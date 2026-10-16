@@ -12,7 +12,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | Tappa | Versione | Obiettivo | Stato | Documento |
 |---|---|---|---|---|
 | 1 | 0.1 | Fondamenta: architettura, CI, polilinee, vista navigabile | **chiusa** | [0.1](tappe/0.1-fondamenta.md) |
-| 2 | 0.2 | Riga di comando, primo comando di disegno, annullamento | **aperta** | [0.2](tappe/0.2-comandi-e-annullamento.md) |
+| 2 | 0.2 | Riga di comando, primo comando di disegno, annullamento | **chiusa** | [0.2](tappe/0.2-comandi-e-annullamento.md) |
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | in programma | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | in programma | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | in programma | [0.5](tappe/0.5-file-e-dxf.md) |
