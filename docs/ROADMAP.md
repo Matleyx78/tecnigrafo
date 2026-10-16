@@ -16,7 +16,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **aperta** | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | in programma | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | in programma | [0.5](tappe/0.5-file-e-dxf.md) |
-| 6 | 0.6 | Layer, colori, tipi di linea, proprietà | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
+| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
@@ -87,3 +87,11 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   quando un revisore che lo usa è disponibile, e il suo esito, o la sua mancanza,
   si scrive nelle note di rilascio. Vale dalla tappa 0.2 (vedi "Modifiche al
   piano" in [tappe/0.2](tappe/0.2-comandi-e-annullamento.md)).
+- **2026-10-16 — Impianto dell'interfaccia nella tappa 0.6.** Il responsabile
+  sceglie: ribbon come in AutoCAD, con la possibilità per l'utente di passare
+  all'interfaccia classica a menu e barre; pannelli agganciabili; icone tutte
+  nostre in un unico stile; tema chiaro o scuro a scelta; scorciatoie
+  personalizzabili. Le aree di lavoro si decideranno insieme agli ambienti del 3D.
+  Il lavoro entra nella tappa 0.6, che introduce i primi pannelli, secondo
+  l'[ADR 0009](adr/0009-interfaccia-grafica.md) (proposto, da accettare
+  all'apertura della tappa).
