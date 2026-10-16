@@ -4,6 +4,7 @@
 #pragma once
 
 #include "tg/core/bbox.hpp"
+#include "tg/core/entity_id.hpp"
 #include "tg/core/polyline.hpp"
 
 #include <cstdint>
@@ -18,15 +19,6 @@ namespace tg::core {
 /// code that visits entities then fails to compile until it handles them,
 /// which is intentional (see docs/adr/0004).
 using Entity = std::variant<Polyline>;
-
-/// Stable identifier of an entity inside its document. Never reused.
-/// Corresponds to the DXF handle (docs/adr/0006). The value 0 is never a
-/// valid identifier.
-struct EntityId {
-    std::uint64_t value{0};
-
-    friend constexpr bool operator==(const EntityId&, const EntityId&) = default;
-};
 
 struct EntityRecord {
     EntityId id;
