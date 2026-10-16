@@ -9,9 +9,27 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **v0.1.0, fondamenta.** Una finestra mostra un disegno di esempio fatto di
-> polilinee (con archi), con griglia, zoom e pan. Nessuna funzione di disegno
-> interattivo, nessun file ancora.
+> Stato: **v0.2.0, comandi e annullamento.** Si disegnano polilinee di segmenti
+> retti con il comando `PLINE`, indicando i punti con il mouse o scrivendo le
+> coordinate sulla riga di comando, e si annulla e ripete il lavoro. Non si
+> possono ancora salvare file, selezionare o cancellare entità. Novità e limiti
+> sono nelle [note di rilascio](docs/rilasci/0.2.md).
+
+## Disegnare
+
+Scrivi `pl` e premi `Invio`, poi indica i punti con il clic sinistro o scrivendo
+le coordinate (`100,50`, `@20,0`, `@50<90`). `Invio` conclude la polilinea, `c`
+la chiude, `Esc` annulla il comando. Il funzionamento completo è nel
+[manuale dei comandi](docs/manuale/comandi.md).
+
+| Azione | Come |
+|---|---|
+| Avviare un comando | scriverne il nome e premere `Invio` (anche con la vista in primo piano) |
+| Indicare un punto | clic sinistro, oppure scrivere le coordinate |
+| Concludere | `Invio`, `Spazio` o clic destro |
+| Annullare il comando in corso | `Esc` |
+| Ripetere l'ultimo comando | `Invio` a riga vuota |
+| Annulla / Ripeti | `Ctrl+Z` / `Ctrl+Y`, oppure i comandi `U` e `REDO` |
 
 ## Comandi della vista
 
@@ -73,14 +91,17 @@ open build/release/app/tecnigrafo.app
 
 ```
 core/     geometria e modello dati (C++20 puro, nessuna dipendenza)
+edit/     modifiche al documento, transazioni, annulla e ripeti (nessun Qt)
+cmd/      comandi, riga di comando, lettura delle coordinate (nessun Qt)
 render/   viewport e disegno della scena, indipendente dalla grafica (nessun Qt)
 app/      applicazione desktop Qt: finestre, input, backend QPainter
-tests/    test automatici (GoogleTest)
-docs/     roadmap e tappe, decisioni architetturali (ADR), stile, guide
+tests/    test automatici (GoogleTest, Qt Test per app)
+docs/     roadmap e tappe, decisioni architetturali (ADR), manuale, note di rilascio
 ```
 
-Le dipendenze vanno in una sola direzione: `core ← render ← app`. La mappa
-completa è in [docs/ARCHITETTURA.md](docs/ARCHITETTURA.md).
+Le dipendenze vanno in una sola direzione: `core ← edit ← cmd ← app` e
+`core ← render ← app`. La mappa completa è in
+[docs/ARCHITETTURA.md](docs/ARCHITETTURA.md).
 
 ## Roadmap
 
