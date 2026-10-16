@@ -17,6 +17,7 @@ endif()
 include(GoogleTest)
 
 add_executable(tg_tests
+    cmd/coordinate_input_test.cpp
     core/document_test.cpp
     core/geometry_test.cpp
     core/polyline_test.cpp
@@ -24,6 +25,7 @@ add_executable(tg_tests
     render/viewport_test.cpp
 )
 target_link_libraries(tg_tests PRIVATE
+    Tecnigrafo::cmd
     Tecnigrafo::edit
     Tecnigrafo::render
     GTest::gtest_main)
