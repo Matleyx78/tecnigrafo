@@ -12,10 +12,10 @@ core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
 
 | Modulo | Namespace | Contiene | Può usare |
 |---|---|---|---|
-| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`), `Document` | solo la libreria standard |
+| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`), `Document`, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap) | solo la libreria standard |
 | `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto, disegno della scena | `core` |
 | `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti | `core` |
-| `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate | `core`, `edit` |
+| `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, snap e orto | `core`, `edit` |
 | `app` | `tg::app` | finestre Qt, input da mouse e tastiera, `QtPainter` | tutti, più Qt |
 
 Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
@@ -42,11 +42,15 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 
 ## Come si disegna un fotogramma
 
-1. Qt chiede a `CadView` di ridisegnarsi (`paintEvent`).
-2. `CadView` crea un `QtPainter` e chiama `render::renderScene`.
-3. `renderScene` disegna sfondo, griglia e assi, poi per ogni entità visibile la
-   approssima con segmenti (tolleranza in pixel), converte i punti in coordinate
-   dello schermo e chiama `Painter::drawPolyline`.
+   1. Qt chiede a `CadView` di ridisegnarsi (`paintEvent`).
+   2. `CadView` crea un `QtPainter` e chiama `render::renderScene`.
+   3. `renderScene` disegna sfondo, griglia e assi, poi per ogni entità visibile la
+      approssima con segmenti (tolleranza in pixel), converte i punti in coordinate
+      dello schermo e chiama `Painter::drawPolyline`.
+   4. Sopra la scena `CadView` disegna, in quest'ordine, le entità selezionate
+      (`renderHighlight`), l'anteprima del comando (`renderPreview`), il rettangolo
+      di selezione e il marcatore dello snap attivo, chiedendo tutto al
+      `CommandRunner`.
 
 ## Decisioni architetturali
 
