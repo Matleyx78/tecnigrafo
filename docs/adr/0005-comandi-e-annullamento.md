@@ -1,6 +1,6 @@
 # ADR 0005: Comandi, annullamento e input dell'utente
 
-- **Stato:** Proposto (da accettare all'apertura della tappa 0.2)
+- **Stato:** Accettato (2026-10-16)
 - **Data:** 2026-10-15
 
 ## Contesto

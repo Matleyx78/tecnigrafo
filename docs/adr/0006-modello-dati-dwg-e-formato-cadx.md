@@ -1,6 +1,6 @@
 # ADR 0006: Modello dati compatibile con DWG/DXF e formato di file `.cadx`
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-16)
 - **Data:** 2026-10-16
 
 ## Contesto
