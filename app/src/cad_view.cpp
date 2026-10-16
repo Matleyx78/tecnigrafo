@@ -25,8 +25,8 @@ core::Vec2 toVec2(const QPointF& point) {
 
 }  // namespace
 
-CadView::CadView(const core::Document& document, QWidget* parent)
-    : QWidget(parent), m_document(document) {
+CadView::CadView(const core::Document& document, cmd::CommandRunner& runner, QWidget* parent)
+    : QWidget(parent), m_document(document), m_runner(runner) {
     setMouseTracking(true);  // cursor coordinates without pressed buttons
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
@@ -44,6 +44,7 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
     QPainter painter(this);
     QtPainter backend(painter);
     render::renderScene(m_document, m_viewport, m_style, backend);
+    render::renderPreview(m_runner.preview(), m_viewport, m_style, backend);
 }
 
 void CadView::resizeEvent(QResizeEvent* event) {
@@ -74,6 +75,16 @@ void CadView::wheelEvent(QWheelEvent* event) {
 }
 
 void CadView::mousePressEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        submit(cmd::PointInput{toWorld(event->position())});
+        event->accept();
+        return;
+    }
+    if (event->button() == Qt::RightButton) {
+        submit(cmd::ConfirmInput{});
+        event->accept();
+        return;
+    }
     if (event->button() == Qt::MiddleButton) {
         m_panning = true;
         m_lastPanPos = event->position();
@@ -90,6 +101,10 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         m_lastPanPos = event->position();
         m_viewport.panByPixels(toVec2(delta));
         update();
+    }
+    m_runner.pointerMoved(toWorld(event->position()));
+    if (m_runner.isActive()) {
+        update();  // the preview follows the pointer
     }
     emitCursor(event->position());
     QWidget::mouseMoveEvent(event);
@@ -115,8 +130,18 @@ void CadView::mouseDoubleClickEvent(QMouseEvent* event) {
 }
 
 void CadView::emitCursor(const QPointF& screenPos) {
-    const core::Vec2 world = m_viewport.screenToWorld(toVec2(screenPos));
+    const core::Vec2 world = toWorld(screenPos);
     emit cursorMoved(world.x, world.y);
+}
+
+core::Vec2 CadView::toWorld(const QPointF& screenPos) const {
+    return m_viewport.screenToWorld(toVec2(screenPos));
+}
+
+void CadView::submit(const cmd::Input& input) {
+    m_runner.submit(input);
+    update();
+    emit inputHandled();
 }
 
 }  // namespace tg::app

@@ -22,6 +22,9 @@ namespace tg::app {
 /// cancels. Keys typed in a widget registered with forwardKeysFrom() (the
 /// drawing view) reach the command line as if typed there.
 ///
+/// Undo and redo keys (Ctrl+Z, Ctrl+Y and the platform's own) always act on
+/// the drawing: in the input field they never undo the typed text.
+///
 /// Child widget names, used by tests: "history", "prompt", "input".
 class CommandLine final : public QWidget {
     Q_OBJECT
@@ -40,6 +43,10 @@ public:
     /// Adds a line at the end of the history.
     void appendToHistory(const QString& line);
 
+    /// Shows the runner's current prompt. Call it after sending the runner
+    /// an input from elsewhere, such as a click in the view.
+    void refreshPrompt();
+
 signals:
     /// Emitted after every input sent to the runner: the drawing, the
     /// preview and what can be undone may have changed.
@@ -54,7 +61,6 @@ private:
     bool forwardTextKey(const QKeyEvent& event);
     void submit();
     void cancel();
-    void updatePrompt();
 
     cmd::CommandRunner& m_runner;
     QPlainTextEdit* m_history{nullptr};

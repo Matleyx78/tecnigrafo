@@ -41,6 +41,7 @@ if(TG_BUILD_APP)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Test Widgets)
     add_executable(tg_app_tests
         app/command_line_test.cpp
+        app/drawing_test.cpp
     )
     target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Test Qt6::Widgets GTest::gtest)
     tg_configure_target(tg_app_tests)

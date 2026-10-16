@@ -6,11 +6,13 @@
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "sample_drawing.hpp"
+#include "tg/cmd/builtin_commands.hpp"
 
 #include <QAction>
 #include <QApplication>
 #include <QKeySequence>
 #include <QLabel>
+#include <QList>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
@@ -23,6 +25,22 @@ namespace {
 // Decimal places of the coordinate read-out.
 constexpr int kCoordinateDecimals = 4;
 
+// The runner's own commands, used by the Edit menu so that Ctrl+Z behaves
+// exactly like typing U (message in the history, Enter repeats it).
+constexpr const char* kUndoCommand = "UNDO";
+constexpr const char* kRedoCommand = "REDO";
+
+/// The platform's redo keys, plus Ctrl+Y that AutoCAD users expect
+/// everywhere (CommandLine recognises the same keys).
+QList<QKeySequence> redoShortcuts() {
+    QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::Redo);
+    const QKeySequence ctrlY(Qt::CTRL | Qt::Key_Y);
+    if (!keys.contains(ctrlY)) {
+        keys.append(ctrlY);
+    }
+    return keys;
+}
+
 }  // namespace
 
 MainWindow::MainWindow(QWidget* parent)
@@ -30,8 +48,9 @@ MainWindow::MainWindow(QWidget* parent)
       m_document(makeSampleDrawing()),
       m_editor(m_document),
       m_runner(m_registry, m_editor),
-      m_view(new CadView(m_document, this)),
+      m_view(new CadView(m_document, m_runner, this)),
       m_commandLine(new CommandLine(m_runner, this)) {
+    cmd::registerBuiltinCommands(m_registry);
     setWindowTitle(QStringLiteral("Tecnigrafo"));
     resize(1100, 720);
 
@@ -50,6 +69,14 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(m_view, &CadView::cursorMoved, this, &MainWindow::showCursorPosition);
     connect(m_view, &CadView::scaleChanged, this, &MainWindow::showScale);
+
+    // The editor's listener runs inside commit(), while the command that
+    // commits is still running: the inputs' own signals refresh again once
+    // the runner is idle, so that Undo is enabled when the command ends.
+    m_editor.setChangeListener([this] { refresh(); });
+    connect(m_view, &CadView::inputHandled, this, &MainWindow::refresh);
+    connect(m_commandLine, &CommandLine::inputHandled, this, &MainWindow::refresh);
+    updateEditActions();
 }
 
 void MainWindow::createMenus() {
@@ -57,6 +84,22 @@ void MainWindow::createMenus() {
     QAction* quitAction = fileMenu->addAction(tr("&Quit"));
     quitAction->setShortcut(QKeySequence::Quit);
     connect(quitAction, &QAction::triggered, this, &QWidget::close);
+
+    QMenu* editMenu = menuBar()->addMenu(tr("&Edit"));
+    m_undoAction = editMenu->addAction(tr("&Undo"));
+    m_undoAction->setObjectName(QStringLiteral("undoAction"));
+    m_undoAction->setShortcuts(QKeySequence::Undo);
+    connect(m_undoAction, &QAction::triggered, this, [this] {
+        m_runner.submitText(kUndoCommand);
+        refresh();
+    });
+    m_redoAction = editMenu->addAction(tr("&Redo"));
+    m_redoAction->setObjectName(QStringLiteral("redoAction"));
+    m_redoAction->setShortcuts(redoShortcuts());
+    connect(m_redoAction, &QAction::triggered, this, [this] {
+        m_runner.submitText(kRedoCommand);
+        refresh();
+    });
 
     QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
     QAction* extentsAction = viewMenu->addAction(tr("Zoom &Extents"));
@@ -76,6 +119,23 @@ void MainWindow::createStatusBar() {
     statusBar()->addPermanentWidget(m_cursorLabel);
     showCursorPosition(0.0, 0.0);
     showScale(m_view->viewport().scale());
+}
+
+void MainWindow::refresh() {
+    m_view->update();
+    m_commandLine->refreshPrompt();
+    updateEditActions();
+}
+
+void MainWindow::updateEditActions() {
+    // Undo and redo wait for the running command to end (docs/tappe/0.2).
+    const bool idle = !m_runner.isActive();
+    const QString undoName = QString::fromStdString(m_editor.undoName());
+    const QString redoName = QString::fromStdString(m_editor.redoName());
+    m_undoAction->setEnabled(idle && m_editor.canUndo());
+    m_redoAction->setEnabled(idle && m_editor.canRedo());
+    m_undoAction->setText(undoName.isEmpty() ? tr("&Undo") : tr("&Undo %1").arg(undoName));
+    m_redoAction->setText(redoName.isEmpty() ? tr("&Redo") : tr("&Redo %1").arg(redoName));
 }
 
 void MainWindow::showCursorPosition(double worldX, double worldY) {

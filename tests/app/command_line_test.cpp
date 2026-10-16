@@ -3,6 +3,7 @@
 
 #include "command_line.hpp"
 
+#include "input_events.hpp"
 #include "tg/cmd/command.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
@@ -10,9 +11,6 @@
 #include "tg/edit/editor.hpp"
 
 #include <QApplication>
-#include <QChar>
-#include <QCoreApplication>
-#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPlainTextEdit>
@@ -31,24 +29,8 @@
 namespace tg::app {
 namespace {
 
-/// Sends a key press to `widget`, as the keyboard does: event filters
-/// included. QTest::keyClick would do the same, but clang-tidy's analyser
-/// reports a false use-after-free inside its inline code.
-void press(QWidget* widget, Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier,
-           const QString& text = {}) {
-    QKeyEvent event(QEvent::KeyPress, key, modifiers, text);
-    QCoreApplication::sendEvent(widget, &event);
-}
-
-/// Types `text` (ASCII) in `widget`, one key press per character. For ASCII,
-/// the Qt key code is the code of the upper-case character.
-void type(QWidget* widget, const std::string& text) {
-    for (const char c : text) {
-        const QChar character = QLatin1Char(c);
-        press(widget, static_cast<Qt::Key>(character.toUpper().unicode()), Qt::NoModifier,
-              QString(character));
-    }
-}
+using events::press;
+using events::type;
 
 /// A stand-in for PLINE, which arrives with package P6: it collects points
 /// and adds a polyline on Enter.
@@ -228,6 +210,7 @@ TEST_F(CommandLineTest, EmitsInputHandledAfterEverySubmission) {
 }  // namespace
 }  // namespace tg::app
 
+// The main() of every test in tg_app_tests.
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
     const QApplication application(argc, argv);

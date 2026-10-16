@@ -7,6 +7,7 @@
 #include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPlainTextEdit>
@@ -39,6 +40,13 @@ bool isForwardedCharacter(QChar c) {
     const bool asciiLetter = (code >= u'a' && code <= u'z') || (code >= u'A' && code <= u'Z');
     const bool digit = code >= u'0' && code <= u'9';
     return asciiLetter || digit || kForwardedSymbols.contains(c);
+}
+
+/// Undo and redo of the drawing. Ctrl+Y is added to the platform's redo keys
+/// because AutoCAD users expect it everywhere (MainWindow does the same).
+bool isUndoOrRedo(const QKeyEvent& event) {
+    return event.matches(QKeySequence::Undo) || event.matches(QKeySequence::Redo) ||
+           event.keyCombination() == QKeyCombination(Qt::ControlModifier, Qt::Key_Y);
 }
 
 bool hasShortcutModifier(const QKeyEvent& event) {
@@ -87,7 +95,7 @@ CommandLine::CommandLine(cmd::CommandRunner& runner, QWidget* parent)
             self->appendToHistory(QString::fromStdString(text));
         }
     });
-    updatePrompt();
+    refreshPrompt();
 }
 
 void CommandLine::forwardKeysFrom(QWidget* widget) {
@@ -99,15 +107,27 @@ void CommandLine::appendToHistory(const QString& line) {
 }
 
 bool CommandLine::eventFilter(QObject* watched, QEvent* event) {
-    const auto* key =
-        event->type() == QEvent::KeyPress ? dynamic_cast<const QKeyEvent*>(event) : nullptr;
-    if (key != nullptr) {
-        if (watched == m_input) {
-            return handleControlKey(*key);
-        }
-        if (!hasShortcutModifier(*key)) {
-            return handleControlKey(*key) || forwardTextKey(*key);
-        }
+    const bool keyEvent =
+        event->type() == QEvent::KeyPress || event->type() == QEvent::ShortcutOverride;
+    const auto* key = keyEvent ? dynamic_cast<const QKeyEvent*>(event) : nullptr;
+    if (key == nullptr) {
+        return QWidget::eventFilter(watched, event);
+    }
+    if (watched == m_input && isUndoOrRedo(*key)) {
+        // QLineEdit claims these keys (ShortcutOverride) for its own text
+        // undo. Filtering the event without accepting it lets the window's
+        // Undo and Redo shortcuts fire; a key press that still arrives, with
+        // Undo disabled during a command, is dropped.
+        return true;
+    }
+    if (event->type() != QEvent::KeyPress) {
+        return QWidget::eventFilter(watched, event);
+    }
+    if (watched == m_input) {
+        return handleControlKey(*key);
+    }
+    if (!hasShortcutModifier(*key)) {
+        return handleControlKey(*key) || forwardTextKey(*key);
     }
     return QWidget::eventFilter(watched, event);
 }
@@ -144,18 +164,18 @@ void CommandLine::submit() {
                                    : QStringLiteral("%1 %2").arg(m_prompt->text(), text));
     m_input->clear();
     m_runner.submitText(text.toStdString());
-    updatePrompt();
+    refreshPrompt();
     emit inputHandled();
 }
 
 void CommandLine::cancel() {
     m_input->clear();
     m_runner.submit(cmd::CancelInput{});
-    updatePrompt();
+    refreshPrompt();
     emit inputHandled();
 }
 
-void CommandLine::updatePrompt() {
+void CommandLine::refreshPrompt() {
     m_prompt->setText(QString::fromStdString(m_runner.promptText()));
 }
 

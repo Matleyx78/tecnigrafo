@@ -6,20 +6,12 @@
 find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
-# Widgets shared by the application and its Qt tests.
+# Everything but main(): shared by the application and its Qt tests.
 qt_add_library(tg_app_ui STATIC
-    src/command_line.cpp
-    src/command_line.hpp
-)
-target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(tg_app_ui PUBLIC Tecnigrafo::cmd Qt6::Widgets)
-target_compile_definitions(tg_app_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
-tg_configure_target(tg_app_ui)
-
-qt_add_executable(tecnigrafo WIN32 MACOSX_BUNDLE
     src/cad_view.cpp
     src/cad_view.hpp
-    src/main.cpp
+    src/command_line.cpp
+    src/command_line.hpp
     src/main_window.cpp
     src/main_window.hpp
     src/qt_painter.cpp
@@ -27,8 +19,16 @@ qt_add_executable(tecnigrafo WIN32 MACOSX_BUNDLE
     src/sample_drawing.cpp
     src/sample_drawing.hpp
 )
+target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(tg_app_ui PUBLIC Tecnigrafo::cmd Tecnigrafo::render Qt6::Widgets)
+target_compile_definitions(tg_app_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
+tg_configure_target(tg_app_ui)
 
-target_link_libraries(tecnigrafo PRIVATE tg_app_ui Tecnigrafo::render Qt6::Widgets)
+qt_add_executable(tecnigrafo WIN32 MACOSX_BUNDLE
+    src/main.cpp
+)
+
+target_link_libraries(tecnigrafo PRIVATE tg_app_ui Qt6::Widgets)
 target_compile_definitions(tecnigrafo PRIVATE
     TG_VERSION="${PROJECT_VERSION}"
     QT_DISABLE_DEPRECATED_UP_TO=0x060400)

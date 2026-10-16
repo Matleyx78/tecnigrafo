@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/render/scene_renderer.hpp"
 #include "tg/render/viewport.hpp"
@@ -12,9 +13,12 @@
 
 namespace tg::app {
 
-/// Drawing area: shows a document and handles zoom and pan.
+/// Drawing area: shows a document, the preview of the running command, and
+/// handles zoom and pan.
 ///
 /// Mouse controls (as in AutoCAD):
+///   left click            point for the running command
+///   right click           Enter: confirm, or repeat the last command
 ///   wheel                 zoom towards the cursor
 ///   middle drag           pan
 ///   middle double-click   zoom extents
@@ -22,7 +26,8 @@ class CadView final : public QWidget {
     Q_OBJECT
 
 public:
-    explicit CadView(const core::Document& document, QWidget* parent = nullptr);
+    /// The document and the runner must outlive the view.
+    CadView(const core::Document& document, cmd::CommandRunner& runner, QWidget* parent = nullptr);
 
     [[nodiscard]] const render::Viewport& viewport() const { return m_viewport; }
 
@@ -34,6 +39,9 @@ signals:
     void cursorMoved(double worldX, double worldY);
     /// Pixels per drawing unit changed.
     void scaleChanged(double pixelsPerUnit);
+    /// A click was sent to the runner: the drawing, the prompt and what can
+    /// be undone may have changed.
+    void inputHandled();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -47,8 +55,11 @@ protected:
 
 private:
     void emitCursor(const QPointF& screenPos);
+    [[nodiscard]] core::Vec2 toWorld(const QPointF& screenPos) const;
+    void submit(const cmd::Input& input);
 
     const core::Document& m_document;
+    cmd::CommandRunner& m_runner;
     render::Viewport m_viewport;
     render::SceneStyle m_style;
     QPointF m_lastPanPos;
