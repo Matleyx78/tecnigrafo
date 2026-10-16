@@ -17,6 +17,7 @@ endif()
 include(GoogleTest)
 
 add_executable(tg_tests
+    core/document_test.cpp
     core/geometry_test.cpp
     core/polyline_test.cpp
     render/viewport_test.cpp

@@ -3,7 +3,6 @@
 
 #include "tg/core/polyline.hpp"
 
-#include "tg/core/document.hpp"
 #include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
@@ -110,22 +109,6 @@ TEST(Polyline, BoundingBoxIncludesArcExtremes) {
     expectNear(box.min(), {0.0, -1.0});
     expectNear(box.max(), {2.0, 1.0});
     EXPECT_NEAR(stadium.length(), 2.0 * kPi, kEps);
-}
-
-TEST(Document, AssignsUniqueIdsAndComputesExtents) {
-    Document document;
-    EXPECT_TRUE(document.extents().isEmpty());
-
-    const EntityId first = document.add(openSquareOfSide(1.0));
-    Polyline shifted;
-    shifted.addVertex({5.0, 5.0});
-    shifted.addVertex({6.0, 7.0});
-    const EntityId second = document.add(shifted);
-
-    EXPECT_NE(first, second);
-    EXPECT_EQ(document.entityCount(), 2U);
-    expectNear(document.extents().min(), {0.0, 0.0});
-    expectNear(document.extents().max(), {6.0, 7.0});
 }
 
 }  // namespace
