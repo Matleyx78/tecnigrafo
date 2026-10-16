@@ -1,6 +1,6 @@
 # ADR 0008: Selezione, snap a oggetto e orto
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-16
 
 ## Contesto
