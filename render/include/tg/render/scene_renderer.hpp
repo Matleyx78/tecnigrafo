@@ -7,6 +7,8 @@
 #include "tg/render/painter.hpp"
 #include "tg/render/viewport.hpp"
 
+#include <span>
+
 namespace tg::render {
 
 /// Visual settings of the drawing area.
@@ -17,6 +19,7 @@ struct SceneStyle {
     Color axisX{170, 60, 60};
     Color axisY{60, 160, 70};
     Color entity{235, 235, 235};
+    Color preview{230, 200, 90};
     double minGridSpacingPx{12.0};  ///< finer grids are hidden
     double tessellationTolerancePx{0.25};
     bool showGrid{true};
@@ -29,5 +32,9 @@ struct SceneStyle {
 /// Draws grid, axes and every entity of `document` as seen through `viewport`.
 void renderScene(const core::Document& document, const Viewport& viewport, const SceneStyle& style,
                  Painter& painter);
+
+/// Draws preview entities without clearing the background or drawing grid and axes.
+void renderPreview(std::span<const core::Entity> entities, const Viewport& viewport,
+                   const SceneStyle& style, Painter& painter);
 
 }  // namespace tg::render

@@ -133,4 +133,16 @@ void renderScene(const core::Document& document, const Viewport& viewport, const
     }
 }
 
+void renderPreview(std::span<const core::Entity> entities, const Viewport& viewport,
+                   const SceneStyle& style, Painter& painter) {
+    const BBox visible = viewport.visibleWorldArea();
+    EntityDrawer drawer(viewport, style, painter);
+    painter.setPen(style.preview, 0.0);
+    for (const core::Entity& entity : entities) {
+        if (overlaps(core::boundingBox(entity), visible)) {
+            std::visit(drawer, entity);
+        }
+    }
+}
+
 }  // namespace tg::render

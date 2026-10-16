@@ -91,7 +91,10 @@ TEST(GridSpacing, UsesOneTwoFiveSequence) {
 /// Painter that records calls instead of drawing.
 class RecordingPainter final : public Painter {
 public:
-    void clear(const Color& background) override { clearedWith = background; }
+    void clear(const Color& background) override {
+        clearedWith = background;
+        ++clears;
+    }
 
     void setPen(const Color& color, double /*widthPx*/) override { pen = color; }
 
@@ -106,6 +109,7 @@ public:
     Color clearedWith;
     Color pen;
     Color polylinePen;
+    int clears{0};
     int lines{0};
     bool lastClosed{false};
     std::vector<std::vector<Vec2>> polylines;
@@ -140,6 +144,72 @@ TEST(SceneRenderer, SkipsEntitiesOutsideTheView) {
 
     RecordingPainter painter;
     renderScene(document, makeViewport(), SceneStyle{}, painter);
+    EXPECT_TRUE(painter.polylines.empty());
+}
+
+TEST(PreviewRenderer, DrawsInScreenSpaceWithoutClearingOrDrawingGridAndAxes) {
+    core::Polyline polyline;
+    polyline.addVertex({10.0, 20.0});
+    polyline.addVertex({11.0, 21.0});
+    const std::vector<core::Entity> entities{polyline};
+    const SceneStyle style;
+    const Color expectedPreview{230, 200, 90};
+    RecordingPainter painter;
+
+    renderPreview(entities, makeViewport(), style, painter);
+
+    EXPECT_EQ(style.preview, expectedPreview);
+    EXPECT_EQ(painter.polylinePen, style.preview);
+    EXPECT_EQ(painter.clears, 0);
+    EXPECT_EQ(painter.lines, 0);
+    EXPECT_FALSE(painter.lastClosed);
+    ASSERT_EQ(painter.polylines.size(), 1U);
+    ASSERT_EQ(painter.polylines.front().size(), 2U);
+    expectNear(painter.polylines.front()[0], {400.0, 300.0});
+    expectNear(painter.polylines.front()[1], {402.0, 298.0});
+}
+
+TEST(PreviewRenderer, UsesCustomColorAndSharedArcTessellation) {
+    core::Polyline polyline;
+    polyline.addVertex({10.0, 20.0}, 1.0);
+    polyline.addVertex({30.0, 20.0});
+    polyline.setClosed(true);
+    const std::vector<core::Entity> entities{polyline};
+    core::Document document;
+    document.add(polyline);
+    SceneStyle style;
+    style.preview = {100, 150, 200};
+    style.tessellationTolerancePx = 0.1;
+    RecordingPainter scenePainter;
+    RecordingPainter previewPainter;
+
+    renderScene(document, makeViewport(), style, scenePainter);
+    renderPreview(entities, makeViewport(), style, previewPainter);
+
+    EXPECT_EQ(previewPainter.polylinePen, style.preview);
+    EXPECT_TRUE(previewPainter.lastClosed);
+    ASSERT_EQ(previewPainter.polylines.size(), 1U);
+    EXPECT_GT(previewPainter.polylines.front().size(), 2U);
+    EXPECT_EQ(previewPainter.polylines, scenePainter.polylines);
+}
+
+TEST(PreviewRenderer, EmptyPreviewDoesNotDrawOrClear) {
+    RecordingPainter painter;
+    renderPreview({}, makeViewport(), SceneStyle{}, painter);
+    EXPECT_EQ(painter.clears, 0);
+    EXPECT_EQ(painter.lines, 0);
+    EXPECT_TRUE(painter.polylines.empty());
+}
+
+TEST(PreviewRenderer, SkipsEntitiesOutsideTheView) {
+    core::Polyline faraway;
+    faraway.addVertex({1e6, 1e6});
+    faraway.addVertex({1e6 + 1.0, 1e6});
+    const std::vector<core::Entity> entities{faraway};
+    RecordingPainter painter;
+    renderPreview(entities, makeViewport(), SceneStyle{}, painter);
+    EXPECT_EQ(painter.clears, 0);
+    EXPECT_EQ(painter.lines, 0);
     EXPECT_TRUE(painter.polylines.empty());
 }
 
