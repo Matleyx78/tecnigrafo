@@ -36,8 +36,9 @@ passo.
 
 ## Seguire una tappa
 
-- Assegna ogni pacchetto a una sola persona; dopo 14 giorni senza notizie
-  rimuovi l'assegnazione.
+- Assegna ogni pacchetto a una sola persona o a un solo agente (etichetta
+  `agente:…`); dopo 14 giorni senza notizie rimuovi l'assegnazione. Per più
+  agenti in parallelo segui [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md).
 - Se un pacchetto si rivela sbagliato, correggi il piano e annota il motivo in
   "Modifiche al piano".
 - Le PR fuori pacchetto, fuori tappa o con la CI rossa si chiudono con un

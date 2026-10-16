@@ -20,6 +20,11 @@ Lavora **su un solo pacchetto**. Se il compito non corrisponde a un pacchetto de
 tappa aperta, non scrivere codice: spiega all'utente che serve prima una issue
 approvata.
 
+Prima di iniziare controlla che la issue del pacchetto porti la **tua** etichetta
+`agente:…` (o il tuo nome come assegnatario). Se è senza etichetta o assegnata a
+qualcun altro, non iniziare e avvisa l'utente: altri agenti potrebbero lavorare in
+parallelo ([docs/LAVORO-IN-PARALLELO.md](docs/LAVORO-IN-PARALLELO.md)).
+
 ## Regole che non si possono violare
 
 - Modifica solo i file elencati nel pacchetto. Se ne serve un altro, dillo

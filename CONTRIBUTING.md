@@ -16,6 +16,9 @@ iniziare: le pull request che non lo rispettano vengono chiuse senza revisione.
 4. Scrivi nella issue che vuoi occupartene e **aspetta l'assegnazione**.
 5. Lavora, apri la pull request, aspetta la revisione.
 
+Come si leggono i riferimenti (`[0.2-P4]`, `#5`, `Closes #5`) e come lavorano più
+persone o agenti in parallelo: [docs/LAVORO-IN-PARALLELO.md](docs/LAVORO-IN-PARALLELO.md).
+
 ## Il percorso di una modifica
 
 1. **Assegnazione.** Un pacchetto è assegnato a una sola persona alla volta. Se
