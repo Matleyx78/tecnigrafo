@@ -24,6 +24,7 @@ add_executable(tg_tests
     core/geometry_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
+    core/snap_points_test.cpp
     core/spatial_index_test.cpp
     edit/editor_test.cpp
     render/viewport_test.cpp

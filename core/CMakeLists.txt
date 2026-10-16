@@ -7,6 +7,7 @@ add_library(tg_core
     src/document.cpp
     src/polyline.cpp
     src/proximity.cpp
+    src/snap_points.cpp
     src/spatial_index.cpp
     src/transform2d.cpp
 )
