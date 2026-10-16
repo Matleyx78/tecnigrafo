@@ -20,9 +20,13 @@ add_executable(tg_tests
     core/document_test.cpp
     core/geometry_test.cpp
     core/polyline_test.cpp
+    edit/editor_test.cpp
     render/viewport_test.cpp
 )
-target_link_libraries(tg_tests PRIVATE Tecnigrafo::render GTest::gtest_main)
+target_link_libraries(tg_tests PRIVATE
+    Tecnigrafo::edit
+    Tecnigrafo::render
+    GTest::gtest_main)
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
