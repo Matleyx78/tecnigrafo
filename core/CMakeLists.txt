@@ -6,6 +6,7 @@
 add_library(tg_core
     src/document.cpp
     src/polyline.cpp
+    src/proximity.cpp
     src/transform2d.cpp
 )
 add_library(Tecnigrafo::core ALIAS tg_core)

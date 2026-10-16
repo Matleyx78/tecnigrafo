@@ -23,6 +23,7 @@ add_executable(tg_tests
     core/document_test.cpp
     core/geometry_test.cpp
     core/polyline_test.cpp
+    core/proximity_test.cpp
     edit/editor_test.cpp
     render/viewport_test.cpp
 )
