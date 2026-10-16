@@ -1,6 +1,6 @@
 # ADR 0007: Indice spaziale
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-16
 
 ## Contesto
