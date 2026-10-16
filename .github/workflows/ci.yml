@@ -18,7 +18,7 @@ jobs:
     name: Formatting (clang-format 18)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check formatting
         run: git ls-files '*.cpp' '*.hpp' | xargs clang-format-18 --dry-run --Werror
 
@@ -26,7 +26,7 @@ jobs:
     name: Linux (GCC, clang-tidy)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -46,7 +46,7 @@ jobs:
     name: Windows (MSVC)
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: jurplel/install-qt-action@v4
         with:
@@ -64,7 +64,7 @@ jobs:
     name: macOS (Apple Clang)
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install dependencies
         run: brew install ninja
       - uses: jurplel/install-qt-action@v4
