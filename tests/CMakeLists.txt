@@ -17,6 +17,7 @@ endif()
 include(GoogleTest)
 
 add_executable(tg_tests
+    cmd/command_runner_test.cpp
     cmd/coordinate_input_test.cpp
     core/document_test.cpp
     core/geometry_test.cpp
