@@ -57,3 +57,4 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0003](adr/0003-licenza.md) | Licenza GPLv3 o successiva | Accettato |
 | [0004](adr/0004-modello-geometrico-2d.md) | Modello geometrico 2D | Accettato |
 | [0005](adr/0005-comandi-e-annullamento.md) | Comandi, annullamento e input | Proposto |
+| [0006](adr/0006-modello-dati-dwg-e-formato-cadx.md) | Modello dati compatibile con DWG/DXF e formato `.cadx` | Proposto |

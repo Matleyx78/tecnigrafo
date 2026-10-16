@@ -30,6 +30,8 @@ approvata.
 - Non disattivare avvisi, controlli di `clang-tidy` o test per far passare la
   build. Niente `NOLINT` senza un commento che spieghi il motivo.
 - Rispetta le interfacce scritte nel pacchetto: nomi, firme e comportamenti.
+- Ogni entità o proprietà del disegno corrisponde a quella DXF equivalente, e i
+  dati non gestiti si conservano intatti, mai scartati in silenzio (ADR 0006).
 - Codice, commenti e messaggi di commit in inglese.
 - Ogni file nuovo inizia con l'intestazione:
   ```cpp
