@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "ms-vscode.cmake-tools",
+    "llvm-vs-code-extensions.vscode-clangd",
+    "ms-vscode.cpptools",
+    "xaver.clang-format",
+    "editorconfig.editorconfig",
+    "github.vscode-github-actions"
+  ]
+}

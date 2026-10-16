@@ -1,0 +1,14 @@
+/build/
+/build-*/
+/out/
+.cache/
+compile_commands.json
+CMakeUserPresets.json
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+*.user
+.DS_Store

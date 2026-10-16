@@ -1,0 +1,23 @@
+{
+  // Build: CMake Tools uses the presets in CMakePresets.json.
+  "cmake.useCMakePresets": "always",
+  "cmake.configureOnOpen": true,
+  "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+
+  // Code intelligence: clangd (with the project's .clang-tidy checks).
+  // The Microsoft C/C++ extension is used only for debugging.
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.arguments": ["--clang-tidy", "--header-insertion=never", "--background-index"],
+
+  // Formatting: exactly clang-format 18, the version the CI checks.
+  "clang-format.executable": "clang-format",
+  "[cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format",
+    "editor.formatOnSave": true
+  },
+
+  "editor.rulers": [100],
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.associations": { "*.hpp": "cpp" }
+}

@@ -1,0 +1,79 @@
+# Continuous integration: every push and pull request must pass all jobs.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Formatting (clang-format 18)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: git ls-files '*.cpp' '*.hpp' | xargs clang-format-18 --dry-run --Werror
+
+  linux:
+    name: Linux (GCC, clang-tidy)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev clang-tidy-18
+      - name: Build, warnings as errors
+        run: |
+          cmake --preset ci
+          cmake --build --preset ci
+      - name: Test
+        run: ctest --preset ci
+      - name: Static analysis
+        run: |
+          cmake --preset tidy
+          cmake --build --preset tidy
+
+  windows:
+    name: Windows (MSVC)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          arch: win64_msvc2022_64
+          cache: true
+      - name: Build, warnings as errors
+        run: |
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+          cmake --build --preset ci
+      - name: Test
+        run: ctest --preset ci
+
+  macos:
+    name: macOS (Apple Clang)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: brew install ninja
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
+      - name: Build, warnings as errors
+        run: |
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+          cmake --build --preset ci
+      - name: Test
+        run: ctest --preset ci
