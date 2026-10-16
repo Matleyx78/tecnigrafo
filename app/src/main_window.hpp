@@ -3,7 +3,10 @@
 
 #pragma once
 
+#include "tg/cmd/command_registry.hpp"
+#include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
+#include "tg/edit/editor.hpp"
 
 #include <QMainWindow>
 
@@ -12,6 +15,7 @@ class QLabel;
 namespace tg::app {
 
 class CadView;
+class CommandLine;
 
 class MainWindow final : public QMainWindow {
     Q_OBJECT
@@ -31,8 +35,13 @@ private:
     void createMenus();
     void createStatusBar();
 
+    // Declared in dependency order: each member is built from the ones above.
     core::Document m_document;
+    edit::Editor m_editor;
+    cmd::CommandRegistry m_registry;
+    cmd::CommandRunner m_runner;
     CadView* m_view{nullptr};
+    CommandLine* m_commandLine{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

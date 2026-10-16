@@ -4,6 +4,7 @@
 #include "main_window.hpp"
 
 #include "cad_view.hpp"
+#include "command_line.hpp"
 #include "sample_drawing.hpp"
 
 #include <QAction>
@@ -13,6 +14,7 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
+#include <QVBoxLayout>
 
 namespace tg::app {
 
@@ -24,10 +26,24 @@ constexpr int kCoordinateDecimals = 4;
 }  // namespace
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent), m_document(makeSampleDrawing()), m_view(new CadView(m_document, this)) {
+    : QMainWindow(parent),
+      m_document(makeSampleDrawing()),
+      m_editor(m_document),
+      m_runner(m_registry, m_editor),
+      m_view(new CadView(m_document, this)),
+      m_commandLine(new CommandLine(m_runner, this)) {
     setWindowTitle(QStringLiteral("Tecnigrafo"));
     resize(1100, 720);
-    setCentralWidget(m_view);
+
+    // The command line sits below the drawing, as in AutoCAD.
+    auto* central = new QWidget(this);
+    auto* layout = new QVBoxLayout(central);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    layout->addWidget(m_view, 1);
+    layout->addWidget(m_commandLine);
+    setCentralWidget(central);
+    m_commandLine->forwardKeysFrom(m_view);
 
     createMenus();
     createStatusBar();

@@ -34,3 +34,19 @@ target_link_libraries(tg_tests PRIVATE
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
+
+# Widgets of the application, driven with the Qt Test module and no display
+# (docs/adr/0005). Built only together with the application.
+if(TG_BUILD_APP)
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Test Widgets)
+    add_executable(tg_app_tests
+        app/command_line_test.cpp
+    )
+    target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Test Qt6::Widgets GTest::gtest)
+    tg_configure_target(tg_app_tests)
+    # One test entry: listing the cases would already need a QApplication.
+    add_test(NAME app_widgets COMMAND tg_app_tests)
+    set_tests_properties(app_widgets PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+        TIMEOUT 60)
+endif()
