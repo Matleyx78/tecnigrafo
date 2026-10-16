@@ -47,8 +47,10 @@ passo.
 ## Chiudere una tappa e pubblicare la versione
 
 1. Verifica e spunta ogni criterio di chiusura nel documento della tappa.
-2. Esegui la prova manuale su Windows, Linux e macOS (o falla eseguire a revisori
-   che usano quei sistemi) e annota l'esito.
+2. Esegui la prova manuale su Windows e Linux (o falla eseguire a revisori che
+   usano quei sistemi) e annota l'esito. Su macOS falla eseguire se c'è un
+   revisore che lo usa; altrimenti scrivi nelle note di rilascio che non è stata
+   fatta (ROADMAP, "Decisioni").
 3. Scrivi `docs/rilasci/X.Y.md` con novità e limiti noti.
 4. Aggiorna `project(... VERSION X.Y.0)` nel `CMakeLists.txt` principale.
 5. Dopo il merge: `git tag -s vX.Y.0 -m "Tecnigrafo X.Y.0"` e

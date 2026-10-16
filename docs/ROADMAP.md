@@ -51,9 +51,11 @@ Solo il responsabile apre una tappa, e solo dopo aver chiuso la precedente:
 
 1. Tutti i pacchetti sono uniti e tutti i criteri di chiusura sono verificati, uno
    per uno, e spuntati nel documento della tappa.
-2. La CI è verde sui tre sistemi operativi.
-3. La prova manuale descritta nel documento è stata eseguita su Windows, Linux e
-   macOS.
+2. La CI è verde sui tre sistemi operativi: su Windows, Linux e macOS il programma
+   si compila senza avvisi e tutti i test automatici passano.
+3. La prova manuale descritta nel documento è stata eseguita su Windows e Linux.
+   Su macOS si esegue quando c'è un revisore che lo usa, e l'esito si annota nelle
+   note di rilascio; la sua mancanza non blocca la chiusura (vedi "Decisioni").
 4. Si crea il tag `vX.Y.0` con le note di rilascio (`docs/rilasci/X.Y.md`).
 5. Si aggiorna la tabella e si apre la tappa successiva.
 
@@ -73,3 +75,15 @@ Il contenuto di una tappa *in programma* può cambiare con una decisione del
 responsabile, registrata in questo file. Il contenuto della tappa *aperta* cambia
 solo se un pacchetto si rivela impossibile o sbagliato: si aggiorna il piano e se
 ne spiega il motivo nella sezione "Modifiche al piano" del documento della tappa.
+
+## Decisioni
+
+Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
+
+- **2026-10-16 — Prova manuale su macOS non obbligatoria.** Il responsabile non
+  dispone di un Mac. macOS resta un sistema supportato: la CI lo compila e ne
+  esegue tutti i test a ogni pull request, come per Windows e Linux. La prova
+  manuale su macOS (scorciatoie con `Cmd`, menu, schermi Retina, trackpad) si fa
+  quando un revisore che lo usa è disponibile, e il suo esito, o la sua mancanza,
+  si scrive nelle note di rilascio. Vale dalla tappa 0.2 (vedi "Modifiche al
+  piano" in [tappe/0.2](tappe/0.2-comandi-e-annullamento.md)).

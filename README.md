@@ -56,6 +56,10 @@ Prima di avviare `tecnigrafo.exe`, esegui `windeployqt` sull'eseguibile oppure a
 
 ### macOS
 
+La CI compila Tecnigrafo e ne esegue tutti i test su macOS a ogni modifica, ma il
+responsabile non ha un Mac: la prova a mano dipende da chi lo usa. Se lavori su
+macOS, le tue segnalazioni sono preziose.
+
 ```sh
 xcode-select --install
 brew install cmake ninja qt
