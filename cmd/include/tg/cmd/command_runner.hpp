@@ -5,9 +5,11 @@
 
 #include "tg/cmd/command.hpp"
 #include "tg/cmd/command_registry.hpp"
+#include "tg/cmd/drawing_aids.hpp"
 #include "tg/cmd/input.hpp"
 #include "tg/cmd/selection_set.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/edit/editor.hpp"
 
@@ -75,6 +77,18 @@ struct SelectionRectangle {
 /// selecting are ignored, as is a SelectionInput while a command runs: only
 /// the runner hands selections to commands.
 ///
+/// Drawing aids (docs/adr/0008). While a command asks for a point, that is
+/// while a command runs and the runner is not selecting, the points given
+/// with the mouse are corrected: the pointer handed to the command, so the
+/// preview follows, and the point of a click. If object snap is on and
+/// core::findSnap() finds a snap within 10 pixels, its point is used; else,
+/// with ortho on and a last point, orthoPoint(); else the point is left as
+/// it is. Snap wins over ortho. Typed coordinates are never corrected, but a
+/// distance typed alone ("50") takes its direction from the corrected
+/// pointer, so with ortho on it follows the horizontal or the vertical.
+/// Points given with submit() are never corrected: they are the exact
+/// points of scripts and tests. While selecting nothing is corrected.
+///
 /// The registry and the editor must outlive the runner.
 class CommandRunner {
 public:
@@ -96,18 +110,33 @@ public:
 
     /// The pointer moved to `point`, in drawing coordinates. Gives the
     /// direction of distances typed alone ("50") and the second corner of an
-    /// open selection rectangle.
+    /// open selection rectangle. While a command asks for a point, the
+    /// command receives it corrected by the drawing aids.
     void pointerMoved(const core::Vec2& point);
 
     /// Drawing units per screen pixel; the view sets it at every zoom.
-    /// Pick box and snap aperture, defined in pixels, follow it.
+    /// Pick box and snap aperture, defined in pixels, follow it. While a
+    /// command asks for a point, a change hands the command the pointer
+    /// corrected again, since the snap may have changed.
     /// Precondition: > 0. Default 1.
     void setPixelSize(double drawingUnitsPerPixel);
 
     /// Left click in the view, in drawing coordinates (docs/adr/0008). While
     /// selecting it is a selection gesture; while a command asks for a point
-    /// it becomes a PointInput.
+    /// it becomes a PointInput, corrected by the drawing aids.
     void click(const core::Vec2& point, PickAction action);
+
+    /// Object snap and ortho. While a command asks for a point, a change
+    /// hands the command the pointer corrected again, so that the preview
+    /// follows the new settings without waiting for the pointer to move.
+    void setDrawingAids(const DrawingAids& aids);
+
+    [[nodiscard]] const DrawingAids& drawingAids() const { return m_drawingAids; }
+
+    /// The snap the pointer is on, for the marker; std::nullopt if none or
+    /// if no command is asking for a point. Computed on each call, from the
+    /// last pointer position and the drawing as it is now.
+    [[nodiscard]] std::optional<core::SnapPoint> activeSnap() const;
 
     /// True while a command is running, including while asking "Select
     /// objects:" for it.
@@ -147,6 +176,12 @@ private:
     void selectionClick(const core::Vec2& point, PickAction action);
     void applyToSelection(std::span<const core::EntityId> ids, PickAction action);
     void forward(const Input& input);
+
+    [[nodiscard]] bool asksForPoint() const { return isActive() && !m_askingSelection; }
+
+    [[nodiscard]] std::optional<core::SnapPoint> snapAt(const core::Vec2& point) const;
+    [[nodiscard]] core::Vec2 aidedPoint(const core::Vec2& point) const;
+    void refreshPointer();
     void cancel();
     void finish();
     void clearSelection();
@@ -158,11 +193,12 @@ private:
     edit::Editor& m_editor;
     CommandContext m_context;
     std::unique_ptr<Command> m_command;
-    std::string m_lastCommand;  ///< canonical name, empty before the first one
-    std::optional<core::Vec2> m_pointer;
+    std::string m_lastCommand;            ///< canonical name, empty before the first one
+    std::optional<core::Vec2> m_pointer;  ///< as given, before the drawing aids
     std::function<void(std::string)> m_sink;
     SelectionSet m_selection;
     std::optional<SelectionRectangle> m_rectangle;
+    DrawingAids m_drawingAids;
     double m_pixelSize{1.0};
     bool m_askingSelection{false};  ///< m_command exists but is not started yet
 };
