@@ -24,6 +24,8 @@ namespace tg::app {
 ///
 /// Undo and redo keys (Ctrl+Z, Ctrl+Y and the platform's own) always act on
 /// the drawing: in the input field they never undo the typed text.
+/// Delete reaches the window's Erase action only while the input is empty;
+/// otherwise it edits the text normally.
 ///
 /// Child widget names, used by tests: "history", "prompt", "input".
 class CommandLine final : public QWidget {

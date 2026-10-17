@@ -13,11 +13,12 @@
 
 namespace tg::app {
 
-/// Drawing area: shows a document, the preview of the running command, and
+/// Drawing area: shows a document, its selection and command preview, and
 /// handles zoom and pan.
 ///
 /// Mouse controls (as in AutoCAD):
-///   left click            point for the running command
+///   left click            selection gesture or point for the running command
+///   Shift + left click    remove from the selection
 ///   right click           Enter: confirm, or repeat the last command
 ///   wheel                 zoom towards the cursor
 ///   middle drag           pan

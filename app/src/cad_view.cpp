@@ -36,6 +36,7 @@ CadView::CadView(const core::Document& document, cmd::CommandRunner& runner, QWi
 
 void CadView::zoomExtents() {
     m_viewport.zoomToBox(m_document.extents());
+    m_runner.setPixelSize(1.0 / m_viewport.scale());
     emit scaleChanged(m_viewport.scale());
     update();
 }
@@ -44,7 +45,12 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
     QPainter painter(this);
     QtPainter backend(painter);
     render::renderScene(m_document, m_viewport, m_style, backend);
+    render::renderHighlight(m_document, m_runner.selection().ids(), m_viewport, m_style, backend);
     render::renderPreview(m_runner.preview(), m_viewport, m_style, backend);
+    if (const auto rectangle = m_runner.selectionRectangle()) {
+        render::renderSelectionRectangle(rectangle->first, rectangle->second, rectangle->crossing,
+                                         m_viewport, m_style, backend);
+    }
 }
 
 void CadView::resizeEvent(QResizeEvent* event) {
@@ -68,6 +74,7 @@ void CadView::wheelEvent(QWheelEvent* event) {
         return;
     }
     m_viewport.zoomAt(toVec2(event->position()), std::pow(kZoomPerNotch, notches));
+    m_runner.setPixelSize(1.0 / m_viewport.scale());
     emit scaleChanged(m_viewport.scale());
     emitCursor(event->position());
     update();
@@ -76,7 +83,12 @@ void CadView::wheelEvent(QWheelEvent* event) {
 
 void CadView::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
-        submit(cmd::PointInput{toWorld(event->position())});
+        const cmd::PickAction action = event->modifiers().testFlag(Qt::ShiftModifier)
+                                           ? cmd::PickAction::Remove
+                                           : cmd::PickAction::Add;
+        m_runner.click(toWorld(event->position()), action);
+        update();
+        emit inputHandled();
         event->accept();
         return;
     }
@@ -103,8 +115,8 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         update();
     }
     m_runner.pointerMoved(toWorld(event->position()));
-    if (m_runner.isActive()) {
-        update();  // the preview follows the pointer
+    if (m_runner.isActive() || m_runner.selectionRectangle()) {
+        update();  // the preview or selection rectangle follows the pointer
     }
     emitCursor(event->position());
     QWidget::mouseMoveEvent(event);

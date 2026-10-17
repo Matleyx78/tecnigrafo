@@ -113,6 +113,19 @@ bool CommandLine::eventFilter(QObject* watched, QEvent* event) {
     if (key == nullptr) {
         return QWidget::eventFilter(watched, event);
     }
+    if (watched == m_input && key->matches(QKeySequence::Delete)) {
+        if (m_input->text().isEmpty()) {
+            // As for Undo/Redo, leave ShortcutOverride unaccepted so the
+            // window's Erase action can fire, when enabled.
+            return true;
+        }
+        if (event->type() == QEvent::ShortcutOverride) {
+            // Keep Delete in QLineEdit while there is text, even when the
+            // drawing has a selection and Erase is enabled.
+            event->accept();
+            return true;
+        }
+    }
     if (watched == m_input && isUndoOrRedo(*key)) {
         // QLineEdit claims these keys (ShortcutOverride) for its own text
         // undo. Filtering the event without accepting it lets the window's
