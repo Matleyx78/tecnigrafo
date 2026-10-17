@@ -39,6 +39,12 @@ tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
 
+# Performance is measured manually in Release, never as a timing gate in ctest.
+add_executable(tg_bench bench/selection_bench.cpp)
+target_link_libraries(tg_bench PRIVATE Tecnigrafo::core Tecnigrafo::edit)
+target_compile_definitions(tg_bench PRIVATE TG_BENCH_BUILD_TYPE="$<CONFIG>")
+tg_configure_target(tg_bench)
+
 # Widgets of the application, driven with the Qt Test module and no display
 # (docs/adr/0005). Built only together with the application.
 if(TG_BUILD_APP)
