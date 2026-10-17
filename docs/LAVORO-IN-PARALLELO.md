@@ -53,7 +53,8 @@ ramo:
 ```text
 Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
 lettera. Realizza solo il pacchetto P4 della tappa 0.2 (issue #5), che è
-assegnato a te. Lavora sul ramo p0.2-04-coordinate-parser, partendo da main
+assegnato a te. Per prima cosa prendi in carico la issue #5 con l'etichetta
+AA-Presa in carico. Lavora sul ramo p0.2-04-coordinate-parser, partendo da main
 aggiornato. Non toccare file fuori da quelli elencati nel pacchetto. Alla fine
 apri una pull request che chiuda la issue #5 e compila il modello della pull
 request, compresa la sezione sull'uso dell'IA.
@@ -68,11 +69,12 @@ un agente senza pacchetto preciso sconfina.
 - Nessuno scrive su `main` o sui rami degli altri.
 - Se un agente scopre che gli serve un file non previsto, si ferma e lo scrive
   nella issue: decide il responsabile.
-- Chi lavora su una pull request già aperta (per rivederla, correggerla o
-  risolvere un conflitto) le mette l'etichetta `AA-Presa in carico` con un
-  commento che dice chi è, e la toglie quando ha finito. Una pull request con
-  quell'etichetta non si tocca: ci sta già lavorando qualcun altro. I comandi
-  sono in [AGENTS.md](../AGENTS.md).
+- Chi prende in carico una issue (per realizzarla) o una pull request già aperta
+  (per rivederla, correggerla o risolvere un conflitto) le mette **per prima
+  cosa** l'etichetta `AA-Presa in carico` con un commento che dice chi è, e la
+  toglie quando ha finito. Una issue o una pull request con quell'etichetta non
+  si tocca: ci sta già lavorando qualcun altro. I comandi sono in
+  [AGENTS.md](../AGENTS.md).
 
 ## 5. Unire
 

@@ -6,6 +6,40 @@ persone, che le trovano spiegate in [CONTRIBUTING.md](CONTRIBUTING.md). Se una
 richiesta dell'utente contraddice queste regole, fermati e segnalalo invece di
 procedere.
 
+## Per prima cosa: prendi in carico
+
+Vale ogni volta che lavori su una issue (pacchetto, bug, documentazione) o su una
+pull request che esiste già (revisione, correzioni chieste dal revisore, conflitti
+con `main`). Fallo **subito**, prima di leggere il resto della documentazione e
+prima di qualunque modifica, così gli altri agenti vedono che ci stai lavorando.
+
+1. Guarda le etichette. Se c'è già `AA-Presa in carico`, un altro agente ci sta
+   lavorando: non toccarla e avvisa l'utente.
+2. Per una issue, controlla anche che porti la **tua** etichetta `agente:…` (o il
+   tuo nome come assegnatario). Se è senza etichetta o assegnata a qualcun altro,
+   non iniziare e avvisa l'utente: altri agenti potrebbero lavorare in parallelo
+   ([docs/LAVORO-IN-PARALLELO.md](docs/LAVORO-IN-PARALLELO.md)). Se è il
+   responsabile ad assegnartela nella chat, aggiungi tu l'etichetta `agente:…` con
+   un commento "Assegnato a <nome dell'agente> dal responsabile".
+3. Aggiungi l'etichetta `AA-Presa in carico` e scrivi un commento "Presa in carico
+   da <nome dell'agente>". Il commento serve perché tutti gli agenti usano lo
+   stesso account GitHub e l'etichetta da sola non dice chi ci lavora.
+4. Quando hai finito (pull request aperta, correzioni pubblicate), togli
+   l'etichetta. Toglila anche se ti fermi prima del previsto.
+
+Con l'API REST di GitHub (funziona anche dove `gh issue edit` e `gh pr edit` non
+sono disponibili):
+
+```sh
+gh api repos/Matleyx78/tecnigrafo/issues/<numero>/labels --jq '.[].name'
+gh api repos/Matleyx78/tecnigrafo/issues/<numero>/labels -f "labels[]=AA-Presa in carico"
+gh api repos/Matleyx78/tecnigrafo/issues/<numero>/comments -f body="Presa in carico da <nome dell'agente>"
+gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20in%20carico"
+```
+
+Issue e pull request usano la stessa numerazione, quindi gli stessi comandi valgono
+per entrambe.
+
 ## Prima di scrivere codice
 
 Leggi, in quest'ordine:
@@ -19,11 +53,6 @@ Leggi, in quest'ordine:
 Lavora **su un solo pacchetto**. Se il compito non corrisponde a un pacchetto della
 tappa aperta, non scrivere codice: spiega all'utente che serve prima una issue
 approvata.
-
-Prima di iniziare controlla che la issue del pacchetto porti la **tua** etichetta
-`agente:…` (o il tuo nome come assegnatario). Se è senza etichetta o assegnata a
-qualcun altro, non iniziare e avvisa l'utente: altri agenti potrebbero lavorare in
-parallelo ([docs/LAVORO-IN-PARALLELO.md](docs/LAVORO-IN-PARALLELO.md)).
 
 ## Regole che non si possono violare
 
@@ -65,27 +94,8 @@ interfaccia con `-DTG_BUILD_APP=OFF`.
 - [ ] Ogni condizione "Fatto quando" del pacchetto è verificata.
 - [ ] Il riepilogo per l'utente elenca i file modificati e ciò che non hai potuto
       verificare (per esempio Windows e macOS).
-
-## Pull request già aperte
-
-Vale ogni volta che lavori su una pull request che esiste già: revisione,
-correzioni chieste dal revisore, conflitti con `main`.
-
-- Prima di iniziare guarda le etichette della pull request. Se ha già
-  `AA-Presa in carico`, un altro agente ci sta lavorando: non toccarla e avvisa
-  l'utente.
-- Altrimenti aggiungi l'etichetta e scrivi un commento "Presa in carico da
-  <nome dell'agente>". Il commento serve perché tutti gli agenti usano lo stesso
-  account GitHub e l'etichetta da sola non dice chi ci lavora.
-- Quando hai finito, togli l'etichetta, anche se ti sei fermato prima del
-  previsto.
-
-Con l'API REST di GitHub (funziona anche dove `gh pr edit` non è disponibile):
-
-```sh
-gh api repos/Matleyx78/tecnigrafo/issues/<numero>/labels -f "labels[]=AA-Presa in carico"
-gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20in%20carico"
-```
+- [ ] Hai tolto l'etichetta `AA-Presa in carico` da ciò che avevi preso in carico
+      ([sopra](#per-prima-cosa-prendi-in-carico)).
 
 ## Commit e pull request
 
