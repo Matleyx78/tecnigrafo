@@ -101,6 +101,15 @@ void MainWindow::createMenus() {
         refresh();
     });
 
+    editMenu->addSeparator();
+    m_eraseAction = editMenu->addAction(tr("&Erase"));
+    m_eraseAction->setObjectName(QStringLiteral("eraseAction"));
+    m_eraseAction->setShortcut(QKeySequence::Delete);
+    connect(m_eraseAction, &QAction::triggered, this, [this] {
+        m_runner.submitText("ERASE");
+        refresh();
+    });
+
     QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
     QAction* extentsAction = viewMenu->addAction(tr("Zoom &Extents"));
     extentsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
@@ -130,6 +139,7 @@ void MainWindow::refresh() {
 void MainWindow::updateEditActions() {
     // Undo and redo wait for the running command to end (docs/tappe/0.2).
     const bool idle = !m_runner.isActive();
+    m_eraseAction->setEnabled(idle && !m_runner.selection().isEmpty());
     const QString undoName = QString::fromStdString(m_editor.undoName());
     const QString redoName = QString::fromStdString(m_editor.redoName());
     m_undoAction->setEnabled(idle && m_editor.canUndo());

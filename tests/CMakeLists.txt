@@ -54,6 +54,7 @@ if(TG_BUILD_APP)
     add_executable(tg_app_tests
         app/command_line_test.cpp
         app/drawing_test.cpp
+        app/selection_test.cpp
     )
     target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Test Qt6::Widgets GTest::gtest)
     tg_configure_target(tg_app_tests)

@@ -30,6 +30,8 @@ public:
 
     [[nodiscard]] const core::Document& document() const { return m_document; }
 
+    [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
+
 private:
     // Connected with the function-pointer syntax of QObject::connect, so no
     // "slots" section is needed.
@@ -41,7 +43,7 @@ private:
     void createStatusBar();
 
     /// After any input or change: redraws the view and updates the prompt
-    /// and the Undo and Redo actions.
+    /// and the Edit actions.
     void refresh();
     void updateEditActions();
 
@@ -56,6 +58,7 @@ private:
     CommandLine* m_commandLine{nullptr};
     QAction* m_undoAction{nullptr};
     QAction* m_redoAction{nullptr};
+    QAction* m_eraseAction{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };
