@@ -9,11 +9,12 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **v0.2.0, comandi e annullamento.** Si disegnano polilinee di segmenti
-> retti con il comando `PLINE`, indicando i punti con il mouse o scrivendo le
-> coordinate sulla riga di comando, e si annulla e ripete il lavoro. Non si
-> possono ancora salvare file, selezionare o cancellare entità. Novità e limiti
-> sono nelle [note di rilascio](docs/rilasci/0.2.md).
+> Stato: **tappa 0.3, selezione, cancellazione, snap e orto — rilascio in
+> preparazione.** In `main` si disegnano polilinee con `PLINE`, si selezionano e
+> cancellano entità con `ERASE`, si agganciano punti notevoli e si usa l'orto.
+> Le modifiche si possono annullare e ripetere. Il salvataggio dei file arriverà
+> con la tappa 0.5. Le [note della 0.3](docs/rilasci/0.3.md) riportano novità,
+> limiti e verifiche ancora da completare prima del tag; la tappa resta aperta.
 
 ## Disegnare
 
@@ -22,14 +23,31 @@ le coordinate (`100,50`, `@20,0`, `@50<90`). `Invio` conclude la polilinea, `c`
 la chiude, `Esc` annulla il comando. Il funzionamento completo è nel
 [manuale dei comandi](docs/manuale/comandi.md).
 
+Per cancellare, scegli le entità sul bordo oppure con un rettangolo a due clic,
+poi premi `Canc`; oppure scrivi `e`, scegli le entità e conferma con `Invio`.
+`F3` attiva o spegne lo snap a oggetto, `F8` l'orto; trovi le stesse funzioni nel
+menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo snap
+è acceso con estremo, punto medio e centro, mentre l'orto è spento.
+
 | Azione | Come |
 |---|---|
 | Avviare un comando | scriverne il nome e premere `Invio` (anche con la vista in primo piano) |
 | Indicare un punto | clic sinistro, oppure scrivere le coordinate |
+| Selezionare / togliere dalla selezione | clic sul bordo / `Shift`+clic; a riposo o durante `Select objects:` |
+| Finestra / intersezione | primo clic nel vuoto, secondo a destra / a sinistra del primo |
+| Cancellare | `ERASE` o `E`; `Canc` o *Edit → Erase* con una selezione pronta |
+| Svuotare la selezione | `Esc` a riposo; con un rettangolo aperto lo chiude prima |
+| Snap a oggetto / orto | `F3` / `F8`; sui portatili può servire `Fn` |
 | Concludere | `Invio`, `Spazio` o clic destro |
 | Annullare il comando in corso | `Esc` |
 | Ripetere l'ultimo comando | `Invio` a riga vuota |
 | Annulla / Ripeti | `Ctrl+Z` / `Ctrl+Y`, oppure i comandi `U` e `REDO` |
+
+Nel campo comandi `Canc` cancella entità solo se il campo è vuoto; con testo
+presente modifica il testo. Le coordinate scritte restano esatte anche con snap
+e orto attivi; la sola distanza (`d`) segue la direzione del puntatore corretto.
+Uno snap disponibile prevale sull'orto. Impostazioni e selezione non si salvano
+alla chiusura del programma.
 
 ## Comandi della vista
 
@@ -92,8 +110,8 @@ open build/release/app/tecnigrafo.app
 ```
 core/     geometria e modello dati (C++20 puro, nessuna dipendenza)
 edit/     modifiche al documento, transazioni, annulla e ripeti (nessun Qt)
-cmd/      comandi, riga di comando, lettura delle coordinate (nessun Qt)
-render/   viewport e disegno della scena, indipendente dalla grafica (nessun Qt)
+cmd/      comandi, coordinate, selezione e aiuti al disegno (nessun Qt)
+render/   viewport, scena, evidenziazione e marcatori (nessun Qt)
 app/      applicazione desktop Qt: finestre, input, backend QPainter
 tests/    test automatici (GoogleTest, Qt Test per app)
 docs/     roadmap e tappe, decisioni architetturali (ADR), manuale, note di rilascio
