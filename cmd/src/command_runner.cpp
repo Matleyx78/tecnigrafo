@@ -136,7 +136,7 @@ void CommandRunner::click(const core::Vec2& point, PickAction action) {
     if (isSelecting()) {
         selectionClick(point, action);
     } else {
-        forward(PointInput{aidedPoint(point)});
+        forward(PointInput{aidedPoint(point, m_command->basePoint())});
     }
 }
 
@@ -241,10 +241,13 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
     if (const std::optional<PointSpec> spec = parseCoordinate(text)) {
         // Before the first pointer movement a typed distance has no
         // direction: falling back to the last point makes it unresolvable.
-        // The pointer is corrected now, against the current last point, so
-        // that the direction is the one the preview shows (docs/adr/0008).
-        const core::Vec2 pointer =
-            m_pointer ? aidedPoint(*m_pointer) : m_context.lastPoint.value_or(core::Vec2{});
+        // The pointer is corrected now, so that the direction is the one the
+        // preview shows (docs/adr/0008). Ortho aligns it to the last point,
+        // the one the distance is measured from: within a command it is the
+        // base point; for the first point of a command it may come from the
+        // previous one, as "@" does.
+        const core::Vec2 pointer = m_pointer ? aidedPoint(*m_pointer, m_context.lastPoint)
+                                             : m_context.lastPoint.value_or(core::Vec2{});
         if (const std::optional<core::Vec2> point = resolve(*spec, m_context.lastPoint, pointer)) {
             forward(PointInput{*point});
             return;
@@ -328,20 +331,21 @@ std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) co
                           m_drawingAids.snapModes);
 }
 
-core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point) const {
+core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
+                                     const std::optional<core::Vec2>& orthoBase) const {
     // Snap wins over ortho (docs/adr/0008).
     if (const std::optional<core::SnapPoint> snap = snapAt(point)) {
         return snap->point;
     }
-    if (m_drawingAids.ortho && m_context.lastPoint) {
-        return orthoPoint(*m_context.lastPoint, point);
+    if (m_drawingAids.ortho && orthoBase) {
+        return orthoPoint(*orthoBase, point);
     }
     return point;
 }
 
 void CommandRunner::refreshPointer() {
     if (asksForPoint() && m_pointer) {
-        m_command->pointerMoved(aidedPoint(*m_pointer));
+        m_command->pointerMoved(aidedPoint(*m_pointer, m_command->basePoint()));
     }
 }
 

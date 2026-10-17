@@ -244,17 +244,18 @@ spengono il vincolo ortogonale. Lo storico mostra `<Ortho on>` oppure
 `<Ortho off>`. All'avvio l'orto è spento; l'impostazione non si conserva alla
 chiusura del programma.
 
-Con un ultimo punto disponibile, il puntatore e il clic vengono allineati
-all'orizzontale o alla verticale che passa per quel punto, secondo la direzione
-più vicina al puntatore. A 45° prevale l'orizzontale. L'anteprima segue lo stesso
-vincolo. L'orto non modifica i gesti di selezione.
+Dal secondo punto di un comando, il puntatore e il clic vengono allineati
+all'orizzontale o alla verticale che passa per il punto precedente dello stesso
+comando, secondo la direzione più vicina al puntatore. A 45° prevale
+l'orizzontale. L'anteprima segue lo stesso vincolo. L'orto non modifica i gesti
+di selezione.
 
 ### Snap, orto e coordinate scritte
 
 | Come indichi il punto | Effetto |
 |---|---|
 | clic con uno snap disponibile | usa il punto di snap, anche fuori dall'asse dell'orto: **lo snap prevale sull'orto** |
-| clic senza snap, con Ortho e un ultimo punto | allinea il punto in orizzontale o verticale |
+| clic senza snap, con Ortho, dal secondo punto del comando | allinea il punto in orizzontale o verticale |
 | coordinate `x,y`, `@dx,dy`, `d<a`, `@d<a` | usa le coordinate esatte, senza correggerle con snap o orto |
 | sola distanza `d` | usa quella lunghezza dall'ultimo punto, nella direzione del puntatore già corretto da snap e orto |
 
@@ -269,12 +270,14 @@ esattamente 10 unità in X e 7 in Y: la diagonale scritta non viene raddrizzata.
 Se riaccendi OSNAP e clicchi un estremo riconosciuto fuori asse, viene scelto
 quell'estremo.
 
-**Primo punto di un nuovo comando:** nella 0.3 l'orto usa l'ultimo punto ricordato
-anche dal comando precedente. Può quindi allineare anche il primo clic di un
-nuovo `PL`. Per iniziare in una posizione esatta, scrivi le coordinate del primo
-punto oppure spegni ORTHO per quel clic. È un difetto noto, da correggere in una
-versione 0.3.x ([bug #64](https://github.com/Matleyx78/tecnigrafo/issues/64));
-è descritto anche nelle [note di rilascio](../rilasci/0.3.md#limiti-noti).
+**Primo punto di un nuovo comando:** l'orto non lo allinea, come in AutoCAD: il
+primo clic di un nuovo `PL` cade dove clicchi (o sullo snap). Anche dopo aver
+annullato con `Undo` tutti i vertici di un `PL`, il clic successivo non viene
+allineato. Le coordinate scritte invece partono ancora dall'ultimo punto, anche
+se è del comando precedente: `@20,0` o `@50<90` come primo punto si misurano da
+lì, e una distanza scritta da sola prende la direzione del puntatore allineato
+dall'orto rispetto a quel punto. Nella 0.3.0 anche il primo clic veniva
+allineato ([bug #64](https://github.com/Matleyx78/tecnigrafo/issues/64)).
 
 Su alcuni portatili e su macOS `F3` e `F8` possono richiedere `Fn`. Puoi sempre
 usare le voci di *Tools* o i pulsanti OSNAP e ORTHO.

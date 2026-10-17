@@ -84,6 +84,17 @@ Con l'orto attivo (`F8`) e un ultimo punto, il punto del mouse si sposta
 sull'orizzontale o sulla verticale passante per l'ultimo punto, quella più vicina
 alla direzione del puntatore (a 45° esatti, l'orizzontale).
 
+> **Nota del 2026-10-17 (bug [#64](https://github.com/Matleyx78/tecnigrafo/issues/64)).**
+> Chiarimento deciso dal responsabile, che non cambia il resto della decisione.
+> Per l'orto, "ultimo punto" è il **punto base del comando in corso**
+> (`Command::basePoint()`): il punto dello stesso comando da cui si disegna il
+> successivo. Mentre un comando chiede il primo punto non c'è un punto base, e il
+> clic resta dove l'utente ha cliccato, come in AutoCAD; in `PLINE` lo stesso vale
+> dopo aver annullato tutti i vertici. Le coordinate scritte (`@dx,dy`, `@d<a` e
+> la distanza diretta `d`, punto 6) continuano invece a partire dall'ultimo punto,
+> anche del comando precedente; la distanza diretta prende la direzione dal
+> puntatore allineato dall'orto rispetto a quel punto, da cui si misura.
+
 ### 6. A quali punti si applicano
 
 - Snap e orto correggono **solo i punti dati con il mouse mentre un comando chiede

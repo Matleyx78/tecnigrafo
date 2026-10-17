@@ -71,6 +71,13 @@ std::span<const core::Entity> PlineCommand::preview() const {
     return m_preview;
 }
 
+std::optional<core::Vec2> PlineCommand::basePoint() const {
+    if (m_vertices.empty()) {
+        return std::nullopt;
+    }
+    return m_vertices.back().position;
+}
+
 Status PlineCommand::finish(CommandContext& context, bool closed) {
     if (m_vertices.size() >= 2) {
         context.editor.add(core::Polyline{m_vertices, closed});
