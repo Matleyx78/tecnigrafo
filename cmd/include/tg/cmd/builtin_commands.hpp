@@ -7,7 +7,7 @@ namespace tg::cmd {
 
 class CommandRegistry;
 
-/// Registers PLINE and its PL alias. Neither name may already be registered.
+/// Registers PLINE (PL) and ERASE (E). None of these names may already be registered.
 void registerBuiltinCommands(CommandRegistry& registry);
 
 }  // namespace tg::cmd
