@@ -31,6 +31,10 @@ constexpr std::string_view kInvalidSelection = "Invalid selection.";
 // PICKBOX.
 constexpr double kPickBoxPixels = 3.0;
 
+// Object snap aperture of docs/adr/0008, in screen pixels: AutoCAD's
+// default APERTURE.
+constexpr double kSnapAperturePixels = 10.0;
+
 // Commands of the runner itself. "U" is the AutoCAD shortcut of a single
 // undo step; here UNDO does the same, since undo groups and marks are not
 // part of stage 0.2.
@@ -119,22 +123,36 @@ void CommandRunner::pointerMoved(const core::Vec2& point) {
         m_rectangle->second = point;
         m_rectangle->crossing = point.x < m_rectangle->first.x;
     }
-    if (isActive() && !m_askingSelection) {
-        m_command->pointerMoved(point);
-    }
+    refreshPointer();
 }
 
 void CommandRunner::setPixelSize(double drawingUnitsPerPixel) {
     assert(drawingUnitsPerPixel > 0.0);
     m_pixelSize = drawingUnitsPerPixel;
+    refreshPointer();
 }
 
 void CommandRunner::click(const core::Vec2& point, PickAction action) {
     if (isSelecting()) {
         selectionClick(point, action);
     } else {
-        forward(PointInput{point});
+        forward(PointInput{aidedPoint(point)});
     }
+}
+
+void CommandRunner::setDrawingAids(const DrawingAids& aids) {
+    if (aids == m_drawingAids) {
+        return;
+    }
+    m_drawingAids = aids;
+    refreshPointer();
+}
+
+std::optional<core::SnapPoint> CommandRunner::activeSnap() const {
+    if (!asksForPoint() || !m_pointer) {
+        return std::nullopt;
+    }
+    return snapAt(*m_pointer);
 }
 
 std::string CommandRunner::promptText() const {
@@ -223,7 +241,10 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
     if (const std::optional<PointSpec> spec = parseCoordinate(text)) {
         // Before the first pointer movement a typed distance has no
         // direction: falling back to the last point makes it unresolvable.
-        const core::Vec2 pointer = m_pointer.value_or(m_context.lastPoint.value_or(core::Vec2{}));
+        // The pointer is corrected now, against the current last point, so
+        // that the direction is the one the preview shows (docs/adr/0008).
+        const core::Vec2 pointer =
+            m_pointer ? aidedPoint(*m_pointer) : m_context.lastPoint.value_or(core::Vec2{});
         if (const std::optional<core::Vec2> point = resolve(*spec, m_context.lastPoint, pointer)) {
             forward(PointInput{*point});
             return;
@@ -296,6 +317,31 @@ void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAc
 void CommandRunner::forward(const Input& input) {
     if (m_command->handle(m_context, input) == Status::Finished) {
         finish();
+    }
+}
+
+std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) const {
+    if (!m_drawingAids.objectSnap) {
+        return std::nullopt;
+    }
+    return core::findSnap(m_editor.document(), point, kSnapAperturePixels * m_pixelSize,
+                          m_drawingAids.snapModes);
+}
+
+core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point) const {
+    // Snap wins over ortho (docs/adr/0008).
+    if (const std::optional<core::SnapPoint> snap = snapAt(point)) {
+        return snap->point;
+    }
+    if (m_drawingAids.ortho && m_context.lastPoint) {
+        return orthoPoint(*m_context.lastPoint, point);
+    }
+    return point;
+}
+
+void CommandRunner::refreshPointer() {
+    if (asksForPoint() && m_pointer) {
+        m_command->pointerMoved(aidedPoint(*m_pointer));
     }
 }
 

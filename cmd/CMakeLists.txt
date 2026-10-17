@@ -11,6 +11,7 @@ add_library(tg_cmd
     src/command_registry.cpp
     src/command_runner.cpp
     src/coordinate_input.cpp
+    src/drawing_aids.cpp
     src/selection_set.cpp
 )
 add_library(Tecnigrafo::cmd ALIAS tg_cmd)

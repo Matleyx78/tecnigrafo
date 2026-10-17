@@ -795,5 +795,351 @@ TEST_F(SelectionTest, EnterRepeatsACommandWithTheCurrentSelection) {
     EXPECT_TRUE(messages().empty());
 }
 
+// --- Snap and ortho (docs/adr/0008) --------------------------------------------
+
+/// What the fake point command saw.
+struct PointJournal {
+    std::vector<Vec2> points;
+    std::vector<Vec2> pointerPositions;
+};
+
+/// A command that asks for points and leaves the document alone, so that it
+/// adds no snap points of its own: every point becomes the last point, Enter
+/// ends it. The preview is a single vertex where the pointer is.
+class FakePointCommand final : public Command {
+public:
+    explicit FakePointCommand(PointJournal& journal) : m_journal(journal) {}
+
+    void start(CommandContext& /*context*/) override {}
+
+    Status handle(CommandContext& context, const Input& input) override {
+        if (const auto* point = std::get_if<PointInput>(&input)) {
+            m_journal.points.push_back(point->point);
+            context.lastPoint = point->point;
+            return Status::Continue;
+        }
+        return Status::Finished;
+    }
+
+    void pointerMoved(const Vec2& point) override {
+        m_journal.pointerPositions.push_back(point);
+        Polyline polyline;
+        polyline.addVertex(point);
+        m_preview.assign(1, polyline);
+    }
+
+    [[nodiscard]] Prompt prompt() const override { return {"Specify point:", {}}; }
+
+    [[nodiscard]] std::span<const Entity> preview() const override { return m_preview; }
+
+private:
+    PointJournal& m_journal;
+    std::vector<Entity> m_preview;
+};
+
+/// A line and a half circle, with the default pixel size of 1 (snap
+/// aperture of 10 units, pick box of 3):
+///
+///   line  (0,0)-(100,0)       endpoints (0,0), (100,0); midpoint (50,0)
+///   arc   (200,0)-(300,0)     bulge 1: centre (250,0), radius 50,
+///                             midpoint (250,-50), below the x axis
+class DrawingAidsTest : public testing::Test {
+protected:
+    DrawingAidsTest() {
+        m_document.add(line({0, 0}, {100, 0}));
+        m_document.add(Polyline{{{{200, 0}, 1.0}, {{300, 0}, 0.0}}});
+        m_registry.add("POINT", {"PT"},
+                       [this] { return std::make_unique<FakePointCommand>(m_journal); });
+        m_registry.add("PICK", {}, [this] { return std::make_unique<FakeSelectCommand>(m_picks); });
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
+    }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const PointJournal& journal() const { return m_journal; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+    /// The points the command received, as given by the runner.
+    [[nodiscard]] const std::vector<Vec2>& points() const { return m_journal.points; }
+
+    /// The last pointer position the command received.
+    [[nodiscard]] std::optional<Vec2> commandPointer() const {
+        if (m_journal.pointerPositions.empty()) {
+            return std::nullopt;
+        }
+        return m_journal.pointerPositions.back();
+    }
+
+    /// The single vertex of the runner's preview.
+    [[nodiscard]] std::optional<Vec2> previewPoint() const {
+        const std::span<const Entity> preview = m_runner.preview();
+        if (preview.size() != 1) {
+            return std::nullopt;
+        }
+        const auto& polyline = std::get<Polyline>(preview.front());
+        if (polyline.vertexCount() != 1) {
+            return std::nullopt;
+        }
+        return polyline.vertices().front().position;
+    }
+
+    void setAids(bool objectSnap, bool ortho) {
+        DrawingAids aids = m_runner.drawingAids();
+        aids.objectSnap = objectSnap;
+        aids.ortho = ortho;
+        m_runner.setDrawingAids(aids);
+    }
+
+private:
+    Document m_document;
+    edit::Editor m_editor{m_document};
+    CommandRegistry m_registry;
+    PointJournal m_journal;
+    SelectionJournal m_picks;
+    CommandRunner m_runner{m_registry, m_editor};
+    std::vector<std::string> m_messages;
+};
+
+using Points = std::vector<Vec2>;
+
+TEST_F(DrawingAidsTest, StartsWithSnapOnAndOrthoOff) {
+    EXPECT_EQ(runner().drawingAids(), DrawingAids{});
+
+    DrawingAids aids;
+    aids.ortho = true;
+    aids.snapModes.midpoint = false;
+    runner().setDrawingAids(aids);
+    EXPECT_EQ(runner().drawingAids(), aids);
+}
+
+TEST_F(DrawingAidsTest, AClickNearAnEndpointSnapsToIt) {
+    runner().submitText("POINT");
+    runner().click({3, 4}, PickAction::Add);       // 5 from (0,0)
+    runner().click({97, -4}, PickAction::Remove);  // the action does not matter
+    EXPECT_EQ(points(), (Points{{0, 0}, {100, 0}}));
+}
+
+TEST_F(DrawingAidsTest, AClickIsLeftAsItIsWithObjectSnapOff) {
+    setAids(false, false);
+    runner().submitText("POINT");
+    runner().click({3, 4}, PickAction::Add);
+    EXPECT_EQ(points(), (Points{{3, 4}}));
+}
+
+TEST_F(DrawingAidsTest, AClickOutsideTheApertureIsLeftAsItIs) {
+    runner().submitText("POINT");
+    runner().click({15, 4}, PickAction::Add);  // on the line, but 15.5 from (0,0)
+    EXPECT_EQ(points(), (Points{{15, 4}}));
+}
+
+TEST_F(DrawingAidsTest, EachSnapModeCanBeTurnedOff) {
+    runner().submitText("POINT");
+    runner().click({52, 3}, PickAction::Add);
+    EXPECT_EQ(points().back(), (Vec2{50, 0}));  // midpoint
+
+    DrawingAids aids;
+    aids.snapModes.midpoint = false;
+    runner().setDrawingAids(aids);
+    runner().click({52, 3}, PickAction::Add);
+    EXPECT_EQ(points().back(), (Vec2{52, 3}));
+
+    aids.snapModes = {false, true, true};  // endpoint off
+    runner().setDrawingAids(aids);
+    runner().click({3, 4}, PickAction::Add);
+    EXPECT_EQ(points().back(), (Vec2{3, 4}));
+
+    aids.snapModes = {true, true, false};  // center off
+    runner().setDrawingAids(aids);
+    runner().click({286, -32}, PickAction::Add);  // on the arc, far from its points
+    EXPECT_EQ(points().back(), (Vec2{286, -32}));
+
+    aids.snapModes = {false, false, false};  // object snap on, every mode off
+    runner().setDrawingAids(aids);
+    runner().click({3, 4}, PickAction::Add);
+    EXPECT_EQ(points().back(), (Vec2{3, 4}));
+}
+
+TEST_F(DrawingAidsTest, TheCentreSnapsOnlyPassingOverTheArc) {
+    runner().submitText("POINT");
+    runner().click({286, -32}, PickAction::Add);  // about 1 from the arc
+    EXPECT_EQ(points().back(), (Vec2{250, 0}));
+
+    runner().click({251, -2}, PickAction::Add);  // near the centre, 48 from the arc
+    EXPECT_EQ(points().back(), (Vec2{251, -2}));
+
+    runner().click({252, -48}, PickAction::Add);  // the midpoint is nearer
+    EXPECT_EQ(points().back(), (Vec2{250, -50}));
+}
+
+TEST_F(DrawingAidsTest, OrthoWithoutALastPointLeavesTheClick) {
+    setAids(false, true);
+    runner().submitText("POINT");
+    runner().click({30, 40}, PickAction::Add);
+    EXPECT_EQ(points(), (Points{{30, 40}}));
+}
+
+TEST_F(DrawingAidsTest, OrthoKeepsClicksOnTheAxesOfTheLastPoint) {
+    setAids(false, true);
+    runner().submitText("POINT");
+    runner().click({30, 40}, PickAction::Add);
+    runner().click({70, 52}, PickAction::Add);  // nearer to the horizontal
+    runner().click({75, 90}, PickAction::Add);  // nearer to the vertical
+    runner().click({35, 55}, PickAction::Add);  // at 45 degrees: horizontal
+    EXPECT_EQ(points(), (Points{{30, 40}, {70, 40}, {70, 90}, {35, 90}}));
+}
+
+TEST_F(DrawingAidsTest, SnapWinsOverOrtho) {
+    setAids(true, true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{60, 60}});
+
+    runner().click({97, 4}, PickAction::Add);  // 5 from (100,0)
+    EXPECT_EQ(points().back(), (Vec2{100, 0}));
+
+    runner().click({140, 30}, PickAction::Add);  // no snap: ortho from (100,0)
+    EXPECT_EQ(points().back(), (Vec2{140, 0}));
+}
+
+TEST_F(DrawingAidsTest, ThePreviewFollowsSnapAndOrtho) {
+    runner().submitText("POINT");
+    runner().pointerMoved({3, 4});
+    EXPECT_EQ(commandPointer(), (Vec2{0, 0}));
+    EXPECT_EQ(previewPoint(), (Vec2{0, 0}));
+
+    runner().pointerMoved({20, 30});  // nothing near
+    EXPECT_EQ(previewPoint(), (Vec2{20, 30}));
+
+    runner().submit(PointInput{{10, 10}});
+    setAids(true, true);
+    runner().pointerMoved({40, 25});
+    EXPECT_EQ(previewPoint(), (Vec2{40, 10}));
+}
+
+TEST_F(DrawingAidsTest, NewSettingsReachThePreviewAtOnce) {
+    runner().submitText("POINT");
+    runner().pointerMoved({3, 4});
+    ASSERT_EQ(previewPoint(), (Vec2{0, 0}));
+
+    setAids(false, false);
+    EXPECT_EQ(previewPoint(), (Vec2{3, 4}));
+
+    runner().submit(PointInput{{60, 60}});
+    setAids(false, true);  // 57 across, 56 down: horizontal
+    EXPECT_EQ(previewPoint(), (Vec2{3, 60}));
+
+    const std::size_t moves = journal().pointerPositions.size();
+    setAids(false, true);  // nothing changed: the command is not told
+    EXPECT_EQ(journal().pointerPositions.size(), moves);
+}
+
+TEST_F(DrawingAidsTest, ANewPixelSizeReachesThePreviewAtOnce) {
+    runner().submitText("POINT");
+    runner().pointerMoved({15, 4});  // 15.5 from (0,0): outside 10 pixels of 1
+    ASSERT_EQ(previewPoint(), (Vec2{15, 4}));
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+
+    runner().setPixelSize(2.0);  // the aperture is now 20 units
+    EXPECT_EQ(previewPoint(), (Vec2{0, 0}));
+    EXPECT_EQ(runner().activeSnap(), (core::SnapPoint{{0, 0}, core::SnapKind::Endpoint}));
+
+    runner().click({15, 4}, PickAction::Add);
+    EXPECT_EQ(points().back(), (Vec2{0, 0}));
+}
+
+TEST_F(DrawingAidsTest, ActiveSnapOnlyWhileACommandAsksForAPoint) {
+    runner().pointerMoved({3, 4});
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);  // idle
+
+    runner().submitText("PICK");
+    ASSERT_EQ(runner().promptText(), "Select objects:");
+    runner().pointerMoved({3, 4});
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);  // selecting
+    runner().submit(CancelInput{});
+
+    runner().submitText("POINT");
+    // The pointer has not moved since: the snap is where it already is.
+    EXPECT_EQ(runner().activeSnap(), (core::SnapPoint{{0, 0}, core::SnapKind::Endpoint}));
+    runner().pointerMoved({48, -2});
+    EXPECT_EQ(runner().activeSnap(), (core::SnapPoint{{50, 0}, core::SnapKind::Midpoint}));
+    runner().pointerMoved({286, -32});
+    EXPECT_EQ(runner().activeSnap(), (core::SnapPoint{{250, 0}, core::SnapKind::Center}));
+    runner().pointerMoved({20, 30});
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);  // nothing near
+
+    runner().pointerMoved({3, 4});
+    setAids(false, false);
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);  // object snap off
+    setAids(true, false);
+
+    runner().submitText("");  // the command ends
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+}
+
+TEST_F(DrawingAidsTest, ActiveSnapNeedsAPointerPosition) {
+    runner().submitText("POINT");
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+}
+
+TEST_F(DrawingAidsTest, SelectionClicksAreNeverCorrected) {
+    setAids(true, true);
+    runner().click({3, 4}, PickAction::Add);  // 4 from the line: void
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{3, 4}, {3, 4}, false}));
+    runner().pointerMoved({97, 4});
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{3, 4}, {97, 4}, false}));
+    runner().submit(CancelInput{});
+
+    runner().submitText("PICK");
+    runner().click({3, 4}, PickAction::Add);
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{3, 4}, {3, 4}, false}));
+}
+
+TEST_F(DrawingAidsTest, DistanceTypedAloneFollowsTheOrtho) {
+    setAids(false, true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{10, 10}});
+    runner().pointerMoved({40, 20});  // nearer to the horizontal
+
+    runner().submitText("50");
+    EXPECT_EQ(points().back(), (Vec2{60, 10}));
+
+    runner().pointerMoved({50, 90});  // from (60,10): nearer to the vertical
+    runner().submitText("30");
+    EXPECT_EQ(points().back(), (Vec2{60, 40}));
+}
+
+TEST_F(DrawingAidsTest, DistanceTypedAloneFollowsTheSnap) {
+    runner().submitText("POINT");
+    runner().submit(PointInput{{100, 50}});
+    runner().pointerMoved({97, 4});  // snaps to (100,0): straight down
+
+    runner().submitText("20");
+    EXPECT_EQ(points().back(), (Vec2{100, 30}));
+}
+
+TEST_F(DrawingAidsTest, TypedCoordinatesAreNotCorrected) {
+    setAids(true, true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{60, 60}});
+    runner().pointerMoved({97, 4});
+
+    runner().submitText("3,4");  // 5 from (0,0)
+    runner().submitText("@40,12");
+    runner().submitText("@2<0");
+    runner().submitText("98,1");
+
+    EXPECT_EQ(points(), (Points{{60, 60}, {3, 4}, {43, 16}, {45, 16}, {98, 1}}));
+    EXPECT_EQ(messages(), std::vector<std::string>{});
+}
+
+TEST_F(DrawingAidsTest, SubmittedPointsAreNotCorrected) {
+    setAids(true, true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{3, 4}});
+    runner().submit(PointInput{{97, 50}});
+    EXPECT_EQ(points(), (Points{{3, 4}, {97, 50}}));
+}
+
 }  // namespace
 }  // namespace tg::cmd
