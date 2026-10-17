@@ -272,8 +272,9 @@ quell'estremo.
 **Primo punto di un nuovo comando:** nella 0.3 l'orto usa l'ultimo punto ricordato
 anche dal comando precedente. Può quindi allineare anche il primo clic di un
 nuovo `PL`. Per iniziare in una posizione esatta, scrivi le coordinate del primo
-punto oppure spegni ORTHO per quel clic. Questo limite è descritto anche nelle
-[note di rilascio](../rilasci/0.3.md#limiti-noti).
+punto oppure spegni ORTHO per quel clic. È un difetto noto, da correggere in una
+versione 0.3.x ([bug #64](https://github.com/Matleyx78/tecnigrafo/issues/64));
+è descritto anche nelle [note di rilascio](../rilasci/0.3.md#limiti-noti).
 
 Su alcuni portatili e su macOS `F3` e `F8` possono richiedere `Fn`. Puoi sempre
 usare le voci di *Tools* o i pulsanti OSNAP e ORTHO.

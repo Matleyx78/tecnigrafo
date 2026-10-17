@@ -9,12 +9,12 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **tappa 0.3, selezione, cancellazione, snap e orto — rilascio in
-> preparazione.** In `main` si disegnano polilinee con `PLINE`, si selezionano e
-> cancellano entità con `ERASE`, si agganciano punti notevoli e si usa l'orto.
-> Le modifiche si possono annullare e ripetere. Il salvataggio dei file arriverà
-> con la tappa 0.5. Le [note della 0.3](docs/rilasci/0.3.md) riportano novità,
-> limiti e verifiche ancora da completare prima del tag; la tappa resta aperta.
+> Stato: **versione 0.3.0 — selezione, cancellazione, snap e orto.** Si disegnano
+> polilinee con `PLINE`, si selezionano e cancellano entità con `ERASE`, si
+> agganciano punti notevoli e si usa l'orto. Le modifiche si possono annullare e
+> ripetere. Il salvataggio dei file arriverà con la tappa 0.5. Le
+> [note della 0.3](docs/rilasci/0.3.md) riportano novità e limiti noti. Prossima
+> tappa: 0.4, entità base (linea, cerchio, arco, testo).
 
 ## Disegnare
 
@@ -78,8 +78,18 @@ ctest --preset release
 ### Windows
 
 Installa Visual Studio 2022 Community (carico di lavoro "Sviluppo di applicazioni
-desktop con C++") e Qt 6.8 per MSVC 2022 con l'installer ufficiale. Da un
-"Developer PowerShell for VS 2022":
+desktop con C++") e Qt 6.8 per MSVC 2022 64-bit con l'installer ufficiale.
+
+Serve un terminale **a 64 bit**. Il collegamento "Developer PowerShell for VS 2022"
+del menu Start apre un ambiente a 32 bit, che non si collega a Qt `msvc2022_64`.
+Usa "x64 Native Tools Command Prompt for VS 2022", oppure, in una PowerShell:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+```
+
+La configurazione deve indicare il compilatore `Hostx64/x64/cl.exe`. Poi:
 
 ```powershell
 cmake --preset release -DCMAKE_PREFIX_PATH=C:/Qt/6.8.3/msvc2022_64
