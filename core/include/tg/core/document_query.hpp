@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 The Tecnigrafo authors
+
+#pragma once
+
+#include "tg/core/bbox.hpp"
+#include "tg/core/document.hpp"
+#include "tg/core/entity_id.hpp"
+#include "tg/core/snap_points.hpp"
+#include "tg/core/vec2.hpp"
+
+#include <cstdint>
+#include <optional>
+#include <vector>
+
+/// The questions that selection and object snap ask the drawing
+/// (docs/adr/0007, docs/adr/0008). Each one takes its candidates from
+/// Document::query() and then decides with the exact geometry of
+/// proximity.hpp and snap_points.hpp, so the answers are the same as visiting
+/// every entity.
+namespace tg::core {
+
+enum class RectangleMode : std::uint8_t { Window, Crossing };
+
+/// The entity nearest to `point` within `tolerance` (drawing units), or
+/// std::nullopt. At equal distance the highest id wins.
+/// The distance is to the entity's curve, so a click inside a closed polyline
+/// does not pick it; an empty polyline is never picked.
+/// Precondition: tolerance >= 0.
+[[nodiscard]] std::optional<EntityId> pickEntity(const Document& document, const Vec2& point,
+                                                 double tolerance);
+
+/// The entities selected by `rectangle`: Window takes those isInside(),
+/// Crossing those isInside() or intersects(). Sorted by id.
+/// An empty rectangle selects nothing.
+[[nodiscard]] std::vector<EntityId> selectInRectangle(const Document& document,
+                                                      const BBox& rectangle, RectangleMode mode);
+
+/// The object snap for a pointer at `pointer` (docs/adr/0008), or
+/// std::nullopt. `aperture` is in drawing units.
+///
+/// Only segments within `aperture` of the pointer are considered; a polyline
+/// with a single vertex counts as a zero-length segment, which offers only its
+/// Endpoint. Among their enabled endpoints and midpoints within `aperture`,
+/// the nearest to the pointer wins; at equal distance an endpoint beats a
+/// midpoint, then the highest id wins, then the earliest segment. If there is
+/// none, the centre of the nearest considered arc wins (nearest by distance
+/// from the pointer to the arc, not to its centre), with the same id and
+/// segment order on ties. With every mode disabled the result is always
+/// std::nullopt.
+/// Precondition: aperture >= 0.
+[[nodiscard]] std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
+                                                double aperture, const SnapModes& modes);
+
+}  // namespace tg::core

@@ -5,6 +5,7 @@
 
 add_library(tg_core
     src/document.cpp
+    src/document_query.cpp
     src/polyline.cpp
     src/proximity.cpp
     src/snap_points.cpp
