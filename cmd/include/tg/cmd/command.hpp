@@ -76,6 +76,12 @@ public:
     /// Entities drawn as a preview, not part of the document. Valid until the
     /// next call to a non-const function of the command.
     [[nodiscard]] virtual std::span<const core::Entity> preview() const = 0;
+
+    /// True for commands that work on existing entities. The runner asks
+    /// "Select objects:" itself and calls start() only once it has a
+    /// selection, then hands it over with one SelectionInput
+    /// (docs/adr/0008).
+    [[nodiscard]] virtual bool needsSelection() const { return false; }
 };
 
 }  // namespace tg::cmd

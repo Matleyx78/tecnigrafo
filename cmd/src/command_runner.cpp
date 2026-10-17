@@ -5,10 +5,15 @@
 
 #include "text.hpp"
 #include "tg/cmd/coordinate_input.hpp"
+#include "tg/core/bbox.hpp"
+#include "tg/core/document_query.hpp"
 
 #include <cassert>
+#include <cstddef>
+#include <string>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace tg::cmd {
 namespace {
@@ -18,6 +23,13 @@ constexpr std::string_view kInvalidInput = "Invalid point or option.";
 constexpr std::string_view kCancelled = "*Cancel*";
 constexpr std::string_view kNothingToUndo = "Nothing to undo.";
 constexpr std::string_view kNothingToRedo = "Nothing to redo.";
+constexpr std::string_view kSelectObjects = "Select objects:";
+constexpr std::string_view kOppositeCorner = "Specify opposite corner:";
+constexpr std::string_view kInvalidSelection = "Invalid selection.";
+
+// Pick tolerance of docs/adr/0008, in screen pixels: AutoCAD's default
+// PICKBOX.
+constexpr double kPickBoxPixels = 3.0;
 
 // Commands of the runner itself. "U" is the AutoCAD shortcut of a single
 // undo step; here UNDO does the same, since undo groups and marks are not
@@ -50,9 +62,22 @@ CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& edit
 
 void CommandRunner::submitText(std::string_view text) {
     text = detail::trim(text);
+    if (m_askingSelection) {
+        if (text.empty()) {
+            endSelectionQuestion();
+        } else {
+            // Written options (W, C, ALL...) will be recognised here
+            // (docs/adr/0008); the open rectangle, if any, stays.
+            message(std::string{kInvalidSelection});
+        }
+        return;
+    }
     if (isActive()) {
         handleTypedWhileActive(text);
-    } else if (text.empty()) {
+        return;
+    }
+    m_rectangle.reset();  // typing abandons a rectangle being traced
+    if (text.empty()) {
         repeatLastCommand();
     } else {
         startCommand(text);
@@ -60,10 +85,20 @@ void CommandRunner::submitText(std::string_view text) {
 }
 
 void CommandRunner::submit(const Input& input) {
+    if (m_askingSelection) {
+        submitWhileAskingSelection(input);
+        return;
+    }
     if (!isActive()) {
-        // Points and options mean nothing without a command; Esc has
-        // nothing to cancel.
-        if (std::holds_alternative<ConfirmInput>(input)) {
+        // Points, options and selections mean nothing without a command.
+        if (std::holds_alternative<CancelInput>(input)) {
+            if (m_rectangle) {
+                m_rectangle.reset();
+            } else {
+                m_selection.clear();
+            }
+        } else if (std::holds_alternative<ConfirmInput>(input)) {
+            m_rectangle.reset();
             repeatLastCommand();
         }
         return;
@@ -72,22 +107,49 @@ void CommandRunner::submit(const Input& input) {
         cancel();
         return;
     }
+    if (std::holds_alternative<SelectionInput>(input)) {
+        return;  // only the runner hands selections to commands
+    }
     forward(input);
 }
 
 void CommandRunner::pointerMoved(const core::Vec2& point) {
     m_pointer = point;
-    if (isActive()) {
+    if (m_rectangle) {
+        m_rectangle->second = point;
+        m_rectangle->crossing = point.x < m_rectangle->first.x;
+    }
+    if (isActive() && !m_askingSelection) {
         m_command->pointerMoved(point);
     }
 }
 
+void CommandRunner::setPixelSize(double drawingUnitsPerPixel) {
+    assert(drawingUnitsPerPixel > 0.0);
+    m_pixelSize = drawingUnitsPerPixel;
+}
+
+void CommandRunner::click(const core::Vec2& point, PickAction action) {
+    if (isSelecting()) {
+        selectionClick(point, action);
+    } else {
+        forward(PointInput{point});
+    }
+}
+
 std::string CommandRunner::promptText() const {
+    if (m_rectangle) {
+        return std::string{kOppositeCorner};
+    }
+    if (m_askingSelection) {
+        return std::string{kSelectObjects};
+    }
     return isActive() ? m_command->prompt().text : std::string{kIdlePrompt};
 }
 
 std::span<const core::Entity> CommandRunner::preview() const {
-    return isActive() ? m_command->preview() : std::span<const core::Entity>{};
+    return isActive() && !m_askingSelection ? m_command->preview()
+                                            : std::span<const core::Entity>{};
 }
 
 void CommandRunner::setMessageSink(std::function<void(std::string)> sink) {
@@ -97,11 +159,13 @@ void CommandRunner::setMessageSink(std::function<void(std::string)> sink) {
 void CommandRunner::startCommand(std::string_view text) {
     if (isUndo(text)) {
         m_lastCommand = kUndo;
+        clearSelection();
         undo();
         return;
     }
     if (isRedo(text)) {
         m_lastCommand = kRedo;
+        clearSelection();
         redo();
         return;
     }
@@ -118,7 +182,24 @@ void CommandRunner::startCommand(std::string_view text) {
         return;
     }
     m_lastCommand = *name;
+    if (m_command->needsSelection() && m_selection.isEmpty()) {
+        m_askingSelection = true;
+        return;
+    }
+    beginCommand();
+}
+
+void CommandRunner::beginCommand() {
+    // The selection is handed over, then cleared: it never outlives the
+    // start of a command (docs/adr/0008).
+    SelectionInput selection;
+    selection.ids.assign(m_selection.ids().begin(), m_selection.ids().end());
+    clearSelection();
     m_command->start(m_context);
+    if (m_command->needsSelection()) {
+        assert(!selection.ids.empty() && "a selection is never handed over empty");
+        forward(selection);
+    }
 }
 
 void CommandRunner::repeatLastCommand() {
@@ -151,6 +232,67 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
     message(std::string{kInvalidInput});
 }
 
+void CommandRunner::submitWhileAskingSelection(const Input& input) {
+    if (std::holds_alternative<CancelInput>(input)) {
+        if (m_rectangle) {
+            m_rectangle.reset();
+        } else {
+            cancel();
+        }
+    } else if (std::holds_alternative<ConfirmInput>(input)) {
+        endSelectionQuestion();
+    }
+}
+
+void CommandRunner::endSelectionQuestion() {
+    m_rectangle.reset();
+    m_askingSelection = false;
+    if (m_selection.isEmpty()) {
+        m_command.reset();  // nothing chosen: the command ends with no effect
+        return;
+    }
+    beginCommand();
+}
+
+void CommandRunner::selectionClick(const core::Vec2& point, PickAction action) {
+    const core::Document& document = m_editor.document();
+    if (m_rectangle) {
+        const core::Vec2 first = m_rectangle->first;
+        m_rectangle.reset();
+        const core::RectangleMode mode =
+            point.x < first.x ? core::RectangleMode::Crossing : core::RectangleMode::Window;
+        applyToSelection(core::selectInRectangle(document, core::BBox{first, point}, mode), action);
+        return;
+    }
+    if (const std::optional<core::EntityId> picked =
+            core::pickEntity(document, point, kPickBoxPixels * m_pixelSize)) {
+        applyToSelection(std::span{&*picked, 1}, action);
+        return;
+    }
+    m_rectangle = SelectionRectangle{point, point, false};
+}
+
+void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAction action) {
+    std::size_t removed = 0;
+    for (const core::EntityId id : ids) {
+        if (action == PickAction::Add) {
+            m_selection.add(id);
+        } else if (m_selection.remove(id)) {
+            ++removed;
+        }
+    }
+    if (!m_askingSelection) {
+        return;  // at rest the gestures are silent
+    }
+    // Numbers in a fixed sentence, as the plan of stage 0.3 allows.
+    const std::string total = std::to_string(m_selection.size()) + " total";
+    if (action == PickAction::Add) {
+        message(std::to_string(ids.size()) + " found, " + total);
+    } else {
+        message(std::to_string(removed) + " removed, " + total);
+    }
+}
+
 void CommandRunner::forward(const Input& input) {
     if (m_command->handle(m_context, input) == Status::Finished) {
         finish();
@@ -161,6 +303,8 @@ void CommandRunner::cancel() {
     // End the command first, so that the editor's listener, called by
     // rollback(), already sees the runner idle.
     m_command.reset();
+    m_askingSelection = false;
+    clearSelection();
     if (m_editor.inTransaction()) {
         m_editor.rollback();
     }
@@ -169,11 +313,17 @@ void CommandRunner::cancel() {
 
 void CommandRunner::finish() {
     m_command.reset();
+    clearSelection();
     const bool closed = !m_editor.inTransaction();
     assert(closed && "a command finished without closing its transaction");
     if (!closed) {
         m_editor.rollback();
     }
+}
+
+void CommandRunner::clearSelection() {
+    m_selection.clear();
+    m_rectangle.reset();
 }
 
 void CommandRunner::undo() {
