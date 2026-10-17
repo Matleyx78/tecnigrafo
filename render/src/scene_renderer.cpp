@@ -3,6 +3,8 @@
 
 #include "tg/render/scene_renderer.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <array>
 #include <cmath>
 #include <variant>
@@ -52,7 +54,7 @@ void drawGrid(const Viewport& viewport, const SceneStyle& style, Painter& painte
 
     // Two passes so that major lines are painted over minor ones.
     for (const bool major : std::array{false, true}) {
-        painter.setPen(major ? style.gridMajor : style.gridMinor, 0.0);
+        painter.setPen(major ? style.gridMajor : style.gridMinor, 0.0, LineStyle::Solid);
         for (long long i = firstX; i <= lastX; ++i) {
             if ((i % kMajorEvery == 0) != major) {
                 continue;
@@ -72,9 +74,9 @@ void drawGrid(const Viewport& viewport, const SceneStyle& style, Painter& painte
 
 void drawAxes(const Viewport& viewport, const SceneStyle& style, Painter& painter) {
     const Vec2 origin = viewport.worldToScreen({0.0, 0.0});
-    painter.setPen(style.axisX, 0.0);
+    painter.setPen(style.axisX, 0.0, LineStyle::Solid);
     painter.drawLine({0.0, origin.y}, {viewport.screenWidth(), origin.y});
-    painter.setPen(style.axisY, 0.0);
+    painter.setPen(style.axisY, 0.0, LineStyle::Solid);
     painter.drawLine({origin.x, 0.0}, {origin.x, viewport.screenHeight()});
 }
 
@@ -125,7 +127,7 @@ void renderScene(const core::Document& document, const Viewport& viewport, const
 
     const BBox visible = viewport.visibleWorldArea();
     EntityDrawer drawer(viewport, style, painter);
-    painter.setPen(style.entity, 0.0);
+    painter.setPen(style.entity, 0.0, LineStyle::Solid);
     for (const core::EntityRecord& record : document.entities()) {
         if (overlaps(core::boundingBox(record.entity), visible)) {
             std::visit(drawer, record.entity);
@@ -137,10 +139,70 @@ void renderPreview(std::span<const core::Entity> entities, const Viewport& viewp
                    const SceneStyle& style, Painter& painter) {
     const BBox visible = viewport.visibleWorldArea();
     EntityDrawer drawer(viewport, style, painter);
-    painter.setPen(style.preview, 0.0);
+    painter.setPen(style.preview, 0.0, LineStyle::Solid);
     for (const core::Entity& entity : entities) {
         if (overlaps(core::boundingBox(entity), visible)) {
             std::visit(drawer, entity);
+        }
+    }
+}
+
+void renderHighlight(const core::Document& document, std::span<const core::EntityId> ids,
+                     const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+    const BBox visible = viewport.visibleWorldArea();
+    EntityDrawer drawer(viewport, style, painter);
+    painter.setPen(style.highlight, 0.0, LineStyle::Dashed);
+    for (const core::EntityId id : ids) {
+        const core::EntityRecord* record = document.find(id);
+        if (record != nullptr && overlaps(core::boundingBox(record->entity), visible)) {
+            std::visit(drawer, record->entity);
+        }
+    }
+}
+
+void renderSelectionRectangle(const Vec2& first, const Vec2& second, bool crossing,
+                              const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+    const Vec2 a = viewport.worldToScreen(first);
+    const Vec2 b = viewport.worldToScreen(second);
+    const std::array points{a, Vec2{b.x, a.y}, b, Vec2{a.x, b.y}};
+    painter.fillPolygon(points, crossing ? style.crossingFill : style.windowFill);
+    painter.setPen(crossing ? style.crossingBorder : style.windowBorder, 0.0,
+                   crossing ? LineStyle::Dashed : LineStyle::Solid);
+    painter.drawPolyline(points, true);
+}
+
+void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
+                      const SceneStyle& style, Painter& painter) {
+    const Vec2 center = viewport.worldToScreen(snap.point);
+    const double half = style.snapMarkerSizePx * 0.5;
+    // ADR 0008 markers are screen-space overlays, not drawing geometry.
+    constexpr double kMarkerPenWidthPx = 2.0;
+    painter.setPen(style.snapMarker, kMarkerPenWidthPx, LineStyle::Solid);
+    switch (snap.kind) {
+        case core::SnapKind::Endpoint: {
+            const std::array points{center + Vec2{-half, -half}, center + Vec2{half, -half},
+                                    center + Vec2{half, half}, center + Vec2{-half, half}};
+            painter.drawPolyline(points, true);
+            break;
+        }
+        case core::SnapKind::Midpoint: {
+            // Centre the triangular outline's bounding box on the snap point.
+            const std::array points{center + Vec2{0.0, -half}, center + Vec2{half, half},
+                                    center + Vec2{-half, half}};
+            painter.drawPolyline(points, true);
+            break;
+        }
+        case core::SnapKind::Center: {
+            // 32 edges keep the default 10 px circle's chord error below 0.025 px.
+            constexpr std::size_t kCircleSegments = 32;
+            std::array<Vec2, kCircleSegments> points;
+            for (std::size_t i = 0; i < points.size(); ++i) {
+                const double angle =
+                    core::kTwoPi * static_cast<double>(i) / static_cast<double>(points.size());
+                points.at(i) = center + Vec2{std::cos(angle), std::sin(angle)} * half;
+            }
+            painter.drawPolyline(points, true);
+            break;
         }
     }
 }

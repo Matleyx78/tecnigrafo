@@ -4,6 +4,7 @@
 #pragma once
 
 #include "tg/core/document.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/render/painter.hpp"
 #include "tg/render/viewport.hpp"
 
@@ -20,6 +21,13 @@ struct SceneStyle {
     Color axisY{60, 160, 70};
     Color entity{235, 235, 235};
     Color preview{230, 200, 90};
+    Color highlight{90, 160, 255};
+    Color windowFill{40, 90, 200, 60};
+    Color windowBorder{80, 140, 255};
+    Color crossingFill{40, 160, 70, 60};
+    Color crossingBorder{90, 210, 110};
+    Color snapMarker{255, 170, 40};
+    double snapMarkerSizePx{10.0};
     double minGridSpacingPx{12.0};  ///< finer grids are hidden
     double tessellationTolerancePx{0.25};
     bool showGrid{true};
@@ -36,5 +44,19 @@ void renderScene(const core::Document& document, const Viewport& viewport, const
 /// Draws preview entities without clearing the background or drawing grid and axes.
 void renderPreview(std::span<const core::Entity> entities, const Viewport& viewport,
                    const SceneStyle& style, Painter& painter);
+
+/// Draws selected entities dashed without clearing; absent ids are skipped.
+void renderHighlight(const core::Document& document, std::span<const core::EntityId> ids,
+                     const Viewport& viewport, const SceneStyle& style, Painter& painter);
+
+/// Fills and outlines the selection rectangle between drawing-space corners.
+/// Window is blue/solid; crossing is green/dashed.
+void renderSelectionRectangle(const core::Vec2& first, const core::Vec2& second, bool crossing,
+                              const Viewport& viewport, const SceneStyle& style, Painter& painter);
+
+/// Draws a square, triangle or circle, centred on the snap in screen space.
+/// Marker width is snapMarkerSizePx; pen width is 2 px, independent of zoom.
+void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
+                      const SceneStyle& style, Painter& painter);
 
 }  // namespace tg::render
