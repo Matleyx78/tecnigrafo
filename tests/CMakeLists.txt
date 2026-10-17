@@ -54,6 +54,7 @@ if(TG_BUILD_APP)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Test Widgets)
     add_executable(tg_app_tests
         app/command_line_test.cpp
+        app/drawing_aids_test.cpp
         app/drawing_test.cpp
         app/selection_test.cpp
     )

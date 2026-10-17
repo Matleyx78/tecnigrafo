@@ -51,6 +51,10 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
         render::renderSelectionRectangle(rectangle->first, rectangle->second, rectangle->crossing,
                                          m_viewport, m_style, backend);
     }
+    // Above everything, so that the preview never hides it.
+    if (const auto snap = m_runner.activeSnap()) {
+        render::renderSnapMarker(*snap, m_viewport, m_style, backend);
+    }
 }
 
 void CadView::resizeEvent(QResizeEvent* event) {

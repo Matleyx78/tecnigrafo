@@ -9,9 +9,11 @@
 #include "tg/edit/editor.hpp"
 
 #include <QMainWindow>
+#include <QString>
 
 class QAction;
 class QLabel;
+class QToolButton;
 
 namespace tg::app {
 
@@ -32,6 +34,8 @@ public:
 
     [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
 
+    [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
+
 private:
     // Connected with the function-pointer syntax of QObject::connect, so no
     // "slots" section is needed.
@@ -40,7 +44,14 @@ private:
     void showAbout();
 
     void createMenus();
+    void createToolsMenu();
     void createStatusBar();
+
+    /// A status bar button that mirrors the checkable `action` both ways.
+    QToolButton* createModeButton(QAction* action, const QString& text, const QString& name);
+
+    /// Hands the runner the drawing aids chosen in the Tools menu.
+    void applyDrawingAids();
 
     /// After any input or change: redraws the view and updates the prompt
     /// and the Edit actions.
@@ -59,6 +70,11 @@ private:
     QAction* m_undoAction{nullptr};
     QAction* m_redoAction{nullptr};
     QAction* m_eraseAction{nullptr};
+    QAction* m_objectSnapAction{nullptr};
+    QAction* m_orthoAction{nullptr};
+    QAction* m_endpointAction{nullptr};
+    QAction* m_midpointAction{nullptr};
+    QAction* m_centerAction{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

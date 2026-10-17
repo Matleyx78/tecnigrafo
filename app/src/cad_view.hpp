@@ -13,8 +13,10 @@
 
 namespace tg::app {
 
-/// Drawing area: shows a document, its selection and command preview, and
-/// handles zoom and pan.
+/// Drawing area: shows a document, its selection, the command preview and
+/// the marker of the object snap under the pointer, and handles zoom and
+/// pan. Snap and ortho correct the clicks and the preview in the
+/// CommandRunner (docs/adr/0008); the view only draws what it is told.
 ///
 /// Mouse controls (as in AutoCAD):
 ///   left click            selection gesture or point for the running command
