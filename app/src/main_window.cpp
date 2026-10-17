@@ -13,9 +13,11 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QList>
+#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 namespace tg::app {
@@ -39,6 +41,15 @@ QList<QKeySequence> redoShortcuts() {
         keys.append(ctrlY);
     }
     return keys;
+}
+
+/// A checkable action of `menu`, named `name` for the tests.
+QAction* addCheckableAction(QMenu* menu, const QString& text, const QString& name, bool checked) {
+    QAction* action = menu->addAction(text);
+    action->setObjectName(name);
+    action->setCheckable(true);
+    action->setChecked(checked);
+    return action;
 }
 
 }  // namespace
@@ -115,12 +126,89 @@ void MainWindow::createMenus() {
     extentsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
     connect(extentsAction, &QAction::triggered, m_view, &CadView::zoomExtents);
 
+    createToolsMenu();
+
     QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
     QAction* aboutAction = helpMenu->addAction(tr("&About Tecnigrafo"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
 }
 
+void MainWindow::createToolsMenu() {
+    // The menu starts from the runner's settings, the defaults of
+    // docs/adr/0008: object snap on with every mode, ortho off.
+    const cmd::DrawingAids& aids = m_runner.drawingAids();
+    QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));
+
+    // F3 and F8 are AutoCAD's keys. On laptops and on macOS they may need
+    // Fn: the same switches are in the status bar (docs/tappe/0.3).
+    m_objectSnapAction = addCheckableAction(toolsMenu, tr("Object &Snap"),
+                                            QStringLiteral("objectSnapAction"), aids.objectSnap);
+    m_objectSnapAction->setShortcut(QKeySequence(Qt::Key_F3));
+    m_orthoAction =
+        addCheckableAction(toolsMenu, tr("&Ortho"), QStringLiteral("orthoAction"), aids.ortho);
+    m_orthoAction->setShortcut(QKeySequence(Qt::Key_F8));
+
+    QMenu* modesMenu = toolsMenu->addMenu(tr("Object Snap &Modes"));
+    m_endpointAction = addCheckableAction(
+        modesMenu, tr("&Endpoint"), QStringLiteral("endpointSnapAction"), aids.snapModes.endpoint);
+    m_midpointAction = addCheckableAction(
+        modesMenu, tr("&Midpoint"), QStringLiteral("midpointSnapAction"), aids.snapModes.midpoint);
+    m_centerAction = addCheckableAction(modesMenu, tr("&Center"),
+                                        QStringLiteral("centerSnapAction"), aids.snapModes.center);
+
+    // Connected after the initial states are set, so that starting the
+    // program writes nothing in the history.
+    for (QAction* action :
+         {m_objectSnapAction, m_orthoAction, m_endpointAction, m_midpointAction, m_centerAction}) {
+        connect(action, &QAction::toggled, this, &MainWindow::applyDrawingAids);
+    }
+    // The switches are echoed in the history, as AutoCAD does.
+    connect(m_objectSnapAction, &QAction::toggled, this, [this](bool on) {
+        m_commandLine->appendToHistory(on ? tr("<Osnap on>") : tr("<Osnap off>"));
+    });
+    connect(m_orthoAction, &QAction::toggled, this, [this](bool on) {
+        m_commandLine->appendToHistory(on ? tr("<Ortho on>") : tr("<Ortho off>"));
+    });
+}
+
+void MainWindow::applyDrawingAids() {
+    cmd::DrawingAids aids;
+    aids.objectSnap = m_objectSnapAction->isChecked();
+    aids.snapModes.endpoint = m_endpointAction->isChecked();
+    aids.snapModes.midpoint = m_midpointAction->isChecked();
+    aids.snapModes.center = m_centerAction->isChecked();
+    aids.ortho = m_orthoAction->isChecked();
+    m_runner.setDrawingAids(aids);
+    m_view->update();  // the snap marker and the preview may have changed
+}
+
+QToolButton* MainWindow::createModeButton(QAction* action, const QString& text,
+                                          const QString& name) {
+    auto* button = new QToolButton(this);
+    button->setObjectName(name);
+    button->setText(text);
+    button->setToolTip(
+        QStringLiteral("%1 (%2)").arg(action->text().remove(QLatin1Char('&')),
+                                      action->shortcut().toString(QKeySequence::NativeText)));
+    button->setCheckable(true);
+    button->setChecked(action->isChecked());
+    button->setAutoRaise(true);
+    // A click must not take the keyboard away from the drawing and the
+    // command line.
+    button->setFocusPolicy(Qt::NoFocus);
+    // Both ways; setChecked() with the current state emits nothing, so the
+    // two signals do not call each other forever.
+    connect(button, &QToolButton::toggled, action, &QAction::setChecked);
+    connect(action, &QAction::toggled, button, &QToolButton::setChecked);
+    return button;
+}
+
 void MainWindow::createStatusBar() {
+    // In AutoCAD's order: ORTHO before OSNAP.
+    statusBar()->addPermanentWidget(
+        createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(m_objectSnapAction, tr("OSNAP"), QStringLiteral("osnapButton")));
     m_cursorLabel = new QLabel(this);
     m_scaleLabel = new QLabel(this);
     m_cursorLabel->setMinimumWidth(260);
