@@ -104,9 +104,10 @@ protected:
         events::press(input(), Qt::Key_Return);
     }
 
-    void escape(QWidget* widget) { events::press(widget, Qt::Key_Escape); }
+    static void escape(QWidget* widget) { events::press(widget, Qt::Key_Escape); }
 
-    void shortcut(QWidget* widget, Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
+    static void shortcut(QWidget* widget, Qt::Key key,
+                         Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
         widget->setFocus();
         QTest::keyPress(widget, key, modifiers);
     }
