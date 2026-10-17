@@ -68,6 +68,11 @@ un agente senza pacchetto preciso sconfina.
 - Nessuno scrive su `main` o sui rami degli altri.
 - Se un agente scopre che gli serve un file non previsto, si ferma e lo scrive
   nella issue: decide il responsabile.
+- Chi lavora su una pull request già aperta (per rivederla, correggerla o
+  risolvere un conflitto) le mette l'etichetta `AA-Presa in carico` con un
+  commento che dice chi è, e la toglie quando ha finito. Una pull request con
+  quell'etichetta non si tocca: ci sta già lavorando qualcun altro. I comandi
+  sono in [AGENTS.md](../AGENTS.md).
 
 ## 5. Unire
 
