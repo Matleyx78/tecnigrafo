@@ -1,4 +1,6 @@
 # Continuous integration: every push and pull request must pass all jobs.
+# Changes that touch only documentation skip the build jobs: they show as
+# "skipped", which GitHub counts as passed for required checks.
 name: CI
 
 on:
@@ -14,8 +16,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-24.04
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check whether anything besides documentation changed
+        id: filter
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "No usable base commit: running all jobs."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE...$HEAD")
+          echo "Changed files:"
+          echo "$changed"
+          code=$(echo "$changed" | grep -vE '^docs/|\.md$|^LICENSE$|^\.github/ISSUE_TEMPLATE/' || true)
+          if [ -n "$code" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Documentation only: build jobs skipped."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   format:
     name: Formatting (clang-format 18)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -24,6 +60,8 @@ jobs:
 
   linux:
     name: Linux (GCC, clang-tidy)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -44,6 +82,8 @@ jobs:
 
   windows:
     name: Windows (MSVC)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5
@@ -62,6 +102,8 @@ jobs:
 
   macos:
     name: macOS (Apple Clang)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v5
