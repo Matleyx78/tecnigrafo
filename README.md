@@ -9,12 +9,13 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.3.0 — selezione, cancellazione, snap e orto.** Si disegnano
+> Stato: **versione 0.3.1 — selezione, cancellazione, snap e orto.** Si disegnano
 > polilinee con `PLINE`, si selezionano e cancellano entità con `ERASE`, si
 > agganciano punti notevoli e si usa l'orto. Le modifiche si possono annullare e
 > ripetere. Il salvataggio dei file arriverà con la tappa 0.5. Le
-> [note della 0.3](docs/rilasci/0.3.md) riportano novità e limiti noti. Prossima
-> tappa: 0.4, entità base (linea, cerchio, arco, testo).
+> [note della 0.3](docs/rilasci/0.3.md) riportano novità e limiti noti; quelle
+> della [0.3.1](docs/rilasci/0.3.1.md) la correzione dell'orto. Prossima tappa:
+> 0.4, entità base (linea, cerchio, arco, testo).
 
 ## Disegnare
 
