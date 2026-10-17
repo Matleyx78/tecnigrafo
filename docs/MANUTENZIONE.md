@@ -20,7 +20,7 @@ passo.
 5. **Issues → Labels:** crea le etichette
    `tappa-0.2` (e così via per ogni tappa), `pacchetto`, `facile`, `media`,
    `impegnativa`, `buon-primo-contributo`, `riservato`, `bug`, `idea`, `approvato`,
-   `AA-Presa in carico` (per le pull request su cui un agente sta lavorando,
+   `AA-Presa in carico` (per le issue e le pull request su cui un agente sta lavorando,
    vedi [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md)).
 6. Installa l'app gratuita **DCO** di GitHub, che rifiuta i commit senza
    `Signed-off-by`.
