@@ -40,7 +40,8 @@ struct Prompt {
 
 /// What a command works with. The runner keeps one context for its whole
 /// life, so `lastPoint` carries over from one command to the next, as the
-/// "@" of AutoCAD does.
+/// "@" of AutoCAD does. Ortho does not use it: it belongs to the running
+/// command (Command::basePoint()).
 struct CommandContext {
     edit::Editor& editor;
     std::optional<core::Vec2> lastPoint;       ///< updated by the command
@@ -76,6 +77,13 @@ public:
     /// Entities drawn as a preview, not part of the document. Valid until the
     /// next call to a non-const function of the command.
     [[nodiscard]] virtual std::span<const core::Entity> preview() const = 0;
+
+    /// The point of this command that the next point is drawn from, which
+    /// ortho aligns the mouse to (docs/adr/0008); std::nullopt while the
+    /// command asks for its first point, so that a first click lands where
+    /// the user clicks, as in AutoCAD. Unlike CommandContext::lastPoint it
+    /// never comes from a previous command.
+    [[nodiscard]] virtual std::optional<core::Vec2> basePoint() const { return std::nullopt; }
 
     /// True for commands that work on existing entities. The runner asks
     /// "Select objects:" itself and calls start() only once it has a

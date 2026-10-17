@@ -82,10 +82,13 @@ struct SelectionRectangle {
 /// with the mouse are corrected: the pointer handed to the command, so the
 /// preview follows, and the point of a click. If object snap is on and
 /// core::findSnap() finds a snap within 10 pixels, its point is used; else,
-/// with ortho on and a last point, orthoPoint(); else the point is left as
-/// it is. Snap wins over ortho. Typed coordinates are never corrected, but a
-/// distance typed alone ("50") takes its direction from the corrected
-/// pointer, so with ortho on it follows the horizontal or the vertical.
+/// with ortho on and a Command::basePoint(), orthoPoint() from it; else the
+/// point is left as it is. Snap wins over ortho. The base point belongs to
+/// the running command: the first point of a command is never aligned to a
+/// point of the previous one. Typed coordinates are never corrected, but a
+/// distance typed alone ("50") takes its direction from the pointer
+/// corrected against the last point it is measured from, so with ortho on
+/// it follows the horizontal or the vertical through that point.
 /// Points given with submit() are never corrected: they are the exact
 /// points of scripts and tests. While selecting nothing is corrected.
 ///
@@ -180,7 +183,10 @@ private:
     [[nodiscard]] bool asksForPoint() const { return isActive() && !m_askingSelection; }
 
     [[nodiscard]] std::optional<core::SnapPoint> snapAt(const core::Vec2& point) const;
-    [[nodiscard]] core::Vec2 aidedPoint(const core::Vec2& point) const;
+    /// `point` corrected by the snap or, failing that, by ortho from
+    /// `orthoBase`, if any.
+    [[nodiscard]] core::Vec2 aidedPoint(const core::Vec2& point,
+                                        const std::optional<core::Vec2>& orthoBase) const;
     void refreshPointer();
     void cancel();
     void finish();

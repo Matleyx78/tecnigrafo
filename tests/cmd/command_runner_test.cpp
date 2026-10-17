@@ -804,8 +804,9 @@ struct PointJournal {
 };
 
 /// A command that asks for points and leaves the document alone, so that it
-/// adds no snap points of its own: every point becomes the last point, Enter
-/// ends it. The preview is a single vertex where the pointer is.
+/// adds no snap points of its own: every point becomes the last point and
+/// the base point, Enter ends it. The preview is a single vertex where the
+/// pointer is.
 class FakePointCommand final : public Command {
 public:
     explicit FakePointCommand(PointJournal& journal) : m_journal(journal) {}
@@ -816,10 +817,13 @@ public:
         if (const auto* point = std::get_if<PointInput>(&input)) {
             m_journal.points.push_back(point->point);
             context.lastPoint = point->point;
+            m_basePoint = point->point;
             return Status::Continue;
         }
         return Status::Finished;
     }
+
+    [[nodiscard]] std::optional<Vec2> basePoint() const override { return m_basePoint; }
 
     void pointerMoved(const Vec2& point) override {
         m_journal.pointerPositions.push_back(point);
@@ -835,6 +839,7 @@ public:
 private:
     PointJournal& m_journal;
     std::vector<Entity> m_preview;
+    std::optional<Vec2> m_basePoint;
 };
 
 /// A line and a half circle, with the default pixel size of 1 (snap
@@ -990,6 +995,64 @@ TEST_F(DrawingAidsTest, OrthoKeepsClicksOnTheAxesOfTheLastPoint) {
     EXPECT_EQ(points(), (Points{{30, 40}, {70, 40}, {70, 90}, {35, 90}}));
 }
 
+// Issue #64: ortho belongs to the running command, as in AutoCAD.
+TEST_F(DrawingAidsTest, OrthoDoesNotAlignTheFirstClickOfANewCommand) {
+    setAids(false, true);
+    runner().submitText("POINT");
+    runner().click({30, 40}, PickAction::Add);
+    runner().click({70, 52}, PickAction::Add);
+    runner().submitText("");
+
+    runner().submitText("POINT");
+    runner().click({100, 90}, PickAction::Add);  // off both axes of (70,40)
+    runner().click({130, 95}, PickAction::Add);  // ortho from (100,90) again
+    EXPECT_EQ(points(), (Points{{30, 40}, {70, 40}, {100, 90}, {130, 90}}));
+}
+
+TEST_F(DrawingAidsTest, OrthoDoesNotAlignThePreviewOfTheFirstPoint) {
+    setAids(false, true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{10, 10}});
+    runner().submitText("");
+
+    runner().submitText("POINT");
+    runner().pointerMoved({40, 25});
+    EXPECT_EQ(previewPoint(), (Vec2{40, 25}));
+    setAids(false, false);
+    setAids(false, true);  // turned on again while asking for the first point
+    EXPECT_EQ(previewPoint(), (Vec2{40, 25}));
+
+    runner().submit(PointInput{{40, 25}});
+    runner().pointerMoved({70, 30});
+    EXPECT_EQ(previewPoint(), (Vec2{70, 25}));
+}
+
+TEST_F(DrawingAidsTest, TypedPointsOfANewCommandStillStartFromTheLastPoint) {
+    setAids(false, true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{30, 40}});
+    runner().submitText("");
+
+    runner().submitText("POINT");
+    runner().submitText("@20,0");
+    runner().submitText("");
+    ASSERT_EQ(points().back(), (Vec2{50, 40}));
+
+    // A distance typed alone is measured from the last point, so ortho takes
+    // its direction from there, even for the first point of a command.
+    runner().submitText("POINT");
+    runner().pointerMoved({90, 52});  // from (50,40): nearer to the horizontal
+    runner().submitText("10");
+    runner().submitText("");
+    ASSERT_EQ(points().back(), (Vec2{60, 40}));
+
+    runner().submitText("POINT");
+    runner().submitText("@50<90");
+    EXPECT_NEAR(points().back().x, 60.0, 1e-9);
+    EXPECT_NEAR(points().back().y, 90.0, 1e-9);
+    EXPECT_EQ(messages(), std::vector<std::string>{});
+}
+
 TEST_F(DrawingAidsTest, SnapWinsOverOrtho) {
     setAids(true, true);
     runner().submitText("POINT");
@@ -1139,6 +1202,18 @@ TEST_F(DrawingAidsTest, SubmittedPointsAreNotCorrected) {
     runner().submit(PointInput{{3, 4}});
     runner().submit(PointInput{{97, 50}});
     EXPECT_EQ(points(), (Points{{3, 4}, {97, 50}}));
+}
+
+// FakeCommand sets the last point but declares no base point.
+TEST_F(CommandRunnerTest, OrthoNeedsABasePointOfTheCommand) {
+    DrawingAids aids;
+    aids.objectSnap = false;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    runner().submitText("FAKE");
+    runner().click({30, 40}, PickAction::Add);
+    runner().click({70, 52}, PickAction::Add);
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{pointInput(30, 40), pointInput(70, 52)}));
 }
 
 }  // namespace

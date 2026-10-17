@@ -365,6 +365,73 @@ TEST_F(PlineCommandTest, InvalidTextKeepsGeometryAndPrompt) {
     EXPECT_EQ(polyline().vertexCount(), 2U);
 }
 
+// Issue #64, with the steps of its report.
+TEST_F(PlineCommandTest, OrthoLeavesTheFirstClickOfANewPlineWhereItIs) {
+    DrawingAids aids;
+    aids.objectSnap = false;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    start();
+    runner().click({0.0, 0.0}, PickAction::Add);
+    runner().click({50.0, 3.0}, PickAction::Add);
+    runner().submitText("");
+    start();
+    runner().click({80.0, 60.0}, PickAction::Add);  // off both axes of (50,0)
+    runner().click({120.0, 65.0}, PickAction::Add);
+    runner().submitText("");
+
+    ASSERT_EQ(document().entityCount(), 2U);
+    EXPECT_EQ(polyline().vertices()[1].position, (Vec2{50.0, 0.0}));
+    const auto& second = std::get<Polyline>(document().entities().back().entity);
+    ASSERT_EQ(second.vertexCount(), 2U);
+    EXPECT_EQ(second.vertices()[0].position, (Vec2{80.0, 60.0}));
+    EXPECT_EQ(second.vertices()[1].position, (Vec2{120.0, 60.0}));
+}
+
+TEST_F(PlineCommandTest, OrthoFollowsTheVertexLeftByUndo) {
+    DrawingAids aids;
+    aids.objectSnap = false;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    start();
+    runner().click({80.0, 60.0}, PickAction::Add);
+    runner().click({120.0, 65.0}, PickAction::Add);
+    runner().submitText("u");                        // back to (80,60)
+    runner().click({90.0, 100.0}, PickAction::Add);  // nearer to the vertical
+    runner().submitText("");
+
+    ASSERT_EQ(document().entityCount(), 1U);
+    ASSERT_EQ(polyline().vertexCount(), 2U);
+    EXPECT_EQ(polyline().vertices()[0].position, (Vec2{80.0, 60.0}));
+    EXPECT_EQ(polyline().vertices()[1].position, (Vec2{80.0, 100.0}));
+}
+
+TEST_F(PlineCommandTest, UndoingEveryVertexLeavesTheNextClickWhereItIs) {
+    DrawingAids aids;
+    aids.objectSnap = false;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    start();
+    runner().click({0.0, 0.0}, PickAction::Add);
+    runner().click({50.0, 3.0}, PickAction::Add);
+    runner().submitText("");
+
+    // Undo restores the last point of the previous PLINE, (50,0), for "@";
+    // ortho has no base point again.
+    start();
+    runner().click({80.0, 60.0}, PickAction::Add);
+    runner().submitText("u");
+    runner().click({100.0, 90.0}, PickAction::Add);
+    runner().click({130.0, 95.0}, PickAction::Add);
+    runner().submitText("");
+
+    ASSERT_EQ(document().entityCount(), 2U);
+    const auto& second = std::get<Polyline>(document().entities().back().entity);
+    ASSERT_EQ(second.vertexCount(), 2U);
+    EXPECT_EQ(second.vertices()[0].position, (Vec2{100.0, 90.0}));
+    EXPECT_EQ(second.vertices()[1].position, (Vec2{130.0, 90.0}));
+}
+
 TEST_F(PlineCommandTest, EditorUndoRedoAreUnavailableDuringPline) {
     start();
     triangle();

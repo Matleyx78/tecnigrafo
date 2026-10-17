@@ -20,6 +20,10 @@ public:
     [[nodiscard]] Prompt prompt() const override;
     [[nodiscard]] std::span<const core::Entity> preview() const override;
 
+    /// The last vertex; none before the first one, or once Undo has removed
+    /// them all.
+    [[nodiscard]] std::optional<core::Vec2> basePoint() const override;
+
 private:
     Status finish(CommandContext& context, bool closed);
     void updatePreview();
