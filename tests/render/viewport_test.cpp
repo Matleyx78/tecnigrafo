@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cmath>
 #include <vector>
 
 namespace tg::render {
@@ -96,7 +98,17 @@ public:
         ++clears;
     }
 
-    void setPen(const Color& color, double /*widthPx*/) override { pen = color; }
+    void setPen(const Color& color, double widthPx, LineStyle style) override {
+        pen = color;
+        penWidth = widthPx;
+        penStyle = style;
+    }
+
+    void fillPolygon(std::span<const Vec2> points, const Color& color) override {
+        fills.emplace_back(points.begin(), points.end());
+        fillColor = color;
+        polylinesAtFill = polylines.size();
+    }
 
     void drawLine(const Vec2& /*from*/, const Vec2& /*to*/) override { ++lines; }
 
@@ -104,8 +116,17 @@ public:
         polylines.emplace_back(points.begin(), points.end());
         lastClosed = closed;
         polylinePen = pen;
+        polylineStyle = penStyle;
+        polylineWidth = penWidth;
     }
 
+    LineStyle penStyle{LineStyle::Solid};
+    LineStyle polylineStyle{LineStyle::Solid};
+    double penWidth{0.0};
+    double polylineWidth{0.0};
+    Color fillColor;
+    std::size_t polylinesAtFill{0};
+    std::vector<std::vector<Vec2>> fills;
     Color clearedWith;
     Color pen;
     Color polylinePen;
@@ -211,6 +232,188 @@ TEST(PreviewRenderer, SkipsEntitiesOutsideTheView) {
     EXPECT_EQ(painter.clears, 0);
     EXPECT_EQ(painter.lines, 0);
     EXPECT_TRUE(painter.polylines.empty());
+}
+
+TEST(HighlightRenderer, UsesSharedTessellationAndSkipsAbsentAndOffscreenIds) {
+    core::Document document;
+    core::Polyline arc;
+    arc.addVertex({10, 20}, 1);
+    arc.addVertex({30, 20});
+    arc.setClosed(true);
+    const auto selected = document.add(arc);
+    core::Polyline other;
+    other.addVertex({0, 0});
+    other.addVertex({1, 1});
+    const auto removed = document.add(other);
+    document.remove(removed);
+    core::Polyline faraway;
+    faraway.addVertex({1e6, 1e6});
+    faraway.addVertex({1e6 + 1, 1e6});
+    const auto outside = document.add(faraway);
+    const std::array ids{removed, selected, outside};
+    SceneStyle style;
+    style.highlight = {1, 2, 3, 140};
+    style.tessellationTolerancePx = 0.1;
+    RecordingPainter highlight;
+    RecordingPainter scene;
+    RecordingPainter preview;
+    const std::array<core::Entity, 1> entities{arc};
+    renderHighlight(document, ids, makeViewport(), style, highlight);
+    renderScene(document, makeViewport(), style, scene);
+    renderPreview(entities, makeViewport(), style, preview);
+    EXPECT_EQ(highlight.polylines, scene.polylines);
+    EXPECT_EQ(highlight.polylines, preview.polylines);
+    ASSERT_EQ(highlight.polylines.size(), 1U);
+    EXPECT_GT(highlight.polylines.front().size(), 2U);
+    EXPECT_TRUE(highlight.lastClosed);
+    EXPECT_EQ(highlight.polylinePen, style.highlight);
+    EXPECT_EQ(highlight.polylineStyle, LineStyle::Dashed);
+    EXPECT_EQ(highlight.clears, 0);
+    EXPECT_EQ(highlight.lines, 0);
+    EXPECT_TRUE(highlight.fills.empty());
+}
+
+TEST(HighlightRenderer, EmptySelectionAndAbsentIdsDoNotDraw) {
+    const core::Document document;
+    RecordingPainter painter;
+    renderHighlight(document, {}, makeViewport(), SceneStyle{}, painter);
+    const std::array ids{core::EntityId{999}};
+    renderHighlight(document, ids, makeViewport(), SceneStyle{}, painter);
+    EXPECT_TRUE(painter.polylines.empty());
+    EXPECT_TRUE(painter.fills.empty());
+    EXPECT_EQ(painter.clears, 0);
+    EXPECT_EQ(painter.lines, 0);
+}
+
+TEST(SelectionRectangleRenderer, WindowAndCrossingFillBeforeClosedBorder) {
+    const Viewport viewport = makeViewport();
+    SceneStyle style;
+    style.windowFill = {1, 2, 3, 40};
+    style.windowBorder = {4, 5, 6};
+    style.crossingFill = {7, 8, 9, 50};
+    style.crossingBorder = {10, 11, 12};
+    for (const bool crossing : {false, true}) {
+        for (const bool reverse : {false, true}) {
+            const Vec2 first = reverse ? Vec2{30, 40} : Vec2{10, 20};
+            const Vec2 second = reverse ? Vec2{10, 20} : Vec2{30, 40};
+            RecordingPainter painter;
+            renderSelectionRectangle(first, second, crossing, viewport, style, painter);
+            ASSERT_EQ(painter.fills.size(), 1U);
+            ASSERT_EQ(painter.polylines.size(), 1U);
+            EXPECT_EQ(painter.fills.front(), painter.polylines.front());
+            ASSERT_EQ(painter.polylines.front().size(), 4U);
+            const Vec2 a = viewport.worldToScreen(first);
+            const Vec2 b = viewport.worldToScreen(second);
+            const std::vector<Vec2> expected{a, {b.x, a.y}, b, {a.x, b.y}};
+            EXPECT_EQ(painter.polylines.front(), expected);
+            EXPECT_EQ(painter.fillColor, crossing ? style.crossingFill : style.windowFill);
+            EXPECT_EQ(painter.polylinePen, crossing ? style.crossingBorder : style.windowBorder);
+            EXPECT_EQ(painter.polylineStyle, crossing ? LineStyle::Dashed : LineStyle::Solid);
+            EXPECT_EQ(painter.polylinesAtFill, 0U);
+            EXPECT_TRUE(painter.lastClosed);
+            EXPECT_EQ(painter.clears, 0);
+            EXPECT_EQ(painter.lines, 0);
+        }
+    }
+}
+
+TEST(SelectionRectangleRenderer, DegenerateRectanglesRemainFinite) {
+    for (const Vec2 second : std::array{Vec2{10, 20}, Vec2{10, 30}, Vec2{20, 20}}) {
+        RecordingPainter painter;
+        renderSelectionRectangle({10, 20}, second, false, makeViewport(), SceneStyle{}, painter);
+        ASSERT_EQ(painter.polylines.size(), 1U);
+        for (const Vec2 point : painter.polylines.front()) {
+            EXPECT_TRUE(std::isfinite(point.x));
+            EXPECT_TRUE(std::isfinite(point.y));
+        }
+        EXPECT_EQ(painter.clears, 0);
+    }
+}
+
+TEST(SnapMarkerRenderer, ShapesStayCenteredAndKeepPixelSizeAcrossZoom) {
+    const std::array kinds{core::SnapKind::Endpoint, core::SnapKind::Midpoint,
+                           core::SnapKind::Center};
+    for (const auto kind : kinds) {
+        for (const double size : {10.0, 24.0}) {
+            for (const double scale : {0.01, 2.0, 1000.0}) {
+                Viewport viewport = makeViewport();
+                viewport.setScale(scale);
+                SceneStyle style;
+                style.snapMarkerSizePx = size;
+                style.snapMarker = {12, 34, 56, 200};
+                const core::SnapPoint snap{{11, 21}, kind};
+                const Vec2 center = viewport.worldToScreen(snap.point);
+                const double half = size * 0.5;
+                RecordingPainter painter;
+                renderSnapMarker(snap, viewport, style, painter);
+                ASSERT_EQ(painter.polylines.size(), 1U);
+                const auto& points = painter.polylines.front();
+                BBox box;
+                for (const Vec2 point : points) {
+                    box.expand(point);
+                }
+                expectNear(box.min(), center - Vec2{half, half});
+                expectNear(box.max(), center + Vec2{half, half});
+                if (kind == core::SnapKind::Endpoint) {
+                    ASSERT_EQ(points.size(), 4U);
+                    expectNear(points[0], center + Vec2{-half, -half});
+                    expectNear(points[1], center + Vec2{half, -half});
+                    expectNear(points[2], center + Vec2{half, half});
+                    expectNear(points[3], center + Vec2{-half, half});
+                } else if (kind == core::SnapKind::Midpoint) {
+                    ASSERT_EQ(points.size(), 3U);
+                    expectNear(points[0], center + Vec2{0, -half});
+                    expectNear(points[1], center + Vec2{half, half});
+                    expectNear(points[2], center + Vec2{-half, half});
+                } else {
+                    EXPECT_GE(points.size(), 16U);
+                    for (const Vec2 point : points) {
+                        EXPECT_NEAR(core::distance(point, center), half, kEps);
+                    }
+                }
+                EXPECT_TRUE(painter.lastClosed);
+                EXPECT_EQ(painter.polylinePen, style.snapMarker);
+                EXPECT_EQ(painter.polylineStyle, LineStyle::Solid);
+                EXPECT_DOUBLE_EQ(painter.polylineWidth, 2.0);
+                EXPECT_EQ(painter.clears, 0);
+                EXPECT_EQ(painter.lines, 0);
+                EXPECT_TRUE(painter.fills.empty());
+            }
+        }
+    }
+}
+
+TEST(SceneRenderer, SceneAndPreviewResetDashedOverlayPenToSolid) {
+    core::Polyline line;
+    line.addVertex({10, 20});
+    line.addVertex({11, 21});
+    core::Document document;
+    const auto id = document.add(line);
+    const std::array ids{id};
+    const std::array<core::Entity, 1> entities{line};
+    RecordingPainter painter;
+    const SceneStyle style;
+    renderHighlight(document, ids, makeViewport(), style, painter);
+    renderScene(document, makeViewport(), style, painter);
+    EXPECT_EQ(painter.polylineStyle, LineStyle::Solid);
+    EXPECT_EQ(painter.polylinePen, style.entity);
+    EXPECT_DOUBLE_EQ(painter.polylineWidth, 0.0);
+    renderHighlight(document, ids, makeViewport(), style, painter);
+    renderPreview(entities, makeViewport(), style, painter);
+    EXPECT_EQ(painter.polylineStyle, LineStyle::Solid);
+    EXPECT_EQ(painter.polylinePen, style.preview);
+    EXPECT_DOUBLE_EQ(painter.polylineWidth, 0.0);
+}
+
+TEST(SceneStyle, OverlayDefaultsMatchTheStagePlan) {
+    const SceneStyle style;
+    EXPECT_EQ(style.highlight, (Color{90, 160, 255}));
+    EXPECT_EQ(style.windowFill, (Color{40, 90, 200, 60}));
+    EXPECT_EQ(style.windowBorder, (Color{80, 140, 255}));
+    EXPECT_EQ(style.crossingFill, (Color{40, 160, 70, 60}));
+    EXPECT_EQ(style.crossingBorder, (Color{90, 210, 110}));
+    EXPECT_EQ(style.snapMarker, (Color{255, 170, 40}));
+    EXPECT_DOUBLE_EQ(style.snapMarkerSizePx, 10.0);
 }
 
 }  // namespace

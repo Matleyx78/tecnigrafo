@@ -19,6 +19,8 @@ struct Color {
     friend constexpr bool operator==(const Color&, const Color&) = default;
 };
 
+enum class LineStyle : std::uint8_t { Solid, Dashed };
+
 /// Abstract drawing backend. Every coordinate is in screen pixels (origin
 /// top-left, Y down). The scene renderer talks only to this interface, so
 /// the backend (QPainter today, OpenGL/Vulkan tomorrow) can be replaced
@@ -36,7 +38,10 @@ public:
 
     /// Pen used by the following draw calls. A width of 0 means "cosmetic",
     /// i.e. always one device pixel regardless of zoom.
-    virtual void setPen(const Color& color, double widthPx) = 0;
+    virtual void setPen(const Color& color, double widthPx, LineStyle style) = 0;
+
+    /// Fills a screen-space polygon, including alpha, without an outline.
+    virtual void fillPolygon(std::span<const core::Vec2> points, const Color& color) = 0;
 
     virtual void drawLine(const core::Vec2& from, const core::Vec2& to) = 0;
     virtual void drawPolyline(std::span<const core::Vec2> points, bool closed) = 0;
