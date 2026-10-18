@@ -266,7 +266,7 @@ Ripeti B3–B6 finché nel milestone non restano issue aperte.
 
    ```sh
    git checkout main && git pull
-   git tag -s v<tappa>.0 -m "Tecnigrafo <tappa>.0"
+   git tag -a v<tappa>.0 -m "Tecnigrafo <tappa>.0"
    git push origin v<tappa>.0
    ```
 
