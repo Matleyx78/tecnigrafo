@@ -443,8 +443,14 @@ constexpr std::array kQuestions{
 }  // namespace
 
 const QuestionRow* findQuestion(std::string_view name) {
-    const auto* const found = std::ranges::find(kQuestions, name, &QuestionRow::name);
-    return found == kQuestions.end() ? nullptr : &*found;
+    // A loop, not std::ranges::find: the iterator of std::array is a pointer
+    // in some standard libraries and a class in others (MSVC).
+    for (const QuestionRow& row : kQuestions) {
+        if (row.name == name) {
+            return &row;
+        }
+    }
+    return nullptr;
 }
 
 }  // namespace tg::script::detail
