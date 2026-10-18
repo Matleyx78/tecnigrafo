@@ -1,0 +1,16 @@
+; Selezione: rimozione con !click ... remove
+PLINE
+0,0
+10,0
+
+PLINE
+0,20
+10,20
+
+!click 5,0
+!report
+!click 5,20
+!report
+!click 5,0 remove
+!report
+!click 5,20 remove

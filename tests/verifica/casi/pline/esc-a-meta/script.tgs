@@ -1,0 +1,6 @@
+; PLINE: Esc a metà comando annulla senza lasciare entità
+PLINE
+0,0
+10,0
+10,10
+!esc

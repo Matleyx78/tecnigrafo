@@ -1,0 +1,13 @@
+; Orto: vincoli orizzontale e verticale, distanza diretta e coordinate non corrette
+!ortho on
+!snap off
+PLINE
+0,0
+!move 10,3
+!click 10,3
+!move 10,30
+!click 10,30
+!move 50,30
+20
+10,50
+

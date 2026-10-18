@@ -1,0 +1,9 @@
+; Snap: estremo preferito al medio a pari distanza entro l'apertura
+PLINE
+0,0
+10,0
+
+PLINE
+!move 2.5,3
+!report
+!esc

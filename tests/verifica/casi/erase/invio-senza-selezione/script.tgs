@@ -1,0 +1,7 @@
+; ERASE: Invio senza selezionare oggetti termina il comando senza cancellare
+PLINE
+0,0
+10,0
+
+ERASE
+

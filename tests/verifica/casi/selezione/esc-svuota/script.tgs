@@ -1,0 +1,8 @@
+; Selezione: Esc a riposo svuota la selezione corrente
+PLINE
+0,0
+10,0
+
+!click 5,0
+!report
+!esc

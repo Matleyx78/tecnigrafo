@@ -1,0 +1,19 @@
+; Selezione: finestra (da sinistra a destra) e intersezione (da destra a sinistra)
+PLINE
+10,10
+20,10
+
+PLINE
+0,15
+30,15
+
+!click 5,5
+!move 25,25
+!report
+!click 25,25
+!report
+!esc
+!click 25,25
+!move 5,5
+!report
+!click 5,5

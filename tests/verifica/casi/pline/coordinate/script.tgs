@@ -1,0 +1,11 @@
+; PLINE: coordinate assolute, relative, polari e distanza diretta con !move
+!view 0,0 1 800x600
+PLINE
+0,0
+10,0
+@0,20
+@10<90
+50<0
+!move 50,20
+10
+

@@ -1,0 +1,17 @@
+; Selezione: clic entro e oltre 3 pixel a due scale diverse di !view
+PLINE
+0,0
+100,0
+
+!view 0,0 1 800x600
+!click 50,4
+!report
+!esc
+!click 50,2
+!report
+!esc
+!view 0,0 10 800x600
+!click 50,35
+!report
+!esc
+!click 50,20

@@ -1,0 +1,21 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]: 10,10
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

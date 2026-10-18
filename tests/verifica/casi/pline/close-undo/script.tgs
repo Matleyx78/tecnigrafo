@@ -1,0 +1,8 @@
+; PLINE: Undo per togliere un vertice e Close per chiudere la polilinea
+PLINE
+0,0
+10,0
+10,10
+0,10
+U
+C

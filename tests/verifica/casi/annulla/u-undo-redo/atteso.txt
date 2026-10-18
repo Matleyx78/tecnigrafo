@@ -1,0 +1,143 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  2 LWPOLYLINE closed=no vertex=0,20 vertex=10,20
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: PLINE
+  Specify start point: 0,20
+  Specify next point or [Undo]: 10,20
+  Specify next point or [Undo]:
+  Command: ERASE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 5,0
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 2]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0
+  2 LWPOLYLINE closed=no vertex=0,20 vertex=10,20
+messages:
+  Command: U
+  Undone: Erase.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+redo:
+  Erase
+snap: on
+ortho: off
+pointer: 5,0
+active snap: none
+statistics:
+  LWPOLYLINE 2
+
+[report 3]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0
+messages:
+  Command: UNDO
+  Undone: Polyline.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+redo:
+  Erase
+  Polyline
+snap: on
+ortho: off
+pointer: 5,0
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 4]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0
+  2 LWPOLYLINE closed=no vertex=0,20 vertex=10,20
+messages:
+  Command: REDO
+  Redone: Polyline.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+redo:
+  Erase
+snap: on
+ortho: off
+pointer: 5,0
+active snap: none
+statistics:
+  LWPOLYLINE 2
+
+[report 5]
+entities:
+  2 LWPOLYLINE closed=no vertex=0,20 vertex=10,20
+messages:
+  Command: REDO
+  Redone: Erase.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 5,0
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[final]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0
+  2 LWPOLYLINE closed=no vertex=0,20 vertex=10,20
+messages:
+  Command: U
+  Undone: Erase.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+redo:
+  Erase
+snap: on
+ortho: off
+pointer: 5,0
+active snap: none
+statistics:
+  LWPOLYLINE 2

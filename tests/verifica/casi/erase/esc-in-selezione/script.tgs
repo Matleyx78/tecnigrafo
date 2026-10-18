@@ -1,0 +1,8 @@
+; ERASE: Esc durante la richiesta di selezione annulla il comando
+PLINE
+0,0
+10,0
+
+ERASE
+!click 5,0
+!esc
