@@ -67,3 +67,7 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0009](adr/0009-interfaccia-grafica.md) | Impianto dell'interfaccia grafica | Proposto |
 | [0010](adr/0010-segnalazione-errori.md) | Segnalazione di errori e crash | Proposto |
 | [0011](adr/0011-modalita-di-controllo.md) | Modalità di controllo e verifica automatica | Proposto |
+| [0012](adr/0012-linea-cerchio-arco.md) | Linea, cerchio e arco | Proposto |
+| [0013](adr/0013-testo-e-font.md) | Testo su una riga e font incluso | Proposto |
+| [0014](adr/0014-richieste-di-valori-e-testo.md) | Richieste di distanza, angolo e testo | Proposto |
+| [0015](adr/0015-esc-conserva-il-lavoro.md) | Esc conserva il lavoro già completato | Proposto |
