@@ -1,0 +1,14 @@
+; Orto: il primo punto di un nuovo comando non è vincolato (bug #66)
+!ortho on
+!snap off
+PLINE
+30,40
+70,40
+
+PLINE
+!move 100,90
+!report
+!click 100,90
+!move 130,95
+!click 130,95
+

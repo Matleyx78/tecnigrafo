@@ -1,0 +1,77 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 100,0
+  Specify next point or [Undo]:
+prompt: Specify opposite corner:
+preview:
+selection: none
+rectangle: window 50,4 50,4
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 50,4
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 2]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 50,2
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 3]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+messages:
+prompt: Specify opposite corner:
+preview:
+selection: none
+rectangle: window 50,35 50,35
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 50,35
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[final]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 50,20
+active snap: none
+statistics:
+  LWPOLYLINE 1

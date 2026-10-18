@@ -1,0 +1,21 @@
+; Annulla e ripeti: U, UNDO e REDO conservano gli identificativi e l'ordine della pila
+PLINE
+0,0
+10,0
+
+PLINE
+0,20
+10,20
+
+!click 5,0
+ERASE
+!report
+U
+!report
+UNDO
+!report
+REDO
+!report
+REDO
+!report
+U

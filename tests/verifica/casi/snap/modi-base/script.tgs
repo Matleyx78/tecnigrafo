@@ -1,0 +1,13 @@
+; Snap: estremo, medio e !snap off
+PLINE
+0,0
+100,0
+
+PLINE
+!move 2,2
+!report
+!move 51,2
+!report
+!snap off
+!report
+!esc

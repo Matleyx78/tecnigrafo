@@ -1,0 +1,89 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+messages:
+  Command: PLINE
+  Specify start point: 10,10
+  Specify next point or [Undo]: 20,10
+  Specify next point or [Undo]:
+  Command: PLINE
+  Specify start point: 0,15
+  Specify next point or [Undo]: 30,15
+  Specify next point or [Undo]:
+prompt: Specify opposite corner:
+preview:
+selection: none
+rectangle: window 5,5 25,25
+undo:
+  Polyline
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 25,25
+active snap: none
+statistics:
+  LWPOLYLINE 2
+
+[report 2]
+entities:
+  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Polyline
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 25,25
+active snap: none
+statistics:
+  LWPOLYLINE 2
+
+[report 3]
+entities:
+  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+messages:
+prompt: Specify opposite corner:
+preview:
+selection: none
+rectangle: crossing 25,25 5,5
+undo:
+  Polyline
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 5,5
+active snap: none
+statistics:
+  LWPOLYLINE 2
+
+[final]
+entities:
+  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+messages:
+prompt: Command:
+preview:
+selection: 1 2
+rectangle: none
+undo:
+  Polyline
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 5,5
+active snap: none
+statistics:
+  LWPOLYLINE 2

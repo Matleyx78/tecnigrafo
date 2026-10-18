@@ -1,0 +1,15 @@
+; Orto: lo snap attivo prevale sul vincolo ortogonale
+PLINE
+0,0
+100,0
+
+!ortho on
+PLINE
+60,60
+!move 97,4
+!report
+!click 97,4
+!move 140,30
+!report
+!click 140,30
+

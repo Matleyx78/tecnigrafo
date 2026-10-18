@@ -1,0 +1,12 @@
+; E: con selezione dopo (verb-noun) chiede gli oggetti ed elimina alla conferma
+PLINE
+0,0
+10,0
+
+PLINE
+0,10
+10,10
+
+E
+!click 5,10
+

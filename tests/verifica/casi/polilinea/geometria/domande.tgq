@@ -1,0 +1,72 @@
+; Domande al modello sulla geometria delle polilinee (0.3.1)
+
+; Semicerchio antiorario sotto l'asse X (bulge positivo)
+; da (0,0) a (10,0), bulge 1: centro (5,0), raggio 5, punto piu basso (5,-5)
+A = LWPOLYLINE vertex=0,0 bulge=1 vertex=10,0
+
+; Semicerchio orario sopra l'asse X (bulge negativo)
+; da (20,0) a (30,0), bulge -1: centro (25,0), raggio 5, punto piu alto (25,5)
+B = LWPOLYLINE vertex=20,0 bulge=-1 vertex=30,0
+
+; Polilinea aperta a L
+C = LWPOLYLINE vertex=0,10 vertex=10,10 vertex=10,20
+
+; Polilinea chiusa: quadrato di lato 100 separato dalle altre entita
+D = LWPOLYLINE closed=yes vertex=0,100 vertex=100,100 vertex=100,200 vertex=0,200
+
+; Semicerchio antiorario da (40,0) a (60,0) con bulge 1 (centro 50,0, raggio 10, punto piu basso 50,-10)
+E = LWPOLYLINE vertex=40,0 bulge=1 vertex=60,0
+
+; Riquadro esatto (bbox) di archi con bulge positivo e negativo
+? bbox A -> 0,-5 10,0
+? bbox B -> 20,0 30,5
+? bbox C -> 0,10 10,20
+? bbox D -> 0,100 100,200
+
+; Lunghezza (length)
+? length A -> 15.707963267948966
+? length B -> 15.707963267948966
+? length C -> 20
+? length D -> 400
+
+; Distanza e punto piu vicino (distance, closest): dentro e fuori dall'arco, oltre gli estremi
+? distance A 5,-2 -> 3
+? closest A 5,-2 -> 5,-5
+? distance A 5,-8 -> 3
+? closest A 5,-8 -> 5,-5
+? distance A 5,0 -> 5
+? closest A 5,0 -> 0,0
+? distance A -3,0 -> 3
+? closest A -3,0 -> 0,0
+? distance A 14,0 -> 4
+? closest A 14,0 -> 10,0
+
+; Finestra e intersezione (inside, crosses)
+; Polilinea chiusa D che circonda il rettangolo [20,80]x[120,180]
+? inside D 20,120 80,180 -> no
+? crosses D 20,120 80,180 -> no
+
+; Arco E che entra nel rettangolo [48,-12]x[52,-8] senza vertici dentro
+? inside E 48,-12 52,-8 -> no
+? crosses E 48,-12 52,-8 -> yes
+
+; Punti di snap (snaps)
+? snaps A -> Endpoint 0,0; Endpoint 10,0; Midpoint 5,-5; Center 5,0
+? snaps B -> Endpoint 20,0; Endpoint 30,0; Midpoint 25,5; Center 25,0
+? snaps C -> Endpoint 0,10; Endpoint 10,10; Endpoint 10,20; Midpoint 5,10; Midpoint 10,15
+
+; Sul documento: scelta (pick)
+? pick 5,-5.5 tolerance=1 -> A
+? pick 5,5 tolerance=1 -> none
+? pick 5,0 tolerance=2 -> none
+
+; Sul documento: selezione (window, crossing)
+? window -1,-6 11,1 -> A
+? window 20,120 80,180 -> none
+? crossing 48,-12 52,-8 -> E
+
+; Sul documento: snap con le regole di priorita dell'ADR 0008
+? snap 0.5,0.5 aperture=2 -> Endpoint 0,0
+? snap 5,-4.5 aperture=1 -> Midpoint 5,-5
+? snap 58,-6 aperture=2 -> Center 50,0
+? snap 50,0.5 aperture=2 -> none

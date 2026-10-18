@@ -1,0 +1,26 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  1 LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Close/Undo]: 0,10
+  Specify next point or [Close/Undo]: U
+  Specify next point or [Close/Undo]: C
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1

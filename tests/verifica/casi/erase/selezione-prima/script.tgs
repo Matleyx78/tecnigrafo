@@ -1,0 +1,12 @@
+; ERASE: con selezione prima (noun-verb) cancella subito le entità selezionate
+PLINE
+0,0
+10,0
+
+PLINE
+0,10
+10,10
+
+!click 5,0
+!report
+ERASE

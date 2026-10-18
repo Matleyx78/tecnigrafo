@@ -1,0 +1,9 @@
+; PLINE: Invio a riga vuota ripete l'ultimo comando
+PLINE
+0,0
+10,0
+
+
+0,10
+10,10
+
