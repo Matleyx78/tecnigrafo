@@ -14,8 +14,8 @@ eccellenza, prima del computer.
 > agganciano punti notevoli e si usa l'orto. Le modifiche si possono annullare e
 > ripetere. Il salvataggio dei file arriverà con la tappa 0.5. Le
 > [note della 0.3](docs/rilasci/0.3.md) riportano novità e limiti noti; quelle
-> della [0.3.1](docs/rilasci/0.3.1.md) la correzione dell'orto. Prossima tappa:
-> 0.4, entità base (linea, cerchio, arco, testo).
+> della [0.3.1](docs/rilasci/0.3.1.md) la correzione dell'orto. Tappa aperta:
+> [0.4](docs/tappe/0.4-entita-base.md), entità base (linea, cerchio, arco, testo).
 
 ## Disegnare
 
