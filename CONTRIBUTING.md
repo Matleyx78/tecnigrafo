@@ -19,6 +19,12 @@ iniziare: le pull request che non lo rispettano vengono chiuse senza revisione.
 Come si leggono i riferimenti (`[0.2-P4]`, `#5`, `Closes #5`) e come lavorano più
 persone o agenti in parallelo: [docs/LAVORO-IN-PARALLELO.md](docs/LAVORO-IN-PARALLELO.md).
 
+Dalla tappa 0.4 un pacchetto che cambia il comportamento del programma ha anche
+un pacchetto di **riferimenti** (`[0.4-R5]`): casi di verifica scritti da qualcun
+altro prima del lavoro, che la CI confronta con il programma
+([ADR 0011](docs/adr/0011-modalita-di-controllo.md)). Una pull request di lavoro
+non li modifica mai: se un caso ti sembra sbagliato, scrivilo nella issue.
+
 ## Il percorso di una modifica
 
 1. **Assegnazione.** Un pacchetto è assegnato a una sola persona alla volta. Se

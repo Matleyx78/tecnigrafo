@@ -43,14 +43,18 @@ Solo il responsabile apre una tappa, e solo dopo aver chiuso la precedente:
 1. trasforma la scheda in piano dettagliato, partendo da
    [tappe/0000-modello.md](tappe/0000-modello.md);
 2. scrive e accetta gli ADR che la tappa richiede;
-3. crea su GitHub il milestone `vX.Y` e una issue per ogni pacchetto di lavoro,
-   con le etichette `tappa-X.Y`, `pacchetto` e la difficoltà;
+3. crea su GitHub il milestone `vX.Y`, una issue per ogni pacchetto di lavoro,
+   con le etichette `tappa-X.Y`, `pacchetto`, la difficoltà e l'agente, e una
+   issue `[X.Y-RN]` con l'etichetta `riferimenti` per ogni pacchetto che ha
+   riferimenti (ADR 0011, [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md));
 4. aggiorna la tabella qui sopra.
 
 ### Chiudere una tappa
 
 1. Tutti i pacchetti sono uniti e tutti i criteri di chiusura sono verificati, uno
-   per uno, e spuntati nel documento della tappa.
+   per uno, e spuntati nel documento della tappa. Lo fa la pull request di
+   chiusura, che prepara anche le note di rilascio
+   ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Chiudere la tappa").
 2. La CI è verde sui tre sistemi operativi: su Windows, Linux e macOS il programma
    si compila senza avvisi e tutti i test automatici passano.
 3. La prova manuale descritta nel documento è stata eseguita su Windows e Linux.
@@ -95,3 +99,16 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   Il lavoro entra nella tappa 0.6, che introduce i primi pannelli, secondo
   l'[ADR 0009](adr/0009-interfaccia-grafica.md) (proposto, da accettare
   all'apertura della tappa).
+- **2026-10-18 — Modalità di controllo, con la tappa 0.4 come banco di prova.**
+  Il responsabile sceglie la verifica automatica proposta nell'[ADR 0011](adr/0011-modalita-di-controllo.md)
+  (proposto, da accettare all'apertura della tappa 0.4):
+  per ogni pacchetto che cambia il comportamento, un altro agente scrive prima i
+  casi di verifica, e il lavoro è finito quando la CI conferma che il programma li
+  rispetta. Di norma i riferimenti li scrive Gemini; Claude lavora ai pacchetti
+  medi e impegnativi, Codex a quelli facili e medi
+  ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md)). La tappa 0.4 comincia con i
+  quattro pacchetti che costruiscono il sistema di verifica (ADR 0011, punto 13);
+  alla sua chiusura si valuta se il metodo ha alleggerito il lavoro. I file DXF e,
+  in futuro, STEP presi da raccolte pubbliche non si copiano nel repository: si
+  scaricano con hash fissato (ADR 0011, punto 6). Cambia di conseguenza il rischio
+  annotato nella scheda della [tappa 0.5](tappe/0.5-file-e-dxf.md).

@@ -37,18 +37,26 @@ Tappe chiuse e ADR accettati da cui questa dipende.
 ## 6. Pacchetti di lavoro
 
 Ogni pacchetto è **una pull request**. I pacchetti senza dipendenze tra loro si
-possono fare in parallelo.
+possono fare in parallelo; due pacchetti che toccano gli stessi file sono legati
+da "Dipende da".
+
+Un pacchetto che cambia il comportamento del programma ha anche un pacchetto di
+riferimenti `RN`, scritto da un altro agente e unito prima del lavoro
+(ADR 0011). La sua issue si cita in "Dipende da".
 
 ### PX — Titolo
 
 - **Issue:** #…
 - **Difficoltà:** facile | media | impegnativa
+- **Agente:** claude | codex | …
+- **Riferimenti:** issue `[X.Y-RN]` (#…), agente gemini | non servono: motivo
 - **Dipende da:** —
 - **Moduli:** core | render | app | …
 - **File:** elenco dei file da creare o modificare
 - **Cosa fare:** descrizione precisa del lavoro, con le interfacce da rispettare
 - **Test richiesti:** i casi minimi che devono esistere
-- **Fatto quando:** condizioni verificabili per considerare il pacchetto concluso
+- **Fatto quando:** condizioni verificabili per considerare il pacchetto concluso;
+  ognuna deve avere almeno un caso di verifica nel pacchetto di riferimenti
 
 ## 7. Prova manuale
 
