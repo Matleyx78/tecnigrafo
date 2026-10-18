@@ -47,7 +47,7 @@ Checks: >
 #  uppercase-literal-suffix     1U vs 1u is not worth a rule
 
 WarningsAsErrors: '*'
-HeaderFilterRegex: '(core|render|app|edit|cmd)/(include|src)/.*'
+HeaderFilterRegex: '(core|render|app|edit|script|cmd)/(include|src)/.*'
 FormatStyle: file
 CheckOptions:
   - key: readability-identifier-naming.NamespaceCase
