@@ -124,3 +124,9 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   eredita il disegno di tutti gli allineamenti del testo, dell'obliquo e della
   specchiatura, e la gestione di quota, spessore ed estrusione diversi dai
   valori predefiniti (ADR 0012 e 0013).
+- **2026-10-18 — Accettazione degli ADR senza attesa.** Il responsabile accetta un
+  ADR quando lo ritiene pronto, senza aspettare un tempo minimo; i 7 giorni di
+  discussione pubblica restano solo prima di poterlo respingere, perché chi lo
+  propone abbia il tempo di sostenerlo. Regola in
+  [GOVERNANCE.md](../GOVERNANCE.md); cambia di conseguenza il prerequisito della
+  [tappa 0.4](tappe/0.4-entita-base.md).
