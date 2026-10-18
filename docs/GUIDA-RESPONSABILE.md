@@ -167,8 +167,8 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    motivo). Proponi anche gli ADR che servono.
    ```
 
-3. Discutete finché il piano ti convince. Gli ADR nuovi restano *Proposti* per
-   almeno 7 giorni (GOVERNANCE.md), poi li accetti.
+3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
+   accetti quando ti convincono, anche subito (GOVERNANCE.md).
 4. Claude apre una pull request con piano e ADR. La leggi e la unisci come in A1.
 
 ### B2. Aprire la tappa (Claude crea le issue)

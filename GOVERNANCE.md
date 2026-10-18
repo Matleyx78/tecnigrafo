@@ -45,9 +45,11 @@ assegnate (file `.github/CODEOWNERS`). Il responsabile può revocare la nomina.
 - **Lavoro ordinario** (pacchetti della tappa aperta, correzioni, test): issue
   assegnata → pull request → revisione → merge.
 - **Decisioni architetturali** (nuovi moduli, dipendenze, formati di file, modifiche
-  agli ADR): proposta scritta come ADR in stato *Proposto*, discussione pubblica di
-  almeno 7 giorni, decisione del responsabile. L'ADR passa in stato *Accettato* o
-  *Respinto* e resta nell'archivio in ogni caso.
+  agli ADR): proposta scritta come ADR in stato *Proposto*, discussa
+  pubblicamente. L'accettazione è decisione del responsabile, che la prende quando
+  ritiene l'ADR pronto; non può invece respingerlo prima di 7 giorni dalla
+  proposta. L'ADR passa in stato *Accettato* o *Respinto* e resta nell'archivio in
+  ogni caso.
 - **Cambio di un ADR accettato:** si scrive un nuovo ADR che lo sostituisce. Gli ADR
   non si riscrivono.
 
