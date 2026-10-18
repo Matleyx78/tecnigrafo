@@ -123,10 +123,13 @@ WSL a casa, nello stesso modo.
    mostra e incollalo nel terminale. Il piano gratuito ha un limite di uso
    settimanale: lo vedi in ogni momento con `/usage`.
 
-8. **Scegli un modello Gemini.** Il piano gratuito offre anche modelli Claude, ma
-   per i riferimenti serve un modello diverso da quelli che scrivono il codice.
-   Scrivi `/model` e scegli un modello **Gemini Pro** (il nome esatto cambia con le
-   versioni: prendi il Gemini Pro più recente).
+8. **Controlla il modello.** Il piano gratuito offre anche modelli Claude e GPT,
+   ma per i riferimenti serve un modello **Gemini**, diverso da quelli che
+   scrivono il codice. Il modello in uso è scritto in basso a destra. Per
+   cambiarlo scrivi `/model`, scegli il modello Gemini dell'elenco (sul piano
+   gratuito, Gemini Flash; i modelli Gemini più potenti, come Gemini 4 Argon,
+   richiedono un abbonamento Google AI Pro o Ultra) e con le frecce `←` `→`
+   porta *Effort* su **high**. Poi `Invio`.
 
 9. Prima prova. Scrivi:
 
