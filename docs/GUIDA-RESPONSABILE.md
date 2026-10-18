@@ -58,38 +58,44 @@ Come si usa:
    per distrazione. Quando arriverà il passo `Verifica` (tappa 0.4, pacchetto 4)
    lo aggiungerai qui allo stesso modo.
 
-### A4. Installare Gemini sui tuoi due PC
+### A4. Installare Gemini (Antigravity CLI) sui tuoi due PC
 
 Gemini lavora come Claude Code e Codex: un programma nel terminale, dentro la
-cartella del progetto, che usa il tuo account GitHub. Si fa sul PC Debian
-dell'ufficio e su Debian in WSL a casa, nello stesso modo.
+cartella del progetto, che usa il tuo account GitHub. Il programma si chiama
+**Antigravity CLI** e il comando è `agy`. Dal 18 giugno 2026 il vecchio Gemini
+CLI non accetta più l'accesso con l'account Google personale, e Google indica
+Antigravity al suo posto. Si installa sul PC Debian dell'ufficio e su Debian in
+WSL a casa, nello stesso modo.
 
-1. Apri il terminale e controlla la versione di Node.js:
-
-   ```sh
-   node --version
-   ```
-
-   Se vedi `v20` o un numero più alto, salta al punto 3.
-
-2. Se Node.js manca o è più vecchio, installalo con nvm:
+1. Se avevi installato il vecchio Gemini CLI, toglilo, così non si confonde:
 
    ```sh
-   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
+   npm uninstall -g @google/gemini-cli
    ```
 
-   Chiudi e riapri il terminale, poi:
+   Se risponde che non c'era, va bene lo stesso.
+
+2. Installa Antigravity CLI. Non serve `sudo`: il programma va nella tua cartella
+   personale (`~/.local/bin/agy`).
 
    ```sh
-   nvm install --lts
-   node --version
+   curl -fsSL https://antigravity.google/cli/install.sh | bash
    ```
 
-3. Installa Gemini:
+3. **Chiudi il terminale e aprine uno nuovo**, poi controlla:
 
    ```sh
-   npm install -g @google/gemini-cli
+   which agy
    ```
+
+   Deve rispondere con un percorso che finisce in `.local/bin/agy`. Se non
+   risponde niente:
+
+   ```sh
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+   ```
+
+   e riprova `which agy`.
 
 4. Controlla che GitHub risponda con il tuo account:
 
@@ -100,20 +106,29 @@ dell'ufficio e su Debian in WSL a casa, nello stesso modo.
    Se dice che non sei collegato: `gh auth login` e segui le domande (GitHub.com,
    HTTPS, accesso con il browser).
 
-5. Entra nella cartella del progetto e avvia Gemini:
+5. Entra nella cartella del progetto e avvia Antigravity:
 
    ```sh
    cd ~/progetti/tecnigrafo
    git checkout main && git pull
-   gemini
+   agy
    ```
 
-6. Alla prima apertura scegli **Sign in with Google** e accedi con il tuo account
-   Google. In WSL il browser potrebbe non aprirsi da solo: copia l'indirizzo che
-   compare nel terminale e aprilo nel browser di Windows. Con l'account Google
-   personale l'uso è gratuito, entro un limite giornaliero di richieste.
+6. Alla prima apertura ti chiede colori e modo di visualizzazione (va bene quello
+   proposto) e se ti fidi della cartella: rispondi **sì**, è la tua.
 
-7. Prima prova. Scrivi a Gemini:
+7. Accesso con il tuo account Google. Sul PC Debian dell'ufficio si apre il
+   browser da solo. In WSL potrebbe non aprirsi: allora il terminale mostra un
+   indirizzo. Copialo nel browser di Windows, accedi, copia il **codice** che ti
+   mostra e incollalo nel terminale. Il piano gratuito ha un limite di uso
+   settimanale: lo vedi in ogni momento con `/usage`.
+
+8. **Scegli un modello Gemini.** Il piano gratuito offre anche modelli Claude, ma
+   per i riferimenti serve un modello diverso da quelli che scrivono il codice.
+   Scrivi `/model` e scegli un modello **Gemini Pro** (il nome esatto cambia con le
+   versioni: prendi il Gemini Pro più recente).
+
+9. Prima prova. Scrivi:
 
    ```text
    Leggi GEMINI.md e AGENTS.md. Spiegami in cinque righe cosa devi fare e cosa
@@ -123,10 +138,12 @@ dell'ufficio e su Debian in WSL a casa, nello stesso modo.
    Se la risposta parla di casi di verifica, di non eseguire Tecnigrafo per i
    valori attesi e di licenze, è pronto.
 
-8. Gemini chiede il permesso prima di eseguire comandi o modificare file. Leggi
-   e approva. Non attivare le modalità che approvano tutto da sole.
+10. Antigravity chiede il permesso prima di eseguire comandi o modificare file.
+    Leggi e approva. Non usare mai l'opzione `--dangerously-skip-permissions`,
+    che approva tutto da sola.
 
-Per uscire da Gemini: scrivi `/quit`.
+Antigravity si aggiorna da solo. Per uscire premi `Ctrl+C` (se non basta, una
+seconda volta).
 
 ---
 
@@ -176,7 +193,7 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
 1. Nel terminale, nella cartella del progetto:
 
    ```sh
-   cd ~/progetti/tecnigrafo && git checkout main && git pull && gemini
+   cd ~/progetti/tecnigrafo && git checkout main && git pull && agy
    ```
 
 2. Scrivi:
@@ -226,7 +243,8 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 
 ### B5. Seconda opinione (Gemini, facoltativa)
 
-Per una pull request di lavoro importante, in una sessione di Gemini:
+Per una pull request di lavoro importante, in una sessione di Antigravity (`agy`,
+con un modello Gemini):
 
 ```text
 Rivedi la pull request #<numero> del repository Matleyx78/tecnigrafo seguendo
@@ -287,5 +305,5 @@ Ripeti B3–B6 finché nel milestone non restano issue aperte.
 | Conflitto con `main` | Scrivi all'agente di quella pull request: `Aggiorna la pull request #<numero> con main e risolvi i conflitti.` |
 | Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
 | Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
-| Gemini dice che ha finito le richieste del giorno | Riprendi il giorno dopo, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
+| Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
 | Non sai cosa fare | Apri una chat con Claude nel progetto e incolla questa riga: `Sono al passo <passo> della guida e succede questo: …` |

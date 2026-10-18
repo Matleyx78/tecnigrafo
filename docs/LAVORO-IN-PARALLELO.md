@@ -35,7 +35,7 @@ della sua issue; ogni pull request riporta in alto la issue che chiude.
 | Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
 | Claude | `agente:claude`, `agente:claude-2` | pacchetti medi e impegnativi; piano della tappa insieme al responsabile |
 | Codex | `agente:codex` | pacchetti facili e medi |
-| Gemini | `agente:gemini` | pacchetti di riferimenti, revisione delle pull request di lavoro, pull request di chiusura della tappa |
+| Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti, revisione delle pull request di lavoro, pull request di chiusura della tappa |
 
 Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Le
 etichette servono perché gli agenti lavorano tutti attraverso l'account GitHub
