@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 The Tecnigrafo authors
+
+#pragma once
+
+#include "tg/script/compare.hpp"
+#include "tg/script/script.hpp"
+
+#include <string>
+#include <string_view>
+#include <variant>
+#include <vector>
+
+/// Questions to the model (docs/adr/0011, point 3; docs/verifica/domande.md).
+namespace tg::script {
+
+/// The answer to one question of a .tgq file.
+struct Answer {
+    int line;              ///< 1-based
+    std::string expected;  ///< as written after "->", blanks collapsed
+    std::string actual;    ///< the model's answer, or "error: <reason>"
+    bool matches{false};   ///< by the tolerances in force at that line
+
+    friend bool operator==(const Answer&, const Answer&) = default;
+};
+
+/// Reads a .tgq file and answers every question against core, in the order
+/// of the file: a question sees the entities defined above it. Returns the
+/// answers, or the first error in the file.
+[[nodiscard]] std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view text);
+
+/// Reads a .tgq file of questions (docs/verifica/domande.md), evaluates
+/// every question against core and returns the differences from the
+/// expected answers written in the file; empty if all match.
+[[nodiscard]] std::variant<std::vector<Difference>, ParseError> checkQuestions(
+    std::string_view text);
+
+/// `text` with the expected answer of each question replaced by the
+/// obtained one: the file a reference writer would write for the program
+/// as it is. Lines without a question are copied as they are.
+[[nodiscard]] std::string withActualAnswers(std::string_view text,
+                                            const std::vector<Answer>& answers);
+
+}  // namespace tg::script

@@ -1,0 +1,10 @@
+# Casi di verifica in attesa (docs/adr/0011, punto 7; docs/verifica/casi.md).
+#
+# Un caso elencato qui si esegue, ma il suo fallimento non blocca la CI: il
+# lavoro che lo farà passare non è ancora unito. Un caso elencato che passa fa
+# invece fallire la CI, perché va tolto da qui.
+#
+# Una riga per caso: <area>/<nome> #<numero della issue del lavoro>
+# La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
+# request del lavoro toglie solo le righe dei casi del suo pacchetto.
+# Le righe che iniziano con # sono commenti.

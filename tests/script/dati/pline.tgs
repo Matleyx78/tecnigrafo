@@ -1,0 +1,23 @@
+; Prova del modulo script (non è un caso di verifica): PLINE con coordinate
+; assolute, relative e polari, poi annulla, ripeti, selezione con un clic,
+; snap all'estremo, orto e distanza diretta.
+!view 0,0 0.5 800x600
+PLINE
+0,0
+100,0
+@0,50
+50<90
+C
+!report
+U
+REDO
+!click 50,1
+!report
+!esc
+!move 99,49
+PL
+!move 101,49
+!click 101,49
+!ortho on
+!move 130,60
+20

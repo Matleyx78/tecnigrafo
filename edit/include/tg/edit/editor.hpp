@@ -73,6 +73,14 @@ public:
     /// Name of the most recent redo step, or an empty string if there is none.
     [[nodiscard]] std::string redoName() const;
 
+    /// Names of every undo step, oldest first: the last one is undoName(),
+    /// the step undo() would undo. Empty if there is none.
+    [[nodiscard]] std::vector<std::string> undoNames() const;
+
+    /// Names of every redo step, the most recently undone last: the last one
+    /// is redoName(), the step redo() would redo. Empty if there is none.
+    [[nodiscard]] std::vector<std::string> redoNames() const;
+
     /// Undoes the most recent step. Returns false, changing nothing, if there
     /// is no step or a transaction is open.
     bool undo();

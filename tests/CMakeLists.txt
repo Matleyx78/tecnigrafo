@@ -32,15 +32,32 @@ add_executable(tg_tests
     core/spatial_index_test.cpp
     edit/editor_test.cpp
     render/viewport_test.cpp
+    script/case_check_test.cpp
+    script/compare_test.cpp
+    script/editor_names_test.cpp
+    script/entity_reader_test.cpp
+    script/level1_test.cpp
+    script/number_format_test.cpp
+    script/questions_test.cpp
+    script/script_test.cpp
 )
 target_link_libraries(tg_tests PRIVATE
     Tecnigrafo::cmd
     Tecnigrafo::edit
     Tecnigrafo::render
+    Tecnigrafo::script
     GTest::gtest_main)
+# Scripts and reports of the module's own tests (not verification cases),
+# and a folder for the files that the tests of tecnigrafo-script write.
+target_compile_definitions(tg_tests PRIVATE
+    TG_SCRIPT_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/script/dati"
+    TG_SCRIPT_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/script-output")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
+
+# Verification cases of the control mode (docs/adr/0011), label "verifica".
+add_subdirectory(verifica)
 
 # Performance is measured manually in Release, never as a timing gate in ctest.
 add_executable(tg_bench bench/selection_bench.cpp)
