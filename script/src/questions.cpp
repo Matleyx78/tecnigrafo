@@ -1,0 +1,282 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 The Tecnigrafo authors
+
+#include "tg/script/questions.hpp"
+
+#include "question_table.hpp"
+#include "text.hpp"
+#include "tg/core/document.hpp"
+#include "tg/edit/editor.hpp"
+#include "tg/script/entity_reader.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <optional>
+#include <utility>
+
+namespace tg::script {
+namespace {
+
+using detail::AnswerShape;
+
+constexpr std::string_view kArrow = "->";
+constexpr std::string_view kNone = "none";
+constexpr std::string_view kNotImplemented = "error: question not implemented yet";
+
+std::string quoted(std::string_view text) {
+    return "'" + std::string{text} + "'";
+}
+
+std::string join(std::span<const std::string_view> words) {
+    std::string text;
+    for (const std::string_view word : words) {
+        if (!text.empty()) {
+            text += ' ';
+        }
+        text += word;
+    }
+    return text;
+}
+
+/// A name of a definition: a letter or '_', then letters, digits and '_'.
+/// "none" is not a name: answers use it for "no entity".
+bool isName(std::string_view text) {
+    const auto letter = [](char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    };
+    return !text.empty() && letter(text.front()) && text != kNone &&
+           std::ranges::all_of(text, [&](char c) { return letter(c) || (c >= '0' && c <= '9'); });
+}
+
+/// The items of a list answer: "none" is the empty list.
+std::vector<std::string> listItems(std::string_view answer, AnswerShape shape) {
+    std::vector<std::string> items;
+    if (detail::trim(answer) == kNone) {
+        return items;
+    }
+    if (shape == AnswerShape::Names) {
+        for (const std::string_view word : detail::splitWords(answer)) {
+            items.emplace_back(word);
+        }
+        return items;
+    }
+    while (true) {
+        const std::size_t semicolon = answer.find(';');
+        items.emplace_back(detail::trim(answer.substr(0, semicolon)));
+        if (semicolon == std::string_view::npos) {
+            return items;
+        }
+        answer.remove_prefix(semicolon + 1);
+    }
+}
+
+/// Lists compare as multisets: every expected item matches one obtained
+/// item, in any order.
+bool listsMatch(std::string_view expected, std::string_view actual, AnswerShape shape,
+                const Tolerances& tolerances) {
+    const std::vector<std::string> wanted = listItems(expected, shape);
+    const std::vector<std::string> got = listItems(actual, shape);
+    if (wanted.size() != got.size()) {
+        return false;
+    }
+    std::vector<bool> used(got.size(), false);
+    for (const std::string& item : wanted) {
+        bool found = false;
+        for (std::size_t i = 0; i < got.size() && !found; ++i) {
+            if (!used[i] && linesMatch(item, got[i], tolerances)) {
+                used[i] = true;
+                found = true;
+            }
+        }
+        if (!found) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool answerMatches(AnswerShape shape, std::string_view expected, std::string_view actual,
+                   const Tolerances& tolerances) {
+    if (shape == AnswerShape::Single) {
+        return linesMatch(expected, actual, tolerances);
+    }
+    return listsMatch(expected, actual, shape, tolerances);
+}
+
+/// Reads a whole .tgq file, line by line.
+class QuestionFile {
+public:
+    QuestionFile() : m_editor(m_document) {}
+
+    QuestionFile(const QuestionFile&) = delete;
+    QuestionFile& operator=(const QuestionFile&) = delete;
+    QuestionFile(QuestionFile&&) = delete;
+    QuestionFile& operator=(QuestionFile&&) = delete;
+    ~QuestionFile() = default;
+
+    /// Handles one line; std::nullopt if it is fine.
+    std::optional<ParseError> read(int line, std::string_view text) {
+        m_line = line;
+        text = detail::trim(text);
+        if (text.empty() || text.starts_with(';')) {
+            return std::nullopt;
+        }
+        if (text.starts_with('!')) {
+            return readDirective(text.substr(1));
+        }
+        if (text.starts_with('?')) {
+            return readQuestion(text.substr(1));
+        }
+        if (text.find('=') != std::string_view::npos) {
+            return readDefinition(text);
+        }
+        return error("expected a definition (A = ...), a question (? ...) or !tolerance");
+    }
+
+    [[nodiscard]] std::vector<Answer> takeAnswers() { return std::move(m_answers); }
+
+private:
+    [[nodiscard]] ParseError error(std::string message, bool notImplemented = false) const {
+        return ParseError{m_line, std::move(message), notImplemented};
+    }
+
+    std::optional<ParseError> readDirective(std::string_view text) {
+        const std::vector<std::string_view> words = detail::splitWords(text);
+        if (words.empty() || words.front() != "tolerance" || text.starts_with(' ')) {
+            return error("the only directive of a question file is !tolerance");
+        }
+        const std::vector<std::string_view> arguments(words.begin() + 1, words.end());
+        std::variant<ToleranceDirective, std::string> tolerance = parseTolerance(arguments);
+        if (auto* message = std::get_if<std::string>(&tolerance)) {
+            return error(std::move(*message));
+        }
+        applyTolerance(std::get<ToleranceDirective>(tolerance), m_tolerances);
+        return std::nullopt;
+    }
+
+    std::optional<ParseError> readDefinition(std::string_view text) {
+        const std::size_t equals = text.find('=');
+        const std::string_view name = detail::trim(text.substr(0, equals));
+        if (!isName(name)) {
+            return error("invalid name " + quoted(name) +
+                         ": a letter or _, then letters, digits and _; not 'none'");
+        }
+        if (std::ranges::find(m_names, name) != m_names.end()) {
+            return error("the name " + quoted(name) + " is already defined");
+        }
+        std::variant<core::Entity, EntityError> entity =
+            readEntity(detail::trim(text.substr(equals + 1)));
+        if (auto* failure = std::get_if<EntityError>(&entity)) {
+            return error(std::move(failure->message), failure->notImplemented);
+        }
+        // The entities form a document numbered in the order they appear
+        // (docs/adr/0011, point 3). Like every change of a document, they
+        // go through the editor (docs/adr/0005).
+        m_editor.beginTransaction("Definition");
+        m_editor.add(std::get<core::Entity>(std::move(entity)));
+        m_editor.commit();
+        m_names.emplace_back(name);
+        return std::nullopt;
+    }
+
+    std::optional<ParseError> readQuestion(std::string_view text) {
+        const std::optional<std::vector<std::string_view>> tokens = detail::splitTokens(text);
+        if (!tokens) {
+            return error("a quoted text is not closed");
+        }
+        const auto arrow = std::ranges::find(*tokens, kArrow);
+        if (tokens->empty() || arrow == tokens->begin()) {
+            return error("a question starts with its name: ? <question> ... -> <answer>");
+        }
+        if (arrow == tokens->end() || arrow + 1 == tokens->end()) {
+            return error("a question ends with -> and the expected answer");
+        }
+        const std::string_view name = tokens->front();
+        const detail::QuestionRow* row = detail::findQuestion(name);
+        if (row == nullptr) {
+            return error("unknown question " + quoted(name));
+        }
+        Answer answer{m_line, join(std::span{arrow + 1, tokens->end()}), {}, false};
+        if (row->function == nullptr) {
+            answer.actual = kNotImplemented;
+            m_answers.push_back(std::move(answer));
+            return std::nullopt;
+        }
+        const detail::QuestionModel model{m_document, m_names};
+        const std::vector<std::string_view> arguments(tokens->begin() + 1, arrow);
+        detail::QuestionResult result = row->function(model, arguments);
+        if (auto* failure = std::get_if<detail::ArgumentError>(&result)) {
+            return error(std::string{name} + ": " + failure->message);
+        }
+        answer.actual = std::get<std::string>(std::move(result));
+        answer.matches = answerMatches(row->shape, answer.expected, answer.actual, m_tolerances);
+        m_answers.push_back(std::move(answer));
+        return std::nullopt;
+    }
+
+    core::Document m_document;
+    edit::Editor m_editor;
+    std::vector<std::string> m_names;  ///< m_names[n - 1] names entity n
+    Tolerances m_tolerances;           ///< as changed by the lines read so far
+    std::vector<Answer> m_answers;
+    int m_line{0};
+};
+
+}  // namespace
+
+std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view text) {
+    QuestionFile file;
+    const std::vector<std::string_view> lines = splitLines(text);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (std::optional<ParseError> failure = file.read(static_cast<int>(i) + 1, lines[i])) {
+            return std::move(*failure);
+        }
+    }
+    return file.takeAnswers();
+}
+
+std::variant<std::vector<Difference>, ParseError> checkQuestions(std::string_view text) {
+    std::variant<std::vector<Answer>, ParseError> answers = answerQuestions(text);
+    if (auto* failure = std::get_if<ParseError>(&answers)) {
+        return std::move(*failure);
+    }
+    std::vector<Difference> differences;
+    for (Answer& answer : std::get<std::vector<Answer>>(answers)) {
+        if (!answer.matches) {
+            differences.push_back(
+                {answer.line, std::move(answer.expected), std::move(answer.actual)});
+        }
+    }
+    return differences;
+}
+
+std::string withActualAnswers(std::string_view text, const std::vector<Answer>& answers) {
+    const std::vector<std::string_view> lines = splitLines(text);
+    std::string out;
+    auto answer = answers.begin();
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        const int line = static_cast<int>(i) + 1;
+        std::string_view content = lines[i];
+        if (answer != answers.end() && answer->line == line) {
+            // The arrow of a question is its first "->" outside quotes.
+            const std::optional<std::vector<std::string_view>> tokens =
+                detail::splitTokens(content);
+            const auto arrow = tokens ? std::ranges::find(*tokens, kArrow)
+                                      : std::vector<std::string_view>::const_iterator{};
+            if (tokens && arrow != tokens->end()) {
+                const auto offset = static_cast<std::size_t>(arrow->data() - content.data());
+                content = content.substr(0, offset + kArrow.size());
+            }
+            out += content;
+            out += ' ';
+            out += answer->actual;
+            ++answer;
+        } else {
+            out += content;
+        }
+        out += '\n';
+    }
+    return out;
+}
+
+}  // namespace tg::script

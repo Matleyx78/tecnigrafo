@@ -69,6 +69,24 @@ std::string Editor::redoName() const {
     return m_redo.empty() ? std::string{} : m_redo.back().name;
 }
 
+std::vector<std::string> Editor::undoNames() const {
+    std::vector<std::string> names;
+    names.reserve(m_undo.size());
+    for (const Step& step : m_undo) {
+        names.push_back(step.name);
+    }
+    return names;
+}
+
+std::vector<std::string> Editor::redoNames() const {
+    std::vector<std::string> names;
+    names.reserve(m_redo.size());
+    for (const Step& step : m_redo) {
+        names.push_back(step.name);
+    }
+    return names;
+}
+
 bool Editor::undo() {
     if (!canUndo()) {
         return false;

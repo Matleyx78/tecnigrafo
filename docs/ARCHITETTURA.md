@@ -8,6 +8,7 @@ fondo.
 ```
 core  ←  render  ←──────────  app
 core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
+                  cmd  ←────  script   (dalla tappa 0.4)
 ```
 
 | Modulo | Namespace | Contiene | Può usare |
@@ -16,9 +17,15 @@ core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
 | `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto, disegno della scena | `core` |
 | `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti | `core` |
 | `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, snap e orto | `core`, `edit` |
+| `script` | `tg::script` | modalità di controllo al livello 1: script `.tgs`, rapporto, domande al modello `.tgq`, confronto con i risultati attesi; l'eseguibile di sviluppo `tecnigrafo-script` | `core`, `edit`, `cmd` |
 | `app` | `tg::app` | finestre Qt, input da mouse e tastiera, `QtPainter` | tutti, più Qt |
 
 Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
+
+`script` non fa parte del programma distribuito: lo usano i test e
+`tecnigrafo-script`, che esegue i casi di verifica scritti prima del lavoro
+([ADR 0011](adr/0011-modalita-di-controllo.md), specifiche in
+[verifica/](verifica/casi.md)).
 
 ## Dove si trova cosa
 
@@ -27,6 +34,8 @@ Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
 <modulo>/include/tg/<modulo>/*.hpp      interfaccia pubblica
 <modulo>/src/*.cpp                      implementazione
 tests/<modulo>/*_test.cpp               test del modulo
+tests/verifica/casi/<area>/<nome>/      casi di verifica (ADR 0011), etichetta ctest "verifica"
+docs/verifica/                          linguaggio degli script, rapporto, domande, casi
 docs/adr/                               decisioni architetturali
 docs/tappe/                             roadmap: schede e piani delle tappe
 ```

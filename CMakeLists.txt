@@ -29,14 +29,16 @@ if(TG_BUILD_TESTS)
     enable_testing()
 endif()
 
-# Layering (docs/adr/0001, docs/adr/0005):
+# Layering (docs/adr/0001, docs/adr/0005, docs/adr/0011):
 #   core <- render <- app
 #   core <- edit <- cmd <- app
+#                   cmd <- script
 # Only app may depend on Qt; the CMake targets enforce it.
 add_subdirectory(core)
 add_subdirectory(render)
 add_subdirectory(edit)
 add_subdirectory(cmd)
+add_subdirectory(script)
 
 if(TG_BUILD_APP)
     add_subdirectory(app)
