@@ -1,6 +1,6 @@
 # ADR 0011: Modalità di controllo e verifica automatica
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-18)
 - **Data:** 2026-10-18
 
 ## Contesto

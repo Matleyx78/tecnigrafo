@@ -1,6 +1,6 @@
 # ADR 0013: Testo su una riga e font incluso
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-18)
 - **Data:** 2026-10-18
 
 ## Contesto
