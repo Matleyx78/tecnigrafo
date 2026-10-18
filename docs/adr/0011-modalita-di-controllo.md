@@ -71,6 +71,15 @@ comando, clic, movimento del cursore, scorciatoie, anteprima, marcatori di snap.
 I due livelli usano lo stesso linguaggio e lo stesso formato del rapporto: uno
 script del livello 1 si esegue anche al livello 2 e deve dare lo stesso rapporto.
 
+**Domande al modello, al livello 1.** Non tutto si vede con uno script: un
+pacchetto che aggiunge un'entità o un algoritmo al modello geometrico (`core`,
+in futuro il modellatore 3D) non è ancora raggiungibile da nessun comando. Per
+questo `tecnigrafo-script` legge anche un secondo tipo di file, le **domande**
+(punto 3, "Domande al modello"): definisce delle entità e chiede al modello
+riquadri, distanze, punti di snap, volumi, con le risposte attese scritte
+accanto. Così anche la geometria ha i suoi riferimenti, scritti prima del lavoro
+e da un altro agente, come i comandi.
+
 ### 3. Linguaggio degli script
 
 Un file di testo UTF-8 con estensione `.tgs`, una riga per azione, nello spirito
@@ -107,6 +116,56 @@ Direttive minime (nomi in inglese, come comandi e messaggi):
   `docs/verifica/script.md` con il primo pacchetto. Da quel momento il linguaggio
   è un contratto: una direttiva si aggiunge, non si cambia; per cambiarla serve un
   nuovo ADR.
+
+#### Domande al modello
+
+Un file di testo UTF-8 con estensione `.tgq`, una riga per istruzione:
+
+- una riga vuota o che inizia con `;` non conta;
+- `!tolerance <tipo> <valore>` cambia una tolleranza, come negli script;
+- una **definizione** dà un nome a un'entità, scritta con lo stesso tipo e le
+  stesse proprietà del rapporto (punto 4), per esempio
+  `A = CIRCLE center=0,0 radius=10`. Le entità definite formano un documento,
+  numerate nell'ordine in cui compaiono;
+- una **domanda** chiede una cosa al modello e scrive accanto la risposta attesa:
+  `? distance A 20,0 -> 10`.
+
+Esempio:
+
+```
+; cerchio di raggio 10 nell'origine
+A = CIRCLE center=0,0 radius=10
+B = LINE start=20,0 end=30,0
+? bbox A                  -> -10,-10 10,10
+? distance A 20,0         -> 10
+? snaps A                 -> Center 0,0
+? pick 0,0 tolerance=3    -> none
+? pick 10,1 tolerance=3   -> A
+? window -11,-11 11,11    -> A
+? circle-through 0,0 10,0 0,10 -> CIRCLE center=5,5 radius=7.0710678118654755
+```
+
+- Ogni domanda ha un nome, degli argomenti e una forma fissa della risposta. Il
+  **catalogo** delle domande si pubblica in `docs/verifica/domande.md` e ha la
+  stessa regola di stabilità del linguaggio degli script: una domanda si
+  aggiunge, non si cambia.
+- Il catalogo copre tre famiglie, e ogni ADR che introduce un tipo di oggetto o
+  un algoritmo dice quali domande lo verificano:
+  - **domande su un oggetto**: riquadro, lunghezza, area, distanza da un punto,
+    punto più vicino, punti di snap, contenuto in un rettangolo, intersezione
+    con un rettangolo;
+  - **domande sul documento**: scelta con un clic, selezione a finestra e a
+    intersezione, snap dal puntatore, con le regole di priorità;
+  - **costruzioni**: il risultato di un algoritmo che crea geometria (cerchio
+    per tre punti, arco tangente, e in futuro raccordi, offset, operazioni sui
+    solidi), scritto come una definizione.
+- Un tipo nuovo di oggetto risponde alle domande che esistono già: un pacchetto
+  che aggiunge un'entità ne aggiunge la lettura nelle definizioni, e le domande
+  generali la trattano senza codice nuovo.
+- Le risposte si confrontano con le regole del punto 6: numeri entro la
+  tolleranza, il resto uguale.
+- Le domande esistono solo in `tecnigrafo-script`, al livello 1: il programma
+  distribuito non le legge.
 
 ### 4. Il rapporto
 
@@ -150,7 +209,9 @@ Un **caso di verifica** è una cartella `tests/verifica/casi/<area>/<nome>/` con
 
 - `script.tgs`;
 - `atteso.txt`: il rapporto atteso;
-- facoltativo, `atteso-<nome>.png` per ogni `!screenshot` da confrontare.
+- facoltativo, `atteso-<nome>.png` per ogni `!screenshot` da confrontare;
+
+oppure con il solo `domande.tgq`, che contiene già le risposte attese (punto 3).
 
 Il confronto:
 
@@ -190,7 +251,9 @@ request, assegnate ad agenti diversi (etichette `agente:…` diverse). Entrambe 
 issue si creano all'apertura della tappa, insieme alle altre: la issue di
 riferimenti del pacchetto `PN` si chiama `[X.Y-RN]`, porta l'etichetta
 `riferimenti` e precede la issue del lavoro. Il piano della tappa indica, per
-ogni pacchetto, l'agente del lavoro e quello dei riferimenti. I pacchetti che non
+ogni pacchetto, l'agente del lavoro e quello dei riferimenti. Un pacchetto che
+aggiunge o cambia la geometria del modello ha riferimenti anche quando nessun
+comando la usa ancora: le domande al modello (punto 3). I pacchetti che non
 cambiano il comportamento (documentazione, note di rilascio, infrastruttura) lo
 dichiarano nel piano con il motivo, e non hanno riferimenti.
 
@@ -247,6 +310,9 @@ ho toccato i riferimenti".
   (`--script`). Nessuna porta di rete, nessun canale sempre aperto, nessun
   server.
 - Uno script può fare solo ciò che potrebbe fare l'utente con mouse e tastiera.
+  Le domande al modello, che creano entità senza comandi, esistono solo in
+  `tecnigrafo-script`, uno strumento di sviluppo che non si installa con il
+  programma.
 - Un canale di controllo dal vivo (per esempio un server MCP per gli agenti) si
   potrà aggiungere in futuro solo con un nuovo ADR, sopra lo stesso linguaggio.
 
@@ -258,6 +324,14 @@ pensandoci. Le linee guida, da precisare nell'ADR del modulo `modeling`:
 - gli script pilotano anche schizzi e feature con lo stesso linguaggio;
 - il rapporto aggiunge, per ogni solido, volume, area delle superfici,
   baricentro, riquadro di ingombro e numero di facce, spigoli e vertici;
+- le **domande al modello** valgono anche per superfici e solidi, con lo stesso
+  file e la stessa sintassi: un solido si definisce con una costruzione
+  (`P = BOX origin=0,0,0 size=100,50,10`, poi le operazioni come fori e
+  raccordi) o si legge da un file STEP di `sorgenti.json`
+  (`S = STEP source=<nome>`); il catalogo aggiunge domande come `volume`,
+  `area`, `centroid`, `bbox`, `topology` (facce, spigoli, vertici),
+  `contains <punto>` e `distance` tra due oggetti. Così il nucleo geometrico 3D ha
+  riferimenti prima che esistano i comandi per costruirlo;
 - i riferimenti sono valori calcolati a mano (per esempio il volume di una
   piastra forata) e file STEP presi da raccolte pubbliche, con le stesse regole di
   licenza e di hash del punto 6;
@@ -277,13 +351,13 @@ e di pull request, controllo della divisione tra riferimenti e lavoro in CI)
 entrano insieme a questo ADR. Il resto si realizza con i **primi pacchetti della
 tappa 0.4**, che fa da banco di prova, in quest'ordine:
 
-1. **Modulo `script`, livello 1:** linguaggio, rapporto, determinismo, confronto
-   con tolleranze, elenco dei casi in attesa, eseguibile `tecnigrafo-script`,
-   specifiche in `docs/verifica/`.
+1. **Modulo `script`, livello 1:** linguaggio, rapporto, domande al modello,
+   determinismo, confronto con tolleranze, elenco dei casi in attesa, eseguibile
+   `tecnigrafo-script`, specifiche in `docs/verifica/`.
 2. **Riferimenti iniziali** (pacchetto di riferimenti): casi per ciò che esiste
    già (`PLINE`, `ERASE`, selezione, snap, orto, annulla e ripeti), compreso il
-   bug dell'orto corretto con la #66. Li scrive un agente diverso da quello del
-   punto 1.
+   bug dell'orto corretto con la #66, e domande sulla geometria delle polilinee.
+   Li scrive un agente diverso da quello del punto 1.
 3. **Livello 2 nel modulo `app`:** `--script`, eventi simulati, immagini.
 4. **CI:** passo `Verifica`, scaricamento e cache dei file pubblici. Le modifiche
    a `.github/` le approva il responsabile.
@@ -300,6 +374,12 @@ responsabile valuta se il metodo ha alleggerito il lavoro, e annota in
 - **Solo i test GoogleTest scritti con il lavoro:** è la situazione di oggi. Chi
   scrive il codice scrive anche il giudice, e una prova sbagliata passa senza che
   nessuno se ne accorga.
+- **Verificare la geometria solo attraverso i comandi:** un'entità o un
+  algoritmo nuovo resterebbe senza riferimenti finché non arriva il comando che
+  lo usa, e un errore si scoprirebbe tardi, nel pacchetto sbagliato.
+- **Una direttiva degli script che crea entità senza comandi:** mescolerebbe in
+  uno stesso file ciò che fa l'utente e ciò che non può fare; le domande stanno
+  in un file a parte.
 - **Canale di controllo dal vivo (JSON o MCP) da subito:** permette agli agenti di
   interrogare il programma mentre lavorano, ma richiede un canale aperto, gestione
   dello stato e più codice. Rimandato (punto 10): gli script coprono le verifiche
@@ -326,8 +406,10 @@ responsabile valuta se il metodo ha alleggerito il lavoro, e annota in
   secondo agente.
 - Nasce un modulo nuovo, `script`, da aggiungere in `docs/ARCHITETTURA.md`, e una
   cartella `tests/verifica/`.
-- Linguaggio degli script e formato del rapporto diventano contratti stabili:
-  agenti e casi di verifica ci si appoggiano.
+- Linguaggio degli script, catalogo delle domande e formato del rapporto
+  diventano contratti stabili: agenti e casi di verifica ci si appoggiano.
+- Il formato del rapporto serve anche a scrivere le entità nelle domande: ogni
+  entità nuova si deve saper scrivere e rileggere.
 - La scheda della tappa 0.5 prevedeva una raccolta di DXF di prova inclusa nel
   repository: con questo ADR i file pubblici si scaricano con hash fissato (punto
   6). La decisione è registrata in `docs/ROADMAP.md` e nella scheda della 0.5.

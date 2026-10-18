@@ -14,7 +14,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 1 | 0.1 | Fondamenta: architettura, CI, polilinee, vista navigabile | **chiusa** | [0.1](tappe/0.1-fondamenta.md) |
 | 2 | 0.2 | Riga di comando, primo comando di disegno, annullamento | **chiusa** | [0.2](tappe/0.2-comandi-e-annullamento.md) |
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
-| 4 | 0.4 | Entità base: linea, cerchio, arco, testo | in programma | [0.4](tappe/0.4-entita-base.md) |
+| 4 | 0.4 | Entità base: linea, cerchio, arco, testo | in preparazione | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | in programma | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
@@ -112,3 +112,15 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   in futuro, STEP presi da raccolte pubbliche non si copiano nel repository: si
   scaricano con hash fissato (ADR 0011, punto 6). Cambia di conseguenza il rischio
   annotato nella scheda della [tappa 0.5](tappe/0.5-file-e-dxf.md).
+- **2026-10-18 — Piano della tappa 0.4 e scelte collegate.** Il piano dettagliato
+  della [tappa 0.4](tappe/0.4-entita-base.md) è in preparazione, con gli ADR
+  0012–0015 proposti e l'[ADR 0011](adr/0011-modalita-di-controllo.md) esteso
+  alle **domande al modello**, che danno riferimenti anche alla geometria non
+  ancora raggiungibile dai comandi, in 2D e in futuro per superfici e solidi. Il
+  responsabile sceglie: font incluso **Liberation Sans** (licenza OFL, ADR 0013);
+  **`Esc` conserva il lavoro già completato** in `LINE`, `PLINE` e `TEXT`, come
+  in AutoCAD (ADR 0015, che sostituisce in parte l'ADR 0005); interlinea del
+  testo 5/3 dell'altezza, da rivedere. La [tappa 0.5](tappe/0.5-file-e-dxf.md)
+  eredita il disegno di tutti gli allineamenti del testo, dell'obliquo e della
+  specchiatura, e la gestione di quota, spessore ed estrusione diversi dai
+  valori predefiniti (ADR 0012 e 0013).
