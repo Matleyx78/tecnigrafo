@@ -1,6 +1,6 @@
 # ADR 0014: Richieste di distanza, angolo e testo
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-18)
 - **Data:** 2026-10-18
 
 ## Contesto

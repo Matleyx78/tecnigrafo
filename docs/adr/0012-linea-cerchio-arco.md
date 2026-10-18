@@ -1,6 +1,6 @@
 # ADR 0012: Linea, cerchio e arco
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-18)
 - **Data:** 2026-10-18
 
 ## Contesto

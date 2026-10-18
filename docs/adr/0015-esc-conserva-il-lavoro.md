@@ -1,6 +1,6 @@
 # ADR 0015: Esc conserva il lavoro già completato
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-18)
 - **Data:** 2026-10-18
 - **Sostituisce in parte:** ADR 0005, sezione "Comandi", regola "Esc la annulla"
 
