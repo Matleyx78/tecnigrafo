@@ -48,6 +48,35 @@ jobs:
             echo "code=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # docs/adr/0011: a pull request either writes reference cases or does the
+  # work, never both. tests/verifica/in-attesa.txt may change in either.
+  references:
+    name: Reference separation (ADR 0011)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check that references and other files are not mixed
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=$(git diff --name-only "$BASE...$HEAD")
+          references=$(echo "$changed" | grep -E '^tests/verifica/(casi/|sorgenti\.json$)' || true)
+          others=$(echo "$changed" | grep -vE '^tests/verifica/(casi/|sorgenti\.json$|in-attesa\.txt$)' | grep -v '^$' || true)
+          if [ -n "$references" ] && [ -n "$others" ]; then
+            echo "::error::This pull request changes reference cases together with other files."
+            echo "Reference files changed:"
+            echo "$references"
+            echo "Other files changed:"
+            echo "$others"
+            echo "Split it: references and work go in separate pull requests (docs/adr/0011)."
+            exit 1
+          fi
+          echo "Reference separation respected."
+
   format:
     name: Formatting (clang-format 18)
     needs: changes

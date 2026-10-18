@@ -54,6 +54,24 @@ Lavora **su un solo pacchetto**. Se il compito non corrisponde a un pacchetto de
 tappa aperta, non scrivere codice: spiega all'utente che serve prima una issue
 approvata.
 
+### Se ti chiedono di prendere il prossimo pacchetto
+
+Quando l'utente ti chiede di prendere "il prossimo pacchetto" della tappa, senza
+indicarne il numero, scegli **una sola** issue, la prima nell'ordine del piano che
+rispetta tutte queste condizioni:
+
+1. è aperta e porta la **tua** etichetta `agente:…`;
+2. non porta `AA-Presa in carico`;
+3. ogni issue della sua riga "Dipende da" è chiusa (la pull request è unita);
+4. se il pacchetto ha una issue di riferimenti (`[X.Y-RN]`), quella è chiusa.
+
+Per "il prossimo pacchetto di riferimenti" valgono le condizioni 1–3, sulle issue
+con l'etichetta `riferimenti`.
+
+Se nessuna issue rispetta le condizioni, non iniziare: scrivi all'utente quali
+issue sono tue e cosa le blocca. Quando hai aperto la pull request, **fermati**:
+il pacchetto successivo si prende in una nuova sessione, dopo il merge.
+
 ## Regole che non si possono violare
 
 - Modifica solo i file elencati nel pacchetto. Se ne serve un altro, dillo
@@ -76,6 +94,43 @@ approvata.
   esplicitamente indicando fonte e licenza (che deve essere compatibile con la
   GPLv3, ADR 0003).
 
+## Modalità di controllo e riferimenti
+
+Dalla tappa 0.4 un pacchetto è finito quando la CI confronta il programma con
+casi di verifica scritti **prima** e da **un altro agente**
+([ADR 0011](docs/adr/0011-modalita-di-controllo.md)). Le regole valgono da quando
+esiste la cartella `tests/verifica/`.
+
+### In un pacchetto di lavoro
+
+- Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
+- Togli da `tests/verifica/in-attesa.txt` solo le righe dei casi del tuo
+  pacchetto: è il modo in cui i tuoi casi diventano obbligatori.
+- Prima di dichiarare il lavoro finito esegui `ctest --preset ci -L verifica`.
+- Se un caso ti sembra sbagliato, **fermati** e scrivilo nella issue, con il
+  motivo. Non adattare il codice a un riferimento che ritieni sbagliato, e non
+  adattare il riferimento al codice.
+- Ciò che dichiari di aver provato non conta: fa fede la CI.
+
+### In un pacchetto di riferimenti (`[X.Y-RN]`)
+
+- Tocca solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
+  `tests/verifica/in-attesa.txt`. La CI rifiuta una pull request che mescola
+  riferimenti e altri file.
+- Non lavorare a un pacchetto di riferimenti se il pacchetto di lavoro collegato
+  è assegnato a te.
+- Ricava i valori attesi da calcoli, da file pubblici o da programmi di
+  riferimento. **Mai eseguendo Tecnigrafo**: registreresti il suo comportamento,
+  errori compresi.
+- Ogni condizione "Fatto quando" del pacchetto di lavoro deve avere almeno un
+  caso che la verifica. Aggiungi anche i casi limite: valori nulli, punti
+  coincidenti o quasi allineati, Esc a metà comando, annulla e ripeti.
+- Per ogni file preso dal web scrivi in `sorgenti.json` indirizzo, versione,
+  hash SHA-256 e licenza, e nella pull request il link alla pagina della licenza.
+  Accetta solo licenze compatibili con la GPLv3 che permettano la
+  ridistribuzione. Nel dubbio, non usare il file e scrivilo nella pull request.
+- Elenca i nuovi casi in `in-attesa.txt`, con il numero della issue del lavoro.
+
 ## Comandi
 
 ```sh
@@ -92,6 +147,8 @@ interfaccia con `-DTG_BUILD_APP=OFF`.
 - [ ] I test richiesti dal pacchetto esistono e passano.
 - [ ] Build `ci` senza avvisi, `tidy` senza segnalazioni, formattazione applicata.
 - [ ] Ogni condizione "Fatto quando" del pacchetto è verificata.
+- [ ] Dove esiste `tests/verifica/`: verifica superata in locale, riferimenti non
+      toccati, righe del tuo pacchetto tolte da `in-attesa.txt`.
 - [ ] Il riepilogo per l'utente elenca i file modificati e ciò che non hai potuto
       verificare (per esempio Windows e macOS).
 - [ ] Hai tolto l'etichetta `AA-Presa in carico` da ciò che avevi preso in carico

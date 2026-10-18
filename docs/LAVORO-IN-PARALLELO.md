@@ -4,6 +4,12 @@ Come far lavorare più persone o più agenti IA sulla stessa tappa senza che si
 intralcino. Il principio è uno: **GitHub è l'unico registro di chi fa cosa**, e
 solo il responsabile assegna i pacchetti e unisce le pull request.
 
+Dalla tappa 0.4 vale anche la modalità di controllo
+([ADR 0011](adr/0011-modalita-di-controllo.md)): chi scrive i riferimenti non è
+chi scrive il codice, e un pacchetto è finito quando la CI conferma che il
+programma li rispetta. La guida pratica, passo per passo, per il responsabile è
+in [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md).
+
 ## Come leggere i riferimenti
 
 GitHub usa **una sola numerazione** per issue e pull request: ogni elemento nuovo,
@@ -12,63 +18,102 @@ indicare una issue o una pull request.
 
 | Scrittura | Significato | Dove si trova |
 |---|---|---|
-| `[0.2-P4]` | tappa 0.2, pacchetto P4 | titolo della issue del pacchetto |
+| `[0.4-P5]` | tappa 0.4, pacchetto P5 | titolo della issue del pacchetto |
+| `[0.4-R5]` | tappa 0.4, riferimenti del pacchetto P5 | titolo della issue dei riferimenti |
 | `#5` | issue o pull request numero 5 | scheda **Issues** o **Pull requests** |
 | `Closes #5` | la pull request, quando viene unita, chiude la issue 5 | descrizione della pull request |
-| `p0.2-04-…` | ramo su cui si lavora al pacchetto P4 della tappa 0.2 | scheda **Branches** |
+| `p0.4-05-…` | ramo su cui si lavora al pacchetto P5 della tappa 0.4 | scheda **Branches** |
+| `r0.4-05-…` | ramo dei riferimenti del pacchetto P5 della tappa 0.4 | scheda **Branches** |
 
 Il documento della tappa (`docs/tappe/…`) riporta per ogni pacchetto il numero
 della sua issue; ogni pull request riporta in alto la issue che chiude.
 
-## 1. Scegliere i pacchetti da far partire
+## Chi fa cosa
 
-Lo fa il responsabile. Un pacchetto si può far partire solo se:
+| Chi | Etichetta | Lavoro |
+|---|---|---|
+| Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
+| Claude | `agente:claude`, `agente:claude-2` | pacchetti medi e impegnativi; piano della tappa insieme al responsabile |
+| Codex | `agente:codex` | pacchetti facili e medi |
+| Gemini | `agente:gemini` | pacchetti di riferimenti, revisione delle pull request di lavoro, pull request di chiusura della tappa |
 
-1. **è libero**: la sua issue è aperta e non ha un'etichetta `agente:…`;
-2. **le sue dipendenze sono unite** in `main` (riga "Dipende da" nel piano della
-   tappa);
-3. **non tocca gli stessi file** di un pacchetto già in corso (riga "File" nel
-   piano della tappa).
+Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Le
+etichette servono perché gli agenti lavorano tutti attraverso l'account GitHub
+del responsabile, e non si possono distinguere in altro modo. La lista delle
+issue filtrata per etichetta mostra in ogni momento chi sta facendo cosa.
 
-Due o tre pacchetti in parallelo sono il massimo sensato: ogni pull request va
-letta dal responsabile.
+## 1. Preparare il piano
 
-## 2. Assegnare
+Il piano dettagliato della tappa (modello in [tappe/0000-modello.md](tappe/0000-modello.md))
+dice, per ogni pacchetto:
 
-Per ogni pacchetto scelto, nella sua issue:
+- **Difficoltà** e **agente** del lavoro;
+- **Riferimenti**: l'agente che li scrive, oppure "non servono" con il motivo
+  (documentazione, note di rilascio, infrastruttura che non cambia il
+  comportamento);
+- **Dipende da**: le issue che devono essere chiuse prima. Due pacchetti che
+  toccano gli stessi file sono **sempre** legati da "Dipende da", così non
+  possono partire insieme.
 
-1. si aggiunge l'etichetta dell'agente: `agente:claude`, `agente:claude-2`,
-   `agente:codex` (o il nome GitHub della persona, come *Assignee*);
-2. si scrive un commento: "Assegnato a …".
+## 2. Aprire la tappa: issue ed etichette
 
-Le etichette servono perché gli agenti lavorano tutti attraverso l'account
-GitHub del responsabile, e non si possono distinguere in altro modo. La lista
-delle issue filtrata per etichetta mostra in ogni momento chi sta facendo cosa.
+All'apertura si creano, nel milestone `vX.Y`:
 
-## 3. Avviare l'agente
+- una issue `[X.Y-PN]` per ogni pacchetto, con le etichette `tappa-X.Y`,
+  `pacchetto`, la difficoltà e `agente:…` secondo il piano;
+- una issue `[X.Y-RN]` per ogni pacchetto che ha riferimenti, con le etichette
+  `tappa-X.Y`, `riferimenti` e `agente:…` di chi li scrive. La issue del lavoro
+  la cita nella riga "Dipende da".
 
-A ogni agente si dà sempre lo stesso messaggio, cambiando solo pacchetto, issue e
-ramo:
+Le issue le può creare Claude, partendo dal piano, quando il responsabile glielo
+chiede.
+
+## 3. Riferimenti
+
+1. L'agente dei riferimenti prende una issue `[X.Y-RN]` alla volta, scrive i casi
+   di verifica e apre una pull request (regole in [AGENTS.md](../AGENTS.md),
+   sezione "Modalità di controllo e riferimenti").
+2. Il responsabile la rivede: è il punto in cui la sua attenzione rende di più.
+   Controlla che ogni condizione "Fatto quando" del pacchetto abbia un caso, che
+   i valori attesi siano giusti, e che i file presi dal web abbiano una licenza
+   adatta (la CI controlla l'hash, non la licenza).
+3. Unita la pull request, il pacchetto di lavoro collegato può partire.
+
+## 4. Avviare l'agente
+
+Il messaggio normale è sempre lo stesso: l'agente sceglie da solo il pacchetto
+giusto con le regole di [AGENTS.md](../AGENTS.md) ("Se ti chiedono di prendere il
+prossimo pacchetto").
 
 ```text
 Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-lettera. Realizza solo il pacchetto P4 della tappa 0.2 (issue #5), che è
-assegnato a te. Per prima cosa prendi in carico la issue #5 con l'etichetta
-AA-Presa in carico. Lavora sul ramo p0.2-04-coordinate-parser, partendo da main
-aggiornato. Non toccare file fuori da quelli elencati nel pacchetto. Alla fine
-apri una pull request che chiuda la issue #5 e compila il modello della pull
-request, compresa la sezione sull'uso dell'IA.
+lettera. Prendi il prossimo pacchetto della tappa 0.4 assegnato a te, secondo le
+regole di AGENTS.md. Realizzalo, apri la pull request e fermati.
+```
+
+Per Gemini, al posto di "pacchetto" si scrive "pacchetto di riferimenti".
+
+Se serve far partire un pacchetto preciso, si indicano issue e ramo:
+
+```text
+Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+lettera. Realizza solo il pacchetto P5 della tappa 0.4 (issue #80), che è
+assegnato a te. Lavora sul ramo p0.4-05-circle-command, partendo da main
+aggiornato. Alla fine apri una pull request che chiuda la issue #80 e fermati.
 ```
 
 Mai dare compiti generici ("continua il progetto", "sistema quello che serve"):
 un agente senza pacchetto preciso sconfina.
 
-## 4. Mentre lavorano
+## 5. Mentre lavorano
 
 - Ogni agente lavora **solo sul suo ramo** e apre **una sola pull request**.
 - Nessuno scrive su `main` o sui rami degli altri.
 - Se un agente scopre che gli serve un file non previsto, si ferma e lo scrive
   nella issue: decide il responsabile.
+- Se un agente ritiene sbagliato un riferimento, si ferma e lo scrive nella
+  issue. La correzione è una nuova pull request di riferimenti, mai una modifica
+  nella pull request di lavoro.
 - Chi prende in carico una issue (per realizzarla) o una pull request già aperta
   (per rivederla, correggerla o risolvere un conflitto) le mette **per prima
   cosa** l'etichetta `AA-Presa in carico` con un commento che dice chi è, e la
@@ -76,21 +121,39 @@ un agente senza pacchetto preciso sconfina.
   si tocca: ci sta già lavorando qualcun altro. I comandi sono in
   [AGENTS.md](../AGENTS.md).
 
-## 5. Unire
+## 6. Unire
 
 - Il responsabile unisce **una pull request alla volta**, con *Squash and merge*,
-  solo con la CI verde.
+  solo con la CI verde. Prima guarda la scheda **Files changed**: i file devono
+  essere quelli del pacchetto, e una pull request di lavoro non deve toccare
+  `tests/verifica/casi/` né `tests/verifica/sorgenti.json` (la CI lo controlla
+  comunque).
 - Dopo ogni merge, le altre pull request aperte mostrano il pulsante **Update
   branch**: si preme, la pull request si allinea a `main` e la CI riparte.
 - Se due pacchetti toccano lo stesso file comune (per esempio
   `tests/CMakeLists.txt`), vale una regola fissa: **chi arriva dopo si aggiorna**.
   Si chiede all'agente di quella pull request di risolvere il conflitto.
 - Quando possibile, una pull request scritta da un modello viene rivista da un
-  modello diverso prima del merge (per esempio Codex rivede Claude e viceversa).
-  La decisione resta del responsabile.
+  modello diverso prima del merge: di norma Gemini rivede le pull request di
+  Claude e di Codex. La decisione resta del responsabile.
 
-## 6. Chiudere
+## 7. Chiudere un pacchetto
 
 Con il merge la issue si chiude da sola (`Closes #…`). Il responsabile toglie
 l'etichetta `agente:…` solo se il pacchetto viene abbandonato senza pull request:
 dopo 14 giorni senza notizie il pacchetto torna libero (CONTRIBUTING.md).
+
+## 8. Chiudere la tappa
+
+Quando tutte le issue del milestone sono chiuse, un agente (di norma Gemini) apre
+la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
+
+- spunta nel documento della tappa ogni criterio di chiusura, indicando per
+  ciascuno i casi di verifica o i test che lo provano, oppure "da provare a mano";
+- scrive le note di rilascio `docs/rilasci/X.Y.md`, con la tabella della prova
+  manuale da compilare;
+- aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README.
+
+Il responsabile esegue la prova manuale su Windows e Linux, compila la tabella,
+unisce la pull request e pubblica la versione (regole in
+[ROADMAP.md](ROADMAP.md), "Chiudere una tappa").

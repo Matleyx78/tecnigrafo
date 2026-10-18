@@ -66,3 +66,4 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0008](adr/0008-selezione-e-snap.md) | Selezione, snap a oggetto e orto | Accettato |
 | [0009](adr/0009-interfaccia-grafica.md) | Impianto dell'interfaccia grafica | Proposto |
 | [0010](adr/0010-segnalazione-errori.md) | Segnalazione di errori e crash | Proposto |
+| [0011](adr/0011-modalita-di-controllo.md) | Modalità di controllo e verifica automatica | Proposto |

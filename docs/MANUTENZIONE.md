@@ -55,7 +55,7 @@ passo.
    fatta (ROADMAP, "Decisioni").
 3. Scrivi `docs/rilasci/X.Y.md` con novità e limiti noti.
 4. Aggiorna `project(... VERSION X.Y.0)` nel `CMakeLists.txt` principale.
-5. Dopo il merge: `git tag -s vX.Y.0 -m "Tecnigrafo X.Y.0"` e
+5. Dopo il merge: `git tag -a vX.Y.0 -m "Tecnigrafo X.Y.0"` e
    `git push origin vX.Y.0`; crea la *Release* su GitHub copiando le note.
 6. Chiudi il milestone, aggiorna `docs/ROADMAP.md` e apri la tappa successiva.
 
