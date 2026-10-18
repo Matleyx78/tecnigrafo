@@ -1,6 +1,7 @@
 # ADR 0005: Comandi, annullamento e input dell'utente
 
 - **Stato:** Accettato (2026-10-16)
+- **Sostituito in parte da:** ADR 0015
 - **Data:** 2026-10-15
 
 ## Contesto
