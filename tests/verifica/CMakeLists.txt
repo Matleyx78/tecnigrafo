@@ -12,6 +12,25 @@
 set(TG_VERIFICA_CASES "${CMAKE_CURRENT_SOURCE_DIR}/casi")
 set(TG_VERIFICA_PENDING "${CMAKE_CURRENT_SOURCE_DIR}/in-attesa.txt")
 
+include(TecnigrafoVerifica)
+# Shared by ci, tidy and asan within this agent's build directory.
+set(TG_VERIFICA_SOURCES_DIR "${CMAKE_BINARY_DIR}/../verifica-sorgenti" CACHE PATH
+    "Pinned public files used by verification cases")
+set(manifest "${CMAKE_CURRENT_SOURCE_DIR}/sorgenti.json")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${manifest}")
+tg_download_verifica_sources("${manifest}" "${TG_VERIFICA_SOURCES_DIR}")
+
+foreach(outcome IN ITEMS correct-hash wrong-hash)
+    add_test(NAME "verifica-download/${outcome}"
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTG_VERIFICA_MODULE=${PROJECT_SOURCE_DIR}/cmake/TecnigrafoVerifica.cmake"
+            "-DTG_VERIFICA_PROBE=${CMAKE_CURRENT_SOURCE_DIR}/prova"
+            "-DTG_VERIFICA_OUTPUT=${CMAKE_CURRENT_BINARY_DIR}/prova/${outcome}"
+            "-DTG_VERIFICA_OUTCOME=${outcome}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/prova/download_test.cmake")
+    set_tests_properties("verifica-download/${outcome}" PROPERTIES TIMEOUT 60)
+endforeach()
+
 # CONFIGURE_DEPENDS: a new case is registered at the next build, without
 # configuring again by hand.
 file(GLOB TG_VERIFICA_FILES CONFIGURE_DEPENDS
@@ -68,9 +87,8 @@ endforeach()
 # case with a script runs also as verifica2/<area>/<name>. The test tool
 # confronta_immagini starts `tecnigrafo --script`, compares its report with
 # the same atteso.txt and the screenshots with atteso-<name>.png. Images
-# depend on fonts and antialiasing: the cases run at level 2 only on
-# Linux, the reference platform. The tool is built everywhere, because the
-# tests of module app use it.
+# depend on fonts and antialiasing: Linux runs all scripts; Windows and
+# macOS run only pline/coordinate, a report-only smoke case from P2.
 if(TG_BUILD_APP)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Gui)
     add_executable(confronta_immagini confronta_immagini.cpp)
@@ -78,10 +96,13 @@ if(TG_BUILD_APP)
     target_compile_definitions(confronta_immagini PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
     tg_configure_target(confronta_immagini)
 
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR APPLE)
         foreach(name IN LISTS TG_VERIFICA_NAMES)
             if(NOT EXISTS "${TG_VERIFICA_CASES}/${name}/script.tgs")
                 continue()  # questions to the model exist only at level 1
+            endif()
+            if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT name STREQUAL "pline/coordinate")
+                continue()
             endif()
             set(arguments case "${TG_VERIFICA_CASES}/${name}"
                 --program "$<TARGET_FILE:tecnigrafo>"

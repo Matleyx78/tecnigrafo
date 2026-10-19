@@ -50,14 +50,16 @@ Come si usa:
    - Spunta **Require status checks to pass** e aggiungi, uno per uno:
      `Formatting (clang-format 18)`, `Linux (GCC, clang-tidy)`, `Windows (MSVC)`,
      `macOS (Apple Clang)`, `Reference separation (ADR 0011)`,
-     `Linux (ASan, UBSan)`.
+     `Linux (ASan, UBSan)`, `Verifica`.
    - Nella sezione **Bypass list** aggiungi *Repository admin*, così in caso di
      emergenza puoi ancora unire tu.
    - **Create**.
 
    Da quel momento GitHub non ti lascia unire una pull request con la CI rossa
-   per distrazione. Quando arriverà il passo `Verifica` (tappa 0.4, pacchetto 4)
-   lo aggiungerai qui allo stesso modo.
+   per distrazione. `Verifica` esegue su Linux tutti i casi ai due livelli;
+   Windows e macOS eseguono il livello 1 e un caso di base del livello 2.
+   Nei dettagli dell'esecuzione, **Artifacts** contiene i rapporti di ogni
+   verifica e, in caso di errore, le immagini ottenute e le differenze.
 
 ### A4. Installare Gemini (Antigravity CLI) sui tuoi due PC
 

@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "sources": [
+    {
+      "name": "local-fixture",
+      "url": "file://@SOURCE_PATH@",
+      "version": "1",
+      "sha256": "@SOURCE_HASH@",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  ]
+}

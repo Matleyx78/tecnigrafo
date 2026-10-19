@@ -98,16 +98,56 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev clang-tidy-18
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
           cmake --preset ci
           cmake --build --preset ci
       - name: Test
-        run: ctest --preset ci
+        run: ctest --preset ci -LE verifica
       - name: Static analysis
         run: |
           cmake --preset tidy
           cmake --build --preset tidy
+
+  verifica:
+    name: Verifica
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      - name: Build verification tools
+        run: |
+          cmake --preset ci
+          cmake --build --preset ci --target tecnigrafo-script tecnigrafo confronta_immagini
+      - name: Verifica
+        run: ctest --preset ci -L verifica --no-tests=error
+      - name: Upload verification reports and images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifica-linux
+          path: |
+            build/ci/tests/verifica/casi*/
+            build/ci/Testing/Temporary/LastTest.log
+            build/ci/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn
 
   # docs/adr/0016: every test, verification cases and application included,
   # runs instrumented; a memory error or undefined behaviour fails the job.
@@ -122,12 +162,31 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build with AddressSanitizer and UBSan
         run: |
           cmake --preset asan
           cmake --build --preset asan
       - name: Test
-        run: ctest --preset asan
+        run: ctest --preset asan -LE verifica
+      - name: Verifica
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --preset asan -L verifica --no-tests=error
+      - name: Upload verification reports and images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifica-sanitizers
+          path: |
+            build/asan/tests/verifica/casi*/
+            build/asan/Testing/Temporary/LastTest.log
+            build/asan/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn
 
   windows:
     name: Windows (MSVC)
@@ -142,12 +201,31 @@ jobs:
           version: '6.8.3'
           arch: win64_msvc2022_64
           cache: true
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
           cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
           cmake --build --preset ci
       - name: Test
-        run: ctest --preset ci
+        run: ctest --preset ci -LE verifica
+      - name: Verifica
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --preset ci -L verifica --no-tests=error
+      - name: Upload verification reports and images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifica-windows
+          path: |
+            build/ci/tests/verifica/casi*/
+            build/ci/Testing/Temporary/LastTest.log
+            build/ci/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn
 
   macos:
     name: macOS (Apple Clang)
@@ -162,9 +240,28 @@ jobs:
         with:
           version: '6.8.3'
           cache: true
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
           cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           cmake --build --preset ci
       - name: Test
-        run: ctest --preset ci
+        run: ctest --preset ci -LE verifica
+      - name: Verifica
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --preset ci -L verifica --no-tests=error
+      - name: Upload verification reports and images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifica-macos
+          path: |
+            build/ci/tests/verifica/casi*/
+            build/ci/Testing/Temporary/LastTest.log
+            build/ci/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn
