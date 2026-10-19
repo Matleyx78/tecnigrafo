@@ -1,0 +1,77 @@
+; Domande sul documento con tipi misti di entita (ADR 0008, ADR 0012, P6)
+
+; Documento con quattro tipi di entita disposti nello spazio
+P = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10
+L = LINE start=20,0 end=30,0
+C = CIRCLE center=50,0 radius=10
+A = ARC center=80,0 radius=10 start-angle=0 end-angle=180
+
+; Scelta con un clic (pick): tolleranza in unita del disegno
+; Clic su entita esistenti
+? pick 5,0.2 tolerance=0.5 -> P
+? pick 25,0.2 tolerance=0.5 -> L
+? pick 50,10.2 tolerance=0.5 -> C
+? pick 80,10.2 tolerance=0.5 -> A
+
+; Un clic al centro di un cerchio non lo sceglie (il cerchio e una curva)
+? pick 50,0 tolerance=2 -> none
+
+; Un clic all'interno del cerchio ma lontano dalla curva
+? pick 50,5 tolerance=1 -> none
+
+; Un clic al centro di un arco non lo sceglie
+? pick 80,0 tolerance=2 -> none
+
+; Clic nello spazio vuoto
+? pick 100,50 tolerance=5 -> none
+
+; Selezione a finestra (window): l'entita deve stare tutta dentro il rettangolo
+? window -1,-1 11,11 -> P
+? window 19,-1 31,1 -> L
+
+; Rettangolo tutto dentro il cerchio: non prende il cerchio
+? window 45,-5 55,5 -> none
+
+; Rettangolo che racchiude interamente il cerchio
+? window 38,-12 62,12 -> C
+
+; Rettangolo che racchiude sia P che L
+? window -2,-2 32,12 -> P L
+
+; Rettangolo che racchiude tutte le entita
+? window -5,-15 95,25 -> P L C A
+
+; Selezione a intersezione (crossing): tocca il rettangolo o vi sta dentro
+; Rettangolo che interseca sia P che L
+? crossing 8,-2 22,2 -> P L
+
+; Rettangolo tutto dentro l'interno del cerchio: non interseca la circonferenza
+? crossing 45,-5 55,5 -> none
+
+; Rettangolo che attraversa la circonferenza di C
+? crossing 38,-2 42,2 -> C
+
+; Rettangolo che attraversa l'arco A al vertice superiore senza estremi dentro
+? crossing 78,8 82,12 -> A
+
+; Rettangolo che interseca L, C e A contemporaneamente
+? crossing 28,-2 82,12 -> L C A
+
+; Snap sul documento con priorita dell'ADR 0008
+; Il centro del cerchio si aggancia passando sulla circonferenza (il cerchio non ha estremi/medi)
+? snap 60,0.5 aperture=1 -> Center 50,0
+
+; Il centro del cerchio NON si aggancia cliccando al centro stesso
+? snap 50,0 aperture=1 -> none
+
+; Sull'arco: se il puntatore e vicino al punto medio, il medio vince sul centro
+? snap 80,9.8 aperture=1 -> Midpoint 80,10
+
+; Sull'arco: passando sulla curva lontano da estremi e medio, si aggancia il centro
+? snap 87.071,7.071 aperture=1 -> Center 80,0
+
+; Sulla linea L: tra estremo e medio vince il piu vicino (a 20.5 vince l'estremo 20,0)
+? snap 20.5,0.5 aperture=2 -> Endpoint 20,0
+
+; Sulla linea L: vicino al punto medio (25,0) vince il medio
+? snap 25,0.3 aperture=1 -> Midpoint 25,0

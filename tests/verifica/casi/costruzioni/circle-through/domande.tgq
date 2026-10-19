@@ -1,0 +1,39 @@
+; Domande al modello sulla costruzione circle-through (ADR 0011, ADR 0012, P6)
+
+; Tre punti in senso antiorario (CCW)
+? circle-through 10,0 0,10 -10,0 -> CIRCLE center=0,0 radius=10
+
+; Tre punti in senso orario (CW)
+? circle-through 10,0 0,-10 -10,0 -> CIRCLE center=0,0 radius=10
+
+; Triangolo rettangolo 3-4-5 traslato: ipotenusa tra (6,0) e (0,8), centro a meta ipotenusa (3,4)
+? circle-through 6,0 0,8 0,0 -> CIRCLE center=3,4 radius=5
+
+; Triangolo con centro traslato e raggio 13 (triangoli pitagorici 5-12-13)
+; centro (5,10), punti a 0 gradi (18,10), ~67.38 gradi (10,22) e ~157.38 gradi (-7,15)
+? circle-through 18,10 10,22 -7,15 -> CIRCLE center=5,10 radius=13
+
+; Punti coincidenti: per l'ADR 0012, punto 4, danno 'collinear'
+? circle-through 0,0 0,0 10,0 -> collinear
+? circle-through 0,0 10,0 10,0 -> collinear
+? circle-through 5,5 10,10 5,5 -> collinear
+? circle-through 7,7 7,7 7,7 -> collinear
+
+; Tre punti allineati esattamente: danno 'collinear'
+? circle-through 0,0 5,5 10,10 -> collinear
+? circle-through -10,0 0,0 10,0 -> collinear
+? circle-through 0,20 0,10 0,0 -> collinear
+
+; Punti quasi allineati intorno alla soglia dell'ADR 0012 (|cross| <= 1e-9 * L^2)
+; Per a=(0,0), c=(10,0), b=(5,h): L=10, L^2=100, soglia = 1e-7
+; |cross| = 10 * h. Quindi h <= 1e-8 e collinear.
+
+; Appena sotto la soglia: h = 9e-9 -> |cross| = 9e-8 <= 1e-7 -> collinear
+? circle-through 0,0 5,9e-09 10,0 -> collinear
+
+; Esattamente alla soglia: h = 1e-8 -> |cross| = 1e-7 <= 1e-7 -> collinear
+? circle-through 0,0 5,1e-08 10,0 -> collinear
+
+; Appena sopra la soglia: h = 2e-8 -> |cross| = 2e-7 > 1e-7 -> cerchio valido
+; centro (5, -625000000), raggio 625000000
+? circle-through 0,0 5,2e-08 10,0 -> CIRCLE center=5,-625000000 radius=625000000

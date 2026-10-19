@@ -1,0 +1,85 @@
+; Domande al modello sulla geometria degli archi (ADR 0012, P6)
+
+; Arco nel primo quadrante (da 0 a 90 gradi)
+A_q1 = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+
+; Archi che attraversano gli assi cardinali (0, 90, 180, 270 gradi)
+A_cross0 = ARC center=0,0 radius=10 start-angle=300 end-angle=60
+A_cross90 = ARC center=0,0 radius=10 start-angle=30 end-angle=150
+A_cross180 = ARC center=0,0 radius=10 start-angle=120 end-angle=240
+A_cross270 = ARC center=0,0 radius=10 start-angle=210 end-angle=330
+
+; Arco quasi completo (359.9 gradi)
+A_full = ARC center=0,0 radius=10 start-angle=0 end-angle=359.9
+
+; Arco minuscolo (raggio 1e-4)
+A_tiny = ARC center=0,0 radius=0.0001 start-angle=0 end-angle=90
+
+; Arco contenuto in un solo quadrante senza attraversare assi
+A_quad = ARC center=0,0 radius=10 start-angle=30 end-angle=60
+
+; Riquadro esatto (bbox)
+? bbox A_q1 -> 0,0 10,10
+? bbox A_cross0 -> 5,-8.660254037844386 10,8.660254037844386
+? bbox A_cross90 -> -8.660254037844387,5 8.660254037844387,10
+? bbox A_cross180 -> -10,-8.660254037844386 -5,8.660254037844386
+? bbox A_cross270 -> -8.660254037844387,-10 8.660254037844387,-5
+? bbox A_full -> -10,-10 10,10
+? bbox A_tiny -> 0,0 0.0001,0.0001
+? bbox A_quad -> 5,5 8.660254037844387,8.660254037844387
+
+; Lunghezza (length = raggio * sweep in radianti)
+? length A_q1 -> 15.707963267948966
+? length A_cross0 -> 20.943951023931955
+? length A_cross90 -> 20.943951023931955
+? length A_cross180 -> 20.943951023931955
+? length A_cross270 -> 20.943951023931955
+? length A_full -> 62.81439977927592
+? length A_tiny -> 0.00015707963267948965
+? length A_quad -> 5.235987755982989
+
+; Distanza e punto piu vicino (distance, closest)
+; Punto sull'arco
+? distance A_q1 6,8 -> 0
+? closest A_q1 6,8 -> 6,8
+
+; Punti dentro l'angolo dell'arco (esterno e interno)
+? distance A_q1 12,16 -> 10
+? closest A_q1 12,16 -> 6,8
+? distance A_q1 3,4 -> 5
+? closest A_q1 3,4 -> 6,8
+
+; Punto fuori dall'angolo dell'arco (nel 4° quadrante, angolo negativo)
+? distance A_q1 14,-3 -> 5
+? closest A_q1 14,-3 -> 10,0
+
+; Punto fuori dall'angolo dell'arco (nel 2° quadrante, angolo > 90 gradi)
+? distance A_q1 -5,10 -> 5
+? closest A_q1 -5,10 -> 0,10
+
+; Punto al centro dell'arco
+? distance A_q1 0,0 -> 10
+? closest A_q1 0,0 -> 10,0
+
+; Finestra e intersezione (inside, crosses)
+; Arco che entra nel rettangolo senza estremi dentro (vertice superiore dell'arco a 90 gradi)
+? inside A_cross90 -2,8 2,12 -> no
+? crosses A_cross90 -2,8 2,12 -> yes
+
+; Rettangolo che racchiude l'intero arco
+? inside A_cross90 -10,0 10,12 -> yes
+? crosses A_cross90 -10,0 10,12 -> yes
+
+; Rettangolo disgiunto
+? inside A_cross90 -5,0 5,4 -> no
+? crosses A_cross90 -5,0 5,4 -> no
+
+; Punti di snap (snaps): estremi, punto medio sull'arco e centro
+? snaps A_q1 -> Endpoint 10,0; Endpoint 0,10; Midpoint 7.0710678118654755,7.0710678118654755; Center 0,0
+? snaps A_cross0 -> Endpoint 5,-8.660254037844386; Endpoint 5,8.660254037844386; Midpoint 10,0; Center 0,0
+
+; Filtro per modi di snap
+? snaps A_q1 modes=endpoint -> Endpoint 10,0; Endpoint 0,10
+? snaps A_q1 modes=midpoint -> Midpoint 7.0710678118654755,7.0710678118654755
+? snaps A_q1 modes=center -> Center 0,0
+? snaps A_q1 modes=none -> none
