@@ -13,6 +13,7 @@ add_library(tg_cmd
     src/coordinate_input.cpp
     src/drawing_aids.cpp
     src/selection_set.cpp
+    src/value_format.cpp
 )
 add_library(Tecnigrafo::cmd ALIAS tg_cmd)
 

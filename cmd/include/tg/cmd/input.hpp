@@ -47,8 +47,24 @@ struct SelectionInput {
     friend bool operator==(const SelectionInput&, const SelectionInput&) = default;
 };
 
+/// A number typed for a Distance (drawing units) or an Angle (radians,
+/// converted from the degrees typed) prompt.
+struct ValueInput {
+    double value;
+
+    friend constexpr bool operator==(const ValueInput&, const ValueInput&) = default;
+};
+
+/// A line typed for a Text prompt, exactly as typed. Never empty.
+struct TextInput {
+    std::string text;
+
+    friend bool operator==(const TextInput&, const TextInput&) = default;
+};
+
 /// One input of the user, from the mouse, the keyboard or the command line
 /// (docs/adr/0005).
-using Input = std::variant<PointInput, KeywordInput, ConfirmInput, CancelInput, SelectionInput>;
+using Input = std::variant<PointInput, KeywordInput, ConfirmInput, CancelInput, SelectionInput,
+                           ValueInput, TextInput>;
 
 }  // namespace tg::cmd

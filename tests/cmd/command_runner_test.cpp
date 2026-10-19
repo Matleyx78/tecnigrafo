@@ -3,8 +3,11 @@
 
 #include "tg/cmd/command_runner.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <span>
@@ -1214,6 +1217,340 @@ TEST_F(CommandRunnerTest, OrthoNeedsABasePointOfTheCommand) {
     runner().click({30, 40}, PickAction::Add);
     runner().click({70, 52}, PickAction::Add);
     EXPECT_EQ(journal().inputs, (std::vector<Input>{pointInput(30, 40), pointInput(70, 52)}));
+}
+
+// --- Value and text prompts (docs/adr/0014 and docs/adr/0015) --------------------
+
+struct PromptJournal {
+    PromptKind kind{PromptKind::Point};
+    std::vector<Input> inputs;
+    std::vector<Vec2> pointerPositions;
+    std::vector<CommandDefaults> defaults;
+    int cancellations{0};
+    bool keepOnCancel{false};
+    bool needsSelection{false};
+};
+
+/// A fixed base different from lastPoint detects accidental ortho alignment
+/// to a previous point. Only the preserving command adds entities, so they
+/// cannot interfere with the snap tests.
+class FakePromptCommand final : public Command {
+public:
+    explicit FakePromptCommand(PromptJournal& journal) : m_journal(journal) {}
+
+    void start(CommandContext& context) override {
+        context.editor.beginTransaction("Prompt");
+        context.lastPoint = Vec2{100, 200};
+        m_journal.defaults.push_back(context.defaults);
+    }
+
+    Status handle(CommandContext& context, const Input& input) override {
+        m_journal.inputs.push_back(input);
+        if (std::holds_alternative<ConfirmInput>(input)) {
+            context.editor.commit();
+            return Status::Finished;
+        }
+        if (const auto* keyword = std::get_if<KeywordInput>(&input);
+            keyword != nullptr && keyword->keyword == "Remember") {
+            context.defaults = {7.5, -core::kPi / 2.0, 12.0};
+        }
+        if (const auto* point = std::get_if<PointInput>(&input);
+            point != nullptr && m_journal.keepOnCancel) {
+            context.editor.add(line({10, 20}, point->point));
+        }
+        return Status::Continue;
+    }
+
+    void cancel(CommandContext& context) override {
+        ++m_journal.cancellations;
+        if (m_journal.keepOnCancel) {
+            context.editor.commit();
+        } else {
+            Command::cancel(context);
+        }
+    }
+
+    void pointerMoved(const Vec2& point) override { m_journal.pointerPositions.push_back(point); }
+
+    [[nodiscard]] Prompt prompt() const override {
+        return {"Test prompt:", {{"Other", "O"}, {"Remember", "R"}}, m_journal.kind};
+    }
+
+    [[nodiscard]] std::span<const Entity> preview() const override { return {}; }
+
+    [[nodiscard]] std::optional<Vec2> basePoint() const override { return Vec2{10, 20}; }
+
+    [[nodiscard]] bool needsSelection() const override { return m_journal.needsSelection; }
+
+private:
+    PromptJournal& m_journal;
+};
+
+class PromptRunnerTest : public testing::Test {
+protected:
+    PromptRunnerTest() {
+        m_document.add(line({0, 0}, {100, 0}));
+        m_registry.add("PROMPT", {},
+                       [this] { return std::make_unique<FakePromptCommand>(m_journal); });
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
+    }
+
+    void start(PromptKind kind) {
+        m_journal.kind = kind;
+        m_runner.submitText("PROMPT");
+    }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] PromptJournal& journal() { return m_journal; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
+    [[nodiscard]] const Document& document() const { return m_document; }
+
+private:
+    Document m_document;
+    edit::Editor m_editor{m_document};
+    CommandRegistry m_registry;
+    PromptJournal m_journal;
+    CommandRunner m_runner{m_registry, m_editor};
+    std::vector<std::string> m_messages;
+};
+
+class NumericPromptTest : public PromptRunnerTest,
+                          public testing::WithParamInterface<PromptKind> {};
+
+TEST_P(NumericPromptTest, BareNumbersAreValuesWithoutAPointerDirection) {
+    start(GetParam());
+    const double factor = GetParam() == PromptKind::Angle ? core::kPi / 180.0 : 1.0;
+    for (const char* text : {"50", " -2.5 ", "+3E1", ".5", "0", "-0"}) {
+        runner().submitText(text);
+    }
+    ASSERT_EQ(journal().inputs.size(), 6U);
+    const std::vector<double> expected{50, -2.5, 30, 0.5, 0, 0};
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        const auto* value = std::get_if<ValueInput>(&journal().inputs[i]);
+        ASSERT_NE(value, nullptr);
+        EXPECT_DOUBLE_EQ(value->value, expected[i] * factor);
+    }
+    EXPECT_TRUE(messages().empty());
+    EXPECT_FALSE(runner().acceptsText());
+}
+
+TEST_P(NumericPromptTest, CoordinatesRemainExactPoints) {
+    start(GetParam());
+    DrawingAids aids;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    runner().submitText("3,4");
+    runner().submitText("@5,-2");
+    runner().submitText("5<0");
+    runner().submitText("@5<0");
+    runner().submit(PointInput{{3, 4}});
+    EXPECT_EQ(journal().inputs,
+              (std::vector<Input>{pointInput(3, 4), pointInput(105, 198), pointInput(5, 0),
+                                  pointInput(105, 200), pointInput(3, 4)}));
+}
+
+TEST_P(NumericPromptTest, ClickAndPointerUseSnapBeforeOrtho) {
+    start(GetParam());
+    DrawingAids aids;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    runner().pointerMoved({3, 4});
+    runner().click({3, 4}, PickAction::Add);
+    EXPECT_EQ(journal().inputs.back(), pointInput(0, 0));
+    ASSERT_FALSE(journal().pointerPositions.empty());
+    EXPECT_EQ(journal().pointerPositions.back(), (Vec2{0, 0}));
+    EXPECT_EQ(runner().activeSnap(), (core::SnapPoint{{0, 0}, core::SnapKind::Endpoint}));
+
+    // With no snap the base is (10,20), not the last point (100,200).
+    runner().pointerMoved({60, 35});
+    runner().click({60, 35}, PickAction::Remove);
+    EXPECT_EQ(journal().inputs.back(), pointInput(60, 20));
+    EXPECT_EQ(journal().pointerPositions.back(), (Vec2{60, 20}));
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+
+    aids.ortho = false;
+    runner().setDrawingAids(aids);
+    EXPECT_EQ(journal().pointerPositions.back(), (Vec2{60, 35}));
+    runner().click({60, 35}, PickAction::Add);
+    EXPECT_EQ(journal().inputs.back(), pointInput(60, 35));
+}
+
+TEST_P(NumericPromptTest, KeywordsStillMatchNamesAndShortcuts) {
+    start(GetParam());
+    for (const char* text : {"Other", "other", " O ", "o"}) {
+        runner().submitText(text);
+        EXPECT_EQ(journal().inputs.back(), Input{KeywordInput{"Other"}});
+    }
+    EXPECT_TRUE(messages().empty());
+}
+
+TEST_P(NumericPromptTest, InvalidInputReportsThePromptKindAndKeepsTheQuestion) {
+    start(GetParam());
+    for (const char* text : {"abc", "1;2", "1 2", "nan", "inf", "0x10", "1e400", "@5"}) {
+        runner().submitText(text);
+        EXPECT_EQ(messages().back(), GetParam() == PromptKind::Distance
+                                         ? "Requires a distance, a point or an option."
+                                         : "Requires an angle, a point or an option.");
+        EXPECT_EQ(runner().promptText(), "Test prompt:");
+        EXPECT_TRUE(runner().isActive());
+    }
+    EXPECT_TRUE(journal().inputs.empty());
+}
+
+TEST_P(NumericPromptTest, EnterIsAConfirmationAndEscCallsCancel) {
+    start(GetParam());
+    runner().submitText("  ");
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{ConfirmInput{}}));
+    EXPECT_FALSE(runner().isActive());
+
+    start(GetParam());
+    runner().submit(CancelInput{});
+    EXPECT_EQ(journal().cancellations, 1);
+    EXPECT_EQ(journal().inputs.size(), 1U);  // Esc never reaches handle().
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_FALSE(editor().inTransaction());
+    EXPECT_EQ(messages().back(), "*Cancel*");
+}
+
+INSTANTIATE_TEST_SUITE_P(ValuePrompts, NumericPromptTest,
+                         testing::Values(PromptKind::Distance, PromptKind::Angle));
+
+TEST_F(PromptRunnerTest, LargeFiniteAnglesDoNotOverflowDuringConversion) {
+    start(PromptKind::Angle);
+    runner().submitText("1e308");
+    ASSERT_EQ(journal().inputs.size(), 1U);
+    const auto* value = std::get_if<ValueInput>(&journal().inputs.front());
+    ASSERT_NE(value, nullptr);
+    EXPECT_TRUE(std::isfinite(value->value));
+    EXPECT_DOUBLE_EQ(value->value, 1e308 * (core::kPi / 180.0));
+}
+
+TEST_F(PromptRunnerTest, TextPreservesSpacesAndUtf8WithoutParsing) {
+    start(PromptKind::Text);
+    for (const char* text : {"  Hello world  ", " \t ", "10,20", "@5<90", "Other", "o", "50", "U",
+                             "Caffè, Ø e 日本語 %%c"}) {
+        runner().submitText(text);
+        EXPECT_EQ(journal().inputs.back(), Input{TextInput{text}});
+        EXPECT_TRUE(runner().acceptsText());
+    }
+    EXPECT_TRUE(messages().empty());
+}
+
+TEST_F(PromptRunnerTest, OnlyAnEmptyTextLineConfirms) {
+    start(PromptKind::Text);
+    runner().submitText(" ");
+    ASSERT_EQ(journal().inputs, (std::vector<Input>{TextInput{" "}}));
+    runner().submitText("");
+    EXPECT_EQ(journal().inputs.back(), Input{ConfirmInput{}});
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_FALSE(runner().acceptsText());
+}
+
+TEST_F(PromptRunnerTest, TextDoesNotAcceptMousePointsOrShowSnap) {
+    start(PromptKind::Text);
+    runner().pointerMoved({3, 4});
+    runner().click({3, 4}, PickAction::Add);
+    runner().setPixelSize(2.0);
+    DrawingAids aids;
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+    EXPECT_TRUE(journal().inputs.empty());
+    EXPECT_TRUE(journal().pointerPositions.empty());
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+    EXPECT_EQ(runner().selectionRectangle(), std::nullopt);
+}
+
+TEST_F(PromptRunnerTest, AcceptsTextTracksTheCurrentPromptAndCommandLifetime) {
+    EXPECT_FALSE(runner().acceptsText());
+    start(PromptKind::Distance);
+    EXPECT_FALSE(runner().acceptsText());
+    journal().kind = PromptKind::Text;
+    EXPECT_TRUE(runner().acceptsText());
+    runner().submit(CancelInput{});
+    EXPECT_FALSE(runner().acceptsText());
+    EXPECT_EQ(journal().cancellations, 1);
+    EXPECT_TRUE(journal().inputs.empty());
+    EXPECT_EQ(messages().back(), "*Cancel*");
+}
+
+TEST_F(PromptRunnerTest, SelectionDoesNotExposeTheTextPromptOrCallCancelBeforeStart) {
+    journal().needsSelection = true;
+    start(PromptKind::Text);
+    EXPECT_FALSE(runner().acceptsText());
+    EXPECT_EQ(runner().promptText(), "Select objects:");
+    runner().click({200, 300}, PickAction::Add);
+    runner().submit(CancelInput{});  // close only the rectangle
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(journal().cancellations, 0);
+    runner().submit(CancelInput{});
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(journal().cancellations, 0);
+    EXPECT_TRUE(journal().defaults.empty());  // not started
+}
+
+TEST_F(PromptRunnerTest, DefaultsStartFreshAndSurviveCommandsAndCancellation) {
+    start(PromptKind::Distance);
+    ASSERT_EQ(journal().defaults.size(), 1U);
+    EXPECT_DOUBLE_EQ(journal().defaults.front().textHeight, 2.5);
+    EXPECT_DOUBLE_EQ(journal().defaults.front().textRotation, 0.0);
+    EXPECT_EQ(journal().defaults.front().circleRadius, std::nullopt);
+    runner().submitText("Remember");
+    runner().submitText("");
+
+    start(PromptKind::Angle);
+    runner().submit(CancelInput{});
+    start(PromptKind::Text);
+    ASSERT_EQ(journal().defaults.size(), 3U);
+    for (std::size_t i = 1; i < journal().defaults.size(); ++i) {
+        EXPECT_DOUBLE_EQ(journal().defaults[i].textHeight, 7.5);
+        EXPECT_DOUBLE_EQ(journal().defaults[i].textRotation, -core::kPi / 2.0);
+        EXPECT_EQ(journal().defaults[i].circleRadius, 12.0);
+    }
+
+    // A separate runner is a new session, even with the same editor.
+    CommandRegistry registry;
+    registry.add("PROMPT", {}, [this] { return std::make_unique<FakePromptCommand>(journal()); });
+    runner().submit(CancelInput{});
+    CommandRunner fresh{registry, editor()};
+    fresh.submitText("PROMPT");
+    EXPECT_DOUBLE_EQ(journal().defaults.back().textHeight, 2.5);
+    EXPECT_DOUBLE_EQ(journal().defaults.back().textRotation, 0.0);
+    EXPECT_EQ(journal().defaults.back().circleRadius, std::nullopt);
+    fresh.submit(CancelInput{});
+}
+
+TEST_F(PromptRunnerTest, EscCanKeepCompletedEntitiesAsOneUndoStep) {
+    journal().keepOnCancel = true;
+    start(PromptKind::Point);
+    runner().submit(PointInput{{30, 40}});
+    runner().submit(PointInput{{50, 60}});
+    ASSERT_EQ(document().entityCount(), 3U);  // two new entities and the snap fixture
+    const core::EntityId first = document().entities()[1].id;
+    const core::EntityId second = document().entities()[2].id;
+    std::optional<bool> activeInListener;
+    editor().setChangeListener([&] { activeInListener = runner().isActive(); });
+    runner().submit(CancelInput{});
+
+    EXPECT_EQ(activeInListener, false);
+    EXPECT_EQ(journal().cancellations, 1);
+    EXPECT_EQ(journal().inputs.size(), 2U);
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_FALSE(editor().inTransaction());
+    EXPECT_EQ(document().entityCount(), 3U);
+    EXPECT_EQ(editor().undoName(), "Prompt");
+    EXPECT_EQ(messages().back(), "*Cancel*");
+    runner().submitText("U");
+    EXPECT_EQ(document().entityCount(), 1U);
+    runner().submitText("REDO");
+    EXPECT_EQ(document().entityCount(), 3U);
+    EXPECT_NE(document().find(first), nullptr);
+    EXPECT_NE(document().find(second), nullptr);
 }
 
 }  // namespace
