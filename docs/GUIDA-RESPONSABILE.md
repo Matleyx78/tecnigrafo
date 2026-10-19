@@ -208,7 +208,7 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
    lettera. Prendi il prossimo pacchetto di riferimenti della tappa <tappa>
    assegnato a te, secondo le regole di AGENTS.md. Scrivi i casi di verifica,
-   apri la pull request e fermati.
+   apri la pull request e fermati come dice AGENTS.md, senza aspettare la CI.
    ```
 
 3. Quando Gemini ha aperto la pull request, la **rivedi tu**. È il controllo più
@@ -241,7 +241,8 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
    ```text
    Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
    lettera. Prendi il prossimo pacchetto della tappa <tappa> assegnato a te,
-   secondo le regole di AGENTS.md. Realizzalo, apri la pull request e fermati.
+   secondo le regole di AGENTS.md. Realizzalo, apri la pull request e fermati
+   come dice AGENTS.md, senza aspettare la CI.
    ```
 
 3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che

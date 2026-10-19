@@ -69,8 +69,26 @@ Per "il prossimo pacchetto di riferimenti" valgono le condizioni 1–3, sulle is
 con l'etichetta `riferimenti`.
 
 Se nessuna issue rispetta le condizioni, non iniziare: scrivi all'utente quali
-issue sono tue e cosa le blocca. Quando hai aperto la pull request, **fermati**:
-il pacchetto successivo si prende in una nuova sessione, dopo il merge.
+issue sono tue e cosa le blocca. Quando hai aperto la pull request, **fermati**
+(vedi sotto): il pacchetto successivo si prende in una nuova sessione, dopo il
+merge.
+
+### Quando fermarsi
+
+"Fermati" vuol dire: apri la pull request, togli l'etichetta `AA-Presa in
+carico`, scrivi all'utente il riepilogo (vedi "Prima di dichiarare il lavoro
+finito") e **termina la sessione**. Dopo la pull request:
+
+- non aspettare l'esito della CI e non controllarlo: lo guarda il responsabile;
+- non fare domande: i dubbi si chiedono prima di aprire la pull request, oppure
+  si scrivono nella pull request stessa;
+- non cominciare altro lavoro, nemmeno correzioni o migliorie allo stesso
+  pacchetto.
+
+Se la CI fallisce o la revisione chiede correzioni, il responsabile te lo dice
+con una nuova richiesta ("Leggi i commenti della pull request #<numero> e
+correggi"): allora riprendi in carico la pull request e, alla fine, ti fermi di
+nuovo allo stesso modo.
 
 ## Regole che non si possono violare
 
@@ -110,7 +128,10 @@ esiste la cartella `tests/verifica/`.
 - Se un caso ti sembra sbagliato, **fermati** e scrivilo nella issue, con il
   motivo. Non adattare il codice a un riferimento che ritieni sbagliato, e non
   adattare il riferimento al codice.
-- Ciò che dichiari di aver provato non conta: fa fede la CI.
+- Ciò che dichiari di aver provato non conta: fa fede la CI, il cui esito lo
+  guarda il responsabile dopo che ti sei fermato ([Quando
+  fermarsi](#quando-fermarsi)). Prima di aprire la pull request fai tutte le
+  prove locali che puoi.
 
 ### In un pacchetto di riferimenti (`[X.Y-RN]`)
 
@@ -170,6 +191,8 @@ asan`. Un errore segnalato nel nostro codice si corregge, non si sopprime.
       verificare (per esempio Windows e macOS).
 - [ ] Hai tolto l'etichetta `AA-Presa in carico` da ciò che avevi preso in carico
       ([sopra](#per-prima-cosa-prendi-in-carico)).
+- [ ] Dopo la pull request ti sei fermato, senza aspettare la CI
+      ([Quando fermarsi](#quando-fermarsi)).
 
 ## Commit e pull request
 
