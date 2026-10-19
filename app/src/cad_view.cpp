@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QWheelEvent>
 
+#include <cassert>
 #include <cmath>
 
 namespace tg::app {
@@ -38,6 +39,23 @@ void CadView::zoomExtents() {
     m_viewport.zoomToBox(m_document.extents());
     m_runner.setPixelSize(1.0 / m_viewport.scale());
     emit scaleChanged(m_viewport.scale());
+    update();
+}
+
+void CadView::setView(const core::Vec2& center, double unitsPerPixel) {
+    assert(unitsPerPixel > 0.0 && "a view needs a positive scale");
+    m_initialFitDone = true;
+    m_viewport.setScale(1.0 / unitsPerPixel);
+    m_viewport.setCenter(center);
+    // Not 1 / m_viewport.scale(): the round trip may change the last bit,
+    // and the pick and snap tolerances in pixels must be those of level 1.
+    m_runner.setPixelSize(unitsPerPixel);
+    emit scaleChanged(m_viewport.scale());
+    update();
+}
+
+void CadView::setStyle(const render::SceneStyle& style) {
+    m_style = style;
     update();
 }
 

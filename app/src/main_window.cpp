@@ -54,9 +54,9 @@ QAction* addCheckableAction(QMenu* menu, const QString& text, const QString& nam
 
 }  // namespace
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     : QMainWindow(parent),
-      m_document(makeSampleDrawing()),
+      m_document(drawing == InitialDrawing::Sample ? makeSampleDrawing() : core::Document{}),
       m_editor(m_document),
       m_runner(m_registry, m_editor),
       m_view(new CadView(m_document, m_runner, this)),

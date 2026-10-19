@@ -73,9 +73,19 @@ if(TG_BUILD_APP)
         app/command_line_test.cpp
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
+        app/script_session_test.cpp
         app/selection_test.cpp
     )
     target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Test Qt6::Widgets GTest::gtest)
+    # Level 2 of the control mode: the scripts of module script's own tests,
+    # a folder for what the tests write, the program and the test tool
+    # confronta_immagini (tests/verifica).
+    target_compile_definitions(tg_app_tests PRIVATE
+        TG_SCRIPT_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/script/dati"
+        TG_APP_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/app-output"
+        TG_TECNIGRAFO="$<TARGET_FILE:tecnigrafo>"
+        TG_CONFRONTA_IMMAGINI="$<TARGET_FILE:confronta_immagini>")
+    add_dependencies(tg_app_tests tecnigrafo confronta_immagini)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
     add_test(NAME app_widgets COMMAND tg_app_tests)

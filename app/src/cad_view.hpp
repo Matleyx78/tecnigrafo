@@ -37,6 +37,17 @@ public:
     /// Fits the whole drawing in the view.
     void zoomExtents();
 
+    /// Shows `center` in the middle of the view, at `unitsPerPixel` drawing
+    /// units per pixel: the "!view" of the control mode (docs/adr/0011).
+    /// The runner gets exactly `unitsPerPixel` as its pixel size, as at
+    /// level 1, and the view is no longer fitted to the drawing when it is
+    /// first shown. Precondition: unitsPerPixel > 0.
+    void setView(const core::Vec2& center, double unitsPerPixel);
+
+    /// Draws with `style` from now on: the colours of grid, entities,
+    /// preview, selection and snap marker.
+    void setStyle(const render::SceneStyle& style);
+
 signals:
     /// Cursor position in drawing units.
     void cursorMoved(double worldX, double worldY);

@@ -25,10 +25,18 @@ eventi veri di tastiera e mouse), e deve dare lo stesso
 | qualunque altro | testo scritto sulla riga di comando, poi `Invio` |
 
 Una riga normale si conserva **esattamente come è scritta**, spazi compresi:
-` ; x` (con uno spazio davanti) non è un commento ma testo, e `  @10,0  `
-arriva al programma con i suoi spazi. Il runner dei comandi toglie poi gli spazi
-dove la sintassi lo prevede (ADR 0005); con le richieste di testo della tappa
-0.4 (ADR 0014) gli spazi restano.
+` ; x` (con uno spazio davanti) non è un commento ma testo, e al livello 1
+`  @10,0  ` arriva al programma con i suoi spazi. Il runner dei comandi toglie
+poi gli spazi dove la sintassi lo prevede (ADR 0005); con le richieste di testo
+della tappa 0.4 (ADR 0014) gli spazi restano.
+
+**Lo spazio al livello 2.** Il livello 2 scrive la riga tasto per tasto, come
+una tastiera, e nella riga di comando dell'interfaccia lo spazio vale `Invio`,
+come in AutoCAD; dal pacchetto P15 della tappa 0.4 è un carattere quando il
+comando chiede un testo. Al livello 1 la riga arriva intera al runner. Perciò
+una riga con spazi dà lo stesso rapporto ai due livelli solo quando il comando
+chiede un testo: altrove uno script scrive ogni valore senza spazi, su una riga
+sua (`PLINE` e `0,0` su due righe, non `PLINE 0,0`).
 
 ## Righe normali
 
