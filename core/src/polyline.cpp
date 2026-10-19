@@ -3,9 +3,6 @@
 
 #include "tg/core/polyline.hpp"
 
-#include "tg/core/math.hpp"
-
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <utility>
@@ -16,25 +13,6 @@ namespace {
 
 // Below this magnitude a bulge is treated as a straight segment.
 constexpr double kBulgeEpsilon = 1e-12;
-
-// Hard cap on the number of points generated for a single arc.
-constexpr int kMaxArcSegments = 4096;
-
-// Normalizes an angle to [0, 2*pi).
-double normalizeAngle(double radians) {
-    double result = std::fmod(radians, kTwoPi);
-    if (result < 0.0) {
-        result += kTwoPi;
-    }
-    return result;
-}
-
-// True if `angle` lies on the arc that starts at `start` and sweeps `sweep`.
-bool angleOnArc(double angle, double start, double sweep) {
-    const double offset =
-        sweep >= 0.0 ? normalizeAngle(angle - start) : normalizeAngle(start - angle);
-    return offset <= std::abs(sweep);
-}
 
 }  // namespace
 
@@ -76,13 +54,7 @@ BBox PolylineSegment::boundingBox() const {
         return box;
     }
     // An arc reaches beyond its end points only at its axis-aligned extremes.
-    const ArcGeometry arc = arcFromBulge(start, end, bulge);
-    for (int quadrant = 0; quadrant < 4; ++quadrant) {
-        const double angle = quadrant * (kPi / 2.0);
-        if (angleOnArc(angle, arc.startAngle, arc.sweep)) {
-            box.expand(arc.center + Vec2{std::cos(angle), std::sin(angle)} * arc.radius);
-        }
-    }
+    expandByAxisExtremes(arcFromBulge(start, end, bulge), box);
     return box;
 }
 
@@ -91,19 +63,8 @@ void PolylineSegment::tessellate(double maxChordError, std::vector<Vec2>& out) c
         out.push_back(end);
         return;
     }
-    const ArcGeometry arc = arcFromBulge(start, end, bulge);
-
-    // Largest angular step whose chord stays within maxChordError of the arc.
-    const double tolerance = std::clamp(maxChordError, 1e-12, arc.radius);
-    const double maxStep = 2.0 * std::acos(1.0 - (tolerance / arc.radius));
-    const double steps = std::ceil(std::abs(arc.sweep) / std::max(maxStep, 1e-9));
-    const int count = std::clamp(static_cast<int>(steps), 1, kMaxArcSegments);
-
-    for (int i = 1; i < count; ++i) {
-        const double angle = arc.startAngle + (arc.sweep * i / count);
-        out.push_back(arc.center + Vec2{std::cos(angle), std::sin(angle)} * arc.radius);
-    }
-    out.push_back(end);  // exact end point, no accumulated rounding
+    core::tessellate(arcFromBulge(start, end, bulge), maxChordError, out);
+    out.back() = end;  // exact end point, no accumulated rounding
 }
 
 Polyline::Polyline(std::vector<PolylineVertex> vertices, bool closed)

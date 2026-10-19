@@ -3,6 +3,7 @@
 
 #include "tg/render/scene_renderer.hpp"
 
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/math.hpp"
 
 #include <array>
@@ -94,10 +95,39 @@ public:
         m_painter.drawPolyline(m_screenPoints, polyline.isClosed());
     }
 
+    void operator()(const core::Line& line) {
+        const std::array points{m_viewport.worldToScreen(line.start),
+                                m_viewport.worldToScreen(line.end)};
+        m_painter.drawPolyline(points, false);
+    }
+
+    void operator()(const core::Circle& circle) {
+        // A closed polyline: the last point, back on the start, is dropped.
+        drawArc(circle.geometry(), true);
+    }
+
+    void operator()(const core::Arc& arc) { drawArc(arc.geometry(), false); }
+
 private:
+    void drawArc(const core::ArcGeometry& arc, bool closed) {
+        const double toleranceWorld = m_style.tessellationTolerancePx / m_viewport.scale();
+        m_worldPoints.clear();
+        m_worldPoints.push_back(core::startPoint(arc));
+        core::tessellate(arc, toleranceWorld, m_worldPoints);
+        if (closed) {
+            m_worldPoints.pop_back();
+        }
+        m_screenPoints.clear();
+        for (const Vec2& point : m_worldPoints) {
+            m_screenPoints.push_back(m_viewport.worldToScreen(point));
+        }
+        m_painter.drawPolyline(m_screenPoints, closed);
+    }
+
     const Viewport& m_viewport;
     const SceneStyle& m_style;
     Painter& m_painter;
+    std::vector<Vec2> m_worldPoints;   // reused buffer
     std::vector<Vec2> m_screenPoints;  // reused buffer
 };
 

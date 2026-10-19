@@ -3,12 +3,14 @@
 
 #include "tg/render/viewport.hpp"
 
+#include "tg/core/math.hpp"
 #include "tg/render/scene_renderer.hpp"
 
 #include <gtest/gtest.h>
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 namespace tg::render {
@@ -154,6 +156,75 @@ TEST(SceneRenderer, DrawsVisiblePolylinesInScreenSpace) {
     ASSERT_EQ(painter.polylines.front().size(), 2U);
     expectNear(painter.polylines.front()[0], {400.0, 300.0});
     expectNear(painter.polylines.front()[1], {402.0, 298.0});
+}
+
+TEST(SceneRenderer, DrawsLinesCirclesAndArcs) {
+    core::Document document;
+    document.add(core::Line{{10.0, 20.0}, {20.0, 20.0}});
+    document.add(core::Circle{{10.0, 20.0}, 5.0});
+    document.add(core::Arc{{10.0, 20.0}, 5.0, 0.0, core::kPi / 2.0});
+
+    const SceneStyle style;
+    RecordingPainter painter;
+    renderScene(document, makeViewport(), style, painter);
+    ASSERT_EQ(painter.polylines.size(), 3U);
+
+    // The line: its two end points, open.
+    const std::vector<Vec2>& line = painter.polylines[0];
+    ASSERT_EQ(line.size(), 2U);
+    expectNear(line[0], {400.0, 300.0});
+    expectNear(line[1], {420.0, 300.0});
+
+    // The circle: a closed polyline whose points lie on it (radius 10 px),
+    // without repeating the first point at the end.
+    const std::vector<Vec2>& circle = painter.polylines[1];
+    ASSERT_GT(circle.size(), 8U);
+    for (std::size_t i = 0; i < circle.size(); ++i) {
+        EXPECT_NEAR(core::distance(circle[i], {400.0, 300.0}), 10.0, kEps);
+        // Every chord, the closing one included, within the tolerance.
+        const Vec2 middle = (circle[i] + circle[(i + 1) % circle.size()]) * 0.5;
+        EXPECT_LE(10.0 - core::distance(middle, {400.0, 300.0}),
+                  style.tessellationTolerancePx + kEps);
+    }
+    expectNear(circle.front(), {410.0, 300.0});
+    EXPECT_GT(core::distance(circle.back(), circle.front()), 0.1);
+
+    // The arc: open, from (15,20) counter-clockwise to (10,25); Y points
+    // down on screen.
+    const std::vector<Vec2>& arc = painter.polylines[2];
+    ASSERT_GT(arc.size(), 4U);
+    expectNear(arc.front(), {410.0, 300.0});
+    expectNear(arc.back(), {400.0, 290.0});
+    EXPECT_FALSE(painter.lastClosed);
+}
+
+TEST(SceneRenderer, CircleIsDrawnClosed) {
+    core::Document document;
+    document.add(core::Circle{{10.0, 20.0}, 5.0});
+    RecordingPainter painter;
+    renderScene(document, makeViewport(), SceneStyle{}, painter);
+    ASSERT_EQ(painter.polylines.size(), 1U);
+    EXPECT_TRUE(painter.lastClosed);
+}
+
+TEST(PreviewRenderer, DrawsTheNewEntitiesAndSkipsThoseOutsideTheView) {
+    const std::array<core::Entity, 3> entities{core::Line{{10.0, 20.0}, {11.0, 21.0}},
+                                               core::Circle{{10.0, 20.0}, 1.0},
+                                               core::Arc{{1e6, 1e6}, 1.0, 0.0, 1.0}};  // far away
+    RecordingPainter painter;
+    renderPreview(entities, makeViewport(), SceneStyle{}, painter);
+    EXPECT_EQ(painter.polylines.size(), 2U);
+    EXPECT_EQ(painter.polylinePen, SceneStyle{}.preview);
+}
+
+TEST(HighlightRenderer, DrawsTheNewEntitiesDashed) {
+    core::Document document;
+    const core::EntityId arc = document.add(core::Arc{{10.0, 20.0}, 5.0, 0.0, 1.0});
+    const std::array ids{arc};
+    RecordingPainter painter;
+    renderHighlight(document, ids, makeViewport(), SceneStyle{}, painter);
+    ASSERT_EQ(painter.polylines.size(), 1U);
+    EXPECT_EQ(painter.polylineStyle, LineStyle::Dashed);
 }
 
 TEST(SceneRenderer, SkipsEntitiesOutsideTheView) {

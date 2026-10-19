@@ -396,5 +396,33 @@ TEST(Proximity, RandomArcsAgreeWithDenseTessellation) {
     }
 }
 
+TEST(Proximity, AnArcEntityAgreesWithTheSameArcInAPolyline) {
+    // A half circle of radius 5 centred on (5,0), counter-clockwise from
+    // (10,0) to (0,0): bulge 1 in a polyline, angles 0 and π in an Arc.
+    const Entity polyline = arcEntity(PolylineSegment{{10.0, 0.0}, {0.0, 0.0}, 1.0});
+    const Entity arc = Arc{{5.0, 0.0}, 5.0, 0.0, kPi};
+    for (const Vec2& point :
+         {Vec2{5.0, 9.0}, Vec2{5.0, -3.0}, Vec2{12.0, 1.0}, Vec2{5.0, 0.0}, Vec2{-1.0, -1.0}}) {
+        EXPECT_NEAR(distance(arc, point), distance(polyline, point), kTolerance);
+    }
+    for (const BBox& rectangle :
+         {BBox{{4.0, 4.0}, {6.0, 6.0}}, BBox{{4.0, -2.0}, {6.0, 2.0}},
+          BBox{{-1.0, -1.0}, {11.0, 6.0}}, BBox{{9.0, -1.0}, {11.0, 1.0}}}) {
+        EXPECT_EQ(intersects(arc, rectangle), intersects(polyline, rectangle));
+        EXPECT_EQ(isInside(arc, rectangle), isInside(polyline, rectangle));
+    }
+}
+
+TEST(Proximity, LineAgreesWithATwoPointPolyline) {
+    const Entity line = Line{{1.0, 2.0}, {7.0, -3.0}};
+    const Entity polyline = curve({{1.0, 2.0}, {7.0, -3.0}});
+    for (const Vec2& point : {Vec2{0.0, 0.0}, Vec2{4.0, 0.0}, Vec2{9.0, -9.0}}) {
+        EXPECT_EQ(distance(line, point), distance(polyline, point));
+    }
+    for (const BBox& rectangle : {BBox{{3.0, -1.0}, {5.0, 1.0}}, BBox{{-5.0, 5.0}, {0.0, 9.0}}}) {
+        EXPECT_EQ(intersects(line, rectangle), intersects(polyline, rectangle));
+    }
+}
+
 }  // namespace
 }  // namespace tg::core

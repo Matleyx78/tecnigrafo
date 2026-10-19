@@ -3,6 +3,7 @@
 
 #include "tg/script/report.hpp"
 
+#include "tg/core/math.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/script/number_format.hpp"
 
@@ -27,6 +28,16 @@ constexpr std::array kSnapModeNames{SnapModeName{"endpoint", &core::SnapModes::e
 // questions would silently ignore it.
 static_assert(sizeof(core::SnapModes) == kSnapModeNames.size() * sizeof(bool),
               "every snap mode needs a name in kSnapModeNames");
+
+/// Builds one visitor out of several lambdas, one per entity type.
+template <typename... Lambdas>
+struct Overloaded : Lambdas... {
+    using Lambdas::operator()...;
+};
+
+// Explicit deduction guide: aggregate CTAD is missing from Apple Clang 15.
+template <typename... Lambdas>
+Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
 
 void appendLine(std::string_view text, std::string& out) {
     out += text;
@@ -65,6 +76,32 @@ void writePolyline(const core::Polyline& polyline, std::string& out) {
             out += formatNumber(vertex.bulge);
         }
     }
+}
+
+void writeLine(const core::Line& line, std::string& out) {
+    out += "LINE start=";
+    out += formatPoint(line.start);
+    out += " end=";
+    out += formatPoint(line.end);
+}
+
+void writeCircle(const core::Circle& circle, std::string& out) {
+    out += "CIRCLE center=";
+    out += formatPoint(circle.center);
+    out += " radius=";
+    out += formatNumber(circle.radius);
+}
+
+void writeArc(const core::Arc& arc, std::string& out) {
+    // Degrees, as in DXF groups 50 and 51 (docs/verifica/rapporto.md).
+    out += "ARC center=";
+    out += formatPoint(arc.center);
+    out += " radius=";
+    out += formatNumber(arc.radius);
+    out += " start-angle=";
+    out += formatNumber(core::radiansToDegrees(arc.startAngle));
+    out += " end-angle=";
+    out += formatNumber(core::radiansToDegrees(arc.endAngle));
 }
 
 std::string selectionText(const cmd::SelectionSet& selection) {
@@ -184,11 +221,23 @@ void writeState(const ReportInput& input, std::string& out) {
 }
 
 std::string_view dxfType(const core::Entity& entity) {
-    return std::visit([](const core::Polyline& /*polyline*/) { return "LWPOLYLINE"; }, entity);
+    return std::visit(Overloaded{
+                          [](const core::Polyline& /*polyline*/) { return "LWPOLYLINE"; },
+                          [](const core::Line& /*line*/) { return "LINE"; },
+                          [](const core::Circle& /*circle*/) { return "CIRCLE"; },
+                          [](const core::Arc& /*arc*/) { return "ARC"; },
+                      },
+                      entity);
 }
 
 void writeEntity(const core::Entity& entity, std::string& out) {
-    std::visit([&out](const core::Polyline& polyline) { writePolyline(polyline, out); }, entity);
+    std::visit(Overloaded{
+                   [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
+                   [&out](const core::Line& line) { writeLine(line, out); },
+                   [&out](const core::Circle& circle) { writeCircle(circle, out); },
+                   [&out](const core::Arc& arc) { writeArc(arc, out); },
+               },
+               entity);
 }
 
 std::string_view snapKindName(core::SnapKind kind) {
