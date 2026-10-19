@@ -7,6 +7,7 @@
 add_library(tg_cmd
     src/builtin_commands.cpp
     src/commands/erase_command.cpp
+    src/commands/line_command.cpp
     src/commands/pline_command.cpp
     src/command_registry.cpp
     src/command_runner.cpp
