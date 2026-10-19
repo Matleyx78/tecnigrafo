@@ -69,8 +69,49 @@ Per "il prossimo pacchetto di riferimenti" valgono le condizioni 1–3, sulle is
 con l'etichetta `riferimenti`.
 
 Se nessuna issue rispetta le condizioni, non iniziare: scrivi all'utente quali
-issue sono tue e cosa le blocca. Quando hai aperto la pull request, **fermati**:
-il pacchetto successivo si prende in una nuova sessione, dopo il merge.
+issue sono tue e cosa le blocca. Quando hai aperto la pull request, **fermati**
+(vedi sotto): il pacchetto successivo si prende in una nuova sessione, dopo il
+merge.
+
+### Quando fermarsi
+
+"Fermati" vuol dire: il pacchetto è finito quando la sua pull request ha
+**tutti i controlli della CI verdi**, e solo allora ti fermi. Quindi:
+
+1. Apri la pull request e segui la CI fino alla fine (vedi i comandi qui
+   sotto). Tieni l'etichetta `AA-Presa in carico` finché lavori.
+2. Se un controllo fallisce, leggi il suo log, correggi sullo stesso ramo,
+   pubblica e ricomincia a seguire la CI. Continua finché tutti i controlli sono
+   verdi.
+3. Poi togli l'etichetta, scrivi all'utente il riepilogo (vedi "Prima di
+   dichiarare il lavoro finito"), con il link alla pull request verde, e
+   **termina la sessione**.
+
+Mentre aspetti la CI non fare domande e non cominciare altro lavoro. Fermati
+prima che la CI sia verde, e scrivi nella pull request che cosa hai visto e
+che cosa hai provato, solo se:
+
+- il controllo fallisce per un motivo che non dipende dal tuo pacchetto (la CI
+  stessa, un servizio esterno, un caso di riferimento che ritieni sbagliato:
+  quest'ultimo va anche nella issue, come dice "Modalità di controllo e
+  riferimenti");
+- per farlo passare dovresti violare una regola di questo file (toccare i
+  riferimenti, disattivare un controllo, modificare file non elencati);
+- dopo tre tentativi di correzione dello stesso controllo non passa ancora.
+
+Comandi per seguire la CI con l'API REST (`<sha>` è l'ultimo commit del ramo):
+
+```sh
+gh api repos/Matleyx78/tecnigrafo/commits/<sha>/check-runs \
+  --jq '.check_runs[] | "\(.name): \(.status) \(.conclusion)"'
+gh api "repos/Matleyx78/tecnigrafo/actions/runs?head_sha=<sha>" \
+  --jq '.workflow_runs[] | "\(.id) \(.status) \(.conclusion)"'
+gh run view <id dell'esecuzione> --repo Matleyx78/tecnigrafo --log-failed
+```
+
+Se nella revisione il responsabile chiede correzioni ("Leggi i commenti della
+pull request #<numero> e correggi"), riprendi in carico la pull request e ti
+fermi allo stesso modo: con la CI verde.
 
 ## Regole che non si possono violare
 
@@ -110,7 +151,9 @@ esiste la cartella `tests/verifica/`.
 - Se un caso ti sembra sbagliato, **fermati** e scrivilo nella issue, con il
   motivo. Non adattare il codice a un riferimento che ritieni sbagliato, e non
   adattare il riferimento al codice.
-- Ciò che dichiari di aver provato non conta: fa fede la CI.
+- Ciò che dichiari di aver provato non conta: fa fede la CI, che devi portare
+  al verde prima di fermarti ([Quando fermarsi](#quando-fermarsi)). Prima di
+  aprire la pull request fai comunque tutte le prove locali che puoi.
 
 ### In un pacchetto di riferimenti (`[X.Y-RN]`)
 
@@ -170,6 +213,8 @@ asan`. Un errore segnalato nel nostro codice si corregge, non si sopprime.
       verificare (per esempio Windows e macOS).
 - [ ] Hai tolto l'etichetta `AA-Presa in carico` da ciò che avevi preso in carico
       ([sopra](#per-prima-cosa-prendi-in-carico)).
+- [ ] La CI della pull request è verde in tutti i controlli, e solo dopo ti
+      sei fermato ([Quando fermarsi](#quando-fermarsi)).
 
 ## Commit e pull request
 
