@@ -1,0 +1,77 @@
+; Domande al modello sul font incluso e le misure dei caratteri (ADR 0013, P11)
+; Valori ricavati da LiberationSans-Regular.ttf 2.1.5 con fontTools:
+;   unitsPerEm = 2048, OS/2.sCapHeight = 1409
+;   hhea.ascent = 1854, hhea.descent = -434
+;   .notdef advanceWidth = 1536
+
+; Metriche verticali del font in unita dell'altezza delle maiuscole (1409)
+? font-metrics -> ascent=1.3158268275372605 descent=-0.30801987224982255
+
+; Caso limite: stringa vuota e soli spazi (space = 569)
+? text-width "" -> 0
+? text-width " " -> 0.40383250532292408
+? text-width "   " -> 1.2114975159687722
+
+; Caratteri ASCII singoli (A=1366, H=1479, M=1706, i=455, 0=1139)
+? text-width "A" -> 0.96948190205819729
+? text-width "H" -> 1.049680624556423
+? text-width "M" -> 1.2107877927608233
+? text-width "i" -> 0.32292405961674947
+? text-width "0" -> 0.80837473385379699
+
+; Stringhe ASCII: somma delle larghezze dei caratteri senza crenatura
+? text-width "0123456789" -> 8.0837473385379699
+? text-width "AV" -> 1.9389638041163946
+? text-width "To" -> 1.6962384669978707
+? text-width "Hello" -> 3.312278211497516
+? text-width "Hello world" -> 7.1894960965223564
+? text-width "Tecnigrafo 0.4" -> 9.2916962384669972
+? text-width "\"\\" -> 0.91980127750177432
+? text-width "a -> b" -> 3.7572746628814762
+
+; I codici di controllo DXF non vengono convertiti da text-width (%=1821, c=1024, d=1139, p=1139)
+? text-width "%%c" -> 3.3115684882895673
+? text-width "%%d" -> 3.3931866572036906
+? text-width "%%p" -> 3.3931866572036906
+? text-width "%%%" -> 3.8772178850248404
+? text-width "100%%c" -> 5.7366926898509583
+
+; Lettere accentate (Latin-1 e Latin Extended-A), greco e simboli tecnici
+? text-width "é" -> 0.80837473385379699
+? text-width "è" -> 0.80837473385379699
+? text-width "à" -> 0.80837473385379699
+? text-width "ù" -> 0.80837473385379699
+? text-width "ì" -> 0.40383250532292408
+? text-width "ò" -> 0.80837473385379699
+? text-width "Ç" -> 1.049680624556423
+? text-width "ß" -> 0.88786373314407385
+? text-width "ł" -> 0.32292405961674947
+? text-width "Œ" -> 1.4535131298793471
+? text-width "Città" -> 2.9886444286728175
+? text-width "Caffè" -> 3.4740951029098652
+? text-width "αβγΩ" -> 3.4897090134847408
+? text-width "°" -> 0.58126330731014908
+? text-width "±" -> 0.79772888573456358
+? text-width "²" -> 0.48403122782114977
+? text-width "³" -> 0.48403122782114977
+? text-width "±0.05°" -> 4.2079488999290273
+? text-width "mm²" -> 2.9056068133427964
+? text-width "m³" -> 1.6948190205819731
+
+; Sostituzioni ADR 0013: U+2300 (⌀) e U+2205 (∅) misurati come U+00D8 (Ø, advance=1593)
+? text-width "Ø" -> 1.1305890702625976
+? text-width "⌀" -> 1.1305890702625976
+? text-width "\u{2300}" -> 1.1305890702625976
+? text-width "∅" -> 1.1305890702625976
+? text-width "\u{2205}" -> 1.1305890702625976
+? text-width "⌀10" -> 2.7473385379701916
+? text-width "∅10" -> 2.7473385379701916
+? text-width "Ø10" -> 2.7473385379701916
+
+; Caratteri assenti dal font senza sostituto: larghezza di .notdef (1536)
+? text-width "\u{FFFD}" -> 1.0901348474095103
+? text-width "☃" -> 1.0901348474095103
+? text-width "中" -> 1.0901348474095103
+? text-width "\u{1F600}" -> 1.0901348474095103
+? text-width "A☃B" -> 3.0290986515259046
+? text-width "A\u{1F600}B" -> 3.0290986515259046

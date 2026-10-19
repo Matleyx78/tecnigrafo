@@ -9,3 +9,4 @@
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
 
+font/misure #92
