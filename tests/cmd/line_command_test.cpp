@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -16,7 +17,6 @@ namespace tg::cmd {
 namespace {
 
 using core::Line;
-using core::Vec2;
 
 class LineCommandTest : public testing::Test {
 protected:
@@ -227,14 +227,13 @@ TEST_F(LineCommandTest, SnapFindsEndpointsAndMidpointsOfUncommittedSegments) {
     point(0.0, 0.0);
     point(100.0, 0.0);
     runner().pointerMoved({50.2, 0.3});
-    ASSERT_TRUE(runner().activeSnap());
-    EXPECT_EQ(runner().activeSnap()->kind, core::SnapKind::Midpoint);
-    EXPECT_EQ(runner().activeSnap()->point, (Vec2{50.0, 0.0}));
+    EXPECT_EQ(runner().activeSnap(),
+              (std::optional{core::SnapPoint{{50.0, 0.0}, core::SnapKind::Midpoint}}));
     runner().click({50.2, 0.3}, PickAction::Add);
     EXPECT_EQ(line(1), (Line{{100.0, 0.0}, {50.0, 0.0}}));
     runner().pointerMoved({0.2, 0.3});
-    ASSERT_TRUE(runner().activeSnap());
-    EXPECT_EQ(runner().activeSnap()->kind, core::SnapKind::Endpoint);
+    EXPECT_EQ(runner().activeSnap(),
+              (std::optional{core::SnapPoint{{0.0, 0.0}, core::SnapKind::Endpoint}}));
     runner().click({0.2, 0.3}, PickAction::Add);
     EXPECT_EQ(line(2), (Line{{50.0, 0.0}, {0.0, 0.0}}));
     runner().submitText("");
