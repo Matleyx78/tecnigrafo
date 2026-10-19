@@ -45,9 +45,16 @@ per entrambe.
 Leggi, in quest'ordine:
 
 1. [docs/ROADMAP.md](docs/ROADMAP.md) — quale tappa è **aperta**.
-2. Il documento di quella tappa in `docs/tappe/` — il **pacchetto di lavoro** che ti
-   è stato assegnato, con file, interfacce, test e criterio di "fatto".
-3. [docs/ARCHITETTURA.md](docs/ARCHITETTURA.md) e gli ADR citati dal pacchetto.
+2. Il **pacchetto di lavoro** che ti è stato assegnato, con file, interfacce, test
+   e criterio di "fatto":
+   - dalla tappa 0.5 è la sua **scheda**, `docs/tappe/X.Y/PN-<nome>.md`, citata
+     nella issue. Contiene tutto ciò che serve: leggi la scheda, non il piano
+     intero. Del documento della tappa ti basta la tabella dei pacchetti, per
+     scegliere "il prossimo pacchetto";
+   - fino alla tappa 0.4 è la sua sezione nel documento della tappa in
+     `docs/tappe/`.
+3. Gli ADR citati dal pacchetto, e [docs/ARCHITETTURA.md](docs/ARCHITETTURA.md)
+   solo se il pacchetto lo cita o aggiunge un modulo.
 4. [docs/CODING_STYLE.md](docs/CODING_STYLE.md).
 
 Lavora **su un solo pacchetto**. Se il compito non corrisponde a un pacchetto della
@@ -78,8 +85,10 @@ merge.
 "Fermati" vuol dire: il pacchetto è finito quando la sua pull request ha
 **tutti i controlli della CI verdi**, e solo allora ti fermi. Quindi:
 
-1. Apri la pull request e segui la CI fino alla fine (vedi i comandi qui
-   sotto). Tieni l'etichetta `AA-Presa in carico` finché lavori.
+1. Apri la pull request e aspetta la fine della CI con **un solo comando che
+   blocca** (vedi qui sotto), non con controlli ripetuti: ogni controllo è un
+   passo in più dell'agente e consuma token, mentre un comando che aspetta non
+   ne consuma. Tieni l'etichetta `AA-Presa in carico` finché lavori.
 2. Se un controllo fallisce, leggi il suo log, correggi sullo stesso ramo,
    pubblica e ricomincia a seguire la CI. Continua finché tutti i controlli sono
    verdi.
@@ -99,15 +108,20 @@ che cosa hai provato, solo se:
   riferimenti, disattivare un controllo, modificare file non elencati);
 - dopo tre tentativi di correzione dello stesso controllo non passa ancora.
 
-Comandi per seguire la CI con l'API REST (`<sha>` è l'ultimo commit del ramo):
+Comandi per aspettare la CI (`<sha>` è l'ultimo commit pubblicato del ramo):
 
 ```sh
-gh api repos/Matleyx78/tecnigrafo/commits/<sha>/check-runs \
-  --jq '.check_runs[] | "\(.name): \(.status) \(.conclusion)"'
+# l'esecuzione della CI di quel commit (se la lista è vuota, non è ancora partita)
 gh api "repos/Matleyx78/tecnigrafo/actions/runs?head_sha=<sha>" \
   --jq '.workflow_runs[] | "\(.id) \(.status) \(.conclusion)"'
-gh run view <id dell'esecuzione> --repo Matleyx78/tecnigrafo --log-failed
+# aspetta la fine; esce con errore se un controllo fallisce
+gh run watch <id> --repo Matleyx78/tecnigrafo --exit-status --compact
+# il log dei controlli falliti
+gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
+
+Se il tuo strumento interrompe i comandi lunghi (la CI può durare mezz'ora),
+rilancia lo stesso `gh run watch`: riprende da dove era.
 
 Se nella revisione il responsabile chiede correzioni ("Leggi i commenti della
 pull request #<numero> e correggi"), riprendi in carico la pull request e ti
