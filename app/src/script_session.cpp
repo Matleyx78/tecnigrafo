@@ -96,6 +96,28 @@ bool waitFor(Condition done) {
 
 }  // namespace
 
+render::SceneStyle lightSceneStyle() {
+    // Grid, sizes and tolerances stay those of the program: only colours
+    // change. Entities are black, as AutoCAD draws colour 7 on white; the
+    // other colours are darker versions of the dark style's, readable on
+    // white.
+    render::SceneStyle style;
+    style.background = {255, 255, 255};
+    style.gridMinor = {236, 238, 241};
+    style.gridMajor = {214, 218, 224};
+    style.axisX = {200, 40, 40};
+    style.axisY = {30, 140, 50};
+    style.entity = {0, 0, 0};
+    style.preview = {190, 120, 0};
+    style.highlight = {0, 100, 230};
+    style.windowFill = {40, 90, 200, 40};
+    style.windowBorder = {30, 90, 220};
+    style.crossingFill = {40, 160, 70, 40};
+    style.crossingBorder = {30, 140, 60};
+    style.snapMarker = {220, 110, 0};
+    return style;
+}
+
 ScriptSession::ScriptSession(MainWindow& window, QString outputFolder)
     : m_window(window),
       m_outputFolder(std::move(outputFolder)),
@@ -114,6 +136,7 @@ bool ScriptSession::run(const script::Script& script) {
         fail(QStringLiteral("the command line has no history"));
         return false;
     }
+    m_window.view()->setStyle(lightSceneStyle());
     if (!activateWindow()) {
         fail(QStringLiteral("the main window did not become active"));
         return false;

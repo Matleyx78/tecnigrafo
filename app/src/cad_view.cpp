@@ -54,6 +54,11 @@ void CadView::setView(const core::Vec2& center, double unitsPerPixel) {
     update();
 }
 
+void CadView::setStyle(const render::SceneStyle& style) {
+    m_style = style;
+    update();
+}
+
 void CadView::paintEvent(QPaintEvent* /*event*/) {
     QPainter painter(this);
     QtPainter backend(painter);

@@ -44,6 +44,10 @@ public:
     /// first shown. Precondition: unitsPerPixel > 0.
     void setView(const core::Vec2& center, double unitsPerPixel);
 
+    /// Draws with `style` from now on: the colours of grid, entities,
+    /// preview, selection and snap marker.
+    void setStyle(const render::SceneStyle& style);
+
 signals:
     /// Cursor position in drawing units.
     void cursorMoved(double worldX, double worldY);

@@ -21,6 +21,7 @@
 #include <QStringList>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -181,6 +182,34 @@ TEST(ScriptSessionTest, ScreenshotHasTheSizeOfTheView) {
     EXPECT_EQ(standard.size(), QSize(800, 600));
     const QImage small(QDir(output).filePath(QStringLiteral("small.png")));
     EXPECT_EQ(small.size(), QSize(320, 200));
+}
+
+TEST(ScriptSessionTest, ScreenshotUsesTheLightTheme) {
+    // A horizontal polyline at y = 10: on screen, row 50 - 10 = 40.
+    const QString output = outputFolder("light-theme");
+    const std::string report = runLevel2(
+        "!level 2\n!view 0,0 1 200x100\nPLINE\n-50,10\n50,10\n\n!screenshot tema\n", output);
+    EXPECT_FALSE(report.empty());
+    const QImage image(QDir(output).filePath(QStringLiteral("tema.png")));
+    ASSERT_EQ(image.size(), QSize(200, 100));
+
+    const render::Color colour = lightSceneStyle().background;
+    const QColor background(colour.r, colour.g, colour.b);
+    ASSERT_EQ(background, QColor(Qt::white));
+    int white = 0;
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            white += image.pixelColor(x, y) == background ? 1 : 0;
+        }
+    }
+    // The grid takes a few rows and columns; the rest is background.
+    EXPECT_GT(white, image.width() * image.height() * 3 / 4);
+    // The polyline is dark, wherever antialiasing puts it around row 40.
+    int darkest = 255;
+    for (int y = 37; y <= 43; ++y) {
+        darkest = std::min(darkest, qGray(image.pixel(100, y)));
+    }
+    EXPECT_LT(darkest, 128);
 }
 
 TEST(ScriptSessionTest, ClickSnapsToTheVertexItIsDrawnAt) {
@@ -368,7 +397,8 @@ TEST(ConfrontaImmaginiCaseTest, CaseComparesTheScreenshots) {
         whiteImage(QSize(64, 48)).save(QDir(folder).filePath(QStringLiteral("atteso-vista.png"))));
     const ProcessResult result = checkCase(folder);
     EXPECT_EQ(result.exitCode, 1) << result.output;
-    // The empty view is the grid on the background, never all white.
+    // The empty view is the grid and the axes on the white background: more
+    // than 0.1% of the pixels are not white.
     EXPECT_NE(result.output.find("image vista: "), std::string::npos) << result.output;
     EXPECT_TRUE(
         QFile::exists(QDir(folder).filePath(QStringLiteral("ottenuto/differenza-vista.png"))));

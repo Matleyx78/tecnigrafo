@@ -4,6 +4,7 @@
 #pragma once
 
 #include "tg/core/vec2.hpp"
+#include "tg/render/scene_renderer.hpp"
 #include "tg/script/script.hpp"
 
 #include <QPointF>
@@ -23,6 +24,12 @@ class MainWindow;
 /// Name of the report that `tecnigrafo --script` writes in its output folder.
 inline constexpr const char* kScriptReportFile = "rapporto.txt";
 
+/// The light theme of the control mode (docs/adr/0011, point 5): dark
+/// drawing on a white background, so that screenshots do not depend on the
+/// theme of the system or of the user. The program has only its dark style
+/// until the themes of stage 0.6, which will take over these colours.
+[[nodiscard]] render::SceneStyle lightSceneStyle();
+
 /// Level 2 of the control mode (docs/adr/0011, docs/verifica/script.md):
 /// runs a script in a main window, with keyboard and mouse events sent to
 /// its widgets as the tests of module app do, and writes the same report
@@ -40,6 +47,7 @@ inline constexpr const char* kScriptReportFile = "rapporto.txt";
 ///   menu writes in the history ("<Ortho on>") is left out of the report,
 ///   because the directives do not pass through the keys. !key sends the
 ///   key, and its line is reported.
+/// - The view uses lightSceneStyle().
 /// - !view fixes the size of the view, its center and its scale; without
 ///   it the view is 800x600, centered on 0,0, one drawing unit per pixel.
 /// - !screenshot saves the view, at one image pixel per screen pixel, in
