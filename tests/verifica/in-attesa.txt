@@ -17,11 +17,3 @@ circle/tre-punti #86
 circle/valore-non-positivo #86
 circle/valori-predefiniti #86
 font/misure #92
-line/annulla-ripeti #84
-line/close #84
-line/esc-conserva #84
-line/punto-coincidente #84
-line/segmenti-e-alias #84
-line/selezione-ed-erase #84
-line/snap-e-orto #84
-line/undo-a-meta #84
