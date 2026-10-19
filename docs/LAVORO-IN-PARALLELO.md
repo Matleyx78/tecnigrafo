@@ -88,8 +88,8 @@ prossimo pacchetto").
 ```text
 Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
 lettera. Prendi il prossimo pacchetto della tappa 0.4 assegnato a te, secondo le
-regole di AGENTS.md. Realizzalo, apri la pull request e fermati come dice
-AGENTS.md, senza aspettare la CI.
+regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI al
+verde e fermati, come dice AGENTS.md.
 ```
 
 Per Gemini, al posto di "pacchetto" si scrive "pacchetto di riferimenti".
@@ -100,8 +100,8 @@ Se serve far partire un pacchetto preciso, si indicano issue e ramo:
 Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
 lettera. Realizza solo il pacchetto P5 della tappa 0.4 (issue #80), che è
 assegnato a te. Lavora sul ramo p0.4-05-circle-command, partendo da main
-aggiornato. Alla fine apri una pull request che chiuda la issue #80 e fermati
-come dice AGENTS.md, senza aspettare la CI.
+aggiornato. Alla fine apri una pull request che chiuda la issue #80, porta la CI
+al verde e fermati, come dice AGENTS.md.
 ```
 
 Mai dare compiti generici ("continua il progetto", "sistema quello che serve"):
