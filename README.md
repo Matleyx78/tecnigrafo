@@ -136,7 +136,9 @@ Le dipendenze vanno in una sola direzione: `core ← edit ← cmd ← app` e
 
 Il progetto avanza per tappe, una alla volta: ogni tappa ha obiettivo, confini,
 criteri di chiusura e un piano diviso in pacchetti di lavoro. Lo stato è in
-[docs/ROADMAP.md](docs/ROADMAP.md).
+[docs/ROADMAP.md](docs/ROADMAP.md); quanto manca ad AutoCAD, comando per
+comando, nel [catalogo di parità](docs/parita/comandi.md). Il perché delle
+scelte di partenza è in [docs/VALUTAZIONI-INIZIALI.md](docs/VALUTAZIONI-INIZIALI.md).
 
 ## Contribuire
 
