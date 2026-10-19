@@ -53,7 +53,8 @@ Solo il responsabile apre una tappa, e solo dopo aver chiuso la precedente:
 
 1. Tutti i pacchetti sono uniti e tutti i criteri di chiusura sono verificati, uno
    per uno, e spuntati nel documento della tappa. Lo fa la pull request di
-   chiusura, che prepara anche le note di rilascio
+   chiusura, che aggiorna il [catalogo di parità](parita/comandi.md) e prepara
+   anche le note di rilascio
    ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Chiudere la tappa").
 2. La CI è verde sui tre sistemi operativi: su Windows, Linux e macOS il programma
    si compila senza avvisi e tutti i test automatici passano.
@@ -130,3 +131,11 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   propone abbia il tempo di sostenerlo. Regola in
   [GOVERNANCE.md](../GOVERNANCE.md); cambia di conseguenza il prerequisito della
   [tappa 0.4](tappe/0.4-entita-base.md).
+- **2026-10-19 — Idea #106 approvata per intero.** Il responsabile approva i
+  cinque punti nati dall'analisi del metodo di ArtCraft:
+  [catalogo di parità](parita/comandi.md) dei comandi di AutoCAD, aggiornato
+  dalla pull request di chiusura di ogni tappa; AddressSanitizer e UBSan in CI
+  ([ADR 0016](adr/0016-sanitizer-in-ci.md), job `Linux (ASan, UBSan)`);
+  cartella di build separata per ogni agente (`TG_BUILD_SUFFIX`, in
+  [AGENTS.md](../AGENTS.md)). Fuzzing del lettore DXF ed ezdxf come oracolo
+  entrano nella scheda della [tappa 0.5](tappe/0.5-file-e-dxf.md).

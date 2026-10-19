@@ -152,6 +152,8 @@ la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
   ciascuno i casi di verifica o i test che lo provano, oppure "da provare a mano";
 - scrive le note di rilascio `docs/rilasci/X.Y.md`, con la tabella della prova
   manuale da compilare;
+- aggiorna il [catalogo di parità](parita/comandi.md): stato, note e riepilogo
+  dei comandi toccati dalla tappa, e la versione in cima al riepilogo;
 - aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README.
 
 Il responsabile esegue la prova manuale su Windows e Linux, compila la tabella,
