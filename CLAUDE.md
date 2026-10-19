@@ -1,4 +1,7 @@
 # Tecnigrafo
 
-Le istruzioni per gli assistenti IA sono in [AGENTS.md](AGENTS.md): leggile per
-intero prima di qualunque modifica e seguile alla lettera.
+Le istruzioni per gli assistenti IA sono in AGENTS.md, importato qui sotto:
+Claude Code lo carica da solo all'avvio della sessione, quindi non serve
+aprirlo a parte. Seguile alla lettera.
+
+@AGENTS.md
