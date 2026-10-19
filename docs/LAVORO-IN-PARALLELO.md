@@ -47,13 +47,61 @@ issue filtrata per etichetta mostra in ogni momento chi sta facendo cosa.
 Il piano dettagliato della tappa (modello in [tappe/0000-modello.md](tappe/0000-modello.md))
 dice, per ogni pacchetto:
 
-- **Difficoltà** e **agente** del lavoro;
+- **Difficoltà**, **agente**, **modello** e **impegno** del lavoro (vedi sotto);
 - **Riferimenti**: l'agente che li scrive, oppure "non servono" con il motivo
   (documentazione, note di rilascio, infrastruttura che non cambia il
   comportamento);
 - **Dipende da**: le issue che devono essere chiuse prima. Due pacchetti che
   toccano gli stessi file sono **sempre** legati da "Dipende da", così non
   possono partire insieme.
+
+### Pacchetti leggeri (dalla tappa 0.5)
+
+Ogni sessione di un agente paga un costo fisso in token prima di scrivere una
+riga: legge le regole, il pacchetto, gli ADR e il codice che tocca. Poi ogni
+pacchetto costa una CI e un merge. Il piano tiene basso il primo costo e non
+moltiplica il secondo:
+
+- **Una scheda per pacchetto.** Ogni pacchetto ha la sua scheda,
+  `docs/tappe/X.Y/PN-<nome>.md` (modello in
+  [tappe/0000-pacchetto.md](tappe/0000-pacchetto.md)), autosufficiente:
+  l'agente legge quella, non il piano intero. Le regole della tappa che lo
+  riguardano si ripetono nella scheda, in breve.
+- **Un modulo per pacchetto**, più i suoi test e le righe dei file comuni.
+- **Misura.** Al massimo una quindicina di file e qualche centinaio di righe
+  cambiate (indicativamente fino a 600). Un pacchetto più grande si divide, di
+  solito lungo i confini naturali (un'entità, un comando, una famiglia di
+  domande).
+- **Non troppo piccoli.** Un pacchetto che tocca una sola funzione o un solo
+  file si unisce a un vicino dello stesso modulo: ogni pacchetto costa comunque
+  una sessione, una CI, una revisione e un merge, e spesso una pull request di
+  riferimenti.
+- **Riferimenti della stessa misura.** Un pacchetto di riferimenti copre un
+  solo pacchetto di lavoro; oltre una ventina di casi si divide per area.
+
+### Modello e impegno
+
+Il piano suggerisce, per ogni pacchetto, la **fascia di modello** e
+l'**impegno** (quanto ragionamento chiedere, dove lo strumento lo permette).
+Sono indicazioni: il responsabile sceglie il modello quando avvia l'agente. I
+nomi dei modelli cambiano, la fascia resta; quelli qui sotto sono gli attuali
+di ottobre 2026.
+
+| Fascia | Per | Claude | Codex | Gemini |
+|---|---|---|---|---|
+| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus | modello di punta | Pro |
+| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta, riferimenti ordinari | Sonnet | modello standard | Pro |
+| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi | Haiku o Sonnet | modello piccolo | Flash |
+
+| Impegno | Quando |
+|---|---|
+| **alto** | il pacchetto richiede di ragionare su casi limite (tolleranze, punti quasi allineati, annulla e ripeti) o di progettare interfacce |
+| **medio** | il lavoro segue uno schema già presente nel codice |
+| **basso** | il lavoro è meccanico: testi, elenchi, documenti |
+
+Di norma: facile → leggero e basso; media → medio e medio; impegnativa →
+forte e alto. Un pacchetto impegnativo che non si riesce a dividere resta
+impegnativo; uno che si divide dà spesso due pacchetti medi.
 
 ## 2. Aprire la tappa: issue ed etichette
 
@@ -64,6 +112,10 @@ All'apertura si creano, nel milestone `vX.Y`:
 - una issue `[X.Y-RN]` per ogni pacchetto che ha riferimenti, con le etichette
   `tappa-X.Y`, `riferimenti` e `agente:…` di chi li scrive. La issue del lavoro
   la cita nella riga "Dipende da".
+
+Dalla tappa 0.5 il testo di ogni issue cita la scheda del pacchetto
+(`docs/tappe/X.Y/PN-<nome>.md`) e ne riporta modello e impegno, così l'agente
+parte da lì.
 
 Le issue le può creare Claude, partendo dal piano, quando il responsabile glielo
 chiede.

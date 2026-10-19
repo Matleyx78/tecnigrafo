@@ -139,3 +139,12 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   cartella di build separata per ogni agente (`TG_BUILD_SUFFIX`, in
   [AGENTS.md](../AGENTS.md)). Fuzzing del lettore DXF ed ezdxf come oracolo
   entrano nella scheda della [tappa 0.5](tappe/0.5-file-e-dxf.md).
+- **2026-10-19 — Agenti: CI verde prima di fermarsi, pacchetti più leggeri.**
+  Un agente si ferma quando la pull request ha tutti i controlli verdi, e
+  aspetta la CI con un solo comando che blocca (`gh run watch`), non con
+  controlli ripetuti che consumano token ([AGENTS.md](../AGENTS.md), "Quando
+  fermarsi"). Dalla tappa 0.5 il piano divide il lavoro in pacchetti più leggeri:
+  una scheda autosufficiente per pacchetto (`docs/tappe/X.Y/PN-<nome>.md`), un
+  modulo e al massimo una quindicina di file ciascuno, e per ognuno la fascia di
+  modello e l'impegno suggeriti ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
+  "Preparare il piano"). La tappa 0.4 finisce con i pacchetti attuali.

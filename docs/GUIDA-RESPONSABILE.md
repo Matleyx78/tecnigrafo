@@ -202,6 +202,9 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    cd ~/progetti/tecnigrafo && git checkout main && git pull && agy
    ```
 
+   Dalla tappa 0.5 scegli il modello che il piano indica per il pacchetto (di
+   norma Pro; Flash solo per i riferimenti più semplici).
+
 2. Scrivi:
 
    ```text
@@ -235,7 +238,9 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
 Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 
 1. Avvia l'agente (Claude Code o Codex) nella cartella del progetto, dopo
-   `git checkout main && git pull`.
+   `git checkout main && git pull`. Dalla tappa 0.5 scegli il modello e
+   l'impegno che il piano indica per il pacchetto (tabella in
+   [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno").
 2. Scrivi:
 
    ```text

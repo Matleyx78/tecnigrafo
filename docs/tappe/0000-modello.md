@@ -44,19 +44,25 @@ Un pacchetto che cambia il comportamento del programma ha anche un pacchetto di
 riferimenti `RN`, scritto da un altro agente e unito prima del lavoro
 (ADR 0011). La sua issue si cita in "Dipende da".
 
-### PX — Titolo
+Dalla tappa 0.5 questa sezione contiene **solo la tabella**: ogni pacchetto ha
+una sua **scheda** in `docs/tappe/X.Y/PN-<nome>.md` (modello in
+[0000-pacchetto.md](0000-pacchetto.md)), e la sua issue la cita. Così un agente
+legge la scheda del suo pacchetto e non tutto il piano. Le regole per dividere
+il lavoro sono in [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), sezione
+"Preparare il piano".
 
-- **Issue:** #…
-- **Difficoltà:** facile | media | impegnativa
-- **Agente:** claude | codex | …
-- **Riferimenti:** issue `[X.Y-RN]` (#…), agente gemini | non servono: motivo
-- **Dipende da:** —
-- **Moduli:** core | render | app | …
-- **File:** elenco dei file da creare o modificare
-- **Cosa fare:** descrizione precisa del lavoro, con le interfacce da rispettare
-- **Test richiesti:** i casi minimi che devono esistere
-- **Fatto quando:** condizioni verificabili per considerare il pacchetto concluso;
-  ognuna deve avere almeno un caso di verifica nel pacchetto di riferimenti
+| Pacchetto | Scheda | Issue | Dipende da | Riferimenti | Difficoltà | Agente | Modello | Impegno |
+|---|---|---|---|---|---|---|---|---|
+| P1 Titolo | [P1](X.Y/P1-nome.md) | #… | — | R1 (gemini) / non servono: motivo | facile / media / impegnativa | claude / codex / … | leggero / medio / forte | basso / medio / alto |
+
+L'**ordine delle righe** è l'ordine in cui gli agenti prendono "il prossimo
+pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RN]` hanno una riga
+ciascuna, prima del loro pacchetto di lavoro.
+
+**File comuni.** I file che più pacchetti toccano nello stesso periodo (di norma
+i `CMakeLists.txt` e i registri come `builtin_commands.cpp`): ognuno aggiunge
+solo le sue righe, in ordine alfabetico, e chi arriva dopo si aggiorna. Si
+elencano qui e si ripetono nelle schede che li toccano.
 
 ## 7. Prova manuale
 
