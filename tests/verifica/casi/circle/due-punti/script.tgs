@@ -1,0 +1,15 @@
+; CIRCLE: opzione 2P con punti in varie direzioni
+CIRCLE
+2P
+0,0
+10,0
+!report
+CIRCLE
+2p
+20,10
+20,-10
+!report
+C
+2P
+0,0
+6,8

@@ -1,0 +1,15 @@
+; CIRCLE: snap al centro passando sul cerchio; nessun snap a estremo o medio
+!view 50,50 1 800x600
+CIRCLE
+50,50
+20
+LINE
+!move 70,50
+!report
+!move 75,50
+!report
+!move 50,50
+!report
+!click 70,50
+!report
+!esc

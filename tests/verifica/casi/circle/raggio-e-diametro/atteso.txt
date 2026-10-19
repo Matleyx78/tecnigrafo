@@ -1,0 +1,99 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 CIRCLE center=10,20 radius=15
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 10,20
+  Specify radius of circle or [Diameter]: 15
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 2]
+entities:
+  1 CIRCLE center=10,20 radius=15
+  2 CIRCLE center=30,40 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 30,40
+  Specify radius of circle or [Diameter] <15.0000>: @0,10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 3]
+entities:
+  1 CIRCLE center=10,20 radius=15
+  2 CIRCLE center=30,40 radius=10
+  3 CIRCLE center=50,50 radius=12.5
+messages:
+  Command: C
+  Specify center point for circle or [3P/2P]: 50,50
+  Specify radius of circle or [Diameter] <10.0000>: D
+  Specify diameter of circle <20.0000>: 25
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 3
+
+[final]
+entities:
+  1 CIRCLE center=10,20 radius=15
+  2 CIRCLE center=30,40 radius=10
+  3 CIRCLE center=50,50 radius=12.5
+  4 CIRCLE center=100,100 radius=10
+messages:
+  Command: C
+  Specify center point for circle or [3P/2P]: 100,100
+  Specify radius of circle or [Diameter] <12.5000>: Diameter
+  Specify diameter of circle <25.0000>: @20,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 4

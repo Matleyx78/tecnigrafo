@@ -1,0 +1,32 @@
+; CIRCLE: selezione con clic (bordo vs centro), finestra, intersezione e cancellazione con ERASE
+!view 100,50 1 800x600
+CIRCLE
+50,50
+20
+CIRCLE
+150,50
+20
+!click 50,50
+!report
+!click 70,50
+!report
+!esc
+!click 25,25
+!click 60,75
+!report
+!esc
+!click 25,25
+!click 75,75
+!report
+!esc
+!click 55,55
+!click 45,45
+!report
+!esc
+!click 75,55
+!click 65,45
+!report
+!esc
+ERASE
+!click 70,50
+

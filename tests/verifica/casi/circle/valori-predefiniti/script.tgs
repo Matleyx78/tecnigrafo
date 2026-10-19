@@ -1,0 +1,24 @@
+; CIRCLE: valore predefinito proposto e accettato con Invio; Invio senza predefinito termina
+CIRCLE
+0,0
+
+!report
+CIRCLE
+0,0
+25
+!report
+CIRCLE
+50,50
+
+!report
+CIRCLE
+100,100
+D
+
+!report
+CIRCLE
+0,0
+10
+CIRCLE
+10,10
+

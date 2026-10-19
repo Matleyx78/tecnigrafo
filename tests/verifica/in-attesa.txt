@@ -8,7 +8,14 @@
 # La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
-
+circle/due-punti #86
+circle/esc-annulla #86
+circle/raggio-e-diametro #86
+circle/selezione-ed-erase #86
+circle/snap #86
+circle/tre-punti #86
+circle/valore-non-positivo #86
+circle/valori-predefiniti #86
 font/misure #92
 line/annulla-ripeti #84
 line/close #84
