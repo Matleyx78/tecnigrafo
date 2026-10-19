@@ -80,3 +80,4 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0013](adr/0013-testo-e-font.md) | Testo su una riga e font incluso | Accettato |
 | [0014](adr/0014-richieste-di-valori-e-testo.md) | Richieste di distanza, angolo e testo | Accettato |
 | [0015](adr/0015-esc-conserva-il-lavoro.md) | Esc conserva il lavoro già completato | Accettato |
+| [0016](adr/0016-sanitizer-in-ci.md) | AddressSanitizer e UBSan in CI | Accettato |
