@@ -1251,10 +1251,11 @@ public:
             return Status::Finished;
         }
         if (const auto* keyword = std::get_if<KeywordInput>(&input);
-            keyword && keyword->keyword == "Remember") {
+            keyword != nullptr && keyword->keyword == "Remember") {
             context.defaults = {7.5, -core::kPi / 2.0, 12.0};
         }
-        if (const auto* point = std::get_if<PointInput>(&input); point && m_journal.keepOnCancel) {
+        if (const auto* point = std::get_if<PointInput>(&input);
+            point != nullptr && m_journal.keepOnCancel) {
             context.editor.add(line({10, 20}, point->point));
         }
         return Status::Continue;
