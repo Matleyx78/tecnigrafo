@@ -1,0 +1,45 @@
+; Domande al modello sulla costruzione arc-through (ADR 0011, ADR 0012, P6)
+
+; Tre punti in senso antiorario (CCW): semicerchio superiore
+? arc-through 10,0 0,10 -10,0 -> ARC center=0,0 radius=10 start-angle=0 end-angle=180
+
+; Tre punti in senso orario (CW): semicerchio inferiore
+; L'arco in DXF e sempre antiorario: gli estremi vengono scambiati (da 180 a 0 gradi)
+? arc-through 10,0 0,-10 -10,0 -> ARC center=0,0 radius=10 start-angle=180 end-angle=0
+
+; Arco che attraversa 0 gradi in senso antiorario (da 270 a 90 gradi)
+? arc-through 0,-10 10,0 0,10 -> ARC center=0,0 radius=10 start-angle=270 end-angle=90
+
+; Arco che attraversa 0 gradi in senso orario (da 90 attraverso (10,0) a 270)
+; Scambiando gli estremi per renderlo antiorario, va da 270 a 90 gradi
+? arc-through 0,10 10,0 0,-10 -> ARC center=0,0 radius=10 start-angle=270 end-angle=90
+
+; Arco di raggio 2 da (0,0) attraverso (2,2) a (4,0):
+; va in senso orario (180 -> 90 -> 0 gradi); scambiato in senso antiorario va da 0 a 180 gradi
+? arc-through 0,0 2,2 4,0 -> ARC center=2,0 radius=2 start-angle=0 end-angle=180
+
+; Stesso arco dato in senso antiorario: da (4,0) attraverso (2,2) a (0,0)
+? arc-through 4,0 2,2 0,0 -> ARC center=2,0 radius=2 start-angle=0 end-angle=180
+
+; Punti coincidenti: danno 'collinear'
+? arc-through 0,0 0,0 10,0 -> collinear
+? arc-through 0,0 10,0 10,0 -> collinear
+? arc-through 5,5 10,10 5,5 -> collinear
+? arc-through 7,7 7,7 7,7 -> collinear
+
+; Tre punti allineati esattamente: danno 'collinear'
+? arc-through 0,0 5,5 10,10 -> collinear
+? arc-through -10,0 0,0 10,0 -> collinear
+
+; Punti quasi allineati intorno alla soglia dell'ADR 0012 (|cross| <= 1e-9 * L^2)
+; Per a=(0,0), c=(10,0), b=(5,h): L=10, L^2=100, soglia = 1e-7; h <= 1e-8 e collinear.
+
+; Appena sotto la soglia: h = 9e-9 -> |cross| = 9e-8 <= 1e-7 -> collinear
+? arc-through 0,0 5,9e-09 10,0 -> collinear
+
+; Esattamente alla soglia: h = 1e-8 -> |cross| = 1e-7 <= 1e-7 -> collinear
+? arc-through 0,0 5,1e-08 10,0 -> collinear
+
+; Appena sopra la soglia: h = 2e-8 -> |cross| = 2e-7 > 1e-7 -> arco valido
+; centro (5, -625000000), raggio 625000000, estremi scambiati in senso antiorario
+? arc-through 0,0 5,2e-08 10,0 -> ARC center=5,-625000000 radius=625000000 start-angle=89.99999954163377 end-angle=90.00000045836623

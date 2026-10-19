@@ -1,0 +1,68 @@
+; Domande al modello sulla geometria delle linee (ADR 0012, P6)
+
+; Linea orizzontale di lunghezza 10
+L1 = LINE start=0,0 end=10,0
+
+; Linea verticale di lunghezza 10
+L2 = LINE start=5,-2 end=5,8
+
+; Segmento obliquo 3-4-5
+L3 = LINE start=0,0 end=3,4
+
+; Segmento obliquo con estremi invertiti
+L4 = LINE start=20,10 end=10,30
+
+; Caso limite: segmento degenere (punti coincidenti)
+L_zero = LINE start=50,50 end=50,50
+
+; Riquadro esatto (bbox)
+? bbox L1 -> 0,0 10,0
+? bbox L2 -> 5,-2 5,8
+? bbox L3 -> 0,0 3,4
+? bbox L4 -> 10,10 20,30
+? bbox L_zero -> 50,50 50,50
+
+; Lunghezza (length)
+? length L1 -> 10
+? length L2 -> 10
+? length L3 -> 5
+? length L4 -> 22.360679774997898
+? length L_zero -> 0
+
+; Distanza e punto piu vicino (distance, closest)
+? distance L1 4,0 -> 0
+? closest L1 4,0 -> 4,0
+? distance L1 4,3 -> 3
+? closest L1 4,3 -> 4,0
+? distance L1 -4,0 -> 4
+? closest L1 -4,0 -> 0,0
+? distance L1 13,4 -> 5
+? closest L1 13,4 -> 10,0
+
+? distance L3 0,0 -> 0
+? closest L3 0,0 -> 0,0
+? distance L3 3,4 -> 0
+? closest L3 3,4 -> 3,4
+? distance L3 -3,-4 -> 5
+? closest L3 -3,-4 -> 0,0
+
+; Finestra e intersezione (inside, crosses)
+? inside L1 -1,-1 11,1 -> yes
+? crosses L1 -1,-1 11,1 -> yes
+? inside L1 4,-1 6,1 -> no
+? crosses L1 4,-1 6,1 -> yes
+? inside L1 0,2 10,5 -> no
+? crosses L1 0,2 10,5 -> no
+? inside L1 10,0 12,2 -> no
+? crosses L1 10,0 12,2 -> yes
+
+; Punti di snap (snaps)
+? snaps L1 -> Endpoint 0,0; Endpoint 10,0; Midpoint 5,0
+? snaps L2 -> Endpoint 5,-2; Endpoint 5,8; Midpoint 5,3
+? snaps L3 -> Endpoint 0,0; Endpoint 3,4; Midpoint 1.5,2
+
+; Filtro per modi di snap
+? snaps L3 modes=endpoint -> Endpoint 0,0; Endpoint 3,4
+? snaps L3 modes=midpoint -> Midpoint 1.5,2
+? snaps L3 modes=center -> none
+? snaps L3 modes=none -> none

@@ -1,0 +1,65 @@
+; Domande al modello sulla geometria dei cerchi (ADR 0012, P6)
+
+; Cerchio con centro nell'origine e raggio 10
+C1 = CIRCLE center=0,0 radius=10
+
+; Cerchio traslato con centro (25,35) e raggio 5
+C2 = CIRCLE center=25,35 radius=5
+
+; Casi limite sui raggi: raggio minuscolo e raggio enorme
+C_tiny = CIRCLE center=0,0 radius=1e-06
+C_huge = CIRCLE center=100,100 radius=1000000
+
+; Riquadro esatto (bbox)
+? bbox C1 -> -10,-10 10,10
+? bbox C2 -> 20,30 30,40
+? bbox C_tiny -> -1e-06,-1e-06 1e-06,1e-06
+? bbox C_huge -> -999900,-999900 1000100,1000100
+
+; Lunghezza (circonferenza)
+? length C1 -> 62.83185307179586
+? length C2 -> 31.41592653589793
+
+; Distanza e punto piu vicino (distance, closest)
+; Il centro del cerchio e a distanza pari al raggio
+? distance C1 0,0 -> 10
+; Punti sulla circonferenza
+? distance C1 6,8 -> 0
+? closest C1 6,8 -> 6,8
+; Punto interno (non centro)
+? distance C1 3,4 -> 5
+? closest C1 3,4 -> 6,8
+; Punti esterni
+? distance C1 12,16 -> 10
+? closest C1 12,16 -> 6,8
+? distance C1 15,0 -> 5
+? closest C1 15,0 -> 10,0
+? distance C1 0,-25 -> 15
+? closest C1 0,-25 -> 0,-10
+
+; Finestra e intersezione (inside, crosses)
+; Il cerchio e una curva, non una regione: un rettangolo dentro il cerchio non lo interseca
+? inside C1 -2,-2 2,2 -> no
+? crosses C1 -2,-2 2,2 -> no
+
+; Rettangolo che contiene l'intero cerchio
+? inside C1 -15,-15 15,15 -> yes
+? crosses C1 -15,-15 15,15 -> yes
+
+; Rettangolo che attraversa la circonferenza
+? inside C1 8,-2 12,2 -> no
+? crosses C1 8,-2 12,2 -> yes
+
+; Rettangolo esterno disgiunto
+? inside C1 15,15 25,25 -> no
+? crosses C1 15,15 25,25 -> no
+
+; Punti di snap (snaps): il cerchio ha solo il centro
+? snaps C1 -> Center 0,0
+? snaps C2 -> Center 25,35
+
+; Filtro per modi di snap
+? snaps C1 modes=center -> Center 0,0
+? snaps C1 modes=endpoint -> none
+? snaps C1 modes=midpoint -> none
+? snaps C1 modes=none -> none
