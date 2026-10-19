@@ -1,0 +1,92 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=10,10 end=30,10
+  2 LINE start=10,30 end=50,30
+messages:
+  Command: LINE
+  Specify first point: 10,10
+  Specify next point or [Undo]: 30,10
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 10,30
+  Specify next point or [Undo]: 50,30
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 20,11
+active snap: none
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  1 LINE start=10,10 end=30,10
+  2 LINE start=10,30 end=50,30
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 35,20
+active snap: none
+statistics:
+  LINE 2
+
+[report 3]
+entities:
+  1 LINE start=10,10 end=30,10
+  2 LINE start=10,30 end=50,30
+messages:
+prompt: Command:
+preview:
+selection: 1 2
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 15,5
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  2 LINE start=10,30 end=50,30
+messages:
+  Command: ERASE
+  1 found, 1 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 20,11
+active snap: none
+statistics:
+  LINE 1

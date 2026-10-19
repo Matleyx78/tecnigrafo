@@ -1,0 +1,15 @@
+; LINE: Esc alla prima domanda, dopo un punto e dopo tre punti (ADR 0015)
+LINE
+!esc
+!report
+LINE
+0,0
+!esc
+!report
+LINE
+0,0
+10,0
+10,10
+!esc
+!report
+U

@@ -1,0 +1,8 @@
+; LINE: segmenti aggiunti subito, anteprima e chiusura con Close dopo tre punti
+LINE
+0,0
+100,0
+100,80
+!move 40,50
+!report
+C

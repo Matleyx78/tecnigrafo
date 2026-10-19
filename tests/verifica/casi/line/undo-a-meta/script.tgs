@@ -1,0 +1,13 @@
+; LINE: Undo del primo punto e dell'ultimo segmento, con buco negli identificativi
+LINE
+0,0
+U
+10,10
+30,10
+30,30
+!report
+U
+!report
+@0,40
+10,50
+Close

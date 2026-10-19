@@ -1,0 +1,19 @@
+; LINE: snap a medio ed estremo di un segmento appena disegnato nello stesso comando, e vincolo orto
+!view 0,0 1 800x600
+LINE
+0,0
+100,0
+100,100
+!move 52,3
+!report
+!click 52,3
+!move 2,1
+!report
+!click 2,1
+!snap off
+!ortho on
+!move 4,60
+!click 4,60
+!move 80,63
+30
+

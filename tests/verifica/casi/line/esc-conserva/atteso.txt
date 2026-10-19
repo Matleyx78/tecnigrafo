@@ -1,0 +1,78 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: LINE
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+  1 LINE start=0,0 end=10,0
+  2 LINE start=10,0 end=10,10
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]: 10,10
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+messages:
+  Command: U
+  Undone: Line.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Line
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
