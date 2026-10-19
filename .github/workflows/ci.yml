@@ -109,6 +109,26 @@ jobs:
           cmake --preset tidy
           cmake --build --preset tidy
 
+  # docs/adr/0016: every test, verification cases and application included,
+  # runs instrumented; a memory error or undefined behaviour fails the job.
+  sanitizers:
+    name: Linux (ASan, UBSan)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev
+      - name: Build with AddressSanitizer and UBSan
+        run: |
+          cmake --preset asan
+          cmake --build --preset asan
+      - name: Test
+        run: ctest --preset asan
+
   windows:
     name: Windows (MSVC)
     needs: changes

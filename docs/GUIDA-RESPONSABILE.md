@@ -49,7 +49,8 @@ Come si usa:
    - **Target branches** → **Add target** → *Include default branch*.
    - Spunta **Require status checks to pass** e aggiungi, uno per uno:
      `Formatting (clang-format 18)`, `Linux (GCC, clang-tidy)`, `Windows (MSVC)`,
-     `macOS (Apple Clang)`, `Reference separation (ADR 0011)`.
+     `macOS (Apple Clang)`, `Reference separation (ADR 0011)`,
+     `Linux (ASan, UBSan)`.
    - Nella sezione **Bypass list** aggiungi *Repository admin*, così in caso di
      emergenza puoi ancora unire tu.
    - **Create**.

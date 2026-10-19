@@ -142,6 +142,23 @@ git ls-files '*.cpp' '*.hpp' | xargs clang-format -i                  # formatta
 Su sistemi senza Qt installato si possono compilare e provare i moduli senza
 interfaccia con `-DTG_BUILD_APP=OFF`.
 
+**Una cartella di build per agente.** Se più agenti lavorano sullo stesso PC,
+ognuno compila nella propria cartella, così non si bloccano a vicenda. Prima dei
+comandi imposta `TG_BUILD_SUFFIX` con il tuo nome; i preset compilano allora in
+`build-<nome>/<preset>` invece di `build/<preset>`:
+
+```sh
+export TG_BUILD_SUFFIX=-claude    # -codex, -gemini, -claude-2
+cmake --preset ci && cmake --build --preset ci && ctest --preset ci   # in build-claude/ci
+```
+
+Nei percorsi della documentazione (`./build/ci/...`) usa la tua cartella.
+
+Errori di memoria e comportamenti indefiniti li cerca il job `Linux (ASan,
+UBSan)` della CI ([ADR 0016](docs/adr/0016-sanitizer-in-ci.md)). Per provarlo in
+locale: `cmake --preset asan && cmake --build --preset asan && ctest --preset
+asan`. Un errore segnalato nel nostro codice si corregge, non si sopprime.
+
 ## Prima di dichiarare il lavoro finito
 
 - [ ] I test richiesti dal pacchetto esistono e passano.

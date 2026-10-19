@@ -1,0 +1,3 @@
+# LeakSanitizer suppressions (docs/adr/0016). Only for leaks inside libraries
+# we do not build; never for our own code. One line per library, with the
+# reason.

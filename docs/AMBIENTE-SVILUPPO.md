@@ -45,6 +45,10 @@ cmake --preset ci && cmake --build --preset ci && ctest --preset ci
 ./build/ci/app/tecnigrafo
 ```
 
+Se sullo stesso PC lavorano anche gli agenti, ognuno usa la sua cartella di
+build con `TG_BUILD_SUFFIX` (per esempio `build-codex/ci`, vedi AGENTS.md):
+la tua resta `build/`.
+
 ## 4. VS Code
 
 1. Apri la cartella del progetto: `code ~/progetti/tecnigrafo`.
