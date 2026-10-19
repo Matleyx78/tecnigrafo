@@ -19,6 +19,10 @@ struct Overloaded : Lambdas... {
     using Lambdas::operator()...;
 };
 
+// Explicit deduction guide: aggregate CTAD is missing from Apple Clang 15.
+template <typename... Lambdas>
+Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
+
 void appendPolylineSnapPoints(const Polyline& polyline, const SnapModes& modes,
                               std::vector<SnapPoint>& out) {
     if (polyline.vertexCount() == 1) {

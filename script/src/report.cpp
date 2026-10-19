@@ -35,6 +35,10 @@ struct Overloaded : Lambdas... {
     using Lambdas::operator()...;
 };
 
+// Explicit deduction guide: aggregate CTAD is missing from Apple Clang 15.
+template <typename... Lambdas>
+Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
+
 void appendLine(std::string_view text, std::string& out) {
     out += text;
     out += '\n';
