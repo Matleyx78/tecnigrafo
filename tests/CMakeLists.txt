@@ -24,9 +24,13 @@ add_executable(tg_tests
     cmd/pline_command_test.cpp
     cmd/selection_set_test.cpp
     cmd/value_format_test.cpp
+    core/arc_geometry_test.cpp
+    core/arc_test.cpp
+    core/circle_test.cpp
     core/document_query_test.cpp
     core/document_test.cpp
     core/geometry_test.cpp
+    core/line_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
     core/snap_points_test.cpp
@@ -40,6 +44,7 @@ add_executable(tg_tests
     script/level1_test.cpp
     script/number_format_test.cpp
     script/questions_test.cpp
+    script/report_test.cpp
     script/script_test.cpp
 )
 target_link_libraries(tg_tests PRIVATE

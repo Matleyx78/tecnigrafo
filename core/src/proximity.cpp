@@ -3,10 +3,9 @@
 
 #include "tg/core/proximity.hpp"
 
-#include "tg/core/math.hpp"
+#include "tg/core/arc_geometry.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <limits>
 #include <variant>
@@ -42,18 +41,6 @@ bool boxInside(const BBox& inner, const BBox& outer) {
            outer.contains(inner.max());
 }
 
-bool angleOnArc(const ArcGeometry& arc, const Vec2& point) {
-    const Vec2 relative = point - arc.center;
-    const double angle = std::atan2(relative.y, relative.x);
-    const double directed = arc.sweep >= 0.0 ? angle - arc.startAngle : arc.startAngle - angle;
-    double offset = std::fmod(directed, kTwoPi);
-    if (offset < 0.0) {
-        offset += kTwoPi;
-    }
-    // Values just below the start can wrap to 2*pi after atan2 rounding.
-    return offset <= std::abs(arc.sweep) + kRoundoff || kTwoPi - offset <= kRoundoff;
-}
-
 Vec2 closestOnLine(const PolylineSegment& segment, const Vec2& point) {
     const Vec2 delta = segment.end - segment.start;
     const double length = delta.length();
@@ -86,29 +73,6 @@ bool lineHitsSide(const Vec2& start, const Vec2& end, double coordinate, double 
            inRange(start.y + parameter * (end.y - start.y), lower, upper);
 }
 
-bool arcHitsSide(const ArcGeometry& arc, bool vertical, double coordinate, double lower,
-                 double upper) {
-    const double fixedCenter = vertical ? arc.center.x : arc.center.y;
-    const double freeCenter = vertical ? arc.center.y : arc.center.x;
-    const double offset = coordinate - fixedCenter;
-    if (!inRange(offset, -arc.radius, arc.radius)) {
-        return false;
-    }
-    // Factor r^2-d^2 to avoid cancellation near tangency. Clamp only the
-    // roundoff accepted above, so a tangent has a single (repeated) root.
-    const double root =
-        std::sqrt(std::max(0.0, (arc.radius - std::abs(offset)) * (arc.radius + std::abs(offset))));
-    const std::array roots{freeCenter - root, freeCenter + root};
-    return std::ranges::any_of(roots, [&](double freeCoordinate) {
-        if (!inRange(freeCoordinate, lower, upper)) {
-            return false;
-        }
-        const Vec2 point =
-            vertical ? Vec2{coordinate, freeCoordinate} : Vec2{freeCoordinate, coordinate};
-        return angleOnArc(arc, point);
-    });
-}
-
 bool segmentIntersects(const PolylineSegment& segment, const BBox& rectangle) {
     if (!boxesOverlap(segment.boundingBox(), rectangle)) {
         return false;
@@ -126,12 +90,18 @@ bool segmentIntersects(const PolylineSegment& segment, const BBox& rectangle) {
                lineHitsSide(swappedStart, swappedEnd, low.y, low.x, high.x) ||
                lineHitsSide(swappedStart, swappedEnd, high.y, low.x, high.x);
     }
-    const ArcGeometry arc = arcFromBulge(segment.start, segment.end, segment.bulge);
-    return arcHitsSide(arc, true, low.x, low.y, high.y) ||
-           arcHitsSide(arc, true, high.x, low.y, high.y) ||
-           arcHitsSide(arc, false, low.y, low.x, high.x) ||
-           arcHitsSide(arc, false, high.y, low.x, high.x);
+    return intersects(arcFromBulge(segment.start, segment.end, segment.bulge), rectangle);
 }
+
+/// Builds one visitor out of several lambdas, one per entity type.
+template <typename... Lambdas>
+struct Overloaded : Lambdas... {
+    using Lambdas::operator()...;
+};
+
+// Explicit deduction guide: aggregate CTAD is missing from Apple Clang 15.
+template <typename... Lambdas>
+Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
 
 double polylineDistance(const Polyline& polyline, const Vec2& point) {
     double nearest = std::numeric_limits<double>::infinity();
@@ -177,7 +147,7 @@ Vec2 closestPoint(const PolylineSegment& segment, const Vec2& point) {
     const ArcGeometry arc = arcFromBulge(segment.start, segment.end, segment.bulge);
     const Vec2 radial = point - arc.center;
     const double length = radial.length();
-    if (!(length > 0.0) || !angleOnArc(arc, point)) {
+    if (!(length > 0.0) || !containsAngle(arc, std::atan2(radial.y, radial.x))) {
         return endpoint;
     }
     const Vec2 projected = arc.center + radial * (arc.radius / length);
@@ -191,7 +161,19 @@ double distance(const PolylineSegment& segment, const Vec2& point) {
 
 double distance(const Entity& entity, const Vec2& point) {
     return std::visit(
-        [&point](const Polyline& polyline) { return polylineDistance(polyline, point); }, entity);
+        Overloaded{
+            [&point](const Polyline& polyline) { return polylineDistance(polyline, point); },
+            [&point](const Line& line) {
+                return distance(PolylineSegment{line.start, line.end}, point);
+            },
+            [&point](const Circle& circle) {
+                return std::abs(distance(circle.center, point) - circle.radius);
+            },
+            [&point](const Arc& arc) {
+                return distance(closestPoint(arc.geometry(), point), point);
+            },
+        },
+        entity);
 }
 
 bool isInside(const Entity& entity, const BBox& rectangle) {
@@ -199,8 +181,20 @@ bool isInside(const Entity& entity, const BBox& rectangle) {
 }
 
 bool intersects(const Entity& entity, const BBox& rectangle) {
+    if (boxInside(boundingBox(entity), rectangle)) {
+        return true;
+    }
     return std::visit(
-        [&rectangle](const Polyline& polyline) { return polylineIntersects(polyline, rectangle); },
+        Overloaded{
+            [&rectangle](const Polyline& polyline) {
+                return polylineIntersects(polyline, rectangle);
+            },
+            [&rectangle](const Line& line) {
+                return segmentIntersects(PolylineSegment{line.start, line.end}, rectangle);
+            },
+            [&rectangle](const Circle& circle) { return intersects(circle.geometry(), rectangle); },
+            [&rectangle](const Arc& arc) { return intersects(arc.geometry(), rectangle); },
+        },
         entity);
 }
 

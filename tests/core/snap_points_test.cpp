@@ -3,8 +3,11 @@
 
 #include "tg/core/snap_points.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <vector>
@@ -167,6 +170,30 @@ TEST(SnapPoints, RotatedTranslatedArcMidpoint) {
     ASSERT_EQ(out.size(), 4U);
     EXPECT_EQ(out[2], (SnapPoint{{-1, 4}, SnapKind::Midpoint}));
     EXPECT_EQ(out[3], (SnapPoint{{1.5, 4}, SnapKind::Center}));
+}
+
+TEST(SnapPoints, EveryEntityTypeHonorsTheModes) {
+    const std::vector<Entity> entities{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
+                                       Arc{{0, 0}, 2, 0, kPi / 2.0}};
+    for (const Entity& entity : entities) {
+        std::vector<SnapPoint> out;
+        appendSnapPoints(entity, SnapModes{false, false, false}, out);
+        EXPECT_TRUE(out.empty());
+        appendSnapPoints(entity, SnapModes{}, out);
+        for (const SnapPoint& snap : out) {
+            std::vector<SnapPoint> alone;
+            const SnapModes only{snap.kind == SnapKind::Endpoint, snap.kind == SnapKind::Midpoint,
+                                 snap.kind == SnapKind::Center};
+            appendSnapPoints(entity, only, alone);
+            EXPECT_NE(std::ranges::find(alone, snap), alone.end());
+        }
+    }
+}
+
+TEST(SnapPoints, DegenerateLineOffersOnlyItsEndpoint) {
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{Line{{5, 5}, {5, 5}}}, {}, out);
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{5, 5}, SnapKind::Endpoint}}));
 }
 
 }  // namespace

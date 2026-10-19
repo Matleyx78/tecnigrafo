@@ -9,9 +9,3 @@
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
 
-arco/geometria #82
-cerchio/geometria #82
-costruzioni/arc-through #82
-costruzioni/circle-through #82
-linea/geometria #82
-modello/tipi-misti #82

@@ -175,20 +175,20 @@ TEST(Questions, ToleranceAppliesFromItsLineOn) {
 
 TEST(Questions, AQuestionNotImplementedYetIsADifference) {
     const std::string text =
-        "? circle-through 0,0 10,0 0,10 -> CIRCLE center=5,5 radius=7.0710678118654755\n"
+        "? text-width \"Hello\" -> 2.5\n"
         "? font-metrics -> ascent=1.3 descent=-0.3\n";
     const std::variant<std::vector<Difference>, ParseError> result = checkQuestions(text);
     ASSERT_TRUE(std::holds_alternative<std::vector<Difference>>(result));
     const auto& differences = std::get<std::vector<Difference>>(result);
     ASSERT_EQ(differences.size(), 2U);
     EXPECT_EQ(differences[0].line, 1);
-    EXPECT_EQ(differences[0].expected, "CIRCLE center=5,5 radius=7.0710678118654755");
+    EXPECT_EQ(differences[0].expected, "2.5");
     EXPECT_EQ(differences[0].actual, "error: question not implemented yet");
     EXPECT_EQ(differences[1].line, 2);
 }
 
 TEST(Questions, AnEntityTypeNotImplementedYetIsMarked) {
-    const ParseError error = failure("; cerchio\nC = CIRCLE center=0,0 radius=10\n");
+    const ParseError error = failure("; testo\nT = TEXT position=0,0 value=\"A\"\n");
     EXPECT_EQ(error.line, 2);
     EXPECT_TRUE(error.notImplemented);
 }
