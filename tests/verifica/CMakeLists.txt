@@ -63,3 +63,37 @@ foreach(name IN LISTS TG_VERIFICA_NAMES)
         LABELS verifica
         SKIP_RETURN_CODE 77)
 endforeach()
+
+# Level 2 (docs/adr/0011, points 2, 6 and 8): with the application, every
+# case with a script runs also as verifica2/<area>/<name>. The test tool
+# confronta_immagini starts `tecnigrafo --script`, compares its report with
+# the same atteso.txt and the screenshots with atteso-<name>.png. Images
+# depend on fonts and antialiasing: the cases run at level 2 only on
+# Linux, the reference platform. The tool is built everywhere, because the
+# tests of module app use it.
+if(TG_BUILD_APP)
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Gui)
+    add_executable(confronta_immagini confronta_immagini.cpp)
+    target_link_libraries(confronta_immagini PRIVATE Tecnigrafo::script Qt6::Gui)
+    target_compile_definitions(confronta_immagini PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
+    tg_configure_target(confronta_immagini)
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        foreach(name IN LISTS TG_VERIFICA_NAMES)
+            if(NOT EXISTS "${TG_VERIFICA_CASES}/${name}/script.tgs")
+                continue()  # questions to the model exist only at level 1
+            endif()
+            set(arguments case "${TG_VERIFICA_CASES}/${name}"
+                --program "$<TARGET_FILE:tecnigrafo>"
+                --output "${CMAKE_CURRENT_BINARY_DIR}/casi2/${name}")
+            if(name IN_LIST TG_VERIFICA_PENDING_NAMES)
+                list(APPEND arguments --pending)
+            endif()
+            add_test(NAME "verifica2/${name}" COMMAND confronta_immagini ${arguments})
+            set_tests_properties("verifica2/${name}" PROPERTIES
+                LABELS verifica
+                ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+                TIMEOUT 180)
+        endforeach()
+    endif()
+endif()

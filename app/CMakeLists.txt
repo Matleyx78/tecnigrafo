@@ -18,9 +18,14 @@ qt_add_library(tg_app_ui STATIC
     src/qt_painter.hpp
     src/sample_drawing.cpp
     src/sample_drawing.hpp
+    src/script_session.cpp
+    src/script_session.hpp
 )
 target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(tg_app_ui PUBLIC Tecnigrafo::cmd Tecnigrafo::render Qt6::Widgets)
+# Tecnigrafo::script writes the report of the control mode at level 2
+# (--script, docs/adr/0011).
+target_link_libraries(tg_app_ui PUBLIC
+    Tecnigrafo::cmd Tecnigrafo::render Tecnigrafo::script Qt6::Widgets)
 target_compile_definitions(tg_app_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
 tg_configure_target(tg_app_ui)
 

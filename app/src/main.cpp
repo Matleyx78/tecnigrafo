@@ -3,12 +3,15 @@
 
 #include "cad_view.hpp"
 #include "main_window.hpp"
+#include "script_session.hpp"
 
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QPixmap>
 #include <QTimer>
 #include <QtGlobal>
+
+#include <iostream>
 
 int main(int argc, char* argv[]) {
     const QApplication application(argc, argv);
@@ -25,7 +28,32 @@ int main(int argc, char* argv[]) {
         QStringLiteral("Render the window to <file> (PNG) and exit. Used by CI smoke tests."),
         QStringLiteral("file"));
     parser.addOption(screenshotOption);
+    // The control mode at level 2 (docs/adr/0011, docs/verifica/script.md).
+    const QCommandLineOption scriptOption(
+        QStringLiteral("script"),
+        QStringLiteral("Run the control mode script <file> on an empty drawing, write the report "
+                       "and the screenshots, and exit."),
+        QStringLiteral("file"));
+    const QCommandLineOption outputOption(
+        QStringLiteral("output"),
+        QStringLiteral("Folder for the report and the screenshots of --script (default: the "
+                       "current folder)."),
+        QStringLiteral("folder"), QStringLiteral("."));
+    parser.addOption(scriptOption);
+    parser.addOption(outputOption);
     parser.process(application);
+
+    if (parser.isSet(scriptOption)) {
+        if (parser.isSet(screenshotOption)) {
+            std::cerr << "--script and --screenshot cannot be used together\n";
+            return 1;
+        }
+        return tg::app::runScriptFile(parser.value(scriptOption), parser.value(outputOption));
+    }
+    if (parser.isSet(outputOption)) {
+        std::cerr << "--output needs --script\n";
+        return 1;
+    }
 
     tg::app::MainWindow window;
     window.show();

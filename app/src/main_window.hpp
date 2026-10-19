@@ -11,6 +11,8 @@
 #include <QMainWindow>
 #include <QString>
 
+#include <cstdint>
+
 class QAction;
 class QLabel;
 class QToolButton;
@@ -24,13 +26,28 @@ class MainWindow final : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+    /// What the window shows when it opens.
+    enum class InitialDrawing : std::uint8_t {
+        /// The sample drawing of sample_drawing.hpp, as the program opens.
+        Sample,
+        /// Nothing: the control mode starts from an empty drawing
+        /// (docs/adr/0011, level 2).
+        Empty,
+    };
+
+    explicit MainWindow(InitialDrawing drawing = InitialDrawing::Sample, QWidget* parent = nullptr);
 
     [[nodiscard]] CadView* view() const { return m_view; }
 
     [[nodiscard]] CommandLine* commandLine() const { return m_commandLine; }
 
     [[nodiscard]] const core::Document& document() const { return m_document; }
+
+    /// The drawing's undo history, read by the report of the control mode.
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    /// The runner of the commands, read by the report of the control mode.
+    [[nodiscard]] const cmd::CommandRunner& runner() const { return m_runner; }
 
     [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
 
