@@ -134,38 +134,51 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
     Candidate bestPoint;
     std::optional<SnapPoint> center;
     Candidate bestCenter;
-    std::vector<SnapPoint> segmentPoints;
+    std::vector<SnapPoint> curvePoints;
+
+    // One curve within the aperture: a polyline segment, or a whole line,
+    // circle or arc, at `curveDistance` from the pointer.
+    const auto consider = [&](double curveDistance, std::uint64_t id) {
+        for (const SnapPoint& snap : curvePoints) {
+            if (snap.kind == SnapKind::Center) {
+                // The centre is reached by passing over its curve.
+                const Candidate candidate{curveDistance, 0, id};
+                if (!center || candidate.beats(bestCenter)) {
+                    center = snap;
+                    bestCenter = candidate;
+                }
+                continue;
+            }
+            const Candidate candidate{distance(snap.point, pointer), tieRank(snap.kind), id};
+            if (candidate.distance <= aperture && (!point || candidate.beats(bestPoint))) {
+                point = snap;
+                bestPoint = candidate;
+            }
+        }
+    };
+
     for (const EntityId id : candidates(document, squareAround(pointer, aperture))) {
-        std::visit(
-            [&](const Polyline& polyline) {
-                forEachSnapSegment(polyline, [&](const PolylineSegment& segment) {
-                    const double segmentDistance = distance(segment, pointer);
-                    if (segmentDistance > aperture) {
-                        return;
-                    }
-                    segmentPoints.clear();
-                    appendSnapPoints(segment, modes, segmentPoints);
-                    for (const SnapPoint& snap : segmentPoints) {
-                        if (snap.kind == SnapKind::Center) {
-                            // The centre is reached by passing over its arc.
-                            const Candidate candidate{segmentDistance, 0, id.value};
-                            if (!center || candidate.beats(bestCenter)) {
-                                center = snap;
-                                bestCenter = candidate;
-                            }
-                            continue;
-                        }
-                        const Candidate candidate{distance(snap.point, pointer), tieRank(snap.kind),
-                                                  id.value};
-                        if (candidate.distance <= aperture &&
-                            (!point || candidate.beats(bestPoint))) {
-                            point = snap;
-                            bestPoint = candidate;
-                        }
-                    }
-                });
-            },
-            entityOf(document, id));
+        const Entity& entity = entityOf(document, id);
+        if (const auto* polyline = std::get_if<Polyline>(&entity)) {
+            forEachSnapSegment(*polyline, [&](const PolylineSegment& segment) {
+                const double segmentDistance = distance(segment, pointer);
+                if (segmentDistance > aperture) {
+                    return;
+                }
+                curvePoints.clear();
+                appendSnapPoints(segment, modes, curvePoints);
+                consider(segmentDistance, id.value);
+            });
+            continue;
+        }
+        // Lines, circles and arcs are a single curve each.
+        const double curveDistance = distance(entity, pointer);
+        if (curveDistance > aperture) {
+            continue;
+        }
+        curvePoints.clear();
+        appendSnapPoints(entity, modes, curvePoints);
+        consider(curveDistance, id.value);
     }
     return point ? point : center;
 }

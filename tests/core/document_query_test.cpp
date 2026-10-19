@@ -458,6 +458,84 @@ private:
     Document m_document;
 };
 
+/// Entities of every type, as in the reference case modello/tipi-misti.
+struct MixedDocument {
+    Document document;
+    EntityId polyline{document.add(Polyline{{{{0.0, 0.0}}, {{10.0, 0.0}}, {{10.0, 10.0}}}})};
+    EntityId line{document.add(Line{{20.0, 0.0}, {30.0, 0.0}})};
+    EntityId circle{document.add(Circle{{50.0, 0.0}, 10.0})};
+    EntityId arc{document.add(Arc{{80.0, 0.0}, 10.0, 0.0, std::numbers::pi})};
+};
+
+TEST(MixedTypes, PickTakesEachTypeOnItsCurve) {
+    const MixedDocument mixed;
+    EXPECT_EQ(pickEntity(mixed.document, {5.0, 0.2}, 0.5), mixed.polyline);
+    EXPECT_EQ(pickEntity(mixed.document, {25.0, 0.2}, 0.5), mixed.line);
+    EXPECT_EQ(pickEntity(mixed.document, {50.0, 10.2}, 0.5), mixed.circle);
+    EXPECT_EQ(pickEntity(mixed.document, {80.0, 10.2}, 0.5), mixed.arc);
+    // The centre of a circle or of an arc is not on the curve.
+    EXPECT_FALSE(pickEntity(mixed.document, {50.0, 0.0}, 2.0));
+    EXPECT_FALSE(pickEntity(mixed.document, {80.0, 0.0}, 2.0));
+}
+
+TEST(MixedTypes, WindowAndCrossing) {
+    const MixedDocument mixed;
+    EXPECT_EQ(values(selectInRectangle(mixed.document, BBox{{-5.0, -15.0}, {95.0, 25.0}},
+                                       RectangleMode::Window)),
+              (std::vector<std::uint64_t>{mixed.polyline.value, mixed.line.value,
+                                          mixed.circle.value, mixed.arc.value}));
+    // Inside the circle, touching nothing.
+    EXPECT_TRUE(
+        selectInRectangle(mixed.document, BBox{{45.0, -5.0}, {55.0, 5.0}}, RectangleMode::Crossing)
+            .empty());
+    EXPECT_EQ(values(selectInRectangle(mixed.document, BBox{{38.0, -12.0}, {62.0, 12.0}},
+                                       RectangleMode::Window)),
+              (std::vector<std::uint64_t>{mixed.circle.value}));
+    // Across the top of the arc, with no end point inside.
+    EXPECT_EQ(values(selectInRectangle(mixed.document, BBox{{78.0, 8.0}, {82.0, 12.0}},
+                                       RectangleMode::Crossing)),
+              (std::vector<std::uint64_t>{mixed.arc.value}));
+    EXPECT_EQ(values(selectInRectangle(mixed.document, BBox{{28.0, -2.0}, {82.0, 12.0}},
+                                       RectangleMode::Crossing)),
+              (std::vector<std::uint64_t>{mixed.line.value, mixed.circle.value, mixed.arc.value}));
+}
+
+TEST(MixedTypes, SnapFollowsThePrioritiesOfAdr0008) {
+    const MixedDocument mixed;
+    const SnapModes all;
+    // The centre of the circle, passing over the circle.
+    EXPECT_EQ(findSnap(mixed.document, {60.0, 0.5}, 1.0, all),
+              (SnapPoint{{50.0, 0.0}, SnapKind::Center}));
+    EXPECT_FALSE(findSnap(mixed.document, {50.0, 0.0}, 1.0, all));
+    // On the arc the midpoint beats the centre; away from it, the centre.
+    const SnapPoint midpoint =
+        findSnap(mixed.document, {80.0, 9.8}, 1.0, all).value_or(SnapPoint{});
+    EXPECT_EQ(midpoint.kind, SnapKind::Midpoint);
+    EXPECT_NEAR(midpoint.point.x, 80.0, 1e-12);
+    EXPECT_NEAR(midpoint.point.y, 10.0, 1e-12);
+    EXPECT_EQ(findSnap(mixed.document, {87.071, 7.071}, 1.0, all),
+              (SnapPoint{{80.0, 0.0}, SnapKind::Center}));
+    // On the line the nearer of end point and midpoint.
+    EXPECT_EQ(findSnap(mixed.document, {20.5, 0.5}, 2.0, all),
+              (SnapPoint{{20.0, 0.0}, SnapKind::Endpoint}));
+    EXPECT_EQ(findSnap(mixed.document, {25.0, 0.3}, 1.0, all),
+              (SnapPoint{{25.0, 0.0}, SnapKind::Midpoint}));
+    // Without the centre mode, passing over the circle snaps to nothing.
+    EXPECT_FALSE(findSnap(mixed.document, {60.0, 0.5}, 1.0, SnapModes{true, true, false}));
+}
+
+TEST(DocumentQuery, SnapAnEndPointBeatsTheCentreOfAnotherType) {
+    Document document;
+    document.add(segment({0.0, 0.0}, {10.0, 0.0}));
+    document.add(Circle{{30.0, 0.0}, 20.0});  // passes through (10,0)
+    // The circle's centre is reached over the circle, but the polyline's end
+    // point within the aperture wins (docs/adr/0008, point 4).
+    EXPECT_EQ(findSnap(document, {10.2, 0.0}, 1.0, SnapModes{}),
+              (SnapPoint{{10.0, 0.0}, SnapKind::Endpoint}));
+    EXPECT_EQ(findSnap(document, {10.2, 0.0}, 1.0, SnapModes{false, true, true}),
+              (SnapPoint{{30.0, 0.0}, SnapKind::Center}));
+}
+
 TEST_F(RandomDocument, PickMatchesExhaustiveSearch) {
     int hits = 0;
     for (int i = 0; i < kQueryCount; ++i) {

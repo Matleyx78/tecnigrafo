@@ -8,6 +8,7 @@
 add_library(tg_script
     src/case_check.cpp
     src/compare.cpp
+    src/construction_questions.cpp
     src/entity_reader.cpp
     src/level1.cpp
     src/number_format.cpp

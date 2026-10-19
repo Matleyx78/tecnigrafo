@@ -3,6 +3,7 @@
 
 #include "question_table.hpp"
 
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
 #include "tg/core/polyline.hpp"
@@ -160,8 +161,14 @@ std::string namesText(const QuestionModel& model, std::span<const core::EntityId
 // Geometry that core answers for one entity type at a time: each new type
 // of core::Entity is handled here, and the compiler checks it (ADR 0004).
 
+/// Builds one visitor out of several lambdas, one per entity type.
+template <typename... Lambdas>
+struct Overloaded : Lambdas... {
+    using Lambdas::operator()...;
+};
+
 double lengthOf(const core::Entity& entity) {
-    return std::visit([](const core::Polyline& polyline) { return polyline.length(); }, entity);
+    return std::visit([](const auto& concrete) { return concrete.length(); }, entity);
 }
 
 std::optional<core::Vec2> closestOnPolyline(const core::Polyline& polyline,
@@ -188,7 +195,18 @@ std::optional<core::Vec2> closestOnPolyline(const core::Polyline& polyline,
 
 std::optional<core::Vec2> closestOn(const core::Entity& entity, const core::Vec2& point) {
     return std::visit(
-        [&point](const core::Polyline& polyline) { return closestOnPolyline(polyline, point); },
+        Overloaded{
+            [&point](const core::Polyline& polyline) { return closestOnPolyline(polyline, point); },
+            [&point](const core::Line& line) -> std::optional<core::Vec2> {
+                return core::closestPoint(core::PolylineSegment{line.start, line.end}, point);
+            },
+            [&point](const core::Circle& circle) -> std::optional<core::Vec2> {
+                return core::closestPoint(circle.geometry(), point);
+            },
+            [&point](const core::Arc& arc) -> std::optional<core::Vec2> {
+                return core::closestPoint(arc.geometry(), point);
+            },
+        },
         entity);
 }
 
@@ -414,6 +432,14 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     return snap ? snapText(*snap) : std::string{"none"};
 }
 
+}  // namespace
+
+// Defined in construction_questions.cpp.
+QuestionResult askCircleThrough(const QuestionModel& model, Arguments arguments);
+QuestionResult askArcThrough(const QuestionModel& model, Arguments arguments);
+
+namespace {
+
 // ---------------------------------------------------------------------------
 // The catalogue: one row per question, in the order of docs/verifica/domande.md.
 
@@ -431,9 +457,9 @@ constexpr std::array kQuestions{
     QuestionRow{"window", AnswerShape::Names, &askWindow},
     QuestionRow{"crossing", AnswerShape::Names, &askCrossing},
     QuestionRow{"snap", AnswerShape::Single, &askSnap},
-    // Constructions: package P6.
-    QuestionRow{"circle-through", AnswerShape::Single, nullptr},
-    QuestionRow{"arc-through", AnswerShape::Single, nullptr},
+    // Constructions (construction_questions.cpp).
+    QuestionRow{"circle-through", AnswerShape::Single, &askCircleThrough},
+    QuestionRow{"arc-through", AnswerShape::Single, &askArcThrough},
     // Text: packages P11 and P13.
     QuestionRow{"text-width", AnswerShape::Single, nullptr},
     QuestionRow{"font-metrics", AnswerShape::Single, nullptr},

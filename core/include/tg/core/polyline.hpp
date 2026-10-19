@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/vec2.hpp"
 
@@ -41,14 +42,6 @@ struct PolylineSegment {
     /// start point and including the end point. `maxChordError` is the
     /// maximum allowed distance between the true arc and its approximation.
     void tessellate(double maxChordError, std::vector<Vec2>& out) const;
-};
-
-/// Arc parameters derived from a bulged segment.
-struct ArcGeometry {
-    Vec2 center;
-    double radius{0.0};
-    double startAngle{0.0};  ///< radians, counter-clockwise from +X
-    double sweep{0.0};       ///< radians, signed: > 0 counter-clockwise
 };
 
 /// Returns the arc described by a bulged segment. Precondition: the

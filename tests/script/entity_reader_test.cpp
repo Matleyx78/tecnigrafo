@@ -136,12 +136,8 @@ TEST(ReadEntity, Errors) {
 }
 
 TEST(ReadEntity, TypesOfTheStageNotImplementedYet) {
-    for (const char* text : {"LINE start=0,0 end=10,0", "CIRCLE center=0,0 radius=10",
-                             "ARC center=0,0 radius=10 start-angle=0 end-angle=90",
-                             "TEXT position=0,0 value=\"Hello\""}) {
-        const EntityError error = failure(text);
-        EXPECT_TRUE(error.notImplemented) << text;
-    }
+    const EntityError error = failure("TEXT position=0,0 value=\"Hello\"");
+    EXPECT_TRUE(error.notImplemented);
 }
 
 TEST(TextFormat, QuoteEscapesQuotesBackslashesAndControlCharacters) {

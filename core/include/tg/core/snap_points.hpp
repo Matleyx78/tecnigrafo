@@ -31,9 +31,13 @@ struct SnapPoint {
 void appendSnapPoints(const PolylineSegment& segment, const SnapModes& modes,
                       std::vector<SnapPoint>& out);
 
-/// Appends enabled points in segment order, each (position, kind) once.
-/// Existing output is preserved and does not participate in deduplication.
-/// Coincident points of different kinds retain their snap semantics.
+/// Appends the enabled snap points of an entity (docs/adr/0008, docs/adr/0012):
+/// - Polyline: the points of its segments in segment order, each (position,
+///   kind) once; existing output does not participate in deduplication, and
+///   coincident points of different kinds retain their snap semantics;
+/// - Line: start, end and midpoint (only the start if they coincide);
+/// - Arc: start, end, midpoint halfway along the arc, centre;
+/// - Circle: only the centre.
 void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<SnapPoint>& out);
 
 }  // namespace tg::core
