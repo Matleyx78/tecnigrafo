@@ -7,6 +7,7 @@
 #include "tg/cmd/coordinate_input.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/math.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -20,6 +21,8 @@ namespace {
 
 constexpr std::string_view kIdlePrompt = "Command:";
 constexpr std::string_view kInvalidInput = "Invalid point or option.";
+constexpr std::string_view kInvalidDistance = "Requires a distance, a point or an option.";
+constexpr std::string_view kInvalidAngle = "Requires an angle, a point or an option.";
 constexpr std::string_view kCancelled = "*Cancel*";
 constexpr std::string_view kNothingToUndo = "Nothing to undo.";
 constexpr std::string_view kNothingToRedo = "Nothing to redo.";
@@ -65,7 +68,9 @@ CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& edit
                 }} {}
 
 void CommandRunner::submitText(std::string_view text) {
-    text = detail::trim(text);
+    if (!acceptsText()) {
+        text = detail::trim(text);
+    }
     if (m_askingSelection) {
         if (text.empty()) {
             endSelectionQuestion();
@@ -135,7 +140,7 @@ void CommandRunner::setPixelSize(double drawingUnitsPerPixel) {
 void CommandRunner::click(const core::Vec2& point, PickAction action) {
     if (isSelecting()) {
         selectionClick(point, action);
-    } else {
+    } else if (asksForPoint()) {
         forward(PointInput{aidedPoint(point, m_command->basePoint())});
     }
 }
@@ -153,6 +158,10 @@ std::optional<core::SnapPoint> CommandRunner::activeSnap() const {
         return std::nullopt;
     }
     return snapAt(*m_pointer);
+}
+
+bool CommandRunner::acceptsText() const {
+    return isActive() && !m_askingSelection && m_command->prompt().kind == PromptKind::Text;
 }
 
 std::string CommandRunner::promptText() const {
@@ -232,13 +241,27 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
         forward(ConfirmInput{});
         return;
     }
-    for (const Keyword& keyword : m_command->prompt().keywords) {
+    const Prompt prompt = m_command->prompt();
+    if (prompt.kind == PromptKind::Text) {
+        forward(TextInput{std::string{text}});
+        return;
+    }
+    for (const Keyword& keyword : prompt.keywords) {
         if (matches(keyword, text)) {
             forward(KeywordInput{keyword.name});
             return;
         }
     }
     if (const std::optional<PointSpec> spec = parseCoordinate(text)) {
+        if (spec->kind == PointSpec::Kind::Distance &&
+            (prompt.kind == PromptKind::Distance || prompt.kind == PromptKind::Angle)) {
+            // Multiply by the ratio so even large finite degree values do
+            // not overflow before division by 180.
+            const double value =
+                prompt.kind == PromptKind::Angle ? spec->a * (core::kPi / 180.0) : spec->a;
+            forward(ValueInput{value});
+            return;
+        }
         // Before the first pointer movement a typed distance has no
         // direction: falling back to the last point makes it unresolvable.
         // The pointer is corrected now, so that the direction is the one the
@@ -253,7 +276,18 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
             return;
         }
     }
-    message(std::string{kInvalidInput});
+    switch (prompt.kind) {
+        case PromptKind::Distance:
+            message(std::string{kInvalidDistance});
+            break;
+        case PromptKind::Angle:
+            message(std::string{kInvalidAngle});
+            break;
+        case PromptKind::Point:
+        case PromptKind::Text:
+            message(std::string{kInvalidInput});
+            break;
+    }
 }
 
 void CommandRunner::submitWhileAskingSelection(const Input& input) {
@@ -350,12 +384,18 @@ void CommandRunner::refreshPointer() {
 }
 
 void CommandRunner::cancel() {
-    // End the command first, so that the editor's listener, called by
-    // rollback(), already sees the runner idle.
-    m_command.reset();
+    // Keep the command alive for cancel(), while editor listeners already
+    // see the runner idle when its transaction is closed.
+    const std::unique_ptr<Command> command = std::move(m_command);
+    const bool started = !m_askingSelection;
     m_askingSelection = false;
     clearSelection();
-    if (m_editor.inTransaction()) {
+    if (started) {
+        command->cancel(m_context);
+    }
+    const bool closed = !m_editor.inTransaction();
+    assert(closed && "a command cancelled without closing its transaction");
+    if (!closed) {
         m_editor.rollback();
     }
     message(std::string{kCancelled});

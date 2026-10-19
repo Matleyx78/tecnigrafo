@@ -43,11 +43,15 @@ struct SelectionRectangle {
 /// text (Enter) or a ConfirmInput repeats the last command. U, UNDO and REDO
 /// are handled here, and only work with no command running.
 ///
-/// With a command running, typed text becomes, in this order: a
-/// ConfirmInput if empty, a KeywordInput if it matches an option of the
-/// prompt, a PointInput if it is a coordinate that can be resolved;
-/// otherwise the runner writes "Invalid point or option." and the prompt
-/// stays. A CancelInput rolls the command's transaction back and ends it.
+/// With a command running, empty text becomes ConfirmInput. At a Text
+/// prompt all other text becomes TextInput unchanged, spaces included.
+/// Otherwise options become KeywordInput, bare numbers at Distance or
+/// Angle prompts become ValueInput (angles converted from degrees to
+/// radians), and coordinates become PointInput. Invalid input writes the
+/// message for that prompt kind and the question stays (docs/adr/0014).
+/// A CancelInput calls Command::cancel() and ends the command: the command
+/// closes its transaction, keeping completed work or rolling it back
+/// (docs/adr/0015).
 ///
 /// Selection (docs/adr/0008). With no command running, and while asking
 /// "Select objects:" for a command that needsSelection(), clicks build the
@@ -77,8 +81,8 @@ struct SelectionRectangle {
 /// selecting are ignored, as is a SelectionInput while a command runs: only
 /// the runner hands selections to commands.
 ///
-/// Drawing aids (docs/adr/0008). While a command asks for a point, that is
-/// while a command runs and the runner is not selecting, the points given
+/// Drawing aids (docs/adr/0008 and docs/adr/0014). While a command asks for
+/// a point, distance or angle, the points given
 /// with the mouse are corrected: the pointer handed to the command, so the
 /// preview follows, and the point of a click. If object snap is on and
 /// core::findSnap() finds a snap within 10 pixels, its point is used; else,
@@ -86,7 +90,7 @@ struct SelectionRectangle {
 /// point is left as it is. Snap wins over ortho. The base point belongs to
 /// the running command: the first point of a command is never aligned to a
 /// point of the previous one. Typed coordinates are never corrected, but a
-/// distance typed alone ("50") takes its direction from the pointer
+/// distance typed alone ("50") at a Point prompt takes its direction from the pointer
 /// corrected against the last point it is measured from, so with ortho on
 /// it follows the horizontal or the vertical through that point.
 /// Points given with submit() are never corrected: they are the exact
@@ -105,7 +109,7 @@ public:
     ~CommandRunner() = default;
 
     /// Text from the command line; empty text means Enter. Leading and
-    /// trailing white space is ignored.
+    /// trailing white space is ignored except at a Text prompt.
     void submitText(std::string_view text);
 
     /// Input from the mouse and the keyboard.
@@ -125,8 +129,9 @@ public:
     void setPixelSize(double drawingUnitsPerPixel);
 
     /// Left click in the view, in drawing coordinates (docs/adr/0008). While
-    /// selecting it is a selection gesture; while a command asks for a point
-    /// it becomes a PointInput, corrected by the drawing aids.
+    /// selecting it is a selection gesture; at a Point, Distance or Angle
+    /// prompt it becomes a PointInput, corrected by the drawing aids. Text
+    /// prompts ignore it.
     void click(const core::Vec2& point, PickAction action);
 
     /// Object snap and ortho. While a command asks for a point, a change
@@ -144,6 +149,10 @@ public:
     /// True while a command is running, including while asking "Select
     /// objects:" for it.
     [[nodiscard]] bool isActive() const { return m_command != nullptr; }
+
+    /// True while the running command asks for Text: the view then treats
+    /// the space bar as a character, not as Enter.
+    [[nodiscard]] bool acceptsText() const;
 
     /// True with no command running, or while asking "Select objects:".
     [[nodiscard]] bool isSelecting() const { return !m_command || m_askingSelection; }
@@ -180,7 +189,10 @@ private:
     void applyToSelection(std::span<const core::EntityId> ids, PickAction action);
     void forward(const Input& input);
 
-    [[nodiscard]] bool asksForPoint() const { return isActive() && !m_askingSelection; }
+    /// Point, Distance and Angle prompts all accept points from the mouse.
+    [[nodiscard]] bool asksForPoint() const {
+        return isActive() && !m_askingSelection && m_command->prompt().kind != PromptKind::Text;
+    }
 
     [[nodiscard]] std::optional<core::SnapPoint> snapAt(const core::Vec2& point) const;
     /// `point` corrected by the snap or, failing that, by ortho from

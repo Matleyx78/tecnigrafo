@@ -23,6 +23,7 @@ add_executable(tg_tests
     cmd/erase_command_test.cpp
     cmd/pline_command_test.cpp
     cmd/selection_set_test.cpp
+    cmd/value_format_test.cpp
     core/document_query_test.cpp
     core/document_test.cpp
     core/geometry_test.cpp

@@ -26,6 +26,8 @@ struct Keyword {
     friend bool operator==(const Keyword&, const Keyword&) = default;
 };
 
+enum class PromptKind : std::uint8_t { Point, Distance, Angle, Text };
+
 /// What a command asks the user. `text` is the complete sentence shown on
 /// the command line, keywords included ("Specify next point or
 /// [Close/Undo]:"): it is never assembled from pieces, so that it can be
@@ -34,8 +36,16 @@ struct Keyword {
 struct Prompt {
     std::string text;
     std::vector<Keyword> keywords;
+    PromptKind kind{PromptKind::Point};
 
     friend bool operator==(const Prompt&, const Prompt&) = default;
+};
+
+/// Values commands remember for the whole session (docs/adr/0014).
+struct CommandDefaults {
+    double textHeight{2.5};
+    double textRotation{0.0};            ///< radians
+    std::optional<double> circleRadius;  ///< none before the first circle
 };
 
 /// What a command works with. The runner keeps one context for its whole
@@ -46,6 +56,7 @@ struct CommandContext {
     edit::Editor& editor;
     std::optional<core::Vec2> lastPoint;       ///< updated by the command
     std::function<void(std::string)> message;  ///< writes to the history
+    CommandDefaults defaults{};
 };
 
 enum class Status : std::uint8_t { Continue, Finished };
@@ -65,9 +76,17 @@ public:
     virtual void start(CommandContext& context) = 0;
 
     /// Handles one input; never a CancelInput, which the runner handles by
-    /// rolling the transaction back. Before returning Finished the command
+    /// calling cancel(). Before returning Finished the command
     /// commits or rolls back its transaction.
     virtual Status handle(CommandContext& context, const Input& input) = 0;
+
+    /// Esc: the command keeps what it has completed and closes its
+    /// transaction (docs/adr/0015). The default rolls everything back.
+    virtual void cancel(CommandContext& context) {
+        if (context.editor.inTransaction()) {
+            context.editor.rollback();
+        }
+    }
 
     /// The pointer moved to `point`, in drawing coordinates.
     virtual void pointerMoved(const core::Vec2& point) = 0;
