@@ -1,0 +1,24 @@
+; LINE: selezione con clic, finestra e intersezione, e cancellazione con ERASE
+!view 0,0 1 800x600
+LINE
+10,10
+30,10
+
+LINE
+10,30
+50,30
+
+!click 20,11
+!report
+!esc
+!click 5,5
+!click 35,20
+!report
+!esc
+!click 25,35
+!click 15,5
+!report
+!esc
+ERASE
+!click 20,11
+

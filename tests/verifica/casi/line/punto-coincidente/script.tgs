@@ -1,0 +1,9 @@
+; LINE: punto coincidente con il precedente
+LINE
+0,0
+0,0
+10,0
+@0,0
+10,10
+10,10
+

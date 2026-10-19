@@ -10,3 +10,11 @@
 # Le righe che iniziano con # sono commenti.
 
 font/misure #92
+line/annulla-ripeti #84
+line/close #84
+line/esc-conserva #84
+line/punto-coincidente #84
+line/segmenti-e-alias #84
+line/selezione-ed-erase #84
+line/snap-e-orto #84
+line/undo-a-meta #84

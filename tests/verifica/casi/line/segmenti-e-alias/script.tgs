@@ -1,0 +1,12 @@
+; LINE e alias L: tre punti creano due entità LINE separate
+LINE
+0,0
+10,0
+10,20
+
+!report
+L
+20,0
+@10,0
+@20<90
+!rightclick

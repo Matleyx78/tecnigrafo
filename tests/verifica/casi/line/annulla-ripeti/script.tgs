@@ -1,0 +1,11 @@
+; LINE: dopo il comando un solo U toglie tutti i segmenti e REDO li rimette con gli stessi id
+LINE
+0,0
+10,0
+10,10
+0,10
+
+!report
+U
+!report
+REDO
