@@ -1,0 +1,150 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 CIRCLE center=50,50 radius=20
+  2 CIRCLE center=150,50 radius=20
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 50,50
+  Specify radius of circle or [Diameter]: 20
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 150,50
+  Specify radius of circle or [Diameter] <20.0000>: 20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 50,50
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 2]
+entities:
+  1 CIRCLE center=50,50 radius=20
+  2 CIRCLE center=150,50 radius=20
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 70,50
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 3]
+entities:
+  1 CIRCLE center=50,50 radius=20
+  2 CIRCLE center=150,50 radius=20
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 60,75
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 4]
+entities:
+  1 CIRCLE center=50,50 radius=20
+  2 CIRCLE center=150,50 radius=20
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 75,75
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 5]
+entities:
+  1 CIRCLE center=50,50 radius=20
+  2 CIRCLE center=150,50 radius=20
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 45,45
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 6]
+entities:
+  1 CIRCLE center=50,50 radius=20
+  2 CIRCLE center=150,50 radius=20
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 65,45
+active snap: none
+statistics:
+  CIRCLE 2
+
+[final]
+entities:
+  2 CIRCLE center=150,50 radius=20
+messages:
+  Command: ERASE
+  1 found, 1 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 70,50
+active snap: none
+statistics:
+  CIRCLE 1

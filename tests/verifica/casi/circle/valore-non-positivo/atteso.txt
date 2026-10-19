@@ -1,0 +1,58 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 CIRCLE center=0,0 radius=15
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  Specify radius of circle or [Diameter]: 0
+  Value must be positive and nonzero.
+  Specify radius of circle or [Diameter]: -5
+  Value must be positive and nonzero.
+  Specify radius of circle or [Diameter]: 0,0
+  Value must be positive and nonzero.
+  Specify radius of circle or [Diameter]: 15
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+
+[final]
+entities:
+  1 CIRCLE center=0,0 radius=15
+  2 CIRCLE center=50,50 radius=15
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 50,50
+  Specify radius of circle or [Diameter] <15.0000>: D
+  Specify diameter of circle <30.0000>: 0
+  Value must be positive and nonzero.
+  Specify diameter of circle <30.0000>: -10
+  Value must be positive and nonzero.
+  Specify diameter of circle <30.0000>: 50,50
+  Value must be positive and nonzero.
+  Specify diameter of circle <30.0000>: 30
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 2

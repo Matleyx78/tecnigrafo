@@ -1,0 +1,18 @@
+; CIRCLE: raggio scritto e dato con un punto; alias C e diametro scritto e dato con un punto
+CIRCLE
+10,20
+15
+!report
+CIRCLE
+30,40
+@0,10
+!report
+C
+50,50
+D
+25
+!report
+C
+100,100
+Diameter
+@20,0

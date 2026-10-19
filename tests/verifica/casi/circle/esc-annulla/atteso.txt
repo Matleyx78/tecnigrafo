@@ -1,0 +1,103 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: CIRCLE
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  Specify radius of circle or [Diameter]: D
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 2P
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 2P
+  Specify first end point of circle's diameter: 0,0
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 3P
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 3P
+  Specify first point on circle: 0,0
+  *Cancel*
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 3P
+  Specify first point on circle: 0,0
+  Specify second point on circle: 10,0
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  1 CIRCLE center=0,0 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  Specify radius of circle or [Diameter]: 10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 3]
+entities:
+messages:
+  Command: U
+  Undone: Circle.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Circle
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  1 CIRCLE center=0,0 radius=10
+messages:
+  Command: REDO
+  Redone: Circle.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1

@@ -1,0 +1,22 @@
+; CIRCLE: opzione 3P, punti CCW, CW, allineati, quasi allineati e coincidenti
+CIRCLE
+3P
+10,0
+0,10
+-10,0
+!report
+C
+3p
+10,0
+0,-10
+-10,0
+!report
+CIRCLE
+3P
+0,0
+10,0
+20,0
+5,9e-09
+10,0
+0,0
+0,10

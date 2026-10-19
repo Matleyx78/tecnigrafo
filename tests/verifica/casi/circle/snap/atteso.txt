@@ -1,0 +1,98 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 CIRCLE center=50,50 radius=20
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 50,50
+  Specify radius of circle or [Diameter]: 20
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 70,50
+active snap: Center 50,50
+statistics:
+  CIRCLE 1
+
+[report 2]
+entities:
+  1 CIRCLE center=50,50 radius=20
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 75,50
+active snap: Center 50,50
+statistics:
+  CIRCLE 1
+
+[report 3]
+entities:
+  1 CIRCLE center=50,50 radius=20
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 50,50
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 4]
+entities:
+  1 CIRCLE center=50,50 radius=20
+messages:
+  Specify first point: 50,50
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=50,50 end=70,50
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 70,50
+active snap: Center 50,50
+statistics:
+  CIRCLE 1
+
+[final]
+entities:
+  1 CIRCLE center=50,50 radius=20
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 70,50
+active snap: none
+statistics:
+  CIRCLE 1

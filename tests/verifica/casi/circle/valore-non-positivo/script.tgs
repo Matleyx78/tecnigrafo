@@ -1,0 +1,15 @@
+; CIRCLE: raggio e diametro zero o negativi danno messaggio e la domanda resta
+CIRCLE
+0,0
+0
+-5
+0,0
+15
+!report
+CIRCLE
+50,50
+D
+0
+-10
+50,50
+30

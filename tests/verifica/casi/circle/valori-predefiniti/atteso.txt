@@ -1,0 +1,121 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  Specify radius of circle or [Diameter]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  1 CIRCLE center=0,0 radius=25
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  Specify radius of circle or [Diameter]: 25
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 3]
+entities:
+  1 CIRCLE center=0,0 radius=25
+  2 CIRCLE center=50,50 radius=25
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 50,50
+  Specify radius of circle or [Diameter] <25.0000>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 2
+
+[report 4]
+entities:
+  1 CIRCLE center=0,0 radius=25
+  2 CIRCLE center=50,50 radius=25
+  3 CIRCLE center=100,100 radius=25
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 100,100
+  Specify radius of circle or [Diameter] <25.0000>: D
+  Specify diameter of circle <50.0000>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 3
+
+[final]
+entities:
+  1 CIRCLE center=0,0 radius=25
+  2 CIRCLE center=50,50 radius=25
+  3 CIRCLE center=100,100 radius=25
+  4 CIRCLE center=0,0 radius=10
+  5 CIRCLE center=10,10 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 0,0
+  Specify radius of circle or [Diameter] <25.0000>: 10
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 10,10
+  Specify radius of circle or [Diameter] <10.0000>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+  Circle
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 5

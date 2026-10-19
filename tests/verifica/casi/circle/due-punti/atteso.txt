@@ -1,0 +1,73 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 CIRCLE center=5,0 radius=5
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 2P
+  Specify first end point of circle's diameter: 0,0
+  Specify second end point of circle's diameter: 10,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 2]
+entities:
+  1 CIRCLE center=5,0 radius=5
+  2 CIRCLE center=20,0 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 2p
+  Specify first end point of circle's diameter: 20,10
+  Specify second end point of circle's diameter: 20,-10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 2
+
+[final]
+entities:
+  1 CIRCLE center=5,0 radius=5
+  2 CIRCLE center=20,0 radius=10
+  3 CIRCLE center=3,4 radius=5
+messages:
+  Command: C
+  Specify center point for circle or [3P/2P]: 2P
+  Specify first end point of circle's diameter: 0,0
+  Specify second end point of circle's diameter: 6,8
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 3
