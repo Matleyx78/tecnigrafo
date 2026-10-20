@@ -36,10 +36,18 @@ protected:
         return std::get<core::Arc>(m_document.entities().back().entity);
     }
 
-    [[nodiscard]] const core::Document& document() const { return m_document; }
-    [[nodiscard]] edit::Editor& editor() { return m_editor; }
-    [[nodiscard]] CommandRunner& runner() { return m_runner; }
-    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+    [[nodiscard]] const core::Document& document() const {
+        return m_document;
+    }
+    [[nodiscard]] edit::Editor& editor() {
+        return m_editor;
+    }
+    [[nodiscard]] CommandRunner& runner() {
+        return m_runner;
+    }
+    [[nodiscard]] const std::vector<std::string>& messages() const {
+        return m_messages;
+    }
 
 private:
     core::Document m_document;
