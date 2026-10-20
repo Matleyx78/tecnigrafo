@@ -93,12 +93,11 @@ TEST_F(ArcCommandTest, InvalidGeometryRetries) {
 }
 
 TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
-    const std::vector<std::vector<const char*>> prefixes{
-        {"A"},
-        {"A", "10,0"},
-        {"A", "10,0", "0,10"},
-        {"A", "10,0", "C"},
-        {"A", "10,0", "C", "0,0"}};
+    const std::vector<std::vector<const char*>> prefixes{{"A"},
+                                                         {"A", "10,0"},
+                                                         {"A", "10,0", "0,10"},
+                                                         {"A", "10,0", "C"},
+                                                         {"A", "10,0", "C", "0,0"}};
     for (const auto& prefix : prefixes) {
         for (const char* text : prefix) {
             m_runner.submitText(text);
@@ -124,7 +123,7 @@ TEST(ArcCommandPreview, PreviewUsesAvailablePoints) {
     command.pointerMoved({-10, 0});
     ASSERT_EQ(command.preview().size(), 1U);
     EXPECT_TRUE(std::holds_alternative<core::Arc>(command.preview().front()));
-    command.pointerMoved({20, 0});
+    command.pointerMoved({20, -10});
     EXPECT_TRUE(command.preview().empty());
     command.cancel(context);
 
