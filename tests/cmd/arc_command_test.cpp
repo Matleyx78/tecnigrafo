@@ -94,8 +94,11 @@ TEST_F(ArcCommandTest, InvalidGeometryRetries) {
 
 TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
     const std::vector<std::vector<const char*>> prefixes{
-        {"A"}, {"A", "10,0"}, {"A", "10,0", "0,10"},
-        {"A", "10,0", "C"}, {"A", "10,0", "C", "0,0"}};
+        {"A"},
+        {"A", "10,0"},
+        {"A", "10,0", "0,10"},
+        {"A", "10,0", "C"},
+        {"A", "10,0", "C", "0,0"}};
     for (const auto& prefix : prefixes) {
         for (const char* text : prefix) {
             m_runner.submitText(text);
@@ -110,7 +113,8 @@ TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
 TEST(ArcCommandPreview, PreviewUsesAvailablePoints) {
     core::Document document;
     edit::Editor editor(document);
-    CommandContext context{editor, {}, [](const std::string&) {}};
+    CommandContext context{editor, {}, [](const std::string&) {
+                           }};
     ArcCommand command;
     command.start(context);
     EXPECT_FALSE(command.basePoint());
