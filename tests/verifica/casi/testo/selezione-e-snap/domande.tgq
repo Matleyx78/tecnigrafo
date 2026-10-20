@@ -1,0 +1,60 @@
+; Domande sul documento con testi e altre entita: selezione e snap (ADR 0008, ADR 0013, P13)
+
+; Entita disposte nel documento:
+T1 = TEXT position=0,0 height=2.5 rotation=0 value="Hello"
+T2 = TEXT position=20,0 height=2.5 rotation=0 value="World"
+; T_over sovrapposto a T1 (ha ID maggiore di T1)
+T_over = TEXT position=1,0.5 height=2.5 rotation=0 value="Over"
+; Linea adiacente a T1 per verificare priorita snap estremo vs inserimento
+L = LINE start=8,0 end=15,0
+
+; --- Clic di selezione (pick) ---
+; Clic dentro T1 (e non dentro T_over): x=0.5, y=-0.5
+? pick 0.5,-0.5 tolerance=0.1 -> T1
+; Clic nella regione di sovrapposizione tra T1 e T_over (x=2, y=1): vince ID maggiore (T_over)
+? pick 2,1 tolerance=0.5 -> T_over
+; Clic dentro T2 (x=25, y=1)
+? pick 25,1 tolerance=0.5 -> T2
+; Clic sulla linea L (x=10, y=0.1)
+? pick 10,0.1 tolerance=0.5 -> L
+; Clic appena fuori dal bordo destro di T2 (x=29.3, y=1): entro tolleranza 0.5 sceglie T2
+? pick 29.3,1 tolerance=0.5 -> T2
+; Clic nello spazio vuoto lontano da tutte le entita
+? pick 50,50 tolerance=1 -> none
+
+; --- Selezione a finestra (window) ---
+; Finestra che racchiude sia T1 che T_over
+? window -1,-2 10,4 -> T1 T_over
+; Finestra che racchiude tutte le entita del documento
+? window -2,-3 35,6 -> T1 T2 T_over L
+; Finestra che racchiude solo L
+? window 7,-1 16,1 -> L
+; Finestra parziale dentro T1: non seleziona nulla
+? window 2,0 6,2 -> none
+
+; --- Selezione a intersezione (crossing) ---
+; Rettangolo che tocca Linterno di T1 e T_over
+? crossing 2,0 6,2 -> T1 T_over
+; Rettangolo che attraversa L e il bordo sinistro di T2
+? crossing 14,-1 21,1 -> T2 L
+; Rettangolo che interseca tutte le entita
+? crossing -1,-2 32,5 -> T1 T2 T_over L
+; Rettangolo lontano nello spazio vuoto
+? crossing 50,50 60,60 -> none
+
+; --- Snap sul documento con priorita (snap) ---
+; 1. Passando sopra il testo T1 lontano da estremi/medi: si aggancia Insertion 0,0
+? snap 4,1 aperture=1 -> Insertion 0,0
+; 2. Passando sopra il testo T2 lontano dal punto di inserimento (20,0): si aggancia Insertion 20,0
+? snap 26,1 aperture=1 -> Insertion 20,0
+; 3. Priorita ADR 0013: puntatore vicino allestremo di L (8,0), dentro lapertura sia del testo che dellestremo
+;    Lestremo di L vince sullo snap Insertion di T1!
+? snap 7.9,0.1 aperture=1 -> Endpoint 8,0
+; 4. Sulla linea L vicino al punto medio (11.5,0): vince Midpoint
+? snap 11.5,0.1 aperture=1 -> Midpoint 11.5,0
+; 5. Con snap allinserimento disattivato (modes=endpoint,midpoint): passando su T1 non aggancia nulla
+? snap 4,1 aperture=1 modes=endpoint,midpoint -> none
+; 6. Con modes=none: nessuno snap
+? snap 4,1 aperture=1 modes=none -> none
+; 7. Puntatore lontano da tutte le entita
+? snap 50,50 aperture=1 -> none
