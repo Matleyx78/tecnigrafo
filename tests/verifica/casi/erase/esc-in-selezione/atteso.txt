@@ -6,8 +6,8 @@ entities:
 messages:
   Command: PLINE
   Specify start point: 0,0
-  Specify next point or [Undo]: 10,0
-  Specify next point or [Undo]:
+  Specify next point or [Arc/Undo]: 10,0
+  Specify next point or [Arc/Undo]:
   Command: ERASE
   1 found, 1 total
   *Cancel*

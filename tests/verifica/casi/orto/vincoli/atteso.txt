@@ -6,9 +6,9 @@ entities:
 messages:
   Command: PLINE
   Specify start point: 0,0
-  Specify next point or [Close/Undo]: 20
-  Specify next point or [Close/Undo]: 10,50
-  Specify next point or [Close/Undo]:
+  Specify next point or [Arc/Close/Undo]: 20
+  Specify next point or [Arc/Close/Undo]: 10,50
+  Specify next point or [Arc/Close/Undo]:
 prompt: Command:
 preview:
 selection: none

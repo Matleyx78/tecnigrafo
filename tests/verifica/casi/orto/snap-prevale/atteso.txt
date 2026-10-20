@@ -6,11 +6,11 @@ entities:
 messages:
   Command: PLINE
   Specify start point: 0,0
-  Specify next point or [Undo]: 100,0
-  Specify next point or [Undo]:
+  Specify next point or [Arc/Undo]: 100,0
+  Specify next point or [Arc/Undo]:
   Command: PLINE
   Specify start point: 60,60
-prompt: Specify next point or [Undo]:
+prompt: Specify next point or [Arc/Undo]:
 preview:
   LWPOLYLINE closed=no vertex=60,60 vertex=100,0
 selection: none
@@ -29,7 +29,7 @@ statistics:
 entities:
   1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
 messages:
-prompt: Specify next point or [Undo]:
+prompt: Specify next point or [Arc/Undo]:
 preview:
   LWPOLYLINE closed=no vertex=60,60 vertex=100,0 vertex=140,0
 selection: none
@@ -49,7 +49,7 @@ entities:
   1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
   2 LWPOLYLINE closed=no vertex=60,60 vertex=100,0 vertex=140,0
 messages:
-  Specify next point or [Close/Undo]:
+  Specify next point or [Arc/Close/Undo]:
 prompt: Command:
 preview:
 selection: none
