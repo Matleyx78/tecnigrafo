@@ -1,0 +1,152 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+  Command: ARC
+  Specify start point of arc: 90,50
+  Specify second point of arc or [Center]: 50,90
+  Specify end point of arc: 10,50
+  Command: ARC
+  Specify start point of arc: 190,50
+  Specify second point of arc or [Center]: 150,90
+  Specify end point of arc: 110,50
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 50,50
+active snap: none
+statistics:
+  ARC 2
+
+[report 2]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 50,90
+active snap: none
+statistics:
+  ARC 2
+
+[report 3]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 80,95
+active snap: none
+statistics:
+  ARC 2
+
+[report 4]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 95,95
+active snap: none
+statistics:
+  ARC 2
+
+[report 5]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 40,45
+active snap: none
+statistics:
+  ARC 2
+
+[report 6]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 45,85
+active snap: none
+statistics:
+  ARC 2
+
+[final]
+entities:
+  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+messages:
+  Command: ERASE
+  1 found, 1 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 50,90
+active snap: none
+statistics:
+  ARC 1

@@ -1,0 +1,115 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+messages:
+  Command: ARC
+  Specify start point of arc: 90,50
+  Specify second point of arc or [Center]: 50,90
+  Specify end point of arc: 10,50
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 90,50
+active snap: Endpoint 90,50
+statistics:
+  ARC 1
+
+[report 2]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 10,50
+active snap: Endpoint 10,50
+statistics:
+  ARC 1
+
+[report 3]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 50,90
+active snap: Midpoint 50,90
+statistics:
+  ARC 1
+
+[report 4]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 78.2842712474619,78.2842712474619
+active snap: Center 50,50
+statistics:
+  ARC 1
+
+[report 5]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 50,50
+active snap: none
+statistics:
+  ARC 1
+
+[final]
+entities:
+  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: 50,50
+active snap: none
+statistics:
+  ARC 1

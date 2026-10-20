@@ -1,0 +1,94 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: ARC
+  *Cancel*
+  Command: ARC
+  Specify start point of arc: 0,0
+  *Cancel*
+  Command: ARC
+  Specify start point of arc: 0,0
+  Specify second point of arc or [Center]: 10,0
+  *Cancel*
+  Command: ARC
+  Specify start point of arc: 0,0
+  Specify second point of arc or [Center]: C
+  *Cancel*
+  Command: ARC
+  Specify start point of arc: 0,0
+  Specify second point of arc or [Center]: Center
+  Specify center point of arc: 5,0
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+messages:
+  Command: ARC
+  Specify start point of arc: 10,0
+  Specify second point of arc or [Center]: 0,10
+  Specify end point of arc: -10,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+
+[report 3]
+entities:
+messages:
+  Command: U
+  Undone: Arc.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Arc
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+messages:
+  Command: REDO
+  Redone: Arc.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 1

@@ -1,0 +1,62 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 ARC center=5,5 radius=7.0710678118654755 start-angle=225 end-angle=135
+messages:
+  Command: ARC
+  Specify start point of arc: 0,0
+  Specify second point of arc or [Center]: 10,0
+  Specify end point of arc: 20,0
+  The three points are collinear.
+  Specify end point of arc: 5,9e-09
+  The three points are collinear.
+  Specify end point of arc: 10,0
+  The three points are collinear.
+  Specify end point of arc: 0,0
+  The three points are collinear.
+  Specify end point of arc: 0,10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+
+[final]
+entities:
+  1 ARC center=5,5 radius=7.0710678118654755 start-angle=225 end-angle=135
+  2 ARC center=0,0 radius=10 start-angle=0 end-angle=90
+messages:
+  Command: ARC
+  Specify start point of arc: 10,0
+  Specify second point of arc or [Center]: C
+  Specify center point of arc: 10,0
+  Center coincides with the start point.
+  Specify center point of arc: 0,0
+  Specify end point of arc: 10,0
+  End point gives a zero-length arc.
+  Specify end point of arc: 20,0
+  End point gives a zero-length arc.
+  Specify end point of arc: 0,10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 2
