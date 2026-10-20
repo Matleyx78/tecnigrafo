@@ -17,6 +17,7 @@ add_library(tg_script
     src/report.cpp
     src/script.cpp
     src/text_format.cpp
+    src/text_questions.cpp
 )
 add_library(Tecnigrafo::script ALIAS tg_script)
 
