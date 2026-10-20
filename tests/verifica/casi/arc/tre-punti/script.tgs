@@ -1,0 +1,25 @@
+; ARC: tre punti in senso antiorario e orario, attraversamento 0 gradi e alias A
+ARC
+10,0
+0,10
+-10,0
+!report
+A
+10,0
+0,-10
+-10,0
+!report
+ARC
+0,-10
+10,0
+0,10
+!report
+ARC
+0,10
+10,0
+0,-10
+!report
+A
+0,0
+2,2
+4,0

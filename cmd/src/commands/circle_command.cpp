@@ -56,9 +56,13 @@ Status CircleCommand::handle(CommandContext& context, const Input& input) {
             case Stage::ThreeFirst:
                 m_first = point->point;
                 context.lastPoint = point->point;
-                m_stage = m_stage == Stage::Center     ? Stage::Radius
-                          : m_stage == Stage::TwoFirst ? Stage::TwoSecond
-                                                       : Stage::ThreeSecond;
+                if (m_stage == Stage::Center) {
+                    m_stage = Stage::Radius;
+                } else if (m_stage == Stage::TwoFirst) {
+                    m_stage = Stage::TwoSecond;
+                } else {
+                    m_stage = Stage::ThreeSecond;
+                }
                 break;
             case Stage::ThreeSecond:
                 m_second = point->point;

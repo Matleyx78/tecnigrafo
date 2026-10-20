@@ -11,10 +11,10 @@ messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 150,50
   Specify radius of circle or [Diameter] <20.0000>: 20
-prompt: Command:
+prompt: Specify opposite corner:
 preview:
 selection: none
-rectangle: none
+rectangle: window 50,50 50,50
 undo:
   Circle
   Circle

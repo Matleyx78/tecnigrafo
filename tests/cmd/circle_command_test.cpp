@@ -61,7 +61,9 @@ TEST_F(CircleCommandTest, RadiusDiameterAndRelativePoints) {
     EXPECT_EQ(circle(), (core::Circle{{50, 50}, 12.5}));
     inputs({"C", "100,100", "Diameter", "@20,0"});
     EXPECT_EQ(circle(), (core::Circle{{100, 100}, 10}));
-    inputs({"L", "@", "@1,0", ""});
+    inputs({"L", "@0,0", "@1,0", ""});
+    ASSERT_EQ(document().entityCount(), 5U);
+    ASSERT_TRUE(std::holds_alternative<core::Line>(document().entities().back().entity));
     EXPECT_EQ(std::get<core::Line>(document().entities().back().entity).start,
               (core::Vec2{100, 100}));
 }
