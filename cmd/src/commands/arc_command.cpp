@@ -139,8 +139,7 @@ std::optional<core::Arc> ArcCommand::arcAt(const core::Vec2& point) const {
     return core::Arc{m_second, radius, start, end};
 }
 
-Status ArcCommand::finish(CommandContext& context, const core::Arc& arc,
-                          const core::Vec2& end) {
+Status ArcCommand::finish(CommandContext& context, const core::Arc& arc, const core::Vec2& end) {
     context.editor.add(arc);
     context.editor.commit();
     context.lastPoint = end;
