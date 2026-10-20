@@ -313,7 +313,7 @@ Ripeti B3–B6 finché nel milestone non restano issue aperte.
 |---|---|
 | La CI è rossa | Non unire. Scrivi all'agente: `La CI della pull request #<numero> è rossa: leggi l'errore e correggi.` |
 | Fallisce *Reference separation* | La pull request mescola riferimenti e codice. Scrivi all'agente: `Dividi la pull request #<numero> in due, come chiede ADR 0011.` |
-| Un agente dice che un riferimento è sbagliato | Leggi il suo commento nella issue. Se ha ragione, fai correggere il riferimento a Gemini (B3, indicando la issue); se ha torto, rispondi nella issue e fallo continuare. |
+| Un agente dice che un riferimento è sbagliato | Leggi il suo commento nella issue. Se ha ragione, fai correggere il riferimento a Gemini (B3, indicando la issue); se ha torto, rispondi nella issue e fallo continuare. Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla lettera. L'agente <x> ha trovato un errore nella tua RX, pr #X. Leggi i commenti nella issue #X. Se ha ragione, correggi i riferimenti. Se ha torto scrivi un perché di poche righe nei commenti della issue #X.|
 | Conflitto con `main` | Scrivi all'agente di quella pull request: `Aggiorna la pull request #<numero> con main e risolvi i conflitti.` |
 | Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
 | Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
