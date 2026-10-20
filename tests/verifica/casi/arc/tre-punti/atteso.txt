@@ -1,0 +1,131 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+messages:
+  Command: ARC
+  Specify start point of arc: 10,0
+  Specify second point of arc or [Center]: 0,10
+  Specify end point of arc: -10,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+
+[report 2]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+  2 ARC center=0,0 radius=10 start-angle=180 end-angle=0
+messages:
+  Command: A
+  Specify start point of arc: 10,0
+  Specify second point of arc or [Center]: 0,-10
+  Specify end point of arc: -10,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 2
+
+[report 3]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+  2 ARC center=0,0 radius=10 start-angle=180 end-angle=0
+  3 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+messages:
+  Command: ARC
+  Specify start point of arc: 0,-10
+  Specify second point of arc or [Center]: 10,0
+  Specify end point of arc: 0,10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 3
+
+[report 4]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+  2 ARC center=0,0 radius=10 start-angle=180 end-angle=0
+  3 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+  4 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+messages:
+  Command: ARC
+  Specify start point of arc: 0,10
+  Specify second point of arc or [Center]: 10,0
+  Specify end point of arc: 0,-10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 4
+
+[final]
+entities:
+  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+  2 ARC center=0,0 radius=10 start-angle=180 end-angle=0
+  3 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+  4 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+  5 ARC center=2,0 radius=2 start-angle=0 end-angle=180
+messages:
+  Command: A
+  Specify start point of arc: 0,0
+  Specify second point of arc or [Center]: 2,2
+  Specify end point of arc: 4,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Arc
+  Arc
+  Arc
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 5

@@ -1,0 +1,18 @@
+; ARC: snap a estremi, medio sull'arco e centro passando sulla curva
+!view 50,50 1 800x600
+ARC
+90,50
+50,90
+10,50
+LINE
+!move 90,50
+!report
+!move 10,50
+!report
+!move 50,90
+!report
+!move 78.2842712474619,78.2842712474619
+!report
+!move 50,50
+!report
+!esc

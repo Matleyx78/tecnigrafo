@@ -1,0 +1,18 @@
+; ARC: punti allineati, centro coincidente con inizio e arco nullo
+ARC
+0,0
+10,0
+20,0
+5,9e-09
+10,0
+0,0
+0,10
+!report
+ARC
+10,0
+C
+10,0
+0,0
+10,0
+20,0
+0,10
