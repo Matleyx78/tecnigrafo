@@ -7,12 +7,12 @@ entities:
 messages:
   Command: PLINE
   Specify start point: 10,10
-  Specify next point or [Undo]: 20,10
-  Specify next point or [Undo]:
+  Specify next point or [Arc/Undo]: 20,10
+  Specify next point or [Arc/Undo]:
   Command: PLINE
   Specify start point: 0,15
-  Specify next point or [Undo]: 30,15
-  Specify next point or [Undo]:
+  Specify next point or [Arc/Undo]: 30,15
+  Specify next point or [Arc/Undo]:
 prompt: Specify opposite corner:
 preview:
 selection: none
