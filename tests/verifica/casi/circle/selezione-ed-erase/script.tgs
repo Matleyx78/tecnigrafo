@@ -8,6 +8,7 @@ CIRCLE
 20
 !click 50,50
 !report
+!esc
 !click 70,50
 !report
 !esc
