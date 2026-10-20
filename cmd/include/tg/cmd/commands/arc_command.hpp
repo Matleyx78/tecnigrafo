@@ -24,8 +24,8 @@ private:
     void updatePreview();
 
     Stage m_stage{Stage::Start};
-    core::Vec2 m_start{};
-    core::Vec2 m_second{};
+    core::Vec2 m_start;
+    core::Vec2 m_second;
     std::optional<core::Vec2> m_pointer;
     std::vector<core::Entity> m_preview;
 };
