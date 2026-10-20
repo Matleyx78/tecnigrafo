@@ -6,6 +6,7 @@
 
 add_library(tg_cmd
     src/builtin_commands.cpp
+    src/commands/arc_command.cpp
     src/commands/circle_command.cpp
     src/commands/erase_command.cpp
     src/commands/line_command.cpp
