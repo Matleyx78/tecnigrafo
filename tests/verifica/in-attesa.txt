@@ -40,3 +40,6 @@ selezione/finestra-intersezione #90
 selezione/rimuovi-shift #90
 snap/modi-base #90
 snap/priorita-estremo-medio #90
+testo/dxf-proprieta #95
+testo/geometria #95
+testo/selezione-e-snap #95
