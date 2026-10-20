@@ -1,0 +1,14 @@
+; PLINE: nel modo arco punto coincidente, dritto dietro, quasi dritto dietro e dritto davanti
+PLINE
+0,0
+A
+0,0
+-10,0
+-10,1e-10
+10,0
+20,0
+20,10
+20,10
+30,10
+10,10
+

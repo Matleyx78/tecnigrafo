@@ -15,3 +15,10 @@ arc/selezione-ed-erase #88
 arc/snap #88
 arc/tre-punti #88
 font/misure #92
+pline/archi-e-linee #90
+pline/arco-iniziale #90
+pline/chiusura-arco-e-linea #90
+pline/direzioni-limite #90
+pline/esc-a-meta #90
+pline/esc-conserva #90
+pline/undo-modi #90

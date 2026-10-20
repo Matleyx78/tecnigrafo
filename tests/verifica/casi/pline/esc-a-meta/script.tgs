@@ -1,4 +1,4 @@
-; PLINE: Esc a metà comando annulla senza lasciare entità
+; PLINE: Esc a metà comando conserva i vertici già inseriti (ADR 0015)
 PLINE
 0,0
 10,0

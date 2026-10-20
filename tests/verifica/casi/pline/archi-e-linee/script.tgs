@@ -1,0 +1,16 @@
+; PLINE: segmento retto, due archi tangenti consecutivi, ritorno al modo linea e anteprima
+PLINE
+0,0
+10,0
+A
+!move 10,10
+!report
+10,10
+4,2
+L
+4,0
+Arc
+-4,-6
+Line
+-10,-6
+

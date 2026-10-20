@@ -1,0 +1,37 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=20,0 bulge=1 vertex=20,10 vertex=10,10
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Arc/Undo]: A
+  Specify end point of arc or [Line/Undo]: 0,0
+  Point coincides with the previous point.
+  Specify end point of arc or [Line/Undo]: -10,0
+  Invalid end point of arc.
+  Specify end point of arc or [Line/Undo]: -10,1e-10
+  Invalid end point of arc.
+  Specify end point of arc or [Line/Undo]: 10,0
+  Specify end point of arc or [Line/Undo]: 20,0
+  Specify end point of arc or [CLose/Line/Undo]: 20,10
+  Specify end point of arc or [CLose/Line/Undo]: 20,10
+  Point coincides with the previous point.
+  Specify end point of arc or [CLose/Line/Undo]: 30,10
+  Invalid end point of arc.
+  Specify end point of arc or [CLose/Line/Undo]: 10,10
+  Specify end point of arc or [CLose/Line/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1
