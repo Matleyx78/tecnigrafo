@@ -1,0 +1,17 @@
+; PLINE: Undo nel modo linea e nel modo arco toglie l'ultimo vertice e lascia il modo com'è
+PLINE
+0,0
+U
+0,0
+10,0
+A
+10,10
+!report
+U
+!report
+10,-10
+10,-20
+L
+Undo
+0,-10
+

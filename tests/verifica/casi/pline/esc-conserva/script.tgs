@@ -1,0 +1,21 @@
+; PLINE: Esc senza vertici, dopo un vertice e dopo tre vertici con arco e segmento retto, poi U e REDO (ADR 0015)
+PLINE
+!esc
+!report
+PLINE
+0,0
+A
+!move 10,10
+!esc
+!report
+PLINE
+0,0
+10,0
+A
+10,10
+!move 0,10
+!esc
+!report
+U
+!report
+REDO
