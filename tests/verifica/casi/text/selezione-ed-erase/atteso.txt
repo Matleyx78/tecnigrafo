@@ -1,0 +1,157 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 TEXT position=10,10 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ABC" ~box=10,8.459900638750888;24.94322214336409,8.459900638750888;24.94322214336409,16.5791341376863;10,16.5791341376863
+  2 TEXT position=50,50 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="XYZ" ~box=50,48.45990063875089;64.13413768630234,48.45990063875089;64.13413768630234,56.5791341376863;50,56.5791341376863
+messages:
+  Command: TEXT
+  Specify start point of text: 10,10
+  Specify height <2.5000>: 5
+  Specify rotation angle of text <0>: 0
+  Enter text: ABC
+  Enter text:
+  Command: TEXT
+  Specify start point of text: 50,50
+  Specify height <5.0000>:
+  Specify rotation angle of text <0>:
+  Enter text: XYZ
+  Enter text:
+prompt: Command:
+preview:
+selection: 1
+rectangle: none
+undo:
+  Text
+  Text
+redo:
+snap: on
+ortho: off
+pointer: 12,12
+active snap: none
+statistics:
+  TEXT 2
+
+[report 2]
+entities:
+  2 TEXT position=50,50 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="XYZ" ~box=50,48.45990063875089;64.13413768630234,48.45990063875089;64.13413768630234,56.5791341376863;50,56.5791341376863
+messages:
+  Command: ERASE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 12,12
+active snap: none
+statistics:
+  TEXT 1
+
+[report 3]
+entities:
+  2 TEXT position=50,50 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="XYZ" ~box=50,48.45990063875089;64.13413768630234,48.45990063875089;64.13413768630234,56.5791341376863;50,56.5791341376863
+messages:
+prompt: Command:
+preview:
+selection: 2
+rectangle: none
+undo:
+  Text
+  Text
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 70,60
+active snap: none
+statistics:
+  TEXT 1
+
+[report 4]
+entities:
+messages:
+  Command: ERASE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Erase
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 70,60
+active snap: none
+statistics:
+
+[report 5]
+entities:
+  2 TEXT position=50,50 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="XYZ" ~box=50,48.45990063875089;64.13413768630234,48.45990063875089;64.13413768630234,56.5791341376863;50,56.5791341376863
+messages:
+  Command: U
+  Undone: Erase.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Erase
+redo:
+  Erase
+snap: on
+ortho: off
+pointer: 70,60
+active snap: none
+statistics:
+  TEXT 1
+
+[report 6]
+entities:
+  2 TEXT position=50,50 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="XYZ" ~box=50,48.45990063875089;64.13413768630234,48.45990063875089;64.13413768630234,56.5791341376863;50,56.5791341376863
+messages:
+prompt: Command:
+preview:
+selection: 2
+rectangle: none
+undo:
+  Text
+  Text
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 48,48
+active snap: none
+statistics:
+  TEXT 1
+
+[final]
+entities:
+messages:
+  Command: ERASE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Erase
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: 48,48
+active snap: none
+statistics:

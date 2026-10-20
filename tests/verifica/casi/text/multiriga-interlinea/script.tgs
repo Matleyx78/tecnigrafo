@@ -1,0 +1,18 @@
+; TEXT: tre righe successive distanziate di 5/3 dell'altezza lungo la direzione di rotazione
+TEXT
+0,30
+3
+0
+Prima riga
+Seconda riga
+Terza riga
+
+!report
+TEXT
+50,0
+6
+90
+Colonna 1
+Colonna 2
+Colonna 3
+

@@ -1,0 +1,10 @@
+; TEXT: altezza non positiva (zero, negativa, punto coincidente) rifiutata con messaggio
+TEXT
+0,0
+0
+-2.5
+0,0
+2.5
+0
+Test valido
+

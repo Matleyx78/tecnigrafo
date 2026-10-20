@@ -1,0 +1,13 @@
+; TEXT: testo con spazi, accenti, codici DXF, coordinate e parole chiave
+TEXT
+0,0
+3
+0
+  Spazi all'inizio, dentro e alla fine  
+Città e caffè
+%%c50 %%d90 %%p0.05 100%%%
+10,20
+@5<45
+Close
+Undo
+
