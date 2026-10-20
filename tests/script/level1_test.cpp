@@ -191,18 +191,18 @@ TEST(RunLevel1, EnterRepeatsTheLastCommandAndEchoesThePromptAlone) {
                    "messages:\n"
                    "  Command: PLINE\n"
                    "  Specify start point: 0,0\n"
-                   "  Specify next point or [Undo]: 10,0\n"
-                   "  Specify next point or [Undo]:\n"
+                   "  Specify next point or [Arc/Undo]: 10,0\n"
+                   "  Specify next point or [Arc/Undo]:\n"
                    "  Command:\n"
                    "prompt: Specify start point:\n");
 }
 
-TEST(RunLevel1, EscCancelsTheCommand) {
+TEST(RunLevel1, EscKeepsCompletedPolylineAndEndsTheCommand) {
     const std::string report = reportOf("PLINE\n0,0\n10,0\n!esc\n");
     const std::string final = section(report, "final");
-    expectContains(final, "entities:\nmessages:");
+    expectContains(final, "entities:\n  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
     expectContains(final, "  *Cancel*\nprompt: Command:\n");
-    expectContains(final, "undo:\nredo:\n");
+    expectContains(final, "undo:\n  Polyline\nredo:\n");
 }
 
 TEST(RunLevel1, RightClickConfirms) {
