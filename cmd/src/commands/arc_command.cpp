@@ -107,7 +107,6 @@ std::optional<core::Vec2> ArcCommand::basePoint() const {
         case Stage::Center:
             return m_start;
         case Stage::Third:
-            return m_second;
         case Stage::End:
             return m_second;
     }
