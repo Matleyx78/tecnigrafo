@@ -90,7 +90,7 @@ TEST_F(CircleCommandTest, DefaultsAndUndoRedo) {
 TEST_F(CircleCommandTest, InvalidSizesAndCoincidentDiameterStayAtPrompt) {
     inputs({"C", "0,0"});
     const std::string prompt = runner().promptText();
-    for (double value : {0.0, -5.0, std::numeric_limits<double>::infinity()}) {
+    for (const double value : {0.0, -5.0, std::numeric_limits<double>::infinity()}) {
         runner().submit(ValueInput{value});
         EXPECT_EQ(messages().back(), "Value must be positive and nonzero.");
         EXPECT_EQ(runner().promptText(), prompt);
@@ -142,7 +142,7 @@ TEST_F(CircleCommandTest, EscapeAtEveryPromptPreservesRedo) {
 TEST(CircleCommandPreview, GeometryAndBasePointsFollowEachConstruction) {
     core::Document document;
     edit::Editor editor(document);
-    CommandContext context{editor, {}, [](std::string) {
+    CommandContext context{editor, {}, [](const std::string&) {
                            }};
     CircleCommand command;
     command.start(context);

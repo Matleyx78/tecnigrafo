@@ -10,6 +10,7 @@ ARC
 110,50
 !click 50,50
 !report
+!esc
 !click 50,90
 !report
 !esc

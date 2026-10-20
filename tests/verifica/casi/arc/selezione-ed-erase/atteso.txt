@@ -13,10 +13,10 @@ messages:
   Specify start point of arc: 190,50
   Specify second point of arc or [Center]: 150,90
   Specify end point of arc: 110,50
-prompt: Command:
+prompt: Specify opposite corner:
 preview:
 selection: none
-rectangle: none
+rectangle: window 50,50 50,50
 undo:
   Arc
   Arc

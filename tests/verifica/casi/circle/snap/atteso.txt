@@ -62,10 +62,8 @@ statistics:
 entities:
   1 CIRCLE center=50,50 radius=20
 messages:
-  Specify first point: 50,50
 prompt: Specify next point or [Undo]:
 preview:
-  LINE start=50,50 end=70,50
 selection: none
 rectangle: none
 undo:
