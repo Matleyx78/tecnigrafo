@@ -4,6 +4,7 @@
 #include "tg/cmd/commands/arc_command.hpp"
 
 #include "tg/core/arc.hpp"
+#include "tg/core/math.hpp"
 
 #include <cmath>
 #include <variant>
