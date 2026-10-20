@@ -36,6 +36,12 @@ protected:
         return std::get<core::Arc>(m_document.entities().back().entity);
     }
 
+    [[nodiscard]] const core::Document& document() const { return m_document; }
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+private:
     core::Document m_document;
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -45,51 +51,51 @@ protected:
 
 TEST_F(ArcCommandTest, ThreePointsBothOrientations) {
     inputs({"A", "10,0", "0,10", "-10,0"});
-    ASSERT_EQ(m_document.entityCount(), 1U);
+    ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_NEAR(arc().center.x, 0.0, 1e-12);
     EXPECT_NEAR(arc().center.y, 0.0, 1e-12);
     EXPECT_NEAR(arc().radius, 10.0, 1e-12);
     EXPECT_NEAR(arc().startAngle, 0.0, 1e-12);
     EXPECT_NEAR(arc().endAngle, core::kPi, 1e-12);
     inputs({"ARC", "10,0", "0,-10", "-10,0"});
-    ASSERT_EQ(m_document.entityCount(), 2U);
+    ASSERT_EQ(document().entityCount(), 2U);
     EXPECT_NEAR(arc().startAngle, core::kPi, 1e-12);
     EXPECT_NEAR(arc().endAngle, 0.0, 1e-12);
-    EXPECT_EQ(m_editor.undoName(), "Arc");
+    EXPECT_EQ(editor().undoName(), "Arc");
     inputs({"U"});
-    EXPECT_EQ(m_document.entityCount(), 1U);
+    EXPECT_EQ(document().entityCount(), 1U);
     inputs({"REDO"});
-    EXPECT_EQ(m_document.entityCount(), 2U);
+    EXPECT_EQ(document().entityCount(), 2U);
 }
 
 TEST_F(ArcCommandTest, CenterEndCrossesZeroAndTracksFinalPoint) {
     inputs({"A", "0,-10", "C", "0,0", "10,0"});
-    ASSERT_EQ(m_document.entityCount(), 1U);
+    ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_NEAR(arc().startAngle, 1.5 * core::kPi, 1e-12);
     EXPECT_NEAR(arc().endAngle, 0.0, 1e-12);
     inputs({"L", "@0,0", "@0,1", ""});
-    EXPECT_EQ(m_document.entityCount(), 2U);
-    const auto& line = std::get<core::Line>(m_document.entities().back().entity);
+    EXPECT_EQ(document().entityCount(), 2U);
+    const auto& line = std::get<core::Line>(document().entities().back().entity);
     EXPECT_EQ(line.start, (core::Vec2{10, 0}));
 }
 
 TEST_F(ArcCommandTest, InvalidGeometryRetries) {
     inputs({"A", "0,0", "10,0"});
     inputs({"20,0", "5,1e-9", "10,0"});
-    EXPECT_EQ(m_runner.promptText(), "Specify end point of arc:");
-    ASSERT_FALSE(m_messages.empty());
-    EXPECT_EQ(m_messages.back(), "The three points are collinear.");
-    EXPECT_TRUE(m_document.isEmpty());
+    EXPECT_EQ(runner().promptText(), "Specify end point of arc:");
+    ASSERT_FALSE(messages().empty());
+    EXPECT_EQ(messages().back(), "The three points are collinear.");
+    EXPECT_TRUE(document().isEmpty());
     inputs({"0,10"});
-    EXPECT_EQ(m_document.entityCount(), 1U);
+    EXPECT_EQ(document().entityCount(), 1U);
     inputs({"A", "10,0", "C", "10,0"});
-    EXPECT_EQ(m_messages.back(), "Center coincides with the start point.");
-    EXPECT_EQ(m_runner.promptText(), "Specify center point of arc:");
+    EXPECT_EQ(messages().back(), "Center coincides with the start point.");
+    EXPECT_EQ(runner().promptText(), "Specify center point of arc:");
     inputs({"0,0", "20,0"});
-    EXPECT_EQ(m_messages.back(), "End point gives a zero-length arc.");
-    EXPECT_EQ(m_runner.promptText(), "Specify end point of arc:");
+    EXPECT_EQ(messages().back(), "End point gives a zero-length arc.");
+    EXPECT_EQ(runner().promptText(), "Specify end point of arc:");
     inputs({"0,10"});
-    EXPECT_EQ(m_document.entityCount(), 2U);
+    EXPECT_EQ(document().entityCount(), 2U);
 }
 
 TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
@@ -101,12 +107,12 @@ TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
     prefixes.push_back({"A", "10,0", "C", "0,0"});
     for (const auto& prefix : prefixes) {
         for (const char* text : prefix) {
-            m_runner.submitText(text);
+            runner().submitText(text);
         }
-        m_runner.submit(CancelInput{});
-        EXPECT_TRUE(m_document.isEmpty());
-        EXPECT_FALSE(m_editor.inTransaction());
-        EXPECT_FALSE(m_runner.isActive());
+        runner().submit(CancelInput{});
+        EXPECT_TRUE(document().isEmpty());
+        EXPECT_FALSE(editor().inTransaction());
+        EXPECT_FALSE(runner().isActive());
     }
 }
 
