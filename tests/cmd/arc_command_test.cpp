@@ -93,11 +93,12 @@ TEST_F(ArcCommandTest, InvalidGeometryRetries) {
 }
 
 TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
-    const std::vector<std::vector<const char*>> prefixes{{"A"},
-                                                         {"A", "10,0"},
-                                                         {"A", "10,0", "0,10"},
-                                                         {"A", "10,0", "C"},
-                                                         {"A", "10,0", "C", "0,0"}};
+    std::vector<std::vector<const char*>> prefixes;
+    prefixes.push_back({"A"});
+    prefixes.push_back({"A", "10,0"});
+    prefixes.push_back({"A", "10,0", "0,10"});
+    prefixes.push_back({"A", "10,0", "C"});
+    prefixes.push_back({"A", "10,0", "C", "0,0"});
     for (const auto& prefix : prefixes) {
         for (const char* text : prefix) {
             m_runner.submitText(text);
