@@ -10,6 +10,7 @@
 #include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/spatial_index.hpp"
+#include "tg/core/text.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -23,7 +24,7 @@ namespace tg::core {
 /// Every drawable entity. New entity types are added to this variant;
 /// code that visits entities then fails to compile until it handles them,
 /// which is intentional (see docs/adr/0004).
-using Entity = std::variant<Polyline, Line, Circle, Arc>;
+using Entity = std::variant<Polyline, Line, Circle, Arc, Text>;
 
 struct EntityRecord {
     EntityId id;

@@ -190,12 +190,6 @@ TEST(Questions, WrongTextAnswersReportMeasuredValues) {
     EXPECT_EQ(differences[1].actual, "ascent=1.3158268275372604 descent=-0.3080198722498226");
 }
 
-TEST(Questions, AnEntityTypeNotImplementedYetIsMarked) {
-    const ParseError error = failure("; testo\nT = TEXT position=0,0 value=\"A\"\n");
-    EXPECT_EQ(error.line, 2);
-    EXPECT_TRUE(error.notImplemented);
-}
-
 TEST(Questions, CommentsBlankLinesAndIndentation) {
     const std::vector<Answer> list = answers(
         "\n"

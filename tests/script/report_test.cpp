@@ -4,15 +4,21 @@
 #include "tg/script/report.hpp"
 
 #include "tg/core/math.hpp"
+#include "tg/core/text.hpp"
 #include "tg/script/entity_reader.hpp"
+#include "tg/script/number_format.hpp"
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cstddef>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 
-// Lines, circles and arcs in the format of docs/verifica/rapporto.md: written
+// Lines, circles, arcs and texts in the format of docs/verifica/rapporto.md: written
 // by writeEntity(), read back by readEntity().
 namespace tg::script {
 namespace {
@@ -127,6 +133,166 @@ TEST(ReadEntity, ErrorsOfLinesCirclesAndArcs) {
         EXPECT_FALSE(error.notImplemented) << text;
         EXPECT_FALSE(error.message.empty()) << text;
     }
+}
+
+/// The corners written after " ~box=" at the end of `line`, compared with
+/// `expected` within `tolerance`.
+void expectBox(const std::string& line, const std::array<core::Vec2, 4>& expected,
+               double tolerance) {
+    constexpr std::string_view kBox = " ~box=";
+    const std::size_t start = line.find(kBox);
+    ASSERT_NE(start, std::string::npos) << line;
+    std::string_view corners = std::string_view{line}.substr(start + kBox.size());
+    for (const core::Vec2& corner : expected) {
+        const std::size_t end = corners.find(';');
+        const std::optional<core::Vec2> point = parsePoint(corners.substr(0, end));
+        if (!point) {
+            ADD_FAILURE() << "no point in " << line;
+            return;
+        }
+        EXPECT_NEAR(point->x, corner.x, tolerance) << line;
+        EXPECT_NEAR(point->y, corner.y, tolerance) << line;
+        corners = end == std::string_view::npos ? std::string_view{} : corners.substr(end + 1);
+    }
+    EXPECT_TRUE(corners.empty()) << line;
+}
+
+TEST(WriteEntity, TextWithEveryPropertyAndItsBox) {
+    core::Text text;
+    text.value = "Hello";
+    const std::string line = written(text);
+    EXPECT_TRUE(line.starts_with(
+        "TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 "
+        "style=\"Standard\" mirror-x=no mirror-y=no horizontal=left vertical=baseline "
+        "value=\"Hello\" ~box="))
+        << line;
+    // Liberation Sans 2.1.5, read independently with fontTools: "Hello" is
+    // 3.312278211497516 capital heights wide, ascent 1.3158268275372604,
+    // descent -0.3080198722498226.
+    expectBox(
+        line,
+        {core::Vec2{0, -0.7700496806245565}, core::Vec2{8.28069552874379, -0.7700496806245565},
+         core::Vec2{8.28069552874379, 3.289567068843151}, core::Vec2{0, 3.289567068843151}},
+        1e-12);
+    EXPECT_EQ(dxfType(text), "TEXT");
+
+    core::Text full;
+    full.position = {10.0, 20.0};
+    full.alignmentPoint = {15.0, 25.0};
+    full.height = 5.0;
+    full.rotation = core::kPi;
+    full.widthFactor = 0.8;
+    full.obliqueAngle = core::kPi / 2.0;
+    full.style = "My \"style\"";
+    full.mirroredX = true;
+    full.mirroredY = true;
+    full.horizontal = core::TextHorizontal::Fit;
+    full.vertical = core::TextVertical::Top;
+    full.value = "%%c20\t\u00E8";
+    const std::string fullLine = written(full);
+    EXPECT_TRUE(fullLine.starts_with(
+        "TEXT position=10,20 alignment-point=15,25 height=5 rotation=180 width-factor=0.8 "
+        "oblique=90 style=\"My \\\"style\\\"\" mirror-x=yes mirror-y=yes horizontal=fit "
+        "vertical=top value=\"%%c20\\u{09}\u00E8\" ~box="))
+        << fullLine;
+    expectBox(fullLine, core::textBox(full), 0.0);
+}
+
+TEST(ReadEntity, TextWithDefaults) {
+    core::Text expected;
+    expected.position = {1.0, 2.0};
+    expected.value = "A b";
+    EXPECT_EQ(read("TEXT position=1,2 value=\"A b\""), core::Entity{expected});
+    // In any order, with a derived box that is ignored.
+    EXPECT_EQ(read("TEXT value=\"A b\" ~box=0,0;1,0;1,1;0,1 position=1,2"), core::Entity{expected});
+}
+
+TEST(ReadEntity, EveryAlignmentName) {
+    const std::array horizontal{
+        std::pair{"left", core::TextHorizontal::Left},
+        std::pair{"center", core::TextHorizontal::Center},
+        std::pair{"right", core::TextHorizontal::Right},
+        std::pair{"aligned", core::TextHorizontal::Aligned},
+        std::pair{"middle", core::TextHorizontal::Middle},
+        std::pair{"fit", core::TextHorizontal::Fit},
+    };
+    for (const auto& [name, value] : horizontal) {
+        const core::Entity entity =
+            read("TEXT position=0,0 value=\"\" horizontal=" + std::string{name});
+        EXPECT_EQ(std::get<core::Text>(entity).horizontal, value) << name;
+    }
+    const std::array vertical{
+        std::pair{"baseline", core::TextVertical::Baseline},
+        std::pair{"bottom", core::TextVertical::Bottom},
+        std::pair{"middle", core::TextVertical::Middle},
+        std::pair{"top", core::TextVertical::Top},
+    };
+    for (const auto& [name, value] : vertical) {
+        const core::Entity entity =
+            read("TEXT position=0,0 value=\"\" vertical=" + std::string{name});
+        EXPECT_EQ(std::get<core::Text>(entity).vertical, value) << name;
+    }
+}
+
+TEST(ReadEntity, TextWithEveryPropertyReadsBackWithoutLoss) {
+    for (const std::string_view text : {
+             std::string_view{"TEXT position=10,20 alignment-point=15,25 height=5 rotation=180 "
+                              "width-factor=0.8 oblique=-90 style=\"ISO \\\"A\\\"\" "
+                              "mirror-x=yes mirror-y=no horizontal=center vertical=middle "
+                              "value=\"%%c50 %%d90 %%p0.05 100%%% è\\u{0A}\""},
+             std::string_view{"TEXT position=-1,0.5 alignment-point=0,0 height=1e-05 rotation=0 "
+                              "width-factor=1 oblique=0 style=\"Standard\" mirror-x=no "
+                              "mirror-y=yes horizontal=aligned vertical=bottom value=\"\""},
+         }) {
+        const core::Entity entity = read(text);
+        const std::string again = written(entity);
+        // The written line adds the derived box at the end.
+        EXPECT_TRUE(again.starts_with(std::string{text} + " ~box=")) << again;
+        EXPECT_EQ(read(again), entity);
+    }
+    // Any angle: writing and reading again gives a text within a rounding.
+    core::Text original;
+    original.position = {1.25, -3.5};
+    original.rotation = 1.0;
+    original.obliqueAngle = -0.25;
+    original.value = "x";
+    const core::Entity again = read(written(original));
+    const auto& text = std::get<core::Text>(again);
+    EXPECT_NEAR(text.rotation, original.rotation, 1e-15);
+    EXPECT_NEAR(text.obliqueAngle, original.obliqueAngle, 1e-15);
+    EXPECT_EQ(written(again), written(original));
+}
+
+TEST(ReadEntity, ErrorsOfTexts) {
+    for (const std::string_view text : {
+             std::string_view{"TEXT value=\"A\""},                          // missing position
+             std::string_view{"TEXT position=0,0"},                         // missing value
+             std::string_view{"TEXT position=0,0 value=A"},                 // not quoted
+             std::string_view{R"(TEXT position=0,0 value="A" value="B")"},  // given twice
+             std::string_view{"TEXT position=0,0 value=\"A\" height=0"},    // not above 0
+             std::string_view{"TEXT position=0,0 value=\"A\" height=-1"},
+             std::string_view{"TEXT position=0,0 value=\"A\" width-factor=0"},
+             std::string_view{"TEXT position=0,0 value=\"A\" rotation=x"},
+             std::string_view{"TEXT position=0,0 value=\"A\" oblique=1,2"},
+             std::string_view{"TEXT position=0,0 value=\"A\" style=Standard"},
+             std::string_view{"TEXT position=0,0 value=\"A\" mirror-x=1"},
+             std::string_view{"TEXT position=0,0 value=\"A\" horizontal=justify"},
+             std::string_view{"TEXT position=0,0 value=\"A\" vertical=Top"},
+             std::string_view{"TEXT position=0 value=\"A\""},
+             std::string_view{"TEXT position=0,0 value=\"A\" color=red"},
+             std::string_view{R"(TEXT position=0,0 value="A\q")"},  // unknown escape
+         }) {
+        const EntityError error = failure(text);
+        EXPECT_FALSE(error.notImplemented) << text;
+        EXPECT_FALSE(error.message.empty()) << text;
+    }
+}
+
+TEST(SnapKindName, EveryKind) {
+    EXPECT_EQ(snapKindName(core::SnapKind::Endpoint), "Endpoint");
+    EXPECT_EQ(snapKindName(core::SnapKind::Midpoint), "Midpoint");
+    EXPECT_EQ(snapKindName(core::SnapKind::Center), "Center");
+    EXPECT_EQ(snapKindName(core::SnapKind::Insertion), "Insertion");
 }
 
 }  // namespace

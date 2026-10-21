@@ -4,6 +4,7 @@
 #include "tg/core/document_query.hpp"
 
 #include "tg/core/proximity.hpp"
+#include "tg/core/text.hpp"
 
 #include <gtest/gtest.h>
 
@@ -534,6 +535,92 @@ TEST(DocumentQuery, SnapAnEndPointBeatsTheCentreOfAnotherType) {
               (SnapPoint{{10.0, 0.0}, SnapKind::Endpoint}));
     EXPECT_EQ(findSnap(document, {10.2, 0.0}, 1.0, SnapModes{false, true, true}),
               (SnapPoint{{30.0, 0.0}, SnapKind::Center}));
+}
+
+// --- Texts: regions with an insertion point (docs/adr/0013, point 6) ------
+
+/// "Hello" 2.5 high at `position`: about 8.28 wide, from y - 0.77 to y + 3.29.
+Text hello(const Vec2& position) {
+    Text text;
+    text.position = position;
+    text.value = "Hello";
+    return text;
+}
+
+TEST(TextQueries, PickInsideTheBoxTakesTheText) {
+    Document document;
+    const EntityId text = document.add(hello({0.0, 0.0}));
+    EXPECT_EQ(pickEntity(document, {4.0, 1.0}, 0.0), text);
+    EXPECT_EQ(pickEntity(document, {0.0, 0.0}, 0.0), text);
+    // Outside, within or beyond the tolerance.
+    EXPECT_EQ(pickEntity(document, {-0.4, 1.0}, 0.5), text);
+    EXPECT_FALSE(pickEntity(document, {-0.6, 1.0}, 0.5));
+}
+
+TEST(TextQueries, PickOnOverlappingTextsTakesTheHighestId) {
+    Document document;
+    document.add(hello({0.0, 0.0}));
+    const EntityId over = document.add(hello({1.0, 0.5}));
+    EXPECT_EQ(pickEntity(document, {2.0, 1.0}, 0.0), over);
+}
+
+TEST(TextQueries, WindowAndCrossing) {
+    Document document;
+    const EntityId text = document.add(hello({0.0, 0.0}));
+    const EntityId line = document.add(Line{{20.0, 0.0}, {30.0, 0.0}});
+    EXPECT_EQ(
+        values(selectInRectangle(document, BBox{{-1.0, -1.0}, {9.0, 4.0}}, RectangleMode::Window)),
+        (std::vector<std::uint64_t>{text.value}));
+    // Inside the text: the window takes nothing, the crossing takes the text.
+    EXPECT_TRUE(
+        selectInRectangle(document, BBox{{2.0, 0.0}, {6.0, 2.0}}, RectangleMode::Window).empty());
+    EXPECT_EQ(
+        values(selectInRectangle(document, BBox{{2.0, 0.0}, {6.0, 2.0}}, RectangleMode::Crossing)),
+        (std::vector<std::uint64_t>{text.value}));
+    EXPECT_EQ(values(selectInRectangle(document, BBox{{5.0, -1.0}, {25.0, 1.0}},
+                                       RectangleMode::Crossing)),
+              (std::vector<std::uint64_t>{text.value, line.value}));
+}
+
+TEST(TextQueries, SnapToTheInsertionPassingOverTheText) {
+    Document document;
+    document.add(hello({0.0, 0.0}));
+    const SnapPoint insertion{{0.0, 0.0}, SnapKind::Insertion};
+    EXPECT_EQ(findSnap(document, {4.0, 1.0}, 1.0, kAllModes), insertion);
+    // Within the aperture of the box, from outside.
+    EXPECT_EQ(findSnap(document, {4.0, 4.0}, 1.0, kAllModes), insertion);
+    EXPECT_FALSE(findSnap(document, {4.0, 5.0}, 1.0, kAllModes));
+}
+
+TEST(TextQueries, AnEndpointOrMidpointWithinTheApertureBeatsTheInsertion) {
+    Document document;
+    document.add(hello({0.0, 0.0}));
+    document.add(Line{{8.0, 0.0}, {15.0, 0.0}});
+    EXPECT_EQ(findSnap(document, {7.9, 0.1}, 1.0, kAllModes),
+              (SnapPoint{{8.0, 0.0}, SnapKind::Endpoint}));
+    // With the endpoint mode off, the insertion point comes back.
+    EXPECT_EQ(findSnap(document, {7.9, 0.1}, 1.0, SnapModes{false, true, true, true}),
+              (SnapPoint{{0.0, 0.0}, SnapKind::Insertion}));
+}
+
+TEST(TextQueries, InsertionModeOff) {
+    Document document;
+    document.add(hello({0.0, 0.0}));
+    EXPECT_FALSE(findSnap(document, {4.0, 1.0}, 1.0, SnapModes{true, true, true, false}));
+    EXPECT_EQ(findSnap(document, {4.0, 1.0}, 1.0, SnapModes{false, false, false, true}),
+              (SnapPoint{{0.0, 0.0}, SnapKind::Insertion}));
+}
+
+TEST(TextQueries, InsertionAndCentreHaveTheSamePriority) {
+    Document document;
+    document.add(Circle{{20.0, 1.0}, 10.0});  // passes through (10,1)
+    document.add(hello({0.0, 0.0}));          // its box ends at about x = 8.28
+    // 0.5 from the circle, 1.22 from the text box: the circle's centre.
+    EXPECT_EQ(findSnap(document, {9.5, 1.0}, 2.0, kAllModes),
+              (SnapPoint{{20.0, 1.0}, SnapKind::Center}));
+    // Inside the text box, 2 from the circle: the insertion point.
+    EXPECT_EQ(findSnap(document, {8.0, 1.0}, 2.0, kAllModes),
+              (SnapPoint{{0.0, 0.0}, SnapKind::Insertion}));
 }
 
 TEST_F(RandomDocument, PickMatchesExhaustiveSearch) {

@@ -103,6 +103,11 @@ void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<
                     out.push_back({arc.center, SnapKind::Center});
                 }
             },
+            [&](const Text& text) {
+                if (modes.insertion) {
+                    out.push_back({text.position, SnapKind::Insertion});
+                }
+            },
         },
         entity);
 }

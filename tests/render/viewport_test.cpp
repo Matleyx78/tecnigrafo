@@ -4,6 +4,7 @@
 #include "tg/render/viewport.hpp"
 
 #include "tg/core/math.hpp"
+#include "tg/core/text.hpp"
 #include "tg/render/scene_renderer.hpp"
 
 #include <gtest/gtest.h>
@@ -455,6 +456,119 @@ TEST(SnapMarkerRenderer, ShapesStayCenteredAndKeepPixelSizeAcrossZoom) {
                 EXPECT_TRUE(painter.fills.empty());
             }
         }
+    }
+}
+
+TEST(SceneRenderer, DrawsTextsWithTheirHeightRotationAndWidthFactor) {
+    core::Document document;
+    core::Text text;
+    text.position = {10.0, 20.0};
+    text.height = 2.5;
+    text.rotation = 0.5;
+    text.widthFactor = 0.8;
+    text.value = "%%c20";
+    // Drawn as if they were not there until tappa 0.5 (docs/adr/0013).
+    text.obliqueAngle = 0.3;
+    text.mirroredX = true;
+    text.horizontal = core::TextHorizontal::Right;
+    document.add(text);
+
+    const SceneStyle style;
+    RecordingPainter painter;
+    renderScene(document, makeViewport(), style, painter);
+    ASSERT_EQ(painter.texts.size(), 1U);
+    EXPECT_TRUE(painter.polylines.empty());
+    EXPECT_EQ(painter.pen, style.entity);
+    const TextRun& run = painter.texts.front();
+    EXPECT_EQ(run.text, U"\u230020");  // control codes converted
+    expectNear(run.origin, {400.0, 300.0});
+    EXPECT_DOUBLE_EQ(run.capHeightPx, 5.0);  // scale 2
+    EXPECT_DOUBLE_EQ(run.angle, 0.5);
+    EXPECT_DOUBLE_EQ(run.widthFactor, 0.8);
+}
+
+TEST(SceneRenderer, SmallTextsAreDrawnAsTheirBox) {
+    core::Text text;
+    text.position = {10.0, 20.0};
+    text.value = "Hello";
+    // At scale 2: 0.99 is drawn as a box, 1.0 (2 px) as text.
+    text.height = 0.99;
+    const std::array<core::Entity, 1> small{text};
+    RecordingPainter painter;
+    renderPreview(small, makeViewport(), SceneStyle{}, painter);
+    EXPECT_TRUE(painter.texts.empty());
+    ASSERT_EQ(painter.polylines.size(), 1U);
+    EXPECT_TRUE(painter.lastClosed);
+    const std::array<Vec2, 4> box = core::textBox(text);
+    ASSERT_EQ(painter.polylines.front().size(), box.size());
+    for (std::size_t i = 0; i < box.size(); ++i) {
+        expectNear(painter.polylines.front()[i], makeViewport().worldToScreen(box.at(i)));
+    }
+
+    text.height = 1.0;
+    const std::array<core::Entity, 1> readable{text};
+    RecordingPainter other;
+    renderPreview(readable, makeViewport(), SceneStyle{}, other);
+    EXPECT_TRUE(other.polylines.empty());
+    ASSERT_EQ(other.texts.size(), 1U);
+    EXPECT_DOUBLE_EQ(other.texts.front().capHeightPx, kMinTextHeightPx);
+}
+
+TEST(SceneRenderer, TextsOutsideTheViewAndHighlightedTexts) {
+    core::Document document;
+    core::Text faraway;
+    faraway.position = {1e6, 1e6};
+    faraway.value = "Far";
+    document.add(faraway);
+    core::Text near;
+    near.position = {10.0, 20.0};
+    near.value = "Near";
+    const core::EntityId id = document.add(near);
+    RecordingPainter scene;
+    renderScene(document, makeViewport(), SceneStyle{}, scene);
+    ASSERT_EQ(scene.texts.size(), 1U);
+    EXPECT_EQ(scene.texts.front().text, U"Near");
+
+    const std::array ids{id};
+    RecordingPainter highlight;
+    renderHighlight(document, ids, makeViewport(), SceneStyle{}, highlight);
+    ASSERT_EQ(highlight.texts.size(), 1U);
+    EXPECT_EQ(highlight.pen, SceneStyle{}.highlight);
+}
+
+TEST(SnapMarkerRenderer, InsertionIsTwoOverlappingOffsetSquares) {
+    for (const double size : {10.0, 24.0}) {
+        SceneStyle style;
+        style.snapMarkerSizePx = size;
+        const Viewport viewport = makeViewport();
+        const core::SnapPoint snap{{11, 21}, core::SnapKind::Insertion};
+        const Vec2 center = viewport.worldToScreen(snap.point);
+        const double half = size * 0.5;
+        RecordingPainter painter;
+        renderSnapMarker(snap, viewport, style, painter);
+        ASSERT_EQ(painter.polylines.size(), 2U);
+        BBox all;
+        std::array<BBox, 2> squares;
+        for (std::size_t i = 0; i < 2; ++i) {
+            const auto& points = painter.polylines.at(i);
+            ASSERT_EQ(points.size(), 4U);
+            for (const Vec2 point : points) {
+                squares.at(i).expand(point);
+                all.expand(point);
+            }
+            EXPECT_NEAR(squares.at(i).width(), squares.at(i).height(), kEps);
+            EXPECT_LT(squares.at(i).width(), size);  // smaller than the endpoint square
+        }
+        // Together they fill the marker, centred on the snap point.
+        expectNear(all.min(), center - Vec2{half, half});
+        expectNear(all.max(), center + Vec2{half, half});
+        // Offset, and overlapping.
+        EXPECT_NE(squares[0].min(), squares[1].min());
+        EXPECT_LT(squares[1].min().x, squares[0].max().x);
+        EXPECT_LT(squares[1].min().y, squares[0].max().y);
+        EXPECT_TRUE(painter.lastClosed);
+        EXPECT_EQ(painter.polylinePen, style.snapMarker);
+        EXPECT_DOUBLE_EQ(painter.polylineWidth, 2.0);
     }
 }
 

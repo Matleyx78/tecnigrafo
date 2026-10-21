@@ -135,11 +135,6 @@ TEST(ReadEntity, Errors) {
     }
 }
 
-TEST(ReadEntity, TypesOfTheStageNotImplementedYet) {
-    const EntityError error = failure("TEXT position=0,0 value=\"Hello\"");
-    EXPECT_TRUE(error.notImplemented);
-}
-
 TEST(TextFormat, QuoteEscapesQuotesBackslashesAndControlCharacters) {
     EXPECT_EQ(quoteText("Hello world"), "\"Hello world\"");
     EXPECT_EQ(quoteText(""), "\"\"");

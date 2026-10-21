@@ -25,7 +25,8 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// The entity nearest to `point` within `tolerance` (drawing units), or
 /// std::nullopt. At equal distance the highest id wins.
 /// The distance is to the entity's curve, so a click inside a closed polyline
-/// does not pick it; an empty polyline is never picked.
+/// does not pick it; an empty polyline is never picked. A text is a region: a
+/// click inside its box is at distance 0.
 /// Precondition: tolerance >= 0.
 [[nodiscard]] std::optional<EntityId> pickEntity(const Document& document, const Vec2& point,
                                                  double tolerance);
@@ -44,10 +45,12 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// Endpoint. Among their enabled endpoints and midpoints within `aperture`,
 /// the nearest to the pointer wins; at equal distance an endpoint beats a
 /// midpoint, then the highest id wins, then the earliest segment. If there is
-/// none, the centre of the nearest considered arc wins (nearest by distance
-/// from the pointer to the arc, not to its centre), with the same id and
-/// segment order on ties. With every mode disabled the result is always
-/// std::nullopt.
+/// none, the centre of the nearest considered arc or the insertion point of
+/// the nearest considered text wins (nearest by distance from the pointer to
+/// the arc or to the text box, not to the snap point), with the same id and
+/// segment order on ties: a text is considered when the pointer is within
+/// `aperture` of its box (docs/adr/0013, point 6). With every mode disabled
+/// the result is always std::nullopt.
 /// Precondition: aperture >= 0.
 [[nodiscard]] std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                                                 double aperture, const SnapModes& modes);

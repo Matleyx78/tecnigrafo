@@ -5,7 +5,9 @@
 
 #include "tg/core/math.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/text.hpp"
 #include "tg/script/number_format.hpp"
+#include "tg/script/text_format.hpp"
 
 #include <algorithm>
 #include <array>
@@ -22,7 +24,8 @@ constexpr std::string_view kIndent = "  ";
 
 constexpr std::array kSnapModeNames{SnapModeName{"endpoint", &core::SnapModes::endpoint},
                                     SnapModeName{"midpoint", &core::SnapModes::midpoint},
-                                    SnapModeName{"center", &core::SnapModes::center}};
+                                    SnapModeName{"center", &core::SnapModes::center},
+                                    SnapModeName{"insertion", &core::SnapModes::insertion}};
 
 // A new member of core::SnapModes needs its name above, or reports and
 // questions would silently ignore it.
@@ -102,6 +105,81 @@ void writeArc(const core::Arc& arc, std::string& out) {
     out += formatNumber(core::radiansToDegrees(arc.startAngle));
     out += " end-angle=";
     out += formatNumber(core::radiansToDegrees(arc.endAngle));
+}
+
+std::string_view textHorizontalName(core::TextHorizontal horizontal) {
+    switch (horizontal) {
+        case core::TextHorizontal::Left:
+            return "left";
+        case core::TextHorizontal::Center:
+            return "center";
+        case core::TextHorizontal::Right:
+            return "right";
+        case core::TextHorizontal::Aligned:
+            return "aligned";
+        case core::TextHorizontal::Middle:
+            return "middle";
+        case core::TextHorizontal::Fit:
+            return "fit";
+    }
+    return "unknown";
+}
+
+std::string_view textVerticalName(core::TextVertical vertical) {
+    switch (vertical) {
+        case core::TextVertical::Baseline:
+            return "baseline";
+        case core::TextVertical::Bottom:
+            return "bottom";
+        case core::TextVertical::Middle:
+            return "middle";
+        case core::TextVertical::Top:
+            return "top";
+    }
+    return "unknown";
+}
+
+/// The corners of the text box, as points separated by ';'.
+std::string textBoxText(const core::Text& text) {
+    std::string out;
+    for (const core::Vec2& corner : core::textBox(text)) {
+        if (!out.empty()) {
+            out += ';';
+        }
+        out += formatPoint(corner);
+    }
+    return out;
+}
+
+void writeText(const core::Text& text, std::string& out) {
+    // Every property, in the order of docs/verifica/rapporto.md; angles in
+    // degrees, as in DXF groups 50 and 51.
+    out += "TEXT position=";
+    out += formatPoint(text.position);
+    out += " alignment-point=";
+    out += formatPoint(text.alignmentPoint);
+    out += " height=";
+    out += formatNumber(text.height);
+    out += " rotation=";
+    out += formatNumber(core::radiansToDegrees(text.rotation));
+    out += " width-factor=";
+    out += formatNumber(text.widthFactor);
+    out += " oblique=";
+    out += formatNumber(core::radiansToDegrees(text.obliqueAngle));
+    out += " style=";
+    out += quoteText(text.style);
+    out += " mirror-x=";
+    out += yesNo(text.mirroredX);
+    out += " mirror-y=";
+    out += yesNo(text.mirroredY);
+    out += " horizontal=";
+    out += textHorizontalName(text.horizontal);
+    out += " vertical=";
+    out += textVerticalName(text.vertical);
+    out += " value=";
+    out += quoteText(text.value);
+    out += " ~box=";
+    out += textBoxText(text);
 }
 
 std::string selectionText(const cmd::SelectionSet& selection) {
@@ -226,6 +304,7 @@ std::string_view dxfType(const core::Entity& entity) {
                           [](const core::Line& /*line*/) { return "LINE"; },
                           [](const core::Circle& /*circle*/) { return "CIRCLE"; },
                           [](const core::Arc& /*arc*/) { return "ARC"; },
+                          [](const core::Text& /*text*/) { return "TEXT"; },
                       },
                       entity);
 }
@@ -236,6 +315,7 @@ void writeEntity(const core::Entity& entity, std::string& out) {
                    [&out](const core::Line& line) { writeLine(line, out); },
                    [&out](const core::Circle& circle) { writeCircle(circle, out); },
                    [&out](const core::Arc& arc) { writeArc(arc, out); },
+                   [&out](const core::Text& text) { writeText(text, out); },
                },
                entity);
 }
@@ -248,6 +328,8 @@ std::string_view snapKindName(core::SnapKind kind) {
             return "Midpoint";
         case core::SnapKind::Center:
             return "Center";
+        case core::SnapKind::Insertion:
+            return "Insertion";
     }
     return "Unknown";
 }
