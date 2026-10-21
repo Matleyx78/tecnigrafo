@@ -35,7 +35,7 @@ della sua issue; ogni pull request riporta in alto la issue che chiude.
 | Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
 | Claude | `agente:claude`, `agente:claude-2` | pacchetti medi e impegnativi; piano della tappa insieme al responsabile |
 | Codex | `agente:codex` | pacchetti facili e medi |
-| Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti, revisione delle pull request di lavoro, pull request di chiusura della tappa |
+| Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti ordinari, revisione delle pull request di lavoro, pull request di chiusura della tappa, pacchetti facili; lavora a lotti (sezioni 3 e 4) |
 
 Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Le
 etichette servono perché gli agenti lavorano tutti attraverso l'account GitHub
@@ -84,14 +84,24 @@ moltiplica il secondo:
 Il piano suggerisce, per ogni pacchetto, la **fascia di modello** e
 l'**impegno** (quanto ragionamento chiedere, dove lo strumento lo permette).
 Sono indicazioni: il responsabile sceglie il modello quando avvia l'agente. I
-nomi dei modelli cambiano, la fascia resta; quelli qui sotto sono gli attuali
-di ottobre 2026.
+nomi dei modelli cambiano, la fascia resta.
+
+La tabella elenca i modelli disponibili al responsabile a ottobre 2026, con il
+livello di ragionamento da scegliere. I modelli della stessa riga hanno capacità
+simile secondo una misura indipendente dai produttori, l'Intelligence Index di
+[Artificial Analysis](https://artificialanalysis.ai/models) (tra parentesi;
+più alto è meglio). Quando cambiano i modelli si aggiorna la tabella con la
+stessa fonte.
 
 | Fascia | Per | Claude | Codex | Gemini |
 |---|---|---|---|---|
-| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus | modello di punta | Pro |
-| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta, riferimenti ordinari | Sonnet | modello standard | Pro |
-| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi | Haiku o Sonnet | modello piccolo | Flash |
+| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus 5.5 medio (51) o alto (54) | astra medium (50) | — |
+| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta | Sonnet 5.5 alto (47) | sol medium (48) o astra light (46) | — |
+| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) | 3.8 Flash medio (40) |
+
+Gemini 3.8 Flash sta nella fascia leggera: i riferimenti con calcoli delicati
+(tolleranze, archi, casi limite geometrici) li scrive un agente di fascia forte,
+diverso da chi farà il pacchetto di lavoro.
 
 | Impegno | Quando |
 |---|---|
@@ -131,6 +141,12 @@ chiede.
    adatta (la CI controlla l'hash, non la licenza).
 3. Unita la pull request, il pacchetto di lavoro collegato può partire.
 
+I pacchetti di riferimenti non dipendono l'uno dal merge dell'altro, quindi
+l'agente li fa **a lotti**: in una sola sessione prende di fila tutti quelli
+pronti, con un ramo e una pull request per ciascuno (regola in
+[AGENTS.md](../AGENTS.md), "Lavoro a lotti"). Il responsabile li rivede poi uno
+alla volta, come sopra.
+
 ## 4. Avviare l'agente
 
 Il messaggio normale è sempre lo stesso: l'agente sceglie da solo il pacchetto
@@ -144,7 +160,25 @@ regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI al
 verde e fermati, come dice AGENTS.md.
 ```
 
-Per Gemini, al posto di "pacchetto" si scrive "pacchetto di riferimenti".
+Per Gemini i messaggi sono a lotti: una sessione fa tutto il lavoro pronto, e
+il responsabile non deve riavviarla per ogni pacchetto.
+
+```text
+Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+lettera. Prendi i pacchetti di riferimenti pronti della tappa 0.5 assegnati a
+te, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti". Per ognuno apri
+la pull request e porta la CI al verde; alla fine scrivimi un solo riepilogo.
+```
+
+```text
+Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
+lotti", e alla fine scrivimi un solo riepilogo.
+```
+
+Perché Gemini lavori senza chiedere conferma a ogni comando, Antigravity CLI va
+configurato una volta: istruzioni in
+[AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
 
 Se serve far partire un pacchetto preciso, si indicano issue e ramo:
 
