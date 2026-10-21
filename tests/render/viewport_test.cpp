@@ -112,6 +112,10 @@ public:
         polylinesAtFill = polylines.size();
     }
 
+    void drawText(const TextRun& run) override { texts.push_back(run); }
+
+    std::vector<TextRun> texts;
+
     void drawLine(const Vec2& /*from*/, const Vec2& /*to*/) override { ++lines; }
 
     void drawPolyline(std::span<const Vec2> points, bool closed) override {
