@@ -80,6 +80,25 @@ issue sono tue e cosa le blocca. Quando hai aperto la pull request, **fermati**
 (vedi sotto): il pacchetto successivo si prende in una nuova sessione, dopo il
 merge.
 
+### Lavoro a lotti (riferimenti e revisioni)
+
+Due eccezioni alla regola "un pacchetto per sessione", perché non dipendono da
+un merge:
+
+- **"Prendi i pacchetti di riferimenti pronti"**: prendi il primo che rispetta
+  le condizioni 1–3, portalo fino alla pull request con la CI verde (vedi sotto),
+  togli l'etichetta e passa al successivo, nella stessa sessione, finché non ne
+  restano. Un ramo e una pull request per pacchetto, partendo ogni volta da
+  `main` aggiornato. Alla fine scrivi all'utente un solo riepilogo con tutte le
+  pull request.
+- **"Rivedi le pull request aperte"**: rivedi una alla volta tutte quelle senza
+  `AA-Presa in carico` scritte da un modello diverso dal tuo, prendendole in
+  carico come sopra, e lascia in ognuna un commento di revisione. Non approvare
+  e non unire: decide il responsabile.
+
+Se in un lotto ti fermi per uno dei motivi elencati in "Quando fermarsi",
+scrivilo nella pull request e passa al pacchetto successivo.
+
 ### Quando fermarsi
 
 "Fermati" vuol dire: il pacchetto è finito quando la sua pull request ha
@@ -189,6 +208,20 @@ esiste la cartella `tests/verifica/`.
 - Elenca i nuovi casi in `in-attesa.txt`, con il numero della issue del lavoro.
 
 ## Comandi
+
+Per le prove locali usa **un solo comando**, che esegue nell'ordine della CI
+formattazione, build, test e casi di verifica, e si ferma al primo errore:
+
+```sh
+scripts/controlla.sh               # formato, compila, test, verifica
+scripts/controlla.sh --tidy        # anche clang-tidy, prima di aprire la pull request
+scripts/controlla.sh --solo test   # rifà un solo passo (formato, compila, test, verifica, tidy)
+scripts/controlla.sh --app-off     # senza Qt
+```
+
+Stampa una riga per passo e, se un passo fallisce, solo le ultime righe del suo
+log; il log completo di ogni passo è in `build<TG_BUILD_SUFFIX>/controlla/`. Leggi
+il log intero solo se la coda non basta. I comandi dei singoli passi, se servono:
 
 ```sh
 cmake --preset ci && cmake --build --preset ci && ctest --preset ci   # build e test

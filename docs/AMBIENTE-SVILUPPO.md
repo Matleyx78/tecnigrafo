@@ -137,3 +137,59 @@ Windows:
 echo 'export BROWSER="explorer.exe"' >> ~/.bashrc
 source ~/.bashrc
 ```
+
+## 6. Antigravity CLI (Gemini) senza conferme continue
+
+Con le impostazioni predefinite Antigravity CLI (`agy`) chiede conferma prima di
+ogni scrittura e di ogni comando, e il responsabile deve restare davanti allo
+schermo. Si configura una volta, in Debian (anche in WSL), con due accorgimenti.
+
+**1. Regole dei permessi.** In `~/.gemini/antigravity-cli/settings.json` si
+autorizzano i comandi che servono al lavoro su Tecnigrafo e si vietano quelli
+che spettano solo al responsabile. Il divieto vince sempre sull'autorizzazione:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "command(git)",
+      "command(gh)",
+      "command(cmake)",
+      "command(ctest)",
+      "command(python3)",
+      "command(scripts/controlla.sh)"
+    ],
+    "deny": [
+      "command(regex:^gh pr merge)",
+      "command(regex:^gh repo delete)",
+      "command(regex:^git push.*(-f|--force))",
+      "command(regex:^git push.* main$)"
+    ]
+  }
+}
+```
+
+Le stesse regole si possono vedere e modificare dentro `agy` con `/permissions`.
+La sintassi viene da guide di terze parti e può cambiare tra le versioni: dopo
+averle scritte, controlla con `/permissions` che `agy` le legga.
+
+**2. Modalità automatica e artifact.** Si avvia con:
+
+```sh
+agy --mode auto
+```
+
+In questa modalità (da `agy` 1.3.5, su Linux e macOS) le modifiche ai file e i
+comandi sicuri si approvano da soli, mentre le azioni irreversibili chiedono
+ancora conferma. In `/config` si imposta anche la revisione degli artifact
+(piani e documenti) su *agent-decides*: altrimenti l'agente si ferma ad
+aspettare che il responsabile approvi il piano.
+
+Non usare `--dangerously-skip-permissions` né `toolPermission` su
+`always-proceed`: approvano tutto senza chiedere, comprese le azioni
+irreversibili, e un testo malevolo letto in una issue o in una pagina web
+potrebbe far eseguire comandi qualsiasi.
+
+Nell'IDE Antigravity la lista dei comandi autorizzati è segnalata come
+inaffidabile (comandi richiesti anche se autorizzati, voci spostate dopo il
+riavvio): per lavorare a lotti si usa la CLI.

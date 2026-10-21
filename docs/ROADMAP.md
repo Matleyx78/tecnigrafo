@@ -148,3 +148,16 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   modulo e al massimo una quindicina di file ciascuno, e per ognuno la fascia di
   modello e l'impegno suggeriti ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
   "Preparare il piano"). La tappa 0.4 finisce con i pacchetti attuali.
+- **2026-10-21 — Fasce di modello, Gemini a lotti, controllo locale in un
+  comando** (#140). La tabella delle fasce nomina i modelli disponibili e li
+  abbina per capacità con una misura indipendente dai produttori (Intelligence
+  Index di Artificial Analysis): Gemini 3.8 Flash sta nella fascia leggera e fa
+  riferimenti ordinari, revisioni, chiusura della tappa e pacchetti facili; i
+  riferimenti con calcoli delicati vanno a un agente di fascia forte
+  ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md)). Riferimenti e revisioni
+  si fanno a lotti, più pacchetti in una sessione
+  ([AGENTS.md](../AGENTS.md), "Lavoro a lotti"), con Antigravity CLI configurato
+  per non chiedere conferma a ogni comando
+  ([AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6). Le prove locali si
+  fanno con `scripts/controlla.sh`, gli stessi passi della CI in un comando, con
+  il log completo di ogni passo salvato; la CI non cambia. Vale dalla tappa 0.5.
