@@ -442,6 +442,9 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
 QuestionResult askCircleThrough(const QuestionModel& model, Arguments arguments);
 QuestionResult askArcThrough(const QuestionModel& model, Arguments arguments);
 
+QuestionResult askFontMetrics(const QuestionModel& model, Arguments arguments);
+QuestionResult askTextWidth(const QuestionModel& model, Arguments arguments);
+
 namespace {
 
 // ---------------------------------------------------------------------------
@@ -465,8 +468,8 @@ constexpr std::array kQuestions{
     QuestionRow{"circle-through", AnswerShape::Single, &askCircleThrough},
     QuestionRow{"arc-through", AnswerShape::Single, &askArcThrough},
     // Text: packages P11 and P13.
-    QuestionRow{"text-width", AnswerShape::Single, nullptr},
-    QuestionRow{"font-metrics", AnswerShape::Single, nullptr},
+    QuestionRow{"text-width", AnswerShape::Single, &askTextWidth},
+    QuestionRow{"font-metrics", AnswerShape::Single, &askFontMetrics},
     QuestionRow{"box", AnswerShape::Single, nullptr},
 };
 

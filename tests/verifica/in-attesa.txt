@@ -14,7 +14,6 @@ arc/inizio-centro-fine #88
 arc/selezione-ed-erase #88
 arc/snap #88
 arc/tre-punti #88
-font/misure #92
 testo/dxf-proprieta #95
 testo/geometria #95
 testo/selezione-e-snap #95

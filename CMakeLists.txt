@@ -46,6 +46,7 @@ endif()
 #   core <- edit <- cmd <- app
 #                   cmd <- script
 # Only app may depend on Qt; the CMake targets enforce it.
+add_subdirectory(tools)
 add_subdirectory(core)
 add_subdirectory(render)
 add_subdirectory(edit)
