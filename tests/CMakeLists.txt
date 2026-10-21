@@ -26,6 +26,7 @@ add_executable(tg_tests
     cmd/line_command_test.cpp
     cmd/pline_command_test.cpp
     cmd/selection_set_test.cpp
+    cmd/text_command_test.cpp
     cmd/value_format_test.cpp
     core/arc_geometry_test.cpp
     core/arc_test.cpp

@@ -9,12 +9,3 @@
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
 testo/selezione-e-snap #95
-text/altezza-e-rotazione #97
-text/base-e-alias #97
-text/contenuto-speciale #97
-text/errori-e-limiti #97
-text/esc-annulla-ripeti #97
-text/multiriga-interlinea #97
-text/selezione-ed-erase #97
-text/snap #97
-text/valori-predefiniti #97
