@@ -1,0 +1,12 @@
+; Interfaccia: al livello 2, riga di comando accetta lo spazio durante l'inserimento di testo
+!level 2
+TEXT
+0,0
+
+
+Hello world
+
+!report
+U
+!report
+REDO

@@ -1,0 +1,12 @@
+; Interfaccia: lo spazio vale Invio per comandi e punti, ma carattere per il testo
+!level 2
+PL 0,0 50,0
+50,30
+
+!report
+TEXT
+0,50
+
+
+Linea con spazi
+

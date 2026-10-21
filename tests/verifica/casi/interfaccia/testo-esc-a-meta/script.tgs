@@ -1,0 +1,13 @@
+; Interfaccia: Esc a meta comando conserva le righe completate al livello 2, con annulla e ripeti
+!level 2
+TEXT
+10,20
+3
+0
+Riga 1
+Riga 2
+!esc
+!report
+U
+!report
+REDO

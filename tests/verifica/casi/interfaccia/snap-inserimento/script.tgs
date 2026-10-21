@@ -1,0 +1,15 @@
+; Interfaccia: al livello 2, snap attivo Insertion passando il puntatore sopra un testo
+!level 2
+!view 0,0 1 800x600
+TEXT
+10,20
+
+
+Hello
+
+PL
+!move 12,21
+!report
+!click 12,21
+40,40
+

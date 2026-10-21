@@ -1,0 +1,49 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+messages:
+  Command: TEXT
+  Specify start point of text: 10,20
+  Specify height <2.5000>:
+  Specify rotation angle of text <0>:
+  Enter text: Hello
+  Enter text:
+  Command: PL
+prompt: Specify start point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+redo:
+snap: off
+ortho: off
+pointer: 12,21
+active snap: none
+statistics:
+  TEXT 1
+
+[final]
+entities:
+  1 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  2 LWPOLYLINE closed=no vertex=12,21 vertex=30,30
+messages:
+  Specify next point or [Arc/Undo]: 30,30
+  Specify next point or [Arc/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Polyline
+redo:
+snap: off
+ortho: off
+pointer: 12,21
+active snap: none
+statistics:
+  LWPOLYLINE 1
+  TEXT 1
