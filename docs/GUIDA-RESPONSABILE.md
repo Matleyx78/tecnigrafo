@@ -129,10 +129,11 @@ WSL a casa, nello stesso modo.
 8. **Controlla il modello.** Il piano gratuito offre anche modelli Claude e GPT,
    ma per i riferimenti serve un modello **Gemini**, diverso da quelli che
    scrivono il codice. Il modello in uso è scritto in basso a destra. Per
-   cambiarlo scrivi `/model`, scegli il modello Gemini dell'elenco (sul piano
-   gratuito, Gemini Flash; i modelli Gemini più potenti, come Gemini 4 Argon,
-   richiedono un abbonamento Google AI Pro o Ultra) e con le frecce `←` `→`
-   porta *Effort* su **high**. Poi `Invio`.
+   cambiarlo scrivi `/model`, scegli **Gemini 3.8 Flash** e con le frecce
+   `←` `→` porta *Effort* su **medium**. Poi `Invio`. È il modello della fascia
+   leggera nella tabella di
+   [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) ("Modello e impegno"): quando
+   cambiano i modelli disponibili, segui quella tabella.
 
 9. Prima prova. Scrivi:
 
@@ -144,12 +145,37 @@ WSL a casa, nello stesso modo.
    Se la risposta parla di casi di verifica, di non eseguire Tecnigrafo per i
    valori attesi e di licenze, è pronto.
 
-10. Antigravity chiede il permesso prima di eseguire comandi o modificare file.
-    Leggi e approva. Non usare mai l'opzione `--dangerously-skip-permissions`,
-    che approva tutto da sola.
-
 Antigravity si aggiorna da solo. Per uscire premi `Ctrl+C` (se non basta, una
 seconda volta).
+
+### A5. Configurare Antigravity per lavorare da solo
+
+Con le impostazioni predefinite Antigravity chiede il permesso prima di ogni
+comando e di ogni modifica, e devi restare davanti allo schermo. Si configura una
+volta su ogni PC; i dettagli e il perché sono in
+[AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
+
+1. Copia le regole dei permessi della sezione 6 in
+   `~/.gemini/antigravity-cli/settings.json` (se il file esiste già, aggiungi
+   il blocco `permissions` a quello che c'è). Autorizzano i comandi del lavoro
+   (`git`, `gh`, `cmake`, `ctest`, `python3`, `scripts/controlla.sh`) e
+   vietano quelli che spettano solo a te (`gh pr merge`, i push forzati e i push
+   su `main`).
+2. Avvia sempre Antigravity così:
+
+   ```sh
+   agy --mode auto
+   ```
+
+3. Dentro `agy` scrivi `/permissions` e controlla che le regole del punto 1
+   compaiano. Se mancano, la sintassi è cambiata: aprimi una chat con Claude
+   (sezione C, ultima riga).
+4. Scrivi `/config` e imposta la revisione degli artifact su
+   **agent-decides**: altrimenti Gemini si ferma ad aspettare che approvi il suo
+   piano.
+
+Non usare mai `--dangerously-skip-permissions` né *always-proceed*: approvano
+tutto senza chiedere, comprese le azioni irreversibili.
 
 ---
 
@@ -164,10 +190,13 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
 
    ```text
    Prepariamo il piano dettagliato della tappa <tappa> partendo dalla scheda in
-   docs/tappe e dal modello tappe/0000-modello.md. Per ogni pacchetto indica
-   difficoltà, agente del lavoro (Codex facili e medie, Claude medie e
-   impegnative) e riferimenti (agente gemini, oppure "non servono" con il
-   motivo). Proponi anche gli ADR che servono.
+   docs/tappe e dai modelli tappe/0000-modello.md e tappe/0000-pacchetto.md,
+   con le regole di docs/LAVORO-IN-PARALLELO.md ("Preparare il piano"). Per ogni
+   pacchetto indica difficoltà, agente del lavoro, fascia di modello e impegno,
+   e chi scrive i riferimenti: Gemini per quelli ordinari, un agente di fascia
+   forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
+   "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
+   documentazione. Proponi anche gli ADR che servono.
    ```
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
@@ -194,27 +223,32 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
 > verifica e non hanno riferimenti. Gemini comincia dal pacchetto di riferimenti
 > R2 (i casi per ciò che esiste già), che dipende da P1.
 
-### B3. Riferimenti (Gemini)
+### B3. Riferimenti (Gemini, a lotti)
+
+Gemini scrive i riferimenti ordinari. Quelli con calcoli delicati il piano li
+assegna a un agente di fascia forte (Claude o Codex) diverso da chi farà il
+lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa.
 
 1. Nel terminale, nella cartella del progetto:
 
    ```sh
-   cd ~/progetti/tecnigrafo && git checkout main && git pull && agy
+   cd ~/progetti/tecnigrafo && git checkout main && git pull && agy --mode auto
    ```
-
-   Dalla tappa 0.5 scegli il modello che il piano indica per il pacchetto (di
-   norma Pro; Flash solo per i riferimenti più semplici).
 
 2. Scrivi:
 
    ```text
    Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-   lettera. Prendi il prossimo pacchetto di riferimenti della tappa <tappa>
-   assegnato a te, secondo le regole di AGENTS.md. Scrivi i casi di verifica,
-   apri la pull request, porta la CI al verde e fermati, come dice AGENTS.md.
+   lettera. Prendi i pacchetti di riferimenti pronti della tappa <tappa>
+   assegnati a te, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti".
+   Per ognuno apri la pull request e porta la CI al verde; alla fine scrivimi
+   un solo riepilogo.
    ```
 
-3. Quando Gemini ha aperto la pull request, la **rivedi tu**. È il controllo più
+   Gemini lavora da solo finché i pacchetti pronti non finiscono. Puoi
+   allontanarti: alla fine trovi il riepilogo con tutte le pull request.
+
+3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
    importante di tutta la tappa. Guarda queste cinque cose:
    - [ ] ogni condizione "Fatto quando" del pacchetto ha almeno un caso;
    - [ ] i numeri attesi hanno senso (per esempio: un cerchio di raggio 10 ha
@@ -253,16 +287,23 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che
    aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo.
 
-### B5. Seconda opinione (Gemini, facoltativa)
+Gli agenti fanno le prove locali con `scripts/controlla.sh` (AGENTS.md,
+"Comandi"). Per te non cambia niente: conta solo la CI verde della pull request.
 
-Per una pull request di lavoro importante, in una sessione di Antigravity (`agy`,
-con un modello Gemini):
+### B5. Seconda opinione (Gemini, a lotti)
+
+Quando ci sono alcune pull request di lavoro aperte, in una sessione di
+Antigravity (`agy --mode auto`):
 
 ```text
-Rivedi la pull request #<numero> del repository Matleyx78/tecnigrafo seguendo
-AGENTS.md. Non modificare file: scrivi le tue osservazioni come commento nella
-pull request.
+Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
+lotti", e alla fine scrivimi un solo riepilogo.
 ```
+
+Gemini lascia un commento di revisione in ognuna, senza modificare file. Leggi i
+commenti prima di unire (B6): se uno chiede correzioni che condividi, passalo
+all'agente che ha scritto la pull request.
 
 ### B6. Unire
 
@@ -270,8 +311,11 @@ pull request.
 2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
 3. Squash and merge come in A1, con la riga `Signed-off-by`.
 4. Se ci sono altre pull request aperte, su ognuna premi **Update branch**.
-5. Riavvia l'agente che ha finito con la stessa frase di B4 (o di B3 per
-   Gemini): prenderà il pacchetto successivo.
+5. Riavvia l'agente che ha finito con la stessa frase di B4: prenderà il
+   pacchetto successivo. Gemini invece non va riavviato dopo ogni merge: rilancia
+   il lotto di B3 quando un merge ha sbloccato nuovi pacchetti di riferimenti
+   (la loro riga "Dipende da" è tutta chiusa), e quello di B5 quando si sono
+   accumulate nuove pull request da rivedere.
 
 Ripeti B3–B6 finché nel milestone non restano issue aperte.
 
@@ -317,5 +361,6 @@ Ripeti B3–B6 finché nel milestone non restano issue aperte.
 | Conflitto con `main` | Scrivi all'agente di quella pull request: `Aggiorna la pull request #<numero> con main e risolvi i conflitti.` |
 | Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
 | Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
+| Gemini si ferma a chiedere conferma per un comando | Se il comando serve al lavoro ed è sicuro (legge, compila, prova), approvalo e aggiungilo alle regole con `/permissions`, così non lo chiede più. Se cancella, unisce o pubblica su `main`, rifiuta. Regole in A5. |
 | Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
 | Non sai cosa fare | Apri una chat con Claude nel progetto e incolla questa riga: `Sono al passo <passo> della guida e succede questo: …` |
