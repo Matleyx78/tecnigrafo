@@ -1,0 +1,10 @@
+; Interfaccia: caratteri non ASCII, spazi multipli e codici DXF al livello 2
+!level 2
+TEXT
+0,0
+3
+0
+  Spazi all'inizio, dentro e alla fine  
+Città e caffè
+%%c50 %%d90 %%p0.05 100%%%
+
