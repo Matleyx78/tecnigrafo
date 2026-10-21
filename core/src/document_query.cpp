@@ -127,7 +127,7 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
 std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer, double aperture,
                                   const SnapModes& modes) {
     assert(aperture >= 0.0);
-    if (!modes.endpoint && !modes.midpoint && !modes.center) {
+    if (!modes.endpoint && !modes.midpoint && !modes.center && !modes.insertion) {
         return std::nullopt;
     }
     std::optional<SnapPoint> point;
@@ -137,11 +137,12 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
     std::vector<SnapPoint> curvePoints;
 
     // One curve within the aperture: a polyline segment, or a whole line,
-    // circle or arc, at `curveDistance` from the pointer.
+    // circle, arc or text box, at `curveDistance` from the pointer.
     const auto consider = [&](double curveDistance, std::uint64_t id) {
         for (const SnapPoint& snap : curvePoints) {
-            if (snap.kind == SnapKind::Center) {
-                // The centre is reached by passing over its curve.
+            if (snap.kind == SnapKind::Center || snap.kind == SnapKind::Insertion) {
+                // The centre is reached by passing over its curve, the
+                // insertion point by passing over the text box.
                 const Candidate candidate{curveDistance, 0, id};
                 if (!center || candidate.beats(bestCenter)) {
                     center = snap;
@@ -171,7 +172,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             });
             continue;
         }
-        // Lines, circles and arcs are a single curve each.
+        // Lines, circles, arcs and text boxes are a single curve each.
         const double curveDistance = distance(entity, pointer);
         if (curveDistance > aperture) {
             continue;

@@ -4,10 +4,12 @@
 #include "tg/core/proximity.hpp"
 
 #include "tg/core/math.hpp"
+#include "tg/core/text.hpp"
 
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <initializer_list>
@@ -422,6 +424,100 @@ TEST(Proximity, LineAgreesWithATwoPointPolyline) {
     for (const BBox& rectangle : {BBox{{3.0, -1.0}, {5.0, 1.0}}, BBox{{-5.0, 5.0}, {0.0, 9.0}}}) {
         EXPECT_EQ(intersects(line, rectangle), intersects(polyline, rectangle));
     }
+}
+
+// --- Text: a region (docs/adr/0013, point 6) -----------------------------
+
+/// "Hello" 2 high at (10,20), turned by `rotation`.
+Text hello(double rotation = 0.0) {
+    Text text;
+    text.position = {10.0, 20.0};
+    text.height = 2.0;
+    text.rotation = rotation;
+    text.value = "Hello";
+    return text;
+}
+
+TEST(TextProximity, InsideTheBoxTheDistanceIsZero) {
+    for (const double rotation : {0.0, kPi / 2.0, degreesToRadians(30.0), kPi}) {
+        const Text text = hello(rotation);
+        const std::array<Vec2, 4> box = textBox(text);
+        const Vec2 middle = (box[0] + box[2]) * 0.5;
+        for (const Vec2& point :
+             {middle, text.position, box[0], box[1], box[2], box[3], (box[1] + box[2]) * 0.5}) {
+            EXPECT_EQ(distance(Entity{text}, point), 0.0) << rotation;
+            EXPECT_EQ(closestPoint(text, point), point) << rotation;
+        }
+    }
+}
+
+TEST(TextProximity, OutsideTheDistanceIsToTheBox) {
+    const Text text = hello();
+    const std::array<Vec2, 4> box = textBox(text);
+    // Left of the box, beside its side.
+    EXPECT_NEAR(distance(Entity{text}, {7.0, 21.0}), 3.0, kTolerance);
+    EXPECT_NEAR(closestPoint(text, {7.0, 21.0}).x, 10.0, kTolerance);
+    EXPECT_NEAR(closestPoint(text, {7.0, 21.0}).y, 21.0, kTolerance);
+    // Above the box, beside its top.
+    EXPECT_NEAR(distance(Entity{text}, {12.0, box[3].y + 2.0}), 2.0, kTolerance);
+    // Beyond a corner: the distance to the corner.
+    const Vec2 beyond = box[2] + Vec2{3.0, 4.0};
+    EXPECT_NEAR(distance(Entity{text}, beyond), 5.0, kTolerance);
+    EXPECT_NEAR(distance(closestPoint(text, beyond), box[2]), 0.0, kTolerance);
+
+    // The same, turned by a quarter: the box rises from the position.
+    const Text turned = hello(kPi / 2.0);
+    const std::array<Vec2, 4> turnedBox = textBox(turned);
+    const Vec2 right{turnedBox[0].x + 2.0, 22.0};
+    EXPECT_NEAR(distance(Entity{turned}, right), 2.0, kTolerance);
+    EXPECT_NEAR(closestPoint(turned, right).x, turnedBox[0].x, kTolerance);
+    EXPECT_NEAR(closestPoint(turned, right).y, 22.0, kTolerance);
+}
+
+TEST(TextProximity, AnEmptyTextIsASegment) {
+    Text empty = hello();
+    empty.value.clear();
+    const std::array<Vec2, 4> box = textBox(empty);
+    EXPECT_EQ(distance(Entity{empty}, (box[0] + box[3]) * 0.5), 0.0);
+    EXPECT_NEAR(distance(Entity{empty}, Vec2{12.0, 21.0}), 2.0, kTolerance);
+}
+
+TEST(TextProximity, WindowTakesTheWholeBox) {
+    const Text text = hello(degreesToRadians(30.0));
+    const BBox bounds = text.boundingBox();
+    EXPECT_TRUE(isInside(Entity{text}, bounds));
+    EXPECT_TRUE(isInside(Entity{text}, BBox{bounds.min() - Vec2{1, 1}, bounds.max() + Vec2{1, 1}}));
+    // Without a corner of the box, the window does not take it.
+    EXPECT_FALSE(isInside(Entity{text}, BBox{bounds.min() + Vec2{0.1, 0.0}, bounds.max()}));
+}
+
+TEST(TextProximity, CrossingTouchesTheRegion) {
+    const Text text = hello();
+    const std::array<Vec2, 4> box = textBox(text);
+    // A rectangle inside the box touches it: the text is a region.
+    EXPECT_TRUE(intersects(Entity{text}, BBox{{11.0, 20.0}, {12.0, 21.0}}));
+    // Across one side, or a point on the border.
+    EXPECT_TRUE(intersects(Entity{text}, BBox{{9.0, 20.0}, {10.5, 21.0}}));
+    EXPECT_TRUE(intersects(Entity{text}, BBox{box[1], box[1]}));
+    // Disjoint, left of the box.
+    EXPECT_FALSE(intersects(Entity{text}, BBox{{5.0, 20.0}, {9.9, 21.0}}));
+}
+
+TEST(TextProximity, CrossingATurnedTextUsesTheTurnedBox) {
+    // At 45 degrees the bounding box is larger than the text: a rectangle in
+    // a corner of the bounding box, away from the text, does not touch it.
+    const Text text = hello(kPi / 4.0);
+    const BBox bounds = text.boundingBox();
+    const BBox corner{bounds.max() - Vec2{0.5, 0.5}, bounds.max()};
+    EXPECT_FALSE(intersects(Entity{text}, corner));
+    EXPECT_FALSE(isInside(Entity{text}, corner));
+    // A rectangle around the middle of the box touches it.
+    const std::array<Vec2, 4> box = textBox(text);
+    const Vec2 middle = (box[0] + box[2]) * 0.5;
+    EXPECT_TRUE(intersects(Entity{text}, BBox{middle - Vec2{0.1, 0.1}, middle + Vec2{0.1, 0.1}}));
+    // A thin rectangle across the whole box, beyond it on both sides.
+    EXPECT_TRUE(intersects(
+        Entity{text}, BBox{{bounds.min().x - 1.0, middle.y}, {bounds.max().x + 1.0, middle.y}}));
 }
 
 }  // namespace

@@ -10,13 +10,14 @@
 
 namespace tg::core {
 
-enum class SnapKind : std::uint8_t { Endpoint, Midpoint, Center };
+enum class SnapKind : std::uint8_t { Endpoint, Midpoint, Center, Insertion };
 
-/// Which object snaps are enabled (docs/adr/0008).
+/// Which object snaps are enabled (docs/adr/0008, docs/adr/0013).
 struct SnapModes {
     bool endpoint{true};
     bool midpoint{true};
     bool center{true};
+    bool insertion{true};
     friend constexpr bool operator==(const SnapModes&, const SnapModes&) = default;
 };
 
@@ -31,13 +32,15 @@ struct SnapPoint {
 void appendSnapPoints(const PolylineSegment& segment, const SnapModes& modes,
                       std::vector<SnapPoint>& out);
 
-/// Appends the enabled snap points of an entity (docs/adr/0008, docs/adr/0012):
+/// Appends the enabled snap points of an entity (docs/adr/0008, docs/adr/0012,
+/// docs/adr/0013):
 /// - Polyline: the points of its segments in segment order, each (position,
 ///   kind) once; existing output does not participate in deduplication, and
 ///   coincident points of different kinds retain their snap semantics;
 /// - Line: start, end and midpoint (only the start if they coincide);
 /// - Arc: start, end, midpoint halfway along the arc, centre;
-/// - Circle: only the centre.
+/// - Circle: only the centre;
+/// - Text: only the insertion point, its position.
 void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<SnapPoint>& out);
 
 }  // namespace tg::core

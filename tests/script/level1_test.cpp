@@ -294,7 +294,8 @@ TEST(SnapModeNames, EveryModeOnce) {
     for (const SnapModeName& mode : snapModeNames()) {
         names.push_back(mode.name);
     }
-    EXPECT_EQ(names, (std::vector<std::string_view>{"endpoint", "midpoint", "center"}));
+    EXPECT_EQ(names,
+              (std::vector<std::string_view>{"endpoint", "midpoint", "center", "insertion"}));
 }
 
 }  // namespace

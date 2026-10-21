@@ -171,8 +171,15 @@ struct Overloaded : Lambdas... {
 template <typename... Lambdas>
 Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
 
-double lengthOf(const core::Entity& entity) {
-    return std::visit([](const auto& concrete) { return concrete.length(); }, entity);
+/// The length of the entity's curve; std::nullopt for a text, which is a
+/// region (docs/verifica/domande.md).
+std::optional<double> lengthOf(const core::Entity& entity) {
+    return std::visit(
+        Overloaded{
+            [](const core::Text& /*text*/) -> std::optional<double> { return std::nullopt; },
+            [](const auto& curve) -> std::optional<double> { return curve.length(); },
+        },
+        entity);
 }
 
 std::optional<core::Vec2> closestOnPolyline(const core::Polyline& polyline,
@@ -210,6 +217,9 @@ std::optional<core::Vec2> closestOn(const core::Entity& entity, const core::Vec2
             [&point](const core::Arc& arc) -> std::optional<core::Vec2> {
                 return core::closestPoint(arc.geometry(), point);
             },
+            [&point](const core::Text& text) -> std::optional<core::Vec2> {
+                return core::closestPoint(text, point);
+            },
         },
         entity);
 }
@@ -245,7 +255,8 @@ QuestionResult askLength(const QuestionModel& model, Arguments arguments) {
     if (const auto* error = std::get_if<ArgumentError>(&entity)) {
         return *error;
     }
-    return formatNumber(lengthOf(*std::get<const core::Entity*>(entity)));
+    const std::optional<double> length = lengthOf(*std::get<const core::Entity*>(entity));
+    return length ? formatNumber(*length) : std::string{"none"};
 }
 
 /// The entity and the point of "<question> <entity> x,y".
@@ -444,6 +455,7 @@ QuestionResult askArcThrough(const QuestionModel& model, Arguments arguments);
 
 QuestionResult askFontMetrics(const QuestionModel& model, Arguments arguments);
 QuestionResult askTextWidth(const QuestionModel& model, Arguments arguments);
+QuestionResult askBox(const QuestionModel& model, Arguments arguments);
 
 namespace {
 
@@ -470,7 +482,7 @@ constexpr std::array kQuestions{
     // Text: packages P11 and P13.
     QuestionRow{"text-width", AnswerShape::Single, &askTextWidth},
     QuestionRow{"font-metrics", AnswerShape::Single, &askFontMetrics},
-    QuestionRow{"box", AnswerShape::Single, nullptr},
+    QuestionRow{"box", AnswerShape::Single, &askBox},
 };
 
 }  // namespace

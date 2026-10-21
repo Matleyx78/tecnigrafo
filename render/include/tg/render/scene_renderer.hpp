@@ -12,6 +12,10 @@
 
 namespace tg::render {
 
+/// Below this height of the capital letters, in pixels, a text is drawn as
+/// its box: its characters could not be read (docs/adr/0013, point 4).
+inline constexpr double kMinTextHeightPx = 2.0;
+
 /// Visual settings of the drawing area.
 struct SceneStyle {
     Color background{33, 40, 48};
@@ -38,6 +42,11 @@ struct SceneStyle {
 [[nodiscard]] double gridSpacing(double pixelsPerUnit, double minSpacingPx);
 
 /// Draws grid, axes and every entity of `document` as seen through `viewport`.
+/// A text is drawn with Painter::drawText from its position, height, rotation
+/// and width factor; oblique angle, mirroring and alignments other than left
+/// on the baseline are ignored until tappa 0.5 (docs/adr/0013, point 1). A
+/// text whose capital letters are lower than kMinTextHeightPx is drawn as its
+/// box (docs/adr/0013, point 4).
 void renderScene(const core::Document& document, const Viewport& viewport, const SceneStyle& style,
                  Painter& painter);
 
@@ -54,8 +63,10 @@ void renderHighlight(const core::Document& document, std::span<const core::Entit
 void renderSelectionRectangle(const core::Vec2& first, const core::Vec2& second, bool crossing,
                               const Viewport& viewport, const SceneStyle& style, Painter& painter);
 
-/// Draws a square, triangle or circle, centred on the snap in screen space.
-/// Marker width is snapMarkerSizePx; pen width is 2 px, independent of zoom.
+/// Draws a square (endpoint), triangle (midpoint), circle (centre) or two
+/// overlapping offset squares (insertion, docs/adr/0013), centred on the snap
+/// in screen space. Marker width is snapMarkerSizePx; pen width is 2 px,
+/// independent of zoom.
 void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
                       const SceneStyle& style, Painter& painter);
 

@@ -16,7 +16,8 @@ namespace tg::core {
 namespace {
 
 TEST(SnapPoints, DefaultsAndEquality) {
-    EXPECT_EQ(SnapModes{}, (SnapModes{true, true, true}));
+    EXPECT_EQ(SnapModes{}, (SnapModes{true, true, true, true}));
+    EXPECT_NE(SnapModes{}, (SnapModes{true, true, true, false}));
     EXPECT_NE(SnapModes{}, (SnapModes{false, true, true}));
     EXPECT_EQ(SnapPoint{}.kind, SnapKind::Endpoint);
     EXPECT_EQ((SnapPoint{{1, 2}}), (SnapPoint{{1, 2}, SnapKind::Endpoint}));
@@ -174,16 +175,16 @@ TEST(SnapPoints, RotatedTranslatedArcMidpoint) {
 
 TEST(SnapPoints, EveryEntityTypeHonorsTheModes) {
     const std::vector<Entity> entities{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
-                                       Arc{{0, 0}, 2, 0, kPi / 2.0}};
+                                       Arc{{0, 0}, 2, 0, kPi / 2.0}, Text{}};
     for (const Entity& entity : entities) {
         std::vector<SnapPoint> out;
-        appendSnapPoints(entity, SnapModes{false, false, false}, out);
+        appendSnapPoints(entity, SnapModes{false, false, false, false}, out);
         EXPECT_TRUE(out.empty());
         appendSnapPoints(entity, SnapModes{}, out);
         for (const SnapPoint& snap : out) {
             std::vector<SnapPoint> alone;
             const SnapModes only{snap.kind == SnapKind::Endpoint, snap.kind == SnapKind::Midpoint,
-                                 snap.kind == SnapKind::Center};
+                                 snap.kind == SnapKind::Center, snap.kind == SnapKind::Insertion};
             appendSnapPoints(entity, only, alone);
             EXPECT_NE(std::ranges::find(alone, snap), alone.end());
         }
@@ -194,6 +195,38 @@ TEST(SnapPoints, DegenerateLineOffersOnlyItsEndpoint) {
     std::vector<SnapPoint> out;
     appendSnapPoints(Entity{Line{{5, 5}, {5, 5}}}, {}, out);
     EXPECT_EQ(out, (std::vector<SnapPoint>{{{5, 5}, SnapKind::Endpoint}}));
+}
+
+TEST(SnapPoints, TextOffersItsInsertionPoint) {
+    Text text;
+    text.position = {3.0, -4.0};
+    text.rotation = 1.0;
+    text.value = "Hello";
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{text}, {}, out);
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{3.0, -4.0}, SnapKind::Insertion}}));
+    // An empty text too: the point is its position, not its box.
+    text.value.clear();
+    out.clear();
+    appendSnapPoints(Entity{text}, {}, out);
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{3.0, -4.0}, SnapKind::Insertion}}));
+}
+
+TEST(SnapPoints, InsertionModeOnlyAffectsTexts) {
+    Text text;
+    text.value = "A";
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{text}, SnapModes{true, true, true, false}, out);
+    EXPECT_TRUE(out.empty());
+    appendSnapPoints(Entity{text}, SnapModes{false, false, false, true}, out);
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{0.0, 0.0}, SnapKind::Insertion}}));
+    // The other entities have no insertion point.
+    out.clear();
+    for (const Entity& entity : std::vector<Entity>{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
+                                                    Arc{{0, 0}, 2, 0, kPi / 2.0}}) {
+        appendSnapPoints(entity, SnapModes{false, false, false, true}, out);
+    }
+    EXPECT_TRUE(out.empty());
 }
 
 }  // namespace

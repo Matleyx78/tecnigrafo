@@ -5,6 +5,7 @@
 
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/text.hpp"
 
 #include <array>
 #include <cmath>
@@ -107,6 +108,23 @@ public:
     }
 
     void operator()(const core::Arc& arc) { drawArc(arc.geometry(), false); }
+
+    void operator()(const core::Text& text) {
+        const double heightPx = text.height * m_viewport.scale();
+        if (heightPx < kMinTextHeightPx) {
+            m_screenPoints.clear();
+            for (const Vec2& corner : core::textBox(text)) {
+                m_screenPoints.push_back(m_viewport.worldToScreen(corner));
+            }
+            m_painter.drawPolyline(m_screenPoints, true);
+            return;
+        }
+        // The screen flips Y and the angle together: a rotation that is
+        // counter-clockwise in the drawing is counter-clockwise as seen.
+        m_painter.drawText(TextRun{core::displayText(text.value),
+                                   m_viewport.worldToScreen(text.position), heightPx, text.rotation,
+                                   text.widthFactor});
+    }
 
 private:
     void drawArc(const core::ArcGeometry& arc, bool closed) {
@@ -220,6 +238,18 @@ void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
             const std::array points{center + Vec2{0.0, -half}, center + Vec2{half, half},
                                     center + Vec2{-half, half}};
             painter.drawPolyline(points, true);
+            break;
+        }
+        case core::SnapKind::Insertion: {
+            // Two squares, each two thirds of the marker, one at the top
+            // left and one at the bottom right: together they fill it.
+            const double side = style.snapMarkerSizePx * (2.0 / 3.0);
+            for (const Vec2 corner :
+                 {center + Vec2{-half, -half}, center + Vec2{half - side, half - side}}) {
+                const std::array points{corner, corner + Vec2{side, 0.0}, corner + Vec2{side, side},
+                                        corner + Vec2{0.0, side}};
+                painter.drawPolyline(points, true);
+            }
             break;
         }
         case core::SnapKind::Center: {

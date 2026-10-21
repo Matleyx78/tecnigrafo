@@ -39,6 +39,7 @@ add_executable(tg_tests
     core/snap_points_test.cpp
     core/spatial_index_test.cpp
     core/text_metrics_test.cpp
+    core/text_test.cpp
     edit/editor_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp

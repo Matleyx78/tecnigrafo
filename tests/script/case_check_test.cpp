@@ -173,16 +173,6 @@ TEST(CheckCase, Questions) {
     EXPECT_EQ(check(failing, true).code, kExitPassed);
 }
 
-TEST(CheckCase, WhatIsNotImplementedYetFailsLikeAnyCase) {
-    const fs::path text = makeCase("not-implemented-type", {{"domande.tgq",
-                                                             "T = TEXT position=0,0 value=\"A\"\n"
-                                                             "? bbox T -> 0,0 1,1\n"}});
-    const Result result = check(text);
-    EXPECT_EQ(result.code, kExitFailed);
-    expectContains(result.output, "not implemented yet: domande.tgq, line 1:");
-    EXPECT_EQ(check(text, true).code, kExitPassed);
-}
-
 TEST(CheckCase, WrongFontMetricsFailAndWriteMeasuredValues) {
     const fs::path question =
         makeCase("wrong-font-metrics", {{"domande.tgq", "? font-metrics -> ascent=1 descent=0\n"}});
