@@ -1,0 +1,21 @@
+; TEXT: avvio con TEXT e gli alias DT e DTEXT; invio accetta altezza e rotazione predefinite
+TEXT
+0,0
+
+
+Hello
+
+!report
+DT
+10,20
+
+
+World
+
+!report
+DTEXT
+30,40
+
+
+DTEXT test
+
