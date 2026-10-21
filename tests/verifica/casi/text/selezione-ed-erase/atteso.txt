@@ -13,8 +13,8 @@ messages:
   Enter text:
   Command: TEXT
   Specify start point of text: 50,50
-  Specify height <5.0000>:
-  Specify rotation angle of text <0>:
+  Specify height <5.0000>: 5
+  Specify rotation angle of text <0>: 0
   Enter text: XYZ
   Enter text:
 prompt: Command:
@@ -129,6 +129,7 @@ undo:
   Text
   Erase
 redo:
+  Erase
 snap: on
 ortho: off
 pointer: 48,48
