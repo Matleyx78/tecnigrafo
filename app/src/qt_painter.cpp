@@ -18,8 +18,9 @@
 #include <cmath>
 #include <numbers>
 
+// Q_INIT_RESOURCE must resolve its generated symbol in the global namespace.
 // Explicitly reference the resource object so static linking retains it.
-static void initializeFontResources() {
+void initializeFontResources() {
     Q_INIT_RESOURCE(fonts);
 }
 
