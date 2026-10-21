@@ -1,0 +1,16 @@
+; Interfaccia: lo snap ad oggetto disattivato non aggancia il punto di inserimento al livello 2
+!level 2
+!view 0,0 1 800x600
+TEXT
+10,20
+
+
+Hello
+
+!snap off
+PL
+!move 12,21
+!report
+!click 12,21
+30,30
+

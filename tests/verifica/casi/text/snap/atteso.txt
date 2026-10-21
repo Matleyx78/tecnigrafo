@@ -31,7 +31,7 @@ entities:
   2 LINE start=20,30 end=50,50
 messages:
   Specify next point or [Undo]: 50,50
-  Specify next point or [Close/Undo]:
+  Specify next point or [Undo]:
 prompt: Command:
 preview:
 selection: none

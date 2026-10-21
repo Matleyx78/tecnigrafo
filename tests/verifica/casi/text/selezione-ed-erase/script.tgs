@@ -15,13 +15,11 @@ XYZ
 !click 12,12
 !report
 ERASE
-
 !report
 !click 45,45
 !click 70,60
 !report
 ERASE
-
 !report
 U
 !report
@@ -29,4 +27,3 @@ U
 !click 48,48
 !report
 ERASE
-

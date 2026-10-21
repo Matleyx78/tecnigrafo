@@ -50,7 +50,6 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                     return Status::Continue;
                 }
                 m_height = height;
-                context.defaults.textHeight = height;
                 m_stage = Stage::Rotation;
             }
             break;
@@ -66,7 +65,6 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                     return Status::Continue;
                 }
                 m_rotation = rotation;
-                context.defaults.textRotation = rotation;
                 m_stage = Stage::Text;
             }
             break;
@@ -82,6 +80,11 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                 line.rotation = m_rotation;
                 line.value = text->text;
                 context.editor.add(line);
+                if (!m_hasLines) {
+                    // Defaults describe a created text, not an abandoned setup.
+                    context.defaults.textHeight = m_height;
+                    context.defaults.textRotation = m_rotation;
+                }
                 context.lastPoint = m_next;
                 m_hasLines = true;
                 // ADR 0013: advance down the text's local Y axis by 5/3 of its height.

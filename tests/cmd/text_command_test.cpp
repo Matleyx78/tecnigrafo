@@ -91,6 +91,41 @@ TEST(TextCommandTest, EscapeAtEveryStageAndInvalidHeightsPreserveRedo) {
     EXPECT_TRUE(editor.canRedo());
 }
 
+TEST(TextCommandTest, AbandonedSetupKeepsDefaultsAndFirstLineUpdatesThem) {
+    core::Document document;
+    edit::Editor editor(document);
+    CommandContext context{editor, {}, [](const std::string&) {
+                           }};
+    TextCommand command;
+    for (bool escape : {false, true}) {
+        command.start(context);
+        command.handle(context, PointInput{{0, 0}});
+        command.handle(context, ValueInput{7});
+        command.handle(context, ValueInput{std::numbers::pi / 4});
+        EXPECT_DOUBLE_EQ(context.defaults.textHeight, 2.5);
+        EXPECT_DOUBLE_EQ(context.defaults.textRotation, 0);
+        if (escape) {
+            command.cancel(context);
+        } else {
+            EXPECT_EQ(command.handle(context, ConfirmInput{}), Status::Finished);
+        }
+        EXPECT_TRUE(document.isEmpty());
+        EXPECT_FALSE(editor.canUndo());
+    }
+    command.start(context);
+    command.handle(context, PointInput{{0, 0}});
+    command.handle(context, ValueInput{7});
+    command.handle(context, ValueInput{std::numbers::pi / 4});
+    command.handle(context, TextInput{"Confirmed"});
+    EXPECT_DOUBLE_EQ(context.defaults.textHeight, 7);
+    EXPECT_DOUBLE_EQ(context.defaults.textRotation, std::numbers::pi / 4);
+    command.cancel(context);
+    editor.undo();
+    // Undo affects the drawing; the session still remembers the created text.
+    EXPECT_DOUBLE_EQ(context.defaults.textHeight, 7);
+    EXPECT_DOUBLE_EQ(context.defaults.textRotation, std::numbers::pi / 4);
+}
+
 TEST(TextCommandTest, PointMeasurementsAndPreviewOfNextBaseline) {
     core::Document document;
     edit::Editor editor(document);
@@ -103,9 +138,9 @@ TEST(TextCommandTest, PointMeasurementsAndPreviewOfNextBaseline) {
     command.handle(context, PointInput{{10, 20}});
     EXPECT_EQ(command.basePoint(), (core::Vec2{10, 20}));
     command.handle(context, PointInput{{13, 24}});
-    EXPECT_DOUBLE_EQ(context.defaults.textHeight, 5);
+    EXPECT_DOUBLE_EQ(context.defaults.textHeight, 2.5);
     command.handle(context, PointInput{{10, 30}});
-    EXPECT_NEAR(context.defaults.textRotation, std::numbers::pi / 2, 1e-12);
+    EXPECT_DOUBLE_EQ(context.defaults.textRotation, 0);
     EXPECT_EQ(command.prompt().kind, PromptKind::Text);
     core::Text character;
     character.position = {10, 20};
@@ -127,6 +162,8 @@ TEST(TextCommandTest, PointMeasurementsAndPreviewOfNextBaseline) {
     command.pointerMoved({999, 999});
     checkPreview();
     command.handle(context, TextInput{"Hello"});
+    EXPECT_DOUBLE_EQ(context.defaults.textHeight, 5);
+    EXPECT_NEAR(context.defaults.textRotation, std::numbers::pi / 2, 1e-12);
     character.position.x += 25.0 / 3.0;
     checkPreview();
     EXPECT_EQ(document.entityCount(), 1U);
