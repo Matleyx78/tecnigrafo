@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -169,9 +170,8 @@ TEST_F(InsertionSnapMenuTest, IsAnObjectSnapModeCheckedAtStart) {
 
 TEST_F(InsertionSnapMenuTest, TogglesTheInsertionSnapOfTheRunner) {
     startPolylineWithPointerAt(kInsideSampleText);
-    ASSERT_TRUE(runner().activeSnap().has_value());
-    EXPECT_EQ(runner().activeSnap()->kind, core::SnapKind::Insertion);
-    EXPECT_EQ(runner().activeSnap()->point, kSampleTextInsertion);
+    EXPECT_EQ(runner().activeSnap(),
+              (core::SnapPoint{kSampleTextInsertion, core::SnapKind::Insertion}));
 
     insertion()->trigger();
     EXPECT_FALSE(insertion()->isChecked());
@@ -181,20 +181,20 @@ TEST_F(InsertionSnapMenuTest, TogglesTheInsertionSnapOfTheRunner) {
     EXPECT_TRUE(aids().snapModes.endpoint);
     EXPECT_TRUE(aids().snapModes.midpoint);
     EXPECT_TRUE(aids().snapModes.center);
-    EXPECT_FALSE(runner().activeSnap().has_value());
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
 
     insertion()->trigger();
     EXPECT_TRUE(insertion()->isChecked());
     EXPECT_EQ(aids(), cmd::DrawingAids{});
-    ASSERT_TRUE(runner().activeSnap().has_value());
-    EXPECT_EQ(runner().activeSnap()->kind, core::SnapKind::Insertion);
+    EXPECT_EQ(runner().activeSnap(),
+              (core::SnapPoint{kSampleTextInsertion, core::SnapKind::Insertion}));
 }
 
 TEST_F(InsertionSnapMenuTest, ObjectSnapOffHidesTheInsertionSnap) {
     startPolylineWithPointerAt(kInsideSampleText);
     objectSnap()->trigger();
     EXPECT_TRUE(insertion()->isChecked());  // the mode stays chosen
-    EXPECT_FALSE(runner().activeSnap().has_value());
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
 }
 
 }  // namespace
