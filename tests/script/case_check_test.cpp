@@ -177,16 +177,22 @@ TEST(CheckCase, WhatIsNotImplementedYetFailsLikeAnyCase) {
     const fs::path text = makeCase("not-implemented-type", {{"domande.tgq",
                                                              "T = TEXT position=0,0 value=\"A\"\n"
                                                              "? bbox T -> 0,0 1,1\n"}});
-    Result result = check(text);
+    const Result result = check(text);
     EXPECT_EQ(result.code, kExitFailed);
     expectContains(result.output, "not implemented yet: domande.tgq, line 1:");
     EXPECT_EQ(check(text, true).code, kExitPassed);
+}
 
-    const fs::path question = makeCase("not-implemented-question",
-                                       {{"domande.tgq", "? font-metrics -> ascent=1 descent=0\n"}});
-    result = check(question);
+TEST(CheckCase, WrongFontMetricsFailAndWriteMeasuredValues) {
+    const fs::path question =
+        makeCase("wrong-font-metrics", {{"domande.tgq", "? font-metrics -> ascent=1 descent=0\n"}});
+    const Result result = check(question);
     EXPECT_EQ(result.code, kExitFailed);
-    expectContains(result.output, "obtained: error: question not implemented yet");
+    expectContains(result.output, "expected: ascent=1 descent=0");
+    expectContains(result.output,
+                   "obtained: ascent=1.3158268275372604 descent=-0.3080198722498226");
+    EXPECT_EQ(readFile(kOutput / "obtained" / "wrong-font-metrics" / kObtainedAnswers),
+              "? font-metrics -> ascent=1.3158268275372604 descent=-0.3080198722498226\n");
     EXPECT_EQ(check(question, true).code, kExitPassed);
 }
 
