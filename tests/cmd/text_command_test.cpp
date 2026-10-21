@@ -60,8 +60,8 @@ TEST(TextCommandTest, EscapeAtEveryStageAndInvalidHeightsPreserveRedo) {
             command.handle(context, PointInput{{0, 0}});
         }
         if (stage > 1) {
-            for (double height : {0.0, -1.0, std::numeric_limits<double>::infinity(),
-                                  std::numeric_limits<double>::quiet_NaN()}) {
+            for (const double height : {0.0, -1.0, std::numeric_limits<double>::infinity(),
+                                        std::numeric_limits<double>::quiet_NaN()}) {
                 command.handle(context, ValueInput{height});
                 EXPECT_EQ(command.prompt().kind, PromptKind::Distance);
             }
@@ -97,7 +97,7 @@ TEST(TextCommandTest, AbandonedSetupKeepsDefaultsAndFirstLineUpdatesThem) {
     CommandContext context{editor, {}, [](const std::string&) {
                            }};
     TextCommand command;
-    for (bool escape : {false, true}) {
+    for (const bool escape : {false, true}) {
         command.start(context);
         command.handle(context, PointInput{{0, 0}});
         command.handle(context, ValueInput{7});
@@ -154,8 +154,8 @@ TEST(TextCommandTest, PointMeasurementsAndPreviewOfNextBaseline) {
         ASSERT_EQ(box.vertexCount(), 4U);
         const auto corners = core::textBox(character);
         for (std::size_t i = 0; i < corners.size(); ++i) {
-            EXPECT_NEAR(box.vertices()[i].position.x, corners[i].x, 1e-12);
-            EXPECT_NEAR(box.vertices()[i].position.y, corners[i].y, 1e-12);
+            EXPECT_NEAR(box.vertices()[i].position.x, corners.at(i).x, 1e-12);
+            EXPECT_NEAR(box.vertices()[i].position.y, corners.at(i).y, 1e-12);
         }
     };
     checkPreview();
