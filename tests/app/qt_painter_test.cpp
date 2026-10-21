@@ -48,7 +48,7 @@ TEST(QtPainterText, CapitalHeightAndAdvanceAgreeWithCoreWithinOnePixel) {
     EXPECT_NEAR(capital.height(), 100.0, 1.0);
     EXPECT_NEAR(capital.bottom() + 1, single.origin.y, 1.0);
     for (const double widthFactor : {0.6, 1.0, 1.7}) {
-        render::TextRun run{U"HAV H", single.origin, 100.0, 0.0, widthFactor};
+        const render::TextRun run{U"HAV H", single.origin, 100.0, 0.0, widthFactor};
         const QRect line = inkBounds(renderText(run));
         render::TextRun last = single;
         last.widthFactor = widthFactor;
