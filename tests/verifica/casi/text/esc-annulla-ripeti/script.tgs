@@ -1,0 +1,27 @@
+; TEXT: Esc a ogni richiesta iniziale non crea nulla; Esc dopo due righe le conserva; U e REDO
+TEXT
+!esc
+TEXT
+0,0
+!esc
+TEXT
+0,0
+3
+!esc
+TEXT
+0,0
+3
+0
+!esc
+!report
+TEXT
+10,20
+3
+0
+Riga 1
+Riga 2
+!esc
+!report
+U
+!report
+REDO

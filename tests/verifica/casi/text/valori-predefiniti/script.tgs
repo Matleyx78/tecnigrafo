@@ -1,0 +1,27 @@
+; TEXT: valori predefiniti proposti tra < > e accettati con Invio
+TEXT
+0,0
+3.5
+30
+Test 1
+
+!report
+TEXT
+10,10
+
+
+Test 2
+
+!report
+TEXT
+20,20
+1.25
+
+Test 3
+
+!report
+TEXT
+30,30
+
+
+

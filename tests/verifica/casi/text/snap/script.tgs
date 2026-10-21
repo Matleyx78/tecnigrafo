@@ -1,0 +1,14 @@
+; TEXT: snap all'inserimento passando sul testo e costruzione di una linea
+!view 20,20 1 800x600
+TEXT
+20,30
+5
+0
+SnapTarget
+
+LINE
+!move 22,31
+!report
+!click 22,31
+50,50
+

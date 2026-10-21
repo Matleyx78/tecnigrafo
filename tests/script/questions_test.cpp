@@ -173,7 +173,7 @@ TEST(Questions, ToleranceAppliesFromItsLineOn) {
     EXPECT_TRUE(list[1].matches);
 }
 
-TEST(Questions, AQuestionNotImplementedYetIsADifference) {
+TEST(Questions, WrongTextAnswersReportMeasuredValues) {
     const std::string text =
         "? text-width \"Hello\" -> 2.5\n"
         "? font-metrics -> ascent=1.3 descent=-0.3\n";
@@ -183,8 +183,11 @@ TEST(Questions, AQuestionNotImplementedYetIsADifference) {
     ASSERT_EQ(differences.size(), 2U);
     EXPECT_EQ(differences[0].line, 1);
     EXPECT_EQ(differences[0].expected, "2.5");
-    EXPECT_EQ(differences[0].actual, "error: question not implemented yet");
+    // Advances and hhea fields read independently from Liberation Sans 2.1.5.
+    EXPECT_EQ(differences[0].actual, "3.3122782114975156");
     EXPECT_EQ(differences[1].line, 2);
+    EXPECT_EQ(differences[1].expected, "ascent=1.3 descent=-0.3");
+    EXPECT_EQ(differences[1].actual, "ascent=1.3158268275372604 descent=-0.3080198722498226");
 }
 
 TEST(Questions, AnEntityTypeNotImplementedYetIsMarked) {
@@ -262,7 +265,7 @@ TEST(Questions, ObtainedFileHasTheActualAnswers) {
               "A = LWPOLYLINE vertex=0,0 vertex=10,0\n"
               "? length A -> 10\n"
               "; fine\n"
-              "? text-width \"a -> b\" -> error: question not implemented yet\n");
+              "? text-width \"a -> b\" -> 3.757274662881476\n");
 }
 
 }  // namespace

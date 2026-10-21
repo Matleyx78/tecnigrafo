@@ -1,0 +1,116 @@
+; Domande al modello sulla geometria del testo (ADR 0013, P13)
+; Misure ricavate dal font Liberation Sans 2.1.5 con fontTools
+
+; 1. Testo base (Hello, h=2.5, rot=0, wf=1) all'origine
+T1 = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="Hello"
+
+; 2. Altezza scalata (h=5.0) e posizione traslata
+T_h5 = TEXT position=10,20 height=5.0 rotation=0 width-factor=1 value="Hello"
+
+; 3. Fattore di larghezza diverso da 1 (wf=0.8)
+T_wf = TEXT position=0,0 height=2.5 rotation=0 width-factor=0.8 value="Hello"
+
+; 4. Rotazioni nei quattro quadranti e a 45 gradi
+T_rot90 = TEXT position=0,0 height=2.5 rotation=90 width-factor=1 value="Hello"
+T_rot180 = TEXT position=30,40 height=3.0 rotation=180 width-factor=1 value="Test"
+T_rot270 = TEXT position=-10,-20 height=2.0 rotation=270 width-factor=0.8 value="Vertical"
+T_rot45 = TEXT position=10,20 height=4.0 rotation=45 width-factor=1.25 value="A"
+
+; 5. Codici di controllo DXF: %%c (diametro), %%d (gradi), %%p (piu-meno), %%% (percento)
+T_c = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="%%c20"
+T_d = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="45%%d"
+T_p = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="%%p0.1"
+T_pct = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="100%%%"
+
+; 6. Codici di controllo incompleti (%% finale e %%x non riconosciuto)
+T_inc1 = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="10%%"
+T_inc2 = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="%%x"
+
+; 7. Casi limite: stringa vuota e soli spazi
+T_empty = TEXT position=5,5 height=2.0 rotation=0 width-factor=1 value=""
+T_spaces = TEXT position=0,0 height=2.5 rotation=0 width-factor=1 value="   "
+
+; --- Rettangolo dingombro (box) ---
+? box T1 -> 0,-0.7700496806245565 8.28069552874379,-0.7700496806245565 8.28069552874379,3.289567068843151 0,3.289567068843151
+? box T_h5 -> 10,18.45990063875089 26.56139105748758,18.45990063875089 26.56139105748758,26.5791341376863 10,26.5791341376863
+? box T_wf -> 0,-0.7700496806245565 6.624556422995032,-0.7700496806245565 6.624556422995032,3.289567068843151 0,3.289567068843151
+? box T_rot90 -> 0.7700496806245565,0 0.770049680624557,8.28069552874379 -3.289567068843151,8.28069552874379 -3.289567068843151,0
+? box T_rot180 -> 30,40.92405961674947 21.5195173882186,40.92405961674947 21.5195173882186,36.05251951738822 30,36.05251951738822
+? box T_rot270 -> -10.61603974449964,-20 -10.61603974449965,-27.75471965933286 -7.368346344925481,-27.75471965933286 -7.368346344925479,-20
+? box T_rot45 -> 10.87121176163225,19.12878823836775 14.29884789754717,22.55642437428266 9.705915845439804,27.14935642639003 6.278279709524886,23.72172029047512
+? box T_c -> 0,-0.7700496806245565 6.868346344925479,-0.7700496806245565 6.868346344925479,3.289567068843151 0,3.289567068843151
+? box T_d -> 0,-0.7700496806245565 5.495031937544358,-0.7700496806245565 5.495031937544358,3.289567068843151 0,3.289567068843151
+? box T_p -> 0,-0.7700496806245565 7.045777146912704,-0.7700496806245565 7.045777146912704,3.289567068843151 0,3.289567068843151
+? box T_pct -> 0,-0.7700496806245565 9.293825408090845,-0.7700496806245565 9.293825408090845,3.289567068843151 0,3.289567068843151
+? box T_inc1 -> 0,-0.7700496806245565 10.50390347764372,-0.7700496806245565 10.50390347764372,3.289567068843151 0,3.289567068843151
+? box T_inc2 -> 0,-0.7700496806245565 8.278921220723918,-0.7700496806245565 8.278921220723918,3.289567068843151 0,3.289567068843151
+? box T_empty -> 5,4.383960255500355 5,4.383960255500355 5,7.631653655074521 5,7.631653655074521
+? box T_spaces -> 0,-0.7700496806245565 3.02874378992193,-0.7700496806245565 3.02874378992193,3.289567068843151 0,3.289567068843151
+
+; --- Riquadro assi-allineato (bbox) ---
+? bbox T1 -> 0,-0.7700496806245565 8.28069552874379,3.289567068843151
+? bbox T_h5 -> 10,18.45990063875089 26.56139105748758,26.5791341376863
+? bbox T_wf -> 0,-0.7700496806245565 6.624556422995032,3.289567068843151
+? bbox T_rot90 -> -3.289567068843151,0 0.770049680624557,8.28069552874379
+? bbox T_rot180 -> 21.5195173882186,36.05251951738822 30,40.92405961674947
+? bbox T_rot270 -> -10.61603974449965,-27.75471965933286 -7.368346344925479,-20
+? bbox T_rot45 -> 6.278279709524886,19.12878823836775 14.29884789754717,27.14935642639003
+? bbox T_c -> 0,-0.7700496806245565 6.868346344925479,3.289567068843151
+? bbox T_d -> 0,-0.7700496806245565 5.495031937544358,3.289567068843151
+? bbox T_p -> 0,-0.7700496806245565 7.045777146912704,3.289567068843151
+? bbox T_pct -> 0,-0.7700496806245565 9.293825408090845,3.289567068843151
+? bbox T_inc1 -> 0,-0.7700496806245565 10.50390347764372,3.289567068843151
+? bbox T_inc2 -> 0,-0.7700496806245565 8.278921220723918,3.289567068843151
+? bbox T_empty -> 5,4.383960255500355 5,7.631653655074521
+? bbox T_spaces -> 0,-0.7700496806245565 3.02874378992193,3.289567068843151
+
+; --- Lunghezza: il testo e una regione, non una curva (length none) ---
+? length T1 -> none
+? length T_rot90 -> none
+? length T_empty -> none
+
+; --- Distanza e punto piu vicino (distance, closest) ---
+; Punti allinterno del rettangolo dingombro hanno distanza zero e punto stesso
+? distance T1 0,0 -> 0
+? closest T1 0,0 -> 0,0
+? distance T1 4,1 -> 0
+? closest T1 4,1 -> 4,1
+? distance T1 0,-0.7700496806245565 -> 0
+? closest T1 0,-0.7700496806245565 -> 0,-0.7700496806245565
+; Punti allesterno di T1: distanza perpendicolare ai bordi
+; Bordo sinistro x=0: punto (-3, 1)
+? distance T1 -3,1 -> 3
+? closest T1 -3,1 -> 0,1
+; Bordo superiore y=3.289567068843151: punto (4, 5.289567068843151)
+? distance T1 4,5.289567068843151 -> 2
+? closest T1 4,5.289567068843151 -> 4,3.289567068843151
+; Testo ruotato a 90 gradi: punto allinterno
+? distance T_rot90 -1,4 -> 0
+? closest T_rot90 -1,4 -> -1,4
+; Testo ruotato a 90 gradi: punto esterno al bordo x=0.770049680624557
+? distance T_rot90 2.770049680624557,4 -> 2
+? closest T_rot90 2.770049680624557,4 -> 0.770049680624557,4
+
+; --- Selezione a finestra e a intersezione (inside, crosses) ---
+; Finestra che racchiude interamente T1
+? inside T1 -1,-2 10,5 -> yes
+? crosses T1 -1,-2 10,5 -> yes
+; Rettangolo tutto contenuto allinterno del rettangolo dingombro di T1
+? inside T1 2,0 6,2 -> no
+? crosses T1 2,0 6,2 -> yes
+; Rettangolo che interseca parzialmente il bordo di T1
+? inside T1 5,2 10,5 -> no
+? crosses T1 5,2 10,5 -> yes
+; Rettangolo completamente disgiunto da T1
+? inside T1 20,20 30,30 -> no
+? crosses T1 20,20 30,30 -> no
+
+; --- Punti di snap su singola entita (snaps) ---
+; T1 ha lo snap Insertion nel punto di inserimento position (0,0)
+? snaps T1 -> Insertion 0,0
+? snaps T1 modes=insertion -> Insertion 0,0
+? snaps T1 modes=endpoint,midpoint -> none
+? snaps T1 modes=none -> none
+? snaps T_h5 -> Insertion 10,20
+? snaps T_rot180 -> Insertion 30,40
+? snaps T_empty -> Insertion 5,5

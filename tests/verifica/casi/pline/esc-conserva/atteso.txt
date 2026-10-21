@@ -1,0 +1,99 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: PLINE
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Arc/Undo]: A
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: 10,10
+active snap: none
+statistics:
+
+[report 3]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 bulge=1 vertex=10,10
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Arc/Undo]: 10,0
+  Specify next point or [Arc/Undo]: A
+  Specify end point of arc or [Line/Undo]: 10,10
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 0,10
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 4]
+entities:
+messages:
+  Command: U
+  Undone: Polyline.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Polyline
+snap: on
+ortho: off
+pointer: 0,10
+active snap: none
+statistics:
+
+[final]
+entities:
+  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 bulge=1 vertex=10,10
+messages:
+  Command: REDO
+  Redone: Polyline.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: 0,10
+active snap: none
+statistics:
+  LWPOLYLINE 1

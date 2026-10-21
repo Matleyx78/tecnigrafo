@@ -155,3 +155,10 @@ contribuisce realizza i pacchetti della tappa aperta.
 ## Licenza
 
 GNU General Public License v3.0 o successiva. Vedi [LICENSE](LICENSE).
+
+## Componenti di terze parti
+
+Il font incluso **Liberation Sans Regular 2.1.5** è distribuito senza modifiche
+con licenza [SIL Open Font License 1.1](resources/fonts/OFL.txt).
+[Fonte, versione e SHA-256](resources/fonts/README.md) sono registrati accanto al font.
+Le metriche usate dal modello sono generate dal file TTF durante la build.

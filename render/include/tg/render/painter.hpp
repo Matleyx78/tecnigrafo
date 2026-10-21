@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <span>
+#include <string>
 
 namespace tg::render {
 
@@ -20,6 +21,15 @@ struct Color {
 };
 
 enum class LineStyle : std::uint8_t { Solid, Dashed };
+
+/// One line of text placed on the screen.
+struct TextRun {
+    std::u32string text;      ///< Control codes already converted.
+    core::Vec2 origin;        ///< Start of the baseline, screen pixels.
+    double capHeightPx{0.0};  ///< Height of capital letters.
+    double angle{0.0};        ///< Radians, counter-clockwise as seen on screen.
+    double widthFactor{1.0};
+};
 
 /// Abstract drawing backend. Every coordinate is in screen pixels (origin
 /// top-left, Y down). The scene renderer talks only to this interface, so
@@ -42,6 +52,9 @@ public:
 
     /// Fills a screen-space polygon, including alpha, without an outline.
     virtual void fillPolygon(std::span<const core::Vec2> points, const Color& color) = 0;
+
+    /// Draws run with the bundled font in the current pen colour.
+    virtual void drawText(const TextRun& run) = 0;
 
     virtual void drawLine(const core::Vec2& from, const core::Vec2& to) = 0;
     virtual void drawPolyline(std::span<const core::Vec2> points, bool closed) = 0;

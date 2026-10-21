@@ -1,0 +1,32 @@
+; TEXT: selezione con clic nella regione, finestra, intersezione e cancellazione con ERASE
+!view 40,30 1 800x600
+TEXT
+10,10
+5
+0
+ABC
+
+TEXT
+50,50
+5
+0
+XYZ
+
+!click 12,12
+!report
+ERASE
+
+!report
+!click 45,45
+!click 70,60
+!report
+ERASE
+
+!report
+U
+!report
+!click 60,52
+!click 48,48
+!report
+ERASE
+

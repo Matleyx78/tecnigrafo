@@ -110,13 +110,12 @@ entities:
   2 ARC center=0,0 radius=10 start-angle=90 end-angle=180
   3 ARC center=0,0 radius=10 start-angle=270 end-angle=0
   4 ARC center=0,0 radius=10 start-angle=270 end-angle=90
-  5 LINE start=0,50 end=10,50
-  6 LINE start=10,50 end=10,60
+  5 LINE start=10,50 end=10,60
 messages:
   Command: LINE
   Specify first point: @10,0
   Specify next point or [Undo]: @0,10
-  Specify next point or [Close/Undo]:
+  Specify next point or [Undo]:
 prompt: Command:
 preview:
 selection: none
@@ -134,4 +133,4 @@ pointer: none
 active snap: none
 statistics:
   ARC 4
-  LINE 2
+  LINE 1

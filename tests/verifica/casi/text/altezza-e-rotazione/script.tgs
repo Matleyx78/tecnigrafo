@@ -1,0 +1,21 @@
+; TEXT: altezza e rotazione specificate sia come numero/angolo sia tramite punto
+TEXT
+0,0
+5
+90
+Vertical 5
+
+!report
+TEXT
+20,10
+20,14
+30,10
+Point inputs
+
+!report
+TEXT
+50,50
+2
+60,60
+Rotated 45
+

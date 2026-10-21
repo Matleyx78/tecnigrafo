@@ -6,11 +6,11 @@ entities:
 messages:
   Command: PLINE
   Specify start point: 0,0
-  Specify next point or [Undo]: 10,0
-  Specify next point or [Undo]: 10,0
+  Specify next point or [Arc/Undo]: 10,0
+  Specify next point or [Arc/Undo]: 10,0
   Point coincides with the previous point.
-  Specify next point or [Undo]: 10,10
-  Specify next point or [Close/Undo]:
+  Specify next point or [Arc/Undo]: 10,10
+  Specify next point or [Arc/Close/Undo]:
 prompt: Command:
 preview:
 selection: none

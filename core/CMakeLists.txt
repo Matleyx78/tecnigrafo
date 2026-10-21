@@ -14,6 +14,7 @@ add_library(tg_core
     src/proximity.cpp
     src/snap_points.cpp
     src/spatial_index.cpp
+    src/text_metrics.cpp
     src/transform2d.cpp
 )
 add_library(Tecnigrafo::core ALIAS tg_core)
@@ -22,3 +23,6 @@ target_include_directories(tg_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_compile_features(tg_core PUBLIC cxx_std_20)
 tg_configure_target(tg_core)
+
+add_dependencies(tg_core tg_font_metrics)
+target_include_directories(tg_core PRIVATE "${PROJECT_BINARY_DIR}/tools/generated")

@@ -1,0 +1,45 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  1 LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 bulge=1 vertex=10,10 vertex=0,10 bulge=1
+  2 LWPOLYLINE closed=yes vertex=4,0 vertex=10,0 bulge=1 vertex=10,8 bulge=0.5
+  3 LWPOLYLINE closed=yes vertex=0,20 vertex=10,20 bulge=1 vertex=10,30
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Arc/Undo]: 10,0
+  Specify next point or [Arc/Undo]: A
+  Specify end point of arc or [Line/Undo]: 10,10
+  Specify end point of arc or [CLose/Line/Undo]: L
+  Specify next point or [Arc/Close/Undo]: 0,10
+  Specify next point or [Arc/Close/Undo]: A
+  Specify end point of arc or [CLose/Line/Undo]: CL
+  Command: PLINE
+  Specify start point: 4,0
+  Specify next point or [Arc/Undo]: 10,0
+  Specify next point or [Arc/Undo]: Arc
+  Specify end point of arc or [Line/Undo]: 10,8
+  Specify end point of arc or [CLose/Line/Undo]: CLose
+  Command: PLINE
+  Specify start point: 0,20
+  Specify next point or [Arc/Undo]: 10,20
+  Specify next point or [Arc/Undo]: A
+  Specify end point of arc or [Line/Undo]: 10,30
+  Specify end point of arc or [CLose/Line/Undo]: L
+  Specify next point or [Arc/Close/Undo]: C
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 3

@@ -38,6 +38,7 @@ add_executable(tg_tests
     core/proximity_test.cpp
     core/snap_points_test.cpp
     core/spatial_index_test.cpp
+    core/text_metrics_test.cpp
     edit/editor_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp
@@ -82,6 +83,7 @@ if(TG_BUILD_APP)
         app/command_line_test.cpp
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
+        app/qt_painter_test.cpp
         app/script_session_test.cpp
         app/selection_test.cpp
     )
@@ -102,3 +104,21 @@ if(TG_BUILD_APP)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
         TIMEOUT 60)
 endif()
+
+# Generate twice, independently of core's table, and compare byte for byte.
+foreach(copy RANGE 1 2)
+    add_test(NAME fontmetrics_generate_${copy}
+        COMMAND fontmetrics "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Regular.ttf"
+                            "${CMAKE_CURRENT_BINARY_DIR}/font_metrics_${copy}.inc")
+    set_tests_properties(fontmetrics_generate_${copy} PROPERTIES FIXTURES_SETUP fontmetrics_generated)
+endforeach()
+add_test(NAME fontmetrics_reproducible
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+        "${CMAKE_CURRENT_BINARY_DIR}/font_metrics_1.inc"
+        "${CMAKE_CURRENT_BINARY_DIR}/font_metrics_2.inc")
+set_tests_properties(fontmetrics_reproducible PROPERTIES FIXTURES_REQUIRED fontmetrics_generated)
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/truncated.ttf" CONTENT "invalid")
+add_test(NAME fontmetrics_rejects_truncated
+    COMMAND fontmetrics "${CMAKE_CURRENT_BINARY_DIR}/truncated.ttf"
+                        "${CMAKE_CURRENT_BINARY_DIR}/invalid.inc")
+set_tests_properties(fontmetrics_rejects_truncated PROPERTIES WILL_FAIL TRUE)

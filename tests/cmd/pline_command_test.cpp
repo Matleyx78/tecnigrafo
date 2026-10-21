@@ -113,7 +113,7 @@ TEST_F(PlineCommandTest, ConfirmationWithFewerThanTwoPointsAddsNothing) {
 TEST_F(PlineCommandTest, CloseRequiresAtLeastThreePoints) {
     start();
     point(0.0, 0.0);
-    EXPECT_EQ(runner().promptText(), "Specify next point or [Undo]:");
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Arc/Undo]:");
     point(10.0, 0.0);
     runner().submitText("c");
     EXPECT_TRUE(runner().isActive());
@@ -121,7 +121,7 @@ TEST_F(PlineCommandTest, CloseRequiresAtLeastThreePoints) {
     EXPECT_EQ(messages().back(), "Invalid point or option.");
     EXPECT_TRUE(document().isEmpty());
     point(10.0, 10.0);
-    EXPECT_EQ(runner().promptText(), "Specify next point or [Close/Undo]:");
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Arc/Close/Undo]:");
     runner().submitText("c");
     ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_TRUE(polyline().isClosed());
@@ -142,7 +142,7 @@ TEST_F(PlineCommandTest, UndoRemovesVertexAndCloseOption) {
     triangle();
     runner().submitText("uNdO");
     EXPECT_TRUE(runner().isActive());
-    EXPECT_EQ(runner().promptText(), "Specify next point or [Undo]:");
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Arc/Undo]:");
     EXPECT_TRUE(document().isEmpty());
     runner().submitText("");
     ASSERT_EQ(document().entityCount(), 1U);
@@ -271,12 +271,19 @@ TEST_F(PlineCommandTest, PreviewUpdatesAfterUndo) {
     EXPECT_EQ(preview.vertices()[2].position, (Vec2{20.0, 20.0}));
 }
 
-TEST_F(PlineCommandTest, EscDiscardsPendingGeometry) {
+TEST_F(PlineCommandTest, EscKeepsAcceptedGeometryInOneUndoStep) {
     start();
     triangle();
+    runner().pointerMoved({50.0, 50.0});
     runner().submit(CancelInput{});
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_EQ(polyline().vertexCount(), 3U);
+    EXPECT_FALSE(polyline().isClosed());
+    EXPECT_TRUE(editor().canUndo());
+    runner().submitText("u");
     EXPECT_TRUE(document().isEmpty());
-    EXPECT_FALSE(editor().canUndo());
+    runner().submitText("redo");
+    EXPECT_EQ(document().entityCount(), 1U);
     EXPECT_FALSE(editor().inTransaction());
     EXPECT_FALSE(runner().isActive());
     EXPECT_TRUE(runner().preview().empty());
@@ -357,12 +364,164 @@ TEST_F(PlineCommandTest, InvalidTextKeepsGeometryAndPrompt) {
     start();
     point(0.0, 0.0);
     runner().submitText("@10");
-    EXPECT_EQ(runner().promptText(), "Specify next point or [Undo]:");
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Arc/Undo]:");
     EXPECT_EQ(messages().back(), "Invalid point or option.");
     point(10.0, 0.0);
     runner().submitText("");
     ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_EQ(polyline().vertexCount(), 2U);
+}
+
+TEST_F(PlineCommandTest, TangentArcsContinueFromLineAndArcThenReturnToLine) {
+    start();
+    point(0.0, 0.0);
+    point(10.0, 0.0);
+    runner().submitText("a");
+    point(10.0, 10.0);
+    point(4.0, 2.0);
+    runner().submitText("l");
+    point(4.0, 0.0);
+    runner().submitText("");
+    ASSERT_EQ(document().entityCount(), 1U);
+    ASSERT_EQ(polyline().vertexCount(), 5U);
+    EXPECT_DOUBLE_EQ(polyline().vertices()[0].bulge, 0.0);
+    EXPECT_NEAR(polyline().vertices()[1].bulge, 1.0, 1e-12);
+    EXPECT_NEAR(polyline().vertices()[2].bulge, 0.5, 1e-12);
+    EXPECT_DOUBLE_EQ(polyline().vertices()[3].bulge, 0.0);
+    EXPECT_DOUBLE_EQ(polyline().vertices()[4].bulge, 0.0);
+}
+
+TEST_F(PlineCommandTest, InitialArcUsesXAxisAndPreviewUsesTheSameBulge) {
+    start();
+    point(10.0, 5.0);
+    runner().submitText("Arc");
+    runner().pointerMoved({16.0, -3.0});
+    ASSERT_EQ(runner().preview().size(), 1U);
+    const auto preview = std::get<Polyline>(runner().preview().front());
+    ASSERT_EQ(preview.vertexCount(), 2U);
+    EXPECT_NEAR(preview.vertices()[0].bulge, -0.5, 1e-12);
+    point(16.0, -3.0);
+    runner().submit(CancelInput{});
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_EQ(polyline(), preview);
+}
+
+TEST_F(PlineCommandTest, ClosingInArcModeUsesTheFinalTangent) {
+    start();
+    point(4.0, 0.0);
+    point(10.0, 0.0);
+    runner().submitText("a");
+    point(10.0, 8.0);
+    runner().submitText("cl");
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_TRUE(polyline().isClosed());
+    EXPECT_NEAR(polyline().vertices().back().bulge, 0.5, 1e-12);
+}
+
+TEST_F(PlineCommandTest, InvalidArcEndpointKeepsPromptVerticesAndCoordinateReference) {
+    start();
+    point(0.0, 0.0);
+    runner().submitText("a");
+    const auto prompt = runner().promptText();
+    for (const double y : {0.0, 1e-10, -1e-10}) {
+        runner().pointerMoved({-10.0, y});
+        ASSERT_EQ(runner().preview().size(), 1U);
+        EXPECT_EQ(std::get<Polyline>(runner().preview().front()).vertexCount(), 1U);
+        point(-10.0, y);
+        EXPECT_EQ(messages().back(), "Invalid end point of arc.");
+        EXPECT_EQ(runner().promptText(), prompt);
+    }
+    point(0.0, 0.0);
+    EXPECT_EQ(messages().back(), "Point coincides with the previous point.");
+    runner().submitText("@10,0");
+    runner().submitText("");
+    ASSERT_EQ(document().entityCount(), 1U);
+    ASSERT_EQ(polyline().vertexCount(), 2U);
+    EXPECT_EQ(polyline().vertices().back().position, (Vec2{10.0, 0.0}));
+    EXPECT_DOUBLE_EQ(polyline().vertices().front().bulge, 0.0);
+}
+
+TEST_F(PlineCommandTest, MajorArcOutsideTheBackwardToleranceIsAccepted) {
+    start();
+    point(0.0, 0.0);
+    runner().submitText("a");
+    point(-10.0, 1e-6);
+    runner().submitText("");
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_GT(polyline().vertices().front().bulge, 1e6);
+}
+
+TEST_F(PlineCommandTest, UndoResetsRemovedBulgeAndPreservesEachMode) {
+    start();
+    triangle();
+    runner().submitText("a");
+    point(0.0, 10.0);
+    runner().submitText("u");
+    EXPECT_EQ(runner().promptText(), "Specify end point of arc or [CLose/Line/Undo]:");
+    ASSERT_EQ(runner().preview().size(), 1U);
+    EXPECT_DOUBLE_EQ(std::get<Polyline>(runner().preview().front()).vertices().back().bulge, 0.0);
+    runner().submitText("u");
+    point(10.0, -10.0);
+    runner().submitText("l");
+    runner().submitText("u");
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Arc/Undo]:");
+    point(20.0, 0.0);
+    runner().submitText("");
+    ASSERT_EQ(document().entityCount(), 1U);
+    for (const auto& vertex : polyline().vertices()) {
+        EXPECT_DOUBLE_EQ(vertex.bulge, 0.0);
+    }
+}
+
+TEST_F(PlineCommandTest, UndoingEveryVertexInArcModeRetainsModeWithXAxisTangent) {
+    start();
+    point(0.0, 0.0);
+    runner().submitText("a");
+    point(0.0, 10.0);
+    runner().submitText("u");
+    runner().submitText("u");
+    point(20.0, 20.0);
+    EXPECT_EQ(runner().promptText(), "Specify end point of arc or [Line/Undo]:");
+    point(20.0, 30.0);
+    runner().submitText("");
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_NEAR(polyline().vertices().front().bulge, 1.0, 1e-12);
+    start();
+    point(40.0, 40.0);
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Arc/Undo]:");
+    runner().submit(CancelInput{});
+}
+
+TEST_F(PlineCommandTest, InvalidTangentClosureLeavesTheCommandOpen) {
+    start();
+    point(0.0, 0.0);
+    point(10.0, 10.0);
+    point(20.0, 20.0);
+    runner().submitText("a");
+    runner().submitText("cl");
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_TRUE(document().isEmpty());
+    EXPECT_EQ(messages().back(), "Invalid end point of arc.");
+    runner().submitText("l");
+    runner().submitText("c");
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_TRUE(polyline().isClosed());
+    EXPECT_DOUBLE_EQ(polyline().vertices().back().bulge, 0.0);
+}
+
+TEST_F(PlineCommandTest, EscWithFewerThanTwoVerticesAddsNothing) {
+    for (const bool addPoint : {false, true}) {
+        start();
+        if (addPoint) {
+            point(0.0, 0.0);
+            runner().submitText("a");
+            runner().pointerMoved({0.0, 10.0});
+        }
+        runner().submit(CancelInput{});
+        EXPECT_TRUE(document().isEmpty());
+        EXPECT_FALSE(editor().inTransaction());
+        EXPECT_FALSE(editor().canUndo());
+    }
 }
 
 // Issue #64, with the steps of its report.
