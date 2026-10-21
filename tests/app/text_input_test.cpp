@@ -145,7 +145,7 @@ protected:
 
     /// PL typed in the command line, then the pointer over `world`.
     void startPolylineWithPointerAt(const core::Vec2& world) const {
-        QLineEdit* input = m_window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
+        auto* input = m_window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
         events::type(input, "PL");
         events::press(input, Qt::Key_Return);
         const core::Vec2 pixel = m_window.view()->viewport().worldToScreen(world);
