@@ -18,8 +18,9 @@ namespace tg::app {
 /// AutoCAD-style command line: a read-only history (three lines visible,
 /// scrollable) above the prompt of the runner and an input field.
 ///
-/// In the input field, Enter and space send the text to the runner and Esc
-/// cancels. Keys typed in a widget registered with forwardKeysFrom() (the
+/// Enter sends input to the runner and Esc cancels. Space submits except
+/// when the runner accepts literal text, where spaces and Unicode are kept.
+/// Keys typed in a widget registered with forwardKeysFrom() (the
 /// drawing view) reach the command line as if typed there.
 ///
 /// Undo and redo keys (Ctrl+Z, Ctrl+Y and the platform's own) always act on
@@ -58,7 +59,7 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
-    /// Enter, space and Esc. Returns true if `event` was one of them.
+    /// Enter, context-sensitive space and Esc; true when handled.
     bool handleControlKey(const QKeyEvent& event);
     bool forwardTextKey(const QKeyEvent& event);
     void submit();

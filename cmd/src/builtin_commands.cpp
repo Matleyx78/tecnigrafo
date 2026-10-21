@@ -9,6 +9,7 @@
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/line_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
+#include "tg/cmd/commands/text_command.hpp"
 
 #include <memory>
 
@@ -20,6 +21,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add("ERASE", {"E"}, [] { return std::make_unique<EraseCommand>(); });
     registry.add("LINE", {"L"}, [] { return std::make_unique<LineCommand>(); });
     registry.add("PLINE", {"PL"}, [] { return std::make_unique<PlineCommand>(); });
+    registry.add("TEXT", {"DT", "DTEXT"}, [] { return std::make_unique<TextCommand>(); });
 }
 
 }  // namespace tg::cmd

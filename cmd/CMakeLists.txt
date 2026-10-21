@@ -11,6 +11,7 @@ add_library(tg_cmd
     src/commands/erase_command.cpp
     src/commands/line_command.cpp
     src/commands/pline_command.cpp
+    src/commands/text_command.cpp
     src/command_registry.cpp
     src/command_runner.cpp
     src/coordinate_input.cpp
