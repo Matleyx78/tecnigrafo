@@ -88,6 +88,7 @@ if(TG_BUILD_APP)
         app/qt_painter_test.cpp
         app/script_session_test.cpp
         app/selection_test.cpp
+        app/text_input_test.cpp
     )
     target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Test Qt6::Widgets GTest::gtest)
     # Level 2 of the control mode: the scripts of module script's own tests,

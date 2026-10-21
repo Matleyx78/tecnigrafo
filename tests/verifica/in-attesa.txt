@@ -8,10 +8,5 @@
 # La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
-interfaccia/snap-inserimento #99
-interfaccia/snap-inserimento-disattivato #99
 interfaccia/spazio-riga-di-comando #99
-interfaccia/testo-caratteri-speciali #99
-interfaccia/testo-con-spazi #99
-interfaccia/testo-esc-a-meta #99
 testo/selezione-e-snap #95

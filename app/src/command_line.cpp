@@ -149,8 +149,15 @@ bool CommandLine::handleControlKey(const QKeyEvent& event) {
     switch (event.key()) {
         case Qt::Key_Return:
         case Qt::Key_Enter:
-        case Qt::Key_Space:
             submit();
+            return true;
+        case Qt::Key_Space:
+            if (m_runner.acceptsText()) {
+                m_input->setFocus(Qt::OtherFocusReason);
+                m_input->insert(QStringLiteral(" "));
+            } else {
+                submit();
+            }
             return true;
         case Qt::Key_Escape:
             cancel();
@@ -162,7 +169,8 @@ bool CommandLine::handleControlKey(const QKeyEvent& event) {
 
 bool CommandLine::forwardTextKey(const QKeyEvent& event) {
     const QString text = event.text();
-    if (text.size() != 1 || !isForwardedCharacter(text.front())) {
+    const bool textInput = m_runner.acceptsText() && !text.isEmpty();
+    if (!textInput && (text.size() != 1 || !isForwardedCharacter(text.front()))) {
         return false;
     }
     m_input->setFocus(Qt::OtherFocusReason);
