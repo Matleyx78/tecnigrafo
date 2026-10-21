@@ -21,6 +21,11 @@ qt_add_library(tg_app_ui STATIC
     src/script_session.cpp
     src/script_session.hpp
 )
+qt_add_resources(tg_app_ui fonts
+    PREFIX "/tg/fonts"
+    BASE "${PROJECT_SOURCE_DIR}/resources/fonts"
+    FILES "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Regular.ttf")
+
 target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Tecnigrafo::script writes the report of the control mode at level 2
 # (--script, docs/adr/0011).

@@ -3,14 +3,53 @@
 
 #include "qt_painter.hpp"
 
+#include "tg/core/text_metrics.hpp"
+
 #include <QBrush>
 #include <QColor>
+#include <QFont>
+#include <QFontDatabase>
+#include <QGlyphRun>
 #include <QPainter>
 #include <QPen>
+#include <QRawFont>
+#include <QResource>
+
+#include <cmath>
+#include <numbers>
+
+// Explicitly reference the resource object so static linking retains it.
+static void initializeFontResources() {
+    Q_INIT_RESOURCE(fonts);
+}
 
 namespace tg::app {
 
 namespace {
+
+const QRawFont& bundledFont() {
+    static const QRawFont kFont = [] {
+        initializeFontResources();
+        const int id = QFontDatabase::addApplicationFont(
+            QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf"));
+        if (id < 0) {
+            qFatal("Cannot load the bundled font");
+        }
+        QFont font(QFontDatabase::applicationFontFamilies(id).first());
+        // A fixed, large size keeps the outline metrics independent of zoom.
+        constexpr int kReferencePixelSize = 1024;
+        font.setPixelSize(kReferencePixelSize);
+        font.setKerning(false);
+        font.setHintingPreference(QFont::PreferNoHinting);
+        font.setStyleStrategy(QFont::NoFontMerging);
+        const QRawFont raw = QRawFont::fromFont(font);
+        if (!raw.isValid() || raw.capHeight() <= 0.0) {
+            qFatal("Cannot obtain the bundled font outlines");
+        }
+        return raw;
+    }();
+    return kFont;
+}
 
 QColor toQColor(const render::Color& color) {
     return {color.r, color.g, color.b, color.a};
@@ -50,6 +89,48 @@ void QtPainter::fillPolygon(std::span<const core::Vec2> points, const render::Co
     m_painter.setBrush(QBrush(toQColor(color), Qt::SolidPattern));
     m_painter.setRenderHint(QPainter::Antialiasing, true);
     m_painter.drawPolygon(m_buffer);
+    m_painter.restore();
+}
+
+void QtPainter::drawText(const render::TextRun& run) {
+    if (run.text.empty() || !std::isfinite(run.capHeightPx) || run.capHeightPx <= 0.0 ||
+        !std::isfinite(run.widthFactor) || run.widthFactor <= 0.0 || !std::isfinite(run.angle) ||
+        !std::isfinite(run.origin.x) || !std::isfinite(run.origin.y)) {
+        return;
+    }
+    m_painter.save();
+    m_painter.translate(run.origin.x, run.origin.y);
+    // QPainter's positive rotation is clockwise because screen Y points down.
+    m_painter.rotate(-run.angle * 180.0 / std::numbers::pi);
+    constexpr double kOutlineOnlyHeightPx = 2.0;
+    if (run.capHeightPx < kOutlineOnlyHeightPx) {
+        const auto& metrics = core::fontMetrics();
+        m_painter.setBrush(Qt::NoBrush);
+        m_painter.drawRect(QRectF(0.0, -metrics.ascent * run.capHeightPx,
+                                  core::textWidth(run.text) * run.capHeightPx * run.widthFactor,
+                                  (metrics.ascent - metrics.descent) * run.capHeightPx));
+    } else {
+        const auto& font = bundledFont();
+        QList<quint32> indexes;
+        QList<QPointF> positions;
+        double advance = 0.0;
+        for (const char32_t code : run.text) {
+            const char32_t character = core::fontCharacter(code);
+            const auto glyphs = font.glyphIndexesForString(QString::fromUcs4(&character, 1));
+            // A raw glyph run never asks Qt for a system fallback or shaping.
+            indexes.append(glyphs.isEmpty() ? 0U : glyphs.first());
+            positions.append(QPointF(advance * font.capHeight(), 0.0));
+            advance += core::advanceWidth(code);
+        }
+        QGlyphRun glyphRun;
+        glyphRun.setRawFont(font);
+        glyphRun.setGlyphIndexes(indexes);
+        glyphRun.setPositions(positions);
+        const double scale = run.capHeightPx / font.capHeight();
+        m_painter.scale(scale * run.widthFactor, scale);
+        m_painter.setRenderHint(QPainter::TextAntialiasing, true);
+        m_painter.drawGlyphRun(QPointF(0.0, 0.0), glyphRun);
+    }
     m_painter.restore();
 }
 
