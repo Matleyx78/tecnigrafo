@@ -92,6 +92,7 @@ private:
     QAction* m_endpointAction{nullptr};
     QAction* m_midpointAction{nullptr};
     QAction* m_centerAction{nullptr};
+    QAction* m_insertionAction{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

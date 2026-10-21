@@ -155,7 +155,7 @@ TEST_F(SelectionTest, ClickAddsAndShiftClickRemovesTheSampleEntity) {
     click(kOutline, Qt::ShiftModifier);
     EXPECT_TRUE(selection().isEmpty());
     EXPECT_FALSE(eraseAction()->isEnabled());
-    EXPECT_EQ(document().entityCount(), 6U);
+    EXPECT_EQ(document().entityCount(), 10U);
 }
 
 TEST_F(SelectionTest, WindowIncludesOnlyWholeEntitiesAndCrossingIncludesTouchedEntities) {
@@ -212,7 +212,7 @@ TEST_F(SelectionTest, DeleteFromViewAndEmptyCommandLineErasesAndUndoRestoresTheS
     for (QWidget* target : {static_cast<QWidget*>(view()), static_cast<QWidget*>(input())}) {
         click(kOutline);
         shortcut(target, Qt::Key_Delete);
-        EXPECT_EQ(document().entityCount(), 5U);
+        EXPECT_EQ(document().entityCount(), 9U);
         EXPECT_EQ(document().find(original.id), nullptr);
         EXPECT_TRUE(selection().isEmpty());
         EXPECT_FALSE(eraseAction()->isEnabled());
@@ -220,7 +220,7 @@ TEST_F(SelectionTest, DeleteFromViewAndEmptyCommandLineErasesAndUndoRestoresTheS
         shortcut(input(), Qt::Key_Z, Qt::ControlModifier);
         ASSERT_NE(document().find(original.id), nullptr);
         EXPECT_EQ(*document().find(original.id), original);
-        EXPECT_EQ(document().entityCount(), 6U);
+        EXPECT_EQ(document().entityCount(), 10U);
     }
 }
 
@@ -230,12 +230,12 @@ TEST_F(SelectionTest, RedoDeletesTheEntitiesRestoredByUndo) {
     click(kOutline);
     click(kSlot);
     shortcut(view(), Qt::Key_Delete);
-    EXPECT_EQ(document().entityCount(), 4U);
+    EXPECT_EQ(document().entityCount(), 8U);
     shortcut(input(), Qt::Key_Z, Qt::ControlModifier);
     EXPECT_NE(document().find(outline), nullptr);
     EXPECT_NE(document().find(slot), nullptr);
     shortcut(input(), Qt::Key_Y, Qt::ControlModifier);
-    EXPECT_EQ(document().entityCount(), 4U);
+    EXPECT_EQ(document().entityCount(), 8U);
     EXPECT_EQ(document().find(outline), nullptr);
     EXPECT_EQ(document().find(slot), nullptr);
 }
@@ -243,10 +243,10 @@ TEST_F(SelectionTest, RedoDeletesTheEntitiesRestoredByUndo) {
 TEST_F(SelectionTest, EraseMenuAndTypedCommandConsumePreselection) {
     click(kOutline);
     eraseAction()->trigger();
-    EXPECT_EQ(document().entityCount(), 5U);
+    EXPECT_EQ(document().entityCount(), 9U);
     click(kSlot);
     enter("ERASE");
-    EXPECT_EQ(document().entityCount(), 4U);
+    EXPECT_EQ(document().entityCount(), 8U);
     EXPECT_EQ(prompt(), "Command:");
     EXPECT_FALSE(eraseAction()->isEnabled());
 }
@@ -260,9 +260,9 @@ TEST_F(SelectionTest, EFromViewAsksForSelectionAndEnterErasesIt) {
     click(kHole);
     EXPECT_TRUE(selection().contains(hole));
     EXPECT_FALSE(eraseAction()->isEnabled());
-    EXPECT_EQ(document().entityCount(), 6U);
+    EXPECT_EQ(document().entityCount(), 10U);
     events::press(view(), Qt::Key_Return);
-    EXPECT_EQ(document().entityCount(), 5U);
+    EXPECT_EQ(document().entityCount(), 9U);
     EXPECT_EQ(document().find(hole), nullptr);
     EXPECT_EQ(prompt(), "Command:");
     EXPECT_TRUE(selection().isEmpty());
@@ -288,26 +288,26 @@ TEST_F(SelectionTest, DeleteEditsNonemptyInputWithoutErasingTheDrawing) {
     input()->setCursorPosition(1);
     shortcut(input(), Qt::Key_Delete);
     EXPECT_EQ(input()->text().toStdString(), "ac");
-    EXPECT_EQ(document().entityCount(), 6U);
+    EXPECT_EQ(document().entityCount(), 10U);
     EXPECT_EQ(selection().size(), 1U);
     EXPECT_TRUE(eraseAction()->isEnabled());
     input()->selectAll();
     shortcut(input(), Qt::Key_Delete);
     EXPECT_TRUE(input()->text().isEmpty());
-    EXPECT_EQ(document().entityCount(), 6U);
+    EXPECT_EQ(document().entityCount(), 10U);
     shortcut(input(), Qt::Key_Delete);
-    EXPECT_EQ(document().entityCount(), 5U);
+    EXPECT_EQ(document().entityCount(), 9U);
 }
 
 TEST_F(SelectionTest, DeleteDoesNothingWithoutSelectionOrDuringAnActiveCommand) {
     shortcut(input(), Qt::Key_Delete);
     EXPECT_EQ(prompt(), "Command:");
-    EXPECT_EQ(document().entityCount(), 6U);
+    EXPECT_EQ(document().entityCount(), 10U);
     enter("E");
     click(kOutline);
     shortcut(input(), Qt::Key_Delete);
     EXPECT_EQ(prompt(), "Select objects:");
-    EXPECT_EQ(document().entityCount(), 6U);
+    EXPECT_EQ(document().entityCount(), 10U);
     escape(input());
     EXPECT_TRUE(selection().isEmpty());
     EXPECT_FALSE(eraseAction()->isEnabled());
