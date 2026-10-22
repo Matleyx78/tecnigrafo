@@ -107,13 +107,12 @@ gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
 Se i log non sono raggiungibili (per esempio il proxy blocca il servizio che li
-ospita), leggi le annotazioni dei check-run dall'API. L'ID del check-run è
-nell'URL `check_run_url` del job: non è l'ID del job.
+ospita), leggi le annotazioni dei check-run dall'API usando l'ID del job.
 
 ```sh
 gh api repos/Matleyx78/tecnigrafo/actions/runs/<id>/jobs \
-  --jq '.jobs[] | select(.conclusion=="failure") | .check_run_url'
-gh api repos/Matleyx78/tecnigrafo/check-runs/<id-del-check-run>/annotations \
+  --jq '.jobs[] | select(.conclusion=="failure") | .id'
+gh api repos/Matleyx78/tecnigrafo/check-runs/<id del job>/annotations \
   --paginate --jq '.[] | "\(.path):\(.start_line) \(.message)"'
 ```
 
