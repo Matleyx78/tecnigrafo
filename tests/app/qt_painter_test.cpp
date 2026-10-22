@@ -151,6 +151,68 @@ TEST(QtPainterText, TinyTextUsesOnlyItsRotatedBoundingRectangle) {
     EXPECT_EQ(renderText(run), expected);
 }
 
+TEST(QtPainterText, MirroringUsesTheBaselineOrigin) {
+    const render::TextRun normal{U"H", {500.0, 300.0}, 100.0};
+    const auto before = inkBounds(renderText(normal));
+    auto backward = normal;
+    backward.backward = true;
+    const auto left = inkBounds(renderText(backward));
+    ASSERT_FALSE(left.isEmpty());
+    EXPECT_LT(left.right(), normal.origin.x);
+    EXPECT_NEAR(left.left(), 2.0 * normal.origin.x - before.right() - 1.0, 1.0);
+    auto upsideDown = normal;
+    upsideDown.upsideDown = true;
+    const auto below = inkBounds(renderText(upsideDown));
+    ASSERT_FALSE(below.isEmpty());
+    EXPECT_GE(below.top(), normal.origin.y);
+    EXPECT_NEAR(below.bottom(), 2.0 * normal.origin.y - before.top() - 1.0, 1.0);
+}
+
+int firstInkOnRow(const QImage& image, int row) {
+    for (int x = 0; x < image.width(); ++x) {
+        if (qAlpha(image.pixel(x, row)) >= 128) {
+            return x;
+        }
+    }
+    return -1;
+}
+
+TEST(QtPainterText, ObliqueShearsTheCapitalTopRightIndependentOfWidthFactor) {
+    for (const double width : {0.6, 1.0, 1.7}) {
+        const render::TextRun normal{U"H", {500.0, 300.0}, 100.0, 0.0, width};
+        const auto before = renderText(normal);
+        auto oblique = normal;
+        oblique.oblique = std::numbers::pi / 6.0;
+        const auto after = renderText(oblique);
+        const int row = inkBounds(before).top();
+        const int oldX = firstInkOnRow(before, row);
+        const int newX = firstInkOnRow(after, row);
+        ASSERT_GE(oldX, 0);
+        ASSERT_GE(newX, 0);
+        EXPECT_NEAR(newX - oldX, std::tan(oblique.oblique) * normal.capHeightPx, 1.0);
+    }
+}
+
+TEST(QtPainterText, TinyTransformedTextUsesTheSameTransformForItsOutline) {
+    const render::TextRun run{
+        U"HHHHHHHHHHHHHHHHHHHH", {500.0, 300.0}, 1.5, 0.4, 2.0, 0.5, true, true};
+    QImage expected(1200, 600, QImage::Format_ARGB32_Premultiplied);
+    expected.fill(Qt::transparent);
+    QPainter painter(&expected);
+    QtPainter backend(painter);
+    backend.setPen({40, 120, 200, 255}, 0.0, render::LineStyle::Solid);
+    const auto& metrics = core::fontMetrics();
+    painter.translate(run.origin.x, run.origin.y);
+    painter.rotate(-run.angle * 180.0 / std::numbers::pi);
+    painter.scale(-1.0, -1.0);
+    painter.shear(-std::tan(run.oblique), 0.0);
+    painter.drawRect(QRectF(0.0, -metrics.ascent * run.capHeightPx,
+                            core::textWidth(run.text) * run.capHeightPx * run.widthFactor,
+                            (metrics.ascent - metrics.descent) * run.capHeightPx));
+    painter.end();
+    EXPECT_EQ(renderText(run), expected);
+}
+
 TEST(QtPainterText, RestoresPainterStateAndUsesCurrentPenColour) {
     QImage image(1200, 600, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
@@ -194,6 +256,7 @@ TEST(QtPainterText, EmptyOrInvalidRunsDrawNothing) {
         EXPECT_EQ(renderText({U"H", {50.0, 250.0}, height}), empty);
     }
     EXPECT_EQ(renderText({U"H", {50.0, 250.0}, 100.0, nan}), empty);
+    EXPECT_EQ(renderText({U"H", {50.0, 250.0}, 100.0, 0.0, 1.0, nan}), empty);
     EXPECT_EQ(renderText({U"H", {50.0, 250.0}, 100.0, 0.0, 0.0}), empty);
 }
 

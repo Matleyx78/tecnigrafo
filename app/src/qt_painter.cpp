@@ -96,13 +96,18 @@ void QtPainter::fillPolygon(std::span<const core::Vec2> points, const render::Co
 void QtPainter::drawText(const render::TextRun& run) {
     if (run.text.empty() || !std::isfinite(run.capHeightPx) || run.capHeightPx <= 0.0 ||
         !std::isfinite(run.widthFactor) || run.widthFactor <= 0.0 || !std::isfinite(run.angle) ||
-        !std::isfinite(run.origin.x) || !std::isfinite(run.origin.y)) {
+        !std::isfinite(run.oblique) || !std::isfinite(run.origin.x) ||
+        !std::isfinite(run.origin.y)) {
         return;
     }
     m_painter.save();
     m_painter.translate(run.origin.x, run.origin.y);
     // QPainter's positive rotation is clockwise because screen Y points down.
     m_painter.rotate(-run.angle * 180.0 / std::numbers::pi);
+    m_painter.scale(run.backward ? -1.0 : 1.0, run.upsideDown ? -1.0 : 1.0);
+    // In text coordinates Y points up; screen Y reverses the shear sign.
+    // Apply shear before width scaling so it depends on height alone.
+    m_painter.shear(-std::tan(run.oblique), 0.0);
     constexpr double kOutlineOnlyHeightPx = 2.0;
     if (run.capHeightPx < kOutlineOnlyHeightPx) {
         const auto& metrics = core::fontMetrics();
