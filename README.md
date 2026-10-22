@@ -9,26 +9,29 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.3.1 — selezione, cancellazione, snap e orto.** Si disegnano
-> polilinee con `PLINE`, si selezionano e cancellano entità con `ERASE`, si
-> agganciano punti notevoli e si usa l'orto. Le modifiche si possono annullare e
-> ripetere. Il salvataggio dei file arriverà con la tappa 0.5. Le
-> [note della 0.3](docs/rilasci/0.3.md) riportano novità e limiti noti; quelle
-> della [0.3.1](docs/rilasci/0.3.1.md) la correzione dell'orto. Tappa aperta:
-> [0.4](docs/tappe/0.4-entita-base.md), entità base (linea, cerchio, arco, testo).
+> Stato: **versione 0.4.0 — entità base: linea, cerchio, arco, testo.** Si
+> disegnano linee con `LINE`, polilinee con archi con `PLINE`, cerchi con
+> `CIRCLE`, archi con `ARC` e testi con `TEXT`. Si selezionano e cancellano
+> entità con `ERASE`, si agganciano punti notevoli (estremo, medio, centro,
+> inserimento) e si usa l'orto. Le modifiche si possono annullare e ripetere. Il
+> salvataggio dei file arriverà con la tappa 0.5. Le
+> [note della 0.4](docs/rilasci/0.4.md) riportano novità e limiti noti. Prossima
+> tappa: [0.5](docs/tappe/0.5-file-e-dxf.md), file: formato nativo e DXF.
 
 ## Disegnare
 
-Scrivi `pl` e premi `Invio`, poi indica i punti con il clic sinistro o scrivendo
-le coordinate (`100,50`, `@20,0`, `@50<90`). `Invio` conclude la polilinea, `c`
-la chiude, `Esc` annulla il comando. Il funzionamento completo è nel
+Scrivi `l` per linee, `pl` per polilinee, `c` per cerchi, `a` per archi o `dt`
+per testi e premi `Invio`, poi indica i punti con il clic sinistro o scrivendo
+le coordinate (`100,50`, `@20,0`, `@50<90`). `Invio` conclude il comando, `c`
+chiude linee e polilinee, `Esc` annulla il comando conservando i tratti già
+completati. Il funzionamento completo è nel
 [manuale dei comandi](docs/manuale/comandi.md).
 
 Per cancellare, scegli le entità sul bordo oppure con un rettangolo a due clic,
 poi premi `Canc`; oppure scrivi `e`, scegli le entità e conferma con `Invio`.
 `F3` attiva o spegne lo snap a oggetto, `F8` l'orto; trovi le stesse funzioni nel
 menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo snap
-è acceso con estremo, punto medio e centro, mentre l'orto è spento.
+è acceso con estremo, punto medio, centro e inserimento, mentre l'orto è spento.
 
 | Azione | Come |
 |---|---|

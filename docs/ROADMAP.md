@@ -14,7 +14,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 1 | 0.1 | Fondamenta: architettura, CI, polilinee, vista navigabile | **chiusa** | [0.1](tappe/0.1-fondamenta.md) |
 | 2 | 0.2 | Riga di comando, primo comando di disegno, annullamento | **chiusa** | [0.2](tappe/0.2-comandi-e-annullamento.md) |
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
-| 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **aperta** | [0.4](tappe/0.4-entita-base.md) |
+| 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | in programma | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
@@ -161,3 +161,14 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   ([AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6). Le prove locali si
   fanno con `scripts/controlla.sh`, gli stessi passi della CI in un comando, con
   il log completo di ogni passo salvato; la CI non cambia. Vale dalla tappa 0.5.
+- **2026-10-22 — Valutazione della modalità di controllo (ADR 0011, punto 13).**
+  La tappa 0.4 ha fatto da banco di prova per la modalità di controllo a due
+  livelli. Il metodo si è dimostrato efficace: la presenza di casi di verifica
+  indipendenti scritti prima del codice ha impedito regressioni, ha reso
+  oggettivo il criterio di "fatto" e ha permesso la collaborazione ordinata di
+  agenti diversi (Claude, Codex, Gemini) su rami paralleli. I casi contestati
+  (in R10, R14, R15, R13) hanno confermato che i riferimenti agiscono da
+  specifica eseguibile e si correggono indipendentemente dal codice. Dalla tappa
+  0.5 il metodo resta la regola di lavoro ordinaria, con i miglioramenti già
+  deliberati (pacchetti più leggeri a schede autosufficienti, fasce di modello
+  e lavoro a lotti per i riferimenti).
