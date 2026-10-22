@@ -150,10 +150,9 @@ TEST(Document, RemoveReturnsTheRecordAndKeepsOrder) {
     const EntityId second = document.add(segment({0.0, 0.0}, {2.0, 0.0}));
     const EntityId third = document.add(segment({0.0, 0.0}, {3.0, 0.0}));
 
-    const std::optional<EntityRecord> removed = document.remove(second);
-    const std::optional<EntityRecord> expected =
-        EntityRecord{second, Entity{segment({0.0, 0.0}, {2.0, 0.0})}};
-    EXPECT_EQ(removed, expected);
+    const EntityRecord removed = removeOrFail(document, second);
+    EXPECT_EQ(removed.id, second);
+    EXPECT_EQ(removed.entity, Entity{segment({0.0, 0.0}, {2.0, 0.0})});
 
     EXPECT_EQ(document.find(second), nullptr);
     EXPECT_EQ(idsOf(document), (std::vector<EntityId>{first, third}));
@@ -168,7 +167,7 @@ TEST(Document, RemovingAMissingIdChangesNothing) {
     EXPECT_EQ(document.entityCount(), 1U);
 }
 
-TEST(Document, RestoreKeepsTheOriginalIdAndAppends) {
+TEST(Document, RestoreKeepsTheOriginalIdAndPlace) {
     Document document;
     const EntityId first = document.add(segment({0.0, 0.0}, {1.0, 0.0}));
     const EntityId second = document.add(segment({0.0, 0.0}, {2.0, 0.0}));
@@ -178,7 +177,133 @@ TEST(Document, RestoreKeepsTheOriginalIdAndAppends) {
     const EntityRecord* restored = document.find(first);
     ASSERT_NE(restored, nullptr);
     EXPECT_EQ(restored->entity, Entity{segment({0.0, 0.0}, {1.0, 0.0})});
-    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{second, first}));
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{first, second}));
+    expectEveryEntityFound(document);
+}
+
+TEST(Document, AddGivesIncreasingOrderKeys) {
+    Document document;
+    const EntityId first = document.add(segment({0.0, 0.0}, {1.0, 0.0}));
+    const EntityId second = document.add(segment({0.0, 0.0}, {2.0, 0.0}));
+    ASSERT_NE(document.find(first), nullptr);
+    ASSERT_NE(document.find(second), nullptr);
+    EXPECT_GT(document.find(second)->order, document.find(first)->order);
+    EXPECT_TRUE(document.find(first)->extras.empty());
+}
+
+TEST(Document, InsertWithSparseHandlesThenAddTakesAHigherOne) {
+    Document document;
+    document.insert(EntityRecord{EntityId{0x2F}, segment({0.0, 0.0}, {1.0, 0.0}), {}, 1});
+    document.reserveHandle(EntityId{0x150});
+    document.insert(EntityRecord{EntityId{0x100}, segment({0.0, 0.0}, {2.0, 0.0}), {}, 2});
+    document.reserveHandle(EntityId{0x30});
+
+    EXPECT_EQ(document.nextId(), 0x151U);
+    const EntityId added = document.add(segment({0.0, 0.0}, {3.0, 0.0}));
+    EXPECT_GT(added.value, 0x150U);
+    EXPECT_NE(added.value, 0x30U);
+    EXPECT_NE(added.value, 0x150U);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{EntityId{0x2F}, EntityId{0x100}, added}));
+    EXPECT_GT(document.find(added)->order, 2U);
+    expectEveryEntityFound(document);
+}
+
+TEST(Document, AddNeverTakesAReservedHandle) {
+    Document document;
+    document.reserveHandle(EntityId{1});
+    document.reserveHandle(EntityId{2});
+    const EntityId added = document.add(segment({0.0, 0.0}, {1.0, 0.0}));
+    EXPECT_EQ(added.value, 3U);
+}
+
+TEST(Document, SetNextIdOnlyMovesForward) {
+    Document document;
+    EXPECT_EQ(document.nextId(), 1U);
+    document.setNextId(0x500);
+    EXPECT_EQ(document.nextId(), 0x500U);
+    document.setNextId(0x100);
+    EXPECT_EQ(document.nextId(), 0x500U);
+    EXPECT_EQ(document.add(segment({0.0, 0.0}, {1.0, 0.0})).value, 0x500U);
+    document.setNextId(0x10);
+    EXPECT_EQ(document.nextId(), 0x501U);
+}
+
+TEST(Document, EntitiesComeOutInKeyOrder) {
+    Document document;
+    document.insert(EntityRecord{EntityId{1}, segment({0.0, 0.0}, {1.0, 0.0}), {}, 10});
+    document.insert(EntityRecord{EntityId{3}, segment({0.0, 0.0}, {3.0, 0.0}), {}, 30});
+    document.insert(EntityRecord{EntityId{2}, segment({0.0, 0.0}, {2.0, 0.0}), {}, 20});
+    const std::vector<EntityId> expected{EntityId{1}, EntityId{2}, EntityId{3}};
+    EXPECT_EQ(idsOf(document), expected);
+    expectEveryEntityFound(document);
+
+    document.restore(removeOrFail(document, EntityId{2}));
+    EXPECT_EQ(idsOf(document), expected);
+    EXPECT_EQ(document.find(EntityId{2})->order, 20U);
+    expectEveryEntityFound(document);
+
+    // The next entity goes after the highest key, whatever its handle.
+    const EntityId added = document.add(segment({0.0, 0.0}, {4.0, 0.0}));
+    EXPECT_EQ(idsOf(document).back(), added);
+    EXPECT_GT(document.find(added)->order, 30U);
+}
+
+TEST(Document, RemovedFromTheMiddleComesBackInTheMiddleAfterOtherChanges) {
+    Document document;
+    std::vector<EntityId> ids;
+    for (int i = 0; i < 6; ++i) {
+        const auto x = static_cast<double>(i);
+        ids.push_back(document.add(segment({x, 0.0}, {x, 1.0})));
+    }
+    EntityRecord second = removeOrFail(document, ids[1]);
+    EntityRecord fourth = removeOrFail(document, ids[3]);
+    const EntityId added = document.add(segment({9.0, 0.0}, {9.0, 1.0}));
+
+    document.restore(std::move(fourth));
+    document.restore(std::move(second));
+    EXPECT_EQ(idsOf(document),
+              (std::vector<EntityId>{ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], added}));
+    expectEveryEntityFound(document);
+}
+
+TEST(Document, ExtrasAndOrderSurviveRemoveAndRestore) {
+    EntityExtras extras;
+    extras.beforeEntity = {{102, "{ACAD_REACTORS"}, {330, "1F"}, {102, "}"}};
+    extras.common = {{8, "Walls"}, {62, "1"}};
+    extras.specific = {{100, "AcDbLine"}};
+    extras.placement = {{30, "5.0"}, {39, "2.5"}};
+    extras.extended = {{1001, "ACAD"}, {1000, "note"}};
+    extras.flippedExtrusion = true;
+    const EntityRecord original{EntityId{0x2A}, segment({0.0, 0.0}, {1.0, 1.0}), extras, 7};
+
+    Document document;
+    document.insert(original);
+    ASSERT_NE(document.find(EntityId{0x2A}), nullptr);
+    EXPECT_EQ(*document.find(EntityId{0x2A}), original);
+
+    EntityRecord removed = removeOrFail(document, EntityId{0x2A});
+    EXPECT_EQ(removed, original);
+    document.restore(std::move(removed));
+    ASSERT_NE(document.find(EntityId{0x2A}), nullptr);
+    EXPECT_EQ(*document.find(EntityId{0x2A}), original);
+}
+
+TEST(Document, UnitsAreMillimetresByDefault) {
+    Document document;
+    EXPECT_EQ(document.units(), 4);
+    document.setUnits(1);
+    EXPECT_EQ(document.units(), 1);
+    document.setUnits(0);
+    EXPECT_EQ(document.units(), 0);
+    document.setUnits(24);
+    EXPECT_EQ(document.units(), 24);
+}
+
+TEST(Document, ANewDocumentHasNoRawData) {
+    const Document document;
+    EXPECT_EQ(document.raw(), RawDrawing{});
+    EXPECT_TRUE(document.rawEntities().empty());
+    EXPECT_EQ(document.nextId(), 1U);
 }
 
 TEST(Document, RemovedIdsAreNeverReassigned) {

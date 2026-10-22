@@ -21,9 +21,16 @@ namespace tg::core {
 /// where theta is the included angle of the arc. 0 means a straight segment,
 /// a positive value an arc travelled counter-clockwise, a negative value a
 /// clockwise arc. A bulge of 1 is a half circle.
+///
+/// `startWidth` and `endWidth` are the widths at the start and at the end of
+/// that segment (DXF groups 40 and 41). They are kept and written back, but
+/// not drawn yet, and they change neither length nor bounding box
+/// (docs/adr/0018, consequences).
 struct PolylineVertex {
     Vec2 position;
     double bulge{0.0};
+    double startWidth{0.0};
+    double endWidth{0.0};
 
     friend constexpr bool operator==(const PolylineVertex&, const PolylineVertex&) = default;
 };
@@ -64,6 +71,13 @@ public:
 
     void setClosed(bool closed) { m_closed = closed; }
 
+    /// Constant width of every segment (DXF group 43), 0 by default. Kept and
+    /// written back, not drawn yet; it changes neither length nor bounding
+    /// box (docs/adr/0018, consequences).
+    [[nodiscard]] double constantWidth() const { return m_constantWidth; }
+
+    void setConstantWidth(double width) { m_constantWidth = width; }
+
     /// Number of drawable segments (a closed polyline has one more).
     [[nodiscard]] std::size_t segmentCount() const;
 
@@ -82,6 +96,7 @@ public:
 private:
     std::vector<PolylineVertex> m_vertices;
     bool m_closed{false};
+    double m_constantWidth{0.0};
 };
 
 }  // namespace tg::core

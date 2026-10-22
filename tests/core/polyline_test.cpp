@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <vector>
 
 namespace tg::core {
 namespace {
@@ -109,6 +110,56 @@ TEST(Polyline, BoundingBoxIncludesArcExtremes) {
     expectNear(box.min(), {0.0, -1.0});
     expectNear(box.max(), {2.0, 1.0});
     EXPECT_NEAR(stadium.length(), 2.0 * kPi, kEps);
+}
+
+TEST(Polyline, WidthsAreZeroByDefault) {
+    const Polyline polyline = openSquareOfSide(1.0);
+    EXPECT_EQ(polyline.constantWidth(), 0.0);
+    for (const PolylineVertex& vertex : polyline.vertices()) {
+        EXPECT_EQ(vertex.startWidth, 0.0);
+        EXPECT_EQ(vertex.endWidth, 0.0);
+    }
+}
+
+TEST(Polyline, WidthsTakePartInEqualityAndCopies) {
+    const std::vector<PolylineVertex> vertices{{{0.0, 0.0}, 0.5, 1.0, 2.0},
+                                               {{4.0, 0.0}, 0.0, 2.0, 0.0}};
+    Polyline wide(vertices);
+    wide.setConstantWidth(0.25);
+    EXPECT_EQ(wide.constantWidth(), 0.25);
+    EXPECT_EQ(wide.vertices()[0].startWidth, 1.0);
+    EXPECT_EQ(wide.vertices()[0].endWidth, 2.0);
+
+    const Polyline copy = wide;
+    EXPECT_EQ(copy, wide);
+
+    Polyline otherConstant = wide;
+    otherConstant.setConstantWidth(0.5);
+    EXPECT_NE(otherConstant, wide);
+
+    std::vector<PolylineVertex> otherVertices = vertices;
+    otherVertices[1].endWidth = 3.0;
+    Polyline otherVertex(otherVertices);
+    otherVertex.setConstantWidth(0.25);
+    EXPECT_NE(otherVertex, wide);
+}
+
+TEST(Polyline, WidthsChangeNeitherLengthNorBoundingBox) {
+    const std::vector<PolylineVertex> thin{
+        {{0.0, 0.0}, 1.0}, {{10.0, 0.0}, 0.0}, {{10.0, 5.0}, 0.0}};
+    std::vector<PolylineVertex> thick = thin;
+    for (PolylineVertex& vertex : thick) {
+        vertex.startWidth = 3.0;
+        vertex.endWidth = 7.0;
+    }
+    const Polyline plain(thin);
+    Polyline wide(thick);
+    wide.setConstantWidth(4.0);
+
+    EXPECT_EQ(wide.length(), plain.length());
+    EXPECT_EQ(wide.boundingBox().min(), plain.boundingBox().min());
+    EXPECT_EQ(wide.boundingBox().max(), plain.boundingBox().max());
+    EXPECT_EQ(wide.tessellate(0.01), plain.tessellate(0.01));
 }
 
 }  // namespace
