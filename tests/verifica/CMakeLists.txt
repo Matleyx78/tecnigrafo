@@ -73,7 +73,8 @@ endif()
 
 foreach(name IN LISTS TG_VERIFICA_NAMES)
     set(arguments check "${TG_VERIFICA_CASES}/${name}"
-        --output "${CMAKE_CURRENT_BINARY_DIR}/casi/${name}")
+        --output "${CMAKE_CURRENT_BINARY_DIR}/casi/${name}"
+        --sources "${TG_VERIFICA_SOURCES_DIR}")
     if(name IN_LIST TG_VERIFICA_PENDING_NAMES)
         list(APPEND arguments --pending)
     endif()

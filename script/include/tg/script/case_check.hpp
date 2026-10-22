@@ -25,13 +25,16 @@ inline constexpr const char* kObtainedReport = "ottenuto.txt";
 /// Name of the question file with the obtained answers that `check` writes.
 inline constexpr const char* kObtainedAnswers = "ottenuto.tgq";
 
-/// `tecnigrafo-script run <script.tgs> [--report <file>]`: runs the script
-/// at level 1 and writes the report to `report`, or to `out` without one.
-/// Errors go to `err`. Returns kExitPassed, kExitInvalid, or
+/// `tecnigrafo-script run <script.tgs> [--report <file>] [--sources <folder>]`:
+/// runs the script at level 1 and writes the report to `report`, or to
+/// `out` without one. Errors go to `err`. The script reads and writes files
+/// in the current folder, and reads "@sources/<name>" in `sources`
+/// (docs/verifica/script.md, "File"). Returns kExitPassed, kExitInvalid, or
 /// kExitNeedsLevel2 for a script that says "!level 2".
 [[nodiscard]] int runScriptFile(const std::filesystem::path& script,
                                 const std::optional<std::filesystem::path>& report,
-                                std::ostream& out, std::ostream& err);
+                                std::ostream& out, std::ostream& err,
+                                const std::optional<std::filesystem::path>& sources = std::nullopt);
 
 struct CheckOptions {
     /// The case is listed in tests/verifica/in-attesa.txt: a case not
@@ -39,15 +42,21 @@ struct CheckOptions {
     /// kExitFailed, asking to remove it from the list.
     bool pending{false};
     /// Where the obtained report or answers are written; created if needed.
+    /// A script reads and writes its files in the subfolder "file"
+    /// (kCaseFilesFolder), prepared by prepareCaseFiles() (case_files.hpp).
     std::filesystem::path output{"."};
 };
 
-/// `tecnigrafo-script check <case folder> [--pending] [--output <folder>]`:
-/// runs the case (script.tgs with atteso.txt, or domande.tgq), compares,
-/// writes the differences to `out` and the obtained file to the output
-/// folder. Returns kExitPassed, kExitFailed, kExitInvalid or
+/// `tecnigrafo-script check <case folder> [--pending] [--output <folder>]
+/// [--sources <folder>]`: runs the case (script.tgs with atteso.txt, or
+/// domande.tgq), compares, writes the differences to `out` and the
+/// obtained file to the output folder. The questions read "file=<name>"
+/// in the case folder. `sources` is the folder of the pinned public files
+/// of tests/verifica/sorgenti.json, read as "@sources/<name>" and
+/// "source=<name>"; without it they are an error. Returns kExitPassed, kExitFailed, kExitInvalid or
 /// kExitNeedsLevel2.
 [[nodiscard]] int checkCase(const std::filesystem::path& folder, const CheckOptions& options,
-                            std::ostream& out);
+                            std::ostream& out,
+                            const std::optional<std::filesystem::path>& sources = std::nullopt);
 
 }  // namespace tg::script

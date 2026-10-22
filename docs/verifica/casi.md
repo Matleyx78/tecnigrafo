@@ -23,14 +23,54 @@ Nel repository stanno solo i file creati da noi. I file presi da raccolte
 pubbliche non si copiano: si elencano in `tests/verifica/sorgenti.json` (vedi
 sotto).
 
+### File del caso
+
+Dalla tappa 0.5 un caso può contenere, accanto a `script.tgs` o a
+`domande.tgq`, dei **file creati da noi** che lo script apre o le domande
+leggono: per esempio un DXF scritto a mano, anche danneggiato apposta, o un
+`.cadx` costruito con lo strumento `zip`. Anche in sottocartelle (`dati/`).
+Lo script o le domande dicono, con un commento, come è fatto ogni file
+creato a mano e perché.
+
+- Le **domande** li leggono con `file=<nome>`, direttamente dalla cartella
+  del caso, in sola lettura ([domande.md](domande.md#file)).
+- Gli **script** li aprono con un nome relativo
+  ([script.md](script.md#file)). Prima di eseguire lo script, `check`
+  svuota la cartella `file/` dentro quella di `--output` e ci copia tutto il
+  contenuto del caso tranne `script.tgs` e i file `atteso*`: lo script legge
+  e scrive lì, sulle copie. Così un caso non cambia mai il repository, e un
+  file salvato da un'esecuzione precedente non cambia la successiva. La CI
+  allega la cartella di uscita, con i file scritti dagli script, agli
+  artefatti.
+- I file pubblici di `sorgenti.json` si leggono con `@sources/<nome>` negli
+  script e con `source=<nome>` nelle domande, dalla cartella di `--sources`.
+
+### Casi controllati dall'oracolo
+
+Un caso di domande i cui valori attesi vengono da ezdxf
+([ADR 0020](../adr/0020-fuzzing-e-oracolo-ezdxf.md), punto 2) lo dichiara
+nella **prima riga**:
+
+```
+; oracle: ezdxf
+D = DXF source=librecad-sample
+? count D -> ARC 2; LINE 12
+```
+
+La riga è un commento per `tecnigrafo-script`. Il passo `Oracolo ezdxf`
+della CI (pacchetto P9) controlla che le risposte scritte nel caso coincidano
+con quelle di ezdxf, con le stesse regole di confronto; le domande che ezdxf
+non sa dare (per esempio `roundtrip`) si saltano.
+
 ## Eseguire un caso
 
 ```sh
 cmake --preset ci && cmake --build --preset ci
 ctest --preset ci -L verifica                     # tutti i casi
 ctest --preset ci -R verifica/pline/              # i casi di un'area
-./build/ci/script/tecnigrafo-script check tests/verifica/casi/<area>/<nome> --output /tmp/caso
-./build/ci/script/tecnigrafo-script run <script.tgs> [--report <file>]
+./build/ci/script/tecnigrafo-script check tests/verifica/casi/<area>/<nome> --output /tmp/caso \
+    --sources build/verifica-sorgenti
+./build/ci/script/tecnigrafo-script run <script.tgs> [--report <file>] [--sources <cartella>]
 ```
 
 - `run` esegue uno script al livello 1 e scrive il rapporto (senza `--report`,
@@ -42,6 +82,12 @@ ctest --preset ci -R verifica/pline/              # i casi di un'area
   del programma al posto di quelle attese.
 - Con `--pending` il risultato si capovolge, come per i casi in attesa (vedi
   sotto).
+- `--sources <cartella>` è la cartella dei file di `sorgenti.json` già
+  scaricati e controllati (in CMake `TG_VERIFICA_SOURCES_DIR`, per difetto
+  `build<suffisso>/verifica-sorgenti`). `ctest` la passa sempre. Senza,
+  `@sources/<nome>` e `source=<nome>` sono un errore che lo dice, e un caso
+  di domande che li usa non è valido.
+- `run` legge e scrive i file dello script nella cartella corrente.
 
 Codici di uscita:
 

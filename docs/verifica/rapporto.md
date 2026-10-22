@@ -65,6 +65,9 @@ statistics:
 | `redo:` | i nomi dei passi da ripetere: l'ultimo è quello che `REDO` ripete |
 | `snap:` | `on` o `off`; se qualche modo dello snap è spento, segue `, modes off:` e i modi spenti (`on, modes off: midpoint center`) |
 | `ortho:` | `on` o `off` |
+| `drawing:` | solo per un disegno legato a un file: il nome e, con modifiche non salvate, `, modified` ([vedi sotto](#il-disegno)) |
+| `units:` | solo se diverso da 4: il valore di `INSUNITS` |
+| `unhandled:` | solo se ce ne sono: le entità non gestite, per tipo |
 | `pointer:` | l'ultimo punto del disegno in cui è stato portato il puntatore (`!move`, `!click`), o `none` |
 | `active snap:` | lo snap su cui si trova il puntatore mentre un comando chiede un punto: il tipo e il punto (`Endpoint 100,50`), o `none` |
 | `statistics:` | per ogni tipo DXF presente nel disegno, in ordine alfabetico, il tipo, uno spazio e il numero di entità (`LWPOLYLINE 2`); i tipi assenti non si scrivono |
@@ -90,6 +93,39 @@ livello 1 lo calcola il runner dei comandi dal puntatore e dalla scala di
 `!view`, esattamente come per il marcatore che il livello 2 disegna. I nomi dei
 tipi sono `Endpoint`, `Midpoint`, `Center` e, dalla tappa 0.4 (pacchetto P13),
 `Insertion`.
+
+### Il disegno
+
+Tre campi della tappa 0.5 ([ADR 0021](../adr/0021-comandi-dei-file.md),
+punto 6; [ADR 0018](../adr/0018-conservazione-dati-non-gestiti.md), punto 3).
+Come ogni campo nuovo si scrivono **solo quando sono diversi da una sessione
+nuova**, dopo `ortho:` e in quest'ordine; mancano tutti e tre nei rapporti
+della tappa 0.4, che restano validi.
+
+```
+ortho: off
+drawing: plan.dxf, modified
+units: 6
+unhandled: HATCH 2, INSERT 1
+pointer: none
+```
+
+- **`drawing:`** il nome del file del disegno, come l'ha scritto chi l'ha
+  aperto o salvato (`plan.dxf`), seguito da `, modified` se il disegno ha
+  modifiche non salvate: la pila di annullamento non è alla posizione
+  dell'ultimo salvataggio o dell'apertura, quindi annullare fino a quel
+  punto toglie `, modified`. Si
+  scrive solo per un disegno **legato a un file**, aperto o salvato almeno
+  una volta. Un disegno mai salvato (`Drawing1.cadx`, come quello di una
+  sessione nuova o dopo `NEW`) non lo scrive, anche con modifiche: ogni
+  rapporto della tappa 0.4 disegna qualcosa e cambierebbe. Un disegno
+  salvato come `Drawing1.cadx` lo scrive.
+- **`units:`** il valore di `INSUNITS` (da 0 a 24), se diverso da 4,
+  millimetri, l'unità di un disegno nuovo.
+- **`unhandled:`** le entità che il programma conserva senza gestirle (ADR
+  0018, punto 3), per tipo in ordine alfabetico, separate da `, `: il tipo,
+  uno spazio e il numero (`HATCH 2, INSERT 1`). Non stanno in `entities:`
+  né in `statistics:`, che elencano solo le entità gestite.
 
 ## Numeri
 
@@ -216,6 +252,44 @@ La trasformazione include allineamento, obliquo, specchiatura e rotazione
 lette dal file del font, con uno strumento indipendente. I numeri dell'esempio
 mostrano solo la forma, non sono misure di Liberation Sans.
 
+### Tappa 0.5: quota, spessore, estrusione e larghezze
+
+Proprietà del DXF che il modello conserva senza disegnarle
+([ADR 0018](../adr/0018-conservazione-dati-non-gestiti.md), punti 4 e 5).
+Come ogni proprietà nuova si scrivono **solo quando sono diverse dal valore
+predefinito**, in fondo alla riga prima delle derivate, nello stesso ordine
+per tutte le entità che le hanno: prima le quote, poi `thickness`, poi
+`extrusion`. Le scrivono e le leggono i pacchetti P11 e P12 della tappa 0.5;
+qui se ne fissa il formato.
+
+| Proprietà | Entità | DXF | Predefinito |
+|---|---|---|---|
+| `width` | `LWPOLYLINE`, subito dopo `closed` | 43 | 0 |
+| `start-width`, `end-width` | `LWPOLYLINE`, dopo il `vertex` (e il suo `bulge`) del segmento che parte da quel vertice | 40, 41 | 0 |
+| `start-z`, `end-z` | `LINE` | 30, 31 | 0 |
+| `z` | `CIRCLE`, `ARC`, `TEXT` | 30 | 0 |
+| `alignment-z` | `TEXT`, dopo `z` | 31 | 0 |
+| `elevation` | `LWPOLYLINE` | 38 | 0 |
+| `thickness` | tutte | 39 | 0 |
+| `extrusion` | tutte, un vettore `x,y,z` | 210/220/230 | `0,0,1` |
+
+```
+LWPOLYLINE closed=yes width=0.5 vertex=0,0 start-width=1 end-width=2 vertex=10,0 bulge=0.5 vertex=10,10 elevation=3 thickness=2
+LINE start=0,0 end=10,5 start-z=1 end-z=2
+CIRCLE center=-5,5 radius=2 z=4 extrusion=0,0,-1
+TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" z=1 alignment-z=1 thickness=0.5 ~box=…
+```
+
+- Un vettore si scrive come un punto, con tre numeri: `0,0,-1`. Lo zero di
+  una componente si scrive `0`, come ogni numero.
+- Per un'entità con estrusione `(0,0,-1)` la geometria scritta è quella nel
+  **sistema globale**, dopo la conversione dell'ADR 0018, punto 5 (per
+  esempio il centro di un cerchio con la x cambiata di segno), seguita da
+  `extrusion=0,0,-1`; le quote restano quelle del file. Un'entità con
+  un'altra estrusione non è gestita e non compare tra le entità.
+- `start-width` ed `end-width` si scrivono ciascuna solo se diversa da 0,
+  come le altre: un segmento che si allarga da 0 a 2 ha solo `end-width=2`.
+
 ### Definizioni nelle domande
 
 Nelle [domande al modello](domande.md) un'entità si scrive nello stesso
@@ -230,6 +304,10 @@ formato, con tre libertà:
   `vertical=baseline`. Le altre sono obbligatorie;
 - le proprietà derivate (`~…`) si accettano e si ignorano, così si può copiare
   una riga del rapporto.
+
+Le proprietà della [tappa 0.5](#tappa-05-quota-spessore-estrusione-e-larghezze)
+si accettano come le altre, dal pacchetto che le realizza, e si possono
+omettere: valgono i loro valori predefiniti.
 
 Un'entità scritta dal rapporto si rilegge senza perdite: i numeri hanno tutte
 le cifre che servono. Per gli angoli, convertiti tra gradi e radianti, vale la

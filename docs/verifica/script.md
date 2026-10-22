@@ -106,6 +106,48 @@ punto decimale, segno ed esponente facoltativi, nessuno spazio dentro un punto
   Le tolleranze si cambiano solo così, cioè solo da chi scrive i riferimenti
   (ADR 0011, punto 6).
 
+## File
+
+Dalla tappa 0.5 gli script aprono e salvano disegni con i comandi dei file
+(`OPEN`, `SAVEAS`…, [ADR 0021](../adr/0021-comandi-dei-file.md)), che
+chiedono il nome del file sulla riga di comando. In modalità di controllo un
+nome di file può essere solo uno di questi (ADR 0021, punto 4):
+
+- un **nome relativo** alla cartella di uscita del caso, da leggere e
+  scrivere: `plan.dxf`, `dati/plan.cadx`. Con `tecnigrafo-script check` è la
+  cartella `file/` dentro quella di `--output`, che `check` svuota e riempie
+  con una copia dei file del caso prima di ogni esecuzione
+  ([casi.md](casi.md#file-del-caso)); con `tecnigrafo-script run` è la
+  cartella corrente;
+- `@sources/<nome>`, **in sola lettura**: il file `<nome>` di
+  `tests/verifica/sorgenti.json`, già scaricato e controllato, nella cartella
+  di `--sources`. `<nome>` segue la regola dei nomi di `sorgenti.json`:
+  lettere minuscole, cifre e `-`.
+
+Ogni altro nome dà l'errore `Invalid file name.`: vuoto, assoluto (`/x`),
+con una lettera di unità (`C:x`), con `..` come componente (`../x`,
+`a/../b`), con `\` o un carattere di controllo, che inizia con `@` senza
+essere `@sources/<nome>`. Scrivere in `@sources/` dà
+`"@sources/<nome>": the files of @sources/ are read only`; leggere
+`@sources/<nome>` senza `--sources` dà
+`"@sources/<nome>": no folder of public files was given (--sources)`. Gli
+errori nominano il file come lo scrive lo script, mai le cartelle: il
+rapporto non dipende da dove gira il caso.
+
+Così uno script non legge né scrive fuori dalla sua cartella, e non cambia
+mai i file del repository: lavora su copie.
+
+```
+; apre un DXF pubblico di sorgenti.json e registra lo stato
+OPEN
+@sources/librecad-sample
+!report
+```
+
+Le domande e i messaggi dei comandi li fissano i loro pacchetti (tappa 0.5,
+P15 e P16); lo stato del disegno si legge nei campi `drawing:`, `units:` e
+`unhandled:` del [rapporto](rapporto.md#il-disegno).
+
 ## Errori
 
 Uno script con una riga che non rispetta questa specifica non è un caso valido:

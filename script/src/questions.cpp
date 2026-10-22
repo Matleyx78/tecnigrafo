@@ -106,7 +106,7 @@ bool answerMatches(AnswerShape shape, std::string_view expected, std::string_vie
 /// Reads a whole .tgq file, line by line.
 class QuestionFile {
 public:
-    QuestionFile() : m_editor(m_document) {}
+    explicit QuestionFile(io::FileAccess* access) : m_editor(m_document), m_access(access) {}
 
     QuestionFile(const QuestionFile&) = delete;
     QuestionFile& operator=(const QuestionFile&) = delete;
@@ -161,11 +161,18 @@ private:
             return error("invalid name " + quoted(name) +
                          ": a letter or _, then letters, digits and _; not 'none'");
         }
-        if (std::ranges::find(m_names, name) != m_names.end()) {
+        if (std::ranges::find(m_names, name) != m_names.end() || m_files.contains(name)) {
             return error("the name " + quoted(name) + " is already defined");
         }
-        std::variant<core::Entity, EntityError> entity =
-            readEntity(detail::trim(text.substr(equals + 1)));
+        const std::string_view definition = detail::trim(text.substr(equals + 1));
+        if (auto file = detail::readFileDefinition(definition, m_access)) {
+            if (auto* failure = std::get_if<detail::FileDefinitionError>(&*file)) {
+                return error(std::move(failure->message), failure->notImplemented);
+            }
+            m_files.emplace(name, std::get<detail::FileDrawing>(std::move(*file)));
+            return std::nullopt;
+        }
+        std::variant<core::Entity, EntityError> entity = readEntity(definition);
         if (auto* failure = std::get_if<EntityError>(&entity)) {
             return error(std::move(failure->message), failure->notImplemented);
         }
@@ -202,8 +209,30 @@ private:
             m_answers.push_back(std::move(answer));
             return std::nullopt;
         }
-        const detail::QuestionModel model{m_document, m_names};
         const std::vector<std::string_view> arguments(tokens->begin() + 1, arrow);
+        // "D:2F" names an entity of a drawing read from a file. A question
+        // about it asks about a copy of that entity alone: the questions
+        // that take a name are questions about one object.
+        core::Document fileDocument;
+        edit::Editor fileEditor(fileDocument);
+        std::vector<std::string> fileNames;
+        for (const std::string_view argument : arguments) {
+            auto entity = detail::fileEntity(m_files, argument);
+            if (!entity) {
+                continue;
+            }
+            if (auto* message = std::get_if<std::string>(&*entity)) {
+                return error(std::string{name} + ": " + *message);
+            }
+            fileEditor.beginTransaction("Definition");
+            fileEditor.add(*std::get<const core::Entity*>(*entity));
+            fileEditor.commit();
+            fileNames.emplace_back(argument);
+        }
+        const bool aboutFiles = !fileNames.empty();
+        const detail::QuestionModel model{aboutFiles ? fileDocument : m_document,
+                                          aboutFiles ? fileNames : m_names, m_files, m_tolerances,
+                                          m_access};
         detail::QuestionResult result = row->function(model, arguments);
         if (auto* failure = std::get_if<detail::ArgumentError>(&result)) {
             return error(std::string{name} + ": " + failure->message);
@@ -216,6 +245,8 @@ private:
 
     core::Document m_document;
     edit::Editor m_editor;
+    io::FileAccess* m_access;
+    detail::FileDrawings m_files;      ///< drawings read from files, by name
     std::vector<std::string> m_names;  ///< m_names[n - 1] names entity n
     Tolerances m_tolerances;           ///< as changed by the lines read so far
     std::vector<Answer> m_answers;
@@ -224,8 +255,9 @@ private:
 
 }  // namespace
 
-std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view text) {
-    QuestionFile file;
+std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view text,
+                                                              io::FileAccess* files) {
+    QuestionFile file{files};
     const std::vector<std::string_view> lines = splitLines(text);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         if (std::optional<ParseError> failure = file.read(static_cast<int>(i) + 1, lines[i])) {

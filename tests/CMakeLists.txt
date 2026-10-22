@@ -51,6 +51,7 @@ add_executable(tg_tests
     script/compare_test.cpp
     script/editor_names_test.cpp
     script/entity_reader_test.cpp
+    script/file_test.cpp
     script/level1_test.cpp
     script/number_format_test.cpp
     script/questions_test.cpp

@@ -5,8 +5,13 @@
 
 #include "tg/core/document.hpp"
 #include "tg/core/entity_id.hpp"
+#include "tg/io/file_access.hpp"
+#include "tg/io/io.hpp"
+#include "tg/script/compare.hpp"
 
 #include <cstdint>
+#include <functional>
+#include <map>
 #include <optional>
 #include <span>
 #include <string>
@@ -18,12 +23,29 @@
 // public: questions.cpp reads the file, this table answers.
 namespace tg::script::detail {
 
+/// A drawing read by a definition "D = DXF ..." or "C = CADX ..."
+/// (docs/verifica/domande.md, "File").
+struct FileDrawing {
+    bool cadx{false};   ///< read by io::readCadx, else by io::readDxf
+    std::string bytes;  ///< the file as read
+    io::ReadResult read;
+};
+
+/// The drawings read by the definitions so far, by name.
+using FileDrawings = std::map<std::string, FileDrawing, std::less<>>;
+
 /// The drawing the questions of a file ask about: the entities defined so
-/// far, with the names the file gave them. Entity n (1-based identifier) is
-/// names[n - 1].
+/// far, with the names the file gave them, and the drawings read from
+/// files. Entity n (1-based identifier) is names[n - 1].
 struct QuestionModel {
     const core::Document& document;
     const std::vector<std::string>& names;
+    const FileDrawings& files;
+    /// The tolerances in force at the question (roundtrip compares with them).
+    const Tolerances& tolerances;
+    /// Where the definitions and questions about files read them; nullptr
+    /// if they cannot (answerQuestions() without files).
+    io::FileAccess* access;
 
     /// The entity named `name`, or std::nullopt.
     [[nodiscard]] std::optional<core::EntityId> find(std::string_view name) const;
@@ -48,6 +70,7 @@ enum class AnswerShape : std::uint8_t {
     Single,  ///< one value: numbers within the tolerances, the rest equal
     Names,   ///< names separated by blanks, or "none", in any order
     Snaps,   ///< "Kind x,y" items separated by ';', or "none", in any order
+    Items,   ///< any items separated by ';', or "none", in any order
 };
 
 struct QuestionRow {
@@ -60,5 +83,25 @@ struct QuestionRow {
 
 /// The row of question `name`, or nullptr if the catalogue has none.
 [[nodiscard]] const QuestionRow* findQuestion(std::string_view name);
+
+/// Why a definition of a drawing read from a file failed.
+struct FileDefinitionError {
+    std::string message;
+    bool notImplemented{false};  ///< io does not read this format yet
+};
+
+/// Reads the drawing of a definition "DXF source=<name>", "DXF file=<name>",
+/// "CADX source=<name>" or "CADX file=<name>" (the text after "D =").
+/// std::nullopt if `text` is not one, so that it is read as an entity.
+/// Defined in file_questions.cpp.
+[[nodiscard]] std::optional<std::variant<FileDrawing, FileDefinitionError>> readFileDefinition(
+    std::string_view text, io::FileAccess* access);
+
+/// The handled entity named "<drawing>:<handle>" ("D:2F"): std::nullopt if
+/// `name` does not start with the name of a drawing of `files` and ':', an
+/// error message if the drawing has no handled entity with that handle.
+/// Defined in file_questions.cpp.
+[[nodiscard]] std::optional<std::variant<const core::Entity*, std::string>> fileEntity(
+    const FileDrawings& files, std::string_view name);
 
 }  // namespace tg::script::detail

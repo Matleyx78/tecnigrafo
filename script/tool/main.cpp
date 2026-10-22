@@ -18,8 +18,12 @@ namespace {
 
 constexpr std::string_view kUsage =
     "usage:\n"
-    "  tecnigrafo-script run <script.tgs> [--report <file>]\n"
+    "  tecnigrafo-script run <script.tgs> [--report <file>] [--sources <folder>]\n"
     "  tecnigrafo-script check <case folder> [--pending] [--output <folder>]\n"
+    "                          [--sources <folder>]\n"
+    "\n"
+    "--sources is the folder of the public files of tests/verifica/sorgenti.json,\n"
+    "read as @sources/<name> by scripts and as source=<name> by questions.\n"
     "\n"
     "Exit codes: 0 passed, 1 not passed, 2 invalid case or arguments,\n"
     "77 the case needs level 2. With --pending, a case not passed exits 0\n"
@@ -33,9 +37,12 @@ int usageError() {
 int run(std::span<const std::string_view> arguments) {
     std::optional<std::filesystem::path> script;
     std::optional<std::filesystem::path> report;
+    std::optional<std::filesystem::path> sources;
     for (std::size_t i = 0; i < arguments.size(); ++i) {
         if (arguments[i] == "--report" && i + 1 < arguments.size() && !report) {
             report = arguments[++i];
+        } else if (arguments[i] == "--sources" && i + 1 < arguments.size() && !sources) {
+            sources = arguments[++i];
         } else if (!arguments[i].starts_with("--") && !script) {
             script = arguments[i];
         } else {
@@ -45,12 +52,13 @@ int run(std::span<const std::string_view> arguments) {
     if (!script) {
         return usageError();
     }
-    return tg::script::runScriptFile(*script, report, std::cout, std::cerr);
+    return tg::script::runScriptFile(*script, report, std::cout, std::cerr, sources);
 }
 
 int check(std::span<const std::string_view> arguments) {
     std::optional<std::filesystem::path> folder;
     tg::script::CheckOptions options;
+    std::optional<std::filesystem::path> sources;
     bool outputGiven = false;
     for (std::size_t i = 0; i < arguments.size(); ++i) {
         if (arguments[i] == "--pending" && !options.pending) {
@@ -58,6 +66,8 @@ int check(std::span<const std::string_view> arguments) {
         } else if (arguments[i] == "--output" && i + 1 < arguments.size() && !outputGiven) {
             options.output = arguments[++i];
             outputGiven = true;
+        } else if (arguments[i] == "--sources" && i + 1 < arguments.size() && !sources) {
+            sources = arguments[++i];
         } else if (!arguments[i].starts_with("--") && !folder) {
             folder = arguments[i];
         } else {
@@ -67,7 +77,7 @@ int check(std::span<const std::string_view> arguments) {
     if (!folder) {
         return usageError();
     }
-    return tg::script::checkCase(*folder, options, std::cout);
+    return tg::script::checkCase(*folder, options, std::cout, sources);
 }
 
 }  // namespace
