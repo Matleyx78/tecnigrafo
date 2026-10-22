@@ -20,7 +20,7 @@ Closes #<!-- numero della issue del pacchetto o del bug -->
   - riferimenti: ho toccato solo `tests/verifica/`, i valori attesi non vengono
     da Tecnigrafo, ogni file preso dal web ha hash e licenza (link qui sotto)
 - [ ] `clang-format` applicato, nessun avviso del compilatore né di `clang-tidy`
-- [ ] Commit firmati (`git commit -s`) e in formato Conventional Commits
+- [ ] Commit in formato Conventional Commits (la firma DCO la aggiunge il responsabile allo squash).
 
 ## Uso dell'IA
 
