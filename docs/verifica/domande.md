@@ -99,7 +99,7 @@ Come ogni tipo di entità risponde ([ADR 0008](../adr/0008-selezione-e-snap.md),
 | `LINE` | lunghezza del segmento | dal segmento | estremi, medio |
 | `ARC` | lunghezza dell'arco | dall'arco, mai dal resto del cerchio | estremi, medio sull'arco, centro |
 | `CIRCLE` | circonferenza | dalla circonferenza: il centro è a distanza pari al raggio | centro |
-| `TEXT` | `none` | dal rettangolo d'ingombro, che è una regione: distanza 0 e punto stesso all'interno | inserimento (`position`) |
+| `TEXT` | `none` | dal parallelogramma d'ingombro, che è una regione: distanza 0 e punto stesso all'interno | punto d'ancoraggio; `position` per `Aligned` e `Fit` (ADR 0022, punto 5) |
 
 ### Sul documento
 
@@ -130,7 +130,17 @@ testo alto 1, con fattore di larghezza 1.
 |---|---|---|
 | `text-width "<testo>"` | numero | la larghezza di una riga, somma delle larghezze dei caratteri, senza crenatura; i codici di controllo (`%%c`) **non** si convertono: si misurano i caratteri come sono scritti |
 | `font-metrics` | `ascent=<a> descent=<d>` | ascendente (> 1) e discendente (< 0) del font incluso |
-| `box <E>` | quattro punti `x,y` separati da spazi | il rettangolo d'ingombro di un `TEXT`, in senso antiorario dall'angolo in basso a sinistra del primo carattere |
+| `box <E>` | quattro punti `x,y` separati da spazi | il parallelogramma d'ingombro di un `TEXT`, nell'ordine definito sotto (ADR 0022, punto 5) |
+
+`box` trasforma, nell'ordine, i punti `(0, d·h)`, `(w, d·h)`, `(w, a·h)`,
+`(0, a·h)` del sistema del testo: `w = L(valore)·h·f`, con altezza `h` e
+fattore di larghezza `f` usati (ricavati per `Aligned` e `Fit`). Allineamento,
+obliquo, specchiatura e rotazione seguono l'[ADR 0022](../adr/0022-allineamenti-obliquo-specchiatura-testo.md).
+Senza specchiatura i punti girano in senso antiorario; con una sola
+specchiatura in senso orario. `bbox` contiene i quattro angoli; selezione,
+`distance` e `closest` usano la regione del parallelogramma. Lo snap
+inserimento è il punto d'ancoraggio (`alignment-point` salvo `Left` sulla
+linea di base), oppure `position` per `Aligned` e `Fit`.
 
 ## Errori
 

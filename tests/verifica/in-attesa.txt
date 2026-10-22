@@ -8,9 +8,3 @@
 # La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
-testo/allineamenti #155
-testo/aligned-fit #155
-testo/obliquo #155
-testo/specchiatura #155
-testo/selezione-parallelogramma #155
-testo/dxf-proprieta-0022 #155

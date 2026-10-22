@@ -520,5 +520,62 @@ TEST(TextProximity, CrossingATurnedTextUsesTheTurnedBox) {
         Entity{text}, BBox{{bounds.min().x - 1.0, middle.y}, {bounds.max().x + 1.0, middle.y}}));
 }
 
+TEST(TextProximity, ShearedMirroredRegionsUseEuclideanEdgeDistance) {
+    for (const double oblique : {kPi / 12, -kPi / 12}) {
+        for (const bool mirrorX : {false, true}) {
+            for (const bool mirrorY : {false, true}) {
+                Text text = hello(kPi / 6);
+                text.obliqueAngle = oblique;
+                text.mirroredX = mirrorX;
+                text.mirroredY = mirrorY;
+                text.horizontal = TextHorizontal::Center;
+                text.vertical = TextVertical::Middle;
+                text.alignmentPoint = {30, -10};
+                const auto box = textBox(text);
+                const Vec2 center = (box[0] + box[2]) * 0.5;
+                EXPECT_EQ(distance(Entity{text}, center), 0);
+                EXPECT_EQ(closestPoint(text, center), center);
+                for (std::size_t i = 0; i < box.size(); ++i) {
+                    const Vec2 edge = box.at((i + 1) % box.size()) - box.at(i);
+                    const Vec2 middle = box.at(i) + edge * 0.5;
+                    Vec2 normal = edge.perpendicular() * (1 / edge.length());
+                    if (dot(normal, center - middle) > 0) {
+                        normal = -normal;
+                    }
+                    const Vec2 outside = middle + normal * 0.25;
+                    EXPECT_NEAR(distance(Entity{text}, outside), 0.25, kTolerance);
+                    EXPECT_NEAR(distance(closestPoint(text, outside), middle), 0, kTolerance);
+                    EXPECT_EQ(distance(Entity{text}, box.at(i)), 0);
+                    EXPECT_TRUE(intersects(Entity{text}, BBox{box.at(i), box.at(i)}));
+                    EXPECT_TRUE(intersects(Entity{text}, BBox{center, center}));
+                }
+                const BBox bounds = text.boundingBox();
+                EXPECT_TRUE(isInside(Entity{text}, bounds));
+                EXPECT_FALSE(isInside(Entity{text}, BBox{center, center}));
+            }
+        }
+    }
+}
+
+TEST(TextProximity, CrossingExcludesEmptyCornersOfAShearedBoundingBox) {
+    Text text = hello();
+    text.obliqueAngle = kPi / 4;
+    // At y=22 the left side is x=12. A rectangle at x=10 is inside
+    // the axis-aligned bounds, yet wholly left of the parallelogram.
+    const BBox outside{{10, 22}, {10.1, 22.1}};
+    EXPECT_TRUE(text.boundingBox().contains(outside.min()));
+    EXPECT_TRUE(text.boundingBox().contains(outside.max()));
+    EXPECT_FALSE(intersects(Entity{text}, outside));
+    EXPECT_TRUE(intersects(Entity{text}, BBox{{11.9, 22}, {12.1, 22.1}}));
+    EXPECT_TRUE(intersects(Entity{text}, BBox{{9, 21}, {20, 21}}));
+    // Empty sheared text is a sloping segment, not a rectangle.
+    text.value.clear();
+    EXPECT_FALSE(intersects(Entity{text}, outside));
+    EXPECT_TRUE(intersects(Entity{text}, BBox{{12, 22}, {12, 22}}));
+    EXPECT_NEAR(distance(Entity{text}, {11, 21}), 0, kTolerance);
+    EXPECT_NEAR(distance(Entity{text}, {10, 21}), 1 / std::sqrt(2.0), kTolerance);
+    EXPECT_NEAR(distance(closestPoint(text, {10, 21}), {10.5, 20.5}), 0, kTolerance);
+}
+
 }  // namespace
 }  // namespace tg::core

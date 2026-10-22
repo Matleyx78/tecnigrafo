@@ -212,6 +212,25 @@ TEST(SnapPoints, TextOffersItsInsertionPoint) {
     EXPECT_EQ(out, (std::vector<SnapPoint>{{{3.0, -4.0}, SnapKind::Insertion}}));
 }
 
+TEST(SnapPoints, TextInsertionFollowsAlignmentEvenForDegenerateFits) {
+    for (const auto horizontal : {TextHorizontal::Left, TextHorizontal::Center,
+                                  TextHorizontal::Aligned, TextHorizontal::Fit}) {
+        for (const bool empty : {false, true}) {
+            Text text;
+            text.position = {3, -4};
+            text.alignmentPoint = {10, 20};
+            text.horizontal = horizontal;
+            text.vertical = horizontal == TextHorizontal::Center ? TextVertical::Middle
+                                                                 : TextVertical::Baseline;
+            text.value = empty ? "" : "Hello";
+            const Vec2 expected = horizontal == TextHorizontal::Center ? Vec2{10, 20} : Vec2{3, -4};
+            std::vector<SnapPoint> out;
+            appendSnapPoints(Entity{text}, {}, out);
+            EXPECT_EQ(out, (std::vector<SnapPoint>{{expected, SnapKind::Insertion}}));
+        }
+    }
+}
+
 TEST(SnapPoints, InsertionModeOnlyAffectsTexts) {
     Text text;
     text.value = "A";

@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <string>
 #include <utility>
 
@@ -149,16 +150,150 @@ TEST(Text, ControlCodesChangeTheBoxAsTheConvertedCharacters) {
     EXPECT_NEAR(textBox(text("%%x"))[1].x, textWidth(U"%%x"), kTolerance);
 }
 
-TEST(Text, OtherDxfPropertiesDoNotChangeTheBox) {
+TEST(Text, AllFifteenAlignmentsPlaceTheBaselineAndCorners) {
+    // ADR 0022: capital top/middle use h and h/2, not the font ascent.
+    // P1=(1,2), P2=(10,20), h=2, f=0.8 for ordinary alignments.
+    constexpr double kWidth = kHelloWidth * 2.0 * 0.8;
+
+    struct AlignmentCase {
+        TextHorizontal horizontal{TextHorizontal::Left};
+        TextVertical vertical{TextVertical::Baseline};
+        Vec2 origin;
+    };
+
+    const std::array cases{
+        AlignmentCase{TextHorizontal::Left, TextVertical::Baseline, {1, 2}},
+        AlignmentCase{TextHorizontal::Left, TextVertical::Bottom, {10, 20 - 2 * kDescent}},
+        AlignmentCase{TextHorizontal::Left, TextVertical::Middle, {10, 19}},
+        AlignmentCase{TextHorizontal::Left, TextVertical::Top, {10, 18}},
+        AlignmentCase{TextHorizontal::Center, TextVertical::Baseline, {10 - kWidth / 2, 20}},
+        AlignmentCase{
+            TextHorizontal::Center, TextVertical::Bottom, {10 - kWidth / 2, 20 - 2 * kDescent}},
+        AlignmentCase{TextHorizontal::Center, TextVertical::Middle, {10 - kWidth / 2, 19}},
+        AlignmentCase{TextHorizontal::Center, TextVertical::Top, {10 - kWidth / 2, 18}},
+        AlignmentCase{TextHorizontal::Right, TextVertical::Baseline, {10 - kWidth, 20}},
+        AlignmentCase{
+            TextHorizontal::Right, TextVertical::Bottom, {10 - kWidth, 20 - 2 * kDescent}},
+        AlignmentCase{TextHorizontal::Right, TextVertical::Middle, {10 - kWidth, 19}},
+        AlignmentCase{TextHorizontal::Right, TextVertical::Top, {10 - kWidth, 18}},
+        AlignmentCase{
+            TextHorizontal::Middle, TextVertical::Top, {10 - kWidth / 2, 20 - (1 + kDescent)}}};
+    for (const auto& entry : cases) {
+        SCOPED_TRACE(static_cast<int>(entry.horizontal));
+        SCOPED_TRACE(static_cast<int>(entry.vertical));
+        Text value = text("Hello", {1, 2}, 2, 0, 0.8);
+        value.alignmentPoint = {10, 20};
+        value.horizontal = entry.horizontal;
+        value.vertical = entry.vertical;
+        const TextFrame frame = textFrame(value);
+        expectNear(frame.origin, entry.origin);
+        expectNear(frame.xAxis, {1, 0});
+        expectNear(frame.yAxis, {0, 1});
+        const std::array<Vec2, 4> expected{
+            entry.origin + Vec2{0, 2 * kDescent}, entry.origin + Vec2{kWidth, 2 * kDescent},
+            entry.origin + Vec2{kWidth, 2 * kAscent}, entry.origin + Vec2{0, 2 * kAscent}};
+        const auto box = textBox(value);
+        for (std::size_t i = 0; i < box.size(); ++i) {
+            expectNear(box.at(i), expected.at(i));
+        }
+    }
+    // A 3-4-5 baseline: used rotation ignores group 50, vertical ignores 73.
+    for (const auto horizontal : {TextHorizontal::Aligned, TextHorizontal::Fit}) {
+        Text value = text("Hello", {1, 2}, 2, 0.5, 0.8);
+        value.alignmentPoint = {4, 6};
+        value.horizontal = horizontal;
+        value.vertical = TextVertical::Top;
+        const Text stored = value;
+        const double height = horizontal == TextHorizontal::Aligned ? 5 / (kHelloWidth * 0.8) : 2;
+        const TextFrame frame = textFrame(value);
+        expectNear(frame.origin, {1, 2});
+        expectNear(frame.insertion, {1, 2});
+        expectNear(frame.xAxis, {0.6, 0.8});
+        expectNear(frame.yAxis, {-0.8, 0.6});
+        EXPECT_NEAR(frame.height, height, kTolerance);
+        EXPECT_NEAR(frame.widthFactor,
+                    horizontal == TextHorizontal::Fit ? 5 / (kHelloWidth * 2) : 0.8, kTolerance);
+        EXPECT_NEAR(frame.rotation, std::atan2(4.0, 3.0), kTolerance);
+        const std::array<Vec2, 4> expected{
+            Vec2{1 - 0.8 * kDescent * height, 2 + 0.6 * kDescent * height},
+            Vec2{4 - 0.8 * kDescent * height, 6 + 0.6 * kDescent * height},
+            Vec2{4 - 0.8 * kAscent * height, 6 + 0.6 * kAscent * height},
+            Vec2{1 - 0.8 * kAscent * height, 2 + 0.6 * kAscent * height}};
+        const auto box = textBox(value);
+        for (std::size_t i = 0; i < box.size(); ++i) {
+            expectNear(box.at(i), expected.at(i));
+        }
+        EXPECT_EQ(value, stored);
+    }
+}
+
+TEST(Text, ObliqueRotationAndMirroringTransformEveryCornerAboutTheAnchor) {
+    // tan(15 degrees)=2-sqrt(3); rotation is 30 degrees. MC anchors at (w/2,h/2).
+    constexpr double kCosine = std::numbers::sqrt3 / 2.0;
+    for (const double shear : {2 - std::numbers::sqrt3, std::numbers::sqrt3 - 2}) {
+        for (const bool mirrorX : {false, true}) {
+            for (const bool mirrorY : {false, true}) {
+                Text value = text("Hello", {1, 2}, 2, kPi / 6, 0.8);
+                value.alignmentPoint = {10, 20};
+                value.horizontal = TextHorizontal::Center;
+                value.vertical = TextVertical::Middle;
+                value.obliqueAngle = std::atan(shear);
+                value.mirroredX = mirrorX;
+                value.mirroredY = mirrorY;
+                const double width = kHelloWidth * 2 * 0.8;
+                const auto place = [&](double x, double y) {
+                    const double shearedX = (mirrorX ? -1 : 1) * (x - width / 2 + shear * (y - 1));
+                    const double mirroredY = (mirrorY ? -1 : 1) * (y - 1);
+                    return Vec2{10 + kCosine * shearedX - 0.5 * mirroredY,
+                                20 + 0.5 * shearedX + kCosine * mirroredY};
+                };
+                expectNear(textFrame(value).origin, place(0, 0));
+                const auto box = textBox(value);
+                const std::array expected{place(0, 2 * kDescent), place(width, 2 * kDescent),
+                                          place(width, 2 * kAscent), place(0, 2 * kAscent)};
+                for (std::size_t i = 0; i < box.size(); ++i) {
+                    expectNear(box.at(i), expected.at(i));
+                }
+                EXPECT_EQ(cross(box[1] - box[0], box[3] - box[0]) > 0, mirrorX == mirrorY);
+            }
+        }
+    }
+}
+
+TEST(Text, DegenerateAlignedAndFitUseStoredLeftBaselineGeometry) {
+    for (const auto horizontal : {TextHorizontal::Aligned, TextHorizontal::Fit}) {
+        for (const bool empty : {false, true}) {
+            Text value = text(empty ? "" : "Hello", {1, 2}, 2, 0.5, 0.8);
+            value.alignmentPoint = empty ? Vec2{4, 6} : value.position;
+            value.horizontal = horizontal;
+            value.vertical = TextVertical::Top;
+            Text left = value;
+            left.horizontal = TextHorizontal::Left;
+            left.vertical = TextVertical::Baseline;
+            const TextFrame frame = textFrame(value);
+            expectNear(frame.origin, value.position);
+            EXPECT_DOUBLE_EQ(frame.height, 2);
+            EXPECT_DOUBLE_EQ(frame.widthFactor, 0.8);
+            EXPECT_DOUBLE_EQ(frame.rotation, 0.5);
+            EXPECT_EQ(textBox(value), textBox(left));
+        }
+    }
+}
+
+TEST(Text, VeryShortAlignedBaselineIsNotCollapsed) {
+    Text value = text("Hello", {}, 2, 1, 0.8);
+    value.horizontal = TextHorizontal::Aligned;
+    value.alignmentPoint = {1e-18, 0};
+    const TextFrame frame = textFrame(value);
+    EXPECT_NEAR(frame.height, 1e-18 / (kHelloWidth * 0.8), 1e-32);
+    EXPECT_DOUBLE_EQ(frame.rotation, 0);
+}
+
+TEST(Text, UnusedDxfPropertiesDoNotChangeLeftBaselineGeometry) {
     const Text plain = text("Hello", {1.0, 2.0}, 2.0, 0.5);
     Text full = plain;
     full.alignmentPoint = {7.0, 8.0};
-    full.obliqueAngle = degreesToRadians(15.0);
     full.style = "Other";
-    full.mirroredX = true;
-    full.mirroredY = true;
-    full.horizontal = TextHorizontal::Fit;
-    full.vertical = TextVertical::Top;
     EXPECT_NE(plain, full);
     EXPECT_EQ(textBox(plain), textBox(full));
 }

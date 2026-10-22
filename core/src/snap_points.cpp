@@ -105,7 +105,7 @@ void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<
             },
             [&](const Text& text) {
                 if (modes.insertion) {
-                    out.push_back({text.position, SnapKind::Insertion});
+                    out.push_back({textFrame(text).insertion, SnapKind::Insertion});
                 }
             },
         },

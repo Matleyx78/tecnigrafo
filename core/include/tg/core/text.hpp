@@ -19,13 +19,9 @@ enum class TextHorizontal : std::uint8_t { Left, Center, Right, Aligned, Middle,
 /// DXF group 73, in the order of its values (0 to 3).
 enum class TextVertical : std::uint8_t { Baseline, Bottom, Middle, Top };
 
-/// DXF TEXT (one line). Every property of the DXF entity is kept, even
-/// those that tappa 0.4 does not draw yet (docs/adr/0013).
-///
-/// The box, the drawing and the selection use position, height, rotation
-/// and width factor only: oblique angle, mirroring and alignments other than
-/// left on the baseline are kept but ignored until the DXF import of tappa
-/// 0.5. The DXF properties that a plane drawing does not use (Z 30,
+/// DXF TEXT (one line). Every property of the DXF entity is kept (docs/adr/0013).
+/// Geometry uses all alignments, oblique angle and mirroring (docs/adr/0022).
+/// The DXF properties that a plane drawing does not use (Z 30,
 /// thickness 39, extrusion 210/220/230) have their default values, as for
 /// the other entities (docs/adr/0012, point 2).
 /// Invariants: height > 0, widthFactor > 0.
@@ -48,11 +44,26 @@ struct Text {
     friend bool operator==(const Text&, const Text&) = default;
 };
 
-/// The four corners of the text box, counter-clockwise from the bottom
-/// left of the first character (docs/adr/0013, point 3): in the system of
-/// the text, from 0 to width · height · widthFactor along the baseline and
-/// from descent · height to ascent · height across it, rotated about
-/// `position`. The width is that of displayText(value) in the bundled font.
+/// Placement of the text system (docs/adr/0022, points 1-4): a point (x, y),
+/// in drawing units from the start of the baseline, maps to
+/// origin + x * xAxis + y * yAxis. Derived values never change stored properties.
+struct TextFrame {
+    Vec2 origin;
+    Vec2 xAxis;               ///< R(rotation) * M * (1, 0)
+    Vec2 yAxis;               ///< R(rotation) * M * (tan(oblique), 1)
+    double height{0.0};       ///< used height (Aligned: derived)
+    double widthFactor{0.0};  ///< used width factor (Fit: derived)
+    double rotation{0.0};     ///< used rotation, radians (Aligned, Fit: P1 -> P2)
+    Vec2 insertion;           ///< insertion snap point (docs/adr/0022, point 5)
+};
+
+[[nodiscard]] TextFrame textFrame(const Text& text);
+
+/// The images of (0, d*h), (w, d*h), (w, a*h), (0, a*h), in that order
+/// (docs/adr/0022, point 5), where w = textWidth(displayText(value)) * h * f,
+/// a/d are the bundled font's ascent/descent and h/f are the used values.
+/// The parallelogram is counter-clockwise without mirroring, clockwise with
+/// exactly one mirroring. Empty text collapses to a segment.
 [[nodiscard]] std::array<Vec2, 4> textBox(const Text& text);
 
 /// `value` decoded from UTF-8, with %%c, %%d, %%p and %%% converted to ⌀, °,
