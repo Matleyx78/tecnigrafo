@@ -1,6 +1,6 @@
 # ADR 0020: Fuzzing dei lettori e oracolo ezdxf
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-22)
 - **Data:** 2026-10-22
 
 ## Contesto

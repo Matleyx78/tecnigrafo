@@ -172,3 +172,13 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   0.5 il metodo resta la regola di lavoro ordinaria, con i miglioramenti già
   deliberati (pacchetti più leggeri a schede autosufficienti, fasce di modello
   e lavoro a lotti per i riferimenti).
+- **2026-10-22 — Piano della tappa 0.5.** Il piano dettagliato della
+  [tappa 0.5](tappe/0.5-file-e-dxf.md) è in preparazione, con gli ADR
+  [0017](adr/0017-modulo-io-e-dxf.md)–[0022](adr/0022-allineamenti-obliquo-specchiatura-testo.md)
+  accettati. Il responsabile sceglie: `SAVE` conserva la versione del DXF
+  aperto, disegni nuovi e `SAVEAS` scrivono R2018, e un `.cadx` contiene sempre
+  R2018 (conversione dalle versioni precedenti); zlib per la compressione e
+  contenitore ZIP scritto da noi, al posto di miniz (ADR 0019); ezdxf solo in
+  CI, con le risposte stampate nel log da cui chi scrive i riferimenti le
+  copia (ADR 0020), al posto del primo pacchetto di riferimenti previsto dalla
+  scheda. Per ora lavora una sola sessione di Claude.

@@ -1,6 +1,6 @@
 # ADR 0017: Modulo `io` e lettura e scrittura del DXF
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-22)
 - **Data:** 2026-10-22
 
 ## Contesto

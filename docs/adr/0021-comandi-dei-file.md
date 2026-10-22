@@ -1,6 +1,6 @@
 # ADR 0021: Comandi dei file
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-22)
 - **Data:** 2026-10-22
 
 ## Contesto

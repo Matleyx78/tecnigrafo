@@ -1,6 +1,6 @@
 # ADR 0019: Archivi ZIP per il formato `.cadx`
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-22)
 - **Data:** 2026-10-22
 
 ## Contesto

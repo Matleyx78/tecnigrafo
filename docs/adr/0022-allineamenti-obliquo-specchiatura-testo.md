@@ -1,6 +1,6 @@
 # ADR 0022: Allineamenti, obliquo e specchiatura del testo
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-22)
 - **Data:** 2026-10-22
 - **Sostituisce in parte:** ADR 0013, punto 3 (ingombro) e punto 1 (le
   proprietà "conservate" ora si usano)
