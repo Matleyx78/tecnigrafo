@@ -106,6 +106,16 @@ gh run watch <id> --repo Matleyx78/tecnigrafo --exit-status --compact
 gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
+Se i log non sono raggiungibili (per esempio il proxy blocca il servizio che li
+ospita), leggi le annotazioni dei check-run dall'API usando l'ID del job.
+
+```sh
+gh api repos/Matleyx78/tecnigrafo/actions/runs/<id>/jobs \
+  --jq '.jobs[] | select(.conclusion=="failure") | .id'
+gh api repos/Matleyx78/tecnigrafo/check-runs/<id del job>/annotations \
+  --paginate --jq '.[] | "\(.path):\(.start_line) \(.message)"'
+```
+
 Quando il responsabile chiede correzioni a una pull request, riprendila in carico
 e fermati allo stesso modo.
 
