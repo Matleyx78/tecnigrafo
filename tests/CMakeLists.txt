@@ -43,6 +43,9 @@ add_executable(tg_tests
     core/text_metrics_test.cpp
     core/text_test.cpp
     edit/editor_test.cpp
+    io/dxf_groups_test.cpp
+    io/encoding_test.cpp
+    io/file_access_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp
     script/compare_test.cpp
@@ -57,6 +60,7 @@ add_executable(tg_tests
 target_link_libraries(tg_tests PRIVATE
     Tecnigrafo::cmd
     Tecnigrafo::edit
+    Tecnigrafo::io
     Tecnigrafo::render
     Tecnigrafo::script
     GTest::gtest_main)
@@ -64,7 +68,8 @@ target_link_libraries(tg_tests PRIVATE
 # and a folder for the files that the tests of tecnigrafo-script write.
 target_compile_definitions(tg_tests PRIVATE
     TG_SCRIPT_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/script/dati"
-    TG_SCRIPT_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/script-output")
+    TG_SCRIPT_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/script-output"
+    TG_IO_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/io-output")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
