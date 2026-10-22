@@ -37,6 +37,7 @@ add_executable(tg_tests
     core/line_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
+    core/raw_data_test.cpp
     core/snap_points_test.cpp
     core/spatial_index_test.cpp
     core/text_metrics_test.cpp
