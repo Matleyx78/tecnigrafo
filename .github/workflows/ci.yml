@@ -106,13 +106,15 @@ jobs:
       - name: Build, warnings as errors
         run: |
           cmake --preset ci
-          cmake --build --preset ci
+          set -o pipefail
+          cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
       - name: Test
         run: ctest --preset ci -LE verifica
       - name: Static analysis
         run: |
           cmake --preset tidy
-          cmake --build --preset tidy
+          set -o pipefail
+          cmake --build --preset tidy 2>&1 | scripts/ci-annota.sh
 
   verifica:
     name: Verifica
@@ -137,7 +139,9 @@ jobs:
           cmake --preset ci
           cmake --build --preset ci --target tecnigrafo-script tecnigrafo confronta_immagini
       - name: Verifica
-        run: ctest --preset ci -L verifica --no-tests=error
+        run: |
+          set -o pipefail
+          ctest --preset ci -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v4
@@ -176,7 +180,9 @@ jobs:
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ctest --preset asan -L verifica --no-tests=error
+        run: |
+          set -o pipefail
+          ctest --preset asan -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v4
