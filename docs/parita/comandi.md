@@ -23,22 +23,22 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.3.1**.
+Aggiornato alla versione **0.4.0**.
 
 | Stato | Comandi |
 |---|---|
 | completo | 2 |
-| presente | 3 |
-| assente | 64 |
+| presente | 7 |
+| assente | 60 |
 
 ## Disegno
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `LINE` | `L` | assente | 0.4 | `Invio` alla prima domanda per continuare dall'ultimo punto: 0.7 |
+| `LINE` | `L` | presente | 0.4 | segmenti e chiusura con `Close`; `Invio` alla prima domanda per continuare dall'ultimo punto: 0.7 |
 | `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), da valutare nella 0.7 |
-| `CIRCLE` | `C` | assente | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio nella 0.7 |
-| `ARC` | `A` | assente | 0.4 | tre punti e inizio-centro-fine nella 0.4; le altre varianti dopo la 1.0 |
+| `CIRCLE` | `C` | presente | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio nella 0.7 |
+| `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4; le altre varianti dopo la 1.0 |
 | `RECTANG` | `REC` | assente | — | |
 | `POLYGON` | `POL` | assente | — | |
 | `ELLIPSE` | `EL` | assente | — | ellissi dopo la 1.0 |
@@ -55,7 +55,7 @@ Aggiornato alla versione **0.3.1**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `TEXT` | `DT`, `DTEXT` | assente | 0.4 | una riga, senza *Justify* e *Style* (0.8) |
+| `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; senza *Justify* e *Style* (0.8) |
 | `MTEXT` | `T`, `MT` | assente | 0.8 | |
 | `STYLE` | `ST` | assente | 0.8 | stili di testo |
 | `DIMLINEAR` | `DLI` | assente | 0.8 | |
@@ -142,7 +142,7 @@ parte.
 
 | Aiuto | Tasto | Stato | Tappa | Note |
 |---|---|---|---|---|
-| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro; inserimento nella 0.4; intersezione, perpendicolare, tangente, quadrante nella 0.7 |
+| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro, inserimento; intersezione, perpendicolare, tangente, quadrante nella 0.7 |
 | Orto | `F8` | completo | 0.3 | |
 | Tracciamento polare | `F10` | assente | 0.7 | |
 | Selezione: clic, finestra, intersezione | | presente | 0.3 | manca la finestra trascinando (idea #61) |
