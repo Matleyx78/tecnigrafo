@@ -3,8 +3,12 @@
 
 #include "sample_drawing.hpp"
 
+#include "tg/core/arc.hpp"
+#include "tg/core/circle.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/text.hpp"
 
 #include <array>
 #include <cmath>
@@ -77,6 +81,19 @@ core::Document makeSampleDrawing() {
     for (const Vec2& center : holeCenters) {
         document.add(circle(center, kHoleRadius));
     }
+
+    // One entity of each other kind (docs/tappe/0.4-entita-base.md, P15),
+    // right of the plate, where the view fitted to the plate already has
+    // room: the plate keeps its place and nearly its scale on screen.
+    constexpr double kAsideX = 140.0;
+    constexpr double kAsideRadius = 7.0;
+    document.add(core::Line{{130.0, 0.0}, {150.0, 20.0}});
+    document.add(core::Circle{{kAsideX, 35.0}, kAsideRadius});
+    document.add(core::Arc{{kAsideX, 55.0}, kAsideRadius, 0.0, core::degreesToRadians(180.0)});
+    core::Text label;
+    label.position = {130.0, 72.0};
+    label.value = "Tecnigrafo";
+    document.add(label);
     return document;
 }
 

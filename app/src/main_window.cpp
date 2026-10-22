@@ -155,11 +155,14 @@ void MainWindow::createToolsMenu() {
         modesMenu, tr("&Midpoint"), QStringLiteral("midpointSnapAction"), aids.snapModes.midpoint);
     m_centerAction = addCheckableAction(modesMenu, tr("&Center"),
                                         QStringLiteral("centerSnapAction"), aids.snapModes.center);
+    m_insertionAction =
+        addCheckableAction(modesMenu, tr("&Insertion"), QStringLiteral("insertionSnapAction"),
+                           aids.snapModes.insertion);
 
     // Connected after the initial states are set, so that starting the
     // program writes nothing in the history.
-    for (QAction* action :
-         {m_objectSnapAction, m_orthoAction, m_endpointAction, m_midpointAction, m_centerAction}) {
+    for (QAction* action : {m_objectSnapAction, m_orthoAction, m_endpointAction, m_midpointAction,
+                            m_centerAction, m_insertionAction}) {
         connect(action, &QAction::toggled, this, &MainWindow::applyDrawingAids);
     }
     // The switches are echoed in the history, as AutoCAD does.
@@ -177,6 +180,7 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.endpoint = m_endpointAction->isChecked();
     aids.snapModes.midpoint = m_midpointAction->isChecked();
     aids.snapModes.center = m_centerAction->isChecked();
+    aids.snapModes.insertion = m_insertionAction->isChecked();
     aids.ortho = m_orthoAction->isChecked();
     m_runner.setDrawingAids(aids);
     m_view->update();  // the snap marker and the preview may have changed

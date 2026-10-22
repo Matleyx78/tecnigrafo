@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include "cad_view.hpp"
 #include "command_line.hpp"
 #include "input_events.hpp"
+#include "main_window.hpp"
 #include "tg/cmd/builtin_commands.hpp"
 
+#include <QAction>
 #include <QLineEdit>
+#include <QMenu>
+#include <QTest>
 #include <QVBoxLayout>
 #include <QWidget>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -108,6 +115,86 @@ TEST_F(TextInputTest, SpaceStillSubmitsCommandsAndPointsAndEscapeKeepsConfirmedL
     EXPECT_EQ(std::get<core::Text>(document().entities().back().entity).value, "First line");
     enter("U");
     EXPECT_EQ(document().entityCount(), 1U);
+}
+
+// The text of the sample drawing: its insertion point, and a point inside
+// its box, away from the other entities.
+constexpr core::Vec2 kSampleTextInsertion{130.0, 72.0};
+constexpr core::Vec2 kInsideSampleText{135.0, 73.0};
+
+class InsertionSnapMenuTest : public testing::Test {
+protected:
+    void SetUp() override {
+        m_window.show();
+        m_window.activateWindow();
+        ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
+        ASSERT_NE(insertion(), nullptr);
+    }
+
+    [[nodiscard]] QAction* insertion() const {
+        return m_window.findChild<QAction*>(QStringLiteral("insertionSnapAction"));
+    }
+
+    [[nodiscard]] QAction* objectSnap() const {
+        return m_window.findChild<QAction*>(QStringLiteral("objectSnapAction"));
+    }
+
+    [[nodiscard]] const cmd::DrawingAids& aids() const { return m_window.drawingAids(); }
+
+    [[nodiscard]] const cmd::CommandRunner& runner() const { return m_window.runner(); }
+
+    /// PL typed in the command line, then the pointer over `world`.
+    void startPolylineWithPointerAt(const core::Vec2& world) const {
+        auto* input = m_window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
+        events::type(input, "PL");
+        events::press(input, Qt::Key_Return);
+        const core::Vec2 pixel = m_window.view()->viewport().worldToScreen(world);
+        events::move(m_window.view(), QPointF{pixel.x, pixel.y}.toPoint());
+    }
+
+private:
+    MainWindow m_window;
+};
+
+TEST_F(InsertionSnapMenuTest, IsAnObjectSnapModeCheckedAtStart) {
+    const QList<QObject*> menus = insertion()->associatedObjects();
+    const bool inModesMenu = std::ranges::any_of(menus, [](const QObject* object) {
+        const auto* menu = qobject_cast<const QMenu*>(object);
+        return menu != nullptr && menu->title() == QStringLiteral("Object Snap &Modes");
+    });
+    EXPECT_TRUE(inModesMenu);
+    EXPECT_TRUE(insertion()->isCheckable());
+    EXPECT_TRUE(insertion()->isChecked());
+    EXPECT_TRUE(aids().snapModes.insertion);
+}
+
+TEST_F(InsertionSnapMenuTest, TogglesTheInsertionSnapOfTheRunner) {
+    startPolylineWithPointerAt(kInsideSampleText);
+    EXPECT_EQ(runner().activeSnap(),
+              (core::SnapPoint{kSampleTextInsertion, core::SnapKind::Insertion}));
+
+    insertion()->trigger();
+    EXPECT_FALSE(insertion()->isChecked());
+    EXPECT_FALSE(aids().snapModes.insertion);
+    // Only that mode changes.
+    EXPECT_TRUE(aids().objectSnap);
+    EXPECT_TRUE(aids().snapModes.endpoint);
+    EXPECT_TRUE(aids().snapModes.midpoint);
+    EXPECT_TRUE(aids().snapModes.center);
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+
+    insertion()->trigger();
+    EXPECT_TRUE(insertion()->isChecked());
+    EXPECT_EQ(aids(), cmd::DrawingAids{});
+    EXPECT_EQ(runner().activeSnap(),
+              (core::SnapPoint{kSampleTextInsertion, core::SnapKind::Insertion}));
+}
+
+TEST_F(InsertionSnapMenuTest, ObjectSnapOffHidesTheInsertionSnap) {
+    startPolylineWithPointerAt(kInsideSampleText);
+    objectSnap()->trigger();
+    EXPECT_TRUE(insertion()->isChecked());  // the mode stays chosen
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
 }
 
 }  // namespace
