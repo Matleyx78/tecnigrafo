@@ -138,55 +138,6 @@ bool polylineIntersects(const Polyline& polyline, const BBox& rectangle) {
     return false;
 }
 
-/// The text box in its own system: `along` the baseline from `position`,
-/// `across` it towards the top of the characters.
-struct TextFrame {
-    Vec2 origin;
-    Vec2 along;
-    Vec2 across;
-    double left{0.0};
-    double right{0.0};
-    double bottom{0.0};
-    double top{0.0};
-
-    explicit TextFrame(const Text& text) : origin(text.position) {
-        // The corners of textBox(), so that the frame and the box agree.
-        const std::array<Vec2, 4> box = textBox(text);
-        along = Vec2{std::cos(text.rotation), std::sin(text.rotation)};
-        across = along.perpendicular();
-        const double first = dot(box[0] - origin, along);
-        const double second = dot(box[1] - origin, along);
-        left = std::min(first, second);
-        right = std::max(first, second);
-        bottom = dot(box[0] - origin, across);
-        top = dot(box[3] - origin, across);
-    }
-
-    [[nodiscard]] Vec2 place(double x, double y) const { return origin + along * x + across * y; }
-};
-
-/// The point of the text box nearest to `point`, with the distance between
-/// them computed in the system of the text.
-struct TextNearest {
-    Vec2 point;
-    double distance{0.0};
-};
-
-TextNearest nearestOnText(const Text& text, const Vec2& point) {
-    const TextFrame frame(text);
-    const Vec2 offset = point - frame.origin;
-    const double x = dot(offset, frame.along);
-    const double y = dot(offset, frame.across);
-    // The roundoff allowance keeps points on the border inside, whatever the
-    // rotation does to their last digits.
-    if (inRange(x, frame.left, frame.right) && inRange(y, frame.bottom, frame.top)) {
-        return {point, 0.0};
-    }
-    const double clampedX = std::clamp(x, frame.left, frame.right);
-    const double clampedY = std::clamp(y, frame.bottom, frame.top);
-    return {frame.place(clampedX, clampedY), std::hypot(x - clampedX, y - clampedY)};
-}
-
 /// The projections of `points` on `axis`: their lowest and highest values.
 std::array<double, 2> project(std::span<const Vec2> points, const Vec2& axis) {
     double lower = dot(points.front(), axis);
@@ -199,10 +150,41 @@ std::array<double, 2> project(std::span<const Vec2> points, const Vec2& axis) {
     return {lower, upper};
 }
 
+struct TextNearest {
+    Vec2 point;
+    double distance{0.0};
+};
+
+TextNearest nearestOnText(const Text& text, const Vec2& point) {
+    const TextFrame frame = textFrame(text);
+    const std::array<Vec2, 4> box = textBox(text);
+    const std::array<Vec2, 2> normals{frame.xAxis.perpendicular(), frame.yAxis.perpendicular()};
+    // A point lies in the parallelogram iff both side-normal projections
+    // contain it. This also covers a zero-width box, in either winding.
+    const bool inside = std::ranges::all_of(normals, [&](const Vec2& normal) {
+        const auto [lower, upper] = project(box, normal);
+        return inRange(dot(point, normal), lower, upper);
+    });
+    if (inside) {
+        return {point, 0.0};
+    }
+    // Clamping text coordinates is not a Euclidean projection after shear.
+    // Outside the region, the nearest point is on one of its four edges.
+    TextNearest nearest{box.front(), std::numeric_limits<double>::infinity()};
+    for (std::size_t i = 0; i < box.size(); ++i) {
+        const Vec2 candidate = closestOnLine({box.at(i), box.at((i + 1) % box.size())}, point);
+        const double candidateDistance = distance(candidate, point);
+        if (candidateDistance < nearest.distance) {
+            nearest = {candidate, candidateDistance};
+        }
+    }
+    return nearest;
+}
+
 /// Separating axes: two convex shapes are disjoint if and only if their
 /// projections are disjoint on one of the directions perpendicular to their
 /// sides, here those of the rectangle and of the text box. A box of an empty
-/// text, a segment, is covered too: its normal is one of the text axes.
+/// text, a segment, is covered too: its normal is retained by TextFrame.
 bool textIntersects(const Text& text, const BBox& rectangle) {
     if (!boxesOverlap(text.boundingBox(), rectangle)) {
         return false;
@@ -211,8 +193,9 @@ bool textIntersects(const Text& text, const BBox& rectangle) {
     const Vec2 low = rectangle.min();
     const Vec2 high = rectangle.max();
     const std::array<Vec2, 4> corners{low, Vec2{high.x, low.y}, high, Vec2{low.x, high.y}};
-    const Vec2 along{std::cos(text.rotation), std::sin(text.rotation)};
-    const std::array<Vec2, 4> axes{Vec2{1.0, 0.0}, Vec2{0.0, 1.0}, along, along.perpendicular()};
+    const TextFrame frame = textFrame(text);
+    const std::array<Vec2, 4> axes{Vec2{1.0, 0.0}, Vec2{0.0, 1.0}, frame.xAxis.perpendicular(),
+                                   frame.yAxis.perpendicular()};
     return std::ranges::all_of(axes, [&](const Vec2& axis) {
         const auto [textLower, textUpper] = project(box, axis);
         const auto [rectangleLower, rectangleUpper] = project(corners, axis);

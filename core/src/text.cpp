@@ -46,15 +46,76 @@ BBox Text::boundingBox() const {
     return box;
 }
 
+TextFrame textFrame(const Text& text) {
+    TextFrame frame;
+    frame.height = text.height;
+    frame.widthFactor = text.widthFactor;
+    frame.rotation = text.rotation;
+    frame.insertion = text.position;
+    const double lineWidth = textWidth(displayText(text.value));
+    Vec2 offset;
+    if (text.horizontal == TextHorizontal::Aligned || text.horizontal == TextHorizontal::Fit) {
+        const Vec2 delta = text.alignmentPoint - text.position;
+        const double length = delta.length();
+        // Guard exact degeneracy only: arbitrarily short baselines remain valid.
+        if (length > 0.0 && lineWidth > 0.0) {
+            frame.rotation = std::atan2(delta.y, delta.x);
+            if (text.horizontal == TextHorizontal::Aligned) {
+                frame.height = length / (lineWidth * text.widthFactor);
+            } else {
+                frame.widthFactor = length / (lineWidth * text.height);
+            }
+        }
+    } else {
+        if (text.horizontal != TextHorizontal::Left || text.vertical != TextVertical::Baseline) {
+            frame.insertion = text.alignmentPoint;
+        }
+        const double width = lineWidth * frame.height * frame.widthFactor;
+        switch (text.horizontal) {
+            case TextHorizontal::Center:
+            case TextHorizontal::Middle:
+                offset.x = width / 2.0;
+                break;
+            case TextHorizontal::Right:
+                offset.x = width;
+                break;
+            default:
+                break;
+        }
+        if (text.horizontal == TextHorizontal::Middle) {
+            offset.y = frame.height * (1.0 + fontMetrics().descent) / 2.0;
+        } else {
+            switch (text.vertical) {
+                case TextVertical::Baseline:
+                    break;
+                case TextVertical::Bottom:
+                    offset.y = fontMetrics().descent * frame.height;
+                    break;
+                case TextVertical::Middle:
+                    offset.y = frame.height / 2.0;
+                    break;
+                case TextVertical::Top:
+                    offset.y = frame.height;
+                    break;
+            }
+        }
+    }
+    const Vec2 along{std::cos(frame.rotation), std::sin(frame.rotation)};
+    frame.xAxis = along * (text.mirroredX ? -1.0 : 1.0);
+    frame.yAxis = frame.xAxis * std::tan(text.obliqueAngle) +
+                  along.perpendicular() * (text.mirroredY ? -1.0 : 1.0);
+    frame.origin = frame.insertion - frame.xAxis * offset.x - frame.yAxis * offset.y;
+    return frame;
+}
+
 std::array<Vec2, 4> textBox(const Text& text) {
+    const TextFrame frame = textFrame(text);
     const FontMetrics& metrics = fontMetrics();
-    const double width = textWidth(displayText(text.value)) * text.height * text.widthFactor;
-    const double bottom = metrics.descent * text.height;
-    const double top = metrics.ascent * text.height;
-    const Vec2 along{std::cos(text.rotation), std::sin(text.rotation)};
-    const Vec2 across = along.perpendicular();
+    const double width = textWidth(displayText(text.value)) * frame.height * frame.widthFactor;
+    const double bottom = metrics.descent * frame.height;
+    const double top = metrics.ascent * frame.height;
     const auto place = [&](double x, double y) {
-        return text.position + along * x + across * y;
+        return frame.origin + frame.xAxis * x + frame.yAxis * y;
     };
     return {place(0.0, bottom), place(width, bottom), place(width, top), place(0.0, top)};
 }

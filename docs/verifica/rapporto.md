@@ -205,7 +205,12 @@ TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 obliq
 | `horizontal` | 72 | `left`, `center`, `right`, `aligned`, `middle`, `fit` |
 | `vertical` | 73 | `baseline`, `bottom`, `middle`, `top` |
 | `value` | 1 | il testo come è scritto, codici di controllo compresi (`%%c`), tra virgolette |
-| `~box` | — | **derivata**: i quattro angoli del rettangolo d'ingombro, separati da `;`, in senso antiorario dall'angolo in basso a sinistra del primo carattere (ADR 0013, punto 3) |
+| `~box` | — | **derivata**: le immagini di `(0, d·h)`, `(w, d·h)`, `(w, a·h)`, `(0, a·h)`, in quest'ordine, separate da `;`: un parallelogramma secondo l'ADR 0022, punto 5; senso antiorario senza specchiatura, orario con una sola specchiatura |
+
+Per `~box`, `h` e `f` sono altezza e fattore di larghezza usati (ricavati per
+`Aligned` e `Fit`), `w = L(valore)·h·f`, e `a`/`d` sono ascendente e discendente.
+La trasformazione include allineamento, obliquo, specchiatura e rotazione
+([ADR 0022](../adr/0022-allineamenti-obliquo-specchiatura-testo.md)).
 
 `~box` permette di controllare le misure del font: si calcola dalle larghezze
 lette dal file del font, con uno strumento indipendente. I numeri dell'esempio
