@@ -1,8 +1,9 @@
 # Manuale dei comandi
 
-Questo manuale descrive gli strumenti della tappa 0.3: la riga di comando, i
-punti, `PLINE`, la selezione, `ERASE`, gli snap a oggetto, la modalità orto e
-l'annullamento. Lo stato del rilascio è nelle [note della 0.3](../rilasci/0.3.md).
+Questo manuale descrive gli strumenti disponibili nella tappa 0.4: la riga di
+comando, i punti, `LINE`, `CIRCLE`, `ARC`, `PLINE`, `TEXT`, la selezione,
+`ERASE`, gli snap a oggetto, la modalità orto e l’annullamento. Lo stato della
+tappa è nella [roadmap](../ROADMAP.md).
 
 Domande e messaggi del programma sono per ora in inglese (la traduzione arriverà
 con la tappa 0.9): qui sono riportati come appaiono sullo schermo.
@@ -29,9 +30,9 @@ premi `Invio`: parte il comando `PLINE`.
 | Tasto | Effetto |
 |---|---|
 | `Invio` | invia ciò che hai scritto |
-| `Spazio` | come `Invio` |
-| `Esc` | svuota il campo; chiude prima un eventuale rettangolo di selezione, altrimenti annulla il comando in corso o, a riposo, svuota la selezione |
-| `Invio` o `Spazio` a riga vuota | durante un comando: conferma (per esempio conclude la polilinea); senza comando: ripete l'ultimo comando |
+| `Spazio` | come `Invio`, tranne durante `Enter text:`, dove scrive uno spazio |
+| `Esc` | svuota il campo; chiude prima un eventuale rettangolo di selezione, altrimenti interrompe il comando conservando il lavoro già completato (vedi sotto) o, a riposo, svuota la selezione |
+| `Invio` a riga vuota | durante un comando: conferma il valore predefinito o conclude; senza comando: ripete l’ultimo comando |
 
 Nomi dei comandi e opzioni si scrivono in maiuscolo o minuscolo, indifferentemente.
 
@@ -40,7 +41,7 @@ Ogni scambio resta nello storico come in AutoCAD, per esempio:
 ```
 Command: pl
 Specify start point: 0,0
-Specify next point or [Undo]: @50,0
+Specify next point or [Arc/Undo]: @50,0
 ```
 
 ### Il mouse
@@ -103,6 +104,35 @@ snap, segue invece la direzione verso il punto di aggancio. Le altre quattro
 forme di coordinate della tabella restano esatte anche con snap e orto attivi:
 vedi [Snap, orto e coordinate scritte](#snap-orto-e-coordinate-scritte).
 
+## Rispondere a distanza, angolo e testo
+
+Il significato di un numero dipende dalla domanda:
+
+| Richiesta | Numero da solo | Punto scritto o clic nella vista |
+|---|---|---|
+| punto | distanza diretta verso il puntatore | punto esatto o punto del clic |
+| distanza (raggio, diametro, altezza) | valore in unità di disegno | distanza dal punto base del comando |
+| angolo (rotazione del testo) | valore in gradi antiorari da +X | direzione dal punto base verso il punto indicato |
+| testo (`Enter text:`) | testo letterale | una coordinata scritta è testo letterale |
+
+Per il raggio e il diametro il punto base è il centro; per altezza e rotazione
+è il punto iniziale del testo. Nel modo diametro di `CIRCLE`, un punto dà la
+lunghezza del diametro misurata dal centro: il raggio è metà di quella distanza.
+I punti scritti seguono la sintassi delle coordinate; ai clic si applicano snap
+e orto. Un valore numerico scritto non dipende dalla posizione del puntatore.
+
+Un valore tra `< >` è quello **predefinito**: `Invio` a campo vuoto lo accetta.
+All’avvio l’altezza del testo è `<2.5000>` e la rotazione `<0>`; il raggio non ha
+un valore predefinito finché non completi un cerchio. I comandi successivi
+propongono gli ultimi valori usati per creare le entità. Questi valori durano
+solo fino alla chiusura del programma. Una conferma senza valore predefinito
+termina il comando; per `LINE` e `PLINE` conserva i tratti già indicati.
+
+Durante `Enter text:` gli spazi, anche iniziali e finali, e le lettere accentate
+restano come scritti. `10,20`, `U` e `Close` sono testo, non punti o opzioni.
+`Spazio` scrive uno spazio; solo una riga davvero vuota confermata con `Invio`
+termina l’inserimento. Un clic nella vista non scrive una riga di testo.
+
 ## Selezione
 
 Puoi scegliere le entità prima di avviare `ERASE`, oppure dopo, quando compare
@@ -124,6 +154,11 @@ primo clic compare `Specify opposite corner:`; il secondo angolo segue il
 puntatore. La finestra è blu trasparente con bordo continuo, l'intersezione è
 verde trasparente con bordo tratteggiato. La tolleranza del clic resta di 3 pixel
 anche cambiando lo zoom. Un clic su un'entità già scelta non la aggiunge due volte.
+
+Linee, archi e cerchi si selezionano sulla curva. Un clic dentro un cerchio
+non lo sceglie. Il testo invece si seleziona anche cliccando **dentro il suo
+rettangolo d’ingombro**, ruotato come il testo: la finestra deve racchiuderlo
+tutto, mentre l’intersezione basta che lo tocchi.
 
 Una polilinea chiusa si seleziona sul **bordo**: cliccare al suo interno non la
 sceglie. Anche un rettangolo a intersezione completamente interno a una
@@ -151,7 +186,7 @@ vengono scelte entrambe le entità. Con `Shift` sul secondo clic le togli.
   mouse, poi conferma a campo vuoto.
 
 La selezione si svuota alla fine dei comandi e con `U`, `UNDO` e `REDO`. Avviare
-`PLINE` svuota la selezione precedente; `ERASE` invece la usa subito.
+un comando di disegno svuota la selezione precedente; `ERASE` invece la usa subito.
 
 ## ERASE — cancellare entità
 
@@ -205,9 +240,10 @@ si applica lo snap.
 
 | Modo nel menu *Tools → Object Snap Modes* | Punto di aggancio | Marcatore |
 |---|---|---|
-| *Endpoint* | estremo di un segmento, cioè un vertice della polilinea | quadrato |
+| *Endpoint* | estremo di una linea o di un arco, o vertice della polilinea | quadrato |
 | *Midpoint* | metà del segmento; per un arco è sulla curva, non sulla corda | triangolo |
-| *Center* | centro del cerchio di un segmento ad arco | cerchio |
+| *Center* | centro di un cerchio, di un arco o di un segmento ad arco | cerchio |
+| *Insertion* | punto d’inserimento del testo, sulla linea di base | due quadrati sovrapposti e sfalsati |
 
 ### Attivare e scegliere i modi
 
@@ -215,10 +251,10 @@ si applica lo snap.
   attivano o spengono insieme lo snap. Lo storico mostra `<Osnap on>` oppure
   `<Osnap off>`.
 - In *Tools → Object Snap Modes* puoi attivare o disattivare separatamente
-  *Endpoint*, *Midpoint* e *Center*, anche quando OSNAP è spento. Spegnere `F3`
+  *Endpoint*, *Midpoint*, *Center* e *Insertion*, anche quando OSNAP è spento. Spegnere `F3`
   conserva i modi scelti. Se tutti i modi sono disattivati, non c'è alcun aggancio
   anche con OSNAP acceso.
-- All'avvio lo snap è acceso con tutti e tre i modi. Le impostazioni non si
+- All'avvio lo snap è acceso con tutti e quattro i modi. Le impostazioni non si
   conservano alla chiusura del programma.
 
 Per estremi e punti medi l'apertura è di **10 pixel**: avvicina il puntatore al
@@ -226,10 +262,17 @@ punto voluto finché compare il marcatore. La dimensione del marcatore e l'apert
 restano in pixel a qualunque zoom. Fra estremi e medi nell'apertura vince il più
 vicino; a pari distanza l'estremo ha precedenza.
 
-Per il **centro** passa sul segmento ad arco, entro l'apertura: il cerchio compare
+Per il **centro** passa sul cerchio o sull’arco, entro l'apertura: il cerchio compare
 sul suo centro anche quando è lontano dal puntatore. Il centro viene proposto
 quando nell'apertura non c'è un estremo o un punto medio attivo da preferire.
-Avvicinarsi soltanto al centro, lontano dall'arco, non basta.
+Avvicinarsi soltanto al centro, lontano dalla curva, non basta.
+
+Per l’**inserimento** passa sopra il testo o entro 10 pixel dal suo rettangolo
+d’ingombro: il marcatore appare sul punto iniziale della linea di base, anche
+se è lontano dal puntatore. Come il centro, perde la precedenza se c’è un
+estremo o un medio attivo nell’apertura. Per provarlo, crea un testo con `DT`,
+avvia `PL` e passa sulle lettere; togli *Insertion* da *Tools → Object Snap
+Modes* per disattivare solo questo aggancio.
 
 **Esempio:** avvia `PL`, avvicinati a uno spigolo del contorno di esempio e clicca
 quando compare il quadrato: il primo vertice coincide con quello spigolo. Su un
@@ -282,69 +325,220 @@ allineato ([bug #64](https://github.com/Matleyx78/tecnigrafo/issues/64)).
 Su alcuni portatili e su macOS `F3` e `F8` possono richiedere `Fn`. Puoi sempre
 usare le voci di *Tools* o i pulsanti OSNAP e ORTHO.
 
+## LINE — linee concatenate
+
+- **Nome:** `LINE`
+- **Alias:** `L`
+
+`Specify first point:` chiede il primo punto; poi `Specify next point or
+[Undo]:` chiede quelli successivi. Dopo tre punti il prompt diventa
+`Specify next point or [Close/Undo]:`.
+
+Ogni coppia di punti crea una **linea distinta**, selezionabile da sola.
+`U` (*Undo*) toglie l’ultimo segmento e torna al punto precedente; togliendo
+anche il primo punto si riparte. `C` (*Close*), disponibile da tre punti,
+aggiunge la linea verso il primo punto e conclude. `Invio` a campo vuoto o `Esc`
+concludono conservando i segmenti già disegnati; il tratto verso il puntatore
+non viene aggiunto. Con un solo punto non resta niente. Tutte le linee dello
+stesso comando si annullano insieme con un solo `U` a riposo.
+
+**Esempio: un triangolo di tre linee.**
+
+```
+Command: l
+Specify first point: 0,0
+Specify next point or [Undo]: 50,0
+Specify next point or [Undo]: 25,30
+Specify next point or [Close/Undo]: c
+```
+
+`Invio` al primo punto termina: continuare dall’ultimo segmento con `Invio`
+non è ancora disponibile. Un punto coincidente viene ignorato con
+`Point coincides with the previous point.`.
+
+## CIRCLE — cerchio
+
+- **Nome:** `CIRCLE`
+- **Alias:** `C`
+
+Alla domanda `Specify center point for circle or [3P/2P]:` scegli il metodo:
+
+| Metodo | Risposte |
+|---|---|
+| centro e raggio | indica il centro, poi scrivi il raggio o indica un punto sul cerchio |
+| centro e diametro | indica il centro, scrivi `D` (*Diameter*), poi il diametro come numero o distanza dal centro a un punto |
+| due punti | scrivi `2P`, poi i due estremi del diametro |
+| tre punti | scrivi `3P`, poi tre punti sulla circonferenza |
+
+Il raggio o diametro deve essere positivo: altrimenti compare
+`Value must be positive and nonzero.` e puoi riprovare. In `3P`, punti
+allineati, quasi allineati o coincidenti producono `The three points are
+collinear.`: indica un altro terzo punto.
+
+**Esempi:** `C`, `0,0`, `25` crea un cerchio di centro `(0,0)` e raggio 25.
+Un nuovo `C`, `80,0`, `Invio` riusa quel raggio, mostrato come `<25.0000>`.
+`C`, `80,0`, `D`, `50` dà lo stesso raggio. `C`, `2P`, `0,0`, `50,0` crea
+invece un cerchio di centro `(25,0)` e raggio 25. `C`, `3P`, `10,0`, `0,10`,
+`-10,0` crea quello di centro `(0,0)` e raggio 10.
+
+Il cerchio si completa con l’ultima risposta; prima, `Esc` non lascia entità.
+Un `Invio` senza valore predefinito termina senza effetti. Il clic per la
+selezione deve essere sulla circonferenza, non nel suo interno.
+
+## ARC — arco
+
+- **Nome:** `ARC`
+- **Alias:** `A`
+
+Sono disponibili due metodi:
+
+- **Tre punti:** rispondi a `Specify start point of arc:`, `Specify second point
+  of arc or [Center]:` e `Specify end point of arc:`. L’arco passa per i tre
+  punti nell’ordine dato, anche in senso orario.
+- **Inizio, centro, fine:** indica l’inizio, poi `C` (*Center*), il centro e il
+  punto finale. L’arco va in senso **antiorario** dall’inizio verso la direzione
+  centro-fine. Il raggio è la distanza inizio-centro: se l’ultimo punto è a
+  un’altra distanza, determina solo la direzione della fine.
+
+**Esempi:** `A`, `10,0`, `0,10`, `-10,0` disegna il semicerchio superiore di
+raggio 10. `A`, `10,0`, `C`, `0,0`, `0,20` disegna un quarto di cerchio di
+raggio 10 che termina in `(0,10)`.
+
+Tre punti allineati, quasi allineati o coincidenti danno `The three points are
+collinear.`. Il centro uguale all’inizio dà `Center coincides with the start
+point.`; una fine al centro o sulla stessa direzione dell’inizio dà
+`End point gives a zero-length arc.`. In questi casi la domanda resta.
+`Esc` o `Invio` prima di completare l’arco non lasciano nulla.
+
 ## PLINE — polilinea
 
-Disegna una polilinea fatta di segmenti retti, aperta o chiusa.
+Disegna un’unica polilinea di segmenti retti e archi tangenti, aperta o chiusa.
 
 - **Nome:** `PLINE`
 - **Alias:** `PL`
 
-### Le domande
+### Le domande e le opzioni
 
-1. `Specify start point:` — indica il primo punto.
-2. `Specify next point or [Undo]:` — indica il secondo punto; da qui in poi vedi
-   il segmento elastico che segue il puntatore.
-3. `Specify next point or [Close/Undo]:` — dal terzo punto in poi compare anche
-   l'opzione *Close*.
+`Specify start point:` chiede il primo vertice. Nel modo linea compare
+`Specify next point or [Arc/Undo]:`; dopo tre vertici compare anche *Close*:
+`Specify next point or [Arc/Close/Undo]:`.
 
-Ogni punto aggiunge un vertice. Le opzioni si scelgono scrivendo il nome intero o
-la lettera maiuscola tra parentesi quadre:
+Con `A` passi al modo arco: `Specify end point of arc or [Line/Undo]:`, oppure
+`Specify end point of arc or [CLose/Line/Undo]:` da tre vertici.
 
 | Opzione | Scrittura | Effetto |
 |---|---|---|
-| *Close* | `C` o `close` | chiude la polilinea con un segmento verso il primo punto e conclude il comando (servono almeno 3 punti) |
-| *Undo* | `U` o `undo` | toglie l'ultimo punto; se li togli tutti si torna a `Specify start point:` |
+| *Arc* | `A` o `arc` | dal modo linea passa agli archi tangenti |
+| *Line* | `L` o `line` | dal modo arco torna ai segmenti retti |
+| *Close* nel modo linea | `C` o `close` | chiude con un segmento retto verso il primo punto e conclude (almeno 3 vertici) |
+| *CLose* nel modo arco | `CL` o `close` | chiude con un arco tangente verso il primo punto e conclude (almeno 3 vertici) |
+| *Undo* | `U` o `undo` | toglie l’ultimo vertice senza cambiare modo; senza vertici torna alla prima domanda |
+
+Un arco parte tangente al segmento precedente, anche se era un arco. Come primo
+segmento parte tangente all’asse X positivo. Un punto dritto davanti alla
+tangente crea un segmento retto; dritto dietro dà `Invalid end point of arc.`
+e puoi riprovare. L’anteprima segue il puntatore nei due modi.
 
 ### Concludere
 
-- `Invio`, `Spazio` o clic destro concludono la polilinea **aperta**. Servono
-  almeno 2 punti: con meno, il comando termina senza disegnare nulla.
-- *Close* conclude la polilinea **chiusa**.
-- `Esc` annulla il comando: nel disegno non resta nulla di quanto indicato e lo
-  storico mostra `*Cancel*`.
+- `Invio`, `Spazio` o clic destro a campo vuoto concludono la polilinea aperta.
+- *Close* conclude la polilinea chiusa, con il tratto del modo attivo.
+- `Esc` conserva una polilinea **aperta** con i vertici già dati, senza il tratto
+  dell’anteprima. Con meno di due vertici non resta niente.
 
-Se indichi due volte di seguito lo stesso punto, il secondo viene ignorato con il
-messaggio `Point coincides with the previous point.`
+Un punto coincidente con il precedente viene ignorato con
+`Point coincides with the previous point.`. La polilinea è una sola entità e un
+solo passo di annullamento, anche se conclusa con `Esc`.
 
 ### Esempi
 
-**Un quadrato di lato 50**, scrivendo solo coordinate:
+**Un quadrato di lato 50:**
 
 ```
 Command: pl
 Specify start point: 0,0
-Specify next point or [Undo]: @50,0
-Specify next point or [Undo]: @50<90
-Specify next point or [Close/Undo]: 0,50
-Specify next point or [Close/Undo]: c
+Specify next point or [Arc/Undo]: @50,0
+Specify next point or [Arc/Undo]: @50<90
+Specify next point or [Arc/Close/Undo]: 0,50
+Specify next point or [Arc/Close/Undo]: c
 ```
 
-Il secondo vertice è 50 unità a destra del primo, il terzo 50 unità sopra il
-secondo, il quarto è scritto in forma assoluta; `c` chiude il quadrato.
+**Linea, due archi, linea:** `PL`, `0,0`, `50,0`, `A`, `60,10`, `50,20`,
+`L`, `30,20`, `Invio`. Il primo arco parte tangente alla linea; il secondo è
+tangente al primo. Con `U` durante il comando togli l’ultimo vertice e puoi
+indicarne un altro. Sostituendo l’ultimo `Invio` con `Esc` resta lo stesso
+profilo aperto.
 
-**Un profilo a L aperto**, con la distanza diretta: avvia `PL`, clicca il primo
-punto, porta il puntatore verso destra e scrivi `120`, poi portalo verso l'alto e
-scrivi `40`, quindi `Invio`. Si ottengono due segmenti lunghi esattamente 120 e 40.
-Per garantirne l'angolo retto, usa ORTHO con OSNAP spento, come nell'esempio
-[con orto e distanza diretta](#snap-orto-e-coordinate-scritte).
+Per un profilo a L con lunghezze note usa la [distanza diretta con
+orto](#snap-orto-e-coordinate-scritte).
 
-**Correggere mentre disegni:** se l'ultimo punto è sbagliato, scrivi `u` e
-indicane un altro; la polilinea in corso non viene interrotta.
+## TEXT — testo su una riga
+
+- **Nome:** `TEXT`
+- **Alias:** `DT`, `DTEXT`
+
+1. `Specify start point of text:` — indica l’inizio della linea di base.
+2. `Specify height <2.5000>:` — altezza delle maiuscole: numero positivo oppure
+   distanza dal punto iniziale a un punto scritto o cliccato; `Invio` accetta
+   il valore proposto.
+3. `Specify rotation angle of text <0>:` — gradi antiorari da +X, oppure
+   direzione dal punto iniziale a un punto; `Invio` accetta il valore proposto.
+4. `Enter text:` — scrivi una riga e premi `Invio`; ripeti per altre righe.
+   `Invio` su una riga vuota conclude.
+
+Ogni riga è un’entità distinta, allineata a sinistra sulla linea di base.
+La successiva parte sotto la precedente di **5/3 dell’altezza**, nel sistema
+ruotato del testo. Tutte le righe dello stesso comando si annullano con un solo
+`U` a riposo. `Esc` conserva le righe già confermate e scarta quella ancora nel
+campo; prima della prima riga non lascia nulla. Il rettangolo d’anteprima,
+grande come una “M”, indica la posizione della riga successiva.
+
+Altezza e rotazione di un testo creato diventano i valori proposti dal comando
+successivo. Altezza zero o negativa dà `Value must be positive and nonzero.`
+senza avanzare alla domanda successiva.
+
+### Codici di controllo e font
+
+| Scritto nel testo | Disegnato |
+|---|---|
+| `%%c` | simbolo di diametro, mostrato come `Ø` nel font incluso |
+| `%%d` | `°` |
+| `%%p` | `±` |
+| `%%%` | `%` |
+
+Il valore conserva i codici originali. Codici non gestiti, come `%%u`, e codici
+incompleti restano letterali. Si usa **Liberation Sans Regular 2.1.5**, incluso
+nel programma sui tre sistemi. `⌀` e `∅` sono mostrati come `Ø`; gli altri
+caratteri mancanti usano il glifo mancante del font. Sotto 2 pixel di altezza
+delle maiuscole il testo appare come il solo rettangolo d’ingombro: avvicina lo
+zoom per leggerlo. Gli stili e il testo multiriga come entità unica non sono
+ancora disponibili.
+
+**Esempio con i valori iniziali:**
+
+```
+Command: dt
+Specify start point of text: 0,0
+Specify height <2.5000>:
+Specify rotation angle of text <0>:
+Enter text: Hello world
+Enter text: Foro %%c10 %%p0.1
+Enter text:
+```
+
+Ottieni due testi di altezza 2.5, rotazione 0, con la seconda linea di base a
+Y = −4.1667 circa. Gli spazi restano nel testo e la seconda riga mostra
+`Foro Ø10 ±0.1`.
+
+**Testo inclinato:** `DT`, `100,50`, `5`, `30`, `Prova d’uso è 100%%c`,
+`Seconda riga`, `Invio`. Le due righe sono inclinate di 30° e distano 25/3
+unità nella direzione perpendicolare verso il basso del testo.
 
 ## Annullare e ripetere
 
-Ogni polilinea conclusa e ogni gruppo cancellato con `ERASE` sono un **passo**
-che si può annullare e poi ripetere.
+Ogni comando di disegno concluso e ogni gruppo cancellato con `ERASE` sono un
+**passo** che si può annullare e poi ripetere. Le linee di un `LINE` e le righe
+di un `TEXT` sono un solo passo per comando, anche se conservate con `Esc`.
 
 | Azione | Menu | Tastiera | Riga di comando |
 |---|---|---|---|
@@ -369,12 +563,26 @@ comando o premi `Esc` prima. Scrivere `U` dentro `PLINE` non annulla il disegno 
 sceglie l'opzione *Undo* del comando, che toglie l'ultimo punto della polilinea in
 corso.
 
+### Che cosa conserva Esc
+
+| Comando interrotto | Nel disegno resta |
+|---|---|
+| `LINE` | i segmenti già disegnati; niente con un solo punto |
+| `PLINE` | la polilinea aperta con i vertici già indicati, se almeno due |
+| `TEXT` | le righe già confermate con `Invio` |
+| `CIRCLE`, `ARC` | niente: prima dell’ultima risposta l’entità non è completa |
+| `ERASE` | nessuna cancellazione; la selezione viene svuotata |
+
+Lo storico scrive `*Cancel*` anche quando resta lavoro completato. Un solo `U`
+a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
+`Esc` chiude prima quello, come descritto nella sezione sulla selezione.
+
 ### Che cosa non si annulla
 
 - Il disegno di esempio che compare all'avvio non fa parte della cronologia e non
   si può annullare.
-- Una polilinea conclusa con meno di 2 punti, o annullata con `Esc`, non lascia
-  alcun passo: non c'è nulla da annullare.
+- Un comando senza entità completate non lascia alcun passo: per esempio una
+  polilinea interrotta con meno di 2 punti o un `TEXT` senza righe confermate.
 - Una nuova modifica confermata, come una polilinea o una cancellazione, elimina
   i passi che si potevano ripetere. Un comando senza effetti conserva il redo.
 - La selezione, lo zoom, il pan e le impostazioni di snap e orto non sono passi
@@ -386,12 +594,19 @@ corso.
 |---|---|
 | `Unknown command: <nome>.` | non esiste un comando con quel nome o alias |
 | `Invalid point or option.` | la scrittura non è una coordinata valida né un'opzione della domanda, oppure manca un dato (nessun ultimo punto, nessuna direzione del puntatore): la domanda resta la stessa |
+| `Requires a distance, a point or an option.` | la richiesta vuole una distanza, un punto o un’opzione valida |
+| `Requires an angle, a point or an option.` | la richiesta vuole un angolo, un punto o un’opzione valida |
+| `Value must be positive and nonzero.` | raggio, diametro o altezza non valido: indica un valore positivo |
+| `The three points are collinear.` | impossibile costruire il cerchio o l’arco: cambia il terzo punto |
+| `Center coincides with the start point.` | per l’arco il centro deve essere diverso dall’inizio |
+| `End point gives a zero-length arc.` | la fine non definisce un arco valido |
+| `Invalid end point of arc.` | il punto è dietro la tangente nel modo arco di `PLINE` |
 | `Select objects:` | scegli le entità per il comando, poi conferma a campo vuoto |
 | `Specify opposite corner:` | un rettangolo di selezione è aperto: indica il secondo angolo |
 | `<n> found, <t> total` / `<n> removed, <t> total` | entità trovate o rimosse dal gesto e totale della selezione durante `Select objects:` |
 | `Invalid selection.` | durante la selezione è stato scritto testo non supportato; scegli le entità con il mouse |
 | `Point coincides with the previous point.` | il punto indicato coincide con il vertice precedente ed è stato ignorato |
-| `*Cancel*` | il comando è stato annullato con `Esc` |
+| `*Cancel*` | il comando è stato interrotto con `Esc`; il lavoro completato resta secondo la tabella sopra |
 | `Undone: <passo>.` / `Redone: <passo>.` | passo annullato o ripetuto |
 | `Nothing to undo.` / `Nothing to redo.` | non ci sono passi da annullare o da ripetere |
 | `<Osnap on>` / `<Osnap off>` | snap a oggetto attivato o spento |

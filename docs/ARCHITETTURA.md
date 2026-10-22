@@ -13,11 +13,12 @@ core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
 
 | Modulo | Namespace | Contiene | Può usare |
 |---|---|---|---|
-| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`), `Document`, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap) | solo la libreria standard |
-| `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto, disegno della scena | `core` |
+| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`, `Line`, `Circle`, `Arc`, `Text`), misure del font incluso, `Document`, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap) | solo la libreria standard |
+| `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto (`drawPolyline`, `drawText`), disegno della scena | `core` |
 | `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti | `core` |
 | `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, snap e orto | `core`, `edit` |
 | `script` | `tg::script` | modalità di controllo al livello 1: script `.tgs`, rapporto, domande al modello `.tgq`, confronto con i risultati attesi; l'eseguibile di sviluppo `tecnigrafo-script` | `core`, `edit`, `cmd` |
+| `tools` | — | `fontmetrics`, generatore delle misure del font TrueType durante la build | solo la libreria standard |
 | `app` | `tg::app` | finestre Qt, input da mouse e tastiera, `QtPainter` | tutti, più Qt |
 
 Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
@@ -40,6 +41,22 @@ docs/adr/                               decisioni architetturali
 docs/tappe/                             roadmap: schede e piani delle tappe
 ```
 
+## Font e strumenti di build
+
+`resources/fonts/` contiene Liberation Sans Regular 2.1.5, la licenza OFL 1.1
+e i dati di provenienza. `tools/fontmetrics` legge il TTF e genera la tabella
+inclusa da `core`: ascendente, discendente e avanzamento di ogni carattere,
+normalizzati all’altezza delle maiuscole. CMake rigenera la tabella quando cambia
+il font. Il generatore è uno strumento di build, non una dipendenza da Qt né un
+componente del programma distribuito.
+
+`core::textWidth`, `fontMetrics` e `textBox` permettono di misurare, selezionare
+e verificare il testo senza finestre. `core::displayText` converte i codici di
+controllo DXF; `core::fontCharacter` applica le sostituzioni dei caratteri
+mancanti. Il valore originale di `Text` resta intatto. `QtPainter` usa lo stesso
+TTF, incluso nelle risorse di `app`, e gli avanzamenti calcolati da `core`,
+senza crenatura, hinting o font di riserva del sistema (ADR 0013).
+
 ## Due sistemi di coordinate
 
 - **Disegno (mondo):** `double`, unità di disegno, Y verso l'alto, angoli in
@@ -53,9 +70,15 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 
    1. Qt chiede a `CadView` di ridisegnarsi (`paintEvent`).
    2. `CadView` crea un `QtPainter` e chiama `render::renderScene`.
-   3. `renderScene` disegna sfondo, griglia e assi, poi per ogni entità visibile la
-      approssima con segmenti (tolleranza in pixel), converte i punti in coordinate
-      dello schermo e chiama `Painter::drawPolyline`.
+   3. `renderScene` disegna sfondo, griglia e assi. Per polilinee, linee, cerchi
+      e archi visibili converte i punti in coordinate dello schermo e chiama
+      `Painter::drawPolyline`; le curve sono approssimate con segmenti secondo
+      una tolleranza in pixel. Per `Text` prepara un `TextRun` con i caratteri
+      convertiti, la linea di base sullo schermo, l’altezza delle maiuscole in
+      pixel, la rotazione e il fattore di larghezza, poi chiama
+      `Painter::drawText`. Sotto 2 pixel di altezza disegna invece il rettangolo
+      d’ingombro. `QtPainter` disegna ogni carattere con il font incluso nelle
+      posizioni determinate dalle misure di `core`.
    4. Sopra la scena `CadView` disegna, in quest'ordine, le entità selezionate
       (`renderHighlight`), l'anteprima del comando (`renderPreview`), il rettangolo
       di selezione e il marcatore dello snap attivo, chiedendo tutto al
