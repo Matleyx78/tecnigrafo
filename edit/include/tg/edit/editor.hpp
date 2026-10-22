@@ -49,6 +49,28 @@ public:
     /// Precondition: a transaction is open.
     bool remove(core::EntityId id);
 
+    /// Changes INSUNITS (docs/adr/0021). Returns false without changes if
+    /// the value is already `units`.
+    /// Preconditions: a transaction is open; 0 <= units <= 24.
+    bool setUnits(int units);
+
+    /// True if the undo stack is not at the last save or load position.
+    [[nodiscard]] bool isModified() const;
+
+    /// Records that the drawing has just been saved as `name` (UTF-8).
+    void markSaved(std::string name);
+
+    /// The drawing name, "Drawing1.cadx" before the first save.
+    [[nodiscard]] const std::string& fileName() const { return m_fileName; }
+
+    /// True once the drawing has been saved or loaded under a name.
+    [[nodiscard]] bool hasFile() const { return m_hasFile; }
+
+    /// Replaces the referenced document, clears history and notifies once.
+    /// An empty name starts a new "Drawing1.cadx" without an associated file.
+    /// Precondition: no transaction is open.
+    void replaceDocument(core::Document document, std::string name);
+
     /// Closes the open transaction, keeping its changes. A transaction that
     /// changed something becomes an undo step and clears the redo steps; an
     /// empty one leaves both stacks as they are.
@@ -99,11 +121,13 @@ private:
     /// document (after an Added change is undone, or a Removed change is
     /// applied) `detached` holds it, so that it can be put back unchanged.
     struct Change {
-        enum class Kind : std::uint8_t { Added, Removed };
+        enum class Kind : std::uint8_t { Added, Removed, Units };
 
         Kind kind{Kind::Added};
         core::EntityId id;
         std::optional<core::EntityRecord> detached;
+        int previousUnits{core::Document::kDefaultUnits};
+        int units{core::Document::kDefaultUnits};
     };
 
     struct Step {
@@ -119,6 +143,10 @@ private:
     std::optional<Step> m_open;
     std::vector<Step> m_undo;
     std::vector<Step> m_redo;
+    // A discarded redo branch can make the saved position unreachable.
+    std::optional<std::size_t> m_savedPosition{0};
+    std::string m_fileName{"Drawing1.cadx"};
+    bool m_hasFile{false};
     Listener m_listener;
 };
 
