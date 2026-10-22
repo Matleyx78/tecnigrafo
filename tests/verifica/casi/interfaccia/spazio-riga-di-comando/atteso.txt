@@ -7,7 +7,7 @@ messages:
   Command: PL
   Specify start point: 0,0
   Specify next point or [Arc/Undo]: 50,0
-  Specify next point or [Arc/Close/Undo]: 50,30
+  Specify next point or [Arc/Undo]: 50,30
   Specify next point or [Arc/Close/Undo]:
 prompt: Command:
 preview:
