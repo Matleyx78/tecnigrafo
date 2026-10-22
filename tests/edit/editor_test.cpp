@@ -7,6 +7,7 @@
 
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace tg::edit {
@@ -318,6 +319,189 @@ TEST(Editor, ListenerIsCalledAfterEveryChangeOfState) {
     editor.setChangeListener({});
     ASSERT_TRUE(editor.undo());
     EXPECT_EQ(calls, 5);
+}
+
+TEST(Editor, UnitsCanBeUndoneRedoneAndRolledBackWithEntities) {
+    Document document;
+    Editor editor(document);
+    editor.beginTransaction("Units and polyline");
+    const EntityId id = editor.add(segment(1.0));
+    EXPECT_TRUE(editor.setUnits(0));
+    EXPECT_EQ(document.units(), 0);
+    EXPECT_TRUE(editor.setUnits(Document::kMaxUnits));
+    editor.commit();
+
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(document.units(), Document::kDefaultUnits);
+    EXPECT_TRUE(document.isEmpty());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(document.units(), Document::kMaxUnits);
+    EXPECT_EQ(entityOf(document, id), Entity{segment(1.0)});
+
+    editor.beginTransaction("Discard units");
+    EXPECT_TRUE(editor.setUnits(1));
+    EXPECT_TRUE(editor.setUnits(2));
+    editor.rollback();
+    EXPECT_EQ(document.units(), Document::kMaxUnits);
+    EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Units and polyline"}));
+}
+
+TEST(Editor, UnchangedUnitsCreateNoUndoStepOrModification) {
+    Document document;
+    Editor editor(document);
+    editor.beginTransaction("Same units");
+    EXPECT_FALSE(editor.setUnits(Document::kDefaultUnits));
+    editor.commit();
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, ModifiedStateFollowsTheSavedPositionInBothDirections) {
+    Document document;
+    Editor editor(document);
+    EXPECT_FALSE(editor.isModified());
+    EXPECT_EQ(editor.fileName(), "Drawing1.cadx");
+    EXPECT_FALSE(editor.hasFile());
+
+    addCommitted(editor, 1.0);
+    EXPECT_TRUE(editor.isModified());
+    editor.markSaved("pianta-caffè.cadx");
+    EXPECT_FALSE(editor.isModified());
+    EXPECT_TRUE(editor.hasFile());
+    EXPECT_EQ(editor.fileName(), "pianta-caffè.cadx");
+
+    addCommitted(editor, 2.0);
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_FALSE(editor.isModified());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_FALSE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_TRUE(editor.isModified());
+}
+
+TEST(Editor, DiscardedSavedBranchCannotBeReachedAtTheSameStackDepth) {
+    Document document;
+    Editor editor(document);
+    addCommitted(editor, 1.0);
+    editor.markSaved("saved.cadx");
+    ASSERT_TRUE(editor.undo());
+    addCommitted(editor, 2.0);
+    EXPECT_TRUE(editor.isModified());
+    EXPECT_FALSE(editor.canRedo());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_TRUE(editor.isModified());
+    editor.markSaved("branch.cadx");
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, BranchingAtOrAfterSavedPositionPreservesIt) {
+    Document document;
+    Editor editor(document);
+    addCommitted(editor, 1.0);
+    editor.markSaved("saved.cadx");
+    addCommitted(editor, 2.0);
+    addCommitted(editor, 3.0);
+    ASSERT_TRUE(editor.undo());
+    addCommitted(editor, 4.0);
+    ASSERT_TRUE(editor.undo());
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_FALSE(editor.isModified());
+    addCommitted(editor, 5.0);
+    ASSERT_TRUE(editor.undo());
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, EmptyCommitAndRollbackPreserveSavedStateAndRedo) {
+    Document document;
+    Editor editor(document);
+    addCommitted(editor, 1.0);
+    editor.markSaved("saved.cadx");
+    editor.beginTransaction("Empty at saved position");
+    editor.commit();
+    EXPECT_FALSE(editor.isModified());
+    ASSERT_TRUE(editor.undo());
+    editor.beginTransaction("Empty below saved position");
+    EXPECT_FALSE(editor.setUnits(document.units()));
+    editor.commit();
+    EXPECT_TRUE(editor.isModified());
+    editor.beginTransaction("Discarded");
+    editor.setUnits(0);
+    editor.add(segment(2.0));
+    editor.rollback();
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, SavingAfterUndoKeepsRedoAndMovesTheSavedPosition) {
+    Document document;
+    Editor editor(document);
+    addCommitted(editor, 1.0);
+    ASSERT_TRUE(editor.undo());
+    editor.markSaved("empty.cadx");
+    EXPECT_FALSE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, ReplaceDocumentKeepsTheReferenceAndNotifiesAfterResettingState) {
+    Document document;
+    Editor editor(document);
+    const Document& reference = editor.document();
+    addCommitted(editor, 1.0);
+    addCommitted(editor, 2.0);
+    ASSERT_TRUE(editor.undo());
+
+    Document opened;
+    opened.setUnits(0);
+    const EntityId id = opened.add(segment(3.0));
+    int calls = 0;
+    editor.setChangeListener([&] {
+        ++calls;
+        EXPECT_EQ(&editor.document(), &document);
+        EXPECT_FALSE(editor.canUndo());
+        EXPECT_FALSE(editor.canRedo());
+        EXPECT_TRUE(editor.undoNames().empty());
+        EXPECT_TRUE(editor.redoNames().empty());
+        EXPECT_FALSE(editor.isModified());
+        if (calls == 1) {
+            EXPECT_TRUE(editor.hasFile());
+            EXPECT_EQ(editor.fileName(), "opened.dxf");
+            EXPECT_EQ(reference.units(), 0);
+            EXPECT_EQ(entityOf(reference, id), Entity{segment(3.0)});
+        } else {
+            EXPECT_FALSE(editor.hasFile());
+            EXPECT_EQ(editor.fileName(), "Drawing1.cadx");
+            EXPECT_TRUE(reference.isEmpty());
+            EXPECT_EQ(reference.units(), Document::kDefaultUnits);
+        }
+    });
+
+    editor.replaceDocument(std::move(opened), "opened.dxf");
+    EXPECT_EQ(calls, 1);
+    editor.replaceDocument(Document{}, "");
+    EXPECT_EQ(calls, 2);
+}
+
+TEST(EditorDeathTest, DrawingStatePreconditionsAreChecked) {
+#ifdef NDEBUG
+    GTEST_SKIP() << "preconditions are checked with assert, disabled in this build";
+#endif
+    Document document;
+    Editor editor(document);
+    EXPECT_DEATH(editor.setUnits(0), "open transaction");
+    editor.beginTransaction("Units");
+    EXPECT_DEATH(editor.setUnits(-1), "invalid units");
+    EXPECT_DEATH(editor.setUnits(Document::kMaxUnits + 1), "invalid units");
+    EXPECT_DEATH(editor.replaceDocument(Document{}, ""), "no open transaction");
 }
 
 TEST(EditorDeathTest, TransactionPreconditionsAreChecked) {

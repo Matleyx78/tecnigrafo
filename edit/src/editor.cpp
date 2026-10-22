@@ -33,11 +33,47 @@ bool Editor::remove(core::EntityId id) {
     return true;
 }
 
+bool Editor::setUnits(int units) {
+    assert(m_open && "setUnits() needs an open transaction");
+    assert(units >= 0 && units <= core::Document::kMaxUnits && "invalid units");
+    const int previous = m_document.units();
+    if (previous == units) {
+        return false;
+    }
+    m_open->changes.push_back(Change{Change::Kind::Units, {}, std::nullopt, previous, units});
+    m_document.setUnits(units);
+    return true;
+}
+
+bool Editor::isModified() const {
+    return !m_savedPosition || *m_savedPosition != m_undo.size();
+}
+
+void Editor::markSaved(std::string name) {
+    m_fileName = std::move(name);
+    m_hasFile = true;
+    m_savedPosition = m_undo.size();
+}
+
+void Editor::replaceDocument(core::Document document, std::string name) {
+    assert(!m_open && "replaceDocument() requires no open transaction");
+    m_document = std::move(document);
+    m_undo.clear();
+    m_redo.clear();
+    m_savedPosition = 0;
+    m_hasFile = !name.empty();
+    m_fileName = m_hasFile ? std::move(name) : "Drawing1.cadx";
+    notify();
+}
+
 void Editor::commit() {
     assert(m_open && "commit() needs an open transaction");
     Step step = std::move(*m_open);
     m_open.reset();
     if (!step.changes.empty()) {
+        if (m_savedPosition && *m_savedPosition > m_undo.size()) {
+            m_savedPosition.reset();
+        }
         m_undo.push_back(std::move(step));
         m_redo.clear();
     }
@@ -133,6 +169,9 @@ void Editor::apply(Change& change) {
             change.detached = m_document.remove(change.id);
             assert(change.detached && "the removed entity must be in the document");
             break;
+        case Change::Kind::Units:
+            m_document.setUnits(change.units);
+            break;
     }
 }
 
@@ -146,6 +185,9 @@ void Editor::revert(Change& change) {
             assert(change.detached && "the removed entity must be outside the document");
             m_document.restore(std::move(*change.detached));
             change.detached.reset();
+            break;
+        case Change::Kind::Units:
+            m_document.setUnits(change.previousUnits);
             break;
     }
 }
