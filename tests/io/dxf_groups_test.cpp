@@ -30,7 +30,7 @@ using Groups = std::vector<std::pair<int, std::string>>;
 std::string lines(const Groups& groups, std::string_view lineEnd = "\n") {
     std::string out;
     for (const auto& [code, value] : groups) {
-        std::string text = std::to_string(code);
+        const std::string text = std::to_string(code);
         out += std::string(text.size() < 3 ? 3 - text.size() : 0, ' ') + text;
         out += lineEnd;
         out += value;
@@ -141,7 +141,7 @@ TEST(DxfGroupsTest, RejectsFileEndingInsideAGroup) {
 }
 
 TEST(DxfGroupsTest, RejectsLinesLongerThan64KiB) {
-    constexpr std::size_t kLimit = 64 * 1024;
+    constexpr std::size_t kLimit = std::size_t{64} * 1024;
     const std::string longest(kLimit, 'x');
     EXPECT_TRUE(readGroups("1\n" + longest + "\r\n0\nEOF\n").ok());
 
@@ -243,7 +243,7 @@ TEST(DxfGroupsTest, ReadsEverySupportedVersion) {
 }
 
 TEST(DxfGroupsTest, RejectsBinaryDxf) {
-    const std::string binary = std::string{"AutoCAD Binary DXF\r\n\x1A"} + '\0' + "\x00\x00";
+    const std::string binary = std::string{"AutoCAD Binary DXF\r\n\x1A"} + '\0';
     const Result<GroupFile> result = readGroups(binary);
     ASSERT_FALSE(result.ok());
     EXPECT_EQ(result.error().kind, Error::Kind::Unsupported);
@@ -337,9 +337,8 @@ TEST(DxfGroupsTest, ParsesNumbersWithADecimalPoint) {
     EXPECT_EQ(parseNumber("1e300"), 1e300);
     EXPECT_EQ(parseNumber("-1.5E-3"), -1.5e-3);
     const std::optional<double> negativeZero = parseNumber("-0.0");
-    ASSERT_TRUE(negativeZero.has_value());
-    EXPECT_EQ(*negativeZero, 0.0);
-    EXPECT_TRUE(std::signbit(*negativeZero));
+    EXPECT_EQ(negativeZero, 0.0);
+    EXPECT_TRUE(std::signbit(negativeZero.value_or(1.0)));
 }
 
 TEST(DxfGroupsTest, RejectsInvalidNumbers) {
@@ -366,15 +365,19 @@ TEST(DxfGroupsTest, FormatsNumbersWithADecimalDigit) {
     EXPECT_EQ(formatNumber(1.25e-300), "1.25e-300");
 }
 
+/// Random numbers reproducible on every platform: std::mt19937_64 is fully
+/// specified by the standard (the distributions are not, but any value will do).
+std::mt19937_64 randomEngine(std::uint64_t seed) {
+    return std::mt19937_64{seed};
+}
+
 TEST(DxfGroupsTest, FormattedNumbersReadBackEqual) {
-    std::mt19937_64 generator{20261022};
+    std::mt19937_64 generator = randomEngine(20261022);
     std::uniform_int_distribution<std::uint64_t> bits;
     std::uniform_real_distribution<double> coordinates{-1e6, 1e6};
     const auto check = [](double value) {
         const std::string text = formatNumber(value);
-        const std::optional<double> back = parseNumber(text);
-        ASSERT_TRUE(back.has_value()) << text;
-        EXPECT_EQ(*back, value) << text;
+        EXPECT_EQ(parseNumber(text), std::optional<double>{value}) << text;
         EXPECT_NE(text.find('.'), std::string::npos) << text;
     };
     for (int i = 0; i < 2000; ++i) {
@@ -382,7 +385,7 @@ TEST(DxfGroupsTest, FormattedNumbersReadBackEqual) {
         // Any normal double, from its bits. Subnormal numbers are left out:
         // the stream used on macOS (see dxf_groups.cpp) reports them as out
         // of range.
-        const double value = std::bit_cast<double>(bits(generator));
+        const auto value = std::bit_cast<double>(bits(generator));
         if (std::isnormal(value)) {
             check(value);
         }

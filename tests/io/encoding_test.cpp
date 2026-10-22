@@ -153,10 +153,8 @@ TEST(EncodingTest, EncodesMissingCharactersAsEscapes) {
 TEST(EncodingTest, DecodesWhatItEncodes) {
     for (const TextEncoding encoding :
          {TextEncoding::Utf8, TextEncoding::Ansi1252, TextEncoding::Ansi1250}) {
-        const std::optional<std::string> back =
-            decodeText(encodeText(kMixedText, encoding), encoding);
-        ASSERT_TRUE(back.has_value());
-        EXPECT_EQ(*back, kMixedText);
+        EXPECT_EQ(decodeText(encodeText(kMixedText, encoding), encoding),
+                  std::optional<std::string>{std::string{kMixedText}});
     }
 }
 
