@@ -15,8 +15,8 @@ eccellenza, prima del computer.
 > entità con `ERASE`, si agganciano punti notevoli (estremo, medio, centro,
 > inserimento) e si usa l'orto. Le modifiche si possono annullare e ripetere. Il
 > salvataggio dei file arriverà con la tappa 0.5. Le
-> [note della 0.4](docs/rilasci/0.4.md) riportano novità e limiti noti. Prossima
-> tappa: [0.5](docs/tappe/0.5-file-e-dxf.md), file: formato nativo e DXF.
+> [note della 0.4](docs/rilasci/0.4.md) riportano novità e limiti noti. Tappa
+> in corso: [0.5](docs/tappe/0.5-file-e-dxf.md), file: formato nativo e DXF.
 
 ## Disegnare
 
