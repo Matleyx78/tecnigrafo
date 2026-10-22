@@ -1,0 +1,22 @@
+; Il testo con tutte le proprieta DXF di testo/dxf-proprieta, con l'ingombro
+; dell'ADR 0022 ([0.5-R2], lavoro #155). Nella tappa 0.4 queste proprieta si
+; conservavano senza contare; da P2 contano tutte.
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (cmap, hmtx):
+;   a = 1854/1409 = 1.3158268275372604, d = -434/1409 = -0.3080198722498226
+;   L("Hello") = 6783/2048 * 2048/1409 = 3.312278211497516
+; L("Test DXF") = 6.137686302342087
+; Middle Center, all'indietro e capovolto: A = 15,25, (ox, oy) = (12.275372604684174, 2.5), h = 5, f = 0.8, w = 24.550745209368348, rotazione = 45 gradi
+T_full = TEXT position=10,20 alignment-point=15,25 height=5 rotation=45 width-factor=0.8 oblique=15 mirror-x=yes mirror-y=yes horizontal=center vertical=middle value="Test DXF"
+? box T_full -> 21.588689892768155,37.30225320278153 4.22869147204065,19.942254782054025 8.431515994358374,12.662749174103327 25.791514415085878,30.022747594830825
+? bbox T_full -> 4.22869147204065,12.662749174103327 25.791514415085878,37.30225320278153
+? snaps T_full -> Insertion 15,25
+? snaps T_full modes=insertion -> Insertion 15,25
+? snaps T_full modes=endpoint -> none
+? distance T_full 15,25 -> 0
+? closest T_full 15,25 -> 15,25
+? distance T_full 10,20 -> 0
+? closest T_full 10,20 -> 10,20
+? inside T_full 3.2286914720406497,11.662749174103327 26.791514415085878,38.30225320278153 -> yes
+? crosses T_full 3.2286914720406497,11.662749174103327 26.791514415085878,38.30225320278153 -> yes
+? inside T_full 13,23 17,27 -> no
+? crosses T_full 13,23 17,27 -> yes

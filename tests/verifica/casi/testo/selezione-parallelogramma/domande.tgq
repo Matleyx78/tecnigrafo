@@ -1,0 +1,55 @@
+; Selezione e snap su testi a parallelogramma (ADR 0022, punto 5; [0.5-R2], lavoro #155)
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (cmap, hmtx):
+;   a = 1854/1409 = 1.3158268275372604, d = -434/1409 = -0.3080198722498226
+;   L("Hello") = 6783/2048 * 2048/1409 = 3.312278211497516
+; Il testo e una regione: dentro il parallelogramma la distanza e 0 e il punto
+; piu vicino e il punto stesso; fuori, la distanza e quella dal bordo.
+
+; P: obliquo 30, rotazione 30, h = 5: A = 0,0, (ox, oy) = (0, 0), h = 5, f = 1, w = 16.56139105748758, rotazione = 30 gradi
+P = TEXT position=0,0 height=5 rotation=30 oblique=30 value="Hello"
+? box P -> 0,-1.7783535615918922 14.342585377792673,6.502341967151897 14.342585377792673,15.877625259599473 0,7.596929730855686
+? bbox P -> 0,-1.7783535615918922 14.342585377792673,15.877625259599473
+
+; Dentro, vicino all'angolo in alto a destra spostato dall'obliquo
+? distance P 14.082777756657341,15.381215098085699 -> 0
+? closest P 14.082777756657341,15.381215098085699 -> 14.082777756657341,15.381215098085699
+; Fuori, dove starebbe il rettangolo senza obliquo (angolo in basso a destra)
+? distance P 14.839429977660343,7.020135438306757 -> 0.4968445998676696
+? closest P 14.839429977660343,7.020135438306757 -> 14.342585377792673,7.020135438306757
+; Fuori, oltre il lato superiore
+? distance P 7.1712926888963375,14.046678571986085 -> 2.0000000000000013
+? closest P 7.1712926888963375,14.046678571986085 -> 8.171292688896338,12.314627764417207
+; Fuori, oltre il lato sinistro inclinato
+? distance P -2.598076211353316,1.386751345948129 -> 2.598076211353316
+? closest P -2.598076211353316,1.386751345948129 -> 0,1.386751345948129
+; Fuori, oltre l'angolo in basso a sinistra: il punto piu vicino e l'angolo
+? distance P -1.7320508075688779,-5.087754638350395 -> 3.7352557458426245
+? closest P -1.7320508075688779,-5.087754638350395 -> 0,-1.7783535615918922
+
+; Finestre
+? inside P -1,-2.778353561591892 15.342585377792673,16.877625259599473 -> yes
+? crosses P -1,-2.778353561591892 15.342585377792673,16.877625259599473 -> yes
+? inside P 0.9999999999999999,-0.7783535615918922 15.342585377792673,16.877625259599473 -> no
+? crosses P 0.9999999999999999,-0.7783535615918922 15.342585377792673,16.877625259599473 -> yes
+; Un rettangolo nell'angolo del bbox, fuori dal parallelogramma: non lo tocca
+? inside P 13.842585377792673,-1.7783535615918922 14.342585377792673,-1.2783535615918922 -> no
+? crosses P 13.842585377792673,-1.7783535615918922 14.342585377792673,-1.2783535615918922 -> no
+
+; Documento: P e un secondo testo Middle Center con obliquo e all'indietro
+; Q: A = 40,0, (ox, oy) = (8.28069552874379, 2.5), h = 5, f = 1, w = 16.56139105748758, rotazione = 0 gradi
+Q = TEXT position=0,0 alignment-point=40,0 height=5 oblique=-20 mirror-x=yes horizontal=center vertical=middle value="Hello"
+? box Q -> 46.81021961777122,-4.040099361249113 30.248828560283634,-4.040099361249113 33.20398787895316,4.079134137686302 49.76537893644074,4.079134137686302
+? pick 7.171292688896337,7.027099110320023 tolerance=0.1 -> P
+? pick 44.42246196584697,-1.5 tolerance=0.1 -> Q
+; Nel bbox di P ma fuori dal parallelogramma, a distanza 0.4968445998676696
+? pick 14.839429977660343,7.020135438306757 tolerance=0.1 -> none
+? pick 14.839429977660343,7.020135438306757 tolerance=0.5 -> P
+? window -1,-2.778353561591892 15.342585377792673,16.877625259599473 -> P
+? window -1,-5.040099361249113 50.76537893644074,16.877625259599473 -> P Q
+
+; Snap: sopra Q, lontano da A, si aggancia l'inserimento in A = 40,0
+? snap 45.79648687012065,0 aperture=0.5 -> Insertion 40,0
+? snap 7.171292688896337,7.027099110320023 aperture=0.5 -> Insertion 0,0
+? snap 45.79648687012065,0 aperture=0.5 modes=endpoint,midpoint,center -> none
+; Nel bbox di P ma fuori dal parallelogramma, oltre l'apertura 0.2: nessuno snap
+? snap 14.839429977660343,7.020135438306757 aperture=0.2 -> none

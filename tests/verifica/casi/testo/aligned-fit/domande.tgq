@@ -1,0 +1,98 @@
+; Domande su Aligned e Fit (ADR 0022, punto 3; [0.5-R2], lavoro #155)
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (cmap, hmtx):
+;   a = 1854/1409 = 1.3158268275372604, d = -434/1409 = -0.3080198722498226
+;   L("Hello") = 6783/2048 * 2048/1409 = 3.312278211497516
+; La rotazione e la direzione da P1 = position a P2 = alignment-point; il gruppo 50
+; si conserva e non si usa. Aligned: h = |P2 - P1| / (L f); Fit: f = |P2 - P1| / (L h).
+; A = P1, (ox, oy) = (0, 0); 73 non conta; snap d'inserimento in P1.
+
+; Aligned orizzontale, f = 0.8 conservato, rotazione 45 ignorata: A = 0,0, (ox, oy) = (0, 0), h = 4.528605099635739, f = 0.8, w = 11.999999999999998, rotazione = 0 gradi
+AL_X = TEXT position=0,0 alignment-point=12,0 rotation=45 width-factor=0.8 horizontal=aligned value="Hello"
+? box AL_X -> 0,-1.3949003642596955 11.999999999999998,-1.3949003642596955 11.999999999999998,5.958860081422754 0,5.958860081422754
+? bbox AL_X -> 0,-1.3949003642596955 11.999999999999998,5.958860081422754
+? snaps AL_X -> Insertion 0,0
+
+; Aligned da 1,2 a 4,6 (lunghezza 5, direzione atan2(4, 3)): A = 1,2, (ox, oy) = (0, 0), h = 1.5095350332119135, f = 1, w = 5, rotazione = 53.130102354 gradi
+AL_345 = TEXT position=1,2 alignment-point=4,6 horizontal=aligned value="Hello"
+? box AL_345 -> 1.3719734304692521,1.7210199271480608 4.371973430469252,5.721019927148061 2.410970644953932,7.191772016284551 -0.5890293550460679,3.1917720162845513
+? bbox AL_345 -> -0.5890293550460679,1.7210199271480608 4.371973430469252,7.191772016284551
+? snaps AL_345 -> Insertion 1,2
+
+; Aligned come AL_345 con 73 = top, che non conta: A = 1,2, (ox, oy) = (0, 0), h = 1.5095350332119135, f = 1, w = 5, rotazione = 53.130102354 gradi
+AL_TOP = TEXT position=1,2 alignment-point=4,6 horizontal=aligned vertical=top value="Hello"
+? box AL_TOP -> 1.3719734304692521,1.7210199271480608 4.371973430469252,5.721019927148061 2.410970644953932,7.191772016284551 -0.5890293550460679,3.1917720162845513
+? bbox AL_TOP -> -0.5890293550460679,1.7210199271480608 4.371973430469252,7.191772016284551
+? snaps AL_TOP -> Insertion 1,2
+
+; Aligned da destra a sinistra: rotazione 180: A = 20,5, (ox, oy) = (0, 0), h = 3.622884079708592, f = 1, w = 12, rotazione = 180 gradi
+AL_BACK = TEXT position=20,5 alignment-point=8,5 horizontal=aligned value="Hello"
+? box AL_BACK -> 20,6.115920291407757 8,6.115920291407758 7.999999999999999,0.2329119348617974 20,0.23291193486179562
+? bbox AL_BACK -> 7.999999999999999,0.23291193486179562 20,6.115920291407758
+? snaps AL_BACK -> Insertion 20,5
+
+; Fit orizzontale, h = 2.5 conservata, f = 0.8 e rotazione 45 ignorate: A = 0,0, (ox, oy) = (0, 0), h = 2.5, f = 1.4491536318834368, w = 12, rotazione = 0 gradi
+FT_X = TEXT position=0,0 alignment-point=12,0 rotation=45 width-factor=0.8 horizontal=fit value="Hello"
+? box FT_X -> 0,-0.7700496806245565 12,-0.7700496806245565 12,3.289567068843151 0,3.289567068843151
+? bbox FT_X -> 0,-0.7700496806245565 12,3.289567068843151
+? snaps FT_X -> Insertion 0,0
+
+; Fit da 1,2 a 4,6 con h = 2: A = 1,2, (ox, oy) = (0, 0), h = 2, f = 0.7547675166059568, w = 5, rotazione = 53.130102354 gradi
+FT_345 = TEXT position=1,2 alignment-point=4,6 height=2 horizontal=fit value="Hello"
+? box FT_345 -> 1.4928317955997161,1.6303761533002128 4.492831795599716,5.630376153300213 1.8946770759403835,7.578992193044713 -1.1053229240596165,3.578992193044713
+? bbox FT_345 -> -1.1053229240596165,1.6303761533002128 4.492831795599716,7.578992193044713
+? snaps FT_345 -> Insertion 1,2
+
+; Fit verticale verso il basso: rotazione -90: A = 5,30, (ox, oy) = (0, 0), h = 3, f = 2.0127133776158845, w = 20, rotazione = -90 gradi
+FT_V = TEXT position=5,30 alignment-point=5,10 height=3 horizontal=fit value="Hello"
+? box FT_V -> 4.075940383250533,30 4.075940383250533,10 8.947480482611782,10 8.94748048261178,30
+? bbox FT_V -> 4.075940383250533,10 8.947480482611782,30
+? snaps FT_V -> Insertion 5,30
+
+; Punti quasi coincidenti (distanza 1e-6): le formule valgono ancora
+; aligned: A = 2,3, (ox, oy) = (0, 0), h = 3.0190700668458264e-07, f = 1, w = 1.000000000139778e-06, rotazione = 0 gradi
+AL_NEAR = TEXT position=2,3 alignment-point=2.000001,3 horizontal=aligned value="Hello"
+? box AL_NEAR -> 2,2.9999999070066425 2.000001,2.9999999070066425 2.000001,3.000000397257339 2,3.000000397257339
+? bbox AL_NEAR -> 2,2.9999999070066425 2.000001,3.000000397257339
+? snaps AL_NEAR -> Insertion 2,3
+; fit: A = 2,3, (ox, oy) = (0, 0), h = 2.5, f = 1.2076280267383306e-07, w = 1.000000000139778e-06, rotazione = 0 gradi
+FT_NEAR = TEXT position=2,3 alignment-point=2.000001,3 horizontal=fit value="Hello"
+? box FT_NEAR -> 2,2.2299503193754435 2.000001,2.2299503193754435 2.000001,6.2895670688431515 2,6.2895670688431515
+? bbox FT_NEAR -> 2,2.2299503193754435 2.000001,6.2895670688431515
+? snaps FT_NEAR -> Insertion 2,3
+
+; P1 = P2, o L(v) = 0: come Left sulla linea di base in P1, con altezza e fattore
+; di larghezza del file. La rotazione del file e 0, cosi la risposta non dipende
+; da quale rotazione si usa in questo caso.
+; AL_SAME: A = 5,5, (ox, oy) = (0, 0), h = 2.5, f = 0.8, w = 6.624556422995032, rotazione = 0 gradi
+AL_SAME = TEXT position=5,5 alignment-point=5,5 width-factor=0.8 horizontal=aligned value="Hello"
+? box AL_SAME -> 5,4.229950319375444 11.624556422995031,4.229950319375444 11.624556422995031,8.289567068843152 5,8.289567068843152
+? bbox AL_SAME -> 5,4.229950319375444 11.624556422995031,8.289567068843152
+? snaps AL_SAME -> Insertion 5,5
+; FT_SAME: A = 5,5, (ox, oy) = (0, 0), h = 2, f = 0.8, w = 5.299645138396026, rotazione = 0 gradi
+FT_SAME = TEXT position=5,5 alignment-point=5,5 height=2 width-factor=0.8 horizontal=fit value="Hello"
+? box FT_SAME -> 5,4.383960255500355 10.299645138396027,4.383960255500355 10.299645138396027,7.631653655074521 5,7.631653655074521
+? bbox FT_SAME -> 5,4.383960255500355 10.299645138396027,7.631653655074521
+? snaps FT_SAME -> Insertion 5,5
+; AL_EMPTY: A = 5,5, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 0, rotazione = 0 gradi
+AL_EMPTY = TEXT position=5,5 alignment-point=15,5 horizontal=aligned value=""
+? box AL_EMPTY -> 5,4.229950319375444 5,4.229950319375444 5,8.289567068843152 5,8.289567068843152
+? bbox AL_EMPTY -> 5,4.229950319375444 5,8.289567068843152
+? snaps AL_EMPTY -> Insertion 5,5
+; FT_EMPTY: A = 5,5, (ox, oy) = (0, 0), h = 2, f = 0.8, w = 0, rotazione = 0 gradi
+FT_EMPTY = TEXT position=5,5 alignment-point=15,5 height=2 width-factor=0.8 horizontal=fit value=""
+? box FT_EMPTY -> 5,4.383960255500355 5,4.383960255500355 5,7.631653655074521 5,7.631653655074521
+? bbox FT_EMPTY -> 5,4.383960255500355 5,7.631653655074521
+? snaps FT_EMPTY -> Insertion 5,5
+; AL_ZERO: A = 0,0, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 0, rotazione = 0 gradi
+AL_ZERO = TEXT position=0,0 horizontal=aligned value=""
+? box AL_ZERO -> 0,-0.7700496806245565 0,-0.7700496806245565 0,3.289567068843151 0,3.289567068843151
+? bbox AL_ZERO -> 0,-0.7700496806245565 0,3.289567068843151
+? snaps AL_ZERO -> Insertion 0,0
+
+; Distanza e punto piu vicino per AL_345 (rettangolo ruotato)
+? distance AL_345 1.8961859867152346,4.452860509963574 -> 0
+? closest AL_345 1.8961859867152346,4.452860509963574 -> 1.8961859867152346,4.452860509963574
+? distance AL_345 4.9,2.1999999999999997 -> 2.535033211913435
+? closest AL_345 4.9,2.1999999999999997 -> 2.871973430469252,3.7210199271480606
+? distance AL_345 2.810970644953933,9.391772016284552 -> 2.236067977499791
+? closest AL_345 2.810970644953933,9.391772016284552 -> 2.410970644953932,7.191772016284551

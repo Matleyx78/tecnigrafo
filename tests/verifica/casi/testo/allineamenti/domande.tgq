@@ -1,0 +1,111 @@
+; Domande sui 15 allineamenti del testo (ADR 0022, punti 1, 2 e 5; [0.5-R2], lavoro #155)
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (cmap, hmtx):
+;   a = 1854/1409 = 1.3158268275372604, d = -434/1409 = -0.3080198722498226
+;   L("Hello") = 6783/2048 * 2048/1409 = 3.312278211497516
+; Testo "Hello", h = 2.5, f = 1, rotazione 0: w = L * h = 8.28069552874379
+; Il punto (x, y) del rettangolo va in A + (x - ox, y - oy).
+; A = position solo con 72 = 0 e 73 = 0; altrimenti A = alignment-point (10,20).
+; Lo snap d'inserimento e in A.
+
+; 72 left, 73 baseline: A = 3,4, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+L_BASE = TEXT position=3,4 alignment-point=10,20 value="Hello"
+? box L_BASE -> 3,3.2299503193754435 11.28069552874379,3.2299503193754435 11.28069552874379,7.2895670688431515 3,7.2895670688431515
+? bbox L_BASE -> 3,3.2299503193754435 11.28069552874379,7.2895670688431515
+? snaps L_BASE -> Insertion 3,4
+
+; 72 left, 73 bottom: A = 10,20, (ox, oy) = (0, -0.7700496806245565), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+L_B = TEXT position=3,4 alignment-point=10,20 vertical=bottom value="Hello"
+? box L_B -> 10,20 18.28069552874379,20 18.28069552874379,24.059616749467708 10,24.059616749467708
+? bbox L_B -> 10,20 18.28069552874379,24.059616749467708
+? snaps L_B -> Insertion 10,20
+
+; 72 left, 73 middle: A = 10,20, (ox, oy) = (0, 1.25), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+L_M = TEXT position=3,4 alignment-point=10,20 vertical=middle value="Hello"
+? box L_M -> 10,17.979950319375444 18.28069552874379,17.979950319375444 18.28069552874379,22.03956706884315 10,22.03956706884315
+? bbox L_M -> 10,17.979950319375444 18.28069552874379,22.03956706884315
+? snaps L_M -> Insertion 10,20
+
+; 72 left, 73 top: A = 10,20, (ox, oy) = (0, 2.5), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+L_T = TEXT position=3,4 alignment-point=10,20 vertical=top value="Hello"
+? box L_T -> 10,16.729950319375444 18.28069552874379,16.729950319375444 18.28069552874379,20.78956706884315 10,20.78956706884315
+? bbox L_T -> 10,16.729950319375444 18.28069552874379,20.78956706884315
+? snaps L_T -> Insertion 10,20
+
+; 72 center, 73 baseline: A = 10,20, (ox, oy) = (4.140347764371895, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+C_BASE = TEXT position=3,4 alignment-point=10,20 horizontal=center value="Hello"
+? box C_BASE -> 5.859652235628105,19.229950319375444 14.140347764371896,19.229950319375444 14.140347764371896,23.28956706884315 5.859652235628105,23.28956706884315
+? bbox C_BASE -> 5.859652235628105,19.229950319375444 14.140347764371896,23.28956706884315
+? snaps C_BASE -> Insertion 10,20
+
+; 72 center, 73 bottom: A = 10,20, (ox, oy) = (4.140347764371895, -0.7700496806245565), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+C_B = TEXT position=3,4 alignment-point=10,20 horizontal=center vertical=bottom value="Hello"
+? box C_B -> 5.859652235628105,20 14.140347764371896,20 14.140347764371896,24.059616749467708 5.859652235628105,24.059616749467708
+? bbox C_B -> 5.859652235628105,20 14.140347764371896,24.059616749467708
+? snaps C_B -> Insertion 10,20
+
+; 72 center, 73 middle: A = 10,20, (ox, oy) = (4.140347764371895, 1.25), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+C_M = TEXT position=3,4 alignment-point=10,20 horizontal=center vertical=middle value="Hello"
+? box C_M -> 5.859652235628105,17.979950319375444 14.140347764371896,17.979950319375444 14.140347764371896,22.03956706884315 5.859652235628105,22.03956706884315
+? bbox C_M -> 5.859652235628105,17.979950319375444 14.140347764371896,22.03956706884315
+? snaps C_M -> Insertion 10,20
+
+; 72 center, 73 top: A = 10,20, (ox, oy) = (4.140347764371895, 2.5), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+C_T = TEXT position=3,4 alignment-point=10,20 horizontal=center vertical=top value="Hello"
+? box C_T -> 5.859652235628105,16.729950319375444 14.140347764371896,16.729950319375444 14.140347764371896,20.78956706884315 5.859652235628105,20.78956706884315
+? bbox C_T -> 5.859652235628105,16.729950319375444 14.140347764371896,20.78956706884315
+? snaps C_T -> Insertion 10,20
+
+; 72 right, 73 baseline: A = 10,20, (ox, oy) = (8.28069552874379, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+R_BASE = TEXT position=3,4 alignment-point=10,20 horizontal=right value="Hello"
+? box R_BASE -> 1.7193044712562102,19.229950319375444 10,19.229950319375444 10,23.28956706884315 1.7193044712562102,23.28956706884315
+? bbox R_BASE -> 1.7193044712562102,19.229950319375444 10,23.28956706884315
+? snaps R_BASE -> Insertion 10,20
+
+; 72 right, 73 bottom: A = 10,20, (ox, oy) = (8.28069552874379, -0.7700496806245565), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+R_B = TEXT position=3,4 alignment-point=10,20 horizontal=right vertical=bottom value="Hello"
+? box R_B -> 1.7193044712562102,20 10,20 10,24.059616749467708 1.7193044712562102,24.059616749467708
+? bbox R_B -> 1.7193044712562102,20 10,24.059616749467708
+? snaps R_B -> Insertion 10,20
+
+; 72 right, 73 middle: A = 10,20, (ox, oy) = (8.28069552874379, 1.25), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+R_M = TEXT position=3,4 alignment-point=10,20 horizontal=right vertical=middle value="Hello"
+? box R_M -> 1.7193044712562102,17.979950319375444 10,17.979950319375444 10,22.03956706884315 1.7193044712562102,22.03956706884315
+? bbox R_M -> 1.7193044712562102,17.979950319375444 10,22.03956706884315
+? snaps R_M -> Insertion 10,20
+
+; 72 right, 73 top: A = 10,20, (ox, oy) = (8.28069552874379, 2.5), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+R_T = TEXT position=3,4 alignment-point=10,20 horizontal=right vertical=top value="Hello"
+? box R_T -> 1.7193044712562102,16.729950319375444 10,16.729950319375444 10,20.78956706884315 1.7193044712562102,20.78956706884315
+? bbox R_T -> 1.7193044712562102,16.729950319375444 10,20.78956706884315
+? snaps R_T -> Insertion 10,20
+
+; 72 = 4 Middle: ox = w/2, oy = h (1 + d) / 2: A = 10,20, (ox, oy) = (4.140347764371895, 0.8649751596877218), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+MID = TEXT position=3,4 alignment-point=10,20 horizontal=middle value="Hello"
+? box MID -> 5.859652235628105,18.36497515968772 14.140347764371896,18.36497515968772 14.140347764371896,22.42459190915543 5.859652235628105,22.42459190915543
+? bbox MID -> 5.859652235628105,18.36497515968772 14.140347764371896,22.42459190915543
+? snaps MID -> Insertion 10,20
+
+; Con 72 = 4 il gruppo 73 non conta: stesse risposte di MID
+MID_T = TEXT position=3,4 alignment-point=10,20 horizontal=middle vertical=top value="Hello"
+? box MID_T -> 5.859652235628105,18.36497515968772 14.140347764371896,18.36497515968772 14.140347764371896,22.42459190915543 5.859652235628105,22.42459190915543
+? bbox MID_T -> 5.859652235628105,18.36497515968772 14.140347764371896,22.42459190915543
+? snaps MID_T -> Insertion 10,20
+
+; 72 = 3 Aligned da P1 = 10,20 a P2 = 30,20: h = |P2 - P1| / (L f): A = 10,20, (ox, oy) = (0, 0), h = 6.038140132847654, f = 1, w = 20, rotazione = 0 gradi
+ALIGNED = TEXT position=10,20 alignment-point=30,20 horizontal=aligned value="Hello"
+? box ALIGNED -> 10,18.14013284765374 30,18.14013284765374 30,27.94514677523034 10,27.94514677523034
+? bbox ALIGNED -> 10,18.14013284765374 30,27.94514677523034
+? snaps ALIGNED -> Insertion 10,20
+
+; 72 = 5 Fit da P1 = 10,20 a P2 = 30,20: f = |P2 - P1| / (L h): A = 10,20, (ox, oy) = (0, 0), h = 2.5, f = 2.4152560531390614, w = 20, rotazione = 0 gradi
+FIT = TEXT position=10,20 alignment-point=30,20 horizontal=fit value="Hello"
+? box FIT -> 10,19.229950319375444 30,19.229950319375444 30,23.28956706884315 10,23.28956706884315
+? bbox FIT -> 10,19.229950319375444 30,23.28956706884315
+? snaps FIT -> Insertion 10,20
+
+; Sinistra sulla linea di base: il punto d'allineamento non conta, anche se diverso
+; da 0,0; il risultato e quello della tappa 0.4 (ADR 0013)
+LEFT_P = TEXT position=-5,7 alignment-point=100,100 value="Hello"
+? box LEFT_P -> -5,6.229950319375444 3.28069552874379,6.229950319375444 3.28069552874379,10.289567068843152 -5,10.289567068843152
+? bbox LEFT_P -> -5,6.229950319375444 3.28069552874379,10.289567068843152
+? snaps LEFT_P -> Insertion -5,7
