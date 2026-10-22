@@ -1,7 +1,7 @@
 # [0.5-P18] Manuale e architettura
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #178
 - **Difficoltà:** facile
 - **Agente:** gemini
 - **Modello e impegno:** leggero; impegno basso

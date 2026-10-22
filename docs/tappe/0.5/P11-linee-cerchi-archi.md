@@ -1,11 +1,11 @@
 # [0.5-P11] `io`: linee, cerchi, archi ed estrusione
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #168
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.5-R11]` (#…), agente codex (calcoli delicati)
+- **Riferimenti:** issue `[0.5-R11]` (#165), agente codex (calcoli delicati)
 - **Dipende da:** P10, P12, R11
 - **Modulo:** `io` (più le righe di quota, spessore ed estrusione in `script`)
 - **Da leggere:** [ADR 0018](../../adr/0018-conservazione-dati-non-gestiti.md)

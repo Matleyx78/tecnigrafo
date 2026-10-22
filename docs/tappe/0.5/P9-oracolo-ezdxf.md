@@ -1,7 +1,7 @@
 # [0.5-P9] Oracolo ezdxf in CI
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #162
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio

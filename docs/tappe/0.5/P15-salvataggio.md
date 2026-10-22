@@ -1,11 +1,11 @@
 # [0.5-P15] `cmd`: `QSAVE`, `SAVE`, `SAVEAS`, `INSUNITS`
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #173
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.5-R15]` (#…), agente gemini
+- **Riferimenti:** issue `[0.5-R15]` (#172), agente gemini
 - **Dipende da:** P5, P11, P14, R15
 - **Modulo:** `cmd` (più i collegamenti in `script`, `app` e nella verifica)
 - **Da leggere:** [ADR 0021](../../adr/0021-comandi-dei-file.md) (tutto),

@@ -1,7 +1,7 @@
 # [0.5-P3] Specifica del formato `.cadx`
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #156
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno medio

@@ -1,11 +1,11 @@
 # [0.5-P14] `io`: formato `.cadx`
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #171
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
-- **Riferimenti:** issue `[0.5-R14]` (#…), agente gemini
+- **Riferimenti:** issue `[0.5-R14]` (#170), agente gemini
 - **Dipende da:** P3, P10, P13, R14
 - **Modulo:** `io`
 - **Da leggere:** `docs/formati/cadx.md` (P3: è la specifica di questo

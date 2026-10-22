@@ -1,7 +1,7 @@
 # [0.5-P13] `io`: contenitore ZIP e zlib
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #169
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto

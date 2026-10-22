@@ -1,7 +1,7 @@
 # [0.5-P1] `core`: handle, unità e dati conservati
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #153
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto

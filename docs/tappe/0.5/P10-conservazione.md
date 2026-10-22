@@ -1,11 +1,11 @@
 # [0.5-P10] `io`: lettura e scrittura conservative del DXF
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #164
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.5-R10]` (#…), agente gemini
+- **Riferimenti:** issue `[0.5-R10]` (#163), agente gemini
 - **Dipende da:** P8, R10
 - **Modulo:** `io`
 - **Da leggere:** [ADR 0017](../../adr/0017-modulo-io-e-dxf.md) punti 2, 5, 6,

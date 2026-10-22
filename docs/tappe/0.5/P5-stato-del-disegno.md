@@ -1,7 +1,7 @@
 # [0.5-P5] `edit`: modifiche non salvate, unità, documento nuovo
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #158
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio

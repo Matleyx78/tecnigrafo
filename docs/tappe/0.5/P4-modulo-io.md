@@ -1,7 +1,7 @@
 # [0.5-P4] `io`: modulo, gruppi DXF e interfaccia
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #157
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto

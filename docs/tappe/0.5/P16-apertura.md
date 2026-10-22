@@ -1,11 +1,11 @@
 # [0.5-P16] `cmd`: `NEW`, `OPEN`, modifiche non salvate
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #175
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.5-R16]` (#…), agente gemini
+- **Riferimenti:** issue `[0.5-R16]` (#174), agente gemini
 - **Dipende da:** P15, R16
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0021](../../adr/0021-comandi-dei-file.md) punti 1–3,

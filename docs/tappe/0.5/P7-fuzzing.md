@@ -1,7 +1,7 @@
 # [0.5-P7] Fuzzing del lettore DXF in CI
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #160
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio

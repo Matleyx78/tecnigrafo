@@ -1,11 +1,11 @@
 # [0.5-P2] `core`: allineamenti, obliquo e specchiatura del testo
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #155
 - **Difficoltà:** impegnativa
 - **Agente:** codex
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.5-R2]` (#…), agente claude (calcoli delicati)
+- **Riferimenti:** issue `[0.5-R2]` (#154), agente claude (calcoli delicati)
 - **Dipende da:** R2
 - **Modulo:** `core` (più due pagine di `docs/verifica/`)
 - **Da leggere:** [ADR 0022](../../adr/0022-allineamenti-obliquo-specchiatura-testo.md)

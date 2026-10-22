@@ -15,7 +15,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 2 | 0.2 | Riga di comando, primo comando di disegno, annullamento | **chiusa** | [0.2](tappe/0.2-comandi-e-annullamento.md) |
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
-| 5 | 0.5 | File: formato nativo e DXF | in preparazione | [0.5](tappe/0.5-file-e-dxf.md) |
+| 5 | 0.5 | File: formato nativo e DXF | **aperta** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
@@ -173,7 +173,8 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   deliberati (pacchetti più leggeri a schede autosufficienti, fasce di modello
   e lavoro a lotti per i riferimenti).
 - **2026-10-22 — Piano della tappa 0.5.** Il piano dettagliato della
-  [tappa 0.5](tappe/0.5-file-e-dxf.md) è in preparazione, con gli ADR
+  [tappa 0.5](tappe/0.5-file-e-dxf.md) è pubblicato e la tappa è aperta,
+  con il milestone `v0.5` e le issue #153–#178, e gli ADR
   [0017](adr/0017-modulo-io-e-dxf.md)–[0022](adr/0022-allineamenti-obliquo-specchiatura-testo.md)
   accettati. Il responsabile sceglie: `SAVE` conserva la versione del DXF
   aperto, disegni nuovi e `SAVEAS` scrivono R2018, e un `.cadx` contiene sempre

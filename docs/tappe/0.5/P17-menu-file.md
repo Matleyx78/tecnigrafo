@@ -1,11 +1,11 @@
 # [0.5-P17] `app`: menu File, finestre di dialogo, file recenti, chiusura
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #177
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.5-R17]` (#…), agente gemini (livello 2)
+- **Riferimenti:** issue `[0.5-R17]` (#176), agente gemini (livello 2)
 - **Dipende da:** P16, R17
 - **Modulo:** `app`
 - **Da leggere:** [ADR 0021](../../adr/0021-comandi-dei-file.md) punti 2 e 5;

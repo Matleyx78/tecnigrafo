@@ -1,11 +1,11 @@
 # [0.5-P12] `io`: polilinee e testo
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #167
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.5-R12]` (#…), agente gemini
+- **Riferimenti:** issue `[0.5-R12]` (#166), agente gemini
 - **Dipende da:** P10, R12
 - **Modulo:** `io` (più le righe delle larghezze in `script`)
 - **Da leggere:** [ADR 0018](../../adr/0018-conservazione-dati-non-gestiti.md)

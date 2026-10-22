@@ -1,7 +1,7 @@
 # [0.5-P6] `render`: disegno del testo allineato, obliquo e specchiato
 
 - **Tappa:** 0.5 — [piano](../0.5-file-e-dxf.md)
-- **Issue:** #…
+- **Issue:** #159
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
