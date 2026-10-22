@@ -135,7 +135,7 @@ TEST(CaseFiles, RejectsEveryNameThatCouldLeaveTheFolder) {
         EXPECT_EQ(read.error().message, kInvalidFileName) << name;
         const std::optional<io::Error> write = files.write(name, "x");
         ASSERT_TRUE(write.has_value()) << name;
-        EXPECT_EQ(write->message, kInvalidFileName) << name;
+        EXPECT_EQ(write.value_or(io::Error{}).message, kInvalidFileName) << name;
         EXPECT_FALSE(files.exists(name)) << name;
     }
     EXPECT_TRUE(fs::is_empty(output));
@@ -151,7 +151,8 @@ TEST(CaseFiles, SourcesAreReadOnly) {
     EXPECT_EQ(read.value(), kDxf);
     const std::optional<io::Error> write = files.write("@sources/esempio", "x");
     ASSERT_TRUE(write.has_value());
-    EXPECT_EQ(write->message, "\"@sources/esempio\": the files of @sources/ are read only");
+    EXPECT_EQ(write.value_or(io::Error{}).message,
+              "\"@sources/esempio\": the files of @sources/ are read only");
     EXPECT_EQ(readFile(sources / "esempio"), kDxf);
 }
 
