@@ -265,11 +265,13 @@ std::optional<std::variant<const core::Entity*, std::string>> fileEntity(const F
 
 QuestionResult askEntity(const QuestionModel& model, Arguments arguments) {
     constexpr std::string_view kForm = "entity <drawing> <handle>";
+    if (arguments.size() != 2) {
+        return wrongArguments(kForm);
+    }
     return askAboutDrawing(
         model, arguments, kForm, 1,
         [kForm](const FileDrawing& drawing, Arguments more) -> QuestionResult {
-            const std::optional<std::uint64_t> handle =
-                more.empty() ? std::nullopt : parseHandle(more[0]);
+            const std::optional<std::uint64_t> handle = parseHandle(more[0]);
             if (!handle) {
                 return wrongArguments(kForm);
             }
