@@ -1,33 +1,20 @@
 ; Domande al modello sulle proprieta DXF dellentita TEXT (ADR 0006, ADR 0013, P13)
-; Tutte le proprieta DXF sono conservate intatte; nella 0.4 obliquo, specchiatura e
-; allineamenti si conservano senza alterare lingombro calcolato
-
-; TEXT con tutte le proprieta DXF esplicite non predefinite
-T_full = TEXT position=10,20 alignment-point=15,25 height=5 rotation=45 width-factor=0.8 oblique=15 style="Standard" mirror-x=yes mirror-y=yes horizontal=center vertical=middle value="Test DXF"
+; Tutte le proprieta DXF sono conservate intatte.
+; Il testo con tutte le proprieta non predefinite (T_full) e in
+; testo/dxf-proprieta-0022: dalla tappa 0.5 il suo ingombro segue l'ADR 0022.
 
 ; TEXT con proprieta omesse (valori predefiniti applicati automaticamente)
 T_minimal = TEXT position=0,0 value="Minimal"
 
 ; --- Rettangolo dingombro (box) ---
-? box T_full -> 11.08901470204032,18.91098529795968 28.44901312276782,36.27098371868719 22.70784805763361,42.0121487838214 5.347849636906107,24.6521503630939
 ? box T_minimal -> 0,-0.7700496806245565 12.51774308019872,-0.7700496806245565 12.51774308019872,3.289567068843151 0,3.289567068843151
 
 ; --- Riquadro assi-allineato (bbox) ---
-? bbox T_full -> 5.347849636906107,18.91098529795968 28.44901312276782,42.0121487838214
 ? bbox T_minimal -> 0,-0.7700496806245565 12.51774308019872,3.289567068843151
 
 ; --- Snap inserimento (position) ---
-? snaps T_full -> Insertion 10,20
-? snaps T_full modes=insertion -> Insertion 10,20
-? snaps T_full modes=endpoint -> none
 ? snaps T_minimal -> Insertion 0,0
 
 ; --- Distanza e appartenenza ---
-? distance T_full 10,20 -> 0
-? closest T_full 10,20 -> 10,20
-? inside T_full 0,10 35,50 -> yes
-? crosses T_full 0,10 35,50 -> yes
-? inside T_full 15,25 25,35 -> no
-? crosses T_full 15,25 25,35 -> yes
 ? inside T_minimal -1,-2 15,5 -> yes
 ? crosses T_minimal -1,-2 15,5 -> yes

@@ -1,0 +1,61 @@
+; Domande sul testo all'indietro e capovolto (ADR 0022, punti 4 e 5; [0.5-R2], lavoro #155)
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (cmap, hmtx):
+;   a = 1854/1409 = 1.3158268275372604, d = -434/1409 = -0.3080198722498226
+;   L("Hello") = 6783/2048 * 2048/1409 = 3.312278211497516
+; p = A + R(rotazione) M q, M = diag(mx, my): si specchia intorno al punto
+; d'ancoraggio. Ordine degli angoli: immagini di (0, d h), (w, d h), (w, a h), (0, a h);
+; senza specchiatura girano in senso antiorario, con una sola in senso orario.
+
+; all'indietro (mirror-x), Left in 10,20: si estende a sinistra di A (verso: orario): A = 10,20, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+BACK = TEXT position=10,20 mirror-x=yes value="Hello"
+? box BACK -> 10,19.229950319375444 1.7193044712562102,19.229950319375444 1.7193044712562102,23.28956706884315 10,23.28956706884315
+? bbox BACK -> 1.7193044712562102,19.229950319375444 10,23.28956706884315
+? snaps BACK -> Insertion 10,20
+
+; capovolto (mirror-y), Left in 10,20: si estende sotto A (verso: orario): A = 10,20, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+UPSIDE = TEXT position=10,20 mirror-y=yes value="Hello"
+? box UPSIDE -> 10,20.770049680624556 18.28069552874379,20.770049680624556 18.28069552874379,16.71043293115685 10,16.71043293115685
+? bbox UPSIDE -> 10,16.71043293115685 18.28069552874379,20.770049680624556
+? snaps UPSIDE -> Insertion 10,20
+
+; all'indietro e capovolto: come ruotato di 180 (verso: antiorario): A = 10,20, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+BOTH = TEXT position=10,20 mirror-x=yes mirror-y=yes value="Hello"
+? box BOTH -> 10,20.770049680624556 1.7193044712562102,20.770049680624556 1.7193044712562102,16.71043293115685 10,16.71043293115685
+? bbox BOTH -> 1.7193044712562102,16.71043293115685 10,20.770049680624556
+? snaps BOTH -> Insertion 10,20
+
+; all'indietro, Middle Center in 10,20 (verso: orario): A = 10,20, (ox, oy) = (4.140347764371895, 1.25), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+BACK_MC = TEXT position=0,0 alignment-point=10,20 mirror-x=yes horizontal=center vertical=middle value="Hello"
+? box BACK_MC -> 14.140347764371896,17.979950319375444 5.859652235628105,17.979950319375444 5.859652235628105,22.03956706884315 14.140347764371896,22.03956706884315
+? bbox BACK_MC -> 5.859652235628105,17.979950319375444 14.140347764371896,22.03956706884315
+? snaps BACK_MC -> Insertion 10,20
+
+; capovolto, Bottom Right, rotazione 30, f = 0.8, obliquo 15 (verso: orario): A = 10,20, (ox, oy) = (6.624556422995032, -0.7700496806245565), h = 2.5, f = 0.8, w = 6.624556422995032, rotazione = 30 gradi
+UP_RB = TEXT position=0,0 alignment-point=10,20 rotation=30 width-factor=0.8 oblique=15 mirror-y=yes horizontal=right vertical=bottom value="Hello"
+? box UP_RB -> 4.2629658488829305,16.687721788502486 10,20 12.971845719867975,17.02815428013202 7.2348115687509065,13.715876068634508
+? bbox UP_RB -> 4.2629658488829305,13.715876068634508 12.971845719867975,20
+? snaps UP_RB -> Insertion 10,20
+
+; all'indietro con obliquo 15: l'obliquo si specchia con il testo (verso: orario): A = 10,20, (ox, oy) = (0, 0), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 0 gradi
+BACK_OBL = TEXT position=10,20 oblique=15 mirror-x=yes value="Hello"
+? box BACK_OBL -> 10.206334190055195,19.229950319375444 1.925638661311405,19.229950319375444 0.8378676317116724,23.28956706884315 9.118563160455462,23.28956706884315
+? bbox BACK_OBL -> 0.8378676317116724,19.229950319375444 10.206334190055195,23.28956706884315
+? snaps BACK_OBL -> Insertion 10,20
+
+; all'indietro e capovolto, rotazione 30, Top Left (verso: antiorario): A = 10,20, (ox, oy) = (0, 2.5), h = 2.5, f = 1, w = 8.28069552874379, rotazione = 30 gradi
+BOTH_ROT = TEXT position=0,0 alignment-point=10,20 rotation=30 mirror-x=yes mirror-y=yes vertical=top value="Hello"
+? box BOTH_ROT -> 8.364975159687722,22.831946095058058 1.1936824707913853,18.691598330686162 3.2234908455252387,15.17586709601832 10.394783534421576,19.316214860390215
+? bbox BOTH_ROT -> 1.1936824707913853,15.17586709601832 10.394783534421576,22.831946095058058
+? snaps BOTH_ROT -> Insertion 10,20
+
+; all'indietro, Aligned da 0,0 a 12,0 (f = 1) (verso: orario): A = 0,0, (ox, oy) = (0, 0), h = 3.622884079708592, f = 1, w = 12, rotazione = 0 gradi
+BACK_AL = TEXT position=0,0 alignment-point=12,0 mirror-x=yes horizontal=aligned value="Hello"
+? box BACK_AL -> 0,-1.1159202914077566 -12,-1.1159202914077566 -12,4.767088065138204 0,4.767088065138204
+? bbox BACK_AL -> -12,-1.1159202914077566 0,4.767088065138204
+? snaps BACK_AL -> Insertion 0,0
+
+; Distanza: un punto a destra di A e fuori dal testo all'indietro
+? distance BACK 12,21 -> 2
+? closest BACK 12,21 -> 10,21
+? distance BACK 5,21 -> 0
+? closest BACK 5,21 -> 5,21
