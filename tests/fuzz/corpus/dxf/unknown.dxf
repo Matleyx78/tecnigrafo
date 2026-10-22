@@ -1,0 +1,26 @@
+999
+SPDX-License-Identifier: GPL-3.0-or-later
+999
+Copyright (C) 2026 The Tecnigrafo authors
+0
+SECTION
+2
+HEADER
+9
+$ACADVER
+1
+AC1032
+0
+ENDSEC
+0
+SECTION
+2
+FUTURE_SECTION
+0
+FUTURE_OBJECT
+1
+Preserve me
+0
+ENDSEC
+0
+EOF
