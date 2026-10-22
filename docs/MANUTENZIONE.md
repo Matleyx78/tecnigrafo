@@ -22,8 +22,6 @@ passo.
    `impegnativa`, `buon-primo-contributo`, `riservato`, `bug`, `idea`, `approvato`,
    `AA-Presa in carico` (per le issue e le pull request su cui un agente sta lavorando,
    vedi [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md)).
-6. Installa l'app gratuita **DCO** di GitHub, che rifiuta i commit senza
-   `Signed-off-by`.
 
 ## Aprire una tappa
 
