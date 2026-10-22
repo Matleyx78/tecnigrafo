@@ -43,8 +43,8 @@ L = LINE start=8,0 end=15,0
 ? crossing 50,50 60,60 -> none
 
 ; --- Snap sul documento con priorita (snap) ---
-; 1. Passando sopra il testo T1 lontano da estremi/medi: si aggancia Insertion 0,0
-? snap 4,1 aperture=1 -> Insertion 0,0
+; 1. Passando sopra il testo T1 (dentro T1, fuori da T_over, lontano da L): si aggancia Insertion 0,0
+? snap 0.5,-0.5 aperture=1 -> Insertion 0,0
 ; 2. Passando sopra il testo T2 lontano dal punto di inserimento (20,0): si aggancia Insertion 20,0
 ? snap 26,1 aperture=1 -> Insertion 20,0
 ; 3. Priorita ADR 0013: puntatore vicino allestremo di L (8,0), dentro lapertura sia del testo che dellestremo
