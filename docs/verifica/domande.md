@@ -175,10 +175,13 @@ le risposte dipendono dal modulo `io` (pacchetti P10–P14).
 **Le entità di un disegno.** Nelle domande su un oggetto (`bbox`, `length`,
 `distance`, `closest`, `inside`, `crosses`, `snaps`, `box`) un'entità di un
 disegno letto si indica con `D:<handle>`: il nome del disegno, `:` e
-l'handle dell'entità in esadecimale, maiuscolo o minuscolo (`D:2F`). Deve
-essere un'entità **gestita**: un handle che non c'è, o di un'entità non
-gestita, è un errore del file di domande. La domanda tratta l'entità da sola,
-come se fosse l'unica definita.
+l'handle dell'entità in esadecimale, maiuscolo o minuscolo (`D:2F`). Un
+handle senza entità è un errore del file di domande. Un'entità **non
+gestita** invece non lo è, perché un pacchetto successivo può gestirne il
+tipo ([casi.md](casi.md), "Ciò che il catalogo prevede ma il programma non ha
+ancora"): la domanda risponde `error: D:2F is an unhandled LINE entity` e
+non è superata. La domanda tratta l'entità da sola, come se fosse l'unica
+definita.
 
 | Domanda | Risposta | Significato |
 |---|---|---|

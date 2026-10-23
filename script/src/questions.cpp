@@ -224,6 +224,14 @@ private:
             if (auto* message = std::get_if<std::string>(&*entity)) {
                 return error(std::string{name} + ": " + *message);
             }
+            if (const auto* unhandled = std::get_if<detail::UnhandledFileEntity>(&*entity)) {
+                // Not passed rather than invalid: a later package may handle
+                // the type (docs/verifica/casi.md, exit codes).
+                answer.actual = "error: " + std::string{argument} + " is an unhandled " +
+                                unhandled->type + " entity";
+                m_answers.push_back(std::move(answer));
+                return std::nullopt;
+            }
             fileEditor.beginTransaction("Definition");
             fileEditor.add(*std::get<const core::Entity*>(*entity));
             fileEditor.commit();

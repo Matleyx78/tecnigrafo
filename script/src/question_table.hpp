@@ -97,11 +97,19 @@ struct FileDefinitionError {
 [[nodiscard]] std::optional<std::variant<FileDrawing, FileDefinitionError>> readFileDefinition(
     std::string_view text, io::FileAccess* access);
 
+/// An entity of a drawing read from a file that io keeps unhandled: a
+/// question about it is not passed, not invalid (docs/verifica/casi.md),
+/// because a later package may handle its type.
+struct UnhandledFileEntity {
+    std::string type;  ///< the DXF type, "LINE"
+};
+
 /// The handled entity named "<drawing>:<handle>" ("D:2F"): std::nullopt if
-/// `name` does not start with the name of a drawing of `files` and ':', an
-/// error message if the drawing has no handled entity with that handle.
+/// `name` does not start with the name of a drawing of `files` and ':',
+/// UnhandledFileEntity if the entity with that handle is unhandled, an error
+/// message if the drawing has no entity with that handle.
 /// Defined in file_questions.cpp.
-[[nodiscard]] std::optional<std::variant<const core::Entity*, std::string>> fileEntity(
-    const FileDrawings& files, std::string_view name);
+[[nodiscard]] std::optional<std::variant<const core::Entity*, UnhandledFileEntity, std::string>>
+fileEntity(const FileDrawings& files, std::string_view name);
 
 }  // namespace tg::script::detail

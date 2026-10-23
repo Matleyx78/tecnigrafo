@@ -11,10 +11,12 @@
 #include "tg/script/report.hpp"
 #include "tg/script/text_format.hpp"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cstddef>
 #include <map>
+#include <span>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -245,8 +247,8 @@ std::optional<std::variant<FileDrawing, FileDefinitionError>> readFileDefinition
     return FileDrawing{cadx, std::move(bytes).value(), std::move(read).value()};
 }
 
-std::optional<std::variant<const core::Entity*, std::string>> fileEntity(const FileDrawings& files,
-                                                                         std::string_view name) {
+std::optional<std::variant<const core::Entity*, UnhandledFileEntity, std::string>> fileEntity(
+    const FileDrawings& files, std::string_view name) {
     const std::size_t colon = name.find(':');
     const auto drawing =
         colon == std::string_view::npos ? files.end() : files.find(name.substr(0, colon));
@@ -256,11 +258,17 @@ std::optional<std::variant<const core::Entity*, std::string>> fileEntity(const F
     const std::optional<std::uint64_t> handle = parseHandle(name.substr(colon + 1));
     const core::EntityRecord* record =
         handle ? drawing->second.read.document.find(core::EntityId{*handle}) : nullptr;
-    if (record == nullptr) {
-        return drawing->first + " has no handled entity with handle " +
-               named(name.substr(colon + 1));
+    if (record != nullptr) {
+        return &record->entity;
     }
-    return &record->entity;
+    if (handle) {
+        const std::span<const core::RawEntity> raw = drawing->second.read.document.rawEntities();
+        const auto found = std::ranges::find(raw, core::EntityId{*handle}, &core::RawEntity::id);
+        if (found != raw.end()) {
+            return UnhandledFileEntity{found->type};
+        }
+    }
+    return drawing->first + " has no entity with handle " + named(name.substr(colon + 1));
 }
 
 QuestionResult askEntity(const QuestionModel& model, Arguments arguments) {

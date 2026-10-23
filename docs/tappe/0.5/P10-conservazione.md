@@ -29,7 +29,12 @@
 - `tests/io/dxf_write_test.cpp` (nuovo)
 - `tests/io/dati/` (nuova: pochi DXF scritti a mano per i test)
 - `tests/CMakeLists.txt` (righe dei test nuovi)
-- `tests/verifica/in-attesa.txt` (togliere le righe di R10)
+- `tests/io/dxf_groups_test.cpp` (le verifiche provvisorie di `readDxf` e
+  `writeDxf` "non realizzate" diventano obsolete; autorizzato dal
+  responsabile)
+- `tests/verifica/in-attesa.txt` (togliere le righe di R10 e
+  `dxf/r11-unusual-extrusion`, che passa già con P10 perché tutte le sue
+  entità restano non gestite)
 
 ## Cosa fare
 
@@ -47,9 +52,15 @@ entità**: dopo questo pacchetto ogni entità è conservata come non gestita
    sostituiscono in scrittura, non si tolgono) e `ENTITIES` come segnaposto
    senza gruppi.
 3. Unità: `$INSUNITS` se c'è (fuori da 0–24: errore), altrimenti 0.
-4. Handle: ogni gruppo 5 (e 105 di `DIMSTYLE`) fuori da `ENTITIES` si
-   riserva con `reserveHandle`; `setNextId` da `$HANDSEED` o dall'handle più
-   alto più uno. Handle doppio: errore `Malformed` con la riga.
+4. Handle: fuori da `HEADER` ed `ENTITIES`, l'handle di ogni record (da un
+   gruppo `0` al successivo: tabella, voce di tabella, blocco, entità di un
+   blocco, oggetto) è il suo **primo** gruppo 5, o il 105 per le voci di
+   `DIMSTYLE`, e si riserva con `reserveHandle`. Gli altri gruppi 5 dello
+   stesso record non sono handle suoi ma riferimenti ad altri (per esempio
+   le coppie 331/5 di `SORTENTSTABLE`, dove il 5 è l'handle d'ordinamento
+   di un'entità) e non si riservano. `setNextId` da `$HANDSEED` o
+   dall'handle più alto più uno. Handle doppio: errore `Malformed` con la
+   riga.
 5. `ENTITIES`: ogni entità (da un `0` al successivo) riceve la chiave
    d'ordine della sua posizione. Si chiede alla tabella delle entità
    (`dxf_entities`) se il suo tipo è gestito **e** l'entità sta nello spazio
@@ -87,10 +98,19 @@ ciascuno per tipo, in ordine alfabetico.
   `Standard`, `BLOCK_RECORD` con `*Model_Space` e `*Paper_Space`; blocchi
   corrispondenti; `OBJECTS` con dizionario radice, `ACAD_GROUP`,
   `ACAD_LAYOUT` con i layout `Model` e `Layout1`).
-- Sezioni scritte nell'ordine in cui sono, uguali. Nell'`HEADER` si
-  sostituiscono, al loro posto o aggiunte se mancano: `$ACADVER` (la
-  versione scritta), `$DWGCODEPAGE`, `$HANDSEED` (`nextId()` in
-  esadecimale), `$INSUNITS`.
+- Sezioni scritte nell'ordine in cui sono, uguali. Nell'`HEADER` le
+  variabili rappresentate `$ACADVER` (la versione scritta), `$DWGCODEPAGE`,
+  `$HANDSEED` (`nextId()` in esadecimale) e `$INSUNITS` si sostituiscono al
+  loro posto quando ci sono. Quando mancano si aggiungono **solo se dicono
+  qualcosa che il file letto non diceva**, così un file aperto e salvato
+  senza modifiche resta identico anche se gli mancano (ADR 0018, punto 6):
+  - tutte, nel disegno nuovo (lo scheletro le ha già) e nella conversione
+    di versione;
+  - `$HANDSEED`, se dopo la lettura il disegno ha assegnato handle nuovi
+    (`nextId()` maggiore di quello fissato dalla lettura);
+  - `$INSUNITS`, se le unità non sono 0;
+  - `$DWGCODEPAGE`, se la code page scritta è diversa da quella usata in
+    lettura (`ANSI_1252` quando mancava).
 - `ENTITIES`: tutte le entità, gestite e non, **in ordine di chiave**; le non
   gestite esattamente come lette; le gestite con il `write` della loro riga
   (nessuna, in questo pacchetto).
@@ -119,6 +139,11 @@ ciascuno per tipo, in ordine alfabetico.
   tipo sarà gestito (provato con una riga di prova nella tabella, solo nel
   test).
 - Disegno nuovo: lo scheletro si rilegge senza errori ed è R2018.
+- `HEADER` senza `$DWGCODEPAGE`, `$HANDSEED` e `$INSUNITS`: riscritto senza
+  aggiungerle; con un handle nuovo assegnato o le unità cambiate, la
+  variabile corrispondente si aggiunge.
+- `SORTENTSTABLE` con handle d'ordinamento uguali a handle di entità: si
+  legge senza errori.
 - Conversione da R2000 a R2018: `$ACADVER`, codifica, testo accentato.
 - Versione più vecchia richiesta: errore.
 - File troncati e sezioni malformate: sempre un errore, mai un crash.
