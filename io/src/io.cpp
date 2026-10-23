@@ -19,20 +19,6 @@ Error notImplemented(std::string_view what, std::string_view package) {
 
 }  // namespace
 
-Result<ReadResult> readDxf(std::string_view bytes) {
-    // The groups are already read, so that the fuzzing target exercises the
-    // group reader before the drawing is built (P10).
-    const Result<GroupFile> groups = readGroups(bytes);
-    if (!groups.ok()) {
-        return groups.error();
-    }
-    return notImplemented("building a drawing from DXF groups", "P10");
-}
-
-Result<std::string> writeDxf(const core::Document& /*document*/, DxfVersion /*version*/) {
-    return notImplemented("writing DXF files", "P10");
-}
-
 Result<ReadResult> readCadx(std::string_view /*bytes*/) {
     return notImplemented("reading .cadx files", "P14");
 }

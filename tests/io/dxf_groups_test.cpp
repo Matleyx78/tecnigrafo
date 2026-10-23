@@ -303,7 +303,9 @@ TEST(DxfGroupsTest, TruncatedFileGivesErrorOrResult) {
             } else {
                 EXPECT_FALSE(result.error().message.empty());
             }
-            EXPECT_FALSE(readDxf(std::string_view{text}.substr(0, length)).ok());
+            // A final line terminator is optional, but the complete EOF is required.
+            EXPECT_EQ(readDxf(std::string_view{text}.substr(0, length)).ok(),
+                      length >= text.find("EOF") + 3);
         }
     }
 }
@@ -398,11 +400,10 @@ TEST(DxfGroupsTest, FormattedNumbersReadBackEqual) {
 
 // --- The module's interface -------------------------------------------------
 
-TEST(IoTest, ReadDxfReadsTheGroupsThenIsNotImplemented) {
+TEST(IoTest, ReadDxfBuildsADrawingAndRejectsInvalidGroups) {
     const Result<ReadResult> valid = readDxf(lines(minimalDxf()));
-    ASSERT_FALSE(valid.ok());
-    EXPECT_EQ(valid.error().kind, Error::Kind::NotImplemented);
-    EXPECT_NE(valid.error().message.find("P10"), std::string::npos);
+    ASSERT_TRUE(valid.ok());
+    EXPECT_EQ(valid.value().document.rawEntities().size(), 1U);
 
     const Result<ReadResult> invalid = readDxf("0\nSECTION\n70\nx\n");
     ASSERT_FALSE(invalid.ok());
@@ -410,12 +411,11 @@ TEST(IoTest, ReadDxfReadsTheGroupsThenIsNotImplemented) {
     EXPECT_EQ(invalid.error().line, 4U);
 }
 
-TEST(IoTest, OtherFunctionsAreNotImplemented) {
+TEST(IoTest, DxfWorksWhileCadxRemainsNotImplemented) {
     const core::Document document;
     const Result<std::string> dxf = writeDxf(document, DxfVersion::R2018);
-    ASSERT_FALSE(dxf.ok());
-    EXPECT_EQ(dxf.error().kind, Error::Kind::NotImplemented);
-    EXPECT_NE(dxf.error().message.find("P10"), std::string::npos);
+    ASSERT_TRUE(dxf.ok());
+    EXPECT_TRUE(readDxf(dxf.value()).ok());
 
     const Result<ReadResult> readCadxResult = readCadx("");
     ASSERT_FALSE(readCadxResult.ok());
