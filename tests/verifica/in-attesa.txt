@@ -47,3 +47,7 @@ apertura/open-dxf-pubblici #175
 apertura/open-errori-e-limiti #175
 apertura/open-modifiche-e-annulla #175
 apertura/open-reset-stato #175
+
+# R17: menu File e scorciatoie
+interfaccia/file-scorciatoie-apri-nuovo #177
+interfaccia/file-scorciatoie-salva #177
