@@ -28,7 +28,10 @@ struct TextRun {
     core::Vec2 origin;        ///< Start of the baseline, screen pixels.
     double capHeightPx{0.0};  ///< Height of capital letters.
     double angle{0.0};        ///< Radians, counter-clockwise as seen on screen.
-    double widthFactor{1.0};
+    double widthFactor{1.0};  ///< The used width factor.
+    double oblique{0.0};      ///< Radians, positive leans right (DXF 51).
+    bool backward{false};     ///< Mirrored along the baseline (DXF 71, bit 2).
+    bool upsideDown{false};   ///< Mirrored across the baseline (DXF 71, bit 4).
 };
 
 /// Abstract drawing backend. Every coordinate is in screen pixels (origin

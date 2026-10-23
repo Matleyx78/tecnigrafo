@@ -467,10 +467,7 @@ TEST(SceneRenderer, DrawsTextsWithTheirHeightRotationAndWidthFactor) {
     text.rotation = 0.5;
     text.widthFactor = 0.8;
     text.value = "%%c20";
-    // Drawn as if they were not there until tappa 0.5 (docs/adr/0013).
-    text.obliqueAngle = 0.3;
-    text.mirroredX = true;
-    text.horizontal = core::TextHorizontal::Right;
+    // Preserve the original Left/baseline rendering as a regression test.
     document.add(text);
 
     const SceneStyle style;

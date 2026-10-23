@@ -46,6 +46,7 @@ add_executable(tg_tests
     io/dxf_groups_test.cpp
     io/encoding_test.cpp
     io/file_access_test.cpp
+    render/scene_renderer_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp
     script/compare_test.cpp

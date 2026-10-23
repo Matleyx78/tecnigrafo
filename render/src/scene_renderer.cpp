@@ -110,7 +110,8 @@ public:
     void operator()(const core::Arc& arc) { drawArc(arc.geometry(), false); }
 
     void operator()(const core::Text& text) {
-        const double heightPx = text.height * m_viewport.scale();
+        const auto frame = core::textFrame(text);
+        const double heightPx = frame.height * m_viewport.scale();
         if (heightPx < kMinTextHeightPx) {
             m_screenPoints.clear();
             for (const Vec2& corner : core::textBox(text)) {
@@ -121,9 +122,9 @@ public:
         }
         // The screen flips Y and the angle together: a rotation that is
         // counter-clockwise in the drawing is counter-clockwise as seen.
-        m_painter.drawText(TextRun{core::displayText(text.value),
-                                   m_viewport.worldToScreen(text.position), heightPx, text.rotation,
-                                   text.widthFactor});
+        m_painter.drawText(TextRun{
+            core::displayText(text.value), m_viewport.worldToScreen(frame.origin), heightPx,
+            frame.rotation, frame.widthFactor, text.obliqueAngle, text.mirroredX, text.mirroredY});
     }
 
 private:
