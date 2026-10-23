@@ -3,59 +3,59 @@
   "sources": [
     {
       "name": "r11-base",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-base/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "7941be5b77f8f4224ec7310dca4da7133916e984d16b51a573326ce85ba1b451",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-base/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "0f2b7e92b89e533f5e5875a77db4e1848c019babb2e7993f0c2744cc8d1e9ead",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "r11-degenerate",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-degenerate/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "260a44780ba576663bf75fd210d64d2a6c15d0f14a2924f21b61e1c43427ebc1",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-degenerate/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "f5951241f0d1cea14281be3639e52b2d42c208af4df0b6d2092a747a743ca877",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "r11-extrusion-boundary",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-extrusion-boundary/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "a0b4b143a0aaff61cf865e1e317d5741a3664762084016d414f1173b60f47323",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-extrusion-boundary/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "525a8a5628f2240a8a16e02c0226b0caa33429f570d2f91e2aed4a8f91598048",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "r11-negative-ocs",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-negative-ocs/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "f0ee5d3999c908335249be1efab9ef012be0d85418439ebf1fba06e9828ec885",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-negative-ocs/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "7faf35cdd34e645e8cfe8335a8b4d13d3c7ad2e1160af894630d54b08e841743",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "r11-negative-text",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-negative-text/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "648412f88528ec0d5c085d32b2b1dedcfe534de5780782db47b2c07d671340d1",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-negative-text/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "9452e06e1e4872aa2db05565f85a0e569a2ba299e4e97b6d811d0ccf98d9e5df",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "r11-placement",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-placement/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "d0cf7ad4c703e33d33c200c6be2a703a2c01034f2a2334214f745665cd7d9eb5",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-placement/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "edc8aaccc11a39bac0223ce46c3566ad3307442c41aa94d63c08c51612f6f19e",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "r11-unusual-extrusion",
-      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-unusual-extrusion/input.dxf",
-      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
-      "sha256": "32c40ee154e642b9222ed5fc31814793b92d6876b14dc0eeb3430eb95ccea719",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-unusual-extrusion/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "f50e070173e837f84e7df59fd04e9a0be8fb345cc6197be9801fd94e1b003e30",
       "license": "GPL-3.0-or-later",
-      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
     },
     {
       "name": "ezdxf-uncommon-r11",
