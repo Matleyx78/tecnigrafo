@@ -3,11 +3,19 @@
 
 #pragma once
 
+#include "tg/io/file_access.hpp"
 #include "tg/script/script.hpp"
 
 #include <string>
 
 namespace tg::script {
+
+/// How a level 1 script runs.
+struct RunOptions {
+    /// Where the file commands read and write (docs/adr/0021, point 4):
+    /// a CaseFiles in tecnigrafo-script. nullptr: the script has no files.
+    io::FileAccess* files{nullptr};
+};
 
 /// Runs a level 1 script on an empty document and returns the report.
 /// A directive that needs level 2 is an error at level 1: parseScript()
@@ -20,6 +28,6 @@ namespace tg::script {
 /// then submitted; !move, !click, !rightclick and !esc are the pointer, the
 /// clicks and the Esc key of the view; !view sets the size of a pixel.
 /// Precondition: script.level == 1.
-[[nodiscard]] std::string runLevel1(const Script& script);
+[[nodiscard]] std::string runLevel1(const Script& script, const RunOptions& options = {});
 
 }  // namespace tg::script

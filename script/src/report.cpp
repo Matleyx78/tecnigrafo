@@ -250,6 +250,40 @@ void writeEntities(const core::Document& document, std::string& out) {
     }
 }
 
+/// The unhandled entities by type, in alphabetical order:
+/// "HATCH 2, INSERT 1" (docs/adr/0018, point 3).
+std::string unhandledText(const core::Document& document) {
+    std::map<std::string_view, std::size_t> counts;  // sorted by type name
+    for (const core::RawEntity& raw : document.rawEntities()) {
+        ++counts[raw.type];
+    }
+    std::string text;
+    for (const auto& [type, count] : counts) {
+        if (!text.empty()) {
+            text += ", ";
+        }
+        text += std::string{type} + " " + std::to_string(count);
+    }
+    return text;
+}
+
+/// The fields of the drawing (docs/adr/0021, point 6), each written only
+/// when it differs from a new session, so that older reports stay valid.
+/// A drawing never opened nor saved has no file to name: its changes alone
+/// do not write "drawing:", or every report of milestone 0.4 would change.
+void writeDrawing(const edit::Editor& editor, std::string& out) {
+    const core::Document& document = editor.document();
+    if (editor.hasFile()) {
+        appendField("drawing", editor.fileName() + (editor.isModified() ? ", modified" : ""), out);
+    }
+    if (document.units() != core::Document::kDefaultUnits) {
+        appendField("units", std::to_string(document.units()), out);
+    }
+    if (!document.rawEntities().empty()) {
+        appendField("unhandled", unhandledText(document), out);
+    }
+}
+
 void writeStatistics(const core::Document& document, std::string& out) {
     std::map<std::string_view, std::size_t> counts;  // sorted by type name
     for (const core::EntityRecord& record : document.entities()) {
@@ -293,6 +327,7 @@ void writeState(const ReportInput& input, std::string& out) {
     }
     appendField("snap", snapText(runner.drawingAids()), out);
     appendField("ortho", onOff(runner.drawingAids().ortho), out);
+    writeDrawing(input.editor, out);
     appendField("pointer", input.pointer ? formatPoint(*input.pointer) : "none", out);
     appendField("active snap", snapPointText(runner.activeSnap()), out);
     writeStatistics(document, out);

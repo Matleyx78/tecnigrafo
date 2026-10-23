@@ -44,6 +44,9 @@ B = LWPOLYLINE vertex=20,0 bulge=1 vertex=30,0
 - Le entità definite formano un documento, numerate da 1 nell'ordine in cui
   compaiono. Una domanda vede le entità definite **sopra** di lei: si può
   definire, chiedere, definire ancora e chiedere di nuovo.
+- Dalla tappa 0.5 una definizione può anche leggere un **disegno da un
+  file** ([File](#file)): il nome indica allora il disegno, che non entra nel
+  documento delle entità definite.
 
 ### Domande
 
@@ -141,6 +144,99 @@ specchiatura in senso orario. `bbox` contiene i quattro angoli; selezione,
 `distance` e `closest` usano la regione del parallelogramma. Lo snap
 inserimento è il punto d'ancoraggio (`alignment-point` salvo `Left` sulla
 linea di base), oppure `position` per `Aligned` e `Fit`.
+
+### File
+
+Le domande sui disegni letti da un file: la lettura e la scrittura dei
+formati della tappa 0.5 e la conservazione dei dati non gestiti
+([ADR 0018](../adr/0018-conservazione-dati-non-gestiti.md),
+[ADR 0021](../adr/0021-comandi-dei-file.md)). Realizzate dal pacchetto P8;
+le risposte dipendono dal modulo `io` (pacchetti P10–P14).
+
+**Definizioni.** Il nome indica un disegno letto con il modulo `io`:
+
+| Riga | Significato |
+|---|---|
+| `D = DXF source=<nome>` | legge con `io::readDxf` il file `<nome>` di `tests/verifica/sorgenti.json`, dalla cartella di `--sources` |
+| `D = DXF file=<nome>` | lo stesso con un file della cartella del caso ([casi.md](casi.md#file-del-caso)) |
+| `C = CADX source=<nome>` / `C = CADX file=<nome>` | lo stesso con `io::readCadx` |
+
+- `<nome>` segue le regole dei nomi degli [script](script.md#file): per
+  `source=` lettere minuscole, cifre e `-`; per `file=` un nome relativo,
+  senza `..`.
+- Un errore di lettura (file che manca, nome non valido, `source=` senza
+  `--sources`, file danneggiato) rende il file di domande **non valido**,
+  con il messaggio di `io`. Finché `io` non sa leggere il formato
+  (`NotImplemented`, prima dei pacchetti P10 e P14), la definizione ferma il
+  file con "not implemented yet", come un tipo di entità non ancora
+  realizzato: il caso non è superato.
+- Il nome di un disegno non si ridefinisce, né come disegno né come entità.
+
+**Le entità di un disegno.** Nelle domande su un oggetto (`bbox`, `length`,
+`distance`, `closest`, `inside`, `crosses`, `snaps`, `box`) un'entità di un
+disegno letto si indica con `D:<handle>`: il nome del disegno, `:` e
+l'handle dell'entità in esadecimale, maiuscolo o minuscolo (`D:2F`). Deve
+essere un'entità **gestita**: un handle che non c'è, o di un'entità non
+gestita, è un errore del file di domande. La domanda tratta l'entità da sola,
+come se fosse l'unica definita.
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `entity D <handle>` | un'entità nel formato del [rapporto](rapporto.md#entità), `unhandled <TIPO>`, o `none` | l'entità con quell'handle: gestita, non gestita (con il suo tipo DXF), o assente (anche l'handle di una tabella o di un oggetto) |
+| `count D` | elenco di `TIPO n` separati da `;`, o `none` | le entità gestite per tipo, in ordine alfabetico |
+| `unhandled D` | elenco di `TIPO n` separati da `;`, o `none` | lo stesso per le entità non gestite |
+| `version D` | `AC1015`…, o `none` | `$ACADVER` letto; `none` se il file non lo dice |
+| `units D` | intero | `INSUNITS` del disegno, come lo dà la lettura |
+| `warnings D` | elenco di avvisi separati da `;`, o `none` | gli avvisi della lettura, come li scrive `io` |
+| `roundtrip D [as=dxf\|cadx]` | `identical`, o `different: <la prima differenza>` | scrive il disegno e lo rilegge, e confronta il file riscritto con l'originale (sotto); per difetto nello stesso formato e nella stessa versione |
+| `open-error source=<nome>` / `open-error file=<nome>` | il messaggio tra virgolette, o `none` | prova a leggere il file e dice l'errore della lettura, con la sua riga (`"line 812: expected a group code, found \"abc\""`); `none` se si legge |
+
+- Gli elenchi si confrontano in qualunque ordine, come gli altri.
+- `open-error` legge un `.dxf` con `io::readDxf` e un `.cadx` con
+  `io::readCadx`, secondo l'estensione, come `OPEN`; i file di
+  `sorgenti.json`, che non hanno estensione, sono DXF. Un file che manca o un
+  nome non valido è un errore del file di domande, non una risposta.
+- Un errore di `io` durante `roundtrip` (per esempio un formato che non sa
+  ancora scrivere) risponde `error: <messaggio>`.
+
+**`roundtrip`** applica la definizione di "identico" dell'ADR 0018, punto 6.
+Confronta, **a livello di gruppi** (`io::readGroups`), il file **originale**
+con quello **riscritto**: così non basta che il lettore sia coerente con sé
+stesso.
+
+1. Scrive il disegno letto: in DXF (`as=dxf`) nella versione letta, o R2018
+   per un disegno letto da un `.cadx`; in `.cadx` (`as=cadx`) con
+   `io::writeCadx`. Rilegge il file scritto: un errore è una differenza
+   (`different: the rewritten file cannot be read: …`).
+2. Prende i gruppi dell'originale e del riscritto. Di un `.cadx` si prendono
+   i gruppi del suo `drawing.dxf` come lo riscrive il modello (in R2018):
+   `tecnigrafo-script` non apre gli archivi.
+3. Confronta i gruppi uno per uno, nell'ordine: stesso codice e stesso
+   valore, carattere per carattere. Fanno eccezione i numeri delle **entità
+   gestite**, che si riscrivono dal modello e sono uguali entro le
+   tolleranze in vigore (`1.0` e `1`); il valore di `$HANDSEED`, che può
+   cambiare; e, se le versioni sono diverse, i valori di `$ACADVER` e
+   `$DWGCODEPAGE`.
+
+La prima differenza si descrive con la riga dell'originale:
+`different: line 812: 10 "1.5" became 10 "2.5"`,
+`different: line 900: 0 "HATCH" is missing`,
+`different: the rewritten file has more groups: 0 "CIRCLE"`.
+
+```
+; un DXF pubblico: conservazione e conteggi (valori da ezdxf)
+D = DXF source=librecad-sample
+? version D               -> AC1015
+? count D                 -> ARC 2; LINE 12
+? unhandled D             -> HATCH 1; INSERT 3
+? entity D 2F             -> LINE start=0,0 end=100,0
+? bbox D:2F               -> 0,0 100,0
+? roundtrip D             -> identical
+? roundtrip D as=cadx     -> identical
+? open-error file=troncato.dxf -> "line 41: the file ends inside a group"
+```
+
+I numeri dell'esempio mostrano solo la forma.
 
 ## Errori
 

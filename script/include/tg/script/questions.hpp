@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/io/file_access.hpp"
 #include "tg/script/compare.hpp"
 #include "tg/script/script.hpp"
 
@@ -27,7 +28,11 @@ struct Answer {
 /// Reads a .tgq file and answers every question against core, in the order
 /// of the file: a question sees the entities defined above it. Returns the
 /// answers, or the first error in the file.
-[[nodiscard]] std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view text);
+///
+/// The definitions and questions about files (docs/verifica/domande.md,
+/// "File") read them through `files`; without it they are an error.
+[[nodiscard]] std::variant<std::vector<Answer>, ParseError> answerQuestions(
+    std::string_view text, io::FileAccess* files = nullptr);
 
 /// Reads a .tgq file of questions (docs/verifica/domande.md), evaluates
 /// every question against core and returns the differences from the

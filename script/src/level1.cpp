@@ -25,7 +25,8 @@ namespace {
 /// besides them.
 class Level1Session {
 public:
-    Level1Session() : m_editor(m_document), m_runner(registry(), m_editor) {
+    explicit Level1Session(io::FileAccess* files)
+        : m_editor(m_document), m_runner(registry(), m_editor), m_files(files) {
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
     }
@@ -114,6 +115,9 @@ private:
     core::Document m_document;
     edit::Editor m_editor;
     cmd::CommandRunner m_runner;
+    // Kept for the file commands: package P15 of milestone 0.5 gives it to
+    // the runner. Unused until then, hence [[maybe_unused]].
+    [[maybe_unused]] io::FileAccess* m_files;
     std::vector<std::string> m_messages;  ///< since the previous section
     std::optional<core::Vec2> m_pointer;
     std::string m_report;
@@ -122,9 +126,9 @@ private:
 
 }  // namespace
 
-std::string runLevel1(const Script& script) {
+std::string runLevel1(const Script& script, const RunOptions& options) {
     assert(script.level == 1 && "a level 2 script does not run at level 1");
-    Level1Session session;
+    Level1Session session{options.files};
     for (const Action& action : script.actions) {
         session.run(action);
     }

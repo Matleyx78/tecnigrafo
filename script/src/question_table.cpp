@@ -457,6 +457,16 @@ QuestionResult askFontMetrics(const QuestionModel& model, Arguments arguments);
 QuestionResult askTextWidth(const QuestionModel& model, Arguments arguments);
 QuestionResult askBox(const QuestionModel& model, Arguments arguments);
 
+// Defined in file_questions.cpp.
+QuestionResult askEntity(const QuestionModel& model, Arguments arguments);
+QuestionResult askCount(const QuestionModel& model, Arguments arguments);
+QuestionResult askUnhandled(const QuestionModel& model, Arguments arguments);
+QuestionResult askVersion(const QuestionModel& model, Arguments arguments);
+QuestionResult askUnits(const QuestionModel& model, Arguments arguments);
+QuestionResult askWarnings(const QuestionModel& model, Arguments arguments);
+QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
+QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
+
 namespace {
 
 // ---------------------------------------------------------------------------
@@ -483,6 +493,15 @@ constexpr std::array kQuestions{
     QuestionRow{"text-width", AnswerShape::Single, &askTextWidth},
     QuestionRow{"font-metrics", AnswerShape::Single, &askFontMetrics},
     QuestionRow{"box", AnswerShape::Single, &askBox},
+    // Files: package P8 of milestone 0.5 (file_questions.cpp).
+    QuestionRow{"entity", AnswerShape::Single, &askEntity},
+    QuestionRow{"count", AnswerShape::Items, &askCount},
+    QuestionRow{"unhandled", AnswerShape::Items, &askUnhandled},
+    QuestionRow{"version", AnswerShape::Single, &askVersion},
+    QuestionRow{"units", AnswerShape::Single, &askUnits},
+    QuestionRow{"warnings", AnswerShape::Items, &askWarnings},
+    QuestionRow{"roundtrip", AnswerShape::Single, &askRoundtrip},
+    QuestionRow{"open-error", AnswerShape::Single, &askOpenError},
 };
 
 }  // namespace

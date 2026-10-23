@@ -2,14 +2,16 @@
 #
 # tg_script: the control mode at level 1 (docs/adr/0011): scripts, reports,
 # questions to the model and their comparison with expected results.
-# May depend on tg_core, tg_edit and tg_cmd only, never on Qt
+# May depend on tg_core, tg_edit, tg_cmd and tg_io only, never on Qt
 # (docs/adr/0001).
 
 add_library(tg_script
     src/case_check.cpp
+    src/case_files.cpp
     src/compare.cpp
     src/construction_questions.cpp
     src/entity_reader.cpp
+    src/file_questions.cpp
     src/level1.cpp
     src/number_format.cpp
     src/question_table.cpp
@@ -23,7 +25,7 @@ add_library(Tecnigrafo::script ALIAS tg_script)
 
 target_include_directories(tg_script PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_link_libraries(tg_script PUBLIC Tecnigrafo::cmd)
+target_link_libraries(tg_script PUBLIC Tecnigrafo::cmd Tecnigrafo::io)
 tg_configure_target(tg_script)
 
 # tecnigrafo-script: a development tool for agents and CI, never installed

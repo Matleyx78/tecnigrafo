@@ -3,6 +3,7 @@
 
 #include "tg/script/case_check.hpp"
 
+#include "tg/script/case_files.hpp"
 #include "tg/script/compare.hpp"
 #include "tg/script/level1.hpp"
 #include "tg/script/questions.hpp"
@@ -75,7 +76,8 @@ Outcome fromParseError(const fs::path& file, const ParseError& error) {
     return invalid(where);
 }
 
-Outcome checkScript(const fs::path& folder, const fs::path& output) {
+Outcome checkScript(const fs::path& folder, const fs::path& output,
+                    const std::optional<fs::path>& sources) {
     const fs::path scriptPath = folder / kScriptFile;
     const std::optional<std::string> text = readFile(scriptPath);
     const std::optional<std::string> expected = readFile(folder / kExpectedFile);
@@ -93,7 +95,14 @@ Outcome checkScript(const fs::path& folder, const fs::path& output) {
     if (!expected) {
         return invalid(std::string{"cannot read "} + kExpectedFile);
     }
-    const std::string report = runLevel1(script);
+    // The script works on copies of the files of the case, in a folder of
+    // its own that each run starts again.
+    const fs::path files = output / fs::path{std::string{kCaseFilesFolder}};
+    if (std::optional<std::string> failure = prepareCaseFiles(folder, files)) {
+        return invalid(std::move(*failure));
+    }
+    CaseFiles access{files, sources};
+    const std::string report = runLevel1(script, {&access});
     Outcome outcome;
     if (!writeFile(output / kObtainedReport, report)) {
         return invalid("cannot write " + (output / kObtainedReport).generic_string());
@@ -103,13 +112,16 @@ Outcome checkScript(const fs::path& folder, const fs::path& output) {
     return outcome;
 }
 
-Outcome checkQuestionFile(const fs::path& folder, const fs::path& output) {
+Outcome checkQuestionFile(const fs::path& folder, const fs::path& output,
+                          const std::optional<fs::path>& sources) {
     const fs::path path = folder / kQuestionsFile;
     const std::optional<std::string> text = readFile(path);
     if (!text) {
         return invalid(std::string{"cannot read "} + kQuestionsFile);
     }
-    std::variant<std::vector<Answer>, ParseError> answers = answerQuestions(*text);
+    // The questions only read: the hand-written files of the case directly.
+    CaseFiles access{folder, sources};
+    std::variant<std::vector<Answer>, ParseError> answers = answerQuestions(*text, &access);
     if (const auto* error = std::get_if<ParseError>(&answers)) {
         return fromParseError(path, *error);
     }
@@ -179,7 +191,7 @@ int conclude(const Outcome& outcome, const fs::path& folder, bool pending, std::
 }  // namespace
 
 int runScriptFile(const fs::path& script, const std::optional<fs::path>& report, std::ostream& out,
-                  std::ostream& err) {
+                  std::ostream& err, const std::optional<fs::path>& sources) {
     const std::optional<std::string> text = readFile(script);
     if (!text) {
         err << "cannot read " << script.generic_string() << "\n";
@@ -195,7 +207,8 @@ int runScriptFile(const fs::path& script, const std::optional<fs::path>& report,
         err << script.generic_string() << " needs level 2: run it with tecnigrafo --script\n";
         return kExitNeedsLevel2;
     }
-    const std::string reportText = runLevel1(parsedScript);
+    CaseFiles access{fs::path{"."}, sources};
+    const std::string reportText = runLevel1(parsedScript, {&access});
     if (!report) {
         out << reportText;
         return kExitPassed;
@@ -207,7 +220,8 @@ int runScriptFile(const fs::path& script, const std::optional<fs::path>& report,
     return kExitPassed;
 }
 
-int checkCase(const fs::path& folder, const CheckOptions& options, std::ostream& out) {
+int checkCase(const fs::path& folder, const CheckOptions& options, std::ostream& out,
+              const std::optional<fs::path>& sources) {
     std::error_code error;
     const bool hasScript = fs::exists(folder / kScriptFile, error);
     const bool hasQuestions = fs::exists(folder / kQuestionsFile, error);
@@ -218,9 +232,9 @@ int checkCase(const fs::path& folder, const CheckOptions& options, std::ostream&
         outcome = invalid(std::string{"a case has either "} + kScriptFile + " and " +
                           kExpectedFile + ", or " + kQuestionsFile);
     } else if (hasScript) {
-        outcome = checkScript(folder, options.output);
+        outcome = checkScript(folder, options.output, sources);
     } else {
-        outcome = checkQuestionFile(folder, options.output);
+        outcome = checkQuestionFile(folder, options.output, sources);
     }
     return conclude(outcome, folder, options.pending, out);
 }
