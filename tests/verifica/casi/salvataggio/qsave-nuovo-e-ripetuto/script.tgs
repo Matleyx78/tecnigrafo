@@ -1,0 +1,15 @@
+; QSAVE su disegno nuovo chiede il nome; dopo il salvataggio QSAVE salva subito
+LINE
+0,0
+10,0
+
+!report
+QSAVE
+disegno1.cadx
+!report
+LINE
+10,0
+10,10
+
+!report
+QSAVE
