@@ -39,3 +39,11 @@ salvataggio/nomi-non-validi #173
 salvataggio/qsave-nuovo-e-ripetuto #173
 salvataggio/save-con-nome #173
 salvataggio/saveas-estensioni #173
+
+# R16: apertura e disegno nuovo
+apertura/new-modifiche #175
+apertura/open-cadx-valido #175
+apertura/open-dxf-pubblici #175
+apertura/open-errori-e-limiti #175
+apertura/open-modifiche-e-annulla #175
+apertura/open-reset-stato #175
