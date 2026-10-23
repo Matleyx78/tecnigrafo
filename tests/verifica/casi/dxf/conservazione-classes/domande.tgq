@@ -1,0 +1,9 @@
+; oracle: ezdxf
+D = DXF source=classes-raw-entity-r2007
+? version D -> AC1021
+? units D -> 0
+? count D -> none
+? unhandled D -> WEIRDENT 1
+? entity D 7A -> unhandled WEIRDENT
+? warnings D -> none
+? roundtrip D -> identical

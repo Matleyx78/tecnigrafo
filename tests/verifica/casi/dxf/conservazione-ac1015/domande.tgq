@@ -1,0 +1,9 @@
+; oracle: ezdxf
+D = DXF source=ac1015-3dface
+? version D -> AC1015
+? units D -> 0
+? count D -> none
+? unhandled D -> 3DFACE 1
+? entity D 30 -> unhandled 3DFACE
+? warnings D -> none
+? roundtrip D -> identical
