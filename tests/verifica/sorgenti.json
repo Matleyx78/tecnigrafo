@@ -64,6 +64,8 @@
       "sha256": "5efdd671e3b6d8c45bd0688b1d6479d523f2290f0b390f1584348bf46e34c965",
       "license": "MIT",
       "license-url": "https://github.com/mozman/ezdxf/blob/7b202613e0d689955b8932a22bcbcf68bdd684f0/LICENSE"
+    },
+    {
       "name": "ac1015-3dface",
       "url": "https://raw.githubusercontent.com/LibreCAD/libdxfrw/d68fb1ed937ad2a74a54f6208277ec10a1b031b0/tests/fixtures/dxf/ac1015_3dface_freecad_control.dxf",
       "version": "2.0.0",
