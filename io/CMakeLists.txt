@@ -5,6 +5,9 @@
 # privately for the ZIP container (docs/adr/0019).
 
 add_library(tg_io
+    src/dxf_entity_common.cpp
+    src/dxf_lwpolyline.cpp
+    src/dxf_text.cpp
     src/dxf_entities.cpp
     src/dxf_read.cpp
     src/dxf_write.cpp

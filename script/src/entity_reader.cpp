@@ -72,6 +72,9 @@ std::optional<bool> parseYesNo(std::string_view text) {
 std::variant<core::Entity, EntityError> readPolyline(const Tokens& properties) {
     std::vector<core::PolylineVertex> vertices;
     std::optional<bool> closed;
+    std::optional<double> width;
+    bool startWidthGiven = false;
+    bool endWidthGiven = false;
     bool bulgeGiven = false;  // for the last vertex
     for (const std::string_view token : properties) {
         std::variant<Property, std::string> split = splitProperty(token);
@@ -88,6 +91,24 @@ std::variant<core::Entity, EntityError> readPolyline(const Tokens& properties) {
                 return EntityError{"closed is given once, as yes or no"};
             }
             closed = flag;
+        } else if (name == "width") {
+            const auto number = parseNumber(value);
+            if (width || !number) {
+                return EntityError{"width is a number given once"};
+            }
+            width = number;
+        } else if (name == "start-width" || name == "end-width") {
+            const auto number = parseNumber(value);
+            bool& given = name == "start-width" ? startWidthGiven : endWidthGiven;
+            if (vertices.empty() || given || !number) {
+                return EntityError{"vertex width is a number given once after each vertex"};
+            }
+            if (name == "start-width") {
+                vertices.back().startWidth = *number;
+            } else {
+                vertices.back().endWidth = *number;
+            }
+            given = true;
         } else if (name == "vertex") {
             const std::optional<core::Vec2> point = parsePoint(value);
             if (!point) {
@@ -95,6 +116,8 @@ std::variant<core::Entity, EntityError> readPolyline(const Tokens& properties) {
             }
             vertices.push_back({*point, 0.0});
             bulgeGiven = false;
+            startWidthGiven = false;
+            endWidthGiven = false;
         } else if (name == "bulge") {
             const std::optional<double> bulge = parseNumber(value);
             if (vertices.empty() || bulgeGiven || !bulge) {
@@ -106,7 +129,9 @@ std::variant<core::Entity, EntityError> readPolyline(const Tokens& properties) {
             return EntityError{"unknown property " + quoted(name) + " of LWPOLYLINE"};
         }
     }
-    return core::Entity{core::Polyline{std::move(vertices), closed.value_or(false)}};
+    core::Polyline polyline{std::move(vertices), closed.value_or(false)};
+    polyline.setConstantWidth(width.value_or(0));
+    return core::Entity{std::move(polyline)};
 }
 
 /// The values of an entity whose properties are each given at most once:

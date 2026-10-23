@@ -57,6 +57,24 @@ TEST(WriteEntity, PolylineWithStraightAndArcSegments) {
     EXPECT_EQ(dxfType(polyline), "LWPOLYLINE");
 }
 
+TEST(ReadEntity, PolylineWidthsAreWrittenAndReadWithoutLoss) {
+    const std::string definition =
+        "LWPOLYLINE closed=yes width=0.5 vertex=0,0 bulge=1 "
+        "start-width=1 end-width=2 vertex=10,0 end-width=3";
+    const auto entity = read(definition);
+    EXPECT_EQ(written(entity), definition);
+    const auto& polyline = std::get<core::Polyline>(entity);
+    EXPECT_EQ(polyline.constantWidth(), 0.5);
+    EXPECT_EQ(polyline.vertices()[0].startWidth, 1);
+    EXPECT_EQ(polyline.vertices()[1].endWidth, 3);
+    for (const auto* invalid : {"LWPOLYLINE width=1 width=2", "LWPOLYLINE start-width=1",
+                                "LWPOLYLINE vertex=0,0 start-width=1 start-width=2",
+                                "LWPOLYLINE vertex=0,0 end-width=1 end-width=2",
+                                "LWPOLYLINE vertex=0,0 end-width=nan", "LWPOLYLINE width=inf"}) {
+        EXPECT_FALSE(failure(invalid).message.empty());
+    }
+}
+
 TEST(ReadEntity, ReadsWhatTheReportWrites) {
     const core::Polyline expected{{{{0.0, 0.0}, 0.0}, {{10.0, 0.0}, 0.5}, {{20.0, -2.5}, -1.0}},
                                   true};
