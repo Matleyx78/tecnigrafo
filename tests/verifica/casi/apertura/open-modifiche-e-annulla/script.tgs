@@ -1,0 +1,15 @@
+; OPEN: modifiche non salvate, annullamento, ripetizione della domanda con Invio vuoto ed Esc
+LINE
+0,0
+10,0
+
+OPEN
+C
+!report
+OPEN
+!esc
+!report
+OPEN
+N
+
+!esc

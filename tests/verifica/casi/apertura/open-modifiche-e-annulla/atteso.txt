@@ -1,0 +1,68 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: OPEN
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: C
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: OPEN
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: OPEN
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+  Enter name of drawing to open:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1

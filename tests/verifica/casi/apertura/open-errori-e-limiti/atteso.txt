@@ -1,0 +1,93 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: OPEN
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+  Enter name of drawing to open: piano.dwg
+  Cannot open piano.dwg: only .cadx and .dxf files are supported.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: OPEN
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+  Enter name of drawing to open: senza-estensione
+  Cannot open senza-estensione: only .cadx and .dxf files are supported.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 3]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: OPEN
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+  Enter name of drawing to open: inesistente.dxf
+  Cannot open inesistente.dxf: "inesistente.dxf": does not exist
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: OPEN
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+  Enter name of drawing to open: versione-3.cadx
+  Cannot open versione-3.cadx: written by a newer version of Tecnigrafo (format 3; this version reads up to 1)
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
