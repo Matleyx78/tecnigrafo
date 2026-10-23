@@ -37,7 +37,7 @@ zip -q -0 "$here/zip-stored.zip" testo.txt vuoto.txt cartella cartella/dati.txt
 zip -q - testo.txt vuoto.txt | cat >"$here/zip-descriptor.zip"
 
 # With a UTF-8 locale zip writes a non-ASCII name as it is, without bit 11:
-# Tecnigrafo must refuse it (docs/tappe/0.5/P13-zip.md).
+# Tecnigrafo reads it as UTF-8 because it is valid UTF-8 (#190).
 zip -q "$here/zip-nome-non-marcato.zip" cartella/città.txt
 
 # Info-ZIP archives that Tecnigrafo must refuse as unsupported.

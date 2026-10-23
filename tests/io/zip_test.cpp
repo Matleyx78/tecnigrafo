@@ -195,8 +195,10 @@ TEST(ZipRead, PythonEmptyArchive) {
     expectParts(readZip(archiveFile("python-empty.zip")), {});
 }
 
-TEST(ZipRead, RefusesInfoZipNonAsciiNameWithoutBit11) {
-    expectError(readZip(archiveFile("zip-nome-non-marcato.zip")), Error::Kind::Malformed, "bit 11");
+TEST(ZipRead, InfoZipUtf8NameWithoutBit11) {
+    // zip of Info-ZIP on Linux writes UTF-8 names without bit 11 (#190).
+    expectParts(readZip(archiveFile("zip-nome-non-marcato.zip")),
+                {{"cartella/città.txt", kUnicodeText, false}});
 }
 
 TEST(ZipRead, RefusesInfoZipEncryption) {
@@ -340,6 +342,18 @@ TEST(ZipRefuse, UnsafeNames) {
     // ".." inside a component is just a name.
     const std::vector<ZipPart> parts{{.name = "dir/a..b/..c", .bytes = "x", .stored = false}};
     EXPECT_TRUE(readZip(writeZip(parts)).ok());
+}
+
+TEST(ZipRefuse, NameNotValidUtf8WithoutBit11) {
+    // "città" in code page 437: 0x85 alone is not valid UTF-8 (#190).
+    for (const std::string_view name :
+         {std::string_view{"citt\x85.txt"}, std::string_view{"bad\xC3(.txt"}}) {
+        const std::vector<ZipPart> parts{
+            {.name = std::string{name}, .bytes = "x", .stored = false}};
+        std::string archive = writeZip(parts);
+        setFirstPartU16(archive, kLocalFlags, kCentralFlags, 0);  // clear bit 11
+        expectError(readZip(archive), Error::Kind::Malformed, "code page 437");
+    }
 }
 
 TEST(ZipRefuse, NameNotValidUtf8) {

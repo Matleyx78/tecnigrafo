@@ -37,7 +37,8 @@ struct ZipLimits {
 /// methods other than 0 and 8; Error::Kind::TooLarge when a limit is
 /// exceeded; Error::Kind::Malformed for everything else that breaks the
 /// format: a damaged structure, a wrong CRC-32, a size that does not match
-/// the data, a name that is not valid UTF-8, absolute, with a `..` component
+/// the data, a name that is not valid UTF-8 (with or without general purpose
+/// bit 11, docs/tappe/0.5/P13-zip.md), absolute, with a `..` component
 /// or a backslash, or repeated. Error::line is always 0.
 [[nodiscard]] Result<std::vector<ZipPart>> readZip(std::string_view archive,
                                                    const ZipLimits& limits = {});

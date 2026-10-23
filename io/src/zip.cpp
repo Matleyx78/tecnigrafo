@@ -198,17 +198,20 @@ struct CentralEntry {
     std::size_t dataStart{0};  ///< filled in from the local header
 };
 
-/// The name in UTF-8: marked as such by bit 11, or plain ASCII. Without
-/// bit 11 other bytes are in code page 437 (APPNOTE 4.4.4, appendix D).
+/// The name, valid UTF-8 with or without bit 11 (#190). Without bit 11 the
+/// specification says code page 437 (APPNOTE 4.4.4, appendix D), but zip of
+/// Info-ZIP writes UTF-8 names that way on Linux, and a real CP437 name is
+/// rarely valid UTF-8: so valid UTF-8 is read as UTF-8.
 Result<std::string> decodeName(std::string_view rawName, std::uint16_t flags, std::size_t index) {
-    if ((flags & kFlagUtf8) == 0 && !isAscii(rawName)) {
+    if (isValidUtf8(rawName)) {
+        return std::string{rawName};
+    }
+    if ((flags & kFlagUtf8) == 0) {
         return malformed(partLabel(index) +
-                         " has a name that is neither ASCII nor marked as UTF-8 (bit 11)");
+                         " has a name that is not valid UTF-8; other encodings, such as "
+                         "code page 437, are not supported");
     }
-    if (!isValidUtf8(rawName)) {
-        return malformed(partLabel(index) + " has a name that is not valid UTF-8");
-    }
-    return std::string{rawName};
+    return malformed(partLabel(index) + " has a name that is not valid UTF-8");
 }
 
 /// Relative, without `..` components, backslashes or NUL characters.
