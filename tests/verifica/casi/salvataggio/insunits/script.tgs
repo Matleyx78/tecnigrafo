@@ -1,0 +1,23 @@
+; INSUNITS: valori non validi, limiti 0 e 24, annulla e ripeti
+INSUNITS
+25
+-1
+abc
+
+!report
+INSUNITS
+6
+!report
+INSUNITS
+0
+!report
+INSUNITS
+24
+!report
+U
+!report
+U
+!report
+U
+!report
+REDO

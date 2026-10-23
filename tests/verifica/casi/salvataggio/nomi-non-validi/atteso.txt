@@ -1,0 +1,68 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: ../esterno.cadx
+  Cannot save ../esterno.cadx: Invalid file name.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: /assoluto.cadx
+  Cannot save /assoluto.cadx: Invalid file name.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: C:disco.cadx
+  Cannot save C:disco.cadx: Invalid file name.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1

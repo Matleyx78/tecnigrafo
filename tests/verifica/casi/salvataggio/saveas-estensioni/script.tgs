@@ -1,0 +1,16 @@
+; SAVEAS con estensione automatica .cadx, formato .dxf, estensione non supportata e virgolette
+LINE
+0,0
+20,0
+
+SAVEAS
+senza-estensione
+!report
+SAVEAS
+disegno.dxf
+!report
+SAVEAS
+progetto.dwg
+!report
+SAVEAS
+"con spazi.cadx"

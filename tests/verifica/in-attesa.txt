@@ -27,3 +27,11 @@ dxf/conservazione-xdata #164
 dxf/lwpolyline-forme #167
 dxf/polilinea-librecad #167
 dxf/testo-proprieta #167
+
+# R15: salvataggio e unità
+salvataggio/file-esistente-e-annulla #173
+salvataggio/insunits #173
+salvataggio/nomi-non-validi #173
+salvataggio/qsave-nuovo-e-ripetuto #173
+salvataggio/save-con-nome #173
+salvataggio/saveas-estensioni #173
