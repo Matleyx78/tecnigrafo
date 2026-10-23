@@ -2,6 +2,7 @@
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; Handwritten TEXT: x and alignment x negate; r -> -r mod 360; flag XOR 2. Font units read independently from LiberationSans-Regular.ttf: cap=1409, hhea asc=1854 desc=-434, hmtx A=1366. With height=1409, box corners use integer font units.
+; Raw DXF values independently checked against CI run 39925415850, job 120320505295.
 D = DXF source=r11-negative-text
 ? count D -> TEXT 3
 ? unhandled D -> none

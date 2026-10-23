@@ -2,6 +2,7 @@
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; Handwritten DXF: z/elevation/thickness stay in file coordinates even after XY reflection; lexical forms must survive roundtrip.
+; Raw DXF values independently checked against CI run 39925415850, job 120320505295.
 D = DXF source=r11-placement
 ? count D -> ARC 1; CIRCLE 1; LINE 1; LWPOLYLINE 1
 ? unhandled D -> none

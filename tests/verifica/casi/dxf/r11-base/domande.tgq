@@ -1,6 +1,7 @@
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; Handwritten DXF: omitted placement defaults, zero-length LINE and degree normalization (ADR 0012).
+; Raw DXF values independently checked against CI run 39925415850, job 120320505295.
 D = DXF file=input.dxf
 ? version D -> AC1032
 ? units D -> 4
@@ -13,4 +14,9 @@ D = DXF file=input.dxf
 ? entity D A5 -> ARC center=-2,3 radius=4 start-angle=270 end-angle=90
 ? bbox D:A2 -> 2,2 2,2
 ? length D:A2 -> 0
-? roundtrip D -> identical
+; Noncanonical -90/450 angles above normalize to 270/90 in the model.
+; Canonical values in canonical.dxf exercise strict group-level roundtrip separately.
+P = DXF file=canonical.dxf
+? count P -> ARC 1; CIRCLE 1; LINE 2
+? unhandled P -> none
+? roundtrip P -> identical

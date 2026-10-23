@@ -1,6 +1,8 @@
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; Handwritten malformed geometry stays raw, including ARC angles equal only after normalization; a coincident LINE is managed.
+; Raw DXF values independently checked against CI run 39925415850, job 120320505295.
+; The raw oracle reports E6 as ARC (0 != 360); P11 classifies it after modulo 360, so it is unhandled.
 D = DXF file=input.dxf
 ? count D -> LINE 1
 ? unhandled D -> ARC 4; CIRCLE 2
