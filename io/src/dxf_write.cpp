@@ -25,7 +25,7 @@ core::RawGroups headerGroups(const core::RawGroups& original, std::string_view v
     core::RawGroups out;
     for (std::size_t i = 0; i < original.size(); ++i) {
         const auto& group = original[i];
-        const auto* const where = std::ranges::find(kNames, trimDxf(group.value));
+        const auto where = std::ranges::find(kNames, trimDxf(group.value));
         if (group.code != 9 || where == kNames.end()) {
             out.push_back(group);
             continue;
