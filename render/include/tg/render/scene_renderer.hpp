@@ -42,11 +42,10 @@ struct SceneStyle {
 [[nodiscard]] double gridSpacing(double pixelsPerUnit, double minSpacingPx);
 
 /// Draws grid, axes and every entity of `document` as seen through `viewport`.
-/// A text is drawn with Painter::drawText from its position, height, rotation
-/// and width factor; oblique angle, mirroring and alignments other than left
-/// on the baseline are ignored until tappa 0.5 (docs/adr/0013, point 1). A
-/// text whose capital letters are lower than kMinTextHeightPx is drawn as its
-/// box (docs/adr/0013, point 4).
+/// A text is drawn with Painter::drawText using core::textFrame() for its
+/// origin, used height, rotation and width factor, together with its oblique
+/// angle and mirroring (docs/adr/0022). A text whose used capital height is
+/// below kMinTextHeightPx is drawn as its transformed core::textBox().
 void renderScene(const core::Document& document, const Viewport& viewport, const SceneStyle& style,
                  Painter& painter);
 
