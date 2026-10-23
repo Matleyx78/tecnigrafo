@@ -16,12 +16,7 @@ dxf/r11-extrusion-boundary #168
 dxf/r11-negative-ocs #168
 dxf/r11-negative-text #168
 dxf/r11-placement #168
-dxf/r11-unusual-extrusion #168
 dxf/r11-public #168
-dxf/conservazione-ac1015 #164
-dxf/conservazione-classes #164
-dxf/conservazione-r2018 #164
-dxf/conservazione-xdata #164
 
 # R12: polilinee e testo
 dxf/lwpolyline-forme #167
