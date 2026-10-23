@@ -81,8 +81,9 @@ Lettura:
   dei dati, bit 3, compresi);
 - metodi 0 e 8; cifratura, ZIP64, più dischi, altri metodi: `Unsupported`
   con il motivo;
-- nomi: UTF-8 valido (bit 11, o solo ASCII), relativi, senza `..` né `\`,
-  senza duplicati: altrimenti `Malformed`;
+- nomi: UTF-8 valido, con o senza bit 11 (lo strumento `zip` di Info-ZIP
+  su Linux scrive i nomi UTF-8 senza bit 11; deciso in #190), relativi,
+  senza `..` né `\`, senza duplicati: altrimenti `Malformed`;
 - limiti **prima** di decomprimere (numero di parti, somma delle dimensioni
   dichiarate, rapporto) e **durante** (inflate si ferma appena supera la
   dimensione dichiarata): `TooLarge` o `Malformed`;
