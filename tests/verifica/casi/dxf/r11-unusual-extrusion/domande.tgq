@@ -1,0 +1,12 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten oblique extrusion for every supported type: retain every raw group and never flatten into a managed XY entity.
+D = DXF file=input.dxf
+? count D -> none
+? unhandled D -> ARC 1; CIRCLE 1; LINE 1; LWPOLYLINE 1; TEXT 1
+? entity D F1 -> unhandled LINE
+? entity D F2 -> unhandled CIRCLE
+? entity D F3 -> unhandled ARC
+? entity D F4 -> unhandled LWPOLYLINE
+? entity D F5 -> unhandled TEXT
+? roundtrip D -> identical

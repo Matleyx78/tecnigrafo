@@ -8,3 +8,12 @@
 # La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
+
+# R11: independent references for P11.
+dxf/r11-base #168
+dxf/r11-degenerate #168
+dxf/r11-extrusion-boundary #168
+dxf/r11-negative-ocs #168
+dxf/r11-negative-text #168
+dxf/r11-placement #168
+dxf/r11-unusual-extrusion #168

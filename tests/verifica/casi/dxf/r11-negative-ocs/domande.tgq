@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten OCS: Ax=Wy x (0,0,-1)=(-1,0,0); Ay=N x Ax=(0,1,0). Reflect x, reverse ARC endpoints and negate bulges.
+D = DXF file=input.dxf
+? count D -> ARC 2; CIRCLE 1; LINE 1; LWPOLYLINE 1
+? unhandled D -> none
+? entity D B1 -> LINE start=3,4 end=8,-2 extrusion=0,0,-1
+? entity D B2 -> CIRCLE center=-5,6 radius=3 extrusion=0,0,-1
+? entity D B3 -> ARC center=-2,3 radius=4 start-angle=330 end-angle=30 extrusion=0,0,-1
+? entity D B4 -> ARC center=4,2 radius=5 start-angle=150 end-angle=240 extrusion=0,0,-1
+? entity D B5 -> LWPOLYLINE closed=yes vertex=-1,2 bulge=-0.5 vertex=-7,2 bulge=1 vertex=-7,8 extrusion=0,0,-1
+? bbox D:B2 -> -8,3 -2,9
+? bbox D:B3 -> 1.4641016151377544,1 2,5
+? roundtrip D -> identical

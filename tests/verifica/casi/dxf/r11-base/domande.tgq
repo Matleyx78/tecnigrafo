@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten DXF: omitted placement defaults, zero-length LINE and degree normalization (ADR 0012).
+D = DXF file=input.dxf
+? version D -> AC1032
+? units D -> 4
+? count D -> ARC 2; CIRCLE 1; LINE 2
+? unhandled D -> none
+? entity D A1 -> LINE start=-3,4 end=5,-8
+? entity D A2 -> LINE start=2,2 end=2,2
+? entity D A3 -> CIRCLE center=5,-7 radius=2.5
+? entity D A4 -> ARC center=1,2 radius=3 start-angle=300 end-angle=30
+? entity D A5 -> ARC center=-2,3 radius=4 start-angle=270 end-angle=90
+? bbox D:A2 -> 2,2 2,2
+? length D:A2 -> 0
+? roundtrip D -> identical

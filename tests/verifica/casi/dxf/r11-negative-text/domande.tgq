@@ -1,0 +1,10 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten TEXT: x and alignment x negate; r -> -r mod 360; flag XOR 2. Font units read independently from LiberationSans-Regular.ttf: cap=1409, hhea asc=1854 desc=-434, hmtx A=1366. With height=1409, box corners use integer font units.
+D = DXF file=input.dxf
+? count D -> TEXT 3
+? unhandled D -> none
+? entity D D1 -> TEXT position=-3,4 alignment-point=-9,7 height=1409 rotation=270 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" z=2.5 alignment-z=-3.25 thickness=0.5 extrusion=0,0,-1 ~box=-437,4;-437,-1362;1851,-1362;1851,4
+? entity D D2 -> TEXT position=-8,-2 alignment-point=-9,7 height=1409 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="A" z=2.5 alignment-z=-3.25 thickness=0.5 extrusion=0,0,-1 ~box=-8,-436;-1374,-436;-1374,1852;-8,1852
+? entity D D3 -> TEXT position=-3,4 alignment-point=-9,7 height=1409 rotation=270 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=yes horizontal=left vertical=baseline value="A" z=2.5 alignment-z=-3.25 thickness=0.5 extrusion=0,0,-1 ~box=431,4;431,-1362;-1857,-1362;-1857,4
+? roundtrip D -> identical

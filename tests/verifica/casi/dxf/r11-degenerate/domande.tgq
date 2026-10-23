@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten malformed geometry stays raw, including ARC angles equal only after normalization; a coincident LINE is managed.
+D = DXF file=input.dxf
+? count D -> LINE 1
+? unhandled D -> ARC 4; CIRCLE 2
+? entity D E1 -> unhandled CIRCLE
+? entity D E2 -> unhandled CIRCLE
+? entity D E3 -> unhandled ARC
+? entity D E4 -> unhandled ARC
+? entity D E5 -> unhandled ARC
+? entity D E6 -> unhandled ARC
+? entity D E7 -> LINE start=0,0 end=0,0
+? roundtrip D -> identical
