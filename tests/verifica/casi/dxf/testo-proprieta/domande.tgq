@@ -1,11 +1,19 @@
 ; Proprieta DXF di TEXT: rotazione, obliquo, specchiatura, allineamenti, accenti e sequenze di controllo (ADR 0013, ADR 0018)
+; ~box (ADR 0022, punto 5) calcolato a mano con fontTools su LiberationSans-Regular.ttf
+; (cmap, hmtx; sCapHeight = 1409, hhea ascent = 1854 e descent = -434), senza eseguire
+; Tecnigrafo. I codici di controllo (%%c, %%d, %%p) contano come caratteri letterali.
+;   a = 1.3158268275372604, d = -0.3080198722498226
+;   51: L = 7.511710432931157, w = 15.023420865862313, Left Baseline, A = 10,20,
+;       obliquo 15 gradi, rotazione 45 gradi
+;   52: L = 17.93541518807665, w = 53.806245564229954, Center Middle (oy = h/2 = 1.5),
+;       A = 50,0, all'indietro e capovolto
 D = DXF file=testo.dxf
 ? version D -> AC1032
 ? units D -> 0
 ? count D -> TEXT 2
 ? unhandled D -> TEXT 2
-? entity D 51 -> TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=45 width-factor=0.8 oblique=15 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello World"
-? entity D 52 -> TEXT position=0,0 alignment-point=50,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=yes horizontal=center vertical=middle value="Città %%c10 %%d %%p0.1"
+? entity D 51 -> TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=45 width-factor=0.8 oblique=15 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello World" ~box=10.398607046041498,19.30959234400118;21.02176981691221,29.932755114871895;18.92035755575335,33.57250791884724;8.297194784882636,22.94934514797653
+? entity D 52 -> TEXT position=0,0 alignment-point=50,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=yes horizontal=center vertical=middle value="Città %%c10 %%d %%p0.1" ~box=76.90312278211498,2.4240596167494677;23.096877217885023,2.4240596167494677;23.096877217885023,-2.4474804826117813;76.90312278211498,-2.4474804826117813
 ? entity D 53 -> unhandled TEXT
 ? entity D 54 -> unhandled TEXT
 ? roundtrip D -> identical
