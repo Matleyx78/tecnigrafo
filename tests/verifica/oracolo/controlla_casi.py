@@ -3,12 +3,15 @@
 """Print oracle answers, check declared references and audit written drawings."""
 
 import argparse
+from contextlib import redirect_stdout
 import io
 import json
 import math
 from pathlib import Path
 import re
 import sys
+import subprocess
+import tempfile
 import zipfile
 
 import ezdxf
@@ -142,10 +145,108 @@ def audit_outputs(outputs):
     return failures
 
 
+def self_test():
+    """Exercise the oracle in CI without adding or changing reference cases."""
+    def require(condition, message):
+        if not condition:
+            raise ValueError(f"oracle self-test: {message}")
+
+    def dxf(path, entities, units=None):
+        header = [(0, "SECTION"), (2, "HEADER"), (9, "$ACADVER"), (1, "AC1015")]
+        if units is not None:
+            header += [(9, "$INSUNITS"), (70, units)]
+        groups = header + [(0, "ENDSEC"), (0, "SECTION"), (2, "ENTITIES")]
+        groups += entities + [(0, "ENDSEC"), (0, "EOF")]
+        path.write_text("".join(f"{code}\n{value}\n" for code, value in groups), encoding="utf-8")
+
+    with tempfile.TemporaryDirectory(prefix="tecnigrafo-oracle-") as directory:
+        root = Path(directory)
+        source = root / "unsupported"
+        mirrored = root / "negative-ocs"
+        # Handwritten DXF records, not values exported by Tecnigrafo or ezdxf.
+        line = [(0, "LINE"), (5, "2F"), (100, "AcDbEntity"), (8, "0"),
+                (100, "AcDbLine"), (10, 0), (20, 0), (11, 10), (21, 5)]
+        unsupported = [(0, "POINT"), (5, "30"), (100, "AcDbEntity"), (8, "0"),
+                       (100, "AcDbPoint"), (10, 3), (20, 4)]
+        circle = [(0, "CIRCLE"), (5, "31"), (100, "AcDbEntity"), (8, "0"),
+                  (100, "AcDbCircle"), (10, 5), (20, 6), (30, 2), (40, 3),
+                  (39, 0.5), (210, 0), (220, 0), (230, -1)]
+        dxf(source, line + unsupported)
+        dxf(mirrored, circle, units=4)
+        for path in (source, mirrored):
+            print(f"=== Handwritten DXF probe: {path.name} ===", flush=True)
+            output = subprocess.check_output(
+                [sys.executable, str(Path(__file__).with_name("ezdxf_attesi.py")), str(path)],
+                text=True,
+            )
+            print(output, end="")
+        drawing = DrawingAnswers(source)
+        require(drawing.answer("units") == "0", "missing INSUNITS must be zero")
+        require(drawing.answer("count") == "LINE 1", "managed count")
+        require(drawing.answer("unhandled") == "POINT 1", "unsupported count")
+        require(drawing.answer("entity", "0030") == "unhandled POINT", "handle lookup")
+        require(drawing.answer("entity", "FF") == "none", "missing handle")
+        require(DrawingAnswers(mirrored).answer("entity", "31") ==
+                "CIRCLE center=5,6 radius=3 z=2 thickness=0.5 extrusion=0,0,-1",
+                "negative OCS must stay raw")
+
+        # The original owner, paper-space flag and degenerate values must survive
+        # ezdxf's document layout binding and affect classification.
+        classified = root / "classification"
+        paper = [(67, 1)]
+        owner = [(330, "FFFF")]
+        dxf(classified, line[:3] + paper + line[3:] +
+            [(code, "32" if code == 5 else value) for code, value in line[:2]] + owner + line[2:] +
+            [(code, "33" if code == 5 else 0 if code == 40 else value) for code, value in circle])
+        classification = DrawingAnswers(classified)
+        require(classification.answer("count") == "none", "unhandled classification")
+        require(classification.answer("unhandled") == "CIRCLE 1; LINE 2", "unhandled details")
+
+        case = root / "cases/probe/domande.tgq"
+        case.parent.mkdir(parents=True)
+        prefix = "; oracle: ezdxf\nD = DXF source=unsupported\n"
+        case.write_text(prefix + "? count D -> LINE 1\n? entity D 2f -> LINE start=0,0 end=10,5\n"
+                        "? roundtrip D -> identical\n", encoding="utf-8")
+        require(check_case(case, root) == (2, 0), "matching case and unsupported question")
+        case.write_text(prefix + "!tolerance absolute 0.01\n"
+                        "? entity D 2F -> LINE start=0,0 end=10.005,5\n"
+                        "!tolerance absolute 0\n? entity D 2F -> LINE start=0,0 end=10.005,5\n",
+                        encoding="utf-8")
+        with redirect_stdout(io.StringIO()) as diagnostic:
+            require(check_case(case, root) == (2, 1), "per-line tolerances and mismatch")
+        require("expected:" in diagnostic.getvalue() and "ezdxf:" in diagnostic.getvalue(),
+                "mismatch diagnostic")
+        require(equal_answer("count", "LINE 1; ARC 2", "ARC 2; LINE 1", 0, 0), "unordered counts")
+        require(not equal_answer("entity", 'TEXT value="A  B"', 'TEXT value="A B"', 1, 1),
+                "literal text must be exact")
+        require(equal_answer("entity", 'TEXT value="1" ~box=0,0;1,0', 'TEXT value="1"', 0, 0),
+                "derived properties")
+        require(equal_answer("units", "100.01", "100", 0, 0.001), "relative tolerance")
+
+        good = root / "good"
+        good.mkdir()
+        document = ezdxf.new("R2018")
+        document.modelspace().add_line((0, 0), (10, 5))
+        document.saveas(good / "output.dxf")
+        with zipfile.ZipFile(good / "output.cadx", "w") as archive:
+            archive.write(good / "output.dxf", "drawing.dxf")
+        require(audit_outputs([good]) == 0, "DXF and embedded CADX audit")
+        bad = root / "bad"
+        bad.mkdir()
+        (bad / "broken.dxf").write_text("invalid\n", encoding="utf-8")
+        with zipfile.ZipFile(bad / "broken.cadx", "w") as archive:
+            archive.writestr("other.txt", "missing drawing")
+        with redirect_stdout(io.StringIO()):
+            require(audit_outputs([bad]) == 2, "invalid DXF and CADX must fail")
+    print("Oracle self-test passed: handwritten probes, comparison, tolerances, classification and audit.")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("cases", type=Path)
     parser.add_argument("sources", type=Path)
+    parser.add_argument("--self-test", action="store_true",
+                        help="also exercise handwritten probes and oracle checks in temporary files")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--print-only", action="store_true",
                       help="print public source answers, including after a failed verification")
@@ -154,6 +255,8 @@ def main():
     parser.add_argument("--outputs", type=Path, action="append",
                         help="case output root; repeatable; default: build/ci/tests/verifica/casi*")
     args = parser.parse_args()
+    if args.self_test:
+        self_test()
     failures = 0
     if not args.check_only:
         manifest = args.cases.parent / "sorgenti.json"

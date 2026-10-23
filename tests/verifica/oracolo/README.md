@@ -81,3 +81,13 @@ record the SHA-256 of each wheel in `requirements.txt`. Install with
 Recheck **all** declared oracle cases and inspect every changed answer before
 accepting the update. Reference changes belong in a separate reference PR;
 never adjust them silently to make the oracle pass.
+
+## Infrastructure self-test
+
+The normal CI oracle check also uses `--self-test`. It creates two handwritten
+DXF probes in a temporary directory, prints their standalone oracle output, and
+checks missing units, unsupported entities, negative OCS, paper space, foreign
+owners, degenerate geometry, handle lookup, case tolerances, mismatch diagnostics,
+exact text, unordered counts and DXF/CADX audit success and failure. It never
+adds reference cases or derives expected values from Tecnigrafo. The probe output
+is in **Verifica → Oracolo ezdxf** and is copied into the package PR as text.

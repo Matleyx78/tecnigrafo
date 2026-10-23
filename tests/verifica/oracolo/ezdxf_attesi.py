@@ -7,6 +7,11 @@ from collections import Counter
 from pathlib import Path
 
 import ezdxf
+from ezdxf.entities import factory
+from ezdxf.lldxf.extendedtags import ExtendedTags
+from ezdxf.lldxf.loader import load_dxf_structure
+from ezdxf.lldxf.tagger import ascii_tags_loader, tag_compiler
+from ezdxf.sections.header import HeaderSection
 
 
 def number(value):
@@ -110,17 +115,32 @@ class DrawingAnswers:
     def __init__(self, path):
         self.document = ezdxf.readfile(path)
         model_owner = self.document.modelspace().block_record_handle
-        # ENTITIES includes paper space too; block definitions are not drawing entities.
-        self.entities = {
-            entity.dxf.handle.upper(): (entity, managed(entity, model_owner))
-            for entity in self.document.entities
-        }
+        # ezdxf binds ENTITIES to layouts and may replace their owner/paper-space
+        # flags. Load the original entity tags independently so that classification
+        # and raw answers describe the file, not those automatic repairs.
+        encoding = ("utf-8" if self.document.loaded_dxfversion >= "AC1021"
+                    else self.document.encoding)
+        with Path(path).open(encoding=encoding) as stream:
+            sections = load_dxf_structure(tag_compiler(ascii_tags_loader(stream)))
+        header = sections.get("HEADER", [])
+        self.header = HeaderSection.load(header[0]) if header else None
+        self.entities = {}
+        # Block definitions, linked vertices/attributes and sequence terminators
+        # are not top-level drawing entities.
+        for tags in sections.get("ENTITIES", [])[1:]:
+            if tags[0].value in {"VERTEX", "ATTRIB", "SEQEND"}:
+                continue
+            entity = factory.load(ExtendedTags(tags))
+            handle = entity.dxf.get("handle")
+            if handle is None:
+                raise ValueError("oracle entities require an explicit DXF handle")
+            self.entities[handle.upper()] = (entity, managed(entity, model_owner))
 
     def answer(self, question, handle=None):
         if question == "version":
-            return self.document.header.get("$ACADVER", "none")
+            return self.header.get("$ACADVER", "none") if self.header else "none"
         if question == "units":
-            return str(self.document.header.get("$INSUNITS", 0))
+            return str(self.header.get("$INSUNITS", 0) if self.header else 0)
         if question in {"count", "unhandled"}:
             counts = Counter(e.dxftype() for e, supported in self.entities.values()
                              if supported == (question == "count"))

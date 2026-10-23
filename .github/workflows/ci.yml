@@ -149,6 +149,13 @@ jobs:
         run: |
           set -o pipefail
           ctest --preset ci -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
+      - name: 'Oracolo ezdxf: answers'
+        if: always()
+        run: |
+          python3 -m pip install --require-hashes --only-binary=:all: -r tests/verifica/oracolo/requirements.txt
+          python3 tests/verifica/oracolo/controlla_casi.py tests/verifica/casi build/verifica-sorgenti --print-only
+      - name: Oracolo ezdxf
+        run: python3 tests/verifica/oracolo/controlla_casi.py tests/verifica/casi build/verifica-sorgenti --check-only --self-test
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v4
