@@ -1,0 +1,5 @@
+; Rifiuto di file CADX malformati o di versione piu recente (docs/formati/cadx.md, ADR 0006, P14)
+? open-error file=senza-mimetype.cadx -> "not a Tecnigrafo drawing (no valid mimetype)"
+? open-error file=mimetype-compresso.cadx -> "not a Tecnigrafo drawing (no valid mimetype)"
+? open-error file=versione-futura.cadx -> "written by a newer version of Tecnigrafo (format 2; this version reads up to 1)"
+? open-error file=versione-3.cadx -> "written by a newer version of Tecnigrafo (format 3; this version reads up to 1)"
