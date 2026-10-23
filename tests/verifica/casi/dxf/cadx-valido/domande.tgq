@@ -1,0 +1,9 @@
+; Disegno CADX conforme alla specifica (docs/formati/cadx.md, ADR 0006, ADR 0019)
+D = CADX file=disegno.cadx
+? version D -> AC1032
+? units D -> 0
+? count D -> none
+? unhandled D -> 3DFACE 1
+? entity D 30 -> unhandled 3DFACE
+? roundtrip D as=cadx -> identical
+? roundtrip D as=dxf -> identical
