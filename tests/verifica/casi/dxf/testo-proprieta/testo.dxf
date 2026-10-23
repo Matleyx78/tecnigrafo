@@ -1,0 +1,148 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1032
+  9
+$HANDSEED
+  5
+100
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+TEXT
+  5
+51
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+10.0
+ 20
+20.0
+ 30
+0.0
+ 40
+2.5
+  1
+Hello World
+ 50
+45.0
+ 41
+0.8
+ 51
+15.0
+  7
+Standard
+ 71
+0
+ 72
+0
+ 11
+0.0
+ 21
+0.0
+ 31
+0.0
+100
+AcDbText
+ 73
+0
+  0
+TEXT
+  5
+52
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+3.0
+  1
+Città %%c10 %%d %%p0.1
+ 50
+0.0
+ 41
+1.0
+ 51
+0.0
+  7
+Standard
+ 71
+6
+ 72
+1
+ 11
+50.0
+ 21
+0.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+53
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+0.0
+  1
+Zero Height
+  0
+TEXT
+  5
+54
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+ 41
+-1.0
+  1
+Negative Width
+  0
+ENDSEC
+  0
+EOF
