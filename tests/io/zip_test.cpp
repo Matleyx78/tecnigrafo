@@ -37,6 +37,7 @@ std::string repeated(std::string_view line, int times) {
 const std::string kText = repeated("Tecnigrafo: archivio di prova.\n", 40);
 const std::string kUnicodeText = repeated("Città, perché, €.\n", 20);
 constexpr std::string_view kMimetype = "application/x-tecnigrafo";
+constexpr std::size_t kMebibyte = std::size_t{1024} * 1024;
 
 /// An archive of tests/io/dati/zip, made by crea.sh with other tools.
 std::string archiveFile(std::string_view name) {
@@ -226,7 +227,7 @@ TEST(ZipWrite, RoundTripsRandomParts) {
     };
     // Several MB of text with some variety: compresses, but not to nothing.
     std::string large;
-    while (large.size() < 3U * 1024U * 1024U) {
+    while (large.size() < 3 * kMebibyte) {
         large += "line " + std::to_string(byte(generator)) + " of a large part\n";
     }
 
@@ -237,11 +238,11 @@ TEST(ZipWrite, RoundTripsRandomParts) {
         {.name = "random.bin", .bytes = randomBytes(10000), .stored = false},
         {.name = "random-stored.bin", .bytes = randomBytes(4096), .stored = true},
         {.name = "large/text.txt", .bytes = large, .stored = false},
-        {.name = "large/random.bin", .bytes = randomBytes(2U * 1024U * 1024U), .stored = false},
+        {.name = "large/random.bin", .bytes = randomBytes(2 * kMebibyte), .stored = false},
         {.name = "cartella/città €.txt", .bytes = kUnicodeText, .stored = false},
     };
     const std::string archive = writeZip(parts);
-    EXPECT_LT(archive.size(), large.size() + 3U * 1024U * 1024U);
+    EXPECT_LT(archive.size(), large.size() + 3 * kMebibyte);
 
     const Result<std::vector<ZipPart>> read = readZip(archive);
     ASSERT_TRUE(read.ok()) << read.error().message;
@@ -403,6 +404,7 @@ TEST(ZipRefuse, TotalSize) {
 
 TEST(ZipRefuse, MoreThan256Parts) {
     std::vector<ZipPart> parts;
+    parts.reserve(257);
     for (int i = 0; i < 256; ++i) {
         parts.push_back({.name = std::to_string(i), .bytes = "", .stored = true});
     }
