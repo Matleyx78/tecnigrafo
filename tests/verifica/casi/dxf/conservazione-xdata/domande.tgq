@@ -1,0 +1,9 @@
+; oracle: ezdxf
+D = DXF source=eed-binary-r2007
+? version D -> AC1021
+? units D -> 0
+? count D -> none
+? unhandled D -> POINT 1
+? entity D 10 -> unhandled POINT
+? warnings D -> none
+? roundtrip D -> identical

@@ -8,3 +8,8 @@
 # La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.
+
+dxf/conservazione-ac1015 #164
+dxf/conservazione-classes #164
+dxf/conservazione-r2018 #164
+dxf/conservazione-xdata #164

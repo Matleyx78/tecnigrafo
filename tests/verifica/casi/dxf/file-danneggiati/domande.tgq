@@ -1,0 +1,5 @@
+; File danneggiati o non supportati verificati con open-error (ADR 0017, ADR 0018)
+? open-error file=troncato.dxf -> "line 5: line 5: the file ends after group code 9: expected its value on line 6"
+? open-error file=codice-non-valido.dxf -> "line 3: line 3: expected a group code (an integer from -5 to 1071), found \"abc\""
+? open-error file=vuoto.dxf -> "the file is empty: expected DXF groups"
+? open-error file=versione-vecchia.dxf -> "line 8: line 8: DXF version \"AC1009\" is older than AutoCAD 2000; Tecnigrafo reads AC1015 (AutoCAD 2000) to AC1032 (AutoCAD 2018)"
