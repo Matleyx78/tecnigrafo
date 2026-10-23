@@ -1,0 +1,12 @@
+; Polilinee con bulge, larghezze, chiuse, e casi non gestiti (ADR 0018, punto 3)
+D = DXF file=polilinee.dxf
+? version D -> AC1015
+? units D -> 0
+? count D -> LWPOLYLINE 3
+? unhandled D -> LWPOLYLINE 2
+? entity D 41 -> LWPOLYLINE closed=no vertex=0,0 bulge=1 vertex=10,0 vertex=20,0
+? entity D 42 -> LWPOLYLINE closed=yes width=0.5 vertex=0,0 vertex=10,10
+? entity D 43 -> LWPOLYLINE closed=no vertex=0,0 start-width=1 end-width=2 vertex=10,0
+? entity D 44 -> unhandled LWPOLYLINE
+? entity D 45 -> unhandled LWPOLYLINE
+? roundtrip D -> identical
