@@ -69,6 +69,10 @@ std::string_view onOff(bool value) {
 void writePolyline(const core::Polyline& polyline, std::string& out) {
     out += "LWPOLYLINE closed=";
     out += yesNo(polyline.isClosed());
+    if (polyline.constantWidth() != 0.0) {
+        out += " width=";
+        out += formatNumber(polyline.constantWidth());
+    }
     for (const core::PolylineVertex& vertex : polyline.vertices()) {
         out += " vertex=";
         out += formatPoint(vertex.position);
@@ -77,6 +81,14 @@ void writePolyline(const core::Polyline& polyline, std::string& out) {
         if (vertex.bulge != 0.0) {
             out += " bulge=";
             out += formatNumber(vertex.bulge);
+        }
+        if (vertex.startWidth != 0.0) {
+            out += " start-width=";
+            out += formatNumber(vertex.startWidth);
+        }
+        if (vertex.endWidth != 0.0) {
+            out += " end-width=";
+            out += formatNumber(vertex.endWidth);
         }
     }
 }

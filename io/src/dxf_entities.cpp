@@ -3,6 +3,7 @@
 
 #include "dxf_entities.hpp"
 
+#include "dxf_entity_common.hpp"
 #include "tg/io/dxf_groups.hpp"
 
 #include <array>
@@ -12,12 +13,23 @@
 
 namespace tg::io {
 
-const EntityCodec* findCodec(std::string_view /*type*/) {
-    // P11/P12 add the codecs here, in alphabetical order.
+const EntityCodec* findCodec(std::string_view type) {
+    if (type == "LWPOLYLINE") {
+        return &kLwpolylineCodec;
+    }
+    if (type == "TEXT") {
+        return &kTextCodec;
+    }
     return nullptr;
 }
 
-const EntityCodec* findCodec(const core::Entity& /*entity*/) {
+const EntityCodec* findCodec(const core::Entity& entity) {
+    if (std::holds_alternative<core::Polyline>(entity)) {
+        return &kLwpolylineCodec;
+    }
+    if (std::holds_alternative<core::Text>(entity)) {
+        return &kTextCodec;
+    }
     return nullptr;
 }
 
