@@ -1,7 +1,7 @@
 ; oracle: ezdxf
 D = DXF source=mtext-columns-r2018
 ? version D -> AC1032
-? units D -> 0
+? units D -> 6
 ? count D -> none
 ? unhandled D -> MTEXT 3
 ? entity D 2D -> unhandled MTEXT
