@@ -12,3 +12,6 @@ foreach(source IN LISTS fuzz_sources)
     tg_configure_target(${target})
     add_dependencies(tg_fuzzers ${target})
 endforeach()
+
+# fuzz_zip calls the ZIP container of io directly: it is internal (io/src).
+target_include_directories(fuzz_zip PRIVATE "${PROJECT_SOURCE_DIR}/io/src")

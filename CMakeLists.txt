@@ -61,6 +61,7 @@ endif()
 # Only app may depend on Qt; the CMake targets enforce it.
 add_subdirectory(tools)
 add_subdirectory(core)
+add_subdirectory(third_party)
 add_subdirectory(io)
 add_subdirectory(render)
 add_subdirectory(edit)
