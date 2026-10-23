@@ -1,0 +1,6 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Public MIT sample from ezdxf. Answers are filled from the CI oracle log.
+D = DXF source=ezdxf-uncommon-r11
+? roundtrip D -> identical

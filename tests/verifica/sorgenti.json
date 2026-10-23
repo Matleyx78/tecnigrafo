@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "sources": [
+    {
+      "name": "r11-base",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-base/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "7941be5b77f8f4224ec7310dca4da7133916e984d16b51a573326ce85ba1b451",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "r11-degenerate",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-degenerate/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "260a44780ba576663bf75fd210d64d2a6c15d0f14a2924f21b61e1c43427ebc1",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "r11-extrusion-boundary",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-extrusion-boundary/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "a0b4b143a0aaff61cf865e1e317d5741a3664762084016d414f1173b60f47323",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "r11-negative-ocs",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-negative-ocs/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "f0ee5d3999c908335249be1efab9ef012be0d85418439ebf1fba06e9828ec885",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "r11-negative-text",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-negative-text/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "648412f88528ec0d5c085d32b2b1dedcfe534de5780782db47b2c07d671340d1",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "r11-placement",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-placement/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "d0cf7ad4c703e33d33c200c6be2a703a2c01034f2a2334214f745665cd7d9eb5",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "r11-unusual-extrusion",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/6702f742658452ae017ad9a0351ebd9e02c6c50f/tests/verifica/casi/dxf/r11-unusual-extrusion/input.dxf",
+      "version": "6702f742658452ae017ad9a0351ebd9e02c6c50f",
+      "sha256": "32c40ee154e642b9222ed5fc31814793b92d6876b14dc0eeb3430eb95ccea719",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/6702f742658452ae017ad9a0351ebd9e02c6c50f/LICENSE"
+    },
+    {
+      "name": "ezdxf-uncommon-r11",
+      "url": "https://raw.githubusercontent.com/mozman/ezdxf/7b202613e0d689955b8932a22bcbcf68bdd684f0/examples_dxf/uncommon.dxf",
+      "version": "7b202613e0d689955b8932a22bcbcf68bdd684f0",
+      "sha256": "5efdd671e3b6d8c45bd0688b1d6479d523f2290f0b390f1584348bf46e34c965",
+      "license": "MIT",
+      "license-url": "https://github.com/mozman/ezdxf/blob/7b202613e0d689955b8932a22bcbcf68bdd684f0/LICENSE"
+    }
+  ]
+}

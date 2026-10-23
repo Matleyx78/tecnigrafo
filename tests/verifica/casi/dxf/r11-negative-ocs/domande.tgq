@@ -1,7 +1,8 @@
+; oracle: ezdxf
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; Handwritten OCS: Ax=Wy x (0,0,-1)=(-1,0,0); Ay=N x Ax=(0,1,0). Reflect x, reverse ARC endpoints and negate bulges.
-D = DXF file=input.dxf
+D = DXF source=r11-negative-ocs
 ? count D -> ARC 2; CIRCLE 1; LINE 1; LWPOLYLINE 1
 ? unhandled D -> none
 ? entity D B1 -> LINE start=3,4 end=8,-2 extrusion=0,0,-1

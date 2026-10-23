@@ -1,7 +1,8 @@
+; oracle: ezdxf
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; Handwritten DXF: z/elevation/thickness stay in file coordinates even after XY reflection; lexical forms must survive roundtrip.
-D = DXF file=input.dxf
+D = DXF source=r11-placement
 ? count D -> ARC 1; CIRCLE 1; LINE 1; LWPOLYLINE 1
 ? unhandled D -> none
 ? entity D C1 -> LINE start=3,4 end=8,-2 start-z=1.25 end-z=-2.5 thickness=-0.75 extrusion=0,0,-1

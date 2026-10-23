@@ -17,3 +17,4 @@ dxf/r11-negative-ocs #168
 dxf/r11-negative-text #168
 dxf/r11-placement #168
 dxf/r11-unusual-extrusion #168
+dxf/r11-public #168
