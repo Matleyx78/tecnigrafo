@@ -2,6 +2,68 @@
   "format": 1,
   "sources": [
     {
+      "name": "r11-base",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-base/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "0f2b7e92b89e533f5e5875a77db4e1848c019babb2e7993f0c2744cc8d1e9ead",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "r11-degenerate",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-degenerate/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "f5951241f0d1cea14281be3639e52b2d42c208af4df0b6d2092a747a743ca877",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "r11-extrusion-boundary",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-extrusion-boundary/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "525a8a5628f2240a8a16e02c0226b0caa33429f570d2f91e2aed4a8f91598048",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "r11-negative-ocs",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-negative-ocs/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "7faf35cdd34e645e8cfe8335a8b4d13d3c7ad2e1160af894630d54b08e841743",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "r11-negative-text",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-negative-text/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "9452e06e1e4872aa2db05565f85a0e569a2ba299e4e97b6d811d0ccf98d9e5df",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "r11-placement",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-placement/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "edc8aaccc11a39bac0223ce46c3566ad3307442c41aa94d63c08c51612f6f19e",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "r11-unusual-extrusion",
+      "url": "https://raw.githubusercontent.com/Matleyx78/tecnigrafo/97d3938cf92b4aee6bf6e0fb859d198361a9f522/tests/verifica/casi/dxf/r11-unusual-extrusion/input.dxf",
+      "version": "97d3938cf92b4aee6bf6e0fb859d198361a9f522",
+      "sha256": "f50e070173e837f84e7df59fd04e9a0be8fb345cc6197be9801fd94e1b003e30",
+      "license": "GPL-3.0-or-later",
+      "license-url": "https://github.com/Matleyx78/tecnigrafo/blob/97d3938cf92b4aee6bf6e0fb859d198361a9f522/LICENSE"
+    },
+    {
+      "name": "ezdxf-uncommon-r11",
+      "url": "https://raw.githubusercontent.com/mozman/ezdxf/7b202613e0d689955b8932a22bcbcf68bdd684f0/examples_dxf/uncommon.dxf",
+      "version": "7b202613e0d689955b8932a22bcbcf68bdd684f0",
+      "sha256": "5efdd671e3b6d8c45bd0688b1d6479d523f2290f0b390f1584348bf46e34c965",
+      "license": "MIT",
+      "license-url": "https://github.com/mozman/ezdxf/blob/7b202613e0d689955b8932a22bcbcf68bdd684f0/LICENSE"
       "name": "ac1015-3dface",
       "url": "https://raw.githubusercontent.com/LibreCAD/libdxfrw/d68fb1ed937ad2a74a54f6208277ec10a1b031b0/tests/fixtures/dxf/ac1015_3dface_freecad_control.dxf",
       "version": "2.0.0",

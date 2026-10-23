@@ -1,0 +1,13 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten DXF: z/elevation/thickness stay in file coordinates even after XY reflection; lexical forms must survive roundtrip.
+; Raw DXF values independently checked against CI run 39925415850, job 120320505295.
+D = DXF source=r11-placement
+? count D -> ARC 1; CIRCLE 1; LINE 1; LWPOLYLINE 1
+? unhandled D -> none
+? entity D C1 -> LINE start=3,4 end=8,-2 start-z=1.25 end-z=-2.5 thickness=-0.75 extrusion=0,0,-1
+? entity D C2 -> CIRCLE center=-5,6 radius=3 z=4.5 thickness=0.25 extrusion=0,0,-1
+? entity D C3 -> ARC center=-2,3 radius=4 start-angle=330 end-angle=30 z=-6.25 thickness=2.5 extrusion=0,0,-1
+? entity D C4 -> LWPOLYLINE closed=no vertex=-2,1 bulge=-0.5 vertex=-6,1 elevation=3.25 thickness=-1.5 extrusion=0,0,-1
+? roundtrip D -> identical

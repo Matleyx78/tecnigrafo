@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten boundary values from P11: abs(x),abs(y)<=1e-12 are axial; just outside is unsupported. Raw extrusion is retained.
+; Raw DXF values independently checked against CI run 39925415850, job 120320505295.
+D = DXF file=input.dxf
+? count D -> CIRCLE 2
+? unhandled D -> CIRCLE 1
+? entity D 91 -> CIRCLE center=-2,3 radius=4 extrusion=1e-12,-1e-12,-1
+? entity D 92 -> unhandled CIRCLE
+? entity D 93 -> CIRCLE center=2,3 radius=4 extrusion=1e-12,-1e-12,1
+? roundtrip D -> identical
