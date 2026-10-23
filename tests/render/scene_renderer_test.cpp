@@ -20,15 +20,15 @@ public:
     std::vector<std::vector<core::Vec2>> outlines;
     std::vector<bool> closed;
 
-    void clear(const Color&) override {}
+    void clear(const Color& /*background*/) override {}
 
-    void setPen(const Color&, double, LineStyle) override {}
+    void setPen(const Color& /*color*/, double /*widthPx*/, LineStyle /*style*/) override {}
 
-    void fillPolygon(std::span<const core::Vec2>, const Color&) override {}
+    void fillPolygon(std::span<const core::Vec2> /*points*/, const Color& /*color*/) override {}
 
     void drawText(const TextRun& run) override { runs.push_back(run); }
 
-    void drawLine(const core::Vec2&, const core::Vec2&) override {}
+    void drawLine(const core::Vec2& /*from*/, const core::Vec2& /*to*/) override {}
 
     void drawPolyline(std::span<const core::Vec2> points, bool isClosed) override {
         outlines.emplace_back(points.begin(), points.end());
