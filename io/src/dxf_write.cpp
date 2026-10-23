@@ -25,12 +25,13 @@ core::RawGroups headerGroups(const core::RawGroups& original, std::string_view v
     core::RawGroups out;
     for (std::size_t i = 0; i < original.size(); ++i) {
         const auto& group = original[i];
-        const auto where = std::ranges::find(kNames, trimDxf(group.value));
-        if (group.code != 9 || where == kNames.end()) {
+        const auto* const where =
+            std::ranges::find(kNames.data(), kNames.data() + kNames.size(), trimDxf(group.value));
+        if (group.code != 9 || where == kNames.data() + kNames.size()) {
             out.push_back(group);
             continue;
         }
-        const auto index = static_cast<std::size_t>(where - kNames.begin());
+        const auto index = static_cast<std::size_t>(where - kNames.data());
         found.at(index) = true;
         out.push_back(group);
         // Keep an unchanged spelling (e.g. INSUNITS " 4") byte for byte.
