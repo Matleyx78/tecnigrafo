@@ -1,0 +1,17 @@
+; Scorciatoie del menu File: Ctrl+S esegue QSAVE, Ctrl+Shift+S esegue SAVEAS
+!level 2
+LINE
+0,0
+10,0
+
+!key Ctrl+S
+disegno-scorciatoia.cadx
+!report
+LINE
+10,0
+10,10
+
+!key Ctrl+S
+!report
+!key Ctrl+Shift+S
+copia-scorciatoia.cadx

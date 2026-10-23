@@ -1,0 +1,21 @@
+; Scorciatoie del menu File: Ctrl+N esegue NEW, Ctrl+O esegue OPEN
+!level 2
+LINE
+0,0
+20,0
+
+!key Ctrl+N
+N
+!report
+!key Ctrl+O
+@sources/ac1015-lwpolyline
+!report
+LINE
+0,0
+10,0
+
+!key Ctrl+O
+C
+!report
+!key Ctrl+N
+N
