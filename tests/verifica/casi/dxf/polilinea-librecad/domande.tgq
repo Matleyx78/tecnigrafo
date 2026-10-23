@@ -1,0 +1,9 @@
+; oracle: ezdxf
+D = DXF source=ac1015-lwpolyline
+? version D -> AC1015
+? units D -> 0
+? count D -> LWPOLYLINE 1
+? unhandled D -> none
+? entity D 30 -> LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+? warnings D -> none
+? roundtrip D -> identical

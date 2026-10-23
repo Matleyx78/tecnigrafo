@@ -1,0 +1,90 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=0,0 end=20,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: senza-estensione
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: senza-estensione.cadx
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=20,0
+messages:
+  Command: SAVEAS
+  Save drawing as <senza-estensione.cadx>: disegno.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: disegno.dxf
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 3]
+entities:
+  1 LINE start=0,0 end=20,0
+messages:
+  Command: SAVEAS
+  Save drawing as <disegno.dxf>: progetto.dwg
+  Cannot save progetto.dwg: only .cadx and .dxf files are supported.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: disegno.dxf
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  1 LINE start=0,0 end=20,0
+messages:
+  Command: SAVEAS
+  Save drawing as <disegno.dxf>: "con spazi.cadx"
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: con spazi.cadx
+pointer: none
+active snap: none
+statistics:
+  LINE 1

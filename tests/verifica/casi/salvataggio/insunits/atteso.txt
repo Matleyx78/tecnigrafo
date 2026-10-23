@@ -1,0 +1,167 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: INSUNITS
+  Enter new value for INSUNITS <4>: 25
+  Requires an integer between 0 and 24.
+  Enter new value for INSUNITS <4>: -1
+  Requires an integer between 0 and 24.
+  Enter new value for INSUNITS <4>: abc
+  Requires an integer between 0 and 24.
+  Enter new value for INSUNITS <4>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: INSUNITS
+  Enter new value for INSUNITS <4>: 6
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  INSUNITS
+redo:
+snap: on
+ortho: off
+units: 6
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: INSUNITS
+  Enter new value for INSUNITS <6>: 0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  INSUNITS
+  INSUNITS
+redo:
+snap: on
+ortho: off
+units: 0
+pointer: none
+active snap: none
+statistics:
+
+[report 4]
+entities:
+messages:
+  Command: INSUNITS
+  Enter new value for INSUNITS <0>: 24
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  INSUNITS
+  INSUNITS
+  INSUNITS
+redo:
+snap: on
+ortho: off
+units: 24
+pointer: none
+active snap: none
+statistics:
+
+[report 5]
+entities:
+messages:
+  Command: U
+  Undone: INSUNITS.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  INSUNITS
+  INSUNITS
+redo:
+  INSUNITS
+snap: on
+ortho: off
+units: 0
+pointer: none
+active snap: none
+statistics:
+
+[report 6]
+entities:
+messages:
+  Command: U
+  Undone: INSUNITS.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  INSUNITS
+redo:
+  INSUNITS
+  INSUNITS
+snap: on
+ortho: off
+units: 6
+pointer: none
+active snap: none
+statistics:
+
+[report 7]
+entities:
+messages:
+  Command: U
+  Undone: INSUNITS.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  INSUNITS
+  INSUNITS
+  INSUNITS
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: REDO
+  Redone: INSUNITS.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  INSUNITS
+redo:
+  INSUNITS
+  INSUNITS
+snap: on
+ortho: off
+units: 6
+pointer: none
+active snap: none
+statistics:

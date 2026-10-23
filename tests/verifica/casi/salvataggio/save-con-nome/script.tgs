@@ -1,0 +1,22 @@
+; SAVE con altro nome non cambia il nome corrente ne' lo stato modificato;
+; SAVE con il nome corrente toglie lo stato modificato
+LINE
+0,0
+10,0
+
+SAVE
+copia.cadx
+!report
+SAVEAS
+progetto.cadx
+!report
+LINE
+10,0
+10,10
+
+!report
+SAVE
+backup.cadx
+!report
+SAVE
+

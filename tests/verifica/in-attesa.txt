@@ -18,3 +18,20 @@ dxf/r11-negative-text #168
 dxf/r11-placement #168
 dxf/r11-unusual-extrusion #168
 dxf/r11-public #168
+
+# R12: polilinee e testo
+dxf/lwpolyline-forme #167
+dxf/polilinea-librecad #167
+dxf/testo-proprieta #167
+
+# R14: formato .cadx
+dxf/cadx-errori #171
+dxf/cadx-valido #171
+
+# R15: salvataggio e unità
+salvataggio/file-esistente-e-annulla #173
+salvataggio/insunits #173
+salvataggio/nomi-non-validi #173
+salvataggio/qsave-nuovo-e-ripetuto #173
+salvataggio/save-con-nome #173
+salvataggio/saveas-estensioni #173

@@ -1,0 +1,91 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: QSAVE
+  Save drawing as <Drawing1.cadx>: disegno1.cadx
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: disegno1.cadx
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 3]
+entities:
+  1 LINE start=0,0 end=10,0
+  2 LINE start=10,0 end=10,10
+messages:
+  Command: LINE
+  Specify first point: 10,0
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+drawing: disegno1.cadx, modified
+pointer: none
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  1 LINE start=0,0 end=10,0
+  2 LINE start=10,0 end=10,10
+messages:
+  Command: QSAVE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+drawing: disegno1.cadx
+pointer: none
+active snap: none
+statistics:
+  LINE 2

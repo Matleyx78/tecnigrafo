@@ -74,6 +74,14 @@
       "license-url": "https://github.com/LibreCAD/libdxfrw/blob/d68fb1ed937ad2a74a54f6208277ec10a1b031b0/COPYING"
     },
     {
+      "name": "ac1015-lwpolyline",
+      "url": "https://raw.githubusercontent.com/LibreCAD/libdxfrw/d68fb1ed937ad2a74a54f6208277ec10a1b031b0/tests/fixtures/dxf/ac1015_lwpolyline_freecad_control.dxf",
+      "version": "2.0.0",
+      "sha256": "ccc9d3c55e0860e93ab7e1cb3d7704221b2fdd8100c468012972d11c1b8760ed",
+      "license": "GPL-2.0-or-later",
+      "license-url": "https://github.com/LibreCAD/libdxfrw/blob/d68fb1ed937ad2a74a54f6208277ec10a1b031b0/COPYING"
+    },
+    {
       "name": "eed-binary-r2007",
       "url": "https://raw.githubusercontent.com/LibreCAD/libdxfrw/d68fb1ed937ad2a74a54f6208277ec10a1b031b0/tests/fixtures/dxf/eed_binary_r2007.dxf",
       "version": "2.0.0",

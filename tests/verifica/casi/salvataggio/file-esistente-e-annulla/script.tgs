@@ -1,0 +1,17 @@
+; File esistente: Esc alla domanda, No torna al nome e poi Esc, Yes sovrascrive
+LINE
+0,0
+50,0
+
+SAVEAS
+esistente.dxf
+!esc
+!report
+SAVEAS
+esistente.dxf
+N
+!esc
+!report
+SAVEAS
+esistente.dxf
+Y
