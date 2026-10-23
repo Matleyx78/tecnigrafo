@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       code: ${{ steps.filter.outputs.code }}
+      io: ${{ steps.filter.outputs.io }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,11 +36,17 @@ jobs:
              || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
             echo "No usable base commit: running all jobs."
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "io=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           changed=$(git diff --name-only "$BASE...$HEAD")
           echo "Changed files:"
           echo "$changed"
+          if echo "$changed" | grep -qE '^(io/|third_party/|tests/fuzz/)'; then
+            echo "io=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "io=false" >> "$GITHUB_OUTPUT"
+          fi
           code=$(echo "$changed" | grep -vE '^docs/|\.md$|^LICENSE$|^\.github/ISSUE_TEMPLATE/' || true)
           if [ -n "$code" ]; then
             echo "code=true" >> "$GITHUB_OUTPUT"
@@ -192,6 +199,85 @@ jobs:
             build/asan/tests/verifica/casi*/
             build/asan/Testing/Temporary/LastTest.log
             build/asan/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn
+
+  # docs/adr/0020: discover new readers without changing this job.
+  fuzz:
+    name: Fuzzing (io)
+    needs: changes
+    if: needs.changes.outputs.io == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      ASAN_OPTIONS: detect_leaks=1:abort_on_error=1:detect_stack_use_after_return=1:strict_string_checks=1:check_initialization_order=1
+      UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      LSAN_OPTIONS: suppressions=${{ github.workspace }}/tests/sanitizer/lsan.supp:print_suppressions=0
+      TG_VERIFICA_SOURCES_DIR: ${{ github.workspace }}/build/verifica-sorgenti
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang-18 libclang-rt-18-dev libgtest-dev
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      - name: Build fuzzing targets
+        run: |
+          cmake --preset fuzz -DTG_VERIFICA_SOURCES_DIR="$TG_VERIFICA_SOURCES_DIR"
+          cmake --build --preset fuzz
+      - name: Fuzz every reader for three minutes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/fuzz-crash
+          status=0
+          for source in tests/fuzz/fuzz_*.cpp; do
+            target=$(basename "$source" .cpp)
+            reader=${target#fuzz_}
+            corpus="build/fuzz-corpus/$reader"
+            crashes="build/fuzz-crash/$target"
+            mkdir -p "$corpus" "$crashes"
+            if [ -d "tests/fuzz/corpus/$reader" ]; then
+              cp -a "tests/fuzz/corpus/$reader/." "$corpus/"
+            fi
+            # Use only manifest entries: the cache also contains a lock file.
+            python3 - "$corpus" <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import sys
+          manifest = Path("tests/verifica/sorgenti.json")
+          if manifest.exists():
+              for source in json.loads(manifest.read_text())["sources"]:
+                  seed = Path(os.environ["TG_VERIFICA_SOURCES_DIR"]) / source["name"]
+                  shutil.copyfile(seed, Path(sys.argv[1]) / ("source-" + source["name"]))
+          PYTHON
+            if ! "build/fuzz/tests/fuzz/$target" "$corpus" \
+                -max_total_time=180 -timeout=10 -rss_limit_mb=2048 \
+                -artifact_prefix="$crashes/"; then
+              status=1
+            fi
+          done
+          exit "$status"
+      - name: Print failing inputs (at most 4 KiB each)
+        if: failure()
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          for path in sorted(Path("build/fuzz-crash").rglob("*")):
+              if path.is_file():
+                  print(f"{path} ({path.stat().st_size} bytes, first 4096 in hex):", flush=True)
+                  print(path.read_bytes()[:4096].hex(" "), flush=True)
+          PYTHON
+      - name: Upload failing inputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crash
+          path: build/fuzz-crash/
           if-no-files-found: warn
 
   windows:

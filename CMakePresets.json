@@ -40,6 +40,22 @@
             "displayName": "AddressSanitizer and UBSan (GCC, Clang)",
             "inherits": "ci",
             "cacheVariables": { "TG_SANITIZE": "ON" }
+        },
+        {
+            "name": "fuzz",
+            "displayName": "libFuzzer, AddressSanitizer and UBSan (Clang 18)",
+            "inherits": "ci",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++-18",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g -O1",
+                "TG_BUILD_APP": "OFF",
+                "TG_FUZZ": "ON"
+            },
+            "environment": {
+                "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:detect_stack_use_after_return=1:strict_string_checks=1:check_initialization_order=1",
+                "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
+                "LSAN_OPTIONS": "suppressions=${sourceDir}/tests/sanitizer/lsan.supp:print_suppressions=0"
+            }
         }
     ],
     "buildPresets": [
@@ -47,7 +63,8 @@
         { "name": "release", "configurePreset": "release" },
         { "name": "ci", "configurePreset": "ci" },
         { "name": "tidy", "configurePreset": "tidy" },
-        { "name": "asan", "configurePreset": "asan" }
+        { "name": "asan", "configurePreset": "asan" },
+        { "name": "fuzz", "configurePreset": "fuzz", "targets": ["tg_fuzzers"] }
     ],
     "testPresets": [
         { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },

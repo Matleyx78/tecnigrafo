@@ -79,6 +79,10 @@ gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
 # Verification cases of the control mode (docs/adr/0011), label "verifica".
 add_subdirectory(verifica)
 
+if(TG_FUZZ)
+    add_subdirectory(fuzz)
+endif()
+
 # Performance is measured manually in Release, never as a timing gate in ctest.
 add_executable(tg_bench bench/selection_bench.cpp)
 target_link_libraries(tg_bench PRIVATE Tecnigrafo::core Tecnigrafo::edit)

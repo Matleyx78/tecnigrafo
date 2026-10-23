@@ -11,6 +11,7 @@ option(TG_BUILD_APP "Build the Qt desktop application" ON)
 option(TG_BUILD_TESTS "Build the unit tests" ON)
 option(TG_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(TG_ENABLE_CLANG_TIDY "Run clang-tidy while compiling" OFF)
+option(TG_FUZZ "Build libFuzzer targets with Clang" OFF)
 option(TG_SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -28,7 +29,18 @@ endif()
 
 # docs/adr/0016: every target, tests included, is instrumented, and the first
 # report stops the program so that the test fails.
-if(TG_SANITIZE)
+if(TG_FUZZ)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "TG_FUZZ needs Clang and libFuzzer (docs/adr/0020)")
+    endif()
+    if(NOT TG_BUILD_TESTS)
+        message(FATAL_ERROR "TG_FUZZ needs TG_BUILD_TESTS for tests/fuzz")
+    endif()
+    add_compile_options(-fsanitize=fuzzer-no-link,address,undefined
+                        -fno-sanitize-recover=all -fno-omit-frame-pointer)
+    # Non-fuzzer executables still need the sanitizer and coverage runtimes.
+    add_link_options(-fsanitize=fuzzer-no-link,address,undefined)
+elseif(TG_SANITIZE)
     if(MSVC)
         message(FATAL_ERROR "TG_SANITIZE needs GCC or Clang (docs/adr/0016)")
     endif()
