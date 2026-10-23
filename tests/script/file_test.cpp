@@ -262,22 +262,17 @@ TEST(FileQuestions, OpenError) {
 
 // The questions about a drawing read from a file, once io reads it (P10).
 // Before, the definition is "not implemented yet" and the test is skipped.
+// Only what P10 answers: the LINE of kDxf is handled from P11 (below).
 TEST(FileQuestions, QuestionsAboutADrawing) {
     const fs::path folder = emptyFolder("drawing");
     writeFile(folder / "plan.dxf", kDxf);
     CaseFiles files{folder, std::nullopt};
     const std::string text =
         "D = DXF file=plan.dxf\n"
-        "? entity D 2F -> LINE start=0,0 end=10,5\n"
-        "? entity D 2f -> LINE start=0,0 end=10,5\n"
         "? entity D 30 -> unhandled HATCH\n"
         "? entity D 99 -> none\n"
-        "? count D -> LINE 1\n"
-        "? unhandled D -> HATCH 1\n"
         "? version D -> AC1015\n"
-        "? units D -> 6\n"
-        "? bbox D:2F -> 0,0 10,5\n"
-        "? length D:2f -> 11.180339887498949\n";
+        "? units D -> 6\n";
     std::variant<std::vector<Answer>, ParseError> result = ask(text, &files);
     if (const auto* error = std::get_if<ParseError>(&result)) {
         ASSERT_TRUE(error->notImplemented) << error->message;
@@ -287,15 +282,54 @@ TEST(FileQuestions, QuestionsAboutADrawing) {
         EXPECT_TRUE(answer.matches) << "line " << answer.line << "\n  expected: " << answer.expected
                                     << "\n  obtained: " << answer.actual;
     }
-    // A handle without a handled entity, a drawing read twice, a wrong as=.
+    // An unhandled entity in a question about an object: not passed, not an
+    // invalid case, because a later package may handle its type
+    // (docs/verifica/casi.md, exit codes).
+    result = ask("D = DXF file=plan.dxf\n? bbox D:30 -> empty\n", &files);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result));
+    const std::vector<Answer>& answers = std::get<std::vector<Answer>>(result);
+    ASSERT_EQ(answers.size(), 1U);
+    EXPECT_FALSE(answers[0].matches);
+    EXPECT_EQ(answers[0].actual, "error: D:30 is an unhandled HATCH entity");
+    // A handle without an entity, a drawing read twice, a wrong as=.
     expectContains(failure("D = DXF file=plan.dxf\n? bbox D:99 -> empty\n", &files).message,
-                   "D has no handled entity with handle '99'");
-    expectContains(failure("D = DXF file=plan.dxf\n? bbox D:30 -> empty\n", &files).message,
-                   "no handled entity");
+                   "D has no entity with handle '99'");
     EXPECT_EQ(failure("D = DXF file=plan.dxf\nD = DXF file=plan.dxf\n", &files).line, 2);
     expectContains(
         failure("D = DXF file=plan.dxf\n? roundtrip D as=svg -> identical\n", &files).message,
         "wrong arguments");
+}
+
+// The questions about a handled entity of a drawing read from a file. io
+// handles LINE from P11: until then the LINE of kDxf is unhandled and the
+// test is skipped (P11 removes the skip, docs/tappe/0.5/P11).
+TEST(FileQuestions, QuestionsAboutAHandledEntity) {
+    const fs::path folder = emptyFolder("handled");
+    writeFile(folder / "plan.dxf", kDxf);
+    CaseFiles files{folder, std::nullopt};
+    std::variant<std::vector<Answer>, ParseError> probe =
+        ask("D = DXF file=plan.dxf\n? entity D 2F -> unhandled LINE\n", &files);
+    if (const auto* error = std::get_if<ParseError>(&probe)) {
+        ASSERT_TRUE(error->notImplemented) << error->message;
+        GTEST_SKIP() << "io does not read DXF drawings yet: " << error->message;
+    }
+    if (std::get<std::vector<Answer>>(probe).at(0).matches) {
+        GTEST_SKIP() << "io does not handle LINE yet (P11)";
+    }
+    const std::string text =
+        "D = DXF file=plan.dxf\n"
+        "? entity D 2F -> LINE start=0,0 end=10,5\n"
+        "? entity D 2f -> LINE start=0,0 end=10,5\n"
+        "? count D -> LINE 1\n"
+        "? unhandled D -> HATCH 1\n"
+        "? bbox D:2F -> 0,0 10,5\n"
+        "? length D:2f -> 11.180339887498949\n";
+    std::variant<std::vector<Answer>, ParseError> result = ask(text, &files);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result));
+    for (const Answer& answer : std::get<std::vector<Answer>>(result)) {
+        EXPECT_TRUE(answer.matches) << "line " << answer.line << "\n  expected: " << answer.expected
+                                    << "\n  obtained: " << answer.actual;
+    }
 }
 
 // ---------------------------------------------------------------------------

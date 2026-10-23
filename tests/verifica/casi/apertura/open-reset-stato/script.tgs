@@ -1,0 +1,18 @@
+; OPEN azzera selezione, pile di annullamento e ripristina lo stato salvato del disegno
+LINE
+0,0
+10,0
+
+SAVEAS
+primo.cadx
+!click 5,0
+!report
+LINE
+10,0
+10,10
+
+SAVEAS
+secondo.cadx
+!report
+OPEN
+primo.cadx

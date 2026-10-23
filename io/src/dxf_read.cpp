@@ -84,10 +84,12 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
     for (const auto& range : ranges) {
         std::string_view variable;
         std::string_view type;
+        bool hasHandle = false;
         for (std::size_t i = range.begin; i < range.end; ++i) {
             const auto& group = file.groups[i];
             if (group.code == 0) {
                 type = trimDxf(group.value);
+                hasHandle = false;
             }
             if (range.name == "HEADER") {
                 if (group.code == 9) {
@@ -110,12 +112,15 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
                                          "HANDSEED is outside the usable handle range");
                     }
                     handles.next = std::max(handles.next, *seed);
-                    continue;
                 }
-            }
-            if (group.code != 5 && (group.code != 105 || type != "DIMSTYLE")) {
                 continue;
             }
+            const bool entities = range.name == "ENTITIES";
+            const int handleCode = !entities && type == "DIMSTYLE" ? 105 : 5;
+            if (group.code != handleCode || (!entities && hasHandle)) {
+                continue;
+            }
+            hasHandle = true;
             const auto id = parseHandle(group.value);
             if (!id || *id == 0 || *id >= kMaximum - 1) {
                 return malformed(file.lines[i], "handle is outside the usable handle range");

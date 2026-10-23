@@ -14,7 +14,8 @@ namespace tg::io {
 namespace {
 
 core::RawGroups headerGroups(const core::RawGroups& original, std::string_view version,
-                             std::string_view codePage, std::uint64_t nextId, int units) {
+                             std::string_view codePage, std::uint64_t nextId, int units,
+                             const std::array<bool, 4>& addMissing) {
     constexpr std::array<std::string_view, 4> kNames{"$ACADVER", "$DWGCODEPAGE", "$HANDSEED",
                                                      "$INSUNITS"};
     const std::array<core::RawGroup, 4> values{{{1, std::string{version}},
@@ -45,12 +46,38 @@ core::RawGroups headerGroups(const core::RawGroups& original, std::string_view v
         }
     }
     for (std::size_t i = 0; i < found.size(); ++i) {
-        if (!found.at(i)) {
+        if (!found.at(i) && addMissing.at(i)) {
             out.push_back({9, std::string{kNames.at(i)}});
             out.push_back(values.at(i));
         }
     }
     return out;
+}
+
+std::uint64_t readNextId(const core::Document& document) {
+    // P10 reads every entity as raw. Those immutable records and the retained
+    // sections recover the read-time counter without adding groups to HEADER.
+    std::uint64_t next = 1;
+    for (const auto& entity : document.rawEntities()) {
+        next = std::max(next, entity.id.value + 1);
+    }
+    for (const auto& section : document.raw().sections) {
+        if (section.name == "HEADER" || section.name == "ENTITIES") {
+            continue;
+        }
+        std::string_view type;
+        bool hasHandle = false;
+        for (const auto& group : section.groups) {
+            if (group.code == 0) {
+                type = trimDxf(group.value);
+                hasHandle = false;
+            } else if (!hasHandle && group.code == (type == "DIMSTYLE" ? 105 : 5)) {
+                hasHandle = true;
+                next = std::max(next, parseHandle(group.value).value_or(0) + 1);
+            }
+        }
+    }
+    return next;
 }
 
 std::optional<Error> appendEntities(const core::Document& document, EntityWriteContext& context,
@@ -104,6 +131,11 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
         nextId = skeleton.nextId;
     }
     const std::string codePage = raw->codePage.empty() ? "ANSI_1252" : raw->codePage;
+    const bool conversion = source.sections.empty() || target != source.version;
+    // An absent DWGCODEPAGE was decoded with the ANSI_1252 fallback.
+    const std::array<bool, 4> addMissing{conversion, conversion || codePage != "ANSI_1252",
+                                         conversion || document.nextId() > readNextId(document),
+                                         conversion || document.units() != 0};
     EntityWriteContext context{target, codePage, modelSpaceHandle(*raw)};
     core::RawGroups out;
     bool hasHeader = false;
@@ -114,7 +146,8 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     }
     if (!hasHeader) {
         out = {{0, "SECTION"}, {2, "HEADER"}};
-        const auto header = headerGroups({}, target, codePage, nextId, document.units());
+        const auto header =
+            headerGroups({}, target, codePage, nextId, document.units(), addMissing);
         out.insert(out.end(), header.begin(), header.end());
         out.push_back({0, "ENDSEC"});
     }
@@ -126,8 +159,8 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
                 return *error;
             }
         } else if (section.name == "HEADER") {
-            const auto header =
-                headerGroups(section.groups, target, codePage, nextId, document.units());
+            const auto header = headerGroups(section.groups, target, codePage, nextId,
+                                             document.units(), addMissing);
             out.insert(out.end(), header.begin(), header.end());
         } else {
             out.insert(out.end(), section.groups.begin(), section.groups.end());

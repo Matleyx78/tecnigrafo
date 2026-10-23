@@ -1,0 +1,127 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: NEW
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: NEW
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: C
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 3]
+entities:
+  1 LINE start=0,0 end=10,0
+messages:
+  Command: NEW
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 4]
+entities:
+messages:
+  Command: NEW
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 5]
+entities:
+  1 LINE start=0,0 end=20,0
+  2 LINE start=20,0 end=20,10
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: salvato.cadx
+  Command: LINE
+  Specify first point: 20,0
+  Specify next point or [Undo]: 20,10
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+drawing: salvato.cadx, modified
+pointer: none
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+messages:
+  Command: NEW
+  Save changes to salvato.cadx? [Yes/No/Cancel] <Yes>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

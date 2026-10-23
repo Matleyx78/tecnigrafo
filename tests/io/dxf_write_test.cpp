@@ -13,6 +13,7 @@
 #include <iterator>
 #include <limits>
 #include <string>
+#include <utility>
 
 namespace tg::io {
 namespace {
@@ -144,6 +145,54 @@ TEST(DxfWrite, AddsAbsentHeaderValuesAndRejectsInvalidRawText) {
     core::Document doc;
     doc.insertRaw({{1}, 1, "POINT", {{5, "1"}, {1, "invalid\nvalue"}}});
     EXPECT_FALSE(writeDxf(doc, DxfVersion::R2018).ok());
+}
+
+TEST(DxfWrite, LeavesMissingHeaderVariablesAbsentUntilTheDocumentChanges) {
+    const core::RawGroups original{
+        {0, "SECTION"},    {2, "HEADER"},  {9, "$ACADVER"}, {1, "AC1032"},
+        {0, "ENDSEC"},     {0, "SECTION"}, {2, "ENTITIES"}, {0, "POINT"},
+        {5, "20"},         {0, "ENDSEC"},  {0, "SECTION"},  {2, "OBJECTS"},
+        {0, "DICTIONARY"}, {5, "30"},      {0, "ENDSEC"},   {0, "EOF"}};
+    auto read = readDxf(writeGroups(original, TextEncoding::Utf8));
+    ASSERT_TRUE(read.ok());
+    auto written = writeDxf(read.value().document, DxfVersion::R2018);
+    ASSERT_TRUE(written.ok());
+    auto groups = readGroups(written.value());
+    ASSERT_TRUE(groups.ok());
+    EXPECT_EQ(groups.value().groups, original);
+
+    read.value().document.setUnits(4);
+    written = writeDxf(read.value().document, DxfVersion::R2018);
+    ASSERT_TRUE(written.ok());
+    EXPECT_NE(written.value().find("$INSUNITS"), std::string::npos);
+    EXPECT_EQ(written.value().find("$HANDSEED"), std::string::npos);
+    EXPECT_EQ(written.value().find("$DWGCODEPAGE"), std::string::npos);
+
+    // Even an entity allocated and then deleted must never reuse its handle.
+    const auto id = read.value().document.add(core::Line{});
+    ASSERT_TRUE(read.value().document.remove(id).has_value());
+    written = writeDxf(read.value().document, DxfVersion::R2018);
+    ASSERT_TRUE(written.ok());
+    EXPECT_NE(written.value().find("$HANDSEED"), std::string::npos);
+    const auto reread = readDxf(written.value());
+    ASSERT_TRUE(reread.ok());
+    EXPECT_EQ(reread.value().document.nextId(), id.value + 1);
+}
+
+TEST(DxfWrite, AddsMissingCodePageWhenTheOutputEncodingChanges) {
+    const std::string bytes =
+        "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n"
+        "0\nENDSEC\n0\nEOF\n";
+    auto read = readDxf(bytes);
+    ASSERT_TRUE(read.ok());
+    auto raw = read.value().document.raw();
+    raw.codePage = "ANSI_1250";
+    read.value().document.setRaw(std::move(raw));
+    const auto written = writeDxf(read.value().document, DxfVersion::R2000);
+    ASSERT_TRUE(written.ok());
+    EXPECT_NE(written.value().find("$DWGCODEPAGE\r\n  3\r\nANSI_1250"), std::string::npos);
+    EXPECT_EQ(written.value().find("$HANDSEED"), std::string::npos);
+    EXPECT_EQ(written.value().find("$INSUNITS"), std::string::npos);
 }
 
 }  // namespace

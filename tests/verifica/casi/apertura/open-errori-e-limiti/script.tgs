@@ -1,0 +1,20 @@
+; OPEN: estensioni non supportate, file inesistente e versione .cadx piu recente; disegno precedente intatto.
+LINE
+0,0
+10,0
+
+OPEN
+N
+piano.dwg
+!report
+OPEN
+N
+senza-estensione
+!report
+OPEN
+N
+inesistente.dxf
+!report
+OPEN
+N
+versione-3.cadx

@@ -1,0 +1,89 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+  Command: NEW
+  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  1 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/ac1015-lwpolyline
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: @sources/ac1015-lwpolyline
+units: 0
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 3]
+entities:
+  1 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+  2 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: OPEN
+  Save changes to @sources/ac1015-lwpolyline? [Yes/No/Cancel] <Yes>: C
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: @sources/ac1015-lwpolyline, modified
+units: 0
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+  LWPOLYLINE 1
+
+[final]
+entities:
+messages:
+  Command: NEW
+  Save changes to @sources/ac1015-lwpolyline? [Yes/No/Cancel] <Yes>: N
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

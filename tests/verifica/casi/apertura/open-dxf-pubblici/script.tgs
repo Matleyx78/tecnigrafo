@@ -1,0 +1,6 @@
+; OPEN di file pubblici: entità gestite e messaggio delle entità non gestite
+OPEN
+@sources/ac1015-lwpolyline
+!report
+OPEN
+@sources/ac1015-3dface

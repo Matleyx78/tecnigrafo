@@ -94,6 +94,47 @@ TEST(DxfRead, ReservesTableObjectAndDimstyleHandlesRegardlessOfSectionOrder) {
     EXPECT_EQ(bad.error().message, "duplicate handle 50");
 }
 
+TEST(DxfRead, SortHandlesAreReferencesButRecordHandlesMustStayUnique) {
+    const core::RawGroups groups{{0, "SECTION"},
+                                 {2, "HEADER"},
+                                 {9, "$ACADVER"},
+                                 {1, "AC1032"},
+                                 {0, "ENDSEC"},
+                                 {0, "SECTION"},
+                                 {2, "ENTITIES"},
+                                 {0, "POINT"},
+                                 {5, "A"},
+                                 {0, "ENDSEC"},
+                                 {0, "SECTION"},
+                                 {2, "OBJECTS"},
+                                 {0, "SORTENTSTABLE"},
+                                 {5, "B"},
+                                 {100, "AcDbSortentsTable"},
+                                 {331, "A"},
+                                 {5, "A"},
+                                 {331, "A"},
+                                 {5, "0"},
+                                 {0, "DICTIONARY"},
+                                 {5, "C"},
+                                 {0, "ENDSEC"},
+                                 {0, "EOF"}};
+    auto result = readDxf(writeGroups(groups, TextEncoding::Utf8));
+    ASSERT_TRUE(result.ok()) << result.error().message;
+    EXPECT_EQ(result.value().document.nextId(), 0xDU);
+    EXPECT_EQ(result.value().document.add(core::Line{}).value, 0xDU);
+    auto duplicate = groups;
+    duplicate[20].value = "B";
+    const auto bad = readDxf(writeGroups(duplicate, TextEncoding::Utf8));
+    ASSERT_FALSE(bad.ok());
+    EXPECT_EQ(bad.error().message, "duplicate handle B");
+}
+
+TEST(DxfRead, HeaderHandleValuesOtherThanHandseedAreNotDefinitions) {
+    const auto result = readDxf(drawing({{0, "POINT"}, {5, "A"}}, {{9, "$CUSTOM"}, {5, "A"}}));
+    ASSERT_TRUE(result.ok()) << result.error().message;
+    EXPECT_EQ(result.value().document.nextId(), 0xBU);
+}
+
 TEST(DxfRead, UnitsDefaultToZeroAndStayInRange) {
     const auto absent = readDxf(drawing({}));
     ASSERT_TRUE(absent.ok());

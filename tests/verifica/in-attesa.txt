@@ -16,7 +16,6 @@ dxf/r11-extrusion-boundary #168
 dxf/r11-negative-ocs #168
 dxf/r11-negative-text #168
 dxf/r11-placement #168
-dxf/r11-unusual-extrusion #168
 dxf/r11-public #168
 
 # R12: polilinee e testo
@@ -35,3 +34,15 @@ salvataggio/nomi-non-validi #173
 salvataggio/qsave-nuovo-e-ripetuto #173
 salvataggio/save-con-nome #173
 salvataggio/saveas-estensioni #173
+
+# R16: apertura e disegno nuovo
+apertura/new-modifiche #175
+apertura/open-cadx-valido #175
+apertura/open-dxf-pubblici #175
+apertura/open-errori-e-limiti #175
+apertura/open-modifiche-e-annulla #175
+apertura/open-reset-stato #175
+
+# R17: menu File e scorciatoie
+interfaccia/file-scorciatoie-apri-nuovo #177
+interfaccia/file-scorciatoie-salva #177
