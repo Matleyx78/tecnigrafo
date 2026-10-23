@@ -23,6 +23,11 @@ dxf/conservazione-classes #164
 dxf/conservazione-r2018 #164
 dxf/conservazione-xdata #164
 
+# R12: polilinee e testo
+dxf/lwpolyline-forme #167
+dxf/polilinea-librecad #167
+dxf/testo-proprieta #167
+
 # R14: formato .cadx
 dxf/cadx-errori #171
 dxf/cadx-valido #171

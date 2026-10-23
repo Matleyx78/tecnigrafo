@@ -1,0 +1,11 @@
+; Proprieta DXF di TEXT: rotazione, obliquo, specchiatura, allineamenti, accenti e sequenze di controllo (ADR 0013, ADR 0018)
+D = DXF file=testo.dxf
+? version D -> AC1032
+? units D -> 0
+? count D -> TEXT 2
+? unhandled D -> TEXT 2
+? entity D 51 -> TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=45 width-factor=0.8 oblique=15 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello World"
+? entity D 52 -> TEXT position=0,0 alignment-point=50,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=yes horizontal=center vertical=middle value="Città %%c10 %%d %%p0.1"
+? entity D 53 -> unhandled TEXT
+? entity D 54 -> unhandled TEXT
+? roundtrip D -> identical
