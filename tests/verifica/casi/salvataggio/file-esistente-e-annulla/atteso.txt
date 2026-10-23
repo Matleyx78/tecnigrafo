@@ -1,0 +1,70 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  1 LINE start=0,0 end=50,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 50,0
+  Specify next point or [Undo]:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: esistente.dxf
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  1 LINE start=0,0 end=50,0
+messages:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: esistente.dxf
+  A drawing with this name already exists. Do you want to replace it? [Yes/No] <No>: N
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  1 LINE start=0,0 end=50,0
+messages:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: esistente.dxf
+  A drawing with this name already exists. Do you want to replace it? [Yes/No] <No>: Y
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: esistente.dxf
+pointer: none
+active snap: none
+statistics:
+  LINE 1

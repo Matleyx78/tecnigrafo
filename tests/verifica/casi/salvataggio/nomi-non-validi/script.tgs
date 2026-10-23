@@ -1,0 +1,13 @@
+; Percorsi non ammessi rifiutati da FileAccess
+LINE
+0,0
+10,0
+
+SAVEAS
+../esterno.cadx
+!report
+SAVEAS
+/assoluto.cadx
+!report
+SAVEAS
+C:disco.cadx
