@@ -31,7 +31,11 @@
 - `tests/io/dxf_line_circle_arc_test.cpp` (nuovo)
 - `tests/io/dxf_extrusion_test.cpp` (nuovo)
 - `tests/script/entity_reader_test.cpp`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R11)
+- `tests/script/file_test.cpp` (togliere il salto di
+  `FileQuestions.QuestionsAboutAHandledEntity`, che vale finché `LINE` non è
+  gestita)
+- `tests/verifica/in-attesa.txt` (togliere le righe di R11;
+  `dxf/r11-unusual-extrusion` l'ha già tolta P10)
 
 ## Cosa fare
 
