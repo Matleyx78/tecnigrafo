@@ -5,5 +5,7 @@ D = DXF source=ac1015-3dface
 ? count D -> none
 ? unhandled D -> 3DFACE 1
 ? entity D 30 -> unhandled 3DFACE
-? warnings D -> none
+; The file has no $DWGCODEPAGE: io reads it as ANSI_1252 and says so, never
+; silently (docs/adr/0017, point 3). Message text from the io reader of P4.
+? warnings D -> no $DWGCODEPAGE in the file: text read as ANSI_1252
 ? roundtrip D -> identical
