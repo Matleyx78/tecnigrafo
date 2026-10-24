@@ -124,16 +124,15 @@ TEST_F(FileCommandsTest, FormatsExtensionsAndQuotedNamesWithSpaces) {
 }
 
 TEST_F(FileCommandsTest, CurrentDxfPreservesReadVersionAndSaveasWritesR2018) {
-    for (const auto version :
-         {io::DxfVersion::R2000, io::DxfVersion::R2004, io::DxfVersion::R2007,
-          io::DxfVersion::R2010, io::DxfVersion::R2013, io::DxfVersion::R2018}) {
-        const auto bytes = io::writeDxf(core::Document{}, version);
-        ASSERT_TRUE(bytes.ok());
-        auto opened = io::readDxf(bytes.value());
+    for (const char* version : {"AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032"}) {
+        // An opened drawing may be old; creating a new one always writes R2018.
+        const std::string bytes = std::string{"0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\n"} + version +
+                                  "\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nENDSEC\n0\nEOF\n";
+        auto opened = io::readDxf(bytes);
         ASSERT_TRUE(opened.ok());
         const auto original = opened.value().document.raw().version;
         editor.replaceDocument(std::move(opened.value().document), "old.dxf");
-        files.contents["old.dxf"] = bytes.value();
+        files.contents["old.dxf"] = bytes;
         inputs({"INSUNITS", "6", "QSAVE"});
         auto saved = io::readDxf(files.contents.at("old.dxf"));
         ASSERT_TRUE(saved.ok());
