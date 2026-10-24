@@ -15,7 +15,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 2 | 0.2 | Riga di comando, primo comando di disegno, annullamento | **chiusa** | [0.2](tappe/0.2-comandi-e-annullamento.md) |
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
-| 5 | 0.5 | File: formato nativo e DXF | **aperta** | [0.5](tappe/0.5-file-e-dxf.md) |
+| 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |

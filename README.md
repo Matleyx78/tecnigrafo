@@ -9,14 +9,16 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.4.0 — entità base: linea, cerchio, arco, testo.** Si
-> disegnano linee con `LINE`, polilinee con archi con `PLINE`, cerchi con
-> `CIRCLE`, archi con `ARC` e testi con `TEXT`. Si selezionano e cancellano
+> Stato: **versione 0.5.0 — file: formato nativo e DXF.** Si aprono e si salvano
+> disegni in formato nativo `.cadx` e DXF con `OPEN`, `QSAVE`, `SAVE`, `SAVEAS` e
+> `NEW`, anche da menu File, scorciatoie e finestre di dialogo. Si disegnano linee
+> con `LINE`, polilinee con archi con `PLINE`, cerchi con `CIRCLE`, archi con `ARC`
+> e testi allineati, obliqui o specchiati con `TEXT`. Si selezionano e cancellano
 > entità con `ERASE`, si agganciano punti notevoli (estremo, medio, centro,
-> inserimento) e si usa l'orto. Le modifiche si possono annullare e ripetere. Il
-> salvataggio dei file arriverà con la tappa 0.5. Le
-> [note della 0.4](docs/rilasci/0.4.md) riportano novità e limiti noti. Tappa
-> in corso: [0.5](docs/tappe/0.5-file-e-dxf.md), file: formato nativo e DXF.
+> inserimento) e si usa l'orto. Le modifiche si possono annullare e ripetere. Le
+> [note della 0.5](docs/rilasci/0.5.md) riportano novità e limiti noti. Prossima
+> tappa: [0.6](docs/tappe/0.6-layer-e-proprieta.md), layer, colori, tipi di linea,
+> proprietà; impianto dell'interfaccia.
 
 ## Disegnare
 
@@ -46,6 +48,7 @@ menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo sna
 | Annullare il comando in corso | `Esc` |
 | Ripetere l'ultimo comando | `Invio` a riga vuota |
 | Annulla / Ripeti | `Ctrl+Z` / `Ctrl+Y`, oppure i comandi `U` e `REDO` |
+| Nuovo / Apri / Salva | `Ctrl+N` / `Ctrl+O` / `Ctrl+S`, oppure i comandi `NEW`, `OPEN`, `QSAVE` |
 
 Nel campo comandi `Canc` cancella entità solo se il campo è vuoto; con testo
 presente modifica il testo. Le coordinate scritte restano esatte anche con snap
