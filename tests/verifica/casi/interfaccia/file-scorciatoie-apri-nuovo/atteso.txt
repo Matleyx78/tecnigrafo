@@ -23,10 +23,11 @@ statistics:
 
 [report 2]
 entities:
-  1 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+  48 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
 messages:
   Command: OPEN
   Enter name of drawing to open: @sources/ac1015-lwpolyline
+  no $DWGCODEPAGE in the file: text read as ANSI_1252
 prompt: Command:
 preview:
 selection: none
@@ -44,8 +45,8 @@ statistics:
 
 [report 3]
 entities:
-  1 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
-  2 LINE start=0,0 end=10,0
+  48 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+  64 LINE start=0,0 end=10,0
 messages:
   Command: LINE
   Specify first point: 0,0
