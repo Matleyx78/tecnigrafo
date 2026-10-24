@@ -53,6 +53,8 @@ add_executable(tg_tests
     io/encoding_test.cpp
     io/file_access_test.cpp
     io/zip_test.cpp
+    io/cadx_test.cpp
+    io/json_test.cpp
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp

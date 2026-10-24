@@ -17,8 +17,6 @@ dxf/r11-public #168
 # R12: polilinee e testo
 
 # R14: formato .cadx
-dxf/cadx-errori #171
-dxf/cadx-valido #171
 
 # R15: salvataggio e unità
 salvataggio/file-esistente-e-annulla #173
