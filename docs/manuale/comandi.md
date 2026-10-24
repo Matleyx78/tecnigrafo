@@ -1,6 +1,6 @@
 # Manuale dei comandi
 
-Questo manuale descrive gli strumenti disponibili nella tappa 0.4: la riga di
+Questo manuale descrive gli strumenti disponibili nella tappa 0.5: i file, la riga di
 comando, i punti, `LINE`, `CIRCLE`, `ARC`, `PLINE`, `TEXT`, la selezione,
 `ERASE`, gli snap a oggetto, la modalità orto e l’annullamento. Lo stato della
 tappa è nella [roadmap](../ROADMAP.md).
@@ -132,6 +132,201 @@ Durante `Enter text:` gli spazi, anche iniziali e finali, e le lettere accentate
 restano come scritti. `10,20`, `U` e `Close` sono testo, non punti o opzioni.
 `Spazio` scrive uno spazio; solo una riga davvero vuota confermata con `Invio`
 termina l’inserimento. Un clic nella vista non scrive una riga di testo.
+
+## File
+
+Dalla tappa 0.5 puoi aprire e salvare i disegni, sia nel formato nativo di
+Tecnigrafo (`.cadx`) sia nel formato DXF di AutoCAD.
+
+Tecnigrafo lavora su un solo disegno alla volta: l'apertura di un file o la
+creazione di un nuovo disegno sostituiscono il disegno corrente. All'apertura o
+creazione di un disegno la cronologia di annullamento si azzera.
+
+### I comandi
+
+| Comando | Scorciatoia | Menu File | Effetto |
+|---|---|---|---|
+| `NEW` | `Ctrl+N` | New | Crea un nuovo disegno vuoto |
+| `OPEN` | `Ctrl+O` | Open… | Apre un file `.cadx` o `.dxf` esistente |
+| `QSAVE` | `Ctrl+S` | Save | Salva rapidamente nel file corrente; se il disegno non ha ancora un nome, chiede come salvarlo |
+| `SAVE` | — | — | Salva una copia del disegno corrente con un nome diverso |
+| `SAVEAS` | `Ctrl+Shift+S` | Save As… | Salva il disegno con un nome diverso, che diventa il file corrente |
+| `INSUNITS` | — | — | Visualizza o cambia l'unità di misura del disegno |
+
+Le voci del menu File e le scorciatoie corrispondenti si disattivano mentre un
+altro comando è in corso.
+
+### Finestre di dialogo e riga di comando
+
+Nell'interfaccia grafica, quando lanci `NEW`, `OPEN`, `QSAVE` (senza nome di file
+ancora assegnato) o `SAVEAS` dal menu, con le scorciatoie da tastiera oppure
+scrivendo il comando senza argomenti, si apre la consueta finestra di dialogo del
+sistema operativo per scegliere dove salvare o quale file aprire. Se chiudi o
+annulli la finestra di dialogo, il comando si interrompe, esattamente come se
+avessi premuto `Esc`.
+
+Negli script della modalità di controllo (`tecnigrafo-script` e l'opzione
+`--script`), le finestre di dialogo non compaiono mai: tutte le domande avvengono
+sulla riga di comando, chiedendo di digitare il percorso del file.
+
+### Modifiche non salvate
+
+Quando provi ad aprire un altro disegno con `OPEN`, a crearne uno nuovo con `NEW`
+o a chiudere la finestra di Tecnigrafo e ci sono modifiche non salvate, il
+programma ti chiede prima se vuoi salvare il lavoro:
+
+```
+Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>:
+```
+
+- `Yes` (oppure `Invio` a riga vuota, confermando il valore predefinito): salva
+  il disegno corrente prima di procedere. Se il disegno non ha ancora un nome,
+  ti chiederà con quale nome salvarlo. Se il salvataggio fallisce o viene annullato,
+  l'operazione si interrompe e il disegno modificato resta aperto.
+- `No`: scarta tutte le modifiche non salvate e procede con l'apertura, la
+  creazione del nuovo disegno o la chiusura.
+- `Cancel` (oppure `Esc`): annulla il comando e ti riporta al disegno corrente,
+  senza perdere nulla.
+
+Se chiudi la finestra dell'applicazione con modifiche non salvate, compare una
+finestra di avviso che ti permette di scegliere tra salvare (`Save`), scartare le
+modifiche (`Discard`) o annullare la chiusura (`Cancel`).
+
+### Salvare un disegno: `QSAVE`, `SAVE` e `SAVEAS`
+
+Per salvare il disegno hai a disposizione tre comandi:
+
+- **`QSAVE`** (*Quick Save*): è il comando richiamato da `Ctrl+S` e dalla voce
+  *Save* del menu File. Se il disegno ha già un file associato, salva subito
+  senza fare domande. Se invece il disegno è nuovo (si chiama ancora
+  `Drawing1.cadx`), chiede il nome:
+  ```
+  Save drawing as <Drawing1.cadx>:
+  ```
+  Premendo `Invio` accetti il nome proposto `Drawing1.cadx`, oppure puoi
+  scrivere un percorso o un nome a tua scelta.
+- **`SAVE`**: chiede con quale nome salvare il disegno. Come in AutoCAD, `SAVE`
+  scrive una **copia** del disegno con il nome indicato, ma il disegno aperto
+  nella sessione di lavoro continua a fare riferimento al file precedente e
+  conserva il suo stato di modifica non salvata (a meno che non indichi lo stesso
+  nome del file corrente).
+- **`SAVEAS`**: chiede con quale nome salvare il disegno. A differenza di `SAVE`,
+  il file salvato diventa il **disegno corrente** di Tecnigrafo, marcato come
+  salvato.
+
+Se indichi il nome di un file che esiste già, Tecnigrafo chiede se vuoi
+sovrascriverlo:
+
+```
+A drawing with this name already exists. Do you want to replace it? [Yes/No] <No>:
+```
+
+Rispondendo `No` (o con `Invio` a vuoto) torni alla richiesta del nome del file.
+Rispondendo `Yes` il file viene sostituito in modo atomico: Tecnigrafo scrive
+prima un file temporaneo e poi sostituisce quello esistente solo a scrittura
+completata con successo, così un eventuale errore non danneggia il vecchio file.
+
+### Formati: `.cadx` e DXF
+
+Tecnigrafo supporta due formati di file:
+
+- **`.cadx`**: è il formato nativo di Tecnigrafo, un archivio compresso aperto
+  (basato sullo standard ZIP) contenente la definizione geometrica del disegno
+  e i metadati. I dettagli della struttura interna sono descritti in
+  [`docs/formati/cadx.md`](../formati/cadx.md).
+- **`.dxf`**: formato standard Drawing Exchange Format di Autodesk, in formato
+  testo (ASCII).
+
+Il formato viene riconosciuto automaticamente dall'estensione:
+- Se scrivi un nome senza estensione (per esempio `progetto`), Tecnigrafo aggiunge
+  automaticamente `.cadx`.
+- Se indichi un'estensione diversa da `.cadx` o `.dxf`, il comando risponde:
+  `Cannot save plan.dwg: only .cadx and .dxf files are supported.`
+
+#### Quale versione viene scritta
+
+- Con **`SAVEAS`**, per i disegni nuovi e all'interno dei file `.cadx`, Tecnigrafo
+  scrive sempre in formato **AutoCAD 2018** (`AC1032`).
+- Quando salvi con **`QSAVE`** (o con `SAVE` sul file corrente) un file DXF
+  esistente aperto in precedenza, Tecnigrafo lo riscrive nella **stessa versione**
+  in cui era stato letto (dalla versione AutoCAD 2000 `AC1015` ad AutoCAD 2018
+  `AC1032`). In questo modo ciò che Tecnigrafo non gestisce resta intatto e
+  utilizzabile dal programma che ha generato il file originario ([ADR 0017](../adr/0017-modulo-io-e-dxf.md)).
+
+### Aprire un disegno: `OPEN`
+
+Con `OPEN` (o `Ctrl+O`) apri un disegno esistente:
+
+```
+Command: open
+Enter name of drawing to open: pianta.dxf
+```
+
+In lettura Tecnigrafo riconosce i file `.cadx` e i DXF ASCII da AutoCAD 2000 fino
+ad AutoCAD 2018. Se il file è danneggiato o non supportato, ricevi un messaggio di
+errore e il disegno corrente resta invariato:
+
+```
+Cannot open plan.dxf: line 812: expected a group code, found "abc".
+```
+
+#### Entità non gestite
+
+Nella tappa 0.5 Tecnigrafo gestisce le cinque entità base: linee, cerchi, archi,
+polilinee 2D e testo. Un file DXF creato con altri programmi può contenere molte
+altre entità (per esempio tratteggi `HATCH`, quote o blocchi `INSERT`), oppure
+entità collocate nello spazio carta.
+
+Tecnigrafo non perde questi dati: legge e conserva tutte le entità non gestite
+esattamente come sono nel file originale ([ADR 0018](../adr/0018-conservazione-dati-non-gestiti.md)). Quando apri il file, un
+messaggio sullo storico ti riepiloga le entità non gestite trovate:
+
+```
+3 entities not supported: HATCH 2, INSERT 1
+```
+
+(o `1 entity not supported: HATCH 1` se è una sola). Anche se queste entità non
+vengono visualizzate né selezionate a schermo, quando risalvi il file Tecnigrafo
+le riscrive identiche carattere per carattere, senza perdita di informazioni.
+
+### Unità del disegno: `INSUNITS`
+
+La variabile e comando `INSUNITS` definisce l'unità di disegno (corrisponde alla
+variabile `$INSUNITS` del DXF):
+
+```
+Command: insunits
+Enter new value for INSUNITS <4>: 6
+```
+
+Il valore tra `< >` è l'unità attualmente impostata nel disegno (`4` per i nuovi
+disegni). Il valore deve essere un numero intero compreso tra 0 e 24; se inserisci
+un valore diverso, il programma risponde:
+
+```
+Requires an integer between 0 and 24.
+```
+
+I valori più usati sono:
+
+| Valore | Unità di misura |
+|---|---|
+| 0 | Senza unità (*Unspecified*) |
+| 1 | Pollici (*Inches*) |
+| 4 | Millimetri (*Millimeters*) — valore predefinito nei nuovi disegni |
+| 5 | Centimetri (*Centimeters*) |
+| 6 | Metri (*Meters*) |
+
+Come per le altre modifiche geometriche, anche il cambio di unità con `INSUNITS`
+può essere annullato con il comando `U` (*Undo*).
+
+### File recenti
+
+Nell'interfaccia grafica, il menu **File ▸ Recent Files** mostra l'elenco degli
+ultimi nove file aperti o salvati, ordinati a partire dal più recente. Selezionando
+un file dall'elenco, Tecnigrafo avvia l'apertura con `OPEN`. Se un file recente è
+stato spostato o cancellato dal disco, il programma mostra un messaggio di errore
+e rimuove automaticamente la voce dall'elenco.
 
 ## Selezione
 
