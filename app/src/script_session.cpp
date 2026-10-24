@@ -374,22 +374,21 @@ int runScriptFile(const QString& scriptPath, const QString& outputFolder) {
     const QString sourcesPrefix = QStringLiteral("--sources=");
     for (qsizetype i = 1; i < arguments.size(); ++i) {
         if (arguments[i] == QStringLiteral("--sources") && i + 1 < arguments.size()) {
-            sources = std::filesystem::u8path(arguments[++i].toStdString());
+            sources = QDir(arguments[++i]).filesystemPath();
         } else if (arguments[i].startsWith(sourcesPrefix)) {
-            sources = std::filesystem::u8path(arguments[i].mid(sourcesPrefix.size()).toStdString());
+            sources = QDir(arguments[i].mid(sourcesPrefix.size())).filesystemPath();
         }
     }
-    const auto output = std::filesystem::u8path(outputFolder.toStdString());
+    const auto output = QDir(outputFolder).filesystemPath();
     const auto filesFolder = output / script::kCaseFilesFolder;
-    const auto caseFolder =
-        std::filesystem::u8path(QFileInfo(scriptPath).absolutePath().toStdString());
+    const auto caseFolder = QFileInfo(scriptPath).absoluteDir().filesystemPath();
     if (const auto error = script::prepareCaseFiles(caseFolder, filesFolder)) {
         std::cerr << *error << "\n";
         return kExitError;
     }
     script::CaseFiles files(filesFolder, sources);
     MainWindow window(MainWindow::InitialDrawing::Empty);
-    window.runner().setFileAccess(&files);
+    window.setFileAccess(&files);
     ScriptSession session(window, outputFolder);
     if (!session.run(std::get<script::Script>(parsed))) {
         std::cerr << scriptPath.toStdString() << ": " << session.error().toStdString() << "\n";

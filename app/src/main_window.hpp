@@ -49,6 +49,9 @@ public:
     /// The runner of the commands, read by the report of the control mode.
     [[nodiscard]] const cmd::CommandRunner& runner() const { return m_runner; }
 
+    /// File access for the commands, not owned; it must outlive the window.
+    void setFileAccess(io::FileAccess* files) { m_runner.setFileAccess(files); }
+
     [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
