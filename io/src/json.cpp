@@ -383,6 +383,29 @@ bool serialize(const Json& value, std::string& out) {
 
 }  // namespace
 
+bool operator==(const Json& left, const Json& right) {
+    std::vector<std::pair<const Json*, const Json*>> pending{{&left, &right}};
+    while (!pending.empty()) {
+        const auto [first, second] = pending.back();
+        pending.pop_back();
+        if (first->kind != second->kind || first->text != second->text ||
+            first->elements.size() != second->elements.size() ||
+            first->members.size() != second->members.size()) {
+            return false;
+        }
+        for (std::size_t i = 0; i < first->elements.size(); ++i) {
+            pending.emplace_back(&first->elements[i], &second->elements[i]);
+        }
+        for (std::size_t i = 0; i < first->members.size(); ++i) {
+            if (first->members[i].first != second->members[i].first) {
+                return false;
+            }
+            pending.emplace_back(&first->members[i].second, &second->members[i].second);
+        }
+    }
+    return true;
+}
+
 const Json* Json::find(std::string_view key) const {
     const auto found = std::ranges::find(members, key, &decltype(members)::value_type::first);
     return found == members.end() ? nullptr : &found->second;
