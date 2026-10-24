@@ -125,6 +125,7 @@ ScriptSession::ScriptSession(MainWindow& window, QString outputFolder)
     : m_window(window),
       m_outputFolder(std::move(outputFolder)),
       m_history(window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"))) {
+    m_window.setScriptMode();
     // The report needs every line written in the history, also beyond the
     // lines the interface keeps.
     if (m_history != nullptr) {

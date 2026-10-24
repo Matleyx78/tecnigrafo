@@ -170,6 +170,11 @@ public:
     /// command, or "Command:" with none.
     [[nodiscard]] std::string promptText() const;
 
+    /// The structured question, including file-dialog metadata, for the UI.
+    [[nodiscard]] Prompt prompt() const {
+        return isActive() && !m_askingSelection ? m_command->prompt() : Prompt{promptText(), {}};
+    }
+
     /// The preview of the running command, empty with none or while asking
     /// for a selection.
     [[nodiscard]] std::span<const core::Entity> preview() const;

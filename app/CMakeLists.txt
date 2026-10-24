@@ -14,6 +14,8 @@ qt_add_library(tg_app_ui STATIC
     src/command_line.hpp
     src/main_window.cpp
     src/main_window.hpp
+    src/recent_files.cpp
+    src/recent_files.hpp
     src/qt_painter.cpp
     src/qt_painter.hpp
     src/sample_drawing.cpp
