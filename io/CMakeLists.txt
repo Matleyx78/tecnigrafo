@@ -15,6 +15,8 @@ add_library(tg_io
     src/dxf_groups.cpp
     src/encoding.cpp
     src/file_access.cpp
+    src/cadx.cpp
+    src/json.cpp
     src/io.cpp
     src/zip.cpp
 )
@@ -25,3 +27,5 @@ target_include_directories(tg_io PUBLIC
 target_link_libraries(tg_io PUBLIC Tecnigrafo::core PRIVATE tg_zlib)
 target_compile_features(tg_io PUBLIC cxx_std_20)
 tg_configure_target(tg_io)
+
+target_compile_definitions(tg_io PRIVATE TG_VERSION="${PROJECT_VERSION}")

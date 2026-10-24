@@ -10,6 +10,7 @@
 #include "tg/core/document.hpp"
 #include "tg/core/line.hpp"
 #include "tg/edit/editor.hpp"
+#include "tg/io/io.hpp"
 #include "tg/script/case_check.hpp"
 #include "tg/script/case_files.hpp"
 #include "tg/script/level1.hpp"
@@ -171,18 +172,23 @@ TEST(FileQuestions, DefinitionsReadThroughTheFileAccess) {
     const fs::path folder = emptyFolder("definitions");
     writeFile(folder / "plan.dxf", kDxf);
     CaseFiles files{folder, sourcesFolder()};
-    // Until io builds drawings (P10 and P14), a definition is "not
-    // implemented yet": the case fails without being invalid.
-    for (const std::string_view text :
-         {"D = DXF source=esempio\n", "D = DXF file=plan.dxf\n", "C = CADX file=plan.dxf\n"}) {
-        std::variant<std::vector<Answer>, ParseError> result = ask(text, &files);
-        if (std::holds_alternative<std::vector<Answer>>(result)) {
-            continue;  // io reads it: the answers are checked by the cases of R10
-        }
-        const ParseError& error = std::get<ParseError>(result);
-        EXPECT_TRUE(error.notImplemented) << text << error.message;
-        EXPECT_EQ(error.line, 1);
+    // Definitions use io's real readers, including the native container.
+    for (const std::string_view text : {"D = DXF source=esempio\n", "D = DXF file=plan.dxf\n"}) {
+        const auto result = ask(text, &files);
+        ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result)) << text;
     }
+    const auto document = io::readDxf(kDxf);
+    ASSERT_TRUE(document.ok());
+    const auto cadx = io::writeCadx(document.value().document);
+    ASSERT_TRUE(cadx.ok());
+    writeFile(folder / "plan.cadx", cadx.value());
+    const auto native = ask("C = CADX file=plan.cadx\n", &files);
+    EXPECT_TRUE(std::holds_alternative<std::vector<Answer>>(native));
+
+    const ParseError wrongFormat = failure("C = CADX file=plan.dxf\n", &files);
+    EXPECT_FALSE(wrongFormat.notImplemented);
+    EXPECT_EQ(wrongFormat.line, 1);
+    expectContains(wrongFormat.message, "expected a ZIP archive");
 }
 
 TEST(FileQuestions, DefinitionErrors) {

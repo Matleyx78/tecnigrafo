@@ -411,7 +411,7 @@ TEST(IoTest, ReadDxfBuildsADrawingAndRejectsInvalidGroups) {
     EXPECT_EQ(invalid.error().line, 4U);
 }
 
-TEST(IoTest, DxfWorksWhileCadxRemainsNotImplemented) {
+TEST(IoTest, DxfAndCadxReadAndWriteDrawings) {
     const core::Document document;
     const Result<std::string> dxf = writeDxf(document, DxfVersion::R2018);
     ASSERT_TRUE(dxf.ok());
@@ -419,13 +419,15 @@ TEST(IoTest, DxfWorksWhileCadxRemainsNotImplemented) {
 
     const Result<ReadResult> readCadxResult = readCadx("");
     ASSERT_FALSE(readCadxResult.ok());
-    EXPECT_EQ(readCadxResult.error().kind, Error::Kind::NotImplemented);
-    EXPECT_NE(readCadxResult.error().message.find("P14"), std::string::npos);
+    EXPECT_EQ(readCadxResult.error().kind, Error::Kind::Malformed);
 
     const Result<std::string> cadx = writeCadx(document);
-    ASSERT_FALSE(cadx.ok());
-    EXPECT_EQ(cadx.error().kind, Error::Kind::NotImplemented);
-    EXPECT_NE(cadx.error().message.find("P14"), std::string::npos);
+    ASSERT_TRUE(cadx.ok()) << cadx.error().message;
+    const Result<ReadResult> reread = readCadx(cadx.value());
+    ASSERT_TRUE(reread.ok()) << reread.error().message;
+    EXPECT_TRUE(reread.value().document.entities().empty());
+    EXPECT_EQ(reread.value().document.units(), document.units());
+    EXPECT_EQ(reread.value().document.raw().version, "AC1032");
     EXPECT_EQ(kCadxFormat, 1);
 }
 
