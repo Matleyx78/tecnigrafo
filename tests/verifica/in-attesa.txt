@@ -23,5 +23,3 @@ dxf/r11-public #168
 # R16: apertura e disegno nuovo
 
 # R17: menu File e scorciatoie
-interfaccia/file-scorciatoie-apri-nuovo #177
-interfaccia/file-scorciatoie-salva #177

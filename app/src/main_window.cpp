@@ -5,24 +5,68 @@
 
 #include "cad_view.hpp"
 #include "command_line.hpp"
+#include "recent_files.hpp"
 #include "sample_drawing.hpp"
 #include "tg/cmd/builtin_commands.hpp"
+#include "tg/io/file_access.hpp"
 
 #include <QAction>
 #include <QApplication>
+#include <QCloseEvent>
+#include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QKeySequence>
 #include <QLabel>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QScopedValueRollback>
+#include <QSettings>
 #include <QStatusBar>
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <string_view>
+#include <utility>
+
 namespace tg::app {
 
 namespace {
+
+/// Observes successful writes, including SAVE copies that do not change
+/// the editor's file name or saved position. Serialization stays in cmd/io.
+class DesktopFiles final : public io::FileAccess {
+public:
+    DesktopFiles(std::function<void(const QString&)> saved,
+                 std::function<void(const QString&)> read)
+        : m_saved(std::move(saved)), m_read(std::move(read)) {}
+
+    [[nodiscard]] io::Result<std::string> read(std::string_view name) override {
+        auto result = m_disk.read(name);
+        if (result.ok()) {
+            m_read(QString::fromUtf8(name.data(), static_cast<qsizetype>(name.size())));
+        }
+        return result;
+    }
+
+    [[nodiscard]] std::optional<io::Error> write(std::string_view name,
+                                                 std::string_view bytes) override {
+        const auto error = m_disk.write(name, bytes);
+        if (!error) {
+            m_saved(QString::fromUtf8(name.data(), static_cast<qsizetype>(name.size())));
+        }
+        return error;
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override { return m_disk.exists(name); }
+
+private:
+    io::DiskFiles m_disk;
+    std::function<void(const QString&)> m_saved;
+    std::function<void(const QString&)> m_read;
+};
 
 // Decimal places of the coordinate read-out.
 constexpr int kCoordinateDecimals = 4;
@@ -62,7 +106,11 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
       m_view(new CadView(m_document, m_runner, this)),
       m_commandLine(new CommandLine(m_runner, this)) {
     cmd::registerBuiltinCommands(m_registry);
-    setWindowTitle(QStringLiteral("Tecnigrafo"));
+    m_diskFiles =
+        std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
+                                       [this](const QString& path) { m_pendingOpen = path; });
+    m_runner.setFileAccess(m_diskFiles.get());
+    updateDrawingState();
     resize(1100, 720);
 
     // The command line sits below the drawing, as in AutoCAD.
@@ -84,7 +132,18 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     // The editor's listener runs inside commit(), while the command that
     // commits is still running: the inputs' own signals refresh again once
     // the runner is idle, so that Undo is enabled when the command ends.
-    m_editor.setChangeListener([this] { refresh(); });
+    m_editor.setChangeListener([this] {
+        // Called inside the runner: never ask another question reentrantly.
+        updateDrawingState();
+        m_view->update();
+        // Only a decoded OPEN replaces the document after reading bytes.
+        // A failed parse, undo or a no-op edit must not reorder recent files.
+        if (!m_pendingOpen.isEmpty() &&
+            m_pendingOpen == QString::fromStdString(m_editor.fileName()) && m_editor.hasFile() &&
+            !m_editor.isModified()) {
+            addRecentFile(std::exchange(m_pendingOpen, {}));
+        }
+    });
     connect(m_view, &CadView::inputHandled, this, &MainWindow::refresh);
     connect(m_commandLine, &CommandLine::inputHandled, this, &MainWindow::refresh);
     updateEditActions();
@@ -92,6 +151,39 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
 
 void MainWindow::createMenus() {
     QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
+    const auto addFileAction = [this, fileMenu](const QString& text, const QString& name,
+                                                QKeySequence::StandardKey shortcut,
+                                                const QString& command) {
+        QAction* action = fileMenu->addAction(text);
+        action->setObjectName(name);
+        QList<QKeySequence> keys = QKeySequence::keyBindings(shortcut);
+        // Some Qt platforms (including offscreen) have no SaveAs binding.
+        // Keep the platform keys and always offer the CAD shortcut of P17.
+        const QKeySequence saveAs(Qt::CTRL | Qt::SHIFT | Qt::Key_S);
+        if (shortcut == QKeySequence::SaveAs && !keys.contains(saveAs)) {
+            keys.append(saveAs);
+        }
+        action->setShortcuts(keys);
+        m_fileActions.append(action);
+        connect(action, &QAction::triggered, this, [this, command] {
+            submitFileText(command);
+            refresh();
+        });
+    };
+    addFileAction(tr("&New"), QStringLiteral("newAction"), QKeySequence::New,
+                  QStringLiteral("NEW"));
+    addFileAction(tr("&Open…"), QStringLiteral("openAction"), QKeySequence::Open,
+                  QStringLiteral("OPEN"));
+    addFileAction(tr("&Save"), QStringLiteral("saveAction"), QKeySequence::Save,
+                  QStringLiteral("QSAVE"));
+    addFileAction(tr("Save &As…"), QStringLiteral("saveAsAction"), QKeySequence::SaveAs,
+                  QStringLiteral("SAVEAS"));
+    m_recentMenu = fileMenu->addMenu(tr("Recent Files"));
+    m_recentMenu->setObjectName(QStringLiteral("recentMenu"));
+    // Delay even reading settings until real UI use: ScriptSession marks
+    // the window as scripted after construction, before sending any input.
+    connect(m_recentMenu, &QMenu::aboutToShow, this, &MainWindow::populateRecentMenu);
+    fileMenu->addSeparator();
     QAction* quitAction = fileMenu->addAction(tr("&Quit"));
     quitAction->setShortcut(QKeySequence::Quit);
     connect(quitAction, &QAction::triggered, this, &QWidget::close);
@@ -225,12 +317,21 @@ void MainWindow::createStatusBar() {
 void MainWindow::refresh() {
     m_view->update();
     m_commandLine->refreshPrompt();
+    updateDrawingState();
+    updateEditActions();
+    handleFilePrompts();
+    m_pendingOpen.clear();
+    updateDrawingState();
     updateEditActions();
 }
 
 void MainWindow::updateEditActions() {
     // Undo and redo wait for the running command to end (docs/tappe/0.2).
     const bool idle = !m_runner.isActive();
+    for (QAction* action : m_fileActions) {
+        action->setEnabled(idle);
+    }
+    m_recentMenu->setEnabled(idle && !m_scriptMode);
     m_eraseAction->setEnabled(idle && !m_runner.selection().isEmpty());
     const QString undoName = QString::fromStdString(m_editor.undoName());
     const QString redoName = QString::fromStdString(m_editor.redoName());
@@ -238,6 +339,172 @@ void MainWindow::updateEditActions() {
     m_redoAction->setEnabled(idle && m_editor.canRedo());
     m_undoAction->setText(undoName.isEmpty() ? tr("&Undo") : tr("&Undo %1").arg(undoName));
     m_redoAction->setText(redoName.isEmpty() ? tr("&Redo") : tr("&Redo %1").arg(redoName));
+}
+
+MainWindow::~MainWindow() = default;
+
+void MainWindow::setScriptMode() {
+    m_scriptMode = true;
+    if (!m_externalFiles) {
+        m_runner.setFileAccess(nullptr);
+    }
+    m_recentMenu->setEnabled(false);
+}
+
+void MainWindow::setFileDialog(FileDialog dialog) {
+    m_fileDialog = std::move(dialog);
+}
+
+void MainWindow::updateDrawingState() {
+    setWindowTitle(tr("%1[*] — Tecnigrafo")
+                       .arg(QFileInfo(QString::fromStdString(m_editor.fileName())).fileName()));
+    setWindowModified(m_editor.isModified());
+}
+
+void MainWindow::submitFileText(const QString& text) {
+    m_commandLine->appendToHistory(
+        QStringLiteral("%1 %2").arg(QString::fromStdString(m_runner.promptText()), text));
+    m_runner.submitText(text.toStdString());
+    m_commandLine->refreshPrompt();
+}
+
+void MainWindow::ensureRecentFiles() {
+    if (!m_settings) {
+        m_settings = std::make_unique<QSettings>();
+        m_recentFiles = std::make_unique<RecentFiles>(*m_settings);
+    }
+}
+
+void MainWindow::addRecentFile(const QString& path) {
+    if (m_scriptMode) {
+        return;
+    }
+    ensureRecentFiles();
+    m_recentFiles->add(QFileInfo(path).absoluteFilePath());
+}
+
+void MainWindow::populateRecentMenu() {
+    m_recentMenu->clear();
+    if (m_scriptMode) {
+        return;
+    }
+    ensureRecentFiles();
+    for (const QString& path : m_recentFiles->files()) {
+        QAction* action = m_recentMenu->addAction(path);
+        connect(action, &QAction::triggered, this, [this, path] { openRecentFile(path); });
+    }
+}
+
+void MainWindow::openRecentFile(const QString& path) {
+    if (m_runner.isActive()) {
+        return;
+    }
+    if (!QFileInfo::exists(path)) {
+        m_commandLine->appendToHistory(tr("Cannot open %1: file no longer exists.").arg(path));
+        m_recentFiles->remove(path);
+        return;
+    }
+    // Keep the selection through a possible unsaved-changes/save exchange.
+    m_pendingRecent = path;
+    submitFileText(QStringLiteral("OPEN"));
+    refresh();
+}
+
+QString MainWindow::dialogPath() {
+    if (m_editor.hasFile()) {
+        return QFileInfo(QString::fromStdString(m_editor.fileName())).absoluteFilePath();
+    }
+    ensureRecentFiles();
+    const QString folder =
+        m_settings->value(QStringLiteral("lastFileDirectory"), QDir::homePath()).toString();
+    return QDir(folder).filePath(QString::fromStdString(m_editor.fileName()));
+}
+
+QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path) {
+    if (m_fileDialog) {
+        return m_fileDialog(prompt, path);
+    }
+    const QString filters = tr("Tecnigrafo drawing (*.cadx);;DXF (*.dxf)");
+    if (prompt == cmd::FilePrompt::Open) {
+        return QFileDialog::getOpenFileName(this, tr("Open drawing"), path, filters);
+    }
+    QFileDialog dialog(this, tr("Save drawing"), path, filters);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(QStringLiteral("cadx"));
+    connect(&dialog, &QFileDialog::filterSelected, &dialog, [&dialog](const QString& filter) {
+        dialog.setDefaultSuffix(filter.contains(QStringLiteral("*.dxf")) ? QStringLiteral("dxf")
+                                                                         : QStringLiteral("cadx"));
+    });
+    return dialog.exec() == QDialog::Accepted ? dialog.selectedFiles().value(0) : QString{};
+}
+
+void MainWindow::handleFilePrompts() {
+    if (m_scriptMode || m_handlingFilePrompt) {
+        return;
+    }
+    const QScopedValueRollback<bool> guard(m_handlingFilePrompt, true);
+    while (m_runner.prompt().file != cmd::FilePrompt::None) {
+        const cmd::FilePrompt kind = m_runner.prompt().file;
+        const bool recent = kind == cmd::FilePrompt::Open && !m_pendingRecent.isEmpty();
+        const QString path =
+            recent ? std::exchange(m_pendingRecent, {}) : chooseFile(kind, dialogPath());
+        if (path.isEmpty()) {
+            m_pendingRecent.clear();
+            m_runner.submit(cmd::CancelInput{});
+            break;
+        }
+        const QString absolutePath = QFileInfo(path).absoluteFilePath();
+        ensureRecentFiles();
+        m_settings->setValue(QStringLiteral("lastFileDirectory"),
+                             QFileInfo(absolutePath).absolutePath());
+        submitFileText(absolutePath);
+        // The picker already confirmed replacement. Only answer this
+        // two-keyword question, never a NEW/OPEN unsaved-changes question.
+        const cmd::Prompt next = m_runner.prompt();
+        if (kind == cmd::FilePrompt::Save &&
+            next.keywords == std::vector<cmd::Keyword>{{"Yes", "Y"}, {"No", "N"}}) {
+            submitFileText(QStringLiteral("Yes"));
+        }
+    }
+    if (!m_runner.isActive()) {
+        m_pendingRecent.clear();
+    }
+    m_commandLine->refreshPrompt();
+}
+
+void MainWindow::closeEvent(QCloseEvent* event) {
+    if (m_scriptMode) {
+        event->accept();
+        return;
+    }
+    // Finish/cancel the current transaction before checking the dirty flag:
+    // Esc preserves completed LINE/PLINE work, just like the command line.
+    if (m_runner.isActive()) {
+        m_runner.submit(cmd::CancelInput{});
+        refresh();
+    }
+    if (!m_editor.isModified()) {
+        event->accept();
+        return;
+    }
+    const auto choice = QMessageBox::question(
+        this, tr("Tecnigrafo"),
+        tr("Save changes to %1?")
+            .arg(QFileInfo(QString::fromStdString(m_editor.fileName())).fileName()),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
+    if (choice == QMessageBox::Cancel) {
+        event->ignore();
+        return;
+    }
+    if (choice == QMessageBox::Save) {
+        submitFileText(QStringLiteral("QSAVE"));
+        refresh();
+        if (m_editor.isModified()) {
+            event->ignore();
+            return;
+        }
+    }
+    event->accept();
 }
 
 void MainWindow::showCursorPosition(double worldX, double worldY) {

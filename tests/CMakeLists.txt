@@ -110,6 +110,8 @@ if(TG_BUILD_APP)
         app/command_line_test.cpp
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
+        app/file_menu_test.cpp
+        app/recent_files_test.cpp
         app/qt_painter_test.cpp
         app/script_session_test.cpp
         app/selection_test.cpp
