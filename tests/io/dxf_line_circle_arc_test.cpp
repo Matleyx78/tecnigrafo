@@ -66,17 +66,19 @@ core::EntityExtras sampleExtras(core::RawGroups placement) {
     return extras;
 }
 
-std::optional<core::EntityRecord> roundtrip(const core::EntityRecord& record) {
+core::EntityRecord roundtrip(const core::EntityRecord& record) {
     auto read = readContext();
     auto write = writeContext();
     const EntityCodec* found = findCodec(record.entity);
     EXPECT_NE(found, nullptr);
     if (found == nullptr) {
-        return std::nullopt;
+        return {};
     }
     core::RawGroups groups;
     found->write(record, write, groups);
-    return decodeEntity(found, groups, read);
+    const auto decoded = decodeEntity(found, groups, read);
+    EXPECT_TRUE(decoded.has_value());
+    return decoded.value_or(core::EntityRecord{});
 }
 
 /// The groups of an entity: handle, AcDbEntity, then `body`.
@@ -89,6 +91,13 @@ core::RawGroups entity(const core::RawGroups& body) {
 std::optional<core::EntityRecord> decode(std::string_view type, const core::RawGroups& body) {
     auto context = readContext();
     return decodeEntity(&codec(type), entity(body), context);
+}
+
+/// The entity read from `body`, which must be handled.
+core::EntityRecord handled(std::string_view type, const core::RawGroups& body) {
+    const auto record = decode(type, body);
+    EXPECT_TRUE(record.has_value()) << type;
+    return record.value_or(core::EntityRecord{});
 }
 
 /// The groups written for `record`, compared with `expected`: same codes in
@@ -123,19 +132,17 @@ TEST(DxfLineCircleArc, RandomEntitiesAndExtrasSurviveRoundtrip) {
             sampleExtras({{39, "1.5"}, {30, "2.00"}, {31, "-3"}, {210, "0"}, {230, "1"}});
         const core::EntityRecord lineRecord{readContext().id, line, lineExtras, 1};
         const auto readLine = roundtrip(lineRecord);
-        ASSERT_TRUE(readLine.has_value());
-        EXPECT_EQ(readLine->entity, lineRecord.entity);
-        EXPECT_EQ(readLine->extras, lineExtras);
+        EXPECT_EQ(readLine.entity, lineRecord.entity);
+        EXPECT_EQ(readLine.extras, lineExtras);
 
         const core::Circle circle{{random.next(), random.next()}, random.positive()};
         const auto circleExtras = sampleExtras({{39, "2"}, {30, "4.5"}});
         const core::EntityRecord circleRecord{readContext().id, circle, circleExtras, 1};
         const auto readCircle = roundtrip(circleRecord);
-        ASSERT_TRUE(readCircle.has_value());
-        EXPECT_EQ(readCircle->entity, circleRecord.entity);
-        EXPECT_EQ(readCircle->extras, circleExtras);
+        EXPECT_EQ(readCircle.entity, circleRecord.entity);
+        EXPECT_EQ(readCircle.extras, circleExtras);
 
-        double start = random.degrees();
+        const double start = random.degrees();
         double end = random.degrees();
         if (start == end) {
             end = std::fmod(end + 1.0, 360.0);
@@ -147,44 +154,40 @@ TEST(DxfLineCircleArc, RandomEntitiesAndExtrasSurviveRoundtrip) {
         const auto arcExtras = sampleExtras({{30, "-6.25"}, {210, "0.0"}, {220, "0"}, {230, "1"}});
         const core::EntityRecord arcRecord{readContext().id, arc, arcExtras, 1};
         const auto readArc = roundtrip(arcRecord);
-        ASSERT_TRUE(readArc.has_value());
-        const auto& actual = std::get<core::Arc>(readArc->entity);
+        const auto& actual = std::get<core::Arc>(readArc.entity);
         EXPECT_EQ(actual.center, arc.center);
         EXPECT_EQ(actual.radius, arc.radius);
         EXPECT_NEAR(actual.startAngle, arc.startAngle, kTolerance);
         EXPECT_NEAR(actual.endAngle, arc.endAngle, kTolerance);
-        EXPECT_EQ(readArc->extras, arcExtras);
+        EXPECT_EQ(readArc.extras, arcExtras);
     }
 }
 
 TEST(DxfLineCircleArc, ValuesAreReadAndAnglesNormalized) {
     const auto line =
-        decode("LINE", {{100, "AcDbLine"}, {10, "-3"}, {20, "4"}, {11, "5"}, {21, "-8"}});
-    ASSERT_TRUE(line.has_value());
-    EXPECT_EQ(line->entity, (core::Entity{core::Line{{-3, 4}, {5, -8}}}));
-    EXPECT_TRUE(line->extras.common == core::RawGroups({{8, "0"}}));
+        handled("LINE", {{100, "AcDbLine"}, {10, "-3"}, {20, "4"}, {11, "5"}, {21, "-8"}});
+    EXPECT_EQ(line.entity, (core::Entity{core::Line{{-3, 4}, {5, -8}}}));
+    EXPECT_TRUE(line.extras.common == core::RawGroups({{8, "0"}}));
     // A line of length zero stays handled (docs/adr/0018, point 3).
     const auto point =
-        decode("LINE", {{100, "AcDbLine"}, {10, "2"}, {20, "2"}, {11, "2"}, {21, "2"}});
-    ASSERT_TRUE(point.has_value());
-    EXPECT_EQ(point->entity, (core::Entity{core::Line{{2, 2}, {2, 2}}}));
+        handled("LINE", {{100, "AcDbLine"}, {10, "2"}, {20, "2"}, {11, "2"}, {21, "2"}});
+    EXPECT_EQ(point.entity, (core::Entity{core::Line{{2, 2}, {2, 2}}}));
 
-    const auto circle = decode("CIRCLE", {{100, "AcDbCircle"}, {10, "5"}, {20, "-7"}, {40, "2.5"}});
-    ASSERT_TRUE(circle.has_value());
-    EXPECT_EQ(circle->entity, (core::Entity{core::Circle{{5, -7}, 2.5}}));
+    const auto circle =
+        handled("CIRCLE", {{100, "AcDbCircle"}, {10, "5"}, {20, "-7"}, {40, "2.5"}});
+    EXPECT_EQ(circle.entity, (core::Entity{core::Circle{{5, -7}, 2.5}}));
 
-    const auto arc = decode("ARC", {{100, "AcDbCircle"},
-                                    {10, "-2"},
-                                    {20, "3"},
-                                    {40, "4"},
-                                    {100, "AcDbArc"},
-                                    {50, "-90"},
-                                    {51, "450"}});
-    ASSERT_TRUE(arc.has_value());
-    const auto& value = std::get<core::Arc>(arc->entity);
+    const auto arc = handled("ARC", {{100, "AcDbCircle"},
+                                     {10, "-2"},
+                                     {20, "3"},
+                                     {40, "4"},
+                                     {100, "AcDbArc"},
+                                     {50, "-90"},
+                                     {51, "450"}});
+    const auto& value = std::get<core::Arc>(arc.entity);
     EXPECT_NEAR(value.startAngle, core::degreesToRadians(270), kTolerance);
     EXPECT_NEAR(value.endAngle, core::degreesToRadians(90), kTolerance);
-    EXPECT_TRUE(arc->extras.specific.empty());
+    EXPECT_TRUE(arc.extras.specific.empty());
 }
 
 TEST(DxfLineCircleArc, DegenerateAndInvalidEntitiesStayUnhandled) {
@@ -237,18 +240,16 @@ TEST(DxfLineCircleArc, NegativeExtrusionIsConvertedAndWrittenBack) {
     };
 
     const auto lineFile = with({{100, "AcDbLine"}, {10, "3"}, {20, "4"}, {11, "8"}, {21, "-2"}});
-    const auto line = decode("LINE", lineFile);
-    ASSERT_TRUE(line.has_value());
-    EXPECT_EQ(line->entity, (core::Entity{core::Line{{3, 4}, {8, -2}}}));  // already in WCS
-    EXPECT_TRUE(line->extras.flippedExtrusion);
-    expectWrittenAs(*line, "LINE", lineFile);
+    const auto line = handled("LINE", lineFile);
+    EXPECT_EQ(line.entity, (core::Entity{core::Line{{3, 4}, {8, -2}}}));  // already in WCS
+    EXPECT_TRUE(line.extras.flippedExtrusion);
+    expectWrittenAs(line, "LINE", lineFile);
 
     const auto circleFile = with({{100, "AcDbCircle"}, {10, "5"}, {20, "6"}, {40, "3"}});
-    const auto circle = decode("CIRCLE", circleFile);
-    ASSERT_TRUE(circle.has_value());
-    EXPECT_EQ(circle->entity, (core::Entity{core::Circle{{-5, 6}, 3}}));
-    EXPECT_TRUE(circle->extras.flippedExtrusion);
-    expectWrittenAs(*circle, "CIRCLE", circleFile);
+    const auto circle = handled("CIRCLE", circleFile);
+    EXPECT_EQ(circle.entity, (core::Entity{core::Circle{{-5, 6}, 3}}));
+    EXPECT_TRUE(circle.extras.flippedExtrusion);
+    expectWrittenAs(circle, "CIRCLE", circleFile);
 
     // 150..210 in the object system: 180-210 = -30 -> 330, 180-150 = 30.
     // The mirrored arc crosses 0 degrees.
@@ -259,13 +260,12 @@ TEST(DxfLineCircleArc, NegativeExtrusionIsConvertedAndWrittenBack) {
                                {100, "AcDbArc"},
                                {50, "150"},
                                {51, "210"}});
-    const auto arc = decode("ARC", arcFile);
-    ASSERT_TRUE(arc.has_value());
-    const auto& mirrored = std::get<core::Arc>(arc->entity);
+    const auto arc = handled("ARC", arcFile);
+    const auto& mirrored = std::get<core::Arc>(arc.entity);
     EXPECT_EQ(mirrored.center, (core::Vec2{-2, 3}));
     EXPECT_NEAR(mirrored.startAngle, core::degreesToRadians(330), kTolerance);
     EXPECT_NEAR(mirrored.endAngle, core::degreesToRadians(30), kTolerance);
-    expectWrittenAs(*arc, "ARC", arcFile);
+    expectWrittenAs(arc, "ARC", arcFile);
 
     // 300..30 crosses 0 in the file: 180-30 = 150, 180-300 = -120 -> 240.
     const auto crossingFile = with({{100, "AcDbCircle"},
@@ -275,13 +275,12 @@ TEST(DxfLineCircleArc, NegativeExtrusionIsConvertedAndWrittenBack) {
                                     {100, "AcDbArc"},
                                     {50, "300"},
                                     {51, "30"}});
-    const auto crossing = decode("ARC", crossingFile);
-    ASSERT_TRUE(crossing.has_value());
-    const auto& value = std::get<core::Arc>(crossing->entity);
+    const auto crossing = handled("ARC", crossingFile);
+    const auto& value = std::get<core::Arc>(crossing.entity);
     EXPECT_EQ(value.center, (core::Vec2{4, 2}));
     EXPECT_NEAR(value.startAngle, core::degreesToRadians(150), kTolerance);
     EXPECT_NEAR(value.endAngle, core::degreesToRadians(240), kTolerance);
-    expectWrittenAs(*crossing, "ARC", crossingFile);
+    expectWrittenAs(crossing, "ARC", crossingFile);
 }
 
 TEST(DxfLineCircleArc, PlacementGroupsAreWrittenWhereTheyWereRead) {
@@ -290,24 +289,21 @@ TEST(DxfLineCircleArc, PlacementGroupsAreWrittenWhereTheyWereRead) {
     const core::RawGroups unusual{{100, "AcDbLine"}, {10, "3"},   {20, "4"},    {30, "1.2500"},
                                   {11, "8"},         {21, "-2"},  {31, "-2.5"}, {210, "0"},
                                   {220, "0"},        {230, "-1"}, {39, "-0.75"}};
-    const auto line = decode("LINE", unusual);
-    ASSERT_TRUE(line.has_value());
-    EXPECT_EQ(line->extras.placementAnchors.size(), line->extras.placement.size());
-    expectWrittenAs(*line, "LINE", unusual);
+    const auto line = handled("LINE", unusual);
+    EXPECT_EQ(line.extras.placementAnchors.size(), line.extras.placement.size());
+    expectWrittenAs(line, "LINE", unusual);
 
     // The order of the DXF reference needs no anchors.
     const core::RawGroups usual{{100, "AcDbCircle"}, {39, "2"},  {10, "1"},  {20, "2"}, {30, "3"},
                                 {40, "4"},           {210, "0"}, {220, "0"}, {230, "1"}};
-    const auto circle = decode("CIRCLE", usual);
-    ASSERT_TRUE(circle.has_value());
-    EXPECT_TRUE(circle->extras.placementAnchors.empty());
-    expectWrittenAs(*circle, "CIRCLE", usual);
+    const auto circle = handled("CIRCLE", usual);
+    EXPECT_TRUE(circle.extras.placementAnchors.empty());
+    expectWrittenAs(circle, "CIRCLE", usual);
 
     // Placement groups an entity does not use are kept as well.
     const core::RawGroups stray{{100, "AcDbCircle"}, {10, "1"}, {20, "2"}, {40, "4"}, {38, "5"}};
-    const auto kept = decode("CIRCLE", stray);
-    ASSERT_TRUE(kept.has_value());
-    expectWrittenAs(*kept, "CIRCLE", stray);
+    const auto kept = handled("CIRCLE", stray);
+    expectWrittenAs(kept, "CIRCLE", stray);
 }
 
 }  // namespace
