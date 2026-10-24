@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # tg_cmd: interactive commands, command runner, typed coordinates.
-# May depend on tg_core and tg_edit only, never on Qt (docs/adr/0001,
-# docs/adr/0005).
+# May depend on tg_core, tg_edit and tg_io, never on Qt (docs/adr/0001,
+# docs/adr/0005, docs/adr/0017).
 
 add_library(tg_cmd
     src/builtin_commands.cpp
     src/commands/arc_command.cpp
     src/commands/circle_command.cpp
+    src/commands/file_commands.cpp
     src/commands/erase_command.cpp
     src/commands/line_command.cpp
     src/commands/pline_command.cpp
@@ -23,5 +24,5 @@ add_library(Tecnigrafo::cmd ALIAS tg_cmd)
 
 target_include_directories(tg_cmd PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_link_libraries(tg_cmd PUBLIC Tecnigrafo::edit)
+target_link_libraries(tg_cmd PUBLIC Tecnigrafo::edit Tecnigrafo::io)
 tg_configure_target(tg_cmd)

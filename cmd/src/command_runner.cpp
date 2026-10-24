@@ -67,6 +67,10 @@ CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& edit
                     message(std::move(text));
                 }} {}
 
+void CommandRunner::setFileAccess(io::FileAccess* files) {
+    m_context.files = files;
+}
+
 void CommandRunner::submitText(std::string_view text) {
     if (!acceptsText()) {
         text = detail::trim(text);
@@ -223,6 +227,11 @@ void CommandRunner::beginCommand() {
     selection.ids.assign(m_selection.ids().begin(), m_selection.ids().end());
     clearSelection();
     m_command->start(m_context);
+    // Immediate commands finish in start() and have no question to ask.
+    if (m_command->prompt().text.empty()) {
+        finish();
+        return;
+    }
     if (m_command->needsSelection()) {
         assert(!selection.ids.empty() && "a selection is never handed over empty");
         forward(selection);
@@ -243,6 +252,10 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
     }
     const Prompt prompt = m_command->prompt();
     if (prompt.kind == PromptKind::Text) {
+        if (prompt.file != FilePrompt::None && text.size() >= 2 && text.front() == '"' &&
+            text.back() == '"') {
+            text = text.substr(1, text.size() - 2);
+        }
         forward(TextInput{std::string{text}});
         return;
     }

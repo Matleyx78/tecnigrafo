@@ -19,12 +19,6 @@ dxf/r11-public #168
 # R14: formato .cadx
 
 # R15: salvataggio e unità
-salvataggio/file-esistente-e-annulla #173
-salvataggio/insunits #173
-salvataggio/nomi-non-validi #173
-salvataggio/qsave-nuovo-e-ripetuto #173
-salvataggio/save-con-nome #173
-salvataggio/saveas-estensioni #173
 
 # R16: apertura e disegno nuovo
 apertura/new-modifiche #175

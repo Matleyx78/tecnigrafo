@@ -174,6 +174,9 @@ public:
     /// for a selection.
     [[nodiscard]] std::span<const core::Entity> preview() const;
 
+    /// File access for commands, not owned. nullptr disables file commands.
+    void setFileAccess(io::FileAccess* files);
+
     /// Where messages go (the history of the command line). An empty
     /// function discards them.
     void setMessageSink(std::function<void(std::string)> sink);

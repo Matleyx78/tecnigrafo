@@ -6,6 +6,7 @@
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "main_window.hpp"
+#include "tg/script/case_files.hpp"
 #include "tg/script/report.hpp"
 
 #include <QAction>
@@ -17,6 +18,7 @@
 #include <QDir>
 #include <QEventLoop>
 #include <QFile>
+#include <QFileInfo>
 #include <QImage>
 #include <QKeyCombination>
 #include <QKeyEvent>
@@ -28,6 +30,7 @@
 #include <QTextDocument>
 
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 #include <string_view>
 #include <utility>
@@ -364,7 +367,28 @@ int runScriptFile(const QString& scriptPath, const QString& outputFolder) {
         return kExitError;
     }
 
+    // Keep the public script-session API unchanged; --sources is specific to
+    // this command-line entry point, not to sessions driven by widget tests.
+    const QStringList arguments = QCoreApplication::arguments();
+    std::optional<std::filesystem::path> sources;
+    const QString sourcesPrefix = QStringLiteral("--sources=");
+    for (qsizetype i = 1; i < arguments.size(); ++i) {
+        if (arguments[i] == QStringLiteral("--sources") && i + 1 < arguments.size()) {
+            sources = QDir(arguments[++i]).filesystemPath();
+        } else if (arguments[i].startsWith(sourcesPrefix)) {
+            sources = QDir(arguments[i].mid(sourcesPrefix.size())).filesystemPath();
+        }
+    }
+    const auto output = QDir(outputFolder).filesystemPath();
+    const auto filesFolder = output / script::kCaseFilesFolder;
+    const auto caseFolder = QFileInfo(scriptPath).absoluteDir().filesystemPath();
+    if (const auto error = script::prepareCaseFiles(caseFolder, filesFolder)) {
+        std::cerr << *error << "\n";
+        return kExitError;
+    }
+    script::CaseFiles files(filesFolder, sources);
     MainWindow window(MainWindow::InitialDrawing::Empty);
+    window.setFileAccess(&files);
     ScriptSession session(window, outputFolder);
     if (!session.run(std::get<script::Script>(parsed))) {
         std::cerr << scriptPath.toStdString() << ": " << session.error().toStdString() << "\n";

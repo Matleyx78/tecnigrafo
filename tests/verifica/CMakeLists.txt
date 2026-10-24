@@ -107,7 +107,8 @@ if(TG_BUILD_APP)
             endif()
             set(arguments case "${TG_VERIFICA_CASES}/${name}"
                 --program "$<TARGET_FILE:tecnigrafo>"
-                --output "${CMAKE_CURRENT_BINARY_DIR}/casi2/${name}")
+                --output "${CMAKE_CURRENT_BINARY_DIR}/casi2/${name}"
+                --sources "${TG_VERIFICA_SOURCES_DIR}")
             if(name IN_LIST TG_VERIFICA_PENDING_NAMES)
                 list(APPEND arguments --pending)
             endif()

@@ -148,6 +148,17 @@ std::optional<std::string> prepareCaseFiles(const fs::path& folder, const fs::pa
         if (name == "script.tgs" || name == "domande.tgq" || name.starts_with("atteso")) {
             continue;
         }
+        // The output may be inside the case folder (or the same folder).
+        // Never copy a directory that contains the destination into itself.
+        if (entry.is_directory(error)) {
+            const fs::path relative = fs::relative(files, entry.path(), error);
+            if (error) {
+                return "cannot resolve the folder " + entry.path().generic_string();
+            }
+            if (!relative.empty() && *relative.begin() != "..") {
+                continue;
+            }
+        }
         fs::copy(entry.path(), files / entry.path().filename(), fs::copy_options::recursive, error);
         if (error) {
             return "cannot copy " + name + " to " + files.generic_string();

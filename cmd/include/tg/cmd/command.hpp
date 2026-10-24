@@ -15,6 +15,10 @@
 #include <string>
 #include <vector>
 
+namespace tg::io {
+class FileAccess;
+}
+
 namespace tg::cmd {
 
 /// An option of a prompt: {"Close", "C"}. The user can type either string,
@@ -25,6 +29,9 @@ struct Keyword {
 
     friend bool operator==(const Keyword&, const Keyword&) = default;
 };
+
+/// File dialogs may replace these text questions in the application (ADR 0021).
+enum class FilePrompt : std::uint8_t { None, Open, Save };
 
 enum class PromptKind : std::uint8_t { Point, Distance, Angle, Text };
 
@@ -37,6 +44,7 @@ struct Prompt {
     std::string text;
     std::vector<Keyword> keywords;
     PromptKind kind{PromptKind::Point};
+    FilePrompt file{FilePrompt::None};
 
     friend bool operator==(const Prompt&, const Prompt&) = default;
 };
@@ -57,6 +65,7 @@ struct CommandContext {
     std::optional<core::Vec2> lastPoint;       ///< updated by the command
     std::function<void(std::string)> message;  ///< writes to the history
     CommandDefaults defaults{};
+    io::FileAccess* files{nullptr};
 };
 
 enum class Status : std::uint8_t { Continue, Finished };
