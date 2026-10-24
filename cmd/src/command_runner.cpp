@@ -415,6 +415,10 @@ void CommandRunner::cancel() {
 }
 
 void CommandRunner::finish() {
+    if (m_context.documentReplaced) {
+        m_context.lastPoint.reset();
+        m_context.documentReplaced = false;
+    }
     m_command.reset();
     clearSelection();
     const bool closed = !m_editor.inTransaction();

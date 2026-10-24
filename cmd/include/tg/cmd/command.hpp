@@ -66,6 +66,7 @@ struct CommandContext {
     std::function<void(std::string)> message;  ///< writes to the history
     CommandDefaults defaults{};
     io::FileAccess* files{nullptr};
+    bool documentReplaced{false};
 };
 
 enum class Status : std::uint8_t { Continue, Finished };

@@ -22,6 +22,8 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add("ERASE", {"E"}, [] { return std::make_unique<EraseCommand>(); });
     registry.add("INSUNITS", {}, [] { return std::make_unique<InsunitsCommand>(); });
     registry.add("LINE", {"L"}, [] { return std::make_unique<LineCommand>(); });
+    registry.add("NEW", {}, [] { return std::make_unique<NewCommand>(); });
+    registry.add("OPEN", {}, [] { return std::make_unique<OpenCommand>(); });
     registry.add("PLINE", {"PL"}, [] { return std::make_unique<PlineCommand>(); });
     registry.add("QSAVE", {}, [] { return std::make_unique<QsaveCommand>(); });
     registry.add("SAVE", {}, [] { return std::make_unique<SaveCommand>(); });

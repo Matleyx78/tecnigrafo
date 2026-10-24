@@ -21,12 +21,6 @@ dxf/r11-public #168
 # R15: salvataggio e unità
 
 # R16: apertura e disegno nuovo
-apertura/new-modifiche #175
-apertura/open-cadx-valido #175
-apertura/open-dxf-pubblici #175
-apertura/open-errori-e-limiti #175
-apertura/open-modifiche-e-annulla #175
-apertura/open-reset-stato #175
 
 # R17: menu File e scorciatoie
 interfaccia/file-scorciatoie-apri-nuovo #177
