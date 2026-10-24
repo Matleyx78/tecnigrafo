@@ -13,6 +13,7 @@ LINE
 
 SAVEAS
 secondo.cadx
+!click 5,0
 !report
 OPEN
 primo.cadx
