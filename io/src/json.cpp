@@ -123,7 +123,7 @@ private:
 
     static void append(Frame& frame, Json child) {
         if (frame.value.kind == Json::Kind::Object) {
-            frame.value.members.emplace_back(std::move(frame.key), std::move(child));
+            frame.value.members.push_back({std::move(frame.key), std::move(child)});
         } else {
             frame.value.elements.push_back(std::move(child));
         }
@@ -418,7 +418,7 @@ void Json::set(std::string key, Json value) {
             return;
         }
     }
-    members.emplace_back(std::move(key), std::move(value));
+    members.push_back({std::move(key), std::move(value)});
 }
 
 Result<Json> readJson(std::string_view bytes) {
