@@ -440,6 +440,71 @@ std::variant<core::Entity, EntityError> readText(const Tokens& properties) {
     return core::Entity{std::move(text)};
 }
 
+/// Whether `text` is a vector "x,y,z" of three numbers.
+bool isVector(std::string_view text) {
+    const std::size_t first = text.find(',');
+    const std::size_t second = first == std::string_view::npos ? first : text.find(',', first + 1);
+    if (second == std::string_view::npos) {
+        return false;
+    }
+    return parseNumber(text.substr(0, first)) &&
+           parseNumber(text.substr(first + 1, second - first - 1)) &&
+           parseNumber(text.substr(second + 1));
+}
+
+/// The quota of each type (docs/verifica/rapporto.md, stage 0.5).
+std::span<const std::string_view> quotaNames(std::string_view type) {
+    static constexpr std::array<std::string_view, 1> kPolyline{"elevation"};
+    static constexpr std::array<std::string_view, 2> kLine{"start-z", "end-z"};
+    static constexpr std::array<std::string_view, 1> kCurve{"z"};
+    static constexpr std::array<std::string_view, 2> kText{"z", "alignment-z"};
+    if (type == "LWPOLYLINE") {
+        return kPolyline;
+    }
+    if (type == "LINE") {
+        return kLine;
+    }
+    if (type == "CIRCLE" || type == "ARC") {
+        return kCurve;
+    }
+    if (type == "TEXT") {
+        return kText;
+    }
+    return {};
+}
+
+/// Checks and takes out of `properties` the quota, thickness and extrusion
+/// of stage 0.5. The model keeps them only for an entity read from a file
+/// (core::EntityExtras): an entity read here is made as a command makes it.
+std::optional<EntityError> takePlacement(std::string_view type, Tokens& properties) {
+    const std::span<const std::string_view> quotas = quotaNames(type);
+    Tokens rest;
+    std::vector<std::string_view> seen;
+    for (const std::string_view token : properties) {
+        const std::size_t equals = token.find('=');
+        const std::string_view name =
+            equals == std::string_view::npos ? std::string_view{} : token.substr(0, equals);
+        const bool number = name == "thickness" || std::ranges::find(quotas, name) != quotas.end();
+        if (!number && name != "extrusion") {
+            rest.push_back(token);
+            continue;
+        }
+        const std::string_view value = token.substr(equals + 1);
+        if (std::ranges::find(seen, name) != seen.end()) {
+            return EntityError{std::string{name} + " is given more than once"};
+        }
+        seen.push_back(name);
+        if (number && !parseNumber(value)) {
+            return EntityError{std::string{name} + " needs a number, found " + quoted(value)};
+        }
+        if (!number && !isVector(value)) {
+            return EntityError{"extrusion needs a vector x,y,z, found " + quoted(value)};
+        }
+    }
+    properties = std::move(rest);
+    return std::nullopt;
+}
+
 }  // namespace
 
 std::variant<core::Entity, EntityError> readEntity(std::string_view text) {
@@ -451,7 +516,10 @@ std::variant<core::Entity, EntityError> readEntity(std::string_view text) {
         return EntityError{"missing entity type"};
     }
     const std::string_view type = tokens->front();
-    const Tokens properties(tokens->begin() + 1, tokens->end());
+    Tokens properties(tokens->begin() + 1, tokens->end());
+    if (std::optional<EntityError> error = takePlacement(type, properties)) {
+        return std::move(*error);
+    }
     if (type == "LWPOLYLINE") {
         return readPolyline(properties);
     }

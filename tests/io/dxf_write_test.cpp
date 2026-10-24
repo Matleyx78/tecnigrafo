@@ -119,7 +119,7 @@ TEST(DxfWrite, ConvertsAnsiTextAndKeepsOriginalVersionOnSave) {
     EXPECT_EQ(reread.value().document.rawEntities()[0], read.value().document.rawEntities()[0]);
 }
 
-TEST(DxfWrite, RejectsDowngradesAndUnsupportedManagedEntitiesWithoutDroppingThem) {
+TEST(DxfWrite, RejectsDowngradesWithoutDroppingEntities) {
     auto read = readDxf(fixture("conservative.dxf"));
     ASSERT_TRUE(read.ok());
     const auto older = writeDxf(read.value().document, DxfVersion::R2000);
@@ -127,10 +127,10 @@ TEST(DxfWrite, RejectsDowngradesAndUnsupportedManagedEntitiesWithoutDroppingThem
     EXPECT_EQ(older.error().kind, Error::Kind::Unsupported);
     core::Document fresh;
     EXPECT_FALSE(writeDxf(fresh, DxfVersion::R2000).ok());
-    fresh.add(core::Line{});
-    const auto unsupported = writeDxf(fresh, DxfVersion::R2018);
-    ASSERT_FALSE(unsupported.ok());
-    EXPECT_EQ(unsupported.error().kind, Error::Kind::Unsupported);
+    // Since P11 every entity type of the model has a codec: a new LINE is
+    // written, not refused.
+    fresh.add(core::Line{{1, 2}, {3, 4}});
+    EXPECT_TRUE(writeDxf(fresh, DxfVersion::R2018).ok());
     EXPECT_FALSE(makeSkeleton(std::numeric_limits<std::uint64_t>::max()).ok());
 }
 

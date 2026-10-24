@@ -66,7 +66,7 @@ TEST(DxfLwpolyline, InvalidAndUnsupportedGeometryStaysUnhandled) {
                                 {90, "1"}, {10, "2"},           {20, "3"}};
     ASSERT_TRUE(decodeEntity(&kLwpolylineCodec, valid, context));
     for (const core::RawGroups& extra :
-         {core::RawGroups{{91, "1"}}, {{230, "-1"}}, {{210, "1"}}, {{67, "1"}}, {{330, "21"}}}) {
+         {core::RawGroups{{91, "1"}}, {{230, "0"}}, {{210, "1"}}, {{67, "1"}}, {{330, "21"}}}) {
         auto groups = valid;
         groups.insert(groups.end(), extra.begin(), extra.end());
         EXPECT_FALSE(decodeEntity(&kLwpolylineCodec, groups, context));

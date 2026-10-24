@@ -169,8 +169,10 @@ std::optional<std::string> firstDifference(const io::GroupFile& original,
         // their numbers match within the tolerances.
         const bool free = variable == "$HANDSEED" ||
                           (converting && (variable == "$ACADVER" || variable == "$DWGCODEPAGE"));
-        const std::optional<double> x = io::parseNumber(old.value);
-        const std::optional<double> y = io::parseNumber(now.value);
+        // A handled number is compared as a number: AutoCAD and ezdxf pad
+        // integers with spaces ("     4"), the model writes "4".
+        const std::optional<double> x = io::parseNumber(detail::trim(old.value));
+        const std::optional<double> y = io::parseNumber(detail::trim(now.value));
         const bool equal = old.value == now.value || (old.code != 9 && free) ||
                            (handled && x && y && numbersMatch(*x, *y, tolerances));
         if (old.code != now.code || !equal) {
@@ -286,7 +288,7 @@ QuestionResult askEntity(const QuestionModel& model, Arguments arguments) {
             const core::Document& document = drawing.read.document;
             if (const core::EntityRecord* record = document.find(core::EntityId{*handle})) {
                 std::string text;
-                writeEntity(record->entity, text);
+                writeEntity(*record, text);
                 return text;
             }
             const auto raw = std::ranges::find(document.rawEntities(), core::EntityId{*handle},

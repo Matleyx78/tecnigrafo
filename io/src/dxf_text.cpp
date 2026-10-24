@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "dxf_entity_common.hpp"
+#include "dxf_extrusion.hpp"
 #include "tg/core/math.hpp"
 #include "tg/io/dxf_groups.hpp"
 
@@ -12,12 +13,11 @@ namespace tg::io {
 namespace {
 std::optional<core::EntityRecord> readText(const core::RawGroups& groups,
                                            EntityReadContext& context) {
-    auto parts = splitEntityGroups(groups);
-    for (const auto& group : parts.extras.placement) {
-        if (group.code == 230 && parseNumber(trimDxf(group.value)) != 1.0) {
-            return std::nullopt;
-        }
+    const Extrusion extrusion = entityExtrusion(groups);
+    if (extrusion == Extrusion::Other) {
+        return std::nullopt;
     }
+    auto parts = splitEntityGroups(groups);
     core::Text text;
     bool hasX = false;
     bool hasY = false;
@@ -110,13 +110,33 @@ std::optional<core::EntityRecord> readText(const core::RawGroups& groups,
     if (!hasX || !hasY || !hasHeight || !hasValue || text.height <= 0 || text.widthFactor <= 0) {
         return std::nullopt;
     }
+    if (extrusion == Extrusion::Down) {
+        // x -> -x turns the baseline direction r into 180 - r and reverses
+        // the glyphs: the same text is rotated by -r and mirrored once more
+        // along its baseline (docs/adr/0018, point 5).
+        text.position = flipX(text.position);
+        text.alignmentPoint = flipX(text.alignmentPoint);
+        text.rotation =
+            core::degreesToRadians(normalizeDegrees(negate(core::radiansToDegrees(text.rotation))));
+        text.mirroredX = !text.mirroredX;
+        parts.extras.flippedExtrusion = true;
+    }
     return core::EntityRecord{context.id, std::move(text), std::move(parts.extras), context.order};
 }
 
 void writeText(const core::EntityRecord& record, EntityWriteContext& context,
                core::RawGroups& out) {
-    const auto& text = std::get<core::Text>(record.entity);
+    auto text = std::get<core::Text>(record.entity);
+    if (record.extras.flippedExtrusion) {
+        // The conversion of the reading is its own inverse.
+        text.position = flipX(text.position);
+        text.alignmentPoint = flipX(text.alignmentPoint);
+        text.rotation =
+            core::degreesToRadians(normalizeDegrees(negate(core::radiansToDegrees(text.rotation))));
+        text.mirroredX = !text.mirroredX;
+    }
     writeEntityCommon(record, context, out);
+    const std::size_t from = out.size();
     out.push_back({100, "AcDbText"});
     constexpr std::array kThickness{39};
     writePlacement(record.extras, kThickness, out);
@@ -138,11 +158,13 @@ void writeText(const core::EntityRecord& record, EntityWriteContext& context,
     out.push_back({21, formatNumber(text.alignmentPoint.y)});
     constexpr std::array kAlignmentZ{31};
     writePlacement(record.extras, kAlignmentZ, out);
-    constexpr std::array kExtrusion{210, 220, 230};
+    // 38 has no meaning for TEXT, but a group read is written.
+    constexpr std::array kExtrusion{210, 220, 230, 38};
     writePlacement(record.extras, kExtrusion, out);
     out.push_back({100, "AcDbText"});
     out.push_back({73, std::to_string(static_cast<int>(text.vertical))});
     writeEntityTail(record.extras, out, 71);
+    restorePlacement(record.extras, from, out);
 }
 }  // namespace
 

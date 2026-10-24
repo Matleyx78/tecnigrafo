@@ -51,6 +51,12 @@ void writeState(const ReportInput& input, std::string& out);
 /// back by readEntity() (entity_reader.hpp) without losses.
 void writeEntity(const core::Entity& entity, std::string& out);
 
+/// The same line for an entity of a document, followed by the quota,
+/// thickness and extrusion its extras keep as read, before the derived
+/// properties (docs/verifica/rapporto.md, stage 0.5). readEntity() reads
+/// them but builds an entity without extras, as a command does.
+void writeEntity(const core::EntityRecord& record, std::string& out);
+
 /// The name of a snap kind in reports and answers ("Endpoint").
 [[nodiscard]] std::string_view snapKindName(core::SnapKind kind);
 

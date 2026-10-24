@@ -300,9 +300,8 @@ TEST(FileQuestions, QuestionsAboutADrawing) {
         "wrong arguments");
 }
 
-// The questions about a handled entity of a drawing read from a file. io
-// handles LINE from P11: until then the LINE of kDxf is unhandled and the
-// test is skipped (P11 removes the skip, docs/tappe/0.5/P11).
+// The questions about a handled entity of a drawing read from a file: io
+// handles LINE since P11.
 TEST(FileQuestions, QuestionsAboutAHandledEntity) {
     const fs::path folder = emptyFolder("handled");
     writeFile(folder / "plan.dxf", kDxf);
@@ -313,9 +312,7 @@ TEST(FileQuestions, QuestionsAboutAHandledEntity) {
         ASSERT_TRUE(error->notImplemented) << error->message;
         GTEST_SKIP() << "io does not read DXF drawings yet: " << error->message;
     }
-    if (std::get<std::vector<Answer>>(probe).at(0).matches) {
-        GTEST_SKIP() << "io does not handle LINE yet (P11)";
-    }
+    EXPECT_FALSE(std::get<std::vector<Answer>>(probe).at(0).matches);
     const std::string text =
         "D = DXF file=plan.dxf\n"
         "? entity D 2F -> LINE start=0,0 end=10,5\n"

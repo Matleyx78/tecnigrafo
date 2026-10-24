@@ -3,9 +3,11 @@
 
 #include "tg/script/report.hpp"
 
+#include "text.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/text.hpp"
+#include "tg/io/dxf_groups.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/text_format.hpp"
 
@@ -13,6 +15,7 @@
 #include <array>
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -190,8 +193,85 @@ void writeText(const core::Text& text, std::string& out) {
     out += textVerticalName(text.vertical);
     out += " value=";
     out += quoteText(text.value);
-    out += " ~box=";
-    out += textBoxText(text);
+}
+
+/// The value of the first placement group with `code`, if it is a number.
+std::optional<double> placementValue(const core::EntityExtras& extras, int code) {
+    for (const core::RawGroup& group : extras.placement) {
+        if (group.code == code) {
+            return io::parseNumber(detail::trim(group.value));
+        }
+    }
+    return std::nullopt;
+}
+
+/// Writes ` name=value` for the placement group `code`, unless it is
+/// missing or 0, its default.
+void writePlacementNumber(const core::EntityExtras& extras, int code, std::string_view name,
+                          std::string& out) {
+    const std::optional<double> value = placementValue(extras, code);
+    if (value && *value != 0.0) {
+        out += ' ';
+        out += name;
+        out += '=';
+        out += formatNumber(*value);
+    }
+}
+
+/// Quota, thickness and extrusion as read (docs/verifica/rapporto.md, stage
+/// 0.5): only those different from their default, quotas first.
+void writePlacementProperties(const core::Entity& entity, const core::EntityExtras& extras,
+                              std::string& out) {
+    std::visit(
+        Overloaded{
+            [&](const core::Polyline& /*polyline*/) {
+                writePlacementNumber(extras, 38, "elevation", out);
+            },
+            [&](const core::Line& /*line*/) {
+                writePlacementNumber(extras, 30, "start-z", out);
+                writePlacementNumber(extras, 31, "end-z", out);
+            },
+            [&](const core::Circle& /*circle*/) { writePlacementNumber(extras, 30, "z", out); },
+            [&](const core::Arc& /*arc*/) { writePlacementNumber(extras, 30, "z", out); },
+            [&](const core::Text& /*text*/) {
+                writePlacementNumber(extras, 30, "z", out);
+                writePlacementNumber(extras, 31, "alignment-z", out);
+            },
+        },
+        entity);
+    writePlacementNumber(extras, 39, "thickness", out);
+    constexpr std::array kExtrusionCodes{210, 220, 230};
+    // A missing component is the one of the default direction (0,0,1).
+    constexpr std::array kDefaultExtrusion{0.0, 0.0, 1.0};
+    std::array<double, 3> extrusion = kDefaultExtrusion;
+    for (std::size_t i = 0; i < extrusion.size(); ++i) {
+        extrusion.at(i) = placementValue(extras, kExtrusionCodes.at(i)).value_or(extrusion.at(i));
+    }
+    if (extrusion != kDefaultExtrusion) {
+        out += " extrusion=";
+        out += formatNumber(extrusion[0]) + ',' + formatNumber(extrusion[1]) + ',' +
+               formatNumber(extrusion[2]);
+    }
+}
+
+/// The derived properties (names starting with '~'), last on the line.
+void writeDerived(const core::Entity& entity, std::string& out) {
+    if (const auto* text = std::get_if<core::Text>(&entity)) {
+        out += " ~box=";
+        out += textBoxText(*text);
+    }
+}
+
+/// The type and the properties of the model, without the derived ones.
+void writeModel(const core::Entity& entity, std::string& out) {
+    std::visit(Overloaded{
+                   [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
+                   [&out](const core::Line& line) { writeLine(line, out); },
+                   [&out](const core::Circle& circle) { writeCircle(circle, out); },
+                   [&out](const core::Arc& arc) { writeArc(arc, out); },
+                   [&out](const core::Text& text) { writeText(text, out); },
+               },
+               entity);
 }
 
 std::string selectionText(const cmd::SelectionSet& selection) {
@@ -257,7 +337,7 @@ void writeEntities(const core::Document& document, std::string& out) {
     appendLine("entities:", out);
     for (const core::EntityRecord* record : records) {
         std::string line = std::to_string(record->id.value) + " ";
-        writeEntity(record->entity, line);
+        writeEntity(*record, line);
         appendItem(line, out);
     }
 }
@@ -357,14 +437,14 @@ std::string_view dxfType(const core::Entity& entity) {
 }
 
 void writeEntity(const core::Entity& entity, std::string& out) {
-    std::visit(Overloaded{
-                   [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
-                   [&out](const core::Line& line) { writeLine(line, out); },
-                   [&out](const core::Circle& circle) { writeCircle(circle, out); },
-                   [&out](const core::Arc& arc) { writeArc(arc, out); },
-                   [&out](const core::Text& text) { writeText(text, out); },
-               },
-               entity);
+    writeModel(entity, out);
+    writeDerived(entity, out);
+}
+
+void writeEntity(const core::EntityRecord& record, std::string& out) {
+    writeModel(record.entity, out);
+    writePlacementProperties(record.entity, record.extras, out);
+    writeDerived(record.entity, out);
 }
 
 std::string_view snapKindName(core::SnapKind kind) {

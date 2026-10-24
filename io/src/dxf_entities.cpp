@@ -4,14 +4,21 @@
 #include "dxf_entities.hpp"
 
 #include "dxf_entity_common.hpp"
+#include "dxf_extrusion.hpp"
 #include "tg/io/dxf_groups.hpp"
 
 #include <array>
 #include <charconv>
 #include <cmath>
 #include <system_error>
+#include <utility>
 
 namespace tg::io {
+
+// Defined in dxf_line.cpp and dxf_circle_arc.cpp.
+extern const EntityCodec kLineCodec;
+extern const EntityCodec kCircleCodec;
+extern const EntityCodec kArcCodec;
 
 const EntityCodec* findCodec(std::string_view type) {
     if (type == "LWPOLYLINE") {
@@ -19,6 +26,15 @@ const EntityCodec* findCodec(std::string_view type) {
     }
     if (type == "TEXT") {
         return &kTextCodec;
+    }
+    if (type == "LINE") {
+        return &kLineCodec;
+    }
+    if (type == "CIRCLE") {
+        return &kCircleCodec;
+    }
+    if (type == "ARC") {
+        return &kArcCodec;
     }
     return nullptr;
 }
@@ -29,6 +45,15 @@ const EntityCodec* findCodec(const core::Entity& entity) {
     }
     if (std::holds_alternative<core::Text>(entity)) {
         return &kTextCodec;
+    }
+    if (std::holds_alternative<core::Line>(entity)) {
+        return &kLineCodec;
+    }
+    if (std::holds_alternative<core::Circle>(entity)) {
+        return &kCircleCodec;
+    }
+    if (std::holds_alternative<core::Arc>(entity)) {
+        return &kArcCodec;
     }
     return nullptr;
 }
@@ -121,7 +146,6 @@ std::optional<core::EntityRecord> decodeEntity(const EntityCodec* codec,
     }
     // Reactors can also carry 330; only the outer owner places the entity.
     std::size_t depth = 0;
-    std::array<double, 3> extrusion{0, 0, 1};
     for (const auto& group : groups) {
         const auto value = trimDxf(group.value);
         if (group.code == 1001) {
@@ -144,20 +168,29 @@ std::optional<core::EntityRecord> decodeEntity(const EntityCodec* codec,
         if (group.code == 67 && parseNumber(value) != 0.0) {
             return std::nullopt;
         }
-        if (group.code == 210 || group.code == 220 || group.code == 230) {
-            const auto number = parseNumber(value);
-            if (!number) {
-                return std::nullopt;
-            }
-            extrusion.at(static_cast<std::size_t>((group.code - 210) / 10)) = *number;
-        }
     }
-    constexpr double kExtrusionTolerance = 1e-12;
-    if (std::abs(extrusion[0]) > kExtrusionTolerance ||
-        std::abs(extrusion[1]) > kExtrusionTolerance || std::abs(extrusion[2]) != 1.0) {
+    if (entityExtrusion(groups) == Extrusion::Other) {
         return std::nullopt;
     }
-    return codec->read(groups, context);
+    auto record = codec->read(groups, context);
+    if (!record) {
+        return record;
+    }
+    // Placement groups where the codec would not write them keep their
+    // anchors; at the usual positions they need none (docs/adr/0018, point 5).
+    auto anchors = readPlacementAnchors(groups);
+    if (!anchors.empty() && anchors.size() == record->extras.placement.size()) {
+        EntityWriteContext write{context.version, context.codePage, context.modelSpace};
+        core::RawGroups usual;
+        codec->write(*record, write, usual);
+        record->extras.placementAnchors = std::move(anchors);
+        core::RawGroups restored;
+        codec->write(*record, write, restored);
+        if (restored == usual) {
+            record->extras.placementAnchors.clear();
+        }
+    }
+    return record;
 }
 
 }  // namespace tg::io
