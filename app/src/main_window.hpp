@@ -8,12 +8,18 @@
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
 
+#include <QList>
 #include <QMainWindow>
 #include <QString>
 
 #include <cstdint>
+#include <functional>
+#include <memory>
 
 class QAction;
+class QCloseEvent;
+class QMenu;
+class QSettings;
 class QLabel;
 class QToolButton;
 
@@ -21,6 +27,7 @@ namespace tg::app {
 
 class CadView;
 class CommandLine;
+class RecentFiles;
 
 class MainWindow final : public QMainWindow {
     Q_OBJECT
@@ -37,6 +44,15 @@ public:
 
     explicit MainWindow(InitialDrawing drawing = InitialDrawing::Sample, QWidget* parent = nullptr);
 
+    ~MainWindow() override;
+
+    /// Script sessions never show dialogs or access application settings.
+    void setScriptMode();
+
+    /// Replaces the platform file picker; an empty answer means Cancel.
+    using FileDialog = std::function<QString(cmd::FilePrompt, const QString&)>;
+    void setFileDialog(FileDialog dialog);
+
     [[nodiscard]] CadView* view() const { return m_view; }
 
     [[nodiscard]] CommandLine* commandLine() const { return m_commandLine; }
@@ -50,11 +66,17 @@ public:
     [[nodiscard]] const cmd::CommandRunner& runner() const { return m_runner; }
 
     /// File access for the commands, not owned; it must outlive the window.
-    void setFileAccess(io::FileAccess* files) { m_runner.setFileAccess(files); }
+    void setFileAccess(io::FileAccess* files) {
+        m_externalFiles = true;
+        m_runner.setFileAccess(files);
+    }
 
     [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
 
 private:
     // Connected with the function-pointer syntax of QObject::connect, so no
@@ -77,6 +99,15 @@ private:
     /// and the Edit actions.
     void refresh();
     void updateEditActions();
+    void updateDrawingState();
+    void submitFileText(const QString& text);
+    void handleFilePrompts();
+    void ensureRecentFiles();
+    void addRecentFile(const QString& path);
+    void populateRecentMenu();
+    void openRecentFile(const QString& path);
+    [[nodiscard]] QString dialogPath();
+    [[nodiscard]] QString chooseFile(cmd::FilePrompt prompt, const QString& path);
 
     // Declared in dependency order: each member is built from the ones above.
     // The sample drawing goes straight into the document, without a
@@ -85,6 +116,17 @@ private:
     edit::Editor m_editor;
     cmd::CommandRegistry m_registry;
     cmd::CommandRunner m_runner;
+    std::unique_ptr<io::FileAccess> m_diskFiles;
+    std::unique_ptr<QSettings> m_settings;
+    std::unique_ptr<RecentFiles> m_recentFiles;
+    FileDialog m_fileDialog;
+    QString m_pendingRecent;
+    QString m_pendingOpen;
+    QList<QAction*> m_fileActions;
+    QMenu* m_recentMenu{nullptr};
+    bool m_scriptMode{false};
+    bool m_externalFiles{false};
+    bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};
     CommandLine* m_commandLine{nullptr};
     QAction* m_undoAction{nullptr};
