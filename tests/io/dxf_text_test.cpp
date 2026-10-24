@@ -89,7 +89,7 @@ TEST(DxfText, DefaultsAndUnsupportedProperties) {
                                            {72, "-1"},
                                            {73, "4"},
                                            {73, "-1"},
-                                           {230, "-1"}}) {
+                                           {230, "0"}}) {
         auto groups = valid;
         groups.push_back(property);
         EXPECT_FALSE(decodeEntity(&kTextCodec, groups, context));

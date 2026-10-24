@@ -8,6 +8,9 @@ add_library(tg_io
     src/dxf_entity_common.cpp
     src/dxf_lwpolyline.cpp
     src/dxf_text.cpp
+    src/dxf_line.cpp
+    src/dxf_circle_arc.cpp
+    src/dxf_extrusion.cpp
     src/dxf_entities.cpp
     src/dxf_read.cpp
     src/dxf_write.cpp

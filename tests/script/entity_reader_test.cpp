@@ -3,7 +3,12 @@
 
 #include "tg/script/entity_reader.hpp"
 
+#include "tg/core/arc.hpp"
+#include "tg/core/circle.hpp"
+#include "tg/core/document.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/text.hpp"
 #include "tg/script/report.hpp"
 #include "tg/script/text_format.hpp"
 
@@ -151,6 +156,65 @@ TEST(ReadEntity, Errors) {
         EXPECT_FALSE(error.message.empty()) << text;
         EXPECT_FALSE(error.notImplemented) << text;
     }
+}
+
+std::string writtenRecord(const core::Entity& entity, core::RawGroups placement,
+                          bool flipped = false) {
+    core::EntityExtras extras;
+    extras.placement = std::move(placement);
+    extras.flippedExtrusion = flipped;
+    std::string text;
+    writeEntity(core::EntityRecord{{1}, entity, std::move(extras), 1}, text);
+    return text;
+}
+
+// Quota, thickness and extrusion of stage 0.5 (docs/verifica/rapporto.md):
+// only those different from their default, quotas first, before ~box.
+TEST(WriteEntity, PlacementPropertiesOfARecordAsRead) {
+    const core::Line line{{0, 0}, {10, 5}};
+    EXPECT_EQ(writtenRecord(line, {{30, " 1.000"}, {31, "2"}}),
+              "LINE start=0,0 end=10,5 start-z=1 end-z=2");
+    EXPECT_EQ(writtenRecord(line, {{30, "0.0"}, {31, "0"}, {39, "0"}, {230, "1.0"}}),
+              "LINE start=0,0 end=10,5");
+    EXPECT_EQ(writtenRecord(core::Circle{{-5, 5}, 2},
+                            {{30, "4"}, {210, "0"}, {220, "0"}, {230, "-1"}}, true),
+              "CIRCLE center=-5,5 radius=2 z=4 extrusion=0,0,-1");
+    const std::string arc =
+        writtenRecord(core::Arc{{0, 0}, 1, 0, 1}, {{39, "-0.75"}, {210, "1e-12"}});
+    EXPECT_TRUE(arc.ends_with(" thickness=-0.75 extrusion=1e-12,0,1")) << arc;
+    core::Polyline polyline;
+    polyline.addVertex({0, 0});
+    EXPECT_EQ(writtenRecord(polyline, {{39, "2"}, {38, "3"}}),
+              "LWPOLYLINE closed=no vertex=0,0 elevation=3 thickness=2");
+    core::Text text;
+    text.value = "A";
+    const std::string line1 = writtenRecord(text, {{39, "0.5"}, {30, "1"}, {31, "1"}});
+    EXPECT_NE(line1.find(" value=\"A\" z=1 alignment-z=1 thickness=0.5 ~box="), std::string::npos)
+        << line1;
+    // Without extras the record is written as the entity alone.
+    std::string alone;
+    writeEntity(core::EntityRecord{{1}, line}, alone);
+    EXPECT_EQ(alone, written(line));
+}
+
+TEST(ReadEntity, PlacementPropertiesAreCheckedAndAccepted) {
+    EXPECT_EQ(read("LINE start=0,0 end=10,5 start-z=1 end-z=2 thickness=3 extrusion=0,0,-1"),
+              (core::Entity{core::Line{{0, 0}, {10, 5}}}));
+    EXPECT_EQ(read("CIRCLE center=-5,5 radius=2 z=4 extrusion=0,0,-1"),
+              (core::Entity{core::Circle{{-5, 5}, 2}}));
+    EXPECT_EQ(read("LWPOLYLINE closed=no vertex=0,0 elevation=3"),
+              read("LWPOLYLINE closed=no vertex=0,0"));
+    EXPECT_EQ(read("TEXT value=\"A\" position=0,0 z=1 alignment-z=1"),
+              read("TEXT value=\"A\" position=0,0"));
+    EXPECT_EQ(failure("LINE start=0,0 end=1,1 z=1").message, "unknown property 'z' of LINE");
+    EXPECT_EQ(failure("CIRCLE center=0,0 radius=1 elevation=1").message,
+              "unknown property 'elevation' of CIRCLE");
+    EXPECT_EQ(failure("ARC center=0,0 radius=1 start-angle=0 end-angle=9 z=a").message,
+              "z needs a number, found 'a'");
+    EXPECT_EQ(failure("CIRCLE center=0,0 radius=1 extrusion=0,1").message,
+              "extrusion needs a vector x,y,z, found '0,1'");
+    EXPECT_EQ(failure("CIRCLE center=0,0 radius=1 thickness=1 thickness=2").message,
+              "thickness is given more than once");
 }
 
 TEST(TextFormat, QuoteEscapesQuotesBackslashesAndControlCharacters) {
