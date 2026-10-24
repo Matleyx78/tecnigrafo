@@ -83,7 +83,7 @@ protected:
         return m_directory.filePath(QString::fromUtf8(name));
     }
 
-    [[nodiscard]] QStringList recent() const {
+    [[nodiscard]] static QStringList recent() {
         QSettings settings;
         return RecentFiles(settings).files();
     }
@@ -105,6 +105,17 @@ protected:
         return event.isAccepted();
     }
 
+    [[nodiscard]] MainWindow* window() const { return m_window.get(); }
+
+    [[nodiscard]] QStringList& answers() { return m_answers; }
+
+    [[nodiscard]] const QList<cmd::FilePrompt>& dialogKinds() const { return m_dialogKinds; }
+
+    [[nodiscard]] const QStringList& dialogPaths() const { return m_dialogPaths; }
+
+    [[nodiscard]] const QTemporaryDir& directory() const { return m_directory; }
+
+private:
     const QString m_oldOrganization{QCoreApplication::organizationName()};
     const QString m_oldApplication{QCoreApplication::applicationName()};
     const QSettings::Format m_oldFormat{QSettings::defaultFormat()};
@@ -127,25 +138,25 @@ TEST_F(FileMenuTest, MenuOrderAndActionsUseTheRunner) {
         EXPECT_EQ(fileMenu->actions()[i], action(commands[i].first));
     }
     EXPECT_EQ(fileMenu->actions()[4]->menu(), recentMenu());
-    m_window->setScriptMode();
+    window()->setScriptMode();
     io::DiskFiles files;
-    m_window->setFileAccess(&files);
+    window()->setFileAccess(&files);
     for (const auto& [name, command] : commands) {
         ASSERT_NE(action(name), nullptr);
         action(name)->trigger();
         EXPECT_TRUE(
             history().contains(QStringLiteral("Command: %1").arg(QString::fromLatin1(command))))
             << command << " " << action(name)->shortcut().toString().toStdString() << "\n"
-            << history().toStdString() << " active=" << m_window->runner().isActive();
-        auto* input = m_window->findChild<QLineEdit*>(QStringLiteral("input"));
+            << history().toStdString() << " active=" << window()->runner().isActive();
+        auto* input = window()->findChild<QLineEdit*>(QStringLiteral("input"));
         events::press(input, Qt::Key_Escape);
     }
 }
 
 TEST_F(FileMenuTest, StandardShortcutsSubmitAllFourCommands) {
-    m_window->setScriptMode();
+    window()->setScriptMode();
     io::DiskFiles files;
-    m_window->setFileAccess(&files);
+    window()->setFileAccess(&files);
 
     struct Shortcut {
         const char* action;
@@ -166,7 +177,7 @@ TEST_F(FileMenuTest, StandardShortcutsSubmitAllFourCommands) {
         ASSERT_EQ(action(name)->shortcut(), expected);
         ASSERT_TRUE(action(name)->isEnabled());
         const auto combination = action(name)->shortcut()[0];
-        auto* input = m_window->findChild<QLineEdit*>(QStringLiteral("input"));
+        auto* input = window()->findChild<QLineEdit*>(QStringLiteral("input"));
         input->setFocus();
         events::press(input, combination.key(), combination.keyboardModifiers());
         // Match ScriptSession and a real keyboard, including key release.
@@ -175,71 +186,71 @@ TEST_F(FileMenuTest, StandardShortcutsSubmitAllFourCommands) {
         EXPECT_TRUE(
             history().contains(QStringLiteral("Command: %1").arg(QString::fromLatin1(command))))
             << command << " " << action(name)->shortcut().toString().toStdString() << "\n"
-            << history().toStdString() << " active=" << m_window->runner().isActive();
+            << history().toStdString() << " active=" << window()->runner().isActive();
         events::press(input, Qt::Key_Escape);
         QCoreApplication::processEvents();
     }
-    EXPECT_TRUE(m_dialogKinds.isEmpty());
+    EXPECT_TRUE(dialogKinds().isEmpty());
 }
 
 TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
-    EXPECT_EQ(m_window->windowTitle(), QStringLiteral("Drawing1.cadx[*] — Tecnigrafo"));
-    EXPECT_FALSE(m_window->isWindowModified());
+    EXPECT_EQ(window()->windowTitle(), QStringLiteral("Drawing1.cadx[*] — Tecnigrafo"));
+    EXPECT_FALSE(window()->isWindowModified());
     line();
-    EXPECT_TRUE(m_window->isWindowModified());
+    EXPECT_TRUE(window()->isWindowModified());
     const QString original = path("drawing with spaces.cadx");
-    m_answers.append(original);
+    answers().append(original);
     action("saveAction")->trigger();
     EXPECT_TRUE(QFileInfo::exists(original));
-    EXPECT_FALSE(m_window->isWindowModified());
-    EXPECT_EQ(m_window->windowTitle(), QStringLiteral("drawing with spaces.cadx[*] — Tecnigrafo"));
+    EXPECT_FALSE(window()->isWindowModified());
+    EXPECT_EQ(window()->windowTitle(), QStringLiteral("drawing with spaces.cadx[*] — Tecnigrafo"));
     EXPECT_EQ(recent(), QStringList{original});
     const QString copy = path("copy.dxf");
-    m_answers.append(copy);
+    answers().append(copy);
     enter(QStringLiteral("SAVE"));
     EXPECT_TRUE(QFileInfo::exists(copy));
-    EXPECT_EQ(QString::fromStdString(m_window->editor().fileName()), original);
+    EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), original);
     EXPECT_EQ(recent().first(), copy);
     action("newAction")->trigger();
-    EXPECT_TRUE(m_window->document().isEmpty());
-    m_answers.append(copy);
+    EXPECT_TRUE(window()->document().isEmpty());
+    answers().append(copy);
     action("openAction")->trigger();
-    EXPECT_EQ(m_window->document().entityCount(), 1U);
+    EXPECT_EQ(window()->document().entityCount(), 1U);
     EXPECT_EQ(recent().first(), copy);
-    EXPECT_EQ(m_dialogKinds, (QList<cmd::FilePrompt>{cmd::FilePrompt::Save, cmd::FilePrompt::Save,
+    EXPECT_EQ(dialogKinds(), (QList<cmd::FilePrompt>{cmd::FilePrompt::Save, cmd::FilePrompt::Save,
                                                      cmd::FilePrompt::Open}));
-    EXPECT_EQ(m_dialogPaths[1], original);
-    EXPECT_EQ(QFileInfo(m_dialogPaths[2]).absolutePath(), m_directory.path());
+    EXPECT_EQ(dialogPaths()[1], original);
+    EXPECT_EQ(QFileInfo(dialogPaths()[2]).absolutePath(), directory().path());
     const QString renamed = path("renamed.cadx");
-    m_answers.append(renamed);
+    answers().append(renamed);
     action("saveAsAction")->trigger();
-    EXPECT_EQ(QString::fromStdString(m_window->editor().fileName()), renamed);
+    EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), renamed);
     EXPECT_EQ(recent().first(), renamed);
     line();
     action("saveAction")->trigger();
-    EXPECT_FALSE(m_window->editor().isModified());
-    EXPECT_EQ(m_dialogKinds.size(), 4);
+    EXPECT_FALSE(window()->editor().isModified());
+    EXPECT_EQ(dialogKinds().size(), 4);
     enter(QStringLiteral("U"));
-    EXPECT_TRUE(m_window->isWindowModified());
+    EXPECT_TRUE(window()->isWindowModified());
     enter(QStringLiteral("REDO"));
-    EXPECT_FALSE(m_window->isWindowModified());
+    EXPECT_FALSE(window()->isWindowModified());
 }
 
 TEST_F(FileMenuTest, CancelAndFailuresPreserveDrawingAndRecentFiles) {
     line();
     action("saveAsAction")->trigger();
-    EXPECT_FALSE(m_window->runner().isActive());
-    EXPECT_TRUE(m_window->editor().isModified());
+    EXPECT_FALSE(window()->runner().isActive());
+    EXPECT_TRUE(window()->editor().isModified());
     EXPECT_TRUE(recent().isEmpty());
-    m_answers.append(path("missing-directory/drawing.cadx"));
+    answers().append(path("missing-directory/drawing.cadx"));
     action("saveAction")->trigger();
-    EXPECT_TRUE(m_window->editor().isModified());
+    EXPECT_TRUE(window()->editor().isModified());
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot save")));
     enter(QStringLiteral("OPEN"));
-    m_answers.append(path("missing.cadx"));
+    answers().append(path("missing.cadx"));
     enter(QStringLiteral("N"));
-    EXPECT_EQ(m_window->document().entityCount(), 1U);
+    EXPECT_EQ(window()->document().entityCount(), 1U);
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot open")));
 }
@@ -250,10 +261,10 @@ TEST_F(FileMenuTest, InvalidDrawingDoesNotEnterRecentList) {
     ASSERT_TRUE(file.open(QIODevice::WriteOnly));
     ASSERT_EQ(file.write("invalid drawing"), 15);
     file.close();
-    m_answers.append(invalid);
+    answers().append(invalid);
     action("openAction")->trigger();
-    EXPECT_TRUE(m_window->document().isEmpty());
-    EXPECT_FALSE(m_window->editor().hasFile());
+    EXPECT_TRUE(window()->document().isEmpty());
+    EXPECT_FALSE(window()->editor().hasFile());
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot open")));
 }
@@ -261,17 +272,17 @@ TEST_F(FileMenuTest, InvalidDrawingDoesNotEnterRecentList) {
 TEST_F(FileMenuTest, SavingModifiedCopyPreservesDirtyFlagAndRecentOrderOnUndo) {
     const QString original = path("original.cadx");
     line();
-    m_answers.append(original);
+    answers().append(original);
     action("saveAction")->trigger();
     line();
     const QString copy = path("copy.cadx");
-    m_answers.append(copy);
+    answers().append(copy);
     enter(QStringLiteral("SAVE"));
-    EXPECT_EQ(QString::fromStdString(m_window->editor().fileName()), original);
-    EXPECT_TRUE(m_window->isWindowModified());
+    EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), original);
+    EXPECT_TRUE(window()->isWindowModified());
     EXPECT_EQ(recent(), (QStringList{copy, original}));
     enter(QStringLiteral("U"));
-    EXPECT_FALSE(m_window->isWindowModified());
+    EXPECT_FALSE(window()->isWindowModified());
     EXPECT_EQ(recent(), (QStringList{copy, original}));
     enter(QStringLiteral("INSUNITS"));
     enter(QStringLiteral("4"));
@@ -284,7 +295,7 @@ TEST_F(FileMenuTest, FileActionsAreDisabledDuringCommands) {
         EXPECT_FALSE(action(name)->isEnabled());
     }
     EXPECT_FALSE(recentMenu()->isEnabled());
-    auto* input = m_window->findChild<QLineEdit*>(QStringLiteral("input"));
+    auto* input = window()->findChild<QLineEdit*>(QStringLiteral("input"));
     events::press(input, Qt::Key_Escape);
     EXPECT_TRUE(action("openAction")->isEnabled());
 }
@@ -292,28 +303,28 @@ TEST_F(FileMenuTest, FileActionsAreDisabledDuringCommands) {
 TEST_F(FileMenuTest, PickerConfirmationReplacesExistingFileWithoutSecondQuestion) {
     const QString drawing = path("existing.cadx");
     line();
-    m_answers.append(drawing);
+    answers().append(drawing);
     action("saveAction")->trigger();
     line();
-    m_answers.append(drawing);
+    answers().append(drawing);
     action("saveAsAction")->trigger();
-    EXPECT_FALSE(m_window->runner().isActive());
-    EXPECT_FALSE(m_window->editor().isModified());
+    EXPECT_FALSE(window()->runner().isActive());
+    EXPECT_FALSE(window()->editor().isModified());
     EXPECT_TRUE(history().contains(QStringLiteral("[Yes/No] <No>: Yes")));
 }
 
 TEST_F(FileMenuTest, RecentOpenSurvivesUnsavedChangesAndRemovesMissingEntries) {
     const QString drawing = path("recent.cadx");
     line();
-    m_answers.append(drawing);
+    answers().append(drawing);
     action("saveAction")->trigger();
     line();
     ASSERT_EQ(recentMenu()->actions().size(), 1);
     recentMenu()->actions().first()->trigger();
-    EXPECT_TRUE(m_window->runner().isActive());
+    EXPECT_TRUE(window()->runner().isActive());
     enter(QStringLiteral("N"));
-    EXPECT_EQ(m_window->document().entityCount(), 1U);
-    EXPECT_EQ(m_dialogKinds.size(), 1);
+    EXPECT_EQ(window()->document().entityCount(), 1U);
+    EXPECT_EQ(dialogKinds().size(), 1);
     ASSERT_TRUE(QFile::remove(drawing));
     recentMenu()->actions().first()->trigger();
     EXPECT_TRUE(recent().isEmpty());
@@ -324,13 +335,13 @@ TEST_F(FileMenuTest, RecentOpenSurvivesUnsavedChangesAndRemovesMissingEntries) {
 TEST_F(FileMenuTest, CloseCancelDiscardSaveAndCancelledSave) {
     line();
     EXPECT_FALSE(closeWith(QMessageBox::Cancel));
-    EXPECT_TRUE(m_window->editor().isModified());
+    EXPECT_TRUE(window()->editor().isModified());
     EXPECT_FALSE(closeWith(QMessageBox::Save));
-    EXPECT_TRUE(m_window->editor().isModified());
-    m_answers.append(path("missing-directory/closed.cadx"));
+    EXPECT_TRUE(window()->editor().isModified());
+    answers().append(path("missing-directory/closed.cadx"));
     EXPECT_FALSE(closeWith(QMessageBox::Save));
-    EXPECT_TRUE(m_window->editor().isModified());
-    m_answers.append(path("closed.cadx"));
+    EXPECT_TRUE(window()->editor().isModified());
+    answers().append(path("closed.cadx"));
     EXPECT_TRUE(closeWith(QMessageBox::Save));
     EXPECT_TRUE(QFileInfo::exists(path("closed.cadx")));
     line();
@@ -344,18 +355,18 @@ TEST_F(FileMenuTest, ScriptSessionDoesNotReadOrWriteSettingsOrShowDialogs) {
     settings.sync();
     const QStringList keys = settings.allKeys();
     io::DiskFiles files;
-    m_window->setFileAccess(&files);
-    const ScriptSession session(*m_window, m_directory.path());
+    window()->setFileAccess(&files);
+    const ScriptSession session(*window(), directory().path());
     line();
     action("saveAction")->trigger();
-    EXPECT_EQ(m_window->runner().prompt().file, cmd::FilePrompt::Save);
+    EXPECT_EQ(window()->runner().prompt().file, cmd::FilePrompt::Save);
     enter(path("script.cadx"));
     EXPECT_TRUE(QFileInfo::exists(path("script.cadx")));
     line();
     QCloseEvent event;
-    QCoreApplication::sendEvent(m_window.get(), &event);
+    QCoreApplication::sendEvent(window(), &event);
     EXPECT_TRUE(event.isAccepted());
-    EXPECT_TRUE(m_dialogKinds.isEmpty());
+    EXPECT_TRUE(dialogKinds().isEmpty());
     settings.sync();
     EXPECT_EQ(settings.allKeys(), keys);
     EXPECT_EQ(settings.value(QStringLiteral("recentFiles")).toStringList(),
