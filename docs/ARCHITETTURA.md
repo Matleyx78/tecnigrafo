@@ -8,6 +8,7 @@ fondo.
 ```
 core  ←  render  ←──────────  app
 core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
+core  ←  io    ←  cmd                  (dalla tappa 0.5)
                   cmd  ←────  script   (dalla tappa 0.4)
 ```
 
@@ -16,7 +17,8 @@ core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
 | `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`, `Line`, `Circle`, `Arc`, `Text`), misure del font incluso, `Document`, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap) | solo la libreria standard |
 | `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto (`drawPolyline`, `drawText`), disegno della scena | `core` |
 | `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti | `core` |
-| `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, snap e orto | `core`, `edit` |
+| `io` | `tg::io` | lettura e scrittura DXF e formato nativo `.cadx`, astrazione per l'accesso ai file (`FileAccess`) | `core`, zlib (in `third_party/`, collegamento privato) |
+| `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, snap e orto | `core`, `edit`, `io` |
 | `script` | `tg::script` | modalità di controllo al livello 1: script `.tgs`, rapporto, domande al modello `.tgq`, confronto con i risultati attesi; l'eseguibile di sviluppo `tecnigrafo-script` | `core`, `edit`, `cmd` |
 | `tools` | — | `fontmetrics`, generatore delle misure del font TrueType durante la build | solo la libreria standard |
 | `app` | `tg::app` | finestre Qt, input da mouse e tastiera, `QtPainter` | tutti, più Qt |
@@ -34,8 +36,11 @@ Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
 <modulo>/CMakeLists.txt                 target e dipendenze del modulo
 <modulo>/include/tg/<modulo>/*.hpp      interfaccia pubblica
 <modulo>/src/*.cpp                      implementazione
+third_party/                            librerie esterne (solo zlib per gli archivi .cadx, ADR 0019)
 tests/<modulo>/*_test.cpp               test del modulo
+tests/fuzz/                             bersagli di fuzzing per lettori DXF, CADX e archivi ZIP (ADR 0020)
 tests/verifica/casi/<area>/<nome>/      casi di verifica (ADR 0011), etichetta ctest "verifica"
+tests/verifica/oracolo/                 oracolo ezdxf per ricavare i valori attesi dei DXF (ADR 0020)
 docs/verifica/                          linguaggio degli script, rapporto, domande, casi
 docs/adr/                               decisioni architetturali
 docs/tappe/                             roadmap: schede e piani delle tappe
@@ -104,3 +109,9 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0014](adr/0014-richieste-di-valori-e-testo.md) | Richieste di distanza, angolo e testo | Accettato |
 | [0015](adr/0015-esc-conserva-il-lavoro.md) | Esc conserva il lavoro già completato | Accettato |
 | [0016](adr/0016-sanitizer-in-ci.md) | AddressSanitizer e UBSan in CI | Accettato |
+| [0017](adr/0017-modulo-io-e-dxf.md) | Modulo `io` e lettura e scrittura del DXF | Accettato |
+| [0018](adr/0018-conservazione-dati-non-gestiti.md) | Conservazione dei dati non gestiti | Accettato |
+| [0019](adr/0019-archivi-zip.md) | Archivi ZIP per il formato `.cadx` | Accettato |
+| [0020](adr/0020-fuzzing-e-oracolo-ezdxf.md) | Fuzzing dei lettori e oracolo ezdxf | Accettato |
+| [0021](adr/0021-comandi-dei-file.md) | Comandi dei file | Accettato |
+| [0022](adr/0022-allineamenti-obliquo-specchiatura-testo.md) | Allineamenti, obliquo e specchiatura del testo | Accettato |
