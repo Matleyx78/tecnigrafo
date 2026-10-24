@@ -192,6 +192,14 @@ scripts/controlla.sh --solo test   # un solo passo (formato, compila, test, veri
 scripts/controlla.sh --app-off     # senza Qt
 ```
 
+Se nel tuo ambiente mancano gli strumenti di build (Qt, compilatori, CMake o
+altri pacchetti di sistema), **non installarli**. Vale per qualunque agente e
+ambiente: un'installazione dura a lungo, può bloccarsi e far cadere la sessione,
+e il lavoro non ancora pubblicato va perso. Esegui solo i passi possibili con
+quello che c'è (per esempio `clang-format`, o `--app-off` se manca solo Qt),
+pubblica il ramo e apri la pull request: la verifica completa la fa la CI. Nella
+pull request scrivi quali passi non hai eseguito.
+
 Errori di memoria e comportamenti indefiniti li cerca il job `Linux (ASan,
 UBSan)` della CI ([ADR 0016](docs/adr/0016-sanitizer-in-ci.md)); in locale:
 `cmake --preset asan && cmake --build --preset asan && ctest --preset asan`. Un
