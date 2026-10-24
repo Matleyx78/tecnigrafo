@@ -10,6 +10,9 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <map>
 #include <string>
 #include <vector>
@@ -241,6 +244,232 @@ TEST_F(FileCommandsTest, FileNamePromptHasSaveDialogHint) {
     command.start(context);
     EXPECT_EQ(command.prompt().kind, PromptKind::Text);
     EXPECT_EQ(command.prompt().file, FilePrompt::Save);
+}
+
+TEST_F(FileCommandsTest, NewResetsDocumentAndHistoryWithoutAskingWhenClean) {
+    inputs({"NEW"});
+    EXPECT_FALSE(runner.isActive());
+    EXPECT_TRUE(messages.empty());
+    changeUnits();
+    inputs({"QSAVE", "old.cadx", "NEW"});
+    EXPECT_FALSE(editor.hasFile());
+    EXPECT_EQ(editor.fileName(), "Drawing1.cadx");
+    EXPECT_EQ(document.units(), 4);
+    EXPECT_FALSE(editor.isModified());
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.canRedo());
+}
+
+TEST_F(FileCommandsTest, CancelAndEscapePreserveUnsavedDrawingForBothCommands) {
+    for (const char* command : {"NEW", "OPEN"}) {
+        changeUnits();
+        for (const char* answer : {"C", "Cancel"}) {
+            inputs({command, answer});
+            EXPECT_FALSE(runner.isActive());
+            EXPECT_EQ(document.units(), 6);
+            EXPECT_TRUE(editor.isModified());
+            EXPECT_EQ(messages.back(), "*Cancel*");
+        }
+        runner.submitText(command);
+        runner.submit(CancelInput{});
+        EXPECT_TRUE(editor.isModified());
+        EXPECT_EQ(document.units(), 6);
+    }
+}
+
+TEST_F(FileCommandsTest, SavingBeforeReplacementUsesQsaveWithAndWithoutCurrentFile) {
+    for (const char* command : {"NEW", "OPEN"}) {
+        for (const char* answer : {"Y", "Yes", ""}) {
+            editor.replaceDocument(core::Document{}, "");
+            files.contents.clear();
+            changeUnits();
+            inputs({command, answer});
+            EXPECT_EQ(runner.promptText(), "Save drawing as <Drawing1.cadx>:");
+            runner.submitText("saved.cadx");
+            ASSERT_TRUE(files.exists("saved.cadx"));
+            const auto saved = io::readCadx(files.contents.at("saved.cadx"));
+            ASSERT_TRUE(saved.ok());
+            EXPECT_EQ(saved.value().document.units(), 6);
+            if (runner.isActive()) {
+                runner.submit(CancelInput{});
+            }
+            editor.replaceDocument(core::Document{}, "saved.cadx");
+            changeUnits();
+            const int writes = files.writes;
+            inputs({command, answer});
+            EXPECT_EQ(files.writes, writes + 1);
+            EXPECT_FALSE(editor.isModified());
+            if (runner.isActive()) {
+                EXPECT_EQ(runner.promptText(), "Enter name of drawing to open:");
+                runner.submit(CancelInput{});
+            }
+        }
+    }
+}
+
+TEST_F(FileCommandsTest, FailedOrCancelledSaveStopsReplacement) {
+    for (const char* command : {"NEW", "OPEN"}) {
+        editor.replaceDocument(core::Document{}, "");
+        changeUnits();
+        inputs({command, "Y"});
+        runner.submit(CancelInput{});
+        EXPECT_EQ(document.units(), 6);
+        EXPECT_TRUE(editor.isModified());
+        files.failWrites = true;
+        inputs({command, "Y", "failed.cadx"});
+        EXPECT_FALSE(runner.isActive());
+        EXPECT_EQ(document.units(), 6);
+        EXPECT_TRUE(editor.isModified());
+        EXPECT_TRUE(editor.canUndo());
+        EXPECT_EQ(messages.back(), "Cannot save failed.cadx: Permission denied.");
+        editor.markSaved("current.cadx");
+        inputs({"INSUNITS", "0", command, "Y"});
+        EXPECT_FALSE(runner.isActive());
+        EXPECT_TRUE(editor.isModified());
+        EXPECT_EQ(document.units(), 0);
+        files.failWrites = false;
+    }
+}
+
+TEST_F(FileCommandsTest, OpenReadsBothFormatsAndQsaveWritesOpenedFile) {
+    core::Document other;
+    other.setUnits(1);
+    auto cadx = io::writeCadx(other);
+    auto old = io::readDxf(
+        "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$DWGCODEPAGE\n3\nANSI_1252\n9\n$"
+        "INSUNITS\n70\n1\n"
+        "0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nENDSEC\n0\nEOF\n");
+    ASSERT_TRUE(old.ok());
+    auto dxf = io::writeDxf(old.value().document, io::DxfVersion::R2000);
+    ASSERT_TRUE(cadx.ok());
+    ASSERT_TRUE(dxf.ok());
+    files.contents["plan.CADX"] = cadx.value();
+    files.contents["plan.DXF"] = dxf.value();
+    files.contents["@sources/public-dxf"] = dxf.value();
+    for (const char* name : {"plan.CADX", "plan.DXF", "@sources/public-dxf"}) {
+        inputs({"OPEN", ""});
+        EXPECT_EQ(runner.promptText(), "Enter name of drawing to open:");
+        runner.submitText(name);
+        EXPECT_FALSE(runner.isActive());
+        EXPECT_EQ(editor.fileName(), name);
+        EXPECT_EQ(document.units(), 1);
+        EXPECT_FALSE(editor.isModified());
+        EXPECT_FALSE(editor.canUndo());
+        EXPECT_FALSE(editor.canRedo());
+    }
+    inputs({"OPEN", "plan.DXF", "INSUNITS", "6", "QSAVE"});
+    EXPECT_FALSE(editor.isModified());
+    auto saved = io::readDxf(files.contents.at("plan.DXF"));
+    ASSERT_TRUE(saved.ok());
+    EXPECT_EQ(saved.value().document.raw().version, "AC1015");
+    EXPECT_EQ(saved.value().document.units(), 6);
+    EXPECT_TRUE(messages.empty());
+}
+
+TEST_F(FileCommandsTest, OpenFailuresPreserveDocumentAndHistory) {
+    changeUnits();
+    files.contents["bad.dxf"] = "abc\nSECTION\n";
+    files.contents["bad.cadx"] = "not a ZIP";
+    for (const char* name : {"bad.dwg", "no-extension", "missing.dxf", "bad.dxf", "bad.cadx"}) {
+        const auto history = editor.undoNames();
+        inputs({"OPEN", "N", name});
+        EXPECT_FALSE(runner.isActive());
+        EXPECT_EQ(document.units(), 6);
+        EXPECT_TRUE(editor.isModified());
+        EXPECT_EQ(editor.undoNames(), history);
+        EXPECT_TRUE(messages.back().starts_with(std::string{"Cannot open "} + name + ": "));
+    }
+    EXPECT_EQ(messages[messages.size() - 2],
+              "Cannot open bad.dxf: line 1: expected a group code (an integer from -5 to 1071), "
+              "found \"abc\"");
+}
+
+TEST_F(FileCommandsTest, ReplacementClearsSelectionRectangleAndLastPoint) {
+    for (const char* command : {"NEW", "OPEN"}) {
+        files.contents.clear();
+        inputs({"LINE", "0,0", "10,0", "", "QSAVE", "current.cadx"});
+        runner.click({5, 0}, PickAction::Add);
+        EXPECT_FALSE(runner.selection().isEmpty());
+        runner.submitText(command);
+        if (runner.isActive()) {
+            runner.submitText("current.cadx");
+        }
+        EXPECT_TRUE(runner.selection().isEmpty());
+        EXPECT_FALSE(runner.selectionRectangle().has_value());
+        EXPECT_FALSE(editor.canUndo());
+        EXPECT_FALSE(editor.canRedo());
+        runner.submitText("LINE");
+        runner.submitText("@");
+        EXPECT_EQ(runner.promptText(), "Specify first point:");
+        runner.submit(CancelInput{});
+    }
+}
+
+TEST_F(FileCommandsTest, OpenReportsUnhandledTypesAlphabeticallyAndReadWarnings) {
+    const std::string header = "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1032\n0\nENDSEC\n";
+    const std::string tail = "0\nENDSEC\n0\nEOF\n";
+    files.contents["single.dxf"] = header + "0\nSECTION\n2\nENTITIES\n0\nINSERT\n5\nA\n" + tail;
+    files.contents["many.dxf"] = header +
+                                 "0\nSECTION\n2\nENTITIES\n0\nINSERT\n5\nA\n"
+                                 "0\nHATCH\n5\nB\n0\nHATCH\n5\nC\n" +
+                                 tail;
+    for (const char* name : {"single.dxf", "many.dxf"}) {
+        const auto read = io::readDxf(files.contents.at(name));
+        ASSERT_TRUE(read.ok());
+        messages.clear();
+        inputs({"OPEN", name});
+        ASSERT_EQ(messages.size(), 1U + read.value().report.warnings.size());
+        EXPECT_EQ(messages.front(), std::string{name} == "single.dxf"
+                                        ? "1 entity not supported: INSERT 1"
+                                        : "3 entities not supported: HATCH 2, INSERT 1");
+        for (std::size_t i = 0; i < read.value().report.warnings.size(); ++i) {
+            EXPECT_EQ(messages[i + 1], read.value().report.warnings[i]);
+        }
+    }
+}
+
+TEST_F(FileCommandsTest, FutureCadxVersionPreservesDrawingAndReportsReaderError) {
+    const auto path = std::filesystem::path{__FILE__}.parent_path().parent_path() /
+                      "verifica/casi/apertura/open-errori-e-limiti/versione-3.cadx";
+    std::ifstream input(path, std::ios::binary);
+    ASSERT_TRUE(input.is_open());
+    files.contents["future.cadx"] = std::string{std::istreambuf_iterator<char>{input}, {}};
+    changeUnits();
+    inputs({"OPEN", "N", "future.cadx"});
+    EXPECT_FALSE(runner.isActive());
+    EXPECT_TRUE(editor.isModified());
+    EXPECT_TRUE(editor.canUndo());
+    EXPECT_EQ(document.units(), 6);
+    EXPECT_EQ(messages.back(),
+              "Cannot open future.cadx: written by a newer version of Tecnigrafo "
+              "(format 3; this version reads up to 1)");
+}
+
+TEST_F(FileCommandsTest, OpenEmitsEveryReaderWarningAfterUnsupportedSummary) {
+    files.contents["warning.dxf"] = "0\nSECTION\n2\nENTITIES\n0\nINSERT\n0\nENDSEC\n0\nEOF\n";
+    const auto read = io::readDxf(files.contents.at("warning.dxf"));
+    ASSERT_TRUE(read.ok());
+    ASSERT_FALSE(read.value().report.warnings.empty());
+    inputs({"OPEN", "warning.dxf"});
+    ASSERT_EQ(messages.size(), 1U + read.value().report.warnings.size());
+    EXPECT_EQ(messages.front(), "1 entity not supported: INSERT 1");
+    for (std::size_t i = 0; i < read.value().report.warnings.size(); ++i) {
+        EXPECT_EQ(messages[i + 1], read.value().report.warnings[i]);
+    }
+}
+
+TEST_F(FileCommandsTest, OpenPromptHasDialogHintAndMissingAccessEndsCommand) {
+    CommandContext context{editor, {}, [](const std::string&) {
+                           }};
+    context.files = &files;
+    OpenCommand command;
+    command.start(context);
+    EXPECT_EQ(command.prompt().kind, PromptKind::Text);
+    EXPECT_EQ(command.prompt().file, FilePrompt::Open);
+    runner.setFileAccess(nullptr);
+    runner.submitText("OPEN");
+    EXPECT_FALSE(runner.isActive());
+    EXPECT_EQ(messages.back(), "File access is not available.");
 }
 
 }  // namespace

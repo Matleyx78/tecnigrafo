@@ -142,6 +142,133 @@ Prompt SaveCommand::prompt() const {
     return {};
 }
 
+void NewCommand::start(CommandContext& context) {
+    m_currentName = context.editor.fileName();
+    if (context.editor.isModified()) {
+        m_stage = Stage::Changes;
+    } else {
+        proceed(context);
+    }
+}
+
+Status NewCommand::proceed(CommandContext& context) {
+    if (m_open) {
+        if (context.files == nullptr) {
+            context.message("File access is not available.");
+            m_stage = Stage::Done;
+            return Status::Finished;
+        }
+        m_stage = Stage::Name;
+        return Status::Continue;
+    }
+    context.editor.replaceDocument(core::Document{}, "");
+    context.documentReplaced = true;
+    m_stage = Stage::Done;
+    return Status::Finished;
+}
+
+Status NewCommand::afterSave(CommandContext& context) {
+    // A failed QSAVE leaves the modified drawing in place.
+    if (context.editor.isModified()) {
+        m_stage = Stage::Done;
+        return Status::Finished;
+    }
+    return proceed(context);
+}
+
+Status NewCommand::handle(CommandContext& context, const Input& input) {
+    if (m_stage == Stage::Saving) {
+        return m_save.handle(context, input) == Status::Finished ? afterSave(context)
+                                                                 : Status::Continue;
+    }
+    if (m_stage == Stage::Name) {
+        if (const auto* text = std::get_if<TextInput>(&input);
+            text != nullptr && !text->text.empty()) {
+            return open(context, text->text);
+        }
+        return Status::Continue;
+    }
+    if (m_stage == Stage::Done) {
+        return Status::Finished;
+    }
+    const auto* keyword = std::get_if<KeywordInput>(&input);
+    if (keyword != nullptr && keyword->keyword == "Cancel") {
+        context.message("*Cancel*");
+        m_stage = Stage::Done;
+        return Status::Finished;
+    }
+    if (keyword != nullptr && keyword->keyword == "No") {
+        return proceed(context);
+    }
+    if (std::holds_alternative<ConfirmInput>(input) ||
+        (keyword != nullptr && keyword->keyword == "Yes")) {
+        m_stage = Stage::Saving;
+        m_save.start(context);
+        if (m_save.prompt().text.empty()) {
+            return afterSave(context);
+        }
+    }
+    return Status::Continue;
+}
+
+Status NewCommand::open(CommandContext& context, const std::string& name) {
+    m_stage = Stage::Done;
+    const auto fail = [&](const io::Error& error) {
+        context.message("Cannot open " + name + ": " + error.message);
+        return Status::Finished;
+    };
+    // Public source identifiers deliberately have no extension (ADR 0021, point 4).
+    const bool dxf =
+        name.starts_with("@sources/") || detail::equalsIgnoringCase(extension(name), ".dxf");
+    if (!dxf && !detail::equalsIgnoringCase(extension(name), ".cadx")) {
+        return fail({io::Error::Kind::Unsupported, 0, "only .cadx and .dxf files are supported."});
+    }
+    const auto bytes = context.files->read(name);
+    if (!bytes.ok()) {
+        return fail(bytes.error());
+    }
+    auto result = dxf ? io::readDxf(bytes.value()) : io::readCadx(bytes.value());
+    if (!result.ok()) {
+        return fail(result.error());
+    }
+    context.editor.replaceDocument(std::move(result.value().document), name);
+    context.documentReplaced = true;
+    const auto& report = result.value().report;
+    int total = 0;
+    std::string types;
+    for (const auto& [type, count] : report.unhandled) {
+        total += count;
+        if (!types.empty()) {
+            types += ", ";
+        }
+        types += type + " " + std::to_string(count);
+    }
+    if (total > 0) {
+        context.message(std::to_string(total) +
+                        (total == 1 ? " entity not supported: " : " entities not supported: ") +
+                        types);
+    }
+    for (const auto& warning : report.warnings) {
+        context.message(warning);
+    }
+    return Status::Finished;
+}
+
+Prompt NewCommand::prompt() const {
+    switch (m_stage) {
+        case Stage::Changes:
+            return {"Save changes to " + m_currentName + "? [Yes/No/Cancel] <Yes>:",
+                    {{"Yes", "Y"}, {"No", "N"}, {"Cancel", "C"}}};
+        case Stage::Saving:
+            return m_save.prompt();
+        case Stage::Name:
+            return {"Enter name of drawing to open:", {}, PromptKind::Text, FilePrompt::Open};
+        case Stage::Done:
+            return {};
+    }
+    return {};
+}
+
 void InsunitsCommand::start(CommandContext& context) {
     m_units = context.editor.document().units();
 }

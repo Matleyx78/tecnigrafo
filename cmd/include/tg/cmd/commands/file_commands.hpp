@@ -48,6 +48,39 @@ public:
     SaveasCommand() : SaveCommand(Mode::Saveas) {}
 };
 
+/// NEW and OPEN share the unsaved-changes question and delegate saving to QSAVE.
+class NewCommand : public Command {
+public:
+    NewCommand() = default;
+    void start(CommandContext& context) override;
+    Status handle(CommandContext& context, const Input& input) override;
+
+    void pointerMoved(const core::Vec2& /*point*/) override {}
+
+    [[nodiscard]] Prompt prompt() const override;
+
+    [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
+
+protected:
+    explicit NewCommand(bool open) : m_open(open) {}
+
+private:
+    enum class Stage : std::uint8_t { Changes, Saving, Name, Done };
+    Status proceed(CommandContext& context);
+    Status afterSave(CommandContext& context);
+    Status open(CommandContext& context, const std::string& name);
+
+    bool m_open{false};
+    Stage m_stage{Stage::Done};
+    std::string m_currentName;
+    QsaveCommand m_save;
+};
+
+class OpenCommand final : public NewCommand {
+public:
+    OpenCommand() : NewCommand(true) {}
+};
+
 /// INSUNITS changes the document's units in one undoable transaction.
 class InsunitsCommand final : public Command {
 public:
