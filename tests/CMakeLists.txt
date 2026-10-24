@@ -23,6 +23,7 @@ add_executable(tg_tests
     cmd/coordinate_input_test.cpp
     cmd/drawing_aids_test.cpp
     cmd/erase_command_test.cpp
+    cmd/file_commands_test.cpp
     cmd/line_command_test.cpp
     cmd/pline_command_test.cpp
     cmd/selection_set_test.cpp

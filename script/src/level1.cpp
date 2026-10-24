@@ -27,6 +27,7 @@ class Level1Session {
 public:
     explicit Level1Session(io::FileAccess* files)
         : m_editor(m_document), m_runner(registry(), m_editor), m_files(files) {
+        m_runner.setFileAccess(files);
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
     }

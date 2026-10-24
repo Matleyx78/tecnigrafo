@@ -39,6 +39,10 @@ int main(int argc, char* argv[]) {
         QStringLiteral("Folder for the report and the screenshots of --script (default: the "
                        "current folder)."),
         QStringLiteral("folder"), QStringLiteral("."));
+    const QCommandLineOption sourcesOption(
+        QStringLiteral("sources"), QStringLiteral("Folder of pinned source files for --script."),
+        QStringLiteral("folder"));
+    parser.addOption(sourcesOption);
     parser.addOption(scriptOption);
     parser.addOption(outputOption);
     parser.process(application);
@@ -49,6 +53,10 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         return tg::app::runScriptFile(parser.value(scriptOption), parser.value(outputOption));
+    }
+    if (parser.isSet(sourcesOption)) {
+        std::cerr << "--sources needs --script\n";
+        return 1;
     }
     if (parser.isSet(outputOption)) {
         std::cerr << "--output needs --script\n";

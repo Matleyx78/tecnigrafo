@@ -262,12 +262,17 @@ Outcome failed(std::string message) {
 
 /// Runs `program --script <script> --output <output>`; an empty string if
 /// it ran to the end with exit code 0, otherwise what went wrong.
-std::string runProgram(const QString& program, const QString& scriptPath, const QString& output) {
+std::string runProgram(const QString& program, const QString& scriptPath, const QString& output,
+                       const std::optional<QString>& sources) {
     QProcess process;
     // The program's own errors (a script it cannot perform) reach the log.
     process.setProcessChannelMode(QProcess::ForwardedChannels);
-    process.start(program,
-                  {QStringLiteral("--script"), scriptPath, QStringLiteral("--output"), output});
+    QStringList arguments{QStringLiteral("--script"), scriptPath, QStringLiteral("--output"),
+                          output};
+    if (sources) {
+        arguments << QStringLiteral("--sources") << *sources;
+    }
+    process.start(program, arguments);
     if (!process.waitForStarted()) {
         return "cannot start " + program.toStdString();
     }
@@ -326,7 +331,8 @@ std::vector<std::string> compareCaseImages(const QDir& folder, const QDir& outpu
     return lines;
 }
 
-Outcome checkCase(const QString& folderPath, const QString& program, const QString& outputPath) {
+Outcome checkCase(const QString& folderPath, const QString& program, const QString& outputPath,
+                  const std::optional<QString>& sources) {
     const QDir folder(folderPath);
     const QDir output(outputPath);
     if (!folder.exists()) {
@@ -365,7 +371,7 @@ Outcome checkCase(const QString& folderPath, const QString& program, const QStri
     }
 
     const std::string problem =
-        runProgram(program, folder.filePath(kScriptFile), output.absolutePath());
+        runProgram(program, folder.filePath(kScriptFile), output.absolutePath(), sources);
     if (!problem.empty()) {
         return failed(problem);
     }
@@ -437,6 +443,7 @@ int checkCaseCommand(const QStringList& arguments) {
     std::optional<QString> folder;
     std::optional<QString> program;
     std::optional<QString> output;
+    std::optional<QString> sources;
     bool pending = false;
     for (qsizetype i = 0; i < arguments.size(); ++i) {
         const QString& argument = arguments[i];
@@ -445,6 +452,8 @@ int checkCaseCommand(const QStringList& arguments) {
             program = arguments[++i];
         } else if (argument == QLatin1String("--output") && hasValue && !output) {
             output = arguments[++i];
+        } else if (argument == QLatin1String("--sources") && hasValue && !sources) {
+            sources = arguments[++i];
         } else if (argument == QLatin1String("--pending") && !pending) {
             pending = true;
         } else if (!argument.startsWith(QLatin1String("--")) && !folder) {
@@ -456,7 +465,7 @@ int checkCaseCommand(const QStringList& arguments) {
     if (!folder || !program || !output) {
         return usageError();
     }
-    return conclude(checkCase(*folder, *program, *output), *folder, pending);
+    return conclude(checkCase(*folder, *program, *output, sources), *folder, pending);
 }
 
 }  // namespace
