@@ -92,7 +92,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Check formatting
-        run: git ls-files '*.cpp' '*.hpp' | xargs clang-format-18 --dry-run --Werror
+        run: |
+          set -o pipefail
+          git ls-files '*.cpp' '*.hpp' | xargs clang-format-18 --dry-run --Werror 2>&1 | scripts/ci-annota.sh
 
   linux:
     name: Linux (GCC, clang-tidy)
@@ -116,7 +118,9 @@ jobs:
           set -o pipefail
           cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
       - name: Test
-        run: ctest --preset ci -LE verifica
+        run: |
+          set -o pipefail
+          ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
       - name: Static analysis
         run: |
           cmake --preset tidy
@@ -188,9 +192,12 @@ jobs:
       - name: Build with AddressSanitizer and UBSan
         run: |
           cmake --preset asan
-          cmake --build --preset asan
+          set -o pipefail
+          cmake --build --preset asan 2>&1 | scripts/ci-annota.sh
       - name: Test
-        run: ctest --preset asan -LE verifica
+        run: |
+          set -o pipefail
+          ctest --preset asan -LE verifica 2>&1 | scripts/ci-annota.sh
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
@@ -308,13 +315,24 @@ jobs:
       - name: Build, warnings as errors
         run: |
           cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
-          cmake --build --preset ci
+          cmake --build --preset ci *> build/ci-build.log
+          $status = $LASTEXITCODE
+          & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-build.log
+          exit $status
       - name: Test
-        run: ctest --preset ci -LE verifica
+        run: |
+          ctest --preset ci -LE verifica *> build/ci-test.log
+          $status = $LASTEXITCODE
+          & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-test.log
+          exit $status
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ctest --preset ci -L verifica --no-tests=error
+        run: |
+          ctest --preset ci -L verifica --no-tests=error *> build/ci-verifica.log
+          $status = $LASTEXITCODE
+          & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-verifica.log
+          exit $status
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v4
@@ -347,13 +365,18 @@ jobs:
       - name: Build, warnings as errors
         run: |
           cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
-          cmake --build --preset ci
+          set -o pipefail
+          cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
       - name: Test
-        run: ctest --preset ci -LE verifica
+        run: |
+          set -o pipefail
+          ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ctest --preset ci -L verifica --no-tests=error
+        run: |
+          set -o pipefail
+          ctest --preset ci -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v4
