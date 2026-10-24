@@ -182,7 +182,8 @@ Status NewCommand::handle(CommandContext& context, const Input& input) {
                                                                  : Status::Continue;
     }
     if (m_stage == Stage::Name) {
-        if (const auto* text = std::get_if<TextInput>(&input); text && !text->text.empty()) {
+        if (const auto* text = std::get_if<TextInput>(&input);
+            text != nullptr && !text->text.empty()) {
             return open(context, text->text);
         }
         return Status::Continue;
@@ -191,15 +192,16 @@ Status NewCommand::handle(CommandContext& context, const Input& input) {
         return Status::Finished;
     }
     const auto* keyword = std::get_if<KeywordInput>(&input);
-    if (keyword && keyword->keyword == "Cancel") {
+    if (keyword != nullptr && keyword->keyword == "Cancel") {
         context.message("*Cancel*");
         m_stage = Stage::Done;
         return Status::Finished;
     }
-    if (keyword && keyword->keyword == "No") {
+    if (keyword != nullptr && keyword->keyword == "No") {
         return proceed(context);
     }
-    if (std::holds_alternative<ConfirmInput>(input) || (keyword && keyword->keyword == "Yes")) {
+    if (std::holds_alternative<ConfirmInput>(input) ||
+        (keyword != nullptr && keyword->keyword == "Yes")) {
         m_stage = Stage::Saving;
         m_save.start(context);
         if (m_save.prompt().text.empty()) {
