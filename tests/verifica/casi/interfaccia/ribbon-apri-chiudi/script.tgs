@@ -1,0 +1,9 @@
+; RIBBON e RIBBONCLOSE dalla riga di comando: comandi ripetuti e ordine inverso
+!level 2
+RIBBON
+!report
+RIBBONCLOSE
+!report
+RIBBONCLOSE
+!report
+RIBBON

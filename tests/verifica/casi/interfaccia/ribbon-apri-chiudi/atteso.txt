@@ -1,0 +1,65 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: RIBBON
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: RIBBONCLOSE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: RIBBONCLOSE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: RIBBON
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

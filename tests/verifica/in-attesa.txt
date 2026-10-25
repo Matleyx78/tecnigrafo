@@ -23,3 +23,11 @@ dxf/r11-public #168
 # R16: apertura e disegno nuovo
 
 # R17: menu File e scorciatoie
+
+# 0.6-R16: ribbon e interfaccia classica (#249)
+interfaccia/ribbon-chiudi-apri #249
+interfaccia/ribbon-apri-chiudi #249
+interfaccia/ribbon-scorciatoie #249
+interfaccia/ribbon-disegno-dopo-cambio #249
+interfaccia/ribbon-disegno-continuo #249
+
