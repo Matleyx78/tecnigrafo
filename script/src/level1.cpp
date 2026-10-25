@@ -30,6 +30,12 @@ public:
         m_runner.setFileAccess(files);
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
+        // A prompt missing from its command's description is written in the
+        // history: the report differs from any expected one, so the case
+        // fails and prints the message among its differences
+        // (docs/adr/0026, point 3).
+        m_runner.setDescriptionCheck(
+            [this](const std::string& message) { m_messages.push_back(message); });
     }
 
     Level1Session(const Level1Session&) = delete;

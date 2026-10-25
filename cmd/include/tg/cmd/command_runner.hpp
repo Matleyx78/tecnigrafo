@@ -96,9 +96,20 @@ struct SelectionRectangle {
 /// Points given with submit() are never corrected: they are the exact
 /// points of scripts and tests. While selecting nothing is corrected.
 ///
+/// Descriptions (docs/adr/0026, point 3). Every prompt that the running
+/// command shows, after start() and after each input it handles, must
+/// match one PromptDescription of its command; an empty text is not a
+/// prompt. The runner's own prompts ("Select objects:", "Specify opposite
+/// corner:", "Command:") are not checked. A prompt that matches none calls
+/// the description check.
+///
 /// The registry and the editor must outlive the runner.
 class CommandRunner {
 public:
+    /// Called with a message when a running command shows a prompt that its
+    /// description lacks (docs/adr/0026, point 3).
+    using DescriptionCheck = std::function<void(const std::string& message)>;
+
     CommandRunner(const CommandRegistry& registry, edit::Editor& editor);
 
     // The context hands commands a callback bound to this object.
@@ -186,6 +197,11 @@ public:
     /// function discards them.
     void setMessageSink(std::function<void(std::string)> sink);
 
+    /// The default check writes the message to std::cerr and calls
+    /// std::abort(), so that any test fails. An empty function turns the check
+    /// off, as the application does outside --script.
+    void setDescriptionCheck(DescriptionCheck check);
+
 private:
     void startCommand(std::string_view text);
     void beginCommand();
@@ -196,6 +212,9 @@ private:
     void selectionClick(const core::Vec2& point, PickAction action);
     void applyToSelection(std::span<const core::EntityId> ids, PickAction action);
     void forward(const Input& input);
+    /// Calls the description check if the running command shows a prompt
+    /// that its description lacks.
+    void checkPrompt() const;
 
     /// Point, Distance and Angle prompts all accept points from the mouse.
     [[nodiscard]] bool asksForPoint() const {
@@ -222,6 +241,8 @@ private:
     std::string m_lastCommand;            ///< canonical name, empty before the first one
     std::optional<core::Vec2> m_pointer;  ///< as given, before the drawing aids
     std::function<void(std::string)> m_sink;
+    DescriptionCheck m_descriptionCheck;
+    const CommandDescription* m_description{nullptr};  ///< of the running command
     SelectionSet m_selection;
     std::optional<SelectionRectangle> m_rectangle;
     DrawingAids m_drawingAids;

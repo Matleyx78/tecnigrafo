@@ -19,6 +19,7 @@ include(GoogleTest)
 add_executable(tg_tests
     cmd/arc_command_test.cpp
     cmd/circle_command_test.cpp
+    cmd/command_registry_test.cpp
     cmd/command_runner_test.cpp
     cmd/coordinate_input_test.cpp
     cmd/drawing_aids_test.cpp
@@ -88,6 +89,17 @@ target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
+
+# tecnigrafo-script describe (docs/adr/0026): the twelve built-in commands,
+# one of them by alias, and an unknown name (exit code 2).
+add_test(NAME script_describe_all COMMAND tecnigrafo-script describe)
+set_tests_properties(script_describe_all PROPERTIES PASS_REGULAR_EXPRESSION
+    "command: ARC\n.*command: CIRCLE\n.*command: ERASE\n.*command: INSUNITS\n.*command: LINE\n.*command: NEW\n.*command: OPEN\n.*command: PLINE\n.*command: QSAVE\n.*command: SAVE\n.*command: SAVEAS\n.*command: TEXT\n")
+add_test(NAME script_describe_one COMMAND tecnigrafo-script describe pl)
+set_tests_properties(script_describe_one PROPERTIES PASS_REGULAR_EXPRESSION
+    "^command: PLINE\naliases: PL\nsummary: [^\n]+\.\nprompt start-point: Specify start point: \\(point\\)\n")
+add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe X)
+set_tests_properties(script_describe_unknown PROPERTIES WILL_FAIL TRUE)
 
 # Verification cases of the control mode (docs/adr/0011), label "verifica".
 add_subdirectory(verifica)

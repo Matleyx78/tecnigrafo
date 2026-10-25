@@ -5,12 +5,17 @@
 // docs/verifica/casi.md). A development tool, never installed with the
 // program.
 
+#include "tg/cmd/builtin_commands.hpp"
+#include "tg/cmd/command_description.hpp"
+#include "tg/cmd/command_registry.hpp"
 #include "tg/script/case_check.hpp"
 
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <ostream>
 #include <span>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -21,6 +26,10 @@ constexpr std::string_view kUsage =
     "  tecnigrafo-script run <script.tgs> [--report <file>] [--sources <folder>]\n"
     "  tecnigrafo-script check <case folder> [--pending] [--output <folder>]\n"
     "                          [--sources <folder>]\n"
+    "  tecnigrafo-script describe [<command>]\n"
+    "\n"
+    "describe prints the description of every built-in command, or of one\n"
+    "named by name or alias (docs/adr/0026).\n"
     "\n"
     "--sources is the folder of the public files of tests/verifica/sorgenti.json,\n"
     "read as @sources/<name> by scripts and as source=<name> by questions.\n"
@@ -32,6 +41,93 @@ constexpr std::string_view kUsage =
 int usageError() {
     std::cerr << kUsage;
     return tg::script::kExitInvalid;
+}
+
+std::string_view valueName(tg::cmd::ValueType value) {
+    using tg::cmd::ValueType;
+    switch (value) {
+        case ValueType::Point:
+            return "point";
+        case ValueType::Distance:
+            return "distance";
+        case ValueType::Angle:
+            return "angle";
+        case ValueType::Integer:
+            return "integer";
+        case ValueType::Real:
+            return "real";
+        case ValueType::Text:
+            return "text";
+        case ValueType::Name:
+            return "name";
+        case ValueType::Color:
+            return "color";
+        case ValueType::Keyword:
+            return "keyword";
+        case ValueType::FileOpen:
+            return "file-open";
+        case ValueType::FileSave:
+            return "file-save";
+    }
+    return "unknown";
+}
+
+/// One field per line:
+///   command: PLINE
+///   aliases: PL
+///   summary: Draws a polyline of line and arc segments.
+///   prompt next-point: Specify next point or [Arc/Undo]: (point; Arc=A Undo=U; Enter)
+/// "selects objects first" follows the summary of commands that select first.
+void printDescription(const tg::cmd::CommandDescription& description, std::ostream& out) {
+    out << "command: " << description.name << "\n";
+    out << "aliases:";
+    for (const std::string& alias : description.aliases) {
+        out << " " << alias;
+    }
+    out << "\n";
+    out << "summary: " << description.summary << "\n";
+    if (description.selectsFirst) {
+        out << "selects objects first\n";
+    }
+    for (const tg::cmd::PromptDescription& prompt : description.prompts) {
+        out << "prompt " << prompt.id << ": " << prompt.text << " (" << valueName(prompt.value);
+        if (!prompt.keywords.empty()) {
+            out << ";";
+            for (const tg::cmd::Keyword& keyword : prompt.keywords) {
+                out << " " << keyword.name << "=" << keyword.shortcut;
+            }
+        }
+        if (prompt.acceptsEmpty) {
+            out << "; Enter";
+        }
+        out << ")\n";
+    }
+}
+
+int describe(std::span<const std::string_view> arguments) {
+    if (arguments.size() > 1 || (!arguments.empty() && arguments.front().starts_with("--"))) {
+        return usageError();
+    }
+    tg::cmd::CommandRegistry registry;
+    tg::cmd::registerBuiltinCommands(registry);
+    if (!arguments.empty()) {
+        const tg::cmd::CommandDescription* description = registry.describe(arguments.front());
+        if (description == nullptr) {
+            std::cerr << "Unknown command \"" << arguments.front() << "\".\n";
+            return tg::script::kExitInvalid;
+        }
+        printDescription(*description, std::cout);
+        return tg::script::kExitPassed;
+    }
+    bool first = true;
+    for (const tg::cmd::CommandDescription* description : registry.descriptions()) {
+        if (!first) {
+            std::cout << "\n";  // an empty line between two commands
+        }
+        first = false;
+        printDescription(*description, std::cout);
+    }
+    return tg::script::kExitPassed;
 }
 
 int run(std::span<const std::string_view> arguments) {
@@ -102,6 +198,9 @@ int main(int argc, char* argv[]) {
     }
     if (command == "check") {
         return check(rest);
+    }
+    if (command == "describe") {
+        return describe(rest);
     }
     return usageError();
 }
