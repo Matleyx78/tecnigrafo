@@ -6,7 +6,7 @@
 - **Agente:** codex
 - **Modello e impegno:** forte; impegno alto
 - **Riferimenti:** issue `[0.6-R16]` (#248), agente gemini
-- **Dipende da:** P3, P7, R16
+- **Dipende da:** P3, P4, P7, R16 (P4: tre casi in attesa hanno le entità da 257, ADR 0023 punto 1)
 - **Modulo:** `app`
 - **Da leggere:** [ADR 0009](../../adr/0009-interfaccia-grafica.md) punti 1 e
   2, [ADR 0026](../../adr/0026-descrizione-dei-comandi.md) punto 2;

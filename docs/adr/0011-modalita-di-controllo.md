@@ -1,6 +1,7 @@
 # ADR 0011: Modalità di controllo e verifica automatica
 
 - **Stato:** Accettato (2026-10-18)
+- **Sostituito in parte da:** ADR 0023 (le entità di una sessione nuova partono da 257)
 - **Data:** 2026-10-18
 
 ## Contesto

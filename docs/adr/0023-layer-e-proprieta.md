@@ -1,7 +1,12 @@
 # ADR 0023: Layer e proprietà delle entità
 
 - **Stato:** Accettato (2026-10-25)
+- **Sostituisce in parte:** ADR 0011, punto 5, riga «Identificativi» (da
+  quale numero partono le entità di una sessione nuova)
 - **Data:** 2026-10-25
+- **Corretto:** 2026-10-25, prima del codice che lo attua (GOVERNANCE.md):
+  punto 1, gli handle degli oggetti di partenza di un disegno nuovo; prima li
+  prendevano dal contatore delle entità
 
 ## Contesto
 
@@ -37,6 +42,46 @@ hanno i loro ADR (0024 e 0025).
   confrontano senza distinguerle, come in AutoCAD. Non possono essere vuoti,
   superare 255 caratteri, né contenere `< > / \ " : ; ? * | , = ` `` ` ``, né
   iniziare o finire con uno spazio.
+
+#### Handle di un disegno nuovo
+
+Nel DXF tabelle, record, blocchi, dizionari ed entità condividono **un solo
+spazio di handle**, e `$HANDSEED` è il primo libero. AutoCAD crea gli oggetti
+del suo modello di partenza prima di ogni entità: nel suo disegno vuoto
+(`vuoto-mm.dxf` della raccolta `Matleyx78/dxf-test-file`, R2018) sono 148
+oggetti, il layer `0` ha l'handle 10 esadecimale e `$HANDSEED` vale 268.
+
+- Tecnigrafo **riserva gli handle da 1 a 256** (da 0x1 a 0x100) agli
+  **oggetti di partenza** di un disegno nuovo: record delle tabelle, tabelle,
+  blocchi, dizionari, layout.
+- Ogni oggetto di partenza ha un handle **fisso**, scritto una volta per
+  sempre in una mappa nel codice (`core/include/tg/core/start_handles.hpp`).
+  Gli handle si assegnano scendendo da 256: un oggetto aggiunto in futuro
+  prende il primo numero libero sotto quelli già dati e non ne sposta
+  nessuno. Un controllo in compilazione impedisce che la mappa scenda sotto 1.
+
+  | Handle | Esadecimale | Oggetto |
+  |---|---|---|
+  | 256 | 100 | tipo di linea `ByBlock` |
+  | 255 | FF | tipo di linea `ByLayer` |
+  | 254 | FE | tipo di linea `Continuous` |
+  | 253 | FD | layer `0` |
+  | 252 e sotto | FC e sotto | gli oggetti dello scheletro DXF (tabelle, blocchi `*Model_Space` e `*Paper_Space`, dizionari, layout), assegnati dal pacchetto 0.6-P10 |
+
+- La **prima entità** di un disegno nuovo ha l'handle **257** (0x101); il
+  contatore cresce da lì come prima. Gli identificativi non si riusano mai, e
+  `$HANDSEED`, l'ultimo handle dato e la scelta dell'ultima entità continuano
+  a funzionare.
+- La mappa vale solo per un **disegno nuovo**: all'avvio, dopo `NEW` e nelle
+  domande al modello. Un **file letto** porta i suoi handle così come sono: il
+  lettore parte da un documento vuoto, senza oggetti di partenza, e i numeri da
+  1 a 256 restano agli oggetti del file. Un file salvato da un disegno nuovo e
+  poi riaperto ha di nuovo la mappa, perché la porta il file stesso.
+- Nella modalità di controllo gli identificativi del rapporto sono gli handle
+  in decimale (ADR 0011, punto 5): in una sessione nuova la prima entità è
+  **257**, non più 1. Il resto della riga «Identificativi» dell'ADR 0011 resta
+  valido (nessun identificativo da numeri casuali, elenchi ordinati per
+  identificativo).
 
 ### 2. Proprietà delle entità
 
@@ -136,6 +181,16 @@ nuova, così i rapporti già scritti restano validi. Le domande sul documento
   sarebbe una perdita.
 - **Sbiadire i layer bloccati da subito:** serve la trasparenza del render;
   si aggiunge nella tappa 0.9 senza cambiare il modello.
+- **Oggetti di partenza presi dal contatore delle entità** (la prima versione
+  di questo ADR): ogni oggetto di partenza aggiunto in una tappa sposterebbe
+  gli identificativi di tutte le entità, e con loro i rapporti di tutti i casi
+  di verifica.
+- **Oggetti di partenza dopo le entità** (lo scheletro dello scrittore fino
+  alla tappa 0.5): il loro handle dipenderebbe da quante entità si sono
+  disegnate prima di salvare.
+- **Numerare le entità del rapporto per posizione invece che per handle:**
+  cambierebbe il formato del rapporto e delle domande, e il rapporto perderebbe
+  il legame diretto con il DXF.
 
 ## Conseguenze
 
@@ -146,3 +201,6 @@ nuova, così i rapporti già scritti restano validi. Le domande sul documento
   blocchi grezzi diventano modello con le stesse regole.
 - Trasparenza, stili di stampa e layer bloccati sbiaditi restano per la
   tappa 0.9.
+- Gli handle di partenza cambiano una volta sola gli identificativi delle
+  entità create in una sessione nuova: i casi di verifica si riscrivono con
+  il pacchetto di riferimenti 0.6-R4, i test unitari con 0.6-P4.
