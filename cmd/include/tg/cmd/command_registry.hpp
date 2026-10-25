@@ -6,6 +6,7 @@
 #include "tg/cmd/command.hpp"
 #include "tg/cmd/command_description.hpp"
 
+#include <deque>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -43,15 +44,15 @@ public:
 
 private:
     struct Entry {
-        // Behind a pointer, so that the addresses handed out by describe()
-        // and descriptions() survive later additions.
-        std::unique_ptr<const CommandDescription> description;
+        CommandDescription description;
         Factory factory;
     };
 
     [[nodiscard]] const Entry* find(std::string_view nameOrAlias) const;
 
-    std::vector<Entry> m_entries;
+    // A deque keeps the addresses handed out by describe() and
+    // descriptions() valid when commands are added.
+    std::deque<Entry> m_entries;
 };
 
 /// True if `description` satisfies the preconditions of

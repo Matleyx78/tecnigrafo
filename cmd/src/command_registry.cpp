@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <memory>
 #include <set>
 #include <string_view>
 #include <utility>
@@ -35,33 +36,36 @@ bool isValue(std::string_view value) {
     return !value.empty() && value.find_first_of("<>") == std::string_view::npos;
 }
 
-/// True if `text` from `position` is pieces[index], a value, pieces[index
-/// + 1], and so on to the end. Every occurrence of the next piece is tried,
-/// so that a value may contain the text that follows it.
-bool matchesFrom(const std::vector<std::string_view>& pieces, std::size_t index,
-                 std::string_view text, std::size_t position) {
-    if (index + 1 == pieces.size()) {
-        return text.substr(position) == pieces[index];
-    }
-    if (!text.substr(position).starts_with(pieces[index])) {
-        return false;
-    }
-    const std::size_t valueStart = position + pieces[index].size();
-    // Starting one past the value's first character keeps the value non-empty.
-    for (std::size_t found = text.find(pieces[index + 1], valueStart + 1);
-         found != std::string_view::npos; found = text.find(pieces[index + 1], found + 1)) {
-        if (!isValue(text.substr(valueStart, found - valueStart))) {
-            return false;  // a longer value would contain the same '<' or '>'
+/// True if `text` is pieces[0], a value, pieces[1], a value, and so on.
+/// A value may contain the text that follows it, so every occurrence of the
+/// next piece is tried: `starts` holds every position where the current
+/// piece may begin.
+bool matchesPieces(const std::vector<std::string_view>& pieces, std::string_view text) {
+    std::set<std::size_t> starts{0};
+    for (std::size_t index = 0; index + 1 < pieces.size(); ++index) {
+        std::set<std::size_t> next;
+        for (const std::size_t position : starts) {
+            if (!text.substr(position).starts_with(pieces[index])) {
+                continue;
+            }
+            const std::size_t valueStart = position + pieces[index].size();
+            // One past the value's first character keeps the value non-empty.
+            for (std::size_t found = text.find(pieces[index + 1], valueStart + 1);
+                 found != std::string_view::npos; found = text.find(pieces[index + 1], found + 1)) {
+                if (!isValue(text.substr(valueStart, found - valueStart))) {
+                    break;  // a longer value would contain the same '<' or '>'
+                }
+                next.insert(found);
+            }
         }
-        if (matchesFrom(pieces, index + 1, text, found)) {
-            return true;
-        }
+        starts = std::move(next);
     }
-    return false;
+    return std::ranges::any_of(
+        starts, [&](std::size_t position) { return text.substr(position) == pieces.back(); });
 }
 
 bool matchesText(std::string_view pattern, std::string_view text) {
-    return matchesFrom(literalPieces(pattern), 0, text, 0);
+    return matchesPieces(literalPieces(pattern), text);
 }
 
 bool compatible(PromptKind kind, ValueType value) {
@@ -136,8 +140,7 @@ void CommandRegistry::add(CommandDescription description, Factory factory) {
                                     return alias.empty() || find(alias) != nullptr;
                                 }) &&
            "command alias empty or already registered");
-    m_entries.push_back(Entry{std::make_unique<const CommandDescription>(std::move(description)),
-                              std::move(factory)});
+    m_entries.push_back(Entry{std::move(description), std::move(factory)});
 }
 
 std::unique_ptr<Command> CommandRegistry::create(std::string_view nameOrAlias) const {
@@ -147,14 +150,14 @@ std::unique_ptr<Command> CommandRegistry::create(std::string_view nameOrAlias) c
 
 std::optional<std::string> CommandRegistry::canonicalName(std::string_view nameOrAlias) const {
     const Entry* entry = find(nameOrAlias);
-    return entry != nullptr ? std::optional<std::string>{entry->description->name} : std::nullopt;
+    return entry != nullptr ? std::optional<std::string>{entry->description.name} : std::nullopt;
 }
 
 std::vector<const CommandDescription*> CommandRegistry::descriptions() const {
     std::vector<const CommandDescription*> result;
     result.reserve(m_entries.size());
     for (const Entry& entry : m_entries) {
-        result.push_back(entry.description.get());
+        result.push_back(&entry.description);
     }
     std::ranges::sort(result, {}, &CommandDescription::name);
     return result;
@@ -162,7 +165,7 @@ std::vector<const CommandDescription*> CommandRegistry::descriptions() const {
 
 const CommandDescription* CommandRegistry::describe(std::string_view nameOrAlias) const {
     const Entry* entry = find(nameOrAlias);
-    return entry != nullptr ? entry->description.get() : nullptr;
+    return entry != nullptr ? &entry->description : nullptr;
 }
 
 const CommandRegistry::Entry* CommandRegistry::find(std::string_view nameOrAlias) const {
@@ -170,8 +173,8 @@ const CommandRegistry::Entry* CommandRegistry::find(std::string_view nameOrAlias
         return detail::equalsIgnoringCase(candidate, nameOrAlias);
     };
     const auto it = std::ranges::find_if(m_entries, [&](const Entry& entry) {
-        return matches(entry.description->name) ||
-               std::ranges::any_of(entry.description->aliases, matches);
+        return matches(entry.description.name) ||
+               std::ranges::any_of(entry.description.aliases, matches);
     });
     return it != m_entries.end() ? &*it : nullptr;
 }
