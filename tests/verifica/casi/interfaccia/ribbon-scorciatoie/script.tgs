@@ -1,0 +1,32 @@
+; Scorciatoie in entrambe le interfacce: F3, F8, Ctrl+Z e Ctrl+S con richiesta nome
+!level 2
+RIBBON
+!key F3
+!key F3
+!key F8
+!key F8
+LINE
+0,0
+10,0
+
+!report
+!key Ctrl+Z
+!report
+!key Ctrl+S
+disegno-ribbon.cadx
+!report
+RIBBONCLOSE
+NEW
+!key F3
+!key F3
+!key F8
+!key F8
+LINE
+0,0
+10,0
+
+!report
+!key Ctrl+Z
+!report
+!key Ctrl+S
+disegno-classica.cadx
