@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LINE start=0,0 end=10,0
+  257 LINE start=0,0 end=10,0
 messages:
   Command: RIBBON
   <Osnap off>
@@ -65,7 +65,7 @@ statistics:
 
 [report 4]
 entities:
-  1 LINE start=0,0 end=10,0
+  257 LINE start=0,0 end=10,0
 messages:
   Command: RIBBONCLOSE
   Command: NEW

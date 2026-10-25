@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 CIRCLE center=10,20 radius=15
+  257 CIRCLE center=10,20 radius=15
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 10,20
@@ -23,8 +23,8 @@ statistics:
 
 [report 2]
 entities:
-  1 CIRCLE center=10,20 radius=15
-  2 CIRCLE center=30,40 radius=10
+  257 CIRCLE center=10,20 radius=15
+  258 CIRCLE center=30,40 radius=10
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 30,40
@@ -46,9 +46,9 @@ statistics:
 
 [report 3]
 entities:
-  1 CIRCLE center=10,20 radius=15
-  2 CIRCLE center=30,40 radius=10
-  3 CIRCLE center=50,50 radius=12.5
+  257 CIRCLE center=10,20 radius=15
+  258 CIRCLE center=30,40 radius=10
+  259 CIRCLE center=50,50 radius=12.5
 messages:
   Command: C
   Specify center point for circle or [3P/2P]: 50,50
@@ -72,10 +72,10 @@ statistics:
 
 [final]
 entities:
-  1 CIRCLE center=10,20 radius=15
-  2 CIRCLE center=30,40 radius=10
-  3 CIRCLE center=50,50 radius=12.5
-  4 CIRCLE center=100,100 radius=10
+  257 CIRCLE center=10,20 radius=15
+  258 CIRCLE center=30,40 radius=10
+  259 CIRCLE center=50,50 radius=12.5
+  260 CIRCLE center=100,100 radius=10
 messages:
   Command: C
   Specify center point for circle or [3P/2P]: 100,100

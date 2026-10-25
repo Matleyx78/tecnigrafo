@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  1 LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10
 messages:
   Command: PLINE
   Specify start point: 0,0

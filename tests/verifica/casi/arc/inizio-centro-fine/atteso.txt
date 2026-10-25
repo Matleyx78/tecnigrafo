@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=90
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=90
 messages:
   Command: ARC
   Specify start point of arc: 10,0
@@ -25,8 +25,8 @@ statistics:
 
 [report 2]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=90
-  2 ARC center=0,0 radius=10 start-angle=90 end-angle=180
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=90
+  258 ARC center=0,0 radius=10 start-angle=90 end-angle=180
 messages:
   Command: A
   Specify start point of arc: 0,10
@@ -50,9 +50,9 @@ statistics:
 
 [report 3]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=90
-  2 ARC center=0,0 radius=10 start-angle=90 end-angle=180
-  3 ARC center=0,0 radius=10 start-angle=270 end-angle=0
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=90
+  258 ARC center=0,0 radius=10 start-angle=90 end-angle=180
+  259 ARC center=0,0 radius=10 start-angle=270 end-angle=0
 messages:
   Command: ARC
   Specify start point of arc: 0,-10
@@ -77,10 +77,10 @@ statistics:
 
 [report 4]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=90
-  2 ARC center=0,0 radius=10 start-angle=90 end-angle=180
-  3 ARC center=0,0 radius=10 start-angle=270 end-angle=0
-  4 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=90
+  258 ARC center=0,0 radius=10 start-angle=90 end-angle=180
+  259 ARC center=0,0 radius=10 start-angle=270 end-angle=0
+  260 ARC center=0,0 radius=10 start-angle=270 end-angle=90
 messages:
   Command: ARC
   Specify start point of arc: 0,-10
@@ -106,11 +106,11 @@ statistics:
 
 [final]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=90
-  2 ARC center=0,0 radius=10 start-angle=90 end-angle=180
-  3 ARC center=0,0 radius=10 start-angle=270 end-angle=0
-  4 ARC center=0,0 radius=10 start-angle=270 end-angle=90
-  5 LINE start=10,50 end=10,60
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=90
+  258 ARC center=0,0 radius=10 start-angle=90 end-angle=180
+  259 ARC center=0,0 radius=10 start-angle=270 end-angle=0
+  260 ARC center=0,0 radius=10 start-angle=270 end-angle=90
+  261 LINE start=10,50 end=10,60
 messages:
   Command: LINE
   Specify first point: @10,0

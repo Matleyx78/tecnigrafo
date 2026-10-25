@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
-  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+  257 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  258 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
 messages:
   Command: PLINE
   Specify start point: 10,10
@@ -30,12 +30,12 @@ statistics:
 
 [report 2]
 entities:
-  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
-  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+  257 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  258 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Polyline
@@ -50,8 +50,8 @@ statistics:
 
 [report 3]
 entities:
-  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
-  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+  257 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  258 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
 messages:
 prompt: Specify opposite corner:
 preview:
@@ -70,12 +70,12 @@ statistics:
 
 [final]
 entities:
-  1 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
-  2 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
+  257 LWPOLYLINE closed=no vertex=10,10 vertex=20,10
+  258 LWPOLYLINE closed=no vertex=0,15 vertex=30,15
 messages:
 prompt: Command:
 preview:
-selection: 1 2
+selection: 257 258
 rectangle: none
 undo:
   Polyline

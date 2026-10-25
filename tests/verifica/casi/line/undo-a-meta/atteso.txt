@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LINE start=10,10 end=30,10
-  2 LINE start=30,10 end=30,30
+  257 LINE start=10,10 end=30,10
+  258 LINE start=30,10 end=30,30
 messages:
   Command: LINE
   Specify first point: 0,0
@@ -26,7 +26,7 @@ statistics:
 
 [report 2]
 entities:
-  1 LINE start=10,10 end=30,10
+  257 LINE start=10,10 end=30,10
 messages:
   Specify next point or [Close/Undo]: U
 prompt: Specify next point or [Undo]:
@@ -44,10 +44,10 @@ statistics:
 
 [final]
 entities:
-  1 LINE start=10,10 end=30,10
-  3 LINE start=30,10 end=30,50
-  4 LINE start=30,50 end=10,50
-  5 LINE start=10,50 end=10,10
+  257 LINE start=10,10 end=30,10
+  259 LINE start=30,10 end=30,50
+  260 LINE start=30,50 end=10,50
+  261 LINE start=10,50 end=10,10
 messages:
   Specify next point or [Undo]: @0,40
   Specify next point or [Close/Undo]: 10,50

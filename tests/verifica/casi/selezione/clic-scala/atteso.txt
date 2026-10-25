@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+  257 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
 messages:
   Command: PLINE
   Specify start point: 0,0
@@ -24,11 +24,11 @@ statistics:
 
 [report 2]
 entities:
-  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+  257 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Polyline
@@ -42,7 +42,7 @@ statistics:
 
 [report 3]
 entities:
-  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+  257 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
 messages:
 prompt: Specify opposite corner:
 preview:
@@ -60,11 +60,11 @@ statistics:
 
 [final]
 entities:
-  1 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
+  257 LWPOLYLINE closed=no vertex=0,0 vertex=100,0
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Polyline

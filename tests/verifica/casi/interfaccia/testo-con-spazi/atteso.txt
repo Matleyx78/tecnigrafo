@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello world" ~box=0,-0.7700496806245565;17.97374024130589,-0.7700496806245565;17.97374024130589,3.289567068843151;0,3.289567068843151
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello world" ~box=0,-0.7700496806245565;17.97374024130589,-0.7700496806245565;17.97374024130589,3.289567068843151;0,3.289567068843151
 messages:
   Command: TEXT
   Specify start point of text: 0,0
@@ -44,7 +44,7 @@ statistics:
 
 [final]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello world" ~box=0,-0.7700496806245565;17.97374024130589,-0.7700496806245565;17.97374024130589,3.289567068843151;0,3.289567068843151
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello world" ~box=0,-0.7700496806245565;17.97374024130589,-0.7700496806245565;17.97374024130589,3.289567068843151;0,3.289567068843151
 messages:
   Command: REDO
   Redone: Text.

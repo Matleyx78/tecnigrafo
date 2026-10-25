@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LWPOLYLINE closed=no vertex=30,40 vertex=70,40
+  257 LWPOLYLINE closed=no vertex=30,40 vertex=70,40
 messages:
   Command: PLINE
   Specify start point: 30,40
@@ -25,8 +25,8 @@ statistics:
 
 [final]
 entities:
-  1 LWPOLYLINE closed=no vertex=30,40 vertex=70,40
-  2 LWPOLYLINE closed=no vertex=100,90 vertex=130,90
+  257 LWPOLYLINE closed=no vertex=30,40 vertex=70,40
+  258 LWPOLYLINE closed=no vertex=100,90 vertex=130,90
 messages:
   Specify next point or [Arc/Undo]:
 prompt: Command:

@@ -2,9 +2,9 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 TEXT position=0,30 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Prima riga" ~box=0,29.07594038325053;19.8694109297374,29.07594038325053;19.8694109297374,33.94748048261178;0,33.94748048261178
-  2 TEXT position=0,25 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Seconda riga" ~box=0,24.07594038325053;25.69694819020582,24.07594038325053;25.69694819020582,28.94748048261178;0,28.94748048261178
-  3 TEXT position=0,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Terza riga" ~box=0,19.07594038325053;19.62881476224273,19.07594038325053;19.62881476224273,23.94748048261178;0,23.94748048261178
+  257 TEXT position=0,30 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Prima riga" ~box=0,29.07594038325053;19.8694109297374,29.07594038325053;19.8694109297374,33.94748048261178;0,33.94748048261178
+  258 TEXT position=0,25 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Seconda riga" ~box=0,24.07594038325053;25.69694819020582,24.07594038325053;25.69694819020582,28.94748048261178;0,28.94748048261178
+  259 TEXT position=0,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Terza riga" ~box=0,19.07594038325053;19.62881476224273,19.07594038325053;19.62881476224273,23.94748048261178;0,23.94748048261178
 messages:
   Command: TEXT
   Specify start point of text: 0,30
@@ -30,12 +30,12 @@ statistics:
 
 [final]
 entities:
-  1 TEXT position=0,30 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Prima riga" ~box=0,29.07594038325053;19.8694109297374,29.07594038325053;19.8694109297374,33.94748048261178;0,33.94748048261178
-  2 TEXT position=0,25 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Seconda riga" ~box=0,24.07594038325053;25.69694819020582,24.07594038325053;25.69694819020582,28.94748048261178;0,28.94748048261178
-  3 TEXT position=0,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Terza riga" ~box=0,19.07594038325053;19.62881476224273,19.07594038325053;19.62881476224273,23.94748048261178;0,23.94748048261178
-  4 TEXT position=50,0 alignment-point=0,0 height=6 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Colonna 1" ~box=51.84811923349893,0;51.84811923349893,39.76011355571327;42.10503903477644,39.76011355571327;42.10503903477644,0
-  5 TEXT position=60,0 alignment-point=0,0 height=6 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Colonna 2" ~box=61.84811923349893,0;61.84811923349893,39.76011355571327;52.10503903477644,39.76011355571327;52.10503903477644,0
-  6 TEXT position=70,0 alignment-point=0,0 height=6 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Colonna 3" ~box=71.84811923349893,0;71.84811923349893,39.76011355571327;62.10503903477644,39.76011355571327;62.10503903477644,0
+  257 TEXT position=0,30 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Prima riga" ~box=0,29.07594038325053;19.8694109297374,29.07594038325053;19.8694109297374,33.94748048261178;0,33.94748048261178
+  258 TEXT position=0,25 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Seconda riga" ~box=0,24.07594038325053;25.69694819020582,24.07594038325053;25.69694819020582,28.94748048261178;0,28.94748048261178
+  259 TEXT position=0,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Terza riga" ~box=0,19.07594038325053;19.62881476224273,19.07594038325053;19.62881476224273,23.94748048261178;0,23.94748048261178
+  260 TEXT position=50,0 alignment-point=0,0 height=6 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Colonna 1" ~box=51.84811923349893,0;51.84811923349893,39.76011355571327;42.10503903477644,39.76011355571327;42.10503903477644,0
+  261 TEXT position=60,0 alignment-point=0,0 height=6 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Colonna 2" ~box=61.84811923349893,0;61.84811923349893,39.76011355571327;52.10503903477644,39.76011355571327;52.10503903477644,0
+  262 TEXT position=70,0 alignment-point=0,0 height=6 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Colonna 3" ~box=71.84811923349893,0;71.84811923349893,39.76011355571327;62.10503903477644,39.76011355571327;62.10503903477644,0
 messages:
   Command: TEXT
   Specify start point of text: 50,0

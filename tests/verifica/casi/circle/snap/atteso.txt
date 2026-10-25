@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 CIRCLE center=50,50 radius=20
+  257 CIRCLE center=50,50 radius=20
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 50,50
@@ -24,7 +24,7 @@ statistics:
 
 [report 2]
 entities:
-  1 CIRCLE center=50,50 radius=20
+  257 CIRCLE center=50,50 radius=20
 messages:
 prompt: Specify first point:
 preview:
@@ -42,7 +42,7 @@ statistics:
 
 [report 3]
 entities:
-  1 CIRCLE center=50,50 radius=20
+  257 CIRCLE center=50,50 radius=20
 messages:
 prompt: Specify first point:
 preview:
@@ -60,7 +60,7 @@ statistics:
 
 [report 4]
 entities:
-  1 CIRCLE center=50,50 radius=20
+  257 CIRCLE center=50,50 radius=20
 messages:
 prompt: Specify next point or [Undo]:
 preview:
@@ -78,7 +78,7 @@ statistics:
 
 [final]
 entities:
-  1 CIRCLE center=50,50 radius=20
+  257 CIRCLE center=50,50 radius=20
 messages:
   *Cancel*
 prompt: Command:

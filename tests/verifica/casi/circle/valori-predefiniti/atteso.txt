@@ -20,7 +20,7 @@ statistics:
 
 [report 2]
 entities:
-  1 CIRCLE center=0,0 radius=25
+  257 CIRCLE center=0,0 radius=25
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 0,0
@@ -41,8 +41,8 @@ statistics:
 
 [report 3]
 entities:
-  1 CIRCLE center=0,0 radius=25
-  2 CIRCLE center=50,50 radius=25
+  257 CIRCLE center=0,0 radius=25
+  258 CIRCLE center=50,50 radius=25
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 50,50
@@ -64,9 +64,9 @@ statistics:
 
 [report 4]
 entities:
-  1 CIRCLE center=0,0 radius=25
-  2 CIRCLE center=50,50 radius=25
-  3 CIRCLE center=100,100 radius=25
+  257 CIRCLE center=0,0 radius=25
+  258 CIRCLE center=50,50 radius=25
+  259 CIRCLE center=100,100 radius=25
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 100,100
@@ -90,11 +90,11 @@ statistics:
 
 [final]
 entities:
-  1 CIRCLE center=0,0 radius=25
-  2 CIRCLE center=50,50 radius=25
-  3 CIRCLE center=100,100 radius=25
-  4 CIRCLE center=0,0 radius=10
-  5 CIRCLE center=10,10 radius=10
+  257 CIRCLE center=0,0 radius=25
+  258 CIRCLE center=50,50 radius=25
+  259 CIRCLE center=100,100 radius=25
+  260 CIRCLE center=0,0 radius=10
+  261 CIRCLE center=10,10 radius=10
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 0,0

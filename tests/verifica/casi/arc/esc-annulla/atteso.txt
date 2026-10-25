@@ -35,7 +35,7 @@ statistics:
 
 [report 2]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=180
 messages:
   Command: ARC
   Specify start point of arc: 10,0
@@ -75,7 +75,7 @@ statistics:
 
 [final]
 entities:
-  1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+  257 ARC center=0,0 radius=10 start-angle=0 end-angle=180
 messages:
   Command: REDO
   Redone: Arc.

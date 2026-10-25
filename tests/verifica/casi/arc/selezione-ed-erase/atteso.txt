@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
   Command: ARC
   Specify start point of arc: 90,50
@@ -30,12 +30,12 @@ statistics:
 
 [report 2]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Arc
@@ -50,8 +50,8 @@ statistics:
 
 [report 3]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Command:
 preview:
@@ -70,12 +70,12 @@ statistics:
 
 [report 4]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Arc
@@ -90,8 +90,8 @@ statistics:
 
 [report 5]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Command:
 preview:
@@ -110,12 +110,12 @@ statistics:
 
 [report 6]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Arc
@@ -130,7 +130,7 @@ statistics:
 
 [final]
 entities:
-  2 ARC center=150,50 radius=40 start-angle=0 end-angle=180
+  258 ARC center=150,50 radius=40 start-angle=0 end-angle=180
 messages:
   Command: ERASE
   1 found, 1 total

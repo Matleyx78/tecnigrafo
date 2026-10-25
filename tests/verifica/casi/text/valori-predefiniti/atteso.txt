@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
+  257 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
 messages:
   Command: TEXT
   Specify start point of text: 0,0
@@ -26,8 +26,8 @@ statistics:
 
 [report 2]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
-  2 TEXT position=10,10 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 2" ~box=10.53903477643719,9.066364380164256;22.78170830750911,16.13467523892934;19.93997658288172,21.05669896746431;7.697303051809795,13.98838810869923
+  257 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
+  258 TEXT position=10,10 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 2" ~box=10.53903477643719,9.066364380164256;22.78170830750911,16.13467523892934;19.93997658288172,21.05669896746431;7.697303051809795,13.98838810869923
 messages:
   Command: TEXT
   Specify start point of text: 10,10
@@ -52,9 +52,9 @@ statistics:
 
 [report 3]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
-  2 TEXT position=10,10 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 2" ~box=10.53903477643719,9.066364380164256;22.78170830750911,16.13467523892934;19.93997658288172,21.05669896746431;7.697303051809795,13.98838810869923
-  3 TEXT position=20,20 alignment-point=0,0 height=1.25 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 3" ~box=20.19251242015614,19.66655870720152;24.5648958241104,22.19095544247476;23.54999163674347,23.94882105980868;19.17760823278921,21.42442432453544
+  257 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
+  258 TEXT position=10,10 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 2" ~box=10.53903477643719,9.066364380164256;22.78170830750911,16.13467523892934;19.93997658288172,21.05669896746431;7.697303051809795,13.98838810869923
+  259 TEXT position=20,20 alignment-point=0,0 height=1.25 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 3" ~box=20.19251242015614,19.66655870720152;24.5648958241104,22.19095544247476;23.54999163674347,23.94882105980868;19.17760823278921,21.42442432453544
 messages:
   Command: TEXT
   Specify start point of text: 20,20
@@ -80,9 +80,9 @@ statistics:
 
 [final]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
-  2 TEXT position=10,10 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 2" ~box=10.53903477643719,9.066364380164256;22.78170830750911,16.13467523892934;19.93997658288172,21.05669896746431;7.697303051809795,13.98838810869923
-  3 TEXT position=20,20 alignment-point=0,0 height=1.25 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 3" ~box=20.19251242015614,19.66655870720152;24.5648958241104,22.19095544247476;23.54999163674347,23.94882105980868;19.17760823278921,21.42442432453544
+  257 TEXT position=0,0 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 1" ~box=0.5390347764371894,-0.9336356198357435;12.78170830750911,6.134675238929336;9.939976582881719,11.05669896746431;-2.302696948190205,3.988388108699235
+  258 TEXT position=10,10 alignment-point=0,0 height=3.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 2" ~box=10.53903477643719,9.066364380164256;22.78170830750911,16.13467523892934;19.93997658288172,21.05669896746431;7.697303051809795,13.98838810869923
+  259 TEXT position=20,20 alignment-point=0,0 height=1.25 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Test 3" ~box=20.19251242015614,19.66655870720152;24.5648958241104,22.19095544247476;23.54999163674347,23.94882105980868;19.17760823278921,21.42442432453544
 messages:
   Command: TEXT
   Specify start point of text: 30,30

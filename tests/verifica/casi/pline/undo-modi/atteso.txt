@@ -42,7 +42,7 @@ statistics:
 
 [final]
 entities:
-  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 bulge=-1 vertex=10,-10 vertex=0,-10
+  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 bulge=-1 vertex=10,-10 vertex=0,-10
 messages:
   Specify end point of arc or [Line/Undo]: 10,-10
   Specify end point of arc or [CLose/Line/Undo]: 10,-20

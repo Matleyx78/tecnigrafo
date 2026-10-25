@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LINE start=10,10 end=30,10
-  2 LINE start=10,30 end=50,30
+  257 LINE start=10,10 end=30,10
+  258 LINE start=10,30 end=50,30
 messages:
   Command: LINE
   Specify first point: 10,10
@@ -15,7 +15,7 @@ messages:
   Specify next point or [Undo]:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Line
@@ -30,12 +30,12 @@ statistics:
 
 [report 2]
 entities:
-  1 LINE start=10,10 end=30,10
-  2 LINE start=10,30 end=50,30
+  257 LINE start=10,10 end=30,10
+  258 LINE start=10,30 end=50,30
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Line
@@ -50,12 +50,12 @@ statistics:
 
 [report 3]
 entities:
-  1 LINE start=10,10 end=30,10
-  2 LINE start=10,30 end=50,30
+  257 LINE start=10,10 end=30,10
+  258 LINE start=10,30 end=50,30
 messages:
 prompt: Command:
 preview:
-selection: 1 2
+selection: 257 258
 rectangle: none
 undo:
   Line
@@ -70,7 +70,7 @@ statistics:
 
 [final]
 entities:
-  2 LINE start=10,30 end=50,30
+  258 LINE start=10,30 end=50,30
 messages:
   Command: ERASE
   1 found, 1 total

@@ -2,9 +2,9 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  1 TEXT position=0,0 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="  Spazi all'inizio, dentro e alla fine  " ~box=0,-0.9240596167494677;66.76224272533712,-0.9240596167494677;66.76224272533712,3.947480482611781;0,3.947480482611781
-  2 TEXT position=0,-5 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Città e caffè" ~box=0,-5.924059616749467;23.26756564939674,-5.924059616749467;23.26756564939674,-1.052519517388219;0,-1.052519517388219
-  3 TEXT position=0,-10 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%%c50 %%d90 %%p0.05 100%%%" ~box=0,-10.92405961674947;40.50319375443577,-10.92405961674947;40.50319375443577,-6.052519517388219;0,-6.052519517388219
+  257 TEXT position=0,0 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="  Spazi all'inizio, dentro e alla fine  " ~box=0,-0.9240596167494677;66.76224272533712,-0.9240596167494677;66.76224272533712,3.947480482611781;0,3.947480482611781
+  258 TEXT position=0,-5 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Città e caffè" ~box=0,-5.924059616749467;23.26756564939674,-5.924059616749467;23.26756564939674,-1.052519517388219;0,-1.052519517388219
+  259 TEXT position=0,-10 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%%c50 %%d90 %%p0.05 100%%%" ~box=0,-10.92405961674947;40.50319375443577,-10.92405961674947;40.50319375443577,-6.052519517388219;0,-6.052519517388219
 messages:
   Command: TEXT
   Specify start point of text: 0,0
