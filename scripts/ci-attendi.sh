@@ -9,9 +9,10 @@
 #     scripts/ci-attendi.sh <sha>        # the run of that commit
 #     scripts/ci-attendi.sh <run id>     # that run
 #
-# Exit status: 0 the run succeeded, 1 it did not (read why with
-# scripts/ci-errori.sh), 3 it is still running when the time ran out: run the
-# same command again, it resumes where it was.
+# Exit status: 0 the run succeeded, 1 it failed (read why with
+# scripts/ci-errori.sh), 3 it is still running when the time ran out (run the
+# same command again, it resumes where it was), 4 it was cancelled: nothing
+# failed, a newer push on the same branch replaced it, so wait for that one.
 #
 # TG_ATTESA_MAX   seconds to wait before giving up (default 1500)
 # TG_ATTESA_PAUSA seconds between two checks (default 60: the anonymous limit
@@ -74,6 +75,11 @@ while :; do
             if [[ $status == completed ]]; then
                 echo "run $run: completed $conclusion"
                 [[ $conclusion == success ]] && exit 0
+                if [[ $conclusion == cancelled ]]; then
+                    echo "Nothing failed: a newer push on the same branch replaced this run."
+                    echo "Run scripts/ci-attendi.sh again, on the newest commit."
+                    exit 4
+                fi
                 exit 1
             fi
         fi

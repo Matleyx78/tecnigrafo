@@ -55,8 +55,14 @@ else
     fi
 fi
 
-api "repos/$repo/actions/runs/$run" \
-    | jq -r '"run \(.id): \(.status) \(.conclusion // "-")  \(.html_url)"'
+summary=$(api "repos/$repo/actions/runs/$run" \
+    | jq -r '"run \(.id): \(.status) \(.conclusion // "-")  \(.html_url)"')
+echo "$summary"
+if [[ $summary == *" completed cancelled "* ]]; then
+    echo "Nothing failed: a newer push on the same branch replaced this run."
+    echo "Look at the run of the newest commit: scripts/ci-errori.sh <sha>."
+    exit 0
+fi
 
 jobs=$(api "repos/$repo/actions/runs/$run/jobs?per_page=100" | jq -r '
     .jobs[] | select(.conclusion == "failure" or .conclusion == "timed_out")

@@ -98,8 +98,10 @@ scrivendo nella pull request che cosa hai visto e provato, solo se:
 ```sh
 # aspetta la fine della CI dell'ultimo commit pubblicato, aspettando dentro lo
 # script (non consuma token). Esce 0 se tutto è verde, 1 se un controllo è
-# fallito, 3 se dopo 25 minuti è ancora in corso: rilancialo, riprende da dove
-# era. Accetta anche <sha> o <id>; non serve `gh`.
+# fallito, 3 se dopo 25 minuti è ancora in corso (rilancialo, riprende da dove
+# era), 4 se è stata annullata: non è un guasto, un push più recente sullo
+# stesso ramo l'ha sostituita, quindi aspetta quella. Accetta anche <sha> o
+# <id>; non serve `gh`.
 scripts/ci-attendi.sh
 # perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
 scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
