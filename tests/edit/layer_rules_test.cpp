@@ -55,8 +55,7 @@ TEST(LayerRules, HandledAndUnhandledEntitiesAndBlocksPreventRemoval) {
     doc.setProperties(id, properties);
     doc.insertRaw({core::EntityId{1000}, 2, "HATCH", {{8, "rAW"}}});
     core::RawDrawing drawing;
-    drawing.sections = {{"BLOCKS", {{0, "LINE"}, {8, "bLOCK"}}},
-                        {"OBJECTS", {{8, "Other"}}}};
+    drawing.sections = {{"BLOCKS", {{0, "LINE"}, {8, "bLOCK"}}}, {"OBJECTS", {{8, "Other"}}}};
     doc.setRaw(drawing);
     EXPECT_EQ(checkRemove(doc, handled), LayerProblem::InUse);
     EXPECT_EQ(checkRemove(doc, raw), LayerProblem::InUse);
@@ -116,8 +115,8 @@ TEST(LayerRules, FindsXdataAndEveryKindOfEntityAndTableExtra) {
 TEST(LayerRules, RawXdataReferencesDoNotCountAsEntityLayerGroups) {
     core::Document doc = core::Document::newDrawing();
     const auto id = addNamed(doc, "Walls");
-    doc.insertRaw({core::EntityId{1000}, 1, "HATCH",
-                   {{8, "0"}, {1001, "APP"}, {1000, "WALLS"}}});
+    doc.insertRaw(
+        {core::EntityId{1000}, 1, "HATCH", {{8, "0"}, {1001, "APP"}, {1000, "WALLS"}}});
     EXPECT_EQ(checkRemove(doc, id), LayerProblem::None);
     EXPECT_TRUE(namedInOtherUnhandledData(doc, id));
 }

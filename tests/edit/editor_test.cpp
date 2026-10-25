@@ -540,7 +540,11 @@ DrawingState stateOf(const Document& doc) {
             {doc.rawEntities().begin(), doc.rawEntities().end()},
             {doc.layers().begin(), doc.layers().end()},
             {doc.linetypes().begin(), doc.linetypes().end()},
-            doc.raw(), doc.current(), doc.ltscale(), doc.units(), doc.lwdisplay()};
+            doc.raw(),
+            doc.current(),
+            doc.ltscale(),
+            doc.units(),
+            doc.lwdisplay()};
 }
 
 core::Layer namedLayer(const Document& doc, const std::string& name) {
@@ -592,12 +596,24 @@ TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
 TEST(Editor, RenameRestoresRawSpellingsAndPreservesOtherReferences) {
     Document doc = Document::newDrawing();
     const auto layer = doc.addLayer(namedLayer(doc, "Walls"));
-    doc.insertRaw({EntityId{1000}, 1, "HATCH",
-                   {{5, "3E8"}, {8, "wALLS"}, {1001, "APP"}, {1000, "Walls"}}});
+    core::RawEntity hatch;
+    hatch.id = EntityId{1000};
+    hatch.order = 1;
+    hatch.type = "HATCH";
+    hatch.groups = {{5, "3E8"}, {8, "wALLS"}, {1001, "APP"}, {1000, "Walls"}};
+    doc.insertRaw(hatch);
     core::RawDrawing raw;
-    raw.sections = {{"BLOCKS", {{0, "LINE"}, {8, "WALLS"}, {1001, "APP"}, {1000, "Walls"},
-                               {0, "ARC"}, {8, "walls"}, {0, "LINE"}, {8, "0"}}},
-                    {"OBJECTS", {{1, "Walls"}}}};
+    core::RawSection blocks;
+    blocks.name = "BLOCKS";
+    blocks.groups.push_back({0, "LINE"});
+    blocks.groups.push_back({8, "WALLS"});
+    blocks.groups.push_back({1001, "APP"});
+    blocks.groups.push_back({1000, "Walls"});
+    blocks.groups.push_back({0, "ARC"});
+    blocks.groups.push_back({8, "walls"});
+    blocks.groups.push_back({0, "LINE"});
+    blocks.groups.push_back({8, "0"});
+    raw.sections = {blocks, {"OBJECTS", {{1, "Walls"}}}};
     raw.nativeParts = {{"extensions.json", "{}"}};
     doc.setRaw(raw);
     Editor editor(doc);

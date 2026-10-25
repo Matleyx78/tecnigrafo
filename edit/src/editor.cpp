@@ -26,8 +26,8 @@ bool validProperties(const core::Document& doc, const core::EntityProperties& pr
 bool validLayerProperties(const core::Document& doc, const core::Layer& layer) {
     return (layer.color.kind() == core::Color::Kind::Index ||
             layer.color.kind() == core::Color::Kind::Rgb) &&
-           doc.linetype(layer.linetype) != nullptr &&
-           layer.linetype != doc.byLayerLinetype() && layer.linetype != doc.byBlockLinetype() &&
+           doc.linetype(layer.linetype) != nullptr && layer.linetype != doc.byLayerLinetype() &&
+           layer.linetype != doc.byBlockLinetype() &&
            (layer.lineweight == core::lineweight::kDefault ||
             core::isAllowedLineweight(layer.lineweight));
 }
@@ -45,7 +45,9 @@ void Editor::beginTransaction(std::string name) {
 core::EntityId Editor::add(core::Entity entity) {
     assert(m_open && "add() needs an open transaction");
     const core::EntityId id = m_document.add(std::move(entity));
-    m_open->changes.push_back(Change{Change::Kind::Added, id, std::nullopt});
+    Change change;
+    change.id = id;
+    m_open->changes.push_back(std::move(change));
     return id;
 }
 
@@ -55,7 +57,11 @@ bool Editor::remove(core::EntityId id) {
     if (!removed) {
         return false;
     }
-    m_open->changes.push_back(Change{Change::Kind::Removed, id, std::move(removed)});
+    Change change;
+    change.kind = Change::Kind::Removed;
+    change.id = id;
+    change.detached = std::move(removed);
+    m_open->changes.push_back(std::move(change));
     return true;
 }
 
@@ -66,7 +72,11 @@ bool Editor::setUnits(int units) {
     if (previous == units) {
         return false;
     }
-    m_open->changes.push_back(Change{Change::Kind::Units, {}, std::nullopt, previous, units});
+    Change change;
+    change.kind = Change::Kind::Units;
+    change.previousUnits = previous;
+    change.units = units;
+    m_open->changes.push_back(std::move(change));
     m_document.setUnits(units);
     return true;
 }
@@ -99,8 +109,8 @@ bool Editor::renameLayer(core::LayerId id, std::string name) {
     }
     LayerUpdate update{renamed, {}};
     // Record the original spellings too: undo must not normalize raw data.
-    const auto collect = [&](const core::RawGroups& groups,
-                             std::optional<core::EntityId> entity, std::size_t section) {
+    const auto collect = [&](const core::RawGroups& groups, std::optional<core::EntityId> entity,
+                             std::size_t section) {
         bool extended = false;
         for (std::size_t i = 0; i < groups.size(); ++i) {
             const core::RawGroup& group = groups[i];
@@ -139,6 +149,7 @@ bool Editor::removeLayer(core::LayerId id) {
         return false;
     }
     auto removed = m_document.removeLayer(id);
+    assert(removed && "the checked layer must exist");
     Change change;
     change.kind = Change::Kind::LayerRemoved;
     change.data = LayerTableChange{std::move(removed->first), removed->second};

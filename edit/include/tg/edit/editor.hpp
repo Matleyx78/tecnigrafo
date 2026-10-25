@@ -183,7 +183,7 @@ private:
         int units{core::Document::kDefaultUnits};
         std::variant<std::monostate, LayerTableChange, LinetypeTableChange, LayerUpdate,
                      core::EntityRecord, core::CurrentProperties, double>
-            data{};
+            data;
     };
 
     struct Step {
