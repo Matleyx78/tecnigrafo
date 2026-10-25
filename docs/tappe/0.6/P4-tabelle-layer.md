@@ -5,7 +5,7 @@
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.6-R4]` (da creare), agente gemini, per gli
+- **Riferimenti:** issue `[0.6-R4]` (#272), agente gemini, per gli
   identificativi di un disegno nuovo; le tabelle non hanno altri effetti
   osservabili e le provano R9 e R10
 - **Dipende da:** P2, R4

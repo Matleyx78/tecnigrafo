@@ -1,7 +1,7 @@
 # [0.6-R4] Riferimenti: identificativi di un disegno nuovo
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** da creare
+- **Issue:** #272
 - **Tipo:** pacchetto di **riferimenti** (AGENTS.md, "In un pacchetto di
   riferimenti")
 - **Difficoltà:** media
