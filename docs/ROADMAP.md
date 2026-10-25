@@ -206,7 +206,7 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
 - **2026-10-25 — Piano della tappa 0.6.** Il piano dettagliato della
   [tappa 0.6](tappe/0.6-layer-e-proprieta.md) è in preparazione, con gli ADR
   [0023](adr/0023-layer-e-proprieta.md)–[0027](adr/0027-server-mcp-di-sviluppo.md)
-  proposti e l'[ADR 0009](adr/0009-interfaccia-grafica.md) da accettare. Il
+  e l'[ADR 0009](adr/0009-interfaccia-grafica.md) accettati. Il
   responsabile sceglie: tratti dei tipi di linea calcolati in `core`, con
   riferimenti propri; tipi di linea predefiniti con i nomi ISO
   (`ACAD_ISO02W100`, `ACAD_ISO10W100`) e le definizioni degli altri

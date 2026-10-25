@@ -1,6 +1,6 @@
 # ADR 0026: Descrizione dei comandi
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-25)
 - **Data:** 2026-10-25
 
 ## Contesto
@@ -73,9 +73,11 @@ struct CommandDescription {
 - Il controllo è acceso nei test di `cmd` e `script`, in `tecnigrafo-script`
   (quindi in tutti i casi di verifica, ai due livelli) e in `tecnigrafo-mcp`;
   è spento nel programma distribuito.
-- Un test verifica che ogni comando registrato abbia sintesi non vuota e
-  almeno una domanda, e che le parole chiave di ogni domanda compaiano tra
-  parentesi quadre nel suo testo.
+- Un test verifica che ogni comando registrato abbia sintesi non vuota e che
+  le parole chiave di ogni domanda compaiano tra parentesi quadre nel suo
+  testo. Un comando può non avere domande (`RIBBON`, che agisce e finisce):
+  allora `prompts` è vuoto, e il controllo del punto 3 rifiuta qualunque
+  domanda gli capiti di porre.
 
 ### 4. Uso
 

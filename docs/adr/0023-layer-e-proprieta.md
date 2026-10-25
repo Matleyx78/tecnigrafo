@@ -1,6 +1,6 @@
 # ADR 0023: Layer e proprietà delle entità
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-25)
 - **Data:** 2026-10-25
 
 ## Contesto

@@ -1,6 +1,6 @@
 # ADR 0025: Tipi di linea e spessori
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-25)
 - **Data:** 2026-10-25
 
 ## Contesto

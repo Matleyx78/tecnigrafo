@@ -1,6 +1,6 @@
 # ADR 0027: Server MCP di sviluppo e libreria JSON
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-25)
 - **Data:** 2026-10-25
 
 ## Contesto
