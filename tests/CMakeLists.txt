@@ -38,6 +38,7 @@ add_executable(tg_tests
     core/linetype_pattern_test.cpp
     core/document_query_test.cpp
     core/document_test.cpp
+    core/layer_test.cpp
     core/geometry_test.cpp
     core/line_test.cpp
     core/polyline_test.cpp

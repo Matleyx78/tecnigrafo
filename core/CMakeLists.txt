@@ -12,6 +12,7 @@ add_library(tg_core
     src/linetype_pattern.cpp
     src/document.cpp
     src/document_query.cpp
+    src/layer.cpp
     src/line.cpp
     src/polyline.cpp
     src/proximity.cpp

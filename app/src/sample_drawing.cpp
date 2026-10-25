@@ -68,7 +68,7 @@ core::Document makeSampleDrawing() {
     constexpr double kHoleRadius = 4.0;
     constexpr double kHoleInset = 15.0;
 
-    core::Document document;
+    core::Document document = core::Document::newDrawing();
     document.add(roundedRectangle(kWidth, kHeight, kCornerRadius));
     document.add(slot({40.0, kHeight / 2.0}, {80.0, kHeight / 2.0}, 16.0));
 

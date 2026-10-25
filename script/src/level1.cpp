@@ -119,7 +119,7 @@ private:
 
     void perform(const ToleranceDirective& /*directive*/) {}
 
-    core::Document m_document;
+    core::Document m_document{core::Document::newDrawing()};
     edit::Editor m_editor;
     cmd::CommandRunner m_runner;
     // Kept for the file commands: package P15 of milestone 0.5 gives it to

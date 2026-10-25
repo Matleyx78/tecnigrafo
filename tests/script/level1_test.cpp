@@ -200,7 +200,7 @@ TEST(RunLevel1, EnterRepeatsTheLastCommandAndEchoesThePromptAlone) {
 TEST(RunLevel1, EscKeepsCompletedPolylineAndEndsTheCommand) {
     const std::string report = reportOf("PLINE\n0,0\n10,0\n!esc\n");
     const std::string final = section(report, "final");
-    expectContains(final, "entities:\n  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
+    expectContains(final, "entities:\n  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
     expectContains(final, "  *Cancel*\nprompt: Command:\n");
     expectContains(final, "undo:\n  Polyline\nredo:\n");
 }
@@ -208,7 +208,7 @@ TEST(RunLevel1, EscKeepsCompletedPolylineAndEndsTheCommand) {
 TEST(RunLevel1, RightClickConfirms) {
     const std::string report = reportOf("PLINE\n0,0\n10,0\n!rightclick\n");
     expectContains(section(report, "final"),
-                   "entities:\n  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
+                   "entities:\n  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
 }
 
 TEST(RunLevel1, ClicksBuildAWindowSelection) {
@@ -225,8 +225,8 @@ TEST(RunLevel1, ClicksBuildAWindowSelection) {
     const std::string first = section(report, "report 1");
     expectContains(first, "selection: none\nrectangle: window -5,-5 50,30\n");
     expectContains(first, "prompt: Specify opposite corner:\n");
-    expectContains(section(report, "report 2"), "selection: 1 2\nrectangle: none\n");
-    expectContains(section(report, "final"), "selection: 1\n");
+    expectContains(section(report, "report 2"), "selection: 257 258\nrectangle: none\n");
+    expectContains(section(report, "final"), "selection: 257\n");
 }
 
 TEST(RunLevel1, ClickToTheLeftTracesACrossing) {
@@ -238,7 +238,7 @@ TEST(RunLevel1, ViewSetsThePickBox) {
     // The pick box is 3 pixels: 3 units at scale 1, 30 at scale 10.
     const std::string drawn = "PLINE\n0,0\n100,0\n\n";
     expectContains(reportOf(drawn + "!click 50,20\n"), "selection: none\n");
-    expectContains(reportOf(drawn + "!view 0,0 10 800x600\n!click 50,20\n"), "selection: 1\n");
+    expectContains(reportOf(drawn + "!view 0,0 10 800x600\n!click 50,20\n"), "selection: 257\n");
 }
 
 TEST(RunLevel1, SnapDirectiveTurnsTheActiveSnapOff) {
@@ -269,8 +269,8 @@ TEST(RunLevel1, EntitiesAreListedByIdentifier) {
         reportOf("PLINE\n0,0\n10,0\n\nPLINE\n0,5\n10,5\n\n!click 5,0\nERASE\nU\n");
     expectContains(section(report, "final"),
                    "entities:\n"
-                   "  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n"
-                   "  2 LWPOLYLINE closed=no vertex=0,5 vertex=10,5\n"
+                   "  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n"
+                   "  258 LWPOLYLINE closed=no vertex=0,5 vertex=10,5\n"
                    "messages:");
 }
 

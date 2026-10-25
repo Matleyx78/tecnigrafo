@@ -6,6 +6,7 @@
 #include "question_table.hpp"
 #include "text.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/start_handles.hpp"
 #include "tg/edit/editor.hpp"
 #include "tg/script/entity_reader.hpp"
 
@@ -213,7 +214,11 @@ private:
         // "D:2F" names an entity of a drawing read from a file. A question
         // about it asks about a copy of that entity alone: the questions
         // that take a name are questions about one object.
+        // An empty document, without the tables of a new drawing, whose
+        // entities are numbered as those of the definitions, so that
+        // QuestionModel finds them by name in the same way.
         core::Document fileDocument;
+        fileDocument.setNextId(core::start_handles::kFirstEntity);
         edit::Editor fileEditor(fileDocument);
         std::vector<std::string> fileNames;
         for (const std::string_view argument : arguments) {
@@ -251,11 +256,11 @@ private:
         return std::nullopt;
     }
 
-    core::Document m_document;
+    core::Document m_document{core::Document::newDrawing()};
     edit::Editor m_editor;
     io::FileAccess* m_access;
     detail::FileDrawings m_files;      ///< drawings read from files, by name
-    std::vector<std::string> m_names;  ///< m_names[n - 1] names entity n
+    std::vector<std::string> m_names;  ///< m_names[n] names entity kFirstEntity + n
     Tolerances m_tolerances;           ///< as changed by the lines read so far
     std::vector<Answer> m_answers;
     int m_line{0};

@@ -166,7 +166,7 @@ TEST(ScriptSessionTest, AidDirectivesWriteNothingAndKeysToggleFromThem) {
 TEST(ScriptSessionTest, TypedLineReachesTheCommandLineAndIsEchoed) {
     const std::string report = runLevel2("PLINE\n0,0\n@10,0\n\n", outputFolder("typed"));
     const std::string last = section(report, "final");
-    EXPECT_NE(last.find("entities:\n  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n"),
+    EXPECT_NE(last.find("entities:\n  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n"),
               std::string::npos)
         << last;
     EXPECT_NE(last.find("  Command: PLINE\n  Specify start point: 0,0\n"), std::string::npos)
@@ -219,7 +219,7 @@ TEST(ScriptSessionTest, ClickSnapsToTheVertexItIsDrawnAt) {
         runLevel2("!view 0,0 0.5 800x600\nPLINE\n0,0\n100,0\n\nPLINE\n!click 101,0\n@0,10\n\n",
                   outputFolder("click-snap"));
     EXPECT_NE(
-        section(report, "final").find("  2 LWPOLYLINE closed=no vertex=100,0 vertex=100,10\n"),
+        section(report, "final").find("  258 LWPOLYLINE closed=no vertex=100,0 vertex=100,10\n"),
         std::string::npos)
         << report;
 }
@@ -239,7 +239,7 @@ TEST(ScriptSessionTest, RunScriptFileWritesTheReport) {
     const std::string report =
         readFile(QDir(output).filePath(QString::fromLatin1(kScriptReportFile))).value_or("");
     EXPECT_EQ(report.rfind("tecnigrafo-report 1\n", 0), 0U) << report;
-    EXPECT_NE(report.find("  1 LWPOLYLINE closed=no vertex=0,0 vertex=5,5\n"), std::string::npos)
+    EXPECT_NE(report.find("  257 LWPOLYLINE closed=no vertex=0,0 vertex=5,5\n"), std::string::npos)
         << report;
 
     const QString broken = QDir(output).filePath(QStringLiteral("broken.tgs"));
