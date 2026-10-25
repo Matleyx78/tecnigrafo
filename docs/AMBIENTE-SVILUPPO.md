@@ -159,7 +159,9 @@ che spettano solo al responsabile. Il divieto vince sempre sull'autorizzazione:
       "command(cmake)",
       "command(ctest)",
       "command(python3)",
-      "command(scripts/controlla.sh)"
+      "command(scripts/controlla.sh)",
+      "command(scripts/ci-attendi.sh)",
+      "command(scripts/ci-errori.sh)"
     ],
     "deny": [
       "command(regex:^gh pr merge)",
