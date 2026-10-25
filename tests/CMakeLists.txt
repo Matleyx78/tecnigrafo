@@ -32,6 +32,9 @@ add_executable(tg_tests
     core/arc_geometry_test.cpp
     core/arc_test.cpp
     core/circle_test.cpp
+    core/color_test.cpp
+    core/lineweight_test.cpp
+    core/linetype_pattern_test.cpp
     core/document_query_test.cpp
     core/document_test.cpp
     core/geometry_test.cpp
