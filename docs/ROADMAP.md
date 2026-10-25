@@ -18,7 +18,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 5 | 0.5 | File: formato nativo e DXF | **aperta** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
-| 8 | 0.8 | Quote, retini, blocchi | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
+| 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
 | 10 | 1.0 | Stabilità e prestazioni: CAD 2D per lavoro reale | in programma | [1.0](tappe/1.0-stabilita.md) |
 | — | 2.x | Modellatore 3D parametrico | da definire | [2.x](tappe/2.x-modellatore-3d.md) |
@@ -198,7 +198,8 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   codice degli strumenti MCP sta in una libreria comune, che riuserà il
   programma distribuito quando l'utente potrà pilotare il disegno aperto con il
   proprio assistente IA, solo in locale e con il canale acceso da lui; lì le
-  domande al modello non si espongono mai. Questa strada è prevista, con un suo
-  ADR e una tappa da definire; una chat dentro Tecnigrafo e il linguaggio
+  domande al modello non si espongono mai. Questa strada entra nella
+  [scheda della tappa 0.8](tappe/0.8-quote-retini-blocchi.md), con un suo ADR;
+  i dettagli si fissano quando si prepara quella tappa. Una chat dentro Tecnigrafo e il linguaggio
   naturale nella riga di comando restano possibili ma con l'intenzione di
   scartarli.
