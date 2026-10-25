@@ -158,7 +158,8 @@ volta su ogni PC; i dettagli e il perché sono in
 1. Copia le regole dei permessi della sezione 6 in
    `~/.gemini/antigravity-cli/settings.json` (se il file esiste già, aggiungi
    il blocco `permissions` a quello che c'è). Autorizzano i comandi del lavoro
-   (`git`, `gh`, `cmake`, `ctest`, `python3`, `scripts/controlla.sh`) e
+   (`git`, `gh`, `cmake`, `ctest`, `python3`, `scripts/controlla.sh`,
+   `scripts/ci-attendi.sh`, `scripts/ci-errori.sh`) e
    vietano quelli che spettano solo a te (`gh pr merge`, i push forzati e i push
    su `main`).
 2. Avvia sempre Antigravity così:
@@ -288,7 +289,9 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
    aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo.
 
 Gli agenti fanno le prove locali con `scripts/controlla.sh` (AGENTS.md,
-"Comandi"). Per te non cambia niente: conta solo la CI verde della pull request.
+"Comandi"), aspettano la CI con `scripts/ci-attendi.sh` e, se è rossa, ne leggono
+la causa con `scripts/ci-errori.sh` (AGENTS.md, "Quando fermarsi"). Per te non
+cambia niente: conta solo la CI verde della pull request.
 
 ### B5. Seconda opinione (Gemini, a lotti)
 

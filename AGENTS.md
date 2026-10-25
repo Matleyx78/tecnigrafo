@@ -82,8 +82,8 @@ verdi**:
 
 1. Apri la pull request e aspetta la CI con **un solo comando che blocca**, non
    con controlli ripetuti (ogni controllo consuma token). Tieni l'etichetta.
-2. Se un controllo fallisce, leggi il log, correggi sullo stesso ramo, pubblica e
-   aspetta di nuovo.
+2. Se un controllo fallisce, leggi gli errori con `scripts/ci-errori.sh`
+   (sotto), correggi sullo stesso ramo, pubblica e aspetta di nuovo.
 3. Con tutto verde togli l'etichetta, scrivi il riepilogo (sotto) e **termina la
    sessione**.
 
@@ -96,24 +96,27 @@ scrivendo nella pull request che cosa hai visto e provato, solo se:
 - dopo tre tentativi lo stesso controllo non passa ancora.
 
 ```sh
-# l'esecuzione della CI dell'ultimo commit pubblicato (vuota: non è ancora partita)
-gh api "repos/Matleyx78/tecnigrafo/actions/runs?head_sha=<sha>" \
-  --jq '.workflow_runs[] | "\(.id) \(.status) \(.conclusion)"'
-# aspetta la fine; esce con errore se un controllo fallisce. Se il tuo strumento
-# interrompe i comandi lunghi, rilancialo: riprende da dove era
-gh run watch <id> --repo Matleyx78/tecnigrafo --exit-status --compact
-# il log dei controlli falliti
-gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
+# aspetta la fine della CI dell'ultimo commit pubblicato, aspettando dentro lo
+# script (non consuma token). Esce 0 se tutto è verde, 1 se un controllo è
+# fallito, 3 se dopo 25 minuti è ancora in corso (rilancialo, riprende da dove
+# era), 4 se è stata annullata: non è un guasto, un push più recente sullo
+# stesso ramo l'ha sostituita, quindi aspetta quella. Accetta anche <sha> o
+# <id>; non serve `gh`.
+scripts/ci-attendi.sh
+# perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
+scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
 ```
 
-Se i log non sono raggiungibili (per esempio il proxy blocca il servizio che li
-ospita), leggi le annotazioni dei check-run dall'API usando l'ID del job.
+`scripts/ci-errori.sh` legge solo l'API REST, quindi funziona anche dove i log non
+sono raggiungibili (per esempio il proxy blocca il servizio che li ospita) e dove
+manca `gh`: allora usa `curl` e `jq`, senza token. Gli
+errori vengono da `scripts/ci-annota.sh`, che la CI esegue su ogni passo di
+compilazione, test e verifica; per i passi in Python l'annotazione contiene le
+ultime righe dell'output. Se ancora non basta, e solo allora, il log intero dei
+controlli falliti:
 
 ```sh
-gh api repos/Matleyx78/tecnigrafo/actions/runs/<id>/jobs \
-  --jq '.jobs[] | select(.conclusion=="failure") | .id'
-gh api repos/Matleyx78/tecnigrafo/check-runs/<id del job>/annotations \
-  --paginate --jq '.[] | "\(.path):\(.start_line) \(.message)"'
+gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
 Quando il responsabile chiede correzioni a una pull request, riprendila in carico
