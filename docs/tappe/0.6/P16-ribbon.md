@@ -1,11 +1,11 @@
 # [0.6-P16] `app`: ribbon e interfaccia classica
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #249
 - **Difficoltà:** impegnativa
 - **Agente:** codex
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.6-R16]` (#…), agente gemini
+- **Riferimenti:** issue `[0.6-R16]` (#248), agente gemini
 - **Dipende da:** P3, P7, R16
 - **Modulo:** `app`
 - **Da leggere:** [ADR 0009](../../adr/0009-interfaccia-grafica.md) punti 1 e

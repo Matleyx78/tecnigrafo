@@ -1,11 +1,11 @@
 # [0.6-P13] `cmd`: `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`, `LWDISPLAY`
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #244
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.6-R13]` (#…), agente gemini
+- **Riferimenti:** issue `[0.6-R13]` (#243), agente gemini
 - **Dipende da:** P12, R13
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0023](../../adr/0023-layer-e-proprieta.md) punto 3,

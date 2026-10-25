@@ -1,7 +1,7 @@
 # [0.6-P5] `script`: layer e proprietà nella modalità di controllo
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #231
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto

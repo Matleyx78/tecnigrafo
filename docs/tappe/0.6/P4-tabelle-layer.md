@@ -1,7 +1,7 @@
 # [0.6-P4] `core`: tabelle dei layer e dei tipi di linea, proprietà delle entità
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #230
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto

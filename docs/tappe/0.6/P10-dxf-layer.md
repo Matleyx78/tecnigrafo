@@ -1,11 +1,11 @@
 # [0.6-P10] `io`: layer, tipi di linea e proprietà nel DXF
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #238
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.6-R10]` (#…), agente gemini
+- **Riferimenti:** issue `[0.6-R10]` (#237), agente gemini
 - **Dipende da:** P4, P5, P8, R10
 - **Modulo:** `io`
 - **Da leggere:** [ADR 0023](../../adr/0023-layer-e-proprieta.md) punti 1, 2,

@@ -1,11 +1,11 @@
 # [0.6-P11] `core`: tratti dei tipi di linea
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #240
 - **Difficoltà:** impegnativa
 - **Agente:** codex
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.6-R11]` (#…), agente claude (calcoli delicati)
+- **Riferimenti:** issue `[0.6-R11]` (#239), agente claude (calcoli delicati)
 - **Dipende da:** P5, P9, P10, R11
 - **Modulo:** `core` (più la domanda `dashes` in `script`)
 - **Da leggere:** [ADR 0025](../../adr/0025-tipi-di-linea-e-spessori.md) punti

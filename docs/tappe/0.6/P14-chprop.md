@@ -1,12 +1,12 @@
 # [0.6-P14] `cmd`: `CHPROP` e layer bloccati nella selezione
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #246
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.6-R14]` (#…), agente gemini
-- **Dipende da:** P13, R14
+- **Riferimenti:** issue `[0.6-R14]` (#245), agente gemini
+- **Dipende da:** P10, P13, R14
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0023](../../adr/0023-layer-e-proprieta.md) punti 2 e 4,
   [ADR 0008](../../adr/0008-selezione-e-snap.md) (selezione);
@@ -73,6 +73,7 @@ Selezione prima (`selectsFirst`), poi, finché Invio:
 
 ## Fatto quando
 
-- I casi di `[0.6-R14]` passano e le loro righe sono tolte da
+- I casi di `[0.6-R14]` passano, compresi quelli che salvano e riaprono il
+  disegno (per questo P14 dipende anche da P10), e le loro righe sono tolte da
   `tests/verifica/in-attesa.txt`.
 - La CI è verde.
