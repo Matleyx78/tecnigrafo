@@ -161,7 +161,7 @@ Status NewCommand::proceed(CommandContext& context) {
         m_stage = Stage::Name;
         return Status::Continue;
     }
-    context.editor.replaceDocument(core::Document{}, "");
+    context.editor.replaceDocument(core::Document::newDrawing(), "");
     context.documentReplaced = true;
     m_stage = Stage::Done;
     return Status::Finished;

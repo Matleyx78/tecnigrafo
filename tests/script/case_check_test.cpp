@@ -26,7 +26,7 @@ constexpr std::string_view kReport =
     "\n"
     "[final]\n"
     "entities:\n"
-    "  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n"
+    "  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n"
     "messages:\n"
     "  Command: PLINE\n"
     "  Specify start point: 0,0\n"
@@ -104,8 +104,8 @@ TEST(CheckCase, ScriptThatDoesNotPass) {
     expectContains(result.output, "1 differences");
     expectContains(result.output,
                    "  line 5\n"
-                   "    expected:   1 LWPOLYLINE closed=no vertex=0,0 vertex=11,0\n"
-                   "    obtained:   1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
+                   "    expected:   257 LWPOLYLINE closed=no vertex=0,0 vertex=11,0\n"
+                   "    obtained:   257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0\n");
     // The obtained report is written also when the case fails.
     EXPECT_EQ(readFile(kOutput / "obtained" / "fails" / kObtainedReport), kReport);
 }

@@ -3,6 +3,8 @@
 
 #include "tg/core/document.hpp"
 
+#include "tg/core/start_handles.hpp"
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -10,6 +12,7 @@
 #include <cstdint>
 #include <optional>
 #include <random>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -486,6 +489,290 @@ TEST(Document, CopyIsIndependentOfTheOriginal) {
     EXPECT_EQ(moved.entityCount(), 51U);
     EXPECT_EQ(moved.extents().max(), Vec2(501.0, 501.0));
     expectEveryEntityFound(moved);
+}
+
+// --- Tables and properties (docs/adr/0023) --------------------------------
+
+/// A layer named `name`, with the defaults of a new layer and `linetype`.
+Layer namedLayer(std::string name, LinetypeId linetype) {
+    Layer layer;
+    layer.name = std::move(name);
+    layer.linetype = linetype;
+    return layer;
+}
+
+/// The value of `optional`, failing the test if it is empty.
+template <typename T>
+T valueOrFail(std::optional<T> optional) {
+    if (!optional) {
+        ADD_FAILURE() << "the record is not in the document";
+        return {};
+    }
+    return std::move(*optional);
+}
+
+/// The names of the layers, in table order.
+std::vector<std::string> layerNames(const Document& document) {
+    std::vector<std::string> names;
+    for (const Layer& layer : document.layers()) {
+        names.push_back(layer.name);
+    }
+    return names;
+}
+
+TEST(DocumentTables, NewDrawingHasTheStartRecordsWithTheirHandles) {
+    const Document document = Document::newDrawing();
+
+    ASSERT_EQ(document.linetypes().size(), 3U);
+    EXPECT_EQ(document.linetypes()[0].name, "ByBlock");
+    EXPECT_EQ(document.linetypes()[0].id.value, start_handles::kByBlock);
+    EXPECT_EQ(document.linetypes()[1].name, "ByLayer");
+    EXPECT_EQ(document.linetypes()[1].id.value, start_handles::kByLayer);
+    EXPECT_EQ(document.linetypes()[2].name, "Continuous");
+    EXPECT_EQ(document.linetypes()[2].id.value, start_handles::kContinuous);
+    for (const Linetype& linetype : document.linetypes()) {
+        EXPECT_TRUE(linetype.pattern.continuous()) << linetype.name;
+    }
+    EXPECT_EQ(document.byBlockLinetype().value, 256U);
+    EXPECT_EQ(document.byLayerLinetype().value, 255U);
+    EXPECT_EQ(document.continuousLinetype().value, 254U);
+
+    ASSERT_EQ(document.layers().size(), 1U);
+    const Layer& zero = document.layers()[0];
+    EXPECT_EQ(zero.name, "0");
+    EXPECT_EQ(zero.id.value, start_handles::kLayerZero);
+    EXPECT_EQ(zero.color, Color::fromIndex(7));
+    EXPECT_EQ(zero.linetype, document.continuousLinetype());
+    EXPECT_EQ(zero.lineweight, lineweight::kDefault);
+    EXPECT_TRUE(zero.on);
+    EXPECT_FALSE(zero.frozen);
+    EXPECT_FALSE(zero.locked);
+    EXPECT_TRUE(zero.plot);
+    EXPECT_EQ(document.layerZero().value, 253U);
+    EXPECT_EQ(document.layer(LayerId{253}), &zero);
+
+    EXPECT_EQ(document.current().layer, document.layerZero());
+    EXPECT_EQ(document.current().color, Color::byLayer());
+    EXPECT_EQ(document.current().linetype, document.byLayerLinetype());
+    EXPECT_EQ(document.current().lineweight, lineweight::kByLayer);
+    EXPECT_DOUBLE_EQ(document.current().linetypeScale, 1.0);
+    EXPECT_DOUBLE_EQ(document.ltscale(), 1.0);
+    EXPECT_EQ(document.lwdefault(), 25);
+    EXPECT_FALSE(document.lwdisplay());
+
+    EXPECT_TRUE(document.isEmpty());
+    EXPECT_TRUE(document.rawEntities().empty());
+    EXPECT_EQ(document.nextId(), 257U);
+    EXPECT_EQ(start_handles::kFirstEntity, 257U);
+}
+
+TEST(DocumentTables, TheFirstEntityOfANewDrawingIs257) {
+    Document document = Document::newDrawing();
+    EXPECT_EQ(document.add(segment({0.0, 0.0}, {1.0, 0.0})).value, 257U);
+    EXPECT_EQ(document.add(segment({0.0, 1.0}, {1.0, 1.0})).value, 258U);
+}
+
+TEST(DocumentTables, ANewDrawingLeavesTheOtherLowHandlesFree) {
+    // Every handle from 1 to 256 that the map does not give can still be
+    // inserted: insert() requires it unused.
+    Document document = Document::newDrawing();
+    for (std::uint64_t handle = 1; handle < start_handles::kLowest; ++handle) {
+        document.insert(
+            EntityRecord{EntityId{handle}, segment({0.0, 0.0}, {1.0, 0.0}), {}, handle});
+    }
+    EXPECT_EQ(document.entityCount(), start_handles::kLowest - 1);
+    EXPECT_EQ(document.nextId(), 257U);
+    EXPECT_EQ(document.find(EntityId{252})->id.value, 252U);
+}
+
+TEST(DocumentTables, AnEmptyDocumentHasNoRecords) {
+    Document document;
+    EXPECT_TRUE(document.layers().empty());
+    EXPECT_TRUE(document.linetypes().empty());
+    EXPECT_EQ(document.nextId(), 1U);
+    EXPECT_EQ(document.layerZero(), LayerId{});
+    EXPECT_EQ(document.byLayerLinetype(), LinetypeId{});
+    EXPECT_EQ(document.byBlockLinetype(), LinetypeId{});
+    EXPECT_EQ(document.continuousLinetype(), LinetypeId{});
+    EXPECT_EQ(document.current(), CurrentProperties{});
+    EXPECT_EQ(document.findLayer("0"), nullptr);
+    EXPECT_EQ(document.layer(LayerId{253}), nullptr);
+    EXPECT_DOUBLE_EQ(document.ltscale(), 1.0);
+    EXPECT_EQ(document.lwdefault(), 25);
+    EXPECT_FALSE(document.lwdisplay());
+
+    // The entities of an empty document keep the identifiers of the past.
+    EXPECT_EQ(document.add(segment({0.0, 0.0}, {1.0, 0.0})).value, 1U);
+    EXPECT_EQ(document.entities()[0].properties, EntityProperties{});
+}
+
+TEST(DocumentTables, ARecordReadWithALowHandleConflictsWithNothing) {
+    // As a file read: layer 0 at 0x10, as AutoCAD writes it, and a linetype
+    // at 253, the handle of layer 0 in a new drawing.
+    Document document;
+    document.insert(EntityRecord{EntityId{1}, segment({0.0, 0.0}, {1.0, 0.0}), {}, 1});
+    const LinetypeId continuous =
+        document.addLinetype(Linetype{LinetypeId{253}, "Continuous", "Solid line", {}, {}});
+    Layer zero = namedLayer("0", continuous);
+    zero.id = LayerId{0x10};
+    EXPECT_EQ(document.addLayer(zero).value, 0x10U);
+
+    EXPECT_EQ(continuous.value, 253U);
+    EXPECT_EQ(document.layerZero().value, 0x10U);
+    EXPECT_EQ(document.continuousLinetype().value, 253U);
+    EXPECT_EQ(document.find(EntityId{1})->id.value, 1U);
+    // The counter moves past every handle used, as for reserved handles.
+    EXPECT_EQ(document.nextId(), 254U);
+    EXPECT_EQ(document.add(segment({0.0, 1.0}, {1.0, 1.0})).value, 254U);
+}
+
+TEST(DocumentTables, AddGivesTheCurrentProperties) {
+    Document document = Document::newDrawing();
+    const EntityId first = document.add(segment({0.0, 0.0}, {1.0, 0.0}));
+    EXPECT_EQ(document.find(first)->properties, document.current());
+
+    const LayerId walls = document.addLayer(namedLayer("Walls", document.continuousLinetype()));
+    CurrentProperties current;
+    current.layer = walls;
+    current.color = Color::fromIndex(1);
+    current.linetype = document.continuousLinetype();
+    current.lineweight = 50;
+    current.linetypeScale = 2.0;
+    document.setCurrent(current);
+    EXPECT_EQ(document.current(), current);
+
+    const EntityId second = document.add(segment({0.0, 1.0}, {1.0, 1.0}));
+    EXPECT_EQ(document.find(second)->properties, current);
+    // The entity added before keeps its own.
+    EXPECT_EQ(document.find(first)->properties.layer, document.layerZero());
+    EXPECT_EQ(document.find(first)->properties.color, Color::byLayer());
+}
+
+TEST(DocumentTables, NamesAreFoundWithoutCase) {
+    Document document = Document::newDrawing();
+    const LayerId walls = document.addLayer(namedLayer("Walls", document.continuousLinetype()));
+    ASSERT_NE(document.findLayer("WALLS"), nullptr);
+    EXPECT_EQ(document.findLayer("walls")->id, walls);
+    EXPECT_EQ(document.findLayer("Walls")->name, "Walls");
+    EXPECT_EQ(document.findLayer("Wall"), nullptr);
+    ASSERT_NE(document.findLinetype("CONTINUOUS"), nullptr);
+    EXPECT_EQ(document.findLinetype("bylayer")->id, document.byLayerLinetype());
+    EXPECT_EQ(document.findLinetype("Dashed"), nullptr);
+}
+
+TEST(DocumentTables, AddedRecordsGetNewIdentifiersAtTheEnd) {
+    Document document = Document::newDrawing();
+    const LinetypeId dashed =
+        document.addLinetype(Linetype{{}, "Dashed", "__ __", LinetypePattern{{5.0, -2.5}}, {}});
+    const LayerId walls = document.addLayer(namedLayer("Walls", dashed));
+    EXPECT_EQ(dashed.value, 257U);
+    EXPECT_EQ(walls.value, 258U);
+    EXPECT_EQ(document.linetypes().back().id, dashed);
+    EXPECT_EQ(document.layers().back().id, walls);
+    EXPECT_EQ(document.layer(walls)->linetype, dashed);
+    EXPECT_EQ(document.linetype(dashed)->pattern.elements.size(), 2U);
+    EXPECT_EQ(document.add(segment({0.0, 0.0}, {1.0, 0.0})).value, 259U);
+}
+
+TEST(DocumentTables, RemoveAndInsertLayerAtTheSamePosition) {
+    Document document = Document::newDrawing();
+    const LinetypeId continuous = document.continuousLinetype();
+    document.addLayer(namedLayer("A", continuous));
+    Layer b = namedLayer("B", continuous);
+    b.color = Color::fromRgb({10, 20, 30});
+    b.locked = true;
+    b.extras = {RawGroup{1001, "APP"}};
+    const LayerId bId = document.addLayer(b);
+    document.addLayer(namedLayer("C", continuous));
+    const std::vector<Layer> before{document.layers().begin(), document.layers().end()};
+
+    auto [removed, position] = valueOrFail(document.removeLayer(bId));
+    EXPECT_EQ(position, 2U);
+    EXPECT_EQ(removed.name, "B");
+    EXPECT_EQ(removed.extras, b.extras);
+    EXPECT_EQ(layerNames(document), (std::vector<std::string>{"0", "A", "C"}));
+    EXPECT_EQ(document.layer(bId), nullptr);
+    EXPECT_FALSE(document.removeLayer(bId).has_value());
+
+    document.insertLayer(std::move(removed), position);
+    EXPECT_EQ(std::vector<Layer>(document.layers().begin(), document.layers().end()), before);
+}
+
+TEST(DocumentTables, RemoveAndInsertLinetypeAtTheSamePosition) {
+    Document document = Document::newDrawing();
+    const LinetypeId dashed =
+        document.addLinetype(Linetype{{}, "Dashed", "", LinetypePattern{{5.0, -2.5}}, {}});
+    auto [removed, position] = valueOrFail(document.removeLinetype(document.continuousLinetype()));
+    EXPECT_EQ(position, 2U);
+    EXPECT_EQ(document.continuousLinetype(), LinetypeId{});
+    EXPECT_EQ(document.linetypes()[2].id, dashed);
+
+    document.insertLinetype(std::move(removed), position);
+    EXPECT_EQ(document.continuousLinetype().value, 254U);
+    EXPECT_EQ(document.linetypes()[2].name, "Continuous");
+    EXPECT_EQ(document.linetypes()[3].id, dashed);
+}
+
+TEST(DocumentTables, IdentifiersAreNeverReused) {
+    Document document = Document::newDrawing();
+    const EntityId entity = document.add(segment({0.0, 0.0}, {1.0, 0.0}));
+    EXPECT_EQ(entity.value, 257U);
+    ASSERT_TRUE(document.remove(entity).has_value());
+
+    const LayerId walls = document.addLayer(namedLayer("Walls", document.continuousLinetype()));
+    EXPECT_EQ(walls.value, 258U);
+    ASSERT_TRUE(document.removeLayer(walls).has_value());
+
+    // A removed layer leaves its name free, never its identifier.
+    const LayerId again = document.addLayer(namedLayer("Walls", document.continuousLinetype()));
+    EXPECT_EQ(again.value, 259U);
+    EXPECT_EQ(document.add(segment({0.0, 0.0}, {1.0, 0.0})).value, 260U);
+}
+
+TEST(DocumentTables, ReplaceLayerChangesEveryFieldButTheIdentifier) {
+    Document document = Document::newDrawing();
+    const LayerId walls = document.addLayer(namedLayer("Walls", document.continuousLinetype()));
+    Layer changed = *document.layer(walls);
+    changed.name = "WALLS";  // the same name in another case is not a double
+    changed.color = Color::fromIndex(3);
+    changed.lineweight = 35;
+    changed.on = false;
+    changed.frozen = true;
+    changed.plot = false;
+    document.replaceLayer(changed);
+    EXPECT_EQ(*document.layer(walls), changed);
+    EXPECT_EQ(document.layers().size(), 2U);
+    EXPECT_EQ(document.layers()[1].id, walls);
+}
+
+TEST(DocumentTables, SetPropertiesAndRemoveRestoreKeepThem) {
+    Document document = Document::newDrawing();
+    const LayerId walls = document.addLayer(namedLayer("Walls", document.continuousLinetype()));
+    const EntityId id = document.add(segment({0.0, 0.0}, {1.0, 0.0}));
+
+    EntityProperties properties;
+    properties.layer = walls;
+    properties.color = Color::fromRgb({1, 2, 3});
+    properties.linetype = document.byBlockLinetype();
+    properties.lineweight = lineweight::kByBlock;
+    properties.linetypeScale = 0.5;
+    document.setProperties(id, properties);
+    EXPECT_EQ(document.find(id)->properties, properties);
+
+    EntityRecord removed = removeOrFail(document, id);
+    EXPECT_EQ(removed.properties, properties);
+    document.restore(std::move(removed));
+    EXPECT_EQ(document.find(id)->properties, properties);
+}
+
+TEST(DocumentTables, CurrentValuesChange) {
+    Document document = Document::newDrawing();
+    document.setLtscale(2.5);
+    document.setLwdefault(18);
+    document.setLwdisplay(true);
+    EXPECT_DOUBLE_EQ(document.ltscale(), 2.5);
+    EXPECT_EQ(document.lwdefault(), 18);
+    EXPECT_TRUE(document.lwdisplay());
 }
 
 }  // namespace

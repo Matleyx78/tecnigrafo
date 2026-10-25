@@ -9,6 +9,7 @@
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/snap_points.hpp"
+#include "tg/core/start_handles.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
 
@@ -27,12 +28,16 @@ std::optional<core::EntityId> QuestionModel::find(std::string_view name) const {
     if (found == names.end()) {
         return std::nullopt;
     }
-    return core::EntityId{static_cast<std::uint64_t>(found - names.begin()) + 1};
+    // The entities are numbered in the order they appear, from the first
+    // handle of a new drawing (docs/adr/0023, point 1).
+    return core::EntityId{static_cast<std::uint64_t>(found - names.begin()) +
+                          core::start_handles::kFirstEntity};
 }
 
 std::string_view QuestionModel::nameOf(core::EntityId id) const {
-    assert(id.value >= 1 && id.value <= names.size());
-    return names[id.value - 1];
+    assert(id.value >= core::start_handles::kFirstEntity &&
+           id.value - core::start_handles::kFirstEntity < names.size());
+    return names[id.value - core::start_handles::kFirstEntity];
 }
 
 namespace {

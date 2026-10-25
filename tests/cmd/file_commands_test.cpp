@@ -260,6 +260,28 @@ TEST_F(FileCommandsTest, NewResetsDocumentAndHistoryWithoutAskingWhenClean) {
     EXPECT_FALSE(editor.canRedo());
 }
 
+TEST_F(FileCommandsTest, NewStartsANewDrawingWhoseFirstEntityIs257) {
+    const auto addSegment = [this] {
+        core::Polyline segment;
+        segment.addVertex({0.0, 0.0});
+        segment.addVertex({10.0, 0.0});
+        editor.beginTransaction("Segment");
+        const core::EntityId id = editor.add(core::Entity{segment});
+        editor.commit();
+        return id;
+    };
+    addSegment();
+    addSegment();
+    inputs({"QSAVE", "old.cadx", "NEW"});
+    EXPECT_TRUE(document.isEmpty());
+    EXPECT_EQ(document.layers().size(), 1U);
+    EXPECT_EQ(document.linetypes().size(), 3U);
+    EXPECT_EQ(document.layerZero().value, 253U);
+    EXPECT_EQ(document.nextId(), 257U);
+    EXPECT_EQ(addSegment().value, 257U);
+    EXPECT_EQ(addSegment().value, 258U);
+}
+
 TEST_F(FileCommandsTest, CancelAndEscapePreserveUnsavedDrawingForBothCommands) {
     for (const char* command : {"NEW", "OPEN"}) {
         changeUnits();
