@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0
-  2 LWPOLYLINE closed=no vertex=0,10 vertex=10,10
+  257 LWPOLYLINE closed=no vertex=0,0 vertex=10,0
+  258 LWPOLYLINE closed=no vertex=0,10 vertex=10,10
 messages:
   Command: PLINE
   Specify start point: 0,0
@@ -15,7 +15,7 @@ messages:
   Specify next point or [Arc/Undo]:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Polyline
@@ -30,7 +30,7 @@ statistics:
 
 [final]
 entities:
-  2 LWPOLYLINE closed=no vertex=0,10 vertex=10,10
+  258 LWPOLYLINE closed=no vertex=0,10 vertex=10,10
 messages:
   Command: ERASE
 prompt: Command:

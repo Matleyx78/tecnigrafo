@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 CIRCLE center=50,50 radius=20
-  2 CIRCLE center=150,50 radius=20
+  257 CIRCLE center=50,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 50,50
@@ -28,12 +28,12 @@ statistics:
 
 [report 2]
 entities:
-  1 CIRCLE center=50,50 radius=20
-  2 CIRCLE center=150,50 radius=20
+  257 CIRCLE center=50,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Circle
@@ -48,8 +48,8 @@ statistics:
 
 [report 3]
 entities:
-  1 CIRCLE center=50,50 radius=20
-  2 CIRCLE center=150,50 radius=20
+  257 CIRCLE center=50,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
 prompt: Command:
 preview:
@@ -68,12 +68,12 @@ statistics:
 
 [report 4]
 entities:
-  1 CIRCLE center=50,50 radius=20
-  2 CIRCLE center=150,50 radius=20
+  257 CIRCLE center=50,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Circle
@@ -88,8 +88,8 @@ statistics:
 
 [report 5]
 entities:
-  1 CIRCLE center=50,50 radius=20
-  2 CIRCLE center=150,50 radius=20
+  257 CIRCLE center=50,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
 prompt: Command:
 preview:
@@ -108,12 +108,12 @@ statistics:
 
 [report 6]
 entities:
-  1 CIRCLE center=50,50 radius=20
-  2 CIRCLE center=150,50 radius=20
+  257 CIRCLE center=50,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
 prompt: Command:
 preview:
-selection: 1
+selection: 257
 rectangle: none
 undo:
   Circle
@@ -128,7 +128,7 @@ statistics:
 
 [final]
 entities:
-  2 CIRCLE center=150,50 radius=20
+  258 CIRCLE center=150,50 radius=20
 messages:
   Command: ERASE
   1 found, 1 total

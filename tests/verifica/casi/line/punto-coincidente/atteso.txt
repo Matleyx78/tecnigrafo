@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  1 LINE start=0,0 end=10,0
-  2 LINE start=10,0 end=10,10
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,0 end=10,10
 messages:
   Command: LINE
   Specify first point: 0,0

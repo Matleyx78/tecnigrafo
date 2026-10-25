@@ -45,7 +45,7 @@ statistics:
 
 [report 2]
 entities:
-  1 CIRCLE center=0,0 radius=10
+  257 CIRCLE center=0,0 radius=10
 messages:
   Command: CIRCLE
   Specify center point for circle or [3P/2P]: 0,0
@@ -84,7 +84,7 @@ statistics:
 
 [final]
 entities:
-  1 CIRCLE center=0,0 radius=10
+  257 CIRCLE center=0,0 radius=10
 messages:
   Command: REDO
   Redone: Circle.

@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LINE start=0,0 end=20,0
+  257 LINE start=0,0 end=20,0
 messages:
   Command: LINE
   Specify first point: 0,0
@@ -27,7 +27,7 @@ statistics:
 
 [report 2]
 entities:
-  1 LINE start=0,0 end=20,0
+  257 LINE start=0,0 end=20,0
 messages:
   Command: SAVEAS
   Save drawing as <senza-estensione.cadx>: disegno.dxf
@@ -48,7 +48,7 @@ statistics:
 
 [report 3]
 entities:
-  1 LINE start=0,0 end=20,0
+  257 LINE start=0,0 end=20,0
 messages:
   Command: SAVEAS
   Save drawing as <disegno.dxf>: progetto.dwg
@@ -70,7 +70,7 @@ statistics:
 
 [final]
 entities:
-  1 LINE start=0,0 end=20,0
+  257 LINE start=0,0 end=20,0
 messages:
   Command: SAVEAS
   Save drawing as <disegno.dxf>: "con spazi.cadx"

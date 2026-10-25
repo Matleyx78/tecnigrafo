@@ -31,8 +31,8 @@ statistics:
 
 [report 2]
 entities:
-  1 TEXT position=10,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 1" ~box=10,19.07594038325053;22.60468417317246,19.07594038325053;22.60468417317246,23.94748048261178;10,23.94748048261178
-  2 TEXT position=10,15 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 2" ~box=10,14.07594038325053;22.60468417317246,14.07594038325053;22.60468417317246,18.94748048261178;10,18.94748048261178
+  257 TEXT position=10,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 1" ~box=10,19.07594038325053;22.60468417317246,19.07594038325053;22.60468417317246,23.94748048261178;10,23.94748048261178
+  258 TEXT position=10,15 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 2" ~box=10,14.07594038325053;22.60468417317246,14.07594038325053;22.60468417317246,18.94748048261178;10,18.94748048261178
 messages:
   Command: TEXT
   Specify start point of text: 10,20
@@ -75,8 +75,8 @@ statistics:
 
 [final]
 entities:
-  1 TEXT position=10,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 1" ~box=10,19.07594038325053;22.60468417317246,19.07594038325053;22.60468417317246,23.94748048261178;10,23.94748048261178
-  2 TEXT position=10,15 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 2" ~box=10,14.07594038325053;22.60468417317246,14.07594038325053;22.60468417317246,18.94748048261178;10,18.94748048261178
+  257 TEXT position=10,20 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 1" ~box=10,19.07594038325053;22.60468417317246,19.07594038325053;22.60468417317246,23.94748048261178;10,23.94748048261178
+  258 TEXT position=10,15 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Riga 2" ~box=10,14.07594038325053;22.60468417317246,14.07594038325053;22.60468417317246,18.94748048261178;10,18.94748048261178
 messages:
   Command: REDO
   Redone: Text.

@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
 messages:
   Command: ARC
   Specify start point of arc: 90,50
@@ -25,7 +25,7 @@ statistics:
 
 [report 2]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Specify first point:
 preview:
@@ -43,7 +43,7 @@ statistics:
 
 [report 3]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Specify first point:
 preview:
@@ -61,7 +61,7 @@ statistics:
 
 [report 4]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Specify first point:
 preview:
@@ -79,7 +79,7 @@ statistics:
 
 [report 5]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
 messages:
 prompt: Specify first point:
 preview:
@@ -97,7 +97,7 @@ statistics:
 
 [final]
 entities:
-  1 ARC center=50,50 radius=40 start-angle=0 end-angle=180
+  257 ARC center=50,50 radius=40 start-angle=0 end-angle=180
 messages:
   *Cancel*
 prompt: Command:

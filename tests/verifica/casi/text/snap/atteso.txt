@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 TEXT position=20,30 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="SnapTarget" ~box=20,28.45990063875089;57.97728885734563,28.45990063875089;57.97728885734563,36.5791341376863;20,36.5791341376863
+  257 TEXT position=20,30 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="SnapTarget" ~box=20,28.45990063875089;57.97728885734563,28.45990063875089;57.97728885734563,36.5791341376863;20,36.5791341376863
 messages:
   Command: TEXT
   Specify start point of text: 20,30
@@ -27,8 +27,8 @@ statistics:
 
 [final]
 entities:
-  1 TEXT position=20,30 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="SnapTarget" ~box=20,28.45990063875089;57.97728885734563,28.45990063875089;57.97728885734563,36.5791341376863;20,36.5791341376863
-  2 LINE start=20,30 end=50,50
+  257 TEXT position=20,30 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="SnapTarget" ~box=20,28.45990063875089;57.97728885734563,28.45990063875089;57.97728885734563,36.5791341376863;20,36.5791341376863
+  258 LINE start=20,30 end=50,50
 messages:
   Specify next point or [Undo]: 50,50
   Specify next point or [Undo]:

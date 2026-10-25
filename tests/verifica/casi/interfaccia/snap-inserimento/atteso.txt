@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  257 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
 messages:
   Command: TEXT
   Specify start point of text: 10,20
@@ -27,8 +27,8 @@ statistics:
 
 [final]
 entities:
-  1 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
-  2 LWPOLYLINE closed=no vertex=10,20 vertex=40,40
+  257 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  258 LWPOLYLINE closed=no vertex=10,20 vertex=40,40
 messages:
   Specify next point or [Arc/Undo]: 40,40
   Specify next point or [Arc/Undo]:
