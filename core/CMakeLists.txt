@@ -7,6 +7,9 @@ add_library(tg_core
     src/arc.cpp
     src/arc_geometry.cpp
     src/circle.cpp
+    src/color.cpp
+    src/lineweight.cpp
+    src/linetype_pattern.cpp
     src/document.cpp
     src/document_query.cpp
     src/line.cpp
