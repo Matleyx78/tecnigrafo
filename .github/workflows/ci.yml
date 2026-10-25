@@ -106,7 +106,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev clang-tidy-18
+          sudo apt-get install -y ninja-build libgtest-dev clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
       - uses: actions/cache@v4
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
@@ -114,7 +118,7 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
-          cmake --preset ci
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
           cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
       - name: Test
@@ -123,7 +127,7 @@ jobs:
           ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
       - name: Static analysis
         run: |
-          cmake --preset tidy
+          cmake --preset tidy -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
           cmake --build --preset tidy 2>&1 | scripts/ci-annota.sh
 
@@ -139,7 +143,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev
+          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
       - uses: actions/cache@v4
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
@@ -147,7 +155,7 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build verification tools
         run: |
-          cmake --preset ci
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           cmake --build --preset ci --target tecnigrafo-script tecnigrafo confronta_immagini
       - name: Verifica
         run: |
@@ -183,7 +191,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build qt6-base-dev libgtest-dev
+          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
       - uses: actions/cache@v4
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
@@ -191,7 +203,7 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build with AddressSanitizer and UBSan
         run: |
-          cmake --preset asan
+          cmake --preset asan -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
           cmake --build --preset asan 2>&1 | scripts/ci-annota.sh
       - name: Test

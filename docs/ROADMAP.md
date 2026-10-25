@@ -223,3 +223,10 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   entra nel modello con P10; i pacchetti di `app` vanno uno dopo l'altro.
   P14 dipende anche da P10, perché i suoi riferimenti salvano e riaprono il
   disegno.
+- **2026-10-25 — Versione minima di Qt 6.8.** La prova di SARibbon (0.6-P3)
+  ha mostrato che la libreria non compila con Qt 6.4 su Linux. Il responsabile
+  alza la versione minima a **Qt 6.8** e la CI Linux usa Qt 6.8.3 con
+  `install-qt-action`, come Windows e macOS; Debian 12 e Ubuntu 24.04 restano
+  fuori dai sistemi con Qt dei pacchetti di sistema
+  ([ADR 0028](adr/0028-versione-minima-di-qt.md), che sostituisce in parte l'ADR
+  0002). SARibbon resta alla v2.9.5, senza modifiche.

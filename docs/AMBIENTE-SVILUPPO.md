@@ -1,6 +1,8 @@
 # Ambiente di sviluppo su Debian con VS Code
 
-Procedura verificata per Debian 12 (bookworm) e Debian 13 (trixie). Su Windows 11
+Procedura per Debian 13 (trixie), che ha Qt 6.8 nei pacchetti (minimo del progetto,
+ADR 0028). Debian 12 (bookworm) ha Qt 6.4: serve Qt 6.8 installato a parte, vedi
+il [README](../README.md). Su Windows 11
 la stessa procedura funziona dentro WSL: vedi la sezione
 [5. Windows con WSL](#5-windows-con-wsl). Per la compilazione nativa su Windows
 (MSVC) e su macOS vedi il [README](../README.md).

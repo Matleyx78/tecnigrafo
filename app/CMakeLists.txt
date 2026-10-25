@@ -3,7 +3,7 @@
 # tecnigrafo: the Qt desktop application. The only module allowed to
 # depend on Qt (docs/adr/0001).
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
 # Everything but main(): shared by the application and its Qt tests.
