@@ -501,6 +501,16 @@ Layer namedLayer(std::string name, LinetypeId linetype) {
     return layer;
 }
 
+/// The value of `optional`, failing the test if it is empty.
+template <typename T>
+T valueOrFail(std::optional<T> optional) {
+    if (!optional) {
+        ADD_FAILURE() << "the record is not in the document";
+        return {};
+    }
+    return std::move(*optional);
+}
+
 /// The names of the layers, in table order.
 std::vector<std::string> layerNames(const Document& document) {
     std::vector<std::string> names;
@@ -676,16 +686,15 @@ TEST(DocumentTables, RemoveAndInsertLayerAtTheSamePosition) {
     document.addLayer(namedLayer("C", continuous));
     const std::vector<Layer> before{document.layers().begin(), document.layers().end()};
 
-    std::optional<std::pair<Layer, std::size_t>> removed = document.removeLayer(bId);
-    ASSERT_TRUE(removed.has_value());
-    EXPECT_EQ(removed->second, 2U);
-    EXPECT_EQ(removed->first.name, "B");
-    EXPECT_EQ(removed->first.extras, b.extras);
+    auto [removed, position] = valueOrFail(document.removeLayer(bId));
+    EXPECT_EQ(position, 2U);
+    EXPECT_EQ(removed.name, "B");
+    EXPECT_EQ(removed.extras, b.extras);
     EXPECT_EQ(layerNames(document), (std::vector<std::string>{"0", "A", "C"}));
     EXPECT_EQ(document.layer(bId), nullptr);
     EXPECT_FALSE(document.removeLayer(bId).has_value());
 
-    document.insertLayer(std::move(removed->first), removed->second);
+    document.insertLayer(std::move(removed), position);
     EXPECT_EQ(std::vector<Layer>(document.layers().begin(), document.layers().end()), before);
 }
 
@@ -693,14 +702,12 @@ TEST(DocumentTables, RemoveAndInsertLinetypeAtTheSamePosition) {
     Document document = Document::newDrawing();
     const LinetypeId dashed =
         document.addLinetype(Linetype{{}, "Dashed", "", LinetypePattern{{5.0, -2.5}}, {}});
-    std::optional<std::pair<Linetype, std::size_t>> removed =
-        document.removeLinetype(document.continuousLinetype());
-    ASSERT_TRUE(removed.has_value());
-    EXPECT_EQ(removed->second, 2U);
+    auto [removed, position] = valueOrFail(document.removeLinetype(document.continuousLinetype()));
+    EXPECT_EQ(position, 2U);
     EXPECT_EQ(document.continuousLinetype(), LinetypeId{});
     EXPECT_EQ(document.linetypes()[2].id, dashed);
 
-    document.insertLinetype(std::move(removed->first), removed->second);
+    document.insertLinetype(std::move(removed), position);
     EXPECT_EQ(document.continuousLinetype().value, 254U);
     EXPECT_EQ(document.linetypes()[2].name, "Continuous");
     EXPECT_EQ(document.linetypes()[3].id, dashed);
