@@ -1,0 +1,3 @@
+# Upstream sources are kept byte-for-byte; first-party files remain checked.
+SARibbon.cpp
+SARibbon.h

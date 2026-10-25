@@ -45,3 +45,19 @@ set_target_properties(tg_zlib PROPERTIES
     C_STANDARD 99
     C_EXTENSIONS ON
     POSITION_INDEPENDENT_CODE ON)
+
+# SARibbon: the GUI-only dependency approved by ADR 0009 (0.6-P3).
+# Keep Qt optional for the script, sanitizer and fuzz builds without app.
+if(TG_BUILD_APP)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
+    add_library(tg_saribbon STATIC saribbon/SARibbon.cpp saribbon/SARibbon.h)
+    target_include_directories(tg_saribbon SYSTEM PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/saribbon>)
+    target_link_libraries(tg_saribbon PUBLIC Qt6::Widgets)
+    set_target_properties(tg_saribbon PROPERTIES
+        AUTOMOC ON
+        POSITION_INDEPENDENT_CODE ON)
+    if(MSVC)
+        target_compile_options(tg_saribbon PRIVATE /utf-8)
+    endif()
+endif()

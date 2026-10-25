@@ -128,6 +128,7 @@ if(TG_BUILD_APP)
         app/file_menu_test.cpp
         app/recent_files_test.cpp
         app/qt_painter_test.cpp
+        app/ribbon_smoke_test.cpp
         app/script_session_test.cpp
         app/selection_test.cpp
         app/text_input_test.cpp
