@@ -51,7 +51,10 @@ assegnate (file `.github/CODEOWNERS`). Il responsabile può revocare la nomina.
   proposta. L'ADR passa in stato *Accettato* o *Respinto* e resta nell'archivio in
   ogni caso.
 - **Cambio di un ADR accettato:** si scrive un nuovo ADR che lo sostituisce. Gli ADR
-  non si riscrivono.
+  non si riscrivono. Eccezione: un ADR accettato che nessun codice unito attua
+  ancora (di solito uno accettato all'apertura di una tappa, prima del suo primo
+  pacchetto) il responsabile lo può correggere direttamente; l'intestazione
+  dell'ADR riceve la riga **Corretto:** con la data e ciò che cambia.
 
 ## Comportamento
 

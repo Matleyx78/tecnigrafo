@@ -16,7 +16,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  1 LWPOLYLINE closed=yes vertex=0,0 vertex=100,0 vertex=100,50 vertex=0,50
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=100,0 vertex=100,50 vertex=0,50
 messages:
   Command: PLINE
   Specify start point: 0,0
@@ -55,7 +55,7 @@ statistics:
 
 | Riga | Contenuto |
 |---|---|
-| `entities:` | le entità del disegno, **in ordine di identificativo**, una per riga: l'identificativo, uno spazio, l'entità nel formato qui sotto |
+| `entities:` | le entità del disegno, **in ordine di identificativo**, una per riga: l'identificativo, uno spazio, l'entità nel formato qui sotto. L'identificativo è l'handle in decimale; in un disegno nuovo la prima entità è 257 ([ADR 0023](../adr/0023-layer-e-proprieta.md), punto 1) |
 | `messages:` | le righe scritte nella cronologia della riga di comando **dalla sezione precedente** (vedi sotto) |
 | `prompt:` | la domanda attuale della riga di comando (`Command:` a riposo) |
 | `preview:` | le entità dell'anteprima del comando in corso, senza identificativo, nell'ordine in cui il comando le dà |

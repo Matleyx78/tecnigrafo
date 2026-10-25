@@ -41,9 +41,10 @@ B = LWPOLYLINE vertex=20,0 bulge=1 vertex=30,0
 - L'**entità** si scrive nel formato del [rapporto](rapporto.md#entità), con le
   libertà delle [definizioni](rapporto.md#definizioni-nelle-domande): proprietà
   in qualunque ordine, predefinite omesse, derivate ignorate.
-- Le entità definite formano un documento, numerate da 1 nell'ordine in cui
-  compaiono. Una domanda vede le entità definite **sopra** di lei: si può
-  definire, chiedere, definire ancora e chiedere di nuovo.
+- Le entità definite formano un documento nuovo, numerate da 257 nell'ordine
+  in cui compaiono ([ADR 0023](../adr/0023-layer-e-proprieta.md), punto 1).
+  Una domanda vede le entità definite **sopra** di lei: si può definire,
+  chiedere, definire ancora e chiedere di nuovo.
 - Dalla tappa 0.5 una definizione può anche leggere un **disegno da un
   file** ([File](#file)): il nome indica allora il disegno, che non entra nel
   documento delle entità definite.

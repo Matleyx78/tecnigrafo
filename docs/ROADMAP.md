@@ -230,3 +230,14 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   fuori dai sistemi con Qt dei pacchetti di sistema
   ([ADR 0028](adr/0028-versione-minima-di-qt.md), che sostituisce in parte l'ADR
   0002). SARibbon resta alla v2.9.5, senza modifiche.
+- **2026-10-25 — Handle di un disegno nuovo; ADR corretti prima del codice.**
+  Gli handle da 1 a 256 di un disegno nuovo sono riservati agli oggetti di
+  partenza, con una mappa fissa che scende da 256, e la prima entità è 257:
+  aggiungere un oggetto di partenza non sposta più gli identificativi delle
+  entità né i rapporti dei casi di verifica. Un file letto porta i suoi
+  handle. Il responsabile corregge direttamente l'ADR 0023, punto 1, perché
+  nessun codice lo attua ancora, e aggiunge l'eccezione a `GOVERNANCE.md`:
+  un ADR accettato e non ancora attuato si può correggere, con la riga
+  **Corretto:** nell'intestazione. Le conseguenze sul piano della tappa 0.6
+  (pacchetto R4, schede P4, P10 e P16) sono nella sua sezione "Modifiche al
+  piano".

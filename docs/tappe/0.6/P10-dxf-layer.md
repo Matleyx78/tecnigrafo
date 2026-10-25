@@ -20,7 +20,8 @@
 - `io/src/dxf_tables.hpp`, `io/src/dxf_tables.cpp` (nuovi: `LAYER` e `LTYPE`)
 - `io/src/dxf_read.cpp`, `io/src/dxf_write.cpp`
 - `io/src/dxf_entity_common.hpp`, `io/src/dxf_entity_common.cpp`
-- `io/src/dxf_skeleton.cpp`
+- `io/src/dxf_skeleton.cpp`, `core/include/tg/core/start_handles.hpp` (gli
+  handle fissi dello scheletro)
 - `io/src/dxf_lwpolyline.cpp`, `core/include/tg/core/polyline.hpp`,
   `core/src/polyline.cpp` (generazione continua del tipo di linea)
 - `io/src/dxf_header.cpp` (nuovo, se serve: le variabili che entrano nel modello)
@@ -68,6 +69,15 @@
   tranne il layer (8), che si scrive sempre.
 - Disegno nuovo: lo scheletro usa le tabelle del documento invece dei record
   fissi di oggi.
+- Handle dello scheletro (ADR 0023, punto 1, "Handle di un disegno nuovo"):
+  ogni oggetto che lo scheletro crea (tabelle, blocchi e record
+  `*Model_Space` e `*Paper_Space`, dizionari, layout, gli altri record) ha un
+  handle **fisso** della mappa di `start_handles.hpp`, sotto
+  `start_handles::kLowest`, scendendo; `kLowest` diventa il più basso dato.
+  Lo scheletro non prende più handle dal contatore delle entità
+  (`makeSkeleton(firstId)` di oggi), e `$HANDSEED` è il `nextId()` del
+  documento. Così un disegno nuovo salvato ha sempre gli stessi handle di
+  partenza, comunque tante siano le entità.
 - Il `.cadx` non cambia: le tabelle viaggiano in `drawing.dxf`.
 
 ### Generazione continua delle polilinee
@@ -93,6 +103,9 @@ scrittore lo scrive insieme a `closed`. Nel rapporto è la proprietà
   che hanno layer, tipi e proprietà.
 - Ogni file incoerente del punto 6, con il suo avviso.
 - `.cadx` con layer e proprietà.
+- Disegno nuovo salvato in DXF: gli handle dello scheletro e dei record di
+  partenza stanno tutti tra 1 e 256, sono gli stessi con 0, 1 o 100 entità, e
+  le entità partono da 257; riaperto e salvato di nuovo, il file è identico.
 
 ## Fatto quando
 
