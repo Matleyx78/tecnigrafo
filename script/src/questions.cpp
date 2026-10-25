@@ -143,8 +143,11 @@ private:
 
     std::optional<ParseError> readDirective(std::string_view text) {
         const std::vector<std::string_view> words = detail::splitWords(text);
+        if (!words.empty() && words.front() == "current" && !text.starts_with(' ')) {
+            return readCurrent(text.substr(words.front().size()));
+        }
         if (words.empty() || words.front() != "tolerance" || text.starts_with(' ')) {
-            return error("the only directive of a question file is !tolerance");
+            return error("the directives of a question file are !tolerance and !current");
         }
         const std::vector<std::string_view> arguments(words.begin() + 1, words.end());
         std::variant<ToleranceDirective, std::string> tolerance = parseTolerance(arguments);
@@ -155,6 +158,87 @@ private:
         return std::nullopt;
     }
 
+    /// "!current <properties>": changes the current values of the
+    /// document of the definitions (docs/verifica/domande.md).
+    std::optional<ParseError> readCurrent(std::string_view text) {
+        if (detail::trim(text).empty()) {
+            return error(
+                "!current needs at least one property: layer, color, linetype, "
+                "ltscale, lineweight");
+        }
+        std::variant<WrittenProperties, EntityError> written = readProperties(text);
+        if (auto* failure = std::get_if<EntityError>(&written)) {
+            return error("!current: " + failure->message);
+        }
+        std::variant<core::EntityProperties, EntityError> current =
+            applyProperties(std::get<WrittenProperties>(written), m_document.current(), m_document);
+        if (auto* failure = std::get_if<EntityError>(&current)) {
+            return error("!current: " + failure->message);
+        }
+        // The definitions build a model to ask questions about, not a
+        // drawing to undo: the tables and the current values change on the
+        // document itself, since edit::Editor has no operation for them yet
+        // (package 0.6-P6).
+        m_document.setCurrent(std::get<core::EntityProperties>(current));
+        return std::nullopt;
+    }
+
+    /// "L = LAYER name=…": a new layer, or the layer 0 changed once.
+    std::optional<ParseError> readLayer(std::string_view definition) {
+        std::variant<LayerDefinition, EntityError> read = readLayerDefinition(definition);
+        if (auto* failure = std::get_if<EntityError>(&read)) {
+            return error(std::move(failure->message));
+        }
+        const LayerDefinition& written = std::get<LayerDefinition>(read);
+        const core::Linetype* linetype = m_document.findLinetype(written.linetype);
+        if (linetype == nullptr) {
+            return error("unknown linetype " + quoted(written.linetype) +
+                         ": define it above with LTYPE");
+        }
+        core::Layer layer;
+        layer.name = written.name;
+        layer.color = written.color;
+        layer.linetype = linetype->id;
+        layer.lineweight = written.lineweight;
+        layer.on = !written.off;
+        layer.frozen = written.frozen;
+        layer.locked = written.locked;
+        layer.plot = !written.noplot;
+        if (const core::Layer* existing = m_document.findLayer(written.name)) {
+            // The layer 0 exists in every drawing: it is defined again once,
+            // to change its values (docs/verifica/domande.md).
+            if (existing->id != m_document.layerZero() || m_layerZeroDefined) {
+                return error("the layer " + quoted(written.name) + " is already defined");
+            }
+            m_layerZeroDefined = true;
+            layer.id = existing->id;
+            layer.name = existing->name;  // the layer 0 is never renamed
+            m_document.replaceLayer(layer);
+            return std::nullopt;
+        }
+        m_document.addLayer(std::move(layer));
+        return std::nullopt;
+    }
+
+    /// "T = LTYPE name=… pattern=…".
+    std::optional<ParseError> readLinetype(std::string_view definition) {
+        std::variant<core::LinetypeDefinition, EntityError> read =
+            readLinetypeDefinition(definition);
+        if (auto* failure = std::get_if<EntityError>(&read)) {
+            return error(std::move(failure->message));
+        }
+        auto& written = std::get<core::LinetypeDefinition>(read);
+        if (m_document.findLinetype(written.name) != nullptr) {
+            return error("the linetype " + quoted(written.name) + " is already defined");
+        }
+        core::Linetype linetype;
+        linetype.name = std::move(written.name);
+        linetype.description = std::move(written.description);
+        linetype.pattern = std::move(written.pattern);
+        m_document.addLinetype(std::move(linetype));
+        return std::nullopt;
+    }
+
     std::optional<ParseError> readDefinition(std::string_view text) {
         const std::size_t equals = text.find('=');
         const std::string_view name = detail::trim(text.substr(0, equals));
@@ -162,10 +246,20 @@ private:
             return error("invalid name " + quoted(name) +
                          ": a letter or _, then letters, digits and _; not 'none'");
         }
-        if (std::ranges::find(m_names, name) != m_names.end() || m_files.contains(name)) {
+        if (std::ranges::find(m_names, name) != m_names.end() || m_files.contains(name) ||
+            std::ranges::find(m_tableNames, name) != m_tableNames.end()) {
             return error("the name " + quoted(name) + " is already defined");
         }
         const std::string_view definition = detail::trim(text.substr(equals + 1));
+        const std::vector<std::string_view> words = detail::splitWords(definition);
+        if (!words.empty() && (words.front() == "LAYER" || words.front() == "LTYPE")) {
+            std::optional<ParseError> failure =
+                words.front() == "LAYER" ? readLayer(definition) : readLinetype(definition);
+            if (!failure) {
+                m_tableNames.emplace_back(name);
+            }
+            return failure;
+        }
         if (auto file = detail::readFileDefinition(definition, m_access)) {
             if (auto* failure = std::get_if<detail::FileDefinitionError>(&*file)) {
                 return error(std::move(failure->message), failure->notImplemented);
@@ -173,17 +267,29 @@ private:
             m_files.emplace(name, std::get<detail::FileDrawing>(std::move(*file)));
             return std::nullopt;
         }
-        std::variant<core::Entity, EntityError> entity = readEntity(definition);
-        if (auto* failure = std::get_if<EntityError>(&entity)) {
+        std::variant<EntityDefinition, EntityError> read = readEntityDefinition(definition);
+        if (auto* failure = std::get_if<EntityError>(&read)) {
             return error(std::move(failure->message), failure->notImplemented);
+        }
+        auto& entity = std::get<EntityDefinition>(read);
+        // A layer or linetype not defined above is an error of the file.
+        std::variant<core::EntityProperties, EntityError> properties =
+            resolveProperties(entity.properties, m_document);
+        if (auto* failure = std::get_if<EntityError>(&properties)) {
+            return error(std::move(failure->message));
         }
         // The entities form a document numbered in the order they appear
         // (docs/adr/0011, point 3). Like every change of a document, they
         // go through the editor (docs/adr/0005).
         m_editor.beginTransaction("Definition");
-        m_editor.add(std::get<core::Entity>(std::move(entity)));
+        const core::EntityId id = m_editor.add(std::move(entity.entity));
         m_editor.commit();
+        // The properties are those written, not the current values the
+        // editor gives a new entity; see readCurrent() for why they are set
+        // on the document.
+        m_document.setProperties(id, std::get<core::EntityProperties>(properties));
         m_names.emplace_back(name);
+        m_ids.push_back(id);
         return std::nullopt;
     }
 
@@ -215,12 +321,13 @@ private:
         // about it asks about a copy of that entity alone: the questions
         // that take a name are questions about one object.
         // An empty document, without the tables of a new drawing, whose
-        // entities are numbered as those of the definitions, so that
-        // QuestionModel finds them by name in the same way.
+        // entities are numbered from the first handle of a new drawing, as
+        // those of the definitions; QuestionModel finds them by name.
         core::Document fileDocument;
         fileDocument.setNextId(core::start_handles::kFirstEntity);
         edit::Editor fileEditor(fileDocument);
         std::vector<std::string> fileNames;
+        std::vector<core::EntityId> fileIds;
         for (const std::string_view argument : arguments) {
             auto entity = detail::fileEntity(m_files, argument);
             if (!entity) {
@@ -238,13 +345,16 @@ private:
                 return std::nullopt;
             }
             fileEditor.beginTransaction("Definition");
-            fileEditor.add(*std::get<const core::Entity*>(*entity));
+            fileIds.push_back(fileEditor.add(*std::get<const core::Entity*>(*entity)));
             fileEditor.commit();
             fileNames.emplace_back(argument);
         }
         const bool aboutFiles = !fileNames.empty();
         const detail::QuestionModel model{aboutFiles ? fileDocument : m_document,
-                                          aboutFiles ? fileNames : m_names, m_files, m_tolerances,
+                                          aboutFiles ? fileNames : m_names,
+                                          aboutFiles ? fileIds : m_ids,
+                                          m_files,
+                                          m_tolerances,
                                           m_access};
         detail::QuestionResult result = row->function(model, arguments);
         if (auto* failure = std::get_if<detail::ArgumentError>(&result)) {
@@ -259,9 +369,12 @@ private:
     core::Document m_document{core::Document::newDrawing()};
     edit::Editor m_editor;
     io::FileAccess* m_access;
-    detail::FileDrawings m_files;      ///< drawings read from files, by name
-    std::vector<std::string> m_names;  ///< m_names[n] names entity kFirstEntity + n
-    Tolerances m_tolerances;           ///< as changed by the lines read so far
+    detail::FileDrawings m_files;           ///< drawings read from files, by name
+    std::vector<std::string> m_names;       ///< m_names[n] names entity m_ids[n]
+    std::vector<core::EntityId> m_ids;      ///< the defined entities, in order
+    std::vector<std::string> m_tableNames;  ///< names of the LAYER and LTYPE definitions
+    bool m_layerZeroDefined{false};         ///< the layer 0 is defined again at most once
+    Tolerances m_tolerances;                ///< as changed by the lines read so far
     std::vector<Answer> m_answers;
     int m_line{0};
 };

@@ -13,6 +13,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 /// The report of the control mode (docs/adr/0011, point 4;
 /// docs/verifica/rapporto.md). The same text at level 1 and level 2.
@@ -56,6 +57,24 @@ void writeEntity(const core::Entity& entity, std::string& out);
 /// properties (docs/verifica/rapporto.md, stage 0.5). readEntity() reads
 /// them but builds an entity without extras, as a command does.
 void writeEntity(const core::EntityRecord& record, std::string& out);
+
+/// The same line followed, before the derived properties, by the
+/// properties of stage 0.6 that differ from their default (layer, color,
+/// linetype, ltscale, lineweight), with the names of the records of
+/// `document`. A layer or linetype that `document` does not have (a file
+/// read without tables) is written as the default. readEntityDefinition()
+/// reads them back.
+void writeEntity(const core::EntityRecord& record, const core::Document& document,
+                 std::string& out);
+
+/// The lines of the field "layers:" of the report, without indentation:
+/// every layer, in table order: the quoted name, color, linetype and
+/// lineweight, then the states off, frozen, locked, noplot that are on.
+[[nodiscard]] std::vector<std::string> layerLines(const core::Document& document);
+
+/// The lines of the field "linetypes:": every linetype but ByBlock, ByLayer
+/// and Continuous, in table order: the quoted name, pattern and description.
+[[nodiscard]] std::vector<std::string> linetypeLines(const core::Document& document);
 
 /// The name of a snap kind in reports and answers ("Endpoint").
 [[nodiscard]] std::string_view snapKindName(core::SnapKind kind);

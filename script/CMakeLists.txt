@@ -14,6 +14,7 @@ add_library(tg_script
     src/file_questions.cpp
     src/level1.cpp
     src/number_format.cpp
+    src/property_questions.cpp
     src/question_table.cpp
     src/questions.cpp
     src/report.cpp

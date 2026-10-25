@@ -67,6 +67,11 @@ statistics:
 | `ortho:` | `on` o `off` |
 | `drawing:` | solo per un disegno legato a un file: il nome e, con modifiche non salvate, `, modified` ([vedi sotto](#il-disegno)) |
 | `units:` | solo se diverso da 4: il valore di `INSUNITS` |
+| `layers:` | solo se la tabella dei layer non è quella di una sessione nuova: tutti i layer ([vedi sotto](#layer-tipi-di-linea-e-valori-correnti)) |
+| `linetypes:` | solo se ce ne sono: i tipi di linea diversi da `ByBlock`, `ByLayer`, `Continuous` |
+| `current:` | solo se almeno uno è diverso da una sessione nuova: i cinque valori correnti |
+| `ltscale:` | solo se diverso da 1: `LTSCALE` |
+| `lwdisplay:` | solo se acceso: `on` |
 | `unhandled:` | solo se ce ne sono: le entità non gestite, per tipo |
 | `pointer:` | l'ultimo punto del disegno in cui è stato portato il puntatore (`!move`, `!click`), o `none` |
 | `active snap:` | lo snap su cui si trova il puntatore mentre un comando chiede un punto: il tipo e il punto (`Endpoint 100,50`), o `none` |
@@ -126,6 +131,58 @@ pointer: none
   0018, punto 3), per tipo in ordine alfabetico, separate da `, `: il tipo,
   uno spazio e il numero (`HATCH 2, INSERT 1`). Non stanno in `entities:`
   né in `statistics:`, che elencano solo le entità gestite.
+
+### Layer, tipi di linea e valori correnti
+
+Cinque campi della tappa 0.6 ([ADR 0023](../adr/0023-layer-e-proprieta.md),
+punti 1, 3 e 7; [ADR 0024](../adr/0024-colori.md), punto 6;
+[ADR 0025](../adr/0025-tipi-di-linea-e-spessori.md), punti 3 e 6). Come ogni
+campo nuovo si scrivono **solo quando sono diversi da una sessione nuova**,
+dopo `units:` e prima di `unhandled:`, in quest'ordine; mancano tutti nei
+rapporti delle tappe precedenti, che restano validi.
+
+```
+units: 6
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri esterni" color=1 linetype="ACAD_ISO02W100" lineweight=0.50 off frozen locked noplot
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="ISO dash __ __ __"
+current: layer="Muri esterni" color=bylayer linetype="ByLayer" ltscale=1 lineweight=bylayer
+ltscale: 2
+lwdisplay: on
+unhandled: HATCH 2
+```
+
+- **`layers:`** un elenco con **tutti** i layer, nell'ordine della tabella,
+  se le righe non sono quelle di una sessione nuova (il solo layer `0`, come
+  nella prima riga dell'esempio). Ogni riga: il nome tra virgolette, poi
+  `color=`, `linetype=` (nome tra virgolette) e `lineweight=`, sempre; poi
+  gli stati, **solo se attivi** e in quest'ordine: `off` (spento), `frozen`
+  (congelato), `locked` (bloccato), `noplot` (non stampabile). Un disegno
+  senza tabella dei layer (un file letto prima che `io` legga le tabelle,
+  pacchetto 0.6-P10) non scrive il campo.
+- **`linetypes:`** un elenco dei tipi di linea diversi da `ByBlock`,
+  `ByLayer` e `Continuous`, che ogni disegno ha, nell'ordine della tabella;
+  manca se non ce ne sono. Ogni riga: il nome tra virgolette,
+  `pattern=` con gli elementi separati da `,` (positivo un tratto, negativo
+  uno spazio, `0` un punto, in unità del disegno) o `continuous` se il tipo
+  non ne ha, e `description=` tra virgolette, sempre, anche vuota
+  (`description=""`).
+- **`current:`** i cinque valori con cui nasce un'entità nuova
+  (`$CLAYER`, `$CECOLOR`, `$CELTYPE`, `$CELTSCALE`, `$CELWEIGHT`), su una
+  riga, **tutti** e in quest'ordine, se almeno uno è diverso da quelli di una
+  sessione nuova (`layer="0" color=bylayer linetype="ByLayer" ltscale=1
+  lineweight=bylayer`).
+- **`ltscale:`** la scala globale dei tipi di linea, `LTSCALE`, se diversa
+  da 1.
+- **`lwdisplay:`** `on` se gli spessori si vedono (`LWDISPLAY`), spento in
+  una sessione nuova.
+
+I valori si scrivono come le [proprietà delle entità](#tappa-06-layer-e-proprietà):
+colori con la prima colonna della tabella dell'ADR 0024, punto 6; spessori
+in millimetri con due decimali (`0.50`), `0` o `default`; numeri come sotto.
+I nomi conservano maiuscole e minuscole come nella tabella.
 
 ## Numeri
 
@@ -290,6 +347,41 @@ TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 obliq
 - `start-width` ed `end-width` si scrivono ciascuna solo se diversa da 0,
   come le altre: un segmento che si allarga da 0 a 2 ha solo `end-width=2`.
 
+### Tappa 0.6: layer e proprietà
+
+Le proprietà che ogni entità ha ([ADR 0023](../adr/0023-layer-e-proprieta.md),
+punto 2). Come ogni proprietà nuova si scrivono **solo quando sono diverse
+dal valore predefinito**, in fondo alla riga, dopo le quote, `thickness` ed
+`extrusion` della tappa 0.5 e prima delle derivate, in quest'ordine:
+
+| Proprietà | DXF | Valore | Predefinito |
+|---|---|---|---|
+| `layer` | 8 | nome tra virgolette (`layer="Muri esterni"`) | `"0"` |
+| `color` | 62, 420 | `bylayer`, `byblock`, un indice da 1 a 255, o `r,g,b` (ADR 0024, punto 6) | `bylayer` |
+| `linetype` | 6 | nome tra virgolette, anche `"ByBlock"` | `"ByLayer"` |
+| `ltscale` | 48 | numero > 0, la scala del tipo di linea dell'entità | 1 |
+| `lineweight` | 370 | `bylayer`, `byblock`, `default`, o millimetri con due decimali (`0.35`) o `0` (ADR 0025, punto 6) | `bylayer` |
+
+```
+LINE start=0,0 end=10,5 layer="Muri esterni" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.35
+CIRCLE center=0,0 radius=2 thickness=1 color=255,128,0
+TEXT position=0,0 … value="A" layer="Quote" ~box=…
+```
+
+- I nomi di layer e tipi di linea conservano maiuscole e minuscole, come
+  nella tabella; sono tra virgolette, con gli stessi caratteri d'escape dei
+  testi. Il confronto con il predefinito non distingue le maiuscole (`"0"`,
+  `"BYLAYER"`).
+- Un'entità di un disegno che non ha la tabella (un file letto prima del
+  pacchetto 0.6-P10) ha i valori predefiniti e non scrive nulla.
+
+**`LWPOLYLINE`** riceve anche una proprietà sua, `linetype-generation`
+(DXF 70, bit 128: la generazione continua del tipo di linea, ADR 0025,
+punto 4): `yes` o `no`, predefinito `no`, scritta solo se `yes`, **subito
+dopo `closed=`** (`LWPOLYLINE closed=no linetype-generation=yes vertex=…`).
+Il modello la riceve dal pacchetto 0.6-P10: fino ad allora le definizioni
+la leggono e la controllano, ma il rapporto non la scrive.
+
 ### Definizioni nelle domande
 
 Nelle [domande al modello](domande.md) un'entità si scrive nello stesso
@@ -308,6 +400,15 @@ formato, con tre libertà:
 Le proprietà della [tappa 0.5](#tappa-05-quota-spessore-estrusione-e-larghezze)
 si accettano come le altre, dal pacchetto che le realizza, e si possono
 omettere: valgono i loro valori predefiniti.
+
+Le proprietà della [tappa 0.6](#tappa-06-layer-e-proprietà) si scrivono in
+qualunque ordine dopo il tipo, ognuna una volta sola, e si possono omettere:
+valgono i loro **valori predefiniti** (layer `"0"`, `bylayer`…), mai i
+valori correnti cambiati con `!current`. Si accettano tutte le scritture
+dell'ADR 0024, punto 6 (`color=red`, `color=256`) e degli spessori
+(`lineweight=0.5`, `0.35mm`); i nomi senza distinguere le maiuscole. Un
+layer o un tipo di linea non definito sopra (`LAYER`, `LTYPE`, o uno di
+quelli che ogni disegno ha) è un errore del file di domande.
 
 Un'entità scritta dal rapporto si rilegge senza perdite: i numeri hanno tutte
 le cifre che servono. Per gli angoli, convertiti tra gradi e radianti, vale la

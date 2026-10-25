@@ -36,10 +36,13 @@ using FileDrawings = std::map<std::string, FileDrawing, std::less<>>;
 
 /// The drawing the questions of a file ask about: the entities defined so
 /// far, with the names the file gave them, and the drawings read from
-/// files. Entity n (1-based identifier) is names[n - 1].
+/// files. Entity ids[n] is named names[n]: the identifiers grow in the order
+/// of the definitions, but the layers and linetypes defined between them
+/// take handles too (docs/adr/0023, point 1).
 struct QuestionModel {
     const core::Document& document;
     const std::vector<std::string>& names;
+    const std::vector<core::EntityId>& ids;  ///< as many as names
     const FileDrawings& files;
     /// The tolerances in force at the question (roundtrip compares with them).
     const Tolerances& tolerances;

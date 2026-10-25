@@ -4,6 +4,9 @@
 #include "tg/script/report.hpp"
 
 #include "text.hpp"
+#include "tg/core/color.hpp"
+#include "tg/core/layer.hpp"
+#include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/text.hpp"
@@ -16,6 +19,7 @@
 #include <cstddef>
 #include <map>
 #include <optional>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -254,6 +258,90 @@ void writePlacementProperties(const core::Entity& entity, const core::EntityExtr
     }
 }
 
+/// The name of a layer for the report: a layer the document does not have
+/// (a file read without its tables) is the default, "0".
+std::string_view layerName(const core::Document& document, core::LayerId id) {
+    const core::Layer* layer = document.layer(id);
+    return layer != nullptr ? std::string_view{layer->name} : std::string_view{"0"};
+}
+
+/// The name of a linetype for the report, "ByLayer" if the document does not
+/// have it.
+std::string_view linetypeName(const core::Document& document, core::LinetypeId id) {
+    const core::Linetype* linetype = document.linetype(id);
+    return linetype != nullptr ? std::string_view{linetype->name} : std::string_view{"ByLayer"};
+}
+
+/// The properties of stage 0.6, each only if different from its default
+/// (docs/verifica/rapporto.md), so that the reports already written stay
+/// valid.
+void writeProperties(const core::EntityProperties& properties, const core::Document& document,
+                     std::string& out) {
+    const std::string_view layer = layerName(document, properties.layer);
+    if (!core::sameTableName(layer, "0")) {
+        out += " layer=";
+        out += quoteText(layer);
+    }
+    if (properties.color != core::Color::byLayer()) {
+        out += " color=";
+        out += core::formatColor(properties.color);
+    }
+    const std::string_view linetype = linetypeName(document, properties.linetype);
+    if (!core::sameTableName(linetype, "ByLayer")) {
+        out += " linetype=";
+        out += quoteText(linetype);
+    }
+    if (properties.linetypeScale != 1.0) {
+        out += " ltscale=";
+        out += formatNumber(properties.linetypeScale);
+    }
+    if (properties.lineweight != core::lineweight::kByLayer) {
+        out += " lineweight=";
+        out += core::formatLineweight(properties.lineweight);
+    }
+}
+
+/// The five current values, as "current:" writes them.
+std::string currentText(const core::Document& document) {
+    const core::CurrentProperties& current = document.current();
+    return "layer=" + quoteText(layerName(document, current.layer)) +
+           " color=" + core::formatColor(current.color) +
+           " linetype=" + quoteText(linetypeName(document, current.linetype)) +
+           " ltscale=" + formatNumber(current.linetypeScale) +
+           " lineweight=" + core::formatLineweight(current.lineweight);
+}
+
+/// The tables and the current values (docs/adr/0023, points 1 and 3), each
+/// written only when it differs from a new session. A document read from
+/// a file before stage 0.6-P10 has no tables at all: it writes no layers.
+void writeTables(const core::Document& document, std::string& out) {
+    static const core::Document kNewSession = core::Document::newDrawing();
+    const std::vector<std::string> layers = layerLines(document);
+    if (!layers.empty() && layers != layerLines(kNewSession)) {
+        appendLine("layers:", out);
+        for (const std::string& line : layers) {
+            appendItem(line, out);
+        }
+    }
+    const std::vector<std::string> linetypes = linetypeLines(document);
+    if (!linetypes.empty()) {
+        appendLine("linetypes:", out);
+        for (const std::string& line : linetypes) {
+            appendItem(line, out);
+        }
+    }
+    const std::string current = currentText(document);
+    if (current != currentText(kNewSession)) {
+        appendField("current", current, out);
+    }
+    if (document.ltscale() != kNewSession.ltscale()) {
+        appendField("ltscale", formatNumber(document.ltscale()), out);
+    }
+    if (document.lwdisplay() != kNewSession.lwdisplay()) {
+        appendField("lwdisplay", onOff(document.lwdisplay()), out);
+    }
+}
+
 /// The derived properties (names starting with '~'), last on the line.
 void writeDerived(const core::Entity& entity, std::string& out) {
     if (const auto* text = std::get_if<core::Text>(&entity)) {
@@ -337,7 +425,7 @@ void writeEntities(const core::Document& document, std::string& out) {
     appendLine("entities:", out);
     for (const core::EntityRecord* record : records) {
         std::string line = std::to_string(record->id.value) + " ";
-        writeEntity(*record, line);
+        writeEntity(*record, document, line);
         appendItem(line, out);
     }
 }
@@ -371,6 +459,7 @@ void writeDrawing(const edit::Editor& editor, std::string& out) {
     if (document.units() != core::Document::kDefaultUnits) {
         appendField("units", std::to_string(document.units()), out);
     }
+    writeTables(document, out);
     if (!document.rawEntities().empty()) {
         appendField("unhandled", unhandledText(document), out);
     }
@@ -445,6 +534,67 @@ void writeEntity(const core::EntityRecord& record, std::string& out) {
     writeModel(record.entity, out);
     writePlacementProperties(record.entity, record.extras, out);
     writeDerived(record.entity, out);
+}
+
+void writeEntity(const core::EntityRecord& record, const core::Document& document,
+                 std::string& out) {
+    writeModel(record.entity, out);
+    writePlacementProperties(record.entity, record.extras, out);
+    writeProperties(record.properties, document, out);
+    writeDerived(record.entity, out);
+}
+
+std::vector<std::string> layerLines(const core::Document& document) {
+    std::vector<std::string> lines;
+    for (const core::Layer& layer : document.layers()) {
+        std::string line = quoteText(layer.name);
+        line += " color=";
+        line += core::formatColor(layer.color);
+        line += " linetype=";
+        line += quoteText(linetypeName(document, layer.linetype));
+        line += " lineweight=";
+        line += core::formatLineweight(layer.lineweight);
+        // The states only when on, in this order (docs/verifica/rapporto.md).
+        if (!layer.on) {
+            line += " off";
+        }
+        if (layer.frozen) {
+            line += " frozen";
+        }
+        if (layer.locked) {
+            line += " locked";
+        }
+        if (!layer.plot) {
+            line += " noplot";
+        }
+        lines.push_back(std::move(line));
+    }
+    return lines;
+}
+
+std::vector<std::string> linetypeLines(const core::Document& document) {
+    std::vector<std::string> lines;
+    for (const core::Linetype& linetype : document.linetypes()) {
+        // Every drawing has these three (docs/adr/0025, point 2).
+        if (core::sameTableName(linetype.name, "ByBlock") ||
+            core::sameTableName(linetype.name, "ByLayer") ||
+            core::sameTableName(linetype.name, "Continuous")) {
+            continue;
+        }
+        std::string line = quoteText(linetype.name);
+        line += " pattern=";
+        if (linetype.pattern.continuous()) {
+            line += "continuous";
+        }
+        for (std::size_t i = 0; i < linetype.pattern.elements.size(); ++i) {
+            line += i == 0 ? "" : ",";
+            line += formatNumber(linetype.pattern.elements[i]);
+        }
+        line += " description=";
+        line += quoteText(linetype.description);
+        lines.push_back(std::move(line));
+    }
+    return lines;
 }
 
 std::string_view snapKindName(core::SnapKind kind) {

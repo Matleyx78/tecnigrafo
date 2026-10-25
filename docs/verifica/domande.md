@@ -18,6 +18,7 @@ istruzione; gli spazi all'inizio e alla fine della riga non contano.
 |---|---|
 | vuota, o che inizia con `;` | ignorata |
 | `!tolerance <tipo> <valore>` | cambia una tolleranza, come negli [script](script.md#dettagli), **per le domande che seguono** |
+| `!current <proprietà>` | cambia i valori correnti del documento delle definizioni (dalla tappa 0.6, [Layer e proprietà](#layer-e-proprietà)) |
 | `<Nome> = <entità>` | una **definizione** |
 | `? <domanda> <argomenti> -> <risposta attesa>` | una **domanda** |
 
@@ -48,6 +49,10 @@ B = LWPOLYLINE vertex=20,0 bulge=1 vertex=30,0
 - Dalla tappa 0.5 una definizione può anche leggere un **disegno da un
   file** ([File](#file)): il nome indica allora il disegno, che non entra nel
   documento delle entità definite.
+- Dalla tappa 0.6 una definizione può anche aggiungere un **layer** o un
+  **tipo di linea** al documento delle entità definite
+  ([Layer e proprietà](#layer-e-proprietà)); il nome non indica un'entità, e
+  come ogni nome si definisce una volta.
 
 ### Domande
 
@@ -241,6 +246,107 @@ D = DXF source=librecad-sample
 ```
 
 I numeri dell'esempio mostrano solo la forma.
+
+### Layer e proprietà
+
+Le domande della tappa 0.6 su layer, colori, tipi di linea e spessori
+([ADR 0023](../adr/0023-layer-e-proprieta.md),
+[ADR 0024](../adr/0024-colori.md),
+[ADR 0025](../adr/0025-tipi-di-linea-e-spessori.md)). Le proprietà delle
+entità si scrivono come nel [rapporto](rapporto.md#tappa-06-layer-e-proprietà).
+
+**Definizioni.** Il documento delle entità definite è quello di una sessione
+nuova: ha i tipi di linea `ByBlock`, `ByLayer`, `Continuous` e il layer `0`.
+Due definizioni lo cambiano:
+
+```
+T = LTYPE name="Tratteggio" pattern=5,-2,0,-2 description="mio"
+I = LTYPE name="ACAD_ISO02W100"
+L = LAYER name="Muri" color=1 linetype="Tratteggio" lineweight=0.5 off frozen locked noplot
+Z = LAYER name="0" color=3
+A = LINE start=0,0 end=10,0 layer="Muri" color=bylayer linetype="ByLayer"
+!current layer="Muri" color=2
+```
+
+| Definizione | Proprietà |
+|---|---|
+| `LAYER` | `name=` tra virgolette, obbligatorio; `color=` un indice o `r,g,b` (mai `bylayer` né `byblock`); `linetype=` un tipo definito sopra, mai `ByLayer` né `ByBlock`; `lineweight=` millimetri o `default` (mai `bylayer` né `byblock`); gli stati `off`, `frozen`, `locked`, `noplot`, parole senza valore. Ciò che manca vale come nel layer `0` di un disegno nuovo: colore 7, `Continuous`, `default`, acceso, scongelato, sbloccato, stampabile |
+| `LTYPE` | `name=` e `pattern=` obbligatori: il motivo è come nel rapporto, numeri separati da `,` o `continuous`; `description=` tra virgolette, vuota se manca. `ACAD_ISO02W100` e `ACAD_ISO10W100` (ADR 0025, punto 2) si definiscono anche con il solo nome: motivo e descrizione sono quelli standard |
+
+- Le proprietà si scrivono in qualunque ordine, ognuna una volta.
+- I nomi seguono le regole dell'ADR 0023, punto 1 (non vuoti, al massimo 255
+  caratteri, senza `< > / \ " : ; ? * | , =` `` ` `` e senza spazi ai capi)
+  e si confrontano senza distinguere le maiuscole. Un nome già in tabella è
+  un errore del file, con un'eccezione: il layer `0`, che esiste già, si può
+  ridefinire **una volta** con `name="0"` per cambiarne colore, tipo di
+  linea, spessore e stati.
+- Nelle entità, un layer o un tipo di linea non definito sopra è un errore
+  del file.
+- **`!current`** cambia i valori correnti del documento: le proprietà
+  scritte, in qualunque ordine e una volta ciascuna, tra `layer`, `color`,
+  `linetype`, `ltscale` e `lineweight` (almeno una); le altre restano
+  com'erano. Non cambia le entità definite né quelle che seguono, che hanno
+  le proprietà scritte o i valori predefiniti: serve a `effective` con
+  `ByLayer` e alle domande sul documento.
+
+**Domande.**
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `aci <n>` | `r,g,b` | il colore dell'indice `n`, da 1 a 255, nella tabella dell'ADR 0024, punto 3 |
+| `effective <E>` | `color=<r,g,b> linetype="<nome>" ltscale=<n> lineweight=<mm> visible=yes\|no locked=yes\|no` | le proprietà con cui l'entità si disegna (sotto) |
+| `dashes <E>` | elenco di pezzi separati da `;`, o `continuous` | i tratti dell'entità secondo l'ADR 0025, punto 4: `LINE x1,y1 x2,y2`, `ARC center=… radius=… start-angle=… end-angle=…`, `POINT x,y` |
+| `quickselect [type=<TIPO>] [<proprietà><op><valore>] [within=<nomi>] [exclude]` | elenco di nomi separati da spazi, o `none` | le entità che soddisfano il filtro (sotto) |
+| `layers D` | elenco di righe separate da `;`, o `none` | i layer del disegno `D` letto da un file, una riga come in [`layers:`](rapporto.md#layer-tipi-di-linea-e-valori-correnti); `none` per un disegno senza tabella dei layer |
+| `linetypes D` | elenco di righe separate da `;`, o `none` | i tipi di linea del disegno `D`, una riga come in [`linetypes:`](rapporto.md#layer-tipi-di-linea-e-valori-correnti), senza `ByBlock`, `ByLayer` e `Continuous` |
+
+- **`effective`** risolve le proprietà dell'entità: `ByLayer` prende il
+  valore del layer dell'entità; `ByBlock` vale come colore 7, tipo
+  `Continuous` e spessore `default` finché non ci sono blocchi (ADR 0024,
+  Conseguenze). Il colore è sempre `r,g,b`, dalla tabella degli indici;
+  `linetype` è il nome del tipo risolto; `ltscale` è `LTSCALE` per la scala
+  dell'entità; `lineweight` è in millimetri (`0.25`), con `default` risolto
+  da `LWDEFAULT` (0.25 in un documento nuovo); `visible=no` se il layer è
+  spento o congelato, `locked=yes` se è bloccato.
+- **`dashes`** dà i pezzi in coordinate del disegno, con il motivo
+  moltiplicato per `LTSCALE` e per la scala dell'entità; `continuous` per
+  un'entità che si disegna continua (tipo senza tratti, o più corta del
+  motivo). Un testo non ha tipo di linea: `continuous`.
+- **`quickselect`**: `type=` un tipo DXF (`LINE`); una condizione su
+  `layer`, `color`, `linetype` o `lineweight` con `<op>` `=` o `!=` e il
+  valore scritto come nelle definizioni (`layer="Muri"`, `color!=bylayer`),
+  confrontato con la proprietà **scritta** dell'entità, non con quella
+  effettiva (`color=bylayer` trova le entità con `ByLayer`, come in
+  AutoCAD), con i nomi senza distinguere le maiuscole; un valore che non si
+  legge (colore o spessore non validi) non trova nulla e non è un errore;
+  `within=` limita la ricerca alle entità nominate, separate da `,`;
+  `exclude` dà le entità che **non** soddisfano il filtro. Senza filtro le
+  dà tutte. Le entità su layer spenti, congelati o bloccati non sono mai
+  scelte, come dai gesti di selezione.
+- `layers` e `linetypes` chiedono di un disegno letto da un file come le
+  domande della sezione [File](#file); `entity D <handle>` scrive anche le
+  proprietà dell'entità, come il rapporto. Finché `io` non legge le tabelle
+  (pacchetto 0.6-P10), un disegno letto non ha layer e le sue entità hanno
+  i valori predefiniti.
+
+**Gli stati dei layer nelle domande sul documento.** `pick`, `window`,
+`crossing` e `snap` seguono la tabella dell'ADR 0023, punto 4:
+
+| Stato del layer dell'entità | `pick`, `window`, `crossing` | `snap` |
+|---|---|---|
+| acceso | trovata | sì |
+| spento | mai trovata | no |
+| congelato | mai trovata | no |
+| bloccato | trovata: le domande chiedono del modello, non della selezione di un comando | sì |
+
+Le domande su un oggetto (`bbox`, `length`, `snaps`…) rispondono per ogni
+entità, qualunque sia lo stato del suo layer.
+
+Chi realizza le domande: `layers`, `linetypes` e le proprietà di `entity` il
+pacchetto 0.6-P5; `aci`, `effective` e gli stati nelle domande sul
+documento il pacchetto 0.6-P9; `dashes` il pacchetto 0.6-P11; `quickselect`
+il pacchetto 0.6-P23. Fino ad allora rispondono
+`error: question not implemented yet`.
 
 ## Errori
 
