@@ -107,7 +107,8 @@ scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <
 ```
 
 `scripts/ci-errori.sh` legge solo l'API REST, quindi funziona anche dove i log non
-sono raggiungibili (per esempio il proxy blocca il servizio che li ospita). Gli
+sono raggiungibili (per esempio il proxy blocca il servizio che li ospita) e dove
+manca `gh`: allora usa `curl` e `jq`, senza token. Gli
 errori vengono da `scripts/ci-annota.sh`, che la CI esegue su ogni passo di
 compilazione, test e verifica; per i passi in Python l'annotazione contiene le
 ultime righe dell'output. Se ancora non basta, e solo allora, il log intero dei

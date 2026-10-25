@@ -11,10 +11,31 @@
 #     scripts/ci-errori.sh <sha>        # the run of that commit
 #     scripts/ci-errori.sh <run id>     # that run
 #
-# Needs gh and jq. Wait for the run to finish first (AGENTS.md).
+# Needs jq, and either gh or curl (the repository is public, so curl works
+# without a token; set GITHUB_TOKEN to raise the anonymous limit of 60
+# requests an hour). Wait for the run to finish first (AGENTS.md).
 set -euo pipefail
 
 repo=${TG_REPO:-Matleyx78/tecnigrafo}
+
+if ! command -v jq > /dev/null 2>&1; then
+    echo "ci-errori.sh needs jq." >&2
+    exit 2
+fi
+
+# Print the JSON the REST API returns for a path such as repos/<repo>/...
+api() {
+    if command -v gh > /dev/null 2>&1; then
+        gh api "$1"
+    elif command -v curl > /dev/null 2>&1; then
+        curl -fsS -H 'Accept: application/vnd.github+json' \
+            ${GITHUB_TOKEN:+-H "Authorization: Bearer $GITHUB_TOKEN"} \
+            "https://api.github.com/$1"
+    else
+        echo "ci-errori.sh needs gh or curl." >&2
+        return 2
+    fi
+}
 
 if (( $# > 1 )); then
     echo "usage: ci-errori.sh [commit sha | run id]" >&2
@@ -26,18 +47,18 @@ if [[ $ref =~ ^[0-9]{1,12}$ ]]; then
     run=$ref
 else
     # The newest run of the commit; several appear after a re-run.
-    run=$(gh api "repos/$repo/actions/runs?head_sha=$ref&per_page=1" \
-        --jq '.workflow_runs[0].id // empty')
+    run=$(api "repos/$repo/actions/runs?head_sha=$ref&per_page=1" \
+        | jq -r '.workflow_runs[0].id // empty')
     if [[ -z $run ]]; then
         echo "No CI run for $ref yet: it has not started, or the commit was not pushed." >&2
         exit 1
     fi
 fi
 
-gh api "repos/$repo/actions/runs/$run" \
-    --jq '"run \(.id): \(.status) \(.conclusion // "-")  \(.html_url)"'
+api "repos/$repo/actions/runs/$run" \
+    | jq -r '"run \(.id): \(.status) \(.conclusion // "-")  \(.html_url)"'
 
-jobs=$(gh api "repos/$repo/actions/runs/$run/jobs?per_page=100" --jq '
+jobs=$(api "repos/$repo/actions/runs/$run/jobs?per_page=100" | jq -r '
     .jobs[] | select(.conclusion == "failure" or .conclusion == "timed_out")
     | "\(.id)\t\(.name)\t\([.steps[] | select(.conclusion == "failure" or .conclusion == "timed_out") | .name] | join(", "))"')
 
@@ -49,7 +70,7 @@ fi
 while IFS=$'\t' read -r id name step; do
     echo
     echo "== $name (job $id): failed step: ${step:-?}"
-    gh api "repos/$repo/check-runs/$id/annotations?per_page=50" --jq '
+    api "repos/$repo/check-runs/$id/annotations?per_page=50" | jq -r '
         .[] | select(.annotation_level == "failure")
         | select(.message | test("^Process completed with exit code") | not)
         | "\(if .path == ".github" then "" else "\(.path):\(.start_line) " end)\(if (.title // "") == "" then "" else "[\(.title)] " end)\(.message | gsub("\n"; " | ") | .[0:400])"' \
