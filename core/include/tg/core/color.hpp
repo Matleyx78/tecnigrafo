@@ -45,7 +45,7 @@ public:
     friend constexpr bool operator==(const Color&, const Color&) = default;
 
 private:
-    constexpr explicit Color(Kind kind) : m_kind(kind) {}
+    constexpr explicit Color(Kind kind, Rgb rgb = {}) : m_kind(kind), m_rgb(rgb) {}
 
     Kind m_kind;
     int m_index{0};
@@ -61,9 +61,7 @@ constexpr Color Color::byBlock() {
 }
 
 constexpr Color Color::fromRgb(Rgb rgb) {
-    Color color(Kind::Rgb);
-    color.m_rgb = rgb;
-    return color;
+    return Color(Kind::Rgb, rgb);
 }
 
 /// AutoCAD Color Index RGB; precondition: index is in 1..255.
