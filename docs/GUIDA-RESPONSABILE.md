@@ -196,7 +196,7 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    e chi scrive i riferimenti: Gemini per quelli ordinari, un agente di fascia
    forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
    "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
-   documentazione. Proponi anche gli ADR che servono.
+   documentazione. Proponi anche le bozze degli ADR che servono.
    ```
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
