@@ -23,13 +23,13 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.4.0**.
+Aggiornato alla versione **0.5.0**.
 
 | Stato | Comandi |
 |---|---|
 | completo | 2 |
-| presente | 7 |
-| assente | 60 |
+| presente | 11 |
+| assente | 56 |
 
 ## Disegno
 
@@ -116,10 +116,10 @@ Aggiornato alla versione **0.4.0**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `NEW` | | assente | 0.5 | |
-| `OPEN` | | assente | 0.5 | |
-| `QSAVE` / `SAVE` | | assente | 0.5 | |
-| `SAVEAS` | | assente | 0.5 | |
+| `NEW` | | presente | 0.5 | azzera il documento e la cronologia; usa lo scheletro interno (mancano i template DWT) |
+| `OPEN` | | presente | 0.5 | apre `.cadx` e DXF (AC1015–AC1032); supporto DWG dopo la 1.0 |
+| `QSAVE` / `SAVE` | | presente | 0.5 | salvataggio rapido atomico nel file corrente o salvataggio di una copia; formato `.cadx` e DXF |
+| `SAVEAS` | | presente | 0.5 | salva con nuovo nome in formato `.cadx` e DXF R2018 |
 | `PLOT` | | assente | 0.9 | stampa e PDF |
 | `PURGE` | `PU` | assente | — | |
 | `ZOOM` | `Z` | assente | — | lo zoom con la rotella esiste dalla 0.1; manca il comando con le opzioni (*Extents*, *Window*…) |

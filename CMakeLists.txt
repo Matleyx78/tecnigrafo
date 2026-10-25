@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(Tecnigrafo
-    VERSION 0.4.0
+    VERSION 0.5.0
     DESCRIPTION "Free 2D/3D CAD"
     HOMEPAGE_URL "https://github.com/tecnigrafo/tecnigrafo"
     LANGUAGES CXX)
