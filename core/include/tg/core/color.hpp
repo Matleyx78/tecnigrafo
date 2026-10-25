@@ -22,18 +22,11 @@ class Color {
 public:
     enum class Kind : std::uint8_t { ByLayer, ByBlock, Index, Rgb };
 
-    [[nodiscard]] static constexpr Color byLayer() { return Color(Kind::ByLayer); }
-
-    [[nodiscard]] static constexpr Color byBlock() { return Color(Kind::ByBlock); }
-
+    [[nodiscard]] static constexpr Color byLayer();
+    [[nodiscard]] static constexpr Color byBlock();
     /// Precondition: index is in 1..255.
     [[nodiscard]] static Color fromIndex(int index);
-
-    [[nodiscard]] static constexpr Color fromRgb(Rgb rgb) {
-        Color color(Kind::Rgb);
-        color.m_rgb = rgb;
-        return color;
-    }
+    [[nodiscard]] static constexpr Color fromRgb(Rgb rgb);
 
     [[nodiscard]] Kind kind() const { return m_kind; }
 
@@ -58,6 +51,20 @@ private:
     int m_index{0};
     Rgb m_rgb;
 };
+
+constexpr Color Color::byLayer() {
+    return Color(Kind::ByLayer);
+}
+
+constexpr Color Color::byBlock() {
+    return Color(Kind::ByBlock);
+}
+
+constexpr Color Color::fromRgb(Rgb rgb) {
+    Color color(Kind::Rgb);
+    color.m_rgb = rgb;
+    return color;
+}
 
 /// AutoCAD Color Index RGB; precondition: index is in 1..255.
 [[nodiscard]] Rgb aciToRgb(int index);

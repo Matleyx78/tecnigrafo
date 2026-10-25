@@ -5,9 +5,10 @@
 
 #include <algorithm>
 #include <cassert>
-#include <charconv>
 #include <cmath>
 #include <limits>
+#include <locale>
+#include <sstream>
 
 namespace tg::core {
 bool isAllowedLineweight(int value) {
@@ -78,11 +79,26 @@ std::optional<int> parseLineweight(std::string_view text) {
         return std::nullopt;
     }
     // Use the fixed grammar: command values are decimal millimetres, not exponents.
+    bool hasDigit = false;
+    bool hasDot = false;
+    for (const char ch : text) {
+        if (ch >= '0' && ch <= '9') {
+            hasDigit = true;
+        } else if (ch == '.' && !hasDot) {
+            hasDot = true;
+        } else {
+            return std::nullopt;
+        }
+    }
+    if (!hasDigit) {
+        return std::nullopt;
+    }
+    // Floating-point from_chars is unavailable in the macOS 14 standard library.
+    std::istringstream stream{std::string(text)};
+    stream.imbue(std::locale::classic());
     double millimetres = 0;
-    const auto result = std::from_chars(text.data(), text.data() + text.size(), millimetres,
-                                        std::chars_format::fixed);
-    if (result.ec != std::errc{} || result.ptr != text.data() + text.size() ||
-        !std::isfinite(millimetres) || millimetres < 0) {
+    stream >> std::noskipws >> millimetres;
+    if (!stream || !stream.eof() || !std::isfinite(millimetres)) {
         return std::nullopt;
     }
     constexpr double kHundredthsPerMillimetre = 100.0;

@@ -28,7 +28,7 @@ TEST(Lineweight, NearestAndTies) {
     EXPECT_EQ(nearestLineweight(7), 5);
     EXPECT_EQ(nearestLineweight(8), 9);
     EXPECT_EQ(nearestLineweight(52), 53);
-    EXPECT_EQ(nearestLineweight(180), 158);
+    EXPECT_EQ(nearestLineweight(179), 158);
     EXPECT_EQ(nearestLineweight(std::numeric_limits<int>::max()), 211);
 }
 
