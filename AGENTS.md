@@ -82,8 +82,8 @@ verdi**:
 
 1. Apri la pull request e aspetta la CI con **un solo comando che blocca**, non
    con controlli ripetuti (ogni controllo consuma token). Tieni l'etichetta.
-2. Se un controllo fallisce, leggi il log, correggi sullo stesso ramo, pubblica e
-   aspetta di nuovo.
+2. Se un controllo fallisce, leggi gli errori con `scripts/ci-errori.sh`
+   (sotto), correggi sullo stesso ramo, pubblica e aspetta di nuovo.
 3. Con tutto verde togli l'etichetta, scrivi il riepilogo (sotto) e **termina la
    sessione**.
 
@@ -102,18 +102,19 @@ gh api "repos/Matleyx78/tecnigrafo/actions/runs?head_sha=<sha>" \
 # aspetta la fine; esce con errore se un controllo fallisce. Se il tuo strumento
 # interrompe i comandi lunghi, rilancialo: riprende da dove era
 gh run watch <id> --repo Matleyx78/tecnigrafo --exit-status --compact
-# il log dei controlli falliti
-gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
+# perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
+scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
 ```
 
-Se i log non sono raggiungibili (per esempio il proxy blocca il servizio che li
-ospita), leggi le annotazioni dei check-run dall'API usando l'ID del job.
+`scripts/ci-errori.sh` legge solo l'API REST, quindi funziona anche dove i log non
+sono raggiungibili (per esempio il proxy blocca il servizio che li ospita). Gli
+errori vengono da `scripts/ci-annota.sh`, che la CI esegue su ogni passo di
+compilazione, test e verifica; per i passi in Python l'annotazione contiene le
+ultime righe dell'output. Se ancora non basta, e solo allora, il log intero dei
+controlli falliti:
 
 ```sh
-gh api repos/Matleyx78/tecnigrafo/actions/runs/<id>/jobs \
-  --jq '.jobs[] | select(.conclusion=="failure") | .id'
-gh api repos/Matleyx78/tecnigrafo/check-runs/<id del job>/annotations \
-  --paginate --jq '.[] | "\(.path):\(.start_line) \(.message)"'
+gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
 Quando il responsabile chiede correzioni a una pull request, riprendila in carico

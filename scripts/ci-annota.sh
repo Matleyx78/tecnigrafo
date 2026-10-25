@@ -7,18 +7,37 @@
 # an agent without access to the CI logs can still read why a step failed.
 # Use with pipefail so a failing producer still fails CI.
 #
-# Recognised: GCC/Clang/clang-format diagnostics, MSVC diagnostics, linker
-# errors, GoogleTest failures, sanitizer reports and failed verification cases
-# (only the first difference of each). A ctest failure that produced none of
-# these (a crash, a timeout) is reported by test name.
+# Recognised: GCC/Clang/clang-format diagnostics, MSVC diagnostics, CMake
+# errors, linker errors, GoogleTest failures, sanitizer reports and failed
+# verification cases (only the first difference of each). A ctest failure that
+# produced none of these (a crash, a timeout) is reported by test name; a test
+# that ctest reports as skipped is not a failure and is never reported.
+#
+# For a step that is not a build or a test (a Python script, say), run the
+# script in the tail mode only after the step failed:
+#
+#     ci-annota.sh --coda TITLE [log file]
+#
+# It prints nothing but one error annotation holding the last lines of the log.
 #
 # Keep it compatible with bash 3.2 (macOS): no associative arrays, no quotes
 # in the replacement part of ${var//pattern/replacement}.
 set -euo pipefail
 
-if (( $# > 1 )); then
+usage() {
     echo "usage: ci-annota.sh [log file]" >&2
+    echo "       ci-annota.sh --coda TITLE [log file]" >&2
     exit 2
+}
+
+tail_title=
+if (( $# >= 1 )) && [[ $1 == --coda ]]; then
+    (( $# >= 2 && $# <= 3 )) || usage
+    tail_title=$2
+    shift 2
+fi
+if (( $# > 1 )); then
+    usage
 fi
 if (( $# == 1 )); then
     exec < "$1"
@@ -35,6 +54,10 @@ gtest_file=
 gtest_line=
 gtest_message=
 gtest_lines=0
+cmake_file=
+cmake_line=
+cmake_message=
+cmake_lines=0
 workspace=${GITHUB_WORKSPACE:-$PWD}
 workspace=${workspace//\\//}
 nl=$'\n'
@@ -50,6 +73,16 @@ escape_property() {
     REPLY=${REPLY//':'/%3A}
     REPLY=${REPLY//','/%2C}
 }
+
+if [[ -n $tail_title ]]; then
+    # The last lines of the log, each cut to 300 characters, as one annotation.
+    tail_text=$(tail -n 15 | cut -c1-300)
+    escape_property "$tail_title"
+    tail_property=$REPLY
+    escape_data "$tail_text"
+    printf '::error title=%s::%s\n' "$tail_property" "$REPLY"
+    exit 0
+fi
 
 annotate() {
     count=$((count + 1))
@@ -95,12 +128,24 @@ finish_gtest() {
     gtest_lines=0
 }
 
+finish_cmake() {
+    if [[ -n $cmake_file ]]; then
+        annotate "$cmake_file" "$cmake_line" "CMake" "$cmake_message" ""
+    fi
+    cmake_file=
+    cmake_line=
+    cmake_message=
+    cmake_lines=0
+}
+
 diagnostic='^(.+):([0-9]+):([0-9]+): (warning|error|fatal error|runtime error): (.*)$'
 msvc_diagnostic='^(.+)\(([0-9]+)(,([0-9]+))?\) ?: (warning|error|fatal error) ([A-Z]+[0-9]+: .*)$'
 linker='(undefined reference to|error LNK[0-9]+:|Undefined symbols for architecture|ld: error:)'
 sanitizer='^[[:space:]]*SUMMARY: ([A-Za-z]+Sanitizer): (.*)$'
 gtest_failure='^(.+):([0-9]+): Failure$'
 gtest_msvc_failure='^(.+)\(([0-9]+)\): error: (.*)$'
+cmake_error_at='^CMake Error at (.+):([0-9]+) \(.+\):$'
+cmake_error='^CMake Error: (.*)$'
 ctest_failed='Test +#[0-9]+: ([^ ]+) [ .]*\*\*\*(.*[^ ])[[:space:]]+[0-9.]+ sec'
 failed='^[[:space:]]*FAILED: (.+: .+)$'
 report_line='^[[:space:]]+line ([0-9]+)$'
@@ -124,12 +169,31 @@ while IFS= read -r line || [[ -n $line ]]; do
         fi
     fi
 
+    # A CMake error message is the indented block under its "CMake Error at" line.
+    if [[ -n $cmake_file ]]; then
+        if [[ $parsed == ' '* ]] && (( cmake_lines < 6 )); then
+            text=${parsed#"${parsed%%[![:space:]]*}"}
+            cmake_message+="${cmake_message:+$nl}$text"
+            cmake_lines=$((cmake_lines + 1))
+            continue
+        elif [[ -z $parsed && -z $cmake_message ]]; then
+            continue
+        else
+            finish_cmake
+        fi
+    fi
+
     if [[ $parsed =~ $diagnostic ]]; then
         annotate "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "" \
             "${BASH_REMATCH[4]}: ${BASH_REMATCH[5]}" "${BASH_REMATCH[3]}"
     elif [[ $parsed =~ $msvc_diagnostic ]]; then
         annotate "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "" \
             "${BASH_REMATCH[5]} ${BASH_REMATCH[6]}" "${BASH_REMATCH[4]}"
+    elif [[ $parsed =~ $cmake_error_at ]]; then
+        cmake_file=${BASH_REMATCH[1]}
+        cmake_line=${BASH_REMATCH[2]}
+    elif [[ $parsed =~ $cmake_error ]]; then
+        annotate "" "" "CMake" "${BASH_REMATCH[1]}" ""
     elif [[ $parsed =~ $gtest_failure ]]; then
         gtest_file=${BASH_REMATCH[1]}
         gtest_line=${BASH_REMATCH[2]}
@@ -142,7 +206,12 @@ while IFS= read -r line || [[ -n $line ]]; do
     elif [[ $parsed =~ $linker ]]; then
         annotate "" "" "Linker" "$parsed" ""
     elif [[ $parsed =~ $ctest_failed ]]; then
-        ctest_failures+=("${BASH_REMATCH[1]}: ${BASH_REMATCH[2]}")
+        # "***Skipped" is a test that opted out (exit code 77), not a failure.
+        ctest_name=${BASH_REMATCH[1]}
+        ctest_result=${BASH_REMATCH[2]}
+        if [[ $ctest_result != Skipped* ]]; then
+            ctest_failures+=("$ctest_name: $ctest_result")
+        fi
     elif [[ $parsed =~ $failed ]]; then
         finish_case
         case_message=${BASH_REMATCH[1]}
@@ -165,6 +234,7 @@ while IFS= read -r line || [[ -n $line ]]; do
     fi
 done
 finish_gtest
+finish_cmake
 finish_case
 
 # Name the failed tests only when nothing more precise explains them.

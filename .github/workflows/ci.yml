@@ -118,8 +118,8 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
           cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
       - name: Test
         run: |
@@ -127,8 +127,8 @@ jobs:
           ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
       - name: Static analysis
         run: |
-          cmake --preset tidy -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
+          cmake --preset tidy -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
           cmake --build --preset tidy 2>&1 | scripts/ci-annota.sh
 
   verifica:
@@ -160,8 +160,9 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build verification tools
         run: |
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
-          cmake --build --preset ci --target tecnigrafo-script tecnigrafo confronta_immagini
+          set -o pipefail
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
+          cmake --build --preset ci --target tecnigrafo-script tecnigrafo confronta_immagini 2>&1 | scripts/ci-annota.sh
       - name: Verifica
         run: |
           set -o pipefail
@@ -169,10 +170,28 @@ jobs:
       - name: 'Oracolo ezdxf: answers'
         if: always()
         run: |
-          python3 -m pip install --require-hashes --only-binary=:all: -r tests/verifica/oracolo/requirements.txt
-          python3 tests/verifica/oracolo/controlla_casi.py tests/verifica/casi build/verifica-sorgenti --print-only
+          # On failure, the last lines of the log become an annotation, so that an
+          # agent without access to the CI logs can still read the cause.
+          mkdir -p build
+          status=0
+          { python3 -m pip install --require-hashes --only-binary=:all: -r tests/verifica/oracolo/requirements.txt \
+            && python3 tests/verifica/oracolo/controlla_casi.py tests/verifica/casi build/verifica-sorgenti --print-only; \
+          } > build/oracolo-risposte.log 2>&1 || status=$?
+          cat build/oracolo-risposte.log
+          if [ "$status" -ne 0 ]; then
+            scripts/ci-annota.sh --coda 'Oracolo ezdxf: answers' build/oracolo-risposte.log
+          fi
+          exit "$status"
       - name: Oracolo ezdxf
-        run: python3 tests/verifica/oracolo/controlla_casi.py tests/verifica/casi build/verifica-sorgenti --check-only --self-test
+        run: |
+          mkdir -p build
+          status=0
+          python3 tests/verifica/oracolo/controlla_casi.py tests/verifica/casi build/verifica-sorgenti --check-only --self-test > build/oracolo.log 2>&1 || status=$?
+          cat build/oracolo.log
+          if [ "$status" -ne 0 ]; then
+            scripts/ci-annota.sh --coda 'Oracolo ezdxf' build/oracolo.log
+          fi
+          exit "$status"
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v4
@@ -208,8 +227,8 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build with AddressSanitizer and UBSan
         run: |
-          cmake --preset asan -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
+          cmake --preset asan -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
           cmake --build --preset asan 2>&1 | scripts/ci-annota.sh
       - name: Test
         run: |
@@ -256,8 +275,9 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build fuzzing targets
         run: |
-          cmake --preset fuzz -DTG_VERIFICA_SOURCES_DIR="$TG_VERIFICA_SOURCES_DIR"
-          cmake --build --preset fuzz
+          set -o pipefail
+          cmake --preset fuzz -DTG_VERIFICA_SOURCES_DIR="$TG_VERIFICA_SOURCES_DIR" 2>&1 | scripts/ci-annota.sh
+          cmake --build --preset fuzz 2>&1 | scripts/ci-annota.sh
       - name: Fuzz every reader for three minutes
         shell: bash
         run: |
@@ -331,9 +351,13 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
-          cmake --build --preset ci *> build/ci-build.log
+          New-Item -ItemType Directory -Force build | Out-Null
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" *> build/ci-build.log
           $status = $LASTEXITCODE
+          if ($status -eq 0) {
+            cmake --build --preset ci *>> build/ci-build.log
+            $status = $LASTEXITCODE
+          }
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-build.log
           exit $status
       - name: Test
@@ -381,8 +405,8 @@ jobs:
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Build, warnings as errors
         run: |
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
           set -o pipefail
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
           cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
       - name: Test
         run: |
