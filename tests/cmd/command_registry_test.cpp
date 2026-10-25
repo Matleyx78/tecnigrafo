@@ -132,7 +132,7 @@ TEST(CommandDescriptionValidity, ChecksNamesSummaryIdsAndKeywords) {
     EXPECT_TRUE(isValid(description("LINE")));
     EXPECT_TRUE(isValid({"RIBBON", {}, "Shows the ribbon.", false, {}}));
 
-    CommandDescription noName = description("");
+    const CommandDescription noName = description("");
     EXPECT_FALSE(isValid(noName));
 
     CommandDescription noSummary = description("LINE");
