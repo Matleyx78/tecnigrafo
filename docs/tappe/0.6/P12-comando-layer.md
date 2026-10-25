@@ -1,11 +1,11 @@
 # [0.6-P12] `cmd`: `-LAYER`, `CLAYER`
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #242
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.6-R12]` (#…), agente gemini
+- **Riferimenti:** issue `[0.6-R12]` (#241), agente gemini
 - **Dipende da:** P1, P6, P9, R12
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0023](../../adr/0023-layer-e-proprieta.md) punti 1, 4,

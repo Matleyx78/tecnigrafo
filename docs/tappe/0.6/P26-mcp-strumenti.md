@@ -1,7 +1,7 @@
 # [0.6-P26] `mcp`: strumenti e confronto con `tecnigrafo-script`
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #260
 - **Difficoltà:** impegnativa
 - **Agente:** codex
 - **Modello e impegno:** forte; impegno alto

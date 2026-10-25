@@ -1,11 +1,11 @@
 # [0.6-P23] `cmd`: selezione rapida
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #257
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.6-R23]` (#…), agente gemini
+- **Riferimenti:** issue `[0.6-R23]` (#256), agente gemini
 - **Dipende da:** P14, R23
 - **Modulo:** `cmd` (più la domanda `quickselect` in `script`)
 - **Da leggere:** [ADR 0023](../../adr/0023-layer-e-proprieta.md) punto 4;

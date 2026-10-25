@@ -1,7 +1,7 @@
 # [0.6-P18] `app`: icone, prima parte, e `docs/ICONE.md`
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #251
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno medio

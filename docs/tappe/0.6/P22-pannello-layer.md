@@ -1,7 +1,7 @@
 # [0.6-P22] `app`: pannello dei layer
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #255
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno medio

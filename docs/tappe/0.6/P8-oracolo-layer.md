@@ -1,7 +1,7 @@
 # [0.6-P8] Oracolo ezdxf: layer, tipi di linea, proprietà, colori e tipi ISO
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #234
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio

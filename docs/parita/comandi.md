@@ -29,7 +29,7 @@ Aggiornato alla versione **0.5.0**.
 |---|---|
 | completo | 2 |
 | presente | 11 |
-| assente | 56 |
+| assente | 64 |
 
 ## Disegno
 
@@ -107,10 +107,18 @@ Aggiornato alla versione **0.5.0**.
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
 | `LAYER` | `LA` | assente | 0.6 | come pannello agganciabile |
+| `-LAYER` | `-LA` | assente | 0.6 | dalla riga di comando, per gli script |
+| `CLAYER` | | assente | 0.6 | layer corrente |
 | `PROPERTIES` | `PR`, `CH`, `MO` | assente | 0.6 | come pannello agganciabile |
+| `CHPROP` | | assente | 0.6 | colore, layer, tipo, scala del tipo, spessore |
+| `COLOR` | `COL`, `-COLOR` | assente | 0.6 | indice AutoCAD e RGB; niente cataloghi di colori |
 | `QSELECT` | | assente | 0.6 | selezione per layer e per tipo |
-| `LINETYPE` | `LT` | assente | 0.6 | continua, tratteggiata, punto e linea |
+| `LINETYPE` | `LT`, `-LINETYPE` | assente | 0.6 | continua e tipi ISO (`ACAD_ISO02W100`, `ACAD_ISO10W100`); niente file `.lin` |
 | `LTSCALE` | `LTS` | assente | 0.6 | scala globale |
+| `CELTSCALE` | | assente | 0.6 | scala delle entità nuove |
+| `LWEIGHT` | `LW`, `-LWEIGHT` | assente | 0.6 | spessore corrente |
+| `LWDISPLAY` | | assente | 0.6 | anche con il pulsante `LWT` |
+| `RIBBON` / `RIBBONCLOSE` | | assente | 0.6 | ribbon o interfaccia classica |
 
 ## File, stampa e vista
 

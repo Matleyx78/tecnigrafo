@@ -1,11 +1,11 @@
 # [0.6-P9] `core`: proprietà effettive e stati dei layer nelle domande del documento
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #236
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.6-R9]` (#…), agente gemini
+- **Riferimenti:** issue `[0.6-R9]` (#235), agente gemini
 - **Dipende da:** P5, P8, R9
 - **Modulo:** `core` (più le due domande in `script`)
 - **Da leggere:** [ADR 0023](../../adr/0023-layer-e-proprieta.md) punto 4,

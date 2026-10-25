@@ -16,7 +16,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
-| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | in preparazione | [0.6](tappe/0.6-layer-e-proprieta.md) |
+| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | **aperta** | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
@@ -215,3 +215,11 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   verificati con i test Qt e la prova manuale, senza riferimenti; nlohmann/json
   solo nel modulo `mcp`. I layer bloccati sbiaditi passano alla
   [tappa 0.9](tappe/0.9-stampa-e-distribuzione.md), con la trasparenza.
+- **2026-10-25 — Apertura della tappa 0.6.** Il piano dettagliato e le schede
+  dei pacchetti della [tappa 0.6](tappe/0.6-layer-e-proprieta.md) sono
+  pubblicati (#226), con il milestone `v0.6` e le issue #227–#262. Dopo
+  l'accettazione il responsabile conferma tre ritocchi: un comando può non
+  avere domande (ADR 0026, punto 3); la generazione continua delle polilinee
+  entra nel modello con P10; i pacchetti di `app` vanno uno dopo l'altro.
+  P14 dipende anche da P10, perché i suoi riferimenti salvano e riaprono il
+  disegno.

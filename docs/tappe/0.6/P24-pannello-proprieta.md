@@ -1,7 +1,7 @@
 # [0.6-P24] `app`: pannello delle proprietà e finestra `QSELECT`
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #258
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno medio

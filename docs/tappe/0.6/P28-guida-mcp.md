@@ -1,7 +1,7 @@
 # [0.6-P28] Guida a `tecnigrafo-mcp` per gli agenti
 
 - **Tappa:** 0.6 — [piano](../0.6-layer-e-proprieta.md)
-- **Issue:** #…
+- **Issue:** #262
 - **Difficoltà:** facile
 - **Agente:** gemini
 - **Modello e impegno:** leggero; impegno basso
