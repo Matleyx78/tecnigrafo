@@ -28,6 +28,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -106,6 +107,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
       m_view(new CadView(m_document, m_runner, this)),
       m_commandLine(new CommandLine(m_runner, this)) {
     cmd::registerBuiltinCommands(m_registry);
+    // The program as distributed does not check descriptions; --script turns
+    // the check on (docs/adr/0026, point 3, and setScriptMode()).
+    m_runner.setDescriptionCheck({});
     m_diskFiles =
         std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
                                        [this](const QString& path) { m_pendingOpen = path; });
@@ -345,6 +349,12 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::setScriptMode() {
     m_scriptMode = true;
+    // At level 2 a prompt missing from its command's description is written
+    // in the history: the report differs from any expected one, so the case
+    // fails and prints the message among its differences (docs/adr/0026).
+    m_runner.setDescriptionCheck([this](const std::string& message) {
+        m_commandLine->appendToHistory(QString::fromStdString(message));
+    });
     if (!m_externalFiles) {
         m_runner.setFileAccess(nullptr);
     }

@@ -73,7 +73,13 @@ private:
 class CommandLineTest : public testing::Test {
 protected:
     CommandLineTest() {
-        m_registry.add("PLINE", {"PL"}, [] { return std::make_unique<FakePline>(); });
+        m_registry.add({"PLINE",
+                        {"PL"},
+                        "Draws a polyline.",
+                        false,
+                        {{"start-point", "Specify start point:", cmd::ValueType::Point, {}, false},
+                         {"next-point", "Specify next point:", cmd::ValueType::Point, {}, true}}},
+                       [] { return std::make_unique<FakePline>(); });
         auto* layout = new QVBoxLayout(&m_window);
         layout->addWidget(m_view);
         layout->addWidget(m_commandLine);

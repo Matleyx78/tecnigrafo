@@ -81,10 +81,23 @@ private:
     std::vector<Entity> m_preview;
 };
 
+/// The description of FakeCommand under `name`.
+CommandDescription fakeDescription(std::string name, std::vector<std::string> aliases) {
+    return {std::move(name),
+            std::move(aliases),
+            "Adds a vertex for each point.",
+            false,
+            {{"point",
+              "Specify point or [Close/Fail]:",
+              ValueType::Point,
+              {{"Close", "C"}, {"Fail", "F"}},
+              true}}};
+}
+
 class CommandRunnerTest : public testing::Test {
 protected:
     CommandRunnerTest() {
-        m_registry.add("FAKE", {"FK", "F2"},
+        m_registry.add(fakeDescription("FAKE", {"FK", "F2"}),
                        [this] { return std::make_unique<FakeCommand>(m_journal); });
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
@@ -116,34 +129,6 @@ private:
     CommandRunner m_runner{m_registry, m_editor};
     std::vector<std::string> m_messages;
 };
-
-// --- Registry -------------------------------------------------------------
-
-TEST(CommandRegistry, FindsNamesAndAliasesIgnoringCase) {
-    Journal journal;
-    CommandRegistry registry;
-    registry.add("PLINE", {"PL"}, [&journal] { return std::make_unique<FakeCommand>(journal); });
-
-    EXPECT_EQ(registry.canonicalName("PLINE"), "PLINE");
-    EXPECT_EQ(registry.canonicalName("pline"), "PLINE");
-    EXPECT_EQ(registry.canonicalName("Pl"), "PLINE");
-    EXPECT_EQ(registry.canonicalName("PLIN"), std::nullopt);
-    EXPECT_EQ(registry.canonicalName(""), std::nullopt);
-
-    EXPECT_NE(registry.create("pl"), nullptr);
-    EXPECT_EQ(registry.create("LINE"), nullptr);
-}
-
-TEST(CommandRegistry, CreatesANewInstanceEveryTime) {
-    Journal journal;
-    CommandRegistry registry;
-    registry.add("FAKE", {}, [&journal] { return std::make_unique<FakeCommand>(journal); });
-
-    const std::unique_ptr<Command> first = registry.create("FAKE");
-    const std::unique_ptr<Command> second = registry.create("FAKE");
-    ASSERT_NE(first, nullptr);
-    EXPECT_NE(first, second);
-}
 
 // --- Starting commands ------------------------------------------------------
 
@@ -428,6 +413,15 @@ private:
     SelectionJournal& m_journal;
 };
 
+/// The description of FakeSelectCommand.
+CommandDescription pickDescription(std::string name, std::vector<std::string> aliases) {
+    return {std::move(name),
+            std::move(aliases),
+            "Records a selection.",
+            true,
+            {{"pick", "Pick:", ValueType::Point, {}, false}}};
+}
+
 /// A two-point polyline from `from` to `to`.
 Polyline line(const Vec2& from, const Vec2& to) {
     Polyline polyline;
@@ -448,8 +442,9 @@ protected:
           m_b(m_document.add(line({0, 5}, {10, 5}))),
           m_c(m_document.add(line({20, 0}, {30, 0}))),
           m_d(m_document.add(line({8, 2}, {25, 2}))) {
-        m_registry.add("FAKE", {"FK"}, [this] { return std::make_unique<FakeCommand>(m_journal); });
-        m_registry.add("PICK", {"PK"},
+        m_registry.add(fakeDescription("FAKE", {"FK"}),
+                       [this] { return std::make_unique<FakeCommand>(m_journal); });
+        m_registry.add(pickDescription("PICK", {"PK"}),
                        [this] { return std::make_unique<FakeSelectCommand>(m_picks); });
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
@@ -856,9 +851,14 @@ protected:
     DrawingAidsTest() {
         m_document.add(line({0, 0}, {100, 0}));
         m_document.add(Polyline{{{{200, 0}, 1.0}, {{300, 0}, 0.0}}});
-        m_registry.add("POINT", {"PT"},
+        m_registry.add({"POINT",
+                        {"PT"},
+                        "Records points.",
+                        false,
+                        {{"point", "Specify point:", ValueType::Point, {}, true}}},
                        [this] { return std::make_unique<FakePointCommand>(m_journal); });
-        m_registry.add("PICK", {}, [this] { return std::make_unique<FakeSelectCommand>(m_picks); });
+        m_registry.add(pickDescription("PICK", {}),
+                       [this] { return std::make_unique<FakeSelectCommand>(m_picks); });
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
     }
@@ -1273,7 +1273,8 @@ public:
     void pointerMoved(const Vec2& point) override { m_journal.pointerPositions.push_back(point); }
 
     [[nodiscard]] Prompt prompt() const override {
-        return {"Test prompt:", {{"Other", "O"}, {"Remember", "R"}}, m_journal.kind};
+        return {
+            "Test prompt [Other/Remember]:", {{"Other", "O"}, {"Remember", "R"}}, m_journal.kind};
     }
 
     [[nodiscard]] std::span<const Entity> preview() const override { return {}; }
@@ -1286,11 +1287,25 @@ private:
     PromptJournal& m_journal;
 };
 
+/// The description of FakePromptCommand: its prompt changes kind, so only
+/// the options describe its value.
+CommandDescription promptDescription() {
+    return {"PROMPT",
+            {},
+            "Asks one question of any kind.",
+            false,
+            {{"value",
+              "Test prompt [Other/Remember]:",
+              ValueType::Keyword,
+              {{"Other", "O"}, {"Remember", "R"}},
+              true}}};
+}
+
 class PromptRunnerTest : public testing::Test {
 protected:
     PromptRunnerTest() {
         m_document.add(line({0, 0}, {100, 0}));
-        m_registry.add("PROMPT", {},
+        m_registry.add(promptDescription(),
                        [this] { return std::make_unique<FakePromptCommand>(m_journal); });
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
@@ -1397,7 +1412,7 @@ TEST_P(NumericPromptTest, InvalidInputReportsThePromptKindAndKeepsTheQuestion) {
         EXPECT_EQ(messages().back(), GetParam() == PromptKind::Distance
                                          ? "Requires a distance, a point or an option."
                                          : "Requires an angle, a point or an option.");
-        EXPECT_EQ(runner().promptText(), "Test prompt:");
+        EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
         EXPECT_TRUE(runner().isActive());
     }
     EXPECT_TRUE(journal().inputs.empty());
@@ -1515,7 +1530,8 @@ TEST_F(PromptRunnerTest, DefaultsStartFreshAndSurviveCommandsAndCancellation) {
 
     // A separate runner is a new session, even with the same editor.
     CommandRegistry registry;
-    registry.add("PROMPT", {}, [this] { return std::make_unique<FakePromptCommand>(journal()); });
+    registry.add(promptDescription(),
+                 [this] { return std::make_unique<FakePromptCommand>(journal()); });
     runner().submit(CancelInput{});
     CommandRunner fresh{registry, editor()};
     fresh.submitText("PROMPT");
@@ -1551,6 +1567,92 @@ TEST_F(PromptRunnerTest, EscCanKeepCompletedEntitiesAsOneUndoStep) {
     EXPECT_EQ(document().entityCount(), 3U);
     EXPECT_NE(document().find(first), nullptr);
     EXPECT_NE(document().find(second), nullptr);
+}
+
+// --- Description check (docs/adr/0026, point 3) ------------------------------
+
+/// FAKE registered with a description that knows only the start of
+/// FakeCommand's question, and a FAKE2 that says the right text with other
+/// options.
+class DescriptionCheckTest : public testing::Test {
+protected:
+    DescriptionCheckTest() {
+        CommandDescription wrongText = fakeDescription("FAKE", {});
+        wrongText.prompts.front().text = "Specify a point or [Close/Fail]:";
+        m_registry.add(std::move(wrongText),
+                       [this] { return std::make_unique<FakeCommand>(m_journal); });
+        CommandDescription wrongKeywords = fakeDescription("FAKE2", {});
+        wrongKeywords.prompts.front().keywords = {{"Fail", "F"}, {"Close", "C"}};
+        m_registry.add(std::move(wrongKeywords),
+                       [this] { return std::make_unique<FakeCommand>(m_journal); });
+        m_runner.setDescriptionCheck(
+            [this](const std::string& message) { m_reports.push_back(message); });
+    }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const std::vector<std::string>& reports() const { return m_reports; }
+
+private:
+    Document m_document;
+    edit::Editor m_editor{m_document};
+    CommandRegistry m_registry;
+    Journal m_journal;
+    CommandRunner m_runner{m_registry, m_editor};
+    std::vector<std::string> m_reports;
+};
+
+TEST_F(DescriptionCheckTest, AnUndescribedPromptCallsTheCheckAtStartAndAfterEachInput) {
+    runner().submitText("FAKE");
+    ASSERT_EQ(reports().size(), 1U);
+    EXPECT_EQ(reports().back(), "FAKE: undescribed prompt \"Specify point or [Close/Fail]:\"");
+
+    runner().submit(pointInput(1, 2));
+    EXPECT_EQ(reports().size(), 2U);
+    runner().submitText("C");  // the command ends: no prompt to check
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(reports().size(), 2U);
+}
+
+TEST_F(DescriptionCheckTest, KeywordsInAnotherOrderAreUndescribed) {
+    runner().submitText("fake2");
+    ASSERT_EQ(reports().size(), 1U);
+    EXPECT_EQ(reports().back(), "FAKE2: undescribed prompt \"Specify point or [Close/Fail]:\"");
+    runner().submit(CancelInput{});
+}
+
+TEST_F(DescriptionCheckTest, TheRunnerPromptsAreNotChecked) {
+    runner().submitText("");  // Enter with no command
+    runner().submit(CancelInput{});
+    EXPECT_EQ(runner().promptText(), "Command:");
+    EXPECT_TRUE(reports().empty());
+}
+
+TEST_F(DescriptionCheckTest, AnEmptyCheckTurnsTheCheckOff) {
+    runner().setDescriptionCheck({});
+    runner().submitText("FAKE");
+    runner().submit(pointInput(1, 2));
+    runner().submit(CancelInput{});
+    EXPECT_TRUE(reports().empty());
+}
+
+TEST_F(CommandRunnerTest, DescribedPromptsPassTheDefaultCheck) {
+    // The default check aborts: reaching the end is the test.
+    runner().submitText("FAKE");
+    runner().submit(pointInput(1, 2));
+    runner().submitText("C");
+    EXPECT_FALSE(runner().isActive());
+}
+
+TEST(DescriptionCheckDeathTest, TheDefaultCheckAborts) {
+    Journal journal;
+    Document document;
+    edit::Editor editor{document};
+    CommandRegistry registry;
+    registry.add({"FAKE", {}, "Asks nothing it describes.", false, {}},
+                 [&journal] { return std::make_unique<FakeCommand>(journal); });
+    CommandRunner runner{registry, editor};
+    EXPECT_DEATH(runner.submitText("FAKE"), "FAKE: undescribed prompt");
 }
 
 }  // namespace

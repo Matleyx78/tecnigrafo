@@ -9,8 +9,11 @@
 #include "tg/core/document_query.hpp"
 #include "tg/core/math.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdlib>
+#include <iostream>
 #include <string>
 #include <utility>
 #include <variant>
@@ -53,6 +56,13 @@ bool isRedo(std::string_view name) {
     return detail::equalsIgnoringCase(name, kRedo);
 }
 
+// The default description check: any test that meets an undescribed prompt
+// fails, wherever it runs (docs/adr/0026, point 3).
+void abortOnUndescribedPrompt(const std::string& message) {
+    std::cerr << message << "\n";
+    std::abort();
+}
+
 bool matches(const Keyword& keyword, std::string_view text) {
     return detail::equalsIgnoringCase(text, keyword.name) ||
            (!keyword.shortcut.empty() && detail::equalsIgnoringCase(text, keyword.shortcut));
@@ -63,9 +73,11 @@ bool matches(const Keyword& keyword, std::string_view text) {
 CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& editor)
     : m_registry(registry),
       m_editor(editor),
-      m_context{editor, std::nullopt, [this](std::string text) {
+      m_context{editor, std::nullopt,
+                [this](std::string text) {
                     message(std::move(text));
-                }} {}
+                }},
+      m_descriptionCheck(abortOnUndescribedPrompt) {}
 
 void CommandRunner::setFileAccess(io::FileAccess* files) {
     m_context.files = files;
@@ -187,6 +199,10 @@ void CommandRunner::setMessageSink(std::function<void(std::string)> sink) {
     m_sink = std::move(sink);
 }
 
+void CommandRunner::setDescriptionCheck(DescriptionCheck check) {
+    m_descriptionCheck = std::move(check);
+}
+
 void CommandRunner::startCommand(std::string_view text) {
     if (isUndo(text)) {
         m_lastCommand = kUndo;
@@ -213,6 +229,7 @@ void CommandRunner::startCommand(std::string_view text) {
         return;
     }
     m_lastCommand = *name;
+    m_description = m_registry.describe(*name);
     if (m_command->needsSelection() && m_selection.isEmpty()) {
         m_askingSelection = true;
         return;
@@ -234,8 +251,10 @@ void CommandRunner::beginCommand() {
     }
     if (m_command->needsSelection()) {
         assert(!selection.ids.empty() && "a selection is never handed over empty");
-        forward(selection);
+        forward(selection);  // checks the prompt that follows
+        return;
     }
+    checkPrompt();
 }
 
 void CommandRunner::repeatLastCommand() {
@@ -367,7 +386,27 @@ void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAc
 void CommandRunner::forward(const Input& input) {
     if (m_command->handle(m_context, input) == Status::Finished) {
         finish();
+        return;
     }
+    checkPrompt();
+}
+
+void CommandRunner::checkPrompt() const {
+    if (!m_descriptionCheck || !isActive() || m_askingSelection) {
+        return;
+    }
+    const Prompt prompt = m_command->prompt();
+    if (prompt.text.empty()) {
+        return;  // nothing shown
+    }
+    if (m_description != nullptr &&
+        std::ranges::any_of(m_description->prompts, [&prompt](const PromptDescription& described) {
+            return cmd::matches(described, prompt);
+        })) {
+        return;
+    }
+    // Composed for developers, never shown to users: not translated.
+    m_descriptionCheck(m_lastCommand + ": undescribed prompt \"" + prompt.text + "\"");
 }
 
 std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) const {
