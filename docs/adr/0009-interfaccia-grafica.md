@@ -1,6 +1,6 @@
 # ADR 0009: Impianto dell'interfaccia grafica
 
-- **Stato:** Proposto
+- **Stato:** Accettato (2026-10-25)
 - **Data:** 2026-10-16
 
 ## Contesto

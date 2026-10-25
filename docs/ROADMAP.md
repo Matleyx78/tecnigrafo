@@ -16,7 +16,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
-| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
+| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | in preparazione | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
@@ -203,3 +203,15 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   i dettagli si fissano quando si prepara quella tappa. Una chat dentro Tecnigrafo e il linguaggio
   naturale nella riga di comando restano possibili ma con l'intenzione di
   scartarli.
+- **2026-10-25 — Piano della tappa 0.6.** Il piano dettagliato della
+  [tappa 0.6](tappe/0.6-layer-e-proprieta.md) è in preparazione, con gli ADR
+  [0023](adr/0023-layer-e-proprieta.md)–[0027](adr/0027-server-mcp-di-sviluppo.md)
+  e l'[ADR 0009](adr/0009-interfaccia-grafica.md) accettati. Il
+  responsabile sceglie: tratti dei tipi di linea calcolati in `core`, con
+  riferimenti propri; tipi di linea predefiniti con i nomi ISO
+  (`ACAD_ISO02W100`, `ACAD_ISO10W100`) e le definizioni degli altri
+  programmi; rinominare un layer nominato in dati non gestiti aggiorna entità
+  e blocchi e avvisa per il resto; temi, icone, scorciatoie e pannelli
+  verificati con i test Qt e la prova manuale, senza riferimenti; nlohmann/json
+  solo nel modulo `mcp`. I layer bloccati sbiaditi passano alla
+  [tappa 0.9](tappe/0.9-stampa-e-distribuzione.md), con la trasparenza.
