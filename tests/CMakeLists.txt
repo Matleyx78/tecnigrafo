@@ -120,7 +120,7 @@ tg_configure_target(tg_bench)
 # Widgets of the application, driven with the Qt Test module and no display
 # (docs/adr/0005). Built only together with the application.
 if(TG_BUILD_APP)
-    find_package(Qt6 6.4 REQUIRED COMPONENTS Test Widgets)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Test Widgets)
     add_executable(tg_app_tests
         app/command_line_test.cpp
         app/drawing_aids_test.cpp

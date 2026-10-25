@@ -42,8 +42,9 @@
    scheda, un gruppo e un pulsante legato a un `QAction`; mostra la finestra;
    verifica che il pulsante esista e che premerlo attivi l'azione.
 
-Se non compila senza avvisi nel nostro codice con Qt 6.4 su Linux o con 6.8
-su Windows e macOS, **fermati** e scrivilo nella issue: serve un ADR che
+Se non compila senza avvisi nel nostro codice con Qt 6.8 (versione minima,
+[ADR 0028](../../adr/0028-versione-minima-di-qt.md)) su Linux, Windows e macOS,
+**fermati** e scrivilo nella issue: serve un ADR che
 cambi libreria o versione minima (ADR 0009, punto 2).
 
 ## Regole della tappa che valgono qui

@@ -1,6 +1,7 @@
 # ADR 0002: Linguaggio, librerie e strumenti
 
 - **Stato:** Accettato
+- **Sostituito in parte da:** ADR 0028 (versione minima di Qt)
 - **Data:** 2026-10-15
 
 ## Contesto

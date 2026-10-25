@@ -66,10 +66,10 @@ alla chiusura del programma.
 
 ## Compilare
 
-Servono un compilatore C++20, CMake ≥ 3.24, Ninja e Qt ≥ 6.4 (solo il modulo Widgets).
+Servono un compilatore C++20, CMake ≥ 3.24, Ninja e Qt ≥ 6.8 (solo il modulo Widgets).
 GoogleTest viene scaricato da CMake se non è installato.
 
-### Debian 12 e 13 / Ubuntu 24.04
+### Debian 13
 
 Procedura completa, con VS Code e gli strumenti di formattazione:
 [docs/AMBIENTE-SVILUPPO.md](docs/AMBIENTE-SVILUPPO.md). In breve:
@@ -81,6 +81,10 @@ cmake --build --preset release
 ctest --preset release
 ./build/release/app/tecnigrafo
 ```
+
+Debian 12 e Ubuntu 24.04 hanno Qt 6.4: non basta (ADR 0028). Installa Qt 6.8 a
+parte (installer ufficiale o aqtinstall) e passa a CMake
+`-DCMAKE_PREFIX_PATH=<cartella di Qt 6.8>`; quei sistemi non si provano in CI.
 
 ### Windows
 

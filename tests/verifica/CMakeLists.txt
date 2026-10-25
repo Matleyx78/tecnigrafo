@@ -91,7 +91,7 @@ endforeach()
 # depend on fonts and antialiasing: Linux runs all scripts; Windows and
 # macOS run only pline/coordinate, a report-only smoke case from P2.
 if(TG_BUILD_APP)
-    find_package(Qt6 6.4 REQUIRED COMPONENTS Gui)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Gui)
     add_executable(confronta_immagini confronta_immagini.cpp)
     target_link_libraries(confronta_immagini PRIVATE Tecnigrafo::script Qt6::Gui)
     target_compile_definitions(confronta_immagini PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
