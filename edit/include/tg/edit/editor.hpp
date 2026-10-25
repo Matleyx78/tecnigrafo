@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace tg::edit {
@@ -53,6 +54,24 @@ public:
     /// the value is already `units`.
     /// Preconditions: a transaction is open; 0 <= units <= 24.
     bool setUnits(int units);
+
+    /// Layer and property edits require an open transaction. They return false
+    /// (or nullopt) for rejected or unchanged values, without recording a change.
+    std::optional<core::LayerId> addLayer(core::Layer layer);
+    bool renameLayer(core::LayerId id, std::string name);
+    bool removeLayer(core::LayerId id);
+    /// Changes colour, linetype, lineweight and states; preserves name/id/extras.
+    /// Freezing the current layer is refused.
+    bool changeLayer(const core::Layer& layer);
+    std::optional<core::LinetypeId> addLinetype(core::Linetype linetype);
+    bool setProperties(core::EntityId id, const core::EntityProperties& properties);
+    /// Refuses a frozen current layer.
+    bool setCurrent(const core::CurrentProperties& current);
+    bool setLtscale(double scale);  ///< finite and > 0
+
+    /// Saved view setting: modifies the drawing without an undo step.
+    /// No transaction is needed. Notifies the change listener on a change.
+    void setLwdisplay(bool on);
 
     /// True if the undo stack is not at the last save or load position.
     [[nodiscard]] bool isModified() const;
@@ -117,17 +136,54 @@ public:
     void setChangeListener(Listener listener);
 
 private:
+    struct LayerTableChange {
+        core::Layer record;
+        std::size_t position{0};
+    };
+
+    struct LinetypeTableChange {
+        core::Linetype record;
+        std::size_t position{0};
+    };
+
+    /// Only changed group values are stored, never a snapshot of the drawing.
+    struct RawValueChange {
+        std::optional<core::EntityId> entity;  ///< otherwise a raw section
+        std::size_t section{0};
+        std::size_t group{0};
+        std::string value;
+    };
+
+    struct LayerUpdate {
+        core::Layer record;
+        std::vector<RawValueChange> rawValues;
+    };
+
     /// One elementary change to the document. While the entity is outside the
     /// document (after an Added change is undone, or a Removed change is
     /// applied) `detached` holds it, so that it can be put back unchanged.
     struct Change {
-        enum class Kind : std::uint8_t { Added, Removed, Units };
+        enum class Kind : std::uint8_t {
+            Added,
+            Removed,
+            Units,
+            LayerAdded,
+            LayerRemoved,
+            LinetypeAdded,
+            LayerUpdated,
+            Properties,
+            Current,
+            Ltscale
+        };
 
         Kind kind{Kind::Added};
         core::EntityId id;
         std::optional<core::EntityRecord> detached;
         int previousUnits{core::Document::kDefaultUnits};
         int units{core::Document::kDefaultUnits};
+        std::variant<std::monostate, LayerTableChange, LinetypeTableChange, LayerUpdate,
+                     core::EntityRecord, core::CurrentProperties, double>
+            data{};
     };
 
     struct Step {
@@ -138,6 +194,8 @@ private:
     void apply(Change& change);
     void revert(Change& change);
     void notify() const;
+    void swapUpdate(Change& change);
+    void swapRawValues(std::vector<RawValueChange>& values);
 
     core::Document& m_document;
     std::optional<Step> m_open;
@@ -147,6 +205,7 @@ private:
     std::optional<std::size_t> m_savedPosition{0};
     std::string m_fileName{"Drawing1.cadx"};
     bool m_hasFile{false};
+    bool m_savedLwdisplay{false};
     Listener m_listener;
 };
 

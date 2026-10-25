@@ -5,6 +5,7 @@
 
 add_library(tg_edit
     src/editor.cpp
+    src/layer_rules.cpp
 )
 add_library(Tecnigrafo::edit ALIAS tg_edit)
 

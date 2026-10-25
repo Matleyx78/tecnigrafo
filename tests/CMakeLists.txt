@@ -49,6 +49,7 @@ add_executable(tg_tests
     core/text_metrics_test.cpp
     core/text_test.cpp
     edit/editor_test.cpp
+    edit/layer_rules_test.cpp
     io/dxf_lwpolyline_test.cpp
     io/dxf_text_test.cpp
     io/dxf_line_circle_arc_test.cpp

@@ -121,6 +121,11 @@ public:
     /// Adds an unhandled entity. Same precondition on raw.id.
     void insertRaw(RawEntity raw);
 
+    /// Replaces the unhandled entity with the same handle, at its position.
+    /// Preconditions: the entity exists and its order key stays unchanged.
+    /// Groups are kept opaque; edit uses this for undoable raw data changes.
+    void replaceRaw(const RawEntity& raw);
+
     /// The unhandled entities, in order. They are not in entities(), the
     /// spatial index, extents() or query().
     [[nodiscard]] std::span<const RawEntity> rawEntities() const { return m_rawEntities; }
