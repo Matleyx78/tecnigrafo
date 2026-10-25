@@ -16,7 +16,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 3 | 0.3 | Selezione, cancellazione, snap e orto | **chiusa** | [0.3](tappe/0.3-selezione-e-snap.md) |
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | **aperta** | [0.5](tappe/0.5-file-e-dxf.md) |
-| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
+| 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | in programma | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
@@ -183,3 +183,22 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   CI, con le risposte stampate nel log da cui chi scrive i riferimenti le
   copia (ADR 0020), al posto del primo pacchetto di riferimenti previsto dalla
   scheda. Per ora lavora una sola sessione di Claude.
+- **2026-10-25 — Descrizione dei comandi e server MCP nella tappa 0.6**
+  (idea #224, approvata). Entrano nella [scheda della tappa 0.6](tappe/0.6-layer-e-proprieta.md)
+  due lavori: una **descrizione dei comandi** leggibile da una macchina nel
+  `CommandRegistry` (richieste, opzioni, tipi di valore), da fare finché i
+  comandi sono pochi; e **`tecnigrafo-mcp`**, eseguibile di sviluppo senza Qt e
+  non installato, che espone agli agenti il modulo `script` con il protocollo
+  MCP, solo su stdio, senza porte di rete. È il canale dal vivo previsto
+  dall'[ADR 0011](adr/0011-modalita-di-controllo.md), punto 10, e richiede un
+  ADR nuovo. Il responsabile sceglie: per il JSON una **libreria già pronta**
+  (per esempio nlohmann/json, licenza MIT), da decidere in quell'ADR come nuova
+  dipendenza (ADR 0002); le **domande al modello** `.tgq` si espongono come
+  strumenti separati, spenti di norma e attivabili con un'opzione al lancio. Il
+  codice degli strumenti MCP sta in una libreria comune, che riuserà il
+  programma distribuito quando l'utente potrà pilotare il disegno aperto con il
+  proprio assistente IA, solo in locale e con il canale acceso da lui; lì le
+  domande al modello non si espongono mai. Questa strada è prevista, con un suo
+  ADR e una tappa da definire; una chat dentro Tecnigrafo e il linguaggio
+  naturale nella riga di comando restano possibili ma con l'intenzione di
+  scartarli.
