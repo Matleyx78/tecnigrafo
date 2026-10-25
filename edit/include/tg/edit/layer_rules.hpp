@@ -22,7 +22,7 @@ enum class LayerProblem : std::uint8_t {
 
 [[nodiscard]] LayerProblem checkNewLayer(const core::Document& doc, std::string_view name);
 [[nodiscard]] LayerProblem checkRename(const core::Document& doc, core::LayerId id,
-                                      std::string_view newName);
+                                       std::string_view newName);
 [[nodiscard]] LayerProblem checkRemove(const core::Document& doc, core::LayerId id);
 [[nodiscard]] LayerProblem checkFreeze(const core::Document& doc, core::LayerId id);
 

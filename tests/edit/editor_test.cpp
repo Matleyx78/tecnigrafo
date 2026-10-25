@@ -572,7 +572,10 @@ TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
     const auto first = editor.addLayer(namedLayer(doc, "First"));
     const auto second = editor.addLayer(namedLayer(doc, "Second"));
     const auto third = editor.addLayer(namedLayer(doc, "Third"));
-    ASSERT_TRUE(first && second && third);
+    if (!first || !second || !third) {
+        ADD_FAILURE() << "Layer creation must succeed";
+        return;
+    }
     editor.commit();
     const auto added = stateOf(doc);
     expectRoundTrip(editor, before, added);
@@ -673,7 +676,10 @@ TEST(Editor, LinetypeCurrentScalePropertiesAndEntitiesShareOneStep) {
     linetype.extras = {{1000, "preserved"}};
     const auto type = editor.addLinetype(linetype);
     const auto layer = editor.addLayer(namedLayer(doc, "Walls"));
-    ASSERT_TRUE(type && layer);
+    if (!type || !layer) {
+        ADD_FAILURE() << "Linetype and layer creation must succeed";
+        return;
+    }
     auto current = doc.current();
     current.layer = *layer;
     current.linetype = *type;
@@ -705,6 +711,10 @@ TEST(Editor, ColourBookIsRemovedOnlyOnColourChangeAndRestoredExactly) {
     Document doc = Document::newDrawing();
     const auto id = doc.add(segment(1));
     auto record = doc.remove(id);
+    if (!record) {
+        ADD_FAILURE() << "The entity must exist";
+        return;
+    }
     record->extras.common = {{440, "1"}, {430, "Catalog$Colour"}, {60, "0"}, {430, "Other"}};
     record->extras.extended = {{1000, "preserved"}};
     doc.restore(*record);
@@ -759,8 +769,9 @@ TEST(Editor, RejectedAndUnchangedLayerEditsKeepRedoAndSavedState) {
     EXPECT_FALSE(editor.setCurrent(current));
     EXPECT_FALSE(editor.setProperties({}, doc.current()));
     EXPECT_FALSE(editor.setLtscale(doc.ltscale()));
-    for (double invalid : {0.0, -1.0, std::numeric_limits<double>::infinity(),
-                           std::numeric_limits<double>::quiet_NaN()}) {
+    const auto infinity = std::numeric_limits<double>::infinity();
+    const auto nan = std::numeric_limits<double>::quiet_NaN();
+    for (const double invalid : {0.0, -1.0, infinity, nan}) {
         EXPECT_FALSE(editor.setLtscale(invalid));
     }
     core::Linetype type;

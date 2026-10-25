@@ -92,10 +92,10 @@ TEST(LayerRules, FindsXdataAndEveryKindOfEntityAndTableExtra) {
     for (auto member : {&core::EntityExtras::beforeEntity, &core::EntityExtras::common,
                         &core::EntityExtras::specific, &core::EntityExtras::placement,
                         &core::EntityExtras::extended}) {
-        auto record = doc.remove(entity);
-        *record = original;
-        record->extras.*member = {{1000, "wALLS"}};
-        doc.restore(*record);
+        ASSERT_TRUE(doc.remove(entity).has_value());
+        auto record = original;
+        record.extras.*member = {{1000, "wALLS"}};
+        doc.restore(record);
         EXPECT_TRUE(namedInOtherUnhandledData(doc, id));
     }
     doc.remove(entity);
@@ -115,8 +115,12 @@ TEST(LayerRules, FindsXdataAndEveryKindOfEntityAndTableExtra) {
 TEST(LayerRules, RawXdataReferencesDoNotCountAsEntityLayerGroups) {
     core::Document doc = core::Document::newDrawing();
     const auto id = addNamed(doc, "Walls");
-    doc.insertRaw(
-        {core::EntityId{1000}, 1, "HATCH", {{8, "0"}, {1001, "APP"}, {1000, "WALLS"}}});
+    core::RawEntity hatch;
+    hatch.id = core::EntityId{1000};
+    hatch.order = 1;
+    hatch.type = "HATCH";
+    hatch.groups = {{8, "0"}, {1001, "APP"}, {1000, "WALLS"}};
+    doc.insertRaw(hatch);
     EXPECT_EQ(checkRemove(doc, id), LayerProblem::None);
     EXPECT_TRUE(namedInOtherUnhandledData(doc, id));
 }
