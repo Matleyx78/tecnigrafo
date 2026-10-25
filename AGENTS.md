@@ -96,12 +96,11 @@ scrivendo nella pull request che cosa hai visto e provato, solo se:
 - dopo tre tentativi lo stesso controllo non passa ancora.
 
 ```sh
-# l'esecuzione della CI dell'ultimo commit pubblicato (vuota: non è ancora partita)
-gh api "repos/Matleyx78/tecnigrafo/actions/runs?head_sha=<sha>" \
-  --jq '.workflow_runs[] | "\(.id) \(.status) \(.conclusion)"'
-# aspetta la fine; esce con errore se un controllo fallisce. Se il tuo strumento
-# interrompe i comandi lunghi, rilancialo: riprende da dove era
-gh run watch <id> --repo Matleyx78/tecnigrafo --exit-status --compact
+# aspetta la fine della CI dell'ultimo commit pubblicato, aspettando dentro lo
+# script (non consuma token). Esce 0 se tutto è verde, 1 se un controllo è
+# fallito, 3 se dopo 25 minuti è ancora in corso: rilancialo, riprende da dove
+# era. Accetta anche <sha> o <id>; non serve `gh`.
+scripts/ci-attendi.sh
 # perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
 scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
 ```
