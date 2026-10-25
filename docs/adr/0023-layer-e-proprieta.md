@@ -85,7 +85,8 @@ AutoCAD.
 - Sul layer corrente bloccato si può disegnare, come in AutoCAD.
 - La selezione dei comandi scarta le entità dei layer bloccati e lo dice:
   `1 was on a locked layer.` / `<n> were on a locked layer.`
-- Nella 0.6 i layer bloccati non si disegnano sbiaditi.
+- Nella 0.6 i layer bloccati non si disegnano sbiaditi: arriva con la
+  trasparenza, nella tappa 0.9.
 - L'estensione del disegno (`Document::extents`, zoom estensione) resta quella
   di tutte le entità.
 
@@ -134,7 +135,7 @@ nuova, così i rapporti già scritti restano validi. Le domande sul documento
   `LAYDEL` di AutoCAD, un comando a parte; con dati non gestiti che lo nominano
   sarebbe una perdita.
 - **Sbiadire i layer bloccati da subito:** serve la trasparenza del render;
-  si può aggiungere dopo senza cambiare il modello.
+  si aggiunge nella tappa 0.9 senza cambiare il modello.
 
 ## Conseguenze
 
@@ -143,4 +144,5 @@ nuova, così i rapporti già scritti restano validi. Le domande sul documento
   nuove ricevono i valori correnti dall'editor.
 - La tappa 0.8 aggiunge i blocchi: lì spento e congelato si distinguono, e i
   blocchi grezzi diventano modello con le stesse regole.
-- Trasparenza, stili di stampa e layer sbiaditi restano per la tappa 0.9.
+- Trasparenza, stili di stampa e layer bloccati sbiaditi restano per la
+  tappa 0.9.

@@ -29,14 +29,20 @@ nascere nel render.
 
 - Ogni disegno ha `ByBlock`, `ByLayer` e `Continuous`, come in AutoCAD; non si
   rinominano né si cancellano.
-- Tecnigrafo offre due tipi da caricare con `-LINETYPE Load`, con le
-  proporzioni della norma ISO 128 per linee da 1 mm e unità in millimetri:
+- Tecnigrafo offre due tipi da caricare con `-LINETYPE Load`, con i **nomi
+  ISO** che usano AutoCAD e gli altri CAD per i disegni metrici:
 
-  | Nome | Descrizione | Motivo |
-  |---|---|---|
-  | `DASHED` | `Dashed __ __ __` | 12, −3 |
-  | `DASHDOT` | `Dash dot __ . __ .` | 24, −3, 0, −3 |
+  | Nome | Linea |
+  |---|---|
+  | `ACAD_ISO02W100` | tratteggiata |
+  | `ACAD_ISO10W100` | a punto e linea |
 
+- Le loro definizioni (descrizione e motivo) non le sceglie Tecnigrafo: sono
+  quelle che questi nomi hanno nei DXF degli altri programmi, verificate dai
+  riferimenti con le definizioni standard di ezdxf stampate nel log
+  dell'oracolo (ADR 0020; pacchetto 0.6-P8), come la tabella dei colori
+  (ADR 0024, punto 3). Così un disegno di Tecnigrafo aperto altrove mostra lo
+  stesso motivo.
 - Un DXF aperto porta le sue definizioni, che restano com'erano anche se
   hanno lo stesso nome dei nostri tipi. Nella 0.6 non si leggono file `.lin`.
 
@@ -97,10 +103,11 @@ ha i suoi riferimenti (pacchetti 0.6-P5 e 0.6-P11).
   dove il motivo è in unità del disegno.
 - **Motivo centrato sull'entità** (tratti uguali ai due capi): più gradevole,
   ma non è ciò che chiede il DXF e complica le polilinee; si potrà valutare.
-- **Definizioni di `acadiso.lin`** per `DASHED` e `DASHDOT`: i numeri
-  coinciderebbero con AutoCAD, ma il file è di Autodesk; la norma ISO dà
-  proporzioni pubbliche. In alternativa si possono adottare i nomi ISO
-  (`ACAD_ISO02W100`, `ACAD_ISO04W100`).
+- **Nomi e proporzioni nostri** (`DASHED` 12, −3 e `DASHDOT` 24, −3, 0, −3,
+  dalla norma ISO 128): scartati dal responsabile il 2026-10-25. Un nome già
+  usato da AutoCAD con valori diversi confonderebbe chi scambia i disegni.
+- **Copiare `acadiso.lin`:** il file è di Autodesk; i valori si verificano con
+  ezdxf come oracolo, senza copiare il file.
 - **Spessore che cresce con lo zoom:** è ciò che serve in stampa (tappa 0.9),
   non a schermo.
 
