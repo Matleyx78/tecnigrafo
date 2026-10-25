@@ -1,0 +1,22 @@
+; Disegno dopo il cambio d'interfaccia: il rapporto delle entità è identico prima e dopo
+!level 2
+LINE
+0,0
+10,0
+
+!report
+RIBBONCLOSE
+NEW
+N
+LINE
+0,0
+10,0
+
+!report
+RIBBON
+NEW
+N
+LINE
+0,0
+10,0
+

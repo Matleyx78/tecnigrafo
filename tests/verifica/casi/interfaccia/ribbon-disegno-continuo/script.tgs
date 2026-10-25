@@ -1,0 +1,18 @@
+; Disegno continuo attraverso i cambi d'interfaccia: conservazione delle entità esistenti
+!level 2
+LINE
+0,0
+10,0
+
+!report
+RIBBONCLOSE
+LINE
+10,0
+10,10
+
+!report
+RIBBON
+LINE
+10,10
+0,10
+

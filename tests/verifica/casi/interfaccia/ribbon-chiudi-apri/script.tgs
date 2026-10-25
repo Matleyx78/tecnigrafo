@@ -1,0 +1,5 @@
+; RIBBONCLOSE e RIBBON dalla riga di comando: chiusura e riapertura della ribbon
+!level 2
+RIBBONCLOSE
+!report
+RIBBON
