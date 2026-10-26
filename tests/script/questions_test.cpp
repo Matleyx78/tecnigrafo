@@ -339,10 +339,9 @@ TEST(Questions, AciAndEffectiveAnswerFromTheDefinitions) {
 }
 
 TEST(Questions, TheQuestionsOfLaterPackagesAreNotImplementedYet) {
-    const std::vector<Answer> list = answers(std::string{kDefinitions} +
-                                             "? dashes A -> continuous\n"
-                                             "? quickselect type=LINE -> none\n");
-    ASSERT_EQ(list.size(), 2U);
+    const std::string text = std::string{kDefinitions} + "? quickselect type=LINE -> none\n";
+    const std::vector<Answer> list = answers(text);
+    ASSERT_EQ(list.size(), 1U);
     for (const Answer& answer : list) {
         EXPECT_EQ(answer.actual, "error: question not implemented yet") << answer.line;
         EXPECT_FALSE(answer.matches) << answer.line;

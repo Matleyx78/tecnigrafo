@@ -760,6 +760,9 @@ std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_vie
         return std::move(*error);
     }
     definition.entity = std::get<core::Entity>(std::move(entity));
+    if (auto* polyline = std::get_if<core::Polyline>(&definition.entity)) {
+        polyline->setContinuousLinetype(definition.linetypeGeneration.value_or(false));
+    }
     return definition;
 }
 

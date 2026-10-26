@@ -8,6 +8,7 @@ add_library(tg_core
     src/arc_geometry.cpp
     src/circle.cpp
     src/color.cpp
+    src/dashes.cpp
     src/lineweight.cpp
     src/linetype_pattern.cpp
     src/document.cpp

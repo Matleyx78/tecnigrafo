@@ -32,12 +32,6 @@ interfaccia/ribbon-disegno-dopo-cambio #249
 interfaccia/ribbon-disegno-continuo #249
 
 
-# 0.6-R11: tratti dei tipi di linea (#240)
-tratti/linea #240
-tratti/arco-cerchio #240
-tratti/polilinea #240
-tratti/tipi #240
-tratti/limite-pezzi #240
 
 # 0.6-R12: -LAYER e CLAYER (#242)
 layer/creazione-e-corrente #242
