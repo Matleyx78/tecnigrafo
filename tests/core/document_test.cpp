@@ -582,7 +582,9 @@ TEST(DocumentTables, ANewDrawingLeavesTheOtherLowHandlesFree) {
     }
     EXPECT_EQ(document.entityCount(), start_handles::kLowest - 1);
     EXPECT_EQ(document.nextId(), 257U);
-    EXPECT_EQ(document.find(EntityId{252})->id.value, 252U);
+    const EntityId highest{start_handles::kLowest - 1};
+    ASSERT_NE(document.find(highest), nullptr);
+    EXPECT_EQ(document.find(highest)->id, highest);
 }
 
 TEST(DocumentTables, AnEmptyDocumentHasNoRecords) {

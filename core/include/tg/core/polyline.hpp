@@ -78,6 +78,13 @@ public:
 
     void setConstantWidth(double width) { m_constantWidth = width; }
 
+    /// Linetype generation (DXF group 70, bit 128): when true the linetype
+    /// pattern runs on along the whole polyline instead of starting again at
+    /// every vertex (docs/adr/0025, point 4). False by default.
+    [[nodiscard]] bool continuousLinetype() const { return m_continuousLinetype; }
+
+    void setContinuousLinetype(bool continuous) { m_continuousLinetype = continuous; }
+
     /// Number of drawable segments (a closed polyline has one more).
     [[nodiscard]] std::size_t segmentCount() const;
 
@@ -97,6 +104,7 @@ private:
     std::vector<PolylineVertex> m_vertices;
     bool m_closed{false};
     double m_constantWidth{0.0};
+    bool m_continuousLinetype{false};
 };
 
 }  // namespace tg::core

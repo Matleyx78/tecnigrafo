@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "json.hpp"
+#include "tg/core/line.hpp"
 #include "tg/io/io.hpp"
 #include "zip.hpp"
 
@@ -34,6 +35,52 @@ std::vector<detail::ZipPart> fixture() {
             {"manifest.json",
              R"({"format":1,"generator":"test","parts":["mimetype","drawing.dxf"]})", false},
             {"drawing.dxf", drawing.ok() ? drawing.value() : std::string{}, false}};
+}
+
+TEST(Cadx, LayersAndPropertiesTravelInTheDrawing) {
+    // The .cadx does not change: the tables are in drawing.dxf (package
+    // 0.6-P10).
+    core::Document document = core::Document::newDrawing();
+    core::Layer walls;
+    walls.name = "Walls";
+    walls.color = core::Color::fromRgb({10, 20, 30});
+    walls.linetype = document.continuousLinetype();
+    walls.lineweight = 50;
+    walls.locked = true;
+    const core::LayerId layer = document.addLayer(walls);
+    const core::LinetypeId dashed = document.addLinetype(
+        core::Linetype{{}, "ACAD_ISO02W100", "ISO dash", core::LinetypePattern{{12.0, -3.0}}, {}});
+    core::CurrentProperties current = document.current();
+    current.layer = layer;
+    current.color = core::Color::fromIndex(3);
+    document.setCurrent(current);
+    const auto id = document.add(core::Line{{0.0, 0.0}, {1.0, 1.0}});
+    core::EntityProperties properties = document.find(id)->properties;
+    properties.linetype = dashed;
+    properties.linetypeScale = 2.0;
+    properties.lineweight = 18;
+    document.setProperties(id, properties);
+    document.setLtscale(4.0);
+
+    const auto written = writeCadx(document);
+    ASSERT_TRUE(written.ok()) << written.error().message;
+    const auto read = readCadx(written.value());
+    ASSERT_TRUE(read.ok()) << read.error().message;
+    const auto& copy = read.value().document;
+    ASSERT_NE(copy.findLayer("Walls"), nullptr);
+    EXPECT_EQ(copy.findLayer("Walls")->color, walls.color);
+    EXPECT_TRUE(copy.findLayer("Walls")->locked);
+    EXPECT_EQ(copy.findLayer("Walls")->lineweight, 50);
+    ASSERT_NE(copy.findLinetype("ACAD_ISO02W100"), nullptr);
+    EXPECT_EQ(copy.findLinetype("ACAD_ISO02W100")->pattern.elements,
+              (std::vector<double>{12.0, -3.0}));
+    ASSERT_NE(copy.find(id), nullptr);
+    EXPECT_EQ(copy.find(id)->properties, properties);
+    EXPECT_EQ(copy.current(), document.current());
+    EXPECT_EQ(copy.ltscale(), 4.0);
+    const auto again = writeCadx(copy);
+    ASSERT_TRUE(again.ok());
+    EXPECT_EQ(again.value(), written.value());
 }
 
 TEST(Cadx, WritesDeterministicOrderedArchiveAndPreservesOpaqueData) {

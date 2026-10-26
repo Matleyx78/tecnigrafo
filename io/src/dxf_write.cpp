@@ -2,6 +2,8 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "dxf_entities.hpp"
+#include "dxf_entity_common.hpp"
+#include "dxf_tables.hpp"
 #include "tg/io/dxf_groups.hpp"
 #include "tg/io/io.hpp"
 
@@ -55,11 +57,19 @@ core::RawGroups headerGroups(const core::RawGroups& original, std::string_view v
 }
 
 std::uint64_t readNextId(const core::Document& document) {
-    // P10 reads every entity as raw. Those immutable records and the retained
-    // sections recover the read-time counter without adding groups to HEADER.
+    // The handles of the unhandled entities, of the table records and of the
+    // retained sections recover the read-time counter without adding groups
+    // to HEADER. The records the reader adds to a file that lacks them are
+    // counted too: they took their handles when the file was read.
     std::uint64_t next = 1;
     for (const auto& entity : document.rawEntities()) {
         next = std::max(next, entity.id.value + 1);
+    }
+    for (const auto& layer : document.layers()) {
+        next = std::max(next, layer.id.value + 1);
+    }
+    for (const auto& linetype : document.linetypes()) {
+        next = std::max(next, linetype.id.value + 1);
     }
     for (const auto& section : document.raw().sections) {
         if (section.name == "HEADER" || section.name == "ENTITIES") {
@@ -96,8 +106,12 @@ std::optional<Error> appendEntities(const core::Document& document, EntityWriteC
             if (codec == nullptr) {
                 return Error{Error::Kind::Unsupported, 0, "no DXF writer for a managed entity"};
             }
+            // The codecs write extras.common as it is: there go the
+            // properties of the model (docs/adr/0023, point 2).
+            core::EntityRecord record = managed[m];
+            record.extras.common = entityCommonGroups(managed[m], document);
             out.push_back({0, std::string{codec->type}});
-            codec->write(managed[m], context, out);
+            codec->write(record, context, out);
             ++m;
         }
     }
@@ -122,7 +136,9 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     const core::RawDrawing* raw = &source;
     std::uint64_t nextId = document.nextId();
     if (source.sections.empty()) {
-        auto built = makeSkeleton(nextId);
+        // A new drawing: the skeleton has the fixed handles of
+        // start_handles.hpp, whatever the number of entities.
+        auto built = makeStartSkeleton(document);
         if (!built.ok()) {
             return built.error();
         }
@@ -130,28 +146,50 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
         raw = &skeleton.raw;
         nextId = skeleton.nextId;
     }
+    // The LTYPE and LAYER tables the file lacks and the document needs take
+    // their handles here, before $HANDSEED is written.
+    std::uint64_t nextHandle = nextId;
+    nextId += tablesToAdd(*raw, document);
     const std::string codePage = raw->codePage.empty() ? "ANSI_1252" : raw->codePage;
     const bool conversion = source.sections.empty() || target != source.version;
     // An absent DWGCODEPAGE was decoded with the ANSI_1252 fallback.
     const std::array<bool, 4> addMissing{conversion, conversion || codePage != "ANSI_1252",
-                                         conversion || document.nextId() > readNextId(document),
+                                         conversion || nextId > readNextId(document),
                                          conversion || document.units() != 0};
     EntityWriteContext context{target, codePage, modelSpaceHandle(*raw)};
     core::RawGroups out;
     bool hasHeader = false;
     bool hasEntities = false;
+    bool hasTables = false;
     for (const auto& section : raw->sections) {
         hasHeader = hasHeader || section.name == "HEADER";
         hasEntities = hasEntities || section.name == "ENTITIES";
+        hasTables = hasTables || section.name == "TABLES";
     }
     if (!hasHeader) {
         out = {{0, "SECTION"}, {2, "HEADER"}};
-        const auto header =
-            headerGroups({}, target, codePage, nextId, document.units(), addMissing);
+        const auto header = headerProperties(
+            headerGroups({}, target, codePage, nextId, document.units(), addMissing), document,
+            conversion);
         out.insert(out.end(), header.begin(), header.end());
         out.push_back({0, "ENDSEC"});
     }
+    // A file without TABLES gets one, before the sections that follow it,
+    // only when the document has layers or linetypes to write.
+    const auto appendNewTables = [&] {
+        hasTables = true;
+        const auto tables = newTables(document, nextHandle);
+        if (!tables.empty()) {
+            out.push_back({0, "SECTION"});
+            out.push_back({2, "TABLES"});
+            out.insert(out.end(), tables.begin(), tables.end());
+            out.push_back({0, "ENDSEC"});
+        }
+    };
     for (const auto& section : raw->sections) {
+        if (!hasTables && section.name != "HEADER" && section.name != "CLASSES") {
+            appendNewTables();
+        }
         out.push_back({0, "SECTION"});
         out.push_back({2, section.name});
         if (section.name == "ENTITIES") {
@@ -159,13 +197,19 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
                 return *error;
             }
         } else if (section.name == "HEADER") {
-            const auto header = headerGroups(section.groups, target, codePage, nextId,
-                                             document.units(), addMissing);
+            const auto header = headerProperties(headerGroups(section.groups, target, codePage,
+                                                              nextId, document.units(), addMissing),
+                                                 document, conversion);
             out.insert(out.end(), header.begin(), header.end());
+        } else if (section.name == "TABLES") {
+            writeTables(section.groups, document, nextHandle, out);
         } else {
             out.insert(out.end(), section.groups.begin(), section.groups.end());
         }
         out.push_back({0, "ENDSEC"});
+    }
+    if (!hasTables) {
+        appendNewTables();
     }
     if (!hasEntities && (!document.entities().empty() || !document.rawEntities().empty())) {
         out.push_back({0, "SECTION"});

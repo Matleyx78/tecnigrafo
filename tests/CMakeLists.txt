@@ -57,6 +57,7 @@ add_executable(tg_tests
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp
+    io/dxf_tables_test.cpp
     io/dxf_groups_test.cpp
     io/encoding_test.cpp
     io/file_access_test.cpp
