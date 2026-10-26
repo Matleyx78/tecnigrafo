@@ -10,7 +10,7 @@
 - **Modulo:** `tests/verifica/oracolo`
 - **Da leggere:** [ADR 0020](../../adr/0020-fuzzing-e-oracolo-ezdxf.md) (parte
   sull'oracolo), [ADR 0024](../../adr/0024-colori.md) punto 3,
-  [ADR 0025](../../adr/0025-tipi-di-linea-e-spessori.md) punto 2;
+  [ADR 0029](../../adr/0029-verifica-dei-tipi-di-linea-iso.md);
   `docs/verifica/domande.md` (sezioni pubblicate da P5);
   `tests/verifica/oracolo/README.md`, `ezdxf_attesi.py`, `controlla_casi.py`
 
@@ -30,12 +30,13 @@
    `linetype=`, `ltscale=`, `lineweight=` solo se diversi dal predefinito).
 2. **Risposte standard**, una volta per esecuzione, in una sezione
    `=== ezdxf: standard ===`:
-   - `? aci <n> -> r,g,b` per n da 1 a 255, dalla tabella di ezdxf;
-   - la definizione di `ACAD_ISO02W100` e `ACAD_ISO10W100` dai tipi standard
-     di ezdxf, come righe di `linetypes:` (`"ACAD_ISO02W100" pattern=12,-3
-     description="…"`). Se ezdxf non ha uno dei due nomi, stampa
-     `; <nome>: not in ezdxf` e **fermati**, scrivendolo nella issue: la
-     decisione 2 del piano va rivista.
+   - `? aci <n> -> r,g,b` per n da 1 a 255, dalla tabella di ezdxf.
+
+   Le definizioni di `ACAD_ISO02W100` e `ACAD_ISO10W100` **non** vengono dai
+   tipi standard di ezdxf, che non le ha (ADR 0029): sono quelle del DXF di
+   AutoCAD `autocad-colori-layer-tipilinea`, e il log le stampa con
+   `? linetypes D` del punto 1, senza altro lavoro. La sezione standard non
+   le contiene.
 3. **Controllo dei casi dichiarati "da ezdxf":** `controlla_casi.py`
    confronta anche `layers`, `linetypes`, `aci` e le proprietà di `entity`.
 4. Aggiorna l'autoverifica (`--self-test`) con un DXF scritto a mano che ha
@@ -54,5 +55,7 @@
 ## Fatto quando
 
 - Il passo `Oracolo ezdxf: answers` della CI stampa le risposte nuove per tutti
-  i file pubblici e la sezione standard.
+  i file pubblici e la sezione standard (solo `? aci`). Il log della fonte
+  `autocad-colori-layer-tipilinea` mostra i tipi ISO nella sua riga
+  `linetypes:`.
 - La CI è verde.

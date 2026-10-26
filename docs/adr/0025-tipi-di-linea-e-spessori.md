@@ -1,6 +1,7 @@
 # ADR 0025: Tipi di linea e spessori
 
 - **Stato:** Accettato (2026-10-25)
+- **Sostituito in parte da:** ADR 0029 (punto 2, verifica delle definizioni ISO)
 - **Data:** 2026-10-25
 
 ## Contesto
