@@ -1,0 +1,29 @@
+; oracle: ezdxf
+; Colori ACI standard e tinte (ADR 0024, punto 3; ezdxf: standard)
+
+; Colori primari (1-9)
+? aci 1 -> 255,0,0
+? aci 2 -> 255,255,0
+? aci 3 -> 0,255,0
+? aci 4 -> 0,255,255
+? aci 5 -> 0,0,255
+? aci 6 -> 255,0,255
+? aci 7 -> 255,255,255
+? aci 8 -> 128,128,128
+? aci 9 -> 192,192,192
+
+; Alcune tinte
+? aci 10 -> 255,0,0
+? aci 11 -> 255,127,127
+? aci 14 -> 127,0,0
+? aci 19 -> 38,19,19
+? aci 120 -> 0,255,191
+? aci 249 -> 88,19,23
+
+; Scala di grigi finale (250-255)
+? aci 250 -> 0,0,0
+? aci 251 -> 101,101,101
+? aci 252 -> 102,102,102
+? aci 253 -> 153,153,153
+? aci 254 -> 204,204,204
+? aci 255 -> 255,255,255
