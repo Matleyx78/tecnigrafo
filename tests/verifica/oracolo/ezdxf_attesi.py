@@ -7,6 +7,7 @@ from collections import Counter
 from pathlib import Path
 
 import ezdxf
+from ezdxf.colors import aci2rgb, int2rgb
 from ezdxf.entities import factory
 from ezdxf.lldxf.extendedtags import ExtendedTags
 from ezdxf.lldxf.loader import load_dxf_structure
@@ -33,6 +34,55 @@ def quoted(value):
     ) + '"'
 
 
+def aci_answer(index):
+    if not 1 <= index <= 255:
+        raise ValueError("ACI index must be between 1 and 255")
+    return ",".join(str(channel) for channel in aci2rgb(index))
+
+
+def print_standard_answers():
+    print("=== ezdxf: standard ===")
+    for index in range(1, 256):
+        print(f"? aci {index} -> {aci_answer(index)}")
+
+
+def color_answer(attributes, layer=False):
+    if attributes.hasattr("true_color"):
+        return ",".join(str(channel) for channel in int2rgb(attributes.true_color))
+    index = attributes.get("color", 7 if layer else 256)
+    if layer:
+        index = abs(index)
+    return {0: "byblock", 256: "bylayer"}.get(index, str(index))
+
+
+def lineweight_answer(value):
+    if value in (-1, -2, -3):
+        return {-1: "bylayer", -2: "byblock", -3: "default"}[value]
+    return "0" if value == 0 else f"{value / 100:.2f}"
+
+
+def layer_answer(layer):
+    d = layer.dxf
+    fields = [quoted(d.name), f"color={color_answer(d, layer=True)}",
+              f"linetype={quoted(d.get('linetype', 'Continuous'))}",
+              f"lineweight={lineweight_answer(d.get('lineweight', -3))}"]
+    flags = d.get("flags", 0)
+    for state, active in (("off", d.get("color", 7) < 0),
+                          ("frozen", flags & 1), ("locked", flags & 4),
+                          ("noplot", not d.get("plot", 1))):
+        if active:
+            fields.append(state)
+    return " ".join(fields)
+
+
+def linetype_answer(linetype):
+    # Group 49 keeps signed gaps, dots and the simple elements of complex types.
+    pattern = [tag.value for tag in linetype.pattern_tags.tags if tag.code == 49]
+    written = ",".join(number(value) for value in pattern) or "continuous"
+    return (f"{quoted(linetype.dxf.name)} pattern={written} "
+            f"description={quoted(linetype.dxf.get('description', ''))}")
+
+
 def managed(entity, model_owner):
     """Classify file entities, without converting OCS or consulting Tecnigrafo."""
     d = entity.dxf
@@ -53,7 +103,7 @@ def managed(entity, model_owner):
     return kind != "LWPOLYLINE" or len(entity) > 0
 
 
-def entity_answer(entity):
+def entity_answer(entity, layer_names=None, linetype_names=None):
     d = entity.dxf
     kind = entity.dxftype()
     fields = [kind]
@@ -108,6 +158,23 @@ def entity_answer(entity):
     fields.extend(extra)
     if extrusion != (0, 0, 1):
         add("extrusion", point(extrusion, 3))
+    layer = d.get("layer", "0")
+    layer = (layer_names or {}).get(layer.casefold(), layer)
+    if layer.casefold() != "0":
+        add("layer", quoted(layer))
+    color = color_answer(d)
+    if color != "bylayer":
+        add("color", color)
+    linetype = d.get("linetype", "ByLayer")
+    linetype = (linetype_names or {}).get(linetype.casefold(), linetype)
+    if linetype.casefold() != "bylayer":
+        add("linetype", quoted(linetype))
+    scale = d.get("ltscale", 1)
+    if scale != 1:
+        add("ltscale", number(scale))
+    weight = d.get("lineweight", -1)
+    if weight != -1:
+        add("lineweight", lineweight_answer(weight))
     return " ".join(fields)
 
 
@@ -124,6 +191,16 @@ class DrawingAnswers:
             sections = load_dxf_structure(tag_compiler(ascii_tags_loader(stream)))
         header = sections.get("HEADER", [])
         self.header = HeaderSection.load(header[0]) if header else None
+        # Read the file's table entries, not tables/defaults inserted by ezdxf.
+        self.layers = []
+        self.linetypes = []
+        for tags in sections.get("TABLES", [])[1:]:
+            kind = tags[0].value
+            if kind in {"LAYER", "LTYPE"}:
+                entry = factory.load(ExtendedTags(tags))
+                (self.layers if kind == "LAYER" else self.linetypes).append(entry)
+        self.layer_names = {entry.dxf.name.casefold(): entry.dxf.name for entry in self.layers}
+        self.linetype_names = {entry.dxf.name.casefold(): entry.dxf.name for entry in self.linetypes}
         self.entities = {}
         # Block definitions, linked vertices/attributes and sequence terminators
         # are not top-level drawing entities.
@@ -145,16 +222,23 @@ class DrawingAnswers:
             counts = Counter(e.dxftype() for e, supported in self.entities.values()
                              if supported == (question == "count"))
             return "; ".join(f"{kind} {count}" for kind, count in sorted(counts.items())) or "none"
+        if question == "layers":
+            return "; ".join(layer_answer(entry) for entry in self.layers) or "none"
+        if question == "linetypes":
+            return "; ".join(linetype_answer(entry) for entry in self.linetypes
+                             if entry.dxf.name.casefold() not in
+                             {"byblock", "bylayer", "continuous"}) or "none"
         if question == "entity":
             record = self.entities.get(format(int(handle, 16), "X"))
             if record is None:
                 return "none"
             entity, supported = record
-            return entity_answer(entity) if supported else "unhandled " + entity.dxftype()
+            return (entity_answer(entity, self.layer_names, self.linetype_names)
+                    if supported else "unhandled " + entity.dxftype())
         raise ValueError(f"unsupported oracle question: {question}")
 
     def print_answers(self, name="D"):
-        for question in ("version", "units", "count", "unhandled"):
+        for question in ("version", "units", "count", "unhandled", "layers", "linetypes"):
             print(f"? {question} {name} -> {self.answer(question)}")
         for handle, (entity, supported) in self.entities.items():
             if not supported:
