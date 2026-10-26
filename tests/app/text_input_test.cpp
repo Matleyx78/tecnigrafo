@@ -132,11 +132,11 @@ protected:
     }
 
     [[nodiscard]] QAction* insertion() const {
-        return m_window.findChild<QAction*>(QStringLiteral("insertionSnapAction"));
+        return m_window.findChild<QAction*>(QStringLiteral("aids.snap.insertion"));
     }
 
     [[nodiscard]] QAction* objectSnap() const {
-        return m_window.findChild<QAction*>(QStringLiteral("objectSnapAction"));
+        return m_window.findChild<QAction*>(QStringLiteral("aids.osnap"));
     }
 
     [[nodiscard]] const cmd::DrawingAids& aids() const { return m_window.drawingAids(); }

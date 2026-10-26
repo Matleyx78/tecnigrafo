@@ -124,6 +124,7 @@ tg_configure_target(tg_bench)
 if(TG_BUILD_APP)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Test Widgets)
     add_executable(tg_app_tests
+        app/action_registry_test.cpp
         app/command_line_test.cpp
         app/drawing_aids_test.cpp
         app/drawing_test.cpp

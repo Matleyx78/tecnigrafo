@@ -3,6 +3,8 @@
 
 #include "main_window.hpp"
 
+#include "action_registry.hpp"
+#include "builtin_actions.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "recent_files.hpp"
@@ -25,9 +27,11 @@
 #include <QScopedValueRollback>
 #include <QSettings>
 #include <QStatusBar>
+#include <QStringList>
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <cassert>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -76,26 +80,6 @@ constexpr int kCoordinateDecimals = 4;
 // exactly like typing U (message in the history, Enter repeats it).
 constexpr const char* kUndoCommand = "UNDO";
 constexpr const char* kRedoCommand = "REDO";
-
-/// The platform's redo keys, plus Ctrl+Y that AutoCAD users expect
-/// everywhere (CommandLine recognises the same keys).
-QList<QKeySequence> redoShortcuts() {
-    QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::Redo);
-    const QKeySequence ctrlY(Qt::CTRL | Qt::Key_Y);
-    if (!keys.contains(ctrlY)) {
-        keys.append(ctrlY);
-    }
-    return keys;
-}
-
-/// A checkable action of `menu`, named `name` for the tests.
-QAction* addCheckableAction(QMenu* menu, const QString& text, const QString& name, bool checked) {
-    QAction* action = menu->addAction(text);
-    action->setObjectName(name);
-    action->setCheckable(true);
-    action->setChecked(checked);
-    return action;
-}
 
 }  // namespace
 
@@ -154,107 +138,79 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     updateEditActions();
 }
 
+QAction* MainWindow::registeredAction(const char* id) const {
+    QAction* action = m_actions->action(QString::fromLatin1(id));
+    assert(action != nullptr && "action not declared in builtin_actions.cpp");
+    return action;
+}
+
 void MainWindow::createMenus() {
-    QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
-    const auto addFileAction = [this, fileMenu](const QString& text, const QString& name,
-                                                QKeySequence::StandardKey shortcut,
-                                                const QString& command) {
-        QAction* action = fileMenu->addAction(text);
-        action->setObjectName(name);
-        QList<QKeySequence> keys = QKeySequence::keyBindings(shortcut);
-        // Some Qt platforms (including offscreen) have no SaveAs binding.
-        // Keep the platform keys and always offer the CAD shortcut of P17.
-        const QKeySequence saveAs(Qt::CTRL | Qt::SHIFT | Qt::Key_S);
-        if (shortcut == QKeySequence::SaveAs && !keys.contains(saveAs)) {
-            keys.append(saveAs);
+    // Every action comes from the registry (docs/adr/0009, point 1); the
+    // window only connects what the actions do.
+    m_actions = new ActionRegistry(this);
+    addBuiltinActions(*m_actions);
+
+    // Actions with a command run it as if typed in the command line, which
+    // shows it; like typing, they wait for the running command to end.
+    for (QAction* action : m_actions->actions()) {
+        const QString command = m_actions->spec(action->objectName())->command;
+        if (command.isEmpty()) {
+            continue;
         }
-        action->setShortcuts(keys);
-        m_fileActions.append(action);
+        m_idleActions.append(action);
         connect(action, &QAction::triggered, this, [this, command] {
             submitFileText(command);
             refresh();
         });
-    };
-    addFileAction(tr("&New"), QStringLiteral("newAction"), QKeySequence::New,
-                  QStringLiteral("NEW"));
-    addFileAction(tr("&Open…"), QStringLiteral("openAction"), QKeySequence::Open,
-                  QStringLiteral("OPEN"));
-    addFileAction(tr("&Save"), QStringLiteral("saveAction"), QKeySequence::Save,
-                  QStringLiteral("QSAVE"));
-    addFileAction(tr("Save &As…"), QStringLiteral("saveAsAction"), QKeySequence::SaveAs,
-                  QStringLiteral("SAVEAS"));
-    m_recentMenu = fileMenu->addMenu(tr("Recent Files"));
+    }
+
+    m_recentMenu = new QMenu(tr("Recent Files"), this);
     m_recentMenu->setObjectName(QStringLiteral("recentMenu"));
+    m_recentAction = registeredAction("file.recent");
+    m_recentAction->setMenu(m_recentMenu);
     // Delay even reading settings until real UI use: ScriptSession marks
     // the window as scripted after construction, before sending any input.
     connect(m_recentMenu, &QMenu::aboutToShow, this, &MainWindow::populateRecentMenu);
-    fileMenu->addSeparator();
-    QAction* quitAction = fileMenu->addAction(tr("&Quit"));
-    quitAction->setShortcut(QKeySequence::Quit);
-    connect(quitAction, &QAction::triggered, this, &QWidget::close);
+    connect(registeredAction("file.quit"), &QAction::triggered, this, &QWidget::close);
 
-    QMenu* editMenu = menuBar()->addMenu(tr("&Edit"));
-    m_undoAction = editMenu->addAction(tr("&Undo"));
-    m_undoAction->setObjectName(QStringLiteral("undoAction"));
-    m_undoAction->setShortcuts(QKeySequence::Undo);
+    m_undoAction = registeredAction("edit.undo");
     connect(m_undoAction, &QAction::triggered, this, [this] {
         m_runner.submitText(kUndoCommand);
         refresh();
     });
-    m_redoAction = editMenu->addAction(tr("&Redo"));
-    m_redoAction->setObjectName(QStringLiteral("redoAction"));
-    m_redoAction->setShortcuts(redoShortcuts());
+    m_redoAction = registeredAction("edit.redo");
     connect(m_redoAction, &QAction::triggered, this, [this] {
         m_runner.submitText(kRedoCommand);
         refresh();
     });
+    m_eraseAction = registeredAction("edit.erase");
 
-    editMenu->addSeparator();
-    m_eraseAction = editMenu->addAction(tr("&Erase"));
-    m_eraseAction->setObjectName(QStringLiteral("eraseAction"));
-    m_eraseAction->setShortcut(QKeySequence::Delete);
-    connect(m_eraseAction, &QAction::triggered, this, [this] {
-        m_runner.submitText("ERASE");
-        refresh();
-    });
+    connect(registeredAction("view.zoom-extents"), &QAction::triggered, m_view,
+            &CadView::zoomExtents);
 
-    QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
-    QAction* extentsAction = viewMenu->addAction(tr("Zoom &Extents"));
-    extentsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
-    connect(extentsAction, &QAction::triggered, m_view, &CadView::zoomExtents);
+    connectDrawingAids();
 
-    createToolsMenu();
+    connect(registeredAction("help.about"), &QAction::triggered, this, &MainWindow::showAbout);
 
-    QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
-    QAction* aboutAction = helpMenu->addAction(tr("&About Tecnigrafo"));
-    connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
+    m_actions->buildMenus(menuBar());
 }
 
-void MainWindow::createToolsMenu() {
-    // The menu starts from the runner's settings, the defaults of
+void MainWindow::connectDrawingAids() {
+    // The switches start from the runner's settings, the defaults of
     // docs/adr/0008: object snap on with every mode, ortho off.
     const cmd::DrawingAids& aids = m_runner.drawingAids();
-    QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));
-
-    // F3 and F8 are AutoCAD's keys. On laptops and on macOS they may need
-    // Fn: the same switches are in the status bar (docs/tappe/0.3).
-    m_objectSnapAction = addCheckableAction(toolsMenu, tr("Object &Snap"),
-                                            QStringLiteral("objectSnapAction"), aids.objectSnap);
-    m_objectSnapAction->setShortcut(QKeySequence(Qt::Key_F3));
-    m_orthoAction =
-        addCheckableAction(toolsMenu, tr("&Ortho"), QStringLiteral("orthoAction"), aids.ortho);
-    m_orthoAction->setShortcut(QKeySequence(Qt::Key_F8));
-
-    QMenu* modesMenu = toolsMenu->addMenu(tr("Object Snap &Modes"));
-    m_endpointAction = addCheckableAction(
-        modesMenu, tr("&Endpoint"), QStringLiteral("endpointSnapAction"), aids.snapModes.endpoint);
-    m_midpointAction = addCheckableAction(
-        modesMenu, tr("&Midpoint"), QStringLiteral("midpointSnapAction"), aids.snapModes.midpoint);
-    m_centerAction = addCheckableAction(modesMenu, tr("&Center"),
-                                        QStringLiteral("centerSnapAction"), aids.snapModes.center);
-    m_insertionAction =
-        addCheckableAction(modesMenu, tr("&Insertion"), QStringLiteral("insertionSnapAction"),
-                           aids.snapModes.insertion);
+    m_objectSnapAction = registeredAction("aids.osnap");
+    m_orthoAction = registeredAction("aids.ortho");
+    m_endpointAction = registeredAction("aids.snap.endpoint");
+    m_midpointAction = registeredAction("aids.snap.midpoint");
+    m_centerAction = registeredAction("aids.snap.center");
+    m_insertionAction = registeredAction("aids.snap.insertion");
+    m_objectSnapAction->setChecked(aids.objectSnap);
+    m_orthoAction->setChecked(aids.ortho);
+    m_endpointAction->setChecked(aids.snapModes.endpoint);
+    m_midpointAction->setChecked(aids.snapModes.midpoint);
+    m_centerAction->setChecked(aids.snapModes.center);
+    m_insertionAction->setChecked(aids.snapModes.insertion);
 
     // Connected after the initial states are set, so that starting the
     // program writes nothing in the history.
@@ -333,10 +289,11 @@ void MainWindow::refresh() {
 void MainWindow::updateEditActions() {
     // Undo and redo wait for the running command to end (docs/tappe/0.2).
     const bool idle = !m_runner.isActive();
-    for (QAction* action : m_fileActions) {
+    for (QAction* action : m_idleActions) {
         action->setEnabled(idle);
     }
     m_recentMenu->setEnabled(idle && !m_scriptMode);
+    m_recentAction->setEnabled(idle && !m_scriptMode);
     m_eraseAction->setEnabled(idle && !m_runner.selection().isEmpty());
     const QString undoName = QString::fromStdString(m_editor.undoName());
     const QString redoName = QString::fromStdString(m_editor.redoName());
@@ -360,6 +317,7 @@ void MainWindow::setScriptMode() {
         m_runner.setFileAccess(nullptr);
     }
     m_recentMenu->setEnabled(false);
+    m_recentAction->setEnabled(false);
 }
 
 void MainWindow::setFileDialog(FileDialog dialog) {
@@ -400,9 +358,17 @@ void MainWindow::populateRecentMenu() {
         return;
     }
     ensureRecentFiles();
-    for (const QString& path : m_recentFiles->files()) {
-        QAction* action = m_recentMenu->addAction(path);
+    const QStringList files = m_recentFiles->files();
+    const QList<QAction*> actions =
+        m_actions->dynamicActions(QStringLiteral("file.recent"), static_cast<int>(files.size()));
+    for (qsizetype i = 0; i < files.size(); ++i) {
+        QAction* action = actions[i];
+        const QString& path = files[i];
+        action->setText(path);
+        // The registry reuses its actions: drop the file of the last time.
+        disconnect(action, &QAction::triggered, this, nullptr);
         connect(action, &QAction::triggered, this, [this, path] { openRecentFile(path); });
+        m_recentMenu->addAction(action);
     }
 }
 

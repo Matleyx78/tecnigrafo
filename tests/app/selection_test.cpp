@@ -64,7 +64,7 @@ protected:
     [[nodiscard]] const cmd::SelectionSet& selection() const { return m_window.selection(); }
 
     [[nodiscard]] QAction* eraseAction() const {
-        return m_window.findChild<QAction*>(QStringLiteral("eraseAction"));
+        return m_window.findChild<QAction*>(QStringLiteral("edit.erase"));
     }
 
     [[nodiscard]] QLineEdit* input() const {
