@@ -85,7 +85,8 @@ TEST(UiBuilderTest, SwitchingPreservesActionsAndDisposesPreviousWidgets) {
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         EXPECT_TRUE(classic.isNull());
         EXPECT_TRUE(toolbar.isNull());
-        const auto remaining = window.findChildren<QToolBar*>(QString{}, Qt::FindDirectChildrenOnly);
+        const auto remaining =
+            window.findChildren<QToolBar*>(QString{}, Qt::FindDirectChildrenOnly);
         EXPECT_TRUE(remaining.isEmpty());
         EXPECT_EQ(window.actionRegistry().actions(), actions);
         EXPECT_TRUE(ortho->isChecked());
