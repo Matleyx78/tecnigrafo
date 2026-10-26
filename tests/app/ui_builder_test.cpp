@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 #include <QEvent>
 #include <QLineEdit>
+#include <QList>
 #include <QMenu>
 #include <QMenuBar>
 #include <QPlainTextEdit>
@@ -30,10 +31,19 @@ namespace tg::app {
 namespace {
 
 void collectMenu(const QMenu& menu, QSet<QAction*>& found) {
-    for (QAction* action : menu.actions()) {
-        found.insert(action);
-        if (action->menu() != nullptr) {
-            collectMenu(*action->menu(), found);
+    QList<const QMenu*> pending{&menu};
+    QSet<const QMenu*> visited;
+    while (!pending.isEmpty()) {
+        const QMenu* current = pending.takeLast();
+        if (visited.contains(current)) {
+            continue;
+        }
+        visited.insert(current);
+        for (QAction* action : current->actions()) {
+            found.insert(action);
+            if (action->menu() != nullptr) {
+                pending.append(action->menu());
+            }
         }
     }
 }
