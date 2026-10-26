@@ -3,9 +3,16 @@
 
 #include "tg/script/questions.hpp"
 
+#include "tg/io/file_access.hpp"
+#include "tg/io/result.hpp"
+
 #include <gtest/gtest.h>
 
+#include <map>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -245,6 +252,148 @@ TEST(Questions, ErrorsGiveTheirLine) {
         EXPECT_EQ(error.line, test.line) << test.text;
         EXPECT_FALSE(error.message.empty()) << test.text;
         EXPECT_FALSE(error.notImplemented) << test.text;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Layers, linetypes and properties (stage 0.6, package P5)
+
+constexpr std::string_view kTables =
+    "T = LTYPE name=\"Tratteggio\" pattern=5,-2,0,-2 description=\"mio\"\n"
+    "I = LTYPE name=\"ACAD_ISO02W100\"\n"
+    "L = LAYER name=\"Muri esterni\" color=1 linetype=\"Tratteggio\" lineweight=0.5 off frozen "
+    "locked noplot\n"
+    "Z = LAYER name=\"0\" color=3 locked\n";
+
+TEST(Questions, LayerAndLinetypeDefinitionsAndEntitiesThatUseThem) {
+    const std::vector<Answer> list =
+        answers(std::string{kTables} +
+                "!current layer=\"Muri esterni\" color=2 linetype=\"ACAD_ISO02W100\"\n"
+                "!current lineweight=0.35 ltscale=2\n"
+                "A = LINE start=0,0 end=10,0 layer=\"muri ESTERNI\" color=255,0,0 "
+                "linetype=\"Tratteggio\" ltscale=2 lineweight=0.35\n"
+                "B = LWPOLYLINE vertex=0,0 vertex=1,0 linetype-generation=yes\n"
+                "C = CIRCLE center=0,0 radius=1 layer=\"0\" linetype=\"ByBlock\" color=byblock\n"
+                "? length A -> 10\n"
+                "? length B -> 1\n");
+    ASSERT_EQ(list.size(), 2U);
+    EXPECT_TRUE(list[0].matches) << list[0].actual;
+    EXPECT_TRUE(list[1].matches) << list[1].actual;
+}
+
+TEST(Questions, ErrorsOfLayersLinetypesAndCurrentValues) {
+    struct Case {
+        std::string text;
+        int line;
+    };
+
+    const std::string tables{kTables};
+    for (const Case& test : {
+             // The name of a definition is used once, whatever it defines.
+             Case{tables + "L = LINE start=0,0 end=1,0", 5},
+             Case{tables + "A = LINE start=0,0 end=1,0\nA = LAYER name=\"X\"", 6},
+             // The name of a record is used once, without case; layer 0 once more.
+             Case{tables + "M = LAYER name=\"MURI esterni\"", 5},
+             Case{tables + "M = LAYER name=\"0\"", 5},
+             Case{tables + "M = LTYPE name=\"tratteggio\" pattern=1", 5},
+             Case{"M = LTYPE name=\"Continuous\" pattern=1", 1},
+             Case{"M = LTYPE name=\"ByLayer\" pattern=1", 1},
+             // Names not defined above.
+             Case{"A = LINE start=0,0 end=1,0 layer=\"Muri\"", 1},
+             Case{"A = LINE start=0,0 end=1,0 linetype=\"Tratteggio\"", 1},
+             Case{R"(L = LAYER name="Muri" linetype="Tratteggio")", 1},
+             Case{"!current layer=\"Muri\"", 1},
+             Case{"!current linetype=\"Tratteggio\"", 1},
+             // Malformed definitions and directives.
+             Case{"L = LAYER", 1},
+             Case{"L = LAYER name=\"A\" color=bylayer", 1},
+             Case{"T = LTYPE name=\"Mio\"", 1},
+             Case{"A = LINE start=0,0 end=1,0 color=rosso", 1},
+             Case{"!current", 1},
+             Case{"!current vertex=0,0", 1},
+             Case{"!current color=1 color=2", 1},
+             Case{"! current color=1", 1},
+         }) {
+        const ParseError error = failure(test.text);
+        EXPECT_EQ(error.line, test.line) << test.text;
+        EXPECT_FALSE(error.message.empty()) << test.text;
+        EXPECT_FALSE(error.notImplemented) << test.text;
+    }
+}
+
+TEST(Questions, TheQuestionsOfLaterPackagesAreNotImplementedYet) {
+    const std::vector<Answer> list = answers(std::string{kDefinitions} +
+                                             "? aci 1 -> 255,0,0\n"
+                                             "? effective A -> color=255,255,255\n"
+                                             "? dashes A -> continuous\n"
+                                             "? quickselect type=LINE -> none\n");
+    ASSERT_EQ(list.size(), 4U);
+    for (const Answer& answer : list) {
+        EXPECT_EQ(answer.actual, "error: question not implemented yet") << answer.line;
+        EXPECT_FALSE(answer.matches) << answer.line;
+    }
+}
+
+/// Files kept in memory, by name.
+class MemoryFiles final : public io::FileAccess {
+public:
+    explicit MemoryFiles(std::map<std::string, std::string, std::less<>> files)
+        : m_files(std::move(files)) {}
+
+    [[nodiscard]] io::Result<std::string> read(std::string_view name) override {
+        const auto found = m_files.find(name);
+        if (found == m_files.end()) {
+            return io::Error{io::Error::Kind::File, 0, "does not exist"};
+        }
+        return found->second;
+    }
+
+    [[nodiscard]] std::optional<io::Error> write(std::string_view name,
+                                                 std::string_view bytes) override {
+        m_files.insert_or_assign(std::string{name}, std::string{bytes});
+        return std::nullopt;
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override {
+        return m_files.contains(name);
+    }
+
+private:
+    std::map<std::string, std::string, std::less<>> m_files;
+};
+
+// A DXF R2000 written by hand, with a LINE (handle 2F) on layer 0 and no
+// tables: io reads the tables from package 0.6-P10.
+constexpr std::string_view kDxf =
+    "  0\nSECTION\n  2\nHEADER\n"
+    "  9\n$ACADVER\n  1\nAC1015\n"
+    "  0\nENDSEC\n"
+    "  0\nSECTION\n  2\nENTITIES\n"
+    "  0\nLINE\n  5\n2F\n100\nAcDbEntity\n  8\n0\n100\nAcDbLine\n"
+    " 10\n0.0\n 20\n0.0\n 30\n0.0\n 11\n10.0\n 21\n5.0\n 31\n0.0\n"
+    "  0\nENDSEC\n  0\nEOF\n";
+
+TEST(Questions, LayersAndLinetypesOfADrawing) {
+    MemoryFiles files{{{"plan.dxf", std::string{kDxf}}}};
+    const std::string text =
+        "D = DXF file=plan.dxf\n"
+        "? layers D -> none\n"
+        "? linetypes D -> none\n"
+        "? entity D 2F -> LINE start=0,0 end=10,5\n";
+    std::variant<std::vector<Answer>, ParseError> result = answerQuestions(text, &files);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result));
+    const auto& list = std::get<std::vector<Answer>>(result);
+    ASSERT_EQ(list.size(), 3U);
+    for (const Answer& answer : list) {
+        EXPECT_TRUE(answer.matches) << answer.line << ": " << answer.actual;
+    }
+
+    for (const std::string_view question : {"? layers -> none", "? layers D D -> none",
+                                            "? layers X -> none", "? linetypes A -> none"}) {
+        std::variant<std::vector<Answer>, ParseError> wrong = answerQuestions(
+            "D = DXF file=plan.dxf\nA = LINE start=0,0 end=1,0\n" + std::string{question}, &files);
+        ASSERT_TRUE(std::holds_alternative<ParseError>(wrong)) << question;
+        EXPECT_EQ(std::get<ParseError>(wrong).line, 3) << question;
     }
 }
 

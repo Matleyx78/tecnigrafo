@@ -288,7 +288,7 @@ QuestionResult askEntity(const QuestionModel& model, Arguments arguments) {
             const core::Document& document = drawing.read.document;
             if (const core::EntityRecord* record = document.find(core::EntityId{*handle})) {
                 std::string text;
-                writeEntity(*record, text);
+                writeEntity(*record, document, text);
                 return text;
             }
             const auto raw = std::ranges::find(document.rawEntities(), core::EntityId{*handle},

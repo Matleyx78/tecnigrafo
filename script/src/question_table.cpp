@@ -9,7 +9,6 @@
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/snap_points.hpp"
-#include "tg/core/start_handles.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
 
@@ -24,20 +23,18 @@
 namespace tg::script::detail {
 
 std::optional<core::EntityId> QuestionModel::find(std::string_view name) const {
+    assert(ids.size() == names.size());
     const auto found = std::ranges::find(names, name);
     if (found == names.end()) {
         return std::nullopt;
     }
-    // The entities are numbered in the order they appear, from the first
-    // handle of a new drawing (docs/adr/0023, point 1).
-    return core::EntityId{static_cast<std::uint64_t>(found - names.begin()) +
-                          core::start_handles::kFirstEntity};
+    return ids[static_cast<std::size_t>(found - names.begin())];
 }
 
 std::string_view QuestionModel::nameOf(core::EntityId id) const {
-    assert(id.value >= core::start_handles::kFirstEntity &&
-           id.value - core::start_handles::kFirstEntity < names.size());
-    return names[id.value - core::start_handles::kFirstEntity];
+    const auto found = std::ranges::find(ids, id);
+    assert(found != ids.end() && "every entity of the document has a name");
+    return names[static_cast<std::size_t>(found - ids.begin())];
 }
 
 namespace {
@@ -472,6 +469,10 @@ QuestionResult askWarnings(const QuestionModel& model, Arguments arguments);
 QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
 
+// Defined in property_questions.cpp.
+QuestionResult askLayers(const QuestionModel& model, Arguments arguments);
+QuestionResult askLinetypes(const QuestionModel& model, Arguments arguments);
+
 namespace {
 
 // ---------------------------------------------------------------------------
@@ -507,6 +508,13 @@ constexpr std::array kQuestions{
     QuestionRow{"warnings", AnswerShape::Items, &askWarnings},
     QuestionRow{"roundtrip", AnswerShape::Single, &askRoundtrip},
     QuestionRow{"open-error", AnswerShape::Single, &askOpenError},
+    // Layers and properties: stage 0.6 (property_questions.cpp).
+    QuestionRow{"aci", AnswerShape::Single, nullptr},         // P9
+    QuestionRow{"effective", AnswerShape::Single, nullptr},   // P9
+    QuestionRow{"dashes", AnswerShape::Items, nullptr},       // P11
+    QuestionRow{"quickselect", AnswerShape::Names, nullptr},  // P23
+    QuestionRow{"layers", AnswerShape::Items, &askLayers},
+    QuestionRow{"linetypes", AnswerShape::Items, &askLinetypes},
 };
 
 }  // namespace

@@ -3,8 +3,17 @@
 
 #include "tg/script/report.hpp"
 
+#include "tg/cmd/builtin_commands.hpp"
+#include "tg/cmd/command_registry.hpp"
+#include "tg/cmd/command_runner.hpp"
+#include "tg/core/color.hpp"
+#include "tg/core/document.hpp"
+#include "tg/core/layer.hpp"
+#include "tg/core/line.hpp"
+#include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/text.hpp"
+#include "tg/edit/editor.hpp"
 #include "tg/script/entity_reader.hpp"
 #include "tg/script/number_format.hpp"
 
@@ -17,6 +26,7 @@
 #include <string_view>
 #include <utility>
 #include <variant>
+#include <vector>
 
 // Lines, circles, arcs and texts in the format of docs/verifica/rapporto.md: written
 // by writeEntity(), read back by readEntity().
@@ -279,12 +289,285 @@ TEST(ReadEntity, ErrorsOfTexts) {
              std::string_view{"TEXT position=0,0 value=\"A\" horizontal=justify"},
              std::string_view{"TEXT position=0,0 value=\"A\" vertical=Top"},
              std::string_view{"TEXT position=0 value=\"A\""},
-             std::string_view{"TEXT position=0,0 value=\"A\" color=red"},
+             std::string_view{"TEXT position=0,0 value=\"A\" colour=red"},
              std::string_view{R"(TEXT position=0,0 value="A\q")"},  // unknown escape
          }) {
         const EntityError error = failure(text);
         EXPECT_FALSE(error.notImplemented) << text;
         EXPECT_FALSE(error.message.empty()) << text;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Layers and properties (stage 0.6, package P5)
+
+void expectContains(std::string_view text, std::string_view part) {
+    EXPECT_NE(text.find(part), std::string_view::npos) << "missing: " << part << "\nin: " << text;
+}
+
+/// One section of the report of `document`, at rest.
+std::string stateOf(core::Document& document) {
+    edit::Editor editor(document);
+    cmd::CommandRegistry registry;
+    cmd::registerBuiltinCommands(registry);
+    const cmd::CommandRunner runner(registry, editor);
+    std::string out;
+    writeState({"final", editor, runner, {}, std::nullopt}, out);
+    return out;
+}
+
+/// The lines of `report` from `from` (included) to `to` (excluded).
+std::string between(const std::string& report, std::string_view from, std::string_view to) {
+    const std::size_t start = report.find(from);
+    const std::size_t end = report.find(to, start);
+    if (start == std::string::npos || end == std::string::npos) {
+        ADD_FAILURE() << "missing " << from << " or " << to << " in:\n" << report;
+        return {};
+    }
+    return report.substr(start, end - start);
+}
+
+struct Tables {
+    core::Document document{core::Document::newDrawing()};
+    core::LinetypeId dashed;
+    core::LayerId walls;
+};
+
+/// A new drawing with a dashed linetype and a layer "Muri esterni" that uses
+/// it, with every state on.
+Tables drawingWithLayers() {
+    Tables tables;
+    core::Linetype dashed;
+    dashed.name = "ACAD_ISO02W100";
+    dashed.description = "ISO dash __ __ __";
+    dashed.pattern.elements = {12.0, -3.0};
+    tables.dashed = tables.document.addLinetype(dashed);
+    core::Layer walls;
+    walls.name = "Muri esterni";
+    walls.color = core::Color::fromIndex(1);
+    walls.linetype = tables.dashed;
+    walls.lineweight = 50;
+    walls.on = false;
+    walls.frozen = true;
+    walls.locked = true;
+    walls.plot = false;
+    tables.walls = tables.document.addLayer(walls);
+    return tables;
+}
+
+TEST(WriteState, ANewSessionDoesNotChangeByACharacter) {
+    core::Document document = core::Document::newDrawing();
+    EXPECT_EQ(stateOf(document),
+              "\n[final]\n"
+              "entities:\n"
+              "messages:\n"
+              "prompt: Command:\n"
+              "preview:\n"
+              "selection: none\n"
+              "rectangle: none\n"
+              "undo:\n"
+              "redo:\n"
+              "snap: on\n"
+              "ortho: off\n"
+              "pointer: none\n"
+              "active snap: none\n"
+              "statistics:\n");
+    // An entity drawn in a new session has the current values, which are the
+    // defaults: no property is written.
+    edit::Editor editor(document);
+    editor.beginTransaction("Line");
+    editor.add(core::Line{{0.0, 0.0}, {10.0, 5.0}});
+    editor.commit();
+    expectContains(stateOf(document), "entities:\n  257 LINE start=0,0 end=10,5\nmessages:\n");
+}
+
+TEST(WriteState, ADocumentWithoutTablesWritesNoTables) {
+    // A file read before package 0.6-P10 brings no table records.
+    core::Document document;
+    const std::string report = stateOf(document);
+    for (const std::string_view field :
+         {"layers:", "linetypes:", "current:", "ltscale:", "lwdisplay:"}) {
+        EXPECT_EQ(report.find(field), std::string::npos) << field;
+    }
+}
+
+TEST(WriteState, TablesAndCurrentValuesInTheirOrder) {
+    Tables tables = drawingWithLayers();
+    core::Document& document = tables.document;
+    core::CurrentProperties current = document.current();
+    current.layer = tables.walls;
+    current.color = core::Color::fromIndex(2);
+    document.setCurrent(current);
+    document.setLtscale(2.0);
+    document.setLwdisplay(true);
+    document.setUnits(6);
+    EXPECT_EQ(between(stateOf(document), "ortho:", "pointer:"),
+              "ortho: off\n"
+              "units: 6\n"
+              "layers:\n"
+              "  \"0\" color=7 linetype=\"Continuous\" lineweight=default\n"
+              "  \"Muri esterni\" color=1 linetype=\"ACAD_ISO02W100\" lineweight=0.50 off frozen "
+              "locked noplot\n"
+              "linetypes:\n"
+              "  \"ACAD_ISO02W100\" pattern=12,-3 description=\"ISO dash __ __ __\"\n"
+              "current: layer=\"Muri esterni\" color=2 linetype=\"ByLayer\" ltscale=1 "
+              "lineweight=bylayer\n"
+              "ltscale: 2\n"
+              "lwdisplay: on\n");
+}
+
+TEST(WriteState, EachFieldOnlyWhenItDiffersFromANewSession) {
+    // A linetype alone: the layers are those of a new session. A name may
+    // have blanks and any letter, not quotes (docs/adr/0023, point 1); a
+    // description may have quotes.
+    core::Document document = core::Document::newDrawing();
+    core::Linetype dotted;
+    dotted.name = "Punti e spazi è";
+    dotted.description = "a \"dotted\" line";
+    dotted.pattern.elements = {0.0, -2.0};
+    document.addLinetype(dotted);
+    EXPECT_EQ(between(stateOf(document), "ortho:", "pointer:"),
+              "ortho: off\n"
+              "linetypes:\n"
+              "  \"Punti e spazi è\" pattern=0,-2 description=\"a \\\"dotted\\\" line\"\n");
+
+    // A linetype without elements is continuous.
+    core::Document plain = core::Document::newDrawing();
+    core::Linetype solid;
+    solid.name = "Solid";
+    plain.addLinetype(solid);
+    expectContains(stateOf(plain), "linetypes:\n  \"Solid\" pattern=continuous description=\"\"\n");
+
+    // One current value: the five are written.
+    core::Document scaled = core::Document::newDrawing();
+    core::CurrentProperties current = scaled.current();
+    current.linetypeScale = 0.5;
+    scaled.setCurrent(current);
+    EXPECT_EQ(between(stateOf(scaled), "ortho:", "pointer:"),
+              "ortho: off\n"
+              "current: layer=\"0\" color=bylayer linetype=\"ByLayer\" ltscale=0.5 "
+              "lineweight=bylayer\n");
+
+    // The layer 0 changed: the table differs from a new session.
+    core::Document changed = core::Document::newDrawing();
+    core::Layer zero = *changed.layer(changed.layerZero());
+    zero.color = core::Color::fromRgb({255, 128, 0});
+    changed.replaceLayer(zero);
+    EXPECT_EQ(between(stateOf(changed), "ortho:", "pointer:"),
+              "ortho: off\n"
+              "layers:\n"
+              "  \"0\" color=255,128,0 linetype=\"Continuous\" lineweight=default\n");
+}
+
+std::string written(const core::EntityRecord& record, const core::Document& document) {
+    std::string text;
+    writeEntity(record, document, text);
+    return text;
+}
+
+/// A LINE of `document` with the default properties.
+core::EntityRecord lineOf(const core::Document& document) {
+    core::EntityRecord record{{257}, core::Line{{0.0, 0.0}, {10.0, 5.0}}};
+    record.properties.layer = document.layerZero();
+    record.properties.linetype = document.byLayerLinetype();
+    return record;
+}
+
+TEST(WriteEntity, EachPropertyOnlyWhenNotItsDefault) {
+    const Tables tables = drawingWithLayers();
+    const core::Document& document = tables.document;
+    EXPECT_EQ(written(lineOf(document), document), "LINE start=0,0 end=10,5");
+
+    struct Case {
+        void (*change)(core::EntityProperties&, const Tables&);
+        std::string_view expected;
+    };
+
+    for (const Case& test : {
+             Case{[](core::EntityProperties& p, const Tables& t) { p.layer = t.walls; },
+                  " layer=\"Muri esterni\""},
+             Case{[](core::EntityProperties& p, const Tables&) {
+                      p.color = core::Color::fromIndex(7);
+                  },
+                  " color=7"},
+             Case{
+                 [](core::EntityProperties& p, const Tables&) { p.color = core::Color::byBlock(); },
+                 " color=byblock"},
+             Case{[](core::EntityProperties& p, const Tables& t) { p.linetype = t.dashed; },
+                  " linetype=\"ACAD_ISO02W100\""},
+             Case{[](core::EntityProperties& p, const Tables& t) {
+                      p.linetype = t.document.byBlockLinetype();
+                  },
+                  " linetype=\"ByBlock\""},
+             Case{[](core::EntityProperties& p, const Tables&) { p.linetypeScale = 2.5; },
+                  " ltscale=2.5"},
+             Case{[](core::EntityProperties& p, const Tables&) {
+                      p.lineweight = core::lineweight::kDefault;
+                  },
+                  " lineweight=default"},
+             Case{[](core::EntityProperties& p, const Tables&) { p.lineweight = 0; },
+                  " lineweight=0"},
+         }) {
+        core::EntityRecord record = lineOf(document);
+        test.change(record.properties, tables);
+        EXPECT_EQ(written(record, document),
+                  "LINE start=0,0 end=10,5" + std::string{test.expected});
+    }
+}
+
+TEST(WriteEntity, PropertiesInOrderAfterThePlacementAndBeforeTheDerived) {
+    const Tables tables = drawingWithLayers();
+    const core::Document& document = tables.document;
+    core::EntityRecord record = lineOf(document);
+    record.properties = {tables.walls, core::Color::fromRgb({255, 128, 0}), tables.dashed, 35, 0.5};
+    record.extras.placement = {{39, "2"}};
+    EXPECT_EQ(written(record, document),
+              "LINE start=0,0 end=10,5 thickness=2 layer=\"Muri esterni\" color=255,128,0 "
+              "linetype=\"ACAD_ISO02W100\" ltscale=0.5 lineweight=0.35");
+
+    core::Text text;
+    text.value = "A";
+    core::EntityRecord label{{258}, text};
+    label.properties = lineOf(document).properties;
+    label.properties.layer = tables.walls;
+    const std::string line = written(label, document);
+    expectContains(line, R"( value="A" layer="Muri esterni" ~box=)");
+}
+
+TEST(WriteEntity, ARecordOfADocumentWithoutTablesHasTheDefaults) {
+    // Identifiers that the document does not have, as in a file read before
+    // package 0.6-P10: written as the defaults, that is not at all.
+    const core::Document document;
+    const core::EntityRecord record{{47}, core::Line{{0.0, 0.0}, {1.0, 0.0}}};
+    EXPECT_EQ(written(record, document), "LINE start=0,0 end=1,0");
+}
+
+TEST(ReadEntity, ALineOfTheReportWithPropertiesReadsBackWithoutLoss) {
+    Tables tables = drawingWithLayers();
+    core::Linetype spaced;
+    spaced.name = "Tratto lungo è corto";
+    spaced.pattern.elements = {5.0, -2.0, 0.0, -2.0};
+    const core::LinetypeId spacedId = tables.document.addLinetype(spaced);
+    const core::Document& document = tables.document;
+    std::vector<core::EntityProperties> cases;
+    cases.push_back(lineOf(document).properties);
+    cases.push_back({tables.walls, core::Color::fromRgb({1, 2, 3}), spacedId, 35, 1e-05});
+    cases.push_back({document.layerZero(), core::Color::fromIndex(255), document.byBlockLinetype(),
+                     core::lineweight::kByBlock, 0.3333333333333333});
+    cases.push_back(
+        {tables.walls, core::Color::byBlock(), tables.dashed, core::lineweight::kDefault, 1.0});
+    for (const core::EntityProperties& properties : cases) {
+        core::EntityRecord record = lineOf(document);
+        record.properties = properties;
+        const std::string text = written(record, document);
+        std::variant<EntityDefinition, EntityError> read = readEntityDefinition(text);
+        ASSERT_TRUE(std::holds_alternative<EntityDefinition>(read)) << text;
+        const EntityDefinition& definition = std::get<EntityDefinition>(read);
+        EXPECT_EQ(definition.entity, record.entity) << text;
+        std::variant<core::EntityProperties, EntityError> resolved =
+            resolveProperties(definition.properties, document);
+        ASSERT_TRUE(std::holds_alternative<core::EntityProperties>(resolved)) << text;
+        EXPECT_EQ(std::get<core::EntityProperties>(resolved), properties) << text;
     }
 }
 

@@ -7,7 +7,11 @@
 #include "tg/core/arc.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/circle.hpp"
+#include "tg/core/color.hpp"
+#include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
+#include "tg/core/linetype_pattern.hpp"
+#include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/text.hpp"
@@ -505,9 +509,221 @@ std::optional<EntityError> takePlacement(std::string_view type, Tokens& properti
     return std::nullopt;
 }
 
+// ---------------------------------------------------------------------------
+// Properties of stage 0.6 (docs/verifica/rapporto.md)
+
+/// A name of a layer or linetype, between double quotes.
+std::variant<std::string, EntityError> tableNameValue(std::string_view name,
+                                                      std::string_view value) {
+    std::optional<std::string> text = unquoteText(value);
+    if (!text || text->empty()) {
+        return EntityError{std::string{name} + " needs a name between double quotes, found " +
+                           quoted(value)};
+    }
+    return std::move(*text);
+}
+
+/// What readWrittenProperty() found.
+struct PropertyRead {
+    bool known{false};  ///< the name is a property of stage 0.6
+    std::optional<EntityError> error;
+};
+
+/// Reads into `written` the property `name`=`value` if it is one of stage
+/// 0.6; otherwise `known` is false, so that the caller reads it as a
+/// property of the geometry.
+PropertyRead readWrittenProperty(std::string_view name, std::string_view value,
+                                 WrittenProperties& written) {
+    const auto failed = [](std::string message) {
+        return PropertyRead{true, EntityError{std::move(message)}};
+    };
+    const auto twice = [&] {
+        return failed(std::string{name} + " is given more than once");
+    };
+    if (name == "layer" || name == "linetype") {
+        std::optional<std::string>& slot = name == "layer" ? written.layer : written.linetype;
+        if (slot) {
+            return twice();
+        }
+        auto text = tableNameValue(name, value);
+        if (auto* error = std::get_if<EntityError>(&text)) {
+            return PropertyRead{true, std::move(*error)};
+        }
+        slot = std::get<std::string>(std::move(text));
+        return PropertyRead{true, std::nullopt};
+    }
+    if (name == "color") {
+        if (written.color) {
+            return twice();
+        }
+        written.color = core::parseColor(value);
+        if (!written.color) {
+            return failed("color needs bylayer, byblock, an index 1-255 or r,g,b, found " +
+                          quoted(value));
+        }
+        return PropertyRead{true, std::nullopt};
+    }
+    if (name == "ltscale") {
+        if (written.linetypeScale) {
+            return twice();
+        }
+        const std::optional<double> scale = parseNumber(value);
+        if (!scale || !(*scale > 0.0)) {
+            return failed("ltscale needs a number above 0, found " + quoted(value));
+        }
+        written.linetypeScale = scale;
+        return PropertyRead{true, std::nullopt};
+    }
+    if (name == "lineweight") {
+        if (written.lineweight) {
+            return twice();
+        }
+        written.lineweight = core::parseLineweight(value);
+        if (!written.lineweight) {
+            return failed(
+                "lineweight needs bylayer, byblock, default or an allowed width in mm, found " +
+                quoted(value));
+        }
+        return PropertyRead{true, std::nullopt};
+    }
+    return PropertyRead{};
+}
+
+/// Checks and takes out of `properties` the properties of stage 0.6, and
+/// the linetype generation of an LWPOLYLINE: the rest is the geometry.
+std::optional<EntityError> takeProperties(std::string_view type, Tokens& properties,
+                                          EntityDefinition& definition) {
+    Tokens rest;
+    for (const std::string_view token : properties) {
+        const std::size_t equals = token.find('=');
+        if (equals == std::string_view::npos) {
+            rest.push_back(token);
+            continue;
+        }
+        const std::string_view name = token.substr(0, equals);
+        const std::string_view value = token.substr(equals + 1);
+        if (type == "LWPOLYLINE" && name == "linetype-generation") {
+            const std::optional<bool> flag = parseYesNo(value);
+            if (definition.linetypeGeneration || !flag) {
+                return EntityError{"linetype-generation is given once, as yes or no"};
+            }
+            definition.linetypeGeneration = flag;
+            continue;
+        }
+        PropertyRead read = readWrittenProperty(name, value, definition.properties);
+        if (!read.known) {
+            rest.push_back(token);
+        } else if (read.error) {
+            return std::move(read.error);
+        }
+    }
+    properties = std::move(rest);
+    return std::nullopt;
+}
+
+/// The value of a definition of a table record ("name=\"Muri\""): the
+/// properties given once each, and the bare words (`off`) given once each.
+struct RecordTokens {
+    std::vector<Property> properties;
+    std::vector<std::string_view> words;
+};
+
+std::variant<RecordTokens, EntityError> readRecordTokens(std::string_view type,
+                                                         std::string_view text,
+                                                         std::span<const std::string_view> names,
+                                                         std::span<const std::string_view> words) {
+    const std::optional<Tokens> tokens = detail::splitTokens(text);
+    if (!tokens) {
+        return EntityError{"a quoted text is not closed"};
+    }
+    if (tokens->empty() || tokens->front() != type) {
+        return EntityError{"expected " + std::string{type}};
+    }
+    RecordTokens record;
+    for (auto token = tokens->begin() + 1; token != tokens->end(); ++token) {
+        if (std::ranges::find(words, *token) != words.end()) {
+            if (std::ranges::find(record.words, *token) != record.words.end()) {
+                return EntityError{std::string{*token} + " is given more than once"};
+            }
+            record.words.push_back(*token);
+            continue;
+        }
+        std::variant<Property, std::string> split = splitProperty(*token);
+        if (auto* error = std::get_if<std::string>(&split)) {
+            return EntityError{std::move(*error)};
+        }
+        const Property property = std::get<Property>(split);
+        if (std::ranges::find(names, property.name) == names.end()) {
+            return EntityError{"unknown property " + quoted(property.name) + " of " +
+                               std::string{type}};
+        }
+        if (std::ranges::find(record.properties, property.name, &Property::name) !=
+            record.properties.end()) {
+            return EntityError{std::string{property.name} + " is given more than once"};
+        }
+        record.properties.push_back(property);
+    }
+    return record;
+}
+
+std::optional<std::string_view> findValue(const RecordTokens& record, std::string_view name) {
+    const auto found = std::ranges::find(record.properties, name, &Property::name);
+    if (found == record.properties.end()) {
+        return std::nullopt;
+    }
+    return found->value;
+}
+
+bool hasWord(const RecordTokens& record, std::string_view word) {
+    return std::ranges::find(record.words, word) != record.words.end();
+}
+
+/// The name of a table record: required, quoted, valid (docs/adr/0023, point 1).
+std::variant<std::string, EntityError> recordName(std::string_view type,
+                                                  const RecordTokens& record) {
+    const std::optional<std::string_view> value = findValue(record, "name");
+    if (!value) {
+        return EntityError{"missing property name of " + std::string{type}};
+    }
+    auto name = tableNameValue("name", *value);
+    if (const auto* error = std::get_if<EntityError>(&name)) {
+        return *error;
+    }
+    if (!core::isValidTableName(std::get<std::string>(name))) {
+        return EntityError{"invalid name " + quoted(std::get<std::string>(name)) + " of " +
+                           std::string{type}};
+    }
+    return name;
+}
+
+/// A linetype pattern: numbers separated by ',', or "continuous".
+std::optional<core::LinetypePattern> parsePattern(std::string_view text) {
+    core::LinetypePattern pattern;
+    if (text == "continuous") {
+        return pattern;
+    }
+    while (true) {
+        const std::size_t comma = text.find(',');
+        const std::optional<double> element = parseNumber(text.substr(0, comma));
+        if (!element) {
+            return std::nullopt;
+        }
+        pattern.elements.push_back(*element);
+        if (comma == std::string_view::npos) {
+            return pattern;
+        }
+        text.remove_prefix(comma + 1);
+    }
+}
+
+std::string unknownName(std::string_view kind, std::string_view name) {
+    return "unknown " + std::string{kind} + " " + quoted(name) + ": define it above with " +
+           (kind == "layer" ? "LAYER" : "LTYPE");
+}
+
 }  // namespace
 
-std::variant<core::Entity, EntityError> readEntity(std::string_view text) {
+std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_view text) {
     const std::optional<Tokens> tokens = detail::splitTokens(text);
     if (!tokens) {
         return EntityError{"a quoted text is not closed"};
@@ -520,25 +736,191 @@ std::variant<core::Entity, EntityError> readEntity(std::string_view text) {
     if (std::optional<EntityError> error = takePlacement(type, properties)) {
         return std::move(*error);
     }
+    EntityDefinition definition{core::Line{}, {}, std::nullopt};
+    if (std::optional<EntityError> error = takeProperties(type, properties, definition)) {
+        return std::move(*error);
+    }
+    std::variant<core::Entity, EntityError> entity = EntityError{};
     if (type == "LWPOLYLINE") {
-        return readPolyline(properties);
-    }
-    if (type == "LINE") {
-        return readLine(properties);
-    }
-    if (type == "CIRCLE") {
-        return readCircle(properties);
-    }
-    if (type == "ARC") {
-        return readArc(properties);
-    }
-    if (type == "TEXT") {
-        return readText(properties);
-    }
-    if (std::ranges::find(kPlannedTypes, type) != kPlannedTypes.end()) {
+        entity = readPolyline(properties);
+    } else if (type == "LINE") {
+        entity = readLine(properties);
+    } else if (type == "CIRCLE") {
+        entity = readCircle(properties);
+    } else if (type == "ARC") {
+        entity = readArc(properties);
+    } else if (type == "TEXT") {
+        entity = readText(properties);
+    } else if (std::ranges::find(kPlannedTypes, type) != kPlannedTypes.end()) {
         return EntityError{"entity type " + std::string{type} + " is not implemented yet", true};
+    } else {
+        return EntityError{"unknown entity type " + quoted(type)};
     }
-    return EntityError{"unknown entity type " + quoted(type)};
+    if (auto* error = std::get_if<EntityError>(&entity)) {
+        return std::move(*error);
+    }
+    definition.entity = std::get<core::Entity>(std::move(entity));
+    return definition;
+}
+
+std::variant<core::Entity, EntityError> readEntity(std::string_view text) {
+    std::variant<EntityDefinition, EntityError> definition = readEntityDefinition(text);
+    if (auto* error = std::get_if<EntityError>(&definition)) {
+        return std::move(*error);
+    }
+    return std::get<EntityDefinition>(std::move(definition)).entity;
+}
+
+std::variant<WrittenProperties, EntityError> readProperties(std::string_view text) {
+    const std::optional<Tokens> tokens = detail::splitTokens(text);
+    if (!tokens) {
+        return EntityError{"a quoted text is not closed"};
+    }
+    WrittenProperties written;
+    for (const std::string_view token : *tokens) {
+        std::variant<Property, std::string> split = splitProperty(token);
+        if (auto* error = std::get_if<std::string>(&split)) {
+            return EntityError{std::move(*error)};
+        }
+        const auto [name, value] = std::get<Property>(split);
+        PropertyRead read = readWrittenProperty(name, value, written);
+        if (!read.known) {
+            return EntityError{"unknown property " + quoted(name) +
+                               ": expected layer, color, linetype, ltscale or lineweight"};
+        }
+        if (read.error) {
+            return std::move(*read.error);
+        }
+    }
+    return written;
+}
+
+std::variant<core::EntityProperties, EntityError> applyProperties(
+    const WrittenProperties& written, const core::EntityProperties& base,
+    const core::Document& document) {
+    core::EntityProperties properties = base;
+    if (written.layer) {
+        const core::Layer* layer = document.findLayer(*written.layer);
+        if (layer == nullptr) {
+            return EntityError{unknownName("layer", *written.layer)};
+        }
+        properties.layer = layer->id;
+    }
+    if (written.linetype) {
+        const core::Linetype* linetype = document.findLinetype(*written.linetype);
+        if (linetype == nullptr) {
+            return EntityError{unknownName("linetype", *written.linetype)};
+        }
+        properties.linetype = linetype->id;
+    }
+    properties.color = written.color.value_or(properties.color);
+    properties.linetypeScale = written.linetypeScale.value_or(properties.linetypeScale);
+    properties.lineweight = written.lineweight.value_or(properties.lineweight);
+    return properties;
+}
+
+std::variant<core::EntityProperties, EntityError> resolveProperties(
+    const WrittenProperties& written, const core::Document& document) {
+    // The defaults of docs/verifica/rapporto.md, not the current values: a
+    // definition writes what the entity has, as a line of the report.
+    core::EntityProperties defaults;
+    defaults.layer = document.layerZero();
+    defaults.linetype = document.byLayerLinetype();
+    return applyProperties(written, defaults, document);
+}
+
+std::variant<LayerDefinition, EntityError> readLayerDefinition(std::string_view text) {
+    constexpr std::array<std::string_view, 4> kNames{"name", "color", "linetype", "lineweight"};
+    constexpr std::array<std::string_view, 4> kWords{"off", "frozen", "locked", "noplot"};
+    auto tokens = readRecordTokens("LAYER", text, kNames, kWords);
+    if (auto* error = std::get_if<EntityError>(&tokens)) {
+        return std::move(*error);
+    }
+    const RecordTokens& record = std::get<RecordTokens>(tokens);
+    auto name = recordName("LAYER", record);
+    if (auto* error = std::get_if<EntityError>(&name)) {
+        return std::move(*error);
+    }
+    LayerDefinition layer;
+    layer.name = std::get<std::string>(std::move(name));
+    if (const auto value = findValue(record, "color")) {
+        const std::optional<core::Color> color = core::parseColor(*value);
+        // A layer has an index or RGB colour, never ByLayer nor ByBlock
+        // (docs/adr/0024, point 1).
+        if (!color || color->kind() == core::Color::Kind::ByLayer ||
+            color->kind() == core::Color::Kind::ByBlock) {
+            return EntityError{"color of a LAYER needs an index 1-255 or r,g,b, found " +
+                               quoted(*value)};
+        }
+        layer.color = *color;
+    }
+    if (const auto value = findValue(record, "linetype")) {
+        auto linetype = tableNameValue("linetype", *value);
+        if (auto* error = std::get_if<EntityError>(&linetype)) {
+            return std::move(*error);
+        }
+        layer.linetype = std::get<std::string>(std::move(linetype));
+        if (core::sameTableName(layer.linetype, "ByLayer") ||
+            core::sameTableName(layer.linetype, "ByBlock")) {
+            return EntityError{"linetype of a LAYER cannot be ByLayer nor ByBlock"};
+        }
+    }
+    if (const auto value = findValue(record, "lineweight")) {
+        const std::optional<int> lineweight = core::parseLineweight(*value);
+        if (!lineweight || *lineweight == core::lineweight::kByLayer ||
+            *lineweight == core::lineweight::kByBlock) {
+            return EntityError{
+                "lineweight of a LAYER needs default or an allowed width in mm, found " +
+                quoted(*value)};
+        }
+        layer.lineweight = *lineweight;
+    }
+    layer.off = hasWord(record, "off");
+    layer.frozen = hasWord(record, "frozen");
+    layer.locked = hasWord(record, "locked");
+    layer.noplot = hasWord(record, "noplot");
+    return layer;
+}
+
+std::variant<core::LinetypeDefinition, EntityError> readLinetypeDefinition(std::string_view text) {
+    constexpr std::array<std::string_view, 3> kNames{"name", "pattern", "description"};
+    auto tokens = readRecordTokens("LTYPE", text, kNames, {});
+    if (auto* error = std::get_if<EntityError>(&tokens)) {
+        return std::move(*error);
+    }
+    const RecordTokens& record = std::get<RecordTokens>(tokens);
+    auto name = recordName("LTYPE", record);
+    if (auto* error = std::get_if<EntityError>(&name)) {
+        return std::move(*error);
+    }
+    core::LinetypeDefinition linetype;
+    linetype.name = std::get<std::string>(std::move(name));
+    if (const auto value = findValue(record, "pattern")) {
+        std::optional<core::LinetypePattern> pattern = parsePattern(*value);
+        if (!pattern) {
+            return EntityError{"pattern needs numbers separated by ',' or continuous, found " +
+                               quoted(*value)};
+        }
+        linetype.pattern = std::move(*pattern);
+    } else if (std::optional<core::LinetypeDefinition> standard =
+                   core::standardLinetype(linetype.name)) {
+        // The standard definitions are written with the name alone
+        // (docs/adr/0025, point 2); the name keeps the case it was given.
+        linetype.pattern = std::move(standard->pattern);
+        linetype.description = std::move(standard->description);
+    } else {
+        return EntityError{"missing property pattern of LTYPE " + quoted(linetype.name) +
+                           ": only a standard linetype is defined by its name alone"};
+    }
+    if (const auto value = findValue(record, "description")) {
+        std::optional<std::string> description = unquoteText(*value);
+        if (!description) {
+            return EntityError{"description needs a text between double quotes, found " +
+                               quoted(*value)};
+        }
+        linetype.description = std::move(*description);
+    }
+    return linetype;
 }
 
 }  // namespace tg::script
