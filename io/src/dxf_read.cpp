@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "dxf_entities.hpp"
+#include "dxf_tables.hpp"
 #include "tg/io/dxf_groups.hpp"
 #include "tg/io/io.hpp"
 
@@ -84,12 +85,18 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
     for (const auto& range : ranges) {
         std::string_view variable;
         std::string_view type;
+        std::string_view table;
         bool hasHandle = false;
         for (std::size_t i = range.begin; i < range.end; ++i) {
             const auto& group = file.groups[i];
             if (group.code == 0) {
                 type = trimDxf(group.value);
                 hasHandle = false;
+                if (type == "ENDTAB") {
+                    table = {};
+                }
+            } else if (group.code == 2 && type == "TABLE" && table.empty()) {
+                table = trimDxf(group.value);
             }
             if (range.name == "HEADER") {
                 if (group.code == 9) {
@@ -129,7 +136,11 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
                 return malformed(file.lines[i], "duplicate handle " + group.value);
             }
             handles.next = std::max(handles.next, *id + 1);
-            if (range.name != "ENTITIES") {
+            // The LAYER and LTYPE records enter the document with their
+            // handle; TableReader reserves those it keeps raw.
+            const bool record =
+                range.name == "TABLES" && type == table && (type == "LAYER" || type == "LTYPE");
+            if (range.name != "ENTITIES" && !record) {
                 document.reserveHandle({*id});
             }
         }
@@ -152,12 +163,20 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
     core::RawDrawing raw;
     raw.version = file.version;
     raw.codePage = file.codePage;
+    TableReader tables{result.document};
     for (const auto& range : parsed.value()) {
         core::RawSection section{range.name, {}};
         if (range.name != "ENTITIES") {
             for (std::size_t i = range.begin; i < range.end; ++i) {
                 section.groups.push_back(file.groups[i]);
             }
+        }
+        if (range.name == "TABLES") {
+            const std::span<const std::size_t> lines{file.lines.data() + range.begin,
+                                                     range.end - range.begin};
+            tables.readTables(section.groups, lines, result.report.warnings);
+        } else if (range.name == "HEADER") {
+            tables.readHeader(section.groups);
         }
         raw.sections.push_back(std::move(section));
     }
@@ -202,7 +221,7 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
             }
             context.id = entity.id;
             auto record = decodeEntity(findCodec(trimDxf(entity.type)), entity.groups, context);
-            if (record) {
+            if (record && tables.entityProperties(*record)) {
                 record->id = entity.id;
                 record->order = entity.order;
                 result.document.insert(std::move(*record));
@@ -212,6 +231,7 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
             }
         }
     }
+    tables.finish(result.report.warnings);
     result.document.setRaw(std::move(raw));
     return result;
 }

@@ -3,6 +3,7 @@
 
 #include "dxf_entities.hpp"
 #include "tg/core/line.hpp"
+#include "tg/core/polyline.hpp"
 #include "tg/io/dxf_groups.hpp"
 #include "tg/io/io.hpp"
 
@@ -133,6 +134,40 @@ TEST(DxfRead, HeaderHandleValuesOtherThanHandseedAreNotDefinitions) {
     const auto result = readDxf(drawing({{0, "POINT"}, {5, "A"}}, {{9, "$CUSTOM"}, {5, "A"}}));
     ASSERT_TRUE(result.ok()) << result.error().message;
     EXPECT_EQ(result.value().document.nextId(), 0xBU);
+}
+
+TEST(DxfRead, LinetypeGenerationOfPolylinesIsInTheModel) {
+    // Bit 128 of the LWPOLYLINE flags (docs/adr/0025, point 4).
+    for (const auto* const flags : {"0", "1", "128", "129", "130"}) {
+        const core::RawGroups polyline{
+            {0, "LWPOLYLINE"},     {5, "30"},   {100, "AcDbEntity"}, {8, "0"},
+            {100, "AcDbPolyline"}, {90, "2"},   {70, flags},         {10, "0.0"},
+            {20, "0.0"},           {10, "1.0"}, {20, "0.0"}};
+        const std::string bytes = drawing(polyline);
+        auto result = readDxf(bytes);
+        ASSERT_TRUE(result.ok()) << result.error().message;
+        const auto* record = result.value().document.find(core::EntityId{0x30});
+        ASSERT_NE(record, nullptr) << flags;
+        const auto value = std::stoi(flags);
+        const auto& model = std::get<core::Polyline>(record->entity);
+        EXPECT_EQ(model.continuousLinetype(), (value & 128) != 0) << flags;
+        EXPECT_EQ(model.isClosed(), (value & 1) != 0) << flags;
+        const auto written = writeDxf(result.value().document, DxfVersion::R2018);
+        ASSERT_TRUE(written.ok());
+        EXPECT_NE(written.value().find(std::string{" 70\r\n"} + flags + "\r\n"), std::string::npos)
+            << flags;
+    }
+    core::Document document;
+    core::Polyline model{{{{0.0, 0.0}}, {{1.0, 1.0}}}, false};
+    model.setContinuousLinetype(true);
+    document.add(model);
+    const auto written = writeDxf(document, DxfVersion::R2018);
+    ASSERT_TRUE(written.ok());
+    const auto reread = readDxf(written.value());
+    ASSERT_TRUE(reread.ok());
+    ASSERT_EQ(reread.value().document.entityCount(), 1U);
+    EXPECT_TRUE(std::get<core::Polyline>(reread.value().document.entities()[0].entity)
+                    .continuousLinetype());
 }
 
 TEST(DxfRead, UnitsDefaultToZeroAndStayInRange) {

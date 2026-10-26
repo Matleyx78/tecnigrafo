@@ -11,6 +11,10 @@
 
 namespace tg::io {
 namespace {
+// Bits of the LWPOLYLINE flags (70) in the model (docs/adr/0025, point 4).
+constexpr int kClosedBit = 1;
+constexpr int kLinetypeGenerationBit = 128;
+
 std::optional<core::EntityRecord> readPolyline(const core::RawGroups& groups,
                                                EntityReadContext& context) {
     const Extrusion extrusion = entityExtrusion(groups);
@@ -37,7 +41,9 @@ std::optional<core::EntityRecord> readPolyline(const core::RawGroups& groups,
                     return std::nullopt;
                 }
                 flags = static_cast<int>(*number);
-                if ((flags & ~1) != 0) {
+                // Bits 1 (closed) and 128 (linetype generation) are the
+                // model's; any other bit keeps the group as read.
+                if ((flags & ~(kClosedBit | kLinetypeGenerationBit)) != 0) {
                     parts.extras.specific.push_back(group);
                 }
                 break;
@@ -98,8 +104,9 @@ std::optional<core::EntityRecord> readPolyline(const core::RawGroups& groups,
         }
         parts.extras.flippedExtrusion = true;
     }
-    core::Polyline polyline{std::move(vertices), (flags & 1) != 0};
+    core::Polyline polyline{std::move(vertices), (flags & kClosedBit) != 0};
     polyline.setConstantWidth(width);
+    polyline.setContinuousLinetype((flags & kLinetypeGenerationBit) != 0);
     return core::EntityRecord{context.id, std::move(polyline), std::move(parts.extras),
                               context.order};
 }
@@ -112,7 +119,9 @@ void writePolyline(const core::EntityRecord& record, EntityWriteContext& context
     const std::size_t from = out.size();
     out.push_back({100, "AcDbPolyline"});
     out.push_back({90, std::to_string(polyline.vertexCount())});
-    const int flags = (preservedFlags(record.extras, 70) & ~1) | (polyline.isClosed() ? 1 : 0);
+    const int flags = (preservedFlags(record.extras, 70) & ~(kClosedBit | kLinetypeGenerationBit)) |
+                      (polyline.isClosed() ? kClosedBit : 0) |
+                      (polyline.continuousLinetype() ? kLinetypeGenerationBit : 0);
     out.push_back({70, std::to_string(flags)});
     const auto& specific = record.extras.specific;
     const auto zeroWidth = std::ranges::find(specific, 43, &core::RawGroup::code);

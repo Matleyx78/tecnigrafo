@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <random>
+#include <string>
 
 namespace tg::io {
 namespace {
@@ -41,13 +42,20 @@ TEST(DxfLwpolyline, RandomModelsAndExtrasSurviveRoundtrip) {
             const double y = random.next();
             vertices.push_back({{x, y}, static_cast<double>(i) / 8.0, 0.5, 1.25});
         }
-        core::Polyline polyline{vertices, trial % 2 == 0};
+        const bool closed = trial % 2 == 0;
+        const bool continuous = trial % 3 == 0;
+        core::Polyline polyline{vertices, closed};
         polyline.setConstantWidth(0.25);
+        // Bits 1 and 128 are in the model (docs/adr/0025, point 4); bit 2
+        // is not, and keeps the group of the flags as written.
+        polyline.setContinuousLinetype(continuous);
+        constexpr int kUnknownBit = 2;
+        const int flags = kUnknownBit | (closed ? 1 : 0) | (continuous ? 128 : 0);
         core::EntityExtras extras;
         extras.beforeEntity = {{102, "{ACAD_REACTORS"}, {330, "A"}, {102, "}"}, {330, "20"}};
         extras.common = {{8, "Layer"}, {62, "3"}, {48, "1.000"}};
         extras.placement = {{38, "2.000"}, {39, "3.000"}, {210, "0.0"}, {220, "0.0"}, {230, "1.0"}};
-        extras.specific = {{70, trial % 2 == 0 ? "129" : "128"}, {999, "opaque"}};
+        extras.specific = {{70, std::to_string(flags)}, {999, "opaque"}};
         extras.extended = {{1001, "APP"}, {1000, "accenté"}, {1040, "1.000"}};
         const core::EntityRecord record{read.id, polyline, extras, 1};
         core::RawGroups groups;
