@@ -31,10 +31,6 @@ interfaccia/ribbon-scorciatoie #249
 interfaccia/ribbon-disegno-dopo-cambio #249
 interfaccia/ribbon-disegno-continuo #249
 
-# 0.6-R9: proprietà effettive e stati dei layer (#236)
-proprieta/aci #236
-proprieta/effettive #236
-proprieta/stati-layer #236
 
 # 0.6-R11: tratti dei tipi di linea (#240)
 tratti/linea #240
