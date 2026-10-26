@@ -1,0 +1,138 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0 color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+messages:
+  Command: -LINETYPE
+  Current line type: "ByLayer"
+  Enter an option [?/Load/Set]: Load
+  Enter linetype(s) to load: ACAD_ISO02W100
+  Enter an option [?/Load/Set]: Set
+  Specify linetype name or [?] <ByLayer>: ACAD_ISO02W100
+  Enter an option [?/Load/Set]:
+  Command: COLOR
+  Enter default object color [Truecolor] <BYLAYER>: red
+  Command: CELTSCALE
+  Enter new value for CELTSCALE <1.0000>: 2.0
+  Command: LWEIGHT
+  Current lineweight: ByLayer
+  Enter default lineweight for new objects or [?]: 0.30
+  Command: LWDISPLAY
+  Enter new value for LWDISPLAY <OFF>: ON
+  Command: LINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LINETYPE
+  COLOR
+  CELTSCALE
+  LWEIGHT
+  Line
+redo:
+snap: on
+ortho: off
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+current: layer="0" color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+messages:
+  Command: U
+  Undone: Line.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LINETYPE
+  COLOR
+  CELTSCALE
+  LWEIGHT
+redo:
+  Line
+snap: on
+ortho: off
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+current: layer="0" color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: U
+  Undone: LWEIGHT.
+  Command: U
+  Undone: CELTSCALE.
+  Command: U
+  Undone: COLOR.
+  Command: U
+  Undone: LINETYPE.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Line
+  LWEIGHT
+  CELTSCALE
+  COLOR
+  LINETYPE
+snap: on
+ortho: off
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0 color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+messages:
+  Command: REDO
+  Redone: LINETYPE.
+  Command: REDO
+  Redone: COLOR.
+  Command: REDO
+  Redone: CELTSCALE.
+  Command: REDO
+  Redone: LWEIGHT.
+  Command: REDO
+  Redone: Line.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LINETYPE
+  COLOR
+  CELTSCALE
+  LWEIGHT
+  Line
+redo:
+snap: on
+ortho: off
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+current: layer="0" color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+  LINE 1

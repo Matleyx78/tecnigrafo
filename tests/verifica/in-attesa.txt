@@ -50,3 +50,9 @@ dxf/layer-e-proprieta #238
 dxf/layer-tipi-complessi #238
 dxf/layer-incoerenti #238
 
+# 0.6-R13: proprietà correnti (#244)
+proprieta-correnti/color #244
+proprieta-correnti/linetype #244
+proprieta-correnti/scale-e-spessori #244
+proprieta-correnti/entita-e-annulla #244
+
