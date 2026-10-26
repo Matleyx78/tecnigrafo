@@ -2,7 +2,9 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "question_table.hpp"
+#include "tg/core/dashes.hpp"
 #include "tg/core/effective_properties.hpp"
+#include "tg/core/math.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
 
@@ -10,6 +12,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 namespace tg::script::detail {
@@ -88,6 +91,46 @@ QuestionResult askEffective(const QuestionModel& model,
            " lineweight=" + core::formatLineweight(properties.lineweight) +
            " visible=" + (properties.visible ? "yes" : "no") +
            " locked=" + (properties.locked ? "yes" : "no");
+}
+
+QuestionResult askDashes(const QuestionModel& model, std::span<const std::string_view> arguments) {
+    if (arguments.size() != 1) {
+        return ArgumentError{"wrong arguments, expected: dashes <E>"};
+    }
+    const auto id = model.find(arguments.front());
+    if (!id) {
+        return ArgumentError{"no entity named '" + std::string{arguments.front()} +
+                             "' is defined above"};
+    }
+    const auto& record = *model.document.find(*id);
+    const auto properties = core::effectiveProperties(model.document, record);
+    const auto pieces =
+        core::dashes(record.entity, properties.linetype->pattern, properties.linetypeScale);
+    if (!pieces) {
+        return std::string{"continuous"};
+    }
+    std::vector<std::string> lines;
+    lines.reserve(pieces->size());
+    for (const auto& piece : *pieces) {
+        lines.push_back(std::visit(
+            [](const auto& value) -> std::string {
+                using Piece = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<Piece, core::DashLine>) {
+                    return "LINE " + formatPoint(value.start) + " " + formatPoint(value.end);
+                } else if constexpr (std::is_same_v<Piece, core::DashArc>) {
+                    const double startDegrees = core::radiansToDegrees(value.startAngle);
+                    std::string text = "ARC center=" + formatPoint(value.center);
+                    text += " radius=" + formatNumber(value.radius);
+                    text += " start-angle=" + formatNumber(startDegrees);
+                    text += " end-angle=" + formatNumber(core::radiansToDegrees(value.endAngle));
+                    return text;
+                } else {
+                    return "POINT " + formatPoint(value.position);
+                }
+            },
+            piece));
+    }
+    return joinItems(lines);
 }
 
 }  // namespace tg::script::detail

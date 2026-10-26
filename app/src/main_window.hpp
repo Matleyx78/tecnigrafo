@@ -7,6 +7,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
+#include "ui_builder.hpp"
 
 #include <QList>
 #include <QMainWindow>
@@ -76,6 +77,9 @@ public:
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
 
+    void setInterface(InterfaceKind kind);
+    [[nodiscard]] InterfaceKind interfaceKind() const;
+
     /// Every action of the window (docs/adr/0009, point 1).
     [[nodiscard]] const ActionRegistry& actionRegistry() const { return *m_actions; }
 
@@ -135,6 +139,8 @@ private:
     // command, as typing does.
     QList<QAction*> m_idleActions;
     ActionRegistry* m_actions{nullptr};
+    std::unique_ptr<UiBuilder> m_uiBuilder;
+    QToolButton* m_ribbonButton{nullptr};
     QMenu* m_recentMenu{nullptr};
     QAction* m_recentAction{nullptr};
     bool m_scriptMode{false};

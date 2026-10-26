@@ -76,7 +76,7 @@ messages:
   Current layer:  "0"
   Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
   Enter name list for new layer(s): Porte
-  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: *Cancel*
+  *Cancel*
 prompt: Command:
 preview:
 selection: none

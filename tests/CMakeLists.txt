@@ -36,6 +36,7 @@ add_executable(tg_tests
     core/arc_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
+    core/dashes_test.cpp
     core/lineweight_test.cpp
     core/linetype_pattern_test.cpp
     core/document_query_test.cpp
@@ -129,6 +130,7 @@ if(TG_BUILD_APP)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Test Widgets)
     add_executable(tg_app_tests
         app/action_registry_test.cpp
+        app/ui_builder_test.cpp
         app/command_line_test.cpp
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
