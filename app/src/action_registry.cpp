@@ -95,7 +95,11 @@ void ActionRegistry::buildMenus(QMenuBar* bar) const {
             }
             menu = found;
         }
-        menu->addAction(entry.action);
+        // A non-empty path has at least one title, so a menu was found; the
+        // check is for the analyser, which cannot know it.
+        if (menu != nullptr) {
+            menu->addAction(entry.action);
+        }
     }
 }
 
