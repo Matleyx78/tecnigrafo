@@ -1,0 +1,19 @@
+; Creazione di layer con Make e New, selezione con Set e CLAYER (0.6-P12)
+-LAYER
+Make
+Muri
+
+LINE
+0,0
+10,0
+
+!report
+-LAYER
+New
+Porte,Finestre
+Set
+Porte
+
+!report
+CLAYER
+0

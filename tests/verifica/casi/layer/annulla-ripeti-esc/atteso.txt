@@ -1,0 +1,96 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: 1
+  Enter name list of layer(s) for color 1 <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LWeight
+  Enter lineweight (0.0mm - 2.11mm): 0.50
+  Enter name list of layer(s) for lineweight 0.50mm <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=0.50
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: U
+  Undone: Layer.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Layer
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: REDO
+  Redone: Layer.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=0.50
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Porte
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=0.50
+  "Porte" color=7 linetype="Continuous" lineweight=default
+pointer: none
+active snap: none
+statistics:
