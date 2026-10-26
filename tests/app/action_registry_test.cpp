@@ -194,14 +194,18 @@ private:
 };
 
 TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
-    QSet<QAction*> submenus;
-    for (const QMenu* menu : window().findChildren<QMenu*>()) {
-        submenus.insert(menu->menuAction());
-    }
+    // Qt gives every QMenu its own menuAction(), a child of the menu. When
+    // a registry action takes the menu (file.recent, with setMenu()), Qt's
+    // action stays a child of the menu but is shown nowhere.
+    const auto madeByQt = [](QAction* item) {
+        const auto* menu = qobject_cast<const QMenu*>(item->parent());
+        return menu != nullptr &&
+               (item == menu->menuAction() || item->associatedObjects().isEmpty());
+    };
     const QList<QAction*> found = window().findChildren<QAction*>();
     qsizetype counted = 0;
     for (QAction* item : found) {
-        if (submenus.contains(item)) {
+        if (madeByQt(item)) {
             continue;
         }
         ++counted;
