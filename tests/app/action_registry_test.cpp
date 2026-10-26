@@ -198,7 +198,7 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
     // Qt gives every QMenu its own menuAction(), a child of the menu. When
     // a registry action takes the menu (file.recent, with setMenu()), Qt's
     // action stays a child of the menu but is shown nowhere.
-    const auto madeByQt = [](QAction* item) {
+    const auto madeByFramework = [](QAction* item) {
         const auto* menu = qobject_cast<const QMenu*>(item->parent());
         if (menu != nullptr &&
             (item == menu->menuAction() || item->associatedObjects().isEmpty())) {
@@ -207,12 +207,21 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
         // Like QMenu::menuAction(), Qt owns the toolbar visibility control;
         // it is not an application command declared in ActionRegistry.
         const auto* toolbar = qobject_cast<const QToolBar*>(item->parent());
-        return toolbar != nullptr && item == toolbar->toggleViewAction();
+        if (toolbar != nullptr && item == toolbar->toggleViewAction()) {
+            return true;
+        }
+        // SARibbon also supplies native-style window controls, including
+        // two QMenu-owned separators. These belong to its title icon's
+        // system menu, not to the application's command registry. Inspect
+        // the Qt metaobject to keep SARibbon headers confined to UiBuilder.
+        const QObject* owner = menu != nullptr ? menu->parent() : item->parent();
+        const bool systemMenu = owner != nullptr && owner->inherits("SARibbonTitleIconWidget");
+        return systemMenu && item->objectName().isEmpty();
     };
     const QList<QAction*> found = window().findChildren<QAction*>();
     qsizetype counted = 0;
     for (QAction* item : found) {
-        if (madeByQt(item)) {
+        if (madeByFramework(item)) {
             continue;
         }
         ++counted;
