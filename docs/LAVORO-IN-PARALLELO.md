@@ -95,13 +95,14 @@ stessa fonte.
 
 | Fascia | Per | Claude | Codex | Gemini |
 |---|---|---|---|---|
-| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus 5.5 medio (51) o alto (54) | astra medium (50) | — |
+| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus 5.5 medio (51) o alto (54) | astra medium (50) | 4 Argon alto (53) |
 | **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta | Sonnet 5.5 alto (47) | sol medium (48) o astra light (46) | — |
-| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) | 3.8 Flash medio (40) |
+| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) | 3.8 Flash medio (40) o alto (41) |
 
 Gemini 3.8 Flash sta nella fascia leggera: i riferimenti con calcoli delicati
 (tolleranze, archi, casi limite geometrici) li scrive un agente di fascia forte,
-diverso da chi farà il pacchetto di lavoro.
+diverso da chi farà il pacchetto di lavoro. Gemini 4 Argon (53) ha una capacità
+da fascia forte secondo la stessa misura.
 
 | Impegno | Quando |
 |---|---|

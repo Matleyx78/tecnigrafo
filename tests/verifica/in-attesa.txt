@@ -36,3 +36,9 @@ proprieta/aci #236
 proprieta/effettive #236
 proprieta/stati-layer #236
 
+# 0.6-R11: tratti dei tipi di linea (#240)
+tratti/linea #240
+tratti/arco-cerchio #240
+tratti/polilinea #240
+tratti/tipi #240
+tratti/limite-pezzi #240
