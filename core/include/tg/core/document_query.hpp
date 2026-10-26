@@ -17,7 +17,8 @@
 /// (docs/adr/0007, docs/adr/0008). Each one takes its candidates from
 /// Document::query() and then decides with the exact geometry of
 /// proximity.hpp and snap_points.hpp, so the answers are the same as visiting
-/// every entity.
+/// every entity. Layers that are off or frozen are ignored; locked layers
+/// remain queryable.
 namespace tg::core {
 
 enum class RectangleMode : std::uint8_t { Window, Crossing };

@@ -48,6 +48,34 @@ std::optional<std::uint64_t> value(const std::optional<EntityId>& id) {
     return id ? std::optional<std::uint64_t>{id->value} : std::nullopt;
 }
 
+TEST(DocumentQuery, LayerStatesFilterAllQueriesAndKeepExtents) {
+    Document document = Document::newDrawing();
+    const auto id = document.add(Line{{0, 0}, {10, 0}});
+    const BBox bounds = document.extents();
+    for (const bool on : {false, true}) {
+        for (const bool frozen : {false, true}) {
+            for (const bool locked : {false, true}) {
+                Layer layer = *document.layer(document.layerZero());
+                layer.on = on;
+                layer.frozen = frozen;
+                layer.locked = locked;
+                document.replaceLayer(layer);
+                const bool visible = on && !frozen;
+                EXPECT_EQ(pickEntity(document, {5, 0}, 0.5).has_value(), visible);
+                for (const auto mode : {RectangleMode::Window, RectangleMode::Crossing}) {
+                    const auto selected = selectInRectangle(document, {{-1, -1}, {11, 1}}, mode);
+                    const auto expected =
+                        visible ? std::vector<EntityId>{id} : std::vector<EntityId>{};
+                    EXPECT_EQ(selected, expected);
+                }
+                EXPECT_EQ(findSnap(document, {0, 0}, 1, SnapModes{}).has_value(), visible);
+                EXPECT_EQ(document.extents().min(), bounds.min());
+                EXPECT_EQ(document.extents().max(), bounds.max());
+            }
+        }
+    }
+}
+
 // --- pickEntity ---------------------------------------------------------
 
 TEST(DocumentQuery, PickOnAnEntity) {

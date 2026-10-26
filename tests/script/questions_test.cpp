@@ -321,13 +321,28 @@ TEST(Questions, ErrorsOfLayersLinetypesAndCurrentValues) {
     }
 }
 
+// Colour 7 is white in the table of ADR 0024, point 3; colour 2 is yellow.
+TEST(Questions, AciAndEffectiveAnswerFromTheDefinitions) {
+    const std::vector<Answer> list = answers(
+        std::string{kDefinitions} +
+        "L = LAYER name=\"Spento\" color=2 off\n"
+        "E = LINE start=0,0 end=1,0 layer=\"Spento\"\n"
+        "? aci 1 -> 255,0,0\n"
+        "? effective A -> color=255,255,255 linetype=\"Continuous\" ltscale=1 lineweight=0.25 "
+        "visible=yes locked=no\n"
+        "? effective E -> color=255,255,0 linetype=\"Continuous\" ltscale=1 lineweight=0.25 "
+        "visible=no locked=no\n");
+    ASSERT_EQ(list.size(), 3U);
+    for (const Answer& answer : list) {
+        EXPECT_TRUE(answer.matches) << answer.line << "\n  obtained: " << answer.actual;
+    }
+}
+
 TEST(Questions, TheQuestionsOfLaterPackagesAreNotImplementedYet) {
     const std::vector<Answer> list = answers(std::string{kDefinitions} +
-                                             "? aci 1 -> 255,0,0\n"
-                                             "? effective A -> color=255,255,255\n"
                                              "? dashes A -> continuous\n"
                                              "? quickselect type=LINE -> none\n");
-    ASSERT_EQ(list.size(), 4U);
+    ASSERT_EQ(list.size(), 2U);
     for (const Answer& answer : list) {
         EXPECT_EQ(answer.actual, "error: question not implemented yet") << answer.line;
         EXPECT_FALSE(answer.matches) << answer.line;
