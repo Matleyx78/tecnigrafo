@@ -241,3 +241,13 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   **Corretto:** nell'intestazione. Le conseguenze sul piano della tappa 0.6
   (pacchetto R4, schede P4, P10 e P16) sono nella sua sezione "Modifiche al
   piano".
+- **2026-10-26 — Tipi di linea ISO verificati con un DXF di AutoCAD.** Il
+  pacchetto 0.6-P8 (#234) ha trovato che ezdxf 1.4.5 non ha i tipi
+  `ACAD_ISO02W100` e `ACAD_ISO10W100`, e si è fermato come chiedeva la
+  scheda. Il responsabile conferma i nomi e le definizioni degli altri
+  programmi, e le fa verificare con il DXF di AutoCAD
+  `autocad-colori-layer-tipilinea` (ora con entrambi i tipi), letto con ezdxf:
+  [ADR 0029](adr/0029-verifica-dei-tipi-di-linea-iso.md), in stato *Proposto*,
+  che sostituisce in parte l'ADR 0025, punto 2. Le conseguenze sul piano sono
+  nella sezione "Modifiche al piano" della
+  [tappa 0.6](tappe/0.6-layer-e-proprieta.md).

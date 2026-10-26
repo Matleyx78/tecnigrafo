@@ -6,7 +6,8 @@
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
 - **Riferimenti:** non servono: tipi di valore senza effetti osservabili; la
-  tabella dei colori la verificano R9 e i tipi ISO R13, con le risposte di ezdxf
+  tabella dei colori la verifica R9 con le risposte di ezdxf; i tipi ISO li
+  verifica R13 con le definizioni del DXF di AutoCAD, lette con ezdxf (ADR 0029)
 - **Dipende da:** —
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0024](../../adr/0024-colori.md) (tutto),
@@ -124,7 +125,9 @@ struct LinetypeDefinition {
 [[nodiscard]] std::span<const std::string_view> standardLinetypeNames();
 ```
 
-Definizioni (le verifica R13 con quelle di ezdxf):
+Definizioni (le verifica R13 con quelle che AutoCAD scrive in un DXF, lette con
+ezdxf: [ADR 0029](../../adr/0029-verifica-dei-tipi-di-linea-iso.md); se non
+coincidono, valgono quelle di AutoCAD, descrizione compresa):
 
 | Nome | Descrizione | Motivo |
 |---|---|---|
