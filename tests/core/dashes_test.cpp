@@ -293,5 +293,25 @@ TEST(DashQuestions, RejectMissingExtraAndUnknownArguments) {
     }
 }
 
+TEST(DashQuestions, ReadContinuousGenerationIntoThePolylineModel) {
+    const auto result = script::answerQuestions(
+        "T = LTYPE name=\"Dashed\" pattern=12,-3\n"
+        "A = LWPOLYLINE closed=yes linetype-generation=yes vertex=0,0 vertex=10,0 "
+        "vertex=10,10 vertex=0,10 linetype=\"Dashed\"\n"
+        "? dashes A -> LINE 0,0 10,0; LINE 10,0 10,2; LINE 10,5 10,10; "
+        "LINE 10,10 3,10; LINE 0,10 0,0\n"
+        "B = LWPOLYLINE closed=yes linetype-generation=no vertex=0,0 vertex=10,0 "
+        "vertex=10,10 vertex=0,10 linetype=\"Dashed\"\n"
+        "? dashes B -> continuous\n");
+    const auto* answers = std::get_if<std::vector<script::Answer>>(&result);
+    ASSERT_NE(answers, nullptr);
+    if (answers != nullptr) {
+        ASSERT_EQ(answers->size(), 2U);
+        for (const auto& answer : *answers) {
+            EXPECT_TRUE(answer.matches) << answer.actual;
+        }
+    }
+}
+
 }  // namespace
 }  // namespace tg::core
