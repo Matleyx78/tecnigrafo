@@ -1,6 +1,6 @@
 # ADR 0029: Verifica dei tipi di linea ISO con un DXF di AutoCAD
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Sostituisce in parte:** ADR 0025, punto 2, solo la frase sulla verifica delle
   definizioni con ezdxf
 - **Data:** 2026-10-26
