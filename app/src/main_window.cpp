@@ -4,6 +4,7 @@
 #include "main_window.hpp"
 
 #include "action_registry.hpp"
+#include "app_commands.hpp"
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
@@ -192,7 +193,9 @@ void MainWindow::createMenus() {
 
     connect(registeredAction("help.about"), &QAction::triggered, this, &MainWindow::showAbout);
 
-    m_actions->buildMenus(menuBar());
+    m_uiBuilder = std::make_unique<UiBuilder>(*this, *m_actions);
+    registerAppCommands(m_registry, *this);
+    setInterface(InterfaceKind::Ribbon);
 }
 
 void MainWindow::connectDrawingAids() {
@@ -260,7 +263,29 @@ QToolButton* MainWindow::createModeButton(QAction* action, const QString& text,
     return button;
 }
 
+void MainWindow::setInterface(InterfaceKind kind) {
+    m_uiBuilder->show(kind);
+    if (m_ribbonButton != nullptr) {
+        m_ribbonButton->setText(kind == InterfaceKind::Ribbon ? tr("RIBBON") : tr("MENU"));
+    }
+}
+
+InterfaceKind MainWindow::interfaceKind() const {
+    return m_uiBuilder->current();
+}
+
 void MainWindow::createStatusBar() {
+    m_ribbonButton = new QToolButton(this);
+    m_ribbonButton->setObjectName(QStringLiteral("ribbonButton"));
+    m_ribbonButton->setText(tr("RIBBON"));
+    m_ribbonButton->setToolTip(tr("Switch between ribbon and classic menus."));
+    m_ribbonButton->setAutoRaise(true);
+    m_ribbonButton->setFocusPolicy(Qt::NoFocus);
+    connect(m_ribbonButton, &QToolButton::clicked, this, [this] {
+        setInterface(interfaceKind() == InterfaceKind::Ribbon ? InterfaceKind::Classic
+                                                            : InterfaceKind::Ribbon);
+    });
+    statusBar()->addPermanentWidget(m_ribbonButton);
     // In AutoCAD's order: ORTHO before OSNAP.
     statusBar()->addPermanentWidget(
         createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));

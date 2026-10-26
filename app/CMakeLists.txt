@@ -10,6 +10,10 @@ qt_standard_project_setup()
 qt_add_library(tg_app_ui STATIC
     src/action_registry.cpp
     src/action_registry.hpp
+    src/app_commands.cpp
+    src/app_commands.hpp
+    src/ui_builder.cpp
+    src/ui_builder.hpp
     src/builtin_actions.cpp
     src/builtin_actions.hpp
     src/cad_view.cpp

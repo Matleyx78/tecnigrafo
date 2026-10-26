@@ -32,6 +32,15 @@ ActionSpec makeSpec(const QString& id, const QString& text, const QString& menu,
     spec.text = text;
     spec.menu = menu;
     spec.description = description;
+    if (id.startsWith(QStringLiteral("draw."))) {
+        spec.ribbon = QStringLiteral("home/draw");
+    } else if (id.startsWith(QStringLiteral("edit."))) {
+        spec.ribbon = QStringLiteral("home/modify");
+    } else if (id.startsWith(QStringLiteral("view."))) {
+        spec.ribbon = QStringLiteral("view/navigate");
+    } else if (id.startsWith(QStringLiteral("aids."))) {
+        spec.ribbon = QStringLiteral("view/aids");
+    }
     return spec;
 }
 
