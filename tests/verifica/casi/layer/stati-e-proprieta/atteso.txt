@@ -1,0 +1,77 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Muri,Porte,Finestre
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: 1
+  Enter name list of layer(s) for color 1 <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: Truecolor
+  Red, Green, Blue: 255,128,0
+  Enter name list of layer(s) for color 255,128,0 <0>: Porte
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LWeight
+  Enter lineweight (0.0mm - 2.11mm): 0.50
+  Enter name list of layer(s) for lineweight 0.50mm <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Plot
+  Enter a plotting preference [Plot/No plot] <Plot>: No plot
+  Enter name list of layer(s) for this plot preference <0>: Finestre
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LOck
+  Enter name list of layer(s) to lock: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Freeze
+  Enter name list of layer(s) to freeze: Porte
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: OFF
+  Enter name list of layer(s) to turn off: Finestre
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Finestre" color=7 linetype="Continuous" lineweight=default off noplot
+  "Muri" color=1 linetype="Continuous" lineweight=0.50 locked
+  "Porte" color=255,128,0 linetype="Continuous" lineweight=default frozen
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Thaw
+  Enter name list of layer(s) to thaw: P*
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Unlock
+  Enter name list of layer(s) to unlock: M*
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: ON
+  Enter name list of layer(s) to turn on: *
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Finestre" color=7 linetype="Continuous" lineweight=default noplot
+  "Muri" color=1 linetype="Continuous" lineweight=0.50
+  "Porte" color=255,128,0 linetype="Continuous" lineweight=default
+pointer: none
+active snap: none
+statistics:

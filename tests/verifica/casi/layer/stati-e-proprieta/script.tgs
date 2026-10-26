@@ -1,0 +1,33 @@
+; Opzioni di colore, spessore, stampa e stati dei layer con -LAYER (0.6-P12)
+-LAYER
+New
+Muri,Porte,Finestre
+Color
+1
+Muri
+Color
+Truecolor
+255,128,0
+Porte
+LWeight
+0.50
+Muri
+Plot
+No plot
+Finestre
+LOck
+Muri
+Freeze
+Porte
+OFF
+Finestre
+
+!report
+-LAYER
+Thaw
+P*
+Unlock
+M*
+ON
+*
+
