@@ -58,7 +58,7 @@ QuestionResult askLinetypes(const QuestionModel& model,
     return askAboutTable(model, arguments, "linetypes <drawing>", &linetypeLines);
 }
 
-QuestionResult askAci(const QuestionModel&, std::span<const std::string_view> arguments) {
+QuestionResult askAci(const QuestionModel& /*model*/, std::span<const std::string_view> arguments) {
     if (arguments.size() != 1) {
         return ArgumentError{"wrong arguments, expected: aci <n>"};
     }
