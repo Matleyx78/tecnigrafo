@@ -1,0 +1,56 @@
+; Effetti degli stati dei layer su pick, window, crossing, snap (ADR 0023, punto 4; 0.6-P9)
+
+; Definizione dei layer con vari stati
+L_ACCESO = LAYER name="Acceso" color=1
+L_SPENTO = LAYER name="Spento" color=2 off
+L_CONGELATO = LAYER name="Congelato" color=3 frozen
+L_BLOCCATO = LAYER name="Bloccato" color=4 locked
+
+; Entita distribuite lungo l'asse X
+E_ON = LINE start=0,0 end=10,0 layer="Acceso"
+E_OFF = LINE start=20,0 end=30,0 layer="Spento"
+E_FRZ = LINE start=40,0 end=50,0 layer="Congelato"
+E_LCK = LINE start=60,0 end=70,0 layer="Bloccato"
+
+; 1. Scelta con un clic (pick): spenti e congelati invisibili/ignorati, bloccati trovati dal modello
+? pick 5,0 tolerance=0.5 -> E_ON
+? pick 25,0 tolerance=0.5 -> none
+? pick 45,0 tolerance=0.5 -> none
+? pick 65,0 tolerance=0.5 -> E_LCK
+
+; 2. Selezione a finestra (window): solo accesi e bloccati
+? window -1,-1 11,1 -> E_ON
+? window 19,-1 31,1 -> none
+? window 39,-1 51,1 -> none
+? window 59,-1 71,1 -> E_LCK
+? window -5,-5 75,5 -> E_ON E_LCK
+
+; 3. Selezione a intersezione (crossing): solo accesi e bloccati
+? crossing 4,-1 6,1 -> E_ON
+? crossing 24,-1 26,1 -> none
+? crossing 44,-1 46,1 -> none
+? crossing 64,-1 66,1 -> E_LCK
+? crossing -5,-5 75,5 -> E_ON E_LCK
+
+; 4. Ricerca snap (snap): spenti e congelati ignorati, bloccati forniscono punti di snap
+? snap 0.2,0.1 aperture=1 -> Endpoint 0,0
+? snap 5.1,-0.1 aperture=1 -> Midpoint 5,0
+? snap 20.2,0.1 aperture=1 -> none
+? snap 25.1,-0.1 aperture=1 -> none
+? snap 40.2,0.1 aperture=1 -> none
+? snap 45.1,-0.1 aperture=1 -> none
+? snap 60.2,0.1 aperture=1 -> Endpoint 60,0
+? snap 65.1,-0.1 aperture=1 -> Midpoint 65,0
+
+; 5. Domande su un singolo oggetto (bbox, length, snaps): rispondono sempre, anche per layer spenti/congelati
+? bbox E_OFF -> 20,0 30,0
+? length E_OFF -> 10
+? snaps E_OFF -> Endpoint 20,0; Endpoint 30,0; Midpoint 25,0
+
+? bbox E_FRZ -> 40,0 50,0
+? length E_FRZ -> 10
+? snaps E_FRZ -> Endpoint 40,0; Endpoint 50,0; Midpoint 45,0
+
+? bbox E_LCK -> 60,0 70,0
+? length E_LCK -> 10
+? snaps E_LCK -> Endpoint 60,0; Endpoint 70,0; Midpoint 65,0

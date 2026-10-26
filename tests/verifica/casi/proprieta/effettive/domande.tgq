@@ -1,0 +1,60 @@
+; Domande effective sulle proprieta effettive delle entita (ADR 0023, ADR 0024, ADR 0025, 0.6-P9)
+
+; Definizioni di tipi di linea e layer
+T1 = LTYPE name="Tratteggio" pattern=10,-2 description="tratto"
+L_NORM = LAYER name="Normale" color=1 linetype="Tratteggio" lineweight=0.50
+L_OFF = LAYER name="Spento" color=2 off
+L_FROZEN = LAYER name="Congelato" color=3 frozen
+L_LOCKED = LAYER name="Bloccato" color=4 locked
+L_OFF_LOCKED = LAYER name="SpentoBloccato" color=5 off locked
+L_FROZEN_LOCKED = LAYER name="CongelatoBloccato" color=6 frozen locked
+
+; Entita con valori predefiniti nel layer 0 (colore 7, Continuous, default)
+E_BASE = LINE start=0,0 end=10,0
+? effective E_BASE -> color=255,255,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=yes locked=no
+
+; Entita con proprieta esplicite proprie
+E_PROPRI = LINE start=0,0 end=10,0 color=255,0,0 linetype="Tratteggio" ltscale=2 lineweight=0.70
+? effective E_PROPRI -> color=255,0,0 linetype="Tratteggio" ltscale=2 lineweight=0.70 visible=yes locked=no
+
+; Entita ByLayer: risolve colore, tipo e spessore dal layer
+E_BYLAYER = LINE start=0,0 end=10,0 layer="Normale" color=bylayer linetype="ByLayer" lineweight=bylayer
+? effective E_BYLAYER -> color=255,0,0 linetype="Tratteggio" ltscale=1 lineweight=0.50 visible=yes locked=no
+
+; Entita ByBlock: colore 7, Continuous, default finche non ci sono blocchi
+E_BYBLOCK = LINE start=0,0 end=10,0 layer="Normale" color=byblock linetype="ByBlock" lineweight=byblock
+? effective E_BYBLOCK -> color=255,255,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=yes locked=no
+
+; Entita con spessore default esplicito
+E_DEF = LINE start=0,0 end=10,0 lineweight=default
+? effective E_DEF -> color=255,255,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=yes locked=no
+
+; Entita con spessore 0
+E_LW0 = LINE start=0,0 end=10,0 lineweight=0
+? effective E_LW0 -> color=255,255,255 linetype="Continuous" ltscale=1 lineweight=0 visible=yes locked=no
+
+; Entita con colore RGB esplicito
+E_RGB = CIRCLE center=0,0 radius=5 color=10,20,30
+? effective E_RGB -> color=10,20,30 linetype="Continuous" ltscale=1 lineweight=0.25 visible=yes locked=no
+
+; Stati dei layer: spento, congelato, bloccato
+E_OFF = LINE start=0,0 end=10,0 layer="Spento"
+? effective E_OFF -> color=255,255,0 linetype="Continuous" ltscale=1 lineweight=0.25 visible=no locked=no
+
+E_FROZEN = LINE start=0,0 end=10,0 layer="Congelato"
+? effective E_FROZEN -> color=0,255,0 linetype="Continuous" ltscale=1 lineweight=0.25 visible=no locked=no
+
+E_LOCKED = LINE start=0,0 end=10,0 layer="Bloccato"
+? effective E_LOCKED -> color=0,255,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=yes locked=yes
+
+E_OFF_LOCKED = LINE start=0,0 end=10,0 layer="SpentoBloccato"
+? effective E_OFF_LOCKED -> color=0,0,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=no locked=yes
+
+E_FROZEN_LOCKED = LINE start=0,0 end=10,0 layer="CongelatoBloccato"
+? effective E_FROZEN_LOCKED -> color=255,0,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=no locked=yes
+
+; Fattore di scala del tipo di linea del documento (LTSCALE) moltiplicato per la scala dell'entita
+!current ltscale=3
+E_SCALE = LINE start=0,0 end=10,0 ltscale=1.5
+? effective E_SCALE -> color=255,255,255 linetype="Continuous" ltscale=4.5 lineweight=0.25 visible=yes locked=no
+? effective E_PROPRI -> color=255,0,0 linetype="Tratteggio" ltscale=6 lineweight=0.70 visible=yes locked=no
