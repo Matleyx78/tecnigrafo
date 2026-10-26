@@ -1,0 +1,24 @@
+; File DXF incoerenti con layer o tipo mancante, duplicati e spessori arrotondati (ADR 0023, ADR 0025, 0.6-P10)
+
+; 1. Entita che nomina un layer assente dalla tabella (viene creato e contato)
+D1 = DXF file=layer-mancante.dxf
+? warnings D1 -> 1 missing layer added.
+? layers D1 -> "0" color=7 linetype="Continuous" lineweight=default; "NonEsiste" color=7 linetype="Continuous" lineweight=default
+
+; 2. Entita che nomina un tipo di linea assente dalla tabella (creato senza tratti e contato)
+D2 = DXF file=tipo-mancante.dxf
+? warnings D2 -> 1 missing linetype added.
+? linetypes D2 -> "NonEsiste" continuous
+
+; 3. Due record di layer con lo stesso nome a meno delle maiuscole (il secondo resta grezzo)
+D3 = DXF file=layer-doppio.dxf
+? warnings D3 -> 1 duplicate layer kept as unhandled data.
+? layers D3 -> "0" color=7 linetype="Continuous" lineweight=default; "Muri" color=1 linetype="Continuous" lineweight=default
+
+; 4. Spessore non ammesso (45 centesimi di mm arrotondato a un valore ammesso)
+D4 = DXF file=spessore-non-ammesso.dxf
+? warnings D4 -> 1 lineweight rounded.
+
+; 5. Incoerenze multiple contate separatamente per specie
+D5 = DXF file=incoerenze-multiple.dxf
+? warnings D5 -> 2 missing layers added.; 1 missing linetype added.; 1 duplicate layer kept as unhandled data.; 3 lineweights rounded.

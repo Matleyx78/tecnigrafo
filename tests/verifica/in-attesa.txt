@@ -37,3 +37,9 @@ tratti/arco-cerchio #240
 tratti/polilinea #240
 tratti/tipi #240
 tratti/limite-pezzi #240
+
+# 0.6-R10: layer, tipi di linea e proprietà nel DXF (#238)
+dxf/layer-e-proprieta #238
+dxf/layer-tipi-complessi #238
+dxf/layer-incoerenti #238
+
