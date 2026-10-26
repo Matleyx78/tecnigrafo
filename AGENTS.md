@@ -91,7 +91,9 @@ Mentre aspetti non fare domande e non cominciare altro. Fermati prima del verde,
 scrivendo nella pull request che cosa hai visto e provato, solo se:
 
 - il controllo fallisce per un motivo che non dipende dal tuo pacchetto (la CI, un
-  servizio esterno, un caso di riferimento che ritieni sbagliato);
+  servizio esterno); per un caso di riferimento che ritieni sbagliato vale la
+  regola "fermati del tutto" di "Modalità di controllo e riferimenti", e se la
+  pull request è già aperta scrivi lì ciò che richiede quella regola;
 - per farlo passare dovresti violare una regola di questo file;
 - dopo tre tentativi lo stesso controllo non passa ancora.
 
@@ -102,8 +104,8 @@ scrivendo nella pull request che cosa hai visto e provato, solo se:
 # macOS); 2 se l'API di GitHub non risponde; 3 se è ancora in corso (rilancialo,
 # riprende da dove era); 4 se è stata annullata: non è un guasto, un push più
 # recente sullo stesso ramo l'ha sostituita, quindi aspetta quella; 5 se è
-# ancora in corso dopo tre attese di fila. Accetta anche <sha> o <id>; non serve
-# `gh`.
+# ancora in corso dopo dieci attese di fila (circa 90 minuti: la CI di Linux ne
+# richiede più di 30). Accetta anche <sha> o <id>; non serve `gh`.
 scripts/ci-attendi.sh
 # perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
 scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
@@ -122,7 +124,7 @@ gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
 Con exit 2 o 5 non rilanciare l'attesa: scrivi nella pull request il messaggio
-dello script e fermati. Dopo tre attese con exit 3 si arriva comunque a 5.
+dello script e fermati. Dopo dieci attese con exit 3 si arriva comunque a 5.
 
 Quando ti fermi per uno dei motivi sopra (compreso un caso di riferimento che
 ritieni sbagliato), **non aspettare la CI**: scrivi il commento nella pull
@@ -164,9 +166,19 @@ scritti **prima** e da **un altro agente**
 - Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
 - Togli da `tests/verifica/in-attesa.txt` solo le righe dei casi del tuo
   pacchetto: così diventano obbligatori.
-- Se un caso ti sembra sbagliato, **fermati** e scrivilo nella issue, con il
-  motivo. Non adattare il codice a un riferimento che ritieni sbagliato, né il
-  riferimento al codice.
+- Se un caso ti sembra sbagliato, **fermati del tutto**, subito, anche se il
+  resto del pacchetto è pronto:
+  1. non adattare il codice al riferimento che ritieni sbagliato, né il
+     riferimento al codice; il caso resta com'è;
+  2. non aprire la pull request, non avviare la CI e non eseguire altri controlli;
+  3. scrivi nella issue il nome del caso, il valore atteso, quello che dà il
+     programma e perché il riferimento ti sembra sbagliato;
+  4. se hai lavoro non pubblicato, pubblica il ramo **senza** pull request (così
+     non parte la CI) e scrivi nel commento il nome del ramo;
+  5. togli `AA-Presa in carico` e termina la sessione.
+
+  Il caso lo corregge un pacchetto di riferimenti; poi il pacchetto si
+  riprende. In un lotto passa al pacchetto successivo.
 
 ### In un pacchetto di riferimenti (`[X.Y-RN]`)
 
@@ -200,10 +212,17 @@ ferma al primo errore e ne stampa la coda del log (log completi in
 
 ```sh
 scripts/controlla.sh               # formato, compila, test, verifica
-scripts/controlla.sh --tidy        # anche clang-tidy, prima di aprire la pull request
+scripts/controlla.sh --tidy        # anche clang-tidy sui file toccati, prima della pull request
 scripts/controlla.sh --solo test   # un solo passo (formato, compila, test, verifica, tidy)
 scripts/controlla.sh --app-off     # senza Qt
 ```
+
+Il tidy su tutto il progetto (`--tidy-tutto`) richiede decine di minuti: lo fa la
+CI, non lanciarlo in locale. `--tidy` rifiuta più di 25 file (per esempio dopo
+aver toccato un'intestazione inclusa ovunque): scrivi nella pull request che il
+tidy è lasciato alla CI. Gli altri passi durano pochi minuti; se un comando
+locale supera i 10 minuti non aspettarlo con controlli ripetuti: fermalo, scrivi
+nella pull request quale passo non hai eseguito e pubblica.
 
 Se nel tuo ambiente mancano gli strumenti di build (Qt, compilatori, CMake o
 altri pacchetti di sistema), **non installarli**. Vale per qualunque agente e

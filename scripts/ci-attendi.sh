@@ -18,7 +18,8 @@
 #      it resumes where it was
 #   4  the run was cancelled: nothing failed, a newer push on the same branch
 #      replaced it, so wait for that one
-#   5  the time ran out TG_ATTESA_RILANCI times in a row on the same run: do not
+#   5  the time ran out TG_ATTESA_RILANCI times in a row on the same run (about
+#      90 minutes in all, longer than any healthy run should take): do not
 #      wait again, report it in the pull request (AGENTS.md, "Quando fermarsi")
 #
 # TG_ATTESA_MAX     seconds to wait before giving up (default 540: the Bash
@@ -26,7 +27,7 @@
 # TG_ATTESA_PAUSA   seconds between two checks (default 90: every check costs
 #                   two requests and the anonymous limit of the GitHub API is 60
 #                   an hour; GITHUB_TOKEN raises it)
-# TG_ATTESA_RILANCI how many timeouts (exit 3) are allowed on one run (default 3)
+# TG_ATTESA_RILANCI how many timeouts (exit 3) are allowed on one run (default 10: about 90 minutes in all)
 #
 # Needs jq, and either gh or curl (the repository is public: no token needed).
 set -euo pipefail
@@ -34,7 +35,7 @@ set -euo pipefail
 repo=${TG_REPO:-Matleyx78/tecnigrafo}
 max=${TG_ATTESA_MAX:-540}
 pause=${TG_ATTESA_PAUSA:-90}
-max_timeouts=${TG_ATTESA_RILANCI:-3}
+max_timeouts=${TG_ATTESA_RILANCI:-10}
 
 if ! command -v jq > /dev/null 2>&1; then
     echo "ci-attendi.sh needs jq." >&2
