@@ -9,21 +9,33 @@
 #     scripts/ci-attendi.sh <sha>        # the run of that commit
 #     scripts/ci-attendi.sh <run id>     # that run
 #
-# Exit status: 0 the run succeeded, 1 it failed (read why with
-# scripts/ci-errori.sh), 3 it is still running when the time ran out (run the
-# same command again, it resumes where it was), 4 it was cancelled: nothing
-# failed, a newer push on the same branch replaced it, so wait for that one.
+# Exit status:
+#   0  the run succeeded
+#   1  a check failed (read why with scripts/ci-errori.sh). The script does not
+#      wait for the slow jobs (Windows, macOS) once one job has already failed
+#   2  the GitHub API did not answer (the last error is printed)
+#   3  the run is still going when the time ran out: run the same command again,
+#      it resumes where it was
+#   4  the run was cancelled: nothing failed, a newer push on the same branch
+#      replaced it, so wait for that one
+#   5  the time ran out TG_ATTESA_RILANCI times in a row on the same run (about
+#      90 minutes in all, longer than any healthy run should take): do not
+#      wait again, report it in the pull request (AGENTS.md, "Quando fermarsi")
 #
-# TG_ATTESA_MAX   seconds to wait before giving up (default 1500)
-# TG_ATTESA_PAUSA seconds between two checks (default 60: the anonymous limit
-#                 of the GitHub API is 60 requests an hour; GITHUB_TOKEN raises it)
+# TG_ATTESA_MAX     seconds to wait before giving up (default 540: the Bash
+#                   tool of an agent stops a foreground command at 600 s)
+# TG_ATTESA_PAUSA   seconds between two checks (default 90: every check costs
+#                   two requests and the anonymous limit of the GitHub API is 60
+#                   an hour; GITHUB_TOKEN raises it)
+# TG_ATTESA_RILANCI how many timeouts (exit 3) are allowed on one run (default 10: about 90 minutes in all)
 #
 # Needs jq, and either gh or curl (the repository is public: no token needed).
 set -euo pipefail
 
 repo=${TG_REPO:-Matleyx78/tecnigrafo}
-max=${TG_ATTESA_MAX:-1500}
-pause=${TG_ATTESA_PAUSA:-60}
+max=${TG_ATTESA_MAX:-540}
+pause=${TG_ATTESA_PAUSA:-90}
+max_timeouts=${TG_ATTESA_RILANCI:-10}
 
 if ! command -v jq > /dev/null 2>&1; then
     echo "ci-attendi.sh needs jq." >&2
@@ -50,6 +62,9 @@ if (( $# > 1 )); then
 fi
 ref=${1:-$(git rev-parse HEAD)}
 
+err=$(mktemp)
+trap 'rm -f "$err"' EXIT
+
 start=$SECONDS
 errors=0
 run=
@@ -60,19 +75,31 @@ if [[ $ref =~ ^[0-9]{1,12}$ ]]; then
     run=$ref
 fi
 
+# Counts how many times in a row the wait ran out on this run.
+timeouts_file() {
+    printf '%s/tg-ci-attendi-%s.timeouts' "${TMPDIR:-/tmp}" "$run"
+}
+
+# Names of the jobs of the run that have already failed, even if the run goes on.
+failed_jobs() {
+    api "repos/$repo/actions/runs/$1/jobs?per_page=100" 2>> "$err" \
+        | jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "timed_out") | .name'
+}
+
 while :; do
     if reply=$( { if [[ -z $run ]]; then
                       api "repos/$repo/actions/runs?head_sha=$ref&per_page=1" \
                           | jq -c '.workflow_runs[0] // empty'
                   else
                       api "repos/$repo/actions/runs/$run" | jq -c '.'
-                  fi; } 2> /dev/null ); then
+                  fi; } 2> "$err" ); then
         errors=0
         if [[ -n $reply ]]; then
             run=$(jq -r '.id' <<< "$reply")
             status=$(jq -r '.status' <<< "$reply")
             conclusion=$(jq -r '.conclusion // "-"' <<< "$reply")
             if [[ $status == completed ]]; then
+                rm -f "$(timeouts_file)"
                 echo "run $run: completed $conclusion"
                 [[ $conclusion == success ]] && exit 0
                 if [[ $conclusion == cancelled ]]; then
@@ -82,12 +109,25 @@ while :; do
                 fi
                 exit 1
             fi
+            # Still running: a job that already failed is enough to stop waiting.
+            failed=$(failed_jobs "$run") || failed=
+            if [[ -n $failed ]]; then
+                rm -f "$(timeouts_file)"
+                echo "run $run: still $status, but a check has already failed:"
+                sed 's/^/  - /' <<< "$failed"
+                echo "Do not wait for the other jobs: read why with scripts/ci-errori.sh $run"
+                exit 1
+            fi
         fi
     else
         # A network hiccup or the anonymous limit: try again a few times.
         errors=$((errors + 1))
         if (( errors >= 5 )); then
-            echo "The GitHub API did not answer five times in a row." >&2
+            echo "The GitHub API did not answer five times in a row. Last error:" >&2
+            tail -n 3 "$err" >&2
+            if grep -qE '403|429|rate limit' "$err"; then
+                echo "It looks like the anonymous request limit: set GITHUB_TOKEN, or wait." >&2
+            fi
             exit 2
         fi
     fi
@@ -96,7 +136,14 @@ while :; do
             echo "No CI run for $ref after $((SECONDS - start)) s: it has not started, or the commit was not pushed." >&2
             exit 1
         fi
-        echo "run $run: still ${status:-unknown} after $((SECONDS - start)) s. Run the same command again."
+        count=$(( $(cat "$(timeouts_file)" 2> /dev/null || echo 0) + 1 ))
+        echo "$count" > "$(timeouts_file)"
+        if (( count >= max_timeouts )); then
+            echo "run $run: still ${status:-unknown} after $count waits in a row. Do not wait again:"
+            echo "write in the pull request what you saw (AGENTS.md, \"Quando fermarsi\"), remove the label, end the session."
+            exit 5
+        fi
+        echo "run $run: still ${status:-unknown} after $((SECONDS - start)) s (wait $count of $max_timeouts). Run the same command again."
         exit 3
     fi
     sleep "$pause"
