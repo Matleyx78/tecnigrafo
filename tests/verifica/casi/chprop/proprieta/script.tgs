@@ -1,0 +1,53 @@
+; Comando CHPROP: modifica di tutte le proprieta, varies, Invio vuoto, Esc e annulla (0.6-P14)
+-LAYER
+New
+Muri
+Color
+1
+Muri
+
+-LINETYPE
+Load
+ACAD_ISO02W100
+
+LINE
+0,0
+10,0
+
+LINE
+0,10
+10,10
+
+!click 5,0
+CHPROP
+Color
+red
+LAyer
+Muri
+LType
+ACAD_ISO02W100
+ltScale
+2.0
+LWeight
+0.50
+
+!report
+!click 5,0
+!click 5,10
+CHPROP
+Color
+
+ltScale
+0.5
+
+!report
+!click 5,10
+CHPROP
+Color
+blue
+LAyer
+!esc
+!report
+U
+!report
+REDO

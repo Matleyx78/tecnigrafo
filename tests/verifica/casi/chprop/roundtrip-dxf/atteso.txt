@@ -1,0 +1,128 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+  258 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+messages:
+  Command: -LINETYPE
+  Current line type: "ByLayer"
+  Enter an option [?/Load/Set]: Load
+  Enter linetype(s) to load: ACAD_ISO02W100
+  Enter an option [?/Load/Set]:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Elettrico,Finestre,Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: 1
+  Enter name list of layer(s) for color 1 <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Ltype
+  Enter a loaded linetype name <Continuous>: ACAD_ISO02W100
+  Enter name list of layer(s) for linetype "ACAD_ISO02W100" <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LWeight
+  Enter lineweight (0.0mm - 2.11mm): 0.50
+  Enter name list of layer(s) for lineweight 0.50mm <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LOck
+  Enter name list of layer(s) to lock: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: Truecolor
+  Red, Green, Blue: 255,128,0
+  Enter name list of layer(s) for color 255,128,0 <0>: Elettrico
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LWeight
+  Enter lineweight (0.0mm - 2.11mm): 0.30
+  Enter name list of layer(s) for lineweight 0.30mm <0>: Elettrico
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: OFF
+  Enter name list of layer(s) to turn off: Elettrico
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: 3
+  Enter name list of layer(s) for color 3 <0>: Finestre
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Freeze
+  Enter name list of layer(s) to freeze: Finestre
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: LTSCALE
+  Enter new linetype scale factor <1.0000>: 2.0
+  Command: CLAYER
+  Enter new value for CLAYER <"0">: Muri
+  Command: COLOR
+  Enter default object color [Truecolor] <BYLAYER>: 1
+  Command: CELTSCALE
+  Enter new value for CELTSCALE <1.0000>: 0.5
+  Command: LWEIGHT
+  Current lineweight: ByLayer
+  Enter default lineweight for new objects or [?]: 0.50
+  Command: LWDISPLAY
+  Enter new value for LWDISPLAY <OFF>: ON
+  Command: LINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 20,20
+  Specify radius of circle or [Diameter]: 5
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LINETYPE
+  Layer
+  LTSCALE
+  CLAYER
+  COLOR
+  CELTSCALE
+  LWEIGHT
+  Line
+  Circle
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Elettrico" color=255,128,0 linetype="Continuous" lineweight=0.30 off
+  "Finestre" color=3 linetype="Continuous" lineweight=default frozen
+  "Muri" color=1 linetype="ACAD_ISO02W100" lineweight=0.50 locked
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+current: layer="Muri" color=1 linetype="ByLayer" ltscale=0.5 lineweight=0.50
+ltscale: 2
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+  258 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+messages:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: giro.dxf
+  Command: OPEN
+  Enter name of drawing to open: giro.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: giro.dxf
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Elettrico" color=255,128,0 linetype="Continuous" lineweight=0.30 off
+  "Finestre" color=3 linetype="Continuous" lineweight=default frozen
+  "Muri" color=1 linetype="ACAD_ISO02W100" lineweight=0.50 locked
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+current: layer="Muri" color=1 linetype="ByLayer" ltscale=0.5 lineweight=0.50
+ltscale: 2
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 1

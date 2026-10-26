@@ -50,6 +50,12 @@ dxf/layer-e-proprieta #238
 dxf/layer-tipi-complessi #238
 dxf/layer-incoerenti #238
 
+# 0.6-R14: CHPROP e layer bloccati (#246)
+chprop/proprieta #246
+chprop/layer-bloccati #246
+chprop/roundtrip-dxf #246
+chprop/roundtrip-cadx #246
+
 # 0.6-R13: proprietà correnti (#244)
 proprieta-correnti/color #244
 proprieta-correnti/linetype #244
