@@ -1,0 +1,86 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Muri,Congelato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Freeze
+  Enter name list of layer(s) to freeze: Congelato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): A<B
+  Invalid layer name.
+  Enter name list for new layer(s): Nuovo
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): 0
+  Layer "0" already exists.
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Rename
+  Enter old layer name: 0
+  Cannot rename layer "0".
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Set
+  Enter layer name to make current: Congelato
+  Cannot set current to a frozen layer.
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Set
+  Enter layer name to make current: Fantasma
+  Layer "Fantasma" not found.
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Ltype
+  Enter a loaded linetype name <Continuous>: Fantasma
+  Linetype "Fantasma" is not loaded.
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: OFF
+  Enter name list of layer(s) to turn off: 0
+  Really want layer 0 (the CURRENT layer) off? [Yes/No] <No>: No
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Freeze
+  Enter name list of layer(s) to freeze: 0
+  Cannot freeze layer "0".  It is the CURRENT layer.
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: OFF
+  Enter name list of layer(s) to turn off: Z*
+  No matching layer names found.
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Congelato" color=7 linetype="Continuous" lineweight=default frozen
+  "Muri" color=7 linetype="Continuous" lineweight=default
+  "Nuovo" color=7 linetype="Continuous" lineweight=default
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: CLAYER
+  Enter new value for CLAYER <"0">: Fantasma
+  Layer "Fantasma" not found.
+  Enter new value for CLAYER <"0">:
+  Command: CLAYER
+  Enter new value for CLAYER <"0">: Congelato
+  Cannot set current to a frozen layer.
+  Enter new value for CLAYER <"0">:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Congelato" color=7 linetype="Continuous" lineweight=default frozen
+  "Muri" color=7 linetype="Continuous" lineweight=default
+  "Nuovo" color=7 linetype="Continuous" lineweight=default
+pointer: none
+active snap: none
+statistics:
