@@ -10,7 +10,7 @@ namespace tg::core {
 /// What the drawing shows of an entity (docs/adr/0023-0025).
 struct EffectiveProperties {
     Rgb color;
-    bool colorIsSeven{false};  ///< index 7 follows the renderer's theme
+    bool colorIsSeven{false};           ///< index 7 follows the renderer's theme
     const Linetype* linetype{nullptr};  ///< never null
     double linetypeScale{1.0};
     int lineweight{Document::kDefaultLwdefault};  ///< hundredths of a millimetre

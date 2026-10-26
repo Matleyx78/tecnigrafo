@@ -64,8 +64,8 @@ TEST(DocumentQuery, LayerStatesFilterAllQueriesAndKeepExtents) {
                 EXPECT_EQ(pickEntity(document, {5, 0}, 0.5).has_value(), visible);
                 for (const auto mode : {RectangleMode::Window, RectangleMode::Crossing}) {
                     const auto selected = selectInRectangle(document, {{-1, -1}, {11, 1}}, mode);
-                    const auto expected = visible ? std::vector<EntityId>{id}
-                                                  : std::vector<EntityId>{};
+                    const auto expected =
+                        visible ? std::vector<EntityId>{id} : std::vector<EntityId>{};
                     EXPECT_EQ(selected, expected);
                 }
                 EXPECT_EQ(findSnap(document, {0, 0}, 1, SnapModes{}).has_value(), visible);

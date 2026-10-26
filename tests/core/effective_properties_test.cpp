@@ -38,9 +38,8 @@ TEST(EffectiveProperties, ResolvesIndependentPropertyCombinations) {
                 }
                 EXPECT_EQ(result.color, expectedColor);
                 EXPECT_EQ(result.colorIsSeven, color.kind() == Color::Kind::ByBlock);
-                const auto expectedType = linetype == document.byBlockLinetype()
-                                              ? document.continuousLinetype()
-                                              : type;
+                const auto expectedType =
+                    linetype == document.byBlockLinetype() ? document.continuousLinetype() : type;
                 EXPECT_EQ(result.linetype->id, expectedType);
                 int expectedWeight = 70;
                 if (weight == lineweight::kByLayer) {
@@ -62,7 +61,7 @@ TEST(EffectiveProperties, SevenRetainsItsIdentityButRgbWhiteDoesNot) {
     const auto id = document.add(Line{{0, 0}, {1, 0}});
     auto properties = document.find(id)->properties;
     for (const Color color : {Color::byLayer(), Color::byBlock(), Color::fromIndex(7),
-                             Color::fromRgb({255, 255, 255})}) {
+                              Color::fromRgb({255, 255, 255})}) {
         properties.color = color;
         document.setProperties(id, properties);
         const auto result = effectiveProperties(document, *document.find(id));

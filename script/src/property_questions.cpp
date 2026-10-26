@@ -7,7 +7,6 @@
 #include "tg/script/report.hpp"
 
 #include <charconv>
-
 #include <span>
 #include <string>
 #include <string_view>
@@ -66,8 +65,8 @@ QuestionResult askAci(const QuestionModel&, std::span<const std::string_view> ar
     int index = 0;
     const auto text = arguments.front();
     const auto parsed = std::from_chars(text.data(), text.data() + text.size(), index);
-    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size() ||
-        index < 1 || index > 255) {
+    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size() || index < 1 ||
+        index > 255) {
         return ArgumentError{"expected an ACI index from 1 to 255"};
     }
     return core::formatColor(core::Color::fromRgb(core::aciToRgb(index)));
@@ -80,13 +79,13 @@ QuestionResult askEffective(const QuestionModel& model,
     }
     const auto id = model.find(arguments.front());
     if (!id) {
-        return ArgumentError{"no entity named '" + std::string{arguments.front()} + "' is defined above"};
+        return ArgumentError{"no entity named '" + std::string{arguments.front()} +
+                             "' is defined above"};
     }
     const auto properties = core::effectiveProperties(model.document, *model.document.find(*id));
-    return "color=" + core::formatColor(core::Color::fromRgb(properties.color)) +
-           " linetype=\"" + properties.linetype->name + "\" ltscale=" +
-           formatNumber(properties.linetypeScale) + " lineweight=" +
-           core::formatLineweight(properties.lineweight) +
+    return "color=" + core::formatColor(core::Color::fromRgb(properties.color)) + " linetype=\"" +
+           properties.linetype->name + "\" ltscale=" + formatNumber(properties.linetypeScale) +
+           " lineweight=" + core::formatLineweight(properties.lineweight) +
            " visible=" + (properties.visible ? "yes" : "no") +
            " locked=" + (properties.locked ? "yes" : "no");
 }

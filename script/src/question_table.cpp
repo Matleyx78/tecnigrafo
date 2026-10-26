@@ -511,10 +511,10 @@ constexpr std::array kQuestions{
     QuestionRow{"roundtrip", AnswerShape::Single, &askRoundtrip},
     QuestionRow{"open-error", AnswerShape::Single, &askOpenError},
     // Layers and properties: stage 0.6 (property_questions.cpp).
-    QuestionRow{"aci", AnswerShape::Single, &askAci},         // P9
-    QuestionRow{"effective", AnswerShape::Single, &askEffective},   // P9
-    QuestionRow{"dashes", AnswerShape::Items, nullptr},       // P11
-    QuestionRow{"quickselect", AnswerShape::Names, nullptr},  // P23
+    QuestionRow{"aci", AnswerShape::Single, &askAci},              // P9
+    QuestionRow{"effective", AnswerShape::Single, &askEffective},  // P9
+    QuestionRow{"dashes", AnswerShape::Items, nullptr},            // P11
+    QuestionRow{"quickselect", AnswerShape::Names, nullptr},       // P23
     QuestionRow{"layers", AnswerShape::Items, &askLayers},
     QuestionRow{"linetypes", AnswerShape::Items, &askLinetypes},
 };
