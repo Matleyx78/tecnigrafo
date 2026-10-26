@@ -118,9 +118,10 @@ QuestionResult askDashes(const QuestionModel& model, std::span<const std::string
                 if constexpr (std::is_same_v<Piece, core::DashLine>) {
                     return "LINE " + formatPoint(value.start) + " " + formatPoint(value.end);
                 } else if constexpr (std::is_same_v<Piece, core::DashArc>) {
+                    const double startDegrees = core::radiansToDegrees(value.startAngle);
                     std::string text = "ARC center=" + formatPoint(value.center);
                     text += " radius=" + formatNumber(value.radius);
-                    text += " start-angle=" + formatNumber(core::radiansToDegrees(value.startAngle));
+                    text += " start-angle=" + formatNumber(startDegrees);
                     text += " end-angle=" + formatNumber(core::radiansToDegrees(value.endAngle));
                     return text;
                 } else {
