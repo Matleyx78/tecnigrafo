@@ -138,7 +138,7 @@ TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) 
     window.activateWindow();
     ASSERT_TRUE(QTest::qWaitForWindowActive(&window));
     ASSERT_EQ(QApplication::focusWidget(), window.view());
-    QTest::keyClicks(QApplication::focusWidget(), "LINE");
+    events::type(QApplication::focusWidget(), "LINE");
     events::press(QApplication::focusWidget(), Qt::Key_Return);
     EXPECT_TRUE(window.runner().isActive());
     events::press(QApplication::focusWidget(), Qt::Key_Escape);
@@ -152,7 +152,7 @@ TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) 
     for (const QString& command : {QStringLiteral("RIBBONCLOSE"), QStringLiteral("RIBBON"),
                                    QStringLiteral("RIBBON"), QStringLiteral("RIBBONCLOSE")}) {
         input->setFocus();
-        QTest::keyClicks(input, command);
+        events::type(input, command.toStdString());
         events::press(input, Qt::Key_Return);
         const bool ribbon = command == QStringLiteral("RIBBON");
         EXPECT_EQ(window.interfaceKind(), ribbon ? InterfaceKind::Ribbon : InterfaceKind::Classic);
@@ -163,7 +163,7 @@ TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) 
         QAction* zoom = window.actionRegistry().action(QStringLiteral("view.zoom-extents"));
         const QSignalSpy triggered(zoom, &QAction::triggered);
         window.view()->setFocus();
-        QTest::keyPress(window.view(), Qt::Key_E, Qt::ControlModifier | Qt::ShiftModifier);
+        events::press(window.view(), Qt::Key_E, Qt::ControlModifier | Qt::ShiftModifier);
         EXPECT_EQ(triggered.count(), 1);
     }
     button->click();
