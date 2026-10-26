@@ -28,10 +28,6 @@ dxf/r11-public #168
 
 
 # 0.6-R12: -LAYER e CLAYER (#242)
-layer/creazione-e-corrente #242
-layer/stati-e-proprieta #242
-layer/errori-e-limiti #242
-layer/annulla-ripeti-esc #242
 
 # 0.6-R23: selezione rapida (#257)
 selezione-rapida/filtri #257

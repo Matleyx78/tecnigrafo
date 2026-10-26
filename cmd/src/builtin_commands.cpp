@@ -9,6 +9,7 @@
 #include "tg/cmd/commands/circle_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/file_commands.hpp"
+#include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
 #include "tg/cmd/commands/text_command.hpp"
@@ -19,8 +20,10 @@ namespace tg::cmd {
 
 void registerBuiltinCommands(CommandRegistry& registry) {
     // Each command with its description (docs/adr/0026), in alphabetical order.
+    registry.add(LayerCommand::description(), [] { return std::make_unique<LayerCommand>(); });
     registry.add(detail::arcDescription(), [] { return std::make_unique<ArcCommand>(); });
     registry.add(detail::circleDescription(), [] { return std::make_unique<CircleCommand>(); });
+    registry.add(ClayerCommand::description(), [] { return std::make_unique<ClayerCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });
