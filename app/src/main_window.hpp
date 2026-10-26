@@ -25,6 +25,7 @@ class QToolButton;
 
 namespace tg::app {
 
+class ActionRegistry;
 class CadView;
 class CommandLine;
 class RecentFiles;
@@ -75,6 +76,9 @@ public:
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
 
+    /// Every action of the window (docs/adr/0009, point 1).
+    [[nodiscard]] const ActionRegistry& actionRegistry() const { return *m_actions; }
+
 protected:
     void closeEvent(QCloseEvent* event) override;
 
@@ -85,9 +89,14 @@ private:
     void showScale(double pixelsPerUnit);
     void showAbout();
 
+    /// Declares the actions in the registry, connects them and builds the
+    /// menus from it.
     void createMenus();
-    void createToolsMenu();
+    void connectDrawingAids();
     void createStatusBar();
+
+    /// The action `id` of builtin_actions.hpp; it must exist.
+    [[nodiscard]] QAction* registeredAction(const char* id) const;
 
     /// A status bar button that mirrors the checkable `action` both ways.
     QToolButton* createModeButton(QAction* action, const QString& text, const QString& name);
@@ -122,8 +131,12 @@ private:
     FileDialog m_fileDialog;
     QString m_pendingRecent;
     QString m_pendingOpen;
-    QList<QAction*> m_fileActions;
+    // The actions that wait for the running command to end: those with a
+    // command, as typing does.
+    QList<QAction*> m_idleActions;
+    ActionRegistry* m_actions{nullptr};
     QMenu* m_recentMenu{nullptr};
+    QAction* m_recentAction{nullptr};
     bool m_scriptMode{false};
     bool m_externalFiles{false};
     bool m_handlingFilePrompt{false};

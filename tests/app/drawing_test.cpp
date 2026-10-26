@@ -80,8 +80,8 @@ private:
 
 TEST_F(DrawingTest, SampleDrawingCannotBeUndone) {
     EXPECT_FALSE(document().isEmpty());
-    EXPECT_FALSE(action("undoAction")->isEnabled());
-    EXPECT_FALSE(action("redoAction")->isEnabled());
+    EXPECT_FALSE(action("edit.undo")->isEnabled());
+    EXPECT_FALSE(action("edit.redo")->isEnabled());
 }
 
 TEST_F(DrawingTest, DrawsAPolylineThenUndoesAndRedoesIt) {
@@ -104,27 +104,27 @@ TEST_F(DrawingTest, DrawsAPolylineThenUndoesAndRedoesIt) {
 
 TEST_F(DrawingTest, MenuShowsTheStepNameAndFollowsTheStacks) {
     drawPolyline();
-    EXPECT_TRUE(action("undoAction")->isEnabled());
-    EXPECT_EQ(action("undoAction")->text().toStdString(), "&Undo Polyline");
-    EXPECT_FALSE(action("redoAction")->isEnabled());
+    EXPECT_TRUE(action("edit.undo")->isEnabled());
+    EXPECT_EQ(action("edit.undo")->text().toStdString(), "&Undo Polyline");
+    EXPECT_FALSE(action("edit.redo")->isEnabled());
 
-    action("undoAction")->trigger();
-    EXPECT_FALSE(action("undoAction")->isEnabled());
-    EXPECT_TRUE(action("redoAction")->isEnabled());
-    EXPECT_EQ(action("redoAction")->text().toStdString(), "&Redo Polyline");
+    action("edit.undo")->trigger();
+    EXPECT_FALSE(action("edit.undo")->isEnabled());
+    EXPECT_TRUE(action("edit.redo")->isEnabled());
+    EXPECT_EQ(action("edit.redo")->text().toStdString(), "&Redo Polyline");
 }
 
 TEST_F(DrawingTest, UndoAndRedoAreDisabledWhileACommandRuns) {
     drawPolyline();
     type(view(), "PL");
     press(view(), Qt::Key_Return);
-    EXPECT_FALSE(action("undoAction")->isEnabled());
+    EXPECT_FALSE(action("edit.undo")->isEnabled());
 
     click(view(), Qt::LeftButton, kFirst);
-    EXPECT_FALSE(action("undoAction")->isEnabled());
+    EXPECT_FALSE(action("edit.undo")->isEnabled());
 
     press(view(), Qt::Key_Escape);
-    EXPECT_TRUE(action("undoAction")->isEnabled());
+    EXPECT_TRUE(action("edit.undo")->isEnabled());
 }
 
 TEST_F(DrawingTest, UndoKeysInTheCommandLineActOnTheDrawing) {
@@ -150,7 +150,7 @@ TEST_F(DrawingTest, RightClickConfirmsAndThePreviewIsDrawn) {
     click(view(), Qt::RightButton, kThird);
 
     EXPECT_EQ(document().entityCount(), before + 1);
-    EXPECT_TRUE(action("undoAction")->isEnabled());
+    EXPECT_TRUE(action("edit.undo")->isEnabled());
 }
 
 }  // namespace

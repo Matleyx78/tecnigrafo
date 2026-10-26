@@ -226,8 +226,8 @@ bool ScriptSession::perform(const script::EscDirective& /*directive*/) {
 
 bool ScriptSession::perform(const script::AidDirective& directive) {
     const bool snap = directive.aid == script::AidDirective::Aid::Snap;
-    auto* action = m_window.findChild<QAction*>(snap ? QStringLiteral("objectSnapAction")
-                                                     : QStringLiteral("orthoAction"));
+    auto* action = m_window.findChild<QAction*>(snap ? QStringLiteral("aids.osnap")
+                                                     : QStringLiteral("aids.ortho"));
     if (action == nullptr) {
         fail(QStringLiteral("the Tools menu has no switch for %1")
                  .arg(snap ? QStringLiteral("!snap") : QStringLiteral("!ortho")));

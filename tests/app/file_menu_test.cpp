@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -127,11 +128,15 @@ private:
 };
 
 TEST_F(FileMenuTest, MenuOrderAndActionsUseTheRunner) {
-    const QList<QPair<const char*, const char*>> commands{{"newAction", "NEW"},
-                                                          {"openAction", "OPEN"},
-                                                          {"saveAction", "QSAVE"},
-                                                          {"saveAsAction", "SAVEAS"}};
-    auto* fileMenu = qobject_cast<QMenu*>(action("newAction")->parent());
+    const QList<QPair<const char*, const char*>> commands{{"file.new", "NEW"},
+                                                          {"file.open", "OPEN"},
+                                                          {"file.save", "QSAVE"},
+                                                          {"file.saveas", "SAVEAS"}};
+    const QList<QObject*> shownIn = action("file.new")->associatedObjects();
+    const auto menuOf = std::ranges::find_if(shownIn, [](const QObject* object) {
+        return qobject_cast<const QMenu*>(object) != nullptr;
+    });
+    auto* fileMenu = menuOf != shownIn.end() ? qobject_cast<QMenu*>(*menuOf) : nullptr;
     ASSERT_NE(fileMenu, nullptr);
     ASSERT_GE(fileMenu->actions().size(), 6);
     for (qsizetype i = 0; i < commands.size(); ++i) {
@@ -164,10 +169,10 @@ TEST_F(FileMenuTest, StandardShortcutsSubmitAllFourCommands) {
         const char* command;
     };
 
-    const QList<Shortcut> keys{{"newAction", QKeySequence::New, "NEW"},
-                               {"openAction", QKeySequence::Open, "OPEN"},
-                               {"saveAction", QKeySequence::Save, "QSAVE"},
-                               {"saveAsAction", QKeySequence::SaveAs, "SAVEAS"}};
+    const QList<Shortcut> keys{{"file.new", QKeySequence::New, "NEW"},
+                               {"file.open", QKeySequence::Open, "OPEN"},
+                               {"file.save", QKeySequence::Save, "QSAVE"},
+                               {"file.saveas", QKeySequence::SaveAs, "SAVEAS"}};
     for (const auto& [name, key, command] : keys) {
         SCOPED_TRACE(command);
         QKeySequence expected(key);
@@ -200,7 +205,7 @@ TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
     EXPECT_TRUE(window()->isWindowModified());
     const QString original = path("drawing with spaces.cadx");
     answers().append(original);
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     EXPECT_TRUE(QFileInfo::exists(original));
     EXPECT_FALSE(window()->isWindowModified());
     EXPECT_EQ(window()->windowTitle(), QStringLiteral("drawing with spaces.cadx[*] — Tecnigrafo"));
@@ -211,10 +216,10 @@ TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
     EXPECT_TRUE(QFileInfo::exists(copy));
     EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), original);
     EXPECT_EQ(recent().first(), copy);
-    action("newAction")->trigger();
+    action("file.new")->trigger();
     EXPECT_TRUE(window()->document().isEmpty());
     answers().append(copy);
-    action("openAction")->trigger();
+    action("file.open")->trigger();
     EXPECT_EQ(window()->document().entityCount(), 1U);
     EXPECT_EQ(recent().first(), copy);
     EXPECT_EQ(dialogKinds(), (QList<cmd::FilePrompt>{cmd::FilePrompt::Save, cmd::FilePrompt::Save,
@@ -223,11 +228,11 @@ TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
     EXPECT_EQ(QFileInfo(dialogPaths()[2]).absolutePath(), directory().path());
     const QString renamed = path("renamed.cadx");
     answers().append(renamed);
-    action("saveAsAction")->trigger();
+    action("file.saveas")->trigger();
     EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), renamed);
     EXPECT_EQ(recent().first(), renamed);
     line();
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     EXPECT_FALSE(window()->editor().isModified());
     EXPECT_EQ(dialogKinds().size(), 4);
     enter(QStringLiteral("U"));
@@ -238,12 +243,12 @@ TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
 
 TEST_F(FileMenuTest, CancelAndFailuresPreserveDrawingAndRecentFiles) {
     line();
-    action("saveAsAction")->trigger();
+    action("file.saveas")->trigger();
     EXPECT_FALSE(window()->runner().isActive());
     EXPECT_TRUE(window()->editor().isModified());
     EXPECT_TRUE(recent().isEmpty());
     answers().append(path("missing-directory/drawing.cadx"));
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     EXPECT_TRUE(window()->editor().isModified());
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot save")));
@@ -262,7 +267,7 @@ TEST_F(FileMenuTest, InvalidDrawingDoesNotEnterRecentList) {
     ASSERT_EQ(file.write("invalid drawing"), 15);
     file.close();
     answers().append(invalid);
-    action("openAction")->trigger();
+    action("file.open")->trigger();
     EXPECT_TRUE(window()->document().isEmpty());
     EXPECT_FALSE(window()->editor().hasFile());
     EXPECT_TRUE(recent().isEmpty());
@@ -273,7 +278,7 @@ TEST_F(FileMenuTest, SavingModifiedCopyPreservesDirtyFlagAndRecentOrderOnUndo) {
     const QString original = path("original.cadx");
     line();
     answers().append(original);
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     line();
     const QString copy = path("copy.cadx");
     answers().append(copy);
@@ -291,23 +296,23 @@ TEST_F(FileMenuTest, SavingModifiedCopyPreservesDirtyFlagAndRecentOrderOnUndo) {
 
 TEST_F(FileMenuTest, FileActionsAreDisabledDuringCommands) {
     enter(QStringLiteral("LINE"));
-    for (const char* name : {"newAction", "openAction", "saveAction", "saveAsAction"}) {
+    for (const char* name : {"file.new", "file.open", "file.save", "file.saveas"}) {
         EXPECT_FALSE(action(name)->isEnabled());
     }
     EXPECT_FALSE(recentMenu()->isEnabled());
     auto* input = window()->findChild<QLineEdit*>(QStringLiteral("input"));
     events::press(input, Qt::Key_Escape);
-    EXPECT_TRUE(action("openAction")->isEnabled());
+    EXPECT_TRUE(action("file.open")->isEnabled());
 }
 
 TEST_F(FileMenuTest, PickerConfirmationReplacesExistingFileWithoutSecondQuestion) {
     const QString drawing = path("existing.cadx");
     line();
     answers().append(drawing);
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     line();
     answers().append(drawing);
-    action("saveAsAction")->trigger();
+    action("file.saveas")->trigger();
     EXPECT_FALSE(window()->runner().isActive());
     EXPECT_FALSE(window()->editor().isModified());
     EXPECT_TRUE(history().contains(QStringLiteral("[Yes/No] <No>: Yes")));
@@ -317,7 +322,7 @@ TEST_F(FileMenuTest, RecentOpenSurvivesUnsavedChangesAndRemovesMissingEntries) {
     const QString drawing = path("recent.cadx");
     line();
     answers().append(drawing);
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     line();
     ASSERT_EQ(recentMenu()->actions().size(), 1);
     recentMenu()->actions().first()->trigger();
@@ -358,7 +363,7 @@ TEST_F(FileMenuTest, ScriptSessionDoesNotReadOrWriteSettingsOrShowDialogs) {
     window()->setFileAccess(&files);
     const ScriptSession session(*window(), directory().path());
     line();
-    action("saveAction")->trigger();
+    action("file.save")->trigger();
     EXPECT_EQ(window()->runner().prompt().file, cmd::FilePrompt::Save);
     enter(path("script.cadx"));
     EXPECT_TRUE(QFileInfo::exists(path("script.cadx")));

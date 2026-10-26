@@ -60,8 +60,8 @@ protected:
         m_window.show();
         m_window.activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
-        for (const char* name : {"objectSnapAction", "orthoAction", "endpointSnapAction",
-                                 "midpointSnapAction", "centerSnapAction"}) {
+        for (const char* name : {"aids.osnap", "aids.ortho", "aids.snap.endpoint",
+                                 "aids.snap.midpoint", "aids.snap.center"}) {
             ASSERT_NE(action(name), nullptr) << name;
         }
         ASSERT_NE(button("osnapButton"), nullptr);
@@ -178,15 +178,15 @@ private:
 
 TEST_F(DrawingAidsTest, StartsWithObjectSnapOnWithEveryModeAndOrthoOff) {
     EXPECT_EQ(aids(), cmd::DrawingAids{});
-    EXPECT_TRUE(action("objectSnapAction")->isChecked());
-    EXPECT_TRUE(action("endpointSnapAction")->isChecked());
-    EXPECT_TRUE(action("midpointSnapAction")->isChecked());
-    EXPECT_TRUE(action("centerSnapAction")->isChecked());
-    EXPECT_FALSE(action("orthoAction")->isChecked());
+    EXPECT_TRUE(action("aids.osnap")->isChecked());
+    EXPECT_TRUE(action("aids.snap.endpoint")->isChecked());
+    EXPECT_TRUE(action("aids.snap.midpoint")->isChecked());
+    EXPECT_TRUE(action("aids.snap.center")->isChecked());
+    EXPECT_FALSE(action("aids.ortho")->isChecked());
     EXPECT_TRUE(button("osnapButton")->isChecked());
     EXPECT_FALSE(button("orthoButton")->isChecked());
-    EXPECT_EQ(action("objectSnapAction")->shortcut(), QKeySequence(Qt::Key_F3));
-    EXPECT_EQ(action("orthoAction")->shortcut(), QKeySequence(Qt::Key_F8));
+    EXPECT_EQ(action("aids.osnap")->shortcut(), QKeySequence(Qt::Key_F3));
+    EXPECT_EQ(action("aids.ortho")->shortcut(), QKeySequence(Qt::Key_F8));
     EXPECT_EQ(button("osnapButton")->text().toStdString(), "OSNAP");
     EXPECT_EQ(button("orthoButton")->text().toStdString(), "ORTHO");
 }
@@ -247,14 +247,14 @@ TEST_F(DrawingAidsTest, EachModeOfTheMenuReachesTheRunner) {
     // The midpoint of the outline's bottom side.
     const core::Vec2 midpoint{60.0, 0.0};
 
-    action("midpointSnapAction")->trigger();
+    action("aids.snap.midpoint")->trigger();
     EXPECT_FALSE(aids().snapModes.midpoint);
     std::vector<core::Vec2> vertices =
         drawTwoPoints(screen(midpoint) + QPointF{3.0, 4.0}, screen(kFar));
     ASSERT_EQ(vertices.size(), 2U);
     EXPECT_NE(vertices[0], midpoint);
 
-    action("midpointSnapAction")->trigger();
+    action("aids.snap.midpoint")->trigger();
     EXPECT_TRUE(aids().snapModes.midpoint);
     // Five pixels from the midpoint again, but seven from the start of the
     // polyline just drawn, whose endpoint would otherwise be nearer.
@@ -262,8 +262,8 @@ TEST_F(DrawingAidsTest, EachModeOfTheMenuReachesTheRunner) {
     ASSERT_EQ(vertices.size(), 2U);
     EXPECT_EQ(vertices[0], midpoint);
 
-    action("endpointSnapAction")->trigger();
-    action("centerSnapAction")->trigger();
+    action("aids.snap.endpoint")->trigger();
+    action("aids.snap.center")->trigger();
     EXPECT_EQ(aids().snapModes, (core::SnapModes{false, true, false}));
     EXPECT_TRUE(aids().objectSnap);  // the modes do not touch the switch
 }
@@ -273,29 +273,29 @@ TEST_F(DrawingAidsTest, ActionsButtonsAndHistoryStayInStep) {
     QToolButton* ortho = button("orthoButton");
 
     shortcut(view(), Qt::Key_F3);
-    EXPECT_FALSE(action("objectSnapAction")->isChecked());
+    EXPECT_FALSE(action("aids.osnap")->isChecked());
     EXPECT_FALSE(osnap->isChecked());
     EXPECT_FALSE(aids().objectSnap);
     EXPECT_EQ(lastHistoryLine(), "<Osnap off>");
 
     osnap->click();
-    EXPECT_TRUE(action("objectSnapAction")->isChecked());
+    EXPECT_TRUE(action("aids.osnap")->isChecked());
     EXPECT_TRUE(aids().objectSnap);
     EXPECT_EQ(lastHistoryLine(), "<Osnap on>");
 
     // F8 works also while the command line has the keyboard.
     shortcut(input(), Qt::Key_F8);
-    EXPECT_TRUE(action("orthoAction")->isChecked());
+    EXPECT_TRUE(action("aids.ortho")->isChecked());
     EXPECT_TRUE(ortho->isChecked());
     EXPECT_TRUE(aids().ortho);
     EXPECT_EQ(lastHistoryLine(), "<Ortho on>");
 
     ortho->click();
-    EXPECT_FALSE(action("orthoAction")->isChecked());
+    EXPECT_FALSE(action("aids.ortho")->isChecked());
     EXPECT_FALSE(aids().ortho);
     EXPECT_EQ(lastHistoryLine(), "<Ortho off>");
 
-    action("orthoAction")->trigger();
+    action("aids.ortho")->trigger();
     EXPECT_TRUE(ortho->isChecked());
     EXPECT_EQ(lastHistoryLine(), "<Ortho on>");
 

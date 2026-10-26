@@ -8,6 +8,10 @@ qt_standard_project_setup()
 
 # Everything but main(): shared by the application and its Qt tests.
 qt_add_library(tg_app_ui STATIC
+    src/action_registry.cpp
+    src/action_registry.hpp
+    src/builtin_actions.cpp
+    src/builtin_actions.hpp
     src/cad_view.cpp
     src/cad_view.hpp
     src/command_line.cpp
