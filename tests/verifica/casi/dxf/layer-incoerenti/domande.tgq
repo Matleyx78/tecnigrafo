@@ -8,7 +8,7 @@ D1 = DXF file=layer-mancante.dxf
 ; 2. Entita che nomina un tipo di linea assente dalla tabella (creato senza tratti e contato)
 D2 = DXF file=tipo-mancante.dxf
 ? warnings D2 -> 1 missing linetype added.
-? linetypes D2 -> "NonEsiste" continuous
+? linetypes D2 -> "NonEsiste" pattern=continuous description=""
 
 ; 3. Due record di layer con lo stesso nome a meno delle maiuscole (il secondo resta grezzo)
 D3 = DXF file=layer-doppio.dxf
