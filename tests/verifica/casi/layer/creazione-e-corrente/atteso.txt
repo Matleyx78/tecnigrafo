@@ -10,7 +10,7 @@ messages:
   Enter name for new layer (becomes the current layer) <0>: Muri
   Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
   Command: LINE
-  Specify start point: 0,0
+  Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
 prompt: Command:
@@ -56,9 +56,9 @@ snap: on
 ortho: off
 layers:
   "0" color=7 linetype="Continuous" lineweight=default
-  "Finestre" color=7 linetype="Continuous" lineweight=default
   "Muri" color=7 linetype="Continuous" lineweight=default
   "Porte" color=7 linetype="Continuous" lineweight=default
+  "Finestre" color=7 linetype="Continuous" lineweight=default
 current: layer="Porte" color=bylayer linetype="ByLayer" ltscale=1 lineweight=bylayer
 pointer: none
 active snap: none
@@ -85,9 +85,9 @@ snap: on
 ortho: off
 layers:
   "0" color=7 linetype="Continuous" lineweight=default
-  "Finestre" color=7 linetype="Continuous" lineweight=default
   "Muri" color=7 linetype="Continuous" lineweight=default
   "Porte" color=7 linetype="Continuous" lineweight=default
+  "Finestre" color=7 linetype="Continuous" lineweight=default
 pointer: none
 active snap: none
 statistics:
