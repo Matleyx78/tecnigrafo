@@ -468,6 +468,21 @@ TEST(DxfTables, LinetypesTheFileLacksDoNotSpendTheHandleSeed) {
     EXPECT_EQ(read.document.nextId(), seed + 1);
 }
 
+TEST(DxfTables, EntitiesWithoutHandleDoNotClashWithTheImpliedLinetypes) {
+    // An entity without a handle takes one from the counter, above the seed:
+    // the implied linetypes must stay below it.
+    RawGroups entity = line("30", {{8, "0"}});
+    entity.erase(std::remove_if(entity.begin(), entity.end(),
+                                [](const core::RawGroup& group) { return group.code == 5; }),
+                 entity.end());
+    auto read = readOk(drawing({}, layer("10", "0", {{70, "     0"}, {6, "CONTINUOUS"}}), entity));
+    const std::uint64_t seed = read.document.nextId() - 1;
+    for (const char* name : {"ByBlock", "ByLayer", "Continuous"}) {
+        ASSERT_NE(read.document.findLinetype(name), nullptr);
+        EXPECT_LT(read.document.findLinetype(name)->id.value, seed);
+    }
+}
+
 // --- Entities --------------------------------------------------------------
 
 TEST(DxfTables, EntityPropertiesEnterTheModel) {

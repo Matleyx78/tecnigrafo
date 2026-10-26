@@ -697,7 +697,7 @@ void TableReader::finish(std::vector<std::string>& warnings,
     // all gives them the next ones.
     std::uint64_t candidate = 1;
     const auto lowFreeHandle = [&]() -> std::uint64_t {
-        while (candidate < m_document.nextId()) {
+        while (candidate < m_seed) {
             const std::uint64_t handle = candidate++;
             if (!usedHandles.contains(handle)) {
                 return handle;

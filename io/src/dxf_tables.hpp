@@ -30,7 +30,8 @@ inline constexpr std::int16_t kRecordPlaceholder = -1000;
 /// entity, finish().
 class TableReader {
 public:
-    explicit TableReader(core::Document& document) : m_document(document) {}
+    explicit TableReader(core::Document& document)
+        : m_document(document), m_seed(document.nextId()) {}
 
     /// Takes the LAYER and LTYPE records out of the groups of the TABLES
     /// section, leaving a kRecordPlaceholder group in their place. The
@@ -104,6 +105,7 @@ private:
     [[nodiscard]] bool layerPending(std::string_view name) const;
 
     core::Document& m_document;
+    std::uint64_t m_seed;  ///< the first free handle of the file, before any entity
     std::vector<PendingLayer> m_layers;
     std::vector<PendingEntity> m_entities;
     std::optional<std::string> m_currentLayer;
