@@ -1,0 +1,39 @@
+; Selezione con entita su layer bloccati ed ERASE (0.6-P14)
+-LAYER
+New
+Bloccato
+LOck
+Bloccato
+
+LINE
+0,0
+10,0
+
+LINE
+0,10
+10,10
+
+CLAYER
+Bloccato
+LINE
+0,20
+10,20
+
+LINE
+0,30
+30,30
+
+CLAYER
+0
+!click 5,20
+!report
+!click -5,-5
+!click 15,25
+!report
+!esc
+ERASE
+!click 5,20
+!click 15,35
+!click -5,5
+
+!report
