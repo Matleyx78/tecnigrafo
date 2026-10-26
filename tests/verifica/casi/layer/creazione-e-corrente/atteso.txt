@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri"
+  258 LINE start=0,0 end=10,0 layer="Muri"
 messages:
   Command: -LAYER
   Current layer:  "0"
@@ -34,7 +34,7 @@ statistics:
 
 [report 2]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri"
+  258 LINE start=0,0 end=10,0 layer="Muri"
 messages:
   Command: -LAYER
   Current layer:  "Muri"
@@ -67,7 +67,7 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri"
+  258 LINE start=0,0 end=10,0 layer="Muri"
 messages:
   Command: CLAYER
   Enter new value for CLAYER <"Porte">: 0
