@@ -245,7 +245,7 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         EXPECT_NE(registry.create(entry->name), nullptr) << entry->name;
     }
     EXPECT_EQ(names,
-              (std::vector<std::string>{"ARC", "CIRCLE", "ERASE", "INSUNITS", "LINE", "NEW", "OPEN",
+              (std::vector<std::string>{"-LAYER", "ARC", "CIRCLE", "CLAYER", "ERASE", "INSUNITS", "LINE", "NEW", "OPEN",
                                         "PLINE", "QSAVE", "SAVE", "SAVEAS", "TEXT"}));
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);
     EXPECT_EQ(registry.describe("DTEXT")->name, "TEXT");
