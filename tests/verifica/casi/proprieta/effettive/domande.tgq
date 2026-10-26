@@ -53,8 +53,8 @@ E_OFF_LOCKED = LINE start=0,0 end=10,0 layer="SpentoBloccato"
 E_FROZEN_LOCKED = LINE start=0,0 end=10,0 layer="CongelatoBloccato"
 ? effective E_FROZEN_LOCKED -> color=255,0,255 linetype="Continuous" ltscale=1 lineweight=0.25 visible=no locked=yes
 
-; Fattore di scala del tipo di linea del documento (LTSCALE) moltiplicato per la scala dell'entita
-!current ltscale=3
+; Scala del tipo di linea dell'entita: ltscale = LTSCALE (1 in un documento nuovo) x scala dell'entita.
+; "!current ltscale=" cambia CELTSCALE (la scala delle entita future), non LTSCALE, quindi da qui
+; il fattore globale resta 1; la sua moltiplicazione e verificata dai test unitari di core.
 E_SCALE = LINE start=0,0 end=10,0 ltscale=1.5
-? effective E_SCALE -> color=255,255,255 linetype="Continuous" ltscale=4.5 lineweight=0.25 visible=yes locked=no
-? effective E_PROPRI -> color=255,0,0 linetype="Tratteggio" ltscale=6 lineweight=0.70 visible=yes locked=no
+? effective E_SCALE -> color=255,255,255 linetype="Continuous" ltscale=1.5 lineweight=0.25 visible=yes locked=no
