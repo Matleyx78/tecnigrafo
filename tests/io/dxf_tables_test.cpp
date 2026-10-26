@@ -445,6 +445,29 @@ TEST(DxfTables, ImpliedLinetypesKeepTheSpellingOfTheFile) {
               objectGroups(bytes, "LAYER", "0"));
 }
 
+TEST(DxfTables, LinetypesTheFileLacksDoNotSpendTheHandleSeed) {
+    // The standard linetypes exist only in the model: the entity drawn after
+    // OPEN still takes the first free handle of the file.
+    const std::string bytes =
+        drawing({}, layer("10", "0", {{70, "     0"}, {62, "     7"}, {6, "CONTINUOUS"}}),
+                line("30", {{8, "0"}}));
+    auto read = readOk(bytes);
+    const std::uint64_t seed = read.document.nextId();
+    std::vector<std::uint64_t> ids;
+    for (const char* name : {"ByBlock", "ByLayer", "Continuous"}) {
+        const core::Linetype* found = read.document.findLinetype(name);
+        ASSERT_NE(found, nullptr);
+        EXPECT_LT(found->id.value, seed);
+        EXPECT_NE(found->id.value, 0x10U);
+        EXPECT_NE(found->id.value, 0x30U);
+        ids.push_back(found->id.value);
+    }
+    std::sort(ids.begin(), ids.end());
+    EXPECT_EQ(std::adjacent_find(ids.begin(), ids.end()), ids.end());
+    EXPECT_EQ(read.document.add(core::Line{}).value, seed);
+    EXPECT_EQ(read.document.nextId(), seed + 1);
+}
+
 // --- Entities --------------------------------------------------------------
 
 TEST(DxfTables, EntityPropertiesEnterTheModel) {

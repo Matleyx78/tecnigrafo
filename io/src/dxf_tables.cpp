@@ -677,7 +677,8 @@ core::LayerId TableReader::layerNamed(std::string_view name) {
     return m_document.addLayer(std::move(layer));
 }
 
-void TableReader::finish(std::vector<std::string>& warnings) {
+void TableReader::finish(std::vector<std::string>& warnings,
+                         const std::unordered_set<std::uint64_t>& usedHandles) {
     const auto warn = [&warnings](int count, std::string_view singular, std::string_view rest) {
         if (count != 0) {
             warnings.push_back(plural(count, singular, rest));
@@ -689,10 +690,25 @@ void TableReader::finish(std::vector<std::string>& warnings) {
     }
     // Every drawing has these (docs/adr/0023, point 1; 0025, point 2): a
     // file may leave them implied, and that is not an inconsistency.
+    //
+    // Nothing is written for them, so they must not spend the handles from
+    // $HANDSEED on: the first entity drawn after OPEN takes $HANDSEED. They
+    // take the lowest free handles below it; only a file that spends them
+    // all gives them the next ones.
+    std::uint64_t candidate = 1;
+    const auto lowFreeHandle = [&]() -> std::uint64_t {
+        while (candidate < m_document.nextId()) {
+            const std::uint64_t handle = candidate++;
+            if (!usedHandles.contains(handle)) {
+                return handle;
+            }
+        }
+        return 0;  // none below $HANDSEED: the document gives the next one
+    };
     for (const std::string_view name : {kByBlockName, kByLayerName, kContinuousName}) {
         if (m_document.findLinetype(name) == nullptr) {
             m_document.addLinetype(
-                core::Linetype{{},
+                core::Linetype{core::LinetypeId{lowFreeHandle()},
                                std::string{name},
                                std::string{name == kContinuousName ? kContinuousDescription : ""},
                                {},

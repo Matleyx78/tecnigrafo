@@ -231,7 +231,7 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
             }
         }
     }
-    tables.finish(result.report.warnings);
+    tables.finish(result.report.warnings, handles.value().used);
     result.document.setRaw(std::move(raw));
     return result;
 }

@@ -10,6 +10,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 /// The LAYER and LTYPE tables, the header variables of the current values and
@@ -67,7 +68,13 @@ public:
     /// values, and the handles of its entities stay those of a file read
     /// before the tables (docs/verifica/domande.md, `layers`: `none` for a
     /// drawing without a layer table).
-    void finish(std::vector<std::string>& warnings);
+    ///
+    /// `usedHandles` are the handles the file spends. The standard linetypes
+    /// the file lacks exist only in the model: they take the lowest free
+    /// handles below the first free one, so that the next entity of the
+    /// drawing still takes `$HANDSEED`, as in AutoCAD.
+    void finish(std::vector<std::string>& warnings,
+                const std::unordered_set<std::uint64_t>& usedHandles);
 
 private:
     struct PendingLayer {
