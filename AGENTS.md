@@ -96,12 +96,14 @@ scrivendo nella pull request che cosa hai visto e provato, solo se:
 - dopo tre tentativi lo stesso controllo non passa ancora.
 
 ```sh
-# aspetta la fine della CI dell'ultimo commit pubblicato, aspettando dentro lo
-# script (non consuma token). Esce 0 se tutto è verde, 1 se un controllo è
-# fallito, 3 se dopo 25 minuti è ancora in corso (rilancialo, riprende da dove
-# era), 4 se è stata annullata: non è un guasto, un push più recente sullo
-# stesso ramo l'ha sostituita, quindi aspetta quella. Accetta anche <sha> o
-# <id>; non serve `gh`.
+# aspetta la CI dell'ultimo commit pubblicato, aspettando dentro lo script (non
+# consuma token), al massimo 9 minuti per volta. Esce 0 se tutto è verde; 1 se
+# un controllo è fallito (appena un job fallisce, senza aspettare Windows e
+# macOS); 2 se l'API di GitHub non risponde; 3 se è ancora in corso (rilancialo,
+# riprende da dove era); 4 se è stata annullata: non è un guasto, un push più
+# recente sullo stesso ramo l'ha sostituita, quindi aspetta quella; 5 se è
+# ancora in corso dopo tre attese di fila. Accetta anche <sha> o <id>; non serve
+# `gh`.
 scripts/ci-attendi.sh
 # perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
 scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
@@ -118,6 +120,14 @@ controlli falliti:
 ```sh
 gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
+
+Con exit 2 o 5 non rilanciare l'attesa: scrivi nella pull request il messaggio
+dello script e fermati. Dopo tre attese con exit 3 si arriva comunque a 5.
+
+Quando ti fermi per uno dei motivi sopra (compreso un caso di riferimento che
+ritieni sbagliato), **non aspettare la CI**: scrivi il commento nella pull
+request o nella issue, togli `AA-Presa in carico` e termina la sessione. Non
+lanciare né rilanciare `scripts/ci-attendi.sh` dopo aver scritto che ti fermi.
 
 Quando il responsabile chiede correzioni a una pull request, riprendila in carico
 e fermati allo stesso modo.
