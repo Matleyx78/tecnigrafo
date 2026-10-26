@@ -244,9 +244,10 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         EXPECT_TRUE(entry->summary.ends_with('.')) << entry->name;
         EXPECT_NE(registry.create(entry->name), nullptr) << entry->name;
     }
-    EXPECT_EQ(names,
-              (std::vector<std::string>{"-LAYER", "ARC", "CIRCLE", "CLAYER", "ERASE", "INSUNITS", "LINE", "NEW", "OPEN",
-                                        "PLINE", "QSAVE", "SAVE", "SAVEAS", "TEXT"}));
+    const std::vector<std::string> expected{
+        "-LAYER", "ARC", "CIRCLE", "CLAYER", "ERASE", "INSUNITS", "LINE", "NEW", "OPEN", "PLINE",
+        "QSAVE", "SAVE", "SAVEAS", "TEXT"};
+    EXPECT_EQ(names, expected);
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);
     EXPECT_EQ(registry.describe("DTEXT")->name, "TEXT");
 }

@@ -17,6 +17,6 @@ namespace tg::cmd::detail {
 [[nodiscard]] bool matchesName(std::string_view pattern, std::string_view name);
 /// Table order, each layer at most once even when patterns overlap.
 [[nodiscard]] std::vector<core::LayerId> matchingLayers(const core::Document& document,
-                                                     std::string_view text);
+                                                      std::string_view text);
 
 }  // namespace tg::cmd::detail

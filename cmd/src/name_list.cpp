@@ -49,8 +49,7 @@ bool matchesName(std::string_view pattern, std::string_view name) {
     return position == pattern.size();
 }
 
-std::vector<core::LayerId> matchingLayers(const core::Document& document,
-                                        std::string_view text) {
+std::vector<core::LayerId> matchingLayers(const core::Document& document, std::string_view text) {
     const auto patterns = splitNameList(text);
     std::vector<core::LayerId> ids;
     for (const auto& layer : document.layers()) {

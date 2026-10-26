@@ -40,8 +40,7 @@ TEST(NameList, ReturnsEachMatchingLayerOnceInTableOrder) {
     layer.id = {};
     layer.name = "Porte";
     const auto doors = document.addLayer(layer);
-    EXPECT_EQ(matchingLayers(document, "p*, M?ri, m*"),
-              (std::vector<core::LayerId>{walls, doors}));
+    EXPECT_EQ(matchingLayers(document, "p*, M?ri, m*"), (std::vector<core::LayerId>{walls, doors}));
     EXPECT_TRUE(matchingLayers(document, "Z*").empty());
     EXPECT_EQ(matchingLayers(document, "*,0"),
               (std::vector<core::LayerId>{document.layerZero(), walls, doors}));

@@ -17,18 +17,43 @@ public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
     void cancel(CommandContext& context) override;
+
     void pointerMoved(const core::Vec2& /*point*/) override {}
+
     [[nodiscard]] Prompt prompt() const override;
+
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
+
     [[nodiscard]] static CommandDescription description();
 
 private:
     enum class Stage : std::uint8_t {
-        Option, List, Make, Set, New, RenameOld, RenameNew, Names,
-        Color, Rgb, Linetype, Lineweight, Plot, ConfirmOff
+        Option,
+        List,
+        Make,
+        Set,
+        New,
+        RenameOld,
+        RenameNew,
+        Names,
+        Color,
+        Rgb,
+        Linetype,
+        Lineweight,
+        Plot,
+        ConfirmOff,
     };
     enum class Operation : std::uint8_t {
-        On, Off, Freeze, Thaw, Lock, Unlock, Color, Linetype, Lineweight, Plot
+        On,
+        Off,
+        Freeze,
+        Thaw,
+        Lock,
+        Unlock,
+        Color,
+        Linetype,
+        Lineweight,
+        Plot,
     };
 
     void chooseOption(CommandContext& context, std::string_view text);
@@ -54,9 +79,13 @@ class ClayerCommand final : public Command {
 public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
+
     void pointerMoved(const core::Vec2& /*point*/) override {}
+
     [[nodiscard]] Prompt prompt() const override;
+
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
+
     [[nodiscard]] static CommandDescription description();
 
 private:

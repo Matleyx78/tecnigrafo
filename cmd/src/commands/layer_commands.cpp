@@ -56,6 +56,10 @@ void createLayer(CommandContext& context, std::string name) {
     context.editor.addLayer(std::move(layer));
 }
 
+Prompt textPrompt(std::string text, std::vector<Keyword> keywords = {}) {
+    return {std::move(text), std::move(keywords), PromptKind::Text};
+}
+
 bool isOption(std::string_view text, const Keyword& keyword) {
     return detail::equalsIgnoringCase(text, keyword.name) ||
            detail::equalsIgnoringCase(text, keyword.shortcut);
@@ -119,22 +123,46 @@ Status LayerCommand::handle(CommandContext& context, const Input& input) {
 
 void LayerCommand::chooseOption(CommandContext& context, std::string_view text) {
     const auto options = description().prompts.front().keywords;
-    const auto found = std::ranges::find_if(options, [text](const Keyword& option) {
-        return isOption(text, option);
-    });
+    const auto found = std::ranges::find_if(
+        options, [text](const Keyword& option) { return isOption(text, option); });
     if (found == options.end()) {
         context.message("Invalid option keyword.");
         return;
     }
     constexpr std::array<Stage, 15> kStages{
-        Stage::List, Stage::Make, Stage::Set, Stage::New, Stage::RenameOld,
-        Stage::Names, Stage::Names, Stage::Color, Stage::Linetype, Stage::Lineweight,
-        Stage::Plot, Stage::Names, Stage::Names, Stage::Names, Stage::Names};
+        Stage::List,
+        Stage::Make,
+        Stage::Set,
+        Stage::New,
+        Stage::RenameOld,
+        Stage::Names,
+        Stage::Names,
+        Stage::Color,
+        Stage::Linetype,
+        Stage::Lineweight,
+        Stage::Plot,
+        Stage::Names,
+        Stage::Names,
+        Stage::Names,
+        Stage::Names,
+    };
     constexpr std::array<Operation, 15> kOperations{
-        Operation::On, Operation::On, Operation::On, Operation::On, Operation::On,
-        Operation::On, Operation::Off, Operation::Color, Operation::Linetype,
-        Operation::Lineweight, Operation::Plot, Operation::Freeze, Operation::Thaw,
-        Operation::Lock, Operation::Unlock};
+        Operation::On,
+        Operation::On,
+        Operation::On,
+        Operation::On,
+        Operation::On,
+        Operation::On,
+        Operation::Off,
+        Operation::Color,
+        Operation::Linetype,
+        Operation::Lineweight,
+        Operation::Plot,
+        Operation::Freeze,
+        Operation::Thaw,
+        Operation::Lock,
+        Operation::Unlock,
+    };
     const auto index = static_cast<std::size_t>(found - options.begin());
     m_stage = kStages.at(index);
     m_operation = kOperations.at(index);
@@ -150,10 +178,10 @@ void LayerCommand::handleName(CommandContext& context, std::string_view text) {
     }
     if (m_stage == Stage::New) {
         const auto names = detail::splitNameList(text);
-        if (!std::ranges::all_of(names, [&context](const std::string& name) {
-                return validName(context, name);
-            })) {
-            return;
+        for (const auto& name : names) {
+            if (!validName(context, name)) {
+                return;
+            }
         }
         for (const auto& name : names) {
             if (context.editor.document().findLayer(name) != nullptr) {
@@ -211,11 +239,14 @@ void LayerCommand::handleValue(CommandContext& context, std::string_view text) {
     }
     if (m_stage == Stage::Color || m_stage == Stage::Rgb) {
         const auto color = core::parseColor(text);
-        const auto required = m_stage == Stage::Rgb ? core::Color::Kind::Rgb
-                                                   : core::Color::Kind::Index;
+        const auto required =
+            m_stage == Stage::Rgb ? core::Color::Kind::Rgb : core::Color::Kind::Index;
         if (!color || color->kind() != required) {
-            context.message(m_stage == Stage::Rgb ? "Requires red, green, blue values from 0 to 255."
-                                                 : "Requires a color index from 1 to 255.");
+            if (m_stage == Stage::Rgb) {
+                context.message("Requires red, green, blue values from 0 to 255.");
+            } else {
+                context.message("Requires a color index from 1 to 255.");
+            }
             return;
         }
         m_color = *color;
@@ -317,20 +348,18 @@ void LayerCommand::list(CommandContext& context, std::string_view text) const {
     }
     for (const auto id : ids) {
         const auto& layer = *document.layer(id);
-        context.message(layer.name + "  " + (layer.on ? "on" : "off") + " " +
-                        (layer.frozen ? "frozen" : "thawed") + " " +
-                        (layer.locked ? "locked" : "unlocked") + " " +
-                        core::formatColor(layer.color) + " \"" +
-                        document.linetype(layer.linetype)->name + "\" " +
-                        core::formatLineweight(layer.lineweight));
+        std::string message = layer.name + "  " + (layer.on ? "on" : "off");
+        message += layer.frozen ? " frozen" : " thawed";
+        message += layer.locked ? " locked" : " unlocked";
+        message += " " + core::formatColor(layer.color);
+        message += " \"" + document.linetype(layer.linetype)->name + "\" ";
+        message += core::formatLineweight(layer.lineweight);
+        context.message(std::move(message));
     }
     context.message("Current layer: \"" + m_currentName + "\"");
 }
 
 Prompt LayerCommand::prompt() const {
-    const auto textPrompt = [](std::string text, std::vector<Keyword> keywords = {}) {
-        return Prompt{std::move(text), std::move(keywords), PromptKind::Text};
-    };
     switch (m_stage) {
         case Stage::Option:
             return textPrompt("Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/"
@@ -339,8 +368,8 @@ Prompt LayerCommand::prompt() const {
         case Stage::List:
             return textPrompt("Enter layer name(s) to list <*>:");
         case Stage::Make:
-            return textPrompt("Enter name for new layer (becomes the current layer) <" +
-                              m_currentName + ">:");
+            return textPrompt(
+                "Enter name for new layer (becomes the current layer) <" + m_currentName + ">:");
         case Stage::Set:
             return textPrompt("Enter layer name to make current:");
         case Stage::New:
@@ -361,9 +390,9 @@ Prompt LayerCommand::prompt() const {
             return textPrompt("Enter a plotting preference [Plot/No plot] <Plot>:",
                               {{"Plot", "P"}, {"No plot", "N"}});
         case Stage::ConfirmOff:
-            return textPrompt("Really want layer " + m_currentName +
-                              " (the CURRENT layer) off? [Yes/No] <No>:",
-                              {{"Yes", "Y"}, {"No", "N"}});
+            return textPrompt(
+                "Really want layer " + m_currentName + " (the CURRENT layer) off? [Yes/No] <No>:",
+                {{"Yes", "Y"}, {"No", "N"}});
         case Stage::Names:
             break;
     }
