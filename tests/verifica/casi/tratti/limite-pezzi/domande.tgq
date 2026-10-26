@@ -1,0 +1,29 @@
+; Troppi pezzi: l'entita si disegna continua (ADR 0025, punto 5; scheda
+; 0.6-P11, kMaxDashPieces = 100000; domanda dashes)
+;
+; Valori calcolati a mano, senza eseguire Tecnigrafo. ACAD_ISO02W100 ha il
+; motivo 12,-3 (lunghezza 15; DXF di AutoCAD autocad-colori-layer-tipilinea,
+; ADR 0029): un tratto ogni 15 unita.
+
+I2 = LTYPE name="ACAD_ISO02W100"
+
+; Lunga 3000000: 3000000 / 15 = 200000 tratti, piu di 100000: continua
+LUNGHISSIMA = LINE start=0,0 end=3000000,0 linetype="ACAD_ISO02W100"
+? dashes LUNGHISSIMA -> continuous
+
+; Lo stesso con un tipo di soli punti e spazi, 0,-1: un punto ogni unita,
+; 150001 punti su una linea lunga 150000.5, piu di 100000: continua
+P = LTYPE name="Puntini" pattern=0,-1
+PUNTINI = LINE start=0,0 end=150000.5,0 linetype="Puntini"
+? dashes PUNTINI -> continuous
+
+; Un cerchio di raggio 300000 (lungo 1884955.59...): 125664 tratti, piu di
+; 100000: continuo
+CERCHIO = CIRCLE center=0,0 radius=300000 linetype="ACAD_ISO02W100"
+? dashes CERCHIO -> continuous
+
+; Con la generazione continua, una polilinea di due segmenti lunghi
+; 1000000 ciascuno: 2000000 / 15 = 133334 tratti (piu i due spezzati al
+; vertice), piu di 100000: continua
+POLILINEA = LWPOLYLINE linetype-generation=yes vertex=0,0 vertex=1000000,0 vertex=1000000,1000000 linetype="ACAD_ISO02W100"
+? dashes POLILINEA -> continuous

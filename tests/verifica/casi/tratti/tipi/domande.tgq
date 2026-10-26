@@ -1,0 +1,60 @@
+; Tratti secondo il tipo di linea effettivo (ADR 0025, punti 1, 2 e 4;
+; scheda 0.6-P11; domanda dashes)
+;
+; Valori calcolati a mano, senza eseguire Tecnigrafo. La domanda usa il tipo
+; e la scala effettivi (scheda 0.6-P9): ByLayer prende il tipo del layer,
+; ByBlock vale Continuous finche non ci sono blocchi. Un tipo senza elementi
+; e continuo; un testo non ha tipo di linea.
+;
+; ACAD_ISO02W100 ha il motivo 12,-3 (lunghezza 15), ACAD_ISO10W100 il motivo
+; 12,-3,0,-3 (lunghezza 18): la tabella LTYPE del DXF di AutoCAD
+; autocad-colori-layer-tipilinea di sorgenti.json (ADR 0029).
+
+I2 = LTYPE name="ACAD_ISO02W100"
+I10 = LTYPE name="ACAD_ISO10W100"
+
+; ACAD_ISO10W100 su una linea lunga 40: tratto 0-12, punto a 15, tratto
+; 18-30, punto a 33, tratto 36-48 troncato a 40
+PUNTO_LINEA = LINE start=0,0 end=40,0 linetype="ACAD_ISO10W100"
+? dashes PUNTO_LINEA -> LINE 0,0 12,0; POINT 15,0; LINE 18,0 30,0; POINT 33,0; LINE 36,0 40,0
+
+; Un tipo definito nel file, 5,-2,0,-2 (lunghezza 9), su una linea
+; verticale lunga 20: tratto 0-5, punto a 7, tratto 9-14, punto a 16, tratto
+; 18-23 troncato a 20
+MIO = LTYPE name="Mio tratto punto" pattern=5,-2,0,-2 description="mio"
+NEL_FILE = LINE start=0,0 end=0,20 linetype="Mio tratto punto"
+? dashes NEL_FILE -> LINE 0,0 0,5; POINT 0,7; LINE 0,9 0,14; POINT 0,16; LINE 0,18 0,20
+
+; ByLayer su un layer con ACAD_ISO02W100: i tratti del tipo del layer
+M = LAYER name="Tratteggiato" linetype="ACAD_ISO02W100"
+DA_LAYER = LINE start=0,5 end=40,5 layer="Tratteggiato" linetype="ByLayer"
+? dashes DA_LAYER -> LINE 0,5 12,5; LINE 15,5 27,5; LINE 30,5 40,5
+
+; Lo stesso layer, ma l'entita ha Continuous: continua
+CONTINUA_SU_LAYER = LINE start=0,6 end=40,6 layer="Tratteggiato" linetype="Continuous"
+? dashes CONTINUA_SU_LAYER -> continuous
+
+; Senza proprieta: ByLayer sul layer 0, che ha Continuous: continua
+PREDEFINITA = LINE start=0,7 end=40,7
+? dashes PREDEFINITA -> continuous
+
+; ByBlock vale Continuous finche non ci sono blocchi: continua
+DA_BLOCCO = LINE start=0,8 end=40,8 layer="Tratteggiato" linetype="ByBlock"
+? dashes DA_BLOCCO -> continuous
+
+; Un tipo definito nel file senza elementi: continuo
+SENZA = LTYPE name="Senza tratti" pattern=continuous
+SENZA_TRATTI = LINE start=0,9 end=40,9 linetype="Senza tratti"
+? dashes SENZA_TRATTI -> continuous
+
+; Un cerchio con ByLayer sul layer tratteggiato: raggio 4.5, come nel caso
+; tratti/arco-cerchio (tratti fino a 12/4.5 rad e da 15/4.5 a 27/4.5 rad)
+CERCHIO_LAYER = CIRCLE center=5,5 radius=4.5 layer="Tratteggiato"
+? dashes CERCHIO_LAYER -> ARC center=5,5 radius=4.5 start-angle=0 end-angle=152.7887453682195; ARC center=5,5 radius=4.5 start-angle=190.98593171027443 end-angle=343.77467707849394
+
+; Un TEXT non ha tipo di linea: continuous anche con un tipo tratteggiato,
+; scritto o preso dal layer
+TESTO = TEXT position=0,0 height=2.5 value="Tratti" linetype="ACAD_ISO02W100"
+? dashes TESTO -> continuous
+TESTO_LAYER = TEXT position=0,10 height=2.5 value="Tratti" layer="Tratteggiato"
+? dashes TESTO_LAYER -> continuous
