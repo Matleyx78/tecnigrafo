@@ -45,7 +45,7 @@ inline constexpr std::size_t kMaxDashPieces = 100'000;
 /// tangent. Clockwise bulges produce counter-clockwise DashArcs with swapped ends.
 /// Precondition: scale is finite and positive; pattern elements are finite.
 [[nodiscard]] std::optional<std::vector<DashPiece>> dashes(const Entity& entity,
-                                                        const LinetypePattern& pattern,
-                                                        double scale);
+                                                           const LinetypePattern& pattern,
+                                                           double scale);
 
 }  // namespace tg::core

@@ -93,8 +93,8 @@ DashPiece dotAtDistance(const CurveSegment& segment, double offset) {
     Vec2 direction;
     if (segment.arc) {
         const double angle = angleAtDistance(segment, offset);
-        direction = Vec2{-std::sin(angle), std::cos(angle)} *
-                    std::copysign(1.0, segment.arc->sweep);
+        const double sign = std::copysign(1.0, segment.arc->sweep);
+        direction = Vec2{-std::sin(angle), std::cos(angle)} * sign;
     } else {
         direction = (segment.end - segment.start) * (1.0 / segment.length);
     }
@@ -177,10 +177,10 @@ private:
 
 }  // namespace
 
-std::optional<std::vector<DashPiece>> dashes(const Entity& entity,
-                                           const LinetypePattern& pattern, double scale) {
+std::optional<std::vector<DashPiece>> dashes(const Entity& entity, const LinetypePattern& pattern,
+                                             double scale) {
     assert(std::isfinite(scale) && scale > 0.0);
-    assert(std::ranges::all_of(pattern.elements, [](double value) { return std::isfinite(value); }));
+    assert(std::ranges::all_of(pattern.elements, [](double v) { return std::isfinite(v); }));
     const double patternLength = pattern.length() * scale;
     if (pattern.continuous() || std::holds_alternative<Text>(entity) ||
         !std::isfinite(patternLength) || patternLength <= 0.0) {

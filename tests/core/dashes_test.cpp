@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "tg/core/dashes.hpp"
+
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/math.hpp"
 #include "tg/script/questions.hpp"
@@ -67,8 +68,7 @@ TEST(Dashes, ContinuousShortEmptyAndTextFallbacks) {
     EXPECT_FALSE(dashes(Text{}, pattern, 1));
     EXPECT_FALSE(dashes(Arc{{0, 0}, 1, 0, kPi}, pattern, 1));
     EXPECT_FALSE(dashes(Circle{{0, 0}, 1}, pattern, 1));
-    EXPECT_FALSE(dashes(Line{{0, 0}, {20, 0}}, {{1, -1}},
-                        std::numeric_limits<double>::max()));
+    EXPECT_FALSE(dashes(Line{{0, 0}, {20, 0}}, {{1, -1}}, std::numeric_limits<double>::max()));
 }
 
 TEST(Dashes, EqualLongAndTruncatedLinesHaveNoZeroLengthStroke) {
@@ -254,7 +254,8 @@ TEST(Dashes, EffectiveScaleCombinesDocumentAndEntityValues) {
     document.setProperties(id, properties);
     const auto& record = *document.find(id);
     const auto effective = effectiveProperties(document, record);
-    const auto pieces = piecesFor(record.entity, effective.linetype->pattern, effective.linetypeScale);
+    const auto pieces =
+        piecesFor(record.entity, effective.linetype->pattern, effective.linetypeScale);
     ASSERT_EQ(pieces.size(), 4U);
     expectLine(pieces[0], {0, 0}, {3, 0});
     expectLine(pieces[3], {12, 0}, {15, 0});
@@ -285,8 +286,9 @@ TEST(DashQuestions, ResolveEffectiveLinetypeWithoutChangingExistingEntityScales)
 
 TEST(DashQuestions, RejectMissingExtraAndUnknownArguments) {
     for (const std::string_view question : {"dashes", "dashes A A", "dashes missing"}) {
-        const auto result = script::answerQuestions(
-            "A = LINE start=0,0 end=10,0\n? " + std::string{question} + " -> continuous\n");
+        const std::string text =
+            "A = LINE start=0,0 end=10,0\n? " + std::string{question} + " -> continuous\n";
+        const auto result = script::answerQuestions(text);
         EXPECT_TRUE(std::holds_alternative<script::ParseError>(result)) << question;
     }
 }
