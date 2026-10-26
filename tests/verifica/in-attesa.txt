@@ -54,3 +54,7 @@ dxf/layer-e-proprieta #238
 dxf/layer-tipi-complessi #238
 dxf/layer-incoerenti #238
 
+# 0.6-R23: selezione rapida (#257)
+selezione-rapida/filtri #257
+selezione-rapida/stati-layer #257
+

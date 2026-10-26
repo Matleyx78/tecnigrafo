@@ -1,0 +1,43 @@
+; Esclusione di layer spenti, congelati e bloccati in quickselect (ADR 0023, punto 4; 0.6-P23)
+
+; Layer con vari stati
+L_ON = LAYER name="Acceso" color=1
+L_OFF = LAYER name="Spento" color=1 off
+L_FRZ = LAYER name="Congelato" color=1 frozen
+L_LCK = LAYER name="Bloccato" color=1 locked
+L_OFF_LCK = LAYER name="SpentoBloccato" color=1 off locked
+L_FRZ_LCK = LAYER name="CongelatoBloccato" color=1 frozen locked
+
+; Tutte le entita hanno lo stesso tipo (LINE) e lo stesso colore (1)
+E_ON = LINE start=0,0 end=10,0 layer="Acceso" color=1
+E_OFF = LINE start=0,10 end=10,10 layer="Spento" color=1
+E_FRZ = LINE start=0,20 end=10,20 layer="Congelato" color=1
+E_LCK = LINE start=0,30 end=10,30 layer="Bloccato" color=1
+E_OFF_LCK = LINE start=0,40 end=10,40 layer="SpentoBloccato" color=1
+E_FRZ_LCK = LINE start=0,50 end=10,50 layer="CongelatoBloccato" color=1
+
+; 1. Senza filtri: solo l'entita sul layer acceso e sbloccato e selezionabile
+? quickselect -> E_ON
+
+; 2. Filtro per tipo
+? quickselect type=LINE -> E_ON
+
+; 3. Filtro per colore: anche se tutte hanno color=1, solo E_ON puo essere selezionata
+? quickselect color=1 -> E_ON
+
+; 4. Filtro per layer
+? quickselect layer="Acceso" -> E_ON
+? quickselect layer="Spento" -> none
+? quickselect layer="Congelato" -> none
+? quickselect layer="Bloccato" -> none
+? quickselect layer="SpentoBloccato" -> none
+? quickselect layer="CongelatoBloccato" -> none
+
+; 5. Filtro con exclude: i layer spenti, congelati o bloccati non vengono mai selezionati
+? quickselect type=CIRCLE exclude -> E_ON
+? quickselect layer="Acceso" exclude -> none
+? quickselect layer="Spento" exclude -> E_ON
+
+; 6. Filtro con within
+? quickselect within=E_ON,E_OFF,E_LCK -> E_ON
+? quickselect within=E_OFF,E_LCK -> none

@@ -1,0 +1,79 @@
+; Criteri della domanda quickselect (0.6-P23)
+
+; Tipi di linea e layer
+T_ISO = LTYPE name="ACAD_ISO02W100"
+T_TRATTO = LTYPE name="Tratteggio" pattern=10,-2 description="mio"
+
+L_MURI = LAYER name="Muri" color=1 linetype="ACAD_ISO02W100" lineweight=0.50
+L_PORTE = LAYER name="Porte" color=2 linetype="Tratteggio" lineweight=0.30
+L_ELETT = LAYER name="Elettrico" color=255,128,0 lineweight=0.18
+
+; Entita con varie combinazioni di tipo e proprieta
+E1 = LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" lineweight=0.50
+E2 = LINE start=0,10 end=10,10 layer="Muri" color=bylayer linetype="ByLayer" lineweight=bylayer
+E3 = CIRCLE center=20,20 radius=5 layer="Porte" color=2 linetype="Tratteggio" lineweight=0.30
+E4 = CIRCLE center=30,30 radius=5 layer="Porte" color=bylayer linetype="ByLayer" lineweight=bylayer
+E5 = LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10 layer="Elettrico" color=255,128,0 lineweight=0.18
+E6 = TEXT position=0,0 height=2.5 value="Test" layer="0"
+
+; 1. Senza filtro: tutte le entita selezionabili
+? quickselect -> E1 E2 E3 E4 E5 E6
+
+; 2. Filtro per tipo DXF
+? quickselect type=LINE -> E1 E2
+? quickselect type=CIRCLE -> E3 E4
+? quickselect type=LWPOLYLINE -> E5
+? quickselect type=TEXT -> E6
+? quickselect type=ARC -> none
+? quickselect type=LINE exclude -> E3 E4 E5 E6
+
+; 3. Filtro per layer (confronto senza distinguere le maiuscole)
+? quickselect layer="Muri" -> E1 E2
+? quickselect layer="muri" -> E1 E2
+? quickselect layer="MURI" -> E1 E2
+? quickselect layer="Porte" -> E3 E4
+? quickselect layer="0" -> E6
+? quickselect layer!="Muri" -> E3 E4 E5 E6
+? quickselect type=LINE layer="Muri" -> E1 E2
+? quickselect type=CIRCLE layer="Muri" -> none
+
+; 4. Filtro per colore (scritta propria, non effettiva)
+? quickselect color=1 -> E1
+? quickselect color=2 -> E3
+? quickselect color=255,128,0 -> E5
+? quickselect color=bylayer -> E2 E4 E6
+? quickselect color!=bylayer -> E1 E3 E5
+? quickselect type=LINE color=bylayer -> E2
+? quickselect type=LINE color!=bylayer -> E1
+
+; 5. Filtro per tipo di linea (scritta propria, maiuscole ignorate)
+? quickselect linetype="ACAD_ISO02W100" -> E1
+? quickselect linetype="Tratteggio" -> E3
+? quickselect linetype="tratteggio" -> E3
+? quickselect linetype="ByLayer" -> E2 E4 E5 E6
+? quickselect linetype!="ByLayer" -> E1 E3
+
+; 6. Filtro per spessore (scritta propria)
+? quickselect lineweight=0.50 -> E1
+? quickselect lineweight=0.30 -> E3
+? quickselect lineweight=0.18 -> E5
+? quickselect lineweight=bylayer -> E2 E4 E6
+? quickselect lineweight!=bylayer -> E1 E3 E5
+
+; 7. Limitazione con within
+? quickselect within=E1,E2,E3 -> E1 E2 E3
+? quickselect type=LINE within=E1,E3,E5 -> E1
+? quickselect color=bylayer within=E1,E2,E3,E4 -> E2 E4
+? quickselect color=bylayer within=E1,E3 -> none
+
+; 8. Inversione con exclude
+? quickselect type=LINE exclude -> E3 E4 E5 E6
+? quickselect color=bylayer exclude -> E1 E3 E5
+? quickselect layer="Muri" exclude -> E3 E4 E5 E6
+? quickselect layer="Muri" within=E1,E3 exclude -> E3
+
+; 9. Valori non leggibili: non trovano nulla e non danno errore
+? quickselect color=invalido -> none
+? quickselect color=invalido exclude -> E1 E2 E3 E4 E5 E6
+? quickselect lineweight=999 -> none
+? quickselect lineweight=999 exclude -> E1 E2 E3 E4 E5 E6
