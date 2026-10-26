@@ -1,0 +1,23 @@
+; Comando COLOR: indici, nomi, Truecolor, ByBlock, ByLayer ed errori (0.6-P13)
+COLOR
+red
+!report
+COLOR
+Truecolor
+255,128,0
+!report
+COLOR
+byblock
+!report
+COLOR
+bylayer
+!report
+COLOR
+300
+Truecolor
+300,0,0
+7
+LINE
+0,0
+10,0
+

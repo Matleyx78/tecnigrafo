@@ -1,0 +1,62 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -LINETYPE
+  Current line type: "ByLayer"
+  Enter an option [?/Load/Set]: Load
+  Enter linetype(s) to load: ACAD_ISO02W100,ACAD_ISO10W100
+  Enter an option [?/Load/Set]: Set
+  Specify linetype name or [?] <ByLayer>: ACAD_ISO02W100
+  Enter an option [?/Load/Set]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LINETYPE
+redo:
+snap: on
+ortho: off
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+  "ACAD_ISO10W100" pattern=12,-3,0,-3 description="Tratto punto ISO __ . __ . __ . __ . __ . __ . "
+current: layer="0" color=bylayer linetype="ACAD_ISO02W100" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: -LINETYPE
+  Current line type: "ACAD_ISO02W100"
+  Enter an option [?/Load/Set]: Load
+  Enter linetype(s) to load: ACAD_ISO02W100
+  Linetype "ACAD_ISO02W100" is already loaded.
+  Enter an option [?/Load/Set]: Load
+  Enter linetype(s) to load: Sconosciuto
+  Linetype "Sconosciuto" not found.
+  Enter an option [?/Load/Set]: Set
+  Specify linetype name or [?] <ACAD_ISO02W100>: Sconosciuto
+  Linetype "Sconosciuto" is not loaded.
+  Enter an option [?/Load/Set]: Set
+  Specify linetype name or [?] <ACAD_ISO02W100>: ByLayer
+  Enter an option [?/Load/Set]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LINETYPE
+  LINETYPE
+redo:
+snap: on
+ortho: off
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+  "ACAD_ISO10W100" pattern=12,-3,0,-3 description="Tratto punto ISO __ . __ . __ . __ . __ . __ . "
+pointer: none
+active snap: none
+statistics:

@@ -1,0 +1,127 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: LTSCALE
+  Enter new linetype scale factor <1.0000>: 2.0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LTSCALE
+redo:
+snap: on
+ortho: off
+ltscale: 2
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: CELTSCALE
+  Enter new value for CELTSCALE <1.0000>: 0.5
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LTSCALE
+  CELTSCALE
+redo:
+snap: on
+ortho: off
+current: layer="0" color=bylayer linetype="ByLayer" ltscale=0.5 lineweight=bylayer
+ltscale: 2
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: LWEIGHT
+  Current lineweight: ByLayer
+  Enter default lineweight for new objects or [?]: 0.50
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LTSCALE
+  CELTSCALE
+  LWEIGHT
+redo:
+snap: on
+ortho: off
+current: layer="0" color=bylayer linetype="ByLayer" ltscale=0.5 lineweight=0.50
+ltscale: 2
+pointer: none
+active snap: none
+statistics:
+
+[report 4]
+entities:
+messages:
+  Command: LWDISPLAY
+  Enter new value for LWDISPLAY <OFF>: ON
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LTSCALE
+  CELTSCALE
+  LWEIGHT
+redo:
+snap: on
+ortho: off
+current: layer="0" color=bylayer linetype="ByLayer" ltscale=0.5 lineweight=0.50
+ltscale: 2
+lwdisplay: on
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: LTSCALE
+  Enter new linetype scale factor <2.0000>: -1
+  Requires a positive number.
+  Enter new linetype scale factor <2.0000>: 2.0
+  Command: CELTSCALE
+  Enter new value for CELTSCALE <0.5000>: 0
+  Requires a positive number.
+  Enter new value for CELTSCALE <0.5000>: 0.5
+  Command: LWEIGHT
+  Current lineweight: 0.50
+  Enter default lineweight for new objects or [?]: 0.45
+  Invalid lineweight.
+  Enter default lineweight for new objects or [?]: ByLayer
+  Command: LWDISPLAY
+  Enter new value for LWDISPLAY <ON>: FORSE
+  Requires ON or OFF.
+  Enter new value for LWDISPLAY <ON>: OFF
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  LTSCALE
+  CELTSCALE
+  LWEIGHT
+  LTSCALE
+  CELTSCALE
+  LWEIGHT
+redo:
+snap: on
+ortho: off
+current: layer="0" color=bylayer linetype="ByLayer" ltscale=0.5 lineweight=bylayer
+ltscale: 2
+pointer: none
+active snap: none
+statistics:

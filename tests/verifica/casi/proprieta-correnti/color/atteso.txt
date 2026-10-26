@@ -1,0 +1,118 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: COLOR
+  Enter default object color [Truecolor] <BYLAYER>: red
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  COLOR
+redo:
+snap: on
+ortho: off
+current: layer="0" color=1 linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: COLOR
+  Enter default object color [Truecolor] <1>: Truecolor
+  Red, Green, Blue: 255,128,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  COLOR
+  COLOR
+redo:
+snap: on
+ortho: off
+current: layer="0" color=255,128,0 linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: COLOR
+  Enter default object color [Truecolor] <255,128,0>: byblock
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  COLOR
+  COLOR
+  COLOR
+redo:
+snap: on
+ortho: off
+current: layer="0" color=byblock linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+
+[report 4]
+entities:
+messages:
+  Command: COLOR
+  Enter default object color [Truecolor] <BYBLOCK>: bylayer
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  COLOR
+  COLOR
+  COLOR
+  COLOR
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0 color=7
+messages:
+  Command: COLOR
+  Enter default object color [Truecolor] <BYLAYER>: 300
+  Invalid color.
+  Enter default object color [Truecolor] <BYLAYER>: Truecolor
+  Red, Green, Blue: 300,0,0
+  Invalid color.
+  Enter default object color [Truecolor] <BYLAYER>: 7
+  Command: LINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  COLOR
+  COLOR
+  COLOR
+  COLOR
+  COLOR
+  Line
+redo:
+snap: on
+ortho: off
+current: layer="0" color=7 linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+  LINE 1
