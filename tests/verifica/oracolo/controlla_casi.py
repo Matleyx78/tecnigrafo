@@ -15,13 +15,27 @@ import tempfile
 import zipfile
 
 import ezdxf
-from ezdxf_attesi import DrawingAnswers
+from ezdxf.entities import factory
+from ezdxf_attesi import DrawingAnswers, aci_answer, print_standard_answers
 
 
 # Quoted text is indivisible: digits inside a text value are never approximate.
 TOKEN = re.compile(r'"(?:\\.|[^"\\])*"|[A-Za-z_~][\w~-]*|[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|[^\s]')
 DEFINITION = re.compile(r"(\w+)\s*=\s*DXF\s+source=([a-z0-9-]+)\s*$")
-QUESTION = re.compile(r"\?\s*(version|units|count|unhandled|entity)\s+(\w+)(?:\s+([0-9A-Fa-f]+))?\s*->\s*(.*)$")
+QUESTION = re.compile(r"\?\s*(version|units|count|unhandled|entity|layers|linetypes)\s+(\w+)(?:\s+([0-9A-Fa-f]+))?\s*->\s*(.*)$")
+
+ACI_QUESTION = re.compile(r"\?\s*aci\s+([+-]?\d+)\s*->\s*(.*)$")
+
+
+def answer_items(answer):
+    """Split lists without treating quoted semicolons as separators."""
+    items = [""]
+    for token in re.findall(r'"(?:\\.|[^"\\])*"|;|[^";]+', answer):
+        if token == ";":
+            items.append("")
+        else:
+            items[-1] += token
+    return items
 
 
 def equal_tokens(expected, actual, absolute, relative):
@@ -41,9 +55,9 @@ def equal_tokens(expected, actual, absolute, relative):
 
 
 def equal_answer(question, expected, actual, absolute, relative):
-    if question in {"count", "unhandled"}:
-        remaining = actual.split(";")
-        for item in expected.split(";"):
+    if question in {"count", "unhandled", "layers", "linetypes"}:
+        remaining = answer_items(actual)
+        for item in answer_items(expected):
             match = next((i for i, value in enumerate(remaining)
                           if equal_tokens(item, value, absolute, relative)), None)
             if match is None:
@@ -87,6 +101,16 @@ def check_case(path, sources):
             if name in drawings:
                 raise ValueError(f"{path}:{line_number}: duplicate drawing {name}")
             drawings[name] = DrawingAnswers(sources / source)
+            continue
+        aci = ACI_QUESTION.fullmatch(line)
+        if aci:
+            index, expected = aci.groups()
+            actual = aci_answer(int(index))
+            checked += 1
+            if not equal_answer("aci", expected, actual, absolute, relative):
+                failures += 1
+                print(f"{path}:{line_number}: ? aci {index}\n"
+                      f"  expected: {expected}\n  ezdxf:    {actual}")
             continue
         match = QUESTION.fullmatch(line)
         if not match:
@@ -151,11 +175,14 @@ def self_test():
         if not condition:
             raise ValueError(f"oracle self-test: {message}")
 
-    def dxf(path, entities, units=None):
+    def dxf(path, entities, units=None, tables=()):
         header = [(0, "SECTION"), (2, "HEADER"), (9, "$ACADVER"), (1, "AC1015")]
         if units is not None:
             header += [(9, "$INSUNITS"), (70, units)]
-        groups = header + [(0, "ENDSEC"), (0, "SECTION"), (2, "ENTITIES")]
+        groups = header + [(0, "ENDSEC")]
+        if tables:
+            groups += [(0, "SECTION"), (2, "TABLES")] + list(tables) + [(0, "ENDSEC")]
+        groups += [(0, "SECTION"), (2, "ENTITIES")]
         groups += entities + [(0, "ENDSEC"), (0, "EOF")]
         path.write_text("".join(f"{code}\n{value}\n" for code, value in groups), encoding="utf-8")
 
@@ -173,7 +200,27 @@ def self_test():
                   (39, 0.5), (210, 0), (220, 0), (230, -1)]
         dxf(source, line + unsupported)
         dxf(mirrored, circle, units=4)
-        for path in (source, mirrored):
+        properties = root / "properties"
+        tables = [
+            (0, "TABLE"), (2, "LTYPE"), (70, 1),
+            (0, "LTYPE"), (5, "40"), (100, "AcDbSymbolTableRecord"),
+            (100, "AcDbLinetypeTableRecord"), (2, "DashDot"), (70, 0),
+            (3, 'Dash; "dot"'), (72, 65), (73, 4), (40, 5),
+            (49, 3), (74, 0), (49, -1), (74, 0),
+            (49, 0), (74, 0), (49, -1), (74, 0), (0, "ENDTAB"),
+            (0, "TABLE"), (2, "LAYER"), (70, 2),
+            (0, "LAYER"), (5, "41"), (100, "AcDbSymbolTableRecord"),
+            (100, "AcDbLayerTableRecord"), (2, "0"), (70, 0),
+            (62, 7), (6, "Continuous"),
+            (0, "LAYER"), (5, "42"), (100, "AcDbSymbolTableRecord"),
+            (100, "AcDbLayerTableRecord"), (2, "Walls"), (70, 5),
+            (62, -3), (420, 16744448), (6, "DashDot"),
+            (370, 50), (290, 0), (0, "ENDTAB"),
+        ]
+        styled = [(code, "walls" if code == 8 else value) for code, value in line]
+        styled[4:4] = [(62, 1), (420, 66051), (6, "dashdot"), (48, 2.5), (370, 35)]
+        dxf(properties, styled, tables=tables)
+        for path in (source, mirrored, properties):
             print(f"=== Handwritten DXF probe: {path.name} ===", flush=True)
             output = subprocess.check_output(
                 [sys.executable, str(Path(__file__).with_name("ezdxf_attesi.py")), str(path)],
@@ -189,6 +236,61 @@ def self_test():
         require(DrawingAnswers(mirrored).answer("entity", "31") ==
                 "CIRCLE center=5,6 radius=3 z=2 thickness=0.5 extrusion=0,0,-1",
                 "negative OCS must stay raw")
+
+        require(drawing.answer("layers") == "none", "do not invent missing layers")
+        require(drawing.answer("linetypes") == "none", "do not invent missing linetypes")
+        styled_drawing = DrawingAnswers(properties)
+        expected_layers = ('"0" color=7 linetype="Continuous" lineweight=default; '
+                           '"Walls" color=255,128,0 linetype="DashDot" '
+                           'lineweight=0.50 off frozen locked noplot')
+        expected_linetypes = ('"DashDot" pattern=3,-1,0,-1 '
+                              'description="Dash; \\"dot\\""')
+        expected_entity = ('LINE start=0,0 end=10,5 layer="Walls" color=1,2,3 '
+                           'linetype="DashDot" ltscale=2.5 lineweight=0.35')
+        require(styled_drawing.answer("layers") == expected_layers, "layer fields and states")
+        require(styled_drawing.answer("linetypes") == expected_linetypes, "signed pattern and quotes")
+        require(styled_drawing.answer("entity", "2F") == expected_entity,
+                "entity properties, table spelling and RGB precedence")
+        raw_entity = styled_drawing.entities["2F"][0]
+        for index, expected in ((0, "byblock"), (1, "1"), (256, "bylayer")):
+            raw_entity.dxf.discard("true_color")
+            raw_entity.dxf.color = index
+            written = styled_drawing.answer("entity", "2F")
+            require((f"color={expected}" in written) if index != 256 else "color=" not in written,
+                    "entity indexed and inherited colors")
+        for weight, expected in ((0, "0"), (-2, "byblock"), (-3, "default"), (-1, None)):
+            raw_entity.dxf.lineweight = weight
+            written = styled_drawing.answer("entity", "2F")
+            require((f"lineweight={expected}" in written) if expected else "lineweight=" not in written,
+                    "entity lineweight values")
+        raw_entity.dxf.layer = "0"
+        raw_entity.dxf.linetype = "BYLAYER"
+        raw_entity.dxf.ltscale = 1
+        require(styled_drawing.answer("entity", "2F") == "LINE start=0,0 end=10,5",
+                "all default entity properties must be omitted")
+        for name in ("ByBlock", "BYLAYER", "Continuous"):
+            styled_drawing.linetypes.append(factory.new("LTYPE", dxfattribs={"name": name}))
+        require(styled_drawing.answer("linetypes") == expected_linetypes, "omit built-in types")
+        styled_drawing.linetypes[0].pattern_tags.tags.clear()
+        require(styled_drawing.answer("linetypes") ==
+                '"DashDot" pattern=continuous description="Dash; \\"dot\\""',
+                "empty pattern is continuous")
+        require(aci_answer(1) == "255,0,0" and aci_answer(255) == "255,255,255",
+                "ACI endpoints")
+        with redirect_stdout(io.StringIO()) as standard:
+            print_standard_answers()
+        standard_lines = standard.getvalue().splitlines()
+        require(len(standard_lines) == 256 and standard_lines[0] == "=== ezdxf: standard ===",
+                "one standard heading and all 255 ACI answers")
+        for index, output in enumerate(standard_lines[1:], 1):
+            require(output == f"? aci {index} -> {aci_answer(index)}", "standard ACI output")
+        for index in (0, 256):
+            try:
+                aci_answer(index)
+            except ValueError:
+                pass
+            else:
+                require(False, "invalid ACI index must fail")
 
         # The original owner, paper-space flag and degenerate values must survive
         # ezdxf's document layout binding and affect classification.
@@ -222,6 +324,34 @@ def self_test():
         require(equal_answer("entity", 'TEXT value="1" ~box=0,0;1,0', 'TEXT value="1"', 0, 0),
                 "derived properties")
         require(equal_answer("units", "100.01", "100", 0, 0.001), "relative tolerance")
+
+        case.write_text('; oracle: ezdxf\nD = DXF source=properties\n'
+                        f'? layers D -> {expected_layers}\n'
+                        f'? linetypes D -> {expected_linetypes}\n'
+                        f'? entity D 2F -> {expected_entity}\n'
+                        '? aci 1 -> 255,0,0\n? aci 255 -> 255,255,255\n',
+                        encoding="utf-8")
+        require(check_case(case, root) == (5, 0), "all new oracle questions")
+        case.write_text(case.read_text(encoding="utf-8")
+                        .replace("color=1,2,3", "color=1,2,4")
+                        .replace("pattern=3,-1,0,-1", "pattern=3,-2,0,-1")
+                        .replace("off frozen", "frozen")
+                        .replace("? aci 1 -> 255,0,0", "? aci 1 -> 0,0,0"),
+                        encoding="utf-8")
+        with redirect_stdout(io.StringIO()):
+            require(check_case(case, root) == (5, 4), "new answer mismatches must fail")
+        require(equal_answer("layers", expected_layers,
+                             "; ".join(reversed(answer_items(expected_layers))), 0, 0),
+                "unordered layer rows")
+        require(not equal_answer("layers", expected_layers,
+                                 expected_layers + '; "extra" color=7', 0, 0),
+                "extra table rows must fail")
+        require(not equal_answer("linetypes", expected_linetypes,
+                                 expected_linetypes.replace("Dash;", "Dash ;"), 1, 1),
+                "quoted semicolons and literal descriptions")
+        require(equal_answer("linetypes", '"A" pattern=3,-1 description=""',
+                             '"A" pattern=3.001,-1 description=""', 0.01, 0),
+                "linetype numeric tolerance")
 
         good = root / "good"
         good.mkdir()
@@ -259,6 +389,7 @@ def main():
         self_test()
     failures = 0
     if not args.check_only:
+        print_standard_answers()
         manifest = args.cases.parent / "sorgenti.json"
         sources = json.loads(manifest.read_text(encoding="utf-8"))["sources"] if manifest.exists() else []
         if not sources:
