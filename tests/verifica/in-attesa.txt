@@ -31,10 +31,6 @@ interfaccia/ribbon-scorciatoie #249
 interfaccia/ribbon-disegno-dopo-cambio #249
 interfaccia/ribbon-disegno-continuo #249
 
-# 0.6-R9: proprietà effettive e stati dei layer (#236)
-proprieta/aci #236
-proprieta/effettive #236
-proprieta/stati-layer #236
 
 # 0.6-R11: tratti dei tipi di linea (#240)
 tratti/linea #240
@@ -57,4 +53,16 @@ dxf/layer-incoerenti #238
 # 0.6-R23: selezione rapida (#257)
 selezione-rapida/filtri #257
 selezione-rapida/stati-layer #257
+
+# 0.6-R14: CHPROP e layer bloccati (#246)
+chprop/proprieta #246
+chprop/layer-bloccati #246
+chprop/roundtrip-dxf #246
+chprop/roundtrip-cadx #246
+
+# 0.6-R13: proprietà correnti (#244)
+proprieta-correnti/color #244
+proprieta-correnti/linetype #244
+proprieta-correnti/scale-e-spessori #244
+proprieta-correnti/entita-e-annulla #244
 

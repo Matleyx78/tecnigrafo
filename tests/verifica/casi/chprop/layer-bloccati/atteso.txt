@@ -1,0 +1,124 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=0,10 end=10,10
+  259 LINE start=0,20 end=10,20 layer="Bloccato"
+  260 LINE start=0,30 end=30,30 layer="Bloccato"
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Bloccato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LOck
+  Enter name list of layer(s) to lock: Bloccato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: LINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify start point: 0,10
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Undo]:
+  Command: CLAYER
+  Enter new value for CLAYER <"0">: Bloccato
+  Command: LINE
+  Specify start point: 0,20
+  Specify next point or [Undo]: 10,20
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify start point: 0,30
+  Specify next point or [Undo]: 30,30
+  Specify next point or [Undo]:
+  Command: CLAYER
+  Enter new value for CLAYER <"Bloccato">: 0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Line
+  Line
+  CLAYER
+  Line
+  Line
+  CLAYER
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
+pointer: 5,20
+active snap: none
+statistics:
+  LINE 4
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=0,10 end=10,10
+  259 LINE start=0,20 end=10,20 layer="Bloccato"
+  260 LINE start=0,30 end=30,30 layer="Bloccato"
+messages:
+prompt: Command:
+preview:
+selection: 257 258
+rectangle: none
+undo:
+  Layer
+  Line
+  Line
+  CLAYER
+  Line
+  Line
+  CLAYER
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
+pointer: 15,25
+active snap: none
+statistics:
+  LINE 4
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0
+  259 LINE start=0,20 end=10,20 layer="Bloccato"
+  260 LINE start=0,30 end=30,30 layer="Bloccato"
+messages:
+  Command: ERASE
+  0 found, 0 total
+  1 was on a locked layer.
+  1 found, 1 total
+  2 were on a locked layer.
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Line
+  Line
+  CLAYER
+  Line
+  Line
+  CLAYER
+  Erase
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
+pointer: -5,5
+active snap: none
+statistics:
+  LINE 3

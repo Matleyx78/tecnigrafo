@@ -1,0 +1,196 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.50
+  258 LINE start=0,10 end=10,10
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Color
+  New color [Truecolor]: 1
+  Enter name list of layer(s) for color 1 <0>: Muri
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: -LINETYPE
+  Current line type: "ByLayer"
+  Enter an option [?/Load/Set]: Load
+  Enter linetype(s) to load: ACAD_ISO02W100
+  Enter an option [?/Load/Set]:
+  Command: LINE
+  Specify start point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify start point: 0,10
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Undo]:
+  Command: CHPROP
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: Color
+  New color [Truecolor] <BYLAYER>: red
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: LAyer
+  Enter new layer name <0>: Muri
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: LType
+  Enter new linetype name <ByLayer>: ACAD_ISO02W100
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: ltScale
+  Specify new linetype scale <1.0000>: 2.0
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: LWeight
+  Enter new lineweight <ByLayer>: 0.50
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  LINETYPE
+  Line
+  Line
+  CHPROP
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=default
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+pointer: 5,0
+active snap: none
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  258 LINE start=0,10 end=10,10 ltscale=0.5
+messages:
+  Command: CHPROP
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: Color
+  New color [Truecolor] <varies>:
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: ltScale
+  Specify new linetype scale <varies>: 0.5
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  LINETYPE
+  Line
+  Line
+  CHPROP
+  CHPROP
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=default
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+pointer: 5,10
+active snap: none
+statistics:
+  LINE 2
+
+[report 3]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  258 LINE start=0,10 end=10,10 color=5 ltscale=0.5
+messages:
+  Command: CHPROP
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: Color
+  New color [Truecolor] <BYLAYER>: blue
+  Enter property to change [Color/LAyer/LType/ltScale/LWeight]: LAyer
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  LINETYPE
+  Line
+  Line
+  CHPROP
+  CHPROP
+  CHPROP
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=default
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+pointer: 5,10
+active snap: none
+statistics:
+  LINE 2
+
+[report 4]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  258 LINE start=0,10 end=10,10 ltscale=0.5
+messages:
+  Command: U
+  Undone: CHPROP.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  LINETYPE
+  Line
+  Line
+  CHPROP
+  CHPROP
+redo:
+  CHPROP
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=default
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+pointer: 5,10
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  258 LINE start=0,10 end=10,10 color=5 ltscale=0.5
+messages:
+  Command: REDO
+  Redone: CHPROP.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  LINETYPE
+  Line
+  Line
+  CHPROP
+  CHPROP
+  CHPROP
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Muri" color=1 linetype="Continuous" lineweight=default
+linetypes:
+  "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "
+pointer: 5,10
+active snap: none
+statistics:
+  LINE 2

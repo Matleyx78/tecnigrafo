@@ -1,0 +1,18 @@
+; Comando -LINETYPE: caricamento tipi ISO, selezione ed errori (ADR 0029, 0.6-P13)
+-LINETYPE
+Load
+ACAD_ISO02W100,ACAD_ISO10W100
+Set
+ACAD_ISO02W100
+
+!report
+-LINETYPE
+Load
+ACAD_ISO02W100
+Load
+Sconosciuto
+Set
+Sconosciuto
+Set
+ByLayer
+

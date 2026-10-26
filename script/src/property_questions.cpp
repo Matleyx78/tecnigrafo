@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
-// The questions on layers and properties of stage 0.6
-// (docs/verifica/domande.md, "Layer e proprietà"). This package answers
-// `layers` and `linetypes`; `aci`, `effective`, `dashes` and `quickselect`
-// are in the catalogue with no function until their packages (0.6-P9,
-// P11, P23) add them here.
-
 #include "question_table.hpp"
+#include "tg/core/effective_properties.hpp"
+#include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
 
+#include <charconv>
 #include <span>
 #include <string>
 #include <string_view>
@@ -59,6 +56,38 @@ QuestionResult askLayers(const QuestionModel& model, std::span<const std::string
 QuestionResult askLinetypes(const QuestionModel& model,
                             std::span<const std::string_view> arguments) {
     return askAboutTable(model, arguments, "linetypes <drawing>", &linetypeLines);
+}
+
+QuestionResult askAci(const QuestionModel& /*model*/, std::span<const std::string_view> arguments) {
+    if (arguments.size() != 1) {
+        return ArgumentError{"wrong arguments, expected: aci <n>"};
+    }
+    int index = 0;
+    const auto text = arguments.front();
+    const auto parsed = std::from_chars(text.data(), text.data() + text.size(), index);
+    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size() || index < 1 ||
+        index > 255) {
+        return ArgumentError{"expected an ACI index from 1 to 255"};
+    }
+    return core::formatColor(core::Color::fromRgb(core::aciToRgb(index)));
+}
+
+QuestionResult askEffective(const QuestionModel& model,
+                            std::span<const std::string_view> arguments) {
+    if (arguments.size() != 1) {
+        return ArgumentError{"wrong arguments, expected: effective <E>"};
+    }
+    const auto id = model.find(arguments.front());
+    if (!id) {
+        return ArgumentError{"no entity named '" + std::string{arguments.front()} +
+                             "' is defined above"};
+    }
+    const auto properties = core::effectiveProperties(model.document, *model.document.find(*id));
+    return "color=" + core::formatColor(core::Color::fromRgb(properties.color)) + " linetype=\"" +
+           properties.linetype->name + "\" ltscale=" + formatNumber(properties.linetypeScale) +
+           " lineweight=" + core::formatLineweight(properties.lineweight) +
+           " visible=" + (properties.visible ? "yes" : "no") +
+           " locked=" + (properties.locked ? "yes" : "no");
 }
 
 }  // namespace tg::script::detail

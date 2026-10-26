@@ -3,6 +3,7 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "tg/core/effective_properties.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 
@@ -44,6 +45,11 @@ BBox squareAround(const Vec2& center, double halfSide) {
 std::vector<EntityId> candidates(const Document& document, const BBox& area) {
     std::vector<EntityId> ids;
     document.query(searchArea(area), ids);
+    std::erase_if(ids, [&](EntityId id) {
+        const EntityRecord* record = document.find(id);
+        assert(record != nullptr && "the index only holds document entities");
+        return !isVisible(document, *record);
+    });
     return ids;
 }
 

@@ -41,8 +41,8 @@ TEST(Color, PaletteGroupsAndDistinctBaseColors) {
     EXPECT_EQ(aciToRgb(7), (Rgb{255, 255, 255}));
     EXPECT_EQ(aciToRgb(10), (Rgb{255, 0, 0}));
     EXPECT_EQ(aciToRgb(11), (Rgb{255, 127, 127}));
-    EXPECT_EQ(aciToRgb(249), (Rgb{38, 19, 23}));
-    EXPECT_EQ(aciToRgb(250), (Rgb{51, 51, 51}));
+    EXPECT_EQ(aciToRgb(249), (Rgb{88, 19, 23}));
+    EXPECT_EQ(aciToRgb(250), (Rgb{0, 0, 0}));
     EXPECT_EQ(aciToRgb(255), (Rgb{255, 255, 255}));
     for (int i = 1; i <= 9; ++i) {
         for (int j = i + 1; j <= 9; ++j) {
@@ -54,7 +54,7 @@ TEST(Color, PaletteGroupsAndDistinctBaseColors) {
 TEST(Color, NearestIndexAndTies) {
     EXPECT_EQ(nearestAci({255, 255, 255}), 255);
     EXPECT_EQ(nearestAci({255, 0, 0}), 1);  // Indices 1 and 10 have the same RGB.
-    EXPECT_EQ(nearestAci({0, 0, 0}), 18);   // Six darkest saturated hues tie.
+    EXPECT_EQ(nearestAci({0, 0, 0}), 250);  // Index 250 is exact black.
     for (int index = 1; index <= 255; ++index) {
         const auto rgb = aciToRgb(index);
         int first = 1;
