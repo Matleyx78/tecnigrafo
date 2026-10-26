@@ -153,8 +153,9 @@ TEST_F(LayerCommandsTest, RenameWarnsAndPreservesOtherUnhandledData) {
     inputs({"-LAYER", "New", "Muri", "Rename", "Muri", "Pareti", ""});
     EXPECT_NE(document.findLayer("Pareti"), nullptr);
     EXPECT_EQ(document.findLayer("Muri"), nullptr);
-    EXPECT_TRUE(heard("Layer \"Muri\" is also named in data Tecnigrafo does not handle; that data "
-                      "keeps the old name."));
+    std::string warning = "Layer \"Muri\" is also named in data Tecnigrafo ";
+    warning += "does not handle; that data keeps the old name.";
+    EXPECT_TRUE(heard(warning));
     EXPECT_EQ(document.raw().sections.back().groups.front().value, "Muri");
     ASSERT_TRUE(editor.undo());
     EXPECT_EQ(document.findLayer("Pareti"), nullptr);

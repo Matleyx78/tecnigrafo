@@ -8,7 +8,6 @@
 #include "tg/edit/layer_rules.hpp"
 
 #include <algorithm>
-#include <array>
 #include <optional>
 #include <utility>
 
@@ -129,43 +128,43 @@ void LayerCommand::chooseOption(CommandContext& context, std::string_view text) 
         context.message("Invalid option keyword.");
         return;
     }
-    constexpr std::array<Stage, 15> kStages{
-        Stage::List,
-        Stage::Make,
-        Stage::Set,
-        Stage::New,
-        Stage::RenameOld,
-        Stage::Names,
-        Stage::Names,
-        Stage::Color,
-        Stage::Linetype,
-        Stage::Lineweight,
-        Stage::Plot,
-        Stage::Names,
-        Stage::Names,
-        Stage::Names,
-        Stage::Names,
-    };
-    constexpr std::array<Operation, 15> kOperations{
-        Operation::On,
-        Operation::On,
-        Operation::On,
-        Operation::On,
-        Operation::On,
-        Operation::On,
-        Operation::Off,
-        Operation::Color,
-        Operation::Linetype,
-        Operation::Lineweight,
-        Operation::Plot,
-        Operation::Freeze,
-        Operation::Thaw,
-        Operation::Lock,
-        Operation::Unlock,
-    };
-    const auto index = static_cast<std::size_t>(found - options.begin());
-    m_stage = kStages.at(index);
-    m_operation = kOperations.at(index);
+    const auto& name = found->name;
+    m_stage = Stage::Names;
+    if (name == "?") {
+        m_stage = Stage::List;
+    } else if (name == "Make") {
+        m_stage = Stage::Make;
+    } else if (name == "Set") {
+        m_stage = Stage::Set;
+    } else if (name == "New") {
+        m_stage = Stage::New;
+    } else if (name == "Rename") {
+        m_stage = Stage::RenameOld;
+    } else if (name == "Color") {
+        m_stage = Stage::Color;
+        m_operation = Operation::Color;
+    } else if (name == "Ltype") {
+        m_stage = Stage::Linetype;
+        m_operation = Operation::Linetype;
+    } else if (name == "LWeight") {
+        m_stage = Stage::Lineweight;
+        m_operation = Operation::Lineweight;
+    } else if (name == "Plot") {
+        m_stage = Stage::Plot;
+        m_operation = Operation::Plot;
+    } else if (name == "ON") {
+        m_operation = Operation::On;
+    } else if (name == "OFF") {
+        m_operation = Operation::Off;
+    } else if (name == "Freeze") {
+        m_operation = Operation::Freeze;
+    } else if (name == "Thaw") {
+        m_operation = Operation::Thaw;
+    } else if (name == "LOck") {
+        m_operation = Operation::Lock;
+    } else {
+        m_operation = Operation::Unlock;
+    }
 }
 
 void LayerCommand::handleName(CommandContext& context, std::string_view text) {
@@ -361,15 +360,16 @@ void LayerCommand::list(CommandContext& context, std::string_view text) const {
 
 Prompt LayerCommand::prompt() const {
     switch (m_stage) {
-        case Stage::Option:
-            return textPrompt("Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/"
-                              "Plot/Freeze/Thaw/LOck/Unlock]:",
-                              description().prompts.front().keywords);
+        case Stage::Option: {
+            const auto option = description().prompts.front();
+            return textPrompt(option.text, option.keywords);
+        }
         case Stage::List:
             return textPrompt("Enter layer name(s) to list <*>:");
-        case Stage::Make:
-            return textPrompt(
-                "Enter name for new layer (becomes the current layer) <" + m_currentName + ">:");
+        case Stage::Make: {
+            const std::string label = "Enter name for new layer (becomes the current layer) <";
+            return textPrompt(label + m_currentName + ">:");
+        }
         case Stage::Set:
             return textPrompt("Enter layer name to make current:");
         case Stage::New:

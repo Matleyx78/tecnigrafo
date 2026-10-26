@@ -237,16 +237,18 @@ TEST(CommandRegistryDeathTest, PreconditionsAreChecked) {
 TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
     CommandRegistry registry;
     registerBuiltinCommands(registry);
-    std::vector<std::string> names;
+    std::string names;
     for (const CommandDescription* entry : registry.descriptions()) {
-        names.push_back(entry->name);
+        if (!names.empty()) {
+            names += ' ';
+        }
+        names += entry->name;
         EXPECT_TRUE(isValid(*entry)) << entry->name;
         EXPECT_TRUE(entry->summary.ends_with('.')) << entry->name;
         EXPECT_NE(registry.create(entry->name), nullptr) << entry->name;
     }
-    const std::vector<std::string> expected{
-        "-LAYER", "ARC", "CIRCLE", "CLAYER", "ERASE", "INSUNITS", "LINE", "NEW", "OPEN", "PLINE",
-        "QSAVE", "SAVE", "SAVEAS", "TEXT"};
+    const std::string expected =
+        "-LAYER ARC CIRCLE CLAYER ERASE INSUNITS LINE NEW OPEN PLINE QSAVE SAVE SAVEAS TEXT";
     EXPECT_EQ(names, expected);
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);
     EXPECT_EQ(registry.describe("DTEXT")->name, "TEXT");
