@@ -1,19 +1,28 @@
 # Continuous integration: every push and pull request must pass all jobs.
 # Changes that touch only documentation skip the build jobs: they show as
 # "skipped", which GitHub counts as passed for required checks.
+#
+# clang-tidy: a pull request checks only the files it touches (and the ones
+# that mention a touched header), on the build of the "Build" step, with no
+# second build. The whole project is checked on every push to main, every
+# night, and in a pull request that changes .clang-tidy, CMake or this file.
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: '23 2 * * *'
 
 permissions:
   contents: read
 
+# A newer push cancels the run of a pull request, never the run of main: the
+# whole-project tidy takes long and must not be cancelled by the next merge.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   changes:
@@ -103,6 +112,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The pull request is compared with its base to find the touched files.
+          fetch-depth: 0
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -125,7 +137,34 @@ jobs:
         run: |
           set -o pipefail
           ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
-      - name: Static analysis
+      - name: Choose the static analysis
+        id: tidy
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          full=true
+          if [ "$EVENT" = pull_request ]; then
+            if git diff --name-only "$BASE" | grep -qE '^(\.clang-tidy$|CMakeLists\.txt$|CMakePresets\.json$|cmake/|\.github/workflows/ci\.yml$)'; then
+              echo "The tidy configuration, CMake or this workflow changed: whole project."
+            else
+              full=false
+            fi
+          fi
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+      # Same clang-tidy-18 and .clang-tidy as the CMake integration, run on the
+      # compile commands of the build above: no second build.
+      - name: Static analysis (files touched by the pull request)
+        if: steps.tidy.outputs.full == 'false'
+        env:
+          TG_TIDY_BASE: ${{ github.event.pull_request.base.sha }}
+          TG_TIDY_MAX: '100000'
+        run: |
+          set -o pipefail
+          scripts/controlla.sh --solo tidy --righe 200 2>&1 | scripts/ci-annota.sh
+          head -n 3 build/controlla/tidy.log
+      - name: Static analysis (whole project)
+        if: steps.tidy.outputs.full == 'true'
         run: |
           set -o pipefail
           cmake --preset tidy -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
