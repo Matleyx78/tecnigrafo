@@ -49,3 +49,8 @@ layer/stati-e-proprieta #242
 layer/errori-e-limiti #242
 layer/annulla-ripeti-esc #242
 
+# 0.6-R10: layer, tipi di linea e proprietà nel DXF (#238)
+dxf/layer-e-proprieta #238
+dxf/layer-tipi-complessi #238
+dxf/layer-incoerenti #238
+

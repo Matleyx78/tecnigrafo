@@ -1,0 +1,23 @@
+; oracle: ezdxf
+; Disegno pubblico AutoCAD con layer, tipi di linea ISO e proprieta delle entita (ADR 0023, ADR 0024, ADR 0025, 0.6-P10)
+D = DXF source=autocad-colori-layer-tipilinea
+? version D -> AC1032
+? units D -> 4
+? count D -> LINE 12
+? unhandled D -> none
+? layers D -> "0" color=7 linetype="Continuous" lineweight=default; "Layer1" color=1 linetype="ACAD_ISO02W100" lineweight=default; "Layer2" color=3 linetype="ACAD_ISO05W100" lineweight=default; "Layer3" color=5 linetype="ACAD_ISO14W100" lineweight=0.30
+? linetypes D -> "ACAD_ISO02W100" pattern=12,-3 description="Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ "; "ACAD_ISO05W100" pattern=24,-3,0,-3,0,-3 description="Tratto lungo doppio punto ISO ____ .. ____ .. _"; "ACAD_ISO14W100" pattern=12,-3,0,-3,0,-3,0,-3 description="Tratto triplo punto ISO __ . . . __ . . . __ . "; "ACAD_ISO10W100" pattern=12,-3,0,-3 description="Tratto punto ISO __ . __ . __ . __ . __ . __ . "
+? entity D 267 -> LINE start=0,0 end=20,0
+? entity D 268 -> LINE start=0,5 end=20,5 linetype="ACAD_ISO10W100"
+? entity D 269 -> LINE start=0,10 end=20,10
+? entity D 26A -> LINE start=0,15 end=20,15 layer="Layer1" color=4
+? entity D 26B -> LINE start=0,20 end=20,20 layer="Layer3"
+? entity D 26C -> LINE start=0,25 end=20,25 layer="Layer2"
+? entity D 26D -> LINE start=0,30 end=20,30 layer="Layer1"
+? entity D 26E -> LINE start=0,35 end=20,35 color=6
+? entity D 26F -> LINE start=0,40 end=20,40 color=5
+? entity D 270 -> LINE start=0,45 end=20,45 color=3
+? entity D 271 -> LINE start=0,50 end=20,50 color=1
+? entity D 272 -> LINE start=0,55 end=20,55 color=2
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
