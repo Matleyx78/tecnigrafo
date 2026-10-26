@@ -2,7 +2,7 @@
 
 <!--
 Modello della scheda di un pacchetto, dalla tappa 0.5 (vedi 0000-modello.md,
-sezione 6). La scheda sta in docs/tappe/X.Y/PN-<nome>.md e la issue la cita.
+sezione 7). La scheda sta in docs/tappe/X.Y/PN-<nome>.md e la issue la cita.
 
 La scheda è autosufficiente: l'agente legge AGENTS.md, questa scheda, gli ADR
 che cita e CODING_STYLE.md, e nient'altro della tappa. Quello che gli serve

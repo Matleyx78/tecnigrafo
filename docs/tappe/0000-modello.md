@@ -5,8 +5,8 @@
 - **Apertura:** AAAA-MM-GG — **Chiusura:** AAAA-MM-GG
 
 <!--
-Una tappa "in programma" compila solo le sezioni 1-4 (la scheda).
-All'apertura il responsabile aggiunge le sezioni 5-8 (il piano dettagliato).
+Una tappa "in programma" compila solo le sezioni 1-5 (la scheda).
+All'apertura il responsabile aggiunge le sezioni 6-9 (il piano dettagliato).
 -->
 
 ## 1. Obiettivo
@@ -30,11 +30,19 @@ Verificabili, uno per riga, con casella da spuntare alla chiusura.
 
 Moduli coinvolti, nuove classi principali, ADR da scrivere, rischi.
 
-## 5. Prerequisiti
+## 5. Idee per la tappa
+
+Idee non ancora pianificate (di norma issue con l'etichetta `idea`) da valutare
+insieme a questa tappa, ciascuna con il punto della scheda a cui si riferisce.
+Si può lasciare vuota.
+
+- …
+
+## 6. Prerequisiti
 
 Tappe chiuse e ADR accettati da cui questa dipende.
 
-## 6. Pacchetti di lavoro
+## 7. Pacchetti di lavoro
 
 Ogni pacchetto è **una pull request**. I pacchetti senza dipendenze tra loro si
 possono fare in parallelo; due pacchetti che toccano gli stessi file sono legati
@@ -64,10 +72,10 @@ i `CMakeLists.txt` e i registri come `builtin_commands.cpp`): ognuno aggiunge
 solo le sue righe, in ordine alfabetico, e chi arriva dopo si aggiorna. Si
 elencano qui e si ripetono nelle schede che li toccano.
 
-## 7. Prova manuale
+## 8. Prova manuale
 
 Passi da eseguire a mano su ogni sistema operativo prima della chiusura.
 
-## 8. Modifiche al piano
+## 9. Modifiche al piano
 
 Cambiamenti decisi durante la tappa, con data e motivo.
