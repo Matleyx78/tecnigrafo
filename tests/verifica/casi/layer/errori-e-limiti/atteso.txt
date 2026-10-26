@@ -49,8 +49,8 @@ snap: on
 ortho: off
 layers:
   "0" color=7 linetype="Continuous" lineweight=default
-  "Congelato" color=7 linetype="Continuous" lineweight=default frozen
   "Muri" color=7 linetype="Continuous" lineweight=default
+  "Congelato" color=7 linetype="Continuous" lineweight=default frozen
   "Nuovo" color=7 linetype="Continuous" lineweight=default
 pointer: none
 active snap: none
@@ -78,8 +78,8 @@ snap: on
 ortho: off
 layers:
   "0" color=7 linetype="Continuous" lineweight=default
-  "Congelato" color=7 linetype="Continuous" lineweight=default frozen
   "Muri" color=7 linetype="Continuous" lineweight=default
+  "Congelato" color=7 linetype="Continuous" lineweight=default frozen
   "Nuovo" color=7 linetype="Continuous" lineweight=default
 pointer: none
 active snap: none

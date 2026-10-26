@@ -38,9 +38,9 @@ snap: on
 ortho: off
 layers:
   "0" color=7 linetype="Continuous" lineweight=default
-  "Finestre" color=7 linetype="Continuous" lineweight=default off noplot
   "Muri" color=1 linetype="Continuous" lineweight=0.50 locked
   "Porte" color=255,128,0 linetype="Continuous" lineweight=default frozen
+  "Finestre" color=7 linetype="Continuous" lineweight=default off noplot
 pointer: none
 active snap: none
 statistics:
@@ -69,9 +69,9 @@ snap: on
 ortho: off
 layers:
   "0" color=7 linetype="Continuous" lineweight=default
-  "Finestre" color=7 linetype="Continuous" lineweight=default noplot
   "Muri" color=1 linetype="Continuous" lineweight=0.50
   "Porte" color=255,128,0 linetype="Continuous" lineweight=default
+  "Finestre" color=7 linetype="Continuous" lineweight=default noplot
 pointer: none
 active snap: none
 statistics:
