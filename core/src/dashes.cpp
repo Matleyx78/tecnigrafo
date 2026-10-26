@@ -58,6 +58,7 @@ std::vector<CurveSegment> segmentsOf(const Entity& entity) {
 }
 
 double angleAtDistance(const CurveSegment& segment, double offset) {
+    assert(segment.arc.has_value());
     const auto& arc = *segment.arc;
     return arc.startAngle + std::copysign(offset / arc.radius, arc.sweep);
 }
@@ -116,7 +117,7 @@ public:
         if (m_pieces.size() >= kMaxDashPieces) {
             return false;
         }
-        m_pieces.push_back(std::move(piece));
+        m_pieces.push_back(piece);
         return true;
     }
 

@@ -120,6 +120,9 @@ TEST(Dashes, LeadingAndOnlyGapsProduceNoSpuriousStrokes) {
     expectLine(pieces[1], {9, 0}, {12, 0});
     const auto gaps = dashes(Line{{0, 0}, {1e20, 0}}, {{-1}}, 1);
     ASSERT_TRUE(gaps);
+    if (!gaps) {
+        return;
+    }
     EXPECT_TRUE(gaps->empty());
 }
 
@@ -222,13 +225,19 @@ TEST(Dashes, ClosedPolylineIncludesTheClosingSegment) {
 }
 
 TEST(Dashes, PieceLimitIncludesPointsAndPiecesSplitAtVertices) {
-    const double limit = static_cast<double>(kMaxDashPieces);
+    const auto limit = static_cast<double>(kMaxDashPieces);
     const auto exact = dashes(Line{{0, 0}, {2 * limit, 0}}, {{1, -1}}, 1);
     ASSERT_TRUE(exact);
+    if (!exact) {
+        return;
+    }
     EXPECT_EQ(exact->size(), kMaxDashPieces);
     EXPECT_FALSE(dashes(Line{{0, 0}, {2 * limit + 1, 0}}, {{1, -1}}, 1));
     const auto points = dashes(Line{{0, 0}, {limit - 1, 0}}, {{0, -1}}, 1);
     ASSERT_TRUE(points);
+    if (!points) {
+        return;
+    }
     EXPECT_EQ(points->size(), kMaxDashPieces);
     EXPECT_FALSE(dashes(Line{{0, 0}, {limit, 0}}, {{0, -1}}, 1));
     EXPECT_FALSE(dashes(Circle{{0, 0}, limit}, {{1, -1}}, 1));
