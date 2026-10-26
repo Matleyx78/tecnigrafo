@@ -50,8 +50,8 @@ QString title(const QString& name) {
 }
 
 QStringList groups() {
-    return {QStringLiteral("home/draw"), QStringLiteral("home/modify"),
-            QStringLiteral("home/layers"), QStringLiteral("home/properties"),
+    return {QStringLiteral("home/draw"),     QStringLiteral("home/modify"),
+            QStringLiteral("home/layers"),   QStringLiteral("home/properties"),
             QStringLiteral("view/navigate"), QStringLiteral("view/aids")};
 }
 

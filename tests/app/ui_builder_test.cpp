@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include "ui_builder.hpp"
+
 #include "action_registry.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
-#include "ui_builder.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -84,7 +85,8 @@ TEST(UiBuilderTest, SwitchingPreservesActionsAndDisposesPreviousWidgets) {
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         EXPECT_TRUE(classic.isNull());
         EXPECT_TRUE(toolbar.isNull());
-        EXPECT_TRUE(window.findChildren<QToolBar*>(QString{}, Qt::FindDirectChildrenOnly).isEmpty());
+        const auto remaining = window.findChildren<QToolBar*>(QString{}, Qt::FindDirectChildrenOnly);
+        EXPECT_TRUE(remaining.isEmpty());
         EXPECT_EQ(window.actionRegistry().actions(), actions);
         EXPECT_TRUE(ortho->isChecked());
         EXPECT_FALSE(line->isEnabled());
@@ -113,10 +115,9 @@ TEST(UiBuilderTest, RibbonButtonsAndClassicToolbarsUseRegisteredActions) {
     EXPECT_TRUE(draw->actions().contains(line));
     auto* standard = window.findChild<QToolBar*>(QStringLiteral("standard"));
     ASSERT_NE(standard, nullptr);
-    EXPECT_TRUE(standard->actions().contains(
-        window.actionRegistry().action(QStringLiteral("file.save"))));
-    EXPECT_TRUE(standard->actions().contains(
-        window.actionRegistry().action(QStringLiteral("edit.undo"))));
+    const auto& registry = window.actionRegistry();
+    EXPECT_TRUE(standard->actions().contains(registry.action(QStringLiteral("file.save"))));
+    EXPECT_TRUE(standard->actions().contains(registry.action(QStringLiteral("edit.undo"))));
 }
 
 TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) {

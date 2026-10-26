@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include "ui_builder.hpp"
-
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
+#include "ui_builder.hpp"
 
 #include <QList>
 #include <QMainWindow>

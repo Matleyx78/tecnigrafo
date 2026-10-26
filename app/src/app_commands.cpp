@@ -41,10 +41,11 @@ void registerAppCommands(cmd::CommandRegistry& registry, MainWindow& window) {
     registry.add({"RIBBON", {}, "Shows the ribbon interface.", false, {}}, [&window] {
         return std::make_unique<InterfaceCommand>(window, InterfaceKind::Ribbon);
     });
-    registry.add({"RIBBONCLOSE", {}, "Shows the classic menus and toolbars.", false, {}},
-                 [&window] {
-                     return std::make_unique<InterfaceCommand>(window, InterfaceKind::Classic);
-                 });
+    const cmd::CommandDescription close{
+        "RIBBONCLOSE", {}, "Shows the classic menus and toolbars.", false, {}};
+    registry.add(close, [&window] {
+        return std::make_unique<InterfaceCommand>(window, InterfaceKind::Classic);
+    });
 }
 
 }  // namespace tg::app

@@ -282,8 +282,8 @@ void MainWindow::createStatusBar() {
     m_ribbonButton->setAutoRaise(true);
     m_ribbonButton->setFocusPolicy(Qt::NoFocus);
     connect(m_ribbonButton, &QToolButton::clicked, this, [this] {
-        setInterface(interfaceKind() == InterfaceKind::Ribbon ? InterfaceKind::Classic
-                                                            : InterfaceKind::Ribbon);
+        const bool ribbon = interfaceKind() == InterfaceKind::Ribbon;
+        setInterface(ribbon ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
     statusBar()->addPermanentWidget(m_ribbonButton);
     // In AutoCAD's order: ORTHO before OSNAP.
