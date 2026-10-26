@@ -1,0 +1,74 @@
+; Tratti di una LWPOLYLINE (ADR 0025, punto 4; scheda 0.6-P11; domanda dashes)
+;
+; Valori calcolati a mano, senza eseguire Tecnigrafo. Senza generazione
+; continua il motivo riparte da ogni vertice, e un segmento piu corto del
+; motivo si disegna continuo, come un pezzo intero; se lo sono tutti, la
+; polilinea e continua. Con linetype-generation=yes (DXF 70, bit 128) il
+; motivo prosegue lungo tutta la polilinea, e un tratto che attraversa un
+; vertice si spezza in due pezzi, uno per segmento. I tratti seguono gli
+; archi dei bulge; un pezzo d'arco si scrive come un ARC del rapporto, in
+; senso antiorario, angoli in gradi in [0, 360).
+;
+; ACAD_ISO02W100 ha il motivo 12,-3 (lunghezza 15), ACAD_ISO10W100 il motivo
+; 12,-3,0,-3 (lunghezza 18): la tabella LTYPE del DXF di AutoCAD
+; autocad-colori-layer-tipilinea di sorgenti.json (ADR 0029).
+
+I2 = LTYPE name="ACAD_ISO02W100"
+I10 = LTYPE name="ACAD_ISO10W100"
+
+; Un segmento dritto (0,0)-(20,0), poi da (20,0) a (40,0) un bulge -1:
+; mezza circonferenza in senso orario, centro 30,0, raggio 10, sopra l'asse,
+; che parte dall'angolo 180 e scende verso 0. Lunghezza dell'arco 10*pi.
+;
+; Senza generazione continua: sul segmento dritto tratti 0-12 e 15-20
+; (troncato); sull'arco il motivo riparte da (20,0): tratto 0-12 da 180 a
+; 180 - 68.75493541569878, tratto 15-27 da 180 - 85.94366926962348 a
+; 180 - 154.6986046853223, tratto 30-31.4159 da 180 - 171.88733853924697 a 0
+BULGE = LWPOLYLINE vertex=0,0 vertex=20,0 bulge=-1 vertex=40,0 linetype="ACAD_ISO02W100"
+? dashes BULGE -> LINE 0,0 12,0; LINE 15,0 20,0; ARC center=30,0 radius=10 start-angle=111.24506458430122 end-angle=180; ARC center=30,0 radius=10 start-angle=25.301395314677716 end-angle=94.05633073037652; ARC center=30,0 radius=10 start-angle=0 end-angle=8.112661460753031
+
+; La stessa con la generazione continua: il tratto 15-27 attraversa il
+; vertice a 20 e si spezza in LINE 15-20 e nell'arco 0-7 (da 180 a
+; 180 - 40.10704565915762); spazio 27-30; tratto 30-42, cioe arco 10-22 (da
+; 180 - 57.29577951308232 a 180 - 126.05071492878112); spazio 42-45; tratto
+; 45-51.4159, cioe arco 25-31.4159 (da 180 - 143.23944878270581 a 0)
+BULGE_GEN = LWPOLYLINE closed=no linetype-generation=yes vertex=0,0 vertex=20,0 bulge=-1 vertex=40,0 linetype="ACAD_ISO02W100"
+? dashes BULGE_GEN -> LINE 0,0 12,0; LINE 15,0 20,0; ARC center=30,0 radius=10 start-angle=139.89295434084238 end-angle=180; ARC center=30,0 radius=10 start-angle=53.94928507121888 end-angle=122.70422048691768; ARC center=30,0 radius=10 start-angle=0 end-angle=36.76055121729419
+
+; Un segmento lungo (20) e uno piu corto del motivo (5): il secondo si
+; disegna continuo come pezzo intero
+SEGMENTO_CORTO = LWPOLYLINE vertex=0,0 vertex=20,0 vertex=20,5 linetype="ACAD_ISO02W100"
+? dashes SEGMENTO_CORTO -> LINE 0,0 12,0; LINE 15,0 20,0; LINE 20,0 20,5
+
+; Un arco di bulge piu corto del motivo: da (20,0) a (22,0) con bulge 1,
+; mezza circonferenza antioraria di centro 21,0 e raggio 1, sotto l'asse,
+; lunga pi < 15: un pezzo intero, da 180 a 360 gradi, cioe end-angle=0
+ARCO_CORTO = LWPOLYLINE vertex=0,0 vertex=20,0 bulge=1 vertex=22,0 linetype="ACAD_ISO02W100"
+? dashes ARCO_CORTO -> LINE 0,0 12,0; LINE 15,0 20,0; ARC center=21,0 radius=1 start-angle=180 end-angle=0
+
+; Chiusa, quadrato di lato 10, senza generazione continua: tutti i segmenti
+; (compreso quello di chiusura) sono piu corti del motivo: continua
+CHIUSA_CORTA = LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10 linetype="ACAD_ISO02W100"
+? dashes CHIUSA_CORTA -> continuous
+
+; Lo stesso quadrato con la generazione continua: lungo 40 compreso il
+; segmento di chiusura. Tratto 0-12 spezzato al vertice 10,0; spazio 12-15;
+; tratto 15-27 spezzato al vertice 10,10; spazio 27-30; tratto 30-40 sul
+; segmento di chiusura, fino alla fine
+CHIUSA_GEN = LWPOLYLINE closed=yes linetype-generation=yes vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10 linetype="ACAD_ISO02W100"
+? dashes CHIUSA_GEN -> LINE 0,0 10,0; LINE 10,0 10,2; LINE 10,5 10,10; LINE 10,10 3,10; LINE 0,10 0,0
+
+; Chiusa, quadrato di lato 20, senza generazione continua: su ogni segmento,
+; compreso quello di chiusura, tratti 0-12 e 15-20
+CHIUSA = LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,20 vertex=0,20 linetype="ACAD_ISO02W100"
+? dashes CHIUSA -> LINE 0,0 12,0; LINE 15,0 20,0; LINE 20,0 20,12; LINE 20,15 20,20; LINE 20,20 8,20; LINE 5,20 0,20; LINE 0,20 0,8; LINE 0,5 0,0
+
+; Con la generazione continua, una polilinea lunga in tutto 10 < 15: continua
+GEN_CORTA = LWPOLYLINE linetype-generation=yes vertex=0,0 vertex=5,0 vertex=5,5 linetype="ACAD_ISO02W100"
+? dashes GEN_CORTA -> continuous
+
+; Con la generazione continua e ACAD_ISO10W100, lunga 40: tratto 0-12
+; spezzato al vertice 10,0; punto a 15 (10,5); tratto 18-30; punto a 33
+; (10,23); tratto 36-40
+ISO10_GEN = LWPOLYLINE linetype-generation=yes vertex=0,0 vertex=10,0 vertex=10,30 linetype="ACAD_ISO10W100"
+? dashes ISO10_GEN -> LINE 0,0 10,0; LINE 10,0 10,2; POINT 10,5; LINE 10,8 10,20; POINT 10,23; LINE 10,26 10,30

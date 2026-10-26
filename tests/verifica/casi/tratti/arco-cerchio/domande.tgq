@@ -1,0 +1,57 @@
+; Tratti di ARC e CIRCLE (ADR 0025, punto 4; scheda 0.6-P11; domanda dashes)
+;
+; Valori calcolati a mano, senza eseguire Tecnigrafo. Un ARC parte
+; dall'angolo iniziale e va in senso antiorario; un CIRCLE parte dall'angolo
+; 0, in senso antiorario. Una lunghezza s lungo una curva di raggio r e un
+; angolo di s/r radianti, cioe s/r*180/pi gradi. Ogni tratto e un ARC con lo
+; stesso centro e raggio, scritto come nel rapporto: in senso antiorario,
+; angoli in gradi in [0, 360). Un punto e POINT x,y.
+;
+; ACAD_ISO02W100 ha il motivo 12,-3 (lunghezza 15), ACAD_ISO10W100 il motivo
+; 12,-3,0,-3 (lunghezza 18): la tabella LTYPE del DXF di AutoCAD
+; autocad-colori-layer-tipilinea di sorgenti.json (ADR 0029).
+
+I2 = LTYPE name="ACAD_ISO02W100"
+I10 = LTYPE name="ACAD_ISO10W100"
+
+; Arco di raggio 10 da 0 a 180 gradi, lungo 10*pi = 31.41592653589793.
+; 12/10 rad = 68.75493541569878 gradi; 15/10 rad = 85.94366926962348;
+; 27/10 rad = 154.6986046853223; 30/10 rad = 171.88733853924697.
+; Tratti 0-12, 15-27, 30-31.4159 (troncato alla fine, 180 gradi)
+ARCO = ARC center=0,0 radius=10 start-angle=0 end-angle=180 linetype="ACAD_ISO02W100"
+? dashes ARCO -> ARC center=0,0 radius=10 start-angle=0 end-angle=68.75493541569878; ARC center=0,0 radius=10 start-angle=85.94366926962348 end-angle=154.6986046853223; ARC center=0,0 radius=10 start-angle=171.88733853924697 end-angle=180
+
+; Arco che attraversa 0 gradi, da 300 a 60 (120 gradi, lungo 20.94395...).
+; Primo tratto da 300 a 300 + 68.75493541569878 = 368.75493541569878, cioe
+; 8.75493541569878 in [0, 360); secondo tratto da 300 + 85.94366926962348,
+; cioe 25.94366926962348, fino alla fine (60), troncato
+ARCO_ZERO = ARC center=0,0 radius=10 start-angle=300 end-angle=60 linetype="ACAD_ISO02W100"
+? dashes ARCO_ZERO -> ARC center=0,0 radius=10 start-angle=300 end-angle=8.75493541569878; ARC center=0,0 radius=10 start-angle=25.94366926962348 end-angle=60
+
+; Arco piu corto del motivo: raggio 1, 90 gradi, lungo pi/2 < 15: continuo
+ARCO_CORTO = ARC center=0,0 radius=1 start-angle=0 end-angle=90 linetype="ACAD_ISO02W100"
+? dashes ARCO_CORTO -> continuous
+
+; Arco con scala dell'entita 2 (motivo 24,-6), raggio 10 da 90 a 270 gradi,
+; lungo 31.4159: tratto 0-24 da 90 a 90 + 137.50987083139756, spazio 24-30,
+; tratto 30-31.4159 da 90 + 171.88733853924697 a 270
+ARCO_SCALA2 = ARC center=0,0 radius=10 start-angle=90 end-angle=270 linetype="ACAD_ISO02W100" ltscale=2
+? dashes ARCO_SCALA2 -> ARC center=0,0 radius=10 start-angle=90 end-angle=227.50987083139756; ARC center=0,0 radius=10 start-angle=261.88733853924697 end-angle=270
+
+; Cerchio di raggio 4.5, lungo 9*pi = 28.274333882308138, dall'angolo 0.
+; 12/4.5 rad = 152.7887453682195 gradi; 15/4.5 rad = 190.98593171027443;
+; 27/4.5 rad = 343.77467707849394. Tratti 0-12 e 15-27; la fine (28.27) cade
+; nello spazio 27-30, che non lascia nulla
+CERCHIO = CIRCLE center=5,5 radius=4.5 linetype="ACAD_ISO02W100"
+? dashes CERCHIO -> ARC center=5,5 radius=4.5 start-angle=0 end-angle=152.7887453682195; ARC center=5,5 radius=4.5 start-angle=190.98593171027443 end-angle=343.77467707849394
+
+; Cerchio piu corto del motivo: raggio 2, lungo 4*pi = 12.566 < 15: continuo
+CERCHIO_CORTO = CIRCLE center=0,0 radius=2 linetype="ACAD_ISO02W100"
+? dashes CERCHIO_CORTO -> continuous
+
+; Cerchio di raggio 5 con ACAD_ISO10W100, lungo 10*pi = 31.4159: tratto
+; 0-12 (fino a 12/5 rad = 137.50987083139756 gradi), punto a 15 (3 rad:
+; 5*cos(3), 5*sin(3)), tratto 18-30 (da 206.26480624709637 a
+; 343.77467707849394 gradi); la fine cade nello spazio 30-33
+CERCHIO_ISO10 = CIRCLE center=0,0 radius=5 linetype="ACAD_ISO10W100"
+? dashes CERCHIO_ISO10 -> ARC center=0,0 radius=5 start-angle=0 end-angle=137.50987083139756; POINT -4.949962483002227,0.7056000402993361; ARC center=0,0 radius=5 start-angle=206.26480624709637 end-angle=343.77467707849394

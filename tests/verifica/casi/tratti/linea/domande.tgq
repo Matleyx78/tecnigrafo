@@ -1,0 +1,71 @@
+; Tratti di una LINE (ADR 0025, punti 3 e 4; scheda 0.6-P11; domanda dashes)
+;
+; Valori calcolati a mano, senza eseguire Tecnigrafo. Il motivo parte dal
+; primo punto della linea con il primo elemento e si tronca alla fine: un
+; tratto tagliato si accorcia, uno spazio tagliato non lascia nulla, un
+; tratto di lunghezza 0 non si emette. Ogni elemento si moltiplica per
+; LTSCALE (1 in un documento nuovo) e per la scala dell'entita (ltscale=).
+;
+; ACAD_ISO02W100 ha il motivo 12,-3 (lunghezza 15): la tabella LTYPE del DXF
+; di AutoCAD autocad-colori-layer-tipilinea di sorgenti.json (ADR 0029).
+
+I2 = LTYPE name="ACAD_ISO02W100"
+
+; Piu lunga del motivo: 0-12 tratto, 12-15 spazio, 15-27 tratto, 27-30
+; spazio, 30-42 tratto troncato a 40
+LUNGA = LINE start=0,0 end=40,0 linetype="ACAD_ISO02W100"
+? dashes LUNGA -> LINE 0,0 12,0; LINE 15,0 27,0; LINE 30,0 40,0
+
+; Lunga quanto il motivo: non e piu corta, quindi ha i tratti; lo spazio
+; finale 12-15 non lascia nulla
+UGUALE = LINE start=0,0 end=15,0 linetype="ACAD_ISO02W100"
+? dashes UGUALE -> LINE 0,0 12,0
+
+; Piu corta del motivo (14.5 < 15): continua
+CORTA = LINE start=0,0 end=14.5,0 linetype="ACAD_ISO02W100"
+? dashes CORTA -> continuous
+
+; Obliqua, lunga 50 lungo la direzione (0.6, 0.8): tratti 0-12, 15-27,
+; 30-42, 45-50 (troncato)
+OBLIQUA = LINE start=0,0 end=30,40 linetype="ACAD_ISO02W100"
+? dashes OBLIQUA -> LINE 0,0 7.2,9.6; LINE 9,12 16.2,21.6; LINE 18,24 25.2,33.6; LINE 27,36 30,40
+
+; Da destra a sinistra: il motivo parte da start, non dal punto piu a
+; sinistra; i pezzi vanno nel verso della linea
+INVERSA = LINE start=40,10 end=0,10 linetype="ACAD_ISO02W100"
+? dashes INVERSA -> LINE 40,10 28,10; LINE 25,10 13,10; LINE 10,10 0,10
+
+; Motivo che finisce con uno spazio, 6,-2 (lunghezza 8)
+T62 = LTYPE name="Tratto62" pattern=6,-2
+; Lunga 14: il secondo tratto 8-14 finisce esattamente alla fine
+FINE_TRATTO = LINE start=0,0 end=14,0 linetype="Tratto62"
+? dashes FINE_TRATTO -> LINE 0,0 6,0; LINE 8,0 14,0
+; Lunga 16: il terzo tratto comincerebbe a 16, alla fine, e troncato ha
+; lunghezza 0: non si emette
+TRATTO_NULLO = LINE start=0,0 end=16,0 linetype="Tratto62"
+? dashes TRATTO_NULLO -> LINE 0,0 6,0; LINE 8,0 14,0
+
+; Motivo che finisce con un punto, 6,-2,0 (lunghezza 8): il punto cade a 8 e
+; a 16, dove comincia il tratto successivo, e si emette comunque
+T620 = LTYPE name="TrattoPunto" pattern=6,-2,0
+FINE_PUNTO = LINE start=0,0 end=20,0 linetype="TrattoPunto"
+? dashes FINE_PUNTO -> LINE 0,0 6,0; POINT 8,0; LINE 8,0 14,0; POINT 16,0; LINE 16,0 20,0
+
+; Motivo che comincia con uno spazio, -2,5 (lunghezza 7): spazio 0-2,
+; tratto 2-7, spazio 7-9, tratto 9-14 troncato a 12
+T25 = LTYPE name="SpazioTratto" pattern=-2,5
+INIZIO_SPAZIO = LINE start=0,0 end=12,0 linetype="SpazioTratto"
+? dashes INIZIO_SPAZIO -> LINE 2,0 7,0; LINE 9,0 12,0
+
+; Scala dell'entita 2: motivo 24,-6 (lunghezza 30)
+SCALA2 = LINE start=0,0 end=40,0 linetype="ACAD_ISO02W100" ltscale=2
+? dashes SCALA2 -> LINE 0,0 24,0; LINE 30,0 40,0
+; Lunga 20, piu corta del motivo scalato (30), anche se piu lunga di 15
+SCALA2_CORTA = LINE start=0,0 end=20,0 linetype="ACAD_ISO02W100" ltscale=2
+? dashes SCALA2_CORTA -> continuous
+
+; Scala dell'entita 0.5: motivo 6,-1.5 (lunghezza 7.5)
+SCALA05 = LINE start=0,0 end=20,0 linetype="ACAD_ISO02W100" ltscale=0.5
+? dashes SCALA05 -> LINE 0,0 6,0; LINE 7.5,0 13.5,0; LINE 15,0 20,0
+SCALA05_CORTA = LINE start=0,0 end=7,0 linetype="ACAD_ISO02W100" ltscale=0.5
+? dashes SCALA05_CORTA -> continuous
