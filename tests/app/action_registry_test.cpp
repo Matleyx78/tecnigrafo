@@ -22,6 +22,7 @@
 #include <QString>
 #include <QStringList>
 #include <QTest>
+#include <QToolBar>
 #include <gtest/gtest.h>
 
 #include <utility>
@@ -199,8 +200,14 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
     // action stays a child of the menu but is shown nowhere.
     const auto madeByQt = [](QAction* item) {
         const auto* menu = qobject_cast<const QMenu*>(item->parent());
-        return menu != nullptr &&
-               (item == menu->menuAction() || item->associatedObjects().isEmpty());
+        if (menu != nullptr &&
+            (item == menu->menuAction() || item->associatedObjects().isEmpty())) {
+            return true;
+        }
+        // Like QMenu::menuAction(), Qt owns the toolbar visibility control;
+        // it is not an application command declared in ActionRegistry.
+        const auto* toolbar = qobject_cast<const QToolBar*>(item->parent());
+        return toolbar != nullptr && item == toolbar->toggleViewAction();
     };
     const QList<QAction*> found = window().findChildren<QAction*>();
     qsizetype counted = 0;
