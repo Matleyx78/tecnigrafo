@@ -159,6 +159,13 @@ void Document::insertRaw(RawEntity raw) {
     m_rawEntities.insert(where, std::move(raw));
 }
 
+void Document::replaceRaw(const RawEntity& raw) {
+    const auto found = std::ranges::find(m_rawEntities, raw.id, &RawEntity::id);
+    assert(found != m_rawEntities.end());
+    assert(found->order == raw.order);
+    *found = raw;
+}
+
 void Document::reserveHandle(EntityId id) {
     assert(id.value != 0);
     m_otherIds.insert(id.value);

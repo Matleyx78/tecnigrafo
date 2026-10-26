@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -517,6 +518,354 @@ TEST(EditorDeathTest, TransactionPreconditionsAreChecked) {
 
     editor.beginTransaction("Open");
     EXPECT_DEATH(editor.beginTransaction("Again"), "already open");
+}
+
+// Counters intentionally are not compared: undo never reuses an allocated handle.
+struct DrawingState {
+    std::vector<core::EntityRecord> entities;
+    std::vector<core::RawEntity> rawEntities;
+    std::vector<core::Layer> layers;
+    std::vector<core::Linetype> linetypes;
+    core::RawDrawing raw;
+    core::CurrentProperties current;
+    double ltscale;
+    int units;
+    bool lwdisplay;
+
+    friend bool operator==(const DrawingState&, const DrawingState&) = default;
+};
+
+DrawingState stateOf(const Document& doc) {
+    return {{doc.entities().begin(), doc.entities().end()},
+            {doc.rawEntities().begin(), doc.rawEntities().end()},
+            {doc.layers().begin(), doc.layers().end()},
+            {doc.linetypes().begin(), doc.linetypes().end()},
+            doc.raw(),
+            doc.current(),
+            doc.ltscale(),
+            doc.units(),
+            doc.lwdisplay()};
+}
+
+core::Layer namedLayer(const Document& doc, const std::string& name) {
+    core::Layer layer;
+    layer.name = name;
+    layer.linetype = doc.continuousLinetype();
+    layer.extras = {{1000, "preserved"}};
+    return layer;
+}
+
+void expectRoundTrip(Editor& editor, const DrawingState& before, const DrawingState& after) {
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        ASSERT_TRUE(editor.undo());
+        EXPECT_EQ(stateOf(editor.document()), before);
+        ASSERT_TRUE(editor.redo());
+        EXPECT_EQ(stateOf(editor.document()), after);
+    }
+}
+
+TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
+    Document doc = Document::newDrawing();
+    Editor editor(doc);
+    const auto before = stateOf(doc);
+    editor.beginTransaction("Layers");
+    const auto first = editor.addLayer(namedLayer(doc, "First"));
+    const auto second = editor.addLayer(namedLayer(doc, "Second"));
+    const auto third = editor.addLayer(namedLayer(doc, "Third"));
+    if (!first || !second || !third) {
+        ADD_FAILURE() << "Layer creation must succeed";
+        return;
+    }
+    editor.commit();
+    const auto added = stateOf(doc);
+    expectRoundTrip(editor, before, added);
+    editor.markSaved("layers.cadx");
+    editor.beginTransaction("Remove middle");
+    EXPECT_TRUE(editor.removeLayer(*second));
+    editor.commit();
+    const auto removed = stateOf(doc);
+    EXPECT_EQ(doc.layers()[2].id, *third);
+    expectRoundTrip(editor, added, removed);
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_FALSE(editor.isModified());
+    editor.beginTransaction("Discard removal");
+    EXPECT_TRUE(editor.removeLayer(*first));
+    EXPECT_TRUE(editor.removeLayer(*third));
+    editor.rollback();
+    EXPECT_EQ(stateOf(doc), added);
+}
+
+TEST(Editor, RenameRestoresRawSpellingsAndPreservesOtherReferences) {
+    Document doc = Document::newDrawing();
+    const auto layer = doc.addLayer(namedLayer(doc, "Walls"));
+    core::RawEntity hatch;
+    hatch.id = EntityId{1000};
+    hatch.order = 1;
+    hatch.type = "HATCH";
+    hatch.groups = {{5, "3E8"}, {8, "wALLS"}, {1001, "APP"}, {1000, "Walls"}};
+    doc.insertRaw(hatch);
+    core::RawDrawing raw;
+    core::RawSection blocks;
+    blocks.name = "BLOCKS";
+    blocks.groups.push_back({0, "LINE"});
+    blocks.groups.push_back({8, "WALLS"});
+    blocks.groups.push_back({1001, "APP"});
+    blocks.groups.push_back({1000, "Walls"});
+    blocks.groups.push_back({0, "ARC"});
+    blocks.groups.push_back({8, "walls"});
+    blocks.groups.push_back({0, "LINE"});
+    blocks.groups.push_back({8, "0"});
+    raw.sections = {blocks, {"OBJECTS", {{1, "Walls"}}}};
+    raw.nativeParts = {{"extensions.json", "{}"}};
+    doc.setRaw(raw);
+    Editor editor(doc);
+    const auto before = stateOf(doc);
+    editor.beginTransaction("Rename twice");
+    EXPECT_TRUE(editor.renameLayer(layer, "Partitions"));
+    EXPECT_TRUE(editor.renameLayer(layer, "Dividers"));
+    editor.commit();
+    EXPECT_EQ(doc.rawEntities()[0].groups[1].value, "Dividers");
+    EXPECT_EQ(doc.rawEntities()[0].groups[3].value, "Walls");
+    EXPECT_EQ(doc.raw().sections[0].groups[1].value, "Dividers");
+    EXPECT_EQ(doc.raw().sections[0].groups[3].value, "Walls");
+    EXPECT_EQ(doc.raw().sections[0].groups[5].value, "Dividers");
+    EXPECT_EQ(doc.raw().sections[1], raw.sections[1]);
+    const auto after = stateOf(doc);
+    expectRoundTrip(editor, before, after);
+    editor.beginTransaction("Discard rename");
+    EXPECT_TRUE(editor.renameLayer(layer, "Other"));
+    editor.rollback();
+    EXPECT_EQ(stateOf(doc), after);
+}
+
+TEST(Editor, LayerStatesAndPropertiesPreserveIdentityNameAndExtras) {
+    Document doc = Document::newDrawing();
+    const auto id = doc.addLayer(namedLayer(doc, "Walls"));
+    Editor editor(doc);
+    const auto before = stateOf(doc);
+    auto changed = *doc.layer(id);
+    changed.name = "Ignored";
+    changed.extras.clear();
+    changed.color = core::Color::fromIndex(1);
+    changed.lineweight = 50;
+    changed.on = false;
+    changed.frozen = true;
+    changed.locked = true;
+    changed.plot = false;
+    editor.beginTransaction("States");
+    EXPECT_TRUE(editor.changeLayer(changed));
+    editor.commit();
+    EXPECT_EQ(doc.layer(id)->name, "Walls");
+    EXPECT_EQ(doc.layer(id)->extras, before.layers[1].extras);
+    EXPECT_FALSE(doc.layer(id)->on);
+    EXPECT_TRUE(doc.layer(id)->frozen);
+    EXPECT_TRUE(doc.layer(id)->locked);
+    EXPECT_FALSE(doc.layer(id)->plot);
+    expectRoundTrip(editor, before, stateOf(doc));
+}
+
+TEST(Editor, LinetypeCurrentScalePropertiesAndEntitiesShareOneStep) {
+    Document doc = Document::newDrawing();
+    Editor editor(doc);
+    const auto before = stateOf(doc);
+    editor.beginTransaction("Mixed");
+    core::Linetype linetype;
+    linetype.name = "Custom";
+    linetype.description = "Test pattern";
+    linetype.extras = {{1000, "preserved"}};
+    const auto type = editor.addLinetype(linetype);
+    const auto layer = editor.addLayer(namedLayer(doc, "Walls"));
+    if (!type || !layer) {
+        ADD_FAILURE() << "Linetype and layer creation must succeed";
+        return;
+    }
+    auto current = doc.current();
+    current.layer = *layer;
+    current.linetype = *type;
+    current.linetypeScale = 2.5;
+    current.lineweight = 50;
+    current.color = core::Color::fromIndex(3);
+    EXPECT_TRUE(editor.setCurrent(current));
+    const auto id = editor.add(segment(2));
+    EXPECT_EQ(doc.find(id)->properties, current);
+    auto properties = current;
+    properties.color = core::Color::byBlock();
+    EXPECT_TRUE(editor.setProperties(id, properties));
+    EXPECT_TRUE(editor.setLtscale(3.5));
+    EXPECT_TRUE(editor.setUnits(0));
+    editor.commit();
+    EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Mixed"}));
+    const auto after = stateOf(doc);
+    expectRoundTrip(editor, before, after);
+    editor.beginTransaction("Discard properties");
+    EXPECT_TRUE(editor.setCurrent(before.current));
+    EXPECT_TRUE(editor.setProperties(id, current));
+    EXPECT_TRUE(editor.setLtscale(1.0));
+    EXPECT_TRUE(editor.remove(id));
+    editor.rollback();
+    EXPECT_EQ(stateOf(doc), after);
+}
+
+TEST(Editor, ColourBookIsRemovedOnlyOnColourChangeAndRestoredExactly) {
+    Document doc = Document::newDrawing();
+    const auto id = doc.add(segment(1));
+    auto record = doc.remove(id);
+    if (!record) {
+        ADD_FAILURE() << "The entity must exist";
+        return;
+    }
+    record->extras.common = {{440, "1"}, {430, "Catalog$Colour"}, {60, "0"}, {430, "Other"}};
+    record->extras.extended = {{1000, "preserved"}};
+    doc.restore(*record);
+    Editor editor(doc);
+    const auto before = stateOf(doc);
+    editor.beginTransaction("Scale only");
+    auto properties = doc.find(id)->properties;
+    properties.linetypeScale = 2;
+    EXPECT_TRUE(editor.setProperties(id, properties));
+    EXPECT_EQ(doc.find(id)->extras, record->extras);
+    editor.rollback();
+    EXPECT_EQ(stateOf(doc), before);
+    editor.beginTransaction("Colour");
+    properties.color = core::Color::fromRgb({12, 34, 56});
+    EXPECT_TRUE(editor.setProperties(id, properties));
+    editor.commit();
+    EXPECT_EQ(doc.find(id)->extras.common, (core::RawGroups{{440, "1"}, {60, "0"}}));
+    expectRoundTrip(editor, before, stateOf(doc));
+}
+
+TEST(Editor, RejectedAndUnchangedLayerEditsKeepRedoAndSavedState) {
+    Document doc = Document::newDrawing();
+    const auto layer = doc.addLayer(namedLayer(doc, "Walls"));
+    auto frozen = namedLayer(doc, "Frozen");
+    frozen.frozen = true;
+    const auto frozenId = doc.addLayer(frozen);
+    Editor editor(doc);
+    addCommitted(editor, 1);
+    ASSERT_TRUE(editor.undo());
+    const auto before = stateOf(doc);
+    editor.beginTransaction("Nothing");
+    EXPECT_FALSE(editor.addLayer(namedLayer(doc, "walls")));
+    EXPECT_FALSE(editor.addLayer(namedLayer(doc, "bad/name")));
+    EXPECT_FALSE(editor.renameLayer(layer, "Walls"));
+    EXPECT_FALSE(editor.renameLayer(layer, "0"));
+    EXPECT_FALSE(editor.renameLayer({}, "Other"));
+    EXPECT_FALSE(editor.renameLayer(doc.layerZero(), "Other"));
+    EXPECT_FALSE(editor.removeLayer(doc.layerZero()));
+    EXPECT_FALSE(editor.removeLayer({}));
+    EXPECT_FALSE(editor.changeLayer(*doc.layer(layer)));
+    auto zero = *doc.layer(doc.layerZero());
+    zero.frozen = true;
+    EXPECT_FALSE(editor.changeLayer(zero));
+    auto missing = zero;
+    missing.id = {};
+    EXPECT_FALSE(editor.changeLayer(missing));
+    EXPECT_FALSE(editor.setCurrent(doc.current()));
+    auto current = doc.current();
+    current.layer = frozenId;
+    EXPECT_FALSE(editor.setCurrent(current));
+    current.layer = {};
+    EXPECT_FALSE(editor.setCurrent(current));
+    EXPECT_FALSE(editor.setProperties({}, doc.current()));
+    EXPECT_FALSE(editor.setLtscale(doc.ltscale()));
+    const auto infinity = std::numeric_limits<double>::infinity();
+    const auto nan = std::numeric_limits<double>::quiet_NaN();
+    for (const double invalid : {0.0, -1.0, infinity, nan}) {
+        EXPECT_FALSE(editor.setLtscale(invalid));
+    }
+    core::Linetype type;
+    type.name = "continuous";
+    EXPECT_FALSE(editor.addLinetype(type));
+    type.name = "";
+    EXPECT_FALSE(editor.addLinetype(type));
+    editor.commit();
+    EXPECT_EQ(stateOf(doc), before);
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_TRUE(editor.canRedo());
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, CurrentLayerMayBeOffOrLockedButNotRemovedOrFrozen) {
+    Document doc = Document::newDrawing();
+    const auto id = doc.addLayer(namedLayer(doc, "Current"));
+    Editor editor(doc);
+    const auto before = stateOf(doc);
+    editor.beginTransaction("Current");
+    auto current = doc.current();
+    current.layer = id;
+    EXPECT_TRUE(editor.setCurrent(current));
+    auto layer = *doc.layer(id);
+    layer.on = false;
+    layer.locked = true;
+    EXPECT_TRUE(editor.changeLayer(layer));
+    EXPECT_FALSE(editor.removeLayer(id));
+    layer.frozen = true;
+    EXPECT_FALSE(editor.changeLayer(layer));
+    const auto entity = editor.add(segment(1));
+    EXPECT_EQ(doc.find(entity)->properties, current);
+    editor.commit();
+    expectRoundTrip(editor, before, stateOf(doc));
+}
+
+TEST(Editor, LwdisplayHasNoUndoStepPreservesRedoAndTracksSavedValue) {
+    Document doc = Document::newDrawing();
+    Editor editor(doc);
+    int notifications = 0;
+    editor.setChangeListener([&] { ++notifications; });
+    editor.setLwdisplay(false);
+    EXPECT_EQ(notifications, 0);
+    editor.setLwdisplay(true);
+    EXPECT_EQ(notifications, 1);
+    EXPECT_TRUE(editor.isModified());
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.canRedo());
+    editor.markSaved("view.cadx");
+    EXPECT_FALSE(editor.isModified());
+    addCommitted(editor, 1);
+    ASSERT_TRUE(editor.undo());
+    editor.setLwdisplay(false);
+    EXPECT_TRUE(editor.canRedo());
+    EXPECT_TRUE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_FALSE(doc.lwdisplay());
+    ASSERT_TRUE(editor.undo());
+    EXPECT_TRUE(editor.isModified());
+    editor.setLwdisplay(true);
+    EXPECT_FALSE(editor.isModified());
+    editor.beginTransaction("View setting is not transactional");
+    editor.setLwdisplay(false);
+    editor.rollback();
+    EXPECT_FALSE(doc.lwdisplay());
+    EXPECT_TRUE(editor.isModified());
+    editor.replaceDocument(Document::newDrawing(), "");
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, OpenTransactionReportsPropertyModificationsAndRollbackClearsThem) {
+    Document doc = Document::newDrawing();
+    Editor editor(doc);
+    editor.beginTransaction("Scale");
+    EXPECT_TRUE(editor.setLtscale(2));
+    EXPECT_TRUE(editor.isModified());
+    editor.rollback();
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(EditorDeathTest, LayerAndPropertyEditsRequireATransaction) {
+#ifdef NDEBUG
+    GTEST_SKIP() << "preconditions are checked with assert, disabled in this build";
+#endif
+    Document doc = Document::newDrawing();
+    Editor editor(doc);
+    EXPECT_DEATH(editor.addLayer(namedLayer(doc, "Walls")), "open transaction");
+    EXPECT_DEATH(editor.renameLayer({}, "Name"), "open transaction");
+    EXPECT_DEATH(editor.removeLayer({}), "open transaction");
+    EXPECT_DEATH(editor.changeLayer(*doc.layer(doc.layerZero())), "open transaction");
+    EXPECT_DEATH(editor.addLinetype(core::Linetype{}), "open transaction");
+    EXPECT_DEATH(editor.setProperties({}, doc.current()), "open transaction");
+    EXPECT_DEATH(editor.setCurrent(doc.current()), "open transaction");
+    EXPECT_DEATH(editor.setLtscale(2), "open transaction");
 }
 
 }  // namespace
