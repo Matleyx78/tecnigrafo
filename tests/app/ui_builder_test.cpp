@@ -127,6 +127,11 @@ TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) 
     window.show();
     window.activateWindow();
     ASSERT_TRUE(QTest::qWaitForWindowActive(&window));
+    ASSERT_EQ(QApplication::focusWidget(), window.view());
+    QTest::keyClicks(QApplication::focusWidget(), "LINE");
+    events::press(QApplication::focusWidget(), Qt::Key_Return);
+    EXPECT_TRUE(window.runner().isActive());
+    events::press(QApplication::focusWidget(), Qt::Key_Escape);
     auto* input = window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
     auto* button = window.findChild<QToolButton*>(QStringLiteral("ribbonButton"));
     ASSERT_NE(input, nullptr);

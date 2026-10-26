@@ -264,7 +264,15 @@ QToolButton* MainWindow::createModeButton(QAction* action, const QString& text,
 }
 
 void MainWindow::setInterface(InterfaceKind kind) {
+    QWidget* focus = focusWidget();
+    QWidget* editingFocus = m_view;
+    if (focus != nullptr && (focus == m_view || m_commandLine->isAncestorOf(focus))) {
+        editingFocus = focus;
+    }
     m_uiBuilder->show(kind);
+    // SARibbon requests focus during construction. Keep keyboard input in
+    // the editor, including the first command typed after the window opens.
+    editingFocus->setFocus(Qt::OtherFocusReason);
     if (m_ribbonButton != nullptr) {
         m_ribbonButton->setText(kind == InterfaceKind::Ribbon ? tr("RIBBON") : tr("MENU"));
     }
