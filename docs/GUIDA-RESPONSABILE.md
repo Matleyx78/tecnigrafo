@@ -198,6 +198,9 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
    "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
    documentazione. Proponi anche le bozze degli ADR che servono.
+   Elenca anche le issue con etichetta `idea` ancora aperte e dimmi quali,
+   secondo te, potrebbero entrare in questa tappa e perché: le approvo io, una
+   per una; quelle che approvo entrano nella scheda, le altre restano issue.
    ```
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
