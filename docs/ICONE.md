@@ -109,6 +109,8 @@ layer e delle proprietà, 0.6-P22 e 0.6-P24).
 | `layer-locked.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso |
 | `layer-unlocked.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto aperto |
 | `layer-current.svg` | `layer.current` (0.6-P22) | pila di tre piani, il primo con il punto d'accento |
+| `layer-new.svg` | `layer.new` (0.6-P22) | pila di tre piani, il primo con un più |
+| `layer-delete.svg` | `layer.delete` (0.6-P22) | pila di tre piani, il primo con una croce |
 | `properties-panel.svg` | `properties.panel` (0.6-P24) | scheda con un elenco di voci |
 | `quick-select.svg` | `edit.quick-select` (0.6-P24) | imbuto |
 | `property-color.svg` | controllo del colore, pannello delle proprietà (0.6-P24) | goccia |

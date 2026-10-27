@@ -160,6 +160,7 @@ if(TG_BUILD_APP)
         app/drawing_test.cpp
         app/file_menu_test.cpp
         app/icons_test.cpp
+        app/layer_panel_test.cpp
         app/recent_files_test.cpp
         app/theme_test.cpp
         app/shortcut_map_test.cpp
@@ -184,10 +185,13 @@ if(TG_BUILD_APP)
     add_dependencies(tg_app_tests tecnigrafo confronta_immagini)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
+    # Most cases build a whole main window, which takes about a second each
+    # on Windows (the suite runs in about two minutes in a Debug build there),
+    # so the limit is far above the time it needs, only to stop a real hang.
     add_test(NAME app_widgets COMMAND tg_app_tests)
     set_tests_properties(app_widgets PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
-        TIMEOUT 60)
+        TIMEOUT 240)
 endif()
 
 # Generate twice, independently of core's table, and compare byte for byte.

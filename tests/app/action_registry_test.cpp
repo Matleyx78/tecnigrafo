@@ -6,10 +6,12 @@
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "input_events.hpp"
+#include "layer_panel.hpp"
 #include "main_window.hpp"
 #include "tg/io/file_access.hpp"
 
 #include <QAction>
+#include <QDockWidget>
 #include <QKeySequence>
 #include <QLineEdit>
 #include <QList>
@@ -23,6 +25,7 @@
 #include <QStringList>
 #include <QTest>
 #include <QToolBar>
+#include <QWidgetAction>
 #include <gtest/gtest.h>
 
 #include <utility>
@@ -208,6 +211,20 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
         // it is not an application command declared in ActionRegistry.
         const auto* toolbar = qobject_cast<const QToolBar*>(item->parent());
         if (toolbar != nullptr && item == toolbar->toggleViewAction()) {
+            return true;
+        }
+        // The same for a dock widget: Qt owns the action that shows or hides
+        // the layers panel (the registry has layer.panel for that).
+        const auto* dock = qobject_cast<const QDockWidget*>(item->parent());
+        if (dock != nullptr && item == dock->toggleViewAction()) {
+            return true;
+        }
+        // The ribbon and the toolbar each hold the layer controls in a
+        // QWidgetAction made by the toolkit; the actions of the layers
+        // panel are in the registry.
+        const auto* widgetAction = qobject_cast<const QWidgetAction*>(item);
+        if (widgetAction != nullptr &&
+            qobject_cast<const LayerControls*>(widgetAction->defaultWidget()) != nullptr) {
             return true;
         }
         // SARibbon also supplies native-style window controls, including

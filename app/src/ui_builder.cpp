@@ -4,6 +4,7 @@
 #include "ui_builder.hpp"
 
 #include "action_registry.hpp"
+#include "layer_panel.hpp"
 
 #include <QAction>
 #include <QHash>
@@ -131,6 +132,11 @@ void UiBuilder::buildRibbon() {
     for (const QString& path : groups()) {
         panelFor(path);
     }
+    // The list of the layers and the state of the current one come first in
+    // their group; they follow the layers panel (0.6-P22).
+    if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
+        panelFor(QStringLiteral("home/layers"))->addSmallWidget(new LayerControls(*layers, ribbon));
+    }
     for (QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
         if (spec->ribbon.isEmpty() || action->isSeparator()) {
@@ -172,6 +178,9 @@ void UiBuilder::buildClassic() {
     QToolBar* standard = toolbarFor(QStringLiteral("standard"));
     for (const QString& path : groups()) {
         toolbarFor(path);
+    }
+    if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
+        toolbarFor(QStringLiteral("home/layers"))->addWidget(new LayerControls(*layers, &m_window));
     }
     for (QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());

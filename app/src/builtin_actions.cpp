@@ -40,6 +40,8 @@ ActionSpec makeSpec(const QString& id, const QString& text, const QString& menu,
         spec.ribbon = QStringLiteral("view/navigate");
     } else if (id.startsWith(QStringLiteral("aids."))) {
         spec.ribbon = QStringLiteral("view/aids");
+    } else if (id.startsWith(QStringLiteral("layer."))) {
+        spec.ribbon = QStringLiteral("home/layers");
     }
     return spec;
 }
@@ -187,6 +189,21 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"),
                                      tools, tr("Switches between ribbon and classic menus.")),
                           QStringLiteral("ui-ribbon")));
+    // The layers panel (0.6-P22). No command: the actions work on the panel,
+    // and LAYER (app_commands.cpp) only shows it.
+    const QString layers = tools + QLatin1Char('/') + tr("&Layers");
+    registry.add(withIcon(makeSpec(QStringLiteral("layer.panel"), tr("Layers &Panel"), layers,
+                                   tr("Shows the layers panel.")),
+                          QStringLiteral("layer-panel")));
+    registry.add(withIcon(
+        makeSpec(QStringLiteral("layer.new"), tr("&New Layer"), layers, tr("Adds a layer.")),
+        QStringLiteral("layer-new")));
+    registry.add(withIcon(makeSpec(QStringLiteral("layer.delete"), tr("&Delete Layer"), layers,
+                                   tr("Deletes the selected layer.")),
+                          QStringLiteral("layer-delete")));
+    registry.add(withIcon(makeSpec(QStringLiteral("layer.current"), tr("Make &Current"), layers,
+                                   tr("Makes the selected layer the current one.")),
+                          QStringLiteral("layer-current")));
     const QString modes = tools + QLatin1Char('/') + tr("Object Snap &Modes");
     registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.endpoint"), tr("&Endpoint"), modes,
                                      tr("Snaps to the endpoints of lines, arcs and polylines.")),
