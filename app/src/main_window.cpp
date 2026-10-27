@@ -553,6 +553,9 @@ void MainWindow::setTheme(Theme theme) {
     auto* application = qobject_cast<QApplication*>(QApplication::instance());
     assert(application != nullptr);
     applyTheme(*application, theme);
+    // Application palette notifications can be queued by the platform.
+    // The window and its icons must already use the new colours now.
+    setPalette(application->palette());
     m_view->setStyle(sceneStyle(theme));
     const QSignalBlocker blocker(registeredAction("ui.theme"));
     registeredAction("ui.theme")->setChecked(theme == Theme::Dark);
@@ -574,11 +577,12 @@ void MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
     panel->setAllowedAreas(Qt::AllDockWidgetAreas);
     panel->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable |
                        QDockWidget::DockWidgetFloatable);
-    addDockWidget(area, panel);
-    // restoreState remembers panels created after the first show too.
-    if (m_uiSettingsReady && !m_scriptMode) {
-        restoreDockWidget(panel);
+    // restoreDockWidget consumes the saved placeholder. Adding the dock
+    // first would discard that placeholder, including its floating state.
+    if (m_uiSettingsReady && !m_scriptMode && restoreDockWidget(panel)) {
+        return;
     }
+    addDockWidget(area, panel);
 }
 
 void MainWindow::showSettings() {

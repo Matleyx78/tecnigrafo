@@ -75,7 +75,16 @@ TEST(ThemeTest, ActionImmediatelyChangesPaletteAndDrawing) {
         EXPECT_EQ(window.theme(), theme);
         const auto background = sceneStyle(theme).background;
         const QImage image = window.view()->grab().toImage();
-        EXPECT_EQ(image.pixelColor(3, 3), QColor(background.r, background.g, background.b));
+        int backgroundPixels = 0;
+        for (int y = 0; y < image.height(); ++y) {
+            for (int x = 0; x < image.width(); ++x) {
+                if (image.pixelColor(x, y) == QColor(background.r, background.g, background.b)) {
+                    ++backgroundPixels;
+                }
+            }
+        }
+        // Grid lines can cross any particular pixel as the window resizes.
+        EXPECT_GT(backgroundPixels, image.width() * image.height() / 2);
         EXPECT_EQ(window.palette().color(QPalette::Text),
                   application().palette().color(QPalette::Text));
     }
