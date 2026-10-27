@@ -140,14 +140,18 @@ void LayerPanel::setActions(QAction* newAction, QAction* deleteAction, QAction* 
     m_newAction = newAction;
     m_deleteAction = deleteAction;
     m_currentAction = currentAction;
+    // The window destroys its actions before its panels.
     if (newAction != nullptr) {
         connect(newAction, &QAction::triggered, this, [this] { newLayer(); });
+        connect(newAction, &QObject::destroyed, this, [this] { m_newAction = nullptr; });
     }
     if (deleteAction != nullptr) {
         connect(deleteAction, &QAction::triggered, this, [this] { deleteSelected(); });
+        connect(deleteAction, &QObject::destroyed, this, [this] { m_deleteAction = nullptr; });
     }
     if (currentAction != nullptr) {
         connect(currentAction, &QAction::triggered, this, [this] { makeSelectedCurrent(); });
+        connect(currentAction, &QObject::destroyed, this, [this] { m_currentAction = nullptr; });
     }
     updateActions();
 }
@@ -191,6 +195,7 @@ bool LayerPanel::refuse(const QString& text) {
     setMessage(text);
     Q_EMIT messageShown(text);
     // The cells that offered the refused value show the real one again.
+    invalidateCells();
     refresh();
     return false;
 }
@@ -208,6 +213,8 @@ bool LayerPanel::run(const std::function<bool()>& change) {
         m_editor.rollback();
     }
     // The owner's listener refreshes too; this keeps a panel without one right.
+    // A change that was not made leaves the drop-downs showing the choice.
+    invalidateCells();
     refresh();
     if (done) {
         Q_EMIT changed();
@@ -248,7 +255,14 @@ void LayerPanel::selectLayer(core::LayerId id) {
     }
 }
 
+void LayerPanel::invalidateCells() {
+    for (CellValues& cell : m_cells) {
+        cell.valid = false;
+    }
+}
+
 void LayerPanel::rebuildCellWidgets() {
+    m_cells.assign(static_cast<std::size_t>(m_model->rowCount()), CellValues{});
     // The cells of the three properties hold the controls of the properties
     // panel (0.6-P21), each one for the layer of its row.
     for (int row = 0; row < m_model->rowCount(); ++row) {
@@ -280,11 +294,30 @@ void LayerPanel::rebuildCellWidgets() {
 
 void LayerPanel::syncCellWidgets() {
     const core::Document& doc = document();
+    const std::size_t linetypes = doc.linetypes().size();
+    const int lwdefault = doc.lwdefault();
+    if (linetypes != m_linetypeCount || lwdefault != m_lwdefault) {
+        // The lists of the drop-downs changed: every control is set again.
+        m_linetypeCount = linetypes;
+        m_lwdefault = lwdefault;
+        invalidateCells();
+    }
+    m_cells.resize(static_cast<std::size_t>(m_model->rowCount()));
     for (int row = 0; row < m_model->rowCount(); ++row) {
         const core::Layer* layer = doc.layer(m_model->layerAt(row));
         if (layer == nullptr) {
             continue;
         }
+        CellValues& cell = m_cells[static_cast<std::size_t>(row)];
+        if (cell.valid && cell.enabled == m_editingEnabled && cell.color == layer->color &&
+            cell.linetype == layer->linetype && cell.lineweight == layer->lineweight) {
+            continue;
+        }
+        cell.color = layer->color;
+        cell.linetype = layer->linetype;
+        cell.lineweight = layer->lineweight;
+        cell.enabled = m_editingEnabled;
+        cell.valid = true;
         // The setters of the controls never emit valueChosen.
         auto* color = qobject_cast<ColorCombo*>(
             m_table->indexWidget(m_model->index(row, columnOf(LayerColumn::Color))));
@@ -318,13 +351,13 @@ void LayerPanel::updateActions() {
     m_newButton->setEnabled(canNew);
     m_deleteButton->setEnabled(canAct);
     m_currentButton->setEnabled(canAct);
-    if (!m_newAction.isNull()) {
+    if (m_newAction != nullptr) {
         m_newAction->setEnabled(canNew);
     }
-    if (!m_deleteAction.isNull()) {
+    if (m_deleteAction != nullptr) {
         m_deleteAction->setEnabled(canAct);
     }
-    if (!m_currentAction.isNull()) {
+    if (m_currentAction != nullptr) {
         m_currentAction->setEnabled(canAct);
     }
 }
@@ -561,6 +594,8 @@ void LayerPanel::changeEvent(QEvent* event) {
     QDockWidget::changeEvent(event);
     if (event->type() == QEvent::PaletteChange && m_model != nullptr) {
         m_model->setPalette(palette());
+        // The icons of the drop-downs are drawn with the palette.
+        invalidateCells();
         syncCellWidgets();
     }
 }
@@ -591,7 +626,7 @@ LayerControls::LayerControls(LayerPanel& panel, QWidget* parent)
         layout->addWidget(button);
     }
     connect(m_combo, &LayerCombo::valueChosen, this, [this](core::LayerId id) {
-        if (!m_panel.isNull()) {
+        if (m_panel != nullptr) {
             m_panel->makeCurrent(id);
         }
     });
@@ -599,11 +634,12 @@ LayerControls::LayerControls(LayerPanel& panel, QWidget* parent)
     connect(m_frozen, &QToolButton::clicked, this, [this] { toggle(LayerState::Frozen); });
     connect(m_locked, &QToolButton::clicked, this, [this] { toggle(LayerState::Locked); });
     connect(&panel, &LayerPanel::refreshed, this, [this] { sync(); });
+    connect(&panel, &QObject::destroyed, this, [this] { m_panel = nullptr; });
     sync();
 }
 
 void LayerControls::sync() {
-    if (m_panel.isNull()) {
+    if (m_panel == nullptr) {
         return;
     }
     const core::Document& doc = m_panel->document();
@@ -625,7 +661,7 @@ void LayerControls::sync() {
 }
 
 void LayerControls::toggle(LayerState state) {
-    if (m_panel.isNull()) {
+    if (m_panel == nullptr) {
         return;
     }
     const core::Document& doc = m_panel->document();

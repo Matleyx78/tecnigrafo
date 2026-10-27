@@ -16,7 +16,7 @@
 namespace tg::app {
 
 /// The columns of the layers table, in the order of docs/tappe/0.6/P22.
-enum class LayerColumn : int {
+enum class LayerColumn : std::uint8_t {
     Status,
     Name,
     On,

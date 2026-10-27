@@ -9,11 +9,12 @@
 
 #include <QDockWidget>
 #include <QModelIndex>
-#include <QPointer>
 #include <QString>
 #include <QWidget>
 
+#include <cstddef>
 #include <functional>
+#include <vector>
 
 class QAction;
 class QEvent;
@@ -42,6 +43,8 @@ class LayerPanel final : public QDockWidget {
 public:
     /// Answers a question of the panel: true is yes.
     using Confirm = std::function<bool(const QString&)>;
+
+    Q_DISABLE_COPY_MOVE(LayerPanel)
 
     explicit LayerPanel(edit::Editor& editor, QWidget* parent = nullptr);
     ~LayerPanel() override;
@@ -112,6 +115,8 @@ private:
     void syncCellWidgets();
     void updateActions();
     void cellClicked(const QModelIndex& index);
+    /// The next syncCellWidgets() sets every control again.
+    void invalidateCells();
 
     edit::Editor& m_editor;
     LayerTableModel* m_model;
@@ -120,9 +125,23 @@ private:
     QPushButton* m_newButton;
     QPushButton* m_deleteButton;
     QPushButton* m_currentButton;
-    QPointer<QAction> m_newAction;
-    QPointer<QAction> m_deleteAction;
-    QPointer<QAction> m_currentAction;
+    QAction* m_newAction{nullptr};
+    QAction* m_deleteAction{nullptr};
+    QAction* m_currentAction{nullptr};
+
+    /// What the controls of a row show now, so that a refresh sets only the
+    /// ones that changed: building a drop-down list is the costly part.
+    struct CellValues {
+        core::Color color{core::Color::byLayer()};
+        core::LinetypeId linetype;
+        int lineweight{0};
+        bool enabled{false};
+        bool valid{false};
+    };
+
+    std::vector<CellValues> m_cells;
+    std::size_t m_linetypeCount{0};
+    int m_lwdefault{0};
     Confirm m_confirm;
     QString m_lastMessage;
     bool m_editingEnabled{true};
@@ -145,7 +164,7 @@ private:
     void sync();
     void toggle(LayerState state);
 
-    QPointer<LayerPanel> m_panel;
+    LayerPanel* m_panel;
     LayerCombo* m_combo;
     QToolButton* m_on;
     QToolButton* m_frozen;

@@ -570,16 +570,18 @@ protected:
     LayerPanel* m_panel{nullptr};
 };
 
-TEST_F(LayerWindowTest, TheWindowHasThePanelAndItsActions) {
+// A window costs much more than the panel alone, so one test checks several
+// things in a row.
+TEST_F(LayerWindowTest, ThePanelFollowsTheWindow) {
     ASSERT_NE(panel(), nullptr);
     EXPECT_EQ(panel()->windowTitle(), QStringLiteral("Layers"));
     for (const char* id : {"layer.panel", "layer.new", "layer.delete", "layer.current"}) {
         EXPECT_NE(m_window.actionRegistry().action(QString::fromLatin1(id)), nullptr) << id;
     }
-    EXPECT_NE(m_window.findChild<LayerCombo*>(QStringLiteral("layerCombo")), nullptr);
-}
+    auto* combo = m_window.findChild<LayerCombo*>(QStringLiteral("layerCombo"));
+    ASSERT_NE(combo, nullptr);
 
-TEST_F(LayerWindowTest, ThePanelFollowsMinusLayerTypedInTheCommandLine) {
+    // It follows -LAYER typed in the command line, and so does the ribbon.
     EXPECT_EQ(names(), QStringList{QStringLiteral("0")});
     enter("-LAYER");
     enter("New");
@@ -588,13 +590,9 @@ TEST_F(LayerWindowTest, ThePanelFollowsMinusLayerTypedInTheCommandLine) {
     EXPECT_TRUE(names().contains(QStringLiteral("Walls")));
     EXPECT_TRUE(names().contains(QStringLiteral("Doors")));
     EXPECT_EQ(names().size(), static_cast<int>(m_window.document().layers().size()));
-    // The list of the ribbon follows too.
-    auto* combo = m_window.findChild<LayerCombo*>(QStringLiteral("layerCombo"));
-    ASSERT_NE(combo, nullptr);
     EXPECT_EQ(combo->count(), static_cast<int>(m_window.document().layers().size()));
-}
 
-TEST_F(LayerWindowTest, ChangesOfThePanelAreUndoneByTheUndoAction) {
+    // A change of the panel is undone and redone by the actions of the window.
     ASSERT_TRUE(panel()->newLayer());
     EXPECT_TRUE(names().contains(QStringLiteral("Layer1")));
     QAction* undo = m_window.actionRegistry().action(QStringLiteral("edit.undo"));
@@ -608,9 +606,21 @@ TEST_F(LayerWindowTest, ChangesOfThePanelAreUndoneByTheUndoAction) {
     ASSERT_NE(redo, nullptr);
     redo->trigger();
     EXPECT_TRUE(names().contains(QStringLiteral("Layer1")));
+
+    // A refusal also goes to the history, as -LAYER writes it.
+    const QSignalSpy spy(panel(), &LayerPanel::messageShown);
+    EXPECT_FALSE(panel()->deleteLayer(m_window.document().layerZero()));
+    ASSERT_EQ(spy.size(), 1);
+    const QString text = spy.at(0).at(0).toString();
+    EXPECT_EQ(text, QStringLiteral("Cannot delete layer \"0\"."));
+    const auto* history =
+        m_window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
+    ASSERT_NE(history, nullptr);
+    EXPECT_TRUE(history->toPlainText().contains(text));
 }
 
-TEST_F(LayerWindowTest, ThePanelChangesNothingWhileACommandRuns) {
+TEST_F(LayerWindowTest, ThePanelWaitsForCommandsAndLayerShowsIt) {
+    // While a command runs the panel changes nothing.
     enter("LINE");
     ASSERT_TRUE(m_window.runner().isActive());
     EXPECT_FALSE(panel()->editingEnabled());
@@ -618,10 +628,8 @@ TEST_F(LayerWindowTest, ThePanelChangesNothingWhileACommandRuns) {
     EXPECT_FALSE(m_window.actionRegistry().action(QStringLiteral("layer.new"))->isEnabled());
     events::press(input(), Qt::Key_Escape);
     EXPECT_TRUE(panel()->editingEnabled());
-    EXPECT_TRUE(panel()->newLayer());
-}
 
-TEST_F(LayerWindowTest, TheLayerCommandAndItsAliasShowThePanel) {
+    // LAYER, its alias and the action show the panel.
     m_window.show();
     for (const char* command : {"LAYER", "LA"}) {
         SCOPED_TRACE(command);
@@ -634,19 +642,6 @@ TEST_F(LayerWindowTest, TheLayerCommandAndItsAliasShowThePanel) {
     panel()->hide();
     m_window.actionRegistry().action(QStringLiteral("layer.panel"))->trigger();
     EXPECT_TRUE(panel()->isVisible());
-}
-
-TEST_F(LayerWindowTest, RefusalsAlsoGoToTheHistoryOfTheCommandLine) {
-    const QSignalSpy spy(panel(), &LayerPanel::messageShown);
-    EXPECT_FALSE(panel()->deleteLayer(m_window.document().layerZero()));
-    ASSERT_EQ(spy.size(), 1);
-    const QString text = spy.at(0).at(0).toString();
-    EXPECT_EQ(text, QStringLiteral("Cannot delete layer \"0\"."));
-    // The window writes it in the history, as -LAYER does.
-    const auto* history =
-        m_window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
-    ASSERT_NE(history, nullptr);
-    EXPECT_TRUE(history->toPlainText().contains(text));
 }
 
 }  // namespace
