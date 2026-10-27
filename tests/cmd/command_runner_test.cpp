@@ -141,8 +141,8 @@ TEST_F(CommandRunnerTest, ReplaceSelectionIsSilentAndClosesTheRectangle) {
     EXPECT_TRUE(runner().replaceSelection({second, first, second}));
     EXPECT_FALSE(runner().selectionRectangle().has_value());
     const auto ids = runner().selection().ids();
-    EXPECT_EQ((std::vector<core::EntityId>{ids.begin(), ids.end()}),
-              (std::vector{second, first}));
+    const std::vector<core::EntityId> selected{ids.begin(), ids.end()};
+    EXPECT_EQ(selected, (std::vector{second, first}));
     EXPECT_TRUE(messages().empty());
     EXPECT_TRUE(runner().replaceSelection({}));
     EXPECT_TRUE(runner().selection().isEmpty());

@@ -2,13 +2,14 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "question_table.hpp"
+
 #include "tg/cmd/quick_select.hpp"
-#include "tg/script/text_format.hpp"
 #include "tg/core/dashes.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/math.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
+#include "tg/script/text_format.hpp"
 
 #include <charconv>
 #include <span>
@@ -136,7 +137,7 @@ QuestionResult askDashes(const QuestionModel& model, std::span<const std::string
 }
 
 QuestionResult askQuickSelect(const QuestionModel& model,
-                                std::span<const std::string_view> arguments) {
+                              std::span<const std::string_view> arguments) {
     using Property = cmd::QuickSelectCriteria::Property;
     cmd::QuickSelectCriteria criteria;
     std::vector<core::EntityId> within;

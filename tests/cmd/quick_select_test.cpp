@@ -53,10 +53,10 @@ TEST(QuickSelectTest, FiltersOwnPropertiesAndCombinesTypeWithinAndExclude) {
 TEST(QuickSelectTest, InvalidValuesNeverMatchEvenWithNotEqual) {
     auto document = core::Document::newDrawing();
     const auto id = document.add(core::Line{{0, 0}, {10, 0}});
-    for (const auto property : {QuickSelectCriteria::Property::Color,
-                                QuickSelectCriteria::Property::Lineweight}) {
-        for (const auto op : {QuickSelectCriteria::Operator::Equal,
-                              QuickSelectCriteria::Operator::NotEqual}) {
+    using Property = QuickSelectCriteria::Property;
+    using Operator = QuickSelectCriteria::Operator;
+    for (const auto property : {Property::Color, Property::Lineweight}) {
+        for (const auto op : {Operator::Equal, Operator::NotEqual}) {
             QuickSelectCriteria criteria;
             criteria.property = property;
             criteria.op = op;
@@ -89,8 +89,8 @@ TEST(QuickSelectTest, IdentifierOrderDoesNotDependOnDrawingOrder) {
     core::Document document;
     document.insert({{9}, core::Line{{0, 0}, {1, 0}}, {}, 1});
     document.insert({{2}, core::Line{{0, 0}, {1, 0}}, {}, 2});
-    EXPECT_EQ(quickSelect(document, {}, {}),
-              (std::vector{core::EntityId{2}, core::EntityId{9}}));
+    const std::vector expected{core::EntityId{2}, core::EntityId{9}};
+    EXPECT_EQ(quickSelect(document, {}, {}), expected);
 }
 
 }  // namespace

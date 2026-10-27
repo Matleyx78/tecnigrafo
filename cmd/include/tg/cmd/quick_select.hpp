@@ -28,7 +28,7 @@ struct QuickSelectCriteria {
 /// Off, frozen and locked layers are always excluded. Names ignore ASCII case.
 /// An unreadable color or lineweight matches nothing before exclude is applied.
 [[nodiscard]] std::vector<core::EntityId> quickSelect(const core::Document& document,
-                                                    std::span<const core::EntityId> within,
-                                                    const QuickSelectCriteria& criteria);
+                                                      std::span<const core::EntityId> within,
+                                                      const QuickSelectCriteria& criteria);
 
 }  // namespace tg::cmd

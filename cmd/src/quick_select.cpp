@@ -55,8 +55,8 @@ bool matchesProperty(const core::Document& document, const core::EntityRecord& r
 }  // namespace
 
 std::vector<core::EntityId> quickSelect(const core::Document& document,
-                                       std::span<const core::EntityId> within,
-                                       const QuickSelectCriteria& criteria) {
+                                        std::span<const core::EntityId> within,
+                                        const QuickSelectCriteria& criteria) {
     // The order follows core::Entity, whose alternatives are the handled DXF types.
     constexpr std::array<std::string_view, std::variant_size_v<core::Entity>> kTypes{
         "LWPOLYLINE", "LINE", "CIRCLE", "ARC", "TEXT"};
@@ -74,7 +74,8 @@ std::vector<core::EntityId> quickSelect(const core::Document& document,
             continue;
         }
         const bool matches =
-            (!criteria.type || core::sameTableName(*criteria.type, kTypes.at(record.entity.index()))) &&
+            (!criteria.type ||
+             core::sameTableName(*criteria.type, kTypes.at(record.entity.index()))) &&
             matchesProperty(document, record, criteria);
         if (matches != criteria.exclude) {
             result.push_back(record.id);
