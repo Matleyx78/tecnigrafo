@@ -36,5 +36,3 @@ selezione-rapida/stati-layer #257
 # 0.6-R14: CHPROP e layer bloccati (#246)
 chprop/proprieta #246
 chprop/layer-bloccati #246
-chprop/roundtrip-dxf #246
-chprop/roundtrip-cadx #246

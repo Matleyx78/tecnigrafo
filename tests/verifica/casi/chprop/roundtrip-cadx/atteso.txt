@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
-  258 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+  261 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+  262 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
 messages:
   Command: -LINETYPE
   Current line type: "ByLayer"
@@ -54,7 +54,7 @@ messages:
   Command: LWDISPLAY
   Enter new value for LWDISPLAY <OFF>: ON
   Command: LINE
-  Specify start point: 0,0
+  Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: CIRCLE
@@ -95,8 +95,8 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
-  258 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+  261 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
+  262 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
 messages:
   Command: SAVEAS
   Save drawing as <Drawing1.cadx>: giro.cadx
