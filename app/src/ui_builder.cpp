@@ -5,6 +5,7 @@
 
 #include "action_registry.hpp"
 #include "layer_panel.hpp"
+#include "properties_panel.hpp"
 
 #include <QAction>
 #include <QHash>
@@ -137,6 +138,12 @@ void UiBuilder::buildRibbon() {
     if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
         panelFor(QStringLiteral("home/layers"))->addSmallWidget(new LayerControls(*layers, ribbon));
     }
+    // So do colour, linetype and lineweight in theirs (0.6-P24).
+    if (auto* properties =
+            m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        panelFor(QStringLiteral("home/properties"))
+            ->addSmallWidget(new PropertyControls(*properties, ribbon));
+    }
     for (QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
         if (spec->ribbon.isEmpty() || action->isSeparator()) {
@@ -181,6 +188,11 @@ void UiBuilder::buildClassic() {
     }
     if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
         toolbarFor(QStringLiteral("home/layers"))->addWidget(new LayerControls(*layers, &m_window));
+    }
+    if (auto* properties =
+            m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        toolbarFor(QStringLiteral("home/properties"))
+            ->addWidget(new PropertyControls(*properties, &m_window));
     }
     for (QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());

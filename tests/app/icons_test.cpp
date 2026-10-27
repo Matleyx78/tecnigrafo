@@ -4,6 +4,7 @@
 #include "action_registry.hpp"
 #include "builtin_actions.hpp"
 #include "layer_table_model.hpp"
+#include "properties_panel.hpp"
 #include "theme.hpp"
 
 #include <QAction>
@@ -168,15 +169,6 @@ bool needsNoIcon(const ActionSpec& spec) {
            spec.id.startsWith(QStringLiteral("file.recent."));
 }
 
-/// The icons of the properties: drawn in 0.6-P19, used by the actions that
-/// 0.6-P24 adds. Until then no action names them; that package takes them out
-/// of this list. The layer icons left it with 0.6-P22.
-QStringList reservedIcons() {
-    return {QStringLiteral("properties-panel"), QStringLiteral("quick-select"),
-            QStringLiteral("property-color"), QStringLiteral("property-linetype"),
-            QStringLiteral("property-lineweight")};
-}
-
 TEST(IconsTest, EveryFileIsAValidSvgOnTheGrid) {
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
     const QStringList names =
@@ -261,7 +253,10 @@ TEST(IconsTest, ViewAidsInterfaceAndHelpActionsUseTheirOwnIcons) {
         {QStringLiteral("ui.interface"), QStringLiteral("ui-ribbon")},
         {QStringLiteral("ui.theme"), QStringLiteral("ui-theme")},
         {QStringLiteral("tools.settings"), QStringLiteral("tools-settings")},
-        {QStringLiteral("help.about"), QStringLiteral("help-about")}};
+        {QStringLiteral("help.about"), QStringLiteral("help-about")},
+        // The properties panel and QSELECT (0.6-P24).
+        {QStringLiteral("properties.panel"), QStringLiteral("properties-panel")},
+        {QStringLiteral("edit.quick-select"), QStringLiteral("quick-select")}};
     for (const auto& [id, icon] : expected) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* spec = registry.spec(id);
@@ -270,7 +265,7 @@ TEST(IconsTest, ViewAidsInterfaceAndHelpActionsUseTheirOwnIcons) {
     }
 }
 
-TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForProperties) {
+TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     ActionRegistry registry;
     addBuiltinActions(registry);
     QStringList used;
@@ -282,9 +277,10 @@ TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForProperties) {
         }
     }
     // The states and the mark of the current layer are drawn by the layers
-    // panel, not named by an action (0.6-P22).
+    // panel (0.6-P22), the icons of colour, linetype and lineweight by the
+    // properties panel and its controls (0.6-P24): no action names them.
     used.append(layerPanelIconNames());
-    const QStringList reserved = reservedIcons();
+    used.append(propertiesPanelIconNames());
 
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
     const QStringList names =
@@ -292,13 +288,12 @@ TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForProperties) {
     for (const QString& name : names) {
         const QString icon = name.chopped(4);
         SCOPED_TRACE(icon.toStdString());
-        EXPECT_TRUE(used.contains(icon) || reserved.contains(icon))
-            << "no action uses this icon and it is not reserved";
+        EXPECT_TRUE(used.contains(icon)) << "neither an action nor a panel uses this icon";
     }
-    // The reserved icons are all drawn, even if no action names them yet.
-    for (const QString& icon : reserved) {
+    // The icons the panels name are all drawn.
+    for (const QString& icon : propertiesPanelIconNames()) {
         SCOPED_TRACE(icon.toStdString());
-        EXPECT_TRUE(QFile::exists(resourcePath(icon))) << "reserved icon not in the resources";
+        EXPECT_TRUE(QFile::exists(resourcePath(icon))) << "icon not in the resources";
     }
 }
 

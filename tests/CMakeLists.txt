@@ -161,6 +161,8 @@ if(TG_BUILD_APP)
         app/file_menu_test.cpp
         app/icons_test.cpp
         app/layer_panel_test.cpp
+        app/properties_panel_test.cpp
+        app/quick_select_dialog_test.cpp
         app/recent_files_test.cpp
         app/theme_test.cpp
         app/shortcut_map_test.cpp
