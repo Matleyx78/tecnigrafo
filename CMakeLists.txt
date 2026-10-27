@@ -57,8 +57,10 @@ endif()
 #   core <- render <- app
 #   core <- edit <- cmd <- app
 #   core <- io   <- cmd
-#                   cmd <- script
-# Only app may depend on Qt; the CMake targets enforce it.
+#                   cmd <- script <- mcp
+#                   io  <-----------  mcp
+# Only app may depend on Qt; the CMake targets enforce it. Only mcp uses
+# nlohmann/json (docs/adr/0027).
 add_subdirectory(tools)
 add_subdirectory(core)
 add_subdirectory(third_party)
@@ -67,6 +69,7 @@ add_subdirectory(render)
 add_subdirectory(edit)
 add_subdirectory(cmd)
 add_subdirectory(script)
+add_subdirectory(mcp)
 
 if(TG_BUILD_APP)
     add_subdirectory(app)
