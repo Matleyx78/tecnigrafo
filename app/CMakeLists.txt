@@ -10,6 +10,10 @@ qt_standard_project_setup()
 
 # Everything but main(): shared by the application and its Qt tests.
 qt_add_library(tg_app_ui STATIC
+    src/color_dialog.cpp
+    src/color_dialog.hpp
+    src/property_widgets.cpp
+    src/property_widgets.hpp
     src/action_registry.cpp
     src/action_registry.hpp
     src/app_commands.cpp
