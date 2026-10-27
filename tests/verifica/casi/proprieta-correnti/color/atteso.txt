@@ -84,7 +84,7 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=0,0 end=10,0 color=7
+  257 LINE start=0,0 end=10,0 color=128,128,128
 messages:
   Command: COLOR
   Enter default object color [Truecolor] <BYLAYER>: 300
@@ -92,9 +92,9 @@ messages:
   Enter default object color [Truecolor] <BYLAYER>: Truecolor
   Red, Green, Blue: 300,0,0
   Invalid color.
-  Enter default object color [Truecolor] <BYLAYER>: 7
+  Red, Green, Blue: 128,128,128
   Command: LINE
-  Specify start point: 0,0
+  Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
 prompt: Command:
@@ -111,7 +111,7 @@ undo:
 redo:
 snap: on
 ortho: off
-current: layer="0" color=7 linetype="ByLayer" ltscale=1 lineweight=bylayer
+current: layer="0" color=128,128,128 linetype="ByLayer" ltscale=1 lineweight=bylayer
 pointer: none
 active snap: none
 statistics:

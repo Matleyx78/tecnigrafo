@@ -21,7 +21,7 @@ messages:
   Command: LWDISPLAY
   Enter new value for LWDISPLAY <OFF>: ON
   Command: LINE
-  Specify start point: 0,0
+  Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
 prompt: Command:
