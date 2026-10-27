@@ -12,9 +12,11 @@
 
 namespace tg::app {
 
-void applyTheme(QApplication& application, Theme theme) {
+void applyTheme(QApplication& /*application*/, Theme theme) {
+    // Qt exposes these operations as static functions; the argument makes
+    // the requirement for a live QApplication explicit.
     // Start from Fusion, never from a native palette which varies by OS.
-    application.setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
+    QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
     QPalette palette(QColor(240, 240, 240));
     const bool dark = theme == Theme::Dark;
     const QColor text = dark ? QColor(235, 235, 235) : QColor(24, 24, 24);
@@ -43,7 +45,7 @@ void applyTheme(QApplication& application, Theme theme) {
     for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
         palette.setColor(QPalette::Disabled, role, QColor(128, 128, 128));
     }
-    application.setPalette(palette);
+    QApplication::setPalette(palette);
 }
 
 render::SceneStyle sceneStyle(Theme theme) {

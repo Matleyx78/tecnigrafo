@@ -25,8 +25,8 @@ QApplication& application() {
 TEST(ThemeTest, FusionPalettesAndSceneColoursMatchBothThemes) {
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
         applyTheme(application(), theme);
-        EXPECT_EQ(application().style()->objectName(), QStringLiteral("fusion"));
-        const QPalette palette = application().palette();
+        EXPECT_EQ(QApplication::style()->objectName(), QStringLiteral("fusion"));
+        const QPalette palette = QApplication::palette();
         const bool dark = theme == Theme::Dark;
         EXPECT_EQ(palette.color(QPalette::Text), dark ? QColor(235, 235, 235) : QColor(24, 24, 24));
         EXPECT_EQ(palette.color(QPalette::Base), dark ? QColor(33, 40, 48) : QColor(255, 255, 255));
@@ -51,7 +51,7 @@ TEST(ThemeTest, SvgIsTintedWithPaletteTextAndKeepsTransparency) {
     file.close();
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
         applyTheme(application(), theme);
-        const QPalette palette = application().palette();
+        const QPalette palette = QApplication::palette();
         const QIcon icon = themedIcon(path, palette);
         ASSERT_FALSE(icon.isNull());
         const QImage image = icon.pixmap(32, 32).toImage();
@@ -86,7 +86,7 @@ TEST(ThemeTest, ActionImmediatelyChangesPaletteAndDrawing) {
         // Grid lines can cross any particular pixel as the window resizes.
         EXPECT_GT(backgroundPixels, image.width() * image.height() / 2);
         EXPECT_EQ(window.palette().color(QPalette::Text),
-                  application().palette().color(QPalette::Text));
+                  QApplication::palette().color(QPalette::Text));
     }
 }
 

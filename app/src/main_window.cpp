@@ -555,7 +555,7 @@ void MainWindow::setTheme(Theme theme) {
     applyTheme(*application, theme);
     // Application palette notifications can be queued by the platform.
     // The window and its icons must already use the new colours now.
-    setPalette(application->palette());
+    setPalette(QApplication::palette());
     m_view->setStyle(sceneStyle(theme));
     const QSignalBlocker blocker(registeredAction("ui.theme"));
     registeredAction("ui.theme")->setChecked(theme == Theme::Dark);

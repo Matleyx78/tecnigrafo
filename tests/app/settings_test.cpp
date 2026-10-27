@@ -66,7 +66,7 @@ TEST_F(SettingsTest, RestartRestoresInterfaceThemeGeometryAndPanelLayout) {
         size = window.size();
         ASSERT_TRUE(window.close());
     }
-    QSettings settings;
+    const QSettings settings;
     EXPECT_EQ(settings.value(QStringLiteral("ui/interface")).toString(), QStringLiteral("classic"));
     EXPECT_EQ(settings.value(QStringLiteral("ui/theme")).toString(), QStringLiteral("dark"));
     EXPECT_FALSE(settings.value(QStringLiteral("ui/geometry")).toByteArray().isEmpty());
