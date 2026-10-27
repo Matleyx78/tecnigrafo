@@ -11,6 +11,7 @@
 #include <QDir>
 #include <QFile>
 #include <QImage>
+#include <QList>
 #include <QPainter>
 #include <QRectF>
 #include <QSize>
@@ -19,6 +20,8 @@
 #include <QSvgRenderer>
 #include <QXmlStreamReader>
 #include <gtest/gtest.h>
+
+#include <utility>
 
 namespace tg::app {
 namespace {
@@ -29,6 +32,7 @@ constexpr int kMargin = 2;        // px of the grid left free of ink
 constexpr int kScale = 4;         // the icons are drawn at 4x to measure the margin
 constexpr int kMarginAlpha = 16;  // alpha (of 255) below which a pixel is not ink
 constexpr int kFirstIcons = 12;   // the icons of 0.6-P18
+constexpr int kSecondIcons = 25;  // the icons of 0.6-P19
 
 bool isAllowedElement(const QString& name) {
     // The elements that Qt SVG draws predictably and the theme can tint.
@@ -155,11 +159,32 @@ QString resourcePath(const QString& icon) {
     return QStringLiteral(":/tg/icons/%1.svg").arg(icon);
 }
 
+/// The actions that have no icon: the separators (no text), the recent files
+/// (the submenu and the run-time list) and Quit (docs/tappe/0.6/P19).
+bool needsNoIcon(const ActionSpec& spec) {
+    return spec.text.isEmpty() || spec.id == QStringLiteral("file.quit") ||
+           spec.id == QStringLiteral("file.recent") ||
+           spec.id.startsWith(QStringLiteral("file.recent."));
+}
+
+/// The icons of layers and properties: drawn in 0.6-P19, used by the actions
+/// that 0.6-P22 and 0.6-P24 add. Until then no action names them; those
+/// packages take them out of this list.
+QStringList reservedIcons() {
+    return {QStringLiteral("layer-panel"),        QStringLiteral("layer-on"),
+            QStringLiteral("layer-off"),          QStringLiteral("layer-frozen"),
+            QStringLiteral("layer-thawed"),       QStringLiteral("layer-locked"),
+            QStringLiteral("layer-unlocked"),     QStringLiteral("layer-current"),
+            QStringLiteral("properties-panel"),   QStringLiteral("quick-select"),
+            QStringLiteral("property-color"),     QStringLiteral("property-linetype"),
+            QStringLiteral("property-lineweight")};
+}
+
 TEST(IconsTest, EveryFileIsAValidSvgOnTheGrid) {
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
     const QStringList names =
         directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name);
-    EXPECT_GE(names.size(), kFirstIcons);
+    EXPECT_GE(names.size(), kFirstIcons + kSecondIcons);
     for (const QString& name : names) {
         SCOPED_TRACE(name.toStdString());
         QFile file(directory.filePath(name));
@@ -181,18 +206,19 @@ TEST(IconsTest, EveryFileIsAValidSvgOnTheGrid) {
     }
 }
 
-TEST(IconsTest, EveryActionIconHasItsFile) {
+TEST(IconsTest, EveryActionHasAnIconWithItsFile) {
     ActionRegistry registry;
     addBuiltinActions(registry);
     int withIcon = 0;
     for (const QAction* action : registry.actions()) {
         const ActionSpec* spec = registry.spec(action->objectName());
         ASSERT_NE(spec, nullptr);
-        if (spec->icon.isEmpty()) {
+        if (needsNoIcon(*spec)) {
             continue;
         }
         ++withIcon;
         SCOPED_TRACE(spec->id.toStdString());
+        ASSERT_FALSE(spec->icon.isEmpty()) << "the action has no icon";
         EXPECT_TRUE(QFile::exists(resourcePath(spec->icon)))
             << "no resources/icons/" << spec->icon.toStdString() << ".svg";
         EXPECT_FALSE(themedIcon(spec->icon, QApplication::palette()).isNull());
@@ -217,6 +243,62 @@ TEST(IconsTest, DrawingEditingAndFileActionsUseTheirOwnIcons) {
         QString expected = id;
         expected.replace(QLatin1Char('.'), QLatin1Char('-'));
         EXPECT_EQ(spec->icon, expected);
+    }
+}
+
+TEST(IconsTest, ViewAidsInterfaceAndHelpActionsUseTheirOwnIcons) {
+    ActionRegistry registry;
+    addBuiltinActions(registry);
+    // The icons of 0.6-P19 that actions already use. Named like the action
+    // with dashes for dots, except the switch between ribbon and classic
+    // menus, which shows the ribbon.
+    const QList<std::pair<QString, QString>> expected{
+        {QStringLiteral("view.zoom-extents"), QStringLiteral("view-zoom-extents")},
+        {QStringLiteral("aids.osnap"), QStringLiteral("aids-osnap")},
+        {QStringLiteral("aids.ortho"), QStringLiteral("aids-ortho")},
+        {QStringLiteral("aids.snap.endpoint"), QStringLiteral("aids-snap-endpoint")},
+        {QStringLiteral("aids.snap.midpoint"), QStringLiteral("aids-snap-midpoint")},
+        {QStringLiteral("aids.snap.center"), QStringLiteral("aids-snap-center")},
+        {QStringLiteral("aids.snap.insertion"), QStringLiteral("aids-snap-insertion")},
+        {QStringLiteral("aids.lwdisplay"), QStringLiteral("aids-lwdisplay")},
+        {QStringLiteral("ui.interface"), QStringLiteral("ui-ribbon")},
+        {QStringLiteral("ui.theme"), QStringLiteral("ui-theme")},
+        {QStringLiteral("tools.settings"), QStringLiteral("tools-settings")},
+        {QStringLiteral("help.about"), QStringLiteral("help-about")}};
+    for (const auto& [id, icon] : expected) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* spec = registry.spec(id);
+        ASSERT_NE(spec, nullptr);
+        EXPECT_EQ(spec->icon, icon);
+    }
+}
+
+TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForLayersAndProperties) {
+    ActionRegistry registry;
+    addBuiltinActions(registry);
+    QStringList used;
+    for (const QAction* action : registry.actions()) {
+        const ActionSpec* spec = registry.spec(action->objectName());
+        ASSERT_NE(spec, nullptr);
+        if (!spec->icon.isEmpty()) {
+            used.append(spec->icon);
+        }
+    }
+    const QStringList reserved = reservedIcons();
+
+    const QDir directory(QStringLiteral(TG_ICONS_DIR));
+    const QStringList names =
+        directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name);
+    for (const QString& name : names) {
+        const QString icon = name.chopped(4);
+        SCOPED_TRACE(icon.toStdString());
+        EXPECT_TRUE(used.contains(icon) || reserved.contains(icon))
+            << "no action uses this icon and it is not reserved";
+    }
+    // The reserved icons are all drawn, even if no action names them yet.
+    for (const QString& icon : reserved) {
+        SCOPED_TRACE(icon.toStdString());
+        EXPECT_TRUE(QFile::exists(resourcePath(icon))) << "reserved icon not in the resources";
     }
 }
 

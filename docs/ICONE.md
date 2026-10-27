@@ -83,6 +83,43 @@ Prima parte (0.6-P18): disegno e modifica, file e annullamento.
 | `file-save.svg` | `file.save` | dischetto |
 | `file-saveas.svg` | `file.saveas` | due dischetti sovrapposti |
 
+Seconda parte (0.6-P19): vista, aiuti, interfaccia, layer e proprietà. Le icone
+di layer e proprietà esistono prima delle azioni che le useranno (pannelli dei
+layer e delle proprietà, 0.6-P22 e 0.6-P24).
+
+| File | Azione | Disegno |
+|---|---|---|
+| `view-zoom-extents.svg` | `view.zoom-extents` | quattro angoli verso l'esterno intorno a un rettangolo |
+| `aids-osnap.svg` | `aids.osnap` | calamita a ferro di cavallo |
+| `aids-ortho.svg` | `aids.ortho` | due assi ad angolo retto con il segno dell'angolo retto |
+| `aids-snap-endpoint.svg` | `aids.snap.endpoint` | quadrato con il punto d'accento al centro |
+| `aids-snap-midpoint.svg` | `aids.snap.midpoint` | triangolo con il punto d'accento al centro |
+| `aids-snap-center.svg` | `aids.snap.center` | cerchio con il punto d'accento al centro |
+| `aids-snap-insertion.svg` | `aids.snap.insertion` | due quadrati sovrapposti e sfalsati con il punto d'accento |
+| `aids-lwdisplay.svg` | `aids.lwdisplay` | tre barre di spessore crescente |
+| `ui-ribbon.svg` | `ui.interface` | finestra con la fascia delle schede e quella dei gruppi |
+| `ui-theme.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata |
+| `tools-settings.svg` | `tools.settings` | tre cursori a scorrimento |
+| `help-about.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro |
+| `layer-panel.svg` | `layer.panel` (0.6-P22) | pila di tre piani |
+| `layer-on.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto |
+| `layer-off.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato |
+| `layer-frozen.svg` | stato del layer, pannello dei layer (0.6-P22) | fiocco di neve |
+| `layer-thawed.svg` | stato del layer, pannello dei layer (0.6-P22) | sole |
+| `layer-locked.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso |
+| `layer-unlocked.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto aperto |
+| `layer-current.svg` | `layer.current` (0.6-P22) | pila di tre piani, il primo con il punto d'accento |
+| `properties-panel.svg` | `properties.panel` (0.6-P24) | scheda con un elenco di voci |
+| `quick-select.svg` | `edit.quick-select` (0.6-P24) | imbuto |
+| `property-color.svg` | controllo del colore, pannello delle proprietà (0.6-P24) | goccia |
+| `property-linetype.svg` | controllo del tipo di linea, pannello delle proprietà (0.6-P24) | linee continua, tratteggiata, tratto e punto |
+| `property-lineweight.svg` | controllo dello spessore, pannello delle proprietà (0.6-P24) | barra con la freccia dello spessore |
+
+Le voci di layer e proprietà non hanno ancora un'azione registrata: le
+collegano i pacchetti indicati, che le tolgono dall'elenco delle icone riservate
+in `tests/app/icons_test.cpp`. `ui.interface` ha l'icona `ui-ribbon` perché il
+suo interruttore passa dai menu classici al ribbon.
+
 Chi aggiunge icone aggiunge le sue righe a questa tabella.
 
 ## Aggiungere un'icona
