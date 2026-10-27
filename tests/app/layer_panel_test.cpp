@@ -124,10 +124,14 @@ protected:
         EXPECT_EQ(value(), after);
     }
 
-    bool m_answer{true};
-    std::vector<QString> m_questions;
+    /// What the stub of the questions answers.
+    void answerWith(bool answer) { m_answer = answer; }
+
+    [[nodiscard]] const std::vector<QString>& questions() const { return m_questions; }
 
 private:
+    bool m_answer{true};
+    std::vector<QString> m_questions;
     core::Document m_document;
     edit::Editor m_editor;
     LayerPanel m_panel;
@@ -179,7 +183,7 @@ TEST_F(LayerPanelTest, RenameChangesTheNameAndUndoes) {
     changeUndoRedo<std::string>([&] { return panel().renameLayer(walls, QStringLiteral("Doors")); },
                                 name);
     EXPECT_EQ(cellText(walls, LayerColumn::Name), QStringLiteral("Doors"));
-    EXPECT_TRUE(m_questions.empty());
+    EXPECT_TRUE(questions().empty());
 }
 
 TEST_F(LayerPanelTest, EditingTheNameInTheTableRenames) {
@@ -223,16 +227,16 @@ TEST_F(LayerPanelTest, RenameWarnsWhenOtherDataNamesTheLayer) {
     document().setRaw(raw);
     ASSERT_TRUE(edit::namedInOtherUnhandledData(document(), walls));
 
-    m_answer = false;
+    answerWith(false);
     EXPECT_FALSE(panel().renameLayer(walls, QStringLiteral("Doors")));
-    ASSERT_EQ(m_questions.size(), 1U);
-    EXPECT_TRUE(m_questions[0].contains(QStringLiteral("Walls")));
-    EXPECT_TRUE(m_questions[0].contains(QStringLiteral("keeps the old name")));
+    ASSERT_EQ(questions().size(), 1U);
+    EXPECT_TRUE(questions()[0].contains(QStringLiteral("Walls")));
+    EXPECT_TRUE(questions()[0].contains(QStringLiteral("keeps the old name")));
     EXPECT_EQ(document().layer(walls)->name, "Walls");
 
-    m_answer = true;
+    answerWith(true);
     EXPECT_TRUE(panel().renameLayer(walls, QStringLiteral("Doors")));
-    EXPECT_EQ(m_questions.size(), 2U);
+    EXPECT_EQ(questions().size(), 2U);
     EXPECT_EQ(document().layer(walls)->name, "Doors");
     ASSERT_TRUE(editor().undo());
     panel().refresh();
@@ -350,18 +354,18 @@ TEST_F(LayerPanelTest, ClickingAStateCellTogglesIt) {
 
 TEST_F(LayerPanelTest, TurningTheCurrentLayerOffAsksFirst) {
     const auto zero = document().layerZero();
-    m_answer = false;
+    answerWith(false);
     EXPECT_FALSE(panel().setState(zero, LayerState::On, false));
-    ASSERT_EQ(m_questions.size(), 1U);
-    EXPECT_TRUE(m_questions[0].contains(QStringLiteral("CURRENT")));
+    ASSERT_EQ(questions().size(), 1U);
+    EXPECT_TRUE(questions()[0].contains(QStringLiteral("CURRENT")));
     EXPECT_TRUE(document().layer(zero)->on);
-    m_answer = true;
+    answerWith(true);
     EXPECT_TRUE(panel().setState(zero, LayerState::On, false));
     EXPECT_FALSE(document().layer(zero)->on);
     // Turning another layer off asks nothing.
     const auto walls = add("Walls");
     EXPECT_TRUE(panel().setState(walls, LayerState::On, false));
-    EXPECT_EQ(m_questions.size(), 2U);
+    EXPECT_EQ(questions().size(), 2U);
 }
 
 TEST_F(LayerPanelTest, ColorChangesAndUndoes) {
@@ -388,16 +392,17 @@ TEST_F(LayerPanelTest, LinetypeChangesAndUndoes) {
     const auto type = editor().addLinetype(custom);
     editor().commit();
     ASSERT_TRUE(type.has_value());
+    const core::LinetypeId customId = type.value_or(core::LinetypeId{});
     panel().refresh();
 
     const auto linetype = [&] {
         return document().layer(walls)->linetype.value;
     };
-    changeUndoRedo<std::uint64_t>([&] { return panel().setLinetype(walls, *type); }, linetype);
+    changeUndoRedo<std::uint64_t>([&] { return panel().setLinetype(walls, customId); }, linetype);
     EXPECT_FALSE(panel().setLinetype(walls, document().byLayerLinetype()));
     EXPECT_FALSE(panel().setLinetype(walls, document().byBlockLinetype()));
     EXPECT_FALSE(panel().setLinetype(walls, core::LinetypeId{9999}));
-    EXPECT_EQ(document().layer(walls)->linetype, *type);
+    EXPECT_EQ(document().layer(walls)->linetype, customId);
 }
 
 TEST_F(LayerPanelTest, LineweightChangesAndUndoes) {
@@ -502,7 +507,7 @@ TEST_F(LayerPanelTest, FollowsChangesMadeElsewhere) {
 
 TEST_F(LayerPanelTest, LayerControlsChooseTheCurrentLayerAndFollowThePanel) {
     const auto walls = add("Walls");
-    LayerControls controls(panel());
+    const LayerControls controls(panel());
     auto* combo = controls.findChild<LayerCombo*>(QStringLiteral("layerCombo"));
     ASSERT_NE(combo, nullptr);
     EXPECT_EQ(combo->count(), static_cast<int>(document().layers().size()));
@@ -566,19 +571,22 @@ protected:
         return result;
     }
 
+    [[nodiscard]] MainWindow& window() { return m_window; }
+
+private:
     MainWindow m_window;
     LayerPanel* m_panel{nullptr};
 };
 
 // A window costs much more than the panel alone, so one test checks several
 // things in a row.
-TEST_F(LayerWindowTest, ThePanelFollowsTheWindow) {
+TEST_F(LayerWindowTest, ThePanelFollowsTheWindowAndWaitsForCommands) {
     ASSERT_NE(panel(), nullptr);
     EXPECT_EQ(panel()->windowTitle(), QStringLiteral("Layers"));
     for (const char* id : {"layer.panel", "layer.new", "layer.delete", "layer.current"}) {
-        EXPECT_NE(m_window.actionRegistry().action(QString::fromLatin1(id)), nullptr) << id;
+        EXPECT_NE(window().actionRegistry().action(QString::fromLatin1(id)), nullptr) << id;
     }
-    auto* combo = m_window.findChild<LayerCombo*>(QStringLiteral("layerCombo"));
+    auto* combo = window().findChild<LayerCombo*>(QStringLiteral("layerCombo"));
     ASSERT_NE(combo, nullptr);
 
     // It follows -LAYER typed in the command line, and so does the ribbon.
@@ -589,58 +597,56 @@ TEST_F(LayerWindowTest, ThePanelFollowsTheWindow) {
     enter("");
     EXPECT_TRUE(names().contains(QStringLiteral("Walls")));
     EXPECT_TRUE(names().contains(QStringLiteral("Doors")));
-    EXPECT_EQ(names().size(), static_cast<int>(m_window.document().layers().size()));
-    EXPECT_EQ(combo->count(), static_cast<int>(m_window.document().layers().size()));
+    EXPECT_EQ(names().size(), static_cast<int>(window().document().layers().size()));
+    EXPECT_EQ(combo->count(), static_cast<int>(window().document().layers().size()));
 
     // A change of the panel is undone and redone by the actions of the window.
     ASSERT_TRUE(panel()->newLayer());
     EXPECT_TRUE(names().contains(QStringLiteral("Layer1")));
-    QAction* undo = m_window.actionRegistry().action(QStringLiteral("edit.undo"));
+    QAction* undo = window().actionRegistry().action(QStringLiteral("edit.undo"));
     ASSERT_NE(undo, nullptr);
     EXPECT_TRUE(undo->isEnabled());
     EXPECT_TRUE(undo->text().contains(QStringLiteral("Layer")));
     undo->trigger();
     EXPECT_FALSE(names().contains(QStringLiteral("Layer1")));
-    EXPECT_EQ(m_window.document().findLayer("Layer1"), nullptr);
-    QAction* redo = m_window.actionRegistry().action(QStringLiteral("edit.redo"));
+    EXPECT_EQ(window().document().findLayer("Layer1"), nullptr);
+    QAction* redo = window().actionRegistry().action(QStringLiteral("edit.redo"));
     ASSERT_NE(redo, nullptr);
     redo->trigger();
     EXPECT_TRUE(names().contains(QStringLiteral("Layer1")));
 
     // A refusal also goes to the history, as -LAYER writes it.
     const QSignalSpy spy(panel(), &LayerPanel::messageShown);
-    EXPECT_FALSE(panel()->deleteLayer(m_window.document().layerZero()));
+    EXPECT_FALSE(panel()->deleteLayer(window().document().layerZero()));
     ASSERT_EQ(spy.size(), 1);
     const QString text = spy.at(0).at(0).toString();
     EXPECT_EQ(text, QStringLiteral("Cannot delete layer \"0\"."));
     const auto* history =
-        m_window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
+        window().commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
     ASSERT_NE(history, nullptr);
     EXPECT_TRUE(history->toPlainText().contains(text));
-}
 
-TEST_F(LayerWindowTest, ThePanelWaitsForCommandsAndLayerShowsIt) {
     // While a command runs the panel changes nothing.
     enter("LINE");
-    ASSERT_TRUE(m_window.runner().isActive());
+    ASSERT_TRUE(window().runner().isActive());
     EXPECT_FALSE(panel()->editingEnabled());
     EXPECT_FALSE(panel()->newLayer());
-    EXPECT_FALSE(m_window.actionRegistry().action(QStringLiteral("layer.new"))->isEnabled());
+    EXPECT_FALSE(window().actionRegistry().action(QStringLiteral("layer.new"))->isEnabled());
     events::press(input(), Qt::Key_Escape);
     EXPECT_TRUE(panel()->editingEnabled());
 
     // LAYER, its alias and the action show the panel.
-    m_window.show();
+    window().show();
     for (const char* command : {"LAYER", "LA"}) {
         SCOPED_TRACE(command);
         panel()->hide();
         ASSERT_FALSE(panel()->isVisible());
         enter(command);
         EXPECT_TRUE(panel()->isVisible());
-        EXPECT_FALSE(m_window.runner().isActive());
+        EXPECT_FALSE(window().runner().isActive());
     }
     panel()->hide();
-    m_window.actionRegistry().action(QStringLiteral("layer.panel"))->trigger();
+    window().actionRegistry().action(QStringLiteral("layer.panel"))->trigger();
     EXPECT_TRUE(panel()->isVisible());
 }
 
