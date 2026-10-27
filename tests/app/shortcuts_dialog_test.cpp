@@ -36,7 +36,7 @@ void editShortcut(ShortcutsDialog& dialog, const QString& text) {
 }
 
 TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) {
-    QTemporaryDir directory;
+    const QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
     QSettings settings(directory.filePath(QStringLiteral("ui.ini")), QSettings::IniFormat);
     ActionRegistry registry;
@@ -70,7 +70,7 @@ TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) 
 }
 
 TEST(ShortcutsDialog, FilterRemoveResetAndCancelRestoreSession) {
-    QTemporaryDir directory;
+    const QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
     QSettings settings(directory.filePath(QStringLiteral("ui.ini")), QSettings::IniFormat);
     ActionRegistry registry;

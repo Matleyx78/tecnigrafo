@@ -18,7 +18,7 @@ bool validSequence(const QString& text, QKeySequence& sequence) {
     }
     for (int i = 0; i < sequence.count(); ++i) {
         const auto key = sequence[static_cast<uint>(i)].key();
-        if (key == Qt::Key_unknown || key == static_cast<Qt::Key>(0)) {
+        if (key == Qt::Key_unknown || static_cast<int>(key) == 0) {
             return false;
         }
     }

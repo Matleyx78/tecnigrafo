@@ -44,7 +44,7 @@ TEST(ShortcutMap, ChangesRemovalConflictsEnvironmentsAndReset) {
 }
 
 TEST(ShortcutMap, SettingsStoreOnlyDifferencesAndIgnoreBadEntries) {
-    QTemporaryDir directory;
+    const QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
     QSettings settings(directory.filePath(QStringLiteral("shortcuts.ini")), QSettings::IniFormat);
     ActionRegistry registry;
@@ -88,7 +88,7 @@ TEST(ShortcutMap, TextRoundTripSwapsDefaultsAndReportsErrorsAtomically) {
     EXPECT_FALSE(map.importText(QStringLiteral("a\tF6\na\tF7\n")).isEmpty());
     EXPECT_TRUE(map.importText(QStringLiteral("a\t\r\nb\tCtrl+A\r\n")).isEmpty());
     EXPECT_TRUE(map.shortcut(QStringLiteral("a")).isEmpty());
-    QTemporaryDir directory;
+    const QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
     QSettings settings(directory.filePath(QStringLiteral("swap.ini")), QSettings::IniFormat);
     ASSERT_TRUE(map.importText(text).isEmpty());
