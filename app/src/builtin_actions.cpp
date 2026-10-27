@@ -178,7 +178,7 @@ void BuiltinActions::add(ActionRegistry& registry) {
                           QStringLiteral("tools-settings")));
     registry.add(withIcon(makeSpec(QStringLiteral("tools.shortcuts"), tr("&Shortcuts…"), tools,
                                    tr("Customizes keyboard shortcuts.")),
-                          QStringLiteral("tools-shortcuts")));
+                          QStringLiteral("tools-settings")));
     registry.add(withIcon(switchSpec(QStringLiteral("ui.theme"), tr("&Dark Theme"), tools,
                                      tr("Switches between light and dark themes.")),
                           QStringLiteral("ui-theme")));
