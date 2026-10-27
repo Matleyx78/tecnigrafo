@@ -27,7 +27,8 @@ per testi e premi `Invio`, poi indica i punti con il clic sinistro o scrivendo
 le coordinate (`100,50`, `@20,0`, `@50<90`). `Invio` conclude il comando, `c`
 chiude linee e polilinee, `Esc` annulla il comando conservando i tratti già
 completati. Il funzionamento completo è nel
-[manuale dei comandi](docs/manuale/comandi.md).
+[manuale dei comandi](docs/manuale/comandi.md) e nel
+[manuale dell'interfaccia](docs/manuale/interfaccia.md).
 
 Per cancellare, scegli le entità sul bordo oppure con un rettangolo a due clic,
 poi premi `Canc`; oppure scrivi `e`, scegli le entità e conferma con `Invio`.
@@ -49,12 +50,19 @@ menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo sna
 | Ripetere l'ultimo comando | `Invio` a riga vuota |
 | Annulla / Ripeti | `Ctrl+Z` / `Ctrl+Y`, oppure i comandi `U` e `REDO` |
 | Nuovo / Apri / Salva | `Ctrl+N` / `Ctrl+O` / `Ctrl+S`, oppure i comandi `NEW`, `OPEN`, `QSAVE` |
+| Gestire i layer | `-LAYER` da riga di comando, oppure `LAYER` / `LA` per il pannello |
+| Impostare il layer corrente | `CLAYER` da riga di comando o menu a tendina nella barra |
+| Colore / Tipi di linea / Spessori | `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`, `LWDISPLAY` |
+| Modificare proprietà entità | `CHPROP` da riga di comando o pannello `PROPERTIES` (`PR`) |
+| Selezione rapida | `QSELECT` per filtrare entità per tipo e proprietà |
+| Ribbon / Interfaccia classica | pulsante `RIBBON`/`MENU` nella barra di stato, o comandi `RIBBON` e `RIBBONCLOSE` |
 
 Nel campo comandi `Canc` cancella entità solo se il campo è vuoto; con testo
 presente modifica il testo. Le coordinate scritte restano esatte anche con snap
 e orto attivi; la sola distanza (`d`) segue la direzione del puntatore corretto.
-Uno snap disponibile prevale sull'orto. Impostazioni e selezione non si salvano
-alla chiusura del programma.
+Uno snap disponibile prevale sull'orto. La selezione non si salva alla chiusura
+del programma; le impostazioni di interfaccia, tema, pannelli e scorciatoie
+sono memorizzate automaticamente.
 
 ## Comandi della vista
 
