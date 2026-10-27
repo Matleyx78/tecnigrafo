@@ -61,6 +61,7 @@ void CadView::setStyle(const render::SceneStyle& style) {
 
 void CadView::paintEvent(QPaintEvent* /*event*/) {
     QPainter painter(this);
+    m_style.devicePixelRatio = devicePixelRatioF();
     QtPainter backend(painter);
     render::renderScene(m_document, m_viewport, m_style, backend);
     render::renderHighlight(m_document, m_runner.selection().ids(), m_viewport, m_style, backend);

@@ -5,6 +5,7 @@
 // main window, `tecnigrafo --script` and the test tool confronta_immagini.
 
 #include "script_session.hpp"
+#include "theme.hpp"
 
 #include "main_window.hpp"
 #include "tg/script/compare.hpp"
@@ -193,7 +194,7 @@ TEST(ScriptSessionTest, ScreenshotUsesTheLightTheme) {
     const QImage image(QDir(output).filePath(QStringLiteral("tema.png")));
     ASSERT_EQ(image.size(), QSize(200, 100));
 
-    const render::Color colour = lightSceneStyle().background;
+    const render::Color colour = sceneStyle(Theme::Light).background;
     const QColor background(colour.r, colour.g, colour.b);
     ASSERT_EQ(background, QColor(Qt::white));
     int white = 0;

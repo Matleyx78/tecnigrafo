@@ -5,6 +5,7 @@
 #include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
+#include "theme.hpp"
 
 #include <QAction>
 #include <QColor>
@@ -155,16 +156,15 @@ protected:
         return vertices;
     }
 
-    /// Pixels in the colour of the snap marker (255, 170, 40), not in that of
-    /// the preview (230, 200, 90) nor of the X axis (170, 60, 60).
+    /// Count only the snap marker, using the window's current theme.
     [[nodiscard]] std::size_t markerPixels() const {
+        const render::Color marker = sceneStyle(m_window.theme()).snapMarker;
         const QImage image = view()->grab().toImage();
         std::size_t count = 0;
         for (int y = 0; y < image.height(); ++y) {
             for (int x = 0; x < image.width(); ++x) {
                 const QColor color = image.pixelColor(x, y);
-                if (color.red() > 200 && color.green() > 130 && color.green() < 190 &&
-                    color.blue() < 80) {
+                if (color == QColor(marker.r, marker.g, marker.b)) {
                     ++count;
                 }
             }
