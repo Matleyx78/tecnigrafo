@@ -17,7 +17,7 @@ bool validSequence(const QString& text, QKeySequence& sequence) {
         return false;
     }
     for (int i = 0; i < sequence.count(); ++i) {
-        const auto key = sequence[i].key();
+        const auto key = sequence[static_cast<uint>(i)].key();
         if (key == Qt::Key_unknown || key == static_cast<Qt::Key>(0)) {
             return false;
         }
@@ -158,8 +158,8 @@ QStringList ShortcutMap::importText(const QString& text) {
         QKeySequence sequence;
         if (fields.size() != 2 || !m_specs.contains(fields[0]) || parsed.contains(fields[0]) ||
             !validSequence(fields.value(1), sequence)) {
-            errors.append(
-                QStringLiteral("Line %1: unknown action, duplicate or invalid sequence.").arg(i + 1));
+            const QString message = QStringLiteral("Line %1: unknown action or invalid sequence.");
+            errors.append(message.arg(i + 1));
             continue;
         }
         parsed.insert(fields[0], sequence);

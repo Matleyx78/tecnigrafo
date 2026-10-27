@@ -24,9 +24,11 @@ TEST(ShortcutMap, ChangesRemovalConflictsEnvironmentsAndReset) {
     ActionRegistry registry;
     addShortcutAction(registry, QStringLiteral("a"), QStringLiteral("Ctrl+A"));
     addShortcutAction(registry, QStringLiteral("b"), QStringLiteral("Ctrl+B"));
-    addShortcutAction(registry, QStringLiteral("c"), QStringLiteral("Ctrl+A"), QStringLiteral("part"));
+    addShortcutAction(registry, QStringLiteral("c"), QStringLiteral("Ctrl+A"),
+                      QStringLiteral("part"));
     ShortcutMap map(registry);
-    EXPECT_EQ(map.conflict(QStringLiteral("b"), QKeySequence(QStringLiteral("Ctrl+A"))), QStringLiteral("a"));
+    EXPECT_EQ(map.conflict(QStringLiteral("b"), QKeySequence(QStringLiteral("Ctrl+A"))),
+              QStringLiteral("a"));
     EXPECT_FALSE(map.set(QStringLiteral("b"), QKeySequence(QStringLiteral("Ctrl+A"))));
     EXPECT_EQ(map.shortcut(QStringLiteral("b")), QKeySequence(QStringLiteral("Ctrl+B")));
     EXPECT_TRUE(map.set(QStringLiteral("a"), {}));

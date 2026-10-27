@@ -20,9 +20,14 @@
 namespace tg::app {
 
 ShortcutsDialog::ShortcutsDialog(ActionRegistry& registry, QSettings& settings, QWidget* parent)
-    : QDialog(parent), m_registry(registry), m_settings(settings), m_map(registry),
-      m_table(new QTableWidget(this)), m_filter(new QLineEdit(this)),
-      m_edit(new QKeySequenceEdit(this)), m_warning(new QLabel(this)) {
+    : QDialog(parent),
+      m_registry(registry),
+      m_settings(settings),
+      m_map(registry),
+      m_table(new QTableWidget(this)),
+      m_filter(new QLineEdit(this)),
+      m_edit(new QKeySequenceEdit(this)),
+      m_warning(new QLabel(this)) {
     setObjectName(QStringLiteral("shortcutsDialog"));
     setWindowTitle(tr("Keyboard Shortcuts"));
     resize(800, 500);
@@ -58,11 +63,11 @@ ShortcutsDialog::ShortcutsDialog(ActionRegistry& registry, QSettings& settings, 
     layout->addWidget(m_edit);
     layout->addWidget(m_warning);
     auto* operations = new QHBoxLayout;
-    const auto button = [this, operations](const QString& text, const QString& name, auto callback) {
+    const auto button = [this, operations](const QString& text, const QString& name, auto fn) {
         auto* result = new QPushButton(text, this);
         result->setObjectName(name);
         operations->addWidget(result);
-        connect(result, &QPushButton::clicked, this, callback);
+        connect(result, &QPushButton::clicked, this, fn);
     };
     button(tr("Remove"), QStringLiteral("removeShortcut"), [this] { change({}); });
     button(tr("Reset"), QStringLiteral("resetShortcut"), [this] {
@@ -106,9 +111,8 @@ void ShortcutsDialog::refresh() {
     m_table->setRowCount(0);
     for (const QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
-        if (spec->text.isEmpty() ||
-            !(spec->text + spec->description + spec->id)
-                 .contains(m_filter->text(), Qt::CaseInsensitive)) {
+        const QString searchable = spec->text + spec->description + spec->id;
+        if (spec->text.isEmpty() || !searchable.contains(m_filter->text(), Qt::CaseInsensitive)) {
             continue;
         }
         const int row = m_table->rowCount();
@@ -170,8 +174,8 @@ void ShortcutsDialog::exportFile() {
         return;
     }
     QSaveFile file(path);
-    const QByteArray data = m_map.exportText().toUtf8();
-    if (!file.open(QIODevice::WriteOnly) || file.write(data) != data.size() || !file.commit()) {
+    const QByteArray bytes = m_map.exportText().toUtf8();
+    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
         m_warning->setText(tr("Could not export shortcuts: %1").arg(file.errorString()));
     }
 }

@@ -44,7 +44,8 @@ TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) 
     ShortcutsDialog dialog(registry, settings);
     chooseAction(dialog, QStringLiteral("draw.line"));
     editShortcut(dialog, QStringLiteral("F6"));
-    EXPECT_EQ(registry.action(QStringLiteral("draw.line"))->shortcut(), QKeySequence(QStringLiteral("F6")));
+    EXPECT_EQ(registry.action(QStringLiteral("draw.line"))->shortcut(),
+              QKeySequence(QStringLiteral("F6")));
     EXPECT_FALSE(settings.contains(QStringLiteral("shortcuts/draw.line")));
     chooseAction(dialog, QStringLiteral("draw.circle"));
     editShortcut(dialog, QStringLiteral("F6"));
@@ -62,8 +63,10 @@ TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) 
     QSettings reloaded(settings.fileName(), QSettings::IniFormat);
     restored.load(reloaded);
     restored.apply(restarted);
-    EXPECT_EQ(restarted.action(QStringLiteral("draw.line"))->shortcut(), QKeySequence(QStringLiteral("F6")));
-    EXPECT_EQ(restarted.action(QStringLiteral("draw.circle"))->shortcut(), QKeySequence(QStringLiteral("F7")));
+    EXPECT_EQ(restarted.action(QStringLiteral("draw.line"))->shortcut(),
+              QKeySequence(QStringLiteral("F6")));
+    EXPECT_EQ(restarted.action(QStringLiteral("draw.circle"))->shortcut(),
+              QKeySequence(QStringLiteral("F7")));
 }
 
 TEST(ShortcutsDialog, FilterRemoveResetAndCancelRestoreSession) {
