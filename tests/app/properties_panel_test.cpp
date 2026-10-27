@@ -371,7 +371,7 @@ TEST_F(PropertiesPanelTest, NothingChangesWhileEditingIsDisabled) {
 }
 
 TEST_F(PropertiesPanelTest, ThePropertyBarChangesTheSelectionOrTheCurrentValues) {
-    PropertyControls controls(panel());
+    const PropertyControls controls(panel());
     auto* color = controls.findChild<ColorCombo*>(QStringLiteral("propertyColorCombo"));
     auto* linetype = controls.findChild<LinetypeCombo*>(QStringLiteral("propertyLinetypeCombo"));
     auto* lineweight =

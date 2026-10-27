@@ -62,9 +62,9 @@ protected:
         wall.lineweight = 50;
         wall.linetype = m_document.continuousLinetype();
         EXPECT_TRUE(m_editor.setProperties(m_wallLine, wall));
-        core::EntityProperties wallCircle = m_document.find(m_wallCircle)->properties;
-        wallCircle.layer = m_walls;
-        EXPECT_TRUE(m_editor.setProperties(m_wallCircle, wallCircle));
+        core::EntityProperties onWalls = m_document.find(m_wallCircle)->properties;
+        onWalls.layer = m_walls;
+        EXPECT_TRUE(m_editor.setProperties(m_wallCircle, onWalls));
         m_editor.commit();
     }
 
@@ -87,19 +87,28 @@ protected:
         activate(*combo, combo->findData(QString::fromLatin1(type)));
     }
 
+    [[nodiscard]] core::LayerId walls() const { return m_walls; }
+
+    [[nodiscard]] EntityId redLine() const { return m_redLine; }
+
+    [[nodiscard]] EntityId circle() const { return m_circle; }
+
+    [[nodiscard]] EntityId wallLine() const { return m_wallLine; }
+
+    [[nodiscard]] EntityId wallCircle() const { return m_wallCircle; }
+
+private:
+    core::Document m_document;
+    edit::Editor m_editor;
     core::LayerId m_walls;
     EntityId m_redLine;
     EntityId m_circle;
     EntityId m_wallLine;
     EntityId m_wallCircle;
-
-private:
-    core::Document m_document;
-    edit::Editor m_editor;
 };
 
 TEST_F(QuickSelectDialogTest, OneCriterionForEachProperty) {
-    QuickSelectDialog dialog(document(), {});
+    const QuickSelectDialog dialog(document(), {});
     EXPECT_EQ(dialog.objectName(), QStringLiteral("quickSelectDialog"));
     // Without a selection only the whole drawing can be searched.
     EXPECT_EQ(child<QComboBox>(dialog, "quickSelectWhere")->count(), 1);
@@ -111,70 +120,70 @@ TEST_F(QuickSelectDialogTest, OneCriterionForEachProperty) {
     choose(*child<ColorCombo>(dialog, "quickSelectColor"), kRed);
     EXPECT_EQ(dialog.criteria().property, Property::Color);
     EXPECT_EQ(dialog.criteria().value, "1");
-    EXPECT_EQ(dialog.result(), std::vector<EntityId>{m_redLine});
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{redLine()});
 
     chooseProperty(dialog, Property::Layer);
-    choose(*child<LayerCombo>(dialog, "quickSelectLayer"), m_walls);
+    choose(*child<LayerCombo>(dialog, "quickSelectLayer"), walls());
     EXPECT_EQ(dialog.criteria().value, "Walls");
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_wallLine, m_wallCircle}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{wallLine(), wallCircle()}));
 
     chooseProperty(dialog, Property::Linetype);
     choose(*child<LinetypeCombo>(dialog, "quickSelectLinetype"), document().continuousLinetype());
-    EXPECT_EQ(dialog.result(), std::vector<EntityId>{m_wallLine});
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{wallLine()});
 
     chooseProperty(dialog, Property::Lineweight);
     choose(*child<LineweightCombo>(dialog, "quickSelectLineweight"), 50);
-    EXPECT_EQ(dialog.result(), std::vector<EntityId>{m_wallLine});
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{wallLine()});
 
     // The operator ≠ and the type of object.
     auto* op = child<QComboBox>(dialog, "quickSelectOperator");
     activate(*op, op->findData(static_cast<int>(Operator::NotEqual)));
     EXPECT_EQ(dialog.criteria().op, Operator::NotEqual);
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_redLine, m_circle, m_wallCircle}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{redLine(), circle(), wallCircle()}));
     chooseType(dialog, "CIRCLE");
     EXPECT_EQ(dialog.criteria().type, std::optional<std::string>("CIRCLE"));
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_circle, m_wallCircle}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{circle(), wallCircle()}));
 
     // By type alone: no property, so no operator and no value.
     chooseProperty(dialog, Property::None);
     EXPECT_FALSE(op->isEnabled());
     EXPECT_EQ(dialog.criteria().op, Operator::Equal);
     chooseType(dialog, "LINE");
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_redLine, m_wallLine}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{redLine(), wallLine()}));
     chooseProperty(dialog, Property::Layer);
     EXPECT_TRUE(op->isEnabled());
 }
 
 TEST_F(QuickSelectDialogTest, ExcludeTakesTheComplement) {
-    QuickSelectDialog dialog(document(), {});
+    const QuickSelectDialog dialog(document(), {});
     chooseProperty(dialog, Property::Layer);
-    choose(*child<LayerCombo>(dialog, "quickSelectLayer"), m_walls);
+    choose(*child<LayerCombo>(dialog, "quickSelectLayer"), walls());
     child<QRadioButton>(dialog, "quickSelectExclude")->setChecked(true);
     EXPECT_TRUE(dialog.criteria().exclude);
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_redLine, m_circle}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{redLine(), circle()}));
     child<QRadioButton>(dialog, "quickSelectInclude")->setChecked(true);
     EXPECT_FALSE(dialog.criteria().exclude);
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_wallLine, m_wallCircle}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{wallLine(), wallCircle()}));
 }
 
 TEST_F(QuickSelectDialogTest, SearchesWithinTheSelection) {
-    QuickSelectDialog dialog(document(), {m_redLine, m_wallCircle});
+    const QuickSelectDialog dialog(document(), {redLine(), wallCircle()});
     // The selection is offered, and taken by default.
     auto* where = child<QComboBox>(dialog, "quickSelectWhere");
     EXPECT_EQ(where->count(), 2);
     EXPECT_TRUE(dialog.searchesSelection());
-    EXPECT_EQ(dialog.within(), (std::vector<EntityId>{m_redLine, m_wallCircle}));
+    EXPECT_EQ(dialog.within(), (std::vector<EntityId>{redLine(), wallCircle()}));
 
     chooseProperty(dialog, Property::None);
     chooseType(dialog, "CIRCLE");
-    EXPECT_EQ(dialog.result(), std::vector<EntityId>{m_wallCircle});
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{wallCircle()});
     child<QRadioButton>(dialog, "quickSelectExclude")->setChecked(true);
-    EXPECT_EQ(dialog.result(), std::vector<EntityId>{m_redLine});
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{redLine()});
 
     // The whole drawing.
     activate(*where, 0);
     EXPECT_FALSE(dialog.searchesSelection());
-    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{m_redLine, m_wallLine}));
+    EXPECT_EQ(dialog.result(), (std::vector<EntityId>{redLine(), wallLine()}));
 }
 
 }  // namespace
