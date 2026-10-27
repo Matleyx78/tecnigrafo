@@ -2,8 +2,8 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.50
-  258 LINE start=0,10 end=10,10
+  259 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.50
+  260 LINE start=0,10 end=10,10
 messages:
   Command: -LAYER
   Current layer:  "0"
@@ -19,11 +19,11 @@ messages:
   Enter linetype(s) to load: ACAD_ISO02W100
   Enter an option [?/Load/Set]:
   Command: LINE
-  Specify start point: 0,0
+  Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: LINE
-  Specify start point: 0,10
+  Specify first point: 0,10
   Specify next point or [Undo]: 10,10
   Specify next point or [Undo]:
   Command: CHPROP
@@ -63,8 +63,8 @@ statistics:
 
 [report 2]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
-  258 LINE start=0,10 end=10,10 ltscale=0.5
+  259 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  260 LINE start=0,10 end=10,10 ltscale=0.5
 messages:
   Command: CHPROP
   Enter property to change [Color/LAyer/LType/ltScale/LWeight]: Color
@@ -98,8 +98,8 @@ statistics:
 
 [report 3]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
-  258 LINE start=0,10 end=10,10 color=5 ltscale=0.5
+  259 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  260 LINE start=0,10 end=10,10 color=5 ltscale=0.5
 messages:
   Command: CHPROP
   Enter property to change [Color/LAyer/LType/ltScale/LWeight]: Color
@@ -133,8 +133,8 @@ statistics:
 
 [report 4]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
-  258 LINE start=0,10 end=10,10 ltscale=0.5
+  259 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  260 LINE start=0,10 end=10,10 ltscale=0.5
 messages:
   Command: U
   Undone: CHPROP.
@@ -165,8 +165,8 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
-  258 LINE start=0,10 end=10,10 color=5 ltscale=0.5
+  259 LINE start=0,0 end=10,0 layer="Muri" color=1 linetype="ACAD_ISO02W100" ltscale=0.5 lineweight=0.50
+  260 LINE start=0,10 end=10,10 color=5 ltscale=0.5
 messages:
   Command: REDO
   Redone: CHPROP.

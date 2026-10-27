@@ -2,10 +2,10 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  257 LINE start=0,0 end=10,0
-  258 LINE start=0,10 end=10,10
-  259 LINE start=0,20 end=10,20 layer="Bloccato"
-  260 LINE start=0,30 end=30,30 layer="Bloccato"
+  258 LINE start=0,0 end=10,0
+  259 LINE start=0,10 end=10,10
+  260 LINE start=0,20 end=10,20 layer="Bloccato"
+  261 LINE start=0,30 end=30,30 layer="Bloccato"
 messages:
   Command: -LAYER
   Current layer:  "0"
@@ -15,21 +15,21 @@ messages:
   Enter name list of layer(s) to lock: Bloccato
   Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
   Command: LINE
-  Specify start point: 0,0
+  Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: LINE
-  Specify start point: 0,10
+  Specify first point: 0,10
   Specify next point or [Undo]: 10,10
   Specify next point or [Undo]:
   Command: CLAYER
   Enter new value for CLAYER <"0">: Bloccato
   Command: LINE
-  Specify start point: 0,20
+  Specify first point: 0,20
   Specify next point or [Undo]: 10,20
   Specify next point or [Undo]:
   Command: LINE
-  Specify start point: 0,30
+  Specify first point: 0,30
   Specify next point or [Undo]: 30,30
   Specify next point or [Undo]:
   Command: CLAYER
@@ -59,14 +59,14 @@ statistics:
 
 [report 2]
 entities:
-  257 LINE start=0,0 end=10,0
-  258 LINE start=0,10 end=10,10
-  259 LINE start=0,20 end=10,20 layer="Bloccato"
-  260 LINE start=0,30 end=30,30 layer="Bloccato"
+  258 LINE start=0,0 end=10,0
+  259 LINE start=0,10 end=10,10
+  260 LINE start=0,20 end=10,20 layer="Bloccato"
+  261 LINE start=0,30 end=30,30 layer="Bloccato"
 messages:
 prompt: Command:
 preview:
-selection: 257 258
+selection: 258 259
 rectangle: none
 undo:
   Layer
@@ -89,9 +89,9 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=0,0 end=10,0
-  259 LINE start=0,20 end=10,20 layer="Bloccato"
-  260 LINE start=0,30 end=30,30 layer="Bloccato"
+  258 LINE start=0,0 end=10,0
+  260 LINE start=0,20 end=10,20 layer="Bloccato"
+  261 LINE start=0,30 end=30,30 layer="Bloccato"
 messages:
   Command: ERASE
   0 found, 0 total
