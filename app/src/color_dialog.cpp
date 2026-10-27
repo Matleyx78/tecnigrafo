@@ -24,8 +24,9 @@ ColorDialog::ColorDialog(core::Color initial, Allow allow, QWidget* parent)
       m_preview(new QLabel(this)),
       m_nearest(new QLabel(this)) {
     setWindowTitle(tr("Select Colour"));
-    if (allow == Allow::IndexAndRgb &&
-        (initial.kind() == core::Color::Kind::ByLayer || initial.kind() == core::Color::Kind::ByBlock)) {
+    const auto kind = initial.kind();
+    const bool inherited = kind == core::Color::Kind::ByLayer || kind == core::Color::Kind::ByBlock;
+    if (allow == Allow::IndexAndRgb && inherited) {
         m_color = core::Color::fromIndex(7);
     }
     auto* layout = new QVBoxLayout(this);
@@ -41,9 +42,12 @@ ColorDialog::ColorDialog(core::Color initial, Allow allow, QWidget* parent)
         button->setIcon(colorIcon(core::Color::fromIndex(index), palette()));
         button->setFixedSize(22, 22);
         const int row = index >= 10 && index <= 249 ? (index - 10) % 10 : 10;
-        const int column = index >= 10 && index <= 249 ? (index - 10) / 10
-                           : index < 10               ? index - 1
-                                                      : index - 250 + 9;
+        int column = index - 250 + 9;
+        if (index >= 10 && index <= 249) {
+            column = (index - 10) / 10;
+        } else if (index < 10) {
+            column = index - 1;
+        }
         grid->addWidget(button, row, column);
         connect(button, &QPushButton::clicked, this, [this, index] {
             m_index->setValue(index);
@@ -70,9 +74,12 @@ ColorDialog::ColorDialog(core::Color initial, Allow allow, QWidget* parent)
     m_tabs->addTab(indexed, tr("Index"));
     auto* rgbPage = new QWidget(m_tabs);
     auto* form = new QFormLayout(rgbPage);
-    const auto rgb = m_color.kind() == core::Color::Kind::Rgb ? m_color.rgb()
-                     : m_color.kind() == core::Color::Kind::Index ? core::aciToRgb(m_color.index())
-                                                                : core::aciToRgb(7);
+    auto rgb = core::aciToRgb(7);
+    if (m_color.kind() == core::Color::Kind::Rgb) {
+        rgb = m_color.rgb();
+    } else if (m_color.kind() == core::Color::Kind::Index) {
+        rgb = core::aciToRgb(m_color.index());
+    }
     const std::array<int, 3> channels{rgb.r, rgb.g, rgb.b};
     const std::array<QString, 3> names{tr("Red"), tr("Green"), tr("Blue")};
     for (std::size_t channel = 0; channel < m_rgb.size(); ++channel) {
@@ -91,8 +98,7 @@ ColorDialog::ColorDialog(core::Color initial, Allow allow, QWidget* parent)
     m_tabs->addTab(rgbPage, tr("RGB"));
     updateRgb();
     m_color = initial;
-    if (allow == Allow::IndexAndRgb &&
-        (initial.kind() == core::Color::Kind::ByLayer || initial.kind() == core::Color::Kind::ByBlock)) {
+    if (allow == Allow::IndexAndRgb && inherited) {
         m_color = core::Color::fromIndex(7);
     }
     m_tabs->setCurrentIndex(initial.kind() == core::Color::Kind::Rgb ? 1 : 0);
@@ -115,8 +121,8 @@ core::Color ColorDialog::color() const {
 
 void ColorDialog::updateRgb() {
     const core::Rgb rgb{static_cast<std::uint8_t>(m_rgb.at(0)->value()),
-                        static_cast<std::uint8_t>(m_rgb.at(1)->value()),
-                        static_cast<std::uint8_t>(m_rgb.at(2)->value())};
+                       static_cast<std::uint8_t>(m_rgb.at(1)->value()),
+                       static_cast<std::uint8_t>(m_rgb.at(2)->value())};
     m_color = core::Color::fromRgb(rgb);
     m_preview->setPixmap(colorIcon(m_color, palette()).pixmap(64, 24));
     m_nearest->setText(QString::number(core::nearestAci(rgb)));

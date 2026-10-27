@@ -15,7 +15,8 @@ namespace tg::app {
 namespace {
 void activate(QComboBox& combo, int index) {
     combo.setCurrentIndex(index);
-    ASSERT_TRUE(QMetaObject::invokeMethod(&combo, "activated", Qt::DirectConnection, Q_ARG(int, index)));
+    ASSERT_TRUE(
+        QMetaObject::invokeMethod(&combo, "activated", Qt::DirectConnection, Q_ARG(int, index)));
 }
 
 template <typename Value>

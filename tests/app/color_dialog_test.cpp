@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "color_dialog.hpp"
+
 #include "property_widgets.hpp"
 
 #include <QImage>

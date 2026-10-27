@@ -48,14 +48,22 @@ QString colorName(core::Color color) {
     }
     if (color.kind() == core::Color::Kind::Index) {
         switch (color.index()) {
-            case 1: return ColorCombo::tr("Red");
-            case 2: return ColorCombo::tr("Yellow");
-            case 3: return ColorCombo::tr("Green");
-            case 4: return ColorCombo::tr("Cyan");
-            case 5: return ColorCombo::tr("Blue");
-            case 6: return ColorCombo::tr("Magenta");
-            case 7: return ColorCombo::tr("White");
-            default: return QString::number(color.index());
+            case 1:
+                return ColorCombo::tr("Red");
+            case 2:
+                return ColorCombo::tr("Yellow");
+            case 3:
+                return ColorCombo::tr("Green");
+            case 4:
+                return ColorCombo::tr("Cyan");
+            case 5:
+                return ColorCombo::tr("Blue");
+            case 6:
+                return ColorCombo::tr("Magenta");
+            case 7:
+                return ColorCombo::tr("White");
+            default:
+                return QString::number(color.index());
         }
     }
     return QString::fromStdString(core::formatColor(color));
@@ -109,13 +117,14 @@ QIcon colorIcon(core::Color color, const QPalette& palette) {
         painter.fillRect(0, 0, kPreviewWidth / 2, kPreviewHeight, Qt::white);
         painter.fillRect(kPreviewWidth / 2, 0, kPreviewWidth / 2, kPreviewHeight, Qt::black);
     } else {
-        const auto rgb = color.kind() == core::Color::Kind::Rgb ? color.rgb()
-                         : color.kind() == core::Color::Kind::Index ? core::aciToRgb(color.index())
-                                                                    : core::Rgb{};
-        const QColor fill = color.kind() == core::Color::Kind::ByLayer ||
-                                    color.kind() == core::Color::Kind::ByBlock
-                                ? palette.color(QPalette::Text)
-                                : QColor(rgb.r, rgb.g, rgb.b);
+        QColor fill = palette.color(QPalette::Text);
+        if (color.kind() == core::Color::Kind::Rgb) {
+            const auto rgb = color.rgb();
+            fill = QColor(rgb.r, rgb.g, rgb.b);
+        } else if (color.kind() == core::Color::Kind::Index) {
+            const auto rgb = core::aciToRgb(color.index());
+            fill = QColor(rgb.r, rgb.g, rgb.b);
+        }
         painter.fillRect(pixmap.rect(), fill);
     }
     painter.setPen(palette.color(QPalette::Text));
@@ -172,13 +181,13 @@ void ColorCombo::setVaries() {
 }
 
 void ColorCombo::choose(int index) {
-    const auto data = itemData(index);
-    if (!data.isValid()) {
+    const auto chosenData = itemData(index);
+    if (!chosenData.isValid()) {
         return;
     }
-    if (data.metaType() == QMetaType::fromType<core::Color>()) {
+    if (chosenData.metaType() == QMetaType::fromType<core::Color>()) {
         // Color has no default constructor; the metatype was checked above.
-        setValue(*static_cast<const core::Color*>(data.constData()));
+        setValue(*static_cast<const core::Color*>(chosenData.constData()));
         Q_EMIT valueChosen(m_value);
         return;
     }
@@ -208,12 +217,12 @@ void LayerCombo::setDocument(const core::Document* document) {
     clear();
     if (document != nullptr) {
         for (const auto& layer : document->layers()) {
-            const auto label = tr("%1 [%2, %3, %4, %5]")
-                                   .arg(QString::fromStdString(layer.name),
-                                        layer.on ? tr("On") : tr("Off"),
-                                        layer.frozen ? tr("Frozen") : tr("Thawed"),
-                                        layer.locked ? tr("Locked") : tr("Unlocked"),
-                                        layer.plot ? tr("Plot") : tr("No plot"));
+            const auto name = QString::fromStdString(layer.name);
+            const auto on = layer.on ? tr("On") : tr("Off");
+            const auto frozen = layer.frozen ? tr("Frozen") : tr("Thawed");
+            const auto locked = layer.locked ? tr("Locked") : tr("Unlocked");
+            const auto plot = layer.plot ? tr("Plot") : tr("No plot");
+            const auto label = tr("%1 [%2, %3, %4, %5]").arg(name, on, frozen, locked, plot);
             addItem(colorIcon(layer.color, palette()), label, QVariant::fromValue(layer.id));
         }
         setValue(document->current().layer);
