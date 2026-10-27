@@ -4,6 +4,7 @@
 #include "command_descriptions.hpp"
 
 #include "tg/cmd/commands/layer_commands.hpp"
+#include "tg/cmd/commands/property_commands.hpp"
 
 namespace tg::cmd::detail {
 namespace {
@@ -312,6 +313,74 @@ CommandDescription ClayerCommand::description() {
             "Sets an existing, thawed layer as the current layer.",
             false,
             {{"layer", "Enter new value for CLAYER <\"{default}\">:", ValueType::Name, {}, true}}};
+}
+
+CommandDescription ColorCommand::description() {
+    return {"COLOR",
+            {"COL", "COLOUR", "-COLOR"},
+            "Sets the color of new objects.",
+            false,
+            {{"color",
+              "Enter default object color [Truecolor] <{default}>:",
+              ValueType::Color,
+              {{"Truecolor", "T"}},
+              true},
+             {"rgb", "Red, Green, Blue:", ValueType::Color, {}, true}}};
+}
+
+CommandDescription LinetypeCommand::description() {
+    return {"-LINETYPE",
+            {"LINETYPE", "LT", "LTYPE", "-LT"},
+            "Loads standard linetypes and sets the linetype of new objects.",
+            false,
+            {{"option",
+              "Enter an option [?/Load/Set]:",
+              ValueType::Keyword,
+              {{"?", "?"}, {"Load", "L"}, {"Set", "S"}},
+              true},
+             {"load", "Enter linetype(s) to load:", ValueType::Name, {}, true},
+             {"set",
+              "Specify linetype name or [?] <{default}>:",
+              ValueType::Name,
+              {{"?", "?"}},
+              true}}};
+}
+
+CommandDescription LwdisplayCommand::description() {
+    return {"LWDISPLAY",
+            {},
+            "Turns the display of lineweights on or off.",
+            false,
+            {{"display", "Enter new value for LWDISPLAY <{default}>:", ValueType::Text, {}, true}}};
+}
+
+CommandDescription LweightCommand::description() {
+    return {"LWEIGHT",
+            {"LW", "LINEWEIGHT", "-LWEIGHT"},
+            "Sets the lineweight of new objects.",
+            false,
+            {{"weight",
+              "Enter default lineweight for new objects or [?]:",
+              ValueType::Real,
+              {{"?", "?"}},
+              true}}};
+}
+
+CommandDescription ScaleCommand::description(Variable variable) {
+    if (variable == Variable::Global) {
+        CommandDescription result;
+        result.name = "LTSCALE";
+        result.aliases = {"LTS"};
+        result.summary = "Sets the global linetype scale factor.";
+        result.prompts.push_back(
+            {"scale", "Enter new linetype scale factor <{default}>:", ValueType::Real, {}, true});
+        return result;
+    }
+    return {"CELTSCALE",
+            {},
+            "Sets the linetype scale factor of new objects.",
+            false,
+            {{"scale", "Enter new value for CELTSCALE <{default}>:", ValueType::Real, {}, true}}};
 }
 
 }  // namespace tg::cmd

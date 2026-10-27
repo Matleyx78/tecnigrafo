@@ -28,11 +28,11 @@ std::optional<LinetypeDefinition> standardLinetype(std::string_view name) {
     }
     if (upper == kNames.at(0)) {
         return LinetypeDefinition{
-            upper, "ISO dash __ __ __ __ __ __ __ __ __ __ __ __ __", {{12, -3}}};
+            upper, "Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ ", {{12, -3}}};
     }
     if (upper == kNames.at(1)) {
         return LinetypeDefinition{
-            upper, "ISO dash dot __ . __ . __ . __ . __ . __ . __", {{12, -3, 0, -3}}};
+            upper, "Tratto punto ISO __ . __ . __ . __ . __ . __ . ", {{12, -3, 0, -3}}};
     }
     return std::nullopt;
 }

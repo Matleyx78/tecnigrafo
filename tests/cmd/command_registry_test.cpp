@@ -248,7 +248,8 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         EXPECT_NE(registry.create(entry->name), nullptr) << entry->name;
     }
     const std::string expected =
-        "-LAYER ARC CIRCLE CLAYER ERASE INSUNITS LINE NEW OPEN PLINE QSAVE SAVE SAVEAS TEXT";
+        "-LAYER -LINETYPE ARC CELTSCALE CIRCLE CLAYER COLOR ERASE INSUNITS LINE LTSCALE "
+        "LWDISPLAY LWEIGHT NEW OPEN PLINE QSAVE SAVE SAVEAS TEXT";
     EXPECT_EQ(names, expected);
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);
     EXPECT_EQ(registry.describe("DTEXT")->name, "TEXT");
