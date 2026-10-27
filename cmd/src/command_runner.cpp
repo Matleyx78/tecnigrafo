@@ -100,6 +100,19 @@ CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& edit
                 }},
       m_descriptionCheck(abortOnUndescribedPrompt) {}
 
+// P23 specifies this owning signature; keep the public API used by the UI.
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+bool CommandRunner::replaceSelection(std::vector<core::EntityId> ids) {
+    if (isActive()) {
+        return false;
+    }
+    clearSelection();
+    for (const auto id : ids) {
+        m_selection.add(id);
+    }
+    return true;
+}
+
 void CommandRunner::setFileAccess(io::FileAccess* files) {
     m_context.files = files;
 }

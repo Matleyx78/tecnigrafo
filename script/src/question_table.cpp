@@ -470,6 +470,7 @@ QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
 
 // Defined in property_questions.cpp.
+QuestionResult askQuickSelect(const QuestionModel& model, Arguments arguments);
 QuestionResult askAci(const QuestionModel& model, Arguments arguments);
 QuestionResult askEffective(const QuestionModel& model, Arguments arguments);
 QuestionResult askDashes(const QuestionModel& model, Arguments arguments);
@@ -515,7 +516,9 @@ constexpr std::array kQuestions{
     QuestionRow{"aci", AnswerShape::Single, &askAci},              // P9
     QuestionRow{"effective", AnswerShape::Single, &askEffective},  // P9
     QuestionRow{"dashes", AnswerShape::Items, &askDashes},         // P11
-    QuestionRow{"quickselect", AnswerShape::Names, nullptr},       // P23
+
+    // P23.
+    QuestionRow{"quickselect", AnswerShape::Names, &askQuickSelect},
     QuestionRow{"layers", AnswerShape::Items, &askLayers},
     QuestionRow{"linetypes", AnswerShape::Items, &askLinetypes},
 };

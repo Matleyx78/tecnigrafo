@@ -338,14 +338,10 @@ TEST(Questions, AciAndEffectiveAnswerFromTheDefinitions) {
     }
 }
 
-TEST(Questions, TheQuestionsOfLaterPackagesAreNotImplementedYet) {
-    const std::string text = std::string{kDefinitions} + "? quickselect type=LINE -> none\n";
-    const std::vector<Answer> list = answers(text);
-    ASSERT_EQ(list.size(), 1U);
-    for (const Answer& answer : list) {
-        EXPECT_EQ(answer.actual, "error: question not implemented yet") << answer.line;
-        EXPECT_FALSE(answer.matches) << answer.line;
-    }
+TEST(Questions, QuickSelectAnswersFromTheDefinitions) {
+    expectAnswer("quickselect type=LINE", "none");
+    expectAnswer("quickselect type=LWPOLYLINE", "A B");
+    expectAnswer("quickselect within=B color=bylayer", "B");
 }
 
 /// Files kept in memory, by name.

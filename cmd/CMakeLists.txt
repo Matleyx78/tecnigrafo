@@ -22,6 +22,7 @@ add_library(tg_cmd
     src/coordinate_input.cpp
     src/drawing_aids.cpp
     src/name_list.cpp
+    src/quick_select.cpp
     src/selection_set.cpp
     src/value_format.cpp
 )

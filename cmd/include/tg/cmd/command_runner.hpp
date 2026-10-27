@@ -20,6 +20,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace tg::cmd {
 
@@ -178,6 +179,9 @@ public:
 
     /// The current selection, or the one being built for a command.
     [[nodiscard]] const SelectionSet& selection() const { return m_selection; }
+
+    /// Replaces the idle selection without messages; false while a command runs.
+    [[nodiscard]] bool replaceSelection(std::vector<core::EntityId> ids);
 
     /// The rectangle being traced, if any.
     [[nodiscard]] std::optional<SelectionRectangle> selectionRectangle() const {

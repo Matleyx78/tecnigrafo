@@ -29,8 +29,5 @@ dxf/r11-public #168
 
 # 0.6-R12: -LAYER e CLAYER (#242)
 
-# 0.6-R23: selezione rapida (#257)
-selezione-rapida/filtri #257
-selezione-rapida/stati-layer #257
 
 # 0.6-R14: CHPROP e layer bloccati (#246)
