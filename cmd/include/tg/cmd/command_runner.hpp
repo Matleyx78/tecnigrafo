@@ -77,6 +77,14 @@ struct SelectionRectangle {
 /// - Starting a command that does not need a selection, the end of every
 ///   command, U, UNDO and REDO clear the selection.
 ///
+/// Locked layers (docs/adr/0023, point 4). A gesture that adds entities
+/// never selects those on a locked layer: it discards them, with a command
+/// or without. While the runner asks "Select objects:", a gesture that
+/// discarded some writes "<n> found, <t> total", where n counts the entities
+/// it took in, and then "1 was on a locked layer." or "<n> were on a locked
+/// layer."; with no command running it writes nothing. A gesture that takes
+/// entities out says nothing about locked layers.
+///
 /// Points, options and selections given with submit() while the runner is
 /// selecting are ignored, as is a SelectionInput while a command runs: only
 /// the runner hands selections to commands.
