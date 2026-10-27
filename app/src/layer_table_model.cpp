@@ -8,6 +8,7 @@
 #include <QIcon>
 #include <QVariant>
 
+#include <algorithm>
 #include <cstddef>
 #include <utility>
 
@@ -82,14 +83,35 @@ QStringList layerPanelIconNames() {
 }
 
 LayerTableModel::LayerTableModel(const core::Document& document, QObject* parent)
-    : QAbstractTableModel(parent), m_document(document) {
+    : QAbstractTableModel(parent), m_document(document), m_rows(snapshot()) {}
+
+std::vector<LayerTableModel::Row> LayerTableModel::snapshot() const {
+    std::vector<Row> rows;
+    const core::LayerId zero = m_document.layerZero();
+    const core::LayerId current = m_document.current().layer;
     for (const core::Layer& layer : m_document.layers()) {
-        m_ids.push_back(layer.id);
+        Row row;
+        row.id = layer.id;
+        row.name = QString::fromStdString(layer.name);
+        row.color = QString::fromStdString(core::formatColor(layer.color));
+        const core::Linetype* linetype = m_document.linetype(layer.linetype);
+        if (linetype != nullptr) {
+            row.linetype = QString::fromStdString(linetype->name);
+        }
+        row.lineweight = QString::fromStdString(core::formatLineweight(layer.lineweight));
+        row.on = layer.on;
+        row.frozen = layer.frozen;
+        row.locked = layer.locked;
+        row.plot = layer.plot;
+        row.current = layer.id == current;
+        row.zero = layer.id == zero;
+        rows.push_back(std::move(row));
     }
+    return rows;
 }
 
 int LayerTableModel::rowCount(const QModelIndex& parent) const {
-    return parent.isValid() ? 0 : static_cast<int>(m_ids.size());
+    return parent.isValid() ? 0 : static_cast<int>(m_rows.size());
 }
 
 int LayerTableModel::columnCount(const QModelIndex& parent) const {
@@ -113,23 +135,18 @@ QVariant LayerTableModel::stateData(int role, LayerState state, bool value) cons
 }
 
 QVariant LayerTableModel::data(const QModelIndex& index, int role) const {
-    if (!index.isValid() || index.row() >= static_cast<int>(m_ids.size()) ||
+    if (!index.isValid() || index.row() >= static_cast<int>(m_rows.size()) ||
         index.column() >= kColumnCount) {
         return {};
     }
-    const core::LayerId id = m_ids[static_cast<std::size_t>(index.row())];
+    const Row& row = m_rows[static_cast<std::size_t>(index.row())];
     if (role == kLayerIdRole) {
-        return QVariant::fromValue(id);
-    }
-    // The row may outlive the layer between a change and refresh().
-    const core::Layer* layer = m_document.layer(id);
-    if (layer == nullptr) {
-        return {};
+        return QVariant::fromValue(row.id);
     }
     const bool display = role == Qt::DisplayRole || role == Qt::EditRole;
     switch (static_cast<LayerColumn>(index.column())) {
         case LayerColumn::Status: {
-            if (id != m_document.current().layer) {
+            if (!row.current) {
                 return role == Qt::TextAlignmentRole ? centered() : QVariant();
             }
             if (role == Qt::DecorationRole) {
@@ -141,29 +158,22 @@ QVariant LayerTableModel::data(const QModelIndex& index, int role) const {
             return role == Qt::TextAlignmentRole ? centered() : QVariant();
         }
         case LayerColumn::Name:
-            return display ? QVariant(QString::fromStdString(layer->name)) : QVariant();
+            return display ? QVariant(row.name) : QVariant();
         case LayerColumn::On:
-            return stateData(role, LayerState::On, layer->on);
+            return stateData(role, LayerState::On, row.on);
         case LayerColumn::Frozen:
-            return stateData(role, LayerState::Frozen, layer->frozen);
+            return stateData(role, LayerState::Frozen, row.frozen);
         case LayerColumn::Locked:
-            return stateData(role, LayerState::Locked, layer->locked);
+            return stateData(role, LayerState::Locked, row.locked);
         case LayerColumn::Color:
-            return role == Qt::DisplayRole
-                       ? QVariant(QString::fromStdString(core::formatColor(layer->color)))
-                       : QVariant();
-        case LayerColumn::Linetype: {
-            const core::Linetype* linetype = m_document.linetype(layer->linetype);
-            return role == Qt::DisplayRole && linetype != nullptr
-                       ? QVariant(QString::fromStdString(linetype->name))
-                       : QVariant();
-        }
+            return role == Qt::DisplayRole ? QVariant(row.color) : QVariant();
+        case LayerColumn::Linetype:
+            return role == Qt::DisplayRole && !row.linetype.isEmpty() ? QVariant(row.linetype)
+                                                                      : QVariant();
         case LayerColumn::Lineweight:
-            return role == Qt::DisplayRole
-                       ? QVariant(QString::fromStdString(core::formatLineweight(layer->lineweight)))
-                       : QVariant();
+            return role == Qt::DisplayRole ? QVariant(row.lineweight) : QVariant();
         case LayerColumn::Plot:
-            return stateData(role, LayerState::Plot, layer->plot);
+            return stateData(role, LayerState::Plot, row.plot);
         case LayerColumn::Count:
             break;
     }
@@ -206,8 +216,9 @@ Qt::ItemFlags LayerTableModel::flags(const QModelIndex& index) const {
     }
     Qt::ItemFlags result = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     // Layer 0 is never renamed (docs/adr/0023, point 1).
-    if (index.column() == static_cast<int>(LayerColumn::Name) &&
-        layerAt(index.row()) != m_document.layerZero()) {
+    if (index.column() == static_cast<int>(LayerColumn::Name) && index.row() >= 0 &&
+        index.row() < static_cast<int>(m_rows.size()) &&
+        !m_rows[static_cast<std::size_t>(index.row())].zero) {
         result |= Qt::ItemIsEditable;
     }
     return result;
@@ -223,24 +234,24 @@ bool LayerTableModel::setData(const QModelIndex& index, const QVariant& value, i
 }
 
 void LayerTableModel::notifyAll() {
-    if (m_ids.empty()) {
+    if (m_rows.empty()) {
         return;
     }
-    const int last = static_cast<int>(m_ids.size()) - 1;
+    const int last = static_cast<int>(m_rows.size()) - 1;
     Q_EMIT dataChanged(index(0, 0), index(last, kColumnCount - 1));
 }
 
 void LayerTableModel::refresh() {
-    std::vector<core::LayerId> ids;
-    for (const core::Layer& layer : m_document.layers()) {
-        ids.push_back(layer.id);
-    }
-    if (ids == m_ids) {
+    std::vector<Row> rows = snapshot();
+    const bool sameLayers =
+        std::ranges::equal(rows, m_rows, [](const Row& a, const Row& b) { return a.id == b.id; });
+    if (sameLayers) {
+        m_rows = std::move(rows);
         notifyAll();
         return;
     }
     beginResetModel();
-    m_ids = std::move(ids);
+    m_rows = std::move(rows);
     endResetModel();
 }
 
@@ -250,15 +261,15 @@ void LayerTableModel::setPalette(const QPalette& palette) {
 }
 
 core::LayerId LayerTableModel::layerAt(int row) const {
-    if (row < 0 || row >= static_cast<int>(m_ids.size())) {
+    if (row < 0 || row >= static_cast<int>(m_rows.size())) {
         return {};
     }
-    return m_ids[static_cast<std::size_t>(row)];
+    return m_rows[static_cast<std::size_t>(row)].id;
 }
 
 int LayerTableModel::rowOf(core::LayerId id) const {
-    for (std::size_t row = 0; row < m_ids.size(); ++row) {
-        if (m_ids[row] == id) {
+    for (std::size_t row = 0; row < m_rows.size(); ++row) {
+        if (m_rows[row].id == id) {
             return static_cast<int>(row);
         }
     }

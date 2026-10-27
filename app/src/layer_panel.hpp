@@ -135,7 +135,7 @@ class LayerControls final : public QWidget {
     Q_OBJECT
 
 public:
-    /// The panel must outlive the controls.
+    /// The controls stop working if the panel is destroyed first.
     explicit LayerControls(LayerPanel& panel, QWidget* parent = nullptr);
 
 protected:
@@ -145,7 +145,7 @@ private:
     void sync();
     void toggle(LayerState state);
 
-    LayerPanel& m_panel;
+    QPointer<LayerPanel> m_panel;
     LayerCombo* m_combo;
     QToolButton* m_on;
     QToolButton* m_frozen;

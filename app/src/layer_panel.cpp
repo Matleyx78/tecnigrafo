@@ -567,7 +567,7 @@ void LayerPanel::changeEvent(QEvent* event) {
 
 LayerControls::LayerControls(LayerPanel& panel, QWidget* parent)
     : QWidget(parent),
-      m_panel(panel),
+      m_panel(&panel),
       m_combo(new LayerCombo(this)),
       m_on(new QToolButton(this)),
       m_frozen(new QToolButton(this)),
@@ -590,17 +590,23 @@ LayerControls::LayerControls(LayerPanel& panel, QWidget* parent)
         button->setFocusPolicy(Qt::NoFocus);
         layout->addWidget(button);
     }
-    connect(m_combo, &LayerCombo::valueChosen, this,
-            [this](core::LayerId id) { m_panel.makeCurrent(id); });
+    connect(m_combo, &LayerCombo::valueChosen, this, [this](core::LayerId id) {
+        if (!m_panel.isNull()) {
+            m_panel->makeCurrent(id);
+        }
+    });
     connect(m_on, &QToolButton::clicked, this, [this] { toggle(LayerState::On); });
     connect(m_frozen, &QToolButton::clicked, this, [this] { toggle(LayerState::Frozen); });
     connect(m_locked, &QToolButton::clicked, this, [this] { toggle(LayerState::Locked); });
-    connect(&m_panel, &LayerPanel::refreshed, this, [this] { sync(); });
+    connect(&panel, &LayerPanel::refreshed, this, [this] { sync(); });
     sync();
 }
 
 void LayerControls::sync() {
-    const core::Document& doc = m_panel.document();
+    if (m_panel.isNull()) {
+        return;
+    }
+    const core::Document& doc = m_panel->document();
     m_combo->setDocument(&doc);
     const core::Layer* layer = doc.layer(doc.current().layer);
     const auto showState = [this, layer](QToolButton* button, LayerState state,
@@ -615,11 +621,14 @@ void LayerControls::sync() {
               tr("Thaw the current layer"));
     showState(m_locked, LayerState::Locked, tr("Lock the current layer"),
               tr("Unlock the current layer"));
-    setEnabled(m_panel.editingEnabled());
+    setEnabled(m_panel->editingEnabled());
 }
 
 void LayerControls::toggle(LayerState state) {
-    const core::Document& doc = m_panel.document();
+    if (m_panel.isNull()) {
+        return;
+    }
+    const core::Document& doc = m_panel->document();
     const core::Layer* layer = doc.layer(doc.current().layer);
     if (layer == nullptr) {
         return;
@@ -627,7 +636,7 @@ void LayerControls::toggle(LayerState state) {
     // Both are read before the call: a change invalidates the layer.
     const core::LayerId id = layer->id;
     const bool next = !layerStateValue(*layer, state);
-    m_panel.setState(id, state, next);
+    m_panel->setState(id, state, next);
 }
 
 void LayerControls::changeEvent(QEvent* event) {

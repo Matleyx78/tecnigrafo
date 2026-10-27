@@ -46,7 +46,9 @@ enum class LayerState : std::uint8_t { On, Frozen, Locked, Plot };
 
 /// The layers of a document as a table; read only. A change of the document
 /// is made by LayerPanel, which asks the editor for it, and then calls
-/// refresh().
+/// refresh(). The model shows a copy of the layers taken by refresh(): it
+/// never reads the document while the view asks for the data, so a view that
+/// outlives the document (a window closing) cannot reach freed layers.
 class LayerTableModel final : public QAbstractTableModel {
     Q_OBJECT
 
@@ -87,11 +89,27 @@ Q_SIGNALS:
     void renameRequested(tg::core::LayerId id, const QString& name);
 
 private:
+    /// What the table shows of one layer.
+    struct Row {
+        core::LayerId id;
+        QString name;
+        QString color;
+        QString linetype;
+        QString lineweight;
+        bool on{true};
+        bool frozen{false};
+        bool locked{false};
+        bool plot{true};
+        bool current{false};
+        bool zero{false};
+    };
+
+    [[nodiscard]] std::vector<Row> snapshot() const;
     [[nodiscard]] QVariant stateData(int role, LayerState state, bool value) const;
     void notifyAll();
 
     const core::Document& m_document;
-    std::vector<core::LayerId> m_ids;
+    std::vector<Row> m_rows;
     QPalette m_palette;
 };
 
