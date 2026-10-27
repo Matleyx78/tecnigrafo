@@ -121,8 +121,8 @@ core::Color ColorDialog::color() const {
 
 void ColorDialog::updateRgb() {
     const core::Rgb rgb{static_cast<std::uint8_t>(m_rgb.at(0)->value()),
-                       static_cast<std::uint8_t>(m_rgb.at(1)->value()),
-                       static_cast<std::uint8_t>(m_rgb.at(2)->value())};
+                        static_cast<std::uint8_t>(m_rgb.at(1)->value()),
+                        static_cast<std::uint8_t>(m_rgb.at(2)->value())};
     m_color = core::Color::fromRgb(rgb);
     m_preview->setPixmap(colorIcon(m_color, palette()).pixmap(64, 24));
     m_nearest->setText(QString::number(core::nearestAci(rgb)));
