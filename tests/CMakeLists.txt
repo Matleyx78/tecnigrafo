@@ -160,6 +160,8 @@ if(TG_BUILD_APP)
         app/icons_test.cpp
         app/recent_files_test.cpp
         app/theme_test.cpp
+        app/shortcut_map_test.cpp
+        app/shortcuts_dialog_test.cpp
         app/settings_test.cpp
         app/qt_painter_test.cpp
         app/ribbon_smoke_test.cpp
