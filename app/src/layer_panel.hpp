@@ -44,6 +44,7 @@ public:
     using Confirm = std::function<bool(const QString&)>;
 
     explicit LayerPanel(edit::Editor& editor, QWidget* parent = nullptr);
+    ~LayerPanel() override;
 
     /// The actions that do what the buttons do, on the layer selected in the
     /// table. The panel enables and disables them. Each may be null.

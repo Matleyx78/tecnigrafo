@@ -126,6 +126,16 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
     updateActions();
 }
 
+LayerPanel::~LayerPanel() {
+    // A window destroys its drawing before its children. The table and the
+    // model are deleted after this destructor, and they report their own
+    // teardown (a row that stops being current, a model that resets): the
+    // panel must not answer with a look at the drawing that is gone.
+    m_table->selectionModel()->disconnect(this);
+    m_model->disconnect(this);
+    m_table->disconnect(this);
+}
+
 void LayerPanel::setActions(QAction* newAction, QAction* deleteAction, QAction* currentAction) {
     m_newAction = newAction;
     m_deleteAction = deleteAction;
@@ -143,6 +153,10 @@ void LayerPanel::setActions(QAction* newAction, QAction* deleteAction, QAction* 
 }
 
 void LayerPanel::setEditingEnabled(bool enabled) {
+    // The window calls this after every input: do nothing if nothing changed.
+    if (enabled == m_editingEnabled) {
+        return;
+    }
     m_editingEnabled = enabled;
     m_table->setEditTriggers(
         enabled ? kNameEditTriggers
@@ -275,7 +289,6 @@ void LayerPanel::syncCellWidgets() {
         auto* color = qobject_cast<ColorCombo*>(
             m_table->indexWidget(m_model->index(row, columnOf(LayerColumn::Color))));
         if (color != nullptr) {
-            color->setDocument(&doc);
             color->setValue(layer->color);
             color->setEnabled(m_editingEnabled);
         }
