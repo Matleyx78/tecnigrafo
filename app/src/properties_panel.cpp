@@ -12,12 +12,14 @@
 #include <QComboBox>
 #include <QEvent>
 #include <QFormLayout>
+#include <QFrame>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPalette>
+#include <QScrollArea>
 #include <QSignalBlocker>
 #include <QVBoxLayout>
 #include <QVariant>
@@ -223,7 +225,14 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
     layout->addWidget(m_geometryBox);
     layout->addWidget(m_message);
     layout->addStretch(1);
-    setWidget(content);
+    // The panel scrolls rather than impose its size on the window: a window
+    // with both panels docked still fits a small screen.
+    auto* scroll = new QScrollArea(this);
+    scroll->setObjectName(QStringLiteral("propertiesScroll"));
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setWidgetResizable(true);
+    scroll->setWidget(content);
+    setWidget(scroll);
 
     // Only the user's choices change the drawing: the setters of the
     // controls emit nothing (0.6-P21), and the filter listens to activated.
