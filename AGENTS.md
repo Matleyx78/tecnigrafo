@@ -190,6 +190,8 @@ scritti **prima** e da **un altro agente**
 - Ricava i valori attesi da calcoli, da file pubblici o da programmi di
   riferimento. **Mai eseguendo Tecnigrafo**: registreresti il suo comportamento,
   errori compresi.
+- Non usare `tecnigrafo-mcp` né `tecnigrafo-script` per ricavare un valore atteso
+  ([ADR 0027](docs/adr/0027-server-mcp-di-sviluppo.md), punto 7).
 - Ogni condizione "Fatto quando" del pacchetto di lavoro ha almeno un caso che la
   verifica. Aggiungi i casi limite: valori nulli, punti coincidenti o quasi
   allineati, Esc a metà comando, annulla e ripeti.
