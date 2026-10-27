@@ -12,6 +12,7 @@
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
+#include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
 
 #include <memory>
@@ -21,12 +22,22 @@ namespace tg::cmd {
 void registerBuiltinCommands(CommandRegistry& registry) {
     // Each command with its description (docs/adr/0026), in alphabetical order.
     registry.add(LayerCommand::description(), [] { return std::make_unique<LayerCommand>(); });
+    registry.add(LinetypeCommand::description(),
+                 [] { return std::make_unique<LinetypeCommand>(); });
     registry.add(detail::arcDescription(), [] { return std::make_unique<ArcCommand>(); });
+    registry.add(ScaleCommand::description(ScaleCommand::Variable::Current),
+                 [] { return std::make_unique<ScaleCommand>(ScaleCommand::Variable::Current); });
     registry.add(detail::circleDescription(), [] { return std::make_unique<CircleCommand>(); });
     registry.add(ClayerCommand::description(), [] { return std::make_unique<ClayerCommand>(); });
+    registry.add(ColorCommand::description(), [] { return std::make_unique<ColorCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });
+    registry.add(ScaleCommand::description(ScaleCommand::Variable::Global),
+                 [] { return std::make_unique<ScaleCommand>(ScaleCommand::Variable::Global); });
+    registry.add(LwdisplayCommand::description(),
+                 [] { return std::make_unique<LwdisplayCommand>(); });
+    registry.add(LweightCommand::description(), [] { return std::make_unique<LweightCommand>(); });
     registry.add(detail::newDescription(), [] { return std::make_unique<NewCommand>(); });
     registry.add(detail::openDescription(), [] { return std::make_unique<OpenCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });

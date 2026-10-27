@@ -28,7 +28,7 @@ TEST(LinetypePattern, StandardDefinitions) {
         return;
     }
     EXPECT_EQ(dash->name, "ACAD_ISO02W100");
-    EXPECT_EQ(dash->description, "ISO dash __ __ __ __ __ __ __ __ __ __ __ __ __");
+    EXPECT_EQ(dash->description, "Tratto ISO __ __ __ __ __ __ __ __ __ __ __ __ ");
     EXPECT_EQ(dash->pattern, (LinetypePattern{{12, -3}}));
     EXPECT_DOUBLE_EQ(dash->pattern.length(), 15);
     const auto dashDot = standardLinetype("AcAd_IsO10W100");
@@ -37,7 +37,7 @@ TEST(LinetypePattern, StandardDefinitions) {
         return;
     }
     EXPECT_EQ(dashDot->name, "ACAD_ISO10W100");
-    EXPECT_EQ(dashDot->description, "ISO dash dot __ . __ . __ . __ . __ . __ . __");
+    EXPECT_EQ(dashDot->description, "Tratto punto ISO __ . __ . __ . __ . __ . __ . ");
     EXPECT_EQ(dashDot->pattern, (LinetypePattern{{12, -3, 0, -3}}));
     auto independent = standardLinetype(dash->name);
     ASSERT_TRUE(independent);
