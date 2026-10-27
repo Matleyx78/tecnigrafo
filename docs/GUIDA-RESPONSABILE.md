@@ -315,8 +315,7 @@ Quando un agente trova un errore nei riferimenti:
 ```text
 Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e
 seguilo alla lettera. Controlla la issue #XX. L'agente che se ne occupa segnala
-un errore. Controlla e dimmi se ha ragione. Se ha ragione, correggi altrimenti
-commenta spiegando il perché.
+un errore. Se ha ragione, correggi altrimenti commenta spiegando il perché.
 ```
 
 ### B6. Unire
