@@ -81,7 +81,9 @@ public:
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
 
     void setTheme(Theme theme);
+
     [[nodiscard]] Theme theme() const { return m_theme; }
+
     /// Panels must have a unique, stable, nonempty objectName.
     void addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
 

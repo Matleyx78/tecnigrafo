@@ -5,12 +5,12 @@
 // main window, `tecnigrafo --script` and the test tool confronta_immagini.
 
 #include "script_session.hpp"
-#include "theme.hpp"
 
 #include "main_window.hpp"
 #include "tg/script/compare.hpp"
 #include "tg/script/level1.hpp"
 #include "tg/script/script.hpp"
+#include "theme.hpp"
 
 #include <QColor>
 #include <QDir>

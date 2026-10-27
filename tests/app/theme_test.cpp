@@ -32,7 +32,8 @@ TEST(ThemeTest, FusionPalettesAndSceneColoursMatchBothThemes) {
         EXPECT_EQ(palette.color(QPalette::Base), dark ? QColor(33, 40, 48) : QColor(255, 255, 255));
         const render::SceneStyle style = sceneStyle(theme);
         EXPECT_EQ(style.entity, (dark ? render::Color{235, 235, 235} : render::Color{0, 0, 0}));
-        EXPECT_EQ(style.background, (dark ? render::Color{33, 40, 48} : render::Color{255, 255, 255}));
+        EXPECT_EQ(style.background,
+                  (dark ? render::Color{33, 40, 48} : render::Color{255, 255, 255}));
         EXPECT_EQ(style.devicePixelRatio, 1.0);
     }
     applyTheme(application(), Theme::Light);
@@ -44,7 +45,8 @@ TEST(ThemeTest, SvgIsTintedWithPaletteTextAndKeepsTransparency) {
     const QString path = directory.filePath(QStringLiteral("test.svg"));
     QFile file(path);
     ASSERT_TRUE(file.open(QIODevice::WriteOnly));
-    const QByteArray svg = R"(<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect x="8" y="8" width="16" height="16" fill="black"/></svg>)";
+    const QByteArray svg =
+        R"(<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect x="8" y="8" width="16" height="16" fill="black"/></svg>)";
     ASSERT_EQ(file.write(svg), svg.size());
     file.close();
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
@@ -53,7 +55,8 @@ TEST(ThemeTest, SvgIsTintedWithPaletteTextAndKeepsTransparency) {
         const QIcon icon = themedIcon(path, palette);
         ASSERT_FALSE(icon.isNull());
         const QImage image = icon.pixmap(32, 32).toImage();
-        EXPECT_EQ(image.pixelColor(image.width() / 2, image.height() / 2), palette.color(QPalette::Text));
+        EXPECT_EQ(image.pixelColor(image.width() / 2, image.height() / 2),
+                  palette.color(QPalette::Text));
         EXPECT_EQ(image.pixelColor(0, 0).alpha(), 0);
     }
     EXPECT_TRUE(themedIcon(QStringLiteral("missing-icon"), QPalette{}).isNull());
@@ -73,7 +76,8 @@ TEST(ThemeTest, ActionImmediatelyChangesPaletteAndDrawing) {
         const auto background = sceneStyle(theme).background;
         const QImage image = window.view()->grab().toImage();
         EXPECT_EQ(image.pixelColor(3, 3), QColor(background.r, background.g, background.b));
-        EXPECT_EQ(window.palette().color(QPalette::Text), application().palette().color(QPalette::Text));
+        EXPECT_EQ(window.palette().color(QPalette::Text),
+                  application().palette().color(QPalette::Text));
     }
 }
 

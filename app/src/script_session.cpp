@@ -3,13 +3,12 @@
 
 #include "script_session.hpp"
 
-#include "theme.hpp"
-
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "main_window.hpp"
 #include "tg/script/case_files.hpp"
 #include "tg/script/report.hpp"
+#include "theme.hpp"
 
 #include <QAction>
 #include <QApplication>

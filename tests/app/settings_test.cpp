@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
-#include "settings_dialog.hpp"
-
 #include "action_registry.hpp"
 #include "main_window.hpp"
+#include "settings_dialog.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -61,7 +60,7 @@ TEST_F(SettingsTest, RestartRestoresInterfaceThemeGeometryAndPanelLayout) {
         window.show();
         window.setInterface(InterfaceKind::Classic);
         window.setTheme(Theme::Dark);
-        window.resize(900, 650);
+        window.resize(700, 500);
         window.addDockWidget(Qt::RightDockWidgetArea, dock);
         QApplication::processEvents();
         size = window.size();
@@ -147,7 +146,8 @@ TEST_F(SettingsTest, ChoicesPersistImmediatelyAndSettingsDialogAppliesOnlyOnAcce
     MainWindow window(MainWindow::InitialDrawing::Empty);
     window.show();
     window.actionRegistry().action(QStringLiteral("ui.interface"))->trigger();
-    EXPECT_EQ(QSettings{}.value(QStringLiteral("ui/interface")).toString(), QStringLiteral("classic"));
+    EXPECT_EQ(QSettings{}.value(QStringLiteral("ui/interface")).toString(),
+              QStringLiteral("classic"));
     window.actionRegistry().action(QStringLiteral("ui.theme"))->trigger();
     EXPECT_EQ(QSettings{}.value(QStringLiteral("ui/theme")).toString(), QStringLiteral("dark"));
     for (const bool accept : {false, true}) {

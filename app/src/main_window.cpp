@@ -196,7 +196,8 @@ void MainWindow::createMenus() {
             &CadView::zoomExtents);
 
     connectDrawingAids();
-    connect(registeredAction("tools.settings"), &QAction::triggered, this, &MainWindow::showSettings);
+    connect(registeredAction("tools.settings"), &QAction::triggered, this,
+            &MainWindow::showSettings);
     connect(registeredAction("ui.theme"), &QAction::toggled, this,
             [this](bool dark) { setTheme(dark ? Theme::Dark : Theme::Light); });
     connect(registeredAction("ui.interface"), &QAction::toggled, this, [this](bool classic) {
@@ -313,9 +314,8 @@ void MainWindow::createStatusBar() {
         setInterface(ribbon ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
     statusBar()->addPermanentWidget(m_ribbonButton);
-    statusBar()->addPermanentWidget(
-        createModeButton(registeredAction("aids.lwdisplay"), tr("LWT"),
-                         QStringLiteral("lwdisplayButton")));
+    statusBar()->addPermanentWidget(createModeButton(registeredAction("aids.lwdisplay"), tr("LWT"),
+                                                    QStringLiteral("lwdisplayButton")));
     // In AutoCAD's order: ORTHO before OSNAP.
     statusBar()->addPermanentWidget(
         createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));
@@ -620,11 +620,16 @@ void MainWindow::saveUiSettings() {
         return;
     }
     ensureRecentFiles();
-    m_settings->setValue(QStringLiteral("ui/interface"),
-                         interfaceKind() == InterfaceKind::Ribbon ? QStringLiteral("ribbon")
-                                                                  : QStringLiteral("classic"));
-    m_settings->setValue(QStringLiteral("ui/theme"),
-                         theme() == Theme::Light ? QStringLiteral("light") : QStringLiteral("dark"));
+    QString interfaceName = QStringLiteral("ribbon");
+    if (interfaceKind() == InterfaceKind::Classic) {
+        interfaceName = QStringLiteral("classic");
+    }
+    QString themeName = QStringLiteral("light");
+    if (theme() == Theme::Dark) {
+        themeName = QStringLiteral("dark");
+    }
+    m_settings->setValue(QStringLiteral("ui/interface"), interfaceName);
+    m_settings->setValue(QStringLiteral("ui/theme"), themeName);
     m_settings->setValue(QStringLiteral("ui/geometry"), saveGeometry());
     m_settings->setValue(QStringLiteral("ui/state"), saveState());
     m_settings->sync();
