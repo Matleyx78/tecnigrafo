@@ -493,6 +493,7 @@ TEST_F(ChpropTest, TheDescriptionListsEveryPrompt) {
     EXPECT_FALSE(description->summary.empty());
     EXPECT_EQ(description->summary.back(), '.');
     std::vector<std::string> ids;
+    ids.reserve(description->prompts.size());
     for (const PromptDescription& prompt : description->prompts) {
         ids.push_back(prompt.id);
     }
