@@ -4,6 +4,7 @@
 # May depend on tg_core only (docs/adr/0001).
 
 add_library(tg_render
+    src/linework.cpp
     src/scene_renderer.cpp
     src/viewport.cpp
 )
