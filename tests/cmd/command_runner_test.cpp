@@ -131,6 +131,33 @@ private:
     std::vector<std::string> m_messages;
 };
 
+TEST_F(CommandRunnerTest, ReplaceSelectionIsSilentAndClosesTheRectangle) {
+    editor().beginTransaction("Create test entities");
+    const auto first = editor().add(core::Line{{0, 0}, {10, 0}});
+    const auto second = editor().add(core::Line{{0, 10}, {10, 10}});
+    editor().commit();
+    runner().click({100, 100}, PickAction::Add);
+    ASSERT_TRUE(runner().selectionRectangle().has_value());
+    EXPECT_TRUE(runner().replaceSelection({second, first, second}));
+    EXPECT_FALSE(runner().selectionRectangle().has_value());
+    const auto ids = runner().selection().ids();
+    EXPECT_EQ((std::vector<core::EntityId>{ids.begin(), ids.end()}),
+              (std::vector{second, first}));
+    EXPECT_TRUE(messages().empty());
+    EXPECT_TRUE(runner().replaceSelection({}));
+    EXPECT_TRUE(runner().selection().isEmpty());
+}
+
+TEST_F(CommandRunnerTest, ReplaceSelectionDoesNothingWhileCommandRuns) {
+    runner().submitText("FAKE");
+    const auto beforeMessages = messages();
+    EXPECT_FALSE(runner().replaceSelection({core::EntityId{999}}));
+    EXPECT_TRUE(runner().selection().isEmpty());
+    EXPECT_EQ(messages(), beforeMessages);
+    EXPECT_TRUE(runner().isActive());
+    runner().submit(CancelInput{});
+}
+
 // --- Starting commands ------------------------------------------------------
 
 TEST_F(CommandRunnerTest, IdleRunnerShowsTheCommandPrompt) {

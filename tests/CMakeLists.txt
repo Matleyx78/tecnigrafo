@@ -31,6 +31,7 @@ add_executable(tg_tests
     cmd/name_list_test.cpp
     cmd/pline_command_test.cpp
     cmd/property_commands_test.cpp
+    cmd/quick_select_test.cpp
     cmd/selection_set_test.cpp
     cmd/text_command_test.cpp
     cmd/value_format_test.cpp

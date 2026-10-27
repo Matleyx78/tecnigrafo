@@ -2,6 +2,8 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "question_table.hpp"
+#include "tg/cmd/quick_select.hpp"
+#include "tg/script/text_format.hpp"
 #include "tg/core/dashes.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/math.hpp"
@@ -131,6 +133,85 @@ QuestionResult askDashes(const QuestionModel& model, std::span<const std::string
             piece));
     }
     return joinItems(lines);
+}
+
+QuestionResult askQuickSelect(const QuestionModel& model,
+                                std::span<const std::string_view> arguments) {
+    using Property = cmd::QuickSelectCriteria::Property;
+    cmd::QuickSelectCriteria criteria;
+    std::vector<core::EntityId> within;
+    bool hasWithin = false;
+    for (const auto argument : arguments) {
+        if (argument == "exclude" && !criteria.exclude) {
+            criteria.exclude = true;
+            continue;
+        }
+        const auto equals = argument.find('=');
+        if (equals == std::string_view::npos || equals == 0) {
+            return ArgumentError{"unexpected quickselect argument"};
+        }
+        const bool notEqual = argument[equals - 1] == '!';
+        const auto key = argument.substr(0, equals - (notEqual ? 1 : 0));
+        const auto written = argument.substr(equals + 1);
+        const auto value = !written.empty() && written.front() == '"'
+                               ? unquoteText(written)
+                               : std::optional<std::string>{std::string{written}};
+        if (!value) {
+            return ArgumentError{"invalid quoted quickselect value"};
+        }
+        if (key == "type" && !notEqual && !criteria.type) {
+            criteria.type = *value;
+        } else if (key == "within" && !notEqual && !hasWithin) {
+            hasWithin = true;
+            std::string_view rest{*value};
+            while (!rest.empty()) {
+                const auto comma = rest.find(',');
+                const auto name = rest.substr(0, comma);
+                const auto id = model.find(name);
+                if (!id) {
+                    return ArgumentError{"no entity named '" + std::string{name} +
+                                         "' is defined above"};
+                }
+                within.push_back(*id);
+                if (comma == std::string_view::npos) {
+                    break;
+                }
+                rest.remove_prefix(comma + 1);
+                if (rest.empty()) {
+                    return ArgumentError{"expected an entity after ','"};
+                }
+            }
+        } else {
+            if (criteria.property != Property::None) {
+                return ArgumentError{"expected one quickselect property condition"};
+            }
+            if (key == "layer") {
+                criteria.property = Property::Layer;
+            } else if (key == "color") {
+                criteria.property = Property::Color;
+            } else if (key == "linetype") {
+                criteria.property = Property::Linetype;
+            } else if (key == "lineweight") {
+                criteria.property = Property::Lineweight;
+            } else {
+                return ArgumentError{"unexpected quickselect argument"};
+            }
+            criteria.op = notEqual ? cmd::QuickSelectCriteria::Operator::NotEqual
+                                   : cmd::QuickSelectCriteria::Operator::Equal;
+            criteria.value = *value;
+        }
+    }
+    if (hasWithin && within.empty()) {
+        return std::string{"none"};
+    }
+    std::string answer;
+    for (const auto id : cmd::quickSelect(model.document, within, criteria)) {
+        if (!answer.empty()) {
+            answer += ' ';
+        }
+        answer += model.nameOf(id);
+    }
+    return answer.empty() ? std::string{"none"} : answer;
 }
 
 }  // namespace tg::script::detail
