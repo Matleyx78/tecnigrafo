@@ -3,6 +3,7 @@
 
 #include "command_descriptions.hpp"
 
+#include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 
@@ -313,6 +314,30 @@ CommandDescription ClayerCommand::description() {
             "Sets an existing, thawed layer as the current layer.",
             false,
             {{"layer", "Enter new value for CLAYER <\"{default}\">:", ValueType::Name, {}, true}}};
+}
+
+CommandDescription ChpropCommand::description() {
+    return {
+        "CHPROP",
+        {},
+        "Changes the color, layer, linetype, linetype scale or lineweight of the selected "
+        "objects.",
+        true,
+        {{"property",
+          "Enter property to change [Color/LAyer/LType/ltScale/LWeight]:",
+          ValueType::Keyword,
+          {{"Color", "C"}, {"LAyer", "LA"}, {"LType", "LT"}, {"ltScale", "LTS"}, {"LWeight", "LW"}},
+          true},
+         {"color",
+          "New color [Truecolor] <{default}>:",
+          ValueType::Color,
+          {{"Truecolor", "T"}},
+          true},
+         {"rgb", "Red, Green, Blue:", ValueType::Color, {}, true},
+         {"layer", "Enter new layer name <{default}>:", ValueType::Name, {}, true},
+         {"linetype", "Enter new linetype name <{default}>:", ValueType::Name, {}, true},
+         {"linetype-scale", "Specify new linetype scale <{default}>:", ValueType::Real, {}, true},
+         {"lineweight", "Enter new lineweight <{default}>:", ValueType::Real, {}, true}}};
 }
 
 CommandDescription ColorCommand::description() {

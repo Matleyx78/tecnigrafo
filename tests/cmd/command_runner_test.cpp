@@ -3,6 +3,7 @@
 
 #include "tg/cmd/command_runner.hpp"
 
+#include "tg/cmd/builtin_commands.hpp"
 #include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
@@ -791,6 +792,178 @@ TEST_F(SelectionTest, EnterRepeatsACommandWithTheCurrentSelection) {
     EXPECT_EQ(picks().started, 2);
     EXPECT_EQ(picks().inputs, (std::vector<Input>{selectionInput({a()}), selectionInput({c()})}));
     EXPECT_TRUE(messages().empty());
+}
+
+// --- Locked layers (docs/adr/0023, point 4) ------------------------------------
+
+/// A new drawing with four horizontal lines, two of them on the locked layer
+/// "Locked", and the built-in commands (ERASE) next to the fake PICK:
+///
+///   y  (0,15)-(10,15)  locked      b  (0,10)-(10,10)
+///   x  (0,5)-(10,5)    locked      a  (0,0)-(10,0)
+class LockedLayerTest : public testing::Test {
+protected:
+    LockedLayerTest() : m_document(Document::newDrawing()) {
+        core::Layer locked;
+        locked.name = "Locked";
+        locked.linetype = m_document.continuousLinetype();
+        locked.locked = true;
+        const core::LayerId lockedId = m_document.addLayer(locked);
+
+        // A new entity takes the current properties, so the current layer
+        // says where each line goes.
+        const core::CurrentProperties open = m_document.current();
+        core::CurrentProperties onLocked = open;
+        onLocked.layer = lockedId;
+        m_a = m_document.add(line({0, 0}, {10, 0}));
+        m_document.setCurrent(onLocked);
+        m_x = m_document.add(line({0, 5}, {10, 5}));
+        m_document.setCurrent(open);
+        m_b = m_document.add(line({0, 10}, {10, 10}));
+        m_document.setCurrent(onLocked);
+        m_y = m_document.add(line({0, 15}, {10, 15}));
+        m_document.setCurrent(open);
+
+        registerBuiltinCommands(m_registry);
+        m_registry.add(pickDescription("PICK", {"PK"}),
+                       [this] { return std::make_unique<FakeSelectCommand>(m_picks); });
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
+    }
+
+    [[nodiscard]] const Document& document() const { return m_document; }
+
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const SelectionJournal& picks() const { return m_picks; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+    [[nodiscard]] core::EntityId a() const { return m_a; }
+
+    [[nodiscard]] core::EntityId b() const { return m_b; }
+
+    [[nodiscard]] core::EntityId x() const { return m_x; }
+
+    [[nodiscard]] core::EntityId y() const { return m_y; }
+
+    /// The ids of the runner's selection, in order.
+    [[nodiscard]] Ids selected() const {
+        const auto ids = m_runner.selection().ids();
+        return {ids.begin(), ids.end()};
+    }
+
+    /// Traces a rectangle with two clicks; the action is that of the second.
+    void rectangle(const Vec2& first, const Vec2& second, PickAction action = PickAction::Add) {
+        m_runner.click(first, PickAction::Add);
+        m_runner.click(second, action);
+    }
+
+private:
+    Document m_document;
+    core::EntityId m_a;
+    core::EntityId m_b;
+    core::EntityId m_x;
+    core::EntityId m_y;
+    edit::Editor m_editor{m_document};
+    CommandRegistry m_registry;
+    SelectionJournal m_picks;
+    CommandRunner m_runner{m_registry, m_editor};
+    std::vector<std::string> m_messages;
+};
+
+TEST_F(LockedLayerTest, AClickOnALockedEntitySelectsNothingAndSaysNothing) {
+    runner().click({5, 5}, PickAction::Add);  // x, which the click found and the runner dropped
+    EXPECT_TRUE(selected().empty());
+    EXPECT_EQ(runner().selectionRectangle(), std::nullopt);  // the click found an entity
+    EXPECT_TRUE(messages().empty());
+
+    runner().click({5, 0}, PickAction::Add);  // a, on the open layer
+    EXPECT_EQ(selected(), Ids{a()});
+    EXPECT_TRUE(messages().empty());
+}
+
+TEST_F(LockedLayerTest, WindowAndCrossingKeepOnlyTheEntitiesOfOpenLayers) {
+    rectangle({-5, -5}, {15, 20});  // window: all four lines are inside
+    EXPECT_EQ(selected(), (Ids{a(), b()}));
+    EXPECT_TRUE(messages().empty());
+
+    runner().submit(CancelInput{});  // with no rectangle open, Esc clears the selection
+    EXPECT_TRUE(selected().empty());
+
+    rectangle({15, 12}, {-5, 3});  // crossing: touches x and b
+    EXPECT_EQ(selected(), Ids{b()});
+    EXPECT_TRUE(messages().empty());
+}
+
+TEST_F(LockedLayerTest, TheQuestionSaysHowManyEntitiesWereOnLockedLayers) {
+    runner().submitText("PICK");
+
+    runner().click({5, 5}, PickAction::Add);  // x alone: singular
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"0 found, 0 total", "1 was on a locked layer."}));
+
+    runner().click({5, 0}, PickAction::Add);  // a alone: no sentence about locked layers
+    ASSERT_EQ(messages().size(), 3U);
+    EXPECT_EQ(messages().back(), "1 found, 1 total");
+
+    rectangle({-5, -5}, {15, 20});  // a again and b; x and y are dropped: plural
+    ASSERT_EQ(messages().size(), 5U);
+    EXPECT_EQ(messages()[3], "2 found, 2 total");
+    EXPECT_EQ(messages()[4], "2 were on a locked layer.");
+    EXPECT_EQ(selected(), (Ids{a(), b()}));
+}
+
+TEST_F(LockedLayerTest, TakingEntitiesOutSaysNothingAboutLockedLayers) {
+    runner().submitText("PICK");
+    runner().click({5, 0}, PickAction::Add);
+    rectangle({-5, -5}, {15, 20}, PickAction::Remove);  // takes a out; x and y were never in
+
+    ASSERT_EQ(messages().size(), 2U);
+    EXPECT_EQ(messages().back(), "1 removed, 0 total");
+    EXPECT_TRUE(selected().empty());
+}
+
+TEST_F(LockedLayerTest, EraseDoesNotRemoveTheEntitiesOfLockedLayers) {
+    runner().submitText("ERASE");
+    rectangle({-5, -5}, {15, 20});
+    EXPECT_EQ(selected(), (Ids{a(), b()}));
+
+    runner().submitText("");
+
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().find(a()), nullptr);
+    EXPECT_EQ(document().find(b()), nullptr);
+    EXPECT_NE(document().find(x()), nullptr);
+    EXPECT_NE(document().find(y()), nullptr);
+    EXPECT_EQ(editor().undoName(), "Erase");
+}
+
+TEST_F(LockedLayerTest, ASelectionMadeBeforeTheCommandHasNoLockedEntities) {
+    rectangle({-5, -5}, {15, 20});
+    runner().submitText("ERASE");  // starts at once with the selection
+
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().entityCount(), 2U);
+    EXPECT_NE(document().find(x()), nullptr);
+    EXPECT_NE(document().find(y()), nullptr);
+    EXPECT_TRUE(messages().empty());
+}
+
+TEST_F(LockedLayerTest, EraseWithOnlyLockedEntitiesFoundEndsWithNoEffect) {
+    runner().submitText("ERASE");
+    runner().click({5, 5}, PickAction::Add);
+    runner().click({5, 15}, PickAction::Add);
+    runner().submitText("");
+
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().entityCount(), 4U);
+    EXPECT_TRUE(editor().undoNames().empty());
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"0 found, 0 total", "1 was on a locked layer.",
+                                        "0 found, 0 total", "1 was on a locked layer."}));
 }
 
 // --- Snap and ortho (docs/adr/0008) --------------------------------------------

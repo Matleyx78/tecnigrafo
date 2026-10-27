@@ -68,6 +68,27 @@ bool matches(const Keyword& keyword, std::string_view text) {
            (!keyword.shortcut.empty() && detail::equalsIgnoringCase(text, keyword.shortcut));
 }
 
+// The questions to the model still find the entities of a locked layer, but
+// no selection gesture takes them in (docs/adr/0023, point 4). An entity
+// whose layer the document lacks is not locked.
+bool isOnLockedLayer(const core::Document& document, core::EntityId id) {
+    const core::EntityRecord* record = document.find(id);
+    if (record == nullptr) {
+        return false;
+    }
+    const core::Layer* layer = document.layer(record->properties.layer);
+    return layer != nullptr && layer->locked;
+}
+
+// The sentence that tells how many entities of a gesture were on locked
+// layers; numbers in a fixed sentence, as the plan of stage 0.3 allows.
+std::string lockedMessage(std::size_t count) {
+    if (count == 1) {
+        return "1 was on a locked layer.";
+    }
+    return std::to_string(count) + " were on a locked layer.";
+}
+
 }  // namespace
 
 CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& editor)
@@ -363,11 +384,22 @@ void CommandRunner::selectionClick(const core::Vec2& point, PickAction action) {
 }
 
 void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAction action) {
+    const core::Document& document = m_editor.document();
+    std::size_t found = 0;
+    std::size_t locked = 0;
     std::size_t removed = 0;
     for (const core::EntityId id : ids) {
         if (action == PickAction::Add) {
+            // A locked layer's entity is discarded, not counted as found.
+            if (isOnLockedLayer(document, id)) {
+                ++locked;
+                continue;
+            }
             m_selection.add(id);
+            ++found;
         } else if (m_selection.remove(id)) {
+            // Nothing on a locked layer is ever selected, so there is nothing
+            // to discard, and nothing to say, when a gesture takes entities out.
             ++removed;
         }
     }
@@ -377,7 +409,10 @@ void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAc
     // Numbers in a fixed sentence, as the plan of stage 0.3 allows.
     const std::string total = std::to_string(m_selection.size()) + " total";
     if (action == PickAction::Add) {
-        message(std::to_string(ids.size()) + " found, " + total);
+        message(std::to_string(found) + " found, " + total);
+        if (locked > 0) {
+            message(lockedMessage(locked));
+        }
     } else {
         message(std::to_string(removed) + " removed, " + total);
     }
