@@ -2,7 +2,6 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "question_table.hpp"
-
 #include "tg/cmd/quick_select.hpp"
 #include "tg/core/dashes.hpp"
 #include "tg/core/effective_properties.hpp"
