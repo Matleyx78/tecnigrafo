@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  257 LINE start=0,0 end=10,0 color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+  258 LINE start=0,0 end=10,0 color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
 messages:
   Command: -LINETYPE
   Current line type: "ByLayer"
@@ -103,7 +103,7 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=0,0 end=10,0 color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
+  258 LINE start=0,0 end=10,0 color=1 linetype="ACAD_ISO02W100" ltscale=2 lineweight=0.30
 messages:
   Command: REDO
   Redone: LINETYPE.
