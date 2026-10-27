@@ -8,6 +8,7 @@
 #include "input_events.hpp"
 #include "layer_panel.hpp"
 #include "main_window.hpp"
+#include "properties_panel.hpp"
 #include "tg/io/file_access.hpp"
 
 #include <QAction>
@@ -219,12 +220,13 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
         if (dock != nullptr && item == dock->toggleViewAction()) {
             return true;
         }
-        // The ribbon and the toolbar each hold the layer controls in a
-        // QWidgetAction made by the toolkit; the actions of the layers
-        // panel are in the registry.
+        // The ribbon and the toolbar each hold the layer controls and the
+        // property controls in a QWidgetAction made by the toolkit; the
+        // actions of the two panels are in the registry.
         const auto* widgetAction = qobject_cast<const QWidgetAction*>(item);
         if (widgetAction != nullptr &&
-            qobject_cast<const LayerControls*>(widgetAction->defaultWidget()) != nullptr) {
+            (qobject_cast<const LayerControls*>(widgetAction->defaultWidget()) != nullptr ||
+             qobject_cast<const PropertyControls*>(widgetAction->defaultWidget()) != nullptr)) {
             return true;
         }
         // SARibbon also supplies native-style window controls, including

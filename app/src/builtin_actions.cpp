@@ -204,6 +204,18 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(makeSpec(QStringLiteral("layer.current"), tr("Make &Current"), layers,
                                    tr("Makes the selected layer the current one.")),
                           QStringLiteral("layer-current")));
+    // The properties panel and the quick selection (0.6-P24). No command:
+    // the actions work on the panel, which keeps the selection; PROPERTIES
+    // and QSELECT (app_commands.cpp) open the same.
+    ActionSpec properties =
+        withIcon(makeSpec(QStringLiteral("properties.panel"), tr("&Properties Panel"), tools,
+                          tr("Shows the properties panel.")),
+                 QStringLiteral("properties-panel"));
+    properties.ribbon = QStringLiteral("home/properties");
+    registry.add(std::move(properties));
+    registry.add(withIcon(makeSpec(QStringLiteral("edit.quick-select"), tr("&Quick Select…"), tools,
+                                   tr("Selects objects by type and property.")),
+                          QStringLiteral("quick-select")));
     const QString modes = tools + QLatin1Char('/') + tr("Object Snap &Modes");
     registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.endpoint"), tr("&Endpoint"), modes,
                                      tr("Snaps to the endpoints of lines, arcs and polylines.")),

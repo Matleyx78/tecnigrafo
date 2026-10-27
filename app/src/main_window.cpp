@@ -9,6 +9,7 @@
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "layer_panel.hpp"
+#include "properties_panel.hpp"
 #include "recent_files.hpp"
 #include "sample_drawing.hpp"
 #include "settings_dialog.hpp"
@@ -137,6 +138,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
             layers->refresh();
         }
+        if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+            properties->refresh();
+        }
         // Only a decoded OPEN replaces the document after reading bytes.
         // A failed parse, undo or a no-op edit must not reorder recent files.
         if (!m_pendingOpen.isEmpty() &&
@@ -232,6 +236,17 @@ void MainWindow::createMenus() {
     connect(layers, &LayerPanel::messageShown, m_commandLine, &CommandLine::appendToHistory);
     connect(layers, &LayerPanel::changed, this, &MainWindow::refresh);
     addPanel(layers, Qt::RightDockWidgetArea);
+
+    // The properties panel and QSELECT (0.6-P24). Like the layers panel, it
+    // exists before the interface, which places its controls.
+    auto* properties = new PropertiesPanel(m_editor, m_runner, this);
+    properties->setQuickSelectAction(registeredAction("edit.quick-select"));
+    connect(registeredAction("properties.panel"), &QAction::triggered, properties,
+            &PropertiesPanel::showAndFocus);
+    connect(properties, &PropertiesPanel::messageShown, m_commandLine,
+            &CommandLine::appendToHistory);
+    connect(properties, &PropertiesPanel::changed, this, &MainWindow::refresh);
+    addPanel(properties, Qt::RightDockWidgetArea);
 
     m_uiBuilder = std::make_unique<UiBuilder>(*this, *m_actions);
     registerAppCommands(m_registry, *this);
@@ -355,6 +370,10 @@ void MainWindow::createStatusBar() {
 }
 
 void MainWindow::refresh() {
+    // A click or Esc may have changed the selection the panel shows.
+    if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        properties->refresh();
+    }
     m_view->update();
     m_commandLine->refreshPrompt();
     updateDrawingState();
@@ -376,6 +395,9 @@ void MainWindow::updateEditActions() {
     m_eraseAction->setEnabled(idle && !m_runner.selection().isEmpty());
     if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
         layers->setEditingEnabled(idle);
+    }
+    if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        properties->setEditingEnabled(idle);
     }
     const QString undoName = QString::fromStdString(m_editor.undoName());
     const QString redoName = QString::fromStdString(m_editor.redoName());

@@ -5,6 +5,7 @@
 
 #include "action_registry.hpp"
 #include "layer_panel.hpp"
+#include "properties_panel.hpp"
 
 #include <QAction>
 #include <QHash>
@@ -137,6 +138,12 @@ void UiBuilder::buildRibbon() {
     if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
         panelFor(QStringLiteral("home/layers"))->addSmallWidget(new LayerControls(*layers, ribbon));
     }
+    // So do colour, linetype and lineweight in theirs (0.6-P24).
+    if (auto* properties =
+            m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        panelFor(QStringLiteral("home/properties"))
+            ->addSmallWidget(new PropertyControls(*properties, ribbon));
+    }
     for (QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
         if (spec->ribbon.isEmpty() || action->isSeparator()) {
@@ -193,6 +200,16 @@ void UiBuilder::buildClassic() {
         } else if (!spec->ribbon.isEmpty()) {
             toolbarFor(spec->ribbon)->addAction(action);
         }
+    }
+    // The controls of the properties come after the panel's button: a
+    // toolbar keeps its first item in sight, and the controls are wide. The
+    // toolbar starts a second row, as in AutoCAD, so that the toolbars do not
+    // make the window wider than a small screen.
+    if (auto* properties =
+            m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        QToolBar* toolbar = toolbarFor(QStringLiteral("home/properties"));
+        toolbar->addWidget(new PropertyControls(*properties, &m_window));
+        m_window.insertToolBarBreak(toolbar);
     }
 }
 
