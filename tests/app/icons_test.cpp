@@ -3,6 +3,7 @@
 
 #include "action_registry.hpp"
 #include "builtin_actions.hpp"
+#include "layer_table_model.hpp"
 #include "theme.hpp"
 
 #include <QAction>
@@ -167,16 +168,12 @@ bool needsNoIcon(const ActionSpec& spec) {
            spec.id.startsWith(QStringLiteral("file.recent."));
 }
 
-/// The icons of layers and properties: drawn in 0.6-P19, used by the actions
-/// that 0.6-P22 and 0.6-P24 add. Until then no action names them; those
-/// packages take them out of this list.
+/// The icons of the properties: drawn in 0.6-P19, used by the actions that
+/// 0.6-P24 adds. Until then no action names them; that package takes them out
+/// of this list. The layer icons left it with 0.6-P22.
 QStringList reservedIcons() {
-    return {QStringLiteral("layer-panel"),        QStringLiteral("layer-on"),
-            QStringLiteral("layer-off"),          QStringLiteral("layer-frozen"),
-            QStringLiteral("layer-thawed"),       QStringLiteral("layer-locked"),
-            QStringLiteral("layer-unlocked"),     QStringLiteral("layer-current"),
-            QStringLiteral("properties-panel"),   QStringLiteral("quick-select"),
-            QStringLiteral("property-color"),     QStringLiteral("property-linetype"),
+    return {QStringLiteral("properties-panel"), QStringLiteral("quick-select"),
+            QStringLiteral("property-color"), QStringLiteral("property-linetype"),
             QStringLiteral("property-lineweight")};
 }
 
@@ -273,7 +270,7 @@ TEST(IconsTest, ViewAidsInterfaceAndHelpActionsUseTheirOwnIcons) {
     }
 }
 
-TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForLayersAndProperties) {
+TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForProperties) {
     ActionRegistry registry;
     addBuiltinActions(registry);
     QStringList used;
@@ -284,6 +281,9 @@ TEST(IconsTest, EveryIconFileHasAnActionOrIsReservedForLayersAndProperties) {
             used.append(spec->icon);
         }
     }
+    // The states and the mark of the current layer are drawn by the layers
+    // panel, not named by an action (0.6-P22).
+    used.append(layerPanelIconNames());
     const QStringList reserved = reservedIcons();
 
     const QDir directory(QStringLiteral(TG_ICONS_DIR));

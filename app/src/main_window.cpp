@@ -8,6 +8,7 @@
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
+#include "layer_panel.hpp"
 #include "recent_files.hpp"
 #include "sample_drawing.hpp"
 #include "settings_dialog.hpp"
@@ -132,6 +133,10 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         // Called inside the runner: never ask another question reentrantly.
         updateDrawingState();
         m_view->update();
+        // The panel shows what a command, undo, redo, NEW or OPEN changed.
+        if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
+            layers->refresh();
+        }
         // Only a decoded OPEN replaces the document after reading bytes.
         // A failed parse, undo or a no-op edit must not reorder recent files.
         if (!m_pendingOpen.isEmpty() &&
@@ -216,6 +221,17 @@ void MainWindow::createMenus() {
     });
 
     connect(registeredAction("help.about"), &QAction::triggered, this, &MainWindow::showAbout);
+
+    // The layers panel (0.6-P22). It exists before the interface is built:
+    // the ribbon and the toolbar find it to place their layer controls.
+    auto* layers = new LayerPanel(m_editor, this);
+    layers->setActions(registeredAction("layer.new"), registeredAction("layer.delete"),
+                       registeredAction("layer.current"));
+    connect(registeredAction("layer.panel"), &QAction::triggered, layers,
+            &LayerPanel::showAndFocus);
+    connect(layers, &LayerPanel::messageShown, m_commandLine, &CommandLine::appendToHistory);
+    connect(layers, &LayerPanel::changed, this, &MainWindow::refresh);
+    addPanel(layers, Qt::RightDockWidgetArea);
 
     m_uiBuilder = std::make_unique<UiBuilder>(*this, *m_actions);
     registerAppCommands(m_registry, *this);
@@ -358,6 +374,9 @@ void MainWindow::updateEditActions() {
     m_recentMenu->setEnabled(idle && !m_scriptMode);
     m_recentAction->setEnabled(idle && !m_scriptMode);
     m_eraseAction->setEnabled(idle && !m_runner.selection().isEmpty());
+    if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
+        layers->setEditingEnabled(idle);
+    }
     const QString undoName = QString::fromStdString(m_editor.undoName());
     const QString redoName = QString::fromStdString(m_editor.redoName());
     m_undoAction->setEnabled(idle && m_editor.canUndo());
