@@ -61,3 +61,10 @@ if(TG_BUILD_APP)
         target_compile_options(tg_saribbon PRIVATE /utf-8)
     endif()
 endif()
+
+# nlohmann/json: the JSON library of mcp only (docs/adr/0027, point 2;
+# third_party/nlohmann_json/README.md). Header-only; included as
+# "nlohmann_json/json.hpp" and as SYSTEM, so our warnings stay out of it.
+add_library(tg_nlohmann_json INTERFACE)
+target_include_directories(tg_nlohmann_json SYSTEM INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
