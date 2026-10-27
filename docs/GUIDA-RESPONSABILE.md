@@ -308,6 +308,17 @@ Gemini lascia un commento di revisione in ognuna, senza modificare file. Leggi i
 commenti prima di unire (B6): se uno chiede correzioni che condividi, passalo
 all'agente che ha scritto la pull request.
 
+### B5.1. Segnalazione errori
+
+Quando un agente trova un errore nei riferimenti:
+
+```text
+Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e
+seguilo alla lettera. Controlla la issue #XX. L'agente che se ne occupa segnala
+un errore. Controlla e dimmi se ha ragione. Se ha ragione, correggi altrimenti
+commenta spiegando il perché.
+```
+
 ### B6. Unire
 
 1. Apri la pull request. In basso tutti i controlli devono essere verdi.
