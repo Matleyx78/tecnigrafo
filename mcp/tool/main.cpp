@@ -7,12 +7,15 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/mcp/server.hpp"
+#include "tg/mcp/session.hpp"
 #include "tg/mcp/tool.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -42,13 +45,7 @@ constexpr std::string_view kUsage =
 constexpr int kExitOk = 0;
 constexpr int kExitUsage = 2;
 
-/// The options of the command line. The tools that use them come with
-/// package 0.6-P26; here they are only read and checked.
-struct Options {
-    std::optional<std::filesystem::path> root;
-    std::optional<std::filesystem::path> sources;
-    bool questions{false};
-};
+using Options = tg::mcp::SessionOptions;
 
 bool isFolder(const std::filesystem::path& path) {
     std::error_code error;
@@ -107,6 +104,12 @@ int main(int argc, char* argv[]) {
 
     auto registry = std::make_shared<tg::cmd::CommandRegistry>();
     tg::cmd::registerBuiltinCommands(*registry);
-    tg::mcp::Server server(tg::mcp::commandTools(std::move(registry)));
+    // list_commands, describe_command, the live session, then the tools of
+    // tecnigrafo-script (docs/adr/0027, point 5).
+    std::vector<std::unique_ptr<tg::mcp::Tool>> tools = tg::mcp::commandTools(std::move(registry));
+    std::ranges::move(tg::mcp::sessionTools(std::make_shared<tg::mcp::Session>(*options)),
+                      std::back_inserter(tools));
+    std::ranges::move(tg::mcp::caseTools(*options), std::back_inserter(tools));
+    tg::mcp::Server server(std::move(tools));
     return server.run(std::cin, std::cout, std::cerr) == 0 ? kExitOk : EXIT_FAILURE;
 }

@@ -84,6 +84,24 @@ foreach(name IN LISTS TG_VERIFICA_NAMES)
         SKIP_RETURN_CODE 77)
 endforeach()
 
+# tecnigrafo-mcp against tecnigrafo-script (docs/adr/0027, point 6): on every
+# case, run_script gives the same report as `tecnigrafo-script run` and
+# check_case the same outcome as `tecnigrafo-script check`, with the same
+# public files. One test per case and tool, labelled "verifica" too; the
+# outcome of the case does not matter, so pending cases are compared as well.
+add_executable(tg_mcp_equivalence "${PROJECT_SOURCE_DIR}/tests/mcp/equivalence_test.cpp")
+target_link_libraries(tg_mcp_equivalence PRIVATE Tecnigrafo::mcp Tecnigrafo::script
+    GTest::gtest_main)
+target_compile_definitions(tg_mcp_equivalence PRIVATE
+    TG_VERIFICA_CASES="${TG_VERIFICA_CASES}"
+    TG_VERIFICA_SOURCES_DIR="${TG_VERIFICA_SOURCES_DIR}"
+    TG_EQUIVALENCE_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/equivalenza")
+tg_configure_target(tg_mcp_equivalence)
+gtest_discover_tests(tg_mcp_equivalence
+    DISCOVERY_MODE PRE_TEST
+    TEST_PREFIX "mcp-equivalenza/"
+    PROPERTIES LABELS verifica)
+
 # Level 2 (docs/adr/0011, points 2, 6 and 8): with the application, every
 # case with a script runs also as verifica2/<area>/<name>. The test tool
 # confronta_immagini starts `tecnigrafo --script`, compares its report with

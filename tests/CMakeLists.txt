@@ -70,6 +70,7 @@ add_executable(tg_tests
     io/cadx_test.cpp
     io/json_test.cpp
     mcp/server_test.cpp
+    mcp/session_test.cpp
     render/linework_test.cpp
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
@@ -120,7 +121,9 @@ add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe X)
 set_tests_properties(script_describe_unknown PROPERTIES WILL_FAIL TRUE)
 
 # tecnigrafo-mcp (docs/adr/0027): it is built, and its options are checked.
-# The protocol itself is tested in memory (mcp/server_test.cpp).
+# The protocol and the tools are tested in memory (mcp/server_test.cpp,
+# mcp/session_test.cpp); the equivalence with tecnigrafo-script on every
+# verification case is in tests/verifica (mcp/equivalence_test.cpp).
 add_test(NAME mcp_version COMMAND tecnigrafo-mcp --version)
 set_tests_properties(mcp_version PROPERTIES PASS_REGULAR_EXPRESSION "^tecnigrafo-mcp [0-9]+\\.[0-9]+\\.[0-9]+")
 add_test(NAME mcp_root_must_exist

@@ -6,8 +6,11 @@
 # (docs/adr/0001). No network port and no socket (docs/adr/0011, point 10).
 
 add_library(tg_mcp
+    src/case_tools.cpp
     src/command_tools.cpp
     src/server.cpp
+    src/session.cpp
+    src/session_tools.cpp
 )
 add_library(Tecnigrafo::mcp ALIAS tg_mcp)
 
