@@ -30,7 +30,7 @@ Value storedValue(const QVariant& data) {
 
 template <typename Combo, typename Value>
 void checkSelection(Combo& combo, Value value) {
-    QSignalSpy spy(&combo, &Combo::valueChosen);
+    const QSignalSpy spy(&combo, &Combo::valueChosen);
     combo.setValue(value);
     EXPECT_TRUE(spy.isEmpty());
     EXPECT_EQ(storedValue<Value>(combo.currentData()), value);
@@ -73,7 +73,7 @@ TEST(PropertyWidgets, ColoursNamesRecentsAndMixedSelection) {
 
 TEST(PropertyWidgets, ColourDialogAcceptAndCancel) {
     ColorCombo combo;
-    QSignalSpy spy(&combo, &ColorCombo::valueChosen);
+    const QSignalSpy spy(&combo, &ColorCombo::valueChosen);
     combo.setVaries();
     QTimer::singleShot(0, &combo, [&combo] {
         auto* dialog = combo.findChild<ColorDialog*>();
@@ -106,7 +106,7 @@ TEST(PropertyWidgets, LayersShowAllStatesAndUseStableIds) {
     const auto id = document.addLayer(layer);
     const auto current = document.current();
     LayerCombo combo;
-    QSignalSpy spy(&combo, &LayerCombo::valueChosen);
+    const QSignalSpy spy(&combo, &LayerCombo::valueChosen);
     combo.setDocument(&document);
     EXPECT_TRUE(spy.isEmpty());
     EXPECT_EQ(combo.count(), static_cast<int>(document.layers().size()));

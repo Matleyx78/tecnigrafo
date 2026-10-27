@@ -94,7 +94,7 @@ QIcon lineIcon(const core::LinetypePattern& pattern, const QPalette& palette) {
             }
         }
     }
-    return QIcon(pixmap);
+    return {pixmap};
 }
 
 QIcon weightIcon(int weight, const QPalette& palette) {
@@ -105,7 +105,7 @@ QIcon weightIcon(int weight, const QPalette& palette) {
     const double width = std::max(1.0, static_cast<double>(weight) * 96.0 / 2540.0);
     painter.setPen(QPen(palette.color(QPalette::Text), width));
     painter.drawLine(0, kPreviewHeight / 2, kPreviewWidth, kPreviewHeight / 2);
-    return QIcon(pixmap);
+    return {pixmap};
 }
 }  // namespace
 
@@ -129,7 +129,7 @@ QIcon colorIcon(core::Color color, const QPalette& palette) {
     }
     painter.setPen(palette.color(QPalette::Text));
     painter.drawRect(0, 0, kPreviewWidth - 1, kPreviewHeight - 1);
-    return QIcon(pixmap);
+    return {pixmap};
 }
 
 ColorCombo::ColorCombo(QWidget* parent) : QComboBox(parent) {

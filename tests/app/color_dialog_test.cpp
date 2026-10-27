@@ -31,7 +31,7 @@ TEST(ColorDialog, IndexGridAndNumberChooseAnAci) {
 
 TEST(ColorDialog, RgbChannelsAndNearestIndex) {
     const core::Rgb initial{13, 57, 201};
-    ColorDialog dialog(core::Color::fromRgb(initial), ColorDialog::Allow::All);
+    const ColorDialog dialog(core::Color::fromRgb(initial), ColorDialog::Allow::All);
     EXPECT_EQ(dialog.color(), core::Color::fromRgb(initial));
     EXPECT_EQ(dialog.findChild<QTabWidget*>()->currentIndex(), 1);
     dialog.findChild<QSpinBox*>(QStringLiteral("rgb0"))->setValue(255);
@@ -45,20 +45,20 @@ TEST(ColorDialog, RgbChannelsAndNearestIndex) {
 }
 
 TEST(ColorDialog, InheritedColoursAreOfferedOnlyWhenAllowed) {
-    ColorDialog dialog(core::Color::byBlock(), ColorDialog::Allow::All);
+    const ColorDialog dialog(core::Color::byBlock(), ColorDialog::Allow::All);
     EXPECT_EQ(dialog.color(), core::Color::byBlock());
     dialog.findChild<QPushButton*>(QStringLiteral("byLayer"))->click();
     EXPECT_EQ(dialog.color(), core::Color::byLayer());
     dialog.findChild<QPushButton*>(QStringLiteral("byBlock"))->click();
     EXPECT_EQ(dialog.color(), core::Color::byBlock());
-    ColorDialog restricted(core::Color::byLayer(), ColorDialog::Allow::IndexAndRgb);
+    const ColorDialog restricted(core::Color::byLayer(), ColorDialog::Allow::IndexAndRgb);
     EXPECT_EQ(restricted.findChild<QPushButton*>(QStringLiteral("byLayer")), nullptr);
     EXPECT_EQ(restricted.findChild<QPushButton*>(QStringLiteral("byBlock")), nullptr);
     EXPECT_EQ(restricted.color(), core::Color::fromIndex(7));
 }
 
 TEST(ColorDialog, SwitchingTabsSelectsTheCorrespondingColourRepresentation) {
-    ColorDialog dialog(core::Color::fromIndex(1), ColorDialog::Allow::All);
+    const ColorDialog dialog(core::Color::fromIndex(1), ColorDialog::Allow::All);
     auto* tabs = dialog.findChild<QTabWidget*>();
     tabs->setCurrentIndex(1);
     EXPECT_EQ(dialog.color(), core::Color::fromRgb(core::aciToRgb(1)));
