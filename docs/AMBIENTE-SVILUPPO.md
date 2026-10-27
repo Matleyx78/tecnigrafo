@@ -1,11 +1,42 @@
-# Ambiente di sviluppo su Debian con VS Code
+# Ambiente di sviluppo (Debian, WSL, Windows con Visual Studio)
 
 Procedura per Debian 13 (trixie), che ha Qt 6.8 nei pacchetti (minimo del progetto,
 ADR 0028). Debian 12 (bookworm) ha Qt 6.4: serve Qt 6.8 installato a parte, vedi
-il [README](../README.md). Su Windows 11
-la stessa procedura funziona dentro WSL: vedi la sezione
-[5. Windows con WSL](#5-windows-con-wsl). Per la compilazione nativa su Windows
-(MSVC) e su macOS vedi il [README](../README.md).
+il [README](../README.md). Su Windows 11 ci sono **due modi distinti** di lavorare:
+la stessa procedura di Debian dentro WSL, sezione
+[5. Windows con WSL](#5-windows-con-wsl), oppure la compilazione nativa con
+Visual Studio, sezione
+[8. Windows nativo con Visual Studio](#8-windows-nativo-con-visual-studio).
+Per macOS vedi il [README](../README.md).
+
+## Windows o WSL: dove sono?
+
+Su un PC Windows si può lavorare in due ambienti che **non condividono nulla**:
+due copie del progetto, due compilatori, due installazioni di Qt, due cartelle
+`build`, e anche `git` e `gh` (con i loro accessi) sono separati.
+
+| | Windows nativo (sezione 8) | Windows con WSL (sezioni 1-5) |
+|---|---|---|
+| Dove scrivo i comandi | PowerShell, prompt `PS C:\...>` | terminale Debian, prompt `utente@PC:~$` |
+| Dove sta il progetto | `C:\progetti\tecnigrafo` | `~/progetti/tecnigrafo`, dentro Debian |
+| Compilatore | MSVC, quello di Visual Studio | GCC di Debian |
+| Qt | installer ufficiale, `C:\Qt\6.8.3\msvc2022_64` | `apt install qt6-base-dev` |
+| Il programma si chiama | `build\release\app\tecnigrafo.exe` | `build/ci/app/tecnigrafo` |
+| Separatore dei percorsi | `\` | `/` |
+| VS Code, in basso a sinistra | niente | **WSL: Debian** |
+| La build vale come prova su | Windows | Linux |
+
+Regole per non confondersi:
+
+- un file con `.exe` è Windows; senza estensione è Linux. Non si lanciano uno
+  dall'altro ambiente;
+- la cartella `build` di un ambiente non si riusa nell'altro: la configurazione
+  ricorda il compilatore e non va d'accordo con quello sbagliato;
+- si lavora nel proprio ambiente: non compilare dentro `\\wsl.localhost\Debian\...`
+  da Windows, né dentro `/mnt/c/...` da Debian (lentissimo). Per **guardare** i file
+  di Debian da Windows, da Debian: `explorer.exe .`;
+- se hai dubbi su dove sei, guarda il prompt: `PS C:\` è Windows, `utente@...:~$`
+  è Debian.
 
 ## 1. Pacchetti di sistema
 
@@ -76,7 +107,8 @@ apre sul desktop di Windows.
 
 Una build fatta in WSL è una build **Linux**. Vale come prova su Linux, non su
 Windows: la prova manuale e il benchmark su Windows richiesti per chiudere una
-tappa si fanno con la compilazione nativa descritta nel [README](../README.md).
+tappa si fanno con la compilazione nativa descritta nella
+[sezione 8](#8-windows-nativo-con-visual-studio).
 
 ### 5.1 Installare Debian
 
@@ -353,3 +385,174 @@ Se l'agente non trova gli strumenti: il server non è connesso (controlla con i
 comandi di ogni sezione), il percorso dell'eseguibile non è assoluto o la
 compilazione non è stata fatta. Gli errori del server arrivano su stderr, che
 lo strumento dell'agente di solito mostra nei suoi log.
+
+## 8. Windows nativo con Visual Studio
+
+Qui si lavora **senza WSL**: tutto dentro Windows, con il compilatore di Visual
+Studio (MSVC) e Qt per Windows. Il risultato è `tecnigrafo.exe`, la build che vale
+come prova su Windows: la prova manuale e il benchmark richiesti per chiudere una
+tappa si fanno qui. Non si mescola con la sezione 5, che è un ambiente a parte
+(vedi la tabella "Windows o WSL: dove sono?" in testa al file).
+
+**Tutti i comandi di questa sezione si scrivono in PowerShell, non nel terminale
+Debian.**
+
+### 8.1 Cosa installare (una volta sola)
+
+1. **Visual Studio 2022 Community**, con il carico di lavoro "Sviluppo di
+   applicazioni desktop con C++": porta compilatore, CMake e Ninja.
+2. **Qt 6.8** per MSVC 2022 64-bit, con l'installer ufficiale (il componente
+   "MSVC 2022 64-bit"; il progetto non chiede moduli aggiuntivi). Negli esempi la
+   cartella è `C:\Qt\6.8.3\msvc2022_64`: se hai un'altra versione, cambia il
+   percorso.
+3. **Git per Windows**, per scaricare il progetto.
+
+### 8.2 Scaricare il progetto
+
+In PowerShell, in una cartella corta (i percorsi lunghi danno problemi a MSVC):
+
+```powershell
+mkdir C:\progetti
+cd C:\progetti
+git clone https://github.com/Matleyx78/tecnigrafo
+cd tecnigrafo
+```
+
+È una copia **diversa** da quella che hai in Debian: le modifiche non passano
+dall'una all'altra se non con `git push` e `git pull`.
+
+### 8.3 Aprire il terminale a 64 bit (ogni volta)
+
+Per compilare serve un terminale **a 64 bit** con l'ambiente di Visual Studio.
+Il collegamento "Developer PowerShell for VS 2022" del menu Start apre un
+ambiente a 32 bit, che non si collega a Qt `msvc2022_64`: non usarlo. Due modi
+giusti:
+
+- apri dal menu Start **"x64 Native Tools Command Prompt for VS 2022"** (è un
+  prompt `cmd`: per usare i comandi PowerShell di questa sezione scrivi
+  `powershell`); oppure
+- in una PowerShell normale:
+
+  ```powershell
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+  & "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+  ```
+
+Controlla di essere nel posto giusto:
+
+```powershell
+where.exe cl      # la prima riga deve contenere Hostx64\x64
+cmake --version   # almeno 3.24
+```
+
+Se `cmake` o `cl` non vengono riconosciuti, hai aperto un terminale normale: torna
+qui sopra.
+
+### 8.4 Compilare
+
+```powershell
+cd C:\progetti\tecnigrafo
+cmake --preset release -DCMAKE_PREFIX_PATH=C:/Qt/6.8.3/msvc2022_64
+cmake --build --preset release
+ctest --preset release
+```
+
+Nel percorso di Qt si scrive `/` anche su Windows. Il primo comando ricorda il
+percorso di Qt: le volte dopo bastano `cmake --build --preset release` e
+`ctest --preset release`.
+
+Il preset `release` serve per usare il programma; per il debugger usa `debug` (gli
+stessi comandi con `debug` al posto di `release`; il programma finisce in
+`build\debug\app`). Le cartelle sono separate, quindi puoi tenerli entrambi.
+
+Se hai configurato da un terminale sbagliato (a 32 bit, o non di Visual Studio),
+cancella la cartella e ricomincia da quello giusto:
+
+```powershell
+Remove-Item -Recurse -Force build\release
+```
+
+### 8.5 Lanciare tecnigrafo.exe
+
+Dopo la compilazione il programma è in `build\release\app\tecnigrafo.exe`, ma da
+solo non parte: Windows non trova le DLL di Qt. Si risolve in uno di due modi.
+
+**A. Aggiungere Qt al `PATH` (il più comodo per lavorare).** Vale solo per la
+finestra di terminale in cui lo scrivi: in una finestra nuova va ripetuto.
+
+```powershell
+$env:PATH = "C:\Qt\6.8.3\msvc2022_64\bin;$env:PATH"
+.\build\release\app\tecnigrafo.exe
+```
+
+**B. Copiare le DLL accanto al programma con `windeployqt`.** Si fa una volta per
+cartella di build, e va rifatto solo se la cancelli.
+
+```powershell
+& C:\Qt\6.8.3\msvc2022_64\bin\windeployqt.exe build\release\app\tecnigrafo.exe
+.\build\release\app\tecnigrafo.exe
+```
+
+Per la build di debug sostituisci `release` con `debug` e aggiungi `--debug` a
+`windeployqt`.
+
+La finestra di Tecnigrafo si apre sul desktop e il terminale torna subito libero:
+è normale, l'applicazione non ha una console.
+
+Se qualcosa non va:
+
+| Sintomo | Causa | Rimedio |
+|---|---|---|
+| `cmake` o `cl` "non riconosciuto" | terminale normale | 8.3 |
+| "Could not find a package configuration file provided by Qt6" | manca `-DCMAKE_PREFIX_PATH=...` | rilancia il primo comando di 8.4 |
+| errori di collegamento tra x86 e x64 | configurato da un terminale a 32 bit | cancella `build\release`, riparti da 8.3 |
+| Windows dice che `Qt6Core.dll` (o `Qt6Cored.dll`) non è stata trovata | mancano le DLL di Qt | 8.5, A o B |
+
+### 8.6 Aprire il progetto nell'IDE di Visual Studio (per il debugger)
+
+Per compilare e lanciare bastano 8.3-8.5. L'IDE serve soprattutto per il
+**debugger**: il `launch.json` condiviso di VS Code usa gdb, pensato per Linux e
+WSL, e non va bene per un programma compilato con MSVC.
+
+> Questo percorso nasce dalla documentazione di Visual Studio e dai preset del
+> progetto, ma **non è stato provato**. Se un passo non torna, i comandi da
+> terminale di 8.3-8.5 restano la strada sicura: sono quelli del
+> [README](../README.md), e la CI compila con MSVC nello stesso modo.
+
+I preset del progetto non conoscono la tua cartella di Qt. La si dice in un file
+personale, `CMakeUserPresets.json`, nella cartella del progetto (Git lo ignora,
+quindi resta solo sul tuo PC):
+
+```json
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "win-debug",
+      "displayName": "Windows Debug (Qt 6.8.3)",
+      "inherits": "debug",
+      "architecture": { "value": "x64", "strategy": "external" },
+      "cacheVariables": { "CMAKE_PREFIX_PATH": "C:/Qt/6.8.3/msvc2022_64" },
+      "environment": { "PATH": "C:/Qt/6.8.3/msvc2022_64/bin;$penv{PATH}" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "win-debug", "configurePreset": "win-debug" }
+  ]
+}
+```
+
+Poi:
+
+1. In Visual Studio scegli **Apri una cartella locale** e seleziona
+   `C:\progetti\tecnigrafo`.
+2. Nella barra degli strumenti scegli la configurazione **Windows Debug (Qt
+   6.8.3)**: Visual Studio configura da solo il progetto (l'avanzamento è nella
+   finestra *Output*).
+3. Compila con il menu **Compila**, voce *Compila tutto* (`Ctrl+Maiusc+B`).
+4. Come elemento di avvio scegli `tecnigrafo.exe`, poi `F5` per avviarlo nel
+   debugger (`Ctrl+F5` senza debugger). Con questo preset il programma è in
+   `build\win-debug\app`.
+
+Se all'avvio mancano le DLL di Qt, usa `windeployqt --debug` come in 8.5, B, sul
+file `build\win-debug\app\tecnigrafo.exe`.
