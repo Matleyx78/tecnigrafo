@@ -197,3 +197,159 @@ potrebbe far eseguire comandi qualsiasi.
 Nell'IDE Antigravity la lista dei comandi autorizzati è segnalata come
 inaffidabile (comandi richiesti anche se autorizzati, voci spostate dopo il
 riavvio): per lavorare a lotti si usa la CLI.
+
+## 7. `tecnigrafo-mcp` per gli agenti
+
+`tecnigrafo-mcp` è un server MCP di sviluppo ([ADR 0027](adr/0027-server-mcp-di-sviluppo.md)):
+un agente lo collega al suo strumento e **esegue comandi di Tecnigrafo dal
+vivo**, leggendo subito il rapporto, invece di scrivere uno script e lanciarlo.
+Parla MCP su stdio, senza porte di rete e senza Qt, e **non si installa**: è
+un eseguibile di sviluppo, come `tecnigrafo-script`. Non sostituisce la CI, che
+resta la sola a fare fede. Gli strumenti che offre, con argomenti ed esempi,
+sono in [docs/verifica/mcp.md](verifica/mcp.md).
+
+Chi scrive i riferimenti della modalità di controllo **non lo usa** per
+ricavare un valore atteso (AGENTS.md, "Modalità di controllo e riferimenti").
+
+### 7.1 Dove si trova e come si avvia
+
+Si compila insieme al resto, con gli stessi preset della sezione 3:
+
+```sh
+cmake --preset ci && cmake --build --preset ci
+```
+
+Senza Qt basta `cmake --preset ci -DTG_BUILD_APP=OFF`: `tecnigrafo-mcp` non lo
+usa. L'eseguibile è in
+
+```
+build<TG_BUILD_SUFFIX>/<preset>/mcp/tecnigrafo-mcp
+```
+
+quindi `build/ci/mcp/tecnigrafo-mcp` per la tua cartella, e per esempio
+`build-codex/ci/mcp/tecnigrafo-mcp` per quella di un agente (AGENTS.md,
+"Comandi"). Per vedere che funziona: `tecnigrafo-mcp --version`.
+
+Le opzioni:
+
+| Opzione | Effetto |
+|---|---|
+| `--root <cartella>` | la sola cartella in cui i comandi dei file leggono e scrivono (`OPEN`, `SAVEAS`, i casi di `check_case`). Senza, nessun accesso ai file |
+| `--sources <cartella>` | i file pubblici di `sorgenti.json` già scaricati, in sola lettura come `@sources/<nome>` (di solito `build/verifica-sorgenti`) |
+| `--questions` | offre anche lo strumento `ask`, per le domande al modello |
+
+Il server aspetta messaggi su stdin e finisce alla fine dell'input: non lo si
+avvia a mano, lo avvia lo strumento dell'agente. Le configurazioni qui sotto
+usano una cartella di lavoro dentro `build/`, che Git ignora; crea prima la
+cartella, perché `--root` deve esistere:
+
+```sh
+mkdir -p ~/progetti/tecnigrafo/build/mcp-lavoro
+```
+
+Nelle configurazioni scrivi **percorsi assoluti** (`/home/<utente>/progetti/…`):
+`~` e le variabili non si espandono dappertutto.
+
+**Non puntare `--root` a `tests/verifica/casi`** per lavorare: `save`
+scriverebbe dentro i casi, che nessun pacchetto di lavoro può modificare. Per
+provare un caso con `check_case`, che non scrive mai dentro `--root`, avvia un
+secondo server con `--root tests/verifica/casi` e `--sources
+build/verifica-sorgenti`.
+
+### 7.2 Claude Code
+
+```sh
+claude mcp add --transport stdio tecnigrafo -- \
+    /home/<utente>/progetti/tecnigrafo/build/ci/mcp/tecnigrafo-mcp \
+    --root /home/<utente>/progetti/tecnigrafo/build/mcp-lavoro
+```
+
+Le opzioni di `claude` vengono **prima** del nome, e `--` separa quelle dal
+comando che avvia il server: senza, Claude Code leggerebbe `--root` come una
+sua opzione. La configurazione resta nel tuo `~/.claude.json`, per questo
+progetto soltanto (`--scope local`, quello predefinito). Non usare `--scope
+project`: scriverebbe un `.mcp.json` nella radice del repository con percorsi
+del tuo computer.
+
+Controllo: `claude mcp list` deve mostrare `tecnigrafo` come connesso, e `/mcp`
+dentro una sessione ne elenca gli strumenti. Per togliere il server: `claude
+mcp remove tecnigrafo`.
+
+Fonte: [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp).
+
+### 7.3 Codex
+
+```sh
+codex mcp add tecnigrafo -- \
+    /home/<utente>/progetti/tecnigrafo/build/ci/mcp/tecnigrafo-mcp \
+    --root /home/<utente>/progetti/tecnigrafo/build/mcp-lavoro
+```
+
+Il comando scrive in `~/.codex/config.toml`, dove si può anche scrivere a mano
+la stessa voce:
+
+```toml
+[mcp_servers.tecnigrafo]
+command = "/home/<utente>/progetti/tecnigrafo/build/ci/mcp/tecnigrafo-mcp"
+args = ["--root", "/home/<utente>/progetti/tecnigrafo/build/mcp-lavoro"]
+```
+
+Come per Claude Code, `--` separa il comando dalle opzioni di `codex`. Dopo
+averlo aggiunto, avvia `codex` in una sessione nuova; `codex mcp --help`
+elenca i sottocomandi disponibili.
+
+Fonte: [Codex: Model Context Protocol](https://developers.openai.com/codex/mcp).
+La sintassi di `codex mcp add` e della tabella `[mcp_servers.<nome>]` è
+quella della documentazione di Codex nel repository
+[openai/codex](https://github.com/openai/codex); se il comando risponde con un
+errore, fa fede la pagina.
+
+### 7.4 Antigravity
+
+Antigravity non ha, nella sua documentazione, un comando per aggiungere un
+server: si modifica il file `mcp_config.json`. Per Tecnigrafo usa quello
+**globale**, `~/.gemini/config/mcp_config.json`, non quello del progetto
+(`<progetto>/.agents/mcp_config.json`), che finirebbe nel repository con i
+percorsi del tuo computer:
+
+```json
+{
+  "mcpServers": {
+    "tecnigrafo": {
+      "command": "/home/<utente>/progetti/tecnigrafo/build/ci/mcp/tecnigrafo-mcp",
+      "args": ["--root", "/home/<utente>/progetti/tecnigrafo/build/mcp-lavoro"]
+    }
+  }
+}
+```
+
+Se il file esiste già, aggiungi solo la voce `tecnigrafo` dentro `mcpServers`.
+Non confonderlo con `~/.gemini/antigravity-cli/settings.json` della sezione 6,
+che contiene i permessi. Nell'IDE lo stesso file si apre dal pannello
+dell'agente: **…**, **MCP Servers**, **Manage MCP Servers**, **View raw
+config**.
+
+Controllo: nella CLI scrivi `/mcp` e premi `Invio`; il gestore mostra lo stato
+del server (attivo, disconnesso, in caricamento) e si può ricaricare la
+configurazione.
+
+Fonte: [Antigravity: MCP](https://antigravity.google/docs/mcp).
+
+### 7.5 La prova: seguire la guida senza altre istruzioni
+
+Con il server collegato, in una sessione nuova dell'agente chiedi, senza dare
+altre istruzioni:
+
+> Usa `tecnigrafo-mcp`: elenca i comandi, descrivi `LINE`, disegna una linea da
+> 0,0 a 10,0, leggi il rapporto e salvala come `prova.dxf`.
+
+Deve usare `list_commands`, `describe_command`, `run` (con le righe `LINE`,
+`0,0`, `10,0` e una stringa vuota), `report` e `save`. Il rapporto deve avere
+`257 LINE start=0,0 end=10,0` tra le entità, e `build/mcp-lavoro/prova.dxf`
+deve esistere. Poi `reset`, `open` con lo stesso nome e `report`: la linea è
+di nuovo là.
+
+Se l'agente non trova gli strumenti: il server non è connesso (controlla con i
+comandi di ogni sezione), il percorso dell'eseguibile non è assoluto o la
+compilazione non è stata fatta. Gli errori del server arrivano su stderr, che
+lo strumento dell'agente di solito mostra nei suoi log.
