@@ -34,6 +34,10 @@ struct SceneStyle {
     double snapMarkerSizePx{10.0};
     double minGridSpacingPx{12.0};  ///< finer grids are hidden
     double tessellationTolerancePx{0.25};
+    /// Device pixels per logical pixel of the screen: the width of a pen
+    /// drawn with a lineweight is in device pixels (docs/adr/0025, point 6).
+    /// Precondition: positive.
+    double devicePixelRatio{1.0};
     bool showGrid{true};
 };
 
@@ -41,7 +45,22 @@ struct SceneStyle {
 /// the form {1, 2, 5} * 10^n that is at least `minSpacingPx` on screen.
 [[nodiscard]] double gridSpacing(double pixelsPerUnit, double minSpacingPx);
 
-/// Draws grid, axes and every entity of `document` as seen through `viewport`.
+/// Draws grid, axes and every visible entity of `document` as seen through
+/// `viewport`: those on a layer that is off or frozen are skipped, those on a
+/// locked layer are drawn (docs/adr/0023). Each entity takes its effective
+/// properties (core::effectiveProperties()):
+/// - colour: its RGB, except index 7, which is style.entity, the main colour of
+///   the theme (docs/adr/0024, point 5);
+/// - lineweight: with document.lwdisplay() on, a pen of
+///   max(1, round(mm * 96 / 25.4 * style.devicePixelRatio)) pixels, otherwise
+///   the cosmetic pen of width 0 (docs/adr/0025, point 6);
+/// - linetype: the pieces of core::dashes() with the effective scale, each with
+///   Painter::drawLine or an open Painter::drawPolyline, and a dot as a stroke
+///   of one pixel; continuous when the pattern, scaled and seen on the screen,
+///   is shorter than 4 pixels, or when core::dashes() gives no pieces
+///   (docs/adr/0025, point 5).
+/// The pen is always LineStyle::Solid: the pattern is ours, not the painter's.
+/// A text takes only the colour: no lineweight and no linetype.
 /// A text is drawn with Painter::drawText using core::textFrame() for its
 /// origin, used height, rotation and width factor, together with its oblique
 /// angle and mirroring (docs/adr/0022). A text whose used capital height is

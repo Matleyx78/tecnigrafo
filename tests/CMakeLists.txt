@@ -68,6 +68,7 @@ add_executable(tg_tests
     io/zip_test.cpp
     io/cadx_test.cpp
     io/json_test.cpp
+    render/linework_test.cpp
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp
@@ -95,8 +96,11 @@ target_compile_definitions(tg_tests PRIVATE
     TG_SCRIPT_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/script-output"
     TG_IO_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/io-output"
     TG_IO_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/io/dati")
-# The ZIP container is internal to io (io/src/zip.hpp); its tests reach it here.
-target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src")
+# The ZIP container is internal to io (io/src/zip.hpp), and the lineweights and
+# linetypes on the screen to render (render/src/linework.hpp); their tests
+# reach them here.
+target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src"
+    "${PROJECT_SOURCE_DIR}/render/src")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)

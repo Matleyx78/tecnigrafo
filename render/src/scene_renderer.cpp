@@ -3,7 +3,9 @@
 
 #include "tg/render/scene_renderer.hpp"
 
+#include "linework.hpp"
 #include "tg/core/arc_geometry.hpp"
+#include "tg/core/effective_properties.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/text.hpp"
 
@@ -150,6 +152,37 @@ private:
     std::vector<Vec2> m_screenPoints;  // reused buffer
 };
 
+// Index 7 follows the theme; no other colour does, not even a white RGB
+// (docs/adr/0024, point 5).
+Color penColor(const core::EffectiveProperties& properties, const SceneStyle& style) {
+    if (properties.colorIsSeven) {
+        return style.entity;
+    }
+    return Color{properties.color.r, properties.color.g, properties.color.b};
+}
+
+// Draws one entity of the document with its effective properties.
+void drawStyled(const core::Document& document, const core::EntityRecord& record,
+                const core::EffectiveProperties& properties, const Viewport& viewport,
+                const SceneStyle& style, EntityDrawer& drawer, Painter& painter) {
+    const Color color = penColor(properties, style);
+    if (std::holds_alternative<core::Text>(record.entity)) {
+        // A text has neither lineweight nor linetype; its tiny box, if it
+        // comes to that, is a plain cosmetic outline.
+        painter.setPen(color, 0.0, LineStyle::Solid);
+        std::visit(drawer, record.entity);
+        return;
+    }
+    const double widthPx =
+        penWidthPx(properties.lineweight, document.lwdisplay(), style.devicePixelRatio);
+    painter.setPen(color, widthPx, LineStyle::Solid);
+    if (const auto pieces = dashPieces(record.entity, properties, viewport.scale())) {
+        drawDashPieces(*pieces, viewport, style.tessellationTolerancePx, painter);
+    } else {
+        std::visit(drawer, record.entity);
+    }
+}
+
 }  // namespace
 
 double gridSpacing(double pixelsPerUnit, double minSpacingPx) {
@@ -176,10 +209,13 @@ void renderScene(const core::Document& document, const Viewport& viewport, const
 
     const BBox visible = viewport.visibleWorldArea();
     EntityDrawer drawer(viewport, style, painter);
-    painter.setPen(style.entity, 0.0, LineStyle::Solid);
     for (const core::EntityRecord& record : document.entities()) {
-        if (overlaps(core::boundingBox(record.entity), visible)) {
-            std::visit(drawer, record.entity);
+        if (!overlaps(core::boundingBox(record.entity), visible)) {
+            continue;
+        }
+        const core::EffectiveProperties properties = core::effectiveProperties(document, record);
+        if (properties.visible) {
+            drawStyled(document, record, properties, viewport, style, drawer, painter);
         }
     }
 }
