@@ -11,6 +11,8 @@
 #include "recent_files.hpp"
 #include "sample_drawing.hpp"
 #include "settings_dialog.hpp"
+#include "shortcut_map.hpp"
+#include "shortcuts_dialog.hpp"
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/io/file_access.hpp"
 
@@ -195,6 +197,11 @@ void MainWindow::createMenus() {
     connect(registeredAction("view.zoom-extents"), &QAction::triggered, m_view,
             &CadView::zoomExtents);
 
+    connect(registeredAction("tools.shortcuts"), &QAction::triggered, this, [this] {
+        ensureRecentFiles();
+        ShortcutsDialog dialog(*m_actions, *m_settings, this);
+        dialog.exec();
+    });
     connectDrawingAids();
     connect(registeredAction("tools.settings"), &QAction::triggered, this,
             &MainWindow::showSettings);
@@ -608,6 +615,9 @@ void MainWindow::showEvent(QShowEvent* event) {
 void MainWindow::restoreUiSettings() {
     const QScopedValueRollback<bool> guard(m_restoringUi, true);
     ensureRecentFiles();
+    ShortcutMap shortcuts(*m_actions);
+    shortcuts.load(*m_settings);
+    shortcuts.apply(*m_actions);
     setInterface(m_settings->value(QStringLiteral("ui/interface")).toString() ==
                          QStringLiteral("classic")
                      ? InterfaceKind::Classic
