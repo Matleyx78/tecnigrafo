@@ -9,16 +9,17 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.5.0 — file: formato nativo e DXF.** Si aprono e si salvano
-> disegni in formato nativo `.cadx` e DXF con `OPEN`, `QSAVE`, `SAVE`, `SAVEAS` e
-> `NEW`, anche da menu File, scorciatoie e finestre di dialogo. Si disegnano linee
-> con `LINE`, polilinee con archi con `PLINE`, cerchi con `CIRCLE`, archi con `ARC`
-> e testi allineati, obliqui o specchiati con `TEXT`. Si selezionano e cancellano
-> entità con `ERASE`, si agganciano punti notevoli (estremo, medio, centro,
-> inserimento) e si usa l'orto. Le modifiche si possono annullare e ripetere. Le
-> [note della 0.5](docs/rilasci/0.5.md) riportano novità e limiti noti. Prossima
-> tappa: [0.6](docs/tappe/0.6-layer-e-proprieta.md), layer, colori, tipi di linea,
-> proprietà; impianto dell'interfaccia.
+> Stato: **versione 0.6.0 — layer, proprietà, interfaccia e server MCP.** Si
+> gestiscono i layer con `-LAYER`, `CLAYER` e il pannello `LAYER`. Si impostano
+> colori (ACI e Truecolor RGB), tipi di linea ISO (`ACAD_ISO02W100`, `ACAD_ISO10W100`),
+> spessori e scale con `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`,
+> `LWDISPLAY` (e pulsante `LWT`), e si modificano le entità con `CHPROP`, il
+> pannello `PROPERTIES` e la selezione rapida `QSELECT`. L'interfaccia offre la
+> barra multifunzione (*ribbon*) e l'interfaccia classica (`RIBBON`, `RIBBONCLOSE`),
+> temi chiaro e scuro e scorciatoie personalizzabili. Gli assistenti IA possono
+> collegarsi a `tecnigrafo-mcp`. Le [note della 0.6](docs/rilasci/0.6.md) riportano
+> novità e limiti noti. Prossima tappa: [0.7](docs/tappe/0.7-modifiche.md),
+> comandi di modifica.
 
 ## Disegnare
 
