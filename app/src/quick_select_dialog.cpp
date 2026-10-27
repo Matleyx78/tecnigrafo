@@ -117,7 +117,7 @@ QuickSelectDialog::QuickSelectDialog(const core::Document& document,
 
     m_operator->setObjectName(QStringLiteral("quickSelectOperator"));
     m_operator->addItem(tr("= Equals"), toInt(Operator::Equal));
-    m_operator->addItem(tr("≠ Not Equal"), toInt(Operator::NotEqual));
+    m_operator->addItem(tr("%1 Not Equal").arg(QChar(kNotEqualSign)), toInt(Operator::NotEqual));
 
     m_values->setObjectName(QStringLiteral("quickSelectValue"));
     m_color->setObjectName(QStringLiteral("quickSelectColor"));
