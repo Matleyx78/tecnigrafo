@@ -202,11 +202,14 @@ void UiBuilder::buildClassic() {
         }
     }
     // The controls of the properties come after the panel's button: a
-    // toolbar keeps its first item in sight, and the controls are wide.
+    // toolbar keeps its first item in sight, and the controls are wide. The
+    // toolbar starts a second row, as in AutoCAD, so that the toolbars do not
+    // make the window wider than a small screen.
     if (auto* properties =
             m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
-        toolbarFor(QStringLiteral("home/properties"))
-            ->addWidget(new PropertyControls(*properties, &m_window));
+        QToolBar* toolbar = toolbarFor(QStringLiteral("home/properties"));
+        toolbar->addWidget(new PropertyControls(*properties, &m_window));
+        m_window.insertToolBarBreak(toolbar);
     }
 }
 
