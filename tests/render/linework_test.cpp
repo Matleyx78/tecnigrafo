@@ -96,9 +96,9 @@ TEST(PenWidth, LineweightsOffGiveTheCosmeticPenWhateverTheLineweight) {
 
 TEST(PenWidth, LineweightsOnConvertMillimetresToDeviceAtLeastOnePixel) {
     struct Case {
-        int lineweight;  // hundredths of a millimetre
-        double ratio;
-        double expected;  // pixels
+        int lineweight{0};  // hundredths of a millimetre
+        double ratio{1.0};
+        double expected{0.0};  // pixels
     };
 
     // mm * 96 / 25.4 * ratio, rounded, at least 1.
@@ -135,7 +135,9 @@ TEST(DashPieces, ContinuousLinetypeAndTextGiveNoPieces) {
 TEST(DashPieces, ArePiecesOfCoreDashesInDrawingCoordinates) {
     const DashedDrawing drawing(core::Line{{0.0, 0.0}, {30.0, 0.0}}, {10.0, -5.0});
     const auto pieces = dashPieces(drawing.entity(), drawing.properties(), 2.0);
-    ASSERT_TRUE(pieces.has_value());
+    if (!pieces.has_value()) {
+        FAIL() << "the line is drawn continuous";
+    }
     ASSERT_EQ(pieces->size(), 2U);
     const auto* first = std::get_if<core::DashLine>(&pieces->at(0));
     const auto* second = std::get_if<core::DashLine>(&pieces->at(1));

@@ -40,32 +40,30 @@ public:
     std::vector<std::vector<core::Vec2>> outlines;
     std::vector<bool> closed;
     std::vector<Stroke> strokes;  ///< every drawLine and drawPolyline, in order
+    Pen pen;                      ///< as set by the last setPen()
 
     void clear(const Color& /*background*/) override {}
 
     void setPen(const Color& color, double widthPx, LineStyle style) override {
-        m_pen = {color, widthPx, style};
+        pen = {color, widthPx, style};
     }
 
     void fillPolygon(std::span<const core::Vec2> /*points*/, const Color& /*color*/) override {}
 
     void drawText(const TextRun& run) override {
         runs.push_back(run);
-        textPens.push_back(m_pen);
+        textPens.push_back(pen);
     }
 
     void drawLine(const core::Vec2& from, const core::Vec2& to) override {
-        strokes.push_back({m_pen, {from, to}, true, false});
+        strokes.push_back({pen, {from, to}, true, false});
     }
 
     void drawPolyline(std::span<const core::Vec2> points, bool isClosed) override {
         outlines.emplace_back(points.begin(), points.end());
         closed.push_back(isClosed);
-        strokes.push_back({m_pen, {points.begin(), points.end()}, false, isClosed});
+        strokes.push_back({pen, {points.begin(), points.end()}, false, isClosed});
     }
-
-private:
-    Pen m_pen;
 };
 
 Viewport textViewport() {
@@ -268,7 +266,7 @@ TEST(SceneRendererProperties, ColourIsTheEffectiveRgbAndOnlyIndexSevenFollowsThe
     struct Case {
         core::LayerId layer;
         core::Color color;
-        bool followsTheme;
+        bool followsTheme{false};
         Color expected;  // when it does not
     };
 
@@ -313,9 +311,9 @@ TEST(SceneRendererProperties, LineweightIsInDevicePixelsWithLwdisplayOnAndCosmet
 
     struct Case {
         core::LayerId layer;
-        int lineweight;
-        double widthAtOne;  // device pixels per logical pixel
-        double widthAtTwo;
+        int lineweight{0};
+        double widthAtOne{0.0};  // device pixels per logical pixel
+        double widthAtTwo{0.0};
     };
 
     // 0.25 mm, 1 mm, 0 mm, ByLayer on 0.5 mm, then Default and ByBlock, which
