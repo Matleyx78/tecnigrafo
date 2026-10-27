@@ -189,11 +189,6 @@ void UiBuilder::buildClassic() {
     if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
         toolbarFor(QStringLiteral("home/layers"))->addWidget(new LayerControls(*layers, &m_window));
     }
-    if (auto* properties =
-            m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
-        toolbarFor(QStringLiteral("home/properties"))
-            ->addWidget(new PropertyControls(*properties, &m_window));
-    }
     for (QAction* action : m_registry.actions()) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
         if (action->isSeparator()) {
@@ -205,6 +200,13 @@ void UiBuilder::buildClassic() {
         } else if (!spec->ribbon.isEmpty()) {
             toolbarFor(spec->ribbon)->addAction(action);
         }
+    }
+    // The controls of the properties come after the panel's button: a
+    // toolbar keeps its first item in sight, and the controls are wide.
+    if (auto* properties =
+            m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+        toolbarFor(QStringLiteral("home/properties"))
+            ->addWidget(new PropertyControls(*properties, &m_window));
     }
 }
 
