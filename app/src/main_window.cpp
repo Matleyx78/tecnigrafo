@@ -10,6 +10,7 @@
 #include "command_line.hpp"
 #include "recent_files.hpp"
 #include "sample_drawing.hpp"
+#include "settings_dialog.hpp"
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/io/file_access.hpp"
 
@@ -17,6 +18,7 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDir>
+#include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QKeySequence>
@@ -27,6 +29,8 @@
 #include <QMessageBox>
 #include <QScopedValueRollback>
 #include <QSettings>
+#include <QShowEvent>
+#include <QSignalBlocker>
 #include <QStatusBar>
 #include <QStringList>
 #include <QToolButton>
@@ -137,6 +141,8 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     connect(m_view, &CadView::inputHandled, this, &MainWindow::refresh);
     connect(m_commandLine, &CommandLine::inputHandled, this, &MainWindow::refresh);
     updateEditActions();
+    setDockOptions(dockOptions() | QMainWindow::AllowTabbedDocks | QMainWindow::AllowNestedDocks);
+    setTheme(Theme::Light);
 }
 
 QAction* MainWindow::registeredAction(const char* id) const {
@@ -190,6 +196,17 @@ void MainWindow::createMenus() {
             &CadView::zoomExtents);
 
     connectDrawingAids();
+    connect(registeredAction("tools.settings"), &QAction::triggered, this,
+            &MainWindow::showSettings);
+    connect(registeredAction("ui.theme"), &QAction::toggled, this,
+            [this](bool dark) { setTheme(dark ? Theme::Dark : Theme::Light); });
+    connect(registeredAction("ui.interface"), &QAction::toggled, this, [this](bool classic) {
+        setInterface(classic ? InterfaceKind::Classic : InterfaceKind::Ribbon);
+    });
+    connect(registeredAction("aids.lwdisplay"), &QAction::toggled, this, [this](bool on) {
+        m_editor.setLwdisplay(on);
+        m_view->update();
+    });
 
     connect(registeredAction("help.about"), &QAction::triggered, this, &MainWindow::showAbout);
 
@@ -270,12 +287,15 @@ void MainWindow::setInterface(InterfaceKind kind) {
         editingFocus = focus;
     }
     m_uiBuilder->show(kind);
+    const QSignalBlocker blocker(registeredAction("ui.interface"));
+    registeredAction("ui.interface")->setChecked(kind == InterfaceKind::Classic);
     // SARibbon requests focus during construction. Keep keyboard input in
     // the editor, including the first command typed after the window opens.
     editingFocus->setFocus(Qt::OtherFocusReason);
     if (m_ribbonButton != nullptr) {
         m_ribbonButton->setText(kind == InterfaceKind::Ribbon ? tr("RIBBON") : tr("MENU"));
     }
+    saveUiSettings();
 }
 
 InterfaceKind MainWindow::interfaceKind() const {
@@ -294,6 +314,9 @@ void MainWindow::createStatusBar() {
         setInterface(ribbon ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
     statusBar()->addPermanentWidget(m_ribbonButton);
+    QAction* lwdisplay = registeredAction("aids.lwdisplay");
+    statusBar()->addPermanentWidget(
+        createModeButton(lwdisplay, tr("LWT"), QStringLiteral("lwdisplayButton")));
     // In AutoCAD's order: ORTHO before OSNAP.
     statusBar()->addPermanentWidget(
         createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));
@@ -340,6 +363,8 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::setScriptMode() {
     m_scriptMode = true;
+    setInterface(InterfaceKind::Ribbon);
+    setTheme(Theme::Light);
     // At level 2 a prompt missing from its command's description is written
     // in the history: the report differs from any expected one, so the case
     // fails and prints the message among its differences (docs/adr/0026).
@@ -358,6 +383,10 @@ void MainWindow::setFileDialog(FileDialog dialog) {
 }
 
 void MainWindow::updateDrawingState() {
+    if (m_actions != nullptr) {
+        const QSignalBlocker blocker(registeredAction("aids.lwdisplay"));
+        registeredAction("aids.lwdisplay")->setChecked(m_document.lwdisplay());
+    }
     setWindowTitle(tr("%1[*] — Tecnigrafo")
                        .arg(QFileInfo(QString::fromStdString(m_editor.fileName())).fileName()));
     setWindowModified(m_editor.isModified());
@@ -494,6 +523,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         refresh();
     }
     if (!m_editor.isModified()) {
+        saveUiSettings();
         event->accept();
         return;
     }
@@ -514,7 +544,100 @@ void MainWindow::closeEvent(QCloseEvent* event) {
             return;
         }
     }
+    saveUiSettings();
     event->accept();
+}
+
+void MainWindow::setTheme(Theme theme) {
+    m_theme = theme;
+    auto* application = qobject_cast<QApplication*>(QApplication::instance());
+    assert(application != nullptr);
+    applyTheme(*application, theme);
+    // Application palette notifications can be queued by the platform.
+    // The window and its icons must already use the new colours now.
+    setPalette(QApplication::palette());
+    m_view->setStyle(sceneStyle(theme));
+    const QSignalBlocker blocker(registeredAction("ui.theme"));
+    registeredAction("ui.theme")->setChecked(theme == Theme::Dark);
+    updateThemeIcons();
+    saveUiSettings();
+}
+
+void MainWindow::updateThemeIcons() {
+    for (QAction* action : m_actions->actions()) {
+        const ActionSpec* spec = m_actions->spec(action->objectName());
+        if (!spec->icon.isEmpty()) {
+            action->setIcon(themedIcon(spec->icon, palette()));
+        }
+    }
+}
+
+void MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
+    assert(panel != nullptr && !panel->objectName().isEmpty());
+    panel->setAllowedAreas(Qt::AllDockWidgetAreas);
+    panel->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable |
+                       QDockWidget::DockWidgetFloatable);
+    // restoreDockWidget consumes the saved placeholder. Adding the dock
+    // first would discard that placeholder, including its floating state.
+    if (m_uiSettingsReady && !m_scriptMode && restoreDockWidget(panel)) {
+        return;
+    }
+    addDockWidget(area, panel);
+}
+
+void MainWindow::showSettings() {
+    if (m_scriptMode) {
+        return;
+    }
+    SettingsDialog dialog(interfaceKind(), theme(), this);
+    if (dialog.exec() == QDialog::Accepted) {
+        setInterface(dialog.interfaceKind());
+        setTheme(dialog.theme());
+    }
+}
+
+void MainWindow::showEvent(QShowEvent* event) {
+    // ScriptSession selects script mode after construction but before show.
+    // Delaying the first read is essential: --script never opens QSettings.
+    if (!m_uiSettingsReady && !m_scriptMode) {
+        restoreUiSettings();
+    }
+    QMainWindow::showEvent(event);
+}
+
+void MainWindow::restoreUiSettings() {
+    const QScopedValueRollback<bool> guard(m_restoringUi, true);
+    ensureRecentFiles();
+    setInterface(m_settings->value(QStringLiteral("ui/interface")).toString() ==
+                         QStringLiteral("classic")
+                     ? InterfaceKind::Classic
+                     : InterfaceKind::Ribbon);
+    setTheme(m_settings->value(QStringLiteral("ui/theme")).toString() == QStringLiteral("dark")
+                 ? Theme::Dark
+                 : Theme::Light);
+    restoreGeometry(m_settings->value(QStringLiteral("ui/geometry")).toByteArray());
+    restoreState(m_settings->value(QStringLiteral("ui/state")).toByteArray());
+    m_uiSettingsReady = true;
+}
+
+void MainWindow::saveUiSettings() {
+    if (m_scriptMode || !m_uiSettingsReady || m_restoringUi) {
+        return;
+    }
+    ensureRecentFiles();
+    QString interfaceName = QStringLiteral("ribbon");
+    if (interfaceKind() == InterfaceKind::Classic) {
+        interfaceName = QStringLiteral("classic");
+    }
+    QString themeName = QStringLiteral("light");
+    if (theme() == Theme::Dark) {
+        themeName = QStringLiteral("dark");
+    }
+    m_settings->setValue(QStringLiteral("ui/interface"), interfaceName);
+    m_settings->setValue(QStringLiteral("ui/theme"), themeName);
+    m_settings->setValue(QStringLiteral("ui/geometry"), saveGeometry());
+    m_settings->setValue(QStringLiteral("ui/state"), saveState());
+    m_settings->sync();
 }
 
 void MainWindow::showCursorPosition(double worldX, double worldY) {

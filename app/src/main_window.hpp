@@ -7,6 +7,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
+#include "theme.hpp"
 #include "ui_builder.hpp"
 
 #include <QList>
@@ -19,6 +20,8 @@
 
 class QAction;
 class QCloseEvent;
+class QDockWidget;
+class QShowEvent;
 class QMenu;
 class QSettings;
 class QLabel;
@@ -77,6 +80,13 @@ public:
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
 
+    void setTheme(Theme theme);
+
+    [[nodiscard]] Theme theme() const { return m_theme; }
+
+    /// Panels must have a unique, stable, nonempty objectName.
+    void addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
+
     void setInterface(InterfaceKind kind);
     [[nodiscard]] InterfaceKind interfaceKind() const;
 
@@ -85,6 +95,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private:
     // Connected with the function-pointer syntax of QObject::connect, so no
@@ -96,6 +107,10 @@ private:
     /// Declares the actions in the registry, connects them and builds the
     /// menus from it.
     void createMenus();
+    void showSettings();
+    void restoreUiSettings();
+    void saveUiSettings();
+    void updateThemeIcons();
     void connectDrawingAids();
     void createStatusBar();
 
@@ -143,6 +158,9 @@ private:
     QToolButton* m_ribbonButton{nullptr};
     QMenu* m_recentMenu{nullptr};
     QAction* m_recentAction{nullptr};
+    Theme m_theme{Theme::Light};
+    bool m_uiSettingsReady{false};
+    bool m_restoringUi{false};
     bool m_scriptMode{false};
     bool m_externalFiles{false};
     bool m_handlingFilePrompt{false};

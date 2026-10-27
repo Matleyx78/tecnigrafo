@@ -10,6 +10,7 @@
 #include "tg/script/compare.hpp"
 #include "tg/script/level1.hpp"
 #include "tg/script/script.hpp"
+#include "theme.hpp"
 
 #include <QColor>
 #include <QDir>
@@ -193,7 +194,7 @@ TEST(ScriptSessionTest, ScreenshotUsesTheLightTheme) {
     const QImage image(QDir(output).filePath(QStringLiteral("tema.png")));
     ASSERT_EQ(image.size(), QSize(200, 100));
 
-    const render::Color colour = lightSceneStyle().background;
+    const render::Color colour = sceneStyle(Theme::Light).background;
     const QColor background(colour.r, colour.g, colour.b);
     ASSERT_EQ(background, QColor(Qt::white));
     int white = 0;

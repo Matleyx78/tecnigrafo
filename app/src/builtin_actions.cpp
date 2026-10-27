@@ -152,6 +152,14 @@ void BuiltinActions::add(ActionRegistry& registry) {
         switchSpec(QStringLiteral("aids.ortho"), tr("&Ortho"), tools, tr("Turns ortho on or off."));
     ortho.shortcut = QKeySequence(Qt::Key_F8);
     registry.add(std::move(ortho));
+    registry.add(switchSpec(QStringLiteral("aids.lwdisplay"), tr("Line&weight Display"), tools,
+                            tr("Shows lineweights in the drawing.")));
+    registry.add(makeSpec(QStringLiteral("tools.settings"), tr("&Settings…"), tools,
+                          tr("Chooses the interface and theme.")));
+    registry.add(switchSpec(QStringLiteral("ui.theme"), tr("&Dark Theme"), tools,
+                            tr("Switches between light and dark themes.")));
+    registry.add(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"), tools,
+                            tr("Switches between ribbon and classic menus.")));
     const QString modes = tools + QLatin1Char('/') + tr("Object Snap &Modes");
     registry.add(switchSpec(QStringLiteral("aids.snap.endpoint"), tr("&Endpoint"), modes,
                             tr("Snaps to the endpoints of lines, arcs and polylines.")));

@@ -154,6 +154,8 @@ if(TG_BUILD_APP)
         app/drawing_test.cpp
         app/file_menu_test.cpp
         app/recent_files_test.cpp
+        app/theme_test.cpp
+        app/settings_test.cpp
         app/qt_painter_test.cpp
         app/ribbon_smoke_test.cpp
         app/script_session_test.cpp
