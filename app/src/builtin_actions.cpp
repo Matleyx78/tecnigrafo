@@ -44,6 +44,13 @@ ActionSpec makeSpec(const QString& id, const QString& text, const QString& menu,
     return spec;
 }
 
+/// `spec` with its icon: the name of a file of resources/icons without the
+/// ".svg" (docs/ICONE.md).
+ActionSpec withIcon(ActionSpec spec, const QString& icon) {
+    spec.icon = icon;
+    return spec;
+}
+
 /// A separator of `menu`.
 void addSeparator(ActionRegistry& registry, const QString& id, const QString& menu) {
     ActionSpec spec;
@@ -91,21 +98,26 @@ void BuiltinActions::add(ActionRegistry& registry) {
     // Some Qt platforms (including offscreen) have no SaveAs binding: keep
     // the platform keys and always offer the CAD shortcut (docs/tappe/0.5).
     addWithKeys(registry,
-                commandSpec(QStringLiteral("file.new"), tr("&New"), file,
-                            tr("Starts a new drawing."), QStringLiteral("NEW")),
+                withIcon(commandSpec(QStringLiteral("file.new"), tr("&New"), file,
+                                     tr("Starts a new drawing."), QStringLiteral("NEW")),
+                         QStringLiteral("file-new")),
                 keysWith(QKeySequence::New, {}));
     addWithKeys(registry,
-                commandSpec(QStringLiteral("file.open"), tr("&Open…"), file, tr("Opens a drawing."),
-                            QStringLiteral("OPEN")),
+                withIcon(commandSpec(QStringLiteral("file.open"), tr("&Open…"), file,
+                                     tr("Opens a drawing."), QStringLiteral("OPEN")),
+                         QStringLiteral("file-open")),
                 keysWith(QKeySequence::Open, {}));
     addWithKeys(registry,
-                commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
-                            tr("Saves the drawing."), QStringLiteral("QSAVE")),
+                withIcon(commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
+                                     tr("Saves the drawing."), QStringLiteral("QSAVE")),
+                         QStringLiteral("file-save")),
                 keysWith(QKeySequence::Save, {}));
-    addWithKeys(registry,
-                commandSpec(QStringLiteral("file.saveas"), tr("Save &As…"), file,
-                            tr("Saves the drawing with a new name."), QStringLiteral("SAVEAS")),
-                keysWith(QKeySequence::SaveAs, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)));
+    addWithKeys(
+        registry,
+        withIcon(commandSpec(QStringLiteral("file.saveas"), tr("Save &As…"), file,
+                             tr("Saves the drawing with a new name."), QStringLiteral("SAVEAS")),
+                 QStringLiteral("file-saveas")),
+        keysWith(QKeySequence::SaveAs, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)));
     // The Recent Files submenu: MainWindow gives this action its menu and
     // fills it with the run-time actions file.recent.1...
     registry.add(makeSpec(QStringLiteral("file.recent"), tr("Recent Files"), file,
@@ -120,19 +132,22 @@ void BuiltinActions::add(ActionRegistry& registry) {
     // No command: undo and redo send the runner UNDO and REDO without the
     // echo of a typed command, so that Ctrl+Z writes only "Undone: ..." in
     // the history, as before the registry. MainWindow connects them.
-    addWithKeys(
-        registry,
-        makeSpec(QStringLiteral("edit.undo"), tr("&Undo"), edit, tr("Undoes the last change.")),
-        keysWith(QKeySequence::Undo, {}));
+    addWithKeys(registry,
+                withIcon(makeSpec(QStringLiteral("edit.undo"), tr("&Undo"), edit,
+                                  tr("Undoes the last change.")),
+                         QStringLiteral("edit-undo")),
+                keysWith(QKeySequence::Undo, {}));
     // Ctrl+Y as well, which AutoCAD users expect everywhere (CommandLine
     // recognises the same keys).
     addWithKeys(registry,
-                makeSpec(QStringLiteral("edit.redo"), tr("&Redo"), edit,
-                         tr("Redoes the last change undone.")),
+                withIcon(makeSpec(QStringLiteral("edit.redo"), tr("&Redo"), edit,
+                                  tr("Redoes the last change undone.")),
+                         QStringLiteral("edit-redo")),
                 keysWith(QKeySequence::Redo, QKeySequence(Qt::CTRL | Qt::Key_Y)));
     addSeparator(registry, QStringLiteral("edit.separator-erase"), edit);
     ActionSpec erase = commandSpec(QStringLiteral("edit.erase"), tr("&Erase"), edit,
                                    tr("Removes the selected objects."), QStringLiteral("ERASE"));
+    erase.icon = QStringLiteral("edit-erase");
     erase.shortcut = QKeySequence(QKeySequence::Delete);
     registry.add(std::move(erase));
 
@@ -171,16 +186,22 @@ void BuiltinActions::add(ActionRegistry& registry) {
                             tr("Snaps to the insertion points of texts.")));
 
     const QString draw = tr("&Draw");
-    registry.add(commandSpec(QStringLiteral("draw.line"), tr("&Line"), draw,
-                             tr("Draws straight line segments."), QStringLiteral("LINE")));
-    registry.add(commandSpec(QStringLiteral("draw.pline"), tr("&Polyline"), draw,
-                             tr("Draws a polyline of lines and arcs."), QStringLiteral("PLINE")));
-    registry.add(commandSpec(QStringLiteral("draw.circle"), tr("&Circle"), draw,
-                             tr("Draws a circle."), QStringLiteral("CIRCLE")));
-    registry.add(commandSpec(QStringLiteral("draw.arc"), tr("&Arc"), draw, tr("Draws an arc."),
-                             QStringLiteral("ARC")));
-    registry.add(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
-                             tr("Writes single-line texts."), QStringLiteral("TEXT")));
+    registry.add(withIcon(commandSpec(QStringLiteral("draw.line"), tr("&Line"), draw,
+                                      tr("Draws straight line segments."), QStringLiteral("LINE")),
+                          QStringLiteral("draw-line")));
+    registry.add(
+        withIcon(commandSpec(QStringLiteral("draw.pline"), tr("&Polyline"), draw,
+                             tr("Draws a polyline of lines and arcs."), QStringLiteral("PLINE")),
+                 QStringLiteral("draw-pline")));
+    registry.add(withIcon(commandSpec(QStringLiteral("draw.circle"), tr("&Circle"), draw,
+                                      tr("Draws a circle."), QStringLiteral("CIRCLE")),
+                          QStringLiteral("draw-circle")));
+    registry.add(withIcon(commandSpec(QStringLiteral("draw.arc"), tr("&Arc"), draw,
+                                      tr("Draws an arc."), QStringLiteral("ARC")),
+                          QStringLiteral("draw-arc")));
+    registry.add(withIcon(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
+                                      tr("Writes single-line texts."), QStringLiteral("TEXT")),
+                          QStringLiteral("draw-text")));
 
     registry.add(makeSpec(QStringLiteral("help.about"), tr("&About Tecnigrafo"), tr("&Help"),
                           tr("Shows the version and the license of Tecnigrafo.")));

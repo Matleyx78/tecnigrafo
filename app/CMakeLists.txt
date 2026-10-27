@@ -3,7 +3,9 @@
 # tecnigrafo: the Qt desktop application. The only module allowed to
 # depend on Qt (docs/adr/0001).
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
+# Svg: the icons are SVG files (docs/ICONE.md). A Qt component, not a new
+# library (docs/adr/0002).
+find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets Svg)
 qt_standard_project_setup()
 
 # Everything but main(): shared by the application and its Qt tests.
@@ -40,11 +42,20 @@ qt_add_resources(tg_app_ui fonts
     BASE "${PROJECT_SOURCE_DIR}/resources/fonts"
     FILES "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Regular.ttf")
 
+# Every SVG of resources/icons is bundled as :/tg/icons/<name>.svg.
+# CONFIGURE_DEPENDS: a new icon is picked up at the next build, without
+# configuring again by hand.
+file(GLOB TG_ICON_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/resources/icons/*.svg")
+qt_add_resources(tg_app_ui icons
+    PREFIX "/tg/icons"
+    BASE "${PROJECT_SOURCE_DIR}/resources/icons"
+    FILES ${TG_ICON_FILES})
+
 target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Tecnigrafo::script writes the report of the control mode at level 2
 # (--script, docs/adr/0011).
 target_link_libraries(tg_app_ui PUBLIC
-    Tecnigrafo::cmd Tecnigrafo::render Tecnigrafo::script tg_saribbon Qt6::Widgets)
+    Tecnigrafo::cmd Tecnigrafo::render Tecnigrafo::script tg_saribbon Qt6::Widgets Qt6::Svg)
 target_compile_definitions(tg_app_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
 tg_configure_target(tg_app_ui)
 
