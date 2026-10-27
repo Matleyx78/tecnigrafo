@@ -3,6 +3,7 @@
 
 #include "layer_panel.hpp"
 
+#include "action_registry.hpp"
 #include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
