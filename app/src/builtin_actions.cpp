@@ -153,6 +153,7 @@ void BuiltinActions::add(ActionRegistry& registry) {
 
     ActionSpec extents = makeSpec(QStringLiteral("view.zoom-extents"), tr("Zoom &Extents"),
                                   tr("&View"), tr("Shows the whole drawing."));
+    extents.icon = QStringLiteral("view-zoom-extents");
     extents.shortcut = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E);
     registry.add(std::move(extents));
 
@@ -161,29 +162,41 @@ void BuiltinActions::add(ActionRegistry& registry) {
     const QString tools = tr("&Tools");
     ActionSpec osnap = switchSpec(QStringLiteral("aids.osnap"), tr("Object &Snap"), tools,
                                   tr("Turns object snap on or off."));
+    osnap.icon = QStringLiteral("aids-osnap");
     osnap.shortcut = QKeySequence(Qt::Key_F3);
     registry.add(std::move(osnap));
     ActionSpec ortho =
         switchSpec(QStringLiteral("aids.ortho"), tr("&Ortho"), tools, tr("Turns ortho on or off."));
+    ortho.icon = QStringLiteral("aids-ortho");
     ortho.shortcut = QKeySequence(Qt::Key_F8);
     registry.add(std::move(ortho));
-    registry.add(switchSpec(QStringLiteral("aids.lwdisplay"), tr("Line&weight Display"), tools,
-                            tr("Shows lineweights in the drawing.")));
-    registry.add(makeSpec(QStringLiteral("tools.settings"), tr("&Settings…"), tools,
-                          tr("Chooses the interface and theme.")));
-    registry.add(switchSpec(QStringLiteral("ui.theme"), tr("&Dark Theme"), tools,
-                            tr("Switches between light and dark themes.")));
-    registry.add(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"), tools,
-                            tr("Switches between ribbon and classic menus.")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.lwdisplay"), tr("Line&weight Display"),
+                                     tools, tr("Shows lineweights in the drawing.")),
+                          QStringLiteral("aids-lwdisplay")));
+    registry.add(withIcon(makeSpec(QStringLiteral("tools.settings"), tr("&Settings…"), tools,
+                                   tr("Chooses the interface and theme.")),
+                          QStringLiteral("tools-settings")));
+    registry.add(withIcon(switchSpec(QStringLiteral("ui.theme"), tr("&Dark Theme"), tools,
+                                     tr("Switches between light and dark themes.")),
+                          QStringLiteral("ui-theme")));
+    // The switch is between the ribbon and the classic menus: its icon is
+    // the ribbon's (docs/ICONE.md).
+    registry.add(withIcon(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"),
+                                     tools, tr("Switches between ribbon and classic menus.")),
+                          QStringLiteral("ui-ribbon")));
     const QString modes = tools + QLatin1Char('/') + tr("Object Snap &Modes");
-    registry.add(switchSpec(QStringLiteral("aids.snap.endpoint"), tr("&Endpoint"), modes,
-                            tr("Snaps to the endpoints of lines, arcs and polylines.")));
-    registry.add(switchSpec(QStringLiteral("aids.snap.midpoint"), tr("&Midpoint"), modes,
-                            tr("Snaps to the midpoints of lines, arcs and polylines.")));
-    registry.add(switchSpec(QStringLiteral("aids.snap.center"), tr("&Center"), modes,
-                            tr("Snaps to the centers of circles and arcs.")));
-    registry.add(switchSpec(QStringLiteral("aids.snap.insertion"), tr("&Insertion"), modes,
-                            tr("Snaps to the insertion points of texts.")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.endpoint"), tr("&Endpoint"), modes,
+                                     tr("Snaps to the endpoints of lines, arcs and polylines.")),
+                          QStringLiteral("aids-snap-endpoint")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.midpoint"), tr("&Midpoint"), modes,
+                                     tr("Snaps to the midpoints of lines, arcs and polylines.")),
+                          QStringLiteral("aids-snap-midpoint")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.center"), tr("&Center"), modes,
+                                     tr("Snaps to the centers of circles and arcs.")),
+                          QStringLiteral("aids-snap-center")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.insertion"), tr("&Insertion"), modes,
+                                     tr("Snaps to the insertion points of texts.")),
+                          QStringLiteral("aids-snap-insertion")));
 
     const QString draw = tr("&Draw");
     registry.add(withIcon(commandSpec(QStringLiteral("draw.line"), tr("&Line"), draw,
@@ -203,8 +216,10 @@ void BuiltinActions::add(ActionRegistry& registry) {
                                       tr("Writes single-line texts."), QStringLiteral("TEXT")),
                           QStringLiteral("draw-text")));
 
-    registry.add(makeSpec(QStringLiteral("help.about"), tr("&About Tecnigrafo"), tr("&Help"),
-                          tr("Shows the version and the license of Tecnigrafo.")));
+    registry.add(
+        withIcon(makeSpec(QStringLiteral("help.about"), tr("&About Tecnigrafo"), tr("&Help"),
+                          tr("Shows the version and the license of Tecnigrafo.")),
+                 QStringLiteral("help-about")));
 }
 
 }  // namespace
