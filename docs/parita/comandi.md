@@ -23,13 +23,13 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.5.0**.
+Aggiornato alla versione **0.6.0**.
 
 | Stato | Comandi |
 |---|---|
-| completo | 2 |
-| presente | 11 |
-| assente | 64 |
+| completo | 7 |
+| presente | 19 |
+| assente | 51 |
 
 ## Disegno
 
@@ -106,19 +106,19 @@ Aggiornato alla versione **0.5.0**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `LAYER` | `LA` | assente | 0.6 | come pannello agganciabile |
-| `-LAYER` | `-LA` | assente | 0.6 | dalla riga di comando, per gli script |
-| `CLAYER` | | assente | 0.6 | layer corrente |
-| `PROPERTIES` | `PR`, `CH`, `MO` | assente | 0.6 | come pannello agganciabile |
-| `CHPROP` | | assente | 0.6 | colore, layer, tipo, scala del tipo, spessore |
-| `COLOR` | `COL`, `-COLOR` | assente | 0.6 | indice AutoCAD e RGB; niente cataloghi di colori |
-| `QSELECT` | | assente | 0.6 | selezione per layer e per tipo |
-| `LINETYPE` | `LT`, `-LINETYPE` | assente | 0.6 | continua e tipi ISO (`ACAD_ISO02W100`, `ACAD_ISO10W100`); niente file `.lin` |
-| `LTSCALE` | `LTS` | assente | 0.6 | scala globale |
-| `CELTSCALE` | | assente | 0.6 | scala delle entità nuove |
-| `LWEIGHT` | `LW`, `-LWEIGHT` | assente | 0.6 | spessore corrente |
-| `LWDISPLAY` | | assente | 0.6 | anche con il pulsante `LWT` |
-| `RIBBON` / `RIBBONCLOSE` | | assente | 0.6 | ribbon o interfaccia classica |
+| `LAYER` | `LA` | presente | 0.6 | pannello agganciabile con tabella degli stati, colori, tipi e spessori |
+| `-LAYER` | `-LA` | presente | 0.6 | dalla riga di comando per gli script; elenchi con virgola e caratteri jolly, opzioni principali |
+| `CLAYER` | | completo | 0.6 | imposta il layer corrente da riga di comando |
+| `PROPERTIES` | `PR`, `CH`, `MO`, `PROPS` | presente | 0.6 | pannello agganciabile con sezione generale e geometria in sola lettura |
+| `CHPROP` | | presente | 0.6 | colore, layer, tipo, scala del tipo, spessore; mancano Thickness e Transparency (0.9) |
+| `COLOR` | `COL`, `COLOUR`, `-COLOR` | presente | 0.6 | indice AutoCAD, nomi standard e Truecolor RGB; niente cataloghi di colori |
+| `QSELECT` | | presente | 0.6 | finestra di dialogo per filtrare per tipo e proprietà |
+| `LINETYPE` | `LT`, `LTYPE`, `-LT`, `-LINETYPE` | presente | 0.6 | tipi continui e tipi ISO standard (`ACAD_ISO02W100`, `ACAD_ISO10W100`); caricamento ed elenco; niente file `.lin` personalizzati |
+| `LTSCALE` | `LTS` | completo | 0.6 | scala globale dei tipi di linea |
+| `CELTSCALE` | | completo | 0.6 | scala del tipo di linea per le nuove entità |
+| `LWEIGHT` | `LW`, `LINEWEIGHT`, `-LWEIGHT` | presente | 0.6 | spessore corrente con valori metrici standard o ByLayer/ByBlock |
+| `LWDISPLAY` | | completo | 0.6 | visualizzazione a schermo, anche con il pulsante `LWT` |
+| `RIBBON` / `RIBBONCLOSE` | | completo | 0.6 | passaggio immediato tra barra multifunzione e interfaccia classica a menu e barre |
 
 ## File, stampa e vista
 
