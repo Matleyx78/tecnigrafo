@@ -114,8 +114,6 @@ undo:
   LTSCALE
   CELTSCALE
   LWEIGHT
-  LTSCALE
-  CELTSCALE
   LWEIGHT
 redo:
 snap: on
