@@ -145,7 +145,7 @@ tg_configure_target(tg_bench)
 # Widgets of the application, driven with the Qt Test module and no display
 # (docs/adr/0005). Built only together with the application.
 if(TG_BUILD_APP)
-    find_package(Qt6 6.8 REQUIRED COMPONENTS Test Widgets)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Svg Test Widgets)
     add_executable(tg_app_tests
         app/action_registry_test.cpp
         app/ui_builder_test.cpp
@@ -153,6 +153,7 @@ if(TG_BUILD_APP)
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
         app/file_menu_test.cpp
+        app/icons_test.cpp
         app/recent_files_test.cpp
         app/theme_test.cpp
         app/settings_test.cpp
@@ -162,11 +163,12 @@ if(TG_BUILD_APP)
         app/selection_test.cpp
         app/text_input_test.cpp
     )
-    target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Test Qt6::Widgets GTest::gtest)
+    target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Svg Qt6::Test Qt6::Widgets GTest::gtest)
     # Level 2 of the control mode: the scripts of module script's own tests,
     # a folder for what the tests write, the program and the test tool
     # confronta_immagini (tests/verifica).
     target_compile_definitions(tg_app_tests PRIVATE
+        TG_ICONS_DIR="${PROJECT_SOURCE_DIR}/resources/icons"
         TG_SCRIPT_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/script/dati"
         TG_APP_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/app-output"
         TG_TECNIGRAFO="$<TARGET_FILE:tecnigrafo>"

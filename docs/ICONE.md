@@ -1,0 +1,99 @@
+# Icone
+
+Le icone di Tecnigrafo sono **nostre**: disegnate per il progetto in un unico
+stile, in SVG, con la licenza del progetto ([ADR 0009](adr/0009-interfaccia-grafica.md),
+punto 4). Questo documento dà le regole di disegno, l'elenco delle icone e i
+passi per aggiungerne una. I file stanno in [`resources/icons/`](../resources/icons/);
+il test che li controlla è `tests/app/icons_test.cpp`.
+
+## Regole di disegno
+
+- **Griglia.** 24×24 px: `width="24" height="24" viewBox="0 0 24 24"`. L'area
+  utile è 20×20: nei 2 px di margine non c'è inchiostro, tratto compreso. Con
+  il tratto di 1,5 px le linee di mezzeria stanno almeno a 2,75 px dal bordo.
+- **Tratto.** 1,5 px, estremità e giunzioni arrotondate
+  (`stroke-linecap="round"`, `stroke-linejoin="round"`).
+- **Riempimenti.** Nessuno, salvo i **punti**: cerchi pieni di 3 px di diametro
+  (`r="1.5"`, `fill="currentColor"`, `stroke="none"`).
+- **Colore.** Uno solo, `currentColor`: lo sostituisce il tema. Il secondo
+  colore, d'accento, si dà con la classe `accent` e solo a un punto agganciato
+  o a un elemento attivo. Nessun colore scritto in chiaro, nessun `style`.
+- **Niente testo.** Né elementi `<text>` né lettere disegnate. Niente forme
+  copiate da altri programmi o raccolte, nemmeno ridisegnate a mano.
+- **Elementi ammessi.** `svg`, `g`, `path`, `circle`, `line`, `rect`,
+  `polyline`, `polygon`. Il test rifiuta gli altri (`text`, `image`, `use`,
+  gradienti, filtri): sono quelli che non si tingono in modo prevedibile.
+- **Nome del file.** Uguale al campo `icon` dell'azione: minuscolo, parole
+  separate da trattini, di solito l'identificatore con i trattini al posto dei
+  punti (`draw.line` ha `draw-line.svg`).
+- **Licenza.** GPL-3.0-or-later, come il progetto: dopo la dichiarazione XML
+  vanno i due commenti con l'intestazione, come in ogni file nuovo.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 19 L19 5"/>
+        <circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none"/>
+    </g>
+</svg>
+```
+
+### Come si colorano
+
+`themedIcon` (`app/src/theme.cpp`) carica `:/tg/icons/<nome>.svg`, lo disegna
+alle dimensioni di menu, barre e ribbon e riempie tutto ciò che è disegnato con
+il colore del testo del tema: così la stessa icona vale per il tema chiaro e per
+lo scuro. Oggi il colore è uno solo, anche per la classe `accent`, che segna
+già gli elementi da distinguere quando il tema avrà un colore per loro. Per
+questo un'icona deve restare comprensibile anche senza l'accento.
+
+### Forme che si ripetono
+
+Le stesse idee si disegnano sempre allo stesso modo, così le icone nuove
+somigliano alle vecchie:
+
+- **Punto pieno:** un punto definito dall'utente, come l'estremo di un
+  segmento o di un arco, il primo e l'ultimo vertice di una polilinea, il
+  centro di un cerchio.
+- **Frecce:** punta aperta a 90° con le braccia di circa 6 px; annulla e ripeti
+  sono una l'immagine speculare dell'altra.
+- **Fogli e dischetti:** contorno con un angolo tagliato in alto a destra; i
+  dettagli interni (piega, finestrella, etichetta) con lo stesso tratto.
+- **Forme inclinate:** a 45° esatti.
+
+## Le icone
+
+Prima parte (0.6-P18): disegno e modifica, file e annullamento.
+
+| File | Azione | Disegno |
+|---|---|---|
+| `draw-line.svg` | `draw.line` | segmento con un punto a ogni estremo |
+| `draw-pline.svg` | `draw.pline` | spezzata di tre tratti, punti agli estremi |
+| `draw-circle.svg` | `draw.circle` | circonferenza con il suo centro |
+| `draw-arc.svg` | `draw.arc` | arco di circa 220° con i due estremi |
+| `draw-text.svg` | `draw.text` | cursore di testo |
+| `edit-erase.svg` | `edit.erase` | gomma inclinata |
+| `edit-undo.svg` | `edit.undo` | freccia a U verso sinistra |
+| `edit-redo.svg` | `edit.redo` | freccia a U verso destra |
+| `file-new.svg` | `file.new` | foglio con l'angolo piegato e un più |
+| `file-open.svg` | `file.open` | cartella aperta |
+| `file-save.svg` | `file.save` | dischetto |
+| `file-saveas.svg` | `file.saveas` | due dischetti sovrapposti |
+
+Chi aggiunge icone aggiunge le sue righe a questa tabella.
+
+## Aggiungere un'icona
+
+1. Disegnala con le regole sopra, partendo da un'icona simile già esistente.
+2. Salvala in `resources/icons/<nome>.svg` con l'intestazione. Il file entra
+   da solo nelle risorse `/tg/icons`: `app/CMakeLists.txt` include tutti gli
+   `*.svg` della cartella.
+3. Scrivi `<nome>` nel campo `icon` dell'azione, in `app/src/builtin_actions.cpp`.
+4. Aggiungi la riga alla tabella qui sopra.
+5. Guardala a 16 e 24 px, nel tema chiaro e nello scuro.
+6. Lancia i test dell'applicazione: `tests/app/icons_test.cpp` controlla che il
+   file sia un SVG valido 24×24 che rispetta le regole (margine, tratto, punti,
+   colori, elementi) e che ogni azione con un'icona abbia il suo file.
