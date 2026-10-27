@@ -314,8 +314,9 @@ void MainWindow::createStatusBar() {
         setInterface(ribbon ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
     statusBar()->addPermanentWidget(m_ribbonButton);
-    statusBar()->addPermanentWidget(createModeButton(registeredAction("aids.lwdisplay"), tr("LWT"),
-                                                    QStringLiteral("lwdisplayButton")));
+    QAction* lwdisplay = registeredAction("aids.lwdisplay");
+    statusBar()->addPermanentWidget(
+        createModeButton(lwdisplay, tr("LWT"), QStringLiteral("lwdisplayButton")));
     // In AutoCAD's order: ORTHO before OSNAP.
     statusBar()->addPermanentWidget(
         createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));
