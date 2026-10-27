@@ -10,24 +10,26 @@ core  ←  render  ←──────────  app
 core  ←  edit  ←  cmd  ←────  app      (dalla tappa 0.2)
 core  ←  io    ←  cmd                  (dalla tappa 0.5)
                   cmd  ←────  script   (dalla tappa 0.4)
+                  cmd, io, script  ←  mcp  (dalla tappa 0.6)
 ```
 
 | Modulo | Namespace | Contiene | Può usare |
 |---|---|---|---|
-| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`, `Line`, `Circle`, `Arc`, `Text`), misure del font incluso, `Document`, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap) | solo la libreria standard |
+| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`, `Line`, `Circle`, `Arc`, `Text`), misure del font incluso, `Document`, tabelle dei layer e dei tipi di linea, proprietà delle entità (`color`, `linetype`, `ltscale`, `lineweight`), valori correnti, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap) | solo la libreria standard |
 | `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto (`drawPolyline`, `drawText`), disegno della scena | `core` |
-| `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti | `core` |
+| `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti, regole per i layer | `core` |
 | `io` | `tg::io` | lettura e scrittura DXF e formato nativo `.cadx`, astrazione per l'accesso ai file (`FileAccess`) | `core`, zlib (in `third_party/`, collegamento privato) |
-| `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, snap e orto | `core`, `edit`, `io` |
+| `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, selezione corrente, selezione rapida, snap e orto | `core`, `edit`, `io` |
 | `script` | `tg::script` | modalità di controllo al livello 1: script `.tgs`, rapporto, domande al modello `.tgq`, confronto con i risultati attesi; l'eseguibile di sviluppo `tecnigrafo-script` | `core`, `edit`, `cmd` |
+| `mcp` | `tg::mcp` | server MCP di sviluppo su stdio per assistenti IA (protocollo JSON-RPC, strumenti per eseguire comandi, script e casi di verifica); l'eseguibile di sviluppo `tecnigrafo-mcp` | `script`, `cmd`, `io`, nlohmann/json (in `third_party/`) |
 | `tools` | — | `fontmetrics`, generatore delle misure del font TrueType durante la build | solo la libreria standard |
-| `app` | `tg::app` | finestre Qt, input da mouse e tastiera, `QtPainter` | tutti, più Qt |
+| `app` | `tg::app` | finestre Qt, registro delle azioni (`ActionRegistry`), interfaccia ribbon e classica (`UiBuilder`), temi e tavolozze (`theme`), pannelli agganciabili (`layer_panel`, `properties_panel`), finestre di dialogo (`settings`, `shortcuts`, `quick_select`), input da mouse e tastiera, `QtPainter` | tutti, più Qt e SARibbon (in `third_party/`) |
 
 Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
 
-`script` non fa parte del programma distribuito: lo usano i test e
-`tecnigrafo-script`, che esegue i casi di verifica scritti prima del lavoro
-([ADR 0011](adr/0011-modalita-di-controllo.md), specifiche in
+`script` e `mcp` non fanno parte del programma distribuito: li usano i test,
+`tecnigrafo-script` e `tecnigrafo-mcp`, che eseguono i casi di verifica scritti prima del lavoro
+([ADR 0011](adr/0011-modalita-di-controllo.md), [ADR 0027](adr/0027-server-mcp-di-sviluppo.md), specifiche in
 [verifica/](verifica/casi.md)).
 
 ## Dove si trova cosa
@@ -36,7 +38,7 @@ Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
 <modulo>/CMakeLists.txt                 target e dipendenze del modulo
 <modulo>/include/tg/<modulo>/*.hpp      interfaccia pubblica
 <modulo>/src/*.cpp                      implementazione
-third_party/                            librerie esterne (solo zlib per gli archivi .cadx, ADR 0019)
+third_party/                            librerie esterne: zlib per gli archivi .cadx (ADR 0019), SARibbon per la ribbon (ADR 0009), nlohmann/json per il server MCP (ADR 0027)
 tests/<modulo>/*_test.cpp               test del modulo
 tests/fuzz/                             bersagli di fuzzing per lettori DXF, CADX e archivi ZIP (ADR 0020)
 tests/verifica/casi/<area>/<nome>/      casi di verifica (ADR 0011), etichetta ctest "verifica"
@@ -101,7 +103,7 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0006](adr/0006-modello-dati-dwg-e-formato-cadx.md) | Modello dati compatibile con DWG/DXF e formato `.cadx` | Accettato |
 | [0007](adr/0007-indice-spaziale.md) | Indice spaziale | Accettato |
 | [0008](adr/0008-selezione-e-snap.md) | Selezione, snap a oggetto e orto | Accettato |
-| [0009](adr/0009-interfaccia-grafica.md) | Impianto dell'interfaccia grafica | Proposto |
+| [0009](adr/0009-interfaccia-grafica.md) | Impianto dell'interfaccia grafica | Accettato |
 | [0010](adr/0010-segnalazione-errori.md) | Segnalazione di errori e crash | Proposto |
 | [0011](adr/0011-modalita-di-controllo.md) | Modalità di controllo e verifica automatica | Accettato |
 | [0012](adr/0012-linea-cerchio-arco.md) | Linea, cerchio e arco | Accettato |
@@ -115,3 +117,10 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0020](adr/0020-fuzzing-e-oracolo-ezdxf.md) | Fuzzing dei lettori e oracolo ezdxf | Accettato |
 | [0021](adr/0021-comandi-dei-file.md) | Comandi dei file | Accettato |
 | [0022](adr/0022-allineamenti-obliquo-specchiatura-testo.md) | Allineamenti, obliquo e specchiatura del testo | Accettato |
+| [0023](adr/0023-layer-e-proprieta.md) | Layer e proprietà delle entità | Accettato |
+| [0024](adr/0024-colori.md) | Colori | Accettato |
+| [0025](adr/0025-tipi-di-linea-e-spessori.md) | Tipi di linea e spessori | Accettato |
+| [0026](adr/0026-descrizione-dei-comandi.md) | Descrizione dei comandi | Accettato |
+| [0027](adr/0027-server-mcp-di-sviluppo.md) | Server MCP di sviluppo e libreria JSON | Accettato |
+| [0028](adr/0028-versione-minima-di-qt.md) | Versione minima di Qt 6.8 | Accettato |
+| [0029](adr/0029-verifica-dei-tipi-di-linea-iso.md) | Verifica dei tipi di linea ISO con un DXF di AutoCAD | Accettato |

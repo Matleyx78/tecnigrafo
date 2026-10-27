@@ -1,8 +1,12 @@
 # Manuale dei comandi
 
-Questo manuale descrive gli strumenti disponibili nella tappa 0.5: i file, la riga di
+Questo manuale descrive gli strumenti disponibili nella tappa 0.6: i file, la riga di
 comando, i punti, `LINE`, `CIRCLE`, `ARC`, `PLINE`, `TEXT`, la selezione,
-`ERASE`, gli snap a oggetto, la modalità orto e l’annullamento. Lo stato della
+`ERASE`, gli snap a oggetto, la modalità orto, i layer (`-LAYER`, `CLAYER`),
+le proprietà correnti e delle entità (`COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`,
+`LWEIGHT`, `LWDISPLAY`, `CHPROP`), e l’annullamento. L'interfaccia grafica
+(ribbon, pannelli `LAYER` e `PROPERTIES`, `QSELECT`, temi, scorciatoie e `LWT`)
+è descritta nel [manuale dell'interfaccia](interfaccia.md). Lo stato della
 tappa è nella [roadmap](../ROADMAP.md).
 
 Domande e messaggi del programma sono per ora in inglese (la traduzione arriverà
@@ -383,6 +387,14 @@ vengono scelte entrambe le entità. Con `Shift` sul secondo clic le togli.
 La selezione si svuota alla fine dei comandi e con `U`, `UNDO` e `REDO`. Avviare
 un comando di disegno svuota la selezione precedente; `ERASE` invece la usa subito.
 
+### Layer bloccati nella selezione
+
+Le entità situate su layer bloccati vengono escluse automaticamente da qualsiasi
+gesto di selezione (clic sul bordo, finestra o intersezione), sia a riposo sia durante
+`Select objects:`. Quando un comando chiede `Select objects:`, se il gesto ha incontrato
+oggetti su layer bloccati, il programma li scarta e scrive subito dopo il conteggio:
+`1 was on a locked layer.` oppure `<n> were on a locked layer.`
+
 ## ERASE — cancellare entità
 
 - **Nome:** `ERASE`
@@ -729,9 +741,301 @@ Y = −4.1667 circa. Gli spazi restano nel testo e la seconda riga mostra
 `Seconda riga`, `Invio`. Le due righe sono inclinate di 30° e distano 25/3
 unità nella direzione perpendicolare verso il basso del testo.
 
+## Layer: -LAYER e CLAYER
+
+I layer permettono di organizzare il disegno in livelli logici, assegnando a ciascun
+livello colore, tipo di linea, spessore e visibilità. Il layer `0` è presente in ogni
+disegno: non può essere rinominato né cancellato.
+
+La gestione da riga di comando si effettua con `-LAYER` (alias `-LA`), mentre per
+impostare direttamente il layer corrente si può usare `CLAYER`. Per il pannello
+interattivo vedi il [manuale dell'interfaccia](interfaccia.md#il-pannello-dei-layer-layer).
+
+### `-LAYER` — gestire i layer da tastiera
+
+All'avvio il comando mostra il layer corrente e propone il menu delle opzioni:
+
+```
+Command: -la
+Current layer:  "0"
+Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+```
+
+Premi `Invio` a riga vuota per concludere il comando.
+
+| Opzione | Tasto | Domande | Effetto |
+|---|---|---|---|
+| `?` | `?` | `Enter layer name(s) to list <*>:` | elenca i layer con stato, colore, tipo di linea, spessore e preferenza di stampa |
+| `Make` | `M` | `Enter name for new layer (becomes the current layer) <0>:` | crea il layer se non esiste e lo rende corrente |
+| `Set` | `S` | `Enter layer name to make current:` | rende corrente un layer esistente e non congelato |
+| `New` | `N` | `Enter name list for new layer(s):` | crea uno o più layer separati da virgola |
+| `Rename` | `R` | `Enter old layer name:` poi `Enter new layer name:` | rinomina un layer (eccetto il layer `0`) |
+| `ON` / `OFF` | `ON` / `OFF` | `Enter name list of layer(s) to turn on/off:` | accende o spegne i layer specificati |
+| `Freeze` / `Thaw` | `F` / `T` | `Enter name list of layer(s) to freeze/thaw:` | congela o scongela i layer specificati |
+| `LOck` / `Unlock` | `LO` / `U` | `Enter name list of layer(s) to lock/unlock:` | blocca o sblocca i layer specificati |
+| `Color` | `C` | `New color [Truecolor]:` poi `Enter name list of layer(s) for color <colore> <layer>:` | cambia il colore dei layer |
+| `Ltype` | `LT` | `Enter a loaded linetype name <Continuous>:` poi `Enter name list of layer(s) for linetype "<tipo>" <layer>:` | cambia il tipo di linea dei layer |
+| `LWeight` | `LW` | `Enter lineweight (0.0mm - 2.11mm):` poi `Enter name list of layer(s) for lineweight <spessore> <layer>:` | cambia lo spessore dei layer |
+| `Plot` | `P` | `Enter a plotting preference [Plot/No plot] <Plot>:` poi `Enter name list of layer(s) for this plot preference <layer>:` | imposta la preferenza di stampa |
+
+#### Elenchi di nomi e caratteri jolly
+
+Nelle domande che accettano elenchi (`name list`), puoi indicare più layer separati
+da virgola (es. `Muri,Porte,Finestre`). Sono supportati i caratteri jolly:
+- `*`: corrisponde a qualsiasi sequenza di caratteri (es. `Mur*` trova `Muri`, `Muratura`);
+- `?`: corrisponde a un singolo carattere (es. `Piano?` trova `Piano1`, `Piano2`).
+
+I nomi non distinguono maiuscole e minuscole. Se nessun layer corrisponde ai criteri, il
+programma risponde: `No matching layer names found.`
+
+#### Regole e vincoli dei layer
+
+- **Nomi validi:** non possono essere vuoti, superare 255 caratteri, né contenere caratteri
+  non consentiti (`< > / \ " : ; ? * | , = `). In caso contrario: `Invalid layer name.`
+- **Layer già esistente:** in `New` o `Rename`, se il nome esiste già compare `Layer "<nome>" already exists.`
+- **Layer `0`:** non può essere rinominato (`Cannot rename layer "0".`) né eliminato.
+- **Layer corrente:**
+  - non può essere congelato (`Cannot freeze layer "<nome>".  It is the CURRENT layer.`);
+  - se si tenta di spegnerlo, il comando chiede conferma:
+    `Really want layer <nome> (the CURRENT layer) off? [Yes/No] <No>:`
+  - non è possibile rendere corrente un layer congelato (`Cannot set current to a frozen layer.`).
+- **Transazione unica:** l'intero comando `-LAYER` costituisce un unico passo di annullamento.
+  Se interrotto con `Esc`, le operazioni già completate e confermate vengono conservate.
+
+**Esempio di creazione e impostazione di layer:**
+
+```
+Command: -la
+Current layer:  "0"
+Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: m
+Enter name for new layer (becomes the current layer) <0>: Muri
+Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: c
+New color [Truecolor]: 1
+Enter name list of layer(s) for color 1 (red) <Muri>: Muri
+Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+```
+
+### `CLAYER` — impostare il layer corrente
+
+Il comando `CLAYER` imposta direttamente il layer di lavoro corrente:
+
+```
+Command: clayer
+Enter new value for CLAYER <"0">: Muri
+```
+
+Il layer specificato deve esistere e non essere congelato. Se il layer non esiste compare
+`Layer "<nome>" not found.`; se è congelato compare `Cannot set current to a frozen layer.`.
+In entrambi i casi la richiesta viene ripetuta.
+
+## Layer bloccati, spenti e congelati
+
+Ogni layer può trovarsi in diversi stati di visibilità e protezione, con effetti precisi
+sul disegno, sulla selezione e sulle modifiche:
+
+| Stato | Disegnato a video | Selezionabile con clic o finestra | Snap a oggetto | Modificabile |
+|---|---|---|---|---|
+| **Acceso** | sì | sì | sì | sì |
+| **Spento** | no | no | no | no |
+| **Congelato** | no | no | no | no |
+| **Bloccato** | sì | no (escluso dai comandi) | sì | no |
+
+### Differenze principali
+
+- **Spento e Congelato:** le entità appartenenti a questi layer non vengono disegnate
+  nella vista, non rispondono agli snap e non possono essere selezionate né modificate.
+- **Bloccato:** le entità sono regolarmente visibili e i loro punti notevoli (estremi,
+  punti medi, centri) possono essere agganciati con gli snap a oggetto. Tuttavia, le
+  entità sono protette da modifiche accidentali: i gesti di selezione le escludono
+  automaticamente e comandi come `ERASE` o `CHPROP` non possono alterarle.
+- **Disegnare sul layer bloccato:** se il layer corrente è bloccato, è consentito
+  tracciare nuove entità (es. linee, cerchi, polilinee); le nuove entità create
+  apparterranno al layer bloccato e non potranno essere modificate successivamente
+  senza aver prima sbloccato il layer.
+
+Durante la selezione con `Select objects:`, se un rettangolo o un clic interseca oggetti
+appartenenti a layer bloccati, il programma li scarta e informa l'utente con il messaggio:
+`1 was on a locked layer.` oppure `<n> were on a locked layer.`
+
+## Colore: COLOR
+
+Il comando `COLOR` (alias `COL`, `COLOUR`, `-COLOR`) definisce il colore assegnato alle
+nuove entità create successivamente:
+
+```
+Command: color
+Enter default object color [Truecolor] <BYLAYER>:
+```
+
+### Valori accettati
+
+- **Nomi standard:** `red` (1), `yellow` (2), `green` (3), `cyan` (4), `blue` (5), `magenta` (6), `white` (7).
+- **Indici numerici ACI:** un intero compreso tra `1` e `255`.
+- **Truecolor (RGB):** scrivi `Truecolor` (o `T`), poi alla richiesta `Red, Green, Blue:`
+  scrivi tre valori da 0 a 255 separati da virgola (es. `255,128,0`).
+- **Logici:**
+  - `ByLayer`: l'entità eredita automaticamente il colore impostato sul suo layer di appartenenza;
+  - `ByBlock`: l'entità assume il colore del blocco in cui è inserita (o il bianco se non fa parte di un blocco).
+
+Se viene digitato un colore non riconosciuto, compare il messaggio `Invalid color.` e la
+domanda viene ripetuta. Premere `Invio` a riga vuota conferma il valore corrente tra `< >`.
+
+## Tipi di linea: -LINETYPE
+
+Il comando `-LINETYPE` (alias `LINETYPE`, `LT`, `LTYPE`, `-LT`) permette di caricare
+definizioni di tipi di linea standard nel disegno e di impostare il tipo di linea corrente:
+
+```
+Command: -lt
+Current line type: "ByLayer"
+Enter an option [?/Load/Set]:
+```
+
+Premi `Invio` a riga vuota per uscire.
+
+### Opzioni disponibili
+
+- **`?`**: elenca tutti i tipi di linea attualmente caricati nel documento, visualizzando
+  per ciascuno il nome e la descrizione grafica testuale (es. `"Continuous" Solid line`).
+- **`Load` (o `L`)**:
+  ```
+  Enter linetype(s) to load: ACAD_ISO02W100
+  ```
+  Carica uno o più tipi standard ISO (es. `ACAD_ISO02W100`, `ACAD_ISO03W100`, `ACAD_ISO10W100`).
+  Se il tipo è già presente nel disegno, il programma risponde: `Linetype "<nome>" is already loaded.`
+  Se il nome non corrisponde a un tipo noto, risponde: `Linetype "<nome>" not found.`
+- **`Set` (o `S`)**:
+  ```
+  Specify linetype name or [?] <ByLayer>: ACAD_ISO02W100
+  ```
+  Imposta il tipo di linea per le nuove entità. Può essere qualsiasi tipo precedentemente
+  caricato, oppure `ByLayer` o `ByBlock`. Se il tipo non è caricato, il programma risponde:
+  `Linetype "<nome>" is not loaded.`
+
+## Scala dei tipi di linea: LTSCALE e CELTSCALE
+
+I tratti e gli spazi dei tipi di linea non continui vengono moltiplicati per fattori di
+scala per adattarsi alla dimensione e all'unità del disegno:
+
+- **`LTSCALE` (alias `LTS`)**: imposta il fattore di scala **globale** per l'intero disegno.
+  Modifica la spaziatura dei tratti di tutte le entità che usano tipi tratteggiati:
+  ```
+  Command: ltscale
+  Enter new linetype scale factor <1.0000>: 2.0
+  ```
+- **`CELTSCALE`**: imposta il fattore di scala del tipo di linea per i **nuovi oggetti** creati.
+  La scala effettiva di ciascuna entità sarà data dal prodotto tra il proprio `CELTSCALE` e
+  il fattore globale `LTSCALE`:
+  ```
+  Command: celtscale
+  Enter new value for CELTSCALE <1.0000>: 0.5
+  ```
+
+Entrambi i comandi richiedono un numero reale strettamente positivo (> 0). In caso di valore
+negativo o zero compare `Requires a positive number.` e la richiesta viene ripetuta.
+
+## Spessore delle linee: LWEIGHT e LWDISPLAY
+
+Lo spessore delle linee determina lo spessore con cui gli oggetti vengono visualizzati e
+stampati.
+
+### `LWEIGHT` — spessore corrente
+
+Il comando `LWEIGHT` (alias `LW`, `LINEWEIGHT`, `-LWEIGHT`) imposta lo spessore per le
+nuove entità:
+
+```
+Command: lw
+Current lineweight: ByLayer
+Enter default lineweight for new objects or [?]: 0.30
+```
+
+- **Valori ammessi:** valori metrici standard in millimetri (`0.00`, `0.05`, `0.09`, `0.13`,
+  `0.15`, `0.18`, `0.20`, `0.25`, `0.30`, `0.35`, `0.40`, `0.50`, `0.53`, `0.60`, `0.70`,
+  `0.80`, `0.90`, `1.00`, `1.06`, `1.20`, `1.40`, `1.58`, `2.00`, `2.11`), oppure `ByLayer`,
+  `ByBlock`, `Default`.
+- **Opzione `?`**: stampa l'elenco completo dei valori ammessi in millimetri.
+- In caso di valore non consentito compare: `Invalid lineweight.`
+
+### `LWDISPLAY` — visualizzazione a schermo
+
+Controlla se gli spessori delle linee devono essere visualizzati graficamente nella vista:
+
+```
+Command: lwdisplay
+Enter new value for LWDISPLAY <OFF>: ON
+```
+
+- Accetta solo `ON` oppure `OFF`. Con altri valori risponde: `Requires ON or OFF.`
+- La modifica ha effetto immediato sulla vista senza richiedere rigenerazione.
+- `LWDISPLAY` non altera il documento e non produce passi di annullamento nello storico.
+
+## Modificare le proprietà: CHPROP
+
+Il comando `CHPROP` permette di cambiare le proprietà di una o più entità già disegnate.
+Richiede prima la selezione degli oggetti:
+
+```
+Command: chprop
+Select objects: (seleziona gli oggetti con clic o finestra)
+Select objects: (conferma con Invio)
+Enter property to change [Color/LAyer/LType/ltScale/LWeight]:
+```
+
+Premi `Invio` a riga vuota alla domanda principale per terminare il comando.
+
+### Proprietà modificabili
+
+- **`Color` (`C`)**:
+  `New color [Truecolor] <{default}>:`
+  Inserisci un nuovo colore per le entità selezionate.
+- **`LAyer` (`LA`)**:
+  `Enter new layer name <{default}>:`
+  Sposta le entità selezionate sul layer specificato. Se il layer non esiste compare
+  `Layer "<nome>" not found.`. È ammesso assegnare un layer congelato (in tal caso le
+  entità diventano invisibili).
+- **`LType` (`LT`)**:
+  `Enter new linetype name <{default}>:`
+  Assegna un nuovo tipo di linea alle entità. Il tipo deve essere caricato nel disegno;
+  altrimenti compare `Linetype "<nome>" is not loaded.`.
+- **`ltScale` (`LTS`)**:
+  `Specify new linetype scale <{default}>:`
+  Modifica la scala individuale del tipo di linea delle entità (> 0).
+- **`LWeight` (`LW`)**:
+  `Enter new lineweight <{default}>:`
+  Assegna un nuovo spessore di linea alle entità.
+
+### Valore comune e `varies`
+
+Se tutte le entità selezionate hanno lo stesso valore per la proprietà richiesta, questo
+compare tra le parentesi angolari `< >` come valore predefinito. Se invece le entità
+hanno valori differenti, compare `<varies>`. Premere `Invio` a riga vuota conserva i valori
+attuali di ogni entità senza modificarli.
+
+Tutte le modifiche apportate durante la sessione di `CHPROP` vengono raggruppate in un'unica
+transazione `CHPROP`: premendo `Esc` si esce dal comando conservando i cambi già confermati.
+
+## Comandi dell'applicazione
+
+Nell'applicazione desktop sono disponibili comandi dedicati alla gestione dell'interfaccia
+grafica e dei pannelli:
+
+| Comando | Alias | Descrizione |
+|---|---|---|
+| `RIBBON` | — | Mostra l'interfaccia a barra multifunzione (*ribbon*) |
+| `RIBBONCLOSE` | — | Mostra l'interfaccia classica a menu e barre degli strumenti |
+| `LAYER` | `LA` | Apre e porta in primo piano il pannello dei layer |
+| `PROPERTIES` | `PR`, `CH`, `MO`, `PROPS` | Apre e porta in primo piano il pannello delle proprietà |
+| `QSELECT` | — | Apre la finestra di dialogo per la selezione rapida degli oggetti |
+
+Per i dettagli sul funzionamento di finestre, pannelli, temi e scorciatoie, consulta il
+[manuale dell'interfaccia](interfaccia.md).
+
 ## Annullare e ripetere
 
-Ogni comando di disegno concluso e ogni gruppo cancellato con `ERASE` sono un
+Ogni comando di disegno concluso, ogni gruppo cancellato con `ERASE`, ogni
+modifica ai layer con `-LAYER` o `CLAYER` e ogni modifica alle proprietà con
+`COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT` o `CHPROP` sono un
 **passo** che si può annullare e poi ripetere. Le linee di un `LINE` e le righe
 di un `TEXT` sono un solo passo per comando, anche se conservate con `Esc`.
 
@@ -767,6 +1071,8 @@ corso.
 | `TEXT` | le righe già confermate con `Invio` |
 | `CIRCLE`, `ARC` | niente: prima dell’ultima risposta l’entità non è completa |
 | `ERASE` | nessuna cancellazione; la selezione viene svuotata |
+| `-LAYER` | le modifiche e creazioni di layer già completate prima dell'interruzione |
+| `CHPROP` | i cambi di proprietà già completati prima dell'interruzione |
 
 Lo storico scrive `*Cancel*` anche quando resta lavoro completato. Un solo `U`
 a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
@@ -780,7 +1086,8 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
   polilinea interrotta con meno di 2 punti o un `TEXT` senza righe confermate.
 - Una nuova modifica confermata, come una polilinea o una cancellazione, elimina
   i passi che si potevano ripetere. Un comando senza effetti conserva il redo.
-- La selezione, lo zoom, il pan e le impostazioni di snap e orto non sono passi
+- `LWDISPLAY` e la visualizzazione dello spessore delle linee (`LWT`), la
+  selezione, lo zoom, il pan e le impostazioni di snap e orto non sono passi
   di annullamento. `U`, `UNDO` e `REDO` svuotano la selezione corrente.
 
 ## Messaggi
@@ -806,3 +1113,18 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Nothing to undo.` / `Nothing to redo.` | non ci sono passi da annullare o da ripetere |
 | `<Osnap on>` / `<Osnap off>` | snap a oggetto attivato o spento |
 | `<Ortho on>` / `<Ortho off>` | modalità orto attivata o spenta |
+| `Invalid layer name.` | il nome del layer contiene caratteri non consentiti o supera 255 caratteri |
+| `Layer "<nome>" already exists.` | esiste già un layer con questo nome nel disegno |
+| `Layer "<nome>" not found.` | il layer specificato non esiste nel documento |
+| `Cannot rename layer "0".` | il layer `0` è protetto e non può essere rinominato |
+| `Cannot freeze layer "<nome>".  It is the CURRENT layer.` | il layer corrente non può essere congelato |
+| `Cannot set current to a frozen layer.` | non è possibile impostare come corrente un layer congelato |
+| `No matching layer names found.` | nessun layer del disegno corrisponde all'elenco o al criterio jolly inserito |
+| `1 was on a locked layer.` / `<n> were on a locked layer.` | entità scartate durante la selezione perché appartenenti a layer bloccati |
+| `Invalid color.` | il valore inserito non è un colore valido (nome, indice 1-255, terna RGB o ByLayer/ByBlock) |
+| `Linetype "<nome>" is already loaded.` | il tipo di linea è già presente nel disegno |
+| `Linetype "<nome>" not found.` | il tipo di linea indicato non è disponibile tra i tipi standard |
+| `Linetype "<nome>" is not loaded.` | il tipo di linea non è ancora stato caricato nel disegno |
+| `Requires a positive number.` | il fattore di scala richiede un valore numerico strettamente positivo |
+| `Invalid lineweight.` | lo spessore inserito non è tra i valori consentiti |
+| `Requires ON or OFF.` | l'opzione accetta esclusivamente `ON` o `OFF` |
