@@ -32,6 +32,17 @@ Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
 ([ADR 0011](adr/0011-modalita-di-controllo.md), [ADR 0027](adr/0027-server-mcp-di-sviluppo.md), specifiche in
 [verifica/](verifica/casi.md)).
 
+## Il kernel: solid-space
+
+La geometria robusta, la politica delle tolleranze geometriche, il solver dei
+vincoli, il naming topologico e i solidi 3D stanno in
+[solid-space](https://github.com/Matleyx78/solid-space), il kernel di Tecnigrafo,
+in un repository separato ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md)).
+Entra come sottomodulo in `third_party/solid-space` con il primo pacchetto che lo
+usa; `core` potrà usare solo `solid_space::robust`, e il futuro `modeling` gli
+altri componenti. Nessun modulo collega OCCT direttamente. Ciò che serve si chiede
+con le regole di [RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md).
+
 ## Dove si trova cosa
 
 ```
@@ -124,3 +135,4 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0027](adr/0027-server-mcp-di-sviluppo.md) | Server MCP di sviluppo e libreria JSON | Accettato |
 | [0028](adr/0028-versione-minima-di-qt.md) | Versione minima di Qt 6.8 | Accettato |
 | [0029](adr/0029-verifica-dei-tipi-di-linea-iso.md) | Verifica dei tipi di linea ISO con un DXF di AutoCAD | Accettato |
+| [0030](adr/0030-solid-space-kernel-di-tecnigrafo.md) | solid-space, il kernel geometrico di Tecnigrafo | Proposto |

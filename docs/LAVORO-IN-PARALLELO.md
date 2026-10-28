@@ -53,7 +53,10 @@ dice, per ogni pacchetto:
   comportamento);
 - **Dipende da**: le issue che devono essere chiuse prima. Due pacchetti che
   toccano gli stessi file sono **sempre** legati da "Dipende da", così non
-  possono partire insieme.
+  possono partire insieme. Un pacchetto che ha bisogno di solid-space cita qui la
+  issue della richiesta in solid-space (`Matleyx78/solid-space#N`), e nel piano
+  sta dopo i pacchetti che non ne hanno bisogno
+  ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md)).
 
 ### Pacchetti leggeri (dalla tappa 0.5)
 

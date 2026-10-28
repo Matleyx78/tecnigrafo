@@ -251,3 +251,20 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   che sostituisce in parte l'ADR 0025, punto 2. Le conseguenze sul piano sono
   nella sezione "Modifiche al piano" della
   [tappa 0.6](tappe/0.6-layer-e-proprieta.md).
+- **2026-10-28 — solid-space, il kernel di Tecnigrafo.** Il responsabile decide
+  che il kernel geometrico di Tecnigrafo è
+  [solid-space](https://github.com/Matleyx78/solid-space), in un repository
+  separato ma parte integrante del progetto: OCCT resta la base per ciò che fa
+  bene, dietro la facciata di solid-space, che aggiunge predicati robusti,
+  solver, naming e robustezza delle operazioni
+  ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md), *Proposto*, che
+  sostituisce in parte gli ADR 0001 e 0002). Ogni bisogno nasce da Tecnigrafo
+  come richiesta ([RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md)):
+  si cerca quando si prepara il piano, ma può emergere anche durante la tappa;
+  comanda il piano di Tecnigrafo, e solid-space risponde con obiettivi
+  raggiungibili. Cambiano di conseguenza la scheda della
+  [tappa 0.7](tappe/0.7-modifiche.md) (l'ADR delle tolleranze copre solo il
+  lato di Tecnigrafo, dopo la valutazione di solid-space) e quella della
+  [fase 2](tappe/2.x-modellatore-3d.md) (solver, naming e feature di
+  solid-space al posto di OCCT e PlaneGCS collegati direttamente). Le richieste
+  della 0.7 si scrivono con il suo piano dettagliato.

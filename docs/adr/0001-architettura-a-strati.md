@@ -1,6 +1,8 @@
 # ADR 0001: Architettura a strati
 
 - **Stato:** Accettato
+- **Sostituito in parte da:** ADR 0030 (`modeling` su solid-space invece che
+  direttamente su Open CASCADE; `core` può usare `solid_space::robust`)
 - **Data:** 2026-10-15
 
 ## Contesto

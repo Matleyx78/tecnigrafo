@@ -28,11 +28,27 @@ Verificabili, uno per riga, con casella da spuntare alla chiusura.
 
 ## 4. Progetto di massima
 
-Moduli coinvolti, nuove classi principali, ADR da scrivere, rischi.
+Moduli coinvolti, nuove classi principali, ADR da scrivere, rischi, e che cosa
+servirà chiedere a solid-space (si dettaglia nella sezione 5).
 
 ## 5. Prerequisiti
 
 Tappe chiuse e ADR accettati da cui questa dipende.
+
+### Richieste a solid-space
+
+I bisogni geometrici che spettano al kernel ([ADR 0030](../adr/0030-solid-space-kernel-di-tecnigrafo.md),
+punto 2), cercati mentre si prepara il piano e scritti con le regole di
+[RICHIESTE-A-SOLID-SPACE.md](../RICHIESTE-A-SOLID-SPACE.md). Un bisogno emerso
+durante la tappa si aggiunge qui e si annota in "Modifiche al piano". Se non ne
+servono, si scrive "nessuna" e perché.
+
+| Richiesta | Issue Tecnigrafo | Issue solid-space | Stato | Pacchetti che ne dipendono |
+|---|---|---|---|---|
+| Richiesta: … | #… | Matleyx78/solid-space#… | da aprire / in valutazione / tappa aperta / soddisfatta / chiusa senza tappa | P… |
+
+I pacchetti che ne dipendono citano la issue di solid-space in "Dipende da" e,
+nella tabella dei pacchetti, stanno dopo quelli che non ne dipendono.
 
 ## 6. Pacchetti di lavoro
 

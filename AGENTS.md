@@ -134,13 +134,38 @@ lanciare né rilanciare `scripts/ci-attendi.sh` dopo aver scritto che ti fermi.
 Quando il responsabile chiede correzioni a una pull request, riprendila in carico
 e fermati allo stesso modo.
 
+### Se serve qualcosa a solid-space
+
+Le decisioni geometriche robuste, le tolleranze geometriche, i vincoli, il naming
+e i solidi spettano a solid-space, il kernel di Tecnigrafo
+([ADR 0030](docs/adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 2). Se il
+pacchetto ti porta a scrivere qualcosa di questo genere che la scheda non affida a
+solid-space né a una funzione che esiste già (per esempio un test di orientamento
+con una soglia tua, o un calcolo di tangenza), **non scriverlo**:
+
+1. scrivi nella issue del pacchetto il testo di una richiesta, con i sette campi
+   di [docs/RICHIESTE-A-SOLID-SPACE.md](docs/RICHIESTE-A-SOLID-SPACE.md); dì che
+   cosa ti serve, non come farlo;
+2. scrivi anche che cosa del pacchetto è già fatto e che cosa dipende da quel
+   bisogno, e non continuare da solo: come cambia il piano lo decide il
+   responsabile;
+3. se hai lavoro non pubblicato, pubblica il ramo **senza** pull request e scrivi
+   nel commento il nome del ramo;
+4. togli `AA-Presa in carico` e termina la sessione.
+
+Non scrivere in solid-space: la richiesta la apre là il responsabile.
+
 ## Regole che non si possono violare
 
 - Modifica solo i file elencati nel pacchetto. Se ne serve un altro, dillo
   all'utente e spiega perché, prima di toccarlo.
 - `core`, `render`, `edit` e `cmd` non includono mai Qt né altre librerie esterne.
+  solid-space non è una libreria esterna: è il kernel di Tecnigrafo, e quali suoi
+  componenti ogni modulo può usare lo dice l'ADR 0030, punto 4.
 - Nessuna nuova dipendenza, nessuna modifica a `.clang-format`, `.clang-tidy`,
-  `cmake/`, `.github/` o agli ADR accettati.
+  `cmake/`, `.github/` o agli ADR accettati, salvo che la scheda del pacchetto lo
+  dica esplicitamente (per esempio il pacchetto che porta il sottomodulo di
+  solid-space, ADR 0030, punto 8).
 - Non disattivare avvisi, controlli di `clang-tidy` o test per far passare la
   build. Niente `NOLINT` senza un commento che spieghi il motivo.
 - Rispetta le interfacce scritte nel pacchetto: nomi, firme e comportamenti.
