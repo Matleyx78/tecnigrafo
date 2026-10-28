@@ -17,7 +17,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | **chiusa** | [0.6](tappe/0.6-layer-e-proprieta.md) |
-| 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
+| 7 | 0.7 | Comandi di modifica | in preparazione | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
 | 10 | 1.0 | Stabilità e prestazioni: CAD 2D per lavoro reale | in programma | [1.0](tappe/1.0-stabilita.md) |
@@ -268,3 +268,30 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   [fase 2](tappe/2.x-modellatore-3d.md) (solver, naming e feature di
   solid-space al posto di OCCT e PlaneGCS collegati direttamente). Le richieste
   della 0.7 si scrivono con il suo piano dettagliato.
+- **2026-10-28 — Piano della tappa 0.7.** Il piano dettagliato della
+  [tappa 0.7](tappe/0.7-modifiche.md) è in preparazione, con gli ADR
+  [0031](adr/0031-modifiche-alle-entita.md)–[0035](adr/0035-taglio-offset-raccordi-unione.md)
+  proposti e la bozza dell'[ADR 0036](adr/0036-tolleranze-di-tecnigrafo.md).
+  Le quattro richieste a solid-space sono aperte
+  ([#326](https://github.com/Matleyx78/tecnigrafo/issues/326)–[#329](https://github.com/Matleyx78/tecnigrafo/issues/329),
+  solid-space#20–#23): la tappa si divide in una prima metà che non ne dipende e
+  una seconda che parte con le tappe di solid-space. Il responsabile ha preparato
+  in AutoCAD LT sei DXF di prova, da cui vengono i riferimenti dei comandi
+  ([tappe/0.7/dxf-di-prova.md](tappe/0.7/dxf-di-prova.md)). Prepararli ha
+  mostrato che negli script AutoCAD usa sequenze di domande diverse per alcuni
+  comandi: Tecnigrafo le riconosce, insieme alla selezione scritta
+  ([ADR 0032](adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)). Il
+  responsabile sceglie:
+  - `TRIM` ed `EXTEND` nei due modi, rapido e standard;
+  - snap a intersezione acceso per difetto;
+  - riferimenti con calcoli delicati a Gemini 4 Argon;
+  - `EXPLODE` che rifiuta le polilinee con quota o spessore;
+  - criterio di chiusura riscritto per le entità a cui AutoCAD applica ogni
+    comando.
+
+  Entrano nella scheda l'idea [#61](https://github.com/Matleyx78/tecnigrafo/issues/61)
+  (finestra chiusa trascinando), `Invio` alla prima domanda di `LINE` e `CIRCLE`
+  tangente-tangente-raggio. Le opzioni di `PLINE` *Width*, *Halfwidth*, *Length*
+  e le varianti dell'arco passano a dopo la 1.0, perché le larghezze non si
+  disegnano ancora. L'idea [#62](https://github.com/Matleyx78/tecnigrafo/issues/62)
+  resta per la tappa 0.9.

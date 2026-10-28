@@ -36,7 +36,7 @@ Aggiornato alla versione **0.6.0**.
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
 | `LINE` | `L` | presente | 0.4 | segmenti e chiusura con `Close`; `Invio` alla prima domanda per continuare dall'ultimo punto: 0.7 |
-| `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), da valutare nella 0.7 |
+| `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), dopo la 1.0 (decisione del 2026-10-28) |
 | `CIRCLE` | `C` | presente | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio nella 0.7 |
 | `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4; le altre varianti dopo la 1.0 |
 | `RECTANG` | `REC` | assente | — | |

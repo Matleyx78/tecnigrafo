@@ -64,8 +64,12 @@ B = LWPOLYLINE vertex=20,0 bulge=1 vertex=30,0
 - Un **punto** è `x,y`; un **rettangolo** è due angoli opposti `x1,y1 x2,y2`, in
   qualunque ordine; i bordi fanno parte del rettangolo.
 - I **modi dello snap** si danno con `modes=` e i nomi separati da virgole:
-  `endpoint`, `midpoint`, `center` e, dal pacchetto P13, `insertion`;
-  `modes=none` li spegne tutti. Senza `modes=` sono tutti accesi.
+  `endpoint`, `midpoint`, `center` e, dal pacchetto P13, `insertion`; dalla
+  tappa 0.7 anche `intersection`, `perpendicular`, `tangent` e `quadrant`
+  ([ADR 0033](../adr/0033-nuovi-snap-e-tracciamento-polare.md)).
+  `modes=none` li spegne tutti. Senza `modes=` sono accesi i quattro modi
+  della tappa 0.4 (`endpoint`, `midpoint`, `center`, `insertion`), così le
+  domande scritte prima della 0.7 non cambiano.
 
 ## Le risposte
 
@@ -80,7 +84,8 @@ Ogni domanda ha una forma fissa della risposta. Il confronto:
 - `none` è un elenco vuoto, o l'assenza di una risposta.
 
 Valori: numeri e punti come nel [rapporto](rapporto.md#numeri); `yes` / `no`;
-i nomi dei tipi di snap `Endpoint`, `Midpoint`, `Center`, `Insertion`.
+i nomi dei tipi di snap `Endpoint`, `Midpoint`, `Center`, `Insertion` e,
+dalla tappa 0.7, `Intersection`, `Perpendicular`, `Tangent`, `Quadrant`.
 
 ## Catalogo
 
@@ -118,6 +123,7 @@ Come ogni tipo di entità risponde ([ADR 0008](../adr/0008-selezione-e-snap.md),
 | `window x1,y1 x2,y2` | elenco di nomi separati da spazi, o `none` | le entità selezionate a finestra |
 | `crossing x1,y1 x2,y2` | elenco di nomi separati da spazi, o `none` | le entità selezionate a intersezione |
 | `snap x,y aperture=<a> [modes=…]` | `Tipo x,y`, o `none` | lo snap per il puntatore in `x,y` con l'apertura `a` in unità del disegno, con le regole di priorità dell'ADR 0008: tra estremi e medi entro l'apertura vince il più vicino (a pari distanza l'estremo), altrimenti il centro (e dalla tappa 0.4 l'inserimento) dell'entità su cui passa il puntatore |
+| `snap x,y aperture=<a> [modes=…] [from=x,y]` | come sopra | dalla tappa 0.7, con i modi nuovi e le priorità dell'[ADR 0033](../adr/0033-nuovi-snap-e-tracciamento-polare.md), punto 5; `from=` è il punto base da cui partono perpendicolare e tangente, che senza `from=` non danno nulla |
 
 ### Costruzioni
 
@@ -150,6 +156,64 @@ specchiatura in senso orario. `bbox` contiene i quattro angoli; selezione,
 `distance` e `closest` usano la regione del parallelogramma. Lo snap
 inserimento è il punto d'ancoraggio (`alignment-point` salvo `Left` sulla
 linea di base), oppure `position` per `Aligned` e `Fit`.
+
+### Modifiche (tappa 0.7)
+
+Le domande della tappa 0.7, pubblicate con il suo piano perché i riferimenti si
+possano scrivere prima del lavoro. Ognuna indica il pacchetto che la realizza;
+fino ad allora i casi che la usano stanno in `in-attesa.txt`. Le entità delle
+risposte si scrivono come [definizioni](rapporto.md#entità).
+
+**Trasformazioni** (P4, [ADR 0031](../adr/0031-modifiche-alle-entita.md), punti 1–4)
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `transform <E> move dx,dy` | un'entità | `E` spostata di `(dx, dy)` |
+| `transform <E> rotate <gradi> x,y` | un'entità | `E` ruotata dell'angolo, in gradi antiorari, intorno a `x,y` |
+| `transform <E> scale <f> x,y` | un'entità, o `invalid` | `E` scalata del fattore `f` intorno a `x,y`; `invalid` se `f` non è maggiore di 0 |
+| `transform <E> mirror x1,y1 x2,y2 [mirrtext=0\|1]` | un'entità, o `invalid` | `E` riflessa rispetto alla retta per i due punti, con `MIRRTEXT` 0 se manca; `invalid` se i due punti coincidono |
+
+**Grip** (P9, [ADR 0034](../adr/0034-grip.md))
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `grips <E>` | elenco di punti `x,y` separati da `;` | i grip dell'entità, ognuno una volta |
+| `grip <E> x1,y1 x2,y2` | un'entità, `invalid`, o `none` | `E` dopo aver portato in `x2,y2` il grip che sta in `x1,y1`; `invalid` se il risultato non esiste (ADR 0034, punto 5); `none` se in `x1,y1` non c'è un grip |
+
+**Intersezioni e lato di un punto** (P14, richiesta
+[#326](https://github.com/Matleyx78/tecnigrafo/issues/326))
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `intersections <A> <B> [extend=a\|b\|both]` | elenco separato da `;` di punti `x,y` e di tratti `overlap x1,y1 x2,y2`, o `none` | dove si incontrano le curve di `A` e `B`; un punto di tangenza conta una volta; `overlap` è un tratto in comune, dai suoi estremi. Con `extend=` la curva indicata si prende intera: la retta di una linea, il cerchio di un arco. Il testo non ha curva: `none` |
+| `side <E> x,y` | `left`, `right` o `on` | da che parte della curva sta il punto, guardando nel verso della curva (linea dall'inizio alla fine, arco e cerchio in senso antiorario, polilinea nel verso dei vertici) rispetto al punto della curva più vicino; per una polilinea, a pari distanza vale il primo segmento |
+
+**Curva parallela** (P17, richiesta [#328](https://github.com/Matleyx78/tecnigrafo/issues/328),
+[ADR 0035](../adr/0035-taglio-offset-raccordi-unione.md), punti 8–9)
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `offset <E> <d> x,y` | un'entità, o `cannot` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `cannot` quando `OFFSET` non crea nulla |
+
+**Raccordi, smussi e tangenze** (P19, richiesta [#327](https://github.com/Matleyx78/tecnigrafo/issues/327),
+ADR 0035, punti 10–12)
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `fillet <A> x1,y1 <B> x2,y2 radius=<r> [trim=no]` | elenco separato da `;` di `<nome> <entità>`, o `impossible` | il raccordo tra `A`, scelta in `x1,y1`, e `B`, scelta in `x2,y2`: le due entità come diventano (`A …`, `B …`) e l'arco nuovo (`new ARC …`; nessuno con raggio 0). Se `A` e `B` sono la stessa polilinea, una sola riga con la polilinea |
+| `fillet <P> polyline radius=<r>` | un'entità | la polilinea `P` con tutti i vertici raccordati (opzione *Polyline*) |
+| `chamfer <A> x1,y1 <B> x2,y2 distances=<d1>,<d2> [trim=no]` | come `fillet` | lo smusso con le due distanze, la prima su `A` |
+| `chamfer <A> x1,y1 <B> x2,y2 angle=<l>,<gradi> [trim=no]` | come `fillet` | lo smusso con la lunghezza su `A` e l'angolo da `A` |
+| `chamfer <P> polyline distances=<d1>,<d2>` | un'entità | la polilinea `P` con tutti i vertici smussati |
+| `tangents x,y <E>` | elenco di punti `x,y` separati da `;`, o `none` | i punti di tangenza dal punto a un cerchio, un arco o un arco di polilinea, solo quelli sulla curva; `none` per un punto dentro il cerchio; il punto stesso se sta sulla curva |
+| `circle-ttr <A> x1,y1 <B> x2,y2 radius=<r>` | `CIRCLE center=… radius=…`, o `none` | il cerchio di raggio `r` tangente ad `A` e `B`, quello vicino ai due punti, come `CIRCLE` *Ttr* |
+
+**Unione** (P22, richiesta [#329](https://github.com/Matleyx78/tecnigrafo/issues/329),
+ADR 0035, punti 13–15)
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `join <A> <B> …` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla |
 
 ### File
 
