@@ -1,6 +1,6 @@
 # ADR 0030: solid-space, il kernel geometrico di Tecnigrafo
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Sostituisce in parte:** ADR 0001 (moduli futuri: `modeling` su Open CASCADE);
   ADR 0002 (riga "Kernel 3D previsto")
 - **Data:** 2026-10-28
