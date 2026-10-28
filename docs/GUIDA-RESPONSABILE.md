@@ -197,7 +197,9 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    e chi scrive i riferimenti: Gemini per quelli ordinari, un agente di fascia
    forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
    "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
-   documentazione. Proponi anche le bozze degli ADR che servono.
+   documentazione. Proponi anche le bozze degli ADR che servono, e i bisogni da
+   chiedere a solid-space (docs/RICHIESTE-A-SOLID-SPACE.md) con il testo delle
+   richieste.
    Elenca anche le issue con etichetta `idea` ancora aperte e dimmi quali,
    secondo te, potrebbero entrare in questa tappa e perché: le approvo io, una
    per una; quelle che approvo entrano nella scheda, le altre restano issue.
@@ -206,6 +208,12 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
    accetti quando ti convincono, anche subito (GOVERNANCE.md).
 4. Claude apre una pull request con piano e ADR. La leggi e la unisci come in A1.
+5. Se il piano ha richieste a solid-space, aprile subito, senza aspettare
+   l'apertura della tappa: una issue in Tecnigrafo con l'etichetta
+   `richiesta-solid-space`, ricopiata in solid-space con l'etichetta
+   `richiesta` (passi in docs/RICHIESTE-A-SOLID-SPACE.md, "Dove si scrive e come
+   arriva a solid-space"). Scrivi i numeri delle due issue nella tabella del
+   piano, sezione 5.
 
 ### B2. Aprire la tappa (Claude crea le issue)
 

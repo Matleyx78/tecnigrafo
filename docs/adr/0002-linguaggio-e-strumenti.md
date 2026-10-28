@@ -1,7 +1,8 @@
 # ADR 0002: Linguaggio, librerie e strumenti
 
 - **Stato:** Accettato
-- **Sostituito in parte da:** ADR 0028 (versione minima di Qt)
+- **Sostituito in parte da:** ADR 0028 (versione minima di Qt); ADR 0030 (kernel
+  3D: solid-space, con OCCT dietro la sua facciata)
 - **Data:** 2026-10-15
 
 ## Contesto
