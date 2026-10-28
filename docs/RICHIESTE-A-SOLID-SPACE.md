@@ -64,7 +64,8 @@ vincoli, come fatto.
 ## Dove si scrive e come arriva a solid-space
 
 1. **In Tecnigrafo**, una issue con l'etichetta `richiesta-solid-space` e i sette
-   campi qui sopra. La apre il responsabile, anche partendo dal testo che un
+   campi qui sopra, dal modello *Richiesta a solid-space*
+   (`.github/ISSUE_TEMPLATE/richiesta-solid-space.md`). La apre il responsabile, anche partendo dal testo che un
    agente ha scritto nella issue di un pacchetto.
 2. **In solid-space**, il responsabile ricopia la richiesta in una issue con
    l'etichetta `richiesta` e scrive in "Da dove nasce" il riferimento completo
