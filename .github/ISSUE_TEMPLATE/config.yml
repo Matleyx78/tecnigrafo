@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Richiesta a solid-space (solo responsabile)
+    url: https://github.com/Matleyx78/solid-space/issues/new?template=richiesta.yml
+    about: Le richieste al kernel si scrivono solo in solid-space, con il suo modulo (docs/RICHIESTE-A-SOLID-SPACE.md).
   - name: Segnalare una vulnerabilità
     url: https://github.com/Matleyx78/tecnigrafo/security/advisories/new
     about: In privato, mai con una issue pubblica (vedi SECURITY.md).

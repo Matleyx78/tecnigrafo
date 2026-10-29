@@ -38,17 +38,32 @@ Tappe chiuse e ADR accettati da cui questa dipende.
 ### Richieste a solid-space
 
 I bisogni geometrici che spettano al kernel ([ADR 0030](../adr/0030-solid-space-kernel-di-tecnigrafo.md),
-punto 2), cercati mentre si prepara il piano e scritti con le regole di
-[RICHIESTE-A-SOLID-SPACE.md](../RICHIESTE-A-SOLID-SPACE.md). Un bisogno emerso
-durante la tappa si aggiunge qui e si annota in "Modifiche al piano". Se non ne
-servono, si scrive "nessuna" e perché.
+punto 2), cercati mentre si prepara il piano e aperti in solid-space con le
+regole di [RICHIESTE-A-SOLID-SPACE.md](../RICHIESTE-A-SOLID-SPACE.md). Qui c'è
+solo il collegamento: il testo della richiesta sta nella issue di solid-space, e
+il suo stato si legge nel Project «Tecnigrafo». Un bisogno emerso durante la
+tappa si aggiunge qui e si annota in "Modifiche al piano". Se non ne servono, si
+scrive "nessuna" e perché.
 
-| Richiesta | Issue Tecnigrafo | Issue solid-space | Stato | Pacchetti che ne dipendono |
-|---|---|---|---|---|
-| Richiesta: … | #… | Matleyx78/solid-space#… | da aprire / in valutazione / tappa aperta / soddisfatta / chiusa senza tappa | P… |
+| Richiesta | Pacchetti che ne dipendono |
+|---|---|
+| [Matleyx78/solid-space#…](https://github.com/Matleyx78/solid-space/issues/…) | P… |
 
-I pacchetti che ne dipendono citano la issue di solid-space in "Dipende da" e,
-nella tabella dei pacchetti, stanno dopo quelli che non ne dipendono.
+Un piano con richieste si scrive **in due tempi** (ADR 0030, punto 13):
+
+1. subito, le schede dei pacchetti che non dipendono da solid-space; i pacchetti
+   che ne dipendono hanno una riga nella tabella, con «scheda dopo il contratto»
+   al posto del link, e stanno dopo gli altri;
+2. dopo che solid-space ha accettato le valutazioni con il loro contratto, le
+   loro schede, scritte sulle intestazioni accettate. Ogni scheda dice quali
+   intestazioni usa e, se il pacchetto sposta il sottomodulo, a quale pacchetto
+   di solid-space (ADR 0030, punto 9).
+
+In "Dipende da" questi pacchetti citano la richiesta (`Matleyx78/solid-space#N`)
+finché la tappa di solid-space non ha i suoi pacchetti, poi il pacchetto di
+solid-space che serve. I loro riferimenti prendono i valori geometrici
+dall'archivio dei casi di solid-space, citando il caso (ADR 0030, punto 14), e
+verificano facciata e comandi.
 
 ## 6. Pacchetti di lavoro
 
@@ -74,6 +89,15 @@ il lavoro sono in [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), sezione
 L'**ordine delle righe** è l'ordine in cui gli agenti prendono "il prossimo
 pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RN]` hanno una riga
 ciascuna, prima del loro pacchetto di lavoro.
+
+La tabella la legge `scripts/apri-tappa.sh`, che crea le issue all'apertura
+(GUIDA-RESPONSABILE.md, B2), quindi segue queste regole: le colonne con questi
+nomi; la prima cella comincia con `PN` o `RN` seguito dal titolo della issue; la
+scheda è un link a un file che esiste, oppure un testo (per esempio «scheda dopo
+il contratto») se non c'è ancora; "Dipende da" elenca, separati da virgole,
+pacchetti delle righe precedenti (`P3`, `R3`), issue di Tecnigrafo (`#12`) o di
+altri repository (`Matleyx78/solid-space#20`), oppure `—`; la colonna Issue resta
+`#…` finché lo script non ci scrive il numero.
 
 **File comuni.** I file che più pacchetti toccano nello stesso periodo (di norma
 i `CMakeLists.txt` e i registri come `builtin_commands.cpp`): ognuno aggiunge

@@ -10,6 +10,13 @@ chi scrive il codice, e un pacchetto è finito quando la CI conferma che il
 programma li rispetta. La guida pratica, passo per passo, per il responsabile è
 in [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md).
 
+Quando una tappa chiede qualcosa a solid-space, le tappe aperte sono due, una per
+progetto, e avanzano insieme ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md),
+punto 13). Il responsabile le vede sulla stessa tavola, il Project «Tecnigrafo»
+del suo account, che raccoglie issue e pull request dei due repository. Il
+Project è una vista: gli agenti continuano a lavorare con etichette e issue, e la
+fonte resta GitHub.
+
 ## Come leggere i riferimenti
 
 GitHub usa **una sola numerazione** per issue e pull request: ogni elemento nuovo,
@@ -54,9 +61,19 @@ dice, per ogni pacchetto:
 - **Dipende da**: le issue che devono essere chiuse prima. Due pacchetti che
   toccano gli stessi file sono **sempre** legati da "Dipende da", così non
   possono partire insieme. Un pacchetto che ha bisogno di solid-space cita qui la
-  issue della richiesta in solid-space (`Matleyx78/solid-space#N`), e nel piano
-  sta dopo i pacchetti che non ne hanno bisogno
-  ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md)).
+  richiesta in solid-space (`Matleyx78/solid-space#N`) finché la tappa di
+  solid-space non ha i suoi pacchetti, poi il pacchetto di solid-space che gli
+  serve; nel piano sta dopo i pacchetti che non ne hanno bisogno
+  ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 13).
+
+**Piano in due tempi.** Se la tappa chiede qualcosa a solid-space, il piano si
+scrive subito per i pacchetti che non ne dipendono, mentre le richieste si aprono
+in solid-space ([RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md)). Le
+schede dei pacchetti che ne dipendono si scrivono dopo, sulle intestazioni che
+solid-space ha accettato come contratto; fino ad allora hanno solo la loro riga
+nella tabella, con «scheda dopo il contratto». I loro riferimenti prendono i
+valori geometrici dall'archivio dei casi di solid-space e verificano la facciata
+e i comandi.
 
 ### Pacchetti leggeri (dalla tappa 0.5)
 
@@ -131,8 +148,16 @@ Dalla tappa 0.5 il testo di ogni issue cita la scheda del pacchetto
 (`docs/tappe/X.Y/PN-<nome>.md`) e ne riporta modello e impegno, così l'agente
 parte da lì.
 
-Le issue le può creare Claude, partendo dal piano, quando il responsabile glielo
-chiede.
+Dalla tappa 0.7 tutto questo lo fa **`scripts/apri-tappa.sh X.Y`**, partendo
+dalla tabella dei pacchetti del piano (formato in
+[tappe/0000-modello.md](tappe/0000-modello.md)): crea etichetta, milestone e
+issue con il loro testo, segna le dipendenze native di GitHub («bloccata da»),
+mette le issue nel Project con *Tappa* e *Tipo*, e apre una pull request che
+scrive i numeri delle issue nel piano e lo stato nella ROADMAP. Prima mostra che
+cosa farà e chiede conferma. I pacchetti senza scheda (quelli che aspettano un
+contratto di solid-space) non ricevono la issue: lo script si rilancia quando
+le loro schede sono unite, e crea solo le issue nuove. Lo lancia il responsabile
+(GUIDA-RESPONSABILE.md, B2).
 
 ## 3. Riferimenti
 
@@ -203,6 +228,12 @@ un agente senza pacchetto preciso sconfina.
 - Nessuno scrive su `main` o sui rami degli altri.
 - Se un agente scopre che gli serve un file non previsto, si ferma e lo scrive
   nella issue: decide il responsabile.
+- Se un agente scopre un bisogno che spetta a solid-space, si ferma e scrive
+  nella issue il testo della richiesta (AGENTS.md, "Se serve qualcosa a
+  solid-space"); il responsabile decide se aprirla e come cambia il piano.
+- Quando un pacchetto di solid-space è unito, i pacchetti di Tecnigrafo che lo
+  aspettavano possono partire: la sua pull request li elenca nella riga
+  «Sblocca:», e il responsabile li sposta nel Project da *Bloccato* a *Da fare*.
 - Se un agente ritiene sbagliato un riferimento, si ferma e lo scrive nella
   issue. La correzione è una nuova pull request di riferimenti, mai una modifica
   nella pull request di lavoro.
