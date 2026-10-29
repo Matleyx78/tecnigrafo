@@ -1,0 +1,41 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 TEXT position=0,30 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Prima riga" ~box=0,29.07594038325053;19.8694109297374,29.07594038325053;19.8694109297374,33.94748048261178;0,33.94748048261178
+  258 TEXT position=0,25 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Seconda riga" ~box=0,24.07594038325053;25.69694819020582,24.07594038325053;25.69694819020582,28.94748048261178;0,28.94748048261178
+  259 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=0,-0.7700496806245565;8.28069552874379,-0.7700496806245565;8.28069552874379,3.289567068843151;0,3.289567068843151
+  260 LINE start=0,0 end=10,0
+messages:
+  Command: TEXT
+  Specify start point of text: 0,30
+  Specify height <2.5000>: 3
+  Specify rotation angle of text <0>: 0
+  Enter text: Prima riga
+  Enter text: Seconda riga
+  Enter text:
+  Command: TEXT
+  Specify start point of text: 0,0
+  Specify height <3.0000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Hello
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+  TEXT 3
