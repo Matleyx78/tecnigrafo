@@ -137,3 +137,9 @@ Il passaggio dall'uno all'altro avviene sempre e solo con `render::Viewport`.
 | [0028](adr/0028-versione-minima-di-qt.md) | Versione minima di Qt 6.8 | Accettato |
 | [0029](adr/0029-verifica-dei-tipi-di-linea-iso.md) | Verifica dei tipi di linea ISO con un DXF di AutoCAD | Accettato |
 | [0030](adr/0030-solid-space-kernel-di-tecnigrafo.md) | solid-space, il kernel geometrico di Tecnigrafo | Accettato |
+| [0031](adr/0031-modifiche-alle-entita.md) | Modifiche alle entità: identità, dati conservati, trasformazioni | Proposto |
+| [0032](adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md) | Richieste di oggetti e di numeri; sequenze degli script di AutoCAD | Proposto |
+| [0033](adr/0033-nuovi-snap-e-tracciamento-polare.md) | Nuovi snap e tracciamento polare | Proposto |
+| [0034](adr/0034-grip.md) | Grip | Proposto |
+| [0035](adr/0035-taglio-offset-raccordi-unione.md) | Taglio, prolungamento, offset, raccordi, smussi e unione | Proposto |
+| [0036](adr/0036-tolleranze-di-tecnigrafo.md) | Tolleranze del lato di Tecnigrafo | Proposto |
