@@ -49,6 +49,12 @@ Solo il responsabile apre una tappa, e solo dopo aver chiuso la precedente:
    riferimenti (ADR 0011, [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md));
 4. aggiorna la tabella qui sopra.
 
+I punti 3 e 4 li fa `scripts/apri-tappa.sh X.Y`, dalla tabella dei pacchetti
+del piano ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B2). Se la tappa
+chiede qualcosa a solid-space, si apre insieme a lei la tappa corrispondente di
+solid-space, e le due avanzano insieme
+([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 13).
+
 ### Chiudere una tappa
 
 1. Tutti i pacchetti sono uniti e tutti i criteri di chiusura sono verificati, uno
@@ -268,3 +274,18 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   [fase 2](tappe/2.x-modellatore-3d.md) (solver, naming e feature di
   solid-space al posto di OCCT e PlaneGCS collegati direttamente). Le richieste
   della 0.7 si scrivono con il suo piano dettagliato.
+- **2026-10-29 — Un flusso unico con solid-space.** Il responsabile cambia la
+  cucitura tra i due progetti e corregge l'ADR 0030 (riga **Corretto:**),
+  insieme all'ADR 0007 di solid-space. La richiesta si scrive solo in
+  solid-space, anche con `scripts/richiesta.sh`
+  ([RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md)); a ogni tappa di
+  Tecnigrafo che chiede qualcosa corrisponde una tappa di solid-space, e le due
+  avanzano insieme; la valutazione porta il contratto (le intestazioni
+  pubbliche), e le schede dei pacchetti che ne dipendono si scrivono dopo; il
+  sottomodulo entra con un pacchetto P0 all'inizio della 0.7, e lo aggiorna il
+  pacchetto che usa il pezzo nuovo; `core` usa anche il nuovo componente
+  `geom2d`; i valori geometrici attesi vengono dall'archivio dei casi di
+  solid-space. La tappa si apre con `scripts/apri-tappa.sh`, e il Project
+  «Tecnigrafo» mostra i due repository sulla stessa tavola. Il piano della 0.7
+  si rifà con queste regole: la pull request #330 resta materiale da cui
+  attingere.

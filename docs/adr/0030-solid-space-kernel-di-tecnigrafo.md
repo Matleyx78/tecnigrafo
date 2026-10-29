@@ -4,6 +4,18 @@
 - **Sostituisce in parte:** ADR 0001 (moduli futuri: `modeling` su Open CASCADE);
   ADR 0002 (riga "Kernel 3D previsto")
 - **Data:** 2026-10-28
+- **Corretto:** 2026-10-29 — il responsabile cambia la cucitura tra i due
+  progetti, insieme alla correzione dell'ADR 0007 di solid-space; nessun codice
+  unito attua ancora questo ADR (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)).
+  `core` usa anche il nuovo componente `geom2d` (punti 4 e 5); i target di
+  solid-space non si compilano con `-ffast-math` né `/fp:fast` (punto 7); il
+  sottomodulo entra con un pacchetto piccolo all'inizio della tappa 0.7, P0
+  (punto 8); la versione fissata la aggiorna il pacchetto che usa il pezzo
+  nuovo (punto 9);
+  la richiesta si scrive solo in solid-space, e "Dipende da" cita la richiesta e
+  poi il pacchetto di solid-space che serve (punti 11–13); i valori geometrici
+  attesi si prendono dall'archivio dei casi di solid-space (punto 14, nuovo).
+  Di conseguenza cambiano anche il contesto, le alternative e le conseguenze.
 
 ## Contesto
 
@@ -28,6 +40,20 @@ cinque componenti (`robust`, `naming`, `solver`, `kernel`, `features`), OCCT e
 libslvs collegati in privato, intestazioni pubbliche senza dipendenze esterne,
 tappe che nascono dalle richieste di Tecnigrafo. Il suo ADR 0002, punto 8, lascia
 a Tecnigrafo la scelta di come incorporarlo.
+
+**La correzione del 2026-10-29.** Le prime richieste, quelle della tappa 0.7
+(solid-space#20–#23), hanno mostrato tre attriti: il testo della richiesta viveva
+in due copie, Tecnigrafo avrebbe scritto le schede dei suoi pacchetti senza
+sapere quali funzioni avrebbe ricevuto, e avrebbe aspettato la fine di intere
+tappe di solid-space. Il responsabile tiene il metodo e cambia la cucitura:
+l'[ADR 0007 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0007-tappe-su-richiesta.md),
+corretto lo stesso giorno, apre una tappa di solid-space per ogni tappa di
+Tecnigrafo che chiede qualcosa, fa portare a ogni valutazione il contratto (le
+intestazioni pubbliche in bozza) e rende utilizzabile ogni pacchetto unito. Per
+il 2D le valutazioni hanno scelto un componente nuovo di solid-space, `geom2d`:
+curve del piano (segmento, arco, cerchio, bulge, polilinea), intersezioni, lato,
+tangenze e curve parallele, sopra `robust` e con la sola libreria standard. Lo
+fissa un ADR di solid-space. Questo ADR adegua il lato di Tecnigrafo.
 
 Senza una decisione scritta qui, le regole di Tecnigrafo vietano di usarlo:
 `core` non ha dipendenze esterne (ADR 0001) e gli agenti non aggiungono
@@ -56,14 +82,15 @@ dipendenze (AGENTS.md).
 
 4. | Modulo di Tecnigrafo | Componenti di solid-space |
    |---|---|
-   | `core` | `robust` |
+   | `core` | `robust`, `geom2d` |
    | `modeling` (fase 2) | `kernel`, `features`, `naming`, `solver` |
 
    Il componente che servirà ai vincoli 2D (`solver`) e il modulo che lo collega
    si decidono con l'ADR della tappa che introduce i vincoli. Ogni altro
    collegamento richiede un ADR.
-5. **`core` resta senza librerie esterne.** `solid_space::robust` usa solo la
-   libreria standard, quindi `core` continua a compilare senza Qt, OCCT o altro.
+5. **`core` resta senza librerie esterne.** `solid_space::robust` e
+   `solid_space::geom2d` usano solo la libreria standard, quindi `core` continua
+   a compilare senza Qt, OCCT o altro.
    Il CAD 2D non compila mai `kernel` né `features`
    (`SOLID_SPACE_BUILD_KERNEL=OFF`), quindi non richiede OCCT.
 
@@ -76,31 +103,68 @@ dipendenze (AGENTS.md).
 7. **Si compila con `add_subdirectory`.** I test di solid-space non si compilano
    dentro Tecnigrafo: li esegue la CI di solid-space. Le sue intestazioni non si
    includono come `SYSTEM`: è codice nostro, con le stesse regole di avvisi.
-8. **Il sottomodulo entra con il primo pacchetto** che usa un componente. Quel
-   pacchetto modifica `cmake/` e `.github/` (il checkout della CI con i
-   sottomoduli), e la sua scheda lo dice esplicitamente, come eccezione alla
-   regola di AGENTS.md.
-9. **Aggiornare la versione fissata** è una pull request di Tecnigrafo, di solito
-   alla chiusura di una tappa di solid-space nata da una richiesta. La pull
-   request cita la tappa e la richiesta, e la CI di Tecnigrafo deve essere verde
-   con la nuova versione. Solo il responsabile la decide.
+   Tecnigrafo non compila i target di solid-space con `-ffast-math` né con
+   `/fp:fast`, e non passa loro opzioni che li includano: i risultati di
+   `robust` e `geom2d` devono essere gli stessi, bit per bit, sui tre sistemi
+   operativi
+   ([ADR 0008 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0008-componente-geom2d.md),
+   punto 5).
+8. **Il sottomodulo entra con un pacchetto suo, piccolo, all'inizio della
+   tappa** che per prima usa solid-space: P0 della tappa 0.7, nella prima metà
+   del piano, quando `robust` è ancora vuoto. P0 porta il sottomodulo, lo
+   collega a CMake e fa scaricare i sottomoduli al checkout della CI: modifica
+   `cmake/` e `.github/`, e la sua scheda lo dice esplicitamente, come eccezione
+   alla regola di AGENTS.md. I pacchetti che poi usano i componenti non toccano
+   né `cmake/` né `.github/`.
+9. **Aggiornare la versione fissata** spetta al pacchetto di Tecnigrafo che usa
+   il pezzo nuovo: sposta il sottomodulo al commit di `main` di solid-space che
+   chiude il pacchetto di solid-space che gli serve, senza aspettare la fine
+   della tappa di solid-space (ogni pacchetto unito là è utilizzabile, ADR 0007
+   di solid-space, punto 16). La sua scheda lo autorizza e cita quel pacchetto;
+   la CI di Tecnigrafo deve essere verde con la nuova versione. Fuori da un
+   pacchetto, l'aggiornamento è una pull request che decide il responsabile.
 10. **Le correzioni si fanno in solid-space**, mai nella copia dentro Tecnigrafo.
 
 ### Come si chiede
 
-11. **Ogni bisogno nasce da Tecnigrafo e diventa una richiesta**, con le regole di
-    [RICHIESTE-A-SOLID-SPACE.md](../RICHIESTE-A-SOLID-SPACE.md): una issue di
-    Tecnigrafo con l'etichetta `richiesta-solid-space`, che il responsabile
-    ricopia in solid-space. La richiesta dice di che cosa c'è bisogno, non come
-    soddisfarlo; solid-space risponde con obiettivi raggiungibili.
+11. **Ogni bisogno nasce da Tecnigrafo e diventa una richiesta, scritta solo in
+    solid-space**, con le regole di
+    [RICHIESTE-A-SOLID-SPACE.md](../RICHIESTE-A-SOLID-SPACE.md): una sola issue
+    di solid-space con l'etichetta `richiesta`, scritta con il suo modulo. La
+    apre il responsabile, oppure un agente di Tecnigrafo a cui lui lo chiede, con
+    `scripts/richiesta.sh`. In Tecnigrafo non ne resta una copia: il piano e i
+    pacchetti citano la issue di solid-space. La richiesta dice di che cosa c'è
+    bisogno, non come soddisfarlo; solid-space risponde con obiettivi
+    raggiungibili e, per gli esiti che cambiano un'interfaccia, con il contratto:
+    le intestazioni pubbliche in bozza, accettate insieme all'ADR di
+    valutazione.
 12. **Due momenti.** Il bisogno si cerca quando si prepara il piano della tappa
     (sezione "Richieste a solid-space" di [tappe/0000-modello.md](../tappe/0000-modello.md)),
     ma può emergere anche durante la tappa: allora l'agente si ferma e scrive il
-    testo della richiesta nella issue (AGENTS.md, "Quando fermarsi").
-13. **Comanda il piano di Tecnigrafo.** Una richiesta che blocca la tappa aperta
-    di Tecnigrafo fa nascere una tappa di solid-space. Intanto in Tecnigrafo
-    vanno avanti solo i pacchetti che non ne dipendono; quelli che ne dipendono
-    citano la issue di solid-space in "Dipende da".
+    testo della richiesta nella issue del suo pacchetto (AGENTS.md, "Se serve
+    qualcosa a solid-space"), e il responsabile decide se aprirla.
+13. **Comanda il piano di Tecnigrafo, e le due tappe avanzano insieme.** A ogni
+    tappa di Tecnigrafo che chiede qualcosa corrisponde una tappa di solid-space
+    (ADR 0007 di solid-space, punti 10–12). Le schede dei pacchetti di
+    Tecnigrafo che dipendono da solid-space si scrivono sulle intestazioni
+    accettate, non prima; finché il contratto manca, il piano li elenca con una
+    riga ciascuno. In "Dipende da" un pacchetto cita la richiesta
+    (`Matleyx78/solid-space#N`) finché la tappa di solid-space non ha i suoi
+    pacchetti, poi il pacchetto di solid-space che gli serve: Tecnigrafo aspetta
+    quel pacchetto, non la fine della tappa. Intanto vanno avanti i pacchetti che
+    non ne dipendono.
+
+### Da dove vengono i valori attesi
+
+14. **La verità geometrica sta nell'archivio dei casi di solid-space**
+    (`tests/corpus/`, ADR 0007 di solid-space, punto 17). I riferimenti di
+    Tecnigrafo prendono da lì i valori geometrici attesi (intersezioni, punti di
+    tangenza, curve parallele, lati), **citando il caso**, invece di rifare i
+    calcoli; verificano la traduzione dalle entità alle curve e i comandi. I
+    casi concreti e i DXF di AutoCAD che servono a una richiesta entrano in
+    quell'archivio. Se un riferimento di Tecnigrafo e l'archivio non
+    concordano, si apre una issue in solid-space e decide l'archivio, corretto
+    là se è sbagliato.
 
 ## Alternative considerate
 
@@ -118,14 +182,36 @@ dipendenze (AGENTS.md).
   pulita e nasconde la versione in un file CMake invece che nella storia di git.
 - **Predicati scritti in `core`**: più rapido per la tappa 0.7, ma duplicherebbe
   in Tecnigrafo proprio ciò per cui solid-space esiste.
+- **La richiesta scritta in Tecnigrafo e ricopiata in solid-space** (il testo
+  del 2026-10-28, con l'etichetta `richiesta-solid-space`): due testi da tenere
+  allineati a mano e un passaggio in più a ogni richiesta.
+- **Il sottomodulo con il primo pacchetto che usa un componente** (il testo del
+  2026-10-28): quel pacchetto, già impegnativo, avrebbe portato anche CMake e la
+  CI, e l'integrazione sarebbe arrivata tutta insieme a metà tappa.
+- **Aggiornare la versione fissata alla chiusura della tappa di solid-space**
+  (il testo del 2026-10-28): Tecnigrafo avrebbe aspettato tutti i pacchetti di
+  solid-space anche quando gliene serviva uno.
+- **Calcolare i valori geometrici attesi anche in Tecnigrafo**: i calcoli
+  delicati si farebbero due volte, e due riferimenti diversi per lo stesso caso
+  non dicono quale sia giusto.
 
 ## Conseguenze
 
 - Gli agenti di Tecnigrafo non scrivono predicati, soglie geometriche proprie,
   solver o naming: chiedono a solid-space.
-- Le tappe di Tecnigrafo possono dover aspettare una tappa di solid-space.
-  Lo limitano la richiesta scritta presto, il piano che mette prima i pacchetti
-  indipendenti e le tappe piccole di solid-space.
+- I pacchetti di Tecnigrafo possono dover aspettare un pacchetto di solid-space.
+  Lo limitano la richiesta scritta presto, il contratto fissato prima delle
+  schede, il piano che mette prima i pacchetti indipendenti e i pacchetti di
+  solid-space utilizzabili appena uniti.
+- Un piano di Tecnigrafo che chiede qualcosa si scrive in due tempi: subito i
+  pacchetti che non dipendono da solid-space, dopo l'accettazione dei contratti
+  le schede di quelli che ne dipendono.
+- I riferimenti dei pacchetti che usano solid-space si accorciano: citano i casi
+  dell'archivio di solid-space e verificano facciata e comandi.
+- Le richieste e i loro stati non stanno in Tecnigrafo: si leggono nelle issue
+  di solid-space e nel Project «Tecnigrafo» del responsabile, che raccoglie i
+  due repository. L'etichetta `richiesta-solid-space` resta solo sulle issue
+  storiche.
 - La scheda della fase 2 ([tappe/2.x](../tappe/2.x-modellatore-3d.md)) e
   l'[ARCHITETTURA](../ARCHITETTURA.md) riflettono questa decisione.
 - Le soglie geometriche già presenti in `core` (per esempio in `arc.cpp`,

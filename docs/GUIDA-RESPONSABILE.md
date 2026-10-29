@@ -178,6 +178,34 @@ volta su ogni PC; i dettagli e il perché sono in
 Non usare mai `--dangerously-skip-permissions` né *always-proceed*: approvano
 tutto senza chiedere, comprese le azioni irreversibili.
 
+### A6. Il Project «Tecnigrafo» e gli script
+
+Il Project «Tecnigrafo» del tuo account raccoglie issue e pull request di
+Tecnigrafo e di solid-space: è la tavola su cui vedi le due tappe aperte e lo
+stato delle richieste. Ha i campi *Tappa* (`tg-0.7`, `ss-0.2`, …) e *Tipo*
+(pacchetto, riferimenti, richiesta, idea, bug) e le viste «Tappe aperte»,
+«Richieste», «Bloccati» e una per agente. Le issue di Tecnigrafo entrano da sole
+(aggiunta automatica); quelle di solid-space le aggiungono gli script, oppure tu.
+
+1. Una volta sola, sul PC dove lanci gli script:
+
+   ```sh
+   gh auth refresh -s project
+   ```
+
+   Segui le domande (si apre il browser). Senza questo permesso gli script
+   lavorano lo stesso, ma non scrivono nel Project e lo dicono.
+2. A ogni tappa nuova aggiungi i suoi valori al campo *Tappa*: nel Project
+   **⋯** → **Settings** → *Tappa* → aggiungi `tg-<tappa>` (e `ss-<tappa>` per
+   quella di solid-space). Gli script non possono crearli.
+3. Per aggiungere una issue a mano: in fondo alla tavola **+ Add item**, incolla
+   il link della issue, poi imposta *Tipo* e *Tappa*.
+
+Gli script sono due, in `scripts/`: `richiesta.sh` apre una richiesta in
+solid-space (B1), `apri-tappa.sh` apre una tappa (B2). Tutti e due mostrano
+prima che cosa faranno e chiedono conferma; non uniscono, non chiudono e non
+accettano nulla. Le opzioni sono scritte in testa a ciascuno.
+
 ---
 
 ## B. Il ciclo di ogni tappa
@@ -199,7 +227,9 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
    documentazione. Proponi anche le bozze degli ADR che servono, e i bisogni da
    chiedere a solid-space (docs/RICHIESTE-A-SOLID-SPACE.md) con il testo delle
-   richieste.
+   richieste, ciascuna nella forma del file di scripts/richiesta.sh. Scrivi
+   subito le schede dei pacchetti che non dipendono da solid-space; per gli
+   altri metti solo la riga nella tabella, con "scheda dopo il contratto".
    Elenca anche le issue con etichetta `idea` ancora aperte e dimmi quali,
    secondo te, potrebbero entrare in questa tappa e perché: le approvo io, una
    per una; quelle che approvo entrano nella scheda, le altre restano issue.
@@ -207,29 +237,92 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
    accetti quando ti convincono, anche subito (GOVERNANCE.md).
-4. Claude apre una pull request con piano e ADR. La leggi e la unisci come in A1.
+4. Claude apre una pull request con piano e ADR. Leggila, ma se il piano ha
+   richieste a solid-space non unirla ancora.
 5. Se il piano ha richieste a solid-space, aprile subito, senza aspettare
-   l'apertura della tappa: una issue in Tecnigrafo con l'etichetta
-   `richiesta-solid-space`, ricopiata in solid-space con l'etichetta
-   `richiesta` (passi in docs/RICHIESTE-A-SOLID-SPACE.md, "Dove si scrive e come
-   arriva a solid-space"). Scrivi i numeri delle due issue nella tabella del
-   piano, sezione 5.
+   l'apertura della tappa: si aprono **solo in solid-space**, e in Tecnigrafo
+   non se ne tiene una copia. In "Da dove nasce" ognuna cita la pull request del
+   piano, come `Matleyx78/tecnigrafo#<numero>`. Hai due modi:
+   - chiedi a Claude, nella stessa chat, collegando solid-space in scrittura
+     (in una sessione cloud lo script apre la issue ma non arriva al Project:
+     lo dice, e la aggiungi tu come in A6):
 
-### B2. Aprire la tappa (Claude crea le issue)
+     ```text
+     Apri in solid-space le richieste che abbiamo approvato, con
+     scripts/richiesta.sh e --tappa ss-<tappa di solid-space>, come dice
+     AGENTS.md in "Dove puoi scrivere". Poi scrivi i riferimenti nella tabella
+     "Richieste a solid-space" del piano, nella pull request del piano.
+     ```
 
-1. Scrivi a Claude:
+   - oppure dal tuo PC, un file per richiesta:
+
+     ```sh
+     scripts/richiesta.sh richiesta.md --tappa ss-<tappa di solid-space>
+     ```
+
+     Lo script mostra la issue e chiede conferma; alla fine stampa il
+     riferimento (`Matleyx78/solid-space#N`): chiedi a Claude di scriverlo
+     nella tabella del piano, sezione 5.
+
+   Da lì le richieste le segui in solid-space (la sua guida, B0) e nella vista
+   «Richieste» del Project. Quando la tabella ha i riferimenti, unisci la pull
+   request del piano come in A1.
+6. **Seconda metà del piano, dopo i contratti.** Quando solid-space ha accettato
+   gli ADR di valutazione con le loro intestazioni, apri una chat con Claude
+   (Tecnigrafo in scrittura, solid-space in lettura):
 
    ```text
-   Apri la tappa <tappa> secondo docs/ROADMAP.md, "Aprire una tappa": crea il
-   milestone v<tappa>, le issue [<tappa>-PN] e [<tappa>-RN] con le etichette
-   indicate nel piano, scrivi i numeri delle issue nel documento della tappa e
-   aggiorna la tabella della ROADMAP. Apri una pull request con le modifiche ai
-   documenti.
+   Scrivi le schede dei pacchetti della tappa <tappa> che aspettavano il
+   contratto di solid-space, sulle intestazioni accettate in solid-space, con
+   le regole di docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni
+   scheda dice quali intestazioni usa e, se sposta il sottomodulo, a quale
+   pacchetto di solid-space. Riferimenti limitati alla facciata e ai comandi.
+   Annota la modifica in "Modifiche al piano" e apri una pull request.
    ```
 
-2. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
-   abbia l'etichetta `agente:…` giusta.
-3. Unisci la pull request come in A1.
+   La unisci come in A1. Se la tappa è già aperta, rilancia poi lo script di
+   B2: crea solo le issue nuove.
+
+### B2. Aprire la tappa (tu, con lo script)
+
+Le issue le crea `scripts/apri-tappa.sh`, dalla tabella dei pacchetti del piano
+unito. Si lancia dal tuo PC, perché serve l'accesso al Project (A6).
+
+1. Nel terminale, nella cartella del progetto:
+
+   ```sh
+   cd ~/progetti/tecnigrafo && git checkout main && git pull
+   scripts/apri-tappa.sh <tappa> --prova
+   ```
+
+   Con `--prova` lo script mostra soltanto che cosa farebbe: per ogni riga del
+   piano *create* (issue da creare, con etichette e dipendenze), *exists* (c'è
+   già) o *waits* (nessuna issue per ora, per esempio perché la scheda aspetta
+   il contratto di solid-space). Se segnala errori nel piano, falli correggere
+   con una pull request prima di andare avanti.
+2. Se l'elenco ti convince:
+
+   ```sh
+   scripts/apri-tappa.sh <tappa>
+   ```
+
+   Ripete l'elenco e chiede `Go on? [s/N]`: rispondi `s`. Crea etichetta,
+   milestone e issue, segna le dipendenze («bloccata da»), mette le issue nel
+   Project con *Tappa* = `tg-<tappa>` e *Tipo*, mette in *Bloccato* quelle che
+   aspettano, e apre una pull request con i numeri delle issue nel piano e lo
+   stato «aperta» nella ROADMAP. Gli avvisi (`WARNING`) non fermano nulla:
+   dicono che cosa fare a mano, di solito una dipendenza verso solid-space che
+   GitHub non accetta (resta la riga "Dipende da") o un valore che manca nel
+   Project.
+3. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
+   abbia l'etichetta `agente:…` giusta. Nel Project, vista «Tappe aperte»,
+   controlla che ci siano tutte.
+4. Unisci la pull request dello script come in A1.
+
+Se la tappa chiede qualcosa a solid-space, apri anche la sua tappa
+corrispondente, seguendo la guida di solid-space (B1 e B2). Quando più avanti
+aggiungi pacchetti alla tappa (per esempio le schede scritte dopo i contratti,
+B1 punto 6), rilancia i due comandi: lo script crea solo le issue nuove.
 
 > **Solo nella 0.4:** i primi quattro pacchetti costruiscono il sistema di
 > verifica e non hanno riferimenti. Gemini comincia dal pacchetto di riferimenti
@@ -342,6 +435,14 @@ spiegando il perché.
    (la loro riga "Dipende da" è tutta chiusa), e quello di B5 quando si sono
    accumulate nuove pull request da rivedere.
 
+**Quando unisci un pacchetto di solid-space**, la sua pull request elenca nella
+riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel pacchetto.
+Nel Project spostale da *Bloccato* a *Da fare*: possono partire subito, senza
+aspettare la fine della tappa di solid-space. Il pacchetto di Tecnigrafo che usa
+il pezzo nuovo sposta da solo il sottomodulo al commit che la sua scheda indica
+(ADR 0030, punto 9): nella sua pull request controlla che `third_party/solid-space`
+punti a quel commit.
+
 Ripeti B3–B6 finché nel milestone non restano issue aperte.
 
 ### B7. Chiudere la tappa
@@ -388,4 +489,7 @@ Ripeti B3–B6 finché nel milestone non restano issue aperte.
 | Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
 | Gemini si ferma a chiedere conferma per un comando | Se il comando serve al lavoro ed è sicuro (legge, compila, prova), approvalo e aggiungilo alle regole con `/permissions`, così non lo chiede più. Se cancella, unisce o pubblica su `main`, rifiuta. Regole in A5. |
 | Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
+| Un agente si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B1, punto 5 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta il contratto. Se non serve, rispondi nella issue e fallo continuare. |
+| Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
+| `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |
 | Non sai cosa fare | Apri una chat con Claude nel progetto e incolla questa riga: `Sono al passo <passo> della guida e succede questo: …` |
