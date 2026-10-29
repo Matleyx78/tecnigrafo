@@ -28,8 +28,9 @@
 - `scripts/controlla.sh` se serve (il tidy)
 - `tests/core/solid_space_test.cpp` (nuovo), `tests/CMakeLists.txt`
 - `docs/AMBIENTE-SVILUPPO.md` (clonare e aggiornare con il sottomodulo)
-- `AGENTS.md` (sezione "Comandi")
-- `docs/GUIDA-RESPONSABILE.md` (B2, B3, B4)
+- `AGENTS.md` (sezione "Comandi"), `GEMINI.md`
+- `docs/GUIDA-RESPONSABILE.md` (B2, B3, B4), `docs/LAVORO-IN-PARALLELO.md`
+  ("Chi fa cosa")
 
 ## Cosa fare
 
@@ -97,15 +98,38 @@ un `git pull` che sposta il sottomodulo (lo stesso comando). Niente
 **`AGENTS.md`, sezione "Comandi":** una regola per gli agenti: dopo il clone e
 dopo ogni `git pull` si esegue `git submodule update --init third_party/solid-space`,
 senza `--recursive`, così il sottomodulo è sempre al commit che `main` fissa.
-Il resto di `AGENTS.md` non cambia.
+Tra le cartelle di build per agente si aggiunge `-gemini-argon`
+(`TG_BUILD_SUFFIX=-gemini-argon`): Gemini 4 Argon lavora sullo stesso PC di
+Gemini 3.8 Flash. Il resto di `AGENTS.md` non cambia.
+
+**`GEMINI.md`:** una frase per la sessione di Gemini 4 Argon: prende solo le
+issue con l'etichetta `agente:gemini-argon`, mai quelle di `agente:gemini`, e
+usa la cartella `build-gemini-argon`.
+
+**`docs/LAVORO-IN-PARALLELO.md`, "Chi fa cosa":** l'etichetta
+`agente:gemini-argon` accanto a Gemini, per i riferimenti con calcoli delicati
+che il piano gli assegna.
 
 **`docs/GUIDA-RESPONSABILE.md`:**
 
 - in B2, B3 e B4, dopo ogni `git pull`, lo stesso comando
   `git submodule update --init third_party/solid-space` (senza `--recursive`);
-- in B3, una frase sul lotto di Gemini 4 Argon: i riferimenti con l'etichetta
-  `agente:gemini-argon` li fa una sessione di Antigravity avviata con il modello
-  Gemini 4 Argon, con lo stesso messaggio dei lotti di Gemini;
+- in B3, il lotto di Gemini 4 Argon: i riferimenti con l'etichetta
+  `agente:gemini-argon` li fa una sessione di Antigravity sua, con `/model`
+  su **Gemini 4 Argon** ed *Effort* **high**, e con il messaggio dei lotti
+  che nomina l'etichetta e la cartella di build:
+
+  ```text
+  Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+  lettera. Sei Gemini 4 Argon: la tua etichetta è agente:gemini-argon e la tua
+  cartella di build è build-gemini-argon (TG_BUILD_SUFFIX=-gemini-argon).
+  Prendi i pacchetti di riferimenti pronti della tappa <tappa> con la tua
+  etichetta, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti". Per
+  ognuno apri la pull request e porta la CI al verde; alla fine scrivimi un
+  solo riepilogo.
+  ```
+
+  Le due sessioni di Gemini possono lavorare nello stesso momento;
 - nella lista dei controlli di B3 (punto 3), la voce "i valori presi
   dall'archivio di solid-space citano il caso, percorso e commit", e il numero
   delle voci che la introduce aggiornato.
@@ -114,8 +138,8 @@ Il resto di `AGENTS.md` non cambia.
 
 - Le modifiche a `.gitmodules`, `third_party/`, `cmake/` e `.github/` sono
   autorizzate da questa scheda (ADR 0030, punto 8) e da nessun'altra della
-  tappa; quelle ad `AGENTS.md` e a `docs/GUIDA-RESPONSABILE.md` sono solo
-  quelle scritte qui.
+  tappa; quelle ad `AGENTS.md`, `GEMINI.md`, `docs/GUIDA-RESPONSABILE.md` e
+  `docs/LAVORO-IN-PARALLELO.md` sono solo quelle scritte qui.
 - `core/CMakeLists.txt`, `tests/CMakeLists.txt`: solo le tue righe; dopo di te
   li toccano altri pacchetti.
 - Il sottomodulo lo spostano poi i pacchetti che usano le funzioni nuove, al
