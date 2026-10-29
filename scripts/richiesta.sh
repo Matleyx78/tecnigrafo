@@ -19,7 +19,8 @@
 #   3. shows the issue and asks for confirmation;
 #   4. opens it in solid-space with the label "richiesta";
 #   5. adds it to the Project "Tecnigrafo" with Tipo = richiesta and, with
-#      --tappa, Tappa = that value (for example ss-0.2);
+#      --tappa, Tappa = that value (for example ss-0.2). If the Project's own
+#      workflow has added it already, it uses the item that is there;
 #   6. prints the reference to cite in the plan: Matleyx78/solid-space#N.
 #
 # --prova          stop after showing the issue: nothing is written
@@ -89,10 +90,68 @@ project_load() {
     project_fields=$(jq -s 'add' <<< "$out")
 }
 
-# Adds an issue to the Project and prints the id of its item.
+# Items of the Project as one JSON array, read when first needed.
+project_items=''
+# Id of the item found or added by project_find and project_add.
+project_item=''
+
+# Reads all the items of the Project into project_items; returns 1 with a
+# warning if it cannot.
+project_items_read() {
+    local out
+    if ! out=$(gh api --paginate \
+        "users/$project_owner/projectsV2/$project_number/items?per_page=100" 2>&1); then
+        warn "cannot read the items of project $project_number: $out"
+        return 1
+    fi
+    project_items=$(jq -s 'add // []' <<< "$out")
+}
+
+# Prints the id of the item of issue $2 of repository $1 in project_items, or
+# nothing. The repository is matched on the issue's URLs, ignoring case.
+project_item_of() { # owner/repo number
+    jq -r --arg r "${1,,}" --argjson n "$2" '[.[]
+        | select(.content.number? == $n)
+        | select([.content.url?, .content.html_url?, .content.repository_url?]
+            | map(strings | ascii_downcase)
+            | any(contains("/" + $r + "/") or endswith("/" + $r)))
+        | .id][0] // empty' <<< "$project_items"
+}
+
+# Looks for the item of an issue in the Project and sets project_item; returns
+# 1 if it is not there. The list of items is read once, and read again only
+# when the issue is not in it, since issues may join the Project meanwhile.
+project_find() { # owner/repo number
+    project_item=''
+    [[ -z $project_items ]] || project_item=$(project_item_of "$1" "$2")
+    if [[ -z $project_item ]]; then
+        project_items_read || return 1
+        project_item=$(project_item_of "$1" "$2")
+    fi
+    [[ -n $project_item ]]
+}
+
+# Adds an issue to the Project and sets project_item to the id of its item. If
+# the issue is there already, for example because the Project's own workflow
+# added it first, GitHub answers 422 "Content already exists in this project":
+# then project_item is the id of the item that is there. On any other failure
+# project_item stays empty and it returns 1 with a warning.
 project_add() { # owner/repo number
-    gh api -X POST "users/$project_owner/projectsV2/$project_number/items" \
-        -f type=Issue -f owner="${1%%/*}" -f repo="${1#*/}" -F number="$2" --jq '.id'
+    local out
+    project_item=''
+    if out=$(gh api -X POST "users/$project_owner/projectsV2/$project_number/items" \
+        -f type=Issue -f owner="${1%%/*}" -f repo="${1#*/}" -F number="$2" --jq '.id' 2>&1) &&
+        [[ $out =~ ^[0-9]+$ ]]; then
+        project_item=$out
+        return 0
+    fi
+    if [[ $out == *'already exists'* ]]; then
+        project_find "$1" "$2" && return 0
+        warn "$1#$2 is already in the Project, but it is not in the list of its items"
+        return 1
+    fi
+    warn "GitHub did not add $1#$2 to the Project: $out"
+    return 1
 }
 
 # Sets a single-select field of an item; returns 1 with a warning if it cannot.
@@ -287,9 +346,9 @@ number=$(jq -r '.number' <<< "$created")
 echo "Opened $repo#$number: $(jq -r '.html_url' <<< "$created")"
 
 if [[ $with_project -eq 1 ]]; then
-    if project_load && item=$(project_add "$repo" "$number"); then
-        project_set "$item" Tipo richiesta || true
-        [[ -z $tappa ]] || project_set "$item" Tappa "$tappa" || true
+    if project_load && project_add "$repo" "$number"; then
+        project_set "$project_item" Tipo richiesta || true
+        [[ -z $tappa ]] || project_set "$project_item" Tappa "$tappa" || true
         echo "Added to the Project \"$project_title\"."
     else
         warn "add it to the Project by hand: + Add item, the link above, Tipo = richiesta${tappa:+, Tappa = $tappa}"

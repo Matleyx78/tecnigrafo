@@ -7,6 +7,7 @@
 # (docs/ROADMAP.md, "Aprire una tappa"; docs/GUIDA-RESPONSABILE.md, B2).
 #
 #     scripts/apri-tappa.sh <tappa> [--prova | --si] [--senza-project] [--senza-pr]
+#     scripts/apri-tappa.sh <tappa> --solo-project [--prova | --si]
 #
 # It reads the table of section 6 of docs/tappe/<tappa>-*.md (format in
 # docs/tappe/0000-modello.md), shows what it would do and asks for
@@ -36,10 +37,17 @@
 # neither do its references nor the rows that depend on it: run the script
 # again once the sheets are merged.
 #
+# With --solo-project it only does step 4 on the issues the stage has already
+# (in the table or in the milestone), and creates nothing: it adds them to the
+# Project if they are missing, puts back Tappa and Tipo, and Status = Bloccato
+# on the open ones that wait for an open issue or for a row without an issue.
+# It leaves the Status of the other issues as it is.
+#
 # --prova          only show what would be done: nothing is written
 # --si             do not ask for confirmation
 # --senza-project  skip step 4
 # --senza-pr       skip step 5 (and the checks on the git working tree)
+# --solo-project   only step 4, on the existing issues (see above)
 #
 # Exit status: 0 done (failed steps 3 and 4 only print warnings), 1 the plan,
 # the options or the working tree are wrong, 2 GitHub refused or did not
@@ -67,6 +75,7 @@ blob="https://github.com/$repo/blob/main"
 
 usage() {
     echo "usage: apri-tappa.sh <tappa> [--prova | --si] [--senza-project] [--senza-pr]" >&2
+    echo "       apri-tappa.sh <tappa> --solo-project [--prova | --si]" >&2
     exit 1
 }
 
@@ -114,11 +123,68 @@ project_load() {
     project_fields=$(jq -s 'add' <<< "$out")
 }
 
-# Adds an issue to the Project (nothing changes if it is there already) and
-# prints the id of its item.
+# Items of the Project as one JSON array, read when first needed.
+project_items=''
+# Id of the item found or added by project_find and project_add.
+project_item=''
+
+# Reads all the items of the Project into project_items; returns 1 with a
+# warning if it cannot.
+project_items_read() {
+    local out
+    if ! out=$(gh api --paginate \
+        "users/$project_owner/projectsV2/$project_number/items?per_page=100" 2>&1); then
+        warn "cannot read the items of project $project_number: $out"
+        return 1
+    fi
+    project_items=$(jq -s 'add // []' <<< "$out")
+}
+
+# Prints the id of the item of issue $2 of repository $1 in project_items, or
+# nothing. The repository is matched on the issue's URLs, ignoring case.
+project_item_of() { # owner/repo number
+    jq -r --arg r "${1,,}" --argjson n "$2" '[.[]
+        | select(.content.number? == $n)
+        | select([.content.url?, .content.html_url?, .content.repository_url?]
+            | map(strings | ascii_downcase)
+            | any(contains("/" + $r + "/") or endswith("/" + $r)))
+        | .id][0] // empty' <<< "$project_items"
+}
+
+# Looks for the item of an issue in the Project and sets project_item; returns
+# 1 if it is not there. The list of items is read once, and read again only
+# when the issue is not in it, since issues may join the Project meanwhile.
+project_find() { # owner/repo number
+    project_item=''
+    [[ -z $project_items ]] || project_item=$(project_item_of "$1" "$2")
+    if [[ -z $project_item ]]; then
+        project_items_read || return 1
+        project_item=$(project_item_of "$1" "$2")
+    fi
+    [[ -n $project_item ]]
+}
+
+# Adds an issue to the Project and sets project_item to the id of its item. If
+# the issue is there already, for example because the Project's own workflow
+# added it first, GitHub answers 422 "Content already exists in this project":
+# then project_item is the id of the item that is there. On any other failure
+# project_item stays empty and it returns 1 with a warning.
 project_add() { # owner/repo number
-    gh api -X POST "users/$project_owner/projectsV2/$project_number/items" \
-        -f type=Issue -f owner="${1%%/*}" -f repo="${1#*/}" -F number="$2" --jq '.id'
+    local out
+    project_item=''
+    if out=$(gh api -X POST "users/$project_owner/projectsV2/$project_number/items" \
+        -f type=Issue -f owner="${1%%/*}" -f repo="${1#*/}" -F number="$2" --jq '.id' 2>&1) &&
+        [[ $out =~ ^[0-9]+$ ]]; then
+        project_item=$out
+        return 0
+    fi
+    if [[ $out == *'already exists'* ]]; then
+        project_find "$1" "$2" && return 0
+        warn "$1#$2 is already in the Project, but it is not in the list of its items"
+        return 1
+    fi
+    warn "GitHub did not add $1#$2 to the Project: $out"
+    return 1
 }
 
 # Prints the id of field $1 of the Project, or nothing.
@@ -165,12 +231,14 @@ tappa=''
 mode=ask
 with_project=1
 with_pr=1
+only_project=0
 while [[ $# -gt 0 ]]; do
     case $1 in
         --prova) mode=show ;;
         --si) mode=yes ;;
         --senza-project) with_project=0 ;;
         --senza-pr) with_pr=0 ;;
+        --solo-project) only_project=1 ;;
         -h | --help) usage ;;
         -*)
             echo "Unknown option: $1" >&2
@@ -184,6 +252,10 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 [[ $tappa =~ ^[0-9]+\.[0-9]+$ ]] || usage
+if [[ $only_project -eq 1 ]]; then
+    [[ $with_project -eq 1 ]] || die "--solo-project and --senza-project exclude each other."
+    with_pr=0
+fi
 for tool in gh jq git; do
     command -v "$tool" > /dev/null 2>&1 || die "apri-tappa.sh needs $tool."
 done
@@ -359,20 +431,34 @@ labels_of() { # id
     printf 'tappa-%s,%s,%s,agente:%s' "$tappa" "$kind" "${row_diff[$1]}" "${row_agent[$1]}"
 }
 
+if [[ $only_project -eq 1 ]]; then
+    has_issue=0
+    for id in "${ids[@]}"; do
+        [[ ${row_state[$id]} == exists ]] && has_issue=1
+    done
+    [[ $has_issue -eq 1 ]] || die "Stage $tappa has no issue yet: --solo-project has nothing to do."
+fi
+
 to_create=0
 echo "Stage $tappa — $stage_title ($doc)"
-if [[ -n $milestone ]]; then
-    echo "Milestone v$tappa: exists"
-else
-    echo "Milestone v$tappa: to create"
+if [[ $only_project -eq 0 ]]; then
+    if [[ -n $milestone ]]; then
+        echo "Milestone v$tappa: exists"
+    else
+        echo "Milestone v$tappa: to create"
+    fi
+    has_label "tappa-$tappa" && echo "Label tappa-$tappa: exists" || echo "Label tappa-$tappa: to create"
 fi
-has_label "tappa-$tappa" && echo "Label tappa-$tappa: exists" || echo "Label tappa-$tappa: to create"
 echo
 for id in "${ids[@]}"; do
     case ${row_state[$id]} in
         exists) printf '  %-4s exists  #%s\n' "$id" "${row_issue[$id]}" ;;
         wait) printf '  %-4s waits   %s: no issue now\n' "$id" "${row_why[$id]}" ;;
         create)
+            if [[ $only_project -eq 1 ]]; then
+                printf '  %-4s skip    no issue yet: --solo-project creates none\n' "$id"
+                continue
+            fi
             to_create=$((to_create + 1))
             printf '  %-4s create  [%s-%s] %s\n' "$id" "$tappa" "$id" "${row_name[$id]}"
             printf '                labels %s; depends on %s\n' "$(labels_of "$id")" "${row_deps[$id]}"
@@ -380,7 +466,9 @@ for id in "${ids[@]}"; do
     esac
 done
 echo
-if [[ $with_project -eq 1 ]]; then
+if [[ $only_project -eq 1 ]]; then
+    echo "Project \"$project_title\", existing issues only: Tappa = tg-$tappa, Tipo = pacchetto or riferimenti; Status = Bloccato for open issues that wait. Nothing is created."
+elif [[ $with_project -eq 1 ]]; then
     echo "Project \"$project_title\": Tappa = tg-$tappa, Tipo = pacchetto or riferimenti; Status = Bloccato for new issues that wait."
 fi
 if [[ $with_pr -eq 1 ]]; then
@@ -405,12 +493,12 @@ esac
 
 # --- 1. Label and milestone --------------------------------------------------
 
-if ! has_label "tappa-$tappa"; then
+if [[ $only_project -eq 0 ]] && ! has_label "tappa-$tappa"; then
     api -X POST "repos/$repo/labels" -f name="tappa-$tappa" -f color=1d76db \
         -f description="Pacchetti della tappa $tappa" > /dev/null
     echo "Created the label tappa-$tappa."
 fi
-if [[ -z $milestone ]]; then
+if [[ $only_project -eq 0 && -z $milestone ]]; then
     milestone=$(api -X POST "repos/$repo/milestones" -f title="v$tappa" \
         -f description="Tappa $tappa — $stage_title" --jq '.number')
     echo "Created the milestone v$tappa."
@@ -420,7 +508,7 @@ fi
 
 declare -A created=()
 for id in "${ids[@]}"; do
-    [[ ${row_state[$id]} == create ]] || continue
+    [[ $only_project -eq 0 && ${row_state[$id]} == create ]] || continue
     number=$(jq -n --arg t "[$tappa-$id] ${row_name[$id]}" --arg l "$(labels_of "$id")" \
         --argjson m "$milestone" \
         '{title: $t, labels: ($l | split(",")), milestone: $m,
@@ -529,6 +617,42 @@ for id in "${ids[@]}"; do
     done < <(split_deps "${row_deps[$id]}")
 done
 
+# Prints the state (open or closed) of issue $1 of the stage, or nothing.
+issue_state() { # number
+    local state
+    state=$(jq -r --argjson n "$1" '[.[] | select(.number == $n)][0].state // empty' <<< "$existing")
+    [[ -n $state ]] || state=$(gh api "repos/$repo/issues/$1" --jq '.state' 2> /dev/null) || state=''
+    [[ $state =~ ^(open|closed)$ ]] && printf '%s' "$state"
+    return 0
+}
+
+# With --solo-project the issues exist already: an open one waits if one of its
+# dependencies is open, has no issue yet or cannot be read.
+if [[ $only_project -eq 1 ]]; then
+    for id in "${ids[@]}"; do
+        [[ ${row_state[$id]} == exists ]] || continue
+        state=$(issue_state "${row_issue[$id]}")
+        if [[ -z $state ]]; then
+            warn "#${row_issue[$id]}: cannot read its state; its Status is left as it is"
+            continue
+        fi
+        [[ $state == open ]] || continue
+        while IFS= read -r dep; do
+            if [[ $dep =~ ^[PR][0-9]+$ && -z ${row_issue[$dep]} ]]; then
+                waiting[$id]=1
+                continue
+            fi
+            read -r dep_id dep_state <<< "$(dep_issue "$dep")" || true
+            if [[ -z ${dep_id:-} ]]; then
+                warn "#${row_issue[$id]}: cannot read $dep; it counts as open"
+                waiting[$id]=1
+            elif [[ $dep_state == open ]]; then
+                waiting[$id]=1
+            fi
+        done < <(split_deps "${row_deps[$id]}")
+    done
+fi
+
 # --- 4. Project --------------------------------------------------------------
 
 if [[ $with_project -eq 1 ]]; then
@@ -536,10 +660,11 @@ if [[ $with_project -eq 1 ]]; then
         declare -A items=()
         for id in "${ids[@]}"; do
             [[ -n ${row_issue[$id]} ]] || continue
-            if ! items[$id]=$(project_add "$repo" "${row_issue[$id]}"); then
-                warn "cannot add #${row_issue[$id]} to the Project"
+            if ! project_add "$repo" "${row_issue[$id]}"; then
+                warn "#${row_issue[$id]}: set Tappa and Tipo in the Project by hand"
                 continue
             fi
+            items[$id]=$project_item
             kind=pacchetto
             [[ $id == R* ]] && kind=riferimenti
             project_set "${items[$id]}" Tappa "tg-$tappa" || true
@@ -578,6 +703,10 @@ fi
 
 # --- 5. Documents and pull request -------------------------------------------
 
+if [[ $only_project -eq 1 ]]; then
+    echo "Done (--solo-project): no issue created, the documents are unchanged."
+    exit 0
+fi
 [[ $with_pr -eq 1 ]] || { echo "Done (--senza-pr): the documents are unchanged."; exit 0; }
 
 numbers=''
