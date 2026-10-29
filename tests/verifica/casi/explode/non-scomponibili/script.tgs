@@ -1,0 +1,12 @@
+; EXPLODE: entita non scomponibili (LINE e CIRCLE)
+LINE
+0,0
+10,0
+
+CIRCLE
+20,20
+5
+
+EXPLODE
+ALL
+
