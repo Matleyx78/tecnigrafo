@@ -293,7 +293,7 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   [tappa 0.7](tappe/0.7-modifiche.md) è in preparazione, rifatto con il flusso
   unico a partire dalla bozza della pull request #330, che si chiude senza
   unirla. Gli ADR [0031](adr/0031-modifiche-alle-entita.md)–[0036](adr/0036-tolleranze-di-tecnigrafo.md)
-  sono proposti. Le quattro richieste a solid-space
+  sono accettati. Le quattro richieste a solid-space
   ([Matleyx78/solid-space#20](https://github.com/Matleyx78/solid-space/issues/20)–[#23](https://github.com/Matleyx78/solid-space/issues/23))
   hanno l'esito 3 e il loro contratto nel nuovo componente `geom2d` (ADR
   0008–0012 di solid-space), quindi tutte le schede sono scritte: la prima metà

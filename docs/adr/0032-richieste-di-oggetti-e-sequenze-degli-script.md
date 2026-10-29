@@ -1,6 +1,6 @@
 # ADR 0032: Richieste di oggetti e di numeri; sequenze degli script di AutoCAD
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-29
 - **Estende:** ADR 0008 (selezione), ADR 0014 (richieste di valori), ADR 0026
   (descrizione dei comandi)

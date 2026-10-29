@@ -1,6 +1,6 @@
 # ADR 0031: Modifiche alle entità: identità, dati conservati, trasformazioni
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-29
 
 ## Contesto

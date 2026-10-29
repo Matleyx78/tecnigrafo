@@ -5,8 +5,8 @@
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
-- **Riferimenti:** issue `[0.7-R9]` (#…), agente gemini, fascia forte
-  (calcoli delicati; valori da `autocad-grip.dxf`)
+- **Riferimenti:** issue `[0.7-R9]` (#…), agente gemini-argon
+  (Gemini 4 Argon; calcoli delicati; valori da `autocad-grip.dxf`)
 - **Dipende da:** P4, R9
 - **Modulo:** `core` (più le domande `grips` e `grip` in `script`)
 - **Da leggere:** [ADR 0034](../../adr/0034-grip.md) punti 2, 4 e 5;

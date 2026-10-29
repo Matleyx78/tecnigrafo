@@ -5,7 +5,7 @@
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto
-- **Riferimenti:** issue `[0.7-R16]` (#…), agente gemini, fascia forte (valori
+- **Riferimenti:** issue `[0.7-R16]` (#…), agente gemini-argon (Gemini 4 Argon; valori
   da `autocad-taglio.dxf`; i punti che stanno nell'archivio dei casi di
   solid-space si prendono da lì)
 - **Dipende da:** P1, P8, P15, R16

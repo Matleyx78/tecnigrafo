@@ -1,6 +1,6 @@
 # ADR 0035: Taglio, prolungamento, offset, raccordi, smussi e unione
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-29
 
 ## Contesto

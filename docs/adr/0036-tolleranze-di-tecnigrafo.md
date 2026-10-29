@@ -1,6 +1,6 @@
 # ADR 0036: Tolleranze del lato di Tecnigrafo
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-29
 
 ## Contesto

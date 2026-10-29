@@ -1,6 +1,6 @@
 # ADR 0033: Nuovi snap e tracciamento polare
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-29
 - **Estende:** ADR 0008 (selezione e snap), ADR 0014 (distanza scritta da sola)
 
