@@ -1,0 +1,36 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,10
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,20
+  Specify next point or [Undo]: 10,20
+  Specify next point or [Undo]:
+  Command: ERASE
+  Select objects: ALL
+  3 found, 3 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
