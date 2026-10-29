@@ -1,0 +1,35 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 CIRCLE center=20,20 radius=5
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 20,20
+  Specify radius of circle or [Diameter]: 5
+  Command: EXPLODE
+  Select objects: ALL
+  2 found, 2 total
+  Select objects:
+  2 were not able to be exploded.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Explode
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 1

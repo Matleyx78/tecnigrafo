@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten R2018 fixtures for #382 (ADR 0011 and ADR 0020).
+; tabelle.dxf omits ENDTAB after STYLE and LTYPE, before LAYER.
+; Group 5 gives DASHED handle 17 and layer 0 handle 10 (hexadecimal).
+; DASHED groups 49 are 12.0 and -3.0; group 40 is abs(12)+abs(-3)=15.
+; Layer 0 has color 7 (62) and linetype DASHED (6); ENTITIES is empty.
+; Reports expose properties, not table handles. Check them before and after
+; saving and reopening; do not require byte identity for malformed tables.
+OPEN
+tabelle.dxf
+!report
+SAVEAS
+tabelle-riaperte.dxf
+OPEN
+tabelle-riaperte.dxf
+!report
+; style-layer.dxf isolates STYLE without ENDTAB immediately before LAYER.
+; No LTYPE table: layer 0 uses the mandatory Continuous linetype.
+OPEN
+style-layer.dxf
+!report
+SAVEAS
+style-layer-riaperto.dxf
+OPEN
+style-layer-riaperto.dxf
