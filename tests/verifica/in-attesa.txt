@@ -31,3 +31,6 @@ dxf/r11-public #168
 
 
 # 0.6-R14: CHPROP e layer bloccati (#246)
+
+# Regression reference for the DXF reader fix in PR #384.
+dxf/tabelle-senza-endtab #382
