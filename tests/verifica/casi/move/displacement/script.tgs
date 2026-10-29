@@ -1,0 +1,11 @@
+; MOVE: spostamento con opzione Displacement
+LINE
+0,0
+10,0
+
+MOVE
+5,0
+
+D
+15,25
+

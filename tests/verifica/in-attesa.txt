@@ -32,6 +32,14 @@ dxf/r11-public #168
 
 # 0.6-R14: CHPROP e layer bloccati (#246)
 
+# 0.7-R5: MOVE, COPY, EXPLODE, LINE (#342)
+move/base-e-secondo-punto #342
+move/displacement #342
+copy/multiple-e-undo #342
+explode/polilinea-chiusa #342
+explode/non-scomponibili #342
+line/continua-ultimo-punto #342
+
 # 0.7-R2: selezione scritta (#336)
 erase/selezione-scritta-punto #336
 erase/selezione-scritta-finestra #336
