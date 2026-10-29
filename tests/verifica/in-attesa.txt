@@ -31,3 +31,11 @@ dxf/r11-public #168
 
 
 # 0.6-R14: CHPROP e layer bloccati (#246)
+
+# 0.7-R2: selezione scritta (#336)
+erase/selezione-scritta-punto #336
+erase/selezione-scritta-finestra #336
+erase/selezione-scritta-intersezione #336
+erase/selezione-scritta-all #336
+erase/selezione-scritta-bloccati #336
+erase/selezione-scritta-errori #336
