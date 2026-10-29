@@ -1,0 +1,30 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=10,20 end=20,20
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: MOVE
+  Select objects: 5,0
+  1 found, 1 total
+  Select objects:
+  Specify base point or [Displacement] <Displacement>: 0,0
+  Specify second point or <use first point as displacement>: 10,20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Move
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1

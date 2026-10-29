@@ -1,0 +1,106 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  258 LINE start=0,0 end=20,0 layer="Bloccato"
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Bloccato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LOck
+  Enter name list of layer(s) to lock: Bloccato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: CLAYER
+  Enter new value for CLAYER <"0">: Bloccato
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+  Command: CLAYER
+  Enter new value for CLAYER <"Bloccato">: 0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Line
+  Layer
+redo:
+snap: on
+ortho: off
+pointer: 10,0
+active snap: none
+statistics:
+  LINE 1
+
+[report 2]
+entities:
+  258 LINE start=0,0 end=20,0 layer="Bloccato"
+  259 LINE start=0,10 end=20,10
+messages:
+  Command: LINE
+  Specify first point: 0,10
+  Specify next point or [Undo]: 20,10
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: 259
+rectangle: none
+undo:
+  Layer
+  Line
+  Layer
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 10,10
+active snap: none
+statistics:
+  LINE 2
+
+[report 3]
+entities:
+  258 LINE start=0,0 end=20,0 layer="Bloccato"
+  259 LINE start=0,10 end=20,10
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Line
+  Layer
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 10,25
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  258 LINE start=0,0 end=20,0 layer="Bloccato"
+  259 LINE start=0,10 end=20,10
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  Line
+  Layer
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 10,25
+active snap: none
+statistics:
+  LINE 2
