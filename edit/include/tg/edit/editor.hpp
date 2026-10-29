@@ -5,6 +5,7 @@
 
 #include "tg/core/document.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -49,6 +50,30 @@ public:
     /// nothing, if the document has no such entity.
     /// Precondition: a transaction is open.
     bool remove(core::EntityId id);
+
+    /// Replaces geometry, preserving identity and data (docs/adr/0031, point 5).
+    /// Only the same type or Circle -> Arc is allowed. Returns false without
+    /// changes for an absent entity, a forbidden type change or identical data.
+    /// Precondition: a transaction is open.
+    bool replace(core::EntityId id, core::Entity entity);
+
+    /// Adds a derived entity with new identity/order and the source's properties
+    /// and extras, except complete 102 groups in beforeEntity (ADR 0031, point 6).
+    /// Returns nullopt without changes if source does not exist.
+    /// Precondition: a transaction is open.
+    std::optional<core::EntityId> addCopy(core::EntityId source, core::Entity entity);
+
+    /// A position in the open transaction (docs/adr/0031, point 11).
+    struct Savepoint {
+        std::size_t changes{0};
+    };
+
+    /// Precondition: a transaction is open.
+    [[nodiscard]] Savepoint savepoint() const;
+
+    /// Reverts changes after mark in reverse order, keeping the transaction open.
+    /// Precondition: mark comes from the open transaction.
+    void rollbackTo(Savepoint mark);
 
     /// Changes INSUNITS (docs/adr/0021). Returns false without changes if
     /// the value is already `units`.
@@ -166,6 +191,7 @@ private:
         enum class Kind : std::uint8_t {
             Added,
             Removed,
+            Replaced,
             Units,
             LayerAdded,
             LayerRemoved,
@@ -182,7 +208,7 @@ private:
         int previousUnits{core::Document::kDefaultUnits};
         int units{core::Document::kDefaultUnits};
         std::variant<std::monostate, LayerTableChange, LinetypeTableChange, LayerUpdate,
-                     core::EntityRecord, core::CurrentProperties, double>
+                     core::EntityRecord, core::CurrentProperties, core::Entity, double>
             data;
     };
 

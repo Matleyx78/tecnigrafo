@@ -868,5 +868,167 @@ TEST(EditorDeathTest, LayerAndPropertyEditsRequireATransaction) {
     EXPECT_DEATH(editor.setLtscale(2), "open transaction");
 }
 
+TEST(Editor, ReplaceRejectsAbsentUnchangedAndForbiddenTypesWithoutHistory) {
+    Document document;
+    const EntityId id = document.add(segment(1));
+    Editor editor(document);
+    editor.beginTransaction("Replace");
+    EXPECT_FALSE(editor.replace(EntityId{999}, segment(2)));
+    EXPECT_FALSE(editor.replace(id, segment(1)));
+    EXPECT_FALSE(editor.replace(id, core::Circle{{0, 0}, 2}));
+    editor.commit();
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.isModified());
+    EXPECT_EQ(entityOf(document, id), Entity{segment(1)});
+}
+
+TEST(Editor, ReplaceKeepsIdentityDataAndOrderThroughUndoRedo) {
+    Document document = Document::newDrawing();
+    core::EntityExtras extras;
+    extras.beforeEntity = {{102, "{ACAD_REACTORS"}, {330, "AB"}, {102, "}"}, {330, "FF"}};
+    extras.extended = {{1001, "MY_APP"}, {1000, "keep"}};
+    const EntityRecord original{EntityId{300}, core::Circle{{0, 0}, 2}, extras, 7,
+                                document.current()};
+    document.insert(original);
+    const EntityId following = document.add(segment(1));
+    const core::Arc arc{{20, 20}, 3, 0, 1};
+    Editor editor(document);
+    editor.beginTransaction("Trim");
+    ASSERT_TRUE(editor.replace(original.id, arc));
+    editor.commit();
+    EntityRecord expected = original;
+    expected.entity = arc;
+    ASSERT_NE(document.find(original.id), nullptr);
+    EXPECT_EQ(*document.find(original.id), expected);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{original.id, following}));
+    std::vector<EntityId> hits;
+    document.query(core::BBox{{-3, -3}, {3, 3}}, hits);
+    EXPECT_EQ(hits, (std::vector<EntityId>{following}));
+    hits.clear();
+    document.query(core::BBox{{19, 19}, {24, 24}}, hits);
+    EXPECT_EQ(hits, (std::vector<EntityId>{original.id}));
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(*document.find(original.id), original);
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(*document.find(original.id), expected);
+    editor.beginTransaction("Forbidden reverse conversion");
+    EXPECT_FALSE(editor.replace(original.id, core::Circle{{20, 20}, 3}));
+    editor.rollback();
+}
+
+TEST(Editor, AddCopyKeepsSourceDataExceptComplete102Groups) {
+    Document document = Document::newDrawing();
+    core::EntityExtras extras;
+    extras.beforeEntity = {{330, "OWNER"},
+                           {102, "{ACAD_REACTORS"},
+                           {330, "REACTOR"},
+                           {102, "{NESTED"},
+                           {360, "INNER"},
+                           {102, "}"},
+                           {102, "}"},
+                           {102, "{ACAD_XDICTIONARY"},
+                           {360, "DICTIONARY"},
+                           {102, "}"},
+                           {330, "OTHER"}};
+    extras.common = {{60, "1"}};
+    extras.specific = {{999, "opaque"}};
+    extras.placement = {{30, "2.00"}};
+    extras.placementAnchors = {{100, 2}};
+    extras.extended = {{1001, "APP"}, {1000, "value"}};
+    extras.flippedExtrusion = true;
+    core::EntityProperties properties = document.current();
+    properties.color = core::Color::fromIndex(3);
+    const EntityRecord source{EntityId{300}, segment(2), extras, 9, properties};
+    document.insert(source);
+    const EntityId following = document.add(segment(3));
+    Editor editor(document);
+    editor.beginTransaction("Copy");
+    const auto copy = editor.addCopy(source.id, core::Line{{10, 10}, {20, 20}});
+    ASSERT_TRUE(copy);
+    ASSERT_NE(document.find(*copy), nullptr);
+    const EntityRecord copied = *document.find(*copy);
+    core::EntityExtras expected = extras;
+    expected.beforeEntity = {{330, "OWNER"}, {330, "OTHER"}};
+    EXPECT_EQ(copied.extras, expected);
+    EXPECT_EQ(copied.properties, properties);
+    EXPECT_EQ(copied.entity, (Entity{core::Line{{10, 10}, {20, 20}}}));
+    EXPECT_GT(copy->value, following.value);
+    EXPECT_GT(copied.order, document.find(following)->order);
+    EXPECT_EQ(*document.find(source.id), source);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{source.id, following, *copy}));
+    EXPECT_FALSE(editor.addCopy(EntityId{999}, segment(4)));
+    editor.commit();
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(document.find(*copy), nullptr);
+    EXPECT_EQ(*document.find(source.id), source);
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(*document.find(*copy), copied);
+}
+
+TEST(Editor, MissingCopyDoesNotAllocateAnIdentifierOrCreateHistory) {
+    Document document;
+    Editor editor(document);
+    const auto next = document.nextId();
+    editor.beginTransaction("Missing copy");
+    EXPECT_FALSE(editor.addCopy(EntityId{999}, segment(1)));
+    EXPECT_EQ(document.nextId(), next);
+    editor.commit();
+    EXPECT_FALSE(editor.canUndo());
+}
+
+TEST(Editor, RollbackToRevertsMixedChangesInReverseOrderAndKeepsEarlierChanges) {
+    Document document;
+    Editor editor(document);
+    editor.beginTransaction("Mixed");
+    const EntityId kept = editor.add(segment(1));
+    const auto mark = editor.savepoint();
+    ASSERT_TRUE(editor.replace(kept, segment(2)));
+    ASSERT_TRUE(editor.remove(kept));
+    const EntityId discarded = editor.add(segment(3));
+    ASSERT_TRUE(editor.replace(discarded, segment(4)));
+    ASSERT_TRUE(editor.addCopy(discarded, segment(5)));
+    editor.rollbackTo(mark);
+    EXPECT_TRUE(editor.inTransaction());
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{kept}));
+    EXPECT_EQ(entityOf(document, kept), Entity{segment(1)});
+    EXPECT_EQ(editor.savepoint().changes, mark.changes);
+    editor.rollbackTo(mark);  // Rolling back to the current point is a no-op.
+    editor.commit();
+    ASSERT_TRUE(editor.undo());
+    EXPECT_TRUE(document.isEmpty());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{kept}));
+    EXPECT_EQ(entityOf(document, kept), Entity{segment(1)});
+}
+
+TEST(Editor, RollbackToStartLeavesEmptyCommitAndPreservesRedo) {
+    Document document;
+    Editor editor(document);
+    const EntityId id = addCommitted(editor, 1);
+    ASSERT_TRUE(editor.undo());
+    editor.beginTransaction("Discarded");
+    const auto start = editor.savepoint();
+    editor.add(segment(2));
+    editor.rollbackTo(start);
+    EXPECT_TRUE(document.isEmpty());
+    EXPECT_EQ(editor.savepoint().changes, 0U);
+    editor.commit();
+    EXPECT_FALSE(editor.canUndo());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{id}));
+}
+
+TEST(EditorDeathTest, EntityEditsAndSavepointsRequireAnOpenTransaction) {
+    Document document;
+    Editor editor(document);
+    EXPECT_DEATH(editor.replace({}, segment(1)), "open transaction");
+    EXPECT_DEATH(editor.addCopy({}, segment(1)), "open transaction");
+    EXPECT_DEATH(static_cast<void>(editor.savepoint()), "open transaction");
+    EXPECT_DEATH(editor.rollbackTo({}), "open transaction");
+    editor.beginTransaction("Invalid mark");
+    EXPECT_DEATH(editor.rollbackTo(Editor::Savepoint{1}), "invalid savepoint");
+    editor.rollback();
+}
+
 }  // namespace
 }  // namespace tg::edit

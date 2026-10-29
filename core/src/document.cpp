@@ -136,6 +136,23 @@ std::optional<EntityRecord> Document::remove(EntityId id) {
     return removed;
 }
 
+Entity Document::replaceEntity(EntityId id, Entity entity) {
+    const auto it = m_positions.find(id.value);
+    assert(it != m_positions.end() && "the replaced entity must exist");
+    EntityRecord& record = m_entities[it->second];
+    const BBox previousBox = boundingBox(record.entity);
+    if (!previousBox.isEmpty()) {
+        [[maybe_unused]] const bool indexed = m_index.erase(id, previousBox);
+        assert(indexed && "an entity with a box is always in the index");
+    }
+    Entity previous = std::exchange(record.entity, std::move(entity));
+    const BBox nextBox = boundingBox(record.entity);
+    if (!nextBox.isEmpty()) {
+        m_index.insert(id, nextBox);
+    }
+    return previous;
+}
+
 void Document::restore(EntityRecord record) {
     assert(record.id.value != 0 && !isUsed(record.id));
     // Keep the "never reused" guarantee even for records that did not come

@@ -109,6 +109,11 @@ public:
     /// none. The identifier is not reused.
     std::optional<EntityRecord> remove(EntityId id);
 
+    /// Replaces the geometry, keeping identifier, order, extras and properties,
+    /// and updates the spatial index. Returns the previous entity.
+    /// Precondition: the record exists.
+    Entity replaceEntity(EntityId id, Entity entity);
+
     /// Puts back an entity previously returned by remove(), with its
     /// original identifier, extras and order key, at its place in key order.
     /// Precondition: `record.id` is valid and not already in the document.
