@@ -92,11 +92,18 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
             if (group.code == 0) {
                 type = trimDxf(group.value);
                 hasHandle = false;
-                if (type == "ENDTAB") {
+                // The table as TableReader::readTables sees it: every TABLE
+                // starts a new one, named by the group 2 right after it, even
+                // when the file did not end the previous one with ENDTAB.
+                // Otherwise a record read into the document would find its
+                // handle reserved here.
+                if (type == "TABLE") {
+                    table = i + 1 < range.end && file.groups[i + 1].code == 2
+                                ? trimDxf(file.groups[i + 1].value)
+                                : std::string_view{};
+                } else if (type == "ENDTAB") {
                     table = {};
                 }
-            } else if (group.code == 2 && type == "TABLE" && table.empty()) {
-                table = trimDxf(group.value);
             }
             if (range.name == "HEADER") {
                 if (group.code == 9) {
