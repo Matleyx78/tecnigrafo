@@ -1,0 +1,11 @@
+; ROTATE: rotazione con punto base e angolo
+LINE
+0,0
+10,0
+
+ROTATE
+5,0
+
+0,0
+90
+
