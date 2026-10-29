@@ -84,7 +84,7 @@ il lavoro sono in [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), sezione
 
 | Pacchetto | Scheda | Issue | Dipende da | Riferimenti | Difficoltà | Agente | Modello | Impegno |
 |---|---|---|---|---|---|---|---|---|
-| P1 Titolo | [P1](X.Y/P1-nome.md) | #… | — | R1 (gemini) / non servono: motivo | facile / media / impegnativa | claude / codex / … | leggero / medio / forte | basso / medio / alto |
+| P1 Titolo | [P1](X.Y/P1-nome.md) | #… | — | R1 (gemini) / non servono: motivo | facile / media / impegnativa | claude / codex / gemini / claude-2 | leggero / medio / forte | basso / medio / alto |
 
 L'**ordine delle righe** è l'ordine in cui gli agenti prendono "il prossimo
 pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RN]` hanno una riga
@@ -94,10 +94,12 @@ La tabella la legge `scripts/apri-tappa.sh`, che crea le issue all'apertura
 (GUIDA-RESPONSABILE.md, B2), quindi segue queste regole: le colonne con questi
 nomi; la prima cella comincia con `PN` o `RN` seguito dal titolo della issue; la
 scheda è un link a un file che esiste, oppure un testo (per esempio «scheda dopo
-il contratto») se non c'è ancora; "Dipende da" elenca, separati da virgole,
-pacchetti delle righe precedenti (`P3`, `R3`), issue di Tecnigrafo (`#12`) o di
-altri repository (`Matleyx78/solid-space#20`), oppure `—`; la colonna Issue resta
-`#…` finché lo script non ci scrive il numero.
+il contratto») se non c'è ancora; la colonna Agente contiene solo il nome
+dell'etichetta `agente:…` (`claude`, `codex`, `gemini`, `claude-2`), mai il
+modello tra parentesi, che si dice nella colonna Modello; "Dipende da" elenca,
+separati da virgole, pacchetti delle righe precedenti (`P3`, `R3`), issue di
+Tecnigrafo (`#12`) o di altri repository (`Matleyx78/solid-space#20`), oppure
+`—`; la colonna Issue resta `#…` finché lo script non ci scrive il numero.
 
 **File comuni.** I file che più pacchetti toccano nello stesso periodo (di norma
 i `CMakeLists.txt` e i registri come `builtin_commands.cpp`): ognuno aggiunge

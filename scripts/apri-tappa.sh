@@ -21,7 +21,9 @@
 #      the body still holds it;
 #   4. adds the issues to the Project "Tecnigrafo" with Tappa = tg-<tappa> and
 #      Tipo = pacchetto or riferimenti, and Status = Bloccato for new issues that
-#      wait for open ones;
+#      wait for open ones. The Project's own workflow "Item added to project"
+#      may move a new item to Da fare after that: the script waits a few
+#      seconds, reads the Status again and puts back Bloccato where it moved;
 #   5. writes the issue numbers in the table, the state "aperta" and the opening
 #      date in the stage document and in docs/ROADMAP.md, on a new branch
 #      docs/apertura-<tappa>, and opens a pull request. Merging it stays with
@@ -52,12 +54,14 @@
 # TG_PROJECT_OWNER   user that owns the Project (default Matleyx78)
 # TG_PROJECT_TITLE   title of the Project (default Tecnigrafo)
 # TG_PROJECT_NUMBER  number of the Project, instead of looking it up by title
+# TG_PROJECT_PAUSA   seconds to wait before reading the Status again (default 10)
 set -euo pipefail
 
 repo=${TG_REPO:-Matleyx78/tecnigrafo}
 project_owner=${TG_PROJECT_OWNER:-Matleyx78}
 project_title=${TG_PROJECT_TITLE:-Tecnigrafo}
 project_number=${TG_PROJECT_NUMBER:-}
+project_pause=${TG_PROJECT_PAUSA:-10}
 project_fields=''
 blob="https://github.com/$repo/blob/main"
 
@@ -117,13 +121,23 @@ project_add() { # owner/repo number
         -f type=Issue -f owner="${1%%/*}" -f repo="${1#*/}" -F number="$2" --jq '.id'
 }
 
+# Prints the id of field $1 of the Project, or nothing.
+project_field() { # field
+    jq -r --arg f "$1" '[.[] | select(.name == $f)][0].id // empty' <<< "$project_fields"
+}
+
+# Prints the id of the option $2 of single-select field $1, or nothing.
+project_option() { # field option
+    jq -r --arg f "$1" --arg o "$2" '[.[] | select(.name == $f) | .options[]?
+        | select((.name | if type == "object" then .raw else . end) == $o)][0].id // empty' \
+        <<< "$project_fields"
+}
+
 # Sets a single-select field of an item; returns 1 with a warning if it cannot.
 project_set() { # item field option
     local field option
-    field=$(jq -r --arg f "$2" '[.[] | select(.name == $f)][0].id // empty' <<< "$project_fields")
-    option=$(jq -r --arg f "$2" --arg o "$3" '[.[] | select(.name == $f) | .options[]?
-        | select((.name | if type == "object" then .raw else . end) == $o)][0].id // empty' \
-        <<< "$project_fields")
+    field=$(project_field "$2")
+    option=$(project_option "$2" "$3")
     if [[ -z $field || -z $option ]]; then
         warn "the Project has no field \"$2\" with the value \"$3\": add the value, then run again"
         return 1
@@ -134,6 +148,15 @@ project_set() { # item field option
         warn "cannot set \"$2\" = \"$3\""
         return 1
     fi
+}
+
+# Prints the option id of the current value of single-select field $2 of an
+# item, or nothing; returns 1 if GitHub does not answer.
+project_value() { # item field
+    local out
+    out=$(gh api "users/$project_owner/projectsV2/$project_number/items/$1?fields=$(project_field "$2")" \
+        2> /dev/null) || return 1
+    jq -r --arg f "$2" '[.fields[]? | select(.name == $f)][0].value.id // empty' <<< "$out"
 }
 
 # --- Options -----------------------------------------------------------------
@@ -523,8 +546,29 @@ if [[ $with_project -eq 1 ]]; then
             project_set "${items[$id]}" Tipo "$kind" || true
         done
         # Last, so that the Project's own "item added" workflow does not undo it.
+        blocked=()
         for id in "${!waiting[@]}"; do
-            [[ -n ${items[$id]:-} ]] && { project_set "${items[$id]}" Status Bloccato || true; }
+            [[ -n ${items[$id]:-} ]] || continue
+            project_set "${items[$id]}" Status Bloccato && blocked+=("$id")
+        done
+        # That workflow runs on GitHub's side a little later and may move the
+        # new items to Da fare: wait, read the Status again and put it back.
+        # Up to three rounds, as long as some item had moved.
+        bloccato=$(project_option Status Bloccato)
+        for round in 1 2 3; do
+            [[ ${#blocked[@]} -gt 0 ]] || break
+            sleep "$project_pause"
+            moved=()
+            for id in "${blocked[@]}"; do
+                if ! value=$(project_value "${items[$id]}" Status); then
+                    warn "#${row_issue[$id]}: cannot read its Status in the Project: check that it is Bloccato"
+                elif [[ $value != "$bloccato" ]]; then
+                    project_set "${items[$id]}" Status Bloccato && moved+=("$id")
+                fi
+            done
+            [[ ${#moved[@]} -eq 0 ]] ||
+                echo "Round $round: Status put back to Bloccato for ${#moved[@]} issue(s)."
+            blocked=("${moved[@]}")
         done
         echo "Issues added to the Project \"$project_title\"."
     else

@@ -7,9 +7,11 @@
 - **Corretto:** 2026-10-29 — il responsabile cambia la cucitura tra i due
   progetti, insieme alla correzione dell'ADR 0007 di solid-space; nessun codice
   unito attua ancora questo ADR (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)).
-  `core` usa anche il nuovo componente `geom2d` (punti 4 e 5); il sottomodulo
-  entra con un pacchetto piccolo all'inizio della tappa 0.7, P0 (punto 8); la
-  versione fissata la aggiorna il pacchetto che usa il pezzo nuovo (punto 9);
+  `core` usa anche il nuovo componente `geom2d` (punti 4 e 5); i target di
+  solid-space non si compilano con `-ffast-math` né `/fp:fast` (punto 7); il
+  sottomodulo entra con un pacchetto piccolo all'inizio della tappa 0.7, P0
+  (punto 8); la versione fissata la aggiorna il pacchetto che usa il pezzo
+  nuovo (punto 9);
   la richiesta si scrive solo in solid-space, e "Dipende da" cita la richiesta e
   poi il pacchetto di solid-space che serve (punti 11–13); i valori geometrici
   attesi si prendono dall'archivio dei casi di solid-space (punto 14, nuovo).
@@ -101,6 +103,12 @@ dipendenze (AGENTS.md).
 7. **Si compila con `add_subdirectory`.** I test di solid-space non si compilano
    dentro Tecnigrafo: li esegue la CI di solid-space. Le sue intestazioni non si
    includono come `SYSTEM`: è codice nostro, con le stesse regole di avvisi.
+   Tecnigrafo non compila i target di solid-space con `-ffast-math` né con
+   `/fp:fast`, e non passa loro opzioni che li includano: i risultati di
+   `robust` e `geom2d` devono essere gli stessi, bit per bit, sui tre sistemi
+   operativi
+   ([ADR 0008 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0008-componente-geom2d.md),
+   punto 5).
 8. **Il sottomodulo entra con un pacchetto suo, piccolo, all'inizio della
    tappa** che per prima usa solid-space: P0 della tappa 0.7, nella prima metà
    del piano, quando `robust` è ancora vuoto. P0 porta il sottomodulo, lo
