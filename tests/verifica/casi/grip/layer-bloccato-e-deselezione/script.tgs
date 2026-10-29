@@ -1,0 +1,25 @@
+; Layer bloccato e clic fuori dai grip (0.7-P10, ADR 0034)
+-LAYER
+New
+Bloccato
+LOck
+Bloccato
+
+CLAYER
+Bloccato
+LINE
+0,0
+20,0
+
+CLAYER
+0
+!click 10,0
+!report
+LINE
+0,10
+20,10
+
+!click 10,10
+!report
+!click 10,25
+!report
