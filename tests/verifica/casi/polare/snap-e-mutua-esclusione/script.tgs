@@ -1,0 +1,14 @@
+; Esclusione reciproca orto/polare e priorita di snap sul polare (0.7-P8, ADR 0033)
+!polar on
+!ortho on
+!report
+!polar on
+!report
+CIRCLE
+0,50
+10
+LINE
+0,0
+!move 1,49
+!report
+!esc
