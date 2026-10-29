@@ -1,0 +1,15 @@
+; Due entita con grip nello stesso punto: vince l'identificativo piu alto (0.7-P10, ADR 0034)
+LINE
+0,0
+10,0
+
+LINE
+10,0
+20,0
+
+!click 5,0
+!click 15,0
+!report
+!click 10,0
+10,10
+!report

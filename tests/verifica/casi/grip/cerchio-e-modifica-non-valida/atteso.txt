@@ -1,0 +1,84 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 CIRCLE center=0,0 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr]: 0,0
+  Specify radius of circle or [Diameter]: 10
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 10,0
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 2]
+entities:
+  257 CIRCLE center=10,10 radius=10
+messages:
+  ** STRETCH **
+  Specify stretch point: 10,10
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Grip edit
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 0,0
+active snap: none
+statistics:
+  CIRCLE 1
+
+[report 3]
+entities:
+  257 CIRCLE center=10,10 radius=10
+messages:
+  ** STRETCH **
+  Specify stretch point: 10,10
+  Invalid grip edit.
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Grip edit
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 20,10
+active snap: none
+statistics:
+  CIRCLE 1
+
+[final]
+entities:
+  257 CIRCLE center=10,10 radius=10
+messages:
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Grip edit
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 20,10
+active snap: none
+statistics:
+  CIRCLE 1
