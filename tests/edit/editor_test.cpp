@@ -944,7 +944,10 @@ TEST(Editor, AddCopyKeepsSourceDataExceptComplete102Groups) {
     Editor editor(document);
     editor.beginTransaction("Copy");
     const auto copy = editor.addCopy(source.id, core::Line{{10, 10}, {20, 20}});
-    ASSERT_TRUE(copy);
+    if (!copy) {
+        ADD_FAILURE() << "Copy creation must succeed";
+        return;
+    }
     ASSERT_NE(document.find(*copy), nullptr);
     const EntityRecord copied = *document.find(*copy);
     core::EntityExtras expected = extras;
