@@ -69,7 +69,10 @@ verificano facciata e comandi.
 
 Ogni pacchetto è **una pull request**. I pacchetti senza dipendenze tra loro si
 possono fare in parallelo; due pacchetti che toccano gli stessi file sono legati
-da "Dipende da".
+da "Dipende da", salvo
+`tests/verifica/in-attesa.txt`, dove ognuno tocca solo le righe dei propri
+casi ([LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), "Preparare il
+piano").
 
 Un pacchetto che cambia il comportamento del programma ha anche un pacchetto di
 riferimenti `RN`, scritto da un altro agente e unito prima del lavoro
