@@ -375,8 +375,13 @@ unito. Si lancia dal tuo PC, perché serve l'accesso al Project (A6).
 
    ```sh
    cd ~/progetti/tecnigrafo && git checkout main && git pull
+   git submodule update --init third_party/solid-space
    scripts/apri-tappa.sh <tappa> --prova
    ```
+
+   Il secondo comando porta solid-space, il kernel, al commit che `main`
+   fissa. Si scrive **senza** `--recursive`, e si ripete dopo ogni `git pull`
+   (qui, in B3 e in B4).
 
    Con `--prova` lo script mostra soltanto che cosa farebbe: per ogni riga del
    piano *create* (issue da creare, con etichette e dipendenze), *exists* (c'è
@@ -420,7 +425,8 @@ lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa
 1. Nel terminale, nella cartella del progetto:
 
    ```sh
-   cd ~/progetti/tecnigrafo && git checkout main && git pull && agy --mode auto
+   cd ~/progetti/tecnigrafo && git checkout main && git pull \
+     && git submodule update --init third_party/solid-space && agy --mode auto
    ```
 
 2. Scrivi:
@@ -439,9 +445,10 @@ lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa
    **Lotto di Gemini 4 Argon.** I riferimenti con calcoli delicati che il piano
    assegna a `gemini-argon` li fa una sessione sua, che può lavorare insieme a
    quella di Gemini 3.8 Flash. Apri un altro terminale, avvia `agy --mode auto`
-   come al punto 1, scrivi `/model`, scegli **Gemini 4 Argon** e porta *Effort*
-   su **high**. Poi scrivi questo messaggio, che gli dice quale etichetta e
-   quale cartella di build sono sue:
+   come al punto 1 (con lo stesso `git submodule update --init
+   third_party/solid-space` dopo il `git pull`), scrivi `/model`, scegli
+   **Gemini 4 Argon** e porta *Effort* su **high**. Poi scrivi questo messaggio,
+   che gli dice quale etichetta e quale cartella di build sono sue:
 
    ```text
    Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
@@ -456,7 +463,7 @@ lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa
    La revisione (punto 3) è la stessa.
 
 3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
-   importante di tutta la tappa. Guarda queste cinque cose:
+   importante di tutta la tappa. Guarda queste sei cose:
    - [ ] ogni condizione "Fatto quando" del pacchetto ha almeno un caso;
    - [ ] i numeri attesi hanno senso (per esempio: un cerchio di raggio 10 ha
          circonferenza 62.83…);
@@ -465,6 +472,8 @@ lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa
    - [ ] per ogni file preso dal web c'è il link alla licenza, e la licenza
          permette di usarlo (MIT, BSD, CC0, CC BY, GPL 3 vanno bene; "solo uso
          personale" o nessuna licenza no);
+   - [ ] i valori presi dall'archivio di solid-space citano il caso, con
+         percorso e commit;
    - [ ] la pull request tocca solo `tests/verifica/`.
 4. Se qualcosa non va, scrivilo come commento nella pull request e di' a Gemini:
 
@@ -479,7 +488,9 @@ lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa
 Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 
 1. Avvia l'agente (Claude Code o Codex) nella cartella del progetto, dopo
-   `git checkout main && git pull`. Dalla tappa 0.5 scegli il modello e
+   `git checkout main && git pull` e
+   `git submodule update --init third_party/solid-space` (senza `--recursive`).
+   Dalla tappa 0.5 scegli il modello e
    l'impegno che il piano indica per il pacchetto (tabella in
    [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno").
 2. Scrivi:

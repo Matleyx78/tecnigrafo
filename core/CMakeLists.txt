@@ -31,5 +31,10 @@ target_include_directories(tg_core PUBLIC
 target_compile_features(tg_core PUBLIC cxx_std_20)
 tg_configure_target(tg_core)
 
+# The kernel of Tecnigrafo (docs/adr/0030, points 4 and 5). PRIVATE: the
+# facades of core speak the types of Tecnigrafo, and no other module sees the
+# headers of solid-space. Both components use only the standard library.
+target_link_libraries(tg_core PRIVATE solid_space::robust solid_space::geom2d)
+
 add_dependencies(tg_core tg_font_metrics)
 target_include_directories(tg_core PRIVATE "${PROJECT_BINARY_DIR}/tools/generated")
