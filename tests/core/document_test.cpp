@@ -782,8 +782,7 @@ TEST(Document, ReplaceEntityPreservesRecordAndUpdatesSpatialIndex) {
     EntityExtras extras;
     extras.beforeEntity = {{330, "OWNER"}};
     extras.extended = {{1001, "APP"}, {1000, "value"}};
-    const EntityRecord original{EntityId{300}, Line{{0, 0}, {1, 1}}, extras, 4,
-                                document.current()};
+    const EntityRecord original{EntityId{300}, Line{{0, 0}, {1, 1}}, extras, 4, document.current()};
     document.insert(original);
     const EntityId following = document.add(Circle{{50, 50}, 1});
     const auto next = document.nextId();
@@ -808,8 +807,7 @@ TEST(Document, ReplaceEntityHandlesEmptyAndNonemptyBoundingBoxes) {
     const EntityId id = document.add(Polyline{});
     const Entity line = Line{{0, 0}, {1, 1}};
     EXPECT_EQ(document.replaceEntity(id, line), Entity{Polyline{}});
-    EXPECT_EQ(indexedQuery(document, BBox{{0, 0}, {1, 1}}),
-              (std::vector<std::uint64_t>{id.value}));
+    EXPECT_EQ(indexedQuery(document, BBox{{0, 0}, {1, 1}}), (std::vector<std::uint64_t>{id.value}));
     EXPECT_EQ(document.replaceEntity(id, Polyline{}), line);
     EXPECT_TRUE(indexedQuery(document, BBox{{0, 0}, {1, 1}}).empty());
     EXPECT_TRUE(document.extents().isEmpty());

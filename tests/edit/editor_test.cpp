@@ -919,17 +919,17 @@ TEST(Editor, ReplaceKeepsIdentityDataAndOrderThroughUndoRedo) {
 TEST(Editor, AddCopyKeepsSourceDataExceptComplete102Groups) {
     Document document = Document::newDrawing();
     core::EntityExtras extras;
-    extras.beforeEntity = {{330, "OWNER"},
-                           {102, "{ACAD_REACTORS"},
-                           {330, "REACTOR"},
-                           {102, "{NESTED"},
-                           {360, "INNER"},
-                           {102, "}"},
-                           {102, "}"},
-                           {102, "{ACAD_XDICTIONARY"},
-                           {360, "DICTIONARY"},
-                           {102, "}"},
-                           {330, "OTHER"}};
+    extras.beforeEntity.push_back({330, "OWNER"});
+    extras.beforeEntity.push_back({102, "{ACAD_REACTORS"});
+    extras.beforeEntity.push_back({330, "REACTOR"});
+    extras.beforeEntity.push_back({102, "{NESTED"});
+    extras.beforeEntity.push_back({360, "INNER"});
+    extras.beforeEntity.push_back({102, "}"});
+    extras.beforeEntity.push_back({102, "}"});
+    extras.beforeEntity.push_back({102, "{ACAD_XDICTIONARY"});
+    extras.beforeEntity.push_back({360, "DICTIONARY"});
+    extras.beforeEntity.push_back({102, "}"});
+    extras.beforeEntity.push_back({330, "OTHER"});
     extras.common = {{60, "1"}};
     extras.specific = {{999, "opaque"}};
     extras.placement = {{30, "2.00"}};
