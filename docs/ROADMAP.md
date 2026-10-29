@@ -17,7 +17,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 4 | 0.4 | Entità base: linea, cerchio, arco, testo | **chiusa** | [0.4](tappe/0.4-entita-base.md) |
 | 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | **chiusa** | [0.6](tappe/0.6-layer-e-proprieta.md) |
-| 7 | 0.7 | Comandi di modifica | in programma | [0.7](tappe/0.7-modifiche.md) |
+| 7 | 0.7 | Comandi di modifica | in preparazione | [0.7](tappe/0.7-modifiche.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
 | 10 | 1.0 | Stabilità e prestazioni: CAD 2D per lavoro reale | in programma | [1.0](tappe/1.0-stabilita.md) |
@@ -289,3 +289,41 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   «Tecnigrafo» mostra i due repository sulla stessa tavola. Il piano della 0.7
   si rifà con queste regole: la pull request #330 resta materiale da cui
   attingere.
+- **2026-10-29 — Piano della tappa 0.7.** Il piano dettagliato della
+  [tappa 0.7](tappe/0.7-modifiche.md) è in preparazione, rifatto con il flusso
+  unico a partire dalla bozza della pull request #330, che si chiude senza
+  unirla. Gli ADR [0031](adr/0031-modifiche-alle-entita.md)–[0036](adr/0036-tolleranze-di-tecnigrafo.md)
+  sono accettati. Le quattro richieste a solid-space
+  ([Matleyx78/solid-space#20](https://github.com/Matleyx78/solid-space/issues/20)–[#23](https://github.com/Matleyx78/solid-space/issues/23))
+  hanno l'esito 3 e il loro contratto nel nuovo componente `geom2d` (ADR
+  0008–0012 di solid-space), quindi tutte le schede sono scritte: la prima metà
+  parte all'apertura con P0, che porta il sottomodulo; la seconda usa le
+  funzioni di solid-space, e ogni suo pacchetto parte quando è unito il
+  pacchetto di solid-space che gli serve. La facciata di `core` passa a
+  solid-space l'unità del disegno in metri, da `INSUNITS` (ADR 0036); i
+  riferimenti delle facciate prendono i valori geometrici dall'archivio dei
+  casi di solid-space e verificano la traduzione, quelli dei comandi i comandi.
+  I riferimenti con calcoli delicati di Tecnigrafo dei pacchetti di Claude li
+  scrive Gemini 4 Argon, con l'etichetta nuova `agente:gemini-argon` e una
+  sessione sua sullo stesso PC di Gemini 3.8 Flash
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B3).
+  Il responsabile ha preparato in AutoCAD LT sei DXF di prova, da cui vengono i
+  riferimenti dei comandi ([tappe/0.7/dxf-di-prova.md](tappe/0.7/dxf-di-prova.md)).
+  Prepararli ha mostrato che negli script AutoCAD usa sequenze di domande
+  diverse per alcuni comandi: Tecnigrafo le riconosce, insieme alla selezione
+  scritta ([ADR 0032](adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)).
+  Il responsabile sceglie, il 2026-10-28:
+  - `TRIM` ed `EXTEND` nei due modi, rapido e standard;
+  - snap a intersezione acceso per difetto;
+  - `EXPLODE` che rifiuta le polilinee con quota o spessore;
+  - criterio di chiusura riscritto per le entità a cui AutoCAD applica ogni
+    comando.
+
+  Entrano nella scheda l'idea [#61](https://github.com/Matleyx78/tecnigrafo/issues/61)
+  (finestra chiusa trascinando), `Invio` alla prima domanda di `LINE` e `CIRCLE`
+  tangente-tangente-raggio. Le opzioni di `PLINE` *Width*, *Halfwidth*, *Length*
+  e le varianti dell'arco passano a dopo la 1.0, perché le larghezze non si
+  disegnano ancora. L'idea [#62](https://github.com/Matleyx78/tecnigrafo/issues/62)
+  resta per la tappa 0.9. La soglia dei tre punti allineati di `core` resta
+  nella 0.7 e si sostituisce dopo con la regola di solid-space (ADR 0036,
+  punto 7).

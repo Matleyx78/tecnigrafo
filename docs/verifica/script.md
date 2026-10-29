@@ -69,6 +69,9 @@ punto decimale, segno ed esponente facoltativi, nessuno spazio dentro un punto
 | `!esc` | il tasto `Esc` | 1 e 2 |
 | `!snap on` / `!snap off` | snap ad oggetto acceso o spento, senza scrivere nella cronologia | 1 e 2 |
 | `!ortho on` / `!ortho off` | orto acceso o spento, senza scrivere nella cronologia | 1 e 2 |
+| `!osnap <modi>` / `!osnap none` | i modi dello snap a oggetto, con le abbreviazioni di AutoCAD separate da virgole: `end`, `mid`, `cen`, `ins`, `int`, `per`, `tan`, `qua`; senza scrivere nella cronologia (dalla tappa 0.7, pacchetto P7) | 1 e 2 |
+| `!polar on` / `!polar off` | tracciamento polare acceso o spento, senza scrivere nella cronologia; accenderlo spegne l'orto e viceversa (dalla tappa 0.7, pacchetto P8) | 1 e 2 |
+| `!scr on` / `!scr off` | le sequenze degli script di AutoCAD (sotto) accese o spente (dalla tappa 0.7, pacchetto P3) | 1 e 2 |
 | `!report` | aggiunge al rapporto una sezione con lo stato in quel momento | 1 e 2 |
 | `!level 1` / `!level 2` | il livello che lo script richiede | 1 e 2 |
 | `!tolerance <tipo> <valore>` | cambia una tolleranza del confronto, per tutto lo script | 1 e 2 |
@@ -105,6 +108,27 @@ punto decimale, segno ed esponente facoltativi, nessuno spazio dentro un punto
 
   Le tolleranze si cambiano solo così, cioè solo da chi scrive i riferimenti
   (ADR 0011, punto 6).
+
+## Sequenze degli script di AutoCAD
+
+Dalla tappa 0.7 ([ADR 0032](../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md),
+punti 6–9). Quando esegue uno script `.scr`, AutoCAD usa per alcuni comandi le
+sequenze di domande delle versioni precedenti. Tecnigrafo fa lo stesso:
+
+- con un file `.scr` (riconosciuto dall'estensione), sia con
+  `tecnigrafo-script run` sia con `--script` del programma;
+- in un file `.tgs`, da `!scr on` fino a `!scr off`.
+
+Senza `!scr on` un `.tgs` simula chi usa il programma e vale la sequenza
+interattiva. I comandi con due sequenze:
+
+| Comando | Interattiva | Negli script | Pacchetto |
+|---|---|---|---|
+| `TEXT` | una riga dopo l'altra, fino a Invio su una riga vuota | una riga, poi il comando finisce | P3 |
+| `COPY` | copie fino a Invio | una copia, poi il comando finisce | P5 |
+| `TRIM`, `EXTEND` | modo di `TRIMEXTENDMODE`, rapido all'avvio | sempre il modo standard | P16 |
+| `FILLET`, `CHAMFER` | dopo *Radius*, *Distance* o *Angle* la domanda dei due oggetti torna | dopo quelle opzioni il comando finisce | P20, P21 |
+| `JOIN` | più oggetti insieme | prima l'oggetto sorgente, poi gli oggetti da unire | P23 |
 
 ## File
 
