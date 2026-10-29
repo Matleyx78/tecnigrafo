@@ -31,3 +31,10 @@ dxf/r11-public #168
 
 
 # 0.6-R14: CHPROP e layer bloccati (#246)
+
+# 0.7-R7: snap a quadrante e perpendicolare (#346)
+snap/quadrante #346
+snap/perpendicolare #346
+snap/priorita-nuovi-snap #346
+snap/osnap-direttiva #346
+

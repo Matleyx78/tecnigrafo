@@ -1,0 +1,30 @@
+; Snap a quadrante per cerchi, archi e polilinee (0.7-P7, ADR 0033)
+
+; 1. Cerchio nell'origine con raggio 10
+; Quadranti a 0° (10,0), 90° (0,10), 180° (-10,0), 270° (0,-10)
+C1 = CIRCLE center=0,0 radius=10
+
+? snaps C1 modes=quadrant -> Quadrant 10,0; Quadrant 0,10; Quadrant -10,0; Quadrant 0,-10
+? snap 10.2,0.1 aperture=1 modes=quadrant -> Quadrant 10,0
+? snap 0.1,10.2 aperture=1 modes=quadrant -> Quadrant 0,10
+? snap -9.8,-0.1 aperture=1 modes=quadrant -> Quadrant -10,0
+? snap 0.1,-10.2 aperture=1 modes=quadrant -> Quadrant 0,-10
+
+; 2. Arco che contiene due quadranti: da 30° a 200° (contiene 90° e 180°)
+A1 = ARC center=0,0 radius=10 start-angle=30 end-angle=200
+
+? snaps A1 modes=quadrant -> Quadrant 0,10; Quadrant -10,0
+? snap 0.1,10.2 aperture=1 modes=quadrant -> Quadrant 0,10
+? snap -10.2,0.1 aperture=1 modes=quadrant -> Quadrant -10,0
+; Punti vicini a 0° e 270° non danno snap perché fuori dall'arco
+? snap 10.1,0.1 aperture=1 modes=quadrant -> none
+? snap 0.1,-10.1 aperture=1 modes=quadrant -> none
+
+; 3. Polilinea con segmento d'arco: da 0,0 a 10,0 (linea) e poi arco a 30,0 (bulge=-1, semicerchio sopra l'asse)
+; Centro in 20,0, raggio 10, va da 10,0 a 30,0 sopra l'asse (Y > 0), quadrante a 90° -> (20,10)
+PL1 = LWPOLYLINE closed=no vertex=0,0 vertex=10,0 bulge=-1 vertex=30,0
+
+? snaps PL1 modes=quadrant -> Quadrant 20,10
+? snap 20.1,10.2 aperture=1 modes=quadrant -> Quadrant 20,10
+; Il punto a Y=-10 non sta sull'arco della polilinea
+? snap 20.1,-10.2 aperture=1 modes=quadrant -> none
