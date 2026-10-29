@@ -83,15 +83,23 @@ Parsed<core::BBox> rectangleArgument(std::string_view first, std::string_view se
 }
 
 /// The arguments "key=value" after the positional ones. Every key must be
-/// one of `allowed`, at most once.
+/// one of `allowed`, at most once. A key of `announced` is one that the
+/// catalogue describes and the program does not have yet: the case is not
+/// passed, it is not invalid. The package that realizes the key moves it
+/// from `announced` to `allowed`.
 Parsed<std::map<std::string_view, std::string_view>> keyedArguments(
-    Arguments arguments, std::span<const std::string_view> allowed) {
+    Arguments arguments, std::span<const std::string_view> allowed,
+    std::span<const std::string_view> announced = {}) {
     std::map<std::string_view, std::string_view> keyed;
     for (const std::string_view argument : arguments) {
         const std::size_t equals = argument.find('=');
         const std::string_view key = argument.substr(0, equals);
-        if (equals == std::string_view::npos || std::ranges::find(allowed, key) == allowed.end() ||
-            !keyed.emplace(key, argument.substr(equals + 1)).second) {
+        const bool hasValue = equals != std::string_view::npos;
+        const bool known = hasValue && std::ranges::find(allowed, key) != allowed.end();
+        if (hasValue && !known && std::ranges::find(announced, key) != announced.end()) {
+            return ArgumentError{"the argument " + quoted(key) + " is not implemented yet", true};
+        }
+        if (!known || !keyed.emplace(key, argument.substr(equals + 1)).second) {
             return ArgumentError{"unexpected argument " + quoted(argument)};
         }
     }
@@ -105,6 +113,12 @@ Parsed<double> nonNegative(std::string_view key, std::string_view text) {
     }
     return *value;
 }
+
+// The snap modes that the catalogue describes from stage 0.7 (docs/verifica/
+// domande.md) and the program does not have yet. The package that realizes a
+// mode (P7) gives it a name in kSnapModeNames and removes it from here.
+constexpr std::array<std::string_view, 4> kAnnouncedModes{"intersection", "perpendicular",
+                                                          "tangent", "quadrant"};
 
 /// "modes=endpoint,center", or "modes=none" for none; every mode when the
 /// argument is absent.
@@ -125,6 +139,10 @@ Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text) {
         const std::string_view name = rest.substr(0, comma);
         const auto found = std::ranges::find(snapModeNames(), name, &SnapModeName::name);
         if (found == snapModeNames().end()) {
+            if (std::ranges::find(kAnnouncedModes, name) != kAnnouncedModes.end()) {
+                return ArgumentError{"the snap mode " + quoted(name) + " is not implemented yet",
+                                     true};
+            }
             return ArgumentError{"unknown snap mode " + quoted(name)};
         }
         modes.*found->member = true;
@@ -424,7 +442,9 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
         return *error;
     }
     constexpr std::array<std::string_view, 2> kKeys{"aperture", "modes"};
-    const auto keyed = keyedArguments(arguments.subspan(1), kKeys);
+    // `from=` is in the catalogue from stage 0.7; package P7 realizes it.
+    constexpr std::array<std::string_view, 1> kAnnounced{"from"};
+    const auto keyed = keyedArguments(arguments.subspan(1), kKeys, kAnnounced);
     if (const auto* error = std::get_if<ArgumentError>(&keyed)) {
         return *error;
     }

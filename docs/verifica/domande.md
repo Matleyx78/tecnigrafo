@@ -445,17 +445,23 @@ domanda scritta male, nome già definito o non definito sopra, domanda
 sconosciuta, argomenti mancanti o in più. `tecnigrafo-script` indica la riga e
 il motivo ed esce con il codice 2 ([casi.md](casi.md)).
 
-Non sono errori, ma risposte sbagliate, due situazioni previste da questo
+Non sono errori, ma casi non superati, tre situazioni previste da questo
 catalogo e non ancora realizzate dal programma:
 
 - una **domanda** del catalogo non ancora realizzata risponde
   `error: question not implemented yet`;
 - una **definizione** di un tipo del [rapporto](rapporto.md#tappa-04) non
   ancora realizzato (`CIRCLE` prima del pacchetto P6) ferma il file con
+  "not implemented yet";
+- un **modo di snap** (`intersection`, `perpendicular`, `tangent`, `quadrant`)
+  o un **argomento con nome** (`from=` della domanda `snap`) descritti da questo
+  catalogo dalla tappa 0.7, fino al pacchetto P7, fermano il file con
   "not implemented yet".
 
-In entrambi i casi il caso non è superato: se è elencato in
-`tests/verifica/in-attesa.txt` aspetta il suo lavoro senza bloccare la CI.
+In tutti questi casi il caso non è superato: se è elencato in
+`tests/verifica/in-attesa.txt` aspetta il suo lavoro senza bloccare la CI. Un
+modo o un argomento che il catalogo non descrive (`modes=corner`,
+`aperure=1`) resta un errore del file.
 
 ## Valori attesi
 

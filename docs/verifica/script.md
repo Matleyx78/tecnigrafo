@@ -176,9 +176,15 @@ P15 e P16); lo stato del disegno si legge nei campi `drawing:`, `units:` e
 
 Uno script con una riga che non rispetta questa specifica non è un caso valido:
 `tecnigrafo-script` indica il numero della riga e il motivo, ed esce con il
-codice 2 ([casi.md](casi.md)). Sono errori, tra gli altri: una direttiva
-sconosciuta o scritta in maiuscolo, argomenti mancanti o in più, un numero
-scritto con la virgola, `!key` senza `!level 2`.
+codice 2 ([casi.md](casi.md)). Sono errori, tra gli altri: una direttiva che
+questa specifica non descrive (sconosciuta o scritta in maiuscolo), argomenti
+mancanti o in più, un numero scritto con la virgola, `!key` senza `!level 2`.
+
+Non è un errore, ma un caso non superato, una direttiva che questa specifica
+descrive e il programma non ha ancora: `!osnap`, `!polar` e `!scr`, fino ai
+pacchetti P7, P8 e P3 della tappa 0.7. Lo script ferma la lettura con "not
+implemented yet" (codice 1; con `--pending`, codice 0): se è elencato in
+`tests/verifica/in-attesa.txt` aspetta il suo lavoro senza bloccare la CI.
 
 ## Esempio
 
