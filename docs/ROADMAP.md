@@ -327,3 +327,8 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   resta per la tappa 0.9. La soglia dei tre punti allineati di `core` resta
   nella 0.7 e si sostituisce dopo con la regola di solid-space (ADR 0036,
   punto 7).
+- **2026-10-29 — L'elenco dei casi in attesa.** Il responsabile scrive
+  l'eccezione che già si applicava: `tests/verifica/in-attesa.txt` è l'unico
+  file che più pacchetti toccano senza essere legati da "Dipende da"
+  ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md)); la stessa eccezione è
+  scritta in solid-space (Matleyx78/solid-space#30).
