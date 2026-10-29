@@ -680,6 +680,35 @@ TEST(DxfTables, RecordsWithoutHandleGetOne) {
               std::string::npos);
 }
 
+TEST(DxfTables, EveryTableStartsANewOneEvenWithoutEndtab) {
+    // Found by fuzz_dxf (issue #382): a STYLE table the file does not end
+    // before the LTYPE one, and an LTYPE table it does not end before the
+    // LAYER one. Their records enter the model with the handles of the file.
+    RawGroups groups{{0, "SECTION"},   {2, "HEADER"}, {9, "$ACADVER"}, {1, "AC1032"},
+                     {9, "$HANDSEED"}, {5, "100"},    {0, "ENDSEC"},   {0, "SECTION"},
+                     {2, "TABLES"},    {0, "TABLE"},  {2, "STYLE"},    {5, "3"},
+                     {70, "0"},        {0, "TABLE"},  {2, "LTYPE"},    {5, "5"},
+                     {70, "4"}};
+    const RawGroups linetypes = standardLinetypes();
+    groups.insert(groups.end(), linetypes.begin(), linetypes.end());
+    groups.insert(groups.end(), {{0, "TABLE"}, {2, "LAYER"}, {5, "2"}, {70, "1"}});
+    const RawGroups zero = layer("10", "0", {{70, "0"}, {62, "7"}, {6, "DASHED"}});
+    groups.insert(groups.end(), zero.begin(), zero.end());
+    groups.insert(
+        groups.end(),
+        {{0, "ENDTAB"}, {0, "ENDSEC"}, {0, "SECTION"}, {2, "ENTITIES"}, {0, "ENDSEC"}, {0, "EOF"}});
+    const auto read = readOk(writeGroups(groups, TextEncoding::Utf8));
+    const core::Linetype* dashed = read.document.findLinetype("DASHED");
+    ASSERT_NE(dashed, nullptr);
+    EXPECT_EQ(dashed->id.value, 0x17U);
+    EXPECT_EQ(read.document.linetypes().size(), 4U);
+    EXPECT_EQ(layerNamed(read.document, "0").id.value, 0x10U);
+    EXPECT_EQ(layerNamed(read.document, "0").linetype, dashed->id);
+    const auto reread = readOk(writeOk(read.document));
+    EXPECT_NE(reread.document.findLinetype("DASHED"), nullptr);
+    EXPECT_EQ(reread.document.layers().size(), 1U);
+}
+
 // --- Header variables (docs/adr/0023, point 3; docs/adr/0025) -------------
 
 TEST(DxfTables, HeaderVariablesEnterTheDocumentAndKeepTheirSpelling) {

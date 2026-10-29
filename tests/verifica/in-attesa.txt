@@ -38,3 +38,10 @@ grip/due-entita-stesso-punto #352
 grip/cerchio-e-modifica-non-valida #352
 grip/layer-bloccato-e-deselezione #352
 
+# 0.7-R2: selezione scritta (#336)
+erase/selezione-scritta-punto #336
+erase/selezione-scritta-finestra #336
+erase/selezione-scritta-intersezione #336
+erase/selezione-scritta-all #336
+erase/selezione-scritta-bloccati #336
+erase/selezione-scritta-errori #336

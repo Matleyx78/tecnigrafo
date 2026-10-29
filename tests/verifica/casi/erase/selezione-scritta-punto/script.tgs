@@ -1,0 +1,12 @@
+; ERASE: selezione scritta con punto di coordinate
+LINE
+0,0
+10,0
+
+LINE
+0,10
+10,10
+
+ERASE
+5,10
+
