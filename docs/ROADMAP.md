@@ -303,6 +303,10 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   solid-space l'unità del disegno in metri, da `INSUNITS` (ADR 0036); i
   riferimenti delle facciate prendono i valori geometrici dall'archivio dei
   casi di solid-space e verificano la traduzione, quelli dei comandi i comandi.
+  I riferimenti con calcoli delicati di Tecnigrafo dei pacchetti di Claude li
+  scrive Gemini 4 Argon, con l'etichetta nuova `agente:gemini-argon` e una
+  sessione sua sullo stesso PC di Gemini 3.8 Flash
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B3).
   Il responsabile ha preparato in AutoCAD LT sei DXF di prova, da cui vengono i
   riferimenti dei comandi ([tappe/0.7/dxf-di-prova.md](tappe/0.7/dxf-di-prova.md)).
   Prepararli ha mostrato che negli script AutoCAD usa sequenze di domande

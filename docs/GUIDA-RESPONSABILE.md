@@ -30,13 +30,15 @@ Come si usa:
    Se manca, aggiungila tu. Vale per **ogni** squash and merge.
 4. Premi **Confirm squash and merge**.
 
-### A2. Creare due etichette
+### A2. Creare le etichette
 
 1. Su GitHub: **Issues** → **Labels** → **New label**.
 2. Nome `riferimenti`, descrizione `Casi di verifica di un pacchetto (ADR 0011)`,
    colore a piacere. **Create label**.
 3. Di nuovo **New label**: nome `agente:gemini`, descrizione
    `Assegnato a Gemini`. **Create label**.
+4. Dalla tappa 0.7, ancora **New label**: nome `agente:gemini-argon`,
+   descrizione `Assegnato a Gemini 4 Argon`. **Create label**.
 
 ### A3. Due impostazioni del repository
 
@@ -352,6 +354,25 @@ lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa
 
    Gemini lavora da solo finché i pacchetti pronti non finiscono. Puoi
    allontanarti: alla fine trovi il riepilogo con tutte le pull request.
+
+   **Lotto di Gemini 4 Argon.** I riferimenti con calcoli delicati che il piano
+   assegna a `gemini-argon` li fa una sessione sua, che può lavorare insieme a
+   quella di Gemini 3.8 Flash. Apri un altro terminale, avvia `agy --mode auto`
+   come al punto 1, scrivi `/model`, scegli **Gemini 4 Argon** e porta *Effort*
+   su **high**. Poi scrivi questo messaggio, che gli dice quale etichetta e
+   quale cartella di build sono sue:
+
+   ```text
+   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+   lettera. Sei Gemini 4 Argon: la tua etichetta è agente:gemini-argon e la tua
+   cartella di build è build-gemini-argon (TG_BUILD_SUFFIX=-gemini-argon).
+   Prendi i pacchetti di riferimenti pronti della tappa <tappa> con la tua
+   etichetta, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti". Per
+   ognuno apri la pull request e porta la CI al verde; alla fine scrivimi un
+   solo riepilogo.
+   ```
+
+   La revisione (punto 3) è la stessa.
 
 3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
    importante di tutta la tappa. Guarda queste cinque cose:

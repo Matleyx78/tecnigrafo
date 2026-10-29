@@ -274,7 +274,7 @@ scritti **prima** e da **un altro agente**
 
 Prima di ogni comando imposta la tua cartella di build, così più agenti sullo
 stesso PC non si bloccano a vicenda: `export TG_BUILD_SUFFIX=-claude` (o `-codex`,
-`-gemini`, `-claude-2`); i preset compilano in `build-<nome>/<preset>`, e i percorsi
+`-gemini`, `-gemini-argon`, `-claude-2`); i preset compilano in `build-<nome>/<preset>`, e i percorsi
 `./build/...` della documentazione diventano i tuoi.
 
 Le prove locali si fanno con **un solo comando**, nell'ordine della CI, che si
