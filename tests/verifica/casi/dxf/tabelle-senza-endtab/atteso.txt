@@ -1,0 +1,89 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: tabelle.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: tabelle.dxf
+units: 0
+layers:
+  "0" color=7 linetype="DASHED" lineweight=default
+linetypes:
+  "DASHED" pattern=12,-3 description=""
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: SAVEAS
+  Save drawing as <tabelle.dxf>: tabelle-riaperte.dxf
+  Command: OPEN
+  Enter name of drawing to open: tabelle-riaperte.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: tabelle-riaperte.dxf
+units: 0
+layers:
+  "0" color=7 linetype="DASHED" lineweight=default
+linetypes:
+  "DASHED" pattern=12,-3 description=""
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: style-layer.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: style-layer.dxf
+units: 0
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: SAVEAS
+  Save drawing as <style-layer.dxf>: style-layer-riaperto.dxf
+  Command: OPEN
+  Enter name of drawing to open: style-layer-riaperto.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: style-layer-riaperto.dxf
+units: 0
+pointer: none
+active snap: none
+statistics:

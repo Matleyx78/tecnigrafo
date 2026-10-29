@@ -1,0 +1,23 @@
+; ERASE: selezione scritta con layer bloccato
+-LAYER
+New
+Bloccato
+LOck
+Bloccato
+
+LINE
+0,0
+10,0
+
+CLAYER
+Bloccato
+LINE
+0,20
+10,20
+
+CLAYER
+0
+ERASE
+5,20
+ALL
+

@@ -1,0 +1,32 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=20,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: SCALE
+  Select objects: 5,0
+  1 found, 1 total
+  Select objects:
+  Specify base point: 0,0
+  Specify scale factor or [Copy/Reference]: 0
+  Value must be positive and nonzero.
+  Specify scale factor or [Copy/Reference]: 2
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Scale
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1

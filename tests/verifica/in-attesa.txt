@@ -37,3 +37,30 @@ polare/comando-polarang #348
 polare/tracciamento-e-distanza #348
 polare/snap-e-mutua-esclusione #348
 
+# 0.7-R6: ROTATE, SCALE, MIRROR (#344)
+rotate/base-e-angolo #344
+scale/base-e-fattore #344
+mirror/copia-e-sorgente #344
+mirror/sul-posto-yes #344
+
+# 0.7-R10: modifica con i grip (#352)
+grip/modifica-linea-annulla-esc #352
+grip/due-entita-stesso-punto #352
+grip/cerchio-e-modifica-non-valida #352
+grip/layer-bloccato-e-deselezione #352
+
+# 0.7-R5: MOVE, COPY, EXPLODE, LINE (#342)
+move/base-e-secondo-punto #342
+move/displacement #342
+copy/multiple-e-undo #342
+explode/polilinea-chiusa #342
+explode/non-scomponibili #342
+line/continua-ultimo-punto #342
+
+# 0.7-R2: selezione scritta (#336)
+erase/selezione-scritta-punto #336
+erase/selezione-scritta-finestra #336
+erase/selezione-scritta-intersezione #336
+erase/selezione-scritta-all #336
+erase/selezione-scritta-bloccati #336
+erase/selezione-scritta-errori #336

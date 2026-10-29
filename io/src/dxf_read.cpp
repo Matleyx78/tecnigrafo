@@ -29,11 +29,36 @@ bool isMarker(const core::RawGroup& group, std::string_view name) {
     return group.code == 0 && trimDxf(group.value) == name;
 }
 
-Result<std::vector<SectionRange>> sections(const GroupFile& file, std::string_view bytes) {
+/// The DXF reference gives group 999 the meaning of a comment, allowed
+/// anywhere in the file.
+constexpr int kCommentCode = 999;
+
+/// The comments found outside every section.
+struct OutsideComments {
+    std::size_t count{0};
+    std::size_t firstLine{0};
+};
+
+/// Moves `i` past the comments that stand between sections: before the first,
+/// after an ENDSEC, before EOF. Inside a section they stay among its groups,
+/// kept as read like any other group the model does not represent.
+void skipComments(const GroupFile& file, std::size_t& i, OutsideComments& skipped) {
+    while (i < file.groups.size() && file.groups[i].code == kCommentCode) {
+        if (skipped.count++ == 0) {
+            skipped.firstLine = file.lines[i];
+        }
+        ++i;
+    }
+}
+
+Result<std::vector<SectionRange>> sections(const GroupFile& file, std::string_view bytes,
+                                           std::vector<std::string>& warnings) {
     const auto& groups = file.groups;
     std::vector<SectionRange> ranges;
     std::unordered_set<std::string> names;
+    OutsideComments comments;
     std::size_t i = 0;
+    skipComments(file, i, comments);
     while (i < groups.size() && !isMarker(groups[i], "EOF")) {
         if (!isMarker(groups[i], "SECTION") || i + 1 >= groups.size() || groups[i + 1].code != 2) {
             return malformed(file.lines[i], "expected SECTION followed by its name");
@@ -55,6 +80,7 @@ Result<std::vector<SectionRange>> sections(const GroupFile& file, std::string_vi
         }
         ranges.push_back({std::move(name), begin, i});
         ++i;
+        skipComments(file, i, comments);
     }
     if (i == groups.size()) {
         return malformed(file.lines.empty() ? 1 : file.lines.back(), "expected EOF");
@@ -68,6 +94,14 @@ Result<std::vector<SectionRange>> sections(const GroupFile& file, std::string_vi
     }
     if (!trimDxf(bytes.substr(position)).empty()) {
         return malformed(file.lines[i] + 2, "unexpected data after EOF");
+    }
+    // A comment is not drawing data, but it is not dropped without a word
+    // either (ADR 0006): the report says how many were left out.
+    if (comments.count > 0) {
+        warnings.push_back("line " + std::to_string(comments.firstLine) + ": ignored " +
+                           std::to_string(comments.count) + " comment " +
+                           (comments.count == 1 ? "group" : "groups") +
+                           " (999) outside any section");
     }
     return ranges;
 }
@@ -92,11 +126,18 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
             if (group.code == 0) {
                 type = trimDxf(group.value);
                 hasHandle = false;
-                if (type == "ENDTAB") {
+                // The table as TableReader::readTables sees it: every TABLE
+                // starts a new one, named by the group 2 right after it, even
+                // when the file did not end the previous one with ENDTAB.
+                // Otherwise a record read into the document would find its
+                // handle reserved here.
+                if (type == "TABLE") {
+                    table = i + 1 < range.end && file.groups[i + 1].code == 2
+                                ? trimDxf(file.groups[i + 1].value)
+                                : std::string_view{};
+                } else if (type == "ENDTAB") {
                     table = {};
                 }
-            } else if (group.code == 2 && type == "TABLE" && table.empty()) {
-                table = trimDxf(group.value);
             }
             if (range.name == "HEADER") {
                 if (group.code == 9) {
@@ -149,12 +190,12 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
 }
 
 Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
-    const auto parsed = sections(file, bytes);
+    ReadResult result;
+    result.report.warnings = file.warnings;
+    const auto parsed = sections(file, bytes, result.report.warnings);
     if (!parsed.ok()) {
         return parsed.error();
     }
-    ReadResult result;
-    result.report.warnings = file.warnings;
     auto handles = collectHandles(file, parsed.value(), result.document);
     if (!handles.ok()) {
         return handles.error();

@@ -1,0 +1,14 @@
+; ERASE: selezione scritta con intersezione (C)
+LINE
+10,10
+20,10
+
+LINE
+0,15
+30,15
+
+ERASE
+c
+5,5
+25,25
+

@@ -1,0 +1,11 @@
+; MIRROR: specchiatura sul posto cancellando la sorgente (Yes)
+LINE
+0,0
+10,0
+
+MIRROR
+5,0
+
+0,0
+0,10
+Y
