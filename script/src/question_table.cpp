@@ -544,6 +544,22 @@ constexpr std::array kQuestions{
     QuestionRow{"quickselect", AnswerShape::Names, &askQuickSelect},
     QuestionRow{"layers", AnswerShape::Items, &askLayers},
     QuestionRow{"linetypes", AnswerShape::Items, &askLinetypes},
+    // Stage 0.7: announced questions must fail as unimplemented, not as invalid
+    // syntax, so their independent references can precede the work packages.
+    QuestionRow{"transform", AnswerShape::Single, nullptr},          // P4
+    QuestionRow{"grips", AnswerShape::Items, nullptr},               // P9
+    QuestionRow{"grip", AnswerShape::Single, nullptr},               // P9
+    QuestionRow{"intersections", AnswerShape::Items, nullptr},       // P14
+    QuestionRow{"self-intersections", AnswerShape::Items, nullptr},  // P14
+    QuestionRow{"side", AnswerShape::Single, nullptr},               // P14
+    QuestionRow{"coincident", AnswerShape::Single, nullptr},         // P14
+    QuestionRow{"degenerate", AnswerShape::Single, nullptr},         // P14
+    QuestionRow{"offset", AnswerShape::Single, nullptr},             // P17
+    QuestionRow{"fillet", AnswerShape::Single, nullptr},             // P19
+    QuestionRow{"tangents", AnswerShape::Items, nullptr},            // P19
+    QuestionRow{"circle-ttr", AnswerShape::Single, nullptr},         // P19
+    QuestionRow{"chamfer", AnswerShape::Single, nullptr},            // P21
+    QuestionRow{"join", AnswerShape::Single, nullptr},               // P22
 };
 
 }  // namespace

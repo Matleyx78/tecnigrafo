@@ -2,6 +2,7 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-10-29
+- **Precisazione:** 2026-10-30 — testo riflesso (decisione del responsabile, #406).
 
 ## Contesto
 
@@ -49,24 +50,86 @@ Il file `autocad-specchiatura.dxf` mostra come `MIRROR` tratta i testi con
    | `CIRCLE` | il centro si trasforma; il raggio si moltiplica per il fattore di scala |
    | `ARC` | centro e raggio come il cerchio; gli angoli ruotano con la similitudine; con una riflessione inizio e fine si scambiano, perché l'arco resti antiorario (ADR 0012, conseguenze) |
    | `LWPOLYLINE` | i vertici si trasformano; con una riflessione ogni bulge cambia segno; le larghezze (gruppi 40, 41, 43) si moltiplicano per il fattore di scala; la generazione continua del tipo di linea non cambia |
-   | `TEXT` | punto d'inserimento e secondo punto si trasformano; l'altezza si moltiplica per il fattore di scala; la rotazione aumenta dell'angolo della similitudine; fattore di larghezza e obliquo non cambiano. La riflessione segue il punto 3 |
+   | `TEXT` | punto d'inserimento e secondo punto si trasformano; l'altezza si moltiplica per il fattore di scala; la rotazione aumenta dell'angolo della similitudine; fattore di larghezza e obliquo non cambiano senza riflessione. La riflessione segue il punto 3 |
 
-3. **Testo riflesso.** `φ` è l'angolo dell'asse di riflessione e `r` la rotazione
-   del testo:
-   - con `MIRRTEXT` = 1 il testo si specchia davvero: i due punti si riflettono,
-     il segnale "all'indietro" (gruppo 71, bit 2) si inverte e la rotazione
-     diventa `2φ − r + 180°`;
-   - con `MIRRTEXT` = 0 (il valore predefinito, come in AutoCAD) il testo resta
-     leggibile: il suo parallelogramma d'ingombro (ADR 0022, punto 5) si
-     riflette, e il testo si riscrive dentro di esso con la stessa
-     giustificazione, gli stessi segnali e la rotazione `2φ − r`, a cui si
-     tolgono 180° quando cade in (90°, 270°]. Per *Aligned* e *Fit* i due punti
-     riflessi si scambiano.
+3. **Testo riflesso.** La riflessione deve rispettare la geometria del testo
+   definita nell'ADR 0022, punti 2–5. `r` è la **direzione effettiva** prima
+   della trasformazione: per *Aligned* e *Fit* non degeneri è la direzione da
+   `P1 = position` a `P2 = alignmentPoint`, non il gruppo 50 conservato nel
+   file. Per gli altri testi è la rotazione memorizzata.
 
-   Le regole sono ricavate da `autocad-specchiatura.dxf`. Con `MIRRTEXT` = 0 la
-   posizione dipende dalle misure del font, che in Tecnigrafo sono quelle di
-   Liberation Sans (ADR 0013): i riferimenti la calcolano con quelle misure, non
-   la copiano da AutoCAD.
+   Per una riflessione pura, `φ` è l'angolo dell'asse e
+   `α = normalize(2φ − r)`. `normalize` riporta in [0°, 360°). Per una
+   similitudine che riflette, `p′ = s·R(θ)·F·p + t` del punto 1, si usa
+   `α = normalize(θ − r)`; le lunghezze si moltiplicano per `s`.
+
+   | Proprietà | `MIRRTEXT` = 1 (specchiato) | `MIRRTEXT` = 0 (leggibile) |
+   |---|---|---|
+   | Direzione effettiva risultante `β` | `normalize(α + 180°)` | `α`, meno 180° se `90° < α ≤ 270°`, poi normalizzata |
+   | Segnale "all'indietro" (gruppo 71, bit 2) | invertito | conservato |
+   | Segnale "capovolto" (gruppo 71, bit 4) | conservato | conservato |
+   | Obliquo (gruppo 51) | conservato | di segno opposto |
+   | Giustificazione | conservata | conservata |
+
+   "Leggibile" non raddrizza un testo che era già all'indietro o capovolto:
+   conserva quei segnali. Con `MIRRTEXT` = 0 il cambio di segno dell'obliquo
+   è necessario per occupare il parallelogramma riflesso con la direzione
+   prescritta e gli stessi segnali. La regola generale del punto 2 sul
+   mantenimento dell'obliquo vale per le trasformazioni senza riflessione;
+   per una riflessione prevale questa tabella.
+
+   **Posizione e punti.** Il bersaglio è l'immagine del parallelogramma
+   `textBox` originale nella similitudine. Si mantengono altezza e fattore di
+   larghezza memorizzati (l'altezza moltiplicata per `s`); le dimensioni
+   effettive di *Aligned* e *Fit* si ricavano ancora dall'ADR 0022.
+
+   - Per *Aligned* e *Fit* non degeneri si ricostruiscono i due punti con
+     distanza `s·|P2 − P1|` e direzione da `P1′` a `P2′` uguale a `β`.
+     Si traslano entrambi della stessa quantità affinché il centro del
+     parallelogramma risultante coincida con quello del bersaglio. Il
+     centro è la media dei quattro vertici, non una misura dei glifi.
+   - Per gli altri allineamenti si ricolloca il punto d'ancoraggio
+     dell'ADR 0022, punto 2, con lo stesso criterio del centro. L'altro punto,
+     che non determina l'ingombro, riceve solo la similitudine originale.
+   - *Aligned* e *Fit* degeneri seguono il trattamento come *Left* in `P1`
+     dell'ADR 0022, punto 3: si usa la rotazione memorizzata e si ricolloca
+     `P1` con il criterio del centro. Se i punti erano coincidenti restano
+     coincidenti (anche `P2` riceve la ricollocazione); se solo la larghezza
+     del testo è nulla, l'altro punto riceve la sola similitudine.
+
+   La forma e le dimensioni fissate sopra rendono il parallelogramma
+   risultante uguale al bersaglio come regione, anche per testo obliquo o
+   già specchiato. Il criterio del centro fissa la traslazione senza
+   ambiguità e senza una tolleranza geometrica nuova. Con `MIRRTEXT` = 1
+   ogni punto dei caratteri si trasforma esattamente con la similitudine;
+   anche i quattro vertici di `textBox`, nel loro ordine, devono coincidere
+   con le immagini di quelli originali. Con `MIRRTEXT` = 0 i vertici
+   coincidono come insieme, ma il loro ordine può cambiare.
+
+   Il gruppo 50 risultante si scrive uguale a `β` anche per *Aligned* e
+   *Fit*: non sostituisce la ricostruzione dei punti, perché l'ADR 0022 lo
+   conserva ma non lo usa per determinarne la direzione.
+
+   **Perché non si scambiano sempre i punti.** Per un testo senza segnali e
+   senza obliquo da `(0,5)` a `(10,5)`, la riflessione sull'asse X richiede
+   `β = 0°` con `MIRRTEXT` = 0: lo scambio darebbe invece 180°. I punti
+   mantengono l'ordine lungo X e la linea di base va ricollocata per
+   conservare l'ingombro riflesso. Sull'asse Y occorre invece invertire la
+   direzione dei punti riflessi. La ricostruzione sopra comprende entrambi
+   i casi, i segnali preesistenti e gli assi obliqui.
+
+   **Rapporto con AutoCAD.** `autocad-specchiatura.dxf` resta il riferimento
+   per l'effetto visibile e per le scelte di orientamento. Con `MIRRTEXT` = 0
+   le posizioni dipendono dalle misure di Liberation Sans (ADR 0013), non
+   si copiano da AutoCAD. Anche con `MIRRTEXT` = 1 i punti grezzi di
+   *Aligned* e *Fit* non si copiano: AutoCAD può conservare i punti riflessi
+   insieme a un gruppo 50 opposto alla loro direzione (per esempio il testo
+   *Fit* `29A`). Nel modello dell'ADR 0022 quella combinazione non produce
+   la riflessione richiesta: i punti si ricostruiscono come sopra, senza
+   cambiare la definizione di disegno dell'ADR 0022. L'inversione
+   dell'obliquo con `MIRRTEXT` = 0 è una scelta esplicita di questa
+   precisazione, ricavata dalle formule dell'ADR 0022; il file AutoCAD
+   citato non contiene quel caso e non ne costituisce una verifica.
 4. **Estrusione rovesciata.** La geometria di un'entità con estrusione (0,0,−1)
    è già nel sistema del disegno (ADR 0018), quindi si trasforma come le altre e
    il segnale resta.
