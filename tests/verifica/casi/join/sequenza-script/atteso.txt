@@ -1,0 +1,53 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=20,0
+  259 LINE start=30,0 end=55,0
+  261 ARC center=80,0 radius=10 start-angle=0 end-angle=150
+  263 LWPOLYLINE closed=no vertex=220,0 vertex=230,0 vertex=230,10 vertex=240,10
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: JOIN
+  Select source object: 5,0
+  Select lines to join to source: 15,0
+  1 found
+  Select lines to join to source:
+  1 line joined to source
+  Command: JOIN
+  Select source object: 35,0
+  Select lines to join to source: 50,0
+  1 found
+  Select lines to join to source:
+  1 line joined to source
+  Command: JOIN
+  Select source object: 88.6603,5
+  Select arcs to join to source or [cLose]: 75,8.6603
+  Select arcs to join to source or [cLose]:
+  1 arc joined to source
+  Command: JOIN
+  Select source object: 225,0
+  Select objects to join to source: 235,10
+  1 found
+  Select objects to join to source:
+  1 segment added to polyline
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Join
+  Join
+  Join
+  Join
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+  LINE 2
+  LWPOLYLINE 1

@@ -304,6 +304,14 @@
       "sha256": "5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/4ad9fff8a88e65561f3998a56a95adf921b58792/LICENSE"
+    },
+    {
+      "name": "autocad-unione",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/4ad9fff8a88e65561f3998a56a95adf921b58792/autocad-unione.dxf",
+      "version": "4ad9fff8a88e65561f3998a56a95adf921b58792",
+      "sha256": "4df5f4490dc442874c7561e4304e78263bd73a01abcfae5618de15193701dec7",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/4ad9fff8a88e65561f3998a56a95adf921b58792/LICENSE"
     }
   ]
 }
