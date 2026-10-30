@@ -1,0 +1,31 @@
+; Snap a perpendicolare per linee, archi e polilinee (0.7-P7, ADR 0033)
+
+; 1. Linea orizzontale da 0,0 a 10,0
+L1 = LINE start=0,0 end=10,0
+
+; Piede della perpendicolare da (5,10) cade su (5,0)
+? snap 5.1,0.2 aperture=1 modes=perpendicular from=5,10 -> Perpendicular 5,0
+
+; Piede da (15,10) cadrebbe a (15,0), fuori dal segmento: nessuno snap
+? snap 9.8,0.2 aperture=1 modes=perpendicular from=15,10 -> none
+
+; Senza punto base 'from', perpendicolare non da nulla
+? snap 5.1,0.2 aperture=1 modes=perpendicular -> none
+
+; 2. Arco nel primo quadrante (0° - 90°) di raggio 10
+; Da (10,10) la retta verso il centro (0,0) e a 45 gradi; interseca l'arco a (7.0710678118654755, 7.0710678118654755)
+A1 = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+
+? snap 7.1,7.1 aperture=1 modes=perpendicular from=10,10 -> Perpendicular 7.0710678118654755,7.0710678118654755
+
+; Da (-10,10) l'angolo e 135 gradi, fuori dall'arco: nessuno snap
+? snap 0.2,9.8 aperture=1 modes=perpendicular from=-10,10 -> none
+
+; 3. Polilinea a due segmenti: (0,0)-(10,0) e (10,0)-(10,10)
+PL1 = LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=10,10
+
+; Perpendicolare al primo segmento da (5,5)
+? snap 5.1,0.2 aperture=1 modes=perpendicular from=5,5 -> Perpendicular 5,0
+
+; Perpendicolare al secondo segmento da (5,5)
+? snap 9.9,5.1 aperture=1 modes=perpendicular from=5,5 -> Perpendicular 10,5

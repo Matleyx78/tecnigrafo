@@ -1,0 +1,41 @@
+; Priorita tra tipi di snap a pari distanza e centro quando non c'e altro (0.7-P7, ADR 0033 punto 5)
+
+; 1. Estremo contro Quadrante a pari distanza
+; L1 ha estremo in 0,0. C1 ha quadrante a 270° in 0,0 (centro 0,5, raggio 5).
+L1 = LINE start=0,0 end=10,0
+C1 = CIRCLE center=0,5 radius=5
+
+; Con entrambi i modi attivi, a pari distanza vince Estremo
+? snap -0.5,0 aperture=1 modes=endpoint,quadrant -> Endpoint 0,0
+; Spegnendo estremo, viene preso il quadrante
+? snap -0.5,0 aperture=1 modes=quadrant -> Quadrant 0,0
+
+; 2. Medio contro Quadrante a pari distanza
+; L2 ha punto medio in 5,10 (estremi 0,10 e 10,10). C2 ha centro in 5,5 e raggio 5, quindi quadrante a 90° in 5,10.
+L2 = LINE start=0,10 end=10,10
+C2 = CIRCLE center=5,5 radius=5
+
+; Con entrambi i modi attivi, a pari distanza vince Medio
+? snap 5,10.5 aperture=1 modes=midpoint,quadrant -> Midpoint 5,10
+; Spegnendo medio, viene preso il quadrante
+? snap 5,10.5 aperture=1 modes=quadrant -> Quadrant 5,10
+
+; 3. Quadrante contro Perpendicolare a pari distanza
+; C3 ha centro 0,0 e raggio 10, con quadrante a 180° in -10,0.
+; L3 e una linea verticale da -10,-5 a -10,5. Il piede della perpendicolare da 0,0 cade in -10,0.
+C3 = CIRCLE center=0,0 radius=10
+L3 = LINE start=-10,-5 end=-10,5
+
+; Con entrambi i modi attivi, a pari distanza vince Quadrante
+? snap -10.5,0 aperture=1 modes=quadrant,perpendicular from=0,0 -> Quadrant -10,0
+; Spegnendo quadrante, viene presa la perpendicolare
+? snap -10.5,0 aperture=1 modes=perpendicular from=0,0 -> Perpendicular -10,0
+
+; 4. Centro quando nessun punto candidato e entro l'apertura
+; Cerchio con centro 50,50 e raggio 10.
+; A 30° il punto sulla circonferenza e (58.660254037844386, 55.0).
+; Con apertura 2, i quadranti (a 0° in 60,50 e a 90° in 50,60) sono a distanza > 5, quindi fuori dall'apertura.
+; Il puntatore passa sulla curva: viene restituito il centro.
+C4 = CIRCLE center=50,50 radius=10
+
+? snap 58.66,55.0 aperture=2 modes=center,quadrant -> Center 50,50

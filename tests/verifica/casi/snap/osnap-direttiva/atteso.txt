@@ -1,0 +1,60 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 CIRCLE center=0,0 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr]: 0,0
+  Specify radius of circle or [Diameter]: 10
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent
+ortho: off
+pointer: 10.1,0
+active snap: Quadrant 10,0
+statistics:
+  CIRCLE 1
+
+[report 2]
+entities:
+  257 CIRCLE center=0,0 radius=10
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 10.1,0
+active snap: none
+statistics:
+  CIRCLE 1
+
+[final]
+entities:
+  257 CIRCLE center=0,0 radius=10
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 10.1,0
+active snap: none
+statistics:
+  CIRCLE 1

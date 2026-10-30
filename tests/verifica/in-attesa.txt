@@ -65,6 +65,12 @@ erase/selezione-scritta-all #336
 erase/selezione-scritta-bloccati #336
 erase/selezione-scritta-errori #336
 
+# 0.7-R7: snap a quadrante e perpendicolare (#346)
+snap/quadrante #346
+snap/perpendicolare #346
+snap/priorita-nuovi-snap #346
+snap/osnap-direttiva #346
+
 # 0.7-R3: sequenze degli script (#338)
 text/sequenze-script #338
 text/sequenze-script-multiriga #338
