@@ -24,7 +24,6 @@ rectangle: none
 undo:
   Line
   Circle
-  Explode
 redo:
 snap: on
 ortho: off
