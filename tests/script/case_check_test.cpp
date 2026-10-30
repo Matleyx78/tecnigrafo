@@ -154,6 +154,38 @@ TEST(CheckCase, InvalidCasesFailEvenWhenPending) {
     expectContains(check(malformed).output, "script.tgs, line 2: unknown directive '!foo'");
 }
 
+// What the specifications describe and the program does not have yet is a
+// case not passed, not an invalid one: pending, it waits for its package
+// without stopping the CI; not pending, it fails (docs/verifica/casi.md).
+TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
+    const fs::path directive =
+        makeCase("announced-directive", {{"script.tgs", "PLINE\n!scr on\n"}, {"atteso.txt", ""}});
+    const fs::path mode =
+        makeCase("announced-mode",
+                 {{"domande.tgq",
+                   "A = LWPOLYLINE vertex=0,0 vertex=10,0\n? snaps A modes=quadrant -> none\n"}});
+    const fs::path argument = makeCase(
+        "announced-argument",
+        {{"domande.tgq",
+          "A = LWPOLYLINE vertex=0,0 vertex=10,0\n? snap 5,0 aperture=1 from=1,1 -> none\n"}});
+    for (const fs::path& folder : {directive, mode, argument}) {
+        const Result failing = check(folder);
+        EXPECT_EQ(failing.code, kExitFailed) << folder;
+        expectContains(failing.output, "FAILED: ");
+        expectContains(failing.output, ": not implemented yet: ");
+
+        const Result pending = check(folder, true);
+        EXPECT_EQ(pending.code, kExitPassed) << folder;
+        expectContains(pending.output, "pending: ");
+        expectContains(pending.output, ": not implemented yet: ");
+        expectContains(pending.output, "warning: not passed yet");
+    }
+    expectContains(check(directive).output,
+                   "script.tgs, line 2: the directive '!scr' is not implemented yet");
+    expectContains(check(mode).output,
+                   "domande.tgq, line 2: snaps: the snap mode 'quadrant' is not implemented yet");
+}
+
 TEST(CheckCase, Questions) {
     const fs::path passing =
         makeCase("questions-pass",

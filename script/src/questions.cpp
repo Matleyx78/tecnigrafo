@@ -358,7 +358,7 @@ private:
                                           m_access};
         detail::QuestionResult result = row->function(model, arguments);
         if (auto* failure = std::get_if<detail::ArgumentError>(&result)) {
-            return error(std::string{name} + ": " + failure->message);
+            return error(std::string{name} + ": " + failure->message, failure->notImplemented);
         }
         answer.actual = std::get<std::string>(std::move(result));
         answer.matches = answerMatches(row->shape, answer.expected, answer.actual, m_tolerances);
