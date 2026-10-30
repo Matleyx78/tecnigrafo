@@ -32,7 +32,7 @@ using Words = std::vector<std::string_view>;
 // every directive the program has (parseDirective), so an entry left here
 // when its package realizes it (P3 `scr`, P7 `osnap`, P8 `polar`) does
 // nothing; remove it to keep the list short.
-constexpr std::array<std::string_view, 3> kAnnouncedDirectives{"scr", "osnap", "polar"};
+constexpr std::array<std::string_view, 2> kAnnouncedDirectives{"osnap", "polar"};
 
 /// A directive of the catalogue that the program does not have yet: a script
 /// that uses it is not passed, it is not invalid.
@@ -135,11 +135,14 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
         }
         return name == "esc" ? Action{EscDirective{}} : Action{ReportDirective{}};
     }
-    if (name == "snap" || name == "ortho") {
+    if (name == "snap" || name == "ortho" || name == "scr") {
         const std::optional<bool> on =
             arguments.size() == 1 ? parseOnOff(arguments[0]) : std::nullopt;
         if (!on) {
             return wrongArguments(name, "!" + std::string{name} + " on|off");
+        }
+        if (name == "scr") {
+            return Action{ScriptSequencesDirective{*on}};
         }
         const auto aid = name == "snap" ? AidDirective::Aid::Snap : AidDirective::Aid::Ortho;
         return Action{AidDirective{aid, *on}};
@@ -234,8 +237,17 @@ void applyTolerance(const ToleranceDirective& directive, Tolerances& tolerances)
     }
 }
 
-std::variant<Script, ParseError> parseScript(std::string_view text) {
+std::variant<Script, ParseError> parseScript(std::string_view text, std::string_view sourceName) {
     Script script;
+    const std::size_t dot = sourceName.find_last_of('.');
+    const std::string_view extension =
+        dot == std::string_view::npos ? std::string_view{} : sourceName.substr(dot);
+    if (extension.size() == 4 && extension[0] == '.' &&
+        (extension[1] == 's' || extension[1] == 'S') &&
+        (extension[2] == 'c' || extension[2] == 'C') &&
+        (extension[3] == 'r' || extension[3] == 'R')) {
+        script.actions.emplace_back(ScriptSequencesDirective{true});
+    }
     std::optional<int> firstLevel2Line;
     std::optional<int> levelOneLine;
     const std::vector<std::string_view> lines = splitLines(text);

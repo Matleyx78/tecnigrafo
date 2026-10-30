@@ -54,6 +54,9 @@ public:
     /// Script sessions never show dialogs or access application settings.
     void setScriptMode();
 
+    /// Chooses the AutoCAD script sequences without writing to the history.
+    void setScriptSequences(bool on) { m_runner.setScriptSequences(on); }
+
     /// Replaces the platform file picker; an empty answer means Cancel.
     using FileDialog = std::function<QString(cmd::FilePrompt, const QString&)>;
     void setFileDialog(FileDialog dialog);

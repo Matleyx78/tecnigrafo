@@ -245,6 +245,9 @@ public:
     /// File access for commands, not owned. nullptr disables file commands.
     void setFileAccess(io::FileAccess* files);
 
+    /// AutoCAD script sequences (ADR 0032, points 6-8). Default false.
+    void setScriptSequences(bool on);
+
     /// Where messages go (the history of the command line). An empty
     /// function discards them.
     void setMessageSink(std::function<void(std::string)> sink);

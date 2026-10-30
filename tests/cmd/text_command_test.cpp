@@ -48,6 +48,68 @@ TEST(TextCommandTest, LiteralLinesDefaultsAndSingleUndoStep) {
     runner.submit(CancelInput{});
 }
 
+TEST(TextCommandTest, ScriptSequenceFinishesAfterOneLineAndCanBeSwitchedOff) {
+    core::Document document;
+    edit::Editor editor(document);
+    CommandRegistry registry;
+    registerBuiltinCommands(registry);
+    CommandRunner runner(registry, editor);
+    runner.setScriptSequences(true);
+    for (const char* input : {"TEXT", "10,20", "3", "90", "  first line  "}) {
+        runner.submitText(input);
+    }
+    EXPECT_FALSE(runner.isActive());
+    EXPECT_FALSE(editor.inTransaction());
+    EXPECT_TRUE(runner.preview().empty());
+    ASSERT_EQ(document.entityCount(), 1U);
+    const auto& text = std::get<core::Text>(document.entities().front().entity);
+    EXPECT_EQ(text.value, "  first line  ");
+    EXPECT_EQ(text.position, (core::Vec2{10, 20}));
+    EXPECT_DOUBLE_EQ(text.height, 3);
+    EXPECT_DOUBLE_EQ(text.rotation, std::numbers::pi / 2);
+    runner.submitText("U");
+    EXPECT_TRUE(document.isEmpty());
+    runner.submitText("REDO");
+    EXPECT_EQ(document.entityCount(), 1U);
+
+    runner.setScriptSequences(false);
+    for (const char* input : {"DTEXT", "0,0", "", "", "One", "Two"}) {
+        runner.submitText(input);
+    }
+    EXPECT_TRUE(runner.isActive());
+    EXPECT_EQ(document.entityCount(), 3U);
+    runner.submitText("");
+    EXPECT_FALSE(runner.isActive());
+    runner.submitText("U");
+    EXPECT_EQ(document.entityCount(), 1U);
+}
+
+TEST(TextCommandTest, ScriptSequenceEmptyTextAndEscapeKeepRedo) {
+    core::Document document;
+    edit::Editor editor(document);
+    CommandRegistry registry;
+    registerBuiltinCommands(registry);
+    CommandRunner runner(registry, editor);
+    runner.setScriptSequences(true);
+    for (const char* input : {"DT", "0,0", "", "", "One", "U"}) {
+        runner.submitText(input);
+    }
+    for (const bool escape : {false, true}) {
+        for (const char* input : {"TEXT", "0,0", "", ""}) {
+            runner.submitText(input);
+        }
+        if (escape) {
+            runner.submit(CancelInput{});
+        } else {
+            runner.submitText("");
+        }
+        EXPECT_FALSE(runner.isActive());
+        EXPECT_FALSE(editor.inTransaction());
+        EXPECT_TRUE(document.isEmpty());
+        EXPECT_TRUE(editor.canRedo());
+    }
+}
+
 TEST(TextCommandTest, EscapeAtEveryStageAndInvalidHeightsPreserveRedo) {
     core::Document document;
     edit::Editor editor(document);

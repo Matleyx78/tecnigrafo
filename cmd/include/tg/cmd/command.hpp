@@ -75,6 +75,7 @@ struct CommandContext {
     CommandDefaults defaults{};
     io::FileAccess* files{nullptr};
     bool documentReplaced{false};
+    bool scriptSequences{false};  ///< AutoCAD script sequences (ADR 0032, points 6-8).
 };
 
 enum class Status : std::uint8_t { Continue, Finished };

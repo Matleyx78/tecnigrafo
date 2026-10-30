@@ -8,6 +8,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
+#include "tg/script/case_check.hpp"
 #include "tg/script/compare.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
@@ -21,6 +22,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <locale>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -246,6 +248,63 @@ TEST(RunLevel1, SnapDirectiveTurnsTheActiveSnapOff) {
     expectContains(reportOf(drawn), "pointer: 99,1\nactive snap: Endpoint 100,0\n");
     expectContains(reportOf(drawn + "!snap off\n"),
                    "snap: off\northo: off\npointer: 99,1\nactive snap: none\n");
+}
+
+TEST(RunLevel1, ScriptSequencesDirectiveSwitchesBothWaysWithoutMessages) {
+    const std::string report = reportOf(
+        "!scr on\nTEXT\n0,0\n\n\nOne\n!report\n"
+        "!scr off\nTEXT\n0,10\n\n\nTwo\nThree\n!report\n\n");
+    expectContains(section(report, "report 1"), "prompt: Command:\n");
+    expectContains(section(report, "report 2"), "prompt: Enter text:\n");
+    expectContains(section(report, "final"), "prompt: Command:\n");
+    expectContains(report, "value=\"One\"");
+    expectContains(report, "value=\"Two\"");
+    expectContains(report, "value=\"Three\"");
+    EXPECT_EQ(report.find("!scr"), std::string::npos);
+}
+
+TEST(RunLevel1, ScriptSequencesDirectiveRejectsMalformedArguments) {
+    for (const char* line : {"!scr", "!scr yes", "!scr ON", "!scr on off"}) {
+        const auto result = parseScript(std::string{"; comment\n"} + line + "\n");
+        ASSERT_TRUE(std::holds_alternative<ParseError>(result)) << line;
+        const auto& error = std::get<ParseError>(result);
+        EXPECT_EQ(error.line, 2);
+        EXPECT_EQ(error.message, "wrong arguments for !scr, expected: !scr on|off");
+        EXPECT_FALSE(error.notImplemented);
+    }
+}
+
+TEST(RunLevel1, RunFileSelectsScriptSequencesByExtension) {
+    const std::filesystem::path folder =
+        std::filesystem::path{TG_SCRIPT_TEST_OUTPUT} / "sequence-extensions";
+    std::filesystem::create_directories(folder);
+    for (const char* extension : {".scr", ".SCR", ".ScR", ".tgs"}) {
+        const auto file = folder / (std::string{"text"} + extension);
+        {
+            std::ofstream out(file, std::ios::binary);
+            out << "TEXT\n0,0\n\n\nOne\n";
+            ASSERT_TRUE(out.good());
+        }
+        std::ostringstream report;
+        std::ostringstream error;
+        EXPECT_EQ(runScriptFile(file, std::nullopt, report, error), kExitPassed);
+        EXPECT_TRUE(error.str().empty()) << error.str();
+        const std::string_view prompt =
+            std::string_view{extension} == ".tgs" ? "prompt: Enter text:\n" : "prompt: Command:\n";
+        expectContains(report.str(), prompt);
+        std::filesystem::remove(file);
+    }
+}
+
+TEST(RunLevel1, ScrExtensionDefaultCanBeOverriddenWithoutChangingErrorLines) {
+    const auto result = parseScript("!scr off\nTEXT\n0,0\n\n\nOne\nTwo\n", "text.SCR");
+    ASSERT_TRUE(std::holds_alternative<Script>(result));
+    const std::string report = runLevel1(std::get<Script>(result));
+    expectContains(report, "value=\"Two\"");
+    expectContains(report, "prompt: Enter text:\n");
+    const auto error = parseScript("; comment\n!scr bad\n", "text.scr");
+    ASSERT_TRUE(std::holds_alternative<ParseError>(error));
+    EXPECT_EQ(std::get<ParseError>(error).line, 2);
 }
 
 TEST(RunLevel1, OrthoDirective) {

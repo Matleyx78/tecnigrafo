@@ -220,6 +220,11 @@ bool ScriptSession::perform(const script::AidDirective& directive) {
     return true;
 }
 
+bool ScriptSession::perform(const script::ScriptSequencesDirective& directive) {
+    m_window.setScriptSequences(directive.on);
+    return true;
+}
+
 bool ScriptSession::perform(const script::KeyDirective& key) {
     const QKeySequence sequence =
         QKeySequence::fromString(QString::fromStdString(key.key), QKeySequence::PortableText);
@@ -340,7 +345,8 @@ int runScriptFile(const QString& scriptPath, const QString& outputFolder) {
     }
     const QByteArray bytes = file.readAll();
     const std::variant<script::Script, script::ParseError> parsed = script::parseScript(
-        std::string_view(bytes.constData(), static_cast<std::size_t>(bytes.size())));
+        std::string_view(bytes.constData(), static_cast<std::size_t>(bytes.size())),
+        QFileInfo(scriptPath).fileName().toStdString());
     if (const auto* error = std::get_if<script::ParseError>(&parsed)) {
         std::cerr << scriptPath.toStdString() << ", line " << error->line << ": " << error->message
                   << "\n";
