@@ -405,13 +405,16 @@ quelli si creano solo le issue nuove.
 1. In una chat con solid-space in scrittura, scrivi a Claude:
 
    ```text
-   Apri la tappa <tappa> secondo docs/ROADMAP.md, "Aprire una tappa": crea il
-   milestone v<tappa>, l'etichetta tappa-<tappa>, le issue [<tappa>-PN] e
-   [<tappa>-RN] con le etichette indicate nel piano, scrivi i numeri delle issue
-   nel documento della tappa e aggiorna la tabella della ROADMAP. Apri una pull
-   request con le modifiche ai documenti.  Usa solo il piano che sta in main: se
-   docs/tappe/<tappa>-*.md non c'è in main, fermati e dimmelo, senza usare rami o pull
-   request aperte.
+    Apri la tappa <tappa> secondo docs/ROADMAP.md, "Aprire una tappa": crea il
+    milestone v<tappa>, l'etichetta tappa-<tappa>, le issue [<tappa>-PN] e
+    [<tappa>-RN] con le etichette del piano (tappa-<tappa>, pacchetto o
+    riferimenti, la difficoltà e l'agente della riga). Con tutte le issue create,
+    scrivi i loro numeri nel documento della tappa e nella riga "Dipende da" di
+    ogni issue, e segna le dipendenze «bloccata da» come dice
+    docs/LAVORO-IN-PARALLELO.md, sezione 2. Aggiorna la tabella della ROADMAP. Apri
+    una pull request con le modifiche ai documenti. Usa solo il piano che sta in
+    main: se docs/tappe/<tappa>-*.md non c'è in main, fermati e dimmelo, senza usare
+    rami o pull request aperte.
    ```
 
 2. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
