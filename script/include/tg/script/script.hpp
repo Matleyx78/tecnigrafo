@@ -133,8 +133,8 @@ struct Script {
 /// error, so a script that parses at level 1 always runs there.
 /// A .scr source path (case insensitive) adds an initial !scr on action;
 /// an empty path or another extension keeps the interactive sequence.
-[[nodiscard]] std::variant<Script, ParseError> parseScript(
-    std::string_view text, std::string_view sourceName = {});
+[[nodiscard]] std::variant<Script, ParseError> parseScript(std::string_view text,
+                                                           std::string_view sourceName = {});
 
 /// Reads "!tolerance <kind> <value>" without the leading "!tolerance": the
 /// words after it, already split. Shared with the question files.
