@@ -576,6 +576,10 @@ TEST(SnapKindName, EveryKind) {
     EXPECT_EQ(snapKindName(core::SnapKind::Midpoint), "Midpoint");
     EXPECT_EQ(snapKindName(core::SnapKind::Center), "Center");
     EXPECT_EQ(snapKindName(core::SnapKind::Insertion), "Insertion");
+    EXPECT_EQ(snapKindName(core::SnapKind::Intersection), "Intersection");
+    EXPECT_EQ(snapKindName(core::SnapKind::Perpendicular), "Perpendicular");
+    EXPECT_EQ(snapKindName(core::SnapKind::Tangent), "Tangent");
+    EXPECT_EQ(snapKindName(core::SnapKind::Quadrant), "Quadrant");
 }
 
 }  // namespace

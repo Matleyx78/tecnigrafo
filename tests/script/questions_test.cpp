@@ -120,6 +120,34 @@ TEST(Questions, SnapPointsInAnyOrder) {
     expectAnswer("snaps B modes=endpoint,center", "Endpoint 20,0; Endpoint 30,0; Center 25,0");
 }
 
+// The quadrants of B, an arc from 180 to 360 degrees: its two end points and
+// the lowest one, not the top one.
+TEST(Questions, SnapQuadrants) {
+    expectAnswer("snaps B modes=quadrant", "Quadrant 20,0; Quadrant 25,-5; Quadrant 30,0");
+    expectAnswer("snaps A modes=quadrant", "none");  // straight segments have none
+    expectAnswer("snap 25.2,-4.8 aperture=1 modes=quadrant", "Quadrant 25,-5");
+}
+
+// Without "modes=" the questions keep the four modes of stage 0.4: the
+// quadrants are off, and so is the intersection.
+TEST(Questions, SnapWithoutModesKeepsTheFourOfStageFour) {
+    expectAnswer("snaps B", "Center 25,0; Midpoint 25,-5; Endpoint 20,0; Endpoint 30,0");
+    expectAnswer("snap 25.2,-4.9 aperture=1", "Midpoint 25,-5");
+}
+
+TEST(Questions, SnapPerpendicularStartsFromTheBasePoint) {
+    // The foot on the first segment of A, then on its second one.
+    expectAnswer("snap 5.1,0.2 aperture=1 modes=perpendicular from=5,3", "Perpendicular 5,0");
+    expectAnswer("snap 9.9,3.1 aperture=1 modes=perpendicular from=5,3", "Perpendicular 10,3");
+    // The foot falls on the extension of the segment: nothing.
+    expectAnswer("snap 9.8,0.2 aperture=1 modes=perpendicular from=15,3", "none");
+    // Without `from=` there is no base point.
+    expectAnswer("snap 5.1,0.2 aperture=1 modes=perpendicular", "none");
+    // On B the foot is where the line from the centre to `from=` meets the arc:
+    // below the axis, not above it.
+    expectAnswer("snap 25.2,-4.8 aperture=1 modes=perpendicular from=25,10", "Perpendicular 25,-5");
+}
+
 TEST(Questions, Pick) {
     expectAnswer("pick 5,1 tolerance=2", "A");
     expectAnswer("pick 5,5 tolerance=1", "none");  // inside the L, far from it
@@ -253,6 +281,8 @@ TEST(Questions, ErrorsGiveTheirLine) {
              Case{defined + "? snaps A modes=endpoint,corner -> none", 4},
              Case{defined + "? snap 5,0 aperture=1 aperure=1 -> none", 4},
              Case{defined + "? snap 5,0 aperture=1 from -> none", 4},
+             Case{defined + "? snap 5,0 aperture=1 from=1 -> none", 4},
+             Case{defined + "? snap 5,0 aperture=1 from=1,1 from=2,2 -> none", 4},
              // `from=` is only an argument of `snap`.
              Case{defined + "? snaps A from=1,1 -> none", 4},
          }) {

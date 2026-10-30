@@ -301,6 +301,40 @@ void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
             painter.drawPolyline(points, true);
             break;
         }
+        case core::SnapKind::Intersection: {
+            // A cross: the two diagonals of the marker (docs/adr/0033, point 1).
+            painter.drawLine(center + Vec2{-half, -half}, center + Vec2{half, half});
+            painter.drawLine(center + Vec2{half, -half}, center + Vec2{-half, half});
+            break;
+        }
+        case core::SnapKind::Perpendicular: {
+            // The right-angle symbol: a base along the bottom of the marker
+            // and a stem rising from its middle.
+            painter.drawLine(center + Vec2{-half, half}, center + Vec2{half, half});
+            painter.drawLine(center + Vec2{0.0, half}, center + Vec2{0.0, -half});
+            break;
+        }
+        case core::SnapKind::Tangent: {
+            // The circle of the centre marker, with a line along the top of the
+            // marker, tangent to it (docs/adr/0033, point 1).
+            constexpr std::size_t kCircleSegments = 32;
+            std::array<Vec2, kCircleSegments> points;
+            for (std::size_t i = 0; i < points.size(); ++i) {
+                const double angle =
+                    core::kTwoPi * static_cast<double>(i) / static_cast<double>(points.size());
+                points.at(i) = center + Vec2{std::cos(angle), std::sin(angle)} * half;
+            }
+            painter.drawPolyline(points, true);
+            painter.drawLine(center + Vec2{-half, -half}, center + Vec2{half, -half});
+            break;
+        }
+        case core::SnapKind::Quadrant: {
+            // A diamond.
+            const std::array points{center + Vec2{0.0, -half}, center + Vec2{half, 0.0},
+                                    center + Vec2{0.0, half}, center + Vec2{-half, 0.0}};
+            painter.drawPolyline(points, true);
+            break;
+        }
     }
 }
 

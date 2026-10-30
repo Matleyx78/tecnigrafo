@@ -101,6 +101,50 @@ TEST(ParseScript, EveryDirective) {
               Action(ToleranceDirective{ToleranceDirective::Kind::Absolute, 1e-6}));
 }
 
+namespace {
+
+/// The modes of "!osnap <text>": the listed ones on, the others off.
+core::SnapModes onlyModes(std::initializer_list<bool core::SnapModes::*> on) {
+    core::SnapModes modes;
+    for (bool core::SnapModes::*member :
+         {&core::SnapModes::endpoint, &core::SnapModes::midpoint, &core::SnapModes::center,
+          &core::SnapModes::insertion, &core::SnapModes::intersection,
+          &core::SnapModes::perpendicular, &core::SnapModes::tangent, &core::SnapModes::quadrant}) {
+        modes.*member = false;
+    }
+    for (bool core::SnapModes::*member : on) {
+        modes.*member = true;
+    }
+    return modes;
+}
+
+}  // namespace
+
+TEST(ParseScript, OsnapSetsExactlyTheListedModes) {
+    EXPECT_EQ(single("!osnap qua"),
+              Action(OsnapDirective{onlyModes({&core::SnapModes::quadrant})}));
+    EXPECT_EQ(single("!osnap end,mid"),
+              Action(OsnapDirective{
+                  onlyModes({&core::SnapModes::endpoint, &core::SnapModes::midpoint})}));
+    EXPECT_EQ(
+        single("!osnap cen,ins,int,per,tan"),
+        Action(OsnapDirective{onlyModes(
+            {&core::SnapModes::center, &core::SnapModes::insertion, &core::SnapModes::intersection,
+             &core::SnapModes::perpendicular, &core::SnapModes::tangent})}));
+    EXPECT_EQ(single("!osnap none"), Action(OsnapDirective{onlyModes({})}));
+}
+
+TEST(ParseScript, OsnapWithWrongArgumentsIsInvalid) {
+    for (const std::string_view text :
+         {"!osnap", "!osnap qua per", "!osnap quadrant", "!osnap QUA", "!osnap end,", "!osnap ,end",
+          "!osnap end,,mid", "!osnap end,xyz", "!osnap none,end", "!osnap on"}) {
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 1) << text;
+        EXPECT_FALSE(error.message.empty()) << text;
+        EXPECT_FALSE(error.notImplemented) << text;
+    }
+}
+
 TEST(ParseScript, ArgumentsMayBeSeparatedByTabsAndManySpaces) {
     EXPECT_EQ(single("!click  3,4\tremove  "), Action(ClickDirective{{3.0, 4.0}, true}));
 }

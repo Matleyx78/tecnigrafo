@@ -9,9 +9,12 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <ranges>
+#include <utility>
 #include <vector>
 
 namespace tg::render {
@@ -117,7 +120,10 @@ public:
 
     std::vector<TextRun> texts;
 
-    void drawLine(const Vec2& /*from*/, const Vec2& /*to*/) override { ++lines; }
+    void drawLine(const Vec2& from, const Vec2& to) override {
+        ++lines;
+        segments.emplace_back(from, to);
+    }
 
     void drawPolyline(std::span<const Vec2> points, bool closed) override {
         polylines.emplace_back(points.begin(), points.end());
@@ -139,6 +145,7 @@ public:
     Color polylinePen;
     int clears{0};
     int lines{0};
+    std::vector<std::pair<Vec2, Vec2>> segments;  ///< every drawLine(), in order
     bool lastClosed{false};
     std::vector<std::vector<Vec2>> polylines;
 };
@@ -565,6 +572,108 @@ TEST(SnapMarkerRenderer, InsertionIsTwoOverlappingOffsetSquares) {
         EXPECT_LT(squares[1].min().y, squares[0].max().y);
         EXPECT_TRUE(painter.lastClosed);
         EXPECT_EQ(painter.polylinePen, style.snapMarker);
+        EXPECT_DOUBLE_EQ(painter.polylineWidth, 2.0);
+    }
+}
+
+// The markers of docs/adr/0033, point 1: a cross, the perpendicular symbol, a
+// circle with a tangent line, a diamond. Each one is centred on the snap
+// point and fills a square of snapMarkerSizePx, whatever the zoom.
+TEST(SnapMarkerRenderer, IntersectionIsAnXCrossOfTwoDiagonals) {
+    for (const double size : {10.0, 24.0}) {
+        SceneStyle style;
+        style.snapMarkerSizePx = size;
+        const Viewport viewport = makeViewport();
+        const core::SnapPoint snap{{11, 21}, core::SnapKind::Intersection};
+        const Vec2 center = viewport.worldToScreen(snap.point);
+        const double half = size * 0.5;
+        RecordingPainter painter;
+        renderSnapMarker(snap, viewport, style, painter);
+        EXPECT_TRUE(painter.polylines.empty());
+        ASSERT_EQ(painter.segments.size(), 2U);
+        expectNear(painter.segments[0].first, center + Vec2{-half, -half});
+        expectNear(painter.segments[0].second, center + Vec2{half, half});
+        expectNear(painter.segments[1].first, center + Vec2{half, -half});
+        expectNear(painter.segments[1].second, center + Vec2{-half, half});
+        EXPECT_EQ(painter.pen, style.snapMarker);
+        EXPECT_DOUBLE_EQ(painter.penWidth, 2.0);
+        EXPECT_EQ(painter.penStyle, LineStyle::Solid);
+    }
+}
+
+TEST(SnapMarkerRenderer, PerpendicularIsABaseWithAStem) {
+    for (const double size : {10.0, 24.0}) {
+        SceneStyle style;
+        style.snapMarkerSizePx = size;
+        const Viewport viewport = makeViewport();
+        const core::SnapPoint snap{{11, 21}, core::SnapKind::Perpendicular};
+        const Vec2 center = viewport.worldToScreen(snap.point);
+        const double half = size * 0.5;
+        RecordingPainter painter;
+        renderSnapMarker(snap, viewport, style, painter);
+        EXPECT_TRUE(painter.polylines.empty());
+        ASSERT_EQ(painter.segments.size(), 2U);
+        // The base along the bottom, the stem from its middle to the top.
+        expectNear(painter.segments[0].first, center + Vec2{-half, half});
+        expectNear(painter.segments[0].second, center + Vec2{half, half});
+        expectNear(painter.segments[1].first, center + Vec2{0.0, half});
+        expectNear(painter.segments[1].second, center + Vec2{0.0, -half});
+        EXPECT_EQ(painter.pen, style.snapMarker);
+        EXPECT_DOUBLE_EQ(painter.penWidth, 2.0);
+    }
+}
+
+TEST(SnapMarkerRenderer, TangentIsACircleUnderATangentLine) {
+    for (const double size : {10.0, 24.0}) {
+        SceneStyle style;
+        style.snapMarkerSizePx = size;
+        const Viewport viewport = makeViewport();
+        const core::SnapPoint snap{{11, 21}, core::SnapKind::Tangent};
+        const Vec2 center = viewport.worldToScreen(snap.point);
+        const double half = size * 0.5;
+        RecordingPainter painter;
+        renderSnapMarker(snap, viewport, style, painter);
+        ASSERT_EQ(painter.polylines.size(), 1U);
+        ASSERT_EQ(painter.segments.size(), 1U);
+        EXPECT_TRUE(painter.lastClosed);
+        const auto& circle = painter.polylines.front();
+        EXPECT_GE(circle.size(), 16U);
+        for (const Vec2 point : circle) {
+            EXPECT_NEAR(core::distance(point, center), half, kEps);
+        }
+        // The line runs along the top of the marker, touching the circle at
+        // its highest point.
+        const auto& [from, to] = painter.segments.front();
+        expectNear(from, center + Vec2{-half, -half});
+        expectNear(to, center + Vec2{half, -half});
+        const double top = std::ranges::min(circle | std::views::transform(&Vec2::y));
+        EXPECT_NEAR(top, from.y, kEps);
+        EXPECT_EQ(painter.polylinePen, style.snapMarker);
+        EXPECT_DOUBLE_EQ(painter.polylineWidth, 2.0);
+    }
+}
+
+TEST(SnapMarkerRenderer, QuadrantIsADiamond) {
+    for (const double size : {10.0, 24.0}) {
+        SceneStyle style;
+        style.snapMarkerSizePx = size;
+        const Viewport viewport = makeViewport();
+        const core::SnapPoint snap{{11, 21}, core::SnapKind::Quadrant};
+        const Vec2 center = viewport.worldToScreen(snap.point);
+        const double half = size * 0.5;
+        RecordingPainter painter;
+        renderSnapMarker(snap, viewport, style, painter);
+        EXPECT_EQ(painter.lines, 0);
+        ASSERT_EQ(painter.polylines.size(), 1U);
+        const auto& points = painter.polylines.front();
+        ASSERT_EQ(points.size(), 4U);
+        expectNear(points[0], center + Vec2{0.0, -half});
+        expectNear(points[1], center + Vec2{half, 0.0});
+        expectNear(points[2], center + Vec2{0.0, half});
+        expectNear(points[3], center + Vec2{-half, 0.0});
+        EXPECT_TRUE(painter.lastClosed);
+        EXPECT_EQ(painter.polylinePen, style.snapMarker);
+        EXPECT_EQ(painter.polylineStyle, LineStyle::Solid);
         EXPECT_DOUBLE_EQ(painter.polylineWidth, 2.0);
     }
 }

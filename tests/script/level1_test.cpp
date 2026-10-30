@@ -345,7 +345,20 @@ TEST(WriteState, SnapModesOffAreListed) {
     runner.setDrawingAids(aids);
     std::string out;
     writeState({"final", editor, runner, {}, std::nullopt}, out);
-    expectContains(out, "snap: on, modes off: midpoint center\n");
+    // The perpendicular, tangent and quadrant modes are off by default, so
+    // they follow the two switched off here.
+    expectContains(out, "snap: on, modes off: midpoint center perpendicular tangent quadrant\n");
+}
+
+TEST(WriteState, DefaultSnapModesAreNotListed) {
+    core::Document document;
+    edit::Editor editor(document);
+    cmd::CommandRegistry registry;
+    cmd::registerBuiltinCommands(registry);
+    cmd::CommandRunner runner(registry, editor);
+    std::string out;
+    writeState({"final", editor, runner, {}, std::nullopt}, out);
+    expectContains(out, "snap: on\n");
 }
 
 TEST(SnapModeNames, EveryModeOnce) {
@@ -353,8 +366,46 @@ TEST(SnapModeNames, EveryModeOnce) {
     for (const SnapModeName& mode : snapModeNames()) {
         names.push_back(mode.name);
     }
-    EXPECT_EQ(names,
-              (std::vector<std::string_view>{"endpoint", "midpoint", "center", "insertion"}));
+    EXPECT_EQ(names, (std::vector<std::string_view>{"endpoint", "midpoint", "center", "insertion",
+                                                    "intersection", "perpendicular", "tangent",
+                                                    "quadrant"}));
+}
+
+// !osnap sets the modes and leaves the !snap switch alone (docs/verifica/
+// script.md).
+TEST(RunLevel1, OsnapSetsTheModesAndNotTheSwitch) {
+    const std::string report = reportOf("!osnap end,qua\n!report\n!snap off\n!osnap none\n");
+    expectContains(section(report, "report 1"),
+                   "snap: on, modes off: midpoint center insertion intersection perpendicular "
+                   "tangent\n");
+    expectContains(section(report, "final"),
+                   "snap: off, modes off: endpoint midpoint center insertion intersection "
+                   "perpendicular tangent quadrant\n");
+    // Nothing is written to the history.
+    expectContains(section(report, "report 1"), "messages:\nprompt: Command:\n");
+}
+
+// The quadrant of a circle becomes the active snap once the mode is on; before,
+// passing over the circle gives its centre.
+TEST(RunLevel1, QuadrantIsTheActiveSnapOnlyWhenTheModeIsOn) {
+    const std::string script =
+        "CIRCLE\n0,0\n10\nLINE\n!move 10.1,0\n!report\n!osnap qua\n!report\n";
+    const std::string report = reportOf(script);
+    expectContains(section(report, "report 1"), "active snap: Center 0,0\n");
+    expectContains(section(report, "report 2"), "active snap: Quadrant 10,0\n");
+}
+
+// A snap of the base point: the running LINE starts at 0,10 and the foot of
+// the perpendicular on the horizontal line is under it.
+TEST(RunLevel1, PerpendicularStartsFromTheBasePointOfTheCommand) {
+    const std::string script =
+        "PLINE\n0,0\n20,0\n\n!osnap per\nLINE\n5,10\n!move 5.1,0.2\n!report\n";
+    expectContains(section(reportOf(script), "report 1"), "active snap: Perpendicular 5,0\n");
+}
+
+TEST(RunLevel1, PerpendicularGivesNothingWithoutABasePoint) {
+    const std::string script = "PLINE\n0,0\n20,0\n\n!osnap per\nLINE\n!move 5.1,0.2\n!report\n";
+    expectContains(section(reportOf(script), "report 1"), "active snap: none\n");
 }
 
 }  // namespace

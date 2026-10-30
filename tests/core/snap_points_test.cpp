@@ -248,5 +248,170 @@ TEST(SnapPoints, InsertionModeOnlyAffectsTexts) {
     EXPECT_TRUE(out.empty());
 }
 
+// ---------------------------------------------------------------------------
+// Quadrants and perpendiculars (docs/adr/0033)
+
+/// Only the given mode on, all the others off.
+SnapModes only(bool SnapModes::*mode) {
+    SnapModes modes{false, false, false, false, false, false, false, false};
+    modes.*mode = true;
+    return modes;
+}
+
+void expectPoints(const std::vector<SnapPoint>& actual, const std::vector<SnapPoint>& expected) {
+    ASSERT_EQ(actual.size(), expected.size());
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        EXPECT_EQ(actual[i].kind, expected[i].kind) << i;
+        EXPECT_NEAR(actual[i].point.x, expected[i].point.x, 1e-12) << i;
+        EXPECT_NEAR(actual[i].point.y, expected[i].point.y, 1e-12) << i;
+    }
+}
+
+TEST(SnapPoints, NewModesDefaults) {
+    const SnapModes modes;
+    EXPECT_TRUE(modes.intersection);
+    EXPECT_FALSE(modes.perpendicular);
+    EXPECT_FALSE(modes.tangent);
+    EXPECT_FALSE(modes.quadrant);
+    // The default modes give no quadrant and no perpendicular.
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{Circle{{1, 2}, 3}}, modes, out, Vec2{9, 9});
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{1, 2}, SnapKind::Center}}));
+}
+
+TEST(SnapPoints, CircleHasTheFourQuadrants) {
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{Circle{{1, 2}, 3}}, only(&SnapModes::quadrant), out);
+    // The exact sums of centre and radius, from 0 degrees counter-clockwise.
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{4, 2}, SnapKind::Quadrant},
+                                           {{1, 5}, SnapKind::Quadrant},
+                                           {{-2, 2}, SnapKind::Quadrant},
+                                           {{1, -1}, SnapKind::Quadrant}}));
+}
+
+TEST(SnapPoints, ArcHasOnlyTheQuadrantsInsideIt) {
+    // From 45 to 225 degrees: 90 and 180 are inside, 0 and 270 are not.
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{Arc{{0, 0}, 2, kPi / 4.0, 5.0 * kPi / 4.0}}, only(&SnapModes::quadrant),
+                     out);
+    EXPECT_EQ(
+        out, (std::vector<SnapPoint>{{{0, 2}, SnapKind::Quadrant}, {{-2, 0}, SnapKind::Quadrant}}));
+    // A short arc inside one quadrant has none.
+    out.clear();
+    appendSnapPoints(Entity{Arc{{0, 0}, 2, kPi / 8.0, 3.0 * kPi / 8.0}}, only(&SnapModes::quadrant),
+                     out);
+    EXPECT_TRUE(out.empty());
+}
+
+TEST(SnapPoints, QuadrantOnAnEndPointOfTheArcIsThatEndPoint) {
+    // From 0 to 90 degrees: both end points are quadrants, and exactly the
+    // same points as the end points.
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{Arc{{1, 1}, 2, 0, kPi / 2.0}}, only(&SnapModes::quadrant), out);
+    EXPECT_EQ(out,
+              (std::vector<SnapPoint>{{{3, 1}, SnapKind::Quadrant}, {{1, 3}, SnapKind::Quadrant}}));
+}
+
+TEST(SnapPoints, ArcSegmentOfAPolylineHasItsQuadrants) {
+    // Bulge 1 from (-2,0) to (2,0): the lower half circle, from 180 to 360
+    // degrees. Both end points and the lowest point are quadrants, in the
+    // order 0, 180 and 270 degrees.
+    std::vector<SnapPoint> out;
+    appendSnapPoints(PolylineSegment{{-2, 0}, {2, 0}, 1}, only(&SnapModes::quadrant), out);
+    expectPoints(out, {{{2, 0}, SnapKind::Quadrant},
+                       {{-2, 0}, SnapKind::Quadrant},
+                       {{0, -2}, SnapKind::Quadrant}});
+    // The same in a polyline: shared points are listed once.
+    out.clear();
+    appendSnapPoints(Entity{Polyline{{{{-2, 0}, 1}, {{2, 0}, 0}}}}, only(&SnapModes::quadrant),
+                     out);
+    EXPECT_EQ(out.size(), 3U);
+    // A straight segment has none.
+    out.clear();
+    appendSnapPoints(PolylineSegment{{0, 0}, {4, 0}}, only(&SnapModes::quadrant), out);
+    EXPECT_TRUE(out.empty());
+}
+
+TEST(SnapPoints, PerpendicularToALineFallsOnTheLineOnly) {
+    const Entity line = Line{{0, 0}, {10, 0}};
+    std::vector<SnapPoint> out;
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out, Vec2{5, 10});
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{5, 0}, SnapKind::Perpendicular}}));
+    // On the extension of the line: nothing, on either side.
+    out.clear();
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out, Vec2{15, 10});
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out, Vec2{-1, 3});
+    EXPECT_TRUE(out.empty());
+    // Over an end point, the foot is that end point, exactly.
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out, Vec2{10, 4});
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out, Vec2{0, 4});
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{10, 0}, SnapKind::Perpendicular},
+                                           {{0, 0}, SnapKind::Perpendicular}}));
+    // A base point on the line is its own foot.
+    out.clear();
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out, Vec2{3, 0});
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{3, 0}, SnapKind::Perpendicular}}));
+}
+
+TEST(SnapPoints, PerpendicularNeedsABasePointAndTheMode) {
+    const Entity line = Line{{0, 0}, {10, 0}};
+    std::vector<SnapPoint> out;
+    appendSnapPoints(line, only(&SnapModes::perpendicular), out);
+    EXPECT_TRUE(out.empty());
+    appendSnapPoints(line, SnapModes{}, out, Vec2{5, 10});
+    EXPECT_EQ(std::ranges::count(out, SnapKind::Perpendicular, &SnapPoint::kind), 0);
+}
+
+TEST(SnapPoints, PerpendicularToACircleIsOnTheLineThroughTheCentre) {
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{Circle{{0, 0}, 2}}, only(&SnapModes::perpendicular), out, Vec2{5, 0});
+    // Both feet, the nearer first.
+    expectPoints(out, {{{2, 0}, SnapKind::Perpendicular}, {{-2, 0}, SnapKind::Perpendicular}});
+    // From the centre every direction is as good: none.
+    out.clear();
+    appendSnapPoints(Entity{Circle{{0, 0}, 2}}, only(&SnapModes::perpendicular), out, Vec2{0, 0});
+    EXPECT_TRUE(out.empty());
+}
+
+TEST(SnapPoints, PerpendicularToAnArcFallsOnTheArcOnly) {
+    // The arc from 0 to 90 degrees, radius 2.
+    const Entity arc = Arc{{0, 0}, 2, 0, kPi / 2.0};
+    const double root = std::sqrt(2.0);
+    std::vector<SnapPoint> out;
+    appendSnapPoints(arc, only(&SnapModes::perpendicular), out, Vec2{3, 3});
+    expectPoints(out, {{{root, root}, SnapKind::Perpendicular}});
+    // From the opposite side the near foot is outside the arc, the far one is on it.
+    out.clear();
+    appendSnapPoints(arc, only(&SnapModes::perpendicular), out, Vec2{-3, -3});
+    expectPoints(out, {{{root, root}, SnapKind::Perpendicular}});
+    // From a direction that meets the circle outside the arc at both ends.
+    out.clear();
+    appendSnapPoints(arc, only(&SnapModes::perpendicular), out, Vec2{-3, 3});
+    EXPECT_TRUE(out.empty());
+}
+
+TEST(SnapPoints, PerpendicularToTheSegmentsOfAPolyline) {
+    // (0,0)-(10,0)-(10,10): from (5,5) the feet are (5,0) and (10,5).
+    const Entity polyline = Polyline{{{{0, 0}, 0}, {{10, 0}, 0}, {{10, 10}, 0}}};
+    std::vector<SnapPoint> out;
+    appendSnapPoints(polyline, only(&SnapModes::perpendicular), out, Vec2{5, 5});
+    EXPECT_EQ(out, (std::vector<SnapPoint>{{{5, 0}, SnapKind::Perpendicular},
+                                           {{10, 5}, SnapKind::Perpendicular}}));
+    // An arc segment gives the foot on its circle.
+    out.clear();
+    appendSnapPoints(PolylineSegment{{-2, 0}, {2, 0}, 1}, only(&SnapModes::perpendicular), out,
+                     Vec2{0, -5});
+    expectPoints(out, {{{0, -2}, SnapKind::Perpendicular}});
+}
+
+TEST(SnapPoints, TextHasNeitherQuadrantsNorPerpendiculars) {
+    Text text;
+    text.value = "A";
+    std::vector<SnapPoint> out;
+    appendSnapPoints(Entity{text}, SnapModes{false, false, false, false, false, true, true, true},
+                     out, Vec2{1, 1});
+    EXPECT_TRUE(out.empty());
+}
+
 }  // namespace
 }  // namespace tg::core

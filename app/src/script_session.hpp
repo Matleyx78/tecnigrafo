@@ -76,6 +76,7 @@ private:
     [[nodiscard]] bool perform(const script::RightClickDirective& directive);
     [[nodiscard]] bool perform(const script::EscDirective& directive);
     [[nodiscard]] bool perform(const script::AidDirective& directive);
+    [[nodiscard]] bool perform(const script::OsnapDirective& directive);
     [[nodiscard]] bool perform(const script::ScriptSequencesDirective& directive);
     [[nodiscard]] bool perform(const script::KeyDirective& key);
     [[nodiscard]] bool perform(const script::ReportDirective& directive);

@@ -116,17 +116,18 @@ Parsed<double> nonNegative(std::string_view key, std::string_view text) {
     return *value;
 }
 
-// The snap modes that the catalogue describes from stage 0.7 (docs/verifica/
-// domande.md) and the program does not have yet. A mode is looked up in
-// kSnapModeNames first, so one left here when its package realizes it (P7
-// gives all four a name) does nothing; remove it to keep the list short.
-constexpr std::array<std::string_view, 4> kAnnouncedModes{"intersection", "perpendicular",
-                                                          "tangent", "quadrant"};
-
-/// "modes=endpoint,center", or "modes=none" for none; every mode when the
-/// argument is absent.
-Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text) {
+/// The modes of the questions without "modes=": the four of stage 0.4, so
+/// that the answers do not change with the defaults of core::SnapModes.
+core::SnapModes stageFourModes() {
     core::SnapModes modes;
+    modes.intersection = false;
+    return modes;
+}
+
+/// "modes=endpoint,center", or "modes=none" for none; the four modes of stage
+/// 0.4 when the argument is absent.
+Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text) {
+    core::SnapModes modes = stageFourModes();
     if (!text) {
         return modes;
     }
@@ -142,10 +143,6 @@ Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text) {
         const std::string_view name = rest.substr(0, comma);
         const auto found = std::ranges::find(snapModeNames(), name, &SnapModeName::name);
         if (found == snapModeNames().end()) {
-            if (std::ranges::find(kAnnouncedModes, name) != kAnnouncedModes.end()) {
-                return ArgumentError{"the snap mode " + quoted(name) + " is not implemented yet",
-                                     true};
-            }
             return ArgumentError{"unknown snap mode " + quoted(name)};
         }
         modes.*found->member = true;
@@ -436,7 +433,7 @@ QuestionResult askCrossing(const QuestionModel& model, Arguments arguments) {
 }
 
 QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
-    constexpr std::string_view kForm = "snap x,y aperture=<a> [modes=<mode>,...]";
+    constexpr std::string_view kForm = "snap x,y aperture=<a> [modes=<mode>,...] [from=x,y]";
     if (arguments.size() < 2) {
         return usage(kForm);
     }
@@ -444,10 +441,8 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     if (const auto* error = std::get_if<ArgumentError>(&pointer)) {
         return *error;
     }
-    constexpr std::array<std::string_view, 2> kKeys{"aperture", "modes"};
-    // `from=` is in the catalogue from stage 0.7; package P7 realizes it.
-    constexpr std::array<std::string_view, 1> kAnnounced{"from"};
-    const auto keyed = keyedArguments(arguments.subspan(1), kKeys, kAnnounced);
+    constexpr std::array<std::string_view, 3> kKeys{"aperture", "modes", "from"};
+    const auto keyed = keyedArguments(arguments.subspan(1), kKeys);
     if (const auto* error = std::get_if<ArgumentError>(&keyed)) {
         return *error;
     }
@@ -466,9 +461,19 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     if (const auto* error = std::get_if<ArgumentError>(&modes)) {
         return *error;
     }
+    // The base point of a running command: without it a perpendicular gives
+    // nothing.
+    std::optional<core::Vec2> from;
+    if (const auto fromText = values.find("from"); fromText != values.end()) {
+        const Parsed<core::Vec2> point = pointArgument(fromText->second);
+        if (const auto* error = std::get_if<ArgumentError>(&point)) {
+            return *error;
+        }
+        from = std::get<core::Vec2>(point);
+    }
     const std::optional<core::SnapPoint> snap =
         core::findSnap(model.document, std::get<core::Vec2>(pointer), std::get<double>(aperture),
-                       std::get<core::SnapModes>(modes));
+                       std::get<core::SnapModes>(modes), from);
     return snap ? snapText(*snap) : std::string{"none"};
 }
 

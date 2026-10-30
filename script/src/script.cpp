@@ -32,7 +32,7 @@ using Words = std::vector<std::string_view>;
 // every directive the program has (parseDirective), so an entry left here
 // when its package realizes it (P3 `scr`, P7 `osnap`, P8 `polar`) does
 // nothing; remove it to keep the list short.
-constexpr std::array<std::string_view, 2> kAnnouncedDirectives{"osnap", "polar"};
+constexpr std::array<std::string_view, 1> kAnnouncedDirectives{"polar"};
 
 /// A directive of the catalogue that the program does not have yet: a script
 /// that uses it is not passed, it is not invalid.
@@ -81,6 +81,55 @@ bool isName(std::string_view text) {
 
 std::string wrongArguments(std::string_view directive, std::string_view usage) {
     return "wrong arguments for !" + std::string{directive} + ", expected: " + std::string{usage};
+}
+
+/// An AutoCAD abbreviation of a snap mode and the member that it enables.
+struct SnapAbbreviation {
+    std::string_view name;
+    bool core::SnapModes::*member;
+};
+
+constexpr std::array kSnapAbbreviations{SnapAbbreviation{"end", &core::SnapModes::endpoint},
+                                        SnapAbbreviation{"mid", &core::SnapModes::midpoint},
+                                        SnapAbbreviation{"cen", &core::SnapModes::center},
+                                        SnapAbbreviation{"ins", &core::SnapModes::insertion},
+                                        SnapAbbreviation{"int", &core::SnapModes::intersection},
+                                        SnapAbbreviation{"per", &core::SnapModes::perpendicular},
+                                        SnapAbbreviation{"tan", &core::SnapModes::tangent},
+                                        SnapAbbreviation{"qua", &core::SnapModes::quadrant}};
+
+// Every mode of core::SnapModes needs an abbreviation.
+static_assert(sizeof(core::SnapModes) == kSnapAbbreviations.size() * sizeof(bool),
+              "every snap mode needs an abbreviation in kSnapAbbreviations");
+
+/// "!osnap end,mid" or "!osnap none": exactly the listed modes are on.
+DirectiveResult parseOsnap(const Words& arguments) {
+    constexpr std::string_view kUsage = "!osnap end,mid,cen,ins,int,per,tan,qua|none";
+    if (arguments.size() != 1) {
+        return wrongArguments("osnap", kUsage);
+    }
+    core::SnapModes modes;
+    for (const SnapAbbreviation& abbreviation : kSnapAbbreviations) {
+        modes.*abbreviation.member = false;
+    }
+    std::string_view rest = arguments[0];
+    if (rest == "none") {
+        return Action{OsnapDirective{modes}};
+    }
+    while (true) {
+        const std::size_t comma = rest.find(',');
+        const std::string_view name = rest.substr(0, comma);
+        const auto found = std::ranges::find(kSnapAbbreviations, name, &SnapAbbreviation::name);
+        if (found == kSnapAbbreviations.end()) {
+            return "unknown snap mode " + quoted(name) +
+                   " for !osnap, expected: " + std::string{kUsage};
+        }
+        modes.*found->member = true;
+        if (comma == std::string_view::npos) {
+            return Action{OsnapDirective{modes}};
+        }
+        rest.remove_prefix(comma + 1);
+    }
 }
 
 DirectiveResult parseView(const Words& arguments) {
@@ -146,6 +195,9 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
         }
         const auto aid = name == "snap" ? AidDirective::Aid::Snap : AidDirective::Aid::Ortho;
         return Action{AidDirective{aid, *on}};
+    }
+    if (name == "osnap") {
+        return parseOsnap(arguments);
     }
     if (name == "key") {
         if (arguments.size() != 1) {

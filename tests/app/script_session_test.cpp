@@ -164,6 +164,28 @@ TEST(ScriptSessionTest, AidDirectivesWriteNothingAndKeysToggleFromThem) {
     EXPECT_NE(last.find("\nsnap: off\northo: off\n"), std::string::npos) << last;
 }
 
+TEST(ScriptSessionTest, OsnapSetsTheModesOfTheSwitchesWithoutMessages) {
+    // The switches of the Tools menu keep the report equal to level 1.
+    const std::string report =
+        runLevel2("!level 2\n!osnap mid,cen,ins,int\n!report\n", outputFolder("osnap"));
+    const std::string first = section(report, "report 1");
+    EXPECT_NE(first.find("messages:\nprompt: Command:\n"), std::string::npos) << first;
+    EXPECT_NE(first.find("\nsnap: on, modes off: endpoint perpendicular tangent quadrant\n"),
+              std::string::npos)
+        << first;
+}
+
+// The window has no switch yet for the intersection, perpendicular, tangent
+// and quadrant modes (package P11 adds them, "aids.snap.<mode>"): until then
+// a mode can only be asked in the state it already has. P11 changes this test.
+TEST(ScriptSessionTest, OsnapStopsOnAModeWithoutASwitch) {
+    MainWindow window(MainWindow::InitialDrawing::Empty);
+    ScriptSession session(window, outputFolder("osnap-no-switch"));
+    EXPECT_FALSE(session.run(parse("!level 2\n!osnap qua\n")));
+    EXPECT_NE(session.error().toStdString().find("has no switch"), std::string::npos)
+        << session.error().toStdString();
+}
+
 TEST(ScriptSessionTest, TypedLineReachesTheCommandLineAndIsEchoed) {
     const std::string report = runLevel2("PLINE\n0,0\n@10,0\n\n", outputFolder("typed"));
     const std::string last = section(report, "final");

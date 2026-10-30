@@ -36,6 +36,7 @@
 #include <string_view>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace tg::app {
 namespace {
@@ -216,6 +217,36 @@ bool ScriptSession::perform(const script::AidDirective& directive) {
     // in agreement, so that a later F3 or F8 toggles from the right state.
     collectMessages();
     action->setChecked(directive.on);
+    collectMessages(false);
+    return true;
+}
+
+bool ScriptSession::perform(const script::OsnapDirective& directive) {
+    // Each mode has a switch in the Tools menu, "aids.snap.<mode>", which
+    // keeps the menu and the runner in agreement. A mode without a switch
+    // (the window of this stage has none for the new ones) cannot be changed:
+    // the directive is accepted only if it asks for the state it already has.
+    // Every switch is looked up before any is set, so that a failure leaves
+    // the aids as they were.
+    const core::SnapModes& current = m_window.drawingAids().snapModes;
+    std::vector<std::pair<QAction*, bool>> switches;
+    for (const script::SnapModeName& mode : script::snapModeNames()) {
+        const bool on = directive.modes.*mode.member;
+        const QString modeName =
+            QString::fromLatin1(mode.name.data(), static_cast<qsizetype>(mode.name.size()));
+        auto* action = m_window.findChild<QAction*>(QStringLiteral("aids.snap.") + modeName);
+        if (action != nullptr) {
+            switches.emplace_back(action, on);
+        } else if (current.*mode.member != on) {
+            fail(QStringLiteral("the Tools menu has no switch for the snap mode %1 of !osnap")
+                     .arg(modeName));
+            return false;
+        }
+    }
+    collectMessages();
+    for (const auto& [action, on] : switches) {
+        action->setChecked(on);
+    }
     collectMessages(false);
     return true;
 }

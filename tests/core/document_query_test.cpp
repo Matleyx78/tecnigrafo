@@ -692,5 +692,140 @@ TEST_F(RandomDocument, SnapMatchesExhaustiveSearch) {
     EXPECT_GT(centers, 0);
 }
 
+// --- findSnap: quadrants and perpendiculars (docs/adr/0033, point 5) -----
+
+/// The default modes plus the quadrant and the perpendicular.
+SnapModes allNewModes() {
+    SnapModes modes;
+    modes.perpendicular = true;
+    modes.quadrant = true;
+    return modes;
+}
+
+/// Only the perpendicular.
+SnapModes perpendicularOnly() {
+    return SnapModes{false, false, false, false, false, true, false, false};
+}
+
+TEST(DocumentQuery, SnapToQuadrantOfACircle) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    EXPECT_EQ(findSnap(document, {10.3, 0.4}, 1.0, allNewModes()),
+              (SnapPoint{{10, 0}, SnapKind::Quadrant}));
+    EXPECT_EQ(findSnap(document, {-0.2, 9.7}, 1.0, allNewModes()),
+              (SnapPoint{{0, 10}, SnapKind::Quadrant}));
+}
+
+TEST(DocumentQuery, QuadrantModeIsOffByDefault) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    // Without the mode, passing over the circle gives its centre.
+    expectCenter(findSnap(document, {10.3, 0.4}, 1.0, kAllModes), {0, 0});
+}
+
+TEST(DocumentQuery, SnapToQuadrantOfAnArcOfAPolylineOnlyInsideIt) {
+    Document document;
+    document.add(halfCircle());  // from 180 to 360 degrees, below the axis
+    SnapModes modes;
+    modes.quadrant = true;
+    modes.endpoint = false;
+    modes.midpoint = false;
+    EXPECT_EQ(findSnap(document, {0.2, -9.8}, 1.0, modes),
+              (SnapPoint{{0, -10}, SnapKind::Quadrant}));
+    // The top of the circle is not on the arc: nothing there.
+    EXPECT_EQ(findSnap(document, {0, 9.8}, 1.0, modes), std::nullopt);
+}
+
+TEST(DocumentQuery, SnapToPerpendicularOfALine) {
+    Document document;
+    document.add(Line{{0, 0}, {10, 0}});
+    EXPECT_EQ(findSnap(document, {4.1, 0.1}, 1.0, perpendicularOnly(), Vec2{4, 7}),
+              (SnapPoint{{4, 0}, SnapKind::Perpendicular}));
+    // The foot falls on the extension of the line: nothing.
+    EXPECT_EQ(findSnap(document, {9.9, 0.1}, 1.0, perpendicularOnly(), Vec2{12, 7}), std::nullopt);
+    // Without a base point, nothing.
+    EXPECT_EQ(findSnap(document, {4.1, 0.1}, 1.0, perpendicularOnly()), std::nullopt);
+}
+
+TEST(DocumentQuery, PerpendicularLooksOnlyAtTheSegmentsNearThePointer) {
+    Document document;
+    document.add(Polyline{{{{0, 0}, 0}, {{10, 0}, 0}, {{10, 10}, 0}}});
+    EXPECT_EQ(findSnap(document, {9.9, 5.1}, 1.0, perpendicularOnly(), Vec2{5, 5}),
+              (SnapPoint{{10, 5}, SnapKind::Perpendicular}));
+    EXPECT_EQ(findSnap(document, {5.1, 0.1}, 1.0, perpendicularOnly(), Vec2{5, 5}),
+              (SnapPoint{{5, 0}, SnapKind::Perpendicular}));
+}
+
+TEST(DocumentQuery, SnapToPerpendicularOfAnArc) {
+    Document document;
+    document.add(Arc{{0, 0}, 10, 0, std::numbers::pi / 2.0});
+    const double root = 10.0 / std::numbers::sqrt2;
+    const auto snap =
+        findSnap(document, {root + 0.1, root - 0.1}, 1.0, perpendicularOnly(), Vec2{20, 20});
+    ASSERT_TRUE(snap.has_value());
+    EXPECT_EQ(snap->kind, SnapKind::Perpendicular);
+    EXPECT_NEAR(snap->point.x, root, 1e-12);
+    EXPECT_NEAR(snap->point.y, root, 1e-12);
+    // From the other side, the line meets the circle outside the arc.
+    EXPECT_EQ(findSnap(document, {root, root}, 1.0, perpendicularOnly(), Vec2{-20, 20}),
+              std::nullopt);
+}
+
+TEST(DocumentQuery, TheNearestPointWinsOverThePriorityOrder) {
+    Document document;
+    document.add(Line{{0, 0}, {10, 0}});
+    // Midpoint (5,0) at about 0.9 from the pointer, the foot (4,0) at about 0.14.
+    EXPECT_EQ(findSnap(document, {4.1, 0.1}, 2.0, allNewModes(), Vec2{4, 7}),
+              (SnapPoint{{4, 0}, SnapKind::Perpendicular}));
+}
+
+TEST(DocumentQuery, SnapPriorityAtEqualDistance) {
+    // Two kinds on the same point, so at the same distance from the pointer.
+    {
+        // Endpoint over perpendicular: the foot is the end of the line.
+        Document document;
+        document.add(Line{{0, 0}, {10, 0}});
+        EXPECT_EQ(findSnap(document, {9.9, 0.1}, 1.0, allNewModes(), Vec2{10, 7}),
+                  (SnapPoint{{10, 0}, SnapKind::Endpoint}));
+    }
+    {
+        // Midpoint over perpendicular.
+        Document document;
+        document.add(Line{{0, 0}, {10, 0}});
+        EXPECT_EQ(findSnap(document, {5.1, 0.1}, 1.0, allNewModes(), Vec2{5, 7}),
+                  (SnapPoint{{5, 0}, SnapKind::Midpoint}));
+    }
+    {
+        // Endpoint over quadrant: the arc from 0 to 90 degrees starts on one.
+        Document document;
+        document.add(Arc{{0, 0}, 10, 0, std::numbers::pi / 2.0});
+        EXPECT_EQ(findSnap(document, {9.9, 0.1}, 1.0, allNewModes()),
+                  (SnapPoint{{10, 0}, SnapKind::Endpoint}));
+    }
+    {
+        // Quadrant over perpendicular: the foot from (20,0) is the quadrant (10,0).
+        Document document;
+        document.add(Circle{{0, 0}, 10});
+        EXPECT_EQ(findSnap(document, {10.1, 0.1}, 1.0, allNewModes(), Vec2{20, 0}),
+                  (SnapPoint{{10, 0}, SnapKind::Quadrant}));
+    }
+}
+
+TEST(DocumentQuery, CenterIsTheLastChoiceWithTheNewModes) {
+    Document document;
+    document.add(halfCircle());
+    // The foot from (0,20) is the lowest point of the arc, far from the
+    // pointer: no point within the aperture, so the centre.
+    expectCenter(findSnap(document, {kOnArc, -kOnArc}, 1.0, allNewModes(), Vec2{0, 20}), {0, 0});
+}
+
+TEST(DocumentQuery, IntersectionAndTangentModesGiveNoPointsYet) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    document.add(Line{{-20, 5}, {20, 5}});
+    const SnapModes modes{false, false, false, false, true, false, true, false};
+    EXPECT_EQ(findSnap(document, {8.6, 5.1}, 1.0, modes, Vec2{30, 0}), std::nullopt);
+}
+
 }  // namespace
 }  // namespace tg::core
