@@ -409,7 +409,9 @@ quelli si creano solo le issue nuove.
    milestone v<tappa>, l'etichetta tappa-<tappa>, le issue [<tappa>-PN] e
    [<tappa>-RN] con le etichette indicate nel piano, scrivi i numeri delle issue
    nel documento della tappa e aggiorna la tabella della ROADMAP. Apri una pull
-   request con le modifiche ai documenti.
+   request con le modifiche ai documenti.  Usa solo il piano che sta in main: se
+   docs/tappe/<tappa>-*.md non c'è in main, fermati e dimmelo, senza usare rami o pull
+   request aperte.
    ```
 
 2. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
