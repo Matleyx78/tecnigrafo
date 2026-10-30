@@ -85,8 +85,10 @@ Parsed<core::BBox> rectangleArgument(std::string_view first, std::string_view se
 /// The arguments "key=value" after the positional ones. Every key must be
 /// one of `allowed`, at most once. A key of `announced` is one that the
 /// catalogue describes and the program does not have yet: the case is not
-/// passed, it is not invalid. The package that realizes the key moves it
-/// from `announced` to `allowed`.
+/// passed, it is not invalid. `announced` is read only for a key that is not
+/// in `allowed`, so a key left in both when its package realizes it does
+/// nothing; the package moves it to `allowed` and can remove it from
+/// `announced`.
 Parsed<std::map<std::string_view, std::string_view>> keyedArguments(
     Arguments arguments, std::span<const std::string_view> allowed,
     std::span<const std::string_view> announced = {}) {
@@ -115,8 +117,9 @@ Parsed<double> nonNegative(std::string_view key, std::string_view text) {
 }
 
 // The snap modes that the catalogue describes from stage 0.7 (docs/verifica/
-// domande.md) and the program does not have yet. The package that realizes a
-// mode (P7) gives it a name in kSnapModeNames and removes it from here.
+// domande.md) and the program does not have yet. A mode is looked up in
+// kSnapModeNames first, so one left here when its package realizes it (P7
+// gives all four a name) does nothing; remove it to keep the list short.
 constexpr std::array<std::string_view, 4> kAnnouncedModes{"intersection", "perpendicular",
                                                           "tangent", "quadrant"};
 

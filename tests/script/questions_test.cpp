@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <map>
 #include <optional>
 #include <string>
@@ -262,31 +263,71 @@ TEST(Questions, ErrorsGiveTheirLine) {
     }
 }
 
-// docs/verifica/domande.md describes these snap modes and `from=` from stage
-// 0.7, before the package that realizes them: a file that uses one is not
-// passed, it is not invalid. P7 takes them out of kAnnouncedModes and of the
-// announced arguments of `snap`, and out of this test.
-TEST(Questions, ModesAndArgumentsOfTheCatalogueNotRealizedYetAreNotImplemented) {
-    struct Case {
-        std::string text;
-        int line;
-        const char* announced;
-    };
+// The snap modes and the argument of `snap` that docs/verifica/domande.md
+// describes from stage 0.7, before the package that realizes them (P7).
+constexpr std::array<std::string_view, 4> kCatalogueModes{"quadrant", "intersection",
+                                                          "perpendicular", "tangent"};
+constexpr std::string_view kCatalogueArgument = "from";
 
+// What the catalogue describes is never an invalid file: either the program
+// has it and the question is answered, or it does not have it yet and the file
+// is not implemented yet, so the case is not passed (docs/verifica/casi.md).
+// The test does not say which of the two holds today, so the package that
+// realizes a mode or `from=` does not have to touch it. If the program does
+// not know one of them and does not announce it either, this fails.
+TEST(Questions, ModesAndArgumentsOfTheCatalogueAreNeverInvalid) {
     const std::string defined = std::string{kDefinitions};  // lines 1-3
-    for (const Case& test : {
-             Case{defined + "? snaps A modes=quadrant -> none", 4, "'quadrant'"},
-             Case{defined + "? snaps B modes=endpoint,intersection -> none", 4, "'intersection'"},
-             Case{defined + "? snaps B modes=perpendicular,center -> none", 4, "'perpendicular'"},
-             Case{defined + "? snap 5,0 aperture=1 modes=tangent -> none", 4, "'tangent'"},
-             Case{defined + "? snap 5,0 aperture=1 from=1,1 -> none", 4, "'from'"},
-             Case{defined + "? snap 5,0 from=1,1 aperture=1 modes=quadrant -> none", 4, "'from'"},
-         }) {
-        const ParseError error = failure(test.text);
-        EXPECT_EQ(error.line, test.line) << test.text;
-        EXPECT_TRUE(error.notImplemented) << test.text;
-        EXPECT_NE(error.message.find(test.announced), std::string::npos) << error.message;
-        EXPECT_NE(error.message.find("not implemented yet"), std::string::npos) << error.message;
+    std::vector<std::string> questions{
+        "? snap 5,0 aperture=1 from=1,1 -> none",
+        "? snap 5,0 from=1,1 aperture=1 modes=quadrant -> none",
+    };
+    for (const std::string_view mode : kCatalogueModes) {
+        questions.push_back("? snaps A modes=" + std::string{mode} + " -> none");
+        questions.push_back("? snaps B modes=endpoint," + std::string{mode} + ",center -> none");
+        questions.push_back("? snap 5,0 aperture=1 modes=" + std::string{mode} + " -> none");
+    }
+    for (const std::string& question : questions) {
+        const std::variant<std::vector<Answer>, ParseError> result =
+            answerQuestions(defined + question);
+        if (const auto* error = std::get_if<ParseError>(&result)) {
+            EXPECT_TRUE(error->notImplemented) << question << ": " << error->message;
+            EXPECT_EQ(error->line, 4) << question;
+            EXPECT_NE(error->message.find("not implemented yet"), std::string::npos)
+                << error->message;
+        }
+    }
+}
+
+// A typing error of a mode or of `from=` (the wrong case, one letter more or
+// less) is still a malformed file, even though they are announced. Derived
+// from the same names, so it holds whichever the program has.
+TEST(Questions, TypingErrorsOfCatalogueModesAndArgumentsStayInvalid) {
+    const std::string defined = std::string{kDefinitions};  // lines 1-3
+    const auto typos = [](std::string_view name) {
+        std::string capital{name};
+        capital[0] = static_cast<char>(capital[0] - 'a' + 'A');
+        return std::array<std::string, 3>{capital, std::string{name} + "x",
+                                          std::string{name.substr(0, name.size() - 1)}};
+    };
+    for (const std::string_view mode : kCatalogueModes) {
+        for (const std::string& typo : typos(mode)) {
+            std::string text = defined;
+            text += "? snaps A modes=";
+            text += typo;
+            text += " -> none";
+            const ParseError error = failure(text);
+            EXPECT_EQ(error.line, 4) << typo;
+            EXPECT_FALSE(error.notImplemented) << typo;
+        }
+    }
+    for (const std::string& typo : typos(kCatalogueArgument)) {
+        std::string text = defined;
+        text += "? snap 5,0 aperture=1 ";
+        text += typo;
+        text += "=1,1 -> none";
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 4) << typo;
+        EXPECT_FALSE(error.notImplemented) << typo;
     }
 }
 
