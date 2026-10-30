@@ -1,0 +1,94 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Casi limite di FILLET e CIRCLE Ttr: proprieta dell'arco (stesse proprieta vs correnti), segmenti troppo corti, impossibile, Circle does not exist
+!view 150,10 0.25 1600x600
+-LAYER
+New
+ROSSO
+New
+BLU
+New
+VERDE
+Set
+VERDE
+
+LINE
+0,0
+30,0
+
+LINE
+0,0
+0,30
+
+-LAYER
+Set
+ROSSO
+
+LINE
+50,0
+80,0
+
+-LAYER
+Set
+BLU
+
+LINE
+50,0
+50,30
+
+-LAYER
+Set
+VERDE
+
+; Polilinea con segmento intermedio troppo corto per il raggio 5
+PLINE
+100,0
+120,0
+120,2
+140,2
+
+; Due cerchi concentrici (nessun raccordo)
+CIRCLE
+200,0
+5
+CIRCLE
+200,0
+10
+
+; Due parallele distanti 20 per CIRCLE Ttr raggio 5 (impossibile)
+LINE
+300,0
+330,0
+
+LINE
+300,20
+330,20
+
+; 1. Raccordo tra due linee su layer 0 -> arco su layer 0
+FILLET
+R
+5
+20,0
+0,20
+
+; 2. Raccordo tra linee su layer ROSSO e BLU -> arco su layer corrente VERDE
+FILLET
+70,0
+50,20
+
+; 3. Raccordo polilinea con segmenti troppo corti
+FILLET
+P
+110,0
+
+; 4. Raccordo impossibile tra cerchi concentrici
+FILLET
+200,5
+200,10
+
+; 5. CIRCLE Ttr impossibile
+CIRCLE
+T
+310,0
+310,20
+5

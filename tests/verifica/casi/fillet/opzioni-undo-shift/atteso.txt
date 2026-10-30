@@ -1,0 +1,147 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,0 end=100,20
+  262 LINE start=100,0 end=130,0
+  263 ARC center=5,5 radius=5 start-angle=180 end-angle=270
+  265 ARC center=65,5 radius=5 start-angle=270 end-angle=0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 0,30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 40,0
+  Specify next point or [Undo]: 60,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 70,10
+  Specify next point or [Undo]: 70,30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 100,-10
+  Specify next point or [Undo]: 100,20
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 90,0
+  Specify next point or [Undo]: 130,0
+  Specify next point or [Undo]:
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 0.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <0.0000>: -5
+  Value must be positive.
+  Specify fillet radius <0.0000>: 5
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: M
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 20,0
+  Select second object or shift-select to apply corner or [Radius]: 0,20
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 50,0
+  Select second object or shift-select to apply corner or [Radius]: 70,20
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: U
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 50,0
+  Select second object or shift-select to apply corner or [Radius]: 70,20
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]:
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 100,10
+  Select second object or shift-select to apply corner or [Radius]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+  Line
+  Fillet
+  Fillet
+redo:
+snap: on
+ortho: off
+pointer: 120,0
+active snap: none
+statistics:
+  ARC 2
+  LINE 6
+
+[report 2]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,-10 end=100,20
+  262 LINE start=90,0 end=130,0
+  263 ARC center=5,5 radius=5 start-angle=180 end-angle=270
+  265 ARC center=65,5 radius=5 start-angle=270 end-angle=0
+messages:
+  Command: U
+  Undone: Fillet.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+  Line
+  Fillet
+redo:
+  Fillet
+snap: on
+ortho: off
+pointer: 120,0
+active snap: none
+statistics:
+  ARC 2
+  LINE 6
+
+[final]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,0 end=100,20
+  262 LINE start=100,0 end=130,0
+  263 ARC center=5,5 radius=5 start-angle=180 end-angle=270
+  265 ARC center=65,5 radius=5 start-angle=270 end-angle=0
+messages:
+  Command: REDO
+  Redone: Fillet.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+  Line
+  Fillet
+  Fillet
+redo:
+snap: on
+ortho: off
+pointer: 120,0
+active snap: none
+statistics:
+  ARC 2
+  LINE 6

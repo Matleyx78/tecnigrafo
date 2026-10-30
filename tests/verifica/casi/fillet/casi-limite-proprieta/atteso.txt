@@ -1,0 +1,134 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE layer=ROSSO start=55,0 end=80,0
+  260 LINE layer=BLU start=50,5 end=50,30
+  261 LWPOLYLINE closed=no vertex=100,0 vertex=120,0 vertex=120,2 vertex=140,2
+  262 CIRCLE center=200,0 radius=5
+  263 CIRCLE center=200,0 radius=10
+  264 LINE start=300,0 end=330,0
+  265 LINE start=300,20 end=330,20
+  266 ARC center=5,5 radius=5 start-angle=180 end-angle=270
+  267 ARC layer=VERDE center=55,5 radius=5 start-angle=180 end-angle=270
+messages:
+  Command: -LAYER
+  Current layer: "0"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter name list for new layer(s): ROSSO
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter name list for new layer(s): BLU
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter name list for new layer(s): VERDE
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <0>: VERDE
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 0,30
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer: "VERDE"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <VERDE>: ROSSO
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 50,0
+  Specify next point or [Undo]: 80,0
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer: "ROSSO"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <ROSSO>: BLU
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 50,0
+  Specify next point or [Undo]: 50,30
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer: "BLU"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <BLU>: VERDE
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: PLINE
+  Specify start point: 100,0
+  Specify next point or [Arc/Undo]: 120,0
+  Specify next point or [Arc/Undo]: 120,2
+  Specify next point or [Arc/Undo]: 140,2
+  Specify next point or [Arc/Undo]:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 200,0
+  Specify radius of circle or [Diameter]: 5
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 200,0
+  Specify radius of circle or [Diameter] <5.0000>: 10
+  Command: LINE
+  Specify first point: 300,0
+  Specify next point or [Undo]: 330,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 300,20
+  Specify next point or [Undo]: 330,20
+  Specify next point or [Undo]:
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 0.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <0.0000>: 5
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 20,0
+  Select second object or shift-select to apply corner or [Radius]: 0,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 70,0
+  Select second object or shift-select to apply corner or [Radius]: 50,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: P
+  Select 2D polyline or [Radius]: 110,0
+  2 were too short
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 200,5
+  Select second object or shift-select to apply corner or [Radius]: 200,10
+  Cannot fillet these entities.
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: T
+  Specify point on object for first tangent of circle: 310,0
+  Specify point on object for second tangent of circle: 310,20
+  Specify radius of circle <10.0000>: 5
+  Circle does not exist.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  -Layer
+  Line
+  Line
+  -Layer
+  Line
+  -Layer
+  Line
+  -Layer
+  Pline
+  Circle
+  Circle
+  Line
+  Line
+  Fillet
+  Fillet
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 2
+  CIRCLE 2
+  LINE 6
+  LWPOLYLINE 1
