@@ -290,7 +290,11 @@ TEST(Questions, StageSevenCatalogueQuestionsAreNeverUnknown) {
     };
     const std::string defined = std::string{kDefinitions} + "C = CIRCLE center=30,0 radius=5\n";
     for (const std::string_view form : kForms) {
-        const auto result = answerQuestions(defined + "? " + std::string{form} + " -> none\n");
+        std::string text = defined;
+        text += "? ";
+        text.append(form);
+        text += " -> none\n";
+        const auto result = answerQuestions(text);
         if (const auto* error = std::get_if<ParseError>(&result)) {
             EXPECT_TRUE(error->notImplemented) << form << ": " << error->message;
         } else {
@@ -298,9 +302,14 @@ TEST(Questions, StageSevenCatalogueQuestionsAreNeverUnknown) {
         }
         // Test the name, not the arguments: append the typo before its first space.
         const std::size_t space = form.find(' ');
-        const std::string misspelled =
-            std::string{form.substr(0, space)} + "x" + std::string{form.substr(space)};
-        const ParseError unknown = failure(defined + "? " + misspelled + " -> none\n");
+        std::string misspelled{form.substr(0, space)};
+        misspelled += "x";
+        misspelled.append(form.substr(space));
+        text = defined;
+        text += "? ";
+        text += misspelled;
+        text += " -> none\n";
+        const ParseError unknown = failure(text);
         EXPECT_FALSE(unknown.notImplemented) << misspelled;
         EXPECT_NE(unknown.message.find("unknown question"), std::string::npos) << misspelled;
     }

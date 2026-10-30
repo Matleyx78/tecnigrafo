@@ -219,7 +219,10 @@ TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
     const std::vector<std::string> forms{"transform A move 1,2", "grips A", "grip A 0,0 1,2"};
     int checked = 0;
     for (const std::string& form : forms) {
-        const std::string text = drawing + "? " + form + " -> none\n";
+        std::string text = drawing;
+        text += "? ";
+        text += form;
+        text += " -> none\n";
         const auto answers = answerQuestions(text);
         ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(answers)) << form;
         const auto& list = std::get<std::vector<Answer>>(answers);
