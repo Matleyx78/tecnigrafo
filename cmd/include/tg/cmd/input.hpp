@@ -38,17 +38,18 @@ struct CancelInput {
     friend constexpr bool operator==(const CancelInput&, const CancelInput&) = default;
 };
 
-/// The objects a command works on, chosen before or after starting it
-/// (docs/adr/0008). Never empty. Only CommandRunner sends it, once, right
-/// after start(), and only to commands whose needsSelection() is true.
+/// The objects a command works on (docs/adr/0008 and docs/adr/0032). Only
+/// CommandRunner sends it: once, right after start(), to commands whose
+/// needsSelection() is true, and then never empty; or as the answer to a
+/// Selection prompt, possibly empty.
 struct SelectionInput {
     std::vector<core::EntityId> ids;
 
     friend bool operator==(const SelectionInput&, const SelectionInput&) = default;
 };
 
-/// A number typed for a Distance (drawing units) or an Angle (radians,
-/// converted from the degrees typed) prompt.
+/// A number typed for a Distance (drawing units), an Angle (radians,
+/// converted from the degrees typed) or a Number (as typed) prompt.
 struct ValueInput {
     double value;
 
@@ -62,9 +63,20 @@ struct TextInput {
     friend bool operator==(const TextInput&, const TextInput&) = default;
 };
 
+/// The entity chosen at an Object prompt (docs/adr/0032, point 1), with the
+/// point where it was picked. Only CommandRunner sends it, and never for an
+/// entity on a locked layer.
+struct ObjectInput {
+    core::EntityId id;
+    core::Vec2 point;   ///< where the object was picked, in drawing coordinates
+    bool shift{false};  ///< Shift held (PickAction::Remove)
+
+    friend bool operator==(const ObjectInput&, const ObjectInput&) = default;
+};
+
 /// One input of the user, from the mouse, the keyboard or the command line
 /// (docs/adr/0005).
 using Input = std::variant<PointInput, KeywordInput, ConfirmInput, CancelInput, SelectionInput,
-                           ValueInput, TextInput>;
+                           ValueInput, TextInput, ObjectInput>;
 
 }  // namespace tg::cmd

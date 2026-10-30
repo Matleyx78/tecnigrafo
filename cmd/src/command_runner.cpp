@@ -7,6 +7,7 @@
 #include "tg/cmd/coordinate_input.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/effective_properties.hpp"
 #include "tg/core/math.hpp"
 
 #include <algorithm>
@@ -26,10 +27,12 @@ constexpr std::string_view kIdlePrompt = "Command:";
 constexpr std::string_view kInvalidInput = "Invalid point or option.";
 constexpr std::string_view kInvalidDistance = "Requires a distance, a point or an option.";
 constexpr std::string_view kInvalidAngle = "Requires an angle, a point or an option.";
+constexpr std::string_view kInvalidNumber = "Requires a number.";
 constexpr std::string_view kCancelled = "*Cancel*";
 constexpr std::string_view kNothingToUndo = "Nothing to undo.";
 constexpr std::string_view kNothingToRedo = "Nothing to redo.";
 constexpr std::string_view kSelectObjects = "Select objects:";
+constexpr std::string_view kFirstCorner = "Specify first corner:";
 constexpr std::string_view kOppositeCorner = "Specify opposite corner:";
 constexpr std::string_view kInvalidSelection = "Invalid selection.";
 
@@ -63,9 +66,27 @@ void abortOnUndescribedPrompt(const std::string& message) {
     std::abort();
 }
 
+bool matches(std::string_view name, std::string_view shortcut, std::string_view text) {
+    return detail::equalsIgnoringCase(text, name) ||
+           (!shortcut.empty() && detail::equalsIgnoringCase(text, shortcut));
+}
+
 bool matches(const Keyword& keyword, std::string_view text) {
-    return detail::equalsIgnoringCase(text, keyword.name) ||
-           (!keyword.shortcut.empty() && detail::equalsIgnoringCase(text, keyword.shortcut));
+    return matches(keyword.name, keyword.shortcut, text);
+}
+
+// The written selection options of docs/adr/0032, point 4, read like the
+// options of a prompt: the name or the shortcut, in any case.
+bool isWindowOption(std::string_view text) {
+    return matches("Window", "W", text);
+}
+
+bool isCrossingOption(std::string_view text) {
+    return matches("Crossing", "C", text);
+}
+
+bool isAllOption(std::string_view text) {
+    return matches("ALL", "", text);
 }
 
 // The questions to the model still find the entities of a locked layer, but
@@ -125,9 +146,7 @@ void CommandRunner::submitText(std::string_view text) {
         if (text.empty()) {
             endSelectionQuestion();
         } else {
-            // Written options (W, C, ALL...) will be recognised here
-            // (docs/adr/0008); the open rectangle, if any, stays.
-            message(std::string{kInvalidSelection});
+            typedSelection(text);
         }
         return;
     }
@@ -163,11 +182,22 @@ void CommandRunner::submit(const Input& input) {
         return;
     }
     if (std::holds_alternative<CancelInput>(input)) {
-        cancel();
+        if (!(inSelectionQuestion() && closeRectangle())) {
+            cancel();
+        }
         return;
     }
-    if (std::holds_alternative<SelectionInput>(input)) {
-        return;  // only the runner hands selections to commands
+    if (std::holds_alternative<SelectionInput>(input) ||
+        std::holds_alternative<ObjectInput>(input)) {
+        return;  // only the runner hands selections and objects to commands
+    }
+    if (promptKind() == PromptKind::Selection) {
+        submitAtSelectionPrompt(input);
+        return;
+    }
+    if (const auto* point = std::get_if<PointInput>(&input); point != nullptr && asksForObject()) {
+        pickObject(point->point, false);
+        return;
     }
     forward(input);
 }
@@ -176,7 +206,8 @@ void CommandRunner::pointerMoved(const core::Vec2& point) {
     m_pointer = point;
     if (m_rectangle) {
         m_rectangle->second = point;
-        m_rectangle->crossing = point.x < m_rectangle->first.x;
+        m_rectangle->crossing = m_writtenMode ? *m_writtenMode == core::RectangleMode::Crossing
+                                              : point.x < m_rectangle->first.x;
     }
     refreshPointer();
 }
@@ -190,6 +221,8 @@ void CommandRunner::setPixelSize(double drawingUnitsPerPixel) {
 void CommandRunner::click(const core::Vec2& point, PickAction action) {
     if (isSelecting()) {
         selectionClick(point, action);
+    } else if (asksForObject()) {
+        pickObject(point, action == PickAction::Remove);
     } else if (asksForPoint()) {
         forward(PointInput{aidedPoint(point, m_command->basePoint())});
     }
@@ -211,17 +244,29 @@ std::optional<core::SnapPoint> CommandRunner::activeSnap() const {
 }
 
 bool CommandRunner::acceptsText() const {
-    return isActive() && !m_askingSelection && m_command->prompt().kind == PromptKind::Text;
+    return promptKind() == PromptKind::Text;
 }
 
 std::string CommandRunner::promptText() const {
     if (m_rectangle) {
         return std::string{kOppositeCorner};
     }
+    if (m_writtenMode) {
+        return std::string{kFirstCorner};
+    }
     if (m_askingSelection) {
         return std::string{kSelectObjects};
     }
     return isActive() ? m_command->prompt().text : std::string{kIdlePrompt};
+}
+
+Prompt CommandRunner::prompt() const {
+    // The runner's own questions: "Command:", "Select objects:" and the
+    // corners of a rectangle, also at a Selection prompt of the command.
+    if (!isActive() || m_askingSelection || m_rectangle || m_writtenMode) {
+        return Prompt{promptText(), {}};
+    }
+    return m_command->prompt();
 }
 
 std::span<const core::Entity> CommandRunner::preview() const {
@@ -299,24 +344,48 @@ void CommandRunner::repeatLastCommand() {
 }
 
 void CommandRunner::handleTypedWhileActive(std::string_view text) {
+    const Prompt prompt = m_command->prompt();
+    if (prompt.kind == PromptKind::Selection) {
+        typedAtSelectionPrompt(text, prompt);  // Enter hands over the selection
+        return;
+    }
     if (text.empty()) {
         forward(ConfirmInput{});
         return;
     }
-    const Prompt prompt = m_command->prompt();
-    if (prompt.kind == PromptKind::Text) {
-        if (prompt.file != FilePrompt::None && text.size() >= 2 && text.front() == '"' &&
-            text.back() == '"') {
-            text = text.substr(1, text.size() - 2);
-        }
-        forward(TextInput{std::string{text}});
-        return;
+    // One function per kind of prompt: the later packages of stage 0.7 extend
+    // them separately.
+    switch (prompt.kind) {
+        case PromptKind::Point:
+        case PromptKind::Distance:
+        case PromptKind::Angle:
+            typedPoint(text, prompt);
+            break;
+        case PromptKind::Text:
+            typedText(text, prompt);
+            break;
+        case PromptKind::Object:
+            typedObject(text, prompt);
+            break;
+        case PromptKind::Number:
+            typedNumber(text, prompt);
+            break;
+        case PromptKind::Selection:
+            break;  // handled above
     }
-    for (const Keyword& keyword : prompt.keywords) {
-        if (matches(keyword, text)) {
-            forward(KeywordInput{keyword.name});
-            return;
-        }
+}
+
+void CommandRunner::typedText(std::string_view text, const Prompt& prompt) {
+    if (prompt.file != FilePrompt::None && text.size() >= 2 && text.front() == '"' &&
+        text.back() == '"') {
+        text = text.substr(1, text.size() - 2);
+    }
+    forward(TextInput{std::string{text}});
+}
+
+void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
+    if (forwardKeyword(text, prompt)) {
+        return;
     }
     if (const std::optional<PointSpec> spec = parseCoordinate(text)) {
         if (spec->kind == PointSpec::Kind::Distance &&
@@ -349,18 +418,114 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
         case PromptKind::Angle:
             message(std::string{kInvalidAngle});
             break;
-        case PromptKind::Point:
-        case PromptKind::Text:
+        default:
             message(std::string{kInvalidInput});
             break;
     }
 }
 
+void CommandRunner::typedNumber(std::string_view text, const Prompt& prompt) {
+    if (forwardKeyword(text, prompt)) {
+        return;
+    }
+    if (const std::optional<PointSpec> spec = parseCoordinate(text);
+        spec && spec->kind == PointSpec::Kind::Distance) {
+        forward(ValueInput{spec->a});  // a pure number: no unit, no conversion
+        return;
+    }
+    if (const std::optional<core::Vec2> point = typedPosition(text)) {
+        forward(PointInput{*point});  // the command measures from its base point
+        return;
+    }
+    message(std::string{kInvalidNumber});
+}
+
+void CommandRunner::typedObject(std::string_view text, const Prompt& prompt) {
+    if (forwardKeyword(text, prompt)) {
+        return;
+    }
+    if (const std::optional<core::Vec2> point = typedPosition(text)) {
+        pickObject(*point, false);
+        return;
+    }
+    message(std::string{kInvalidInput});
+}
+
+void CommandRunner::typedAtSelectionPrompt(std::string_view text, const Prompt& prompt) {
+    if (text.empty()) {
+        endSelectionPrompt();
+        return;
+    }
+    // While a corner is asked for, the question is the runner's, not the
+    // command's: its options do not apply.
+    if (!m_rectangle && !m_writtenMode && forwardKeyword(text, prompt)) {
+        return;
+    }
+    typedSelection(text);
+}
+
+void CommandRunner::typedSelection(std::string_view text) {
+    if (m_rectangle || m_writtenMode) {
+        // "Specify first corner:" or "Specify opposite corner:" ask for a point.
+        if (const std::optional<core::Vec2> point = typedPosition(text)) {
+            selectionClick(*point, PickAction::Add);
+        } else {
+            message(std::string{kInvalidInput});
+        }
+        return;
+    }
+    if (isWindowOption(text)) {
+        m_writtenMode = core::RectangleMode::Window;
+        return;
+    }
+    if (isCrossingOption(text)) {
+        m_writtenMode = core::RectangleMode::Crossing;
+        return;
+    }
+    if (isAllOption(text)) {
+        // Everything a gesture could reach, as one gesture: entities on locked
+        // layers are discarded and counted by applyToSelection().
+        const core::Document& document = m_editor.document();
+        std::vector<core::EntityId> ids;
+        for (const core::EntityRecord& record : document.entities()) {
+            if (core::isVisible(document, record)) {
+                ids.push_back(record.id);
+            }
+        }
+        std::ranges::sort(ids, {}, &core::EntityId::value);
+        applyToSelection(ids, PickAction::Add);
+        return;
+    }
+    if (const std::optional<core::Vec2> point = typedPosition(text)) {
+        selectionClick(*point, PickAction::Add);
+        return;
+    }
+    message(std::string{kInvalidSelection});
+}
+
+bool CommandRunner::forwardKeyword(std::string_view text, const Prompt& prompt) {
+    const auto keyword = std::ranges::find_if(
+        prompt.keywords, [text](const Keyword& candidate) { return matches(candidate, text); });
+    if (keyword == prompt.keywords.end()) {
+        return false;
+    }
+    forward(KeywordInput{keyword->name});
+    return true;
+}
+
+std::optional<core::Vec2> CommandRunner::typedPosition(std::string_view text) const {
+    const std::optional<PointSpec> spec = parseCoordinate(text);
+    // A distance alone needs a direction from the pointer: it is not a
+    // position.
+    if (!spec || spec->kind == PointSpec::Kind::Distance) {
+        return std::nullopt;
+    }
+    return resolve(*spec, m_context.lastPoint, core::Vec2{});
+}
+
 void CommandRunner::submitWhileAskingSelection(const Input& input) {
     if (std::holds_alternative<CancelInput>(input)) {
-        if (m_rectangle) {
-            m_rectangle.reset();
-        } else {
+        if (!closeRectangle()) {
             cancel();
         }
     } else if (std::holds_alternative<ConfirmInput>(input)) {
@@ -368,8 +533,18 @@ void CommandRunner::submitWhileAskingSelection(const Input& input) {
     }
 }
 
+void CommandRunner::submitAtSelectionPrompt(const Input& input) {
+    if (std::holds_alternative<ConfirmInput>(input)) {
+        endSelectionPrompt();
+    } else if (std::holds_alternative<KeywordInput>(input)) {
+        forward(input);
+    }
+    // Points and values given with submit() are not selection gestures.
+}
+
 void CommandRunner::endSelectionQuestion() {
     m_rectangle.reset();
+    m_writtenMode.reset();
     m_askingSelection = false;
     if (m_selection.isEmpty()) {
         m_command.reset();  // nothing chosen: the command ends with no effect
@@ -378,14 +553,28 @@ void CommandRunner::endSelectionQuestion() {
     beginCommand();
 }
 
+void CommandRunner::endSelectionPrompt() {
+    SelectionInput selection;
+    selection.ids.assign(m_selection.ids().begin(), m_selection.ids().end());
+    forward(selection);  // possibly empty: the command decides what that means
+}
+
 void CommandRunner::selectionClick(const core::Vec2& point, PickAction action) {
     const core::Document& document = m_editor.document();
     if (m_rectangle) {
         const core::Vec2 first = m_rectangle->first;
+        // A written W or C fixes the mode; otherwise the direction decides.
+        const core::RectangleMode mode = m_writtenMode.value_or(
+            point.x < first.x ? core::RectangleMode::Crossing : core::RectangleMode::Window);
         m_rectangle.reset();
-        const core::RectangleMode mode =
-            point.x < first.x ? core::RectangleMode::Crossing : core::RectangleMode::Window;
+        m_writtenMode.reset();
         applyToSelection(core::selectInRectangle(document, core::BBox{first, point}, mode), action);
+        return;
+    }
+    if (m_writtenMode) {
+        // The first corner of W or C never picks the entity under it.
+        m_rectangle =
+            SelectionRectangle{point, point, *m_writtenMode == core::RectangleMode::Crossing};
         return;
     }
     if (const std::optional<core::EntityId> picked =
@@ -416,7 +605,7 @@ void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAc
             ++removed;
         }
     }
-    if (!m_askingSelection) {
+    if (!inSelectionQuestion()) {
         return;  // at rest the gestures are silent
     }
     // Numbers in a fixed sentence, as the plan of stage 0.3 allows.
@@ -431,7 +620,35 @@ void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAc
     }
 }
 
+void CommandRunner::pickObject(const core::Vec2& point, bool shift) {
+    const core::Document& document = m_editor.document();
+    const std::optional<core::EntityId> picked =
+        core::pickEntity(document, point, kPickBoxPixels * m_pixelSize);
+    if (!picked) {
+        return;  // nothing there: the question stays, silently
+    }
+    if (isOnLockedLayer(document, *picked)) {
+        message(lockedMessage(1));
+        return;
+    }
+    forward(ObjectInput{*picked, point, shift});
+}
+
+bool CommandRunner::closeRectangle() {
+    if (!m_rectangle) {
+        return false;
+    }
+    m_rectangle.reset();
+    m_writtenMode.reset();
+    return true;
+}
+
 void CommandRunner::forward(const Input& input) {
+    // Any answer to a Selection prompt ends that question: what was chosen
+    // goes with the SelectionInput, if that is the answer, or is dropped.
+    if (promptKind() == PromptKind::Selection) {
+        clearSelection();
+    }
     if (m_command->handle(m_context, input) == Status::Finished) {
         finish();
         return;
@@ -477,9 +694,27 @@ core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
     return point;
 }
 
+std::optional<PromptKind> CommandRunner::promptKind() const {
+    if (!isActive() || m_askingSelection) {
+        return std::nullopt;
+    }
+    return m_command->prompt().kind;
+}
+
+bool CommandRunner::asksForPoint() const {
+    const std::optional<PromptKind> kind = promptKind();
+    return kind == PromptKind::Point || kind == PromptKind::Distance || kind == PromptKind::Angle ||
+           kind == PromptKind::Number;
+}
+
 void CommandRunner::refreshPointer() {
-    if (asksForPoint() && m_pointer) {
+    if (!m_pointer) {
+        return;
+    }
+    if (asksForPoint()) {
         m_command->pointerMoved(aidedPoint(*m_pointer, m_command->basePoint()));
+    } else if (asksForObject()) {
+        m_command->pointerMoved(*m_pointer);  // one picks, one does not draw
     }
 }
 
@@ -518,6 +753,7 @@ void CommandRunner::finish() {
 void CommandRunner::clearSelection() {
     m_selection.clear();
     m_rectangle.reset();
+    m_writtenMode.reset();
 }
 
 void CommandRunner::undo() {
