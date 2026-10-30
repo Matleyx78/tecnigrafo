@@ -1,0 +1,43 @@
+; Trasformazioni di polilinee
+; [0.7-R4] #339, lavoro [0.7-P4] #340: domanda `transform`
+; (docs/verifica/domande.md, "Modifiche (tappa 0.7)"; ADR 0031, punti 1-4).
+; Valori attesi calcolati a mano con le formule dell'ADR 0031 (e dell'ADR 0022
+; per il testo), con uno strumento indipendente da Tecnigrafo; dove indicato,
+; confrontati con il risultato di AutoCAD LT in autocad-specchiatura.dxf
+; (Matleyx78/dxf-test-file, commit 4ad9fff, SHA-256
+; 5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051).
+
+; la polilinea di autocad-specchiatura.dxf (handle 26E), larghezza globale 0.5
+P = LWPOLYLINE width=0.5 vertex=0,-40 vertex=20,-40 bulge=-0.4142135623730951 vertex=30,-50 vertex=40,-50
+; chiusa, con larghezze dei segmenti e un arco
+Q = LWPOLYLINE closed=yes vertex=0,0 start-width=1 end-width=2 vertex=10,0 bulge=0.5 vertex=10,10 end-width=0.5
+; senza vertici e con un vertice solo
+E = LWPOLYLINE closed=no
+V = LWPOLYLINE vertex=2,3
+
+; riflessione: ogni bulge cambia segno, le larghezze restano. Risultati di
+; AutoCAD: M1 -> 27A, M3 -> 292, M5 -> 2AA, M6 -> 2B6
+? transform P mirror 100,-100 100,200 -> LWPOLYLINE closed=no width=0.5 vertex=200,-40 vertex=180,-40 bulge=0.4142135623730951 vertex=170,-50 vertex=160,-50
+? transform P mirror -100,-100 200,-100 -> LWPOLYLINE closed=no width=0.5 vertex=0,-160 vertex=20,-160 bulge=0.4142135623730951 vertex=30,-150 vertex=40,-150
+? transform P mirror 300,0 400,100 -> LWPOLYLINE closed=no width=0.5 vertex=260,-300 vertex=260,-280 bulge=0.4142135623730951 vertex=250,-270 vertex=250,-260
+? transform P mirror -300,0 -400,100 mirrtext=1 -> LWPOLYLINE closed=no width=0.5 vertex=-260,-300 vertex=-260,-320 bulge=0.4142135623730951 vertex=-250,-330 vertex=-250,-340
+? transform Q mirror 0,0 0,1 -> LWPOLYLINE closed=yes vertex=0,0 start-width=1 end-width=2 vertex=-10,0 bulge=-0.5 vertex=-10,10 end-width=0.5
+? transform Q mirror 0,0 1,1 -> LWPOLYLINE closed=yes vertex=0,0 start-width=1 end-width=2 vertex=0,10 bulge=-0.5 vertex=10,10 end-width=0.5
+
+; scala: le larghezze (gruppi 40, 41, 43) si moltiplicano per il fattore, i bulge restano
+? transform P scale 2 0,-40 -> LWPOLYLINE closed=no width=1 vertex=0,-40 vertex=40,-40 bulge=-0.4142135623730951 vertex=60,-60 vertex=80,-60
+? transform Q scale 3 0,0 -> LWPOLYLINE closed=yes vertex=0,0 start-width=3 end-width=6 vertex=30,0 bulge=0.5 vertex=30,30 end-width=1.5
+? transform Q scale 0.5 10,10 -> LWPOLYLINE closed=yes vertex=5,5 start-width=0.5 end-width=1 vertex=10,5 bulge=0.5 vertex=10,10 end-width=0.25
+
+; rotazione e spostamento: bulge e larghezze restano
+? transform P rotate 90 0,0 -> LWPOLYLINE closed=no width=0.5 vertex=40,0 vertex=40,20 bulge=-0.4142135623730951 vertex=50,30 vertex=50,40
+? transform Q rotate 45 5,5 -> LWPOLYLINE closed=yes vertex=5,-2.0710678118654755 start-width=1 end-width=2 vertex=12.071067811865476,5 bulge=0.5 vertex=5,12.071067811865476 end-width=0.5
+? transform Q move -10,20 -> LWPOLYLINE closed=yes vertex=-10,20 start-width=1 end-width=2 vertex=0,20 bulge=0.5 vertex=0,30 end-width=0.5
+
+; senza vertici resta senza vertici; un vertice solo si trasforma
+? transform E move 5,5 -> LWPOLYLINE closed=no
+? transform E mirror 0,0 0,1 -> LWPOLYLINE closed=no
+? transform E scale 2 1,1 -> LWPOLYLINE closed=no
+? transform V rotate 90 0,0 -> LWPOLYLINE closed=no vertex=-3,2
+? transform V mirror 0,0 1,1 -> LWPOLYLINE closed=no vertex=3,2
+? transform V scale 2 0,0 -> LWPOLYLINE closed=no vertex=4,6

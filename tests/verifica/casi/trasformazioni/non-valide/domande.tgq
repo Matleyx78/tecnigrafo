@@ -1,0 +1,33 @@
+; Trasformazioni non valide e casi limite
+; [0.7-R4] #339, lavoro [0.7-P4] #340: domanda `transform`
+; (docs/verifica/domande.md, "Modifiche (tappa 0.7)"; ADR 0031, punti 1-4).
+; Valori attesi calcolati a mano con le formule dell'ADR 0031 (e dell'ADR 0022
+; per il testo), con uno strumento indipendente da Tecnigrafo; dove indicato,
+; confrontati con il risultato di AutoCAD LT in autocad-specchiatura.dxf
+; (Matleyx78/dxf-test-file, commit 4ad9fff, SHA-256
+; 5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051).
+
+L = LINE start=1,2 end=7,5
+C = CIRCLE center=3,-4 radius=2.5
+A = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+P = LWPOLYLINE vertex=0,0 bulge=1 vertex=10,0
+T = TEXT position=1,2 value="Tg1"
+
+; scala con fattore non maggiore di 0
+? transform L scale 0 0,0 -> invalid
+? transform C scale -2 3,-4 -> invalid
+? transform A scale -1 0,0 -> invalid
+? transform P scale 0 5,5 -> invalid
+? transform T scale -0.5 1,2 -> invalid
+
+; riflessione con i due punti dell'asse coincidenti, con e senza MIRRTEXT
+? transform L mirror 3,3 3,3 -> invalid
+? transform C mirror 0,0 0,0 -> invalid
+? transform A mirror 5,5 5,5 mirrtext=1 -> invalid
+? transform P mirror -1,2 -1,2 -> invalid
+? transform T mirror 1,2 1,2 -> invalid
+? transform T mirror 1,2 1,2 mirrtext=1 -> invalid
+
+; i valori vicini al limite sono validi
+? transform C scale 1e-06 3,-4 -> CIRCLE center=3,-4 radius=2.4999999999999998e-06
+? transform A mirror 0,0 0,1e-09 -> ARC center=0,0 radius=10 start-angle=90 end-angle=180
