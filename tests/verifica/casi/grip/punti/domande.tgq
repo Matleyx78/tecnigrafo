@@ -1,0 +1,78 @@
+; Punti dei grip di ogni tipo di entita (0.7-P9, ADR 0034 punto 2; lavoro #350)
+; Ordine di gripPoints():
+; - LINE: inizio, fine, medio
+; - ARC: inizio, fine, medio sull'arco, centro
+; - CIRCLE: centro, quadranti a 0, 90, 180, 270 gradi
+; - LWPOLYLINE: per ogni vertice, il vertice e poi il medio del segmento che parte li
+;   (sull'arco se curvo; nessun segmento dopo l'ultimo vertice se aperta)
+; - TEXT: punto d'inserimento (ADR 0022 punto 5); per Aligned e Fit, position e alignment-point
+
+; 1. LINE: orizzontale e obliqua con coordinate negative
+L1 = LINE start=10,20 end=50,20
+? grips L1 -> 10,20; 50,20; 30,20
+
+L2 = LINE start=-10,5 end=14,-7
+? grips L2 -> -10,5; 14,-7; 2,-1
+
+; 2. ARC: quarto di cerchio, semicerchio inferiore e arco maggiore che attraversa 0 gradi
+; A1: centro (0,0), r=10, da 0 a 90 gradi -> medio a 45 gradi: 10*cos(45), 10*sin(45)
+A1 = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+? grips A1 -> 10,0; 0,10; 7.0710678118654755,7.0710678118654755; 0,0
+
+; A2: semicerchio inferiore da 180 a 0 gradi -> medio a 270 gradi: (5, -5)
+A2 = ARC center=5,0 radius=5 start-angle=180 end-angle=0
+? grips A2 -> 0,0; 10,0; 5,-5; 5,0
+
+; A3: arco maggiore da 270 a 180 gradi (ampiezza 270 gradi) -> medio a 270 + 135 = 45 gradi
+A3 = ARC center=10,20 radius=5 start-angle=270 end-angle=180
+? grips A3 -> 10,15; 5,20; 13.535533905932738,23.535533905932738; 10,20
+
+; 3. CIRCLE: nell'origine e traslato
+C1 = CIRCLE center=0,0 radius=10
+? grips C1 -> 0,0; 10,0; 0,10; -10,0; 0,-10
+
+C2 = CIRCLE center=150,-25 radius=12.5
+? grips C2 -> 150,-25; 162.5,-25; 150,-12.5; 137.5,-25; 150,-37.5
+
+; 4. LWPOLYLINE aperta: solo segmenti dritti (nessun medio dopo l'ultimo vertice)
+PL_APERTA = LWPOLYLINE closed=no vertex=0,0 vertex=20,0 vertex=20,10
+? grips PL_APERTA -> 0,0; 10,0; 20,0; 20,5; 20,10
+
+; 5. LWPOLYLINE aperta con archi (bulge positivo e negativo)
+; Seg 0: da (0,0) a (10,0), bulge=0.5 -> corda (10,0), perp (0,10), medio = (5,0) - (0,10)*0.25 = (5,-2.5)
+; Seg 1: da (10,0) a (10,20), dritto -> medio = (10,10)
+; Seg 2: da (10,20) a (30,20), bulge=-1 -> corda (20,0), perp (0,20), medio = (20,20) - (0,20)*(-0.5) = (20,30)
+PL_CURVA = LWPOLYLINE closed=no vertex=0,0 bulge=0.5 vertex=10,0 vertex=10,20 bulge=-1 vertex=30,20
+? grips PL_CURVA -> 0,0; 5,-2.5; 10,0; 10,10; 10,20; 20,30; 30,20
+
+; 6. LWPOLYLINE chiusa: rettangolo (include il medio del segmento di chiusura)
+PL_CHIUSA = LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+? grips PL_CHIUSA -> 0,0; 10,0; 20,0; 20,5; 20,10; 10,10; 0,10; 0,5
+
+; 7. LWPOLYLINE chiusa con archi (asola: anche il segmento di chiusura ha bulge=1)
+; Seg 1: da (20,0) a (20,10), bulge=1 -> corda (0,10), perp (-10,0), medio = (20,5) - (-10,0)*0.5 = (25,5)
+; Seg 3: da (0,10) a (0,0), bulge=1 -> corda (0,-10), perp (10,0), medio = (0,5) - (10,0)*0.5 = (-5,5)
+PL_ASOLA = LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 bulge=1 vertex=20,10 vertex=0,10 bulge=1
+? grips PL_ASOLA -> 0,0; 10,0; 20,0; 25,5; 20,10; 10,10; 0,10; -5,5
+
+; 8. TEXT: Left+Baseline (position), altri allineamenti a un punto (alignment-point), Aligned e Fit (due grip)
+T_LEFT = TEXT position=3,4 alignment-point=10,20 value="Hello"
+? grips T_LEFT -> 3,4
+
+T_LEFT_TOP = TEXT position=3,4 alignment-point=10,20 vertical=top value="Hello"
+? grips T_LEFT_TOP -> 10,20
+
+T_CENTER = TEXT position=3,4 alignment-point=10,20 horizontal=center value="Hello"
+? grips T_CENTER -> 10,20
+
+T_RIGHT_BOT = TEXT position=3,4 alignment-point=10,20 horizontal=right vertical=bottom value="Hello"
+? grips T_RIGHT_BOT -> 10,20
+
+T_MIDDLE = TEXT position=3,4 alignment-point=10,20 horizontal=middle value="Hello"
+? grips T_MIDDLE -> 10,20
+
+T_ALIGNED = TEXT position=600,20 alignment-point=620,20 horizontal=aligned value="Tg2"
+? grips T_ALIGNED -> 600,20; 620,20
+
+T_FIT = TEXT position=10,20 alignment-point=30,25 horizontal=fit value="Tg2"
+? grips T_FIT -> 10,20; 30,25

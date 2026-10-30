@@ -1,0 +1,64 @@
+; Risultati degeneri della modifica con i grip (0.7-P9, ADR 0034 punto 5; lavoro #350)
+; La decisione di allineamento e areCollinear dell'ADR 0012 punto 4: |cross| <= 1e-9 * L^2.
+
+; 1. LINE: estremo portato sull'altro estremo -> invalid
+L = LINE start=10,20 end=30,40
+? grip L 10,20 30,40 -> invalid
+? grip L 30,40 10,20 -> invalid
+
+; 2. CIRCLE: quadrante portato sul centro (raggio nullo) -> invalid
+C = CIRCLE center=15,25 radius=10
+? grip C 25,25 15,25 -> invalid
+? grip C 15,35 15,25 -> invalid
+? grip C 5,25 15,25 -> invalid
+? grip C 15,15 15,25 -> invalid
+
+; 3. ARC: medio portato sulla corda, sugli estremi o lungo la retta degli estremi -> invalid
+; Semicerchio superiore da (10,0) a (0,0) con medio in (5,5) e centro in (5,0)
+A = ARC center=5,0 radius=5 start-angle=0 end-angle=180
+? grip A 5,5 5,0 -> invalid
+? grip A 5,5 20,0 -> invalid
+? grip A 5,5 10,0 -> invalid
+? grip A 5,5 0,0 -> invalid
+
+; Soglia di areCollinear per corda da (10,0) a (0,0): L = 10, L^2 = 100, soglia |cross| = 1e-7
+; Per medio in (5, h): |cross| = 10 * |h| -> invalid per h <= 1e-8, valido per h = 2e-8
+? grip A 5,5 5,9e-09 -> invalid
+? grip A 5,5 5,1e-08 -> invalid
+; Il centro sta a -6.25e8: li' un ulp di un double vale circa 1.2e-7, piu' della
+; tolleranza assoluta 1e-9, e i tre punti quasi allineati rendono il calcolo mal
+; condizionato. Per questa sola domanda vale anche una tolleranza relativa 1e-12
+; (circa 6e-4 sulle coordinate, 9e-11 sugli angoli).
+!tolerance relative 1e-12
+? grip A 5,5 5,2e-08 -> ARC center=5,-625000000 radius=625000000 start-angle=89.99999954163377 end-angle=90.00000045836623
+!tolerance relative 0
+
+; Estremi dell'arco portati sull'altro estremo o allineati con il vecchio medio (5,5) e l'altro estremo
+; Per inizio (10,0): vecchio medio (5,5) e fine (0,0) stanno sulla retta y = x -> (10,10) e allineato
+? grip A 10,0 0,0 -> invalid
+? grip A 10,0 5,5 -> invalid
+? grip A 10,0 10,10 -> invalid
+; Per fine (0,0): inizio (10,0) e vecchio medio (5,5) stanno sulla retta x + y = 10 -> (0,10) e allineato
+? grip A 0,0 10,0 -> invalid
+? grip A 0,0 5,5 -> invalid
+? grip A 0,0 0,10 -> invalid
+
+; 4. LWPOLYLINE: segmento curvo reso degenere (tre punti allineati o estremi coincidenti)
+; P: segmento curvo da (0,0) a (20,0) con bulge=1 -> vecchio medio sull'arco in (10,-10)
+P = LWPOLYLINE closed=no vertex=0,0 bulge=1 vertex=20,0 vertex=40,0
+; Vertice (0,0) portato sull'altro vertice (20,0), sul vecchio medio (10,-10) o sulla retta per (20,0) e (10,-10) (x - y = 20, es. (30,10))
+? grip P 0,0 20,0 -> invalid
+? grip P 0,0 10,-10 -> invalid
+? grip P 0,0 30,10 -> invalid
+; Medio del segmento dritto (30,0) spostato in modo che il vertice (20,0) finisca sulla retta per (0,0) e (10,-10) (x + y = 0, es. vertice in (20,-20) -> medio da (30,0) a (30,-20))
+? grip P 30,0 30,-20 -> invalid
+; Medio del segmento curvo (10,-10) portato su uno dei suoi vertici
+? grip P 10,-10 0,0 -> invalid
+? grip P 10,-10 20,0 -> invalid
+
+; 5. TEXT Aligned e Fit: secondo punto portato sul primo punto (estremi coincidenti) -> invalid
+T_AL = TEXT position=10,20 alignment-point=30,20 horizontal=aligned value="Tg2"
+? grip T_AL 30,20 10,20 -> invalid
+
+T_FIT = TEXT position=10,20 alignment-point=30,20 height=2.5 horizontal=fit value="Tg2"
+? grip T_FIT 30,20 10,20 -> invalid
