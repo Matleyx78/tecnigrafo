@@ -269,6 +269,43 @@ constexpr std::array<std::string_view, 4> kCatalogueModes{"quadrant", "intersect
                                                           "perpendicular", "tangent"};
 constexpr std::string_view kCatalogueArgument = "from";
 
+// Valid forms stay recognized after their packages implement them. A missing
+// catalogue row must never turn these references into malformed files.
+TEST(Questions, StageSevenCatalogueQuestionsAreNeverUnknown) {
+    constexpr std::array<std::string_view, 14> kForms{
+        "transform A move 1,2",
+        "grips A",
+        "grip A 0,0 1,2",
+        "intersections A B",
+        "self-intersections A",
+        "side A 1,2",
+        "coincident 0,0 1,2",
+        "degenerate A segment=0",
+        "offset A 1 0,2",
+        "fillet A 5,0 B 25,-5 radius=1",
+        "tangents 40,0 C",
+        "circle-ttr A 5,0 B 25,-5 radius=1",
+        "chamfer A 5,0 B 25,-5 distances=1,1",
+        "join A B",
+    };
+    const std::string defined = std::string{kDefinitions} + "C = CIRCLE center=30,0 radius=5\n";
+    for (const std::string_view form : kForms) {
+        const auto result = answerQuestions(defined + "? " + std::string{form} + " -> none\n");
+        if (const auto* error = std::get_if<ParseError>(&result)) {
+            EXPECT_TRUE(error->notImplemented) << form << ": " << error->message;
+        } else {
+            EXPECT_EQ(std::get<std::vector<Answer>>(result).size(), 1U) << form;
+        }
+        // Test the name, not the arguments: append the typo before its first space.
+        const std::size_t space = form.find(' ');
+        const std::string misspelled = std::string{form.substr(0, space)} + "x" +
+                                       std::string{form.substr(space)};
+        const ParseError unknown = failure(defined + "? " + misspelled + " -> none\n");
+        EXPECT_FALSE(unknown.notImplemented) << misspelled;
+        EXPECT_NE(unknown.message.find("unknown question"), std::string::npos) << misspelled;
+    }
+}
+
 // What the catalogue describes is never an invalid file: either the program
 // has it and the question is answered, or it does not have it yet and the file
 // is not implemented yet, so the case is not passed (docs/verifica/casi.md).

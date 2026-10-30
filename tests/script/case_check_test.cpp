@@ -214,6 +214,42 @@ TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
     }
 }
 
+TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
+    const std::string drawing = "A = LINE start=0,0 end=10,0\n";
+    const std::vector<std::string> forms{"transform A move 1,2", "grips A", "grip A 0,0 1,2"};
+    int checked = 0;
+    for (const std::string& form : forms) {
+        const std::string text = drawing + "? " + form + " -> none\n";
+        const auto answers = answerQuestions(text);
+        ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(answers)) << form;
+        const auto& list = std::get<std::vector<Answer>>(answers);
+        ASSERT_EQ(list.size(), 1U);
+        // A realized question is covered by its package; do not freeze the
+        // catalogue in its current, unimplemented state.
+        if (list[0].actual != "error: question not implemented yet") {
+            continue;
+        }
+        ++checked;
+        const fs::path folder = makeCase("announced-question", {{"domande.tgq", text}});
+        const Result failing = check(folder);
+        EXPECT_EQ(failing.code, kExitFailed) << form;
+        expectContains(failing.output, "question not implemented yet");
+        const Result pending = check(folder, true);
+        EXPECT_EQ(pending.code, kExitPassed) << form;
+        expectContains(pending.output, "pending: ");
+    }
+    const std::string unknownText = drawing + "? transformx A move 1,2 -> none\n";
+    const fs::path unknown = makeCase("unknown-question", {{"domande.tgq", unknownText}});
+    for (const bool pending : {false, true}) {
+        const Result result = check(unknown, pending);
+        EXPECT_EQ(result.code, kExitInvalid);
+        expectContains(result.output, "unknown question 'transformx'");
+    }
+    if (checked == 0) {
+        GTEST_SKIP() << "the program already answers all three announced questions";
+    }
+}
+
 TEST(CheckCase, Questions) {
     const fs::path passing =
         makeCase("questions-pass",
