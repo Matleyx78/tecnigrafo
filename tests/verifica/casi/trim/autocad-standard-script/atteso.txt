@@ -1,0 +1,95 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,-10 end=10,10
+  259 ARC center=100,0 radius=10 start-angle=180 end-angle=0
+  260 LINE start=85,0 end=115,0
+  261 ARC center=200,0 radius=10 start-angle=0 end-angle=60
+  262 LINE start=195,-5 end=195,15
+  263 LINE start=205,-5 end=205,15
+  264 LWPOLYLINE closed=no vertex=300,0 vertex=320,0 bulge=1 vertex=340,0
+  265 LINE start=330,-20 end=330,20
+  266 LWPOLYLINE closed=no vertex=420,10 vertex=400,10 vertex=400,-10 vertex=420,-10
+  267 LINE start=410,-20 end=410,20
+  268 CIRCLE center=610,0 radius=10
+  269 LINE start=610,10 end=620,10
+  270 LWPOLYLINE closed=no vertex=710,10 vertex=720,20 vertex=720,0 vertex=700,20
+  271 ARC center=200,0 radius=10 start-angle=120 end-angle=180
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: TR
+  Current settings: Projection=UCS, Edge=None, Mode=Standard
+  Select cutting edges ...
+  Select objects or [mOde] <select all>:
+  Select object to trim or shift-select to extend or [mOde]: 15,0
+  Select object to trim or shift-select to extend or [mOde/Undo]: 100,10
+  Select object to trim or shift-select to extend or [mOde/Undo]: 200,10
+  Select object to trim or shift-select to extend or [mOde/Undo]: 350,0
+  Select object to trim or shift-select to extend or [mOde/Undo]: 420,0
+  Select object to trim or shift-select to extend or [mOde/Undo]: 602,10
+  Select object to trim or shift-select to extend or [mOde/Undo]: 703,3
+  Select object to trim or shift-select to extend or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Trim
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 3
+  CIRCLE 1
+  LINE 8
+  LWPOLYLINE 3
+
+[final]
+entities:
+  257 LWPOLYLINE closed=no vertex=510,10 vertex=500,10 vertex=500,-10 vertex=510,-10
+  258 LINE start=510,-20 end=510,20
+messages:
+  Command: NEW
+  Save changes to ingresso.dxf? [Yes/No/Cancel] <Yes>: N
+  Command: TRIMEXTENDMODE
+  Enter new value for TRIMEXTENDMODE <1>: 0
+  Command: PL
+  Specify start point: 500,-10
+  Specify next point or [Arc/Undo]: 520,-10
+  Specify next point or [Arc/Undo]: 520,10
+  Specify next point or [Arc/Close/Undo]: 500,10
+  Specify next point or [Arc/Close/Undo]: C
+  Command: LINE
+  Specify first point: 510,-20
+  Specify next point or [Undo]: 510,20
+  Specify next point or [Undo]:
+  Command: TRIM
+  Current settings: Projection=UCS, Edge=None, Mode=Standard
+  Select cutting edges ...
+  Select objects or [mOde] <select all>: 510,-15
+  1 found, 1 total
+  Select objects or [mOde] <select all>:
+  Select object to trim or shift-select to extend or [mOde]: 520,0
+  Select object to trim or shift-select to extend or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Line
+  Trim
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+  LWPOLYLINE 1

@@ -58,12 +58,6 @@ explode/non-scomponibili #342
 line/continua-ultimo-punto #342
 
 # 0.7-R2: selezione scritta (#336)
-erase/selezione-scritta-punto #336
-erase/selezione-scritta-finestra #336
-erase/selezione-scritta-intersezione #336
-erase/selezione-scritta-all #336
-erase/selezione-scritta-bloccati #336
-erase/selezione-scritta-errori #336
 
 # 0.7-R7: snap a quadrante e perpendicolare (#346)
 snap/quadrante #346
@@ -74,3 +68,12 @@ snap/osnap-direttiva #346
 # 0.7-R3: sequenze degli script (#338)
 text/sequenze-script #338
 text/sequenze-script-multiriga #338
+
+# 0.7-R16: TRIM, EXTEND (#361)
+trim/autocad-rapido #361
+trim/autocad-standard-script #361
+trim/mezzo-polilinee-larghezze #361
+trim/casi-limite-bordi #361
+trim/opzioni-shift-undo-esc #361
+extend/autocad-rapido-e-standard #361
+extend/estremi-curvi-shift-annulla #361

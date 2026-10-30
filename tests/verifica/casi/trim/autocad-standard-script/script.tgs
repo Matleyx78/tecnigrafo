@@ -1,0 +1,39 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; TRIM in modo standard con !scr on (autocad-taglio.dxf) e con scelta esplicita del solo bordo esterno
+!view 360,0 0.5 1800x400
+!scr on
+OPEN
+ingresso.dxf
+TR
+
+15,0
+100,10
+200,10
+350,0
+420,0
+602,10
+703,3
+
+!report
+!scr off
+NEW
+N
+!view 510,0 0.5 400x400
+TRIMEXTENDMODE
+0
+PL
+500,-10
+520,-10
+520,10
+500,10
+C
+LINE
+510,-20
+510,20
+
+TRIM
+510,-15
+
+520,0
+

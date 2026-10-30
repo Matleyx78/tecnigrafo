@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; EXTEND sulle figure i, j, k, l di autocad-taglio.dxf in modo rapido e in modo standard con !scr on
+!view 160,205 0.5 900x200
+OPEN
+ingresso.dxf
+EXTEND
+8,200
+100.8716,209.9619
+210,204
+304,200
+
+!report
+U
+!scr on
+EX
+
+8,200
+100.8716,209.9619
+210,204
+304,200
+

@@ -33,7 +33,15 @@ struct Keyword {
 /// File dialogs may replace these text questions in the application (ADR 0021).
 enum class FilePrompt : std::uint8_t { None, Open, Save };
 
-enum class PromptKind : std::uint8_t { Point, Distance, Angle, Text };
+/// What a prompt asks for, which decides how CommandRunner reads the answer
+/// (docs/adr/0014 and docs/adr/0032):
+/// - Point, Distance, Angle: a point, or a bare number for Distance and Angle;
+/// - Text: a line, as typed;
+/// - Object: one entity, picked with a click or a typed point (ObjectInput);
+/// - Number: a pure number, with no unit or angle (ValueInput), or a point;
+/// - Selection: a selection built with the runner's gestures and written
+///   options, handed over with Enter (SelectionInput).
+enum class PromptKind : std::uint8_t { Point, Distance, Angle, Text, Object, Number, Selection };
 
 /// What a command asks the user. `text` is the complete sentence shown on
 /// the command line, keywords included ("Specify next point or

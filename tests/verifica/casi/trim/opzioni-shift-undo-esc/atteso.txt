@@ -1,0 +1,115 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,-10 end=10,30
+  259 LINE start=20,-10 end=20,30
+  260 LINE start=0,20 end=10,20
+  262 LINE start=20,0 end=30,0
+messages:
+  Command: TRIMEXTENDMODE
+  Enter new value for TRIMEXTENDMODE <1>: 2
+  Requires an integer between 0 and 1.
+  Enter new value for TRIMEXTENDMODE <1>: -1
+  Requires an integer between 0 and 1.
+  Enter new value for TRIMEXTENDMODE <1>: abc
+  Requires an integer between 0 and 1.
+  Enter new value for TRIMEXTENDMODE <1>: 0
+  Command: TRIMEXTENDMODE
+  Enter new value for TRIMEXTENDMODE <0>:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 10,-10
+  Specify next point or [Undo]: 10,30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 20,-10
+  Specify next point or [Undo]: 20,30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,20
+  Specify next point or [Undo]: 8,20
+  Specify next point or [Undo]:
+  Command: TRIM
+  Current settings: Projection=UCS, Edge=None, Mode=Standard
+  Select cutting edges ...
+  Select objects or [mOde] <select all>: O
+  Enter a trim mode option [Quick/Standard] <Standard>: Q
+  Select object to trim or shift-select to extend or [mOde/Undo]: U
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Trim
+redo:
+snap: on
+ortho: off
+pointer: 7,20
+active snap: none
+statistics:
+  LINE 5
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=30,0
+  258 LINE start=10,-10 end=10,30
+  259 LINE start=20,-10 end=20,30
+  260 LINE start=0,20 end=8,20
+messages:
+  Command: U
+  Undone: Trim.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+redo:
+  Trim
+snap: on
+ortho: off
+pointer: 7,20
+active snap: none
+statistics:
+  LINE 4
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,-10 end=10,30
+  259 LINE start=20,-10 end=20,30
+  260 LINE start=0,20 end=10,20
+  262 LINE start=20,0 end=30,0
+messages:
+  Command: REDO
+  Redone: Trim.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Trim
+redo:
+snap: on
+ortho: off
+pointer: 7,20
+active snap: none
+statistics:
+  LINE 5

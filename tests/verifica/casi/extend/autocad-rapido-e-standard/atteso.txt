@@ -1,0 +1,79 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,200 end=20,200
+  258 LINE start=20,190 end=20,210
+  259 ARC center=100,200 radius=10 start-angle=0 end-angle=143.13010235415598
+  260 LINE start=92,190 end=92,220
+  261 LWPOLYLINE closed=no vertex=200,200 vertex=210,200 vertex=210,215
+  262 LINE start=195,215 end=215,215
+  263 LINE start=300,200 end=315,200
+  264 CIRCLE center=320,200 radius=5
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: EXTEND
+  Current settings: Trim mode = Quick, Projection=UCS, Edge=None
+  Select object to extend or shift-select to trim or [mOde]: 8,200
+  Select object to extend or shift-select to trim or [mOde/Undo]: 100.8716,209.9619
+  Select object to extend or shift-select to trim or [mOde/Undo]: 210,204
+  Select object to extend or shift-select to trim or [mOde/Undo]: 304,200
+  Select object to extend or shift-select to trim or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Extend
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  LINE 5
+  LWPOLYLINE 1
+
+[final]
+entities:
+  257 LINE start=0,200 end=20,200
+  258 LINE start=20,190 end=20,210
+  259 ARC center=100,200 radius=10 start-angle=0 end-angle=143.13010235415598
+  260 LINE start=92,190 end=92,220
+  261 LWPOLYLINE closed=no vertex=200,200 vertex=210,200 vertex=210,215
+  262 LINE start=195,215 end=215,215
+  263 LINE start=300,200 end=315,200
+  264 CIRCLE center=320,200 radius=5
+messages:
+  Command: U
+  Undone: Extend.
+  Command: EX
+  Current settings: Projection=UCS, Edge=None, Mode=Standard
+  Select boundary edges ...
+  Select objects or [mOde] <select all>:
+  Select object to extend or shift-select to trim or [mOde]: 8,200
+  Select object to extend or shift-select to trim or [mOde/Undo]: 100.8716,209.9619
+  Select object to extend or shift-select to trim or [mOde/Undo]: 210,204
+  Select object to extend or shift-select to trim or [mOde/Undo]: 304,200
+  Select object to extend or shift-select to trim or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Extend
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  LINE 5
+  LWPOLYLINE 1
