@@ -81,6 +81,12 @@ grip/punti #350
 grip/modifica #350
 grip/degeneri #350
 
+# 0.7-R20: FILLET, CIRCLE Ttr (#369)
+fillet/autocad-raccordi #369
+fillet/sequenza-script #369
+fillet/opzioni-undo-shift #369
+fillet/casi-limite-proprieta #369
+
 # 0.7-R18: OFFSET (#365)
 offset/autocad-distanza #365
 offset/through-e-lati #365

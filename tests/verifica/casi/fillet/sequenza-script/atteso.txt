@@ -1,0 +1,67 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=10,0 end=30,0
+  258 LINE start=0,10 end=0,30
+  259 LWPOLYLINE closed=yes vertex=360,0 vertex=380,0 bulge=0.414213562373 vertex=390,10 vertex=390,20 bulge=0.414213562373 vertex=380,30 vertex=360,30 bulge=0.414213562373 vertex=350,20 vertex=350,10 bulge=0.414213562373
+  260 LINE start=500,0 end=530,0
+  261 LINE start=500,0 end=500,30
+  262 LINE start=0,200 end=40,200
+  263 LINE start=0,200 end=0,240
+  264 ARC center=10,10 radius=10 start-angle=180 end-angle=270
+  265 ARC center=505,5 radius=5 start-angle=180 end-angle=270
+  266 CIRCLE center=8,208 radius=8
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 0.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <0.0000>: 10
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 10.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 20,0
+  Select second object or shift-select to apply corner or [Radius]: 0,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 10.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: P
+  Select 2D polyline or [Radius]: 370,0
+  4 lines were filleted
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 10.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: T
+  Enter Trim mode option [Trim/No trim] <Trim>: N
+  Command: FILLET
+  Current settings: Mode = NO TRIM, Radius = 10.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <10.0000>: 5
+  Command: FILLET
+  Current settings: Mode = NO TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 520,0
+  Select second object or shift-select to apply corner or [Radius]: 500,20
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: T
+  Specify point on object for first tangent of circle: 10,200
+  Specify point on object for second tangent of circle: 0,210
+  Specify radius of circle: 8
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Fillet
+  Fillet
+  Fillet
+  Circle
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 2
+  CIRCLE 1
+  LINE 6
+  LWPOLYLINE 1
