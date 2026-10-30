@@ -3,6 +3,9 @@
 
 #include "tg/script/case_check.hpp"
 
+#include "tg/script/questions.hpp"
+#include "tg/script/script.hpp"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
@@ -11,6 +14,8 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <variant>
+#include <vector>
 
 namespace tg::script {
 namespace {
@@ -157,33 +162,56 @@ TEST(CheckCase, InvalidCasesFailEvenWhenPending) {
 // What the specifications describe and the program does not have yet is a
 // case not passed, not an invalid one: pending, it waits for its package
 // without stopping the CI; not pending, it fails (docs/verifica/casi.md).
+//
+// A form that the program already has is left out, the way file_test.cpp
+// leaves out a DXF drawing that io does not read yet: so the package that
+// realizes it does not have to touch this test. It counts as realized only if
+// the file is read; any other error is checked here, as an invalid case would
+// fail the exit codes. If the program has all of them, the test is skipped.
 TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
-    const fs::path directive =
-        makeCase("announced-directive", {{"script.tgs", "PLINE\n!scr on\n"}, {"atteso.txt", ""}});
-    const fs::path mode =
-        makeCase("announced-mode",
-                 {{"domande.tgq",
-                   "A = LWPOLYLINE vertex=0,0 vertex=10,0\n? snaps A modes=quadrant -> none\n"}});
-    const fs::path argument = makeCase(
-        "announced-argument",
-        {{"domande.tgq",
-          "A = LWPOLYLINE vertex=0,0 vertex=10,0\n? snap 5,0 aperture=1 from=1,1 -> none\n"}});
-    for (const fs::path& folder : {directive, mode, argument}) {
+    struct Form {
+        std::string name;
+        std::string file;
+        std::string text;
+    };
+
+    const std::string drawing = "A = LWPOLYLINE vertex=0,0 vertex=10,0\n";
+    const std::vector<Form> forms{
+        {"announced-directive", "script.tgs", "PLINE\n!scr on\n"},
+        {"announced-mode", "domande.tgq", drawing + "? snaps A modes=quadrant -> none\n"},
+        {"announced-argument", "domande.tgq", drawing + "? snap 5,0 aperture=1 from=1,1 -> none\n"},
+    };
+    int checked = 0;
+    for (const Form& form : forms) {
+        const bool isScript = form.file == "script.tgs";
+        const bool realized =
+            isScript ? std::holds_alternative<Script>(parseScript(form.text))
+                     : std::holds_alternative<std::vector<Answer>>(answerQuestions(form.text));
+        if (realized) {
+            continue;
+        }
+        ++checked;
+        std::map<std::string, std::string> files{{form.file, form.text}};
+        if (isScript) {
+            files.emplace("atteso.txt", "");
+        }
+        const fs::path folder = makeCase(form.name, files);
+
         const Result failing = check(folder);
-        EXPECT_EQ(failing.code, kExitFailed) << folder;
+        EXPECT_EQ(failing.code, kExitFailed) << form.name;
         expectContains(failing.output, "FAILED: ");
         expectContains(failing.output, ": not implemented yet: ");
+        expectContains(failing.output, "is not implemented yet");
 
         const Result pending = check(folder, true);
-        EXPECT_EQ(pending.code, kExitPassed) << folder;
+        EXPECT_EQ(pending.code, kExitPassed) << form.name;
         expectContains(pending.output, "pending: ");
         expectContains(pending.output, ": not implemented yet: ");
         expectContains(pending.output, "warning: not passed yet");
     }
-    expectContains(check(directive).output,
-                   "script.tgs, line 2: the directive '!scr' is not implemented yet");
-    expectContains(check(mode).output,
-                   "domande.tgq, line 2: snaps: the snap mode 'quadrant' is not implemented yet");
+    if (checked == 0) {
+        GTEST_SKIP() << "the program already has all the syntax that the catalogue announced";
+    }
 }
 
 TEST(CheckCase, Questions) {

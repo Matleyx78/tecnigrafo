@@ -5,7 +5,9 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <string>
+#include <string_view>
 #include <variant>
 
 namespace tg::script {
@@ -181,42 +183,58 @@ TEST(ParseScript, ErrorsGiveTheirLine) {
     }
 }
 
-// docs/verifica/script.md describes these directives from stage 0.7, before
-// the packages that realize them: a script that uses one is not passed, it is
-// not invalid. P3 (!scr), P7 (!osnap) and P8 (!polar) take theirs out of
-// kAnnouncedDirectives and out of this test.
-TEST(ParseScript, DirectivesOfTheCatalogueNotRealizedYetAreNotImplemented) {
+// The directives that docs/verifica/script.md describes from stage 0.7, before
+// the packages that realize them (P3 !scr, P8 !polar, P7 !osnap), each with a
+// form that is valid once the program has it.
+constexpr std::array<std::string_view, 3> kCatalogueDirectives{"scr", "osnap", "polar"};
+
+// What the catalogue describes is never an invalid script: either the program
+// has it and the line is read, or it does not have it yet and the script is
+// not implemented yet, so the case is not passed (docs/verifica/casi.md). The
+// test does not say which of the two holds today, so a package that realizes
+// a directive does not have to touch it. If the program does not know a
+// directive of the catalogue and does not announce it either, this fails.
+TEST(ParseScript, DirectivesOfTheCatalogueAreNeverInvalid) {
     struct Case {
-        const char* text;
+        std::string_view text;
         int line;
-        const char* directive;
     };
 
     for (const Case& test : {
-             Case{"!scr on", 1, "!scr"},
-             Case{"!scr", 1, "!scr"},
-             Case{"PLINE\n0,0\n!osnap end,mid", 3, "!osnap"},
-             Case{"!osnap none", 1, "!osnap"},
-             Case{"!polar on\n!polar off", 1, "!polar"},
+             Case{"!scr on", 1},
+             Case{"!scr off", 1},
+             Case{"PLINE\n0,0\n!osnap end,mid", 3},
+             Case{"!osnap none", 1},
+             Case{"!polar on", 1},
+             Case{"!polar off", 1},
          }) {
-        const ParseError error = failure(test.text);
-        EXPECT_EQ(error.line, test.line) << test.text;
-        EXPECT_TRUE(error.notImplemented) << test.text;
-        EXPECT_NE(error.message.find(test.directive), std::string::npos) << error.message;
-        EXPECT_NE(error.message.find("not implemented yet"), std::string::npos) << error.message;
+        const std::variant<Script, ParseError> result = parseScript(test.text);
+        if (const auto* error = std::get_if<ParseError>(&result)) {
+            EXPECT_TRUE(error->notImplemented) << test.text << ": " << error->message;
+            EXPECT_EQ(error->line, test.line) << test.text;
+            EXPECT_NE(error->message.find("not implemented yet"), std::string::npos)
+                << error->message;
+        }
     }
 }
 
-// Only what the catalogue describes is announced: a typing error is still a
-// malformed script.
-TEST(ParseScript, NamesOutsideTheCatalogueStayInvalid) {
-    for (const char* text :
-         {"!Scr on", "!scrr on", "!osnaps end", "!polarang 45", "!foo", "!SCR"}) {
-        const ParseError error = failure(text);
-        EXPECT_EQ(error.line, 1) << text;
-        EXPECT_NE(error.message.find("unknown directive"), std::string::npos) << error.message;
-        EXPECT_FALSE(error.notImplemented) << text;
+// A typing error of a directive of the catalogue (the wrong case, one letter
+// more or less) is still a malformed script, even though the directive is
+// announced. Derived from the same names, so it holds whichever the program
+// has.
+TEST(ParseScript, TypingErrorsOfCatalogueDirectivesStayInvalid) {
+    for (const std::string_view name : kCatalogueDirectives) {
+        std::string capital{name};
+        capital[0] = static_cast<char>(capital[0] - 'a' + 'A');
+        for (const std::string& typo :
+             {capital, std::string{name} + "x", std::string{name.substr(0, name.size() - 1)}}) {
+            const ParseError error = failure("!" + typo + " on");
+            EXPECT_EQ(error.line, 1) << typo;
+            EXPECT_NE(error.message.find("unknown directive"), std::string::npos) << error.message;
+            EXPECT_FALSE(error.notImplemented) << typo;
+        }
     }
+    EXPECT_FALSE(failure("!foo").notImplemented);
 }
 
 }  // namespace

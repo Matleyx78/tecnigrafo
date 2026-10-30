@@ -28,8 +28,10 @@ constexpr double kMaxPercent = 100.0;
 using Words = std::vector<std::string_view>;
 
 // The directives that the catalogue describes from stage 0.7 (docs/verifica/
-// script.md) and the program does not have yet. The package that realizes
-// one removes it from here: P3 `scr`, P7 `osnap`, P8 `polar`.
+// script.md) and the program does not have yet. This list is read only after
+// every directive the program has (parseDirective), so an entry left here
+// when its package realizes it (P3 `scr`, P7 `osnap`, P8 `polar`) does
+// nothing; remove it to keep the list short.
 constexpr std::array<std::string_view, 3> kAnnouncedDirectives{"scr", "osnap", "polar"};
 
 /// A directive of the catalogue that the program does not have yet: a script
