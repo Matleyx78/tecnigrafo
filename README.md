@@ -78,13 +78,23 @@ sono memorizzate automaticamente.
 Servono un compilatore C++20, CMake ≥ 3.24, Ninja e Qt ≥ 6.8 (solo il modulo Widgets).
 GoogleTest viene scaricato da CMake se non è installato.
 
+Il kernel geometrico, solid-space, è un sottomodulo git: dopo il clone, e dopo
+ogni `git pull` che lo sposta, su tutti i sistemi:
+
+```sh
+git submodule update --init third_party/solid-space
+```
+
+Senza `--recursive`: i sottomoduli di solid-space non servono.
+
 ### Debian 13
 
-Procedura completa, con VS Code e gli strumenti di formattazione:
+Procedura completa, con VS Code e clang-format e clang-tidy 18 (quelli dei
+repository Debian sono di un'altra versione):
 [docs/AMBIENTE-SVILUPPO.md](docs/AMBIENTE-SVILUPPO.md). In breve:
 
 ```sh
-sudo apt install build-essential cmake ninja-build git qt6-base-dev libgtest-dev clang-format
+sudo apt install build-essential cmake ninja-build git qt6-base-dev libgtest-dev
 cmake --preset release
 cmake --build --preset release
 ctest --preset release

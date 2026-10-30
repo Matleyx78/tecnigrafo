@@ -163,7 +163,7 @@ scrive i numeri delle issue nel piano e lo stato nella ROADMAP. Prima mostra che
 cosa farà e chiede conferma. I pacchetti senza scheda (quelli che aspettano un
 contratto di solid-space) non ricevono la issue: lo script si rilancia quando
 le loro schede sono unite, e crea solo le issue nuove. Lo lancia il responsabile
-(GUIDA-RESPONSABILE.md, B2).
+(GUIDA-RESPONSABILE.md, B6).
 
 ## 3. Riferimenti
 
@@ -283,7 +283,9 @@ la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
   manuale da compilare;
 - aggiorna il [catalogo di parità](parita/comandi.md): stato, note e riepilogo
   dei comandi toccati dalla tappa, e la versione in cima al riepilogo;
-- aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README.
+- aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README;
+- porta `project(... VERSION X.Y.0)` del `CMakeLists.txt` principale alla
+  versione nuova.
 
 Il responsabile esegue la prova manuale su Windows e Linux, compila la tabella,
 unisce la pull request e pubblica la versione (regole in

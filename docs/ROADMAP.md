@@ -50,7 +50,7 @@ Solo il responsabile apre una tappa, e solo dopo aver chiuso la precedente:
 4. aggiorna la tabella qui sopra.
 
 I punti 3 e 4 li fa `scripts/apri-tappa.sh X.Y`, dalla tabella dei pacchetti
-del piano ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B2). Se la tappa
+del piano ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B6). Se la tappa
 chiede qualcosa a solid-space, si apre insieme a lei la tappa corrispondente di
 solid-space, e le due avanzano insieme
 ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 13).
@@ -306,7 +306,7 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   I riferimenti con calcoli delicati di Tecnigrafo dei pacchetti di Claude li
   scrive Gemini 4 Argon, con l'etichetta nuova `agente:gemini-argon` e una
   sessione sua sullo stesso PC di Gemini 3.8 Flash
-  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B3).
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B7).
   Il responsabile ha preparato in AutoCAD LT sei DXF di prova, da cui vengono i
   riferimenti dei comandi ([tappe/0.7/dxf-di-prova.md](tappe/0.7/dxf-di-prova.md)).
   Prepararli ha mostrato che negli script AutoCAD usa sequenze di domande

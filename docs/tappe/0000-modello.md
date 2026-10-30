@@ -94,7 +94,7 @@ pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RN]` hanno una riga
 ciascuna, prima del loro pacchetto di lavoro.
 
 La tabella la legge `scripts/apri-tappa.sh`, che crea le issue all'apertura
-(GUIDA-RESPONSABILE.md, B2), quindi segue queste regole: le colonne con questi
+(GUIDA-RESPONSABILE.md, B6), quindi segue queste regole: le colonne con questi
 nomi; la prima cella comincia con `PN` o `RN` seguito dal titolo della issue; la
 scheda è un link a un file che esiste, oppure un testo (per esempio «scheda dopo
 il contratto») se non c'è ancora; la colonna Agente contiene solo il nome
