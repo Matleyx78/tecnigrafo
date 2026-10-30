@@ -1,0 +1,40 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; TRIMEXTENDMODE, opzione mOde, clic nel vuoto, Shift (prolunga), Undo interno, Esc dopo due operazioni, U e REDO
+!view 15,10 0.5 300x300
+TRIMEXTENDMODE
+2
+-1
+abc
+0
+TRIMEXTENDMODE
+
+LINE
+0,0
+30,0
+
+LINE
+10,-10
+10,30
+
+LINE
+20,-10
+20,30
+
+LINE
+0,20
+8,20
+
+TRIM
+O
+Q
+!click 0,-50
+!click 15,0
+U
+!click 15,0
+!click 7,20 remove
+!esc
+!report
+U
+!report
+REDO

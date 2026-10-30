@@ -1,0 +1,144 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,-10 end=0,10
+  258 LINE start=30,-10 end=30,10
+  259 LINE start=0,0 end=30,0
+  260 ARC center=0,50 radius=10 start-angle=323.130102354156 end-angle=216.86989764584402
+  261 LINE start=-15,44 end=15,44
+  262 LINE start=100,-10 end=100,10
+  263 LWPOLYLINE closed=no vertex=100,0 vertex=120,0 vertex=120,10
+  264 LWPOLYLINE closed=no vertex=90,42 vertex=106,42 bulge=1 vertex=94,58
+  265 LINE start=94,40 end=94,65
+  266 LWPOLYLINE closed=no vertex=194,42 bulge=1 vertex=206,58 vertex=220,58
+  267 LINE start=194,35 end=194,60
+  268 CIRCLE center=300,0 radius=10
+  269 LINE start=320,-15 end=320,15
+  270 LWPOLYLINE closed=yes vertex=300,40 vertex=310,40 vertex=310,50 vertex=300,50
+  271 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  272 LINE start=300,100 end=310,100
+  273 LINE start=410,0 end=420,0
+  274 LINE start=410,-10 end=410,10
+messages:
+  Command: OPEN
+  Enter name of drawing to open: polilinee.dxf
+  Command: EXTEND
+  Current settings: Trim mode = Quick, Projection=UCS, Edge=None
+  Select object to extend or shift-select to trim or [mOde]: O
+  Enter a trim mode option [Quick/Standard] <Quick>:
+  Select object to extend or shift-select to trim or [mOde]: 15,0
+  Select object to extend or shift-select to trim or [mOde/Undo]: 12,0
+  Select object to extend or shift-select to trim or [mOde/Undo]: 8,56
+  Select object to extend or shift-select to trim or [mOde/Undo]: 0,60
+  Select object to extend or shift-select to trim or [mOde/Undo]: 111,0
+  Select object to extend or shift-select to trim or [mOde/Undo]: 108,56
+  Select object to extend or shift-select to trim or [mOde/Undo]: 208,44
+  Select object to extend or shift-select to trim or [mOde/Undo]: 310,0
+  Select object to extend or shift-select to trim or [mOde/Undo]: 310,45
+  Select object to extend or shift-select to trim or [mOde/Undo]: 11,21
+  Select object to extend or shift-select to trim or [mOde/Undo]: 309,100
+  Select object to extend or shift-select to trim or [mOde/Undo]: U
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Extend
+redo:
+snap: on
+ortho: off
+drawing: polilinee.dxf, modified
+pointer: 402,0
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  LINE 11
+  LWPOLYLINE 4
+  TEXT 1
+
+[report 2]
+entities:
+  257 LINE start=0,-10 end=0,10
+  258 LINE start=30,-10 end=30,10
+  259 LINE start=10,0 end=20,0
+  260 ARC center=0,50 radius=10 start-angle=0 end-angle=90
+  261 LINE start=-15,44 end=15,44
+  262 LINE start=100,-10 end=100,10
+  263 LWPOLYLINE closed=no vertex=110,0 vertex=120,0 vertex=120,10
+  264 LWPOLYLINE closed=no vertex=90,42 vertex=106,42 bulge=0.5 vertex=106,58
+  265 LINE start=94,40 end=94,65
+  266 LWPOLYLINE closed=no vertex=206,42 bulge=0.5 vertex=206,58 vertex=220,58
+  267 LINE start=194,35 end=194,60
+  268 CIRCLE center=300,0 radius=10
+  269 LINE start=320,-15 end=320,15
+  270 LWPOLYLINE closed=yes vertex=300,40 vertex=310,40 vertex=310,50 vertex=300,50
+  271 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  272 LINE start=300,100 end=310,100
+  273 LINE start=400,0 end=420,0
+  274 LINE start=410,-10 end=410,10
+messages:
+  Command: U
+  Undone: Extend.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Extend
+snap: on
+ortho: off
+drawing: polilinee.dxf
+pointer: 402,0
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  LINE 11
+  LWPOLYLINE 4
+  TEXT 1
+
+[final]
+entities:
+  257 LINE start=0,-10 end=0,10
+  258 LINE start=30,-10 end=30,10
+  259 LINE start=0,0 end=30,0
+  260 ARC center=0,50 radius=10 start-angle=323.130102354156 end-angle=216.86989764584402
+  261 LINE start=-15,44 end=15,44
+  262 LINE start=100,-10 end=100,10
+  263 LWPOLYLINE closed=no vertex=100,0 vertex=120,0 vertex=120,10
+  264 LWPOLYLINE closed=no vertex=90,42 vertex=106,42 bulge=1 vertex=94,58
+  265 LINE start=94,40 end=94,65
+  266 LWPOLYLINE closed=no vertex=194,42 bulge=1 vertex=206,58 vertex=220,58
+  267 LINE start=194,35 end=194,60
+  268 CIRCLE center=300,0 radius=10
+  269 LINE start=320,-15 end=320,15
+  270 LWPOLYLINE closed=yes vertex=300,40 vertex=310,40 vertex=310,50 vertex=300,50
+  271 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  272 LINE start=300,100 end=310,100
+  273 LINE start=410,0 end=420,0
+  274 LINE start=410,-10 end=410,10
+messages:
+  Command: REDO
+  Redone: Extend.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Extend
+redo:
+snap: on
+ortho: off
+drawing: polilinee.dxf, modified
+pointer: 402,0
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  LINE 11
+  LWPOLYLINE 4
+  TEXT 1

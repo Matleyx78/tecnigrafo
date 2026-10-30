@@ -1,0 +1,39 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0 color=1
+  258 LINE start=10,-10 end=10,10
+  259 LINE start=20,-10 end=20,10
+  260 LWPOLYLINE closed=no vertex=0,50 start-width=1 end-width=2 vertex=10,50
+  261 LINE start=10,40 end=10,60
+  262 LINE start=20,40 end=20,60
+  263 LWPOLYLINE closed=no width=0.5 vertex=-25,100 bulge=0.3333333333333333 vertex=-7,76
+  264 LINE start=-7,65 end=-7,110
+  265 LINE start=7,65 end=7,110
+  266 LINE start=10,140 end=10,160
+  267 LINE start=0,150 end=10,150
+  268 LINE start=20,0 end=30,0 color=1
+  269 LWPOLYLINE closed=no vertex=20,50 start-width=3 end-width=4 vertex=30,50
+  270 LWPOLYLINE closed=no width=0.5 vertex=7,76 bulge=0.3333333333333333 vertex=25,100
+messages:
+  Command: OPEN
+  Enter name of drawing to open: polilinee.dxf
+  Command: TRIM
+  Current settings: Trim mode = Quick, Projection=UCS, Edge=None
+  Select object to trim or shift-select to extend or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Trim
+redo:
+snap: on
+ortho: off
+drawing: polilinee.dxf, modified
+pointer: 10,150
+active snap: none
+statistics:
+  LINE 10
+  LWPOLYLINE 4

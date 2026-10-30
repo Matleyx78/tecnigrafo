@@ -1,0 +1,15 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; TRIM in modo rapido sulle figure a, b, c, d, e, g, h di autocad-taglio.dxf
+!view 360,0 0.5 1800x400
+OPEN
+ingresso.dxf
+TRIM
+15,0
+100,10
+200,10
+350,0
+420,0
+602,10
+703,3
+

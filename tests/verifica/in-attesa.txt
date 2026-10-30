@@ -68,3 +68,12 @@ snap/osnap-direttiva #346
 # 0.7-R3: sequenze degli script (#338)
 text/sequenze-script #338
 text/sequenze-script-multiriga #338
+
+# 0.7-R16: TRIM, EXTEND (#361)
+trim/autocad-rapido #361
+trim/autocad-standard-script #361
+trim/mezzo-polilinee-larghezze #361
+trim/casi-limite-bordi #361
+trim/opzioni-shift-undo-esc #361
+extend/autocad-rapido-e-standard #361
+extend/estremi-curvi-shift-annulla #361

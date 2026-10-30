@@ -1,0 +1,30 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; TRIM: bordi sovrapposti, doppio bordo nello stesso punto, pezzi degeneri, senza tagli, TEXT, layer bloccato e spento
+!view 60,60 0.5 500x500
+OPEN
+bordi.dxf
+TRIMEXTENDMODE
+0
+TRIM
+
+2,-40
+110,-40
+11,21
+14,28
+18,60
+15,100
+15,150
+110,68
+105,68
+102,60
+
+!report
+TRIMEXTENDMODE
+1
+TRIM
+11,21
+14,28
+110,-40
+2,-40
+
