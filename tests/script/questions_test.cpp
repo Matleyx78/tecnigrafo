@@ -298,8 +298,8 @@ TEST(Questions, StageSevenCatalogueQuestionsAreNeverUnknown) {
         }
         // Test the name, not the arguments: append the typo before its first space.
         const std::size_t space = form.find(' ');
-        const std::string misspelled = std::string{form.substr(0, space)} + "x" +
-                                       std::string{form.substr(space)};
+        const std::string misspelled =
+            std::string{form.substr(0, space)} + "x" + std::string{form.substr(space)};
         const ParseError unknown = failure(defined + "? " + misspelled + " -> none\n");
         EXPECT_FALSE(unknown.notImplemented) << misspelled;
         EXPECT_NE(unknown.message.find("unknown question"), std::string::npos) << misspelled;
