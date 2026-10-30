@@ -78,7 +78,14 @@ bool compatible(PromptKind kind, ValueType value) {
             return value == ValueType::Angle || value == ValueType::Keyword;
         case PromptKind::Text:
             return value != ValueType::Point && value != ValueType::Distance &&
-                   value != ValueType::Angle;
+                   value != ValueType::Angle && value != ValueType::Object &&
+                   value != ValueType::Selection;
+        case PromptKind::Object:
+            return value == ValueType::Object || value == ValueType::Keyword;
+        case PromptKind::Number:
+            return value == ValueType::Real || value == ValueType::Keyword;
+        case PromptKind::Selection:
+            return value == ValueType::Selection || value == ValueType::Keyword;
     }
     return false;
 }

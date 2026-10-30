@@ -4,6 +4,7 @@
 #include "tg/cmd/command_runner.hpp"
 
 #include "tg/cmd/builtin_commands.hpp"
+#include "tg/cmd/command_description.hpp"
 #include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
@@ -713,7 +714,7 @@ TEST_F(SelectionTest, EnterWithNothingSelectedEndsTheCommandWithNoEffect) {
 
 TEST_F(SelectionTest, TextIsNotAValidSelection) {
     runner().submitText("PICK");
-    for (const char* text : {"abc", "10,10", "PICK", "U"}) {
+    for (const char* text : {"abc", "5", "PICK", "U"}) {
         runner().submitText(text);
         EXPECT_EQ(messages().back(), "Invalid selection.") << text;
     }
@@ -819,6 +820,140 @@ TEST_F(SelectionTest, EnterRepeatsACommandWithTheCurrentSelection) {
     EXPECT_EQ(picks().started, 2);
     EXPECT_EQ(picks().inputs, (std::vector<Input>{selectionInput({a()}), selectionInput({c()})}));
     EXPECT_TRUE(messages().empty());
+}
+
+// --- Written selection (docs/adr/0032, point 4) -------------------------------
+
+TEST_F(SelectionTest, ATypedPointChoosesLikeAClick) {
+    runner().submitText("PICK");
+    runner().submitText("5,0");
+    EXPECT_EQ(selected(), (Ids{a()}));
+
+    // In the void it opens a rectangle, closed by the next point, typed or
+    // clicked: left to right, a window.
+    runner().submitText("-5,-5");
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{-5, -5}, {-5, -5}, false}));
+    EXPECT_EQ(runner().promptText(), "Specify opposite corner:");
+    runner().submitText("14,8");
+    EXPECT_EQ(selected(), (Ids{a(), b()}));
+    EXPECT_EQ(messages(), (std::vector<std::string>{"1 found, 1 total", "2 found, 2 total"}));
+    EXPECT_EQ(runner().promptText(), "Select objects:");
+    EXPECT_EQ(picks().started, 0);
+}
+
+TEST_F(SelectionTest, ATypedPointCanBeRelativeToTheLastPoint) {
+    runner().submitText("FAKE");
+    runner().submit(pointInput(5, 0));  // the last point
+    runner().submitText("C");
+
+    runner().submitText("PICK");
+    runner().submitText("@0,5");
+    EXPECT_EQ(selected(), (Ids{b()}));
+}
+
+TEST_F(SelectionTest, WrittenWindowIgnoresTheDirection) {
+    runner().submitText("PICK");
+    runner().submitText("W");
+    EXPECT_EQ(runner().promptText(), "Specify first corner:");
+    EXPECT_EQ(runner().prompt(), (Prompt{"Specify first corner:", {}}));
+    EXPECT_EQ(runner().selectionRectangle(), std::nullopt);
+
+    runner().submitText("14,8");
+    EXPECT_EQ(runner().promptText(), "Specify opposite corner:");
+    runner().pointerMoved({-5, -5});  // to the left, yet still a window
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{14, 8}, {-5, -5}, false}));
+
+    runner().submitText("-5,-5");
+    EXPECT_EQ(selected(), (Ids{a(), b()}));  // d crosses it and stays out
+    EXPECT_EQ(messages(), (std::vector<std::string>{"2 found, 2 total"}));
+    EXPECT_EQ(runner().promptText(), "Select objects:");
+}
+
+TEST_F(SelectionTest, WrittenCrossingIgnoresTheDirection) {
+    runner().submitText("PICK");
+    runner().submitText("c");
+    runner().submitText("-5,-5");
+    runner().pointerMoved({14, 8});  // to the right, yet still a crossing
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{-5, -5}, {14, 8}, true}));
+
+    runner().submitText("14,8");
+    EXPECT_EQ(selected(), (Ids{a(), b(), d()}));
+    EXPECT_EQ(messages(), (std::vector<std::string>{"3 found, 3 total"}));
+}
+
+TEST_F(SelectionTest, TheCornersOfAWrittenOptionCanBeClicked) {
+    runner().submitText("PICK");
+    runner().submitText("Window");
+    runner().click({11, 6}, PickAction::Add);  // within the pick box of b, yet a corner
+    EXPECT_TRUE(selected().empty());
+    EXPECT_EQ(runner().selectionRectangle(), (SelectionRectangle{{11, 6}, {11, 6}, false}));
+
+    runner().click({-1, -1}, PickAction::Add);  // to the left, yet a window
+    EXPECT_EQ(selected(), (Ids{a(), b()}));
+    EXPECT_EQ(messages().back(), "2 found, 2 total");
+
+    runner().submitText("CROSSING");
+    runner().click({5, -1}, PickAction::Add);
+    runner().click({11, 1}, PickAction::Remove);  // the closing click decides the action
+    EXPECT_EQ(selected(), (Ids{b()}));
+    EXPECT_EQ(messages().back(), "1 removed, 1 total");
+}
+
+TEST_F(SelectionTest, AllTakesEveryEntityAsOneGesture) {
+    runner().submitText("PICK");
+    runner().submitText("5,0");
+    runner().submitText("all");
+    EXPECT_EQ(selected(), (Ids{a(), b(), c(), d()}));
+    EXPECT_EQ(messages().back(), "4 found, 4 total");
+}
+
+TEST_F(SelectionTest, ACornerQuestionTakesOnlyPoints) {
+    runner().submitText("PICK");
+    runner().submitText("W");
+    for (const char* text : {"abc", "5", "ALL", "W"}) {
+        runner().submitText(text);
+        EXPECT_EQ(messages().back(), "Invalid point or option.") << text;
+        EXPECT_EQ(runner().promptText(), "Specify first corner:");
+    }
+    runner().submitText("-5,-5");
+    runner().submitText("C");
+    EXPECT_EQ(messages().back(), "Invalid point or option.");
+    EXPECT_EQ(runner().promptText(), "Specify opposite corner:");
+    EXPECT_EQ(messages().size(), 5U);
+}
+
+TEST_F(SelectionTest, EscAfterAWrittenOptionClosesTheRectangleOrCancels) {
+    runner().submitText("PICK");
+    runner().submitText("W");
+    runner().submitText("14,8");
+    runner().submit(CancelInput{});
+    EXPECT_EQ(runner().selectionRectangle(), std::nullopt);
+    EXPECT_EQ(runner().promptText(), "Select objects:");
+    EXPECT_TRUE(runner().isActive());
+
+    // The option went with its rectangle: the direction decides again.
+    runner().submitText("14,8");
+    runner().submitText("-5,-5");
+    EXPECT_EQ(selected(), (Ids{a(), b(), d()}));
+
+    // With no rectangle open yet, Esc cancels the command.
+    runner().submitText("C");
+    runner().submit(CancelInput{});
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(messages().back(), "*Cancel*");
+    EXPECT_EQ(picks().started, 0);
+    EXPECT_EQ(runner().promptText(), "Command:");
+}
+
+TEST_F(SelectionTest, EnterAfterAWrittenOptionEndsTheQuestion) {
+    runner().submitText("PICK");
+    runner().submitText("5,0");
+    runner().submitText("W");
+    runner().submitText("");
+
+    EXPECT_EQ(picks().inputs, (std::vector<Input>{selectionInput({a()})}));
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(runner().promptText(), "Command:");
 }
 
 // --- Locked layers (docs/adr/0023, point 4) ------------------------------------
@@ -991,6 +1126,43 @@ TEST_F(LockedLayerTest, EraseWithOnlyLockedEntitiesFoundEndsWithNoEffect) {
     EXPECT_EQ(messages(),
               (std::vector<std::string>{"0 found, 0 total", "1 was on a locked layer.",
                                         "0 found, 0 total", "1 was on a locked layer."}));
+}
+
+TEST_F(LockedLayerTest, EraseWithAWrittenPointAndWindow) {
+    runner().submitText("ERASE");
+    runner().submitText("5,0");  // a
+    runner().submitText("5,5");  // x, on the locked layer
+    runner().submitText("w");
+    runner().submitText("11,11");
+    runner().submitText("-1,9");  // b alone lies inside
+    runner().submitText("");
+
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().find(a()), nullptr);
+    EXPECT_EQ(document().find(b()), nullptr);
+    EXPECT_NE(document().find(x()), nullptr);
+    EXPECT_NE(document().find(y()), nullptr);
+    EXPECT_EQ(editor().undoName(), "Erase");
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"1 found, 1 total", "0 found, 1 total",
+                                        "1 was on a locked layer.", "1 found, 2 total"}));
+}
+
+TEST_F(LockedLayerTest, EraseWithAWrittenCrossingAndAll) {
+    runner().submitText("ERASE");
+    runner().submitText("C");
+    runner().submitText("5,-1");
+    runner().submitText("11,6");  // touches a and x
+    runner().submitText("nonsense");
+    runner().submitText("ALL");  // a again and b; x and y are dropped
+    runner().submitText("");
+
+    EXPECT_EQ(document().entityCount(), 2U);
+    EXPECT_NE(document().find(x()), nullptr);
+    EXPECT_NE(document().find(y()), nullptr);
+    EXPECT_EQ(messages(), (std::vector<std::string>{"1 found, 1 total", "1 was on a locked layer.",
+                                                    "Invalid selection.", "2 found, 2 total",
+                                                    "2 were on a locked layer."}));
 }
 
 // --- Snap and ortho (docs/adr/0008) --------------------------------------------
@@ -1538,6 +1710,17 @@ private:
 class NumericPromptTest : public PromptRunnerTest,
                           public testing::WithParamInterface<PromptKind> {};
 
+/// The message for text that a Distance, Angle or Number prompt rejects.
+std::string invalidMessage(PromptKind kind) {
+    if (kind == PromptKind::Distance) {
+        return "Requires a distance, a point or an option.";
+    }
+    if (kind == PromptKind::Angle) {
+        return "Requires an angle, a point or an option.";
+    }
+    return "Requires a number.";
+}
+
 TEST_P(NumericPromptTest, BareNumbersAreValuesWithoutAPointerDirection) {
     start(GetParam());
     const double factor = GetParam() == PromptKind::Angle ? core::kPi / 180.0 : 1.0;
@@ -1609,9 +1792,7 @@ TEST_P(NumericPromptTest, InvalidInputReportsThePromptKindAndKeepsTheQuestion) {
     start(GetParam());
     for (const char* text : {"abc", "1;2", "1 2", "nan", "inf", "0x10", "1e400", "@5"}) {
         runner().submitText(text);
-        EXPECT_EQ(messages().back(), GetParam() == PromptKind::Distance
-                                         ? "Requires a distance, a point or an option."
-                                         : "Requires an angle, a point or an option.");
+        EXPECT_EQ(messages().back(), invalidMessage(GetParam())) << text;
         EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
         EXPECT_TRUE(runner().isActive());
     }
@@ -1633,8 +1814,23 @@ TEST_P(NumericPromptTest, EnterIsAConfirmationAndEscCallsCancel) {
     EXPECT_EQ(messages().back(), "*Cancel*");
 }
 
+// A Number prompt reads bare numbers as they are, without the conversion
+// of angles (docs/adr/0032, point 2).
 INSTANTIATE_TEST_SUITE_P(ValuePrompts, NumericPromptTest,
-                         testing::Values(PromptKind::Distance, PromptKind::Angle));
+                         testing::Values(PromptKind::Distance, PromptKind::Angle,
+                                         PromptKind::Number));
+
+TEST_F(PromptRunnerTest, ANumberPromptPassesAnyNumberAndClicks) {
+    start(PromptKind::Number);
+    runner().submitText("2");
+    runner().submitText("-1");  // the command decides whether it fits
+    runner().submitText("abc");
+    runner().click({60, 35}, PickAction::Add);
+    EXPECT_EQ(journal().inputs,
+              (std::vector<Input>{ValueInput{2}, ValueInput{-1}, pointInput(60, 35)}));
+    EXPECT_EQ(messages(), (std::vector<std::string>{"Requires a number."}));
+    EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
+}
 
 TEST_F(PromptRunnerTest, LargeFiniteAnglesDoNotOverflowDuringConversion) {
     start(PromptKind::Angle);
@@ -1767,6 +1963,337 @@ TEST_F(PromptRunnerTest, EscCanKeepCompletedEntitiesAsOneUndoStep) {
     EXPECT_EQ(document().entityCount(), 3U);
     EXPECT_NE(document().find(first), nullptr);
     EXPECT_NE(document().find(second), nullptr);
+}
+
+// --- Object and Selection prompts (docs/adr/0032, points 1 and 3) ------------
+
+/// A new drawing for the Object and Selection prompts of PROMPT, with the
+/// default pixel size of 1 (pick box of 3 units):
+///
+///   z  (0,15)-(10,15)  layer "Off", turned off
+///   x  (0,10)-(10,10)  layer "Locked", locked
+///   b  (0,5)-(10,5)
+///   a  (0,0)-(10,0)
+class EntityPromptTest : public testing::Test {
+protected:
+    EntityPromptTest() : m_document(Document::newDrawing()) {
+        m_a = m_document.add(line({0, 0}, {10, 0}));
+        m_b = m_document.add(line({0, 5}, {10, 5}));
+        m_x = addOnNewLayer("Locked", true, true, line({0, 10}, {10, 10}));
+        m_z = addOnNewLayer("Off", false, false, line({0, 15}, {10, 15}));
+        m_registry.add(promptDescription(),
+                       [this] { return std::make_unique<FakePromptCommand>(m_journal); });
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
+    }
+
+    void start(PromptKind kind) {
+        m_journal.kind = kind;
+        m_runner.submitText("PROMPT");
+    }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const PromptJournal& journal() const { return m_journal; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+    [[nodiscard]] core::EntityId a() const { return m_a; }
+
+    [[nodiscard]] core::EntityId b() const { return m_b; }
+
+    [[nodiscard]] core::EntityId x() const { return m_x; }
+
+    [[nodiscard]] core::EntityId z() const { return m_z; }
+
+    /// The ids of the runner's selection, in order.
+    [[nodiscard]] Ids selected() const {
+        const auto ids = m_runner.selection().ids();
+        return {ids.begin(), ids.end()};
+    }
+
+private:
+    /// Adds `polyline` on a new layer, keeping the current layer.
+    core::EntityId addOnNewLayer(std::string name, bool on, bool locked, const Polyline& polyline) {
+        core::Layer layer;
+        layer.name = std::move(name);
+        layer.linetype = m_document.continuousLinetype();
+        layer.on = on;
+        layer.locked = locked;
+        const core::CurrentProperties previous = m_document.current();
+        core::CurrentProperties onLayer = previous;
+        onLayer.layer = m_document.addLayer(layer);
+        m_document.setCurrent(onLayer);
+        const core::EntityId id = m_document.add(polyline);
+        m_document.setCurrent(previous);
+        return id;
+    }
+
+    Document m_document;
+    core::EntityId m_a;
+    core::EntityId m_b;
+    core::EntityId m_x;
+    core::EntityId m_z;
+    edit::Editor m_editor{m_document};
+    CommandRegistry m_registry;
+    PromptJournal m_journal;
+    CommandRunner m_runner{m_registry, m_editor};
+    std::vector<std::string> m_messages;
+};
+
+/// An ObjectInput as an Input; also keeps braces out of the gtest macros.
+Input objectInput(core::EntityId id, double x, double y, bool shift = false) {
+    return ObjectInput{id, {x, y}, shift};
+}
+
+TEST_F(EntityPromptTest, AClickPicksAnEntityWithThePointOfTheClick) {
+    start(PromptKind::Object);
+    EXPECT_FALSE(runner().isSelecting());
+    runner().click({5, 1}, PickAction::Add);
+    runner().click({5, 6}, PickAction::Remove);  // Shift held
+
+    EXPECT_EQ(journal().inputs,
+              (std::vector<Input>{objectInput(a(), 5, 1), objectInput(b(), 5, 6, true)}));
+    EXPECT_TRUE(messages().empty());
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_TRUE(runner().selection().isEmpty());
+    EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
+}
+
+TEST_F(EntityPromptTest, AClickOnNothingOrOnAnOffLayerLeavesTheQuestion) {
+    start(PromptKind::Object);
+    runner().click({50, 50}, PickAction::Add);
+    runner().click({5, 15}, PickAction::Add);  // z, on a layer that is off
+
+    EXPECT_TRUE(journal().inputs.empty());
+    EXPECT_TRUE(messages().empty());
+    EXPECT_EQ(runner().selectionRectangle(), std::nullopt);
+    EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
+    EXPECT_NE(z(), x());
+}
+
+TEST_F(EntityPromptTest, AnEntityOnALockedLayerIsNotPicked) {
+    start(PromptKind::Object);
+    runner().click({5, 10}, PickAction::Add);
+    runner().submitText("5,10");
+
+    EXPECT_TRUE(journal().inputs.empty());
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"1 was on a locked layer.", "1 was on a locked layer."}));
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
+}
+
+TEST_F(EntityPromptTest, ATypedOrSubmittedPointPicksLikeAClick) {
+    start(PromptKind::Object);
+    runner().submitText("5,0");
+    runner().submitText("@-95,-195");  // from the last point (100,200): b
+    runner().submit(pointInput(5, 0));
+    runner().submitText("50,50");  // nothing there
+
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{objectInput(a(), 5, 0), objectInput(b(), 5, 5),
+                                                    objectInput(a(), 5, 0)}));
+    EXPECT_TRUE(messages().empty());
+}
+
+TEST_F(EntityPromptTest, AnObjectPromptTakesOptionsEnterAndEsc) {
+    start(PromptKind::Object);
+    runner().submitText("abc");
+    runner().submitText("5");  // a distance alone is no position
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"Invalid point or option.", "Invalid point or option."}));
+    runner().submitText("o");
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{KeywordInput{"Other"}}));
+
+    // Only the runner picks objects and selections.
+    runner().submit(objectInput(a(), 5, 0));
+    runner().submit(selectionInput({a()}));
+    EXPECT_EQ(journal().inputs.size(), 1U);
+
+    runner().submitText("");
+    EXPECT_EQ(journal().inputs.back(), Input{ConfirmInput{}});
+    EXPECT_FALSE(runner().isActive());
+
+    start(PromptKind::Object);
+    runner().submit(CancelInput{});
+    EXPECT_EQ(journal().cancellations, 1);
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(messages().back(), "*Cancel*");
+}
+
+TEST_F(EntityPromptTest, DrawingAidsDoNotMoveTheObjectPoint) {
+    start(PromptKind::Object);
+    DrawingAids aids;  // object snap on
+    aids.ortho = true;
+    runner().setDrawingAids(aids);
+
+    // Within the aperture of a's endpoint (10,0), and off the axes of the
+    // base point (10,20).
+    runner().pointerMoved({9, 1});
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+    ASSERT_FALSE(journal().pointerPositions.empty());
+    EXPECT_EQ(journal().pointerPositions.back(), (Vec2{9, 1}));
+
+    runner().click({9, 1}, PickAction::Add);
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{objectInput(a(), 9, 1)}));
+}
+
+TEST_F(EntityPromptTest, ASelectionPromptBuildsASelectionUnderItsOwnText) {
+    start(PromptKind::Selection);
+    EXPECT_TRUE(runner().isSelecting());
+
+    runner().click({5, 0}, PickAction::Add);
+    EXPECT_EQ(runner().promptText(), "Test prompt [Other/Remember]:");
+    EXPECT_EQ(runner().prompt().keywords.size(), 2U);
+
+    runner().click({-4, -4}, PickAction::Add);  // the void: a rectangle
+    EXPECT_EQ(runner().promptText(), "Specify opposite corner:");
+    EXPECT_TRUE(runner().prompt().keywords.empty());
+    runner().click({11, 11}, PickAction::Add);  // a again and b; x is dropped
+    runner().click({5, 0}, PickAction::Remove);
+
+    EXPECT_EQ(selected(), (Ids{b()}));
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"1 found, 1 total", "2 found, 2 total",
+                                        "1 was on a locked layer.", "1 removed, 1 total"}));
+    EXPECT_TRUE(journal().inputs.empty());
+
+    runner().submitText("");
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{selectionInput({b()})}));
+    EXPECT_TRUE(runner().selection().isEmpty());
+    EXPECT_TRUE(runner().isActive());  // the fake asks again, with nothing chosen
+}
+
+TEST_F(EntityPromptTest, EnterWithNothingChosenHandsOverAnEmptySelection) {
+    start(PromptKind::Selection);
+    runner().submitText("");
+    runner().submit(ConfirmInput{});
+
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{selectionInput({}), selectionInput({})}));
+    EXPECT_TRUE(messages().empty());
+    EXPECT_TRUE(runner().isActive());
+}
+
+TEST_F(EntityPromptTest, ASelectionPromptTakesTheWrittenSelection) {
+    start(PromptKind::Selection);
+    runner().submitText("5,0");
+    runner().submitText("W");
+    EXPECT_EQ(runner().promptText(), "Specify first corner:");
+    runner().submitText("-1,4");
+    runner().submitText("11,6");
+    runner().submitText("ALL");  // z is on a layer that is off: not even counted
+    runner().submitText("abc");
+
+    EXPECT_EQ(messages(),
+              (std::vector<std::string>{"1 found, 1 total", "1 found, 2 total", "2 found, 2 total",
+                                        "1 was on a locked layer.", "Invalid selection."}));
+    runner().submitText("");
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{selectionInput({a(), b()})}));
+}
+
+TEST_F(EntityPromptTest, TheOptionsOfASelectionPromptDropTheSelection) {
+    start(PromptKind::Selection);
+    runner().click({5, 0}, PickAction::Add);
+    runner().submitText("o");
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{KeywordInput{"Other"}}));
+    EXPECT_TRUE(runner().selection().isEmpty());
+
+    runner().click({5, 0}, PickAction::Add);
+    runner().submit(KeywordInput{"Remember"});
+    EXPECT_EQ(journal().inputs.back(), Input{KeywordInput{"Remember"}});
+    EXPECT_TRUE(runner().selection().isEmpty());
+
+    // While a corner is asked for, the question is the runner's.
+    runner().submitText("W");
+    runner().submitText("o");
+    EXPECT_EQ(messages().back(), "Invalid point or option.");
+    EXPECT_EQ(journal().inputs.size(), 2U);
+}
+
+TEST_F(EntityPromptTest, EscAtASelectionPromptClosesTheRectangleThenCancels) {
+    start(PromptKind::Selection);
+    runner().click({-4, -4}, PickAction::Add);
+    runner().submit(CancelInput{});
+    EXPECT_EQ(runner().selectionRectangle(), std::nullopt);
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(journal().cancellations, 0);
+
+    runner().submit(CancelInput{});
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(journal().cancellations, 1);
+    EXPECT_EQ(messages().back(), "*Cancel*");
+    EXPECT_TRUE(journal().inputs.empty());
+}
+
+TEST_F(EntityPromptTest, ASelectionPromptIgnoresPointsValuesAndDrawingAids) {
+    start(PromptKind::Selection);
+    runner().submit(pointInput(5, 0));
+    runner().submit(ValueInput{2});
+    runner().submit(selectionInput({a()}));
+    runner().submit(objectInput(a(), 5, 0));
+    runner().pointerMoved({9, 1});
+
+    EXPECT_TRUE(journal().inputs.empty());
+    EXPECT_TRUE(journal().pointerPositions.empty());
+    EXPECT_TRUE(runner().selection().isEmpty());
+    EXPECT_EQ(runner().activeSnap(), std::nullopt);
+    EXPECT_FALSE(runner().acceptsText());
+}
+
+// The description check knows the new kinds (docs/adr/0032, point 5): Real
+// describes a Number prompt.
+TEST(PromptKindDescriptions, NewKindsMatchTheirValueTypes) {
+    const auto compatible = [](PromptKind kind, ValueType value) {
+        return matches(PromptDescription{"q", "Q:", value, {}, false}, Prompt{"Q:", {}, kind});
+    };
+    const std::vector<ValueType> all{ValueType::Point,   ValueType::Distance,  ValueType::Angle,
+                                     ValueType::Integer, ValueType::Real,      ValueType::Text,
+                                     ValueType::Name,    ValueType::Color,     ValueType::Keyword,
+                                     ValueType::Object,  ValueType::Selection, ValueType::FileOpen,
+                                     ValueType::FileSave};
+    for (const ValueType value : all) {
+        const auto index = static_cast<int>(value);
+        EXPECT_EQ(compatible(PromptKind::Object, value),
+                  value == ValueType::Object || value == ValueType::Keyword)
+            << index;
+        EXPECT_EQ(compatible(PromptKind::Number, value),
+                  value == ValueType::Real || value == ValueType::Keyword)
+            << index;
+        EXPECT_EQ(compatible(PromptKind::Selection, value),
+                  value == ValueType::Selection || value == ValueType::Keyword)
+            << index;
+        EXPECT_EQ(compatible(PromptKind::Text, value),
+                  value != ValueType::Point && value != ValueType::Distance &&
+                      value != ValueType::Angle && value != ValueType::Object &&
+                      value != ValueType::Selection)
+            << index;
+    }
+}
+
+TEST(PromptKindDescriptions, TheRunnerChecksTheNewKindsAgainstTheirValueType) {
+    PromptJournal journal;
+    Document document;
+    edit::Editor editor{document};
+    CommandRegistry registry;
+    CommandDescription described = promptDescription();
+    described.prompts.front().value = ValueType::Object;
+    registry.add(std::move(described),
+                 [&journal] { return std::make_unique<FakePromptCommand>(journal); });
+    CommandRunner runner{registry, editor};
+    std::vector<std::string> reports;
+    runner.setDescriptionCheck(
+        [&reports](const std::string& report) { reports.push_back(report); });
+
+    journal.kind = PromptKind::Object;
+    runner.submitText("PROMPT");
+    EXPECT_TRUE(reports.empty());
+    runner.submit(CancelInput{});
+
+    journal.kind = PromptKind::Selection;
+    runner.submitText("PROMPT");
+    ASSERT_EQ(reports.size(), 1U);
+    EXPECT_EQ(reports.back(), "PROMPT: undescribed prompt \"Test prompt [Other/Remember]:\"");
+    runner.submit(CancelInput{});
 }
 
 // --- Description check (docs/adr/0026, point 3) ------------------------------

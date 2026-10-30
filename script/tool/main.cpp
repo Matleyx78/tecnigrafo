@@ -64,6 +64,10 @@ std::string_view valueName(tg::cmd::ValueType value) {
             return "color";
         case ValueType::Keyword:
             return "keyword";
+        case ValueType::Object:
+            return "object";
+        case ValueType::Selection:
+            return "selection";
         case ValueType::FileOpen:
             return "file-open";
         case ValueType::FileSave:

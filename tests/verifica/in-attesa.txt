@@ -58,12 +58,6 @@ explode/non-scomponibili #342
 line/continua-ultimo-punto #342
 
 # 0.7-R2: selezione scritta (#336)
-erase/selezione-scritta-punto #336
-erase/selezione-scritta-finestra #336
-erase/selezione-scritta-intersezione #336
-erase/selezione-scritta-all #336
-erase/selezione-scritta-bloccati #336
-erase/selezione-scritta-errori #336
 
 # 0.7-R7: snap a quadrante e perpendicolare (#346)
 snap/quadrante #346
