@@ -777,5 +777,47 @@ TEST(DocumentTables, CurrentValuesChange) {
     EXPECT_TRUE(document.lwdisplay());
 }
 
+TEST(Document, ReplaceEntityPreservesRecordAndUpdatesSpatialIndex) {
+    Document document = Document::newDrawing();
+    EntityExtras extras;
+    extras.beforeEntity = {{330, "OWNER"}};
+    extras.extended = {{1001, "APP"}, {1000, "value"}};
+    const EntityRecord original{EntityId{300}, Line{{0, 0}, {1, 1}}, extras, 4, document.current()};
+    document.insert(original);
+    const EntityId following = document.add(Circle{{50, 50}, 1});
+    const auto next = document.nextId();
+    const Entity moved = Line{{20, 20}, {21, 21}};
+    EXPECT_EQ(document.replaceEntity(original.id, moved), original.entity);
+    EntityRecord expected = original;
+    expected.entity = moved;
+    EXPECT_EQ(*document.find(original.id), expected);
+    EXPECT_EQ(document.entities().front().id, original.id);
+    EXPECT_EQ(document.entities().back().id, following);
+    EXPECT_EQ(document.nextId(), next);
+    EXPECT_TRUE(indexedQuery(document, BBox{{-1, -1}, {2, 2}}).empty());
+    EXPECT_EQ(indexedQuery(document, BBox{{19, 19}, {22, 22}}),
+              (std::vector<std::uint64_t>{original.id.value}));
+    EXPECT_EQ(document.replaceEntity(original.id, original.entity), moved);
+    EXPECT_EQ(*document.find(original.id), original);
+    expectEveryEntityFound(document);
+}
+
+TEST(Document, ReplaceEntityHandlesEmptyAndNonemptyBoundingBoxes) {
+    Document document;
+    const EntityId id = document.add(Polyline{});
+    const Entity line = Line{{0, 0}, {1, 1}};
+    EXPECT_EQ(document.replaceEntity(id, line), Entity{Polyline{}});
+    EXPECT_EQ(indexedQuery(document, BBox{{0, 0}, {1, 1}}), (std::vector<std::uint64_t>{id.value}));
+    EXPECT_EQ(document.replaceEntity(id, Polyline{}), line);
+    EXPECT_TRUE(indexedQuery(document, BBox{{0, 0}, {1, 1}}).empty());
+    EXPECT_TRUE(document.extents().isEmpty());
+    EXPECT_EQ(document.replaceEntity(id, Polyline{}), Entity{Polyline{}});
+}
+
+TEST(DocumentDeathTest, ReplaceEntityRequiresAnExistingRecord) {
+    Document document;
+    EXPECT_DEATH(document.replaceEntity(EntityId{999}, Polyline{}), "must exist");
+}
+
 }  // namespace
 }  // namespace tg::core

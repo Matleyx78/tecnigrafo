@@ -65,6 +65,72 @@ bool Editor::remove(core::EntityId id) {
     return true;
 }
 
+bool Editor::replace(core::EntityId id, core::Entity entity) {
+    assert(m_open && "replace() needs an open transaction");
+    const core::EntityRecord* previous = m_document.find(id);
+    if (previous == nullptr || previous->entity == entity) {
+        return false;
+    }
+    const bool circleToArc = std::holds_alternative<core::Circle>(previous->entity) &&
+                             std::holds_alternative<core::Arc>(entity);
+    if (previous->entity.index() != entity.index() && !circleToArc) {
+        return false;
+    }
+    Change change;
+    change.kind = Change::Kind::Replaced;
+    change.id = id;
+    change.data = m_document.replaceEntity(id, std::move(entity));
+    m_open->changes.push_back(std::move(change));
+    return true;
+}
+
+std::optional<core::EntityId> Editor::addCopy(core::EntityId source, core::Entity entity) {
+    assert(m_open && "addCopy() needs an open transaction");
+    const core::EntityRecord* original = m_document.find(source);
+    if (original == nullptr) {
+        return std::nullopt;
+    }
+    // Copy before add() invalidates pointers into the document.
+    core::EntityExtras extras = original->extras;
+    const core::EntityProperties properties = original->properties;
+    core::RawGroups retained;
+    std::size_t depth = 0;
+    for (const core::RawGroup& group : extras.beforeEntity) {
+        if (group.code == 102 && group.value.starts_with('{')) {
+            ++depth;
+        } else if (depth > 0) {
+            if (group.code == 102 && group.value == "}") {
+                --depth;
+            }
+        } else {
+            retained.push_back(group);
+        }
+    }
+    extras.beforeEntity = std::move(retained);
+    const core::EntityId id = add(std::move(entity));
+    // restore() sets extras too; add() already recorded this entity for undo.
+    auto record = m_document.remove(id);
+    assert(record);
+    record->extras = std::move(extras);
+    record->properties = properties;
+    m_document.restore(std::move(*record));
+    return id;
+}
+
+Editor::Savepoint Editor::savepoint() const {
+    assert(m_open && "savepoint() needs an open transaction");
+    return Savepoint{m_open->changes.size()};
+}
+
+void Editor::rollbackTo(Savepoint mark) {
+    assert(m_open && "rollbackTo() needs an open transaction");
+    assert(mark.changes <= m_open->changes.size() && "invalid savepoint");
+    while (m_open->changes.size() > mark.changes) {
+        revert(m_open->changes.back());
+        m_open->changes.pop_back();
+    }
+}
+
 bool Editor::setUnits(int units) {
     assert(m_open && "setUnits() needs an open transaction");
     assert(units >= 0 && units <= core::Document::kMaxUnits && "invalid units");
@@ -444,6 +510,11 @@ void Editor::revert(Change& change) {
 
 void Editor::swapUpdate(Change& change) {
     switch (change.kind) {
+        case Change::Kind::Replaced: {
+            auto& entity = std::get<core::Entity>(change.data);
+            entity = m_document.replaceEntity(change.id, std::move(entity));
+            break;
+        }
         case Change::Kind::LayerUpdated: {
             auto& update = std::get<LayerUpdate>(change.data);
             core::Layer previous = *m_document.layer(update.record.id);
