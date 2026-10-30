@@ -1,0 +1,143 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=20,0
+  258 CIRCLE center=50,0 radius=10
+  259 ARC center=100,0 radius=10 start-angle=0 end-angle=180
+  260 LWPOLYLINE closed=yes vertex=150,-25 vertex=250,-25 vertex=250,25 vertex=150,25
+  261 LWPOLYLINE closed=yes vertex=300,-10 vertex=340,-10 bulge=0.9999999999999998 vertex=340,10 vertex=300,10 bulge=0.9999999999999998
+  262 LWPOLYLINE closed=no vertex=400,0 vertex=400,-20 vertex=406,-20 vertex=406,0
+  263 LWPOLYLINE closed=no vertex=450,0 vertex=470,0 bulge=0.9999999999999998 vertex=476,0 vertex=496,0
+  264 LWPOLYLINE closed=yes vertex=1000150,999975 vertex=1000250,999975 vertex=1000250,1000025 vertex=1000150,1000025
+  265 LINE start=0,5 end=20,5
+  266 CIRCLE center=50,0 radius=7
+  267 CIRCLE center=50,0 radius=13
+  268 ARC center=100,0 radius=14 start-angle=0 end-angle=180
+  269 ARC center=100,0 radius=6 start-angle=0 end-angle=180
+  270 LWPOLYLINE closed=yes vertex=160,-15 vertex=240,-15 vertex=240,15 vertex=160,15
+  271 LWPOLYLINE closed=yes vertex=140,-35 vertex=260,-35 vertex=260,35 vertex=140,35
+  272 LWPOLYLINE closed=yes vertex=300,-6 vertex=340,-6 bulge=1 vertex=340,6 vertex=300,6 bulge=1
+  273 LWPOLYLINE closed=yes vertex=300,-14 vertex=340,-14 bulge=1 vertex=340,14 vertex=300,14 bulge=1
+  274 LWPOLYLINE closed=no vertex=402,0 vertex=402,-18 vertex=404,-18 vertex=404,0
+  275 LWPOLYLINE closed=no vertex=450,2 vertex=470,2 bulge=-0.4142135623730951 vertex=472,-3e-16 bulge=1 vertex=474,3e-16 bulge=-0.4142135623730951 vertex=476,2 vertex=496,2
+  276 LWPOLYLINE closed=no vertex=450,5 vertex=470,5 bulge=-0.1622776601683792 vertex=473,4.000000000000007 bulge=-0.1622776601683794 vertex=476,5 vertex=496,5
+  277 LWPOLYLINE closed=yes vertex=1000160,999985 vertex=1000240,999985 vertex=1000240,1000015 vertex=1000160,1000015
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <Through>: 5
+  Select object to offset or [Exit/Undo] <Exit>: 10,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,5
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <5.0000>: 3
+  Select object to offset or [Exit/Undo] <Exit>: 60,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 50,1
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <3.0000>: 3
+  Select object to offset or [Exit/Undo] <Exit>: 60,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 50,20
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <3.0000>: 4
+  Select object to offset or [Exit/Undo] <Exit>: 110,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 100,15
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <4.0000>: 4
+  Select object to offset or [Exit/Undo] <Exit>: 110,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 100,1
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <4.0000>: 10
+  Select object to offset or [Exit/Undo] <Exit>: 150,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 200,0
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <10.0000>: 10
+  Select object to offset or [Exit/Undo] <Exit>: 150,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 200,40
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <10.0000>: 4
+  Select object to offset or [Exit/Undo] <Exit>: 320,-10
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 320,0
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <4.0000>: 4
+  Select object to offset or [Exit/Undo] <Exit>: 320,-10
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 320,20
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <4.0000>: 2
+  Select object to offset or [Exit/Undo] <Exit>: 403,-20
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 403,-10
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <2.0000>: 4
+  Select object to offset or [Exit/Undo] <Exit>: 403,-20
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 403,-10
+  Cannot offset that object.
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <4.0000>: 2
+  Select object to offset or [Exit/Undo] <Exit>: 460,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 480,10
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <2.0000>: 5
+  Select object to offset or [Exit/Undo] <Exit>: 460,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 480,10
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <5.0000>: 10
+  Select object to offset or [Exit/Undo] <Exit>: 1000150,1000000
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 1000200,1000000
+  Select object to offset or [Exit/Undo] <Exit>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+  Offset
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 3
+  CIRCLE 3
+  LINE 2
+  LWPOLYLINE 13
