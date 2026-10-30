@@ -32,6 +32,11 @@ dxf/r11-public #168
 
 # 0.6-R14: CHPROP e layer bloccati (#246)
 
+# 0.7-R8: tracciamento polare (#348)
+polare/comando-polarang #348
+polare/tracciamento-e-distanza #348
+polare/snap-e-mutua-esclusione #348
+
 # 0.7-R6: ROTATE, SCALE, MIRROR (#344)
 rotate/base-e-angolo #344
 scale/base-e-fattore #344

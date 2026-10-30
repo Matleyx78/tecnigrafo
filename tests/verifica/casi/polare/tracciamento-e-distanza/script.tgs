@@ -1,0 +1,10 @@
+; Tracciamento polare e distanza scritta da sola (0.7-P8, ADR 0033)
+!polar on
+LINE
+0,0
+!move 10,1
+50
+!move 51,20
+20
+
+!report
