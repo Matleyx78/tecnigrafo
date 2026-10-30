@@ -1,0 +1,46 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; OFFSET con Through, entrambi i lati (linea, cerchio, arco), punto sulla curva, entita che collassa, testo, rifiuto distanze <= 0
+LINE
+0,0
+20,0
+
+CIRCLE
+50,0
+10
+
+ARC
+C
+100,0
+110,0
+A
+90
+
+TEXT
+0,50
+2.5
+0
+Tg1
+
+OFFSET
+0
+-5
+T
+10,0
+10,4
+10,0
+10,-6
+60,0
+50,15
+60,0
+50,6
+110,0
+100,12
+110,0
+100,8
+60,0
+50,0
+10,0
+5,0
+0,50
+
