@@ -21,6 +21,7 @@ jobs:
   check:
     name: Linux integration with solid-space main
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     steps:
@@ -37,6 +38,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build libgtest-dev
+      - uses: actions/cache@v4
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
       - name: Configure without Qt, warnings as errors
         run: cmake --preset ci -DTG_BUILD_APP=OFF -DTG_WARNINGS_AS_ERRORS=ON
       - name: Build
@@ -49,6 +55,7 @@ jobs:
     needs: check
     if: ${{ failure() && needs.check.result == 'failure' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - uses: actions/github-script@v7
         with:
