@@ -4,7 +4,7 @@
 #
 # Open a stage ("tappa") from the table of its packages: the plan is the only
 # source, and this script turns it into GitHub objects and a pull request
-# (docs/ROADMAP.md, "Aprire una tappa"; docs/GUIDA-RESPONSABILE.md, B2).
+# (docs/ROADMAP.md, "Aprire una tappa"; docs/GUIDA-RESPONSABILE.md, B6).
 #
 #     scripts/apri-tappa.sh <tappa> [--prova | --si] [--senza-project] [--senza-pr]
 #     scripts/apri-tappa.sh <tappa> --solo-project [--prova | --si]

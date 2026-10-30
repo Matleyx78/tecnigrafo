@@ -5,255 +5,34 @@ ordine, e cosa scrivere agli agenti**, senza dover ricordare le regole. Le regol
 complete sono in [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
 [ROADMAP.md](ROADMAP.md) e nell'[ADR 0011](adr/0011-modalita-di-controllo.md).
 
-Come si usa:
-
-- la **parte A** si fa una volta sola;
-- la **parte B** si ripete a ogni tappa, dall'inizio alla fine;
-- la **parte C** serve quando qualcosa non va;
-- la **parte D** si ripete a ogni tappa di solid-space;
-- le frasi da copiare sono nei riquadri grigi: si copiano così come sono,
-  cambiando solo i numeri tra `< >`.
-
 È l'**unica guida del responsabile per i due progetti**: Tecnigrafo e il suo
 kernel, [solid-space](https://github.com/Matleyx78/solid-space). La guida di
-solid-space rimanda qui. Le parti A, B e C valgono per Tecnigrafo, e per
-solid-space dove lo dicono; la parte D è il ciclo di una tappa di solid-space.
+solid-space rimanda qui. Ci sono le cose di ogni giorno e il ciclo delle tappe;
+il resto sta in altri due documenti:
 
-Cartelle di lavoro sul PC: `~/progetti/tecnigrafo` e `~/progetti/solid-space`.
-Ogni agente si avvia dalla cartella del repository su cui lavora, mai da una
-cartella che le contenga tutte e due (A7).
+| Che cosa | Dove |
+|---|---|
+| Lavoro di ogni giorno e ciclo di una tappa, nei due repository | questa guida |
+| Preparare un PC: Debian 13, WSL, Windows, account, agenti | [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md) |
+| Impostazioni dei repository, etichette, Project, un agente nuovo, versioni di correzione | [MANUTENZIONE.md](MANUTENZIONE.md) |
+
+Come si usa:
+
+- la **parte A** è quello che fai tutti i giorni, in tutti e due i repository;
+- la **parte B** si ripete a ogni tappa, dall'inizio alla fine: una tappa di
+  Tecnigrafo e, se chiede qualcosa al kernel, la tappa di solid-space che le
+  corrisponde;
+- la **parte C** serve quando qualcosa non va;
+- le frasi da copiare sono nei riquadri grigi: si copiano così come sono,
+  cambiando solo ciò che sta tra `< >`.
 
 ---
 
-## A. Una volta sola
+## A. Ogni giorno
 
-### A1. Unire la pull request di questa guida
+### A1. Una chat, un repository
 
-1. Apri la pull request su GitHub e leggila.
-2. Premi **Squash and merge**.
-3. Nel messaggio che compare, controlla che l'ultima riga sia:
-
-   ```text
-   Signed-off-by: Matleyx78 <18114626+Matleyx78@users.noreply.github.com>
-   ```
-
-   Se manca, aggiungila tu. Vale per **ogni** squash and merge.
-4. Premi **Confirm squash and merge**.
-
-### A2. Creare le etichette
-
-1. Su GitHub: **Issues** → **Labels** → **New label**.
-2. Nome `riferimenti`, descrizione `Casi di verifica di un pacchetto (ADR 0011)`,
-   colore a piacere. **Create label**.
-3. Di nuovo **New label**: nome `agente:gemini`, descrizione
-   `Assegnato a Gemini`. **Create label**.
-4. Dalla tappa 0.7, ancora **New label**: nome `agente:gemini-argon`,
-   descrizione `Assegnato a Gemini 4 Argon`. **Create label**.
-
-**In solid-space** (là, **Issues** → **Labels**) servono queste etichette. Sono
-già state create tutte, tranne `tappa-X.Y`, che nasce all'apertura di ogni tappa
-(D2):
-
-| Etichetta | A cosa serve |
-|---|---|
-| `idea` | proposta per le tappe future: si discute, non si implementa |
-| `richiesta` | bisogno di Tecnigrafo che solid-space deve valutare (D0); la mette da sola il modulo della richiesta |
-| `contratto` | proposta di cambiare intestazioni pubbliche già accettate come contratto con Tecnigrafo: decidi tu, per i due progetti (C) |
-| `pacchetto` | issue di un pacchetto di lavoro (`[X.Y-PN]`) |
-| `riferimenti` | issue dei casi di verifica di un pacchetto (`[X.Y-RN]`) |
-| `tappa-X.Y` | tappa a cui appartiene la issue (una per tappa, creata all'apertura) |
-| `agente:claude`, `agente:claude-2`, `agente:codex`, `agente:gemini` | a chi è assegnata la issue |
-| `AA-Presa in carico` | qualcuno ci sta lavorando adesso: non toccare |
-
-### A3. Due impostazioni del repository
-
-1. **Settings** → **General** → sezione **Pull Requests**.
-2. Spunta **Automatically delete head branches**: i rami si cancellano da soli
-   dopo il merge, e la scheda *Branches* resta pulita.
-3. Facoltativo ma consigliato: **Settings** → **Rules** → **Rulesets** →
-   **New ruleset** → **New branch ruleset**.
-   - Nome: `main protetto`. **Enforcement status:** *Active*.
-   - **Target branches** → **Add target** → *Include default branch*.
-   - Spunta **Require status checks to pass** e aggiungi, uno per uno:
-     `Formatting (clang-format 18)`, `Linux (GCC, clang-tidy)`, `Windows (MSVC)`,
-     `macOS (Apple Clang)`, `Reference separation (ADR 0011)`,
-     `Linux (ASan, UBSan)`, `Verifica`.
-   - Nella sezione **Bypass list** aggiungi *Repository admin*, così in caso di
-     emergenza puoi ancora unire tu.
-   - **Create**.
-
-   Da quel momento GitHub non ti lascia unire una pull request con la CI rossa
-   per distrazione. `Verifica` esegue su Linux tutti i casi ai due livelli;
-   Windows e macOS eseguono il livello 1 e un caso di base del livello 2.
-   Nei dettagli dell'esecuzione, **Artifacts** contiene i rapporti di ogni
-   verifica e, in caso di errore, le immagini ottenute e le differenze.
-
-**In solid-space** si fanno le stesse due impostazioni. Nel ruleset i controlli
-sono quelli del suo [ADR 0006](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0006-build-ci-e-sottomoduli.md),
-punto 5: `Formatting (clang-format 18)`, `Linux (GCC, clang-tidy)`,
-`Windows (MSVC)`, `macOS (Apple Clang)`, `Linux (ASan, UBSan)` e
-`Reference separation (ADR 0004)`.
-
-### A4. Installare Gemini (Antigravity CLI) sui tuoi due PC
-
-Gemini lavora come Claude Code e Codex: un programma nel terminale, dentro la
-cartella del progetto, che usa il tuo account GitHub. Il programma si chiama
-**Antigravity CLI** e il comando è `agy`. Dal 18 giugno 2026 il vecchio Gemini
-CLI non accetta più l'accesso con l'account Google personale, e Google indica
-Antigravity al suo posto. Si installa sul PC Debian dell'ufficio e su Debian in
-WSL a casa, nello stesso modo.
-
-1. Se avevi installato il vecchio Gemini CLI, toglilo, così non si confonde:
-
-   ```sh
-   npm uninstall -g @google/gemini-cli
-   ```
-
-   Se risponde che non c'era, va bene lo stesso.
-
-2. Installa Antigravity CLI. Non serve `sudo`: il programma va nella tua cartella
-   personale (`~/.local/bin/agy`).
-
-   ```sh
-   curl -fsSL https://antigravity.google/cli/install.sh | bash
-   ```
-
-3. **Chiudi il terminale e aprine uno nuovo**, poi controlla:
-
-   ```sh
-   which agy
-   ```
-
-   Deve rispondere con un percorso che finisce in `.local/bin/agy`. Se non
-   risponde niente:
-
-   ```sh
-   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
-   ```
-
-   e riprova `which agy`.
-
-4. Controlla che GitHub risponda con il tuo account:
-
-   ```sh
-   gh auth status
-   ```
-
-   Se dice che non sei collegato: `gh auth login` e segui le domande (GitHub.com,
-   HTTPS, accesso con il browser).
-
-5. Entra nella cartella del progetto e avvia Antigravity:
-
-   ```sh
-   cd ~/progetti/tecnigrafo
-   git checkout main && git pull
-   agy
-   ```
-
-6. Alla prima apertura ti chiede colori e modo di visualizzazione (va bene quello
-   proposto) e se ti fidi della cartella: rispondi **sì**, è la tua.
-
-7. Accesso con il tuo account Google. Sul PC Debian dell'ufficio si apre il
-   browser da solo. In WSL potrebbe non aprirsi: allora il terminale mostra un
-   indirizzo. Copialo nel browser di Windows, accedi, copia il **codice** che ti
-   mostra e incollalo nel terminale. Il piano gratuito ha un limite di uso
-   settimanale: lo vedi in ogni momento con `/usage`.
-
-8. **Controlla il modello.** Il piano gratuito offre anche modelli Claude e GPT,
-   ma per i riferimenti serve un modello **Gemini**, diverso da quelli che
-   scrivono il codice. Il modello in uso è scritto in basso a destra. Per
-   cambiarlo scrivi `/model`, scegli **Gemini 3.8 Flash** e con le frecce
-   `←` `→` porta *Effort* su **medium**. Poi `Invio`. È il modello della fascia
-   leggera nella tabella di
-   [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) ("Modello e impegno"): quando
-   cambiano i modelli disponibili, segui quella tabella.
-
-9. Prima prova. Scrivi:
-
-   ```text
-   Leggi GEMINI.md e AGENTS.md. Spiegami in cinque righe cosa devi fare e cosa
-   non devi mai fare in un pacchetto di riferimenti.
-   ```
-
-   Se la risposta parla di casi di verifica, di non eseguire Tecnigrafo per i
-   valori attesi e di licenze, è pronto.
-
-Per solid-space i punti 5–9 sono gli stessi, nella sua cartella
-(`cd ~/progetti/solid-space`). Nella prima prova chiedigli anche dove può
-scrivere: la risposta deve parlare di casi di verifica, di non eseguire
-solid-space per i valori attesi, di licenze, e dire che scrive solo in
-solid-space.
-
-Antigravity si aggiorna da solo. Per uscire premi `Ctrl+C` (se non basta, una
-seconda volta).
-
-### A5. Configurare Antigravity per lavorare da solo
-
-Con le impostazioni predefinite Antigravity chiede il permesso prima di ogni
-comando e di ogni modifica, e devi restare davanti allo schermo. Si configura una
-volta su ogni PC; i dettagli e il perché sono in
-[AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
-
-1. Copia le regole dei permessi della sezione 6 in
-   `~/.gemini/antigravity-cli/settings.json` (se il file esiste già, aggiungi
-   il blocco `permissions` a quello che c'è). Autorizzano i comandi del lavoro
-   (`git`, `gh`, `cmake`, `ctest`, `python3`, `scripts/controlla.sh`,
-   `scripts/ci-attendi.sh`, `scripts/ci-errori.sh`) e
-   vietano quelli che spettano solo a te (`gh pr merge`, i push forzati e i push
-   su `main`).
-2. Avvia sempre Antigravity così:
-
-   ```sh
-   agy --mode auto
-   ```
-
-3. Dentro `agy` scrivi `/permissions` e controlla che le regole del punto 1
-   compaiano. Se mancano, la sintassi è cambiata: aprimi una chat con Claude
-   (sezione C, ultima riga).
-4. Scrivi `/config` e imposta la revisione degli artifact su
-   **agent-decides**: altrimenti Gemini si ferma ad aspettare che approvi il suo
-   piano.
-
-Per solid-space le regole dei permessi sono nel suo
-[AMBIENTE-SVILUPPO.md](https://github.com/Matleyx78/solid-space/blob/main/docs/AMBIENTE-SVILUPPO.md), sezione 3.
-
-Non usare mai `--dangerously-skip-permissions` né *always-proceed*: approvano
-tutto senza chiedere, comprese le azioni irreversibili.
-
-### A6. Il Project «Tecnigrafo» e gli script
-
-Il Project «Tecnigrafo» del tuo account raccoglie issue e pull request di
-Tecnigrafo e di solid-space: è la tavola su cui vedi le due tappe aperte e lo
-stato delle richieste. Ha i campi *Tappa* (`tg-0.7`, `ss-0.2`, …) e *Tipo*
-(pacchetto, riferimenti, richiesta, idea, bug) e le viste «Tappe aperte»,
-«Richieste», «Bloccati» e una per agente. Le issue di Tecnigrafo entrano da sole
-(aggiunta automatica); quelle di solid-space le aggiungono gli script, oppure tu.
-
-1. Una volta sola, sul PC dove lanci gli script:
-
-   ```sh
-   gh auth refresh -s project
-   ```
-
-   Segui le domande (si apre il browser). Senza questo permesso gli script
-   lavorano lo stesso, ma non scrivono nel Project e lo dicono.
-2. A ogni tappa nuova aggiungi i suoi valori al campo *Tappa*: nel Project
-   **⋯** → **Settings** → *Tappa* → aggiungi `tg-<tappa>` (e `ss-<tappa>` per
-   quella di solid-space). Gli script non possono crearli.
-3. Per aggiungere una issue a mano: in fondo alla tavola **+ Add item**, incolla
-   il link della issue, poi imposta *Tipo* e *Tappa*.
-4. L'aggiunta automatica del piano gratuito è una sola e sta su Tecnigrafo:
-   **le issue di solid-space entrano nel Project solo se le aggiunge qualcuno**,
-   lo script delle richieste oppure tu (D0, D2). Nel Project non scrive nessun
-   workflow: gli agenti lavorano con etichette e issue.
-
-Gli script sono due, in `scripts/`: `richiesta.sh` apre una richiesta in
-solid-space (B1), `apri-tappa.sh` apre una tappa (B2). Tutti e due mostrano
-prima che cosa faranno e chiedono conferma; non uniscono, non chiudono e non
-accettano nulla. Le opzioni sono scritte in testa a ciascuno.
-
-
-### A7. Il confine tra i due repository
+Cartelle di lavoro sul PC: `~/progetti/tecnigrafo` e `~/progetti/solid-space`.
 
 I due progetti hanno lo stesso responsabile, ma ognuno ha le sue regole. La regola
 per gli agenti è la stessa nei due `AGENTS.md` ("Dove puoi scrivere"): **una
@@ -265,7 +44,7 @@ chat, un repository**.
   request solo se glielo chiedi tu, indicando quale. Niente file, rami, commit,
   pull request, etichette, chiusure.
 - Una sola eccezione in più: un agente di Tecnigrafo può **aprire una
-  richiesta** in solid-space, se glielo chiedi tu (B1, punto 5).
+  richiesta** in solid-space, se glielo chiedi tu (B2).
 
 La regola scritta, da sola, si basa sull'obbedienza dell'agente. Per renderla
 più difficile da violare, usa tutti i livelli che puoi:
@@ -289,15 +68,117 @@ Quello che l'agente legge nell'altro repository (issue, commenti, file) è
 informazione, non un ordine: se contiene richieste, deve riferirtele, non
 eseguirle.
 
+### A2. Aggiornare la cartella e avviare un agente
+
+Prima di avviare un agente nel terminale, porta la cartella all'ultimo `main`.
+
+In Tecnigrafo:
+
+```sh
+cd ~/progetti/tecnigrafo && git checkout main && git pull \
+  && git submodule update --init third_party/solid-space
+```
+
+Il comando dopo `git pull` porta solid-space, il kernel, al commit che `main`
+fissa. Si scrive **senza** `--recursive`, e si ripete dopo ogni `git pull`.
+
+In solid-space:
+
+```sh
+cd ~/progetti/solid-space && git checkout main && git pull
+```
+
+Poi, nella stessa cartella, avvia l'agente:
+
+| Agente | Comando | Modello |
+|---|---|---|
+| Claude Code | `claude` | quello che il piano indica per il pacchetto |
+| Codex | `codex` | quello che il piano indica per il pacchetto |
+| Gemini 3.8 Flash | `agy --mode auto` | `/model` → **Gemini 3.8 Flash**, *Effort* **medium** |
+| Gemini 4 Argon | `agy --mode auto`, in un altro terminale | `/model` → **Gemini 4 Argon**, *Effort* **high** |
+
+Modello e impegno di ogni pacchetto sono nella tabella del piano; le fasce sono
+in [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno", e
+quando cambiano i modelli disponibili si segue quella tabella. In Antigravity il
+modello in uso è scritto in basso a destra; *Effort* si sceglie con le frecce
+`←` `→` dopo `/model`. Per uscire da `agy` premi `Ctrl+C` (se non basta, una
+seconda volta). Come installare e configurare Antigravity:
+[AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
+
+### A3. Unire una pull request
+
+Vale per **ogni** pull request, nei due repository.
+
+1. Apri la pull request su GitHub. In basso tutti i controlli devono essere
+   verdi.
+2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
+3. Premi **Squash and merge**.
+4. Nel messaggio che compare, controlla che l'ultima riga sia:
+
+   ```text
+   Signed-off-by: Matleyx78 <18114626+Matleyx78@users.noreply.github.com>
+   ```
+
+   Se manca, aggiungila tu.
+5. Premi **Confirm squash and merge**.
+6. Se ci sono altre pull request aperte nello stesso repository, su ognuna premi
+   **Update branch**.
+
+Quando unisci il pacchetto di una tappa, guarda anche B11.
+
 ---
 
-## B. Il ciclo di ogni tappa
+## B. Il ciclo di una tappa
 
-Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
+Una tappa di Tecnigrafo che chiede qualcosa al kernel ha una tappa
+corrispondente di solid-space («solid-space 0.2 per Tecnigrafo 0.7»), e le due
+avanzano insieme ([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md),
+punto 13; [ADR 0007 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0007-tappe-su-richiesta.md)).
+Le tappe di solid-space non si pianificano in anticipo: nascono dalle richieste
+di Tecnigrafo. Il ciclo è uno solo:
 
-### B1. Preparare il piano (tu e Claude)
+| Passo | Repository della chat | Chi |
+|---|---|---|
+| B1. Preparare il piano di Tecnigrafo | Tecnigrafo | tu e Claude |
+| B2. Aprire le richieste | solid-space | tu, con uno script o con un agente |
+| B3. Valutare le richieste | solid-space | tu e Claude |
+| B4. Le schede dopo il contratto | Tecnigrafo | tu e Claude |
+| B5. Preparare il piano di solid-space | solid-space | tu e Claude |
+| B6. Aprire le tappe | tutti e due | tu, con lo script o con Claude |
+| B7. Riferimenti | tutti e due | Gemini, a lotti |
+| B8. Lavoro | tutti e due | Claude e Codex |
+| B9. Seconda opinione | tutti e due | Gemini, a lotti |
+| B10. Un riferimento contestato | tutti e due | chi ha scritto i riferimenti |
+| B11. Unire i pacchetti | tutti e due | tu |
+| B12. Chiudere le tappe | tutti e due | Gemini, poi tu |
 
-1. Apri una chat con Claude nel progetto Tecnigrafo.
+Una tappa che non chiede nulla a solid-space salta B2–B5. Da B7 in poi i passi
+sono gli stessi nei due repository; le frasi indicano il repository con
+`<repository>` (`tecnigrafo` o `solid-space`) e la tappa con `<tappa>`, per
+esempio `0.7` per Tecnigrafo e `0.2` per solid-space. Quello che cambia tra i
+due:
+
+| | Tecnigrafo | solid-space |
+|---|---|---|
+| Cartella | `~/progetti/tecnigrafo` | `~/progetti/solid-space` |
+| Dopo `git pull` | `git submodule update --init third_party/solid-space` (A2) | niente |
+| Casi di verifica | `tests/verifica/` | `tests/corpus/` |
+| Controllo che separa riferimenti e lavoro | `Reference separation (ADR 0011)` | `Reference separation (ADR 0004)` |
+| Chi crea le issue all'apertura | tu, con `scripts/apri-tappa.sh` | Claude, su tua richiesta |
+| Valore di *Tappa* nel Project | `tg-<tappa>` | `ss-<tappa>` |
+| Prova manuale alla chiusura | Windows e Linux | quella delle note di rilascio |
+
+Gli script del responsabile stanno in `scripts/` di Tecnigrafo e sono due:
+`richiesta.sh` apre una richiesta in solid-space (B2), `apri-tappa.sh` apre una
+tappa di Tecnigrafo (B6). Tutti e due mostrano prima che cosa faranno e chiedono
+conferma; non uniscono, non chiudono e non accettano nulla. Le opzioni sono
+scritte in testa a ciascuno. Scrivono nel Project «Tecnigrafo» se `gh` ha il
+permesso `project` ([AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 5);
+senza, lavorano lo stesso e lo dicono.
+
+### B1. Preparare il piano di Tecnigrafo (tu e Claude)
+
+1. Apri una chat con Claude nel progetto, con Tecnigrafo in scrittura.
 2. Scrivi:
 
    ```text
@@ -319,339 +200,64 @@ Le frasi indicano la tappa con `<tappa>`, per esempio `0.4`.
    ```
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
-   accetti quando ti convincono, anche subito (GOVERNANCE.md).
-4. Claude apre una pull request con piano e ADR. Leggila, ma se il piano ha
-   richieste a solid-space non unirla ancora.
-5. Se il piano ha richieste a solid-space, aprile subito, senza aspettare
-   l'apertura della tappa: si aprono **solo in solid-space**, e in Tecnigrafo
-   non se ne tiene una copia. In "Da dove nasce" ognuna cita la pull request del
-   piano, come `Matleyx78/tecnigrafo#<numero>`. Hai due modi:
-   - chiedi a Claude, nella stessa chat, collegando solid-space in scrittura
-     (in una sessione cloud lo script apre la issue ma non arriva al Project:
-     lo dice, e la aggiungi tu come in A6):
+   accetti quando ti convincono, anche subito ([GOVERNANCE.md](../GOVERNANCE.md)).
+4. Claude apre una pull request con piano e ADR. Leggila. Se il piano non ha
+   richieste a solid-space, uniscila (A3) e passa a B6. Se le ha, non unirla
+   ancora: prima B2.
 
-     ```text
-     Apri in solid-space le richieste che abbiamo approvato, con
-     scripts/richiesta.sh e --tappa ss-<tappa di solid-space>, come dice
-     AGENTS.md in "Dove puoi scrivere". Poi scrivi i riferimenti nella tabella
-     "Richieste a solid-space" del piano, nella pull request del piano.
-     ```
+### B2. Aprire le richieste a solid-space
 
-   - oppure dal tuo PC, un file per richiesta:
+Una richiesta nasce in Tecnigrafo: di solito mentre prepari il piano (B1),
+oppure perché un agente di Tecnigrafo si ferma in un pacchetto e ne scrive il
+testo nella issue (C). Il testo segue il modello
+[richieste/0000-modello.md](https://github.com/Matleyx78/solid-space/blob/main/docs/richieste/0000-modello.md)
+di solid-space ([RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md)): sette
+campi, dice di che cosa c'è bisogno e non come soddisfarlo, e ogni riferimento è
+assoluto (`Matleyx78/tecnigrafo#N`). In "Da dove nasce" ognuna cita la pull
+request del piano, come `Matleyx78/tecnigrafo#<numero>`.
 
-     ```sh
-     scripts/richiesta.sh richiesta.md --tappa ss-<tappa di solid-space>
-     ```
+Le richieste si aprono subito, senza aspettare l'apertura della tappa, e **solo
+in solid-space**: in Tecnigrafo non se ne tiene una copia. Hai tre modi:
 
-     Lo script mostra la issue e chiede conferma; alla fine stampa il
-     riferimento (`Matleyx78/solid-space#N`): chiedi a Claude di scriverlo
-     nella tabella del piano, sezione 5.
+- **chiedi a Claude**, nella chat del piano, collegando solid-space in scrittura
+  (in una sessione cloud lo script apre la issue ma non arriva al Project: lo
+  dice, e la aggiungi tu come in [MANUTENZIONE.md](MANUTENZIONE.md), sezione 3):
 
-   Da lì le richieste le segui in solid-space (parte D, D0) e nella vista
-   «Richieste» del Project. Quando la tabella ha i riferimenti, unisci la pull
-   request del piano come in A1.
-6. **Seconda metà del piano, dopo i contratti.** Quando solid-space ha accettato
-   gli ADR di valutazione con le loro intestazioni, apri una chat con Claude
-   (Tecnigrafo in scrittura, solid-space in lettura):
+  ```text
+  Apri in solid-space le richieste che abbiamo approvato, con
+  scripts/richiesta.sh e --tappa ss-<tappa di solid-space>, come dice
+  AGENTS.md in "Dove puoi scrivere". Poi scrivi i riferimenti nella tabella
+  "Richieste a solid-space" del piano, nella pull request del piano.
+  ```
 
-   ```text
-   Scrivi le schede dei pacchetti della tappa <tappa> che aspettavano il
-   contratto di solid-space, sulle intestazioni accettate in solid-space, con
-   le regole di docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni
-   scheda dice quali intestazioni usa e, se sposta il sottomodulo, a quale
-   pacchetto di solid-space. Riferimenti limitati alla facciata e ai comandi.
-   Annota la modifica in "Modifiche al piano" e apri una pull request.
-   ```
+- **dal tuo PC**, un file per richiesta, nella cartella di Tecnigrafo:
 
-   La unisci come in A1. Se la tappa è già aperta, rilancia poi lo script di
-   B2: crea solo le issue nuove.
+  ```sh
+  scripts/richiesta.sh richiesta.md --tappa ss-<tappa di solid-space>
+  ```
 
-### B2. Aprire la tappa (tu, con lo script)
+  Lo script mostra la issue e chiede conferma; alla fine stampa il
+  riferimento (`Matleyx78/solid-space#N`): chiedi a Claude di scriverlo nella
+  tabella del piano, sezione 5;
+- **da GitHub**: in solid-space **Issues** → **New issue** → **Richiesta di
+  Tecnigrafo**, compila i campi e premi **Create**. L'etichetta `richiesta` la
+  mette il modulo. Poi aggiungi la issue al Project
+  ([MANUTENZIONE.md](MANUTENZIONE.md), sezione 3) con *Tipo* = richiesta e
+  *Tappa* = `ss-<tappa>`.
 
-Le issue le crea `scripts/apri-tappa.sh`, dalla tabella dei pacchetti del piano
-unito. Si lancia dal tuo PC, perché serve l'accesso al Project (A6).
+Entro un paio di minuti il controllo automatico di solid-space legge la issue. Se
+compare un suo commento con un elenco, completa la issue (**⋯** → **Edit**): il
+commento si aggiorna da solo e, quando è tutto a posto, lo dice. Il controllo
+guarda solo campi e riferimenti, non decide nulla. Senza questa issue nessuno
+valuta nulla.
 
-1. Nel terminale, nella cartella del progetto:
+Quando la tabella del piano ha i riferimenti, unisci la pull request del piano
+(A3). Da lì le richieste le segui nella vista «Richieste» del Project.
 
-   ```sh
-   cd ~/progetti/tecnigrafo && git checkout main && git pull
-   git submodule update --init third_party/solid-space
-   scripts/apri-tappa.sh <tappa> --prova
-   ```
+### B3. Valutare le richieste (tu e Claude, in solid-space)
 
-   Il secondo comando porta solid-space, il kernel, al commit che `main`
-   fissa. Si scrive **senza** `--recursive`, e si ripete dopo ogni `git pull`
-   (qui, in B3 e in B4).
-
-   Con `--prova` lo script mostra soltanto che cosa farebbe: per ogni riga del
-   piano *create* (issue da creare, con etichette e dipendenze), *exists* (c'è
-   già) o *waits* (nessuna issue per ora, per esempio perché la scheda aspetta
-   il contratto di solid-space). Se segnala errori nel piano, falli correggere
-   con una pull request prima di andare avanti.
-2. Se l'elenco ti convince:
-
-   ```sh
-   scripts/apri-tappa.sh <tappa>
-   ```
-
-   Ripete l'elenco e chiede `Go on? [s/N]`: rispondi `s`. Crea etichetta,
-   milestone e issue, segna le dipendenze («bloccata da»), mette le issue nel
-   Project con *Tappa* = `tg-<tappa>` e *Tipo*, mette in *Bloccato* quelle che
-   aspettano, e apre una pull request con i numeri delle issue nel piano e lo
-   stato «aperta» nella ROADMAP. Gli avvisi (`WARNING`) non fermano nulla:
-   dicono che cosa fare a mano, di solito una dipendenza verso solid-space che
-   GitHub non accetta (resta la riga "Dipende da") o un valore che manca nel
-   Project.
-3. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
-   abbia l'etichetta `agente:…` giusta. Nel Project, vista «Tappe aperte»,
-   controlla che ci siano tutte.
-4. Unisci la pull request dello script come in A1.
-
-Se la tappa chiede qualcosa a solid-space, apri anche la sua tappa
-corrispondente, con la parte D (D1 e D2). Quando più avanti
-aggiungi pacchetti alla tappa (per esempio le schede scritte dopo i contratti,
-B1 punto 6), rilancia i due comandi: lo script crea solo le issue nuove.
-
-> **Solo nella 0.4:** i primi quattro pacchetti costruiscono il sistema di
-> verifica e non hanno riferimenti. Gemini comincia dal pacchetto di riferimenti
-> R2 (i casi per ciò che esiste già), che dipende da P1.
-
-### B3. Riferimenti (Gemini, a lotti)
-
-Gemini scrive i riferimenti ordinari. Quelli con calcoli delicati il piano li
-assegna a un agente di fascia forte (Claude o Codex) diverso da chi farà il
-lavoro: per quelli si usa la frase di B4, e la revisione al punto 3 è la stessa.
-
-1. Nel terminale, nella cartella del progetto:
-
-   ```sh
-   cd ~/progetti/tecnigrafo && git checkout main && git pull \
-     && git submodule update --init third_party/solid-space && agy --mode auto
-   ```
-
-2. Scrivi:
-
-   ```text
-   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-   lettera. Prendi i pacchetti di riferimenti pronti della tappa <tappa>
-   assegnati a te, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti".
-   Per ognuno apri la pull request e porta la CI al verde; alla fine scrivimi
-   un solo riepilogo.
-   ```
-
-   Gemini lavora da solo finché i pacchetti pronti non finiscono. Puoi
-   allontanarti: alla fine trovi il riepilogo con tutte le pull request.
-
-   **Lotto di Gemini 4 Argon.** I riferimenti con calcoli delicati che il piano
-   assegna a `gemini-argon` li fa una sessione sua, che può lavorare insieme a
-   quella di Gemini 3.8 Flash. Apri un altro terminale, avvia `agy --mode auto`
-   come al punto 1 (con lo stesso `git submodule update --init
-   third_party/solid-space` dopo il `git pull`), scrivi `/model`, scegli
-   **Gemini 4 Argon** e porta *Effort* su **high**. Poi scrivi questo messaggio,
-   che gli dice quale etichetta e quale cartella di build sono sue:
-
-   ```text
-   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-   lettera. Sei Gemini 4 Argon: la tua etichetta è agente:gemini-argon e la tua
-   cartella di build è build-gemini-argon (TG_BUILD_SUFFIX=-gemini-argon).
-   Prendi i pacchetti di riferimenti pronti della tappa <tappa> con la tua
-   etichetta, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti". Per
-   ognuno apri la pull request e porta la CI al verde; alla fine scrivimi un
-   solo riepilogo.
-   ```
-
-   La revisione (punto 3) è la stessa.
-
-3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
-   importante di tutta la tappa. Guarda queste sei cose:
-   - [ ] ogni condizione "Fatto quando" del pacchetto ha almeno un caso;
-   - [ ] i numeri attesi hanno senso (per esempio: un cerchio di raggio 10 ha
-         circonferenza 62.83…);
-   - [ ] ci sono casi limite (Esc a metà comando, annulla e ripeti, punti
-         coincidenti);
-   - [ ] per ogni file preso dal web c'è il link alla licenza, e la licenza
-         permette di usarlo (MIT, BSD, CC0, CC BY, GPL 3 vanno bene; "solo uso
-         personale" o nessuna licenza no);
-   - [ ] i valori presi dall'archivio di solid-space citano il caso, con
-         percorso e commit;
-   - [ ] la pull request tocca solo `tests/verifica/`.
-4. Se qualcosa non va, scrivilo come commento nella pull request e di' a Gemini:
-
-   ```text
-   Leggi i commenti della pull request #<numero> e correggi.
-   ```
-
-5. Se va bene, unisci come in A1.
-
-### B4. Lavoro (Claude e Codex)
-
-Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
-
-1. Avvia l'agente (Claude Code o Codex) nella cartella del progetto, dopo
-   `git checkout main && git pull` e
-   `git submodule update --init third_party/solid-space` (senza `--recursive`).
-   Dalla tappa 0.5 scegli il modello e
-   l'impegno che il piano indica per il pacchetto (tabella in
-   [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno").
-2. Scrivi:
-
-   ```text
-   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-   lettera. Prendi il prossimo pacchetto della tappa <tappa> assegnato a te,
-   secondo le regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI
-   al verde e fermati, come dice AGENTS.md.
-   ```
-
-3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che
-   aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo.
-
-Gli agenti fanno le prove locali con `scripts/controlla.sh` (AGENTS.md,
-"Comandi"), aspettano la CI con `scripts/ci-attendi.sh` e, se è rossa, ne leggono
-la causa con `scripts/ci-errori.sh` (AGENTS.md, "Quando fermarsi"). Per te non
-cambia niente: conta solo la CI verde della pull request.
-
-### B5. Seconda opinione (Gemini, a lotti)
-
-Quando ci sono alcune pull request di lavoro aperte, in una sessione di
-Antigravity (`agy --mode auto`):
-
-```text
-Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
-lotti", e alla fine scrivimi un solo riepilogo.
-```
-
-Gemini lascia un commento di revisione in ognuna, senza modificare file. Leggi i
-commenti prima di unire (B6): se uno chiede correzioni che condividi, passalo
-all'agente che ha scritto la pull request.
-
-### B5.1. Segnalazione errori
-
-Quando un agente trova un errore nei riferimenti:
-
-```text
-Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e
-seguilo alla lettera. Controlla la issue #XX e leggi i commenti. L'agente che se
-ne occupa segnala un errore. Se ha ragione, correggi altrimenti commenta
-spiegando il perché.
-```
-
-### B6. Unire
-
-1. Apri la pull request. In basso tutti i controlli devono essere verdi.
-2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
-3. Squash and merge come in A1, con la riga `Signed-off-by`.
-4. Se ci sono altre pull request aperte, su ognuna premi **Update branch**.
-5. Riavvia l'agente che ha finito con la stessa frase di B4: prenderà il
-   pacchetto successivo. Gemini invece non va riavviato dopo ogni merge: rilancia
-   il lotto di B3 quando un merge ha sbloccato nuovi pacchetti di riferimenti
-   (la loro riga "Dipende da" è tutta chiusa), e quello di B5 quando si sono
-   accumulate nuove pull request da rivedere.
-
-**Quando unisci un pacchetto di solid-space**, la sua pull request elenca nella
-riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel pacchetto.
-Nel Project spostale da *Bloccato* a *Da fare*: possono partire subito, senza
-aspettare la fine della tappa di solid-space. Il pacchetto di Tecnigrafo che usa
-il pezzo nuovo sposta da solo il sottomodulo al commit che la sua scheda indica
-(ADR 0030, punto 9): nella sua pull request controlla che `third_party/solid-space`
-punti a quel commit.
-
-Ripeti B3–B6 finché nel milestone non restano issue aperte.
-
-### B7. Chiudere la tappa
-
-1. A Gemini:
-
-   ```text
-   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md. Tutte le issue
-   del milestone v<tappa> sono chiuse: prepara la pull request di chiusura della
-   tappa come descritto in docs/LAVORO-IN-PARALLELO.md, "Chiudere la tappa", sul
-   ramo docs/chiusura-<tappa>. Poi fermati.
-   ```
-
-2. Leggi la pull request: per ogni criterio di chiusura deve esserci la prova (un
-   caso di verifica o un test), oppure "da provare a mano".
-3. Fai la **prova manuale** descritta nelle note di rilascio, su Windows e su
-   Linux, e scrivi l'esito nella tabella (puoi chiedere all'agente di compilarla
-   per te, dandogli gli esiti).
-4. Unisci come in A1.
-5. Nel terminale:
-
-   ```sh
-   git checkout main && git pull
-   git tag -a v<tappa>.0 -m "Tecnigrafo <tappa>.0"
-   git push origin v<tappa>.0
-   ```
-
-6. Su GitHub: **Releases** → **Draft a new release** → scegli il tag
-   `v<tappa>.0` → copia nel testo le note di `docs/rilasci/<tappa>.md` →
-   **Publish release**.
-7. Torna a B1 per la tappa successiva.
-
----
-
-## C. Se qualcosa va storto
-
-| Cosa succede | Cosa fai |
-|---|---|
-| La CI è rossa | Non unire. Scrivi all'agente: `La CI della pull request #<numero> è rossa: leggi l'errore e correggi.` |
-| Fallisce *Reference separation* | La pull request mescola riferimenti e codice. Scrivi all'agente: `Dividi la pull request #<numero> in due, come chiede ADR 0011.` |
-| Un agente dice che un riferimento è sbagliato | Leggi il suo commento nella issue. Se ha ragione, fai correggere il riferimento a Gemini (B3, indicando la issue); se ha torto, rispondi nella issue e fallo continuare. Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla lettera. L'agente <x> ha trovato un errore nella tua RX, pr #X. Leggi i commenti nella issue #X. Se ha ragione, correggi i riferimenti. Se ha torto scrivi un perché di poche righe nei commenti della issue #X.|
-| Conflitto con `main` | Scrivi all'agente di quella pull request: `Aggiorna la pull request #<numero> con main e risolvi i conflitti.` |
-| Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
-| Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
-| Gemini si ferma a chiedere conferma per un comando | Se il comando serve al lavoro ed è sicuro (legge, compila, prova), approvalo e aggiungilo alle regole con `/permissions`, così non lo chiede più. Se cancella, unisce o pubblica su `main`, rifiuta. Regole in A5. |
-| Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
-| Un agente si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B1, punto 5 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta il contratto. Se non serve, rispondi nella issue e fallo continuare. |
-| Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
-| Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (D0, punto 3). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |
-| Serve cambiare un'intestazione di solid-space già accettata come contratto | Apri in solid-space una issue con l'etichetta `contratto` che dice che cosa cambia e perché, e guarda quali schede di Tecnigrafo la usano. Decidi tu per i due progetti; se approvi, la scheda del pacchetto che la cambia lo dice esplicitamente, e in Tecnigrafo si aggiornano le schede che la usano (ADR 0007 di solid-space, punto 15). |
-| In solid-space fallisce il controllo di separazione tra riferimenti e lavoro | La pull request mescola riferimenti e codice. Scrivi all'agente: `Dividi la pull request #<numero> in due, come chiede ADR 0004.` |
-| Un agente ha scritto o proposto qualcosa nell'altro repository senza che tu l'abbia chiesto | Non unire e non rispondere. Chiudi la pull request o cancella il commento, e di' all'agente: `La regola "Dove puoi scrivere" di AGENTS.md vieta di scrivere nell'altro repository: spiega cos'è successo.` (A7) |
-| `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |
-| Non sai cosa fare | Apri una chat con Claude nel progetto e incolla questa riga: `Sono al passo <passo> della guida e succede questo: …` |
-
----
-
-## D. Il ciclo di una tappa di solid-space
-
-Le tappe di solid-space nascono dalle richieste di una tappa di Tecnigrafo
-([ADR 0007 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0007-tappe-su-richiesta.md)). Le
-frasi indicano la tappa di solid-space con `<tappa>`, per esempio `0.2`. Ogni
-chat di questa parte collega **solid-space in scrittura** e Tecnigrafo, se
-serve, solo in lettura (A7); i comandi nel terminale si danno nella cartella
-`~/progetti/solid-space`.
-
-### D0. Arriva una richiesta di Tecnigrafo (tu e Claude)
-
-Le tappe non si pianificano in anticipo: nascono dalle richieste di una tappa di
-Tecnigrafo, e a ogni tappa di Tecnigrafo che chiede qualcosa corrisponde una tappa
-di solid-space ([ADR 0007](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0007-tappe-su-richiesta.md), punti 10–12). La
-richiesta nasce e vive qui, in una sola issue: in Tecnigrafo non se ne tiene una
-copia.
-
-1. In Tecnigrafo emerge un bisogno: di solito mentre prepari il piano di una sua
-   tappa, oppure perché un agente di Tecnigrafo si ferma in un pacchetto e ne
-   scrive il testo nella issue. Il testo segue il modello
-   [richieste/0000-modello.md](https://github.com/Matleyx78/solid-space/blob/main/docs/richieste/0000-modello.md): sette campi, dice di
-   che cosa c'è bisogno e non come soddisfarlo, e ogni riferimento è assoluto
-   (`Matleyx78/tecnigrafo#N`).
-2. Apri la richiesta qui, in uno di due modi:
-   - **da GitHub**: in solid-space **Issues** → **New issue** → **Richiesta di
-     Tecnigrafo**, compila i campi e premi **Create**. L'etichetta `richiesta` la
-     mette il modulo. Poi nel Project «Tecnigrafo» (A6): **+ Add item**, incolla
-     il link della issue, metti *Tipo* = richiesta e *Tappa* = `ss-<tappa>`;
-   - **da una chat di Tecnigrafo**: chiedi a un agente di Tecnigrafo di aprirla
-     con lo script delle richieste (`scripts/richiesta.sh`), come in B1,
-     punto 5. Lo script mette anche la issue nel Project, con Tipo e Tappa, e
-     stampa il riferimento da citare nel piano di Tecnigrafo.
-
-   Senza questa issue nessuno valuta nulla.
-3. Entro un paio di minuti il controllo automatico legge la issue. Se compare un
-   suo commento con un elenco, completa la issue (**⋯** → **Edit**): il commento
-   si aggiorna da solo e, quando è tutto a posto, lo dice. Il controllo guarda
-   solo campi e riferimenti, non decide nulla.
-4. Apri una chat con Claude nel progetto, con solid-space in scrittura, e scrivi:
+1. Apri una chat con Claude nel progetto, con solid-space in scrittura, e
+   scrivi:
 
    ```text
    Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo.
@@ -668,28 +274,45 @@ copia.
    Più richieste della stessa tappa di Tecnigrafo si possono valutare nella
    stessa chat, una pull request per gruppo di richieste che condividono le
    stesse intestazioni.
-5. Leggi la valutazione e il contratto, e discutetene. Gli ADR nuovi nascono
+2. Leggi la valutazione e il contratto, e discutetene. Gli ADR nuovi nascono
    *Proposti*: quando ti convincono, scrivi nella chat «accetto gli ADR», aspetta
-   che li porti in stato *Accettato* e unisci come in A1, nel repository di solid-space
-   ([GOVERNANCE.md](https://github.com/Matleyx78/solid-space/blob/main/GOVERNANCE.md)). Da quel momento le intestazioni sono il
-   contratto: in Tecnigrafo puoi far scrivere le schede dei pacchetti che le
-   usano, senza aspettare il codice di solid-space.
-6. Se l'esito è 4, chiudi la issue con la motivazione. Con gli esiti 1, 2 e 3 la
+   che li porti in stato *Accettato* e unisci (A3), nel repository di solid-space
+   ([GOVERNANCE.md](https://github.com/Matleyx78/solid-space/blob/main/GOVERNANCE.md)).
+   Da quel momento le intestazioni sono il contratto: in Tecnigrafo puoi far
+   scrivere le schede dei pacchetti che le usano (B4), senza aspettare il codice
+   di solid-space.
+3. Se l'esito è 4, chiudi la issue con la motivazione. Con gli esiti 1, 2 e 3 la
    richiesta entra nella tappa di solid-space della sua tappa di Tecnigrafo:
-   - se quella tappa è **in preparazione**, passa a D1 quando le valutazioni di
+   - se quella tappa è **in preparazione**, passa a B5 quando le valutazioni di
      tutte le sue richieste conosciute sono accettate;
    - se è **già aperta** (la richiesta è nata mentre Tecnigrafo percorreva la
-     tappa), passa a D1 con la frase per aggiungere una richiesta;
+     tappa), passa a B5 con la frase per aggiungere una richiesta;
    - se è aperta un'altra tappa di solid-space, quella di una tappa precedente
      di Tecnigrafo, la richiesta aspetta che si chiuda. Prima passa quella che
      blocca la tappa aperta di Tecnigrafo.
 
-   Lo stato di ogni richiesta lo vedi nella vista «Richieste» del Project.
+### B4. Le schede dopo il contratto (tu e Claude, in Tecnigrafo)
 
-### D1. Preparare il piano (tu e Claude)
+Quando solid-space ha accettato gli ADR di valutazione con le loro intestazioni
+(B3), apri una chat con Claude (Tecnigrafo in scrittura, solid-space in
+lettura):
 
-Una tappa di solid-space raccoglie tutte le richieste di una tappa di Tecnigrafo
-(«solid-space 0.2 per Tecnigrafo 0.7»).
+```text
+Scrivi le schede dei pacchetti della tappa <tappa> che aspettavano il
+contratto di solid-space, sulle intestazioni accettate in solid-space, con
+le regole di docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni
+scheda dice quali intestazioni usa e, se sposta il sottomodulo, a quale
+pacchetto di solid-space. Riferimenti limitati alla facciata e ai comandi.
+Annota la modifica in "Modifiche al piano" e apri una pull request.
+```
+
+La unisci (A3). Se la tappa è già aperta, rilancia poi lo script di B6: crea
+solo le issue nuove.
+
+### B5. Preparare il piano di solid-space (tu e Claude)
+
+Una tappa di solid-space raccoglie tutte le richieste di una tappa di
+Tecnigrafo.
 
 1. Apri una chat con Claude nel progetto, con solid-space in scrittura.
 2. Scrivi:
@@ -728,16 +351,58 @@ Una tappa di solid-space raccoglie tutte le richieste di una tappa di Tecnigrafo
    ```
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
-   accetti quando ti convincono, anche subito ([GOVERNANCE.md](https://github.com/Matleyx78/solid-space/blob/main/GOVERNANCE.md)).
-4. Claude apre una pull request con piano e ADR. La leggi e la unisci come in A1, nel repository di solid-space.
+   accetti quando ti convincono, anche subito.
+4. Claude apre una pull request con piano e ADR. La leggi e la unisci (A3), nel
+   repository di solid-space.
 
-### D2. Aprire la tappa (Claude crea le issue)
+### B6. Aprire le tappe
 
-La tappa si apre quando la tappa precedente di solid-space è chiusa; da quel
-momento avanza insieme alla tappa di Tecnigrafo a cui corrisponde. Vale anche per
-i pacchetti aggiunti a tappa aperta: per quelli crei solo le issue nuove.
+Prima di tutto, nel Project «Tecnigrafo» aggiungi al campo *Tappa* i valori
+della tappa nuova: **⋯** → **Settings** → *Tappa* → aggiungi `tg-<tappa>` (e
+`ss-<tappa>` per quella di solid-space). Gli script non possono crearli.
 
-1. Scrivi a Claude:
+**Tecnigrafo, con lo script.** Le issue le crea `scripts/apri-tappa.sh`, dalla
+tabella dei pacchetti del piano unito. Si lancia dal tuo PC, perché serve
+l'accesso al Project.
+
+1. Aggiorna la cartella come in A2, poi:
+
+   ```sh
+   scripts/apri-tappa.sh <tappa> --prova
+   ```
+
+   Con `--prova` lo script mostra soltanto che cosa farebbe: per ogni riga del
+   piano *create* (issue da creare, con etichette e dipendenze), *exists* (c'è
+   già) o *waits* (nessuna issue per ora, per esempio perché la scheda aspetta
+   il contratto di solid-space). Se segnala errori nel piano, falli correggere
+   con una pull request prima di andare avanti.
+2. Se l'elenco ti convince:
+
+   ```sh
+   scripts/apri-tappa.sh <tappa>
+   ```
+
+   Ripete l'elenco e chiede `Go on? [s/N]`: rispondi `s`. Crea etichetta,
+   milestone e issue, segna le dipendenze («bloccata da»), mette le issue nel
+   Project con *Tappa* = `tg-<tappa>` e *Tipo*, mette in *Bloccato* quelle che
+   aspettano, e apre una pull request con i numeri delle issue nel piano e lo
+   stato «aperta» nella ROADMAP. Gli avvisi (`WARNING`) non fermano nulla:
+   dicono che cosa fare a mano, di solito una dipendenza verso solid-space che
+   GitHub non accetta (resta la riga "Dipende da") o un valore che manca nel
+   Project.
+3. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
+   abbia l'etichetta `agente:…` giusta. Nel Project, vista «Tappe aperte»,
+   controlla che ci siano tutte.
+4. Unisci la pull request dello script (A3).
+
+Quando più avanti aggiungi pacchetti alla tappa (per esempio le schede di B4),
+rilancia i due comandi: lo script crea solo le issue nuove.
+
+**solid-space, con Claude.** La tappa di solid-space si apre quando la sua tappa
+precedente è chiusa. Vale anche per i pacchetti aggiunti a tappa aperta: per
+quelli si creano solo le issue nuove.
+
+1. In una chat con solid-space in scrittura, scrivi a Claude:
 
    ```text
    Apri la tappa <tappa> secondo docs/ROADMAP.md, "Aprire una tappa": crea il
@@ -749,28 +414,26 @@ i pacchetti aggiunti a tappa aperta: per quelli crei solo le issue nuove.
 
 2. Su GitHub apri **Issues** e filtra per il milestone: controlla che ogni issue
    abbia l'etichetta `agente:…` giusta.
-3. Metti le issue nuove nel Project «Tecnigrafo» (A6): nella vista a tabella,
-   **+ Add item** → **Add item from repository** → solid-space, seleziona le
-   issue del milestone. A ciascuna metti *Tappa* = `ss-<tappa>` e *Tipo* =
-   pacchetto o riferimenti. Controlla che compaiano nella vista «Tappe aperte».
-4. Unisci la pull request come in A1, nel repository di solid-space.
+3. Metti le issue nuove nel Project: nella vista a tabella, **+ Add item** →
+   **Add item from repository** → solid-space, seleziona le issue del
+   milestone. A ciascuna metti *Tappa* = `ss-<tappa>` e *Tipo* = pacchetto o
+   riferimenti. Controlla che compaiano nella vista «Tappe aperte».
+4. Unisci la pull request (A3), nel repository di solid-space.
 
-### D3. Riferimenti (Gemini, a lotti)
+### B7. Riferimenti (Gemini, a lotti)
 
-Gemini scrive i riferimenti ordinari. Quelli con calcoli delicati il piano li
-assegna a un agente di fascia forte (Claude o Codex) diverso da chi farà il
-lavoro: per quelli si usa la frase di D4, e la revisione al punto 3 è la stessa.
+Gemini 3.8 Flash scrive i riferimenti ordinari. Quelli con calcoli delicati il
+piano li assegna a un agente di fascia forte diverso da chi farà il lavoro: a
+Gemini 4 Argon (`agente:gemini-argon`), con la sua frase qui sotto, oppure a
+Claude o Codex, con la frase di B8. La revisione al punto 3 è la stessa per
+tutti.
 
-1. Nel terminale, nella cartella del progetto:
-
-   ```sh
-   cd ~/progetti/solid-space && git checkout main && git pull && agy --mode auto
-   ```
-
+1. Aggiorna la cartella del repository e avvia `agy --mode auto` con Gemini 3.8
+   Flash (A2).
 2. Scrivi:
 
    ```text
-   Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
+   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
    lettera. Prendi i pacchetti di riferimenti pronti della tappa <tappa>
    assegnati a te, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti".
    Per ognuno apri la pull request e porta la CI al verde; alla fine scrivimi
@@ -780,37 +443,55 @@ lavoro: per quelli si usa la frase di D4, e la revisione al punto 3 è la stessa
    Gemini lavora da solo finché i pacchetti pronti non finiscono. Puoi
    allontanarti: alla fine trovi il riepilogo con tutte le pull request.
 
+   **Lotto di Gemini 4 Argon.** Una sessione sua, che può lavorare insieme a
+   quella di Gemini 3.8 Flash: in un altro terminale aggiorna la cartella e
+   avvia `agy --mode auto` con Gemini 4 Argon (A2). Poi scrivi questo
+   messaggio, che gli dice quale etichetta e quale cartella di build sono sue:
+
+   ```text
+   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
+   lettera. Sei Gemini 4 Argon: la tua etichetta è agente:gemini-argon e il
+   suffisso della tua cartella di build è -gemini-argon. Prendi i pacchetti di
+   riferimenti pronti della tappa <tappa> con la tua etichetta, uno dopo
+   l'altro, come dice AGENTS.md in "Lavoro a lotti". Per ognuno apri la pull
+   request e porta la CI al verde; alla fine scrivimi un solo riepilogo.
+   ```
+
 3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
-   importante di tutta la tappa. Guarda queste cinque cose:
+   importante di tutta la tappa. Guarda queste cose:
    - [ ] ogni condizione "Fatto quando" del pacchetto ha almeno un caso;
-   - [ ] i valori attesi hanno senso (per esempio: un cubo di lato 1 ha volume 1,
-         area 6 e 6 facce) e non possono venire da solid-space;
-   - [ ] ci sono casi limite (valori nulli, punti coincidenti o quasi allineati,
-         facce tangenti, spessori minimi);
+   - [ ] i valori attesi hanno senso e non vengono dal programma che verificano
+         (per esempio: in Tecnigrafo un cerchio di raggio 10 ha circonferenza
+         62.83…; in solid-space un cubo di lato 1 ha volume 1, area 6 e 6
+         facce);
+   - [ ] ci sono casi limite (in Tecnigrafo: Esc a metà comando, annulla e
+         ripeti, punti coincidenti; in solid-space: valori nulli, punti
+         coincidenti o quasi allineati, facce tangenti, spessori minimi);
    - [ ] per ogni file preso dal web c'è il link alla licenza, e la licenza
          permette di usarlo (MIT, BSD, CC0, CC BY, GPL 3 vanno bene; "solo uso
          personale" o nessuna licenza no);
-   - [ ] la pull request tocca solo `tests/corpus/`.
+   - [ ] solo in Tecnigrafo: i valori presi dall'archivio di solid-space citano
+         il caso, con percorso e commit;
+   - [ ] la pull request tocca solo i casi di verifica (`tests/verifica/` in
+         Tecnigrafo, `tests/corpus/` in solid-space).
 4. Se qualcosa non va, scrivilo come commento nella pull request e di' a Gemini:
 
    ```text
    Leggi i commenti della pull request #<numero> e correggi.
    ```
 
-5. Se va bene, unisci come in A1, nel repository di solid-space.
+5. Se va bene, unisci (A3 e B11).
 
-### D4. Lavoro (Claude e Codex)
+### B8. Lavoro (Claude e Codex)
 
 Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 
-1. Avvia l'agente (Claude Code o Codex) nella cartella del progetto, dopo
-   `git checkout main && git pull`. Scegli il modello e l'impegno che il piano
-   indica per il pacchetto (tabella in
-   [LAVORO-IN-PARALLELO.md](https://github.com/Matleyx78/solid-space/blob/main/docs/LAVORO-IN-PARALLELO.md), "Modello e impegno").
+1. Aggiorna la cartella del repository e avvia l'agente (Claude Code o Codex)
+   con il modello e l'impegno che il piano indica per il pacchetto (A2).
 2. Scrivi:
 
    ```text
-   Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
+   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
    lettera. Prendi il prossimo pacchetto della tappa <tappa> assegnato a te,
    secondo le regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI
    al verde e fermati, come dice AGENTS.md.
@@ -819,85 +500,124 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che
    aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo.
 
-Per te non cambia niente nei dettagli della CI: conta solo la CI verde della
-pull request.
+Gli agenti fanno le prove locali con `scripts/controlla.sh` (AGENTS.md,
+"Comandi"), aspettano la CI con `scripts/ci-attendi.sh` e, se è rossa, ne leggono
+la causa con `scripts/ci-errori.sh` (AGENTS.md, "Quando fermarsi"). Per te non
+cambia niente: conta solo la CI verde della pull request.
 
-### D5. Seconda opinione (Gemini, a lotti)
+### B9. Seconda opinione (Gemini, a lotti)
 
 Quando ci sono alcune pull request di lavoro aperte, in una sessione di
-Antigravity (`agy --mode auto`):
+Antigravity (A2):
 
 ```text
-Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
+Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
 lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
 lotti", e alla fine scrivimi un solo riepilogo.
 ```
 
 Gemini lascia un commento di revisione in ognuna, senza modificare file. Leggi i
-commenti prima di unire (D6): se uno chiede correzioni che condividi, passalo
+commenti prima di unire: se uno chiede correzioni che condividi, passalo
 all'agente che ha scritto la pull request.
 
-### D5.1. Segnalazione errori
+### B10. Un riferimento contestato
 
-Quando un agente trova un errore nei riferimenti:
+Un agente di lavoro che trova un caso di verifica sbagliato si ferma e lo scrive
+nella issue del pacchetto (AGENTS.md, "Modalità di controllo e riferimenti").
+Leggi il suo commento: se ha torto, rispondi nella issue e fallo continuare. Se
+ha ragione, o se non sai decidere, avvia l'agente che ha scritto i riferimenti
+(A2) e scrivi:
 
 ```text
-Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
-lettera. Controlla la issue #<numero> e leggi i commenti. L'agente che se ne
-occupa segnala un errore. Se ha ragione, correggi; altrimenti commenta
-spiegando il perché.
+Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
+lettera. Leggi i commenti della issue #<numero>: l'agente che lavora al
+pacchetto segnala un errore nei riferimenti della pull request #<numero>. Se ha
+ragione, correggi i riferimenti; altrimenti spiega il perché in poche righe in
+un commento della issue.
 ```
 
-### D6. Unire
+Quando i riferimenti corretti sono uniti, il pacchetto di lavoro si riprende con
+la frase di B8.
 
-1. Apri la pull request. In basso tutti i controlli devono essere verdi.
-2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
-3. Squash and merge come in A1, nel repository di solid-space, con la riga `Signed-off-by`.
-4. Se ci sono altre pull request aperte, su ognuna premi **Update branch**.
-5. Se la pull request ha una riga «Sblocca:» con issue di Tecnigrafo, nel
-   Project spostale da *Bloccato* a *Da fare*: il pacchetto unito è già
-   utilizzabile, e il pacchetto di Tecnigrafo che lo usa aggiorna lui la versione
-   di solid-space fissata in Tecnigrafo, al commit di questo merge. Se con questo
+### B11. Unire i pacchetti
+
+Ogni pull request si unisce come in A3. In più, durante una tappa:
+
+1. **Riavvia** l'agente di lavoro che ha finito con la stessa frase di B8:
+   prenderà il pacchetto successivo. Gemini invece non va riavviato dopo ogni
+   merge: rilancia il lotto di B7 quando un merge ha sbloccato nuovi pacchetti
+   di riferimenti (la loro riga "Dipende da" è tutta chiusa), e quello di B9
+   quando si sono accumulate nuove pull request da rivedere.
+2. **Quando unisci un pacchetto di solid-space**, la sua pull request elenca
+   nella riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel
+   pacchetto. Nel Project spostale da *Bloccato* a *Da fare*: possono partire
+   subito, senza aspettare la fine della tappa di solid-space. Se con questo
    merge tutti i pacchetti di una richiesta sono uniti, controlla dal lato di
    Tecnigrafo il suo «quando è soddisfatta» e chiudi la issue della richiesta.
-6. Riavvia l'agente che ha finito con la stessa frase di D4: prenderà il
-   pacchetto successivo. Gemini invece non va riavviato dopo ogni merge: rilancia
-   il lotto di D3 quando un merge ha sbloccato nuovi pacchetti di riferimenti
-   (la loro riga "Dipende da" è tutta chiusa), e quello di D5 quando si sono
-   accumulate nuove pull request da rivedere.
+3. **Quando unisci il pacchetto di Tecnigrafo che usa il pezzo nuovo**, controlla
+   che sposti il sottomodulo al commit che la sua scheda indica (ADR 0030, punto
+   9): nella sua pull request `third_party/solid-space` deve puntare a quel
+   commit.
 
-Ripeti D3–D6 finché nel milestone non restano issue aperte.
+Ripeti B7–B11 finché nel milestone non restano issue aperte.
 
-### D7. Chiudere la tappa
+### B12. Chiudere le tappe
 
-1. A Gemini:
+Si chiude prima la tappa di solid-space, se c'è, poi quella di Tecnigrafo.
+
+1. Avvia Gemini 3.8 Flash (A2) e scrivi:
 
    ```text
-   Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md. Tutte le issue
+   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md. Tutte le issue
    del milestone v<tappa> sono chiuse: prepara la pull request di chiusura della
    tappa come descritto in docs/LAVORO-IN-PARALLELO.md, "Chiudere la tappa", sul
    ramo docs/chiusura-<tappa>. Poi fermati.
    ```
 
 2. Leggi la pull request: per ogni criterio di chiusura deve esserci la prova (un
-   caso di verifica o un test), oppure "da provare a mano".
-3. Fai la **prova manuale** descritta nelle note di rilascio e scrivi l'esito
-   nella tabella (puoi chiedere all'agente di compilarla per te, dandogli gli
-   esiti).
-4. Unisci come in A1, nel repository di solid-space.
-5. Nel terminale:
+   caso di verifica o un test), oppure "da provare a mano". In Tecnigrafo
+   controlla anche che `project(... VERSION <tappa>.0)` nel `CMakeLists.txt`
+   principale sia aggiornato.
+3. Fai la **prova manuale** descritta nelle note di rilascio (per Tecnigrafo su
+   Windows e su Linux) e scrivi l'esito nella tabella. Puoi chiedere all'agente
+   di compilarla per te, dandogli gli esiti.
+4. Unisci (A3).
+5. Nel terminale, nella cartella del repository:
 
    ```sh
    git checkout main && git pull
-   git tag -a v<tappa>.0 -m "solid-space <tappa>.0"
+   git tag -a v<tappa>.0 -m "<Tecnigrafo o solid-space> <tappa>.0"
    git push origin v<tappa>.0
    ```
 
 6. Su GitHub: **Releases** → **Draft a new release** → scegli il tag
    `v<tappa>.0` → copia nel testo le note di `docs/rilasci/<tappa>.md` →
    **Publish release**.
-7. Per le richieste della tappa ancora aperte, controlla dal lato di Tecnigrafo
-   il «quando è soddisfatta» e chiudi le loro issue.
-8. Se la tappa successiva di Tecnigrafo ha già richieste valutate, torna a D1
-   per la sua tappa di solid-space; altrimenti aspetta le prossime richieste
-   (D0).
+7. Solo per solid-space: per le richieste della tappa ancora aperte, controlla
+   dal lato di Tecnigrafo il «quando è soddisfatta» e chiudi le loro issue.
+8. Torna a B1 per la tappa successiva di Tecnigrafo. Se ha già richieste
+   valutate, prepara anche la sua tappa di solid-space (B5); altrimenti
+   solid-space aspetta le prossime richieste (B2).
+
+---
+
+## C. Se qualcosa va storto
+
+| Cosa succede | Cosa fai |
+|---|---|
+| La CI è rossa | Non unire. Scrivi all'agente: `La CI della pull request #<numero> è rossa: leggi l'errore e correggi.` |
+| Fallisce *Reference separation* | La pull request mescola riferimenti e codice. Scrivi all'agente: `Dividi la pull request #<numero> in due, come chiede ADR <0011 in Tecnigrafo, 0004 in solid-space>.` |
+| Un agente dice che un riferimento è sbagliato | B10. |
+| Conflitto con `main` | Scrivi all'agente di quella pull request: `Aggiorna la pull request #<numero> con main e risolvi i conflitti.` |
+| Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
+| Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
+| Arriva una pull request fuori pacchetto, fuori tappa o con la CI rossa da chi contribuisce | Chiudila con un rimando a `CONTRIBUTING.md`, senza discutere il codice ([ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori dalla tappa aperta"). |
+| Gemini si ferma a chiedere conferma per un comando | Se il comando serve al lavoro ed è sicuro (legge, compila, prova), approvalo e aggiungilo alle regole con `/permissions`, così non lo chiede più. Se cancella, unisce o pubblica su `main`, rifiuta. Regole in [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6. |
+| Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
+| Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta il contratto (B3, B4). Se non serve, rispondi nella issue e fallo continuare. |
+| Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
+| Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (B2). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |
+| Serve cambiare un'intestazione di solid-space già accettata come contratto | Apri in solid-space una issue con l'etichetta `contratto` che dice che cosa cambia e perché, e guarda quali schede di Tecnigrafo la usano. Decidi tu per i due progetti; se approvi, la scheda del pacchetto che la cambia lo dice esplicitamente, e in Tecnigrafo si aggiornano le schede che la usano (ADR 0007 di solid-space, punto 15). |
+| Un agente ha scritto o proposto qualcosa nell'altro repository senza che tu l'abbia chiesto | Non unire e non rispondere. Chiudi la pull request o cancella il commento, e di' all'agente: `La regola "Dove puoi scrivere" di AGENTS.md vieta di scrivere nell'altro repository: spiega cos'è successo.` (A1) |
+| `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |
+| Non sai cosa fare | Apri una chat con Claude nel progetto e incolla questa riga: `Sono al passo <passo> della guida e succede questo: …` |
