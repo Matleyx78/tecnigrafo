@@ -1,0 +1,103 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Casi limite di CHAMFER: arco non valido, parallele, distanza troppo grande, validazione raggio negativo, proprieta dello smusso
+!view 100,50 0.5 1200x800
+-LAYER
+New
+ROSSO
+New
+BLU
+New
+VERDE
+Set
+VERDE
+
+LINE
+0,0
+30,0
+
+LINE
+0,0
+0,30
+
+-LAYER
+Set
+ROSSO
+
+LINE
+50,0
+80,0
+
+-LAYER
+Set
+BLU
+
+LINE
+50,0
+50,30
+
+-LAYER
+Set
+VERDE
+
+; Due parallele distanti 20
+LINE
+100,0
+130,0
+
+LINE
+100,20
+130,20
+
+; Due linee corte (lunghezza 10) per distanza troppo grande
+LINE
+200,0
+210,0
+
+LINE
+200,0
+200,10
+
+; Arco (entita non valida per CHAMFER)
+ARC
+C
+300,0
+310,0
+A
+180
+
+LINE
+290,-5
+320,-5
+
+; 1. Validazione distanza negativa, poi smusso su layer 0 -> linea smusso su layer 0
+CHAMFER
+D
+-5
+5
+5
+20,0
+0,20
+
+; 2. Smusso su layer ROSSO e BLU -> linea smusso su layer corrente VERDE
+CHAMFER
+70,0
+50,20
+
+; 3. Parallele rifiutate
+CHAMFER
+120,0
+120,20
+
+; 4. Distanza troppo grande rifiutata
+CHAMFER
+D
+15
+15
+205,0
+200,5
+
+; 5. Arco rifiutato
+CHAMFER
+300,5
+300,-5

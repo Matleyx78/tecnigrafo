@@ -1,0 +1,50 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Opzioni Multiple, Undo interno, Shift-select per spigolo, U e REDO
+!view 60,10 0.5 600x400
+LINE
+0,0
+30,0
+
+LINE
+0,0
+0,30
+
+LINE
+40,0
+60,0
+
+LINE
+70,10
+70,30
+
+LINE
+100,-10
+100,20
+
+LINE
+90,0
+130,0
+
+; Multiple con Undo interno
+CHAMFER
+D
+5
+5
+M
+20,0
+0,20
+50,0
+70,20
+U
+50,0
+70,20
+
+; Shift per applicare spigolo (distanza 0) senza cambiare le distanze correnti
+CHAMFER
+100,10
+!click 120,0 remove
+!report
+U
+!report
+REDO
