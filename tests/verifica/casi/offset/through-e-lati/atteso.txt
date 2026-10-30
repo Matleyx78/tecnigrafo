@@ -1,0 +1,82 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=20,0
+  258 CIRCLE center=50,0 radius=10
+  259 ARC center=100,0 radius=10 start-angle=0 end-angle=90
+  260 TEXT position=0,50 alignment-point=0,50 height=2.5 rotation=0 width-factor=1 oblique=0 style="STANDARD" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1"
+  261 LINE start=0,4 end=20,4
+  262 LINE start=0,-6 end=20,-6
+  263 CIRCLE center=50,0 radius=15
+  264 CIRCLE center=50,0 radius=6
+  265 ARC center=100,0 radius=12 start-angle=0 end-angle=90
+  266 ARC center=100,0 radius=8 start-angle=0 end-angle=90
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P]: 50,0
+  Specify radius of circle or [Diameter]: 10
+  Command: ARC
+  Specify start point of arc or [Center]: C
+  Specify center point of arc: 100,0
+  Specify start point of arc: 110,0
+  Specify end point of arc or [Angle/chord Length]: A
+  Specify included angle: 90
+  Command: TEXT
+  Specify start point of text: 0,50
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Tg1
+  Enter text:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <Through>: 0
+  Value must be positive and nonzero.
+  Specify offset distance or [Through/Erase/Layer] <Through>: -5
+  Value must be positive and nonzero.
+  Specify offset distance or [Through/Erase/Layer] <Through>: T
+  Select object to offset or [Exit/Undo] <Exit>: 10,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 10,4
+  Select object to offset or [Exit/Undo] <Exit>: 10,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 10,-6
+  Select object to offset or [Exit/Undo] <Exit>: 60,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 50,15
+  Select object to offset or [Exit/Undo] <Exit>: 60,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 50,6
+  Select object to offset or [Exit/Undo] <Exit>: 110,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 100,12
+  Select object to offset or [Exit/Undo] <Exit>: 110,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 100,8
+  Select object to offset or [Exit/Undo] <Exit>: 60,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 50,0
+  Cannot offset that object.
+  Select object to offset or [Exit/Undo] <Exit>: 10,0
+  Specify through point or [Exit/Multiple/Undo] <Exit>: 5,0
+  Cannot offset that object.
+  Select object to offset or [Exit/Undo] <Exit>: 0,50
+  Cannot offset that object.
+  Select object to offset or [Exit/Undo] <Exit>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Arc
+  Text
+  Offset
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 3
+  CIRCLE 3
+  LINE 3
+  TEXT 1

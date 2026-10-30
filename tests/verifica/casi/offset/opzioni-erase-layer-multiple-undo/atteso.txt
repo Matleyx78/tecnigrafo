@@ -1,0 +1,145 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  258 LINE start=0,50 end=20,50
+  259 LINE layer="Mura" start=0,5 end=20,5
+  260 LINE layer="Mura" start=0,55 end=20,55
+  262 LINE layer="Mura" start=0,60 end=20,60
+  263 LINE layer="Mura" start=0,65 end=20,65
+  264 LINE layer="Mura" start=0,45 end=20,45
+  265 LINE layer="Mura" start=0,40 end=20,40
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,50
+  Specify next point or [Undo]: 20,50
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Make
+  Enter name for new layer (becomes the current layer) <0>: Mura
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <Through>: E
+  Erase source object after offsetting? [Yes/No] <No>: Y
+  Specify offset distance or [Through/Erase/Layer] <Through>: L
+  Enter layer option for offset objects [Current/Source] <Source>: C
+  Specify offset distance or [Through/Erase/Layer] <Through>: 5
+  Select object to offset or [Exit/Undo] <Exit>: 10,0
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,5
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=Yes  Layer=Current  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <5.0000>: E
+  Erase source object after offsetting? [Yes/No] <Yes>: N
+  Specify offset distance or [Through/Erase/Layer] <5.0000>: 5
+  Select object to offset or [Exit/Undo] <Exit>: 10,50
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: M
+  Specify point on side to offset or [Exit/Undo] <Exit>: 10,55
+  Specify point on side to offset or [Exit/Undo] <Exit>: 10,60
+  Specify point on side to offset or [Exit/Undo] <Exit>: U
+  Specify point on side to offset or [Exit/Undo] <Exit>: 10,60
+  Specify point on side to offset or [Exit/Undo] <Exit>: 10,65
+  Specify point on side to offset or [Exit/Undo] <Exit>:
+  Select object to offset or [Exit/Undo] <Exit>:
+  Command: OFFSET
+  Current settings: Erase source=No  Layer=Current  OFFSETGAPTYPE=0
+  Specify offset distance or [Through/Erase/Layer] <5.0000>: 5
+  Select object to offset or [Exit/Undo] <Exit>: 10,50
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,45
+  Select object to offset or [Exit/Undo] <Exit>: 10,50
+  Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,40
+  Select object to offset or [Exit/Undo] <Exit>: *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Layer
+  Offset
+  Offset
+  Offset
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Mura" color=7 linetype="Continuous" lineweight=default
+current: layer="Mura" color=bylayer linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+  LINE 7
+
+[report 2]
+entities:
+  258 LINE start=0,50 end=20,50
+  259 LINE layer="Mura" start=0,5 end=20,5
+  260 LINE layer="Mura" start=0,55 end=20,55
+  262 LINE layer="Mura" start=0,60 end=20,60
+  263 LINE layer="Mura" start=0,65 end=20,65
+messages:
+  Command: U
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Layer
+  Offset
+  Offset
+redo:
+  Offset
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Mura" color=7 linetype="Continuous" lineweight=default
+current: layer="Mura" color=bylayer linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+  LINE 5
+
+[final]
+entities:
+  258 LINE start=0,50 end=20,50
+  259 LINE layer="Mura" start=0,5 end=20,5
+  260 LINE layer="Mura" start=0,55 end=20,55
+  262 LINE layer="Mura" start=0,60 end=20,60
+  263 LINE layer="Mura" start=0,65 end=20,65
+  264 LINE layer="Mura" start=0,45 end=20,45
+  265 LINE layer="Mura" start=0,40 end=20,40
+messages:
+  Command: REDO
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Layer
+  Offset
+  Offset
+  Offset
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Mura" color=7 linetype="Continuous" lineweight=default
+current: layer="Mura" color=bylayer linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+  LINE 7

@@ -442,7 +442,7 @@ jobs:
     name: macOS (Apple Clang)
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v5
         with:

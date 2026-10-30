@@ -51,6 +51,7 @@ add_executable(tg_tests
     core/polyline_test.cpp
     core/proximity_test.cpp
     core/raw_data_test.cpp
+    core/similarity_test.cpp
     core/snap_points_test.cpp
     core/solid_space_test.cpp
     core/spatial_index_test.cpp
