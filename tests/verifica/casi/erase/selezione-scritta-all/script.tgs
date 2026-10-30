@@ -1,0 +1,16 @@
+; ERASE: selezione scritta ALL
+LINE
+0,0
+10,0
+
+LINE
+0,10
+10,10
+
+LINE
+0,20
+10,20
+
+ERASE
+ALL
+

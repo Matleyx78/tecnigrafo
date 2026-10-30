@@ -1,0 +1,13 @@
+; Grip di un cerchio e modifica non valida (0.7-P10, ADR 0034)
+CIRCLE
+0,0
+10
+
+!click 10,0
+!report
+!click 0,0
+10,10
+!report
+!click 20,10
+10,10
+!report

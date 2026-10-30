@@ -1,0 +1,12 @@
+; SCALE: scala con punto base, controllo fattore e scalatura
+LINE
+0,0
+10,0
+
+SCALE
+5,0
+
+0,0
+0
+2
+

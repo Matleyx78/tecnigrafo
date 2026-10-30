@@ -52,6 +52,7 @@ add_executable(tg_tests
     core/proximity_test.cpp
     core/raw_data_test.cpp
     core/snap_points_test.cpp
+    core/solid_space_test.cpp
     core/spatial_index_test.cpp
     core/text_metrics_test.cpp
     core/text_test.cpp
@@ -93,6 +94,7 @@ target_link_libraries(tg_tests PRIVATE
     Tecnigrafo::mcp
     Tecnigrafo::render
     Tecnigrafo::script
+    solid_space::geom2d
     GTest::gtest_main)
 # Scripts and reports of the module's own tests (not verification cases),
 # and a folder for the files that the tests of tecnigrafo-script write.

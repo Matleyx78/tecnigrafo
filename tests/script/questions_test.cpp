@@ -247,11 +247,46 @@ TEST(Questions, ErrorsGiveTheirLine) {
              Case{"!tolerance absolute -1", 1},
              Case{"!level 2", 1},
              Case{"? text-width \"open -> 3", 1},
+             // Not in the catalogue: a typing error, not a mode or argument to come.
+             Case{defined + "? snaps A modes=Quadrant -> none", 4},
+             Case{defined + "? snaps A modes=endpoint,corner -> none", 4},
+             Case{defined + "? snap 5,0 aperture=1 aperure=1 -> none", 4},
+             Case{defined + "? snap 5,0 aperture=1 from -> none", 4},
+             // `from=` is only an argument of `snap`.
+             Case{defined + "? snaps A from=1,1 -> none", 4},
          }) {
         const ParseError error = failure(test.text);
         EXPECT_EQ(error.line, test.line) << test.text;
         EXPECT_FALSE(error.message.empty()) << test.text;
         EXPECT_FALSE(error.notImplemented) << test.text;
+    }
+}
+
+// docs/verifica/domande.md describes these snap modes and `from=` from stage
+// 0.7, before the package that realizes them: a file that uses one is not
+// passed, it is not invalid. P7 takes them out of kAnnouncedModes and of the
+// announced arguments of `snap`, and out of this test.
+TEST(Questions, ModesAndArgumentsOfTheCatalogueNotRealizedYetAreNotImplemented) {
+    struct Case {
+        std::string text;
+        int line;
+        const char* announced;
+    };
+
+    const std::string defined = std::string{kDefinitions};  // lines 1-3
+    for (const Case& test : {
+             Case{defined + "? snaps A modes=quadrant -> none", 4, "'quadrant'"},
+             Case{defined + "? snaps B modes=endpoint,intersection -> none", 4, "'intersection'"},
+             Case{defined + "? snaps B modes=perpendicular,center -> none", 4, "'perpendicular'"},
+             Case{defined + "? snap 5,0 aperture=1 modes=tangent -> none", 4, "'tangent'"},
+             Case{defined + "? snap 5,0 aperture=1 from=1,1 -> none", 4, "'from'"},
+             Case{defined + "? snap 5,0 from=1,1 aperture=1 modes=quadrant -> none", 4, "'from'"},
+         }) {
+        const ParseError error = failure(test.text);
+        EXPECT_EQ(error.line, test.line) << test.text;
+        EXPECT_TRUE(error.notImplemented) << test.text;
+        EXPECT_NE(error.message.find(test.announced), std::string::npos) << error.message;
+        EXPECT_NE(error.message.find("not implemented yet"), std::string::npos) << error.message;
     }
 }
 

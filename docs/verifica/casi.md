@@ -98,9 +98,14 @@ Codici di uscita:
 | 2 | caso non valido: file mancante o scritto male, argomenti sbagliati. Vale anche con `--pending` |
 | 77 | il caso richiede il livello 2 (`!level 2`): `ctest` lo conta come saltato |
 
-Ciò che il catalogo prevede ma il programma non ha ancora (una domanda non
-realizzata, un tipo di entità che arriva con un pacchetto successivo) **non** è
-un caso non valido: è un caso non superato, codice 1.
+Ciò che il catalogo prevede ma il programma non ha ancora **non** è un caso non
+valido: è un caso non superato, codice 1 (con `--pending`, codice 0 e un
+avviso). Vale per una domanda non realizzata, per un tipo di entità che arriva
+con un pacchetto successivo e per ciò che le specifiche descrivono in anticipo:
+una direttiva (`!osnap`, `!polar`, `!scr`), un modo di snap (`intersection`,
+`perpendicular`, `tangent`, `quadrant`) o un argomento di domanda (`from=`),
+fino al pacchetto che li realizza. Ciò che le specifiche **non** descrivono, un
+nome sbagliato o un argomento che non esiste, resta un caso non valido.
 
 ## Come si confronta
 
@@ -199,4 +204,8 @@ licenza.
    lavoro.
 6. Controllare in locale che i casi siano validi: `ctest --preset ci -L
    verifica` deve passare, e `tecnigrafo-script check <caso> --pending` deve
-   scrivere "pending" (o "skipped" per il livello 2), mai "INVALID".
+   scrivere "pending" (o "skipped" per il livello 2), mai "INVALID". Se dà
+   "INVALID" per una direttiva, un modo di snap o un argomento che le
+   specifiche descrivono, il programma non lo annuncia ancora (gli elenchi sono
+   in `script/src/script.cpp` e `script/src/question_table.cpp`): non
+   cambiare il caso e scrivilo nella issue.

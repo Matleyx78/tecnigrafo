@@ -1,0 +1,12 @@
+; MIRROR: specchiatura mantenendo la sorgente (copia riflessa)
+LINE
+0,0
+10,0
+
+MIRROR
+5,0
+
+0,0
+0,10
+
+

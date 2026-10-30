@@ -1,0 +1,73 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,0 end=20,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 10,0
+  Specify next point or [Undo]: 20,0
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: 257 258
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 15,0
+active snap: none
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,10 end=20,0
+messages:
+  ** STRETCH **
+  Specify stretch point: 10,10
+prompt: Command:
+preview:
+selection: 257 258
+rectangle: none
+undo:
+  Grip edit
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 10,0
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,10 end=20,0
+messages:
+prompt: Command:
+preview:
+selection: 257 258
+rectangle: none
+undo:
+  Grip edit
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 10,0
+active snap: none
+statistics:
+  LINE 2

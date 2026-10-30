@@ -9,8 +9,10 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace tg::io {
 namespace {
@@ -199,6 +201,67 @@ TEST(DxfRead, RejectsMalformedSectionsAndTrailingData) {
     }
     EXPECT_TRUE(readDxf("0\nEOF").ok());
     EXPECT_TRUE(readDxf("0\r\nEOF\r\n \r\n").ok());
+}
+
+// Issue #393: a comment (group 999) before the first section made the file
+// unreadable ("expected SECTION followed by its name").
+TEST(DxfRead, IgnoresCommentsBetweenSectionsAndReportsThem) {
+    const std::string plain = drawing({{0, "HATCH"}, {5, "2F"}});
+    const auto expected = readDxf(plain);
+    ASSERT_TRUE(expected.ok());
+    ASSERT_TRUE(expected.value().report.warnings.empty());
+
+    // Comments before the first section, after the HEADER section and before EOF.
+    const auto plainGroups = readGroups(plain);
+    ASSERT_TRUE(plainGroups.ok());
+    core::RawGroups groups = plainGroups.value().groups;
+    groups.insert(groups.end() - 1, core::RawGroup{999, "before EOF"});
+    const auto endOfHeader = std::find(groups.begin(), groups.end(), core::RawGroup{0, "ENDSEC"});
+    ASSERT_NE(endOfHeader, groups.end());
+    groups.insert(endOfHeader + 1, core::RawGroup{999, "between sections"});
+    groups.insert(groups.begin(),
+                  {core::RawGroup{999, "SPDX-License-Identifier: GPL-3.0-or-later"},
+                   core::RawGroup{999, "Copyright (C) 2026 The Tecnigrafo authors"}});
+
+    const auto result = readDxf(writeGroups(groups, TextEncoding::Utf8));
+    ASSERT_TRUE(result.ok()) << result.error().message << " at line " << result.error().line;
+    // The same drawing as without the comments, and one line in the report.
+    EXPECT_EQ(result.value().document.raw(), expected.value().document.raw());
+    EXPECT_EQ(result.value().document.rawEntities().size(), 1U);
+    EXPECT_EQ(
+        result.value().report.warnings,
+        std::vector<std::string>{"line 1: ignored 4 comment groups (999) outside any section"});
+}
+
+TEST(DxfRead, ACommentOutsideSectionsIsReportedInTheSingular) {
+    const auto result = readDxf("999\nonly one\n0\nEOF\n");
+    ASSERT_TRUE(result.ok());
+    ASSERT_EQ(result.value().report.warnings.size(), 2U);  // the first is the missing $ACADVER
+    EXPECT_EQ(result.value().report.warnings.back(),
+              "line 1: ignored 1 comment group (999) outside any section");
+}
+
+TEST(DxfRead, CommentsInsideASectionStayAmongItsGroups) {
+    const auto result = readDxf(drawing({}, {{999, "inside the header"}}));
+    ASSERT_TRUE(result.ok());
+    EXPECT_TRUE(result.value().report.warnings.empty());
+    const auto& groups = result.value().document.raw().sections.front().groups;
+    EXPECT_NE(std::find(groups.begin(), groups.end(), core::RawGroup{999, "inside the header"}),
+              groups.end());
+}
+
+TEST(DxfRead, CommentsDoNotHideMalformedFiles) {
+    // Only comments: no EOF. A comment before something that is not a section
+    // keeps the line of that group, not the comment's.
+    const auto onlyComments = readDxf("999\na\n999\nb\n");
+    ASSERT_FALSE(onlyComments.ok());
+    EXPECT_EQ(onlyComments.error().kind, Error::Kind::Malformed);
+    const auto notASection = readDxf("999\na\n0\nENDSEC\n0\nEOF\n");
+    ASSERT_FALSE(notASection.ok());
+    EXPECT_EQ(notASection.error().kind, Error::Kind::Malformed);
+    EXPECT_EQ(notASection.error().line, 3U);
+    // Data after EOF is still refused when comments came first.
+    EXPECT_FALSE(readDxf("999\na\n0\nEOF\n0\nPOINT\n").ok());
 }
 
 std::optional<core::EntityRecord> probeRead(const core::RawGroups& /*groups*/,

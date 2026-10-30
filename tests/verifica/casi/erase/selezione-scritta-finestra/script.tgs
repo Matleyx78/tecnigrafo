@@ -1,0 +1,14 @@
+; ERASE: selezione scritta con finestra (W)
+LINE
+10,10
+20,10
+
+LINE
+0,15
+30,15
+
+ERASE
+W
+25,25
+5,5
+
