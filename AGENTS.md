@@ -277,6 +277,12 @@ stesso PC non si bloccano a vicenda: `export TG_BUILD_SUFFIX=-claude` (o `-codex
 `-gemini`, `-gemini-argon`, `-claude-2`); i preset compilano in `build-<nome>/<preset>`, e i percorsi
 `./build/...` della documentazione diventano i tuoi.
 
+Dopo il clone e dopo ogni `git pull` esegui
+`git submodule update --init third_party/solid-space`, **senza** `--recursive`, così
+il sottomodulo di solid-space è sempre al commit che `main` fissa
+([ADR 0030](docs/adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 6). Se lo
+salti, la configurazione di CMake si ferma e ti scrive il comando.
+
 Le prove locali si fanno con **un solo comando**, nell'ordine della CI, che si
 ferma al primo errore e ne stampa la coda del log (log completi in
 `build<TG_BUILD_SUFFIX>/controlla/`):

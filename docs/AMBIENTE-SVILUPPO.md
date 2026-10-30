@@ -72,6 +72,23 @@ formatterebbe il codice in modo diverso da quello che la CI accetta.
 
 ## 3. Prima compilazione dal terminale
 
+Il progetto usa solid-space, il suo kernel geometrico, come **sottomodulo git**
+in `third_party/solid-space`
+([ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md)). Dopo il clone si
+scarica con un comando, **senza** `--recursive`: i sottomoduli di solid-space
+(OCCT, SolveSpace) non servono al CAD 2D e non si scaricano.
+
+```sh
+git clone https://github.com/Matleyx78/tecnigrafo ~/progetti/tecnigrafo
+cd ~/progetti/tecnigrafo
+git submodule update --init third_party/solid-space
+```
+
+Lo stesso comando si ripete dopo ogni `git pull` che sposta il sottomodulo: così
+solid-space è sempre al commit che `main` fissa. Non usare `--recursive` né
+`--recurse-submodules`. Se lo dimentichi, la configurazione di CMake si ferma e
+ti scrive il comando da eseguire.
+
 ```sh
 cd ~/progetti/tecnigrafo
 cmake --preset ci && cmake --build --preset ci && ctest --preset ci
@@ -416,7 +433,11 @@ mkdir C:\progetti
 cd C:\progetti
 git clone https://github.com/Matleyx78/tecnigrafo
 cd tecnigrafo
+git submodule update --init third_party/solid-space
 ```
+
+Il quarto comando scarica solid-space, il kernel (sezione 3); si ripete dopo ogni
+`git pull` che sposta il sottomodulo, sempre senza `--recursive`.
 
 È una copia **diversa** da quella che hai in Debian: le modifiche non passano
 dall'una all'altra se non con `git push` e `git pull`.

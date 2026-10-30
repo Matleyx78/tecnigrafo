@@ -7,6 +7,7 @@
 #include "tg/script/number_format.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <optional>
@@ -26,8 +27,19 @@ constexpr double kMaxPercent = 100.0;
 
 using Words = std::vector<std::string_view>;
 
+// The directives that the catalogue describes from stage 0.7 (docs/verifica/
+// script.md) and the program does not have yet. The package that realizes
+// one removes it from here: P3 `scr`, P7 `osnap`, P8 `polar`.
+constexpr std::array<std::string_view, 3> kAnnouncedDirectives{"scr", "osnap", "polar"};
+
+/// A directive of the catalogue that the program does not have yet: a script
+/// that uses it is not passed, it is not invalid.
+struct AnnouncedDirective {
+    std::string message;
+};
+
 /// A directive read from its words, or the error message.
-using DirectiveResult = std::variant<Action, std::string>;
+using DirectiveResult = std::variant<Action, std::string, AnnouncedDirective>;
 
 std::string quoted(std::string_view text) {
     return "'" + std::string{text} + "'";
@@ -157,6 +169,10 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
         }
         return Action{std::get<ToleranceDirective>(tolerance)};
     }
+    if (std::ranges::find(kAnnouncedDirectives, name) != kAnnouncedDirectives.end()) {
+        return AnnouncedDirective{"the directive " + quoted("!" + std::string{name}) +
+                                  " is not implemented yet"};
+    }
     return "unknown directive " + quoted("!" + std::string{name});
 }
 
@@ -239,6 +255,9 @@ std::variant<Script, ParseError> parseScript(std::string_view text) {
         DirectiveResult result = parseDirective(words.front(), arguments);
         if (auto* error = std::get_if<std::string>(&result)) {
             return ParseError{lineNumber, std::move(*error)};
+        }
+        if (auto* announced = std::get_if<AnnouncedDirective>(&result)) {
+            return ParseError{lineNumber, std::move(announced->message), true};
         }
         Action action = std::get<Action>(std::move(result));
         if (needsLevel2(action) && !firstLevel2Line) {
