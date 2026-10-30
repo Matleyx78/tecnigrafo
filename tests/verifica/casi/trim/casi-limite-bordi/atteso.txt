@@ -1,0 +1,107 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,-40 end=20,-40
+  258 LINE start=5,-40 end=30,-40
+  259 LINE start=0,60 end=10,60
+  260 LINE start=10,50 end=10,70
+  261 LINE start=0,50 end=20,70
+  263 LINE start=1e-10,90 end=1e-10,110
+  264 LINE start=0,150 end=10,150
+  265 LINE start=10,140 end=10,160
+  266 LINE start=19.99999999,140 end=19.99999999,160
+  267 LINE start=100,-40 end=120,-40
+  268 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  269 LINE start=14,15 end=14,30
+  270 LINE start=110,60 end=120,60
+  271 LINE start=110,50 end=110,70 layer="Bloccato"
+  272 LINE start=105,50 end=105,70 layer="Spento"
+messages:
+  Command: OPEN
+  Enter name of drawing to open: bordi.dxf
+  Command: TRIMEXTENDMODE
+  Enter new value for TRIMEXTENDMODE <1>: 0
+  Command: TRIM
+  Current settings: Projection=UCS, Edge=None, Mode=Standard
+  Select cutting edges ...
+  Select objects or [mOde] <select all>:
+  Select object to trim or shift-select to extend or [mOde]: 2,-40
+  Object does not intersect an edge.
+  Select object to trim or shift-select to extend or [mOde]: 110,-40
+  Object does not intersect an edge.
+  Select object to trim or shift-select to extend or [mOde]: 11,21
+  Select object to trim or shift-select to extend or [mOde]: 14,28
+  Object does not intersect an edge.
+  Select object to trim or shift-select to extend or [mOde]: 18,60
+  Select object to trim or shift-select to extend or [mOde/Undo]: 15,100
+  Select object to trim or shift-select to extend or [mOde/Undo]: 15,150
+  Select object to trim or shift-select to extend or [mOde/Undo]: 110,68
+  1 was on a locked layer.
+  Select object to trim or shift-select to extend or [mOde/Undo]: 105,68
+  Select object to trim or shift-select to extend or [mOde/Undo]: 102,60
+  Select object to trim or shift-select to extend or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Trim
+redo:
+snap: on
+ortho: off
+drawing: bordi.dxf, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=1 linetype="Continuous" lineweight=default locked
+  "Spento" color=3 linetype="Continuous" lineweight=default off
+pointer: none
+active snap: none
+statistics:
+  LINE 14
+  TEXT 1
+
+[final]
+entities:
+  258 LINE start=5,-40 end=30,-40
+  259 LINE start=0,60 end=10,60
+  260 LINE start=10,50 end=10,70
+  261 LINE start=0,50 end=20,70
+  263 LINE start=1e-10,90 end=1e-10,110
+  264 LINE start=0,150 end=10,150
+  265 LINE start=10,140 end=10,160
+  266 LINE start=19.99999999,140 end=19.99999999,160
+  268 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10,19.22995031937544;18.28069552874379,19.22995031937544;18.28069552874379,23.28956706884315;10,23.28956706884315
+  270 LINE start=110,60 end=120,60
+  271 LINE start=110,50 end=110,70 layer="Bloccato"
+  272 LINE start=105,50 end=105,70 layer="Spento"
+messages:
+  Command: TRIMEXTENDMODE
+  Enter new value for TRIMEXTENDMODE <0>: 1
+  Command: TRIM
+  Current settings: Trim mode = Quick, Projection=UCS, Edge=None
+  Select object to trim or shift-select to extend or [mOde]: 11,21
+  Select object to trim or shift-select to extend or [mOde]: 14,28
+  Select object to trim or shift-select to extend or [mOde/Undo]: 110,-40
+  Select object to trim or shift-select to extend or [mOde/Undo]: 2,-40
+  Select object to trim or shift-select to extend or [mOde/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Trim
+  Trim
+redo:
+snap: on
+ortho: off
+drawing: bordi.dxf, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=1 linetype="Continuous" lineweight=default locked
+  "Spento" color=3 linetype="Continuous" lineweight=default off
+pointer: none
+active snap: none
+statistics:
+  LINE 11
+  TEXT 1

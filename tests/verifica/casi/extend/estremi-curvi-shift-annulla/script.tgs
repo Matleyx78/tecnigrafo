@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; EXTEND: inizio e fine di linea (anche pareggio al punto medio), arco oltre 2pi, polilinea dritta e curva, entita non prolungabili, Shift, Undo, Esc, U e REDO
+!view 200,50 0.5 1000x300
+OPEN
+polilinee.dxf
+EXTEND
+O
+
+15,0
+12,0
+8,56
+0,60
+111,0
+108,56
+208,44
+310,0
+310,45
+11,21
+309,100
+!click 418,0 remove
+U
+!click 402,0 remove
+!esc
+!report
+U
+!report
+REDO
