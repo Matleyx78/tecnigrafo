@@ -113,6 +113,10 @@ private:
         m_runner.setDrawingAids(aids);
     }
 
+    void perform(const ScriptSequencesDirective& directive) {
+        m_runner.setScriptSequences(directive.on);
+    }
+
     void perform(const ReportDirective& /*directive*/) {
         ++m_reports;
         report("report " + std::to_string(m_reports));

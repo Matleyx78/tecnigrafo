@@ -87,6 +87,10 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                 }
                 context.lastPoint = m_next;
                 m_hasLines = true;
+                if (context.scriptSequences) {
+                    finish(context);
+                    return Status::Finished;
+                }
                 // ADR 0013: advance down the text's local Y axis by 5/3 of its height.
                 constexpr double kLineSpacing = 5.0 / 3.0;
                 const double spacing = kLineSpacing * m_height;

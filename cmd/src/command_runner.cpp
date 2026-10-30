@@ -134,6 +134,10 @@ bool CommandRunner::replaceSelection(std::vector<core::EntityId> ids) {
     return true;
 }
 
+void CommandRunner::setScriptSequences(bool on) {
+    m_context.scriptSequences = on;
+}
+
 void CommandRunner::setFileAccess(io::FileAccess* files) {
     m_context.files = files;
 }

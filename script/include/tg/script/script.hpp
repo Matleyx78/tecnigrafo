@@ -76,6 +76,13 @@ struct AidDirective {
     friend bool operator==(const AidDirective&, const AidDirective&) = default;
 };
 
+/// !scr on|off: AutoCAD script sequences, without history messages.
+struct ScriptSequencesDirective {
+    bool on{false};
+    friend bool operator==(const ScriptSequencesDirective&,
+                           const ScriptSequencesDirective&) = default;
+};
+
 /// !key <key>: a key or a shortcut ("F3", "Ctrl+Z"). Level 2 only.
 struct KeyDirective {
     std::string key;
@@ -110,8 +117,8 @@ struct ToleranceDirective {
 
 using Action =
     std::variant<TypedLine, ViewDirective, MoveDirective, ClickDirective, RightClickDirective,
-                 EscDirective, AidDirective, KeyDirective, ReportDirective, ScreenshotDirective,
-                 LevelDirective, ToleranceDirective>;
+                 EscDirective, AidDirective, ScriptSequencesDirective, KeyDirective,
+                 ReportDirective, ScreenshotDirective, LevelDirective, ToleranceDirective>;
 
 /// A parsed .tgs script (docs/verifica/script.md).
 struct Script {
@@ -124,7 +131,10 @@ struct Script {
 /// kept exactly as written, spaces included: only the line ending goes.
 /// A directive that needs level 2 without "!level 2" in the script is an
 /// error, so a script that parses at level 1 always runs there.
-[[nodiscard]] std::variant<Script, ParseError> parseScript(std::string_view text);
+/// A .scr source path (case insensitive) adds an initial !scr on action;
+/// an empty path or another extension keeps the interactive sequence.
+[[nodiscard]] std::variant<Script, ParseError> parseScript(std::string_view text,
+                                                           std::string_view sourceName = {});
 
 /// Reads "!tolerance <kind> <value>" without the leading "!tolerance": the
 /// words after it, already split. Shared with the question files.
