@@ -1,0 +1,14 @@
+; Comando POLARANG: valore predefinito, modifica, validazione ed Esc (0.7-P8, ADR 0033)
+POLARANG
+45
+!report
+POLARANG
+190
+200
+0
+-10
+30
+!report
+POLARANG
+!esc
+!report

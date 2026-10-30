@@ -1,0 +1,18 @@
+; TEXT: sequenze interattive con righe multiple vs sequenze degli script
+TEXT
+0,30
+3
+0
+Prima riga
+Seconda riga
+
+!scr on
+TEXT
+0,0
+2.5
+0
+Hello
+LINE
+0,0
+10,0
+

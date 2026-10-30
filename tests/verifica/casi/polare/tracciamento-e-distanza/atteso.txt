@@ -1,0 +1,44 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=50,0
+  258 LINE start=50,0 end=50,20
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 50
+  Specify next point or [Undo]: 20
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 51,20
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  257 LINE start=0,0 end=50,0
+  258 LINE start=50,0 end=50,20
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 51,20
+active snap: none
+statistics:
+  LINE 2

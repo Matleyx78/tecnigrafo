@@ -1,0 +1,32 @@
+; TEXT: sequenze degli script (!scr on e !scr off)
+!scr on
+TEXT
+0,0
+
+
+Hello
+LINE
+0,0
+10,0
+
+!scr off
+TEXT
+10,20
+
+
+World
+
+LINE
+10,20
+20,20
+
+!scr on
+DT
+30,40
+
+
+DTEXT test
+LINE
+30,40
+40,40
+

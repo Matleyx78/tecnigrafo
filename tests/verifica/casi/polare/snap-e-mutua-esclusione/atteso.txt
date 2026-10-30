@@ -1,0 +1,73 @@
+tecnigrafo-report 1
+
+[report 1]
+entities: none
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: on
+pointer: none
+active snap: none
+statistics: none
+
+[report 2]
+entities: none
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics: none
+
+[report 3]
+entities:
+  257 CIRCLE center=0,50 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr]: 0,50
+  Specify radius of circle or [Diameter]: 10
+  Command: LINE
+  Specify first point: 0,0
+prompt: Specify next point or [Undo]:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 1,49
+active snap: Center 0,50
+statistics:
+  CIRCLE 1
+
+[final]
+entities:
+  257 CIRCLE center=0,50 radius=10
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: 1,49
+active snap: none
+statistics:
+  CIRCLE 1

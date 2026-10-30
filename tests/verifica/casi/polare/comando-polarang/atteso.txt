@@ -1,0 +1,76 @@
+tecnigrafo-report 1
+
+[report 1]
+entities: none
+messages:
+  Command: POLARANG
+  Enter new value for POLARANG <90>: 45
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics: none
+
+[report 2]
+entities: none
+messages:
+  Command: POLARANG
+  Enter new value for POLARANG <45>: 190
+  Value must be between 0 and 180.
+  Enter new value for POLARANG <45>: 200
+  Value must be between 0 and 180.
+  Enter new value for POLARANG <45>: 0
+  Value must be between 0 and 180.
+  Enter new value for POLARANG <45>: -10
+  Value must be between 0 and 180.
+  Enter new value for POLARANG <45>: 30
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics: none
+
+[report 3]
+entities: none
+messages:
+  Command: POLARANG
+  Enter new value for POLARANG <30>:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics: none
+
+[final]
+entities: none
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics: none
