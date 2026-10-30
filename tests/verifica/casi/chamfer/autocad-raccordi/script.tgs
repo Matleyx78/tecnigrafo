@@ -1,0 +1,29 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Casi j, k, l di autocad-raccordi.dxf per CHAMFER (distanze, angolo, polilinea) in sequenza interattiva
+!view 70,115 0.5 800x400
+OPEN
+ingresso.dxf
+; Caso j: distanze 5 e 8
+CHAMFER
+D
+5
+8
+20,100
+0,120
+; Caso k: lunghezza 6 e angolo 30
+CHAMFER
+A
+6
+30
+70,100
+50,120
+; Caso l: polilinea rettangolo, distanze 3 e 3
+CHAMFER
+E
+D
+D
+3
+3
+P
+120,100

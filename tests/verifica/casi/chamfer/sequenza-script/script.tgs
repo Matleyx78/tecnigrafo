@@ -1,0 +1,42 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; CHAMFER nella sequenza degli script (!scr on, ADR 0032 punto 8): terminazione dopo opzioni
+!view 270,60 0.25 2400x800
+!scr on
+OPEN
+ingresso.dxf
+; Impostazione distanze: il comando termina subito dopo i valori
+CHAMFER
+D
+5
+8
+; Esecuzione smusso con distanze
+CHAMFER
+20,100
+0,120
+; Impostazione metodo Angle
+CHAMFER
+E
+A
+; Impostazione lunghezza e angolo
+CHAMFER
+A
+6
+30
+; Esecuzione smusso con angolo
+CHAMFER
+70,100
+50,120
+; Impostazione No trim
+CHAMFER
+T
+N
+; Impostazione distanze 5 e 5
+CHAMFER
+D
+5
+5
+; Esecuzione smusso No trim
+CHAMFER
+520,0
+500,20

@@ -93,3 +93,9 @@ grip/degeneri #350
 offset/autocad-distanza #365
 offset/through-e-lati #365
 offset/opzioni-erase-layer-multiple-undo #365
+
+# 0.7-R21: CHAMFER e smusso (#371)
+chamfer/autocad-raccordi #371
+chamfer/sequenza-script #371
+chamfer/opzioni-undo-shift #371
+chamfer/casi-limite-errori #371
