@@ -1,0 +1,10 @@
+; ERASE: selezione scritta con errori e cancellazione
+LINE
+0,0
+10,0
+
+ERASE
+NONESUCH
+W
+abc
+!esc

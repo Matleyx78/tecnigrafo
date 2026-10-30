@@ -1,0 +1,30 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: ERASE
+  Select objects: NONESUCH
+  Invalid selection.
+  Select objects: W
+  Specify first corner: abc
+  Invalid point or option.
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1

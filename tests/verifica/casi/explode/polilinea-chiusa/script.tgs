@@ -1,0 +1,11 @@
+; EXPLODE: scomposizione di polilinea chiusa in linee
+PLINE
+0,0
+10,0
+10,10
+0,10
+C
+
+EXPLODE
+5,0
+

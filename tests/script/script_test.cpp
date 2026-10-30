@@ -181,5 +181,43 @@ TEST(ParseScript, ErrorsGiveTheirLine) {
     }
 }
 
+// docs/verifica/script.md describes these directives from stage 0.7, before
+// the packages that realize them: a script that uses one is not passed, it is
+// not invalid. P3 (!scr), P7 (!osnap) and P8 (!polar) take theirs out of
+// kAnnouncedDirectives and out of this test.
+TEST(ParseScript, DirectivesOfTheCatalogueNotRealizedYetAreNotImplemented) {
+    struct Case {
+        const char* text;
+        int line;
+        const char* directive;
+    };
+
+    for (const Case& test : {
+             Case{"!scr on", 1, "!scr"},
+             Case{"!scr", 1, "!scr"},
+             Case{"PLINE\n0,0\n!osnap end,mid", 3, "!osnap"},
+             Case{"!osnap none", 1, "!osnap"},
+             Case{"!polar on\n!polar off", 1, "!polar"},
+         }) {
+        const ParseError error = failure(test.text);
+        EXPECT_EQ(error.line, test.line) << test.text;
+        EXPECT_TRUE(error.notImplemented) << test.text;
+        EXPECT_NE(error.message.find(test.directive), std::string::npos) << error.message;
+        EXPECT_NE(error.message.find("not implemented yet"), std::string::npos) << error.message;
+    }
+}
+
+// Only what the catalogue describes is announced: a typing error is still a
+// malformed script.
+TEST(ParseScript, NamesOutsideTheCatalogueStayInvalid) {
+    for (const char* text :
+         {"!Scr on", "!scrr on", "!osnaps end", "!polarang 45", "!foo", "!SCR"}) {
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 1) << text;
+        EXPECT_NE(error.message.find("unknown directive"), std::string::npos) << error.message;
+        EXPECT_FALSE(error.notImplemented) << text;
+    }
+}
+
 }  // namespace
 }  // namespace tg::script

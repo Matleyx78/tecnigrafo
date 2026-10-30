@@ -4,6 +4,32 @@
 # Code of other projects, copied unmodified (docs/adr/0019). It does not call
 # tg_configure_target: our warnings and clang-tidy would be noise we cannot
 # fix. The sanitizer and fuzzing options are global, so they apply here too.
+#
+# solid-space is the exception: it is the kernel of Tecnigrafo, a git submodule
+# of ours, and its targets follow our warning rules (docs/adr/0030, points 5-7).
+
+# solid-space, the geometric kernel (docs/adr/0030). The submodule is
+# initialised without --recursive: the 2D components need neither OCCT nor
+# SolveSpace, which are its own submodules.
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/solid-space/CMakeLists.txt")
+    message(FATAL_ERROR
+        "The solid-space submodule is missing. Run:\n"
+        "    git submodule update --init third_party/solid-space\n"
+        "(without --recursive) and configure again.")
+endif()
+
+# Only what core links is built: without the kernel and features components,
+# which are the only ones that need OCCT. These are normal variables, so they
+# also win over a value in the cache.
+set(SOLID_SPACE_BUILD_KERNEL OFF)
+# The same warning rules as our own code (docs/adr/0030, point 7). Nothing here
+# passes -ffast-math or /fp:fast to its targets: robust and geom2d must give
+# the same results, bit for bit, on every system.
+set(SOLID_SPACE_WARNINGS_AS_ERRORS ${TG_WARNINGS_AS_ERRORS})
+# Not SYSTEM: the headers are ours, with our warnings. EXCLUDE_FROM_ALL: a
+# component is built only when a target of ours links it. Its tests are built
+# only when it is the top-level project, so they are not built here.
+add_subdirectory(solid-space EXCLUDE_FROM_ALL)
 
 # The fuzz preset names only the C++ compiler. The C compiler must be the
 # matching Clang, otherwise the global -fsanitize=fuzzer-no-link options reach

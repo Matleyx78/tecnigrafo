@@ -60,6 +60,11 @@ struct QuestionModel {
 /// A question whose arguments are wrong: the file is malformed.
 struct ArgumentError {
     std::string message;
+    /// True if the catalogue (docs/verifica/domande.md) describes what the
+    /// argument asks for but the program does not have it yet (a snap mode,
+    /// a named argument): the case fails like any case not passed instead
+    /// of being invalid.
+    bool notImplemented{false};
 };
 
 /// The answer as text, in the form of docs/verifica/domande.md.
