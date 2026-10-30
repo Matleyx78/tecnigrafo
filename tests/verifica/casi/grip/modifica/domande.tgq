@@ -1,0 +1,102 @@
+; Modifica delle entita tramite grip (0.7-P9, ADR 0034 punto 4; lavoro #350)
+; Valori geometrici verificati in modo indipendente e confrontati con autocad-grip.dxf
+; (dxf-di-prova.md, handle 263..26E); misure del testo da LiberationSans-Regular.ttf
+; (sCapHeight = 1409, hhea ascent = 1854, descent = -434; L("Tg1") = L("Tg2") = 3529/1409).
+
+; --- I 12 casi di autocad-grip.dxf (263..26E) ---
+
+; 263: arco centro (0,0) r=10 0..90 gradi, estremo iniziale (10,0) -> (12,0)
+; Passa per (12,0), vecchio medio (7.0710678118654755,7.0710678118654755) e fine (0,10)
+A263 = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+? grip A263 10,0 12,0 -> ARC center=-1.8118723659289846,-4.374246839114782 radius=14.487989980056529 start-angle=17.57309582854266 end-angle=82.81576198692696
+
+; 264: arco centro (30,0) r=10 0..90 gradi, estremo finale (30,10) -> (30,12)
+A264 = ARC center=30,0 radius=10 start-angle=0 end-angle=90
+? grip A264 30,10 30,12 -> ARC center=25.625753160885218,-1.811872365928987 radius=14.48798998005653 start-angle=7.184238013073051 end-angle=72.42690417145735
+
+; 265: arco centro (60,0) r=10 0..90 gradi, medio sull'arco -> (69,9) (diventa arco maggiore)
+A265 = ARC center=60,0 radius=10 start-angle=0 end-angle=90
+? grip A265 67.07106781186548,7.0710678118654755 69,9 -> ARC center=63.875,3.875 radius=7.247844507162112 start-angle=327.6803834918198 end-angle=122.31961650818018
+
+; 266: arco centro (90,0) r=10 0..90 gradi, centro (90,0) -> (95,5)
+A266 = ARC center=90,0 radius=10 start-angle=0 end-angle=90
+? grip A266 90,0 95,5 -> ARC center=95,5 radius=10 start-angle=0 end-angle=90
+
+; 267: cerchio centro (150,0) r=10, quadrante (160,0) -> (165,0)
+C267 = CIRCLE center=150,0 radius=10
+? grip C267 160,0 165,0 -> CIRCLE center=150,0 radius=15
+
+; 268: polilinea con arco (semicerchio inferiore di centro 230,0, medio 230,-10), vertice (220,0) -> (220,5)
+P268 = LWPOLYLINE closed=no vertex=200,0 vertex=220,0 bulge=1 vertex=240,0 vertex=260,0
+? grip P268 220,0 220,5 -> LWPOLYLINE closed=no vertex=200,0 vertex=220,5 bulge=1.2198039027185568 vertex=240,0 vertex=260,0
+
+; 269: stessa forma traslata di +100, medio del primo segmento dritto (310,0) -> (310,5)
+P269 = LWPOLYLINE closed=no vertex=300,0 vertex=320,0 bulge=1 vertex=340,0 vertex=360,0
+? grip P269 310,0 310,5 -> LWPOLYLINE closed=no vertex=300,5 vertex=320,5 bulge=1.2198039027185568 vertex=340,0 vertex=360,0
+
+; 26A: stessa forma traslata di +200, medio del segmento curvo (430,-10) -> (430,-15)
+P26A = LWPOLYLINE closed=no vertex=400,0 vertex=420,0 bulge=1 vertex=440,0 vertex=460,0
+? grip P26A 430,-10 430,-15 -> LWPOLYLINE closed=no vertex=400,0 vertex=420,0 bulge=1.5 vertex=440,0 vertex=460,0
+
+; 26B: linea (500,0)-(520,0), medio (510,0) -> (515,5) (sposta l'entita)
+L26B = LINE start=500,0 end=520,0
+? grip L26B 510,0 515,5 -> LINE start=505,5 end=525,5
+
+; 26C: linea (500,20)-(520,20), estremo finale (520,20) -> (525,25)
+L26C = LINE start=500,20 end=520,20
+? grip L26C 520,20 525,25 -> LINE start=500,20 end=525,25
+
+; 26D: testo Left Baseline "Tg1" in (600,0), inserimento -> (605,5) (sposta l'entita con Similarity::translation, ADR 0031 punto 2)
+T26D = TEXT position=600,0 height=2.5 rotation=0 value="Tg1"
+? grip T26D 600,0 605,5 -> TEXT position=605,5 alignment-point=5,5 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=605,4.229950319375444;611.2615330021292,4.229950319375444;611.2615330021292,8.289567068843152;605,8.289567068843152
+
+; 26E: testo Aligned "Tg2" da (600,20) a (620,20), secondo punto (620,20) -> (625,25)
+; Prende altezza e rotazione dall'allineamento (textFrame, P9-grip-core.md e 26E in autocad-grip.dxf)
+T26E = TEXT position=600,20 alignment-point=620,20 horizontal=aligned value="Tg2"
+? grip T26E 620,20 625,25 -> TEXT position=600,20 alignment-point=625,25 height=10.179255447226176 rotation=11.309932474020213 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg2" ~box=600.6149050722585,16.92547463870785;625.6149050722585,21.92547463870785;622.3731935392462,38.13403230376878;597.3731935392462,33.13403230376878
+
+; --- Casi complementari per ogni regola di ADR 0034 punto 4 ---
+
+; LINE: spostamento dell'estremo iniziale
+? grip L26C 500,20 495,15 -> LINE start=495,15 end=520,20
+
+; CIRCLE: spostamento del centro e quadrante portato fuori dagli assi (raggio = distanza dal centro = hypot(9,12) = 15)
+? grip C267 150,0 140,-5 -> CIRCLE center=140,-5 radius=10
+? grip C267 150,10 159,12 -> CIRCLE center=150,0 radius=15
+
+; ARC: inversione del verso (da antiorario a orario -> estremi scambiati per restare antiorario)
+A_SEMI = ARC center=5,0 radius=5 start-angle=0 end-angle=180
+? grip A_SEMI 5,5 5,-5 -> ARC center=5,0 radius=5 start-angle=180 end-angle=0
+? grip A263 10,0 -10,10 -> ARC center=-5,-12.071067811865477 radius=22.630334384537147 start-angle=102.76438968275465 end-angle=77.23561031724535
+
+; LWPOLYLINE aperta: medio di segmento curvo portato dall'altro lato della corda (bulge cambia segno)
+? grip P26A 430,-10 430,10 -> LWPOLYLINE closed=no vertex=400,0 vertex=420,0 bulge=-1 vertex=440,0 vertex=460,0
+
+; LWPOLYLINE aperta: segmento dritto tra DUE segmenti curvi (entrambi ricalcolano il bulge; larghezze conservate)
+P_DUE_ARCHI = LWPOLYLINE closed=no width=0.5 vertex=0,0 bulge=1 start-width=1 end-width=2 vertex=20,0 vertex=40,0 bulge=-1 vertex=60,0
+? grip P_DUE_ARCHI 30,0 30,5 -> LWPOLYLINE closed=no width=0.5 vertex=0,0 bulge=1.219803902718557 start-width=1 end-width=2 vertex=20,5 vertex=40,5 bulge=-0.7207592200561265 vertex=60,0
+
+; LWPOLYLINE chiusa: spostamento del vertice 0 aggiorna sia il segmento 0 sia il segmento di chiusura
+P_CHIUSA_CURVA = LWPOLYLINE closed=yes vertex=0,0 bulge=1 vertex=20,0 vertex=20,20 bulge=1
+? grip P_CHIUSA_CURVA 0,0 4,4 -> LWPOLYLINE closed=yes vertex=4,4 bulge=1.4770329614269007 vertex=20,0 vertex=20,20 bulge=1.2807764064044151
+
+; TEXT: Center (inserimento in alignment-point), Aligned primo grip (sposta l'entita), Fit primo e secondo grip
+; Un Fit con il secondo punto spostato tiene l'altezza e aggiorna width-factor e rotazione (ADR 0034 punto 4, P9-grip-core.md)
+T_CENTER = TEXT position=3,4 alignment-point=10,20 horizontal=center value="Tg1"
+? grip T_CENTER 10,20 15,25 -> TEXT position=8,9 alignment-point=15,25 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=baseline value="Tg1" ~box=11.869233498935415,24.229950319375444;18.130766501064585,24.229950319375444;18.130766501064585,28.28956706884315;11.869233498935415,28.28956706884315
+
+? grip T26E 600,20 605,25 -> TEXT position=605,25 alignment-point=625,25 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg2" ~box=605,22.540379710966278;625,22.540379710966278;625,35.50722584301502;605,35.50722584301502
+
+T_FIT = TEXT position=600,20 alignment-point=620,20 height=2.5 horizontal=fit value="Tg2"
+? grip T_FIT 600,20 605,25 -> TEXT position=605,25 alignment-point=625,25 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg2" ~box=605,24.229950319375444;625,24.229950319375444;625,28.28956706884315;605,28.28956706884315
+? grip T_FIT 620,20 625,25 -> TEXT position=600,20 alignment-point=625,25 height=2.5 rotation=11.309932474020213 width-factor=4.07170217889047 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg2" ~box=600.1510191672285,19.244904163857594;625.1510191672285,24.244904163857594;624.3548628201806,28.225685899096817;599.3548628201806,23.225685899096817
+
+; --- Ricerca del grip entro 1e-9 e risposta 'none' fuori da 1e-9 ---
+
+; Entro 1e-9 (distanza 5e-10): trova il grip
+? grip L26B 510.0000000005,0 515,5 -> LINE start=505,5 end=525,5
+
+; Fuori da 1e-9 (distanza 2e-9, punto arrotondato a 4 decimali 67.0711,7.0711, punto lontano): 'none'
+? grip L26B 510.000000002,0 515,5 -> none
+? grip A265 67.0711,7.0711 69,9 -> none
+? grip C267 0,0 10,10 -> none
