@@ -13,6 +13,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -32,11 +33,23 @@ double normalized(double angle) {
     return result < 0.0 ? result + kTwoPi : result;
 }
 
+Similarity requireSimilarity(const std::optional<Similarity>& similarity) {
+    if (!similarity.has_value()) {
+        ADD_FAILURE() << "Expected a valid similarity";
+        return {};
+    }
+    return *similarity;
+}
+
 std::array<Similarity, 5> similarities() {
-    return {Similarity::translation({7.0, -3.0}), Similarity::rotation(kPi / 3.0, {2.0, 1.0}),
-            *Similarity::scaling(2.5, {3.0, -4.0}), *Similarity::reflection({1.0, 2.0}, {2.0, 3.0}),
-            Similarity::translation({4.0, 8.0}) * Similarity::rotation(0.3, {}) *
-                *Similarity::scaling(1.7, {2.0, 4.0}) * *Similarity::reflection({}, {1.0, 0.0})};
+    const Similarity move = Similarity::translation({7.0, -3.0});
+    const Similarity rotate = Similarity::rotation(kPi / 3.0, {2.0, 1.0});
+    const Similarity scale = requireSimilarity(Similarity::scaling(2.5, {3.0, -4.0}));
+    const Similarity mirror = requireSimilarity(Similarity::reflection({1.0, 2.0}, {2.0, 3.0}));
+    const Similarity first = Similarity::translation({4.0, 8.0}) * Similarity::rotation(0.3, {});
+    const Similarity second = requireSimilarity(Similarity::scaling(1.7, {2.0, 4.0}));
+    const Similarity third = requireSimilarity(Similarity::reflection({}, {1.0, 0.0}));
+    return {move, rotate, scale, mirror, first * second * third};
 }
 
 TEST(Similarity, IdentityCentersAndAxisAreFixed) {
@@ -44,11 +57,11 @@ TEST(Similarity, IdentityCentersAndAxisAreFixed) {
     expectPoint(Similarity{}.apply(point), point);
     expectPoint(Similarity::translation({2.0, -1.0}).apply(point), {5.0, 3.0});
     expectPoint(Similarity::rotation(kPi / 2.0, {1.0, 2.0}).apply(point), {-1.0, 4.0});
-    expectPoint(Similarity::scaling(2.0, {1.0, 2.0})->apply(point), {5.0, 6.0});
-    const auto reflection = Similarity::reflection({1.0, 2.0}, {2.0, 3.0});
-    ASSERT_TRUE(reflection);
-    expectPoint(reflection->apply({4.0, 5.0}), {4.0, 5.0});
-    expectPoint(reflection->apply({2.0, 2.0}), {1.0, 3.0});
+    const Similarity scaling = requireSimilarity(Similarity::scaling(2.0, {1.0, 2.0}));
+    expectPoint(scaling.apply(point), {5.0, 6.0});
+    const Similarity reflection = requireSimilarity(Similarity::reflection({1.0, 2.0}, {2.0, 3.0}));
+    expectPoint(reflection.apply({4.0, 5.0}), {4.0, 5.0});
+    expectPoint(reflection.apply({2.0, 2.0}), {1.0, 3.0});
 }
 
 TEST(Similarity, CompositionAndMatrixAgreeForBothParities) {
@@ -77,9 +90,8 @@ TEST(Similarity, InvalidFactoriesAndVeryShortAxes) {
         EXPECT_FALSE(Similarity::scaling(factor, {}));
     }
     EXPECT_FALSE(Similarity::reflection({3.0, 4.0}, {3.0, 4.0}));
-    const auto tiny = Similarity::reflection({}, {0.0, 1e-100});
-    ASSERT_TRUE(tiny);
-    expectPoint(tiny->apply({3.0, 4.0}), {-3.0, 4.0});
+    const Similarity tiny = requireSimilarity(Similarity::reflection({}, {0.0, 1e-100}));
+    expectPoint(tiny.apply({3.0, 4.0}), {-3.0, 4.0});
 }
 
 TEST(Similarity, TransformsEveryCurveAndPreservesPolylineAttributes) {
@@ -133,9 +145,9 @@ void expectTextImage(const Text& before, const Text& after, const Similarity& si
     const auto source = textBox(before);
     const auto target = textBox(after);
     for (std::size_t i = 0; i < source.size(); ++i) {
-        const Vec2 expected = similarity.apply(source[i]);
+        const Vec2 expected = similarity.apply(source.at(i));
         if (mode == MirrorText::Mirrored || !similarity.reflects()) {
-            expectPoint(target[i], expected);
+            expectPoint(target.at(i), expected);
         } else {
             EXPECT_TRUE(std::ranges::any_of(target, [&](const Vec2& point) {
                 return nearlyEqual(point, expected, kTolerance);
@@ -210,8 +222,8 @@ TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
     for (const auto& similarity : similarities()) {
         transformations.push_back(similarity);
     }
-    transformations.push_back(*Similarity::reflection({}, {1.0, 0.0}));
-    transformations.push_back(*Similarity::reflection({}, {0.0, 1.0}));
+    transformations.push_back(requireSimilarity(Similarity::reflection({}, {1.0, 0.0})));
+    transformations.push_back(requireSimilarity(Similarity::reflection({}, {0.0, 1.0})));
     // DXF group 72 has the six consecutive values Left through Fit.
     for (int horizontalIndex = 0; horizontalIndex < 6; ++horizontalIndex) {
         const auto horizontal = static_cast<TextHorizontal>(horizontalIndex);
@@ -247,7 +259,7 @@ TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
 }
 
 TEST(Similarity, ReadableTextDirectionAtNinetyAndTwoHundredSeventyDegrees) {
-    const auto reflection = *Similarity::reflection({}, {1.0, 0.0});
+    const Similarity reflection = requireSimilarity(Similarity::reflection({}, {1.0, 0.0}));
     const double ninety = kPi / 2.0;
     const double twoSeventy = 3.0 * kPi / 2.0;
     const std::array centers{ninety, twoSeventy};
