@@ -59,3 +59,7 @@ erase/selezione-scritta-intersezione #336
 erase/selezione-scritta-all #336
 erase/selezione-scritta-bloccati #336
 erase/selezione-scritta-errori #336
+
+# 0.7-R3: sequenze degli script (#338)
+text/sequenze-script #338
+text/sequenze-script-multiriga #338
