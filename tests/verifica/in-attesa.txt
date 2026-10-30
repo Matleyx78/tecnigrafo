@@ -86,3 +86,8 @@ trasformazioni/testo #340
 trasformazioni/testo-mirrtext-1 #340
 trasformazioni/testo-mirrtext-0 #340
 trasformazioni/non-valide #340
+
+# 0.7-R9: grip, punti e modifica (#350)
+grip/punti #350
+grip/modifica #350
+grip/degeneri #350
