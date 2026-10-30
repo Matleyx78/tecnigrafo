@@ -237,10 +237,11 @@ void applyTolerance(const ToleranceDirective& directive, Tolerances& tolerances)
     }
 }
 
-std::variant<Script, ParseError> parseScript(std::string_view text,
-                                           const std::filesystem::path& source) {
+std::variant<Script, ParseError> parseScript(std::string_view text, std::string_view sourceName) {
     Script script;
-    const std::string extension = source.extension().string();
+    const std::size_t dot = sourceName.find_last_of('.');
+    const std::string_view extension =
+        dot == std::string_view::npos ? std::string_view{} : sourceName.substr(dot);
     if (extension.size() == 4 && extension[0] == '.' &&
         (extension[1] == 's' || extension[1] == 'S') &&
         (extension[2] == 'c' || extension[2] == 'C') &&

@@ -7,7 +7,6 @@
 #include "tg/script/compare.hpp"
 
 #include <cstdint>
-#include <filesystem>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -80,7 +79,8 @@ struct AidDirective {
 /// !scr on|off: AutoCAD script sequences, without history messages.
 struct ScriptSequencesDirective {
     bool on{false};
-    friend bool operator==(const ScriptSequencesDirective&, const ScriptSequencesDirective&) = default;
+    friend bool operator==(const ScriptSequencesDirective&,
+                           const ScriptSequencesDirective&) = default;
 };
 
 /// !key <key>: a key or a shortcut ("F3", "Ctrl+Z"). Level 2 only.
@@ -117,8 +117,8 @@ struct ToleranceDirective {
 
 using Action =
     std::variant<TypedLine, ViewDirective, MoveDirective, ClickDirective, RightClickDirective,
-                 EscDirective, AidDirective, ScriptSequencesDirective, KeyDirective, ReportDirective,
-                 ScreenshotDirective, LevelDirective, ToleranceDirective>;
+                 EscDirective, AidDirective, ScriptSequencesDirective, KeyDirective,
+                 ReportDirective, ScreenshotDirective, LevelDirective, ToleranceDirective>;
 
 /// A parsed .tgs script (docs/verifica/script.md).
 struct Script {
@@ -134,7 +134,7 @@ struct Script {
 /// A .scr source path (case insensitive) adds an initial !scr on action;
 /// an empty path or another extension keeps the interactive sequence.
 [[nodiscard]] std::variant<Script, ParseError> parseScript(
-    std::string_view text, const std::filesystem::path& source = {});
+    std::string_view text, std::string_view sourceName = {});
 
 /// Reads "!tolerance <kind> <value>" without the leading "!tolerance": the
 /// words after it, already split. Shared with the question files.

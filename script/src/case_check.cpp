@@ -197,7 +197,7 @@ int runScriptFile(const fs::path& script, const std::optional<fs::path>& report,
         err << "cannot read " << script.generic_string() << "\n";
         return kExitInvalid;
     }
-    std::variant<Script, ParseError> parsed = parseScript(*text, script);
+    std::variant<Script, ParseError> parsed = parseScript(*text, script.filename().string());
     if (const auto* error = std::get_if<ParseError>(&parsed)) {
         err << script.generic_string() << ", " << describe(*error) << "\n";
         return kExitInvalid;

@@ -346,7 +346,7 @@ int runScriptFile(const QString& scriptPath, const QString& outputFolder) {
     const QByteArray bytes = file.readAll();
     const std::variant<script::Script, script::ParseError> parsed = script::parseScript(
         std::string_view(bytes.constData(), static_cast<std::size_t>(bytes.size())),
-        QFileInfo(scriptPath).filesystemFilePath());
+        QFileInfo(scriptPath).fileName().toStdString());
     if (const auto* error = std::get_if<script::ParseError>(&parsed)) {
         std::cerr << scriptPath.toStdString() << ", line " << error->line << ": " << error->message
                   << "\n";

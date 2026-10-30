@@ -289,9 +289,9 @@ TEST(RunLevel1, RunFileSelectsScriptSequencesByExtension) {
         std::ostringstream error;
         EXPECT_EQ(runScriptFile(file, std::nullopt, report, error), kExitPassed);
         EXPECT_TRUE(error.str().empty()) << error.str();
-        expectContains(report.str(), std::string_view{extension} == ".tgs"
-                                         ? "prompt: Enter text:\n"
-                                         : "prompt: Command:\n");
+        const std::string_view prompt =
+            std::string_view{extension} == ".tgs" ? "prompt: Enter text:\n" : "prompt: Command:\n";
+        expectContains(report.str(), prompt);
         std::filesystem::remove(file);
     }
 }
