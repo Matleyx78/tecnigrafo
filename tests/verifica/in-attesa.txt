@@ -75,14 +75,6 @@ trim/opzioni-shift-undo-esc #361
 extend/autocad-rapido-e-standard #361
 extend/estremi-curvi-shift-annulla #361
 
-# 0.7-R4: trasformazioni, domanda transform (#340)
-trasformazioni/linea-cerchio #340
-trasformazioni/arco #340
-trasformazioni/polilinea #340
-trasformazioni/testo #340
-trasformazioni/testo-mirrtext-1 #340
-trasformazioni/testo-mirrtext-0 #340
-trasformazioni/non-valide #340
 
 # 0.7-R9: grip, punti e modifica (#350)
 grip/punti #350
