@@ -38,9 +38,8 @@ Text transformedText(const Text& text, const Similarity& similarity, MirrorText 
         result.rotation = normalizeAngle(alpha + kPi);
         result.mirroredX = !text.mirroredX;
     } else {
-        result.rotation = normalizeAngle(alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0
-                                         ? alpha - kPi
-                                         : alpha);
+        const bool reverse = alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0;
+        result.rotation = normalizeAngle(reverse ? alpha - kPi : alpha);
         result.obliqueAngle = -text.obliqueAngle;
     }
 
@@ -98,8 +97,9 @@ std::optional<Similarity> Similarity::scaling(double factor, const Vec2& center)
 
 std::optional<Similarity> Similarity::reflection(const Vec2& a, const Vec2& b) {
     const Vec2 delta = b - a;
-    if (!std::isfinite(a.x) || !std::isfinite(a.y) || !std::isfinite(b.x) ||
-        !std::isfinite(b.y) || !(delta.length() > 0.0)) {
+    const bool finite = std::isfinite(a.x) && std::isfinite(a.y) && std::isfinite(b.x) &&
+                        std::isfinite(b.y);
+    if (!finite || !(delta.length() > 0.0)) {
         return std::nullopt;
     }
     Similarity result;
@@ -128,8 +128,9 @@ bool Similarity::reflects() const {
 Transform2D Similarity::matrix() const {
     const double cosine = m_scale * std::cos(m_angle);
     const double sine = m_scale * std::sin(m_angle);
-    return {cosine, sine, m_reflects ? sine : -sine, m_reflects ? -cosine : cosine, m_offset.x,
-            m_offset.y};
+    const double xFromY = m_reflects ? sine : -sine;
+    const double yFromY = m_reflects ? -cosine : cosine;
+    return {cosine, sine, xFromY, yFromY, m_offset.x, m_offset.y};
 }
 
 Similarity operator*(const Similarity& a, const Similarity& b) {

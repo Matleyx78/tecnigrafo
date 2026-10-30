@@ -66,9 +66,14 @@ TEST(Similarity, CompositionAndMatrixAgreeForBothParities) {
 }
 
 TEST(Similarity, InvalidFactoriesAndVeryShortAxes) {
-    for (const double factor : {0.0, -1.0, std::numeric_limits<double>::infinity(),
-                                -std::numeric_limits<double>::infinity(),
-                                std::numeric_limits<double>::quiet_NaN()}) {
+    const std::array factors{
+        0.0,
+        -1.0,
+        std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::quiet_NaN(),
+    };
+    for (const double factor : factors) {
         EXPECT_FALSE(Similarity::scaling(factor, {}));
     }
     EXPECT_FALSE(Similarity::reflection({3.0, 4.0}, {3.0, 4.0}));
@@ -94,12 +99,12 @@ TEST(Similarity, TransformsEveryCurveAndPreservesPolylineAttributes) {
         const Arc movedArc = std::get<Arc>(transformed(arc, similarity));
         expectPoint(movedArc.center, similarity.apply(arc.center));
         EXPECT_NEAR(movedArc.radius, arc.radius * similarity.scale(), kTolerance);
-        expectPoint(startPoint(movedArc.geometry()),
-                    similarity.apply(similarity.reflects() ? endPoint(arc.geometry())
-                                                          : startPoint(arc.geometry())));
-        expectPoint(endPoint(movedArc.geometry()),
-                    similarity.apply(similarity.reflects() ? startPoint(arc.geometry())
-                                                          : endPoint(arc.geometry())));
+        const Vec2 first = startPoint(arc.geometry());
+        const Vec2 last = endPoint(arc.geometry());
+        const Vec2 expectedStart = similarity.apply(similarity.reflects() ? last : first);
+        const Vec2 expectedEnd = similarity.apply(similarity.reflects() ? first : last);
+        expectPoint(startPoint(movedArc.geometry()), expectedStart);
+        expectPoint(endPoint(movedArc.geometry()), expectedEnd);
         EXPECT_NEAR(movedArc.geometry().sweep, arc.geometry().sweep, kTolerance);
         EXPECT_GE(movedArc.startAngle, 0.0);
         EXPECT_LT(movedArc.startAngle, kTwoPi);
@@ -115,7 +120,8 @@ TEST(Similarity, TransformsEveryCurveAndPreservesPolylineAttributes) {
             const auto& before = polyline.vertices()[i];
             const auto& after = movedPolyline.vertices()[i];
             expectPoint(after.position, similarity.apply(before.position));
-            EXPECT_NEAR(after.bulge, before.bulge * (similarity.reflects() ? -1.0 : 1.0), kTolerance);
+            const double expectedBulge = before.bulge * (similarity.reflects() ? -1.0 : 1.0);
+            EXPECT_NEAR(after.bulge, expectedBulge, kTolerance);
             EXPECT_NEAR(after.startWidth, before.startWidth * similarity.scale(), kTolerance);
             EXPECT_NEAR(after.endWidth, before.endWidth * similarity.scale(), kTolerance);
         }
@@ -141,26 +147,27 @@ void expectTextImage(const Text& before, const Text& after, const Similarity& si
     EXPECT_EQ(after.value, before.value);
     EXPECT_EQ(after.style, before.style);
     EXPECT_EQ(after.mirroredY, before.mirroredY);
-    EXPECT_EQ(after.mirroredX, before.mirroredX !=
-                                  (similarity.reflects() && mode == MirrorText::Mirrored));
+    const bool flipX = similarity.reflects() && mode == MirrorText::Mirrored;
+    EXPECT_EQ(after.mirroredX, before.mirroredX != flipX);
     EXPECT_NEAR(after.height, before.height * similarity.scale(), kTolerance);
     EXPECT_DOUBLE_EQ(after.widthFactor, before.widthFactor);
-    EXPECT_DOUBLE_EQ(after.obliqueAngle,
-                     similarity.reflects() && mode == MirrorText::Readable ? -before.obliqueAngle
-                                                                           : before.obliqueAngle);
+    const bool flipOblique = similarity.reflects() && mode == MirrorText::Readable;
+    const double expectedOblique = flipOblique ? -before.obliqueAngle : before.obliqueAngle;
+    EXPECT_DOUBLE_EQ(after.obliqueAngle, expectedOblique);
 
-    const bool baseline = before.horizontal == TextHorizontal::Aligned ||
-                          before.horizontal == TextHorizontal::Fit;
+    const bool baseline =
+        before.horizontal == TextHorizontal::Aligned || before.horizontal == TextHorizontal::Fit;
     const double length = distance(before.position, before.alignmentPoint);
     const bool fitted = baseline && length > 0.0 && textWidth(displayText(before.value)) > 0.0;
     double expectedAngle = normalized(textFrame(before).rotation + similarity.rotationAngle());
     if (similarity.reflects()) {
         const double alpha = normalized(similarity.rotationAngle() - textFrame(before).rotation);
-        expectedAngle = mode == MirrorText::Mirrored
-                            ? normalized(alpha + kPi)
-                            : normalized(alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0
-                                             ? alpha - kPi
-                                             : alpha);
+        if (mode == MirrorText::Mirrored) {
+            expectedAngle = normalized(alpha + kPi);
+        } else {
+            const bool reverse = alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0;
+            expectedAngle = normalized(reverse ? alpha - kPi : alpha);
+        }
         EXPECT_NEAR(after.rotation, expectedAngle, kTolerance);
     }
     EXPECT_NEAR(std::cos(textFrame(after).rotation), std::cos(expectedAngle), kTolerance);
@@ -193,10 +200,20 @@ TEST(Similarity, RoundedArcAnglesRemainDistinctAndNormalized) {
 }
 
 TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
-    const std::array horizontals{TextHorizontal::Left, TextHorizontal::Center, TextHorizontal::Right,
-                                 TextHorizontal::Middle, TextHorizontal::Aligned, TextHorizontal::Fit};
-    const std::array verticals{TextVertical::Baseline, TextVertical::Bottom, TextVertical::Middle,
-                               TextVertical::Top};
+    const std::array horizontals{
+        TextHorizontal::Left,
+        TextHorizontal::Center,
+        TextHorizontal::Right,
+        TextHorizontal::Middle,
+        TextHorizontal::Aligned,
+        TextHorizontal::Fit,
+    };
+    const std::array verticals{
+        TextVertical::Baseline,
+        TextVertical::Bottom,
+        TextVertical::Middle,
+        TextVertical::Top,
+    };
     std::vector<Similarity> transformations;
     for (const auto& similarity : similarities()) {
         transformations.push_back(similarity);
@@ -223,7 +240,8 @@ TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
                         text.mirroredY = (flags & 2) != 0;
                         for (const auto& similarity : transformations) {
                             for (const auto mode : {MirrorText::Readable, MirrorText::Mirrored}) {
-                                const Text after = std::get<Text>(transformed(text, similarity, mode));
+                                const auto entity = transformed(text, similarity, mode);
+                                const auto& after = std::get<Text>(entity);
                                 expectTextImage(text, after, similarity, mode);
                             }
                         }
@@ -236,16 +254,21 @@ TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
 
 TEST(Similarity, ReadableTextDirectionAtNinetyAndTwoHundredSeventyDegrees) {
     const auto reflection = *Similarity::reflection({}, {1.0, 0.0});
-    for (const double alpha : {kPi / 2.0 - 1e-8, kPi / 2.0, kPi / 2.0 + 1e-8,
-                               3.0 * kPi / 2.0 - 1e-8, 3.0 * kPi / 2.0,
-                               3.0 * kPi / 2.0 + 1e-8}) {
+    const std::array angles{
+        kPi / 2.0 - 1e-8,
+        kPi / 2.0,
+        kPi / 2.0 + 1e-8,
+        3.0 * kPi / 2.0 - 1e-8,
+        3.0 * kPi / 2.0,
+        3.0 * kPi / 2.0 + 1e-8,
+    };
+    for (const double alpha : angles) {
         Text text;
         text.rotation = kTwoPi - alpha;
         text.value = "Tg1";
         const Text after = std::get<Text>(transformed(text, reflection));
-        const double expected = normalized(alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0
-                                               ? alpha - kPi
-                                               : alpha);
+        const bool reverse = alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0;
+        const double expected = normalized(reverse ? alpha - kPi : alpha);
         EXPECT_NEAR(after.rotation, expected, kTolerance);
         expectTextImage(text, after, reflection, MirrorText::Readable);
     }
@@ -253,17 +276,25 @@ TEST(Similarity, ReadableTextDirectionAtNinetyAndTwoHundredSeventyDegrees) {
 
 TEST(Similarity, TransformQuestionsRejectMalformedArgumentsAndDoNotMutateTheSource) {
     const std::string definition = "L = LINE start=1,2 end=3,4\n";
-    for (const std::string question : {"transform L", "transform Missing move 1,2",
-                                       "transform L move 1", "transform L move 1,2 extra",
-                                       "transform L rotate nan 0,0", "transform L scale 2 0",
-                                       "transform L mirror 0,0 1,0 mirrtext=2",
-                                       "transform L mirror 0,0 1,0 unexpected=1"}) {
-        const auto answers = tg::script::answerQuestions(definition + "? " + question + " -> invalid\n");
+    const std::array questions{
+        "transform L",
+        "transform Missing move 1,2",
+        "transform L move 1",
+        "transform L move 1,2 extra",
+        "transform L rotate nan 0,0",
+        "transform L scale 2 0",
+        "transform L mirror 0,0 1,0 mirrtext=2",
+        "transform L mirror 0,0 1,0 unexpected=1",
+    };
+    for (const auto* question : questions) {
+        const std::string input = definition + "? " + question + " -> invalid\n";
+        const auto answers = tg::script::answerQuestions(input);
         EXPECT_TRUE(std::holds_alternative<tg::script::ParseError>(answers));
     }
-    const auto answers = tg::script::answerQuestions(
-        definition + "? transform L move 2,3 -> LINE start=3,5 end=5,7\n"
-                     "? transform L move 0,0 -> LINE start=1,2 end=3,4\n");
+    std::string input = definition;
+    input += "? transform L move 2,3 -> LINE start=3,5 end=5,7\n";
+    input += "? transform L move 0,0 -> LINE start=1,2 end=3,4\n";
+    const auto answers = tg::script::answerQuestions(input);
     ASSERT_TRUE(std::holds_alternative<std::vector<tg::script::Answer>>(answers));
     for (const auto& answer : std::get<std::vector<tg::script::Answer>>(answers)) {
         EXPECT_TRUE(answer.matches) << answer.actual;

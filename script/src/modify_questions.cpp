@@ -2,7 +2,6 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "question_table.hpp"
-
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/script/number_format.hpp"
@@ -19,8 +18,9 @@ namespace {
 using Arguments = std::span<const std::string_view>;
 
 ArgumentError transformUsage() {
-    return ArgumentError{"expected transform <entity> move dx,dy | rotate <degrees> x,y | "
-                         "scale <factor> x,y | mirror x1,y1 x2,y2 [mirrtext=0|1]"};
+    std::string message = "expected transform <entity> move dx,dy | rotate <degrees> x,y | ";
+    message += "scale <factor> x,y | mirror x1,y1 x2,y2 [mirrtext=0|1]";
+    return ArgumentError{message};
 }
 
 std::variant<std::optional<core::Similarity>, ArgumentError> readSimilarity(Arguments arguments) {
@@ -69,7 +69,8 @@ QuestionResult askTransform(const QuestionModel& model, Arguments arguments) {
     } else if (const auto id = model.find(arguments[0])) {
         entity = &model.document.find(*id)->entity;
     } else {
-        return ArgumentError{"no entity named '" + std::string{arguments[0]} + "' is defined above"};
+        const std::string name{arguments[0]};
+        return ArgumentError{"no entity named '" + name + "' is defined above"};
     }
     const auto parsed = readSimilarity(arguments.subspan(1));
     if (const auto* error = std::get_if<ArgumentError>(&parsed)) {
@@ -79,9 +80,8 @@ QuestionResult askTransform(const QuestionModel& model, Arguments arguments) {
     if (!similarity) {
         return std::string{"invalid"};
     }
-    const core::MirrorText mirrorText = arguments.back() == "mirrtext=1"
-                                          ? core::MirrorText::Mirrored
-                                          : core::MirrorText::Readable;
+    const bool mirrored = arguments.back() == "mirrtext=1";
+    const auto mirrorText = mirrored ? core::MirrorText::Mirrored : core::MirrorText::Readable;
     std::string answer;
     writeEntity(core::transformed(*entity, *similarity, mirrorText), answer);
     return answer;
