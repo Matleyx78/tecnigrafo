@@ -200,14 +200,6 @@ TEST(Similarity, RoundedArcAnglesRemainDistinctAndNormalized) {
 }
 
 TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
-    const std::array horizontals{
-        TextHorizontal::Left,
-        TextHorizontal::Center,
-        TextHorizontal::Right,
-        TextHorizontal::Middle,
-        TextHorizontal::Aligned,
-        TextHorizontal::Fit,
-    };
     const std::array verticals{
         TextVertical::Baseline,
         TextVertical::Bottom,
@@ -220,7 +212,9 @@ TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
     }
     transformations.push_back(*Similarity::reflection({}, {1.0, 0.0}));
     transformations.push_back(*Similarity::reflection({}, {0.0, 1.0}));
-    for (const auto horizontal : horizontals) {
+    // DXF group 72 has the six consecutive values Left through Fit.
+    for (int horizontalIndex = 0; horizontalIndex < 6; ++horizontalIndex) {
+        const auto horizontal = static_cast<TextHorizontal>(horizontalIndex);
         for (const auto vertical : verticals) {
             for (const double oblique : {-0.3, 0.0, 0.2}) {
                 for (int flags = 0; flags < 4; ++flags) {
@@ -254,23 +248,22 @@ TEST(Similarity, TextJustificationsObliqueFlagsAndDegeneracies) {
 
 TEST(Similarity, ReadableTextDirectionAtNinetyAndTwoHundredSeventyDegrees) {
     const auto reflection = *Similarity::reflection({}, {1.0, 0.0});
-    const std::array angles{
-        kPi / 2.0 - 1e-8,
-        kPi / 2.0,
-        kPi / 2.0 + 1e-8,
-        3.0 * kPi / 2.0 - 1e-8,
-        3.0 * kPi / 2.0,
-        3.0 * kPi / 2.0 + 1e-8,
-    };
-    for (const double alpha : angles) {
-        Text text;
-        text.rotation = kTwoPi - alpha;
-        text.value = "Tg1";
-        const Text after = std::get<Text>(transformed(text, reflection));
-        const bool reverse = alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0;
-        const double expected = normalized(reverse ? alpha - kPi : alpha);
-        EXPECT_NEAR(after.rotation, expected, kTolerance);
-        expectTextImage(text, after, reflection, MirrorText::Readable);
+    const double ninety = kPi / 2.0;
+    const double twoSeventy = 3.0 * kPi / 2.0;
+    const std::array centers{ninety, twoSeventy};
+    const std::array offsets{-1e-8, 0.0, 1e-8};
+    for (const double center : centers) {
+        for (const double offset : offsets) {
+            const double alpha = center + offset;
+            Text text;
+            text.rotation = kTwoPi - alpha;
+            text.value = "Tg1";
+            const Text after = std::get<Text>(transformed(text, reflection));
+            const bool reverse = alpha > kPi / 2.0 && alpha <= 3.0 * kPi / 2.0;
+            const double expected = normalized(reverse ? alpha - kPi : alpha);
+            EXPECT_NEAR(after.rotation, expected, kTolerance);
+            expectTextImage(text, after, reflection, MirrorText::Readable);
+        }
     }
 }
 

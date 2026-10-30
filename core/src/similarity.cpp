@@ -97,9 +97,9 @@ std::optional<Similarity> Similarity::scaling(double factor, const Vec2& center)
 
 std::optional<Similarity> Similarity::reflection(const Vec2& a, const Vec2& b) {
     const Vec2 delta = b - a;
-    const bool finite = std::isfinite(a.x) && std::isfinite(a.y) && std::isfinite(b.x) &&
-                        std::isfinite(b.y);
-    if (!finite || !(delta.length() > 0.0)) {
+    const bool finiteA = std::isfinite(a.x) && std::isfinite(a.y);
+    const bool finiteB = std::isfinite(b.x) && std::isfinite(b.y);
+    if (!finiteA || !finiteB || !(delta.length() > 0.0)) {
         return std::nullopt;
     }
     Similarity result;
