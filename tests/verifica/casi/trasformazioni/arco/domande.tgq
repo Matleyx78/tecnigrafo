@@ -1,0 +1,40 @@
+; Trasformazioni di archi
+; [0.7-R4] #339, lavoro [0.7-P4] #340: domanda `transform`
+; (docs/verifica/domande.md, "Modifiche (tappa 0.7)"; ADR 0031, punti 1-4).
+; Valori attesi calcolati a mano con le formule dell'ADR 0031 (e dell'ADR 0022
+; per il testo), con uno strumento indipendente da Tecnigrafo; dove indicato,
+; confrontati con il risultato di AutoCAD LT in autocad-specchiatura.dxf
+; (Matleyx78/dxf-test-file, commit 4ad9fff, SHA-256
+; 5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051).
+
+; l'arco di autocad-specchiatura.dxf (handle 26D; AutoCAD scrive 51 = 119.9999999999999)
+A = ARC center=0,-20 radius=10 start-angle=0 end-angle=120
+; un arco che attraversa 0 gradi
+B = ARC center=5,5 radius=3 start-angle=300 end-angle=30
+
+; riflessione: gli angoli si scambiano e l'arco resta antiorario. Gli assi e i
+; risultati sono quelli di AutoCAD: M1 -> 279, M2 -> 285, M3 -> 291, M4 -> 29D,
+; M5 -> 2A9, M6 -> 2B5 (stessi valori entro 1e-12)
+? transform A mirror 100,-100 100,200 -> ARC center=200,-20 radius=10 start-angle=60 end-angle=180
+? transform A mirror -100,-100 -100,200 mirrtext=1 -> ARC center=-200,-20 radius=10 start-angle=60 end-angle=180
+? transform A mirror -100,-100 200,-100 -> ARC center=0,-180 radius=10 start-angle=240 end-angle=0
+? transform A mirror -100,200 200,200 mirrtext=1 -> ARC center=0,420 radius=10 start-angle=240 end-angle=0
+? transform A mirror 300,0 400,100 -> ARC center=280,-300 radius=10 start-angle=330 end-angle=90
+? transform A mirror -300,0 -400,100 mirrtext=1 -> ARC center=-280,-300 radius=10 start-angle=150 end-angle=270
+? transform B mirror 0,0 0,1 -> ARC center=-5,5 radius=3 start-angle=150 end-angle=240
+? transform B mirror 0,0 1,0 -> ARC center=5,-5 radius=3 start-angle=330 end-angle=60
+? transform B mirror 5,5 8,8 -> ARC center=5,5 radius=3 start-angle=60 end-angle=150
+
+; rotazione: gli angoli ruotano e si riportano in [0, 360)
+? transform A rotate 90 0,0 -> ARC center=20,0 radius=10 start-angle=90 end-angle=210
+? transform A rotate 240 0,-20 -> ARC center=0,-20 radius=10 start-angle=240 end-angle=0
+? transform A rotate 360 0,0 -> ARC center=0,-20 radius=10 start-angle=0 end-angle=120
+? transform B rotate 90 5,5 -> ARC center=5,5 radius=3 start-angle=30 end-angle=120
+? transform B rotate -60 0,0 -> ARC center=6.830127018922193,-1.8301270189221923 radius=3 start-angle=240 end-angle=330
+? transform B rotate 45 5,5 -> ARC center=5,5 radius=3 start-angle=345 end-angle=75
+
+; spostamento e scala: gli angoli non cambiano
+? transform A move 7,3 -> ARC center=7,-17 radius=10 start-angle=0 end-angle=120
+? transform B move 0,0 -> ARC center=5,5 radius=3 start-angle=300 end-angle=30
+? transform A scale 2 0,0 -> ARC center=0,-40 radius=20 start-angle=0 end-angle=120
+? transform B scale 0.25 5,5 -> ARC center=5,5 radius=0.75 start-angle=300 end-angle=30

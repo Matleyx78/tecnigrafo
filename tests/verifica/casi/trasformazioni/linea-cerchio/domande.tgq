@@ -1,0 +1,52 @@
+; Trasformazioni di linee e cerchi
+; [0.7-R4] #339, lavoro [0.7-P4] #340: domanda `transform`
+; (docs/verifica/domande.md, "Modifiche (tappa 0.7)"; ADR 0031, punti 1-4).
+; Valori attesi calcolati a mano con le formule dell'ADR 0031 (e dell'ADR 0022
+; per il testo), con uno strumento indipendente da Tecnigrafo; dove indicato,
+; confrontati con il risultato di AutoCAD LT in autocad-specchiatura.dxf
+; (Matleyx78/dxf-test-file, commit 4ad9fff, SHA-256
+; 5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051).
+
+L = LINE start=1,2 end=7,5
+; estremi coincidenti: una linea degenere si trasforma come le altre
+LP = LINE start=4,4 end=4,4
+C = CIRCLE center=3,-4 radius=2.5
+
+; spostamento, anche nullo
+? transform L move 10,-3 -> LINE start=11,-1 end=17,2
+? transform L move 0,0 -> LINE start=1,2 end=7,5
+? transform C move -3,4 -> CIRCLE center=0,0 radius=2.5
+? transform LP move 1,1 -> LINE start=5,5 end=5,5
+
+; rotazione in gradi antiorari; 0 e 360 non cambiano nulla
+? transform L rotate 90 0,0 -> LINE start=-2,1 end=-5,7
+? transform L rotate 30 1,2 -> LINE start=1,2 end=4.696152422706633,7.598076211353316
+? transform L rotate -45 10,10 -> LINE start=-2.0208152801713086,10.707106781186548 end=4.3431457505076185,8.585786437626906
+? transform L rotate 0 5,5 -> LINE start=1,2 end=7,5
+? transform L rotate 360 0,0 -> LINE start=1,2 end=7,5
+? transform C rotate 90 0,0 -> CIRCLE center=4,3 radius=2.5
+? transform C rotate 123 3,-4 -> CIRCLE center=3,-4 radius=2.5
+? transform LP rotate 180 0,0 -> LINE start=-4,-4 end=-4,-4
+
+; scala: il raggio si moltiplica per il fattore; 1 non cambia nulla
+? transform L scale 2 1,2 -> LINE start=1,2 end=13,8
+? transform L scale 0.5 0,0 -> LINE start=0.5,1 end=3.5,2.5
+? transform L scale 1 3,3 -> LINE start=1,2 end=7,5
+? transform C scale 2.5 3,-4 -> CIRCLE center=3,-4 radius=6.25
+? transform C scale 0.001 0,0 -> CIRCLE center=0.003,-0.004 radius=0.0025
+? transform LP scale 3 1,1 -> LINE start=10,10 end=10,10
+
+; riflessione: asse verticale, orizzontale, a 45 gradi e qualunque
+? transform L mirror 0,0 0,10 -> LINE start=-1,2 end=-7,5
+? transform L mirror 0,0 10,0 -> LINE start=1,-2 end=7,-5
+? transform L mirror 0,0 5,5 -> LINE start=2,1 end=5,7
+? transform L mirror -2,3 4,-1 -> LINE start=0.0769230769230771,0.6153846153846159 end=-0.3846153846153837,-6.076923076923075
+; l'asse passa per la linea: la linea non cambia; MIRRTEXT non conta
+? transform L mirror 1,2 7,5 -> LINE start=1,2 end=7,5
+? transform L mirror 0,0 0,10 mirrtext=1 -> LINE start=-1,2 end=-7,5
+; i due punti dell'asse quasi coincidenti, ma distinti: l'asse X
+? transform L mirror 0,0 1e-09,0 -> LINE start=1,-2 end=7,-5
+? transform C mirror 0,0 0,10 -> CIRCLE center=-3,-4 radius=2.5
+? transform C mirror 0,0 5,5 -> CIRCLE center=-4,3 radius=2.5
+? transform C mirror -2,3 4,-1 -> CIRCLE center=6.384615384615385,1.076923076923078 radius=2.5
+? transform LP mirror 0,0 10,0 -> LINE start=4,-4 end=4,-4

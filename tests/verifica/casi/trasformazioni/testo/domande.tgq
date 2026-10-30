@@ -1,0 +1,54 @@
+; Trasformazioni di testi senza riflessione
+; [0.7-R4] #339, lavoro [0.7-P4] #340: domanda `transform`
+; (docs/verifica/domande.md, "Modifiche (tappa 0.7)"; ADR 0031, punti 1-4).
+; Valori attesi calcolati a mano con le formule dell'ADR 0031 (e dell'ADR 0022
+; per il testo), con uno strumento indipendente da Tecnigrafo; dove indicato,
+; confrontati con il risultato di AutoCAD LT in autocad-specchiatura.dxf
+; (Matleyx78/dxf-test-file, commit 4ad9fff, SHA-256
+; 5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051).
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (head, hhea,
+; OS/2, cmap, hmtx): altezza delle maiuscole 1409, a = 1854/1409, d = -434/1409;
+; L("Tg1") = ... = L("Tg9") = 3529/1409, L("Tg10") = 4668/1409.
+; ~box: immagini di (0, d h), (w, d h), (w, a h), (0, a h) secondo l'ADR 0022.
+
+; i dieci testi di autocad-specchiatura.dxf (handle 263-26C), con i valori del file
+TG1 = TEXT position=0,0 value="Tg1"
+TG2 = TEXT position=-3.009038199181446,10 alignment-point=0,10 horizontal=center value="Tg2"
+TG3 = TEXT position=-6.018076398362892,20 alignment-point=0,20 horizontal=right value="Tg3"
+TG4 = TEXT position=-3.009038199181446,29.1174965893588 alignment-point=0,30 horizontal=middle value="Tg4"
+TG5 = TEXT position=0,37.5 alignment-point=0,40 vertical=top value="Tg5"
+TG6 = TEXT position=-6.018076398362892,50.74010914051842 alignment-point=0,50 horizontal=right vertical=bottom value="Tg6"
+TG7 = TEXT position=0,60 alignment-point=20,62 height=8.34974081074708 rotation=5.710593137499642 horizontal=aligned value="Tg7"
+TG8 = TEXT position=0,70 alignment-point=20,70 width-factor=3.32332105412298 horizontal=fit value="Tg8"
+TG9 = TEXT position=0,80 rotation=30 value="Tg9"
+TG10 = TEXT position=0,90 width-factor=0.8 oblique=15 value="Tg10"
+BACK = TEXT position=10,20 mirror-x=yes value="Tg1"
+UPS = TEXT position=10,20 alignment-point=14,25 mirror-y=yes horizontal=right value="Tg2"
+
+; spostamento: i due punti si spostano (anche alignment-point di un testo Left),
+; il resto non cambia
+? transform TG1 move 10,5 -> TEXT position=10,5 alignment-point=10,5 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=10,4.229950319375444;16.26153300212917,4.229950319375444;16.26153300212917,8.289567068843152;10,8.289567068843152
+? transform TG2 move -1.5,2 -> TEXT position=-4.509038199181446,12 alignment-point=-1.5,12 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=baseline value="Tg2" ~box=-4.630766501064585,11.229950319375444;1.6307665010645849,11.229950319375444;1.6307665010645849,15.289567068843152;-4.630766501064585,15.289567068843152
+? transform TG7 move 0,0 -> TEXT position=0,60 alignment-point=20,62 height=8.34974081074708 rotation=5.710593137499642 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=0.2459620289033721,57.54037971096628;20.24596202890337,59.54037971096628;18.949277415698496,72.50722584301502;-1.050722584301502,70.50722584301502
+? transform TG10 move 3,-4 -> TEXT position=3,86 alignment-point=3,-4 height=2.5 rotation=0 width-factor=0.8 oblique=15 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg10" ~box=2.793665809944806,85.22995031937545;9.419641679355735,85.22995031937545;10.507412708955467,89.28956706884316;3.8814368395445378,89.28956706884316
+
+; rotazione: i punti ruotano e la rotazione del testo aumenta dell'angolo
+? transform TG1 rotate 90 0,0 -> TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=0.7700496806245565,0;0.7700496806245568,6.26153300212917;-3.2895670688431506,6.26153300212917;-3.289567068843151,0
+? transform TG3 rotate 45 0,20 -> TEXT position=-4.255422630981117,15.744577369018884 alignment-point=0,20 height=2.5 rotation=45 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=baseline value="Tg3" ~box=-3.883065095408738,15.027920202550943;0.544507351020159,19.455492648979842;-2.3260751815469463,22.326075181546948;-6.753647627975843,17.89850273511805
+? transform TG6 rotate 30 0,0 -> TEXT position=-30.58186161315703,40.93318530730251 alignment-point=-25,43.30127018922194 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=bottom value="Tg6" ~box=-30.422646646478498,40.17050368815735;-25,43.30127018922194;-27.02980837473385,46.81700142388978;-32.45245502121235,43.68623492282519
+? transform TG9 rotate -30 0,80 -> TEXT position=0,80 alignment-point=-40,10.717967697244902 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg9" ~box=0,79.22995031937545;6.26153300212917,79.22995031937545;6.26153300212917,83.28956706884316;0,83.28956706884316
+? transform TG7 rotate 90 0,60 -> TEXT position=0,60 alignment-point=-2,80 height=8.34974081074708 rotation=95.71059313749964 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=2.459620289033721,60.24596202890337;0.4596202890337213,80.24596202890338;-12.50722584301502,78.9492774156985;-10.50722584301502,58.949277415698496
+? transform TG8 rotate 90 0,0 -> TEXT position=-70,0 alignment-point=-70,20 height=2.5 rotation=90 width-factor=3.32332105412298 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg8" ~box=-69.22995031937545,0;-69.22995031937545,20;-73.28956706884316,20;-73.28956706884316,0
+? transform TG10 rotate 30 0,90 -> TEXT position=0,90 alignment-point=45,12.05771365940052 height=2.5 rotation=30 width-factor=0.8 oblique=15 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg10" ~box=0.20633419005519382,89.22995031937543;5.944597617827741,92.5429382540809;4.85682658822801,96.60255500354862;-0.8814368395445374,93.28956706884316
+? transform BACK rotate 60 0,0 -> TEXT position=-12.320508075688771,18.66025403784439 alignment-point=0,0 height=2.5 rotation=60 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=-11.653625490091812,18.27522919753211;-14.784391991156397,12.85258255105361;-18.300123225824237,14.882390925787464;-15.169356724759654,20.305037572265967
+? transform UPS rotate 120 10,20 -> TEXT position=10,20 alignment-point=3.6698729810778055,20.964101615137757 height=2.5 rotation=120 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=yes horizontal=right vertical=baseline value="Tg2" ~box=6.133756896545429,15.156430128346976;3.002990395480846,20.579076774825477;6.518721630148688,22.60888514955933;9.649488131213271,17.18623850308083
+
+; scala: i punti si scalano, l'altezza si moltiplica per il fattore; fattore di
+; larghezza, obliquo e rotazione non cambiano
+? transform TG1 scale 2 1,2 -> TEXT position=-1,-2 alignment-point=-1,-2 height=5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=-1,-3.540099361249113;11.52306600425834,-3.540099361249113;11.52306600425834,4.579134137686302;-1,4.579134137686302
+? transform TG4 scale 0.5 0,30 -> TEXT position=-1.504519099590723,29.5587482946794 alignment-point=0,30 height=1.25 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=middle vertical=baseline value="Tg4" ~box=-1.5653832505322924,29.182487579843862;1.5653832505322924,29.182487579843862;1.5653832505322924,31.212295954577716;-1.5653832505322924,31.212295954577716
+? transform TG5 scale 4 0,0 -> TEXT position=0,150 alignment-point=0,160 height=10 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=top value="Tg5" ~box=0,146.91980127750176;25.04613200851668,146.91980127750176;25.04613200851668,163.1582682753726;0,163.1582682753726
+? transform TG7 scale 0.5 0,0 -> TEXT position=0,30 alignment-point=10,31 height=4.17487040537354 rotation=5.710593137499642 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=0.12298101445168605,28.77018985548314;10.122981014451685,29.77018985548314;9.474638707849248,36.25361292150751;-0.525361292150751,35.25361292150751
+? transform TG8 scale 3 0,70 -> TEXT position=0,70 alignment-point=60,70 height=7.5 rotation=0 width-factor=3.32332105412298 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg8" ~box=0,67.68985095812633;60,67.68985095812633;60,79.86870120652945;0,79.86870120652945
+? transform TG9 scale 1.5 0,0 -> TEXT position=0,120 alignment-point=0,0 height=3.75 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg9" ~box=0.5775372604684172,118.99967612160457;8.711507230186172,123.69582587320144;5.666794668085391,128.9694227252032;-2.4671753016323628,124.27327297360632
+? transform TG10 scale 2 0,90 -> TEXT position=0,90 alignment-point=0,-90 height=5 rotation=0 width-factor=0.8 oblique=15 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg10" ~box=-0.4126683801103877,88.45990063875088;12.839283358711471,88.45990063875088;15.014825417910934,96.5791341376863;1.7628736790890756,96.5791341376863

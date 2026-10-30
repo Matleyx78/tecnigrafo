@@ -1,0 +1,79 @@
+; Testi riflessi con MIRRTEXT 0
+; [0.7-R4] #339, lavoro [0.7-P4] #340: domanda `transform`
+; (docs/verifica/domande.md, "Modifiche (tappa 0.7)"; ADR 0031, punti 1-4).
+; Valori attesi calcolati a mano con le formule dell'ADR 0031 (e dell'ADR 0022
+; per il testo), con uno strumento indipendente da Tecnigrafo; dove indicato,
+; confrontati con il risultato di AutoCAD LT in autocad-specchiatura.dxf
+; (Matleyx78/dxf-test-file, commit 4ad9fff, SHA-256
+; 5f176996ad6fdd9b8e59291ba0125236afb74574099caba3f5434b8f0011b051).
+; Misure di LiberationSans-Regular.ttf 2.1.5 lette con fontTools (head, hhea,
+; OS/2, cmap, hmtx): altezza delle maiuscole 1409, a = 1854/1409, d = -434/1409;
+; L("Tg1") = ... = L("Tg9") = 3529/1409, L("Tg10") = 4668/1409.
+; ~box: immagini di (0, d h), (w, d h), (w, a h), (0, a h) secondo l'ADR 0022.
+
+; i dieci testi di autocad-specchiatura.dxf (handle 263-26C), con i valori del file
+TG1 = TEXT position=0,0 value="Tg1"
+TG2 = TEXT position=-3.009038199181446,10 alignment-point=0,10 horizontal=center value="Tg2"
+TG3 = TEXT position=-6.018076398362892,20 alignment-point=0,20 horizontal=right value="Tg3"
+TG4 = TEXT position=-3.009038199181446,29.1174965893588 alignment-point=0,30 horizontal=middle value="Tg4"
+TG5 = TEXT position=0,37.5 alignment-point=0,40 vertical=top value="Tg5"
+TG6 = TEXT position=-6.018076398362892,50.74010914051842 alignment-point=0,50 horizontal=right vertical=bottom value="Tg6"
+TG7 = TEXT position=0,60 alignment-point=20,62 height=8.34974081074708 rotation=5.710593137499642 horizontal=aligned value="Tg7"
+TG8 = TEXT position=0,70 alignment-point=20,70 width-factor=3.32332105412298 horizontal=fit value="Tg8"
+TG9 = TEXT position=0,80 rotation=30 value="Tg9"
+TG10 = TEXT position=0,90 width-factor=0.8 oblique=15 value="Tg10"
+BACK = TEXT position=10,20 mirror-x=yes value="Tg1"
+
+; MIRRTEXT 0, il valore predefinito (ADR 0031, punto 3): il parallelogramma
+; d'ingombro si riflette e il testo si riscrive dentro di esso, leggibile, con la
+; stessa giustificazione e gli stessi segnali; rotazione 2 phi - r, meno 180 quando
+; cade in (90, 270], scritta in [0, 360). Rotazioni e segnali coincidono con
+; quelli di AutoCAD (M1: 26F-27A, M3: 287-292, M5: 29F-2AA); le posizioni no,
+; perche' dipendono dalle misure del font: qui sono quelle di Liberation Sans.
+; Il ~box atteso e' lo stesso parallelogramma riflesso (stessi quattro angoli),
+; nell'ordine del testo nuovo.
+; Il punto d'ancoraggio (ADR 0022, punto 2) e' quello del testo riscritto; l'altro
+; punto si riflette come nel punto 2 dell'ADR 0031 (decisione del responsabile,
+; issue #339): position per Center, Right, Middle, TL e BR; alignment-point per Left.
+; Aligned e Fit: P1 e P2 sono quelli del testo riscritto nel parallelogramma.
+; Quando si tolgono 180 gradi (asse verticale) sono i due punti riflessi
+; scambiati, come dice l'ADR, e coincidono con quelli di AutoCAD; quando non si
+; tolgono (asse orizzontale e a 45 gradi) i punti riflessi, senza scambio, si
+; spostano dall'altra parte della linea di base di (a + d) h, come in AutoCAD
+; (con le sue misure del font): scambiarli darebbe un testo capovolto.
+; asse verticale (M1)
+? transform TG1 mirror 100,-100 100,200 -> TEXT position=193.73846699787083,0 alignment-point=200,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=193.73846699787083,-0.7700496806245702;200,-0.7700496806245702;200,3.2895670688431373;193.73846699787083,3.2895670688431373
+? transform TG2 mirror 100,-100 100,200 -> TEXT position=203.00903819918145,10 alignment-point=200,10 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=baseline value="Tg2" ~box=196.86923349893542,9.22995031937543;203.13076650106458,9.22995031937543;203.13076650106458,13.289567068843137;196.86923349893542,13.289567068843137
+? transform TG3 mirror 100,-100 100,200 -> TEXT position=206.0180763983629,20 alignment-point=206.26153300212917,20 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=baseline value="Tg3" ~box=200,19.22995031937543;206.26153300212917,19.22995031937543;206.26153300212917,23.289567068843137;200,23.289567068843137
+? transform TG4 mirror 100,-100 100,200 -> TEXT position=203.00903819918145,29.117496589358787 alignment-point=200,30 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=middle vertical=baseline value="Tg4" ~box=196.86923349893542,28.36497515968771;203.13076650106458,28.36497515968771;203.13076650106458,32.42459190915542;196.86923349893542,32.42459190915542
+? transform TG5 mirror 100,-100 100,200 -> TEXT position=200,37.499999999999986 alignment-point=193.73846699787083,40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=top value="Tg5" ~box=193.73846699787083,36.729950319375426;200,36.729950319375426;200,40.789567068843134;193.73846699787083,40.789567068843134
+? transform TG6 mirror 100,-100 100,200 -> TEXT position=206.0180763983629,50.740109140518406 alignment-point=206.26153300212917,50 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=bottom value="Tg6" ~box=200,50;206.26153300212917,50;206.26153300212917,54.05961674946769;200,54.05961674946769
+? transform TG7 mirror 100,-100 100,200 -> TEXT position=180,62 alignment-point=200,60 height=8.34974081074708 rotation=354.28940686250036 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=179.75403797109664,59.54037971096626;199.75403797109664,57.54037971096626;201.0507225843015,70.50722584301501;181.0507225843015,72.50722584301501
+? transform TG8 mirror 100,-100 100,200 -> TEXT position=180,70 alignment-point=200,70 height=2.5 rotation=0 width-factor=3.32332105412298 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg8" ~box=180,69.22995031937543;200,69.22995031937543;200,73.28956706884314;180,73.28956706884314
+? transform TG9 mirror 100,-100 100,200 -> TEXT position=194.5773533535215,83.13076650106457 alignment-point=200,0 height=2.5 rotation=330 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg9" ~box=194.19232851320922,82.4638839154676;199.61497515968773,79.33311741440302;201.64478353442158,82.84884864907087;196.22213688794307,85.97961515013546
+; asse orizzontale (M3), anche con mirrtext=0 scritto
+? transform TG1 mirror -100,-100 200,-100 mirrtext=0 -> TEXT position=0,-202.5195173882186 alignment-point=0,-200 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=0,-203.28956706884316;6.26153300212917,-203.28956706884316;6.26153300212917,-199.22995031937543;0,-199.22995031937543
+? transform TG2 mirror -100,-100 200,-100 -> TEXT position=-3.009038199181446,-210 alignment-point=0,-212.5195173882186 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=baseline value="Tg2" ~box=-3.130766501064585,-213.28956706884316;3.130766501064585,-213.28956706884316;3.130766501064585,-209.22995031937543;-3.130766501064585,-209.22995031937543
+? transform TG3 mirror -100,-100 200,-100 -> TEXT position=-6.018076398362892,-220 alignment-point=0,-222.5195173882186 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=baseline value="Tg3" ~box=-6.26153300212917,-223.28956706884316;0,-223.28956706884316;0,-219.22995031937543;-6.26153300212917,-219.22995031937543
+? transform TG4 mirror -100,-100 200,-100 -> TEXT position=-3.009038199181446,-229.1174965893588 alignment-point=0,-230.78956706884316 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=middle vertical=baseline value="Tg4" ~box=-3.130766501064585,-232.42459190915542;3.130766501064585,-232.42459190915542;3.130766501064585,-228.36497515968773;-3.130766501064585,-228.36497515968773
+? transform TG5 mirror -100,-100 200,-100 -> TEXT position=0,-237.5 alignment-point=0,-237.5195173882186 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=top value="Tg5" ~box=0,-240.78956706884316;6.26153300212917,-240.78956706884316;6.26153300212917,-236.72995031937543;0,-236.72995031937543
+? transform TG6 mirror -100,-100 200,-100 -> TEXT position=-6.018076398362892,-250.74010914051843 alignment-point=0,-254.0596167494677 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=bottom value="Tg6" ~box=-6.26153300212917,-254.0596167494677;0,-254.0596167494677;0,-250;-6.26153300212917,-250
+? transform TG7 mirror -100,-100 200,-100 -> TEXT position=-0.8047605553981327,-268.04760555398127 alignment-point=19.195239444601867,-270.04760555398127 height=8.34974081074708 rotation=354.28940686250036 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=-1.050722584301505,-270.50722584301496;18.949277415698496,-272.50722584301496;20.24596202890337,-259.54037971096625;0.24596202890336927,-257.54037971096625
+? transform TG8 mirror -100,-100 200,-100 -> TEXT position=0,-272.5195173882186 alignment-point=20,-272.5195173882186 height=2.5 rotation=0 width-factor=3.32332105412298 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg8" ~box=0,-273.28956706884316;20,-273.28956706884316;20,-269.22995031937546;0,-269.22995031937546
+? transform TG9 mirror -100,-100 200,-100 -> TEXT position=-1.2597586941092969,-282.1819660634739 alignment-point=0,-200 height=2.5 rotation=330 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg9" ~box=-1.6447835344215753,-282.8488486490709;3.777863112056926,-285.9796151501355;5.807671486790781,-282.46388391546765;0.38502484031228024,-279.33311741440303
+; asse a 45 gradi (M5, phi = 45): 2 phi - r = 90 per i testi orizzontali, non si tolgono 180
+? transform TG1 mirror 300,0 400,100 -> TEXT position=302.5195173882186,-300 alignment-point=300,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=303.28956706884316,-300;303.28956706884316,-293.73846699787083;299.22995031937546,-293.73846699787083;299.22995031937546,-300
+? transform TG2 mirror 300,0 400,100 -> TEXT position=310,-303.0090381991814 alignment-point=312.5195173882186,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=baseline value="Tg2" ~box=313.28956706884316,-303.1307665010646;313.28956706884316,-296.8692334989354;309.22995031937546,-296.8692334989354;309.22995031937546,-303.1307665010646
+? transform TG3 mirror 300,0 400,100 -> TEXT position=320,-306.0180763983629 alignment-point=322.5195173882186,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=baseline value="Tg3" ~box=323.28956706884316,-306.26153300212917;323.28956706884316,-300;319.22995031937546,-300;319.22995031937546,-306.26153300212917
+? transform TG4 mirror 300,0 400,100 -> TEXT position=329.1174965893588,-303.0090381991815 alignment-point=330.7895670688431,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=middle vertical=baseline value="Tg4" ~box=332.42459190915537,-303.1307665010646;332.42459190915537,-296.8692334989354;328.3649751596877,-296.8692334989354;328.3649751596877,-303.1307665010646
+? transform TG5 mirror 300,0 400,100 -> TEXT position=337.5,-300 alignment-point=337.5195173882186,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=top value="Tg5" ~box=340.78956706884316,-300;340.78956706884316,-293.73846699787083;336.72995031937546,-293.73846699787083;336.72995031937546,-300
+? transform TG6 mirror 300,0 400,100 -> TEXT position=350.7401091405184,-306.0180763983629 alignment-point=354.05961674946775,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=right vertical=bottom value="Tg6" ~box=354.05961674946775,-306.26153300212917;354.05961674946775,-300;350,-300;350,-306.26153300212917
+? transform TG7 mirror 300,0 400,100 -> TEXT position=368.04760555398127,-300.80476055539816 alignment-point=370.04760555398127,-280.80476055539816 height=8.34974081074708 rotation=84.28940686250036 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=370.50722584301496,-301.0507225843015;372.50722584301496,-281.0507225843015;359.54037971096625,-279.75403797109664;357.54037971096625,-299.75403797109664
+? transform TG8 mirror 300,0 400,100 -> TEXT position=372.5195173882186,-300 alignment-point=372.5195173882186,-280 height=2.5 rotation=90 width-factor=3.32332105412298 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="Tg8" ~box=373.28956706884316,-300;373.28956706884316,-280;369.22995031937546,-280;369.22995031937546,-300
+? transform TG9 mirror 300,0 400,100 -> TEXT position=382.1819660634739,-301.25975869410934 alignment-point=300,-300 height=2.5 rotation=60 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg9" ~box=382.8488486490709,-301.6447835344216;385.9796151501355,-296.2221368879431;382.46388391546765,-294.1923285132093;379.33311741440303,-299.6149751596878
+; asse a 135 gradi: 2 phi - r = 270, nell'intervallo: si tolgono 180, rotazione 90
+? transform TG1 mirror -300,0 -400,100 -> TEXT position=-300,-306.2615330021292 alignment-point=-300,-300 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=-299.2299503193755,-306.2615330021292;-299.2299503193755,-300;-303.2895670688432,-300;-303.2895670688432,-306.2615330021292
+? transform TG7 mirror -300,0 -400,100 -> TEXT position=-362,-320 alignment-point=-360,-300 height=8.34974081074708 rotation=84.28940686250036 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="Tg7" ~box=-359.54037971096636,-320.24596202890336;-357.54037971096636,-300.24596202890336;-370.5072258430151,-298.9492774156985;-372.5072258430151,-318.9492774156985
+; un testo gia' all'indietro resta all'indietro (stessi segnali)
+? transform BACK mirror 0,0 0,1 -> TEXT position=-3.7384669978708276,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=-3.7384669978708276,19.229950319375444;-10,19.229950319375444;-10,23.28956706884315;-3.7384669978708276,23.28956706884315
+? transform BACK mirror 0,0 1,0 -> TEXT position=10,-22.519517388218595 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=10,-23.28956706884315;3.7384669978708303,-23.28956706884315;3.7384669978708303,-19.229950319375444;10,-19.229950319375444
