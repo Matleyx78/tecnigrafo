@@ -3,8 +3,9 @@
 - **Stato:** Accettato (2026-10-18)
 - **Sostituito in parte da:** ADR 0023 (le entità di una sessione nuova partono da 257)
 - **Corretto:** 2026-10-31 — l'elenco dei casi in attesa non è più un file ma la
-  cartella `tests/verifica/in-attesa/`, con un file per blocco di riferimenti
-  `<X.Y>-R<N>.txt` (punti 7 e 9): con un file solo, ogni pacchetto di riferimenti
+  cartella `tests/verifica/in-attesa/`, con un file per blocco di riferimenti,
+  `<X.Y>-R<N>.txt`, o `<X.Y>-R<N>a.txt` con una lettera minuscola se i
+  riferimenti di un pacchetto sono divisi in più pull request (punti 7 e 9): con un file solo, ogni pacchetto di riferimenti
   lo allungava e ogni pacchetto di lavoro lo accorciava, e le pull request in
   parallelo andavano in conflitto una dopo l'altra. Il pacchetto di riferimenti
   aggiunge il suo file e quello di lavoro lo cancella, quindi nessun file è
@@ -269,7 +270,8 @@ dichiarano nel piano con il motivo, e non hanno riferimenti.
 1. **Riferimenti.** La issue `[X.Y-RN]`. La pull request tocca
    solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
    `tests/verifica/in-attesa/`. Aggiunge i casi del pacchetto e li elenca nel
-   file del suo blocco, `tests/verifica/in-attesa/<X.Y>-R<N>.txt`, insieme al
+   file del suo blocco, `tests/verifica/in-attesa/<X.Y>-R<N>.txt` (con una
+   lettera in fondo, `0.7-R14a.txt`, se i riferimenti sono divisi), insieme al
    numero della issue del lavoro. Il responsabile la unisce per prima.
 2. **Lavoro.** La pull request del pacchetto non può toccare
    `tests/verifica/casi/` né `tests/verifica/sorgenti.json`. Deve cancellare da
@@ -285,7 +287,7 @@ La CI fa rispettare la divisione:
 - un caso elencato in `in-attesa/` che passa fa fallire la CI, con il messaggio
   di toglierlo dall'elenco: così un lavoro finito non resta mai non verificato;
 - la cartella `in-attesa/` è letta dalla configurazione di CMake: un file con un
-  nome che non sia `<X.Y>-R<N>.txt`, un file senza casi, un caso elencato in due
+  nome che non sia `<X.Y>-R<N>.txt` o `<X.Y>-R<N>a.txt`, un file senza casi, un caso elencato in due
   file e il vecchio file unico `in-attesa.txt` sono errori.
 
 Se un agente ritiene sbagliato un riferimento, si ferma e lo scrive nella issue.

@@ -232,7 +232,11 @@ riferimenti.
 L'elenco dei casi il cui lavoro non è ancora unito. È una cartella con **un file
 per blocco di riferimenti**, che prende il nome dal tag della issue di
 riferimenti: `<X.Y>-R<N>.txt`, per esempio `in-attesa/0.7-R16.txt` per
-`[0.7-R16]`. In ogni file, una riga per caso:
+`[0.7-R16]`. Se i riferimenti di un pacchetto sono divisi in più pull request
+più piccole, ogni blocco porta una lettera minuscola in fondo al tag
+(`[0.7-R16a]`, `[0.7-R16b]`) e il suo file ha lo stesso nome
+(`in-attesa/0.7-R16a.txt`, `in-attesa/0.7-R16b.txt`): il pacchetto di lavoro
+cancella tutti i file dei suoi blocchi. In ogni file, una riga per caso:
 
 ```
 # commento
@@ -264,7 +268,8 @@ grip/cerchio-e-modifica-non-valida #352 esente
   I file che cominciano con `.` si ignorano; il `.gitkeep` tiene viva la
   cartella quando l'ultimo file è stato cancellato.
 - Sono errori di configurazione di CMake: un nome che non sia
-  `<X.Y>-R<N>.txt` (anche una sottocartella), una riga scritta male, un caso che
+  `<X.Y>-R<N>.txt` o `<X.Y>-R<N>a.txt` (una sola lettera minuscola; anche una
+  sottocartella), una riga scritta male, un caso che
   non esiste, un caso elencato due volte o in due file, e il vecchio file unico
   `tests/verifica/in-attesa.txt`, che non esiste più. La lettura è in
   `tests/verifica/pending_list.cmake`, provata dal test
@@ -326,7 +331,8 @@ licenza.
    (dopo ogni domanda importante, prima e dopo `Esc`): la sezione finale da sola
    nasconde gli stati intermedi.
 5. Elencare i nuovi casi nel file del proprio blocco,
-   `in-attesa/<X.Y>-R<N>.txt`, con il numero della issue del lavoro.
+   `in-attesa/<X.Y>-R<N>.txt` (con la lettera se il blocco è diviso), con il
+   numero della issue del lavoro.
 6. Controllare in locale che i casi siano validi, controlli anticipati
    compresi: `ctest --preset ci -L verifica` deve passare, e `tecnigrafo-script check <caso> --pending` deve
    scrivere "pending" (o "skipped" per il livello 2), mai "INVALID". Se dà

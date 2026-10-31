@@ -227,9 +227,10 @@ scritti **prima** e da **un altro agente**
 ### In un pacchetto di lavoro
 
 - Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
-- Cancella da `tests/verifica/in-attesa/` il file dei riferimenti del tuo
-  pacchetto, `<X.Y>-R<N>.txt` (il tag della issue `[X.Y-RN]`): così i suoi casi
-  diventano obbligatori.
+- Cancella da `tests/verifica/in-attesa/` i file dei riferimenti del tuo
+  pacchetto, uno per ogni sua issue di riferimenti: `<X.Y>-R<N>.txt`, con una
+  lettera minuscola in fondo (`<X.Y>-R<N>a.txt`) se i riferimenti sono divisi
+  in più blocchi. Così i suoi casi diventano obbligatori.
 - La parola `esente` in un file di `tests/verifica/in-attesa/` la aggiunge solo
   un pacchetto che porta un controllo anticipato, se la sua scheda lo dice
   ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md), punto 9).
@@ -274,8 +275,9 @@ scritti **prima** e da **un altro agente**
   licenze compatibili con la GPLv3 che permettano la ridistribuzione; nel dubbio,
   non usare il file e scrivilo nella pull request.
 - Elenca i nuovi casi nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt`
-  (il tag del tuo blocco di riferimenti), una riga per caso, con il numero della
-  issue del lavoro. Il file è tuo: nessun altro pacchetto lo tocca.
+  (il tag della tua issue di riferimenti, con la lettera se il blocco è diviso:
+  `<X.Y>-R<N>a.txt`), una riga per caso, con il numero della issue del lavoro. Il
+  file è tuo: nessun altro pacchetto lo tocca.
 - La pull request è finita con la CI verde, **controlli anticipati compresi**
   ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): la forma
   dei file, l'eco di ogni riga dello script in `atteso.txt` e, per uno script

@@ -27,4 +27,5 @@ caso. Il responsabile può aggiungere qui casi o file che vuole vedere. -->
 - File presi dal web: indirizzo, versione, hash SHA-256 e licenza in
   `sorgenti.json`, link alla licenza nella pull request.
 - I nuovi casi vanno nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt` (il
-  tag di questo blocco), una riga `<area>/<nome> #<issue del lavoro>` per caso.
+  tag di questo blocco, con la lettera se è diviso: `<X.Y>-R<N>a.txt`), una riga `<area>/<nome> #<issue del lavoro>` per
+  caso.

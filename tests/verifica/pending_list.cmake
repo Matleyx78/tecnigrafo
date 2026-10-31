@@ -3,9 +3,11 @@
 #
 # The pending list of the verification cases (docs/adr/0011, point 7): the
 # folder tests/verifica/in-attesa/, one file <X.Y>-R<N>.txt per block of
-# references (for example 0.7-R16.txt). The package of references adds its
-# file and the package of work deletes it, so two packages running in parallel
-# never touch the same path and the list needs no merge.
+# references (for example 0.7-R16.txt), or <X.Y>-R<N>a.txt with a lowercase
+# letter when the references of a package are split into smaller blocks
+# (0.7-R16a.txt, 0.7-R16b.txt). The package of references adds its file and
+# the package of work deletes it, so two packages running in parallel never
+# touch the same path and the list needs no merge.
 #
 # A file has one line per case, "<area>/<name> #<issue>" or
 # "<area>/<name> #<issue> esente" (docs/adr/0037, point 9); empty lines and
@@ -53,9 +55,9 @@ function(tg_read_pending_list directory known_cases prefix)
             continue()
         endif()
         set(shown "${display}/${file_name}")
-        if(IS_DIRECTORY "${entry}" OR NOT file_name MATCHES "^[0-9]+\\.[0-9]+-R[0-9]+\\.txt$")
+        if(IS_DIRECTORY "${entry}" OR NOT file_name MATCHES "^[0-9]+\\.[0-9]+-R[0-9]+[a-z]?\\.txt$")
             list(APPEND errors
-                "${shown}: expected a file named <X.Y>-R<N>.txt, after the tag of its block of references")
+                "${shown}: expected a file named <X.Y>-R<N>.txt or <X.Y>-R<N>a.txt, after the tag of its block of references")
             continue()
         endif()
         list(APPEND files "${entry}")

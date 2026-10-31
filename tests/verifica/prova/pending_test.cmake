@@ -7,7 +7,7 @@
 cmake_minimum_required(VERSION 3.24)
 include("${TG_VERIFICA_PENDING_MODULE}")
 
-set(known a/one a/two b/three)
+set(known a/one a/two a/three b/three)
 
 # Starts a fresh folder <output>/<label>/in-attesa and sets `dir` to it.
 macro(fresh label)
@@ -44,20 +44,21 @@ file(WRITE "${dir}/0.7-R16.txt"
     "\n"
     "a/one #361\n"
     "  a/two   #361   esente  \n")
-file(WRITE "${dir}/0.7-R20.txt" "b/three #369\r\n")
+file(WRITE "${dir}/0.7-R20a.txt" "b/three #369\r\n")
+file(WRITE "${dir}/0.7-R20b.txt" "# 0.7-R20b: the second half of the references\na/three #369\n")
 file(WRITE "${dir}/.gitkeep" "")
 read()
 if(NOT "${ERRORS}" STREQUAL "")
     message(FATAL_ERROR "valid: unexpected errors: ${ERRORS}")
 endif()
-if(NOT "${R_NAMES}" STREQUAL "a/one;a/two;b/three")
+if(NOT "${R_NAMES}" STREQUAL "a/one;a/two;b/three;a/three")
     message(FATAL_ERROR "valid: wrong cases: ${R_NAMES}")
 endif()
 if(NOT "${R_EXEMPT}" STREQUAL "a/two")
     message(FATAL_ERROR "valid: wrong exempt cases: ${R_EXEMPT}")
 endif()
 list(LENGTH R_FILES file_count)
-if(NOT file_count EQUAL 2)
+if(NOT file_count EQUAL 3)
     message(FATAL_ERROR "valid: the .gitkeep must be ignored, files: ${R_FILES}")
 endif()
 
@@ -90,11 +91,12 @@ read()
 expect_one_error("comment-only-file" "0.7-R16.txt lists no case")
 
 # --- a wrong name ------------------------------------------------------------
-foreach(wrong IN ITEMS R16.txt 0.7-R16 0.7-R16.md 0.7-r16.txt 0.7-R16a.txt in-attesa.txt)
+foreach(wrong IN ITEMS R16.txt 0.7-R16 0.7-R16.md 0.7-r16.txt 0.7-R16A.txt 0.7-R16ab.txt 0.7-Ra.txt
+                    0.7-R16a.txt.bak in-attesa.txt)
     fresh(wrong-name)
     file(WRITE "${dir}/${wrong}" "a/one #361\n")
     read()
-    expect_one_error("wrong name ${wrong}" "${wrong}: expected a file named <X.Y>-R<N>.txt")
+    expect_one_error("wrong name ${wrong}" "${wrong}: expected a file named <X.Y>-R<N>.txt or <X.Y>-R<N>a.txt")
 endforeach()
 fresh(subfolder)
 file(MAKE_DIRECTORY "${dir}/0.7-R16.txt")
