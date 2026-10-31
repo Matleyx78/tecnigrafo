@@ -91,7 +91,7 @@ QuestionResult askTransform(const QuestionModel& model, Arguments arguments) {
 namespace {
 
 std::variant<const core::Entity*, ArgumentError> gripEntity(const QuestionModel& model,
-                                                          std::string_view name) {
+                                                         std::string_view name) {
     if (const auto fromFile = fileEntity(model.files, name)) {
         if (const auto* handled = std::get_if<const core::Entity*>(&*fromFile)) {
             return *handled;

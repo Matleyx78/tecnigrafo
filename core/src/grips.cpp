@@ -27,8 +27,7 @@ bool twoPointText(const Text& text) {
     return text.horizontal == TextHorizontal::Aligned || text.horizontal == TextHorizontal::Fit;
 }
 
-std::optional<Polyline> movedPolyline(const Polyline& input, std::size_t index,
-                                     const Vec2& target) {
+std::optional<Polyline> movedPolyline(const Polyline& input, std::size_t index, const Vec2& target) {
     std::vector<PolylineVertex> vertices(input.vertices().begin(), input.vertices().end());
     const std::size_t vertex = index / 2;
     const bool segmentGrip = index % 2 != 0;
@@ -46,8 +45,8 @@ std::optional<Polyline> movedPolyline(const Polyline& input, std::size_t index,
         const std::size_t end = (i + 1) % vertices.size();
         const Vec2 startPointNew = vertices[i].position;
         const Vec2 endPointNew = vertices[end].position;
-        const bool changed = distance(startPointNew, old.start) > 0.0 ||
-                             distance(endPointNew, old.end) > 0.0;
+        const bool changed =
+            distance(startPointNew, old.start) > 0.0 || distance(endPointNew, old.end) > 0.0;
         if (!changed && !(curvedGrip && i == vertex)) {
             continue;
         }

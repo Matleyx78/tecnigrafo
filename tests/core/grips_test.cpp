@@ -76,28 +76,28 @@ TEST(Grips, LineCircleAndArcMoves) {
     const Entity circle = Circle{{}, 10.0};
     expectPoint(std::get<Circle>(moveGrip(circle, 0, {5.0, 5.0}).entity).center, {5.0, 5.0});
     for (std::size_t i = 1; i < 5; ++i) {
-        EXPECT_NEAR(std::get<Circle>(moveGrip(circle, i, {9.0, 12.0}).entity).radius,
-                    15.0, kTolerance);
+        EXPECT_NEAR(std::get<Circle>(moveGrip(circle, i, {9.0, 12.0}).entity).radius, 15.0,
+                    kTolerance);
     }
     const Entity arc = Arc{{}, 10.0, 0.0, kPi / 2.0};
     const auto points = gripPoints(arc);
     for (std::size_t i = 0; i < 3; ++i) {
-        const Vec2 target = i == 0 ? Vec2{12.0, 0.0} :
-                            i == 1 ? Vec2{0.0, 12.0} : Vec2{9.0, 9.0};
+        const Vec2 target =
+            i == 0 ? Vec2{12.0, 0.0} : i == 1 ? Vec2{0.0, 12.0} : Vec2{9.0, 9.0};
         const auto moved = moveGrip(arc, i, target);
         ASSERT_EQ(moved.outcome, GripOutcome::Moved);
         const auto result = std::get<Arc>(moved.entity);
         for (std::size_t j = 0; j < 3; ++j) {
-            EXPECT_NEAR(distance(result.center, j == i ? target : points[j]),
-                        result.radius, kTolerance);
+            EXPECT_NEAR(distance(result.center, j == i ? target : points[j]), result.radius,
+                        kTolerance);
         }
     }
     expectPoint(std::get<Arc>(moveGrip(arc, 3, {5.0, 5.0}).entity).center, {5.0, 5.0});
 }
 
 TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {
-    Polyline poly{{{{0.0, 0.0}, 1.0, 1.0, 2.0}, {{20.0, 0.0}},
-                   {{40.0, 0.0}, -1.0}, {{60.0, 0.0}}}};
+    Polyline poly{
+        {{{0.0, 0.0}, 1.0, 1.0, 2.0}, {{20.0, 0.0}}, {{40.0, 0.0}, -1.0}, {{60.0, 0.0}}}};
     poly.setConstantWidth(0.5);
     poly.setContinuousLinetype(true);
     const auto moved = moveGrip(poly, 3, {30.0, 5.0});
@@ -110,12 +110,11 @@ TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {
     EXPECT_DOUBLE_EQ(result.vertices()[0].startWidth, 1.0);
     EXPECT_DOUBLE_EQ(result.vertices()[0].endWidth, 2.0);
     const auto vertex = moveGrip(poly, 2, {20.0, 5.0});
-    EXPECT_NEAR(std::get<Polyline>(vertex.entity).vertices()[0].bulge,
-                1.219803902718557, kTolerance);
+    EXPECT_NEAR(std::get<Polyline>(vertex.entity).vertices()[0].bulge, 1.219803902718557,
+                kTolerance);
     const auto curved = moveGrip(poly, 1, {10.0, 15.0});
     EXPECT_NEAR(std::get<Polyline>(curved.entity).vertices()[0].bulge, -1.5, kTolerance);
-    const Polyline closed{{{{0.0, 0.0}, 1.0}, {{20.0, 0.0}},
-                           {{20.0, 20.0}, 1.0}}, true};
+    const Polyline closed{{{{0.0, 0.0}, 1.0}, {{20.0, 0.0}}, {{20.0, 20.0}, 1.0}}, true};
     const auto closedMove = moveGrip(closed, 0, {4.0, 4.0});
     ASSERT_EQ(closedMove.outcome, GripOutcome::Moved);
     const auto closedResult = std::get<Polyline>(closedMove.entity);
@@ -129,8 +128,8 @@ TEST(Grips, TextInsertionAndSecondAlignmentPoint) {
     text.position = {600.0, 20.0};
     text.alignmentPoint = {620.0, 20.0};
     text.value = "Tg2";
-    for (const auto horizontal : {TextHorizontal::Left, TextHorizontal::Aligned,
-                                  TextHorizontal::Fit}) {
+    for (const auto horizontal :
+         {TextHorizontal::Left, TextHorizontal::Aligned, TextHorizontal::Fit}) {
         text.horizontal = horizontal;
         const auto moved = std::get<Text>(moveGrip(text, 0, {605.0, 25.0}).entity);
         expectPoint(moved.position, {605.0, 25.0});
