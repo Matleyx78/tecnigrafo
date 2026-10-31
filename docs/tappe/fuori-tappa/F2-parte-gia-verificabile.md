@@ -3,14 +3,14 @@
 - **Tappa:** fuori tappa, miglioramento dei test ([ROADMAP.md](../../ROADMAP.md),
   "Cosa si può fare fuori dalla tappa aperta"); nasce dall'idea
   [#426](https://github.com/Matleyx78/tecnigrafo/issues/426)
-- **Issue:** #… (da aprire)
+- **Issue:** #431
 - **Difficoltà:** impegnativa
 - **Agente:** claude
 - **Modello e impegno:** forte; impegno alto
 - **Riferimenti:** non servono: il pacchetto cambia lo strumento di verifica,
   non il comportamento di Tecnigrafo. Lo provano i test di unità con testi
   costruiti apposta e l'esecuzione su tutti i casi in attesa
-- **Dipende da:** [F1](F1-forma-dei-casi.md)
+- **Dipende da:** [F1](F1-forma-dei-casi.md) (#430)
 - **Modulo:** `script`
 - **Da leggere:** [ADR 0037](../../adr/0037-controllo-anticipato-dei-riferimenti.md)
   punti 4–7 e 9; [ADR 0011](../../adr/0011-modalita-di-controllo.md) punto 7;

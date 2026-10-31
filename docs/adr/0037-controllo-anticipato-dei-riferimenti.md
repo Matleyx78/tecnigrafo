@@ -1,6 +1,6 @@
 # ADR 0037: Controllo anticipato dei riferimenti
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-10-31
 
 ## Contesto
