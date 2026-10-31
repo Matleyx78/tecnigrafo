@@ -11,10 +11,10 @@ messages:
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: COPY
-  Current settings:  Copy mode = Multiple
   Select objects: 5,0
   1 found, 1 total
   Select objects:
+  Current settings:  Copy mode = Multiple
   Specify base point or [Displacement] <Displacement>: 0,0
   Specify second point or <use first point as displacement>: 0,10
   Specify second point or [Exit/Undo] <Exit>: 0,20

@@ -75,27 +75,30 @@ trim/opzioni-shift-undo-esc #361
 extend/autocad-rapido-e-standard #361
 extend/estremi-curvi-shift-annulla #361
 
-# 0.7-R4: trasformazioni, domanda transform (#340)
-trasformazioni/linea-cerchio #340
-trasformazioni/arco #340
-trasformazioni/polilinea #340
-trasformazioni/testo #340
-trasformazioni/testo-mirrtext-1 #340
-trasformazioni/testo-mirrtext-0 #340
-trasformazioni/non-valide #340
 
 # 0.7-R9: grip, punti e modifica (#350)
 grip/punti #350
 grip/modifica #350
 grip/degeneri #350
 
+# 0.7-R20: FILLET, CIRCLE Ttr (#369)
+fillet/autocad-raccordi #369
+fillet/sequenza-script #369
+fillet/opzioni-undo-shift #369
+fillet/casi-limite-proprieta #369
+
 # 0.7-R18: OFFSET (#365)
 offset/autocad-distanza #365
 offset/through-e-lati #365
 offset/opzioni-erase-layer-multiple-undo #365
 
+# 0.7-R21: CHAMFER e smusso (#371)
+chamfer/autocad-raccordi #371
+chamfer/sequenza-script #371
+chamfer/opzioni-undo-shift #371
+chamfer/casi-limite-errori #371
+
 # 0.7-R23: JOIN (#375)
 join/autocad-interattivo #375
 join/sequenza-script #375
 join/arco-close-e-annulla #375
-

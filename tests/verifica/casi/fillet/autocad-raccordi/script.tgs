@@ -1,0 +1,66 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Casi a-i e m-n di autocad-raccordi.dxf per FILLET e CIRCLE Ttr in sequenza interattiva
+!view 270,100 0.25 2400x1200
+OPEN
+ingresso.dxf
+; Caso a: angolo retto, raggio 10
+FILLET
+R
+10
+20,0
+0,20
+; Caso b: linee disgiunte, raggio 5
+FILLET
+R
+5
+50,0
+70,20
+; Caso c: rette parallele, distanza 20 -> semicerchio raggio 10
+FILLET
+120,0
+120,20
+; Caso d: cerchio e linea, raggio 3
+FILLET
+R
+3
+170,0
+185,-5
+; Caso e: arco e linea, raggio 3
+FILLET
+238.6603,5
+245,-5
+; Caso f: linee che si incrociano, raggio 0 (spigolo)
+FILLET
+R
+0
+300,10
+320,0
+; Caso g: polilinea rettangolo, opzione Polyline, raggio 5
+FILLET
+R
+5
+P
+370,0
+; Caso h: due segmenti della stessa polilinea, raggio 5
+FILLET
+440,0
+450,20
+; Caso i: TRIMMODE No trim, raggio 5
+FILLET
+T
+N
+520,0
+500,20
+; Caso m: CIRCLE Ttr su due linee, raggio 8
+CIRCLE
+T
+10,200
+0,210
+8
+; Caso n: CIRCLE Ttr su cerchio e linea, raggio 6
+CIRCLE
+T
+74,212
+90,200
+6

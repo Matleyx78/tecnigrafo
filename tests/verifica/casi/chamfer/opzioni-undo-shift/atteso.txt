@@ -1,0 +1,143 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,0 end=100,20
+  262 LINE start=100,0 end=130,0
+  263 LINE start=5,0 end=0,5
+  265 LINE start=65,0 end=70,5
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 0,30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 40,0
+  Specify next point or [Undo]: 60,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 70,10
+  Specify next point or [Undo]: 70,30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 100,-10
+  Specify next point or [Undo]: 100,20
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 90,0
+  Specify next point or [Undo]: 130,0
+  Specify next point or [Undo]:
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <0.0000>: 5
+  Specify second chamfer distance <5.0000>: 5
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: M
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 20,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 0,20
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 50,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 70,20
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: U
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 50,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 70,20
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]:
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 100,10
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+  Line
+  Chamfer
+  Chamfer
+redo:
+snap: on
+ortho: off
+pointer: 120,0
+active snap: none
+statistics:
+  LINE 8
+
+[report 2]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,-10 end=100,20
+  262 LINE start=90,0 end=130,0
+  263 LINE start=5,0 end=0,5
+  265 LINE start=65,0 end=70,5
+messages:
+  Command: U
+  Undone: Chamfer.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+  Line
+  Chamfer
+redo:
+  Chamfer
+snap: on
+ortho: off
+pointer: 120,0
+active snap: none
+statistics:
+  LINE 8
+
+[final]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,0 end=100,20
+  262 LINE start=100,0 end=130,0
+  263 LINE start=5,0 end=0,5
+  265 LINE start=65,0 end=70,5
+messages:
+  Command: REDO
+  Redone: Chamfer.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+  Line
+  Chamfer
+  Chamfer
+redo:
+snap: on
+ortho: off
+pointer: 120,0
+active snap: none
+statistics:
+  LINE 8

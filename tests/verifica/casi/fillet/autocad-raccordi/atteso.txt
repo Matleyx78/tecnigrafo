@@ -1,0 +1,121 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=10,0 end=30,0
+  258 LINE start=0,10 end=0,30
+  259 LINE start=40,0 end=65,0
+  260 LINE start=70,5 end=70,30
+  261 LINE start=100,0 end=130,0
+  262 LINE start=100,20 end=130,20
+  263 CIRCLE center=170,10 radius=10
+  264 LINE start=175,-5 end=200,-5
+  265 ARC center=230,0 radius=10 start-angle=351.150116902 end-angle=180
+  266 LINE start=242.845232579,-5 end=250,-5
+  267 LINE start=300,0 end=300,20
+  268 LINE start=300,0 end=330,0
+  269 LWPOLYLINE closed=yes vertex=355,0 vertex=385,0 bulge=0.414213562373 vertex=390,5 vertex=390,25 bulge=0.414213562373 vertex=385,30 vertex=355,30 bulge=0.414213562373 vertex=350,25 vertex=350,5 bulge=0.414213562373
+  270 LWPOLYLINE closed=no vertex=420,0 vertex=445,0 bulge=0.414213562373 vertex=450,5 vertex=450,30
+  271 LINE start=500,0 end=530,0
+  272 LINE start=500,0 end=500,30
+  273 LINE start=0,200 end=40,200
+  274 LINE start=0,200 end=0,240
+  275 CIRCLE center=80,220 radius=10
+  276 LINE start=60,200 end=110,200
+  277 ARC center=10,10 radius=10 start-angle=180 end-angle=270
+  278 ARC center=65,5 radius=5 start-angle=270 end-angle=0
+  279 ARC center=130,10 radius=10 start-angle=270 end-angle=90
+  280 ARC center=175,-2 radius=3 start-angle=112.619864948 end-angle=270
+  281 ARC center=242.845232579,-2 radius=3 start-angle=171.150116902 end-angle=270
+  282 ARC center=505,5 radius=5 start-angle=180 end-angle=270
+  283 CIRCLE center=8,208 radius=8
+  284 CIRCLE center=87.7459666924,206 radius=6
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 0.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <0.0000>: 10
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 20,0
+  Select second object or shift-select to apply corner or [Radius]: 0,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 10.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <10.0000>: 5
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 50,0
+  Select second object or shift-select to apply corner or [Radius]: 70,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 120,0
+  Select second object or shift-select to apply corner or [Radius]: 120,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <5.0000>: 3
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 170,0
+  Select second object or shift-select to apply corner or [Radius]: 185,-5
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 3.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 238.6603,5
+  Select second object or shift-select to apply corner or [Radius]: 245,-5
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 3.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <3.0000>: 0
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 300,10
+  Select second object or shift-select to apply corner or [Radius]: 320,0
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 0.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: R
+  Specify fillet radius <0.0000>: 5
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: P
+  Select 2D polyline or [Radius]: 370,0
+  4 lines were filleted
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 440,0
+  Select second object or shift-select to apply corner or [Radius]: 450,20
+  Command: FILLET
+  Current settings: Mode = TRIM, Radius = 5.0000
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: T
+  Enter Trim mode option [Trim/No trim] <Trim>: N
+  Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 520,0
+  Select second object or shift-select to apply corner or [Radius]: 500,20
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: T
+  Specify point on object for first tangent of circle: 10,200
+  Specify point on object for second tangent of circle: 0,210
+  Specify radius of circle: 8
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: T
+  Specify point on object for first tangent of circle: 74,212
+  Specify point on object for second tangent of circle: 90,200
+  Specify radius of circle <8.0000>: 6
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Fillet
+  Fillet
+  Fillet
+  Fillet
+  Fillet
+  Fillet
+  Fillet
+  Fillet
+  Fillet
+  Circle
+  Circle
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 7
+  CIRCLE 4
+  LINE 15
+  LWPOLYLINE 2

@@ -1,0 +1,145 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=5,0 end=30,0
+  258 LINE start=0,5 end=0,30
+  259 LINE layer=ROSSO start=55,0 end=80,0
+  260 LINE layer=BLU start=50,5 end=50,30
+  261 LINE layer=VERDE start=100,0 end=130,0
+  262 LINE layer=VERDE start=100,20 end=130,20
+  263 LINE layer=VERDE start=200,0 end=210,0
+  264 LINE layer=VERDE start=200,0 end=200,10
+  265 ARC layer=VERDE center=300,0 radius=10 start-angle=0 end-angle=180
+  266 LINE layer=VERDE start=290,-5 end=320,-5
+  267 LINE start=5,0 end=0,5
+  268 LINE layer=VERDE start=55,0 end=50,5
+messages:
+  Command: -LAYER
+  Current layer: "0"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter name list for new layer(s): ROSSO
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter name list for new layer(s): BLU
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter name list for new layer(s): VERDE
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <0>: VERDE
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 0,30
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer: "VERDE"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <VERDE>: ROSSO
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 50,0
+  Specify next point or [Undo]: 80,0
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer: "ROSSO"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <ROSSO>: BLU
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 50,0
+  Specify next point or [Undo]: 50,30
+  Specify next point or [Undo]:
+  Command: -LAYER
+  Current layer: "BLU"
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
+  Enter layer name to make current <BLU>: VERDE
+  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Command: LINE
+  Specify first point: 100,0
+  Specify next point or [Undo]: 130,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 100,20
+  Specify next point or [Undo]: 130,20
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 200,0
+  Specify next point or [Undo]: 210,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 200,0
+  Specify next point or [Undo]: 200,10
+  Specify next point or [Undo]:
+  Command: ARC
+  Specify start point of arc or [Center]: C
+  Specify center point of arc: 300,0
+  Specify start point of arc: 310,0
+  Specify end point of arc or [Angle/chord Length]: A
+  Specify included angle: 180
+  Command: LINE
+  Specify first point: 290,-5
+  Specify next point or [Undo]: 320,-5
+  Specify next point or [Undo]:
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <0.0000>: -5
+  Value must be positive.
+  Specify first chamfer distance <0.0000>: 5
+  Specify second chamfer distance <5.0000>: 5
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 20,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 0,20
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 70,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 50,20
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 120,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 120,20
+  Lines are parallel.
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <5.0000>: 15
+  Specify second chamfer distance <15.0000>: 15
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 205,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 200,5
+  Chamfer distance too large.
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 15.0000, Dist2 = 15.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 300,5
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 300,-5
+  Object must be a 2D line.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  -Layer
+  Line
+  Line
+  -Layer
+  Line
+  -Layer
+  Line
+  -Layer
+  Line
+  Line
+  Line
+  Line
+  Arc
+  Line
+  Chamfer
+  Chamfer
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+  LINE 11

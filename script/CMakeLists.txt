@@ -13,6 +13,7 @@ add_library(tg_script
     src/entity_reader.cpp
     src/file_questions.cpp
     src/level1.cpp
+    src/modify_questions.cpp
     src/number_format.cpp
     src/property_questions.cpp
     src/question_table.cpp

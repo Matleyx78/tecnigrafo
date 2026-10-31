@@ -1,0 +1,67 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=5,100 end=30,100
+  258 LINE start=0,108 end=0,130
+  259 LINE start=56,100 end=80,100
+  260 LINE start=50,103.464101615 end=50,130
+  261 LINE start=500,0 end=530,0
+  262 LINE start=500,0 end=500,30
+  263 LINE start=5,100 end=0,108
+  264 LINE start=56,100 end=50,103.464101615
+  265 LINE start=505,0 end=500,5
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <0.0000>: 5
+  Specify second chamfer distance <5.0000>: 8
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 8.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 20,100
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 0,120
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 8.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: E
+  Enter trim method [Distance/Angle] <Distance>: A
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Length = 0.0000, Angle = 0
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: A
+  Specify chamfer length on the first line <0.0000>: 6
+  Specify chamfer angle from the first line <0>: 30
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Length = 6.0000, Angle = 30
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 70,100
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 50,120
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Length = 6.0000, Angle = 30
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: T
+  Enter Trim mode option [Trim/No trim] <Trim>: N
+  Command: CHAMFER
+  (NO TRIM mode) Current chamfer Length = 6.0000, Angle = 30
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <5.0000>: 5
+  Specify second chamfer distance <5.0000>: 5
+  Command: CHAMFER
+  (NO TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 520,0
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 500,20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Chamfer
+  Chamfer
+  Chamfer
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  LINE 9

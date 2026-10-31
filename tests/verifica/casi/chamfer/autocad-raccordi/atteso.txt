@@ -1,0 +1,55 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=5,100 end=30,100
+  258 LINE start=0,108 end=0,130
+  259 LINE start=56,100 end=80,100
+  260 LINE start=50,103.464101615 end=50,130
+  261 LWPOLYLINE closed=yes vertex=103,100 vertex=137,100 vertex=140,103 vertex=140,127 vertex=137,130 vertex=103,130 vertex=100,127 vertex=100,103
+  262 LINE start=5,100 end=0,108
+  263 LINE start=56,100 end=50,103.464101615
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <0.0000>: 5
+  Specify second chamfer distance <5.0000>: 8
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 20,100
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 0,120
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 8.0000
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: A
+  Specify chamfer length on the first line <0.0000>: 6
+  Specify chamfer angle from the first line <0>: 30
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 70,100
+  Select second line or shift-select to apply corner or [Distance/Angle/Method]: 50,120
+  Command: CHAMFER
+  (TRIM mode) Current chamfer Length = 6.0000, Angle = 30
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: E
+  Enter trim method [Distance/Angle] <Angle>: D
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
+  Specify first chamfer distance <5.0000>: 3
+  Specify second chamfer distance <3.0000>: 3
+  Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: P
+  Select 2D polyline or [Distance/Angle/Method]: 120,100
+  4 lines were chamfered
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Chamfer
+  Chamfer
+  Chamfer
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  LINE 6
+  LWPOLYLINE 1
