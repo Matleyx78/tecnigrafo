@@ -101,9 +101,10 @@ TEST(CheckCase, ScriptThatPasses) {
 
 TEST(CheckCase, ReadsScriptAcrossMultipleBlocks) {
     const std::string padding = ";" + std::string(20000, 'x') + "\n";
-    const fs::path folder =
-        makeCase("large-input", {{"script.tgs", padding + std::string{kScript}},
-                                 {"atteso.txt", std::string{kReport}}});
+    std::map<std::string, std::string> files;
+    files.emplace("script.tgs", padding + std::string{kScript});
+    files.emplace("atteso.txt", std::string{kReport});
+    const fs::path folder = makeCase("large-input", files);
     const Result result = check(folder, false, false);
     EXPECT_EQ(result.code, kExitPassed) << result.output;
 }
