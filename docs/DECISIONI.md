@@ -271,3 +271,17 @@ i rimandi ai documenti che cambia.
   B9). Dalla stessa analisi nasce l'idea
   [#426](https://github.com/Matleyx78/tecnigrafo/issues/426): la CI controlla i
   riferimenti prima del merge.
+- **2026-10-31 — La CI controlla i riferimenti prima del merge.** Il
+  responsabile approva l'idea
+  [#426](https://github.com/Matleyx78/tecnigrafo/issues/426) e la fa entrare
+  fuori tappa, come miglioramento dei test ([ROADMAP.md](ROADMAP.md), "Cosa si
+  può fare fuori dalla tappa aperta"). Le regole sono nell'[ADR
+  0037](adr/0037-controllo-anticipato-dei-riferimenti.md), che il responsabile
+  accetta lo stesso giorno; il lavoro in tre schede in
+  [tappe/fuori-tappa/](tappe/fuori-tappa/): la forma dei casi e l'eco degli
+  script ([F1](tappe/fuori-tappa/F1-forma-dei-casi.md), #430), la parte già
+  verificabile degli script
+  ([F2](tappe/fuori-tappa/F2-parte-gia-verificabile.md), #431) e delle domande
+  ([F3](tappe/fuori-tappa/F3-domande-gia-verificabili.md), #432). Le richieste
+  annunciate, terzo controllo dell'idea, si decidono con il piano della tappa
+  0.8.
