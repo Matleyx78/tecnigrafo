@@ -55,16 +55,22 @@ std::string describe(const ParseError& error) {
     return "line " + std::to_string(error.line) + ": " + error.message;
 }
 
-enum class Verdict : std::uint8_t { Passed, Failed, Invalid, NeedsLevel2 };
+/// Failed and, for a pending case, compared up to its frontier.
+/// FailedBeforeFrontier: a pending case that fails before its frontier, or
+/// has none (docs/adr/0037, point 6), an error even when pending.
+enum class Verdict : std::uint8_t { Passed, Failed, FailedBeforeFrontier, Invalid, NeedsLevel2 };
 
 struct Outcome {
     Verdict verdict{Verdict::Passed};
     std::string message;  ///< why a case is invalid or not implemented
     std::vector<Difference> differences;
+    /// For a pending case the same as expected up to its frontier: where it
+    /// is ("script.tgs, line 12: unknown command PLINE").
+    std::string frontier;
 };
 
 Outcome invalid(std::string message) {
-    return {Verdict::Invalid, std::move(message), {}};
+    return {Verdict::Invalid, std::move(message), {}, {}};
 }
 
 /// A parse error: a malformed file is invalid, a file that uses what the
@@ -72,7 +78,7 @@ Outcome invalid(std::string message) {
 Outcome fromParseError(const fs::path& file, const ParseError& error) {
     const std::string where = file.filename().generic_string() + ", " + describe(error);
     if (error.notImplemented) {
-        return {Verdict::Failed, "not implemented yet: " + where, {}};
+        return {Verdict::Failed, "not implemented yet: " + where, {}, {}};
     }
     return invalid(where);
 }
@@ -81,6 +87,57 @@ Outcome fromParseError(const fs::path& file, const ParseError& error) {
 /// pending one (docs/adr/0037, point 2).
 Outcome fromFormError(const FormError& error) {
     return invalid(error.file + ", line " + std::to_string(error.line) + ": " + error.message);
+}
+
+/// The frontier of a pending script that does not pass, and the comparison
+/// of what comes before it (docs/adr/0037, points 4 and 6). `outcome` is the
+/// result of the whole run, kept when the case is right up to its frontier
+/// and when the script is of level 2.
+Outcome checkBeforeFrontier(const fs::path& folder, std::string_view text,
+                            std::string_view expected, const CheckOptions& options,
+                            const std::optional<fs::path>& sources, Outcome outcome) {
+    const fs::path& output = options.output;
+    const fs::path scriptPath = folder / kScriptFile;
+    std::variant<ScriptPrefix, ParseError> parsed = parseScriptPrefix(text);
+    if (const auto* error = std::get_if<ParseError>(&parsed)) {
+        return fromParseError(scriptPath, *error);
+    }
+    const ScriptPrefix& prefix = std::get<ScriptPrefix>(parsed);
+    if (prefix.script.level == 2) {
+        return outcome;
+    }
+    const fs::path files = output / fs::path{std::string{kCaseFilesFolder}};
+    if (std::optional<std::string> failure = prepareCaseFiles(folder, files)) {
+        return invalid(std::move(*failure));
+    }
+    CaseFiles access{files, sources};
+    const PrefixRun run = runLevel1UntilUnknownCommand(prefix.script, {&access});
+    if (!writeFile(output / kObtainedFrontierReport, run.report)) {
+        return invalid("cannot write " + (output / kObtainedFrontierReport).generic_string());
+    }
+    // The unknown command is above the frontier of the file, if any: the run
+    // only has the actions above it.
+    const std::optional<Frontier>& frontier = run.frontier ? run.frontier : prefix.frontier;
+    if (!frontier) {
+        return {Verdict::FailedBeforeFrontier,
+                "fails, but uses nothing the program does not have yet: fix the reference, "
+                "or write \"; cambia con #<issue>\" before the line where the behaviour "
+                "changes (docs/adr/0037)",
+                std::move(outcome.differences),
+                {}};
+    }
+    const std::string where = scriptPath.filename().generic_string() + ", line " +
+                              std::to_string(frontier->line) + ": " + frontier->reason;
+    std::vector<Difference> differences =
+        compareReportPrefix(expected, run.report, prefix.script.tolerances);
+    if (!differences.empty()) {
+        return {Verdict::FailedBeforeFrontier,
+                "differs before the point the program cannot do yet (" + where + ")",
+                std::move(differences),
+                {}};
+    }
+    outcome.frontier = where;
+    return outcome;
 }
 
 Outcome checkScript(const fs::path& folder, const CheckOptions& options,
@@ -98,31 +155,35 @@ Outcome checkScript(const fs::path& folder, const CheckOptions& options,
             return fromFormError(*error);
         }
     }
+    Outcome outcome;
     std::variant<Script, ParseError> parsed = parseScript(*text);
     if (const auto* error = std::get_if<ParseError>(&parsed)) {
-        return fromParseError(scriptPath, *error);
+        outcome = fromParseError(scriptPath, *error);
+    } else {
+        const Script& script = std::get<Script>(parsed);
+        if (script.level == 2) {
+            return {Verdict::NeedsLevel2, {}, {}, {}};
+        }
+        if (!expected) {
+            return invalid(std::string{"cannot read "} + kExpectedFile);
+        }
+        // The script works on copies of the files of the case, in a folder
+        // of its own that each run starts again.
+        const fs::path files = output / fs::path{std::string{kCaseFilesFolder}};
+        if (std::optional<std::string> failure = prepareCaseFiles(folder, files)) {
+            return invalid(std::move(*failure));
+        }
+        CaseFiles access{files, sources};
+        const std::string report = runLevel1(script, {&access});
+        if (!writeFile(output / kObtainedReport, report)) {
+            return invalid("cannot write " + (output / kObtainedReport).generic_string());
+        }
+        outcome.differences = compareReports(*expected, report, script.tolerances);
+        outcome.verdict = outcome.differences.empty() ? Verdict::Passed : Verdict::Failed;
     }
-    const Script& script = std::get<Script>(parsed);
-    if (script.level == 2) {
-        return {Verdict::NeedsLevel2, {}, {}};
+    if (outcome.verdict == Verdict::Failed && options.pending && options.earlyChecks && expected) {
+        return checkBeforeFrontier(folder, *text, *expected, options, sources, std::move(outcome));
     }
-    if (!expected) {
-        return invalid(std::string{"cannot read "} + kExpectedFile);
-    }
-    // The script works on copies of the files of the case, in a folder of
-    // its own that each run starts again.
-    const fs::path files = output / fs::path{std::string{kCaseFilesFolder}};
-    if (std::optional<std::string> failure = prepareCaseFiles(folder, files)) {
-        return invalid(std::move(*failure));
-    }
-    CaseFiles access{files, sources};
-    const std::string report = runLevel1(script, {&access});
-    Outcome outcome;
-    if (!writeFile(output / kObtainedReport, report)) {
-        return invalid("cannot write " + (output / kObtainedReport).generic_string());
-    }
-    outcome.differences = compareReports(*expected, report, script.tolerances);
-    outcome.verdict = outcome.differences.empty() ? Verdict::Passed : Verdict::Failed;
     return outcome;
 }
 
@@ -190,6 +251,10 @@ int conclude(const Outcome& outcome, const fs::path& folder, bool pending, std::
             }
             out << "passed: " << name << "\n";
             return kExitPassed;
+        case Verdict::FailedBeforeFrontier:
+            out << "FAILED: " << name << ": " << outcome.message << "\n";
+            printDifferences(outcome.differences, out);
+            return kExitFailed;
         case Verdict::Failed:
             break;
     }
@@ -201,8 +266,11 @@ int conclude(const Outcome& outcome, const fs::path& folder, bool pending, std::
     }
     printDifferences(outcome.differences, out);
     if (pending) {
-        out << "warning: not passed yet, as expected while it is listed in " << kPendingList
-            << "\n";
+        out << "warning: not passed yet, as expected while it is listed in " << kPendingList;
+        if (!outcome.frontier.empty()) {
+            out << "; as expected up to " << outcome.frontier;
+        }
+        out << "\n";
         return kExitPassed;
     }
     return kExitFailed;

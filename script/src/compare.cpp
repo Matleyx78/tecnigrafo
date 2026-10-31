@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstddef>
 #include <optional>
+#include <utility>
 
 namespace tg::script {
 namespace {
@@ -95,6 +96,57 @@ std::vector<Part> split(std::string_view line) {
     return parts;
 }
 
+/// A section of a report: its title line and the lines up to the next
+/// section, without the empty line that precedes it.
+struct Section {
+    std::size_t title;  ///< index of the "[...]" line
+    std::size_t end;    ///< one past the last line of the section
+};
+
+/// The parts of a report: the lines before the first section are the
+/// header, then one Section per line that opens one.
+std::vector<Section> sectionsOf(const std::vector<std::string_view>& lines) {
+    std::vector<Section> sections;
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (!lines[i].starts_with('[')) {
+            continue;
+        }
+        if (!sections.empty()) {
+            sections.back().end = i;
+        }
+        sections.push_back({i, lines.size()});
+    }
+    for (Section& section : sections) {
+        while (section.end > section.title + 1 && lines[section.end - 1].empty()) {
+            --section.end;
+        }
+    }
+    return sections;
+}
+
+/// The items of the "messages:" list of a section: the lines after
+/// "messages:" indented by two spaces, as [first, end) indices.
+std::pair<std::size_t, std::size_t> messagesOf(const std::vector<std::string_view>& lines,
+                                               const Section& section) {
+    constexpr std::string_view kMessages = "messages:";
+    constexpr std::string_view kItem = "  ";
+    for (std::size_t i = section.title + 1; i < section.end; ++i) {
+        if (lines[i] != kMessages) {
+            continue;
+        }
+        std::size_t end = i + 1;
+        while (end < section.end && lines[end].starts_with(kItem)) {
+            ++end;
+        }
+        return {i + 1, end};
+    }
+    return {section.end, section.end};
+}
+
+Difference difference(std::size_t index, std::string_view expected, std::string_view actual) {
+    return {static_cast<int>(index) + 1, std::string{expected}, std::string{actual}};
+}
+
 }  // namespace
 
 bool numbersMatch(double expected, double actual, const Tolerances& tolerances) {
@@ -159,6 +211,65 @@ std::vector<Difference> compareReports(std::string_view expected, std::string_vi
         const bool bothPresent = i < expectedLines.size() && i < actualLines.size();
         if (!bothPresent || !linesMatch(wanted, got, tolerances)) {
             differences.push_back({static_cast<int>(i) + 1, std::string{wanted}, std::string{got}});
+        }
+    }
+    return differences;
+}
+
+std::vector<Difference> compareReportPrefix(std::string_view expected, std::string_view actual,
+                                            const Tolerances& tolerances) {
+    const std::vector<std::string_view> wanted = splitLines(expected);
+    const std::vector<std::string_view> got = splitLines(actual);
+    std::vector<Difference> differences;
+    const std::string_view wantedHeader = wanted.empty() ? kNoLine : wanted.front();
+    const std::string_view gotHeader = got.empty() ? kNoLine : got.front();
+    if (wanted.empty() || got.empty() || !linesMatch(wantedHeader, gotHeader, tolerances)) {
+        differences.push_back(difference(0, wantedHeader, gotHeader));
+    }
+    const std::vector<Section> wantedSections = sectionsOf(wanted);
+    const std::vector<Section> gotSections = sectionsOf(got);
+    if (gotSections.empty()) {
+        return differences;
+    }
+    // The expected section after the last one compared: the first one
+    // before any [report k].
+    std::size_t next = 0;
+    for (std::size_t k = 0; k + 1 < gotSections.size(); ++k) {
+        const Section& section = gotSections[k];
+        const auto found = std::ranges::find_if(wantedSections, [&](const Section& candidate) {
+            return wanted[candidate.title] == got[section.title];
+        });
+        if (found == wantedSections.end()) {
+            differences.push_back(difference(wanted.size(), kNoLine, got[section.title]));
+            return differences;
+        }
+        const std::size_t wantedCount = found->end - found->title;
+        const std::size_t gotCount = section.end - section.title;
+        for (std::size_t i = 0; i < std::max(wantedCount, gotCount); ++i) {
+            const std::size_t line = found->title + i;
+            const std::string_view w = i < wantedCount ? wanted[line] : kNoLine;
+            const std::string_view g = i < gotCount ? got[section.title + i] : kNoLine;
+            if (i >= wantedCount || i >= gotCount || !linesMatch(w, g, tolerances)) {
+                differences.push_back(difference(line, w, g));
+            }
+        }
+        next = static_cast<std::size_t>(found - wantedSections.begin()) + 1;
+    }
+    const auto [gotFirst, gotEnd] = messagesOf(got, gotSections.back());
+    if (next >= wantedSections.size()) {
+        if (gotFirst < gotEnd) {
+            differences.push_back(difference(wanted.size(), kNoLine, got[gotFirst]));
+        }
+        return differences;
+    }
+    const auto [wantedFirst, wantedEnd] = messagesOf(wanted, wantedSections[next]);
+    for (std::size_t i = 0; gotFirst + i < gotEnd; ++i) {
+        const std::size_t line = wantedFirst + i;
+        const std::string_view g = got[gotFirst + i];
+        if (line >= wantedEnd) {
+            differences.push_back(difference(line, kNoLine, g));
+        } else if (!linesMatch(wanted[line], g, tolerances)) {
+            differences.push_back(difference(line, wanted[line], g));
         }
     }
     return differences;

@@ -44,8 +44,8 @@ polare/snap-e-mutua-esclusione #348
 # 0.7-R10: modifica con i grip (#352)
 grip/modifica-linea-annulla-esc #352
 grip/due-entita-stesso-punto #352
-grip/cerchio-e-modifica-non-valida #352
-grip/layer-bloccato-e-deselezione #352
+grip/cerchio-e-modifica-non-valida #352 esente
+grip/layer-bloccato-e-deselezione #352 esente
 
 # 0.7-R5: MOVE, COPY, EXPLODE, LINE (#342)
 
@@ -69,20 +69,20 @@ extend/estremi-curvi-shift-annulla #361
 fillet/autocad-raccordi #369
 fillet/sequenza-script #369
 fillet/opzioni-undo-shift #369
-fillet/casi-limite-proprieta #369
+fillet/casi-limite-proprieta #369 esente
 
 # 0.7-R18: OFFSET (#365)
 offset/autocad-distanza #365
-offset/through-e-lati #365
+offset/through-e-lati #365 esente
 offset/opzioni-erase-layer-multiple-undo #365
 
 # 0.7-R21: CHAMFER e smusso (#371)
 chamfer/autocad-raccordi #371
 chamfer/sequenza-script #371
 chamfer/opzioni-undo-shift #371
-chamfer/casi-limite-errori #371
+chamfer/casi-limite-errori #371 esente
 
 # 0.7-R23: JOIN (#375)
 join/autocad-interattivo #375
 join/sequenza-script #375
-join/arco-close-e-annulla #375
+join/arco-close-e-annulla #375 esente

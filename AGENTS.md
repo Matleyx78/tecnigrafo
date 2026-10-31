@@ -275,10 +275,24 @@ scritti **prima** e da **un altro agente**
 - Elenca i nuovi casi in `in-attesa.txt`, con il numero della issue del lavoro.
 - La pull request è finita con la CI verde, **controlli anticipati compresi**
   ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): la forma
-  dei file e l'eco di ogni riga dello script in `atteso.txt`
+  dei file, l'eco di ogni riga dello script in `atteso.txt` e, per uno script
+  in attesa, il confronto della parte prima del **confine**, il primo punto
+  che il programma non sa ancora fare
   ([docs/verifica/casi.md](docs/verifica/casi.md), "Controlli anticipati"). Puoi
   eseguire i casi che scrivi (`scripts/controlla.sh --solo verifica`) per sapere
   se sono validi, mai per ricavare un valore atteso.
+- Se il lavoro cambia **apposta** un comportamento che esiste già (un'opzione
+  nuova cambia la domanda di un comando, un nuovo snap acceso per difetto),
+  scrivi nello script, **prima** della riga da cui il comportamento cambia, il
+  commento `; cambia con #<numero della issue del lavoro>` (ADR 0037, punto 5).
+  Non usarlo per far passare un controllo: il responsabile guarda ogni
+  `; cambia con` nuovo in revisione.
+- Se il controllo segnala una differenza **prima del confine**, rifai il
+  valore dalle tue fonti (calcoli, file pubblici, AutoCAD). Se le fonti
+  confermano il tuo valore, la differenza può essere un errore del programma:
+  non adattare il riferimento, fermati e scrivilo nella issue, con il caso, il
+  valore atteso e quello che dà il programma; decide il responsabile (ADR 0037,
+  punto 7).
 - Non aggiungere `esente` in `in-attesa.txt`; toglilo dalla riga di un caso che
   correggi.
 

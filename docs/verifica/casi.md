@@ -85,6 +85,9 @@ ctest --preset ci -R verifica/pline/              # i casi di un'area
 - Con `--pending` il risultato si capovolge, come per i casi in attesa (vedi
   sotto). `--no-early-checks`, solo insieme a `--pending`, salta i controlli
   anticipati: lo usa `ctest` per i casi `esente`.
+- Con `--pending`, uno script di livello 1 che non passa si esegue di nuovo
+  fino al suo **confine** (vedi sotto), e `check` scrive accanto a
+  `ottenuto.txt` il rapporto ottenuto fin lì, `ottenuto-confine.txt`.
 - `--sources <cartella>` è la cartella dei file di `sorgenti.json` già
   scaricati e controllati (in CMake `TG_VERIFICA_SOURCES_DIR`, per difetto
   `build<suffisso>/verifica-sorgenti`). `ctest` la passa sempre. Senza,
@@ -96,10 +99,12 @@ Codici di uscita:
 
 | Codice | Significato |
 |---|---|
-| 0 | superato; con `--pending`, non superato (con un avviso) |
+| 0 | superato; con `--pending`, non superato (con un avviso), e uguale all'atteso fino al confine |
 | 1 | non superato; con `--pending`, superato: va tolto da `in-attesa.txt` |
 | 2 | caso non valido: file mancante o scritto male, argomenti sbagliati. Vale anche con `--pending` |
 | 2 | caso che non supera i controlli anticipati: `INVALID: <caso>: <file>, line <n>: <motivo>`. Vale anche con `--pending`, non con `--no-early-checks` |
+| 1 | con `--pending`, script che differisce dall'atteso **prima del confine**: `FAILED: <caso>: differs before the point the program cannot do yet (script.tgs, line <n>: <motivo>)`, poi le differenze. Non con `--no-early-checks` |
+| 1 | con `--pending`, script che non passa ma non ha un confine: `FAILED: <caso>: fails, but uses nothing the program does not have yet: fix the reference, or write "; cambia con #<issue>" before the line where the behaviour changes (docs/adr/0037)`. Non con `--no-early-checks` |
 | 77 | il caso richiede il livello 2 (`!level 2`): `ctest` lo conta come saltato |
 
 Ciò che il catalogo prevede ma il programma non ha ancora **non** è un caso non
@@ -113,11 +118,14 @@ nome sbagliato o un argomento che non esiste, resta un caso non valido.
 
 ## Controlli anticipati
 
-Li fa `check` prima di eseguire il caso, leggendo solo i file
+I primi due li fa `check` prima di eseguire il caso, leggendo solo i file
 ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punti 2 e
 3): trovano nella pull request di riferimenti gli errori di forma e le righe
 vuote di troppo, che altrimenti emergerebbero solo con il lavoro. Il primo che
-non passa rende il caso non valido, con il file, la riga e il motivo.
+non passa rende il caso non valido, con il file, la riga e il motivo. Il
+terzo, per i soli casi in attesa, confronta la parte dello script che il
+programma sa già fare ([il confine](#il-confine-di-un-caso-in-attesa), punti
+4–6).
 
 **La forma dei file**, per ogni caso, in attesa o no:
 
@@ -146,6 +154,60 @@ Una riga senza eco dà `no echo of this line in the messages of atteso.txt (an
 empty line is Enter: at Command: it repeats the last command)`, con il numero
 della riga dello script. Il caso tipico è una riga vuota dopo un comando già
 finito: a `Command:` è `Invio`, che ripete l'ultimo comando.
+
+### Il confine di un caso in attesa
+
+Un caso in attesa fallisce perché il programma non sa ancora fare qualcosa, ma
+ciò che viene **prima** si può già confrontare
+([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punti 4–6).
+Con `--pending`, uno script di livello 1 che non passa ha un **confine**: la
+prima di queste righe.
+
+1. Una riga che usa ciò che il catalogo descrive ma il programma non ha
+   ancora: una direttiva annunciata (`!polar`). Le righe sotto si leggono
+   comunque, e una riga scritta male, anche sotto il confine, rende il caso non
+   valido.
+2. Una riga normale scritta a `Command:`, senza un comando in corso, a cui il
+   programma risponderebbe `Unknown command`: non è `U`, `UNDO`, `REDO`, un
+   comando né un alias registrato. La stessa riga scritta come risposta a una
+   domanda di un comando in corso non è un confine.
+3. Un commento **`; cambia con #<numero>`**: `;` nella prima colonna, spazi
+   facoltativi, `cambia con #` e il numero della issue del lavoro che cambia
+   apposta un comportamento che esiste già (un'opzione nuova cambia la domanda
+   di un comando). Il riferimento lo scrive **prima** della riga da cui il
+   comportamento cambia; resta nel caso anche dopo il merge, come
+   documentazione. Per un caso non in attesa non cambia nulla: si confronta
+   sempre per intero.
+
+`check` esegue le azioni prima del confine e scrive il rapporto come se lo
+script finisse lì (`ottenuto-confine.txt`). Si confrontano, con le stesse
+tolleranze del caso:
+
+- la prima riga del rapporto;
+- le sezioni `[report 1]` … `[report k]` scritte prima del confine, riga per
+  riga, con le sezioni di `atteso.txt` con lo stesso titolo; una sezione che
+  manca in `atteso.txt` è una differenza;
+- le righe di `messages:` della sezione `[final]` ottenuta, che devono essere
+  le **prime** righe di `messages:` della sezione di `atteso.txt` che segue
+  `[report k]` (la prima sezione, se non c'è un `!report` prima del confine).
+
+Il resto non si confronta. Gli esiti, con `--pending` e senza
+`--no-early-checks`:
+
+- il caso passa per intero: codice 1, va tolto da `in-attesa.txt` (come
+  sempre);
+- uguale all'atteso fino al confine: codice 0, e l'avviso dice fin dove
+  (`...; as expected up to script.tgs, line 12: unknown command TRIM`);
+- una differenza prima del confine: codice 1, `differs before the point the
+  program cannot do yet`, con il confine e le differenze. Il caso tipico è una
+  domanda di un comando che esiste già scritta male (`Specify start point`
+  invece di `Specify first point` in `LINE`) o un handle sbagliato in un
+  `[report]` prima del comando nuovo;
+- nessun confine: codice 1, `fails, but uses nothing the program does not
+  have yet`. O il riferimento è sbagliato, o manca `; cambia con`.
+
+Gli script di livello 2 e i casi di domande non hanno ancora questo controllo;
+per le domande arriva con il pacchetto F3.
 
 ## Come si confronta
 

@@ -12,7 +12,10 @@
 #include "tg/edit/editor.hpp"
 #include "tg/script/report.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <span>
@@ -23,13 +26,63 @@
 #include <vector>
 
 namespace tg::script {
+namespace {
+
+/// The built-in commands, shared by every run.
+const cmd::CommandRegistry& builtinRegistry() {
+    static const cmd::CommandRegistry kCommands = [] {
+        cmd::CommandRegistry built;
+        cmd::registerBuiltinCommands(built);
+        return built;
+    }();
+    return kCommands;
+}
+
+// What CommandRunner::submitText() trims from a line typed at "Command:",
+// and the names of the runner's own commands (cmd/src/command_runner.cpp):
+// the runner does not export them.
+constexpr std::string_view kWhiteSpace = " \t\n\v\f\r";
+constexpr std::array<std::string_view, 3> kRunnerCommands{"UNDO", "U", "REDO"};
+
+std::string_view trimmed(std::string_view text) {
+    const std::size_t first = text.find_first_not_of(kWhiteSpace);
+    if (first == std::string_view::npos) {
+        return {};
+    }
+    const std::size_t last = text.find_last_not_of(kWhiteSpace);
+    return text.substr(first, last - first + 1);
+}
+
+bool equalsIgnoringCase(std::string_view lhs, std::string_view rhs) {
+    const auto upper = [](char c) {
+        return (c >= 'a' && c <= 'z') ? static_cast<char>(c - 'a' + 'A') : c;
+    };
+    return std::ranges::equal(lhs, rhs, [&upper](char a, char b) { return upper(a) == upper(b); });
+}
+
+/// The name a line typed at "Command:" starts, if the runner would answer
+/// it with "Unknown command"; nothing otherwise. An empty line repeats the
+/// last command.
+std::optional<std::string_view> unknownCommand(std::string_view text) {
+    const std::string_view name = trimmed(text);
+    if (name.empty() ||
+        std::ranges::any_of(
+            kRunnerCommands,
+            [name](std::string_view own) { return equalsIgnoringCase(own, name); }) ||
+        builtinRegistry().canonicalName(name)) {
+        return std::nullopt;
+    }
+    return name;
+}
+
+}  // namespace
 
 /// The state of one run: the drawing, the runner and what the report needs
 /// besides them.
 class Level1Session::State {
 public:
     explicit State(io::FileAccess* files)
-        : m_editor(m_document), m_runner(registry(), m_editor), m_files(files) {
+        : m_editor(m_document), m_runner(builtinRegistry(), m_editor), m_files(files) {
         m_runner.setFileAccess(files);
         m_runner.setMessageSink([this](std::string text) { write(std::move(text)); });
         // A prompt missing from its command's description is written in the
@@ -61,15 +114,6 @@ public:
     [[nodiscard]] const cmd::CommandRunner& runner() const { return m_runner; }
 
 private:
-    static const cmd::CommandRegistry& registry() {
-        static const cmd::CommandRegistry kCommands = [] {
-            cmd::CommandRegistry built;
-            cmd::registerBuiltinCommands(built);
-            return built;
-        }();
-        return kCommands;
-    }
-
     /// A line of the history: for the next section of the report, and for
     /// the whole history of a live session.
     void write(std::string line) {
@@ -189,6 +233,30 @@ std::string runLevel1(const Script& script, const RunOptions& options) {
     report += '\n';
     report += session.takeReport();
     return report;
+}
+
+PrefixRun runLevel1UntilUnknownCommand(const Script& script, const RunOptions& options) {
+    assert(script.level == 1 && "a level 2 script does not run at level 1");
+    assert(script.lines.size() == script.actions.size() && "parseScript() fills the lines");
+    PrefixRun run;
+    Level1Session session{options.files};
+    for (std::size_t index = 0; index < script.actions.size(); ++index) {
+        const Action& action = script.actions[index];
+        if (const auto* line = std::get_if<TypedLine>(&action);
+            line != nullptr && !session.runner().isActive()) {
+            if (const std::optional<std::string_view> name = unknownCommand(line->text)) {
+                run.frontier =
+                    Frontier{script.lines[index], "unknown command " + std::string{*name}};
+                break;
+            }
+        }
+        session.perform(action);
+    }
+    session.writeSection(kFinalSection);
+    run.report = kReportHeader;
+    run.report += '\n';
+    run.report += session.takeReport();
+    return run;
 }
 
 }  // namespace tg::script

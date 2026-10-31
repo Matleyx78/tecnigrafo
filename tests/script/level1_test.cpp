@@ -22,6 +22,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <locale>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -421,6 +422,39 @@ TEST(RunLevel1, OsnapQuadrantFindsTheQuadrantOfACircle) {
     EXPECT_EQ(
         reportOf(drawn + "!osnap qua\n!osnap none\n!move 10.1,0\n").find("active snap: Quadrant"),
         std::string::npos);
+}
+
+// docs/adr/0037, point 4.2: the run stops before the first line typed at
+// "Command:" that the runner would answer with "Unknown command".
+TEST(RunLevel1UntilUnknownCommand, UnknownCommandAtCommandIsTheFrontier) {
+    const PrefixRun run =
+        runLevel1UntilUnknownCommand(parsed("; c\nPL\n0,0\n10,0\n\n xyz \n0,0\n"));
+    EXPECT_EQ(run.frontier, (std::optional<Frontier>{Frontier{6, "unknown command xyz"}}));
+    // The report as if the script ended there; PL is an alias of PLINE.
+    EXPECT_EQ(run.report, reportOf("PL\n0,0\n10,0\n\n"));
+}
+
+TEST(RunLevel1UntilUnknownCommand, OtherLinesAreNoFrontier) {
+    // An answer to a question of a running command, U, REDO, an empty line
+    // that repeats the last command, the runner's own UNDO.
+    constexpr std::string_view kText =
+        "PLINE\nXYZ\n0,0\n10,0\n\nu\n REDO \nUNDO\nredo\n\nLINE\nXYZ\n!esc\n";
+    const Script script = parsed(kText);
+    const PrefixRun run = runLevel1UntilUnknownCommand(script);
+    EXPECT_EQ(run.frontier, std::nullopt);
+    EXPECT_EQ(run.report, runLevel1(script));
+    // Without a command running, the same line is the frontier.
+    const PrefixRun idle = runLevel1UntilUnknownCommand(parsed("XYZ\n"));
+    EXPECT_EQ(idle.frontier, (std::optional<Frontier>{Frontier{1, "unknown command XYZ"}}));
+    EXPECT_EQ(idle.report, reportOf(""));
+}
+
+TEST(RunLevel1UntilUnknownCommand, WithoutUnknownCommandTheSameReport) {
+    constexpr std::string_view kText = "PLINE\n0,0\n10,0\n\n!report\nLINE\n0,0\n5,5\n\n";
+    const Script script = parsed(kText);
+    const PrefixRun run = runLevel1UntilUnknownCommand(script);
+    EXPECT_EQ(run.frontier, std::nullopt);
+    EXPECT_EQ(run.report, runLevel1(script));
 }
 
 }  // namespace
