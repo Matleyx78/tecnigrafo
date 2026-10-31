@@ -102,9 +102,9 @@ TEST(Questions, PrefixStopsAtChangesWithAndRejectsMalformedLinesAboveIt) {
     ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
     const auto& prefix = std::get<QuestionPrefix>(result);
     ASSERT_EQ(prefix.answers.size(), 1U);
-    ASSERT_TRUE(prefix.frontier);
-    EXPECT_EQ(prefix.frontier->line, 3);
-    EXPECT_EQ(prefix.frontier->reason, "changes with #346");
+    const Frontier frontier = prefix.frontier.value_or(Frontier{0, {}});
+    EXPECT_EQ(frontier.line, 3);
+    EXPECT_EQ(frontier.reason, "changes with #346");
     const auto malformed = answerQuestionsUntilFrontier("malformed\n; cambia con #346\n");
     ASSERT_TRUE(std::holds_alternative<ParseError>(malformed));
     EXPECT_EQ(std::get<ParseError>(malformed).line, 1);
@@ -125,8 +125,7 @@ TEST(Questions, PrefixStopsAtUnimplementedDefinitionsWhenAvailable) {
             answerQuestionsUntilFrontier("? font-metrics -> wrong\n" + definition + "malformed\n");
         ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
         const auto& prefix = std::get<QuestionPrefix>(result);
-        ASSERT_TRUE(prefix.frontier);
-        EXPECT_EQ(prefix.frontier->line, 2);
+        EXPECT_EQ(prefix.frontier.value_or(Frontier{0, {}}).line, 2);
         EXPECT_EQ(prefix.answers.size(), 1U);
         return;
     }
