@@ -1,7 +1,7 @@
 tecnigrafo-report 1
 
 [report 1]
-entities: none
+entities:
 messages:
   Command: POLARANG
   Enter new value for POLARANG <90>: 45
@@ -15,10 +15,10 @@ snap: on
 ortho: off
 pointer: none
 active snap: none
-statistics: none
+statistics:
 
 [report 2]
-entities: none
+entities:
 messages:
   Command: POLARANG
   Enter new value for POLARANG <45>: 190
@@ -40,10 +40,10 @@ snap: on
 ortho: off
 pointer: none
 active snap: none
-statistics: none
+statistics:
 
 [report 3]
-entities: none
+entities:
 messages:
   Command: POLARANG
   Enter new value for POLARANG <30>:
@@ -58,10 +58,10 @@ snap: on
 ortho: off
 pointer: none
 active snap: none
-statistics: none
+statistics:
 
 [final]
-entities: none
+entities:
 messages:
 prompt: Command:
 preview:
@@ -73,4 +73,4 @@ snap: on
 ortho: off
 pointer: none
 active snap: none
-statistics: none
+statistics:

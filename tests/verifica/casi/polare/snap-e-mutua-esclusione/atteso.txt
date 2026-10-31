@@ -1,7 +1,7 @@
 tecnigrafo-report 1
 
 [report 1]
-entities: none
+entities:
 messages:
 prompt: Command:
 preview:
@@ -13,10 +13,10 @@ snap: on
 ortho: on
 pointer: none
 active snap: none
-statistics: none
+statistics:
 
 [report 2]
-entities: none
+entities:
 messages:
 prompt: Command:
 preview:
@@ -28,19 +28,20 @@ snap: on
 ortho: off
 pointer: none
 active snap: none
-statistics: none
+statistics:
 
 [report 3]
 entities:
   257 CIRCLE center=0,50 radius=10
 messages:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P/Ttr]: 0,50
+  Specify center point for circle or [3P/2P]: 0,50
   Specify radius of circle or [Diameter]: 10
   Command: LINE
   Specify first point: 0,0
 prompt: Specify next point or [Undo]:
 preview:
+  LINE start=0,0 end=0,50
 selection: none
 rectangle: none
 undo:
