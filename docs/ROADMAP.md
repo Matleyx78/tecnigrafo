@@ -332,3 +332,23 @@ Decisioni del responsabile che cambiano le regole o le tappe, in ordine di data.
   file che più pacchetti toccano senza essere legati da "Dipende da"
   ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md)); la stessa eccezione è
   scritta in solid-space (Matleyx78/solid-space#30).
+- **2026-10-31 — Claude Max, Copilot Pro e la quota di Gemini 4 Argon.** Il
+  responsabile ha il piano Max di Claude e Copilot Pro, e la quota settimanale
+  di Gemini 4 Argon basta a uno o due pacchetti di riferimenti. Decide, dalla
+  tappa 0.8 (la 0.7 resta com'è):
+  - Claude prende tutti i pacchetti impegnativi e la maggior parte dei medi, con
+    Opus anche per i medi; può lavorare in più sessioni nello stesso momento con
+    la sola etichetta `agente:claude` (`agente:claude-2` resta solo sulle issue
+    già aperte);
+  - Codex scrive i riferimenti con calcoli delicati dei pacchetti di Claude, in
+    fascia forte, e fa i pacchetti facili e medi che il piano non dà a Claude;
+  - Gemini 4 Argon non ha pacchetti nel piano: se ha quota, il responsabile gli
+    passa un pacchetto di Codex cambiandone l'etichetta;
+  - Copilot serve solo come revisione mirata delle pull request impegnative,
+    chiesta dal responsabile; non prende pacchetti e non apre pull request.
+
+  Regole in [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) ("Chi fa cosa",
+  "Modello e impegno") e in [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (B7,
+  B9). Dalla stessa analisi nasce l'idea
+  [#426](https://github.com/Matleyx78/tecnigrafo/issues/426): la CI controlla i
+  riferimenti prima del merge.
