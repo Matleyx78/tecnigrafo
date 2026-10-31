@@ -13,9 +13,11 @@
 #include "tg/cmd/commands/file_commands.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
+#include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
+#include "tg/cmd/commands/rotate_scale_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
 
 #include <memory>
@@ -44,13 +46,19 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(LwdisplayCommand::description(),
                  [] { return std::make_unique<LwdisplayCommand>(); });
     registry.add(LweightCommand::description(), [] { return std::make_unique<LweightCommand>(); });
+    registry.add(MirrorCommand::description(), [] { return std::make_unique<MirrorCommand>(); });
+    registry.add(MirrtextCommand::description(),
+                 [] { return std::make_unique<MirrtextCommand>(); });
     registry.add(MoveCommand::description(), [] { return std::make_unique<MoveCommand>(); });
     registry.add(detail::newDescription(), [] { return std::make_unique<NewCommand>(); });
     registry.add(detail::openDescription(), [] { return std::make_unique<OpenCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });
     registry.add(detail::qsaveDescription(), [] { return std::make_unique<QsaveCommand>(); });
+    registry.add(RotateCommand::description(), [] { return std::make_unique<RotateCommand>(); });
     registry.add(detail::saveDescription(), [] { return std::make_unique<SaveCommand>(); });
     registry.add(detail::saveasDescription(), [] { return std::make_unique<SaveasCommand>(); });
+    registry.add(ScaleObjectsCommand::description(),
+                 [] { return std::make_unique<ScaleObjectsCommand>(); });
     registry.add(detail::textDescription(), [] { return std::make_unique<TextCommand>(); });
 }
 

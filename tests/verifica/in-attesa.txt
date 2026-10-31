@@ -38,10 +38,6 @@ polare/tracciamento-e-distanza #348
 polare/snap-e-mutua-esclusione #348
 
 # 0.7-R6: ROTATE, SCALE, MIRROR (#344)
-rotate/base-e-angolo #344
-scale/base-e-fattore #344
-mirror/copia-e-sorgente #344
-mirror/sul-posto-yes #344
 
 # 0.7-R10: modifica con i grip (#352)
 grip/modifica-linea-annulla-esc #352

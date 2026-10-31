@@ -249,7 +249,8 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
     }
     const std::string expected =
         "-LAYER -LINETYPE ARC CELTSCALE CHPROP CIRCLE CLAYER COLOR COPY ERASE EXPLODE INSUNITS "
-        "LINE LTSCALE LWDISPLAY LWEIGHT MOVE NEW OPEN PLINE QSAVE SAVE SAVEAS TEXT";
+        "LINE LTSCALE LWDISPLAY LWEIGHT MIRROR MIRRTEXT MOVE NEW OPEN PLINE QSAVE ROTATE SAVE "
+        "SAVEAS SCALE TEXT";
     EXPECT_EQ(names, expected);
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);
     EXPECT_EQ(registry.describe("DTEXT")->name, "TEXT");
