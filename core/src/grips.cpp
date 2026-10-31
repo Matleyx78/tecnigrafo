@@ -27,7 +27,7 @@ bool twoPointText(const Text& text) {
     return text.horizontal == TextHorizontal::Aligned || text.horizontal == TextHorizontal::Fit;
 }
 
-std::optional<Polyline> movedPolyline(const Polyline& input, std::size_t index, const Vec2& target) {
+std::optional<Polyline> movedPoly(const Polyline& input, std::size_t index, const Vec2& target) {
     std::vector<PolylineVertex> vertices(input.vertices().begin(), input.vertices().end());
     const std::size_t vertex = index / 2;
     const bool segmentGrip = index % 2 != 0;
@@ -166,7 +166,7 @@ GripResult moveGrip(const Entity& entity, std::size_t index, const Vec2& target)
                     result.widthFactor = frame.widthFactor;
                 }
             } else {
-                const auto polyline = movedPolyline(value, index, target);
+                const auto polyline = movedPoly(value, index, target);
                 if (!polyline) {
                     return invalid;
                 }

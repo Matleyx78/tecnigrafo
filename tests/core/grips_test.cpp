@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cmath>
 #include <limits>
 #include <variant>
@@ -81,9 +82,9 @@ TEST(Grips, LineCircleAndArcMoves) {
     }
     const Entity arc = Arc{{}, 10.0, 0.0, kPi / 2.0};
     const auto points = gripPoints(arc);
+    const std::array<Vec2, 3> targets{{{12.0, 0.0}, {0.0, 12.0}, {9.0, 9.0}}};
     for (std::size_t i = 0; i < 3; ++i) {
-        const Vec2 target =
-            i == 0 ? Vec2{12.0, 0.0} : i == 1 ? Vec2{0.0, 12.0} : Vec2{9.0, 9.0};
+        const Vec2 target = targets[i];
         const auto moved = moveGrip(arc, i, target);
         ASSERT_EQ(moved.outcome, GripOutcome::Moved);
         const auto result = std::get<Arc>(moved.entity);
@@ -96,8 +97,8 @@ TEST(Grips, LineCircleAndArcMoves) {
 }
 
 TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {
-    Polyline poly{
-        {{{0.0, 0.0}, 1.0, 1.0, 2.0}, {{20.0, 0.0}}, {{40.0, 0.0}, -1.0}, {{60.0, 0.0}}}};
+    const PolylineVertex start{{0.0, 0.0}, 1.0, 1.0, 2.0};
+    Polyline poly{{start, {{20.0, 0.0}}, {{40.0, 0.0}, -1.0}, {{60.0, 0.0}}}};
     poly.setConstantWidth(0.5);
     poly.setContinuousLinetype(true);
     const auto moved = moveGrip(poly, 3, {30.0, 5.0});
