@@ -21,7 +21,7 @@
   (nuovi, interni: non nel registro)
 - `cmd/CMakeLists.txt`
 - `tests/cmd/grip_test.cpp` (nuovo), `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R10)
+- `tests/verifica/in-attesa/0.7-R10.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -73,6 +73,6 @@ static constexpr double kGripSizePixels = 10.0;  ///< side of the grip square
 
 ## Fatto quando
 
-- I casi di `[0.7-R10]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`; i casi di selezione esistenti passano ancora.
+- I casi di `[0.7-R10]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`; i casi di selezione esistenti passano ancora.
 - La CI è verde.

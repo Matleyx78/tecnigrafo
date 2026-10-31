@@ -258,7 +258,7 @@ atteso.
 {"outcome": "passed", "output": "passed: line/annulla-ripeti\n"}
 ```
 
-Un caso elencato in `tests/verifica/in-attesa.txt` si esegue lo stesso, senza
+Un caso elencato in `tests/verifica/in-attesa/` si esegue lo stesso, senza
 l'inversione di `--pending`: se il programma non lo supera ancora, l'esito è
 `not passed`.
 

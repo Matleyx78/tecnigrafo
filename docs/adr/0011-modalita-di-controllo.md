@@ -2,6 +2,14 @@
 
 - **Stato:** Accettato (2026-10-18)
 - **Sostituito in parte da:** ADR 0023 (le entità di una sessione nuova partono da 257)
+- **Corretto:** 2026-10-31 — l'elenco dei casi in attesa non è più un file ma la
+  cartella `tests/verifica/in-attesa/`, con un file per blocco di riferimenti
+  `<X.Y>-R<N>.txt` (punti 7 e 9): con un file solo, ogni pacchetto di riferimenti
+  lo allungava e ogni pacchetto di lavoro lo accorciava, e le pull request in
+  parallelo andavano in conflitto una dopo l'altra. Il pacchetto di riferimenti
+  aggiunge il suo file e quello di lavoro lo cancella, quindi nessun file è
+  condiviso tra pacchetti in parallelo. La regola della CI («un caso in lista che
+  passa fa fallire la CI») resta. Lo decide il responsabile.
 - **Data:** 2026-10-18
 
 ## Contesto
@@ -260,21 +268,25 @@ dichiarano nel piano con il motivo, e non hanno riferimenti.
 
 1. **Riferimenti.** La issue `[X.Y-RN]`. La pull request tocca
    solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
-   `tests/verifica/in-attesa.txt`. Aggiunge i casi del pacchetto e li elenca in
-   `in-attesa.txt` insieme al numero della issue del lavoro. Il responsabile la
-   unisce per prima.
+   `tests/verifica/in-attesa/`. Aggiunge i casi del pacchetto e li elenca nel
+   file del suo blocco, `tests/verifica/in-attesa/<X.Y>-R<N>.txt`, insieme al
+   numero della issue del lavoro. Il responsabile la unisce per prima.
 2. **Lavoro.** La pull request del pacchetto non può toccare
-   `tests/verifica/casi/` né `tests/verifica/sorgenti.json`. Deve togliere da
-   `in-attesa.txt` le righe dei suoi casi: quando sono tolte, i casi diventano
-   obbligatori.
+   `tests/verifica/casi/` né `tests/verifica/sorgenti.json`. Deve cancellare da
+   `in-attesa/` il file dei riferimenti del suo pacchetto: quando è cancellato,
+   i casi diventano obbligatori.
 
 La CI fa rispettare la divisione:
 
 - una pull request che tocca `tests/verifica/casi/` o `tests/verifica/sorgenti.json`
-  insieme ad altri file, a parte `in-attesa.txt`, fallisce;
-- un caso in `in-attesa.txt` si esegue, ma il suo fallimento non blocca la CI;
-- un caso in `in-attesa.txt` che passa fa fallire la CI, con il messaggio di
-  toglierlo dall'elenco: così un lavoro finito non resta mai non verificato.
+  insieme ad altri file, a parte la cartella `in-attesa/`, fallisce;
+- un caso elencato in `in-attesa/` si esegue, ma il suo fallimento non blocca la
+  CI;
+- un caso elencato in `in-attesa/` che passa fa fallire la CI, con il messaggio
+  di toglierlo dall'elenco: così un lavoro finito non resta mai non verificato;
+- la cartella `in-attesa/` è letta dalla configurazione di CMake: un file con un
+  nome che non sia `<X.Y>-R<N>.txt`, un file senza casi, un caso elencato in due
+  file e il vecchio file unico `in-attesa.txt` sono errori.
 
 Se un agente ritiene sbagliato un riferimento, si ferma e lo scrive nella issue.
 La correzione è una nuova pull request di riferimenti, di un agente diverso o del
@@ -297,7 +309,7 @@ AGENTS.md contiene queste regole, in vigore da quando esiste
   (`ctest --preset ci -L verifica`);
 - non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`
   in una pull request di lavoro;
-- togli da `in-attesa.txt` solo le righe dei casi del tuo pacchetto;
+- cancella da `in-attesa/` il file dei riferimenti del tuo pacchetto;
 - se un caso ti sembra sbagliato, fermati e scrivilo nella issue;
 - un bug corretto arriva con un caso di verifica che lo riproduce, scritto come
   riferimento da un altro agente o dal responsabile.

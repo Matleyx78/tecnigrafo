@@ -100,7 +100,7 @@ Codici di uscita:
 | Codice | Significato |
 |---|---|
 | 0 | superato; con `--pending`, non superato (con un avviso), e uguale all'atteso fino al confine |
-| 1 | non superato; con `--pending`, superato: va tolto da `in-attesa.txt` |
+| 1 | non superato; con `--pending`, superato: va tolto da `in-attesa/` |
 | 2 | caso non valido: file mancante o scritto male, argomenti sbagliati. Vale anche con `--pending` |
 | 2 | caso che non supera i controlli anticipati: `INVALID: <caso>: <file>, line <n>: <motivo>`. Vale anche con `--pending`, non con `--no-early-checks` |
 | 1 | con `--pending`, script che differisce dall'atteso **prima del confine**: `FAILED: <caso>: differs before the point the program cannot do yet (script.tgs, line <n>: <motivo>)`, poi le differenze. Non con `--no-early-checks` |
@@ -194,7 +194,7 @@ tolleranze del caso:
 Il resto non si confronta. Gli esiti, con `--pending` e senza
 `--no-early-checks`:
 
-- il caso passa per intero: codice 1, va tolto da `in-attesa.txt` (come
+- il caso passa per intero: codice 1, va tolto da `in-attesa/` (come
   sempre);
 - uguale all'atteso fino al confine: codice 0, e l'avviso dice fin dove
   (`...; as expected up to script.tgs, line 12: unknown command TRIM`);
@@ -227,9 +227,12 @@ per le domande arriva con il pacchetto F3.
 Le tolleranze si cambiano solo nel file del caso, cioè solo da chi scrive i
 riferimenti.
 
-## `tests/verifica/in-attesa.txt`
+## `tests/verifica/in-attesa/`
 
-L'elenco dei casi il cui lavoro non è ancora unito.
+L'elenco dei casi il cui lavoro non è ancora unito. È una cartella con **un file
+per blocco di riferimenti**, che prende il nome dal tag della issue di
+riferimenti: `<X.Y>-R<N>.txt`, per esempio `in-attesa/0.7-R16.txt` per
+`[0.7-R16]`. In ogni file, una riga per caso:
 
 ```
 # commento
@@ -247,16 +250,27 @@ grip/cerchio-e-modifica-non-valida #352 esente
   È la transizione per i casi in attesa scritti prima di un controllo: la
   aggiunge solo il pacchetto che porta un controllo anticipato, se la sua
   scheda lo dice; la toglie la pull request di riferimenti che corregge il
-  caso, o il lavoro quando toglie la riga. Un caso non in attesa non può
+  caso, o il lavoro quando cancella il file. Un caso non in attesa non può
   essere `esente`.
 - Un caso elencato si esegue con `--pending`: il suo fallimento non blocca la
   CI, ma se **passa** la CI fallisce, con il messaggio di toglierlo dall'elenco.
   Così un lavoro finito non resta mai non verificato.
-- La pull request di **riferimenti** aggiunge i suoi casi e le loro righe; la
-  pull request del **lavoro** toglie solo le righe dei casi del suo pacchetto, e
-  da quel momento i casi sono obbligatori.
-- Una riga scritta male, o che nomina un caso che non esiste, è un errore di
-  configurazione di CMake.
+- La pull request di **riferimenti** aggiunge i suoi casi e il **suo file**; la
+  pull request del **lavoro** cancella quel file, e da quel momento i casi sono
+  obbligatori. Due pacchetti non toccano mai lo stesso file, quindi l'elenco non
+  causa conflitti tra pull request in parallelo. Un file elenca i casi di un
+  solo pacchetto di lavoro, quello della sua issue.
+- Un file senza casi (solo commenti) è un residuo da cancellare: è un errore.
+  I file che cominciano con `.` si ignorano; il `.gitkeep` tiene viva la
+  cartella quando l'ultimo file è stato cancellato.
+- Sono errori di configurazione di CMake: un nome che non sia
+  `<X.Y>-R<N>.txt` (anche una sottocartella), una riga scritta male, un caso che
+  non esiste, un caso elencato due volte o in due file, e il vecchio file unico
+  `tests/verifica/in-attesa.txt`, che non esiste più. La lettura è in
+  `tests/verifica/pending_list.cmake`, provata dal test
+  `verifica-in-attesa/lettura`.
+- Aggiungere, cancellare o cambiare un file riconfigura da solo alla prossima
+  compilazione, anche con una build già fatta.
 
 ## `tests/verifica/sorgenti.json`
 
@@ -311,8 +325,8 @@ licenza.
 4. Per i comandi, conviene un `!report` nei punti che il pacchetto descrive
    (dopo ogni domanda importante, prima e dopo `Esc`): la sezione finale da sola
    nasconde gli stati intermedi.
-5. Elencare i nuovi casi in `in-attesa.txt` con il numero della issue del
-   lavoro.
+5. Elencare i nuovi casi nel file del proprio blocco,
+   `in-attesa/<X.Y>-R<N>.txt`, con il numero della issue del lavoro.
 6. Controllare in locale che i casi siano validi, controlli anticipati
    compresi: `ctest --preset ci -L verifica` deve passare, e `tecnigrafo-script check <caso> --pending` deve
    scrivere "pending" (o "skipped" per il livello 2), mai "INVALID". Se dà

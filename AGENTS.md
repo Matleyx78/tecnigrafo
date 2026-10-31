@@ -227,10 +227,11 @@ scritti **prima** e da **un altro agente**
 ### In un pacchetto di lavoro
 
 - Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
-- Togli da `tests/verifica/in-attesa.txt` solo le righe dei casi del tuo
-  pacchetto: così diventano obbligatori.
-- La parola `esente` in `in-attesa.txt` la aggiunge solo un pacchetto che porta
-  un controllo anticipato, se la sua scheda lo dice
+- Cancella da `tests/verifica/in-attesa/` il file dei riferimenti del tuo
+  pacchetto, `<X.Y>-R<N>.txt` (il tag della issue `[X.Y-RN]`): così i suoi casi
+  diventano obbligatori.
+- La parola `esente` in un file di `tests/verifica/in-attesa/` la aggiunge solo
+  un pacchetto che porta un controllo anticipato, se la sua scheda lo dice
   ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md), punto 9).
 - Se un caso ti sembra sbagliato, **fermati del tutto**, subito, anche se il
   resto del pacchetto è pronto:
@@ -249,7 +250,7 @@ scritti **prima** e da **un altro agente**
 ### In un pacchetto di riferimenti (`[X.Y-RN]`)
 
 - Tocca solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
-  `tests/verifica/in-attesa.txt`: la CI rifiuta una pull request che mescola
+  `tests/verifica/in-attesa/`: la CI rifiuta una pull request che mescola
   riferimenti e altri file.
 - Non lavorare a un pacchetto di riferimenti se il pacchetto di lavoro collegato
   è assegnato a te.
@@ -272,7 +273,9 @@ scritti **prima** e da **un altro agente**
   SHA-256 e licenza, e nella pull request il link alla pagina della licenza. Solo
   licenze compatibili con la GPLv3 che permettano la ridistribuzione; nel dubbio,
   non usare il file e scrivilo nella pull request.
-- Elenca i nuovi casi in `in-attesa.txt`, con il numero della issue del lavoro.
+- Elenca i nuovi casi nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt`
+  (il tag del tuo blocco di riferimenti), una riga per caso, con il numero della
+  issue del lavoro. Il file è tuo: nessun altro pacchetto lo tocca.
 - La pull request è finita con la CI verde, **controlli anticipati compresi**
   ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): la forma
   dei file, l'eco di ogni riga dello script in `atteso.txt` e, per uno script
@@ -293,8 +296,8 @@ scritti **prima** e da **un altro agente**
   non adattare il riferimento, fermati e scrivilo nella issue, con il caso, il
   valore atteso e quello che dà il programma; decide il responsabile (ADR 0037,
   punto 7).
-- Non aggiungere `esente` in `in-attesa.txt`; toglilo dalla riga di un caso che
-  correggi.
+- Non aggiungere `esente` in `tests/verifica/in-attesa/`; toglilo dalla riga di
+  un caso che correggi.
 
 ## Comandi
 
@@ -346,8 +349,8 @@ errore nel nostro codice si corregge, non si sopprime.
 - [ ] `scripts/controlla.sh --tidy` passa, o hai scritto nella pull request quali
       passi non hai potuto eseguire e perché.
 - [ ] I test richiesti dal pacchetto esistono; ogni condizione "Fatto quando" è
-      verificata; i riferimenti non sono toccati e le righe del tuo pacchetto
-      sono tolte da `in-attesa.txt`.
+      verificata; i riferimenti non sono toccati e il file dei riferimenti del tuo
+      pacchetto è cancellato da `tests/verifica/in-attesa/`.
 - [ ] Il riepilogo per l'utente elenca i file modificati e ciò che non hai potuto
       verificare (per esempio Windows e macOS).
 - [ ] La CI è verde in tutti i controlli e hai tolto `AA-Presa in carico`.

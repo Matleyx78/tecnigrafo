@@ -27,7 +27,7 @@
   `cmd/CMakeLists.txt`
 - `tests/cmd/fillet_command_test.cpp` (nuovo), `tests/cmd/circle_command_test.cpp`,
   `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R20)
+- `tests/verifica/in-attesa/0.7-R20.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -94,6 +94,6 @@ comando finisce senza disegnare.
 
 ## Fatto quando
 
-- I casi di `[0.7-R20]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R20]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - La CI è verde.

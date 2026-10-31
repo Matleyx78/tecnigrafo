@@ -161,7 +161,7 @@ linea di base), oppure `position` per `Aligned` e `Fit`.
 
 Le domande della tappa 0.7, pubblicate con il suo piano perché i riferimenti si
 possano scrivere prima del lavoro. Ognuna indica il pacchetto che la realizza;
-fino ad allora i casi che la usano stanno in `in-attesa.txt`. Le entità delle
+fino ad allora i casi che la usano stanno in `in-attesa/`. Le entità delle
 risposte si scrivono come [definizioni](rapporto.md#entità).
 
 **Trasformazioni** (P4, [ADR 0031](../adr/0031-modifiche-alle-entita.md), punti 1–4)
@@ -459,7 +459,7 @@ catalogo e non ancora realizzate dal programma:
   "not implemented yet".
 
 In tutti questi casi il caso non è superato: se è elencato in
-`tests/verifica/in-attesa.txt` aspetta il suo lavoro senza bloccare la CI. Un
+`tests/verifica/in-attesa/` aspetta il suo lavoro senza bloccare la CI. Un
 modo o un argomento che il catalogo non descrive (`modes=corner`,
 `aperure=1`) resta un errore del file.
 

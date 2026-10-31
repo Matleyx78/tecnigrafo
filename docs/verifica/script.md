@@ -184,7 +184,7 @@ Non è un errore, ma un caso non superato, una direttiva che questa specifica
 descrive e il programma non ha ancora: `!osnap`, `!polar` e `!scr`, fino ai
 pacchetti P7, P8 e P3 della tappa 0.7. Lo script ferma la lettura con "not
 implemented yet" (codice 1; con `--pending`, codice 0): se è elencato in
-`tests/verifica/in-attesa.txt` aspetta il suo lavoro senza bloccare la CI.
+`tests/verifica/in-attesa/` aspetta il suo lavoro senza bloccare la CI.
 
 ## Esempio
 
