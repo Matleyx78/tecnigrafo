@@ -7,7 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -106,6 +108,149 @@ TEST(NumbersMatch, AbsoluteOrRelative) {
     EXPECT_FALSE(numbersMatch(1.0, 1.2, tolerances));
     EXPECT_TRUE(numbersMatch(100.0, 101.0, tolerances));
     EXPECT_FALSE(numbersMatch(100.0, 102.1, tolerances));
+}
+
+// docs/adr/0037, point 6. The expected report of a case whose script
+// draws a line, writes [report 1], draws a circle, then types a command the
+// program does not have yet.
+constexpr std::string_view kExpected =
+    "tecnigrafo-report 1\n"            // 1
+    "\n"                               // 2
+    "[report 1]\n"                     // 3
+    "entities:\n"                      // 4
+    "  257 LINE start=0,0 end=10,0\n"  // 5
+    "messages:\n"                      // 6
+    "  Command: LINE\n"                // 7
+    "  Specify first point: 0,0\n"     // 8
+    "prompt: Command:\n"               // 9
+    "\n"                               // 10
+    "[final]\n"                        // 11
+    "entities:\n"                      // 12
+    "  257 LINE start=0,0 end=10,0\n"  // 13
+    "  258 FUTURE center=5,5\n"        // 14
+    "messages:\n"                      // 15
+    "  Command: CIRCLE\n"              // 16
+    "  Specify center point: 5,5\n"    // 17
+    "  Command: FUTURE\n"              // 18
+    "prompt: Command:\n";              // 19
+
+// What the program writes up to the frontier, before FUTURE.
+constexpr std::string_view kReportOne =
+    "tecnigrafo-report 1\n"
+    "\n"
+    "[report 1]\n"
+    "entities:\n"
+    "  257 LINE start=0,0 end=10,0\n"
+    "messages:\n"
+    "  Command: LINE\n"
+    "  Specify first point: 0,0\n"
+    "prompt: Command:\n";
+constexpr std::string_view kFinalAtFrontier =
+    "\n"
+    "[final]\n"
+    "entities:\n"
+    "  257 LINE start=0,0 end=10,0\n"
+    "messages:\n"
+    "  Command: CIRCLE\n"
+    "  Specify center point: 5,5\n"
+    "prompt: Specify radius:\n";
+
+std::string obtained(std::string_view reportOne = kReportOne,
+                     std::string_view final = kFinalAtFrontier) {
+    return std::string{reportOne} + std::string{final};
+}
+
+std::string replaced(std::string_view text, std::string_view from, std::string_view to) {
+    std::string result{text};
+    const std::size_t at = result.find(from);
+    EXPECT_NE(at, std::string::npos) << from;
+    if (at != std::string::npos) {
+        result.replace(at, from.size(), to);
+    }
+    return result;
+}
+
+TEST(CompareReportPrefix, SameBeforeTheFrontier) {
+    EXPECT_TRUE(compareReportPrefix(kExpected, obtained(), kDefault).empty());
+    // Line endings and a byte order mark do not count, as in compareReports().
+    EXPECT_TRUE(compareReportPrefix(kExpected, "\xEF\xBB\xBF" + obtained(), kDefault).empty());
+    // Numbers within the tolerances.
+    Tolerances loose;
+    loose.absolute = 0.01;
+    EXPECT_TRUE(compareReportPrefix(
+                    kExpected, obtained(replaced(kReportOne, "end=10,0", "end=10.001,0")), loose)
+                    .empty());
+    // The frontier before the first !report: the first expected section.
+    EXPECT_TRUE(compareReportPrefix(kExpected,
+                                    "tecnigrafo-report 1\n\n[final]\nentities:\nmessages:\n"
+                                    "  Command: LINE\nprompt: Specify first point:\n",
+                                    kDefault)
+                    .empty());
+}
+
+TEST(CompareReportPrefix, DifferentSectionBeforeTheFrontier) {
+    const std::vector<Difference> differences = compareReportPrefix(
+        kExpected, obtained(replaced(kReportOne, "end=10,0", "end=11,0")), kDefault);
+    ASSERT_EQ(differences.size(), 1U);
+    EXPECT_EQ(differences[0],
+              (Difference{5, "  257 LINE start=0,0 end=10,0", "  257 LINE start=0,0 end=11,0"}));
+    // A line more in the obtained section.
+    const std::vector<Difference> longer = compareReportPrefix(
+        kExpected, obtained(replaced(kReportOne, "prompt:", "  *Cancel*\nprompt:")), kDefault);
+    ASSERT_FALSE(longer.empty());
+    EXPECT_EQ(longer[0], (Difference{9, "prompt: Command:", "  *Cancel*"}));
+}
+
+// #296: the expected handle of the first entity is 258 instead of 257, in a
+// section written before a command the program does not have yet.
+TEST(CompareReportPrefix, WrongHandleBeforeAnUnknownCommand) {
+    const std::string expected = replaced(kExpected, "  257 LINE", "  258 LINE");
+    const std::vector<Difference> differences = compareReportPrefix(expected, obtained(), kDefault);
+    ASSERT_EQ(differences.size(), 1U);
+    EXPECT_EQ(differences[0],
+              (Difference{5, "  258 LINE start=0,0 end=10,0", "  257 LINE start=0,0 end=10,0"}));
+}
+
+TEST(CompareReportPrefix, MessagesOfTheFinalSectionAreTheStartOfTheExpectedOnes) {
+    // #301: a question of a command that exists, written wrong.
+    std::vector<Difference> differences = compareReportPrefix(
+        replaced(kExpected, "Specify center point: 5,5", "Specify centre point: 5,5"), obtained(),
+        kDefault);
+    ASSERT_EQ(differences.size(), 1U);
+    EXPECT_EQ(differences[0],
+              (Difference{17, "  Specify centre point: 5,5", "  Specify center point: 5,5"}));
+
+    // More messages than the expected section has.
+    differences = compareReportPrefix(
+        kExpected,
+        obtained(kReportOne, replaced(kFinalAtFrontier, "prompt:",
+                                      "  Command: FUTURE\n  Unknown command: FUTURE.\nprompt:")),
+        kDefault);
+    ASSERT_EQ(differences.size(), 1U);
+    EXPECT_EQ(differences[0], (Difference{19, std::string{kNoLine}, "  Unknown command: FUTURE."}));
+
+    // The rest of the final section is not compared: entities, prompt.
+    EXPECT_TRUE(compareReportPrefix(
+                    kExpected,
+                    obtained(kReportOne, replaced(kFinalAtFrontier, "  257 LINE", "  999 LINE")),
+                    kDefault)
+                    .empty());
+}
+
+TEST(CompareReportPrefix, HeaderAndMissingSections) {
+    std::vector<Difference> differences = compareReportPrefix(
+        kExpected, replaced(obtained(), "tecnigrafo-report 1", "tecnigrafo-report 2"), kDefault);
+    ASSERT_EQ(differences.size(), 1U);
+    EXPECT_EQ(differences[0], (Difference{1, "tecnigrafo-report 1", "tecnigrafo-report 2"}));
+
+    // [report 2] is not in the expected report: one difference.
+    const std::string twoReports = std::string{kReportOne} +
+                                   "\n[report 2]\nentities:\nmessages:\n  Command: X\n"
+                                   "prompt: Command:\n" +
+                                   std::string{kFinalAtFrontier};
+    differences = compareReportPrefix(kExpected, twoReports, kDefault);
+    ASSERT_EQ(differences.size(), 1U);
+    EXPECT_EQ(differences[0], (Difference{20, std::string{kNoLine}, "[report 2]"}));
 }
 
 }  // namespace

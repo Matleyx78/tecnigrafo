@@ -8,9 +8,11 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstddef>
 #include <optional>
+#include <system_error>
 #include <utility>
 
 namespace tg::script {
@@ -300,8 +302,17 @@ void applyTolerance(const ToleranceDirective& directive, Tolerances& tolerances)
     }
 }
 
-std::variant<Script, ParseError> parseScript(std::string_view text, std::string_view sourceName) {
-    Script script;
+namespace {
+
+/// Reads the whole script. With `stopAtFrontier`, the first line of points
+/// 4.1 and 4.3 of docs/adr/0037 becomes the frontier: the actions stop
+/// there, and the reading goes on only to find malformed lines. Without it,
+/// a line not implemented yet is the error that parseScript() returns.
+std::variant<ScriptPrefix, ParseError> parseLines(std::string_view text,
+                                                  std::string_view sourceName,
+                                                  bool stopAtFrontier) {
+    ScriptPrefix result;
+    Script& script = result.script;
     const std::size_t dot = sourceName.find_last_of('.');
     const std::string_view extension =
         dot == std::string_view::npos ? std::string_view{} : sourceName.substr(dot);
@@ -310,18 +321,31 @@ std::variant<Script, ParseError> parseScript(std::string_view text, std::string_
         (extension[2] == 'c' || extension[2] == 'C') &&
         (extension[3] == 'r' || extension[3] == 'R')) {
         script.actions.emplace_back(ScriptSequencesDirective{true});
+        script.lines.push_back(0);
     }
     std::optional<int> firstLevel2Line;
     std::optional<int> levelOneLine;
+    const auto keep = [&result](Action action, int lineNumber) {
+        if (!result.frontier) {
+            result.script.actions.push_back(std::move(action));
+            result.script.lines.push_back(lineNumber);
+        }
+    };
     const std::vector<std::string_view> lines = splitLines(text);
     for (std::size_t index = 0; index < lines.size(); ++index) {
         const int lineNumber = static_cast<int>(index) + 1;
         const std::string_view line = lines[index];
         if (line.starts_with(';')) {
+            if (stopAtFrontier && !result.frontier) {
+                if (const std::optional<int> issue = changesWith(line)) {
+                    result.frontier =
+                        Frontier{lineNumber, "changes with #" + std::to_string(*issue)};
+                }
+            }
             continue;
         }
         if (!line.starts_with('!')) {
-            script.actions.emplace_back(TypedLine{std::string{line}});
+            keep(TypedLine{std::string{line}}, lineNumber);
             continue;
         }
         const Words words = detail::splitWords(line.substr(1));
@@ -329,14 +353,20 @@ std::variant<Script, ParseError> parseScript(std::string_view text, std::string_
             return ParseError{lineNumber, "a directive needs a name right after '!'"};
         }
         const Words arguments(words.begin() + 1, words.end());
-        DirectiveResult result = parseDirective(words.front(), arguments);
-        if (auto* error = std::get_if<std::string>(&result)) {
+        DirectiveResult parsed = parseDirective(words.front(), arguments);
+        if (auto* error = std::get_if<std::string>(&parsed)) {
             return ParseError{lineNumber, std::move(*error)};
         }
-        if (auto* announced = std::get_if<AnnouncedDirective>(&result)) {
-            return ParseError{lineNumber, std::move(announced->message), true};
+        if (auto* announced = std::get_if<AnnouncedDirective>(&parsed)) {
+            if (!stopAtFrontier) {
+                return ParseError{lineNumber, std::move(announced->message), true};
+            }
+            if (!result.frontier) {
+                result.frontier = Frontier{lineNumber, std::move(announced->message)};
+            }
+            continue;
         }
-        Action action = std::get<Action>(std::move(result));
+        Action action = std::get<Action>(std::move(parsed));
         if (needsLevel2(action) && !firstLevel2Line) {
             firstLevel2Line = lineNumber;
         }
@@ -350,7 +380,7 @@ std::variant<Script, ParseError> parseScript(std::string_view text, std::string_
         if (const auto* tolerance = std::get_if<ToleranceDirective>(&action)) {
             applyTolerance(*tolerance, script.tolerances);
         }
-        script.actions.push_back(std::move(action));
+        keep(std::move(action), lineNumber);
     }
     if (script.level == 2 && levelOneLine) {
         return ParseError{*levelOneLine, "the script asks for both !level 1 and !level 2"};
@@ -359,7 +389,51 @@ std::variant<Script, ParseError> parseScript(std::string_view text, std::string_
         return ParseError{*firstLevel2Line,
                           "this directive needs level 2: add \"!level 2\" to the script"};
     }
-    return script;
+    return result;
+}
+
+}  // namespace
+
+std::variant<Script, ParseError> parseScript(std::string_view text, std::string_view sourceName) {
+    std::variant<ScriptPrefix, ParseError> parsed = parseLines(text, sourceName, false);
+    if (auto* error = std::get_if<ParseError>(&parsed)) {
+        return std::move(*error);
+    }
+    return std::move(std::get<ScriptPrefix>(parsed).script);
+}
+
+std::variant<ScriptPrefix, ParseError> parseScriptPrefix(std::string_view text) {
+    return parseLines(text, {}, true);
+}
+
+std::optional<int> changesWith(std::string_view line) {
+    constexpr std::string_view kWords = "cambia con #";
+    // The numbers of GitHub issues; more digits are not a number of one.
+    constexpr std::size_t kMaxDigits = 9;
+    if (!line.starts_with(';')) {
+        return std::nullopt;
+    }
+    line.remove_prefix(1);
+    while (line.starts_with(' ')) {
+        line.remove_prefix(1);
+    }
+    if (!line.starts_with(kWords)) {
+        return std::nullopt;
+    }
+    line.remove_prefix(kWords.size());
+    std::size_t digits = 0;
+    while (digits < line.size() && line[digits] >= '0' && line[digits] <= '9') {
+        ++digits;
+    }
+    if (digits == 0 || digits > kMaxDigits) {
+        return std::nullopt;
+    }
+    int number = 0;
+    const auto [end, error] = std::from_chars(line.data(), line.data() + digits, number);
+    if (error != std::errc{} || end != line.data() + digits) {
+        return std::nullopt;
+    }
+    return number;
 }
 
 }  // namespace tg::script

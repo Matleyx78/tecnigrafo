@@ -6,9 +6,11 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 namespace tg::script {
 namespace {
@@ -264,6 +266,127 @@ TEST(ParseScript, TypingErrorsOfCatalogueDirectivesStayInvalid) {
         }
     }
     EXPECT_FALSE(failure("!foo").notImplemented);
+}
+
+TEST(ParseScript, LinesOfTheActions) {
+    const Script script = parsed("; comment\nPLINE\n\n!snap off\n; another\n10,0\n");
+    EXPECT_EQ(script.lines, (std::vector<int>{2, 3, 4, 6}));
+    EXPECT_EQ(script.lines.size(), script.actions.size());
+    // The "!scr on" that a .scr source adds has no line.
+    std::variant<Script, ParseError> scr = parseScript("PLINE\n", "a.scr");
+    ASSERT_TRUE(std::holds_alternative<Script>(scr));
+    EXPECT_EQ(std::get<Script>(scr).lines, (std::vector<int>{0, 1}));
+}
+
+// docs/adr/0037, point 5.
+TEST(ChangesWith, ReadsTheNumberOfTheIssue) {
+    EXPECT_EQ(changesWith("; cambia con #346"), 346);
+    EXPECT_EQ(changesWith(";cambia con #346"), 346);
+    EXPECT_EQ(changesWith(";    cambia con #346"), 346);
+    EXPECT_EQ(changesWith("; cambia con #346, the default snap changes"), 346);
+    EXPECT_EQ(changesWith("; cambia con #12abc"), 12);
+
+    EXPECT_EQ(changesWith(";cambia con 346"), std::nullopt);
+    EXPECT_EQ(changesWith(" ; cambia con #346"), std::nullopt);  // a normal line: text
+    EXPECT_EQ(changesWith("; cambia con #"), std::nullopt);
+    EXPECT_EQ(changesWith("; cambia con # 346"), std::nullopt);
+    EXPECT_EQ(changesWith("; Cambia con #346"), std::nullopt);
+    EXPECT_EQ(changesWith("; cambia  con #346"), std::nullopt);
+    EXPECT_EQ(changesWith("; a comment"), std::nullopt);
+    EXPECT_EQ(changesWith("PLINE"), std::nullopt);
+    EXPECT_EQ(changesWith("; cambia con #12345678901234567890"), std::nullopt);
+}
+
+ScriptPrefix prefixOf(std::string_view text) {
+    std::variant<ScriptPrefix, ParseError> result = parseScriptPrefix(text);
+    if (const auto* error = std::get_if<ParseError>(&result)) {
+        ADD_FAILURE() << "line " << error->line << ": " << error->message;
+        return {};
+    }
+    return std::get<ScriptPrefix>(std::move(result));
+}
+
+/// A directive of the catalogue that the program does not have yet, if any
+/// is left: the tests that need one are skipped once all are realized.
+std::optional<std::string> announcedDirective() {
+    for (const std::string_view text : {"!polar on", "!osnap none", "!scr on"}) {
+        const std::variant<Script, ParseError> result = parseScript(text);
+        if (const auto* error = std::get_if<ParseError>(&result);
+            error != nullptr && error->notImplemented) {
+            return std::string{text};
+        }
+    }
+    return std::nullopt;
+}
+
+TEST(ParseScriptPrefix, WithoutFrontierTheSameActionsAsParseScript) {
+    constexpr std::string_view kText = "; a comment\nPLINE\n0,0\n!tolerance absolute 0.1\n\n";
+    const ScriptPrefix prefix = prefixOf(kText);
+    const Script whole = parsed(kText);
+    EXPECT_EQ(prefix.frontier, std::nullopt);
+    EXPECT_EQ(prefix.script.actions, whole.actions);
+    EXPECT_EQ(prefix.script.lines, whole.lines);
+    EXPECT_EQ(prefix.script.tolerances, whole.tolerances);
+    EXPECT_EQ(prefix.script.level, 1);
+}
+
+TEST(ParseScriptPrefix, ChangesWithIsTheFrontier) {
+    const ScriptPrefix prefix =
+        prefixOf("PLINE\n0,0\n; cambia con #346\n10,0\n!tolerance absolute 0.5\n");
+    ASSERT_TRUE(prefix.frontier.has_value());
+    EXPECT_EQ(*prefix.frontier, (Frontier{3, "changes with #346"}));
+    EXPECT_EQ(prefix.script.actions, (std::vector<Action>{TypedLine{"PLINE"}, TypedLine{"0,0"}}));
+    EXPECT_EQ(prefix.script.lines, (std::vector<int>{1, 2}));
+    // The tolerances are those of the whole script, also below the frontier.
+    EXPECT_EQ(prefix.script.tolerances.absolute, 0.5);
+    // A comment of another kind is no frontier; parseScript() ignores it.
+    EXPECT_EQ(prefixOf("PLINE\n; cambia con 346\n").frontier, std::nullopt);
+    EXPECT_EQ(parsed("PLINE\n; cambia con #346\n0,0\n").actions.size(), 2U);
+}
+
+TEST(ParseScriptPrefix, AnnouncedDirectiveIsTheFrontier) {
+    const std::optional<std::string> announced = announcedDirective();
+    if (!announced) {
+        GTEST_SKIP() << "the program has every directive of the catalogue";
+    }
+    const ScriptPrefix prefix = prefixOf("PLINE\n" + *announced + "\n0,0\n");
+    ASSERT_TRUE(prefix.frontier.has_value());
+    EXPECT_EQ(prefix.frontier->line, 2);
+    EXPECT_NE(prefix.frontier->reason.find("not implemented yet"), std::string::npos)
+        << prefix.frontier->reason;
+    EXPECT_EQ(prefix.script.actions, (std::vector<Action>{TypedLine{"PLINE"}}));
+
+    // The first of the two.
+    ScriptPrefix first = prefixOf("PLINE\n; cambia con #7\n" + *announced + "\n");
+    ASSERT_TRUE(first.frontier.has_value());
+    EXPECT_EQ(*first.frontier, (Frontier{2, "changes with #7"}));
+    first = prefixOf("PLINE\n" + *announced + "\n; cambia con #7\n");
+    ASSERT_TRUE(first.frontier.has_value());
+    EXPECT_EQ(first.frontier->line, 2);
+}
+
+TEST(ParseScriptPrefix, MalformedLineBelowTheFrontierIsStillAnError) {
+    std::variant<ScriptPrefix, ParseError> result =
+        parseScriptPrefix("PLINE\n; cambia con #346\n0,0\n!foo\n");
+    ASSERT_TRUE(std::holds_alternative<ParseError>(result));
+    EXPECT_EQ(std::get<ParseError>(result).line, 4);
+    EXPECT_FALSE(std::get<ParseError>(result).notImplemented);
+
+    // A directive of level 2 without "!level 2", below the frontier.
+    result = parseScriptPrefix("PLINE\n; cambia con #346\n!key F8\n");
+    ASSERT_TRUE(std::holds_alternative<ParseError>(result));
+    EXPECT_EQ(std::get<ParseError>(result).line, 3);
+
+    const std::optional<std::string> announced = announcedDirective();
+    if (!announced) {
+        GTEST_SKIP() << "the program has every directive of the catalogue";
+    }
+    result = parseScriptPrefix(*announced + "\nPLINE\n!snap maybe\n");
+    ASSERT_TRUE(std::holds_alternative<ParseError>(result));
+    EXPECT_EQ(std::get<ParseError>(result).line, 3);
+    EXPECT_FALSE(std::get<ParseError>(result).notImplemented);
+    // parseScript() stops at the first error, the announced line.
+    EXPECT_TRUE(failure(*announced + "\nPLINE\n!snap maybe\n").notImplemented);
 }
 
 }  // namespace

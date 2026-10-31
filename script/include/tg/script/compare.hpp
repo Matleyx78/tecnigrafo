@@ -57,6 +57,18 @@ inline constexpr std::string_view kNoLine = "(no line)";
                                                      std::string_view actual,
                                                      const Tolerances& tolerances);
 
+/// Compares a report obtained up to the frontier with the expected one
+/// (docs/adr/0037, point 6). The sections of `actual` before its last one
+/// ([report 1] ... [report k]) are compared line by line with the expected
+/// sections of the same titles; the lines of the "messages:" list of the
+/// last section of `actual` must be the first lines of the "messages:" list
+/// of the expected section after [report k]. Nothing else is compared. The
+/// header line is compared. Returns the differences, with the lines of the
+/// expected file; an expected section missing is one difference.
+[[nodiscard]] std::vector<Difference> compareReportPrefix(std::string_view expected,
+                                                          std::string_view actual,
+                                                          const Tolerances& tolerances);
+
 /// The lines of `text` without their endings (LF or CRLF), without a UTF-8
 /// byte order mark at the start. A final line ending does not start an
 /// empty line: "a\n" is one line, "a\n\n" two, the second empty.

@@ -20,7 +20,7 @@ eventi veri di tastiera e mouse), e deve dare lo stesso
 | Prima della riga | Significato |
 |---|---|
 | niente (riga vuota) | `Invio` |
-| `;` | commento, ignorato |
+| `;` | commento, ignorato; `; cambia con #<numero>` segna dove un caso in attesa smette di confrontarsi ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punto 5; [casi.md](casi.md#il-confine-di-un-caso-in-attesa)) |
 | `!` | direttiva |
 | qualunque altro | testo scritto sulla riga di comando, poi `Invio` |
 

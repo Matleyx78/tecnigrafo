@@ -71,7 +71,9 @@ if(EXISTS "${TG_VERIFICA_PENDING}")
                 "tests/verifica/in-attesa.txt lists ${name}, which is not a case of tests/verifica/casi")
         endif()
         list(APPEND TG_VERIFICA_PENDING_NAMES "${name}")
-        if(NOT CMAKE_MATCH_2 STREQUAL "")
+        # Quoted: an optional group that does not match leaves CMAKE_MATCH_2
+        # undefined, and unquoted if() would compare the name itself.
+        if(NOT "${CMAKE_MATCH_2}" STREQUAL "")
             list(APPEND TG_VERIFICA_EXEMPT_NAMES "${name}")
         endif()
     endforeach()

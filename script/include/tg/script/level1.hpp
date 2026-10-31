@@ -7,6 +7,7 @@
 #include "tg/script/script.hpp"
 
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -36,6 +37,22 @@ struct RunOptions {
 /// clicks and the Esc key of the view; !view sets the size of a pixel.
 /// Precondition: script.level == 1.
 [[nodiscard]] std::string runLevel1(const Script& script, const RunOptions& options = {});
+
+/// A level 1 run up to the frontier.
+struct PrefixRun {
+    std::string report;                ///< as runLevel1() writes it, [final] at the frontier
+    std::optional<Frontier> frontier;  ///< the line typed with an unknown command name
+};
+
+/// Runs `script` as runLevel1() does, but stops before the first normal
+/// line typed while no command is running (CommandRunner::isActive() is
+/// false) whose text the runner would answer with "Unknown command":
+/// not U, not REDO, and not a command or alias of the registry
+/// (CommandRegistry::canonicalName), read as startCommand() reads it
+/// (docs/adr/0037, point 4.2). The report ends with the section [final]
+/// at that point. Precondition: script.level == 1, script.lines filled.
+[[nodiscard]] PrefixRun runLevel1UntilUnknownCommand(const Script& script,
+                                                     const RunOptions& options = {});
 
 /// The state of a level 1 run, one action at a time: what runLevel1() does
 /// for a whole script, open for a live session (tecnigrafo-mcp,

@@ -8,6 +8,7 @@
 #include "tg/script/compare.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -129,11 +130,23 @@ using Action =
                  EscDirective, AidDirective, OsnapDirective, ScriptSequencesDirective, KeyDirective,
                  ReportDirective, ScreenshotDirective, LevelDirective, ToleranceDirective>;
 
+/// Where a pending case stops being compared (docs/adr/0037, point 4).
+struct Frontier {
+    int line;            ///< 1-based, in script.tgs or domande.tgq
+    std::string reason;  ///< "not implemented yet: ...", "unknown command PLINE",
+                         ///< "changes with #346"
+
+    friend bool operator==(const Frontier&, const Frontier&) = default;
+};
+
 /// A parsed .tgs script (docs/verifica/script.md).
 struct Script {
     std::vector<Action> actions;  ///< one per line, comments dropped
     int level{1};                 ///< 2 if the script contains "!level 2"
     Tolerances tolerances;        ///< after every "!tolerance" of the script
+    /// 1-based line of each action, as many as actions; 0 for the "!scr on"
+    /// that a .scr source adds, which has no line.
+    std::vector<int> lines;
 };
 
 /// Reads a script. UTF-8, with or without BOM, LF or CRLF. A normal line is
@@ -144,6 +157,26 @@ struct Script {
 /// an empty path or another extension keeps the interactive sequence.
 [[nodiscard]] std::variant<Script, ParseError> parseScript(std::string_view text,
                                                            std::string_view sourceName = {});
+
+/// The number of a comment "; cambia con #<number>" (docs/adr/0037,
+/// point 5): ';' in the first column, then optional spaces, "cambia con #"
+/// and the digits; anything after them is ignored. Nothing for any other
+/// line. Shared by the scripts and the questions.
+[[nodiscard]] std::optional<int> changesWith(std::string_view line);
+
+/// A script above its frontier.
+struct ScriptPrefix {
+    Script script;                     ///< the actions above the frontier
+    std::optional<Frontier> frontier;  ///< none: the same actions as parseScript()
+};
+
+/// Reads the whole script as parseScript() does, and stops the actions at
+/// the first line of points 4.1 or 4.3 of docs/adr/0037: a line that uses
+/// what the catalogue describes but the program does not have yet (a
+/// ParseError with notImplemented), or a "; cambia con #<n>" comment. A
+/// malformed line anywhere, also below the frontier, is still an error.
+/// The level and the tolerances are those of the whole script.
+[[nodiscard]] std::variant<ScriptPrefix, ParseError> parseScriptPrefix(std::string_view text);
 
 /// Reads "!tolerance <kind> <value>" without the leading "!tolerance": the
 /// words after it, already split. Shared with the question files.

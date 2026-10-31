@@ -8,12 +8,14 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <map>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -90,6 +92,27 @@ void expectContains(const std::string& text, std::string_view part) {
     EXPECT_NE(text.find(part), std::string::npos) << "missing: " << part << "\nin:\n" << text;
 }
 
+std::string replaced(std::string_view text, std::string_view from, std::string_view to) {
+    std::string result{text};
+    const std::size_t at = result.find(from);
+    EXPECT_NE(at, std::string::npos) << from;
+    if (at != std::string::npos) {
+        result.replace(at, from.size(), to);
+    }
+    return result;
+}
+
+/// `report` as a reference would write it after one more line, "FUTURE",
+/// typed at "Command:": a command the program does not have yet, which
+/// draws an entity.
+std::string withFuture(std::string_view report) {
+    std::string result =
+        replaced(report, "prompt: Command:\n", "  Command: FUTURE\nprompt: Command:\n");
+    const std::size_t messages = result.find("messages:\n");
+    result.insert(messages, "  258 FUTURE center=5,5\n");
+    return result;
+}
+
 TEST(CheckCase, ScriptThatPasses) {
     const fs::path folder = makeCase(
         "passes", {{"script.tgs", std::string{kScript}}, {"atteso.txt", std::string{kReport}}});
@@ -117,10 +140,11 @@ TEST(CheckCase, ScriptThatDoesNotPass) {
 }
 
 TEST(CheckCase, PendingInvertsTheResult) {
-    std::string wrong{kReport};
-    wrong.replace(wrong.find("vertex=10,0"), 11, "vertex=11,0");
-    const fs::path failing =
-        makeCase("pending-fails", {{"script.tgs", std::string{kScript}}, {"atteso.txt", wrong}});
+    // Not passed only after the frontier: a command the program does not
+    // have yet (docs/adr/0037, point 4.2).
+    const fs::path failing = makeCase(
+        "pending-fails",
+        {{"script.tgs", std::string{kScript} + "FUTURE\n"}, {"atteso.txt", withFuture(kReport)}});
     Result result = check(failing, true);
     EXPECT_EQ(result.code, kExitPassed);
     expectContains(result.output, "pending: ");
@@ -131,6 +155,149 @@ TEST(CheckCase, PendingInvertsTheResult) {
     result = check(passing, true);
     EXPECT_EQ(result.code, kExitFailed);
     expectContains(result.output, "remove it from tests/verifica/in-attesa.txt");
+}
+
+// docs/adr/0037, points 4-6: a pending script is compared up to its
+// frontier, and a difference before it fails even when pending.
+TEST(CheckCase, PendingDifferenceOnlyAfterTheFrontierWaits) {
+    const fs::path folder = makeCase(
+        "frontier-after",
+        {{"script.tgs", std::string{kScript} + "FUTURE\n"}, {"atteso.txt", withFuture(kReport)}});
+    const Result result = check(folder, true);
+    EXPECT_EQ(result.code, kExitPassed);
+    expectContains(result.output, "pending: " + folder.generic_string() + ": ");
+    expectContains(result.output,
+                   "warning: not passed yet, as expected while it is listed in "
+                   "tests/verifica/in-attesa.txt; as expected up to script.tgs, line 5: unknown "
+                   "command FUTURE\n");
+    // The report up to the frontier, next to the whole one.
+    EXPECT_EQ(readFile(kOutput / "obtained" / "frontier-after" / kObtainedFrontierReport), kReport);
+    EXPECT_TRUE(fs::exists(kOutput / "obtained" / "frontier-after" / kObtainedReport));
+    // Not pending, the whole report is compared, as before.
+    EXPECT_EQ(check(folder).code, kExitFailed);
+}
+
+TEST(CheckCase, PendingDifferenceBeforeTheFrontierFails) {
+    // #301: a question of LINE written wrong, before a command the program
+    // does not have yet.
+    const std::string script = "LINE\n0,0\n10,0\n\nFUTURE\n";
+    const std::string expected = withFuture(
+        "tecnigrafo-report 1\n"
+        "\n"
+        "[final]\n"
+        "entities:\n"
+        "  257 LINE start=0,0 end=10,0\n"
+        "messages:\n"
+        "  Command: LINE\n"
+        "  Specify start point: 0,0\n"
+        "  Specify next point or [Undo]: 10,0\n"
+        "  Specify next point or [Undo]:\n"
+        "prompt: Command:\n");
+    const fs::path folder =
+        makeCase("frontier-before", {{"script.tgs", script}, {"atteso.txt", expected}});
+    const Result result = check(folder, true);
+    EXPECT_EQ(result.code, kExitFailed);
+    expectContains(result.output,
+                   "FAILED: " + folder.generic_string() +
+                       ": differs before the point the program cannot do yet (script.tgs, line 5: "
+                       "unknown command FUTURE)\n"
+                       "  line 9\n"
+                       "    expected:   Specify start point: 0,0\n"
+                       "    obtained:   Specify first point: 0,0\n");
+    EXPECT_EQ(result.output.find("warning:"), std::string::npos) << result.output;
+}
+
+TEST(CheckCase, PendingWithoutFrontierThatFailsIsWrong) {
+    std::string wrong{kReport};
+    wrong.replace(wrong.find("vertex=10,0"), 11, "vertex=11,0");
+    const fs::path folder =
+        makeCase("no-frontier", {{"script.tgs", std::string{kScript}}, {"atteso.txt", wrong}});
+    Result result = check(folder, true);
+    EXPECT_EQ(result.code, kExitFailed);
+    expectContains(result.output,
+                   "FAILED: " + folder.generic_string() +
+                       ": fails, but uses nothing the program does not have yet: fix the "
+                       "reference, or write \"; cambia con #<issue>\" before the line where the "
+                       "behaviour changes (docs/adr/0037)\n"
+                       "  line 5\n");
+    // Exempt: as before, pending and not passed.
+    result = check(folder, true, false);
+    EXPECT_EQ(result.code, kExitPassed);
+    expectContains(result.output,
+                   "warning: not passed yet, as expected while it is listed in "
+                   "tests/verifica/in-attesa.txt\n");
+}
+
+TEST(CheckCase, ChangesWithStopsTheComparisonOfAPendingCaseOnly) {
+    // The reference says the second polyline changes with #346: its
+    // expected echo is not what the program writes today.
+    const std::string script = std::string{kScript} + "; cambia con #346\nPLINE\n5,5\n\n";
+    const std::string expected = replaced(kReport, "  Specify next point or [Arc/Undo]:\n",
+                                          "  Specify next point or [Arc/Undo]:\n"
+                                          "  Command: PLINE\n"
+                                          "  Specify start point or [Future]: 5,5\n"
+                                          "  Specify next point or [Arc/Undo]:\n");
+    const fs::path folder =
+        makeCase("changes-with", {{"script.tgs", script}, {"atteso.txt", expected}});
+    Result result = check(folder, true);
+    EXPECT_EQ(result.code, kExitPassed);
+    expectContains(result.output, "as expected up to script.tgs, line 5: changes with #346\n");
+    // Not pending, the comment changes nothing.
+    result = check(folder);
+    EXPECT_EQ(result.code, kExitFailed);
+    expectContains(result.output, "FAILED: " + folder.generic_string() + ": ");
+    // Before the comment, a difference still fails.
+    const fs::path wrong = makeCase("changes-with-wrong",
+                                    {{"script.tgs", script},
+                                     {"atteso.txt", replaced(expected, "  Specify start point: 0,0",
+                                                             "  Specify first point: 0,0")}});
+    result = check(wrong, true);
+    EXPECT_EQ(result.code, kExitFailed);
+    expectContains(result.output,
+                   ": differs before the point the program cannot do yet "
+                   "(script.tgs, line 5: changes with #346)\n");
+}
+
+// A directive the catalogue describes and the program does not have yet is
+// the frontier (docs/adr/0037, point 4.1); a malformed line below it still
+// makes the case invalid. Skipped once the program has every directive.
+TEST(CheckCase, AnnouncedDirectiveIsTheFrontier) {
+    std::string announced;
+    for (const std::string_view text : {"!polar on", "!osnap none", "!scr on"}) {
+        const std::variant<Script, ParseError> parsed = parseScript(text);
+        if (const auto* error = std::get_if<ParseError>(&parsed);
+            error != nullptr && error->notImplemented) {
+            announced = text;
+            break;
+        }
+    }
+    if (announced.empty()) {
+        GTEST_SKIP() << "the program has every directive of the catalogue";
+    }
+    const std::string script = std::string{kScript} + announced + "\n";
+    const fs::path waiting = makeCase(
+        "frontier-directive", {{"script.tgs", script}, {"atteso.txt", std::string{kReport}}});
+    Result result = check(waiting, true);
+    EXPECT_EQ(result.code, kExitPassed);
+    expectContains(result.output, "; as expected up to script.tgs, line 5: ");
+    expectContains(result.output, "not implemented yet\n");
+
+    const fs::path wrong = makeCase(
+        "frontier-directive-wrong",
+        {{"script.tgs", script},
+         {"atteso.txt", replaced(kReport, "  Command: PLINE", "  Command: PLINE\n  Extra")}});
+    result = check(wrong, true);
+    EXPECT_EQ(result.code, kExitFailed);
+    expectContains(result.output,
+                   ": differs before the point the program cannot do yet "
+                   "(script.tgs, line 5: ");
+
+    const fs::path malformed =
+        makeCase("frontier-malformed",
+                 {{"script.tgs", script + "!snap maybe\n"}, {"atteso.txt", std::string{kReport}}});
+    result = check(malformed, true);
+    EXPECT_EQ(result.code, kExitInvalid);
+    expectContains(result.output, "script.tgs, line 6: wrong arguments for !snap");
 }
 
 TEST(CheckCase, LevelTwoCaseIsSkipped) {
