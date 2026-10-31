@@ -5,6 +5,7 @@
 
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_description.hpp"
+#include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
@@ -1231,6 +1232,8 @@ protected:
                        [this] { return std::make_unique<FakePointCommand>(m_journal); });
         m_registry.add(pickDescription("PICK", {}),
                        [this] { return std::make_unique<FakeSelectCommand>(m_picks); });
+        m_registry.add(PolarangCommand::description(),
+                       [] { return std::make_unique<PolarangCommand>(); });
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
     }
@@ -1269,6 +1272,15 @@ protected:
         DrawingAids aids = m_runner.drawingAids();
         aids.objectSnap = objectSnap;
         aids.ortho = ortho;
+        m_runner.setDrawingAids(aids);
+    }
+
+    /// Object snap on or off, polar tracking on, ortho off.
+    void setPolar(bool objectSnap) {
+        DrawingAids aids = m_runner.drawingAids();
+        aids.objectSnap = objectSnap;
+        aids.ortho = false;
+        aids.polar = true;
         m_runner.setDrawingAids(aids);
     }
 
@@ -1577,6 +1589,123 @@ TEST_F(DrawingAidsTest, SubmittedPointsAreNotCorrected) {
     runner().submit(PointInput{{3, 4}});
     runner().submit(PointInput{{97, 50}});
     EXPECT_EQ(points(), (Points{{3, 4}, {97, 50}}));
+}
+
+// --- Polar tracking (docs/adr/0033, points 8 and 9) -------------------------
+
+TEST_F(DrawingAidsTest, PolarWithoutABasePointLeavesTheClick) {
+    setPolar(false);
+    runner().submitText("POINT");
+    runner().click({30, 1}, PickAction::Add);   // the first point: no base point
+    runner().click({80, 4}, PickAction::Add);   // 3 off the ray at 0 degrees
+    runner().click({83, 60}, PickAction::Add);  // 3 off the ray at 90 degrees
+    EXPECT_EQ(points(), (Points{{30, 1}, {80, 1}, {80, 60}}));
+}
+
+TEST_F(DrawingAidsTest, PolarEngagesWithinTheSnapAperture) {
+    setPolar(false);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{30, 1}});
+    runner().click({80, 13}, PickAction::Add);  // 12 off the ray: too far
+    EXPECT_EQ(points().back(), (Vec2{80, 13}));
+
+    runner().setPixelSize(2.0);                  // 10 pixels are now 20 units
+    runner().click({120, 25}, PickAction::Add);  // 12 off the ray from (80,13)
+    EXPECT_EQ(points().back(), (Vec2{120, 13}));
+}
+
+TEST_F(DrawingAidsTest, SnapWinsOverPolar) {
+    setPolar(true);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{100, 50}});
+
+    // 3 off the ray at 270 degrees, but 3 from the endpoint (100,0).
+    runner().click({97, 4}, PickAction::Add);
+    EXPECT_EQ(points().back(), (Vec2{100, 0}));
+
+    runner().click({140, 6}, PickAction::Add);  // no snap: polar from (100,0)
+    EXPECT_EQ(points().back(), (Vec2{140, 0}));
+}
+
+TEST_F(DrawingAidsTest, ThePreviewFollowsPolar) {
+    setPolar(false);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{10, 10}});
+    runner().pointerMoved({50, 17});
+    EXPECT_EQ(previewPoint(), (Vec2{50, 10}));
+    EXPECT_EQ(commandPointer(), (Vec2{50, 10}));
+}
+
+TEST_F(DrawingAidsTest, OrthoAppliesIfBothAreOn) {
+    DrawingAids aids;
+    aids.objectSnap = false;
+    aids.ortho = true;
+    aids.polar = true;
+    runner().setDrawingAids(aids);
+    EXPECT_EQ(runner().drawingAids(), aids);  // the runner leaves both on
+
+    runner().submitText("POINT");
+    runner().submit(PointInput{{0, 0}});
+    runner().click({60, 40}, PickAction::Add);  // far from every polar ray
+    EXPECT_EQ(points().back(), (Vec2{60, 0}));
+}
+
+TEST_F(DrawingAidsTest, DistanceTypedAloneFollowsThePolarRay) {
+    setPolar(false);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{10, 10}});
+    runner().pointerMoved({20, 11});  // 1 off the ray at 0 degrees
+    runner().submitText("50");
+    EXPECT_EQ(points().back(), (Vec2{60, 10}));
+
+    runner().pointerMoved({61, 30});  // from (60,10): 1 off the ray at 90
+    runner().submitText("20");
+    EXPECT_EQ(points().back(), (Vec2{60, 30}));
+
+    // Away from every ray the distance follows the pointer itself.
+    runner().pointerMoved({90, 70});  // from (60,30): 30, 40
+    runner().submitText("10");
+    EXPECT_EQ(points().back(), (Vec2{66, 38}));
+}
+
+TEST_F(DrawingAidsTest, PolarangAsksForTheIncrementAndRefusesOtherValues) {
+    runner().submitText("POLARANG");
+    EXPECT_EQ(runner().prompt().text, "Enter new value for POLARANG <90>:");
+    for (const char* refused : {"190", "0", "-10", "180.0001", "abc", "45<0", "1,2"}) {
+        runner().submitText(refused);
+        ASSERT_FALSE(messages().empty());
+        EXPECT_EQ(messages().back(), "Value must be between 0 and 180.") << refused;
+        EXPECT_EQ(runner().prompt().text, "Enter new value for POLARANG <90>:") << refused;
+    }
+    runner().submitText("22.5");
+    EXPECT_FALSE(runner().isActive());
+
+    runner().submitText("POLARANG");
+    EXPECT_EQ(runner().prompt().text, "Enter new value for POLARANG <22.5>:");
+    runner().submitText("");  // Enter keeps the value
+    runner().submitText("POLARANG");
+    EXPECT_EQ(runner().prompt().text, "Enter new value for POLARANG <22.5>:");
+    runner().submitText("180");  // the upper bound is allowed
+    runner().submitText("POLARANG");
+    EXPECT_EQ(runner().prompt().text, "Enter new value for POLARANG <180>:");
+}
+
+TEST_F(DrawingAidsTest, ChangingPolarangChangesTheRays) {
+    setPolar(false);
+    runner().submitText("POINT");
+    runner().submit(PointInput{{0, 0}});
+    runner().click({50, 53}, PickAction::Add);  // near 45 degrees: no ray at 90
+    EXPECT_EQ(points().back(), (Vec2{50, 53}));
+    runner().submitText("");
+
+    runner().submitText("POLARANG");
+    runner().submitText("45");
+    runner().submitText("POINT");
+    runner().submit(PointInput{{0, 0}});
+    runner().click({50, 53}, PickAction::Add);  // 2.1 off the ray at 45 degrees
+    ASSERT_EQ(points().size(), 4U);
+    EXPECT_NEAR(points().back().x, 51.5, 1e-9);
+    EXPECT_NEAR(points().back().y, 51.5, 1e-9);
 }
 
 // FakeCommand sets the last point but declares no base point.

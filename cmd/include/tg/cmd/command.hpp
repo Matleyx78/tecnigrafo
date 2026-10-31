@@ -5,6 +5,7 @@
 
 #include "tg/cmd/input.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/edit/editor.hpp"
@@ -66,6 +67,9 @@ struct CommandDefaults {
     double rotation{0.0};                ///< the last rotation of ROTATE, radians
     /// MIRRTEXT: 0 (Readable) at start-up (docs/adr/0031, point 3).
     core::MirrorText mirrorText{core::MirrorText::Readable};
+    /// POLARANG, the increment of polar tracking, radians: 90 degrees at
+    /// start-up (docs/adr/0033, point 8).
+    double polarAngle{core::kPi / 2.0};
 };
 
 /// What a command works with. The runner keeps one context for its whole

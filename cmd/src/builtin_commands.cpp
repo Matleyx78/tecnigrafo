@@ -5,6 +5,7 @@
 
 #include "command_descriptions.hpp"
 #include "tg/cmd/command_registry.hpp"
+#include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/cmd/commands/arc_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
@@ -53,6 +54,8 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(detail::newDescription(), [] { return std::make_unique<NewCommand>(); });
     registry.add(detail::openDescription(), [] { return std::make_unique<OpenCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });
+    registry.add(PolarangCommand::description(),
+                 [] { return std::make_unique<PolarangCommand>(); });
     registry.add(detail::qsaveDescription(), [] { return std::make_unique<QsaveCommand>(); });
     registry.add(RotateCommand::description(), [] { return std::make_unique<RotateCommand>(); });
     registry.add(detail::saveDescription(), [] { return std::make_unique<SaveCommand>(); });
