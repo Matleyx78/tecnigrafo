@@ -9,7 +9,7 @@ messages:
   Specify first point: 0,0
   Specify next point or [Undo]: 50
   Specify next point or [Undo]: 20
-  Specify next point or [Undo]:
+  Specify next point or [Close/Undo]:
 prompt: Command:
 preview:
 selection: none
