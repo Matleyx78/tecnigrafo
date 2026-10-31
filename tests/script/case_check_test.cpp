@@ -122,6 +122,16 @@ TEST(CheckCase, ScriptThatPasses) {
     EXPECT_EQ(readFile(kOutput / "obtained" / "passes" / kObtainedReport), kReport);
 }
 
+TEST(CheckCase, ReadsScriptAcrossMultipleBlocks) {
+    const std::string padding = ";" + std::string(20000, 'x') + "\n";
+    std::map<std::string, std::string> files;
+    files.emplace("script.tgs", padding + std::string{kScript});
+    files.emplace("atteso.txt", std::string{kReport});
+    const fs::path folder = makeCase("large-input", files);
+    const Result result = check(folder, false, false);
+    EXPECT_EQ(result.code, kExitPassed) << result.output;
+}
+
 TEST(CheckCase, ScriptThatDoesNotPass) {
     std::string expected{kReport};
     expected.replace(expected.find("vertex=10,0"), 11, "vertex=11,0");

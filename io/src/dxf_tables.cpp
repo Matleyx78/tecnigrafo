@@ -138,9 +138,11 @@ core::RawGroups layerRecord(const core::Layer& layer, const core::Document& docu
         // The 62 read with an unchanged RGB is written again as it was
         // (docs/adr/0024, point 2); otherwise the nearest index.
         const auto read420 = at420 ? parseInteger(body[*at420].value) : std::nullopt;
-        const auto read62 = at62 ? parseInteger(body[*at62].value) : std::nullopt;
-        index = read420 == rgb && read62 && *read62 != 0 ? std::llabs(*read62)
-                                                         : core::nearestAci(layer.color.rgb());
+        const long long read62 = at62 ? parseInteger(body[*at62].value).value_or(0) : 0;
+        index = core::nearestAci(layer.color.rgb());
+        if (read420 == rgb && read62 != 0) {
+            index = std::llabs(read62);
+        }
         wanted.push_back(wantedInteger(62, layer.on ? index : -index));
         wanted.push_back(wantedInteger(420, rgb));
     } else {

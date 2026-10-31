@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <limits>
 #include <optional>
 #include <span>
@@ -139,6 +140,10 @@ std::optional<EntityRecord> Document::remove(EntityId id) {
 Entity Document::replaceEntity(EntityId id, Entity entity) {
     const auto it = m_positions.find(id.value);
     assert(it != m_positions.end() && "the replaced entity must exist");
+    // A broken precondition must not become undefined behavior in Release.
+    if (it == m_positions.end()) {
+        std::abort();
+    }
     EntityRecord& record = m_entities[it->second];
     const BBox previousBox = boundingBox(record.entity);
     if (!previousBox.isEmpty()) {
@@ -303,6 +308,10 @@ std::optional<std::pair<Linetype, std::size_t>> Document::removeLinetype(Linetyp
 void Document::setProperties(EntityId id, const EntityProperties& properties) {
     const auto it = m_positions.find(id.value);
     assert(it != m_positions.end());
+    // A broken precondition must not become undefined behavior in Release.
+    if (it == m_positions.end()) {
+        std::abort();
+    }
     checkProperties(properties);
     m_entities[it->second].properties = properties;
 }

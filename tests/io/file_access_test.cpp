@@ -86,6 +86,21 @@ TEST_F(DiskFilesTest, WritesAndReadsBytes) {
     EXPECT_EQ(fileCount(), 1U) << "no temporary file is left";
 }
 
+TEST_F(DiskFilesTest, ReadsEmptyAndLargeBinaryFiles) {
+    const std::string file = name("bytes.dxf");
+    for (const std::size_t size : {0U, 8192U, 16384U, 20001U}) {
+        SCOPED_TRACE(size);
+        std::string bytes(size, '\0');
+        for (std::size_t i = 0; i < size; ++i) {
+            bytes[i] = static_cast<char>(i % 256);
+        }
+        ASSERT_EQ(files().write(file, bytes), std::nullopt);
+        const Result<std::string> read = files().read(file);
+        ASSERT_TRUE(read.ok()) << read.error().message;
+        EXPECT_EQ(read.value(), bytes);
+    }
+}
+
 TEST_F(DiskFilesTest, ReplacesAnExistingFile) {
     const std::string file = name("drawing.dxf");
     ASSERT_EQ(files().write(file, "old content, longer than the new one"), std::nullopt);

@@ -814,9 +814,14 @@ TEST(Document, ReplaceEntityHandlesEmptyAndNonemptyBoundingBoxes) {
     EXPECT_EQ(document.replaceEntity(id, Polyline{}), Entity{Polyline{}});
 }
 
+TEST(DocumentDeathTest, SetPropertiesRequiresAnExistingRecord) {
+    Document document = Document::newDrawing();
+    EXPECT_DEATH(document.setProperties(EntityId{999}, document.current()), "");
+}
+
 TEST(DocumentDeathTest, ReplaceEntityRequiresAnExistingRecord) {
     Document document;
-    EXPECT_DEATH(document.replaceEntity(EntityId{999}, Polyline{}), "must exist");
+    EXPECT_DEATH(document.replaceEntity(EntityId{999}, Polyline{}), "");
 }
 
 }  // namespace
