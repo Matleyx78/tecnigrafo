@@ -229,6 +229,9 @@ scritti **prima** e da **un altro agente**
 - Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
 - Togli da `tests/verifica/in-attesa.txt` solo le righe dei casi del tuo
   pacchetto: così diventano obbligatori.
+- La parola `esente` in `in-attesa.txt` la aggiunge solo un pacchetto che porta
+  un controllo anticipato, se la sua scheda lo dice
+  ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md), punto 9).
 - Se un caso ti sembra sbagliato, **fermati del tutto**, subito, anche se il
   resto del pacchetto è pronto:
   1. non adattare il codice al riferimento che ritieni sbagliato, né il
@@ -270,6 +273,14 @@ scritti **prima** e da **un altro agente**
   licenze compatibili con la GPLv3 che permettano la ridistribuzione; nel dubbio,
   non usare il file e scrivilo nella pull request.
 - Elenca i nuovi casi in `in-attesa.txt`, con il numero della issue del lavoro.
+- La pull request è finita con la CI verde, **controlli anticipati compresi**
+  ([ADR 0037](docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): la forma
+  dei file e l'eco di ogni riga dello script in `atteso.txt`
+  ([docs/verifica/casi.md](docs/verifica/casi.md), "Controlli anticipati"). Puoi
+  eseguire i casi che scrivi (`scripts/controlla.sh --solo verifica`) per sapere
+  se sono validi, mai per ricavare un valore atteso.
+- Non aggiungere `esente` in `in-attesa.txt`; toglilo dalla riga di un caso che
+  correggi.
 
 ## Comandi
 

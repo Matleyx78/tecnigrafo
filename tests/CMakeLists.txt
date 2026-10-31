@@ -83,6 +83,7 @@ add_executable(tg_tests
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
     script/case_check_test.cpp
+    script/case_form_test.cpp
     script/compare_test.cpp
     script/editor_names_test.cpp
     script/entity_reader_test.cpp
@@ -128,6 +129,14 @@ set_tests_properties(script_describe_one PROPERTIES PASS_REGULAR_EXPRESSION
     "^command: PLINE\naliases: PL\nsummary: [^\n]+\.\nprompt start-point: Specify start point: \\(point\\)\n")
 add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe NOSUCHCOMMAND)
 set_tests_properties(script_describe_unknown PROPERTIES WILL_FAIL TRUE)
+
+# tecnigrafo-script check --no-early-checks (docs/adr/0037, point 9) only
+# with --pending: alone it is a usage error, exit code 2. The case folder is
+# never read.
+add_test(NAME script_check_exempt_needs_pending
+    COMMAND tecnigrafo-script check no-such-case --no-early-checks)
+set_tests_properties(script_check_exempt_needs_pending PROPERTIES
+    PASS_REGULAR_EXPRESSION "^usage:\n")
 
 # tecnigrafo-mcp (docs/adr/0027): it is built, and its options are checked.
 # The protocol and the tools are tested in memory (mcp/server_test.cpp,

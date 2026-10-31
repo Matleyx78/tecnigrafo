@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The text files of the verification cases keep LF line endings on every
+# checkout, also on Windows with core.autocrlf: a carriage return makes a case
+# invalid (docs/adr/0037, point 2). Only these three names, never the images
+# or the DXF files of a case.
+tests/verifica/casi/**/script.tgs text eol=lf
+tests/verifica/casi/**/atteso.txt text eol=lf
+tests/verifica/casi/**/domande.tgq text eol=lf

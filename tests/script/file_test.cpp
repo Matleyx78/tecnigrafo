@@ -367,7 +367,11 @@ TEST(CheckWithFiles, QuestionsReadSourcesOnlyWithTheirFolder) {
 TEST(CheckWithFiles, ScriptsWorkOnFreshCopiesOfTheFilesOfTheCase) {
     const fs::path folder = emptyFolder("case-copies");
     writeFile(folder / "script.tgs", "PLINE\n0,0\n10,0\n\n");
-    writeFile(folder / "atteso.txt", "anything");
+    // Not the report the script gives, but with the echo of every line, so
+    // that the case runs and fails (docs/adr/0037, point 3).
+    writeFile(folder / "atteso.txt",
+              "messages:\n  Command: PLINE\n  Specify start point: 0,0\n"
+              "  Specify next point or [Arc/Undo]: 10,0\n  Specify next point or [Arc/Undo]:\n");
     writeFile(folder / "plan.dxf", kDxf);
     writeFile(folder / "dati" / "altro.dxf", kDxf);
     const fs::path output = kRoot / "case-copies-output";

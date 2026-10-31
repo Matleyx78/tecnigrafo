@@ -574,6 +574,7 @@ Scrivi i casi di verifica del pacchetto $work prima che il lavoro cominci: ogni 
 - Valori attesi da calcoli, file pubblici o programmi di riferimento, **mai** eseguendo Tecnigrafo, \`tecnigrafo-script\` o \`tecnigrafo-mcp\`.
 - File presi dal web: indirizzo, versione, hash SHA-256 e licenza in \`sorgenti.json\`, link alla licenza nella pull request.
 - I nuovi casi vanno in \`in-attesa.txt\` con il numero della issue del lavoro.
+- La pull request è finita con la CI verde, controlli anticipati compresi ([ADR 0037]($blob/docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): i casi si possono eseguire per sapere se sono validi, mai per ricavare un valore atteso. Non si aggiunge \`esente\`, e lo si toglie dai casi che si correggono.
 EOF
     fi
 }

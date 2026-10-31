@@ -322,7 +322,12 @@ TEST(McpSession, CheckCaseGivesTheOutcome) {
     fs::create_directories(root / "area" / "vuoto");
     {
         std::ofstream(root / "area" / "buono" / "script.tgs") << "LINE\n0,0\n10,0\n\n";
-        std::ofstream(root / "area" / "buono" / "atteso.txt") << "tecnigrafo-report 1\n";
+        // Not the report the script gives, but with the echo of every line,
+        // so that the case runs and is not passed (docs/adr/0037, point 3).
+        std::ofstream(root / "area" / "buono" / "atteso.txt")
+            << "tecnigrafo-report 1\n\n[final]\nmessages:\n  Command: LINE\n"
+               "  Specify first point: 0,0\n  Specify next point or [Undo]: 10,0\n"
+               "  Specify next point or [Undo]:\n";
     }
     Tools tools{{.root = root, .sources = std::nullopt, .questions = false}};
     const ToolResult notPassed = tools.call("check_case", json{{"path", "area/buono"}});

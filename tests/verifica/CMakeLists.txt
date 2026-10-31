@@ -46,10 +46,13 @@ endforeach()
 list(REMOVE_DUPLICATES TG_VERIFICA_NAMES)
 list(SORT TG_VERIFICA_NAMES)
 
-# in-attesa.txt: one line "<area>/<name> #<issue>"; lines starting with #
-# are comments. Changing it configures again.
+# in-attesa.txt: one line "<area>/<name> #<issue>", or
+# "<area>/<name> #<issue> esente" for a pending case that runs without the
+# early checks (docs/adr/0037, point 9); lines starting with # are comments.
+# Changing it configures again.
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${TG_VERIFICA_PENDING}")
 set(TG_VERIFICA_PENDING_NAMES "")
+set(TG_VERIFICA_EXEMPT_NAMES "")
 if(EXISTS "${TG_VERIFICA_PENDING}")
     file(STRINGS "${TG_VERIFICA_PENDING}" pending_lines ENCODING UTF-8)
     foreach(line IN LISTS pending_lines)
@@ -57,9 +60,9 @@ if(EXISTS "${TG_VERIFICA_PENDING}")
         if(line STREQUAL "" OR line MATCHES "^#")
             continue()
         endif()
-        if(NOT line MATCHES "^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)[ \t]+#[0-9]+$")
+        if(NOT line MATCHES "^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)[ \t]+#[0-9]+([ \t]+esente)?$")
             message(SEND_ERROR
-                "tests/verifica/in-attesa.txt: expected \"<area>/<name> #<issue>\", found \"${line}\"")
+                "tests/verifica/in-attesa.txt: expected \"<area>/<name> #<issue>\" or \"<area>/<name> #<issue> esente\", found \"${line}\"")
             continue()
         endif()
         set(name "${CMAKE_MATCH_1}")
@@ -68,6 +71,9 @@ if(EXISTS "${TG_VERIFICA_PENDING}")
                 "tests/verifica/in-attesa.txt lists ${name}, which is not a case of tests/verifica/casi")
         endif()
         list(APPEND TG_VERIFICA_PENDING_NAMES "${name}")
+        if(NOT CMAKE_MATCH_2 STREQUAL "")
+            list(APPEND TG_VERIFICA_EXEMPT_NAMES "${name}")
+        endif()
     endforeach()
 endif()
 
@@ -77,6 +83,9 @@ foreach(name IN LISTS TG_VERIFICA_NAMES)
         --sources "${TG_VERIFICA_SOURCES_DIR}")
     if(name IN_LIST TG_VERIFICA_PENDING_NAMES)
         list(APPEND arguments --pending)
+        if(name IN_LIST TG_VERIFICA_EXEMPT_NAMES)
+            list(APPEND arguments --no-early-checks)
+        endif()
     endif()
     add_test(NAME "verifica/${name}" COMMAND tecnigrafo-script ${arguments})
     set_tests_properties("verifica/${name}" PROPERTIES
