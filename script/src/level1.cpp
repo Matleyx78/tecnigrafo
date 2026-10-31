@@ -149,10 +149,20 @@ private:
 
     void perform(const AidDirective& directive) {
         cmd::DrawingAids aids = m_runner.drawingAids();
-        if (directive.aid == AidDirective::Aid::Snap) {
-            aids.objectSnap = directive.on;
-        } else {
-            aids.ortho = directive.on;
+        switch (directive.aid) {
+            case AidDirective::Aid::Snap:
+                aids.objectSnap = directive.on;
+                break;
+            case AidDirective::Aid::Ortho:
+                // Switching ortho on switches polar tracking off (docs/adr/0033,
+                // point 9); the runner leaves the exclusion to its callers.
+                aids.ortho = directive.on;
+                aids.polar = aids.polar && !directive.on;
+                break;
+            case AidDirective::Aid::Polar:
+                aids.polar = directive.on;
+                aids.ortho = aids.ortho && !directive.on;
+                break;
         }
         m_runner.setDrawingAids(aids);
     }

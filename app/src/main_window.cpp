@@ -296,6 +296,15 @@ void MainWindow::setSnapModes(const core::SnapModes& modes) {
     applyDrawingAids();
 }
 
+void MainWindow::setPolar(bool on) {
+    m_polar = on;
+    if (on && m_orthoAction->isChecked()) {
+        m_orthoAction->setChecked(false);  // applies the aids, with polar on
+        return;
+    }
+    applyDrawingAids();
+}
+
 void MainWindow::applyDrawingAids() {
     cmd::DrawingAids aids;
     aids.snapModes = m_snapModes;
@@ -305,6 +314,11 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.center = m_centerAction->isChecked();
     aids.snapModes.insertion = m_insertionAction->isChecked();
     aids.ortho = m_orthoAction->isChecked();
+    // Ortho and polar exclude each other: ortho switched on wins.
+    if (aids.ortho) {
+        m_polar = false;
+    }
+    aids.polar = m_polar;
     m_runner.setDrawingAids(aids);
     m_view->update();  // the snap marker and the preview may have changed
 }

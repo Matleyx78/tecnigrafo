@@ -70,9 +70,11 @@ struct EscDirective {
     friend bool operator==(const EscDirective&, const EscDirective&) = default;
 };
 
-/// !snap on|off and !ortho on|off.
+/// !snap on|off, !ortho on|off and !polar on|off. Ortho and polar tracking
+/// exclude each other (docs/adr/0033, point 9): switching one on switches
+/// the other off; switching one off leaves the other as it is.
 struct AidDirective {
-    enum class Aid : std::uint8_t { Snap, Ortho };
+    enum class Aid : std::uint8_t { Snap, Ortho, Polar };
     Aid aid{Aid::Snap};
     bool on{false};
     friend bool operator==(const AidDirective&, const AidDirective&) = default;

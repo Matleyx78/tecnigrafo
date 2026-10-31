@@ -3,6 +3,7 @@
 
 #include "command_descriptions.hpp"
 
+#include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
@@ -473,6 +474,14 @@ CommandDescription MirrtextCommand::description() {
             "Sets whether MIRROR reflects text (1) or keeps it readable (0).",
             false,
             {{"value", "Enter new value for MIRRTEXT <{default}>:", ValueType::Integer, {}, true}}};
+}
+
+CommandDescription PolarangCommand::description() {
+    return {"POLARANG",
+            {},
+            "Sets the angle increment of polar tracking, in degrees.",
+            false,
+            {{"value", "Enter new value for POLARANG <{default}>:", ValueType::Real, {}, true}}};
 }
 
 CommandDescription LinetypeCommand::description() {

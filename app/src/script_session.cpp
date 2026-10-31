@@ -204,6 +204,15 @@ bool ScriptSession::perform(const script::EscDirective& /*directive*/) {
 }
 
 bool ScriptSession::perform(const script::AidDirective& directive) {
+    if (directive.aid == script::AidDirective::Aid::Polar) {
+        // No switch yet for polar: the window keeps it, and switching it on
+        // turns the ortho switch off; that switch's history line is left out,
+        // as for !ortho.
+        collectMessages();
+        m_window.setPolar(directive.on);
+        collectMessages(false);
+        return true;
+    }
     const bool snap = directive.aid == script::AidDirective::Aid::Snap;
     auto* action = m_window.findChild<QAction*>(snap ? QStringLiteral("aids.osnap")
                                                      : QStringLiteral("aids.ortho"));

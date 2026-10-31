@@ -405,9 +405,10 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
         // direction: falling back to the last point makes it unresolvable.
         // The pointer is corrected now, so that the direction is the one the
         // preview shows (docs/adr/0008). Ortho aligns it to the last point,
-        // the one the distance is measured from: within a command it is the
-        // base point; for the first point of a command it may come from the
-        // previous one, as "@" does.
+        // the one the distance is measured from, and polar tracking puts it
+        // on the polar ray the pointer is on (docs/adr/0033, point 9):
+        // within a command it is the base point; for the first point of a
+        // command it may come from the previous one, as "@" does.
         const core::Vec2 pointer = m_pointer ? aidedPoint(*m_pointer, m_context.lastPoint)
                                              : m_context.lastPoint.value_or(core::Vec2{});
         if (const std::optional<core::Vec2> point = resolve(*spec, m_context.lastPoint, pointer)) {
@@ -692,12 +693,25 @@ std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) co
 
 core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
                                      const std::optional<core::Vec2>& orthoBase) const {
-    // Snap wins over ortho (docs/adr/0008).
+    // Snap wins over ortho (docs/adr/0008) and over polar tracking
+    // (docs/adr/0033, point 9). Ortho and polar start from the same base
+    // point; if a caller left both on, ortho applies.
     if (const std::optional<core::SnapPoint> snap = snapAt(point)) {
         return snap->point;
     }
-    if (m_drawingAids.ortho && orthoBase) {
+    if (!orthoBase) {
+        return point;
+    }
+    if (m_drawingAids.ortho) {
         return orthoPoint(*orthoBase, point);
+    }
+    if (m_drawingAids.polar) {
+        // The polar aperture is the snap aperture (docs/adr/0033, point 9).
+        if (const std::optional<core::Vec2> polar =
+                polarPoint(*orthoBase, point, m_context.defaults.polarAngle,
+                           kSnapAperturePixels * m_pixelSize)) {
+            return *polar;
+        }
     }
     return point;
 }

@@ -92,6 +92,13 @@ public:
     /// is written in the history.
     void setSnapModes(const core::SnapModes& modes);
 
+    /// Switches polar tracking on or off, as the `!polar` directive does.
+    /// Switching it on switches ortho off through its switch, and switching
+    /// ortho on switches it off (docs/adr/0033, point 9). Until the stage's
+    /// interface has a switch for it, the state is kept here; nothing is
+    /// written in the history for polar itself.
+    void setPolar(bool on);
+
     void setTheme(Theme theme);
 
     [[nodiscard]] Theme theme() const { return m_theme; }
@@ -190,6 +197,9 @@ private:
     /// The snap modes as set so far; applyDrawingAids() overwrites the ones
     /// that have a switch with the state of the switch.
     core::SnapModes m_snapModes;
+    /// Polar tracking, until it has a switch; applyDrawingAids() turns it
+    /// off when ortho is on.
+    bool m_polar{false};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

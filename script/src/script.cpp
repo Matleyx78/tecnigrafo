@@ -32,9 +32,9 @@ using Words = std::vector<std::string_view>;
 // The directives that the catalogue describes from stage 0.7 (docs/verifica/
 // script.md) and the program does not have yet. This list is read only after
 // every directive the program has (parseDirective), so an entry left here
-// when its package realizes it (P3 `scr`, P8 `polar`) does nothing; remove
-// it to keep the list short.
-constexpr std::array<std::string_view, 1> kAnnouncedDirectives{"polar"};
+// when its package realizes it does nothing; remove it to keep the list
+// short. Every directive of stage 0.7 is realized: the list is empty.
+constexpr std::array<std::string_view, 0> kAnnouncedDirectives{};
 
 /// An abbreviation of AutoCAD for a snap mode, and the member of
 /// core::SnapModes that it turns on (docs/adr/0033, point 7).
@@ -197,7 +197,7 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
         }
         return name == "esc" ? Action{EscDirective{}} : Action{ReportDirective{}};
     }
-    if (name == "snap" || name == "ortho" || name == "scr") {
+    if (name == "snap" || name == "ortho" || name == "polar" || name == "scr") {
         const std::optional<bool> on =
             arguments.size() == 1 ? parseOnOff(arguments[0]) : std::nullopt;
         if (!on) {
@@ -206,7 +206,12 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
         if (name == "scr") {
             return Action{ScriptSequencesDirective{*on}};
         }
-        const auto aid = name == "snap" ? AidDirective::Aid::Snap : AidDirective::Aid::Ortho;
+        AidDirective::Aid aid = AidDirective::Aid::Snap;
+        if (name == "ortho") {
+            aid = AidDirective::Aid::Ortho;
+        } else if (name == "polar") {
+            aid = AidDirective::Aid::Polar;
+        }
         return Action{AidDirective{aid, *on}};
     }
     if (name == "osnap") {
