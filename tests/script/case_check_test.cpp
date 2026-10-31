@@ -534,7 +534,7 @@ TEST(CheckCase, PendingQuestionsCompareBeforeFrontierAndAfterSkippedAnswers) {
         makeCase("question-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 10\n"}});
     EXPECT_EQ(check(pending, true).code, kExitPassed);
     const fs::path after =
-        makeCase("question-after-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 12\n"}});
+        makeCase("after-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 12\n"}});
     EXPECT_EQ(check(after, true).code, kExitFailed);
     expectContains(check(after, true).output, "differs before the point the program cannot do yet");
 }
