@@ -23,6 +23,23 @@ Vec2 midpoint(const PolylineSegment& segment) {
     return (segment.start + segment.end) * 0.5;
 }
 
+Vec2 arcEndpoint(const ArcGeometry& arc, double angle) {
+    const double normalized = normalizeAngle(angle);
+    if (normalized == 0.0) {
+        return {arc.center.x + arc.radius, arc.center.y};
+    }
+    if (normalized == kPi / 2.0) {
+        return {arc.center.x, arc.center.y + arc.radius};
+    }
+    if (normalized == kPi) {
+        return {arc.center.x - arc.radius, arc.center.y};
+    }
+    if (normalized == 3.0 * kPi / 2.0) {
+        return {arc.center.x, arc.center.y - arc.radius};
+    }
+    return pointAt(arc, angle);
+}
+
 bool twoPointText(const Text& text) {
     return text.horizontal == TextHorizontal::Aligned || text.horizontal == TextHorizontal::Fit;
 }
@@ -47,7 +64,8 @@ std::optional<Polyline> movedPoly(const Polyline& input, std::size_t index, cons
         const Vec2 endPointNew = vertices[end].position;
         const bool changed =
             distance(startPointNew, old.start) > 0.0 || distance(endPointNew, old.end) > 0.0;
-        if (!changed && !(curvedGrip && i == vertex)) {
+        const bool shouldRebuild = changed || (curvedGrip && i == vertex);
+        if (!shouldRebuild) {
             continue;
         }
         if (!(distance(startPointNew, endPointNew) > 0.0)) {
@@ -82,7 +100,8 @@ std::vector<Vec2> gripPoints(const Entity& entity) {
                 return {value.start, value.end, (value.start + value.end) * 0.5};
             } else if constexpr (std::is_same_v<T, Arc>) {
                 const auto arc = value.geometry();
-                return {startPoint(arc), endPoint(arc),
+                return {arcEndpoint(arc, arc.startAngle),
+                        arcEndpoint(arc, arc.startAngle + arc.sweep),
                         pointAt(arc, arc.startAngle + arc.sweep / 2.0), value.center};
             } else if constexpr (std::is_same_v<T, Circle>) {
                 const auto c = value.center;
@@ -111,7 +130,7 @@ std::vector<Vec2> gripPoints(const Entity& entity) {
 GripResult moveGrip(const Entity& entity, std::size_t index, const Vec2& target) {
     const auto points = gripPoints(entity);
     assert(index < points.size());
-    const GripResult invalid{GripOutcome::Invalid, entity};
+    GripResult invalid{GripOutcome::Invalid, entity};
     if (!std::isfinite(target.x) || !std::isfinite(target.y)) {
         return invalid;
     }

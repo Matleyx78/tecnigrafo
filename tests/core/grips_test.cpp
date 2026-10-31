@@ -84,16 +84,26 @@ TEST(Grips, LineCircleAndArcMoves) {
     const auto points = gripPoints(arc);
     const std::array<Vec2, 3> targets{{{12.0, 0.0}, {0.0, 12.0}, {9.0, 9.0}}};
     for (std::size_t i = 0; i < 3; ++i) {
-        const Vec2 target = targets[i];
+        const Vec2 target = targets.at(i);
         const auto moved = moveGrip(arc, i, target);
         ASSERT_EQ(moved.outcome, GripOutcome::Moved);
         const auto result = std::get<Arc>(moved.entity);
         for (std::size_t j = 0; j < 3; ++j) {
-            EXPECT_NEAR(distance(result.center, j == i ? target : points[j]), result.radius,
+            EXPECT_NEAR(distance(result.center, j == i ? target : points.at(j)), result.radius,
                         kTolerance);
         }
     }
     expectPoint(std::get<Arc>(moveGrip(arc, 3, {5.0, 5.0}).entity).center, {5.0, 5.0});
+}
+
+TEST(Grips, AxisAlignedArcEndpointsStayExactForShallowMovedArc) {
+    const Entity arc = Arc{{5.0, 0.0}, 5.0, 0.0, kPi};
+    const auto moved = moveGrip(arc, 2, {5.0, 2e-8});
+    ASSERT_EQ(moved.outcome, GripOutcome::Moved);
+    const auto result = std::get<Arc>(moved.entity);
+    EXPECT_DOUBLE_EQ(result.center.x, 5.0);
+    EXPECT_DOUBLE_EQ(result.center.y, -625000000.0);
+    EXPECT_DOUBLE_EQ(result.radius, 625000000.0);
 }
 
 TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {
