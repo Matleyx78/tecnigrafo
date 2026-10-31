@@ -41,7 +41,7 @@ Il contratto accettato con l'ADR 0012 di solid-space:
 - `core/CMakeLists.txt`
 - `script/src/curve_questions.cpp`, `script/src/question_table.cpp`
 - `tests/core/offset_test.cpp` (nuovo), `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R17)
+- `tests/verifica/in-attesa/0.7-R17.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -115,6 +115,6 @@ struct OffsetResult {
 
 ## Fatto quando
 
-- I casi di `[0.7-R17]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R17]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - La CI è verde.

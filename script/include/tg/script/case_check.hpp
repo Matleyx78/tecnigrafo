@@ -40,12 +40,12 @@ inline constexpr const char* kObtainedAnswers = "ottenuto.tgq";
                                 const std::optional<std::filesystem::path>& sources = std::nullopt);
 
 struct CheckOptions {
-    /// The case is listed in tests/verifica/in-attesa.txt: a case not
+    /// The case is listed in a file of tests/verifica/in-attesa/: a case not
     /// passed exits with kExitPassed, with a warning, and a case passed with
     /// kExitFailed, asking to remove it from the list.
     bool pending{false};
     /// The checks of docs/adr/0037 run; false only for a pending case
-    /// marked "esente" in tests/verifica/in-attesa.txt (point 9). For a
+    /// marked "esente" in tests/verifica/in-attesa/ (point 9). For a
     /// pending script of level 1 that does not pass, they include the run
     /// up to its frontier: a difference before it, or no frontier at all,
     /// exits with kExitFailed even when pending (points 4-6).

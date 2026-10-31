@@ -29,7 +29,7 @@ namespace fs = std::filesystem;
 constexpr const char* kScriptFile = "script.tgs";
 constexpr const char* kExpectedFile = "atteso.txt";
 constexpr const char* kQuestionsFile = "domande.tgq";
-constexpr std::string_view kPendingList = "tests/verifica/in-attesa.txt";
+constexpr std::string_view kPendingList = "tests/verifica/in-attesa/";
 
 // Differences printed for one case; the rest are only counted, so that a
 // shifted report does not flood the log. The obtained file has them all.
@@ -257,7 +257,9 @@ int conclude(const Outcome& outcome, const fs::path& folder, bool pending, std::
             return kExitNeedsLevel2;
         case Verdict::Passed:
             if (pending) {
-                out << "FAILED: " << name << " passes now: remove it from " << kPendingList << "\n";
+                out << "FAILED: " << name
+                    << " passes now: remove its line from the file of its block in " << kPendingList
+                    << " (delete the file when it lists no more case)\n";
                 return kExitFailed;
             }
             out << "passed: " << name << "\n";

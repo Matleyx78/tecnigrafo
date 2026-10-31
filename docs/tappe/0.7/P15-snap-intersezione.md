@@ -33,7 +33,7 @@ arriva con un pacchetto di solid-space diverso), lo sposti a quello.
 - `core/CMakeLists.txt`
 - `tests/core/document_query_test.cpp`, `tests/core/curve_parts_test.cpp`
   (nuovo), `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R15)
+- `tests/verifica/in-attesa/0.7-R15.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -119,7 +119,7 @@ esatto (P14), quindi non serve confrontare stazioni.
 
 ## Fatto quando
 
-- I casi di `[0.7-R15]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`; i casi esistenti (rivisti da R15) passano.
+- I casi di `[0.7-R15]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`; i casi esistenti (rivisti da R15) passano.
 - I test di `partOf` esistono e passano.
 - La CI è verde.

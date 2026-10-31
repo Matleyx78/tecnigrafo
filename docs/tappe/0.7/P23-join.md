@@ -22,7 +22,7 @@
 - `cmd/src/builtin_commands.cpp`, `cmd/src/command_descriptions.cpp`,
   `cmd/CMakeLists.txt`
 - `tests/cmd/join_command_test.cpp` (nuovo), `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R23)
+- `tests/verifica/in-attesa/0.7-R23.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -78,6 +78,6 @@ Un passo di annulla `Join`.
 
 ## Fatto quando
 
-- I casi di `[0.7-R23]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R23]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - La CI è verde.

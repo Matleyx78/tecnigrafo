@@ -20,7 +20,7 @@
 // and the screenshots in the output folder; the report is compared with
 // atteso.txt, and every atteso-<name>.png of the case with <name>.png, with
 // the tolerances of the script. --pending reverses the outcome, as for
-// tecnigrafo-script (tests/verifica/in-attesa.txt).
+// tecnigrafo-script (tests/verifica/in-attesa/).
 //
 // Exit codes, as for tecnigrafo-script: 0 passed (or equal), 1 not passed,
 // 2 invalid case or arguments.
@@ -72,7 +72,7 @@ constexpr const char* kExpectedFile = "atteso.txt";
 constexpr const char* kObtainedReport = "rapporto.txt";
 constexpr const char* kExpectedImagePrefix = "atteso-";
 constexpr const char* kDifferenceImagePrefix = "differenza-";
-constexpr std::string_view kPendingList = "tests/verifica/in-attesa.txt";
+constexpr std::string_view kPendingList = "tests/verifica/in-attesa/";
 
 // A run of the program longer than this is a failure: a script that hangs
 // must not block the CI.
@@ -414,8 +414,9 @@ int conclude(const Outcome& outcome, const QString& folder, bool pending) {
             return kExitInvalid;
         case Verdict::Passed:
             if (pending) {
-                std::cout << "FAILED: " << name << " passes now: remove it from " << kPendingList
-                          << "\n";
+                std::cout << "FAILED: " << name
+                          << " passes now: remove its line from the file of its block in "
+                          << kPendingList << " (delete the file when it lists no more case)\n";
                 return kExitFailed;
             }
             std::cout << "passed: " << name << "\n";

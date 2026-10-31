@@ -47,7 +47,7 @@ Il contratto accettato con l'ADR 0011 di solid-space:
 - `script/src/curve_questions.cpp`, `script/src/question_table.cpp`
 - `tests/core/fillet_test.cpp` (nuovo), `tests/core/document_query_test.cpp`,
   `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R19)
+- `tests/verifica/in-attesa/0.7-R19.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -168,6 +168,6 @@ struct TangentCircleResult {
 
 ## Fatto quando
 
-- I casi di `[0.7-R19]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R19]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - La CI è verde.

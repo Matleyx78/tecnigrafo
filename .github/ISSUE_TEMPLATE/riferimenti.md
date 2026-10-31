@@ -21,9 +21,11 @@ caso. Il responsabile può aggiungere qui casi o file che vuole vedere. -->
 ## In breve
 
 - Tocca solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
-  `tests/verifica/in-attesa.txt`.
+  `tests/verifica/in-attesa/`.
 - Valori attesi da calcoli, file pubblici o programmi di riferimento, **mai**
   eseguendo Tecnigrafo.
 - File presi dal web: indirizzo, versione, hash SHA-256 e licenza in
   `sorgenti.json`, link alla licenza nella pull request.
-- I nuovi casi vanno in `in-attesa.txt` con il numero della issue del lavoro.
+- I nuovi casi vanno nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt` (il
+  tag di questo blocco, con la lettera se è diviso: `<X.Y>-R<N>a.txt`), una riga `<area>/<nome> #<issue del lavoro>` per
+  caso.

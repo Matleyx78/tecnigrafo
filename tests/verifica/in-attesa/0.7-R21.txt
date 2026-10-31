@@ -1,0 +1,5 @@
+# 0.7-R21: CHAMFER e smusso (#371)
+chamfer/autocad-raccordi #371
+chamfer/sequenza-script #371
+chamfer/opzioni-undo-shift #371
+chamfer/casi-limite-errori #371 esente

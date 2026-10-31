@@ -5,7 +5,7 @@
 
 ## Contesto
 
-Un caso di verifica scritto prima del lavoro sta in `tests/verifica/in-attesa.txt`
+Un caso di verifica scritto prima del lavoro sta in `tests/verifica/in-attesa/`
 e si esegue con `--pending`: fallire è previsto, quindi la CI della pull request
 di riferimenti non dice niente sul suo contenuto
 ([ADR 0011](0011-modalita-di-controllo.md), punto 7). Un errore del riferimento
@@ -143,7 +143,7 @@ Un caso in attesa senza confine, che però non passa, è lo stesso errore: o il
 riferimento è sbagliato, o manca `; cambia con`.
 
 Se il caso passa per intero vale ancora la regola di oggi: va tolto da
-`in-attesa.txt`.
+`in-attesa/`.
 
 ### 7. Chi fa cosa
 
@@ -157,8 +157,8 @@ Se il caso passa per intero vale ancora la regola di oggi: va tolto da
   differenza può essere un errore del programma: non adatta il riferimento, si
   ferma e lo scrive nella issue; decide il responsabile (una issue di
   correzione, e nel caso `; cambia con #<correzione>`).
-- **Lavoro.** Nulla cambia: toglie da `in-attesa.txt` le righe dei suoi casi,
-  e da quel momento il confronto è intero.
+- **Lavoro.** Nulla cambia: cancella da `in-attesa/` il file dei suoi casi, e da
+  quel momento il confronto è intero.
 - **Responsabile.** In revisione guarda ogni `; cambia con` nuovo: è
   l'eccezione che spegne il controllo per il resto del caso.
 
@@ -175,7 +175,7 @@ allora una domanda che cambia si dichiara con `; cambia con` (punto 5).
 
 I casi già in attesa sono scritti senza queste regole. Il pacchetto che porta
 un controllo anticipato lo prova su tutti i casi esistenti; quelli in attesa
-che non lo superano restano in `in-attesa.txt` con la parola `esente` in fondo
+che non lo superano restano in `in-attesa/` con la parola `esente` in fondo
 alla riga:
 
 ```

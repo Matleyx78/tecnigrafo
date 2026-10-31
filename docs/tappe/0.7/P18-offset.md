@@ -23,7 +23,7 @@
 - `cmd/src/builtin_commands.cpp`, `cmd/src/command_descriptions.cpp`,
   `cmd/CMakeLists.txt`
 - `tests/cmd/offset_command_test.cpp` (nuovo), `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R18)
+- `tests/verifica/in-attesa/0.7-R18.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -74,6 +74,6 @@ Enter layer option for offset objects [Current/Source] <Source>:
 
 ## Fatto quando
 
-- I casi di `[0.7-R18]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R18]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - La CI è verde.

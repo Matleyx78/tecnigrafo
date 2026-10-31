@@ -285,3 +285,17 @@ i rimandi ai documenti che cambia.
   ([F3](tappe/fuori-tappa/F3-domande-gia-verificabili.md), #432). Le richieste
   annunciate, terzo controllo dell'idea, si decidono con il piano della tappa
   0.8.
+- **2026-10-31 — L'elenco dei casi in attesa diventa una cartella.** Il
+  responsabile sostituisce `tests/verifica/in-attesa.txt` con
+  `tests/verifica/in-attesa/`, un file per blocco di riferimenti
+  (`0.7-R16.txt`): il pacchetto di riferimenti aggiunge il suo file e quello di
+  lavoro lo cancella, quindi nessun file è condiviso e cade l'eccezione alla
+  regola "Dipende da" scritta il 2026-10-29, perché con un file solo le pull
+  request in parallelo andavano in conflitto una dopo l'altra. È la stessa
+  decisione di solid-space (Matleyx78/solid-space#95). L'[ADR
+  0011](adr/0011-modalita-di-controllo.md), punti 7 e 9, è corretto con una
+  riga **Corretto:** e non sostituito; [AGENTS.md](../AGENTS.md),
+  [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), `docs/verifica/` e i piani
+  della tappa 0.7 lo seguono. La regola della CI (un caso in lista che passa fa
+  fallire la CI) non cambia. Issue
+  [#425](https://github.com/Matleyx78/tecnigrafo/issues/425).

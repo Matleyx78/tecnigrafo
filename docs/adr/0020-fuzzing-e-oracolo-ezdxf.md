@@ -19,7 +19,7 @@ programma. La scheda della tappa 0.5 (idea #106, punti 3 e 5) chiede:
 Due vincoli pratici:
 
 - una pull request di riferimenti può toccare solo `tests/verifica/casi/`,
-  `tests/verifica/sorgenti.json` e `tests/verifica/in-attesa.txt` (ADR 0011,
+  `tests/verifica/sorgenti.json` e `tests/verifica/in-attesa/` (ADR 0011,
   punto 7): non può aggiungere lo script dell'oracolo né il passo della CI,
   come invece prevedeva la scheda;
 - non tutti gli agenti possono installare pacchetti Python: le sessioni cloud

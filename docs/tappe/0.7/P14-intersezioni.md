@@ -58,7 +58,7 @@ Il contratto accettato con gli ADR 0009 e 0010 di solid-space:
   `script/CMakeLists.txt`
 - `tests/core/intersections_test.cpp`, `tests/core/tolerance_test.cpp` (nuovi),
   `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R14)
+- `tests/verifica/in-attesa/0.7-R14.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -299,8 +299,8 @@ tolleranze"), con le risposte nella forma scritta lì.
 
 ## Fatto quando
 
-- I casi di `[0.7-R14]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R14]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - Nessun file di Tecnigrafo fuori da `core/src` include un'intestazione di
   solid-space, salvo il test di P0.
 - La CI è verde su tutti i sistemi.

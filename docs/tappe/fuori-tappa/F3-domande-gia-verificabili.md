@@ -23,7 +23,7 @@
 - `script/include/tg/script/questions.hpp`, `script/src/questions.cpp`
 - `script/src/case_check.cpp`
 - `tests/script/questions_test.cpp`, `tests/script/case_check_test.cpp`
-- `tests/verifica/in-attesa.txt` (solo `esente`, sotto)
+- i file di `tests/verifica/in-attesa/` (solo `esente`, sotto)
 - `docs/verifica/casi.md`, `docs/verifica/domande.md`
 
 ## Cosa fare
@@ -80,7 +80,7 @@ nella riga dei commenti, con il rimando all'ADR 0037; in
 ## Regole della tappa che valgono qui
 
 - Il pacchetto non tocca `tests/verifica/casi/` né `sorgenti.json`; in
-  `in-attesa.txt` aggiunge solo `esente`.
+  `in-attesa/` aggiunge solo `esente`.
 - Niente modifiche a `.github/` né a `cmake/`.
 - Messaggi del programma in inglese; documenti in italiano.
 

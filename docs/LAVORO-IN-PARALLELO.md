@@ -67,12 +67,11 @@ dice, per ogni pacchetto:
   comportamento);
 - **Dipende da**: le issue che devono essere chiuse prima. Due pacchetti che
   toccano gli stessi file sono **sempre** legati da "Dipende da", così non
-  possono partire insieme. **Unica eccezione**: l'elenco dei casi in attesa
-  (`tests/verifica/in-attesa.txt`), che ogni pacchetto di riferimenti allunga
-  con i suoi casi e ogni pacchetto di lavoro accorcia togliendo i propri
-  (ADR 0011, punto 7). Lì ognuno tocca solo le righe dei propri casi, e chi
-  arriva dopo si aggiorna; legare tutti quei pacchetti per un solo file li
-  metterebbe in fila. La stessa eccezione vale in solid-space. Un pacchetto che
+  possono partire insieme. Nessuna eccezione: nemmeno l'elenco dei casi in
+  attesa è un file condiviso, perché è la cartella `tests/verifica/in-attesa/`
+  con un file per blocco di riferimenti, che il pacchetto di riferimenti
+  aggiunge e quello di lavoro cancella (ADR 0011, punto 7); lo stesso in
+  solid-space. Un pacchetto che
   ha bisogno di solid-space cita qui la richiesta in solid-space (`Matleyx78/solid-space#N`) finché la tappa di
   solid-space non ha i suoi pacchetti, poi il pacchetto di solid-space che gli
   serve; nel piano sta dopo i pacchetti che non ne hanno bisogno

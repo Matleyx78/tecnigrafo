@@ -29,7 +29,7 @@
 - `script/src/curve_questions.cpp`, `script/src/question_table.cpp`
 - `tests/core/chamfer_test.cpp`, `tests/cmd/chamfer_command_test.cpp` (nuovi),
   `tests/CMakeLists.txt`
-- `tests/verifica/in-attesa.txt` (togliere le righe di R21)
+- `tests/verifica/in-attesa/0.7-R21.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -110,6 +110,6 @@ Select 2D polyline or [Distance/Angle/Method]:
 
 ## Fatto quando
 
-- I casi di `[0.7-R21]` passano e le loro righe sono tolte da
-  `tests/verifica/in-attesa.txt`.
+- I casi di `[0.7-R21]` passano e il loro file è cancellato da
+  `tests/verifica/in-attesa/`.
 - La CI è verde.
