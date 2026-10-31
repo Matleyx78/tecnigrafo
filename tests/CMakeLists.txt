@@ -38,6 +38,7 @@ add_executable(tg_tests
     cmd/text_command_test.cpp
     cmd/value_format_test.cpp
     core/arc_geometry_test.cpp
+    core/grips_test.cpp
     core/arc_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
