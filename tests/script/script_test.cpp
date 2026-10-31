@@ -333,8 +333,7 @@ TEST(ParseScriptPrefix, WithoutFrontierTheSameActionsAsParseScript) {
 TEST(ParseScriptPrefix, ChangesWithIsTheFrontier) {
     const ScriptPrefix prefix =
         prefixOf("PLINE\n0,0\n; cambia con #346\n10,0\n!tolerance absolute 0.5\n");
-    ASSERT_TRUE(prefix.frontier.has_value());
-    EXPECT_EQ(*prefix.frontier, (Frontier{3, "changes with #346"}));
+    EXPECT_EQ(prefix.frontier, (std::optional<Frontier>{Frontier{3, "changes with #346"}}));
     EXPECT_EQ(prefix.script.actions, (std::vector<Action>{TypedLine{"PLINE"}, TypedLine{"0,0"}}));
     EXPECT_EQ(prefix.script.lines, (std::vector<int>{1, 2}));
     // The tolerances are those of the whole script, also below the frontier.
@@ -350,19 +349,16 @@ TEST(ParseScriptPrefix, AnnouncedDirectiveIsTheFrontier) {
         GTEST_SKIP() << "the program has every directive of the catalogue";
     }
     const ScriptPrefix prefix = prefixOf("PLINE\n" + *announced + "\n0,0\n");
-    ASSERT_TRUE(prefix.frontier.has_value());
-    EXPECT_EQ(prefix.frontier->line, 2);
-    EXPECT_NE(prefix.frontier->reason.find("not implemented yet"), std::string::npos)
-        << prefix.frontier->reason;
+    const Frontier frontier = prefix.frontier.value_or(Frontier{0, {}});
+    EXPECT_EQ(frontier.line, 2);
+    EXPECT_NE(frontier.reason.find("not implemented yet"), std::string::npos) << frontier.reason;
     EXPECT_EQ(prefix.script.actions, (std::vector<Action>{TypedLine{"PLINE"}}));
 
     // The first of the two.
     ScriptPrefix first = prefixOf("PLINE\n; cambia con #7\n" + *announced + "\n");
-    ASSERT_TRUE(first.frontier.has_value());
-    EXPECT_EQ(*first.frontier, (Frontier{2, "changes with #7"}));
+    EXPECT_EQ(first.frontier, (std::optional<Frontier>{Frontier{2, "changes with #7"}}));
     first = prefixOf("PLINE\n" + *announced + "\n; cambia con #7\n");
-    ASSERT_TRUE(first.frontier.has_value());
-    EXPECT_EQ(first.frontier->line, 2);
+    EXPECT_EQ(first.frontier.value_or(Frontier{0, {}}).line, 2);
 }
 
 TEST(ParseScriptPrefix, MalformedLineBelowTheFrontierIsStillAnError) {

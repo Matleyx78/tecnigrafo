@@ -22,6 +22,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <locale>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -428,8 +429,7 @@ TEST(RunLevel1, OsnapQuadrantFindsTheQuadrantOfACircle) {
 TEST(RunLevel1UntilUnknownCommand, UnknownCommandAtCommandIsTheFrontier) {
     const PrefixRun run =
         runLevel1UntilUnknownCommand(parsed("; c\nPL\n0,0\n10,0\n\n xyz \n0,0\n"));
-    ASSERT_TRUE(run.frontier.has_value());
-    EXPECT_EQ(*run.frontier, (Frontier{6, "unknown command xyz"}));
+    EXPECT_EQ(run.frontier, (std::optional<Frontier>{Frontier{6, "unknown command xyz"}}));
     // The report as if the script ended there; PL is an alias of PLINE.
     EXPECT_EQ(run.report, reportOf("PL\n0,0\n10,0\n\n"));
 }
@@ -445,8 +445,7 @@ TEST(RunLevel1UntilUnknownCommand, OtherLinesAreNoFrontier) {
     EXPECT_EQ(run.report, runLevel1(script));
     // Without a command running, the same line is the frontier.
     const PrefixRun idle = runLevel1UntilUnknownCommand(parsed("XYZ\n"));
-    ASSERT_TRUE(idle.frontier.has_value());
-    EXPECT_EQ(*idle.frontier, (Frontier{1, "unknown command XYZ"}));
+    EXPECT_EQ(idle.frontier, (std::optional<Frontier>{Frontier{1, "unknown command XYZ"}}));
     EXPECT_EQ(idle.report, reportOf(""));
 }
 
