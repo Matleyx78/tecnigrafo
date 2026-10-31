@@ -156,22 +156,22 @@ TEST_F(LineCommandTest, EmptyAndFullyUndoneCommandsPreserveRedo) {
     triangle();
     runner().submitText("");
     runner().submitText("U");
-    for (const bool cancel : {false, true}) {
-        for (const int points : {0, 1, 3}) {
-            runner().submitText("L");
-            for (int index = 0; index < points; ++index) {
-                point(static_cast<double>(index), 0.0);
-            }
-            for (int index = 0; index < points; ++index) {
-                runner().submitText("U");
-            }
-            runner().submit(cancel ? Input{CancelInput{}} : Input{ConfirmInput{}});
-            EXPECT_FALSE(runner().isActive());
-            EXPECT_FALSE(editor().inTransaction());
-            EXPECT_TRUE(document().isEmpty());
-            EXPECT_FALSE(editor().canUndo());
-            EXPECT_TRUE(editor().canRedo());
+    // Enter at the first question no longer ends the command: it continues
+    // from the last point (docs/tappe/0.7/P5), so only Esc ends these.
+    for (const int points : {0, 1, 3}) {
+        runner().submitText("L");
+        for (int index = 0; index < points; ++index) {
+            point(static_cast<double>(index), 0.0);
         }
+        for (int index = 0; index < points; ++index) {
+            runner().submitText("U");
+        }
+        runner().submit(CancelInput{});
+        EXPECT_FALSE(runner().isActive());
+        EXPECT_FALSE(editor().inTransaction());
+        EXPECT_TRUE(document().isEmpty());
+        EXPECT_FALSE(editor().canUndo());
+        EXPECT_TRUE(editor().canRedo());
     }
 }
 

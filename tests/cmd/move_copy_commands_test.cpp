@@ -125,7 +125,7 @@ TEST_F(MoveCopyTest, MoveMovesEveryKindOfEntity) {
     EXPECT_EQ(std::get<core::Polyline>(entityOf(a)).vertices()[2].position, (core::Vec2{110, -40}));
     EXPECT_EQ(std::get<core::Polyline>(entityOf(a)).vertices()[1].bulge, 1.0);
     EXPECT_EQ(entityOf(b), Entity{lineAt(100, -50, 101, -49)});
-    EXPECT_EQ(entityOf(c), Entity{Circle{{105, -45}, 2}});
+    EXPECT_EQ(entityOf(c), (Entity{Circle{{105, -45}, 2}}));
     EXPECT_EQ(entityOf(d), (Entity{Arc{{100, -50}, 3, 0.0, 1.0}}));
     EXPECT_EQ(std::get<Text>(entityOf(e)).position, (core::Vec2{101, -48}));
     EXPECT_EQ(std::get<Text>(entityOf(e)).alignmentPoint, (core::Vec2{101, -48}));
@@ -291,7 +291,7 @@ TEST_F(MoveCopyTest, CopyCopiesEverySelectedEntityInSelectionOrder) {
     point(0, 100);
     runner().submitText("");
     ASSERT_EQ(document().entityCount(), 4U);
-    EXPECT_EQ(document().entities()[2].entity, Entity{Circle{{5, 105}, 2}});
+    EXPECT_EQ(document().entities()[2].entity, (Entity{Circle{{5, 105}, 2}}));
     EXPECT_EQ(document().entities()[3].entity, Entity{lineAt(0, 100, 1, 100)});
 }
 
