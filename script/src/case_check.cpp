@@ -213,21 +213,63 @@ Outcome checkQuestionFile(const fs::path& folder, const CheckOptions& options,
     }
     // The questions only read: the hand-written files of the case directly.
     CaseFiles access{folder, sources};
+    Outcome outcome;
     std::variant<std::vector<Answer>, ParseError> answers = answerQuestions(*text, &access);
     if (const auto* error = std::get_if<ParseError>(&answers)) {
+        outcome = fromParseError(path, *error);
+    } else {
+        const std::vector<Answer>& list = std::get<std::vector<Answer>>(answers);
+        if (!writeFile(output / kObtainedAnswers, withActualAnswers(*text, list))) {
+            return invalid("cannot write " + (output / kObtainedAnswers).generic_string());
+        }
+        for (const Answer& answer : list) {
+            if (!answer.matches) {
+                outcome.differences.push_back({answer.line, answer.expected, answer.actual});
+            }
+        }
+        outcome.verdict = outcome.differences.empty() ? Verdict::Passed : Verdict::Failed;
+    }
+    if (outcome.verdict == Verdict::Passed || !options.pending || !options.earlyChecks) {
+        return outcome;
+    }
+    // A full read may fail below the frontier; the prefix deliberately
+    // does not read those lines, including malformed ones (ADR 0037.4).
+    auto parsed = answerQuestionsUntilFrontier(*text, &access);
+    if (const auto* error = std::get_if<ParseError>(&parsed)) {
         return fromParseError(path, *error);
     }
-    const std::vector<Answer>& list = std::get<std::vector<Answer>>(answers);
-    if (!writeFile(output / kObtainedAnswers, withActualAnswers(*text, list))) {
-        return invalid("cannot write " + (output / kObtainedAnswers).generic_string());
-    }
-    Outcome outcome;
-    for (const Answer& answer : list) {
-        if (!answer.matches) {
-            outcome.differences.push_back({answer.line, answer.expected, answer.actual});
+    const QuestionPrefix& prefix = std::get<QuestionPrefix>(parsed);
+    std::vector<Difference> differences;
+    bool skipped = false;
+    for (const Answer& answer : prefix.answers) {
+        skipped = skipped || answer.skipped;
+        if (!answer.skipped && !answer.matches) {
+            differences.push_back({answer.line, answer.expected, answer.actual});
         }
     }
-    outcome.verdict = outcome.differences.empty() ? Verdict::Passed : Verdict::Failed;
+    if (!prefix.frontier && !skipped) {
+        return {Verdict::FailedBeforeFrontier,
+                "fails, but uses nothing the program does not have yet: fix the reference, "
+                "or write \"; cambia con #<issue>\" before the line where the behaviour "
+                "changes (docs/adr/0037)",
+                std::move(differences),
+                {}};
+    }
+    const std::string where = prefix.frontier
+                                  ? "domande.tgq, line " + std::to_string(prefix.frontier->line) +
+                                        ": " + prefix.frontier->reason
+                                  : "domande.tgq: questions not implemented yet are skipped";
+    if (!differences.empty()) {
+        return {Verdict::FailedBeforeFrontier,
+                "differs before the point the program cannot do yet (" + where + ")",
+                std::move(differences),
+                {}};
+    }
+    if (outcome.verdict == Verdict::Invalid) {
+        outcome.message = "not implemented yet: " + where;
+    }
+    outcome.verdict = Verdict::Failed;
+    outcome.frontier = where;
     return outcome;
 }
 

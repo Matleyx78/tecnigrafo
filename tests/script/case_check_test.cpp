@@ -503,7 +503,50 @@ TEST(CheckCase, Questions) {
     expectContains(result.output, "  line 2\n    expected: 12\n    obtained: 10\n");
     EXPECT_EQ(readFile(kOutput / "obtained" / "questions-fail" / kObtainedAnswers),
               "A = LWPOLYLINE vertex=0,0 vertex=10,0\n? length A -> 10\n");
-    EXPECT_EQ(check(failing, true).code, kExitPassed);
+    EXPECT_EQ(check(failing, true).code, kExitFailed);
+}
+
+TEST(CheckCase, PendingQuestionsCompareBeforeFrontierAndAfterSkippedAnswers) {
+    const std::string drawing = "A = LINE start=0,0 end=10,0\n";
+    const fs::path wrong = makeCase(
+        "question-prefix-wrong",
+        {{"domande.tgq", drawing + "? length A -> 12\n; cambia con #346\n? length A -> 13\n"}});
+    const Result failed = check(wrong, true);
+    EXPECT_EQ(failed.code, kExitFailed);
+    expectContains(failed.output, "differs before the point the program cannot do yet");
+    expectContains(failed.output, "  line 2\n    expected: 12\n    obtained: 10\n");
+    EXPECT_EQ(check(wrong, true, false).code, kExitPassed);
+
+    const fs::path future = makeCase(
+        "question-prefix-future",
+        {{"domande.tgq", drawing + "? length A -> 10\n; cambia con #346\nmalformed\n"}});
+    EXPECT_EQ(check(future, true).code, kExitPassed);
+    EXPECT_EQ(check(future).code, kExitInvalid);
+    expectContains(check(future, true).output, "domande.tgq, line 3: changes with #346");
+
+    const std::string skipped = "? intersections A A -> none\n";
+    const auto parsed = answerQuestions(drawing + skipped);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(parsed));
+    if (std::get<std::vector<Answer>>(parsed)[0].actual != "error: question not implemented yet") {
+        return;  // The realized question is covered by its own package.
+    }
+    const fs::path pending = makeCase(
+        "question-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 10\n"}});
+    EXPECT_EQ(check(pending, true).code, kExitPassed);
+    const fs::path after = makeCase(
+        "question-after-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 12\n"}});
+    EXPECT_EQ(check(after, true).code, kExitFailed);
+    expectContains(check(after, true).output, "differs before the point the program cannot do yet");
+}
+
+TEST(CheckCase, PendingQuestionsWithoutFrontierRequireChangesWith) {
+    const fs::path folder = makeCase(
+        "question-no-frontier", {{"domande.tgq", "? font-metrics -> wrong\n"}});
+    const Result result = check(folder, true);
+    EXPECT_EQ(result.code, kExitFailed);
+    expectContains(result.output, "fails, but uses nothing the program does not have yet");
+    expectContains(result.output, "; cambia con #<issue>");
+    EXPECT_EQ(check(folder, true, false).code, kExitPassed);
 }
 
 TEST(CheckCase, WrongFontMetricsFailAndWriteMeasuredValues) {
@@ -516,7 +559,7 @@ TEST(CheckCase, WrongFontMetricsFailAndWriteMeasuredValues) {
                    "obtained: ascent=1.3158268275372604 descent=-0.3080198722498226");
     EXPECT_EQ(readFile(kOutput / "obtained" / "wrong-font-metrics" / kObtainedAnswers),
               "? font-metrics -> ascent=1.3158268275372604 descent=-0.3080198722498226\n");
-    EXPECT_EQ(check(question, true).code, kExitPassed);
+    EXPECT_EQ(check(question, true).code, kExitFailed);
 }
 
 TEST(RunScriptFile, WritesTheReport) {

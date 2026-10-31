@@ -123,7 +123,7 @@ I primi due li fa `check` prima di eseguire il caso, leggendo solo i file
 3): trovano nella pull request di riferimenti gli errori di forma e le righe
 vuote di troppo, che altrimenti emergerebbero solo con il lavoro. Il primo che
 non passa rende il caso non valido, con il file, la riga e il motivo. Il
-terzo, per i soli casi in attesa, confronta la parte dello script che il
+terzo, per i soli casi in attesa, confronta la parte dello script o delle domande che il
 programma sa già fare ([il confine](#il-confine-di-un-caso-in-attesa), punti
 4–6).
 
@@ -206,8 +206,18 @@ Il resto non si confronta. Gli esiti, con `--pending` e senza
 - nessun confine: codice 1, `fails, but uses nothing the program does not
   have yet`. O il riferimento è sbagliato, o manca `; cambia con`.
 
-Gli script di livello 2 e i casi di domande non hanno ancora questo controllo;
-per le domande arriva con il pacchetto F3.
+Per le **domande**, ogni risposta sopra il confine e non saltata si confronta
+con quella attesa, con le tolleranze in vigore alla sua riga e gli elenchi in
+qualunque ordine. Una domanda non realizzata, un argomento o tipo di entità
+non realizzato, o un'entità non gestita di un file si saltano: le domande
+successive si confrontano comunque. Una definizione o direttiva non ancora
+realizzata, oppure `; cambia con #<numero>`, ferma il resto del file: le righe
+sotto non si leggono. Una riga malformata sopra il confine rende il caso non
+valido. Senza confine e senza domande saltate, un caso che non passa è un
+errore che rimanda a `; cambia con`, come per gli script.
+
+Gli script di livello 2 non hanno questo controllo. Il commento iniziale
+`; oracle: ezdxf` resta un commento e non cambia il passo dell'oracolo.
 
 ## Come si confronta
 

@@ -58,6 +58,81 @@ void expectAnswer(std::string_view question, std::string_view expected) {
                                  << "\n  obtained: " << list[0].actual;
 }
 
+TEST(Questions, PrefixSkipsUnimplementedQuestionsAndKeepsComparing) {
+    const std::string text =
+        "A = LINE start=0,0 end=10,0\n"
+        "? intersections A A -> none\n"
+        "? length A -> 12\n";
+    const auto result = answerQuestionsUntilFrontier(text);
+    ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
+    const auto& prefix = std::get<QuestionPrefix>(result);
+    ASSERT_EQ(prefix.answers.size(), 2U);
+    if (prefix.answers[0].actual != "error: question not implemented yet") {
+        GTEST_SKIP() << "intersections is now implemented";
+    }
+    EXPECT_TRUE(prefix.answers[0].skipped);
+    EXPECT_FALSE(prefix.answers[1].skipped);
+    EXPECT_FALSE(prefix.answers[1].matches);
+    EXPECT_EQ(prefix.answers[1].actual, "10");
+    EXPECT_FALSE(prefix.frontier);
+    // Ordinary answers retain their original semantics.
+    EXPECT_FALSE(answers(text)[0].skipped);
+}
+
+TEST(Questions, PrefixSkipsAnnouncedArgumentsWhenNotImplemented) {
+    const std::string text = "? snap 5,0 aperture=1 from=1,1 -> none\n";
+    const auto whole = answerQuestions(text);
+    const auto* error = std::get_if<ParseError>(&whole);
+    if (error == nullptr || !error->notImplemented) {
+        GTEST_SKIP() << "from= is now implemented";
+    }
+    const auto result = answerQuestionsUntilFrontier(text + "? font-metrics -> wrong\n");
+    ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
+    const auto& prefix = std::get<QuestionPrefix>(result);
+    ASSERT_EQ(prefix.answers.size(), 2U);
+    EXPECT_TRUE(prefix.answers[0].skipped);
+    EXPECT_FALSE(prefix.answers[1].skipped);
+    EXPECT_FALSE(prefix.answers[1].matches);
+    EXPECT_FALSE(prefix.frontier);
+}
+
+TEST(Questions, PrefixStopsAtChangesWithAndRejectsMalformedLinesAboveIt) {
+    const auto result = answerQuestionsUntilFrontier(
+        "; oracle: ezdxf\n? font-metrics -> wrong\n; cambia con #346\nmalformed\n");
+    ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
+    const auto& prefix = std::get<QuestionPrefix>(result);
+    ASSERT_EQ(prefix.answers.size(), 1U);
+    ASSERT_TRUE(prefix.frontier);
+    EXPECT_EQ(prefix.frontier->line, 3);
+    EXPECT_EQ(prefix.frontier->reason, "changes with #346");
+    const auto malformed = answerQuestionsUntilFrontier("malformed\n; cambia con #346\n");
+    ASSERT_TRUE(std::holds_alternative<ParseError>(malformed));
+    EXPECT_EQ(std::get<ParseError>(malformed).line, 1);
+    EXPECT_FALSE(std::get<ParseError>(malformed).notImplemented);
+}
+
+TEST(Questions, PrefixStopsAtUnimplementedDefinitionsWhenAvailable) {
+    // The current catalogue has no planned entity definitions. Keep the
+    // frontier contract covered when a future package announces one.
+    for (const std::string_view type : {"ELLIPSE", "SPLINE", "HATCH", "INSERT"}) {
+        const std::string definition = "B = " + std::string{type} + "\n";
+        const auto whole = answerQuestions(definition);
+        const auto* error = std::get_if<ParseError>(&whole);
+        if (error == nullptr || !error->notImplemented) {
+            continue;
+        }
+        const auto result = answerQuestionsUntilFrontier(
+            "? font-metrics -> wrong\n" + definition + "malformed\n");
+        ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
+        const auto& prefix = std::get<QuestionPrefix>(result);
+        ASSERT_TRUE(prefix.frontier);
+        EXPECT_EQ(prefix.frontier->line, 2);
+        EXPECT_EQ(prefix.answers.size(), 1U);
+        return;
+    }
+    GTEST_SKIP() << "no unimplemented definition in the catalogue";
+}
+
 TEST(Questions, BoundingBox) {
     expectAnswer("bbox A", "0,0 10,10");
     expectAnswer("bbox B", "20,-5 30,0");  // exact: the arc reaches y = -5
@@ -504,6 +579,23 @@ constexpr std::string_view kDxf =
     "  0\nLINE\n  5\n2F\n100\nAcDbEntity\n  8\n0\n100\nAcDbLine\n"
     " 10\n0.0\n 20\n0.0\n 30\n0.0\n 11\n10.0\n 21\n5.0\n 31\n0.0\n"
     "  0\nENDSEC\n  0\nEOF\n";
+
+TEST(Questions, PrefixSkipsUnhandledFileEntitiesAndContinues) {
+    const std::string dxf =
+        "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n0\nENDSEC\n"
+        "0\nSECTION\n2\nENTITIES\n0\nHATCH\n5\n30\n100\nAcDbEntity\n8\n0\n"
+        "0\nENDSEC\n0\nEOF\n";
+    MemoryFiles files{{{"hatch.dxf", dxf}}};
+    const auto result = answerQuestionsUntilFrontier(
+        "D = DXF file=hatch.dxf\n? bbox D:30 -> empty\n? version D -> AC1015\n", &files);
+    ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
+    const auto& prefix = std::get<QuestionPrefix>(result);
+    ASSERT_EQ(prefix.answers.size(), 2U);
+    EXPECT_TRUE(prefix.answers[0].skipped);
+    EXPECT_FALSE(prefix.answers[1].skipped);
+    EXPECT_TRUE(prefix.answers[1].matches);
+    EXPECT_FALSE(prefix.frontier);
+}
 
 TEST(Questions, LayersAndLinetypesOfADrawing) {
     MemoryFiles files{{{"plan.dxf", std::string{kDxf}}}};
