@@ -5,6 +5,7 @@
 
 #include "tg/cmd/input.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/similarity.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/edit/editor.hpp"
 
@@ -62,6 +63,9 @@ struct CommandDefaults {
     double textHeight{2.5};
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
+    double rotation{0.0};                ///< the last rotation of ROTATE, radians
+    /// MIRRTEXT: 0 (Readable) at start-up (docs/adr/0031, point 3).
+    core::MirrorText mirrorText{core::MirrorText::Readable};
 };
 
 /// What a command works with. The runner keeps one context for its whole

@@ -6,8 +6,10 @@
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
+#include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
+#include "tg/cmd/commands/rotate_scale_commands.hpp"
 
 namespace tg::cmd::detail {
 namespace {
@@ -404,6 +406,73 @@ CommandDescription MoveCommand::description() {
             true,
             {detail::displacementBasePrompt(), detail::displacementSecondPrompt(),
              detail::displacementPrompt()}};
+}
+
+CommandDescription RotateCommand::description() {
+    return {"ROTATE",
+            {"RO"},
+            "Rotates the selected objects about a base point.",
+            true,
+            {{"base-point", "Specify base point:", ValueType::Point, {}, false},
+             {"rotation-angle",
+              "Specify rotation angle or [Copy/Reference] <{default}>:",
+              ValueType::Angle,
+              {{"Copy", "C"}, {"Reference", "R"}},
+              true},
+             {"reference-angle", "Specify the reference angle <0>:", ValueType::Angle, {}, true},
+             // Also the second point of the Points option of the new angle.
+             {"second-point", "Specify second point:", ValueType::Point, {}, false},
+             {"new-angle",
+              "Specify the new angle or [Points] <0>:",
+              ValueType::Angle,
+              {{"Points", "P"}},
+              true},
+             {"first-point", "Specify first point:", ValueType::Point, {}, false}}};
+}
+
+CommandDescription ScaleObjectsCommand::description() {
+    return {
+        "SCALE",
+        {"SC"},
+        "Scales the selected objects about a base point.",
+        true,
+        {{"base-point", "Specify base point:", ValueType::Point, {}, false},
+         {"scale-factor",
+          "Specify scale factor or [Copy/Reference]:",
+          ValueType::Real,
+          {{"Copy", "C"}, {"Reference", "R"}},
+          false},
+         {"reference-length", "Specify reference length <1.0000>:", ValueType::Distance, {}, true},
+         // Also the second point of the Points option of the new length.
+         {"second-point", "Specify second point:", ValueType::Point, {}, false},
+         {"new-length",
+          "Specify new length or [Points] <1.0000>:",
+          ValueType::Distance,
+          {{"Points", "P"}},
+          true},
+         {"first-point", "Specify first point:", ValueType::Point, {}, false}}};
+}
+
+CommandDescription MirrorCommand::description() {
+    return {"MIRROR",
+            {"MI"},
+            "Mirrors the selected objects about a line, keeping or replacing the source.",
+            true,
+            {{"first-point", "Specify first point of mirror line:", ValueType::Point, {}, false},
+             {"second-point", "Specify second point of mirror line:", ValueType::Point, {}, false},
+             {"erase",
+              "Erase source objects? [Yes/No] <No>:",
+              ValueType::Keyword,
+              {{"Yes", "Y"}, {"No", "N"}},
+              true}}};
+}
+
+CommandDescription MirrtextCommand::description() {
+    return {"MIRRTEXT",
+            {},
+            "Sets whether MIRROR reflects text (1) or keeps it readable (0).",
+            false,
+            {{"value", "Enter new value for MIRRTEXT <{default}>:", ValueType::Integer, {}, true}}};
 }
 
 CommandDescription LinetypeCommand::description() {
