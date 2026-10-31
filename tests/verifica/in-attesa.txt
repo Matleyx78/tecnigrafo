@@ -66,10 +66,6 @@ extend/autocad-rapido-e-standard #361
 extend/estremi-curvi-shift-annulla #361
 
 
-# 0.7-R9: grip, punti e modifica (#350)
-grip/punti #350
-grip/modifica #350
-grip/degeneri #350
 
 # 0.7-R20: FILLET, CIRCLE Ttr (#369)
 fillet/autocad-raccordi #369

@@ -502,6 +502,8 @@ QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
 
 // Defined in modify_questions.cpp.
+QuestionResult askGrips(const QuestionModel& model, Arguments arguments);
+QuestionResult askGrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askTransform(const QuestionModel& model, Arguments arguments);
 
 // Defined in property_questions.cpp.
@@ -559,8 +561,8 @@ constexpr std::array kQuestions{
     // Stage 0.7: announced questions must fail as unimplemented, not as invalid
     // syntax, so their independent references can precede the work packages.
     QuestionRow{"transform", AnswerShape::Single, &askTransform},    // P4
-    QuestionRow{"grips", AnswerShape::Items, nullptr},               // P9
-    QuestionRow{"grip", AnswerShape::Single, nullptr},               // P9
+    QuestionRow{"grips", AnswerShape::Items, &askGrips},             // P9
+    QuestionRow{"grip", AnswerShape::Single, &askGrip},              // P9
     QuestionRow{"intersections", AnswerShape::Items, nullptr},       // P14
     QuestionRow{"self-intersections", AnswerShape::Items, nullptr},  // P14
     QuestionRow{"side", AnswerShape::Single, nullptr},               // P14
