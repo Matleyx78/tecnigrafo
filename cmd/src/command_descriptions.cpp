@@ -4,7 +4,9 @@
 #include "command_descriptions.hpp"
 
 #include "tg/cmd/commands/chprop_command.hpp"
+#include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
+#include "tg/cmd/commands/move_copy_commands.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 
 namespace tg::cmd::detail {
@@ -31,6 +33,29 @@ PromptDescription saveChangesPrompt() {
             ValueType::Keyword,
             {{"Yes", "Y"}, {"No", "N"}, {"Cancel", "C"}},
             true};
+}
+
+// The prompts that MOVE and COPY share (docs/adr/0032, point 9: every prompt of
+// both sequences is described).
+
+PromptDescription displacementBasePrompt() {
+    return {"base-point",
+            "Specify base point or [Displacement] <Displacement>:",
+            ValueType::Point,
+            {{"Displacement", "D"}},
+            true};
+}
+
+PromptDescription displacementSecondPrompt() {
+    return {"second-point",
+            "Specify second point or <use first point as displacement>:",
+            ValueType::Point,
+            {},
+            true};
+}
+
+PromptDescription displacementPrompt() {
+    return {"displacement", "Specify displacement <{default}>:", ValueType::Point, {}, true};
 }
 
 }  // namespace
@@ -118,7 +143,7 @@ CommandDescription lineDescription() {
             "Draws a straight line segment, or a chain of them.",
             false,
             {
-                {"first-point", "Specify first point:", ValueType::Point, {}, false},
+                {"first-point", "Specify first point:", ValueType::Point, {}, true},
                 {"next-point",
                  "Specify next point or [Undo]:",
                  ValueType::Point,
@@ -351,6 +376,34 @@ CommandDescription ColorCommand::description() {
               {{"Truecolor", "T"}},
               true},
              {"rgb", "Red, Green, Blue:", ValueType::Color, {}, true}}};
+}
+
+CommandDescription CopyCommand::description() {
+    return {"COPY",
+            {"CO", "CP"},
+            "Copies the selected objects by a displacement, as many times as asked.",
+            true,
+            {detail::displacementBasePrompt(),
+             detail::displacementSecondPrompt(),
+             detail::displacementPrompt(),
+             {"next-copy",
+              "Specify second point or [Exit/Undo] <Exit>:",
+              ValueType::Point,
+              {{"Exit", "E"}, {"Undo", "U"}},
+              true}}};
+}
+
+CommandDescription ExplodeCommand::description() {
+    return {"EXPLODE", {"X"}, "Breaks the selected polylines into lines and arcs.", true, {}};
+}
+
+CommandDescription MoveCommand::description() {
+    return {"MOVE",
+            {"M"},
+            "Moves the selected objects by a displacement.",
+            true,
+            {detail::displacementBasePrompt(), detail::displacementSecondPrompt(),
+             detail::displacementPrompt()}};
 }
 
 CommandDescription LinetypeCommand::description() {

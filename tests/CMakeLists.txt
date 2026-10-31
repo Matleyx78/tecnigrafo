@@ -25,9 +25,11 @@ add_executable(tg_tests
     cmd/coordinate_input_test.cpp
     cmd/drawing_aids_test.cpp
     cmd/erase_command_test.cpp
+    cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp
     cmd/layer_commands_test.cpp
     cmd/line_command_test.cpp
+    cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/pline_command_test.cpp
     cmd/property_commands_test.cpp
@@ -121,7 +123,7 @@ set_tests_properties(script_describe_all PROPERTIES PASS_REGULAR_EXPRESSION
 add_test(NAME script_describe_one COMMAND tecnigrafo-script describe pl)
 set_tests_properties(script_describe_one PROPERTIES PASS_REGULAR_EXPRESSION
     "^command: PLINE\naliases: PL\nsummary: [^\n]+\.\nprompt start-point: Specify start point: \\(point\\)\n")
-add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe X)
+add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe NOSUCHCOMMAND)
 set_tests_properties(script_describe_unknown PROPERTIES WILL_FAIL TRUE)
 
 # tecnigrafo-mcp (docs/adr/0027): it is built, and its options are checked.
