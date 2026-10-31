@@ -9,10 +9,10 @@ messages:
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: ROTATE
-  Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
   Select objects: 5,0
   1 found, 1 total
   Select objects:
+  Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
   Specify base point: 0,0
   Specify rotation angle or [Copy/Reference] <0>: 90
 prompt: Command:
