@@ -8,7 +8,6 @@ C
 10,0
 A
 180
-
 LINE
 50,0
 60,0
@@ -31,7 +30,6 @@ JOIN
 0,10
 L
 !scr off
-
 ; 2. Niente da unire tra due linee parallele distanti (scartate)
 JOIN
 55,0
