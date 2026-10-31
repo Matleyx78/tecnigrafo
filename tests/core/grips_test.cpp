@@ -3,6 +3,7 @@
 
 #include "tg/core/grips.hpp"
 
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/text_metrics.hpp"
 
@@ -21,6 +22,13 @@ constexpr double kTolerance = 1e-9;
 void expectPoint(const Vec2& actual, const Vec2& expected) {
     EXPECT_NEAR(actual.x, expected.x, kTolerance);
     EXPECT_NEAR(actual.y, expected.y, kTolerance);
+}
+
+// Exact comparison on purpose: a tolerance would hide the cos/sin residue of
+// about 1e-16 that the axis-aligned arc endpoints must not carry (issue #422).
+void expectSamePoint(const Vec2& actual, const Vec2& expected) {
+    EXPECT_EQ(actual.x, expected.x);
+    EXPECT_EQ(actual.y, expected.y);
 }
 
 TEST(Grips, PointOrderForEveryEntity) {
@@ -104,6 +112,53 @@ TEST(Grips, AxisAlignedArcEndpointsStayExactForShallowMovedArc) {
     EXPECT_DOUBLE_EQ(result.center.x, 5.0);
     EXPECT_DOUBLE_EQ(result.center.y, -625000000.0);
     EXPECT_DOUBLE_EQ(result.radius, 625000000.0);
+}
+
+TEST(Grips, ArcEndpointsOnAxesAreExactForEveryPairOfAxes) {
+    const Vec2 center{1.25, -3.5};
+    constexpr double radius = 7.0;
+    // Start and end angles in degrees, as they arrive from a DXF file.
+    constexpr std::array<double, 4> kAxisDegrees{0.0, 90.0, 180.0, 270.0};
+    const std::array<Vec2, 4> onAxis{{{center.x + radius, center.y},
+                                      {center.x, center.y + radius},
+                                      {center.x - radius, center.y},
+                                      {center.x, center.y - radius}}};
+    for (std::size_t first = 0; first < kAxisDegrees.size(); ++first) {
+        for (std::size_t last = 0; last < kAxisDegrees.size(); ++last) {
+            if (first == last) {
+                continue;
+            }
+            const Arc arc{center, radius, degreesToRadians(kAxisDegrees.at(first)),
+                          degreesToRadians(kAxisDegrees.at(last))};
+            const auto points = gripPoints(arc);
+            ASSERT_EQ(points.size(), 4U) << "arc " << first << " -> " << last;
+            expectSamePoint(points[0], onAxis.at(first));
+            expectSamePoint(points[1], onAxis.at(last));
+        }
+    }
+}
+
+TEST(Grips, ArcAcrossZeroKeepsExactEndpointsOnAxes) {
+    const Vec2 center{1.25, -3.5};
+    constexpr double radius = 7.0;
+    const Arc arc{center, radius, degreesToRadians(270.0), degreesToRadians(90.0)};
+    const auto points = gripPoints(arc);
+    ASSERT_EQ(points.size(), 4U);
+    expectSamePoint(points[0], {center.x, center.y - radius});
+    expectSamePoint(points[1], {center.x, center.y + radius});
+    // The middle point sits at 0 degrees; it is not an endpoint, so it only
+    // has to be right within the tolerance.
+    expectPoint(points[2], {center.x + radius, center.y});
+    expectSamePoint(points[3], center);
+}
+
+TEST(Grips, ArcEndpointsOffAxesMatchTheArcGeometry) {
+    const Arc arc{{1.25, -3.5}, 7.0, degreesToRadians(30.0), degreesToRadians(150.0)};
+    const auto geometry = arc.geometry();
+    const auto points = gripPoints(arc);
+    ASSERT_EQ(points.size(), 4U);
+    expectSamePoint(points[0], startPoint(geometry));
+    expectSamePoint(points[1], endPoint(geometry));
 }
 
 TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {
