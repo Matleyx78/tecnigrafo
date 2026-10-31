@@ -1,0 +1,4 @@
+# 0.7-R23: JOIN (#375)
+join/autocad-interattivo #375
+join/sequenza-script #375
+join/arco-close-e-annulla #375 esente

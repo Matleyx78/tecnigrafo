@@ -6,11 +6,11 @@
 #
 #   ctest --preset ci -L verifica
 #
-# The cases listed in in-attesa.txt run with --pending: their work is not
-# merged yet, so failing is expected and passing is an error.
+# The cases listed in the folder in-attesa/ run with --pending: their work is
+# not merged yet, so failing is expected and passing is an error.
 
 set(TG_VERIFICA_CASES "${CMAKE_CURRENT_SOURCE_DIR}/casi")
-set(TG_VERIFICA_PENDING "${CMAKE_CURRENT_SOURCE_DIR}/in-attesa.txt")
+set(TG_VERIFICA_PENDING_DIR "${CMAKE_CURRENT_SOURCE_DIR}/in-attesa")
 
 include(TecnigrafoVerifica)
 # Shared by ci, tidy and asan within this agent's build directory.
@@ -46,38 +46,30 @@ endforeach()
 list(REMOVE_DUPLICATES TG_VERIFICA_NAMES)
 list(SORT TG_VERIFICA_NAMES)
 
-# in-attesa.txt: one line "<area>/<name> #<issue>", or
-# "<area>/<name> #<issue> esente" for a pending case that runs without the
-# early checks (docs/adr/0037, point 9); lines starting with # are comments.
-# Changing it configures again.
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${TG_VERIFICA_PENDING}")
-set(TG_VERIFICA_PENDING_NAMES "")
-set(TG_VERIFICA_EXEMPT_NAMES "")
-if(EXISTS "${TG_VERIFICA_PENDING}")
-    file(STRINGS "${TG_VERIFICA_PENDING}" pending_lines ENCODING UTF-8)
-    foreach(line IN LISTS pending_lines)
-        string(STRIP "${line}" line)
-        if(line STREQUAL "" OR line MATCHES "^#")
-            continue()
-        endif()
-        if(NOT line MATCHES "^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)[ \t]+#[0-9]+([ \t]+esente)?$")
-            message(SEND_ERROR
-                "tests/verifica/in-attesa.txt: expected \"<area>/<name> #<issue>\" or \"<area>/<name> #<issue> esente\", found \"${line}\"")
-            continue()
-        endif()
-        set(name "${CMAKE_MATCH_1}")
-        if(NOT name IN_LIST TG_VERIFICA_NAMES)
-            message(SEND_ERROR
-                "tests/verifica/in-attesa.txt lists ${name}, which is not a case of tests/verifica/casi")
-        endif()
-        list(APPEND TG_VERIFICA_PENDING_NAMES "${name}")
-        # Quoted: an optional group that does not match leaves CMAKE_MATCH_2
-        # undefined, and unquoted if() would compare the name itself.
-        if(NOT "${CMAKE_MATCH_2}" STREQUAL "")
-            list(APPEND TG_VERIFICA_EXEMPT_NAMES "${name}")
-        endif()
-    endforeach()
-endif()
+# in-attesa/: one file <X.Y>-R<N>.txt per block of references, one line
+# "<area>/<name> #<issue>" per case, or "<area>/<name> #<issue> esente" for a
+# pending case that runs without the early checks (docs/adr/0037, point 9);
+# lines starting with # are comments (rules and messages: pending_list.cmake).
+# The listing of the folder is part of the build system, so a file added or
+# deleted configures again, and so is the content of every file.
+include("${CMAKE_CURRENT_SOURCE_DIR}/pending_list.cmake")
+tg_read_pending_list("${TG_VERIFICA_PENDING_DIR}" "${TG_VERIFICA_NAMES}"
+    TG_VERIFICA_PENDING CONFIGURE_DEPENDS)
+foreach(error IN LISTS TG_VERIFICA_PENDING_ERRORS)
+    message(SEND_ERROR "${error}")
+endforeach()
+set(TG_VERIFICA_EXEMPT_NAMES "${TG_VERIFICA_PENDING_EXEMPT}")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/pending_list.cmake" ${TG_VERIFICA_PENDING_FILES})
+
+# The reading of the pending folder, on temporary folders: the old single file,
+# an empty file, a wrong name, a case in two files and the valid shapes.
+add_test(NAME verifica-in-attesa/lettura
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTG_VERIFICA_PENDING_MODULE=${CMAKE_CURRENT_SOURCE_DIR}/pending_list.cmake"
+        "-DTG_VERIFICA_OUTPUT=${CMAKE_CURRENT_BINARY_DIR}/prova/in-attesa"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/prova/pending_test.cmake")
+set_tests_properties(verifica-in-attesa/lettura PROPERTIES TIMEOUT 60)
 
 foreach(name IN LISTS TG_VERIFICA_NAMES)
     set(arguments check "${TG_VERIFICA_CASES}/${name}"

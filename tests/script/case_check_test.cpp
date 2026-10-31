@@ -164,7 +164,9 @@ TEST(CheckCase, PendingInvertsTheResult) {
                                                          {"atteso.txt", std::string{kReport}}});
     result = check(passing, true);
     EXPECT_EQ(result.code, kExitFailed);
-    expectContains(result.output, "remove it from tests/verifica/in-attesa.txt");
+    expectContains(result.output,
+                   "remove its line from the file of its block in tests/verifica/in-attesa/ "
+                   "(delete the file when it lists no more case)\n");
 }
 
 // docs/adr/0037, points 4-6: a pending script is compared up to its
@@ -178,7 +180,7 @@ TEST(CheckCase, PendingDifferenceOnlyAfterTheFrontierWaits) {
     expectContains(result.output, "pending: " + folder.generic_string() + ": ");
     expectContains(result.output,
                    "warning: not passed yet, as expected while it is listed in "
-                   "tests/verifica/in-attesa.txt; as expected up to script.tgs, line 5: unknown "
+                   "tests/verifica/in-attesa/; as expected up to script.tgs, line 5: unknown "
                    "command FUTURE\n");
     // The report up to the frontier, next to the whole one.
     EXPECT_EQ(readFile(kOutput / "obtained" / "frontier-after" / kObtainedFrontierReport), kReport);
@@ -235,7 +237,7 @@ TEST(CheckCase, PendingWithoutFrontierThatFailsIsWrong) {
     EXPECT_EQ(result.code, kExitPassed);
     expectContains(result.output,
                    "warning: not passed yet, as expected while it is listed in "
-                   "tests/verifica/in-attesa.txt\n");
+                   "tests/verifica/in-attesa/\n");
 }
 
 TEST(CheckCase, ChangesWithStopsTheComparisonOfAPendingCaseOnly) {

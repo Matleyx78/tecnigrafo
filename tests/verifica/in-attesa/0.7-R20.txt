@@ -1,0 +1,5 @@
+# 0.7-R20: FILLET, CIRCLE Ttr (#369)
+fillet/autocad-raccordi #369
+fillet/sequenza-script #369
+fillet/opzioni-undo-shift #369
+fillet/casi-limite-proprieta #369 esente

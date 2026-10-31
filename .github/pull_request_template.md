@@ -16,7 +16,8 @@ Closes #<!-- numero della issue del pacchetto o del bug -->
 - [ ] Test richiesti presenti e funzionanti
 - [ ] Modalità di controllo (ADR 0011), se esiste `tests/verifica/`:
   - lavoro: la verifica in CI è verde, non ho toccato `tests/verifica/casi/` né
-    `sorgenti.json`, ho tolto da `in-attesa.txt` solo le righe del mio pacchetto
+    `sorgenti.json`, ho cancellato da `tests/verifica/in-attesa/` solo il file dei
+    riferimenti del mio pacchetto
   - riferimenti: ho toccato solo `tests/verifica/`, i valori attesi non vengono
     da Tecnigrafo, ogni file preso dal web ha hash e licenza (link qui sotto)
 - [ ] `clang-format` applicato, nessun avviso del compilatore né di `clang-tidy`

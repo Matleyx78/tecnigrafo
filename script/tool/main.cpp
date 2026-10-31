@@ -35,7 +35,7 @@ constexpr std::string_view kUsage =
     "of the case and the echo of the lines of the script; a case that does not\n"
     "pass them is invalid, also with --pending. --no-early-checks, only with\n"
     "--pending, leaves them out for a pending case marked \"esente\" in\n"
-    "tests/verifica/in-attesa.txt.\n"
+    "the folder tests/verifica/in-attesa/.\n"
     "\n"
     "--sources is the folder of the public files of tests/verifica/sorgenti.json,\n"
     "read as @sources/<name> by scripts and as source=<name> by questions.\n"

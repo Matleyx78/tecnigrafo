@@ -5,7 +5,7 @@
 // (0.6-P26, docs/adr/0027 point 6): run_script gives the same report as
 // `tecnigrafo-script run`, check_case the same outcome as `tecnigrafo-script
 // check`, with the same --sources. The outcome itself does not matter: a
-// case listed in in-attesa.txt is compared all the same.
+// case listed in in-attesa/ is compared all the same.
 
 #include "nlohmann_json/json.hpp"
 #include "tg/mcp/session.hpp"
