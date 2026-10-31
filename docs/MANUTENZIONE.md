@@ -125,7 +125,7 @@ stato delle richieste.
 Quando entra un agente nuovo, o un modello che lavora in una sessione sua come
 Gemini 4 Argon:
 
-1. Decidilo e scrivilo in [ROADMAP.md](ROADMAP.md), "Decisioni" (e nella
+1. Decidilo e scrivilo in [DECISIONI.md](DECISIONI.md) (e nella
    ROADMAP di solid-space, se lavora anche lì).
 2. Crea l'etichetta `agente:<nome>` nei repository in cui lavora (sezione 2).
 3. In [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) aggiungi la riga in

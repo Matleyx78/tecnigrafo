@@ -63,7 +63,8 @@ gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20i
 
 Leggi, in quest'ordine:
 
-1. [docs/ROADMAP.md](docs/ROADMAP.md): quale tappa è **aperta**.
+1. [docs/ROADMAP.md](docs/ROADMAP.md), solo la tabella "Stato": quale tappa è
+   **aperta**.
 2. La **scheda** del tuo pacchetto, `docs/tappe/X.Y/PN-<nome>.md`, citata nella
    issue: file, interfacce, test e criterio di "fatto". Del documento della tappa
    ti basta la tabella dei pacchetti.
