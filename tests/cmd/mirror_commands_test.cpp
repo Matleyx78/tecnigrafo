@@ -236,10 +236,13 @@ TEST_F(MirrorTest, MirrorTextFollowsMirrtext) {
     text.rotation = 0.3;
     text.value = "AB";
     const Entity original{text};
-    const std::optional<core::Similarity> axis = core::Similarity::reflection({0, 0}, {0, 10});
-    ASSERT_TRUE(axis.has_value());
-    const Entity readable = core::transformed(original, *axis, core::MirrorText::Readable);
-    const Entity reflected = core::transformed(original, *axis, core::MirrorText::Mirrored);
+    const std::optional<core::Similarity> found = core::Similarity::reflection({0, 0}, {0, 10});
+    if (!found) {
+        FAIL() << "the mirror line is valid";
+    }
+    const core::Similarity axis = *found;
+    const Entity readable = core::transformed(original, axis, core::MirrorText::Readable);
+    const Entity reflected = core::transformed(original, axis, core::MirrorText::Mirrored);
     ASSERT_NE(readable, reflected);  // otherwise this test would prove nothing
 
     // MIRRTEXT is 0 when the program starts.

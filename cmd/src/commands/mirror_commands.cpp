@@ -138,8 +138,15 @@ bool MirrorCommand::needsSelection() const {
 }
 
 Status MirrorCommand::apply(CommandContext& context, bool eraseSource) {
+    if (!m_line) {
+        // Not reachable: the question after the mirror line is asked only once
+        // the line is valid. Leave the drawing untouched all the same.
+        context.editor.rollback();
+        return Status::Finished;
+    }
+    const core::Similarity line = *m_line;
     for (const SelectedEntity& item : m_selected) {
-        core::Entity result = core::transformed(item.entity, *m_line, m_mirrorText);
+        core::Entity result = core::transformed(item.entity, line, m_mirrorText);
         if (eraseSource) {
             // The source is reflected where it is: same identity, same data.
             context.editor.replace(item.id, std::move(result));
