@@ -345,7 +345,27 @@ TEST(WriteState, SnapModesOffAreListed) {
     runner.setDrawingAids(aids);
     std::string out;
     writeState({"final", editor, runner, {}, std::nullopt}, out);
-    expectContains(out, "snap: on, modes off: midpoint center\n");
+    // Perpendicular, tangent and quadrant start off (docs/adr/0033, point 6).
+    expectContains(out, "snap: on, modes off: midpoint center perpendicular tangent quadrant\n");
+}
+
+TEST(WriteState, AllSnapModesOnAreSilentAtTheDefaultAndNamedWhenNoneIsOff) {
+    core::Document document;
+    edit::Editor editor(document);
+    cmd::CommandRegistry registry;
+    cmd::registerBuiltinCommands(registry);
+    cmd::CommandRunner runner(registry, editor);
+    std::string defaults;
+    writeState({"final", editor, runner, {}, std::nullopt}, defaults);
+    expectContains(defaults, "snap: on\n");
+    EXPECT_EQ(defaults.find("modes off"), std::string::npos);
+
+    cmd::DrawingAids aids;
+    aids.snapModes = core::SnapModes{true, true, true, true, true, true, true, true};
+    runner.setDrawingAids(aids);
+    std::string all;
+    writeState({"final", editor, runner, {}, std::nullopt}, all);
+    expectContains(all, "snap: on, modes off: none\n");
 }
 
 TEST(SnapModeNames, EveryModeOnce) {
@@ -353,8 +373,54 @@ TEST(SnapModeNames, EveryModeOnce) {
     for (const SnapModeName& mode : snapModeNames()) {
         names.push_back(mode.name);
     }
-    EXPECT_EQ(names,
-              (std::vector<std::string_view>{"endpoint", "midpoint", "center", "insertion"}));
+    EXPECT_EQ(names, (std::vector<std::string_view>{"endpoint", "midpoint", "center", "insertion",
+                                                    "intersection", "perpendicular", "tangent",
+                                                    "quadrant"}));
+}
+
+TEST(RunLevel1, OsnapDirectiveSetsExactlyTheListedModes) {
+    // Only the quadrant is on; the snap itself (!snap) stays on.
+    const std::string report = reportOf("!osnap qua\n");
+    expectContains(section(report, "final"),
+                   "snap: on, modes off: endpoint midpoint center insertion intersection "
+                   "perpendicular tangent\n");
+    // Several modes, with the abbreviations of the catalogue.
+    const std::string several = reportOf("!osnap end,mid,cen,ins,int,per,tan,qua\n");
+    expectContains(section(several, "final"), "snap: on, modes off: none\n");
+    // None switches every mode off, and the next directive replaces the set.
+    const std::string none = reportOf("!osnap none\n");
+    expectContains(section(none, "final"),
+                   "snap: on, modes off: endpoint midpoint center insertion intersection "
+                   "perpendicular tangent quadrant\n");
+    const std::string replaced = reportOf("!osnap none\n!osnap end\n");
+    expectContains(section(replaced, "final"),
+                   "snap: on, modes off: midpoint center insertion intersection perpendicular "
+                   "tangent quadrant\n");
+}
+
+TEST(RunLevel1, OsnapDirectiveGivesNoMessageAndLeavesSnapAlone) {
+    const std::string report = reportOf("!osnap none\n!report\n");
+    expectContains(section(report, "final"), "messages:");
+    EXPECT_EQ(report.find("osnap"), std::string::npos);
+    // !snap off stays off after !osnap, and !osnap does not switch it back on.
+    const std::string off = reportOf("!snap off\n!osnap qua\n");
+    expectContains(section(off, "final"),
+                   "snap: off, modes off: endpoint midpoint center insertion intersection "
+                   "perpendicular tangent\n");
+    const std::string on = reportOf("!osnap qua\n!snap off\n!snap on\n");
+    expectContains(section(on, "final"), "snap: on, modes off: endpoint");
+}
+
+TEST(RunLevel1, OsnapQuadrantFindsTheQuadrantOfACircle) {
+    const std::string drawn = "CIRCLE\n0,0\n10\nLINE\n";
+    // The quadrant mode starts off: the circle gives its centre at most.
+    EXPECT_EQ(reportOf(drawn + "!move 10.1,0\n").find("active snap: Quadrant"), std::string::npos);
+    expectContains(section(reportOf(drawn + "!osnap qua\n!move 10.1,0\n"), "final"),
+                   "active snap: Quadrant 10,0\n");
+    // Switched off again: no quadrant.
+    EXPECT_EQ(
+        reportOf(drawn + "!osnap qua\n!osnap none\n!move 10.1,0\n").find("active snap: Quadrant"),
+        std::string::npos);
 }
 
 }  // namespace

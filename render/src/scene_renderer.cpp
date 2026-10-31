@@ -183,6 +183,20 @@ void drawStyled(const core::Document& document, const core::EntityRecord& record
     }
 }
 
+// The circle of a snap marker: 32 edges keep the default 10 px circle's chord
+// error below 0.025 px.
+constexpr std::size_t kMarkerCircleSegments = 32;
+
+std::array<Vec2, kMarkerCircleSegments> markerCircle(const Vec2& center, double radius) {
+    std::array<Vec2, kMarkerCircleSegments> points;
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        const double angle =
+            core::kTwoPi * static_cast<double>(i) / static_cast<double>(points.size());
+        points.at(i) = center + Vec2{std::cos(angle), std::sin(angle)} * radius;
+    }
+    return points;
+}
+
 }  // namespace
 
 double gridSpacing(double pixelsPerUnit, double minSpacingPx) {
@@ -290,14 +304,31 @@ void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
             break;
         }
         case core::SnapKind::Center: {
-            // 32 edges keep the default 10 px circle's chord error below 0.025 px.
-            constexpr std::size_t kCircleSegments = 32;
-            std::array<Vec2, kCircleSegments> points;
-            for (std::size_t i = 0; i < points.size(); ++i) {
-                const double angle =
-                    core::kTwoPi * static_cast<double>(i) / static_cast<double>(points.size());
-                points.at(i) = center + Vec2{std::cos(angle), std::sin(angle)} * half;
-            }
+            painter.drawPolyline(markerCircle(center, half), true);
+            break;
+        }
+        case core::SnapKind::Intersection: {
+            // A cross in the shape of an X (docs/adr/0033, point 1).
+            painter.drawLine(center + Vec2{-half, -half}, center + Vec2{half, half});
+            painter.drawLine(center + Vec2{-half, half}, center + Vec2{half, -half});
+            break;
+        }
+        case core::SnapKind::Perpendicular: {
+            // The symbol ⊥: a base with a stem rising from its middle.
+            painter.drawLine(center + Vec2{-half, half}, center + Vec2{half, half});
+            painter.drawLine(center + Vec2{0.0, half}, center + Vec2{0.0, -half});
+            break;
+        }
+        case core::SnapKind::Tangent: {
+            // A circle with a line tangent to it at the top.
+            painter.drawPolyline(markerCircle(center, half), true);
+            painter.drawLine(center + Vec2{-half, -half}, center + Vec2{half, -half});
+            break;
+        }
+        case core::SnapKind::Quadrant: {
+            // A diamond.
+            const std::array points{center + Vec2{0.0, -half}, center + Vec2{half, 0.0},
+                                    center + Vec2{0.0, half}, center + Vec2{-half, 0.0}};
             painter.drawPolyline(points, true);
             break;
         }
