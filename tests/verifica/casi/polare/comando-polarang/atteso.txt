@@ -46,7 +46,6 @@ statistics:
 entities:
 messages:
   Command: POLARANG
-  Enter new value for POLARANG <30>:
   *Cancel*
 prompt: Command:
 preview:
