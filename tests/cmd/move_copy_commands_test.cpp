@@ -58,8 +58,8 @@ protected:
         const core::EntityRecord* record = m_document.find(id);
         if (record == nullptr) {
             ADD_FAILURE() << "missing entity " << id.value;
-            static const Entity none{Line{}};
-            return none;
+            static const Entity kNone{Line{}};
+            return kNone;
         }
         return record->entity;
     }
