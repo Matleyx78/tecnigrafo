@@ -6,6 +6,7 @@
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/edit/editor.hpp"
 #include "theme.hpp"
 #include "ui_builder.hpp"
@@ -82,6 +83,14 @@ public:
     [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
+
+    /// Sets every object snap mode, as the `!osnap` directive does. The modes
+    /// that have a switch in the Tools menu go through it, so the menu, the
+    /// status bar and the runner stay in agreement; the others (intersection,
+    /// perpendicular, tangent and quadrant, until the stage's menu has their
+    /// switches) are kept here and handed to the runner with the rest. Nothing
+    /// is written in the history.
+    void setSnapModes(const core::SnapModes& modes);
 
     void setTheme(Theme theme);
 
@@ -178,6 +187,9 @@ private:
     QAction* m_midpointAction{nullptr};
     QAction* m_centerAction{nullptr};
     QAction* m_insertionAction{nullptr};
+    /// The snap modes as set so far; applyDrawingAids() overwrites the ones
+    /// that have a switch with the state of the switch.
+    core::SnapModes m_snapModes;
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

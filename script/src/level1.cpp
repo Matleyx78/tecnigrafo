@@ -113,6 +113,12 @@ private:
         m_runner.setDrawingAids(aids);
     }
 
+    void perform(const OsnapDirective& directive) {
+        cmd::DrawingAids aids = m_runner.drawingAids();
+        aids.snapModes = directive.modes;
+        m_runner.setDrawingAids(aids);
+    }
+
     void perform(const ScriptSequencesDirective& directive) {
         m_runner.setScriptSequences(directive.on);
     }

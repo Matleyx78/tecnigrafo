@@ -41,6 +41,9 @@ inline constexpr const char* kScriptReportFile = "rapporto.txt";
 ///   menu writes in the history ("<Ortho on>") is left out of the report,
 ///   because the directives do not pass through the keys. !key sends the
 ///   key, and its line is reported.
+/// - !osnap sets every snap mode through MainWindow::setSnapModes: the
+///   switches of the Tools menu that exist (`aids.snap.<mode>`) in the same
+///   way, the other modes in the runner.
 /// - The view uses sceneStyle(Theme::Light).
 /// - !view fixes the size of the view, its center and its scale; without
 ///   it the view is 800x600, centered on 0,0, one drawing unit per pixel.
@@ -76,6 +79,7 @@ private:
     [[nodiscard]] bool perform(const script::RightClickDirective& directive);
     [[nodiscard]] bool perform(const script::EscDirective& directive);
     [[nodiscard]] bool perform(const script::AidDirective& directive);
+    [[nodiscard]] bool perform(const script::OsnapDirective& directive);
     [[nodiscard]] bool perform(const script::ScriptSequencesDirective& directive);
     [[nodiscard]] bool perform(const script::KeyDirective& key);
     [[nodiscard]] bool perform(const script::ReportDirective& directive);

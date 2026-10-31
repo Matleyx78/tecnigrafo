@@ -59,9 +59,33 @@ const Entity& entityOf(const Document& document, EntityId id) {
     return record->entity;
 }
 
-/// Rank of a snap kind on equal distance: an endpoint beats a midpoint.
+/// Rank of a snap kind on equal distance (docs/adr/0033, point 5): endpoint,
+/// intersection, midpoint, quadrant, perpendicular, tangent. The centre and
+/// the insertion point never compete with them, so their rank is not used.
 int tieRank(SnapKind kind) {
-    return kind == SnapKind::Endpoint ? 0 : 1;
+    switch (kind) {
+        case SnapKind::Endpoint:
+            return 0;
+        case SnapKind::Intersection:
+            return 1;
+        case SnapKind::Midpoint:
+            return 2;
+        case SnapKind::Quadrant:
+            return 3;
+        case SnapKind::Perpendicular:
+            return 4;
+        case SnapKind::Tangent:
+            return 5;
+        case SnapKind::Center:
+        case SnapKind::Insertion:
+            break;
+    }
+    return 6;
+}
+
+bool anyModeEnabled(const SnapModes& modes) {
+    return modes.endpoint || modes.midpoint || modes.center || modes.insertion ||
+           modes.intersection || modes.perpendicular || modes.tangent || modes.quadrant;
 }
 
 /// A candidate answer, ordered by distance, then rank, then highest id.
@@ -131,9 +155,9 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
 }
 
 std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer, double aperture,
-                                  const SnapModes& modes) {
+                                  const SnapModes& modes, std::optional<Vec2> from) {
     assert(aperture >= 0.0);
-    if (!modes.endpoint && !modes.midpoint && !modes.center && !modes.insertion) {
+    if (!anyModeEnabled(modes)) {
         return std::nullopt;
     }
     std::optional<SnapPoint> point;
@@ -173,7 +197,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                     return;
                 }
                 curvePoints.clear();
-                appendSnapPoints(segment, modes, curvePoints);
+                appendSnapPoints(segment, modes, curvePoints, from);
                 consider(segmentDistance, id.value);
             });
             continue;
@@ -184,7 +208,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             continue;
         }
         curvePoints.clear();
-        appendSnapPoints(entity, modes, curvePoints);
+        appendSnapPoints(entity, modes, curvePoints, from);
         consider(curveDistance, id.value);
     }
     return point ? point : center;

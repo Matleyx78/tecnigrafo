@@ -101,6 +101,35 @@ TEST(ParseScript, EveryDirective) {
               Action(ToleranceDirective{ToleranceDirective::Kind::Absolute, 1e-6}));
 }
 
+TEST(ParseScript, OsnapDirective) {
+    const core::SnapModes none{false, false, false, false, false, false, false, false};
+    EXPECT_EQ(single("!osnap none"), Action(OsnapDirective{none}));
+
+    core::SnapModes ends = none;
+    ends.endpoint = true;
+    ends.midpoint = true;
+    EXPECT_EQ(single("!osnap end,mid"), Action(OsnapDirective{ends}));
+
+    const core::SnapModes all{true, true, true, true, true, true, true, true};
+    EXPECT_EQ(single("!osnap end,mid,cen,ins,int,per,tan,qua"), Action(OsnapDirective{all}));
+
+    // The order and repeats do not matter.
+    core::SnapModes qp = none;
+    qp.quadrant = true;
+    qp.perpendicular = true;
+    EXPECT_EQ(single("!osnap qua,per,qua"), Action(OsnapDirective{qp}));
+}
+
+TEST(ParseScript, OsnapIsParsedAndNeverNotImplemented) {
+    for (const char* line : {"!osnap", "!osnap end mid", "!osnap foo", "!osnap end,", "!osnap ,end",
+                             "!osnap END", "!osnap none,end", "!osnap on"}) {
+        const ParseError error = failure(std::string{"; comment\n"} + line + "\n");
+        EXPECT_EQ(error.line, 2) << line;
+        EXPECT_FALSE(error.message.empty()) << line;
+        EXPECT_FALSE(error.notImplemented) << line;
+    }
+}
+
 TEST(ParseScript, ArgumentsMayBeSeparatedByTabsAndManySpaces) {
     EXPECT_EQ(single("!click  3,4\tremove  "), Action(ClickDirective{{3.0, 4.0}, true}));
 }

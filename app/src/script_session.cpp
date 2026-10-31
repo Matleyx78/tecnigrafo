@@ -220,6 +220,15 @@ bool ScriptSession::perform(const script::AidDirective& directive) {
     return true;
 }
 
+bool ScriptSession::perform(const script::OsnapDirective& directive) {
+    // The window keeps the switches of the Tools menu, the status bar and the
+    // runner in agreement, as for !snap; the history lines are left out.
+    collectMessages();
+    m_window.setSnapModes(directive.modes);
+    collectMessages(false);
+    return true;
+}
+
 bool ScriptSession::perform(const script::ScriptSequencesDirective& directive) {
     m_window.setScriptSequences(directive.on);
     return true;

@@ -682,8 +682,12 @@ std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) co
     if (!m_drawingAids.objectSnap) {
         return std::nullopt;
     }
+    // Perpendicular starts from the base point of the running command, like
+    // ortho (docs/adr/0033, point 4); the first point of a command has none.
+    const std::optional<core::Vec2> from =
+        isActive() ? m_command->basePoint() : std::optional<core::Vec2>{};
     return core::findSnap(m_editor.document(), point, kSnapAperturePixels * m_pixelSize,
-                          m_drawingAids.snapModes);
+                          m_drawingAids.snapModes, from);
 }
 
 core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,

@@ -285,8 +285,20 @@ void MainWindow::connectDrawingAids() {
     });
 }
 
+void MainWindow::setSnapModes(const core::SnapModes& modes) {
+    // The modes without a switch first: each switch that changes calls
+    // applyDrawingAids(), which must already see them.
+    m_snapModes = modes;
+    m_endpointAction->setChecked(modes.endpoint);
+    m_midpointAction->setChecked(modes.midpoint);
+    m_centerAction->setChecked(modes.center);
+    m_insertionAction->setChecked(modes.insertion);
+    applyDrawingAids();
+}
+
 void MainWindow::applyDrawingAids() {
     cmd::DrawingAids aids;
+    aids.snapModes = m_snapModes;
     aids.objectSnap = m_objectSnapAction->isChecked();
     aids.snapModes.endpoint = m_endpointAction->isChecked();
     aids.snapModes.midpoint = m_midpointAction->isChecked();

@@ -60,10 +60,6 @@ line/continua-ultimo-punto #342
 # 0.7-R2: selezione scritta (#336)
 
 # 0.7-R7: snap a quadrante e perpendicolare (#346)
-snap/quadrante #346
-snap/perpendicolare #346
-snap/priorita-nuovi-snap #346
-snap/osnap-direttiva #346
 
 
 # 0.7-R16: TRIM, EXTEND (#361)

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/core/snap_points.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/script/compare.hpp"
 
@@ -76,6 +77,14 @@ struct AidDirective {
     friend bool operator==(const AidDirective&, const AidDirective&) = default;
 };
 
+/// !osnap <modes>|none: the object snap modes that are on, all the others
+/// off (docs/adr/0033, point 7), without history messages. It does not touch
+/// !snap, which switches object snap as a whole.
+struct OsnapDirective {
+    core::SnapModes modes;
+    friend bool operator==(const OsnapDirective&, const OsnapDirective&) = default;
+};
+
 /// !scr on|off: AutoCAD script sequences, without history messages.
 struct ScriptSequencesDirective {
     bool on{false};
@@ -117,7 +126,7 @@ struct ToleranceDirective {
 
 using Action =
     std::variant<TypedLine, ViewDirective, MoveDirective, ClickDirective, RightClickDirective,
-                 EscDirective, AidDirective, ScriptSequencesDirective, KeyDirective,
+                 EscDirective, AidDirective, OsnapDirective, ScriptSequencesDirective, KeyDirective,
                  ReportDirective, ScreenshotDirective, LevelDirective, ToleranceDirective>;
 
 /// A parsed .tgs script (docs/verifica/script.md).

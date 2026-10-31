@@ -38,22 +38,31 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 [[nodiscard]] std::vector<EntityId> selectInRectangle(const Document& document,
                                                       const BBox& rectangle, RectangleMode mode);
 
-/// The object snap for a pointer at `pointer` (docs/adr/0008), or
-/// std::nullopt. `aperture` is in drawing units.
+/// The object snap for a pointer at `pointer` (docs/adr/0008, docs/adr/0033),
+/// or std::nullopt. `aperture` is in drawing units.
 ///
 /// Only segments within `aperture` of the pointer are considered; a polyline
 /// with a single vertex counts as a zero-length segment, which offers only its
-/// Endpoint. Among their enabled endpoints and midpoints within `aperture`,
-/// the nearest to the pointer wins; at equal distance an endpoint beats a
-/// midpoint, then the highest id wins, then the earliest segment. If there is
-/// none, the centre of the nearest considered arc or the insertion point of
-/// the nearest considered text wins (nearest by distance from the pointer to
-/// the arc or to the text box, not to the snap point), with the same id and
-/// segment order on ties: a text is considered when the pointer is within
-/// `aperture` of its box (docs/adr/0013, point 6). With every mode disabled
-/// the result is always std::nullopt.
+/// Endpoint. Among their enabled snap points within `aperture` of the pointer
+/// (endpoints, midpoints, quadrants and perpendicular feet; the intersections
+/// and tangent points are not given yet) the nearest to the pointer wins; at
+/// equal distance the order is Endpoint, Intersection, Midpoint, Quadrant,
+/// Perpendicular, Tangent (docs/adr/0033, point 5), then the highest id wins,
+/// then the earliest segment. If there is none, the centre of the nearest
+/// considered arc or the insertion point of the nearest considered text wins
+/// (nearest by distance from the pointer to the arc or to the text box, not to
+/// the snap point), with the same id and segment order on ties: a text is
+/// considered when the pointer is within `aperture` of its box
+/// (docs/adr/0013, point 6). With every mode disabled the result is always
+/// std::nullopt.
+///
+/// `from` is the base point of the running command (Command::basePoint()):
+/// the Perpendicular points start from it, and without it there are none. A
+/// foot of a perpendicular competes only if it is within `aperture` of the
+/// pointer, like every other point, not merely its curve.
 /// Precondition: aperture >= 0.
 [[nodiscard]] std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
-                                                double aperture, const SnapModes& modes);
+                                                double aperture, const SnapModes& modes,
+                                                std::optional<Vec2> from = std::nullopt);
 
 }  // namespace tg::core

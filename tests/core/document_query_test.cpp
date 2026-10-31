@@ -3,6 +3,7 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "tg/core/math.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/text.hpp"
 
@@ -256,6 +257,22 @@ void expectCenter(const std::optional<SnapPoint>& actual, const Vec2& expected) 
     EXPECT_NEAR(actual->point.y, expected.y, kCenterTolerance);
 }
 
+/// The kind of the snap found, nothing if there is none.
+std::optional<SnapKind> kindOf(const std::optional<SnapPoint>& snap) {
+    return snap ? std::optional<SnapKind>{snap->kind} : std::nullopt;
+}
+
+/// A snap of `kind` at `expected`, up to rounding.
+void expectSnap(const std::optional<SnapPoint>& actual, SnapKind kind, const Vec2& expected) {
+    if (!actual) {
+        ADD_FAILURE() << "no snap";
+        return;
+    }
+    EXPECT_EQ(actual->kind, kind);
+    EXPECT_NEAR(actual->point.x, expected.x, kCenterTolerance);
+    EXPECT_NEAR(actual->point.y, expected.y, kCenterTolerance);
+}
+
 TEST(DocumentQuery, SnapToCenterWhenPassingOverTheArc) {
     Document document;
     document.add(halfCircle());
@@ -320,6 +337,107 @@ TEST(DocumentQuery, SnapInTheVoidOrOnAnEmptyDocument) {
     document.add(Polyline{});
     document.add(segment({0, 0}, {10, 0}));
     EXPECT_EQ(findSnap(document, {5, 5}, 1.0, kAllModes), std::nullopt);
+}
+
+// --- findSnap: quadrant and perpendicular (docs/adr/0033, points 4 and 5) ---
+
+constexpr SnapModes kQuadrantOnly{false, false, false, false, false, false, false, true};
+constexpr SnapModes kPerpendicularOnly{false, false, false, false, false, true, false, false};
+
+TEST(DocumentQuery, SnapToAQuadrantOfACircle) {
+    Document document;
+    document.add(Circle{{0, 0}, 5});
+    EXPECT_EQ(findSnap(document, {5.2, 0.3}, 1.0, kQuadrantOnly),
+              (SnapPoint{{5, 0}, SnapKind::Quadrant}));
+    EXPECT_EQ(findSnap(document, {-0.2, 5.3}, 1.0, kQuadrantOnly),
+              (SnapPoint{{0, 5}, SnapKind::Quadrant}));
+    // Away from the four points, even on the circle: nothing.
+    EXPECT_EQ(findSnap(document, {3.5355, 3.5355}, 0.5, kQuadrantOnly), std::nullopt);
+    // With the mode off (the default) there is none: the centre of the circle
+    // crossed is all the default modes give.
+    EXPECT_EQ(kindOf(findSnap(document, {5.2, 0.3}, 1.0, kAllModes)), SnapKind::Center);
+}
+
+TEST(DocumentQuery, QuadrantsOfAnArcAreOnlyThoseInsideIt) {
+    Document document;
+    document.add(Arc{{0, 0}, 5, 0, kPi / 2.0});
+    EXPECT_EQ(findSnap(document, {0.2, 5.2}, 1.0, kQuadrantOnly),
+              (SnapPoint{{0, 5}, SnapKind::Quadrant}));
+    EXPECT_EQ(findSnap(document, {-5.2, 0.2}, 1.0, kQuadrantOnly), std::nullopt);
+}
+
+TEST(DocumentQuery, PerpendicularNeedsTheBasePointAndTheFootInTheAperture) {
+    Document document;
+    document.add(segment({0, 0}, {10, 0}));
+    const SnapPoint foot{{4, 0}, SnapKind::Perpendicular};
+    EXPECT_EQ(findSnap(document, {4.3, 0.4}, 1.0, kPerpendicularOnly, Vec2{4, 8}), foot);
+    // Without a base point the mode gives nothing.
+    EXPECT_EQ(findSnap(document, {4.3, 0.4}, 1.0, kPerpendicularOnly), std::nullopt);
+    // The pointer is near the line but not near the foot.
+    EXPECT_EQ(findSnap(document, {7.0, 0.4}, 1.0, kPerpendicularOnly, Vec2{4, 8}), std::nullopt);
+    // The foot would be on the extension of the line.
+    EXPECT_EQ(findSnap(document, {10.2, 0.4}, 1.0, kPerpendicularOnly, Vec2{14, 8}), std::nullopt);
+}
+
+TEST(DocumentQuery, PerpendicularOfACircleIsTheNearerFootInTheAperture) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    expectSnap(findSnap(document, {0.3, 9.7}, 1.0, kPerpendicularOnly, Vec2{0, 20}),
+               SnapKind::Perpendicular, {0, 10});
+    expectSnap(findSnap(document, {0.3, -9.7}, 1.0, kPerpendicularOnly, Vec2{0, 20}),
+               SnapKind::Perpendicular, {0, -10});
+}
+
+TEST(DocumentQuery, TiesFollowEndpointMidpointQuadrantPerpendicular) {
+    constexpr SnapModes kEverything{true, true, true, true, true, true, true, true};
+    // The arc from (10,0) to (-10,0) over the top: its midpoint, the quadrant
+    // at 90° and the foot from (0,20) are the same point (0,10).
+    Document document;
+    document.add(Arc{{0, 0}, 10, 0, kPi});
+    EXPECT_EQ(kindOf(findSnap(document, {0, 10.5}, 1.0, kEverything, Vec2{0, 20})),
+              SnapKind::Midpoint);
+
+    // Quadrant before Perpendicular.
+    EXPECT_EQ(kindOf(findSnap(document, {0, 10.5}, 1.0,
+                              SnapModes{false, false, false, false, false, true, false, true},
+                              Vec2{0, 20})),
+              SnapKind::Quadrant);
+
+    // Endpoint before Quadrant: the arc ends on a quadrant.
+    Document quarter;
+    quarter.add(Arc{{0, 0}, 10, 0, kPi / 2.0});
+    EXPECT_EQ(kindOf(findSnap(quarter, {10.2, 0}, 1.0, kEverything)), SnapKind::Endpoint);
+}
+
+TEST(DocumentQuery, TheNearestSnapBeatsTheKindRank) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    // The pointer is nearer to the perpendicular foot than to the quadrant.
+    EXPECT_EQ(kindOf(findSnap(document, {5.0, 8.7}, 3.0,
+                              SnapModes{false, false, false, false, false, true, false, true},
+                              Vec2{10, 17.32})),
+              SnapKind::Perpendicular);
+}
+
+TEST(DocumentQuery, TheCentreIsOnlyTheLastResort) {
+    Document document;
+    document.add(Circle{{0, 0}, 5});
+    constexpr SnapModes kCenterAndQuadrant{false, false, true, false, false, false, false, true};
+    // A quadrant within the aperture wins over the centre.
+    EXPECT_EQ(findSnap(document, {5.1, 0.1}, 1.0, kCenterAndQuadrant),
+              (SnapPoint{{5, 0}, SnapKind::Quadrant}));
+    // With none within the aperture, the centre of the circle crossed.
+    EXPECT_EQ(kindOf(findSnap(document, {3.5355, 3.5355}, 0.5, kCenterAndQuadrant)),
+              SnapKind::Center);
+}
+
+TEST(DocumentQuery, EveryModeOffGivesNothing) {
+    Document document;
+    document.add(Circle{{0, 0}, 5});
+    document.add(segment({0, 0}, {10, 0}));
+    constexpr SnapModes kNone{false, false, false, false, false, false, false, false};
+    EXPECT_EQ(findSnap(document, {5, 0}, 1.0, kNone, Vec2{5, 5}), std::nullopt);
+    EXPECT_EQ(findSnap(document, {0, 0}, 1.0, kNone), std::nullopt);
 }
 
 // --- Comparison with an exhaustive search -------------------------------

@@ -32,7 +32,11 @@ constexpr std::string_view kIndent = "  ";
 constexpr std::array kSnapModeNames{SnapModeName{"endpoint", &core::SnapModes::endpoint},
                                     SnapModeName{"midpoint", &core::SnapModes::midpoint},
                                     SnapModeName{"center", &core::SnapModes::center},
-                                    SnapModeName{"insertion", &core::SnapModes::insertion}};
+                                    SnapModeName{"insertion", &core::SnapModes::insertion},
+                                    SnapModeName{"intersection", &core::SnapModes::intersection},
+                                    SnapModeName{"perpendicular", &core::SnapModes::perpendicular},
+                                    SnapModeName{"tangent", &core::SnapModes::tangent},
+                                    SnapModeName{"quadrant", &core::SnapModes::quadrant}};
 
 // A new member of core::SnapModes needs its name above, or reports and
 // questions would silently ignore it.
@@ -386,9 +390,9 @@ std::string rectangleText(const std::optional<cmd::SelectionRectangle>& rectangl
            formatPoint(rectangle->first) + " " + formatPoint(rectangle->second);
 }
 
-/// "on" or "off", followed by the snap modes that are off, if any: the
-/// modes of a new session are all on, so a report shows them only when a
-/// script has changed them.
+/// "on" or "off", followed by the snap modes that are off, if any: a report
+/// shows the modes only when a script has changed them from those of a new
+/// session (docs/adr/0033, point 6).
 std::string snapText(const cmd::DrawingAids& aids) {
     std::string text{onOff(aids.objectSnap)};
     const core::SnapModes& modes = aids.snapModes;
@@ -396,11 +400,18 @@ std::string snapText(const cmd::DrawingAids& aids) {
         return text;
     }
     text += ", modes off:";
+    bool anyOff = false;
     for (const SnapModeName& mode : kSnapModeNames) {
         if (!(modes.*mode.member)) {
             text += ' ';
             text += mode.name;
+            anyOff = true;
         }
+    }
+    // Every mode on is not the state of a new session since stage 0.7, where
+    // perpendicular, tangent and quadrant start off: the report still says so.
+    if (!anyOff) {
+        text += " none";
     }
     return text;
 }
@@ -607,6 +618,14 @@ std::string_view snapKindName(core::SnapKind kind) {
             return "Center";
         case core::SnapKind::Insertion:
             return "Insertion";
+        case core::SnapKind::Intersection:
+            return "Intersection";
+        case core::SnapKind::Perpendicular:
+            return "Perpendicular";
+        case core::SnapKind::Tangent:
+            return "Tangent";
+        case core::SnapKind::Quadrant:
+            return "Quadrant";
     }
     return "Unknown";
 }
