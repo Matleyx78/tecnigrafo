@@ -404,7 +404,7 @@ std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view t
 }
 
 std::variant<QuestionPrefix, ParseError> answerQuestionsUntilFrontier(std::string_view text,
-                                                                  io::FileAccess* files) {
+                                                                      io::FileAccess* files) {
     QuestionFile file{files, true};
     const std::vector<std::string_view> lines = splitLines(text);
     std::optional<Frontier> frontier;

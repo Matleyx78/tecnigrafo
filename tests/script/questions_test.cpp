@@ -121,8 +121,8 @@ TEST(Questions, PrefixStopsAtUnimplementedDefinitionsWhenAvailable) {
         if (error == nullptr || !error->notImplemented) {
             continue;
         }
-        const auto result = answerQuestionsUntilFrontier(
-            "? font-metrics -> wrong\n" + definition + "malformed\n");
+        const auto result =
+            answerQuestionsUntilFrontier("? font-metrics -> wrong\n" + definition + "malformed\n");
         ASSERT_TRUE(std::holds_alternative<QuestionPrefix>(result));
         const auto& prefix = std::get<QuestionPrefix>(result);
         ASSERT_TRUE(prefix.frontier);

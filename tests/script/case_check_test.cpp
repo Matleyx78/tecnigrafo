@@ -517,9 +517,9 @@ TEST(CheckCase, PendingQuestionsCompareBeforeFrontierAndAfterSkippedAnswers) {
     expectContains(failed.output, "  line 2\n    expected: 12\n    obtained: 10\n");
     EXPECT_EQ(check(wrong, true, false).code, kExitPassed);
 
-    const fs::path future = makeCase(
-        "question-prefix-future",
-        {{"domande.tgq", drawing + "? length A -> 10\n; cambia con #346\nmalformed\n"}});
+    const fs::path future =
+        makeCase("question-prefix-future",
+                 {{"domande.tgq", drawing + "? length A -> 10\n; cambia con #346\nmalformed\n"}});
     EXPECT_EQ(check(future, true).code, kExitPassed);
     EXPECT_EQ(check(future).code, kExitInvalid);
     expectContains(check(future, true).output, "domande.tgq, line 3: changes with #346");
@@ -530,18 +530,18 @@ TEST(CheckCase, PendingQuestionsCompareBeforeFrontierAndAfterSkippedAnswers) {
     if (std::get<std::vector<Answer>>(parsed)[0].actual != "error: question not implemented yet") {
         return;  // The realized question is covered by its own package.
     }
-    const fs::path pending = makeCase(
-        "question-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 10\n"}});
+    const fs::path pending =
+        makeCase("question-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 10\n"}});
     EXPECT_EQ(check(pending, true).code, kExitPassed);
-    const fs::path after = makeCase(
-        "question-after-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 12\n"}});
+    const fs::path after =
+        makeCase("question-after-skipped", {{"domande.tgq", drawing + skipped + "? length A -> 12\n"}});
     EXPECT_EQ(check(after, true).code, kExitFailed);
     expectContains(check(after, true).output, "differs before the point the program cannot do yet");
 }
 
 TEST(CheckCase, PendingQuestionsWithoutFrontierRequireChangesWith) {
-    const fs::path folder = makeCase(
-        "question-no-frontier", {{"domande.tgq", "? font-metrics -> wrong\n"}});
+    const fs::path folder =
+        makeCase("question-no-frontier", {{"domande.tgq", "? font-metrics -> wrong\n"}});
     const Result result = check(folder, true);
     EXPECT_EQ(result.code, kExitFailed);
     expectContains(result.output, "fails, but uses nothing the program does not have yet");
