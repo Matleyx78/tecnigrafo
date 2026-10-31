@@ -123,7 +123,7 @@ set_tests_properties(script_describe_all PROPERTIES PASS_REGULAR_EXPRESSION
 add_test(NAME script_describe_one COMMAND tecnigrafo-script describe pl)
 set_tests_properties(script_describe_one PROPERTIES PASS_REGULAR_EXPRESSION
     "^command: PLINE\naliases: PL\nsummary: [^\n]+\.\nprompt start-point: Specify start point: \\(point\\)\n")
-add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe X)
+add_test(NAME script_describe_unknown COMMAND tecnigrafo-script describe NOSUCHCOMMAND)
 set_tests_properties(script_describe_unknown PROPERTIES WILL_FAIL TRUE)
 
 # tecnigrafo-mcp (docs/adr/0027): it is built, and its options are checked.
