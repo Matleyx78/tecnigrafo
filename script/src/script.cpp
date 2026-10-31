@@ -158,9 +158,16 @@ DirectiveResult parseOsnap(const Words& arguments) {
     while (true) {
         const std::size_t comma = rest.find(',');
         const std::string_view abbreviation = rest.substr(0, comma);
-        const auto* const found =
-            std::ranges::find(kOsnapAbbreviations, abbreviation, &OsnapAbbreviation::name);
-        if (found == kOsnapAbbreviations.end()) {
+        // A loop, not std::ranges::find: the iterator of std::array is a
+        // pointer with some standard libraries only.
+        const OsnapAbbreviation* found = nullptr;
+        for (const OsnapAbbreviation& candidate : kOsnapAbbreviations) {
+            if (candidate.name == abbreviation) {
+                found = &candidate;
+                break;
+            }
+        }
+        if (found == nullptr) {
             return "unknown snap mode " + quoted(abbreviation) +
                    " in !osnap, expected: end, mid, cen, ins, int, per, tan, qua or none";
         }
