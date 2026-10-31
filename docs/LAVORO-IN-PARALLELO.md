@@ -40,10 +40,16 @@ della sua issue; ogni pull request riporta in alto la issue che chiude.
 | Chi | Etichetta | Lavoro |
 |---|---|---|
 | Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
-| Claude | `agente:claude`, `agente:claude-2` | pacchetti medi e impegnativi; piano della tappa insieme al responsabile |
-| Codex | `agente:codex` | pacchetti facili e medi |
+| Claude | `agente:claude` | pacchetti impegnativi e la maggior parte dei medi, anche in più sessioni nello stesso momento; riferimenti dei pacchetti di lavoro di Codex; piano della tappa insieme al responsabile |
+| Codex | `agente:codex` | riferimenti con calcoli delicati dei pacchetti di lavoro di Claude, in fascia forte; pacchetti facili e medi che il piano non dà a Claude |
 | Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti ordinari, revisione delle pull request di lavoro, pull request di chiusura della tappa, pacchetti facili; lavora a lotti (sezioni 3 e 4) |
-| Gemini 4 Argon (con Antigravity CLI, `agy`) | `agente:gemini-argon` | pacchetti di riferimenti con calcoli delicati che il piano gli assegna, di pacchetti di lavoro di Claude; lavora a lotti, in una sessione sua, sullo stesso PC di Gemini |
+| Gemini 4 Argon (con Antigravity CLI, `agy`) | `agente:gemini-argon` | nessun pacchetto nel piano: la sua quota settimanale basta a uno o due pacchetti di riferimenti. Se è disponibile e serve, il responsabile gli passa un pacchetto che il piano dava a Codex, cambiandone l'etichetta; lavora a lotti, in una sessione sua, sullo stesso PC di Gemini |
+| Copilot (GitHub Copilot Pro) | — | solo revisione mirata delle pull request impegnative, chiesta dal responsabile (sezione 6); non prende pacchetti e non apre pull request |
+
+Più sessioni di Claude nello stesso momento usano la stessa etichetta:
+`AA-Presa in carico` basta perché due sessioni non prendano la stessa issue.
+Le issue aperte prima con `agente:claude-2` le prende qualunque sessione di
+Claude; per le nuove l'etichetta non si usa più.
 
 Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Le
 etichette servono perché gli agenti lavorano tutti attraverso l'account GitHub
@@ -121,14 +127,20 @@ stessa fonte.
 
 | Fascia | Per | Claude | Codex | Gemini |
 |---|---|---|---|---|
-| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus 5.5 medio (51) o alto (54) | astra medium (50) | 4 Argon alto (53) |
-| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta | Sonnet 5.5 alto (47) | sol medium (48) o astra light (46) | — |
+| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus 5.5 medio (51) o alto (54) | astra medium (50) | 4 Argon alto (53), se disponibile |
+| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta | Opus 5.5 medio (51) | sol medium (48) o astra light (46) | — |
 | **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) | 3.8 Flash medio (40) o alto (41) |
 
 Gemini 3.8 Flash sta nella fascia leggera: i riferimenti con calcoli delicati
 (tolleranze, archi, casi limite geometrici) li scrive un agente di fascia forte,
-diverso da chi farà il pacchetto di lavoro. Gemini 4 Argon (53) ha una capacità
-da fascia forte secondo la stessa misura.
+diverso da chi farà il pacchetto di lavoro: di norma Codex per i pacchetti di
+Claude, e Claude per quelli di Codex. Gemini 4 Argon (53) ha una capacità da
+fascia forte secondo la stessa misura, ma una quota settimanale che basta a
+uno o due pacchetti di riferimenti: il piano non gli assegna niente, e il
+responsabile gli passa un pacchetto quando è disponibile.
+
+Per i pacchetti medi Claude lavora con Opus medio, non con Sonnet: la quota del
+piano Max lo permette, e un modello più forte fa meno giri di correzione.
 
 | Impegno | Quando |
 |---|---|
@@ -264,7 +276,11 @@ un agente senza pacchetto preciso sconfina.
   Si chiede all'agente di quella pull request di risolvere il conflitto.
 - Quando possibile, una pull request scritta da un modello viene rivista da un
   modello diverso prima del merge: di norma Gemini rivede le pull request di
-  Claude e di Codex. La decisione resta del responsabile.
+  Claude e di Codex. Le pull request impegnative di Claude il responsabile può
+  farle rivedere anche a Copilot, che consuma i crediti mensili di Copilot Pro:
+  solo dove una seconda opinione forte conta
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B9). La decisione resta del
+  responsabile.
 
 ## 7. Chiudere un pacchetto
 

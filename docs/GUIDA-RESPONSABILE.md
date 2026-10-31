@@ -95,7 +95,7 @@ Poi, nella stessa cartella, avvia l'agente:
 | Claude Code | `claude` | quello che il piano indica per il pacchetto |
 | Codex | `codex` | quello che il piano indica per il pacchetto |
 | Gemini 3.8 Flash | `agy --mode auto` | `/model` → **Gemini 3.8 Flash**, *Effort* **medium** |
-| Gemini 4 Argon | `agy --mode auto`, in un altro terminale | `/model` → **Gemini 4 Argon**, *Effort* **high** |
+| Gemini 4 Argon, se ha quota (B7) | `agy --mode auto`, in un altro terminale | `/model` → **Gemini 4 Argon**, *Effort* **high** |
 
 Modello e impegno di ogni pacchetto sono nella tabella del piano; le fasce sono
 in [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno", e
@@ -147,7 +147,7 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B6. Aprire le tappe | tutti e due | tu, con lo script o con Claude |
 | B7. Riferimenti | tutti e due | Gemini, a lotti |
 | B8. Lavoro | tutti e due | Claude e Codex |
-| B9. Seconda opinione | tutti e due | Gemini, a lotti |
+| B9. Seconda opinione | tutti e due | Gemini, a lotti; Copilot sulle impegnative |
 | B10. Un riferimento contestato | tutti e due | chi ha scritto i riferimenti |
 | B11. Unire i pacchetti | tutti e due | tu |
 | B12. Chiudere le tappe | tutti e due | Gemini, poi tu |
@@ -428,10 +428,13 @@ quelli si creano solo le issue nuove.
 ### B7. Riferimenti (Gemini, a lotti)
 
 Gemini 3.8 Flash scrive i riferimenti ordinari. Quelli con calcoli delicati il
-piano li assegna a un agente di fascia forte diverso da chi farà il lavoro: a
-Gemini 4 Argon (`agente:gemini-argon`), con la sua frase qui sotto, oppure a
-Claude o Codex, con la frase di B8. La revisione al punto 3 è la stessa per
-tutti.
+piano li assegna a un agente di fascia forte diverso da chi farà il lavoro: di
+norma Codex per i pacchetti di Claude, e Claude per quelli di Codex, con la
+frase di B8. Gemini 4 Argon non ha pacchetti nel piano, perché la sua quota
+settimanale basta a uno o due pacchetti di riferimenti: se ha quota e ti serve,
+passagli tu un pacchetto di Codex, cambiando l'etichetta da `agente:codex` a
+`agente:gemini-argon`, e avvialo con la sua frase qui sotto. La revisione al
+punto 3 è la stessa per tutti.
 
 1. Aggiorna la cartella del repository e avvia `agy --mode auto` con Gemini 3.8
    Flash (A2).
@@ -524,6 +527,17 @@ lotti", e alla fine scrivimi un solo riepilogo.
 Gemini lascia un commento di revisione in ognuna, senza modificare file. Leggi i
 commenti prima di unire: se uno chiede correzioni che condividi, passalo
 all'agente che ha scritto la pull request.
+
+**Copilot, sulle pull request impegnative.** Per le pull request di lavoro
+impegnative di Claude (geometria, motore dei comandi, facciata di solid-space)
+puoi chiedere anche la revisione di Copilot: nella pagina della pull request,
+**Reviewers** → **Copilot**. Copilot legge la pull request e lascia i suoi
+commenti, come Gemini; non modifica file e non apre pull request. Ogni
+revisione consuma i crediti mensili di Copilot Pro: dopo le prime guarda in
+**Settings** → **Billing and licensing** quanto è costata, e regola di
+conseguenza quante chiederne al mese. I commenti di Copilot si trattano come
+quelli di Gemini: le correzioni che condividi le passi all'agente della pull
+request.
 
 ### B10. Un riferimento contestato
 

@@ -19,4 +19,5 @@ Se sei **Gemini 4 Argon**, il responsabile te lo dice nel messaggio: la tua
 etichetta è `agente:gemini-argon`, non `agente:gemini`, e la tua cartella di
 build è `build-gemini-argon` (`TG_BUILD_SUFFIX=-gemini-argon`). Prendi solo le
 issue con la tua etichetta: quelle di `agente:gemini` sono di Gemini 3.8 Flash,
-che lavora sullo stesso PC.
+che lavora sullo stesso PC. Il piano non ti assegna niente: l'etichetta la
+mette il responsabile sulle issue che ti passa, quando hai quota disponibile.

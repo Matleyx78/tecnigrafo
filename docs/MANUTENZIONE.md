@@ -81,8 +81,9 @@ una volta.
 | `pacchetto` | issue di un pacchetto di lavoro (`[X.Y-PN]`) | sì | sì |
 | `riferimenti` | casi di verifica di un pacchetto (`[X.Y-RN]`, ADR 0011 in Tecnigrafo, ADR 0004 in solid-space) | sì | sì |
 | `tappa-X.Y` | tappa a cui appartiene la issue (una per tappa) | sì | sì |
-| `agente:claude`, `agente:claude-2`, `agente:codex`, `agente:gemini` | a chi è assegnata la issue | sì | sì |
-| `agente:gemini-argon` | assegnata a Gemini 4 Argon | sì | sì |
+| `agente:claude`, `agente:codex`, `agente:gemini` | a chi è assegnata la issue | sì | sì |
+| `agente:claude-2` | solo issue aperte prima della tappa 0.8 di Tecnigrafo: le prende qualunque sessione di Claude; si elimina quando non ne restano | sì | sì |
+| `agente:gemini-argon` | issue che il responsabile passa a Gemini 4 Argon, quando ha quota disponibile | sì | sì |
 | `AA-Presa in carico` | qualcuno ci sta lavorando adesso: non toccare | sì | sì |
 | `facile`, `media`, `impegnativa` | difficoltà del pacchetto | sì | — |
 | `idea` | proposta per le tappe future: si discute, non si implementa | sì | sì |
