@@ -116,19 +116,19 @@ TEST(Grips, AxisAlignedArcEndpointsStayExactForShallowMovedArc) {
 
 TEST(Grips, ArcEndpointsOnAxesAreExactForEveryPairOfAxes) {
     const Vec2 center{1.25, -3.5};
-    constexpr double radius = 7.0;
+    constexpr double kRadius = 7.0;
     // Start and end angles in degrees, as they arrive from a DXF file.
     constexpr std::array<double, 4> kAxisDegrees{0.0, 90.0, 180.0, 270.0};
-    const std::array<Vec2, 4> onAxis{{{center.x + radius, center.y},
-                                      {center.x, center.y + radius},
-                                      {center.x - radius, center.y},
-                                      {center.x, center.y - radius}}};
+    const std::array<Vec2, 4> onAxis{{{center.x + kRadius, center.y},
+                                      {center.x, center.y + kRadius},
+                                      {center.x - kRadius, center.y},
+                                      {center.x, center.y - kRadius}}};
     for (std::size_t first = 0; first < kAxisDegrees.size(); ++first) {
         for (std::size_t last = 0; last < kAxisDegrees.size(); ++last) {
             if (first == last) {
                 continue;
             }
-            const Arc arc{center, radius, degreesToRadians(kAxisDegrees.at(first)),
+            const Arc arc{center, kRadius, degreesToRadians(kAxisDegrees.at(first)),
                           degreesToRadians(kAxisDegrees.at(last))};
             const auto points = gripPoints(arc);
             ASSERT_EQ(points.size(), 4U) << "arc " << first << " -> " << last;
@@ -140,15 +140,15 @@ TEST(Grips, ArcEndpointsOnAxesAreExactForEveryPairOfAxes) {
 
 TEST(Grips, ArcAcrossZeroKeepsExactEndpointsOnAxes) {
     const Vec2 center{1.25, -3.5};
-    constexpr double radius = 7.0;
-    const Arc arc{center, radius, degreesToRadians(270.0), degreesToRadians(90.0)};
+    constexpr double kRadius = 7.0;
+    const Arc arc{center, kRadius, degreesToRadians(270.0), degreesToRadians(90.0)};
     const auto points = gripPoints(arc);
     ASSERT_EQ(points.size(), 4U);
-    expectSamePoint(points[0], {center.x, center.y - radius});
-    expectSamePoint(points[1], {center.x, center.y + radius});
+    expectSamePoint(points[0], {center.x, center.y - kRadius});
+    expectSamePoint(points[1], {center.x, center.y + kRadius});
     // The middle point sits at 0 degrees; it is not an endpoint, so it only
     // has to be right within the tolerance.
-    expectPoint(points[2], {center.x + radius, center.y});
+    expectPoint(points[2], {center.x + kRadius, center.y});
     expectSamePoint(points[3], center);
 }
 
