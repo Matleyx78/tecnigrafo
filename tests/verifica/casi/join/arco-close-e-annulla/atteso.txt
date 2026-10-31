@@ -1,0 +1,130 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  258 LINE start=50,0 end=60,0
+  259 LINE start=50,10 end=60,10
+  260 LINE start=100,0 end=120,0
+  262 CIRCLE center=0,0 radius=10
+messages:
+  Command: ARC
+  Specify start point of arc or [Center]: C
+  Specify center point of arc: 0,0
+  Specify start point of arc: 10,0
+  Specify end point of arc or [Angle/chord Length]: A
+  Specify included angle: 180
+  Command: LINE
+  Specify first point: 50,0
+  Specify next point or [Undo]: 60,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 50,10
+  Specify next point or [Undo]: 60,10
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 100,0
+  Specify next point or [Undo]: 110,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 110,0
+  Specify next point or [Undo]: 120,0
+  Specify next point or [Undo]:
+  Command: JOIN
+  Select source object: 0,10
+  Select arcs to join to source or [cLose]: L
+  Arc converted to circle.
+  Command: JOIN
+  Select source object or multiple objects to join at once: 55,0
+  1 found
+  Select objects: 55,10
+  1 found, 2 total
+  Select objects:
+  0 objects joined, 2 objects discarded from the operation.
+  Command: JOIN
+  Select source object or multiple objects to join at once: 105,0
+  1 found
+  Select objects: 115,0
+  1 found, 2 total
+  Select objects:
+  2 lines joined into 1 line
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Line
+  Line
+  Line
+  Line
+  Join
+  Join
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 3
+
+[report 2]
+entities:
+  258 LINE start=50,0 end=60,0
+  259 LINE start=50,10 end=60,10
+  260 LINE start=100,0 end=110,0
+  261 LINE start=110,0 end=120,0
+  262 CIRCLE center=0,0 radius=10
+messages:
+  Command: U
+  Undone: Join.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Line
+  Line
+  Line
+  Line
+  Join
+redo:
+  Join
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 4
+
+[final]
+entities:
+  258 LINE start=50,0 end=60,0
+  259 LINE start=50,10 end=60,10
+  260 LINE start=100,0 end=120,0
+  262 CIRCLE center=0,0 radius=10
+messages:
+  Command: REDO
+  Redone: Join.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Arc
+  Line
+  Line
+  Line
+  Line
+  Join
+  Join
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 3

@@ -1,0 +1,48 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Opzione cLose per arco in cerchio, niente da unire, U e REDO
+!view 60,5 0.5 800x400
+ARC
+C
+0,0
+10,0
+A
+180
+
+LINE
+50,0
+60,0
+
+LINE
+50,10
+60,10
+
+LINE
+100,0
+110,0
+
+LINE
+110,0
+120,0
+
+; 1. Arco chiuso in cerchio con opzione cLose (nella sequenza script)
+!scr on
+JOIN
+0,10
+L
+!scr off
+
+; 2. Niente da unire tra due linee parallele distanti (scartate)
+JOIN
+55,0
+55,10
+
+; 3. Unione con U e REDO
+JOIN
+105,0
+115,0
+
+!report
+U
+!report
+REDO

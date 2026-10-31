@@ -1,0 +1,69 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  260 LINE start=150,0 end=170,0
+  264 LWPOLYLINE closed=no vertex=220,0 vertex=230,0 vertex=230,10 vertex=240,10
+  266 LINE start=260,0 end=270,0
+  267 ARC center=280,0 radius=5 start-angle=0 end-angle=180
+  268 LWPOLYLINE closed=no vertex=100,0 vertex=110,0 bulge=1 vertex=120,0 vertex=130,0
+  269 LWPOLYLINE closed=no vertex=180,0 vertex=190,1e-10 vertex=200,5
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+  Command: JOIN
+  Select source object or multiple objects to join at once: 155,0
+  1 found
+  Select objects: 165,0
+  1 found, 2 total
+  Select objects:
+  2 lines joined into 1 line
+  Command: JOIN
+  Select source object or multiple objects to join at once: 225,0
+  1 found
+  Select objects: 235,10
+  1 found, 2 total
+  Select objects:
+  1 segment added to polyline
+  Command: JOIN
+  Select source object or multiple objects to join at once: 105,0
+  1 found
+  Select objects: 115,-5
+  1 found, 2 total
+  Select objects: 125,0
+  1 found, 3 total
+  Select objects:
+  3 objects converted to 1 polyline
+  Command: JOIN
+  Select source object or multiple objects to join at once: 185,0
+  1 found
+  Select objects: 195,2.5
+  1 found, 2 total
+  Select objects:
+  2 objects converted to 1 polyline
+  Command: JOIN
+  Select source object or multiple objects to join at once: 265,0
+  1 found
+  Select objects: 280,5
+  1 found, 2 total
+  Select objects:
+  0 objects joined, 2 objects discarded from the operation.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Join
+  Join
+  Join
+  Join
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf, modified
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+  LINE 2
+  LWPOLYLINE 3

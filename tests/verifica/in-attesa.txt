@@ -97,3 +97,8 @@ chamfer/autocad-raccordi #371
 chamfer/sequenza-script #371
 chamfer/opzioni-undo-shift #371
 chamfer/casi-limite-errori #371
+
+# 0.7-R23: JOIN (#375)
+join/autocad-interattivo #375
+join/sequenza-script #375
+join/arco-close-e-annulla #375

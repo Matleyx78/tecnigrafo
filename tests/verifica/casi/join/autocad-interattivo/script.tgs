@@ -1,0 +1,32 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Casi d, e1, e2, f, g di autocad-unione.dxf per JOIN in sequenza interattiva
+!view 190,5 0.5 1900x400
+OPEN
+ingresso.dxf
+; Caso e1: due linee allineate con spazio 1e-10 (unite in una sola linea)
+JOIN
+155,0
+165,0
+
+; Caso f: polilinea piu linea contigua (segmento unito a polilinea)
+JOIN
+225,0
+235,10
+
+; Caso d: linea, arco, linea (3 oggetti convertiti in 1 polilinea)
+JOIN
+105,0
+115,-5
+125,0
+
+; Caso e2: due linee contigue non allineate a 1e-10 (convertite in 1 polilinea)
+JOIN
+185,0
+195,2.5
+
+; Caso g: linea e arco non contigui (nessuna unione, 2 scartati)
+JOIN
+265,0
+280,5
+
