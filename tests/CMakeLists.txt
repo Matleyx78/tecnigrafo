@@ -25,9 +25,11 @@ add_executable(tg_tests
     cmd/coordinate_input_test.cpp
     cmd/drawing_aids_test.cpp
     cmd/erase_command_test.cpp
+    cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp
     cmd/layer_commands_test.cpp
     cmd/line_command_test.cpp
+    cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/pline_command_test.cpp
     cmd/property_commands_test.cpp

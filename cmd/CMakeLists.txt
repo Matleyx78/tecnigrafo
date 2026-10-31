@@ -12,8 +12,10 @@ add_library(tg_cmd
     src/commands/circle_command.cpp
     src/commands/file_commands.cpp
     src/commands/erase_command.cpp
+    src/commands/explode_command.cpp
     src/commands/layer_commands.cpp
     src/commands/line_command.cpp
+    src/commands/move_copy_commands.cpp
     src/commands/pline_command.cpp
     src/commands/property_commands.cpp
     src/commands/text_command.cpp

@@ -35,6 +35,15 @@ Status LineCommand::handle(CommandContext& context, const Input& input) {
         context.lastPoint = point->point;
         updatePreview();
     } else if (std::holds_alternative<ConfirmInput>(input)) {
+        if (m_points.empty()) {
+            // Enter at the first question continues from the last point; with
+            // none, the question stays. Esc leaves the command.
+            if (context.lastPoint) {
+                m_points.push_back(*context.lastPoint);
+                updatePreview();
+            }
+            return Status::Continue;
+        }
         return finish(context);
     } else if (const auto* keyword = std::get_if<KeywordInput>(&input)) {
         if (keyword->keyword == "Close" && m_points.size() >= 3) {

@@ -295,5 +295,71 @@ TEST_F(LineCommandTest, CloseDoesNotAddADegenerateSegmentWhenAlreadyAtTheFirstPo
     runner().submitText("");
 }
 
+TEST_F(LineCommandTest, EnterAtTheFirstQuestionContinuesFromTheLastPoint) {
+    runner().submitText("L");
+    point(0.0, 0.0);
+    point(10.0, 10.0);
+    runner().submitText("");
+    ASSERT_FALSE(runner().isActive());
+    runner().submitText("L");
+    runner().submitText("");
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(runner().promptText(), "Specify next point or [Undo]:");
+    point(20.0, 10.0);
+    runner().submitText("");
+    EXPECT_FALSE(runner().isActive());
+    ASSERT_EQ(document().entityCount(), 2U);
+    EXPECT_EQ(line(1), (Line{{10.0, 10.0}, {20.0, 10.0}}));
+}
+
+TEST_F(LineCommandTest, EnterAtTheFirstQuestionOfAFreshDrawingKeepsTheQuestion) {
+    runner().submitText("L");
+    runner().submitText("");
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(runner().promptText(), "Specify first point:");
+    EXPECT_TRUE(messages().empty() || messages().back() != "*Cancel*");
+    point(1.0, 1.0);
+    point(2.0, 2.0);
+    runner().submitText("");
+    EXPECT_EQ(document().entityCount(), 1U);
+}
+
+TEST_F(LineCommandTest, ContinuingFromTheLastPointStartsAtItAndPreviewsFromIt) {
+    runner().submitText("L");
+    point(0.0, 0.0);
+    point(10.0, 10.0);
+    runner().submitText("");
+    runner().submitText("L");
+    runner().submitText("");
+    runner().pointerMoved({15.0, 10.0});
+    ASSERT_EQ(runner().preview().size(), 1U);
+    EXPECT_EQ(std::get<Line>(runner().preview().front()), (Line{{10.0, 10.0}, {15.0, 10.0}}));
+}
+
+TEST_F(LineCommandTest, EscapeAfterContinuingWithoutSegmentsLeavesNoStep) {
+    runner().submitText("L");
+    point(0.0, 0.0);
+    point(10.0, 10.0);
+    runner().submitText("");
+    runner().submitText("L");
+    runner().submitText("");
+    runner().submit(CancelInput{});
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().entityCount(), 1U);
+    EXPECT_EQ(editor().undoNames().size(), 1U);
+}
+
+TEST_F(LineCommandTest, UndoAfterContinuingFallsBackToTheFirstQuestion) {
+    runner().submitText("L");
+    point(0.0, 0.0);
+    point(10.0, 10.0);
+    runner().submitText("");
+    runner().submitText("L");
+    runner().submitText("");
+    runner().submitText("U");
+    EXPECT_EQ(runner().promptText(), "Specify first point:");
+    runner().submit(CancelInput{});
+}
+
 }  // namespace
 }  // namespace tg::cmd
