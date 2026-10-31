@@ -10,10 +10,10 @@
 #include "tg/script/questions.hpp"
 #include "tg/script/script.hpp"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
-#include <iterator>
 #include <optional>
 #include <string>
 #include <system_error>
@@ -40,7 +40,18 @@ std::optional<std::string> readFile(const fs::path& path) {
     if (!file) {
         return std::nullopt;
     }
-    return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{});
+    // Read in blocks so empty files and embedded null bytes are preserved.
+    constexpr std::size_t kReadBlockSize = 8192;
+    std::array<char, kReadBlockSize> buffer{};
+    std::string bytes;
+    while (file.read(buffer.data(), static_cast<std::streamsize>(buffer.size())) ||
+           file.gcount() != 0) {
+        bytes.append(buffer.data(), static_cast<std::size_t>(file.gcount()));
+    }
+    if (file.bad() || !file.eof()) {
+        return std::nullopt;
+    }
+    return bytes;
 }
 
 bool writeFile(const fs::path& path, std::string_view text) {

@@ -255,7 +255,8 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
                     return malformed(file.lines[start], "no handle available for an entity");
                 }
                 entity.id.value = result.document.nextId();
-                entity.groups.insert(entity.groups.begin(), {5, handleText(entity.id.value)});
+                entity.groups.push_back({5, handleText(entity.id.value)});
+                std::rotate(entity.groups.begin(), entity.groups.end() - 1, entity.groups.end());
                 result.report.warnings.push_back(
                     "line " + std::to_string(file.lines[start]) + ": entity " + entity.type +
                     " had no handle; assigned " + handleText(entity.id.value));

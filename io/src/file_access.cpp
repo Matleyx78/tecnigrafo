@@ -3,11 +3,12 @@
 
 #include "tg/io/file_access.hpp"
 
+#include <array>
+#include <cstddef>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <ios>
-#include <iterator>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -66,8 +67,15 @@ Result<std::string> DiskFiles::read(std::string_view name) {
             return fileError(
                 name, fs::exists(path, error) ? "cannot be opened for reading" : "does not exist");
         }
-        std::string bytes{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}};
-        if (stream.bad()) {
+        // Read in blocks so empty files and embedded null bytes are preserved.
+        constexpr std::size_t kReadBlockSize = 8192;
+        std::array<char, kReadBlockSize> buffer{};
+        std::string bytes;
+        while (stream.read(buffer.data(), static_cast<std::streamsize>(buffer.size())) ||
+               stream.gcount() != 0) {
+            bytes.append(buffer.data(), static_cast<std::size_t>(stream.gcount()));
+        }
+        if (stream.bad() || !stream.eof()) {
             return fileError(name, "cannot be read");
         }
         return bytes;
