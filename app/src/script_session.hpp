@@ -41,9 +41,9 @@ inline constexpr const char* kScriptReportFile = "rapporto.txt";
 ///   menu writes in the history ("<Ortho on>") is left out of the report,
 ///   because the directives do not pass through the keys. !key sends the
 ///   key, and its line is reported.
-/// - !osnap sets the switches of the snap modes (`aids.snap.<mode>`) in the
-///   same way. A mode whose switch the window does not have yet can only
-///   stay as it is: asking for another state is an error.
+/// - !osnap sets every snap mode through MainWindow::setSnapModes: the
+///   switches of the Tools menu that exist (`aids.snap.<mode>`) in the same
+///   way, the other modes in the runner.
 /// - The view uses sceneStyle(Theme::Light).
 /// - !view fixes the size of the view, its center and its scale; without
 ///   it the view is 800x600, centered on 0,0, one drawing unit per pixel.

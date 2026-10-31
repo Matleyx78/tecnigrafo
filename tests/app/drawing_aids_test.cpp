@@ -76,6 +76,8 @@ protected:
 
     [[nodiscard]] const cmd::DrawingAids& aids() const { return m_window.drawingAids(); }
 
+    void setSnapModes(const core::SnapModes& modes) { m_window.setSnapModes(modes); }
+
     [[nodiscard]] QAction* action(const char* name) const {
         return m_window.findChild<QAction*>(QString::fromLatin1(name));
     }
@@ -266,6 +268,24 @@ TEST_F(DrawingAidsTest, EachModeOfTheMenuReachesTheRunner) {
     action("aids.snap.center")->trigger();
     EXPECT_EQ(aids().snapModes, (core::SnapModes{false, true, false}));
     EXPECT_TRUE(aids().objectSnap);  // the modes do not touch the switch
+}
+
+TEST_F(DrawingAidsTest, SetSnapModesReachesTheSwitchesAndTheRunner) {
+    // The directive !osnap: modes with a switch and modes without one.
+    const core::SnapModes wanted{false, true, false, true, false, true, false, true};
+    setSnapModes(wanted);
+    EXPECT_EQ(aids().snapModes, wanted);
+    EXPECT_FALSE(action("aids.snap.endpoint")->isChecked());
+    EXPECT_TRUE(action("aids.snap.midpoint")->isChecked());
+    EXPECT_FALSE(action("aids.snap.center")->isChecked());
+    EXPECT_TRUE(action("aids.snap.insertion")->isChecked());
+    EXPECT_TRUE(aids().objectSnap);  // the modes do not touch the switch
+    EXPECT_EQ(lastHistoryLine().find("Osnap"), std::string::npos);
+
+    // Toggling a switch later keeps the modes that have none.
+    action("aids.snap.center")->trigger();
+    EXPECT_EQ(aids().snapModes,
+              (core::SnapModes{false, true, true, true, false, true, false, true}));
 }
 
 TEST_F(DrawingAidsTest, ActionsButtonsAndHistoryStayInStep) {
