@@ -321,8 +321,16 @@ TEST(McpSession, CheckCaseGivesTheOutcome) {
     fs::create_directories(root / "area" / "buono");
     fs::create_directories(root / "area" / "vuoto");
     {
-        std::ofstream(root / "area" / "buono" / "script.tgs") << "LINE\n0,0\n10,0\n\n";
-        std::ofstream(root / "area" / "buono" / "atteso.txt") << "tecnigrafo-report 1\n";
+        // Binary: a text stream writes CRLF on Windows, and a carriage
+        // return makes the case invalid (docs/adr/0037, point 2).
+        std::ofstream(root / "area" / "buono" / "script.tgs", std::ios::binary)
+            << "LINE\n0,0\n10,0\n\n";
+        // Not the report the script gives, but with the echo of every line,
+        // so that the case runs and is not passed (docs/adr/0037, point 3).
+        std::ofstream(root / "area" / "buono" / "atteso.txt", std::ios::binary)
+            << "tecnigrafo-report 1\n\n[final]\nmessages:\n  Command: LINE\n"
+               "  Specify first point: 0,0\n  Specify next point or [Undo]: 10,0\n"
+               "  Specify next point or [Undo]:\n";
     }
     Tools tools{{.root = root, .sources = std::nullopt, .questions = false}};
     const ToolResult notPassed = tools.call("check_case", json{{"path", "area/buono"}});

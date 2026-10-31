@@ -5,6 +5,8 @@
 # invece fallire la CI, perché va tolto da qui.
 #
 # Una riga per caso: <area>/<nome> #<numero della issue del lavoro>
+# Con "esente" in fondo alla riga il caso si esegue senza i controlli anticipati:
+# lo aggiunge solo il pacchetto che porta un controllo (ADR 0037, punto 9).
 # La pull request di riferimenti aggiunge le righe dei suoi casi; la pull
 # request del lavoro toglie solo le righe dei casi del suo pacchetto.
 # Le righe che iniziano con # sono commenti.

@@ -4,6 +4,7 @@
 #include "tg/script/case_check.hpp"
 
 #include "tg/script/case_files.hpp"
+#include "tg/script/case_form.hpp"
 #include "tg/script/compare.hpp"
 #include "tg/script/level1.hpp"
 #include "tg/script/questions.hpp"
@@ -76,13 +77,26 @@ Outcome fromParseError(const fs::path& file, const ParseError& error) {
     return invalid(where);
 }
 
-Outcome checkScript(const fs::path& folder, const fs::path& output,
+/// A violation of the form of a case: never a valid case, not even a
+/// pending one (docs/adr/0037, point 2).
+Outcome fromFormError(const FormError& error) {
+    return invalid(error.file + ", line " + std::to_string(error.line) + ": " + error.message);
+}
+
+Outcome checkScript(const fs::path& folder, const CheckOptions& options,
                     const std::optional<fs::path>& sources) {
+    const fs::path& output = options.output;
     const fs::path scriptPath = folder / kScriptFile;
     const std::optional<std::string> text = readFile(scriptPath);
     const std::optional<std::string> expected = readFile(folder / kExpectedFile);
     if (!text) {
         return invalid(std::string{"cannot read "} + kScriptFile);
+    }
+    // Before running anything; a missing atteso.txt is reported below.
+    if (options.earlyChecks && expected) {
+        if (const std::optional<FormError> error = checkScriptForm(*text, *expected)) {
+            return fromFormError(*error);
+        }
     }
     std::variant<Script, ParseError> parsed = parseScript(*text);
     if (const auto* error = std::get_if<ParseError>(&parsed)) {
@@ -112,12 +126,18 @@ Outcome checkScript(const fs::path& folder, const fs::path& output,
     return outcome;
 }
 
-Outcome checkQuestionFile(const fs::path& folder, const fs::path& output,
+Outcome checkQuestionFile(const fs::path& folder, const CheckOptions& options,
                           const std::optional<fs::path>& sources) {
+    const fs::path& output = options.output;
     const fs::path path = folder / kQuestionsFile;
     const std::optional<std::string> text = readFile(path);
     if (!text) {
         return invalid(std::string{"cannot read "} + kQuestionsFile);
+    }
+    if (options.earlyChecks) {
+        if (const std::optional<FormError> error = checkQuestionsForm(*text)) {
+            return fromFormError(*error);
+        }
     }
     // The questions only read: the hand-written files of the case directly.
     CaseFiles access{folder, sources};
@@ -232,9 +252,9 @@ int checkCase(const fs::path& folder, const CheckOptions& options, std::ostream&
         outcome = invalid(std::string{"a case has either "} + kScriptFile + " and " +
                           kExpectedFile + ", or " + kQuestionsFile);
     } else if (hasScript) {
-        outcome = checkScript(folder, options.output, sources);
+        outcome = checkScript(folder, options, sources);
     } else {
-        outcome = checkQuestionFile(folder, options.output, sources);
+        outcome = checkQuestionFile(folder, options, sources);
     }
     return conclude(outcome, folder, options.pending, out);
 }

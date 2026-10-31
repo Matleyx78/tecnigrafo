@@ -77,11 +77,12 @@ struct Result {
     std::string output;
 };
 
-Result check(const fs::path& folder, bool pending = false) {
+Result check(const fs::path& folder, bool pending = false, bool earlyChecks = true) {
     std::ostringstream out;
     const fs::path output = kOutput / "obtained" / folder.filename();
     fs::remove_all(output);
-    const int code = checkCase(folder, {pending, output}, out);
+    const int code =
+        checkCase(folder, {.pending = pending, .earlyChecks = earlyChecks, .output = output}, out);
     return {code, out.str()};
 }
 
@@ -141,8 +142,9 @@ TEST(CheckCase, LevelTwoCaseIsSkipped) {
 }
 
 TEST(CheckCase, InvalidCasesFailEvenWhenPending) {
-    const fs::path malformed =
-        makeCase("malformed", {{"script.tgs", "PLINE\n!foo\n"}, {"atteso.txt", ""}});
+    const fs::path malformed = makeCase(
+        "malformed",
+        {{"script.tgs", "PLINE\n!foo\n"}, {"atteso.txt", "messages:\n  Command: PLINE\n"}});
     const fs::path empty = makeCase("empty", {});
     const fs::path both =
         makeCase("both", {{"script.tgs", ""}, {"atteso.txt", ""}, {"domande.tgq", ""}});
@@ -157,6 +159,58 @@ TEST(CheckCase, InvalidCasesFailEvenWhenPending) {
         }
     }
     expectContains(check(malformed).output, "script.tgs, line 2: unknown directive '!foo'");
+}
+
+// The early checks (docs/adr/0037, points 2, 3 and 9): a case with the wrong
+// form is invalid before it runs, also when pending; a pending case marked
+// "esente" runs without them, as before. That --no-early-checks needs
+// --pending is checked on tecnigrafo-script itself (tests/CMakeLists.txt).
+TEST(CheckCase, WrongFormIsInvalidEvenWhenPending) {
+    // An empty line after the finished PLINE, without its echo.
+    const std::string script = std::string{kScript} + "\n";
+    std::string wrong{kReport};
+    wrong.replace(wrong.find("vertex=10,0"), 11, "vertex=11,0");
+    const fs::path noEcho =
+        makeCase("form-no-echo", {{"script.tgs", script}, {"atteso.txt", wrong}});
+    const fs::path crlf = makeCase("form-crlf", {{"script.tgs", "PLINE\r\n0,0\r\n10,0\r\n\r\n"},
+                                                 {"atteso.txt", std::string{kReport}}});
+    const fs::path questions =
+        makeCase("form-questions",
+                 {{"domande.tgq", "A = LWPOLYLINE vertex=0,0 vertex=10,0\n? length A -> 12\n\n"}});
+    for (const bool pending : {false, true}) {
+        Result result = check(noEcho, pending);
+        EXPECT_EQ(result.code, kExitInvalid);
+        expectContains(result.output,
+                       "INVALID: " + noEcho.generic_string() +
+                           ": script.tgs, line 5: no echo of this line in the messages of "
+                           "atteso.txt (an empty line is Enter: at Command: it repeats the last "
+                           "command)\n");
+        // Nothing ran: no obtained report.
+        EXPECT_FALSE(fs::exists(kOutput / "obtained" / "form-no-echo" / kObtainedReport));
+
+        result = check(crlf, pending);
+        EXPECT_EQ(result.code, kExitInvalid);
+        expectContains(result.output,
+                       ": script.tgs, line 1: carriage return: lines end with LF only\n");
+
+        result = check(questions, pending);
+        EXPECT_EQ(result.code, kExitInvalid);
+        expectContains(result.output, ": domande.tgq, line 3: empty line at the end of the file\n");
+    }
+
+    // Exempt: the pending case runs as before, and is not passed.
+    Result result = check(noEcho, true, false);
+    EXPECT_EQ(result.code, kExitPassed);
+    expectContains(result.output, "pending: ");
+    expectContains(result.output, "warning: not passed yet");
+    result = check(questions, true, false);
+    EXPECT_EQ(result.code, kExitPassed);
+    expectContains(result.output, "  line 2\n    expected: 12\n    obtained: 10\n");
+    // With the form of a case right, exempt or not gives the same result.
+    const fs::path passing = makeCase(
+        "form-right", {{"script.tgs", std::string{kScript}}, {"atteso.txt", std::string{kReport}}});
+    EXPECT_EQ(check(passing, true, false).code, kExitFailed);
+    EXPECT_EQ(check(passing, true).code, kExitFailed);
 }
 
 // What the specifications describe and the program does not have yet is a
@@ -193,7 +247,8 @@ TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
         ++checked;
         std::map<std::string, std::string> files{{form.file, form.text}};
         if (isScript) {
-            files.emplace("atteso.txt", "");
+            // The echo of the first line, so that the early checks pass.
+            files.emplace("atteso.txt", "messages:\n  Command: PLINE\n");
         }
         const fs::path folder = makeCase(form.name, files);
 

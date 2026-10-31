@@ -41,15 +41,20 @@ struct CheckOptions {
     /// passed exits with kExitPassed, with a warning, and a case passed with
     /// kExitFailed, asking to remove it from the list.
     bool pending{false};
+    /// The checks of docs/adr/0037 run; false only for a pending case
+    /// marked "esente" in tests/verifica/in-attesa.txt (point 9).
+    bool earlyChecks{true};
     /// Where the obtained report or answers are written; created if needed.
     /// A script reads and writes its files in the subfolder "file"
     /// (kCaseFilesFolder), prepared by prepareCaseFiles() (case_files.hpp).
     std::filesystem::path output{"."};
 };
 
-/// `tecnigrafo-script check <case folder> [--pending] [--output <folder>]
-/// [--sources <folder>]`: runs the case (script.tgs with atteso.txt, or
-/// domande.tgq), compares, writes the differences to `out` and the
+/// `tecnigrafo-script check <case folder> [--pending [--no-early-checks]]
+/// [--output <folder>] [--sources <folder>]`: with `options.earlyChecks`,
+/// checks the form of the case first (case_form.hpp), and a violation is an
+/// invalid case even when pending; then runs the case (script.tgs with
+/// atteso.txt, or domande.tgq), compares, writes the differences to `out` and the
 /// obtained file to the output folder. The questions read "file=<name>"
 /// in the case folder. `sources` is the folder of the pinned public files
 /// of tests/verifica/sorgenti.json, read as "@sources/<name>" and

@@ -80,8 +80,11 @@ ctest --preset ci -R verifica/pline/              # i casi di un'area
   cartella di `--output` (per difetto quella corrente) il risultato ottenuto:
   `ottenuto.txt` per uno script, `ottenuto.tgq` per le domande, con le risposte
   del programma al posto di quelle attese.
+- Prima di eseguire il caso, `check` fa i **controlli anticipati** (vedi
+  sotto): un caso che non li supera non è valido, anche con `--pending`.
 - Con `--pending` il risultato si capovolge, come per i casi in attesa (vedi
-  sotto).
+  sotto). `--no-early-checks`, solo insieme a `--pending`, salta i controlli
+  anticipati: lo usa `ctest` per i casi `esente`.
 - `--sources <cartella>` è la cartella dei file di `sorgenti.json` già
   scaricati e controllati (in CMake `TG_VERIFICA_SOURCES_DIR`, per difetto
   `build<suffisso>/verifica-sorgenti`). `ctest` la passa sempre. Senza,
@@ -96,6 +99,7 @@ Codici di uscita:
 | 0 | superato; con `--pending`, non superato (con un avviso) |
 | 1 | non superato; con `--pending`, superato: va tolto da `in-attesa.txt` |
 | 2 | caso non valido: file mancante o scritto male, argomenti sbagliati. Vale anche con `--pending` |
+| 2 | caso che non supera i controlli anticipati: `INVALID: <caso>: <file>, line <n>: <motivo>`. Vale anche con `--pending`, non con `--no-early-checks` |
 | 77 | il caso richiede il livello 2 (`!level 2`): `ctest` lo conta come saltato |
 
 Ciò che il catalogo prevede ma il programma non ha ancora **non** è un caso non
@@ -106,6 +110,42 @@ una direttiva (`!osnap`, `!polar`, `!scr`), un modo di snap (`intersection`,
 `perpendicular`, `tangent`, `quadrant`) o un argomento di domanda (`from=`),
 fino al pacchetto che li realizza. Ciò che le specifiche **non** descrivono, un
 nome sbagliato o un argomento che non esiste, resta un caso non valido.
+
+## Controlli anticipati
+
+Li fa `check` prima di eseguire il caso, leggendo solo i file
+([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punti 2 e
+3): trovano nella pull request di riferimenti gli errori di forma e le righe
+vuote di troppo, che altrimenti emergerebbero solo con il lavoro. Il primo che
+non passa rende il caso non valido, con il file, la riga e il motivo.
+
+**La forma dei file**, per ogni caso, in attesa o no:
+
+| Regola | Motivo stampato |
+|---|---|
+| `script.tgs`, `atteso.txt` e `domande.tgq` non hanno `CR` (righe terminate da LF) | `carriage return: lines end with LF only` |
+| … né tabulazioni | `tab character` |
+| `atteso.txt` e `domande.tgq` non finiscono con righe vuote; quelle in fondo a `script.tgs` sono `Invio` e restano ammesse | `empty line at the end of the file` |
+| in `atteso.txt` una riga vuota sta solo prima di una riga che apre una sezione (`[...]`) | `empty line not followed by a section` |
+| spazi in fondo a una riga: mai in `domande.tgq`; in `script.tgs` solo sulle righe normali, mai su commenti e direttive; in `atteso.txt` solo sull'eco di una riga normale dello script che li ha (una riga che finisce con `: ` e il testo intero di quella riga) | `trailing spaces` |
+
+Il BOM UTF-8 iniziale è ammesso e non conta.
+
+**L'eco delle righe dello script**, solo se lo script non ha una riga
+`!level 2` (al livello 2 lo spazio scritto con la tastiera vale `Invio`).
+Ogni riga normale scrive la sua eco nella cronologia
+([rapporto](rapporto.md#la-cronologia-messages)). Il controllo prende le righe
+di tutti gli elenchi `messages:` di `atteso.txt`, nell'ordine delle sezioni, e
+cerca, nell'ordine dello script e ciascuna dopo quella della riga precedente:
+
+- per una riga non vuota `t`, una riga che finisce con `: ` seguito da `t`;
+- per una riga vuota, una riga che finisce con `:`, prima dell'eco della riga
+  non vuota successiva.
+
+Una riga senza eco dà `no echo of this line in the messages of atteso.txt (an
+empty line is Enter: at Command: it repeats the last command)`, con il numero
+della riga dello script. Il caso tipico è una riga vuota dopo un comando già
+finito: a `Command:` è `Invio`, che ripete l'ultimo comando.
 
 ## Come si confronta
 
@@ -133,11 +173,20 @@ L'elenco dei casi il cui lavoro non è ancora unito.
 # commento
 pline/esc-conserva #90
 cerchio/domande-base #82
+grip/cerchio-e-modifica-non-valida #352 esente
 ```
 
 - Una riga per caso: `<area>/<nome>`, uno o più spazi, `#` e il numero della
   **issue del lavoro** che lo farà passare. Le righe che iniziano con `#` sono
   commenti; le righe vuote non contano.
+- **`esente`**, dopo il numero e solo quella parola: il caso si esegue con
+  `--pending --no-early-checks`, cioè senza i controlli anticipati
+  ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punto 9).
+  È la transizione per i casi in attesa scritti prima di un controllo: la
+  aggiunge solo il pacchetto che porta un controllo anticipato, se la sua
+  scheda lo dice; la toglie la pull request di riferimenti che corregge il
+  caso, o il lavoro quando toglie la riga. Un caso non in attesa non può
+  essere `esente`.
 - Un caso elencato si esegue con `--pending`: il suo fallimento non blocca la
   CI, ma se **passa** la CI fallisce, con il messaggio di toglierlo dall'elenco.
   Così un lavoro finito non resta mai non verificato.
@@ -202,8 +251,8 @@ licenza.
    nasconde gli stati intermedi.
 5. Elencare i nuovi casi in `in-attesa.txt` con il numero della issue del
    lavoro.
-6. Controllare in locale che i casi siano validi: `ctest --preset ci -L
-   verifica` deve passare, e `tecnigrafo-script check <caso> --pending` deve
+6. Controllare in locale che i casi siano validi, controlli anticipati
+   compresi: `ctest --preset ci -L verifica` deve passare, e `tecnigrafo-script check <caso> --pending` deve
    scrivere "pending" (o "skipped" per il livello 2), mai "INVALID". Se dà
    "INVALID" per una direttiva, un modo di snap o un argomento che le
    specifiche descrivono, il programma non lo annuncia ancora (gli elenchi sono

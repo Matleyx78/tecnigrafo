@@ -24,12 +24,18 @@ namespace {
 constexpr std::string_view kUsage =
     "usage:\n"
     "  tecnigrafo-script run <script.tgs> [--report <file>] [--sources <folder>]\n"
-    "  tecnigrafo-script check <case folder> [--pending] [--output <folder>]\n"
-    "                          [--sources <folder>]\n"
+    "  tecnigrafo-script check <case folder> [--pending [--no-early-checks]]\n"
+    "                          [--output <folder>] [--sources <folder>]\n"
     "  tecnigrafo-script describe [<command>]\n"
     "\n"
     "describe prints the description of every built-in command, or of one\n"
     "named by name or alias (docs/adr/0026).\n"
+    "\n"
+    "check first runs the early checks (docs/adr/0037): the form of the files\n"
+    "of the case and the echo of the lines of the script; a case that does not\n"
+    "pass them is invalid, also with --pending. --no-early-checks, only with\n"
+    "--pending, leaves them out for a pending case marked \"esente\" in\n"
+    "tests/verifica/in-attesa.txt.\n"
     "\n"
     "--sources is the folder of the public files of tests/verifica/sorgenti.json,\n"
     "read as @sources/<name> by scripts and as source=<name> by questions.\n"
@@ -163,6 +169,8 @@ int check(std::span<const std::string_view> arguments) {
     for (std::size_t i = 0; i < arguments.size(); ++i) {
         if (arguments[i] == "--pending" && !options.pending) {
             options.pending = true;
+        } else if (arguments[i] == "--no-early-checks" && options.earlyChecks) {
+            options.earlyChecks = false;
         } else if (arguments[i] == "--output" && i + 1 < arguments.size() && !outputGiven) {
             options.output = arguments[++i];
             outputGiven = true;
@@ -174,7 +182,8 @@ int check(std::span<const std::string_view> arguments) {
             return usageError();
         }
     }
-    if (!folder) {
+    // Only a pending case can be exempt from the early checks.
+    if (!folder || (!options.earlyChecks && !options.pending)) {
         return usageError();
     }
     return tg::script::checkCase(*folder, options, std::cout, sources);
