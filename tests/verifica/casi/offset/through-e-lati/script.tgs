@@ -8,14 +8,12 @@ LINE
 CIRCLE
 50,0
 10
-
 ARC
 C
 100,0
 110,0
 A
 90
-
 TEXT
 0,50
 2.5

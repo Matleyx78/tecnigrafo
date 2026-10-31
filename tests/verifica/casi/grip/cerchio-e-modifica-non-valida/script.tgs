@@ -2,7 +2,6 @@
 CIRCLE
 0,0
 10
-
 !click 10,0
 !report
 !click 0,0

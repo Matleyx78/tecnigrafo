@@ -65,7 +65,6 @@ C
 310,0
 A
 180
-
 LINE
 290,-5
 320,-5
@@ -78,17 +77,14 @@ D
 5
 20,0
 0,20
-
 ; 2. Smusso su layer ROSSO e BLU -> linea smusso su layer corrente VERDE
 CHAMFER
 70,0
 50,20
-
 ; 3. Parallele rifiutate
 CHAMFER
 120,0
 120,20
-
 ; 4. Distanza troppo grande rifiutata
 CHAMFER
 D
@@ -96,7 +92,6 @@ D
 15
 205,0
 200,5
-
 ; 5. Arco rifiutato
 CHAMFER
 300,5

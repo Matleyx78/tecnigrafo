@@ -54,7 +54,6 @@ CIRCLE
 CIRCLE
 200,0
 10
-
 ; Due parallele distanti 20 per CIRCLE Ttr raggio 5 (impossibile)
 LINE
 300,0
@@ -70,22 +69,18 @@ R
 5
 20,0
 0,20
-
 ; 2. Raccordo tra linee su layer ROSSO e BLU -> arco su layer corrente VERDE
 FILLET
 70,0
 50,20
-
 ; 3. Raccordo polilinea con segmenti troppo corti
 FILLET
 P
 110,0
-
 ; 4. Raccordo impossibile tra cerchi concentrici
 FILLET
 200,5
 200,10
-
 ; 5. CIRCLE Ttr impossibile
 CIRCLE
 T
