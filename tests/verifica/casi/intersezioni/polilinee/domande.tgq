@@ -1,0 +1,31 @@
+; Intersezioni: polilinee e autointersezioni (self-intersections)
+; [0.7-R14] #356, lavoro [0.7-P14] #357: domande `self-intersections` e `intersections`
+; (docs/verifica/domande.md, "Intersezioni, lato e tolleranze"; ADR 0035, punti 1 e 4).
+; Valori attesi conformi al corpus di solid-space (tagli-richiesta20-caso5-pezzo-*.json,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; Caso 5 della richiesta #20 di solid-space:
+; Polilinea chiusa (-2,0),(2,0),(0,2),(0,0),(0,-2) chiusa su (-2,0)
+; Il segmento 0 (-2,0)-(2,0) attraversa il vertice comune (0,0) dei segmenti 2 e 3
+; Nel risultato compare una volta sola come 3:start
+P_REQ5 = LWPOLYLINE closed=yes vertex=-2,0 vertex=2,0 vertex=0,2 vertex=0,0 vertex=0,-2
+? self-intersections P_REQ5 -> 0,0 crossing 0:inside 3:start
+
+; Polilinea a papillon (figura a 8 aperta): segmento 0 (0,0)-(10,10) e segmento 2 (10,0)-(0,10)
+; si incrociano al centro (5,5)
+P_BOW = LWPOLYLINE vertex=0,0 vertex=10,10 vertex=10,0 vertex=0,10
+? self-intersections P_BOW -> 5,5 crossing 0:inside 2:inside
+
+; Polilinea senza autointersezioni (segmenti consecutivi condividono solo il vertice comune):
+; i vertici condivisi tra segmenti consecutivi non sono autointersezioni
+P_SIMPLE = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+? self-intersections P_SIMPLE -> none
+
+; Polilinea chiusa semplice (rettangolo)
+P_RECT = LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+? self-intersections P_RECT -> none
+
+; Linea che interseca una polilinea chiusa esattamente nel vertice 0:
+; compare una sola volta come 0:start
+L_DIAG = LINE start=-5,-5 end=5,5
+? intersections L_DIAG P_RECT -> 0,0 crossing 0:inside 0:start

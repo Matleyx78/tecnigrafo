@@ -1,0 +1,5 @@
+# 0.7-R14: facciata di solid-space, intersezioni, lato, tolleranze (#357)
+intersezioni/casi-richiesta #357
+intersezioni/coppie-entita #357
+intersezioni/polilinee #357
+intersezioni/lato-e-tolleranze #357
