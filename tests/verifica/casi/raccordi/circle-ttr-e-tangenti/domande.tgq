@@ -1,0 +1,45 @@
+; Raccordi: CIRCLE Ttr e tangenti da un punto (tangents)
+; [0.7-R19] #366, lavoro [0.7-P19] #367: domande `circle-ttr` e `tangents`
+; (docs/verifica/domande.md, "Raccordi e tangenze"; ADR 0035, punto 14; solid-space ADR 0011).
+; Valori attesi conformi all'archivio dei casi di solid-space (cerchio-ttr-*, tangenti-punto-*,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- CIRCLE Ttr tra due linee (caso m di autocad-raccordi.dxf) ---
+; cerchio-ttr-autocad-caso-m-linee.json
+L_M1 = LINE start=0,200 end=40,200
+L_M2 = LINE start=0,200 end=0,240
+? circle-ttr L_M1 10,200 L_M2 0,210 radius=8 -> CIRCLE center=8,208 radius=8
+
+; --- CIRCLE Ttr tra cerchio e linea (caso n di autocad-raccordi.dxf) ---
+; cerchio-ttr-autocad-caso-n-cerchio-linea.json
+C_N = CIRCLE center=80,220 radius=10
+L_N = LINE start=60,200 end=110,200
+? circle-ttr C_N 74,212 L_N 90,200 radius=6 -> CIRCLE center=87.74596669241484,206 radius=6
+
+; --- Domanda tangents da un punto (richiesta #21, caso 6) ---
+; cerchio centro 0,0 raggio 5
+C_TANG = CIRCLE center=0,0 radius=5
+
+; punto esattamente sul cerchio: restituisce il punto stesso
+; tangenti-punto-richiesta21-caso6-sul-cerchio-origine.json
+? tangents 5,0 C_TANG -> 5,0
+
+; punto esterno al cerchio: restituisce due punti di tangenza
+; tangenti-punto-richiesta21-caso6-vicino-esterno-origine.json
+? tangents 5.000000000001,0 C_TANG -> 4.999999999999,0.000003162418221206741; 4.999999999999,-0.000003162418221206741
+
+; punto esterno standard a distanza 10 sull'asse x: punti a x = R^2/d = 2.5, y = +- R*sqrt(d^2-R^2)/d = +- 5*sqrt(75)/10 = +- 4.330127018922193
+? tangents 10,0 C_TANG -> 2.5,4.330127018922193; 2.5,-4.330127018922193
+
+; punto interno al cerchio: nessuna tangente
+? tangents 0,0 C_TANG -> none
+? tangents 2,0 C_TANG -> none
+
+; curva dritta (LINE): nessuna tangente
+? tangents 5,5 L_M1 -> none
+
+; arco: restituisce solo i punti di tangenza che cadono sull'arco
+; tangenti-punto-arco-none.json
+A_TANG = ARC center=0,0 radius=5 start-angle=0 end-angle=57.29577951308232
+; da (5.000000000001, 0) solo il punto superiore cade nell'intervallo dell'arco
+? tangents 5.000000000001,0 A_TANG -> 4.999999999999,0.000003162418221206741

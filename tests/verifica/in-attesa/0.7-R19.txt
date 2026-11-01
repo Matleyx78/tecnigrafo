@@ -1,0 +1,5 @@
+# 0.7-R19: raccordi e tangenze (#367)
+raccordi/entita-base #367
+raccordi/circle-ttr-e-tangenti #367
+raccordi/polilinee #367
+raccordi/casi-limite-ed-esiti #367

@@ -1,0 +1,27 @@
+; Raccordi: segmenti di polilinea e opzione Polyline
+; [0.7-R19] #366, lavoro [0.7-P19] #367: domanda `fillet`
+; (docs/verifica/domande.md, "Raccordi e tangenze"; ADR 0035, punto 13).
+
+; Polilinea aperta con 3 segmenti (4 vertici):
+; vertici (0,0)-(20,0)-(20,20)-(0,20)
+P_OPEN = LWPOLYLINE vertex=0,0 vertex=20,0 vertex=20,20 vertex=0,20
+
+; raccordo tra i primi due segmenti consecutivi (clic a 10,0 e 20,10): raggio 5
+; il vertice (20,0) viene sostituito dall'arco di raccordo con bulge
+? fillet P_OPEN 10,0 20,10 radius=5 -> P_OPEN LWPOLYLINE closed=no vertex=0,0 vertex=15,0 bulge=0.4142135623730951 vertex=20,5 vertex=20,20 vertex=0,20
+
+; raccordo tra due segmenti NON consecutivi (segmento 0 e segmento 2): non permesso
+? fillet P_OPEN 10,0 10,20 radius=5 -> not-allowed
+
+; --- Opzione fillet polyline su rettangolo chiuso ---
+; rettangolo 40x40 da (0,0) a (40,40)
+P_RECT = LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,40 vertex=0,40
+; raggio 5: tutti e 4 i vertici vengono raccordati con successo (done=4, short=0)
+? fillet P_RECT polyline radius=5 -> LWPOLYLINE closed=yes vertex=0,5 bulge=0.4142135623730951 vertex=5,0 vertex=35,0 bulge=0.4142135623730951 vertex=40,5 vertex=40,35 bulge=0.4142135623730951 vertex=35,40 vertex=5,40 bulge=0.4142135623730951 vertex=0,35 done=4 short=0
+
+; --- Opzione fillet polyline con segmento troppo corto per il raggio ---
+; polilinea aperta a gradino con un segmento intermedio lungo solo 2:
+; vertici (0,0)-(20,0)-(20,2)-(40,2) con raggio 5
+; il segmento verticale da (20,0) a (20,2) ha lunghezza 2 < 2*radius, quindi non puo essere raccordato
+P_SHORT = LWPOLYLINE vertex=0,0 vertex=20,0 vertex=20,2 vertex=40,2
+? fillet P_SHORT polyline radius=5 -> LWPOLYLINE closed=no vertex=0,0 vertex=20,0 vertex=20,2 vertex=40,2 done=0 short=2
