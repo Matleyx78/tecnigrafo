@@ -65,7 +65,9 @@ Un piano con richieste si scrive **in due tempi** (ADR 0030, punto 13):
    La revisione parte appena le valutazioni sono accettate, anche con la tappa
    in preparazione. Ogni scheda dice quali intestazioni usa, il commit del
    contratto da cui parte e, se il pacchetto sposta il sottomodulo, a quale
-   pacchetto di solid-space (ADR 0030, punto 9).
+   pacchetto di solid-space (ADR 0030, punto 9). Le schede che introducono tipi
+   o funzioni nuove in `core` passano poi la revisione delle interfacce
+   (sezione 6).
 
 In "Dipende da" questi pacchetti citano la richiesta (`Matleyx78/solid-space#N`)
 finché la tappa di solid-space non ha i suoi pacchetti, poi il pacchetto di
@@ -83,6 +85,22 @@ da "Dipende da" ([LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md),
 Un pacchetto che cambia il comportamento del programma ha anche un pacchetto di
 riferimenti `RN`, scritto da un altro agente e unito prima del lavoro
 (ADR 0011). La sua issue si cita in "Dipende da".
+
+**Revisione delle interfacce.** Le schede che introducono tipi o funzioni nuove
+in `core` si controllano, prima che i loro pacchetti partano, con la lista di
+[CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)
+(punti 1–11, compresi il 10, scelte libere entro un errore, e l'11, che cosa
+arriva al chiamante), sulle interfacce che la scheda scrive e su come passa i
+risultati da una funzione all'altra. Lo fa un pacchetto di revisione nella
+tabella, prima dei pacchetti che rivede, che lo citano in "Dipende da":
+difficoltà impegnativa, fascia forte, impegno alto, di un agente diverso da chi
+ha scritto le schede (di norma Codex, perché le schede le scrive Claude con il
+responsabile); riferimenti: non servono, è una revisione di documenti. Il
+verbale sta nella sua issue; i buchi li decide il responsabile in
+[DECISIONI.md](../DECISIONI.md), e una pull request li applica alle schede e
+chiude la issue. Senza buchi, la chiude il responsabile dopo il verbale. Le
+schede dei pacchetti che usano il contratto si rivedono dopo che sono scritte
+(sezione 5, secondo tempo). Esempio: [0.7-P25](0.7/P25-revisione-interfacce.md).
 
 Dalla tappa 0.5 questa sezione contiene **solo la tabella**: ogni pacchetto ha
 una sua **scheda** in `docs/tappe/X.Y/PN-<nome>.md` (modello in

@@ -396,3 +396,41 @@ i rimandi ai documenti che cambia.
   catalogo delle domande ([verifica/domande.md](verifica/domande.md), esito
   `out-of-domain`) e il piano della [tappa 0.7](tappe/0.7-modifiche.md) in
   "Modifiche al piano". I riferimenti già uniti non cambiano.
+- **2026-11-01 — Buchi nelle schede e revisione delle interfacce.** Gemella
+  della decisione di solid-space dello stesso giorno
+  (Matleyx78/solid-space#134), dopo che due pacchetti di Codex si sono fermati
+  su un buco: R19 di solid-space (Matleyx78/solid-space#132) e P15 qui (#359).
+  Il meccanismo di arresto ha funzionato; il problema è a monte, e il buco di
+  P15 non sta nel contratto di solid-space ma nella scheda: `intersect` e
+  `cutsAlong` decidono esattamente quali tagli sono distinti e il loro ordine,
+  ma `partOf` riceve solo punti e stazioni arrotondati. È il nuovo punto 11
+  della lista di
+  [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
+  che con il punto 10 (scelte libere entro un errore) vale anche per le
+  interfacce di Tecnigrafo. Da qui:
+  - **Buco nella scheda.** Quando il contratto di solid-space determina la
+    risposta ma un'interfaccia di Tecnigrafo no (intestazione, ADR e scheda
+    non la determinano, o si contraddicono), l'agente si ferma come per un
+    buco nel contratto, prima di scrivere codice o casi e senza scegliere, e
+    scrive nella issue del pacchetto che cosa manca, un esempio e le scelte
+    possibili. Nessuna issue in solid-space: decide il responsabile, qui, e la
+    scheda si corregge prima di riprendere il pacchetto.
+  - **Revisione delle interfacce.** Le schede che introducono tipi o funzioni
+    nuove in `core` si controllano con la lista, punti 1–11, prima che i loro
+    pacchetti partano: un pacchetto di revisione nella tabella, di un agente
+    diverso da chi ha scritto le schede (di norma Codex), da cui quei pacchetti
+    dipendono. Nella tappa 0.7 è P25 (#464), per le schede P15–P23, a partire
+    da `curve_parts.hpp` di P15.
+  - **Correzioni del contratto di solid-space.** Una sua pull request con
+    **Revisione del contratto: da fare** si unisce solo dopo il verbale della
+    revisione, anche quella che applica le decisioni di un pacchetto
+    `[X.Y-C]`.
+
+  Il buco della #359 resta aperto: lo decide il responsabile a parte. Cambiano
+  [AGENTS.md](../AGENTS.md) ("Se serve qualcosa a solid-space" e "Lavoro a
+  lotti"), [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, B1, B3a, B4 e C),
+  [tappe/0000-modello.md](tappe/0000-modello.md) e il piano della
+  [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano", con la nuova
+  scheda [P25](tappe/0.7/P25-revisione-interfacce.md) e la dipendenza da P25
+  nelle schede P15–P23. Nessun ADR cambia.

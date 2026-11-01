@@ -6,7 +6,7 @@
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.7-R20]` (#…), agente gemini
-- **Dipende da:** P18, P19, R20
+- **Dipende da:** P18, P19, P25, R20
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)

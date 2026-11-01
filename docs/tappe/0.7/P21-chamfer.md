@@ -7,7 +7,7 @@
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.7-R21]` (#…), agente gemini (valori da
   `autocad-raccordi.dxf`; lo smusso è un calcolo di Tecnigrafo)
-- **Dipende da:** P20, R21
+- **Dipende da:** P20, P25, R21
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)

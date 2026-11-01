@@ -105,8 +105,8 @@ Due eccezioni alla regola "un pacchetto per sessione":
   sopra, con un commento di revisione. Non approvare e non unire.
 
 Se in un lotto ti fermi per uno dei motivi di "Quando fermarsi", scrivilo nella
-pull request (o nella issue, se ti fermi per un buco nel contratto) e passa al
-pacchetto successivo.
+pull request (o nella issue, se ti fermi per un buco nel contratto o nella
+scheda) e passa al pacchetto successivo.
 
 ### Quando fermarsi
 
@@ -207,6 +207,28 @@ le scelte possibili, con riferimenti assoluti. È un buco nel contratto, non una
 nuova richiesta con i sette campi. Poi segui i punti 2–4 sopra, anche se il
 lavoro è già avanzato. La issue `contratto` la apre il responsabile e la
 risposta la decide lui; il pacchetto si riprende dopo la decisione.
+
+**Un buco nella scheda ferma allo stesso modo, ma resta in Tecnigrafo.** Con la
+stessa lista rileggi anche le interfacce di Tecnigrafo che la scheda definisce
+o che usi (tipi e funzioni di `core`, `edit`, `cmd`), e come la scheda passa i
+risultati da una funzione all'altra. Il buco è **nella scheda** quando il
+contratto di solid-space determina la risposta, ma intestazione di Tecnigrafo,
+ADR e scheda no, o si contraddicono: per esempio la scheda passa a una funzione
+solo valori arrotondati, e due tagli distinti decisi esattamente da solid-space
+arrivano uguali (#359). Allora:
+
+1. fermati prima di scrivere codice o casi, senza scegliere una risposta,
+   nemmeno segnalandola;
+2. nella issue del tuo pacchetto scrivi che cosa manca, un esempio con i dati e
+   le scelte possibili, con riferimenti assoluti; **niente** testo per una issue
+   di solid-space;
+3. segui i punti 2–4 sopra.
+
+Decide il responsabile, in [docs/DECISIONI.md](docs/DECISIONI.md); la scheda si
+corregge con la decisione e il pacchetto si riprende dopo il merge. Se la
+risposta manca anche nell'intestazione di solid-space, il buco è nel contratto
+(paragrafo sopra); se non sai quale dei due è, scrivilo e lascia decidere al
+responsabile.
 
 Non aprire la richiesta di tua iniziativa: la apre in solid-space il
 responsabile, o un agente a cui lui lo chiede ("Dove puoi scrivere").

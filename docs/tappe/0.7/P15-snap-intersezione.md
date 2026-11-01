@@ -9,7 +9,7 @@
   revisione dei casi esistenti, ADR 0033 punto 6). Le parti delle entità non si
   raggiungono ancora da uno script: le provano i test di unità qui e i casi di
   `TRIM`, `EXTEND` e `FILLET` più avanti (R16, R20)
-- **Dipende da:** P7, P14, R15
+- **Dipende da:** P7, P14, P25, R15
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
   punti 3, 5 e 6; [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)

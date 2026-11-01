@@ -6,7 +6,7 @@
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
 - **Riferimenti:** issue `[0.7-R23]` (#…), agente gemini
-- **Dipende da:** P21, P22, R23
+- **Dipende da:** P21, P22, P25, R23
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 17–22; [ADR 0031](../../adr/0031-modifiche-alle-entita.md) punto 7;
