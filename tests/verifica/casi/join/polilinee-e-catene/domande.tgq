@@ -1,0 +1,49 @@
+; Unione di polilinee e catene di entita
+; [0.7-R22] #372, lavoro [0.7-P22] #373: domanda `join`
+; (docs/verifica/domande.md, "Unione"; ADR 0035, punti 17-20).
+
+; --- Due polilinee aperte che si uniscono testa-coda ---
+; P1 (0,0 a 10,0 a 10,10) e P2 (10,10 a 20,10 a 20,20).
+; La sorgente e' P1 (LWPOLYLINE), il tipo non cambia: P1 viene aggiornata.
+P1 = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10
+P2 = LWPOLYLINE vertex=10,10 vertex=20,10 vertex=20,20
+? join P1 P2 -> P1 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=10,10 vertex=20,10 vertex=20,20
+
+; --- Polilinea unita a una polilinea orientata al contrario (invertita) ---
+; P3 va da (0,0) a (10,0). P4 va da (20,0) a (10,0).
+; P4 viene rovesciata per agganciarsi a (10,0) e proseguire fino a (20,0).
+P3 = LWPOLYLINE vertex=0,0 vertex=10,0
+P4 = LWPOLYLINE vertex=20,0 vertex=10,0
+? join P3 P4 -> P3 LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=20,0
+
+; --- Polilinea aperta con linee aggiunte in testa e in coda ---
+; La catena cresce prima dalla fine e poi dall'inizio della sorgente.
+; P_MID va da (10,0) a (20,0) a (20,10).
+; L_TAIL (20,10 a 30,10) si aggancia alla fine; L_HEAD (0,0 a 10,0) si aggancia alla testa.
+P_MID = LWPOLYLINE vertex=10,0 vertex=20,0 vertex=20,10
+L_TAIL = LINE start=20,10 end=30,10
+L_HEAD = LINE start=0,0 end=10,0
+? join P_MID L_TAIL L_HEAD -> P_MID LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=20,0 vertex=20,10 vertex=30,10
+
+; --- Catena che si chiude: rettangolo formato da 4 linee ---
+; Quando l'ultimo estremo coincide con il primo, la polilinea risultante e' chiusa (closed=yes).
+; Il vertice di chiusura non viene ripetuto.
+LR1 = LINE start=0,0 end=10,0
+LR2 = LINE start=10,0 end=10,10
+LR3 = LINE start=10,10 end=0,10
+LR4 = LINE start=0,10 end=0,0
+? join LR1 LR2 LR3 LR4 -> new LWPOLYLINE closed=yes vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+
+; --- Catena chiusa mista: linea e semicerchio ---
+; Linea da (0,0) a (20,0); arco con centro (10,0), raggio 10, angoli 0..180 (da 20,0 a 0,0).
+; Il semicerchio ha bulge = 1. Si richiude sul punto di partenza (0,0).
+LS1 = LINE start=0,0 end=20,0
+AS1 = ARC center=10,0 radius=10 start-angle=0 end-angle=180
+? join LS1 AS1 -> new LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 bulge=1
+
+; --- Conservazione delle larghezze dei segmenti (ADR 0035, punto 11) ---
+; La polilinea prende le larghezze dei segmenti originari, e larghezza 0 per linee e archi.
+; PW_SEG ha due segmenti con start-width ed end-width; la linea LW_ADD aggiunge un segmento con larghezza 0.
+PW_SEG = LWPOLYLINE vertex=0,0 start-width=1 end-width=2 vertex=10,0 start-width=2 end-width=3 vertex=20,0
+LW_ADD = LINE start=20,0 end=30,0
+? join PW_SEG LW_ADD -> PW_SEG LWPOLYLINE closed=no vertex=0,0 start-width=1 end-width=2 vertex=10,0 start-width=2 end-width=3 vertex=20,0 vertex=30,0

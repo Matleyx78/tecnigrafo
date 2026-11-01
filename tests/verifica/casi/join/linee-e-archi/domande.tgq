@@ -1,0 +1,86 @@
+; Unione di linee allineate e archi dello stesso cerchio
+; [0.7-R22] #372, lavoro [0.7-P22] #373: domanda `join`
+; (docs/verifica/domande.md, "Unione"; ADR 0035, punti 17-20).
+
+; --- Linee allineate con verso opposto ---
+; La linea unita va dall'estremo della prima all'estremo dell'ultima lungo la sorgente.
+; LA1 va da (0,0) a (10,0) (direzione +X). LA2 va da (20,0) a (10,0) (verso opposto).
+; Gli estremi lungo la sorgente sono (0,0) e (20,0).
+LA1 = LINE start=0,0 end=10,0
+LA2 = LINE start=20,0 end=10,0
+? join LA1 LA2 -> LA1 LINE start=0,0 end=20,0
+
+; Sorgente orientata nel verso negativo di X (da 10 a 0):
+; lungo la direzione -X, il primo estremo e' (20,0) e l'ultimo estremo e' (0,0).
+LB1 = LINE start=10,0 end=0,0
+LB2 = LINE start=20,0 end=10,0
+? join LB1 LB2 -> LB1 LINE start=20,0 end=0,0
+
+; --- Sovrapposizione parziale tra linee allineate ---
+LC1 = LINE start=0,0 end=15,0
+LC2 = LINE start=10,0 end=25,0
+? join LC1 LC2 -> LC1 LINE start=0,0 end=25,0
+
+; --- Linea interna interamente contenuta nella prima ---
+LD1 = LINE start=0,0 end=30,0
+LD2 = LINE start=10,0 end=20,0
+? join LD1 LD2 -> LD1 LINE start=0,0 end=30,0
+
+; --- Tre linee allineate con spazi ---
+LE1 = LINE start=0,0 end=10,0
+LE2 = LINE start=15,0 end=25,0
+LE3 = LINE start=30,0 end=40,0
+? join LE1 LE2 LE3 -> LE1 LINE start=0,0 end=40,0
+
+; In ordine sparso negli argomenti:
+? join LE1 LE3 LE2 -> LE1 LINE start=0,0 end=40,0
+
+; --- Linee parallele ma non collineari (distanza 5): nessuna unione ---
+LF1 = LINE start=0,0 end=10,0
+LF2 = LINE start=0,5 end=10,5
+? join LF1 LF2 -> none
+
+; --- Linee incidenti a T o X (non agli estremi): nessuna unione ---
+LG1 = LINE start=0,0 end=20,0
+LG2 = LINE start=10,-5 end=10,5
+? join LG1 LG2 -> none
+
+; --- Archi dello stesso cerchio contigui agli estremi ---
+ARC1 = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+ARC2 = ARC center=0,0 radius=10 start-angle=90 end-angle=180
+? join ARC1 ARC2 -> ARC1 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+
+; --- Archi dello stesso cerchio parzialmente sovrapposti ---
+ARC3 = ARC center=0,0 radius=10 start-angle=0 end-angle=120
+ARC4 = ARC center=0,0 radius=10 start-angle=90 end-angle=210
+? join ARC3 ARC4 -> ARC3 ARC center=0,0 radius=10 start-angle=0 end-angle=210
+
+; --- Archi dello stesso cerchio con spazio (gap) ---
+ARC5 = ARC center=0,0 radius=10 start-angle=0 end-angle=60
+ARC6 = ARC center=0,0 radius=10 start-angle=120 end-angle=180
+? join ARC5 ARC6 -> ARC5 ARC center=0,0 radius=10 start-angle=0 end-angle=180
+
+; --- Due semicerchi che chiudono l'intero cerchio (360 gradi) ---
+; Quando gli archi coprono il cerchio fino a richiudersi, nasce un cerchio (new CIRCLE).
+ARC7 = ARC center=50,50 radius=15 start-angle=0 end-angle=180
+ARC8 = ARC center=50,50 radius=15 start-angle=180 end-angle=0
+? join ARC7 ARC8 -> new CIRCLE center=50,50 radius=15
+
+; --- Tre archi che insieme coprono l'intero cerchio ---
+ARC9 = ARC center=0,0 radius=20 start-angle=0 end-angle=150
+ARC10 = ARC center=0,0 radius=20 start-angle=120 end-angle=270
+ARC11 = ARC center=0,0 radius=20 start-angle=240 end-angle=30
+? join ARC9 ARC10 ARC11 -> new CIRCLE center=0,0 radius=20
+
+; --- Archi concentrici di raggio diverso: non sono lo stesso cerchio ne' contigui ---
+ARC12 = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+ARC13 = ARC center=0,0 radius=12 start-angle=0 end-angle=90
+? join ARC12 ARC13 -> none
+
+; --- Archi di cerchi diversi ma contigui agli estremi: diventano polilinea ---
+; ARC14 ha centro (10,0), raggio 10, angoli 180..0 (da 0,0 a 20,0 attraverso 10,-10, bulge 1).
+; ARC15 ha centro (30,0), raggio 10, angoli 180..0 (da 20,0 a 40,0 attraverso 30,-10, bulge 1).
+; Si toccano a (20,0). Non essendo dello stesso cerchio, formano una LWPOLYLINE.
+ARC14 = ARC center=10,0 radius=10 start-angle=180 end-angle=0
+ARC15 = ARC center=30,0 radius=10 start-angle=180 end-angle=0
+? join ARC14 ARC15 -> new LWPOLYLINE closed=no vertex=0,0 bulge=1 vertex=20,0 bulge=1 vertex=40,0

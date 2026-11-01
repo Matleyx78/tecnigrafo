@@ -1,0 +1,59 @@
+; Casi da autocad-unione.dxf e 6-unione.scr
+; [0.7-R22] #372, lavoro [0.7-P22] #373: domanda `join`
+; (docs/verifica/domande.md, "Unione"; docs/tappe/0.7/dxf-di-prova.md; ADR 0035, punti 17-20).
+; Valori conformi ad autocad-unione.dxf (sorgente esterna con licenza CC0-1.0).
+
+; --- Caso a: due linee allineate contigue ---
+; Due segmenti contigui che giacciono sulla stessa retta: la sorgente si allunga fino all'estremo della seconda.
+L_A1 = LINE start=0,0 end=10,0
+L_A2 = LINE start=10,0 end=20,0
+? join L_A1 L_A2 -> L_A1 LINE start=0,0 end=20,0
+
+; --- Caso b: due linee allineate con spazio intermedio ---
+; Due linee collineari con uno spazio vuoto (30..40 e 45..55): diventano una sola linea da 30 a 55.
+L_B1 = LINE start=30,0 end=40,0
+L_B2 = LINE start=45,0 end=55,0
+? join L_B1 L_B2 -> L_B1 LINE start=30,0 end=55,0
+
+; --- Caso c: due archi dello stesso cerchio ---
+; Due archi su centro (80,0) e raggio 10, da 0 a 60 e da 90 a 150:
+; l'arco risultante copre gli archi in senso antiorario a partire dalla sorgente (da 0 a 150).
+A_C1 = ARC center=80,0 radius=10 start-angle=0 end-angle=60
+A_C2 = ARC center=80,0 radius=10 start-angle=90 end-angle=150
+? join A_C1 A_C2 -> A_C1 ARC center=80,0 radius=10 start-angle=0 end-angle=150
+
+; --- Caso d: linea, arco e linea contigui (in due passi o insieme) ---
+; L_D1 (100,0 a 110,0), A_D (arco antiorario da 180 a 0 con centro 115,0 raggio 5), L_D2 (120,0 a 130,0).
+; Il bulge dell'arco e' tan(180/4) = 1.
+; La sorgente e' una linea, quindi il tipo cambia: nasce una nuova LWPOLYLINE.
+L_D1 = LINE start=100,0 end=110,0
+A_D = ARC center=115,0 radius=5 start-angle=180 end-angle=0
+L_D2 = LINE start=120,0 end=130,0
+? join L_D1 A_D L_D2 -> new LWPOLYLINE closed=no vertex=100,0 vertex=110,0 bulge=1 vertex=120,0 vertex=130,0
+
+; --- Caso e1: due linee allineate con spazio di 1e-10 (millimetri) ---
+; In millimetri (predefinito), lo scarto di 1e-10 e' inferiore al pavimento (1e-6 mm): le due linee sono allineate.
+L_E1A = LINE start=150,0 end=160,0
+L_E1B = LINE start=160.0000000001,0 end=170,0
+? join L_E1A L_E1B -> L_E1A LINE start=150,0 end=170,0
+
+; --- Caso e2: due linee con estremi a 1e-10 non allineate (millimetri) ---
+; Gli estremi a 190 e 190+1e-10 coincidono per tolleranza, ma le linee hanno direzioni diverse:
+; si uniscono in una polilinea. Il vertice comune prende il punto dell'entita che segue.
+L_E2A = LINE start=180,0 end=190,0
+L_E2B = LINE start=190,0.0000000001 end=200,5
+? join L_E2A L_E2B -> new LWPOLYLINE closed=no vertex=180,0 vertex=190,0.0000000001 vertex=200,5
+
+; --- Caso f: polilinea aperta unita a una linea contigua ---
+; La polilinea P_F (vertici 220,0; 230,0; 230,10) si unisce alla linea (230,10 a 240,10).
+; La sorgente e' gia' polilinea, quindi il tipo non cambia: P_F viene aggiornata.
+P_F = LWPOLYLINE vertex=220,0 vertex=230,0 vertex=230,10
+L_F = LINE start=230,10 end=240,10
+? join P_F L_F -> P_F LWPOLYLINE closed=no vertex=220,0 vertex=230,0 vertex=230,10 vertex=240,10
+
+; --- Caso g: linea e arco non contigui ---
+; Linea (260..270) e arco (centro 280, raggio 5, 0..180 con estremi a 285,0 e 275,0): spazio di 5 unita.
+; Nessuna entita si unisce: risposta "none".
+L_G = LINE start=260,0 end=270,0
+A_G = ARC center=280,0 radius=5 start-angle=0 end-angle=180
+? join L_G A_G -> none

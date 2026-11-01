@@ -1,0 +1,5 @@
+# 0.7-R22: unione di entita (#373)
+join/autocad #373
+join/linee-e-archi #373
+join/polilinee-e-catene #373
+join/tolleranze-ed-ordine #373
