@@ -41,7 +41,7 @@ della sua issue; ogni pull request riporta in alto la issue che chiude.
 |---|---|---|
 | Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
 | Claude | `agente:claude` | pacchetti impegnativi e la maggior parte dei medi, anche in più sessioni nello stesso momento; riferimenti dei pacchetti di lavoro di Codex; piano della tappa insieme al responsabile |
-| Codex | `agente:codex` | riferimenti con calcoli delicati dei pacchetti di lavoro di Claude, in fascia forte; pacchetti facili e medi che il piano non dà a Claude |
+| Codex | `agente:codex` | revisione del contratto di ogni tappa di solid-space; riferimenti con calcoli delicati dei pacchetti di lavoro di Claude, in fascia forte; pacchetti facili e medi che il piano non dà a Claude |
 | Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti ordinari, revisione delle pull request di lavoro, pull request di chiusura della tappa, pacchetti facili; lavora a lotti (sezioni 3 e 4) |
 | Gemini 4 Argon (con Antigravity CLI, `agy`) | `agente:gemini-argon` | nessun pacchetto nel piano: la sua quota settimanale basta a uno o due pacchetti di riferimenti. Se è disponibile e serve, il responsabile gli passa un pacchetto che il piano dava a Codex, cambiandone l'etichetta; lavora a lotti, in una sessione sua, sullo stesso PC di Gemini |
 | Copilot (GitHub Copilot Pro) | — | solo revisione mirata delle pull request impegnative, chiesta dal responsabile (sezione 6); non prende pacchetti e non apre pull request |
@@ -80,8 +80,10 @@ dice, per ogni pacchetto:
 **Piano in due tempi.** Se la tappa chiede qualcosa a solid-space, il piano si
 scrive subito per i pacchetti che non ne dipendono, mentre le richieste si aprono
 in solid-space ([RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md)). Le
-schede dei pacchetti che ne dipendono si scrivono dopo, sulle intestazioni che
-solid-space ha accettato come contratto; fino ad allora hanno solo la loro riga
+schede dei pacchetti che ne dipendono si scrivono dopo che la issue `[X.Y-C]`
+di solid-space è chiusa, sulle intestazioni accettate e riviste
+([CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md));
+fino ad allora hanno solo la loro riga
 nella tabella, con «scheda dopo il contratto». I loro riferimenti prendono i
 valori geometrici dall'archivio dei casi di solid-space e verificano la facciata
 e i comandi.
@@ -248,6 +250,17 @@ un agente senza pacchetto preciso sconfina.
 - Se un agente scopre un bisogno che spetta a solid-space, si ferma e scrive
   nella issue il testo della richiesta (AGENTS.md, "Se serve qualcosa a
   solid-space"); il responsabile decide se aprirla e come cambia il piano.
+- Se un agente trova un buco nel contratto di solid-space, si ferma prima di
+  scrivere codice o casi, senza scegliere una risposta. Nella issue del suo
+  pacchetto scrive il testo della issue `contratto` da aprire in solid-space:
+  titolo con l'intestazione, che cosa manca, un esempio con i dati, le scelte
+  possibili. La apre il responsabile, che decide; l'agente pubblica l'eventuale
+  ramo senza pull request, toglie `AA-Presa in carico` e termina la sessione
+  (AGENTS.md, "Se serve qualcosa a solid-space"). Nessun pacchetto che usa
+  un'intestazione nominata nel titolo di una issue `contratto` aperta in
+  solid-space si prende in carico. Prima della pull request, chi sposta il
+  sottomodulo controlla in `docs/DECISIONI.md` di solid-space i cambiamenti alle
+  intestazioni rispetto al commit di partenza della scheda: si adegua o si ferma.
 - Quando un pacchetto di solid-space è unito, i pacchetti di Tecnigrafo che lo
   aspettavano possono partire: la sua pull request li elenca nella riga
   «Sblocca:», e il responsabile li sposta nel Project da *Bloccato* a *Da fare*.

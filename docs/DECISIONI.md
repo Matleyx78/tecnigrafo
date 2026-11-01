@@ -324,3 +324,37 @@ i rimandi ai documenti che cambia.
     responsabile, controlla e allinea le dipendenze tra piano, issue, relazioni
     e Project, e propone le sostituzioni
     ([F4](tappe/fuori-tappa/F4-dipendenze.md), #450).
+- **2026-11-01 — Le schede seguono la revisione del contratto di solid-space.**
+  Il responsabile porta in Tecnigrafo la decisione di
+  [Matleyx78/solid-space#125](https://github.com/Matleyx78/solid-space/pull/125):
+  appena gli ADR di valutazione sono accettati, il pacchetto `[X.Y-C]` di
+  solid-space, di un agente diverso da chi ha scritto l'ADR (di norma Codex),
+  controlla il contratto con la lista di `docs/CONTRATTI.md`. Per ogni buco
+  apre una issue `contratto`; il responsabile decide e una sola pull request
+  applica le decisioni. Senza buchi, basta il verbale e il responsabile chiude
+  la revisione. Tecnigrafo scrive le schede che usano il contratto solo quando
+  `[X.Y-C]` è chiusa, non alla sola accettazione delle valutazioni.
+  - Non si prende un pacchetto, anche di riferimenti, se una issue `contratto`
+    aperta in solid-space nomina nel titolo un'intestazione che usa.
+  - Chi trova un buco si ferma prima di scrivere codice o casi, senza scegliere
+    una risposta, e scrive nella issue del proprio pacchetto il testo della
+    issue `contratto` da aprire: che cosa manca, un esempio con i dati, le
+    scelte possibili. La apre il responsabile e decide lui.
+  - Prima della pull request, chi sposta il sottomodulo controlla in
+    `docs/DECISIONI.md` di solid-space e nelle intestazioni i cambiamenti dopo
+    il commit di partenza della scheda: si adegua o si ferma.
+  - Le pull request chiudono le issue con la parola chiave inglese
+    `Closes #N`: «Chiude» non le chiude. Questa modifica delle regole non ha
+    issue da chiudere.
+
+  Corregge l'[ADR 0030](adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 13
+  e conseguenze, con una nuova riga **Corretto:**; aggiorna
+  [AGENTS.md](../AGENTS.md), [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md)
+  (nuovo B3a, senza rinumerare B4–B12),
+  [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
+  [tappe/0000-modello.md](tappe/0000-modello.md) e
+  [RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md). La revisione
+  `[X.Y-C]` vale dalla prossima tappa di solid-space; i blocchi e il controllo
+  prima della pull request valgono subito, anche per i pacchetti rimasti della
+  [tappa 0.7](tappe/0.7-modifiche.md), di cui si chiarisce il passaggio storico
+  sulle schede scritte prima della revisione.

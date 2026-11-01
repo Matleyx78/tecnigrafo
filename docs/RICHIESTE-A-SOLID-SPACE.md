@@ -84,7 +84,11 @@ commenta la issue se manca qualcosa.
 2. A ogni tappa di Tecnigrafo che chiede qualcosa corrisponde **una tappa di
    solid-space**, che raccoglie tutte le sue richieste e avanza insieme a lei.
 3. Nel piano di Tecnigrafo i pacchetti che ne dipendono hanno la scheda **dopo
-   il contratto**, scritta sulle intestazioni accettate. In "Dipende da" citano
+   la chiusura della issue `[X.Y-C]` di revisione del contratto** in solid-space,
+   scritta sulle intestazioni accettate e riviste. La revisione parte appena
+   gli ADR di valutazione sono accettati, con la lista di
+   [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)
+   e le decisioni del responsabile sui buchi (guida, B3a). In "Dipende da" citano
    la richiesta finché la tappa di solid-space non ha i suoi pacchetti, poi i
    **pacchetti di solid-space** che servono, dalla tabella «Che cosa sblocca in
    Tecnigrafo» del suo piano. La sostituzione si fa **appena si apre la tappa

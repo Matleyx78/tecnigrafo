@@ -59,10 +59,13 @@ Un piano con richieste si scrive **in due tempi** (ADR 0030, punto 13):
 1. subito, le schede dei pacchetti che non dipendono da solid-space; i pacchetti
    che ne dipendono hanno una riga nella tabella, con «scheda dopo il contratto»
    al posto del link, e stanno dopo gli altri;
-2. dopo che solid-space ha accettato le valutazioni con il loro contratto, le
-   loro schede, scritte sulle intestazioni accettate. Ogni scheda dice quali
-   intestazioni usa e, se il pacchetto sposta il sottomodulo, a quale pacchetto
-   di solid-space (ADR 0030, punto 9).
+2. dopo che la issue `[X.Y-C]` di revisione del contratto in solid-space è
+   chiusa, le loro schede, scritte sulle intestazioni accettate e riviste
+   ([CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)).
+   La revisione parte appena le valutazioni sono accettate, anche con la tappa
+   in preparazione. Ogni scheda dice quali intestazioni usa, il commit del
+   contratto da cui parte e, se il pacchetto sposta il sottomodulo, a quale
+   pacchetto di solid-space (ADR 0030, punto 9).
 
 In "Dipende da" questi pacchetti citano la richiesta (`Matleyx78/solid-space#N`)
 finché la tappa di solid-space non ha i suoi pacchetti, poi il pacchetto di

@@ -82,10 +82,13 @@ Scegli **una sola** issue, la prima nell'ordine del piano che:
 1. è aperta e porta la **tua** etichetta `agente:…`;
 2. non porta `AA-Presa in carico`;
 3. ha chiuse tutte le issue della sua riga "Dipende da";
-4. ha chiusa la sua issue di riferimenti (`[X.Y-RN]`), se esiste.
+4. ha chiusa la sua issue di riferimenti (`[X.Y-RN]`), se esiste;
+5. se usa intestazioni di solid-space, non c'è in solid-space una issue aperta
+   con l'etichetta `contratto` che le nomina nel titolo. Controlla le
+   intestazioni citate dalla scheda del pacchetto, anche in **Da leggere**.
 
-Per "il prossimo pacchetto di riferimenti" valgono le condizioni 1–3, sulle issue
-con l'etichetta `riferimenti`. Se nessuna issue va bene, non iniziare: scrivi
+Per "il prossimo pacchetto di riferimenti" valgono le condizioni 1–3 e 5, sulle
+issue con l'etichetta `riferimenti`. Se nessuna issue va bene, non iniziare: scrivi
 all'utente quali issue sono tue e cosa le blocca. Il pacchetto successivo si
 prende in una nuova sessione, dopo il merge.
 
@@ -94,7 +97,7 @@ prende in una nuova sessione, dopo il merge.
 Due eccezioni alla regola "un pacchetto per sessione":
 
 - **"Prendi i pacchetti di riferimenti pronti"**: uno dopo l'altro, nell'ordine
-  delle condizioni 1–3, ciascuno con il suo ramo partito da `main` aggiornato e la
+  delle condizioni 1–3 e 5, ciascuno con il suo ramo partito da `main` aggiornato e la
   sua pull request portata alla CI verde; alla fine un solo riepilogo con tutte le
   pull request.
 - **"Rivedi le pull request aperte"**: una alla volta, tutte quelle senza
@@ -102,18 +105,26 @@ Due eccezioni alla regola "un pacchetto per sessione":
   sopra, con un commento di revisione. Non approvare e non unire.
 
 Se in un lotto ti fermi per uno dei motivi di "Quando fermarsi", scrivilo nella
-pull request e passa al pacchetto successivo.
+pull request (o nella issue, se ti fermi per un buco nel contratto) e passa al
+pacchetto successivo.
 
 ### Quando fermarsi
 
 Il pacchetto è finito quando la sua pull request ha **tutti i controlli della CI
 verdi**:
 
-1. Apri la pull request e aspetta la CI con **un solo comando che blocca**, non
+1. Prima di aprire la pull request, se il pacchetto sposta il sottomodulo di
+   solid-space, controlla il suo `docs/DECISIONI.md` al commit di destinazione:
+   le intestazioni che usi sono cambiate dopo il commit su cui è stata scritta
+   la scheda? Confronta quelle versioni delle intestazioni, commenti compresi.
+   Se sono cambiate, leggi le decisioni e adegua il pacchetto; se il contratto
+   non determina la risposta o contraddice la scheda, fermati come dice "Se
+   serve qualcosa a solid-space", senza scegliere tu.
+2. Apri la pull request e aspetta la CI con **un solo comando che blocca**, non
    con controlli ripetuti (ogni controllo consuma token). Tieni l'etichetta.
-2. Se un controllo fallisce, leggi gli errori con `scripts/ci-errori.sh`
+3. Se un controllo fallisce, leggi gli errori con `scripts/ci-errori.sh`
    (sotto), correggi sullo stesso ramo, pubblica e aspetta di nuovo.
-3. Con tutto verde togli l'etichetta, scrivi il riepilogo (sotto) e **termina la
+4. Con tutto verde togli l'etichetta, scrivi il riepilogo (sotto) e **termina la
    sessione**.
 
 Mentre aspetti non fare domande e non cominciare altro. Fermati prima del verde,
@@ -183,6 +194,19 @@ con una soglia tua, o un calcolo di tangenza), **non scriverlo**:
 3. se hai lavoro non pubblicato, pubblica il ramo **senza** pull request e scrivi
    nel commento il nome del ramo;
 4. togli `AA-Presa in carico` e termina la sessione.
+
+**Un buco nel contratto ferma anche i riferimenti.** Prima di scrivere codice
+o casi, rileggi le intestazioni che usi, commenti compresi, con la lista di
+[docs/CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md).
+Se intestazione, ADR e scheda non determinano una risposta, o si
+contraddicono, **fermati prima di scrivere codice o casi**: non scegliere una
+risposta, nemmeno segnalandola. Nella issue del tuo pacchetto scrivi il testo
+della issue da aprire in solid-space con l'etichetta `contratto`: titolo che
+nomini l'intestazione e la funzione, che cosa manca, un esempio con i dati e
+le scelte possibili, con riferimenti assoluti. È un buco nel contratto, non una
+nuova richiesta con i sette campi. Poi segui i punti 2–4 sopra, anche se il
+lavoro è già avanzato. La issue `contratto` la apre il responsabile e la
+risposta la decide lui; il pacchetto si riprende dopo la decisione.
 
 Non aprire la richiesta di tua iniziativa: la apre in solid-space il
 responsabile, o un agente a cui lui lo chiede ("Dove puoi scrivere").
@@ -364,3 +388,6 @@ errore nel nostro codice si corregge, non si sopprime.
   firma `Signed-off-by` la aggiunge la persona responsabile, che ne risponde.
 - Nel commit aggiungi la riga `Assisted-by: <nome dello strumento>`.
 - Nella pull request compila la sezione sull'uso dell'IA del modello.
+- Per chiudere una issue usa nella descrizione la parola chiave inglese di
+  GitHub `Closes #N`, anche se il resto è in italiano: «Chiude» non la chiude.
+  Se il lavoro non ha issue da chiudere, non aggiungere una riga di chiusura.
