@@ -126,6 +126,65 @@ Vale per **ogni** pull request, nei due repository.
 
 Quando unisci il pacchetto di una tappa, guarda anche B11.
 
+### A4. Controllare le dipendenze
+
+`scripts/dipendenze.py` confronta il piano della tappa aperta con quello che sta
+su GitHub. Ti dice quali issue possono partire, chi blocca le altre, e dove
+testo delle issue, relazioni «bloccata da» e Project non seguono più il piano.
+Legge anche solid-space, ma non ci scrive mai. Il piano fa fede: lo script
+allinea le issue al piano, mai il contrario.
+
+**La prima volta**, sul PC: serve Python 3.11 o più recente (Debian 13 ha la
+3.13) e `gh` con lo scope del Project, come per `apri-tappa.sh`:
+
+```sh
+gh auth refresh -s project
+```
+
+**Come si lancia**, dalla cartella di Tecnigrafo aggiornata (A2):
+
+```sh
+scripts/dipendenze.py <tappa>             # controlla e basta
+scripts/dipendenze.py <tappa> --applica   # mostra le correzioni, chiede, corregge
+```
+
+Con `--applica` lo script elenca le modifiche e chiede `Go on? [s/N]`. Con `s`
+riscrive "Dipende da" nel testo delle issue, aggiunge e toglie le relazioni
+«bloccata da» e sposta le schede nel Project tra *Bloccato* e *Da fare*. Non
+scrive mai il piano, non chiude issue e non tocca solid-space.
+`--senza-project` salta il Project, per esempio se `gh` non ha ancora lo scope.
+
+**Come si legge**, sezione per sezione:
+
+| Sezione | Che cosa vuol dire | Che cosa fai |
+|---|---|---|
+| *Ready* | issue aperte con tutte le dipendenze chiuse, con l'agente e «(in charge)» se qualcuno ci lavora | avvia l'agente della sua etichetta (B7 o B8) |
+| *Blocked* | issue aperte e chi le blocca, nei due repository | niente: aspetti quei merge |
+| *Without an issue* | righe del piano senza issue, che aspettano una scheda | rilancia `apri-tappa.sh` quando la scheda è unita (B6) |
+| *To fix* | testo, relazioni o Project diversi dal piano; righe che citano ancora una richiesta, con la cella "Dipende da" nuova già pronta | per le issue e il Project, `--applica`; per le celle nuove, la pull request del piano (B6, passo 5) |
+| *To check* | richieste di solid-space con tutte le issue di «Si chiude con» chiuse | controlla il «quando è soddisfatta» e chiudi la richiesta in solid-space (B11, punto 3) |
+| *Information* | etichetta `agente:…` diversa dal piano, avvisi | niente, se l'hai riassegnata tu: decide l'etichetta |
+
+In fondo scrive «Nothing to fix or to check.» se *To fix* e *To check* sono
+vuote. Codici di uscita: 0 tutto a posto, 1 qualcosa da correggere o da
+controllare, 2 una lettura non è riuscita (il messaggio dice quale), 3 hai
+risposto di no.
+
+**Quando si usa:**
+
+| Quando | Perché | Comando |
+|---|---|---|
+| Subito dopo aver aperto la tappa di solid-space (B6, passo 5) | le righe che citano le richieste devono citare i pacchetti: lo script ti dà le celle nuove da copiare nel piano | `<tappa>`, poi `--applica` dopo la pull request del piano |
+| Ogni volta che unisci un pacchetto di solid-space (B11, punto 2) | qualche issue di Tecnigrafo diventa pronta | `--applica` |
+| Ogni volta che unisci un pacchetto di Tecnigrafo che sta in «Si chiude con» (B11, punto 3) | una richiesta può chiudersi | `<tappa>`, sezione *To check* |
+| Prima di avviare un lotto di Gemini o un agente in Tecnigrafo (B7, B8) | sai già chi ha lavoro pronto, e non avvii un agente per sentirti dire che non c'è niente | `<tappa>`, sezione *Ready* |
+| Quando un agente risponde che nessun pacchetto è pronto e non te lo aspetti | vedi chi lo blocca, oppure un "Dipende da" rimasto indietro | `<tappa>` |
+| Dopo aver cambiato "Dipende da" nel piano a tappa aperta (una richiesta nuova, "Modifiche al piano") | issue e relazioni devono seguire il piano | `--applica` |
+| Prima di chiudere le tappe (B12) | niente in *To fix* né in *To check*, e nessuna richiesta della tappa ancora aperta | `<tappa>` |
+
+Lo script legge il piano dalla cartella, quindi lancialo **su `main`
+aggiornato**: su un ramo vecchio confronterebbe GitHub con un piano superato.
+
 ---
 
 ## B. Il ciclo di una tappa
@@ -472,7 +531,9 @@ passagli tu un pacchetto di Codex, cambiando l'etichetta da `agente:codex` a
 punto 3 è la stessa per tutti.
 
 1. Aggiorna la cartella del repository e avvia `agy --mode auto` con Gemini 3.8
-   Flash (A2).
+   Flash (A2). In Tecnigrafo, prima, lancia `scripts/dipendenze.py <tappa>`
+   (A4): se sotto *Ready* non c'è nessun pacchetto di riferimenti con
+   l'etichetta di Gemini, non avviarlo.
 2. Scrivi:
 
    ```text
@@ -541,7 +602,9 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
    ```
 
 3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che
-   aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo.
+   aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo. In
+   Tecnigrafo, per sapere che cosa aspetta, e per non avviarlo a vuoto, guarda
+   prima *Ready* e *Blocked* di `scripts/dipendenze.py <tappa>` (A4).
 
 Gli agenti fanno le prove locali con `scripts/controlla.sh` (AGENTS.md,
 "Comandi"), aspettano la CI con `scripts/ci-attendi.sh` e, se è rossa, ne leggono
@@ -624,6 +687,9 @@ Ripeti B7–B11 finché nel milestone non restano issue aperte.
 ### B12. Chiudere le tappe
 
 Si chiude prima la tappa di solid-space, se c'è, poi quella di Tecnigrafo.
+Prima di cominciare, `scripts/dipendenze.py <tappa>` di Tecnigrafo (A4) non deve
+avere niente in *To fix* né in *To check*: le richieste della tappa sono già
+chiuse.
 
 1. Avvia Gemini 3.8 Flash (A2) e scrivi:
 
