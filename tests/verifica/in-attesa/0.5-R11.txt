@@ -1,4 +1,4 @@
 # 0.5-R11: the roundtrip passes; the expected `unhandled` follows ezdxf, which
 # does not count VERTEX, SEQEND and ATTRIB apart from POLYLINE and INSERT
 # (P10 counts every entity by type): to be decided, see #168.
-dxf/r11-public #168
+dxf/r11-public #168 esente

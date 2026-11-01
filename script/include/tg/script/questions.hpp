@@ -7,6 +7,7 @@
 #include "tg/script/compare.hpp"
 #include "tg/script/script.hpp"
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -22,6 +23,8 @@ struct Answer {
     std::string actual;    ///< the model's answer, or "error: <reason>"
     bool matches{false};   ///< by the tolerances in force at that line
 
+    bool skipped{false};  ///< not compared: the program cannot answer it yet
+
     friend bool operator==(const Answer&, const Answer&) = default;
 };
 
@@ -32,6 +35,18 @@ struct Answer {
 /// The definitions and questions about files (docs/verifica/domande.md,
 /// "File") read them through `files`; without it they are an error.
 [[nodiscard]] std::variant<std::vector<Answer>, ParseError> answerQuestions(
+    std::string_view text, io::FileAccess* files = nullptr);
+
+/// The answers above the frontier of a pending question file.
+struct QuestionPrefix {
+    std::vector<Answer> answers;       ///< some may be skipped
+    std::optional<Frontier> frontier;  ///< none: every line was read
+};
+
+/// Reads as answerQuestions(), skipping questions not implemented yet.
+/// An unimplemented definition/directive or changesWith() stops the file;
+/// malformed lines above that frontier are errors (docs/adr/0037, point 4).
+[[nodiscard]] std::variant<QuestionPrefix, ParseError> answerQuestionsUntilFrontier(
     std::string_view text, io::FileAccess* files = nullptr);
 
 /// Reads a .tgq file of questions (docs/verifica/domande.md), evaluates

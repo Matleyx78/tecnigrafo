@@ -16,7 +16,7 @@ istruzione; gli spazi all'inizio e alla fine della riga non contano.
 
 | Riga | Significato |
 |---|---|
-| vuota, o che inizia con `;` | ignorata |
+| vuota, o che inizia con `;` | ignorata; con `--pending`, `; cambia con #<numero>` ferma il controllo anticipato prima del comportamento che cambia apposta ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punti 4–6) |
 | `!tolerance <tipo> <valore>` | cambia una tolleranza, come negli [script](script.md#dettagli), **per le domande che seguono** |
 | `!current <proprietà>` | cambia i valori correnti del documento delle definizioni (dalla tappa 0.6, [Layer e proprietà](#layer-e-proprietà)) |
 | `<Nome> = <entità>` | una **definizione** |

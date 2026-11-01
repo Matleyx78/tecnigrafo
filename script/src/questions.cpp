@@ -107,7 +107,8 @@ bool answerMatches(AnswerShape shape, std::string_view expected, std::string_vie
 /// Reads a whole .tgq file, line by line.
 class QuestionFile {
 public:
-    explicit QuestionFile(io::FileAccess* access) : m_editor(m_document), m_access(access) {}
+    explicit QuestionFile(io::FileAccess* access, bool pending = false)
+        : m_editor(m_document), m_access(access), m_pending(pending) {}
 
     QuestionFile(const QuestionFile&) = delete;
     QuestionFile& operator=(const QuestionFile&) = delete;
@@ -312,6 +313,7 @@ private:
         }
         Answer answer{m_line, join(std::span{arrow + 1, tokens->end()}), {}, false};
         if (row->function == nullptr) {
+            answer.skipped = m_pending;
             answer.actual = kNotImplemented;
             m_answers.push_back(std::move(answer));
             return std::nullopt;
@@ -339,6 +341,7 @@ private:
             if (const auto* unhandled = std::get_if<detail::UnhandledFileEntity>(&*entity)) {
                 // Not passed rather than invalid: a later package may handle
                 // the type (docs/verifica/casi.md, exit codes).
+                answer.skipped = m_pending;
                 answer.actual = "error: " + std::string{argument} + " is an unhandled " +
                                 unhandled->type + " entity";
                 m_answers.push_back(std::move(answer));
@@ -358,7 +361,13 @@ private:
                                           m_access};
         detail::QuestionResult result = row->function(model, arguments);
         if (auto* failure = std::get_if<detail::ArgumentError>(&result)) {
-            return error(std::string{name} + ": " + failure->message, failure->notImplemented);
+            if (!m_pending || !failure->notImplemented) {
+                return error(std::string{name} + ": " + failure->message, failure->notImplemented);
+            }
+            answer.skipped = true;
+            answer.actual = "error: " + failure->message;
+            m_answers.push_back(std::move(answer));
+            return std::nullopt;
         }
         answer.actual = std::get<std::string>(std::move(result));
         answer.matches = answerMatches(row->shape, answer.expected, answer.actual, m_tolerances);
@@ -377,6 +386,7 @@ private:
     Tolerances m_tolerances;                ///< as changed by the lines read so far
     std::vector<Answer> m_answers;
     int m_line{0};
+    bool m_pending{false};
 };
 
 }  // namespace
@@ -391,6 +401,28 @@ std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view t
         }
     }
     return file.takeAnswers();
+}
+
+std::variant<QuestionPrefix, ParseError> answerQuestionsUntilFrontier(std::string_view text,
+                                                                      io::FileAccess* files) {
+    QuestionFile file{files, true};
+    const std::vector<std::string_view> lines = splitLines(text);
+    std::optional<Frontier> frontier;
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        const int line = static_cast<int>(i) + 1;
+        if (const std::optional<int> issue = changesWith(lines[i])) {
+            frontier = Frontier{line, "changes with #" + std::to_string(*issue)};
+            break;
+        }
+        if (std::optional<ParseError> failure = file.read(line, lines[i])) {
+            if (!failure->notImplemented) {
+                return std::move(*failure);
+            }
+            frontier = Frontier{line, std::move(failure->message)};
+            break;
+        }
+    }
+    return QuestionPrefix{file.takeAnswers(), std::move(frontier)};
 }
 
 std::variant<std::vector<Difference>, ParseError> checkQuestions(std::string_view text) {
