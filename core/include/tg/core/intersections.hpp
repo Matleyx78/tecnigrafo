@@ -26,8 +26,9 @@ enum class Extension : std::uint8_t {
     None,  ///< the entity as it is
     /// A line: its whole line. An arc: its whole circle. An open polyline: the
     /// line or circle of its first segment, for the points before its start,
-    /// and of its last segment, for the points after its end. Circles, closed
-    /// polylines and texts: as None.
+    /// and of its last segment, for the points after its end; a segment that
+    /// is exactly a point meets nothing, so these are the first and the last
+    /// segment that are not. Circles, closed polylines and texts: as None.
     ///
     /// For an open polyline of more than one segment the shared stretches
     /// (SharedStretch, HostCuts::overlapping) are searched on its segments

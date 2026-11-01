@@ -360,6 +360,28 @@ TEST(Intersect, ExtendsAnOpenPolylineAtItsEnds) {
     EXPECT_TRUE(intersect(open, kExtended, line({5, -5}, {15, -5}), kNone).crossings.empty());
 }
 
+TEST(Intersect, ExtendsTheFirstAndLastSegmentsThatAreNotAPoint) {
+    // A segment that is exactly a point at either end carries no extension:
+    // the segment next to it does (review of #460).
+    const Entity pointFirst = polyline({{{0, 0}, 0.0}, {{0, 0}, 0.0}, {{10, 0}, 0.0}});
+    const auto before = intersect(pointFirst, kExtended, line({-5, -5}, {-5, 5}), kNone);
+    ASSERT_EQ(before.crossings.size(), 1U);
+    expectCrossing(before.crossings[0], {-5, 0}, Contact::Crossing, at(1, Location::BeforeStart),
+                   at(0, Location::Inside));
+    const Entity pointLast = polyline({{{0, 0}, 0.0}, {{10, 0}, 0.0}, {{10, 0}, 0.0}});
+    const auto after = intersect(pointLast, kExtended, line({15, -5}, {15, 5}), kNone);
+    ASSERT_EQ(after.crossings.size(), 1U);
+    expectCrossing(after.crossings[0], {15, 0}, Contact::Crossing, at(0, Location::AfterEnd),
+                   at(0, Location::Inside));
+    const auto asSecond = intersect(line({-5, -5}, {-5, 5}), kNone, pointFirst, kExtended);
+    ASSERT_EQ(asSecond.crossings.size(), 1U);
+    expectPosition(asSecond.crossings[0].onB, at(1, Location::BeforeStart));
+    const std::vector<Entity> cutters{line({15, -5}, {15, 5})};
+    const auto cuts = cutsAlong(pointLast, kExtended, cutters);
+    ASSERT_EQ(cuts.cuts.size(), 1U);
+    expectPosition(cuts.cuts[0].onHost, at(0, Location::AfterEnd));
+}
+
 TEST(Intersect, ExtendsAPolylineOnlyAtItsEndsAsTheSecondEntity) {
     const Entity open = polyline({{{0, 0}, 0.0}, {{10, 0}, 0.0}, {{10, 10}, 0.0}});
     const auto found = intersect(line({-5, -5}, {-5, 5}), kNone, open, kExtended);

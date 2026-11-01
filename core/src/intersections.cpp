@@ -130,18 +130,6 @@ EntityCurves curvesOf(const Entity& entity, Extension extension) {
         }
         curves.reach.resize(curves.pieces.size());
         curves.closed = polyline->isClosed();
-        if (extend && !curves.closed && !curves.empty()) {
-            // Before the start of the first segment: its line, or the rest of
-            // its circle (afterEnd in solid-space); after the end of the last.
-            const auto& first = std::get<g::PolylineSegment>(curves.pieces.front());
-            if (first.bulge == 0.0) {
-                curves.reach.front().before = true;
-            } else {
-                curves.reach.front().after = true;
-            }
-            curves.reach.back().after = true;
-            curves.mixed = curves.size() > 1;
-        }
     } else if (std::optional<g::Curve> curve = bridge::curveOf(entity)) {
         const bool isCircle = std::holds_alternative<g::Circle>(*curve);
         curves.pieces.push_back(*curve);
@@ -150,6 +138,28 @@ EntityCurves curvesOf(const Entity& entity, Extension extension) {
     curves.isPoint.reserve(curves.size());
     for (const g::Curve& piece : curves.pieces) {
         curves.isPoint.push_back(isExactlyAPoint(piece));
+    }
+    if (std::holds_alternative<Polyline>(entity) && extend && !curves.closed) {
+        // The first and the last segment that are not exactly a point: a
+        // piece that is a point meets nothing, so it cannot carry the
+        // extension. Before the start of the first: its line, or the rest of
+        // its circle (afterEnd in solid-space); after the end of the last.
+        std::vector<std::size_t> segments;
+        for (std::size_t i = 0; i < curves.size(); ++i) {
+            if (!curves.isPoint[i]) {
+                segments.push_back(i);
+            }
+        }
+        if (!segments.empty()) {
+            const std::size_t first = segments.front();
+            if (std::get<g::PolylineSegment>(curves.pieces[first]).bulge == 0.0) {
+                curves.reach[first].before = true;
+            } else {
+                curves.reach[first].after = true;
+            }
+            curves.reach[segments.back()].after = true;
+            curves.mixed = segments.size() > 1;
+        }
     }
     return curves;
 }
