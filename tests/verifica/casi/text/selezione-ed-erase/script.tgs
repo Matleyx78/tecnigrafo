@@ -24,6 +24,6 @@ ERASE
 U
 !report
 !click 60,52
-!click 48,48
+!click 62,47
 !report
 ERASE

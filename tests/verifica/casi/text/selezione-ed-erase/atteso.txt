@@ -132,7 +132,7 @@ redo:
   Erase
 snap: on
 ortho: off
-pointer: 48,48
+pointer: 62,47
 active snap: none
 statistics:
   TEXT 1
@@ -153,6 +153,6 @@ undo:
 redo:
 snap: on
 ortho: off
-pointer: 48,48
+pointer: 62,47
 active snap: none
 statistics:
