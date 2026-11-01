@@ -335,8 +335,8 @@ void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
     }
 }
 
-void renderGrips(std::span<const Vec2> grips, std::optional<Vec2> hot,
-                 const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+void renderGrips(std::span<const Vec2> grips, std::optional<Vec2> hot, const Viewport& viewport,
+                 const SceneStyle& style, Painter& painter) {
     const double half = style.gripSizePx * 0.5;
     const auto square = [&](const Vec2& point, const Color& color) {
         const Vec2 center = viewport.worldToScreen(point);

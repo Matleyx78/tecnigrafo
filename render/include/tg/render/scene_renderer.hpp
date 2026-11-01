@@ -33,9 +33,12 @@ struct SceneStyle {
     Color crossingBorder{90, 210, 110};
     Color snapMarker{255, 170, 40};
     double snapMarkerSizePx{10.0};
-    Color grip{0, 0, 255};     ///< AutoCAD GRIPCOLOR
-    Color hotGrip{255, 0, 0};  ///< AutoCAD GRIPHOT
-    double gripSizePx{10.0};   ///< cmd::CommandRunner::kGripSizePixels
+    /// AutoCAD GRIPCOLOR.
+    Color grip{0, 0, 255};
+    /// AutoCAD GRIPHOT.
+    Color hotGrip{255, 0, 0};
+    /// cmd::CommandRunner::kGripSizePixels.
+    double gripSizePx{10.0};
     double minGridSpacingPx{12.0};  ///< finer grids are hidden
     double tessellationTolerancePx{0.25};
     /// Device pixels per logical pixel of the screen: the width of a pen

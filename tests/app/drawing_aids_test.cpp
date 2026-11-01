@@ -19,6 +19,7 @@
 #include <QToolButton>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <string>
@@ -61,10 +62,19 @@ protected:
         m_window.show();
         m_window.activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
-        for (const char* name : {"aids.osnap", "aids.ortho", "aids.snap.endpoint",
-                                 "aids.snap.midpoint", "aids.snap.center", "aids.polar",
-                                 "aids.snap.intersection", "aids.snap.perpendicular",
-                                 "aids.snap.tangent", "aids.snap.quadrant"}) {
+        constexpr std::array names{
+            "aids.osnap",
+            "aids.ortho",
+            "aids.snap.endpoint",
+            "aids.snap.midpoint",
+            "aids.snap.center",
+            "aids.polar",
+            "aids.snap.intersection",
+            "aids.snap.perpendicular",
+            "aids.snap.tangent",
+            "aids.snap.quadrant",
+        };
+        for (const char* name : names) {
             ASSERT_NE(action(name), nullptr) << name;
         }
         ASSERT_NE(button("osnapButton"), nullptr);

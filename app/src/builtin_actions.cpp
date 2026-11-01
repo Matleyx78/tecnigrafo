@@ -235,10 +235,9 @@ void BuiltinActions::add(ActionRegistry& registry) {
                                      tr("Snaps to the insertion points of texts.")),
                           QStringLiteral("aids-snap-insertion")));
 
-    registry.add(
-        withIcon(switchSpec(QStringLiteral("aids.snap.intersection"), tr("&Intersection"), modes,
-                            tr("Snaps to intersections of curves.")),
-                 QStringLiteral("aids-snap-intersection")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.intersection"), tr("&Intersection"),
+                                     modes, tr("Snaps to intersections of curves.")),
+                          QStringLiteral("aids-snap-intersection")));
     registry.add(
         withIcon(switchSpec(QStringLiteral("aids.snap.perpendicular"), tr("&Perpendicular"), modes,
                             tr("Snaps perpendicular from the base point to curves.")),
