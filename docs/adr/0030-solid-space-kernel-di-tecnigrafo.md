@@ -16,6 +16,12 @@
   poi il pacchetto di solid-space che serve (punti 11–13); i valori geometrici
   attesi si prendono dall'archivio dei casi di solid-space (punto 14, nuovo).
   Di conseguenza cambiano anche il contesto, le alternative e le conseguenze.
+- **Corretto:** 2026-11-01 — su decisione del responsabile, il punto 13 e le
+  conseguenze richiedono la chiusura della revisione del contratto `[X.Y-C]`
+  in solid-space prima di scrivere le schede che lo usano, in accordo con
+  [solid-space#125](https://github.com/Matleyx78/solid-space/pull/125) e con il
+  punto 15 del suo ADR 0007. La revisione segue l'accettazione degli ADR di
+  valutazione; il responsabile decide i buchi prima che si usi il contratto.
 
 ## Contesto
 
@@ -147,8 +153,16 @@ dipendenze (AGENTS.md).
     tappa di Tecnigrafo che chiede qualcosa corrisponde una tappa di solid-space
     (ADR 0007 di solid-space, punti 10–12). Le schede dei pacchetti di
     Tecnigrafo che dipendono da solid-space si scrivono sulle intestazioni
-    accettate, non prima; finché il contratto manca, il piano li elenca con una
-    riga ciascuno. In "Dipende da" un pacchetto cita la richiesta
+    accettate e riviste, **dopo che la issue `[X.Y-C]` di solid-space è chiusa**
+    ([CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)),
+    non alla sola accettazione delle valutazioni. La revisione parte appena gli
+    ADR sono accettati, anche con la tappa in preparazione; la fa un agente
+    diverso da chi ha scritto l'ADR, di norma Codex. Apre una issue `contratto`
+    per ogni buco; il responsabile decide e una sola pull request applica le
+    decisioni. Se non ci sono buchi, il responsabile chiude `[X.Y-C]` dopo il
+    verbale, senza pull request. Fino alla chiusura, il piano di Tecnigrafo
+    elenca i pacchetti che usano il contratto con una riga ciascuno. In
+    "Dipende da" un pacchetto cita la richiesta
     (`Matleyx78/solid-space#N`) finché la tappa di solid-space non ha i suoi
     pacchetti, poi il pacchetto di solid-space che gli serve: Tecnigrafo aspetta
     quel pacchetto, non la fine della tappa. Intanto vanno avanti i pacchetti che
@@ -204,8 +218,8 @@ dipendenze (AGENTS.md).
   schede, il piano che mette prima i pacchetti indipendenti e i pacchetti di
   solid-space utilizzabili appena uniti.
 - Un piano di Tecnigrafo che chiede qualcosa si scrive in due tempi: subito i
-  pacchetti che non dipendono da solid-space, dopo l'accettazione dei contratti
-  le schede di quelli che ne dipendono.
+  pacchetti che non dipendono da solid-space, dopo la chiusura della revisione
+  `[X.Y-C]` di solid-space le schede di quelli che ne dipendono.
 - I riferimenti dei pacchetti che usano solid-space si accorciano: citano i casi
   dell'archivio di solid-space e verificano facciata e comandi.
 - Le richieste e i loro stati non stanno in Tecnigrafo: si leggono nelle issue

@@ -201,7 +201,8 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B1. Preparare il piano di Tecnigrafo | Tecnigrafo | tu e Claude |
 | B2. Aprire le richieste | solid-space | tu, con uno script o con un agente |
 | B3. Valutare le richieste | solid-space | tu e Claude |
-| B4. Le schede dopo il contratto | Tecnigrafo | tu e Claude |
+| B3a. Rivedere il contratto | solid-space | Codex, poi tu |
+| B4. Le schede dopo la revisione del contratto | Tecnigrafo | tu e Claude |
 | B5. Preparare il piano di solid-space | solid-space | tu e Claude |
 | B6. Aprire le tappe | tutti e due | tu, con lo script o con Claude |
 | B7. Riferimenti | tutti e due | Gemini, a lotti |
@@ -337,31 +338,77 @@ Quando la tabella del piano ha i riferimenti, unisci la pull request del piano
    *Proposti*: quando ti convincono, scrivi nella chat «accetto gli ADR», aspetta
    che li porti in stato *Accettato* e unisci (A3), nel repository di solid-space
    ([GOVERNANCE.md](https://github.com/Matleyx78/solid-space/blob/main/GOVERNANCE.md)).
-   Da quel momento le intestazioni sono il contratto: in Tecnigrafo puoi far
-   scrivere le schede dei pacchetti che le usano (B4), senza aspettare il codice
-   di solid-space.
+   Da quel momento le intestazioni sono il contratto: appena gli ADR sono
+   accettati avvia la revisione in B3a, anche con la tappa in preparazione.
+   Le schede di Tecnigrafo che le usano aspettano la chiusura di `[X.Y-C]`
+   (B4), senza aspettare il codice di solid-space.
 3. Se l'esito è 4, chiudi la issue con la motivazione. Con gli esiti 1, 2 e 3 la
    richiesta entra nella tappa di solid-space della sua tappa di Tecnigrafo:
-   - se quella tappa è **in preparazione**, passa a B5 quando le valutazioni di
-     tutte le sue richieste conosciute sono accettate;
+   - se quella tappa è **in preparazione**, quando le valutazioni di tutte le
+     sue richieste conosciute sono accettate, fai B3a e B4, poi B5;
    - se è **già aperta** (la richiesta è nata mentre Tecnigrafo percorreva la
-     tappa), passa a B5 con la frase per aggiungere una richiesta;
+     tappa), rivedi anche il contratto nuovo come in B3a prima di B4; poi passa
+     a B5 con la frase per aggiungere una richiesta;
    - se è aperta un'altra tappa di solid-space, quella di una tappa precedente
      di Tecnigrafo, la richiesta aspetta che si chiuda. Prima passa quella che
      blocca la tappa aperta di Tecnigrafo.
 
-### B4. Le schede dopo il contratto (tu e Claude, in Tecnigrafo)
+### B3a. Rivedere il contratto (Codex, poi tu, in solid-space)
 
-Quando solid-space ha accettato gli ADR di valutazione con le loro intestazioni
-(B3), apri una chat con Claude (Tecnigrafo in scrittura, solid-space in
-lettura):
+Appena gli ADR di valutazione sono accettati, senza aspettare l'apertura della
+tappa, crea in solid-space la issue `[X.Y-C]` di revisione del contratto,
+secondo [docs/CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md):
+etichette `tappa-X.Y`, `pacchetto`, `contratto`, `difficoltà:impegnativa` e
+`agente:codex`. Indica gli ADR e le intestazioni da controllare. La revisione
+vale dalla prossima tappa di solid-space; i blocchi sui buchi valgono subito
+anche nei pacchetti rimasti della tappa 0.2 (Tecnigrafo 0.7).
+
+1. Avvia un agente di fascia forte con impegno alto, **diverso da chi ha scritto
+   l'ADR e le intestazioni**, di norma Codex. Con solid-space in scrittura e
+   Tecnigrafo in lettura, scrivi:
+
+   ```text
+   Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
+   lettera. Prendi la issue [<tappa>-C] #<numero>, assegnata a te, e segui
+   docs/CONTRATTI.md: controlla ogni funzione con la lista fissa, apri una issue
+   contratto per ogni buco e scrivi il verbale nella issue della revisione.
+   Non decidere il contratto e non scrivere in Tecnigrafo. Poi fermati.
+   ```
+
+2. Leggi il verbale e ogni issue `contratto`: che cosa manca, l'esempio con i
+   dati, le scelte possibili e il consiglio motivato. **Decidi tu** nella issue
+   di ciascun buco. Se non ci sono buchi, chiudi `[X.Y-C]` dopo il verbale:
+   non serve una pull request.
+3. Se ci sono buchi, dopo averli decisi tutti avvia lo stesso agente in una
+   nuova sessione:
+
+   ```text
+   Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
+   lettera. Riprendi la issue [<tappa>-C] #<numero> e applica le mie decisioni
+   nelle issue contratto collegate, secondo docs/CONTRATTI.md. Apri una sola
+   pull request con intestazioni, riga Corretto: nell'ADR, schede interessate,
+   docs/DECISIONI.md e Modifiche al piano. La descrizione usa Closes #N per
+   chiudere la revisione e le issue dei buchi. Porta la CI al verde e fermati.
+   Non scrivere in Tecnigrafo.
+   ```
+
+4. Leggi la pull request e uniscila con la CI verde (A3). Controlla che
+   `[X.Y-C]` e le issue dei buchi siano chiuse. **Solo allora passa a B4**.
+   Nel piano di solid-space (B5) tutti i riferimenti e i pacchetti di lavoro
+   che usano quelle intestazioni dipendono da `[X.Y-C]`.
+
+### B4. Le schede dopo la revisione del contratto (tu e Claude, in Tecnigrafo)
+
+Quando la issue `[X.Y-C]` di solid-space è **chiusa** (B3a), apri una chat con
+Claude (Tecnigrafo in scrittura, solid-space in lettura):
 
 ```text
 Scrivi le schede dei pacchetti della tappa <tappa> che aspettavano il
-contratto di solid-space, sulle intestazioni accettate in solid-space, con
-le regole di docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni
-scheda dice quali intestazioni usa e, se sposta il sottomodulo, a quale
-pacchetto di solid-space. Riferimenti limitati alla facciata e ai comandi.
+contratto di solid-space, ora che la issue [<tappa-ss>-C] #<numero> è chiusa,
+sulle intestazioni accettate e riviste in solid-space, con le regole di
+docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni scheda dice quali intestazioni usa, il commit del contratto da cui parte e,
+se sposta il sottomodulo, a quale pacchetto di solid-space. Riferimenti
+limitati alla facciata e ai comandi.
 Annota la modifica in "Modifiche al piano" e apri una pull request.
 ```
 
@@ -383,8 +430,11 @@ Tecnigrafo.
    <NNNN>, <NNNN>, …: scrivi la scheda e il piano dettagliato partendo dai
    modelli tappe/0000-modello.md e tappe/0000-pacchetto.md,
    con le regole di docs/LAVORO-IN-PARALLELO.md ("Preparare il piano"). La
-   scheda rimanda agli ADR senza ripeterli. I pacchetti realizzano le
-   intestazioni del contratto senza cambiarle; metti prima i pacchetti che
+   scheda rimanda agli ADR senza ripeterli. Riporta il pacchetto [<tappa>-C]
+   di revisione del contratto e la sua issue già chiusa (B3a) come prima riga:
+   tutti i riferimenti e i pacchetti di lavoro che usano quelle intestazioni
+   dipendono da lui. I pacchetti realizzano le intestazioni del contratto
+   rivisto senza cambiarle; metti prima i pacchetti che
    sbloccano la tappa di Tecnigrafo, e scrivi nella scheda di ciascuno quali
    issue di Tecnigrafo sblocca, se esistono già. I casi concreti delle richieste
    e i DXF di Tecnigrafo entrano nei pacchetti di riferimenti, come dice
@@ -741,9 +791,10 @@ chiuse.
 | Arriva una pull request fuori pacchetto, fuori tappa o con la CI rossa da chi contribuisce | Chiudila con un rimando a `CONTRIBUTING.md`, senza discutere il codice ([ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori dalla tappa aperta"). |
 | Gemini si ferma a chiedere conferma per un comando | Se il comando serve al lavoro ed è sicuro (legge, compila, prova), approvalo e aggiungilo alle regole con `/permissions`, così non lo chiede più. Se cancella, unisce o pubblica su `main`, rifiuta. Regole in [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6. |
 | Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
-| Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta il contratto (B3, B4). Se non serve, rispondi nella issue e fallo continuare. |
+| Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta valutazione e revisione del contratto (B3, B3a, B4). Se non serve, rispondi nella issue e fallo continuare. |
 | Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
 | Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (B2). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |
+| Un agente di Tecnigrafo trova un buco nel contratto di solid-space | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto il testo della issue `contratto`: che cosa manca, un esempio con i dati, le scelte possibili, titolo con il nome dell'intestazione. La apri tu in solid-space e decidi lì; finché è aperta non parte nessun pacchetto che usa quell'intestazione. Fai applicare la decisione in solid-space e aggiorna le schede di Tecnigrafo interessate; poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
 | Serve cambiare un'intestazione di solid-space già accettata come contratto | Apri in solid-space una issue con l'etichetta `contratto` che dice che cosa cambia e perché, e guarda quali schede di Tecnigrafo la usano. Decidi tu per i due progetti; se approvi, la scheda del pacchetto che la cambia lo dice esplicitamente, e in Tecnigrafo si aggiornano le schede che la usano (ADR 0007 di solid-space, punto 15). |
 | Un agente ha scritto o proposto qualcosa nell'altro repository senza che tu l'abbia chiesto | Non unire e non rispondere. Chiudi la pull request o cancella il commento, e di' all'agente: `La regola "Dove puoi scrivere" di AGENTS.md vieta di scrivere nell'altro repository: spiega cos'è successo.` (A1) |
 | `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |
