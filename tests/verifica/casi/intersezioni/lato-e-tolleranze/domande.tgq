@@ -48,11 +48,16 @@ P_SIDE = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10
 ; oltre 1e-6 mm non coincidono
 ? coincident 0,0 1.000001e-6,0 units=4 -> no
 
-; chilometri (units=10): f = 1e-9 m = 1e-12 km
+; Kilometres are INSUNITS 7 (ADR 0036, point 1): f = 1e-9 m = 1e-12 km.
 ; Caso 4 della richiesta #23 (tolleranza-coincidenza-richiesta-km.json)
-? coincident 100000.00001,100000 100000.00001,100000 units=10 -> yes
-? coincident 0,0 1e-12,0 units=10 -> yes
-? coincident 0,0 1e-11,0 units=10 -> no
+; tests/corpus/casi/robust/tolleranza-coincidenza-richiesta-km.json in solid-space
+; at 295712a101c7734619485e2dc6929cfb42c8eeba uses unitInMeters = 1000.
+? coincident 100000.00001,100000 100000.00001,100000 units=7 -> yes
+? coincident 0,0 1e-12,0 units=7 -> yes
+? coincident 0,0 1e-11,0 units=7 -> no
+
+; Yards are INSUNITS 10: f = 1e-9 / 0.9144, about 1.09e-9 drawing units.
+? coincident 0,0 1e-11,0 units=10 -> yes
 
 ; metri (units=6): f = 1e-9 m
 ? coincident 0,0 1e-9,0 units=6 -> yes
