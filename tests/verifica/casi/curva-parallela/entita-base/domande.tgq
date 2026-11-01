@@ -1,0 +1,50 @@
+; Curva parallela: entita base (LINE, CIRCLE, ARC)
+; [0.7-R17] #362, lavoro [0.7-P17] #363: domanda `offset`
+; (docs/verifica/domande.md, "Curva parallela"; ADR 0035, punti 10-12; solid-space ADR 0012).
+; Valori attesi conformi all'archivio dei casi di solid-space (tests/corpus/casi/geom2d/,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Linea (caso a di autocad-offset.dxf) ---
+; parallela-curva-autocad-caso-a-linea.json
+L1 = LINE start=0,0 end=20,0
+; lato sinistro (y positivo)
+? offset L1 5 10,10 -> LINE start=0,5 end=20,5
+; lato destro (y negativo)
+? offset L1 5 10,-10 -> LINE start=0,-5 end=20,-5
+; punto esattamente sulla retta: nessun lato
+? offset L1 5 10,0 -> no-side
+; punto sul prolungamento della retta: nessun lato
+? offset L1 5 30,0 -> no-side
+
+; --- Cerchio (caso b di autocad-offset.dxf) ---
+; parallela-curva-autocad-caso-b-cerchio-dentro.json e -fuori.json
+C1 = CIRCLE center=50,0 radius=10
+; verso l'interno (punto al centro o comunque dentro): raggio 10 - 3 = 7
+? offset C1 3 50,0 -> CIRCLE center=50,0 radius=7
+; verso l'esterno (punto fuori): raggio 10 + 3 = 13
+? offset C1 3 70,0 -> CIRCLE center=50,0 radius=13
+; distanza interna esattamente pari al raggio: la curva scompare (parallela-curva-cerchio-raggio-esatto.json)
+? offset C1 10 50,0 -> vanished
+; distanza interna superiore al raggio
+? offset C1 12 50,0 -> vanished
+; punto esattamente sulla circonferenza: nessun lato
+? offset C1 3 60,0 -> no-side
+
+; --- Arco (caso c di autocad-offset.dxf) ---
+; parallela-curva-autocad-caso-c-arco-dentro.json e -fuori.json
+A1 = ARC center=100,0 radius=10 start-angle=0 end-angle=180
+; verso l'interno (a sinistra): raggio 10 - 4 = 6, stessi angoli
+? offset A1 4 100,5 -> ARC center=100,0 radius=6 start-angle=0 end-angle=180
+; verso l'esterno (a destra): raggio 10 + 4 = 14, stessi angoli
+? offset A1 4 100,-5 -> ARC center=100,0 radius=14 start-angle=0 end-angle=180
+; distanza pari al raggio verso l'interno: scompare
+? offset A1 10 100,5 -> vanished
+; punto esattamente sull'arco
+? offset A1 4 110,0 -> no-side
+; punto sulla circonferenza dell'arco
+? offset A1 4 100,-10 -> no-side
+
+; arco che attraversa lo zero (start-angle 300, end-angle 60)
+A_CROSS = ARC center=0,0 radius=10 start-angle=300 end-angle=60
+? offset A_CROSS 2 0,0 -> ARC center=0,0 radius=8 start-angle=300 end-angle=60
+? offset A_CROSS 2 20,0 -> ARC center=0,0 radius=12 start-angle=300 end-angle=60

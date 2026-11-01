@@ -1,0 +1,28 @@
+; Curva parallela: casi limite, fallimenti e coordinate grandi
+; [0.7-R17] #362, lavoro [0.7-P17] #363: domanda `offset`
+; (docs/verifica/domande.md, "Curva parallela"; ADR 0035, punti 10-12; solid-space ADR 0012).
+; Valori attesi conformi all'archivio dei casi di solid-space (parallela-polilinea-*,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Asola con distanza uguale o superiore al raggio (richiesta #22, caso 2) ---
+; parallela-polilinea-asola-raggio-esatto.json
+; asola con semicerchi di raggio 5: verso l'interno d=5 annulla i semicerchi e dà autointersezione -> failed
+P_SLOT_FAIL = LWPOLYLINE closed=yes vertex=0,-5 vertex=20,-5 bulge=1 vertex=20,5 vertex=0,5 bulge=1
+? offset P_SLOT_FAIL 5 10,0 -> failed
+? offset P_SLOT_FAIL 6 10,0 -> failed
+
+; --- Polilinea a U stretta (caso f di autocad-offset.dxf, richiesta #22 caso 5) ---
+; parallela-polilinea-autocad-caso-f-u-dentro-d4.json
+; polilinea a U con larghezza interna 6: con d=4 verso l'interno (d > larghezza/2) -> failed
+P_U_FAIL = LWPOLYLINE vertex=400,0 vertex=400,-20 vertex=406,-20 vertex=406,0
+? offset P_U_FAIL 4 403,-10 -> failed
+
+; --- Punto sul segmento della polilinea: nessun lato ---
+P_RECT = LWPOLYLINE closed=yes vertex=150,-25 vertex=250,-25 vertex=250,25 vertex=150,25
+? offset P_RECT 10 200,-25 -> no-side
+
+; --- Coordinate grandi dell'ordine di 1e6 (caso h di autocad-offset.dxf, richiesta #22 caso 6) ---
+; parallela-polilinea-autocad-caso-h-rettangolo-1e6-dentro.json
+; rettangolo traslato a (1e6, 1e6) con d=10 verso l'interno
+P_1E6 = LWPOLYLINE closed=yes vertex=1000150,999975 vertex=1000250,999975 vertex=1000250,1000025 vertex=1000150,1000025
+? offset P_1E6 10 1000200,1000000 -> LWPOLYLINE closed=yes vertex=1000160,999985 vertex=1000240,999985 vertex=1000240,1000015 vertex=1000160,1000015
