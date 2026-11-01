@@ -1,0 +1,38 @@
+; Raccordi: casi limite, esiti particolari e tolleranze
+; [0.7-R19] #366, lavoro [0.7-P19] #367: domanda `fillet`
+; (docs/verifica/domande.md, "Raccordi e tangenze"; ADR 0035, punti 13-14; solid-space ADR 0011).
+; Valori attesi conformi all'archivio dei casi di solid-space (raccordo-regola-*,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Raccordo impossibile (none) ---
+; cerchio e linea distanti piu di 2r dove si guardano
+; raccordo-richiesta21-distanti-non-entra-origine.json
+C_FAR = CIRCLE center=0,0 radius=10
+L_FAR = LINE start=-20,40 end=20,40
+? fillet C_FAR 0,10 L_FAR 0,40 radius=5 -> none
+
+; --- Cerchi o archi concentrici (infinite) ---
+; richiesta #21 caso 3: due cerchi concentrici (centro comune 0,0, raggi 10 e 20)
+; con raggio 5 (= (20 - 10) / 2): esistono infiniti cerchi tangenti
+; cerchi-tangenti-concentrici-differenza-origine.json
+C_CONC1 = CIRCLE center=0,0 radius=10
+C_CONC2 = CIRCLE center=0,0 radius=20
+? fillet C_CONC1 10,0 C_CONC2 20,0 radius=5 -> infinite
+
+; --- Clic ambiguo (ambiguous) ---
+; raccordo-regola-ambiguo-cerchio.json: il clic cade esattamente sul cerchio dell'altra curva
+C_AMB = CIRCLE center=0,0 radius=10
+L_AMB = LINE start=-20,-15 end=20,-15
+? fillet C_AMB 0,-15 L_AMB 0,-15 radius=5 -> ambiguous
+
+; --- Entita non supportata (not-allowed) ---
+T_NA = TEXT position=0,0 height=2.5 value="Hello"
+L_OK = LINE start=0,0 end=10,0
+? fillet T_NA 0,0 L_OK 5,0 radius=2 -> not-allowed
+
+; --- Raccordo quasi allineato con raggio piccolissimo (richiesta #21 caso 4 e ADR 0036 punto 5) ---
+; due segmenti che deviano di un angolo piccolissimo: l'arco di raccordo e degenere
+; sotto la tolleranza dell'unita del disegno e produce lo spigolo vivo (raggio 0)
+L_DEV1 = LINE start=-10,0 end=0,0
+L_DEV2 = LINE start=0,0 end=10,1e-9
+? fillet L_DEV1 -5,0 L_DEV2 5,0 radius=1e-9 units=4 -> L_DEV1 LINE start=-10,0 end=0,0; L_DEV2 LINE start=0,0 end=10,1e-9

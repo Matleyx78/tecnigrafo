@@ -1,0 +1,42 @@
+; Raccordi: entita base (LINE, CIRCLE, ARC)
+; [0.7-R19] #366, lavoro [0.7-P19] #367: domanda `fillet`
+; (docs/verifica/domande.md, "Raccordi e tangenze"; ADR 0035, punti 13-14; solid-space ADR 0011).
+; Valori attesi conformi all'archivio dei casi di solid-space (tests/corpus/casi/geom2d/,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Angolo retto tra linee (caso a di autocad-raccordi.dxf, richiesta #21 caso 1) ---
+; raccordo-autocad-caso-a-retto.json
+L1 = LINE start=0,0 end=30,0
+L2 = LINE start=0,0 end=0,30
+; con trim (predefinito): linee rifilate a (10,0) e (0,10), nuovo arco di raggio 10
+? fillet L1 20,0 L2 0,20 radius=10 -> L1 LINE start=10,0 end=30,0; L2 LINE start=0,10 end=0,30; new ARC center=10,10 radius=10 start-angle=180 end-angle=270
+
+; con trim=no: le due linee restano invariate, viene aggiunto solo l'arco
+? fillet L1 20,0 L2 0,20 radius=10 trim=no -> L1 LINE start=0,0 end=30,0; L2 LINE start=0,0 end=0,30; new ARC center=10,10 radius=10 start-angle=180 end-angle=270
+
+; --- Spigolo vivo a raggio zero (caso f di autocad-raccordi.dxf) ---
+; raccordo-autocad-caso-f-spigolo-raggio-zero.json
+L_SPIG1 = LINE start=300,-10 end=300,20
+L_SPIG2 = LINE start=290,0 end=330,0
+; le due linee si incontrano nello spigolo vivo (300,0), nessun arco aggiunto
+? fillet L_SPIG1 300,10 L_SPIG2 320,0 radius=0 -> L_SPIG1 LINE start=300,0 end=300,20; L_SPIG2 LINE start=300,0 end=330,0
+
+; --- Linee parallele (caso c di autocad-raccordi.dxf, richiesta #21 caso 5) ---
+; raccordo-autocad-caso-c-parallele.json
+; due linee parallele a distanza 20: produce semicerchio di raggio 10 a prescindere dal raggio chiesto
+L_PAR1 = LINE start=100,0 end=130,0
+L_PAR2 = LINE start=100,20 end=130,20
+? fillet L_PAR1 120,0 L_PAR2 120,20 radius=5 -> L_PAR1 LINE start=100,0 end=130,0; L_PAR2 LINE start=100,20 end=130,20; new ARC center=130,10 radius=10 start-angle=270 end-angle=90
+
+; --- Raccordo tra cerchio e linea (caso d di autocad-raccordi.dxf) ---
+; raccordo-autocad-caso-d-cerchio-linea.json
+; cerchio centro 170,10 raggio 10 e linea da (150,-5) a (200,-5)
+; il cerchio non viene tagliato; la linea viene rifilata
+C_D = CIRCLE center=170,10 radius=10
+L_D = LINE start=150,-5 end=200,-5
+? fillet C_D 170,0 L_D 185,-5 radius=3 -> C_D CIRCLE center=170,10 radius=10; L_D LINE start=175,-5 end=200,-5; new ARC center=175,-2 radius=3 start-angle=112.61986494804044 end-angle=270
+
+; --- Linea che si prolunga per incontrare il punto di tangenza ---
+; linea corta che non arriva al punto di tangenza: viene estesa
+L_SHORT = LINE start=15,0 end=30,0
+? fillet L_SHORT 20,0 L2 0,20 radius=10 -> L_SHORT LINE start=10,0 end=30,0; L2 LINE start=0,10 end=0,30; new ARC center=10,10 radius=10 start-angle=180 end-angle=270
