@@ -8,9 +8,13 @@
 - **Riferimenti:** issue `[0.7-R17]` (#…), agente gemini: la facciata (lato,
   esiti, polilinee, larghezze, unità); i valori geometrici dall'archivio dei
   casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#22, R17. La richiesta diventa il
-  pacchetto di solid-space che realizza `offset.hpp`, quando la tappa 0.2 di
-  solid-space lo avrà (ADR 0030, punto 13)
+- **Dipende da:** P14, Matleyx78/solid-space#130, R17. La richiesta
+  Matleyx78/solid-space#22 è diventata i pacchetti di solid-space che
+  realizzano `offset.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P19
+  (Matleyx78/solid-space#130, bulge ricostruito, riferimenti
+  Matleyx78/solid-space#129), che comprende gli altri tra le sue dipendenze
+  (Matleyx78/solid-space#63). Prima di #130 `offsetCurve` sbaglia in silenzio
+  sugli archi quasi interi (Matleyx78/solid-space#127)
 - **Modulo:** `core` (più la domanda `offset` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 10–12; l'[ADR 0012 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0012-curva-parallela-nel-piano.md)
@@ -29,8 +33,8 @@ Il contratto accettato con l'ADR 0012 di solid-space:
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che chiude il pacchetto di solid-space che realizza
-  `offset.hpp`. Se la issue non lo dice, chiedilo e non cominciare.
+  sottomodulo: quello che chiude Matleyx78/solid-space#130, l'ultimo
+  pacchetto di solid-space che realizza `offset.hpp`. Se la issue non lo dice, chiedilo e non cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 

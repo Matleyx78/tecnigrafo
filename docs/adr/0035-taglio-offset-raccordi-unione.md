@@ -3,8 +3,9 @@
 - **Stato:** Accettato
 - **Data:** 2026-10-29
 - **Corretto:** 2026-11-01 — su decisione del responsabile, dopo due decisioni
-  di solid-space prese realizzando o rivedendo il contratto; nessun codice unito attua
-  ancora questo ADR (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)).
+  di solid-space prese realizzando o rivedendo il contratto; nessun codice
+  unito attua i punti corretti (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)):
+  P14 (#460, unito lo stesso giorno) attua i punti 1, 2 e 4, che non cambiano.
   (1) `fillet` e `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio
   (dato 2) anche quando il centro del cerchio, o lo spigolo del raggio 0, cade
   oltre 2^50: due rette quasi parallele che si incontrano lontanissimo

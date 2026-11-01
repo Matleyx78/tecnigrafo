@@ -381,7 +381,13 @@ i rimandi ai documenti che cambia.
     nuovo motivo `OffsetFailure::notRepresentable`
     (Matleyx78/solid-space#127). `failed` dà `Failed` anche per linea, arco e
     cerchio, dove il contratto non lo dà mai, perché un arco arriva a
-    solid-space come `Arc`; per la polilinea non cambia niente (P17).
+    solid-space come `Arc`; per la polilinea non cambia niente. P17 aspetta
+    però Matleyx78/solid-space#130 (0.2-P19, bulge ricostruito, riferimenti
+    Matleyx78/solid-space#129): oggi `offsetCurve` sbaglia in silenzio sugli
+    archi quasi interi, e R19 di solid-space può spostare di qualche ulp casi
+    del suo archivio. In "Dipende da" di P17 la #130 prende il posto della
+    Matleyx78/solid-space#63, che ne è una dipendenza. R17 (#362), già chiusa,
+    non si riapre: i suoi casi non cambiano.
 
   Correggono l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punti
   12–15, con una riga **Corretto:**; cambiano le schede
