@@ -1,0 +1,44 @@
+; Intersezioni: casi della richiesta solid-space #20 e #23 (ADR 0010, ADR 0009)
+; [0.7-R14] #356, lavoro [0.7-P14] #357: domanda `intersections`
+; (docs/verifica/domande.md, "Intersezioni, lato e tolleranze"; ADR 0035, punto 1; ADR 0036).
+; Valori attesi geometrici dall'archivio dei casi di solid-space (tests/corpus/casi/,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b), citati come richiesto dall'ADR 0030, punto 14.
+
+; Caso 1: Segmenti incrociati a X (intersezione-richiesta-x-origine.json)
+L1A = LINE start=0,0 end=10,10
+L1B = LINE start=0,10 end=10,0
+? intersections L1A L1B -> 5,5 crossing 0:inside 0:inside
+
+; Caso 2: Cerchio r=5 contro tangenza e quasi-tangenze a y=5 (richiesta #20, caso 2)
+; cerchio al centro e linea tangente y=5 (intersezione-richiesta-cerchio-tangente-origine.json)
+C2 = CIRCLE center=0,0 radius=5
+L2_TAN = LINE start=-10,5 end=10,5
+? intersections L2_TAN C2 -> 0,5 touching 0:inside 0:inside
+
+; linea a y = 5 + 1e-12: esterna, nessun incontro (intersezione-richiesta-cerchio-esterna-origine.json)
+L2_EXT = LINE start=-10,5.000000000001 end=10,5.000000000001
+? intersections L2_EXT C2 -> none
+
+; linea a y = 5 - 1e-12: secante interna, due incroci (intersezione-richiesta-cerchio-interna-origine.json)
+L2_INT = LINE start=-10,4.999999999999 end=10,4.999999999999
+? intersections L2_INT C2 -> -0.0000031624182212070575,4.999999999999 crossing 0:inside 0:inside; 0.0000031624182212070575,4.999999999999 crossing 0:inside 0:inside
+
+; Caso 3: Archi dello stesso cerchio sovrapposti per 30 gradi (intersezione-richiesta-sovrapposizione30-origine.json)
+; arco 0 -> 60 gradi e arco 30 -> 90 gradi su cerchio r=5
+A3A = ARC center=0,0 radius=5 start-angle=0 end-angle=60
+A3B = ARC center=0,0 radius=5 start-angle=30 end-angle=90
+? intersections A3A A3B -> overlap 4.330127018922193,2.5 2.5,4.330127018922194
+
+; Caso 4: Segmento che finisce su un altro a T (intersezione-richiesta-t-origine.json)
+L4A = LINE start=5,-5 end=5,0
+L4B = LINE start=0,0 end=10,0
+? intersections L4A L4B -> 5,0 crossing 0:end 0:inside
+
+; Caso 6: Segmento (0,0)-(1,0) contro cerchio (10,0) r=2 (richiesta #20, caso 6)
+; senza prolungamento: nessun punto (intersezione-richiesta-non-prolungata-origine.json)
+L6 = LINE start=0,0 end=1,0
+C6 = CIRCLE center=10,0 radius=2
+? intersections L6 C6 -> none
+
+; con prolungamento su prima (extend=a): incontra il cerchio in 8,0 e 12,0 (intersezione-richiesta-prolungata-origine.json)
+? intersections L6 C6 extend=a -> 8,0 crossing 0:after 0:inside; 12,0 crossing 0:after 0:inside

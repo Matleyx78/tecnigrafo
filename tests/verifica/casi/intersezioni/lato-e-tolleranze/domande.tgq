@@ -1,0 +1,82 @@
+; Lato e tolleranze di Tecnigrafo
+; [0.7-R14] #356, lavoro [0.7-P14] #357: domande `side`, `coincident`, `degenerate`
+; (docs/verifica/domande.md, "Intersezioni, lato e tolleranze"; ADR 0036; ADR 0009 di solid-space).
+; Valori attesi conformi al corpus di solid-space (lato-richiesta20-caso7-*,
+; tolleranza-coincidenza-richiesta-*, bordo-degenere-segmento-*, commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Domanda side: retta e segmento (richiesta #20, caso 7) ---
+; Segmento (0,0)-(10,0) verso positivo x: sopra è sinistra, sotto è destra
+L_HORIZ = LINE start=0,0 end=10,0
+? side L_HORIZ 5,1 -> left
+? side L_HORIZ 5,-1 -> right
+? side L_HORIZ 5,0 -> on
+; punti a 1e-13 dalla retta (lato-richiesta20-caso7-origine-sopra.json e -sotto.json)
+? side L_HORIZ 5,1e-13 -> left
+? side L_HORIZ 5,-1e-13 -> right
+; punti sul prolungamento della retta
+? side L_HORIZ 15,0 -> on
+? side L_HORIZ 15,1 -> left
+
+; Cerchio: centro 0,0 raggio 5; orientamento antiorario, l'interno è a sinistra
+C_SIDE = CIRCLE center=0,0 radius=5
+? side C_SIDE 0,0 -> left
+? side C_SIDE 5,0 -> on
+? side C_SIDE 10,0 -> right
+
+; Arco: centro 0,0 raggio 5 da 0 a 90 gradi; l'interno del cerchio è a sinistra
+A_SIDE = ARC center=0,0 radius=5 start-angle=0 end-angle=90
+? side A_SIDE 0,0 -> left
+? side A_SIDE 10,0 -> right
+? side A_SIDE 0,5 -> on
+; punto sul resto della circonferenza dell'arco
+? side A_SIDE -5,0 -> on
+
+; Polilinea a due segmenti: lato del segmento più vicino
+P_SIDE = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10
+? side P_SIDE 5,1 -> left
+? side P_SIDE 5,-1 -> right
+? side P_SIDE 11,5 -> right
+? side P_SIDE 9,5 -> left
+
+; --- Domanda coincident (regola delle tolleranze, ADR 0036 e solid-space ADR 0009) ---
+; millimetri (units=4, predefinito se omesso)
+; Caso 1 della richiesta #23: (10,0) e (10, 1e-10) coincidono (tolleranza-coincidenza-richiesta-mm.json)
+? coincident 10,0 10,1e-10 -> yes
+? coincident 10,0 10,1e-10 units=4 -> yes
+; pavimento fisico: 1e-9 m = 1e-6 mm; entro 1e-6 mm coincidono
+? coincident 0,0 1e-6,0 units=4 -> yes
+; oltre 1e-6 mm non coincidono
+? coincident 0,0 1.000001e-6,0 units=4 -> no
+
+; chilometri (units=10): f = 1e-9 m = 1e-12 km
+; Caso 4 della richiesta #23 (tolleranza-coincidenza-richiesta-km.json)
+? coincident 100000.00001,100000 100000.00001,100000 units=10 -> yes
+? coincident 0,0 1e-12,0 units=10 -> yes
+? coincident 0,0 1e-11,0 units=10 -> no
+
+; metri (units=6): f = 1e-9 m
+? coincident 0,0 1e-9,0 units=6 -> yes
+? coincident 0,0 2e-9,0 units=6 -> no
+
+; --- Domanda degenerate (ADR 0036, punto 2) ---
+; Caso 5 della richiesta #23: pezzo lungo 1e-14 è degenere sia in mm sia in km
+L_DEG = LINE start=0,0 end=1e-14,0
+L_NORM = LINE start=0,0 end=10,0
+? degenerate L_DEG units=4 -> yes
+? degenerate L_NORM units=4 -> no
+
+; cerchio con raggio sotto tolleranza
+C_DEG = CIRCLE center=0,0 radius=1e-14
+C_NORM = CIRCLE center=0,0 radius=10
+? degenerate C_DEG units=4 -> yes
+? degenerate C_NORM units=4 -> no
+
+; arco con raggio sotto tolleranza
+A_DEG = ARC center=0,0 radius=1e-14 start-angle=0 end-angle=90
+? degenerate A_DEG units=4 -> yes
+
+; polilinea: nel suo insieme non è mai degenere; lo sono i singoli segmenti
+P_MIX = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10.00000000000001,0
+? degenerate P_MIX units=4 -> no
+? degenerate P_MIX segment=0 units=4 -> no
+? degenerate P_MIX segment=1 units=4 -> yes
