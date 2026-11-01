@@ -299,3 +299,28 @@ i rimandi ai documenti che cambia.
   della tappa 0.7 lo seguono. La regola della CI (un caso in lista che passa fa
   fallire la CI) non cambia. Issue
   [#425](https://github.com/Matleyx78/tecnigrafo/issues/425).
+- **2026-11-01 — Dipendenze verso solid-space e chiusura delle richieste.** Il
+  2026-11-01 R14 (#356) e R22 (#372) della tappa 0.7 risultavano bloccate con
+  tutti i loro pacchetti di solid-space già uniti: in "Dipende da" citavano
+  ancora le richieste Matleyx78/solid-space#20–#23, che restano aperte fino
+  alla fine, e la sostituzione con i pacchetti, prevista dal piano, non aveva
+  un momento preciso. Il responsabile decide:
+  - le richieste si sostituiscono con i pacchetti di solid-space appena si apre
+    la tappa di solid-space, nel piano, nel testo delle issue e nelle relazioni
+    «bloccata da» ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B6, passo 5;
+    [RICHIESTE-A-SOLID-SPACE.md](RICHIESTE-A-SOLID-SPACE.md), punto 3). Per la
+    0.7 è fatto lo stesso giorno, con la pull request
+    [#449](https://github.com/Matleyx78/tecnigrafo/pull/449); le copie
+    storiche #326–#329 sono chiuse;
+  - una richiesta si chiude quando sono unite le issue di Tecnigrafo che usano
+    per primi il pezzo nuovo, elencate nella colonna «Si chiude con» della
+    tabella «Richieste a solid-space» del piano, perché il suo «quando è
+    soddisfatta» si osserva nella CI di Tecnigrafo; non più quando sono uniti
+    tutti i suoi pacchetti di solid-space (GUIDA-RESPONSABILE.md, B11 e B12;
+    [tappe/0000-modello.md](tappe/0000-modello.md));
+  - la riga «Sblocca:» delle pull request di solid-space resta un promemoria:
+    fa fede "Dipende da";
+  - lo script `scripts/dipendenze.py`, fuori tappa come strumento del
+    responsabile, controlla e allinea le dipendenze tra piano, issue, relazioni
+    e Project, e propone le sostituzioni
+    ([F4](tappe/fuori-tappa/F4-dipendenze.md), #450).

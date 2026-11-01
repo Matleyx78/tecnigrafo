@@ -424,6 +424,26 @@ quelli si creano solo le issue nuove.
    milestone. A ciascuna metti *Tappa* = `ss-<tappa>` e *Tipo* = pacchetto o
    riferimenti. Controlla che compaiano nella vista «Tappe aperte».
 4. Unisci la pull request (A3), nel repository di solid-space.
+5. **Subito dopo, in Tecnigrafo:** le issue che in "Dipende da" citano le
+   richieste devono citare i pacchetti di solid-space. Finché citano la
+   richiesta, che resta aperta fino alla fine, nessun agente le prende, anche
+   quando quello che serve è già unito (è successo con R14 e R22 della 0.7, il
+   2026-11-01). In una chat con Tecnigrafo in scrittura e solid-space in
+   lettura, scrivi a Claude:
+
+   ```text
+   La tappa <tappa di solid-space> di solid-space è aperta. Nella tappa
+   <tappa> di Tecnigrafo sostituisci, nella colonna "Dipende da" del piano, le
+   richieste di solid-space con i pacchetti di solid-space che servono, dalla
+   tabella «Che cosa sblocca in Tecnigrafo» del piano di solid-space; cita solo
+   quelli non già compresi attraverso le dipendenze. Allinea il testo delle
+   issue e le relazioni «bloccata da», scrivi nella issue dei pacchetti di
+   Tecnigrafo che spostano il sottomodulo il commit, se è già unito, e apri una
+   pull request con il piano. Non scrivere niente in solid-space.
+   ```
+
+   Unisci la pull request (A3) e nel Project sposta da *Bloccato* a *Da fare*
+   le issue che risultano pronte.
 
 ### B7. Riferimenti (Gemini, a lotti)
 
@@ -570,13 +590,16 @@ Ogni pull request si unisce come in A3. In più, durante una tappa:
 2. **Quando unisci un pacchetto di solid-space**, la sua pull request elenca
    nella riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel
    pacchetto. Nel Project spostale da *Bloccato* a *Da fare*: possono partire
-   subito, senza aspettare la fine della tappa di solid-space. Se con questo
-   merge tutti i pacchetti di una richiesta sono uniti, controlla dal lato di
-   Tecnigrafo il suo «quando è soddisfatta» e chiudi la issue della richiesta.
+   subito, senza aspettare la fine della tappa di solid-space. La riga
+   «Sblocca:» è un promemoria scritto a mano: fa fede "Dipende da" della issue
+   di Tecnigrafo, che dev'essere tutta chiusa. Non chiudere la richiesta
+   anche se tutti i suoi pacchetti sono uniti: si chiude al punto 3.
 3. **Quando unisci il pacchetto di Tecnigrafo che usa il pezzo nuovo**, controlla
    che sposti il sottomodulo al commit che la sua scheda indica (ADR 0030, punto
    9): nella sua pull request `third_party/solid-space` deve puntare a quel
-   commit.
+   commit. Se è l'ultimo della colonna «Si chiude con» di una richiesta (piano,
+   sezione 5, «Richieste a solid-space»), controlla il «quando è soddisfatta»
+   della richiesta e chiudi la sua issue in solid-space.
 
 Ripeti B7–B11 finché nel milestone non restano issue aperte.
 
@@ -612,8 +635,9 @@ Si chiude prima la tappa di solid-space, se c'è, poi quella di Tecnigrafo.
 6. Su GitHub: **Releases** → **Draft a new release** → scegli il tag
    `v<tappa>.0` → copia nel testo le note di `docs/rilasci/<tappa>.md` →
    **Publish release**.
-7. Solo per solid-space: per le richieste della tappa ancora aperte, controlla
-   dal lato di Tecnigrafo il «quando è soddisfatta» e chiudi le loro issue.
+7. Solo per solid-space: le richieste della tappa dovrebbero essere già chiuse
+   (B11, punto 3). Per quelle ancora aperte controlla dal lato di Tecnigrafo il
+   «quando è soddisfatta» e chiudile, oppure scrivi nella issue che cosa manca.
 8. Torna a B1 per la tappa successiva di Tecnigrafo. Se ha già richieste
    valutate, prepara anche la sua tappa di solid-space (B5); altrimenti
    solid-space aspetta le prossime richieste (B2).
