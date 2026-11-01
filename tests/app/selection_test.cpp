@@ -97,6 +97,29 @@ protected:
         clickScreen(screen(world), modifiers);
     }
 
+    void dragScreen(const QPointF& fromLocal, const QPointF& toLocal,
+                    Qt::KeyboardModifiers pressModifiers = Qt::NoModifier,
+                    Qt::KeyboardModifiers releaseModifiers = Qt::NoModifier) {
+        const QPointF fromGlobal = view()->mapToGlobal(fromLocal);
+        QMouseEvent down(QEvent::MouseButtonPress, fromLocal, fromGlobal, Qt::LeftButton,
+                         Qt::LeftButton, pressModifiers);
+        QCoreApplication::sendEvent(view(), &down);
+
+        const QPointF toGlobal = view()->mapToGlobal(toLocal);
+        QMouseEvent move(QEvent::MouseMove, toLocal, toGlobal, Qt::LeftButton, Qt::LeftButton,
+                         releaseModifiers);
+        QCoreApplication::sendEvent(view(), &move);
+
+        QMouseEvent up(QEvent::MouseButtonRelease, toLocal, toGlobal, Qt::LeftButton, Qt::NoButton,
+                       releaseModifiers);
+        QCoreApplication::sendEvent(view(), &up);
+    }
+
+    void drag(const core::Vec2& fromWorld, const core::Vec2& toWorld,
+              Qt::KeyboardModifiers releaseModifiers = Qt::NoModifier) {
+        dragScreen(screen(fromWorld), screen(toWorld), Qt::NoModifier, releaseModifiers);
+    }
+
     void move(const core::Vec2& world) { events::move(view(), screen(world).toPoint()); }
 
     void enter(const std::string& text) {
@@ -334,6 +357,64 @@ TEST_F(SelectionTest, PickingKeepsAThreePixelToleranceAfterInitialFitWheelAndZoo
         escape(view());
         view()->zoomExtents();
     }
+}
+
+TEST_F(SelectionTest, DragToRightSelectsByWindowAndClosesRectangleOnRelease) {
+    const core::EntityId hole = document().entities()[2].id;
+    // Drag left-to-right enclosing the hole.
+    drag({8.0, 8.0}, {22.0, 22.0});
+    EXPECT_EQ(prompt(), "Command:");
+    ASSERT_EQ(selection().size(), 1U);
+    EXPECT_TRUE(selection().contains(hole));
+    escape(view());
+
+    // Drag left-to-right cutting the hole: window excludes it.
+    drag({18.0, 8.0}, {22.0, 22.0});
+    EXPECT_EQ(prompt(), "Command:");
+    EXPECT_TRUE(selection().isEmpty());
+}
+
+TEST_F(SelectionTest, DragToLeftSelectsByCrossingAndClosesRectangleOnRelease) {
+    const core::EntityId hole = document().entities()[2].id;
+    // Drag right-to-left cutting the hole: crossing includes it.
+    drag({22.0, 8.0}, {18.0, 22.0});
+    EXPECT_EQ(prompt(), "Command:");
+    ASSERT_EQ(selection().size(), 1U);
+    EXPECT_TRUE(selection().contains(hole));
+}
+
+TEST_F(SelectionTest, DragReleaseWithShiftRemovesFromSelection) {
+    const core::EntityId hole = document().entities()[2].id;
+    click(kHole);
+    ASSERT_TRUE(selection().contains(hole));
+    // Drag crossing over the hole with Shift removes it on release.
+    drag({22.0, 8.0}, {18.0, 22.0}, Qt::ShiftModifier);
+    EXPECT_EQ(prompt(), "Command:");
+    EXPECT_TRUE(selection().isEmpty());
+}
+
+TEST_F(SelectionTest, DragUnderFivePixelsLeavesRectangleOpen) {
+    const QPointF start = screen({8.0, 8.0});
+    // Drag 3 pixels to the right, under the 5 pixel threshold.
+    dragScreen(start, start + QPointF{3.0, 0.0});
+    EXPECT_EQ(prompt(), "Specify opposite corner:");
+    // Second stationary click closes it.
+    click({22.0, 22.0});
+    EXPECT_EQ(prompt(), "Command:");
+    EXPECT_EQ(selection().size(), 1U);
+}
+
+TEST_F(SelectionTest, DragDuringPointPromptHasNoEffectOnRelease) {
+    const std::size_t before = document().entityCount();
+    enter("LINE");
+    EXPECT_EQ(prompt(), "Specify first point:");
+    // Drag press specifies the first point; release does not specify a second point.
+    drag({10.0, 10.0}, {50.0, 50.0});
+    EXPECT_EQ(prompt(), "Specify next point:");
+    // Enter without a second point finishes LINE without creating entities.
+    events::press(view(), Qt::Key_Return);
+    EXPECT_EQ(prompt(), "Command:");
+    EXPECT_EQ(document().entityCount(), before);
 }
 
 }  // namespace

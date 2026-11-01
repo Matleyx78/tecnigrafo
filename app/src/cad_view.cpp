@@ -21,6 +21,9 @@ namespace {
 // Zoom factor applied for one standard wheel notch (120 units).
 constexpr double kZoomPerNotch = 1.2;
 constexpr double kWheelNotch = 120.0;
+// Minimum pointer movement to consider a mouse press and release a drag
+// gesture (AutoCAD's PICKDRAG = 2, docs/tappe/0.7/P12-finestra-trascinamento.md).
+constexpr double kDragThresholdPixels = 5.0;
 
 core::Vec2 toVec2(const QPointF& point) {
     return {point.x(), point.y()};
@@ -134,10 +137,13 @@ void CadView::wheelEvent(QWheelEvent* event) {
 
 void CadView::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
+        const bool hadRectangle = m_runner.selectionRectangle().has_value();
         const cmd::PickAction action = event->modifiers().testFlag(Qt::ShiftModifier)
                                            ? cmd::PickAction::Remove
                                            : cmd::PickAction::Add;
         m_runner.click(toWorld(event->position()), action);
+        m_leftPressPos = event->position();
+        m_dragSelecting = !hadRectangle && m_runner.selectionRectangle().has_value();
         update();
         emit inputHandled();
         event->accept();
@@ -174,6 +180,22 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void CadView::mouseReleaseEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton && m_dragSelecting) {
+        m_dragSelecting = false;
+        const double dx = event->position().x() - m_leftPressPos.x();
+        const double dy = event->position().y() - m_leftPressPos.y();
+        const double distance = std::hypot(dx, dy);
+        if (distance > kDragThresholdPixels && m_runner.selectionRectangle()) {
+            const cmd::PickAction action = event->modifiers().testFlag(Qt::ShiftModifier)
+                                               ? cmd::PickAction::Remove
+                                               : cmd::PickAction::Add;
+            m_runner.click(toWorld(event->position()), action);
+            update();
+            emit inputHandled();
+            event->accept();
+            return;
+        }
+    }
     if (event->button() == Qt::MiddleButton && m_panning) {
         m_panning = false;
         setCursor(Qt::CrossCursor);

@@ -77,7 +77,9 @@ private:
     render::Viewport m_viewport;
     render::SceneStyle m_style;
     QPointF m_lastPanPos;
+    QPointF m_leftPressPos;
     bool m_panning{false};
+    bool m_dragSelecting{false};
     bool m_initialFitDone{false};
 };
 
