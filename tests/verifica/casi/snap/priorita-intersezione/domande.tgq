@@ -1,0 +1,51 @@
+; Priorita di snap e spareggio a pari distanza per intersezione (0.7-P15, ADR 0033 punto 5)
+
+; cambia con #359
+
+; 1. Estremo contro Intersezione a pari distanza (vince Estremo)
+; L1 e L2 si incrociano a X in 0,0 (estremi e medi distanti > 4). L3 ha estremo iniziale in 2,0.
+; Dal puntatore (1,0) sia l'intersezione (0,0) che l'estremo (2,0) distano esattamente 1.0.
+L1 = LINE start=-5,-5 end=5,5
+L2 = LINE start=-5,5 end=5,-5
+L3 = LINE start=2,0 end=10,0
+
+? snap 1,0 aperture=1.5 modes=endpoint,intersection -> Endpoint 2,0
+; Spegnendo estremo, viene presa l'intersezione
+? snap 1,0 aperture=1.5 modes=intersection -> Intersection 0,0
+
+; 2. La distanza minore vince sulla priorita del tipo
+; In 0.8,0 la distanza dall'intersezione (0,0) e 0.8, dall'estremo (2,0) e 1.2
+? snap 0.8,0 aperture=1.5 modes=endpoint,intersection -> Intersection 0,0
+
+; 3. Intersezione contro Medio a pari distanza (vince Intersezione)
+; L4 e L5 si incrociano in 50,0 con medi distanti > 4 dal puntatore (51,0).
+; L6 ha punto medio in 52,0 (da 52,-5 a 52,5).
+; Dal puntatore (51,0) sia l'intersezione (50,0) che il medio (52,0) distano 1.0.
+L4 = LINE start=40,-10 end=55,5
+L5 = LINE start=40,10 end=55,-5
+L6 = LINE start=52,-5 end=52,5
+
+? snap 51,0 aperture=1.5 modes=midpoint,intersection -> Intersection 50,0
+; Spegnendo intersezione, viene preso il medio
+? snap 51,0 aperture=1.5 modes=midpoint -> Midpoint 52,0
+
+; 4. Intersezione contro Quadrante a pari distanza (vince Intersezione)
+; L7 e L8 si incrociano in 100,0 con medi distanti > 4 dal puntatore (101,0).
+; C1 ha quadrante a 270° in 102,0 (centro 102,5 raggio 5).
+; Dal puntatore (101,0) sia l'intersezione (100,0) che il quadrante (102,0) distano 1.0.
+L7 = LINE start=90,-10 end=105,5
+L8 = LINE start=90,10 end=105,-5
+C1 = CIRCLE center=102,5 radius=5
+
+? snap 101,0 aperture=1.5 modes=intersection,quadrant -> Intersection 100,0
+; Spegnendo intersezione, viene preso il quadrante
+? snap 101,0 aperture=1.5 modes=quadrant -> Quadrant 102,0
+
+; 5. Centro quando nessun punto candidato e entro l'apertura
+; Cerchio con centro in 150,50 e raggio 10; linea che lo attraversa da 135,50 a 165,50.
+; Intersezioni in 140,50 e 160,50. In 150,60.2 il puntatore passa sulla curva del cerchio.
+; La distanza dalle intersezioni e > 14, fuori dall'apertura 2.
+C_CEN = CIRCLE center=150,50 radius=10
+L_CEN = LINE start=135,50 end=165,50
+
+? snap 150,60.2 aperture=2 modes=center,intersection -> Center 150,50

@@ -1,0 +1,78 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,10
+  258 LINE start=0,10 end=10,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,10
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+pointer: 5.1,5.1
+active snap: Intersection 5,5
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=10,10
+  258 LINE start=0,10 end=10,0
+  259 LINE start=5,5 end=20,5
+messages:
+  Specify next point or [Undo]: 20,5
+  Specify next point or [Undo]:
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: endpoint midpoint center insertion perpendicular tangent quadrant
+ortho: off
+pointer: 5.1,5.1
+active snap: Intersection 5,5
+statistics:
+  LINE 3
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,10
+  258 LINE start=0,10 end=10,0
+  259 LINE start=5,5 end=20,5
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: endpoint midpoint center insertion perpendicular tangent quadrant
+ortho: off
+pointer: 5.1,5.1
+active snap: none
+statistics:
+  LINE 3
