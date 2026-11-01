@@ -1,0 +1,4 @@
+# 0.7-R17: curva parallela (#363)
+curva-parallela/entita-base #363
+curva-parallela/polilinee-semplici #363
+curva-parallela/casi-limite #363

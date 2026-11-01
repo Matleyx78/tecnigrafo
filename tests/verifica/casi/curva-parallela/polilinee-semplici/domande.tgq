@@ -1,0 +1,43 @@
+; Curva parallela: polilinee semplici aperte e chiuse con archi e larghezze
+; [0.7-R17] #362, lavoro [0.7-P17] #363: domanda `offset`
+; (docs/verifica/domande.md, "Curva parallela"; ADR 0035, punti 10-12; solid-space ADR 0012).
+; Valori attesi conformi all'archivio dei casi di solid-space (parallela-polilinea-autocad-caso-*,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Rettangolo chiuso (caso d di autocad-offset.dxf, richiesta #22 caso 1) ---
+; parallela-polilinea-autocad-caso-d-rettangolo-dentro.json e -fuori.json
+P_RECT = LWPOLYLINE closed=yes vertex=150,-25 vertex=250,-25 vertex=250,25 vertex=150,25
+; verso l'interno (punto nel rettangolo, ad es. 200,0): ridotto di d=10
+? offset P_RECT 10 200,0 -> LWPOLYLINE closed=yes vertex=160,-15 vertex=240,-15 vertex=240,15 vertex=160,15
+; verso l'esterno (punto fuori, ad es. 200,-35): allargato di d=10
+? offset P_RECT 10 200,-35 -> LWPOLYLINE closed=yes vertex=140,-35 vertex=260,-35 vertex=260,35 vertex=140,35
+
+; --- Asola chiusa con due segmenti e due semicerchi (caso e di autocad-offset.dxf, richiesta #22 caso 2) ---
+; parallela-polilinea-autocad-caso-e-asola-dentro.json e -fuori.json
+P_SLOT = LWPOLYLINE closed=yes vertex=300,-10 vertex=340,-10 bulge=1 vertex=340,10 vertex=300,10 bulge=1
+; verso l'interno d=4: semicerchi ridotti a raggio 6 (bulge 1)
+? offset P_SLOT 4 320,0 -> LWPOLYLINE closed=yes vertex=300,-6 vertex=340,-6 bulge=1 vertex=340,6 vertex=300,6 bulge=1
+; verso l'esterno d=4: semicerchi allargati a raggio 14 (bulge 1)
+? offset P_SLOT 4 320,-20 -> LWPOLYLINE closed=yes vertex=300,-14 vertex=340,-14 bulge=1 vertex=340,14 vertex=300,14 bulge=1
+
+; --- Polilinea aperta a L ---
+P_L = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10
+; verso l'interno dell'angolo (a sinistra, ad es. 5,5) d=2
+? offset P_L 2 5,5 -> LWPOLYLINE closed=no vertex=0,2 vertex=8,2 vertex=8,10
+; verso l'esterno dell'angolo (a destra, ad es. 5,-5) d=2
+? offset P_L 2 5,-5 -> LWPOLYLINE closed=no vertex=0,-2 vertex=12,-2 vertex=12,10
+
+; --- Polilinea aperta con arco ---
+; segmento (0,0)-(10,0) seguito da semicerchio bulge=1 fino a (20,0)
+P_ARC = LWPOLYLINE vertex=0,0 vertex=10,0 bulge=1 vertex=20,0
+; verso l'alto (a sinistra del primo segmento) d=2
+? offset P_ARC 2 5,5 -> LWPOLYLINE closed=no vertex=0,2 vertex=10,2 bulge=1 vertex=20,2
+
+; --- Conservazione delle larghezze (ADR 0035, punto 11) ---
+; larghezza costante
+P_CONST_W = LWPOLYLINE width=0.5 vertex=0,0 vertex=10,0 vertex=10,10
+? offset P_CONST_W 2 5,5 -> LWPOLYLINE closed=no width=0.5 vertex=0,2 vertex=8,2 vertex=8,10
+
+; larghezze per segmento
+P_SEG_W = LWPOLYLINE vertex=0,0 start-width=1 end-width=2 vertex=10,0 vertex=10,10
+? offset P_SEG_W 2 5,5 -> LWPOLYLINE closed=no vertex=0,2 start-width=1 end-width=2 vertex=8,2 vertex=8,10
