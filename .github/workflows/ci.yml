@@ -107,6 +107,29 @@ jobs:
           set -o pipefail
           git ls-files '*.cpp' '*.hpp' | xargs clang-format-18 --dry-run --Werror 2>&1 | scripts/ci-annota.sh
 
+  # The Python tools of the maintainer (scripts/dipendenze.py), on the oldest
+  # Python they support (docs/tappe/fuori-tappa/F4-dipendenze.md).
+  scripts:
+    name: Scripts (Python)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test the scripts
+        run: |
+          mkdir -p build
+          status=0
+          python3 -m unittest discover -s scripts -p '*_test.py' -v > build/scripts.log 2>&1 || status=$?
+          cat build/scripts.log
+          if [ "$status" -ne 0 ]; then
+            scripts/ci-annota.sh --coda 'Scripts (Python)' build/scripts.log
+          fi
+          exit "$status"
+
   linux:
     name: Linux (GCC, clang-tidy)
     needs: changes
