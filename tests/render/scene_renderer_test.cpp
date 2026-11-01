@@ -99,7 +99,7 @@ TEST(SceneRendererGrips, FilledSquaresKeepTheirPixelSizeAtEveryZoom) {
         ASSERT_EQ(painter.fills.size(), 3U);
         EXPECT_EQ(painter.fillColors, (std::vector<Color>{style.grip, style.grip, style.hotGrip}));
         for (std::size_t i = 0; i < painter.fills.size(); ++i) {
-            const auto center = viewport.worldToScreen(grips[i % grips.size()]);
+            const auto center = viewport.worldToScreen(grips.at(i % grips.size()));
             const auto& square = painter.fills[i];
             ASSERT_EQ(square.size(), 4U);
             expectPoint(square[0], center + core::Vec2{-6.0, -6.0});

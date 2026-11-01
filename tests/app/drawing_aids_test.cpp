@@ -62,7 +62,7 @@ protected:
         m_window.show();
         m_window.activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
-        constexpr std::array names{
+        constexpr std::array kNames{
             "aids.osnap",
             "aids.ortho",
             "aids.snap.endpoint",
@@ -74,7 +74,7 @@ protected:
             "aids.snap.tangent",
             "aids.snap.quadrant",
         };
-        for (const char* name : names) {
+        for (const char* name : kNames) {
             ASSERT_NE(action(name), nullptr) << name;
         }
         ASSERT_NE(button("osnapButton"), nullptr);
@@ -284,7 +284,10 @@ TEST_F(DrawingAidsTest, PolarOverlayFollowsTheRunnerAndYieldsToObjectSnap) {
     enter("30,22");
     moveScreen(screen({70.0, 24.0}));
     const auto polar = runner().activePolar();
-    ASSERT_TRUE(polar);
+    if (!polar) {
+        ADD_FAILURE() << "Expected an active polar ray";
+        return;
+    }
     EXPECT_EQ(polar->base, kFirst);
     EXPECT_EQ(polar->point, (core::Vec2{70.0, 22.0}));
     EXPECT_GT(markerPixels(), 0U);  // dashed ray and its hint
