@@ -410,7 +410,7 @@ TEST_F(SelectionTest, DragDuringPointPromptHasNoEffectOnRelease) {
     EXPECT_EQ(prompt(), "Specify first point:");
     // Drag press specifies the first point; release does not specify a second point.
     drag({10.0, 10.0}, {50.0, 50.0});
-    EXPECT_EQ(prompt(), "Specify next point:");
+    EXPECT_EQ(prompt(), "Specify next point or [Undo]:");
     // Enter without a second point finishes LINE without creating entities.
     events::press(view(), Qt::Key_Return);
     EXPECT_EQ(prompt(), "Command:");
