@@ -40,7 +40,6 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
-#include <array>
 #include <cassert>
 #include <string>
 #include <string_view>
@@ -283,19 +282,11 @@ void MainWindow::connectDrawingAids() {
 
     // Connected after the initial states are set, so that starting the
     // program writes nothing in the history.
-    const std::array switches{
-        m_objectSnapAction,
-        m_endpointAction,
-        m_midpointAction,
-        m_centerAction,
-        m_insertionAction,
-        m_intersectionAction,
-        m_perpendicularAction,
-        m_tangentAction,
-        m_quadrantAction,
-    };
-    for (QAction* action : switches) {
-        connect(action, &QAction::toggled, this, &MainWindow::applyDrawingAids);
+    for (QAction* action : m_actions->actions()) {
+        const bool snapMode = action->objectName().startsWith(QStringLiteral("aids.snap."));
+        if (snapMode || action == m_objectSnapAction) {
+            connect(action, &QAction::toggled, this, &MainWindow::applyDrawingAids);
+        }
     }
     // The switches are echoed in the history, as AutoCAD does.
     connect(m_objectSnapAction, &QAction::toggled, this, [this](bool on) {
