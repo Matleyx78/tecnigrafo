@@ -2,6 +2,26 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-10-29
+- **Corretto:** 2026-11-01 — su decisione del responsabile, dopo due decisioni
+  di solid-space prese realizzando o rivedendo il contratto; nessun codice unito attua
+  ancora questo ADR (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)).
+  (1) `fillet` e `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio
+  (dato 2) anche quando il centro del cerchio, o lo spigolo del raggio 0, cade
+  oltre 2^50: due rette quasi parallele che si incontrano lontanissimo
+  ([Matleyx78/solid-space#66](https://github.com/Matleyx78/solid-space/issues/66),
+  [#70](https://github.com/Matleyx78/solid-space/issues/70),
+  [#122](https://github.com/Matleyx78/solid-space/pull/122),
+  [#126](https://github.com/Matleyx78/solid-space/pull/126); ADR 0011 di
+  solid-space, righe **Corretto:**). Il raccordo, il cerchio o lo spigolo
+  esistono ma non si rappresentano: `FILLET`, `CIRCLE` *Ttr* e `CHAMFER` (lo
+  spigolo che `intersect` omette oltre il dominio) lo dicono con un messaggio
+  proprio, distinto da "non esiste" e da "parallele", e nessuna entità cambia;
+  un raggio scritto dall'utente oltre 2^50 resta un dato fuori dal dominio
+  (punto 23) (punti 13–15). (2) Una curva parallela può mancare anche nei casi
+  semplici di una polilinea, per un arco quasi intero che solid-space non
+  rappresenta
+  ([Matleyx78/solid-space#127](https://github.com/Matleyx78/solid-space/issues/127))
+  (punto 12).
 
 ## Contesto
 
@@ -161,7 +181,10 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       la copia esatta resta più lontana della tolleranza della regola (ADR
       0036) da se stessa e dalla polilinea di partenza. La copia c'è sempre, è
       quella esatta entro l'errore dichiarato da solid-space e non si
-      interseca;
+      interseca; unica eccezione, un arco vicino al giro intero con una corda
+      di pochi ulp, che nessun bulge rappresenta entro l'errore: nessuna
+      copia, con il messaggio di AutoCAD (Matleyx78/solid-space#127, corretto
+      il 2026-11-01);
     - **negli altri casi**: o una copia senza autointersezioni che non incontra
       la polilinea di partenza, o nessuna copia con il messaggio di AutoCAD. Mai
       una copia sbagliata. Il risultato può differire da quello di AutoCAD: nel
@@ -194,16 +217,29 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       raggio 0.
 
     Le risposte "non esiste", "infiniti raccordi" e "il punto non indica un
-    lato" di solid-space diventano messaggi; nessuna entità cambia. Fuori: il
-    raccordo tra una polilinea e un'altra entità.
+    lato" di solid-space diventano messaggi; nessuna entità cambia. Lo stesso
+    per "oltre il dominio": il centro del raccordo, o lo spigolo del raggio 0,
+    cade oltre 2^50 (due rette quasi parallele). Il raccordo esiste ma non si
+    rappresenta, quindi il messaggio è suo, distinto da "non esiste"; con
+    *Polyline* il vertice resta com'è e si conta tra i troppo corti. Un raggio
+    scritto oltre 2^50 è invece un dato fuori dal dominio (punto 23): la
+    facciata lo riconosce prima di chiedere il raccordo a solid-space
+    (corretto il 2026-11-01). Fuori: il raccordo tra una polilinea e
+    un'altra entità.
 14. **`CIRCLE` tangente-tangente-raggio** usa `tangentCircleNear` di
     solid-space: il cerchio con i punti di tangenza più vicini ai due punti
-    indicati. Per una polilinea vale il segmento più vicino al punto.
+    indicati. Per una polilinea vale il segmento più vicino al punto. Un
+    cerchio il cui centro cadrebbe oltre 2^50 (due rette quasi parallele) non
+    si disegna, con il messaggio del punto 13 per "oltre il dominio"
+    (corretto il 2026-11-01).
 15. **`CHAMFER`.** Opzioni *Undo*, *Polyline*, *Distance*, *Angle*, *Trim*,
     *mEthod* e *Multiple*. Lavora su linee e segmenti dritti di polilinee.
     - Lo spigolo è il punto comune delle due rette, deciso da solid-space
       (`intersect` con le curve prolungate); due rette parallele o coincidenti
-      non hanno spigolo e danno il messaggio di AutoCAD.
+      non hanno spigolo e danno il messaggio di AutoCAD. Due rette quasi
+      parallele il cui spigolo cade oltre 2^50, che `intersect` omette e conta,
+      danno il messaggio del punto 13 per "oltre il dominio": è lo stesso caso
+      del raccordo di raggio 0 (corretto il 2026-11-01).
     - Lo smusso lo costruisce Tecnigrafo (ADR 0011 di solid-space, punto 11): i
       suoi estremi stanno alle distanze date dallo spigolo, ciascuno sulla
       parte della sua linea che il punto indica, cioè dalla parte dello spigolo

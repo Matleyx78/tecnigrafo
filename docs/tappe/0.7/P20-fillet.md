@@ -9,7 +9,7 @@
 - **Dipende da:** P18, P19, R20
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
-  punti 13, 14, 16, 21 e 22; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
+  punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
   punto 8; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md) punto 6;
   `core/include/tg/core/fillet.hpp` (P19), `core/include/tg/core/tolerance.hpp`
   (P14); `cmd/src/commands/circle_command.cpp`;
@@ -45,7 +45,9 @@ Select 2D polyline or [Radius]:
 - Gli oggetti sono richieste di oggetto (`PromptKind::Object`). `Shift` sul
   secondo vale raggio 0. Il raggio è una richiesta di distanza: negativo dà
   `Value must be positive.` e la domanda resta; 0 vale lo spigolo (ADR 0036,
-  punto 6).
+  punto 6). Un raggio oltre il dominio di solid-space si accetta come gli
+  altri: è `fillet` a dare `None` (P19, ADR 0035 punto 23), e nessun controllo
+  in più nel comando.
 - Il risultato viene da `fillet`, `filletSegments` (due punti sulla stessa
   polilinea) o `filletPolyline` (*Polyline*), con `ToleranceRule::of` del
   documento:
@@ -55,8 +57,14 @@ Select 2D polyline or [Radius]:
     16);
   - `None`, `InfinitelyMany`, `AmbiguousPick` e `NotAllowed`: il messaggio
     inglese di AutoCAD (da controllare, ADR 0035 punto 22) e nessuna modifica;
+  - `OutOfDomain` (due rette quasi parallele, il centro del raccordo o lo
+    spigolo oltre il dominio di solid-space): `Lines are nearly parallel.` e
+    nessuna modifica. Il messaggio è di Tecnigrafo, nello stile di quelli di
+    AutoCAD (`Lines are parallel.` di `CHAMFER`): il caso nasce dal dominio di
+    solid-space, e la prova in AutoCAD non lo copre;
   - *Polyline* scrive `<n> lines were filleted` e, se ce ne sono,
-    `<m> were too short` (da controllare come sopra).
+    `<m> were too short` (da controllare come sopra); i vertici rimasti per
+    `OutOfDomain` sono tra questi (P19).
 - *Multiple* ripete finché non si preme Invio; *Undo* torna all'ultimo punto di
   ripristino.
 - **Sequenze:**
@@ -73,8 +81,10 @@ Specify radius of circle <{default}>:
 ```
 
 Le due domande sono richieste di oggetto; il cerchio viene da
-`circleTangentTangentRadius`; senza soluzione, `Circle does not exist.` e il
-comando finisce senza disegnare.
+`circleTangentTangentRadius`; senza soluzione (anche con un raggio oltre il
+dominio, che dà `None`), `Circle does not exist.` e il comando finisce senza
+disegnare; con `OutOfDomain`, `Lines are nearly parallel.` e il comando finisce
+allo stesso modo.
 
 ## Regole della tappa che valgono qui
 
@@ -91,6 +101,9 @@ comando finisce senza disegnare.
 - I casi di `autocad-raccordi.dxf` per `FILLET` e *Ttr*, nelle due sequenze.
 - Raggio 0, `Shift`, parallele, *Polyline*, *Trim No*, *Multiple*, *Undo*,
   impossibile, punto ambiguo, proprietà dell'arco; annulla e ripeti.
+- Rette quasi parallele (i dati di P19) in `FILLET`, anche con `Shift`, e in
+  *Ttr*: il messaggio e nessuna modifica; un raggio oltre il dominio (2e15):
+  il messaggio del raccordo impossibile e `Circle does not exist.`.
 
 ## Fatto quando
 

@@ -49,7 +49,7 @@ Il contratto accettato con l'ADR 0012 di solid-space:
 enum class OffsetOutcome : std::uint8_t {
     Done,      ///< `entity` holds the copy
     Vanished,  ///< nothing is left at that distance
-    Failed,    ///< a polyline copy that cannot be made without self-intersections
+    Failed,    ///< solid-space could not make the copy (its outcome failed)
     NoSide,    ///< the side point lies exactly on the line or circle
 };
 
@@ -77,7 +77,12 @@ struct OffsetResult {
   tipo: la linea con i suoi due estremi nuovi; il cerchio con il nuovo raggio;
   l'arco con il nuovo raggio e **gli stessi angoli** dell'arco di partenza
   (solid-space tiene angolo iniziale e ampiezza, ADR 0012 di solid-space,
-  punto 3). `vanished` dà `Vanished`.
+  punto 3). `vanished` dà `Vanished`; `failed` dà `Failed`. Dalla decisione
+  di Matleyx78/solid-space#127 `offsetCurve` può dare `failed` per un arco
+  quasi intero che i suoi estremi arrotondati e un bulge non rappresentano
+  entro l'errore; il contratto lo dà solo per un `PolylineSegment` curvo, e
+  qui un arco arriva come `Arc` (`bridge::curveOf`), quindi per linea, arco e
+  cerchio non capita e non serve un test che lo provochi.
 - **Polilinea:** `offsetPolyline` con la regola del documento
   (`bridge::policyOf`). Il risultato torna una polilinea aperta o chiusa come
   quella di partenza, con le posizioni e i bulge di solid-space e, per ogni
@@ -89,7 +94,8 @@ struct OffsetResult {
     restano quelle della polilinea di partenza.
 
   `done` dà `Done` con `simple`; `vanished` dà `Vanished`; `failed` dà
-  `Failed`, qualunque sia il motivo.
+  `Failed`, qualunque sia il motivo (anche `notRepresentable`, aggiunto da
+  Matleyx78/solid-space#127).
 - Una diagnosi di solid-space (dati fuori dal dominio, polilinea senza pezzi)
   dà `Failed`.
 - La domanda `offset` del catalogo, con le risposte scritte lì.

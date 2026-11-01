@@ -13,10 +13,10 @@
   solid-space lo avrà (ADR 0030, punto 13)
 - **Modulo:** `core` (più le domande in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
-  punti 1, 2, 13 e 14; [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
+  punti 1, 2, 13, 14 e 23; [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
   punti 4 e 5 (tangente); [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
   punto 5; l'[ADR 0011 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0011-raccordi-e-tangenze-nel-piano.md)
-  (Decisione); in `third_party/solid-space` l'intestazione qui sotto;
+  (Decisione e righe **Corretto:**); in `third_party/solid-space` l'intestazione qui sotto;
   [dxf-di-prova.md](dxf-di-prova.md) (`autocad-raccordi.dxf`);
   `core/include/tg/core/intersections.hpp`, `tolerance.hpp`,
   `core/src/solid_space_bridge.hpp` (P14); `core/include/tg/core/curve_parts.hpp`
@@ -59,6 +59,10 @@ enum class CornerOutcome : std::uint8_t {
     InfinitelyMany,  ///< the curves lie on one line or circle, or similar
     AmbiguousPick,   ///< a pick lies exactly on the other curve's line or circle
     NotAllowed,      ///< an entity the command does not take
+    /// It exists, but beyond solid-space's domain: a centre or a corner
+    /// farther than robust::kMaxCoordinate (two almost parallel lines that
+    /// meet very far away).
+    OutOfDomain,
 };
 
 /// The result of FILLET and CHAMFER on two entities.
@@ -74,7 +78,8 @@ struct CornerResult {
 
 /// FILLET of two different entities, each a Line, an Arc or a Circle, picked
 /// at the given points (docs/adr/0035, point 13). Radius 0 gives the corner.
-/// Anything else: NotAllowed. Precondition: radius finite and >= 0.
+/// Anything else: NotAllowed. A radius beyond robust::kMaxCoordinate: None
+/// (docs/adr/0035, point 23). Precondition: radius finite and >= 0.
 [[nodiscard]] CornerResult fillet(const Entity& first, const Vec2& pickFirst,
                                   const Entity& second, const Vec2& pickSecond,
                                   double radius, bool trim, const ToleranceRule& rule);
@@ -99,7 +104,8 @@ struct PolylineCorners {
 
 /// CIRCLE Ttr (docs/adr/0035, point 14): the circle of `radius` tangent to
 /// both, nearest the picks; for a polyline its segment nearest the pick. A
-/// text: NotAllowed.
+/// text: NotAllowed. A radius beyond robust::kMaxCoordinate: None
+/// (docs/adr/0035, point 23).
 struct TangentCircleResult {
     CornerOutcome outcome{CornerOutcome::None};
     std::optional<Circle> circle;  ///< with Done
@@ -122,6 +128,22 @@ struct TangentCircleResult {
 - **Il raccordo** viene da `fillet` di solid-space, con le sue regole
   (semicerchio tra parallele, raggio 0, lato dai punti, arco più corto). Gli
   esiti `none`, `infinitelyMany` e `ambiguousPick` danno l'esito omonimo.
+- **Oltre il dominio** (ADR 0035, punti 13 e 14, corretti il 2026-11-01;
+  ADR 0011 di solid-space, righe **Corretto:**): `fillet` e `tangentCircleNear`
+  danno la diagnosi `outOfDomain` sul raggio (dato 2) anche quando il centro
+  del cerchio, o lo spigolo del raggio 0, cade oltre `kMaxCoordinate`: due
+  rette quasi parallele che si incontrano lontanissimo. Il raccordo esiste, ma
+  non si rappresenta. Per non confonderlo con un raggio scritto oltre il
+  dominio, che dà la stessa diagnosi:
+  - un raggio oltre `solid_space::robust::kMaxCoordinate` (lo stesso
+    confronto di solid-space: il dominio arriva a `kMaxCoordinate` compreso)
+    dà `None` senza chiamare solid-space: è un dato fuori dal dominio (ADR
+    0035, punto 23);
+  - con un raggio nel dominio, `outOfDomain` sul dato 2 dà `OutOfDomain`;
+  - ogni altra diagnosi (una curva o un punto fuori dal dominio, una linea di
+    lunghezza zero) dà `None` (ADR 0035, punto 23).
+
+  Vale per `fillet`, `filletSegments` e `circleTangentTangentRadius`.
 - **Le entità che risultano:** ciascuna curva si porta al suo punto di
   tangenza con `partOf` (P15), tenendo la parte che il punto indicato mostra:
   - se il punto di tangenza è prima della fine nella parte tenuta, la curva si
@@ -136,8 +158,9 @@ struct TangentCircleResult {
   degenere l'arco di raccordo, il risultato è quello del raggio 0 (spigolo).
 - **`filletPolyline`:** per ogni vertice, `fillet` sui due segmenti che vi
   arrivano (per una polilinea aperta, solo i vertici interni); un vertice i cui
-  punti di tangenza non cadono dentro i due segmenti, o un raccordo che non
-  esiste, resta com'è e conta in `tooShort`.
+  punti di tangenza non cadono dentro i due segmenti, un raccordo che non
+  esiste, o uno che esiste oltre il dominio (`OutOfDomain`, un vertice a
+  forcina quasi chiusa), resta com'è e conta in `tooShort`.
 - **Snap a tangente** in `findSnap`: con `modes.tangent` e `from`, i punti di
   `tangentPoints(from, …)` entro l'apertura, con le priorità dell'ADR 0033,
   punto 5.
@@ -162,6 +185,15 @@ struct TangentCircleResult {
 - Raccordo impossibile; archi concentrici (`InfinitelyMany`); punto sulla retta
   dell'altra curva (`AmbiguousPick`); raggio 0; parallele; *Trim* falso;
   cerchio; linea che si prolunga fino al punto di tangenza; arco degenere.
+- Oltre il dominio: due rette quasi parallele, per esempio da 0,0 a 1,0 e da
+  0,1 a 1,1.0000000000000002 (pendenza 2^-52, si incontrano a x = −2^52),
+  danno `OutOfDomain` con raggio 1 e con raggio 0 in `fillet`, e con raggio 1
+  in `circleTangentTangentRadius`; due segmenti consecutivi a forcina quasi
+  chiusa, per esempio i vertici 10,0, 0,0 e 10,1e-15 con raggio 1 (centro a
+  circa 2e16 dal vertice), danno `OutOfDomain` in `filletSegments` e contano
+  in `tooShort` in `filletPolyline`; un raggio di 2e15, oltre `kMaxCoordinate`,
+  tra due linee perpendicolari dà `None` in `fillet` e in
+  `circleTangentTangentRadius`.
 - Due segmenti consecutivi e non consecutivi di una polilinea; `filletPolyline`
   su un rettangolo e con un segmento troppo corto.
 - Tangenti da fuori, sul cerchio, da dentro; snap a tangente senza `from`.
