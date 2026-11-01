@@ -15,6 +15,8 @@
   Matleyx78/solid-space#129), che comprende gli altri tra le sue dipendenze
   (Matleyx78/solid-space#63). Prima di #130 `offsetCurve` sbaglia in silenzio
   sugli archi quasi interi (Matleyx78/solid-space#127)
+- **Corretta:** 2026-11-01, con la decisione del responsabile sul buco B5 della
+  #464 ([DECISIONI.md](../../DECISIONI.md))
 - **Modulo:** `core` (più la domanda `offset` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 10–12; l'[ADR 0012 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0012-curva-parallela-nel-piano.md)
@@ -74,6 +76,13 @@ struct OffsetResult {
 - **Lato** (ADR 0035, punto 10): `sideOf(entity, sidePoint)` (P14), che per una
   polilinea usa il segmento più vicino al punto. `Left` dà la distanza
   positiva, `Right` negativa, `On` dà `NoSide` senza chiamare solid-space.
+  Quando `sideOf` non dà un lato per un'entità che non è un testo (una curva
+  esattamente puntiforme, una polilinea senza segmenti o con soli segmenti
+  puntiformi, dati che solid-space rifiuta), l'esito è `Failed`, senza
+  chiamare solid-space (B5): `NoSide` resta solo per `Side::On`. La
+  precondizione non cambia. È coerente con solid-space, che per un segmento
+  puntiforme dà la diagnosi di curva degenere e rifiuta i dati fuori dal
+  dominio, due casi che danno già `Failed`.
   Per un segmento di polilinea il lato è rispetto a quel segmento, e la
   distanza con segno vale per tutta la polilinea, che segue il verso dei
   vertici.
@@ -116,7 +125,9 @@ struct OffsetResult {
 ## Test richiesti
 
 - Linea, cerchio e arco dai due lati; arco e cerchio che si annullano (distanza
-  uguale al raggio); punto esattamente sulla curva (`NoSide`).
+  uguale al raggio); punto esattamente sulla curva (`NoSide`);
+  `Line[(0,0),(0,0)]` con distanza 1 e lato (0,1), e una polilinea senza
+  segmenti (`Failed`).
 - I casi di `autocad-offset.dxf` e quelli della richiesta
   Matleyx78/solid-space#22 (ADR 0012 di solid-space, "I casi della
   richiesta"), passando dalle entità.
