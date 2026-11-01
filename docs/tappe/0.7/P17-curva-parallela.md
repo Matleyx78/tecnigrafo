@@ -8,7 +8,7 @@
 - **Riferimenti:** issue `[0.7-R17]` (#…), agente gemini: la facciata (lato,
   esiti, polilinee, larghezze, unità); i valori geometrici dall'archivio dei
   casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#130, R17. La richiesta
+- **Dipende da:** P14, Matleyx78/solid-space#130, P25, R17. La richiesta
   Matleyx78/solid-space#22 è diventata i pacchetti di solid-space che
   realizzano `offset.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P19
   (Matleyx78/solid-space#130, bulge ricostruito, riferimenti

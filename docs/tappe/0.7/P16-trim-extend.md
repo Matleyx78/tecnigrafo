@@ -8,7 +8,7 @@
 - **Riferimenti:** issue `[0.7-R16]` (#…), agente gemini-argon (Gemini 4 Argon; valori
   da `autocad-taglio.dxf`; i punti che stanno nell'archivio dei casi di
   solid-space si prendono da lì)
-- **Dipende da:** P1, P8, P15, R16
+- **Dipende da:** P1, P8, P15, P25, R16
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 3–8, 21 e 22; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)

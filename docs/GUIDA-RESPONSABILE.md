@@ -112,16 +112,34 @@ Vale per **ogni** pull request, nei due repository.
 1. Apri la pull request su GitHub. In basso tutti i controlli devono essere
    verdi.
 2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
-3. Premi **Squash and merge**.
-4. Nel messaggio che compare, controlla che l'ultima riga sia:
+3. In solid-space, se la descrizione comincia con **Revisione del contratto: da
+   fare**, la pull request cambia un'intestazione del contratto già accettata:
+   uniscila solo dopo il commento **Verbale della revisione del contratto**, di
+   un agente diverso da chi l'ha scritta (di norma Codex; Claude se l'ha
+   scritta Codex). Se manca, avvia la revisione:
+
+   ```text
+   Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
+   lettera. Rivedi la pull request #<numero>, che porta "Revisione del
+   contratto: da fare", come dice docs/CONTRATTI.md in "Le correzioni del
+   contratto": verbale nella pull request e una issue contratto per ogni buco
+   nuovo. Non modificarla, non decidere il contratto e non scrivere in
+   Tecnigrafo. Poi fermati.
+   ```
+
+   Se il verbale apre buchi nuovi, decidili prima del merge: la decisione entra
+   nella stessa pull request, che si rivede di nuovo sulle sole funzioni
+   toccate.
+4. Premi **Squash and merge**.
+5. Nel messaggio che compare, controlla che l'ultima riga sia:
 
    ```text
    Signed-off-by: Matleyx78 <18114626+Matleyx78@users.noreply.github.com>
    ```
 
    Se manca, aggiungila tu.
-5. Premi **Confirm squash and merge**.
-6. Se ci sono altre pull request aperte nello stesso repository, su ognuna premi
+6. Premi **Confirm squash and merge**.
+7. Se ci sono altre pull request aperte nello stesso repository, su ognuna premi
    **Update branch**.
 
 Quando unisci il pacchetto di una tappa, guarda anche B11.
@@ -254,6 +272,8 @@ senza, lavorano lo stesso e lo dicono.
    richieste, ciascuna nella forma del file di scripts/richiesta.sh. Scrivi
    subito le schede dei pacchetti che non dipendono da solid-space; per gli
    altri metti solo la riga nella tabella, con "scheda dopo il contratto".
+   Se una scheda introduce tipi o funzioni nuove in core, aggiungi il
+   pacchetto di revisione delle interfacce (tappe/0000-modello.md, sezione 6).
    Elenca anche le issue con etichetta `idea` ancora aperte e dimmi quali,
    secondo te, potrebbero entrare in questa tappa e perché: le approvo io, una
    per una; quelle che approvo entrano nella scheda, le altre restano issue.
@@ -392,7 +412,10 @@ anche nei pacchetti rimasti della tappa 0.2 (Tecnigrafo 0.7).
    Non scrivere in Tecnigrafo.
    ```
 
-4. Leggi la pull request e uniscila con la CI verde (A3). Controlla che
+4. Anche questa pull request cambia il contratto: porta in testa **Revisione
+   del contratto: da fare**, e prima del merge la rivede con la lista un agente
+   diverso da chi l'ha scritta, di norma Claude se l'ha scritta Codex (A3,
+   punto 3). Leggi il verbale e uniscila con la CI verde. Controlla che
    `[X.Y-C]` e le issue dei buchi siano chiuse. **Solo allora passa a B4**.
    Nel piano di solid-space (B5) tutti i riferimenti e i pacchetti di lavoro
    che usano quelle intestazioni dipendono da `[X.Y-C]`.
@@ -408,12 +431,44 @@ contratto di solid-space, ora che la issue [<tappa-ss>-C] #<numero> è chiusa,
 sulle intestazioni accettate e riviste in solid-space, con le regole di
 docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni scheda dice quali intestazioni usa, il commit del contratto da cui parte e,
 se sposta il sottomodulo, a quale pacchetto di solid-space. Riferimenti
-limitati alla facciata e ai comandi.
+limitati alla facciata e ai comandi. Per le schede che introducono tipi o
+funzioni nuove in core aggiungi il pacchetto di revisione delle interfacce
+(docs/tappe/0000-modello.md, sezione 6), prima di loro nella tabella.
 Annota la modifica in "Modifiche al piano" e apri una pull request.
 ```
 
 La unisci (A3). Se la tappa è già aperta, rilancia poi lo script di B6: crea
 solo le issue nuove.
+
+**Revisione delle interfacce.** Le schede che introducono tipi o funzioni nuove
+in `core` si controllano con la lista di
+[docs/CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)
+(punti 1–11, con il 10 e l'11) **prima che i loro pacchetti partano**: lo fa il
+pacchetto di revisione della tabella, che quei pacchetti citano in "Dipende
+da" (vale per ogni piano, anche per le schede scritte in B1 senza contratto).
+
+1. Quando la sua issue esiste, avvia un agente di fascia forte con impegno
+   alto, diverso da chi ha scritto le schede (di norma Codex), con Tecnigrafo in
+   scrittura e solid-space in lettura:
+
+   ```text
+   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+   lettera. Prendi la issue [<tappa>-P<N>] #<numero>, revisione delle
+   interfacce, assegnata a te, e segui la sua scheda: verbale nella issue, con
+   un commento per ogni buco. Non correggere le schede e non scrivere in
+   solid-space. Poi fermati.
+   ```
+
+2. Leggi il verbale. Se non ci sono buchi, chiudi la issue: i pacchetti
+   partono.
+3. Se ci sono buchi, **decidi tu** ciascuno; poi, in una chat con Claude, fai
+   scrivere le decisioni in `docs/DECISIONI.md`, le correzioni delle schede e
+   una riga in "Modifiche al piano", in una pull request che chiude la issue
+   della revisione con `Closes #N`. Prima del merge falla rileggere con la lista
+   all'agente della revisione, sulle sole interfacce corrette (verbale nella
+   pull request), poi uniscila (A3).
+4. Un buco che sta nel contratto di solid-space e non nella scheda segue la
+   strada solita (C, buco nel contratto).
 
 ### B5. Preparare il piano di solid-space (tu e Claude)
 
@@ -795,6 +850,7 @@ chiuse.
 | Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
 | Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (B2). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |
 | Un agente di Tecnigrafo trova un buco nel contratto di solid-space | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto il testo della issue `contratto`: che cosa manca, un esempio con i dati, le scelte possibili, titolo con il nome dell'intestazione. La apri tu in solid-space e decidi lì; finché è aperta non parte nessun pacchetto che usa quell'intestazione. Fai applicare la decisione in solid-space e aggiorna le schede di Tecnigrafo interessate; poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
+| Un agente di Tecnigrafo trova un buco nella sua scheda: un'interfaccia di Tecnigrafo che intestazione, ADR e scheda non determinano, mentre il contratto di solid-space sì (come in #359) | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto che cosa manca, un esempio e le scelte possibili. Nessuna issue in solid-space: decidi tu e, in una chat con Claude, fai scrivere la decisione in `docs/DECISIONI.md` con la correzione della scheda (e di quelle che usano la stessa interfaccia) e una riga in "Modifiche al piano", in una pull request; poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
 | Serve cambiare un'intestazione di solid-space già accettata come contratto | Apri in solid-space una issue con l'etichetta `contratto` che dice che cosa cambia e perché, e guarda quali schede di Tecnigrafo la usano. Decidi tu per i due progetti; se approvi, la scheda del pacchetto che la cambia lo dice esplicitamente, e in Tecnigrafo si aggiornano le schede che la usano (ADR 0007 di solid-space, punto 15). |
 | Un agente ha scritto o proposto qualcosa nell'altro repository senza che tu l'abbia chiesto | Non unire e non rispondere. Chiudi la pull request o cancella il commento, e di' all'agente: `La regola "Dove puoi scrivere" di AGENTS.md vieta di scrivere nell'altro repository: spiega cos'è successo.` (A1) |
 | `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |

@@ -8,7 +8,7 @@
 - **Riferimenti:** issue `[0.7-R22]` (#…), agente gemini: la facciata (catena,
   ordine, entità che risultano, unità); i confini della regola dall'archivio
   dei casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#23, R22. La richiesta diventa il
+- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22. La richiesta diventa il
   pacchetto di solid-space che realizza `coincidence.hpp`, quando la tappa 0.2
   di solid-space lo avrà (ADR 0030, punto 13)
 - **Modulo:** `core` (più la domanda `join` in `script`)

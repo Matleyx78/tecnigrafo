@@ -8,7 +8,7 @@
 - **Riferimenti:** issue `[0.7-R19]` (#…), agente gemini: la facciata (scelta
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
-- **Dipende da:** P15, Matleyx78/solid-space#21, R19. La richiesta diventa il
+- **Dipende da:** P15, Matleyx78/solid-space#21, P25, R19. La richiesta diventa il
   pacchetto di solid-space che realizza `tangency.hpp`, quando la tappa 0.2 di
   solid-space lo avrà (ADR 0030, punto 13)
 - **Modulo:** `core` (più le domande in `script`)

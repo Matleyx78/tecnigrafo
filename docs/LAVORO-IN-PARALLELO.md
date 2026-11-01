@@ -41,7 +41,7 @@ della sua issue; ogni pull request riporta in alto la issue che chiude.
 |---|---|---|
 | Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
 | Claude | `agente:claude` | pacchetti impegnativi e la maggior parte dei medi, anche in più sessioni nello stesso momento; riferimenti dei pacchetti di lavoro di Codex; piano della tappa insieme al responsabile |
-| Codex | `agente:codex` | revisione del contratto di ogni tappa di solid-space; riferimenti con calcoli delicati dei pacchetti di lavoro di Claude, in fascia forte; pacchetti facili e medi che il piano non dà a Claude |
+| Codex | `agente:codex` | revisione del contratto di ogni tappa di solid-space e delle sue correzioni; revisione delle interfacce delle schede di Tecnigrafo (sezione 1); riferimenti con calcoli delicati dei pacchetti di lavoro di Claude, in fascia forte; pacchetti facili e medi che il piano non dà a Claude |
 | Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti ordinari, revisione delle pull request di lavoro, pull request di chiusura della tappa, pacchetti facili; lavora a lotti (sezioni 3 e 4) |
 | Gemini 4 Argon (con Antigravity CLI, `agy`) | `agente:gemini-argon` | nessun pacchetto nel piano: la sua quota settimanale basta a uno o due pacchetti di riferimenti. Se è disponibile e serve, il responsabile gli passa un pacchetto che il piano dava a Codex, cambiandone l'etichetta; lavora a lotti, in una sessione sua, sullo stesso PC di Gemini |
 | Copilot (GitHub Copilot Pro) | — | solo revisione mirata delle pull request impegnative, chiesta dal responsabile (sezione 6); non prende pacchetti e non apre pull request |
@@ -87,6 +87,18 @@ fino ad allora hanno solo la loro riga
 nella tabella, con «scheda dopo il contratto». I loro riferimenti prendono i
 valori geometrici dall'archivio dei casi di solid-space e verificano la facciata
 e i comandi.
+
+**Revisione delle interfacce.** Le schede che introducono tipi o funzioni nuove
+in `core` si controllano con la lista di
+[CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)
+(punti 1–11, con il 10 e l'11) prima che i loro pacchetti partano: un pacchetto
+di revisione, di un agente diverso da chi ha scritto le schede (di norma Codex),
+sta nella tabella prima di loro, e loro lo citano in "Dipende da"
+([tappe/0000-modello.md](tappe/0000-modello.md), sezione 6). La lista nasce per
+il contratto di solid-space, ma i buchi più costosi stanno spesso tra una
+funzione e l'altra: un'informazione decisa esattamente da solid-space che la
+scheda passa avanti solo come valore arrotondato (#359). I buchi trovati li
+decide il responsabile in [DECISIONI.md](DECISIONI.md).
 
 ### Pacchetti leggeri (dalla tappa 0.5)
 
@@ -261,6 +273,13 @@ un agente senza pacchetto preciso sconfina.
   solid-space si prende in carico. Prima della pull request, chi sposta il
   sottomodulo controlla in `docs/DECISIONI.md` di solid-space i cambiamenti alle
   intestazioni rispetto al commit di partenza della scheda: si adegua o si ferma.
+- Se un agente trova un buco nella sua scheda, cioè in un'interfaccia di
+  Tecnigrafo che intestazione, ADR e scheda non determinano mentre il contratto
+  di solid-space sì (#359), si ferma allo stesso modo, ma scrive nella issue del
+  suo pacchetto che cosa manca, un esempio e le scelte possibili, senza testo
+  per solid-space. Decide il responsabile in [DECISIONI.md](DECISIONI.md), e la
+  scheda si corregge prima di riprendere il pacchetto (AGENTS.md, "Se serve
+  qualcosa a solid-space").
 - Quando un pacchetto di solid-space è unito, i pacchetti di Tecnigrafo che lo
   aspettavano possono partire: la sua pull request li elenca nella riga
   «Sblocca:», e il responsabile li sposta nel Project da *Bloccato* a *Da fare*.
