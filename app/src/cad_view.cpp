@@ -4,6 +4,8 @@
 #include "cad_view.hpp"
 
 #include "qt_painter.hpp"
+#include "tg/cmd/value_format.hpp"
+#include "tg/core/math.hpp"
 
 #include <QMouseEvent>
 #include <QPainter>
@@ -70,6 +72,32 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
         render::renderSelectionRectangle(rectangle->first, rectangle->second, rectangle->crossing,
                                          m_viewport, m_style, backend);
     }
+    if (const auto polar = m_runner.activePolar()) {
+        const core::Vec2 direction = polar->point - polar->base;
+        const double distance = direction.length();
+        // A zero-length ray has no visible direction or angle.
+        if (distance > 0.0) {
+            const core::Vec2 base = m_viewport.worldToScreen(polar->base);
+            const core::Vec2 point = m_viewport.worldToScreen(polar->point);
+            const core::Vec2 screenDirection = point - base;
+            // Long enough to cover the visible part, even with an offscreen base.
+            const double extent = std::hypot(width(), height()) +
+                                  (base - core::Vec2{width() * 0.5, height() * 0.5}).length();
+            const core::Vec2 end = base + screenDirection * (extent / screenDirection.length());
+            backend.setPen(m_style.snapMarker, 0.0, render::LineStyle::Dashed);
+            backend.drawLine(base, end);
+            double angle = std::atan2(direction.y, direction.x);
+            if (angle < 0.0) {
+                angle += core::kTwoPi;
+            }
+            const QString text = tr("Polar: %1 < %2°")
+                                     .arg(QString::fromStdString(cmd::formatLength(distance)))
+                                     .arg(QString::fromStdString(cmd::formatAngle(angle)));
+            constexpr double kHintOffsetPx = 14.0;
+            painter.drawText(QPointF(point.x + kHintOffsetPx, point.y - kHintOffsetPx), text);
+        }
+    }
+    render::renderGrips(m_runner.grips(), m_runner.hotGrip(), m_viewport, m_style, backend);
     // Above everything, so that the preview never hides it.
     if (const auto snap = m_runner.activeSnap()) {
         render::renderSnapMarker(*snap, m_viewport, m_style, backend);

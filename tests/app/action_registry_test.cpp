@@ -304,7 +304,7 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
     }
 }
 
-TEST_F(MainWindowActionsTest, ShortcutsAreTheSameAsBeforeTheRegistry) {
+TEST_F(MainWindowActionsTest, ShortcutsMatchTheBuiltinDefaults) {
     const auto single = [](const QKeySequence& key) {
         return key.isEmpty() ? QList<QKeySequence>{} : QList<QKeySequence>{key};
     };
@@ -328,6 +328,7 @@ TEST_F(MainWindowActionsTest, ShortcutsAreTheSameAsBeforeTheRegistry) {
         {"view.zoom-extents", {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E)}},
         {"aids.osnap", {QKeySequence(Qt::Key_F3)}},
         {"aids.ortho", {QKeySequence(Qt::Key_F8)}},
+        {"aids.polar", {QKeySequence(Qt::Key_F10)}},
     };
     QSet<QString> withKeys;
     for (const auto& [id, keys] : expected) {

@@ -35,6 +35,8 @@ struct Stroke {
 
 class RecordingPainter final : public Painter {
 public:
+    std::vector<std::vector<core::Vec2>> fills;
+    std::vector<Color> fillColors;
     std::vector<TextRun> runs;
     std::vector<Pen> textPens;  ///< the pen at each drawText, in step with runs
     std::vector<std::vector<core::Vec2>> outlines;
@@ -48,7 +50,10 @@ public:
         pen = {color, widthPx, style};
     }
 
-    void fillPolygon(std::span<const core::Vec2> /*points*/, const Color& /*color*/) override {}
+    void fillPolygon(std::span<const core::Vec2> points, const Color& color) override {
+        fills.emplace_back(points.begin(), points.end());
+        fillColors.push_back(color);
+    }
 
     void drawText(const TextRun& run) override {
         runs.push_back(run);
@@ -78,6 +83,47 @@ void expectPoint(const core::Vec2& actual, const core::Vec2& expected) {
     constexpr double kTolerance = 1e-10;
     EXPECT_NEAR(actual.x, expected.x, kTolerance);
     EXPECT_NEAR(actual.y, expected.y, kTolerance);
+}
+
+TEST(SceneRendererGrips, FilledSquaresKeepTheirPixelSizeAtEveryZoom) {
+    for (const double scale : {0.5, 3.0, 100.0}) {
+        auto viewport = textViewport();
+        viewport.setScale(scale);
+        SceneStyle style;
+        style.gripSizePx = 12.0;
+        style.grip = {10, 20, 30};
+        style.hotGrip = {40, 50, 60};
+        RecordingPainter painter;
+        const std::array grips{core::Vec2{12.0, 24.0}, core::Vec2{20.0, 30.0}};
+        renderGrips(grips, grips[0], viewport, style, painter);
+        ASSERT_EQ(painter.fills.size(), 3U);
+        EXPECT_EQ(painter.fillColors, (std::vector<Color>{style.grip, style.grip, style.hotGrip}));
+        for (std::size_t i = 0; i < painter.fills.size(); ++i) {
+            const auto center = viewport.worldToScreen(grips.at(i % grips.size()));
+            const auto& square = painter.fills[i];
+            ASSERT_EQ(square.size(), 4U);
+            expectPoint(square[0], center + core::Vec2{-6.0, -6.0});
+            expectPoint(square[1], center + core::Vec2{6.0, -6.0});
+            expectPoint(square[2], center + core::Vec2{6.0, 6.0});
+            expectPoint(square[3], center + core::Vec2{-6.0, 6.0});
+        }
+        EXPECT_TRUE(painter.strokes.empty());
+    }
+}
+
+TEST(SceneRendererGrips, EmptySelectionAndHotGripWithoutIdleGrips) {
+    const auto viewport = textViewport();
+    const SceneStyle style;
+    RecordingPainter painter;
+    renderGrips({}, std::nullopt, viewport, style, painter);
+    EXPECT_TRUE(painter.fills.empty());
+    const core::Vec2 hot{10.0, 20.0};
+    renderGrips({}, hot, viewport, style, painter);
+    ASSERT_EQ(painter.fills.size(), 1U);
+    EXPECT_EQ(painter.fillColors[0], style.hotGrip);
+    const auto center = viewport.worldToScreen(hot);
+    expectPoint(painter.fills[0][0], center + core::Vec2{-5.0, -5.0});
+    expectPoint(painter.fills[0][2], center + core::Vec2{5.0, 5.0});
 }
 
 TEST(SceneRendererText, UsesTextFrameForEveryAlignmentAndTransformation) {

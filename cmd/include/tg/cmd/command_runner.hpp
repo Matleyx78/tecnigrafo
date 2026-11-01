@@ -237,6 +237,32 @@ public:
     /// the last pointer position and the drawing as it is now.
     [[nodiscard]] std::optional<core::SnapPoint> activeSnap() const;
 
+    /// The base and projected point of an active polar ray, for the view.
+    /// Uses the same aperture, base and snap priority as aidedPoint().
+    struct PolarTracking {
+        core::Vec2 base;
+        core::Vec2 point;
+    };
+
+    [[nodiscard]] std::optional<PolarTracking> activePolar() const {
+        if (!m_drawingAids.polar || m_drawingAids.ortho || !m_pointer || !asksForPoint() ||
+            snapAt(*m_pointer)) {
+            return std::nullopt;
+        }
+        const auto base = m_command->basePoint();
+        if (!base) {
+            return std::nullopt;
+        }
+        // Same 10-pixel snap aperture as aidedPoint() (ADR 0033, point 9).
+        constexpr double kPolarAperturePixels = 10.0;
+        const auto point = polarPoint(*base, *m_pointer, m_context.defaults.polarAngle,
+                                      kPolarAperturePixels * m_pixelSize);
+        if (!point) {
+            return std::nullopt;
+        }
+        return PolarTracking{*base, *point};
+    }
+
     /// True while a command is running, including while asking "Select
     /// objects:" for it.
     [[nodiscard]] bool isActive() const { return m_command != nullptr; }

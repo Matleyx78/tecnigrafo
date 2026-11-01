@@ -122,6 +122,16 @@ collegano i pacchetti indicati, che le tolgono dall'elenco delle icone riservate
 in `tests/app/icons_test.cpp`. `ui.interface` ha l'icona `ui-ribbon` perché il
 suo interruttore passa dai menu classici al ribbon.
 
+La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
+
+| File | Azione | Disegno |
+|---|---|---|
+| `aids-snap-intersection.svg` | `aids.snap.intersection` | due segmenti che si incrociano a X |
+| `aids-snap-perpendicular.svg` | `aids.snap.perpendicular` | perpendicolare con il segno dell'angolo retto |
+| `aids-snap-tangent.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto |
+| `aids-snap-quadrant.svg` | `aids.snap.quadrant` | rombo |
+| `aids-polar.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo |
+
 Chi aggiunge icone aggiunge le sue righe a questa tabella.
 
 ## Aggiungere un'icona

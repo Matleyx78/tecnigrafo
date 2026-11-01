@@ -84,19 +84,11 @@ public:
 
     [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
 
-    /// Sets every object snap mode, as the `!osnap` directive does. The modes
-    /// that have a switch in the Tools menu go through it, so the menu, the
-    /// status bar and the runner stay in agreement; the others (intersection,
-    /// perpendicular, tangent and quadrant, until the stage's menu has their
-    /// switches) are kept here and handed to the runner with the rest. Nothing
-    /// is written in the history.
+    /// Sets all snap switches and the runner, without writing in the history.
     void setSnapModes(const core::SnapModes& modes);
 
-    /// Switches polar tracking on or off, as the `!polar` directive does.
-    /// Switching it on switches ortho off through its switch, and switching
-    /// ortho on switches it off (docs/adr/0033, point 9). Until the stage's
-    /// interface has a switch for it, the state is kept here; nothing is
-    /// written in the history for polar itself.
+    /// Sets polar tracking silently, as !polar does. Turning ortho off still
+    /// goes through its switch, as before (docs/adr/0033, point 9).
     void setPolar(bool on);
 
     void setTheme(Theme theme);
@@ -181,6 +173,7 @@ private:
     bool m_uiSettingsReady{false};
     bool m_restoringUi{false};
     bool m_scriptMode{false};
+    bool m_silentPolar{false};
     bool m_externalFiles{false};
     bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};
@@ -190,16 +183,15 @@ private:
     QAction* m_eraseAction{nullptr};
     QAction* m_objectSnapAction{nullptr};
     QAction* m_orthoAction{nullptr};
+    QAction* m_polarAction{nullptr};
     QAction* m_endpointAction{nullptr};
     QAction* m_midpointAction{nullptr};
     QAction* m_centerAction{nullptr};
     QAction* m_insertionAction{nullptr};
-    /// The snap modes as set so far; applyDrawingAids() overwrites the ones
-    /// that have a switch with the state of the switch.
-    core::SnapModes m_snapModes;
-    /// Polar tracking, until it has a switch; applyDrawingAids() turns it
-    /// off when ortho is on.
-    bool m_polar{false};
+    QAction* m_intersectionAction{nullptr};
+    QAction* m_perpendicularAction{nullptr};
+    QAction* m_tangentAction{nullptr};
+    QAction* m_quadrantAction{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

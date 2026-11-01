@@ -172,6 +172,11 @@ void BuiltinActions::add(ActionRegistry& registry) {
     ortho.icon = QStringLiteral("aids-ortho");
     ortho.shortcut = QKeySequence(Qt::Key_F8);
     registry.add(std::move(ortho));
+    ActionSpec polar = switchSpec(QStringLiteral("aids.polar"), tr("&Polar Tracking"), tools,
+                                  tr("Turns polar tracking on or off."));
+    polar.icon = QStringLiteral("aids-polar");
+    polar.shortcut = QKeySequence(Qt::Key_F10);
+    registry.add(std::move(polar));
     registry.add(withIcon(switchSpec(QStringLiteral("aids.lwdisplay"), tr("Line&weight Display"),
                                      tools, tr("Shows lineweights in the drawing.")),
                           QStringLiteral("aids-lwdisplay")));
@@ -229,6 +234,20 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.insertion"), tr("&Insertion"), modes,
                                      tr("Snaps to the insertion points of texts.")),
                           QStringLiteral("aids-snap-insertion")));
+
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.intersection"), tr("&Intersection"),
+                                     modes, tr("Snaps to intersections of curves.")),
+                          QStringLiteral("aids-snap-intersection")));
+    registry.add(
+        withIcon(switchSpec(QStringLiteral("aids.snap.perpendicular"), tr("&Perpendicular"), modes,
+                            tr("Snaps perpendicular from the base point to curves.")),
+                 QStringLiteral("aids-snap-perpendicular")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.tangent"), tr("&Tangent"), modes,
+                                     tr("Snaps tangent from the base point to curves.")),
+                          QStringLiteral("aids-snap-tangent")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.quadrant"), tr("&Quadrant"), modes,
+                                     tr("Snaps to quadrants of circles and arcs.")),
+                          QStringLiteral("aids-snap-quadrant")));
 
     const QString draw = tr("&Draw");
     registry.add(withIcon(commandSpec(QStringLiteral("draw.line"), tr("&Line"), draw,
