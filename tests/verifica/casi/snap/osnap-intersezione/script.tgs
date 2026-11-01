@@ -1,0 +1,21 @@
+; Snap a intersezione e direttiva !osnap int (0.7-P15, ADR 0033)
+LINE
+0,0
+10,10
+
+LINE
+0,10
+10,0
+
+; cambia con #359
+LINE
+!move 5.1,5.1
+!report
+!click 5.1,5.1
+20,5
+
+!osnap int
+LINE
+!move 5.1,5.1
+!report
+!esc

@@ -1,0 +1,4 @@
+# 0.7-R15: snap a intersezione (#359)
+snap/intersezione #359
+snap/priorita-intersezione #359
+snap/osnap-intersezione #359

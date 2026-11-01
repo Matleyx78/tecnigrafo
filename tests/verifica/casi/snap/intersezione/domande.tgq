@@ -1,0 +1,80 @@
+; Snap a intersezione per linee, cerchi, archi e polilinee (0.7-P15, ADR 0033)
+
+; cambia con #359
+
+; 1. Due linee che si incrociano
+; L1 da 0,0 a 10,10; L2 da 0,10 a 10,0. Si intersecano in 5,5.
+L1 = LINE start=0,0 end=10,10
+L2 = LINE start=0,10 end=10,0
+
+? snap 5.1,4.9 aperture=1 modes=intersection -> Intersection 5,5
+; Con apertura ridotta a 0.05, il punto (5.1, 4.9) dista circa 0.1414 > 0.05: fuori apertura
+? snap 5.1,4.9 aperture=0.05 modes=intersection -> none
+
+; 2. Tre linee nello stesso punto: deduplicazione del candidato intersezione
+; L3 e orizzontale da 0,5 a 10,5 e passa anch'essa per 5,5.
+L3 = LINE start=0,5 end=10,5
+
+? snap 5.1,5.1 aperture=1 modes=intersection -> Intersection 5,5
+
+; 3. Incrocio fuori dall'apertura ma puntatore su una delle linee
+; In 7,7 il puntatore e sulla linea L1, ma dista circa 2.828 da (5,5). Con apertura 1 non si aggancia.
+? snap 7,7 aperture=1 modes=intersection -> none
+
+; 4. Linea e arco a semicerchio (due intersezioni)
+; Arco con centro in 50,0 e raggio 5 da 0° a 180°.
+; Retta orizzontale Y=3 interseca la circonferenza (X-50)^2 + 3^2 = 25 in X=46 e X=54.
+A1 = ARC center=50,0 radius=5 start-angle=0 end-angle=180
+LA1 = LINE start=40,3 end=60,3
+
+? snap 46.1,2.9 aperture=1 modes=intersection -> Intersection 46,3
+? snap 53.9,3.1 aperture=1 modes=intersection -> Intersection 54,3
+
+; Arco limitato al primo quadrante (0°-90°): solo l'intersezione a 36.87° cade sull'arco
+A2 = ARC center=100,0 radius=5 start-angle=0 end-angle=90
+LA2 = LINE start=90,3 end=110,3
+
+? snap 103.9,3.1 aperture=1 modes=intersection -> Intersection 104,3
+; L'intersezione a 143.13° (in 96,3) e fuori dall'intervallo angolare dell'arco
+? snap 96.1,2.9 aperture=1 modes=intersection -> none
+
+; 5. Due cerchi che si intersecano in due punti
+; C1 centro 150,0 raggio 5; C2 centro 156,0 raggio 5. Distanza tra i centri 6.
+; Intersezioni a X = 153, Y = +/- 4 (3^2 + 4^2 = 25).
+C1 = CIRCLE center=150,0 radius=5
+C2 = CIRCLE center=156,0 radius=5
+
+? snap 153.1,3.9 aperture=1 modes=intersection -> Intersection 153,4
+? snap 152.9,-4.1 aperture=1 modes=intersection -> Intersection 153,-4
+
+; 6. Polilinea che si autointerseca (self-intersection tra segmenti non consecutivi)
+; Segmento (200,0)-(210,10) e segmento (200,10)-(210,0) si incrociano in 205,5.
+PL1 = LWPOLYLINE closed=no vertex=200,0 vertex=210,10 vertex=200,10 vertex=210,0
+
+? snap 205.1,4.9 aperture=1 modes=intersection -> Intersection 205,5
+
+; 7. Tangenza tra linea e cerchio (contatto touching da snap a intersezione)
+; Cerchio centro 250,0 raggio 5; linea orizzontale Y=5 tangente in 250,5.
+C_TAN = CIRCLE center=250,0 radius=5
+L_TAN = LINE start=240,5 end=260,5
+
+? snap 250.1,5.1 aperture=1 modes=intersection -> Intersection 250,5
+
+; Due cerchi tangenti esternamente in 285,0
+C_TAN1 = CIRCLE center=280,0 radius=5
+C_TAN2 = CIRCLE center=290,0 radius=5
+
+? snap 285.1,0.1 aperture=1 modes=intersection -> Intersection 285,0
+
+; 8. Tratti in comune tra segmenti collineari: nessun punto di intersezione
+L_OV1 = LINE start=320,0 end=330,0
+L_OV2 = LINE start=325,0 end=335,0
+
+? snap 327.5,0.1 aperture=1 modes=intersection -> none
+
+; 9. Layer spento: le sue entita non danno intersezioni
+L_OFF = LAYER name="Spento" off
+L_ON = LINE start=350,0 end=360,10
+L_OFF_ENT = LINE start=350,10 end=360,0 layer="Spento"
+
+? snap 355.1,4.9 aperture=1 modes=intersection -> none
