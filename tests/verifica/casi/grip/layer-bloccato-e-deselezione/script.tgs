@@ -14,6 +14,8 @@ LINE
 CLAYER
 0
 !click 10,0
+; Close the rectangle opened by clicking an unselectable locked entity.
+!esc
 !report
 LINE
 0,10
@@ -21,5 +23,13 @@ LINE
 
 !click 10,10
 !report
+; cambia con #352
+!click 20,10
+!esc
 !click 10,25
+!report
+; First Esc closes the rectangle, second Esc clears the idle selection.
+!esc
+!report
+!esc
 !report

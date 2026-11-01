@@ -5,6 +5,7 @@ LINE
 
 !click 10,0
 !report
+; cambia con #352
 !click 20,0
 25,10
 !report
@@ -12,6 +13,8 @@ U
 !report
 REDO
 !report
+; Reselect after REDO clears the idle selection, then heat the endpoint grip.
+!click 25,10
 !click 25,10
 !esc
 !report

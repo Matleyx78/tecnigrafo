@@ -8,8 +8,10 @@ LINE
 20,0
 
 !click 5,0
-!click 15,0
+; Keep the selection click strictly outside every grip square of entity 257.
+!click 18,0
 !report
+; cambia con #352
 !click 10,0
 10,10
 !report

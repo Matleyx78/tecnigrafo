@@ -23,7 +23,7 @@ undo:
 redo:
 snap: on
 ortho: off
-pointer: 15,0
+pointer: 18,0
 active snap: none
 statistics:
   LINE 2
@@ -40,9 +40,9 @@ preview:
 selection: 257 258
 rectangle: none
 undo:
+  Line
+  Line
   Grip edit
-  Line
-  Line
 redo:
 snap: on
 ortho: off
@@ -61,9 +61,9 @@ preview:
 selection: 257 258
 rectangle: none
 undo:
+  Line
+  Line
   Grip edit
-  Line
-  Line
 redo:
 snap: on
 ortho: off
