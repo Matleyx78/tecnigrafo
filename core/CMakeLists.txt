@@ -15,15 +15,18 @@ add_library(tg_core
     src/document_query.cpp
     src/effective_properties.cpp
     src/grips.cpp
+    src/intersections.cpp
     src/layer.cpp
     src/line.cpp
     src/polyline.cpp
     src/proximity.cpp
     src/similarity.cpp
+    src/solid_space_bridge.cpp
     src/snap_points.cpp
     src/spatial_index.cpp
     src/text.cpp
     src/text_metrics.cpp
+    src/tolerance.cpp
     src/transform2d.cpp
 )
 add_library(Tecnigrafo::core ALIAS tg_core)

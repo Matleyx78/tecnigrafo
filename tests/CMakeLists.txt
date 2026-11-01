@@ -42,6 +42,7 @@ add_executable(tg_tests
     cmd/value_format_test.cpp
     core/arc_geometry_test.cpp
     core/grips_test.cpp
+    core/intersections_test.cpp
     core/arc_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
@@ -63,6 +64,7 @@ add_executable(tg_tests
     core/spatial_index_test.cpp
     core/text_metrics_test.cpp
     core/text_test.cpp
+    core/tolerance_test.cpp
     edit/editor_test.cpp
     edit/layer_rules_test.cpp
     io/dxf_lwpolyline_test.cpp
