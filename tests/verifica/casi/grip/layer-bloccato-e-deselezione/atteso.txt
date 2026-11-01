@@ -25,11 +25,15 @@ selection: none
 rectangle: none
 undo:
   Layer
+  CLAYER
   Line
-  Layer
+  CLAYER
 redo:
 snap: on
 ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
 pointer: 10,0
 active snap: none
 statistics:
@@ -50,12 +54,16 @@ selection: 259
 rectangle: none
 undo:
   Layer
+  CLAYER
   Line
-  Layer
+  CLAYER
   Line
 redo:
 snap: on
 ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
 pointer: 10,10
 active snap: none
 statistics:
@@ -66,18 +74,76 @@ entities:
   258 LINE start=0,0 end=20,0 layer="Bloccato"
   259 LINE start=0,10 end=20,10
 messages:
+  ** STRETCH **
+  *Cancel*
+prompt: Specify opposite corner:
+preview:
+selection: 259
+rectangle: window 10,25 10,25
+undo:
+  Layer
+  CLAYER
+  Line
+  CLAYER
+  Line
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
+pointer: 10,25
+active snap: none
+statistics:
+  LINE 2
+
+[report 4]
+entities:
+  258 LINE start=0,0 end=20,0 layer="Bloccato"
+  259 LINE start=0,10 end=20,10
+messages:
+prompt: Command:
+preview:
+selection: 259
+rectangle: none
+undo:
+  Layer
+  CLAYER
+  Line
+  CLAYER
+  Line
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
+pointer: 10,25
+active snap: none
+statistics:
+  LINE 2
+
+[report 5]
+entities:
+  258 LINE start=0,0 end=20,0 layer="Bloccato"
+  259 LINE start=0,10 end=20,10
+messages:
 prompt: Command:
 preview:
 selection: none
 rectangle: none
 undo:
   Layer
+  CLAYER
   Line
-  Layer
+  CLAYER
   Line
 redo:
 snap: on
 ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
 pointer: 10,25
 active snap: none
 statistics:
@@ -94,12 +160,16 @@ selection: none
 rectangle: none
 undo:
   Layer
+  CLAYER
   Line
-  Layer
+  CLAYER
   Line
 redo:
 snap: on
 ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
 pointer: 10,25
 active snap: none
 statistics:

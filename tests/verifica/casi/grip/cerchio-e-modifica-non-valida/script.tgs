@@ -4,6 +4,7 @@ CIRCLE
 10
 !click 10,0
 !report
+; cambia con #352
 !click 0,0
 10,10
 !report

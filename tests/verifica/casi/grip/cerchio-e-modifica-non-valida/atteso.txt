@@ -5,7 +5,7 @@ entities:
   257 CIRCLE center=0,0 radius=10
 messages:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P/Ttr]: 0,0
+  Specify center point for circle or [3P/2P]: 0,0
   Specify radius of circle or [Diameter]: 10
 prompt: Command:
 preview:
@@ -32,8 +32,8 @@ preview:
 selection: 257
 rectangle: none
 undo:
-  Grip edit
   Circle
+  Grip edit
 redo:
 snap: on
 ortho: off
@@ -54,8 +54,8 @@ preview:
 selection: 257
 rectangle: none
 undo:
-  Grip edit
   Circle
+  Grip edit
 redo:
 snap: on
 ortho: off
@@ -73,8 +73,8 @@ preview:
 selection: 257
 rectangle: none
 undo:
-  Grip edit
   Circle
+  Grip edit
 redo:
 snap: on
 ortho: off
