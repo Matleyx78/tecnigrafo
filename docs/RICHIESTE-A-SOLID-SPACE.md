@@ -85,16 +85,25 @@ commenta la issue se manca qualcosa.
    solid-space**, che raccoglie tutte le sue richieste e avanza insieme a lei.
 3. Nel piano di Tecnigrafo i pacchetti che ne dipendono hanno la scheda **dopo
    il contratto**, scritta sulle intestazioni accettate. In "Dipende da" citano
-   la richiesta finché la tappa di solid-space non ha i suoi pacchetti, poi il
-   **pacchetto di solid-space** che serve.
+   la richiesta finché la tappa di solid-space non ha i suoi pacchetti, poi i
+   **pacchetti di solid-space** che servono, dalla tabella «Che cosa sblocca in
+   Tecnigrafo» del suo piano. La sostituzione si fa **appena si apre la tappa
+   di solid-space**, nel piano, nel testo delle issue e nelle relazioni
+   «bloccata da» (guida del responsabile, B6): una richiesta resta aperta fino
+   alla fine, quindi un pacchetto che la cita non parte mai, anche quando ciò
+   che gli serve è già unito.
 4. Quando quel pacchetto è unito, il pacchetto di Tecnigrafo può partire: sposta
    il sottomodulo al commit che lo chiude, come autorizza la sua scheda (ADR
    0030, punto 9).
 5. I valori geometrici attesi dei riferimenti si prendono dall'archivio dei casi
    di solid-space, citando il caso (ADR 0030, punto 14).
 6. Il responsabile controlla il «quando è soddisfatta» e chiude la issue della
-   richiesta. Lo stato delle richieste si legge nella vista «Richieste» del
-   Project, non in un documento.
+   richiesta quando sono unite le issue di Tecnigrafo della colonna «Si chiude
+   con» del piano: i pacchetti che usano per primi il pezzo nuovo, perché il
+   «quando è soddisfatta» si osserva nella CI di Tecnigrafo. Fino ad allora la
+   richiesta resta aperta, anche se tutti i suoi pacchetti di solid-space sono
+   uniti, e nessun pacchetto la cita in "Dipende da". Lo stato delle richieste
+   si legge nella vista «Richieste» del Project, non in un documento.
 
 ## Esempio del file per lo script (inventato)
 

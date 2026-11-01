@@ -45,9 +45,14 @@ il suo stato si legge nel Project «Tecnigrafo». Un bisogno emerso durante la
 tappa si aggiunge qui e si annota in "Modifiche al piano". Se non ne servono, si
 scrive "nessuna" e perché.
 
-| Richiesta | Pacchetti che ne dipendono |
-|---|---|
-| [Matleyx78/solid-space#…](https://github.com/Matleyx78/solid-space/issues/…) | P… |
+| Richiesta | Pacchetti che ne dipendono | Si chiude con |
+|---|---|---|
+| [Matleyx78/solid-space#…](https://github.com/Matleyx78/solid-space/issues/…) | P… | P… |
+
+*Si chiude con* elenca i pacchetti che usano per primi il pezzo nuovo: la
+richiesta si chiude quando sono uniti, perché il suo «quando è soddisfatta» si
+osserva nella CI di Tecnigrafo ([RICHIESTE-A-SOLID-SPACE.md](../RICHIESTE-A-SOLID-SPACE.md),
+"Che cosa succede dopo").
 
 Un piano con richieste si scrive **in due tempi** (ADR 0030, punto 13):
 
