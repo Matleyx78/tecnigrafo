@@ -1,0 +1,64 @@
+; Tolleranze, unita e ordine di unione (non transitivita)
+; [0.7-R22] #372, lavoro [0.7-P22] #373: domanda `join`
+; (docs/verifica/domande.md, "Unione"; ADR 0035, punti 17-20; ADR 0036).
+; Valori limite di allineamento e coincidenza conformi all'archivio dei casi di solid-space
+; (allineate-richiesta-mm.json, tolleranza-coincidenza-richiesta-mm.json,
+; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
+
+; --- Entita fornite in ordine sparso negli argomenti ---
+; La catena parte dalla sorgente e a ogni passo cerca la prima entita che si aggancia.
+; Ordine nel percorso: LS_A (0,0..10,0) -> LS_B (10,0..10,10) -> LS_C (10,10..20,10).
+; Se passate come LS_A LS_C LS_B, LS_C non tocca (10,0), quindi viene agganciata prima LS_B, poi LS_C.
+LS_A = LINE start=0,0 end=10,0
+LS_B = LINE start=10,0 end=10,10
+LS_C = LINE start=10,10 end=20,10
+? join LS_A LS_C LS_B -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=10,10 vertex=20,10
+
+; --- Tolleranze di coincidenza ed unita di disegno (units=) ---
+; In millimetri (units=4, predefinito), il pavimento di tolleranza e' f = 1e-6 mm.
+; Due estremi distanti 1e-10 coincidono sia in millimetri sia in metri (dove f = 1e-9 m).
+TL1 = LINE start=0,0 end=10,0
+TL2 = LINE start=10,0.0000000001 end=20,0
+? join TL1 TL2 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,0
+? join TL1 TL2 units=4 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,0
+? join TL1 TL2 units=6 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,0
+
+; Due estremi distanti 1e-8:
+; - in millimetri (units=4), 1e-8 mm < 1e-6 mm: coincidono e si uniscono.
+; - in metri (units=6), 1e-8 m > 1e-9 m: NON coincidono, nessuna entita si unisce.
+TM1 = LINE start=0,0 end=10,0
+TM2 = LINE start=10,0.00000001 end=20,0
+? join TM1 TM2 units=4 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.00000001 vertex=20,0
+? join TM1 TM2 units=6 -> none
+
+; --- Non transitivita della coincidenza: l'ordine scritto decide ---
+; In millimetri (units=4), pavimento f = 1e-6.
+; a = (10, 0), b = (10, 0.7e-6), c = (10, 1.4e-6).
+; dist(b, a) = 0.7e-6 <= 1e-6 (coincidono: a ~ b).
+; dist(b, c) = 0.7e-6 <= 1e-6 (coincidono: b ~ c).
+; dist(a, c) = 1.4e-6 > 1e-6 (NON coincidono: a !~ c).
+; E_BASE finisce in b. E_A inizia in a. E_C inizia in c.
+; Entrambe competono per agganciarsi all'estremo b di E_BASE.
+E_BASE = LINE start=0,0 end=10,0.0000007
+E_A = LINE start=10,0 end=20,0
+E_C = LINE start=10,0.0000014 end=20,10
+
+; Ordine E_BASE E_A E_C: E_A viene valutata prima, si aggancia a b; il nuovo estremo libero diventa (20,0).
+; E_C non si aggancia a (20,0) ne' a (0,0), quindi viene scartata.
+? join E_BASE E_A E_C -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=20,0
+
+; Ordine E_BASE E_C E_A: E_C viene valutata prima, si aggancia a b; il nuovo estremo libero diventa (20,10).
+; E_A non si aggancia a (20,10) ne' a (0,0), quindi viene scartata.
+? join E_BASE E_C E_A -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000014 vertex=20,10
+
+; --- Segmenti quasi dritti (isStraight, ADR 0035 punto 18, ADR 0009 solid-space) ---
+; In metri (units=6), epsilon = 1e-9 m.
+; Per una corda di lunghezza 10, la freccia e' |bulge| * 10 / 2 = 5 * |bulge|.
+; Se bulge = 1e-10, freccia = 5e-10 <= 1e-9: isStraight e' vero, il bulge diventa 0 nel risultato.
+P_STR = LWPOLYLINE vertex=0,0 bulge=0.0000000001 vertex=10,0
+L_CONT = LINE start=10,0 end=20,0
+? join P_STR L_CONT units=6 -> P_STR LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=20,0
+
+; Se bulge = 1e-8, freccia = 5e-8 > 1e-9: isStraight e' falso, il bulge viene conservato.
+P_CRV = LWPOLYLINE vertex=0,0 bulge=0.00000001 vertex=10,0
+? join P_CRV L_CONT units=6 -> P_CRV LWPOLYLINE closed=no vertex=0,0 bulge=0.00000001 vertex=10,0 vertex=20,0
