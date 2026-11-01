@@ -11,6 +11,7 @@ add_library(tg_script
     src/case_form.cpp
     src/compare.cpp
     src/construction_questions.cpp
+    src/curve_questions.cpp
     src/entity_reader.cpp
     src/file_questions.cpp
     src/level1.cpp

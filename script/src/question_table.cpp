@@ -491,6 +491,13 @@ QuestionResult askFontMetrics(const QuestionModel& model, Arguments arguments);
 QuestionResult askTextWidth(const QuestionModel& model, Arguments arguments);
 QuestionResult askBox(const QuestionModel& model, Arguments arguments);
 
+// Defined in curve_questions.cpp.
+QuestionResult askIntersections(const QuestionModel& model, Arguments arguments);
+QuestionResult askSelfIntersections(const QuestionModel& model, Arguments arguments);
+QuestionResult askSide(const QuestionModel& model, Arguments arguments);
+QuestionResult askCoincident(const QuestionModel& model, Arguments arguments);
+QuestionResult askDegenerate(const QuestionModel& model, Arguments arguments);
+
 // Defined in file_questions.cpp.
 QuestionResult askEntity(const QuestionModel& model, Arguments arguments);
 QuestionResult askCount(const QuestionModel& model, Arguments arguments);
@@ -560,20 +567,20 @@ constexpr std::array kQuestions{
     QuestionRow{"linetypes", AnswerShape::Items, &askLinetypes},
     // Stage 0.7: announced questions must fail as unimplemented, not as invalid
     // syntax, so their independent references can precede the work packages.
-    QuestionRow{"transform", AnswerShape::Single, &askTransform},    // P4
-    QuestionRow{"grips", AnswerShape::Items, &askGrips},             // P9
-    QuestionRow{"grip", AnswerShape::Single, &askGrip},              // P9
-    QuestionRow{"intersections", AnswerShape::Items, nullptr},       // P14
-    QuestionRow{"self-intersections", AnswerShape::Items, nullptr},  // P14
-    QuestionRow{"side", AnswerShape::Single, nullptr},               // P14
-    QuestionRow{"coincident", AnswerShape::Single, nullptr},         // P14
-    QuestionRow{"degenerate", AnswerShape::Single, nullptr},         // P14
-    QuestionRow{"offset", AnswerShape::Single, nullptr},             // P17
-    QuestionRow{"fillet", AnswerShape::Single, nullptr},             // P19
-    QuestionRow{"tangents", AnswerShape::Items, nullptr},            // P19
-    QuestionRow{"circle-ttr", AnswerShape::Single, nullptr},         // P19
-    QuestionRow{"chamfer", AnswerShape::Single, nullptr},            // P21
-    QuestionRow{"join", AnswerShape::Single, nullptr},               // P22
+    QuestionRow{"transform", AnswerShape::Single, &askTransform},                  // P4
+    QuestionRow{"grips", AnswerShape::Items, &askGrips},                           // P9
+    QuestionRow{"grip", AnswerShape::Single, &askGrip},                            // P9
+    QuestionRow{"intersections", AnswerShape::Items, &askIntersections},           // P14
+    QuestionRow{"self-intersections", AnswerShape::Items, &askSelfIntersections},  // P14
+    QuestionRow{"side", AnswerShape::Single, &askSide},                            // P14
+    QuestionRow{"coincident", AnswerShape::Single, &askCoincident},                // P14
+    QuestionRow{"degenerate", AnswerShape::Single, &askDegenerate},                // P14
+    QuestionRow{"offset", AnswerShape::Single, nullptr},                           // P17
+    QuestionRow{"fillet", AnswerShape::Single, nullptr},                           // P19
+    QuestionRow{"tangents", AnswerShape::Items, nullptr},                          // P19
+    QuestionRow{"circle-ttr", AnswerShape::Single, nullptr},                       // P19
+    QuestionRow{"chamfer", AnswerShape::Single, nullptr},                          // P21
+    QuestionRow{"join", AnswerShape::Single, nullptr},                             // P22
 };
 
 }  // namespace
