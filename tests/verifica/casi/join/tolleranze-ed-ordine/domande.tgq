@@ -14,21 +14,27 @@ LS_B = LINE start=10,0 end=10,10
 LS_C = LINE start=10,10 end=20,10
 ? join LS_A LS_C LS_B -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0 vertex=10,10 vertex=20,10
 
-; --- Tolleranze di coincidenza ed unita di disegno (units=) ---
-; In millimetri (units=4, predefinito), il pavimento di tolleranza e' f = 1e-6 mm.
-; Due estremi distanti 1e-10 coincidono sia in millimetri sia in metri (dove f = 1e-9 m).
+; --- Endpoint coincidence and drawing units (units=) ---
+; P22 and ADR 0035, points 17-18; solid-space coincidence.hpp and
+; robust/tolerance.hpp at 295712a101c7734619485e2dc6929cfb42c8eeba.
+; Keep the lines non-aligned: (20,10) is 10 units from the source line y=0.
+; For M=20, 2^-42*M is about 4.55e-12, below both physical floors:
+; epsilon is 1e-6 in millimetres (default or units=4), 1e-9 in metres (units=6).
+; The endpoint pair has M=10, so its epsilon has the same floor.
+; TL's endpoint gap is 1e-10: coincident in both units. The chain uses the
+; following entity's point (10,1e-10), then ends at (20,10).
 TL1 = LINE start=0,0 end=10,0
-TL2 = LINE start=10,0.0000000001 end=20,0
-? join TL1 TL2 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,0
-? join TL1 TL2 units=4 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,0
-? join TL1 TL2 units=6 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,0
+TL2 = LINE start=10,0.0000000001 end=20,10
+? join TL1 TL2 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,10
+? join TL1 TL2 units=4 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,10
+? join TL1 TL2 units=6 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.0000000001 vertex=20,10
 
-; Due estremi distanti 1e-8:
-; - in millimetri (units=4), 1e-8 mm < 1e-6 mm: coincidono e si uniscono.
-; - in metri (units=6), 1e-8 m > 1e-9 m: NON coincidono, nessuna entita si unisce.
+; TM's gap is 1e-8: coincident only in millimetres (1e-8 < 1e-6), with
+; joint (10,1e-8) from TM2 and final vertex (20,10). In metres 1e-8 > 1e-9:
+; non-aligned lines with no coincident endpoint pair cannot join.
 TM1 = LINE start=0,0 end=10,0
-TM2 = LINE start=10,0.00000001 end=20,0
-? join TM1 TM2 units=4 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.00000001 vertex=20,0
+TM2 = LINE start=10,0.00000001 end=20,10
+? join TM1 TM2 units=4 -> new LWPOLYLINE closed=no vertex=0,0 vertex=10,0.00000001 vertex=20,10
 ? join TM1 TM2 units=6 -> none
 
 ; --- Non transitivita della coincidenza: l'ordine scritto decide ---
