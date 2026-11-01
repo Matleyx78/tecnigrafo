@@ -3,18 +3,22 @@
 
 #include "tg/cmd/command_runner.hpp"
 
+#include "commands/grip_command.hpp"
 #include "text.hpp"
 #include "tg/cmd/coordinate_input.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
 #include "tg/core/effective_properties.hpp"
+#include "tg/core/grips.hpp"
 #include "tg/core/math.hpp"
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <utility>
 #include <variant>
@@ -108,6 +112,14 @@ std::string lockedMessage(std::size_t count) {
         return "1 was on a locked layer.";
     }
     return std::to_string(count) + " were on a locked layer.";
+}
+
+// The selection never takes in an entity on a locked layer, but a layer can
+// be locked, frozen or switched off while the selection stays (from the
+// interface, with no command): such an entity shows no grip, so that no grip
+// edits it (docs/adr/0023, point 4).
+bool showsGrips(const core::Document& document, const core::EntityRecord& record) {
+    return core::isVisible(document, record) && !isOnLockedLayer(document, record.id);
 }
 
 }  // namespace
@@ -223,6 +235,12 @@ void CommandRunner::setPixelSize(double drawingUnitsPerPixel) {
 }
 
 void CommandRunner::click(const core::Vec2& point, PickAction action) {
+    // A grip belongs to an entity already selected, so it wins over a
+    // selection gesture (docs/adr/0034, "Conseguenze"); an open rectangle
+    // waits for its second corner, and Shift takes entities out.
+    if (!isActive() && action == PickAction::Add && !m_rectangle && clickGrip(point)) {
+        return;
+    }
     if (isSelecting()) {
         selectionClick(point, action);
     } else if (asksForObject()) {
@@ -245,6 +263,23 @@ std::optional<core::SnapPoint> CommandRunner::activeSnap() const {
         return std::nullopt;
     }
     return snapAt(*m_pointer);
+}
+
+std::vector<core::Vec2> CommandRunner::grips() const {
+    std::vector<core::Vec2> points;
+    if (isActive() || m_selection.size() > kMaxGripEntities) {
+        return points;
+    }
+    const core::Document& document = m_editor.document();
+    for (const core::EntityId id : m_selection.ids()) {
+        const core::EntityRecord* record = document.find(id);
+        if (record == nullptr || !showsGrips(document, *record)) {
+            continue;
+        }
+        const std::vector<core::Vec2> own = core::gripPoints(record->entity);
+        points.insert(points.end(), own.begin(), own.end());
+    }
+    return points;
 }
 
 bool CommandRunner::acceptsText() const {
@@ -590,6 +625,55 @@ void CommandRunner::selectionClick(const core::Vec2& point, PickAction action) {
     m_rectangle = SelectionRectangle{point, point, false};
 }
 
+bool CommandRunner::clickGrip(const core::Vec2& point) {
+    if (m_selection.size() > kMaxGripEntities) {
+        return false;  // no grip is shown (docs/adr/0034, point 1)
+    }
+    const core::Document& document = m_editor.document();
+    const double halfSide = kGripSizePixels / 2.0 * m_pixelSize;
+
+    struct Hit {
+        const core::EntityRecord* record{nullptr};
+        std::size_t index{0};
+        core::Vec2 grip;
+        double distance{0.0};
+    };
+
+    std::optional<Hit> best;
+    for (const core::EntityId id : m_selection.ids()) {
+        const core::EntityRecord* record = document.find(id);
+        if (record == nullptr || !showsGrips(document, *record)) {
+            continue;
+        }
+        const std::vector<core::Vec2> points = core::gripPoints(record->entity);
+        for (std::size_t index = 0; index < points.size(); ++index) {
+            const double dx = points[index].x - point.x;
+            const double dy = points[index].y - point.y;
+            if (std::abs(dx) > halfSide || std::abs(dy) > halfSide) {
+                continue;  // outside the square, edges included in it
+            }
+            const double distance = std::hypot(dx, dy);
+            // The nearest grip; at equal distance the entity with the highest
+            // identifier, as core::pickEntity() orders its candidates
+            // (docs/adr/0034, point 3); within one entity the first grip.
+            if (!best || distance < best->distance ||
+                (!(best->distance < distance) && id.value > best->record->id.value)) {
+                best = Hit{record, index, points[index], distance};
+            }
+        }
+    }
+    if (!best) {
+        return false;
+    }
+    m_hotGrip = best->grip;
+    m_description = nullptr;  // its prompt is the runner's (docs/adr/0026, point 3)
+    m_command = std::make_unique<GripCommand>(best->record->id, best->record->entity, best->index,
+                                              best->grip);
+    m_command->start(m_context);
+    refreshPointer();  // the preview follows the pointer from the start
+    return true;
+}
+
 void CommandRunner::applyToSelection(std::span<const core::EntityId> ids, PickAction action) {
     const core::Document& document = m_editor.document();
     std::size_t found = 0;
@@ -662,8 +746,8 @@ void CommandRunner::forward(const Input& input) {
 }
 
 void CommandRunner::checkPrompt() const {
-    if (!m_descriptionCheck || !isActive() || m_askingSelection) {
-        return;
+    if (!m_descriptionCheck || !isActive() || m_askingSelection || m_hotGrip) {
+        return;  // the grip command's prompt is the runner's own
     }
     const Prompt prompt = m_command->prompt();
     if (prompt.text.empty()) {
@@ -746,7 +830,11 @@ void CommandRunner::cancel() {
     const std::unique_ptr<Command> command = std::move(m_command);
     const bool started = !m_askingSelection;
     m_askingSelection = false;
-    clearSelection();
+    // Esc on a hot grip leaves the selection with its grips (docs/adr/0034,
+    // point 3).
+    if (!std::exchange(m_hotGrip, std::nullopt)) {
+        clearSelection();
+    }
     if (started) {
         command->cancel(m_context);
     }
@@ -764,7 +852,11 @@ void CommandRunner::finish() {
         m_context.documentReplaced = false;
     }
     m_command.reset();
-    clearSelection();
+    // A grip edit leaves the selection with its grips (docs/adr/0034,
+    // point 3); every other command clears it (docs/adr/0008).
+    if (!std::exchange(m_hotGrip, std::nullopt)) {
+        clearSelection();
+    }
     const bool closed = !m_editor.inTransaction();
     assert(closed && "a command finished without closing its transaction");
     if (!closed) {

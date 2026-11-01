@@ -27,6 +27,7 @@ add_executable(tg_tests
     cmd/erase_command_test.cpp
     cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp
+    cmd/grip_test.cpp
     cmd/layer_commands_test.cpp
     cmd/line_command_test.cpp
     cmd/mirror_commands_test.cpp

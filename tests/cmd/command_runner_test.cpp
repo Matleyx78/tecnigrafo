@@ -536,10 +536,13 @@ TEST_F(SelectionTest, IdleRunnerIsSelecting) {
 }
 
 TEST_F(SelectionTest, ClickOnAnEntityAddsItSilently) {
-    runner().click({5, 1}, PickAction::Add);  // 1 from a, 4 from b
+    // 0.1 units per pixel: the grip squares of the selected lines (half side
+    // 0.5) leave room for selection clicks; the pick box is 0.3 (docs/adr/0034).
+    runner().setPixelSize(0.1);
+    runner().click({5, 0.2}, PickAction::Add);  // 0.2 from a, 4.8 from b
     EXPECT_EQ(selected(), Ids{a()});
-    runner().click({5, 4}, PickAction::Add);
-    runner().click({5, 0}, PickAction::Add);  // already there: no duplicate
+    runner().click({5, 4.8}, PickAction::Add);
+    runner().click({2, 0}, PickAction::Add);  // already there: no duplicate
     EXPECT_EQ(selected(), (Ids{a(), b()}));
     EXPECT_EQ(runner().promptText(), "Command:");
     EXPECT_EQ(runner().selectionRectangle(), std::nullopt);
@@ -547,9 +550,12 @@ TEST_F(SelectionTest, ClickOnAnEntityAddsItSilently) {
 }
 
 TEST_F(SelectionTest, ClickWithRemoveTakesAnEntityOut) {
+    // 0.1 units per pixel: the grip squares of the selected lines (half side
+    // 0.5) leave room for selection clicks; the pick box is 0.3 (docs/adr/0034).
+    runner().setPixelSize(0.1);
     runner().click({5, 0}, PickAction::Add);
     runner().click({5, 5}, PickAction::Add);
-    runner().click({5, 0.5}, PickAction::Remove);
+    runner().click({5, 0.2}, PickAction::Remove);
     EXPECT_EQ(selected(), Ids{b()});
     runner().click({25, 0}, PickAction::Remove);  // c is not selected: nothing changes
     EXPECT_EQ(selected(), Ids{b()});
@@ -587,6 +593,9 @@ TEST_F(SelectionTest, TheSecondClickClosesTheRectangleEvenOnAnEntity) {
 }
 
 TEST_F(SelectionTest, RectangleWithRemoveTakesEntitiesOut) {
+    // 0.1 units per pixel: the grip squares of the selected lines (half side
+    // 0.5) leave room for selection clicks; the pick box is 0.3 (docs/adr/0034).
+    runner().setPixelSize(0.1);
     rectangle({-5, -5}, {40, 10});  // everything
     ASSERT_EQ(selected(), (Ids{a(), b(), c(), d()}));
     rectangle({14, 8}, {-5, -5}, PickAction::Remove);  // crossing: a, b, d
@@ -594,6 +603,9 @@ TEST_F(SelectionTest, RectangleWithRemoveTakesEntitiesOut) {
 }
 
 TEST_F(SelectionTest, EscClosesTheRectangleThenClearsTheSelection) {
+    // 0.1 units per pixel: the grip squares of the selected lines (half side
+    // 0.5) leave room for selection clicks; the pick box is 0.3 (docs/adr/0034).
+    runner().setPixelSize(0.1);
     runner().click({5, 0}, PickAction::Add);
     runner().click({-5, -5}, PickAction::Add);
     ASSERT_TRUE(runner().selectionRectangle().has_value());
@@ -636,6 +648,9 @@ TEST_F(SelectionTest, PickBoxFollowsThePixelSize) {
 }
 
 TEST_F(SelectionTest, SelectionBeforeTheCommandIsHandedOverAtOnce) {
+    // 0.1 units per pixel: the grip squares of the selected lines (half side
+    // 0.5) leave room for selection clicks; the pick box is 0.3 (docs/adr/0034).
+    runner().setPixelSize(0.1);
     runner().click({5, 5}, PickAction::Add);
     runner().click({5, 0}, PickAction::Add);
 
