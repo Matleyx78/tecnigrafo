@@ -428,22 +428,37 @@ quelli si creano solo le issue nuove.
    richieste devono citare i pacchetti di solid-space. Finché citano la
    richiesta, che resta aperta fino alla fine, nessun agente le prende, anche
    quando quello che serve è già unito (è successo con R14 e R22 della 0.7, il
-   2026-11-01). In una chat con Tecnigrafo in scrittura e solid-space in
-   lettura, scrivi a Claude:
+   2026-11-01). Nel terminale, nella cartella di Tecnigrafo aggiornata (A2):
 
-   ```text
-   La tappa <tappa di solid-space> di solid-space è aperta. Nella tappa
-   <tappa> di Tecnigrafo sostituisci, nella colonna "Dipende da" del piano, le
-   richieste di solid-space con i pacchetti di solid-space che servono, dalla
-   tabella «Che cosa sblocca in Tecnigrafo» del piano di solid-space; cita solo
-   quelli non già compresi attraverso le dipendenze. Allinea il testo delle
-   issue e le relazioni «bloccata da», scrivi nella issue dei pacchetti di
-   Tecnigrafo che spostano il sottomodulo il commit, se è già unito, e apri una
-   pull request con il piano. Non scrivere niente in solid-space.
+   ```sh
+   scripts/dipendenze.py <tappa>
    ```
 
-   Unisci la pull request (A3) e nel Project sposta da *Bloccato* a *Da fare*
-   le issue che risultano pronte.
+   Per ogni riga che cita una richiesta lo script stampa la cella "Dipende da"
+   nuova, presa dalla tabella «Che cosa sblocca in Tecnigrafo» del piano di
+   solid-space (riga «cites the request …; with the packages of solid-space it
+   is: …»). In una chat con Tecnigrafo in scrittura e solid-space in lettura,
+   incolla quelle righe e scrivi a Claude:
+
+   ```text
+   Copia nella colonna "Dipende da" del piano della tappa <tappa> le celle
+   proposte da scripts/dipendenze.py qui sopra, aggiungi una riga in "Modifiche
+   al piano", scrivi nella issue dei pacchetti di Tecnigrafo che spostano il
+   sottomodulo il commit di solid-space, se è già unito, e apri una pull request
+   con il piano. Non scrivere niente in solid-space.
+   ```
+
+   Unisci la pull request (A3), aggiorna la cartella e lancia:
+
+   ```sh
+   scripts/dipendenze.py <tappa> --applica
+   ```
+
+   Lo script mostra le modifiche e chiede `Go on? [s/N]`: con `s` riscrive
+   "Dipende da" nel testo delle issue, sistema le relazioni «bloccata da» e
+   sposta nel Project da *Bloccato* a *Da fare* le issue pronte. Non tocca il
+   piano né solid-space. Rilancialo senza opzioni: deve dire «Nothing to fix or
+   to check.».
 
 ### B7. Riferimenti (Gemini, a lotti)
 
@@ -589,17 +604,20 @@ Ogni pull request si unisce come in A3. In più, durante una tappa:
    quando si sono accumulate nuove pull request da rivedere.
 2. **Quando unisci un pacchetto di solid-space**, la sua pull request elenca
    nella riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel
-   pacchetto. Nel Project spostale da *Bloccato* a *Da fare*: possono partire
-   subito, senza aspettare la fine della tappa di solid-space. La riga
-   «Sblocca:» è un promemoria scritto a mano: fa fede "Dipende da" della issue
-   di Tecnigrafo, che dev'essere tutta chiusa. Non chiudere la richiesta
-   anche se tutti i suoi pacchetti sono uniti: si chiude al punto 3.
+   pacchetto: possono partire subito, senza aspettare la fine della tappa di
+   solid-space. La riga «Sblocca:» è un promemoria scritto a mano: fa fede
+   "Dipende da" della issue di Tecnigrafo. Nella cartella di Tecnigrafo lancia
+   `scripts/dipendenze.py <tappa> --applica`: elenca sotto «Ready» le issue
+   che possono partire, e con `s` le sposta da *Bloccato* a *Da fare* nel
+   Project. Non chiudere la richiesta anche se tutti i suoi pacchetti sono
+   uniti: si chiude al punto 3.
 3. **Quando unisci il pacchetto di Tecnigrafo che usa il pezzo nuovo**, controlla
    che sposti il sottomodulo al commit che la sua scheda indica (ADR 0030, punto
    9): nella sua pull request `third_party/solid-space` deve puntare a quel
    commit. Se è l'ultimo della colonna «Si chiude con» di una richiesta (piano,
    sezione 5, «Richieste a solid-space»), controlla il «quando è soddisfatta»
-   della richiesta e chiudi la sua issue in solid-space.
+   della richiesta e chiudi la sua issue in solid-space. `scripts/dipendenze.py
+   <tappa>` lo segnala sotto «To check».
 
 Ripeti B7–B11 finché nel milestone non restano issue aperte.
 
