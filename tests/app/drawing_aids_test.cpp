@@ -62,11 +62,14 @@ protected:
         m_window.activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
         for (const char* name : {"aids.osnap", "aids.ortho", "aids.snap.endpoint",
-                                 "aids.snap.midpoint", "aids.snap.center"}) {
+                                 "aids.snap.midpoint", "aids.snap.center", "aids.polar",
+                                 "aids.snap.intersection", "aids.snap.perpendicular",
+                                 "aids.snap.tangent", "aids.snap.quadrant"}) {
             ASSERT_NE(action(name), nullptr) << name;
         }
         ASSERT_NE(button("osnapButton"), nullptr);
         ASSERT_NE(button("orthoButton"), nullptr);
+        ASSERT_NE(button("polarButton"), nullptr);
         ASSERT_NE(input(), nullptr);
     }
 
@@ -77,6 +80,10 @@ protected:
     [[nodiscard]] const cmd::DrawingAids& aids() const { return m_window.drawingAids(); }
 
     void setSnapModes(const core::SnapModes& modes) { m_window.setSnapModes(modes); }
+
+    void setPolar(bool on) { m_window.setPolar(on); }
+
+    [[nodiscard]] const cmd::CommandRunner& runner() const { return m_window.runner(); }
 
     [[nodiscard]] QAction* action(const char* name) const {
         return m_window.findChild<QAction*>(QString::fromLatin1(name));
@@ -193,6 +200,117 @@ TEST_F(DrawingAidsTest, StartsWithObjectSnapOnWithEveryModeAndOrthoOff) {
     EXPECT_EQ(button("orthoButton")->text().toStdString(), "ORTHO");
 }
 
+TEST_F(DrawingAidsTest, NewSnapModesHaveTheAdrDefaultsAndReachTheRunner) {
+    EXPECT_TRUE(action("aids.snap.intersection")->isChecked());
+    EXPECT_FALSE(action("aids.snap.perpendicular")->isChecked());
+    EXPECT_FALSE(action("aids.snap.tangent")->isChecked());
+    EXPECT_FALSE(action("aids.snap.quadrant")->isChecked());
+    const core::SnapModes defaults = aids().snapModes;
+    for (const char* name : {"aids.snap.intersection", "aids.snap.perpendicular",
+                             "aids.snap.tangent", "aids.snap.quadrant"}) {
+        action(name)->trigger();
+    }
+    auto wanted = defaults;
+    wanted.intersection = false;
+    wanted.perpendicular = true;
+    wanted.tangent = true;
+    wanted.quadrant = true;
+    EXPECT_EQ(aids().snapModes, wanted);
+    setSnapModes(defaults);
+    EXPECT_EQ(aids().snapModes, defaults);
+    EXPECT_TRUE(action("aids.snap.intersection")->isChecked());
+    EXPECT_FALSE(action("aids.snap.perpendicular")->isChecked());
+    EXPECT_FALSE(action("aids.snap.tangent")->isChecked());
+    EXPECT_FALSE(action("aids.snap.quadrant")->isChecked());
+}
+
+TEST_F(DrawingAidsTest, F10AndF8ExcludeEachOtherAndEchoBothChanges) {
+    EXPECT_FALSE(aids().polar);
+    EXPECT_FALSE(button("polarButton")->isChecked());
+    EXPECT_EQ(action("aids.polar")->shortcut(), QKeySequence(Qt::Key_F10));
+    shortcut(view(), Qt::Key_F8);
+    shortcut(input(), Qt::Key_F10);
+    EXPECT_TRUE(aids().polar);
+    EXPECT_FALSE(aids().ortho);
+    EXPECT_TRUE(button("polarButton")->isChecked());
+    EXPECT_FALSE(button("orthoButton")->isChecked());
+    EXPECT_EQ(lastHistoryLine(), "<Polar on>");
+    shortcut(view(), Qt::Key_F8);
+    EXPECT_FALSE(aids().polar);
+    EXPECT_TRUE(aids().ortho);
+    EXPECT_FALSE(action("aids.polar")->isChecked());
+    const auto* history =
+        input()->parentWidget()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
+    ASSERT_NE(history, nullptr);
+    EXPECT_TRUE(history->toPlainText().contains(QStringLiteral("<Polar off>\n<Ortho on>")));
+    shortcut(view(), Qt::Key_F10);
+    button("polarButton")->click();
+    EXPECT_FALSE(aids().polar);
+    EXPECT_FALSE(aids().ortho);
+    EXPECT_EQ(lastHistoryLine(), "<Polar off>");
+    EXPECT_EQ(button("polarButton")->focusPolicy(), Qt::NoFocus);
+}
+
+TEST_F(DrawingAidsTest, PolarDirectiveUpdatesTheButtonWithoutEchoingPolar) {
+    const auto before = lastHistoryLine();
+    setPolar(true);
+    EXPECT_TRUE(aids().polar);
+    EXPECT_TRUE(action("aids.polar")->isChecked());
+    EXPECT_TRUE(button("polarButton")->isChecked());
+    EXPECT_EQ(lastHistoryLine(), before);
+    setPolar(false);
+    EXPECT_FALSE(aids().polar);
+    EXPECT_FALSE(button("polarButton")->isChecked());
+    EXPECT_EQ(lastHistoryLine(), before);
+}
+
+TEST_F(DrawingAidsTest, PolarOverlayFollowsTheRunnerAndYieldsToObjectSnap) {
+    action("aids.osnap")->setChecked(false);
+    view()->setView({50.0, 30.0}, 1.0);
+    shortcut(view(), Qt::Key_F10);
+    EXPECT_FALSE(runner().activePolar());
+    enter("LINE");
+    EXPECT_FALSE(runner().activePolar());
+    enter("30,22");
+    moveScreen(screen({70.0, 24.0}));
+    const auto polar = runner().activePolar();
+    ASSERT_TRUE(polar);
+    EXPECT_EQ(polar->base, kFirst);
+    EXPECT_EQ(polar->point, (core::Vec2{70.0, 22.0}));
+    EXPECT_GT(markerPixels(), 0U);  // dashed ray and its hint
+    moveScreen(screen({70.0, 42.0}));
+    EXPECT_FALSE(runner().activePolar());
+    EXPECT_EQ(markerPixels(), 0U);
+    moveScreen(screen({70.0, 24.0}));
+    shortcut(view(), Qt::Key_F8);
+    EXPECT_FALSE(runner().activePolar());
+    EXPECT_EQ(markerPixels(), 0U);
+    shortcut(view(), Qt::Key_F10);
+    action("aids.osnap")->setChecked(true);
+    moveScreen(screen(kVertex));
+    ASSERT_TRUE(runner().activeSnap());
+    EXPECT_FALSE(runner().activePolar());
+    events::press(input(), Qt::Key_Escape);
+    EXPECT_FALSE(runner().activePolar());
+}
+
+TEST_F(DrawingAidsTest, SelectedAndHotGripsArePaintedAboveTheDrawing) {
+    click(kVertex);
+    ASSERT_FALSE(runner().grips().empty());
+    const auto pixel = screen(kVertex).toPoint();
+    const auto style = sceneStyle(Theme::Light);
+    EXPECT_EQ(view()->grab().toImage().pixelColor(pixel),
+              QColor(style.grip.r, style.grip.g, style.grip.b));
+    click(kVertex);
+    ASSERT_TRUE(runner().hotGrip());
+    EXPECT_EQ(view()->grab().toImage().pixelColor(pixel),
+              QColor(style.hotGrip.r, style.hotGrip.g, style.hotGrip.b));
+    events::press(input(), Qt::Key_Escape);
+    EXPECT_FALSE(runner().hotGrip());
+    EXPECT_EQ(view()->grab().toImage().pixelColor(pixel),
+              QColor(style.grip.r, style.grip.g, style.grip.b));
+}
+
 TEST_F(DrawingAidsTest, OrthoKeepsTheSecondVertexOnTheAxesOfTheFirst) {
     shortcut(view(), Qt::Key_F8);
     ASSERT_TRUE(aids().ortho);
@@ -271,7 +389,7 @@ TEST_F(DrawingAidsTest, EachModeOfTheMenuReachesTheRunner) {
 }
 
 TEST_F(DrawingAidsTest, SetSnapModesReachesTheSwitchesAndTheRunner) {
-    // The directive !osnap: modes with a switch and modes without one.
+    // The directive !osnap keeps every switch in step with the runner.
     const core::SnapModes wanted{false, true, false, true, false, true, false, true};
     setSnapModes(wanted);
     EXPECT_EQ(aids().snapModes, wanted);
@@ -282,7 +400,7 @@ TEST_F(DrawingAidsTest, SetSnapModesReachesTheSwitchesAndTheRunner) {
     EXPECT_TRUE(aids().objectSnap);  // the modes do not touch the switch
     EXPECT_EQ(lastHistoryLine().find("Osnap"), std::string::npos);
 
-    // Toggling a switch later keeps the modes that have none.
+    // Toggling a switch later keeps all the other modes.
     action("aids.snap.center")->trigger();
     EXPECT_EQ(aids().snapModes,
               (core::SnapModes{false, true, true, true, false, true, false, true}));

@@ -335,4 +335,22 @@ void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
     }
 }
 
+void renderGrips(std::span<const Vec2> grips, std::optional<Vec2> hot,
+                 const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+    const double half = style.gripSizePx * 0.5;
+    const auto square = [&](const Vec2& point, const Color& color) {
+        const Vec2 center = viewport.worldToScreen(point);
+        const std::array points{center + Vec2{-half, -half}, center + Vec2{half, -half},
+                                center + Vec2{half, half}, center + Vec2{-half, half}};
+        painter.fillPolygon(points, color);
+    };
+    for (const Vec2& point : grips) {
+        square(point, style.grip);
+    }
+    // Last, including when several selected entities share the hot point.
+    if (hot) {
+        square(*hot, style.hotGrip);
+    }
+}
+
 }  // namespace tg::render

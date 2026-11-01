@@ -259,21 +259,32 @@ void MainWindow::connectDrawingAids() {
     const cmd::DrawingAids& aids = m_runner.drawingAids();
     m_objectSnapAction = registeredAction("aids.osnap");
     m_orthoAction = registeredAction("aids.ortho");
+    m_polarAction = registeredAction("aids.polar");
     m_endpointAction = registeredAction("aids.snap.endpoint");
     m_midpointAction = registeredAction("aids.snap.midpoint");
     m_centerAction = registeredAction("aids.snap.center");
     m_insertionAction = registeredAction("aids.snap.insertion");
+    m_intersectionAction = registeredAction("aids.snap.intersection");
+    m_perpendicularAction = registeredAction("aids.snap.perpendicular");
+    m_tangentAction = registeredAction("aids.snap.tangent");
+    m_quadrantAction = registeredAction("aids.snap.quadrant");
     m_objectSnapAction->setChecked(aids.objectSnap);
     m_orthoAction->setChecked(aids.ortho);
+    m_polarAction->setChecked(aids.polar);
     m_endpointAction->setChecked(aids.snapModes.endpoint);
     m_midpointAction->setChecked(aids.snapModes.midpoint);
     m_centerAction->setChecked(aids.snapModes.center);
     m_insertionAction->setChecked(aids.snapModes.insertion);
+    m_intersectionAction->setChecked(aids.snapModes.intersection);
+    m_perpendicularAction->setChecked(aids.snapModes.perpendicular);
+    m_tangentAction->setChecked(aids.snapModes.tangent);
+    m_quadrantAction->setChecked(aids.snapModes.quadrant);
 
     // Connected after the initial states are set, so that starting the
     // program writes nothing in the history.
-    for (QAction* action : {m_objectSnapAction, m_orthoAction, m_endpointAction, m_midpointAction,
-                            m_centerAction, m_insertionAction}) {
+    for (QAction* action : {m_objectSnapAction, m_endpointAction, m_midpointAction,
+                            m_centerAction, m_insertionAction, m_intersectionAction,
+                            m_perpendicularAction, m_tangentAction, m_quadrantAction}) {
         connect(action, &QAction::toggled, this, &MainWindow::applyDrawingAids);
     }
     // The switches are echoed in the history, as AutoCAD does.
@@ -281,44 +292,57 @@ void MainWindow::connectDrawingAids() {
         m_commandLine->appendToHistory(on ? tr("<Osnap on>") : tr("<Osnap off>"));
     });
     connect(m_orthoAction, &QAction::toggled, this, [this](bool on) {
+        if (on) {
+            m_polarAction->setChecked(false);
+        }
+        applyDrawingAids();
         m_commandLine->appendToHistory(on ? tr("<Ortho on>") : tr("<Ortho off>"));
+    });
+    connect(m_polarAction, &QAction::toggled, this, [this](bool on) {
+        if (on) {
+            m_orthoAction->setChecked(false);
+        }
+        applyDrawingAids();
+        if (!m_silentPolar) {
+            m_commandLine->appendToHistory(on ? tr("<Polar on>") : tr("<Polar off>"));
+        }
     });
 }
 
 void MainWindow::setSnapModes(const core::SnapModes& modes) {
-    // The modes without a switch first: each switch that changes calls
-    // applyDrawingAids(), which must already see them.
-    m_snapModes = modes;
     m_endpointAction->setChecked(modes.endpoint);
     m_midpointAction->setChecked(modes.midpoint);
     m_centerAction->setChecked(modes.center);
     m_insertionAction->setChecked(modes.insertion);
+    m_intersectionAction->setChecked(modes.intersection);
+    m_perpendicularAction->setChecked(modes.perpendicular);
+    m_tangentAction->setChecked(modes.tangent);
+    m_quadrantAction->setChecked(modes.quadrant);
     applyDrawingAids();
 }
 
 void MainWindow::setPolar(bool on) {
-    m_polar = on;
-    if (on && m_orthoAction->isChecked()) {
-        m_orthoAction->setChecked(false);  // applies the aids, with polar on
-        return;
+    const QScopedValueRollback<bool> silence(m_silentPolar, true);
+    m_polarAction->setChecked(on);
+    if (on) {
+        m_orthoAction->setChecked(false);
     }
     applyDrawingAids();
 }
 
 void MainWindow::applyDrawingAids() {
     cmd::DrawingAids aids;
-    aids.snapModes = m_snapModes;
     aids.objectSnap = m_objectSnapAction->isChecked();
     aids.snapModes.endpoint = m_endpointAction->isChecked();
     aids.snapModes.midpoint = m_midpointAction->isChecked();
     aids.snapModes.center = m_centerAction->isChecked();
     aids.snapModes.insertion = m_insertionAction->isChecked();
     aids.ortho = m_orthoAction->isChecked();
-    // Ortho and polar exclude each other: ortho switched on wins.
-    if (aids.ortho) {
-        m_polar = false;
-    }
-    aids.polar = m_polar;
+    aids.snapModes.intersection = m_intersectionAction->isChecked();
+    aids.snapModes.perpendicular = m_perpendicularAction->isChecked();
+    aids.snapModes.tangent = m_tangentAction->isChecked();
+    aids.snapModes.quadrant = m_quadrantAction->isChecked();
+    aids.polar = m_polarAction->isChecked();
     m_runner.setDrawingAids(aids);
     m_view->update();  // the snap marker and the preview may have changed
 }
@@ -384,6 +408,8 @@ void MainWindow::createStatusBar() {
     // In AutoCAD's order: ORTHO before OSNAP.
     statusBar()->addPermanentWidget(
         createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(m_polarAction, tr("POLAR"), QStringLiteral("polarButton")));
     statusBar()->addPermanentWidget(
         createModeButton(m_objectSnapAction, tr("OSNAP"), QStringLiteral("osnapButton")));
     m_cursorLabel = new QLabel(this);
