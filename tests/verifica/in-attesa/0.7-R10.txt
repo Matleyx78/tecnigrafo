@@ -1,5 +1,0 @@
-# 0.7-R10: modifica con i grip (#352)
-grip/modifica-linea-annulla-esc #352
-grip/due-entita-stesso-punto #352
-grip/cerchio-e-modifica-non-valida #352
-grip/layer-bloccato-e-deselezione #352

@@ -14,6 +14,7 @@
 #include "tg/core/vec2.hpp"
 #include "tg/edit/editor.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -97,7 +98,24 @@ struct SelectionRectangle {
 ///   SelectionInput; without, the command ends with no effect. A CancelInput
 ///   with no open rectangle cancels the command.
 /// - Starting a command that does not need a selection, the end of every
-///   command, U, UNDO and REDO clear the selection.
+///   command, U, UNDO and REDO clear the selection; the end of a grip edit
+///   does not (see "Grips" below).
+///
+/// Grips (docs/adr/0034, points 1 and 3). With no command running, the
+/// entities of the selection, when it holds at most kMaxGripEntities of
+/// them, show their core::gripPoints(). A click with PickAction::Add and no
+/// open rectangle that falls in the square of a grip (kGripSizePixels on a
+/// side, centred on the grip) makes that grip hot instead of being a
+/// selection gesture: of the grips whose square holds the click, the nearest,
+/// and at equal distance the one of the entity with the highest identifier,
+/// as core::pickEntity(). The runner then runs a command of its own, which
+/// is not in the registry: it writes "** STRETCH **" and asks "Specify
+/// stretch point:", a Point prompt whose base point is the hot grip, so
+/// snap, ortho and polar start from there. The point moves the grip with
+/// core::moveGrip() in one undo step, "Grip edit"; an invalid result changes
+/// nothing and writes "Invalid grip edit.". Enter and Esc leave the grip
+/// without changes. After the edit, after Enter and after Esc the selection
+/// stays, with its grips.
 ///
 /// Written selection (docs/adr/0032, point 4). While asking "Select
 /// objects:" or at a Selection prompt, typed text is read, in any case, as:
@@ -148,8 +166,9 @@ struct SelectionRectangle {
 /// command shows, after start() and after each input it handles, must
 /// match one PromptDescription of its command; an empty text is not a
 /// prompt. The runner's own prompts ("Select objects:", "Specify first
-/// corner:", "Specify opposite corner:", "Command:") are not checked. A prompt that matches none
-/// calls the description check.
+/// corner:", "Specify opposite corner:", "Specify stretch point:",
+/// "Command:") are not checked. A prompt that matches none calls the
+/// description check.
 ///
 /// The registry and the editor must outlive the runner.
 class CommandRunner {
@@ -199,6 +218,19 @@ public:
     void setDrawingAids(const DrawingAids& aids);
 
     [[nodiscard]] const DrawingAids& drawingAids() const { return m_drawingAids; }
+
+    /// AutoCAD's GRIPOBJLIMIT (docs/adr/0034, point 1): above this many
+    /// selected entities no grip is shown.
+    static constexpr std::size_t kMaxGripEntities = 100;
+    /// Side of the grip square, in screen pixels (docs/adr/0034, point 3).
+    static constexpr double kGripSizePixels = 10.0;
+
+    /// The grips to draw (docs/adr/0034, point 1): those of the idle selection,
+    /// when no command runs and it holds at most kMaxGripEntities entities.
+    [[nodiscard]] std::vector<core::Vec2> grips() const;
+
+    /// The hot grip, while a grip is being stretched.
+    [[nodiscard]] std::optional<core::Vec2> hotGrip() const { return m_hotGrip; }
 
     /// The snap the pointer is on, for the marker; std::nullopt if none or
     /// if no command is asking for a point, distance, angle or number. Computed on each call, from
@@ -285,6 +317,9 @@ private:
     /// Enter at a Selection prompt: hands over what has been chosen.
     void endSelectionPrompt();
     void selectionClick(const core::Vec2& point, PickAction action);
+    /// Makes hot the grip whose square holds `point`, and starts stretching
+    /// it; false if no grip square holds it.
+    bool clickGrip(const core::Vec2& point);
     void applyToSelection(std::span<const core::EntityId> ids, PickAction action);
     /// Picks the entity at `point` for an Object prompt.
     void pickObject(const core::Vec2& point, bool shift);
@@ -343,6 +378,9 @@ private:
     DrawingAids m_drawingAids;
     double m_pixelSize{1.0};
     bool m_askingSelection{false};  ///< m_command exists but is not started yet
+    /// The grip being stretched: m_command is then the runner's own grip
+    /// command, which keeps the selection when it ends.
+    std::optional<core::Vec2> m_hotGrip;
 };
 
 }  // namespace tg::cmd

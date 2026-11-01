@@ -14,6 +14,7 @@ add_library(tg_cmd
     src/commands/file_commands.cpp
     src/commands/erase_command.cpp
     src/commands/explode_command.cpp
+    src/commands/grip_command.cpp
     src/commands/layer_commands.cpp
     src/commands/line_command.cpp
     src/commands/mirror_commands.cpp
