@@ -8,9 +8,13 @@
 - **Riferimenti:** issue `[0.7-R17]` (#…), agente gemini: la facciata (lato,
   esiti, polilinee, larghezze, unità); i valori geometrici dall'archivio dei
   casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#22, R17. La richiesta diventa il
-  pacchetto di solid-space che realizza `offset.hpp`, quando la tappa 0.2 di
-  solid-space lo avrà (ADR 0030, punto 13)
+- **Dipende da:** P14, Matleyx78/solid-space#130, R17. La richiesta
+  Matleyx78/solid-space#22 è diventata i pacchetti di solid-space che
+  realizzano `offset.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P19
+  (Matleyx78/solid-space#130, bulge ricostruito, riferimenti
+  Matleyx78/solid-space#129), che comprende gli altri tra le sue dipendenze
+  (Matleyx78/solid-space#63). Prima di #130 `offsetCurve` sbaglia in silenzio
+  sugli archi quasi interi (Matleyx78/solid-space#127)
 - **Modulo:** `core` (più la domanda `offset` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 10–12; l'[ADR 0012 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0012-curva-parallela-nel-piano.md)
@@ -29,8 +33,8 @@ Il contratto accettato con l'ADR 0012 di solid-space:
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che chiude il pacchetto di solid-space che realizza
-  `offset.hpp`. Se la issue non lo dice, chiedilo e non cominciare.
+  sottomodulo: quello che chiude Matleyx78/solid-space#130, l'ultimo
+  pacchetto di solid-space che realizza `offset.hpp`. Se la issue non lo dice, chiedilo e non cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 
@@ -49,7 +53,7 @@ Il contratto accettato con l'ADR 0012 di solid-space:
 enum class OffsetOutcome : std::uint8_t {
     Done,      ///< `entity` holds the copy
     Vanished,  ///< nothing is left at that distance
-    Failed,    ///< a polyline copy that cannot be made without self-intersections
+    Failed,    ///< solid-space could not make the copy (its outcome failed)
     NoSide,    ///< the side point lies exactly on the line or circle
 };
 
@@ -77,7 +81,12 @@ struct OffsetResult {
   tipo: la linea con i suoi due estremi nuovi; il cerchio con il nuovo raggio;
   l'arco con il nuovo raggio e **gli stessi angoli** dell'arco di partenza
   (solid-space tiene angolo iniziale e ampiezza, ADR 0012 di solid-space,
-  punto 3). `vanished` dà `Vanished`.
+  punto 3). `vanished` dà `Vanished`; `failed` dà `Failed`. Dalla decisione
+  di Matleyx78/solid-space#127 `offsetCurve` può dare `failed` per un arco
+  quasi intero che i suoi estremi arrotondati e un bulge non rappresentano
+  entro l'errore; il contratto lo dà solo per un `PolylineSegment` curvo, e
+  qui un arco arriva come `Arc` (`bridge::curveOf`), quindi per linea, arco e
+  cerchio non capita e non serve un test che lo provochi.
 - **Polilinea:** `offsetPolyline` con la regola del documento
   (`bridge::policyOf`). Il risultato torna una polilinea aperta o chiusa come
   quella di partenza, con le posizioni e i bulge di solid-space e, per ogni
@@ -89,7 +98,8 @@ struct OffsetResult {
     restano quelle della polilinea di partenza.
 
   `done` dà `Done` con `simple`; `vanished` dà `Vanished`; `failed` dà
-  `Failed`, qualunque sia il motivo.
+  `Failed`, qualunque sia il motivo (anche `notRepresentable`, aggiunto da
+  Matleyx78/solid-space#127).
 - Una diagnosi di solid-space (dati fuori dal dominio, polilinea senza pezzi)
   dà `Failed`.
 - La domanda `offset` del catalogo, con le risposte scritte lì.

@@ -358,3 +358,41 @@ i rimandi ai documenti che cambia.
   prima della pull request valgono subito, anche per i pacchetti rimasti della
   [tappa 0.7](tappe/0.7-modifiche.md), di cui si chiarisce il passaggio storico
   sulle schede scritte prima della revisione.
+- **2026-11-01 — Raccordi, cerchi e spigoli oltre il dominio; curva parallela
+  non rappresentabile.** Il responsabile porta nella tappa 0.7 due decisioni di
+  solid-space prese dopo che le schede e i riferimenti R17, R19, R20 e R21
+  erano scritti:
+  - `fillet` e `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio
+    (dato 2) anche quando il centro del cerchio, o lo spigolo del raggio 0,
+    cade oltre `kMaxCoordinate`: due rette quasi parallele che si incontrano
+    lontanissimo (Matleyx78/solid-space#66, #70, #122, #126; ADR 0011 di
+    solid-space, righe **Corretto:**). Tecnigrafo lo tratta con il nuovo
+    esito `CornerOutcome::OutOfDomain` in `fillet`, `filletSegments` e
+    `circleTangentTangentRadius` (P19); `filletPolyline` lascia il vertice
+    com'è e lo conta in `tooShort`. `FILLET` e `CIRCLE` *Ttr* scrivono
+    `Lines are nearly parallel.` e non cambiano il disegno (P20). `CHAMFER` dà
+    lo stesso esito e lo stesso messaggio quando `intersect` omette lo
+    spigolo oltre il dominio (`omittedBeyondDomain`), distinto da `Lines are
+    parallel.` (P21). Un raggio scritto dall'utente oltre `kMaxCoordinate`
+    dà la stessa diagnosi, ma è un dato fuori dal dominio: la facciata lo
+    riconosce prima di chiamare solid-space e dà `None` (ADR 0035, punto 23);
+  - `offsetCurve` può dare `failed` per un arco quasi intero che i suoi
+    estremi arrotondati e un bulge non rappresentano, e `offsetPolyline` ha il
+    nuovo motivo `OffsetFailure::notRepresentable`
+    (Matleyx78/solid-space#127). `failed` dà `Failed` anche per linea, arco e
+    cerchio, dove il contratto non lo dà mai, perché un arco arriva a
+    solid-space come `Arc`; per la polilinea non cambia niente. P17 aspetta
+    però Matleyx78/solid-space#130 (0.2-P19, bulge ricostruito, riferimenti
+    Matleyx78/solid-space#129): oggi `offsetCurve` sbaglia in silenzio sugli
+    archi quasi interi, e R19 di solid-space può spostare di qualche ulp casi
+    del suo archivio. In "Dipende da" di P17 la #130 prende il posto della
+    Matleyx78/solid-space#63, che ne è una dipendenza. R17 (#362), già chiusa,
+    non si riapre: i suoi casi non cambiano.
+
+  Correggono l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punti
+  12–15, con una riga **Corretto:**; cambiano le schede
+  [P17](tappe/0.7/P17-curva-parallela.md), [P19](tappe/0.7/P19-raccordi-core.md),
+  [P20](tappe/0.7/P20-fillet.md) e [P21](tappe/0.7/P21-chamfer.md), il
+  catalogo delle domande ([verifica/domande.md](verifica/domande.md), esito
+  `out-of-domain`) e il piano della [tappa 0.7](tappe/0.7-modifiche.md) in
+  "Modifiche al piano". I riferimenti già uniti non cambiano.
