@@ -108,6 +108,13 @@ SS_UNBLOCKS = [
     (372, "R4b, R8a, R8b"),
     (373, "P4, P8 (con P5, P6, P7)"),
 ]
+# What the plan 0.2 of solid-space has since the review of the contract: C, with
+# no number, which later packages wait for.
+SS_CONTRACT = [
+    ("C", 133, ""),
+    ("R19", 129, "P1 (#34), C (#133)"),
+    ("P19", 130, "P13 (#59), P14 (#63), C (#133), R19 (#129)"),
+]
 
 
 def ss_plan(packages=SS_PACKAGES, unblocks=SS_UNBLOCKS) -> str:
@@ -290,6 +297,64 @@ class Unblocks(unittest.TestCase):
         self.assertEqual((stage.version, stage.open, stage.plan_path, stage.milestone),
                          ("0.2", True, "docs/tappe/0.2-geometria-del-piano.md", 2))
         self.assertIsNone(d.parse_ss_roadmap(SS_ROADMAP, "0.8"))
+
+
+class ContractReview(unittest.TestCase):
+    """The package C of solid-space, the review of the contract of the stage."""
+
+    order = [p[0] for p in SS_PACKAGES + SS_CONTRACT]
+
+    def test_plan_with_c(self):
+        text = ss_plan(SS_PACKAGES + SS_CONTRACT).replace(
+            "| C Titolo |", "| C Revisione del contratto: `offset.hpp` e `tangency.hpp` |")
+        self.assertIn("| C Revisione del contratto: `offset.hpp` e `tangency.hpp` |", text)
+        plan = d.parse_ss_plan(text, "ss.md")
+        self.assertEqual(plan.order[-3:], ["C", "R19", "P19"])
+        self.assertEqual(plan.issue["C"], 133)
+        self.assertEqual(plan.deps["C"], [])
+        self.assertEqual(plan.deps["R19"], ["P1", "C"])
+        self.assertEqual(plan.deps["P19"], ["P13", "P14", "C", "R19"])
+        self.assertIn("C", plan.closure(["P19"]))
+        self.assertNotIn("C", plan.closure(["P14"]))
+        self.assertEqual(plan.id_of(133), "C")
+
+    def test_expand_c(self):
+        e = lambda cell: d.expand(cell, self.order, "x")  # noqa: E731
+        self.assertEqual(e("C"), ["C"])
+        self.assertEqual(e("R19, C"), ["R19", "C"])
+        self.assertEqual(e("P4–P7, C (con R19)"), ["P4", "P5", "P6", "P7", "C", "R19"])
+        # a range of one kind never takes C, even if C sits between its ends
+        self.assertEqual(e("P15–P19"), ["P15", "P16", "P19"])
+        self.assertEqual(e("R14a–c, P8"), ["R14a", "R14b", "R14c", "P8"])
+        with self.assertRaisesRegex(d.Failure, "C is not in the package table"):
+            d.expand("C", [p[0] for p in SS_PACKAGES], "x")
+
+    def test_c_is_not_the_start_of_a_word(self):
+        e = lambda cell: d.expand(cell, self.order, "x")  # noqa: E731
+        self.assertEqual(e("Come Casi Cosa Cx C1, P8"), ["P8"])
+        plan = d.parse_ss_plan(ss_plan(SS_PACKAGES + SS_CONTRACT, SS_UNBLOCKS + [(364, "Come P8, Casi")]), "ss.md")
+        self.assertEqual(plan.unblocks[364], ["P8"])
+
+    def test_unblocks_with_c(self):
+        unblocks = [(357, "P4, P8, C")]
+        plan = d.parse_ss_plan(ss_plan(SS_PACKAGES + SS_CONTRACT, unblocks), "ss.md")
+        self.assertEqual(plan.unblocks[357], ["P4", "P8", "C"])
+
+    def test_bad_first_cell_names_c(self):
+        text = ss_plan(SS_PACKAGES + SS_CONTRACT).replace("| C Titolo |", "| Revisione del contratto |")
+        with self.assertRaisesRegex(d.Failure, r"ss\.md:[0-9]+: the first cell must start with PN, RN or C"):
+            d.parse_ss_plan(text, "ss.md")
+
+    def test_proposal_names_c(self):
+        w = world_07()
+        unblocks = [(n, f"{cell}, C" if n == 357 else cell) for n, cell in SS_UNBLOCKS]
+        w.responses[f"repos/{SS}/contents/docs/tappe/0.2-geometria-del-piano.md?ref=main"] = \
+            {"content": b64(ss_plan(SS_PACKAGES + SS_CONTRACT, unblocks))}
+        w.responses[f"repos/{SS}/issues?state=all&per_page=100&milestone=2"].append(ss_issue(133))
+        code, out, _, _ = w.run("--senza-project")
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"P14 \(docs/tappe/0\.7-modifiche\.md:[0-9]+\): \"Dipende da\" cites the request "
+                              rf".*; with the packages of solid-space it is: \"P0, {SS}#49, {SS}#56, {SS}#133, R14\"")
 
 
 def aligned_world(**changes) -> World:
