@@ -188,10 +188,10 @@ struct JoinResult {
   solid-space con la regola del documento.
 - Le prove a mano dei punti 5 e 6 di [dxf-di-prova.md](dxf-di-prova.md) ("Che
   cosa resta da controllare") sono fatte (2026-11-02): la 6 ha confermato B16;
-  la 5 ha smentito B11, che è la regola di adesso. Prima di cominciare
-  controlla nella issue l'esito della **prova 7**, che prova la regola nuova
-  degli archi. Se AutoCAD la smentisce, fermati: B11 si rivede prima di questo
-  pacchetto.
+  la 5 ha smentito B11, che è la regola di adesso, e la 7 l'ha confermata sui
+  due casi che la distinguono dalla vecchia (0°→90° con 200°→300° dà 0°→300°;
+  con 300°→30° dà il cerchio con la domanda). Non c'è niente da controllare
+  nella issue.
 
 ## Test richiesti
 

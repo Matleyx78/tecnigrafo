@@ -297,7 +297,24 @@ Prima dei pacchetti indicati, una prova a mano:
    Si prova anche la domanda del cerchio nella sequenza degli script (il
    `JOIN` vecchio, senza *cLose*), per sapere se c'è anche lì. Serve a P22 e
    P23 (ADR 0035, punti 17–19): se AutoCAD smentisce, B11 si rivede prima di
-   P22. L'esito si scrive qui e nella issue di P22.
+   P22. L'esito si scrive qui e nella issue di P22. **Esito (2026-11-02):**
+   confermata, anche nella sequenza degli script. Le figure sono in
+   `dxf-di-prova/8-prova-7.scr` (i sei archi, tre coppie) e in
+   `dxf-di-prova/8b-join-script.scr` (il `JOIN` degli script; fa prima lo zoom,
+   perché un punto fuori dallo schermo non seleziona niente):
+   - caso 1 (sorgente 0°→90°, arco 200°→300°): «2 archi uniti in 1 arco», e
+     `LIST` dà un arco con angolo iniziale 0 e finale 300: la regola nuova;
+   - caso 2 (sorgente 0°→90°, arco 300°→30°): compare la domanda «I segmenti di
+     arco combinati formano un cerchio. Convertire in cerchio? [Sì/No]
+     <Sì>:»; con «No» non unisce niente e non scrive alcun messaggio;
+   - `JOIN` interattivo con «Sì», sulle stesse due figure (a centro 80,0, con i
+     punti scritti a mano): il cerchio, e «2 archi uniti e convertiti in
+     cerchio»;
+   - sequenza degli script («Selezionare oggetto sorgente:», «Selezionare gli
+     archi da unire all'origine o [cHiudi]:», poi «Selezionare gli archi da
+     unire all'origine:»): dopo il secondo arco e Invio compare la **stessa
+     domanda del cerchio**, e con «Sì» il cerchio e lo stesso messaggio.
 
-Le prove 1, 2, 4, 5 e 6 sono in `autocad-prove-a-mano.dxf`. Restano la 3 e la
-7.
+   I disegni di questa prova non sono salvati in un DXF.
+
+Le prove 1, 2, 4, 5 e 6 sono in `autocad-prove-a-mano.dxf`. Resta la 3.

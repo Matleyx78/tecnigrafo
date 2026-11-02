@@ -56,9 +56,9 @@
   come in AutoCAD, in senso antiorario a partire dall'inizio della sorgente;
   se arrivano al giro intero formano un cerchio, e `JOIN` interattivo chiede se
   convertirlo (punti 17 e 18). La regola vecchia, il cerchio meno il vuoto più
-  grande, decade. La regola nuova ha una prova a mano ancora da fare, la 7 di
-  [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), prima del pacchetto
-  dell'unione.
+  grande, decade. La regola nuova è confermata dalla prova 7 di
+  [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), fatta il 2026-11-02 sui due
+  casi che la distinguono dalla vecchia.
 
 ## Contesto
 
@@ -343,9 +343,10 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
     Una linea accetta linee allineate, un arco archi dello stesso cerchio (uno per
     clic, con l'opzione *cLose*), una polilinea linee, archi e polilinee contigue.
     Gli archi si coprono come al punto 17; se coprono il giro intero senza
-    *cLose*, che la sequenza chieda la conversione in cerchio lo dice la prova 7
-    di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), da fare prima del
-    pacchetto dell'unione (corretto il 2026-11-02).
+    *cLose*, anche questa sequenza chiede la conversione in cerchio, con la
+    stessa domanda e le stesse risposte (prova 7 di
+    [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), 2026-11-02); con *cLose*
+    non chiede niente (corretto il 2026-11-02).
 20. **Identità:** l'entità sorgente resta (ADR 0031, punto 7); con più oggetti
     insieme la sorgente è il primo scelto.
 
@@ -399,9 +400,9 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 - I riferimenti dei comandi prendono i valori geometrici dall'archivio dei casi
   di solid-space, quando il caso c'è (ADR 0030, punto 14), e dal DXF di AutoCAD
   negli altri casi.
-- La regola degli archi dello stesso cerchio (punto 17) si conferma con la
-  prova 7 di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md) prima del
-  pacchetto dell'unione; se AutoCAD la smentisce, si corregge prima.
+- La regola degli archi dello stesso cerchio (punto 17) è confermata dalla
+  prova 7 di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md) (2026-11-02), anche
+  per la domanda del cerchio nella sequenza degli script (punto 19).
 - Due domande restano aperte fino alla prova in AutoCAD LT: proprietà dell'arco
   di raccordo (punto 16) e testi inglesi dei messaggi (punto 22). Se la prova
   smentisce il punto 4 nel modo rapido, lo si corregge prima del pacchetto di

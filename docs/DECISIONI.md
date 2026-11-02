@@ -560,3 +560,17 @@ i rimandi ai documenti che cambia.
   e il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al
   piano". P19–P21 si riprendono dopo il merge; P22 e P23 dopo il merge e dopo
   la prova 7.
+- **2026-11-02 — Prova 7 in AutoCAD: la regola degli archi di B11 è confermata.**
+  Il responsabile ha fatto la prova a mano proposta nella
+  [#468](https://github.com/Matleyx78/tecnigrafo/issues/468)
+  ([dxf-di-prova.md](tappe/0.7/dxf-di-prova.md), punto 7). Sullo stesso cerchio,
+  con sorgente 0°→90°: l'arco 200°→300° dà l'arco 0°→300°, e l'arco 300°→30°
+  chiede se convertire in cerchio (con «No» non unisce niente e non scrive
+  messaggi; con «Sì» dà il cerchio). **La sequenza degli script fa la stessa
+  domanda del cerchio**, con lo stesso messaggio finale: P23 la fa in tutte e
+  due le sequenze, con *cLose* senza domanda. P22 e P23 non aspettano più
+  nessuna prova. Cambiano l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md)
+  (punto 19 e le righe che aspettavano la prova), le schede
+  [P22](tappe/0.7/P22-unione-core.md) e [P23](tappe/0.7/P23-join.md),
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md) (l'esito e due script, in
+  `dxf-di-prova/`) e il piano della [tappa 0.7](tappe/0.7-modifiche.md).
