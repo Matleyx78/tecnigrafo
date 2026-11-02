@@ -253,9 +253,38 @@ Prima dei pacchetti indicati, una prova a mano:
 2. **`FILLET` tra due linee su layer diversi:** su quale layer va l'arco? Serve a
    P20 (ADR 0035, punto 16). **Esito (2026-11-02):** sul layer corrente, come
    dice il punto 16 per due entità con proprietà diverse: confermato.
-3. **I testi inglesi dei messaggi osservati in italiano**, se c'è un AutoCAD in
-   inglese a disposizione; altrimenti dalla documentazione di AutoCAD. Servono a
-   P5, P16, P18, P20, P21 e P23 (ADR 0035, punto 22).
+3. **I testi inglesi dei messaggi osservati in italiano.** Servono a P5, P16,
+   P18, P20, P21 e P23 (ADR 0035, punto 22). **Esito (2026-11-02):** non c'è un
+   AutoCAD inglese, e il responsabile decide che non serve: i messaggi non
+   devono ripetere AutoCAD parola per parola. Si traducono quelli osservati e
+   si scrivono nello stesso stile quelli che nessuna prova ha mostrato; la
+   tabella qui sotto li fissa tutti, e il punto 22 dell'ADR 0035 è corretto.
+
+   | Comando | Testo inglese | Origine |
+   |---|---|---|
+   | `JOIN` | `<n> lines joined into 1 line` | osservato: «2 linee unite in 1 linea» |
+   | `JOIN` | `1 line joined to source` | osservato: «1 linea unita all'origine» |
+   | `JOIN` | `<n> objects converted to 1 polyline` | osservato |
+   | `JOIN` | `<n> segments added to polyline` | osservato: «1 segmento unito in 1 polilinea» |
+   | `JOIN` | `<n> arcs joined and converted to circle` | osservato, approvato dal responsabile |
+   | `JOIN` | `<n> arcs joined into 1 arc` | osservato: «2 archi uniti in 1 arco» |
+   | `JOIN` | `0 objects joined, <n> objects discarded from the operation.` | osservato |
+   | `JOIN` | `<k> objects converted to 1 polyline, <n> objects discarded from the operation.` | osservato (con scartate, il resto del messaggio precede la virgola) |
+   | `JOIN` | `Arc segments combined form a circle. Convert to circle? [Yes/No] <Yes>:` | osservato |
+   | `EXPLODE` | `Exploding this polyline has lost width information.` e `The UNDO command will restore it.` | osservato |
+   | `FILLET` | `<n> lines were filleted`, `<m> were too short` | osservato: «1 linea raccordata(e)» |
+   | `CHAMFER` | `<n> lines were chamfered`, `<m> were too short` | osservato: «1 linea cimata(e)» |
+   | `CHAMFER` | `(TRIM mode) Current chamfer Dist1 = <d1>, Dist2 = <d2>` e `(NOTRIM mode) …` | osservato: «(TRIMMODE 0 - Nontaglia) …» |
+   | `TRIM` | `Object does not intersect an edge.` | scritto da noi |
+   | `OFFSET` | `Cannot offset that object.` | scritto da noi |
+   | `FILLET` | `Cannot fillet those objects.` (`None`, `InfinitelyMany`, `NotAllowed`) | scritto da noi |
+   | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |
+   | `FILLET`, `CHAMFER` | `Pick a point that is not on the other object.` (`AmbiguousPick`) | scritto da noi |
+   | `FILLET`, `CHAMFER` | `Lines are nearly parallel.` (`OutOfDomain`) | scritto da noi |
+   | `FILLET`, `CHAMFER`, `OFFSET` | `Value must be positive.` (distanza o raggio negativo); `Requires numeric distance.` (non numerico) | scritto da noi |
+
+   Singolare e plurale: `<n> lines were filleted` con n = 1 resta così, senza
+   forme speciali.
 4. **`FILLET` e `CHAMFER` con `TRIMMODE` = 0 su una polilinea:** su due
    segmenti di una stessa polilinea, per esempio [(0,10),(0,0),(10,0)] con
    raggio 1 o distanze 1 e 1, e con l'opzione *Polyline*, AutoCAD modifica la

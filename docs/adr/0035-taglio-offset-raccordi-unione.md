@@ -59,6 +59,11 @@
   grande, decade. La regola nuova è confermata dalla prova 7 di
   [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), fatta il 2026-11-02 sui due
   casi che la distinguono dalla vecchia.
+- **Corretto:** 2026-11-02 — su decisione del responsabile, chiusa la prova 3
+  di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md): il punto 22 non chiede più
+  di controllare i testi su un AutoCAD inglese; valgono quelli della tabella di
+  quel file. Nessun codice unito attua il punto (eccezione di
+  [GOVERNANCE.md](../../GOVERNANCE.md)).
 
 ## Contesto
 
@@ -312,7 +317,7 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       loro estremi, come in AutoCAD (`autocad-prove-a-mano.dxf`, punto 5). Se
       arriva al giro intero, gli archi formano un cerchio e il comando chiede
       `Arc segments combined form a circle. Convert to circle? [Yes/No]
-      <Yes>:` (testo inglese da controllare, punto 22): con *Yes* il
+      <Yes>:` (testo del punto 22): con *Yes* il
       risultato è il cerchio, con *No* niente si unisce e il disegno non
       cambia (corretto il 2026-11-02);
     - una linea o un arco nascono solo se tutte le entità scelte sono linee
@@ -354,11 +359,14 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 
 21. **`Esc`** conserva le operazioni già completate e annulla solo quella in
     corso (ADR 0015).
-22. **Testi dei messaggi.** I messaggi che vengono da AutoCAD (taglio senza
-    bordo, offset impossibile, raccordo impossibile, unione non riuscita,
-    larghezze perse) si scrivono con le parole della versione inglese. Quelli
-    osservati nella prova sono in italiano: la versione inglese si controlla
-    prima del pacchetto che li introduce.
+22. **Testi dei messaggi.** I messaggi di questi comandi sono in inglese e
+    seguono lo stile di AutoCAD, ma Tecnigrafo non deve ripeterne le parole
+    una per una: i testi sono quelli della tabella "Testi inglesi dei
+    messaggi" di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), tradotti
+    dall'italiano osservato nelle prove a mano o scritti nello stesso stile
+    (corretto il 2026-11-02, su decisione del responsabile: non c'è un AutoCAD
+    inglese su cui controllarli). Un testo nuovo si aggiunge a quella tabella
+    nella scheda del pacchetto che lo introduce.
 23. **Dati fuori dal dominio di solid-space** (coordinate o raggi oltre 2^50,
     circa 1.1e15): nessun disegno reale ci arriva. Le curve che solid-space
     rifiuta non tagliano, non si raccordano e non si uniscono, e il comando lo
@@ -403,8 +411,9 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 - La regola degli archi dello stesso cerchio (punto 17) è confermata dalla
   prova 7 di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md) (2026-11-02), anche
   per la domanda del cerchio nella sequenza degli script (punto 19).
-- Due domande restano aperte fino alla prova in AutoCAD LT: proprietà dell'arco
-  di raccordo (punto 16) e testi inglesi dei messaggi (punto 22). Se la prova
+- Le due domande aperte per la prova in AutoCAD LT, proprietà dell'arco di
+  raccordo (punto 16) e testi inglesi dei messaggi (punto 22), sono chiuse
+  (2026-11-02). Se la prova
   smentisce il punto 4 nel modo rapido, lo si corregge prima del pacchetto di
   `TRIM`.
 - Le funzioni di solid-space si usano solo quando il loro pacchetto di

@@ -49,9 +49,8 @@ Enter layer option for offset objects [Current/Source] <Source>:
   0 (il punto sta sulla curva) si tratta come `NoSide`.
   - `Done`: la copia con `addCopy` (layer corrente con *Layer Current*), e
     l'originale cancellato con *Erase Yes*.
-  - `Vanished`, `Failed` e `NoSide`: il messaggio inglese di AutoCAD (da
-    controllare, ADR 0035 punto 22; per difetto `Cannot offset that object.`)
-    e nessuna copia.
+  - `Vanished`, `Failed` e `NoSide`: il messaggio `Cannot offset that object.`
+    (tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3) e nessuna copia.
     `Failed` vale anche per un oggetto che non dà un lato, come una linea di
     lunghezza zero (P17, decisione B5 della #464 del 2026-11-01): lo stesso
     messaggio, senza altri controlli nel comando.
@@ -62,9 +61,9 @@ Enter layer option for offset objects [Current/Source] <Source>:
 
 ## Regole della tappa che valgono qui
 
-- I testi di `Current settings` e dei messaggi vanno controllati sulla versione
-  inglese di AutoCAD (ADR 0035, punto 22); se differiscono, vale AutoCAD e lo
-  scrivi nella pull request.
+- I testi di `Current settings` e dei messaggi non vanno controllati: valgono
+  quelli della scheda e della tabella di [dxf-di-prova.md](dxf-di-prova.md),
+  punto 3 (ADR 0035, punto 22, corretto il 2026-11-02).
 - `builtin_commands.cpp`, `command_descriptions.cpp`, `cmd/CMakeLists.txt`:
   solo le tue righe; prima di te P16, dopo di te P20.
 - Nessuna decisione geometrica propria: lato ed esito vengono da `offset.hpp`.

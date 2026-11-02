@@ -86,10 +86,9 @@ continuazione tangente dopo un arco (`Length of line:`) resta fuori.
   le tue righe, in ordine alfabetico; dopo di te li tocca P6.
 - Le descrizioni dei comandi elencano le domande di entrambe le sequenze
   (ADR 0032, punto 9).
-- Il testo dei messaggi di `EXPLODE` va controllato sulla versione inglese di
-  AutoCAD prima di scriverlo ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta
-  da controllare"): se differisce, vale l'inglese di AutoCAD e lo scrivi nella
-  pull request.
+- I testi dei messaggi di `EXPLODE` sono quelli della tabella di
+  [dxf-di-prova.md](dxf-di-prova.md) ("Che cosa resta da controllare", punto 3,
+  chiuso il 2026-11-02): niente da controllare.
 
 ## Test richiesti
 

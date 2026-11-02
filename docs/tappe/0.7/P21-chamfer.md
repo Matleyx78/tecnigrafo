@@ -169,13 +169,15 @@ Select 2D polyline or [Distance/Angle/Method]:
   spigolo, *Multiple*, *Undo*, le due sequenze (negli script il comando finisce
   dopo *Distance*, *Angle*, *mEthod* e *Trim*), le proprietà della linea nuova
   (ADR 0035, punto 16).
-- `NotAllowed` (un arco) e `None` danno il messaggio inglese di AutoCAD (da
-  controllare, ADR 0035 punto 22); `OutOfDomain` dà il messaggio di `FILLET`
+- `NotAllowed` (un arco) dà `Cannot chamfer those objects.`, `None` e
+  `InfinitelyMany` danno `Lines are parallel.` (tabella di
+  [dxf-di-prova.md](dxf-di-prova.md), punto 3); `OutOfDomain` dà il messaggio di `FILLET`
   per le rette quasi parallele, `Lines are nearly parallel.` (P20), distinto
   da `Lines are parallel.`; `AmbiguousPick` dà il messaggio di `AmbiguousPick`
   di `FILLET` (B9); in tutti i casi la domanda resta.
 - Una distanza, una lunghezza o un angolo negativo o non numerico dà il
-  messaggio inglese di AutoCAD (da controllare, ADR 0035 punto 22) e la
+  messaggio della tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3
+  (`Value must be positive.` o `Requires numeric distance.`), e la
   domanda resta (B8): a `core` arrivano solo valori che rispettano la sua
   precondizione.
 - Un `first` o un `second` vuoto cancella l'entità, come in `FILLET` (P20,

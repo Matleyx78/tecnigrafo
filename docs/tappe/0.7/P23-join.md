@@ -49,7 +49,7 @@ con la domanda `Select source object or multiple objects to join at once:`, poi:
   Arc segments combined form a circle. Convert to circle? [Yes/No] <Yes>:
   ```
 
-  (testo inglese da controllare, ADR 0035, punto 22), con le parole chiave
+  (testo osservato in AutoCAD e tradotto, ADR 0035, punto 22), con le parole chiave
   *Yes* e *No* e *Yes* predefinito, come `Enter Trim mode option [Trim/No trim]
   <Trim>:` di `FILLET` (P20). Con *Yes* nasce il cerchio di `created` con
   `addCopy` dalla sorgente, la sorgente e gli archi di `consumed` si cancellano,
@@ -79,14 +79,19 @@ Select objects to join to source:
   compare la domanda, e con «Sì» il messaggio è lo stesso). Con *cLose* non
   chiede niente.
 
-**Messaggi**, come quelli di AutoCAD in `autocad-unione.dxf`, in inglese (da
-controllare, ADR 0035 punto 22):
+**Messaggi**, come quelli di AutoCAD in `autocad-unione.dxf`, in inglese (la
+tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3, ADR 0035 punto 22):
 
 - `<n> lines joined into 1 line`;
 - `<n> objects converted to 1 polyline`;
 - `<n> segments added to polyline`;
 - `<n> arcs joined and converted to circle`, dopo *Yes* alla domanda del cerchio
   (osservato in italiano: «2 archi uniti e convertiti in cerchio»);
+- `<n> arcs joined into 1 arc` e `1 line joined to source`, per un arco o una
+  linea che si unisce alla sorgente;
+- con scartate, il messaggio dell'esito finisce con `, <m> objects discarded
+  from the operation.` (per esempio `2 objects converted to 1 polyline, 1
+  object discarded from the operation.`, con `1 object` al singolare);
 - `0 objects joined, <n> objects discarded from the operation.`
 
 Un passo di annulla `Join`.
