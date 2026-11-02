@@ -8,12 +8,14 @@
 - **Riferimenti:** issue `[0.7-R22]` (#…), agente gemini: la facciata (catena,
   ordine, entità che risultano, unità); i confini della regola dall'archivio
   dei casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22. La richiesta diventa il
+- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22,
+  Matleyx78/solid-space#158. La richiesta diventa il
   pacchetto di solid-space che realizza `coincidence.hpp`, quando la tappa 0.2
-  di solid-space lo avrà (ADR 0030, punto 13). Dal 2026-11-02 anche la issue
-  `contratto` di solid-space sull'ordine degli estremi delle linee allineate
-  (punto 3 della #373, testo in quella issue), e il pacchetto di solid-space
-  che ne applica la decisione
+  di solid-space lo avrà (ADR 0030, punto 13). Matleyx78/solid-space#158 è la
+  issue `contratto` sull'ordine degli estremi delle linee allineate (punto 3
+  della #373; il responsabile sceglie l'opzione 2): quando la pull request di
+  solid-space che la applica è unita, la issue di P22 dice a quale commit
+  spostare il sottomodulo
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B10–B13,
   B16 e B17 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
   revisione di B11 dopo le prove in AutoCAD (#468); 2026-11-02, con le
@@ -37,9 +39,10 @@ Il contratto accettato con l'ADR 0009 di solid-space:
 `solid_space/geom2d/coincidence.hpp` (`areAligned`, `onSameCircle`,
 `isStraight`) e `solid_space/robust/tolerance.hpp` (`coincident`), con i tipi
 di `curves.hpp`. Per le linee allineate anche la funzione che ordina gli
-estremi lungo la sorgente, che la decisione sulla issue `contratto` del punto 3
-della #373 aggiunge al contratto: il suo nome e il commit del sottomodulo li
-scrive la issue di P22 dopo quella decisione.
+estremi lungo la sorgente, che Matleyx78/solid-space#158 aggiunge al contratto
+(opzione 2: i due estremi del segmento unito, con i pareggi nell'ordine dei
+segmenti): il suo nome e il commit del sottomodulo li scrive la issue di P22
+quando la decisione è applicata.
 
 ## Prima di cominciare
 
@@ -122,8 +125,9 @@ struct JoinResult {
 - **Linee allineate:** la linea unita va dall'estremo della prima all'estremo
   dell'ultima lungo la sorgente, anche con spazi (`autocad-unione.dxf`, casi b
   ed e1). L'ordine degli estremi lungo la sorgente, pareggi compresi, viene da
-  solid-space, con la funzione che aggiunge la decisione sulla issue
-  `contratto` (punto 3 della #373, 2026-11-02): la facciata non proietta e non
+  solid-space, con la funzione che aggiunge Matleyx78/solid-space#158
+  (punto 3 della #373, 2026-11-02; opzione 2: dati i segmenti allineati,
+  solid-space dà i due estremi del segmento unito): la facciata non proietta e non
   confronta da sé (ADR 0035, punto 1). Per esempio, in millimetri, sorgente
   (0,0)→(10,0) e linea (0,5e-7)→(5,0): quale fra (0,0) e (0,5e-7) è il primo
   estremo lo dice solid-space.

@@ -597,9 +597,12 @@ i rimandi ai documenti che cambia.
      ha estremi liberi, non entra nella catena e si scarta.
   3. **Ordine degli estremi delle linee allineate: C.** L'ordine viene da
      solid-space, con una funzione nuova del contratto, come chiede l'ADR
-     0035, punto 1. È un buco nel contratto: il responsabile apre in
-     solid-space la issue `contratto` (testo nella #373) e decide lì; P22
-     aspetta anche quella issue e il pacchetto che ne applica la decisione.
+     0035, punto 1. È un buco nel contratto:
+     [Matleyx78/solid-space#158](https://github.com/Matleyx78/solid-space/issues/158),
+     in cui il responsabile sceglie l'opzione 2 (dati i segmenti allineati,
+     solid-space dà i due estremi del segmento unito, con i pareggi
+     nell'ordine dei segmenti). P22 la cita in "Dipende da" e aspetta la pull
+     request di solid-space che la applica.
   4. **Arco con angoli uguali: A.** Se `normalizeAngle(σ + il più lontano)`
      dà σ, gli archi formano un cerchio, con `formsCircle` vero, come se il
      più lontano fosse arrivato al giro intero.
