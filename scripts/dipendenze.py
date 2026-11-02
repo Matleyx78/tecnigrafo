@@ -304,7 +304,11 @@ def dep_ref(dep: str, plan: Plan, home: str) -> Ref | None:
 
 # --- The plan of solid-space ----------------------------------------------------
 
-SS_ID = r"[PR][0-9]+[a-z]?"
+# A package of the plan of solid-space: PN or RN with an optional letter (P8,
+# R14a), or the review of the contract of the stage, C, which has no number and
+# never takes part in a range. C must stand alone: without the end of the word
+# it would match the start of any word that begins with C.
+SS_ID = r"(?:[PR][0-9]+[a-z]?|C(?![A-Za-z0-9]))"
 
 
 @dataclass
@@ -361,10 +365,12 @@ def parse_ss_roadmap(text: str, tappa: str) -> SsStage | None:
 def expand(cell: str, order: list[str], where: str) -> list[str]:
     """Package ids in a cell: names (P8, R14a), ranges (P4–P10, R14a–c, with
     the long or short dash, over the packages of the same kind in table
-    order) and brackets (they count too)."""
+    order) and brackets (they count too). The review of the contract, C, is a
+    name only: it has no range."""
     out: list[str] = []
-    for m in re.finditer(rf"(?<![A-Za-z0-9])({SS_ID})(?:\s*[–-]\s*([PR]?[0-9]+[a-z]?|[a-z]\b))?", cell):
-        first, last = m.group(1), m.group(2)
+    ids = r"(?:([PR][0-9]+[a-z]?)(?:\s*[–-]\s*([PR]?[0-9]+[a-z]?|[a-z]\b))?|(C)(?![A-Za-z0-9]))"
+    for m in re.finditer(rf"(?<![A-Za-z0-9]){ids}", cell):
+        first, last = m.group(1) or m.group(3), m.group(2)
         if not last:
             names = [first]
         else:
@@ -398,7 +404,7 @@ def parse_ss_plan(text: str, path: str) -> SsPlan:
         m = re.match(rf"^({SS_ID})\s", c["Pacchetto"] + " ")
         im = re.match(r"^#([0-9]+)$", c["Issue"])
         if not m:
-            raise Failure(f"{path}:{line}: the first cell must start with PN or RN: \"{c['Pacchetto']}\"")
+            raise Failure(f"{path}:{line}: the first cell must start with PN, RN or C: \"{c['Pacchetto']}\"")
         id_ = m.group(1)
         plan.order.append(id_)
         if im:
