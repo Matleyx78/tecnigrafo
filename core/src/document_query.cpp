@@ -4,6 +4,7 @@
 #include "tg/core/document_query.hpp"
 
 #include "tg/core/effective_properties.hpp"
+#include "tg/core/intersections.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 
@@ -188,8 +189,13 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         }
     };
 
+    std::vector<EntityId> nearbyCurves;
     for (const EntityId id : candidates(document, squareAround(pointer, aperture))) {
         const Entity& entity = entityOf(document, id);
+        if (modes.intersection && !std::holds_alternative<Text>(entity) &&
+            distance(entity, pointer) <= aperture) {
+            nearbyCurves.push_back(id);
+        }
         if (const auto* polyline = std::get_if<Polyline>(&entity)) {
             forEachSnapSegment(*polyline, [&](const PolylineSegment& segment) {
                 const double segmentDistance = distance(segment, pointer);
@@ -210,6 +216,31 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         curvePoints.clear();
         appendSnapPoints(entity, modes, curvePoints, from);
         consider(curveDistance, id.value);
+    }
+    if (modes.intersection) {
+        // Stable discovery order also resolves intersections of several pairs
+        // at the same point. Shared stretches deliberately supply no points.
+        std::ranges::sort(nearbyCurves, {}, &EntityId::value);
+        const auto considerCrossings = [&](const Intersections& found, std::uint64_t id) {
+            curvePoints.clear();
+            for (const Crossing& crossing : found.crossings) {
+                curvePoints.push_back({crossing.point, SnapKind::Intersection});
+            }
+            consider(0.0, id);
+        };
+        for (std::size_t i = 0; i < nearbyCurves.size(); ++i) {
+            const EntityId first = nearbyCurves[i];
+            const Entity& entity = entityOf(document, first);
+            if (const auto* polyline = std::get_if<Polyline>(&entity)) {
+                considerCrossings(selfIntersections(*polyline), first.value);
+            }
+            for (std::size_t j = i + 1; j < nearbyCurves.size(); ++j) {
+                const EntityId second = nearbyCurves[j];
+                considerCrossings(intersect(entity, Extension::None, entityOf(document, second),
+                                             Extension::None),
+                                  second.value);
+            }
+        }
     }
     return point ? point : center;
 }

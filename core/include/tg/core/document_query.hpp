@@ -44,8 +44,8 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// Only segments within `aperture` of the pointer are considered; a polyline
 /// with a single vertex counts as a zero-length segment, which offers only its
 /// Endpoint. Among their enabled snap points within `aperture` of the pointer
-/// (endpoints, midpoints, quadrants and perpendicular feet; the intersections
-/// and tangent points are not given yet) the nearest to the pointer wins; at
+/// (endpoints, intersections, midpoints, quadrants and perpendicular feet;
+/// tangent points are not given yet) the nearest to the pointer wins; at
 /// equal distance the order is Endpoint, Intersection, Midpoint, Quadrant,
 /// Perpendicular, Tangent (docs/adr/0033, point 5), then the highest id wins,
 /// then the earliest segment. If there is none, the centre of the nearest
@@ -55,6 +55,10 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// considered when the pointer is within `aperture` of its box
 /// (docs/adr/0013, point 6). With every mode disabled the result is always
 /// std::nullopt.
+///
+/// Intersections come from pairs of visible curves within the aperture and
+/// from self-intersections of each such polyline, without extensions. Shared
+/// stretches offer no intersection points (docs/adr/0033, point 3).
 ///
 /// `from` is the base point of the running command (Command::basePoint()):
 /// the Perpendicular points start from it, and without it there are none. A
