@@ -21,7 +21,10 @@ nella issue.
 
 Repository [Matleyx78/dxf-test-file](https://github.com/Matleyx78/dxf-test-file),
 licenza CC0, commit
-[`4ad9fff`](https://github.com/Matleyx78/dxf-test-file/commit/4ad9fff8a88e65561f3998a56a95adf921b58792).
+[`17875c1`](https://github.com/Matleyx78/dxf-test-file/commit/17875c168d8dd147da26097ecd0f4158009bb0fc)
+(prima [`4ad9fff`](https://github.com/Matleyx78/dxf-test-file/commit/4ad9fff8a88e65561f3998a56a95adf921b58792),
+che ha gli stessi sei file del 2026-10-28 con gli stessi hash; `17875c1`
+aggiunge `autocad-prove-a-mano.dxf`).
 Tutti in DXF 2018 (`AC1032`), in millimetri (`$INSUNITS` 4, `$MEASUREMENT` 1).
 
 | File | SHA-256 | Riferimenti |
