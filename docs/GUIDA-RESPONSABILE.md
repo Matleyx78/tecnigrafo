@@ -130,6 +130,10 @@ Vale per **ogni** pull request, nei due repository.
    Se il verbale apre buchi nuovi, decidili prima del merge: la decisione entra
    nella stessa pull request, che si rivede di nuovo sulle sole funzioni
    toccate.
+   In Tecnigrafo vale lo stesso per **Revisione della correzione: da fare**
+   (una pull request che applica le tue decisioni sui buchi delle schede):
+   uniscila solo dopo il commento **Verbale della revisione della correzione**
+   (B10a, passo 4).
 4. Premi **Squash and merge**.
 5. Nel messaggio che compare, controlla che l'ultima riga sia:
 
@@ -227,6 +231,7 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B8. Lavoro | tutti e due | Claude e Codex |
 | B9. Seconda opinione | tutti e due | Gemini, a lotti; Copilot sulle impegnative |
 | B10. Un riferimento contestato | tutti e due | chi ha scritto i riferimenti |
+| B10a. Un agente si ferma su un buco | Tecnigrafo | tu, poi Claude e Codex |
 | B11. Unire i pacchetti | tutti e due | tu |
 | B12. Chiudere le tappe | tutti e due | Gemini, poi tu |
 
@@ -466,7 +471,9 @@ da" (vale per ogni piano, anche per le schede scritte in B1 senza contratto).
    una riga in "Modifiche al piano", in una pull request che chiude la issue
    della revisione con `Closes #N`. Prima del merge falla rileggere con la lista
    all'agente della revisione, sulle sole interfacce corrette (verbale nella
-   pull request), poi uniscila (A3).
+   pull request), poi uniscila (A3). La correzione segue B10a, passi 3–5:
+   esempi nelle schede, riga **Revisione della correzione: da fare**, due
+   domande in più nella rilettura.
 4. Un buco che sta nel contratto di solid-space e non nella scheda segue la
    strada solita (C, buco nel contratto).
 
@@ -761,6 +768,61 @@ un commento della issue.
 Quando i riferimenti corretti sono uniti, il pacchetto di lavoro si riprende con
 la frase di B8.
 
+### B10a. Un agente si ferma su un buco (tu, poi Claude e Codex)
+
+Un agente si ferma prima di scrivere codice o casi e scrive nella issue del suo
+pacchetto uno o più buchi, ciascuno con un esempio e le scelte possibili
+(AGENTS.md, "Se serve qualcosa a solid-space"). Succederà ancora: la revisione
+delle interfacce riduce i buchi, non li elimina, e una decisione scritta come
+regola breve può aprirne di nuovi (B10 e B11 della #464 hanno aperto due dei
+quattro buchi di P22 nella #373). Ogni volta:
+
+1. **Smista.** Per ogni buco: sta nella **scheda** (il contratto di solid-space
+   determina la risposta, Tecnigrafo no), nel **contratto** (manca anche in
+   solid-space) o **non si sa**. Un buco che non si sa lo smisti tu, in chat
+   con Claude, prima di decidere. I buchi nel contratto prendono la strada di
+   C (issue `contratto` in solid-space); gli altri restano qui.
+2. **Decidi** nella issue del pacchetto, un buco per commento, scegliendo una
+   delle uscite scritte dall'agente (A, B, …) o scrivendone una con lo stesso
+   esempio. Se una scelta dipende da AutoCAD, la prova a mano si fa **prima**
+   di decidere ([dxf-di-prova.md](tappe/0.7/dxf-di-prova.md)).
+3. **Una sola pull request di correzione**, in una chat con Claude e
+   Tecnigrafo in scrittura:
+
+   ```text
+   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+   lettera. Applica le mie decisioni sui buchi della issue #<numero> come dice
+   la guida in B10a, passo 3: docs/DECISIONI.md, le schede che usano le
+   interfacce corrette, la riga Corretto: degli ADR se il loro testo cambia e
+   Modifiche al piano. Ogni decisione va nella scheda con il suo esempio e la
+   risposta scelta, in "Test richiesti". La descrizione comincia con
+   "Revisione della correzione: da fare" e le regole che cambiano. Porta la CI
+   al verde e fermati.
+   ```
+
+   La pull request non chiude la issue del pacchetto: il pacchetto riparte dopo
+   il merge. Se un buco va in solid-space, la pull request lo scrive nella
+   scheda ("Dipende da") e il pacchetto aspetta anche la issue `contratto`.
+4. **Rilettura con la lista.** Prima del merge la rilegge un agente diverso da
+   chi l'ha scritta (di norma Codex), sulle sole regole nuove o corrette:
+
+   ```text
+   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+   lettera. Rivedi la pull request #<numero>, che porta "Revisione della
+   correzione: da fare", come dice AGENTS.md in "Le correzioni delle schede si
+   rivedono": verbale nella pull request, con un buco nuovo per commento. Non
+   modificarla e non scrivere in solid-space. Poi fermati.
+   ```
+
+   Se il verbale apre buchi nuovi, torna al passo 2 sulla stessa pull request;
+   la rilettura si ripete sulle sole regole toccate.
+5. **Unisci** (A3). Se una decisione cambia una risposta che si vede con una
+   domanda del catalogo ([verifica/domande.md](verifica/domande.md)), apri una
+   issue di riferimenti con la lettera dopo il numero (`[X.Y-R<N>b]`, Gemini) e
+   aggiungila in "Dipende da" del pacchetto; altrimenti bastano i test della
+   scheda.
+6. **Riprendi il pacchetto** con la frase di B8.
+
 ### B11. Unire i pacchetti
 
 Ogni pull request si unisce come in A3. In più, durante una tappa:
@@ -849,8 +911,8 @@ chiuse.
 | Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta valutazione e revisione del contratto (B3, B3a, B4). Se non serve, rispondi nella issue e fallo continuare. |
 | Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
 | Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (B2). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |
-| Un agente di Tecnigrafo trova un buco nel contratto di solid-space | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto il testo della issue `contratto`: che cosa manca, un esempio con i dati, le scelte possibili, titolo con il nome dell'intestazione. La apri tu in solid-space e decidi lì; finché è aperta non parte nessun pacchetto che usa quell'intestazione. Fai applicare la decisione in solid-space e aggiorna le schede di Tecnigrafo interessate; poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
-| Un agente di Tecnigrafo trova un buco nella sua scheda: un'interfaccia di Tecnigrafo che intestazione, ADR e scheda non determinano, mentre il contratto di solid-space sì (come in #359) | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto che cosa manca, un esempio e le scelte possibili. Nessuna issue in solid-space: decidi tu e, in una chat con Claude, fai scrivere la decisione in `docs/DECISIONI.md` con la correzione della scheda (e di quelle che usano la stessa interfaccia) e una riga in "Modifiche al piano", in una pull request; poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
+| Un agente di Tecnigrafo trova un buco nel contratto di solid-space | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto il testo della issue `contratto`: che cosa manca, un esempio con i dati, le scelte possibili, titolo con il nome dell'intestazione. La apri tu in solid-space e decidi lì; finché è aperta non parte nessun pacchetto che usa quell'intestazione. Fai applicare la decisione in solid-space e aggiorna le schede di Tecnigrafo interessate (B10a, passi 3–5); poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
+| Un agente di Tecnigrafo trova un buco nella sua scheda: un'interfaccia di Tecnigrafo che intestazione, ADR e scheda non determinano, mentre il contratto di solid-space sì (come in #359) | B10a: smista i buchi, decidi nella issue, fai scrivere a Claude una sola pull request di correzione con **Revisione della correzione: da fare**, falla rileggere con la lista a Codex, uniscila e fai riprendere il pacchetto. Nessuna issue in solid-space, salvo per i buchi che risultano nel contratto. |
 | Serve cambiare un'intestazione di solid-space già accettata come contratto | Apri in solid-space una issue con l'etichetta `contratto` che dice che cosa cambia e perché, e guarda quali schede di Tecnigrafo la usano. Decidi tu per i due progetti; se approvi, la scheda del pacchetto che la cambia lo dice esplicitamente, e in Tecnigrafo si aggiornano le schede che la usano (ADR 0007 di solid-space, punto 15). |
 | Un agente ha scritto o proposto qualcosa nell'altro repository senza che tu l'abbia chiesto | Non unire e non rispondere. Chiudi la pull request o cancella il commento, e di' all'agente: `La regola "Dove puoi scrivere" di AGENTS.md vieta di scrivere nell'altro repository: spiega cos'è successo.` (A1) |
 | `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |
