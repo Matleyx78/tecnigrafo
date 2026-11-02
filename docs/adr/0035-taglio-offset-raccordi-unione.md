@@ -64,6 +64,17 @@
   di controllare i testi su un AutoCAD inglese; valgono quelli della tabella di
   quel file. Nessun codice unito attua il punto (eccezione di
   [GOVERNANCE.md](../../GOVERNANCE.md)).
+- **Corretto:** 2026-11-02 — su decisione del responsabile sui buchi trovati
+  da P22 ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373)); nessun
+  codice unito attua il punto corretto (eccezione di
+  [GOVERNANCE.md](../../GOVERNANCE.md)). (1) Una polilinea chiusa diversa
+  dalla sorgente non ha estremi liberi e non entra nella catena: si scarta.
+  (2) Gli archi dello stesso cerchio formano un cerchio anche quando l'arco
+  calcolato avrebbe l'angolo finale uguale a quello iniziale (punto 17).
+  L'ordine degli estremi delle linee allineate viene da solid-space, come dice
+  già il punto 1: la funzione la aggiunge al contratto una issue `contratto`
+  di solid-space. Le altre decisioni precisano la scheda P22 senza cambiare
+  questo ADR.
 
 ## Contesto
 
@@ -319,13 +330,16 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       `Arc segments combined form a circle. Convert to circle? [Yes/No]
       <Yes>:` (testo del punto 22): con *Yes* il
       risultato è il cerchio, con *No* niente si unisce e il disegno non
-      cambia (corretto il 2026-11-02);
+      cambia (corretto il 2026-11-02). Lo stesso vale quando l'arco calcolato
+      avrebbe l'angolo finale uguale a quello iniziale (corretto il
+      2026-11-02, #373);
     - una linea o un arco nascono solo se tutte le entità scelte sono linee
       allineate alla sorgente o archi del suo cerchio; altrimenti vale la
       catena (punto 18), e le entità che non vi entrano si scartano (corretto
       il 2026-11-01);
     - linee, archi e polilinee che si toccano agli estremi diventano una
-      polilinea;
+      polilinea; una polilinea chiusa diversa dalla sorgente non ha estremi
+      liberi e si scarta (corretto il 2026-11-02, #373);
     - entità che non si toccano non si uniscono, e compare il messaggio
       `0 objects joined, <n> objects discarded from the operation.`
 

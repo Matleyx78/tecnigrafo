@@ -585,3 +585,30 @@ i rimandi ai documenti che cambia.
   di quel file. L'ADR 0035, punto 22, è corretto (nessun codice lo applica
   ancora). I pacchetti P5, P16, P18, P20, P21 e P23 non hanno più testi da
   controllare.
+- **2026-11-02 — Buchi della scheda P22: le decisioni.** P22
+  ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373#issuecomment-6576564686))
+  si è fermato su quattro buchi. Il responsabile decide:
+  1. **Verso quando la catena cresce dall'inizio: B.** Vince l'inizio della
+     candidata, che diventa il vertice comune con la catena: dalla fine si
+     aggiunge com'è, dall'inizio si gira. Con un solo estremo coincidente, il
+     vertice comune è quello e la candidata si orienta allo stesso modo. B10
+     resta, scritta per tutti e due i lati.
+  2. **Polilinee chiuse: A.** Una polilinea chiusa diversa dalla sorgente non
+     ha estremi liberi, non entra nella catena e si scarta.
+  3. **Ordine degli estremi delle linee allineate: C.** L'ordine viene da
+     solid-space, con una funzione nuova del contratto, come chiede l'ADR
+     0035, punto 1. È un buco nel contratto: il responsabile apre in
+     solid-space la issue `contratto` (testo nella #373) e decide lì; P22
+     aspetta anche quella issue e il pacchetto che ne applica la decisione.
+  4. **Arco con angoli uguali: A.** Se `normalizeAngle(σ + il più lontano)`
+     dà σ, gli archi formano un cerchio, con `formsCircle` vero, come se il
+     più lontano fosse arrivato al giro intero.
+
+  È la prima correzione con il metodo dello stesso giorno (B10a della guida):
+  ogni decisione ha il suo esempio in "Test richiesti" della scheda, e la pull
+  request si rivede con la lista prima del merge. Correggono
+  l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punto 17, con una
+  riga **Corretto:**; cambiano la scheda [P22](tappe/0.7/P22-unione-core.md) e
+  il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+  Il catalogo delle domande e i riferimenti di R22 non cambiano: nessun caso
+  cade nei quattro punti.
