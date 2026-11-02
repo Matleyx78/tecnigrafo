@@ -23,6 +23,23 @@
   rappresenta
   ([Matleyx78/solid-space#127](https://github.com/Matleyx78/solid-space/issues/127))
   (punto 12).
+- **Corretto:** 2026-11-01 — su decisione del responsabile sui buchi della
+  revisione delle interfacce delle schede
+  ([#464](https://github.com/Matleyx78/tecnigrafo/issues/464), B1–B18, e
+  [#359](https://github.com/Matleyx78/tecnigrafo/issues/359)); nessun codice
+  unito attua i punti corretti (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)).
+  (1) Con una risposta incompleta di solid-space (dati rifiutati) e nessun
+  taglio, `TRIM` ed `EXTEND` non riescono in tutti e due i modi, e un oggetto
+  non si cancella (punti 5 e 6). (2) *Trim No* vale solo fra entità distinte:
+  sui segmenti di una stessa polilinea e con *Polyline* la polilinea cambia
+  sempre (punti 13 e 15), da confermare con una prova in AutoCAD prima del
+  pacchetto di `FILLET`. (3) Con il taglio attivo, una parte tenuta che si
+  riduce a nulla cancella la sua entità (punti 13 e 15). (4) In `JOIN` una
+  linea o un arco nascono solo se tutte le entità scelte sono linee allineate
+  alla sorgente o archi del suo cerchio, altrimenti vale la catena; la catena
+  si ferma quando si chiude (punti 17 e 18); la prima regola è da confermare
+  con una prova in AutoCAD prima del pacchetto dell'unione. Le altre decisioni
+  precisano le schede senza cambiare questo ADR.
 
 ## Contesto
 
@@ -132,14 +149,17 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
      0036, punto 5) non si tiene: se nulla resta, l'oggetto si cancella.
    - Nel modo rapido un oggetto senza tagli si cancella; nel modo standard
      compare il messaggio di AutoCAD che non interseca il bordo, e l'oggetto
-     resta.
+     resta. Se però solid-space ha rifiutato dei dati (punto 23) e non c'è
+     nessun taglio, l'operazione non riesce nei due modi e l'oggetto resta
+     (corretto il 2026-11-01).
    - Il testo non si taglia.
 6. **`EXTEND`** prolunga l'estremo più vicino al clic fino al primo bordo che
    incontra: le linee lungo la retta, gli archi lungo il loro cerchio, le
    polilinee aperte con il loro primo o ultimo segmento. Il primo bordo è il
    primo taglio che solid-space dà sul prolungamento, nel suo ordine. Cerchi,
    polilinee chiuse e testo non si prolungano. Senza un bordo da raggiungere,
-   l'entità resta com'è.
+   l'entità resta com'è; se solid-space ha rifiutato dei dati (punto 23),
+   l'operazione non riesce e lo dice (corretto il 2026-11-01).
 7. **`Shift`.** Con `Shift` premuto il clic fa l'altro comando: in `TRIM`
    prolunga, in `EXTEND` taglia.
 8. **Opzioni:** *mOde* e *Undo*. Restano fuori *cuTting edges*/*Boundary edges*,
@@ -212,7 +232,12 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       con il bulge che dà solid-space; *Polyline* raccorda tutti i vertici,
       segmento per segmento, e i segmenti troppo corti restano come sono e si
       contano nel messaggio;
-    - con *Trim No* le entità non cambiano e si aggiunge solo l'arco;
+    - con *Trim No* le entità non cambiano e si aggiunge solo l'arco; vale
+      solo fra entità distinte: sui segmenti di una stessa polilinea e con
+      *Polyline* la polilinea cambia sempre (corretto il 2026-11-01);
+    - con il taglio attivo, un'entità la cui parte tenuta si riduce a nulla,
+      o è degenere per la regola delle tolleranze (ADR 0036, punto 5), si
+      cancella (corretto il 2026-11-01);
     - un arco di raccordo che la regola delle tolleranze trova degenere (ADR
       0036, punto 5) non si aggiunge: il comando fa lo spigolo, come con
       raggio 0.
@@ -246,6 +271,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       parte della sua linea che il punto indica, cioè dalla parte dello spigolo
       dove cade la proiezione del punto. Una distanza più lunga della parte da
       tenere dà il messaggio di AutoCAD.
+    - *Trim No* e una parte tenuta che si riduce a nulla come al punto 13
+      (corretto il 2026-11-01).
 16. **Proprietà dell'arco di raccordo e della linea di smusso:** quelle della
     prima entità scelta se le due hanno le stesse proprietà, altrimenti quelle
     correnti. I file di prova hanno tutto sul layer 0 e non lo dicono: la regola
@@ -257,6 +284,10 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
     (`autocad-unione.dxf`):
     - linee allineate diventano una linea, anche con spazi tra loro;
     - archi dello stesso cerchio diventano un arco, anche con spazi;
+    - una linea o un arco nascono solo se tutte le entità scelte sono linee
+      allineate alla sorgente o archi del suo cerchio; altrimenti vale la
+      catena (punto 18), e le entità che non vi entrano si scartano (corretto
+      il 2026-11-01);
     - linee, archi e polilinee che si toccano agli estremi diventano una
       polilinea;
     - entità che non si toccano non si uniscono, e compare il messaggio
@@ -271,7 +302,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
     dalla sorgente e cresce prima dalla sua fine, poi dal suo inizio; a ogni
     passo si aggiunge la prima entità, nell'ordine in cui sono state scelte, che
     ha un estremo coincidente con l'estremo libero della catena; ci si ferma
-    quando nessuna si aggiunge. Linee e archi si uniscono tra loro con la stessa
+    quando nessuna si aggiunge, o quando la catena si chiude (corretto il
+    2026-11-01). Linee e archi si uniscono tra loro con la stessa
     regola, confrontando ciascuno con la sorgente.
 19. **Negli script** vale la sequenza vecchia (ADR 0032): prima l'oggetto
     sorgente, poi gli oggetti da unire, accettati secondo il tipo della sorgente.

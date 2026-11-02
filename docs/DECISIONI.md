@@ -434,3 +434,75 @@ i rimandi ai documenti che cambia.
   [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano", con la nuova
   scheda [P25](tappe/0.7/P25-revisione-interfacce.md) e la dipendenza da P25
   nelle schede P15–P23. Nessun ADR cambia.
+- **2026-11-01 — Buchi delle schede P15–P23: le decisioni.** Il responsabile
+  decide il buco di P15 (#359) e i diciotto buchi B1–B18 del verbale della
+  revisione delle interfacce (P25, #464), una decisione per commento, sempre
+  con la scelta A. Tutti restano in Tecnigrafo: nessuna richiesta a
+  solid-space, perché il contratto determina già le risposte.
+  - [#359](https://github.com/Matleyx78/tecnigrafo/issues/359#issuecomment-6563748188), P15: `partOf` non deduce niente da punti e stazioni
+    arrotondati. Lo stesso posto e il passaggio per l'inizio (vertice 0, angolo
+    0) li decide il chiamante, che li ha esatti: dalla lista di
+    `HostCuts::cuts` per `TRIM` ed `EXTEND`, dalla costruzione per `FILLET` e
+    `CHAMFER`; `partOf` li riceve con un'indicazione esplicita
+    (`PartCourse`).
+  - [B1](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563748337), P15: gli estremi nuovi sono esattamente i punti ricevuti solo
+    per linee e vertici di polilinea; un arco ha gli angoli di `atan2`, entro
+    l'errore. Se i due angoli di un arco (o i due vertici di un segmento
+    curvo) coincidono, il pezzo corto è vuoto e quello lungo non
+    rappresentabile, mai un cerchio: `partOf` ha tre esiti, e nei comandi
+    «non rappresentabile» vuol dire operazione non riuscita (ADR 0035, punto
+    23). Come Matleyx78/solid-space#132 e #148.
+  - [B2](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563748494), P15, P16, P19, P21: il prolungamento è una funzione distinta,
+    `extendTo`, che per l'inizio di un arco percorre il cerchio all'indietro
+    fino a un taglio `AfterEnd`; il chiamante sceglie fra le due funzioni
+    guardando la `Location`.
+  - [B3](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563748656), P15, P16: primo e ultimo segmento di una polilinea aperta sono i
+    non puntiformi, come in P14; i vertici puntiformi all'estremo seguono il
+    nuovo estremo e conservano gli altri dati.
+  - [B4](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563765170), P16: un pezzo di polilinea è degenere quando lo sono tutti i
+    suoi segmenti, ciascuno con `isDegenerate` del segmento.
+  - [B5](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563774381), P17, P18: quando `sideOf` non dà un lato per un'entità che non è
+    un testo, l'esito è `Failed`; `NoSide` resta per `Side::On`.
+  - [B6](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563795446), P19, P20, P21: *Trim* vale solo fra entità distinte; sui
+    segmenti di una polilinea e con *Polyline* la polilinea cambia sempre. Da
+    confermare con una prova in AutoCAD prima di P20.
+  - [B7](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563795913), P19: le tangenti a una polilinea vanno per segmento, un vertice
+    comune compare una volta sola, sul segmento che segue, e un segmento
+    rifiutato non toglie i punti degli altri.
+  - [B8](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563818910), P21: con *Angle* la retta parte dal primo punto verso lo
+    spigolo, ruotata dell'angolo verso la parte tenuta della seconda linea;
+    una sola distanza zero dà `None`; precondizione in `core` sui valori, e
+    messaggio di AutoCAD in `CHAMFER`.
+  - [B9](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563819053), P21: un clic proiettato esattamente sullo spigolo dà
+    `AmbiguousPick`.
+  - [B10](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871532), P22: con i due estremi di una candidata coincidenti con la
+    catena vince il suo inizio.
+  - [B11](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871709), P22, P23: archi dello stesso cerchio danno il cerchio meno il
+    vuoto più grande, confrontando gli angoli memorizzati. Da confermare con
+    una prova in AutoCAD prima di P22.
+  - [B12](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871873), P22: la polilinea unita scrive nei vertici le larghezze
+    effettive e prende dalla sorgente la generazione del tipo di linea.
+  - [B13](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563872048), P22: la coincidenza si decide sugli estremi degli archi come
+    li calcola Tecnigrafo, con esito libero nella fascia dell'errore, come
+    Matleyx78/solid-space#152.
+  - [B14](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563795579), P19, P20, P21: con il taglio attivo un `first` o `second`
+    vuoto con `Done` cancella l'entità, nella stessa operazione.
+  - [B15](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563795747), P19, P21: `filletPolyline` e `chamferPolyline` visitano i
+    vertici originali in ordine, ognuno sulla polilinea già modificata.
+  - [B16](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871203), P22, P23: una linea o un arco nascono solo se tutte le entità
+    sono linee allineate o archi del cerchio della sorgente; altrimenti la
+    catena. Da confermare con una prova in AutoCAD prima di P22.
+  - [B17](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871378), P22: la catena si ferma quando si chiude.
+  - [B18](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563765305), P16: con `HostCuts::complete` falso e nessun taglio,
+    `TRIM` ed `EXTEND` non riescono nei due modi e l'oggetto resta; con dei
+    tagli si usano.
+
+  Correggono l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punti
+  5, 6, 13, 15, 17 e 18, con una riga **Corretto:**; cambiano le schede
+  [P15](tappe/0.7/P15-snap-intersezione.md)–[P23](tappe/0.7/P23-join.md), il
+  catalogo delle domande ([verifica/domande.md](verifica/domande.md):
+  `offset`, `fillet`, `tangents`, `chamfer` e `join`),
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md) ("Che cosa resta da
+  controllare", punti 4–6) e il piano della [tappa 0.7](tappe/0.7-modifiche.md)
+  in "Modifiche al piano". P25 (#464) si chiude; P15–P23 si riprendono dopo il
+  merge.

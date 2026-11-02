@@ -8,14 +8,18 @@
 - **Riferimenti:** issue `[0.7-R21]` (#…), agente gemini (valori da
   `autocad-raccordi.dxf`; lo smusso è un calcolo di Tecnigrafo)
 - **Dipende da:** P20, P25, R21
+- **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
+  buchi B2, B6, B8, B9, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md))
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
   punto 8; `core/include/tg/core/fillet.hpp` (P19: `CornerResult`),
-  `core/include/tg/core/intersections.hpp` e `core/src/solid_space_bridge.hpp`
-  (P14); in `third_party/solid-space` l'intestazione qui sotto;
+  `core/include/tg/core/intersections.hpp`, `tolerance.hpp` e
+  `core/src/solid_space_bridge.hpp` (P14); [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
+  punto 5; in `third_party/solid-space` l'intestazione qui sotto;
   `core/include/tg/core/curve_parts.hpp` (P15);
-  `cmd/src/commands/fillet_command.cpp` (P20, lo stesso schema)
+  `cmd/src/commands/fillet_command.cpp` (P20, lo stesso schema);
+  [dxf-di-prova.md](dxf-di-prova.md) ("Che cosa resta da controllare", punto 4)
 
 ## Intestazioni di solid-space che usa
 
@@ -51,15 +55,24 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
 /// CHAMFER of two lines, or two straight segments of one polyline, picked at
 /// the given points (docs/adr/0035, point 15). An arc, a circle or a text:
 /// NotAllowed. Parallel or collinear lines: None. Two almost parallel lines
-/// whose corner lies beyond solid-space's domain: OutOfDomain.
+/// whose corner lies beyond solid-space's domain: OutOfDomain. A pick whose
+/// projection on the line of its entity is exactly the corner: AmbiguousPick.
+/// `trim` applies only here, between distinct entities.
+/// Precondition (also for the two functions below): the values of `spec`
+/// finite, distances and length >= 0.
 [[nodiscard]] CornerResult chamfer(const Entity& first, const Vec2& pickFirst,
                                    const Entity& second, const Vec2& pickSecond,
-                                   const ChamferSpec& spec, bool trim);
-/// The same on two segments of one polyline (as filletSegments).
+                                   const ChamferSpec& spec, bool trim,
+                                   const ToleranceRule& rule);
+/// The same on two segments of one polyline (as filletSegments): the polyline
+/// always changes, Trim or not.
 [[nodiscard]] CornerResult chamferSegments(const Polyline& polyline, const Vec2& pickFirst,
-                                           const Vec2& pickSecond, const ChamferSpec& spec);
-/// CHAMFER Polyline: every vertex between two straight segments.
-[[nodiscard]] PolylineCorners chamferPolyline(const Polyline& polyline, const ChamferSpec& spec);
+                                           const Vec2& pickSecond, const ChamferSpec& spec,
+                                           const ToleranceRule& rule);
+/// CHAMFER Polyline: every original vertex between two straight segments, in
+/// order, as filletPolyline; the polyline always changes, Trim or not.
+[[nodiscard]] PolylineCorners chamferPolyline(const Polyline& polyline, const ChamferSpec& spec,
+                                              const ToleranceRule& rule);
 ```
 
 - **Lo spigolo** è il punto comune delle due rette, deciso da solid-space:
@@ -82,15 +95,47 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
   comune, che sta nel dominio: lì `OutOfDomain` non capita.
 - **La parte da tenere** di ciascuna linea è quella dalla parte dello spigolo
   dove cade la proiezione del punto indicato (`nearestPosition` sulla retta):
-  è la scelta dell'utente, non una decisione geometrica.
+  è la scelta dell'utente, non una decisione geometrica. Se la proiezione di
+  uno dei due punti è **esattamente lo spigolo**, l'esito è `AmbiguousPick`
+  (B9), in `chamfer` e in `chamferSegments`: per esempio A da (−10,0) a
+  (10,0), B da (0,−10) a (0,10), il punto su A in (0,0) o in (0,2).
 - **Gli estremi dello smusso** stanno alle distanze date dallo spigolo, lungo
-  la parte tenuta; con *Angle*, il primo alla lunghezza data, il secondo dove
-  la retta che parte dal primo con quell'angolo dalla prima linea incontra la
-  seconda. È una costruzione di Tecnigrafo (ADR 0035, punto 15).
-- Una distanza che supera la parte tenuta: `None`. Distanze entrambe 0: lo
-  spigolo, senza linea nuova.
-- Le linee si portano agli estremi dello smusso con `partOf` (P15); con `trim`
-  falso non cambiano. La linea nuova va in `added`.
+  la parte tenuta. È una costruzione di Tecnigrafo (ADR 0035, punto 15).
+- **Con *Angle*** (B8):
+  - il primo punto P1 sta alla lunghezza data dallo spigolo, sulla parte
+    tenuta della prima linea;
+  - lo smusso parte da P1 nella direzione **da P1 verso lo spigolo**, ruotata
+    dell'angolo **verso il lato in cui sta la parte tenuta della seconda
+    linea**;
+  - il secondo punto è dove questa retta incontra la seconda linea;
+  - se la retta è parallela alla seconda linea, o il punto d'incontro non sta
+    sulla parte tenuta della seconda linea a distanza positiva dallo spigolo,
+    l'esito è `None`. Angolo 0, angoli troppo grandi e parallelismo non hanno
+    regole a parte.
+
+  Per esempio, prima linea sull'asse X, seconda sull'asse Y, parti tenute
+  positive, lunghezza 1 e angolo 45°: lo smusso va da (1,0) a (0,1).
+- **Distanze** (B8): una sola distanza zero dà `None`; tutte e due zero, lo
+  spigolo senza linea nuova; una distanza (o la lunghezza) uguale alla parte
+  tenuta, quella parte si cancella (B14); una distanza maggiore della parte
+  tenuta, `None`.
+- Le linee si portano agli estremi dello smusso con `partOf` o `extendTo`
+  (P15, B2: sceglie la `Location`), con `PartCourse::Direct` perché la
+  costruzione dà un solo posto per linea (#359). Come in P19 (B14), una parte
+  tenuta `Empty` o degenere per la regola del documento lascia vuoto `first` o
+  `second` (l'entità si cancella), e una parte `NotRepresentable` dà `None`.
+  Con `trim` falso le linee ci sono sempre, invariate. La linea nuova va in
+  `added`. Per giudicare degenere una parte tenuta le tre funzioni ricevono la
+  regola del documento (`ToleranceRule::of`), come `fillet`: è l'unico
+  parametro nuovo, aggiunto con B14.
+- ***Trim* solo fra entità distinte** (B6): `chamferSegments` e
+  `chamferPolyline` modificano sempre la polilinea.
+- **`chamferPolyline`** (B15): la visita di `filletPolyline` (P19): i vertici
+  originali in ordine, ognuno sulla polilinea già modificata dai precedenti;
+  uno smusso che non sta nei due segmenti come sono in quel momento, che non
+  esiste o che è oltre il dominio lascia il vertice com'è e conta in
+  `tooShort`. Per esempio [(0,2),(0,0),(1,0),(1,2)] con distanze 0.75 e 0.75:
+  `done` = 1 e `tooShort` = 1.
 - La domanda `chamfer` del catalogo, con le risposte scritte lì.
 
 ### `CHAMFER` (`CHA`)
@@ -116,13 +161,25 @@ Select 2D polyline or [Distance/Angle/Method]:
 - `NotAllowed` (un arco) e `None` danno il messaggio inglese di AutoCAD (da
   controllare, ADR 0035 punto 22); `OutOfDomain` dà il messaggio di `FILLET`
   per le rette quasi parallele, `Lines are nearly parallel.` (P20), distinto
-  da `Lines are parallel.`; in tutti i casi la domanda resta.
+  da `Lines are parallel.`; `AmbiguousPick` dà il messaggio di `AmbiguousPick`
+  di `FILLET` (B9); in tutti i casi la domanda resta.
+- Una distanza, una lunghezza o un angolo negativo o non numerico dà il
+  messaggio inglese di AutoCAD (da controllare, ADR 0035 punto 22) e la
+  domanda resta (B8): a `core` arrivano solo valori che rispettano la sua
+  precondizione.
+- Un `first` o un `second` vuoto cancella l'entità, come in `FILLET` (P20,
+  B14).
 - Un passo di annulla `Chamfer`.
 
 ## Regole della tappa che valgono qui
 
 - `builtin_commands.cpp`, `command_descriptions.cpp`, `cmd/CMakeLists.txt`:
   solo le tue righe; prima di te P20, dopo di te P23.
+- Prima di cominciare controlla nella issue l'esito della prova di `CHAMFER`
+  con `TRIMMODE` = 0 su due segmenti di una stessa polilinea e con *Polyline*
+  ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da controllare", punto
+  4). Se AutoCAD lascia la polilinea com'è e aggiunge lo smusso come entità a
+  sé, fermati: la decisione B6 si rivede prima di questo pacchetto.
 - `core/CMakeLists.txt`, `question_table.cpp`, `curve_questions.cpp`: file
   comuni, solo le tue righe (li toccano anche P14, P17, P19 e P22).
 - Lo spigolo e la sua esistenza vengono da `intersect` di solid-space:
@@ -131,8 +188,13 @@ Select 2D polyline or [Distance/Angle/Method]:
 ## Test richiesti
 
 - I casi di `autocad-raccordi.dxf` per `CHAMFER`, nelle due sequenze.
-- Distanze, angolo, *mEthod*, *Polyline*, *Trim No*, `Shift`, un arco,
-  parallele, distanza troppo lunga, *Multiple*, *Undo*; annulla e ripeti.
+- Distanze, angolo, *mEthod*, *Polyline*, *Trim No* (anche su due segmenti di
+  una polilinea e con *Polyline*), `Shift`, un arco, parallele, distanza
+  troppo lunga, *Multiple*, *Undo*; annulla e ripeti.
+- Gli esempi di B8 (angolo 45°; una sola distanza zero; distanza uguale alla
+  parte tenuta, che cancella la linea), di B9 (clic proiettato sullo
+  spigolo, `AmbiguousPick`) e di B15; angolo che dà una retta parallela alla
+  seconda linea (`None`); valori negativi nel comando.
 - Rette quasi parallele (i dati di P19, da 0,0 a 1,0 e da 0,1 a
   1,1.0000000000000002): `OutOfDomain` in `chamfer` e il suo messaggio in
   `CHAMFER`, distinto da quello delle parallele; una linea di lunghezza zero:

@@ -7,13 +7,16 @@
 - **Modello e impegno:** medio; impegno medio
 - **Riferimenti:** issue `[0.7-R23]` (#…), agente gemini
 - **Dipende da:** P21, P22, P25, R23
+- **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B11 e
+  B16 della #464 ([DECISIONI.md](../../DECISIONI.md))
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 17–22; [ADR 0031](../../adr/0031-modifiche-alle-entita.md) punto 7;
   [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
   punti 3 e 8; `core/include/tg/core/join.hpp` (P22),
   `core/include/tg/core/tolerance.hpp` (P14);
-  [dxf-di-prova.md](dxf-di-prova.md) (`autocad-unione.dxf`, messaggi osservati)
+  [dxf-di-prova.md](dxf-di-prova.md) (`autocad-unione.dxf`, messaggi osservati;
+  "Che cosa resta da controllare", punti 5 e 6)
 
 ## File
 
@@ -34,7 +37,9 @@ con la domanda `Select source object or multiple objects to join at once:`, poi:
 - `join` decide, con `ToleranceRule::of` del documento;
 - la sorgente cambia con `replace`, oppure nasce un'entità con `addCopy` dalla
   sorgente e la sorgente si cancella;
-- le entità assorbite si cancellano.
+- le entità assorbite (`consumed`) si cancellano; le altre scelte restano e
+  contano tra le scartate del messaggio, anche quelle che una scelta mista
+  lascia fuori dalla catena (P22, B16).
 
 **Sequenza degli script:**
 
@@ -68,12 +73,17 @@ Un passo di annulla `Join`.
   solo le tue righe; prima di te P21.
 - Le descrizioni elencano le domande di entrambe le sequenze (ADR 0032, punto 9).
 - Nessuna decisione geometrica propria: tutto viene da `join.hpp`.
+- Prima di cominciare controlla nella issue l'esito delle prove a mano di
+  `JOIN` ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da
+  controllare", punti 5 e 6): P22 si ferma se smentiscono le decisioni B11 e
+  B16, e questo pacchetto ne dipende.
 
 ## Test richiesti
 
 - I casi di `autocad-unione.dxf`, ognuno nella sequenza con cui è stato fatto
   (a, b, c negli script; gli altri interattivi).
 - Sorgente polilinea nelle due sequenze; arco con *cLose*; niente da unire;
+  una scelta mista (l'esempio di B16 in P22), con la linea staccata che resta;
   annulla e ripeti.
 
 ## Fatto quando

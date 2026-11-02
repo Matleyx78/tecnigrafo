@@ -204,3 +204,21 @@ Prima dei pacchetti indicati, una prova a mano:
 3. **I testi inglesi dei messaggi osservati in italiano**, se c'è un AutoCAD in
    inglese a disposizione; altrimenti dalla documentazione di AutoCAD. Servono a
    P5, P16, P18, P20, P21 e P23 (ADR 0035, punto 22).
+4. **`FILLET` e `CHAMFER` con `TRIMMODE` = 0 su una polilinea:** su due
+   segmenti di una stessa polilinea, per esempio [(0,10),(0,0),(10,0)] con
+   raggio 1 o distanze 1 e 1, e con l'opzione *Polyline*, AutoCAD modifica la
+   polilinea o la lascia com'è e aggiunge il raccordo o lo smusso come entità a
+   sé? Serve a P20 e P21 (decisione B6 della #464, 2026-11-01): nel secondo
+   caso la decisione si rivede prima di P20.
+5. **`JOIN` su due archi dello stesso cerchio**, uno dei quali parte prima
+   dell'inizio della sorgente: per esempio, sorgente di centro 0,0 e raggio 10
+   da 0° a 90°, e un arco dello stesso cerchio da 270° a 45°. Tecnigrafo dà
+   l'arco da 270° a 90°. Serve a P22 e P23 (decisione B11 della #464,
+   2026-11-01): se AutoCAD si comporta diversamente, la decisione si rivede
+   prima di P22.
+6. **`JOIN` interattivo su una scelta mista:** sorgente la linea da 0,0 a
+   10,0, poi la linea da 20,0 a 30,0 (allineata, staccata) e la linea da 10,0
+   a 10,10 (contigua). Tecnigrafo dà la polilinea 0,0 → 10,0 → 10,10 e scarta
+   la linea staccata. Serve a P22 e P23 (decisione B16 della #464,
+   2026-11-01): se AutoCAD si comporta diversamente, la decisione si rivede
+   prima di P22.

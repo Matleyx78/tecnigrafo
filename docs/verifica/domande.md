@@ -208,7 +208,7 @@ la fine), decisa esattamente da solid-space. Le stazioni non compaiono. `units=`
 
 | Domanda | Risposta | Significato |
 |---|---|---|
-| `offset <E> <d> x,y [units=<n>]` | un'entità, oppure `vanished`, `failed` o `no-side` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `vanished` quando non resta nulla, `failed` quando solid-space non può fare la copia di una polilinea (autointersezioni, o un arco quasi intero che non rappresenta, Matleyx78/solid-space#127), `no-side` quando il punto sta esattamente sulla retta o sul cerchio |
+| `offset <E> <d> x,y [units=<n>]` | un'entità, oppure `vanished`, `failed` o `no-side` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `vanished` quando non resta nulla, `failed` quando solid-space non può fare la copia di una polilinea (autointersezioni, o un arco quasi intero che non rappresenta, Matleyx78/solid-space#127) e quando l'entità non dà un lato (una curva esattamente puntiforme, una polilinea senza segmenti o con soli segmenti puntiformi, dati che solid-space rifiuta; decisione B5 della #464, 2026-11-01), `no-side` solo quando il punto sta esattamente sulla retta o sul cerchio |
 
 **Raccordi e tangenze** (P19, richiesta [Matleyx78/solid-space#21](https://github.com/Matleyx78/solid-space/issues/21),
 ADR 0035, punti 13 e 14)
@@ -219,14 +219,24 @@ punto sta esattamente sulla retta o sul cerchio dell'altra curva),
 `not-allowed` (un'entità che il comando non prende), `out-of-domain` (esiste,
 ma il centro o lo spigolo cade oltre il dominio di solid-space, 2^50: due rette
 quasi parallele; aggiunto il 2026-11-01, ADR 0035, punti 13–15). Un raggio
-oltre 2^50 dà `none`. Gli smussi hanno gli stessi esiti.
+oltre 2^50 dà `none`, e così una parte tenuta che il modello non rappresenta
+(un arco che si chiuderebbe in un cerchio, P15). Gli smussi hanno gli stessi
+esiti.
+
+Con il taglio attivo, un'entità la cui parte tenuta è vuota o degenere per la
+regola del disegno si cancella, e non compare nella risposta: per esempio
+`fillet` sulle linee da 0,0 a 1,0 e da 0,0 a 0,1, scelte in 1,0 e in 0,1, con
+raggio 1, risponde solo `new ARC …`. Con `trim=no` le due entità compaiono
+sempre, invariate. `trim=no` vale solo fra entità distinte: sui segmenti di
+una polilinea e con `polyline` la polilinea cambia sempre (decisioni B6 e B14
+della #464, 2026-11-01).
 
 | Domanda | Risposta | Significato |
 |---|---|---|
 | `fillet <A> x1,y1 <B> x2,y2 radius=<r> [trim=no] [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o un esito | il raccordo tra `A`, scelta in `x1,y1`, e `B`, scelta in `x2,y2`: le due entità come diventano (`A …`, `B …`) e l'arco nuovo (`new ARC …`; nessuno con raggio 0) |
 | `fillet <P> x1,y1 x2,y2 radius=<r> [units=<n>]` | `P <entità>`, o un esito | il raccordo tra i due segmenti della polilinea `P` più vicini ai due punti |
-| `fillet <P> polyline radius=<r> [units=<n>]` | `<entità> done=<n> short=<m>` | la polilinea `P` con tutti i vertici raccordati (opzione *Polyline*), quanti vertici raccordati e quanti con segmenti troppo corti |
-| `tangents x,y <E>` | elenco di punti `x,y` separati da `;`, o `none` | i punti di tangenza dal punto a un cerchio, un arco o un arco di polilinea, solo quelli sulla curva; `none` per un punto dentro il cerchio o una curva dritta; il punto stesso se sta esattamente sul cerchio |
+| `fillet <P> polyline radius=<r> [units=<n>]` | `<entità> done=<n> short=<m>` | la polilinea `P` con tutti i vertici raccordati (opzione *Polyline*), quanti vertici raccordati e quanti con segmenti troppo corti; i vertici originali in ordine, ognuno sulla polilinea già modificata dai precedenti (decisione B15 della #464, 2026-11-01) |
+| `tangents x,y <E>` | elenco di punti `x,y` separati da `;`, o `none` | i punti di tangenza dal punto a un cerchio, un arco o gli archi di una polilinea, solo quelli sulla curva; `none` per un punto dentro il cerchio o una curva dritta; il punto stesso se sta esattamente sul cerchio. Per una polilinea, per indice di segmento e poi nell'ordine del segmento; un vertice comune a due segmenti compare una volta; un segmento rifiutato o la cui costruzione è oltre il dominio non dà punti, e gli altri restano (decisione B7 della #464, 2026-11-01) |
 | `circle-ttr <A> x1,y1 <B> x2,y2 radius=<r>` | `CIRCLE center=… radius=…`, o un esito | il cerchio di raggio `r` tangente ad `A` e `B`, quello con i punti di tangenza più vicini ai due punti, come `CIRCLE` *Ttr* |
 
 **Smussi** (P21, ADR 0035, punto 15)
@@ -234,15 +244,20 @@ oltre 2^50 dà `none`. Gli smussi hanno gli stessi esiti.
 | Domanda | Risposta | Significato |
 |---|---|---|
 | `chamfer <A> x1,y1 <B> x2,y2 distances=<d1>,<d2> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con le due distanze, la prima su `A` |
-| `chamfer <A> x1,y1 <B> x2,y2 angle=<l>,<gradi> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con la lunghezza su `A` e l'angolo da `A` |
-| `chamfer <P> polyline distances=<d1>,<d2>` | `<entità> done=<n> short=<m>` | la polilinea `P` con tutti i vertici tra segmenti dritti smussati |
+| `chamfer <A> x1,y1 <B> x2,y2 angle=<l>,<gradi> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con la lunghezza su `A` e l'angolo: dal primo punto, sulla parte tenuta di `A` alla lunghezza dallo spigolo, la direzione verso lo spigolo ruotata dell'angolo verso il lato della parte tenuta di `B`; `none` se quella retta è parallela a `B` o la incontra fuori dalla sua parte tenuta |
+| `chamfer <P> polyline distances=<d1>,<d2>` | `<entità> done=<n> short=<m>` | la polilinea `P` con tutti i vertici tra segmenti dritti smussati, nell'ordine di `fillet … polyline` |
+
+Un punto la cui proiezione sulla retta della sua linea è esattamente lo
+spigolo dà `ambiguous`; una sola distanza zero dà `none`; una distanza (o la
+lunghezza) uguale alla parte tenuta cancella quella linea (decisioni B8 e B9
+della #464, 2026-11-01).
 
 **Unione** (P22, richiesta [Matleyx78/solid-space#23](https://github.com/Matleyx78/solid-space/issues/23),
 ADR 0035, punti 17–20)
 
 | Domanda | Risposta | Significato |
 |---|---|---|
-| `join <A> <B> … [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente e le altre nell'ordine scritto: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla |
+| `join <A> <B> … [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente e le altre nell'ordine scritto: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla. Una linea o un arco solo se tutte le entità sono linee allineate alla sorgente o archi del suo cerchio; altrimenti la catena (decisione B16 della #464, 2026-11-01) |
 
 ### File
 

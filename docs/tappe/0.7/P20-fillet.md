@@ -7,13 +7,16 @@
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.7-R20]` (#…), agente gemini
 - **Dipende da:** P18, P19, P25, R20
+- **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B6, B14
+  e B15 della #464 ([DECISIONI.md](../../DECISIONI.md))
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
   punto 8; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md) punto 6;
   `core/include/tg/core/fillet.hpp` (P19), `core/include/tg/core/tolerance.hpp`
   (P14); `cmd/src/commands/circle_command.cpp`;
-  [dxf-di-prova.md](dxf-di-prova.md) ("Che cosa resta da controllare", punto 2)
+  [dxf-di-prova.md](dxf-di-prova.md) ("Che cosa resta da controllare", punti 2
+  e 4)
 
 ## File
 
@@ -51,7 +54,13 @@ Select 2D polyline or [Radius]:
 - Il risultato viene da `fillet`, `filletSegments` (due punti sulla stessa
   polilinea) o `filletPolyline` (*Polyline*), con `ToleranceRule::of` del
   documento:
-  - le entità cambiano con `replace`;
+  - le entità cambiano con `replace`; un `first` o un `second` vuoto con
+    `Done` (P19, B14) cancella quell'entità invece di sostituirla, nella
+    stessa operazione, con un solo punto di ripristino: nell'esempio di P19
+    le due linee si cancellano e resta solo l'arco;
+  - *Trim* vale solo fra entità distinte (B6): su due segmenti della stessa
+    polilinea e con *Polyline* la polilinea cambia sempre, anche con *Trim
+    No*;
   - l'arco nuovo con `addCopy` dalla prima entità se le due hanno le stesse
     proprietà, altrimenti con `add` e le proprietà correnti (ADR 0035, punto
     16);
@@ -64,7 +73,8 @@ Select 2D polyline or [Radius]:
     solid-space, e la prova in AutoCAD non lo copre;
   - *Polyline* scrive `<n> lines were filleted` e, se ce ne sono,
     `<m> were too short` (da controllare come sopra); i vertici rimasti per
-    `OutOfDomain` sono tra questi (P19).
+    `OutOfDomain` sono tra questi, e i contatori seguono la visita dei vertici
+    originali in ordine (P19, B15).
 - *Multiple* ripete finché non si preme Invio; *Undo* torna all'ultimo punto di
   ripristino.
 - **Sequenze:**
@@ -91,6 +101,10 @@ allo stesso modo.
 - Prima di cominciare controlla nella issue l'esito della prova a mano sul layer
   dell'arco ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da
   controllare", punto 2). Se smentisce l'ADR 0035, punto 16, fermati.
+- Allo stesso modo controlla l'esito della prova di `FILLET` con `TRIMMODE` = 0
+  su due segmenti di una stessa polilinea e con *Polyline* (punto 4). Se
+  AutoCAD lascia la polilinea com'è e aggiunge il raccordo come entità a sé,
+  fermati: la decisione B6 si rivede prima di questo pacchetto.
 - `builtin_commands.cpp`, `command_descriptions.cpp`, `cmd/CMakeLists.txt`:
   solo le tue righe; prima di te P18, dopo di te P21.
 - Le descrizioni elencano le domande di entrambe le sequenze (ADR 0032, punto 9).
@@ -99,8 +113,10 @@ allo stesso modo.
 ## Test richiesti
 
 - I casi di `autocad-raccordi.dxf` per `FILLET` e *Ttr*, nelle due sequenze.
-- Raggio 0, `Shift`, parallele, *Polyline*, *Trim No*, *Multiple*, *Undo*,
-  impossibile, punto ambiguo, proprietà dell'arco; annulla e ripeti.
+- Raggio 0, `Shift`, parallele, *Polyline*, *Trim No* (anche su due segmenti di
+  una polilinea e con *Polyline*), *Multiple*, *Undo*, impossibile, punto
+  ambiguo, proprietà dell'arco; le due linee che si cancellano (l'esempio di
+  B14), con un solo passo di annulla; annulla e ripeti.
 - Rette quasi parallele (i dati di P19) in `FILLET`, anche con `Shift`, e in
   *Ttr*: il messaggio e nessuna modifica; un raggio oltre il dominio (2e15):
   il messaggio del raccordo impossibile e `Circle does not exist.`.

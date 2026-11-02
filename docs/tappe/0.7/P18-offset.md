@@ -52,6 +52,9 @@ Enter layer option for offset objects [Current/Source] <Source>:
   - `Vanished`, `Failed` e `NoSide`: il messaggio inglese di AutoCAD (da
     controllare, ADR 0035 punto 22; per difetto `Cannot offset that object.`)
     e nessuna copia.
+    `Failed` vale anche per un oggetto che non dà un lato, come una linea di
+    lunghezza zero (P17, decisione B5 della #464 del 2026-11-01): lo stesso
+    messaggio, senza altri controlli nel comando.
 - *Multiple* ripete il lato sullo stesso oggetto, ogni volta dall'ultima copia,
   finché non si preme Invio. *Undo* torna all'ultimo punto di ripristino. *Exit*
   o Invio chiudono.
@@ -69,7 +72,7 @@ Enter layer option for offset objects [Current/Source] <Source>:
 ## Test richiesti
 
 - Distanza e *Through*, dai due lati, su ogni entità; arco che si annulla;
-  punto sulla curva; testo.
+  punto sulla curva; linea di lunghezza zero; testo.
 - *Erase*, *Layer*, *Multiple*, *Undo*, `Esc` dopo due copie; annulla e ripeti.
 
 ## Fatto quando
