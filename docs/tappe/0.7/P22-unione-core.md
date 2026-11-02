@@ -8,12 +8,20 @@
 - **Riferimenti:** issue `[0.7-R22]` (#…), agente gemini: la facciata (catena,
   ordine, entità che risultano, unità); i confini della regola dall'archivio
   dei casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22. La richiesta diventa il
+- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22,
+  Matleyx78/solid-space#158. La richiesta diventa il
   pacchetto di solid-space che realizza `coincidence.hpp`, quando la tappa 0.2
-  di solid-space lo avrà (ADR 0030, punto 13)
+  di solid-space lo avrà (ADR 0030, punto 13). Matleyx78/solid-space#158 è la
+  issue `contratto` sull'ordine degli estremi delle linee allineate (punto 3
+  della #373; il responsabile sceglie l'opzione 2): quando la pull request di
+  solid-space che la applica è unita, la issue di P22 dice a quale commit
+  spostare il sottomodulo
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B10–B13,
   B16 e B17 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
-  revisione di B11 dopo le prove in AutoCAD (#468)
+  revisione di B11 dopo le prove in AutoCAD (#468); 2026-11-02, con le
+  decisioni sui quattro buchi trovati nella #373 (verso dall'inizio della
+  catena, polilinee chiuse, ordine degli estremi delle linee allineate, arco
+  con angoli uguali)
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -30,7 +38,11 @@
 Il contratto accettato con l'ADR 0009 di solid-space:
 `solid_space/geom2d/coincidence.hpp` (`areAligned`, `onSameCircle`,
 `isStraight`) e `solid_space/robust/tolerance.hpp` (`coincident`), con i tipi
-di `curves.hpp`.
+di `curves.hpp`. Per le linee allineate anche la funzione che ordina gli
+estremi lungo la sorgente, che Matleyx78/solid-space#158 aggiunge al contratto
+(opzione 2: i due estremi del segmento unito, con i pareggi nell'ordine dei
+segmenti): il suo nome e il commit del sottomodulo li scrive la issue di P22
+quando la decisione è applicata.
 
 ## Prima di cominciare
 
@@ -112,7 +124,13 @@ struct JoinResult {
   ammette.
 - **Linee allineate:** la linea unita va dall'estremo della prima all'estremo
   dell'ultima lungo la sorgente, anche con spazi (`autocad-unione.dxf`, casi b
-  ed e1).
+  ed e1). L'ordine degli estremi lungo la sorgente, pareggi compresi, viene da
+  solid-space, con la funzione che aggiunge Matleyx78/solid-space#158
+  (punto 3 della #373, 2026-11-02; opzione 2: dati i segmenti allineati,
+  solid-space dà i due estremi del segmento unito): la facciata non proietta e non
+  confronta da sé (ADR 0035, punto 1). Per esempio, in millimetri, sorgente
+  (0,0)→(10,0) e linea (0,5e-7)→(5,0): quale fra (0,0) e (0,5e-7) è il primo
+  estremo lo dice solid-space.
 - **Archi dello stesso cerchio** (B11, rivista il 2026-11-02 come AutoCAD:
   `autocad-prove-a-mano.dxf`, punto 5), in `join` e in `joinToSource`: ogni
   arco si copre in senso antiorario a partire dall'**inizio della sorgente**.
@@ -125,7 +143,15 @@ struct JoinResult {
     `double` in quest'ordine, sugli angoli memorizzati, che sono dati e non
     costruzioni, senza tolleranza;
   - il **più lontano** è il maggiore di questi estremi;
-  - se il più lontano è almeno `kFullTurn`, gli archi formano un cerchio:
+  - prima di tutto, almeno un altro arco deve unirsi: se `entities` ha la sola
+    sorgente, o nessun altro arco del suo cerchio, il risultato è
+    `std::nullopt`, anche quando le regole seguenti darebbero il cerchio sulla
+    sola sorgente; *cLose* di `joinToSource` resta l'eccezione (decisione
+    B476-1 sulla #476, 2026-11-02);
+  - se il più lontano è almeno `kFullTurn`, **oppure** se
+    `normalizeAngle(σ + il più lontano)`, calcolato in `double`, risulta
+    uguale a σ (un arco con angoli uguali, che `Arc` non ammette: decisione sul
+    punto 4 della #373, 2026-11-02), gli archi formano un cerchio:
     `created` è il cerchio con centro e raggio della sorgente, `formsCircle` è
     vero e tutti gli altri archi sono in `consumed`. Se convertire lo decide il
     comando (P23): con *No* niente si unisce e il disegno non cambia;
@@ -142,18 +168,46 @@ struct JoinResult {
   - con l'arco 300°→30°: il cerchio, perché 300° + 90° arriva oltre il giro
     intero (prima 300°→90°);
   - con l'arco 270°→45°, il caso osservato in AutoCAD: il cerchio;
-  - con l'arco 90°→180°: l'arco 0°→180°.
+  - con l'arco 90°→180°: l'arco 0°→180°;
+  - sorgente con centro (0,0), raggio 10, angolo iniziale 6 rad e angolo
+    finale il `double` precedente a 6 (5.999999999999999), con l'arco da 1 a 2
+    rad: l'ampiezza della sorgente, 6.283185307179585, è il più lontano e sta
+    sotto `kFullTurn`, ma `normalizeAngle(6 + 6.283185307179585)` dà 6, cioè
+    σ: il cerchio di centro (0,0) e raggio 10, `formsCircle` vero, l'altro
+    arco in `consumed`. La stessa sorgente da sola, senza l'arco da 1 a 2:
+    `std::nullopt` in `join` e in `joinToSource` senza `close`, e il cerchio
+    con `close` (B476-1).
 - **Catena** (ADR 0035, punto 18), per tutto il resto: parte dalla sorgente,
   cresce prima dalla sua fine e poi dal suo inizio; a ogni passo si aggiunge la
   prima entità, nell'ordine di `entities`, con un estremo coincidente con
   l'estremo libero della catena, girata se serve; ci si ferma quando nessuna si
   aggiunge. Due estremi che coincidono diventano un vertice, nel punto
   dell'entità che segue. In `join` e in `joinToSource`:
-  - **verso** (B10): quando tutti e due gli estremi di un'entità coincidono
-    con l'estremo libero della catena vince il suo inizio, e l'entità si
-    aggiunge com'è; si gira solo quando coincide soltanto la sua fine. Per
-    esempio la candidata [(2e-7,0),(10,10),(−2e-7,0)] si aggiunge in
-    quest'ordine dopo la sorgente [(0,−10),(0,0)];
+  - **verso** (B10, precisata il 2026-11-02 con il punto 1 della #373):
+    l'estremo della candidata che coincide con l'estremo libero della catena
+    diventa il vertice comune; quando coincidono tutti e due vince il suo
+    **inizio**. La candidata si orienta di conseguenza, da tutti e due i lati:
+    - quando la catena cresce **dalla fine**, il vertice comune deve essere il
+      primo punto della candidata: si aggiunge com'è se il vertice comune è il
+      suo inizio, girata se è la sua fine;
+    - quando la catena cresce **dall'inizio**, il vertice comune deve essere
+      l'ultimo punto della candidata: si aggiunge girata se il vertice comune è
+      il suo inizio, com'è se è la sua fine.
+
+    Per esempio, dalla fine: la candidata [(2e-7,0),(10,10),(−2e-7,0)] si
+    aggiunge in quest'ordine dopo la sorgente [(0,−10),(0,0)]. Dall'inizio, in
+    millimetri: sorgente linea (0,0)→(10,0) e candidata polilinea aperta
+    [(2e-7,0),(−10,10),(−2e-7,0)]; dalla fine (10,0) non si aggiunge niente,
+    dall'inizio (0,0) coincidono tutti e due i suoi estremi, vince l'inizio e
+    la candidata si gira: `new LWPOLYLINE closed=no vertex=-2e-7,0
+    vertex=-10,10 vertex=0,0 vertex=10,0`. Girata, anche le larghezze dei suoi
+    segmenti si scambiano e i bulge cambiano segno;
+  - **polilinee chiuse** (punto 2 della #373, 2026-11-02): una polilinea
+    chiusa che non è la sorgente non ha estremi liberi, quindi non entra mai
+    nella catena: non è in `consumed` e conta tra le scartate del messaggio
+    (P23). Per esempio, sorgente linea (0,0)→(10,0) e polilinea chiusa
+    [(10,0),(20,0),(20,10)]: niente si unisce (`std::nullopt`; la domanda
+    `join` dà `none`). Una sorgente chiusa non cresce (punto seguente);
   - **chiusura** (B17): quando l'estremo libero della catena coincide con il
     suo primo estremo, la catena è chiusa e la crescita si ferma da tutti e
     due i lati; le entità non ancora aggiunte non si consumano. Per esempio
@@ -202,6 +256,14 @@ struct JoinResult {
   tre estremi dove a ~ b e b ~ c ma non a ~ c (l'ordine scritto decide).
 - Gli esempi di B10, B12, B16 e B17, in `join` e, dove si applicano, in
   `joinToSource`.
+- Gli esempi delle decisioni sulla #373: il verso quando la catena cresce
+  dall'inizio (candidata girata, anche con larghezze diverse e un bulge, per
+  controllare lo scambio e il segno); la polilinea chiusa scartata; l'arco
+  con angoli uguali che dà il cerchio, in `join` e in `joinToSource`, e la
+  stessa sorgente da sola, che dà `std::nullopt` (con `close` il cerchio);
+  l'ordine
+  degli estremi delle linee allineate con due proiezioni uguali, secondo la
+  decisione in solid-space.
 - Gli archi (B11 rivista): i quattro esempi sopra, in `join` e in
   `joinToSource`; un arco che arriva al giro intero partendo prima dell'inizio
   della sorgente; archi con spazi in mezzo e in ordine sparso (stesso

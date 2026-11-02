@@ -626,3 +626,43 @@ i rimandi ai documenti che cambia.
   [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, frase per la revisione
   del contratto in solid-space; B10a, passo 4). Nessuna regola cambia nella
   sostanza.
+- **2026-11-02 — Buchi della scheda P22: le decisioni.** P22
+  ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373#issuecomment-6576564686))
+  si è fermato su quattro buchi. Il responsabile decide:
+  1. **Verso quando la catena cresce dall'inizio: B.** Vince l'inizio della
+     candidata, che diventa il vertice comune con la catena: dalla fine si
+     aggiunge com'è, dall'inizio si gira. Con un solo estremo coincidente, il
+     vertice comune è quello e la candidata si orienta allo stesso modo. B10
+     resta, scritta per tutti e due i lati.
+  2. **Polilinee chiuse: A.** Una polilinea chiusa diversa dalla sorgente non
+     ha estremi liberi, non entra nella catena e si scarta.
+  3. **Ordine degli estremi delle linee allineate: C.** L'ordine viene da
+     solid-space, con una funzione nuova del contratto, come chiede l'ADR
+     0035, punto 1. È un buco nel contratto:
+     [Matleyx78/solid-space#158](https://github.com/Matleyx78/solid-space/issues/158),
+     in cui il responsabile sceglie l'opzione 2 (dati i segmenti allineati,
+     solid-space dà i due estremi del segmento unito, con i pareggi
+     nell'ordine dei segmenti). P22 la cita in "Dipende da" e aspetta la pull
+     request di solid-space che la applica.
+  4. **Arco con angoli uguali: A.** Se `normalizeAngle(σ + il più lontano)`
+     dà σ, gli archi formano un cerchio, con `formsCircle` vero, come se il
+     più lontano fosse arrivato al giro intero.
+
+  La rilettura di Codex (il
+  [verbale](https://github.com/Matleyx78/tecnigrafo/pull/476#issuecomment-6577193793))
+  ha trovato un buco nuovo nel punto 4,
+  [B476-1](https://github.com/Matleyx78/tecnigrafo/pull/476#issuecomment-6577208775):
+  il calcolo comprende la sorgente, quindi un arco sorgente quasi intero
+  darebbe il cerchio anche da solo. Il responsabile sceglie **A**: serve almeno
+  un altro arco che si unisca; con la sola sorgente il risultato è
+  `std::nullopt`, la sorgente non cambia e non compare nessuna domanda.
+  *cLose* resta l'eccezione.
+
+  È la prima correzione con il metodo dello stesso giorno (B10a della guida):
+  ogni decisione ha il suo esempio in "Test richiesti" della scheda, e la pull
+  request si rivede con la lista prima del merge. Correggono
+  l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punto 17, con una
+  riga **Corretto:**; cambiano la scheda [P22](tappe/0.7/P22-unione-core.md) e
+  il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+  Il catalogo delle domande e i riferimenti di R22 non cambiano: nessun caso
+  cade nei quattro punti.
