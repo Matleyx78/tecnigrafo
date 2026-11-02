@@ -8,7 +8,8 @@
 - **Riferimenti:** issue `[0.7-R20]` (#…), agente gemini
 - **Dipende da:** P18, P19, P25, R20
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B6, B14
-  e B15 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  e B15 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
+  revisione di B6 dopo le prove in AutoCAD (#468)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -58,12 +59,16 @@ Select 2D polyline or [Radius]:
     `Done` (P19, B14) cancella quell'entità invece di sostituirla, nella
     stessa operazione, con un solo punto di ripristino: nell'esempio di P19
     le due linee si cancellano e resta solo l'arco;
-  - *Trim* vale solo fra entità distinte (B6): su due segmenti della stessa
-    polilinea e con *Polyline* la polilinea cambia sempre, anche con *Trim
-    No*;
-  - l'arco nuovo con `addCopy` dalla prima entità se le due hanno le stesse
-    proprietà, altrimenti con `add` e le proprietà correnti (ADR 0035, punto
-    16);
+  - *Trim* vale anche per le polilinee, come in AutoCAD (B6, rivista il
+    2026-11-02): `filletSegments` e `filletPolyline` ricevono il *Trim* del
+    comando. Con *Trim No* la polilinea resta com'è, senza `replace`, e la
+    geometria nuova nasce come entità a sé: gli archi che il risultato ha in
+    `added` (uno per due segmenti, uno per vertice raccordato con *Polyline*),
+    nella stessa operazione e con un solo punto di ripristino;
+  - l'arco nuovo (o quelli di `added`) con `addCopy` dalla prima entità se le
+    due hanno le stesse proprietà, altrimenti con `add` e le proprietà correnti
+    (ADR 0035, punto 16). Su due segmenti della stessa polilinea e con
+    *Polyline* la prima entità è la polilinea: l'arco ha le sue proprietà;
   - `None`, `InfinitelyMany`, `AmbiguousPick` e `NotAllowed`: il messaggio
     inglese di AutoCAD (da controllare, ADR 0035 punto 22) e nessuna modifica;
   - `OutOfDomain` (due rette quasi parallele, il centro del raccordo o lo
@@ -98,13 +103,11 @@ allo stesso modo.
 
 ## Regole della tappa che valgono qui
 
-- Prima di cominciare controlla nella issue l'esito della prova a mano sul layer
-  dell'arco ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da
-  controllare", punto 2). Se smentisce l'ADR 0035, punto 16, fermati.
-- Allo stesso modo controlla l'esito della prova di `FILLET` con `TRIMMODE` = 0
-  su due segmenti di una stessa polilinea e con *Polyline* (punto 4). Se
-  AutoCAD lascia la polilinea com'è e aggiunge il raccordo come entità a sé,
-  fermati: la decisione B6 si rivede prima di questo pacchetto.
+- Le prove a mano di [dxf-di-prova.md](dxf-di-prova.md) ("Che cosa resta da
+  controllare") che servono qui sono fatte, e non c'è niente da controllare
+  nella issue: il punto 2 (layer dell'arco) ha confermato l'ADR 0035, punto 16;
+  il punto 4 (`TRIMMODE` = 0 su una polilinea) ha dato la decisione B6 di
+  adesso, *Trim No* anche per le polilinee (2026-11-02).
 - `builtin_commands.cpp`, `command_descriptions.cpp`, `cmd/CMakeLists.txt`:
   solo le tue righe; prima di te P18, dopo di te P21.
 - Le descrizioni elencano le domande di entrambe le sequenze (ADR 0032, punto 9).
@@ -113,10 +116,15 @@ allo stesso modo.
 ## Test richiesti
 
 - I casi di `autocad-raccordi.dxf` per `FILLET` e *Ttr*, nelle due sequenze.
-- Raggio 0, `Shift`, parallele, *Polyline*, *Trim No* (anche su due segmenti di
-  una polilinea e con *Polyline*), *Multiple*, *Undo*, impossibile, punto
-  ambiguo, proprietà dell'arco; le due linee che si cancellano (l'esempio di
-  B14), con un solo passo di annulla; annulla e ripeti.
+- Raggio 0, `Shift`, parallele, *Polyline*, *Trim No*, *Multiple*, *Undo*,
+  impossibile, punto ambiguo, proprietà dell'arco; le due linee che si
+  cancellano (l'esempio di B14), con un solo passo di annulla; annulla e
+  ripeti.
+- *Trim No* su due segmenti di una polilinea e con *Polyline* (i casi della
+  prova a mano, punto 4: [(0,10),(0,0),(10,0)] con raggio 1, clic in 0,5 e
+  5,0, e *Polyline* con clic in 25,0 sulla stessa polilinea spostata): la
+  polilinea invariata, l'arco come entità a sé con le proprietà della
+  polilinea, e un solo passo di annulla.
 - Rette quasi parallele (i dati di P19) in `FILLET`, anche con `Shift`, e in
   *Ttr*: il messaggio e nessuna modifica; un raggio oltre il dominio (2e15):
   il messaggio del raccordo impossibile e `Circle does not exist.`.

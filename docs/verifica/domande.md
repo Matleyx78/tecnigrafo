@@ -227,15 +227,16 @@ Con il taglio attivo, un'entità la cui parte tenuta è vuota o degenere per la
 regola del disegno si cancella, e non compare nella risposta: per esempio
 `fillet` sulle linee da 0,0 a 1,0 e da 0,0 a 0,1, scelte in 1,0 e in 0,1, con
 raggio 1, risponde solo `new ARC …`. Con `trim=no` le due entità compaiono
-sempre, invariate. `trim=no` vale solo fra entità distinte: sui segmenti di
-una polilinea e con `polyline` la polilinea cambia sempre (decisioni B6 e B14
-della #464, 2026-11-01).
+sempre, invariate. `trim=no` vale anche per le polilinee, come in AutoCAD: sui
+segmenti di una polilinea e con `polyline` la polilinea resta com'è e la
+geometria nuova compare a parte, come `new ARC …` (decisione B14 della #464,
+2026-11-01, e B6, rivista il 2026-11-02 dopo la prova in AutoCAD, #468).
 
 | Domanda | Risposta | Significato |
 |---|---|---|
 | `fillet <A> x1,y1 <B> x2,y2 radius=<r> [trim=no] [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o un esito | il raccordo tra `A`, scelta in `x1,y1`, e `B`, scelta in `x2,y2`: le due entità come diventano (`A …`, `B …`) e l'arco nuovo (`new ARC …`; nessuno con raggio 0) |
-| `fillet <P> x1,y1 x2,y2 radius=<r> [units=<n>]` | `P <entità>`, o un esito | il raccordo tra i due segmenti della polilinea `P` più vicini ai due punti |
-| `fillet <P> polyline radius=<r> [units=<n>]` | `<entità> done=<n> short=<m>` | la polilinea `P` con tutti i vertici raccordati (opzione *Polyline*), quanti vertici raccordati e quanti con segmenti troppo corti; i vertici originali in ordine, ognuno sulla polilinea già modificata dai precedenti (decisione B15 della #464, 2026-11-01) |
+| `fillet <P> x1,y1 x2,y2 radius=<r> [trim=no] [units=<n>]` | `P <entità>`, con `trim=no` anche `; new ARC …`, o un esito | il raccordo tra i due segmenti della polilinea `P` più vicini ai due punti; con `trim=no` `P` resta com'è e l'arco nuovo compare a parte (nessuno con raggio 0) |
+| `fillet <P> polyline radius=<r> [trim=no] [units=<n>]` | `<entità> done=<n> short=<m>`; con `trim=no` `<entità>`, poi uno `; new ARC …` per vertice raccordato, nell'ordine della visita, e `done=<n> short=<m>` | la polilinea `P` con tutti i vertici raccordati (opzione *Polyline*), quanti vertici raccordati e quanti con segmenti troppo corti; i vertici originali in ordine, ognuno sulla polilinea già modificata dai precedenti (decisione B15 della #464, 2026-11-01). Con `trim=no` la polilinea resta com'è e ogni vertice si giudica sui suoi due segmenti originali (decisione B6, rivista il 2026-11-02) |
 | `tangents x,y <E>` | elenco di punti `x,y` separati da `;`, o `none` | i punti di tangenza dal punto a un cerchio, un arco o gli archi di una polilinea, solo quelli sulla curva; `none` per un punto dentro il cerchio o una curva dritta; il punto stesso se sta esattamente sul cerchio. Per una polilinea, per indice di segmento e poi nell'ordine del segmento; un vertice comune a due segmenti compare una volta; un segmento rifiutato o la cui costruzione è oltre il dominio non dà punti, e gli altri restano (decisione B7 della #464, 2026-11-01) |
 | `circle-ttr <A> x1,y1 <B> x2,y2 radius=<r>` | `CIRCLE center=… radius=…`, o un esito | il cerchio di raggio `r` tangente ad `A` e `B`, quello con i punti di tangenza più vicini ai due punti, come `CIRCLE` *Ttr* |
 
@@ -245,7 +246,8 @@ della #464, 2026-11-01).
 |---|---|---|
 | `chamfer <A> x1,y1 <B> x2,y2 distances=<d1>,<d2> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con le due distanze, la prima su `A` |
 | `chamfer <A> x1,y1 <B> x2,y2 angle=<l>,<gradi> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con la lunghezza su `A` e l'angolo: dal primo punto, sulla parte tenuta di `A` alla lunghezza dallo spigolo, la direzione verso lo spigolo ruotata dell'angolo verso il lato della parte tenuta di `B`; `none` se quella retta è parallela a `B` o la incontra fuori dalla sua parte tenuta |
-| `chamfer <P> polyline distances=<d1>,<d2>` | `<entità> done=<n> short=<m>` | la polilinea `P` con tutti i vertici tra segmenti dritti smussati, nell'ordine di `fillet … polyline` |
+| `chamfer <P> x1,y1 x2,y2 distances=<d1>,<d2> [trim=no]` (anche `angle=<l>,<gradi>`) | `P <entità>`, con `trim=no` anche `; new LINE …`, o un esito | lo smusso tra i due segmenti dritti della polilinea `P` più vicini ai due punti, il primo con la prima distanza; con `trim=no` `P` resta com'è e la linea nuova compare a parte (nessuna con le due distanze zero) |
+| `chamfer <P> polyline distances=<d1>,<d2> [trim=no]` | `<entità> done=<n> short=<m>`; con `trim=no` `<entità>`, poi uno `; new LINE …` per vertice smussato e `done=<n> short=<m>` | la polilinea `P` con tutti i vertici tra segmenti dritti smussati, nell'ordine di `fillet … polyline`; con `trim=no` come per `fillet` (decisione B6, rivista il 2026-11-02) |
 
 Un punto la cui proiezione sulla retta della sua linea è esattamente lo
 spigolo dà `ambiguous`; una sola distanza zero dà `none`; una distanza (o la
@@ -257,7 +259,7 @@ ADR 0035, punti 17–20)
 
 | Domanda | Risposta | Significato |
 |---|---|---|
-| `join <A> <B> … [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente e le altre nell'ordine scritto: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla. Una linea o un arco solo se tutte le entità sono linee allineate alla sorgente o archi del suo cerchio; altrimenti la catena (decisione B16 della #464, 2026-11-01) |
+| `join <A> <B> … [circle=no] [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente e le altre nell'ordine scritto: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla. Una linea o un arco solo se tutte le entità sono linee allineate alla sorgente o archi del suo cerchio; altrimenti la catena (decisione B16 della #464, 2026-11-01). Gli archi dello stesso cerchio si coprono in senso antiorario a partire dall'inizio della sorgente; se arrivano al giro intero la risposta è il cerchio (`new CIRCLE …`), come con *Yes* alla domanda *Convert to circle?*, e con `circle=no`, come con *No*, è `none` (decisione B11, rivista il 2026-11-02) |
 
 ### File
 

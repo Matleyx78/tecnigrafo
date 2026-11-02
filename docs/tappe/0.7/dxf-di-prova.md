@@ -264,7 +264,8 @@ Prima dei pacchetti indicati, una prova a mano:
    caso la decisione si rivede prima di P20. **Esito (2026-11-02):** in tutti e
    quattro i casi AutoCAD lascia la polilinea com'è e aggiunge il raccordo o lo
    smusso come entità a sé. **La decisione B6 è smentita** e si rivede prima di
-   P20.
+   P20. **Rivista il 2026-11-02 ([#468](https://github.com/Matleyx78/tecnigrafo/issues/468)):**
+   *Trim No* vale anche per le polilinee, come in AutoCAD.
 5. **`JOIN` su due archi dello stesso cerchio**, uno dei quali parte prima
    dell'inizio della sorgente: per esempio, sorgente di centro 0,0 e raggio 10
    da 0° a 90°, e un arco dello stesso cerchio da 270° a 45°. Tecnigrafo dà
@@ -273,7 +274,9 @@ Prima dei pacchetti indicati, una prova a mano:
    prima di P22. **Esito (2026-11-02):** AutoCAD copre gli archi in senso
    antiorario a partire dalla sorgente, qui fino al giro intero, e chiede se
    farne un cerchio: con «Sì» dà il cerchio, con «No» non unisce nulla. **La
-   decisione B11 è smentita** e si rivede prima di P22.
+   decisione B11 è smentita** e si rivede prima di P22. **Rivista il
+   2026-11-02 (#468):** la regola di AutoCAD, con la domanda del cerchio; la
+   conferma è la prova 7.
 6. **`JOIN` interattivo su una scelta mista:** sorgente la linea da 0,0 a
    10,0, poi la linea da 20,0 a 30,0 (allineata, staccata) e la linea da 10,0
    a 10,10 (contigua). Tecnigrafo dà la polilinea 0,0 → 10,0 → 10,10 e scarta
@@ -281,5 +284,20 @@ Prima dei pacchetti indicati, una prova a mano:
    2026-11-01): se AutoCAD si comporta diversamente, la decisione si rivede
    prima di P22. **Esito (2026-11-02):** come Tecnigrafo, nei due ordini delle
    candidate: confermato.
+7. **`JOIN` su archi dello stesso cerchio, con la regola nuova** (decisione B11
+   rivista il 2026-11-02, #468): ogni arco si copre in senso antiorario a
+   partire dall'inizio della sorgente, e se arriva al giro intero chiede il
+   cerchio. Sullo stesso cerchio di centro 0,0 e raggio 10, due casi che
+   distinguono la regola nuova da quella vecchia:
+   - sorgente 0°→90° e arco 200°→300°: la nuova regola dà 0°→300°, la vecchia
+     dava 200°→90°;
+   - sorgente 0°→90° e arco 300°→30°: la nuova regola chiede il cerchio, la
+     vecchia dava 300°→90°.
 
-Le prove 1, 2, 4, 5 e 6 sono in `autocad-prove-a-mano.dxf`. Resta la 3.
+   Si prova anche la domanda del cerchio nella sequenza degli script (il
+   `JOIN` vecchio, senza *cLose*), per sapere se c'è anche lì. Serve a P22 e
+   P23 (ADR 0035, punti 17–19): se AutoCAD smentisce, B11 si rivede prima di
+   P22. L'esito si scrive qui e nella issue di P22.
+
+Le prove 1, 2, 4, 5 e 6 sono in `autocad-prove-a-mano.dxf`. Restano la 3 e la
+7.

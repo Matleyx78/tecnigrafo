@@ -465,7 +465,8 @@ i rimandi ai documenti che cambia.
     un testo, l'esito è `Failed`; `NoSide` resta per `Side::On`.
   - [B6](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563795446), P19, P20, P21: *Trim* vale solo fra entità distinte; sui
     segmenti di una polilinea e con *Polyline* la polilinea cambia sempre. Da
-    confermare con una prova in AutoCAD prima di P20.
+    confermare con una prova in AutoCAD prima di P20 (smentita: rivista il
+    2026-11-02, vedi la decisione di quel giorno).
   - [B7](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563795913), P19: le tangenti a una polilinea vanno per segmento, un vertice
     comune compare una volta sola, sul segmento che segue, e un segmento
     rifiutato non toglie i punti degli altri.
@@ -479,7 +480,8 @@ i rimandi ai documenti che cambia.
     catena vince il suo inizio.
   - [B11](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871709), P22, P23: archi dello stesso cerchio danno il cerchio meno il
     vuoto più grande, confrontando gli angoli memorizzati. Da confermare con
-    una prova in AutoCAD prima di P22.
+    una prova in AutoCAD prima di P22 (smentita: rivista il 2026-11-02, vedi la
+    decisione di quel giorno).
   - [B12](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563871873), P22: la polilinea unita scrive nei vertici le larghezze
     effettive e prende dalla sorgente la generazione del tipo di linea.
   - [B13](https://github.com/Matleyx78/tecnigrafo/issues/464#issuecomment-6563872048), P22: la coincidenza si decide sugli estremi degli archi come
@@ -506,3 +508,55 @@ i rimandi ai documenti che cambia.
   controllare", punti 4–6) e il piano della [tappa 0.7](tappe/0.7-modifiche.md)
   in "Modifiche al piano". P25 (#464) si chiude; P15–P23 si riprendono dopo il
   merge.
+- **2026-11-02 — B6 e B11 riviste dopo le prove in AutoCAD.** Le prove a mano
+  del giorno ([#467](https://github.com/Matleyx78/tecnigrafo/issues/467),
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md), punti 4 e 5) hanno smentito due
+  decisioni del 2026-11-01 sui buchi del verbale di P25
+  ([#464](https://github.com/Matleyx78/tecnigrafo/issues/464)): B6 e B11. Il
+  responsabile le rivede ([#468](https://github.com/Matleyx78/tecnigrafo/issues/468))
+  scegliendo per tutte e due la **strada A, come AutoCAD**. Restano in
+  Tecnigrafo: nessuna richiesta a solid-space.
+  - **B6**, P19, P20, P21: *Trim No* vale anche per le polilinee. Con
+    `TRIMMODE` 0 AutoCAD lascia la polilinea com'è e il raccordo o lo smusso
+    nasce come entità a sé, in tutti e quattro i casi provati (`FILLET` e
+    `CHAMFER`, sui due segmenti di una polilinea e con *Polilinea*).
+    `filletSegments`, `filletPolyline`, `chamferSegments` e `chamferPolyline`
+    ricevono di nuovo `trim`; con *Trim No* la polilinea resta invariata e la
+    geometria nuova va in `added`, e per questo `PolylineCorners` ha un elenco
+    di entità aggiunte; con *Trim No* ogni vertice si giudica sui segmenti
+    originali, perché la polilinea non cambia (la visita di B15 su una
+    polilinea che non si modifica); le proprietà dell'arco o della linea
+    nuova sono quelle della polilinea (ADR 0035, punto 16: la prima entità
+    scelta, che qui è la stessa).
+  - **B11**, P22, P23: gli archi dello stesso cerchio si coprono come AutoCAD
+    (punto 5: sorgente 0°→90° e arco 270°→45°). Ogni arco si misura in senso
+    antiorario dall'inizio della sorgente, da `a` (il suo inizio meno l'inizio
+    della sorgente, in [0, 2π)) fino ad `a` più la sua ampiezza, sugli angoli
+    memorizzati; il risultato va dall'inizio della sorgente al più lontano di
+    questi estremi, in `join` e in `joinToSource`. Se il più lontano arriva al
+    giro intero (2π o oltre), gli archi formano un cerchio: `join` lo dice con
+    il campo `formsCircle` di `JoinResult` (la forma la fissa la scheda P22), e
+    `JOIN` interattivo (P23) chiede `Arc segments combined form a circle.
+    Convert to circle? [Yes/No] <Yes>:` (testo inglese da controllare, ADR
+    0035, punto 22): con *Yes* il cerchio, con *No* niente si unisce e il
+    disegno non cambia. *cLose* di `joinToSource` resta com'è. Decadono il
+    vuoto più grande e il pareggio fra vuoti di B11; B13 resta dove la catena
+    confronta estremi di archi. I casi degli archi di `join/linee-e-archi` (R22)
+    danno lo stesso risultato con la regola nuova.
+  - **Prova 7**, prima di P22: il responsabile approva la proposta di una prova
+    in AutoCAD con due casi sullo stesso cerchio di centro 0,0 e raggio 10
+    (sorgente 0°→90° con l'arco 200°→300°, che dà 0°→300°; con l'arco
+    300°→30°, che chiede il cerchio) e della domanda del cerchio nella
+    sequenza degli script. Se AutoCAD smentisce, B11 si rivede prima di P22.
+
+  Correggono l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punti 13,
+  15 e 17–19, con una riga **Corretto:** (nessun codice unito attua i punti
+  corretti); cambiano le schede [P19](tappe/0.7/P19-raccordi-core.md),
+  [P20](tappe/0.7/P20-fillet.md) e [P21](tappe/0.7/P21-chamfer.md) (B6),
+  [P22](tappe/0.7/P22-unione-core.md) e [P23](tappe/0.7/P23-join.md) (B11, e le
+  loro "Regole della tappa", che danno per fatte le prove dei punti 4–6), il
+  catalogo delle domande ([verifica/domande.md](verifica/domande.md): `fillet`,
+  `chamfer` e `join`), [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md) (la prova 7)
+  e il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al
+  piano". P19–P21 si riprendono dopo il merge; P22 e P23 dopo il merge e dopo
+  la prova 7.
