@@ -614,3 +614,15 @@ i rimandi ai documenti che cambia.
   [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, tabella di B, B4, il
   nuovo B10a, C) e [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) (sezione
   5). Nessun ADR cambia.
+- **2026-11-02 — Chi rivede una pull request può commentarla.** La prima
+  rilettura con il metodo di B10a (Codex sulla
+  [#476](https://github.com/Matleyx78/tecnigrafo/pull/476)) si è fermata: il
+  controllo automatico dell'agente ha letto «non modificarla» come divieto
+  anche dell'etichetta e dei commenti, cioè di tutto ciò che la revisione deve
+  scrivere. Le frasi per la rilettura dicono ora che cosa si può fare
+  (prendere in carico, commentare, togliere l'etichetta) e che cosa no
+  (commit, cambi a file, ramo, titolo o descrizione). Cambiano
+  [AGENTS.md](../AGENTS.md) ("Le correzioni delle schede si rivedono") e
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, frase per la revisione
+  del contratto in solid-space; B10a, passo 4). Nessuna regola cambia nella
+  sostanza.

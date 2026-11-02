@@ -123,8 +123,9 @@ Vale per **ogni** pull request, nei due repository.
    lettera. Rivedi la pull request #<numero>, che porta "Revisione del
    contratto: da fare", come dice docs/CONTRATTI.md in "Le correzioni del
    contratto": verbale nella pull request e una issue contratto per ogni buco
-   nuovo. Non modificarla, non decidere il contratto e non scrivere in
-   Tecnigrafo. Poi fermati.
+   nuovo. Prendila in carico e scrivi i commenti, ma non modificarla: niente
+   commit né cambi a file, ramo, titolo o descrizione. Non decidere il
+   contratto e non scrivere in Tecnigrafo. Poi fermati.
    ```
 
    Se il verbale apre buchi nuovi, decidili prima del merge: la decisione entra
@@ -810,8 +811,10 @@ quattro buchi di P22 nella #373). Ogni volta:
    Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
    lettera. Rivedi la pull request #<numero>, che porta "Revisione della
    correzione: da fare", come dice AGENTS.md in "Le correzioni delle schede si
-   rivedono": verbale nella pull request, con un buco nuovo per commento. Non
-   modificarla e non scrivere in solid-space. Poi fermati.
+   rivedono": verbale nella pull request, con un buco nuovo per commento.
+   Prendila in carico e scrivi i commenti, ma non modificarla: niente commit
+   né cambi a file, ramo, titolo o descrizione. Non scrivere in solid-space.
+   Poi fermati.
    ```
 
    Se il verbale apre buchi nuovi, torna al passo 2 sulla stessa pull request;
