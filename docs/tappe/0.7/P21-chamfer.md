@@ -10,7 +10,9 @@
 - **Dipende da:** P20, P25, R21
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B2, B6, B8, B9, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
-  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468)
+  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
+  2026-11-02, il messaggio di `OutOfDomain` (ADR 0035, riga **Corretto:** del
+  2026-11-02)
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -172,7 +174,7 @@ Select 2D polyline or [Distance/Angle/Method]:
 - `NotAllowed` (un arco) dà `Cannot chamfer those objects.`, `None` e
   `InfinitelyMany` danno `Lines are parallel.` (tabella di
   [dxf-di-prova.md](dxf-di-prova.md), punto 3); `OutOfDomain` dà il messaggio di `FILLET`
-  per le rette quasi parallele, `Lines are nearly parallel.` (P20), distinto
+  per "oltre il dominio", `Result is beyond the drawing limits.` (P20), distinto
   da `Lines are parallel.`; `AmbiguousPick` dà il messaggio di `AmbiguousPick`
   di `FILLET` (B9); in tutti i casi la domanda resta.
 - Una distanza, una lunghezza o un angolo negativo o non numerico dà il

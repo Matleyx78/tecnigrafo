@@ -208,7 +208,7 @@ la fine), decisa esattamente da solid-space. Le stazioni non compaiono. `units=`
 
 | Domanda | Risposta | Significato |
 |---|---|---|
-| `offset <E> <d> x,y [units=<n>]` | un'entità, oppure `vanished`, `failed` o `no-side` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `vanished` quando non resta nulla, `failed` quando solid-space non può fare la copia di una polilinea (autointersezioni, o un arco quasi intero che non rappresenta, Matleyx78/solid-space#127) e quando l'entità non dà un lato (una curva esattamente puntiforme, una polilinea senza segmenti o con soli segmenti puntiformi, dati che solid-space rifiuta; decisione B5 della #464, 2026-11-01), `no-side` solo quando il punto sta esattamente sulla retta o sul cerchio |
+| `offset <E> <d> x,y [units=<n>]` | un'entità, oppure `vanished`, `failed` o `no-side` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `vanished` quando non resta nulla, `failed` quando solid-space non può fare la copia (per una polilinea: autointersezioni, un arco quasi intero che non rappresenta, Matleyx78/solid-space#127, un vertice oltre il dominio o pezzi tutti ridotti a un punto dall'arrotondamento, #138 e #148; per ogni entità: una curva costruita oltre il dominio, come un raggio oltre 2^50, #144) e quando l'entità non dà un lato (una curva esattamente puntiforme, una polilinea senza segmenti o con soli segmenti puntiformi, dati che solid-space rifiuta; decisione B5 della #464, 2026-11-01), `no-side` solo quando il punto sta esattamente sulla retta o sul cerchio |
 
 **Raccordi e tangenze** (P19, richiesta [Matleyx78/solid-space#21](https://github.com/Matleyx78/solid-space/issues/21),
 ADR 0035, punti 13 e 14)
@@ -217,8 +217,11 @@ Gli esiti che non costruiscono nulla: `none` (non esiste), `infinite` (le curve
 stanno sulla stessa retta o sullo stesso cerchio, o simili), `ambiguous` (un
 punto sta esattamente sulla retta o sul cerchio dell'altra curva),
 `not-allowed` (un'entità che il comando non prende), `out-of-domain` (esiste,
-ma il centro o lo spigolo cade oltre il dominio di solid-space, 2^50: due rette
-quasi parallele; aggiunto il 2026-11-01, ADR 0035, punti 13–15). Un raggio
+ma un valore della costruzione, cioè il centro, un punto di tangenza, lo
+spigolo o il semicerchio tra due parallele, cade oltre il dominio di
+solid-space, 2^50: due rette quasi parallele, archi lontani, due parallele
+lontane; aggiunto il 2026-11-01 e allargato il 2026-11-02, ADR 0035, punti
+13–15). Un raggio
 oltre 2^50 dà `none`, e così una parte tenuta che il modello non rappresenta
 (un arco che si chiuderebbe in un cerchio, P15). Gli smussi hanno gli stessi
 esiti.

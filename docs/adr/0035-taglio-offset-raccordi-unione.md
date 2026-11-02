@@ -64,6 +64,22 @@
   di controllare i testi su un AutoCAD inglese; valgono quelli della tabella di
   quel file. Nessun codice unito attua il punto (eccezione di
   [GOVERNANCE.md](../../GOVERNANCE.md)).
+- **Corretto:** 2026-11-02 — su decisione del responsabile, per allineare
+  l'ADR al contratto di solid-space corretto con la revisione `[0.2-C]`
+  ([Matleyx78/solid-space#133](https://github.com/Matleyx78/solid-space/issues/133),
+  pull request [#147](https://github.com/Matleyx78/solid-space/pull/147),
+  commit `11108db`); nessun codice unito attua i punti corretti (eccezione di
+  [GOVERNANCE.md](../../GOVERNANCE.md)). (1) "Oltre il dominio" vale per ogni
+  valore che solid-space costruirebbe, deciso sul valore esatto: centro,
+  spigolo, punto di tangenza, piede della perpendicolare tra rette parallele,
+  raggio costruito (issue #136, #137, #144 e #149 di solid-space). Non solo
+  due rette quasi parallele: anche archi e cerchi lontani, o il semicerchio tra
+  due rette esattamente parallele. Il messaggio di `FILLET`, `CIRCLE` *Ttr* e
+  `CHAMFER` per "oltre il dominio" è quindi uno solo e non nomina una causa:
+  `Result is beyond the drawing limits.` (punti 13–15). (2) La curva parallela
+  manca (`failed`) anche per una linea i cui estremi, arrotondati, coincidono,
+  per una curva costruita oltre il dominio e per una polilinea i cui pezzi
+  l'arrotondamento riduce tutti a un punto (issue #132, #144, #148; punto 12).
 
 ## Contesto
 
@@ -270,8 +286,9 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 
     Le risposte "non esiste", "infiniti raccordi" e "il punto non indica un
     lato" di solid-space diventano messaggi; nessuna entità cambia. Lo stesso
-    per "oltre il dominio": il centro del raccordo, o lo spigolo del raggio 0,
-    cade oltre 2^50 (due rette quasi parallele). Il raccordo esiste ma non si
+    per "oltre il dominio": un valore della costruzione (il centro del
+    raccordo, un punto di tangenza, lo spigolo del raggio 0) cade oltre 2^50,
+    per esempio con due rette quasi parallele (corretto il 2026-11-02). Il raccordo esiste ma non si
     rappresenta, quindi il messaggio è suo, distinto da "non esiste"; con
     *Polyline* il vertice resta com'è e si conta tra i troppo corti. Un raggio
     scritto oltre 2^50 è invece un dato fuori dal dominio (punto 23): la
@@ -281,7 +298,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 14. **`CIRCLE` tangente-tangente-raggio** usa `tangentCircleNear` di
     solid-space: il cerchio con i punti di tangenza più vicini ai due punti
     indicati. Per una polilinea vale il segmento più vicino al punto. Un
-    cerchio il cui centro cadrebbe oltre 2^50 (due rette quasi parallele) non
+    cerchio il cui centro o un cui punto di tangenza cadrebbe oltre 2^50 (due
+    rette quasi parallele, archi lontani; corretto il 2026-11-02) non
     si disegna, con il messaggio del punto 13 per "oltre il dominio"
     (corretto il 2026-11-01).
 15. **`CHAMFER`.** Opzioni *Undo*, *Polyline*, *Distance*, *Angle*, *Trim*,

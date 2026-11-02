@@ -14,9 +14,13 @@
   (Matleyx78/solid-space#130, bulge ricostruito, riferimenti
   Matleyx78/solid-space#129), che comprende gli altri tra le sue dipendenze
   (Matleyx78/solid-space#63). Prima di #130 `offsetCurve` sbaglia in silenzio
-  sugli archi quasi interi (Matleyx78/solid-space#127)
+  sugli archi quasi interi (Matleyx78/solid-space#127). Anche
+  Matleyx78/solid-space#145 (0.2-P20, costruzioni nei subnormali,
+  riferimenti Matleyx78/solid-space#146), che può correggere `offsetCurve` e
+  `offsetPolyline` già uniti
 - **Corretta:** 2026-11-01, con la decisione del responsabile sul buco B5 della
-  #464 ([DECISIONI.md](../../DECISIONI.md))
+  #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con il contratto
+  corretto dalla revisione `[0.2-C]` di solid-space (Matleyx78/solid-space#147)
 - **Modulo:** `core` (più la domanda `offset` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 10–12; l'[ADR 0012 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0012-curva-parallela-nel-piano.md)
@@ -30,13 +34,18 @@
 Il contratto accettato con l'ADR 0012 di solid-space:
 `solid_space/geom2d/offset.hpp` (`offsetCurve`, `offsetPolyline`,
 `CurveOffset`, `PolylineOffset`, `OffsetOutcome`, `OffsetFailure`,
-`OffsetPiece`, `PieceOrigin`), con i tipi di `curves.hpp` e `side.hpp`.
+`OffsetPiece`, `PieceOrigin`), con i tipi di `curves.hpp` e `side.hpp`, come
+li ha corretti la revisione `[0.2-C]`: la scheda parte dal commit `11108db`
+di `main` di solid-space (pull request Matleyx78/solid-space#147).
 
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che chiude Matleyx78/solid-space#130, l'ultimo
-  pacchetto di solid-space che realizza `offset.hpp`. Se la issue non lo dice, chiedilo e non cominciare.
+  sottomodulo: il più recente fra quelli che chiudono
+  Matleyx78/solid-space#130 e Matleyx78/solid-space#145, gli ultimi
+  pacchetti di solid-space che realizzano `offset.hpp`. Se `offset.hpp` è
+  cambiato dopo il commit `11108db`, leggi le decisioni come dice AGENTS.md
+  ("Quando fermarsi", punto 1). Se la issue non lo dice, chiedilo e non cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 
@@ -90,12 +99,14 @@ struct OffsetResult {
   tipo: la linea con i suoi due estremi nuovi; il cerchio con il nuovo raggio;
   l'arco con il nuovo raggio e **gli stessi angoli** dell'arco di partenza
   (solid-space tiene angolo iniziale e ampiezza, ADR 0012 di solid-space,
-  punto 3). `vanished` dà `Vanished`; `failed` dà `Failed`. Dalla decisione
-  di Matleyx78/solid-space#127 `offsetCurve` può dare `failed` per un arco
-  quasi intero che i suoi estremi arrotondati e un bulge non rappresentano
-  entro l'errore; il contratto lo dà solo per un `PolylineSegment` curvo, e
-  qui un arco arriva come `Arc` (`bridge::curveOf`), quindi per linea, arco e
-  cerchio non capita e non serve un test che lo provochi.
+  punto 3). `vanished` dà `Vanished`; `failed` dà `Failed`. Il contratto dà
+  `failed` per un `PolylineSegment` curvo che non si rappresenta
+  (Matleyx78/solid-space#127 e #132), e per una linea non degenere i cui
+  estremi, arrotondati al `double` più vicino, coincidono
+  (Matleyx78/solid-space#148): per una linea può quindi capitare, ma solo con
+  coordinate vicine ai subnormali, e nessun test lo pretende. Un arco arriva
+  come `Arc` (`bridge::curveOf`) e un cerchio come `Circle`: per loro
+  `failed` non capita.
 - **Polilinea:** `offsetPolyline` con la regola del documento
   (`bridge::policyOf`). Il risultato torna una polilinea aperta o chiusa come
   quella di partenza, con le posizioni e i bulge di solid-space e, per ogni
@@ -107,10 +118,17 @@ struct OffsetResult {
     restano quelle della polilinea di partenza.
 
   `done` dà `Done` con `simple`; `vanished` dà `Vanished`; `failed` dà
-  `Failed`, qualunque sia il motivo (anche `notRepresentable`, aggiunto da
-  Matleyx78/solid-space#127).
-- Una diagnosi di solid-space (dati fuori dal dominio, polilinea senza pezzi)
-  dà `Failed`.
+  `Failed`, qualunque sia il motivo: anche `notRepresentable`
+  (Matleyx78/solid-space#127, e quando l'arrotondamento riduce a un punto
+  tutti i pezzi, #148) e `beyondDomain`, che ora vale per ogni vertice del
+  risultato finale oltre il dominio (#138). Un pezzo dritto che
+  l'arrotondamento riduce a un punto sparisce dal risultato **insieme alla sua
+  voce in `origins`** (#148, `simple` falso): le larghezze si riportano
+  sempre per `origins`, mai per posizione.
+- Una diagnosi di solid-space dà `Failed`: dati fuori dal dominio, polilinea
+  senza pezzi, e anche una curva costruita che non sarebbe un dato valido,
+  come un raggio oltre `kMaxCoordinate` (diagnosi `outOfDomain` sulla
+  distanza, Matleyx78/solid-space#143 e #144).
 - La domanda `offset` del catalogo, con le risposte scritte lì.
 
 ## Regole della tappa che valgono qui
@@ -127,7 +145,8 @@ struct OffsetResult {
 - Linea, cerchio e arco dai due lati; arco e cerchio che si annullano (distanza
   uguale al raggio); punto esattamente sulla curva (`NoSide`);
   `Line[(0,0),(0,0)]` con distanza 1 e lato (0,1), e una polilinea senza
-  segmenti (`Failed`).
+  segmenti (`Failed`); un cerchio di centro (0,0) e raggio 2^50 con distanza 1
+  verso l'esterno (il raggio costruito supera `kMaxCoordinate`: `Failed`).
 - I casi di `autocad-offset.dxf` e quelli della richiesta
   Matleyx78/solid-space#22 (ADR 0012 di solid-space, "I casi della
   richiesta"), passando dalle entità.

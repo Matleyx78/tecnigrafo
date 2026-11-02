@@ -585,3 +585,31 @@ i rimandi ai documenti che cambia.
   di quel file. L'ADR 0035, punto 22, è corretto (nessun codice lo applica
   ancora). I pacchetti P5, P16, P18, P20, P21 e P23 non hanno più testi da
   controllare.
+
+## 2026-11-02 — Schede della 0.7 sul contratto corretto di solid-space
+
+- La revisione `[0.2-C]` di solid-space (Matleyx78/solid-space#133, decisioni
+  nelle issue #132, #135–#144 e #148–#152, applicate dalla pull request
+  Matleyx78/solid-space#147, commit `11108db`) ha corretto `curves.hpp`,
+  `offset.hpp` e `tangency.hpp`. Per Tecnigrafo conta che:
+  - "oltre il dominio" vale per ogni valore costruito, deciso sul valore
+    esatto: centri, punti di tangenza, spigoli, il piede della perpendicolare
+    e il semicerchio tra due parallele, il raggio costruito di una curva
+    parallela;
+  - `offsetCurve` dà `failed` anche per una linea i cui estremi arrotondati
+    coincidono, e `offsetPolyline` anche quando l'arrotondamento riduce a un
+    punto tutti i pezzi; un pezzo dritto ridotto a un punto sparisce con la sua
+    voce in `origins`;
+  - in `fillet`, due punti di tangenza restituiti uguali danno bulge 0;
+  - l'ordine dei cerchi tangenti è totale.
+- Il responsabile decide un solo messaggio per `OutOfDomain` di `FILLET`,
+  `CIRCLE` *Ttr* e `CHAMFER`: `Result is beyond the drawing limits.`, che non
+  nomina una causa. Sostituisce `Lines are nearly parallel.`.
+- P17 e P19 partono dal commit `11108db` e aspettano anche
+  Matleyx78/solid-space#145 (0.2-P20). Correggono l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md)
+  (riga **Corretto:**, punti 12–15) e cambiano le schede
+  [P17](tappe/0.7/P17-curva-parallela.md), [P19](tappe/0.7/P19-raccordi-core.md),
+  [P20](tappe/0.7/P20-fillet.md), [P21](tappe/0.7/P21-chamfer.md), la tabella
+  dei messaggi di [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md), il catalogo
+  delle domande ([verifica/domande.md](verifica/domande.md)) e il piano della
+  [tappa 0.7](tappe/0.7-modifiche.md).
