@@ -86,7 +86,7 @@ struct CornerResult {
 
 /// FILLET of two different entities, each a Line, an Arc or a Circle, picked
 /// at the given points (docs/adr/0035, point 13). Radius 0 gives the corner.
-/// `trim` applies only here, between distinct entities. Anything else:
+/// Anything else:
 /// NotAllowed. A radius beyond robust::kMaxCoordinate: None
 /// (docs/adr/0035, point 23). Precondition: radius finite and >= 0.
 [[nodiscard]] CornerResult fillet(const Entity& first, const Vec2& pickFirst,
