@@ -241,8 +241,10 @@ un calcolo in `double` porta proprio al limite.
   "Test richiesti", e una regola si scrive per tutti i casi che tocca (la fine
   e l'inizio, i due versi, le due unità), non solo per quello dell'esempio.
 - **Chi la rivede** è un agente diverso da chi l'ha scritta (di norma Codex;
-  Claude se l'ha scritta Codex). La prende in carico come ogni pull request e
-  non la modifica. Controlla le sole regole nuove o corrette con la lista di
+  Claude se l'ha scritta Codex). La prende in carico come ogni pull request
+  (etichetta `AA-Presa in carico` e commento) e scrive nella pull request i
+  suoi commenti, ma non la modifica: niente commit, niente cambi a file, ramo,
+  titolo o descrizione. Alla fine toglie l'etichetta. Controlla le sole regole nuove o corrette con la lista di
   CONTRATTI.md, punti 1–11, più due domande: la regola vale anche al contrario
   (l'altro estremo, l'altro verso, gli argomenti scambiati)? Che cosa succede
   quando il calcolo scritto nella scheda arriva esattamente al limite (un
