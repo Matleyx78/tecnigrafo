@@ -12,7 +12,8 @@
   pacchetto di solid-space che realizza `coincidence.hpp`, quando la tappa 0.2
   di solid-space lo avrà (ADR 0030, punto 13)
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B10–B13,
-  B16 e B17 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  B16 e B17 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
+  revisione di B11 dopo le prove in AutoCAD (#468)
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -20,7 +21,8 @@
   l'[ADR 0009 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0009-regola-delle-tolleranze-del-piano.md)
   (Decisione); in `third_party/solid-space` l'intestazione qui sotto;
   [dxf-di-prova.md](dxf-di-prova.md) (`autocad-unione.dxf`, e "Che cosa resta
-  da controllare", punti 5 e 6);
+  da controllare", punti 5, 6 e 7);
+  `core/include/tg/core/arc_geometry.hpp` (`normalizeAngle`);
   `core/include/tg/core/tolerance.hpp` e `core/src/solid_space_bridge.hpp` (P14)
 
 ## Intestazioni di solid-space che usa
@@ -59,13 +61,19 @@ struct JoinResult {
     std::optional<Entity> source;
     std::optional<Entity> created;
     std::vector<std::size_t> consumed;
+    /// Arcs of the source's circle that reach the whole circle (docs/adr/0035,
+    /// point 17): `created` is the circle, which the command applies only if
+    /// the user answers Yes to "Convert to circle?"; with No nothing joins.
+    /// Never set with `close` of joinToSource, which asks nothing.
+    bool formsCircle{false};
 };
 
 /// JOIN of `entities`, entities[0] the source, the others in the order they
 /// were chosen: aligned lines into a line, when the source and every other
-/// entity are lines aligned with the source; arcs of one circle into an arc,
-/// when the source and every other entity are arcs on the source's circle;
-/// otherwise a chain of contiguous lines, arcs and polylines into a polyline.
+/// entity are lines aligned with the source; arcs of one circle into an arc
+/// (or, reaching the whole circle, into a circle: `formsCircle`), when the
+/// source and every other entity are arcs on the source's circle; otherwise a
+/// chain of contiguous lines, arcs and polylines into a polyline.
 /// std::nullopt when nothing joins.
 [[nodiscard]] std::optional<JoinResult> join(std::span<const Entity> entities,
                                              const ToleranceRule& rule);
@@ -83,7 +91,9 @@ struct JoinResult {
   delle due linee, "stesso cerchio" è `onSameCircle` dei due archi, "si
   toccano" è `coincident` dei due estremi. Ogni linea e ogni arco si confronta
   con la sorgente, non con l'ultima entità aggiunta (ADR 0035, punto 18).
-- **Gli estremi degli archi** (B13): la coincidenza si decide sugli estremi
+- **Gli estremi degli archi** (B13), nella catena, che confronta gli estremi
+  di archi e linee (gli archi di un solo cerchio non li confrontano, punto
+  seguente): la coincidenza si decide sugli estremi
   come li calcola Tecnigrafo, con la stessa funzione usata altrove per gli
   estremi di un arco. Quando la distanza esatta fra due estremi sta entro
   l'errore di quel calcolo dal confine della tolleranza, l'esito è libero
@@ -103,21 +113,36 @@ struct JoinResult {
 - **Linee allineate:** la linea unita va dall'estremo della prima all'estremo
   dell'ultima lungo la sorgente, anche con spazi (`autocad-unione.dxf`, casi b
   ed e1).
-- **Archi dello stesso cerchio** (B11), in `join` e in `joinToSource`:
-  - il risultato è tutto il cerchio **meno il vuoto più grande** fra gli archi
-    uniti, con centro e raggio della sorgente. I vuoti si confrontano
-    esattamente sugli **angoli memorizzati** degli archi, che sono dati e non
-    costruzioni;
-  - se non resta nessun vuoto, o se tutti i vuoti hanno gli estremi
-    coincidenti per la regola (`coincident`, con gli estremi di B13), il
-    risultato è un cerchio; con `close` di `joinToSource` è un cerchio
-    comunque;
-  - un arco contenuto in quello che risulta si consuma;
-  - a pari ampiezza vince il primo vuoto in senso antiorario dopo la fine
-    della sorgente.
+- **Archi dello stesso cerchio** (B11, rivista il 2026-11-02 come AutoCAD:
+  `autocad-prove-a-mano.dxf`, punto 5), in `join` e in `joinToSource`: ogni
+  arco si copre in senso antiorario a partire dall'**inizio della sorgente**.
+  L'ordine in cui gli archi sono scelti non conta. Sia σ l'angolo iniziale
+  memorizzato della sorgente:
+  - ogni arco, la sorgente compresa, va da `a` fino ad `a` + la sua ampiezza.
+    `a` è (il suo angolo iniziale − σ) portato in [0, 2π) con `normalizeAngle`
+    (0 per la sorgente); l'ampiezza è quella del punto 1 dell'ADR 0035
+    (`endAngle − startAngle`, più `kFullTurn` se non è positiva). Si calcola in
+    `double` in quest'ordine, sugli angoli memorizzati, che sono dati e non
+    costruzioni, senza tolleranza;
+  - il **più lontano** è il maggiore di questi estremi;
+  - se il più lontano è almeno `kFullTurn`, gli archi formano un cerchio:
+    `created` è il cerchio con centro e raggio della sorgente, `formsCircle` è
+    vero e tutti gli altri archi sono in `consumed`. Se convertire lo decide il
+    comando (P23): con *No* niente si unisce e il disegno non cambia;
+  - altrimenti il risultato è l'arco della sorgente (`source`) che va da σ a σ +
+    il più lontano, con l'angolo finale portato in [0, 2π) con `normalizeAngle`;
+    tutti gli altri archi sono in `consumed`, perché stanno in quello che
+    risulta;
+  - con `close` di `joinToSource` il risultato è sempre il cerchio e
+    `formsCircle` resta falso: *cLose* non chiede niente, e resta com'è.
 
-  Per esempio, sorgente 0°→90° e candidato 270°→45° sullo stesso cerchio:
-  l'arco 270°→90°.
+  Il vuoto più grande e il pareggio fra vuoti, di B11 prima del 2026-11-02,
+  decadono. Per esempio, sullo stesso cerchio e con sorgente 0°→90°:
+  - con l'arco 200°→300°: l'arco 0°→300° (prima 200°→90°);
+  - con l'arco 300°→30°: il cerchio, perché 300° + 90° arriva oltre il giro
+    intero (prima 300°→90°);
+  - con l'arco 270°→45°, il caso osservato in AutoCAD: il cerchio;
+  - con l'arco 90°→180°: l'arco 0°→180°.
 - **Catena** (ADR 0035, punto 18), per tutto il resto: parte dalla sorgente,
   cresce prima dalla sua fine e poi dal suo inizio; a ogni passo si aggiunge la
   prima entità, nell'ordine di `entities`, con un estremo coincidente con
@@ -161,11 +186,12 @@ struct JoinResult {
   comuni, solo le tue righe (li toccano anche P14, P17, P19 e P21).
 - Nessuna soglia propria: coincidenze, allineamenti e stesso cerchio vengono da
   solid-space con la regola del documento.
-- Prima di cominciare controlla nella issue l'esito delle prove a mano di
-  `JOIN` su due archi dello stesso cerchio e su una scelta mista
-  ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da controllare", punti
-  5 e 6). Se AutoCAD si comporta diversamente, fermati: le decisioni B11 e B16
-  si rivedono prima di questo pacchetto.
+- Le prove a mano dei punti 5 e 6 di [dxf-di-prova.md](dxf-di-prova.md) ("Che
+  cosa resta da controllare") sono fatte (2026-11-02): la 6 ha confermato B16;
+  la 5 ha smentito B11, che è la regola di adesso. Prima di cominciare
+  controlla nella issue l'esito della **prova 7**, che prova la regola nuova
+  degli archi. Se AutoCAD la smentisce, fermati: B11 si rivede prima di questo
+  pacchetto.
 
 ## Test richiesti
 
@@ -174,9 +200,13 @@ struct JoinResult {
   si chiude; entità in ordine sparso; archi che coprono il cerchio intero;
   estremi a `1e-10` in millimetri (coincidono) e in un disegno in metri;
   tre estremi dove a ~ b e b ~ c ma non a ~ c (l'ordine scritto decide).
-- Gli esempi di B10, B11 (anche due vuoti di pari ampiezza e un arco
-  contenuto), B12, B16 e B17, in `join` e, dove si applicano, in
+- Gli esempi di B10, B12, B16 e B17, in `join` e, dove si applicano, in
   `joinToSource`.
+- Gli archi (B11 rivista): i quattro esempi sopra, in `join` e in
+  `joinToSource`; un arco che arriva al giro intero partendo prima dell'inizio
+  della sorgente; archi con spazi in mezzo e in ordine sparso (stesso
+  risultato); un arco contenuto; `close` (il cerchio, `formsCircle` falso);
+  senza `close` e con il cerchio, `formsCircle` vero e `created` il cerchio.
 
 ## Fatto quando
 

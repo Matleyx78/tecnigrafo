@@ -33,13 +33,32 @@
   non si cancella (punti 5 e 6). (2) *Trim No* vale solo fra entità distinte:
   sui segmenti di una stessa polilinea e con *Polyline* la polilinea cambia
   sempre (punti 13 e 15), da confermare con una prova in AutoCAD prima del
-  pacchetto di `FILLET`. (3) Con il taglio attivo, una parte tenuta che si
+  pacchetto di `FILLET` (smentita dalla prova, rivista il 2026-11-02: riga
+  seguente). (3) Con il taglio attivo, una parte tenuta che si
   riduce a nulla cancella la sua entità (punti 13 e 15). (4) In `JOIN` una
   linea o un arco nascono solo se tutte le entità scelte sono linee allineate
   alla sorgente o archi del suo cerchio, altrimenti vale la catena; la catena
   si ferma quando si chiude (punti 17 e 18); la prima regola è da confermare
   con una prova in AutoCAD prima del pacchetto dell'unione. Le altre decisioni
   precisano le schede senza cambiare questo ADR.
+- **Corretto:** 2026-11-02 — su decisione del responsabile, dopo le prove a
+  mano in AutoCAD LT dello stesso giorno
+  ([#467](https://github.com/Matleyx78/tecnigrafo/issues/467),
+  [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), punti 4 e 5;
+  [#468](https://github.com/Matleyx78/tecnigrafo/issues/468)), che hanno
+  smentito due decisioni del 2026-11-01 (B6 e B11 della #464); il responsabile
+  sceglie la strada di AutoCAD per tutte e due. Nessun codice unito attua i
+  punti corretti (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)). (1) *Trim
+  No* vale anche per le polilinee, come fra entità distinte: sui segmenti di
+  una stessa polilinea e con *Polyline* la polilinea resta com'è e il raccordo
+  o lo smusso nasce come entità a sé (punti 13 e 15); sostituisce il punto (2)
+  della riga del 2026-11-01. (2) Gli archi dello stesso cerchio si coprono
+  come in AutoCAD, in senso antiorario a partire dall'inizio della sorgente;
+  se arrivano al giro intero formano un cerchio, e `JOIN` interattivo chiede se
+  convertirlo (punti 17 e 18). La regola vecchia, il cerchio meno il vuoto più
+  grande, decade. La regola nuova ha una prova a mano ancora da fare, la 7 di
+  [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), prima del pacchetto
+  dell'unione.
 
 ## Contesto
 
@@ -228,13 +247,15 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
     - due curve dritte parallele si raccordano con un semicerchio, qualunque sia
       il raggio;
     - l'arco di raccordo è il più corto dei due tra i punti di tangenza;
-    - due segmenti della stessa polilinea ricevono un segmento curvo in mezzo,
-      con il bulge che dà solid-space; *Polyline* raccorda tutti i vertici,
-      segmento per segmento, e i segmenti troppo corti restano come sono e si
-      contano nel messaggio;
-    - con *Trim No* le entità non cambiano e si aggiunge solo l'arco; vale
-      solo fra entità distinte: sui segmenti di una stessa polilinea e con
-      *Polyline* la polilinea cambia sempre (corretto il 2026-11-01);
+    - con *Trim*, due segmenti della stessa polilinea ricevono un segmento
+      curvo in mezzo, con il bulge che dà solid-space; *Polyline* raccorda
+      tutti i vertici, segmento per segmento, e i segmenti troppo corti restano
+      come sono e si contano nel messaggio;
+    - con *Trim No* le entità non cambiano e si aggiunge solo l'arco. Vale
+      anche per i segmenti di una stessa polilinea e con *Polyline*, come in
+      AutoCAD (`autocad-prove-a-mano.dxf`, punto 4): la polilinea resta com'è
+      e ogni arco di raccordo nasce come entità a sé, con le proprietà della
+      polilinea (punto 16) (corretto il 2026-11-02);
     - con il taglio attivo, un'entità la cui parte tenuta si riduce a nulla,
       o è degenere per la regola delle tolleranze (ADR 0036, punto 5), si
       cancella (corretto il 2026-11-01);
@@ -271,8 +292,10 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       parte della sua linea che il punto indica, cioè dalla parte dello spigolo
       dove cade la proiezione del punto. Una distanza più lunga della parte da
       tenere dà il messaggio di AutoCAD.
-    - *Trim No* e una parte tenuta che si riduce a nulla come al punto 13
-      (corretto il 2026-11-01).
+    - *Trim No*, anche sui segmenti di una polilinea e con *Polyline* (la
+      polilinea resta com'è e ogni smusso è una linea a sé), e una parte tenuta
+      che si riduce a nulla, come al punto 13 (corretto il 2026-11-01 e il
+      2026-11-02).
 16. **Proprietà dell'arco di raccordo e della linea di smusso:** quelle della
     prima entità scelta se le due hanno le stesse proprietà, altrimenti quelle
     correnti. I file di prova hanno tutto sul layer 0 e non lo dicono: la regola
@@ -283,7 +306,15 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 17. **Interattivo, più oggetti insieme**, come AutoCAD dal 2012
     (`autocad-unione.dxf`):
     - linee allineate diventano una linea, anche con spazi tra loro;
-    - archi dello stesso cerchio diventano un arco, anche con spazi;
+    - archi dello stesso cerchio diventano un arco, anche con spazi: ogni arco
+      si copre in senso antiorario a partire dall'inizio della sorgente, e
+      l'arco che risulta va dall'inizio della sorgente fino al più lontano dei
+      loro estremi, come in AutoCAD (`autocad-prove-a-mano.dxf`, punto 5). Se
+      arriva al giro intero, gli archi formano un cerchio e il comando chiede
+      `Arc segments combined form a circle. Convert to circle? [Yes/No]
+      <Yes>:` (testo inglese da controllare, punto 22): con *Yes* il
+      risultato è il cerchio, con *No* niente si unisce e il disegno non
+      cambia (corretto il 2026-11-02);
     - una linea o un arco nascono solo se tutte le entità scelte sono linee
       allineate alla sorgente o archi del suo cerchio; altrimenti vale la
       catena (punto 18), e le entità che non vi entrano si scartano (corretto
@@ -304,11 +335,17 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
     ha un estremo coincidente con l'estremo libero della catena; ci si ferma
     quando nessuna si aggiunge, o quando la catena si chiude (corretto il
     2026-11-01). Linee e archi si uniscono tra loro con la stessa
-    regola, confrontando ciascuno con la sorgente.
+    regola, confrontando ciascuno con la sorgente. Gli archi di un solo
+    cerchio non seguono la catena: li copre la regola del punto 17 (corretto
+    il 2026-11-02).
 19. **Negli script** vale la sequenza vecchia (ADR 0032): prima l'oggetto
     sorgente, poi gli oggetti da unire, accettati secondo il tipo della sorgente.
     Una linea accetta linee allineate, un arco archi dello stesso cerchio (uno per
     clic, con l'opzione *cLose*), una polilinea linee, archi e polilinee contigue.
+    Gli archi si coprono come al punto 17; se coprono il giro intero senza
+    *cLose*, che la sequenza chieda la conversione in cerchio lo dice la prova 7
+    di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md), da fare prima del
+    pacchetto dell'unione (corretto il 2026-11-02).
 20. **Identità:** l'entità sorgente resta (ADR 0031, punto 7); con più oggetti
     insieme la sorgente è il primo scelto.
 
@@ -362,6 +399,9 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 - I riferimenti dei comandi prendono i valori geometrici dall'archivio dei casi
   di solid-space, quando il caso c'è (ADR 0030, punto 14), e dal DXF di AutoCAD
   negli altri casi.
+- La regola degli archi dello stesso cerchio (punto 17) si conferma con la
+  prova 7 di [dxf-di-prova.md](../tappe/0.7/dxf-di-prova.md) prima del
+  pacchetto dell'unione; se AutoCAD la smentisce, si corregge prima.
 - Due domande restano aperte fino alla prova in AutoCAD LT: proprietà dell'arco
   di raccordo (punto 16) e testi inglesi dei messaggi (punto 22). Se la prova
   smentisce il punto 4 nel modo rapido, lo si corregge prima del pacchetto di

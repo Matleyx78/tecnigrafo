@@ -9,7 +9,8 @@
   `autocad-raccordi.dxf`; lo smusso è un calcolo di Tecnigrafo)
 - **Dipende da:** P20, P25, R21
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
-  buchi B2, B6, B8, B9, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  buchi B2, B6, B8, B9, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
+  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468)
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -57,22 +58,24 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
 /// NotAllowed. Parallel or collinear lines: None. Two almost parallel lines
 /// whose corner lies beyond solid-space's domain: OutOfDomain. A pick whose
 /// projection on the line of its entity is exactly the corner: AmbiguousPick.
-/// `trim` applies only here, between distinct entities.
+/// With `trim` off the two lines are unchanged and the new line is in `added`.
 /// Precondition (also for the two functions below): the values of `spec`
 /// finite, distances and length >= 0.
 [[nodiscard]] CornerResult chamfer(const Entity& first, const Vec2& pickFirst,
                                    const Entity& second, const Vec2& pickSecond,
                                    const ChamferSpec& spec, bool trim,
                                    const ToleranceRule& rule);
-/// The same on two segments of one polyline (as filletSegments): the polyline
-/// always changes, Trim or not.
+/// The same on two segments of one polyline (as filletSegments): with `trim`
+/// the polyline changes; without, `first` is the polyline unchanged and the
+/// new line is in `added`.
 [[nodiscard]] CornerResult chamferSegments(const Polyline& polyline, const Vec2& pickFirst,
                                            const Vec2& pickSecond, const ChamferSpec& spec,
-                                           const ToleranceRule& rule);
+                                           bool trim, const ToleranceRule& rule);
 /// CHAMFER Polyline: every original vertex between two straight segments, in
-/// order, as filletPolyline; the polyline always changes, Trim or not.
+/// order, as filletPolyline; with `trim` the polyline changes; without, it is
+/// unchanged and the new lines are in `added`.
 [[nodiscard]] PolylineCorners chamferPolyline(const Polyline& polyline, const ChamferSpec& spec,
-                                              const ToleranceRule& rule);
+                                              bool trim, const ToleranceRule& rule);
 ```
 
 - **Lo spigolo** è il punto comune delle due rette, deciso da solid-space:
@@ -128,14 +131,22 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
   `added`. Per giudicare degenere una parte tenuta le tre funzioni ricevono la
   regola del documento (`ToleranceRule::of`), come `fillet`: è l'unico
   parametro nuovo, aggiunto con B14.
-- ***Trim* solo fra entità distinte** (B6): `chamferSegments` e
-  `chamferPolyline` modificano sempre la polilinea.
+- ***Trim* vale anche per le polilinee** (B6, rivista il 2026-11-02 dopo la
+  prova in AutoCAD: `autocad-prove-a-mano.dxf`, punto 4, in cui con `TRIMMODE`
+  0 la polilinea resta com'è e lo smusso nasce come entità a sé).
+  `chamferSegments` e `chamferPolyline` ricevono `trim`, come `chamfer`: con
+  *Trim No* la polilinea resta invariata (`first`, uguale a quella ricevuta) e
+  le linee di smusso vanno in `added`, una per vertice smussato; nessuna con le
+  due distanze zero.
 - **`chamferPolyline`** (B15): la visita di `filletPolyline` (P19): i vertici
   originali in ordine, ognuno sulla polilinea già modificata dai precedenti;
   uno smusso che non sta nei due segmenti come sono in quel momento, che non
   esiste o che è oltre il dominio lascia il vertice com'è e conta in
   `tooShort`. Per esempio [(0,2),(0,0),(1,0),(1,2)] con distanze 0.75 e 0.75:
-  `done` = 1 e `tooShort` = 1.
+  `done` = 1 e `tooShort` = 1. Con *Trim No* la polilinea non cambia e ogni
+  vertice si giudica sui suoi due segmenti **originali**, come in
+  `filletPolyline` (P19): lo stesso esempio dà `done` = 2, `tooShort` = 0 e due
+  linee in `added`.
 - La domanda `chamfer` del catalogo, con le risposte scritte lì.
 
 ### `CHAMFER` (`CHA`)
@@ -169,17 +180,21 @@ Select 2D polyline or [Distance/Angle/Method]:
   precondizione.
 - Un `first` o un `second` vuoto cancella l'entità, come in `FILLET` (P20,
   B14).
+- *Trim No* anche su due segmenti di una polilinea e con *Polyline*, come in
+  `FILLET` (P20, B6): la polilinea resta com'è, senza `replace`, e le linee di
+  `added` si aggiungono come entità a sé, con le proprietà della polilinea
+  (ADR 0035, punto 16), nella stessa operazione.
 - Un passo di annulla `Chamfer`.
 
 ## Regole della tappa che valgono qui
 
 - `builtin_commands.cpp`, `command_descriptions.cpp`, `cmd/CMakeLists.txt`:
   solo le tue righe; prima di te P20, dopo di te P23.
-- Prima di cominciare controlla nella issue l'esito della prova di `CHAMFER`
-  con `TRIMMODE` = 0 su due segmenti di una stessa polilinea e con *Polyline*
-  ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da controllare", punto
-  4). Se AutoCAD lascia la polilinea com'è e aggiunge lo smusso come entità a
-  sé, fermati: la decisione B6 si rivede prima di questo pacchetto.
+- La prova a mano di `CHAMFER` con `TRIMMODE` = 0 su due segmenti di una
+  stessa polilinea e con *Polyline* ([dxf-di-prova.md](dxf-di-prova.md), "Che
+  cosa resta da controllare", punto 4) è fatta, e non c'è niente da
+  controllare nella issue: AutoCAD lascia la polilinea com'è e lo smusso è
+  un'entità a sé, e questo dà la decisione B6 di adesso (2026-11-02).
 - `core/CMakeLists.txt`, `question_table.cpp`, `curve_questions.cpp`: file
   comuni, solo le tue righe (li toccano anche P14, P17, P19 e P22).
 - Lo spigolo e la sua esistenza vengono da `intersect` di solid-space:
@@ -188,9 +203,13 @@ Select 2D polyline or [Distance/Angle/Method]:
 ## Test richiesti
 
 - I casi di `autocad-raccordi.dxf` per `CHAMFER`, nelle due sequenze.
-- Distanze, angolo, *mEthod*, *Polyline*, *Trim No* (anche su due segmenti di
-  una polilinea e con *Polyline*), `Shift`, un arco, parallele, distanza
-  troppo lunga, *Multiple*, *Undo*; annulla e ripeti.
+- Distanze, angolo, *mEthod*, *Polyline*, *Trim No*, `Shift`, un arco,
+  parallele, distanza troppo lunga, *Multiple*, *Undo*; annulla e ripeti.
+- *Trim No* su due segmenti di una polilinea e con *Polyline* (i casi della
+  prova a mano, punto 4: [(0,10),(0,0),(10,0)] con distanze 1 e 1, e *Polyline*
+  sulla stessa polilinea spostata): la polilinea invariata, la linea come
+  entità a sé con le proprietà della polilinea, un solo passo di annulla; e
+  l'esempio di B15 con *Trim No*, che dà due linee.
 - Gli esempi di B8 (angolo 45°; una sola distanza zero; distanza uguale alla
   parte tenuta, che cancella la linea), di B9 (clic proiettato sullo
   spigolo, `AmbiguousPick`) e di B15; angolo che dà una retta parallela alla

@@ -8,7 +8,8 @@
 - **Riferimenti:** issue `[0.7-R23]` (#…), agente gemini
 - **Dipende da:** P21, P22, P25, R23
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B11 e
-  B16 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  B16 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
+  revisione di B11 dopo le prove in AutoCAD (#468)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 17–22; [ADR 0031](../../adr/0031-modifiche-alle-entita.md) punto 7;
@@ -16,7 +17,7 @@
   punti 3 e 8; `core/include/tg/core/join.hpp` (P22),
   `core/include/tg/core/tolerance.hpp` (P14);
   [dxf-di-prova.md](dxf-di-prova.md) (`autocad-unione.dxf`, messaggi osservati;
-  "Che cosa resta da controllare", punti 5 e 6)
+  `autocad-prove-a-mano.dxf`; "Che cosa resta da controllare", punti 5, 6 e 7)
 
 ## File
 
@@ -39,7 +40,22 @@ con la domanda `Select source object or multiple objects to join at once:`, poi:
   sorgente e la sorgente si cancella;
 - le entità assorbite (`consumed`) si cancellano; le altre scelte restano e
   contano tra le scartate del messaggio, anche quelle che una scelta mista
-  lascia fuori dalla catena (P22, B16).
+  lascia fuori dalla catena (P22, B16);
+- **archi che formano un cerchio** (B11, rivista il 2026-11-02, come AutoCAD):
+  quando `join` dà `formsCircle`, prima di cambiare qualunque cosa il comando
+  chiede
+
+  ```
+  Arc segments combined form a circle. Convert to circle? [Yes/No] <Yes>:
+  ```
+
+  (testo inglese da controllare, ADR 0035, punto 22), con le parole chiave
+  *Yes* e *No* e *Yes* predefinito, come `Enter Trim mode option [Trim/No trim]
+  <Trim>:` di `FILLET` (P20). Con *Yes* nasce il cerchio di `created` con
+  `addCopy` dalla sorgente, la sorgente e gli archi di `consumed` si cancellano,
+  in un solo passo di annulla. Con *No*, e con `Esc` (ADR 0035, punto 21),
+  niente si unisce e il disegno non cambia, senza passo di annulla; nei
+  messaggi osservati in AutoCAD non ce n'è uno dopo *No*.
 
 **Sequenza degli script:**
 
@@ -56,6 +72,11 @@ Select objects to join to source:
   chiude l'arco in un cerchio. Per gli altri tipi è una richiesta di selezione
   (`PromptKind::Selection`).
 - `joinToSource` decide, con la regola del documento.
+- Quando gli archi coprono il giro intero senza *cLose* (`formsCircle` di
+  `joinToSource`), che anche questa sequenza faccia la domanda del cerchio, e
+  che cosa faccia se non la fa, lo dice la **prova 7** di
+  [dxf-di-prova.md](dxf-di-prova.md) (ADR 0035, punto 19): il pacchetto la
+  aspetta, e la scheda si corregge con il suo esito prima di cominciare.
 
 **Messaggi**, come quelli di AutoCAD in `autocad-unione.dxf`, in inglese (da
 controllare, ADR 0035 punto 22):
@@ -63,6 +84,8 @@ controllare, ADR 0035 punto 22):
 - `<n> lines joined into 1 line`;
 - `<n> objects converted to 1 polyline`;
 - `<n> segments added to polyline`;
+- `<n> arcs joined and converted to circle`, dopo *Yes* alla domanda del cerchio
+  (osservato in italiano: «2 archi uniti e convertiti in cerchio»);
 - `0 objects joined, <n> objects discarded from the operation.`
 
 Un passo di annulla `Join`.
@@ -73,10 +96,12 @@ Un passo di annulla `Join`.
   solo le tue righe; prima di te P21.
 - Le descrizioni elencano le domande di entrambe le sequenze (ADR 0032, punto 9).
 - Nessuna decisione geometrica propria: tutto viene da `join.hpp`.
-- Prima di cominciare controlla nella issue l'esito delle prove a mano di
-  `JOIN` ([dxf-di-prova.md](dxf-di-prova.md), "Che cosa resta da
-  controllare", punti 5 e 6): P22 si ferma se smentiscono le decisioni B11 e
-  B16, e questo pacchetto ne dipende.
+- Le prove a mano dei punti 5 e 6 di [dxf-di-prova.md](dxf-di-prova.md) ("Che
+  cosa resta da controllare") sono fatte (2026-11-02): la 6 ha confermato B16;
+  la 5 ha dato la regola di B11 di adesso (P22). Prima di cominciare controlla
+  nella issue l'esito della prova 7, anche per la domanda del cerchio nella
+  sequenza degli script: P22 si ferma se la regola nuova è smentita, e questo
+  pacchetto ne dipende.
 
 ## Test richiesti
 
@@ -85,6 +110,11 @@ Un passo di annulla `Join`.
 - Sorgente polilinea nelle due sequenze; arco con *cLose*; niente da unire;
   una scelta mista (l'esempio di B16 in P22), con la linea staccata che resta;
   annulla e ripeti.
+- Archi che formano un cerchio, nella sequenza interattiva (il caso 0°→90° con
+  270°→45°, del punto 5 della prova a mano): *Yes* (anche con Invio), con il
+  cerchio e un solo passo di annulla, e annulla e ripeti; *No* e `Esc`, che non
+  cambiano niente. Archi che si uniscono in un arco più grande (0°→90° con
+  200°→300°: 0°→300°) senza domanda.
 
 ## Fatto quando
 

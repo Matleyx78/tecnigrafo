@@ -12,14 +12,16 @@
   pacchetto di solid-space che realizza `tangency.hpp`, quando la tappa 0.2 di
   solid-space lo avrà (ADR 0030, punto 13)
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
-  buchi B1, B2, B6, B7, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  buchi B1, B2, B6, B7, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
+  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468)
 - **Modulo:** `core` (più le domande in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 13, 14 e 23; [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
   punti 4 e 5 (tangente); [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
   punto 5; l'[ADR 0011 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0011-raccordi-e-tangenze-nel-piano.md)
   (Decisione e righe **Corretto:**); in `third_party/solid-space` l'intestazione qui sotto;
-  [dxf-di-prova.md](dxf-di-prova.md) (`autocad-raccordi.dxf`);
+  [dxf-di-prova.md](dxf-di-prova.md) (`autocad-raccordi.dxf`, e "Che cosa resta
+  da controllare", punto 4);
   `core/include/tg/core/intersections.hpp`, `tolerance.hpp`,
   `core/src/solid_space_bridge.hpp` (P14); `core/include/tg/core/curve_parts.hpp`
   e `core/src/document_query.cpp` (P15)
@@ -74,7 +76,9 @@ struct CornerResult {
     /// and a circle is never cut), and the new arc or line, none for a
     /// corner of radius 0. With trim on, an empty `first` or `second` means
     /// that entity is erased: its kept part is empty (partOf gives Empty) or
-    /// degenerate for the rule of the document (docs/adr/0036, point 5).
+    /// degenerate for the rule of the document (docs/adr/0036, point 5). In
+    /// the results on one polyline, `first` is the polyline, never empty, and
+    /// `second` is always empty without meaning "erased".
     std::optional<Entity> first;
     std::optional<Entity> second;
     std::optional<Entity> added;
@@ -89,24 +93,31 @@ struct CornerResult {
                                   const Entity& second, const Vec2& pickSecond,
                                   double radius, bool trim, const ToleranceRule& rule);
 
-/// FILLET of two segments of one polyline, each the segment nearest its pick:
-/// `first` of the result is the new polyline, always changed, Trim or not;
-/// `second` and `added` are empty. Two segments that are not consecutive
-/// (also across the closing segment): NotAllowed.
+/// FILLET of two segments of one polyline, each the segment nearest its pick
+/// (docs/adr/0035, point 13). With `trim`: `first` of the result is the new
+/// polyline, with the curved segment in the corner, and `added` is empty.
+/// Without: `first` is the polyline unchanged, and `added` the arc of the
+/// corner (none for radius 0 or a degenerate arc, docs/adr/0036, point 5).
+/// `second` is always empty. Two segments that are not consecutive (also
+/// across the closing segment): NotAllowed.
 [[nodiscard]] CornerResult filletSegments(const Polyline& polyline, const Vec2& pickFirst,
-                                          const Vec2& pickSecond, double radius,
+                                          const Vec2& pickSecond, double radius, bool trim,
                                           const ToleranceRule& rule);
 
-/// FILLET Polyline: every original vertex in order, each on the polyline as
-/// the vertices before it left it (docs/adr/0035, point 13); always changed,
-/// Trim or not.
+/// FILLET Polyline: every original vertex in order (docs/adr/0035, point 13).
+/// With `trim`, each vertex on the polyline as the vertices before it left
+/// it, and `polyline` is the result. Without, the polyline does not change,
+/// each vertex is judged on the original segments, and the new arcs go in
+/// `added`, in the order of the visit.
 struct PolylineCorners {
     Polyline polyline;
+    /// With trim off: the new arcs (for CHAMFER, lines). Empty with trim on.
+    std::vector<Entity> added;
     std::size_t done{0};      ///< vertices filleted
     std::size_t tooShort{0};  ///< vertices whose segments are too short
 };
 [[nodiscard]] PolylineCorners filletPolyline(const Polyline& polyline, double radius,
-                                             const ToleranceRule& rule);
+                                             bool trim, const ToleranceRule& rule);
 
 /// CIRCLE Ttr (docs/adr/0035, point 14): the circle of `radius` tangent to
 /// both, nearest the picks; for a polyline its segment nearest the pick. A
@@ -170,14 +181,21 @@ struct TangentCircleResult {
     nessuna entità cambia;
   - un cerchio non si taglia; con `trim` falso le due entità ci sono sempre,
     invariate.
-- ***Trim* solo fra entità distinte** (B6): `filletSegments` e
-  `filletPolyline` modificano sempre la polilinea, con *Trim* o senza, e non
-  hanno il parametro `trim`.
+- ***Trim* vale anche per le polilinee** (B6, rivista il 2026-11-02 dopo la
+  prova in AutoCAD: `autocad-prove-a-mano.dxf`, punto 4, in cui con `TRIMMODE`
+  0 la polilinea resta com'è e il raccordo nasce come entità a sé).
+  `filletSegments` e `filletPolyline` ricevono `trim`, come `fillet`:
+  - con *Trim* la polilinea cambia come descritto sotto;
+  - con *Trim No* la polilinea resta invariata (`first`, uguale a quella
+    ricevuta) e la geometria nuova va in `added`: l'arco di raccordo come
+    `Arc`, costruito come per due entità distinte (punto seguente). Nessun
+    arco con raggio 0 o con un arco degenere.
 - **L'arco nuovo** è `Fillet::arc` portato in un `Arc` di Tecnigrafo,
   antiorario: con ampiezza negativa, inizio e fine si scambiano; gli angoli si
   riportano in [0, 2π). Nei due segmenti di una polilinea il segmento nuovo è
-  `Fillet::bulge`, tra i due punti di tangenza. Le proprietà dell'arco nuovo le
-  decide il comando (P20).
+  `Fillet::bulge`, tra i due punti di tangenza, solo con *Trim*; con *Trim No*
+  l'arco è un `Arc` in `added`. Le proprietà dell'arco nuovo le decide il
+  comando (P20).
 - **Arco degenere** (ADR 0036, punto 5): se `isDegenerate` con la regola trova
   degenere l'arco di raccordo, il risultato è quello del raggio 0 (spigolo).
 - **`filletPolyline`** (B15): si visitano i **vertici originali in ordine**:
@@ -190,6 +208,15 @@ struct TangentCircleResult {
   `tooShort`. Per esempio [(0,2),(0,0),(1,0),(1,2)] con raggio 0.75: il primo
   vertice interno si raccorda e il secondo conta tra i troppo corti, `done` = 1
   e `tooShort` = 1.
+  - **Con *Trim No*** la polilinea non cambia, quindi ogni vertice si giudica
+    sui suoi due segmenti **originali**: è la visita di B15 su una polilinea
+    che non si modifica. Un vertice i cui punti di tangenza non cadono dentro
+    quei due segmenti, un raccordo che non esiste o uno oltre il dominio resta
+    senza arco e conta in `tooShort`; gli altri contano in `done` e il loro
+    arco va in `added`, nell'ordine dei vertici. Non si controlla se gli archi
+    si incontrano. Per esempio, lo stesso [(0,2),(0,0),(1,0),(1,2)] con raggio
+    0.75: i due vertici interni si raccordano, perché il segmento da (0,0) a
+    (1,0) è lungo 1, `done` = 2, `tooShort` = 0 e `added` ha due archi.
 - **`tangentPoints` su una polilinea** (B7): l'ordine, il vertice comune e i
   segmenti rifiutati come nel commento sopra. Il vertice comune è lo stesso
   punto esatto perché la posizione la decide esattamente solid-space: è la
@@ -236,6 +263,10 @@ struct TangentCircleResult {
 - Due segmenti consecutivi e non consecutivi di una polilinea; `filletPolyline`
   su un rettangolo, su una polilinea chiusa (la visita parte dal vertice 0) e
   con un segmento troppo corto; l'esempio di B15.
+- *Trim No* (B6, 2026-11-02): `filletSegments` su [(0,10),(0,0),(10,0)] con
+  raggio 1 (la polilinea invariata e un solo arco in `added`; raggio 0: nessun
+  arco) e `filletPolyline` su un rettangolo e sull'esempio di B15 (i due
+  archi, `done` = 2); con *Trim* `added` è sempre vuoto.
 - Tangenti da fuori, sul cerchio, da dentro; su una polilinea, con il vertice
   comune (l'esempio di B7) e con un segmento rifiutato; snap a tangente senza
   `from`.
