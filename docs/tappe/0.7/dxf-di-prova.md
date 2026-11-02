@@ -1,7 +1,8 @@
 # DXF di prova della tappa 0.7
 
 Sei disegni preparati dal responsabile in AutoCAD LT il 2026-10-28, per avere
-riferimenti indipendenti da Tecnigrafo sui comandi di modifica. Ogni disegno è
+riferimenti indipendenti da Tecnigrafo sui comandi di modifica, più un settimo
+del 2026-11-02 con le prove a mano di "Che cosa resta da controllare". Ogni disegno è
 fatto di figure di partenza e dei comandi eseguiti su di esse. Chi scrive i
 riferimenti conosce le figure di partenza da questo documento e dagli script, e
 legge il risultato di AutoCAD con l'oracolo ezdxf (ADR 0020). I valori attesi
@@ -31,6 +32,7 @@ Tutti in DXF 2018 (`AC1032`), in millimetri (`$INSUNITS` 4, `$MEASUREMENT` 1).
 | `autocad-raccordi.dxf` | `aecc6725a0d5b0b76c11eef4c9f93613e7beda91c0a2a225496ea8899118e842` | R19, R20, R21; archivio di solid-space (`FILLET`, *Ttr*) |
 | `autocad-grip.dxf` | `864d277c2be7cd9c58491f140417d5cb9be3e1206fc02b3737a207ac3c3521ed` | R9, R10 |
 | `autocad-unione.dxf` | `4df5f4490dc442874c7561e4304e78263bd73a01abcfae5618de15193701dec7` | R22, R23 |
+| `autocad-prove-a-mano.dxf` | `a43db52c1df6b49e4bd486b046ac5366b3aef1682bd060058507f16d0316e463` | prove a mano del 2026-11-02 ("Che cosa resta da controllare") |
 
 Gli script eseguiti stanno in [dxf-di-prova/](dxf-di-prova/). Ogni disegno è
 partito da un disegno nuovo, con snap, orto e input dinamico spenti,
@@ -192,15 +194,62 @@ passi fatti a mano.
   - «L'esplosione di questa polilinea causa la perdita di informazioni sulla
     larghezza».
 
+### `autocad-prove-a-mano.dxf`
+
+Fatto dal responsabile il 2026-11-02, in AutoCAD LT in italiano, per le prove
+di "Che cosa resta da controllare", punti 1, 2, 4, 5 e 6.
+
+- **Script:** `7-prove-a-mano.scr` disegna solo le figure; i comandi sono stati
+  dati a mano, scrivendo le coordinate al posto dei clic. Una prima versione,
+  che dava anche i comandi, si fermava al `TRIM`: in uno script AutoCAD usa il
+  modo standard anche con `TRIMEXTENDMODE` 1 (ADR 0032, punto 8), quindi il
+  modo rapido si prova solo a mano.
+- **Punto 1:** `TRIMEXTENDMODE` 1, `TRIM` con il clic in 383,0 sul rettangolo
+  380,0–400,10 attraversato dalla linea x=390; poi `TRIMEXTENDMODE` 0, `TRIM`,
+  Invio (tutti i bordi) e il clic in 423,0 sul rettangolo 420,0–440,10
+  attraversato dalla linea x=430. In tutti e due i modi resta una polilinea
+  aperta che parte dall'incrocio e passa per il vertice 0: 390,0 → 400,0 →
+  400,10 → 380,10 → 380,0 (e la stessa a 420).
+- **Punto 2:** linea 460,0–490,0 sul layer A, linea 460,0–460,30 sul layer B,
+  layer corrente 0; `TRIMMODE` 1, raggio 10, `FILLET` con i clic in 480,0 e
+  460,20. Le linee restano sui loro layer; l'arco, di centro 470,10, è sul
+  layer 0.
+- **Punto 4:** `TRIMMODE` 0, raggio 1, distanze 1 e 1, sulle polilinee
+  0,10 → 0,0 → 10,0 e le stesse a 20, 40 e 60: `FILLET` sui due segmenti (clic
+  in 0,5 e 5,0), `FILLET` *Polilinea* (clic in 25,0), `CHAMFER` sui due
+  segmenti (clic in 40,5 e 45,0), `CHAMFER` *Polilinea* (clic in 65,0). Le
+  quattro polilinee restano come sono; l'arco o la linea di smusso è un'entità
+  a sé.
+- **Punto 5:** arco di centro 200,0 e raggio 10 da 0° a 90° (sorgente) e arco
+  dello stesso cerchio da 270° a 45°; `JOIN` con i clic in 205,8.6603 e
+  205,−8.6603, poi Invio. AutoCAD chiede se convertire gli archi in un cerchio:
+  con «No» non unisce nulla e restano i due archi; con «Sì» (la risposta
+  salvata nel file) i due archi diventano un cerchio.
+- **Punto 6:** linea sorgente 260,0–270,0, linea allineata e staccata
+  280,0–290,0, linea contigua 270,0–270,10; `JOIN` con i clic in 265,0, 285,0 e
+  270,5. Poi lo stesso a 320 con l'ordine inverso delle due candidate (clic in
+  325,0, 330,5 e 345,0). In tutti e due i casi nasce la polilinea a L e la
+  linea staccata resta.
+- **Messaggi osservati** (in italiano):
+  - «1 linea raccordata(e)» e «1 linea cimata(e)» (*Polilinea*);
+  - «(TRIMMODE 0 - Nontaglia) Prima distanza corrente di cimatura = 1.0000,
+    Dist2 = 1.0000»;
+  - «I segmenti di arco combinati formano un cerchio. Convertire in cerchio?
+    [Sì/No] <Sì>:» e «2 archi uniti e convertiti in cerchio»;
+  - «2 oggetti convertiti in 1 polilinea, 1 oggetto scartato
+    dall'operazione».
+
 ## Che cosa resta da controllare in AutoCAD LT
 
 Prima dei pacchetti indicati, una prova a mano:
 
 1. **`TRIM` in modo rapido su un rettangolo attraversato da una linea:** il
    taglio va da vertice a vertice come nel modo standard? Serve a P16 (ADR 0035,
-   punto 4).
+   punto 4). **Esito (2026-11-02):** sì, nei due modi il pezzo tolto va dal
+   vertice all'incrocio: confermato.
 2. **`FILLET` tra due linee su layer diversi:** su quale layer va l'arco? Serve a
-   P20 (ADR 0035, punto 16).
+   P20 (ADR 0035, punto 16). **Esito (2026-11-02):** sul layer corrente, come
+   dice il punto 16 per due entità con proprietà diverse: confermato.
 3. **I testi inglesi dei messaggi osservati in italiano**, se c'è un AutoCAD in
    inglese a disposizione; altrimenti dalla documentazione di AutoCAD. Servono a
    P5, P16, P18, P20, P21 e P23 (ADR 0035, punto 22).
@@ -209,16 +258,25 @@ Prima dei pacchetti indicati, una prova a mano:
    raggio 1 o distanze 1 e 1, e con l'opzione *Polyline*, AutoCAD modifica la
    polilinea o la lascia com'è e aggiunge il raccordo o lo smusso come entità a
    sé? Serve a P20 e P21 (decisione B6 della #464, 2026-11-01): nel secondo
-   caso la decisione si rivede prima di P20.
+   caso la decisione si rivede prima di P20. **Esito (2026-11-02):** in tutti e
+   quattro i casi AutoCAD lascia la polilinea com'è e aggiunge il raccordo o lo
+   smusso come entità a sé. **La decisione B6 è smentita** e si rivede prima di
+   P20.
 5. **`JOIN` su due archi dello stesso cerchio**, uno dei quali parte prima
    dell'inizio della sorgente: per esempio, sorgente di centro 0,0 e raggio 10
    da 0° a 90°, e un arco dello stesso cerchio da 270° a 45°. Tecnigrafo dà
    l'arco da 270° a 90°. Serve a P22 e P23 (decisione B11 della #464,
    2026-11-01): se AutoCAD si comporta diversamente, la decisione si rivede
-   prima di P22.
+   prima di P22. **Esito (2026-11-02):** AutoCAD copre gli archi in senso
+   antiorario a partire dalla sorgente, qui fino al giro intero, e chiede se
+   farne un cerchio: con «Sì» dà il cerchio, con «No» non unisce nulla. **La
+   decisione B11 è smentita** e si rivede prima di P22.
 6. **`JOIN` interattivo su una scelta mista:** sorgente la linea da 0,0 a
    10,0, poi la linea da 20,0 a 30,0 (allineata, staccata) e la linea da 10,0
    a 10,10 (contigua). Tecnigrafo dà la polilinea 0,0 → 10,0 → 10,10 e scarta
    la linea staccata. Serve a P22 e P23 (decisione B16 della #464,
    2026-11-01): se AutoCAD si comporta diversamente, la decisione si rivede
-   prima di P22.
+   prima di P22. **Esito (2026-11-02):** come Tecnigrafo, nei due ordini delle
+   candidate: confermato.
+
+Le prove 1, 2, 4, 5 e 6 sono in `autocad-prove-a-mano.dxf`. Resta la 3.
