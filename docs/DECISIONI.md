@@ -585,6 +585,47 @@ i rimandi ai documenti che cambia.
   di quel file. L'ADR 0035, punto 22, è corretto (nessun codice lo applica
   ancora). I pacchetti P5, P16, P18, P20, P21 e P23 non hanno più testi da
   controllare.
+- **2026-11-02 — Un metodo per i buchi trovati dagli agenti.** P22
+  ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373)) si è fermato su
+  quattro buchi dopo la revisione delle interfacce (P25,
+  [#464](https://github.com/Matleyx78/tecnigrafo/issues/464)); due vengono
+  dalle decisioni stesse: B10 vale solo quando la catena cresce dalla fine, e
+  la regola di B11 rivista può dare un arco con angoli uguali. L'arresto
+  funziona; mancava un controllo sulla correzione. Il responsabile fissa il
+  metodo, in sei passi
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B10a): smistare i buchi
+  (scheda, contratto, non si sa), decidere nella issue un buco per commento,
+  una sola pull request di correzione, rilettura con la lista, merge,
+  ripresa del pacchetto. Le cose nuove sono due:
+  - **ogni decisione ha il suo esempio**, con la risposta scelta, nella scheda
+    ("Test richiesti"), e una regola si scrive per tutti i casi che tocca; se
+    la risposta si vede con una domanda del catalogo, un pacchetto di
+    riferimenti con la lettera la mette in un caso;
+  - **la correzione si rivede prima del merge**: la pull request comincia con
+    **Revisione della correzione: da fare**, e un agente diverso da chi l'ha
+    scritta (di norma Codex) rilegge le sole regole nuove o corrette con la
+    lista di CONTRATTI.md di solid-space, più due domande (vale anche al
+    contrario? che cosa succede quando il calcolo arriva esattamente al
+    limite?), con un **Verbale della revisione della correzione**. Il
+    responsabile unisce solo dopo il verbale (A3).
+
+  Vale da subito, anche per la correzione dei buchi della #373. Cambiano
+  [AGENTS.md](../AGENTS.md) ("Le correzioni delle schede si rivedono"),
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, tabella di B, B4, il
+  nuovo B10a, C) e [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) (sezione
+  5). Nessun ADR cambia.
+- **2026-11-02 — Chi rivede una pull request può commentarla.** La prima
+  rilettura con il metodo di B10a (Codex sulla
+  [#476](https://github.com/Matleyx78/tecnigrafo/pull/476)) si è fermata: il
+  controllo automatico dell'agente ha letto «non modificarla» come divieto
+  anche dell'etichetta e dei commenti, cioè di tutto ciò che la revisione deve
+  scrivere. Le frasi per la rilettura dicono ora che cosa si può fare
+  (prendere in carico, commentare, togliere l'etichetta) e che cosa no
+  (commit, cambi a file, ramo, titolo o descrizione). Cambiano
+  [AGENTS.md](../AGENTS.md) ("Le correzioni delle schede si rivedono") e
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, frase per la revisione
+  del contratto in solid-space; B10a, passo 4). Nessuna regola cambia nella
+  sostanza.
 - **2026-11-02 — Buchi della scheda P22: le decisioni.** P22
   ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373#issuecomment-6576564686))
   si è fermato su quattro buchi. Il responsabile decide:
@@ -606,6 +647,16 @@ i rimandi ai documenti che cambia.
   4. **Arco con angoli uguali: A.** Se `normalizeAngle(σ + il più lontano)`
      dà σ, gli archi formano un cerchio, con `formsCircle` vero, come se il
      più lontano fosse arrivato al giro intero.
+
+  La rilettura di Codex (il
+  [verbale](https://github.com/Matleyx78/tecnigrafo/pull/476#issuecomment-6577193793))
+  ha trovato un buco nuovo nel punto 4,
+  [B476-1](https://github.com/Matleyx78/tecnigrafo/pull/476#issuecomment-6577208775):
+  il calcolo comprende la sorgente, quindi un arco sorgente quasi intero
+  darebbe il cerchio anche da solo. Il responsabile sceglie **A**: serve almeno
+  un altro arco che si unisca; con la sola sorgente il risultato è
+  `std::nullopt`, la sorgente non cambia e non compare nessuna domanda.
+  *cLose* resta l'eccezione.
 
   È la prima correzione con il metodo dello stesso giorno (B10a della guida):
   ogni decisione ha il suo esempio in "Test richiesti" della scheda, e la pull

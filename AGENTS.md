@@ -230,6 +230,29 @@ risposta manca anche nell'intestazione di solid-space, il buco è nel contratto
 (paragrafo sopra); se non sai quale dei due è, scrivilo e lascia decidere al
 responsabile.
 
+**Le correzioni delle schede si rivedono.** Le decisioni sui buchi si applicano
+in una sola pull request (guida del responsabile, B10a), ed è lì che nascono i
+buchi successivi: una regola breve che vale da un lato e non dall'altro, o che
+un calcolo in `double` porta proprio al limite.
+
+- **Chi la scrive** mette in testa alla descrizione la riga
+  **Revisione della correzione: da fare**, con le regole che cambia. Nella
+  scheda ogni decisione ha il suo esempio con la risposta scelta, in
+  "Test richiesti", e una regola si scrive per tutti i casi che tocca (la fine
+  e l'inizio, i due versi, le due unità), non solo per quello dell'esempio.
+- **Chi la rivede** è un agente diverso da chi l'ha scritta (di norma Codex;
+  Claude se l'ha scritta Codex). La prende in carico come ogni pull request
+  (etichetta `AA-Presa in carico` e commento) e scrive nella pull request i
+  suoi commenti, ma non la modifica: niente commit, niente cambi a file, ramo,
+  titolo o descrizione. Alla fine toglie l'etichetta. Controlla le sole regole nuove o corrette con la lista di
+  CONTRATTI.md, punti 1–11, più due domande: la regola vale anche al contrario
+  (l'altro estremo, l'altro verso, gli argomenti scambiati)? Che cosa succede
+  quando il calcolo scritto nella scheda arriva esattamente al limite (un
+  angolo che torna uguale, una somma che tocca il giro intero, due proiezioni
+  uguali)? Scrive nella pull request un commento **Verbale della revisione
+  della correzione** e, per ogni buco nuovo, un commento con un esempio e le
+  scelte possibili, come un agente che si ferma. Non sceglie lui.
+
 Non aprire la richiesta di tua iniziativa: la apre in solid-space il
 responsabile, o un agente a cui lui lo chiede ("Dove puoi scrivere").
 

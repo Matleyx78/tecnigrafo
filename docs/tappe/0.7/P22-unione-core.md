@@ -143,6 +143,11 @@ struct JoinResult {
     `double` in quest'ordine, sugli angoli memorizzati, che sono dati e non
     costruzioni, senza tolleranza;
   - il **più lontano** è il maggiore di questi estremi;
+  - prima di tutto, almeno un altro arco deve unirsi: se `entities` ha la sola
+    sorgente, o nessun altro arco del suo cerchio, il risultato è
+    `std::nullopt`, anche quando le regole seguenti darebbero il cerchio sulla
+    sola sorgente; *cLose* di `joinToSource` resta l'eccezione (decisione
+    B476-1 sulla #476, 2026-11-02);
   - se il più lontano è almeno `kFullTurn`, **oppure** se
     `normalizeAngle(σ + il più lontano)`, calcolato in `double`, risulta
     uguale a σ (un arco con angoli uguali, che `Arc` non ammette: decisione sul
@@ -169,7 +174,9 @@ struct JoinResult {
     rad: l'ampiezza della sorgente, 6.283185307179585, è il più lontano e sta
     sotto `kFullTurn`, ma `normalizeAngle(6 + 6.283185307179585)` dà 6, cioè
     σ: il cerchio di centro (0,0) e raggio 10, `formsCircle` vero, l'altro
-    arco in `consumed`.
+    arco in `consumed`. La stessa sorgente da sola, senza l'arco da 1 a 2:
+    `std::nullopt` in `join` e in `joinToSource` senza `close`, e il cerchio
+    con `close` (B476-1).
 - **Catena** (ADR 0035, punto 18), per tutto il resto: parte dalla sorgente,
   cresce prima dalla sua fine e poi dal suo inizio; a ogni passo si aggiunge la
   prima entità, nell'ordine di `entities`, con un estremo coincidente con
@@ -252,7 +259,9 @@ struct JoinResult {
 - Gli esempi delle decisioni sulla #373: il verso quando la catena cresce
   dall'inizio (candidata girata, anche con larghezze diverse e un bulge, per
   controllare lo scambio e il segno); la polilinea chiusa scartata; l'arco
-  con angoli uguali che dà il cerchio, in `join` e in `joinToSource`; l'ordine
+  con angoli uguali che dà il cerchio, in `join` e in `joinToSource`, e la
+  stessa sorgente da sola, che dà `std::nullopt` (con `close` il cerchio);
+  l'ordine
   degli estremi delle linee allineate con due proiezioni uguali, secondo la
   decisione in solid-space.
 - Gli archi (B11 rivista): i quattro esempi sopra, in `join` e in

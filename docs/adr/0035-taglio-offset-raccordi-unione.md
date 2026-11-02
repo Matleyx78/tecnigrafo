@@ -70,7 +70,8 @@
   [GOVERNANCE.md](../../GOVERNANCE.md)). (1) Una polilinea chiusa diversa
   dalla sorgente non ha estremi liberi e non entra nella catena: si scarta.
   (2) Gli archi dello stesso cerchio formano un cerchio anche quando l'arco
-  calcolato avrebbe l'angolo finale uguale a quello iniziale (punto 17).
+  calcolato avrebbe l'angolo finale uguale a quello iniziale, purché almeno un
+  altro arco si unisca: la sola sorgente non cambia (punto 17).
   L'ordine degli estremi delle linee allineate viene da solid-space, come dice
   già il punto 1: la funzione la aggiunge al contratto una issue `contratto`
   di solid-space. Le altre decisioni precisano la scheda P22 senza cambiare
@@ -331,8 +332,9 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       <Yes>:` (testo del punto 22): con *Yes* il
       risultato è il cerchio, con *No* niente si unisce e il disegno non
       cambia (corretto il 2026-11-02). Lo stesso vale quando l'arco calcolato
-      avrebbe l'angolo finale uguale a quello iniziale (corretto il
-      2026-11-02, #373);
+      avrebbe l'angolo finale uguale a quello iniziale, purché almeno un altro
+      arco si unisca: senza, niente si unisce (corretto il 2026-11-02, #373 e
+      #476);
     - una linea o un arco nascono solo se tutte le entità scelte sono linee
       allineate alla sorgente o archi del suo cerchio; altrimenti vale la
       catena (punto 18), e le entità che non vi entrano si scartano (corretto
