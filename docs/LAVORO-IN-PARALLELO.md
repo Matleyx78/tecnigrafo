@@ -280,6 +280,14 @@ un agente senza pacchetto preciso sconfina.
   per solid-space. Decide il responsabile in [DECISIONI.md](DECISIONI.md), e la
   scheda si corregge prima di riprendere il pacchetto (AGENTS.md, "Se serve
   qualcosa a solid-space").
+- Le decisioni sui buchi si applicano in una sola pull request di correzione,
+  con in testa **Revisione della correzione: da fare**: ogni decisione entra
+  nella scheda con il suo esempio e la risposta scelta, e prima del merge un
+  agente diverso da chi l'ha scritta (di norma Codex) rilegge le sole regole
+  nuove con la lista, più due domande (vale anche al contrario? che cosa
+  succede al limite del calcolo?). Passi in
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B10a; regole per chi scrive e
+  chi rivede in AGENTS.md, "Le correzioni delle schede si rivedono".
 - Quando un pacchetto di solid-space è unito, i pacchetti di Tecnigrafo che lo
   aspettavano possono partire: la sua pull request li elenca nella riga
   «Sblocca:», e il responsabile li sposta nel Project da *Bloccato* a *Da fare*.

@@ -585,3 +585,32 @@ i rimandi ai documenti che cambia.
   di quel file. L'ADR 0035, punto 22, è corretto (nessun codice lo applica
   ancora). I pacchetti P5, P16, P18, P20, P21 e P23 non hanno più testi da
   controllare.
+- **2026-11-02 — Un metodo per i buchi trovati dagli agenti.** P22
+  ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373)) si è fermato su
+  quattro buchi dopo la revisione delle interfacce (P25,
+  [#464](https://github.com/Matleyx78/tecnigrafo/issues/464)); due vengono
+  dalle decisioni stesse: B10 vale solo quando la catena cresce dalla fine, e
+  la regola di B11 rivista può dare un arco con angoli uguali. L'arresto
+  funziona; mancava un controllo sulla correzione. Il responsabile fissa il
+  metodo, in sei passi
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B10a): smistare i buchi
+  (scheda, contratto, non si sa), decidere nella issue un buco per commento,
+  una sola pull request di correzione, rilettura con la lista, merge,
+  ripresa del pacchetto. Le cose nuove sono due:
+  - **ogni decisione ha il suo esempio**, con la risposta scelta, nella scheda
+    ("Test richiesti"), e una regola si scrive per tutti i casi che tocca; se
+    la risposta si vede con una domanda del catalogo, un pacchetto di
+    riferimenti con la lettera la mette in un caso;
+  - **la correzione si rivede prima del merge**: la pull request comincia con
+    **Revisione della correzione: da fare**, e un agente diverso da chi l'ha
+    scritta (di norma Codex) rilegge le sole regole nuove o corrette con la
+    lista di CONTRATTI.md di solid-space, più due domande (vale anche al
+    contrario? che cosa succede quando il calcolo arriva esattamente al
+    limite?), con un **Verbale della revisione della correzione**. Il
+    responsabile unisce solo dopo il verbale (A3).
+
+  Vale da subito, anche per la correzione dei buchi della #373. Cambiano
+  [AGENTS.md](../AGENTS.md) ("Le correzioni delle schede si rivedono"),
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, tabella di B, B4, il
+  nuovo B10a, C) e [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) (sezione
+  5). Nessun ADR cambia.
