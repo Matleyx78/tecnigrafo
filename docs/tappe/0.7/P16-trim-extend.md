@@ -94,8 +94,8 @@ Per `EXTEND` le domande sono le stesse, con *extend* e *trim* scambiati (e
     resta com'è e compare il messaggio dell'operazione non riuscita (ADR
     0035, punto 23);
   - senza tagli, con `HostCuts::complete` vero: nel modo rapido l'oggetto si
-    cancella; nel modo standard compare il messaggio inglese di AutoCAD (da
-    controllare, ADR 0035 punto 22) e l'oggetto resta.
+    cancella; nel modo standard compare `Object does not intersect an edge.`
+    (tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3) e l'oggetto resta.
 - **Prolungare** (`EXTEND`, o `TRIM` con `Shift`):
   - l'estremo da prolungare è il più vicino al clic (confronto delle distanze
     del clic dai due estremi; a pari distanza la fine);

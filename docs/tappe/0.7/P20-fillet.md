@@ -70,14 +70,16 @@ Select 2D polyline or [Radius]:
     (ADR 0035, punto 16). Su due segmenti della stessa polilinea e con
     *Polyline* la prima entità è la polilinea: l'arco ha le sue proprietà;
   - `None`, `InfinitelyMany`, `AmbiguousPick` e `NotAllowed`: il messaggio
-    inglese di AutoCAD (da controllare, ADR 0035 punto 22) e nessuna modifica;
+    `Cannot fillet those objects.` per i primi tre e `Pick a point that is not
+    on the other object.` per `AmbiguousPick` (tabella di
+    [dxf-di-prova.md](dxf-di-prova.md), punto 3), e nessuna modifica;
   - `OutOfDomain` (due rette quasi parallele, il centro del raccordo o lo
     spigolo oltre il dominio di solid-space): `Lines are nearly parallel.` e
     nessuna modifica. Il messaggio è di Tecnigrafo, nello stile di quelli di
     AutoCAD (`Lines are parallel.` di `CHAMFER`): il caso nasce dal dominio di
     solid-space, e la prova in AutoCAD non lo copre;
   - *Polyline* scrive `<n> lines were filleted` e, se ce ne sono,
-    `<m> were too short` (da controllare come sopra); i vertici rimasti per
+    `<m> were too short` (tabella come sopra); i vertici rimasti per
     `OutOfDomain` sono tra questi, e i contatori seguono la visita dei vertici
     originali in ordine (P19, B15).
 - *Multiple* ripete finché non si preme Invio; *Undo* torna all'ultimo punto di

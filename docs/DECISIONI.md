@@ -537,7 +537,7 @@ i rimandi ai documenti che cambia.
     giro intero (2π o oltre), gli archi formano un cerchio: `join` lo dice con
     il campo `formsCircle` di `JoinResult` (la forma la fissa la scheda P22), e
     `JOIN` interattivo (P23) chiede `Arc segments combined form a circle.
-    Convert to circle? [Yes/No] <Yes>:` (testo inglese da controllare, ADR
+    Convert to circle? [Yes/No] <Yes>:` (testo inglese, ADR
     0035, punto 22): con *Yes* il cerchio, con *No* niente si unisce e il
     disegno non cambia. *cLose* di `joinToSource` resta com'è. Decadono il
     vuoto più grande e il pareggio fra vuoti di B11; B13 resta dove la catena
@@ -574,3 +574,14 @@ i rimandi ai documenti che cambia.
   [P22](tappe/0.7/P22-unione-core.md) e [P23](tappe/0.7/P23-join.md),
   [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md) (l'esito e due script, in
   `dxf-di-prova/`) e il piano della [tappa 0.7](tappe/0.7-modifiche.md).
+
+## 2026-11-02 — Testi inglesi dei messaggi (prova 3)
+
+- Il responsabile chiude la prova 3 di [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md):
+  non c'è un AutoCAD inglese, e i messaggi di Tecnigrafo non devono ripetere
+  AutoCAD parola per parola. Si traducono i messaggi osservati in italiano
+  (compreso `<n> arcs joined and converted to circle`) e si scrivono nello
+  stesso stile i pochi che nessuna prova ha mostrato; la tabella è nel punto 3
+  di quel file. L'ADR 0035, punto 22, è corretto (nessun codice lo applica
+  ancora). I pacchetti P5, P16, P18, P20, P21 e P23 non hanno più testi da
+  controllare.
