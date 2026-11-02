@@ -73,10 +73,11 @@ Select objects to join to source:
   (`PromptKind::Selection`).
 - `joinToSource` decide, con la regola del documento.
 - Quando gli archi coprono il giro intero senza *cLose* (`formsCircle` di
-  `joinToSource`), che anche questa sequenza faccia la domanda del cerchio, e
-  che cosa faccia se non la fa, lo dice la **prova 7** di
-  [dxf-di-prova.md](dxf-di-prova.md) (ADR 0035, punto 19): il pacchetto la
-  aspetta, e la scheda si corregge con il suo esito prima di cominciare.
+  `joinToSource`), anche questa sequenza fa la domanda del cerchio, con lo
+  stesso testo e le stesse risposte di quella interattiva (prova 7 di
+  [dxf-di-prova.md](dxf-di-prova.md), 2026-11-02: dopo l'ultimo arco e Invio
+  compare la domanda, e con «Sì» il messaggio è lo stesso). Con *cLose* non
+  chiede niente.
 
 **Messaggi**, come quelli di AutoCAD in `autocad-unione.dxf`, in inglese (da
 controllare, ADR 0035 punto 22):
@@ -96,12 +97,11 @@ Un passo di annulla `Join`.
   solo le tue righe; prima di te P21.
 - Le descrizioni elencano le domande di entrambe le sequenze (ADR 0032, punto 9).
 - Nessuna decisione geometrica propria: tutto viene da `join.hpp`.
-- Le prove a mano dei punti 5 e 6 di [dxf-di-prova.md](dxf-di-prova.md) ("Che
-  cosa resta da controllare") sono fatte (2026-11-02): la 6 ha confermato B16;
-  la 5 ha dato la regola di B11 di adesso (P22). Prima di cominciare controlla
-  nella issue l'esito della prova 7, anche per la domanda del cerchio nella
-  sequenza degli script: P22 si ferma se la regola nuova è smentita, e questo
-  pacchetto ne dipende.
+- Le prove a mano dei punti 5, 6 e 7 di [dxf-di-prova.md](dxf-di-prova.md)
+  ("Che cosa resta da controllare") sono fatte (2026-11-02): la 6 ha confermato
+  B16; la 5 ha dato la regola di B11 di adesso (P22), e la 7 l'ha confermata,
+  anche per la domanda del cerchio nella sequenza degli script. Non c'è niente
+  da controllare nella issue.
 
 ## Test richiesti
 
@@ -115,6 +115,9 @@ Un passo di annulla `Join`.
   cerchio e un solo passo di annulla, e annulla e ripeti; *No* e `Esc`, che non
   cambiano niente. Archi che si uniscono in un arco più grande (0°→90° con
   200°→300°: 0°→300°) senza domanda.
+- Archi che formano un cerchio nella sequenza degli script (sorgente 0°→90° e
+  arco 300°→30°, un clic ciascuno e Invio): la stessa domanda, *Yes* e *No*
+  come sopra; con *cLose* nessuna domanda.
 
 ## Fatto quando
 

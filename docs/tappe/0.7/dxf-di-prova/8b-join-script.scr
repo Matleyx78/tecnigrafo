@@ -1,0 +1,33 @@
+;Tecnigrafo 0.7 - prova 7, terza parte: JOIN con la sequenza degli script
+;Tutto in uno: zoom, i due archi del caso 2 (0-90 e 300-30, raggio 10) a centro
+;160,0, poi il JOIN. Lo script finisce subito dopo l'Invio che chiude la scelta:
+;se compare la domanda del cerchio resta sulla riga di comando, e la risposta
+;si da a mano.
+CMDECHO
+1
+OSMODE
+0
+ANGBASE
+0
+ANGDIR
+0
+_ZOOM
+_W
+140,-20
+180,20
+_ARC
+_C
+160,0
+@10<0
+_A
+90
+_ARC
+_C
+160,0
+@10<300
+_A
+90
+_JOIN
+167.0711,7.0711
+169.6593,-2.5882
+

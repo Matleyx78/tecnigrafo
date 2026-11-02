@@ -1,0 +1,73 @@
+;Tecnigrafo 0.7 - prova 7 a mano (JOIN su archi dello stesso cerchio): solo il disegno
+;Tre coppie di archi su cerchi di raggio 10, sorgente sempre 0-90 gradi:
+;  caso 1, centro 0,0:  sorgente 0-90 e arco 200-300
+;  caso 2, centro 40,0: sorgente 0-90 e arco 300-30
+;  caso 3, centro 80,0: come il caso 2, per la sequenza degli script
+CMDECHO
+1
+MEASUREMENT
+1
+INSUNITS
+4
+OSMODE
+0
+OSNAPCOORD
+1
+ORTHOMODE
+0
+SNAPMODE
+0
+DYNMODE
+0
+ANGBASE
+0
+ANGDIR
+0
+_ZOOM
+_W
+-20,-20
+110,20
+;Caso 1: sorgente 0-90
+_ARC
+_C
+0,0
+@10<0
+_A
+90
+;Caso 1: arco 200-300
+_ARC
+_C
+0,0
+@10<200
+_A
+100
+;Caso 2: sorgente 0-90
+_ARC
+_C
+40,0
+@10<0
+_A
+90
+;Caso 2: arco 300-30
+_ARC
+_C
+40,0
+@10<300
+_A
+90
+;Caso 3: sorgente 0-90
+_ARC
+_C
+80,0
+@10<0
+_A
+90
+;Caso 3: arco 300-30
+_ARC
+_C
+80,0
+@10<300
+_A
+90
+_ZOOM
+_E
