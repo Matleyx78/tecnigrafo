@@ -3,9 +3,9 @@
 
 #include "tg/core/curve_parts.hpp"
 
-#include "solid_space/robust/trigonometry.hpp"
-
 #include "tg/core/math.hpp"
+
+#include "solid_space/robust/trigonometry.hpp"
 
 #include <array>
 #include <cassert>
@@ -80,9 +80,9 @@ AngularPart correctAngles(double first, double last, double originalStart, doubl
         const double correction = angularDistance(first, from) + angularDistance(last, to);
         // Exact comparisons of computed values, no geometric tolerance. Prefer
         // the original start, then the beginning of the retained part on ties.
-        if (correction < cost ||
-            (correction == cost && (before(from, bestFirst) ||
-                                    (from == bestFirst && before(to, bestLast))))) {
+        const bool preferStart = before(from, bestFirst) ||
+                                 (from == bestFirst && before(to, bestLast));
+        if (correction < cost || (correction == cost && preferStart)) {
             best = {from, to};
             cost = correction;
             bestFirst = from;
@@ -107,10 +107,11 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
                    const std::optional<CurvePoint>& to, PartCourse course, bool circle = false) {
     const double first = from ? angleOf(from->point, arc.center) : arc.startAngle;
     const double last = to ? angleOf(to->point, arc.center) : arc.endAngle;
-    const AngularPart corrected = correctAngles(first, last, arc.startAngle,
-                                                circle ? kTwoPi : arc.endAngle,
-                                                circle ? kTwoPi : arc.geometry().sweep,
-                                                course == PartCourse::AcrossStart);
+    const double originalEnd = circle ? kTwoPi : arc.endAngle;
+    const double sweep = circle ? kTwoPi : arc.geometry().sweep;
+    const bool across = course == PartCourse::AcrossStart;
+    const AngularPart corrected =
+        correctAngles(first, last, arc.startAngle, originalEnd, sweep, across);
     Arc result = arc;
     result.startAngle = normalizeAngle(corrected.first);
     result.endAngle = normalizeAngle(corrected.last);
@@ -122,10 +123,10 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
 
 // The changed endpoint must lie in the complementary interval. Its two
 // boundaries are the minimum extension and the unrepresentable full turn.
-double correctedExtension(double angle, double originalStart, double originalEnd,
-                          double sweep) {
-    const AngularPart corrected = correctAngles(angle, angle, originalEnd, originalStart,
-                                                std::copysign(kTwoPi - std::abs(sweep), sweep));
+double correctedExtension(double angle, double originalStart, double originalEnd, double sweep) {
+    const double complement = std::copysign(kTwoPi - std::abs(sweep), sweep);
+    const AngularPart corrected =
+        correctAngles(angle, angle, originalEnd, originalStart, complement);
     // correctAngles resolves endpoint ties toward the complement's start.
     // For a start extension the original arc's start must win instead.
     if (angularDistance(angle, originalStart) == angularDistance(angle, originalEnd) &&
@@ -184,9 +185,8 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
     const double originalEnd = normalizeAngle(arc.startAngle + arc.sweep);
     const auto corrected = correctAngles(angleOf(from, arc.center), angleOf(to, arc.center),
                                          originalStart, originalEnd, arc.sweep);
-    const double sweep = original.bulge > 0.0
-                             ? normalizeAngle(corrected.last - corrected.first)
-                             : -normalizeAngle(corrected.first - corrected.last);
+    const double sweep = original.bulge > 0.0 ? normalizeAngle(corrected.last - corrected.first)
+                                             : -normalizeAngle(corrected.first - corrected.last);
     return std::tan(sweep / 4.0);
 }
 
@@ -258,15 +258,15 @@ PartResult extendPolyline(const Polyline& polyline, EntityEnd end, const CurvePo
         const ArcGeometry arc = arcFromBulge(segment.start, segment.end, segment.bulge);
         const double originalStart = normalizeAngle(arc.startAngle);
         const double originalEnd = normalizeAngle(arc.startAngle + arc.sweep);
-        const double angle = correctedExtension(angleOf(to.point, arc.center), originalStart,
-                                                 originalEnd, arc.sweep);
+        const double received = angleOf(to.point, arc.center);
+        const double angle = correctedExtension(received, originalStart, originalEnd, arc.sweep);
         const double firstAngle = start ? angle : originalStart;
         const double lastAngle = start ? originalEnd : angle;
         if (first == last || firstAngle == lastAngle) {
             return {PartOutcome::NotRepresentable, std::nullopt};
         }
         const double sweep = segment.bulge > 0.0 ? normalizeAngle(lastAngle - firstAngle)
-                                                : -normalizeAngle(firstAngle - lastAngle);
+                                                 : -normalizeAngle(firstAngle - lastAngle);
         bulge = std::tan(sweep / 4.0);
     }
     std::vector<PolylineVertex> vertices{polyline.vertices().begin(), polyline.vertices().end()};

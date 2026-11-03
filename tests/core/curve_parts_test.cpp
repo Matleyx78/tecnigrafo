@@ -142,21 +142,18 @@ TEST(CurveParts, MinimumCorrectionKeepsAlmostTheWholeOriginalArc) {
     const Arc quarter{{0, 0}, 5, 0, kPi / 2};
     expectArc(partOf(quarter, std::nullopt, place({-1e-15, 5}), PartCourse::Direct), 0, 90);
     expectArc(partOf(quarter, place({5, -1e-14}), std::nullopt, PartCourse::Direct), 0, 90);
-    expectArc(partOf(quarter, place({5, -1e-14}), place({-1e-15, 5}), PartCourse::Direct),
-              0, 90);
+    expectArc(partOf(quarter, place({5, -1e-14}), place({-1e-15, 5}), PartCourse::Direct), 0, 90);
     const Arc wrapping{{0, 0}, 5, 3 * kPi / 2, kPi / 2};
-    expectArc(partOf(wrapping, place({-1e-15, -5}), std::nullopt, PartCourse::Direct),
-              270, 90);
+    expectArc(partOf(wrapping, place({-1e-15, -5}), std::nullopt, PartCourse::Direct), 270, 90);
 }
 
 TEST(CurveParts, MinimumCorrectionPrefersTheOriginalStartOnAnExactTie) {
     // #487: the missing gap is two ulps; the supplied ray bisects it.
     constexpr double kUnit = 0x1p-50;
     const Arc almostClosed{{0, 0}, 5, 0, kTwoPi - 2 * kUnit};
-    expectOutcome(partOf(almostClosed, std::nullopt, place({5, -5 * kUnit}),
-                         PartCourse::Direct), PartOutcome::Empty);
-    const auto kept = partOf(almostClosed, place({5, -5 * kUnit}), std::nullopt,
-                             PartCourse::Direct);
+    const auto middle = place({5, -5 * kUnit});
+    expectOutcome(partOf(almostClosed, std::nullopt, middle, PartCourse::Direct), PartOutcome::Empty);
+    const auto kept = partOf(almostClosed, middle, std::nullopt, PartCourse::Direct);
     ASSERT_TRUE(kept.entity);
     EXPECT_EQ(std::get<Arc>(*kept.entity), almostClosed);
 }
@@ -196,10 +193,8 @@ TEST(CurveParts, MinimumCorrectionKeepsCurvedSegmentsInEitherDirection) {
 TEST(CurveParts, MinimumCorrectionKeepsMinimalExtensionsAtEitherEndAndDirection) {
     // Second review, example 4, its start mirror, and curved polyline ends.
     const Arc quarter{{0, 0}, 5, 0, kPi / 2};
-    expectArc(extendTo(quarter, EntityEnd::End, place({1e-15, 5}, 0, Location::AfterEnd)),
-              0, 90);
-    expectArc(extendTo(quarter, EntityEnd::Start, place({5, 1e-14}, 0, Location::AfterEnd)),
-              0, 90);
+    expectArc(extendTo(quarter, EntityEnd::End, place({1e-15, 5}, 0, Location::AfterEnd)), 0, 90);
+    expectArc(extendTo(quarter, EntityEnd::Start, place({5, 1e-14}, 0, Location::AfterEnd)), 0, 90);
     for (const double sign : {1.0, -1.0}) {
         const Polyline polyline{{{{-5, 0}, sign, 2, 6}, {{5, 0}}}};
         for (const EntityEnd end : {EntityEnd::Start, EntityEnd::End}) {
