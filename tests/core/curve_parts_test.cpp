@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -124,7 +125,10 @@ TEST(CurveParts, InvertedRoundedAnglesDiscardACurvedSegmentInEitherDirection) {
         const auto multiple =
             partOf(multiCurve, place(invertedStart), std::nullopt, PartCourse::Direct);
         expectOutcome(multiple, PartOutcome::Done);
-        ASSERT_TRUE(multiple.entity);
+        if (!multiple.entity) {
+            ADD_FAILURE() << "missing constructed entity";
+            return;
+        }
         const auto& part = std::get<Polyline>(*multiple.entity);
         ASSERT_EQ(part.vertexCount(), 3U);
         EXPECT_EQ(part.vertices()[0].position, invertedStart);
@@ -138,7 +142,10 @@ TEST(CurveParts, RebuildsSuppliedExistingArcEndpointsButKeepsOmittedAngles) {
     const auto result = partOf(arc, place({5, 1e-15}, 0, Location::AtStart),
                                place({1e-15, 5}, 0, Location::AtEnd), PartCourse::Direct);
     expectOutcome(result, PartOutcome::Done);
-    ASSERT_TRUE(result.entity);
+    if (!result.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& cut = std::get<Arc>(*result.entity);
     EXPECT_GT(cut.startAngle, arc.startAngle);
     EXPECT_LT(cut.endAngle, arc.endAngle);
@@ -201,14 +208,17 @@ TEST(CurveParts, CutsPositiveAndNegativeBulgesByArcLength) {
 TEST(CurveParts, InterpolatesClockwiseWidthsFromTheStartAwayFromTheMidpoint) {
     const Polyline polyline{{{{-5, 0}, -1, 2, 10}, {{5, 0}, 0.25, 11, 12}}};
     // Clockwise from angle pi to 3*pi/4: one quarter of the semicircle.
-    const double coordinate = 5 / std::sqrt(2.0);
+    const double coordinate = 5 / std::numbers::sqrt2;
     const auto cut = place({-coordinate, coordinate}, 0, Location::Inside, 5 * kPi / 4);
     for (const bool keepStart : {true, false}) {
         const auto from = keepStart ? std::nullopt : std::optional{cut};
         const auto to = keepStart ? std::optional{cut} : std::nullopt;
         const auto result = partOf(polyline, from, to, PartCourse::Direct);
         expectOutcome(result, PartOutcome::Done);
-        ASSERT_TRUE(result.entity);
+        if (!result.entity) {
+            ADD_FAILURE() << "missing constructed entity";
+            return;
+        }
         const auto& part = std::get<Polyline>(*result.entity);
         ASSERT_EQ(part.vertexCount(), 2U);
         EXPECT_NEAR(part.vertices()[0].startWidth, keepStart ? 2 : 4, kBuilt);
@@ -228,7 +238,10 @@ TEST(CurveParts, ReplacesSuppliedExistingPolylineVerticesIncludingTheOpenEnd) {
     const auto result = partOf(polyline, place(first, 0, Location::AtStart),
                                place(last, 1, Location::AtEnd), PartCourse::Direct);
     expectOutcome(result, PartOutcome::Done);
-    ASSERT_TRUE(result.entity);
+    if (!result.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& part = std::get<Polyline>(*result.entity);
     ASSERT_EQ(part.vertexCount(), 3U);
     EXPECT_EQ(part.vertices()[0].position, first);
@@ -245,8 +258,14 @@ TEST(CurveParts, UsesTheFollowingSegmentForVertexZeroOfAClosedPolyline) {
     const auto across = partOf(rectangle, next, zero, PartCourse::AcrossStart);
     expectOutcome(direct, PartOutcome::Done);
     expectOutcome(across, PartOutcome::Done);
-    ASSERT_TRUE(direct.entity);
-    ASSERT_TRUE(across.entity);
+    if (!direct.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
+    if (!across.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& shortPart = std::get<Polyline>(*direct.entity);
     ASSERT_EQ(shortPart.vertexCount(), 2U);
     EXPECT_EQ(shortPart.vertices()[0].position, suppliedZero);
