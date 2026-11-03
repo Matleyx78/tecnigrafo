@@ -723,7 +723,15 @@ i rimandi ai documenti che cambia.
     traduzione di P14, come chiede il suo commento, e non da un coseno e un
     seno di Tecnigrafo. La scheda diceva «la stessa funzione usata altrove»;
     la fascia vicino al confine della tolleranza resta libera (ADR 0013 di
-    solid-space, punto 4).
+    solid-space, punto 4). Una diagnosi di `endpoints()`, e un estremo che
+    `endpoints()` restituisce oltre `kMaxCoordinate` (possibile per dati
+    validi, che `coincident` non accetta), seguono l'ADR 0035, punto 23: in
+    `join` e in `joinToSource` un'entità diversa dalla sorgente non si unisce,
+    non entra in `consumed` e conta tra le scartate; se è la sorgente, il
+    risultato è `std::nullopt`. Il controllo vale per tutti e due gli estremi,
+    per coordinate positive e negative e per ogni verso, prima di ogni
+    chiamata a `coincident` (revisione della
+    [#480](https://github.com/Matleyx78/tecnigrafo/pull/480), R480-1).
   - **P25** ([#464](https://github.com/Matleyx78/tecnigrafo/issues/464)) è
     chiusa dal 2026-11-01 e resta chiusa: la sua scheda rimanda ai punti 10 e
     11 di CONTRATTI.md invece di trascriverli. La rilettura di questa
