@@ -32,7 +32,10 @@ void expectOutcome(const PartResult& result, PartOutcome outcome) {
 
 void expectArc(const PartResult& result, double start, double end) {
     ASSERT_EQ(result.outcome, PartOutcome::Done);
-    ASSERT_TRUE(result.entity.has_value());
+    if (!result.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto* arc = std::get_if<Arc>(&*result.entity);
     ASSERT_NE(arc, nullptr);
     EXPECT_EQ(arc->center, (Vec2{0, 0}));
@@ -47,7 +50,10 @@ TEST(CurveParts, CutsALineAtBothEndsAndKeepsTheGivenPointsExactly) {
     const Vec2 last{8, -1e-15};
     const auto result = partOf(line, place(first), place(last), PartCourse::Direct);
     expectOutcome(result, PartOutcome::Done);
-    ASSERT_TRUE(result.entity);
+    if (!result.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     EXPECT_EQ(std::get<Line>(*result.entity), (Line{first, last}));
     const auto unchanged = partOf(line, std::nullopt, std::nullopt, PartCourse::Direct);
     EXPECT_EQ(unchanged.entity, std::optional<Entity>{line});
@@ -59,7 +65,10 @@ TEST(CurveParts, SamePlaceIsEmptyButEqualRoundedPlacesCanGiveAZeroLengthLine) {
     const CurvePoint rounded = place({1, 0}, 0, Location::Inside, 1);
     const auto kept = partOf(line, rounded, rounded, PartCourse::Direct);
     expectOutcome(kept, PartOutcome::Done);
-    ASSERT_TRUE(kept.entity);
+    if (!kept.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     EXPECT_EQ(std::get<Line>(*kept.entity), (Line{{1, 0}, {1, 0}}));
     expectOutcome(partOf(line, rounded, rounded, PartCourse::SamePlace), PartOutcome::Empty);
 }
@@ -98,7 +107,10 @@ TEST(CurveParts, CutsStraightPolylineSegmentsAndInterpolatesWidths) {
     const auto result = partOf(polyline, place(first, 0, Location::Inside, 2),
                                place(last, 1, Location::Inside, 5), PartCourse::Direct);
     expectOutcome(result, PartOutcome::Done);
-    ASSERT_TRUE(result.entity);
+    if (!result.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& part = std::get<Polyline>(*result.entity);
     EXPECT_FALSE(part.isClosed());
     EXPECT_EQ(part.constantWidth(), 7);
@@ -121,7 +133,10 @@ TEST(CurveParts, CutsPositiveAndNegativeBulgesByArcLength) {
         const auto cut = place({0, -5 * sign}, 0, Location::Inside, 5 * kPi / 2);
         const auto result = partOf(polyline, cut, std::nullopt, PartCourse::Direct);
         expectOutcome(result, PartOutcome::Done);
-        ASSERT_TRUE(result.entity);
+        if (!result.entity) {
+            ADD_FAILURE() << "missing constructed entity";
+            return;
+        }
         const auto& part = std::get<Polyline>(*result.entity);
         ASSERT_EQ(part.vertexCount(), 2U);
         EXPECT_EQ(part.vertices()[0].position, (Vec2{0, -5 * sign}));
@@ -137,14 +152,20 @@ TEST(CurveParts, DistinguishesTheTwoCoursesOnOneSegmentOfAClosedPolyline) {
     rectangle.setConstantWidth(3);
     const auto shortPart = partOf(rectangle, place({2, 0}), place({8, 0}), PartCourse::Direct);
     expectOutcome(shortPart, PartOutcome::Done);
-    ASSERT_TRUE(shortPart.entity);
+    if (!shortPart.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& shortLine = std::get<Polyline>(*shortPart.entity);
     ASSERT_EQ(shortLine.vertexCount(), 2U);
     EXPECT_EQ(shortLine.vertices()[0].position, (Vec2{2, 0}));
     EXPECT_EQ(shortLine.vertices()[1].position, (Vec2{8, 0}));
     const auto longPart = partOf(rectangle, place({8, 0}), place({2, 0}), PartCourse::AcrossStart);
     expectOutcome(longPart, PartOutcome::Done);
-    ASSERT_TRUE(longPart.entity);
+    if (!longPart.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& opened = std::get<Polyline>(*longPart.entity);
     ASSERT_EQ(opened.vertexCount(), 6U);
     EXPECT_FALSE(opened.isClosed());
@@ -161,7 +182,10 @@ TEST(CurveParts, UsesExactVertexLocationsWithoutDuplicatingBoundaryVertices) {
     const auto result = partOf(rectangle, place({0, 10}, 2, Location::AtEnd),
                                place({10, 0}, 1, Location::AtStart), PartCourse::AcrossStart);
     expectOutcome(result, PartOutcome::Done);
-    ASSERT_TRUE(result.entity);
+    if (!result.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& part = std::get<Polyline>(*result.entity);
     ASSERT_EQ(part.vertexCount(), 3U);
     EXPECT_EQ(part.vertices()[0].position, (Vec2{0, 10}));
@@ -176,7 +200,10 @@ TEST(CurveParts, DiscardsASingleRoundedPointArcButRetainsItWithinSeveralSegments
     expectOutcome(partOf(polyline, cut, vertex, PartCourse::Direct), PartOutcome::Empty);
     const auto multiple = partOf(polyline, cut, std::nullopt, PartCourse::Direct);
     expectOutcome(multiple, PartOutcome::Done);
-    ASSERT_TRUE(multiple.entity);
+    if (!multiple.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     const auto& part = std::get<Polyline>(*multiple.entity);
     ASSERT_EQ(part.vertexCount(), 3U);
     EXPECT_EQ(part.vertices()[0].position, part.vertices()[1].position);
@@ -192,8 +219,14 @@ TEST(CurveParts, ExtendsALineAtEitherEndWithTheGivenPoint) {
     const auto end = extendTo(line, EntityEnd::End, place(last, 0, Location::AfterEnd));
     expectOutcome(start, PartOutcome::Done);
     expectOutcome(end, PartOutcome::Done);
-    ASSERT_TRUE(start.entity);
-    ASSERT_TRUE(end.entity);
+    if (!start.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
+    if (!end.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     EXPECT_EQ(std::get<Line>(*start.entity), (Line{first, line.end}));
     EXPECT_EQ(std::get<Line>(*end.entity), (Line{line.start, last}));
 }
@@ -217,15 +250,22 @@ TEST(CurveParts, ExtendsPastPointSegmentsAndPreservesAllTheirOtherData) {
     const auto end = extendTo(polyline, EntityEnd::End, place({15, 0}, 1, Location::AfterEnd));
     for (const auto* result : {&start, &end}) {
         expectOutcome(*result, PartOutcome::Done);
-        ASSERT_TRUE(result->entity);
+        if (!result->entity) {
+            ADD_FAILURE() << "missing constructed entity";
+            return;
+        }
         const auto& part = std::get<Polyline>(*result->entity);
         ASSERT_EQ(part.vertexCount(), polyline.vertexCount());
         for (std::size_t i = 0; i < part.vertexCount(); ++i) {
             EXPECT_EQ(part.vertices()[i].bulge, polyline.vertices()[i].bulge);
             EXPECT_EQ(part.vertices()[i].startWidth, polyline.vertices()[i].startWidth);
             EXPECT_EQ(part.vertices()[i].endWidth, polyline.vertices()[i].endWidth);
-            const Vec2 expected = result == &start ? (i < 2 ? Vec2{-5, 0} : Vec2{10, 0})
-                                                   : (i < 2 ? Vec2{0, 0} : Vec2{15, 0});
+            Vec2 expected;
+            if (result == &start) {
+                expected = i < 2 ? Vec2{-5, 0} : Vec2{10, 0};
+            } else {
+                expected = i < 2 ? Vec2{0, 0} : Vec2{15, 0};
+            }
             EXPECT_EQ(part.vertices()[i].position, expected);
         }
     }
@@ -240,7 +280,10 @@ TEST(CurveParts, ExtendsCurvedPolylineEndsInBothDirections) {
             const auto cut = place({0, 5 * sign}, 0, Location::AfterEnd);
             const auto result = extendTo(polyline, end, cut);
             expectOutcome(result, PartOutcome::Done);
-            ASSERT_TRUE(result.entity);
+            if (!result.entity) {
+                ADD_FAILURE() << "missing constructed entity";
+                return;
+            }
             const auto& part = std::get<Polyline>(*result.entity);
             ASSERT_EQ(part.vertexCount(), 2U);
             EXPECT_EQ(part.vertices()[end == EntityEnd::Start ? 0 : 1].position,

@@ -136,15 +136,15 @@ PartResult polylinePart(const Polyline& polyline, const std::optional<CurvePoint
         const bool cutStart = index == first.index && first.inside;
         const bool cutEnd = index == endIndex && last.inside;
         PolylineVertex next = vertexAt(cutEnd ? index : index + 1);
-        if (cutEnd || (to && index + 1 == segmentEnd)) {
+        if (to && (cutEnd || index + 1 == segmentEnd)) {
             next.position = to->point;
         }
         if (cutStart || cutEnd) {
             PolylineVertex& vertex = vertices.back();
             const PolylineVertex& original = polyline.vertices()[originalIndex];
             vertex.bulge = cutBulge(segment, vertex.position, next.position);
-            const double startFraction = cutStart ? fractionAt(segment, *from) : 0.0;
-            const double endFraction = cutEnd ? fractionAt(segment, *to) : 1.0;
+            const double startFraction = from && cutStart ? fractionAt(segment, *from) : 0.0;
+            const double endFraction = to && cutEnd ? fractionAt(segment, *to) : 1.0;
             vertex.startWidth = std::lerp(original.startWidth, original.endWidth, startFraction);
             vertex.endWidth = std::lerp(original.startWidth, original.endWidth, endFraction);
             if (segment.isArc() && vertex.bulge == 0.0 && segmentEnd == first.index + 1) {
@@ -240,7 +240,7 @@ PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to) {
         return result;
     }
     assert(std::holds_alternative<Polyline>(entity));
-    const Polyline& polyline = std::get<Polyline>(entity);
+    const auto& polyline = std::get<Polyline>(entity);
     assert(to.position.segment < polyline.segmentCount());
     auto expectedLocation = Location::AfterEnd;
     if (start && !polyline.segment(to.position.segment).isArc()) {
