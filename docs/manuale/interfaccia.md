@@ -1,10 +1,12 @@
 # Manuale dell'interfaccia
 
-Questo manuale descrive l'interfaccia grafica introdotta nella tappa 0.6:
-la barra multifunzione (*ribbon*) e l'interfaccia classica, i pannelli agganciabili
-per i layer e le proprietà, la finestra di selezione rapida `QSELECT`, i temi chiaro e
-scuro, la personalizzazione delle scorciatoie da tastiera e la visualizzazione dello
-spessore delle linee (`LWT`).
+Questo manuale descrive l'interfaccia grafica del programma: la barra multifunzione
+(*ribbon*) e l'interfaccia classica, i pannelli agganciabili per i layer e le
+proprietà, la selezione rapida `QSELECT`, la finestra di selezione chiusa
+trascinando, i grip per la modifica diretta delle entità, i nuovi snap a oggetto
+con i loro marcatori, il tracciamento polare (`POLAR`), i temi chiaro e scuro, la
+personalizzazione delle scorciatoie da tastiera e la visualizzazione dello spessore
+delle linee (`LWT`).
 
 Per i comandi da riga di comando vedi il [manuale dei comandi](comandi.md).
 
@@ -146,6 +148,91 @@ Alla conferma con **OK**, la selezione attiva nel disegno viene aggiornata e la 
 comando segnala il totale degli elementi selezionati (`<n> item(s) selected.`). Le entità
 su layer spenti, congelati o bloccati vengono escluse automaticamente.
 
+## Finestra di selezione chiusa trascinando
+
+Nella tappa 0.7 il rettangolo di selezione nell'area di disegno si può creare sia con
+la tradizionale tecnica a due clic separati, sia tenendo premuto e trascinando il mouse
+(comportamento analogo alla variabile `PICKDRAG` = 2 di AutoCAD, sempre attivo):
+
+- **Clic fermo (spostamento inferiore a 5 pixel):** premendo e rilasciando il tasto
+  sinistro del mouse nella stessa posizione, il rettangolo di selezione si apre e
+  rimane attivo seguendo il puntatore; un secondo clic nella vista fissa l'angolo
+  opposto e conclude la selezione.
+- **Pressione, trascinamento e rilascio:** premendo il tasto sinistro nel vuoto e
+  trascinando il puntatore oltre la soglia di 5 pixel, il rilascio del tasto vale come
+  secondo clic e chiude immediatamente il rettangolo di selezione.
+
+In entrambe le modalità valgono le regole standard della selezione a rettangolo:
+
+- **Verso destra (finestra):** sfondo azzurro trasparente con bordo continuo; seleziona
+  solo le entità interamente contenute all'interno dell'area.
+- **Verso sinistra (intersezione):** sfondo verde trasparente con bordo tratteggiato;
+  seleziona tutte le entità contenute o attraversate dal contorno del rettangolo.
+- **Tasto `Shift`:** tenendo premuto `Shift` al momento del rilascio (o del secondo clic),
+  gli oggetti individuati vengono rimossi dalla selezione anziché aggiunti.
+- **Tasto `Esc`:** premuto con un rettangolo aperto, chiude e annulla il rettangolo
+  senza modificare la selezione precedente.
+
+Il gesto di trascinamento chiude **esclusivamente** un rettangolo di selezione: durante
+la richiesta di un punto o di un oggetto per un comando il rilascio dopo un trascinamento
+non ha effetto, e non sposta un grip.
+
+## Grip: modifica diretta delle entità
+
+I grip sono quadratini blu (10 pixel di lato a schermo) che compaiono sui vertici e
+sui punti notevoli delle entità quando queste sono selezionate nell'area di disegno
+senza alcun comando in corso (*selezione a riposo*).
+
+Se la selezione contiene più di 100 entità (`kMaxGripEntities`, come `GRIPOBJLIMIT`
+in AutoCAD), i grip non vengono disegnati a schermo per preservare la fluidità grafica.
+
+### Dove si trovano
+
+| Entità | Posizione dei grip |
+|---|---|
+| `LINE` | I due estremi e il punto medio |
+| `ARC` | I due estremi, il punto medio (sull'arco) e il centro |
+| `CIRCLE` | Il centro e i quattro quadranti (a 0°, 90°, 180° e 270°) |
+| `LWPOLYLINE` | Ciascun vertice e il punto medio di ogni segmento (sull'arco per i segmenti curvi) |
+| `TEXT` | Il punto d'inserimento (sulla linea di base); per allineamenti *Aligned* e *Fit*, anche il secondo punto di allineamento |
+
+### Come si usano
+
+1. Fai clic con il tasto sinistro entro il quadrato di un grip (con tolleranza di 5 pixel
+   dal centro): il grip diventa **caldo** (*hot grip*) e si colora di rosso.
+2. Sulla riga di comando compare l'intestazione `** STRETCH **` e la domanda
+   `Specify stretch point:`.
+3. Gli aiuti al disegno (snap a oggetto, modalità orto e tracciamento polare) usano la
+   posizione iniziale del grip caldo come punto base.
+4. L'anteprima dinamica mostra l'entità deformata o spostata mentre muovi il puntatore.
+5. Indica il nuovo punto cliccando nella vista o digitando le coordinate sulla riga di
+   comando: l'entità viene aggiornata. La modifica produce un passo di annullamento
+   `Grip edit` dell'editor.
+6. Se la nuova posizione genera una geometria degenere o non valida (ad esempio tre punti
+   allineati per un arco, raggio nullo, o estremi coincidenti), compare il messaggio
+   `Invalid grip edit.` e l'entità resta invariata.
+7. Premendo `Esc` sul grip caldo si abbandona l'operazione senza modificare l'entità.
+8. Sia dopo aver completato la modifica, sia dopo aver premuto `Esc`, la selezione e i
+   suoi grip rimangono attivi sul disegno. Un ulteriore tasto `Esc` a riposo svuota la
+   selezione e nasconde i grip.
+
+Se due o più entità selezionate condividono un grip nello stesso punto, il clic seleziona
+il grip dell'entità con l'identificativo più alto (quella creata più di recente).
+
+### Effetto di ciascun grip
+
+| Grip | Effetto del nuovo punto |
+|---|---|
+| Estremo di `LINE` | Sposta quell'estremo nella nuova posizione |
+| Medio di `LINE`, centro di `ARC` e `CIRCLE`, inserimento di `TEXT` | Sposta l'intera entità (traslazione rigida) |
+| Quadrante di `CIRCLE` | Modifica il raggio del cerchio, che diventa pari alla distanza tra il nuovo punto e il centro |
+| Estremo di `ARC` | L'arco viene ricalcolato affinché passi per il nuovo punto, per l'altro estremo e per il punto medio originario |
+| Medio di `ARC` | L'arco passa per i due estremi invariati e per il nuovo punto (può diventare l'arco maggiore se supera 180°) |
+| Secondo punto di `TEXT` *Aligned* o *Fit* | Sposta quel punto: per *Aligned* adatta anche l'altezza del testo, per *Fit* varia il fattore di larghezza |
+| Vertice di `LWPOLYLINE` | Sposta il vertice; i segmenti curvi collegati continuano a passare per il loro punto medio originario |
+| Medio di un segmento rettilineo di `LWPOLYLINE` | Sposta il segmento parallelamente a se stesso: i due vertici estremi del segmento si traslano, e gli eventuali tratti curvi adiacenti seguono la regola del vertice |
+| Medio di un segmento curvo di `LWPOLYLINE` | Il segmento curvo viene ricalcolato affinché passi per i suoi due vertici e per il nuovo punto indicato |
+
 ## Temi dell'interfaccia
 
 Tecnigrafo supporta due temi grafici completi basati sullo stile Qt Fusion, con tavolozza
@@ -194,9 +281,95 @@ nei menu classici e vengono salvate nelle impostazioni utente (`QSettings`).
 *Nota:* i comandi e gli alias della riga di comando (es. `L`, `PL`, `E`, `LA`) non sono
 scorciatoie da tastiera di sistema e non compaiono in questa finestra.
 
+## Nuovi snap a oggetto
+
+Dalla tappa 0.7 il sistema di snap a oggetto include quattro nuovi tipi di aggancio
+geometrico (ADR 0033), ciascuno associato a un'azione dedicata, a un'icona e a un marcatore
+visivo a schermo:
+
+| Modo | Azione / Menu *Tools → Object Snap Modes* | Punto di aggancio | Marcatore a schermo |
+|---|---|---|---|
+| *Intersection* | `aids.snap.intersection` | Punto d'incontro tra due curve o tra segmenti della stessa polilinea | Croce a forma di X |
+| *Perpendicular* | `aids.snap.perpendicular` | Piede della perpendicolare tracciata dal punto base del comando verso la curva | Simbolo perpendicolare (⊥) |
+| *Tangent* | `aids.snap.tangent` | Punto di tangenza condotto dal punto base verso cerchi, archi o segmenti curvi di polilinea | Cerchio con linea tangente in alto |
+| *Quadrant* | `aids.snap.quadrant` | Punti cardinali (0°, 90°, 180°, 270°) di cerchi, archi e archi di polilinea | Rombo |
+
+### Regole geometriche
+
+- **Quadrante:** individua i quattro punti a 0°, 90°, 180° e 270° rispetto agli assi del
+  disegno. Per un arco o per un segmento curvo di polilinea, lo snap interviene solo se
+  l'angolo cade all'interno dello sviluppo effettivo dell'arco.
+- **Perpendicolare e Tangente:** richiedono che il comando in esecuzione disponga di un
+  punto base (come il primo punto di `LINE`, il punto base di `MOVE` o il grip caldo);
+  senza punto base non producono alcun aggancio. Il punto calcolato viene accettato solo
+  se cade sull'entità geometrica reale e non sul suo prolungamento ideale.
+- **Intersezione:** rileva il punto di intersezione geometrico calcolato quando entrambe
+  le curve attraversano l'apertura del cursore (10 pixel).
+
+### Priorità e attivazione
+
+Tutti i punti di snap candidati entro l'apertura di 10 pixel competono tra loro e viene
+scelto quello più vicino al puntatore. A parità di distanza si applica l'ordine di
+priorità: *Endpoint*, *Intersection*, *Midpoint*, *Quadrant*, *Perpendicular*, *Tangent*.
+Se nessuno di questi rientra nell'apertura, operano *Center* e *Insertion* quando si
+passa sopra l'entità.
+
+All'avvio del programma, *Intersection* è attivo per impostazione predefinita (insieme
+ai modi storici *Endpoint*, *Midpoint*, *Center*, *Insertion*); *Perpendicular*,
+*Tangent* e *Quadrant* sono disattivati per difetto e si possono attivare dal menu
+*Tools → Object Snap Modes* o dal gruppo *Aids* della barra multifunzione.
+
+## Tracciamento polare (`POLAR`)
+
+Il tracciamento polare proietta linee guida allineate ad angoli regolari a partire dal
+punto base del comando o dal grip caldo.
+
+### Attivazione e scorciatoia `F10`
+
+- Si attiva o disattiva premendo il tasto funzione `F10`, scegliendo la voce di menu
+  *Tools → Polar Tracking*, oppure cliccando sul pulsante **POLAR** nella barra di stato.
+- Nello storico della riga di comando compaiono i messaggi `<Polar on>` e `<Polar off>`.
+
+### Esclusione reciproca con la modalità Orto (`F8`)
+
+Come in AutoCAD, la modalità ortogonale (`ORTHO`, `F8`) e il tracciamento polare
+(`POLAR`, `F10`) si escludono reciprocamente:
+
+- Se attivi il tracciamento polare con `F10` mentre l'orto è acceso, l'orto si spegne
+  automaticamente (con i messaggi `<Ortho off>` e `<Polar on>`).
+- Se attivi l'orto con `F8` mentre il polare è acceso, il polare si spegne
+  automaticamente (con i messaggi `<Polar off>` e `<Ortho on>`).
+
+### Feedback grafico e suggerimento a schermo
+
+Quando il puntatore si trova entro una tolleranza di 10 pixel da una delle semirette
+polari uscenti dal punto base:
+
+- la vista disegna una **semiretta tratteggiata** che si estende dal punto base lungo la
+  direzione polare;
+- accanto al puntatore appare un suggerimento di testo (*tooltip*) con la distanza e
+  l'angolo polare: `Polar: <distanza> < <angolo>°` (ad esempio `Polar: 75.0000 < 45°`).
+
+Uno snap a oggetto riconosciuto ha sempre la precedenza sul tracciamento polare.
+
+### Incremento angolare e `POLARANG`
+
+L'angolo di incremento predefinito è di 90° (direzioni a 0°, 90°, 180° e 270°). Con il
+comando da tastiera `POLARANG` puoi impostare qualsiasi incremento desiderato tra 0° e 180°
+(ad esempio 45°, 30° o 15°):
+
+```
+Command: polarang
+Enter new value for POLARANG <90>: 45
+```
+
+Quando una semiretta polare è agganciata, digitando un valore numerico singolo sulla
+riga di comando (es. `50`) il punto viene calcolato a quella distanza esatta dal punto
+base lungo la direzione polare attiva.
+
 ## Visualizzazione dello spessore delle linee (`LWT`)
 
-Il pulsante **LWT** nella barra di stato (accanto agli aiuti al disegno `SNAP` e `ORTHO`)
+Il pulsante **LWT** nella barra di stato (accanto agli aiuti al disegno `SNAP`, `ORTHO` e `POLAR`)
 attiva o disattiva la visualizzazione dello spessore effettivo delle linee nella vista:
 
 - Con `LWT` attivo (`ON`), linee, polilinee, archi e cerchi vengono renderizzati con il loro
