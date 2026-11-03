@@ -27,7 +27,9 @@
   decisione della Matleyx78/solid-space#158 e alla
   Matleyx78/solid-space#159, e la fascia di B13 all'ADR 0013 di solid-space;
   2026-11-03, con la decisione del responsabile su B13: gli estremi degli archi
-  vengono da `endpoints()` di solid-space (DECISIONI.md, 2026-11-03)
+  vengono da `endpoints()` di solid-space (DECISIONI.md, 2026-11-03);
+  2026-11-03, con il responsabile: che cosa fa `JOIN` con una diagnosi di
+  `endpoints()`, per l'ADR 0035, punto 23
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -124,6 +126,13 @@ struct JoinResult {
   (punto 4) e il punto 10 di [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
   e i riferimenti R22 e R23 non mettono casi in quella fascia. Nessun obbligo
   di estremi arrotondati correttamente e nessuna richiesta a solid-space.
+- **Una diagnosi di `endpoints()`** (dati che solid-space rifiuta, per
+  esempio oltre `kMaxCoordinate`): le curve che solid-space rifiuta non si
+  uniscono (ADR 0035, punto 23). In `join` e in `joinToSource`:
+  - un'entità diversa dalla sorgente con una diagnosi non si unisce e non
+    entra in `consumed`: conta tra le scartate del messaggio (P23);
+  - con una diagnosi sulla sorgente non si unisce niente: il risultato è
+    `std::nullopt`, e tutte le altre entità sono scartate.
 - **Quale forma** (B16): `join` fa una linea solo se la sorgente è una linea e
   ogni altra entità è una linea allineata alla sorgente, e un arco solo se la
   sorgente è un arco e ogni altra entità è un arco sul suo cerchio. In ogni
@@ -269,6 +278,13 @@ struct JoinResult {
 - B13: l'arco di centro (0,0), raggio 10, da 0 a `kQuarterTurn` e la linea da
   (0,10) a (−10,10) si uniscono in una polilinea, con la fine dell'arco presa
   da `endpoints()` e il vertice comune nel punto della linea (0,10).
+- Diagnosi di `endpoints()` (ADR 0035, punto 23), con dati oltre
+  `kMaxCoordinate`, perché un arco degenere Tecnigrafo non lo crea:
+  - sorgente la linea (0,0)→(10,0), poi l'arco di centro (2^51,0) e raggio 1,
+    poi la linea (10,0)→(10,10): la polilinea (0,0)→(10,0)→(10,10), con
+    l'arco non in `consumed` e scartato;
+  - sorgente l'arco di centro (2^51,0) e raggio 1, poi la linea (0,0)→(10,0):
+    `std::nullopt` (la domanda `join` dà `none`), con la linea scartata.
 - Gli esempi delle decisioni sulla #373: il verso quando la catena cresce
   dall'inizio (candidata girata, anche con larghezze diverse e un bulge, per
   controllare lo scambio e il segno); la polilinea chiusa scartata; l'arco
