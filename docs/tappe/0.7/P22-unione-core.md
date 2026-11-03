@@ -25,7 +25,9 @@
   catena, polilinee chiuse, ordine degli estremi delle linee allineate, arco
   con angoli uguali); 2026-11-03, operazione snellimento (#478): rimanda alla
   decisione della Matleyx78/solid-space#158 e alla
-  Matleyx78/solid-space#159, e la fascia di B13 all'ADR 0013 di solid-space
+  Matleyx78/solid-space#159, e la fascia di B13 all'ADR 0013 di solid-space;
+  2026-11-03, con la decisione del responsabile su B13: gli estremi degli archi
+  vengono da `endpoints()` di solid-space (DECISIONI.md, 2026-11-03)
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -42,7 +44,7 @@
 Il contratto accettato con l'ADR 0009 di solid-space:
 `solid_space/geom2d/coincidence.hpp` (`areAligned`, `onSameCircle`,
 `isStraight`) e `solid_space/robust/tolerance.hpp` (`coincident`), con i tipi
-di `curves.hpp`. Per le linee allineate anche la funzione di
+di `curves.hpp` ed `endpoints()` per gli estremi degli archi (B13). Per le linee allineate anche la funzione di
 `coincidence.hpp` che dà gli estremi del segmento unito, decisa nella
 [Matleyx78/solid-space#158](https://github.com/Matleyx78/solid-space/issues/158)
 e scritta nella pull request
@@ -112,11 +114,13 @@ struct JoinResult {
   con la sorgente, non con l'ultima entità aggiunta (ADR 0035, punto 18).
 - **Gli estremi degli archi** (B13), nella catena, che confronta gli estremi
   di archi e linee (gli archi di un solo cerchio non li confrontano, punto
-  seguente): la coincidenza si decide sugli estremi
-  come li calcola Tecnigrafo, con la stessa funzione usata altrove per gli
-  estremi di un arco. Quando la distanza esatta fra due estremi sta entro
-  l'errore di quel calcolo dal confine della tolleranza, l'esito è libero:
-  è una fascia, come la definisce l'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
+  seguente): la coincidenza si decide sugli estremi che dà `endpoints()` di
+  `curves.hpp` di solid-space, sulla curva della traduzione di P14
+  (`bridge::curveOf`), come chiede il suo commento: non su un coseno e un seno
+  di Tecnigrafo (decisione del responsabile, 2026-11-03). Gli estremi di linee
+  e polilinee sono i loro dati. Quando la distanza esatta fra due estremi sta
+  entro l'errore di `endpoints()` dal confine della tolleranza, l'esito è
+  libero: è una fascia, come la definisce l'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
   (punto 4) e il punto 10 di [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
   e i riferimenti R22 e R23 non mettono casi in quella fascia. Nessun obbligo
   di estremi arrotondati correttamente e nessuna richiesta a solid-space.
@@ -262,6 +266,9 @@ struct JoinResult {
   tre estremi dove a ~ b e b ~ c ma non a ~ c (l'ordine scritto decide).
 - Gli esempi di B10, B12, B16 e B17, in `join` e, dove si applicano, in
   `joinToSource`.
+- B13: l'arco di centro (0,0), raggio 10, da 0 a `kQuarterTurn` e la linea da
+  (0,10) a (−10,10) si uniscono in una polilinea, con la fine dell'arco presa
+  da `endpoints()` e il vertice comune nel punto della linea (0,10).
 - Gli esempi delle decisioni sulla #373: il verso quando la catena cresce
   dall'inizio (candidata girata, anche con larghezze diverse e un bulge, per
   controllare lo scambio e il segno); la polilinea chiusa scartata; l'arco
