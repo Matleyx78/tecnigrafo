@@ -51,9 +51,10 @@ pacchetti di riferimenti pronti presi di fila sono in [lotti.md](lotti.md).
   in attesa, il confronto della parte prima del **confine**, il primo punto
   che il programma non sa ancora fare
   ([docs/verifica/casi.md](../verifica/casi.md), "Controlli anticipati").
-- La pull request tocca solo casi di riferimento: non si compila in locale e i
-  casi non si eseguono in locale. Se i casi che scrivi sono validi lo dicono i
-  controlli anticipati della CI ([comandi.md](comandi.md), "Pull request senza
+- La pull request tocca solo casi di riferimento: non si compila e non si
+  eseguono i casi in locale (`scripts/controlla.sh --solo formato` resta
+  permesso). Se i casi che scrivi sono validi lo dicono i controlli anticipati
+  della CI ([comandi.md](comandi.md), "Pull request senza
   compilazione locale").
 - Se il lavoro cambia **apposta** un comportamento che esiste già (un'opzione
   nuova cambia la domanda di un comando, un nuovo snap acceso per difetto),

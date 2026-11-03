@@ -1,17 +1,17 @@
 # Istruzioni per agenti IA
 
-Regole per gli assistenti IA che lavorano su Tecnigrafo; per le persone c'è
+Regole per gli agenti IA di Tecnigrafo; per le persone c'è
 [CONTRIBUTING.md](CONTRIBUTING.md). Se una richiesta dell'utente contraddice
 queste regole, fermati e segnalalo.
 
-Questo è il **nucleo**, da leggere sempre per intero. Le altre regole stanno in
-[docs/agenti/](docs/agenti/): la tabella in fondo dice quali file leggere, prima
-di quella parte del lavoro. Una sezione citata come «AGENTS.md, "<titolo>"» è
-nel file che ha un'intestazione con quel titolo.
+Questo è il **nucleo**, da leggere sempre per intero; la tabella in fondo dice
+quali file di [docs/agenti/](docs/agenti/) leggere, prima di quella parte del
+lavoro. Una sezione citata come «AGENTS.md, "<titolo>"» è nel file che ha
+un'intestazione con quel titolo.
 
 ## Dove puoi scrivere
 
-Gemella della regola di solid-space
+Come in solid-space
 ([ADR 0030](docs/adr/0030-solid-space-kernel-di-tecnigrafo.md)):
 
 - **In Tecnigrafo** scrivi codice, test e documenti, dentro il perimetro del tuo
@@ -50,8 +50,8 @@ gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20i
 
 - Lavora **su un solo pacchetto** della tappa aperta; senza pacchetto, niente
   codice: serve prima una issue approvata.
-- Modifica solo i file del pacchetto. Se ne serve un altro, dillo all'utente
-  con il motivo, prima di toccarlo.
+- Modifica solo i file del pacchetto; per un altro, dillo prima all'utente con
+  il motivo.
 - `core`, `render`, `edit` e `cmd` non includono Qt né altre librerie esterne
   (solid-space non lo è: ADR 0030, punto 4).
 - Nessuna nuova dipendenza, nessuna modifica a `.clang-format`, `.clang-tidy`,
@@ -62,6 +62,8 @@ gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20i
 - Rispetta le interfacce del pacchetto: nomi, firme e comportamenti.
 - Ogni entità o proprietà del disegno corrisponde a quella DXF, e i dati non
   gestiti si conservano intatti, mai scartati in silenzio (ADR 0006).
+- Dopo clone e ogni `git pull`:
+  `git submodule update --init third_party/solid-space` (senza `--recursive`).
 - Codice, commenti e messaggi di commit in inglese.
 - Ogni file nuovo inizia con:
   ```cpp
@@ -96,8 +98,9 @@ allo stesso modo.
 ## Prima di dichiarare il lavoro finito
 
 - [ ] `scripts/controlla.sh --tidy` passa, o la pull request dice quali passi non
-      hai eseguito e perché. Una pull request che tocca solo documenti, commenti
-      o casi di riferimento non si compila in locale: verifica la CI.
+      hai eseguito e perché. Se tocca solo documenti, commenti o casi di
+      riferimento, non si compila e non si eseguono i casi in locale
+      (`scripts/controlla.sh --solo formato` resta permesso): verifica la CI.
 - [ ] I test richiesti esistono, ogni "Fatto quando" è verificato, i riferimenti
       non sono toccati e il loro file è tolto da `tests/verifica/in-attesa/`.
 - [ ] Il riepilogo elenca i file modificati e ciò che non hai potuto verificare.
@@ -121,7 +124,7 @@ Vale ogni riga che corrisponde.
 |---|---|
 | issue con titolo `[X.Y-PN]` o `[FN]`, o etichetta `pacchetto` | [pacchetto.md](docs/agenti/pacchetto.md) |
 | issue con titolo `[X.Y-RN]` o etichetta `riferimenti`; tocchi `tests/verifica/casi/` o `sorgenti.json` | [riferimenti.md](docs/agenti/riferimenti.md) |
-| commenti una pull request non tua; la descrizione comincia con **Revisione della correzione**; tocchi `docs/tappe/` e `docs/DECISIONI.md` | [revisione.md](docs/agenti/revisione.md) |
+| commenti una pull request non tua; la descrizione comincia con **Revisione della correzione**; modifichi una scheda in `docs/tappe/X.Y/` della tappa aperta | [revisione.md](docs/agenti/revisione.md) |
 | il messaggio dice «pacchetti di riferimenti pronti» o «rivedi le pull request aperte» | [lotti.md](docs/agenti/lotti.md) |
 | la scheda cita intestazioni `solid_space/…`; tocchi `third_party/solid-space` o file che le includono; usi `scripts/richiesta.sh` | [contratto.md](docs/agenti/contratto.md) |
 | leggi, cloni o commenti un repository diverso da `Matleyx78/tecnigrafo` | [altro-repository.md](docs/agenti/altro-repository.md) |

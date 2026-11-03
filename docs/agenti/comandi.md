@@ -12,7 +12,8 @@ stesso PC non si bloccano a vicenda: `export TG_BUILD_SUFFIX=-claude` (o `-codex
 `-claude-2`); i preset compilano in `build-<nome>/<preset>`, e i percorsi
 `./build/...` della documentazione diventano i tuoi.
 
-Dopo il clone e dopo ogni `git pull` esegui
+Dopo il clone e dopo ogni `git pull` esegui (il nucleo lo dice per ogni
+lavoro, in "Regole che non si possono violare")
 `git submodule update --init third_party/solid-space`, **senza** `--recursive`, così
 il sottomodulo di solid-space è sempre al commit che `main` fissa
 ([ADR 0030](../adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 6). Se lo
@@ -52,10 +53,12 @@ errore nel nostro codice si corregge, non si sopprime.
 ## Pull request senza compilazione locale
 
 Una pull request che tocca solo documenti, commenti o casi di riferimento non si
-compila in locale e non esegue `scripts/controlla.sh`: la verifica la fa la CI.
+compila e non si eseguono i casi in locale: la verifica la fa la CI.
+`scripts/controlla.sh --solo formato`, che non compila né esegue i casi, resta
+permesso.
 Come chiede il nucleo ("Prima di dichiarare il lavoro finito"), la pull request
-dice quali passi non hai eseguito e perché. Per i casi di riferimento, se sono validi lo
-dicono i controlli anticipati della CI ([riferimenti.md](riferimenti.md)).
+dice quali passi non hai eseguito e perché. Per i casi di riferimento, se sono
+validi lo dicono i controlli anticipati della CI ([riferimenti.md](riferimenti.md)).
 
 ## Aspettare la CI e leggerne gli errori
 

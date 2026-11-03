@@ -763,7 +763,8 @@ i rimandi ai documenti che cambia.
   Tre regole nuove:
   - **Niente compilazione locale per documenti, commenti e riferimenti.** Una
     pull request che tocca solo documenti, commenti o casi di riferimento non
-    si compila in locale: la verifica la fa la CI. Per i riferimenti cade la
+    si compila e non si eseguono i casi in locale: la verifica la fa la CI;
+    `scripts/controlla.sh --solo formato` resta permesso. Per i riferimenti cade la
     possibilità di eseguire i casi in locale; la loro validità la dicono i
     controlli anticipati
     ([ADR 0037](adr/0037-controllo-anticipato-dei-riferimenti.md)).

@@ -1,10 +1,12 @@
 # Revisione di una pull request
 
 Da leggere quando commenti una pull request che non hai aperto tu, quando la
-descrizione comincia con **Revisione della correzione**, o quando la pull
-request tocca `docs/tappe/` e `docs/DECISIONI.md` ([AGENTS.md](../../AGENTS.md),
-"Se ... leggi anche ..."). Vale insieme al nucleo. Le pull request aperte rivedute
-una dopo l'altra sono in [lotti.md](lotti.md).
+descrizione comincia con **Revisione della correzione**, o quando modifichi una
+scheda in `docs/tappe/X.Y/` della tappa aperta, anche senza toccare
+`docs/DECISIONI.md` ([AGENTS.md](../../AGENTS.md), "Se ... leggi anche ...").
+Chi scrive una correzione legge "Le correzioni delle schede si rivedono" prima
+di scrivere la descrizione della pull request. Vale insieme al nucleo. Le pull
+request aperte rivedute una dopo l'altra sono in [lotti.md](lotti.md).
 
 ## Le correzioni delle schede si rivedono
 
