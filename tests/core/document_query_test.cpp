@@ -429,8 +429,7 @@ TEST(IntersectionSnap, UsesDistanceBeforeKindThenEndpointBeforeIntersection) {
     document.add(Line{{-10, 10}, {4, -4}});
     document.add(Line{{2, 0}, {10, 0}});
     constexpr SnapModes kEndAndIntersection{true, false, false, false, true};
-    expectSnap(findSnap(document, {1, 0}, 1.5, kEndAndIntersection),
-               SnapKind::Endpoint, {2, 0});
+    expectSnap(findSnap(document, {1, 0}, 1.5, kEndAndIntersection), SnapKind::Endpoint, {2, 0});
     expectIntersection(findSnap(document, {0.8, 0}, 1.5, kEndAndIntersection), {0, 0});
 }
 
