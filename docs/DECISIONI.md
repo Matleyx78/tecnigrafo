@@ -715,6 +715,12 @@ i rimandi ai documenti che cambia.
     commit `11108db` come punto di partenza delle schede, la dipendenza di
     P17 da #145 (dopo l'ADR 0013, 0.2-P20 non tocca più `offset.hpp`) e le
     ripetizioni del contratto corretto.
+  - **Gli estremi degli archi in `JOIN`** (P22, B13): si prendono da
+    `endpoints()` di `curves.hpp` di solid-space, sulla curva della
+    traduzione di P14, come chiede il suo commento, e non da un coseno e un
+    seno di Tecnigrafo. La scheda diceva «la stessa funzione usata altrove»;
+    la fascia vicino al confine della tolleranza resta libera (ADR 0013 di
+    solid-space, punto 4).
   - **P25** ([#464](https://github.com/Matleyx78/tecnigrafo/issues/464)) è
     chiusa dal 2026-11-01 e resta chiusa: la sua scheda rimanda ai punti 10 e
     11 di CONTRATTI.md invece di trascriverli. La rilettura di questa
