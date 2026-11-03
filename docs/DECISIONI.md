@@ -666,3 +666,65 @@ i rimandi ai documenti che cambia.
   il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
   Il catalogo delle domande e i riferimenti di R22 non cambiano: nessun caso
   cade nei quattro punti.
+- **2026-11-03 — Operazione snellimento, passo 3: Tecnigrafo rimanda a
+  solid-space.** Durante il congelamento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478)), dopo l'[ADR 0013
+  di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
+  («Esatto dove serve») e i commenti delle sue intestazioni che lo seguono, il
+  responsabile decide che i documenti di Tecnigrafo non ripetono più il
+  contratto di solid-space: lo citano.
+  - **Dove.** I 54 blocchi dell'[inventario di
+    Codex](https://github.com/Matleyx78/tecnigrafo/issues/478#issuecomment-6579550558),
+    negli ADR [0030](adr/0030-solid-space-kernel-di-tecnigrafo.md),
+    [0035](adr/0035-taglio-offset-raccordi-unione.md) e
+    [0036](adr/0036-tolleranze-di-tecnigrafo.md) e nelle schede
+    [P15](tappe/0.7/P15-snap-intersezione.md)–[P22](tappe/0.7/P22-unione-core.md)
+    e [P25](tappe/0.7/P25-revisione-interfacce.md), diventano un rimando
+    all'intestazione (la funzione o il tipo), all'ADR di solid-space, a
+    CONTRATTI.md o all'archivio dei casi. Le righe **Corretto:** dello 0035 che
+    descrivevano solid-space diventano un rimando solo. Restano scritte per
+    intero le regole di Tecnigrafo: comandi, messaggi, che cosa si tiene,
+    l'ordine della catena di `JOIN`, la proiezione, i pixel, il confronto dei
+    casi.
+  - **Quale versione.** Un rimando vale nella versione dell'intestazione
+    fissata dal sottomodulo, o in quella al cui commit la issue del pacchetto
+    lo sposta (ADR 0030, punto 9); chi sposta il sottomodulo rilegge le
+    intestazioni come dice AGENTS.md ("Quando fermarsi", punto 1).
+  - **Le ripetizioni già diverse dal contratto** si correggono con il rimando:
+    vale il contratto. Sono il lato di un arco orario (ADR 0035, punto 10: un
+    segmento di polilinea con bulge negativo ha l'interno a destra), la
+    grandezza M con il punto `m` dei segmenti curvi e il dominio 2^-50 degli
+    errori (ADR 0036), i casi `failed` della curva parallela (P17) e
+    l'attribuzione di B13 alla #152 (P22: è una fascia dell'ADR 0013, punto 4).
+  - **Eccezione redazionale a [GOVERNANCE.md](../GOVERNANCE.md).** Il punto 1
+    dello 0035, che P14 attua, e i punti 4 e 5 dello 0036 cambiano solo nella
+    descrizione: il rimando la sostituisce, la regola resta identica. I punti
+    6–8 dello 0030, che P0 attua, non cambiano. Ogni ADR toccato ha una riga
+    **Corretto:** con la data di oggi.
+  - **La [PR #473](https://github.com/Matleyx78/tecnigrafo/pull/473) si chiude
+    senza unirla.** Se ne tiene ciò che è di Tecnigrafo e serve ancora: il
+    messaggio unico di `OutOfDomain` per `FILLET`, `CIRCLE` *Ttr* e `CHAMFER`,
+    **`Result is beyond the drawing limits.`**, al posto di `Lines are nearly
+    parallel.` (decisione del responsabile del 2026-11-02, nella chat di
+    quella pull request), perché la diagnosi nasce da più costruzioni, non
+    solo da rette quasi parallele; la dipendenza di P19 da
+    [Matleyx78/solid-space#145](https://github.com/Matleyx78/solid-space/issues/145)
+    (0.2-P20, dominio delle tangenze), al posto di #70, già unito; i due
+    esempi nuovi dei test di P17 e P19 (un raggio costruito oltre 2^50, due
+    parallele lontane). Si lasciano la riga **Corretto:** dello 0035, il
+    commit `11108db` come punto di partenza delle schede, la dipendenza di
+    P17 da #145 (dopo l'ADR 0013, 0.2-P20 non tocca più `offset.hpp`) e le
+    ripetizioni del contratto corretto.
+  - **P25** ([#464](https://github.com/Matleyx78/tecnigrafo/issues/464)) è
+    chiusa dal 2026-11-01 e resta chiusa: la sua scheda rimanda ai punti 10 e
+    11 di CONTRATTI.md invece di trascriverli. La rilettura di questa
+    operazione la fa la revisione della correzione delle sue pull request,
+    non una P25 riaperta.
+
+  Cambiano gli ADR 0030, 0035 e 0036 (righe **Corretto:** del 2026-11-03), le
+  schede P15–P22 e P25, il piano della [tappa 0.7](tappe/0.7-modifiche.md)
+  ("Modifiche al piano" e la riga di P19), il catalogo delle domande
+  ([verifica/domande.md](verifica/domande.md)) e la tabella dei messaggi di
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md). La issue #363 (P17) è
+  bloccata da Matleyx78/solid-space#130 invece che da #63; la #367 (P19) da
+  #145 invece che da #70.
