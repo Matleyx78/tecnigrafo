@@ -691,14 +691,17 @@ i rimandi ai documenti che cambia.
     lo sposta (ADR 0030, punto 9); chi sposta il sottomodulo rilegge le
     intestazioni come dice AGENTS.md ("Quando fermarsi", punto 1).
   - **Le ripetizioni già diverse dal contratto** si correggono con il rimando:
-    vale il contratto. Sono il lato di un arco orario (ADR 0035, punto 10: un
-    segmento di polilinea con bulge negativo ha l'interno a destra), la
-    grandezza M con il punto `m` dei segmenti curvi e il dominio 2^-50 degli
-    errori (ADR 0036), i casi `failed` della curva parallela (P17) e
-    l'attribuzione di B13 alla #152 (P22: è una fascia dell'ADR 0013, punto 4).
+    vale il contratto. Sono il lato di un arco orario (ADR 0035, punto 10,
+    `side.hpp`), la grandezza M e il dominio degli errori (ADR 0036, contesto),
+    il confronto dei casi (ADR 0036, punto 4: l'errore di un valore costruito
+    e gli esiti liberi nelle fasce, dalla revisione della
+    [#479](https://github.com/Matleyx78/tecnigrafo/pull/479)), i casi `failed`
+    della curva parallela (P17) e l'attribuzione di B13 alla #152 (P22).
   - **Eccezione redazionale a [GOVERNANCE.md](../GOVERNANCE.md).** Il punto 1
-    dello 0035, che P14 attua, e i punti 4 e 5 dello 0036 cambiano solo nella
-    descrizione: il rimando la sostituisce, la regola resta identica. I punti
+    dello 0035, che P14 attua, e il punto 5 dello 0036 cambiano solo nella
+    descrizione: il rimando la sostituisce, la regola resta identica. Il
+    punto 4 dello 0036 invece si corregge (sopra), perché contraddiceva il
+    contratto. I punti
     6–8 dello 0030, che P0 attua, non cambiano. Ogni ADR toccato ha una riga
     **Corretto:** con la data di oggi.
   - **La [PR #473](https://github.com/Matleyx78/tecnigrafo/pull/473) si chiude

@@ -7,11 +7,13 @@
   [DECISIONI.md](../DECISIONI.md), stessa data): dove questo ADR descriveva il
   contratto di solid-space (la regola, la grandezza M, gli errori delle
   costruzioni e `isDegenerate`, nel contesto e nei punti 4 e 5), rimanda alle
-  sue intestazioni e ai suoi ADR. Nessuna regola di Tecnigrafo cambia: nei
-  punti 4 e 5 il rimando sostituisce solo la descrizione. Dove la descrizione
-  era già diversa dal contratto vale il contratto: la grandezza M comprende il
-  punto `m` dei segmenti curvi di polilinea, e gli errori dichiarati valgono
-  per dati di grandezza almeno 2^-50 (ADR 0013 di solid-space, punto 2).
+  sue intestazioni e ai suoi ADR. Nel punto 5 il rimando sostituisce solo la
+  descrizione. Dove la descrizione era già diversa dal contratto vale il
+  contratto: la grandezza M (`magnitude()`) e il dominio degli errori (ADR
+  0013 di solid-space, punto 2) nel contesto; nel punto 4 l'errore di un
+  valore costruito, che dipende anche dalla sua grandezza, e gli esiti liberi
+  nelle fasce, che un caso non impone (ADR 0013, punti 4 e 5; revisione della
+  [#479](https://github.com/Matleyx78/tecnigrafo/pull/479), R479-1 e R479-2).
 
 ## Contesto
 
@@ -118,14 +120,18 @@ di solid-space, che ora c'è.
    Tecnigrafo calcola da sé.
    - Per i numeri costruiti da solid-space (punti d'intersezione e di tangenza,
      estremi tagliati, archi di raccordo, curve parallele) vale l'errore che
-     solid-space dichiara per la grandezza M dei dati del caso (le costanti
-     del contesto; sotto 2^-50 non ne dichiara, ADR 0013 di solid-space,
-     punto 2). Fino a M = 7e4 circa il valore predefinito basta già
+     solid-space dichiara, con le formule delle costanti del contesto: dipende
+     dalla grandezza G, la maggiore fra la grandezza M dei dati e quella dei
+     valori costruiti che il caso confronta (un'intersezione può cadere molto
+     più lontano dei dati), e sotto 2^-50 non c'è (ADR 0013 di solid-space,
+     punto 2). Fino a G = 7e4 circa il valore predefinito basta già
      (2^-46 · 7e4 ≈ 9.9e-10); sopra, il caso imposta `!tolerance absolute`
      all'errore dichiarato, arrotondato per eccesso alla prima cifra (per
-     M = 1e6: `!tolerance absolute 2e-8`).
-   - Le decisioni (`yes`/`no`, posizioni, lati, esiti) sono esatte e si
-     confrontano esatte.
+     G = 1e6: `!tolerance absolute 2e-8`).
+   - Le decisioni (`yes`/`no`, posizioni, lati, esiti) si confrontano esatte,
+     tranne gli esiti che il contratto lascia liberi in una fascia: un caso
+     non mette i suoi dati in una fascia, come l'archivio dei casi di
+     solid-space (ADR 0013 di solid-space, punti 4 e 5).
    - I valori geometrici attesi si prendono dall'archivio dei casi di
      solid-space, citando il caso, quando il caso c'è (ADR 0030, punto 14).
 5. **Risultati degeneri.** Un pezzo che dopo un taglio, una curva parallela o un

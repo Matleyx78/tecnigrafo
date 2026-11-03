@@ -387,8 +387,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 - **I tratti in comune come tagli:** servirebbe ordinare i loro estremi tra gli
   altri tagli confrontando stazioni (punto 4).
 - **`OFFSET` che promette il risultato di AutoCAD in tutti i casi:** solid-space
-  promette il risultato esatto solo nei casi semplici, e un messaggio onesto
-  negli altri; Tecnigrafo non promette di più.
+  non lo promette (`offset.hpp`, «What is guaranteed»), e Tecnigrafo non
+  promette di più.
 - **Il lato di `OFFSET` deciso dentro solid-space con un punto:** per una
   polilinea dipende dalla proiezione sul segmento più vicino, che resta a
   Tecnigrafo (ADR 0012 di solid-space, alternative).
