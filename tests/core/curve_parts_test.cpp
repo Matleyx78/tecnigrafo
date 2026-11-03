@@ -187,7 +187,10 @@ TEST(CurveParts, CircleCutBandKeepsTheCurrentDeterministicOppositePieces) {
         const auto result = partOf(circle, across ? above : below, across ? below : above,
                                    across ? PartCourse::AcrossStart : PartCourse::Direct);
         ASSERT_EQ(result.outcome, PartOutcome::Done);
-        ASSERT_TRUE(result.entity.has_value());
+        if (!result.entity) {
+            ADD_FAILURE() << "missing constructed entity";
+            return;
+        }
         const auto* arc = std::get_if<Arc>(&*result.entity);
         ASSERT_NE(arc, nullptr);
         EXPECT_EQ(arc->center, circle.center);
