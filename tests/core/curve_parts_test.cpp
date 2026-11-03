@@ -98,8 +98,57 @@ TEST(CurveParts, EqualRoundedAnglesDoNotTurnAShortArcIntoAWholeCircle) {
     expectOutcome(partOf(circle, rounded, rounded, PartCourse::SamePlace), PartOutcome::Empty);
 }
 
+TEST(CurveParts, InvertedRoundedAnglesDiscardTheShortPartOfAnArcOrCircle) {
+    // Review #487: the exact cuts are in order, their received points are not.
+    const CurvePoint first = place({3, 4});
+    const CurvePoint last = place({3.000000000000001, 4});
+    const Arc quarter{{0, 0}, 5, 0, kPi / 2};
+    expectOutcome(partOf(quarter, first, last, PartCourse::Direct), PartOutcome::Empty);
+    // The same inversion on an arc whose original sweep crosses angle zero.
+    const Arc wrapping{{0, 0}, 5, 3 * kPi / 2, kPi / 2};
+    expectOutcome(partOf(wrapping, first, last, PartCourse::Direct), PartOutcome::Empty);
+    const Circle circle{{0, 0}, 5};
+    expectOutcome(partOf(circle, first, last, PartCourse::Direct), PartOutcome::Empty);
+    expectOutcome(partOf(circle, last, first, PartCourse::AcrossStart),
+                  PartOutcome::NotRepresentable);
+}
+
+TEST(CurveParts, InvertedRoundedAnglesDiscardACurvedSegmentInEitherDirection) {
+    for (const double sign : {1.0, -1.0}) {
+        const Polyline polyline{{{{-5, 0}, sign}, {{5, 0}}, {{10, 0}}}};
+        const CurvePoint first = place({0, -5 * sign}, 0, Location::Inside, 5 * kPi / 2);
+        const CurvePoint last = place({-1e-15, -5 * sign}, 0, Location::Inside, 5 * kPi / 2);
+        expectOutcome(partOf(polyline, first, last, PartCourse::Direct), PartOutcome::Empty);
+        const Polyline multipleSegments{
+            {{{-3, -4 * sign}, sign}, {{3, 4 * sign}}, {{10, 0}}}};
+        const Vec2 invertedStart{2.999999999999999, 4 * sign};
+        const auto multiple = partOf(multipleSegments, place(invertedStart), std::nullopt,
+                                     PartCourse::Direct);
+        expectOutcome(multiple, PartOutcome::Done);
+        ASSERT_TRUE(multiple.entity);
+        const auto& part = std::get<Polyline>(*multiple.entity);
+        ASSERT_EQ(part.vertexCount(), 3U);
+        EXPECT_EQ(part.vertices()[0].position, invertedStart);
+        EXPECT_EQ(part.vertices()[1].position, (Vec2{3, 4 * sign}));
+        EXPECT_EQ(part.vertices()[0].bulge, 0);
+    }
+}
+
+TEST(CurveParts, RebuildsSuppliedExistingArcEndpointsButKeepsOmittedAngles) {
+    const Arc arc{{0, 0}, 5, 0, kPi / 2};
+    const auto result = partOf(arc, place({5, 1e-15}, 0, Location::AtStart),
+                               place({1e-15, 5}, 0, Location::AtEnd), PartCourse::Direct);
+    expectOutcome(result, PartOutcome::Done);
+    ASSERT_TRUE(result.entity);
+    const auto& cut = std::get<Arc>(*result.entity);
+    EXPECT_GT(cut.startAngle, arc.startAngle);
+    EXPECT_LT(cut.endAngle, arc.endAngle);
+    const auto unchanged = partOf(arc, std::nullopt, std::nullopt, PartCourse::Direct);
+    EXPECT_EQ(unchanged.entity, std::optional<Entity>{arc});
+}
+
 TEST(CurveParts, CutsStraightPolylineSegmentsAndInterpolatesWidths) {
-    Polyline polyline{{{{0, 0}, 0, 2, 6}, {{10, 0}, 0, 8, 12}, {{10, 10}, 0, 3, 4}}};
+    Polyline polyline{{{{0, 0}, 0, 2, 6}, {{10, 0}, 0, 8, 12}, {{10, 10}, -0.5, 3, 4}}};
     polyline.setConstantWidth(7);
     polyline.setContinuousLinetype(true);
     const Vec2 first{2, 1e-15};
@@ -119,6 +168,9 @@ TEST(CurveParts, CutsStraightPolylineSegmentsAndInterpolatesWidths) {
     EXPECT_EQ(part.vertices()[0].position, first);
     EXPECT_EQ(part.vertices()[1].position, (Vec2{10, 0}));
     EXPECT_EQ(part.vertices()[2].position, last);
+    EXPECT_EQ(part.vertices()[2].bulge, polyline.vertices()[2].bulge);
+    EXPECT_EQ(part.vertices()[2].startWidth, 3);
+    EXPECT_EQ(part.vertices()[2].endWidth, 4);
     EXPECT_NEAR(part.vertices()[0].startWidth, 2.8, kBuilt);
     EXPECT_EQ(part.vertices()[0].endWidth, 6);
     EXPECT_EQ(part.vertices()[1].startWidth, 8);
@@ -145,6 +197,65 @@ TEST(CurveParts, CutsPositiveAndNegativeBulgesByArcLength) {
         EXPECT_NEAR(part.vertices()[0].startWidth, 4, kBuilt);
         EXPECT_EQ(part.vertices()[0].endWidth, 6);
     }
+}
+
+TEST(CurveParts, InterpolatesClockwiseWidthsFromTheStartAwayFromTheMidpoint) {
+    const Polyline polyline{{{{-5, 0}, -1, 2, 10}, {{5, 0}, 0.25, 11, 12}}};
+    // Clockwise from angle pi to 3*pi/4: one quarter of the semicircle.
+    const double coordinate = 5 / std::sqrt(2.0);
+    const auto cut = place({-coordinate, coordinate}, 0, Location::Inside, 5 * kPi / 4);
+    for (const bool keepStart : {true, false}) {
+        const auto result = partOf(polyline, keepStart ? std::nullopt : std::optional{cut},
+                                   keepStart ? std::optional{cut} : std::nullopt,
+                                   PartCourse::Direct);
+        expectOutcome(result, PartOutcome::Done);
+        ASSERT_TRUE(result.entity);
+        const auto& part = std::get<Polyline>(*result.entity);
+        ASSERT_EQ(part.vertexCount(), 2U);
+        EXPECT_NEAR(part.vertices()[0].startWidth, keepStart ? 2 : 4, kBuilt);
+        EXPECT_NEAR(part.vertices()[0].endWidth, keepStart ? 4 : 10, kBuilt);
+        EXPECT_NEAR(part.vertices()[0].bulge,
+                    -std::tan(keepStart ? kPi / 16 : 3 * kPi / 16), kBuilt);
+        EXPECT_EQ(part.vertices()[1].bulge, 0.25);
+        EXPECT_EQ(part.vertices()[1].startWidth, 11);
+        EXPECT_EQ(part.vertices()[1].endWidth, 12);
+    }
+}
+
+TEST(CurveParts, ReplacesSuppliedExistingPolylineVerticesIncludingTheOpenEnd) {
+    const Polyline polyline{{{{0, 0}}, {{10, 0}}, {{10, 10}}}};
+    const Vec2 first{1e-15, 0};
+    const Vec2 last{10, 10 - 2e-15};
+    const auto result = partOf(polyline, place(first, 0, Location::AtStart),
+                               place(last, 1, Location::AtEnd), PartCourse::Direct);
+    expectOutcome(result, PartOutcome::Done);
+    ASSERT_TRUE(result.entity);
+    const auto& part = std::get<Polyline>(*result.entity);
+    ASSERT_EQ(part.vertexCount(), 3U);
+    EXPECT_EQ(part.vertices()[0].position, first);
+    EXPECT_EQ(part.vertices()[1], polyline.vertices()[1]);
+    EXPECT_EQ(part.vertices()[2].position, last);
+}
+
+TEST(CurveParts, UsesTheFollowingSegmentForVertexZeroOfAClosedPolyline) {
+    const Polyline rectangle{{{{0, 0}}, {{10, 0}}, {{10, 10}}, {{0, 10}}}, true};
+    const Vec2 suppliedZero{1e-15, 0};
+    const auto zero = place(suppliedZero, 0, Location::AtStart);
+    const auto next = place({10, 0}, 1, Location::AtStart);
+    const auto direct = partOf(rectangle, zero, next, PartCourse::Direct);
+    const auto across = partOf(rectangle, next, zero, PartCourse::AcrossStart);
+    expectOutcome(direct, PartOutcome::Done);
+    expectOutcome(across, PartOutcome::Done);
+    ASSERT_TRUE(direct.entity);
+    ASSERT_TRUE(across.entity);
+    const auto& shortPart = std::get<Polyline>(*direct.entity);
+    ASSERT_EQ(shortPart.vertexCount(), 2U);
+    EXPECT_EQ(shortPart.vertices()[0].position, suppliedZero);
+    EXPECT_EQ(shortPart.vertices()[1].position, (Vec2{10, 0}));
+    const auto& longPart = std::get<Polyline>(*across.entity);
+    ASSERT_EQ(longPart.vertexCount(), 4U);
+    EXPECT_EQ(longPart.vertices()[0].position, (Vec2{10, 0}));
+    EXPECT_EQ(longPart.vertices()[3].position, suppliedZero);
 }
 
 TEST(CurveParts, DistinguishesTheTwoCoursesOnOneSegmentOfAClosedPolyline) {
@@ -179,7 +290,7 @@ TEST(CurveParts, DistinguishesTheTwoCoursesOnOneSegmentOfAClosedPolyline) {
 
 TEST(CurveParts, UsesExactVertexLocationsWithoutDuplicatingBoundaryVertices) {
     const Polyline rectangle{{{{0, 0}}, {{10, 0}}, {{10, 10}}, {{0, 10}}}, true};
-    const auto result = partOf(rectangle, place({0, 10}, 2, Location::AtEnd),
+    const auto result = partOf(rectangle, place({0, 10}, 3, Location::AtStart),
                                place({10, 0}, 1, Location::AtStart), PartCourse::AcrossStart);
     expectOutcome(result, PartOutcome::Done);
     if (!result.entity) {
@@ -240,6 +351,27 @@ TEST(CurveParts, ExtendsAnArcBeyondZeroAndBackwardsFromItsStart) {
                   PartOutcome::NotRepresentable);
     expectOutcome(extendTo(quarter, EntityEnd::Start, place({0, 5}, 0, Location::AfterEnd)),
                   PartOutcome::NotRepresentable);
+}
+
+TEST(CurveParts, RejectsExtensionsWhoseRoundedAnglesPassTheOtherEnd) {
+    const double boundary = std::atan2(4.0, 3.0);
+    const Arc fromBoundary{{0, 0}, 5, boundary, kPi};
+    const Arc toBoundary{{0, 0}, 5, 0, boundary};
+    expectOutcome(extendTo(fromBoundary, EntityEnd::End,
+                           place({2.999999999999999, 4}, 0, Location::AfterEnd)),
+                  PartOutcome::NotRepresentable);
+    expectOutcome(extendTo(toBoundary, EntityEnd::Start,
+                           place({3.000000000000001, 4}, 0, Location::AfterEnd)),
+                  PartOutcome::NotRepresentable);
+    for (const double sign : {1.0, -1.0}) {
+        const Polyline polyline{{{{-3, -4 * sign}, sign}, {{3, 4 * sign}}}};
+        expectOutcome(extendTo(polyline, EntityEnd::End,
+                               place({-2.999999999999999, -4 * sign}, 0, Location::AfterEnd)),
+                      PartOutcome::NotRepresentable);
+        expectOutcome(extendTo(polyline, EntityEnd::Start,
+                               place({3.000000000000001, 4 * sign}, 0, Location::AfterEnd)),
+                      PartOutcome::NotRepresentable);
+    }
 }
 
 TEST(CurveParts, ExtendsPastPointSegmentsAndPreservesAllTheirOtherData) {

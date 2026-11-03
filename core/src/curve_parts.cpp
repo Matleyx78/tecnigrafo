@@ -33,7 +33,7 @@ PartResult collapsedArc(PartCourse course) {
 }
 
 PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
-                   const std::optional<CurvePoint>& to, PartCourse course) {
+                   const std::optional<CurvePoint>& to, PartCourse course, bool circle = false) {
     Arc result = arc;
     if (from) {
         result.startAngle = angleOf(from->point, arc.center);
@@ -43,7 +43,12 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
     }
     // Equality here tests the representation, not whether the exact places
     // coincide: only the caller can decide that, with PartCourse (#359).
-    if (result.startAngle == result.endAngle) {
+    bool inverted = result.geometry().sweep > arc.geometry().sweep;
+    if (circle) {
+        inverted = course == PartCourse::Direct ? result.startAngle > result.endAngle
+                                               : result.startAngle < result.endAngle;
+    }
+    if (result.startAngle == result.endAngle || inverted) {
         return collapsedArc(course);
     }
     return done(result);
@@ -67,9 +72,8 @@ Boundary boundaryOf(const Polyline& polyline, const CurvePoint& place) {
     std::size_t index = place.position.segment;
     if (place.position.location == Location::AtEnd) {
         ++index;
-        if (polyline.isClosed()) {
-            index %= polyline.segmentCount();
-        }
+        // Vertices belong to the following segment, except the open end.
+        assert(!polyline.isClosed() && index == polyline.segmentCount());
     }
     return {index, place.position.location == Location::Inside};
 }
@@ -89,8 +93,9 @@ double fractionAt(const PolylineSegment& segment, const CurvePoint& place) {
 }
 
 // Rebuild a cut segment on its original circle, with the original direction.
-// Equal rounded ends/angles describe the short, zero-sweep part (B1).
-double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& to) {
+// Equal or inverted rounded angles describe the short, zero-sweep part (B1).
+double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& to,
+                bool extending = false) {
     if (!original.isArc() || from == to) {
         return 0.0;
     }
@@ -99,6 +104,12 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
     const double end = angleOf(to, arc.center);
     const double sweep =
         original.bulge > 0.0 ? normalizeAngle(end - start) : -normalizeAngle(start - end);
+    // These exact comparisons concern the computed representation only.
+    // The caller already knows whether the exact part cuts or extends it.
+    if (extending ? std::abs(sweep) < std::abs(arc.sweep)
+                  : std::abs(sweep) > std::abs(arc.sweep)) {
+        return 0.0;
+    }
     return std::tan(sweep / 4.0);
 }
 
@@ -135,7 +146,7 @@ PartResult polylinePart(const Polyline& polyline, const std::optional<CurvePoint
         const PolylineSegment segment = polyline.segment(originalIndex);
         const bool cutStart = index == first.index && first.inside;
         const bool cutEnd = index == endIndex && last.inside;
-        PolylineVertex next = vertexAt(cutEnd ? index : index + 1);
+        PolylineVertex next = vertexAt(index + 1);
         if (to && (cutEnd || index + 1 == segmentEnd)) {
             next.position = to->point;
         }
@@ -173,7 +184,10 @@ PartResult extendPolyline(const Polyline& polyline, EntityEnd end, const CurvePo
         if (first == last || firstAngle == lastAngle) {
             return {PartOutcome::NotRepresentable, std::nullopt};
         }
-        bulge = cutBulge(segment, first, last);
+        bulge = cutBulge(segment, first, last, true);
+        if (bulge == 0.0) {
+            return {PartOutcome::NotRepresentable, std::nullopt};
+        }
     }
     std::vector<PolylineVertex> vertices{polyline.vertices().begin(), polyline.vertices().end()};
     // The caller's exact position identifies the first/last non-point
@@ -218,7 +232,7 @@ PartResult partOf(const Entity& entity, const std::optional<CurvePoint>& from,
     }
     if (const auto* circle = std::get_if<Circle>(&entity)) {
         assert(from && to);
-        return arcPart(Arc{circle->center, circle->radius, 0.0, 0.0}, from, to, course);
+        return arcPart(Arc{circle->center, circle->radius, 0.0, 0.0}, from, to, course, true);
     }
     return polylinePart(std::get<Polyline>(entity), from, to, course);
 }
@@ -231,13 +245,17 @@ PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to) {
     }
     if (const auto* arc = std::get_if<Arc>(&entity)) {
         assert(to.position.location == Location::AfterEnd);
-        const std::optional<CurvePoint> place{to};
-        PartResult result = arcPart(*arc, start ? place : std::nullopt,
-                                    start ? std::nullopt : place, PartCourse::Direct);
-        if (result.outcome == PartOutcome::Empty) {
-            result.outcome = PartOutcome::NotRepresentable;
+        Arc result = *arc;
+        if (start) {
+            result.startAngle = angleOf(to.point, arc->center);
+        } else {
+            result.endAngle = angleOf(to.point, arc->center);
         }
-        return result;
+        if (result.startAngle == result.endAngle ||
+            result.geometry().sweep < arc->geometry().sweep) {
+            return {PartOutcome::NotRepresentable, std::nullopt};
+        }
+        return done(result);
     }
     assert(std::holds_alternative<Polyline>(entity));
     const auto& polyline = std::get<Polyline>(entity);

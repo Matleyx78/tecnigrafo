@@ -46,23 +46,34 @@ struct PartResult {
 /// - Polyline: the vertices between the two places, with the cut segments
 ///   ending at the given points; a closed polyline becomes open, running from
 ///   `from` to `to`, across its vertex 0 with AcrossStart (both required).
-/// The new end points of a line and the new vertices of a polyline are the
-/// given points, exactly. New arc angles come from solid_space::robust::atan2
+/// Every supplied boundary point replaces the endpoint or vertex exactly,
+/// including AtStart/AtEnd at an existing vertex. Supplied arc endpoints are
+/// also rebuilt, even at AtStart/AtEnd; omitted endpoints keep their angles.
+/// New arc angles come from solid_space::robust::atan2
 /// of (point - centre), brought into [0, 2π) with normalizeAngle: the ends of
 /// an arc lie within the error, not exactly on the given points. A cut
 /// polyline arc gets the bulge of its new included angle; the widths of a cut
-/// polyline segment are interpolated by length (docs/adr/0031, point 9).
+/// polyline segment are interpolated by length (docs/adr/0031, point 9), with
+/// stations measured from its start in either direction. An interior end cut
+/// copies the following original vertex's bulge and widths to the final,
+/// non-drawing vertex, replacing only its position.
 /// Every other property of the entity stays.
 /// Empty with SamePlace, and when the part is a single arc (an Arc, a part of
 /// a Circle, or a part of a polyline within one curved segment) whose two
 /// angles, or two vertices, come out equal while the exact part is the short
 /// one (Direct, on one segment); NotRepresentable when they come out equal
 /// and the exact part is the long one (AcrossStart): it never becomes a
-/// circle.
+/// circle. Inverted computed angles follow the same rule, with exact
+/// comparisons and no tolerance: for an Arc or a curved segment, a cut sweep
+/// larger than the original; for a Circle, start > end with Direct or start
+/// < end with AcrossStart. Within several polyline segments a collapsed or
+/// inverted cut arc has bulge 0 and retains its supplied boundary points.
 /// Precondition: not a Text; no place is BeforeStart or AfterEnd (extendTo
 /// takes those); with Direct, `from` does not come after `to` in the order of
 /// cutsAlong; AcrossStart only for a circle or a closed polyline, with `to`
-/// not after `from`.
+/// not after `from`. A polyline vertex is AtStart of the following segment
+/// (vertex 0 is segment 0, also on a closed polyline); only the final vertex
+/// of an open polyline is AtEnd of its last segment.
 [[nodiscard]] PartResult partOf(const Entity& entity, const std::optional<CurvePoint>& from,
                                 const std::optional<CurvePoint>& to, PartCourse course);
 
@@ -81,7 +92,9 @@ enum class EntityEnd : std::uint8_t { Start, End };
 /// The new point of a line and of a polyline is `to`, exactly; a new arc
 /// angle comes as in partOf. NotRepresentable when the new angle of an arc,
 /// or the new vertex of a curved polyline segment, comes out equal to the
-/// other end of that arc or segment: the arc would close into a circle.
+/// other end of that arc or segment, or passes it: the computed directed
+/// sweep is smaller than the original, compared exactly without tolerance.
+/// The exact extension would close into a circle.
 /// Precondition: a Line, an Arc or an open Polyline; `to` is on the segment
 /// above, BeforeStart or AfterEnd as said.
 [[nodiscard]] PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to);

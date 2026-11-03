@@ -13,7 +13,8 @@
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B1–B3 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-03,
   operazione snellimento (#478): rimanda a `intersection.hpp` invece di
-  ripeterlo
+  ripeterlo; revisione della #487: inversione degli angoli (A:a) e
+  identificativo delle intersezioni (B:a), decise dal responsabile
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
   punti 3, 5 e 6; [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
@@ -53,7 +54,9 @@ In `findSnap`, con `modes.intersection`:
   priorità dell'ADR 0033, punto 5; i tratti in comune non danno punti (i loro
   estremi sono già estremi delle entità);
 - un punto in cui si incontrano più coppie è uno solo: tra i candidati alla
-  stessa distanza vale l'ordine di `findSnap`, e la facciata non deve dare due
+  stessa distanza vale l'ordine di `findSnap`: il punto di una coppia porta
+  il maggiore dei due identificativi, un'autointersezione quello della
+  polilinea; e la facciata non deve dare due
   volte lo stesso punto per la stessa coppia.
 
 Prestazioni: al più qualche decina di entità vicine al puntatore. Il test di
@@ -104,23 +107,34 @@ struct PartResult {
 /// - Polyline: the vertices between the two places, with the cut segments
 ///   ending at the given points; a closed polyline becomes open, running from
 ///   `from` to `to`, across its vertex 0 with AcrossStart (both required).
-/// The new end points of a line and the new vertices of a polyline are the
-/// given points, exactly. New arc angles come from solid_space::robust::atan2
+/// Every supplied boundary point replaces the endpoint or vertex exactly,
+/// including AtStart/AtEnd at an existing vertex. Supplied arc endpoints are
+/// also rebuilt, even at AtStart/AtEnd; omitted endpoints keep their angles.
+/// New arc angles come from solid_space::robust::atan2
 /// of (point - centre), brought into [0, 2π) with normalizeAngle: the ends of
 /// an arc lie within the error, not exactly on the given points. A cut
 /// polyline arc gets the bulge of its new included angle; the widths of a cut
-/// polyline segment are interpolated by length (docs/adr/0031, point 9).
+/// polyline segment are interpolated by length (docs/adr/0031, point 9), with
+/// stations measured from its start in either direction. An interior end cut
+/// copies the following original vertex's bulge and widths to the final,
+/// non-drawing vertex, replacing only its position.
 /// Every other property of the entity stays.
 /// Empty with SamePlace, and when the part is a single arc (an Arc, a part of
 /// a Circle, or a part of a polyline within one curved segment) whose two
 /// angles, or two vertices, come out equal while the exact part is the short
 /// one (Direct, on one segment); NotRepresentable when they come out equal
 /// and the exact part is the long one (AcrossStart): it never becomes a
-/// circle.
+/// circle. Inverted computed angles follow the same rule, with exact
+/// comparisons and no tolerance: for an Arc or a curved segment, a cut sweep
+/// larger than the original; for a Circle, start > end with Direct or start
+/// < end with AcrossStart. Within several polyline segments a collapsed or
+/// inverted cut arc has bulge 0 and retains its supplied boundary points.
 /// Precondition: not a Text; no place is BeforeStart or AfterEnd (extendTo
 /// takes those); with Direct, `from` does not come after `to` in the order of
 /// cutsAlong; AcrossStart only for a circle or a closed polyline, with `to`
-/// not after `from`.
+/// not after `from`. A polyline vertex is AtStart of the following segment
+/// (vertex 0 is segment 0, also on a closed polyline); only the final vertex
+/// of an open polyline is AtEnd of its last segment.
 [[nodiscard]] PartResult partOf(const Entity& entity, const std::optional<CurvePoint>& from,
                                 const std::optional<CurvePoint>& to, PartCourse course);
 
@@ -139,10 +153,13 @@ enum class EntityEnd : std::uint8_t { Start, End };
 /// The new point of a line and of a polyline is `to`, exactly; a new arc
 /// angle comes as in partOf. NotRepresentable when the new angle of an arc,
 /// or the new vertex of a curved polyline segment, comes out equal to the
-/// other end of that arc or segment: the arc would close into a circle.
+/// other end of that arc or segment, or passes it: the computed directed
+/// sweep is smaller than the original, compared exactly without tolerance.
+/// The exact extension would close into a circle.
 /// Precondition: a Line, an Arc or an open Polyline; `to` is on the segment
 /// above, BeforeStart or AfterEnd as said.
 [[nodiscard]] PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to);
+
 ```
 
 - **Lo stesso posto e il giro** li decide il chiamante, che li ha esatti
@@ -153,11 +170,18 @@ enum class EntityEnd : std::uint8_t { Start, End };
   solid-space: identità e ordine esatti li dà già il contratto
   (`intersection.hpp`, in testa, e `HostIntersections`).
 - **Archi** (B1): l'estremo nuovo di un arco sta entro l'errore, non sul
-  punto ricevuto; quando i due angoli coincidono decide `course`, mai le
-  stazioni. La regola è di Tecnigrafo: solid-space ha le sue per la curva
+  punto ricevuto; quando i due angoli coincidono o si invertono decide `course`, mai le
+  stazioni. L'inversione si riconosce con confronti esatti sugli angoli
+  calcolati, senza tolleranza: ampiezza della parte maggiore dell'originale
+  per un arco o segmento curvo; inizio dopo la fine con `Direct`, prima con
+  `AcrossStart` per un cerchio. Il corto dà `Empty`, il lungo
+  `NotRepresentable`. In `extendTo`, il nuovo angolo che oltrepassa l'altro
+  estremo (ampiezza diretta minore dell'originale) dà `NotRepresentable`,
+  all'inizio e alla fine e nei due versi dei segmenti curvi (A:a, #487). La regola è di Tecnigrafo: solid-space ha le sue per la curva
   parallela (`offset.hpp`), che qui non valgono. In una parte di polilinea di
   più segmenti un
-  segmento curvo tagliato con i due vertici uguali è il pezzo corto: ampiezza
+  segmento curvo tagliato con i due vertici uguali o gli angoli invertiti è
+  il pezzo corto: ampiezza
   0, bulge 0, un segmento esattamente puntiforme, che `TRIM` giudica con la
   regola dei pezzi degeneri (P16).
 - **Nei comandi** `Empty` vuol dire che quel pezzo non resta;
@@ -198,6 +222,26 @@ enum class EntityEnd : std::uint8_t { Start, End };
   270°→90°); arco che si chiuderebbe (`NotRepresentable`); polilinea aperta
   prolungata al primo e all'ultimo segmento, anche curvi, e con un segmento
   puntiforme all'estremo (l'esempio di B3).
+
+- Revisione #487, A:a: `Arc{{0,0},5,0,π/2}`, da (3,4) a
+  (3.000000000000001,4), entrambi `Inside`, `Direct`: `Empty`;
+  `Polyline` da (−5,0) a (5,0), bulge 1, da (0,−5) a
+  (−1e−15,−5), entrambi `Inside` del segmento 0, `Direct`: `Empty`.
+  Ripetere con bulge negativo, arco attraverso 0, cerchio `Direct` corto
+  (`Empty`) e `AcrossStart` lungo (`NotRepresentable`), e prolungamenti
+  invertiti ai due estremi (`NotRepresentable`), anche di segmenti curvi nei
+  due versi. In una parte con più segmenti l'arco invertito conserva i punti
+  e prende bulge 0.
+- Revisione #487, B:a: linea 1 da (−10,0) a (10,0), linea 2 a x=−1,
+  linea 3 a x=1, puntatore (0,0), apertura 1, solo intersezione: vince
+  (1,0), identificativo della coppia {1,3} pari a 3.
+- Scelte non bloccanti #487: punti ricevuti diversi di qualche ulp dai
+  vertici `AtStart`/`AtEnd` sostituiscono le coordinate; anche gli estremi
+  espliciti di un arco ricalcolano l'angolo. Il vertice finale di un taglio
+  interno prende bulge e larghezze da `vertexAt(index + 1)`. Vertice 0 di
+  una chiusa rappresentato come `AtStart` del segmento 0, in entrambi i
+  percorsi. Larghezze di un arco orario tagliato fuori dal medio:
+  stazione dall'inizio del segmento, non dalla fine.
 
 ## Fatto quando
 

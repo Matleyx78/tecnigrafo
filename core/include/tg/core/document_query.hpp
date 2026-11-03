@@ -58,7 +58,9 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 ///
 /// Intersections come from pairs of visible curves within the aperture and
 /// from self-intersections of each such polyline, without extensions. Shared
-/// stretches offer no intersection points (docs/adr/0033, point 3).
+/// stretches offer no intersection points (docs/adr/0033, point 3). A pair's
+/// intersection carries its higher entity id; a self-intersection carries
+/// the polyline id. These ids decide equal-distance, equal-rank ties.
 ///
 /// `from` is the base point of the running command (Command::basePoint()):
 /// the Perpendicular points start from it, and without it there are none. A

@@ -804,3 +804,21 @@ i rimandi ai documenti che cambia.
   Cambia [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, punti 3 e 7;
   B10a, passo 4; B12), che nella stessa pull request si allinea anche alle
   decisioni dei passi 3 e 4. Nessun ADR cambia.
+
+- **2026-11-03 — Revisione P15: angoli invertiti e identificativo dello snap.**
+  Il responsabile decide A:a e B:a nella
+  [#487](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6609308810).
+  In [P15](tappe/0.7/P15-snap-intersezione.md) l'inversione si tratta come
+  l'uguaglianza di B1, con confronti esatti sugli angoli calcolati, senza
+  tolleranza: ampiezza della parte maggiore dell'originale per un arco o un
+  segmento curvo; inizio dopo la fine con `Direct`, prima con `AcrossStart`
+  per un cerchio. `Empty` per il pezzo esatto corto, `NotRepresentable` per
+  il lungo. In una parte di polilinea con più segmenti, il tratto curvo
+  invertito prende bulge 0 conservando i punti ricevuti. In `extendTo` il
+  nuovo angolo che oltrepassa l'altro estremo dà `NotRepresentable`
+  (ampiezza diretta minore dell'originale), a inizio e fine, nei due versi
+  dei segmenti curvi. I due esempi della revisione entrano nei test della
+  scheda, insieme ai casi opposti. Per `findSnap`, il punto di una coppia
+  porta il maggiore dei due identificativi; un'autointersezione porta
+  quello della polilinea. Cambiano scheda P15, commenti delle interfacce,
+  implementazione e test nella stessa PR; nessun ADR o riferimento cambia.
