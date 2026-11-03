@@ -69,6 +69,7 @@ OFFSET
 460,0
 480,10
 
+; ADR 0036 punto 4: G circa 1e6, errore dichiarato circa 1.4e-8, vale per tutto lo script
 !tolerance absolute 2e-8
 OFFSET
 10

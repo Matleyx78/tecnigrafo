@@ -25,6 +25,7 @@ P_RECT = LWPOLYLINE closed=yes vertex=150,-25 vertex=250,-25 vertex=250,25 verte
 ; parallela-polilinea-autocad-caso-h-rettangolo-1e6-dentro.json
 ; rettangolo traslato a (1e6, 1e6) con d=10 verso l'interno
 P_1E6 = LWPOLYLINE closed=yes vertex=1000150,999975 vertex=1000250,999975 vertex=1000250,1000025 vertex=1000150,1000025
+; ADR 0036 punto 4: G circa 1e6, errore dichiarato circa 1.4e-8
 !tolerance absolute 2e-8
 ? offset P_1E6 10 1000200,1000000 -> LWPOLYLINE closed=yes vertex=1000160,999985 vertex=1000240,999985 vertex=1000240,1000015 vertex=1000160,1000015
 !tolerance absolute 1e-9
