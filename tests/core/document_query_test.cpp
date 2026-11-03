@@ -404,11 +404,12 @@ TEST(IntersectionSnap, IgnoresOffAndFrozenLayersButIncludesLockedLayers) {
     Document document = Document::newDrawing();
     document.add(Line{{-10, 0}, {10, 0}});
     Layer layer = *document.layer(document.layerZero());
+    layer.id = {};
     layer.name = "Crossing";
     const auto layerId = document.addLayer(layer);
-    EntityProperties properties;
-    properties.layer = layerId;
     const auto crossing = document.add(Line{{0, -10}, {0, 10}});
+    auto properties = document.find(crossing)->properties;
+    properties.layer = layerId;
     document.setProperties(crossing, properties);
     for (const bool on : {false, true}) {
         for (const bool frozen : {false, true}) {
