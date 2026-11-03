@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import base64
 import io
+import re
 import sys
 import tempfile
 import unittest
@@ -256,6 +257,17 @@ class PlanTable(unittest.TestCase):
         with self.assertRaisesRegex(d.Failure, r"line 9: P1 depends on P2, which is not earlier"):
             d.parse_plan(tg_plan([tg_row("P1", 10, "P2"), tg_row("P2", 12, "—")]), "piano.md", TG)
 
+    def test_letter_after_the_number(self):
+        # A block of references split in two (R17b, #481), as a row and as a dependency.
+        plan = d.parse_plan(tg_plan([tg_row("R17", 10, "—", "gemini"), tg_row("R17b", 11, "#9", "gemini"),
+                                     tg_row("P17", 12, "R17, R17b")]), "piano.md", TG)
+        self.assertEqual([r.id for r in plan.rows], ["R17", "R17b", "P17"])
+        self.assertEqual(plan.row("P17").deps, ["R17", "R17b"])
+        self.assertEqual(d.dep_ref("R17b", plan, TG), d.Ref(TG, 11))
+        with self.assertRaisesRegex(d.Failure, r"P17 depends on R17b, which is not earlier"):
+            d.parse_plan(tg_plan([tg_row("P17", 12, "R17b"), tg_row("R17b", 11, "—", "gemini")]),
+                         "piano.md", TG)
+
     def test_missing_table(self):
         with self.assertRaisesRegex(d.Failure, "no package table in section 6"):
             d.parse_plan("# Tappa 0.7 — x\n\n## 6. Pacchetti\n\nNiente.\n", "piano.md", TG)
@@ -268,6 +280,24 @@ class PlanTable(unittest.TestCase):
                            "piano.md", TG)
         self.assertEqual([q.closes_with for q in old.requests], [None] * 4)
         self.assertIn("check 6 skipped", old.notes[0])
+
+
+class RealPlan(unittest.TestCase):
+    """The plan of the open stage, as it is in the repository: a change to the
+    plan that the tools cannot read shows up here, not when the maintainer runs
+    them."""
+
+    def test_open_stage_plan_parses(self):
+        root = Path(__file__).resolve().parent.parent
+        roadmap = (root / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        found = re.findall(r"^\|[^\n]*\|\s*\*\*aperta\*\*\s*\|\s*\[[^]]*\]\((tappe/[^)]+\.md)\)",
+                           roadmap, re.M)
+        if not found:
+            self.skipTest("no open stage in docs/ROADMAP.md")
+        for rel in found:
+            path = root / "docs" / rel
+            plan = d.parse_plan(path.read_text(encoding="utf-8"), str(path), TG)
+            self.assertTrue(plan.rows, rel)
 
 
 class Unblocks(unittest.TestCase):

@@ -181,8 +181,8 @@ def heading_index(lines: list[str], pattern: str) -> int | None:
 
 PLAN_COLUMNS = ["Pacchetto", "Scheda", "Issue", "Dipende da", "Riferimenti", "Difficoltà",
                 "Agente", "Modello", "Impegno"]
-TG_ID_RE = re.compile(r"^([PR][0-9]+)\s+(.+)$")
-DEP_RE = re.compile(r"^(?:[PR][0-9]+|#[0-9]+|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+)$")
+TG_ID_RE = re.compile(r"^([PR][0-9]+[a-z]?)\s+(.+)$")
+DEP_RE = re.compile(r"^(?:[PR][0-9]+[a-z]?|#[0-9]+|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+)$")
 
 
 @dataclass
@@ -251,7 +251,7 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
         im = re.match(r"^#([0-9]+)$", c["Issue"])
         deps = split_deps(c["Dipende da"])
         for dep in deps:
-            if re.match(r"^[PR][0-9]+$", dep):
+            if re.match(r"^[PR][0-9]+[a-z]?$", dep):
                 if dep not in seen:
                     problems.append(f"line {line}: {id_} depends on {dep}, which is not earlier in the table")
             elif not DEP_RE.match(dep):
@@ -283,7 +283,7 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
                 raise Failure(f"{path}:{line}: no issue in the cell \"Richiesta\"")
             closes = None
             if has_closing:
-                closes = re.findall(r"\b[PR][0-9]+\b", c["Si chiude con"])
+                closes = re.findall(r"\b[PR][0-9]+[a-z]?\b", c["Si chiude con"])
                 for id_ in closes:
                     if plan.row(id_) is None:
                         raise Failure(f"{path}:{line}: \"Si chiude con\" names {id_}, not in the package table")
@@ -293,7 +293,7 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
 
 def dep_ref(dep: str, plan: Plan, home: str) -> Ref | None:
     """The issue of a dependency of the plan; None for a row without issue."""
-    if re.match(r"^[PR][0-9]+$", dep):
+    if re.match(r"^[PR][0-9]+[a-z]?$", dep):
         row = plan.row(dep)
         return Ref(home, row.issue) if row and row.issue else None
     if dep.startswith("#"):
@@ -679,7 +679,7 @@ def dep_text(dep: str, ctx: Context) -> str:
     """A dependency as the issue text shows it: "#12 (P3)", or for another
     repository "owner/repo#49 (0.2-P8)" with the tag of the issue's title."""
     ref = dep_ref(dep, ctx.plan, ctx.home)
-    if re.match(r"^[PR][0-9]+$", dep):
+    if re.match(r"^[PR][0-9]+[a-z]?$", dep):
         return f"#{ref.number} ({dep})"
     if ref.repo.lower() == ctx.home.lower():
         return f"#{ref.number}"
@@ -710,7 +710,7 @@ def propose(ctx: Context) -> dict[str, list[str]]:
     def covered(deps: list[str]) -> set[str]:
         out: set[str] = set()
         for dep in deps:
-            if re.match(r"^[PR][0-9]+$", dep):
+            if re.match(r"^[PR][0-9]+[a-z]?$", dep):
                 out |= covered(effective.get(dep, []))
             elif (i := ss_id(dep)):
                 out |= ss.closure([i])
