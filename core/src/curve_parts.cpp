@@ -3,9 +3,8 @@
 
 #include "tg/core/curve_parts.hpp"
 
-#include "tg/core/math.hpp"
-
 #include "solid_space/robust/trigonometry.hpp"
+#include "tg/core/math.hpp"
 
 #include <array>
 #include <cassert>
@@ -80,8 +79,8 @@ AngularPart correctAngles(double first, double last, double originalStart, doubl
         const double correction = angularDistance(first, from) + angularDistance(last, to);
         // Exact comparisons of computed values, no geometric tolerance. Prefer
         // the original start, then the beginning of the retained part on ties.
-        const bool preferStart = before(from, bestFirst) ||
-                                 (from == bestFirst && before(to, bestLast));
+        const bool sameStart = from == bestFirst && before(to, bestLast);
+        const bool preferStart = before(from, bestFirst) || sameStart;
         if (correction < cost || (correction == cost && preferStart)) {
             best = {from, to};
             cost = correction;
@@ -185,8 +184,9 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
     const double originalEnd = normalizeAngle(arc.startAngle + arc.sweep);
     const auto corrected = correctAngles(angleOf(from, arc.center), angleOf(to, arc.center),
                                          originalStart, originalEnd, arc.sweep);
-    const double sweep = original.bulge > 0.0 ? normalizeAngle(corrected.last - corrected.first)
-                                             : -normalizeAngle(corrected.first - corrected.last);
+    const double forward = normalizeAngle(corrected.last - corrected.first);
+    const double backward = normalizeAngle(corrected.first - corrected.last);
+    const double sweep = original.bulge > 0.0 ? forward : -backward;
     return std::tan(sweep / 4.0);
 }
 

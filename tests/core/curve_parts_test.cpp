@@ -152,7 +152,8 @@ TEST(CurveParts, MinimumCorrectionPrefersTheOriginalStartOnAnExactTie) {
     constexpr double kUnit = 0x1p-50;
     const Arc almostClosed{{0, 0}, 5, 0, kTwoPi - 2 * kUnit};
     const auto middle = place({5, -5 * kUnit});
-    expectOutcome(partOf(almostClosed, std::nullopt, middle, PartCourse::Direct), PartOutcome::Empty);
+    const auto removed = partOf(almostClosed, std::nullopt, middle, PartCourse::Direct);
+    expectOutcome(removed, PartOutcome::Empty);
     const auto kept = partOf(almostClosed, middle, std::nullopt, PartCourse::Direct);
     ASSERT_TRUE(kept.entity);
     EXPECT_EQ(std::get<Arc>(*kept.entity), almostClosed);
