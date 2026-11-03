@@ -276,6 +276,7 @@ Prima dei pacchetti indicati, una prova a mano:
    | `CHAMFER` | `<n> lines were chamfered`, `<m> were too short` | osservato: «1 linea cimata(e)» |
    | `CHAMFER` | `(TRIM mode) Current chamfer Dist1 = <d1>, Dist2 = <d2>` e `(NOTRIM mode) …` | osservato: «(TRIMMODE 0 - Nontaglia) …» |
    | `TRIM` | `Object does not intersect an edge.` | scritto da noi |
+   | `TRIM`, `EXTEND` | `Cannot trim that object.` e `Cannot extend that object.` (operazione non riuscita: nessun taglio con dati rifiutati da solid-space, o un pezzo non rappresentabile; ADR 0035, punto 23) | scritto da noi (P16) |
    | `OFFSET` | `Cannot offset that object.` | scritto da noi |
    | `FILLET` | `Cannot fillet those objects.` (`None`, `InfinitelyMany`, `NotAllowed`) | scritto da noi |
    | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |

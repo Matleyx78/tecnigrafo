@@ -70,6 +70,9 @@ struct CommandDefaults {
     /// POLARANG, the increment of polar tracking, radians: 90 degrees at
     /// start-up (docs/adr/0033, point 8).
     double polarAngle{core::kPi / 2.0};
+    /// TRIMEXTENDMODE: 1 (quick) at start-up, or 0 (standard); the mode
+    /// TRIM and EXTEND start in (docs/adr/0035, point 3).
+    int trimExtendMode{1};
 };
 
 /// What a command works with. The runner keeps one context for its whole
