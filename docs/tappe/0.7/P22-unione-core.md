@@ -27,7 +27,9 @@
   decisione della Matleyx78/solid-space#158 e alla
   Matleyx78/solid-space#159, e la fascia di B13 all'ADR 0013 di solid-space;
   2026-11-03, con la decisione del responsabile su B13: gli estremi degli archi
-  vengono da `endpoints()` di solid-space (DECISIONI.md, 2026-11-03);
+  vengono da `endpoints()` di solid-space (DECISIONI.md, 2026-11-03), e la
+  fascia comprende gli errori di tutti e due gli estremi (revisione della #480,
+  R480-2);
   2026-11-03, con il responsabile: che cosa fa `JOIN` con una diagnosi di
   `endpoints()`, per l'ADR 0035, punto 23
 - **Modulo:** `core` (più la domanda `join` in `script`)
@@ -120,9 +122,11 @@ struct JoinResult {
   `curves.hpp` di solid-space, sulla curva della traduzione di P14
   (`bridge::curveOf`), come chiede il suo commento: non su un coseno e un seno
   di Tecnigrafo (decisione del responsabile, 2026-11-03). Gli estremi di linee
-  e polilinee sono i loro dati. Quando la distanza esatta fra due estremi sta
-  entro l'errore di `endpoints()` dal confine della tolleranza, l'esito è
-  libero: è una fascia, come la definisce l'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
+  e polilinee sono i loro dati. L'esito è libero dove due scelte lecite degli
+  estremi costruiti, ciascuno entro il suo errore (`kRelativePointError` di
+  `curves.hpp`, sulla sua grandezza), danno coincidenze diverse; fra due archi
+  contano gli errori di tutti e due gli estremi, fra un arco e una linea solo
+  quello dell'arco. È una fascia, come la definisce l'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
   (punto 4) e il punto 10 di [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
   e i riferimenti R22 e R23 non mettono casi in quella fascia. Nessun obbligo
   di estremi arrotondati correttamente e nessuna richiesta a solid-space.
