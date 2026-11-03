@@ -785,3 +785,22 @@ i rimandi ai documenti che cambia.
 
   Cambiano [AGENTS.md](../AGENTS.md), `GEMINI.md` e i nuovi file di
   [agenti/](agenti/). `CLAUDE.md` non cambia; nessun ADR cambia.
+- **2026-11-03 — Operazione snellimento: revisioni, aggiornamenti, regole di
+  metodo.** A fine congelamento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478)) il responsabile
+  decide, nella chat di coordinamento dell'operazione, tre regole di metodo:
+  - **Il secondo giro di una revisione guarda solo il commit di correzione.**
+    Se la correzione rimette un testo di `main` o fa esattamente ciò che il
+    revisore ha chiesto, basta il controllo del responsabile, senza un altro
+    giro.
+  - **Una pull request si aggiorna su `main` con un merge.** Sempre «Update
+    with merge commit» (o `gh pr update-branch <numero>`), mai il rebase.
+  - **Le regole di metodo cambiano solo alla chiusura della tappa**, salvo un
+    vero blocco: un lavoro che non può andare avanti con le regole attuali, e
+    lo stabilisce il responsabile. Le proposte si raccolgono durante la tappa
+    in una issue per tappa, «[X.Y] Proposte di metodo», con l'etichetta
+    `proposta`, e si decidono nella pull request di chiusura.
+
+  Cambia [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, punti 3 e 7;
+  B10a, passo 4; B12), che nella stessa pull request si allinea anche alle
+  decisioni dei passi 3 e 4. Nessun ADR cambia.

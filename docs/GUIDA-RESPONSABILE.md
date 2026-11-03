@@ -3,7 +3,8 @@
 Questa guida è per il responsabile del progetto. Dice **cosa fare, in che
 ordine, e cosa scrivere agli agenti**, senza dover ricordare le regole. Le regole
 complete sono in [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
-[ROADMAP.md](ROADMAP.md) e nell'[ADR 0011](adr/0011-modalita-di-controllo.md).
+[ROADMAP.md](ROADMAP.md), nell'[ADR 0011](adr/0011-modalita-di-controllo.md),
+nel nucleo di [AGENTS.md](../AGENTS.md) e in [agenti/](agenti/).
 
 È l'**unica guida del responsabile per i due progetti**: Tecnigrafo e il suo
 kernel, [solid-space](https://github.com/Matleyx78/solid-space). La guida di
@@ -112,11 +113,11 @@ Vale per **ogni** pull request, nei due repository.
 1. Apri la pull request su GitHub. In basso tutti i controlli devono essere
    verdi.
 2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
-3. In solid-space, se la descrizione comincia con **Revisione del contratto: da
-   fare**, la pull request cambia un'intestazione del contratto già accettata:
-   uniscila solo dopo il commento **Verbale della revisione del contratto**, di
-   un agente diverso da chi l'ha scritta (di norma Codex; Claude se l'ha
-   scritta Codex). Se manca, avvia la revisione:
+3. **Revisione prima del merge.** In solid-space, se la descrizione comincia con
+   **Revisione del contratto: da fare**, la pull request cambia un'intestazione
+   del contratto già accettata: uniscila solo dopo il commento **Verbale della
+   revisione del contratto**, di un agente diverso da chi l'ha scritta (di
+   norma Codex; Claude se l'ha scritta Codex). Se manca, avvia la revisione:
 
    ```text
    Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
@@ -128,13 +129,24 @@ Vale per **ogni** pull request, nei due repository.
    contratto e non scrivere in Tecnigrafo. Poi fermati.
    ```
 
-   Se il verbale apre buchi nuovi, decidili prima del merge: la decisione entra
-   nella stessa pull request, che si rivede di nuovo sulle sole funzioni
-   toccate.
    In Tecnigrafo vale lo stesso per **Revisione della correzione: da fare**
-   (una pull request che applica le tue decisioni sui buchi delle schede):
-   uniscila solo dopo il commento **Verbale della revisione della correzione**
-   (B10a, passo 4).
+   (una pull request che applica le tue decisioni sui buchi delle schede), con
+   il **Verbale della revisione della correzione** (B10a, passo 4).
+
+   Il verbale blocca il merge solo per due cose:
+   - un **buco visibile**, secondo la regola dei buchi visibili
+     ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+     punto 3; in Tecnigrafo [agenti/pacchetto.md](agenti/pacchetto.md),
+     "Buchi visibili e no"): lo decidi tu, e la decisione entra nella stessa
+     pull request;
+   - una **regola persa o cambiata** senza una tua decisione.
+
+   Una fascia al confine di una soglia o un buco non visibile li sistema
+   l'autore nella stessa pull request, senza una tua decisione
+   ([agenti/revisione.md](agenti/revisione.md)). Il secondo giro guarda solo il
+   commit di correzione; se la correzione rimette un testo di `main` o fa
+   esattamente ciò che il revisore ha chiesto, basta il tuo controllo, senza un
+   altro giro ([DECISIONI.md](DECISIONI.md), 2026-11-03).
 4. Premi **Squash and merge**.
 5. Nel messaggio che compare, controlla che l'ultima riga sia:
 
@@ -144,8 +156,12 @@ Vale per **ogni** pull request, nei due repository.
 
    Se manca, aggiungila tu.
 6. Premi **Confirm squash and merge**.
-7. Se ci sono altre pull request aperte nello stesso repository, su ognuna premi
-   **Update branch**.
+7. Se ci sono altre pull request aperte nello stesso repository, aggiornale con
+   `main`: su ognuna premi **Update branch** e scegli sempre **Update with merge
+   commit**, mai il rebase ([DECISIONI.md](DECISIONI.md), 2026-11-03). Il
+   pulsante si vede con l'impostazione del repository **Always suggest updating
+   pull request branches**. In alternativa, nel terminale:
+   `gh pr update-branch <numero>`.
 
 Quando unisci il pacchetto di una tappa, guarda anche B11.
 
@@ -397,16 +413,20 @@ anche nei pacchetti rimasti della tappa 0.2 (Tecnigrafo 0.7).
    Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
    lettera. Prendi la issue [<tappa>-C] #<numero>, assegnata a te, e segui
    docs/CONTRATTI.md: controlla ogni funzione con la lista fissa, apri una issue
-   contratto per ogni buco e scrivi il verbale nella issue della revisione.
-   Non decidere il contratto e non scrivere in Tecnigrafo. Poi fermati.
+   contratto per ogni buco visibile, annota nel verbale quelli non visibili e
+   scrivi il verbale nella issue della revisione. Non decidere il contratto e
+   non scrivere in Tecnigrafo. Poi fermati.
    ```
 
 2. Leggi il verbale e ogni issue `contratto`: che cosa manca, l'esempio con i
    dati, le scelte possibili e il consiglio motivato. **Decidi tu** nella issue
-   di ciascun buco. Se non ci sono buchi, chiudi `[X.Y-C]` dopo il verbale:
-   non serve una pull request.
-3. Se ci sono buchi, dopo averli decisi tutti avvia lo stesso agente in una
-   nuova sessione:
+   di ciascun buco. La issue `contratto` e la tua decisione servono solo per i
+   buchi visibili; quelli non visibili restano annotati nel verbale
+   ([docs/CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
+   "Buchi visibili e no"). Se non ci sono buchi visibili, chiudi `[X.Y-C]` dopo
+   il verbale: non serve una pull request.
+3. Se ci sono buchi visibili, dopo averli decisi tutti avvia lo stesso agente
+   in una nuova sessione:
 
    ```text
    Lavora sul repository Matleyx78/solid-space. Leggi AGENTS.md e seguilo alla
@@ -461,13 +481,17 @@ da" (vale per ogni piano, anche per le schede scritte in B1 senza contratto).
    Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
    lettera. Prendi la issue [<tappa>-P<N>] #<numero>, revisione delle
    interfacce, assegnata a te, e segui la sua scheda: verbale nella issue, con
-   un commento per ogni buco. Non correggere le schede e non scrivere in
-   solid-space. Poi fermati.
+   un commento per ogni buco visibile e quelli non visibili annotati nel
+   verbale. Non correggere le schede e non scrivere in solid-space. Poi
+   fermati.
    ```
 
-2. Leggi il verbale. Se non ci sono buchi, chiudi la issue: i pacchetti
-   partono.
-3. Se ci sono buchi, **decidi tu** ciascuno; poi, in una chat con Claude, fai
+2. Leggi il verbale. Se non ci sono buchi visibili, chiudi la issue: i
+   pacchetti partono.
+3. Se ci sono buchi visibili, **decidi tu** ciascuno; quelli non visibili
+   restano annotati nel verbale e li sceglie chi implementa
+   ([agenti/pacchetto.md](agenti/pacchetto.md), "Buchi visibili e no"). Poi,
+   in una chat con Claude, fai
    scrivere le decisioni in `docs/DECISIONI.md`, le correzioni delle schede e
    una riga in "Modifiche al piano", in una pull request che chiude la issue
    della revisione con `Closes #N`. Prima del merge falla rileggere con la lista
@@ -721,8 +745,10 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
 
 Gli agenti fanno le prove locali con `scripts/controlla.sh` (AGENTS.md,
 "Comandi"), aspettano la CI con `scripts/ci-attendi.sh` e, se è rossa, ne leggono
-la causa con `scripts/ci-errori.sh` (AGENTS.md, "Quando fermarsi"). Per te non
-cambia niente: conta solo la CI verde della pull request.
+la causa con `scripts/ci-errori.sh` (AGENTS.md, "Quando fermarsi"). Una pull
+request di soli documenti, commenti o casi non si compila in locale (AGENTS.md,
+"Prima di dichiarare il lavoro finito"). Per te non cambia niente: conta solo la
+CI verde della pull request.
 
 ### B9. Seconda opinione (Gemini, a lotti)
 
@@ -771,12 +797,18 @@ la frase di B8.
 
 ### B10a. Un agente si ferma su un buco (tu, poi Claude e Codex)
 
-Un agente si ferma prima di scrivere codice o casi e scrive nella issue del suo
-pacchetto uno o più buchi, ciascuno con un esempio e le scelte possibili
-(AGENTS.md, "Se serve qualcosa a solid-space"). Succederà ancora: la revisione
-delle interfacce riduce i buchi, non li elimina, e una decisione scritta come
-regola breve può aprirne di nuovi (B10 e B11 della #464 hanno aperto due dei
-quattro buchi di P22 nella #373). Ogni volta:
+Un agente si ferma **solo per un buco visibile**, anche nelle schede
+([agenti/pacchetto.md](agenti/pacchetto.md), "Buchi visibili e no"; ADR 0013 di
+solid-space, punto 3). Si ferma prima di scrivere codice o casi e scrive nella
+issue del suo pacchetto i buchi, ciascuno con un esempio e le scelte possibili.
+Un buco non visibile invece non lo ferma: lo sceglie chi implementa, lo scrive
+nella scheda o nel commento dell'interfaccia, lo fissa con un test e lo segnala
+nella pull request. Tu lo leggi al merge (A3).
+
+Succederà ancora: la revisione delle interfacce riduce i buchi, non li elimina,
+e una decisione scritta come regola breve può aprirne di nuovi (B10 e B11 della
+#464 hanno aperto due dei quattro buchi di P22 nella #373). Per i buchi
+visibili, ogni volta:
 
 1. **Smista.** Per ogni buco: sta nella **scheda** (il contratto di solid-space
    determina la risposta, Tecnigrafo no), nel **contratto** (manca anche in
@@ -817,8 +849,8 @@ quattro buchi di P22 nella #373). Ogni volta:
    Poi fermati.
    ```
 
-   Se il verbale apre buchi nuovi, torna al passo 2 sulla stessa pull request;
-   la rilettura si ripete sulle sole regole toccate.
+   Se il verbale apre buchi visibili nuovi, torna al passo 2 sulla stessa pull
+   request. Il secondo giro segue A3, punto 3.
 5. **Unisci** (A3). Se una decisione cambia una risposta che si vede con una
    domanda del catalogo ([verifica/domande.md](verifica/domande.md)), apri una
    issue di riferimenti con la lettera dopo il numero (`[X.Y-R<N>b]`, Gemini) e
@@ -861,6 +893,12 @@ Prima di cominciare, `scripts/dipendenze.py <tappa>` di Tecnigrafo (A4) non deve
 avere niente in *To fix* né in *To check*: le richieste della tappa sono già
 chiuse.
 
+Le regole di metodo cambiano solo qui, alla chiusura della tappa, salvo un vero
+blocco: un lavoro che non può andare avanti con le regole attuali, e lo
+stabilisci tu. Durante la tappa le proposte si raccolgono in una issue per
+tappa, «[X.Y] Proposte di metodo», con l'etichetta `proposta`
+([DECISIONI.md](DECISIONI.md), 2026-11-03).
+
 1. Avvia Gemini 3.8 Flash (A2) e scrivi:
 
    ```text
@@ -873,7 +911,8 @@ chiuse.
 2. Leggi la pull request: per ogni criterio di chiusura deve esserci la prova (un
    caso di verifica o un test), oppure "da provare a mano". In Tecnigrafo
    controlla anche che `project(... VERSION <tappa>.0)` nel `CMakeLists.txt`
-   principale sia aggiornato.
+   principale sia aggiornato. Le proposte della issue «[<tappa>] Proposte di
+   metodo» le decidi in questa pull request.
 3. Fai la **prova manuale** descritta nelle note di rilascio (per Tecnigrafo su
    Windows e su Linux) e scrivi l'esito nella tabella. Puoi chiedere all'agente
    di compilarla per te, dandogli gli esiti.
@@ -914,8 +953,8 @@ chiuse.
 | Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta valutazione e revisione del contratto (B3, B3a, B4). Se non serve, rispondi nella issue e fallo continuare. |
 | Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
 | Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (B2). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |
-| Un agente di Tecnigrafo trova un buco nel contratto di solid-space | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto il testo della issue `contratto`: che cosa manca, un esempio con i dati, le scelte possibili, titolo con il nome dell'intestazione. La apri tu in solid-space e decidi lì; finché è aperta non parte nessun pacchetto che usa quell'intestazione. Fai applicare la decisione in solid-space e aggiorna le schede di Tecnigrafo interessate (B10a, passi 3–5); poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). |
-| Un agente di Tecnigrafo trova un buco nella sua scheda: un'interfaccia di Tecnigrafo che intestazione, ADR e scheda non determinano, mentre il contratto di solid-space sì (come in #359) | B10a: smista i buchi, decidi nella issue, fai scrivere a Claude una sola pull request di correzione con **Revisione della correzione: da fare**, falla rileggere con la lista a Codex, uniscila e fai riprendere il pacchetto. Nessuna issue in solid-space, salvo per i buchi che risultano nel contratto. |
+| Un agente di Tecnigrafo trova un buco visibile nel contratto di solid-space | Si ferma prima di scrivere codice o casi e scrive nella issue del suo pacchetto il testo della issue `contratto`: che cosa manca, un esempio con i dati, le scelte possibili, titolo con il nome dell'intestazione. La apri tu in solid-space e decidi lì; finché è aperta non parte nessun pacchetto che usa quell'intestazione. Fai applicare la decisione in solid-space e aggiorna le schede di Tecnigrafo interessate (B10a, passi 3–5); poi fai riprendere il pacchetto (AGENTS.md, "Se serve qualcosa a solid-space"). Per un buco non visibile l'agente non si ferma (B10a). |
+| Un agente di Tecnigrafo trova un buco visibile nella sua scheda: un'interfaccia di Tecnigrafo che intestazione, ADR e scheda non determinano, mentre il contratto di solid-space sì (come in #359) | B10a: smista i buchi, decidi nella issue, fai scrivere a Claude una sola pull request di correzione con **Revisione della correzione: da fare**, falla rileggere con la lista a Codex, uniscila e fai riprendere il pacchetto. Nessuna issue in solid-space, salvo per i buchi che risultano nel contratto. Un buco non visibile non lo ferma: lo sceglie chi implementa, lo scrive, lo fissa con un test e lo segnala nella pull request, e tu lo leggi al merge (B10a). |
 | Serve cambiare un'intestazione di solid-space già accettata come contratto | Apri in solid-space una issue con l'etichetta `contratto` che dice che cosa cambia e perché, e guarda quali schede di Tecnigrafo la usano. Decidi tu per i due progetti; se approvi, la scheda del pacchetto che la cambia lo dice esplicitamente, e in Tecnigrafo si aggiornano le schede che la usano (ADR 0007 di solid-space, punto 15). |
 | Un agente ha scritto o proposto qualcosa nell'altro repository senza che tu l'abbia chiesto | Non unire e non rispondere. Chiudi la pull request o cancella il commento, e di' all'agente: `La regola "Dove puoi scrivere" di AGENTS.md vieta di scrivere nell'altro repository: spiega cos'è successo.` (A1) |
 | `apri-tappa.sh` o `richiesta.sh` dice che il piano o il file non è pronto | Elenca che cosa correggere, riga per riga. Correggi (o fai correggere a Claude) e rilancia: finché non è tutto a posto non scrive nulla. |
