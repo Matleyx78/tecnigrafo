@@ -321,7 +321,7 @@ declare -A row_line=() row_name=() row_sheet=() row_issue=() row_deps=() row_ref
 problems=()
 sheet_re='\]\(([^)]+\.md)\)'
 while IFS=$'\x1f' read -r line pkg sheet issue deps refs diff agent model effort; do
-    if [[ ! $pkg =~ ^([PR][0-9]+)[[:space:]]+(.+)$ ]]; then
+    if [[ ! $pkg =~ ^([PR][0-9]+[a-z]?)[[:space:]]+(.+)$ ]]; then
         problems+=("line $line: the first cell must start with PN or RN and a title: \"$pkg\"")
         continue
     fi
@@ -376,7 +376,7 @@ for id in "${ids[@]}"; do
         fi
     fi
     while IFS= read -r dep; do
-        if [[ $dep =~ ^[PR][0-9]+$ ]]; then
+        if [[ $dep =~ ^[PR][0-9]+[a-z]?$ ]]; then
             if [[ -z ${seen[$dep]:-} ]]; then
                 problems+=("$id depends on $dep, which is not earlier in the table")
             elif [[ ${row_state[$dep]} == wait && ${row_state[$id]} == create ]]; then
@@ -521,7 +521,7 @@ done
 
 # A dependency as the body shows it: "#12 (P3)" or "Matleyx78/solid-space#20".
 dep_text() { # dep
-    if [[ $1 =~ ^[PR][0-9]+$ ]]; then
+    if [[ $1 =~ ^[PR][0-9]+[a-z]?$ ]]; then
         printf '#%s (%s)' "${row_issue[$1]}" "$1"
     else
         printf '%s' "$1"
@@ -540,7 +540,7 @@ body_of() { # id
     line="**Tappa:** [$tappa — $stage_title]($blob/$doc)"
     if [[ $id == P* ]]; then
         local refs=${row_refs[$id]}
-        if [[ $refs =~ ^(R[0-9]+)([^0-9]|$) ]]; then
+        if [[ $refs =~ ^(R[0-9]+[a-z]?)([^0-9a-z]|$) ]]; then
             local ref=${BASH_REMATCH[1]}
             [[ -z ${row_issue[$ref]:-} ]] || refs="#${row_issue[$ref]} ($ref)"
         fi
@@ -590,7 +590,7 @@ done
 # Prints "<id> <state>" of the issue a dependency names, or nothing.
 dep_issue() { # dep
     local where number
-    if [[ $1 =~ ^[PR][0-9]+$ ]]; then
+    if [[ $1 =~ ^[PR][0-9]+[a-z]?$ ]]; then
         where=$repo number=${row_issue[$1]}
     elif [[ $1 =~ ^#([0-9]+)$ ]]; then
         where=$repo number=${BASH_REMATCH[1]}
@@ -639,7 +639,7 @@ if [[ $only_project -eq 1 ]]; then
         fi
         [[ $state == open ]] || continue
         while IFS= read -r dep; do
-            if [[ $dep =~ ^[PR][0-9]+$ && -z ${row_issue[$dep]} ]]; then
+            if [[ $dep =~ ^[PR][0-9]+[a-z]?$ && -z ${row_issue[$dep]} ]]; then
                 waiting[$id]=1
                 continue
             fi
