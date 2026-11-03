@@ -10,7 +10,9 @@
 - **Dipende da:** P20, P25, R21
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B2, B6, B8, B9, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
-  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468)
+  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
+  2026-11-03, operazione snellimento (#478): il messaggio di `OutOfDomain` (P20)
+  e i rimandi a `intersection.hpp`
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -84,6 +86,8 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
   un segmento di polilinea), tutte e due con `Extension::extended`. Non si
   passa da `intersect` della facciata (P14), che riassume in `complete` sia i
   dati rifiutati sia i punti omessi oltre il dominio: qui vanno distinti.
+  I campi sono quelli di `PairIntersections` (`intersection.hpp`); qui si
+  dice soltanto come diventano esiti:
   - Un punto in `points`: lo spigolo.
   - Nessun punto e `omittedBeyondDomain` maggiore di zero: lo spigolo esiste,
     ma oltre il dominio (due rette quasi parallele), `OutOfDomain` (ADR 0035,
@@ -172,7 +176,7 @@ Select 2D polyline or [Distance/Angle/Method]:
 - `NotAllowed` (un arco) dà `Cannot chamfer those objects.`, `None` e
   `InfinitelyMany` danno `Lines are parallel.` (tabella di
   [dxf-di-prova.md](dxf-di-prova.md), punto 3); `OutOfDomain` dà il messaggio di `FILLET`
-  per le rette quasi parallele, `Lines are nearly parallel.` (P20), distinto
+  per "oltre il dominio", `Result is beyond the drawing limits.` (P20), distinto
   da `Lines are parallel.`; `AmbiguousPick` dà il messaggio di `AmbiguousPick`
   di `FILLET` (B9); in tutti i casi la domanda resta.
 - Una distanza, una lunghezza o un angolo negativo o non numerico dà il

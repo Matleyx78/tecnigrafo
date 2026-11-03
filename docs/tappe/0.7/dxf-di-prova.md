@@ -280,7 +280,7 @@ Prima dei pacchetti indicati, una prova a mano:
    | `FILLET` | `Cannot fillet those objects.` (`None`, `InfinitelyMany`, `NotAllowed`) | scritto da noi |
    | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |
    | `FILLET`, `CHAMFER` | `Pick a point that is not on the other object.` (`AmbiguousPick`) | scritto da noi |
-   | `FILLET`, `CHAMFER` | `Lines are nearly parallel.` (`OutOfDomain`) | scritto da noi |
+   | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr* | `Result is beyond the drawing limits.` (`OutOfDomain`; prima `Lines are nearly parallel.`, cambiato il 2026-11-03, [DECISIONI.md](../../DECISIONI.md)) | scritto da noi |
    | `FILLET`, `CHAMFER`, `OFFSET` | `Value must be positive.` (distanza o raggio negativo); `Requires numeric distance.` (non numerico) | scritto da noi |
 
    Singolare e plurale: `<n> lines were filleted` con n = 1 resta così, senza

@@ -11,7 +11,9 @@
   `TRIM`, `EXTEND` e `FILLET` più avanti (R16, R20)
 - **Dipende da:** P7, P14, P25, R15
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
-  buchi B1–B3 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  buchi B1–B3 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-03,
+  operazione snellimento (#478): rimanda a `intersection.hpp` invece di
+  ripeterlo
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
   punti 3, 5 e 6; [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
@@ -148,12 +150,13 @@ enum class EntityEnd : std::uint8_t { Start, End };
   `HostCuts::cuts`, dove lo stesso posto è lo stesso taglio della lista, mai
   due tagli con gli stessi dati arrotondati; per `FILLET` e `CHAMFER` dalla
   costruzione, che dà un solo posto per curva. Nessuna richiesta a
-  solid-space: il contratto dà già identità e ordine esatti.
+  solid-space: identità e ordine esatti li dà già il contratto
+  (`intersection.hpp`, in testa, e `HostIntersections`).
 - **Archi** (B1): l'estremo nuovo di un arco sta entro l'errore, non sul
   punto ricevuto; quando i due angoli coincidono decide `course`, mai le
-  stazioni. È la regola delle decisioni Matleyx78/solid-space#132 (arco quasi
-  intero con estremi arrotondati coincidenti: `failed`) e #148 (pezzo dritto
-  ridotto a un punto: si scarta). In una parte di polilinea di più segmenti un
+  stazioni. La regola è di Tecnigrafo: solid-space ha le sue per la curva
+  parallela (`offset.hpp`), che qui non valgono. In una parte di polilinea di
+  più segmenti un
   segmento curvo tagliato con i due vertici uguali è il pezzo corto: ampiezza
   0, bulge 0, un segmento esattamente puntiforme, che `TRIM` giudica con la
   regola dei pezzi degeneri (P16).
@@ -161,8 +164,8 @@ enum class EntityEnd : std::uint8_t { Start, End };
   `NotRepresentable` che l'operazione non riesce e l'oggetto resta com'è, con
   il messaggio dell'operazione non riuscita (ADR 0035, punto 23).
 - **Prolungare o tagliare** (B2): il chiamante sceglie fra `partOf` ed
-  `extendTo` guardando la `Location`, che è esatta. Il significato di
-  `AfterEnd` di solid-space non cambia.
+  `extendTo` guardando la `Location` (`intersection.hpp`), che è esatta e
+  non cambia significato.
 - **Polilinee aperte** (B3): il «primo» e l'«ultimo» segmento sono il primo e
   l'ultimo non puntiforme, come in P14 (`Extension::Extended`). Per esempio
   [(0,0),(0,0),(10,0)] prolungata all'inizio fino a x=−5 diventa

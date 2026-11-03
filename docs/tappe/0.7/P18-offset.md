@@ -5,8 +5,12 @@
 - **Difficoltà:** media
 - **Agente:** codex
 - **Modello e impegno:** medio; impegno medio
-- **Riferimenti:** issue `[0.7-R18]` (#…), agente gemini
-- **Dipende da:** P16, P17, P25, R18
+- **Riferimenti:** issue `[0.7-R18]` (#…), agente gemini; issue `[0.7-R17b]`
+  (#481), agente gemini: le tolleranze dei casi di R18 (ADR 0036, punto 4)
+- **Dipende da:** P16, P17, P25, R18, R17b (#481: le tolleranze dei casi di
+  R18 dopo l'ADR 0036, punto 4)
+- **Corretta:** 2026-11-03, operazione snellimento (#478): P18 aspetta anche
+  R17b (#481)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 9, 10, 12, 21 e 22; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)

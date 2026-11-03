@@ -8,6 +8,10 @@
 - **Riferimenti:** non servono: è una revisione di documenti, non cambia il
   comportamento del programma
 - **Dipende da:** —
+- **Stato:** chiuso il 2026-11-01: il verbale è nella #464 e le decisioni sono
+  applicate (DECISIONI.md, 2026-11-01). La scheda resta come storia; dal
+  2026-11-03 (operazione snellimento, #478) rimanda ai punti 10 e 11 di
+  CONTRATTI.md invece di trascriverli
 - **Modulo:** nessuno: il lavoro sta nella issue, non in una pull request
 - **Da leggere:** la lista di controllo di
   [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
@@ -26,13 +30,12 @@
 Le schede della seconda metà della tappa sono state scritte il 2026-10-29 sul
 contratto di solid-space, prima che esistesse la revisione con la lista, e
 nessuno le ha controllate. P15 si è fermato il 2026-11-01 (#359) su un buco che
-non sta nel contratto di solid-space ma nella scheda: `intersect` e `cutsAlong`
-decidono esattamente quali tagli sono distinti e in che ordine stanno, ma
-`partOf` riceve solo punti e stazioni arrotondati, e due tagli a meno di un ulp
-arrivano uguali. È il punto 11 della lista applicato a un'interfaccia di
-Tecnigrafo. Questo pacchetto cerca i buchi dello stesso tipo nelle schede
-rimaste, prima che i loro pacchetti partano (decisione del 2026-11-01,
-[DECISIONI.md](../../DECISIONI.md)).
+non sta nel contratto di solid-space ma nella scheda: `partOf` riceveva solo
+valori arrotondati, e perdeva ciò che `intersect` e `cutsAlong` decidono
+esattamente. È il punto 11 della lista, che cita proprio la #359, applicato a
+un'interfaccia di Tecnigrafo. Questo pacchetto cerca i buchi dello stesso tipo
+nelle schede rimaste, prima che i loro pacchetti partano (decisione del
+2026-11-01, [DECISIONI.md](../../DECISIONI.md)).
 
 ## Che cosa si rivede
 
@@ -63,15 +66,10 @@ dall'intestazione, dall'ADR o dalla scheda (e allora citi dove), oppure è un
 **buco**. Per le schede di `cmd` contano soprattutto i punti 4, 5, 8, 10 e 11:
 come il comando usa i risultati di `core` e che cosa ne mostra all'utente.
 
-Insisti sui punti 10 e 11, i due che hanno fermato P15 e R19 di solid-space:
-
-- **10.** Dove una scheda arrotonda o sceglie un valore entro un errore (un
-  punto, un angolo, un bulge, una stazione), la scelta può cambiare un esito,
-  un ordine, un'uguaglianza? Provalo con un esempio al limite e due scelte
-  lecite.
-- **11.** Ciò che solid-space o una funzione di `core` decide esattamente
-  (quale taglio è quale, l'ordine, il lato, l'appartenenza a un pezzo) arriva a
-  chi lo usa, o chi lo usa dovrebbe ricostruirlo da valori arrotondati?
+Insisti sui punti 10 e 11 di
+[CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
+i due che hanno fermato P15 e R19 di solid-space, letti sulle interfacce di
+Tecnigrafo come sulle intestazioni.
 
 **Che cosa non si rivede.** Il contratto di solid-space in sé: un punto che
 solo un'intestazione di solid-space determina si cita. Le funzioni di

@@ -7,16 +7,19 @@
 - **Modello e impegno:** forte; impegno alto
 - **Riferimenti:** issue `[0.7-R17]` (#…), agente gemini: la facciata (lato,
   esiti, polilinee, larghezze, unità); i valori geometrici dall'archivio dei
-  casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#130, P25, R17. La richiesta
+  casi di solid-space; issue `[0.7-R17b]` (#481), agente gemini: le tolleranze
+  dei casi di R17 (ADR 0036, punto 4)
+- **Dipende da:** P14, Matleyx78/solid-space#130, P25, R17, R17b (#481:
+  le tolleranze dei casi di R17 dopo l'ADR 0036, punto 4). La richiesta
   Matleyx78/solid-space#22 è diventata i pacchetti di solid-space che
   realizzano `offset.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P19
-  (Matleyx78/solid-space#130, bulge ricostruito, riferimenti
-  Matleyx78/solid-space#129), che comprende gli altri tra le sue dipendenze
-  (Matleyx78/solid-space#63). Prima di #130 `offsetCurve` sbaglia in silenzio
-  sugli archi quasi interi (Matleyx78/solid-space#127)
+  (Matleyx78/solid-space#130, riferimenti Matleyx78/solid-space#129), che
+  comprende gli altri tra le sue dipendenze; perché serve lo dice il piano
+  della tappa 0.2 di solid-space
 - **Corretta:** 2026-11-01, con la decisione del responsabile sul buco B5 della
-  #464 ([DECISIONI.md](../../DECISIONI.md))
+  #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-03, operazione snellimento
+  (#478): rimanda a `offset.hpp` invece di ripeterlo, i casi `failed` sono
+  quelli del contratto, e P17 aspetta anche R17b (#481)
 - **Modulo:** `core` (più la domanda `offset` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 10–12; l'[ADR 0012 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0012-curva-parallela-nel-piano.md)
@@ -30,7 +33,11 @@
 Il contratto accettato con l'ADR 0012 di solid-space:
 `solid_space/geom2d/offset.hpp` (`offsetCurve`, `offsetPolyline`,
 `CurveOffset`, `PolylineOffset`, `OffsetOutcome`, `OffsetFailure`,
-`OffsetPiece`, `PieceOrigin`), con i tipi di `curves.hpp` e `side.hpp`.
+`OffsetPiece`, `PieceOrigin`), con i tipi di `curves.hpp` e `side.hpp`, nella
+versione del commit della issue (sotto). I commenti di `offset.hpp` dicono che
+cosa è deciso esattamente e quali esiti sono liberi in una fascia
+([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+punto 4): la scheda li cita e non li ripete.
 
 ## Prima di cominciare
 
@@ -62,7 +69,7 @@ enum class OffsetOutcome : std::uint8_t {
 struct OffsetResult {
     OffsetOutcome outcome{OffsetOutcome::Failed};
     std::optional<Entity> entity;  ///< with Done: the same type as the input
-    /// With Done for a polyline: solid-space's simple case (its ADR 0012, point 6).
+    /// With Done for a polyline: solid-space's PolylineOffset::simple.
     bool simple{false};
 };
 
@@ -80,26 +87,22 @@ struct OffsetResult {
   esattamente puntiforme, una polilinea senza segmenti o con soli segmenti
   puntiformi, dati che solid-space rifiuta), l'esito è `Failed`, senza
   chiamare solid-space (B5): `NoSide` resta solo per `Side::On`. La
-  precondizione non cambia. È coerente con solid-space, che per un segmento
-  puntiforme dà la diagnosi di curva degenere e rifiuta i dati fuori dal
-  dominio, due casi che danno già `Failed`.
+  precondizione non cambia.
   Per un segmento di polilinea il lato è rispetto a quel segmento, e la
   distanza con segno vale per tutta la polilinea, che segue il verso dei
   vertici.
 - **Linea, arco, cerchio:** `offsetCurve`. Il risultato torna dello stesso
-  tipo: la linea con i suoi due estremi nuovi; il cerchio con il nuovo raggio;
-  l'arco con il nuovo raggio e **gli stessi angoli** dell'arco di partenza
-  (solid-space tiene angolo iniziale e ampiezza, ADR 0012 di solid-space,
-  punto 3). `vanished` dà `Vanished`; `failed` dà `Failed`. Dalla decisione
-  di Matleyx78/solid-space#127 `offsetCurve` può dare `failed` per un arco
-  quasi intero che i suoi estremi arrotondati e un bulge non rappresentano
-  entro l'errore; il contratto lo dà solo per un `PolylineSegment` curvo, e
-  qui un arco arriva come `Arc` (`bridge::curveOf`), quindi per linea, arco e
-  cerchio non capita e non serve un test che lo provochi.
+  tipo, con la curva di `CurveOffset`: per un arco il nuovo raggio e **gli
+  stessi angoli** dell'arco di partenza. `vanished` dà `Vanished`; `failed`
+  dà `Failed`, nei casi che dice `CurveOffset`: per una linea solo quando i
+  suoi estremi arrotondati coincidono, in una fascia del commento, che nessun
+  test pretende; per un arco (che arriva come `Arc`, `bridge::curveOf`) e un
+  cerchio mai.
 - **Polilinea:** `offsetPolyline` con la regola del documento
   (`bridge::policyOf`). Il risultato torna una polilinea aperta o chiusa come
   quella di partenza, con le posizioni e i bulge di solid-space e, per ogni
-  segmento, grazie a `origins` (ADR 0035, punto 11):
+  segmento, grazie a `origins` (una voce per pezzo del risultato,
+  `PolylineOffset`; mai per posizione) (ADR 0035, punto 11):
   - un segmento che viene da un segmento di partenza (`source`) prende le sue
     larghezze;
   - un arco di giunzione (`gap`) ha larghezze 0;
@@ -107,10 +110,8 @@ struct OffsetResult {
     restano quelle della polilinea di partenza.
 
   `done` dà `Done` con `simple`; `vanished` dà `Vanished`; `failed` dà
-  `Failed`, qualunque sia il motivo (anche `notRepresentable`, aggiunto da
-  Matleyx78/solid-space#127).
-- Una diagnosi di solid-space (dati fuori dal dominio, polilinea senza pezzi)
-  dà `Failed`.
+  `Failed`, qualunque sia il motivo (`OffsetFailure`).
+- Una diagnosi di `offsetCurve` o di `offsetPolyline` dà `Failed`.
 - La domanda `offset` del catalogo, con le risposte scritte lì.
 
 ## Regole della tappa che valgono qui
@@ -127,7 +128,9 @@ struct OffsetResult {
 - Linea, cerchio e arco dai due lati; arco e cerchio che si annullano (distanza
   uguale al raggio); punto esattamente sulla curva (`NoSide`);
   `Line[(0,0),(0,0)]` con distanza 1 e lato (0,1), e una polilinea senza
-  segmenti (`Failed`).
+  segmenti (`Failed`); un cerchio di centro (0,0) e raggio 2^50 con distanza 1
+  verso l'esterno (`Failed`: la diagnosi di `offsetCurve` per il raggio
+  costruito oltre il dominio).
 - I casi di `autocad-offset.dxf` e quelli della richiesta
   Matleyx78/solid-space#22 (ADR 0012 di solid-space, "I casi della
   richiesta"), passando dalle entità.
