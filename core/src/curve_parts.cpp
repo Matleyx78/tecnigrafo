@@ -4,7 +4,6 @@
 #include "tg/core/curve_parts.hpp"
 
 #include "solid_space/robust/trigonometry.hpp"
-#include "tg/core/math.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -26,6 +25,13 @@ PartResult done(Entity entity) {
     return {PartOutcome::Done, std::move(entity)};
 }
 
+PartResult collapsedArc(PartCourse course) {
+    if (course == PartCourse::AcrossStart) {
+        return {PartOutcome::NotRepresentable, std::nullopt};
+    }
+    return {};
+}
+
 PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
                    const std::optional<CurvePoint>& to, PartCourse course) {
     Arc result = arc;
@@ -38,9 +44,7 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
     // Equality here tests the representation, not whether the exact places
     // coincide: only the caller can decide that, with PartCourse (#359).
     if (result.startAngle == result.endAngle) {
-        return {course == PartCourse::AcrossStart ? PartOutcome::NotRepresentable
-                                                  : PartOutcome::Empty,
-                std::nullopt};
+        return collapsedArc(course);
     }
     return done(result);
 }
@@ -144,9 +148,7 @@ PartResult polylinePart(const Polyline& polyline, const std::optional<CurvePoint
             vertex.startWidth = std::lerp(original.startWidth, original.endWidth, startFraction);
             vertex.endWidth = std::lerp(original.startWidth, original.endWidth, endFraction);
             if (segment.isArc() && vertex.bulge == 0.0 && segmentEnd == first.index + 1) {
-                return {course == PartCourse::AcrossStart ? PartOutcome::NotRepresentable
-                                                          : PartOutcome::Empty,
-                        std::nullopt};
+                return collapsedArc(course);
             }
         }
         vertices.push_back(next);

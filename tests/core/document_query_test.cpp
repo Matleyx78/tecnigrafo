@@ -339,6 +339,113 @@ TEST(DocumentQuery, SnapInTheVoidOrOnAnEmptyDocument) {
     EXPECT_EQ(findSnap(document, {5, 5}, 1.0, kAllModes), std::nullopt);
 }
 
+// --- findSnap: intersections (docs/adr/0033, points 3 and 5) -------------
+
+constexpr SnapModes kIntersectionOnly{false, false, false, false, true};
+
+TEST(IntersectionSnap, CrossesTwoLinesAndIsEnabledByDefault) {
+    Document document;
+    document.add(Line{{-10, -10}, {4, 4}});
+    document.add(Line{{-10, 10}, {4, -4}});
+    expectSnap(findSnap(document, {0.1, 0.2}, 0.5, kIntersectionOnly),
+               SnapKind::Intersection, {0, 0});
+    expectSnap(findSnap(document, {0.1, 0.2}, 0.5, {}), SnapKind::Intersection, {0, 0});
+    EXPECT_FALSE(findSnap(document, {0.1, 0.2}, 0.5,
+                          SnapModes{false, false, false, false, false}));
+}
+
+TEST(IntersectionSnap, CrossesALineAndAnArcWithoutExtendingEither) {
+    Document document;
+    document.add(Arc{{0, 0}, 5, 0, kPi});
+    document.add(Line{{-10, 4}, {10, 4}});
+    expectSnap(findSnap(document, {3.1, 4}, 0.5, kIntersectionOnly),
+               SnapKind::Intersection, {3, 4});
+    EXPECT_FALSE(findSnap(document, {3, -4}, 0.5, kIntersectionOnly));
+    Document shortLine;
+    shortLine.add(Line{{-10, 0}, {-1, 0}});
+    shortLine.add(Line{{0, -10}, {0, 10}});
+    EXPECT_FALSE(findSnap(shortLine, {0, 0}, 2, kIntersectionOnly));
+}
+
+TEST(IntersectionSnap, CrossesTwoCirclesAndIncludesTangencies) {
+    Document document;
+    document.add(Circle{{0, 0}, 5});
+    document.add(Circle{{6, 0}, 5});
+    expectSnap(findSnap(document, {3, 4.1}, 0.5, kIntersectionOnly),
+               SnapKind::Intersection, {3, 4});
+    Document tangent;
+    tangent.add(Circle{{0, 0}, 5});
+    tangent.add(Line{{-10, 5}, {10, 5}});
+    expectSnap(findSnap(tangent, {0.1, 5}, 0.5, kIntersectionOnly),
+               SnapKind::Intersection, {0, 5});
+}
+
+TEST(IntersectionSnap, FindsSelfIntersectionsAndOneAnswerForSeveralPairs) {
+    Document document;
+    document.add(Polyline{{{{-5, -5}}, {{5, 5}}, {{5, -5}}, {{-5, 5}}}});
+    expectSnap(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly),
+               SnapKind::Intersection, {0, 0});
+    document.add(Line{{-10, 0}, {10, 0}});
+    expectSnap(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly),
+               SnapKind::Intersection, {0, 0});
+}
+
+TEST(IntersectionSnap, RejectsCrossingsOutsideTheCircularApertureAndSharedStretches) {
+    Document document;
+    document.add(Line{{-10, 0}, {10, 0}});
+    document.add(Line{{0, -10}, {0, 10}});
+    // Both curves pass within 1, but their crossing is sqrt(2) away.
+    EXPECT_FALSE(findSnap(document, {1, 1}, 1, kIntersectionOnly));
+    Document shared;
+    shared.add(Line{{0, 0}, {10, 0}});
+    shared.add(Line{{5, 0}, {15, 0}});
+    EXPECT_FALSE(findSnap(shared, {5, 0}, 1, kIntersectionOnly));
+}
+
+TEST(IntersectionSnap, IgnoresOffAndFrozenLayersButIncludesLockedLayers) {
+    Document document = Document::newDrawing();
+    document.add(Line{{-10, 0}, {10, 0}});
+    Layer layer = *document.layer(document.layerZero());
+    layer.name = "Crossing";
+    const auto layerId = document.addLayer(layer);
+    EntityProperties properties;
+    properties.layer = layerId;
+    const auto crossing = document.add(Line{{0, -10}, {0, 10}});
+    document.setProperties(crossing, properties);
+    for (const bool on : {false, true}) {
+        for (const bool frozen : {false, true}) {
+            layer = *document.layer(layerId);
+            layer.on = on;
+            layer.frozen = frozen;
+            layer.locked = true;
+            document.replaceLayer(layer);
+            EXPECT_EQ(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly).has_value(),
+                      on && !frozen);
+        }
+    }
+}
+
+TEST(IntersectionSnap, UsesDistanceBeforeKindThenEndpointBeforeIntersection) {
+    Document document;
+    document.add(Line{{-10, -10}, {4, 4}});
+    document.add(Line{{-10, 10}, {4, -4}});
+    document.add(Line{{2, 0}, {10, 0}});
+    constexpr SnapModes kEndAndIntersection{true, false, false, false, true};
+    expectSnap(findSnap(document, {1, 0}, 1.5, kEndAndIntersection),
+               SnapKind::Endpoint, {2, 0});
+    expectSnap(findSnap(document, {0.8, 0}, 1.5, kEndAndIntersection),
+               SnapKind::Intersection, {0, 0});
+}
+
+TEST(IntersectionSnap, PrefersTheHighestEntityIdOnAnEqualDistance) {
+    Document document;
+    document.add(Line{{-10, 0}, {10, 0}});
+    document.add(Line{{-1, -10}, {-1, 10}});
+    document.add(Line{{1, -10}, {1, 10}});
+    expectSnap(findSnap(document, {0, 0}, 1, kIntersectionOnly),
+               SnapKind::Intersection, {1, 0});
+}
+
 // --- findSnap: quadrant and perpendicular (docs/adr/0033, points 4 and 5) ---
 
 constexpr SnapModes kQuadrantOnly{false, false, false, false, false, false, false, true};
@@ -487,7 +594,9 @@ public:
         return {between(-20.0, 560.0), between(-20.0, 560.0)};
     }
 
-    SnapModes modes() { return {unit() < 0.7, unit() < 0.7, unit() < 0.7}; }
+    // This exhaustive oracle covers the original per-entity snap modes.
+    // Pair intersections have their own tests below.
+    SnapModes modes() { return {unit() < 0.7, unit() < 0.7, unit() < 0.7, true, false}; }
 
 private:
     static constexpr double kRange = 4294967296.0;  // 2^32, mt19937's range
@@ -679,7 +788,7 @@ TEST(DocumentQuery, SnapAnEndPointBeatsTheCentreOfAnotherType) {
     // point within the aperture wins (docs/adr/0008, point 4).
     EXPECT_EQ(findSnap(document, {10.2, 0.0}, 1.0, SnapModes{}),
               (SnapPoint{{10.0, 0.0}, SnapKind::Endpoint}));
-    EXPECT_EQ(findSnap(document, {10.2, 0.0}, 1.0, SnapModes{false, true, true}),
+    EXPECT_EQ(findSnap(document, {10.2, 0.0}, 1.0, SnapModes{false, true, true, true, false}),
               (SnapPoint{{30.0, 0.0}, SnapKind::Center}));
 }
 

@@ -8,12 +8,18 @@
 - **Riferimenti:** issue `[0.7-R19]` (#…), agente gemini: la facciata (scelta
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
-- **Dipende da:** P15, Matleyx78/solid-space#21, P25, R19. La richiesta diventa il
-  pacchetto di solid-space che realizza `tangency.hpp`, quando la tappa 0.2 di
-  solid-space lo avrà (ADR 0030, punto 13)
+- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19. La richiesta
+  Matleyx78/solid-space#21 è diventata i pacchetti di solid-space che
+  realizzano `tangency.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P20
+  (Matleyx78/solid-space#145, dominio delle tangenze, riferimenti
+  Matleyx78/solid-space#146): gli altri (0.2-P15 e 0.2-P16,
+  Matleyx78/solid-space#66 e #70) sono già uniti
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B1, B2, B6, B7, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
-  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468)
+  2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
+  2026-11-03, operazione snellimento (#478): rimanda a `tangency.hpp` invece di
+  ripeterlo, aspetta Matleyx78/solid-space#145 invece di #21, tratta il bulge 0
+  come arco degenere e ha un caso in più (due parallele lontane)
 - **Modulo:** `core` (più le domande in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 13, 14 e 23; [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
@@ -31,13 +37,18 @@
 Il contratto accettato con l'ADR 0011 di solid-space:
 `solid_space/geom2d/tangency.hpp` (`tangentsFrom`, `tangentCircleNear`,
 `fillet`, con i loro tipi), con i tipi di `curves.hpp`, `intersection.hpp` e
-`side.hpp`.
+`side.hpp`, nella versione del commit della issue (sotto). I commenti di
+`tangency.hpp` dicono che cosa è deciso esattamente, in che ordine si danno le
+diagnosi e quali esiti sono liberi in una fascia
+([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+punto 4): la scheda li cita e non li ripete.
 
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che chiude il pacchetto di solid-space che realizza
-  `tangency.hpp`. Se la issue non lo dice, chiedilo e non cominciare.
+  sottomodulo: quello che chiude Matleyx78/solid-space#145, l'ultimo
+  pacchetto di solid-space che realizza `tangency.hpp`. Se la issue non lo
+  dice, chiedilo e non cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 
@@ -63,9 +74,9 @@ enum class CornerOutcome : std::uint8_t {
     InfinitelyMany,  ///< the curves lie on one line or circle, or similar
     AmbiguousPick,   ///< a pick lies exactly on the other curve's line or circle
     NotAllowed,      ///< an entity the command does not take
-    /// It exists, but beyond solid-space's domain: a centre or a corner
-    /// farther than robust::kMaxCoordinate (two almost parallel lines that
-    /// meet very far away).
+    /// It exists, but a construction is beyond solid-space's domain: the
+    /// outOfDomain diagnosis on the radius of fillet and tangentCircleNear
+    /// (tangency.hpp), or for CHAMFER a corner that intersect() omits.
     OutOfDomain,
 };
 
@@ -134,11 +145,10 @@ struct TangentCircleResult {
                                                             double radius);
 
 /// The tangent points from `point` to a circle, an arc or the arcs of a
-/// polyline, only those on the curve (tangentsFrom with Extension::none); the
-/// point itself if it lies exactly on the circle; none from inside or for a
-/// straight curve. For a polyline: by segment index, then in the order
-/// tangentsFrom gives on the segment; a point AtEnd of a segment and AtStart of
-/// the one that follows (for a closed polyline also the last and segment 0)
+/// polyline, as tangentsFrom gives them with Extension::none (tangency.hpp);
+/// none for a straight curve. For a polyline: by segment index, then in the
+/// order tangentsFrom gives on the segment; a point AtEnd of a segment and
+/// AtStart of the one that follows (for a closed polyline also the last and segment 0)
 /// is listed once, on the segment that follows; a segment solid-space refuses,
 /// or whose construction is beyond its domain, gives no points, and the
 /// others keep theirs.
@@ -148,14 +158,13 @@ struct TangentCircleResult {
 - **Dalle entità alle curve** con la traduzione di P14; per una polilinea, il
   segmento più vicino al punto indicato (`nearestPosition`).
 - **Il raccordo** viene da `fillet` di solid-space, con le sue regole
-  (semicerchio tra parallele, raggio 0, lato dai punti, arco più corto). Gli
-  esiti `none`, `infinitelyMany` e `ambiguousPick` danno l'esito omonimo.
-- **Oltre il dominio** (ADR 0035, punti 13 e 14, corretti il 2026-11-01;
-  ADR 0011 di solid-space, righe **Corretto:**): `fillet` e `tangentCircleNear`
-  danno la diagnosi `outOfDomain` sul raggio (dato 2) anche quando il centro
-  del cerchio, o lo spigolo del raggio 0, cade oltre `kMaxCoordinate`: due
-  rette quasi parallele che si incontrano lontanissimo. Il raccordo esiste, ma
-  non si rappresenta. Per non confonderlo con un raggio scritto oltre il
+  (`tangency.hpp`, regole 1–4). Gli esiti `none`, `infinitelyMany` e
+  `ambiguousPick` danno l'esito omonimo.
+- **Oltre il dominio** (ADR 0035, punti 13 e 14): `fillet` e
+  `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio (dato 2) per
+  una costruzione oltre il dominio, con le regole e l'ordine delle diagnosi del
+  loro commento (`tangency.hpp`). Il raccordo esiste, ma non si rappresenta.
+  Per non confonderlo con un raggio scritto oltre il
   dominio, che dà la stessa diagnosi:
   - un raggio oltre `solid_space::robust::kMaxCoordinate` (lo stesso
     confronto di solid-space: il dominio arriva a `kMaxCoordinate` compreso)
@@ -198,6 +207,10 @@ struct TangentCircleResult {
   comando (P20).
 - **Arco degenere** (ADR 0036, punto 5): se `isDegenerate` con la regola trova
   degenere l'arco di raccordo, il risultato è quello del raggio 0 (spigolo).
+  Vale anche quando `Fillet::bulge` è 0 perché i punti di tangenza restituiti
+  coincidono (`tangency.hpp`, `Fillet`): l'arco è degenere, e nessun segmento
+  puntiforme entra nella polilinea. Che i punti coincidano sta in una fascia
+  del commento: nessun test lo pretende.
 - **`filletPolyline`** (B15): si visitano i **vertici originali in ordine**:
   per una polilinea aperta i vertici interni da 1 in su, per una chiusa da 0
   (il vertice di chiusura) in su. Ogni vertice si raccorda sulla polilinea già
@@ -254,7 +267,10 @@ struct TangentCircleResult {
 - Oltre il dominio: due rette quasi parallele, per esempio da 0,0 a 1,0 e da
   0,1 a 1,1.0000000000000002 (pendenza 2^-52, si incontrano a x = −2^52),
   danno `OutOfDomain` con raggio 1 e con raggio 0 in `fillet`, e con raggio 1
-  in `circleTangentTangentRadius`; due segmenti consecutivi a forcina quasi
+  in `circleTangentTangentRadius`; due linee esattamente parallele e lontane,
+  da (2^50,−2^50) a (0,0) e da (0,2^50) a (2^50,0), indicate negli estremi
+  (2^50,−2^50) e (0,2^50) con raggio 1, danno `OutOfDomain` in `fillet`
+  (Matleyx78/solid-space#137); due segmenti consecutivi a forcina quasi
   chiusa, per esempio i vertici 10,0, 0,0 e 10,1e-15 con raggio 1 (centro a
   circa 2e16 dal vertice), danno `OutOfDomain` in `filletSegments` e contano
   in `tooShort` in `filletPolyline`; un raggio di 2e15, oltre `kMaxCoordinate`,

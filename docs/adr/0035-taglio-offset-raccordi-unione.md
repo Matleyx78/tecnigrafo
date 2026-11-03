@@ -6,22 +6,20 @@
   di solid-space prese realizzando o rivedendo il contratto; nessun codice
   unito attua i punti corretti (eccezione di [GOVERNANCE.md](../../GOVERNANCE.md)):
   P14 (#460, unito lo stesso giorno) attua i punti 1, 2 e 4, che non cambiano.
-  (1) `fillet` e `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio
-  (dato 2) anche quando il centro del cerchio, o lo spigolo del raggio 0, cade
-  oltre 2^50: due rette quasi parallele che si incontrano lontanissimo
-  ([Matleyx78/solid-space#66](https://github.com/Matleyx78/solid-space/issues/66),
+  (1) La diagnosi `outOfDomain` di `fillet` e `tangentCircleNear` per una
+  costruzione oltre il dominio (`tangency.hpp`; ADR 0011 di solid-space, righe
+  **Corretto:**; [Matleyx78/solid-space#66](https://github.com/Matleyx78/solid-space/issues/66),
   [#70](https://github.com/Matleyx78/solid-space/issues/70),
   [#122](https://github.com/Matleyx78/solid-space/pull/122),
-  [#126](https://github.com/Matleyx78/solid-space/pull/126); ADR 0011 di
-  solid-space, righe **Corretto:**). Il raccordo, il cerchio o lo spigolo
-  esistono ma non si rappresentano: `FILLET`, `CIRCLE` *Ttr* e `CHAMFER` (lo
-  spigolo che `intersect` omette oltre il dominio) lo dicono con un messaggio
-  proprio, distinto da "non esiste" e da "parallele", e nessuna entità cambia;
-  un raggio scritto dall'utente oltre 2^50 resta un dato fuori dal dominio
-  (punto 23) (punti 13–15). (2) Una curva parallela può mancare anche nei casi
-  semplici di una polilinea, per un arco quasi intero che solid-space non
-  rappresenta
-  ([Matleyx78/solid-space#127](https://github.com/Matleyx78/solid-space/issues/127))
+  [#126](https://github.com/Matleyx78/solid-space/pull/126)): il raccordo, il
+  cerchio o lo spigolo esistono ma non si rappresentano, e `FILLET`, `CIRCLE`
+  *Ttr* e `CHAMFER` (lo spigolo che `intersect` omette oltre il dominio) lo
+  dicono con un messaggio proprio, distinto da "non esiste" e da "parallele",
+  e nessuna entità cambia; un raggio scritto dall'utente oltre 2^50 resta un
+  dato fuori dal dominio (punto 23) (punti 13–15). (2) Una curva parallela può
+  mancare anche nei casi semplici di una polilinea, quando solid-space non la
+  rappresenta (`offset.hpp`;
+  [Matleyx78/solid-space#127](https://github.com/Matleyx78/solid-space/issues/127))
   (punto 12).
 - **Corretto:** 2026-11-01 — su decisione del responsabile sui buchi della
   revisione delle interfacce delle schede
@@ -64,6 +62,28 @@
   di controllare i testi su un AutoCAD inglese; valgono quelli della tabella di
   quel file. Nessun codice unito attua il punto (eccezione di
   [GOVERNANCE.md](../../GOVERNANCE.md)).
+- **Corretto:** 2026-11-02 — su decisione del responsabile sui buchi trovati
+  da P22 ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373)); nessun
+  codice unito attua il punto corretto (eccezione di
+  [GOVERNANCE.md](../../GOVERNANCE.md)). (1) Una polilinea chiusa diversa
+  dalla sorgente non ha estremi liberi e non entra nella catena: si scarta.
+  (2) Gli archi dello stesso cerchio formano un cerchio anche quando l'arco
+  calcolato avrebbe l'angolo finale uguale a quello iniziale, purché almeno un
+  altro arco si unisca: la sola sorgente non cambia (punto 17).
+  L'ordine degli estremi delle linee allineate viene da solid-space, come dice
+  già il punto 1: la funzione la aggiunge al contratto una issue `contratto`
+  di solid-space. Le altre decisioni precisano la scheda P22 senza cambiare
+  questo ADR.
+- **Corretto:** 2026-11-03 — operazione snellimento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478);
+  [DECISIONI.md](../DECISIONI.md), stessa data): dove questo ADR descriveva il
+  contratto di solid-space (il contesto, la prima riga **Corretto:** del
+  2026-11-01 e i punti 1, 5, 10–15 e 23), rimanda alle sue intestazioni e ai
+  suoi ADR, 0013 compreso. Nessuna regola di Tecnigrafo cambia; nel punto 1,
+  che il codice unito attua (P14), il rimando sostituisce solo la
+  descrizione. Dove la descrizione era già diversa dal contratto vale il
+  contratto: nel punto 10, il lato di un arco orario (un segmento di
+  polilinea con bulge negativo), il cui interno è a destra.
 
 ## Contesto
 
@@ -80,10 +100,13 @@ suo) e il loro contratto, nel nuovo componente `geom2d` sopra `robust`:
 | [Matleyx78/solid-space#23](https://github.com/Matleyx78/solid-space/issues/23) | regola delle tolleranze | [0009](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0009-regola-delle-tolleranze-del-piano.md) | `tolerance.hpp`, `coincidence.hpp` |
 
 Il componente è descritto dall'[ADR 0008 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0008-componente-geom2d.md).
-Ogni decisione di solid-space (quanti punti comuni, dove sta un punto lungo una
-curva, in che ordine, da che parte) è esatta sui `double` ricevuti; ogni punto
-costruito ha un errore dichiarato; la regola delle tolleranze dice che cosa
-intendeva l'utente e si usa solo con le funzioni che la nominano.
+Che cosa decide esattamente e che cosa costruisce entro un errore lo dicono
+`curves.hpp`, in testa, e l'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md);
+la regola delle tolleranze si usa solo con le funzioni che la nominano (ADR
+0009 di solid-space). Le intestazioni citate qui stanno in
+`geom2d/include/solid_space/geom2d/` di solid-space (`tolerance.hpp` in
+`robust/include/solid_space/robust/`) e valgono nella versione fissata dal
+sottomodulo (ADR 0030, punto 9).
 
 Restano a Tecnigrafo il comportamento dei comandi (domande, opzioni, che cosa si
 tiene e che cosa si toglie, messaggi), la traduzione dalle entità alle curve, la
@@ -115,10 +138,9 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
      sulla stessa curva che Tecnigrafo disegna (ADR 0036, punto 7). Il testo
      non ha curva.
    - **Dalle risposte alle entità:** l'ordine dei punti lungo una curva, la
-     loro posizione (prima dell'inizio, all'inizio, dentro, alla fine, oltre la
-     fine) e quali punti sono lo stesso punto vengono da solid-space. La
-     facciata non riordina e non confronta mai da sé le stazioni, che sono
-     arrotondate e servono solo come informazione.
+     loro posizione e quali punti sono lo stesso punto vengono da solid-space
+     (`intersection.hpp`, in testa, e `Location`). La facciata non riordina e
+     non confronta mai da sé le stazioni.
    - **Le polilinee** si compongono pezzo per pezzo, nell'ordine dei segmenti.
      Un punto alla fine di un segmento e all'inizio del successivo (per una
      polilinea chiusa, anche alla fine dell'ultimo e all'inizio del primo) è il
@@ -159,9 +181,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
      facciata non lo ricava confrontando stazioni (punto 1).
 5. **`TRIM`** toglie il pezzo dell'oggetto scelto compreso tra i due tagli più
    vicini al punto del clic.
-   - I tagli lungo l'oggetto e il loro ordine vengono da solid-space
-     (`intersectAlong`); tagli di bordi diversi nello stesso punto esatto sono
-     un taglio solo.
+   - I tagli lungo l'oggetto vengono da `intersectAlong` di solid-space, nel
+     suo ordine e riuniti come dice `HostIntersections`.
    - Il punto del clic si porta sull'oggetto con la proiezione di Tecnigrafo e
      si confronta con le posizioni dei tagli: è la scelta dell'utente, non una
      decisione geometrica. Se cade esattamente su un taglio, si toglie il pezzo
@@ -197,61 +218,38 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
    copia è un'entità nuova (ADR 0031, punto 6); con *Layer Current* prende il
    layer corrente.
 10. **Il lato.** Il punto indicato dà il segno della distanza con `side()` di
-    solid-space: a sinistra positiva, a destra negativa, guardando nel verso
-    della curva (per un cerchio e per un arco la sinistra è l'interno). Per una
+    solid-space, con i lati di `side.hpp` e il segno di `offset.hpp` (in
+    testa). Per una
     polilinea vale il segmento più vicino al punto, con la proiezione di
     Tecnigrafo (a pari distanza il primo). Un punto esattamente sulla retta o
     sul cerchio di quel segmento non indica un lato: nessuna copia, con il
     messaggio di AutoCAD. Con *Through* la distanza è quella del punto dalla
     curva, misurata da Tecnigrafo, e il lato è il suo.
-11. **Giunzioni**, come le definisce l'ADR 0012 di solid-space (`offsetPolyline`),
-    che corrisponde ad AutoCAD con `OFFSETGAPTYPE` = 0 (`autocad-offset.dxf`):
-    - ogni segmento si sposta; un segmento curvo il cui raggio diventa zero o
-      negativo sparisce;
-    - due segmenti vicini si uniscono nel loro punto comune più vicino al
-      vertice; se i loro prolungamenti non si incontrano e i segmenti di
-      partenza sono consecutivi, con un arco di raggio pari alla distanza
-      centrato nel vertice; altrimenti la copia non riesce;
-    - un segmento che le giunzioni girano al contrario si toglie, e i vicini si
-      uniscono di nuovo;
-    - i segmenti ridotti esattamente a un punto si tolgono.
-
-    Ogni segmento della copia tiene le larghezze del segmento da cui viene; un
+11. **Giunzioni**: i passi di `offsetPolyline` (`offset.hpp`; ADR 0012 di
+    solid-space, punto 4), che corrispondono ad AutoCAD con `OFFSETGAPTYPE` = 0
+    (`autocad-offset.dxf`). Ogni segmento della copia tiene le larghezze del segmento da cui viene; un
     arco di giunzione ha larghezza 0, salvo la larghezza costante della
     polilinea (gruppo 43), che resta.
-12. **Che cosa si garantisce** (il punto 6 dell'ADR 0012 di solid-space):
-    - linee, archi e cerchi: sempre. Un arco o un cerchio che si annullerebbe dà
-      il messaggio di AutoCAD e nessuna copia;
-    - polilinee, nei **casi semplici**: nessun segmento sparisce o si toglie, e
-      la copia esatta resta più lontana della tolleranza della regola (ADR
-      0036) da se stessa e dalla polilinea di partenza. La copia c'è sempre, è
-      quella esatta entro l'errore dichiarato da solid-space e non si
-      interseca; unica eccezione, un arco vicino al giro intero con una corda
-      di pochi ulp, che nessun bulge rappresenta entro l'errore: nessuna
-      copia, con il messaggio di AutoCAD (Matleyx78/solid-space#127, corretto
-      il 2026-11-01);
-    - **negli altri casi**: o una copia senza autointersezioni che non incontra
-      la polilinea di partenza, o nessuna copia con il messaggio di AutoCAD. Mai
-      una copia sbagliata. Il risultato può differire da quello di AutoCAD: nel
-      caso della U troppo stretta (`autocad-offset.dxf`, caso f) anche AutoCAD
-      non crea nulla; nel caso g con distanza 5 solid-space non ha potuto
-      confrontare i suoi passi con AutoCAD, e se differiscono vale la regola dei
-      passi (lo segnala il pacchetto di riferimenti, e decide il responsabile).
+12. **Che cosa si garantisce** è ciò che garantiscono `offsetCurve` e
+    `offsetPolyline` (`offset.hpp`, «What is guaranteed»; ADR 0012 di
+    solid-space, punto 6): Tecnigrafo non promette di più. Quando solid-space
+    non dà una copia (una curva che si annulla, una copia che non può fare o
+    non rappresenta), il comando dà il messaggio di AutoCAD e nessuna copia:
+    mai una copia sbagliata. Il risultato può differire da quello di AutoCAD:
+    nel caso della U troppo stretta (`autocad-offset.dxf`, caso f) anche
+    AutoCAD non crea nulla; nel caso g con distanza 5 solid-space non ha potuto
+    confrontare i suoi passi con AutoCAD, e se differiscono vale la regola dei
+    passi (lo segnala il pacchetto di riferimenti, e decide il responsabile).
 
 ### `FILLET` e `CHAMFER`
 
 13. **`FILLET`.** Opzioni *Undo*, *Polyline*, *Radius*, *Trim* e *Multiple*,
     con `Shift` che vale raggio 0. Il comando lavora su linee, archi, cerchi e
     segmenti della stessa polilinea; il raccordo viene da `fillet` di
-    solid-space, con le sue regole, che seguono `autocad-raccordi.dxf`:
-    - ogni punto indica la parte della sua curva da tenere; il lato del
-      raccordo si decide esattamente con `side()`;
+    solid-space, con le sue regole (`tangency.hpp`, regole 1–4), che seguono
+    `autocad-raccordi.dxf`. Restano a Tecnigrafo:
     - le linee e gli archi si accorciano o si allungano fino ai punti di
       tangenza, con le posizioni che solid-space dà; i cerchi non si tagliano;
-    - con raggio 0 le due entità si incontrano in uno spigolo;
-    - due curve dritte parallele si raccordano con un semicerchio, qualunque sia
-      il raggio;
-    - l'arco di raccordo è il più corto dei due tra i punti di tangenza;
     - con *Trim*, due segmenti della stessa polilinea ricevono un segmento
       curvo in mezzo, con il bulge che dà solid-space; *Polyline* raccorda
       tutti i vertici, segmento per segmento, e i segmenti troppo corti restano
@@ -270,28 +268,28 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 
     Le risposte "non esiste", "infiniti raccordi" e "il punto non indica un
     lato" di solid-space diventano messaggi; nessuna entità cambia. Lo stesso
-    per "oltre il dominio": il centro del raccordo, o lo spigolo del raggio 0,
-    cade oltre 2^50 (due rette quasi parallele). Il raccordo esiste ma non si
-    rappresenta, quindi il messaggio è suo, distinto da "non esiste"; con
-    *Polyline* il vertice resta com'è e si conta tra i troppo corti. Un raggio
+    per "oltre il dominio", la diagnosi `outOfDomain` sul raggio per una
+    costruzione oltre il dominio (`tangency.hpp`, `fillet`): il raccordo
+    esiste ma non si rappresenta, quindi il messaggio è suo, distinto da "non
+    esiste"; con *Polyline* il vertice resta com'è e si conta tra i troppo
+    corti. Un raggio
     scritto oltre 2^50 è invece un dato fuori dal dominio (punto 23): la
     facciata lo riconosce prima di chiedere il raccordo a solid-space
     (corretto il 2026-11-01). Fuori: il raccordo tra una polilinea e
     un'altra entità.
 14. **`CIRCLE` tangente-tangente-raggio** usa `tangentCircleNear` di
-    solid-space: il cerchio con i punti di tangenza più vicini ai due punti
-    indicati. Per una polilinea vale il segmento più vicino al punto. Un
-    cerchio il cui centro cadrebbe oltre 2^50 (due rette quasi parallele) non
-    si disegna, con il messaggio del punto 13 per "oltre il dominio"
-    (corretto il 2026-11-01).
+    solid-space, con la sua scelta tra i cerchi tangenti (`tangency.hpp`). Per
+    una polilinea vale il segmento più vicino al punto. Con la diagnosi
+    `outOfDomain` sul raggio il cerchio non si disegna, con il messaggio del
+    punto 13 per "oltre il dominio" (corretto il 2026-11-01).
 15. **`CHAMFER`.** Opzioni *Undo*, *Polyline*, *Distance*, *Angle*, *Trim*,
     *mEthod* e *Multiple*. Lavora su linee e segmenti dritti di polilinee.
-    - Lo spigolo è il punto comune delle due rette, deciso da solid-space
-      (`intersect` con le curve prolungate); due rette parallele o coincidenti
-      non hanno spigolo e danno il messaggio di AutoCAD. Due rette quasi
-      parallele il cui spigolo cade oltre 2^50, che `intersect` omette e conta,
-      danno il messaggio del punto 13 per "oltre il dominio": è lo stesso caso
-      del raccordo di raggio 0 (corretto il 2026-11-01).
+    - Lo spigolo è il punto comune delle due rette prolungate, dato da
+      `intersect` di solid-space (`intersection.hpp`, `PairIntersections`).
+      Senza punto comune (rette parallele o coincidenti) il comando dà il
+      messaggio di AutoCAD; con lo spigolo omesso oltre il dominio
+      (`omittedBeyondDomain`), il messaggio del punto 13 per "oltre il
+      dominio", come il raccordo di raggio 0 (corretto il 2026-11-01).
     - Lo smusso lo costruisce Tecnigrafo (ADR 0011 di solid-space, punto 11): i
       suoi estremi stanno alle distanze date dallo spigolo, ciascuno sulla
       parte della sua linea che il punto indica, cioè dalla parte dello spigolo
@@ -319,13 +317,17 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
       `Arc segments combined form a circle. Convert to circle? [Yes/No]
       <Yes>:` (testo del punto 22): con *Yes* il
       risultato è il cerchio, con *No* niente si unisce e il disegno non
-      cambia (corretto il 2026-11-02);
+      cambia (corretto il 2026-11-02). Lo stesso vale quando l'arco calcolato
+      avrebbe l'angolo finale uguale a quello iniziale, purché almeno un altro
+      arco si unisca: senza, niente si unisce (corretto il 2026-11-02, #373 e
+      #476);
     - una linea o un arco nascono solo se tutte le entità scelte sono linee
       allineate alla sorgente o archi del suo cerchio; altrimenti vale la
       catena (punto 18), e le entità che non vi entrano si scartano (corretto
       il 2026-11-01);
     - linee, archi e polilinee che si toccano agli estremi diventano una
-      polilinea;
+      polilinea; una polilinea chiusa diversa dalla sorgente non ha estremi
+      liberi e si scarta (corretto il 2026-11-02, #373);
     - entità che non si toccano non si uniscono, e compare il messaggio
       `0 objects joined, <n> objects discarded from the operation.`
 
@@ -367,8 +369,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
     (corretto il 2026-11-02, su decisione del responsabile: non c'è un AutoCAD
     inglese su cui controllarli). Un testo nuovo si aggiunge a quella tabella
     nella scheda del pacchetto che lo introduce.
-23. **Dati fuori dal dominio di solid-space** (coordinate o raggi oltre 2^50,
-    circa 1.1e15): nessun disegno reale ci arriva. Le curve che solid-space
+23. **Dati fuori dal dominio di solid-space** (`curves.hpp`, «Checking the
+    data»; in breve, oltre 2^50, circa 1.1e15): nessun disegno reale ci arriva. Le curve che solid-space
     rifiuta non tagliano, non si raccordano e non si uniscono, e il comando lo
     dice con il messaggio dell'operazione non riuscita.
 
@@ -385,8 +387,8 @@ alcuni di questi comandi usano sequenze vecchie (ADR 0032).
 - **I tratti in comune come tagli:** servirebbe ordinare i loro estremi tra gli
   altri tagli confrontando stazioni (punto 4).
 - **`OFFSET` che promette il risultato di AutoCAD in tutti i casi:** solid-space
-  promette il risultato esatto solo nei casi semplici, e un messaggio onesto
-  negli altri; Tecnigrafo non promette di più.
+  non lo promette (`offset.hpp`, «What is guaranteed»), e Tecnigrafo non
+  promette di più.
 - **Il lato di `OFFSET` deciso dentro solid-space con un punto:** per una
   polilinea dipende dalla proiezione sul segmento più vicino, che resta a
   Tecnigrafo (ADR 0012 di solid-space, alternative).

@@ -9,7 +9,9 @@
 - **Dipende da:** P18, P19, P25, R20
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B6, B14
   e B15 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
-  revisione di B6 dopo le prove in AutoCAD (#468)
+  revisione di B6 dopo le prove in AutoCAD (#468); 2026-11-03, operazione
+  snellimento (#478): il messaggio di `OutOfDomain`, deciso dal responsabile
+  il 2026-11-02 (DECISIONI.md, 2026-11-03)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -73,11 +75,12 @@ Select 2D polyline or [Radius]:
     `Cannot fillet those objects.` per i primi tre e `Pick a point that is not
     on the other object.` per `AmbiguousPick` (tabella di
     [dxf-di-prova.md](dxf-di-prova.md), punto 3), e nessuna modifica;
-  - `OutOfDomain` (due rette quasi parallele, il centro del raccordo o lo
-    spigolo oltre il dominio di solid-space): `Lines are nearly parallel.` e
-    nessuna modifica. Il messaggio è di Tecnigrafo, nello stile di quelli di
-    AutoCAD (`Lines are parallel.` di `CHAMFER`): il caso nasce dal dominio di
-    solid-space, e la prova in AutoCAD non lo copre;
+  - `OutOfDomain` (una costruzione oltre il dominio di solid-space, P19):
+    `Result is beyond the drawing limits.` e nessuna modifica. Il messaggio è
+    di Tecnigrafo, nello stile di quelli di AutoCAD: il caso nasce dal dominio
+    di solid-space, la prova in AutoCAD non lo copre, e il messaggio non nomina
+    una causa perché le costruzioni che lo danno sono più d'una (non solo due
+    rette quasi parallele);
   - *Polyline* scrive `<n> lines were filleted` e, se ce ne sono,
     `<m> were too short` (tabella come sopra); i vertici rimasti per
     `OutOfDomain` sono tra questi, e i contatori seguono la visita dei vertici
@@ -100,8 +103,8 @@ Specify radius of circle <{default}>:
 Le due domande sono richieste di oggetto; il cerchio viene da
 `circleTangentTangentRadius`; senza soluzione (anche con un raggio oltre il
 dominio, che dà `None`), `Circle does not exist.` e il comando finisce senza
-disegnare; con `OutOfDomain`, `Lines are nearly parallel.` e il comando finisce
-allo stesso modo.
+disegnare; con `OutOfDomain`, `Result is beyond the drawing limits.` e il
+comando finisce allo stesso modo.
 
 ## Regole della tappa che valgono qui
 
@@ -128,8 +131,10 @@ allo stesso modo.
   polilinea invariata, l'arco come entità a sé con le proprietà della
   polilinea, e un solo passo di annulla.
 - Rette quasi parallele (i dati di P19) in `FILLET`, anche con `Shift`, e in
-  *Ttr*: il messaggio e nessuna modifica; un raggio oltre il dominio (2e15):
-  il messaggio del raccordo impossibile e `Circle does not exist.`.
+  *Ttr*: `Result is beyond the drawing limits.` e nessuna modifica; le due
+  parallele lontane di P19 in `FILLET`: lo stesso messaggio; un raggio oltre
+  il dominio (2e15): il messaggio del raccordo impossibile e `Circle does not
+  exist.`.
 
 ## Fatto quando
 

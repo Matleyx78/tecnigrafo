@@ -585,3 +585,222 @@ i rimandi ai documenti che cambia.
   di quel file. L'ADR 0035, punto 22, è corretto (nessun codice lo applica
   ancora). I pacchetti P5, P16, P18, P20, P21 e P23 non hanno più testi da
   controllare.
+- **2026-11-02 — Un metodo per i buchi trovati dagli agenti.** P22
+  ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373)) si è fermato su
+  quattro buchi dopo la revisione delle interfacce (P25,
+  [#464](https://github.com/Matleyx78/tecnigrafo/issues/464)); due vengono
+  dalle decisioni stesse: B10 vale solo quando la catena cresce dalla fine, e
+  la regola di B11 rivista può dare un arco con angoli uguali. L'arresto
+  funziona; mancava un controllo sulla correzione. Il responsabile fissa il
+  metodo, in sei passi
+  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B10a): smistare i buchi
+  (scheda, contratto, non si sa), decidere nella issue un buco per commento,
+  una sola pull request di correzione, rilettura con la lista, merge,
+  ripresa del pacchetto. Le cose nuove sono due:
+  - **ogni decisione ha il suo esempio**, con la risposta scelta, nella scheda
+    ("Test richiesti"), e una regola si scrive per tutti i casi che tocca; se
+    la risposta si vede con una domanda del catalogo, un pacchetto di
+    riferimenti con la lettera la mette in un caso;
+  - **la correzione si rivede prima del merge**: la pull request comincia con
+    **Revisione della correzione: da fare**, e un agente diverso da chi l'ha
+    scritta (di norma Codex) rilegge le sole regole nuove o corrette con la
+    lista di CONTRATTI.md di solid-space, più due domande (vale anche al
+    contrario? che cosa succede quando il calcolo arriva esattamente al
+    limite?), con un **Verbale della revisione della correzione**. Il
+    responsabile unisce solo dopo il verbale (A3).
+
+  Vale da subito, anche per la correzione dei buchi della #373. Cambiano
+  [AGENTS.md](../AGENTS.md) ("Le correzioni delle schede si rivedono"),
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, tabella di B, B4, il
+  nuovo B10a, C) e [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) (sezione
+  5). Nessun ADR cambia.
+- **2026-11-02 — Chi rivede una pull request può commentarla.** La prima
+  rilettura con il metodo di B10a (Codex sulla
+  [#476](https://github.com/Matleyx78/tecnigrafo/pull/476)) si è fermata: il
+  controllo automatico dell'agente ha letto «non modificarla» come divieto
+  anche dell'etichetta e dei commenti, cioè di tutto ciò che la revisione deve
+  scrivere. Le frasi per la rilettura dicono ora che cosa si può fare
+  (prendere in carico, commentare, togliere l'etichetta) e che cosa no
+  (commit, cambi a file, ramo, titolo o descrizione). Cambiano
+  [AGENTS.md](../AGENTS.md) ("Le correzioni delle schede si rivedono") e
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, frase per la revisione
+  del contratto in solid-space; B10a, passo 4). Nessuna regola cambia nella
+  sostanza.
+- **2026-11-02 — Buchi della scheda P22: le decisioni.** P22
+  ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373#issuecomment-6576564686))
+  si è fermato su quattro buchi. Il responsabile decide:
+  1. **Verso quando la catena cresce dall'inizio: B.** Vince l'inizio della
+     candidata, che diventa il vertice comune con la catena: dalla fine si
+     aggiunge com'è, dall'inizio si gira. Con un solo estremo coincidente, il
+     vertice comune è quello e la candidata si orienta allo stesso modo. B10
+     resta, scritta per tutti e due i lati.
+  2. **Polilinee chiuse: A.** Una polilinea chiusa diversa dalla sorgente non
+     ha estremi liberi, non entra nella catena e si scarta.
+  3. **Ordine degli estremi delle linee allineate: C.** L'ordine viene da
+     solid-space, con una funzione nuova del contratto, come chiede l'ADR
+     0035, punto 1. È un buco nel contratto:
+     [Matleyx78/solid-space#158](https://github.com/Matleyx78/solid-space/issues/158),
+     in cui il responsabile sceglie l'opzione 2 (dati i segmenti allineati,
+     solid-space dà i due estremi del segmento unito, con i pareggi
+     nell'ordine dei segmenti). P22 la cita in "Dipende da" e aspetta la pull
+     request di solid-space che la applica.
+  4. **Arco con angoli uguali: A.** Se `normalizeAngle(σ + il più lontano)`
+     dà σ, gli archi formano un cerchio, con `formsCircle` vero, come se il
+     più lontano fosse arrivato al giro intero.
+
+  La rilettura di Codex (il
+  [verbale](https://github.com/Matleyx78/tecnigrafo/pull/476#issuecomment-6577193793))
+  ha trovato un buco nuovo nel punto 4,
+  [B476-1](https://github.com/Matleyx78/tecnigrafo/pull/476#issuecomment-6577208775):
+  il calcolo comprende la sorgente, quindi un arco sorgente quasi intero
+  darebbe il cerchio anche da solo. Il responsabile sceglie **A**: serve almeno
+  un altro arco che si unisca; con la sola sorgente il risultato è
+  `std::nullopt`, la sorgente non cambia e non compare nessuna domanda.
+  *cLose* resta l'eccezione.
+
+  È la prima correzione con il metodo dello stesso giorno (B10a della guida):
+  ogni decisione ha il suo esempio in "Test richiesti" della scheda, e la pull
+  request si rivede con la lista prima del merge. Correggono
+  l'[ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punto 17, con una
+  riga **Corretto:**; cambiano la scheda [P22](tappe/0.7/P22-unione-core.md) e
+  il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+  Il catalogo delle domande e i riferimenti di R22 non cambiano: nessun caso
+  cade nei quattro punti.
+- **2026-11-03 — Operazione snellimento, passo 3: Tecnigrafo rimanda a
+  solid-space.** Durante il congelamento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478)), dopo l'[ADR 0013
+  di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
+  («Esatto dove serve») e i commenti delle sue intestazioni che lo seguono, il
+  responsabile decide che i documenti di Tecnigrafo non ripetono più il
+  contratto di solid-space: lo citano.
+  - **Dove.** I 54 blocchi dell'[inventario di
+    Codex](https://github.com/Matleyx78/tecnigrafo/issues/478#issuecomment-6579550558),
+    negli ADR [0030](adr/0030-solid-space-kernel-di-tecnigrafo.md),
+    [0035](adr/0035-taglio-offset-raccordi-unione.md) e
+    [0036](adr/0036-tolleranze-di-tecnigrafo.md) e nelle schede
+    [P15](tappe/0.7/P15-snap-intersezione.md)–[P22](tappe/0.7/P22-unione-core.md)
+    e [P25](tappe/0.7/P25-revisione-interfacce.md), diventano un rimando
+    all'intestazione (la funzione o il tipo), all'ADR di solid-space, a
+    CONTRATTI.md o all'archivio dei casi. Le righe **Corretto:** dello 0035 che
+    descrivevano solid-space diventano un rimando solo. Restano scritte per
+    intero le regole di Tecnigrafo: comandi, messaggi, che cosa si tiene,
+    l'ordine della catena di `JOIN`, la proiezione, i pixel, il confronto dei
+    casi.
+  - **Quale versione.** Un rimando vale nella versione dell'intestazione
+    fissata dal sottomodulo, o in quella al cui commit la issue del pacchetto
+    lo sposta (ADR 0030, punto 9); chi sposta il sottomodulo rilegge le
+    intestazioni come dice AGENTS.md ("Quando fermarsi", punto 1).
+  - **Le ripetizioni già diverse dal contratto** si correggono con il rimando:
+    vale il contratto. Sono il lato di un arco orario (ADR 0035, punto 10,
+    `side.hpp`), la grandezza M e il dominio degli errori (ADR 0036, contesto),
+    il confronto dei casi (ADR 0036, punto 4: l'errore di un valore costruito
+    e gli esiti liberi nelle fasce, dalla revisione della
+    [#479](https://github.com/Matleyx78/tecnigrafo/pull/479)), i casi `failed`
+    della curva parallela (P17) e l'attribuzione di B13 alla #152 (P22).
+  - **Eccezione redazionale a [GOVERNANCE.md](../GOVERNANCE.md).** Il punto 1
+    dello 0035, che P14 attua, e il punto 5 dello 0036 cambiano solo nella
+    descrizione: il rimando la sostituisce, la regola resta identica. Il
+    punto 4 dello 0036 invece si corregge (sopra), perché contraddiceva il
+    contratto. I punti
+    6–8 dello 0030, che P0 attua, non cambiano. Ogni ADR toccato ha una riga
+    **Corretto:** con la data di oggi.
+  - **La [PR #473](https://github.com/Matleyx78/tecnigrafo/pull/473) si chiude
+    senza unirla.** Se ne tiene ciò che è di Tecnigrafo e serve ancora: il
+    messaggio unico di `OutOfDomain` per `FILLET`, `CIRCLE` *Ttr* e `CHAMFER`,
+    **`Result is beyond the drawing limits.`**, al posto di `Lines are nearly
+    parallel.` (decisione del responsabile del 2026-11-02, nella chat di
+    quella pull request), perché la diagnosi nasce da più costruzioni, non
+    solo da rette quasi parallele; la dipendenza di P19 da
+    [Matleyx78/solid-space#145](https://github.com/Matleyx78/solid-space/issues/145)
+    (0.2-P20, dominio delle tangenze), al posto di #70, già unito; i due
+    esempi nuovi dei test di P17 e P19 (un raggio costruito oltre 2^50, due
+    parallele lontane). Si lasciano la riga **Corretto:** dello 0035, il
+    commit `11108db` come punto di partenza delle schede, la dipendenza di
+    P17 da #145 (dopo l'ADR 0013, 0.2-P20 non tocca più `offset.hpp`) e le
+    ripetizioni del contratto corretto.
+  - **Gli estremi degli archi in `JOIN`** (P22, B13): si prendono da
+    `endpoints()` di `curves.hpp` di solid-space, sulla curva della
+    traduzione di P14, come chiede il suo commento, e non da un coseno e un
+    seno di Tecnigrafo. La scheda diceva «la stessa funzione usata altrove»;
+    la fascia vicino al confine della tolleranza resta libera (ADR 0013 di
+    solid-space, punto 4). Una diagnosi di `endpoints()`, e un estremo che
+    `endpoints()` restituisce oltre `kMaxCoordinate` (possibile per dati
+    validi, che `coincident` non accetta), seguono l'ADR 0035, punto 23: in
+    `join` e in `joinToSource` un'entità diversa dalla sorgente non si unisce,
+    non entra in `consumed` e conta tra le scartate; se è la sorgente, il
+    risultato è `std::nullopt`. Il controllo vale per tutti e due gli estremi,
+    per coordinate positive e negative e per ogni verso, prima di ogni
+    chiamata a `coincident` (revisione della
+    [#480](https://github.com/Matleyx78/tecnigrafo/pull/480), R480-1).
+  - **P25** ([#464](https://github.com/Matleyx78/tecnigrafo/issues/464)) è
+    chiusa dal 2026-11-01 e resta chiusa: la sua scheda rimanda ai punti 10 e
+    11 di CONTRATTI.md invece di trascriverli. La rilettura di questa
+    operazione la fa la revisione della correzione delle sue pull request,
+    non una P25 riaperta.
+
+  Cambiano gli ADR 0030, 0035 e 0036 (righe **Corretto:** del 2026-11-03), le
+  schede P15–P22 e P25, il piano della [tappa 0.7](tappe/0.7-modifiche.md)
+  ("Modifiche al piano" e la riga di P19), il catalogo delle domande
+  ([verifica/domande.md](verifica/domande.md)) e la tabella dei messaggi di
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md). La issue #363 (P17) è
+  bloccata da Matleyx78/solid-space#130 invece che da #63; la #367 (P19) da
+  #145 invece che da #70.
+- **2026-11-03 — Operazione snellimento, passo 4: AGENTS.md diventa un nucleo.**
+  Durante il congelamento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478)), come in
+  solid-space, il responsabile decide che [AGENTS.md](../AGENTS.md) contiene
+  solo un nucleo che ogni agente legge sempre, sotto le 1000 parole (dove si
+  scrive, presa in carico, regole che non si possono violare, quando fermarsi,
+  prima di dichiarare finito, commit e pull request), più una tabella
+  "Se ... leggi anche ..." con segni oggettivi: titolo della issue, etichetta,
+  cartelle o file toccati, ramo. Il resto delle regole sta in
+  [agenti/](agenti/), con gli stessi otto nomi di file nei due repository:
+  `pacchetto.md`, `riferimenti.md`, `revisione.md`, `lotti.md`,
+  `contratto.md`, `altro-repository.md`, `comandi.md`, `chiusura.md`. Nessuna
+  regola si perde: le sezioni conservano i titoli di prima, così i rimandi
+  «AGENTS.md, "<titolo>"» degli altri documenti restano validi. `GEMINI.md`
+  rimanda al nucleo e alla tabella e tiene solo le note proprie di Gemini.
+  Tre regole nuove:
+  - **Niente compilazione locale per documenti, commenti e riferimenti.** Una
+    pull request che tocca solo documenti, commenti o casi di riferimento non
+    si compila e non si eseguono i casi in locale: la verifica la fa la CI;
+    `scripts/controlla.sh --solo formato` resta permesso. Per i riferimenti cade la
+    possibilità di eseguire i casi in locale; la loro validità la dicono i
+    controlli anticipati
+    ([ADR 0037](adr/0037-controllo-anticipato-dei-riferimenti.md)).
+  - **La fascia di una soglia non blocca.** In revisione, un caso che sta entro
+    un errore dichiarato dal confine di `kMaxCoordinate` o da un'altra soglia
+    del contratto si chiude dichiarando la fascia
+    ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+    punto 4), senza bloccare il merge e senza decisione del responsabile: chi
+    rivede lo segnala come non bloccante e l'autore scrive la fascia nella
+    scheda nella stessa pull request, senza un altro giro.
+  - **Buchi visibili e no anche nelle schede.** La regola dell'ADR 0013 di
+    solid-space, punto 3, vale anche per i buchi delle schede di Tecnigrafo:
+    un buco visibile (esito o diagnosi, numero o ordine delle entità, una
+    coordinata oltre la tolleranza della regola) lo decide il responsabile;
+    uno non visibile non ferma, lo sceglie chi implementa (la scelta più
+    semplice), lo scrive nella scheda o nel commento, lo fissa con un test e
+    lo segnala nella pull request.
+
+  Cambiano [AGENTS.md](../AGENTS.md), `GEMINI.md` e i nuovi file di
+  [agenti/](agenti/). `CLAUDE.md` non cambia; nessun ADR cambia.
+- **2026-11-03 — Operazione snellimento: revisioni, aggiornamenti, regole di
+  metodo.** A fine congelamento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478)) il responsabile
+  decide, nella chat di coordinamento dell'operazione, tre regole di metodo:
+  - **Il secondo giro di una revisione guarda solo il commit di correzione.**
+    Se la correzione rimette un testo di `main` o fa esattamente ciò che il
+    revisore ha chiesto, basta il controllo del responsabile, senza un altro
+    giro.
+  - **Una pull request si aggiorna su `main` con un merge.** Sempre «Update
+    with merge commit» (o `gh pr update-branch <numero>`), mai il rebase.
+  - **Le regole di metodo cambiano solo alla chiusura della tappa**, salvo un
+    vero blocco: un lavoro che non può andare avanti con le regole attuali, e
+    lo stabilisce il responsabile. Le proposte si raccolgono durante la tappa
+    in una issue per tappa, «[X.Y] Proposte di metodo», con l'etichetta
+    `proposta`, e si decidono nella pull request di chiusura.
+
+  Cambia [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, punti 3 e 7;
+  B10a, passo 4; B12), che nella stessa pull request si allinea anche alle
+  decisioni dei passi 3 e 4. Nessun ADR cambia.

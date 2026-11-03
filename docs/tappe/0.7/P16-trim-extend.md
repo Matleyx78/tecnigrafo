@@ -10,7 +10,9 @@
   solid-space si prendono da lì)
 - **Dipende da:** P1, P8, P15, P25, R16
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
-  buchi B1–B4 e B18 della #464 ([DECISIONI.md](../../DECISIONI.md))
+  buchi B1–B4 e B18 della #464 ([DECISIONI.md](../../DECISIONI.md));
+  2026-11-03, operazione snellimento (#478): rimanda a `coincidence.hpp` e a
+  `intersection.hpp` invece di ripeterli
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 3–8 e 21–23; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -84,7 +86,8 @@ Per `EXTEND` le domande sono le stesse, con *extend* e *trim* scambiati (e
     `ToleranceRule::of` del documento, non si tiene; se nulla resta, l'oggetto
     si cancella. Un pezzo di polilinea è degenere quando **tutti** i suoi
     segmenti lo sono, ciascuno giudicato con `isDegenerate(const
-    PolylineSegment&, rule)` (B4): nessuna soglia nuova; `isDegenerate`
+    PolylineSegment&, rule)` (B4), cioè con `isDegenerate` di
+    `coincidence.hpp` di solid-space: nessuna soglia nuova; `isDegenerate`
     sull'entità resta falso per le polilinee, e una catena di segmenti
     ciascuno sotto la tolleranza si scarta anche se nel complesso la supera di
     poco. Per esempio, in millimetri, [(0,0),(10,0),(10,10)] che fa da bordo a
@@ -105,7 +108,8 @@ Per `EXTEND` le domande sono le stesse, con *extend* e *trim* scambiati (e
     segmento non puntiforme, per una polilinea); per l'inizio, l'ultimo taglio
     `BeforeStart` di una linea o del primo segmento dritto non puntiforme,
     l'ultimo taglio `AfterEnd` di un arco o del primo segmento curvo non
-    puntiforme (il resto del cerchio, percorso all'indietro dall'inizio). Il
+    puntiforme (per un arco `AfterEnd` copre il resto del cerchio:
+    `intersection.hpp`, `Location`). Il
     primo e l'ultimo segmento sono quelli di `Extension::Extended` (P14, B3);
   - l'entità prolungata viene da `extendTo` (P15, B2) con l'estremo e quel
     taglio, e cambia con `Editor::replace`; i vertici dei segmenti puntiformi
