@@ -22,6 +22,12 @@
   [solid-space#125](https://github.com/Matleyx78/solid-space/pull/125) e con il
   punto 15 del suo ADR 0007. La revisione segue l'accettazione degli ADR di
   valutazione; il responsabile decide i buchi prima che si usi il contratto.
+- **Corretto:** 2026-11-03 — operazione snellimento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478);
+  [DECISIONI.md](../DECISIONI.md), stessa data): dove questo ADR descriveva
+  solid-space (il contesto, i punti 2, 3, 5, 11, 13 e 14), rimanda ai suoi ADR,
+  a CONTRATTI.md e all'archivio dei casi. Nessuna decisione di Tecnigrafo
+  cambia; i punti 6–8, che il codice unito attua (P0), non cambiano.
 
 ## Contesto
 
@@ -37,15 +43,13 @@ Questo lavoro sta in [solid-space](https://github.com/Matleyx78/solid-space), un
 repository separato dello stesso responsabile. È **il kernel di Tecnigrafo**: è
 separato solo perché altri lo possano usare così com'è, ma Tecnigrafo non ha basi
 geometriche né 3D senza di lui. È lo stesso rapporto che c'è tra Inventor e il suo
-kernel. solid-space ha già fissato la sua parte
-([ADR 0001](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0001-scopo-e-confini.md),
-[ADR 0002](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0002-componenti-e-dipendenze.md),
-[ADR 0004](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0004-robustezza-e-verifica.md),
-[ADR 0007](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0007-tappe-su-richiesta.md)):
-cinque componenti (`robust`, `naming`, `solver`, `kernel`, `features`), OCCT e
-libslvs collegati in privato, intestazioni pubbliche senza dipendenze esterne,
-tappe che nascono dalle richieste di Tecnigrafo. Il suo ADR 0002, punto 8, lascia
-a Tecnigrafo la scelta di come incorporarlo.
+kernel. solid-space ha già fissato la sua parte: scopo, componenti e
+dipendenze nei suoi
+[ADR 0001](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0001-scopo-e-confini.md),
+[0002](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0002-componenti-e-dipendenze.md)
+e [0004](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0004-robustezza-e-verifica.md),
+le tappe che nascono dalle richieste di Tecnigrafo nell'[ADR 0007](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0007-tappe-su-richiesta.md).
+Il suo ADR 0002, punto 8, lascia a Tecnigrafo la scelta di come incorporarlo.
 
 **La correzione del 2026-10-29.** Le prime richieste, quelle della tappa 0.7
 (solid-space#20–#23), hanno mostrato tre attriti: il testo della richiesta viveva
@@ -56,10 +60,10 @@ l'[ADR 0007 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/d
 corretto lo stesso giorno, apre una tappa di solid-space per ogni tappa di
 Tecnigrafo che chiede qualcosa, fa portare a ogni valutazione il contratto (le
 intestazioni pubbliche in bozza) e rende utilizzabile ogni pacchetto unito. Per
-il 2D le valutazioni hanno scelto un componente nuovo di solid-space, `geom2d`:
-curve del piano (segmento, arco, cerchio, bulge, polilinea), intersezioni, lato,
-tangenze e curve parallele, sopra `robust` e con la sola libreria standard. Lo
-fissa un ADR di solid-space. Questo ADR adegua il lato di Tecnigrafo.
+il 2D le valutazioni hanno scelto un componente nuovo di solid-space, `geom2d`,
+descritto dal suo
+[ADR 0008](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0008-componente-geom2d.md).
+Questo ADR adegua il lato di Tecnigrafo.
 
 Senza una decisione scritta qui, le regole di Tecnigrafo vietano di usarlo:
 `core` non ha dipendenze esterne (ADR 0001) e gli agenti non aggiungono
@@ -72,17 +76,15 @@ dipendenze (AGENTS.md).
 1. **solid-space è il kernel geometrico di Tecnigrafo**, non una libreria esterna.
    Tutto ciò che è geometria robusta, vincoli, naming e solidi si chiede a lui;
    Tecnigrafo non ne scrive una versione propria.
-2. **Confine dei compiti.** A solid-space spettano: decisioni geometriche che
-   dipendono dal segno di una grandezza vicina a zero (da che parte sta un
-   punto, se due elementi si intersecano, sono tangenti o coincidono),
-   costruzioni con un errore garantito (punti d'intersezione, raccordi), politica
-   delle tolleranze geometriche, solver dei vincoli, naming topologico, albero
-   delle feature, operazioni solide, STEP. A Tecnigrafo restano: comandi,
+2. **Confine dei compiti.** A solid-space spetta ciò che gli danno i suoi
+   ADR 0001 e 0008 (punti 2 e 6): le decisioni geometriche robuste, le
+   costruzioni con un errore garantito, le tolleranze geometriche, i vincoli,
+   il naming, le feature, i solidi e STEP. A Tecnigrafo restano: comandi,
    interfaccia, annulla e ripeti, formati di file (DXF, `.cadx`), disegno sullo
    schermo, tolleranze in pixel e tolleranze dei casi di verifica.
 3. **Non si espone OCCT.** Tecnigrafo usa solo le intestazioni pubbliche di
-   solid-space, che non includono OCCT né libslvs. Nessun modulo di Tecnigrafo
-   collega OCCT direttamente.
+   solid-space, senza dipendenze esterne per l'ADR 0002 di solid-space
+   (punto 4). Nessun modulo di Tecnigrafo collega OCCT direttamente.
 
 ### Quale modulo usa quale componente
 
@@ -95,8 +97,8 @@ dipendenze (AGENTS.md).
    si decidono con l'ADR della tappa che introduce i vincoli. Ogni altro
    collegamento richiede un ADR.
 5. **`core` resta senza librerie esterne.** `solid_space::robust` e
-   `solid_space::geom2d` usano solo la libreria standard, quindi `core` continua
-   a compilare senza Qt, OCCT o altro.
+   `solid_space::geom2d` non ne hanno (ADR 0008 di solid-space, punti 1 e 4),
+   quindi `core` continua a compilare senza Qt, OCCT o altro.
    Il CAD 2D non compila mai `kernel` né `features`
    (`SOLID_SPACE_BUILD_KERNEL=OFF`), quindi non richiede OCCT.
 
@@ -139,11 +141,9 @@ dipendenze (AGENTS.md).
     di solid-space con l'etichetta `richiesta`, scritta con il suo modulo. La
     apre il responsabile, oppure un agente di Tecnigrafo a cui lui lo chiede, con
     `scripts/richiesta.sh`. In Tecnigrafo non ne resta una copia: il piano e i
-    pacchetti citano la issue di solid-space. La richiesta dice di che cosa c'è
-    bisogno, non come soddisfarlo; solid-space risponde con obiettivi
-    raggiungibili e, per gli esiti che cambiano un'interfaccia, con il contratto:
-    le intestazioni pubbliche in bozza, accettate insieme all'ADR di
-    valutazione.
+    pacchetti citano la issue di solid-space. Che cosa dice la richiesta e come
+    risponde solid-space, con il contratto, lo dice l'ADR 0007 di solid-space
+    (punti 2–4 e 15).
 12. **Due momenti.** Il bisogno si cerca quando si prepara il piano della tappa
     (sezione "Richieste a solid-space" di [tappe/0000-modello.md](../tappe/0000-modello.md)),
     ma può emergere anche durante la tappa: allora l'agente si ferma e scrive il
@@ -155,14 +155,10 @@ dipendenze (AGENTS.md).
     Tecnigrafo che dipendono da solid-space si scrivono sulle intestazioni
     accettate e riviste, **dopo che la issue `[X.Y-C]` di solid-space è chiusa**
     ([CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)),
-    non alla sola accettazione delle valutazioni. La revisione parte appena gli
-    ADR sono accettati, anche con la tappa in preparazione; la fa un agente
-    diverso da chi ha scritto l'ADR, di norma Codex. Apre una issue `contratto`
-    per ogni buco; il responsabile decide e una sola pull request applica le
-    decisioni. Se non ci sono buchi, il responsabile chiude `[X.Y-C]` dopo il
-    verbale, senza pull request. Fino alla chiusura, il piano di Tecnigrafo
-    elenca i pacchetti che usano il contratto con una riga ciascuno. In
-    "Dipende da" un pacchetto cita la richiesta
+    non alla sola accettazione delle valutazioni. Come si fa la revisione lo
+    dice CONTRATTI.md, «La revisione del contratto». Fino alla chiusura, il
+    piano di Tecnigrafo elenca i pacchetti che usano il contratto con una riga
+    ciascuno. In "Dipende da" un pacchetto cita la richiesta
     (`Matleyx78/solid-space#N`) finché la tappa di solid-space non ha i suoi
     pacchetti, poi il pacchetto di solid-space che gli serve: Tecnigrafo aspetta
     quel pacchetto, non la fine della tappa. Intanto vanno avanti i pacchetti che
@@ -174,11 +170,11 @@ dipendenze (AGENTS.md).
     (`tests/corpus/`, ADR 0007 di solid-space, punto 17). I riferimenti di
     Tecnigrafo prendono da lì i valori geometrici attesi (intersezioni, punti di
     tangenza, curve parallele, lati), **citando il caso**, invece di rifare i
-    calcoli; verificano la traduzione dalle entità alle curve e i comandi. I
-    casi concreti e i DXF di AutoCAD che servono a una richiesta entrano in
-    quell'archivio. Se un riferimento di Tecnigrafo e l'archivio non
-    concordano, si apre una issue in solid-space e decide l'archivio, corretto
-    là se è sbagliato.
+    calcoli; verificano la traduzione dalle entità alle curve e i comandi. Come
+    entrano nell'archivio i casi di Tecnigrafo, e chi decide quando non
+    concordano, lo dice il
+    [`tests/corpus/README.md`](https://github.com/Matleyx78/solid-space/blob/main/tests/corpus/README.md),
+    «Casi che arrivano da Tecnigrafo».
 
 ## Alternative considerate
 

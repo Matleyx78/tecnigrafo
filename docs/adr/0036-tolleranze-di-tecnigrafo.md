@@ -2,6 +2,18 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-10-29
+- **Corretto:** 2026-11-03 — operazione snellimento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478);
+  [DECISIONI.md](../DECISIONI.md), stessa data): dove questo ADR descriveva il
+  contratto di solid-space (la regola, la grandezza M, gli errori delle
+  costruzioni e `isDegenerate`, nel contesto e nei punti 4 e 5), rimanda alle
+  sue intestazioni e ai suoi ADR. Nel punto 5 il rimando sostituisce solo la
+  descrizione. Dove la descrizione era già diversa dal contratto vale il
+  contratto: la grandezza M (`magnitude()`) e il dominio degli errori (ADR
+  0013 di solid-space, punto 2) nel contesto; nel punto 4 l'errore di un
+  valore costruito, che dipende anche dalla sua grandezza, e gli esiti liberi
+  nelle fasce, che un caso non impone (ADR 0013, punti 4 e 5; revisione della
+  [#479](https://github.com/Matleyx78/tecnigrafo/pull/479), R479-1 e R479-2).
 
 ## Contesto
 
@@ -15,20 +27,17 @@ disegno.
 solid-space ha risposto alla richiesta
 [Matleyx78/solid-space#23](https://github.com/Matleyx78/solid-space/issues/23)
 con l'[ADR 0009 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0009-regola-delle-tolleranze-del-piano.md):
-una regola sola, che per dati di grandezza M vale
-
-```text
-epsilon(M) = max(f, r · M)      f = 1e-9 m espresso in unità del disegno
-                                r = 2^-42 ≈ 2.3e-13
-```
-
-con M il massimo valore assoluto tra coordinate e raggi delle curve in gioco.
-Tecnigrafo le dà la lunghezza della sua unità in metri, ricavata da `INSUNITS`.
-Le decisioni esatte di solid-space (intersezioni, lato, ordine) non usano mai la
-regola; la regola dice che cosa intendeva l'utente e si usa solo con le funzioni
-che la nominano. Gli errori delle costruzioni di solid-space sono dichiarati
-nelle sue intestazioni: 2^-48 · max(M, |p|) per i punti, 2^-46 · max(M, |p|)
-per stazioni, lunghezze, archi di raccordo e curve parallele.
+una regola sola, `epsilon(M)`, scritta in `robust/tolerance.hpp`
+(`TolerancePolicy`), con la grandezza M dei dati di `magnitude()` in
+`geom2d/curves.hpp`. Tecnigrafo le dà la lunghezza della sua unità in metri,
+ricavata da `INSUNITS`. Le decisioni esatte di solid-space non usano mai la
+regola, che si usa solo con le funzioni che la nominano (ADR 0009 di
+solid-space, punto 1). Gli errori delle costruzioni sono le costanti delle sue
+intestazioni (`kRelativePointError` e `kRelativeStationError` in `curves.hpp`,
+`kRelativeArcError` in `tangency.hpp`, `kRelativeOffsetError` in `offset.hpp`),
+con il dominio dell'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+punto 2. Le intestazioni valgono nella versione fissata dal sottomodulo (ADR
+0030, punto 9).
 
 Oggi le regole di Tecnigrafo sono sparse:
 
@@ -111,17 +120,23 @@ di solid-space, che ora c'è.
    Tecnigrafo calcola da sé.
    - Per i numeri costruiti da solid-space (punti d'intersezione e di tangenza,
      estremi tagliati, archi di raccordo, curve parallele) vale l'errore che
-     solid-space dichiara per la grandezza M dei dati del caso. Fino a M = 7e4
-     circa il valore predefinito basta già (2^-46 · 7e4 ≈ 9.9e-10); sopra, il
-     caso imposta `!tolerance absolute` all'errore dichiarato, arrotondato per
-     eccesso alla prima cifra (per M = 1e6: `!tolerance absolute 2e-8`).
-   - Le decisioni (`yes`/`no`, posizioni, lati, esiti) sono esatte e si
-     confrontano esatte.
+     solid-space dichiara, con le formule delle costanti del contesto: dipende
+     dalla grandezza G, la maggiore fra la grandezza M dei dati e quella dei
+     valori costruiti che il caso confronta (un'intersezione può cadere molto
+     più lontano dei dati), e sotto 2^-50 non c'è (ADR 0013 di solid-space,
+     punto 2). Fino a G = 7e4 circa il valore predefinito basta già
+     (2^-46 · 7e4 ≈ 9.9e-10); sopra, il caso imposta `!tolerance absolute`
+     all'errore dichiarato, arrotondato per eccesso alla prima cifra (per
+     G = 1e6: `!tolerance absolute 2e-8`).
+   - Le decisioni (`yes`/`no`, posizioni, lati, esiti) si confrontano esatte,
+     tranne gli esiti che il contratto lascia liberi in una fascia: un caso
+     non mette i suoi dati in una fascia, come l'archivio dei casi di
+     solid-space (ADR 0013 di solid-space, punti 4 e 5).
    - I valori geometrici attesi si prendono dall'archivio dei casi di
      solid-space, citando il caso, quando il caso c'è (ADR 0030, punto 14).
 5. **Risultati degeneri.** Un pezzo che dopo un taglio, una curva parallela o un
-   raccordo la regola trova degenere (`isDegenerate`: ogni due suoi punti
-   distano al più epsilon) non si crea. Che cosa fa il comando al suo posto lo
+   raccordo la regola trova degenere (`isDegenerate` di
+   `geom2d/coincidence.hpp`) non si crea. Che cosa fa il comando al suo posto lo
    dice l'ADR 0035 per ciascuno.
 6. **Valori scritti dall'utente.** Un raggio, una distanza o un fattore uguali a
    0, o non finiti, si trattano come in AutoCAD:
