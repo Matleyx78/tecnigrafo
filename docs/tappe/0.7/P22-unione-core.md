@@ -12,16 +12,20 @@
   Matleyx78/solid-space#158. La richiesta diventa il
   pacchetto di solid-space che realizza `coincidence.hpp`, quando la tappa 0.2
   di solid-space lo avrà (ADR 0030, punto 13). Matleyx78/solid-space#158 è la
-  issue `contratto` sull'ordine degli estremi delle linee allineate (punto 3
-  della #373; il responsabile sceglie l'opzione 2): quando la pull request di
-  solid-space che la applica è unita, la issue di P22 dice a quale commit
-  spostare il sottomodulo
+  issue `contratto` sugli estremi delle linee allineate unite (punto 3 della
+  #373): la decisione è in quella issue, e la scrive nel contratto la pull
+  request Matleyx78/solid-space#159, che si unisce allo scongelamento
+  (operazione snellimento, #478). Dopo, la issue di P22 dice a quale commit
+  spostare il sottomodulo: quello che chiude il pacchetto di solid-space che
+  realizza la funzione
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B10–B13,
   B16 e B17 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
   revisione di B11 dopo le prove in AutoCAD (#468); 2026-11-02, con le
   decisioni sui quattro buchi trovati nella #373 (verso dall'inizio della
   catena, polilinee chiuse, ordine degli estremi delle linee allineate, arco
-  con angoli uguali)
+  con angoli uguali); 2026-11-03, operazione snellimento (#478): rimanda alla
+  decisione della Matleyx78/solid-space#158 e alla
+  Matleyx78/solid-space#159, e la fascia di B13 all'ADR 0013 di solid-space
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -38,11 +42,14 @@
 Il contratto accettato con l'ADR 0009 di solid-space:
 `solid_space/geom2d/coincidence.hpp` (`areAligned`, `onSameCircle`,
 `isStraight`) e `solid_space/robust/tolerance.hpp` (`coincident`), con i tipi
-di `curves.hpp`. Per le linee allineate anche la funzione che ordina gli
-estremi lungo la sorgente, che Matleyx78/solid-space#158 aggiunge al contratto
-(opzione 2: i due estremi del segmento unito, con i pareggi nell'ordine dei
-segmenti): il suo nome e il commit del sottomodulo li scrive la issue di P22
-quando la decisione è applicata.
+di `curves.hpp`. Per le linee allineate anche la funzione di
+`coincidence.hpp` che dà gli estremi del segmento unito, decisa nella
+[Matleyx78/solid-space#158](https://github.com/Matleyx78/solid-space/issues/158)
+e scritta nella pull request
+[Matleyx78/solid-space#159](https://github.com/Matleyx78/solid-space/pull/159)
+(oggi `joinAligned`), che non è ancora in `main`: vale il suo commento come la
+#159 lo unisce, non una sintesi qui. Il nome definitivo e il commit del
+sottomodulo li scrive la issue di P22.
 
 ## Prima di cominciare
 
@@ -108,11 +115,11 @@ struct JoinResult {
   seguente): la coincidenza si decide sugli estremi
   come li calcola Tecnigrafo, con la stessa funzione usata altrove per gli
   estremi di un arco. Quando la distanza esatta fra due estremi sta entro
-  l'errore di quel calcolo dal confine della tolleranza, l'esito è libero
-  (punto 10 di [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)),
+  l'errore di quel calcolo dal confine della tolleranza, l'esito è libero:
+  è una fascia, come la definisce l'[ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md)
+  (punto 4) e il punto 10 di [CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md),
   e i riferimenti R22 e R23 non mettono casi in quella fascia. Nessun obbligo
-  di estremi arrotondati correttamente e nessuna richiesta a solid-space: è la
-  soluzione di Matleyx78/solid-space#152.
+  di estremi arrotondati correttamente e nessuna richiesta a solid-space.
 - **Quale forma** (B16): `join` fa una linea solo se la sorgente è una linea e
   ogni altra entità è una linea allineata alla sorgente, e un arco solo se la
   sorgente è un arco e ogni altra entità è un arco sul suo cerchio. In ogni
@@ -124,11 +131,10 @@ struct JoinResult {
   ammette.
 - **Linee allineate:** la linea unita va dall'estremo della prima all'estremo
   dell'ultima lungo la sorgente, anche con spazi (`autocad-unione.dxf`, casi b
-  ed e1). L'ordine degli estremi lungo la sorgente, pareggi compresi, viene da
-  solid-space, con la funzione che aggiunge Matleyx78/solid-space#158
-  (punto 3 della #373, 2026-11-02; opzione 2: dati i segmenti allineati,
-  solid-space dà i due estremi del segmento unito): la facciata non proietta e non
-  confronta da sé (ADR 0035, punto 1). Per esempio, in millimetri, sorgente
+  ed e1). I due estremi della linea unita, pareggi compresi, li dà
+  solid-space, con la funzione della Matleyx78/solid-space#158 (sopra): la
+  facciata non proietta e non confronta da sé (ADR 0035, punto 1). Per
+  esempio, in millimetri, sorgente
   (0,0)→(10,0) e linea (0,5e-7)→(5,0): quale fra (0,0) e (0,5e-7) è il primo
   estremo lo dice solid-space.
 - **Archi dello stesso cerchio** (B11, rivista il 2026-11-02 come AutoCAD:

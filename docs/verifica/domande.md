@@ -199,7 +199,7 @@ la fine), decisa esattamente da solid-space. Le stazioni non compaiono. `units=`
 |---|---|---|
 | `intersections <A> <B> [extend=a\|b\|both]` | elenco separato da `;` di `x,y <contatto> <posizione su A> <posizione su B>` e di `overlap x1,y1 x2,y2`, o `none` | dove si incontrano le curve di `A` e `B`; `<contatto>` è `crossing`, `touching` o `same-curve`; un vertice di una polilinea compare una volta, come `start` del segmento che segue; `overlap` è un tratto in comune, dai suoi estremi nel verso di `A`. Con `extend=` la curva indicata si prende con il suo prolungamento (la retta di una linea, il cerchio di un arco; di una polilinea aperta, il primo e l'ultimo segmento). Il testo non ha curva: `none` |
 | `self-intersections <P>` | come `intersections` | dove la polilinea `P` incontra se stessa, senza i vertici comuni di due segmenti consecutivi |
-| `side <E> x,y` | `left`, `right` o `on` | da che parte della retta o del cerchio della curva sta il punto, guardando nel verso della curva (linea dall'inizio alla fine, arco e cerchio in senso antiorario: a sinistra l'interno); per una polilinea, del segmento più vicino al punto, a pari distanza il primo |
+| `side <E> x,y` | `left`, `right` o `on` | da che parte della retta o del cerchio della curva sta il punto, guardando nel verso della curva, come `side()` di solid-space (`side.hpp`: per un cerchio e un arco a sinistra l'interno, per un segmento curvo orario di polilinea a destra); per una polilinea, del segmento più vicino al punto, a pari distanza il primo |
 | `coincident x1,y1 x2,y2 [units=<n>]` | `yes` / `no` | i due punti coincidono per la regola delle tolleranze del disegno |
 | `degenerate <E> [segment=<i>] [units=<n>]` | `yes` / `no` | la curva di una linea, di un arco o di un cerchio, o il segmento `i` di una polilinea, è degenere per la regola (ogni due suoi punti distano al più la tolleranza) |
 
@@ -208,7 +208,7 @@ la fine), decisa esattamente da solid-space. Le stazioni non compaiono. `units=`
 
 | Domanda | Risposta | Significato |
 |---|---|---|
-| `offset <E> <d> x,y [units=<n>]` | un'entità, oppure `vanished`, `failed` o `no-side` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `vanished` quando non resta nulla, `failed` quando solid-space non può fare la copia di una polilinea (autointersezioni, o un arco quasi intero che non rappresenta, Matleyx78/solid-space#127) e quando l'entità non dà un lato (una curva esattamente puntiforme, una polilinea senza segmenti o con soli segmenti puntiformi, dati che solid-space rifiuta; decisione B5 della #464, 2026-11-01), `no-side` solo quando il punto sta esattamente sulla retta o sul cerchio |
+| `offset <E> <d> x,y [units=<n>]` | un'entità, oppure `vanished`, `failed` o `no-side` | la curva a distanza `d` (> 0) dal lato del punto `x,y`; `vanished` quando non resta nulla, `failed` quando solid-space non può fare la copia (il suo esito `failed`, o una diagnosi di `offsetCurve` o di `offsetPolyline`: `offset.hpp`) e quando l'entità non dà un lato (una curva esattamente puntiforme, una polilinea senza segmenti o con soli segmenti puntiformi, dati che solid-space rifiuta; decisione B5 della #464, 2026-11-01), `no-side` solo quando il punto sta esattamente sulla retta o sul cerchio |
 
 **Raccordi e tangenze** (P19, richiesta [Matleyx78/solid-space#21](https://github.com/Matleyx78/solid-space/issues/21),
 ADR 0035, punti 13 e 14)
@@ -217,8 +217,9 @@ Gli esiti che non costruiscono nulla: `none` (non esiste), `infinite` (le curve
 stanno sulla stessa retta o sullo stesso cerchio, o simili), `ambiguous` (un
 punto sta esattamente sulla retta o sul cerchio dell'altra curva),
 `not-allowed` (un'entità che il comando non prende), `out-of-domain` (esiste,
-ma il centro o lo spigolo cade oltre il dominio di solid-space, 2^50: due rette
-quasi parallele; aggiunto il 2026-11-01, ADR 0035, punti 13–15). Un raggio
+ma una sua costruzione cade oltre il dominio di solid-space: la diagnosi
+`outOfDomain` sul raggio di `tangency.hpp`, o lo spigolo che `intersect` omette;
+aggiunto il 2026-11-01, ADR 0035, punti 13–15). Un raggio
 oltre 2^50 dà `none`, e così una parte tenuta che il modello non rappresenta
 (un arco che si chiuderebbe in un cerchio, P15). Gli smussi hanno gli stessi
 esiti.
