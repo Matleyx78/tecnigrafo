@@ -1,12 +1,14 @@
 # Manuale dei comandi
 
-Questo manuale descrive gli strumenti disponibili nella tappa 0.6: i file, la riga di
+Questo manuale descrive gli strumenti disponibili nella tappa 0.7: i file, la riga di
 comando, i punti, `LINE`, `CIRCLE`, `ARC`, `PLINE`, `TEXT`, la selezione,
-`ERASE`, gli snap a oggetto, la modalità orto, i layer (`-LAYER`, `CLAYER`),
-le proprietà correnti e delle entità (`COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`,
-`LWEIGHT`, `LWDISPLAY`, `CHPROP`), e l’annullamento. L'interfaccia grafica
-(ribbon, pannelli `LAYER` e `PROPERTIES`, `QSELECT`, temi, scorciatoie e `LWT`)
-è descritta nel [manuale dell'interfaccia](interfaccia.md). Lo stato della
+`ERASE`, i comandi di modifica (`MOVE`, `COPY`, `ROTATE`, `SCALE`, `MIRROR` con
+`MIRRTEXT`, `EXPLODE`), gli snap a oggetto, la modalità orto e il tracciamento
+polare (`POLARANG`), i layer (`-LAYER`, `CLAYER`), le proprietà correnti e delle
+entità (`COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`, `LWDISPLAY`,
+`CHPROP`), le sequenze negli script e l’annullamento. L'interfaccia grafica
+(ribbon, pannelli `LAYER` e `PROPERTIES`, `QSELECT`, grip, temi, scorciatoie e
+`LWT`) è descritta nel [manuale dell'interfaccia](interfaccia.md). Lo stato della
 tappa è nella [roadmap](../ROADMAP.md).
 
 Domande e messaggi del programma sono per ora in inglese (la traduzione arriverà
@@ -451,6 +453,10 @@ si applica lo snap.
 | *Midpoint* | metà del segmento; per un arco è sulla curva, non sulla corda | triangolo |
 | *Center* | centro di un cerchio, di un arco o di un segmento ad arco | cerchio |
 | *Insertion* | punto d’inserimento del testo, sulla linea di base | due quadrati sovrapposti e sfalsati |
+| *Intersection* | incontro tra due curve o segmenti della stessa polilinea (interruttore presente, aggancio non ancora attivo) | croce a X |
+| *Perpendicular* | piede della perpendicolare dal punto base del comando | simbolo ⊥ |
+| *Tangent* | punto di tangenza dal punto base del comando (interruttore presente, aggancio non ancora attivo) | cerchio con linea tangente in alto |
+| *Quadrant* | punti cardinali a 0°, 90°, 180°, 270° di cerchi e archi | rombo |
 
 ### Attivare e scegliere i modi
 
@@ -458,11 +464,12 @@ si applica lo snap.
   attivano o spengono insieme lo snap. Lo storico mostra `<Osnap on>` oppure
   `<Osnap off>`.
 - In *Tools → Object Snap Modes* puoi attivare o disattivare separatamente
-  *Endpoint*, *Midpoint*, *Center* e *Insertion*, anche quando OSNAP è spento. Spegnere `F3`
-  conserva i modi scelti. Se tutti i modi sono disattivati, non c'è alcun aggancio
-  anche con OSNAP acceso.
-- All'avvio lo snap è acceso con tutti e quattro i modi. Le impostazioni non si
-  conservano alla chiusura del programma.
+  i singoli modi, anche quando OSNAP è spento. Spegnere `F3` conserva i modi scelti.
+  Se tutti i modi sono disattivati, non c'è alcun aggancio anche con OSNAP acceso.
+- All'avvio lo snap è acceso con i modi *Endpoint*, *Midpoint*, *Center*, *Insertion* e
+  *Intersection*; *Perpendicular*, *Tangent* e *Quadrant* sono disattivati per difetto.
+  I modi *Intersection* e *Tangent* sono presenti come interruttori ma per ora non
+  agganciano punti nel nucleo. Le impostazioni non si conservano alla chiusura del programma.
 
 Per estremi e punti medi l'apertura è di **10 pixel**: avvicina il puntatore al
 punto voluto finché compare il marcatore. La dimensione del marcatore e l'apertura
@@ -500,14 +507,15 @@ comando, secondo la direzione più vicina al puntatore. A 45° prevale
 l'orizzontale. L'anteprima segue lo stesso vincolo. L'orto non modifica i gesti
 di selezione.
 
-### Snap, orto e coordinate scritte
+### Snap, orto, polare e coordinate scritte
 
 | Come indichi il punto | Effetto |
 |---|---|
-| clic con uno snap disponibile | usa il punto di snap, anche fuori dall'asse dell'orto: **lo snap prevale sull'orto** |
+| clic con uno snap disponibile | usa il punto di snap, anche fuori dall'asse dell'orto o della linea polare: **lo snap prevale su orto e polare** |
 | clic senza snap, con Ortho, dal secondo punto del comando | allinea il punto in orizzontale o verticale |
-| coordinate `x,y`, `@dx,dy`, `d<a`, `@d<a` | usa le coordinate esatte, senza correggerle con snap o orto |
-| sola distanza `d` | usa quella lunghezza dall'ultimo punto, nella direzione del puntatore già corretto da snap e orto |
+| clic senza snap, con Polar, entro 10 pixel da un raggio | aggancia il punto alla semiretta multipla di `POLARANG` |
+| coordinate `x,y`, `@dx,dy`, `d<a`, `@d<a` | usa le coordinate esatte, senza correggerle con snap, orto o polare |
+| sola distanza `d` | usa quella lunghezza dall'ultimo punto, nella direzione del puntatore già corretto da snap, orto o polare |
 
 **Esempio con orto e distanza diretta:** spegni OSNAP se è acceso e accendi ORTHO.
 Avvia `PL` e scrivi `0,0`. Porta il puntatore verso destra, più vicino
@@ -559,8 +567,11 @@ Specify next point or [Undo]: 25,30
 Specify next point or [Close/Undo]: c
 ```
 
-`Invio` al primo punto termina: continuare dall’ultimo segmento con `Invio`
-non è ancora disponibile. Un punto coincidente viene ignorato con
+`Invio` alla prima domanda (`Specify first point:`) fa ripartire la linea
+dall’ultimo punto indicato nel disegno, ad esempio l'estremo di
+una linea o di un arco precedente. Se non è ancora presente alcun punto
+precedente, la domanda resta attiva; per uscire dal comando premi `Esc`.
+Un punto coincidente con il precedente viene ignorato con
 `Point coincides with the previous point.`.
 
 ## CIRCLE — cerchio
@@ -740,6 +751,400 @@ Y = −4.1667 circa. Gli spazi restano nel testo e la seconda riga mostra
 **Testo inclinato:** `DT`, `100,50`, `5`, `30`, `Prova d’uso è 100%%c`,
 `Seconda riga`, `Invio`. Le due righe sono inclinate di 30° e distano 25/3
 unità nella direzione perpendicolare verso il basso del testo.
+
+## MOVE — spostare entità
+
+Sposta le entità selezionate applicando un vettore di spostamento.
+
+- **Nome:** `MOVE`
+- **Alias:** `M`
+
+### Le domande e le opzioni
+
+Se avvii il comando senza una selezione attiva, compare prima la richiesta di selezione
+degli oggetti: `Select objects:`. Scegli le entità e premi `Invio` a riga vuota. Con una
+selezione già attiva prima del comando, `MOVE` la utilizza subito e passa alla richiesta
+del punto base:
+
+```
+Specify base point or [Displacement] <Displacement>:
+```
+
+- **Punto base e secondo punto:** indica un punto base con un clic nella vista o scrivendo
+  le coordinate. Il comando chiede il punto di destinazione:
+  ```
+  Specify second point or <use first point as displacement>:
+  ```
+  - Indicando un secondo punto, le entità vengono spostate della differenza tra il secondo
+    e il primo punto (`secondo punto − punto base`).
+  - Premendo `Invio` a riga vuota, le coordinate del primo punto vengono usate direttamente
+    come vettore di spostamento rispetto all'origine `(0,0)`.
+- **Opzione *Displacement*:** scrivi `D` o premi `Invio` alla prima domanda per inserire
+  direttamente lo spostamento:
+  ```
+  Specify displacement <0.0000, 0.0000>:
+  ```
+  - Digita le coordinate dello spostamento (es. `10,20`).
+  - Premendo `Invio` viene confermato lo spostamento predefinito `<0.0000, 0.0000>`, lasciando
+    le entità nella posizione corrente.
+
+Durante lo spostamento del puntatore, l'anteprima mostra gli oggetti nella posizione
+risultante. Le entità spostate conservano il loro identificativo (`handle`), la posizione
+nell'ordine del disegno e tutti i dati non gestiti. L'operazione genera un unico passo di
+annullamento (`Move`).
+
+**Esempio:** sposta un cerchio di 50 unità a destra:
+
+```
+Command: m
+Select objects: 1 found, 1 total
+Select objects: 
+Specify base point or [Displacement] <Displacement>: 0,0
+Specify second point or <use first point as displacement>: 50,0
+```
+
+Oppure con *Displacement*:
+
+```
+Command: move
+Select objects: 1 found, 1 total
+Select objects: 
+Specify base point or [Displacement] <Displacement>: d
+Specify displacement <0.0000, 0.0000>: 50,0
+```
+
+## COPY — copiare entità
+
+Crea una o più copie delle entità selezionate applicando un vettore di spostamento.
+
+- **Nome:** `COPY`
+- **Alias:** `CO`, `CP`
+
+### Le domande e le opzioni
+
+Dopo aver selezionato gli oggetti (`Select objects:`), compare il messaggio informativo
+sulla modalità multipla:
+
+```
+Current settings:  Copy mode = Multiple
+Specify base point or [Displacement] <Displacement>:
+```
+
+- **Punto base e copie multiple:** indica il punto base; compare la richiesta:
+  ```
+  Specify second point or <use first point as displacement>:
+  ```
+  - Indicando un secondo punto viene creata la prima copia, e il comando passa alla
+    creazione di copie successive:
+    ```
+    Specify second point or [Exit/Undo] <Exit>:
+    ```
+    - Ogni ulteriore punto indicato aggiunge una nuova copia con quello spostamento dal punto base.
+    - `U` (*Undo*) annulla l'ultima copia creata nel comando.
+    - `E` (*Exit*) o `Invio` a riga vuota conclude il comando.
+  - Premendo `Invio` alla prima richiesta del secondo punto, il punto base viene usato
+    come vettore di spostamento: viene creata una copia e il comando passa alla richiesta
+    delle copie successive (`Specify second point or [Exit/Undo] <Exit>:`).
+- **Opzione *Displacement*:** digitando `D` o premendo `Invio` alla prima domanda:
+  ```
+  Specify displacement <0.0000, 0.0000>:
+  ```
+  Scrivi il vettore di spostamento per creare una singola copia e concludere.
+
+Interrompere `COPY` con `Esc` conclude il comando conservando tutte le copie già
+create (ADR 0015). Le nuove entità ricevono nuovi handle, vengono inserite in coda
+all'ordine del disegno e conservano proprietà e dati non gestiti dell'originale
+(tranne i gruppi 102). L'intero comando costituisce un unico passo di annullamento (`Copy`).
+
+Negli script `.scr` (o con `!scr on`), `COPY` adotta la sequenza degli script di AutoCAD
+concludendosi automaticamente dopo la prima copia.
+
+**Esempio:** crea due copie di una linea a distanza 20 e 40 lungo l'asse X:
+
+```
+Command: co
+Select objects: 1 found, 1 total
+Select objects: 
+Current settings:  Copy mode = Multiple
+Specify base point or [Displacement] <Displacement>: 0,0
+Specify second point or <use first point as displacement>: 20,0
+Specify second point or [Exit/Undo] <Exit>: 40,0
+Specify second point or [Exit/Undo] <Exit>: 
+```
+
+## ROTATE — ruotare entità
+
+Ruota le entità selezionate attorno a un punto base.
+
+- **Nome:** `ROTATE`
+- **Alias:** `RO`
+
+### Le domande e le opzioni
+
+All'avvio il comando ricorda la convenzione degli angoli e chiede il punto base:
+
+```
+Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
+Specify base point:
+```
+
+Indica il punto perno attorno a cui ruotare gli oggetti (premendo `Invio` a riga
+vuota il comando si conclude senza effetti). Segue la domanda dell'angolo:
+
+```
+Specify rotation angle or [Copy/Reference] <0>:
+```
+
+- **Angolo di rotazione:**
+  - Scrivi un valore numerico in gradi (in senso antiorario da +X): gli oggetti vengono
+    ruotati di quell'angolo.
+  - Clicca un punto nella vista: l'angolo applicato corrisponde alla direzione della
+    linea dal punto base verso il punto cliccato.
+  - Premi `Invio` a riga vuota per confermare l'ultimo angolo usato (mostrato tra
+    parentesi angolari `< >`, all'avvio `<0>`).
+- **Opzione *Copy*:** scrivi `C` per ruotare una copia mantenendo gli oggetti originali.
+  Compare il messaggio `Rotating a copy of the selected objects.` e viene riproposta
+  la domanda dell'angolo. Le copie ricevono nuovi handle.
+- **Opzione *Reference*:** scrivi `R` per ruotare specificando un angolo di partenza
+  e l'orientamento finale desiderato:
+  ```
+  Specify the reference angle <0>:
+  ```
+  Indica l'angolo di riferimento numericamente oppure con due punti (`Specify second point:`).
+  Quindi inserisci il nuovo angolo:
+  ```
+  Specify the new angle or [Points] <0>:
+  ```
+  Digita l'angolo, clicca dal punto base, oppure scegli `P` (*Points*) per indicare due
+  punti arbitrari (`Specify first point:`, `Specify second point:`). La rotazione
+  effettiva applicata corrisponde a `nuovo angolo − angolo di riferimento`.
+
+L'anteprima segue dinamicamente il cursore mostrando l'inclinazione risultante. La
+rotazione sul posto conserva gli handle originali delle entità. Il comando crea un
+passo di annullamento (`Rotate`).
+
+**Esempio:** ruota un oggetto di 45 gradi attorno all'origine:
+
+```
+Command: ro
+Select objects: 1 found, 1 total
+Select objects: 
+Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
+Specify base point: 0,0
+Specify rotation angle or [Copy/Reference] <0>: 45
+```
+
+Con opzione *Reference*: allinea a 90° un oggetto orientato a 30°:
+
+```
+Command: ro
+Select objects: 1 found, 1 total
+Select objects: 
+Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
+Specify base point: 0,0
+Specify rotation angle or [Copy/Reference] <0>: r
+Specify the reference angle <0>: 30
+Specify the new angle or [Points] <0>: 90
+```
+
+## SCALE — scalare entità
+
+Ridimensiona in modo uniforme le entità selezionate attorno a un punto base.
+
+- **Nome:** `SCALE`
+- **Alias:** `SC`
+
+### Le domande e le opzioni
+
+Indica il punto perno rispetto a cui calcolare il ridimensionamento (premendo
+`Invio` a riga vuota il comando si conclude senza effetti):
+
+```
+Specify base point:
+```
+
+Seguito dal fattore di scala o da un'opzione:
+
+```
+Specify scale factor or [Copy/Reference]:
+```
+
+- **Fattore di scala:**
+  - Inserisci un numero positivo strettamente maggiore di zero (es. `2` per raddoppiare,
+    `0.5` per dimezzare). Valori negativi o nulli mostrano il messaggio d'errore
+    `Value must be positive and nonzero.` e ripropongono la domanda.
+  - Clicca un punto nella vista: il fattore di scala sarà la distanza tra il punto
+    indicato e il punto base.
+  - Premendo `Invio` a riga vuota il comando si conclude senza effetti.
+- **Opzione *Copy*:** scrivi `C` per applicare la scala a una copia degli oggetti,
+  lasciando invariati gli originali. Il programma scrive:
+  `Scaling a copy of the selected objects.` e ripropone la richiesta del fattore.
+- **Opzione *Reference*:** scrivi `R` per scalare in base a una lunghezza di riferimento
+  e alla nuova lunghezza voluta:
+  ```
+  Specify reference length <1.0000>:
+  ```
+  Digita la lunghezza o indica due punti (`Specify second point:`). Segue:
+  ```
+  Specify new length or [Points] <1.0000>:
+  ```
+  Digita la nuova lunghezza, indica un punto (distanza dal punto base), oppure scrivi
+  `P` (*Points*) per definire la nuova lunghezza con due punti (`Specify first point:`,
+  `Specify second point:`). Il fattore applicato è `nuova lunghezza / lunghezza di riferimento`.
+
+L'anteprima mostra in tempo reale le dimensioni scalate. La scala sul posto conserva
+gli handle originali. Crea un passo di annullamento (`Scale`).
+
+**Esempio:** scala un oggetto di un fattore 2.5 rispetto all'origine:
+
+```
+Command: sc
+Select objects: 1 found, 1 total
+Select objects: 
+Specify base point: 0,0
+Specify scale factor or [Copy/Reference]: 2.5
+```
+
+Con opzione *Reference*: porta un segmento lungo 40 unità alla misura di 100 unità:
+
+```
+Command: sc
+Select objects: 1 found, 1 total
+Select objects: 
+Specify base point: 0,0
+Specify scale factor or [Copy/Reference]: r
+Specify reference length <1.0000>: 40
+Specify new length or [Points] <1.0000>: 100
+```
+
+## MIRROR e MIRRTEXT — specchiare entità
+
+`MIRROR` riflette le entità selezionate rispetto a un asse di specchiatura definito da due
+punti. La variabile `MIRRTEXT` controlla se il testo viene specchiato graficamente
+oppure mantenuto orientato in modo leggibile.
+
+- **Nome:** `MIRROR`
+- **Alias:** `MI`
+
+### Le domande e le opzioni di `MIRROR`
+
+1. `Specify first point of mirror line:` indica il primo punto dell'asse di riflessione.
+2. `Specify second point of mirror line:` indica il secondo punto dell'asse. Se il
+   secondo punto coincide con il primo, la domanda resta attiva finché non viene fornito
+   un asse valido.
+3. `Erase source objects? [Yes/No] <No>:`
+   - `No` (o `Invio` a vuoto): crea copie specchiate mantenendo gli oggetti originari.
+     Le nuove entità prendono nuovi identificativi (`handle`).
+   - `Yes` (o `Y`): riflette le entità sul posto ed elimina gli oggetti originari. Le
+     entità mantengono i loro handle originari.
+
+L'anteprima mostra dinamicamente gli oggetti riflessi non appena si sposta il puntatore
+per scegliere il secondo punto dell'asse. Il comando crea un passo di annullamento (`Mirror`).
+
+### La variabile `MIRRTEXT`
+
+Comando per regolare il comportamento del testo durante la specchiatura con `MIRROR`:
+
+```
+Command: mirrtext
+Enter new value for MIRRTEXT <0>:
+```
+
+- `0` (valore predefinito): il testo specchiato viene mantenuto leggibile e non si legge
+  allo specchio (non raddrizza però un testo che era già all'indietro o capovolto: ne
+  conserva i relativi segnali).
+- `1`: il testo viene specchiato integralmente come geometria (effetto immagine riflessa
+  in uno specchio).
+
+Valori diversi da `0` e `1` producono il messaggio `Requires an integer between 0 and 1.`.
+
+**Esempio:** specchia un profilo rispetto alla retta verticale X = 50 conservando gli originali:
+
+```
+Command: mi
+Select objects: 1 found, 1 total
+Select objects: 
+Specify first point of mirror line: 50,0
+Specify second point of mirror line: 50,100
+Erase source objects? [Yes/No] <No>: n
+```
+
+E per `MIRRTEXT`:
+
+```
+Command: mirrtext
+Enter new value for MIRRTEXT <0>: 1
+```
+
+## EXPLODE — scomporre polilinee
+
+Scompone le polilinee 2D selezionate nei singoli segmenti retti (`LINE`) e archi (`ARC`)
+di cui sono composte.
+
+- **Nome:** `EXPLODE`
+- **Alias:** `X`
+
+### Funzionamento
+
+Avviato il comando, compare la richiesta `Select objects:`. Seleziona le polilinee da
+scomporre e conferma con `Invio`.
+
+- Ogni segmento rettilineo della polilinea diventa un'entità `LINE`; ogni segmento curvo
+  diventa un'entità `ARC`.
+- Le nuove entità generate ricevono nuovi handle, si aggiungono in fondo all'ordine del
+  disegno ed ereditano layer, colore, tipo di linea, spessore e dati non gestiti della
+  polilinea di origine.
+- Se la polilinea contiene larghezze dei vertici o larghezza costante, queste vengono
+  rimosse durante la scomposizione. Il programma avvisa con due messaggi nello storico:
+  ```
+  Exploding this polyline has lost width information.
+  The UNDO command will restore it.
+  ```
+- Entità diverse dalle polilinee 2D (come linee, cerchi, archi, testi), polilinee senza
+  segmenti, o polilinee aventi quota z (*elevation*) o spessore 3D (*thickness*)
+  diversi da zero (gruppi DXF 38 e 39) non possono essere scomposte. Vengono lasciate
+  intatte e segnalate con:
+  `1 was not able to be exploded.` oppure `<n> were not able to be exploded.`
+
+Tutte le scomposizioni del comando avvengono in un singolo passo di annullamento (`Explode`):
+un solo `U` o `Ctrl+Z` ripristina la polilinea originale integra con le sue larghezze.
+
+**Esempio:** scompone una polilinea in linee e archi:
+
+```
+Command: x
+Select objects: 1 found, 1 total
+Select objects: 
+```
+
+## POLARANG — incremento del tracciamento polare
+
+Imposta l'incremento angolare per il tracciamento polare (`Polar Tracking`), in gradi.
+
+- **Nome:** `POLARANG`
+
+### Funzionamento
+
+```
+Command: polarang
+Enter new value for POLARANG <90>:
+```
+
+- Digita un valore in gradi strettamente maggiore di 0 e minore o uguale a 180 (ad esempio
+  `45`, `30`, `15` o `22.5`).
+- Valori $\le 0$ o $> 180$ danno l'errore `Value must be between 0 and 180.` e la domanda resta.
+- Premendo `Invio` a vuoto si conferma l'angolo corrente indicato tra parentesi angolari.
+
+Quando il tracciamento polare è attivo (`F10` o pulsante **POLAR** nella barra di stato),
+il cursore si aggancia a tutte le semirette che formano angoli multipli di questo valore
+a partire dal punto base del comando (0°, 45°, 90°, 135°, 180°, ecc.).
+
+**Esempio:** imposta l'incremento polare a 45 gradi:
+
+```
+Command: polarang
+Enter new value for POLARANG <90>: 45
+```
 
 ## Layer: -LAYER e CLAYER
 
@@ -1031,10 +1436,30 @@ grafica e dei pannelli:
 Per i dettagli sul funzionamento di finestre, pannelli, temi e scorciatoie, consulta il
 [manuale dell'interfaccia](interfaccia.md).
 
+## Negli script
+
+Dalla tappa 0.7 ([ADR 0032](../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)),
+quando esegue uno script `.scr` di AutoCAD o uno script `.tgs` con la direttiva `!scr on`,
+Tecnigrafo adotta per alcuni comandi le sequenze storiche di AutoCAD, diverse da quelle
+della sessione interattiva:
+
+- nei file `.scr` (riconosciuti automaticamente dall'estensione);
+- nei file `.tgs`, a partire dalla direttiva `!scr on` fino a `!scr off`. Senza questa
+  direttiva, un file `.tgs` riproduce fedelmente l'interazione umana e usa la sequenza
+  interattiva normale.
+
+Comandi con sequenza dedicata negli script:
+
+| Comando | Sequenza interattiva | Negli script |
+|---|---|---|
+| `TEXT` | Chiede una riga dopo l'altra fino a `Invio` su riga vuota | Inserisce una riga sola, poi conclude automaticamente |
+| `COPY` | Chiede copie multiple fino a `Exit` o `Invio` a vuoto | Effettua una sola copia, poi conclude automaticamente |
+
 ## Annullare e ripetere
 
 Ogni comando di disegno concluso, ogni gruppo cancellato con `ERASE`, ogni
-modifica ai layer con `-LAYER` o `CLAYER` e ogni modifica alle proprietà con
+modifica geometrica (`MOVE`, `COPY`, `ROTATE`, `SCALE`, `MIRROR`, `EXPLODE` o stiramento
+con grip), ogni modifica ai layer con `-LAYER` o `CLAYER` e ogni modifica alle proprietà con
 `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT` o `CHPROP` sono un
 **passo** che si può annullare e poi ripetere. Le linee di un `LINE` e le righe
 di un `TEXT` sono un solo passo per comando, anche se conservate con `Esc`.
@@ -1071,6 +1496,9 @@ corso.
 | `TEXT` | le righe già confermate con `Invio` |
 | `CIRCLE`, `ARC` | niente: prima dell’ultima risposta l’entità non è completa |
 | `ERASE` | nessuna cancellazione; la selezione viene svuotata |
+| `MOVE`, `ROTATE`, `SCALE`, `MIRROR` | nessuna modifica; le entità restano invariate |
+| `COPY` | le copie già create prima dell'interruzione |
+| `EXPLODE` | nessuna scomposizione |
 | `-LAYER` | le modifiche e creazioni di layer già completate prima dell'interruzione |
 | `CHPROP` | i cambi di proprietà già completati prima dell'interruzione |
 
@@ -1087,7 +1515,7 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 - Una nuova modifica confermata, come una polilinea o una cancellazione, elimina
   i passi che si potevano ripetere. Un comando senza effetti conserva il redo.
 - `LWDISPLAY` e la visualizzazione dello spessore delle linee (`LWT`), la
-  selezione, lo zoom, il pan e le impostazioni di snap e orto non sono passi
+  selezione, lo zoom, il pan e le impostazioni di snap, orto e polare non sono passi
   di annullamento. `U`, `UNDO` e `REDO` svuotano la selezione corrente.
 
 ## Messaggi
@@ -1098,7 +1526,7 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Invalid point or option.` | la scrittura non è una coordinata valida né un'opzione della domanda, oppure manca un dato (nessun ultimo punto, nessuna direzione del puntatore): la domanda resta la stessa |
 | `Requires a distance, a point or an option.` | la richiesta vuole una distanza, un punto o un’opzione valida |
 | `Requires an angle, a point or an option.` | la richiesta vuole un angolo, un punto o un’opzione valida |
-| `Value must be positive and nonzero.` | raggio, diametro o altezza non valido: indica un valore positivo |
+| `Value must be positive and nonzero.` | raggio, diametro, altezza o fattore di scala non valido: indica un valore positivo |
 | `The three points are collinear.` | impossibile costruire il cerchio o l’arco: cambia il terzo punto |
 | `Center coincides with the start point.` | per l’arco il centro deve essere diverso dall’inizio |
 | `End point gives a zero-length arc.` | la fine non definisce un arco valido |
@@ -1113,6 +1541,18 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Nothing to undo.` / `Nothing to redo.` | non ci sono passi da annullare o da ripetere |
 | `<Osnap on>` / `<Osnap off>` | snap a oggetto attivato o spento |
 | `<Ortho on>` / `<Ortho off>` | modalità orto attivata o spenta |
+| `<Polar on>` / `<Polar off>` | tracciamento polare attivato o spento |
+| `Current settings:  Copy mode = Multiple` | impostazione iniziale di `COPY`: copia multipla attiva fino a conclusione |
+| `Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0` | convenzione degli angoli all'avvio di `ROTATE`: antiorari da +X |
+| `Rotating a copy of the selected objects.` | opzione *Copy* di `ROTATE`: ruota una copia delle entità selezionate |
+| `Scaling a copy of the selected objects.` | opzione *Copy* di `SCALE`: scala una copia delle entità selezionate |
+| `Exploding this polyline has lost width information.` | avviso di `EXPLODE`: le larghezze della polilinea sono state rimosse |
+| `The UNDO command will restore it.` | avviso di `EXPLODE`: `UNDO` può ripristinare la polilinea integra |
+| `1 was not able to be exploded.` / `<n> were not able to be exploded.` | entità non scomponibili scartate da `EXPLODE` |
+| `Requires an integer between 0 and 1.` | valore non valido per `MIRRTEXT`: inserisci 0 o 1 |
+| `Value must be between 0 and 180.` | valore non valido per `POLARANG`: inserisci un angolo positivo fino a 180° |
+| `** STRETCH **` | avvio della modifica interattiva di un'entità tramite grip caldo |
+| `Invalid grip edit.` | modifica con il grip non valida (es. arco degenere o raggio nullo): entità non modificata |
 | `Invalid layer name.` | il nome del layer contiene caratteri non consentiti o supera 255 caratteri |
 | `Layer "<nome>" already exists.` | esiste già un layer con questo nome nel disegno |
 | `Layer "<nome>" not found.` | il layer specificato non esiste nel documento |
