@@ -155,7 +155,10 @@ TEST(CurveParts, MinimumCorrectionPrefersTheOriginalStartOnAnExactTie) {
     const auto removed = partOf(almostClosed, std::nullopt, middle, PartCourse::Direct);
     expectOutcome(removed, PartOutcome::Empty);
     const auto kept = partOf(almostClosed, middle, std::nullopt, PartCourse::Direct);
-    ASSERT_TRUE(kept.entity);
+    if (!kept.entity) {
+        ADD_FAILURE() << "missing constructed entity";
+        return;
+    }
     EXPECT_EQ(std::get<Arc>(*kept.entity), almostClosed);
 }
 
@@ -182,7 +185,10 @@ TEST(CurveParts, MinimumCorrectionKeepsCurvedSegmentsInEitherDirection) {
             const auto to = atStart ? std::nullopt : std::optional{place({5, sign * 1e-14})};
             const auto result = partOf(polyline, from, to, PartCourse::Direct);
             ASSERT_EQ(result.outcome, PartOutcome::Done);
-            ASSERT_TRUE(result.entity);
+            if (!result.entity) {
+                ADD_FAILURE() << "missing constructed entity";
+                return;
+            }
             const auto& part = std::get<Polyline>(*result.entity);
             EXPECT_NEAR(part.vertices()[0].bulge, sign, kBuilt);
             EXPECT_EQ(part.vertices()[0].position, from ? from->point : (Vec2{-5, 0}));
@@ -202,7 +208,10 @@ TEST(CurveParts, MinimumCorrectionKeepsMinimalExtensionsAtEitherEndAndDirection)
             const Vec2 point{end == EntityEnd::Start ? -5.0 : 5.0, -sign * 1e-14};
             const auto result = extendTo(polyline, end, place(point, 0, Location::AfterEnd));
             ASSERT_EQ(result.outcome, PartOutcome::Done);
-            ASSERT_TRUE(result.entity);
+            if (!result.entity) {
+                ADD_FAILURE() << "missing constructed entity";
+                return;
+            }
             const auto& part = std::get<Polyline>(*result.entity);
             EXPECT_NEAR(part.vertices()[0].bulge, sign, kBuilt);
             EXPECT_EQ(part.vertices()[end == EntityEnd::Start ? 0 : 1].position, point);

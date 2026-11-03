@@ -46,21 +46,21 @@ double angularDistance(double first, double last) {
     return std::abs(std::remainder(first - last, kTwoPi));
 }
 
-AngularPart correctAngles(double first, double last, double originalStart, double originalEnd,
+AngularPart correctAngles(double first, double last, double originAngle, double limitAngle,
                           double sweep, bool across = false) {
     const double length = std::abs(sweep);
     const auto before = [&](double from, double to) {
         // Compare rays before subtracting the origin: subtraction can erase
         // the very ulp inversion that this correction must handle (#487 A).
-        const bool fromWrapped = sweep > 0.0 ? from < originalStart : from > originalStart;
-        const bool toWrapped = sweep > 0.0 ? to < originalStart : to > originalStart;
+        const bool fromWrapped = sweep > 0.0 ? from < originAngle : from > originAngle;
+        const bool toWrapped = sweep > 0.0 ? to < originAngle : to > originAngle;
         if (fromWrapped != toWrapped) {
             return !fromWrapped;
         }
         return sweep > 0.0 ? from < to : from > to;
     };
     const auto inside = [&](double angle) {
-        return length == kTwoPi || !before(originalEnd, angle);
+        return length == kTwoPi || !before(limitAngle, angle);
     };
     const auto coherent = [&](double from, double to) {
         return inside(from) && inside(to) && (across ? !before(from, to) : !before(to, from));
@@ -70,8 +70,8 @@ AngularPart correctAngles(double first, double last, double originalStart, doubl
     }
     AngularPart best{first, first};
     double cost = std::numeric_limits<double>::infinity();
-    double bestFirst = originalEnd;
-    double bestLast = originalEnd;
+    double bestFirst = limitAngle;
+    double bestLast = limitAngle;
     const auto consider = [&](double from, double to) {
         if (!coherent(from, to)) {
             return;
@@ -90,11 +90,11 @@ AngularPart correctAngles(double first, double last, double originalStart, doubl
     };
     // Endpoints are kept as angles as well as positions: 0 and 2*pi are
     // distinct sides of a circle's cut even though they draw the same ray.
-    const std::array fromAngles{first, originalStart, originalEnd};
-    const std::array toAngles{last, originalStart, originalEnd};
-    for (std::size_t i = 0; i < fromAngles.size(); ++i) {
-        for (std::size_t j = 0; j < toAngles.size(); ++j) {
-            consider(fromAngles[i], toAngles[j]);
+    const std::array fromAngles{first, originAngle, limitAngle};
+    const std::array toAngles{last, originAngle, limitAngle};
+    for (const double from : fromAngles) {
+        for (const double to : toAngles) {
+            consider(from, to);
         }
     }
     consider(first, first);
