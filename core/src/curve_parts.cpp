@@ -45,8 +45,11 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
     // coincide: only the caller can decide that, with PartCourse (#359).
     bool inverted = result.geometry().sweep > arc.geometry().sweep;
     if (circle) {
-        inverted = course == PartCourse::Direct ? result.startAngle > result.endAngle
-                                               : result.startAngle < result.endAngle;
+        if (course == PartCourse::Direct) {
+            inverted = result.startAngle > result.endAngle;
+        } else {
+            inverted = result.startAngle < result.endAngle;
+        }
     }
     if (result.startAngle == result.endAngle || inverted) {
         return collapsedArc(course);
@@ -106,8 +109,8 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
         original.bulge > 0.0 ? normalizeAngle(end - start) : -normalizeAngle(start - end);
     // These exact comparisons concern the computed representation only.
     // The caller already knows whether the exact part cuts or extends it.
-    if (extending ? std::abs(sweep) < std::abs(arc.sweep)
-                  : std::abs(sweep) > std::abs(arc.sweep)) {
+    if ((extending && std::abs(sweep) < std::abs(arc.sweep)) ||
+        (!extending && std::abs(sweep) > std::abs(arc.sweep))) {
         return 0.0;
     }
     return std::tan(sweep / 4.0);

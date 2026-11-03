@@ -119,11 +119,10 @@ TEST(CurveParts, InvertedRoundedAnglesDiscardACurvedSegmentInEitherDirection) {
         const CurvePoint first = place({0, -5 * sign}, 0, Location::Inside, 5 * kPi / 2);
         const CurvePoint last = place({-1e-15, -5 * sign}, 0, Location::Inside, 5 * kPi / 2);
         expectOutcome(partOf(polyline, first, last, PartCourse::Direct), PartOutcome::Empty);
-        const Polyline multipleSegments{
-            {{{-3, -4 * sign}, sign}, {{3, 4 * sign}}, {{10, 0}}}};
+        const Polyline multiCurve{{{{-3, -4 * sign}, sign}, {{3, 4 * sign}}, {{10, 0}}}};
         const Vec2 invertedStart{2.999999999999999, 4 * sign};
-        const auto multiple = partOf(multipleSegments, place(invertedStart), std::nullopt,
-                                     PartCourse::Direct);
+        const auto multiple =
+            partOf(multiCurve, place(invertedStart), std::nullopt, PartCourse::Direct);
         expectOutcome(multiple, PartOutcome::Done);
         ASSERT_TRUE(multiple.entity);
         const auto& part = std::get<Polyline>(*multiple.entity);
@@ -205,17 +204,17 @@ TEST(CurveParts, InterpolatesClockwiseWidthsFromTheStartAwayFromTheMidpoint) {
     const double coordinate = 5 / std::sqrt(2.0);
     const auto cut = place({-coordinate, coordinate}, 0, Location::Inside, 5 * kPi / 4);
     for (const bool keepStart : {true, false}) {
-        const auto result = partOf(polyline, keepStart ? std::nullopt : std::optional{cut},
-                                   keepStart ? std::optional{cut} : std::nullopt,
-                                   PartCourse::Direct);
+        const auto from = keepStart ? std::nullopt : std::optional{cut};
+        const auto to = keepStart ? std::optional{cut} : std::nullopt;
+        const auto result = partOf(polyline, from, to, PartCourse::Direct);
         expectOutcome(result, PartOutcome::Done);
         ASSERT_TRUE(result.entity);
         const auto& part = std::get<Polyline>(*result.entity);
         ASSERT_EQ(part.vertexCount(), 2U);
         EXPECT_NEAR(part.vertices()[0].startWidth, keepStart ? 2 : 4, kBuilt);
         EXPECT_NEAR(part.vertices()[0].endWidth, keepStart ? 4 : 10, kBuilt);
-        EXPECT_NEAR(part.vertices()[0].bulge,
-                    -std::tan(keepStart ? kPi / 16 : 3 * kPi / 16), kBuilt);
+        const double expectedBulge = -std::tan(keepStart ? kPi / 16 : 3 * kPi / 16);
+        EXPECT_NEAR(part.vertices()[0].bulge, expectedBulge, kBuilt);
         EXPECT_EQ(part.vertices()[1].bulge, 0.25);
         EXPECT_EQ(part.vertices()[1].startWidth, 11);
         EXPECT_EQ(part.vertices()[1].endWidth, 12);
