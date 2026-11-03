@@ -1,19 +1,18 @@
 # Tecnigrafo
 
-Le istruzioni per gli assistenti IA sono in [AGENTS.md](AGENTS.md): leggile per
-intero prima di qualunque modifica e seguile alla lettera.
+Le istruzioni per gli assistenti IA sono in [AGENTS.md](AGENTS.md): prima di
+qualunque modifica leggi il nucleo e, dalla sua tabella "Se ... leggi anche ...",
+i file di [docs/agenti/](docs/agenti/) che riguardano il tuo lavoro. Seguili alla
+lettera.
 
-Questo file lo leggono Gemini CLI e Antigravity CLI. Di norma Gemini lavora ai
-**pacchetti di riferimenti** (`[X.Y-RN]`): le regole sono in AGENTS.md, sezione
-"Modalità di controllo e riferimenti", e in
-[docs/adr/0011-modalita-di-controllo.md](docs/adr/0011-modalita-di-controllo.md).
-Fa anche le revisioni delle pull request, la pull request di chiusura della
-tappa e i pacchetti facili.
+Questo file lo leggono Gemini CLI e Antigravity CLI, e tiene solo le note proprie
+di Gemini.
 
 Riferimenti e revisioni si fanno **a lotti**: una sessione prende di fila tutto
-il lavoro pronto, con una pull request per pacchetto (AGENTS.md, "Lavoro a
-lotti"). Usa la cartella di build `build-gemini` (`TG_BUILD_SUFFIX=-gemini`) e,
-se devi compilare o provare, `scripts/controlla.sh` (AGENTS.md, "Comandi").
+il lavoro pronto, con una pull request per pacchetto
+([docs/agenti/lotti.md](docs/agenti/lotti.md)). Usa la cartella di build
+`build-gemini` (`TG_BUILD_SUFFIX=-gemini`) e, se devi compilare o provare,
+`scripts/controlla.sh` ([docs/agenti/comandi.md](docs/agenti/comandi.md)).
 
 Se sei **Gemini 4 Argon**, il responsabile te lo dice nel messaggio: la tua
 etichetta è `agente:gemini-argon`, non `agente:gemini`, e la tua cartella di
