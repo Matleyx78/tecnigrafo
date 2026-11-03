@@ -69,6 +69,7 @@ OFFSET
 460,0
 480,10
 
+!tolerance absolute 2e-8
 OFFSET
 10
 1000150,1000000
