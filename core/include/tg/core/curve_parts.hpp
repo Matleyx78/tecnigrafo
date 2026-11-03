@@ -63,11 +63,14 @@ struct PartResult {
 /// angles, or two vertices, come out equal while the exact part is the short
 /// one (Direct, on one segment); NotRepresentable when they come out equal
 /// and the exact part is the long one (AcrossStart): it never becomes a
-/// circle. Inverted computed angles follow the same rule, with exact
-/// comparisons and no tolerance: for an Arc or a curved segment, a cut sweep
-/// larger than the original; for a Circle, start > end with Direct or start
-/// < end with AcrossStart. Within several polyline segments a collapsed or
-/// inverted cut arc has bulge 0 and retains its supplied boundary points.
+/// circle. If computed angles contradict PartCourse or containment in the
+/// original arc, use the minimum angular correction restoring both facts:
+/// collapse the two angles, or move an angle to an original endpoint (for a
+/// circle, to the side of the 0/2*pi cut required by PartCourse). Minimize
+/// the sum of circular angular displacements with exact computed comparisons,
+/// no threshold; ties prefer the original start, then the part's start.
+/// This applies to either direction of curved polyline segments. A collapsed
+/// cut arc within several segments has bulge 0 and keeps the supplied points.
 /// Precondition: not a Text; no place is BeforeStart or AfterEnd (extendTo
 /// takes those); with Direct, `from` does not come after `to` in the order of
 /// cutsAlong; AcrossStart only for a circle or a closed polyline, with `to`
@@ -90,11 +93,11 @@ enum class EntityEnd : std::uint8_t { Start, End };
 ///   vertices of the segments exactly a point between that segment and the
 ///   end take the new point and keep all their other data (docs/adr/0006).
 /// The new point of a line and of a polyline is `to`, exactly; a new arc
-/// angle comes as in partOf. NotRepresentable when the new angle of an arc,
-/// or the new vertex of a curved polyline segment, comes out equal to the
-/// other end of that arc or segment, or passes it: the computed directed
-/// sweep is smaller than the original, compared exactly without tolerance.
-/// The exact extension would close into a circle.
+/// angle comes as in partOf, with the same minimum angular correction when
+/// it contradicts extension: the allowed interval is the complement of the
+/// original arc. Choose between the minimum extension (the changed original
+/// endpoint) and closing the full turn (the other endpoint); ties prefer the
+/// original arc's start, in either direction. The latter is NotRepresentable.
 /// Precondition: a Line, an Arc or an open Polyline; `to` is on the segment
 /// above, BeforeStart or AfterEnd as said.
 [[nodiscard]] PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to);

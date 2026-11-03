@@ -5,9 +5,13 @@
 
 #include "solid_space/robust/trigonometry.hpp"
 
+#include "tg/core/math.hpp"
+
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -32,29 +36,104 @@ PartResult collapsedArc(PartCourse course) {
     return {};
 }
 
-PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
-                   const std::optional<CurvePoint>& to, PartCourse course, bool circle = false) {
-    Arc result = arc;
-    if (from) {
-        result.startAngle = angleOf(from->point, arc.center);
+// Project only a contradictory representation, never the exact places. The
+// candidates implement the responsible's minimum angular correction (#487).
+struct AngularPart {
+    double first;
+    double last;
+};
+
+double angularDistance(double first, double last) {
+    return std::abs(std::remainder(first - last, kTwoPi));
+}
+
+AngularPart correctAngles(double first, double last, double originalStart, double originalEnd,
+                          double sweep, bool across = false) {
+    const double length = std::abs(sweep);
+    const auto before = [&](double from, double to) {
+        // Compare rays before subtracting the origin: subtraction can erase
+        // the very ulp inversion that this correction must handle (#487 A).
+        const bool fromWrapped = sweep > 0.0 ? from < originalStart : from > originalStart;
+        const bool toWrapped = sweep > 0.0 ? to < originalStart : to > originalStart;
+        if (fromWrapped != toWrapped) {
+            return !fromWrapped;
+        }
+        return sweep > 0.0 ? from < to : from > to;
+    };
+    const auto inside = [&](double angle) {
+        return length == kTwoPi || !before(originalEnd, angle);
+    };
+    const auto coherent = [&](double from, double to) {
+        return inside(from) && inside(to) && (across ? !before(from, to) : !before(to, from));
+    };
+    if (coherent(first, last)) {
+        return {first, last};
     }
-    if (to) {
-        result.endAngle = angleOf(to->point, arc.center);
-    }
-    // Equality here tests the representation, not whether the exact places
-    // coincide: only the caller can decide that, with PartCourse (#359).
-    bool inverted = result.geometry().sweep > arc.geometry().sweep;
-    if (circle) {
-        if (course == PartCourse::Direct) {
-            inverted = result.startAngle > result.endAngle;
-        } else {
-            inverted = result.startAngle < result.endAngle;
+    AngularPart best{first, first};
+    double cost = std::numeric_limits<double>::infinity();
+    double bestFirst = originalEnd;
+    double bestLast = originalEnd;
+    const auto consider = [&](double from, double to) {
+        if (!coherent(from, to)) {
+            return;
+        }
+        const double correction = angularDistance(first, from) + angularDistance(last, to);
+        // Exact comparisons of computed values, no geometric tolerance. Prefer
+        // the original start, then the beginning of the retained part on ties.
+        if (correction < cost ||
+            (correction == cost && (before(from, bestFirst) ||
+                                    (from == bestFirst && before(to, bestLast))))) {
+            best = {from, to};
+            cost = correction;
+            bestFirst = from;
+            bestLast = to;
+        }
+    };
+    // Endpoints are kept as angles as well as positions: 0 and 2*pi are
+    // distinct sides of a circle's cut even though they draw the same ray.
+    const std::array fromAngles{first, originalStart, originalEnd};
+    const std::array toAngles{last, originalStart, originalEnd};
+    for (std::size_t i = 0; i < fromAngles.size(); ++i) {
+        for (std::size_t j = 0; j < toAngles.size(); ++j) {
+            consider(fromAngles[i], toAngles[j]);
         }
     }
-    if (result.startAngle == result.endAngle || inverted) {
+    consider(first, first);
+    consider(last, last);
+    return best;
+}
+
+PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
+                   const std::optional<CurvePoint>& to, PartCourse course, bool circle = false) {
+    const double first = from ? angleOf(from->point, arc.center) : arc.startAngle;
+    const double last = to ? angleOf(to->point, arc.center) : arc.endAngle;
+    const AngularPart corrected = correctAngles(first, last, arc.startAngle,
+                                                circle ? kTwoPi : arc.endAngle,
+                                                circle ? kTwoPi : arc.geometry().sweep,
+                                                course == PartCourse::AcrossStart);
+    Arc result = arc;
+    result.startAngle = normalizeAngle(corrected.first);
+    result.endAngle = normalizeAngle(corrected.last);
+    if (result.startAngle == result.endAngle) {
         return collapsedArc(course);
     }
     return done(result);
+}
+
+// The changed endpoint must lie in the complementary interval. Its two
+// boundaries are the minimum extension and the unrepresentable full turn.
+double correctedExtension(double angle, double originalStart, double originalEnd,
+                          double sweep) {
+    const AngularPart corrected = correctAngles(angle, angle, originalEnd, originalStart,
+                                                std::copysign(kTwoPi - std::abs(sweep), sweep));
+    // correctAngles resolves endpoint ties toward the complement's start.
+    // For a start extension the original arc's start must win instead.
+    if (angularDistance(angle, originalStart) == angularDistance(angle, originalEnd) &&
+        normalizeAngle(std::copysign(1.0, sweep) * (angle - originalEnd)) >
+            kTwoPi - std::abs(sweep)) {
+        return originalStart;
+    }
+    return corrected.first;
 }
 
 void checkPlace(const CurvePoint& place) {
@@ -95,24 +174,19 @@ double fractionAt(const PolylineSegment& segment, const CurvePoint& place) {
     return place.position.station / length;
 }
 
-// Rebuild a cut segment on its original circle, with the original direction.
-// Equal or inverted rounded angles describe the short, zero-sweep part (B1).
-double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& to,
-                bool extending = false) {
+// Rebuild on the original circle in traversal order, in either direction.
+double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& to) {
     if (!original.isArc() || from == to) {
         return 0.0;
     }
     const ArcGeometry arc = arcFromBulge(original.start, original.end, original.bulge);
-    const double start = angleOf(from, arc.center);
-    const double end = angleOf(to, arc.center);
-    const double sweep =
-        original.bulge > 0.0 ? normalizeAngle(end - start) : -normalizeAngle(start - end);
-    // These exact comparisons concern the computed representation only.
-    // The caller already knows whether the exact part cuts or extends it.
-    if ((extending && std::abs(sweep) < std::abs(arc.sweep)) ||
-        (!extending && std::abs(sweep) > std::abs(arc.sweep))) {
-        return 0.0;
-    }
+    const double originalStart = normalizeAngle(arc.startAngle);
+    const double originalEnd = normalizeAngle(arc.startAngle + arc.sweep);
+    const auto corrected = correctAngles(angleOf(from, arc.center), angleOf(to, arc.center),
+                                         originalStart, originalEnd, arc.sweep);
+    const double sweep = original.bulge > 0.0
+                             ? normalizeAngle(corrected.last - corrected.first)
+                             : -normalizeAngle(corrected.first - corrected.last);
     return std::tan(sweep / 4.0);
 }
 
@@ -182,15 +256,18 @@ PartResult extendPolyline(const Polyline& polyline, EntityEnd end, const CurvePo
     double bulge = segment.bulge;
     if (segment.isArc()) {
         const ArcGeometry arc = arcFromBulge(segment.start, segment.end, segment.bulge);
-        const double firstAngle = angleOf(first, arc.center);
-        const double lastAngle = angleOf(last, arc.center);
+        const double originalStart = normalizeAngle(arc.startAngle);
+        const double originalEnd = normalizeAngle(arc.startAngle + arc.sweep);
+        const double angle = correctedExtension(angleOf(to.point, arc.center), originalStart,
+                                                 originalEnd, arc.sweep);
+        const double firstAngle = start ? angle : originalStart;
+        const double lastAngle = start ? originalEnd : angle;
         if (first == last || firstAngle == lastAngle) {
             return {PartOutcome::NotRepresentable, std::nullopt};
         }
-        bulge = cutBulge(segment, first, last, true);
-        if (bulge == 0.0) {
-            return {PartOutcome::NotRepresentable, std::nullopt};
-        }
+        const double sweep = segment.bulge > 0.0 ? normalizeAngle(lastAngle - firstAngle)
+                                                : -normalizeAngle(firstAngle - lastAngle);
+        bulge = std::tan(sweep / 4.0);
     }
     std::vector<PolylineVertex> vertices{polyline.vertices().begin(), polyline.vertices().end()};
     // The caller's exact position identifies the first/last non-point
@@ -250,12 +327,13 @@ PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to) {
         assert(to.position.location == Location::AfterEnd);
         Arc result = *arc;
         if (start) {
-            result.startAngle = angleOf(to.point, arc->center);
+            result.startAngle = correctedExtension(angleOf(to.point, arc->center), arc->startAngle,
+                                                   arc->endAngle, arc->geometry().sweep);
         } else {
-            result.endAngle = angleOf(to.point, arc->center);
+            result.endAngle = correctedExtension(angleOf(to.point, arc->center), arc->startAngle,
+                                                 arc->endAngle, arc->geometry().sweep);
         }
-        if (result.startAngle == result.endAngle ||
-            result.geometry().sweep < arc->geometry().sweep) {
+        if (result.startAngle == result.endAngle) {
             return {PartOutcome::NotRepresentable, std::nullopt};
         }
         return done(result);

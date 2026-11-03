@@ -13,7 +13,7 @@
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B1–B3 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-03,
   operazione snellimento (#478): rimanda a `intersection.hpp` invece di
-  ripeterlo; revisione della #487: inversione degli angoli (A:a) e
+  ripeterlo; revisione della #487: correzione angolare minima (C, che sostituisce A:a e C:A) e
   identificativo delle intersezioni (B:a), decise dal responsabile
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
@@ -124,11 +124,14 @@ struct PartResult {
 /// angles, or two vertices, come out equal while the exact part is the short
 /// one (Direct, on one segment); NotRepresentable when they come out equal
 /// and the exact part is the long one (AcrossStart): it never becomes a
-/// circle. Inverted computed angles follow the same rule, with exact
-/// comparisons and no tolerance: for an Arc or a curved segment, a cut sweep
-/// larger than the original; for a Circle, start > end with Direct or start
-/// < end with AcrossStart. Within several polyline segments a collapsed or
-/// inverted cut arc has bulge 0 and retains its supplied boundary points.
+/// circle. If computed angles contradict PartCourse or containment in the
+/// original arc, use the minimum angular correction restoring both facts:
+/// collapse the two angles, or move an angle to an original endpoint (for a
+/// circle, to the side of the 0/2*pi cut required by PartCourse). Minimize
+/// the sum of circular angular displacements with exact computed comparisons,
+/// no threshold; ties prefer the original start, then the part's start.
+/// This applies to either direction of curved polyline segments. A collapsed
+/// cut arc within several segments has bulge 0 and keeps the supplied points.
 /// Precondition: not a Text; no place is BeforeStart or AfterEnd (extendTo
 /// takes those); with Direct, `from` does not come after `to` in the order of
 /// cutsAlong; AcrossStart only for a circle or a closed polyline, with `to`
@@ -151,11 +154,11 @@ enum class EntityEnd : std::uint8_t { Start, End };
 ///   vertices of the segments exactly a point between that segment and the
 ///   end take the new point and keep all their other data (docs/adr/0006).
 /// The new point of a line and of a polyline is `to`, exactly; a new arc
-/// angle comes as in partOf. NotRepresentable when the new angle of an arc,
-/// or the new vertex of a curved polyline segment, comes out equal to the
-/// other end of that arc or segment, or passes it: the computed directed
-/// sweep is smaller than the original, compared exactly without tolerance.
-/// The exact extension would close into a circle.
+/// angle comes as in partOf, with the same minimum angular correction when
+/// it contradicts extension: the allowed interval is the complement of the
+/// original arc. Choose between the minimum extension (the changed original
+/// endpoint) and closing the full turn (the other endpoint); ties prefer the
+/// original arc's start, in either direction. The latter is NotRepresentable.
 /// Precondition: a Line, an Arc or an open Polyline; `to` is on the segment
 /// above, BeforeStart or AfterEnd as said.
 [[nodiscard]] PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to);
@@ -169,21 +172,24 @@ enum class EntityEnd : std::uint8_t { Start, End };
   costruzione, che dà un solo posto per curva. Nessuna richiesta a
   solid-space: identità e ordine esatti li dà già il contratto
   (`intersection.hpp`, in testa, e `HostIntersections`).
-- **Archi** (B1): l'estremo nuovo di un arco sta entro l'errore, non sul
-  punto ricevuto; quando i due angoli coincidono o si invertono decide `course`, mai le
-  stazioni. L'inversione si riconosce con confronti esatti sugli angoli
-  calcolati, senza tolleranza: ampiezza della parte maggiore dell'originale
-  per un arco o segmento curvo; inizio dopo la fine con `Direct`, prima con
-  `AcrossStart` per un cerchio. Il corto dà `Empty`, il lungo
-  `NotRepresentable`. In `extendTo`, il nuovo angolo che oltrepassa l'altro
-  estremo (ampiezza diretta minore dell'originale) dà `NotRepresentable`,
-  all'inizio e alla fine e nei due versi dei segmenti curvi (A:a, #487). La regola è di Tecnigrafo: solid-space ha le sue per la curva
-  parallela (`offset.hpp`), che qui non valgono. In una parte di polilinea di
-  più segmenti un
-  segmento curvo tagliato con i due vertici uguali o gli angoli invertiti è
-  il pezzo corto: ampiezza
-  0, bulge 0, un segmento esattamente puntiforme, che `TRIM` giudica con la
-  regola dei pezzi degeneri (P16).
+- **Archi e correzione angolare minima** (B1 e C della #487): se gli
+  angoli calcolati contraddicono `PartCourse` o il contenimento del pezzo
+  esatto nell'arco originale, si sceglie la correzione angolare minima che
+  rende coerenti entrambi. Le alternative sono il collasso dei due angoli
+  e il riporto di un angolo a un estremo originale; per il cerchio, al
+  taglio 0/2π dal lato richiesto da `PartCourse`, sia `Direct` sia
+  `AcrossStart`. Si minimizza la somma degli spostamenti angolari circolari
+  con confronti esatti sui valori calcolati, senza soglie. A parità prevale
+  l'inizio originale, poi quello del pezzo. Vale per `Arc` e segmenti curvi
+  di polilinea nei due versi. Il collasso segue B1: `Empty` per il pezzo
+  corto, `NotRepresentable` per il lungo; in una parte di più segmenti il
+  tratto collassato prende bulge 0 e conserva i punti ricevuti. Per
+  `extendTo` l'intervallo coerente è il complemento dell'arco originale:
+  fra prolungamento minimo e chiusura del giro vince la correzione minore,
+  a parità l'inizio originale; chiudere il giro dà `NotRepresentable`.
+  Questa regola sostituisce le regole caso per caso di A:a e C:A, anche per
+  nuovi casi della stessa classe. La regola è di Tecnigrafo; quella della
+  curva parallela di solid-space (`offset.hpp`) qui non si applica.
 - **Nei comandi** `Empty` vuol dire che quel pezzo non resta;
   `NotRepresentable` che l'operazione non riesce e l'oggetto resta com'è, con
   il messaggio dell'operazione non riuscita (ADR 0035, punto 23).
@@ -232,6 +238,24 @@ enum class EntityEnd : std::uint8_t { Start, End };
   invertiti ai due estremi (`NotRepresentable`), anche di segmenti curvi nei
   due versi. In una parte con più segmenti l'arco invertito conserva i punti
   e prende bulge 0.
+- Revisione #487, C (secondo verbale, esempi 1–4):
+  1. `Arc{{0,0},5,0,π/2}`, `from` omesso, `to=(-1e-15,5)` Inside,
+     `Direct`: `Done`, l'arco originale; anche il caso simmetrico all'inizio
+     e un arco che passa per zero.
+  2. `Circle{{0,0},5}`, da `(5,-1e-14)` a `(0,5)`, `Direct`:
+     `Done`, arco 0→π/2. Scambiando i tagli e usando `AcrossStart`:
+     arco π/2→0. Taglio vicino a zero nell'altro verso: da `(0,-5)` a
+     `(5,1e-14)` Direct dà 3π/2→0; scambiati, AcrossStart dà 0→3π/2.
+  3. `Polyline{{{-5,0},1},{{5,0}},{{10,0}}}`, da `(-5,1e-14)`
+     Inside a fine omessa: `Done`, conserva il semicerchio (bulge 1)
+     seguito dalla linea e il punto ricevuto. Anche fine tagliata e bulge −1.
+  4. L'arco del punto 1 prolungato alla fine a `(1e-15,5)` AfterEnd:
+     `Done`, prolungamento minimo; anche all'inizio e sui segmenti curvi
+     nei due versi, conservando punti e larghezze.
+- Parità C: `u=0x1p-50`, `T=0x1.921fb54442d18p+2`,
+  `Arc{{0,0},5,0,T-2*u}`, `to=(5,-5*u)` Inside, `from` omesso,
+  `Direct`: prevale l'inizio, `Empty`; usando lo stesso punto come `from`
+  e omettendo `to`, `Done` con l'arco originale.
 - Revisione #487, B:a: linea 1 da (−10,0) a (10,0), linea 2 a x=−1,
   linea 3 a x=1, puntatore (0,0), apertura 1, solo intersezione: vince
   (1,0), identificativo della coppia {1,3} pari a 3.

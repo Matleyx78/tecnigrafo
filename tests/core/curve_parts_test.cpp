@@ -137,6 +137,85 @@ TEST(CurveParts, InvertedRoundedAnglesDiscardACurvedSegmentInEitherDirection) {
     }
 }
 
+TEST(CurveParts, MinimumCorrectionKeepsAlmostTheWholeOriginalArc) {
+    // Second review, example 1, and its start/end and zero-crossing mirrors.
+    const Arc quarter{{0, 0}, 5, 0, kPi / 2};
+    expectArc(partOf(quarter, std::nullopt, place({-1e-15, 5}), PartCourse::Direct), 0, 90);
+    expectArc(partOf(quarter, place({5, -1e-14}), std::nullopt, PartCourse::Direct), 0, 90);
+    expectArc(partOf(quarter, place({5, -1e-14}), place({-1e-15, 5}), PartCourse::Direct),
+              0, 90);
+    const Arc wrapping{{0, 0}, 5, 3 * kPi / 2, kPi / 2};
+    expectArc(partOf(wrapping, place({-1e-15, -5}), std::nullopt, PartCourse::Direct),
+              270, 90);
+}
+
+TEST(CurveParts, MinimumCorrectionPrefersTheOriginalStartOnAnExactTie) {
+    // #487: the missing gap is two ulps; the supplied ray bisects it.
+    constexpr double kUnit = 0x1p-50;
+    const Arc almostClosed{{0, 0}, 5, 0, kTwoPi - 2 * kUnit};
+    expectOutcome(partOf(almostClosed, std::nullopt, place({5, -5 * kUnit}),
+                         PartCourse::Direct), PartOutcome::Empty);
+    const auto kept = partOf(almostClosed, place({5, -5 * kUnit}), std::nullopt,
+                             PartCourse::Direct);
+    ASSERT_TRUE(kept.entity);
+    EXPECT_EQ(std::get<Arc>(*kept.entity), almostClosed);
+}
+
+TEST(CurveParts, MinimumCorrectionUsesEitherSideOfTheCircleCutInBothCourses) {
+    // Second review, example 2. Reverse the exact order for AcrossStart;
+    // also move the other endpoint across zero in the opposite direction.
+    const Circle circle{{0, 0}, 5};
+    const auto below = place({5, -1e-14});
+    const auto above = place({5, 1e-14});
+    const auto quarter = place({0, 5});
+    const auto threeQuarters = place({0, -5});
+    expectArc(partOf(circle, below, quarter, PartCourse::Direct), 0, 90);
+    expectArc(partOf(circle, quarter, below, PartCourse::AcrossStart), 90, 0);
+    expectArc(partOf(circle, threeQuarters, above, PartCourse::Direct), 270, 0);
+    expectArc(partOf(circle, above, threeQuarters, PartCourse::AcrossStart), 0, 270);
+}
+
+TEST(CurveParts, MinimumCorrectionKeepsCurvedSegmentsInEitherDirection) {
+    // Second review, example 3, mirrored for clockwise segments and both ends.
+    for (const double sign : {1.0, -1.0}) {
+        const Polyline polyline{{{{-5, 0}, sign, 2, 6}, {{5, 0}}, {{10, 0}}}};
+        for (const bool atStart : {true, false}) {
+            const auto from = atStart ? std::optional{place({-5, sign * 1e-14})} : std::nullopt;
+            const auto to = atStart ? std::nullopt : std::optional{place({5, sign * 1e-14})};
+            const auto result = partOf(polyline, from, to, PartCourse::Direct);
+            ASSERT_EQ(result.outcome, PartOutcome::Done);
+            ASSERT_TRUE(result.entity);
+            const auto& part = std::get<Polyline>(*result.entity);
+            EXPECT_NEAR(part.vertices()[0].bulge, sign, kBuilt);
+            EXPECT_EQ(part.vertices()[0].position, from ? from->point : (Vec2{-5, 0}));
+            EXPECT_EQ(part.vertices()[1].position, to ? to->point : (Vec2{5, 0}));
+        }
+    }
+}
+
+TEST(CurveParts, MinimumCorrectionKeepsMinimalExtensionsAtEitherEndAndDirection) {
+    // Second review, example 4, its start mirror, and curved polyline ends.
+    const Arc quarter{{0, 0}, 5, 0, kPi / 2};
+    expectArc(extendTo(quarter, EntityEnd::End, place({1e-15, 5}, 0, Location::AfterEnd)),
+              0, 90);
+    expectArc(extendTo(quarter, EntityEnd::Start, place({5, 1e-14}, 0, Location::AfterEnd)),
+              0, 90);
+    for (const double sign : {1.0, -1.0}) {
+        const Polyline polyline{{{{-5, 0}, sign, 2, 6}, {{5, 0}}}};
+        for (const EntityEnd end : {EntityEnd::Start, EntityEnd::End}) {
+            const Vec2 point{end == EntityEnd::Start ? -5.0 : 5.0, -sign * 1e-14};
+            const auto result = extendTo(polyline, end, place(point, 0, Location::AfterEnd));
+            ASSERT_EQ(result.outcome, PartOutcome::Done);
+            ASSERT_TRUE(result.entity);
+            const auto& part = std::get<Polyline>(*result.entity);
+            EXPECT_NEAR(part.vertices()[0].bulge, sign, kBuilt);
+            EXPECT_EQ(part.vertices()[end == EntityEnd::Start ? 0 : 1].position, point);
+            EXPECT_EQ(part.vertices()[0].startWidth, 2);
+            EXPECT_EQ(part.vertices()[0].endWidth, 6);
+        }
+    }
+}
+
 TEST(CurveParts, RebuildsSuppliedExistingArcEndpointsButKeepsOmittedAngles) {
     const Arc arc{{0, 0}, 5, 0, kPi / 2};
     const auto result = partOf(arc, place({5, 1e-15}, 0, Location::AtStart),
