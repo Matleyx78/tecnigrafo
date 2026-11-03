@@ -343,23 +343,25 @@ TEST(DocumentQuery, SnapInTheVoidOrOnAnEmptyDocument) {
 
 constexpr SnapModes kIntersectionOnly{false, false, false, false, true};
 
+void expectIntersection(const std::optional<SnapPoint>& actual, const Vec2& expected) {
+    expectSnap(actual, SnapKind::Intersection, expected);
+}
+
 TEST(IntersectionSnap, CrossesTwoLinesAndIsEnabledByDefault) {
     Document document;
     document.add(Line{{-10, -10}, {4, 4}});
     document.add(Line{{-10, 10}, {4, -4}});
-    expectSnap(findSnap(document, {0.1, 0.2}, 0.5, kIntersectionOnly),
-               SnapKind::Intersection, {0, 0});
-    expectSnap(findSnap(document, {0.1, 0.2}, 0.5, {}), SnapKind::Intersection, {0, 0});
-    EXPECT_FALSE(findSnap(document, {0.1, 0.2}, 0.5,
-                          SnapModes{false, false, false, false, false}));
+    expectIntersection(findSnap(document, {0.1, 0.2}, 0.5, kIntersectionOnly), {0, 0});
+    expectIntersection(findSnap(document, {0.1, 0.2}, 0.5, {}), {0, 0});
+    constexpr SnapModes kNone{false, false, false, false, false};
+    EXPECT_FALSE(findSnap(document, {0.1, 0.2}, 0.5, kNone));
 }
 
 TEST(IntersectionSnap, CrossesALineAndAnArcWithoutExtendingEither) {
     Document document;
     document.add(Arc{{0, 0}, 5, 0, kPi});
     document.add(Line{{-10, 4}, {10, 4}});
-    expectSnap(findSnap(document, {3.1, 4}, 0.5, kIntersectionOnly),
-               SnapKind::Intersection, {3, 4});
+    expectIntersection(findSnap(document, {3.1, 4}, 0.5, kIntersectionOnly), {3, 4});
     EXPECT_FALSE(findSnap(document, {3, -4}, 0.5, kIntersectionOnly));
     Document shortLine;
     shortLine.add(Line{{-10, 0}, {-1, 0}});
@@ -371,23 +373,19 @@ TEST(IntersectionSnap, CrossesTwoCirclesAndIncludesTangencies) {
     Document document;
     document.add(Circle{{0, 0}, 5});
     document.add(Circle{{6, 0}, 5});
-    expectSnap(findSnap(document, {3, 4.1}, 0.5, kIntersectionOnly),
-               SnapKind::Intersection, {3, 4});
+    expectIntersection(findSnap(document, {3, 4.1}, 0.5, kIntersectionOnly), {3, 4});
     Document tangent;
     tangent.add(Circle{{0, 0}, 5});
     tangent.add(Line{{-10, 5}, {10, 5}});
-    expectSnap(findSnap(tangent, {0.1, 5}, 0.5, kIntersectionOnly),
-               SnapKind::Intersection, {0, 5});
+    expectIntersection(findSnap(tangent, {0.1, 5}, 0.5, kIntersectionOnly), {0, 5});
 }
 
 TEST(IntersectionSnap, FindsSelfIntersectionsAndOneAnswerForSeveralPairs) {
     Document document;
     document.add(Polyline{{{{-5, -5}}, {{5, 5}}, {{5, -5}}, {{-5, 5}}}});
-    expectSnap(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly),
-               SnapKind::Intersection, {0, 0});
+    expectIntersection(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly), {0, 0});
     document.add(Line{{-10, 0}, {10, 0}});
-    expectSnap(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly),
-               SnapKind::Intersection, {0, 0});
+    expectIntersection(findSnap(document, {0.1, 0}, 0.5, kIntersectionOnly), {0, 0});
 }
 
 TEST(IntersectionSnap, RejectsCrossingsOutsideTheCircularApertureAndSharedStretches) {
@@ -433,8 +431,7 @@ TEST(IntersectionSnap, UsesDistanceBeforeKindThenEndpointBeforeIntersection) {
     constexpr SnapModes kEndAndIntersection{true, false, false, false, true};
     expectSnap(findSnap(document, {1, 0}, 1.5, kEndAndIntersection),
                SnapKind::Endpoint, {2, 0});
-    expectSnap(findSnap(document, {0.8, 0}, 1.5, kEndAndIntersection),
-               SnapKind::Intersection, {0, 0});
+    expectIntersection(findSnap(document, {0.8, 0}, 1.5, kEndAndIntersection), {0, 0});
 }
 
 TEST(IntersectionSnap, PrefersTheHighestEntityIdOnAnEqualDistance) {
@@ -442,8 +439,7 @@ TEST(IntersectionSnap, PrefersTheHighestEntityIdOnAnEqualDistance) {
     document.add(Line{{-10, 0}, {10, 0}});
     document.add(Line{{-1, -10}, {-1, 10}});
     document.add(Line{{1, -10}, {1, 10}});
-    expectSnap(findSnap(document, {0, 0}, 1, kIntersectionOnly),
-               SnapKind::Intersection, {1, 0});
+    expectIntersection(findSnap(document, {0, 0}, 1, kIntersectionOnly), {1, 0});
 }
 
 // --- findSnap: quadrant and perpendicular (docs/adr/0033, points 4 and 5) ---

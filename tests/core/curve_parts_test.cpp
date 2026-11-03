@@ -67,8 +67,7 @@ TEST(CurveParts, SamePlaceIsEmptyButEqualRoundedPlacesCanGiveAZeroLengthLine) {
 TEST(CurveParts, CutsAnArcAndKeepsItsCenterAndRadius) {
     const Arc arc{{0, 0}, 5, 0, degreesToRadians(180)};
     expectArc(partOf(arc, place({3, 4}), place({-3, 4}), PartCourse::Direct),
-              radiansToDegrees(std::atan2(4.0, 3.0)),
-              radiansToDegrees(std::atan2(4.0, -3.0)));
+              radiansToDegrees(std::atan2(4.0, 3.0)), radiansToDegrees(std::atan2(4.0, -3.0)));
     expectArc(partOf(arc, std::nullopt, place({0, 5}), PartCourse::Direct), 0, 90);
     expectArc(partOf(arc, place({0, 5}), std::nullopt, PartCourse::Direct), 90, 180);
 }
@@ -119,9 +118,8 @@ TEST(CurveParts, CutsStraightPolylineSegmentsAndInterpolatesWidths) {
 TEST(CurveParts, CutsPositiveAndNegativeBulgesByArcLength) {
     for (const double sign : {1.0, -1.0}) {
         const Polyline polyline{{{{-5, 0}, sign, 2, 6}, {{5, 0}, 0, 11, 12}}};
-        const auto result = partOf(polyline, place({0, -5 * sign}, 0, Location::Inside,
-                                                  5 * kPi / 2),
-                                   std::nullopt, PartCourse::Direct);
+        const auto cut = place({0, -5 * sign}, 0, Location::Inside, 5 * kPi / 2);
+        const auto result = partOf(polyline, cut, std::nullopt, PartCourse::Direct);
         expectOutcome(result, PartOutcome::Done);
         ASSERT_TRUE(result.entity);
         const auto& part = std::get<Polyline>(*result.entity);
@@ -174,8 +172,8 @@ TEST(CurveParts, UsesExactVertexLocationsWithoutDuplicatingBoundaryVertices) {
 TEST(CurveParts, DiscardsASingleRoundedPointArcButRetainsItWithinSeveralSegments) {
     const Polyline polyline{{{{-5, 0}, 1}, {{5, 0}}, {{10, 0}}}};
     const CurvePoint cut = place({5, 0}, 0, Location::Inside, 5 * kPi);
-    expectOutcome(partOf(polyline, cut, place({5, 0}, 1, Location::AtStart),
-                         PartCourse::Direct), PartOutcome::Empty);
+    const auto vertex = place({5, 0}, 1, Location::AtStart);
+    expectOutcome(partOf(polyline, cut, vertex, PartCourse::Direct), PartOutcome::Empty);
     const auto multiple = partOf(polyline, cut, std::nullopt, PartCourse::Direct);
     expectOutcome(multiple, PartOutcome::Done);
     ASSERT_TRUE(multiple.entity);
@@ -212,12 +210,11 @@ TEST(CurveParts, ExtendsAnArcBeyondZeroAndBackwardsFromItsStart) {
 }
 
 TEST(CurveParts, ExtendsPastPointSegmentsAndPreservesAllTheirOtherData) {
-    const Polyline polyline{{{{0, 0}, 2, 1, 2}, {{0, 0}, 0, 3, 4},
-                              {{10, 0}, -2, 5, 6}, {{10, 0}, 3, 7, 8}}};
-    const auto start = extendTo(polyline, EntityEnd::Start,
-                                place({-5, 0}, 1, Location::BeforeStart));
-    const auto end = extendTo(polyline, EntityEnd::End,
-                              place({15, 0}, 1, Location::AfterEnd));
+    const Polyline polyline{
+        {{{0, 0}, 2, 1, 2}, {{0, 0}, 0, 3, 4}, {{10, 0}, -2, 5, 6}, {{10, 0}, 3, 7, 8}}};
+    const auto first = place({-5, 0}, 1, Location::BeforeStart);
+    const auto start = extendTo(polyline, EntityEnd::Start, first);
+    const auto end = extendTo(polyline, EntityEnd::End, place({15, 0}, 1, Location::AfterEnd));
     for (const auto* result : {&start, &end}) {
         expectOutcome(*result, PartOutcome::Done);
         ASSERT_TRUE(result->entity);
@@ -240,8 +237,8 @@ TEST(CurveParts, ExtendsCurvedPolylineEndsInBothDirections) {
         polyline.setConstantWidth(7);
         polyline.setContinuousLinetype(true);
         for (const EntityEnd end : {EntityEnd::Start, EntityEnd::End}) {
-            const auto result = extendTo(polyline, end,
-                                         place({0, 5 * sign}, 0, Location::AfterEnd));
+            const auto cut = place({0, 5 * sign}, 0, Location::AfterEnd);
+            const auto result = extendTo(polyline, end, cut);
             expectOutcome(result, PartOutcome::Done);
             ASSERT_TRUE(result.entity);
             const auto& part = std::get<Polyline>(*result.entity);
@@ -254,9 +251,8 @@ TEST(CurveParts, ExtendsCurvedPolylineEndsInBothDirections) {
             EXPECT_EQ(part.constantWidth(), 7);
             EXPECT_TRUE(part.continuousLinetype());
         }
-        expectOutcome(extendTo(polyline, EntityEnd::End,
-                               place({-5, 0}, 0, Location::AfterEnd)),
-                      PartOutcome::NotRepresentable);
+        const auto closing = place({-5, 0}, 0, Location::AfterEnd);
+        expectOutcome(extendTo(polyline, EntityEnd::End, closing), PartOutcome::NotRepresentable);
     }
 }
 

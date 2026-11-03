@@ -236,9 +236,9 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             }
             for (std::size_t j = i + 1; j < nearbyCurves.size(); ++j) {
                 const EntityId second = nearbyCurves[j];
-                considerCrossings(intersect(entity, Extension::None, entityOf(document, second),
-                                             Extension::None),
-                                  second.value);
+                const Entity& other = entityOf(document, second);
+                const auto found = intersect(entity, Extension::None, other, Extension::None);
+                considerCrossings(found, second.value);
             }
         }
     }

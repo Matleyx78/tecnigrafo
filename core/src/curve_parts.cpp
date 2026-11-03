@@ -97,8 +97,8 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
     const ArcGeometry arc = arcFromBulge(original.start, original.end, original.bulge);
     const double start = angleOf(from, arc.center);
     const double end = angleOf(to, arc.center);
-    const double sweep = original.bulge > 0.0 ? normalizeAngle(end - start)
-                                              : -normalizeAngle(start - end);
+    const double sweep =
+        original.bulge > 0.0 ? normalizeAngle(end - start) : -normalizeAngle(start - end);
     return std::tan(sweep / 4.0);
 }
 
@@ -242,9 +242,11 @@ PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to) {
     assert(std::holds_alternative<Polyline>(entity));
     const Polyline& polyline = std::get<Polyline>(entity);
     assert(to.position.segment < polyline.segmentCount());
-    assert(to.position.location ==
-           (start && !polyline.segment(to.position.segment).isArc() ? Location::BeforeStart
-                                                                   : Location::AfterEnd));
+    auto expectedLocation = Location::AfterEnd;
+    if (start && !polyline.segment(to.position.segment).isArc()) {
+        expectedLocation = Location::BeforeStart;
+    }
+    assert(to.position.location == expectedLocation);
     return extendPolyline(polyline, end, to);
 }
 
