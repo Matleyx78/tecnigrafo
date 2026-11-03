@@ -7,8 +7,10 @@
 - **Modello e impegno:** forte; impegno alto
 - **Riferimenti:** issue `[0.7-R17]` (#…), agente gemini: la facciata (lato,
   esiti, polilinee, larghezze, unità); i valori geometrici dall'archivio dei
-  casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#130, P25, R17. La richiesta
+  casi di solid-space; issue `[0.7-R17b]` (#481), agente gemini: le tolleranze
+  dei casi di R17 (ADR 0036, punto 4)
+- **Dipende da:** P14, Matleyx78/solid-space#130, P25, R17, R17b (#481:
+  le tolleranze dei casi di R17 dopo l'ADR 0036, punto 4). La richiesta
   Matleyx78/solid-space#22 è diventata i pacchetti di solid-space che
   realizzano `offset.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P19
   (Matleyx78/solid-space#130, riferimenti Matleyx78/solid-space#129), che
@@ -16,8 +18,8 @@
   della tappa 0.2 di solid-space
 - **Corretta:** 2026-11-01, con la decisione del responsabile sul buco B5 della
   #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-03, operazione snellimento
-  (#478): rimanda a `offset.hpp` invece di ripeterlo, e i casi `failed` sono
-  quelli del contratto
+  (#478): rimanda a `offset.hpp` invece di ripeterlo, i casi `failed` sono
+  quelli del contratto, e P17 aspetta anche R17b (#481)
 - **Modulo:** `core` (più la domanda `offset` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 10–12; l'[ADR 0012 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0012-curva-parallela-nel-piano.md)
