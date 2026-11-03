@@ -745,3 +745,43 @@ i rimandi ai documenti che cambia.
   [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md). La issue #363 (P17) è
   bloccata da Matleyx78/solid-space#130 invece che da #63; la #367 (P19) da
   #145 invece che da #70.
+- **2026-11-03 — Operazione snellimento, passo 4: AGENTS.md diventa un nucleo.**
+  Durante il congelamento
+  ([#478](https://github.com/Matleyx78/tecnigrafo/issues/478)), come in
+  solid-space, il responsabile decide che [AGENTS.md](../AGENTS.md) contiene
+  solo un nucleo che ogni agente legge sempre, sotto le 1000 parole (dove si
+  scrive, presa in carico, regole che non si possono violare, quando fermarsi,
+  prima di dichiarare finito, commit e pull request), più una tabella
+  "Se ... leggi anche ..." con segni oggettivi: titolo della issue, etichetta,
+  cartelle o file toccati, ramo. Il resto delle regole sta in
+  [agenti/](agenti/), con gli stessi otto nomi di file nei due repository:
+  `pacchetto.md`, `riferimenti.md`, `revisione.md`, `lotti.md`,
+  `contratto.md`, `altro-repository.md`, `comandi.md`, `chiusura.md`. Nessuna
+  regola si perde: le sezioni conservano i titoli di prima, così i rimandi
+  «AGENTS.md, "<titolo>"» degli altri documenti restano validi. `GEMINI.md`
+  rimanda al nucleo e alla tabella e tiene solo le note proprie di Gemini.
+  Tre regole nuove:
+  - **Niente compilazione locale per documenti, commenti e riferimenti.** Una
+    pull request che tocca solo documenti, commenti o casi di riferimento non
+    si compila e non si eseguono i casi in locale: la verifica la fa la CI;
+    `scripts/controlla.sh --solo formato` resta permesso. Per i riferimenti cade la
+    possibilità di eseguire i casi in locale; la loro validità la dicono i
+    controlli anticipati
+    ([ADR 0037](adr/0037-controllo-anticipato-dei-riferimenti.md)).
+  - **La fascia di una soglia non blocca.** In revisione, un caso che sta entro
+    un errore dichiarato dal confine di `kMaxCoordinate` o da un'altra soglia
+    del contratto si chiude dichiarando la fascia
+    ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+    punto 4), senza bloccare il merge e senza decisione del responsabile: chi
+    rivede lo segnala come non bloccante e l'autore scrive la fascia nella
+    scheda nella stessa pull request, senza un altro giro.
+  - **Buchi visibili e no anche nelle schede.** La regola dell'ADR 0013 di
+    solid-space, punto 3, vale anche per i buchi delle schede di Tecnigrafo:
+    un buco visibile (esito o diagnosi, numero o ordine delle entità, una
+    coordinata oltre la tolleranza della regola) lo decide il responsabile;
+    uno non visibile non ferma, lo sceglie chi implementa (la scelta più
+    semplice), lo scrive nella scheda o nel commento, lo fissa con un test e
+    lo segnala nella pull request.
+
+  Cambiano [AGENTS.md](../AGENTS.md), `GEMINI.md` e i nuovi file di
+  [agenti/](agenti/). `CLAUDE.md` non cambia; nessun ADR cambia.
