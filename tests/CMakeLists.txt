@@ -46,6 +46,7 @@ add_executable(tg_tests
     core/arc_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
+    core/curve_parts_test.cpp
     core/dashes_test.cpp
     core/lineweight_test.cpp
     core/linetype_pattern_test.cpp

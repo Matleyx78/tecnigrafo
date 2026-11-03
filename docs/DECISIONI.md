@@ -804,3 +804,57 @@ i rimandi ai documenti che cambia.
   Cambia [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md) (A3, punti 3 e 7;
   B10a, passo 4; B12), che nella stessa pull request si allinea anche alle
   decisioni dei passi 3 e 4. Nessun ADR cambia.
+
+- **2026-11-03 — Revisione P15: angoli invertiti e identificativo dello snap.**
+  Il responsabile decide A:a e B:a nella
+  [#487](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6609308810).
+  In [P15](tappe/0.7/P15-snap-intersezione.md) l'inversione si tratta come
+  l'uguaglianza di B1, con confronti esatti sugli angoli calcolati, senza
+  tolleranza: ampiezza della parte maggiore dell'originale per un arco o un
+  segmento curvo; inizio dopo la fine con `Direct`, prima con `AcrossStart`
+  per un cerchio. `Empty` per il pezzo esatto corto, `NotRepresentable` per
+  il lungo. In una parte di polilinea con più segmenti, il tratto curvo
+  invertito prende bulge 0 conservando i punti ricevuti. In `extendTo` il
+  nuovo angolo che oltrepassa l'altro estremo dà `NotRepresentable`
+  (ampiezza diretta minore dell'originale), a inizio e fine, nei due versi
+  dei segmenti curvi. I due esempi della revisione entrano nei test della
+  scheda, insieme ai casi opposti. Per `findSnap`, il punto di una coppia
+  porta il maggiore dei due identificativi; un'autointersezione porta
+  quello della polilinea. Cambiano scheda P15, commenti delle interfacce,
+  implementazione e test nella stessa PR; nessun ADR o riferimento cambia.
+
+- **2026-11-03 — P15: correzione angolare minima, decisione C completa.**
+  Il responsabile nella [#487](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6611988842)
+  sostituisce le regole caso per caso di **A:a e C:A**, compresa la parità,
+  con una sola regola: quando gli angoli calcolati contraddicono `PartCourse`
+  o il contenimento del pezzo esatto nell'arco originale, vince la correzione
+  angolare minima fra collasso dei due angoli (B1) e riporto di uno o tutti e
+  due gli angoli agli estremi originali, oppure al taglio 0/2π del cerchio
+  dal lato richiesto da `PartCourse`. Si minimizza la somma degli spostamenti angolari circolari;
+  confronti esatti sui valori calcolati, senza soglie; a parità prevale
+  l'inizio originale, poi quello del pezzo. Vale per `Arc`, cerchio con
+  `Direct` e `AcrossStart`, segmenti curvi nei due versi ed `extendTo`:
+  per il prolungamento l'intervallo consentito è il complemento dell'arco,
+  con scelta fra prolungamento minimo e chiusura non rappresentabile, sempre
+  preferendo l'inizio originale in parità. I casi nuovi della stessa classe
+  si risolvono con questa regola. Restano B1 per il collasso e B:a per lo
+  snap. Cambiano nella stessa PR implementazione, commenti di `partOf` ed
+  `extendTo`, [scheda P15](tappe/0.7/P15-snap-intersezione.md) con esempi e
+  test; nessun ADR, riferimento o sottomodulo cambia.
+
+- **2026-11-03 — P15, terzo verbale: fascia del cerchio al taglio 0/2π.**
+  Il responsabile [sceglie a](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6613739609)
+  sul punto 1 del [terzo verbale](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6613603556).
+  Quando i due posti esatti di un cerchio stanno entro l'errore dichiarato
+  dal taglio 0/2π, da lati opposti, l'esito della correzione angolare minima
+  è libero e deterministico, e può essere il pezzo opposto a quello esatto,
+  sia con `Direct` sia con `AcrossStart`: è una fascia ai sensi dell'[ADR
+  0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+  punto 4. Su `Circle{{0,0},5}`, `Direct` da `(5,-1e-14)` a `(5,1e-14)` dà
+  `Done`, arco 0→circa 2e-15 radianti; scambiando i punti, `AcrossStart` dà
+  `Done`, arco circa 2e-15→0. Il test fissa questi esiti dentro la fascia,
+  non quelli esatti. Il punto 2 allinea la formulazione della decisione C:
+  si riportano **uno o tutti e due gli angoli**, come fa già `correctAngles`
+  e come fissa `MinimumCorrectionKeepsAlmostTheWholeOriginalArc`.
+  Cambiano commento di `partOf`, scheda P15, questa voce e test; algoritmo,
+  metrica e spareggi (punto 3), ADR, riferimenti e sottomodulo restano invariati.
