@@ -176,6 +176,30 @@ TEST(CurveParts, MinimumCorrectionUsesEitherSideOfTheCircleCutInBothCourses) {
     expectArc(partOf(circle, above, threeQuarters, PartCourse::AcrossStart), 0, 270);
 }
 
+TEST(CurveParts, CircleCutBandKeepsTheCurrentDeterministicOppositePieces) {
+    // Third review, point 1: these are outcomes inside the declared 0/2*pi
+    // cut band, not the exact pieces. Direct keeps a tiny arc although the
+    // exact piece is almost the whole circle; AcrossStart does the opposite.
+    const Circle circle{{0, 0}, 5};
+    const auto below = place({5, -1e-14});
+    const auto above = place({5, 1e-14});
+    for (const bool across : {false, true}) {
+        const auto result = partOf(circle, across ? above : below, across ? below : above,
+                                   across ? PartCourse::AcrossStart : PartCourse::Direct);
+        ASSERT_EQ(result.outcome, PartOutcome::Done);
+        ASSERT_TRUE(result.entity.has_value());
+        const auto* arc = std::get_if<Arc>(&*result.entity);
+        ASSERT_NE(arc, nullptr);
+        EXPECT_EQ(arc->center, circle.center);
+        EXPECT_EQ(arc->radius, circle.radius);
+        // A tight allowance distinguishes the tiny positive angle from zero.
+        constexpr double kTinyAngle = 2e-15;
+        constexpr double kAngleRoundoff = 1e-29;
+        EXPECT_EQ(across ? arc->endAngle : arc->startAngle, 0.0);
+        EXPECT_NEAR(across ? arc->startAngle : arc->endAngle, kTinyAngle, kAngleRoundoff);
+    }
+}
+
 TEST(CurveParts, MinimumCorrectionKeepsCurvedSegmentsInEitherDirection) {
     // Second review, example 3, mirrored for clockwise segments and both ends.
     for (const double sign : {1.0, -1.0}) {

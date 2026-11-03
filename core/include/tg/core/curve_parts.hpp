@@ -65,12 +65,16 @@ struct PartResult {
 /// and the exact part is the long one (AcrossStart): it never becomes a
 /// circle. If computed angles contradict PartCourse or containment in the
 /// original arc, use the minimum angular correction restoring both facts:
-/// collapse the two angles, or move an angle to an original endpoint (for a
-/// circle, to the side of the 0/2*pi cut required by PartCourse). Minimize
+/// collapse the two angles, or move one or both angles to original endpoints
+/// (for a circle, to the side of the 0/2*pi cut required by PartCourse). Minimize
 /// the sum of circular angular displacements with exact computed comparisons,
 /// no threshold; ties prefer the original start, then the part's start.
 /// This applies to either direction of curved polyline segments. A collapsed
 /// cut arc within several segments has bulge 0 and keeps the supplied points.
+/// Circle cut band (solid-space ADR 0013, point 4): when both exact places
+/// are within the declared error of the 0/2*pi cut, on opposite sides, the
+/// minimum correction has a free but deterministic outcome, which may be
+/// the opposite piece to the exact one, for Direct and AcrossStart alike.
 /// Precondition: not a Text; no place is BeforeStart or AfterEnd (extendTo
 /// takes those); with Direct, `from` does not come after `to` in the order of
 /// cutsAlong; AcrossStart only for a circle or a closed polyline, with `to`

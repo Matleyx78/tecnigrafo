@@ -828,9 +828,9 @@ i rimandi ai documenti che cambia.
   sostituisce le regole caso per caso di **A:a e C:A**, compresa la parità,
   con una sola regola: quando gli angoli calcolati contraddicono `PartCourse`
   o il contenimento del pezzo esatto nell'arco originale, vince la correzione
-  angolare minima fra collasso dei due angoli (B1) e riporto di un angolo a
-  un estremo originale, oppure al taglio 0/2π del cerchio dal lato richiesto
-  da `PartCourse`. Si minimizza la somma degli spostamenti angolari circolari;
+  angolare minima fra collasso dei due angoli (B1) e riporto di uno o tutti e
+  due gli angoli agli estremi originali, oppure al taglio 0/2π del cerchio
+  dal lato richiesto da `PartCourse`. Si minimizza la somma degli spostamenti angolari circolari;
   confronti esatti sui valori calcolati, senza soglie; a parità prevale
   l'inizio originale, poi quello del pezzo. Vale per `Arc`, cerchio con
   `Direct` e `AcrossStart`, segmenti curvi nei due versi ed `extendTo`:
@@ -841,3 +841,20 @@ i rimandi ai documenti che cambia.
   snap. Cambiano nella stessa PR implementazione, commenti di `partOf` ed
   `extendTo`, [scheda P15](tappe/0.7/P15-snap-intersezione.md) con esempi e
   test; nessun ADR, riferimento o sottomodulo cambia.
+
+- **2026-11-03 — P15, terzo verbale: fascia del cerchio al taglio 0/2π.**
+  Il responsabile [sceglie a](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6613739609)
+  sul punto 1 del [terzo verbale](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6613603556).
+  Quando i due posti esatti di un cerchio stanno entro l'errore dichiarato
+  dal taglio 0/2π, da lati opposti, l'esito della correzione angolare minima
+  è libero e deterministico, e può essere il pezzo opposto a quello esatto,
+  sia con `Direct` sia con `AcrossStart`: è una fascia ai sensi dell'[ADR
+  0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+  punto 4. Su `Circle{{0,0},5}`, `Direct` da `(5,-1e-14)` a `(5,1e-14)` dà
+  `Done`, arco 0→circa 2e-15 radianti; scambiando i punti, `AcrossStart` dà
+  `Done`, arco circa 2e-15→0. Il test fissa questi esiti dentro la fascia,
+  non quelli esatti. Il punto 2 allinea la formulazione della decisione C:
+  si riportano **uno o tutti e due gli angoli**, come fa già `correctAngles`
+  e come fissa `MinimumCorrectionKeepsAlmostTheWholeOriginalArc`.
+  Cambiano commento di `partOf`, scheda P15, questa voce e test; algoritmo,
+  metrica e spareggi (punto 3), ADR, riferimenti e sottomodulo restano invariati.

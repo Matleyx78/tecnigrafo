@@ -14,7 +14,9 @@
   buchi B1–B3 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-03,
   operazione snellimento (#478): rimanda a `intersection.hpp` invece di
   ripeterlo; revisione della #487: correzione angolare minima (C, che sostituisce A:a e C:A) e
-  identificativo delle intersezioni (B:a), decise dal responsabile
+  identificativo delle intersezioni (B:a), decise dal responsabile; terzo
+  verbale: fascia del cerchio al taglio 0/2π (scelta a) e riporto di uno o
+  tutti e due gli angoli
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
   punti 3, 5 e 6; [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
@@ -126,12 +128,16 @@ struct PartResult {
 /// and the exact part is the long one (AcrossStart): it never becomes a
 /// circle. If computed angles contradict PartCourse or containment in the
 /// original arc, use the minimum angular correction restoring both facts:
-/// collapse the two angles, or move an angle to an original endpoint (for a
-/// circle, to the side of the 0/2*pi cut required by PartCourse). Minimize
+/// collapse the two angles, or move one or both angles to original endpoints
+/// (for a circle, to the side of the 0/2*pi cut required by PartCourse). Minimize
 /// the sum of circular angular displacements with exact computed comparisons,
 /// no threshold; ties prefer the original start, then the part's start.
 /// This applies to either direction of curved polyline segments. A collapsed
 /// cut arc within several segments has bulge 0 and keeps the supplied points.
+/// Circle cut band (solid-space ADR 0013, point 4): when both exact places
+/// are within the declared error of the 0/2*pi cut, on opposite sides, the
+/// minimum correction has a free but deterministic outcome, which may be
+/// the opposite piece to the exact one, for Direct and AcrossStart alike.
 /// Precondition: not a Text; no place is BeforeStart or AfterEnd (extendTo
 /// takes those); with Direct, `from` does not come after `to` in the order of
 /// cutsAlong; AcrossStart only for a circle or a closed polyline, with `to`
@@ -176,8 +182,8 @@ enum class EntityEnd : std::uint8_t { Start, End };
   angoli calcolati contraddicono `PartCourse` o il contenimento del pezzo
   esatto nell'arco originale, si sceglie la correzione angolare minima che
   rende coerenti entrambi. Le alternative sono il collasso dei due angoli
-  e il riporto di un angolo a un estremo originale; per il cerchio, al
-  taglio 0/2π dal lato richiesto da `PartCourse`, sia `Direct` sia
+  e il riporto di uno o tutti e due gli angoli agli estremi originali;
+  per il cerchio, al taglio 0/2π dal lato richiesto da `PartCourse`, sia `Direct` sia
   `AcrossStart`. Si minimizza la somma degli spostamenti angolari circolari
   con confronti esatti sui valori calcolati, senza soglie. A parità prevale
   l'inizio originale, poi quello del pezzo. Vale per `Arc` e segmenti curvi
@@ -190,6 +196,14 @@ enum class EntityEnd : std::uint8_t { Start, End };
   Questa regola sostituisce le regole caso per caso di A:a e C:A, anche per
   nuovi casi della stessa classe. La regola è di Tecnigrafo; quella della
   curva parallela di solid-space (`offset.hpp`) qui non si applica.
+- **Fascia del cerchio al taglio 0/2π** (terzo verbale della #487, punto 1,
+  [scelta a del responsabile](https://github.com/Matleyx78/tecnigrafo/pull/487#issuecomment-6613739609)):
+  quando i due posti esatti stanno entro l'errore dichiarato dal taglio 0/2π,
+  da lati opposti, l'esito della correzione angolare minima è libero e
+  deterministico, e può essere il pezzo opposto a quello esatto, sia con
+  `Direct` sia con `AcrossStart`. È una fascia ai sensi dell'[ADR 0013 di
+  solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+  punto 4; non cambia l'algoritmo né aggiunge una soglia.
 - **Nei comandi** `Empty` vuol dire che quel pezzo non resta;
   `NotRepresentable` che l'operazione non riesce e l'oggetto resta com'è, con
   il messaggio dell'operazione non riuscita (ADR 0035, punto 23).
@@ -252,6 +266,15 @@ enum class EntityEnd : std::uint8_t { Start, End };
   4. L'arco del punto 1 prolungato alla fine a `(1e-15,5)` AfterEnd:
      `Done`, prolungamento minimo; anche all'inizio e sui segmenti curvi
      nei due versi, conservando punti e larghezze.
+- Terzo verbale #487, fascia del cerchio (punto 1, scelta a): su
+  `Circle{{0,0},5}`, `Direct` da `(5,-1e-14)` a `(5,1e-14)` dà `Done`,
+  arco 0→circa 2e-15 radianti; `AcrossStart` da `(5,1e-14)` a `(5,-1e-14)`
+  dà `Done`, arco circa 2e-15→0. Il test fissa l'esito attuale dentro la
+  fascia del taglio 0/2π, non quello esatto: il primo pezzo esatto è quasi
+  tutto il cerchio, il secondo è minuscolo attraverso lo zero.
+- Riporto di tutti e due gli angoli: `Arc{{0,0},5,0,π/2}`, da `(5,-1e-14)`
+  a `(-1e-15,5)`, entrambi `Inside`, `Direct`: `Done`, l'arco intero,
+  come nel terzo controllo di `MinimumCorrectionKeepsAlmostTheWholeOriginalArc`.
 - Parità C: `u=0x1p-50`, `T=0x1.921fb54442d18p+2`,
   `Arc{{0,0},5,0,T-2*u}`, `to=(5,-5*u)` Inside, `from` omesso,
   `Direct`: prevale l'inizio, `Empty`; usando lo stesso punto come `from`
