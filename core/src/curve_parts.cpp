@@ -46,8 +46,9 @@ double angularDistance(double first, double last) {
     return std::abs(std::remainder(first - last, kTwoPi));
 }
 
-AngularPart correctAngles(double first, double last, double originAngle, double limitAngle,
-                          double sweep, bool across = false) {
+AngularPart correctAngles(AngularPart rays, AngularPart bounds, double sweep, bool across = false) {
+    const auto [first, last] = rays;
+    const auto [originAngle, limitAngle] = bounds;
     const double length = std::abs(sweep);
     const auto before = [&](double from, double to) {
         // Compare rays before subtracting the origin: subtraction can erase
@@ -110,7 +111,7 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
     const double sweep = circle ? kTwoPi : arc.geometry().sweep;
     const bool across = course == PartCourse::AcrossStart;
     const AngularPart corrected =
-        correctAngles(first, last, arc.startAngle, originalEnd, sweep, across);
+        correctAngles({first, last}, {arc.startAngle, originalEnd}, sweep, across);
     Arc result = arc;
     result.startAngle = normalizeAngle(corrected.first);
     result.endAngle = normalizeAngle(corrected.last);
@@ -125,7 +126,7 @@ PartResult arcPart(const Arc& arc, const std::optional<CurvePoint>& from,
 double correctedExtension(double angle, double originalStart, double originalEnd, double sweep) {
     const double complement = std::copysign(kTwoPi - std::abs(sweep), sweep);
     const AngularPart corrected =
-        correctAngles(angle, angle, originalEnd, originalStart, complement);
+        correctAngles({angle, angle}, {originalEnd, originalStart}, complement);
     // correctAngles resolves endpoint ties toward the complement's start.
     // For a start extension the original arc's start must win instead.
     if (angularDistance(angle, originalStart) == angularDistance(angle, originalEnd) &&
@@ -182,8 +183,8 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
     const ArcGeometry arc = arcFromBulge(original.start, original.end, original.bulge);
     const double originalStart = normalizeAngle(arc.startAngle);
     const double originalEnd = normalizeAngle(arc.startAngle + arc.sweep);
-    const auto corrected = correctAngles(angleOf(from, arc.center), angleOf(to, arc.center),
-                                         originalStart, originalEnd, arc.sweep);
+    const AngularPart rays{angleOf(from, arc.center), angleOf(to, arc.center)};
+    const auto corrected = correctAngles(rays, {originalStart, originalEnd}, arc.sweep);
     const double forward = normalizeAngle(corrected.last - corrected.first);
     const double backward = normalizeAngle(corrected.first - corrected.last);
     const double sweep = original.bulge > 0.0 ? forward : -backward;
