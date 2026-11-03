@@ -183,7 +183,7 @@ I grip sono quadratini blu (10 pixel di lato a schermo) che compaiono sui vertic
 sui punti notevoli delle entità quando queste sono selezionate nell'area di disegno
 senza alcun comando in corso (*selezione a riposo*).
 
-Se la selezione contiene più di 100 entità (`kMaxGripEntities`, come `GRIPOBJLIMIT`
+Se la selezione contiene più di 100 entità (come la variabile `GRIPOBJLIMIT`
 in AutoCAD), i grip non vengono disegnati a schermo per preservare la fluidità grafica.
 
 ### Dove si trovano
@@ -289,9 +289,9 @@ visivo a schermo:
 
 | Modo | Azione / Menu *Tools → Object Snap Modes* | Punto di aggancio | Marcatore a schermo |
 |---|---|---|---|
-| *Intersection* | `aids.snap.intersection` | Punto d'incontro tra due curve o tra segmenti della stessa polilinea | Croce a forma di X |
+| *Intersection* | `aids.snap.intersection` | Punto d'incontro tra due curve o tra segmenti della stessa polilinea (interruttore presente, aggancio non ancora attivo) | Croce a forma di X |
 | *Perpendicular* | `aids.snap.perpendicular` | Piede della perpendicolare tracciata dal punto base del comando verso la curva | Simbolo perpendicolare (⊥) |
-| *Tangent* | `aids.snap.tangent` | Punto di tangenza condotto dal punto base verso cerchi, archi o segmenti curvi di polilinea | Cerchio con linea tangente in alto |
+| *Tangent* | `aids.snap.tangent` | Punto di tangenza condotto dal punto base verso cerchi, archi o segmenti curvi di polilinea (interruttore presente, aggancio non ancora attivo) | Cerchio con linea tangente in alto |
 | *Quadrant* | `aids.snap.quadrant` | Punti cardinali (0°, 90°, 180°, 270°) di cerchi, archi e archi di polilinea | Rombo |
 
 ### Regole geometriche
@@ -299,25 +299,28 @@ visivo a schermo:
 - **Quadrante:** individua i quattro punti a 0°, 90°, 180° e 270° rispetto agli assi del
   disegno. Per un arco o per un segmento curvo di polilinea, lo snap interviene solo se
   l'angolo cade all'interno dello sviluppo effettivo dell'arco.
-- **Perpendicolare e Tangente:** richiedono che il comando in esecuzione disponga di un
-  punto base (come il primo punto di `LINE`, il punto base di `MOVE` o il grip caldo);
-  senza punto base non producono alcun aggancio. Il punto calcolato viene accettato solo
-  se cade sull'entità geometrica reale e non sul suo prolungamento ideale.
-- **Intersezione:** rileva il punto di intersezione geometrico calcolato quando entrambe
-  le curve attraversano l'apertura del cursore (10 pixel).
+- **Perpendicolare:** richiede che il comando in esecuzione disponga di un punto base
+  (come il primo punto di `LINE`, il punto base di `MOVE` o il grip caldo); senza punto
+  base non produce alcun aggancio. Il punto calcolato viene accettato solo se cade
+  sull'entità geometrica reale e non sul suo prolungamento ideale.
+- **Intersezione e Tangente:** i comandi e le voci di menu sono già presenti per
+  attivare o disattivare questi modi, ma il nucleo geometrico non calcola ancora i loro
+  punti di aggancio (arriveranno con i pacchetti successivi della tappa 0.7: per ora non
+  agganciano punti).
 
 ### Priorità e attivazione
 
 Tutti i punti di snap candidati entro l'apertura di 10 pixel competono tra loro e viene
 scelto quello più vicino al puntatore. A parità di distanza si applica l'ordine di
-priorità: *Endpoint*, *Intersection*, *Midpoint*, *Quadrant*, *Perpendicular*, *Tangent*.
-Se nessuno di questi rientra nell'apertura, operano *Center* e *Insertion* quando si
-passa sopra l'entità.
+priorità: *Endpoint*, *Intersection*, *Midpoint*, *Quadrant*, *Perpendicular*, *Tangent*
+(per ora *Intersection* e *Tangent* non generano punti di aggancio). Se nessuno di questi
+rientra nell'apertura, operano *Center* e *Insertion* quando si passa sopra l'entità.
 
-All'avvio del programma, *Intersection* è attivo per impostazione predefinita (insieme
-ai modi storici *Endpoint*, *Midpoint*, *Center*, *Insertion*); *Perpendicular*,
+All'avvio del programma, *Intersection* è attivo per impostazione predefinita come interruttore
+(insieme ai modi storici *Endpoint*, *Midpoint*, *Center*, *Insertion*); *Perpendicular*,
 *Tangent* e *Quadrant* sono disattivati per difetto e si possono attivare dal menu
-*Tools → Object Snap Modes* o dal gruppo *Aids* della barra multifunzione.
+*Tools → Object Snap Modes* o dal gruppo *Aids* della barra multifunzione. Come precisato
+sopra, *Intersection* e *Tangent* non agganciano ancora alcun punto.
 
 ## Tracciamento polare (`POLAR`)
 

@@ -382,14 +382,9 @@ vengono scelte entrambe le entità. Con `Shift` sul secondo clic le togli.
   confermano le entità scelte. Confermare senza selezione conclude il comando
   senza effetti. `Esc` chiude prima un rettangolo aperto; senza rettangolo
   annulla il comando e svuota la selezione, scrivendo `*Cancel*`.
-- Dalla tappa 0.7 alla domanda `Select objects:` puoi selezionare le entità anche
-  scrivendo da tastiera:
-  - un punto `x,y`: seleziona l'entità sotto quel punto, come un clic;
-  - `W` (*Window*), poi i due angoli opposti: selezione a finestra;
-  - `C` (*Crossing*), poi i due angoli opposti: selezione a intersezione;
-  - `ALL`: seleziona tutte le entità visibili e non situate su layer bloccati.
-  Le altre opzioni storiche di AutoCAD (`L`, `P`, recinto) non sono supportate:
-  altro testo durante la domanda produce `Invalid selection.`.
+- Le opzioni scritte `W`, `C`, `ALL`, `L`, `P` e il recinto non sono disponibili:
+  altro testo durante la domanda produce `Invalid selection.`. Scegli con il
+  mouse, poi conferma a campo vuoto.
 
 La selezione si svuota alla fine dei comandi e con `U`, `UNDO` e `REDO`. Avviare
 un comando di disegno svuota la selezione precedente; `ERASE` invece la usa subito.
@@ -458,9 +453,9 @@ si applica lo snap.
 | *Midpoint* | metà del segmento; per un arco è sulla curva, non sulla corda | triangolo |
 | *Center* | centro di un cerchio, di un arco o di un segmento ad arco | cerchio |
 | *Insertion* | punto d’inserimento del testo, sulla linea di base | due quadrati sovrapposti e sfalsati |
-| *Intersection* | incontro tra due curve o segmenti della stessa polilinea | croce a X |
+| *Intersection* | incontro tra due curve o segmenti della stessa polilinea (interruttore presente, aggancio non ancora attivo) | croce a X |
 | *Perpendicular* | piede della perpendicolare dal punto base del comando | simbolo ⊥ |
-| *Tangent* | punto di tangenza dal punto base del comando | cerchio con linea tangente in alto |
+| *Tangent* | punto di tangenza dal punto base del comando (interruttore presente, aggancio non ancora attivo) | cerchio con linea tangente in alto |
 | *Quadrant* | punti cardinali a 0°, 90°, 180°, 270° di cerchi e archi | rombo |
 
 ### Attivare e scegliere i modi
@@ -473,7 +468,8 @@ si applica lo snap.
   Se tutti i modi sono disattivati, non c'è alcun aggancio anche con OSNAP acceso.
 - All'avvio lo snap è acceso con i modi *Endpoint*, *Midpoint*, *Center*, *Insertion* e
   *Intersection*; *Perpendicular*, *Tangent* e *Quadrant* sono disattivati per difetto.
-  Le impostazioni non si conservano alla chiusura del programma.
+  I modi *Intersection* e *Tangent* sono presenti come interruttori ma per ora non
+  agganciano punti nel nucleo. Le impostazioni non si conservano alla chiusura del programma.
 
 Per estremi e punti medi l'apertura è di **10 pixel**: avvicina il puntatore al
 punto voluto finché compare il marcatore. La dimensione del marcatore e l'apertura
@@ -572,7 +568,7 @@ Specify next point or [Close/Undo]: c
 ```
 
 `Invio` alla prima domanda (`Specify first point:`) fa ripartire la linea
-dall’ultimo punto indicato nel disegno (`lastPoint`), ad esempio l'estremo di
+dall’ultimo punto indicato nel disegno, ad esempio l'estremo di
 una linea o di un arco precedente. Se non è ancora presente alcun punto
 precedente, la domanda resta attiva; per uscire dal comando premi `Esc`.
 Un punto coincidente con il precedente viene ignorato con
@@ -762,7 +758,6 @@ Sposta le entità selezionate applicando un vettore di spostamento.
 
 - **Nome:** `MOVE`
 - **Alias:** `M`
-- **Menu:** *Modify → Move*
 
 ### Le domande e le opzioni
 
@@ -824,7 +819,6 @@ Crea una o più copie delle entità selezionate applicando un vettore di spostam
 
 - **Nome:** `COPY`
 - **Alias:** `CO`, `CP`
-- **Menu:** *Modify → Copy*
 
 ### Le domande e le opzioni
 
@@ -849,7 +843,8 @@ Specify base point or [Displacement] <Displacement>:
     - `U` (*Undo*) annulla l'ultima copia creata nel comando.
     - `E` (*Exit*) o `Invio` a riga vuota conclude il comando.
   - Premendo `Invio` alla prima richiesta del secondo punto, il punto base viene usato
-    come vettore di spostamento: viene creata una singola copia e il comando termina.
+    come vettore di spostamento: viene creata una copia e il comando passa alla richiesta
+    delle copie successive (`Specify second point or [Exit/Undo] <Exit>:`).
 - **Opzione *Displacement*:** digitando `D` o premendo `Invio` alla prima domanda:
   ```
   Specify displacement <0.0000, 0.0000>:
@@ -883,7 +878,6 @@ Ruota le entità selezionate attorno a un punto base.
 
 - **Nome:** `ROTATE`
 - **Alias:** `RO`
-- **Menu:** *Modify → Rotate*
 
 ### Le domande e le opzioni
 
@@ -894,7 +888,8 @@ Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
 Specify base point:
 ```
 
-Indica il punto perno attorno a cui ruotare gli oggetti. Segue la domanda dell'angolo:
+Indica il punto perno attorno a cui ruotare gli oggetti (premendo `Invio` a riga
+vuota il comando si conclude senza effetti). Segue la domanda dell'angolo:
 
 ```
 Specify rotation angle or [Copy/Reference] <0>:
@@ -958,11 +953,11 @@ Ridimensiona in modo uniforme le entità selezionate attorno a un punto base.
 
 - **Nome:** `SCALE`
 - **Alias:** `SC`
-- **Menu:** *Modify → Scale*
 
 ### Le domande e le opzioni
 
-Indica il punto perno rispetto a cui calcolare il ridimensionamento:
+Indica il punto perno rispetto a cui calcolare il ridimensionamento (premendo
+`Invio` a riga vuota il comando si conclude senza effetti):
 
 ```
 Specify base point:
@@ -980,6 +975,7 @@ Specify scale factor or [Copy/Reference]:
     `Value must be positive and nonzero.` e ripropongono la domanda.
   - Clicca un punto nella vista: il fattore di scala sarà la distanza tra il punto
     indicato e il punto base.
+  - Premendo `Invio` a riga vuota il comando si conclude senza effetti.
 - **Opzione *Copy*:** scrivi `C` per applicare la scala a una copia degli oggetti,
   lasciando invariati gli originali. Il programma scrive:
   `Scaling a copy of the selected objects.` e ripropone la richiesta del fattore.
@@ -1029,7 +1025,6 @@ oppure mantenuto orientato in modo leggibile.
 
 - **Nome:** `MIRROR`
 - **Alias:** `MI`
-- **Menu:** *Modify → Mirror*
 
 ### Le domande e le opzioni di `MIRROR`
 
@@ -1055,8 +1050,9 @@ Command: mirrtext
 Enter new value for MIRRTEXT <0>:
 ```
 
-- `0` (valore predefinito): il testo specchiato viene mantenuto leggibile: la direzione
-  di lettura rimane naturale (da sinistra a destra e dal basso verso l'alto).
+- `0` (valore predefinito): il testo specchiato viene mantenuto leggibile e non si legge
+  allo specchio (non raddrizza però un testo che era già all'indietro o capovolto: ne
+  conserva i relativi segnali).
 - `1`: il testo viene specchiato integralmente come geometria (effetto immagine riflessa
   in uno specchio).
 
@@ -1087,7 +1083,6 @@ di cui sono composte.
 
 - **Nome:** `EXPLODE`
 - **Alias:** `X`
-- **Menu:** *Modify → Explode*
 
 ### Funzionamento
 
@@ -1105,9 +1100,10 @@ scomporre e conferma con `Invio`.
   Exploding this polyline has lost width information.
   The UNDO command will restore it.
   ```
-- Entità diverse dalle polilinee 2D (come linee, cerchi, archi, testi) o polilinee
-  aventi quota z (*elevation*) o spessore 3D (*thickness*) diversi da zero (gruppi DXF
-  38 e 39) non possono essere scomposte. Vengono lasciate intatte e segnalate con:
+- Entità diverse dalle polilinee 2D (come linee, cerchi, archi, testi), polilinee senza
+  segmenti, o polilinee aventi quota z (*elevation*) o spessore 3D (*thickness*)
+  diversi da zero (gruppi DXF 38 e 39) non possono essere scomposte. Vengono lasciate
+  intatte e segnalate con:
   `1 was not able to be exploded.` oppure `<n> were not able to be exploded.`
 
 Tutte le scomposizioni del comando avvengono in un singolo passo di annullamento (`Explode`):
@@ -1452,19 +1448,12 @@ della sessione interattiva:
   direttiva, un file `.tgs` riproduce fedelmente l'interazione umana e usa la sequenza
   interattiva normale.
 
-Comandi con sequenza dedicata negli script (tappa 0.7):
+Comandi con sequenza dedicata negli script:
 
-| Comando | Sequenza interattiva | Negli script | Pacchetto |
-|---|---|---|---|
-| `TEXT` | Chiede una riga dopo l'altra fino a `Invio` su riga vuota | Inserisce una riga sola, poi conclude automaticamente | P3 |
-| `COPY` | Chiede copie multiple fino a `Exit` o `Invio` a vuoto | Effettua una sola copia, poi conclude automaticamente | P5 |
-| `TRIM`, `EXTEND` | Modo rapido o standard in base a `TRIMEXTENDMODE` | Sempre modo standard | P16 |
-| `FILLET`, `CHAMFER` | Dopo *Radius*, *Distance* o *Angle* torna alla richiesta oggetti | Dopo l'impostazione dell'opzione conclude il comando | P20, P21 |
-| `JOIN` | Più oggetti selezionati insieme | Prima l'oggetto sorgente, poi le entità da unire | P23 |
-
-I comandi `TEXT` e `COPY` sono pienamente attivi con entrambe le sequenze; gli altri
-comandi della tabella adotteranno la sequenza script nei rispettivi pacchetti della
-seconda metà della tappa 0.7.
+| Comando | Sequenza interattiva | Negli script |
+|---|---|---|
+| `TEXT` | Chiede una riga dopo l'altra fino a `Invio` su riga vuota | Inserisce una riga sola, poi conclude automaticamente |
+| `COPY` | Chiede copie multiple fino a `Exit` o `Invio` a vuoto | Effettua una sola copia, poi conclude automaticamente |
 
 ## Annullare e ripetere
 
@@ -1545,7 +1534,7 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Select objects:` | scegli le entità per il comando, poi conferma a campo vuoto |
 | `Specify opposite corner:` | un rettangolo di selezione è aperto: indica il secondo angolo |
 | `<n> found, <t> total` / `<n> removed, <t> total` | entità trovate o rimosse dal gesto e totale della selezione durante `Select objects:` |
-| `Invalid selection.` | durante la selezione è stato scritto testo non supportato; scegli con il mouse o con `W`, `C`, `ALL` |
+| `Invalid selection.` | durante la selezione è stato scritto testo non supportato; scegli le entità con il mouse |
 | `Point coincides with the previous point.` | il punto indicato coincide con il vertice precedente ed è stato ignorato |
 | `*Cancel*` | il comando è stato interrotto con `Esc`; il lavoro completato resta secondo la tabella sopra |
 | `Undone: <passo>.` / `Redone: <passo>.` | passo annullato o ripetuto |
