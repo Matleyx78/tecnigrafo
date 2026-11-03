@@ -31,7 +31,9 @@
   fascia comprende gli errori di tutti e due gli estremi (revisione della #480,
   R480-2);
   2026-11-03, con il responsabile: che cosa fa `JOIN` con una diagnosi di
-  `endpoints()`, per l'ADR 0035, punto 23
+  `endpoints()`, per l'ADR 0035, punto 23; 2026-11-03, decisione del
+  responsabile su R480-1 (revisione della #480; DECISIONI.md, 2026-11-03): un
+  estremo restituito oltre `kMaxCoordinate` vale come una diagnosi
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -132,7 +134,13 @@ struct JoinResult {
   di estremi arrotondati correttamente e nessuna richiesta a solid-space.
 - **Una diagnosi di `endpoints()`** (dati che solid-space rifiuta, per
   esempio oltre `kMaxCoordinate`): le curve che solid-space rifiuta non si
-  uniscono (ADR 0035, punto 23). In `join` e in `joinToSource`:
+  uniscono (ADR 0035, punto 23). Vale lo stesso per un **estremo restituito
+  oltre `kMaxCoordinate`**: `endpoints()` lo può dare per dati validi
+  (`curves.hpp`, il dominio controlla i dati, non l'estensione della curva),
+  e `coincident` non lo accetta (`tolerance.hpp`). Il controllo si fa su tutti
+  e due gli estremi, per coordinate positive e negative, prima di ogni
+  chiamata a `coincident` e in ogni verso di crescita della catena (decisione
+  del responsabile su R480-1, 2026-11-03). In `join` e in `joinToSource`:
   - un'entità diversa dalla sorgente con una diagnosi non si unisce e non
     entra in `consumed`: conta tra le scartate del messaggio (P23);
   - con una diagnosi sulla sorgente non si unisce niente: il risultato è
@@ -289,6 +297,15 @@ struct JoinResult {
     l'arco non in `consumed` e scartato;
   - sorgente l'arco di centro (2^51,0) e raggio 1, poi la linea (0,0)→(10,0):
     `std::nullopt` (la domanda `join` dà `none`), con la linea scartata.
+- Estremo restituito oltre `kMaxCoordinate` (R480-1), con K = 2^50: sorgente
+  la linea (K,K−1)→(K,K), poi l'arco di centro (K,0), raggio K, da 0 a
+  `kQuarterTurn`, che ha dati validi ed estremi esatti (2K,0) e (K,K): l'arco
+  si scarta anche se il suo estremo (K,K) tocca la linea, e il risultato è
+  `std::nullopt`. Con l'arco come sorgente e la linea come candidata:
+  `std::nullopt`, con la linea scartata. Gli stessi due casi con le
+  coordinate negative, la linea (−K,1−K)→(−K,−K) e l'arco di centro (−K,0),
+  raggio K, da π a `kThreeQuarterTurn` (estremi esatti (−2K,0) e (−K,−K)),
+  danno lo stesso esito.
 - Gli esempi delle decisioni sulla #373: il verso quando la catena cresce
   dall'inizio (candidata girata, anche con larghezze diverse e un bulge, per
   controllare lo scambio e il segno); la polilinea chiusa scartata; l'arco
