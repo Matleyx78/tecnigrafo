@@ -11,7 +11,8 @@
   e B15 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
   revisione di B6 dopo le prove in AutoCAD (#468); 2026-11-03, operazione
   snellimento (#478): il messaggio di `OutOfDomain`, deciso dal responsabile
-  il 2026-11-02 (DECISIONI.md, 2026-11-03)
+  il 2026-11-02 (DECISIONI.md, 2026-11-03); 2026-11-04, il messaggio di
+  `RadiusTooLarge`, deciso nella Matleyx78/solid-space#187 (#494)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -75,6 +76,9 @@ Select 2D polyline or [Radius]:
     `Cannot fillet those objects.` per i primi tre e `Pick a point that is not
     on the other object.` per `AmbiguousPick` (tabella di
     [dxf-di-prova.md](dxf-di-prova.md), punto 3), e nessuna modifica;
+  - `RadiusTooLarge` (P19, Matleyx78/solid-space#187): `Radius is too large.`
+    (tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3) e nessuna
+    modifica;
   - `OutOfDomain` (una costruzione oltre il dominio di solid-space, P19):
     `Result is beyond the drawing limits.` e nessuna modifica. Il messaggio è
     di Tecnigrafo, nello stile di quelli di AutoCAD: il caso nasce dal dominio
@@ -130,6 +134,9 @@ comando finisce allo stesso modo.
   5,0, e *Polyline* con clic in 25,0 sulla stessa polilinea spostata): la
   polilinea invariata, l'arco come entità a sé con le proprietà della
   polilinea, e un solo passo di annulla.
+- `RadiusTooLarge` con i dati di P19 (L1 (2,0)→(5,0), L2 (0,0)→(0,30), clic
+  in 3,0 e 0,20, raggio 10): `Radius is too large.` e il disegno invariato,
+  anche invertendo L1 e con *Trim No*.
 - Rette quasi parallele (i dati di P19) in `FILLET`, anche con `Shift`, e in
   *Ttr*: `Result is beyond the drawing limits.` e nessuna modifica; le due
   parallele lontane di P19 in `FILLET`: lo stesso messaggio; un raggio oltre

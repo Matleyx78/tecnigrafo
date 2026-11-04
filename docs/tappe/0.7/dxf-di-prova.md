@@ -279,6 +279,7 @@ Prima dei pacchetti indicati, una prova a mano:
    | `TRIM`, `EXTEND` | `Cannot trim that object.` e `Cannot extend that object.` (operazione non riuscita: nessun taglio con dati rifiutati da solid-space, o un pezzo non rappresentabile; ADR 0035, punto 23) | scritto da noi (P16) |
    | `OFFSET` | `Cannot offset that object.` | scritto da noi |
    | `FILLET` | `Cannot fillet those objects.` (`None`, `InfinitelyMany`, `NotAllowed`) | scritto da noi |
+   | `FILLET` | `Radius is too large.` (`RadiusTooLarge`) | deciso nella Matleyx78/solid-space#187 |
    | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |
    | `FILLET`, `CHAMFER` | `Pick a point that is not on the other object.` (`AmbiguousPick`) | scritto da noi |
    | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr* | `Result is beyond the drawing limits.` (`OutOfDomain`; prima `Lines are nearly parallel.`, cambiato il 2026-11-03, [DECISIONI.md](../../DECISIONI.md)) | scritto da noi |

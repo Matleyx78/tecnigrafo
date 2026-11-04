@@ -916,3 +916,14 @@ i rimandi ai documenti che cambia.
   (0.2-P22), che le realizza, con i riferimenti Matleyx78/solid-space#189
   (0.2-R22). Cambiano la scheda [P19](tappe/0.7/P19-raccordi-core.md) e il
   piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+
+  Sull'esito `radiusTooLarge` di `fillet`, deciso nella
+  [Matleyx78/solid-space#187](https://github.com/Matleyx78/solid-space/issues/187)
+  ([decisione del responsabile](https://github.com/Matleyx78/tecnigrafo/pull/494#issuecomment-6632305280)
+  sul buco segnalato nella #494): in Tecnigrafo diventa un esito nuovo,
+  `CornerOutcome::RadiusTooLarge`, in `fillet` e `filletSegments`; `FILLET`
+  scrive `Radius is too large.` e non cambia il disegno; `filletPolyline`
+  lascia il vertice com'è e lo conta in `tooShort`, come gli altri esiti senza
+  raccordo. Esempio: L1 (2,0)→(5,0), L2 (0,0)→(0,30), scelte in (3,0) e
+  (0,20), raggio 10. Cambiano le schede P19 e [P20](tappe/0.7/P20-fillet.md)
+  e la tabella dei messaggi di [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md).
