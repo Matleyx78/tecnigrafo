@@ -67,6 +67,18 @@ OffsetResult offset(const Entity& entity, double distance, Vec2 side) {
     return offsetEntity(entity, distance, side, kMillimetres);
 }
 
+/// The copy in `result`, which must be Done with an entity of type T; a
+/// default T and a failure otherwise.
+template <typename T>
+T copyAs(const OffsetResult& result) {
+    EXPECT_EQ(result.outcome, OffsetOutcome::Done);
+    EXPECT_TRUE(result.entity.has_value());
+    const Entity entity = result.entity.value_or(Entity{});
+    const T* copy = std::get_if<T>(&entity);
+    EXPECT_NE(copy, nullptr);
+    return copy != nullptr ? *copy : T{};
+}
+
 void expectNear(Vec2 actual, Vec2 expected, double tolerance) {
     EXPECT_NEAR(actual.x, expected.x, tolerance);
     EXPECT_NEAR(actual.y, expected.y, tolerance);
@@ -76,14 +88,12 @@ void expectNear(Vec2 actual, Vec2 expected, double tolerance) {
 void expectPolyline(const OffsetResult& result, std::initializer_list<V> vertices, bool closed,
                     double tolerance = kBuilt) {
     ASSERT_EQ(result.outcome, OffsetOutcome::Done);
-    ASSERT_TRUE(result.entity.has_value());
-    const auto* copy = std::get_if<Polyline>(&*result.entity);
-    ASSERT_NE(copy, nullptr);
-    EXPECT_EQ(copy->isClosed(), closed);
-    ASSERT_EQ(copy->vertexCount(), vertices.size());
+    const auto copy = copyAs<Polyline>(result);
+    EXPECT_EQ(copy.isClosed(), closed);
+    ASSERT_EQ(copy.vertexCount(), vertices.size());
     std::size_t i = 0;
     for (const V& expected : vertices) {
-        const PolylineVertex& actual = copy->vertices()[i];
+        const PolylineVertex& actual = copy.vertices()[i];
         SCOPED_TRACE("vertex " + std::to_string(i));
         expectNear(actual.position, Vec2{expected.x, expected.y}, tolerance);
         EXPECT_NEAR(actual.bulge, expected.bulge, kBuilt);
@@ -101,13 +111,13 @@ TEST(Offset, LineOnBothSides) {
 
     const OffsetResult left = offset(l, 5, {10, 10});
     ASSERT_EQ(left.outcome, OffsetOutcome::Done);
-    const auto& up = std::get<Line>(*left.entity);
+    const auto up = copyAs<Line>(left);
     expectNear(up.start, {0, 5}, kBuilt);
     expectNear(up.end, {20, 5}, kBuilt);
 
     const OffsetResult right = offset(l, 5, {10, -10});
     ASSERT_EQ(right.outcome, OffsetOutcome::Done);
-    const auto& down = std::get<Line>(*right.entity);
+    const auto down = copyAs<Line>(right);
     expectNear(down.start, {0, -5}, kBuilt);
     expectNear(down.end, {20, -5}, kBuilt);
 }
@@ -117,13 +127,13 @@ TEST(Offset, CircleInsideAndOutside) {
 
     const OffsetResult inside = offset(c, 3, {50, 1});
     ASSERT_EQ(inside.outcome, OffsetOutcome::Done);
-    const auto& smaller = std::get<Circle>(*inside.entity);
+    const auto smaller = copyAs<Circle>(inside);
     EXPECT_EQ(smaller.center, (Vec2{50, 0}));
     EXPECT_NEAR(smaller.radius, 7, kBuilt);
 
     const OffsetResult outside = offset(c, 3, {50, 20});
     ASSERT_EQ(outside.outcome, OffsetOutcome::Done);
-    EXPECT_NEAR(std::get<Circle>(*outside.entity).radius, 13, kBuilt);
+    EXPECT_NEAR(copyAs<Circle>(outside).radius, 13, kBuilt);
 }
 
 TEST(Offset, ArcKeepsItsAnglesBitForBit) {
@@ -132,7 +142,7 @@ TEST(Offset, ArcKeepsItsAnglesBitForBit) {
 
     const OffsetResult inside = offset(a, 4, {100, 1});
     ASSERT_EQ(inside.outcome, OffsetOutcome::Done);
-    const auto& smaller = std::get<Arc>(*inside.entity);
+    const auto smaller = copyAs<Arc>(inside);
     EXPECT_EQ(smaller.center, source.center);
     EXPECT_NEAR(smaller.radius, 6, kBuilt);
     EXPECT_EQ(smaller.startAngle, source.startAngle);
@@ -140,7 +150,7 @@ TEST(Offset, ArcKeepsItsAnglesBitForBit) {
 
     const OffsetResult outside = offset(a, 4, {100, 15});
     ASSERT_EQ(outside.outcome, OffsetOutcome::Done);
-    const auto& larger = std::get<Arc>(*outside.entity);
+    const auto larger = copyAs<Arc>(outside);
     EXPECT_NEAR(larger.radius, 14, kBuilt);
     EXPECT_EQ(larger.startAngle, source.startAngle);
     EXPECT_EQ(larger.endAngle, source.endAngle);
@@ -150,14 +160,14 @@ TEST(Offset, ArcThroughZeroDegrees) {
     const Entity a = arc({0, 0}, 10, 300, 60);
     const OffsetResult inside = offset(a, 2, {0, 0});
     ASSERT_EQ(inside.outcome, OffsetOutcome::Done);
-    const auto& copy = std::get<Arc>(*inside.entity);
+    const auto copy = copyAs<Arc>(inside);
     EXPECT_NEAR(copy.radius, 8, kBuilt);
     EXPECT_EQ(copy.startAngle, std::get<Arc>(a).startAngle);
     EXPECT_EQ(copy.endAngle, std::get<Arc>(a).endAngle);
 
     const OffsetResult outside = offset(a, 2, {20, 0});
     ASSERT_EQ(outside.outcome, OffsetOutcome::Done);
-    EXPECT_NEAR(std::get<Arc>(*outside.entity).radius, 12, kBuilt);
+    EXPECT_NEAR(copyAs<Arc>(outside).radius, 12, kBuilt);
 }
 
 TEST(Offset, ArcAndCircleVanishAtTheirRadius) {
@@ -320,7 +330,7 @@ TEST(Offset, WidthsAndPropertiesOfThePolyline) {
     constant.setContinuousLinetype(true);
     const OffsetResult result = offset(constant, 2, {5, 5});
     expectPolyline(result, {{0, 2}, {8, 2}, {8, 10}}, false);
-    const auto& copy = std::get<Polyline>(*result.entity);
+    const auto copy = copyAs<Polyline>(result);
     EXPECT_EQ(copy.constantWidth(), 0.5);
     EXPECT_TRUE(copy.continuousLinetype());
 

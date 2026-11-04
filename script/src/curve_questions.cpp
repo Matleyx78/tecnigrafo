@@ -396,11 +396,14 @@ QuestionResult askOffset(const QuestionModel& model, Arguments arguments) {
     const core::OffsetResult result = core::offsetEntity(
         chosen, *distance, std::get<core::Vec2>(point), std::get<core::ToleranceRule>(rule));
     switch (result.outcome) {
-        case core::OffsetOutcome::Done: {
-            std::string answer;
-            writeEntity(*result.entity, answer);
-            return answer;
-        }
+        case core::OffsetOutcome::Done:
+            // Done always carries the copy (tg/core/offset.hpp).
+            if (result.entity) {
+                std::string answer;
+                writeEntity(*result.entity, answer);
+                return answer;
+            }
+            break;
         case core::OffsetOutcome::Vanished:
             return std::string{"vanished"};
         case core::OffsetOutcome::Failed:
