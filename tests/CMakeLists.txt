@@ -44,6 +44,7 @@ add_executable(tg_tests
     core/arc_geometry_test.cpp
     core/grips_test.cpp
     core/intersections_test.cpp
+    core/join_test.cpp
     core/arc_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
