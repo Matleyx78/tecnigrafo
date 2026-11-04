@@ -875,3 +875,14 @@ i rimandi ai documenti che cambia.
   piano"; nessun ADR cambia (l'ADR 0035, punto 17, non dice su quale corda si
   decide). La decisione cambia una risposta della domanda `join`, quindi si
   aggiunge R22b (Gemini) e P22 dipende anche da lei (guida, B10a, passo 5).
+
+  Sulla revisione della correzione ([#492](https://github.com/Matleyx78/tecnigrafo/pull/492#issuecomment-6629266301)):
+  - **R492-1:** un ARC nella catena si tratta come il suo segmento, con gli
+    estremi di `endpoints()` e il bulge della sua ampiezza, e `isStraight`
+    decide su quello, com'è nella sua entità, con la stessa regola dei
+    segmenti di polilinea;
+  - **R492-2:** non è una decisione nuova, vale l'ADR 0035, punto 23. Il
+    pezzo costruito, con il vertice comune e il bulge deciso in ingresso, si
+    controlla; se solid-space lo rifiuta, la candidata non si unisce e conta
+    tra le scartate (con una diagnosi sulla sorgente, `std::nullopt`), come
+    per R480-1.

@@ -39,7 +39,9 @@
   unita; 2026-11-04, decisione del responsabile sul buco della #373 trovato da
   Codex: `isStraight` decide sul segmento com'è nella sua entità, prima che un
   suo estremo si sposti sul vertice comune (DECISIONI.md, 2026-11-04), con i
-  casi in R22b (#493)
+  casi in R22b (#493); 2026-11-04, decisioni del responsabile sulla revisione
+  della #492: un ARC nella catena è il suo segmento (R492-1), e il pezzo
+  costruito si controlla (R492-2, ADR 0035, punto 23)
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -83,6 +85,8 @@ commit del sottomodulo lo scrive la issue di P22.
 - `core/CMakeLists.txt`
 - `script/src/curve_questions.cpp`, `script/src/question_table.cpp`
 - `tests/core/join_test.cpp` (nuovo), `tests/CMakeLists.txt`
+- `tests/verifica/in-attesa/0.7-R22.txt` e `tests/verifica/in-attesa/0.7-R22b.txt`
+  (da cancellare)
 - `tests/verifica/in-attesa/0.7-R22.txt` (da cancellare)
 
 ## Cosa fare
@@ -273,8 +277,15 @@ struct JoinResult {
     dall'inizio, in `join` e in `joinToSource`, in millimetri e in metri.
     Girare un segmento cambia il segno del bulge, non la freccia, quindi non
     cambia l'esito. Il segmento prende 0 o il suo bulge secondo quell'esito,
-    anche se la corda che risulta, con il vertice comune, è diversa. Per
-    esempio, in millimetri (epsilon 1e-6):
+    anche se la corda che risulta, con il vertice comune, è diversa.
+    Un **ARC** che entra nella catena è il suo segmento (R492-1 della #492,
+    2026-11-04): gli estremi che dà `endpoints()` (B13) e il bulge
+    `tan(ampiezza / 4)`, con l'ampiezza dell'ADR 0035, punto 1, positivo nel
+    verso dell'arco e negativo se l'arco si gira; `isStraight` decide su quel
+    segmento con la stessa regola dei segmenti di polilinea.
+    Alla chiusura l'entità che segue l'ultima è la prima, quindi il vertice
+    comune è il primo vertice della catena, e si sposta la fine dell'ultimo
+    segmento. Per esempio, in millimetri (epsilon 1e-6):
     - **dalla fine:** sorgente la polilinea aperta [(−10,0),(0,0),(1e-7,0)]
       con bulge 10 sul secondo vertice, candidata la linea
       (1.05e-6,0)→(1.05e-6,10). Gli estremi (1e-7,0) e (1.05e-6,0) distano
@@ -282,17 +293,59 @@ struct JoinResult {
       linea. Il segmento d'ingresso (0,0)→(1e-7,0) ha freccia
       10 · 1e-7 / 2 = 5e-7, quindi è dritto, e la sorgente diventa
       `LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0
-      vertex=0.00000105,10`. Sulla corda che risulta, (0,0)→(1.05e-6,0), la
-      freccia sarebbe 5.25e-6: non conta;
-    - **dall'inizio:** sorgente la linea (1.05e-6,0)→(1.05e-6,10), candidata
-      la stessa polilinea, che si aggiunge com'è, oppure la polilinea
-      [(1e-7,0),(0,0),(−10,0)] con bulge −10 sul primo vertice, che si
-      aggiunge girata: in tutti e due i casi `new LWPOLYLINE closed=no
-      vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10`;
-    - **in metri** (epsilon 1e-9): con le coordinate divise per 1000 e lo
-      stesso bulge 10 il risultato è lo stesso, con le coordinate divise per
-      1000 (freccia d'ingresso 5e-10, distanza 9.5e-10); i dati in millimetri
-      danno `none`, perché 9.5e-7 > 1e-9;
+      vertex=0.00000105,10`, in `join` e in `joinToSource`. Sulla corda che
+      risulta, (0,0)→(1.05e-6,0), la freccia sarebbe 5.25e-6: non conta;
+    - **dall'inizio:** in `join`, sorgente la linea (1.05e-6,0)→(1.05e-6,10)
+      e candidata la stessa polilinea, che si aggiunge com'è, oppure la
+      polilinea [(1e-7,0),(0,0),(−10,0)] con bulge −10 sul primo vertice, che
+      si aggiunge girata: in tutti e due i casi `new LWPOLYLINE closed=no
+      vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10`. In
+      `joinToSource` una sorgente linea accetta solo linee allineate (ADR
+      0035, punto 19), quindi gli stessi ingressi danno `std::nullopt`; con la
+      sorgente polilinea aperta [(1.05e-6,0),(1.05e-6,10)] e le stesse due
+      candidate, in `join` e in `joinToSource` la sorgente diventa
+      `LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0
+      vertex=0.00000105,10`;
+    - **un ARC:** in `join`, sorgente l'arco di centro (0,0), raggio 9.5e-7,
+      da 0 a π (estremi (9.5e-7,0) e circa (−9.5e-7,0), ampiezza π, bulge
+      `tan(π / 4)`, circa 1), candidata la linea (−1.85e-6,0)→(−1.85e-6,−10).
+      La fine dell'arco e l'inizio della linea distano circa 9e-7 e
+      coincidono; il segmento dell'arco ha freccia circa 9.5e-7, quindi è
+      dritto: `new LWPOLYLINE closed=no vertex=0.00000095,0
+      vertex=-0.00000185,0 vertex=-0.00000185,-10`. Sulla corda che risulta,
+      lunga 2.8e-6, la freccia sarebbe circa 1.4e-6: non conta. Dall'inizio,
+      in `join` e in `joinToSource`: sorgente la polilinea aperta
+      [(−1.85e-6,0),(−1.85e-6,−10)] e candidata lo stesso arco, che si
+      aggiunge com'è; la sorgente diventa `LWPOLYLINE closed=no
+      vertex=0.00000095,0 vertex=-0.00000185,0 vertex=-0.00000185,-10`;
+    - **alla chiusura:** sorgente la polilinea aperta [(1.05e-6,0),(10,0)],
+      poi la linea (10,0)→(0,10), poi la polilinea aperta
+      [(0,10),(0,0),(1e-7,0)] con bulge 10 sul secondo vertice. La fine
+      (1e-7,0) dell'ultima coincide con il primo vertice (1.05e-6,0), che
+      resta; il segmento d'ingresso (0,0)→(1e-7,0) è dritto, e la sorgente
+      diventa `LWPOLYLINE closed=yes vertex=0.00000105,0 vertex=10,0
+      vertex=0,10 vertex=0,0`, in `join` e in `joinToSource`;
+    - **in metri** (epsilon 1e-9): con le coordinate divise per 1000 e gli
+      stessi bulge, il risultato degli esempi delle polilinee è lo stesso, con
+      le coordinate divise per 1000 (freccia d'ingresso 5e-10, distanza
+      9.5e-10); i dati in millimetri danno `none`, perché 9.5e-7 > 1e-9;
+  - **il pezzo costruito si controlla** (R492-2 della #492, 2026-11-04; ADR
+    0035, punto 23, come per R480-1): ogni segmento della polilinea, con i suoi
+    vertici dopo lo spostamento sul vertice comune e il bulge deciso sopra, si
+    controlla con il controllo dei dati di `curves.hpp` («Checking the data»)
+    prima di confermare l'aggancio. Se solid-space lo rifiuta, la candidata non
+    si unisce, non entra in `consumed` e conta tra le scartate del messaggio
+    (P23); la catena continua con le altre candidate come se non ci fosse. Una
+    diagnosi sulla sorgente dà `std::nullopt` (punto «Una diagnosi di
+    `endpoints()`» sopra). Per esempio, in millimetri, con K = 2^50 e
+    Y = K − 3000 (epsilon circa 256 a questa scala): sorgente la polilinea
+    aperta [(−10000,Y),(0,Y),(0.5,Y)] con bulge −8192 sul secondo vertice,
+    candidata la linea (1,Y)→(1,Y−10000). Gli estremi (0.5,Y) e (1,Y)
+    coincidono; il segmento d'ingresso ha freccia 2048 e resta curvo, con il
+    punto m a Y + 2048 = K − 952. Con il vertice comune (1,Y) la corda
+    raddoppia e il punto m sale a Y + 4096 = K + 1096, oltre `kMaxCoordinate`:
+    `outOfDomain`, la linea si scarta e il risultato è `std::nullopt`, in
+    `join` e in `joinToSource`;
   - **larghezze** (B12): ogni segmento conserva la sua larghezza effettiva,
     quella dei vertici se è impostata, altrimenti la larghezza costante della
     sua polilinea; linee e archi hanno larghezza 0. Queste larghezze si
@@ -360,10 +413,14 @@ struct JoinResult {
   l'ordine
   degli estremi delle linee allineate con due proiezioni uguali, secondo la
   decisione in solid-space.
-- Il segmento d'ingresso per `isStraight` (2026-11-04): gli esempi sopra, dalla
-  fine e dall'inizio (con la candidata com'è e girata), in millimetri e in
-  metri, in `join` e in `joinToSource`; e lo stesso dalla fine con un bulge
-  curvo già in ingresso (per esempio 100: freccia 5e-6), che resta 100.
+- Il segmento d'ingresso per `isStraight` (2026-11-04, con R492-1 e R492-2
+  della #492): gli esempi sopra, nelle funzioni che vi sono indicate: dalla
+  fine; dall'inizio, con la candidata com'è e girata, con la sorgente linea in
+  `join` (e `std::nullopt` in `joinToSource`) e con la sorgente polilinea in
+  tutte e due; l'ARC come sorgente e come candidata; la chiusura; le
+  polilinee in metri; il pezzo costruito oltre `kMaxCoordinate`. In più lo
+  stesso esempio dalla fine con un bulge curvo già in ingresso (per esempio
+  100: freccia 5e-6), che resta 100.
 - Gli archi (B11 rivista): i quattro esempi sopra, in `join` e in
   `joinToSource`; un arco che arriva al giro intero partendo prima dell'inizio
   della sorgente; archi con spazi in mezzo e in ordine sparso (stesso
@@ -372,6 +429,6 @@ struct JoinResult {
 
 ## Fatto quando
 
-- I casi di `[0.7-R22]` passano e il loro file è cancellato da
-  `tests/verifica/in-attesa/`.
+- I casi di `[0.7-R22]` e di `[0.7-R22b]` passano e i loro file sono
+  cancellati da `tests/verifica/in-attesa/`.
 - La CI è verde.
