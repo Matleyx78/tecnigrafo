@@ -263,6 +263,27 @@ TEST_F(TrimExtendTest, ScriptsAlwaysUseStandardMode) {
     EXPECT_EQ(runner().promptText(), "Select objects or [mOde] <select all>:");
 }
 
+TEST_F(TrimExtendTest, ScriptsStayInStandardModeAfterTheModeOption) {
+    // Review of #491: Quick changes TRIMEXTENDMODE, but the script goes on in
+    // standard mode, so an object without cuts is not erased.
+    runner().setScriptSequences(true);
+    seed(lineAt(0, 0, 10, 0));
+    type("TRIM");
+    type("O");
+    EXPECT_EQ(runner().promptText(), "Enter a trim mode option [Quick/Standard] <Standard>:");
+    type("Q");
+    EXPECT_EQ(runner().promptText(), "Select objects or [mOde] <select all>:");
+    type("");
+    clearMessages();
+    pick(5, 0);
+    EXPECT_EQ(messages(), (Lines{"Object does not intersect an edge."}));
+    EXPECT_EQ(drawing(), (Lines{"1 LINE 0,0 10,0"}));
+    type("");
+    EXPECT_FALSE(runner().isActive());
+    type("TRIMEXTENDMODE");
+    EXPECT_EQ(runner().promptText(), "Enter new value for TRIMEXTENDMODE <1>:");
+}
+
 TEST_F(TrimExtendTest, StandardModeCutsOnlyAtTheChosenEdges) {
     const EntityId host = seed(lineAt(0, 0, 30, 0));
     seed(lineAt(10, -10, 10, 10));
@@ -323,6 +344,16 @@ TEST_F(TrimExtendTest, TrimInACurvedPolylineSegment) {
     const double y = -5.0 * std::numbers::sqrt3;
     EXPECT_EQ(result[0], "1 PLINE -10,0 b=" + bulge + " " + point({-5, y}));
     EXPECT_EQ(result[3], "4 PLINE " + point({5, y}) + " b=" + bulge + " 10,0");
+}
+
+TEST_F(TrimExtendTest, APickOnAVertexAfterASegmentThatIsAPointTakesThePieceThatFollows) {
+    // Review of #491: the pick at (10,0) is the end of segment 0, the cut at
+    // that vertex is the start of segment 2, after the point segment 1.
+    seed(polylineOf({{{0, 0}}, {{10, 0}}, {{10, 0}}, {{10, 10}}}));
+    type("TRIM");
+    pick(10, 0);
+    type("");
+    EXPECT_EQ(drawing(), (Lines{"1 PLINE 0,0 10,0 10,0"}));
 }
 
 TEST_F(TrimExtendTest, TrimAClosedPolylineThroughItsVertexZero) {

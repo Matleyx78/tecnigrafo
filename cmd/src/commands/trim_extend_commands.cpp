@@ -99,21 +99,39 @@ bool comesBefore(const core::CurvePosition& a, const core::CurvePosition& b) {
     return a.location == core::Location::Inside && a.station < b.station;
 }
 
+/// Whether a polyline segment is exactly a point: the same exact test that
+/// Extension::Extended and extendTo() make, so that the segment chosen here is
+/// the one they extend (docs/tappe/0.7/P15-snap-intersezione.md, B3).
+bool isPointSegment(const core::PolylineSegment& segment) {
+    return segment.start == segment.end;
+}
+
 /// The pick on a polyline vertex, which nearestPosition() gives as the end of
-/// the segment before it, is moved to the start of the segment after it, as
-/// cutsAlong() gives a cut there: a pick exactly on a cut takes the piece
-/// that follows (docs/adr/0035, point 5).
+/// the segment before it (or as a place on a segment that is exactly a
+/// point), is moved to the start of the first segment after it that is not
+/// exactly a point, where cutsAlong() gives a cut at that vertex: a pick
+/// exactly on a cut takes the piece that follows (docs/adr/0035, point 5).
+/// Without such a segment (the end of an open polyline) the pick stays.
 core::CurvePosition normalizedPick(const core::Entity& entity, core::CurvePosition position) {
     const auto* polyline = std::get_if<core::Polyline>(&entity);
-    if (polyline == nullptr || position.location != core::Location::AtEnd) {
+    if (polyline == nullptr) {
         return position;
     }
     const std::size_t segments = polyline->segmentCount();
-    if (position.segment + 1 < segments) {
-        return {position.segment + 1, core::Location::AtStart, 0.0};
+    const bool onAPoint =
+        position.segment < segments && isPointSegment(polyline->segment(position.segment));
+    if (position.location != core::Location::AtEnd && !onAPoint) {
+        return position;
     }
-    if (polyline->isClosed()) {
-        return {0, core::Location::AtStart, 0.0};
+    for (std::size_t step = 1; step < segments; ++step) {
+        const std::size_t next = position.segment + step;
+        if (next >= segments && !polyline->isClosed()) {
+            break;
+        }
+        const std::size_t index = next % segments;
+        if (!isPointSegment(polyline->segment(index))) {
+            return {index, core::Location::AtStart, 0.0};
+        }
     }
     return position;
 }
@@ -176,13 +194,6 @@ std::vector<Part> partsLeft(const core::Entity& entity, const std::vector<core::
     }
     return {{std::nullopt, at(after - 1), core::PartCourse::Direct},
             {at(after), std::nullopt, core::PartCourse::Direct}};
-}
-
-/// Whether a polyline segment is exactly a point: the same exact test that
-/// Extension::Extended and extendTo() make, so that the segment chosen here is
-/// the one they extend (docs/tappe/0.7/P15-snap-intersezione.md, B3).
-bool isPointSegment(const core::PolylineSegment& segment) {
-    return segment.start == segment.end;
 }
 
 /// The segment that an end extends with, and whether it is curved.
@@ -270,7 +281,8 @@ std::optional<core::Cut> boundaryFor(const std::vector<core::Cut>& cuts, core::E
 
 void TrimExtendCommand::start(CommandContext& context) {
     // The AutoCAD scripts always use standard mode (docs/adr/0032, point 8).
-    m_quick = context.defaults.trimExtendMode == kQuickMode && !context.scriptSequences;
+    m_scriptSequence = context.scriptSequences;
+    m_quick = context.defaults.trimExtendMode == kQuickMode && !m_scriptSequence;
     m_edges.reset();
     m_savepoints.clear();
     m_beforeMode = Stage::Object;
@@ -385,8 +397,13 @@ void TrimExtendCommand::handleMode(CommandContext& context, const Input& input) 
 }
 
 void TrimExtendCommand::enterMode(CommandContext& context, bool quick) {
-    // The option changes TRIMEXTENDMODE too (P16).
+    // The option changes TRIMEXTENDMODE too (P16), but within the AutoCAD
+    // script sequences the command stays in standard mode (docs/adr/0032,
+    // point 8; docs/adr/0035, point 3).
     context.defaults.trimExtendMode = quick ? kQuickMode : kStandardMode;
+    if (m_scriptSequence) {
+        quick = false;
+    }
     if (quick == m_quick) {
         m_stage = m_beforeMode;
         return;

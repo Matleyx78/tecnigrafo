@@ -23,8 +23,8 @@ namespace tg::cmd {
 /// Quick mode (TRIMEXTENDMODE 1, CommandDefaults::trimExtendMode): every
 /// line, arc, circle and polyline on a visible layer is an edge. Standard
 /// mode (0), and always in the AutoCAD script sequences (docs/adr/0032,
-/// point 8): the edges are chosen first, and an empty choice means all of
-/// them, as in quick mode. A text is never an edge.
+/// point 8), even after the mOde option: the edges are chosen first, and an empty choice means all
+/// of them, as in quick mode. A text is never an edge.
 ///
 /// Trimming takes the cuts from core::cutsAlong(), the edges without the
 /// object itself, a polyline among the edges cutting itself; the piece
@@ -92,6 +92,7 @@ private:
     Stage m_stage{Stage::Object};
     Stage m_beforeMode{Stage::Object};  ///< where the mOde option returns
     bool m_quick{true};
+    bool m_scriptSequence{false};  ///< always standard mode (docs/adr/0032, point 8)
     /// The chosen edges in standard mode; std::nullopt for all of them.
     std::optional<std::vector<core::EntityId>> m_edges;
     std::vector<edit::Editor::Savepoint> m_savepoints;
