@@ -927,3 +927,12 @@ i rimandi ai documenti che cambia.
   raccordo. Esempio: L1 (2,0)→(5,0), L2 (0,0)→(0,30), scelte in (3,0) e
   (0,20), raggio 10. Cambiano le schede P19 e [P20](tappe/0.7/P20-fillet.md)
   e la tabella dei messaggi di [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md).
+
+- **2026-11-04 — Prova di Copilot su una issue.** Il responsabile assegna a
+  Copilot (cloud agent di GitHub Copilot Pro) una issue facile o media, per
+  misurare quanti crediti IA consuma. È una prova, non cambia "Chi fa cosa" di
+  [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) né la decisione del
+  2026-10-31: se Copilot entrerà nel piano, lo si decide alla chiusura della
+  tappa. Il suo ambiente è in `.github/workflows/copilot-setup-steps.yml`; le
+  differenze dal nucleo (presa in carico, CI, `Assisted-by`) sono in
+  `.github/copilot-instructions.md`.

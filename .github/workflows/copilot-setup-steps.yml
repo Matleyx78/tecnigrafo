@@ -1,0 +1,61 @@
+# Environment of the GitHub Copilot cloud agent (trial on an easy or medium
+# issue, docs/DECISIONI.md, 2026-11-04). Copilot runs this job before it starts
+# working, outside its firewall, so the agent finds Qt, the build tools, the
+# solid-space submodule and a configured build already in place and never
+# installs anything itself (docs/agenti/comandi.md).
+#
+# The job name must stay "copilot-setup-steps". The push and pull_request
+# triggers only check this file when it changes; they do not run the agent.
+name: Copilot setup steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      # Same build folder the agent uses (.github/copilot-instructions.md).
+      TG_BUILD_SUFFIX: -copilot
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
+          submodules: true
+      # Same tools as the Linux jobs of ci.yml.
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtest-dev clang-format-18 clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev
+      # A fixed folder, so the agent knows where Qt is even if the variables
+      # set by this action do not reach its session.
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          dir: /home/runner/qt
+          cache: true
+      # The oracle of the verification cases, pinned like in ci.yml.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the oracle
+        run: python3 -m pip install --require-hashes --only-binary=:all: -r tests/verifica/oracolo/requirements.txt
+      # Configure and build main once, so the agent starts from an
+      # incremental build. The cache keeps the Qt path for later "cmake
+      # --preset ci" runs. A failure here must not stop the agent: it sees the
+      # error itself when it builds.
+      - name: Configure and build main
+        continue-on-error: true
+        run: |
+          cmake --preset ci -DCMAKE_PREFIX_PATH=/home/runner/qt/Qt/6.8.3/gcc_64
+          cmake --build --preset ci
