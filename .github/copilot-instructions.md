@@ -18,7 +18,9 @@ e scrivilo nella pull request.
 
 Prima di te ha girato `.github/workflows/copilot-setup-steps.yml`: Qt, compilatori,
 `clang-format-18`, `clang-tidy-18`, il sottomodulo di solid-space e l'oracolo
-sono installati, e `main` è già configurato e compilato. Non installare niente.
+sono installati, e il setup ha tentato di configurare e compilare `main` in
+`build-copilot/` (se non c'è riuscito, `scripts/controlla.sh` completa la
+build). Non installare niente.
 
 ```sh
 export TG_BUILD_SUFFIX=-copilot

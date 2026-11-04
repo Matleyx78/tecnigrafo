@@ -23,10 +23,9 @@ permissions:
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-24.04
+    # Copilot honours only steps, permissions, runs-on, services, snapshot and
+    # timeout-minutes of this job: variables go in the steps that need them.
     timeout-minutes: 45
-    env:
-      # Same build folder the agent uses (.github/copilot-instructions.md).
-      TG_BUILD_SUFFIX: -copilot
     steps:
       - uses: actions/checkout@v5
         with:
@@ -57,6 +56,9 @@ jobs:
       # error itself when it builds.
       - name: Configure and build main
         continue-on-error: true
+        env:
+          # Same build folder the agent uses (.github/copilot-instructions.md).
+          TG_BUILD_SUFFIX: -copilot
         run: |
           cmake --preset ci -DCMAKE_PREFIX_PATH=/home/runner/qt/Qt/6.8.3/gcc_64
           cmake --build --preset ci
