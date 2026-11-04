@@ -400,7 +400,7 @@ Quando la tabella del piano ha i riferimenti, unisci la pull request del piano
 Appena gli ADR di valutazione sono accettati, senza aspettare l'apertura della
 tappa, crea in solid-space la issue `[X.Y-C]` di revisione del contratto,
 secondo [docs/CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md):
-etichette `tappa-X.Y`, `pacchetto`, `contratto`, `difficoltà:impegnativa` e
+etichette `tappa-X.Y`, `pacchetto`, `contratto`, `impegnativa` e
 `agente:codex`. Indica gli ADR e le intestazioni da controllare. La revisione
 vale dalla prossima tappa di solid-space; i blocchi sui buchi valgono subito
 anche nei pacchetti rimasti della tappa 0.2 (Tecnigrafo 0.7).

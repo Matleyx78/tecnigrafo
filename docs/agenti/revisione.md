@@ -8,6 +8,27 @@ Chi scrive una correzione legge "Le correzioni delle schede si rivedono" prima
 di scrivere la descrizione della pull request. Vale insieme al nucleo. Le pull
 request aperte rivedute una dopo l'altra sono in [lotti.md](lotti.md).
 
+## Che cosa blocca una revisione
+
+Vale per ogni revisione, di una correzione come di un pacchetto
+([DECISIONI.md](../DECISIONI.md), 2026-11-04).
+
+- Il revisore serve a portare il lavoro al merge, non a fermarlo: **blocca solo
+  un errore vero o una regola persa**. Se una regola esistente risponde, la
+  applica e va avanti; i dubbi di forma li scrive come **non bloccanti**.
+- Prima di dichiarare un buco controlla se una regola esistente lo decide già,
+  in particolare: dati fuori dal dominio di solid-space,
+  [ADR 0035](../adr/0035-taglio-offset-raccordi-unione.md), punto 23; pezzi
+  degeneri, [ADR 0036](../adr/0036-tolleranze-di-tecnigrafo.md), punto 5;
+  fasce di una soglia, ADR 0013 di solid-space, punto 4 ("La fascia di una
+  soglia", qui sotto). Se sì, lo scrive come applicazione di quella regola, non
+  come buco, e non blocca il merge. Con queste regole si trattano anche i dati
+  privi di senso pratico, come lunghezze sotto la tolleranza o ampiezze di un
+  ulp.
+- Una garanzia del contratto si verifica **con i test, non con dimostrazioni
+  matematiche**: il revisore che teme un ramo non coperto chiede un test che lo
+  raggiunga, non un lemma.
+
 ## Le correzioni delle schede si rivedono
 
 Le decisioni sui buchi si applicano in una sola pull request (guida del
@@ -30,7 +51,8 @@ limite.
   scambiati)? Che cosa succede quando il calcolo scritto nella scheda arriva
   esattamente al limite (un angolo che torna uguale, una somma che tocca il giro
   intero, due proiezioni uguali)? Scrive nella pull request un commento
-  **Verbale della revisione della correzione** e, per ogni buco nuovo, un
+  **Verbale della revisione della correzione** e, per ogni buco nuovo che
+  nessuna regola esistente decide ("Che cosa blocca una revisione"), un
   commento con un esempio e le scelte possibili, come un agente che si ferma.
   Non sceglie lui.
 
