@@ -8,7 +8,7 @@
 - **Riferimenti:** issue `[0.7-R22]` (#…), agente gemini: la facciata (catena,
   ordine, entità che risultano, unità); i confini della regola dall'archivio
   dei casi di solid-space
-- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22,
+- **Dipende da:** P14, Matleyx78/solid-space#23, P25, R22, R22b,
   Matleyx78/solid-space#167. La richiesta diventa il
   pacchetto di solid-space che realizza `coincidence.hpp`, quando la tappa 0.2
   di solid-space lo avrà (ADR 0030, punto 13). Matleyx78/solid-space#167
@@ -36,7 +36,10 @@
   sua fascia al confine del dominio (R480-4); 2026-11-03, la dipendenza
   Matleyx78/solid-space#158 diventa Matleyx78/solid-space#167 (0.2-P21), e
   `joinAligned` è il nome definitivo, perché la Matleyx78/solid-space#159 è
-  unita
+  unita; 2026-11-04, decisione del responsabile sul buco della #373 trovato da
+  Codex: `isStraight` decide sul segmento com'è nella sua entità, prima che un
+  suo estremo si sposti sul vertice comune (DECISIONI.md, 2026-11-04), con i
+  casi in R22b
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -261,7 +264,35 @@ struct JoinResult {
 
   La polilinea risultante:
   - è chiusa se l'ultimo estremo coincide con il primo;
-  - ha segmenti dritti dove `isStraight` dice che il bulge vale zero;
+  - ha segmenti dritti dove `isStraight` dice che il bulge vale zero. Si
+    chiede a `isStraight` di **ogni segmento com'è nella sua entità**
+    (2026-11-04, buco della #373 trovato da Codex): con gli estremi e il bulge
+    con cui entra nella catena, girato se l'entità si gira, **prima** che un suo
+    estremo si sposti sul vertice comune, anche alla chiusura. Vale per la
+    sorgente e per le candidate, quando la catena cresce dalla fine e
+    dall'inizio, in `join` e in `joinToSource`, in millimetri e in metri.
+    Girare un segmento cambia il segno del bulge, non la freccia, quindi non
+    cambia l'esito. Il segmento prende 0 o il suo bulge secondo quell'esito,
+    anche se la corda che risulta, con il vertice comune, è diversa. Per
+    esempio, in millimetri (epsilon 1e-6):
+    - **dalla fine:** sorgente la polilinea aperta [(−10,0),(0,0),(1e-7,0)]
+      con bulge 10 sul secondo vertice, candidata la linea
+      (1.05e-6,0)→(1.05e-6,10). Gli estremi (1e-7,0) e (1.05e-6,0) distano
+      9.5e-7 e coincidono; il vertice comune è (1.05e-6,0), il punto della
+      linea. Il segmento d'ingresso (0,0)→(1e-7,0) ha freccia
+      10 · 1e-7 / 2 = 5e-7, quindi è dritto, e la sorgente diventa
+      `LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0
+      vertex=0.00000105,10`. Sulla corda che risulta, (0,0)→(1.05e-6,0), la
+      freccia sarebbe 5.25e-6: non conta;
+    - **dall'inizio:** sorgente la linea (1.05e-6,0)→(1.05e-6,10), candidata
+      la stessa polilinea, che si aggiunge com'è, oppure la polilinea
+      [(1e-7,0),(0,0),(−10,0)] con bulge −10 sul primo vertice, che si
+      aggiunge girata: in tutti e due i casi `new LWPOLYLINE closed=no
+      vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10`;
+    - **in metri** (epsilon 1e-9): con le coordinate divise per 1000 e lo
+      stesso bulge 10 il risultato è lo stesso, con le coordinate divise per
+      1000 (freccia d'ingresso 5e-10, distanza 9.5e-10); i dati in millimetri
+      danno `none`, perché 9.5e-7 > 1e-9;
   - **larghezze** (B12): ogni segmento conserva la sua larghezza effettiva,
     quella dei vertici se è impostata, altrimenti la larghezza costante della
     sua polilinea; linee e archi hanno larghezza 0. Queste larghezze si
@@ -329,6 +360,10 @@ struct JoinResult {
   l'ordine
   degli estremi delle linee allineate con due proiezioni uguali, secondo la
   decisione in solid-space.
+- Il segmento d'ingresso per `isStraight` (2026-11-04): gli esempi sopra, dalla
+  fine e dall'inizio (con la candidata com'è e girata), in millimetri e in
+  metri, in `join` e in `joinToSource`; e lo stesso dalla fine con un bulge
+  curvo già in ingresso (per esempio 100: freccia 5e-6), che resta 100.
 - Gli archi (B11 rivista): i quattro esempi sopra, in `join` e in
   `joinToSource`; un arco che arriva al giro intero partendo prima dell'inizio
   della sorgente; archi con spazi in mezzo e in ordine sparso (stesso
