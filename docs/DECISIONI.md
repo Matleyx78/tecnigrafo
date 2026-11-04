@@ -903,3 +903,27 @@ i rimandi ai documenti che cambia.
   [procedura](agenti/situazione-generale.md) e consulta in sola lettura
   Tecnigrafo e solid-space. Il riepilogo indica lo stato dei lavori, che cosa
   li blocca e quali azioni del responsabile possono sbloccarli.
+
+- **2026-11-04 — P19: parte conservata dal raccordo (B2 della
+  [#367](https://github.com/Matleyx78/tecnigrafo/issues/367)).**
+  Con *Trim* attivo solid-space indica, per ciascuna curva aperta, la parte
+  da tenere o l'estremo da prolungare. La issue `contratto`
+  [Matleyx78/solid-space#184](https://github.com/Matleyx78/solid-space/issues/184) è decisa e la
+  [Matleyx78/solid-space#185](https://github.com/Matleyx78/solid-space/pull/185) la scrive nel contratto: le
+  regole sono nel commento di `fillet` in `tangency.hpp` (regola 5, `KeptPart`,
+  `Fillet::keepFirst` e `Fillet::keepSecond`) e qui non si ripetono. P19
+  dipende da [Matleyx78/solid-space#190](https://github.com/Matleyx78/solid-space/issues/190)
+  (0.2-P22), che le realizza, con i riferimenti Matleyx78/solid-space#189
+  (0.2-R22). Cambiano la scheda [P19](tappe/0.7/P19-raccordi-core.md) e il
+  piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+
+  Sull'esito `radiusTooLarge` di `fillet`, deciso nella
+  [Matleyx78/solid-space#187](https://github.com/Matleyx78/solid-space/issues/187)
+  ([decisione del responsabile](https://github.com/Matleyx78/tecnigrafo/pull/494#issuecomment-6632305280)
+  sul buco segnalato nella #494): in Tecnigrafo diventa un esito nuovo,
+  `CornerOutcome::RadiusTooLarge`, in `fillet` e `filletSegments`; `FILLET`
+  scrive `Radius is too large.` e non cambia il disegno; `filletPolyline`
+  lascia il vertice com'è e lo conta in `tooShort`, come gli altri esiti senza
+  raccordo. Esempio: L1 (2,0)→(5,0), L2 (0,0)→(0,30), scelte in (3,0) e
+  (0,20), raggio 10. Cambiano le schede P19 e [P20](tappe/0.7/P20-fillet.md)
+  e la tabella dei messaggi di [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md).

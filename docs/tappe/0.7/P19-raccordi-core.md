@@ -8,18 +8,26 @@
 - **Riferimenti:** issue `[0.7-R19]` (#…), agente gemini: la facciata (scelta
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
-- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19. La richiesta
-  Matleyx78/solid-space#21 è diventata i pacchetti di solid-space che
-  realizzano `tangency.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P20
-  (Matleyx78/solid-space#145, dominio delle tangenze, riferimenti
-  Matleyx78/solid-space#146): gli altri (0.2-P15 e 0.2-P16,
+- **Dipende da:** P15, Matleyx78/solid-space#145,
+  Matleyx78/solid-space#190, P25, R19. Matleyx78/solid-space#190 è 0.2-P22
+  di solid-space ([scheda](https://github.com/Matleyx78/solid-space/blob/main/docs/tappe/0.2/P22-parte-tenuta-raccordo.md), parte di
+  ciascuna curva tenuta dal raccordo, riferimenti Matleyx78/solid-space#189,
+  0.2-R22): realizza la correzione del contratto di `fillet` per B2 della
+  #367, issue `contratto` Matleyx78/solid-space#184, scritta nel contratto
+  dalla Matleyx78/solid-space#185. La richiesta Matleyx78/solid-space#21 è
+  diventata i pacchetti di solid-space che realizzano `tangency.hpp` (ADR
+  0030, punto 13); si citano 0.2-P20 (Matleyx78/solid-space#145, dominio
+  delle tangenze, riferimenti Matleyx78/solid-space#146) e l'ultimo, 0.2-P22
+  (Matleyx78/solid-space#190): gli altri (0.2-P15 e 0.2-P16,
   Matleyx78/solid-space#66 e #70) sono già uniti
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B1, B2, B6, B7, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
   2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
   2026-11-03, operazione snellimento (#478): rimanda a `tangency.hpp` invece di
   ripeterlo, aspetta Matleyx78/solid-space#145 invece di #21, tratta il bulge 0
-  come arco degenere e ha un caso in più (due parallele lontane)
+  come arco degenere e ha un caso in più (due parallele lontane);
+  2026-11-04, B2 della #367 con le Matleyx78/solid-space#184 e #185 e
+  l'esito `RadiusTooLarge` della Matleyx78/solid-space#187 (#494)
 - **Modulo:** `core` (più le domande in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 13, 14 e 23; [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
@@ -46,9 +54,10 @@ punto 4): la scheda li cita e non li ripete.
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che chiude Matleyx78/solid-space#145, l'ultimo
-  pacchetto di solid-space che realizza `tangency.hpp`. Se la issue non lo
-  dice, chiedilo e non cominciare.
+  sottomodulo: quello che chiude Matleyx78/solid-space#190 (0.2-P22), l'ultimo
+  pacchetto di solid-space che realizza `tangency.hpp` (dopo
+  Matleyx78/solid-space#145). Se la issue non lo dice, chiedilo e non
+  cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 
@@ -73,6 +82,9 @@ enum class CornerOutcome : std::uint8_t {
     None,            ///< it does not exist (solid-space: none)
     InfinitelyMany,  ///< the curves lie on one line or circle, or similar
     AmbiguousPick,   ///< a pick lies exactly on the other curve's line or circle
+    /// FILLET only (fillet, filletSegments): the kept part would turn a line
+    /// back past the end it keeps (radiusTooLarge, tangency.hpp, rule 5).
+    RadiusTooLarge,
     NotAllowed,      ///< an entity the command does not take
     /// It exists, but a construction is beyond solid-space's domain: the
     /// outOfDomain diagnosis on the radius of fillet and tangentCircleNear
@@ -158,8 +170,10 @@ struct TangentCircleResult {
 - **Dalle entità alle curve** con la traduzione di P14; per una polilinea, il
   segmento più vicino al punto indicato (`nearestPosition`).
 - **Il raccordo** viene da `fillet` di solid-space, con le sue regole
-  (`tangency.hpp`, regole 1–4). Gli esiti `none`, `infinitelyMany` e
-  `ambiguousPick` danno l'esito omonimo.
+  (`tangency.hpp`, regole 1–5). Gli esiti `none`, `infinitelyMany`,
+  `ambiguousPick` e `radiusTooLarge` danno l'esito omonimo, in `fillet` e in
+  `filletSegments`; con `RadiusTooLarge` non c'è raccordo e le entità non
+  cambiano (Matleyx78/solid-space#187).
 - **Oltre il dominio** (ADR 0035, punti 13 e 14): `fillet` e
   `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio (dato 2) per
   una costruzione oltre il dominio, con le regole e l'ordine delle diagnosi del
@@ -175,13 +189,18 @@ struct TangentCircleResult {
     lunghezza zero) dà `None` (ADR 0035, punto 23).
 
   Vale per `fillet`, `filletSegments` e `circleTangentTangentRadius`.
-- **Le entità che risultano:** ciascuna curva si porta al suo punto di
-  tangenza, tenendo la parte che il punto indicato mostra. La costruzione dà
-  un solo posto per curva, quindi il giro è `PartCourse::Direct` (P15,
-  decisione della #359):
-  - se il punto di tangenza è prima della fine nella parte tenuta, la curva si
-    accorcia con `partOf`; se è oltre (`BeforeStart`, `AfterEnd`), si prolunga
-    con `extendTo` (B2): sceglie la `Location`, che è esatta;
+- **Le entità che risultano:** con *Trim*, per ciascuna curva aperta la
+  facciata tiene la parte che `fillet` indica in `Fillet::keepFirst` e
+  `Fillet::keepSecond` (`KeptPart`), senza decisioni geometriche sue (B2 della
+  #367). Le regole, anche per il punto di tangenza fuori dalla curva, lo
+  spigolo con raggio zero, le tangenze coincidenti e `radiusTooLarge`, sono
+  quelle del commento di `fillet` in `tangency.hpp` (regola 5), decise dalla
+  Matleyx78/solid-space#184 e dalla #185: qui non si ripetono.
+  - Per accorciare si usa `partOf` sul ramo indicato, con
+    `PartCourse::Direct` (P15, decisione della #359). Per prolungare si usa
+    `extendTo` sull'estremo indicato. La `Location` localizza il contatto
+    sulla curva: per un arco `AfterEnd` comprende tutto il complemento
+    dell'arco e da sola non individua l'estremo da spostare;
   - una parte tenuta `Empty`, o degenere per la regola del documento (ADR
     0036, punto 5), lascia vuoto `first` o `second`: l'entità si cancella
     (B14). Per esempio, raggio 1 sulle linee (0,0)→(1,0) e (0,0)→(0,1), scelte
@@ -216,16 +235,16 @@ struct TangentCircleResult {
   (il vertice di chiusura) in su. Ogni vertice si raccorda sulla polilinea già
   modificata dai vertici precedenti, con i suoi due segmenti come sono in quel
   momento. Un vertice i cui punti di tangenza non cadono dentro quei due
-  segmenti, un raccordo che non esiste, o uno che esiste oltre il dominio
-  (`OutOfDomain`, un vertice a forcina quasi chiusa), resta com'è e conta in
-  `tooShort`. Per esempio [(0,2),(0,0),(1,0),(1,2)] con raggio 0.75: il primo
+  segmenti, un raccordo che non esiste (anche `RadiusTooLarge`), o uno che
+  esiste oltre il dominio (`OutOfDomain`, un vertice a forcina quasi chiusa),
+  resta com'è e conta in `tooShort`. Per esempio [(0,2),(0,0),(1,0),(1,2)] con raggio 0.75: il primo
   vertice interno si raccorda e il secondo conta tra i troppo corti, `done` = 1
   e `tooShort` = 1.
   - **Con *Trim No*** la polilinea non cambia, quindi ogni vertice si giudica
     sui suoi due segmenti **originali**: è la visita di B15 su una polilinea
     che non si modifica. Un vertice i cui punti di tangenza non cadono dentro
-    quei due segmenti, un raccordo che non esiste o uno oltre il dominio resta
-    senza arco e conta in `tooShort`; gli altri contano in `done` e il loro
+    quei due segmenti, un raccordo che non esiste (anche `RadiusTooLarge`) o
+    uno oltre il dominio resta senza arco e conta in `tooShort`; gli altri contano in `done` e il loro
     arco va in `added`, nell'ordine dei vertici. Non si controlla se gli archi
     si incontrano. Per esempio, lo stesso [(0,2),(0,0),(1,0),(1,2)] con raggio
     0.75: i due vertici interni si raccordano, perché il segmento da (0,0) a
@@ -255,6 +274,23 @@ struct TangentCircleResult {
   verso dell'arco vengono da solid-space.
 
 ## Test richiesti
+
+- B2 della #367, *Trim* attivo: linee (0,0)→(30,0) e (0,0)→(0,30),
+  scelte in (5,0) e (0,5), raggio 10. Restano (10,0)→(30,0) e
+  (0,10)→(0,30). Verificare gli stessi tratti geometrici invertendo
+  il verso delle linee o scambiando le due curve.
+- B2 della #367, caso e di `autocad-raccordi.dxf`: arco di centro
+  (230,0), raggio 10, da 0° a 180°, scelto in (238.6603,5); linea
+  (215,-5)→(250,-5), scelta in (245,-5); raggio 3. Con *Trim* si
+  prolunga l'inizio dell'arco a circa 351,15°, lasciando la fine a 180°.
+  Invertendo il verso dell'arco si prolunga la fine e si conserva lo
+  stesso tratto geometrico.
+- `RadiusTooLarge` (Matleyx78/solid-space#187): L1 (2,0)→(5,0) e L2
+  (0,0)→(0,30), scelte in (3,0) e (0,20), raggio 10. La tangenza su L1 è
+  (10,0), oltre la fine, e tenere la parte che prosegue il raccordo
+  richiederebbe di far tornare L1 indietro oltre (5,0): `fillet` dà
+  `RadiusTooLarge`, senza arco, con le due linee invariate, anche invertendo
+  L1 e con *Trim No*.
 
 - I casi di `autocad-raccordi.dxf` per `FILLET` e *Ttr*, e quelli della
   richiesta Matleyx78/solid-space#21 (ADR 0011 di solid-space, "I casi della
