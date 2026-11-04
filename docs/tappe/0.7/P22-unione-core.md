@@ -39,7 +39,7 @@
   unita; 2026-11-04, decisione del responsabile sul buco della #373 trovato da
   Codex: `isStraight` decide sul segmento com'è nella sua entità, prima che un
   suo estremo si sposti sul vertice comune (DECISIONI.md, 2026-11-04), con i
-  casi in R22b
+  casi in R22b (#493)
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
