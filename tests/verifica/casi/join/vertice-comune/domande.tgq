@@ -1,0 +1,130 @@
+; Regole del vertice comune nella catena di unione: isStraight d'ingresso,
+; ARC nella catena, pezzo costruito rifiutato, pezzo di lunghezza zero, ARC giro intero.
+; [0.7-R22b] #493, lavoro [0.7-P22] #373: domanda `join`
+; (docs/tappe/0.7/P22-unione-core.md; ADR 0035; ADR 0036; DECISIONI 2026-11-04).
+
+; --- 1. Dalla fine, millimetri e metri (P22; domande 1, 2, 3 di #493) ---
+; Sorgente P_END: polilinea aperta con secondo segmento con bulge 10 verso (1e-7, 0).
+; Candidata L_END: linea da (1.05e-6, 0) a (1.05e-6, 10).
+; In millimetri (units=4): epsilon = 1e-6.
+; Distanza estremi: |1.05e-6 - 1e-7| = 9.5e-7 <= 1e-6 (coincidono).
+; Freccia d'ingresso: |bulge| * corda / 2 = 10 * 1e-7 / 2 = 5e-7 <= 1e-6.
+; isStraight e' vero: il bulge diventa 0 nel risultato; vertice comune (0.00000105, 0).
+P_END = LWPOLYLINE vertex=-10,0 vertex=0,0 bulge=10 vertex=0.0000001,0
+L_END = LINE start=0.00000105,0 end=0.00000105,10
+? join P_END L_END -> P_END LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10
+
+; Stessi dati in metri (units=6): epsilon = 1e-9.
+; Distanza estremi: 9.5e-7 > 1e-9: gli estremi non coincidono, nessuna unione.
+? join P_END L_END units=6 -> none
+
+; Dalla fine, coordinate divise per 1000 in metri (units=6): epsilon = 1e-9.
+; Distanza estremi: |1.05e-9 - 1e-10| = 9.5e-10 <= 1e-9 (coincidono).
+; Freccia d'ingresso: 10 * 1e-10 / 2 = 5e-10 <= 1e-9.
+; isStraight e' vero: il bulge diventa 0; vertice comune (0.00000000105, 0).
+P_END_M = LWPOLYLINE vertex=-0.01,0 vertex=0,0 bulge=10 vertex=0.0000000001,0
+L_END_M = LINE start=0.00000000105,0 end=0.00000000105,0.01
+? join P_END_M L_END_M units=6 -> P_END_M LWPOLYLINE closed=no vertex=-0.01,0 vertex=0,0 vertex=0.00000000105,0 vertex=0.00000000105,0.01
+
+; --- 2. Bulge gia curvo in ingresso (P22; domanda 6 di #493) ---
+; Polilinea con bulge 100 in millimetri (units=4): epsilon = 1e-6.
+; Distanza estremi: |1.05e-6 - 1e-7| = 9.5e-7 <= 1e-6 (coincidono).
+; Freccia d'ingresso: 100 * 1e-7 / 2 = 5e-6 > 1e-6.
+; isStraight e' falso: il bulge 100 resta conservato sul vertice (0,0).
+P_CRV = LWPOLYLINE vertex=-10,0 vertex=0,0 bulge=100 vertex=0.0000001,0
+? join P_CRV L_END -> P_CRV LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 bulge=100 vertex=0.00000105,0 vertex=0.00000105,10
+
+; --- 3. Dall'inizio con sorgente linea (P22; domande 4 e 5 di #493) ---
+; Sorgente linea da (1.05e-6, 0) a (1.05e-6, 10). La catena cresce dall'inizio (1.05e-6, 0).
+; In millimetri (units=4): epsilon = 1e-6.
+; Candidata P_END: coincide la sua fine (1e-7, 0) (distanza 9.5e-7 <= 1e-6).
+; Coincide la fine: si aggiunge com'e'.
+; Freccia d'ingresso: 10 * 1e-7 / 2 = 5e-7 <= 1e-6 (isStraight vero, bulge = 0).
+; Tipo cambia da LINE a LWPOLYLINE -> new LWPOLYLINE.
+L_START = LINE start=0.00000105,0 end=0.00000105,10
+? join L_START P_END -> new LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10
+
+; Candidata girata P_REV: inizio in (1e-7, 0) con bulge -10, (0,0), (-10,0).
+; Coincide il suo inizio (1e-7, 0) (distanza 9.5e-7 <= 1e-6): si aggiunge girata.
+; Girata, il bulge cambia segno (-10 -> 10).
+; Freccia d'ingresso: 10 * 1e-7 / 2 = 5e-7 <= 1e-6 (isStraight vero, bulge = 0).
+P_REV = LWPOLYLINE vertex=0.0000001,0 bulge=-10 vertex=0,0 vertex=-10,0
+? join L_START P_REV -> new LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10
+
+; --- 4. Dall'inizio con sorgente polilinea (P22 righe 329-333) ---
+; Sorgente polilinea P_START: la catena cresce dall'inizio (1.05e-6, 0).
+; Candidata com'e' (P_END) e girata (P_REV): il risultato aggiorna P_START.
+; In millimetri (units=4): epsilon = 1e-6, distanza estremi 9.5e-7 <= 1e-6, freccia d'ingresso 5e-7 <= 1e-6.
+P_START = LWPOLYLINE vertex=0.00000105,0 vertex=0.00000105,10
+? join P_START P_END -> P_START LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10
+? join P_START P_REV -> P_START LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0.00000105,0 vertex=0.00000105,10
+
+; --- 5. Un ARC nella catena (R492-1; P22 righe 334-345) ---
+; ARC_CH: centro (0,0), raggio 9.5e-7, angoli 0..180 gradi (estremi (9.5e-7, 0) e (-9.5e-7, 0)).
+; Bulge d'ingresso tan(pi/4) = 1, corda 1.9e-6.
+; In millimetri (units=4): epsilon = 1e-6.
+; Distanza estremi tra fine arco (-9.5e-7, 0) e inizio linea (-1.85e-6, 0): 9e-7 <= 1e-6 (coincidono).
+; Freccia d'ingresso dell'arco: 1 * 1.9e-6 / 2 = 9.5e-7 <= 1e-6.
+; isStraight e' vero: bulge = 0; vertice comune (-0.00000185, 0).
+; Come sorgente: tipo cambia in polilinea -> new LWPOLYLINE.
+ARC_CH = ARC center=0,0 radius=0.00000095 start-angle=0 end-angle=180
+L_ARC = LINE start=-0.00000185,0 end=-0.00000185,-10
+? join ARC_CH L_ARC -> new LWPOLYLINE closed=no vertex=0.00000095,0 vertex=-0.00000185,0 vertex=-0.00000185,-10
+
+; Come candidata dall'inizio: sorgente polilinea P_L_ARC.
+; Cresce dall'inizio (-1.85e-6, 0). Coincide la fine dell'arco (-9.5e-7, 0) (distanza 9e-7 <= 1e-6).
+; Coincide la fine: ARC_CH si aggiunge com'e'. Risultato aggiorna P_L_ARC.
+P_L_ARC = LWPOLYLINE vertex=-0.00000185,0 vertex=-0.00000185,-10
+? join P_L_ARC ARC_CH -> P_L_ARC LWPOLYLINE closed=no vertex=0.00000095,0 vertex=-0.00000185,0 vertex=-0.00000185,-10
+
+; --- 6. Alla chiusura (P22 righe 346-352) ---
+; P_CL_1 (1.05e-6,0 a 10,0), L_CL_2 (10,0 a 0,10), P_CL_3 (0,10 a 0,0 a 1e-7,0 con bulge 10).
+; In millimetri (units=4): epsilon = 1e-6.
+; L'ultimo estremo (1e-7, 0) e il primo vertice (1.05e-6, 0) distano 9.5e-7 <= 1e-6 (chiusura).
+; Vertice comune alla chiusura e' il primo vertice (0.00000105, 0).
+; Segmento d'ingresso (0,0)->(1e-7,0): freccia 10 * 1e-7 / 2 = 5e-7 <= 1e-6 (isStraight vero, bulge = 0).
+P_CL_1 = LWPOLYLINE vertex=0.00000105,0 vertex=10,0
+L_CL_2 = LINE start=10,0 end=0,10
+P_CL_3 = LWPOLYLINE vertex=0,10 vertex=0,0 bulge=10 vertex=0.0000001,0
+? join P_CL_1 L_CL_2 P_CL_3 -> P_CL_1 LWPOLYLINE closed=yes vertex=0.00000105,0 vertex=10,0 vertex=0,10 vertex=0,0
+
+; --- 7. Il pezzo costruito si controlla (R492-2; ADR 0035 punto 23; P22 righe 375-391) ---
+; Scala K = 2^50 = 1125899906842624, Y = K - 3000 = 1125899906839624.
+; Epsilon a questa scala: 2^-42 * 2^50 = 256.
+; Distanza estremi (0.5, Y) e (1, Y) = 0.5 <= 256 (coincidono).
+; Segmento d'ingresso (0,Y)->(0.5,Y) con bulge -8192: freccia 8192 * 0.5 / 2 = 2048 > 256.
+; isStraight e' falso: il bulge resta -8192.
+; Con vertice comune (1, Y) la corda raddoppia a 1.0 e la freccia sale a 4096:
+; il punto medio m_y = Y + 4096 = K + 1096 > kMaxCoordinate.
+; curves.hpp rifiuta il segmento con outOfDomain: candidata scartata, nessun aggancio.
+P_OOD = LWPOLYLINE vertex=-10000,1125899906839624 vertex=0,1125899906839624 bulge=-8192 vertex=0.5,1125899906839624
+L_OOD = LINE start=1,1125899906839624 end=1,1125899906829624
+? join P_OOD L_OOD -> none
+
+; --- 8. Il pezzo di lunghezza zero si toglie (R492-3; ADR 0036 punto 5; P22 righe 357-374) ---
+; In millimetri (units=4): epsilon = 1e-6.
+; Distanza estremi (5e-7, 0) e (0, 0): 5e-7 <= 1e-6 (coincidono). Vertice comune: (0, 0).
+; Il segmento (0,0)->(5e-7,0) diventa (0,0)->(0,0): lunghezza zero, si toglie.
+P_ZERO = LWPOLYLINE vertex=-10,0 vertex=0,0 vertex=0.0000005,0
+L_ZERO = LINE start=0,0 end=0,10
+? join P_ZERO L_ZERO -> P_ZERO LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0,10
+
+; Dalla fine con larghezze 1 e 3: il segmento tolto aveva larghezza 3, si toglie con i suoi dati.
+; Il primo segmento conserva larghezza 1, la linea ha larghezza 0.
+P_ZERO_W = LWPOLYLINE vertex=-10,0 start-width=1 end-width=1 vertex=0,0 start-width=3 end-width=3 vertex=0.0000005,0
+? join P_ZERO_W L_ZERO -> P_ZERO_W LWPOLYLINE closed=no vertex=-10,0 start-width=1 end-width=1 vertex=0,0 vertex=0,10
+
+; Dall'inizio: sorgente P_HEAD_ZERO da (0,0) a (0,10), cresce dall'inizio (0,0).
+; Candidata P_ZERO: la fine (5e-7, 0) coincide con (0,0) (distanza 5e-7 <= 1e-6).
+; Coincide la fine: si aggiunge com'e'. L'ultimo segmento diventa (0,0)->(0,0) e si toglie.
+P_HEAD_ZERO = LWPOLYLINE vertex=0,0 vertex=0,10
+? join P_HEAD_ZERO P_ZERO -> P_HEAD_ZERO LWPOLYLINE closed=no vertex=-10,0 vertex=0,0 vertex=0,10
+
+; --- 9. ARC letto come giro intero (R492-4; P22 righe 171-186) ---
+; Arco da 1 rad (57.29577951308232 deg) a std::nextafter(1.0, 0.0) rad (57.295779513082316 deg).
+; Ampiezza sweep in double = kFullTurn: solid-space curves.hpp lo legge come giro intero (cerchio).
+; Come un CIRCLE, non ha estremi liberi e non si unisce.
+P_FULL = LWPOLYLINE vertex=10,10 vertex=0.5403023058681398,0.8414709848078965
+ARC_FULL = ARC center=0,0 radius=1 start-angle=57.29577951308232 end-angle=57.295779513082316
+? join P_FULL ARC_FULL -> none
+? join ARC_FULL P_FULL -> none
