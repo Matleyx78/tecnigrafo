@@ -858,3 +858,42 @@ i rimandi ai documenti che cambia.
   e come fissa `MinimumCorrectionKeepsAlmostTheWholeOriginalArc`.
   Cambiano commento di `partOf`, scheda P15, questa voce e test; algoritmo,
   metrica e spareggi (punto 3), ADR, riferimenti e sottomodulo restano invariati.
+
+- **2026-11-04 — P22: `isStraight` sul segmento d'ingresso.** Codex si è
+  fermato su P22 ([#373](https://github.com/Matleyx78/tecnigrafo/issues/373#issuecomment-6627971604))
+  perché la scheda non diceva su quale corda chiedere `isStraight` quando un
+  estremo del segmento si sposta sul vertice comune («nel punto dell'entità che
+  segue»): la freccia, |bulge| · corda / 2, cambia con la corda. Il
+  responsabile sceglie **A**: decide il segmento com'è nella sua entità, con
+  gli estremi e il bulge con cui entra nella catena (girato se l'entità si
+  gira), prima dello spostamento, anche alla chiusura; dalla fine e
+  dall'inizio, in `join` e in `joinToSource`, nelle due unità. Nell'esempio di
+  Codex, in millimetri, il segmento (0,0)→(1e-7,0) con bulge 10 ha freccia
+  5e-7 e diventa dritto, anche se con il vertice comune (1.05e-6,0) la
+  freccia sarebbe 5.25e-6. Cambiano la scheda [P22](tappe/0.7/P22-unione-core.md)
+  e il piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al
+  piano"; nessun ADR cambia (l'ADR 0035, punto 17, non dice su quale corda si
+  decide). La decisione cambia una risposta della domanda `join`, quindi si
+  aggiunge R22b (Gemini) e P22 dipende anche da lei (guida, B10a, passo 5).
+
+  Sulla revisione della correzione ([#492](https://github.com/Matleyx78/tecnigrafo/pull/492#issuecomment-6629266301)):
+  - **R492-1:** un ARC nella catena si tratta come il suo segmento, con gli
+    estremi di `endpoints()` e il bulge della sua ampiezza, e `isStraight`
+    decide su quello, com'è nella sua entità, con la stessa regola dei
+    segmenti di polilinea;
+  - **R492-2:** non è una decisione nuova, vale l'ADR 0035, punto 23. Il
+    pezzo costruito, con il vertice comune e il bulge deciso in ingresso, si
+    controlla; se solid-space lo rifiuta, la candidata non si unisce e conta
+    tra le scartate (con una diagnosi sulla sorgente, `std::nullopt`), come
+    per R480-1.
+  - **R492-3 e R492-4** ([decisione del responsabile](https://github.com/Matleyx78/tecnigrafo/pull/492#issuecomment-6630178016),
+    applicazioni di regole che esistono): il pezzo che lo spostamento sul
+    vertice comune riduce esattamente a un punto si toglie con i suoi dati, e
+    gli altri conservano i loro (ADR 0036, punto 5; scelta C); un ARC che
+    solid-space legge come giro intero è un cerchio, non ha estremi liberi e
+    non si unisce, come un CIRCLE (scelta A);
+  - **fascia del segmento di un ARC** (punto 10 del secondo verbale, non
+    bloccante, senza decisione del responsabile; guida, «La fascia di una
+    soglia»): quando costruzioni lecite degli estremi e del bulge danno frecce
+    dai due lati di epsilon, l'esito di `isStraight` è libero e
+    deterministico, e nessun riferimento lo impone.
