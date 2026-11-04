@@ -858,3 +858,11 @@ i rimandi ai documenti che cambia.
   e come fissa `MinimumCorrectionKeepsAlmostTheWholeOriginalArc`.
   Cambiano commento di `partOf`, scheda P15, questa voce e test; algoritmo,
   metrica e spareggi (punto 3), ADR, riferimenti e sottomodulo restano invariati.
+
+- **2026-11-04 — P19: parte conservata dal raccordo (B2 della
+  [#367](https://github.com/Matleyx78/tecnigrafo/issues/367)).**
+  Con *Trim* attivo Solid Space indica, per ciascuna curva aperta, il ramo
+  da tenere o l'estremo da prolungare. Con un raccordo non degenere si
+  conserva il ramo che prosegue l'arco nel punto di tangenza. Il contratto
+  deve fissare anche la scelta allo spigolo per il raggio zero e il raccordo
+  degenere. P19 aspetta il contratto corretto e la sua implementazione.

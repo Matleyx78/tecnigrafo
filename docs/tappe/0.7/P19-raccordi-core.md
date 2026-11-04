@@ -8,7 +8,11 @@
 - **Riferimenti:** issue `[0.7-R19]` (#…), agente gemini: la facciata (scelta
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
-- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19. La richiesta
+- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19 e dalla correzione
+  del contratto di `fillet` in solid-space (B2 della #367, issue `contratto`
+  da aprire). Prima di riprendere P19, la #367 deve indicare il commit di
+  solid-space che contiene il contratto corretto e la sua implementazione.
+  La richiesta
   Matleyx78/solid-space#21 è diventata i pacchetti di solid-space che
   realizzano `tangency.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P20
   (Matleyx78/solid-space#145, dominio delle tangenze, riferimenti
@@ -175,13 +179,16 @@ struct TangentCircleResult {
     lunghezza zero) dà `None` (ADR 0035, punto 23).
 
   Vale per `fillet`, `filletSegments` e `circleTangentTangentRadius`.
-- **Le entità che risultano:** ciascuna curva si porta al suo punto di
-  tangenza, tenendo la parte che il punto indicato mostra. La costruzione dà
-  un solo posto per curva, quindi il giro è `PartCourse::Direct` (P15,
-  decisione della #359):
-  - se il punto di tangenza è prima della fine nella parte tenuta, la curva si
-    accorcia con `partOf`; se è oltre (`BeforeStart`, `AfterEnd`), si prolunga
-    con `extendTo` (B2): sceglie la `Location`, che è esatta;
+- **Le entità che risultano:** con *Trim*, per ciascuna curva aperta la
+  facciata usa la parte o l'estremo indicato da `fillet` (B2 della #367).
+  Con un arco di raccordo non degenere si conserva il ramo che prosegue
+  l'arco nel punto di tangenza. La regola per lo spigolo, anche con raggio
+  zero o raccordo degenere, spetta al contratto di solid-space.
+  - Per accorciare si usa `partOf` sul ramo indicato, con
+    `PartCourse::Direct` (P15, decisione della #359). Per prolungare si usa
+    `extendTo` sull'estremo indicato. La `Location` localizza il contatto
+    sulla curva: per un arco `AfterEnd` comprende tutto il complemento
+    dell'arco e da sola non individua l'estremo da spostare;
   - una parte tenuta `Empty`, o degenere per la regola del documento (ADR
     0036, punto 5), lascia vuoto `first` o `second`: l'entità si cancella
     (B14). Per esempio, raggio 1 sulle linee (0,0)→(1,0) e (0,0)→(0,1), scelte
@@ -255,6 +262,17 @@ struct TangentCircleResult {
   verso dell'arco vengono da solid-space.
 
 ## Test richiesti
+
+- B2 della #367, *Trim* attivo: linee (0,0)→(30,0) e (0,0)→(0,30),
+  scelte in (5,0) e (0,5), raggio 10. Restano (10,0)→(30,0) e
+  (0,10)→(0,30). Verificare gli stessi tratti geometrici invertendo
+  il verso delle linee o scambiando le due curve.
+- B2 della #367, caso e di `autocad-raccordi.dxf`: arco di centro
+  (230,0), raggio 10, da 0° a 180°, scelto in (238.6603,5); linea
+  (215,-5)→(250,-5), scelta in (245,-5); raggio 3. Con *Trim* si
+  prolunga l'inizio dell'arco a circa 351,15°, lasciando la fine a 180°.
+  Invertendo il verso dell'arco si prolunga la fine e si conserva lo
+  stesso tratto geometrico.
 
 - I casi di `autocad-raccordi.dxf` per `FILLET` e *Ttr*, e quelli della
   richiesta Matleyx78/solid-space#21 (ADR 0011 di solid-space, "I casi della
