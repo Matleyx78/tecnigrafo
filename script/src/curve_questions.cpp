@@ -2,13 +2,15 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 // The questions on curves answered by the facade of core over solid-space
-// (docs/verifica/domande.md, "Intersezioni, lato e tolleranze"): where curves
-// meet, on which side a point lies, and the tolerance rule of a drawing.
+// (docs/verifica/domande.md, "Intersezioni, lato e tolleranze" and "Curva
+// parallela"): where curves meet, on which side a point lies, the tolerance
+// rule of a drawing and the parallel curve.
 
 #include "question_table.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/intersections.hpp"
 #include "tg/core/join.hpp"
+#include "tg/core/offset.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/tolerance.hpp"
 #include "tg/script/number_format.hpp"
@@ -357,6 +359,56 @@ QuestionResult askJoin(const QuestionModel& model, Arguments arguments) {
         return answer;
     }
     return std::string{"none"};
+}
+
+QuestionResult askOffset(const QuestionModel& model, Arguments arguments) {
+    constexpr std::string_view kForm = "offset <E> <d> x,y [units=<n>]";
+    if (arguments.size() != 3 && arguments.size() != 4) {
+        return ArgumentError{"wrong arguments, expected: " + std::string{kForm}};
+    }
+    const auto entity = entityNamed(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+        return *error;
+    }
+    const core::Entity& chosen = *std::get<const core::Entity*>(entity);
+    if (std::holds_alternative<core::Text>(chosen)) {
+        return ArgumentError{"offset needs a curve, " + quoted(arguments[0]) + " is a TEXT"};
+    }
+    const std::optional<double> distance = parseNumber(arguments[1]);
+    if (!distance || !std::isfinite(*distance) || !(*distance > 0.0)) {
+        return ArgumentError{"offset needs a distance greater than 0, found " +
+                             quoted(arguments[1])};
+    }
+    const auto point = pointNamed(arguments[2]);
+    if (const auto* error = std::get_if<ArgumentError>(&point)) {
+        return *error;
+    }
+    const auto options = keyed(arguments.subspan(3), {"units", ""});
+    if (const auto* error = std::get_if<ArgumentError>(&options)) {
+        return *error;
+    }
+    const auto& units = std::get<0>(options)[0];
+    const auto rule = units ? unitsArgument(*units)
+                            : Parsed<core::ToleranceRule>{core::ToleranceRule{kDefaultUnits}};
+    if (const auto* error = std::get_if<ArgumentError>(&rule)) {
+        return *error;
+    }
+    const core::OffsetResult result = core::offsetEntity(
+        chosen, *distance, std::get<core::Vec2>(point), std::get<core::ToleranceRule>(rule));
+    switch (result.outcome) {
+        case core::OffsetOutcome::Done: {
+            std::string answer;
+            writeEntity(*result.entity, answer);
+            return answer;
+        }
+        case core::OffsetOutcome::Vanished:
+            return std::string{"vanished"};
+        case core::OffsetOutcome::Failed:
+            return std::string{"failed"};
+        case core::OffsetOutcome::NoSide:
+            return std::string{"no-side"};
+    }
+    return std::string{"failed"};
 }
 
 }  // namespace tg::script::detail

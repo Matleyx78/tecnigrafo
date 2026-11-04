@@ -18,6 +18,7 @@ add_library(tg_core
     src/grips.cpp
     src/intersections.cpp
     src/join.cpp
+    src/offset.cpp
     src/layer.cpp
     src/line.cpp
     src/polyline.cpp

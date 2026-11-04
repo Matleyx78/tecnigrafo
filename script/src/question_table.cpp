@@ -498,6 +498,7 @@ QuestionResult askSide(const QuestionModel& model, Arguments arguments);
 QuestionResult askCoincident(const QuestionModel& model, Arguments arguments);
 QuestionResult askJoin(const QuestionModel& model, Arguments arguments);
 QuestionResult askDegenerate(const QuestionModel& model, Arguments arguments);
+QuestionResult askOffset(const QuestionModel& model, Arguments arguments);
 
 // Defined in file_questions.cpp.
 QuestionResult askEntity(const QuestionModel& model, Arguments arguments);
@@ -576,7 +577,7 @@ constexpr std::array kQuestions{
     QuestionRow{"side", AnswerShape::Single, &askSide},                            // P14
     QuestionRow{"coincident", AnswerShape::Single, &askCoincident},                // P14
     QuestionRow{"degenerate", AnswerShape::Single, &askDegenerate},                // P14
-    QuestionRow{"offset", AnswerShape::Single, nullptr},                           // P17
+    QuestionRow{"offset", AnswerShape::Single, &askOffset},                        // P17
     QuestionRow{"fillet", AnswerShape::Single, nullptr},                           // P19
     QuestionRow{"tangents", AnswerShape::Items, nullptr},                          // P19
     QuestionRow{"circle-ttr", AnswerShape::Single, nullptr},                       // P19
