@@ -42,7 +42,6 @@ struct JoinResult {
 /// contiguous lines, arcs and polylines). `close` (arcs only) closes the arc
 /// into a circle.
 [[nodiscard]] std::optional<JoinResult> joinToSource(std::span<const Entity> entities,
-                                                     const ToleranceRule& rule,
-                                                     bool close = false);
+                                                     const ToleranceRule& rule, bool close = false);
 
 }  // namespace tg::core

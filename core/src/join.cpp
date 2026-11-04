@@ -3,10 +3,10 @@
 
 #include "tg/core/join.hpp"
 
-#include "solid_space_bridge.hpp"
 #include "solid_space/geom2d/coincidence.hpp"
 #include "solid_space/robust/predicates.hpp"
 #include "solid_space/robust/trigonometry.hpp"
+#include "solid_space_bridge.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -162,9 +162,10 @@ std::optional<JoinResult> joinChain(std::span<const Entity> entities, const Tole
                 joined.back().end = following.front().start.position;
                 joined.insert(joined.end(), following.begin(), following.end());
 
-                const bool closes = rule.coincident(joined.front().start.position, joined.back().end);
+                const Vec2 first = joined.front().start.position;
+                const bool closes = rule.coincident(first, joined.back().end);
                 if (closes) {
-                    joined.back().end = joined.front().start.position;
+                    joined.back().end = first;
                 }
                 if (!checkPieces(joined)) {
                     continue;
@@ -237,8 +238,8 @@ std::optional<JoinResult> joinLines(std::span<const Entity> entities, const Poli
     if (!joined.hasValue()) {
         return std::nullopt;
     }
-    result.source = Line{bridge::fromPoint(joined.value().start),
-                         bridge::fromPoint(joined.value().end)};
+    const auto& segment = joined.value();
+    result.source = Line{bridge::fromPoint(segment.start), bridge::fromPoint(segment.end)};
     return result;
 }
 

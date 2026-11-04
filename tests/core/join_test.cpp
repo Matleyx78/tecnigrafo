@@ -45,7 +45,9 @@ void expectBoth(const std::span<const Entity> entities, bool closed,
 TEST(Join, AlignedLinesUseTheSourcesDirectionAndItsEndWinsTies) {
     const std::array<Entity, 3> entities{Line{{10, 0}, {0, 0}}, Line{{0, 5e-7}, {5, 0}},
                                          Line{{20, 0}, {30, 0}}};
-    for (const auto& result : {join(entities, kMillimetres), joinToSource(entities, kMillimetres)}) {
+    const auto interactive = join(entities, kMillimetres);
+    const auto scripted = joinToSource(entities, kMillimetres);
+    for (const auto& result : {interactive, scripted}) {
         if (!result) {
             ADD_FAILURE() << "aligned lines did not join";
             continue;
@@ -71,7 +73,8 @@ TEST(Join, InteractiveFallbackUsesAChainAndStopsWhenItCloses) {
     if (result) {
         EXPECT_EQ(result->consumed, (std::vector<std::size_t>{2, 3}));
     }
-    const std::array<Entity, 2> closed{entities[0], Polyline{{{{10, 0}}, {{20, 0}}, {{20, 10}}}, true}};
+    const Polyline closedCandidate{{{{10, 0}}, {{20, 0}}, {{20, 10}}}, true};
+    const std::array<Entity, 2> closed{entities[0], closedCandidate};
     EXPECT_FALSE(join(closed, kMillimetres));
     EXPECT_FALSE(joinToSource(closed, kMillimetres));
 }
@@ -84,9 +87,8 @@ TEST(Join, ClassifiesTheTranslatedSegmentBeforeMovingItsEnd) {
     for (const double bulge : {10.0, 100.0}) {
         const Polyline input{{{{-10, 0}}, {{0, 0}, bulge}, {{1e-7, 0}}}};
         const std::array<Entity, 2> tail{input, Line{{1.05e-6, 0}, {1.05e-6, 10}}};
-        expectBoth(tail, false,
-                   {{{-10, 0}}, {{0, 0}, bulge == 10.0 ? 0.0 : bulge}, {{1.05e-6, 0}},
-                    {{1.05e-6, 10}}});
+        const double retained = bulge == 10.0 ? 0.0 : bulge;
+        expectBoth(tail, false, {{{-10, 0}}, {{0, 0}, retained}, {{1.05e-6, 0}}, {{1.05e-6, 10}}});
     }
 }
 
@@ -95,8 +97,8 @@ TEST(Join, ClassifiesTheIncomingPiecesAtTheHeadAndAtClosure) {
     const Polyline reversed{{{{1e-7, 0}, -10}, {{0, 0}}, {{-10, 0}}}};
     const Polyline source{{{{1.05e-6, 0}}, {{1.05e-6, 10}}}};
     const Line line{{1.05e-6, 0}, {1.05e-6, 10}};
-    const std::vector<PolylineVertex> expected{{{-10, 0}}, {{0, 0}}, {{1.05e-6, 0}},
-                                               {{1.05e-6, 10}}};
+    const Vec2 common{1.05e-6, 0};
+    const std::vector<PolylineVertex> expected{{{-10, 0}}, {{0, 0}}, {common}, {line.end}};
     for (const auto& candidate : {incoming, reversed}) {
         expectBoth(std::array<Entity, 2>{source, candidate}, false, expected);
         const std::array<Entity, 2> mixed{line, candidate};
@@ -104,17 +106,18 @@ TEST(Join, ClassifiesTheIncomingPiecesAtTheHeadAndAtClosure) {
         EXPECT_FALSE(joinToSource(mixed, kMillimetres));
     }
 
-    const std::array<Entity, 3> closed{
-        Polyline{{{{1.05e-6, 0}}, {{10, 0}}}}, Line{{10, 0}, {0, 10}},
-        Polyline{{{{0, 10}}, {{0, 0}, 10}, {{1e-7, 0}}}}};
+    const Polyline first{{{common}, {{10, 0}}}};
+    const Polyline last{{{{0, 10}}, {{0, 0}, 10}, {{1e-7, 0}}}};
+    const std::array<Entity, 3> closed{first, Line{{10, 0}, {0, 10}}, last};
     expectBoth(closed, true, {{{1.05e-6, 0}}, {{10, 0}}, {{0, 10}}, {{0, 0}}});
 
-    const std::array<Entity, 2> metres{
-        Polyline{{{{-0.01, 0}}, {{0, 0}, 10}, {{1e-10, 0}}}},
-        Line{{1.05e-9, 0}, {1.05e-9, 0.01}}};
+    const Polyline metresSource{{{{-0.01, 0}}, {{0, 0}, 10}, {{1e-10, 0}}}};
+    const Line metresLine{{1.05e-9, 0}, {1.05e-9, 0.01}};
+    const std::array<Entity, 2> metres{metresSource, metresLine};
     const ToleranceRule metreRule{6};
-    const std::vector<PolylineVertex> scaled{{{-0.01, 0}}, {{0, 0}}, {{1.05e-9, 0}},
-                                             {{1.05e-9, 0.01}}};
+    const Vec2 start = metresLine.start;
+    const Vec2 end = metresLine.end;
+    const std::vector<PolylineVertex> scaled{{{-0.01, 0}}, {{0, 0}}, {start}, {end}};
     expectPolyline(join(metres, metreRule), true, false, scaled);
     expectPolyline(joinToSource(metres, metreRule), true, false, scaled);
     EXPECT_FALSE(join(std::array<Entity, 2>{source, incoming}, metreRule));
@@ -123,8 +126,7 @@ TEST(Join, ClassifiesTheIncomingPiecesAtTheHeadAndAtClosure) {
 TEST(Join, ClassifiesAnArcAsItsIncomingSegment) {
     const Line line{{-1.85e-6, 0}, {-1.85e-6, -10}};
     const Arc arc{{0, 0}, 9.5e-7, 0, kPi};
-    const std::vector<PolylineVertex> expected{{{9.5e-7, 0}}, {{-1.85e-6, 0}},
-                                               {{-1.85e-6, -10}}};
+    const std::vector<PolylineVertex> expected{{{9.5e-7, 0}}, {line.start}, {line.end}};
     expectPolyline(join(std::array<Entity, 2>{arc, line}, kMillimetres), false, false, expected);
     expectBoth(std::array<Entity, 2>{Polyline{{{line.start}, {line.end}}}, arc}, false, expected);
 
@@ -215,7 +217,9 @@ TEST(Join, CoversArcsFromTheSourceAndDistinguishesCloseFromConversion) {
 TEST(Join, RoundsAnEqualResultAngleToACircleOnlyWhenSomethingJoins) {
     const Arc source{{0, 0}, 10, 6, std::nextafter(6.0, 0.0)};
     const std::array<Entity, 2> entities{source, Arc{{0, 0}, 10, 1, 2}};
-    for (const auto& result : {join(entities, kMillimetres), joinToSource(entities, kMillimetres)}) {
+    const auto interactive = join(entities, kMillimetres);
+    const auto scripted = joinToSource(entities, kMillimetres);
+    for (const auto& result : {interactive, scripted}) {
         if (!result) {
             ADD_FAILURE() << "the near-full arc did not join";
             continue;
