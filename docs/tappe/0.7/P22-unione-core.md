@@ -41,7 +41,10 @@
   suo estremo si sposti sul vertice comune (DECISIONI.md, 2026-11-04), con i
   casi in R22b (#493); 2026-11-04, decisioni del responsabile sulla revisione
   della #492: un ARC nella catena è il suo segmento (R492-1), e il pezzo
-  costruito si controlla (R492-2, ADR 0035, punto 23)
+  costruito si controlla (R492-2, ADR 0035, punto 23); 2026-11-04, con il
+  responsabile sul secondo verbale della #492: il pezzo di lunghezza zero si
+  toglie (R492-3, ADR 0036, punto 5), un ARC letto come giro intero non si
+  unisce (R492-4), e la fascia del segmento di un ARC
 - **Modulo:** `core` (più la domanda `join` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 17–20; [ADR 0036](../../adr/0036-tolleranze-di-tecnigrafo.md)
@@ -165,6 +168,22 @@ struct JoinResult {
   accettare o scartare l'entità è libero: è una fascia (ADR 0013 di
   solid-space, punto 4), come quella delle coincidenze sopra, e nessun
   riferimento la impone. Fuori dalla fascia l'esito è determinato.
+- **Un ARC che solid-space legge come giro intero** (R492-4 della #492,
+  2026-11-04) è un cerchio: per `curves.hpp` (`Arc`) lo è con
+  |ampiezza| ≥ `kFullTurn`, oppure con |ampiezza| ≥ `kThreeQuarterTurn` e
+  l'angolo esatto da D0 a D1 al più π / 2. Come un CIRCLE, non ha estremi
+  liberi e non si unisce, né nella catena né con gli archi del suo cerchio:
+  un'entità diversa dalla sorgente non entra in `consumed` e conta tra le
+  scartate del messaggio (P23); come sorgente il risultato è `std::nullopt`,
+  in `join` e in `joinToSource`. Per esempio, in millimetri: sorgente la
+  polilinea aperta [(10,10),(0.5403023058681398,0.8414709848078965)],
+  candidata l'arco di centro (0,0), raggio 1, da 1 rad al `double`
+  precedente a 1 (0.9999999999999999). L'ampiezza dell'ADR 0035, punto 1, è
+  (0.9999999999999999 − 1) + `kFullTurn`, che in `double` dà `kFullTurn`:
+  l'arco è un cerchio, anche se `endpoints()` dà due estremi vicini alla
+  fine della sorgente, e si scarta; il risultato è `std::nullopt`, in `join`
+  e in `joinToSource`. Lo stesso arco come sorgente, con la stessa
+  polilinea come candidata: `std::nullopt`.
 - **Quale forma** (B16): `join` fa una linea solo se la sorgente è una linea e
   ogni altra entità è una linea allineata alla sorgente, e un arco solo se la
   sorgente è un arco e ogni altra entità è un arco sul suo cerchio. In ogni
@@ -335,6 +354,24 @@ struct JoinResult {
       stessi bulge, il risultato degli esempi delle polilinee è lo stesso, con
       le coordinate divise per 1000 (freccia d'ingresso 5e-10, distanza
       9.5e-10); i dati in millimetri danno `none`, perché 9.5e-7 > 1e-9;
+  - **il pezzo di lunghezza zero si toglie** (R492-3 della #492, 2026-11-04;
+    ADR 0036, punto 5: Tecnigrafo non crea pezzi degeneri): quando lo
+    spostamento sul vertice comune fa di un segmento esattamente un punto
+    (inizio e fine uguali, qualunque sia il suo bulge), il segmento si toglie
+    con i suoi dati (bulge e larghezze), prima del controllo del punto
+    seguente; gli altri segmenti conservano i loro, e il vertice comune resta
+    una volta sola. Vale dalla fine e dall'inizio, e alla chiusura. Per
+    esempio, in millimetri: sorgente la polilinea aperta
+    [(−10,0),(0,0),(5e-7,0)], candidata la linea (0,0)→(0,10). Gli estremi
+    (5e-7,0) e (0,0) coincidono e il vertice comune è (0,0), il punto della
+    linea: il secondo segmento della sorgente diventa (0,0)→(0,0) e si toglie,
+    e la sorgente diventa `LWPOLYLINE closed=no vertex=-10,0 vertex=0,0
+    vertex=0,10`, in `join` e in `joinToSource`. Se il primo segmento ha
+    larghezza 1 e quello tolto larghezza 3, nel risultato il primo segmento ha
+    larghezza 1 e quello della linea 0. Dall'inizio: sorgente la polilinea
+    aperta [(0,0),(0,10)], candidata la polilinea aperta
+    [(−10,0),(0,0),(5e-7,0)], che si aggiunge com'è; il suo ultimo segmento
+    diventa (0,0)→(0,0) e si toglie: lo stesso risultato;
   - **il pezzo costruito si controlla** (R492-2 della #492, 2026-11-04; ADR
     0035, punto 23, come per R480-1): ogni segmento della polilinea, con i suoi
     vertici dopo lo spostamento sul vertice comune e il bulge deciso sopra, si
@@ -427,6 +464,10 @@ struct JoinResult {
   polilinee in metri; il pezzo costruito oltre `kMaxCoordinate`. In più lo
   stesso esempio dalla fine con un bulge curvo già in ingresso (per esempio
   100: freccia 5e-6), che resta 100.
+- Il pezzo di lunghezza zero (R492-3 della #492): gli esempi sopra, dalla fine
+  (anche con le larghezze 1 e 3) e dall'inizio, in `join` e in `joinToSource`.
+- L'ARC letto come giro intero (R492-4 della #492): l'esempio sopra, con
+  l'arco come candidata e come sorgente, in `join` e in `joinToSource`.
 - La fascia del segmento di un ARC (punto 10 del secondo verbale della #492),
   in millimetri: sorgente l'arco di centro (0,0), raggio 1e-6, da 0 a π
   (freccia d'ingresso circa 1e-6, cioè epsilon), candidata la linea

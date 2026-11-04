@@ -886,6 +886,12 @@ i rimandi ai documenti che cambia.
     controlla; se solid-space lo rifiuta, la candidata non si unisce e conta
     tra le scartate (con una diagnosi sulla sorgente, `std::nullopt`), come
     per R480-1.
+  - **R492-3 e R492-4** ([decisione del responsabile](https://github.com/Matleyx78/tecnigrafo/pull/492#issuecomment-6630178016),
+    applicazioni di regole che esistono): il pezzo che lo spostamento sul
+    vertice comune riduce esattamente a un punto si toglie con i suoi dati, e
+    gli altri conservano i loro (ADR 0036, punto 5; scelta C); un ARC che
+    solid-space legge come giro intero è un cerchio, non ha estremi liberi e
+    non si unisce, come un CIRCLE (scelta A);
   - **fascia del segmento di un ARC** (punto 10 del secondo verbale, non
     bloccante, senza decisione del responsabile; guida, «La fascia di una
     soglia»): quando costruzioni lecite degli estremi e del bulge danno frecce
