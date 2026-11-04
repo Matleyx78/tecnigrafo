@@ -9,17 +9,16 @@
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
 - **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19 e il pacchetto
-  0.2-P22 di solid-space (parte di ciascuna curva tenuta dal raccordo, nel
-  [piano 0.2](https://github.com/Matleyx78/solid-space/blob/main/docs/tappe/0.2-geometria-del-piano.md)),
-  che realizza la correzione del contratto di `fillet` per B2 della #367:
-  issue `contratto` Matleyx78/solid-space#184, scritta nel contratto dalla
-  Matleyx78/solid-space#185. Prima di riprendere P19, la #367 deve indicare il
-  commit di solid-space che contiene 0.2-P22. La richiesta
-  Matleyx78/solid-space#21 è diventata i pacchetti di solid-space che
-  realizzano `tangency.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P20
-  (Matleyx78/solid-space#145, dominio delle tangenze, riferimenti
-  Matleyx78/solid-space#146): gli altri (0.2-P15 e 0.2-P16,
-  Matleyx78/solid-space#66 e #70) sono già uniti
+  0.2-P22 di solid-space ([scheda](https://github.com/Matleyx78/solid-space/blob/main/docs/tappe/0.2/P22-parte-tenuta-raccordo.md),
+  parte di ciascuna curva tenuta dal raccordo, issue da aprire), che realizza
+  la correzione del contratto di `fillet` per B2 della #367: issue
+  `contratto` Matleyx78/solid-space#184, scritta nel contratto dalla
+  Matleyx78/solid-space#185. La richiesta Matleyx78/solid-space#21 è
+  diventata i pacchetti di solid-space che realizzano `tangency.hpp` (ADR
+  0030, punto 13); si citano 0.2-P20 (Matleyx78/solid-space#145, dominio
+  delle tangenze, riferimenti Matleyx78/solid-space#146) e l'ultimo, 0.2-P22:
+  gli altri (0.2-P15 e 0.2-P16, Matleyx78/solid-space#66 e #70) sono già
+  uniti
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B1, B2, B6, B7, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
   2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
@@ -52,9 +51,9 @@ punto 4): la scheda li cita e non li ripete.
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che chiude Matleyx78/solid-space#145, l'ultimo
-  pacchetto di solid-space che realizza `tangency.hpp`. Se la issue non lo
-  dice, chiedilo e non cominciare.
+  sottomodulo: quello che unisce 0.2-P22, l'ultimo pacchetto di solid-space
+  che realizza `tangency.hpp` (dopo Matleyx78/solid-space#145). Se la issue
+  non lo dice, chiedilo e non cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 
@@ -164,7 +163,7 @@ struct TangentCircleResult {
 - **Dalle entità alle curve** con la traduzione di P14; per una polilinea, il
   segmento più vicino al punto indicato (`nearestPosition`).
 - **Il raccordo** viene da `fillet` di solid-space, con le sue regole
-  (`tangency.hpp`, regole 1–4). Gli esiti `none`, `infinitelyMany` e
+  (`tangency.hpp`, regole 1–5). Gli esiti `none`, `infinitelyMany` e
   `ambiguousPick` danno l'esito omonimo.
 - **Oltre il dominio** (ADR 0035, punti 13 e 14): `fillet` e
   `tangentCircleNear` danno la diagnosi `outOfDomain` sul raggio (dato 2) per
