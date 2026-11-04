@@ -897,3 +897,9 @@ i rimandi ai documenti che cambia.
     soglia»): quando costruzioni lecite degli estremi e del bulge danno frecce
     dai due lati di epsilon, l'esito di `isStraight` è libero e
     deterministico, e nessun riferimento lo impone.
+
+- **2026-11-04 — Procedura «SITUAZIONE GENERALE».** Quando il responsabile
+  scrive «SITUAZIONE GENERALE», l'agente segue la
+  [procedura](agenti/situazione-generale.md) e consulta in sola lettura
+  Tecnigrafo e solid-space. Il riepilogo indica lo stato dei lavori, che cosa
+  li blocca e quali azioni del responsabile possono sbloccarli.
