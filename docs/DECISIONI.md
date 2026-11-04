@@ -912,6 +912,7 @@ i rimandi ai documenti che cambia.
   [Matleyx78/solid-space#185](https://github.com/Matleyx78/solid-space/pull/185) la scrive nel contratto: le
   regole sono nel commento di `fillet` in `tangency.hpp` (regola 5, `KeptPart`,
   `Fillet::keepFirst` e `Fillet::keepSecond`) e qui non si ripetono. P19
-  dipende dal pacchetto 0.2-P22 di solid-space, che le realizza. Cambiano la
-  scheda [P19](tappe/0.7/P19-raccordi-core.md) e il piano della
-  [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+  dipende da [Matleyx78/solid-space#190](https://github.com/Matleyx78/solid-space/issues/190)
+  (0.2-P22), che le realizza, con i riferimenti Matleyx78/solid-space#189
+  (0.2-R22). Cambiano la scheda [P19](tappe/0.7/P19-raccordi-core.md) e il
+  piano della [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".

@@ -8,17 +8,18 @@
 - **Riferimenti:** issue `[0.7-R19]` (#…), agente gemini: la facciata (scelta
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
-- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19 e il pacchetto
-  0.2-P22 di solid-space ([scheda](https://github.com/Matleyx78/solid-space/blob/main/docs/tappe/0.2/P22-parte-tenuta-raccordo.md),
-  parte di ciascuna curva tenuta dal raccordo, issue da aprire), che realizza
-  la correzione del contratto di `fillet` per B2 della #367: issue
-  `contratto` Matleyx78/solid-space#184, scritta nel contratto dalla
-  Matleyx78/solid-space#185. La richiesta Matleyx78/solid-space#21 è
+- **Dipende da:** P15, Matleyx78/solid-space#145,
+  Matleyx78/solid-space#190, P25, R19. Matleyx78/solid-space#190 è 0.2-P22
+  di solid-space ([scheda](https://github.com/Matleyx78/solid-space/blob/main/docs/tappe/0.2/P22-parte-tenuta-raccordo.md), parte di
+  ciascuna curva tenuta dal raccordo, riferimenti Matleyx78/solid-space#189,
+  0.2-R22): realizza la correzione del contratto di `fillet` per B2 della
+  #367, issue `contratto` Matleyx78/solid-space#184, scritta nel contratto
+  dalla Matleyx78/solid-space#185. La richiesta Matleyx78/solid-space#21 è
   diventata i pacchetti di solid-space che realizzano `tangency.hpp` (ADR
   0030, punto 13); si citano 0.2-P20 (Matleyx78/solid-space#145, dominio
-  delle tangenze, riferimenti Matleyx78/solid-space#146) e l'ultimo, 0.2-P22:
-  gli altri (0.2-P15 e 0.2-P16, Matleyx78/solid-space#66 e #70) sono già
-  uniti
+  delle tangenze, riferimenti Matleyx78/solid-space#146) e l'ultimo, 0.2-P22
+  (Matleyx78/solid-space#190): gli altri (0.2-P15 e 0.2-P16,
+  Matleyx78/solid-space#66 e #70) sono già uniti
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sulla #359 e sui
   buchi B1, B2, B6, B7, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
   2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
@@ -51,9 +52,10 @@ punto 4): la scheda li cita e non li ripete.
 ## Prima di cominciare
 
 - La issue dice a quale commit di `main` di solid-space spostare il
-  sottomodulo: quello che unisce 0.2-P22, l'ultimo pacchetto di solid-space
-  che realizza `tangency.hpp` (dopo Matleyx78/solid-space#145). Se la issue
-  non lo dice, chiedilo e non cominciare.
+  sottomodulo: quello che chiude Matleyx78/solid-space#190 (0.2-P22), l'ultimo
+  pacchetto di solid-space che realizza `tangency.hpp` (dopo
+  Matleyx78/solid-space#145). Se la issue non lo dice, chiedilo e non
+  cominciare.
 - Se qualcosa che serve qui manca dal contratto o non si comporta come dichiara,
   **fermati** come dice AGENTS.md ("Se serve qualcosa a solid-space").
 
