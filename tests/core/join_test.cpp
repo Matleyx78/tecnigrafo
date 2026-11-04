@@ -158,9 +158,9 @@ TEST(Join, DropsCollapsedPiecesWithTheirWidthsAtEitherEnd) {
 }
 
 TEST(Join, RejectsAnAttachmentThatMovesTheBulgeOutsideTheDomain) {
-    constexpr double y = kDomain - 3000;
-    const Polyline source{{{{-10000, y}}, {{0, y}, -8192}, {{0.5, y}}}};
-    const std::array<Entity, 2> entities{source, Line{{1, y}, {1, y - 10000}}};
+    constexpr double kY = kDomain - 3000;
+    const Polyline source{{{{-10000, kY}}, {{0, kY}, -8192}, {{0.5, kY}}}};
+    const std::array<Entity, 2> entities{source, Line{{1, kY}, {1, kY - 10000}}};
     EXPECT_FALSE(join(entities, kMillimetres));
     EXPECT_FALSE(joinToSource(entities, kMillimetres));
 }
