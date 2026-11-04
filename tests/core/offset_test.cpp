@@ -293,9 +293,16 @@ TEST(Offset, RectangleAndLAtCoordinatesOf1e6) {
                    false, kBuilt1e6);
 }
 
-TEST(Offset, OpenPolylineWithAnArc) {
+TEST(Offset, OpenPolylineWithAnArcAtACorner) {
+    // The counter-clockwise half circle from (10,0) to (20,0) passes below
+    // the line, so (10,0) is a sharp corner. Moved to the left by 2, the line
+    // is y = 2 and the arc keeps its centre (15,0) with radius 3: they meet
+    // at (15 - sqrt(5), 2), the one nearer to (10,0) (step 2 of
+    // offsetPolyline). The arc reaches it extending backwards by asin(2/3).
     const Polyline open = polyline({{0, 0}, {10, 0, 1}, {20, 0}});
-    expectPolyline(offset(open, 2, {5, 5}), {{0, 2}, {10, 2, 1}, {20, 2}}, false);
+    const double bulge = std::tan((std::numbers::pi + std::asin(2.0 / 3.0)) / 4.0);
+    expectPolyline(offset(open, 2, {5, 5}), {{0, 2}, {15 - std::sqrt(5.0), 2, bulge}, {18, 0}},
+                   false);
 }
 
 TEST(Offset, ClockwiseArcSegmentInsideIsOnTheRight) {
