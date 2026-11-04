@@ -496,6 +496,7 @@ QuestionResult askIntersections(const QuestionModel& model, Arguments arguments)
 QuestionResult askSelfIntersections(const QuestionModel& model, Arguments arguments);
 QuestionResult askSide(const QuestionModel& model, Arguments arguments);
 QuestionResult askCoincident(const QuestionModel& model, Arguments arguments);
+QuestionResult askJoin(const QuestionModel& model, Arguments arguments);
 QuestionResult askDegenerate(const QuestionModel& model, Arguments arguments);
 
 // Defined in file_questions.cpp.
@@ -580,7 +581,7 @@ constexpr std::array kQuestions{
     QuestionRow{"tangents", AnswerShape::Items, nullptr},                          // P19
     QuestionRow{"circle-ttr", AnswerShape::Single, nullptr},                       // P19
     QuestionRow{"chamfer", AnswerShape::Single, nullptr},                          // P21
-    QuestionRow{"join", AnswerShape::Single, nullptr},                             // P22
+    QuestionRow{"join", AnswerShape::Single, &askJoin},                            // P22
 };
 
 }  // namespace

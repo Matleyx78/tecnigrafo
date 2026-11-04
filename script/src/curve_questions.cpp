@@ -8,9 +8,11 @@
 #include "question_table.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/intersections.hpp"
+#include "tg/core/join.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/tolerance.hpp"
 #include "tg/script/number_format.hpp"
+#include "tg/script/report.hpp"
 
 #include <array>
 #include <cmath>
@@ -20,6 +22,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 namespace tg::script::detail {
 namespace {
@@ -306,6 +309,54 @@ QuestionResult askDegenerate(const QuestionModel& model, Arguments arguments) {
     }
     return yesNo(
         core::isDegenerate(polyline->segment(static_cast<std::size_t>(*index)), tolerance));
+}
+
+QuestionResult askJoin(const QuestionModel& model, Arguments arguments) {
+    constexpr std::string_view kForm = "join <A> <B> … [circle=no] [units=<n>]";
+    std::size_t count = 0;
+    while (count < arguments.size() && arguments[count].find('=') == std::string_view::npos) {
+        ++count;
+    }
+    if (count < 2) {
+        return ArgumentError{"wrong arguments, expected: " + std::string{kForm}};
+    }
+    const auto options = keyed(arguments.subspan(count), {"circle", "units"});
+    if (const auto* error = std::get_if<ArgumentError>(&options)) {
+        return *error;
+    }
+    const auto& [circle, units] = std::get<0>(options);
+    if (circle && *circle != "no") {
+        return ArgumentError{"circle only accepts no"};
+    }
+    const auto rule = units ? unitsArgument(*units)
+                            : Parsed<core::ToleranceRule>{core::ToleranceRule{kDefaultUnits}};
+    if (const auto* error = std::get_if<ArgumentError>(&rule)) {
+        return *error;
+    }
+    std::vector<core::Entity> entities;
+    entities.reserve(count);
+    for (const auto name : arguments.first(count)) {
+        const auto entity = entityNamed(model, name);
+        if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+            return *error;
+        }
+        entities.push_back(*std::get<const core::Entity*>(entity));
+    }
+    const auto result = core::join(entities, std::get<core::ToleranceRule>(rule));
+    if (!result || (result->formsCircle && circle)) {
+        return std::string{"none"};
+    }
+    if (result->source) {
+        std::string answer = std::string{arguments.front()} + " ";
+        writeEntity(*result->source, answer);
+        return answer;
+    }
+    if (result->created) {
+        std::string answer = "new ";
+        writeEntity(*result->created, answer);
+        return answer;
+    }
+    return std::string{"none"};
 }
 
 }  // namespace tg::script::detail
