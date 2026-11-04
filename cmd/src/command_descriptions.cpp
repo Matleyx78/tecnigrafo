@@ -11,6 +11,7 @@
 #include "tg/cmd/commands/move_copy_commands.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
+#include "tg/cmd/commands/trim_extend_commands.hpp"
 
 namespace tg::cmd::detail {
 namespace {
@@ -537,6 +538,51 @@ CommandDescription ScaleCommand::description(Variable variable) {
             "Sets the linetype scale factor of new objects.",
             false,
             {{"scale", "Enter new value for CELTSCALE <{default}>:", ValueType::Real, {}, true}}};
+}
+
+CommandDescription TrimExtendCommand::description(Action action) {
+    const bool trim = action == Action::Trim;
+    // The prompts of both modes and of the script sequence (docs/adr/0032,
+    // point 9): standard mode asks for the edges first.
+    return {trim ? "TRIM" : "EXTEND",
+            {trim ? "TR" : "EX"},
+            trim ? "Trims objects at the edges they meet, or extends them with Shift."
+                 : "Extends objects to the edges they meet, or trims them with Shift.",
+            false,
+            {{"edges",
+              "Select objects or [mOde] <select all>:",
+              ValueType::Selection,
+              {{"mOde", "O"}},
+              true},
+             {"object",
+              trim ? "Select object to trim or shift-select to extend or [mOde]:"
+                   : "Select object to extend or shift-select to trim or [mOde]:",
+              ValueType::Object,
+              {{"mOde", "O"}},
+              true},
+             {"next-object",
+              trim ? "Select object to trim or shift-select to extend or [mOde/Undo]:"
+                   : "Select object to extend or shift-select to trim or [mOde/Undo]:",
+              ValueType::Object,
+              {{"mOde", "O"}, {"Undo", "U"}},
+              true},
+             {"mode",
+              "Enter a trim mode option [Quick/Standard] <{default}>:",
+              ValueType::Keyword,
+              {{"Quick", "Q"}, {"Standard", "S"}},
+              true}}};
+}
+
+CommandDescription TrimextendmodeCommand::description() {
+    return {"TRIMEXTENDMODE",
+            {},
+            "Sets whether TRIM and EXTEND start in quick mode (1) or standard mode (0).",
+            false,
+            {{"value",
+              "Enter new value for TRIMEXTENDMODE <{default}>:",
+              ValueType::Integer,
+              {},
+              true}}};
 }
 
 }  // namespace tg::cmd

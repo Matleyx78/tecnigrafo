@@ -20,6 +20,7 @@
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
+#include "tg/cmd/commands/trim_extend_commands.hpp"
 
 #include <memory>
 
@@ -40,6 +41,9 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(CopyCommand::description(), [] { return std::make_unique<CopyCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(ExplodeCommand::description(), [] { return std::make_unique<ExplodeCommand>(); });
+    registry.add(TrimExtendCommand::description(TrimExtendCommand::Action::Extend), [] {
+        return std::make_unique<TrimExtendCommand>(TrimExtendCommand::Action::Extend);
+    });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });
     registry.add(ScaleCommand::description(ScaleCommand::Variable::Global),
@@ -63,6 +67,11 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(ScaleObjectsCommand::description(),
                  [] { return std::make_unique<ScaleObjectsCommand>(); });
     registry.add(detail::textDescription(), [] { return std::make_unique<TextCommand>(); });
+    registry.add(TrimExtendCommand::description(TrimExtendCommand::Action::Trim), [] {
+        return std::make_unique<TrimExtendCommand>(TrimExtendCommand::Action::Trim);
+    });
+    registry.add(TrimextendmodeCommand::description(),
+                 [] { return std::make_unique<TrimextendmodeCommand>(); });
 }
 
 }  // namespace tg::cmd
