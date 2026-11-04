@@ -1,0 +1,2 @@
+# 0.7-R22b: vertice comune dell'unione (#373)
+join/vertice-comune #373

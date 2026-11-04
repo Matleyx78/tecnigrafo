@@ -130,3 +130,4 @@ Vale ogni riga che corrisponde.
 | leggi, cloni o commenti un repository diverso da `Matleyx78/tecnigrafo` | [altro-repository.md](docs/agenti/altro-repository.md) |
 | lanci `scripts/controlla.sh`, `cmake` o `ctest`; `scripts/ci-attendi.sh` non esce con 0 | [comandi.md](docs/agenti/comandi.md) |
 | ramo `docs/chiusura-X.Y`, o il messaggio chiede la chiusura della tappa | [chiusura.md](docs/agenti/chiusura.md) |
+| il messaggio del responsabile è «SITUAZIONE GENERALE» | [situazione-generale.md](docs/agenti/situazione-generale.md) |
