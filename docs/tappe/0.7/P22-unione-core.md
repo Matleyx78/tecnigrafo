@@ -87,7 +87,6 @@ commit del sottomodulo lo scrive la issue di P22.
 - `tests/core/join_test.cpp` (nuovo), `tests/CMakeLists.txt`
 - `tests/verifica/in-attesa/0.7-R22.txt` e `tests/verifica/in-attesa/0.7-R22b.txt`
   (da cancellare)
-- `tests/verifica/in-attesa/0.7-R22.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -282,7 +281,14 @@ struct JoinResult {
     2026-11-04): gli estremi che dà `endpoints()` (B13) e il bulge
     `tan(ampiezza / 4)`, con l'ampiezza dell'ADR 0035, punto 1, positivo nel
     verso dell'arco e negativo se l'arco si gira; `isStraight` decide su quel
-    segmento con la stessa regola dei segmenti di polilinea.
+    segmento con la stessa regola dei segmenti di polilinea. Gli estremi
+    dell'arco sono costruiti, ciascuno entro il suo errore
+    (`kRelativePointError` di `curves.hpp`, sulla sua grandezza), e il bulge
+    è calcolato in `double`: quando due costruzioni lecite del segmento danno
+    frecce dai due lati di epsilon, l'esito di `isStraight` è libero e
+    deterministico. È una fascia (ADR 0013 di solid-space, punto 4; punto 10
+    del secondo verbale della #492, non bloccante), come quella degli estremi
+    degli archi di B13, e nessun riferimento la impone.
     Alla chiusura l'entità che segue l'ultima è la prima, quindi il vertice
     comune è il primo vertice della catena, e si sposta la fine dell'ultimo
     segmento. Per esempio, in millimetri (epsilon 1e-6):
@@ -421,6 +427,13 @@ struct JoinResult {
   polilinee in metri; il pezzo costruito oltre `kMaxCoordinate`. In più lo
   stesso esempio dalla fine con un bulge curvo già in ingresso (per esempio
   100: freccia 5e-6), che resta 100.
+- La fascia del segmento di un ARC (punto 10 del secondo verbale della #492),
+  in millimetri: sorgente l'arco di centro (0,0), raggio 1e-6, da 0 a π
+  (freccia d'ingresso circa 1e-6, cioè epsilon), candidata la linea
+  (−1.9e-6,0)→(−1.9e-6,−10), che coincide con la fine dell'arco (distanza
+  9e-7). Il test accetta la polilinea con il primo bulge 0 o con quello
+  dell'arco, e controlla che due chiamate con gli stessi dati diano lo stesso
+  risultato.
 - Gli archi (B11 rivista): i quattro esempi sopra, in `join` e in
   `joinToSource`; un arco che arriva al giro intero partendo prima dell'inizio
   della sorgente; archi con spazi in mezzo e in ordine sparso (stesso

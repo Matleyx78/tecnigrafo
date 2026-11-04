@@ -886,3 +886,8 @@ i rimandi ai documenti che cambia.
     controlla; se solid-space lo rifiuta, la candidata non si unisce e conta
     tra le scartate (con una diagnosi sulla sorgente, `std::nullopt`), come
     per R480-1.
+  - **fascia del segmento di un ARC** (punto 10 del secondo verbale, non
+    bloccante, senza decisione del responsabile; guida, «La fascia di una
+    soglia»): quando costruzioni lecite degli estremi e del bulge danno frecce
+    dai due lati di epsilon, l'esito di `isStraight` è libero e
+    deterministico, e nessun riferimento lo impone.
