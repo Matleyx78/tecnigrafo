@@ -36,7 +36,7 @@ A1 = ARC center=100,0 radius=10 start-angle=0 end-angle=180
 ; verso l'interno (a sinistra): raggio 10 - 4 = 6, stessi angoli
 ? offset A1 4 100,5 -> ARC center=100,0 radius=6 start-angle=0 end-angle=180
 ; verso l'esterno (a destra): raggio 10 + 4 = 14, stessi angoli
-? offset A1 4 100,-5 -> ARC center=100,0 radius=14 start-angle=0 end-angle=180
+? offset A1 4 100,15 -> ARC center=100,0 radius=14 start-angle=0 end-angle=180
 ; distanza pari al raggio verso l'interno: scompare
 ? offset A1 10 100,5 -> vanished
 ; punto esattamente sull'arco

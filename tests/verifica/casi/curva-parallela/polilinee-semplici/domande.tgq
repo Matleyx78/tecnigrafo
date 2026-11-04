@@ -1,7 +1,7 @@
 ; Curva parallela: polilinee semplici aperte e chiuse con archi e larghezze
 ; [0.7-R17] #362, lavoro [0.7-P17] #363: domanda `offset`
 ; (docs/verifica/domande.md, "Curva parallela"; ADR 0035, punti 10-12; solid-space ADR 0012).
-; Valori attesi conformi all'archivio dei casi di solid-space (parallela-polilinea-autocad-caso-*,
+; Valori attesi per rettangolo e asola dall'archivio dei casi di solid-space (parallela-polilinea-autocad-caso-*,
 ; commit 336b4286ed721ae71eefcfaafe7527f4c4beeb3b).
 
 ; --- Rettangolo chiuso (caso d di autocad-offset.dxf, richiesta #22 caso 1) ---
@@ -30,8 +30,9 @@ P_L = LWPOLYLINE vertex=0,0 vertex=10,0 vertex=10,10
 ; --- Polilinea aperta con arco ---
 ; segmento (0,0)-(10,0) seguito da semicerchio bulge=1 fino a (20,0)
 P_ARC = LWPOLYLINE vertex=0,0 vertex=10,0 bulge=1 vertex=20,0
-; verso l'alto (a sinistra del primo segmento) d=2
-? offset P_ARC 2 5,5 -> LWPOLYLINE closed=no vertex=0,2 vertex=10,2 bulge=1 vertex=20,2
+; Positive offset: y=2 meets the circle of radius 3 at x=15-sqrt(5), nearest (10,0).
+; The CCW arc extends backward by asin(2/3), so its bulge is tan((pi+asin(2/3))/4).
+? offset P_ARC 2 5,5 -> LWPOLYLINE closed=no vertex=0,2 vertex=12.7639320225002,2 bulge=1.452432280569375 vertex=18,0
 
 ; --- Conservazione delle larghezze (ADR 0035, punto 11) ---
 ; larghezza costante

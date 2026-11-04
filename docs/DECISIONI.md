@@ -928,6 +928,23 @@ i rimandi ai documenti che cambia.
   (0,20), raggio 10. Cambiano le schede P19 e [P20](tappe/0.7/P20-fillet.md)
   e la tabella dei messaggi di [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md).
 
+- **2026-11-04 — Che cosa blocca una revisione
+  ([#489](https://github.com/Matleyx78/tecnigrafo/issues/489)).** Il revisore
+  serve a portare il lavoro al merge, non a fermarlo: blocca solo un errore
+  vero o una regola persa. Se una regola esistente risponde, la applica e va
+  avanti; i dubbi di forma li scrive come non bloccanti. Prima di dichiarare un
+  buco controlla se una regola esistente lo decide già (dati fuori dal dominio,
+  [ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punto 23; pezzi
+  degeneri, [ADR 0036](adr/0036-tolleranze-di-tecnigrafo.md), punto 5; fasce,
+  ADR 0013 di solid-space, punto 4): se sì, lo scrive come applicazione di
+  quella regola e non blocca il merge; con queste regole si trattano anche i
+  dati privi di senso pratico (lunghezze sotto la tolleranza, ampiezze di un
+  ulp). Una garanzia del contratto si verifica con i test, non con
+  dimostrazioni matematiche: il revisore che teme un ramo non coperto chiede un
+  test che lo raggiunga, non un lemma. La decisione toglie un blocco vero, che
+  fermava P19 (#367); la stessa regola vale in solid-space. Cambia
+  [agenti/revisione.md](agenti/revisione.md), "Che cosa blocca una revisione".
+
 - **2026-11-04 — Prova di Copilot su una issue.** Il responsabile assegna a
   Copilot (cloud agent di GitHub Copilot Pro) una issue facile o media, per
   misurare quanti crediti IA consuma. È una prova, non cambia "Chi fa cosa" di
