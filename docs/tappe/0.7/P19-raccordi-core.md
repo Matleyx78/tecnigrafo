@@ -8,11 +8,13 @@
 - **Riferimenti:** issue `[0.7-R19]` (#…), agente gemini: la facciata (scelta
   dei segmenti, entità che risultano, esiti, snap); i valori geometrici
   dall'archivio dei casi di solid-space
-- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19 e dalla correzione
-  del contratto di `fillet` in solid-space (B2 della #367, issue `contratto`
-  da aprire). Prima di riprendere P19, la #367 deve indicare il commit di
-  solid-space che contiene il contratto corretto e la sua implementazione.
-  La richiesta
+- **Dipende da:** P15, Matleyx78/solid-space#145, P25, R19 e il pacchetto
+  0.2-P22 di solid-space (parte di ciascuna curva tenuta dal raccordo, nel
+  [piano 0.2](https://github.com/Matleyx78/solid-space/blob/main/docs/tappe/0.2-geometria-del-piano.md)),
+  che realizza la correzione del contratto di `fillet` per B2 della #367:
+  issue `contratto` Matleyx78/solid-space#184, scritta nel contratto dalla
+  Matleyx78/solid-space#185. Prima di riprendere P19, la #367 deve indicare il
+  commit di solid-space che contiene 0.2-P22. La richiesta
   Matleyx78/solid-space#21 è diventata i pacchetti di solid-space che
   realizzano `tangency.hpp` (ADR 0030, punto 13); si cita l'ultimo, 0.2-P20
   (Matleyx78/solid-space#145, dominio delle tangenze, riferimenti
@@ -180,10 +182,12 @@ struct TangentCircleResult {
 
   Vale per `fillet`, `filletSegments` e `circleTangentTangentRadius`.
 - **Le entità che risultano:** con *Trim*, per ciascuna curva aperta la
-  facciata usa la parte o l'estremo indicato da `fillet` (B2 della #367).
-  Con un arco di raccordo non degenere si conserva il ramo che prosegue
-  l'arco nel punto di tangenza. La regola per lo spigolo, anche con raggio
-  zero o raccordo degenere, spetta al contratto di solid-space.
+  facciata tiene la parte che `fillet` indica in `Fillet::keepFirst` e
+  `Fillet::keepSecond` (`KeptPart`), senza decisioni geometriche sue (B2 della
+  #367). Le regole, anche per il punto di tangenza fuori dalla curva, lo
+  spigolo con raggio zero, le tangenze coincidenti e `radiusTooLarge`, sono
+  quelle del commento di `fillet` in `tangency.hpp` (regola 5), decise dalla
+  Matleyx78/solid-space#184 e dalla #185: qui non si ripetono.
   - Per accorciare si usa `partOf` sul ramo indicato, con
     `PartCourse::Direct` (P15, decisione della #359). Per prolungare si usa
     `extendTo` sull'estremo indicato. La `Location` localizza il contatto

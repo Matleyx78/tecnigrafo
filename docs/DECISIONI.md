@@ -906,8 +906,12 @@ i rimandi ai documenti che cambia.
 
 - **2026-11-04 — P19: parte conservata dal raccordo (B2 della
   [#367](https://github.com/Matleyx78/tecnigrafo/issues/367)).**
-  Con *Trim* attivo Solid Space indica, per ciascuna curva aperta, il ramo
-  da tenere o l'estremo da prolungare. Con un raccordo non degenere si
-  conserva il ramo che prosegue l'arco nel punto di tangenza. Il contratto
-  deve fissare anche la scelta allo spigolo per il raggio zero e il raccordo
-  degenere. P19 aspetta il contratto corretto e la sua implementazione.
+  Con *Trim* attivo solid-space indica, per ciascuna curva aperta, la parte
+  da tenere o l'estremo da prolungare. La issue `contratto`
+  [Matleyx78/solid-space#184](https://github.com/Matleyx78/solid-space/issues/184) è decisa e la
+  [Matleyx78/solid-space#185](https://github.com/Matleyx78/solid-space/pull/185) la scrive nel contratto: le
+  regole sono nel commento di `fillet` in `tangency.hpp` (regola 5, `KeptPart`,
+  `Fillet::keepFirst` e `Fillet::keepSecond`) e qui non si ripetono. P19
+  dipende dal pacchetto 0.2-P22 di solid-space, che le realizza. Cambiano la
+  scheda [P19](tappe/0.7/P19-raccordi-core.md) e il piano della
+  [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
