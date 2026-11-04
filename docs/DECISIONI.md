@@ -944,3 +944,12 @@ i rimandi ai documenti che cambia.
   test che lo raggiunga, non un lemma. La decisione toglie un blocco vero, che
   fermava P19 (#367); la stessa regola vale in solid-space. Cambia
   [agenti/revisione.md](agenti/revisione.md), "Che cosa blocca una revisione".
+
+- **2026-11-04 — Prova di Copilot su una issue.** Il responsabile assegna a
+  Copilot (cloud agent di GitHub Copilot Pro) una issue facile o media, per
+  misurare quanti crediti IA consuma. È una prova, non cambia "Chi fa cosa" di
+  [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md) né la decisione del
+  2026-10-31: se Copilot entrerà nel piano, lo si decide alla chiusura della
+  tappa. Il suo ambiente è in `.github/workflows/copilot-setup-steps.yml`; le
+  differenze dal nucleo (presa in carico, CI, `Assisted-by`) sono in
+  `.github/copilot-instructions.md`.
