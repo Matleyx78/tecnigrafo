@@ -73,6 +73,9 @@ struct CommandDefaults {
     /// TRIMEXTENDMODE: 1 (quick) at start-up, or 0 (standard); the mode
     /// TRIM and EXTEND start in (docs/adr/0035, point 3).
     int trimExtendMode{1};
+    std::optional<double> offsetDistance = std::nullopt;  ///< none means Through
+    bool offsetEraseSource{false};
+    bool offsetCurrentLayer{false};  ///< false means Source
 };
 
 /// What a command works with. The runner keeps one context for its whole
