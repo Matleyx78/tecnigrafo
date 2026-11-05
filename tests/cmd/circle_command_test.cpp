@@ -139,6 +139,33 @@ TEST_F(CircleCommandTest, EscapeAtEveryPromptPreservesRedo) {
     }
 }
 
+TEST_F(CircleCommandTest, TangentCircleUsesTwoPicksAndTheLastRadius) {
+    inputs({"LINE", "0,0", "40,0", "", "LINE", "0,0", "0,40", ""});
+    inputs({"CIRCLE", "Ttr", "10,0", "0,10", "8"});
+    ASSERT_EQ(document().entityCount(), 3U);
+    EXPECT_EQ(circle(), (core::Circle{{8, 8}, 8}));
+    EXPECT_EQ(editor().undoName(), "Circle");
+
+    inputs({"CIRCLE", "T", "20,0", "0,20"});
+    EXPECT_EQ(runner().promptText(), "Specify radius of circle <8.0000>:");
+    inputs({""});
+    ASSERT_EQ(document().entityCount(), 4U);
+    EXPECT_EQ(circle(), (core::Circle{{8, 8}, 8}));
+}
+
+TEST_F(CircleCommandTest, TangentCircleDistinguishesBeyondDomainFromNoSolution) {
+    inputs({"LINE", "0,0", "1,0", "", "LINE", "0,1", "1,1.0000000000000002", ""});
+    runner().setPixelSize(0.01);
+    inputs({"CIRCLE", "T", "0.5,0", "0.5,1", "1"});
+    EXPECT_EQ(messages().back(), "Result is beyond the drawing limits.");
+    EXPECT_FALSE(runner().isActive());
+    inputs({"CIRCLE", "T", "0.5,0", "0.5,1", "2e15"});
+    EXPECT_EQ(messages().back(), "Circle does not exist.");
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().entityCount(), 2U);
+    EXPECT_EQ(editor().undoNames().size(), 2U);
+}
+
 TEST(CircleCommandPreview, GeometryAndBasePointsFollowEachConstruction) {
     core::Document document;
     edit::Editor editor(document);

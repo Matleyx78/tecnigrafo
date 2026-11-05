@@ -76,6 +76,8 @@ struct CommandDefaults {
     std::optional<double> offsetDistance = std::nullopt;  ///< none means Through
     bool offsetEraseSource{false};
     bool offsetCurrentLayer{false};  ///< false means Source
+    double filletRadius{0.0};
+    bool trimMode{true};
 };
 
 /// What a command works with. The runner keeps one context for its whole

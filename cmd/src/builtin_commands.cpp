@@ -11,6 +11,7 @@
 #include "tg/cmd/commands/circle_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
+#include "tg/cmd/commands/fillet_command.hpp"
 #include "tg/cmd/commands/file_commands.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
@@ -45,6 +46,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(TrimExtendCommand::description(TrimExtendCommand::Action::Extend), [] {
         return std::make_unique<TrimExtendCommand>(TrimExtendCommand::Action::Extend);
     });
+    registry.add(FilletCommand::description(), [] { return std::make_unique<FilletCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });
     registry.add(ScaleCommand::description(ScaleCommand::Variable::Global),
