@@ -35,7 +35,7 @@ private:
 
     Stage m_stage{Stage::First};
     ObjectInput m_first{};
-    core::Vec2 m_radiusBase{};
+    core::Vec2 m_radiusBase;
     double m_radius{0.0};
     bool m_trim{true};
     bool m_multiple{false};
