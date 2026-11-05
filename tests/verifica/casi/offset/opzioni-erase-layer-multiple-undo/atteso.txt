@@ -3,12 +3,12 @@ tecnigrafo-report 1
 [report 1]
 entities:
   258 LINE start=0,50 end=20,50
-  260 LINE layer="Mura" start=0,5 end=20,5
-  261 LINE layer="Mura" start=0,55 end=20,55
-  263 LINE layer="Mura" start=0,60 end=20,60
-  264 LINE layer="Mura" start=0,65 end=20,65
-  265 LINE layer="Mura" start=0,45 end=20,45
-  266 LINE layer="Mura" start=0,45 end=20,45
+  260 LINE start=0,5 end=20,5 layer="Mura"
+  261 LINE start=0,55 end=20,55 layer="Mura"
+  263 LINE start=0,60 end=20,60 layer="Mura"
+  264 LINE start=0,65 end=20,65 layer="Mura"
+  265 LINE start=0,45 end=20,45 layer="Mura"
+  266 LINE start=0,45 end=20,45 layer="Mura"
 messages:
   Command: LINE
   Specify first point: 0,0
@@ -81,10 +81,10 @@ statistics:
 [report 2]
 entities:
   258 LINE start=0,50 end=20,50
-  260 LINE layer="Mura" start=0,5 end=20,5
-  261 LINE layer="Mura" start=0,55 end=20,55
-  263 LINE layer="Mura" start=0,60 end=20,60
-  264 LINE layer="Mura" start=0,65 end=20,65
+  260 LINE start=0,5 end=20,5 layer="Mura"
+  261 LINE start=0,55 end=20,55 layer="Mura"
+  263 LINE start=0,60 end=20,60 layer="Mura"
+  264 LINE start=0,65 end=20,65 layer="Mura"
 messages:
   Command: U
   Undone: Offset.
@@ -114,12 +114,12 @@ statistics:
 [final]
 entities:
   258 LINE start=0,50 end=20,50
-  260 LINE layer="Mura" start=0,5 end=20,5
-  261 LINE layer="Mura" start=0,55 end=20,55
-  263 LINE layer="Mura" start=0,60 end=20,60
-  264 LINE layer="Mura" start=0,65 end=20,65
-  265 LINE layer="Mura" start=0,45 end=20,45
-  266 LINE layer="Mura" start=0,45 end=20,45
+  260 LINE start=0,5 end=20,5 layer="Mura"
+  261 LINE start=0,55 end=20,55 layer="Mura"
+  263 LINE start=0,60 end=20,60 layer="Mura"
+  264 LINE start=0,65 end=20,65 layer="Mura"
+  265 LINE start=0,45 end=20,45 layer="Mura"
+  266 LINE start=0,45 end=20,45 layer="Mura"
 messages:
   Command: REDO
   Redone: Offset.
