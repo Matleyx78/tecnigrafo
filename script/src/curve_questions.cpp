@@ -3,11 +3,13 @@
 
 // The questions on curves answered by the facade of core over solid-space
 // (docs/verifica/domande.md, "Intersezioni, lato e tolleranze" and "Curva
-// parallela"): where curves meet, on which side a point lies, the tolerance
-// rule of a drawing and the parallel curve.
+// parallela", "Raccordi e tangenze"): where curves meet, on which side a
+// point lies, the tolerance rule of a drawing, the parallel curve, fillets
+// and tangents.
 
 #include "question_table.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/fillet.hpp"
 #include "tg/core/intersections.hpp"
 #include "tg/core/join.hpp"
 #include "tg/core/offset.hpp"
@@ -165,6 +167,195 @@ std::string intersectionsText(const core::Intersections& found) {
 
 std::string yesNo(bool value) {
     return value ? "yes" : "no";
+}
+
+// ---------------------------------------------------------------------------
+// Fillets and tangents (docs/verifica/domande.md, "Raccordi e tangenze")
+
+/// The answer of a fillet or a tangent circle that builds nothing.
+std::string_view cornerOutcomeName(core::CornerOutcome outcome) {
+    switch (outcome) {
+        case core::CornerOutcome::Done:
+            return "done";
+        case core::CornerOutcome::None:
+            return "none";
+        case core::CornerOutcome::InfinitelyMany:
+            return "infinite";
+        case core::CornerOutcome::AmbiguousPick:
+            return "ambiguous";
+        case core::CornerOutcome::RadiusTooLarge:
+            return "radius-too-large";
+        case core::CornerOutcome::DistanceTooLarge:
+            return "distance-too-large";
+        case core::CornerOutcome::NotAllowed:
+            return "not-allowed";
+        case core::CornerOutcome::OutOfDomain:
+            return "out-of-domain";
+    }
+    return "none";
+}
+
+/// The value of "radius=<r>": a finite number not below 0.
+Parsed<double> radiusArgument(std::string_view text) {
+    const std::optional<double> radius = parseNumber(text);
+    if (!radius || !std::isfinite(*radius) || *radius < 0.0) {
+        return ArgumentError{"radius needs a number not below 0, found " + quoted(text)};
+    }
+    return *radius;
+}
+
+/// Appends "; " and then `item`, or only `item` to an empty text.
+void addItem(std::string& text, const std::string& item) {
+    if (!text.empty()) {
+        text += "; ";
+    }
+    text += item;
+}
+
+std::string namedEntity(std::string_view name, const core::Entity& entity) {
+    std::string text = std::string{name} + " ";
+    writeEntity(entity, text);
+    return text;
+}
+
+std::string newEntity(const core::Entity& entity) {
+    std::string text = "new ";
+    writeEntity(entity, text);
+    return text;
+}
+
+/// The options of fillet: radius= (required), trim=no and units=.
+struct FilletOptions {
+    double radius{0.0};
+    bool trim{true};
+    core::ToleranceRule rule{kDefaultUnits};
+};
+
+Parsed<FilletOptions> filletOptions(Arguments arguments, std::string_view form) {
+    std::optional<std::string_view> radius;
+    std::vector<std::string_view> others;
+    for (const std::string_view argument : arguments) {
+        if (argument.starts_with("radius=") && !radius) {
+            radius = argument.substr(std::string_view{"radius="}.size());
+        } else {
+            others.push_back(argument);
+        }
+    }
+    if (!radius) {
+        return ArgumentError{"wrong arguments, expected: " + std::string{form}};
+    }
+    const auto options = keyed(others, {"trim", "units"});
+    if (const auto* error = std::get_if<ArgumentError>(&options)) {
+        return *error;
+    }
+    const auto& [trim, units] = std::get<0>(options);
+    if (trim && *trim != "no") {
+        return ArgumentError{"trim only accepts no"};
+    }
+    const auto value = radiusArgument(*radius);
+    if (const auto* error = std::get_if<ArgumentError>(&value)) {
+        return *error;
+    }
+    const auto rule = units ? unitsArgument(*units)
+                            : Parsed<core::ToleranceRule>{core::ToleranceRule{kDefaultUnits}};
+    if (const auto* error = std::get_if<ArgumentError>(&rule)) {
+        return *error;
+    }
+    return FilletOptions{std::get<double>(value), !trim, std::get<core::ToleranceRule>(rule)};
+}
+
+QuestionResult filletEntities(const QuestionModel& model, Arguments names,
+                              const FilletOptions& options) {
+    const auto first = entityNamed(model, names[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&first)) {
+        return *error;
+    }
+    const auto pickFirst = pointNamed(names[1]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickFirst)) {
+        return *error;
+    }
+    const auto second = entityNamed(model, names[2]);
+    if (const auto* error = std::get_if<ArgumentError>(&second)) {
+        return *error;
+    }
+    const auto pickSecond = pointNamed(names[3]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickSecond)) {
+        return *error;
+    }
+    if (std::get<const core::Entity*>(first) == std::get<const core::Entity*>(second)) {
+        return ArgumentError{"fillet needs two different entities"};
+    }
+    const core::CornerResult result =
+        core::fillet(*std::get<const core::Entity*>(first), std::get<core::Vec2>(pickFirst),
+                     *std::get<const core::Entity*>(second), std::get<core::Vec2>(pickSecond),
+                     options.radius, options.trim, options.rule);
+    if (result.outcome != core::CornerOutcome::Done) {
+        return std::string{cornerOutcomeName(result.outcome)};
+    }
+    std::string answer;
+    if (result.first) {
+        addItem(answer, namedEntity(names[0], *result.first));
+    }
+    if (result.second) {
+        addItem(answer, namedEntity(names[2], *result.second));
+    }
+    if (result.added) {
+        addItem(answer, newEntity(*result.added));
+    }
+    return answer;
+}
+
+QuestionResult filletOfSegments(const QuestionModel& model, Arguments names,
+                                const FilletOptions& options) {
+    const auto entity = entityNamed(model, names[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+        return *error;
+    }
+    const auto pickFirst = pointNamed(names[1]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickFirst)) {
+        return *error;
+    }
+    const auto pickSecond = pointNamed(names[2]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickSecond)) {
+        return *error;
+    }
+    const auto* polyline = std::get_if<core::Polyline>(std::get<const core::Entity*>(entity));
+    if (polyline == nullptr) {
+        return std::string{cornerOutcomeName(core::CornerOutcome::NotAllowed)};
+    }
+    const core::CornerResult result = core::filletSegments(
+        *polyline, std::get<core::Vec2>(pickFirst), std::get<core::Vec2>(pickSecond),
+        options.radius, options.trim, options.rule);
+    if (result.outcome != core::CornerOutcome::Done || !result.first) {
+        return std::string{cornerOutcomeName(result.outcome)};
+    }
+    std::string answer = namedEntity(names[0], *result.first);
+    if (result.added) {
+        addItem(answer, newEntity(*result.added));
+    }
+    return answer;
+}
+
+QuestionResult filletWholePolyline(const QuestionModel& model, std::string_view name,
+                                   const FilletOptions& options) {
+    const auto entity = entityNamed(model, name);
+    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+        return *error;
+    }
+    const auto* polyline = std::get_if<core::Polyline>(std::get<const core::Entity*>(entity));
+    if (polyline == nullptr) {
+        return std::string{cornerOutcomeName(core::CornerOutcome::NotAllowed)};
+    }
+    const core::PolylineCorners corners =
+        core::filletPolyline(*polyline, options.radius, options.trim, options.rule);
+    std::string answer;
+    writeEntity(core::Entity{corners.polyline}, answer);
+    for (const core::Entity& added : corners.added) {
+        addItem(answer, newEntity(added));
+    }
+    answer +=
+        " done=" + std::to_string(corners.done) + " short=" + std::to_string(corners.tooShort);
+    return answer;
 }
 
 }  // namespace
@@ -412,6 +603,90 @@ QuestionResult askOffset(const QuestionModel& model, Arguments arguments) {
             return std::string{"no-side"};
     }
     return std::string{"failed"};
+}
+
+QuestionResult askFillet(const QuestionModel& model, Arguments arguments) {
+    constexpr std::string_view kForm =
+        "fillet <A> x1,y1 <B> x2,y2 radius=<r> [trim=no] [units=<n>], "
+        "fillet <P> x1,y1 x2,y2 radius=<r> [trim=no] [units=<n>] or "
+        "fillet <P> polyline radius=<r> [trim=no] [units=<n>]";
+    std::size_t count = 0;
+    while (count < arguments.size() && arguments[count].find('=') == std::string_view::npos) {
+        ++count;
+    }
+    const auto options = filletOptions(arguments.subspan(count), kForm);
+    if (const auto* error = std::get_if<ArgumentError>(&options)) {
+        return *error;
+    }
+    const auto& chosen = std::get<FilletOptions>(options);
+    const Arguments names = arguments.first(count);
+    if (count == 2 && names[1] == "polyline") {
+        return filletWholePolyline(model, names[0], chosen);
+    }
+    if (count == 3) {
+        return filletOfSegments(model, names, chosen);
+    }
+    if (count == 4) {
+        return filletEntities(model, names, chosen);
+    }
+    return ArgumentError{"wrong arguments, expected: " + std::string{kForm}};
+}
+
+QuestionResult askTangents(const QuestionModel& model, Arguments arguments) {
+    if (arguments.size() != 2) {
+        return ArgumentError{"wrong arguments, expected: tangents x,y <E>"};
+    }
+    const auto point = pointNamed(arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&point)) {
+        return *error;
+    }
+    const auto entity = entityNamed(model, arguments[1]);
+    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+        return *error;
+    }
+    std::string answer;
+    for (const core::Vec2& tangent :
+         core::tangentPoints(std::get<core::Vec2>(point), *std::get<const core::Entity*>(entity))) {
+        addItem(answer, formatPoint(tangent));
+    }
+    return answer.empty() ? std::string{"none"} : answer;
+}
+
+QuestionResult askCircleTtr(const QuestionModel& model, Arguments arguments) {
+    constexpr std::string_view kForm = "circle-ttr <A> x1,y1 <B> x2,y2 radius=<r>";
+    if (arguments.size() != 5 || !arguments[4].starts_with("radius=")) {
+        return ArgumentError{"wrong arguments, expected: " + std::string{kForm}};
+    }
+    const auto first = entityNamed(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&first)) {
+        return *error;
+    }
+    const auto pickFirst = pointNamed(arguments[1]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickFirst)) {
+        return *error;
+    }
+    const auto second = entityNamed(model, arguments[2]);
+    if (const auto* error = std::get_if<ArgumentError>(&second)) {
+        return *error;
+    }
+    const auto pickSecond = pointNamed(arguments[3]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickSecond)) {
+        return *error;
+    }
+    const auto radius = radiusArgument(arguments[4].substr(std::string_view{"radius="}.size()));
+    if (const auto* error = std::get_if<ArgumentError>(&radius)) {
+        return *error;
+    }
+    const core::TangentCircleResult result = core::circleTangentTangentRadius(
+        *std::get<const core::Entity*>(first), std::get<core::Vec2>(pickFirst),
+        *std::get<const core::Entity*>(second), std::get<core::Vec2>(pickSecond),
+        std::get<double>(radius));
+    if (result.outcome != core::CornerOutcome::Done || !result.circle) {
+        return std::string{cornerOutcomeName(result.outcome)};
+    }
+    std::string answer;
+    writeEntity(core::Entity{*result.circle}, answer);
+    return answer;
 }
 
 }  // namespace tg::script::detail
