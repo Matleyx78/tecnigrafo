@@ -21,11 +21,10 @@ messages:
   Specify center point for circle or [3P/2P]: 50,0
   Specify radius of circle or [Diameter]: 10
   Command: ARC
-  Specify start point of arc or [Center]: C
-  Specify center point of arc: 100,0
   Specify start point of arc: 110,0
-  Specify end point of arc or [Angle/chord Length]: A
-  Specify included angle: 90
+  Specify second point of arc or [Center]: C
+  Specify center point of arc: 100,0
+  Specify end point of arc: 100,10
   Command: TEXT
   Specify start point of text: 0,50
   Specify height <2.5000>: 2.5
