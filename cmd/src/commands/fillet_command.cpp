@@ -98,7 +98,10 @@ Prompt FilletCommand::prompt() const {
     switch (m_stage) {
         case Stage::First:
             return {"Select first object or [Undo/Polyline/Radius/Trim/Multiple]:",
-                    {{"Undo", "U"}, {"Polyline", "P"}, {"Radius", "R"}, {"Trim", "T"},
+                    {{"Undo", "U"},
+                     {"Polyline", "P"},
+                     {"Radius", "R"},
+                     {"Trim", "T"},
                      {"Multiple", "M"}},
                     PromptKind::Object};
         case Stage::Second:
@@ -179,8 +182,7 @@ Status FilletCommand::filletObjects(CommandContext& context, const ObjectInput& 
         result = core::fillet(first->entity, m_first.point, second->entity, object.point, radius,
                               m_trim, rule);
     } else if (const auto* polyline = std::get_if<core::Polyline>(&first->entity)) {
-        result =
-            core::filletSegments(*polyline, m_first.point, object.point, radius, m_trim, rule);
+        result = core::filletSegments(*polyline, m_first.point, object.point, radius, m_trim, rule);
     }
     if (result.outcome != core::CornerOutcome::Done) {
         context.message(failureMessage(result.outcome));
@@ -212,7 +214,8 @@ Status FilletCommand::filletPolyline(CommandContext& context, core::EntityId id)
     edit::Editor& editor = context.editor;
     const core::Document& document = editor.document();
     const core::EntityRecord* source = document.find(id);
-    const auto* polyline = source == nullptr ? nullptr : std::get_if<core::Polyline>(&source->entity);
+    const auto* polyline =
+        source == nullptr ? nullptr : std::get_if<core::Polyline>(&source->entity);
     if (polyline == nullptr) {
         context.message(failureMessage(core::CornerOutcome::NotAllowed));
         return finishAttempt(context);

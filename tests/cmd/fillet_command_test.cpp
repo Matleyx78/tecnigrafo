@@ -26,7 +26,8 @@ protected:
         registerBuiltinCommands(m_registry);
         m_document.setUnits(4);
         m_runner.setPixelSize(0.01);
-        m_runner.setMessageSink([this](std::string text) { m_messages.push_back(std::move(text)); });
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
     }
 
     void type(std::initializer_list<std::string_view> lines) {
@@ -146,7 +147,8 @@ TEST_F(FilletCommandTest, ImpossibleCornerEndsUnlessMultipleIsActive) {
 
     type({"FILLET", "M", "200,5", "200,10"});
     EXPECT_EQ(lastMessage(), "Cannot fillet those objects.");
-    EXPECT_EQ(m_runner.promptText(), "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
+    EXPECT_EQ(m_runner.promptText(),
+              "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
     type({""});
     EXPECT_FALSE(m_runner.isActive());
     EXPECT_EQ(m_document.entityCount(), 2U);
@@ -167,7 +169,8 @@ TEST_F(FilletCommandTest, RadiusTooLargeEndsUnlessMultipleAndLeavesBothLines) {
     m_document.replaceEntity(id, reversed);
     type({"FILLET", "T", "N", "M", "3,0", "0,20"});
     EXPECT_EQ(lastMessage(), "Radius is too large.");
-    EXPECT_EQ(m_runner.promptText(), "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
+    EXPECT_EQ(m_runner.promptText(),
+              "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
     type({""});
     EXPECT_FALSE(m_runner.isActive());
     EXPECT_FALSE(m_editor.canUndo());

@@ -149,13 +149,15 @@ Prompt CircleCommand::prompt() const {
         case Stage::TangentFirst:
             return {"Specify point on object for first tangent of circle:", {}, PromptKind::Object};
         case Stage::TangentSecond:
-            return {"Specify point on object for second tangent of circle:", {}, PromptKind::Object};
+            return {
+                "Specify point on object for second tangent of circle:", {}, PromptKind::Object};
         case Stage::TangentRadius:
-            return {m_defaultRadius ? "Specify radius of circle <" +
-                                          formatLength(*m_defaultRadius) + ">:"
-                                    : "Specify radius of circle:",
-                    {},
-                    PromptKind::Distance};
+            if (m_defaultRadius) {
+                return {"Specify radius of circle <" + formatLength(*m_defaultRadius) + ">:",
+                        {},
+                        PromptKind::Distance};
+            }
+            return {"Specify radius of circle:", {}, PromptKind::Distance};
         case Stage::TangentRadiusPoint:
             return {"Specify second point:", {}};
     }
