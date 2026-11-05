@@ -5,6 +5,8 @@
 
 #include "solid_space/geom2d/tangency.hpp"
 #include "solid_space/robust/point.hpp"
+#include "solid_space/robust/predicates.hpp"
+#include "solid_space/robust/trigonometry.hpp"
 #include "solid_space_bridge.hpp"
 #include "tg/core/arc.hpp"
 #include "tg/core/arc_geometry.hpp"
@@ -157,9 +159,42 @@ Solved solve(const g::Curve& first, const Vec2& pickFirst, const g::Curve& secon
 /// The part of a line or an arc that a fillet keeps (Fillet::keepFirst and
 /// keepSecond): cut with partOf, or extended with extendTo, as the position
 /// of the point of tangency says (docs/tappe/0.7/P19-raccordi-core.md, B2 of
-/// #367). A circle is never cut.
-PartResult keptPart(const Entity& entity, const g::TangencyPoint& tangency, g::KeptPart keep) {
+/// #367). A circle, or an ARC read as one, is never cut (isNeverCut).
+/// Whether solid-space reads an ARC as its whole circle (curves.hpp, Arc):
+/// |sweep| >= kFullTurn, or |sweep| >= kThreeQuarterTurn with the exact angle
+/// from D0 to D1 at most pi / 2. The exact direction tests are those of
+/// isWholeCircle in join.cpp (P22, R492-4 of #492).
+bool isWholeCircle(const Arc& arc) {
+    const std::optional<g::Curve> curve = bridge::curveOf(Entity{arc});
+    assert(curve.has_value());
+    const auto& read = std::get<g::Arc>(*curve);
+    if (read.sweep >= g::kFullTurn) {
+        return true;
+    }
+    if (read.sweep < g::kThreeQuarterTurn) {
+        return false;
+    }
+    namespace robust = solid_space::robust;
+    const auto first = robust::sinCos(read.startAngle);
+    const auto last = robust::sinCos(read.startAngle + read.sweep);
+    const g::Point2 end{last.cosine, last.sine};
+    return robust::orient2d({}, {first.cosine, first.sine}, end) != robust::Sign::negative &&
+           robust::orient2d({}, {first.sine, -first.cosine}, end) != robust::Sign::negative;
+}
+
+/// A circle is never cut (docs/adr/0035, point 13), and neither is an ARC
+/// that solid-space reads as its whole circle: it is a circle, with no free
+/// ends (R492-4 of #492).
+bool isNeverCut(const Entity& entity) {
     if (std::holds_alternative<Circle>(entity)) {
+        return true;
+    }
+    const auto* arc = std::get_if<Arc>(&entity);
+    return arc != nullptr && isWholeCircle(*arc);
+}
+
+PartResult keptPart(const Entity& entity, const g::TangencyPoint& tangency, g::KeptPart keep) {
+    if (isNeverCut(entity)) {
         return PartResult{PartOutcome::Done, entity};
     }
     const CurvePoint place = curvePointOf(tangency);

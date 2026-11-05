@@ -178,6 +178,19 @@ TEST(Fillet, ExtendsTheStartOfAnArcBackwards) {
     expectLine(swapped.first, {cx, -5}, {250, -5});
 }
 
+TEST(Fillet, ExtendsTheEndOfAnArc) {
+    // Case e mirrored about x = 230: the arc keeps its start at 0 degrees and
+    // its end goes to about 188.85 degrees.
+    const Entity arc = arcOf({230, 0}, 10, 0, 180);
+    const CornerResult result =
+        fillet(arc, {221.3397, 5}, line({210, -5}, {245, -5}), {215, -5}, 3.0, true, kMillimetres);
+    ASSERT_EQ(result.outcome, CornerOutcome::Done);
+    const double cx = 230.0 - std::sqrt(169.0 - 4.0);
+    const double angle = std::atan2(-2.0, cx - 230.0);
+    expectArc(result.first, Arc{{230, 0}, 10, 0, normalizeAngle(angle)});
+    expectLine(result.second, {210, -5}, {cx, -5});
+}
+
 TEST(Fillet, RadiusTooLargeChangesNothing) {
     // The point of tangency on L1 is (10,0), past its end: keeping the part
     // that continues the arc would turn L1 back past (5,0).
@@ -237,6 +250,19 @@ TEST(Fillet, ACircleIsNeverCut) {
         fillet(circle, {170, 0}, line({150, -5}, {200, -5}), {185, -5}, 3.0, true, kMillimetres);
     ASSERT_EQ(result.outcome, CornerOutcome::Done);
     EXPECT_EQ(result.first, circle);
+    expectLine(result.second, {175, -5}, {200, -5});
+    expectArc(result.added, arcOf({175, -2}, 3, 112.61986494804044, 270));
+}
+
+TEST(Fillet, AnArcReadAsItsWholeCircleIsNeverCut) {
+    // R492-4 of #492: from 1 rad to the double before 1 the sweep of
+    // docs/adr/0035, point 1, rounds to kFullTurn, and solid-space reads the
+    // arc as its whole circle. Like a CIRCLE it stays as it is.
+    const Entity whole = Arc{{170, 10}, 10, 1.0, std::nextafter(1.0, 0.0)};
+    const CornerResult result =
+        fillet(whole, {170, 0}, line({150, -5}, {200, -5}), {185, -5}, 3.0, true, kMillimetres);
+    ASSERT_EQ(result.outcome, CornerOutcome::Done);
+    EXPECT_EQ(result.first, whole);
     expectLine(result.second, {175, -5}, {200, -5});
     expectArc(result.added, arcOf({175, -2}, 3, 112.61986494804044, 270));
 }

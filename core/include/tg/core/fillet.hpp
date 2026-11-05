@@ -69,7 +69,9 @@ struct CornerResult {
 /// with extendTo, as the position of its point of tangency says. A line whose
 /// kept part lies wholly on its extension (possible only without a fillet
 /// arc, tangency.hpp, rule 5) keeps its kept end and gets the point of
-/// tangency as the other end. A kept part that the model cannot hold
+/// tangency as the other end. An ARC that solid-space reads as its whole
+/// circle (curves.hpp, Arc) is a circle, with no free ends (R492-4 of #492):
+/// like a CIRCLE, it is never cut. A kept part that the model cannot hold
 /// (NotRepresentable) gives None, and no entity changes. A fillet arc that
 /// the rule finds degenerate, or whose bulge is 0, gives the result of
 /// radius 0 (docs/adr/0036, point 5).
