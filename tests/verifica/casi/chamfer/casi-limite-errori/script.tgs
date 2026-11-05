@@ -1,15 +1,14 @@
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
-; Casi limite di CHAMFER: arco non valido, parallele, distanza troppo grande, validazione raggio negativo, proprieta dello smusso
+; Casi limite di CHAMFER: arco non valido, parallele, distanza troppo grande, validazione distanza negativa, proprieta dello smusso
 !view 100,50 0.5 1200x800
+; Tre layer nuovi; il layer corrente resta 0
 -LAYER
 New
 ROSSO
 New
 BLU
 New
-VERDE
-Set
 VERDE
 
 LINE
@@ -58,13 +57,12 @@ LINE
 200,0
 200,10
 
-; Arco (entita non valida per CHAMFER)
+; Arco (entita non valida per CHAMFER): centro 300,0, raggio 10, da 0 a 180 gradi
 ARC
+310,0
 C
 300,0
-310,0
-A
-180
+290,0
 LINE
 290,-5
 320,-5
@@ -92,7 +90,7 @@ D
 15
 205,0
 200,5
-; 5. Arco rifiutato
+; 5. Arco rifiutato (clic sull'arco, in 300,10)
 CHAMFER
-300,5
+300,10
 300,-5

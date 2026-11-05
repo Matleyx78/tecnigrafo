@@ -2,4 +2,4 @@
 fillet/autocad-raccordi #369
 fillet/sequenza-script #369
 fillet/opzioni-undo-shift #369
-fillet/casi-limite-proprieta #369 esente
+fillet/casi-limite-proprieta #369
