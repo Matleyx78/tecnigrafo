@@ -261,7 +261,8 @@ Un punto la cui proiezione sulla retta della sua linea è esattamente lo
 spigolo dà `ambiguous`; una sola distanza zero dà `none`; una distanza (o la
 lunghezza) uguale alla parte tenuta cancella quella linea (decisioni B8 e B9
 della #464, 2026-11-01); una più lunga dà `distance-too-large` (decisione del
-2026-11-05, #507).
+2026-11-05, #507), tranne quando l'altra distanza è zero: allora `none`, in
+tutti e due gli ordini (decisione del 2026-11-05, #508).
 
 **Unione** (P22, richiesta [Matleyx78/solid-space#23](https://github.com/Matleyx78/solid-space/issues/23),
 ADR 0035, punti 17–20)

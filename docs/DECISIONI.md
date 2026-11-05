@@ -973,7 +973,9 @@ i rimandi ai documenti che cambia.
     costruito cade dalla parte tenuta della seconda linea ma oltre la sua fine
     (decisione sulla [#508](https://github.com/Matleyx78/tecnigrafo/pull/508)):
     prima linea (0,0)→(10,0), seconda (0,0)→(0,1), clic in (8,0) e (0,0.5),
-    lunghezza 5 e angolo 45°, secondo punto in (0,5);
+    lunghezza 5 e angolo 45°, secondo punto in (0,5). Con una distanza zero e
+    l'altra troppo lunga prevale invece B8, `None`, in tutti e due gli ordini
+    (decisione sulla #508): le stesse linee con distanze 0 e 15;
   - in `CHAMFER` il valore predefinito della seconda distanza è la prima
     distanza appena scritta.
 

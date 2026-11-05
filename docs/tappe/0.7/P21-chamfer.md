@@ -15,8 +15,9 @@
   e i rimandi a `intersection.hpp`; 2026-11-05, con le decisioni del
   responsabile sulla #507: il comando finisce dopo uno smusso non riuscito,
   l'esito `DistanceTooLarge` con `Chamfer distance too large.` e il valore
-  predefinito della seconda distanza; con quella sulla #508:
-  `DistanceTooLarge` anche con *Angle*
+  predefinito della seconda distanza; con quelle sulla #508:
+  `DistanceTooLarge` anche con *Angle* e, con una distanza zero e l'altra
+  troppo lunga, `None` (B8 prevale)
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -159,6 +160,13 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
   (200,5), distanze 15 e 15, o 5 e 15: `DistanceTooLarge`, e nessuna entità
   cambia. In `chamferPolyline` un vertice così resta com'è e conta in
   `tooShort`, come gli altri smussi che non stanno nei due segmenti.
+- **Una distanza zero e l'altra troppo lunga** (decisione del 2026-11-05 sulla
+  #508, R508-1): prevale B8, quindi `None`, prima di guardare le lunghezze, in
+  `chamfer` e in `chamferSegments`, in tutti e due gli ordini. Per esempio,
+  le linee sopra con le distanze 0 e 15, e le stesse linee scambiate, con i
+  clic scambiati e le distanze 15 e 0: `None` (`Lines are parallel.` in
+  `CHAMFER`, `none` nella domanda), e nessuna entità cambia. In
+  `chamferPolyline` il vertice conta in `tooShort` come prima.
 - Le linee si portano agli estremi dello smusso con `partOf` o `extendTo`
   (P15, B2: sceglie la `Location`), con `PartCourse::Direct` perché la
   costruzione dà un solo posto per linea (#359). Come in P19 (B14), una parte
@@ -274,6 +282,10 @@ Select 2D polyline or [Distance/Angle/Method]:
   senza passi di annulla; con *Multiple* torna la prima domanda.
 - Il valore predefinito della seconda distanza: dopo una prima distanza 5,
   `<5.0000>`.
+- Una distanza zero e l'altra troppo lunga (R508-1): le distanze 0 e 15, e
+  le linee scambiate con le distanze 15 e 0, danno `None` in `chamfer` e in
+  `chamferSegments`; in `CHAMFER`, `Lines are parallel.`, nessuna modifica e
+  il comando finito.
 - Rette quasi parallele (i dati di P19, da 0,0 a 1,0 e da 0,1 a
   1,1.0000000000000002): `OutOfDomain` in `chamfer` e il suo messaggio in
   `CHAMFER`, distinto da quello delle parallele; una linea di lunghezza zero:
