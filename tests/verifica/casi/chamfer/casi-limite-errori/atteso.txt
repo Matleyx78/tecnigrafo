@@ -105,7 +105,7 @@ messages:
   Specify second chamfer distance <15.0000>: 15
   Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 205,0
   Select second line or shift-select to apply corner or [Distance/Angle/Method]: 200,5
-  Lines are parallel.
+  Distance is too large.
   Command: CHAMFER
   (TRIM mode) Current chamfer Dist1 = 15.0000, Dist2 = 15.0000
   Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 300,10
