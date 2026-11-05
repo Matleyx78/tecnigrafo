@@ -41,9 +41,8 @@ protected:
     OffsetTest() {
         registerBuiltinCommands(m_registry);
         m_runner.setPixelSize(0.1);
-        m_runner.setMessageSink([this](std::string message) {
-            m_messages.push_back(std::move(message));
-        });
+        m_runner.setMessageSink(
+            [this](std::string message) { m_messages.push_back(std::move(message)); });
         m_runner.setDescriptionCheck([this](const std::string& error) { ADD_FAILURE() << error; });
     }
 
