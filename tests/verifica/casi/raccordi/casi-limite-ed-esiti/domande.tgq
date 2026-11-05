@@ -35,4 +35,4 @@ L_OK = LINE start=0,0 end=10,0
 ; sotto la tolleranza dell'unita del disegno e produce lo spigolo vivo (raggio 0)
 L_DEV1 = LINE start=-10,0 end=0,0
 L_DEV2 = LINE start=0,0 end=10,1e-9
-? fillet L_DEV1 -5,0 L_DEV2 5,0 radius=1e-9 units=4 -> L_DEV1 LINE start=-10,0 end=0,0; L_DEV2 LINE start=0,0 end=10,1e-9
+? fillet L_DEV1 -5,0 L_DEV2 5,5e-10 radius=1e-9 units=4 -> L_DEV1 LINE start=-10,0 end=0,0; L_DEV2 LINE start=0,0 end=10,1e-9
