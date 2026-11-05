@@ -39,7 +39,9 @@ protected:
     [[nodiscard]] std::string lastMessage() const { return m_messages.back(); }
 
     [[nodiscard]] core::Document& document() { return m_document; }
+
     [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
     [[nodiscard]] CommandRunner& runner() { return m_runner; }
 
 private:
@@ -152,7 +154,8 @@ TEST_F(FilletCommandTest, ImpossibleCornerEndsUnlessMultipleIsActive) {
 
     type({"FILLET", "M", "200,5", "200,10"});
     EXPECT_EQ(lastMessage(), "Cannot fillet those objects.");
-    EXPECT_EQ(runner().promptText(), "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
+    EXPECT_EQ(runner().promptText(),
+              "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
     type({""});
     EXPECT_FALSE(runner().isActive());
     EXPECT_EQ(document().entityCount(), 2U);
@@ -173,7 +176,8 @@ TEST_F(FilletCommandTest, RadiusTooLargeEndsUnlessMultipleAndLeavesBothLines) {
     document().replaceEntity(id, reversed);
     type({"FILLET", "T", "N", "M", "3,0", "0,20"});
     EXPECT_EQ(lastMessage(), "Radius is too large.");
-    EXPECT_EQ(runner().promptText(), "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
+    EXPECT_EQ(runner().promptText(),
+              "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:");
     type({""});
     EXPECT_FALSE(runner().isActive());
     EXPECT_FALSE(editor().canUndo());
