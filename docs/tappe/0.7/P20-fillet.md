@@ -149,9 +149,11 @@ comando finisce allo stesso modo.
   parallele lontane di P19 in `FILLET`: lo stesso messaggio; un raggio oltre
   il dominio (2e15): il messaggio del raccordo impossibile e `Circle does not
   exist.`.
-- Dopo un raccordo non riuscito (l'esempio dei cerchi concentrici,
-  `RadiusTooLarge`) il comando finisce, senza passi di annulla; con *Multiple*
-  torna la prima domanda.
+- Dopo un raccordo non riuscito il comando finisce, senza passi di annulla, in
+  due test distinti: il raccordo impossibile (l'esempio dei cerchi
+  concentrici, `Cannot fillet those objects.`) e `RadiusTooLarge` (i dati di
+  P19, `Radius is too large.`); con *Multiple*, in tutti e due, torna la prima
+  domanda.
 
 ## Fatto quando
 

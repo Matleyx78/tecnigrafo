@@ -14,7 +14,7 @@
   2026-11-03, operazione snellimento (#478): il messaggio di `OutOfDomain` (P20)
   e i rimandi a `intersection.hpp`; 2026-11-05, con le decisioni del
   responsabile sulla #507: il comando finisce dopo uno smusso non riuscito,
-  l'esito `DistanceTooLarge` con `Distance is too large.` e il valore
+  l'esito `DistanceTooLarge` con `Chamfer distance too large.` e il valore
   predefinito della seconda distanza; con quella sulla #508:
   `DistanceTooLarge` anche con *Angle*
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
@@ -132,8 +132,18 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
     le distanze (B14). Per esempio, prima linea da (0,0) a (10,0), seconda da
     (0,0) a (0,1), scelte in (8,0) e (0,0.5), lunghezza 5 e angolo 45°: lo
     smusso incontra la seconda retta in (0,5), oltre (0,1), e l'esito è
-    `DistanceTooLarge`; con la seconda linea da (0,0) a (0,5) lo smusso va da
-    (5,0) a (0,5) e la seconda linea si cancella;
+    `DistanceTooLarge`; con la seconda linea da (0,0) a (0,6) lo smusso va da
+    (5,0) a (0,5) e della seconda linea resta il tratto da (0,5) a (0,6);
+  - **la fascia al limite:** il secondo punto è costruito in `double`, e quando
+    cade alla fine della parte tenuta della seconda linea, entro l'errore di
+    arrotondamento della costruzione, l'esito è libero: la parte tenuta si
+    cancella o l'esito è `DistanceTooLarge` (fascia dell'ADR 0013 di
+    solid-space, punto 4; revisione della #508). Lo è per esempio la seconda
+    linea da (0,0) a (0,5) con i dati sopra. Chi implementa scrive nel
+    commento di `chamfer` l'errore della costruzione; nessun test pretende uno
+    dei due esiti nella fascia, e i test fuori dalla fascia (la seconda linea
+    fino a (0,1) e fino a (0,6)) distinguono i due lati. Il comando e la
+    domanda `chamfer` usano l'esito che dà `core`, senza ricalcolarlo;
   - angolo 0, angoli troppo grandi e parallelismo non hanno regole a parte.
 
   Per esempio, prima linea sull'asse X, seconda sull'asse Y, parti tenute
@@ -203,7 +213,7 @@ Select 2D polyline or [Distance/Angle/Method]:
   (ADR 0035, punto 16).
 - `NotAllowed` (un arco) dà `Cannot chamfer those objects.`, `None` e
   `InfinitelyMany` danno `Lines are parallel.`, `DistanceTooLarge` dà
-  `Distance is too large.` (tabella di
+  `Chamfer distance too large.` (tabella di
   [dxf-di-prova.md](dxf-di-prova.md), punto 3); `OutOfDomain` dà il messaggio di `FILLET`
   per "oltre il dominio", `Result is beyond the drawing limits.` (P20), distinto
   da `Lines are parallel.`; `AmbiguousPick` dà il messaggio di `AmbiguousPick`
@@ -251,11 +261,15 @@ Select 2D polyline or [Distance/Angle/Method]:
   parte tenuta, che cancella la linea), di B9 (clic proiettato sullo
   spigolo, `AmbiguousPick`) e di B15; angolo che dà una retta parallela alla
   seconda linea (`None`); valori negativi nel comando.
-- `DistanceTooLarge` con l'esempio di "Distanze" (distanze 15 e 15, e 5 e 15)
-  e con quello di *Angle* (il secondo punto in (0,5), oltre la fine della
-  seconda linea; e la seconda linea che si cancella quando finisce in (0,5)),
-  in `chamfer` e in `chamferSegments`; in `CHAMFER`: `Distance is too large.`,
-  nessuna modifica e il comando finito.
+- `DistanceTooLarge` con l'esempio di "Distanze" (distanze 15 e 15, 5 e 15, e
+  la sola prima troppo lunga, 15 e 5) e con quelli di *Angle*: il secondo
+  punto in (0,5), oltre la fine (0,1) della seconda linea, anche con la
+  seconda linea invertita, da (0,1) a (0,0); la sola lunghezza troppo lunga
+  (lunghezza 15 sulla prima linea lunga 10); in `chamfer` e in
+  `chamferSegments`. In `CHAMFER`: `Chamfer distance too large.`, nessuna
+  modifica e il comando finito. Con la seconda linea fino a (0,6) lo smusso
+  riesce; la seconda linea fino a (0,5) sta nella fascia e nessun test ne
+  fissa l'esito.
 - Dopo uno smusso non riuscito (le parallele, un arco) il comando finisce,
   senza passi di annulla; con *Multiple* torna la prima domanda.
 - Il valore predefinito della seconda distanza: dopo una prima distanza 5,

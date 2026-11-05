@@ -964,7 +964,8 @@ i rimandi ai documenti che cambia.
     prima domanda. Esempio: due parallele, `CHAMFER` con i clic sulle due,
     `Lines are parallel.` e `Command:`;
   - una distanza di smusso, o la lunghezza, più lunga della parte tenuta della
-    sua linea dà il messaggio di AutoCAD, `Distance is too large.`, con un
+    sua linea dà il messaggio di AutoCAD, `Chamfer distance too large.` (il
+    testo della schermata di AutoCAD trovata nella revisione della #508), con un
     esito nuovo, `CornerOutcome::DistanceTooLarge`, in `chamfer` e
     `chamferSegments`; prima era `None`, con `Lines are parallel.`. Esempio:
     linee (200,0)→(210,0) e (200,0)→(200,10), clic in (205,0) e (200,5),
