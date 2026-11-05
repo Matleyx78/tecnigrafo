@@ -3,12 +3,12 @@ tecnigrafo-report 1
 [report 1]
 entities:
   258 LINE start=0,50 end=20,50
-  259 LINE layer="Mura" start=0,5 end=20,5
-  260 LINE layer="Mura" start=0,55 end=20,55
-  262 LINE layer="Mura" start=0,60 end=20,60
-  263 LINE layer="Mura" start=0,65 end=20,65
-  264 LINE layer="Mura" start=0,45 end=20,45
+  260 LINE layer="Mura" start=0,5 end=20,5
+  261 LINE layer="Mura" start=0,55 end=20,55
+  263 LINE layer="Mura" start=0,60 end=20,60
+  264 LINE layer="Mura" start=0,65 end=20,65
   265 LINE layer="Mura" start=0,45 end=20,45
+  266 LINE layer="Mura" start=0,45 end=20,45
 messages:
   Command: LINE
   Specify first point: 0,0
@@ -54,7 +54,7 @@ messages:
   Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,45
   Select object to offset or [Exit/Undo] <Exit>: 10,50
   Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,40
-  Select object to offset or [Exit/Undo] <Exit>: *Cancel*
+  *Cancel*
 prompt: Command:
 preview:
 selection: none
@@ -81,12 +81,13 @@ statistics:
 [report 2]
 entities:
   258 LINE start=0,50 end=20,50
-  259 LINE layer="Mura" start=0,5 end=20,5
-  260 LINE layer="Mura" start=0,55 end=20,55
-  262 LINE layer="Mura" start=0,60 end=20,60
-  263 LINE layer="Mura" start=0,65 end=20,65
+  260 LINE layer="Mura" start=0,5 end=20,5
+  261 LINE layer="Mura" start=0,55 end=20,55
+  263 LINE layer="Mura" start=0,60 end=20,60
+  264 LINE layer="Mura" start=0,65 end=20,65
 messages:
   Command: U
+  Undone: Offset.
 prompt: Command:
 preview:
 selection: none
@@ -113,14 +114,15 @@ statistics:
 [final]
 entities:
   258 LINE start=0,50 end=20,50
-  259 LINE layer="Mura" start=0,5 end=20,5
-  260 LINE layer="Mura" start=0,55 end=20,55
-  262 LINE layer="Mura" start=0,60 end=20,60
-  263 LINE layer="Mura" start=0,65 end=20,65
-  264 LINE layer="Mura" start=0,45 end=20,45
+  260 LINE layer="Mura" start=0,5 end=20,5
+  261 LINE layer="Mura" start=0,55 end=20,55
+  263 LINE layer="Mura" start=0,60 end=20,60
+  264 LINE layer="Mura" start=0,65 end=20,65
   265 LINE layer="Mura" start=0,45 end=20,45
+  266 LINE layer="Mura" start=0,45 end=20,45
 messages:
   Command: REDO
+  Redone: Offset.
 prompt: Command:
 preview:
 selection: none
