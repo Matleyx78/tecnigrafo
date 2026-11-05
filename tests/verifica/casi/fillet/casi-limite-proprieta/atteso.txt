@@ -2,29 +2,27 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  257 LINE start=5,0 end=30,0
-  258 LINE start=0,5 end=0,30
-  259 LINE layer=ROSSO start=55,0 end=80,0
-  260 LINE layer=BLU start=50,5 end=50,30
-  261 LWPOLYLINE closed=no vertex=100,0 vertex=120,0 vertex=120,2 vertex=140,2
-  262 CIRCLE center=200,0 radius=5
-  263 CIRCLE center=200,0 radius=10
-  264 LINE start=300,0 end=330,0
-  265 LINE start=300,20 end=330,20
-  266 ARC center=5,5 radius=5 start-angle=180 end-angle=270
-  267 ARC layer=VERDE center=55,5 radius=5 start-angle=180 end-angle=270
+  260 LINE start=5,0 end=30,0
+  261 LINE start=0,5 end=0,30
+  262 LINE start=55,0 end=80,0 layer="ROSSO"
+  263 LINE start=50,5 end=50,30 layer="BLU"
+  264 LWPOLYLINE closed=no vertex=100,0 vertex=120,0 vertex=120,2 vertex=140,2 layer="VERDE"
+  265 CIRCLE center=200,0 radius=5 layer="VERDE"
+  266 CIRCLE center=200,0 radius=10 layer="VERDE"
+  267 LINE start=300,0 end=330,0 layer="VERDE"
+  268 LINE start=300,20 end=330,20 layer="VERDE"
+  269 ARC center=5,5 radius=5 start-angle=180 end-angle=270
+  270 ARC center=55,5 radius=5 start-angle=180 end-angle=270 layer="VERDE"
 messages:
   Command: -LAYER
-  Current layer: "0"
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
   Enter name list for new layer(s): ROSSO
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
   Enter name list for new layer(s): BLU
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: New
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
   Enter name list for new layer(s): VERDE
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
-  Enter layer name to make current <0>: VERDE
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
   Command: LINE
   Specify first point: 0,0
   Specify next point or [Undo]: 30,0
@@ -34,34 +32,34 @@ messages:
   Specify next point or [Undo]: 0,30
   Specify next point or [Undo]:
   Command: -LAYER
-  Current layer: "VERDE"
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
-  Enter layer name to make current <VERDE>: ROSSO
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Set
+  Enter layer name to make current: ROSSO
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
   Command: LINE
   Specify first point: 50,0
   Specify next point or [Undo]: 80,0
   Specify next point or [Undo]:
   Command: -LAYER
-  Current layer: "ROSSO"
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
-  Enter layer name to make current <ROSSO>: BLU
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Current layer:  "ROSSO"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Set
+  Enter layer name to make current: BLU
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
   Command: LINE
   Specify first point: 50,0
   Specify next point or [Undo]: 50,30
   Specify next point or [Undo]:
   Command: -LAYER
-  Current layer: "BLU"
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]: Set
-  Enter layer name to make current <BLU>: VERDE
-  Enter an option [?/Make/Set/New/Rename/On/Off/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock/stAte]:
+  Current layer:  "BLU"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Set
+  Enter layer name to make current: VERDE
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
   Command: PLINE
   Specify start point: 100,0
   Specify next point or [Arc/Undo]: 120,0
   Specify next point or [Arc/Undo]: 120,2
-  Specify next point or [Arc/Undo]: 140,2
-  Specify next point or [Arc/Undo]:
+  Specify next point or [Arc/Close/Undo]: 140,2
+  Specify next point or [Arc/Close/Undo]:
   Command: CIRCLE
   Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 200,0
   Specify radius of circle or [Diameter]: 5
@@ -90,12 +88,13 @@ messages:
   Current settings: Mode = TRIM, Radius = 5.0000
   Select first object or [Undo/Polyline/Radius/Trim/Multiple]: P
   Select 2D polyline or [Radius]: 110,0
+  0 lines were filleted
   2 were too short
   Command: FILLET
   Current settings: Mode = TRIM, Radius = 5.0000
   Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 200,5
   Select second object or shift-select to apply corner or [Radius]: 200,10
-  Cannot fillet these entities.
+  Cannot fillet those objects.
   Command: CIRCLE
   Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: T
   Specify point on object for first tangent of circle: 310,0
@@ -107,15 +106,15 @@ preview:
 selection: none
 rectangle: none
 undo:
-  -Layer
+  Layer
   Line
   Line
-  -Layer
+  Layer
   Line
-  -Layer
+  Layer
   Line
-  -Layer
-  Pline
+  Layer
+  Polyline
   Circle
   Circle
   Line
@@ -125,6 +124,12 @@ undo:
 redo:
 snap: on
 ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "ROSSO" color=7 linetype="Continuous" lineweight=default
+  "BLU" color=7 linetype="Continuous" lineweight=default
+  "VERDE" color=7 linetype="Continuous" lineweight=default
+current: layer="VERDE" color=bylayer linetype="ByLayer" ltscale=1 lineweight=bylayer
 pointer: none
 active snap: none
 statistics:
