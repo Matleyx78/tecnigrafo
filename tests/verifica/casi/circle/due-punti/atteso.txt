@@ -5,7 +5,7 @@ entities:
   257 CIRCLE center=5,0 radius=5
 messages:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P]: 2P
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 2P
   Specify first end point of circle's diameter: 0,0
   Specify second end point of circle's diameter: 10,0
 prompt: Command:
@@ -28,7 +28,7 @@ entities:
   258 CIRCLE center=20,0 radius=10
 messages:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P]: 2p
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 2p
   Specify first end point of circle's diameter: 20,10
   Specify second end point of circle's diameter: 20,-10
 prompt: Command:
@@ -53,7 +53,7 @@ entities:
   259 CIRCLE center=3,4 radius=5
 messages:
   Command: C
-  Specify center point for circle or [3P/2P]: 2P
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 2P
   Specify first end point of circle's diameter: 0,0
   Specify second end point of circle's diameter: 6,8
 prompt: Command:

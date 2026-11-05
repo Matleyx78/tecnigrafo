@@ -1,4 +1,5 @@
 ; CIRCLE: raggio scritto e dato con un punto; alias C e diametro scritto e dato con un punto
+; cambia con #369
 CIRCLE
 10,20
 15

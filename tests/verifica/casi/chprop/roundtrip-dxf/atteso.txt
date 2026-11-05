@@ -58,7 +58,7 @@ messages:
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P]: 20,20
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 20,20
   Specify radius of circle or [Diameter]: 5
 prompt: Command:
 preview:

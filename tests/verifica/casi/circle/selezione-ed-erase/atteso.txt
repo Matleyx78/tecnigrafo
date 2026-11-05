@@ -6,10 +6,10 @@ entities:
   258 CIRCLE center=150,50 radius=20
 messages:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P]: 50,50
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 50,50
   Specify radius of circle or [Diameter]: 20
   Command: CIRCLE
-  Specify center point for circle or [3P/2P]: 150,50
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 150,50
   Specify radius of circle or [Diameter] <20.0000>: 20
 prompt: Specify opposite corner:
 preview:

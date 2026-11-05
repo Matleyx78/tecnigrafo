@@ -4,7 +4,7 @@ tecnigrafo-report 1
 entities:
   257 LINE start=10,0 end=30,0
   258 LINE start=0,10 end=0,30
-  259 LWPOLYLINE closed=yes vertex=360,0 vertex=380,0 bulge=0.414213562373 vertex=390,10 vertex=390,20 bulge=0.414213562373 vertex=380,30 vertex=360,30 bulge=0.414213562373 vertex=350,20 vertex=350,10 bulge=0.414213562373
+  259 LWPOLYLINE closed=yes vertex=350,10 bulge=0.414213562373 vertex=360,0 vertex=380,0 bulge=0.414213562373 vertex=390,10 vertex=390,20 bulge=0.414213562373 vertex=380,30 vertex=360,30 bulge=0.414213562373 vertex=350,20
   260 LINE start=500,0 end=530,0
   261 LINE start=500,0 end=500,30
   262 LINE start=0,200 end=40,200
