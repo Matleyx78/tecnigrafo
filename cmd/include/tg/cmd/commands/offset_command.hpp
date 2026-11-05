@@ -48,7 +48,7 @@ private:
     bool m_erase{false};
     bool m_currentLayer{false};
     bool m_multiple{false};
-    core::Vec2 m_firstPoint{};
+    core::Vec2 m_firstPoint;
     core::EntityId m_source{};
     std::vector<Step> m_steps;
 };

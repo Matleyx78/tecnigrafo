@@ -59,6 +59,17 @@ protected:
         EXPECT_EQ(m_document.entities().back().entity, expected);
     }
 
+    core::EntityId seed(core::Entity entity) { return m_document.add(std::move(entity)); }
+
+    [[nodiscard]] const core::Document& document() const { return m_document; }
+
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -68,10 +79,10 @@ protected:
 
 TEST_F(OffsetTest, OffsetsEveryCurveTypeOnEitherSideByDistanceAndThrough) {
     constexpr double kQuarterTurn = std::numbers::pi / 2.0;
-    m_document.add(horizontal(0));
-    m_document.add(Circle{{50, 0}, 10});
-    m_document.add(Arc{{100, 0}, 10, 0, kQuarterTurn});
-    m_document.add(openPolyline(0));
+    seed(horizontal(0));
+    seed(Circle{{50, 0}, 10});
+    seed(Arc{{100, 0}, 10, 0, kQuarterTurn});
+    seed(openPolyline(0));
 
     type({"O", "2"});
     expectCopy("10,0", "10,8", horizontal(2));
@@ -94,16 +105,16 @@ TEST_F(OffsetTest, OffsetsEveryCurveTypeOnEitherSideByDistanceAndThrough) {
     expectCopy("160,0", "160,4", openPolyline(4));
     expectCopy("160,0", "160,-6", openPolyline(-6));
     type({"Exit"});
-    EXPECT_EQ(m_editor.undoName(), "Offset");
-    EXPECT_FALSE(m_runner.isActive());
+    EXPECT_EQ(editor().undoName(), "Offset");
+    EXPECT_FALSE(runner().isActive());
 }
 
 TEST_F(OffsetTest, RejectsAnInvalidDistanceAndRemembersTheLastMode) {
-    m_document.add(horizontal(0));
+    seed(horizontal(0));
     type({"OFFSET", "0", "-1"});
-    ASSERT_EQ(m_messages.size(), 3U);
-    EXPECT_EQ(m_messages[1], "Value must be positive and nonzero.");
-    EXPECT_EQ(m_messages[2], m_messages[1]);
+    ASSERT_EQ(messages().size(), 3U);
+    EXPECT_EQ(messages()[1], "Value must be positive and nonzero.");
+    EXPECT_EQ(messages()[2], messages()[1]);
 
     // Two points specify a distance without using a previous command's last point.
     type({"0,5", "3,9"});
@@ -117,61 +128,61 @@ TEST_F(OffsetTest, RejectsAnInvalidDistanceAndRemembersTheLastMode) {
 
 TEST_F(OffsetTest, FailedAttemptsCreateNoCopyOrUndoStep) {
     constexpr double kQuarterTurn = std::numbers::pi / 2.0;
-    m_document.add(horizontal(0));
-    m_document.add(Arc{{50, 0}, 10, 0, kQuarterTurn});
-    m_document.add(Line{{80, 0}, {80, 0}});
+    seed(horizontal(0));
+    seed(Arc{{50, 0}, 10, 0, kQuarterTurn});
+    seed(Line{{80, 0}, {80, 0}});
     core::Text text;
     text.position = {100, 0};
     text.value = "Text";
-    m_document.add(text);
+    seed(text);
 
     type({"OFFSET", "10", "60,0", "50,5", "80,0", "80,5", "100,0", ""});
     type({"OFFSET", "T", "10,0", "5,0", ""});
-    EXPECT_EQ(m_document.entities().size(), 4U);
-    EXPECT_FALSE(m_editor.canUndo());
-    ASSERT_EQ(m_messages.size(), 6U);
-    EXPECT_EQ(m_messages[1], "Cannot offset that object.");
-    EXPECT_EQ(m_messages[2], m_messages[1]);
-    EXPECT_EQ(m_messages[3], m_messages[1]);
-    EXPECT_EQ(m_messages[5], m_messages[1]);
+    EXPECT_EQ(document().entities().size(), 4U);
+    EXPECT_FALSE(editor().canUndo());
+    ASSERT_EQ(messages().size(), 6U);
+    EXPECT_EQ(messages()[1], "Cannot offset that object.");
+    EXPECT_EQ(messages()[2], messages()[1]);
+    EXPECT_EQ(messages()[3], messages()[1]);
+    EXPECT_EQ(messages()[5], messages()[1]);
 }
 
 TEST_F(OffsetTest, EraseAndCurrentLayerCarryOverAndUndoRestoresTheSource) {
-    const auto source = m_document.add(horizontal(0));
+    const auto source = seed(horizontal(0));
     type({"-LAYER", "Make", "Target", "", "OFFSET", "E", "Y", "L", "C", "5"});
     type({"10,0", "10,6"});
-    EXPECT_EQ(m_document.find(source), nullptr);
-    ASSERT_EQ(m_document.entities().size(), 1U);
-    EXPECT_EQ(m_document.entities().front().entity, core::Entity{horizontal(5)});
-    EXPECT_EQ(m_document.entities().front().properties.layer, m_document.current().layer);
+    EXPECT_EQ(document().find(source), nullptr);
+    ASSERT_EQ(document().entities().size(), 1U);
+    EXPECT_EQ(document().entities().front().entity, core::Entity{horizontal(5)});
+    EXPECT_EQ(document().entities().front().properties.layer, document().current().layer);
 
     type({"U"});
-    ASSERT_EQ(m_document.entities().size(), 1U);
-    EXPECT_EQ(m_document.entities().front().id, source);
+    ASSERT_EQ(document().entities().size(), 1U);
+    EXPECT_EQ(document().entities().front().id, source);
     type({"", "OFFSET", ""});
     type({"10,0", "10,-6", ""});
-    ASSERT_EQ(m_document.entities().size(), 1U);
-    EXPECT_EQ(m_document.entities().front().entity, core::Entity{horizontal(-5)});
-    EXPECT_EQ(m_document.entities().front().properties.layer, m_document.current().layer);
+    ASSERT_EQ(document().entities().size(), 1U);
+    EXPECT_EQ(document().entities().front().entity, core::Entity{horizontal(-5)});
+    EXPECT_EQ(document().entities().front().properties.layer, document().current().layer);
 }
 
 TEST_F(OffsetTest, MultipleUndoUsesThePreviousCopyAndEscapeCommitsBoth) {
-    m_document.add(horizontal(0));
+    seed(horizontal(0));
     type({"OFFSET", "5", "10,0", "M", "10,5", "10,10", "U", "10,10"});
-    ASSERT_EQ(m_document.entities().size(), 3U);
-    EXPECT_EQ(m_document.entities()[1].entity, core::Entity{horizontal(5)});
-    EXPECT_EQ(m_document.entities()[2].entity, core::Entity{horizontal(10)});
+    ASSERT_EQ(document().entities().size(), 3U);
+    EXPECT_EQ(document().entities()[1].entity, core::Entity{horizontal(5)});
+    EXPECT_EQ(document().entities()[2].entity, core::Entity{horizontal(10)});
 
-    m_runner.submit(CancelInput{});
-    ASSERT_FALSE(m_runner.isActive());
-    EXPECT_EQ(m_editor.undoName(), "Offset");
-    EXPECT_EQ(m_document.entities().size(), 3U);
+    runner().submit(CancelInput{});
+    ASSERT_FALSE(runner().isActive());
+    EXPECT_EQ(editor().undoName(), "Offset");
+    EXPECT_EQ(document().entities().size(), 3U);
     type({"U"});
-    EXPECT_EQ(m_document.entities().size(), 1U);
+    EXPECT_EQ(document().entities().size(), 1U);
     type({"REDO"});
-    ASSERT_EQ(m_document.entities().size(), 3U);
-    EXPECT_EQ(m_document.entities()[1].entity, core::Entity{horizontal(5)});
-    EXPECT_EQ(m_document.entities()[2].entity, core::Entity{horizontal(10)});
+    ASSERT_EQ(document().entities().size(), 3U);
+    EXPECT_EQ(document().entities()[1].entity, core::Entity{horizontal(5)});
+    EXPECT_EQ(document().entities()[2].entity, core::Entity{horizontal(10)});
 }
 
 }  // namespace
