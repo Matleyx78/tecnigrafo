@@ -1,4 +1,5 @@
 ; CIRCLE: opzione 3P, punti CCW, CW, allineati, quasi allineati e coincidenti
+; cambia con #369
 CIRCLE
 3P
 10,0

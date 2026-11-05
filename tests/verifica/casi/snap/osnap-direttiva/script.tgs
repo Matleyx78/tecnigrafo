@@ -1,4 +1,5 @@
 ; Direttiva !osnap: imposta i modi dello snap a oggetto (0.7-P7, ADR 0033)
+; cambia con #369
 CIRCLE
 0,0
 10

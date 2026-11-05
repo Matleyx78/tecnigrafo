@@ -1,5 +1,6 @@
 ; CIRCLE: snap al centro passando sul cerchio; nessun snap a estremo o medio
 !view 50,50 1 800x600
+; cambia con #369
 CIRCLE
 50,50
 20

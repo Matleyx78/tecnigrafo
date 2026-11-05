@@ -1,4 +1,5 @@
 ; CIRCLE: raggio e diametro zero o negativi danno messaggio e la domanda resta
+; cambia con #369
 CIRCLE
 0,0
 0

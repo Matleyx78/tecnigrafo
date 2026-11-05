@@ -18,7 +18,7 @@ messages:
   Specify next point or [Undo]: 20,0
   Specify next point or [Undo]:
   Command: CIRCLE
-  Specify center point for circle or [3P/2P]: 50,0
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 50,0
   Specify radius of circle or [Diameter]: 10
   Command: ARC
   Specify start point of arc: 110,0

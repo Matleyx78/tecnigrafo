@@ -1,4 +1,5 @@
 ; Grip di un cerchio e modifica non valida (0.7-P10, ADR 0034)
+; cambia con #369
 CIRCLE
 0,0
 10
