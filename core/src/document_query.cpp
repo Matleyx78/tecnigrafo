@@ -4,6 +4,7 @@
 #include "tg/core/document_query.hpp"
 
 #include "tg/core/effective_properties.hpp"
+#include "tg/core/fillet.hpp"
 #include "tg/core/intersections.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
@@ -189,6 +190,24 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         }
     };
 
+    // The tangent points from the base point to a curve within the aperture
+    // (docs/adr/0033, points 4 and 5): those of a polyline lie on its
+    // segments, so each one within the aperture is on a segment within it.
+    const auto considerTangents = [&](const Entity& entity, std::uint64_t id) {
+        if (!modes.tangent || !from || std::holds_alternative<Text>(entity)) {
+            return;
+        }
+        const double curveDistance = distance(entity, pointer);
+        if (curveDistance > aperture) {
+            return;
+        }
+        curvePoints.clear();
+        for (const Vec2& tangent : tangentPoints(*from, entity)) {
+            curvePoints.push_back({tangent, SnapKind::Tangent});
+        }
+        consider(curveDistance, id);
+    };
+
     std::vector<EntityId> nearbyCurves;
     for (const EntityId id : candidates(document, squareAround(pointer, aperture))) {
         const Entity& entity = entityOf(document, id);
@@ -196,6 +215,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             distance(entity, pointer) <= aperture) {
             nearbyCurves.push_back(id);
         }
+        considerTangents(entity, id.value);
         if (const auto* polyline = std::get_if<Polyline>(&entity)) {
             forEachSnapSegment(*polyline, [&](const PolylineSegment& segment) {
                 const double segmentDistance = distance(segment, pointer);
