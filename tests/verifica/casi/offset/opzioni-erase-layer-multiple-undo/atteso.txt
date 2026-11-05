@@ -8,7 +8,7 @@ entities:
   262 LINE layer="Mura" start=0,60 end=20,60
   263 LINE layer="Mura" start=0,65 end=20,65
   264 LINE layer="Mura" start=0,45 end=20,45
-  265 LINE layer="Mura" start=0,40 end=20,40
+  265 LINE layer="Mura" start=0,45 end=20,45
 messages:
   Command: LINE
   Specify first point: 0,0
@@ -118,7 +118,7 @@ entities:
   262 LINE layer="Mura" start=0,60 end=20,60
   263 LINE layer="Mura" start=0,65 end=20,65
   264 LINE layer="Mura" start=0,45 end=20,45
-  265 LINE layer="Mura" start=0,40 end=20,40
+  265 LINE layer="Mura" start=0,45 end=20,45
 messages:
   Command: REDO
 prompt: Command:
