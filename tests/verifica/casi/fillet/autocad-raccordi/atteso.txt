@@ -22,14 +22,14 @@ entities:
   274 LINE start=0,200 end=0,240
   275 CIRCLE center=80,220 radius=10
   276 LINE start=60,200 end=110,200
-  277 ARC center=10,10 radius=10 start-angle=180 end-angle=270
-  278 ARC center=65,5 radius=5 start-angle=270 end-angle=0
-  279 ARC center=130,10 radius=10 start-angle=270 end-angle=90
-  280 ARC center=175,-2 radius=3 start-angle=112.619864948 end-angle=270
-  281 ARC center=242.845232579,-2 radius=3 start-angle=171.150116902 end-angle=270
-  282 ARC center=505,5 radius=5 start-angle=180 end-angle=270
-  283 CIRCLE center=8,208 radius=8
-  284 CIRCLE center=87.7459666924,206 radius=6
+  289 ARC center=10,10 radius=10 start-angle=180 end-angle=270
+  290 ARC center=65,5 radius=5 start-angle=270 end-angle=0
+  291 ARC center=130,10 radius=10 start-angle=270 end-angle=90
+  292 ARC center=175,-2 radius=3 start-angle=112.619864948 end-angle=270
+  293 ARC center=242.845232579,-2 radius=3 start-angle=171.150116902 end-angle=270
+  294 ARC center=505,5 radius=5 start-angle=180 end-angle=270
+  295 CIRCLE center=8,208 radius=8
+  296 CIRCLE center=87.7459666924,206 radius=6
 messages:
   Command: OPEN
   Enter name of drawing to open: ingresso.dxf

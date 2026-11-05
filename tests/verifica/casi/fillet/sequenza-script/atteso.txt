@@ -9,9 +9,9 @@ entities:
   261 LINE start=500,0 end=500,30
   262 LINE start=0,200 end=40,200
   263 LINE start=0,200 end=0,240
-  264 ARC center=10,10 radius=10 start-angle=180 end-angle=270
-  265 ARC center=505,5 radius=5 start-angle=180 end-angle=270
-  266 CIRCLE center=8,208 radius=8
+  265 ARC center=10,10 radius=10 start-angle=180 end-angle=270
+  266 ARC center=505,5 radius=5 start-angle=180 end-angle=270
+  267 CIRCLE center=8,208 radius=8
 messages:
   Command: OPEN
   Enter name of drawing to open: ingresso.dxf
