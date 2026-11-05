@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -489,6 +490,58 @@ TEST(DocumentQuery, PerpendicularOfACircleIsTheNearerFootInTheAperture) {
                SnapKind::Perpendicular, {0, 10});
     expectSnap(findSnap(document, {0.3, -9.7}, 1.0, kPerpendicularOnly, Vec2{0, 20}),
                SnapKind::Perpendicular, {0, -10});
+}
+
+// --- findSnap: tangent (docs/adr/0033, points 4 and 5; package P19) ---
+
+constexpr SnapModes kTangentOnly{false, false, false, false, false, false, true, false};
+
+TEST(DocumentQuery, TangentNeedsTheBasePointAndThePointInTheAperture) {
+    Document document;
+    document.add(Circle{{0, 0}, 5});
+    // From (10,0) the two lines touch the circle at x = 2.5,
+    // y = +-5 * sqrt(75) / 10.
+    const double y = 5.0 * std::sqrt(75.0) / 10.0;
+    expectSnap(findSnap(document, {2.6, 4.2}, 1.0, kTangentOnly, Vec2{10, 0}), SnapKind::Tangent,
+               {2.5, y});
+    expectSnap(findSnap(document, {2.6, -4.2}, 1.0, kTangentOnly, Vec2{10, 0}), SnapKind::Tangent,
+               {2.5, -y});
+    // Without a base point the mode gives nothing.
+    EXPECT_EQ(findSnap(document, {2.6, 4.2}, 1.0, kTangentOnly), std::nullopt);
+    // On the circle but far from both points of tangency.
+    EXPECT_EQ(findSnap(document, {-5.0, 0.2}, 1.0, kTangentOnly, Vec2{10, 0}), std::nullopt);
+    // From inside the circle there is no tangent.
+    EXPECT_EQ(findSnap(document, {2.6, 4.2}, 1.0, kTangentOnly, Vec2{1, 0}), std::nullopt);
+    // With the mode off (the default) there is none.
+    EXPECT_NE(kindOf(findSnap(document, {2.6, 4.2}, 1.0, kAllModes, Vec2{10, 0})),
+              SnapKind::Tangent);
+}
+
+TEST(DocumentQuery, TangentOfAnArcIsOnlyOnTheArcAndALineHasNone) {
+    Document document;
+    document.add(Arc{{0, 0}, 5, 0, kPi / 2.0});
+    document.add(segment({20, 0}, {30, 0}));
+    const double y = 5.0 * std::sqrt(75.0) / 10.0;
+    expectSnap(findSnap(document, {2.6, 4.2}, 1.0, kTangentOnly, Vec2{10, 0}), SnapKind::Tangent,
+               {2.5, y});
+    EXPECT_EQ(findSnap(document, {2.6, -4.2}, 1.0, kTangentOnly, Vec2{10, 0}), std::nullopt);
+    EXPECT_EQ(findSnap(document, {25.0, 0.2}, 1.0, kTangentOnly, Vec2{25, 10}), std::nullopt);
+}
+
+TEST(DocumentQuery, TangentOfAPolylineArcAndTheEndpointFirstOnATie) {
+    // Two half circles below (0,0)-(2,0)-(4,0): from (2,1) the shared vertex
+    // (2,0) is the point of tangency of both (B7 of #464).
+    Document document;
+    Polyline polyline;
+    polyline.addVertex({0, 0}, 1.0);
+    polyline.addVertex({2, 0}, 1.0);
+    polyline.addVertex({4, 0});
+    document.add(polyline);
+    expectSnap(findSnap(document, {2.1, -0.1}, 0.5, kTangentOnly, Vec2{2, 1}), SnapKind::Tangent,
+               {2, 0});
+    constexpr SnapModes kEndpointAndTangent{true, false, false, false, false, false, true, false};
+    EXPECT_EQ(kindOf(findSnap(document, {2.1, -0.1}, 0.5, kEndpointAndTangent, Vec2{2, 1})),
+              SnapKind::Endpoint);
 }
 
 TEST(DocumentQuery, TiesFollowEndpointMidpointQuadrantPerpendicular) {

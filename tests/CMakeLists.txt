@@ -52,6 +52,7 @@ add_executable(tg_tests
     core/color_test.cpp
     core/curve_parts_test.cpp
     core/dashes_test.cpp
+    core/fillet_test.cpp
     core/lineweight_test.cpp
     core/linetype_pattern_test.cpp
     core/document_query_test.cpp

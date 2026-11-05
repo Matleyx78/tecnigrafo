@@ -318,7 +318,10 @@ VertexFillet filletVertex(const Polyline& polyline, Corner corner, const Vec2& p
                                           vertices[start].endWidth, first);
         const double secondWidth =
             widthAt(later.start, later.end, original.startWidth, original.endWidth, second);
-        const PolylineVertex arcStart{first, fillet.bulge, firstWidth, secondWidth};
+        // Fillet::bulge runs from onFirst to onSecond: from the later
+        // segment to the earlier one when the later came first.
+        const double bulge = earlierFirst ? fillet.bulge : -fillet.bulge;
+        const PolylineVertex arcStart{first, bulge, firstWidth, secondWidth};
         const PolylineVertex lineStart{second, original.bulge, secondWidth, original.endWidth};
         // A kept segment the rule finds degenerate is not created
         // (docs/adr/0036, point 5): its far vertex takes the point of
