@@ -129,7 +129,6 @@ undo:
   Offset
   Offset
   Offset
-  Offset
 redo:
 snap: on
 ortho: off

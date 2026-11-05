@@ -5,7 +5,7 @@ entities:
   257 LINE start=0,0 end=20,0
   258 CIRCLE center=50,0 radius=10
   259 ARC center=100,0 radius=10 start-angle=0 end-angle=90
-  260 TEXT position=0,50 alignment-point=0,50 height=2.5 rotation=0 width-factor=1 oblique=0 style="STANDARD" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1"
+  260 TEXT position=0,50 alignment-point=0,50 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Tg1" ~box=0,49.22995031937544;6.26153300212917,49.22995031937544;6.26153300212917,53.28956706884315;0,53.28956706884315
   261 LINE start=0,4 end=20,4
   262 LINE start=0,-6 end=20,-6
   263 CIRCLE center=50,0 radius=15
@@ -21,11 +21,10 @@ messages:
   Specify center point for circle or [3P/2P]: 50,0
   Specify radius of circle or [Diameter]: 10
   Command: ARC
-  Specify start point of arc or [Center]: C
-  Specify center point of arc: 100,0
   Specify start point of arc: 110,0
-  Specify end point of arc or [Angle/chord Length]: A
-  Specify included angle: 90
+  Specify second point of arc or [Center]: C
+  Specify center point of arc: 100,0
+  Specify end point of arc: 100,10
   Command: TEXT
   Specify start point of text: 0,50
   Specify height <2.5000>: 2.5
