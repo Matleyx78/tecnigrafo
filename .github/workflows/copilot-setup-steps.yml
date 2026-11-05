@@ -43,6 +43,10 @@ jobs:
           version: '6.8.3'
           dir: /home/runner/qt
           cache: true
+      # The Qt action leaves its log in the working tree, where the agent
+      # would commit it.
+      - name: Remove the Qt installer log
+        run: rm -f aqtinstall.log
       # The oracle of the verification cases, pinned like in ci.yml.
       - uses: actions/setup-python@v5
         with:

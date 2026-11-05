@@ -10,8 +10,10 @@ e scrivilo nella pull request.
 - Ti assegna la issue il responsabile, con "Assign to Copilot": l'assegnazione
   vale come "il tuo nome come assegnatario" del nucleo. Non lavori su issue che
   non ti sono assegnate.
-- Etichette e commenti della issue (`AA-Presa in carico`, "Presa in carico da
-  …") li gestisce il responsabile: tu non hai i permessi, salta quei passi.
+- Etichette e commenti della issue li gestisce il responsabile: non toccarli.
+  Sulla issue assegnata a te, `AA-Presa in carico` (con `agente:copilot`) l'ha
+  messa il responsabile per te: non vuol dire che ci lavora un altro agente.
+  Il punto 1 di "Per prima cosa: prendi in carico" per te è già fatto: lavora.
 - Il tuo nome di agente, nei commenti e nella pull request, è **Copilot**.
 
 ## Ambiente
@@ -48,3 +50,5 @@ La build è in `build-copilot/`. Le altre regole dei comandi sono in
 - La descrizione segue il modello della pull request, in italiano, con la
   sezione sull'uso dell'IA compilata e `Closes #N`.
 - Leggi solo i file che il lavoro richiede: ogni file letto consuma crediti.
+- Committa solo i file del pacchetto: niente log o file generati (per esempio
+  `aqtinstall.log`). Controlla `git status` prima di pubblicare.
