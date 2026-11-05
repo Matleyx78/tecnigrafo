@@ -9,6 +9,7 @@
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
+#include "tg/cmd/commands/offset_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
 #include "tg/cmd/commands/trim_extend_commands.hpp"
@@ -538,6 +539,54 @@ CommandDescription ScaleCommand::description(Variable variable) {
             "Sets the linetype scale factor of new objects.",
             false,
             {{"scale", "Enter new value for CELTSCALE <{default}>:", ValueType::Real, {}, true}}};
+}
+
+CommandDescription OffsetCommand::description() {
+    return {"OFFSET",
+            {"O"},
+            "Creates a parallel or concentric copy of an object.",
+            false,
+            {{"distance",
+              "Specify offset distance or [Through/Erase/Layer] <{default}>:",
+              ValueType::Distance,
+              {{"Through", "T"}, {"Erase", "E"}, {"Layer", "L"}},
+              true},
+             {"second-point", "Specify second point:", ValueType::Point, {}, true},
+             {"erase",
+              "Erase source object after offsetting? [Yes/No] <{default}>:",
+              ValueType::Keyword,
+              {{"Yes", "Y"}, {"No", "N"}},
+              true},
+             {"layer",
+              "Enter layer option for offset objects [Current/Source] <{default}>:",
+              ValueType::Keyword,
+              {{"Current", "C"}, {"Source", "S"}},
+              true},
+             {"object",
+              "Select object to offset or [Exit/Undo] <Exit>:",
+              ValueType::Object,
+              {{"Exit", "E"}, {"Undo", "U"}},
+              true},
+             {"side",
+              "Specify point on side to offset or [Exit/Multiple/Undo] <Exit>:",
+              ValueType::Point,
+              {{"Exit", "E"}, {"Multiple", "M"}, {"Undo", "U"}},
+              true},
+             {"through",
+              "Specify through point or [Exit/Multiple/Undo] <Exit>:",
+              ValueType::Point,
+              {{"Exit", "E"}, {"Multiple", "M"}, {"Undo", "U"}},
+              true},
+             {"multiple-side",
+              "Specify point on side to offset or [Exit/Undo] <Exit>:",
+              ValueType::Point,
+              {{"Exit", "E"}, {"Undo", "U"}},
+              true},
+             {"multiple-through",
+              "Specify through point or [Exit/Undo] <Exit>:",
+              ValueType::Point,
+              {{"Exit", "E"}, {"Undo", "U"}},
+              true}}};
 }
 
 CommandDescription TrimExtendCommand::description(Action action) {

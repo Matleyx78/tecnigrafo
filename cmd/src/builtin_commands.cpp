@@ -16,6 +16,7 @@
 #include "tg/cmd/commands/line_command.hpp"
 #include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
+#include "tg/cmd/commands/offset_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
@@ -56,6 +57,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
                  [] { return std::make_unique<MirrtextCommand>(); });
     registry.add(MoveCommand::description(), [] { return std::make_unique<MoveCommand>(); });
     registry.add(detail::newDescription(), [] { return std::make_unique<NewCommand>(); });
+    registry.add(OffsetCommand::description(), [] { return std::make_unique<OffsetCommand>(); });
     registry.add(detail::openDescription(), [] { return std::make_unique<OpenCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });
     registry.add(PolarangCommand::description(),

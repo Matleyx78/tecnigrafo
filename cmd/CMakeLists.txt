@@ -19,6 +19,7 @@ add_library(tg_cmd
     src/commands/line_command.cpp
     src/commands/mirror_commands.cpp
     src/commands/move_copy_commands.cpp
+    src/commands/offset_command.cpp
     src/commands/pline_command.cpp
     src/commands/property_commands.cpp
     src/commands/rotate_scale_commands.cpp
