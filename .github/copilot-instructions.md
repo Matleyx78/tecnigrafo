@@ -11,9 +11,12 @@ e scrivilo nella pull request.
   vale come "il tuo nome come assegnatario" del nucleo. Non lavori su issue che
   non ti sono assegnate.
 - Etichette e commenti della issue li gestisce il responsabile: non toccarli.
-  Sulla issue assegnata a te, `AA-Presa in carico` (con `agente:copilot`) l'ha
-  messa il responsabile per te: non vuol dire che ci lavora un altro agente.
-  Il punto 1 di "Per prima cosa: prendi in carico" per te è già fatto: lavora.
+  Per te la presa in carico è l'assegnazione con `agente:copilot`: il
+  responsabile non mette `AA-Presa in carico`. Se però la trovi, fermati come
+  dice il punto 1: ci lavora davvero un altro agente.
+- I casi di riferimento del tuo pacchetto (`tests/verifica/casi/`) fanno parte
+  della scheda: leggi quelli citati in "Fatto quando" prima di dire che la
+  scheda non decide un punto.
 - Il tuo nome di agente, nei commenti e nella pull request, è **Copilot**.
 
 ## Ambiente
