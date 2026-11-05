@@ -43,7 +43,7 @@ protected:
         m_runner.setPixelSize(0.1);
         m_runner.setMessageSink(
             [this](std::string message) { m_messages.push_back(std::move(message)); });
-        m_runner.setDescriptionCheck([this](const std::string& error) { ADD_FAILURE() << error; });
+        m_runner.setDescriptionCheck([](const std::string& error) { ADD_FAILURE() << error; });
     }
 
     void type(std::initializer_list<std::string_view> lines) {
