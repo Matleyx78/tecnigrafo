@@ -63,8 +63,11 @@ void expectPoint(const Vec2& actual, const Vec2& expected) {
 }
 
 void expectLine(const std::optional<Entity>& actual, const Vec2& start, const Vec2& end) {
-    ASSERT_TRUE(actual.has_value());
-    const auto* got = std::get_if<Line>(&actual.value());
+    if (!actual) {
+        ADD_FAILURE() << "no line";
+        return;
+    }
+    const auto* got = std::get_if<Line>(&*actual);
     ASSERT_NE(got, nullptr);
     expectPoint(got->start, start);
     expectPoint(got->end, end);
@@ -76,8 +79,11 @@ double angleGap(double a, double b) {
 }
 
 void expectArc(const std::optional<Entity>& actual, const Arc& expected) {
-    ASSERT_TRUE(actual.has_value());
-    const auto* got = std::get_if<Arc>(&actual.value());
+    if (!actual) {
+        ADD_FAILURE() << "no arc";
+        return;
+    }
+    const auto* got = std::get_if<Arc>(&*actual);
     ASSERT_NE(got, nullptr);
     expectPoint(got->center, expected.center);
     EXPECT_NEAR(got->radius, expected.radius, kBuilt);
@@ -98,8 +104,26 @@ void expectVertices(const Polyline& actual, std::initializer_list<V> expected) {
     }
 }
 
-const Polyline& polylineOf(const std::optional<Entity>& entity) {
-    return std::get<Polyline>(entity.value());
+Polyline polylineOf(const std::optional<Entity>& entity) {
+    if (!entity) {
+        ADD_FAILURE() << "no polyline";
+        return {};
+    }
+    const auto* polyline = std::get_if<Polyline>(&*entity);
+    if (polyline == nullptr) {
+        ADD_FAILURE() << "not a polyline";
+        return {};
+    }
+    return *polyline;
+}
+
+void expectCircle(const std::optional<Circle>& actual, const Vec2& center, double radius) {
+    if (!actual) {
+        ADD_FAILURE() << "no circle";
+        return;
+    }
+    expectPoint(actual->center, center);
+    EXPECT_EQ(actual->radius, radius);
 }
 
 // --- fillet: two entities ---
@@ -459,14 +483,12 @@ TEST(CircleTangentTangentRadius, BetweenTwoLinesAndACircleAndALine) {
     const TangentCircleResult lines = circleTangentTangentRadius(
         line({0, 200}, {40, 200}), {10, 200}, line({0, 200}, {0, 240}), {0, 210}, 8.0);
     ASSERT_EQ(lines.outcome, CornerOutcome::Done);
-    ASSERT_TRUE(lines.circle.has_value());
-    expectPoint(lines.circle.value().center, {8, 208});
-    EXPECT_EQ(lines.circle.value().radius, 8.0);
+    expectCircle(lines.circle, {8, 208}, 8.0);
 
     const TangentCircleResult mixed = circleTangentTangentRadius(
         Circle{{80, 220}, 10}, {74, 212}, line({60, 200}, {110, 200}), {90, 200}, 6.0);
     ASSERT_EQ(mixed.outcome, CornerOutcome::Done);
-    expectPoint(mixed.circle.value().center, {80.0 + std::sqrt(60.0), 206});
+    expectCircle(mixed.circle, {80.0 + std::sqrt(60.0), 206}, 6.0);
 }
 
 TEST(CircleTangentTangentRadius, APolylineSegmentAndATextNotAllowed) {
@@ -474,7 +496,7 @@ TEST(CircleTangentTangentRadius, APolylineSegmentAndATextNotAllowed) {
     const TangentCircleResult result =
         circleTangentTangentRadius(corner, {10, 200}, corner, {0, 210}, 8.0);
     ASSERT_EQ(result.outcome, CornerOutcome::Done);
-    expectPoint(result.circle.value().center, {8, 208});
+    expectCircle(result.circle, {8, 208}, 8.0);
     EXPECT_EQ(circleTangentTangentRadius(Text{}, {0, 0}, corner, {0, 210}, 8.0).outcome,
               CornerOutcome::NotAllowed);
 }
