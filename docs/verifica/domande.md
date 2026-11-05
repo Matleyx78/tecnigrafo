@@ -219,10 +219,17 @@ punto sta esattamente sulla retta o sul cerchio dell'altra curva),
 `not-allowed` (un'entità che il comando non prende), `out-of-domain` (esiste,
 ma una sua costruzione cade oltre il dominio di solid-space: la diagnosi
 `outOfDomain` sul raggio di `tangency.hpp`, o lo spigolo che `intersect` omette;
-aggiunto il 2026-11-01, ADR 0035, punti 13–15). Un raggio
+aggiunto il 2026-11-01, ADR 0035, punti 13–15), `radius-too-large` (solo
+`fillet`: la parte tenuta farebbe tornare una linea indietro oltre l'estremo
+che tiene, l'esito `radiusTooLarge` di `tangency.hpp`; aggiunto il 2026-11-05,
+dalla decisione del 2026-11-04 sulla Matleyx78/solid-space#187). Un raggio
 oltre 2^50 dà `none`, e così una parte tenuta che il modello non rappresenta
 (un arco che si chiuderebbe in un cerchio, P15). Gli smussi hanno gli stessi
-esiti.
+esiti, tranne `radius-too-large`, più `distance-too-large`: una distanza, o la
+lunghezza, più lunga della parte tenuta della sua linea, o con l'angolo il
+secondo punto oltre la parte tenuta di `B` (decisioni del 2026-11-05, #507 e
+#508). Con `polyline` un vertice che darebbe uno di questi esiti resta com'è e
+conta in `short`.
 
 Con il taglio attivo, un'entità la cui parte tenuta è vuota o degenere per la
 regola del disegno si cancella, e non compare nella risposta: per esempio
@@ -246,14 +253,15 @@ geometria nuova compare a parte, come `new ARC …` (decisione B14 della #464,
 | Domanda | Risposta | Significato |
 |---|---|---|
 | `chamfer <A> x1,y1 <B> x2,y2 distances=<d1>,<d2> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con le due distanze, la prima su `A` |
-| `chamfer <A> x1,y1 <B> x2,y2 angle=<l>,<gradi> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con la lunghezza su `A` e l'angolo: dal primo punto, sulla parte tenuta di `A` alla lunghezza dallo spigolo, la direzione verso lo spigolo ruotata dell'angolo verso il lato della parte tenuta di `B`; `none` se quella retta è parallela a `B` o la incontra fuori dalla sua parte tenuta |
+| `chamfer <A> x1,y1 <B> x2,y2 angle=<l>,<gradi> [trim=no]` | come `fillet`, con `new LINE …` | lo smusso con la lunghezza su `A` e l'angolo: dal primo punto, sulla parte tenuta di `A` alla lunghezza dallo spigolo, la direzione verso lo spigolo ruotata dell'angolo verso il lato della parte tenuta di `B`; `none` se quella retta è parallela a `B` o la incontra nello spigolo o dall'altra parte; `distance-too-large` se la incontra dalla parte tenuta ma oltre la sua fine (decisione del 2026-11-05, #508) |
 | `chamfer <P> x1,y1 x2,y2 distances=<d1>,<d2> [trim=no]` (anche `angle=<l>,<gradi>`) | `P <entità>`, con `trim=no` anche `; new LINE …`, o un esito | lo smusso tra i due segmenti dritti della polilinea `P` più vicini ai due punti, il primo con la prima distanza; con `trim=no` `P` resta com'è e la linea nuova compare a parte (nessuna con le due distanze zero) |
 | `chamfer <P> polyline distances=<d1>,<d2> [trim=no]` | `<entità> done=<n> short=<m>`; con `trim=no` `<entità>`, poi uno `; new LINE …` per vertice smussato e `done=<n> short=<m>` | la polilinea `P` con tutti i vertici tra segmenti dritti smussati, nell'ordine di `fillet … polyline`; con `trim=no` come per `fillet` (decisione B6, rivista il 2026-11-02) |
 
 Un punto la cui proiezione sulla retta della sua linea è esattamente lo
 spigolo dà `ambiguous`; una sola distanza zero dà `none`; una distanza (o la
 lunghezza) uguale alla parte tenuta cancella quella linea (decisioni B8 e B9
-della #464, 2026-11-01).
+della #464, 2026-11-01); una più lunga dà `distance-too-large` (decisione del
+2026-11-05, #507).
 
 **Unione** (P22, richiesta [Matleyx78/solid-space#23](https://github.com/Matleyx78/solid-space/issues/23),
 ADR 0035, punti 17–20)

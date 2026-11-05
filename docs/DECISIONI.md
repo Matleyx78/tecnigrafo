@@ -979,5 +979,6 @@ i rimandi ai documenti che cambia.
   Cambiano le schede [P19](tappe/0.7/P19-raccordi-core.md) (solo
   l'enumeratore), [P20](tappe/0.7/P20-fillet.md) e
   [P21](tappe/0.7/P21-chamfer.md), la tabella dei messaggi di
-  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md) e il piano della
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md), il catalogo delle
+  [domande](verifica/domande.md) (esito `distance-too-large`) e il piano della
   [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
