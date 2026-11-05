@@ -12,7 +12,9 @@
   revisione di B6 dopo le prove in AutoCAD (#468); 2026-11-03, operazione
   snellimento (#478): il messaggio di `OutOfDomain`, deciso dal responsabile
   il 2026-11-02 (DECISIONI.md, 2026-11-03); 2026-11-04, il messaggio di
-  `RadiusTooLarge`, deciso nella Matleyx78/solid-space#187 (#494)
+  `RadiusTooLarge`, deciso nella Matleyx78/solid-space#187 (#494); 2026-11-05,
+  con la decisione del responsabile sulla #507: il comando finisce dopo un
+  raccordo non riuscito
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 13, 14, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -88,7 +90,12 @@ Select 2D polyline or [Radius]:
   - *Polyline* scrive `<n> lines were filleted` e, se ce ne sono,
     `<m> were too short` (tabella come sopra); i vertici rimasti per
     `OutOfDomain` sono tra questi, e i contatori seguono la visita dei vertici
-    originali in ordine (P19, B15).
+    originali in ordine (P19, B15);
+  - dopo un esito senza raccordo (`None`, `InfinitelyMany`, `AmbiguousPick`,
+    `NotAllowed`, `RadiusTooLarge`, `OutOfDomain`) il comando finisce, senza
+    modifiche e senza passi di annulla; con *Multiple* torna la prima domanda (decisione del 2026-11-05, #507). Per esempio, due cerchi
+    concentrici di raggio 5 e 10 di centro (200,0), scelti in (200,5) e
+    (200,10), raggio 5: `Cannot fillet those objects.` e `Command:`.
 - *Multiple* ripete finché non si preme Invio; *Undo* torna all'ultimo punto di
   ripristino.
 - **Sequenze:**
@@ -142,6 +149,11 @@ comando finisce allo stesso modo.
   parallele lontane di P19 in `FILLET`: lo stesso messaggio; un raggio oltre
   il dominio (2e15): il messaggio del raccordo impossibile e `Circle does not
   exist.`.
+- Dopo un raccordo non riuscito il comando finisce, senza passi di annulla, in
+  due test distinti: il raccordo impossibile (l'esempio dei cerchi
+  concentrici, `Cannot fillet those objects.`) e `RadiusTooLarge` (i dati di
+  P19, `Radius is too large.`); con *Multiple*, in tutti e due, torna la prima
+  domanda.
 
 ## Fatto quando
 

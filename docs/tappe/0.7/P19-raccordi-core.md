@@ -27,7 +27,9 @@
   ripeterlo, aspetta Matleyx78/solid-space#145 invece di #21, tratta il bulge 0
   come arco degenere e ha un caso in più (due parallele lontane);
   2026-11-04, B2 della #367 con le Matleyx78/solid-space#184 e #185 e
-  l'esito `RadiusTooLarge` della Matleyx78/solid-space#187 (#494)
+  l'esito `RadiusTooLarge` della Matleyx78/solid-space#187 (#494); 2026-11-05,
+  l'esito `DistanceTooLarge`, che dà solo lo smusso di P21 (decisione del
+  responsabile sulla #507)
 - **Modulo:** `core` (più le domande in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 2, 13, 14 e 23; [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md)
@@ -85,6 +87,10 @@ enum class CornerOutcome : std::uint8_t {
     /// FILLET only (fillet, filletSegments): the kept part would turn a line
     /// back past the end it keeps (radiusTooLarge, tangency.hpp, rule 5).
     RadiusTooLarge,
+    /// CHAMFER only (chamfer, chamferSegments; P21): a distance, or the
+    /// length, longer than the kept part of its line, or with an angle a
+    /// second point beyond the kept part of the second line.
+    DistanceTooLarge,
     NotAllowed,      ///< an entity the command does not take
     /// It exists, but a construction is beyond solid-space's domain: the
     /// outOfDomain diagnosis on the radius of fillet and tangentCircleNear

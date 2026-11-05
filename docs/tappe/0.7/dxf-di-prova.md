@@ -281,6 +281,7 @@ Prima dei pacchetti indicati, una prova a mano:
    | `FILLET` | `Cannot fillet those objects.` (`None`, `InfinitelyMany`, `NotAllowed`) | scritto da noi |
    | `FILLET` | `Radius is too large.` (`RadiusTooLarge`) | deciso nella Matleyx78/solid-space#187 |
    | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |
+   | `CHAMFER` | `Chamfer distance too large.` (`DistanceTooLarge`: una distanza o la lunghezza più lunga della parte tenuta; con *Angle*, il secondo punto oltre la parte tenuta della seconda linea) | messaggio di AutoCAD (la schermata della [guida a `CHAMFER` di cadmastercoach.com](https://cadmastercoach.com/commands/modify/chamfer), letta nella revisione della #508), deciso dal responsabile nella [#507](https://github.com/Matleyx78/tecnigrafo/pull/507) e nella [#508](https://github.com/Matleyx78/tecnigrafo/pull/508) (2026-11-05) |
    | `FILLET`, `CHAMFER` | `Pick a point that is not on the other object.` (`AmbiguousPick`) | scritto da noi |
    | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr* | `Result is beyond the drawing limits.` (`OutOfDomain`; prima `Lines are nearly parallel.`, cambiato il 2026-11-03, [DECISIONI.md](../../DECISIONI.md)) | scritto da noi |
    | `FILLET`, `CHAMFER`, `OFFSET` | `Value must be positive.` (distanza o raggio negativo); `Requires numeric distance.` (non numerico) | scritto da noi |

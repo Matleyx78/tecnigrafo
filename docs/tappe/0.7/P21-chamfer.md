@@ -12,7 +12,12 @@
   buchi B2, B6, B8, B9, B14 e B15 della #464 ([DECISIONI.md](../../DECISIONI.md));
   2026-11-02, con la revisione di B6 dopo le prove in AutoCAD (#468);
   2026-11-03, operazione snellimento (#478): il messaggio di `OutOfDomain` (P20)
-  e i rimandi a `intersection.hpp`
+  e i rimandi a `intersection.hpp`; 2026-11-05, con le decisioni del
+  responsabile sulla #507: il comando finisce dopo uno smusso non riuscito,
+  l'esito `DistanceTooLarge` con `Chamfer distance too large.` e il valore
+  predefinito della seconda distanza; con quelle sulla #508:
+  `DistanceTooLarge` anche con *Angle* e, con una distanza zero e l'altra
+  troppo lunga, `None` (B8 prevale)
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -60,6 +65,9 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
 /// NotAllowed. Parallel or collinear lines: None. Two almost parallel lines
 /// whose corner lies beyond solid-space's domain: OutOfDomain. A pick whose
 /// projection on the line of its entity is exactly the corner: AmbiguousPick.
+/// A distance, or the length, longer than the kept part of its line, or with
+/// an angle a second point beyond the kept part of the second line:
+/// DistanceTooLarge.
 /// With `trim` off the two lines are unchanged and the new line is in `added`.
 /// Precondition (also for the two functions below): the values of `spec`
 /// finite, distances and length >= 0.
@@ -116,16 +124,49 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
     linea**;
   - il secondo punto è dove questa retta incontra la seconda linea;
   - se la retta è parallela alla seconda linea, o il punto d'incontro non sta
-    sulla parte tenuta della seconda linea a distanza positiva dallo spigolo,
-    l'esito è `None`. Angolo 0, angoli troppo grandi e parallelismo non hanno
-    regole a parte.
+    dalla parte tenuta della seconda linea a distanza positiva dallo spigolo
+    (cade nello spigolo o dall'altra parte), l'esito è `None`;
+  - se il punto d'incontro sta dalla parte tenuta ma più lontano dallo spigolo
+    della fine della parte tenuta, l'esito è `DistanceTooLarge`, come per una
+    seconda distanza scritta troppo lunga (decisione del 2026-11-05, #508); a
+    distanza uguale la parte tenuta della seconda linea si cancella, come per
+    le distanze (B14). Per esempio, prima linea da (0,0) a (10,0), seconda da
+    (0,0) a (0,1), scelte in (8,0) e (0,0.5), lunghezza 5 e angolo 45°: lo
+    smusso incontra la seconda retta in (0,5), oltre (0,1), e l'esito è
+    `DistanceTooLarge`; con la seconda linea da (0,0) a (0,6) lo smusso va da
+    (5,0) a (0,5) e della seconda linea resta il tratto da (0,5) a (0,6);
+  - **la fascia al limite:** il secondo punto è costruito in `double`, e quando
+    cade alla fine della parte tenuta della seconda linea, entro l'errore di
+    arrotondamento della costruzione, l'esito è libero: la parte tenuta si
+    cancella o l'esito è `DistanceTooLarge` (fascia dell'ADR 0013 di
+    solid-space, punto 4; revisione della #508). Lo è per esempio la seconda
+    linea da (0,0) a (0,5) con i dati sopra. Chi implementa scrive nel
+    commento di `chamfer` l'errore della costruzione; nessun test pretende uno
+    dei due esiti nella fascia, e i test fuori dalla fascia (la seconda linea
+    fino a (0,1) e fino a (0,6)) distinguono i due lati. Il comando e la
+    domanda `chamfer` usano l'esito che dà `core`, senza ricalcolarlo;
+  - angolo 0, angoli troppo grandi e parallelismo non hanno regole a parte.
 
   Per esempio, prima linea sull'asse X, seconda sull'asse Y, parti tenute
   positive, lunghezza 1 e angolo 45°: lo smusso va da (1,0) a (0,1).
 - **Distanze** (B8): una sola distanza zero dà `None`; tutte e due zero, lo
   spigolo senza linea nuova; una distanza (o la lunghezza) uguale alla parte
-  tenuta, quella parte si cancella (B14); una distanza maggiore della parte
-  tenuta, `None`.
+  tenuta, quella parte si cancella (B14); una distanza (o la lunghezza)
+  maggiore della parte tenuta, `DistanceTooLarge`, in `chamfer` e in
+  `chamferSegments`, anche con *Angle* come detto sopra (decisione del
+  2026-11-05, #507: è il "messaggio di AutoCAD" dell'ADR 0035, punto 15,
+  distinto da quello delle parallele). Per
+  esempio, linee (200,0)→(210,0) e (200,0)→(200,10), scelte in (205,0) e
+  (200,5), distanze 15 e 15, o 5 e 15: `DistanceTooLarge`, e nessuna entità
+  cambia. In `chamferPolyline` un vertice così resta com'è e conta in
+  `tooShort`, come gli altri smussi che non stanno nei due segmenti.
+- **Una distanza zero e l'altra troppo lunga** (decisione del 2026-11-05 sulla
+  #508, R508-1): prevale B8, quindi `None`, prima di guardare le lunghezze, in
+  `chamfer` e in `chamferSegments`, in tutti e due gli ordini. Per esempio,
+  le linee sopra con le distanze 0 e 15, e le stesse linee scambiate, con i
+  clic scambiati e le distanze 15 e 0: `None` (`Lines are parallel.` in
+  `CHAMFER`, `none` nella domanda), e nessuna entità cambia. In
+  `chamferPolyline` il vertice conta in `tooShort` come prima.
 - Le linee si portano agli estremi dello smusso con `partOf` o `extendTo`
   (P15, B2: sceglie la `Location`), con `PartCourse::Direct` perché la
   costruzione dà un solo posto per linea (#359). Come in P19 (B14), una parte
@@ -169,16 +210,24 @@ Enter trim method [Distance/Angle] <{default}>:
 Select 2D polyline or [Distance/Angle/Method]:
 ```
 
+- Il valore predefinito della seconda distanza è la prima distanza appena
+  scritta, come in AutoCAD (decisione del 2026-11-05, #507): dopo
+  `Specify first chamfer distance <0.0000>: 5` viene
+  `Specify second chamfer distance <5.0000>:`. Gli altri valori predefiniti
+  sono quelli correnti.
 - Stesso schema di `FILLET` (P20): richieste di oggetto, `Shift` per lo
   spigolo, *Multiple*, *Undo*, le due sequenze (negli script il comando finisce
   dopo *Distance*, *Angle*, *mEthod* e *Trim*), le proprietà della linea nuova
   (ADR 0035, punto 16).
 - `NotAllowed` (un arco) dà `Cannot chamfer those objects.`, `None` e
-  `InfinitelyMany` danno `Lines are parallel.` (tabella di
+  `InfinitelyMany` danno `Lines are parallel.`, `DistanceTooLarge` dà
+  `Chamfer distance too large.` (tabella di
   [dxf-di-prova.md](dxf-di-prova.md), punto 3); `OutOfDomain` dà il messaggio di `FILLET`
   per "oltre il dominio", `Result is beyond the drawing limits.` (P20), distinto
   da `Lines are parallel.`; `AmbiguousPick` dà il messaggio di `AmbiguousPick`
-  di `FILLET` (B9); in tutti i casi la domanda resta.
+  di `FILLET` (B9). In tutti i casi nessuna entità cambia e, come in `FILLET`
+  (P20), il comando finisce; con *Multiple* torna la prima domanda (decisione
+  del 2026-11-05, #507).
 - Una distanza, una lunghezza o un angolo negativo o non numerico dà il
   messaggio della tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3
   (`Value must be positive.` o `Requires numeric distance.`), e la
@@ -220,6 +269,23 @@ Select 2D polyline or [Distance/Angle/Method]:
   parte tenuta, che cancella la linea), di B9 (clic proiettato sullo
   spigolo, `AmbiguousPick`) e di B15; angolo che dà una retta parallela alla
   seconda linea (`None`); valori negativi nel comando.
+- `DistanceTooLarge` con l'esempio di "Distanze" (distanze 15 e 15, 5 e 15, e
+  la sola prima troppo lunga, 15 e 5) e con quelli di *Angle*: il secondo
+  punto in (0,5), oltre la fine (0,1) della seconda linea, anche con la
+  seconda linea invertita, da (0,1) a (0,0); la sola lunghezza troppo lunga
+  (lunghezza 15 sulla prima linea lunga 10); in `chamfer` e in
+  `chamferSegments`. In `CHAMFER`: `Chamfer distance too large.`, nessuna
+  modifica e il comando finito. Con la seconda linea fino a (0,6) lo smusso
+  riesce; la seconda linea fino a (0,5) sta nella fascia e nessun test ne
+  fissa l'esito.
+- Dopo uno smusso non riuscito (le parallele, un arco) il comando finisce,
+  senza passi di annulla; con *Multiple* torna la prima domanda.
+- Il valore predefinito della seconda distanza: dopo una prima distanza 5,
+  `<5.0000>`.
+- Una distanza zero e l'altra troppo lunga (R508-1): le distanze 0 e 15, e
+  le linee scambiate con le distanze 15 e 0, danno `None` in `chamfer` e in
+  `chamferSegments`; in `CHAMFER`, `Lines are parallel.`, nessuna modifica e
+  il comando finito.
 - Rette quasi parallele (i dati di P19, da 0,0 a 1,0 e da 0,1 a
   1,1.0000000000000002): `OutOfDomain` in `chamfer` e il suo messaggio in
   `CHAMFER`, distinto da quello delle parallele; una linea di lunghezza zero:
