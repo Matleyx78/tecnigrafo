@@ -953,3 +953,26 @@ i rimandi ai documenti che cambia.
   tappa. Il suo ambiente è in `.github/workflows/copilot-setup-steps.yml`; le
   differenze dal nucleo (presa in carico, CI, `Assisted-by`) sono in
   `.github/copilot-instructions.md`.
+
+- **2026-11-05 — Esiti di `FILLET` e `CHAMFER` non riusciti
+  ([#507](https://github.com/Matleyx78/tecnigrafo/pull/507)).** Tre decisioni
+  del responsabile sui casi limite di R20 e R21:
+  - dopo un raccordo o uno smusso non riuscito (nessun raccordo, infiniti,
+    punto ambiguo, entità non ammessa, raggio o distanza troppo grande, oltre
+    il dominio) il comando finisce, senza modifiche; con *Multiple* torna la
+    prima domanda. Esempio: due parallele, `CHAMFER` con i clic sulle due,
+    `Lines are parallel.` e `Command:`;
+  - una distanza di smusso, o la lunghezza, più lunga della parte tenuta della
+    sua linea dà il messaggio di AutoCAD, `Distance is too large.`, con un
+    esito nuovo, `CornerOutcome::DistanceTooLarge`, in `chamfer` e
+    `chamferSegments`; prima era `None`, con `Lines are parallel.`. Esempio:
+    linee (200,0)→(210,0) e (200,0)→(200,10), clic in (205,0) e (200,5),
+    distanze 15 e 15;
+  - in `CHAMFER` il valore predefinito della seconda distanza è la prima
+    distanza appena scritta.
+
+  Cambiano le schede [P19](tappe/0.7/P19-raccordi-core.md) (solo
+  l'enumeratore), [P20](tappe/0.7/P20-fillet.md) e
+  [P21](tappe/0.7/P21-chamfer.md), la tabella dei messaggi di
+  [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md) e il piano della
+  [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
