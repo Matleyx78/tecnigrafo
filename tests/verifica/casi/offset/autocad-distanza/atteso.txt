@@ -10,19 +10,18 @@ entities:
   262 LWPOLYLINE closed=no vertex=400,0 vertex=400,-20 vertex=406,-20 vertex=406,0
   263 LWPOLYLINE closed=no vertex=450,0 vertex=470,0 bulge=0.9999999999999998 vertex=476,0 vertex=496,0
   264 LWPOLYLINE closed=yes vertex=1000150,999975 vertex=1000250,999975 vertex=1000250,1000025 vertex=1000150,1000025
-  265 LINE start=0,5 end=20,5
-  266 CIRCLE center=50,0 radius=7
-  267 CIRCLE center=50,0 radius=13
-  268 ARC center=100,0 radius=14 start-angle=0 end-angle=180
-  269 ARC center=100,0 radius=6 start-angle=0 end-angle=180
-  270 LWPOLYLINE closed=yes vertex=160,-15 vertex=240,-15 vertex=240,15 vertex=160,15
-  271 LWPOLYLINE closed=yes vertex=140,-35 vertex=260,-35 vertex=260,35 vertex=140,35
-  272 LWPOLYLINE closed=yes vertex=300,-6 vertex=340,-6 bulge=1 vertex=340,6 vertex=300,6 bulge=1
-  273 LWPOLYLINE closed=yes vertex=300,-14 vertex=340,-14 bulge=1 vertex=340,14 vertex=300,14 bulge=1
-  274 LWPOLYLINE closed=no vertex=402,0 vertex=402,-18 vertex=404,-18 vertex=404,0
-  275 LWPOLYLINE closed=no vertex=450,2 vertex=470,2 bulge=-0.4142135623730951 vertex=472,-3e-16 bulge=1 vertex=474,3e-16 bulge=-0.4142135623730951 vertex=476,2 vertex=496,2
-  276 LWPOLYLINE closed=no vertex=450,5 vertex=470,5 bulge=-0.1622776601683792 vertex=473,4.000000000000007 bulge=-0.1622776601683794 vertex=476,5 vertex=496,5
-  277 LWPOLYLINE closed=yes vertex=1000160,999985 vertex=1000240,999985 vertex=1000240,1000015 vertex=1000160,1000015
+  271 LINE start=0,5 end=20,5
+  272 CIRCLE center=50,0 radius=7
+  273 CIRCLE center=50,0 radius=13
+  274 ARC center=100,0 radius=14 start-angle=0 end-angle=180
+  275 ARC center=100,0 radius=6 start-angle=0 end-angle=180
+  276 LWPOLYLINE closed=yes vertex=160,-15 vertex=240,-15 vertex=240,15 vertex=160,15
+  277 LWPOLYLINE closed=yes vertex=140,-35 vertex=260,-35 vertex=260,35 vertex=140,35
+  278 LWPOLYLINE closed=yes vertex=300,-6 vertex=340,-6 bulge=1 vertex=340,6 vertex=300,6 bulge=1
+  279 LWPOLYLINE closed=yes vertex=300,-14 vertex=340,-14 bulge=1 vertex=340,14 vertex=300,14 bulge=1
+  280 LWPOLYLINE closed=no vertex=402,0 vertex=402,-18 vertex=404,-18 vertex=404,0
+  281 LWPOLYLINE closed=no vertex=450,2 vertex=470,2 bulge=-0.4142135623730951 vertex=472,-3e-16 bulge=1 vertex=474,3e-16 bulge=-0.4142135623730951 vertex=476,2 vertex=496,2
+  282 LWPOLYLINE closed=yes vertex=1000160,999985 vertex=1000240,999985 vertex=1000240,1000015 vertex=1000160,1000015
 messages:
   Command: OPEN
   Enter name of drawing to open: ingresso.dxf
@@ -104,6 +103,7 @@ messages:
   Specify offset distance or [Through/Erase/Layer] <2.0000>: 5
   Select object to offset or [Exit/Undo] <Exit>: 460,0
   Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 480,10
+  Cannot offset that object.
   Select object to offset or [Exit/Undo] <Exit>:
   Command: OFFSET
   Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
@@ -128,7 +128,6 @@ undo:
   Offset
   Offset
   Offset
-  Offset
 redo:
 snap: on
 ortho: off
@@ -139,4 +138,4 @@ statistics:
   ARC 3
   CIRCLE 3
   LINE 2
-  LWPOLYLINE 13
+  LWPOLYLINE 12
