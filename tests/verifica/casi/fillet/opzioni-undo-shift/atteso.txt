@@ -53,7 +53,6 @@ messages:
   Command: FILLET
   Current settings: Mode = TRIM, Radius = 5.0000
   Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 100,10
-  Select second object or shift-select to apply corner or [Radius]:
 prompt: Command:
 preview:
 selection: none
