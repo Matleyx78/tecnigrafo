@@ -127,25 +127,31 @@ struct Solved {
     std::optional<Arc> arc;  ///< with Done: none for the corner
 };
 
+/// fillet of solid-space on two curves, with one radius.
+Solved attempt(const g::Curve& first, const Vec2& pickFirst, const g::Curve& second,
+               const Vec2& pickSecond, double radius, const ToleranceRule& rule) {
+    auto made =
+        g::fillet(first, bridge::toPoint(pickFirst), second, bridge::toPoint(pickSecond), radius);
+    if (!made.hasValue()) {
+        return Solved{outcomeOf(made.diagnosis()), {}, std::nullopt};
+    }
+    const g::Fillet fillet = std::move(made).value();
+    if (fillet.outcome != g::TangencyOutcome::found) {
+        return Solved{outcomeOf(fillet.outcome), {}, std::nullopt};
+    }
+    return Solved{CornerOutcome::Done, fillet, filletArc(fillet, rule)};
+}
+
 /// fillet of solid-space on two curves. A fillet arc that is not added
 /// (filletArc) gives the result of radius 0, the corner (docs/adr/0036,
 /// point 5). Precondition: radius within [0, kMaxRadius].
 Solved solve(const g::Curve& first, const Vec2& pickFirst, const g::Curve& second,
              const Vec2& pickSecond, double radius, const ToleranceRule& rule) {
-    auto attempt =
-        g::fillet(first, bridge::toPoint(pickFirst), second, bridge::toPoint(pickSecond), radius);
-    if (!attempt.hasValue()) {
-        return Solved{outcomeOf(attempt.diagnosis()), {}, std::nullopt};
+    Solved solved = attempt(first, pickFirst, second, pickSecond, radius, rule);
+    if (solved.outcome == CornerOutcome::Done && !solved.arc && radius > 0.0) {
+        solved = attempt(first, pickFirst, second, pickSecond, 0.0, rule);
     }
-    g::Fillet fillet = std::move(attempt).value();
-    if (fillet.outcome != g::TangencyOutcome::found) {
-        return Solved{outcomeOf(fillet.outcome), {}, std::nullopt};
-    }
-    std::optional<Arc> arc = filletArc(fillet, rule);
-    if (!arc && radius > 0.0) {
-        return solve(first, pickFirst, second, pickSecond, 0.0, rule);
-    }
-    return Solved{CornerOutcome::Done, fillet, arc};
+    return solved;
 }
 
 /// The part of a line or an arc that a fillet keeps (Fillet::keepFirst and
@@ -547,9 +553,12 @@ std::vector<Vec2> tangentPoints(const Vec2& point, const Entity& entity) {
     for (std::size_t i = 0; i < bySegment.size(); ++i) {
         // The segment that follows: a point at the end of this one that is
         // at the start of that one is their common vertex, listed there (B7).
-        const std::size_t following = i + 1 < bySegment.size() ? i + 1
-                                      : polyline->isClosed()   ? 0
-                                                               : bySegment.size();
+        std::size_t following = bySegment.size();
+        if (i + 1 < bySegment.size()) {
+            following = i + 1;
+        } else if (polyline->isClosed()) {
+            following = 0;
+        }
         const bool followerStartsHere =
             following < bySegment.size() && following != i &&
             std::ranges::any_of(bySegment[following], [](const g::TangencyPoint& tangency) {
