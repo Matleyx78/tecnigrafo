@@ -955,7 +955,8 @@ i rimandi ai documenti che cambia.
   `.github/copilot-instructions.md`.
 
 - **2026-11-05 — Esiti di `FILLET` e `CHAMFER` non riusciti
-  ([#507](https://github.com/Matleyx78/tecnigrafo/pull/507)).** Tre decisioni
+  ([#507](https://github.com/Matleyx78/tecnigrafo/pull/507),
+  [#508](https://github.com/Matleyx78/tecnigrafo/pull/508)).** Tre decisioni
   del responsabile sui casi limite di R20 e R21:
   - dopo un raccordo o uno smusso non riuscito (nessun raccordo, infiniti,
     punto ambiguo, entità non ammessa, raggio o distanza troppo grande, oltre
@@ -967,7 +968,11 @@ i rimandi ai documenti che cambia.
     esito nuovo, `CornerOutcome::DistanceTooLarge`, in `chamfer` e
     `chamferSegments`; prima era `None`, con `Lines are parallel.`. Esempio:
     linee (200,0)→(210,0) e (200,0)→(200,10), clic in (205,0) e (200,5),
-    distanze 15 e 15;
+    distanze 15 e 15. Lo stesso con *Angle*, quando il secondo punto
+    costruito cade dalla parte tenuta della seconda linea ma oltre la sua fine
+    (decisione sulla [#508](https://github.com/Matleyx78/tecnigrafo/pull/508)):
+    prima linea (0,0)→(10,0), seconda (0,0)→(0,1), clic in (8,0) e (0,0.5),
+    lunghezza 5 e angolo 45°, secondo punto in (0,5);
   - in `CHAMFER` il valore predefinito della seconda distanza è la prima
     distanza appena scritta.
 

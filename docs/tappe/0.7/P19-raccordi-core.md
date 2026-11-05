@@ -88,7 +88,8 @@ enum class CornerOutcome : std::uint8_t {
     /// back past the end it keeps (radiusTooLarge, tangency.hpp, rule 5).
     RadiusTooLarge,
     /// CHAMFER only (chamfer, chamferSegments; P21): a distance, or the
-    /// length, longer than the kept part of its line.
+    /// length, longer than the kept part of its line, or with an angle a
+    /// second point beyond the kept part of the second line.
     DistanceTooLarge,
     NotAllowed,      ///< an entity the command does not take
     /// It exists, but a construction is beyond solid-space's domain: the

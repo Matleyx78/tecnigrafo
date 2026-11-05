@@ -15,7 +15,8 @@
   e i rimandi a `intersection.hpp`; 2026-11-05, con le decisioni del
   responsabile sulla #507: il comando finisce dopo uno smusso non riuscito,
   l'esito `DistanceTooLarge` con `Distance is too large.` e il valore
-  predefinito della seconda distanza
+  predefinito della seconda distanza; con quella sulla #508:
+  `DistanceTooLarge` anche con *Angle*
 - **Modulo:** `cmd` (più lo smusso in `core` e la domanda `chamfer` in `script`)
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 1, 15, 16, 21, 22 e 23; [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md)
@@ -63,7 +64,8 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
 /// NotAllowed. Parallel or collinear lines: None. Two almost parallel lines
 /// whose corner lies beyond solid-space's domain: OutOfDomain. A pick whose
 /// projection on the line of its entity is exactly the corner: AmbiguousPick.
-/// A distance, or the length, longer than the kept part of its line:
+/// A distance, or the length, longer than the kept part of its line, or with
+/// an angle a second point beyond the kept part of the second line:
 /// DistanceTooLarge.
 /// With `trim` off the two lines are unchanged and the new line is in `added`.
 /// Precondition (also for the two functions below): the values of `spec`
@@ -121,9 +123,18 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
     linea**;
   - il secondo punto è dove questa retta incontra la seconda linea;
   - se la retta è parallela alla seconda linea, o il punto d'incontro non sta
-    sulla parte tenuta della seconda linea a distanza positiva dallo spigolo,
-    l'esito è `None`. Angolo 0, angoli troppo grandi e parallelismo non hanno
-    regole a parte.
+    dalla parte tenuta della seconda linea a distanza positiva dallo spigolo
+    (cade nello spigolo o dall'altra parte), l'esito è `None`;
+  - se il punto d'incontro sta dalla parte tenuta ma più lontano dallo spigolo
+    della fine della parte tenuta, l'esito è `DistanceTooLarge`, come per una
+    seconda distanza scritta troppo lunga (decisione del 2026-11-05, #508); a
+    distanza uguale la parte tenuta della seconda linea si cancella, come per
+    le distanze (B14). Per esempio, prima linea da (0,0) a (10,0), seconda da
+    (0,0) a (0,1), scelte in (8,0) e (0,0.5), lunghezza 5 e angolo 45°: lo
+    smusso incontra la seconda retta in (0,5), oltre (0,1), e l'esito è
+    `DistanceTooLarge`; con la seconda linea da (0,0) a (0,5) lo smusso va da
+    (5,0) a (0,5) e la seconda linea si cancella;
+  - angolo 0, angoli troppo grandi e parallelismo non hanno regole a parte.
 
   Per esempio, prima linea sull'asse X, seconda sull'asse Y, parti tenute
   positive, lunghezza 1 e angolo 45°: lo smusso va da (1,0) a (0,1).
@@ -131,8 +142,9 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
   spigolo senza linea nuova; una distanza (o la lunghezza) uguale alla parte
   tenuta, quella parte si cancella (B14); una distanza (o la lunghezza)
   maggiore della parte tenuta, `DistanceTooLarge`, in `chamfer` e in
-  `chamferSegments` (decisione del 2026-11-05, #507: è il "messaggio di
-  AutoCAD" dell'ADR 0035, punto 15, distinto da quello delle parallele). Per
+  `chamferSegments`, anche con *Angle* come detto sopra (decisione del
+  2026-11-05, #507: è il "messaggio di AutoCAD" dell'ADR 0035, punto 15,
+  distinto da quello delle parallele). Per
   esempio, linee (200,0)→(210,0) e (200,0)→(200,10), scelte in (205,0) e
   (200,5), distanze 15 e 15, o 5 e 15: `DistanceTooLarge`, e nessuna entità
   cambia. In `chamferPolyline` un vertice così resta com'è e conta in
@@ -239,7 +251,9 @@ Select 2D polyline or [Distance/Angle/Method]:
   parte tenuta, che cancella la linea), di B9 (clic proiettato sullo
   spigolo, `AmbiguousPick`) e di B15; angolo che dà una retta parallela alla
   seconda linea (`None`); valori negativi nel comando.
-- `DistanceTooLarge` con l'esempio di "Distanze" (distanze 15 e 15, e 5 e 15),
+- `DistanceTooLarge` con l'esempio di "Distanze" (distanze 15 e 15, e 5 e 15)
+  e con quello di *Angle* (il secondo punto in (0,5), oltre la fine della
+  seconda linea; e la seconda linea che si cancella quando finisce in (0,5)),
   in `chamfer` e in `chamferSegments`; in `CHAMFER`: `Distance is too large.`,
   nessuna modifica e il comando finito.
 - Dopo uno smusso non riuscito (le parallele, un arco) il comando finisce,
