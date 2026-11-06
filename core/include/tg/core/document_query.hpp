@@ -44,8 +44,8 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// Only segments within `aperture` of the pointer are considered; a polyline
 /// with a single vertex counts as a zero-length segment, which offers only its
 /// Endpoint. Among their enabled snap points within `aperture` of the pointer
-/// (endpoints, intersections, midpoints, quadrants and perpendicular feet;
-/// tangent points are not given yet) the nearest to the pointer wins; at
+/// (endpoints, intersections, midpoints, quadrants, perpendicular feet and
+/// tangent points) the nearest to the pointer wins; at
 /// equal distance the order is Endpoint, Intersection, Midpoint, Quadrant,
 /// Perpendicular, Tangent (docs/adr/0033, point 5), then the highest id wins,
 /// then the earliest segment. If there is none, the centre of the nearest

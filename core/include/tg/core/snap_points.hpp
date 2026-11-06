@@ -29,9 +29,9 @@ struct SnapModes {
     bool midpoint{true};
     bool center{true};
     bool insertion{true};
-    bool intersection{true};  ///< no snap point is given yet: package P15 of 0.7
+    bool intersection{true};
     bool perpendicular{false};
-    bool tangent{false};  ///< no snap point is given yet: package P19 of 0.7
+    bool tangent{false};
     bool quadrant{false};
     friend constexpr bool operator==(const SnapModes&, const SnapModes&) = default;
 };
@@ -69,7 +69,8 @@ void appendSnapPoints(const PolylineSegment& segment, const SnapModes& modes,
 /// has one, at most; a circle or arc has the two points of its circle on the
 /// line through the centre and `from` that fall on it, none if `from` is the
 /// centre, where every direction is perpendicular; a text has none.
-/// Intersection and Tangent points are not appended yet.
+/// Intersection and Tangent points are not appended here: findSnap gives
+/// them (document_query.hpp).
 void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<SnapPoint>& out,
                       const std::optional<Vec2>& from = std::nullopt);
 
