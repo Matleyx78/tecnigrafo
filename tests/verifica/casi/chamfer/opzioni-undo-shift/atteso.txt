@@ -52,7 +52,6 @@ messages:
   Command: CHAMFER
   (TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
   Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 100,10
-  Select second line or shift-select to apply corner or [Distance/Angle/Method]:
 prompt: Command:
 preview:
 selection: none
