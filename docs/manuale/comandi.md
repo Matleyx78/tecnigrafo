@@ -351,8 +351,10 @@ evidenziate con una linea tratteggiata.
 | clic nel vuoto, poi secondo clic a sinistra del primo | **intersezione**: prende anche le entità toccate dal rettangolo |
 | `Shift` durante il secondo clic del rettangolo | toglie le entità individuate invece di aggiungerle |
 
-Il rettangolo si costruisce con **due clic**, non trascinando il mouse. Dopo il
-primo clic compare `Specify opposite corner:`; il secondo angolo segue il
+Il rettangolo si costruisce con **due clic**, oppure **trascinando**: premi nel
+vuoto, trascina oltre 5 pixel e rilascia, e il rilascio vale come secondo clic
+(dettagli nel [manuale dell'interfaccia](interfaccia.md#finestra-di-selezione-chiusa-trascinando)).
+Dopo il primo clic compare `Specify opposite corner:`; il secondo angolo segue il
 puntatore. La finestra è blu trasparente con bordo continuo, l'intersezione è
 verde trasparente con bordo tratteggiato. La tolleranza del clic resta di 3 pixel
 anche cambiando lo zoom. Un clic su un'entità già scelta non la aggiunge due volte.
@@ -1579,6 +1581,7 @@ Le linee diventano da `5,0` a `30,0` e da `0,8` a `0,30`, e lo smusso va da
 Unisce più entità in una sola.
 
 - **Nome:** `JOIN`
+- **Alias:** `J`
 
 ### Le domande
 
