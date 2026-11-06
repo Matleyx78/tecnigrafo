@@ -281,11 +281,14 @@ Prima dei pacchetti indicati, una prova a mano:
    | `OFFSET` | `Cannot offset that object.` | scritto da noi |
    | `FILLET` | `Cannot fillet those objects.` (`None`, `InfinitelyMany`, `NotAllowed`) | scritto da noi |
    | `FILLET` | `Radius is too large.` (`RadiusTooLarge`) | deciso nella Matleyx78/solid-space#187 |
-   | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |
+   | `CHAMFER` | `Lines are parallel.` (`None`, `InfinitelyMany`; `None` anche con una sola distanza zero, P21, B8 e R508-1); `Cannot chamfer those objects.` (`NotAllowed`) | scritto da noi |
    | `CHAMFER` | `Chamfer distance too large.` (`DistanceTooLarge`: una distanza o la lunghezza più lunga della parte tenuta; con *Angle*, il secondo punto oltre la parte tenuta della seconda linea) | messaggio di AutoCAD (la schermata della [guida a `CHAMFER` di cadmastercoach.com](https://cadmastercoach.com/commands/modify/chamfer), letta nella revisione della #508), deciso dal responsabile nella [#507](https://github.com/Matleyx78/tecnigrafo/pull/507) e nella [#508](https://github.com/Matleyx78/tecnigrafo/pull/508) (2026-11-05) |
    | `FILLET`, `CHAMFER` | `Pick a point that is not on the other object.` (`AmbiguousPick`) | scritto da noi |
    | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr* | `Result is beyond the drawing limits.` (`OutOfDomain`; prima `Lines are nearly parallel.`, cambiato il 2026-11-03, [DECISIONI.md](../../DECISIONI.md)) | scritto da noi |
-   | `FILLET`, `CHAMFER`, `OFFSET` | `Value must be positive.` (distanza o raggio negativo); `Requires numeric distance.` (non numerico) | scritto da noi |
+   | `FILLET`, `CHAMFER` | `Value must be positive.` (raggio o distanza negativi; il raggio 0 di `FILLET` e le due distanze 0 di `CHAMFER` fanno lo spigolo, una sola distanza 0 dà `Lines are parallel.`) | scritto da noi |
+   | `OFFSET`, `CIRCLE` *Ttr* | `Value must be positive and nonzero.` (distanza o raggio nulli o negativi), deciso nella [#530](https://github.com/Matleyx78/tecnigrafo/pull/530#issuecomment-6689130590) | scritto da noi |
+   | `CHAMFER` | `Requires numeric distance.` (testo non numerico alle domande dei numeri; a quelle di `FILLET` e `OFFSET`, che accettano anche due punti, il testo non valido dà `Requires a distance, a point or an option.` della riga di comando) | scritto da noi |
+   | `CIRCLE` *Ttr* | `Circle does not exist.` (il nucleo non dà un cerchio da disegnare: `None`, anche con un raggio oltre `kMaxCoordinate`, `InfinitelyMany`, per esempio due segmenti sulla stessa retta, o `NotAllowed`; `OutOfDomain` resta `Result is beyond the drawing limits.`, ADR 0035, punti 14 e 23), aggiunto nella [#530](https://github.com/Matleyx78/tecnigrafo/pull/530#issuecomment-6689130590) | scritto da noi |
 
    Singolare e plurale: `<n> lines were filleted` con n = 1 resta così, senza
    forme speciali.

@@ -127,7 +127,7 @@ interattiva. I comandi con due sequenze:
 | `TEXT` | una riga dopo l'altra, fino a Invio su una riga vuota | una riga, poi il comando finisce | P3 |
 | `COPY` | copie fino a Invio | una copia, poi il comando finisce | P5 |
 | `TRIM`, `EXTEND` | modo di `TRIMEXTENDMODE`, rapido all'avvio | sempre il modo standard | P16 |
-| `FILLET`, `CHAMFER` | dopo *Radius*, *Distance* o *Angle* la domanda dei due oggetti torna | dopo quelle opzioni il comando finisce | P20, P21 |
+| `FILLET`, `CHAMFER` | dopo *Radius* o *Trim* (`FILLET`), dopo *Distance*, *Angle*, *Trim* o *mEthod* (`CHAMFER`) la domanda dei due oggetti torna | dopo quelle opzioni il comando finisce ([DECISIONI.md](../DECISIONI.md), 2026-11-06) | P20, P21 |
 | `JOIN` | più oggetti insieme | prima l'oggetto sorgente, poi gli oggetti da unire | P23 |
 
 ## File

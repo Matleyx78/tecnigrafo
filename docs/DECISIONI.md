@@ -1006,3 +1006,18 @@ i rimandi ai documenti che cambia.
   omettendo l'eventuale punto prima della virgola. Cambiano la [scheda P23](tappe/0.7/P23-join.md), la tabella dei
   messaggi delle [prove DXF](tappe/0.7/dxf-di-prova.md) e il
   [piano della tappa 0.7](tappe/0.7-modifiche.md).
+- **2026-11-06 — P24, messaggi della tabella e fine dei comandi negli script.**
+  Nella [#530](https://github.com/Matleyx78/tecnigrafo/pull/530#issuecomment-6689130590)
+  il responsabile conferma ciò che fa il codice in due punti in cui i
+  documenti erano rimasti indietro. `OFFSET` con distanza nulla o negativa
+  scrive `Value must be positive and nonzero.`, come il raggio di `CIRCLE`
+  *Ttr*, e *Ttr* senza cerchio possibile scrive `Circle does not exist.`: la
+  tabella dei messaggi delle [prove DXF](tappe/0.7/dxf-di-prova.md) è corretta.
+  Negli script di AutoCAD `FILLET` finisce dopo *Radius* e dopo *Trim*,
+  `CHAMFER` dopo *Distance*, *Angle*, *Trim* e *mEthod*, come già dicono le
+  schede [P20](tappe/0.7/P20-fillet.md) e [P21](tappe/0.7/P21-chamfer.md): la
+  decisione completa la tabella del punto 8
+  dell'[ADR 0032](adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md), che
+  nomina solo *Radius*, *Distance* e *Angle*; è corretta anche la tabella
+  delle sequenze in [verifica/script.md](verifica/script.md). Il [manuale dei
+  comandi](manuale/comandi.md) descrive tutti e due i punti.
