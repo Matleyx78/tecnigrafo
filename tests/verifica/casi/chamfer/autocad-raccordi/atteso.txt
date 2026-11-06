@@ -6,7 +6,7 @@ entities:
   258 LINE start=0,108 end=0,130
   259 LINE start=56,100 end=80,100
   260 LINE start=50,103.464101615 end=50,130
-  261 LWPOLYLINE closed=yes vertex=103,100 vertex=137,100 vertex=140,103 vertex=140,127 vertex=137,130 vertex=103,130 vertex=100,127 vertex=100,103
+  261 LWPOLYLINE closed=yes vertex=100,103 vertex=103,100 vertex=137,100 vertex=140,103 vertex=140,127 vertex=137,130 vertex=103,130 vertex=100,127
   262 LINE start=5,100 end=0,108
   263 LINE start=56,100 end=50,103.464101615
 messages:

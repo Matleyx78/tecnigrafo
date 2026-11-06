@@ -41,12 +41,12 @@ messages:
   Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: T
   Enter Trim mode option [Trim/No trim] <Trim>: N
   Command: CHAMFER
-  (NO TRIM mode) Current chamfer Length = 6.0000, Angle = 30
+  (NOTRIM mode) Current chamfer Length = 6.0000, Angle = 30
   Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: D
   Specify first chamfer distance <5.0000>: 5
   Specify second chamfer distance <5.0000>: 5
   Command: CHAMFER
-  (NO TRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
+  (NOTRIM mode) Current chamfer Dist1 = 5.0000, Dist2 = 5.0000
   Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 520,0
   Select second line or shift-select to apply corner or [Distance/Angle/Method]: 500,20
 prompt: Command:
