@@ -4,6 +4,7 @@
 #include "tg/cmd/commands/circle_command.hpp"
 
 #include "tg/cmd/value_format.hpp"
+#include "tg/core/fillet.hpp"
 
 #include <cmath>
 #include <numeric>
@@ -35,16 +36,32 @@ Status CircleCommand::handle(CommandContext& context, const Input& input) {
             m_stage = Stage::TwoFirst;
         } else if (m_stage == Stage::Center && keyword->keyword == "3P") {
             m_stage = Stage::ThreeFirst;
+        } else if (m_stage == Stage::Center && keyword->keyword == "Ttr (tan tan radius)") {
+            m_stage = Stage::TangentFirst;
         } else if (m_stage == Stage::Radius && keyword->keyword == "Diameter") {
             m_stage = Stage::Diameter;
         }
+    } else if (const auto* object = std::get_if<ObjectInput>(&input)) {
+        if (m_stage == Stage::TangentFirst) {
+            m_firstTangent = *object;
+            m_stage = Stage::TangentSecond;
+        } else if (m_stage == Stage::TangentSecond) {
+            m_secondTangent = *object;
+            m_stage = Stage::TangentRadius;
+        }
     } else if (std::holds_alternative<ConfirmInput>(input)) {
+        if (m_stage == Stage::TangentRadius && m_defaultRadius) {
+            return finishTangent(context, *m_defaultRadius);
+        }
         if ((m_stage == Stage::Radius || m_stage == Stage::Diameter) && m_defaultRadius) {
             return finish(context, {m_first, *m_defaultRadius});
         }
         context.editor.rollback();
         return Status::Finished;
     } else if (const auto* value = std::get_if<ValueInput>(&input)) {
+        if (m_stage == Stage::TangentRadius) {
+            return finishTangent(context, value->value);
+        }
         if (m_stage == Stage::Radius || m_stage == Stage::Diameter) {
             return finish(
                 context, {m_first, m_stage == Stage::Diameter ? value->value / 2.0 : value->value});
@@ -78,6 +95,16 @@ Status CircleCommand::handle(CommandContext& context, const Input& input) {
                 }
                 context.message("The three points are collinear.");
                 break;
+            case Stage::TangentRadius:
+                m_first = point->point;
+                context.lastPoint = point->point;
+                m_stage = Stage::TangentRadiusPoint;
+                break;
+            case Stage::TangentRadiusPoint:
+                return finishTangent(context, core::distance(m_first, point->point));
+            case Stage::TangentFirst:
+            case Stage::TangentSecond:
+                break;
         }
     }
     updatePreview();
@@ -92,7 +119,11 @@ void CircleCommand::pointerMoved(const core::Vec2& point) {
 Prompt CircleCommand::prompt() const {
     switch (m_stage) {
         case Stage::Center:
-            return {"Specify center point for circle or [3P/2P]:", {{"3P", "3P"}, {"2P", "2P"}}};
+            return {"Specify center point for circle or [3P/2P/Ttr (tan tan radius)]:",
+                    {{"3P", "3P"},
+                     {"2P", "2P"},
+                     {"Ttr (tan tan radius)", "T"},
+                     {"Ttr (tan tan radius)", "Ttr"}}};
         case Stage::Radius:
             return {m_defaultRadius ? "Specify radius of circle or [Diameter] <" +
                                           formatLength(*m_defaultRadius) + ">:"
@@ -115,6 +146,20 @@ Prompt CircleCommand::prompt() const {
             return {"Specify second point on circle:", {}};
         case Stage::ThreeThird:
             return {"Specify third point on circle:", {}};
+        case Stage::TangentFirst:
+            return {"Specify point on object for first tangent of circle:", {}, PromptKind::Object};
+        case Stage::TangentSecond:
+            return {
+                "Specify point on object for second tangent of circle:", {}, PromptKind::Object};
+        case Stage::TangentRadius:
+            if (m_defaultRadius) {
+                return {"Specify radius of circle <" + formatLength(*m_defaultRadius) + ">:",
+                        {},
+                        PromptKind::Distance};
+            }
+            return {"Specify radius of circle:", {}, PromptKind::Distance};
+        case Stage::TangentRadiusPoint:
+            return {"Specify second point:", {}};
     }
     return {};
 }
@@ -129,6 +174,7 @@ std::optional<core::Vec2> CircleCommand::basePoint() const {
         case Stage::Diameter:
         case Stage::TwoSecond:
         case Stage::ThreeSecond:
+        case Stage::TangentRadiusPoint:
             return m_first;
         case Stage::ThreeThird:
             return m_second;
@@ -164,6 +210,31 @@ Status CircleCommand::finish(CommandContext& context, const core::Circle& circle
     context.defaults.circleRadius = circle.radius;
     context.lastPoint = circle.center;
     m_preview.clear();
+    return Status::Finished;
+}
+
+Status CircleCommand::finishTangent(CommandContext& context, double radius) {
+    if (!(radius > 0.0) || !std::isfinite(radius)) {
+        context.message("Value must be positive and nonzero.");
+        m_stage = Stage::TangentRadius;
+        return Status::Continue;
+    }
+
+    const core::Document& document = context.editor.document();
+    const core::EntityRecord* first = document.find(m_firstTangent.id);
+    const core::EntityRecord* second = document.find(m_secondTangent.id);
+    core::TangentCircleResult result;
+    if (first != nullptr && second != nullptr) {
+        result = core::circleTangentTangentRadius(first->entity, m_firstTangent.point,
+                                                  second->entity, m_secondTangent.point, radius);
+    }
+    if (result.circle) {
+        return finish(context, *result.circle);
+    }
+    context.message(result.outcome == core::CornerOutcome::OutOfDomain
+                        ? "Result is beyond the drawing limits."
+                        : "Circle does not exist.");
+    context.editor.rollback();
     return Status::Finished;
 }
 

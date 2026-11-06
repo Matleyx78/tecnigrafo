@@ -7,7 +7,8 @@
 
 namespace tg::cmd {
 
-/// CIRCLE constructs one circle from a centre and size, or two or three points.
+/// CIRCLE constructs one circle from a centre and size, two or three points,
+/// or two tangent objects and a radius.
 class CircleCommand final : public Command {
 public:
     void start(CommandContext& context) override;
@@ -26,15 +27,22 @@ private:
         TwoSecond,
         ThreeFirst,
         ThreeSecond,
-        ThreeThird
+        ThreeThird,
+        TangentFirst,
+        TangentSecond,
+        TangentRadius,
+        TangentRadiusPoint
     };
     [[nodiscard]] std::optional<core::Circle> circleAt(const core::Vec2& point) const;
     Status finish(CommandContext& context, const core::Circle& circle);
+    Status finishTangent(CommandContext& context, double radius);
     void updatePreview();
 
     Stage m_stage{Stage::Center};
     core::Vec2 m_first;
     core::Vec2 m_second;
+    ObjectInput m_firstTangent{};
+    ObjectInput m_secondTangent{};
     std::optional<double> m_defaultRadius;
     std::optional<core::Vec2> m_pointer;
     std::vector<core::Entity> m_preview;

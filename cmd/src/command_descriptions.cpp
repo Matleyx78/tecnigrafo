@@ -6,6 +6,7 @@
 #include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
+#include "tg/cmd/commands/fillet_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
@@ -87,13 +88,17 @@ CommandDescription circleDescription() {
     return {
         "CIRCLE",
         {"C"},
-        "Draws a circle from its center and radius or diameter, or through two or three points.",
+        "Draws a circle from its center and size, through two or three points, or tangent to "
+        "two objects.",
         false,
         {
             {"center-point",
-             "Specify center point for circle or [3P/2P]:",
+             "Specify center point for circle or [3P/2P/Ttr (tan tan radius)]:",
              ValueType::Point,
-             {{"3P", "3P"}, {"2P", "2P"}},
+             {{"3P", "3P"},
+              {"2P", "2P"},
+              {"Ttr (tan tan radius)", "T"},
+              {"Ttr (tan tan radius)", "Ttr"}},
              false},
             {"radius",
              "Specify radius of circle or [Diameter]:",
@@ -111,6 +116,23 @@ CommandDescription circleDescription() {
              ValueType::Distance,
              {},
              true},
+            {"tangent-first",
+             "Specify point on object for first tangent of circle:",
+             ValueType::Object,
+             {},
+             false},
+            {"tangent-second",
+             "Specify point on object for second tangent of circle:",
+             ValueType::Object,
+             {},
+             false},
+            {"tangent-radius", "Specify radius of circle:", ValueType::Distance, {}, false},
+            {"tangent-radius-default",
+             "Specify radius of circle <{default}>:",
+             ValueType::Distance,
+             {},
+             true},
+            {"tangent-radius-point", "Specify second point:", ValueType::Point, {}, false},
             {"three-point-first", "Specify first point on circle:", ValueType::Point, {}, false},
             {"three-point-second", "Specify second point on circle:", ValueType::Point, {}, false},
             {"three-point-third", "Specify third point on circle:", ValueType::Point, {}, false},
@@ -539,6 +561,35 @@ CommandDescription ScaleCommand::description(Variable variable) {
             "Sets the linetype scale factor of new objects.",
             false,
             {{"scale", "Enter new value for CELTSCALE <{default}>:", ValueType::Real, {}, true}}};
+}
+
+CommandDescription FilletCommand::description() {
+    return {"FILLET",
+            {"F"},
+            "Rounds a corner with a tangent arc or makes a sharp corner.",
+            false,
+            {{"first",
+              "Select first object or [Undo/Polyline/Radius/Trim/Multiple]:",
+              ValueType::Object,
+              {{"Undo", "U"}, {"Polyline", "P"}, {"Radius", "R"}, {"Trim", "T"}, {"Multiple", "M"}},
+              true},
+             {"second",
+              "Select second object or shift-select to apply corner or [Radius]:",
+              ValueType::Object,
+              {{"Radius", "R"}},
+              false},
+             {"radius", "Specify fillet radius <{default}>:", ValueType::Distance, {}, true},
+             {"radius-point", "Specify second point:", ValueType::Point, {}, false},
+             {"trim",
+              "Enter Trim mode option [Trim/No trim] <{default}>:",
+              ValueType::Keyword,
+              {{"Trim", "T"}, {"No trim", "N"}},
+              true},
+             {"polyline",
+              "Select 2D polyline or [Radius]:",
+              ValueType::Object,
+              {{"Radius", "R"}},
+              false}}};
 }
 
 CommandDescription OffsetCommand::description() {

@@ -20,6 +20,7 @@ add_executable(tg_tests
     cmd/arc_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
+    cmd/fillet_command_test.cpp
     cmd/command_registry_test.cpp
     cmd/command_runner_test.cpp
     cmd/coordinate_input_test.cpp
