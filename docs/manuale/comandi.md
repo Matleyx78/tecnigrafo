@@ -3,7 +3,8 @@
 Questo manuale descrive gli strumenti disponibili nella tappa 0.7: i file, la riga di
 comando, i punti, `LINE`, `CIRCLE`, `ARC`, `PLINE`, `TEXT`, la selezione,
 `ERASE`, i comandi di modifica (`MOVE`, `COPY`, `ROTATE`, `SCALE`, `MIRROR` con
-`MIRRTEXT`, `EXPLODE`), gli snap a oggetto, la modalità orto e il tracciamento
+`MIRRTEXT`, `EXPLODE`, `TRIM` ed `EXTEND` con `TRIMEXTENDMODE`, `OFFSET`,
+`FILLET`, `CHAMFER`, `JOIN`), gli snap a oggetto, la modalità orto e il tracciamento
 polare (`POLARANG`), i layer (`-LAYER`, `CLAYER`), le proprietà correnti e delle
 entità (`COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`, `LWDISPLAY`,
 `CHPROP`), le sequenze negli script e l’annullamento. L'interfaccia grafica
@@ -382,12 +383,62 @@ vengono scelte entrambe le entità. Con `Shift` sul secondo clic le togli.
   confermano le entità scelte. Confermare senza selezione conclude il comando
   senza effetti. `Esc` chiude prima un rettangolo aperto; senza rettangolo
   annulla il comando e svuota la selezione, scrivendo `*Cancel*`.
-- Le opzioni scritte `W`, `C`, `ALL`, `L`, `P` e il recinto non sono disponibili:
-  altro testo durante la domanda produce `Invalid selection.`. Scegli con il
-  mouse, poi conferma a campo vuoto.
 
 La selezione si svuota alla fine dei comandi e con `U`, `UNDO` e `REDO`. Avviare
 un comando di disegno svuota la selezione precedente; `ERASE` invece la usa subito.
+
+### Selezione scritta
+
+Durante `Select objects:`, e nelle domande di selezione dei comandi (i bordi di
+`TRIM` ed `EXTEND` nel modo standard, gli oggetti di `JOIN`), puoi scegliere
+anche scrivendo:
+
+| Scrivi | Risultato |
+|---|---|
+| un punto, per esempio `10,0` | come un clic in quel punto: sceglie l'entità che passa entro 3 pixel; nel vuoto apre un rettangolo, e compare `Specify opposite corner:` |
+| `W` (*Window*), poi due punti | una **finestra**, in qualunque direzione indichi i due angoli |
+| `C` (*Crossing*), poi due punti | un'**intersezione**, in qualunque direzione |
+| `ALL` | tutte le entità sui layer accesi e non congelati; quelle sui layer bloccati sono scartate e contate |
+
+Dopo `W` o `C` compaiono `Specify first corner:` e `Specify opposite corner:`:
+rispondi con le coordinate o con due clic. Il primo angolo non sceglie l'entità
+che c'è sotto. Mentre il programma chiede un angolo, un testo che non è un punto
+produce `Invalid point or option.`. `Esc` chiude il rettangolo se il primo
+angolo c'è già; prima, annulla il comando.
+
+I messaggi sono quelli dei gesti con il mouse (`2 found, 2 total`, layer
+bloccati). Le parole chiave della domanda hanno la precedenza: nella domanda dei
+bordi di `TRIM`, `O` sceglie *mOde*. Le altre opzioni di AutoCAD (*Last*,
+*Previous*, *Fence*, *WPolygon* e simili) non ci sono: un testo diverso produce
+`Invalid selection.`.
+
+**Esempio:** scrivi `e`, poi `c` e i due angoli `5,5` e `25,25`: vengono scelte
+le entità toccate dal rettangolo, qui due linee, e `Invio` le cancella.
+
+```
+Command: ERASE
+Select objects: c
+Specify first corner: 5,5
+Specify opposite corner: 25,25
+2 found, 2 total
+Select objects:
+```
+
+### Indicare un oggetto
+
+Alcune domande vogliono **un solo oggetto**, nel punto in cui lo indichi: per
+esempio `Select object to trim or shift-select to extend or [mOde]:` di `TRIM`,
+o `Select first object or [...]` di `FILLET`. A queste domande:
+
+- clicca l'entità, o scrivi un punto che le passi entro 3 pixel: il punto conta,
+  perché dice quale parte dell'entità hai indicato;
+- un clic o un punto nel vuoto non fa nulla e la domanda resta: non si apre un
+  rettangolo;
+- `Shift`+clic indica l'oggetto con `Shift` premuto, che alcuni comandi usano
+  (in `TRIM` prolunga invece di tagliare);
+- un'entità su un layer bloccato non si sceglie e compare `1 was on a locked
+  layer.`;
+- le parole chiave della domanda si scrivono come sempre.
 
 ### Layer bloccati nella selezione
 
@@ -453,9 +504,9 @@ si applica lo snap.
 | *Midpoint* | metà del segmento; per un arco è sulla curva, non sulla corda | triangolo |
 | *Center* | centro di un cerchio, di un arco o di un segmento ad arco | cerchio |
 | *Insertion* | punto d’inserimento del testo, sulla linea di base | due quadrati sovrapposti e sfalsati |
-| *Intersection* | incontro tra due curve o segmenti della stessa polilinea (interruttore presente, aggancio non ancora attivo) | croce a X |
+| *Intersection* | incontro tra due curve, o tra due segmenti della stessa polilinea, che passano entrambi entro l'apertura | croce a X |
 | *Perpendicular* | piede della perpendicolare dal punto base del comando | simbolo ⊥ |
-| *Tangent* | punto di tangenza dal punto base del comando (interruttore presente, aggancio non ancora attivo) | cerchio con linea tangente in alto |
+| *Tangent* | punto di tangenza dal punto base del comando a un cerchio, a un arco o a un arco di polilinea | cerchio con linea tangente in alto |
 | *Quadrant* | punti cardinali a 0°, 90°, 180°, 270° di cerchi e archi | rombo |
 
 ### Attivare e scegliere i modi
@@ -468,8 +519,9 @@ si applica lo snap.
   Se tutti i modi sono disattivati, non c'è alcun aggancio anche con OSNAP acceso.
 - All'avvio lo snap è acceso con i modi *Endpoint*, *Midpoint*, *Center*, *Insertion* e
   *Intersection*; *Perpendicular*, *Tangent* e *Quadrant* sono disattivati per difetto.
-  I modi *Intersection* e *Tangent* sono presenti come interruttori ma per ora non
-  agganciano punti nel nucleo. Le impostazioni non si conservano alla chiusura del programma.
+  Le impostazioni non si conservano alla chiusura del programma.
+- Le regole di intersezione, perpendicolare, tangente e quadrante, e la loro
+  priorità, sono nel [manuale dell'interfaccia](interfaccia.md#snap-a-intersezione-tangente-perpendicolare-e-quadrante).
 
 Per estremi e punti medi l'apertura è di **10 pixel**: avvicina il puntatore al
 punto voluto finché compare il marcatore. La dimensione del marcatore e l'apertura
@@ -579,7 +631,8 @@ Un punto coincidente con il precedente viene ignorato con
 - **Nome:** `CIRCLE`
 - **Alias:** `C`
 
-Alla domanda `Specify center point for circle or [3P/2P]:` scegli il metodo:
+Alla domanda `Specify center point for circle or [3P/2P/Ttr (tan tan radius)]:`
+scegli il metodo:
 
 | Metodo | Risposte |
 |---|---|
@@ -587,6 +640,7 @@ Alla domanda `Specify center point for circle or [3P/2P]:` scegli il metodo:
 | centro e diametro | indica il centro, scrivi `D` (*Diameter*), poi il diametro come numero o distanza dal centro a un punto |
 | due punti | scrivi `2P`, poi i due estremi del diametro |
 | tre punti | scrivi `3P`, poi tre punti sulla circonferenza |
+| tangente, tangente, raggio | scrivi `T` o `Ttr`, indica due oggetti, poi il raggio |
 
 Il raggio o diametro deve essere positivo: altrimenti compare
 `Value must be positive and nonzero.` e puoi riprovare. In `3P`, punti
@@ -602,6 +656,43 @@ invece un cerchio di centro `(25,0)` e raggio 25. `C`, `3P`, `10,0`, `0,10`,
 Il cerchio si completa con l’ultima risposta; prima, `Esc` non lascia entità.
 Un `Invio` senza valore predefinito termina senza effetti. Il clic per la
 selezione deve essere sulla circonferenza, non nel suo interno.
+
+### Tangente, tangente, raggio (*Ttr*)
+
+Disegna un cerchio del raggio dato, tangente a due oggetti:
+
+```
+Specify point on object for first tangent of circle:
+Specify point on object for second tangent of circle:
+Specify radius of circle <25.0000>:
+```
+
+- Alle prime due domande clicca un oggetto, o scrivi un punto che vi passi
+  vicino: valgono linee, archi, cerchi e polilinee; di una polilinea conta il
+  segmento più vicino al punto. Un clic nel vuoto non fa nulla e la domanda
+  resta.
+- Al raggio scrivi un numero, indica due punti (la loro distanza: dopo il primo
+  compare `Specify second point:`) o premi `Invio` per l'ultimo raggio usato,
+  mostrato tra `< >` solo se c'è già. Un valore nullo o negativo produce
+  `Value must be positive and nonzero.` e la domanda torna.
+- Fra i cerchi tangenti possibili vince quello più vicino ai due punti
+  indicati: dove clicchi decide in quale angolo cade il cerchio.
+- Se nessun cerchio di quel raggio tocca i due oggetti compare
+  `Circle does not exist.`; se il cerchio esiste ma cade fuori dai limiti
+  geometrici che il programma rappresenta, `Result is beyond the drawing
+  limits.`. In tutti e due i casi il comando finisce senza disegnare nulla.
+
+**Esempio:** con le linee da `0,0` a `40,0` e da `0,0` a `0,40`:
+
+```
+Command: c
+Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: t
+Specify point on object for first tangent of circle: 10,0
+Specify point on object for second tangent of circle: 0,10
+Specify radius of circle: 8
+```
+
+nasce il cerchio di centro `(8,8)` e raggio 8, tangente alle due linee.
 
 ## ARC — arco
 
@@ -1117,6 +1208,423 @@ Select objects: 1 found, 1 total
 Select objects: 
 ```
 
+## TRIM ed EXTEND — tagliare e prolungare
+
+`TRIM` toglie il pezzo dell'oggetto compreso tra i due bordi più vicini al punto
+che indichi. `EXTEND` prolunga l'estremo più vicino al punto fino al primo bordo
+che incontra. I due comandi si scambiano con `Shift`: in `TRIM` un `Shift`+clic
+prolunga, in `EXTEND` taglia.
+
+- **Nomi e alias:** `TRIM` (`TR`) ed `EXTEND` (`EX`)
+
+### I due modi e `TRIMEXTENDMODE`
+
+| Modo | `TRIMEXTENDMODE` | Bordi | Messaggio all'avvio |
+|---|---|---|---|
+| **rapido** | 1, all'avvio del programma | tutte le linee, gli archi, i cerchi e le polilinee sui layer visibili, anche bloccati | `Current settings: Trim mode = Quick, Projection=UCS, Edge=None` |
+| **standard** | 0 | quelli che scegli all'inizio del comando | `Current settings: Projection=UCS, Edge=None, Mode=Standard` |
+
+Il testo non fa mai da bordo. Nel modo standard, dopo il messaggio, compaiono
+`Select cutting edges ...` (in `EXTEND`, `Select boundary edges ...`) e la
+domanda dei bordi:
+
+```
+Select objects or [mOde] <select all>:
+```
+
+Scegli i bordi con i gesti della selezione o con la selezione scritta, poi
+premi `Invio`. `Invio` senza aver scelto nulla prende tutti i bordi, come nel
+modo rapido.
+
+- **`TRIMEXTENDMODE`** imposta il modo con cui partono i due comandi:
+  `Enter new value for TRIMEXTENDMODE <1>:`. Accetta `0` o `1`; altro testo
+  produce `Requires an integer between 0 and 1.` e `Invio` conserva il valore.
+  Vale per la sessione: non si salva nel disegno e non è un passo di
+  annullamento.
+- **Opzione *mOde*** (`O`), sia alla domanda dei bordi sia a quella dell'oggetto:
+  `Enter a trim mode option [Quick/Standard] <Quick>:`, con il modo in uso tra
+  `< >`. Cambia anche `TRIMEXTENDMODE`. Passando al modo standard il comando chiede i bordi; `Invio`
+  lascia il modo com'è.
+- **Negli script** di AutoCAD vale sempre il modo standard, anche dopo *mOde*
+  (sezione "Negli script").
+
+### Tagliare
+
+La domanda è `Select object to trim or shift-select to extend or [mOde]:`; dopo
+la prima operazione diventa `[mOde/Undo]`. Indica l'oggetto nel punto del pezzo
+da togliere (sezione "Indicare un oggetto"). Si tagliano linee, archi, cerchi e
+polilinee:
+
+- si toglie il pezzo tra l'ultimo taglio prima del punto e il primo dopo; se il
+  punto cade proprio su un taglio, si toglie il pezzo che segue;
+- una linea, un arco o una polilinea aperta tagliati in mezzo diventano due
+  entità: la prima conserva l'entità originale, la seconda è una copia con le
+  stesse proprietà;
+- un cerchio tagliato diventa un arco, la stessa entità; una polilinea chiusa
+  tagliata diventa aperta;
+- **una polilinea che è tra i bordi fa da bordo anche a se stessa**: i suoi
+  vertici e i punti in cui si incrocia delimitano i pezzi, come in AutoCAD. Un
+  clic su un lato di un rettangolo toglie quel lato da vertice a vertice, anche
+  se un'altra linea lo attraversa più lontano;
+- un bordo tangente taglia nel punto di tangenza; un bordo che ha un tratto in
+  comune con l'oggetto (sulla stessa retta o sullo stesso cerchio) non lo taglia;
+- un pezzo che resta e che è troppo piccolo per le unità del disegno non si
+  tiene: se non resta nulla, l'oggetto si cancella;
+- **senza tagli**, nel modo rapido l'oggetto si cancella; nel modo standard
+  compare `Object does not intersect an edge.` e l'oggetto resta;
+- il testo non si taglia: il clic non ha effetto.
+
+### Prolungare
+
+La domanda di `EXTEND` è `Select object to extend or shift-select to trim or
+[mOde]:`, poi `[mOde/Undo]`. Si prolunga l'estremo più vicino al punto
+indicato; a pari distanza, la fine:
+
+- una linea lungo la sua retta, un arco lungo il suo cerchio;
+- una polilinea aperta con il suo primo o il suo ultimo segmento, dritto o
+  curvo;
+- fino al **primo** bordo che l'estremo incontra.
+
+Cerchi, polilinee chiuse e testi non si prolungano. Se non c'è un bordo da
+raggiungere, l'oggetto resta com'è, senza messaggi.
+
+### Annullare e concludere
+
+- **Opzione *Undo*** (`U`): annulla l'ultima operazione del comando, che resta
+  aperto.
+- `Invio`, `Spazio` a campo vuoto o clic destro concludono. Tutto il comando è
+  un solo passo di annullamento, `Trim` o `Extend`; `Esc` conserva le
+  operazioni già fatte.
+- Un clic nel vuoto non apre un rettangolo. Le opzioni *cuTting edges*,
+  *Crossing*, *Fence*, *Project*, *Edge* ed *eRase* di AutoCAD non ci sono.
+- Se un'operazione non riesce (dati oltre i limiti che il programma
+  rappresenta, o un pezzo che non si può costruire) compare `Cannot trim that
+  object.` o `Cannot extend that object.`, e l'oggetto resta com'è.
+
+**Esempio nel modo rapido:** con la linea da `0,0` a `30,0` e due linee verticali
+che la attraversano in `x = 10` e `x = 20`:
+
+```
+Command: tr
+Current settings: Trim mode = Quick, Projection=UCS, Edge=None
+Select object to trim or shift-select to extend or [mOde]: 15,0
+Select object to trim or shift-select to extend or [mOde/Undo]:
+```
+
+restano le linee da `0,0` a `10,0` e da `20,0` a `30,0`. Un `Shift`+clic in
+`7,20` su una linea da `0,20` a `8,20` la prolunga invece fino alla verticale in
+`x = 10`.
+
+**Esempio nel modo standard:** dopo `TRIMEXTENDMODE` `0`, la stessa linea da
+`0,20` a `8,20` si prolunga fino alla verticale scelta come bordo:
+
+```
+Command: ex
+Current settings: Projection=UCS, Edge=None, Mode=Standard
+Select boundary edges ...
+Select objects or [mOde] <select all>: 10,25
+1 found, 1 total
+Select objects or [mOde] <select all>:
+Select object to extend or shift-select to trim or [mOde]: 7,20
+Select object to extend or shift-select to trim or [mOde/Undo]:
+```
+
+## OFFSET — copia parallela
+
+Crea una copia parallela di una linea, di un arco, di una polilinea, o
+concentrica di un cerchio, a una distanza data o passante per un punto.
+
+- **Nome:** `OFFSET`
+- **Alias:** `O`
+
+### Le domande e le opzioni
+
+All'avvio il comando mostra le impostazioni e chiede la distanza:
+
+```
+Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+Specify offset distance or [Through/Erase/Layer] <Through>:
+```
+
+- **Distanza:** scrivi un numero, oppure indica due punti (dopo il primo compare
+  `Specify second point:`) e vale la loro distanza. Un valore nullo o negativo
+  produce `Value must be positive and nonzero.`. `Invio` usa il valore tra
+  `< >`: all'avvio *Through*, poi l'ultima distanza.
+- ***Through*** (`T`): la copia passa per un punto che indicherai.
+- ***Erase*** (`E`): `Erase source object after offsetting? [Yes/No] <No>:`;
+  con *Yes* l'oggetto di partenza si cancella dopo la copia.
+- ***Layer*** (`L`): `Enter layer option for offset objects [Current/Source]
+  <Source>:`; con *Current* la copia va sul layer corrente, con *Source* sul
+  layer dell'oggetto.
+
+Dopo *Erase* e *Layer* torna la domanda della distanza. Distanza, *Erase* e
+*Layer* restano per i prossimi `OFFSET` della sessione. Poi il comando ripete:
+
+```
+Select object to offset or [Exit/Undo] <Exit>:
+Specify point on side to offset or [Exit/Multiple/Undo] <Exit>:
+```
+
+Con *Through* la seconda domanda è `Specify through point or
+[Exit/Multiple/Undo] <Exit>:`.
+
+- Il punto indica il **lato**. Per una polilinea conta il segmento più vicino al
+  punto (a pari distanza, il primo). Un punto esattamente sulla retta o sul
+  cerchio di quel segmento non indica un lato e non dà copie.
+- Con *Through* la distanza è quella del punto dall'oggetto, e il lato è il suo.
+- ***Multiple*** (`M`): una copia dopo l'altra, ciascuna dall'ultima creata;
+  `Invio` torna alla domanda dell'oggetto.
+- ***Undo*** (`U`): toglie l'ultima copia.
+- ***Exit*** (`E`), `Invio` a campo vuoto o clic destro concludono.
+
+La copia è un'entità nuova con le proprietà dell'oggetto (salvo il layer con
+*Current*). Nelle polilinee ogni segmento della copia tiene le larghezze del
+segmento da cui viene; gli archi di giunzione tra un segmento e l'altro hanno
+larghezza 0, salvo la larghezza costante della polilinea. Tutto il comando è un
+solo passo di annullamento (`Offset`); `Esc` conserva le copie già fatte.
+
+### Che cosa è garantito
+
+La copia la costruisce il nucleo geometrico, e Tecnigrafo garantisce ciò che
+garantisce il nucleo, niente di più. Quando la copia non esiste o non si può
+costruire (un cerchio verso l'interno con distanza pari o maggiore del raggio,
+una polilinea troppo stretta per la distanza, un testo, un punto senza lato) il
+comando scrive `Cannot offset that object.` e **non crea nulla: mai una copia
+sbagliata**. In casi rari la copia di una polilinea può differire da quella di
+AutoCAD; le giunzioni seguono AutoCAD con `OFFSETGAPTYPE` 0.
+
+**Esempio:** copia a distanza 5, verso l'alto, la linea da `0,0` a `50,0`:
+
+```
+Command: o
+Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0
+Specify offset distance or [Through/Erase/Layer] <Through>: 5
+Select object to offset or [Exit/Undo] <Exit>: 10,0
+Specify point on side to offset or [Exit/Multiple/Undo] <Exit>: 10,5
+Select object to offset or [Exit/Undo] <Exit>:
+```
+
+Nasce la linea da `0,5` a `50,5`.
+
+## FILLET — raccordare
+
+Unisce due oggetti con un arco tangente a entrambi, o con uno spigolo vivo.
+
+- **Nome:** `FILLET`
+- **Alias:** `F`
+
+### Le domande e le opzioni
+
+```
+Current settings: Mode = TRIM, Radius = 0.0000
+Select first object or [Undo/Polyline/Radius/Trim/Multiple]:
+Select second object or shift-select to apply corner or [Radius]:
+```
+
+- **Gli oggetti:** due entità diverse tra linee, archi e cerchi, oppure due
+  segmenti dritti e consecutivi della stessa polilinea (indica la polilinea due
+  volte, vicino ai due segmenti). Il punto di ogni clic dice quale parte
+  dell'oggetto tenere. Una polilinea con un'altra entità, gli archi di una
+  polilinea e il testo non si raccordano.
+- **`Shift`+clic sul secondo oggetto:** fa lo spigolo, come con raggio 0.
+- ***Radius*** (`R`): `Specify fillet radius <0.0000>:`. Scrivi il raggio o
+  indica due punti (`Specify second point:`). Un raggio negativo produce
+  `Value must be positive.`; 0 fa lo spigolo. Dopo, il comando chiede di nuovo
+  il primo oggetto.
+- ***Trim*** (`T`): `Enter Trim mode option [Trim/No trim] <Trim>:`. L'impostazione
+  è comune a `FILLET` e `CHAMFER`.
+- ***Polyline*** (`P`): `Select 2D polyline or [Radius]:` raccorda tutti i
+  vertici di una polilinea, uno dopo l'altro, e scrive `<n> lines were
+  filleted`, poi `<m> were too short` se qualche vertice resta com'è (segmenti
+  troppo corti per il raggio, segmenti curvi).
+- ***Multiple*** (`M`): il comando continua dopo ogni raccordo, finché non premi
+  `Invio`; ***Undo*** (`U`) annulla l'ultimo raccordo fatto nel comando.
+
+Raggio e *Trim* restano per i prossimi `FILLET` della sessione.
+
+### Il risultato
+
+- **Con *Trim*** linee e archi si accorciano o si allungano fino ai punti di
+  tangenza; i cerchi non si tagliano mai. Su due segmenti della stessa polilinea
+  il raccordo diventa un segmento curvo della polilinea. Un'entità di cui non
+  resta nulla, o resta un pezzo troppo piccolo per le unità del disegno, si
+  cancella.
+- **Con *No trim*** le entità non cambiano e si aggiunge solo l'arco, anche
+  sulle polilinee e con *Polyline*: ogni arco è un'entità a sé.
+- **L'arco** prende le proprietà del primo oggetto se i due hanno le stesse
+  proprietà, altrimenti quelle correnti. Un arco troppo piccolo per le unità del
+  disegno non si aggiunge: il comando fa lo spigolo.
+
+Tutto il comando è un solo passo di annullamento (`Fillet`); `Esc` conserva i
+raccordi già fatti.
+
+| Messaggio | Quando |
+|---|---|
+| `Cannot fillet those objects.` | il raccordo non esiste, o gli oggetti non si raccordano |
+| `Radius is too large.` | il raggio non sta nella parte da tenere |
+| `Pick a point that is not on the other object.` | un punto indicato cade sulla retta o sul cerchio dell'altro oggetto |
+| `Result is beyond the drawing limits.` | il raccordo esiste ma cade oltre i limiti che il programma rappresenta |
+
+**Esempio:** con le linee da `0,0` a `30,0` e da `0,0` a `0,30`:
+
+```
+Command: f
+Current settings: Mode = TRIM, Radius = 0.0000
+Select first object or [Undo/Polyline/Radius/Trim/Multiple]: r
+Specify fillet radius <0.0000>: 5
+Select first object or [Undo/Polyline/Radius/Trim/Multiple]: 20,0
+Select second object or shift-select to apply corner or [Radius]: 0,20
+```
+
+Le linee diventano da `5,0` a `30,0` e da `0,5` a `0,30`, e nasce l'arco di
+centro `(5,5)` e raggio 5 che le unisce.
+
+## CHAMFER — smussare
+
+Unisce due linee con un tratto dritto, lo smusso, o con uno spigolo vivo.
+
+- **Nome:** `CHAMFER`
+- **Alias:** `CHA`
+
+### Le domande e le opzioni
+
+```
+(TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000
+Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]:
+Select second line or shift-select to apply corner or [Distance/Angle/Method]:
+```
+
+Con *No trim* il messaggio comincia con `(NOTRIM mode)`; con il metodo
+dell'angolo mostra `Length = …, Angle = …`.
+
+- **Gli oggetti:** due linee, oppure due segmenti dritti e consecutivi della
+  stessa polilinea. Ogni punto indica la parte della linea da tenere.
+- **`Shift`+clic sulla seconda linea:** fa lo spigolo, con le due distanze a 0.
+- ***Distance*** (`D`): `Specify first chamfer distance <0.0000>:` e
+  `Specify second chamfer distance <…>:`, che propone la prima. Le distanze si
+  misurano dallo spigolo, la prima sulla prima linea. Sceglie il metodo delle
+  distanze.
+- ***Angle*** (`A`): `Specify chamfer length on the first line <0.0000>:` e
+  `Specify chamfer angle from the first line <0>:`, in gradi. Sceglie il metodo
+  dell'angolo.
+- ***mEthod*** (`E`, alla seconda domanda `M`): `Enter trim method
+  [Distance/Angle] <Distance>:` sceglie quale delle due coppie di valori usare.
+- ***Trim*** (`T`), ***Polyline*** (`P`), ***Multiple*** (`M`) e ***Undo***
+  (`U`): come in `FILLET`. *Polyline* chiede `Select 2D polyline or
+  [Distance/Angle/Method]:` e scrive `<n> lines were chamfered`, poi `<m> were
+  too short`.
+
+Alle domande dei numeri vale solo un numero: altro testo produce
+`Requires numeric distance.`, un valore negativo `Value must be positive.`, e
+`Invio` conserva il valore tra `< >`. Dopo un'opzione torna la domanda da cui
+l'hai scelta: alla seconda linea, la prima resta scelta. Distanze, angolo,
+metodo e *Trim* restano per i prossimi `CHAMFER` della sessione.
+
+### Il risultato
+
+Lo spigolo è il punto in cui si incontrano le due rette prolungate. Gli estremi
+dello smusso stanno alle distanze date dallo spigolo, ciascuno sulla parte della
+sua linea indicata dal clic. Con *Trim* le linee si accorciano o si allungano
+fino allo smusso; con *No trim* restano com'erano e si aggiunge solo lo smusso,
+anche sulle polilinee. Le proprietà dello smusso, *Undo*, `Esc` e il passo di
+annullamento (`Chamfer`) seguono le regole di `FILLET`.
+
+| Messaggio | Quando |
+|---|---|
+| `Lines are parallel.` | le due rette non hanno un punto comune |
+| `Chamfer distance too large.` | una distanza, o la lunghezza, supera la parte da tenere della sua linea |
+| `Cannot chamfer those objects.` | gli oggetti non sono linee o segmenti dritti consecutivi |
+| `Pick a point that is not on the other object.` | un punto indicato cade sulla retta dell'altra linea |
+| `Result is beyond the drawing limits.` | lo spigolo cade oltre i limiti che il programma rappresenta |
+
+**Esempio:** con le linee da `0,0` a `30,0` e da `0,0` a `0,30`:
+
+```
+Command: cha
+(TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000
+Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: d
+Specify first chamfer distance <0.0000>: 5
+Specify second chamfer distance <5.0000>: 8
+Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]: 20,0
+Select second line or shift-select to apply corner or [Distance/Angle/Method]: 0,20
+```
+
+Le linee diventano da `5,0` a `30,0` e da `0,8` a `0,30`, e lo smusso va da
+`5,0` a `0,8`.
+
+## JOIN — unire
+
+Unisce più entità in una sola.
+
+- **Nome:** `JOIN`
+
+### Le domande
+
+```
+Select source object or multiple objects to join at once:
+```
+
+Scegli le entità con i gesti della selezione o con la selezione scritta, poi
+premi `Invio`. La **sorgente** è la prima scelta, e l'ordine in cui scegli le
+altre conta. `Invio` senza aver scelto nulla conclude senza effetti, come `Esc`
+in qualunque momento.
+
+### Che cosa si unisce
+
+- **Linee allineate** diventano una linea, anche con spazi tra loro.
+- **Archi dello stesso cerchio** diventano un arco, anche con spazi: l'arco va
+  dall'inizio della sorgente, in senso antiorario, fino al più lontano dei loro
+  estremi. Se gli archi coprono il giro intero, il comando chiede
+  `Arc segments combined form a circle. Convert to circle? [Yes/No] <Yes>:`:
+  *Yes* o `Invio` danno un cerchio, *No* lascia il disegno com'era.
+- Linea e arco nascono così solo se **tutte** le entità scelte sono linee
+  allineate alla sorgente, o archi del suo cerchio. Altrimenti linee, archi e
+  polilinee **che si toccano agli estremi** diventano una **polilinea**.
+- La polilinea è una catena: parte dalla sorgente, cresce prima dalla sua fine,
+  poi dal suo inizio, e a ogni passo aggiunge la prima entità, nell'ordine di
+  scelta, che ha un estremo sull'estremo libero della catena. Si ferma quando
+  nessuna si aggiunge o quando la catena si chiude. Le entità che non entrano
+  nella catena, e le polilinee chiuse diverse dalla sorgente, si scartano.
+
+Quando due estremi **coincidono**, quando due linee sono **allineate** e quando
+due archi stanno sullo **stesso cerchio** lo decidono le unità del disegno
+(`INSUNITS`): la tolleranza è quella del nucleo geometrico per quell'unità, e
+cambiare `INSUNITS` cambia le decisioni dei `JOIN` successivi, non le entità già
+disegnate. Due estremi che coincidono diventano un vertice, nel punto
+dell'entità che segue.
+
+Se il risultato è dello stesso tipo della sorgente (una linea, un arco, la
+polilinea sorgente allungata), la sorgente resta la stessa entità; altrimenti
+nasce un'entità nuova con le sue proprietà. Il comando è un passo di
+annullamento (`Join`).
+
+| Messaggio | Risultato |
+|---|---|
+| `<n> lines joined into 1 line` | linee allineate unite |
+| `<n> arcs joined into 1 arc` | archi dello stesso cerchio uniti |
+| `<n> arcs joined and converted to circle` | archi uniti in un cerchio |
+| `<n> objects converted to 1 polyline` | una polilinea nuova |
+| `<n> segments added to polyline` | la polilinea sorgente è cresciuta (`1 segment added to polyline` per un segmento) |
+| `0 objects joined, <n> objects discarded from the operation.` | niente si unisce |
+
+Con entità scartate il messaggio continua con `, <n> objects discarded from the
+operation.` (`1 object …` per una).
+
+**Esempio:** due linee da `0,0` a `10,0` e da `20,0` a `30,0`:
+
+```
+Command: join
+Select source object or multiple objects to join at once: 5,0
+1 found, 1 total
+Select source object or multiple objects to join at once: 25,0
+1 found, 2 total
+Select source object or multiple objects to join at once:
+2 lines joined into 1 line
+```
+
+danno la linea da `0,0` a `30,0`. Con una linea da `0,0` a `10,0` e una da
+`10,0` a `10,10` il messaggio è invece `2 objects converted to 1 polyline`.
+
 ## POLARANG — incremento del tracciamento polare
 
 Imposta l'incremento angolare per il tracciamento polare (`Polar Tracking`), in gradi.
@@ -1454,15 +1962,37 @@ Comandi con sequenza dedicata negli script:
 |---|---|---|
 | `TEXT` | Chiede una riga dopo l'altra fino a `Invio` su riga vuota | Inserisce una riga sola, poi conclude automaticamente |
 | `COPY` | Chiede copie multiple fino a `Exit` o `Invio` a vuoto | Effettua una sola copia, poi conclude automaticamente |
+| `TRIM`, `EXTEND` | Parte nel modo di `TRIMEXTENDMODE`, rapido all'avvio | Sempre nel modo standard, anche dopo l'opzione *mOde*: prima i bordi (`Invio` li sceglie tutti), poi gli oggetti |
+| `FILLET` | Dopo *Radius* o *Trim* torna la domanda del primo oggetto | Dopo *Radius* o *Trim* il comando conclude |
+| `CHAMFER` | Dopo *Distance*, *Angle*, *Trim* o *mEthod* torna la domanda da cui l'hai scelta | Dopo quelle opzioni il comando conclude |
+| `JOIN` | Più oggetti insieme, con una sola selezione | Prima l'oggetto sorgente, poi gli oggetti da unire, secondo il tipo della sorgente |
+
+Nella sequenza degli script `JOIN` chiede `Select source object:` (un oggetto;
+`Invio` conclude senza effetti), poi, secondo la sorgente:
+
+- **una linea:** `Select lines to join to source:`, una selezione; accetta le
+  linee allineate. Con una sola linea unita il messaggio è
+  `1 line joined to source`;
+- **un arco:** `Select arcs to join to source or [cLose]:`, un arco per volta,
+  finché non premi `Invio`; accetta gli archi dello stesso cerchio. L'opzione
+  *cLose* (`L`) chiude l'arco in un cerchio senza domande e scrive
+  `Arc converted to circle.`, oppure `<n> arcs joined and converted to circle`
+  se ha unito anche altri archi. Senza *cLose*, se gli archi coprono il giro
+  intero, compare la stessa domanda della conversione in cerchio della sessione
+  interattiva;
+- **una polilinea:** `Select objects to join to source:`, una selezione; accetta
+  linee, archi e polilinee che si toccano agli estremi.
 
 ## Annullare e ripetere
 
 Ogni comando di disegno concluso, ogni gruppo cancellato con `ERASE`, ogni
-modifica geometrica (`MOVE`, `COPY`, `ROTATE`, `SCALE`, `MIRROR`, `EXPLODE` o stiramento
-con grip), ogni modifica ai layer con `-LAYER` o `CLAYER` e ogni modifica alle proprietà con
+modifica geometrica (`MOVE`, `COPY`, `ROTATE`, `SCALE`, `MIRROR`, `EXPLODE`, `TRIM`,
+`EXTEND`, `OFFSET`, `FILLET`, `CHAMFER`, `JOIN` o stiramento con grip), ogni modifica ai layer con `-LAYER` o `CLAYER` e ogni modifica alle proprietà con
 `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT` o `CHPROP` sono un
 **passo** che si può annullare e poi ripetere. Le linee di un `LINE` e le righe
-di un `TEXT` sono un solo passo per comando, anche se conservate con `Esc`.
+di un `TEXT` sono un solo passo per comando, anche se conservate con `Esc`; lo
+stesso vale per i tagli di un `TRIM`, le copie di un `OFFSET` e i raccordi di un
+`FILLET` con *Multiple*.
 
 | Azione | Menu | Tastiera | Riga di comando |
 |---|---|---|---|
@@ -1494,10 +2024,14 @@ corso.
 | `LINE` | i segmenti già disegnati; niente con un solo punto |
 | `PLINE` | la polilinea aperta con i vertici già indicati, se almeno due |
 | `TEXT` | le righe già confermate con `Invio` |
-| `CIRCLE`, `ARC` | niente: prima dell’ultima risposta l’entità non è completa |
+| `CIRCLE`, `ARC` | niente: prima dell’ultima risposta l’entità non è completa, anche con *Ttr* |
 | `ERASE` | nessuna cancellazione; la selezione viene svuotata |
 | `MOVE`, `ROTATE`, `SCALE`, `MIRROR` | nessuna modifica; le entità restano invariate |
 | `COPY` | le copie già create prima dell'interruzione |
+| `TRIM`, `EXTEND` | i tagli e i prolungamenti già fatti |
+| `OFFSET` | le copie già create |
+| `FILLET`, `CHAMFER` | i raccordi e gli smussi già fatti |
+| `JOIN` | niente: nessuna unione |
 | `EXPLODE` | nessuna scomposizione |
 | `-LAYER` | le modifiche e creazioni di layer già completate prima dell'interruzione |
 | `CHPROP` | i cambi di proprietà già completati prima dell'interruzione |
@@ -1534,7 +2068,8 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Select objects:` | scegli le entità per il comando, poi conferma a campo vuoto |
 | `Specify opposite corner:` | un rettangolo di selezione è aperto: indica il secondo angolo |
 | `<n> found, <t> total` / `<n> removed, <t> total` | entità trovate o rimosse dal gesto e totale della selezione durante `Select objects:` |
-| `Invalid selection.` | durante la selezione è stato scritto testo non supportato; scegli le entità con il mouse |
+| `Invalid selection.` | durante la selezione è stato scritto un testo che non è un punto, `W`, `C`, `ALL` né un'opzione della domanda |
+| `Specify first corner:` | dopo `W` o `C` scritti in una selezione: indica il primo angolo |
 | `Point coincides with the previous point.` | il punto indicato coincide con il vertice precedente ed è stato ignorato |
 | `*Cancel*` | il comando è stato interrotto con `Esc`; il lavoro completato resta secondo la tabella sopra |
 | `Undone: <passo>.` / `Redone: <passo>.` | passo annullato o ripetuto |
@@ -1549,7 +2084,7 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Exploding this polyline has lost width information.` | avviso di `EXPLODE`: le larghezze della polilinea sono state rimosse |
 | `The UNDO command will restore it.` | avviso di `EXPLODE`: `UNDO` può ripristinare la polilinea integra |
 | `1 was not able to be exploded.` / `<n> were not able to be exploded.` | entità non scomponibili scartate da `EXPLODE` |
-| `Requires an integer between 0 and 1.` | valore non valido per `MIRRTEXT`: inserisci 0 o 1 |
+| `Requires an integer between 0 and 1.` | valore non valido per `MIRRTEXT` o `TRIMEXTENDMODE`: inserisci 0 o 1 |
 | `Value must be between 0 and 180.` | valore non valido per `POLARANG`: inserisci un angolo positivo fino a 180° |
 | `** STRETCH **` | avvio della modifica interattiva di un'entità tramite grip caldo |
 | `Invalid grip edit.` | modifica con il grip non valida (es. arco degenere o raggio nullo): entità non modificata |
@@ -1568,3 +2103,27 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `Requires a positive number.` | il fattore di scala richiede un valore numerico strettamente positivo |
 | `Invalid lineweight.` | lo spessore inserito non è tra i valori consentiti |
 | `Requires ON or OFF.` | l'opzione accetta esclusivamente `ON` o `OFF` |
+| `Requires a number.` | una domanda di numero, come il fattore di `SCALE`, vuole un numero o un punto da cui il comando misura |
+| `Current settings: Trim mode = Quick, Projection=UCS, Edge=None` | avvio di `TRIM` o `EXTEND` nel modo rapido |
+| `Current settings: Projection=UCS, Edge=None, Mode=Standard` | avvio di `TRIM` o `EXTEND` nel modo standard |
+| `Select cutting edges ...` / `Select boundary edges ...` | modo standard di `TRIM` / `EXTEND`: segue la domanda dei bordi |
+| `Object does not intersect an edge.` | `TRIM` nel modo standard: l'oggetto non incontra bordi e resta |
+| `Cannot trim that object.` / `Cannot extend that object.` | il taglio o il prolungamento non riesce; l'oggetto resta |
+| `Current settings: Erase source=No  Layer=Source  OFFSETGAPTYPE=0` | impostazioni di `OFFSET` all'avvio |
+| `Cannot offset that object.` | `OFFSET` non può creare la copia: nessuna copia |
+| `Current settings: Mode = TRIM, Radius = 0.0000` | impostazioni di `FILLET` all'avvio |
+| `(TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000` | impostazioni di `CHAMFER` all'avvio |
+| `Cannot fillet those objects.` / `Cannot chamfer those objects.` | il raccordo o lo smusso non si può fare su quegli oggetti |
+| `Radius is too large.` | `FILLET`: il raggio non sta nella parte da tenere |
+| `Lines are parallel.` | `CHAMFER`: le due rette non hanno un punto comune |
+| `Chamfer distance too large.` | `CHAMFER`: una distanza supera la parte da tenere |
+| `Pick a point that is not on the other object.` | `FILLET`, `CHAMFER`: il punto cade sulla retta o sul cerchio dell'altro oggetto |
+| `Result is beyond the drawing limits.` | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr*: il risultato cade oltre i limiti che il programma rappresenta |
+| `Circle does not exist.` | `CIRCLE` *Ttr*: nessun cerchio di quel raggio tocca i due oggetti |
+| `Value must be positive.` | raggio di `FILLET` o distanza di `CHAMFER` negativi |
+| `Requires numeric distance.` | alle domande dei numeri di `CHAMFER` va scritto un numero |
+| `<n> lines were filleted` / `<n> lines were chamfered` / `<m> were too short` | esito dell'opzione *Polyline* di `FILLET` e `CHAMFER` |
+| `<n> lines joined into 1 line`, `<n> arcs joined into 1 arc`, `<n> objects converted to 1 polyline`, `<n> segments added to polyline` | esito di `JOIN` |
+| `<n> arcs joined and converted to circle` / `Arc converted to circle.` | `JOIN`: gli archi sono diventati un cerchio |
+| `1 line joined to source` | `JOIN` negli script: una linea unita alla sorgente |
+| `0 objects joined, <n> objects discarded from the operation.` | `JOIN`: niente si unisce |

@@ -281,46 +281,62 @@ nei menu classici e vengono salvate nelle impostazioni utente (`QSettings`).
 *Nota:* i comandi e gli alias della riga di comando (es. `L`, `PL`, `E`, `LA`) non sono
 scorciatoie da tastiera di sistema e non compaiono in questa finestra.
 
-## Nuovi snap a oggetto
+## Snap a intersezione, tangente, perpendicolare e quadrante
 
-Dalla tappa 0.7 il sistema di snap a oggetto include quattro nuovi tipi di aggancio
-geometrico (ADR 0033), ciascuno associato a un'azione dedicata, a un'icona e a un marcatore
-visivo a schermo:
+Dalla tappa 0.7 lo snap a oggetto ha quattro tipi di aggancio in più (ADR 0033),
+ciascuno con un'azione, un'icona e un marcatore a schermo:
 
 | Modo | Azione / Menu *Tools → Object Snap Modes* | Punto di aggancio | Marcatore a schermo |
 |---|---|---|---|
-| *Intersection* | `aids.snap.intersection` | Punto d'incontro tra due curve o tra segmenti della stessa polilinea (interruttore presente, aggancio non ancora attivo) | Croce a forma di X |
+| *Intersection* | `aids.snap.intersection` | Punto d'incontro tra due curve, o tra due segmenti della stessa polilinea | Croce a forma di X |
 | *Perpendicular* | `aids.snap.perpendicular` | Piede della perpendicolare tracciata dal punto base del comando verso la curva | Simbolo perpendicolare (⊥) |
-| *Tangent* | `aids.snap.tangent` | Punto di tangenza condotto dal punto base verso cerchi, archi o segmenti curvi di polilinea (interruttore presente, aggancio non ancora attivo) | Cerchio con linea tangente in alto |
+| *Tangent* | `aids.snap.tangent` | Punto di tangenza dal punto base del comando a cerchi, archi o segmenti curvi di polilinea | Cerchio con linea tangente in alto |
 | *Quadrant* | `aids.snap.quadrant` | Punti cardinali (0°, 90°, 180°, 270°) di cerchi, archi e archi di polilinea | Rombo |
 
 ### Regole geometriche
 
-- **Quadrante:** individua i quattro punti a 0°, 90°, 180° e 270° rispetto agli assi del
-  disegno. Per un arco o per un segmento curvo di polilinea, lo snap interviene solo se
-  l'angolo cade all'interno dello sviluppo effettivo dell'arco.
-- **Perpendicolare:** richiede che il comando in esecuzione disponga di un punto base
-  (come il primo punto di `LINE`, il punto base di `MOVE` o il grip caldo); senza punto
-  base non produce alcun aggancio. Il punto calcolato viene accettato solo se cade
-  sull'entità geometrica reale e non sul suo prolungamento ideale.
-- **Intersezione e Tangente:** i comandi e le voci di menu sono già presenti per
-  attivare o disattivare questi modi, ma il nucleo geometrico non calcola ancora i loro
-  punti di aggancio (arriveranno con i pacchetti successivi della tappa 0.7: per ora non
-  agganciano punti).
+- **Intersezione:** il punto in cui si incontrano due linee, archi, cerchi o
+  polilinee, oppure due segmenti della stessa polilinea, purché **tutte e due le
+  curve passino entro l'apertura** di 10 pixel dal puntatore. Il punto deve
+  esistere davvero: le intersezioni apparenti e quelle dei prolungamenti
+  (*Extended Intersection* di AutoCAD) non ci sono. Due curve che hanno un tratto
+  in comune (sulla stessa retta o sullo stesso cerchio) non danno punti su quel
+  tratto, e un punto in cui si incontrano più curve è uno solo. Il testo non
+  partecipa. I punti li calcola il nucleo geometrico (solid-space), lo stesso
+  che decide i tagli di `TRIM`.
+- **Tangente:** i punti di tangenza dal **punto base** del comando a un cerchio,
+  a un arco o a un segmento curvo di polilinea che passa entro l'apertura, solo
+  se cadono sulla curva e non sul suo prolungamento. Un punto base esattamente
+  sul cerchio dà il punto stesso. Linee e segmenti dritti non danno tangenti.
+- **Perpendicolare:** il piede della perpendicolare dal **punto base** del
+  comando alla curva, accettato solo se cade sull'entità e non sul suo
+  prolungamento.
+- **Quadrante:** i quattro punti a 0°, 90°, 180° e 270° rispetto agli assi del
+  disegno. Per un arco o per un segmento curvo di polilinea, lo snap interviene
+  solo se l'angolo cade all'interno dello sviluppo effettivo dell'arco.
+
+Il punto base è per esempio il primo punto di `LINE`, il punto base di `MOVE` o
+il grip caldo: senza punto base, tangente e perpendicolare non agganciano
+nulla. Gli snap "rimandati" di AutoCAD, che si risolvono dopo il secondo punto,
+non ci sono.
+
+**Esempio:** con due linee che si incrociano, avvia `L` e passa vicino
+all'incrocio: compare la croce, e il clic prende il punto d'incontro esatto. Con
+*Tangent* acceso, dopo il primo punto di `LINE` passa su un cerchio: il cerchio
+con la linea tangente indica il punto in cui il segmento sarà tangente.
 
 ### Priorità e attivazione
 
-Tutti i punti di snap candidati entro l'apertura di 10 pixel competono tra loro e viene
-scelto quello più vicino al puntatore. A parità di distanza si applica l'ordine di
-priorità: *Endpoint*, *Intersection*, *Midpoint*, *Quadrant*, *Perpendicular*, *Tangent*
-(per ora *Intersection* e *Tangent* non generano punti di aggancio). Se nessuno di questi
-rientra nell'apertura, operano *Center* e *Insertion* quando si passa sopra l'entità.
+Tutti i punti di snap candidati entro l'apertura di 10 pixel competono tra loro e
+viene scelto quello più vicino al puntatore. A parità di distanza si applica
+l'ordine di priorità: *Endpoint*, *Intersection*, *Midpoint*, *Quadrant*,
+*Perpendicular*, *Tangent*. Se nessuno di questi rientra nell'apertura, operano
+*Center* e *Insertion* quando si passa sopra l'entità.
 
-All'avvio del programma, *Intersection* è attivo per impostazione predefinita come interruttore
-(insieme ai modi storici *Endpoint*, *Midpoint*, *Center*, *Insertion*); *Perpendicular*,
-*Tangent* e *Quadrant* sono disattivati per difetto e si possono attivare dal menu
-*Tools → Object Snap Modes* o dal gruppo *Aids* della barra multifunzione. Come precisato
-sopra, *Intersection* e *Tangent* non agganciano ancora alcun punto.
+All'avvio del programma sono attivi *Intersection* e i modi storici *Endpoint*,
+*Midpoint*, *Center* e *Insertion*; *Perpendicular*, *Tangent* e *Quadrant* sono
+disattivati per difetto e si possono attivare dal menu *Tools → Object Snap
+Modes* o dal gruppo *Aids* della barra multifunzione.
 
 ## Tracciamento polare (`POLAR`)
 
