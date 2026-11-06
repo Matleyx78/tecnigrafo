@@ -167,6 +167,7 @@ TEST_F(JoinCommandTest, ScriptCloseReportsExactlyWhatWasAbsorbedOrDiscarded) {
         bool discard;
         std::string_view message;
     };
+
     const auto cases = std::to_array<Case>({
         {false, false, "Arc converted to circle."},
         {true, false, "2 arcs joined and converted to circle"},
