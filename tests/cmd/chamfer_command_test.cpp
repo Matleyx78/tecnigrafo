@@ -25,7 +25,8 @@ protected:
         registerBuiltinCommands(m_registry);
         m_document.setUnits(4);
         m_runner.setPixelSize(0.01);
-        m_runner.setMessageSink([this](std::string text) { m_messages.push_back(std::move(text)); });
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
     }
 
     void type(std::initializer_list<std::string_view> lines) {

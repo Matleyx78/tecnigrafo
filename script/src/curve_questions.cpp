@@ -631,13 +631,13 @@ QuestionResult askChamfer(const QuestionModel& model, Arguments arguments) {
         return ArgumentError{"trim only accepts no"};
     }
     const auto values = parsePoint(distances.value_or(angle.value_or(std::string_view{})));
-    if (!values || !std::isfinite(values->x) || !std::isfinite(values->y) ||
-        values->x < 0.0 || values->y < 0.0) {
+    if (!values || !std::isfinite(values->x) || !std::isfinite(values->y) || values->x < 0.0 ||
+        values->y < 0.0) {
         return ArgumentError{"chamfer needs two finite nonnegative numbers"};
     }
-    const core::ChamferSpec spec = distances
-        ? core::ChamferSpec{core::ChamferDistances{values->x, values->y}}
-        : core::ChamferSpec{core::ChamferAngle{values->x, values->y * (core::kPi / 180.0)}};
+    const core::ChamferDistances lengths{values->x, values->y};
+    const core::ChamferAngle rotation{values->x, values->y * (core::kPi / 180.0)};
+    const auto spec = distances ? core::ChamferSpec{lengths} : core::ChamferSpec{rotation};
     const core::ToleranceRule rule{kDefaultUnits};
     const auto entity = entityNamed(model, arguments[0]);
     if (const auto* error = std::get_if<ArgumentError>(&entity)) {
@@ -655,8 +655,8 @@ QuestionResult askChamfer(const QuestionModel& model, Arguments arguments) {
         for (const auto& added : corners.added) {
             addItem(answer, newEntity(added));
         }
-        answer += " done=" + std::to_string(corners.done) + " short=" +
-                  std::to_string(corners.tooShort);
+        answer +=
+            " done=" + std::to_string(corners.done) + " short=" + std::to_string(corners.tooShort);
         return answer;
     }
 

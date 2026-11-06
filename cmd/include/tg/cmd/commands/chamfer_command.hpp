@@ -16,8 +16,11 @@ public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
     void cancel(CommandContext& context) override;
+
     void pointerMoved(const core::Vec2& /*point*/) override {}
+
     [[nodiscard]] Prompt prompt() const override;
+
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
 
 private:

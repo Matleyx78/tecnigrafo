@@ -3,8 +3,8 @@
 
 #include "tg/core/chamfer.hpp"
 
-#include "solid_space_bridge.hpp"
 #include "solid_space/geom2d/intersection.hpp"
+#include "solid_space_bridge.hpp"
 #include "tg/core/curve_parts.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
@@ -57,8 +57,8 @@ std::optional<Ray> keptRay(const Line& line, const Vec2& corner, const Vec2& pic
     const bool keepsStart = projected < 0.0;
     const Vec2 end = keepsStart ? line.start : line.end;
     const Vec2 keptDirection = keepsStart ? -direction : direction;
-    const bool passesKeptEnd = keepsStart ? location == g::Location::beforeStart
-                                          : location == g::Location::afterEnd;
+    const auto keptEnd = keepsStart ? g::Location::beforeStart : g::Location::afterEnd;
+    const bool passesKeptEnd = location == keptEnd;
     const double available = distance(end, corner);
     return Ray{keptDirection, end, passesKeptEnd ? -available : available, keepsStart};
 }
@@ -261,8 +261,8 @@ CornerResult chamfer(const Entity& first, const Vec2& pickFirst, const Entity& s
     }
     const auto& intersection = found.value();
     if (intersection.points.empty()) {
-        return withOutcome(intersection.omittedBeyondDomain > 0 ? CornerOutcome::OutOfDomain
-                                                               : CornerOutcome::None);
+        const bool beyondDomain = intersection.omittedBeyondDomain > 0;
+        return withOutcome(beyondDomain ? CornerOutcome::OutOfDomain : CornerOutcome::None);
     }
     const auto& crossing = intersection.points.front();
     const Vec2 corner = bridge::fromPoint(crossing.point);
@@ -313,10 +313,9 @@ CornerResult chamferSegments(const Polyline& polyline, const Vec2& pickFirst,
     const Entity entity = polyline;
     const auto first = nearestPosition(entity, pickFirst).segment;
     const auto second = nearestPosition(entity, pickSecond).segment;
-    const bool earlierFirst = first + 1 == second ||
-                              (polyline.isClosed() && first + 1 == count && second == 0);
-    const bool earlierSecond = second + 1 == first ||
-                               (polyline.isClosed() && second + 1 == count && first == 0);
+    const bool closed = polyline.isClosed();
+    const bool earlierFirst = first + 1 == second || (closed && first + 1 == count && second == 0);
+    const bool earlierSecond = second + 1 == first || (closed && second + 1 == count && first == 0);
     if (!earlierFirst && !earlierSecond) {
         return withOutcome(CornerOutcome::NotAllowed);
     }
@@ -331,14 +330,15 @@ CornerResult chamferSegments(const Polyline& polyline, const Vec2& pickFirst,
 }
 
 PolylineCorners chamferPolyline(const Polyline& polyline, const ChamferSpec& spec, bool trim,
-                               const ToleranceRule& rule) {
+                                const ToleranceRule& rule) {
     assert(valid(spec));
     PolylineCorners result{polyline, {}, 0, 0};
     if (polyline.segmentCount() < 2) {
         return result;
     }
-    const std::size_t first = polyline.isClosed() ? 0 : 1;
-    const std::size_t end = polyline.isClosed() ? polyline.vertexCount() : polyline.vertexCount() - 1;
+    const bool closed = polyline.isClosed();
+    const std::size_t first = closed ? 0 : 1;
+    const std::size_t end = closed ? polyline.vertexCount() : polyline.vertexCount() - 1;
     std::size_t current = first;
     for (std::size_t original = first; original < end; ++original) {
         const std::size_t count = result.polyline.segmentCount();
@@ -349,7 +349,8 @@ PolylineCorners chamferPolyline(const Polyline& polyline, const ChamferSpec& spe
         const std::size_t at = trim ? current : original;
         const Vec2 pickEarlier = result.polyline.segment((at + count - 1) % count).start;
         const Vec2 pickLater = result.polyline.segment(at).end;
-        const auto cut = cutVertex(result.polyline, at, true, pickEarlier, pickLater, spec, trim, rule);
+        const auto cut =
+            cutVertex(result.polyline, at, true, pickEarlier, pickLater, spec, trim, rule);
         if (cut.outcome != CornerOutcome::Done) {
             ++result.tooShort;
             current = at + 1;

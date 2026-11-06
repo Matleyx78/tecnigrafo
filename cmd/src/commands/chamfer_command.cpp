@@ -51,12 +51,12 @@ void ChamferCommand::start(CommandContext& context) {
     m_multiple = false;
     m_steps.clear();
     context.editor.beginTransaction("Chamfer");
-    const std::string settings =
-        m_useAngle ? "Length = " + formatLength(m_angle.length) + ", Angle = " + formatAngle(m_angle.angle)
-                   : "Dist1 = " + formatLength(m_distances.first) +
-                         ", Dist2 = " + formatLength(m_distances.second);
-    context.message(std::string{m_trim ? "(TRIM mode)" : "(NOTRIM mode)"} +
-                    " Current chamfer " + settings);
+    const std::string mode = m_trim ? "(TRIM mode)" : "(NOTRIM mode)";
+    const std::string first = m_useAngle ? "Length = " + formatLength(m_angle.length)
+                                         : "Dist1 = " + formatLength(m_distances.first);
+    const std::string second = m_useAngle ? "Angle = " + formatAngle(m_angle.angle)
+                                          : "Dist2 = " + formatLength(m_distances.second);
+    context.message(mode + " Current chamfer " + first + ", " + second);
 }
 
 Status ChamferCommand::handle(CommandContext& context, const Input& input) {
@@ -126,26 +126,35 @@ Prompt ChamferCommand::prompt() const {
                      {"Multiple", "M"}},
                     PromptKind::Object};
         case Stage::Second:
-            return {"Select second line or shift-select to apply corner or [Distance/Angle/Method]:",
-                    {{"Distance", "D"}, {"Angle", "A"}, {"Method", "M"}},
-                    PromptKind::Object};
+            return {
+                "Select second line or shift-select to apply corner or [Distance/Angle/Method]:",
+                {{"Distance", "D"}, {"Angle", "A"}, {"Method", "M"}},
+                PromptKind::Object};
         case Stage::Polyline:
             return {"Select 2D polyline or [Distance/Angle/Method]:",
                     {{"Distance", "D"}, {"Angle", "A"}, {"Method", "M"}},
                     PromptKind::Object};
         case Stage::FirstDistance:
             return {"Specify first chamfer distance <" + formatLength(m_distances.first) + ">:",
-                    {}, PromptKind::Text};
+                    {},
+                    PromptKind::Text};
         case Stage::SecondDistance:
             return {"Specify second chamfer distance <" + formatLength(m_pending) + ">:",
-                    {}, PromptKind::Text};
-        case Stage::Length:
-            return {"Specify chamfer length on the first line <" + formatLength(m_angle.length) + ">:",
-                    {}, PromptKind::Text};
-        case Stage::Angle:
+                    {},
+                    PromptKind::Text};
+        case Stage::Length: {
+            const auto value = formatLength(m_angle.length);
+            return {"Specify chamfer length on the first line <" + value + ">:",
+                    {},
+                    PromptKind::Text};
+        }
+        case Stage::Angle: {
             // CHAMFER uses the distance diagnostic for all four numeric prompts.
-            return {"Specify chamfer angle from the first line <" + formatAngle(m_angle.angle) + ">:",
-                    {}, PromptKind::Text};
+            const auto value = formatAngle(m_angle.angle);
+            return {"Specify chamfer angle from the first line <" + value + ">:",
+                    {},
+                    PromptKind::Text};
+        }
         case Stage::Trim:
             return {m_trim ? "Enter Trim mode option [Trim/No trim] <Trim>:"
                            : "Enter Trim mode option [Trim/No trim] <No trim>:",
@@ -292,7 +301,8 @@ Status ChamferCommand::chamferPolyline(CommandContext& context, core::EntityId i
         return finishAttempt(context);
     }
 
-    auto result = core::chamferPolyline(*polyline, spec(), m_trim, core::ToleranceRule::of(document));
+    const auto rule = core::ToleranceRule::of(document);
+    auto result = core::chamferPolyline(*polyline, spec(), m_trim, rule);
     const auto before = editor.savepoint();
     if (m_trim && result.done != 0) {
         editor.replace(id, std::move(result.polyline));

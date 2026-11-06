@@ -16,8 +16,8 @@ const Line kFirst{{0, 0}, {10, 0}};
 const Line kSecond{{0, 0}, {0, 10}};
 
 TEST(Chamfer, DistancesKeepThePickedSidesAndEraseAConsumedLine) {
-    const auto result = chamfer(kFirst, {8, 0}, kSecond, {0, 5},
-                                ChamferDistances{10, 2}, true, kRule);
+    const ChamferDistances distances{10, 2};
+    const auto result = chamfer(kFirst, {8, 0}, kSecond, {0, 5}, distances, true, kRule);
     ASSERT_EQ(result.outcome, CornerOutcome::Done);
     EXPECT_FALSE(result.first);
     ASSERT_TRUE(result.second);
@@ -31,8 +31,9 @@ TEST(Chamfer, DistancesKeepThePickedSidesAndEraseAConsumedLine) {
 }
 
 TEST(Chamfer, RejectsAnOversizedDistanceButGivesPrecedenceToASingleZero) {
-    for (const auto spec : {ChamferDistances{15, 15}, ChamferDistances{5, 15},
-                            ChamferDistances{15, 5}}) {
+    const auto oversized =
+        {ChamferDistances{15, 15}, ChamferDistances{5, 15}, ChamferDistances{15, 5}};
+    for (const auto spec : oversized) {
         EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, spec, true, kRule).outcome,
                   CornerOutcome::DistanceTooLarge);
         const Polyline polyline{{{{10, 0}}, {{0, 0}}, {{0, 10}}}};
@@ -40,13 +41,15 @@ TEST(Chamfer, RejectsAnOversizedDistanceButGivesPrecedenceToASingleZero) {
                   CornerOutcome::DistanceTooLarge);
     }
     const Polyline polyline{{{{10, 0}}, {{0, 0}}, {{0, 10}}}};
-    EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, ChamferDistances{0, 15}, true, kRule).outcome,
+    const ChamferDistances firstZero{0, 15};
+    const ChamferDistances secondZero{15, 0};
+    EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, firstZero, true, kRule).outcome,
               CornerOutcome::None);
-    EXPECT_EQ(chamfer(kSecond, {0, 5}, kFirst, {8, 0}, ChamferDistances{15, 0}, true, kRule).outcome,
+    EXPECT_EQ(chamfer(kSecond, {0, 5}, kFirst, {8, 0}, secondZero, true, kRule).outcome,
               CornerOutcome::None);
-    EXPECT_EQ(chamferSegments(polyline, {8, 0}, {0, 5}, ChamferDistances{0, 15}, true, kRule).outcome,
+    EXPECT_EQ(chamferSegments(polyline, {8, 0}, {0, 5}, firstZero, true, kRule).outcome,
               CornerOutcome::None);
-    EXPECT_EQ(chamferSegments(polyline, {0, 5}, {8, 0}, ChamferDistances{15, 0}, true, kRule).outcome,
+    EXPECT_EQ(chamferSegments(polyline, {0, 5}, {8, 0}, secondZero, true, kRule).outcome,
               CornerOutcome::None);
 }
 
@@ -68,7 +71,8 @@ TEST(Chamfer, AngleBuildsOnTheKeptSideAndRejectsParallelOrOversizedCuts) {
               CornerOutcome::DistanceTooLarge);
     EXPECT_EQ(chamferSegments(shortPolyline, {8, 0}, {0, 0.5}, tooLong, true, kRule).outcome,
               CornerOutcome::DistanceTooLarge);
-    EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, ChamferAngle{5, kPi / 2.0}, true, kRule).outcome,
+    const ChamferAngle parallel{5, kPi / 2.0};
+    EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, parallel, true, kRule).outcome,
               CornerOutcome::None);
 
     const Line longEnough{{0, 0}, {0, 6}};
