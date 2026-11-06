@@ -267,6 +267,7 @@ Prima dei pacchetti indicati, una prova a mano:
    | `JOIN` | `<n> objects converted to 1 polyline` | osservato |
    | `JOIN` | `<n> segments added to polyline` | osservato: «1 segmento unito in 1 polilinea» |
    | `JOIN` | `<n> arcs joined and converted to circle` | osservato, approvato dal responsabile |
+   | `JOIN` | `Arc converted to circle.` | dopo *cLose*, deciso dal responsabile nella [#375](https://github.com/Matleyx78/tecnigrafo/issues/375#issuecomment-6684760832) |
    | `JOIN` | `<n> arcs joined into 1 arc` | osservato: «2 archi uniti in 1 arco» |
    | `JOIN` | `0 objects joined, <n> objects discarded from the operation.` | osservato |
    | `JOIN` | `<k> objects converted to 1 polyline, <n> objects discarded from the operation.` | osservato (con scartate, il resto del messaggio precede la virgola) |
