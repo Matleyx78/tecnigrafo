@@ -44,6 +44,15 @@ protected:
         return m_document.add(Arc{center, 10, start * (core::kPi / 180), end * (core::kPi / 180)});
     }
 
+    [[nodiscard]] core::Document& document() { return m_document; }
+
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -52,69 +61,68 @@ protected:
 };
 
 TEST_F(JoinCommandTest, MixedSelectionConsumesOnlyTheChainAndCopiesSourceProperties) {
-    const auto source = m_document.add(Line{{0, 0}, {10, 0}});
-    const auto detached = m_document.add(Line{{20, 0}, {30, 0}});
-    const auto adjacent = m_document.add(Line{{10, 0}, {10, 10}});
-    auto properties = m_document.current();
+    const auto source = document().add(Line{{0, 0}, {10, 0}});
+    const auto detached = document().add(Line{{20, 0}, {30, 0}});
+    const auto adjacent = document().add(Line{{10, 0}, {10, 10}});
+    auto properties = document().current();
     properties.color = core::Color::fromIndex(3);
-    m_document.setProperties(source, properties);
+    document().setProperties(source, properties);
 
     type({"JOIN", "5,0", "25,0", "10,5", ""});
-    EXPECT_EQ(m_messages.back(),
+    EXPECT_EQ(messages().back(),
               "2 objects converted to 1 polyline, 1 object discarded from the operation.");
-    ASSERT_EQ(m_document.entityCount(), 2U);
-    EXPECT_EQ(m_document.find(source), nullptr);
-    EXPECT_EQ(m_document.find(adjacent), nullptr);
-    EXPECT_NE(m_document.find(detached), nullptr);
-    EXPECT_EQ(m_document.entities().back().properties, properties);
-    const auto* polyline = std::get_if<Polyline>(&m_document.entities().back().entity);
+    ASSERT_EQ(document().entityCount(), 2U);
+    EXPECT_EQ(document().find(source), nullptr);
+    EXPECT_EQ(document().find(adjacent), nullptr);
+    EXPECT_NE(document().find(detached), nullptr);
+    EXPECT_EQ(document().entities().back().properties, properties);
+    const auto* polyline = std::get_if<Polyline>(&document().entities().back().entity);
     ASSERT_NE(polyline, nullptr);
     ASSERT_EQ(polyline->vertexCount(), 3U);
     EXPECT_EQ(polyline->vertices()[1].position, (core::Vec2{10, 0}));
     EXPECT_EQ(polyline->vertices()[2].position, (core::Vec2{10, 10}));
-    EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Join"});
+    EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Join"});
 
     type({"U"});
-    EXPECT_EQ(m_document.entityCount(), 3U);
+    EXPECT_EQ(document().entityCount(), 3U);
     type({"REDO"});
-    EXPECT_EQ(m_document.entityCount(), 2U);
+    EXPECT_EQ(document().entityCount(), 2U);
 }
 
 TEST_F(JoinCommandTest, InteractiveCircleConversionCanBeDeclinedCancelledOrAccepted) {
     const auto source = addArc({0, 0}, 0, 90);
     const auto other = addArc({0, 0}, 270, 45);
 
-    for (const auto answer : {"No", "Esc", "Yes", ""}) {
+    for (const std::string_view choice : {"No", "Esc", "Yes", ""}) {
         type({"JOIN", "0,10", "0,-10", ""});
-        ASSERT_EQ(m_runner.promptText(), kCircleQuestion);
-        EXPECT_EQ(m_document.entityCount(), 2U);
-        EXPECT_FALSE(m_editor.canUndo());
+        ASSERT_EQ(runner().promptText(), kCircleQuestion);
+        EXPECT_EQ(document().entityCount(), 2U);
+        EXPECT_FALSE(editor().canUndo());
 
-        const std::string_view choice{answer};
-        const auto messagesBefore = m_messages.size();
+        const auto messagesBefore = messages().size();
         if (choice == "Esc") {
-            m_runner.submit(CancelInput{});
+            runner().submit(CancelInput{});
         } else {
             type({choice});
         }
-        EXPECT_FALSE(m_runner.isActive());
+        EXPECT_FALSE(runner().isActive());
         if (choice == "No" || choice == "Esc") {
-            EXPECT_EQ(m_messages.size(), messagesBefore + (choice == "Esc" ? 1U : 0U));
-            EXPECT_EQ(m_document.entityCount(), 2U);
-            EXPECT_FALSE(m_editor.canUndo());
+            EXPECT_EQ(messages().size(), messagesBefore + (choice == "Esc" ? 1U : 0U));
+            EXPECT_EQ(document().entityCount(), 2U);
+            EXPECT_FALSE(editor().canUndo());
             continue;
         }
 
-        ASSERT_EQ(m_document.entityCount(), 1U);
-        EXPECT_EQ(m_document.entities().front().entity, (core::Entity{Circle{{0, 0}, 10}}));
-        EXPECT_EQ(m_messages.back(), "2 arcs joined and converted to circle");
-        EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Join"});
+        ASSERT_EQ(document().entityCount(), 1U);
+        EXPECT_EQ(document().entities().front().entity, (core::Entity{Circle{{0, 0}, 10}}));
+        EXPECT_EQ(messages().back(), "2 arcs joined and converted to circle");
+        EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Join"});
         type({"U"});
-        EXPECT_NE(m_document.find(source), nullptr);
-        EXPECT_NE(m_document.find(other), nullptr);
+        EXPECT_NE(document().find(source), nullptr);
+        EXPECT_NE(document().find(other), nullptr);
         type({"REDO"});
-        ASSERT_EQ(m_document.entityCount(), 1U);
-        EXPECT_TRUE(std::holds_alternative<Circle>(m_document.entities().front().entity));
+        ASSERT_EQ(document().entityCount(), 1U);
+        EXPECT_TRUE(std::holds_alternative<Circle>(document().entities().front().entity));
         type({"U"});
     }
 }
@@ -124,10 +132,10 @@ TEST_F(JoinCommandTest, InteractiveArcsThatDoNotReachAFullTurnJoinWithoutAQuesti
     addArc({0, 0}, 200, 300);
 
     type({"JOIN", "0,10", "5,-8.660254", ""});
-    EXPECT_FALSE(m_runner.isActive());
-    EXPECT_EQ(m_messages.back(), "2 arcs joined into 1 arc");
-    ASSERT_EQ(m_document.entityCount(), 1U);
-    const auto* record = m_document.find(source);
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(messages().back(), "2 arcs joined into 1 arc");
+    ASSERT_EQ(document().entityCount(), 1U);
+    const auto* record = document().find(source);
     ASSERT_NE(record, nullptr);
     const auto* arc = std::get_if<Arc>(&record->entity);
     ASSERT_NE(arc, nullptr);
@@ -136,28 +144,28 @@ TEST_F(JoinCommandTest, InteractiveArcsThatDoNotReachAFullTurnJoinWithoutAQuesti
 }
 
 TEST_F(JoinCommandTest, ScriptArcsAskBeforeConvertingAFullTurn) {
-    m_runner.setScriptSequences(true);
+    runner().setScriptSequences(true);
     addArc({0, 0}, 0, 90);
     addArc({0, 0}, 300, 30);
 
     type({"JOIN", "0,10", "5,-8.660254", ""});
-    ASSERT_EQ(m_runner.promptText(), kCircleQuestion);
+    ASSERT_EQ(runner().promptText(), kCircleQuestion);
     type({"N"});
-    EXPECT_FALSE(m_runner.isActive());
-    EXPECT_EQ(m_document.entityCount(), 2U);
-    EXPECT_FALSE(m_editor.canUndo());
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(document().entityCount(), 2U);
+    EXPECT_FALSE(editor().canUndo());
 
     type({"JOIN", "0,10", "5,-8.660254", ""});
-    ASSERT_EQ(m_runner.promptText(), kCircleQuestion);
+    ASSERT_EQ(runner().promptText(), kCircleQuestion);
     type({"Y"});
-    ASSERT_EQ(m_document.entityCount(), 1U);
-    EXPECT_EQ(m_document.entities().front().entity, (core::Entity{Circle{{0, 0}, 10}}));
-    EXPECT_EQ(m_messages.back(), "2 arcs joined and converted to circle");
-    EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Join"});
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_EQ(document().entities().front().entity, (core::Entity{Circle{{0, 0}, 10}}));
+    EXPECT_EQ(messages().back(), "2 arcs joined and converted to circle");
+    EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Join"});
 }
 
 TEST_F(JoinCommandTest, ScriptCloseReportsExactlyWhatWasAbsorbedOrDiscarded) {
-    m_runner.setScriptSequences(true);
+    runner().setScriptSequences(true);
     const auto source = addArc({80, 0}, 0, 60);
     const auto other = addArc({80, 0}, 90, 150);
     const auto detached = addArc({50, 0}, 0, 180);
@@ -183,15 +191,15 @@ TEST_F(JoinCommandTest, ScriptCloseReportsExactlyWhatWasAbsorbedOrDiscarded) {
         if (test.discard) {
             type({"50,10"});
         }
-        ASSERT_EQ(m_runner.promptText(), "Select arcs to join to source or [cLose]:");
+        ASSERT_EQ(runner().promptText(), "Select arcs to join to source or [cLose]:");
         type({"L"});
-        EXPECT_FALSE(m_runner.isActive());
-        EXPECT_EQ(m_messages.back(), test.message);
-        EXPECT_EQ(m_document.find(source), nullptr);
-        EXPECT_EQ(m_document.find(other) == nullptr, test.absorb);
-        EXPECT_NE(m_document.find(detached), nullptr);
-        EXPECT_EQ(m_document.entities().back().entity, (core::Entity{Circle{{80, 0}, 10}}));
-        EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Join"});
+        EXPECT_FALSE(runner().isActive());
+        EXPECT_EQ(messages().back(), test.message);
+        EXPECT_EQ(document().find(source), nullptr);
+        EXPECT_EQ(document().find(other) == nullptr, test.absorb);
+        EXPECT_NE(document().find(detached), nullptr);
+        EXPECT_EQ(document().entities().back().entity, (core::Entity{Circle{{80, 0}, 10}}));
+        EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Join"});
         type({"U"});
     }
 }

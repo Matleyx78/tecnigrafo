@@ -185,10 +185,13 @@ std::string JoinCommand::successMessage(const core::JoinResult& result,
         return joined + " arcs joined into 1 arc";
     }
 
-    const auto segments = std::get<core::Polyline>(result.source.value()).segmentCount() -
-                          std::get<core::Polyline>(source).segmentCount();
-    return std::to_string(segments) +
-           (segments == 1 ? " segment added to polyline" : " segments added to polyline");
+    if (result.source) {
+        const auto segments = std::get<core::Polyline>(*result.source).segmentCount() -
+                              std::get<core::Polyline>(source).segmentCount();
+        return std::to_string(segments) +
+               (segments == 1 ? " segment added to polyline" : " segments added to polyline");
+    }
+    return {};
 }
 
 }  // namespace tg::cmd
