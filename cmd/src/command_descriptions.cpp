@@ -8,6 +8,7 @@
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/fillet_command.hpp"
+#include "tg/cmd/commands/join_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
@@ -649,6 +650,31 @@ CommandDescription FilletCommand::description() {
               ValueType::Object,
               {{"Radius", "R"}},
               false}}};
+}
+
+CommandDescription JoinCommand::description() {
+    return {"JOIN",
+            {},
+            "Joins compatible objects into a single object.",
+            false,
+            {{"interactive",
+              "Select source object or multiple objects to join at once:",
+              ValueType::Selection,
+              {},
+              true},
+             {"source", "Select source object:", ValueType::Object, {}, true},
+             {"lines", "Select lines to join to source:", ValueType::Selection, {}, true},
+             {"arcs",
+              "Select arcs to join to source or [cLose]:",
+              ValueType::Object,
+              {{"cLose", "L"}},
+              true},
+             {"objects", "Select objects to join to source:", ValueType::Selection, {}, true},
+             {"circle",
+              "Arc segments combined form a circle. Convert to circle? [Yes/No] <Yes>:",
+              ValueType::Keyword,
+              {{"Yes", "Y"}, {"No", "N"}},
+              true}}};
 }
 
 CommandDescription OffsetCommand::description() {
