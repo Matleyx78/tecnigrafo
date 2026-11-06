@@ -89,6 +89,20 @@ TEST_F(JoinCommandTest, MixedSelectionConsumesOnlyTheChainAndCopiesSourcePropert
     EXPECT_EQ(document().entityCount(), 2U);
 }
 
+TEST_F(JoinCommandTest, AliasJStartsJoin) {
+    document().add(Line{{0, 0}, {10, 0}});
+    document().add(Line{{20, 0}, {30, 0}});
+
+    type({"J", "5,0", "25,0", ""});
+    EXPECT_EQ(messages().back(), "2 lines joined into 1 line");
+    ASSERT_EQ(document().entityCount(), 1U);
+    const auto* line = std::get_if<Line>(&document().entities().front().entity);
+    ASSERT_NE(line, nullptr);
+    EXPECT_EQ(line->start, (core::Vec2{0, 0}));
+    EXPECT_EQ(line->end, (core::Vec2{30, 0}));
+    EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Join"});
+}
+
 TEST_F(JoinCommandTest, InteractiveCircleConversionCanBeDeclinedCancelledOrAccepted) {
     const auto source = addArc({0, 0}, 0, 90);
     const auto other = addArc({0, 0}, 270, 45);

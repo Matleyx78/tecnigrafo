@@ -654,7 +654,7 @@ CommandDescription FilletCommand::description() {
 
 CommandDescription JoinCommand::description() {
     return {"JOIN",
-            {},
+            {"J"},
             "Joins compatible objects into a single object.",
             false,
             {{"interactive",
