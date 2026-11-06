@@ -9,6 +9,7 @@ add_library(tg_cmd
     src/command_descriptions.cpp
     src/commands/aid_commands.cpp
     src/commands/arc_command.cpp
+    src/commands/chamfer_command.cpp
     src/commands/chprop_command.cpp
     src/commands/circle_command.cpp
     src/commands/file_commands.cpp

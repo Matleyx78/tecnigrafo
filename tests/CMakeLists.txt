@@ -18,6 +18,7 @@ include(GoogleTest)
 
 add_executable(tg_tests
     cmd/arc_command_test.cpp
+    cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
     cmd/fillet_command_test.cpp
@@ -53,6 +54,7 @@ add_executable(tg_tests
     core/color_test.cpp
     core/curve_parts_test.cpp
     core/dashes_test.cpp
+    core/chamfer_test.cpp
     core/fillet_test.cpp
     core/lineweight_test.cpp
     core/linetype_pattern_test.cpp

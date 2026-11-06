@@ -4,6 +4,7 @@
 #include "command_descriptions.hpp"
 
 #include "tg/cmd/commands/aid_commands.hpp"
+#include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/fillet_command.hpp"
@@ -561,6 +562,64 @@ CommandDescription ScaleCommand::description(Variable variable) {
             "Sets the linetype scale factor of new objects.",
             false,
             {{"scale", "Enter new value for CELTSCALE <{default}>:", ValueType::Real, {}, true}}};
+}
+
+CommandDescription ChamferCommand::description() {
+    return {"CHAMFER",
+            {"CHA"},
+            "Bevels a corner between two lines or polyline segments.",
+            false,
+            {{"first",
+              "Select first line or [Undo/Polyline/Distance/Angle/Trim/mEthod/Multiple]:",
+              ValueType::Object,
+              {{"Undo", "U"},
+               {"Polyline", "P"},
+               {"Distance", "D"},
+               {"Angle", "A"},
+               {"Trim", "T"},
+               {"mEthod", "E"},
+               {"Multiple", "M"}},
+              true},
+             {"second",
+              "Select second line or shift-select to apply corner or [Distance/Angle/Method]:",
+              ValueType::Object,
+              {{"Distance", "D"}, {"Angle", "A"}, {"Method", "M"}},
+              false},
+             {"first-distance",
+              "Specify first chamfer distance <{default}>:",
+              ValueType::Real,
+              {},
+              true},
+             {"second-distance",
+              "Specify second chamfer distance <{default}>:",
+              ValueType::Real,
+              {},
+              true},
+             {"length",
+              "Specify chamfer length on the first line <{default}>:",
+              ValueType::Real,
+              {},
+              true},
+             {"angle",
+              "Specify chamfer angle from the first line <{default}>:",
+              ValueType::Real,
+              {},
+              true},
+             {"trim",
+              "Enter Trim mode option [Trim/No trim] <{default}>:",
+              ValueType::Keyword,
+              {{"Trim", "T"}, {"No trim", "N"}},
+              true},
+             {"method",
+              "Enter trim method [Distance/Angle] <{default}>:",
+              ValueType::Keyword,
+              {{"Distance", "D"}, {"Angle", "A"}},
+              true},
+             {"polyline",
+              "Select 2D polyline or [Distance/Angle/Method]:",
+              ValueType::Object,
+              {{"Distance", "D"}, {"Angle", "A"}, {"Method", "M"}},
+              false}}};
 }
 
 CommandDescription FilletCommand::description() {

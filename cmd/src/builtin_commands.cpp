@@ -7,6 +7,7 @@
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/cmd/commands/arc_command.hpp"
+#include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
@@ -36,6 +37,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(detail::arcDescription(), [] { return std::make_unique<ArcCommand>(); });
     registry.add(ScaleCommand::description(ScaleCommand::Variable::Current),
                  [] { return std::make_unique<ScaleCommand>(ScaleCommand::Variable::Current); });
+    registry.add(ChamferCommand::description(), [] { return std::make_unique<ChamferCommand>(); });
     registry.add(ChpropCommand::description(), [] { return std::make_unique<ChpropCommand>(); });
     registry.add(detail::circleDescription(), [] { return std::make_unique<CircleCommand>(); });
     registry.add(ClayerCommand::description(), [] { return std::make_unique<ClayerCommand>(); });
