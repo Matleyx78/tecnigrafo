@@ -27,8 +27,8 @@ Aggiornato alla versione **0.7.0**.
 
 | Stato | Comandi |
 |---|---|
-| completo | 16 |
-| presente | 24 |
+| completo | 17 |
+| presente | 23 |
 | assente | 39 |
 
 ## Disegno
@@ -85,7 +85,7 @@ Aggiornato alla versione **0.7.0**.
 | `FILLET` | `F` | presente | 0.7 | linee, archi, cerchi e segmenti dritti di una polilinea; *Radius*, *Trim*, *Polyline*, *Multiple*, *Undo*, `Shift` per lo spigolo; non raccorda una polilinea con un'altra entità né i suoi segmenti curvi |
 | `CHAMFER` | `CHA` | presente | 0.7 | linee e segmenti dritti di una polilinea; *Distance*, *Angle*, *mEthod*, *Trim*, *Polyline*, *Multiple*, *Undo*, `Shift` per lo spigolo; non smussa una polilinea con un'altra entità |
 | `EXPLODE` | `X` | presente | 0.7 | polilinee in linee e archi nella 0.7; blocchi nella 0.8 |
-| `JOIN` | `J` | presente | 0.7 | linee allineate, archi dello stesso cerchio (anche in un cerchio), catene di linee, archi e polilinee; sequenza degli script con *cLose*; manca l'alias `J` |
+| `JOIN` | `J` | completo | 0.7 | linee allineate, archi dello stesso cerchio (anche in un cerchio), catene di linee, archi e polilinee; sequenza degli script con *cLose* |
 | `MIRRTEXT` | | completo | 0.7 | testo specchiato leggibile (0) o riflesso (1) |
 | `TRIMEXTENDMODE` | | completo | 0.7 | modo con cui partono `TRIM` ed `EXTEND` |
 | `ARRAY` | `AR` | assente | — | da valutare dopo la 0.7 |
