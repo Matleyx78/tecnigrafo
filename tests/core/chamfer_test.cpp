@@ -20,9 +20,13 @@ TEST(Chamfer, DistancesKeepThePickedSidesAndEraseAConsumedLine) {
     const auto result = chamfer(kFirst, {8, 0}, kSecond, {0, 5}, distances, true, kRule);
     ASSERT_EQ(result.outcome, CornerOutcome::Done);
     EXPECT_FALSE(result.first);
-    ASSERT_TRUE(result.second);
+    if (!result.second.has_value()) {
+        FAIL() << "Expected the kept part of the second line";
+    }
     EXPECT_EQ(std::get<Line>(*result.second), (Line{{0, 2}, {0, 10}}));
-    ASSERT_TRUE(result.added);
+    if (!result.added.has_value()) {
+        FAIL() << "Expected the chamfer line";
+    }
     EXPECT_EQ(std::get<Line>(*result.added), (Line{{10, 0}, {0, 2}}));
 
     const auto corner = chamfer(kFirst, {8, 0}, kSecond, {0, 5}, ChamferDistances{}, true, kRule);
@@ -80,7 +84,9 @@ TEST(Chamfer, AngleBuildsOnTheKeptSideAndRejectsParallelOrOversizedCuts) {
     const Line longEnough{{0, 0}, {0, 6}};
     const auto result = chamfer(kFirst, {8, 0}, longEnough, {0, 5}, angle, true, kRule);
     ASSERT_EQ(result.outcome, CornerOutcome::Done);
-    ASSERT_TRUE(result.added);
+    if (!result.added.has_value()) {
+        FAIL() << "Expected the chamfer line";
+    }
     const auto& added = std::get<Line>(*result.added);
     EXPECT_EQ(added.start, (Vec2{5, 0}));
     EXPECT_NEAR(added.end.y, 5.0, 1e-12);
