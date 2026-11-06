@@ -3,11 +3,10 @@
 ; Opzione cLose per arco in cerchio, niente da unire, U e REDO
 !view 60,5 0.5 800x400
 ARC
+10,0
 C
 0,0
-10,0
-A
-180
+-10,0
 LINE
 50,0
 60,0

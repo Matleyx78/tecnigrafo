@@ -13,40 +13,40 @@ messages:
   Enter name of drawing to open: ingresso.dxf
   Command: JOIN
   Select source object or multiple objects to join at once: 155,0
-  1 found
-  Select objects: 165,0
+  1 found, 1 total
+  Select source object or multiple objects to join at once: 165,0
   1 found, 2 total
-  Select objects:
+  Select source object or multiple objects to join at once:
   2 lines joined into 1 line
   Command: JOIN
   Select source object or multiple objects to join at once: 225,0
-  1 found
-  Select objects: 235,10
+  1 found, 1 total
+  Select source object or multiple objects to join at once: 235,10
   1 found, 2 total
-  Select objects:
+  Select source object or multiple objects to join at once:
   1 segment added to polyline
   Command: JOIN
   Select source object or multiple objects to join at once: 105,0
-  1 found
-  Select objects: 115,-5
+  1 found, 1 total
+  Select source object or multiple objects to join at once: 115,-5
   1 found, 2 total
-  Select objects: 125,0
+  Select source object or multiple objects to join at once: 125,0
   1 found, 3 total
-  Select objects:
+  Select source object or multiple objects to join at once:
   3 objects converted to 1 polyline
   Command: JOIN
   Select source object or multiple objects to join at once: 185,0
-  1 found
-  Select objects: 195,2.5
+  1 found, 1 total
+  Select source object or multiple objects to join at once: 195,2.5
   1 found, 2 total
-  Select objects:
+  Select source object or multiple objects to join at once:
   2 objects converted to 1 polyline
   Command: JOIN
   Select source object or multiple objects to join at once: 265,0
-  1 found
-  Select objects: 280,5
+  1 found, 1 total
+  Select source object or multiple objects to join at once: 280,5
   1 found, 2 total
-  Select objects:
+  Select source object or multiple objects to join at once:
   0 objects joined, 2 objects discarded from the operation.
 prompt: Command:
 preview:

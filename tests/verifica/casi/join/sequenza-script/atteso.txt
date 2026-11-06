@@ -12,24 +12,24 @@ messages:
   Command: JOIN
   Select source object: 5,0
   Select lines to join to source: 15,0
-  1 found
+  1 found, 1 total
   Select lines to join to source:
   1 line joined to source
   Command: JOIN
   Select source object: 35,0
   Select lines to join to source: 50,0
-  1 found
+  1 found, 1 total
   Select lines to join to source:
   1 line joined to source
   Command: JOIN
   Select source object: 88.6603,5
   Select arcs to join to source or [cLose]: 75,8.6603
   Select arcs to join to source or [cLose]:
-  1 arc joined to source
+  2 arcs joined into 1 arc
   Command: JOIN
   Select source object: 225,0
   Select objects to join to source: 235,10
-  1 found
+  1 found, 1 total
   Select objects to join to source:
   1 segment added to polyline
 prompt: Command:
