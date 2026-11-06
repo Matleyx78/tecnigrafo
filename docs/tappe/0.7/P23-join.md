@@ -9,7 +9,9 @@
 - **Dipende da:** P21, P22, P25, R23
 - **Corretta:** 2026-11-01, con le decisioni del responsabile sui buchi B11 e
   B16 della #464 ([DECISIONI.md](../../DECISIONI.md)); 2026-11-02, con la
-  revisione di B11 dopo le prove in AutoCAD (#468)
+  revisione di B11 dopo le prove in AutoCAD (#468); 2026-11-06, con le
+  [decisioni del responsabile su *cLose*](https://github.com/Matleyx78/tecnigrafo/issues/375#issuecomment-6684760832)
+  e sul [messaggio dopo altri archi](https://github.com/Matleyx78/tecnigrafo/pull/528#issuecomment-6685063558)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md)
   punti 17–22; [ADR 0031](../../adr/0031-modifiche-alle-entita.md) punto 7;
@@ -68,16 +70,18 @@ Select objects to join to source:
 
 - La seconda domanda dipende dal tipo della sorgente: linee, archi o oggetti
   per le polilinee.
-- Per gli archi la scelta è un oggetto per clic, ripetuta fino a Invio; *cLose*
-  chiude l'arco in un cerchio. Per gli altri tipi è una richiesta di selezione
-  (`PromptKind::Selection`).
+- Per gli archi la scelta è un oggetto per clic. La domanda
+  `Select arcs to join to source or [cLose]:` si ripete fino a Invio e
+  *cLose* resta disponibile anche dopo aver scelto uno o più archi. Per gli
+  altri tipi è una richiesta di selezione (`PromptKind::Selection`).
 - `joinToSource` decide, con la regola del documento.
 - Quando gli archi coprono il giro intero senza *cLose* (`formsCircle` di
   `joinToSource`), anche questa sequenza fa la domanda del cerchio, con lo
   stesso testo e le stesse risposte di quella interattiva (prova 7 di
   [dxf-di-prova.md](dxf-di-prova.md), 2026-11-02: dopo l'ultimo arco e Invio
-  compare la domanda, e con «Sì» il messaggio è lo stesso). Con *cLose* non
-  chiede niente.
+  compare la domanda, e con «Sì» il messaggio è lo stesso). Con *cLose* il
+  comando crea direttamente il cerchio restituito da `joinToSource`,
+  senza domanda di conferma.
 
 **Messaggi**, come quelli di AutoCAD in `autocad-unione.dxf`, in inglese (la
 tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3, ADR 0035 punto 22):
@@ -85,13 +89,17 @@ tabella di [dxf-di-prova.md](dxf-di-prova.md), punto 3, ADR 0035 punto 22):
 - `<n> lines joined into 1 line`;
 - `<n> objects converted to 1 polyline`;
 - `<n> segments added to polyline`;
-- `<n> arcs joined and converted to circle`, dopo *Yes* alla domanda del cerchio
-  (osservato in italiano: «2 archi uniti e convertiti in cerchio»);
+- `<n> arcs joined and converted to circle`, dopo *Yes* alla domanda del
+  cerchio o dopo *cLose* se viene assorbito almeno un altro arco. Il conteggio
+  include la sorgente e gli archi in `consumed`;
+- `Arc converted to circle.` dopo *cLose* se nessun altro arco è assorbito;
 - `<n> arcs joined into 1 arc` e `1 line joined to source`, per un arco o una
   linea che si unisce alla sorgente;
 - con scartate, il messaggio dell'esito finisce con `, <m> objects discarded
   from the operation.` (per esempio `2 objects converted to 1 polyline, 1
-  object discarded from the operation.`, con `1 object` al singolare);
+  object discarded from the operation.`, con `1 object` al singolare).
+  Dopo *cLose* vale la stessa regola: si omette il punto di
+  `Arc converted to circle.` prima della virgola;
 - `0 objects joined, <n> objects discarded from the operation.`
 
 Un passo di annulla `Join`.
@@ -122,7 +130,21 @@ Un passo di annulla `Join`.
   200°→300°: 0°→300°) senza domanda.
 - Archi che formano un cerchio nella sequenza degli script (sorgente 0°→90° e
   arco 300°→30°, un clic ciascuno e Invio): la stessa domanda, *Yes* e *No*
-  come sopra; con *cLose* nessuna domanda.
+  come sopra.
+- In sequenza script, un arco di centro (0,0), raggio 10, da 0° a 180°,
+  seguito da *cLose*: cerchio senza conferma, messaggio
+  `Arc converted to circle.`. Scegliendo prima anche un arco di centro
+  (50,0), raggio 10 e da 0° a 180°, questo resta intatto e il messaggio è
+  `Arc converted to circle, 1 object discarded from the operation.`.
+- Con sorgente 0°→60° e secondo arco 90°→150°, entrambi di centro (80,0)
+  e raggio 10, dopo il clic sul secondo arco compare ancora
+  `Select arcs to join to source or [cLose]:`. Con *cLose* i due archi
+  si cancellano e nasce il cerchio senza conferma, con il messaggio
+  `2 arcs joined and converted to circle`; con Invio si ottiene l'arco
+  0°→150°. Ripeti *cLose* scegliendo anche l'arco di centro (50,0) del
+  caso precedente: questo resta intatto e il messaggio è
+  `2 arcs joined and converted to circle, 1 object discarded from the operation.`.
+  Ogni conversione costituisce un solo passo di annulla `Join`.
 
 ## Fatto quando
 

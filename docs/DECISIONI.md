@@ -992,3 +992,17 @@ i rimandi ai documenti che cambia.
   anche quando la seconda retta è parallela alla retta dello smusso o la
   interseca nello spigolo o dalla parte opposta. La
   [scheda P21](tappe/0.7/P21-chamfer.md) riporta la regola e l'esempio di test.
+
+- **2026-11-06 — P23, opzione `cLose` di `JOIN` negli script.**
+  Nella [#375](https://github.com/Matleyx78/tecnigrafo/issues/375#issuecomment-6684760832)
+  il responsabile conferma che *cLose* converte l'arco senza domanda di
+  conferma e resta disponibile dopo la scelta di altri archi: si ripete
+  `Select arcs to join to source or [cLose]:` fino a Invio o alla scelta
+  dell'opzione. Il messaggio è `Arc converted to circle.` se nessun altro
+  arco è assorbito. Nella [#528](https://github.com/Matleyx78/tecnigrafo/pull/528#issuecomment-6685063558)
+  il responsabile decide `<n> arcs joined and converted to circle` se
+  *cLose* assorbe altri archi, contando la sorgente e gli archi assorbiti.
+  In entrambi i casi si aggiunge il suffisso delle scartate quando serve,
+  omettendo l'eventuale punto prima della virgola. Cambiano la [scheda P23](tappe/0.7/P23-join.md), la tabella dei
+  messaggi delle [prove DXF](tappe/0.7/dxf-di-prova.md) e il
+  [piano della tappa 0.7](tappe/0.7-modifiche.md).
