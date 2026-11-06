@@ -677,10 +677,12 @@ Specify radius of circle <25.0000>:
   `Value must be positive and nonzero.` e la domanda torna.
 - Fra i cerchi tangenti possibili vince quello più vicino ai due punti
   indicati: dove clicchi decide in quale angolo cade il cerchio.
-- Se nessun cerchio di quel raggio tocca i due oggetti compare
-  `Circle does not exist.`; se il cerchio esiste ma cade fuori dai limiti
-  geometrici che il programma rappresenta, `Result is beyond the drawing
-  limits.`. In tutti e due i casi il comando finisce senza disegnare nulla.
+- Se il nucleo geometrico non dà un cerchio da disegnare compare
+  `Circle does not exist.`: nessun cerchio di quel raggio tocca i due oggetti,
+  oppure ce ne sono infiniti (per esempio due segmenti sulla stessa retta),
+  oppure uno dei due oggetti è un testo o il raggio è oltre i limiti che il
+  programma rappresenta. Se il cerchio esiste ma cade fuori da quei limiti
+  compare invece `Result is beyond the drawing limits.`. In tutti e due i casi il comando finisce senza disegnare nulla.
 
 **Esempio:** con le linee da `0,0` a `40,0` e da `0,0` a `0,40`:
 
@@ -1350,7 +1352,7 @@ Specify offset distance or [Through/Erase/Layer] <Through>:
   `Specify second point:`) e vale la loro distanza. Un valore nullo o negativo
   produce `Value must be positive and nonzero.`. `Invio` usa il valore tra
   `< >`: all'avvio *Through*, poi l'ultima distanza.
-- ***Through*** (`T`): la copia passa per un punto che indicherai.
+- ***Through*** (`T`): la distanza la dà un punto che indicherai.
 - ***Erase*** (`E`): `Erase source object after offsetting? [Yes/No] <No>:`;
   con *Yes* l'oggetto di partenza si cancella dopo la copia.
 - ***Layer*** (`L`): `Enter layer option for offset objects [Current/Source]
@@ -1371,7 +1373,11 @@ Con *Through* la seconda domanda è `Specify through point or
 - Il punto indica il **lato**. Per una polilinea conta il segmento più vicino al
   punto (a pari distanza, il primo). Un punto esattamente sulla retta o sul
   cerchio di quel segmento non indica un lato e non dà copie.
-- Con *Through* la distanza è quella del punto dall'oggetto, e il lato è il suo.
+- Con *Through* la distanza è quella del punto dall'oggetto, misurata dal
+  punto più vicino dell'oggetto, estremi compresi, e il lato è quello del
+  punto. La copia passa per il punto solo se il punto più vicino non è un
+  estremo: per la linea da `0,0` a `10,0` e il punto `13,4` la distanza è 5,
+  misurata da `10,0`, e la copia va da `0,5` a `10,5`.
 - ***Multiple*** (`M`): una copia dopo l'altra, ciascuna dall'ultima creata;
   `Invio` torna alla domanda dell'oggetto.
 - ***Undo*** (`U`): toglie l'ultima copia.
@@ -1529,9 +1535,19 @@ fino allo smusso; con *No trim* restano com'erano e si aggiunge solo lo smusso,
 anche sulle polilinee. Le proprietà dello smusso, *Undo*, `Esc` e il passo di
 annullamento (`Chamfer`) seguono le regole di `FILLET`.
 
+Le distanze a zero, con il metodo delle distanze, non funzionano come il raggio
+0 di `FILLET`:
+
+- **tutte e due 0:** lo spigolo, senza linea nuova (come `Shift`+clic);
+- **una sola 0:** nessuno smusso, compare `Lines are parallel.` e il disegno
+  resta com'è, anche se l'altra distanza è troppo lunga, in qualunque ordine
+  scegli le linee;
+- una distanza uguale alla parte da tenere cancella quella parte; una distanza
+  maggiore dà `Chamfer distance too large.`.
+
 | Messaggio | Quando |
 |---|---|
-| `Lines are parallel.` | le due rette non hanno un punto comune |
+| `Lines are parallel.` | le due rette non hanno un punto comune, oppure una sola delle due distanze è 0 |
 | `Chamfer distance too large.` | una distanza, o la lunghezza, supera la parte da tenere della sua linea |
 | `Cannot chamfer those objects.` | gli oggetti non sono linee o segmenti dritti consecutivi |
 | `Pick a point that is not on the other object.` | un punto indicato cade sulla retta dell'altra linea |
@@ -2115,11 +2131,11 @@ a riposo lo toglie e `REDO` lo ripristina. Con un rettangolo di selezione aperto
 | `(TRIM mode) Current chamfer Dist1 = 0.0000, Dist2 = 0.0000` | impostazioni di `CHAMFER` all'avvio |
 | `Cannot fillet those objects.` / `Cannot chamfer those objects.` | il raccordo o lo smusso non si può fare su quegli oggetti |
 | `Radius is too large.` | `FILLET`: il raggio non sta nella parte da tenere |
-| `Lines are parallel.` | `CHAMFER`: le due rette non hanno un punto comune |
+| `Lines are parallel.` | `CHAMFER`: le due rette non hanno un punto comune, oppure una sola distanza è 0 |
 | `Chamfer distance too large.` | `CHAMFER`: una distanza supera la parte da tenere |
 | `Pick a point that is not on the other object.` | `FILLET`, `CHAMFER`: il punto cade sulla retta o sul cerchio dell'altro oggetto |
 | `Result is beyond the drawing limits.` | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr*: il risultato cade oltre i limiti che il programma rappresenta |
-| `Circle does not exist.` | `CIRCLE` *Ttr*: nessun cerchio di quel raggio tocca i due oggetti |
+| `Circle does not exist.` | `CIRCLE` *Ttr*: il nucleo non dà un cerchio da disegnare (nessuno, infiniti, un testo, un raggio troppo grande) |
 | `Value must be positive.` | raggio di `FILLET` o distanza di `CHAMFER` negativi |
 | `Requires numeric distance.` | alle domande dei numeri di `CHAMFER` va scritto un numero |
 | `<n> lines were filleted` / `<n> lines were chamfered` / `<m> were too short` | esito dell'opzione *Polyline* di `FILLET` e `CHAMFER` |

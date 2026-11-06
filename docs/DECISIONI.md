@@ -1018,5 +1018,6 @@ i rimandi ai documenti che cambia.
   schede [P20](tappe/0.7/P20-fillet.md) e [P21](tappe/0.7/P21-chamfer.md): la
   decisione completa la tabella del punto 8
   dell'[ADR 0032](adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md), che
-  nomina solo *Radius*, *Distance* e *Angle*. Il [manuale dei
+  nomina solo *Radius*, *Distance* e *Angle*; è corretta anche la tabella
+  delle sequenze in [verifica/script.md](verifica/script.md). Il [manuale dei
   comandi](manuale/comandi.md) descrive tutti e due i punti.
