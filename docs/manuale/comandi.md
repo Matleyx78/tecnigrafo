@@ -1334,7 +1334,7 @@ Select object to extend or shift-select to trim or [mOde/Undo]:
 ## OFFSET — copia parallela
 
 Crea una copia parallela di una linea, di un arco, di una polilinea, o
-concentrica di un cerchio, a una distanza data o passante per un punto.
+concentrica di un cerchio, a una distanza data o alla distanza di un punto.
 
 - **Nome:** `OFFSET`
 - **Alias:** `O`
@@ -1375,9 +1375,14 @@ Con *Through* la seconda domanda è `Specify through point or
   cerchio di quel segmento non indica un lato e non dà copie.
 - Con *Through* la distanza è quella del punto dall'oggetto, misurata dal
   punto più vicino dell'oggetto, estremi compresi, e il lato è quello del
-  punto. La copia passa per il punto solo se il punto più vicino non è un
-  estremo: per la linea da `0,0` a `10,0` e il punto `13,4` la distanza è 5,
-  misurata da `10,0`, e la copia va da `0,5` a `10,5`.
+  punto. Per una linea o un arco la copia passa per il punto quando il punto
+  sta di fronte all'oggetto: la sua perpendicolare alla linea, o la retta dal
+  centro dell'arco, cade sull'oggetto, anche proprio in un estremo. Se invece
+  il punto sta oltre un estremo, la distanza si misura da quell'estremo e la
+  copia non passa per il punto. Per la linea da `0,0` a `10,0`: con il punto
+  `10,5` la copia va da `0,5` a `10,5` e finisce nel punto; con il punto `13,4`
+  la distanza è 5, misurata da `10,0`, e la copia è la stessa, lontana dal
+  punto.
 - ***Multiple*** (`M`): una copia dopo l'altra, ciascuna dall'ultima creata;
   `Invio` torna alla domanda dell'oggetto.
 - ***Undo*** (`U`): toglie l'ultima copia.
@@ -1542,8 +1547,9 @@ Le distanze a zero, con il metodo delle distanze, non funzionano come il raggio
 - **una sola 0:** nessuno smusso, compare `Lines are parallel.` e il disegno
   resta com'è, anche se l'altra distanza è troppo lunga, in qualunque ordine
   scegli le linee;
-- una distanza uguale alla parte da tenere cancella quella parte; una distanza
-  maggiore dà `Chamfer distance too large.`.
+- una distanza uguale alla parte da tenere, con *Trim*, cancella quella parte;
+  con *No trim* le linee restano com'erano e si aggiunge solo lo smusso. Una
+  distanza maggiore dà `Chamfer distance too large.`.
 
 | Messaggio | Quando |
 |---|---|
