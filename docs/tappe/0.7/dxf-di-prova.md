@@ -285,7 +285,10 @@ Prima dei pacchetti indicati, una prova a mano:
    | `CHAMFER` | `Chamfer distance too large.` (`DistanceTooLarge`: una distanza o la lunghezza più lunga della parte tenuta; con *Angle*, il secondo punto oltre la parte tenuta della seconda linea) | messaggio di AutoCAD (la schermata della [guida a `CHAMFER` di cadmastercoach.com](https://cadmastercoach.com/commands/modify/chamfer), letta nella revisione della #508), deciso dal responsabile nella [#507](https://github.com/Matleyx78/tecnigrafo/pull/507) e nella [#508](https://github.com/Matleyx78/tecnigrafo/pull/508) (2026-11-05) |
    | `FILLET`, `CHAMFER` | `Pick a point that is not on the other object.` (`AmbiguousPick`) | scritto da noi |
    | `FILLET`, `CHAMFER`, `CIRCLE` *Ttr* | `Result is beyond the drawing limits.` (`OutOfDomain`; prima `Lines are nearly parallel.`, cambiato il 2026-11-03, [DECISIONI.md](../../DECISIONI.md)) | scritto da noi |
-   | `FILLET`, `CHAMFER`, `OFFSET` | `Value must be positive.` (distanza o raggio negativo); `Requires numeric distance.` (non numerico) | scritto da noi |
+   | `FILLET`, `CHAMFER` | `Value must be positive.` (raggio o distanza negativi; 0 fa lo spigolo) | scritto da noi |
+   | `OFFSET`, `CIRCLE` *Ttr* | `Value must be positive and nonzero.` (distanza o raggio nulli o negativi), deciso nella [#530](https://github.com/Matleyx78/tecnigrafo/pull/530#issuecomment-6689130590) | scritto da noi |
+   | `CHAMFER` | `Requires numeric distance.` (testo non numerico alle domande dei numeri; a quelle di `FILLET` e `OFFSET`, che accettano anche due punti, il testo non valido dà `Requires a distance, a point or an option.` della riga di comando) | scritto da noi |
+   | `CIRCLE` *Ttr* | `Circle does not exist.` (nessun cerchio di quel raggio tangente ai due oggetti), aggiunto nella [#530](https://github.com/Matleyx78/tecnigrafo/pull/530#issuecomment-6689130590) | scritto da noi |
 
    Singolare e plurale: `<n> lines were filleted` con n = 1 resta così, senza
    forme speciali.
