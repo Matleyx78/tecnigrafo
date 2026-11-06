@@ -500,6 +500,7 @@ QuestionResult askJoin(const QuestionModel& model, Arguments arguments);
 QuestionResult askDegenerate(const QuestionModel& model, Arguments arguments);
 QuestionResult askOffset(const QuestionModel& model, Arguments arguments);
 QuestionResult askFillet(const QuestionModel& model, Arguments arguments);
+QuestionResult askChamfer(const QuestionModel& model, Arguments arguments);
 QuestionResult askTangents(const QuestionModel& model, Arguments arguments);
 QuestionResult askCircleTtr(const QuestionModel& model, Arguments arguments);
 
@@ -584,7 +585,7 @@ constexpr std::array kQuestions{
     QuestionRow{"fillet", AnswerShape::Single, &askFillet},                        // P19
     QuestionRow{"tangents", AnswerShape::Items, &askTangents},                     // P19
     QuestionRow{"circle-ttr", AnswerShape::Single, &askCircleTtr},                 // P19
-    QuestionRow{"chamfer", AnswerShape::Single, nullptr},                          // P21
+    QuestionRow{"chamfer", AnswerShape::Single, &askChamfer},                      // P21
     QuestionRow{"join", AnswerShape::Single, &askJoin},                            // P22
 };
 

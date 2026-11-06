@@ -77,6 +77,11 @@ struct CommandDefaults {
     bool offsetEraseSource{false};
     bool offsetCurrentLayer{false};  ///< false means Source
     double filletRadius{0.0};
+    double chamferFirstDistance{0.0};
+    double chamferSecondDistance{0.0};
+    double chamferLength{0.0};
+    double chamferAngle{0.0};  ///< radians
+    bool chamferUseAngle{false};
     bool trimMode{true};
 };
 

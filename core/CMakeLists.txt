@@ -15,6 +15,7 @@ add_library(tg_core
     src/document.cpp
     src/document_query.cpp
     src/effective_properties.cpp
+    src/chamfer.cpp
     src/fillet.cpp
     src/grips.cpp
     src/intersections.cpp

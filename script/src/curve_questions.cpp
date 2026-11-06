@@ -8,10 +8,12 @@
 // and tangents.
 
 #include "question_table.hpp"
+#include "tg/core/chamfer.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/fillet.hpp"
 #include "tg/core/intersections.hpp"
 #include "tg/core/join.hpp"
+#include "tg/core/math.hpp"
 #include "tg/core/offset.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/tolerance.hpp"
@@ -86,9 +88,10 @@ Parsed<core::ToleranceRule> unitsArgument(std::string_view text) {
 
 /// The optional arguments "key=value" after the positional ones: each key of
 /// `allowed` at most once, in any order.
-Parsed<std::array<std::optional<std::string_view>, 2>> keyed(
-    Arguments arguments, std::array<std::string_view, 2> allowed) {
-    std::array<std::optional<std::string_view>, 2> values;
+template <std::size_t Size = 2>
+Parsed<std::array<std::optional<std::string_view>, Size>> keyed(
+    Arguments arguments, std::array<std::string_view, Size> allowed) {
+    std::array<std::optional<std::string_view>, Size> values;
     for (const std::string_view argument : arguments) {
         const std::size_t equals = argument.find('=');
         bool known = false;
@@ -603,6 +606,98 @@ QuestionResult askOffset(const QuestionModel& model, Arguments arguments) {
             return std::string{"no-side"};
     }
     return std::string{"failed"};
+}
+
+QuestionResult askChamfer(const QuestionModel& model, Arguments arguments) {
+    constexpr std::string_view kForm =
+        "chamfer <A> x1,y1 <B> x2,y2 | <P> x1,y1 x2,y2 | <P> polyline, "
+        "with distances=<d1>,<d2> or angle=<length>,<degrees> [trim=no]";
+    std::size_t count = 0;
+    while (count < arguments.size() && arguments[count].find('=') == std::string_view::npos) {
+        ++count;
+    }
+    if (count < 2 || count > 4 || (count == 2 && arguments[1] != "polyline")) {
+        return ArgumentError{"wrong arguments, expected: " + std::string{kForm}};
+    }
+    const auto options = keyed<3>(arguments.subspan(count), {"distances", "angle", "trim"});
+    if (const auto* error = std::get_if<ArgumentError>(&options)) {
+        return *error;
+    }
+    const auto& [distances, angle, trim] = std::get<0>(options);
+    if (distances.has_value() == angle.has_value()) {
+        return ArgumentError{"chamfer needs either distances= or angle="};
+    }
+    if (trim && *trim != "no") {
+        return ArgumentError{"trim only accepts no"};
+    }
+    const auto values = parsePoint(distances.value_or(angle.value_or(std::string_view{})));
+    if (!values || !std::isfinite(values->x) || !std::isfinite(values->y) ||
+        values->x < 0.0 || values->y < 0.0) {
+        return ArgumentError{"chamfer needs two finite nonnegative numbers"};
+    }
+    const core::ChamferSpec spec = distances
+        ? core::ChamferSpec{core::ChamferDistances{values->x, values->y}}
+        : core::ChamferSpec{core::ChamferAngle{values->x, values->y * (core::kPi / 180.0)}};
+    const core::ToleranceRule rule{kDefaultUnits};
+    const auto entity = entityNamed(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+        return *error;
+    }
+    const core::Entity& first = *std::get<const core::Entity*>(entity);
+    const auto* polyline = std::get_if<core::Polyline>(&first);
+    if (count < 4 && polyline == nullptr) {
+        return std::string{cornerOutcomeName(core::CornerOutcome::NotAllowed)};
+    }
+    if (count == 2 && polyline != nullptr) {
+        const auto corners = core::chamferPolyline(*polyline, spec, !trim, rule);
+        std::string answer;
+        writeEntity(core::Entity{corners.polyline}, answer);
+        for (const auto& added : corners.added) {
+            addItem(answer, newEntity(added));
+        }
+        answer += " done=" + std::to_string(corners.done) + " short=" +
+                  std::to_string(corners.tooShort);
+        return answer;
+    }
+
+    const auto pickFirst = pointNamed(arguments[1]);
+    const auto pickSecond = pointNamed(arguments[count - 1]);
+    if (const auto* error = std::get_if<ArgumentError>(&pickFirst)) {
+        return *error;
+    }
+    if (const auto* error = std::get_if<ArgumentError>(&pickSecond)) {
+        return *error;
+    }
+    const auto& pointA = std::get<core::Vec2>(pickFirst);
+    const auto& pointB = std::get<core::Vec2>(pickSecond);
+    core::CornerResult result;
+    if (count == 3 && polyline != nullptr) {
+        result = core::chamferSegments(*polyline, pointA, pointB, spec, !trim, rule);
+    } else {
+        const auto other = entityNamed(model, arguments[2]);
+        if (const auto* error = std::get_if<ArgumentError>(&other)) {
+            return *error;
+        }
+        const auto* second = std::get<const core::Entity*>(other);
+        if (&first == second) {
+            return ArgumentError{"chamfer needs two different entities"};
+        }
+        result = core::chamfer(first, pointA, *second, pointB, spec, !trim, rule);
+    }
+    if (result.outcome != core::CornerOutcome::Done) {
+        return std::string{cornerOutcomeName(result.outcome)};
+    }
+    std::string answer;
+    if (result.first) {
+        addItem(answer, namedEntity(arguments[0], *result.first));
+    }
+    if (result.second) {
+        addItem(answer, namedEntity(arguments[2], *result.second));
+    }
+    if (result.added) {
+        addItem(answer, newEntity(*result.added));
+    }
+    return answer;
 }
 
 QuestionResult askFillet(const QuestionModel& model, Arguments arguments) {
