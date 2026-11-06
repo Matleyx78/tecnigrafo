@@ -31,8 +31,10 @@ TEST(Chamfer, DistancesKeepThePickedSidesAndEraseAConsumedLine) {
 }
 
 TEST(Chamfer, RejectsAnOversizedDistanceButGivesPrecedenceToASingleZero) {
-    const auto oversized =
-        {ChamferDistances{15, 15}, ChamferDistances{5, 15}, ChamferDistances{15, 5}};
+    const ChamferDistances bothTooLong{15, 15};
+    const ChamferDistances secondTooLong{5, 15};
+    const ChamferDistances firstTooLong{15, 5};
+    const auto oversized = {bothTooLong, secondTooLong, firstTooLong};
     for (const auto spec : oversized) {
         EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, spec, true, kRule).outcome,
                   CornerOutcome::DistanceTooLarge);

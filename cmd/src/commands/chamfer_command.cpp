@@ -143,17 +143,15 @@ Prompt ChamferCommand::prompt() const {
                     {},
                     PromptKind::Text};
         case Stage::Length: {
-            const auto value = formatLength(m_angle.length);
-            return {"Specify chamfer length on the first line <" + value + ">:",
-                    {},
-                    PromptKind::Text};
+            const auto text =
+                "Specify chamfer length on the first line <" + formatLength(m_angle.length) + ">:";
+            return {text, {}, PromptKind::Text};
         }
         case Stage::Angle: {
             // CHAMFER uses the distance diagnostic for all four numeric prompts.
-            const auto value = formatAngle(m_angle.angle);
-            return {"Specify chamfer angle from the first line <" + value + ">:",
-                    {},
-                    PromptKind::Text};
+            const auto text =
+                "Specify chamfer angle from the first line <" + formatAngle(m_angle.angle) + ">:";
+            return {text, {}, PromptKind::Text};
         }
         case Stage::Trim:
             return {m_trim ? "Enter Trim mode option [Trim/No trim] <Trim>:"
