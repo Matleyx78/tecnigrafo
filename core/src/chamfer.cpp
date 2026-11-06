@@ -227,6 +227,8 @@ VertexCut cutVertex(Polyline& polyline, std::size_t vertex, bool earlierFirst,
     if (!trim) {
         return {CornerOutcome::Done, line, 0};
     }
+    // An off-segment pick can select an extension beyond the shared vertex.
+    // In-place replacement needs both cuts on the original sides of the vertex.
     if (dot(pickEarlier - in.end, in.start - in.end) <= 0.0 ||
         dot(pickLater - out.start, out.end - out.start) <= 0.0) {
         return {};

@@ -985,3 +985,10 @@ i rimandi ai documenti che cambia.
   [dxf-di-prova.md](tappe/0.7/dxf-di-prova.md), il catalogo delle
   [domande](verifica/domande.md) (esito `distance-too-large`) e il piano della
   [tappa 0.7](tappe/0.7-modifiche.md) in "Modifiche al piano".
+- **2026-11-06 — P21, precedenza della prima lunghezza in Angle.** Nella
+  [#525](https://github.com/Matleyx78/tecnigrafo/pull/525#issuecomment-6683170915)
+  il responsabile conferma che una lunghezza maggiore della parte tenuta della
+  prima linea dà `DistanceTooLarge` prima di cercare il secondo punto. Vale
+  anche quando la seconda retta è parallela alla retta dello smusso o la
+  interseca nello spigolo o dalla parte opposta. La
+  [scheda P21](tappe/0.7/P21-chamfer.md) riporta la regola e l'esempio di test.

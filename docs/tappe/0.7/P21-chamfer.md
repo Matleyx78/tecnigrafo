@@ -117,6 +117,10 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
 - **Gli estremi dello smusso** stanno alle distanze date dallo spigolo, lungo
   la parte tenuta. È una costruzione di Tecnigrafo (ADR 0035, punto 15).
 - **Con *Angle*** (B8):
+  - se la lunghezza supera la parte tenuta della prima linea, l'esito è
+    `DistanceTooLarge` prima di cercare il secondo punto, anche quando la
+    retta è parallela, incontra la seconda nello spigolo o dall'altra parte
+    (decisione del 2026-11-06, #525);
   - il primo punto P1 sta alla lunghezza data dallo spigolo, sulla parte
     tenuta della prima linea;
   - lo smusso parte da P1 nella direzione **da P1 verso lo spigolo**, ruotata
@@ -141,7 +145,10 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
     cancella o l'esito è `DistanceTooLarge` (fascia dell'ADR 0013 di
     solid-space, punto 4; revisione della #508). Lo è per esempio la seconda
     linea da (0,0) a (0,5) con i dati sopra. Chi implementa scrive nel
-    commento di `chamfer` l'errore della costruzione; nessun test pretende uno
+    commento di `chamfer` la stima al primo ordine, che include alcuni ulp
+    della seconda distanza e la propagazione degli errori angolari, amplificata
+    vicino al parallelismo. La stima si usa per descrivere la fascia al limite
+    della parte tenuta. Nessun test pretende uno
     dei due esiti nella fascia, e i test fuori dalla fascia (la seconda linea
     fino a (0,1) e fino a (0,6)) distinguono i due lati. Il comando e la
     domanda `chamfer` usano l'esito che dà `core`, senza ricalcolarlo;
@@ -280,6 +287,10 @@ Select 2D polyline or [Distance/Angle/Method]:
   fissa l'esito.
 - Dopo uno smusso non riuscito (le parallele, un arco) il comando finisce,
   senza passi di annulla; con *Multiple* torna la prima domanda.
+- Precedenza con *Angle* (#525): prima linea da (0,0) a (10,0), seconda da
+  (0,0) a (0,10), clic in (8,0) e (0,5), lunghezza 15 e angoli 0°, 90° e
+  135°. L'esito è `DistanceTooLarge` in tutti e tre i casi, sia per due
+  linee sia per gli stessi segmenti consecutivi di una polilinea.
 - Il valore predefinito della seconda distanza: dopo una prima distanza 5,
   `<5.0000>`.
 - Una distanza zero e l'altra troppo lunga (R508-1): le distanze 0 e 15, e

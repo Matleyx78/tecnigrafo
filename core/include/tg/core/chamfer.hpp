@@ -24,12 +24,18 @@ using ChamferSpec = std::variant<ChamferDistances, ChamferAngle>;
 /// Chamfer of two lines. Other entities give NotAllowed. Parallel lines give
 /// None, a corner beyond solid-space's domain gives OutOfDomain, and a pick
 /// projected onto the corner gives AmbiguousPick. A cut beyond the kept end
-/// gives DistanceTooLarge. The angle construction uses double-precision
-/// directions and trigonometry: the second distance has rounding error,
-/// amplified near parallelism by division by the sine of the crossing angle.
-/// At the kept end within that construction error, the part may be erased
-/// or the result may be DistanceTooLarge (P21, #508).
-/// With trim off, both lines stay as they are.
+/// gives DistanceTooLarge. With Angle, an oversized first length takes
+/// precedence over an absent second cut (P21, #525).
+/// For Angle, let L be the first length, a the reduced turn, b the opening
+/// minus a, and s = L*sin(a)/sin(b) the second distance. Its first-order
+/// error estimate is a few ulps of s plus
+/// L*abs(cos(a)/sin(b))*da + abs(s*cos(b)/sin(b))*db,
+/// where da and db are the angle rounding errors, including the construction
+/// of the opening from the directions. Near parallelism this estimate is
+/// ill-conditioned. At the kept end within the construction error (including
+/// rounding of the kept length), the part may be erased or the result may be
+/// DistanceTooLarge (P21, #508).
+/// With trim off, both lines stay as they are and any new line goes in added.
 /// Precondition for all three functions: spec is finite, lengths and distances >= 0.
 [[nodiscard]] CornerResult chamfer(const Entity& first, const Vec2& pickFirst, const Entity& second,
                                    const Vec2& pickSecond, const ChamferSpec& spec, bool trim,

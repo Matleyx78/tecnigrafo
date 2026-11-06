@@ -92,6 +92,17 @@ TEST(Chamfer, AngleBuildsOnTheKeptSideAndRejectsParallelOrOversizedCuts) {
     EXPECT_NEAR(added.end.y, 5.0, 1e-12);
 }
 
+TEST(Chamfer, OversizedAngleLengthTakesPrecedenceOverAnAbsentSecondCut) {
+    const Polyline polyline{{{{10, 0}}, {{0, 0}}, {{0, 10}}}};
+    for (const double turn : {0.0, kPi / 2.0, 3.0 * kPi / 4.0}) {
+        const ChamferAngle spec{15, turn};
+        EXPECT_EQ(chamfer(kFirst, {8, 0}, kSecond, {0, 5}, spec, true, kRule).outcome,
+                  CornerOutcome::DistanceTooLarge);
+        EXPECT_EQ(chamferSegments(polyline, {8, 0}, {0, 5}, spec, true, kRule).outcome,
+                  CornerOutcome::DistanceTooLarge);
+    }
+}
+
 TEST(Chamfer, AmbiguousPickAndOmittedCornerAreDistinctFromParallelOrDegenerateInputs) {
     const ChamferDistances distances{1, 1};
     EXPECT_EQ(chamfer(kFirst, {0, 2}, kSecond, {0, 5}, distances, true, kRule).outcome,
