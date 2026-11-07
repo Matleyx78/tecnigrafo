@@ -66,7 +66,7 @@ protected:
     }
 
     [[nodiscard]] const Entity& entityAt(std::size_t index) {
-        return m_document.entities()[index].entity;
+        return m_document.find(m_document.entities()[index].id)->entity;
     }
 
 private:

@@ -249,11 +249,10 @@ TEST(Cadx, RandomModelsSurviveWithHandlesAndTolerance) {
                                                document.rawEntities().end()),
                   std::vector<core::RawEntity>(read.value().document.rawEntities().begin(),
                                                read.value().document.rawEntities().end()));
-        const auto& actualPolyline = std::get<core::Polyline>(
-            read.value().document.entities()[read.value().document.entities().size() - 2].entity);
+        const auto entities = read.value().document.entities();
+        const auto& actualPolyline = std::get<core::Polyline>(entities[entities.size() - 2].entity);
         EXPECT_EQ(polyline, actualPolyline);
-        const auto& actualText =
-            std::get<core::Text>(read.value().document.entities().back().entity);
+        const auto& actualText = std::get<core::Text>(entities.back().entity);
         EXPECT_EQ(actualText.value, text.value);
         EXPECT_EQ(actualText.mirroredX, text.mirroredX);
         EXPECT_NEAR(actualText.rotation, text.rotation, kTolerance);

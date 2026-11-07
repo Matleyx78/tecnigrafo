@@ -44,7 +44,7 @@ protected:
     }
 
     [[nodiscard]] const Polyline& polyline() const {
-        return std::get<Polyline>(document().entities().front().entity);
+        return std::get<Polyline>(document().find(document().entities().front().id)->entity);
     }
 
 private:
@@ -190,7 +190,8 @@ TEST_F(PlineCommandTest, UndoAllRestoresPreviousCommandReference) {
     point(20.0, 0.0);
     runner().submitText("");
     ASSERT_EQ(document().entityCount(), 2U);
-    const auto& second = std::get<Polyline>(document().entities().back().entity);
+    const auto entities = document().entities();
+    const auto& second = std::get<Polyline>(entities.back().entity);
     EXPECT_EQ(second.vertices().front().position, (Vec2{15.0, 0.0}));
 }
 
@@ -237,7 +238,8 @@ TEST_F(PlineCommandTest, PreviewFollowsPointerWithoutChangingDocument) {
     point(10.0, 0.0);
     runner().pointerMoved({20.0, 30.0});
     ASSERT_EQ(runner().preview().size(), 1U);
-    const auto& preview = std::get<Polyline>(runner().preview().front());
+    const auto previewEntities = runner().preview();
+    const auto& preview = std::get<Polyline>(previewEntities.front());
     ASSERT_EQ(preview.vertexCount(), 3U);
     EXPECT_EQ(preview.vertices()[0].position, (Vec2{0.0, 0.0}));
     EXPECT_EQ(preview.vertices()[1].position, (Vec2{10.0, 0.0}));
@@ -265,7 +267,8 @@ TEST_F(PlineCommandTest, PreviewUpdatesAfterUndo) {
     runner().pointerMoved({20.0, 20.0});
     runner().submitText("u");
     ASSERT_EQ(runner().preview().size(), 1U);
-    const auto& preview = std::get<Polyline>(runner().preview().front());
+    const auto previewEntities = runner().preview();
+    const auto& preview = std::get<Polyline>(previewEntities.front());
     ASSERT_EQ(preview.vertexCount(), 3U);
     EXPECT_EQ(preview.vertices()[1].position, (Vec2{10.0, 0.0}));
     EXPECT_EQ(preview.vertices()[2].position, (Vec2{20.0, 20.0}));
@@ -541,7 +544,8 @@ TEST_F(PlineCommandTest, OrthoLeavesTheFirstClickOfANewPlineWhereItIs) {
 
     ASSERT_EQ(document().entityCount(), 2U);
     EXPECT_EQ(polyline().vertices()[1].position, (Vec2{50.0, 0.0}));
-    const auto& second = std::get<Polyline>(document().entities().back().entity);
+    const auto entities = document().entities();
+    const auto& second = std::get<Polyline>(entities.back().entity);
     ASSERT_EQ(second.vertexCount(), 2U);
     EXPECT_EQ(second.vertices()[0].position, (Vec2{80.0, 60.0}));
     EXPECT_EQ(second.vertices()[1].position, (Vec2{120.0, 60.0}));
@@ -585,7 +589,8 @@ TEST_F(PlineCommandTest, UndoingEveryVertexLeavesTheNextClickWhereItIs) {
     runner().submitText("");
 
     ASSERT_EQ(document().entityCount(), 2U);
-    const auto& second = std::get<Polyline>(document().entities().back().entity);
+    const auto entities = document().entities();
+    const auto& second = std::get<Polyline>(entities.back().entity);
     ASSERT_EQ(second.vertexCount(), 2U);
     EXPECT_EQ(second.vertices()[0].position, (Vec2{100.0, 90.0}));
     EXPECT_EQ(second.vertices()[1].position, (Vec2{130.0, 90.0}));
