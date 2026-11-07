@@ -1021,3 +1021,81 @@ i rimandi ai documenti che cambia.
   nomina solo *Radius*, *Distance* e *Angle*; è corretta anche la tabella
   delle sequenze in [verifica/script.md](verifica/script.md). Il [manuale dei
   comandi](manuale/comandi.md) descrive tutti e due i punti.
+- **2026-11-07 — La pausa tra le tappe e le decisioni della pausa dopo la 0.7.**
+  Nella chat del 2026-11-07, dopo l'analisi delle issue aperte dei due
+  repository, il responsabile decide:
+  - **Immagini della CI.** I due progetti si fissano a `windows-2025-vs2026` e
+    `macos-26`, con Linux `ubuntu-24.04`. È annullata la scelta della #526 del
+    2026-11-06 (`windows-2025` e `macos-15`), che non considerava la decisione
+    del 2026-11-05 di solid-space né la prova della sua #199 (sulle immagini
+    precedenti il codice di solid-space non compila); in solid-space resta la
+    decisione del 2026-11-05 sulle immagini più recenti. Lo applica il primo
+    pacchetto della [tappa 0.7.5](tappe/0.7.5-correzione-di-rotta.md).
+  - **La pausa tra le tappe.** La decisione del 2026-11-03 («le regole di
+    metodo cambiano solo alla chiusura della tappa […] e si decidono nella pull
+    request di chiusura») era scritta male. Si intende: chiuse le tappe, con
+    tutto fermo, il responsabile decide le idee aperte, le proposte di metodo e
+    le correzioni dei documenti; una pull request di soli documenti per
+    repository le applica; solo dopo si apre la tappa successiva. La pull
+    request di chiusura non decide più le proposte
+    ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), nuovo B13 e B12;
+    [ROADMAP.md](ROADMAP.md), "Chiudere una tappa";
+    [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), sezione 8). Durante la
+    tappa le regole non cambiano, salvo un vero blocco, come prima.
+  - **Idee.** Entrano nella tappa 0.7.5, di cui c'è ora la
+    [scheda](tappe/0.7.5-correzione-di-rotta.md): l'allineamento della CI
+    ([#521](https://github.com/Matleyx78/tecnigrafo/issues/521)), l'analisi dei
+    pacchetti medi ([#442](https://github.com/Matleyx78/tecnigrafo/issues/442)),
+    `PEDIT` ([#535](https://github.com/Matleyx78/tecnigrafo/issues/535)), da
+    avere prima della 0.8, e la **base di partenza** dell'interfaccia
+    ([#483](https://github.com/Matleyx78/tecnigrafo/issues/483)), che deve
+    essere pronta prima della 0.8; l'autohide dei pannelli
+    ([#534](https://github.com/Matleyx78/tecnigrafo/issues/534)) si analizza e
+    si decide quando la 0.7.5 lavora alla #483. La
+    [#522](https://github.com/Matleyx78/tecnigrafo/issues/522) aspetta il parere
+    di Codex, poi segue la scheda. La
+    [#62](https://github.com/Matleyx78/tecnigrafo/issues/62) resta fuori, per la
+    0.9. La [#61](https://github.com/Matleyx78/tecnigrafo/issues/61) è fatta
+    nella 0.7 (P12, #354) e si chiude.
+  - **Proposte di metodo**
+    ([#486](https://github.com/Matleyx78/tecnigrafo/issues/486) e
+    Matleyx78/solid-space#169): si applicano tutte. Le voci comuni hanno lo
+    stesso testo nei due repository:
+    - una dipendenza da una pull request si scrive come la issue che quella
+      pull request chiude ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md),
+      sezione 1; [tappe/0000-modello.md](tappe/0000-modello.md));
+    - prefissi `PT`/`RT`/`CT` per Tecnigrafo e `PS`/`RS`/`CS` per solid-space,
+      dalla tappa 0.8, senza rinominare l'esistente; servono prima gli script e
+      i controlli, adeguati da un pacchetto della 0.7.5, che quindi usa ancora
+      `P`/`R`/`C` (LAVORO-IN-PARALLELO.md, "Come leggere i riferimenti");
+    - prima di fermarsi per un dubbio anche chi realizza cerca le regole
+      esistenti, come chi rivede ([AGENTS.md](../AGENTS.md), "Quando
+      fermarsi");
+    - chi rivede usa un modello diverso dall'autore, e chi scrive i riferimenti
+      un modello diverso da chi realizza; pull request e verbali dicono il
+      modello (AGENTS.md, "Commit e pull request"; LAVORO-IN-PARALLELO.md, "Chi
+      fa cosa" e sezione 6; [agenti/revisione.md](agenti/revisione.md));
+    - i riferimenti delicati (curve parallele, raccordi, intersezioni) a un
+      agente di fascia forte, di norma Codex; a Gemini 3.8 Flash solo i
+      riferimenti ordinari e dei comandi (LAVORO-IN-PARALLELO.md, "Modello e
+      impegno"). Completa la regola del 2026-10-31;
+    - chi trova riferimenti che gli sembrano sbagliati li guarda tutti e si
+      ferma una volta sola, con un solo commento
+      ([agenti/pacchetto.md](agenti/pacchetto.md)).
+
+    Le proposte che sono codice o CI diventano lavori della 0.7.5: correggere
+    `scripts/ci-attendi.sh`; il commit del sottomodulo automatico e sicuro
+    (scelta del 2026-11-06, che vale anche per «gestire il commit del
+    sottomodulo» di solid-space); gli estremi degli archi con `endpoints()`
+    di solid-space, con il commento dello snap alle intersezioni. In
+    solid-space la promessa «Symmetric» di `intersection.hpp` si tiene.
+  - **Documenti da sistemare.** Le issue
+    [#500](https://github.com/Matleyx78/tecnigrafo/issues/500) e
+    Matleyx78/solid-space#192 sono vuote: si chiudono senza correzioni.
+  - **Una chat su due repository.** Per questa pausa il responsabile ha
+    autorizzato la chat di Tecnigrafo a scrivere anche in solid-space
+    (commenti, chiusura di issue, una pull request), in deroga ad
+    [AGENTS.md](../AGENTS.md), "Dove puoi scrivere", che non cambia.
+
+  La [#526](https://github.com/Matleyx78/tecnigrafo/issues/526) si chiude: la
+  sostituisce la scheda della tappa 0.7.5.

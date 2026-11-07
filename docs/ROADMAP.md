@@ -18,6 +18,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | **chiusa** | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | **aperta** | [0.7](tappe/0.7-modifiche.md) |
+| 7.5 | 0.7.5 | Correzione di rotta: CI, metodo, `PEDIT`, base dell'interfaccia, basi della 0.8 e del 3D | in programma | [0.7.5](tappe/0.7.5-correzione-di-rotta.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
 | 10 | 1.0 | Stabilità e prestazioni: CAD 2D per lavoro reale | in programma | [1.0](tappe/1.0-stabilita.md) |
@@ -68,7 +69,11 @@ solid-space, e le due avanzano insieme
    Su macOS si esegue quando c'è un revisore che lo usa, e l'esito si annota nelle
    note di rilascio; la sua mancanza non blocca la chiusura ([DECISIONI.md](DECISIONI.md), 2026-10-16).
 4. Si crea il tag `vX.Y.0` con le note di rilascio (`docs/rilasci/X.Y.md`).
-5. Si aggiorna la tabella e si apre la tappa successiva.
+5. Si aggiorna la tabella. Poi la **pausa tra le tappe**: con tutto fermo, il
+   responsabile decide le idee aperte, le proposte di metodo e le correzioni dei
+   documenti, che una pull request di soli documenti applica
+   ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B13). Solo dopo si apre la
+   tappa successiva.
 
 ### Cosa si può fare fuori dalla tappa aperta
 
