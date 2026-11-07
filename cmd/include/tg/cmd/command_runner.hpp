@@ -263,6 +263,17 @@ public:
         return PolarTracking{*base, *point};
     }
 
+    /// The base point of the running command's prompt (Command::basePoint()),
+    /// which ortho, polar and the dynamic input measure from
+    /// (docs/adr/0042, point 2); std::nullopt with no command running and
+    /// while asking "Select objects:" for one.
+    [[nodiscard]] std::optional<core::Vec2> basePoint() const;
+
+    /// The point a click at `position` would hand the running command: at a
+    /// Point, Distance, Angle or Number prompt corrected by snap, ortho and
+    /// polar as click() does; otherwise `position` as it is. Changes nothing.
+    [[nodiscard]] core::Vec2 clickPoint(const core::Vec2& position) const;
+
     /// True while a command is running, including while asking "Select
     /// objects:" for it.
     [[nodiscard]] bool isActive() const { return m_command != nullptr; }
