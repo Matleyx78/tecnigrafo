@@ -58,7 +58,18 @@ di solid-space `PS`, `RS`, `CS`; le tappe fino alla 0.7.5 restano con `P`, `R`,
   `<tappa>-R<N>.txt`;
 - i rami: `pt0.8-05-…` e `rt0.8-05-…` nei testi che li citano.
 
-### 3. Strumento e modello nelle pull request
+### 3. La riga della tappa nella ROADMAP
+
+`apri-tappa.sh`, quando apre una tappa, scrive «**aperta**» nella sua riga della
+tabella «Stato» di `docs/ROADMAP.md`. Oggi la cerca con un primo numero intero
+(`^\| *[0-9]+ *\|`), quindi non ha trovato la riga della 0.7.5, che comincia con
+`7.5` (piano, «Modifiche al piano»). Deve trovare anche le righe con un numero
+come `7.5`, confrontando la versione della seconda colonna con la tappa per
+intero, come fa F5. Lo provi con lo script su una copia della ROADMAP, con una
+riga `7.5 | 0.7.5` e una `7 | 0.7`, e scrivi nella pull request come e con quale
+risultato.
+
+### 4. Strumento e modello nelle pull request
 
 Il modello della pull request chiede, nella sezione sull'uso dell'IA, lo
 strumento **e** il modello (per esempio «Claude Code, Claude Opus 5.5»), come
@@ -84,6 +95,7 @@ prefissi (`0.8 / PT5`).
 ## Fatto quando
 
 - `ci-attendi.sh` senza argomenti aspetta la run di `ci.yml`.
+- `apri-tappa.sh` trova nella ROADMAP anche la riga di una tappa come la 0.7.5.
 - I test qui sopra esistono e passano.
 - Il modello della pull request chiede strumento e modello.
 - La CI è verde.
