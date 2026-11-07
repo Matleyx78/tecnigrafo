@@ -31,7 +31,8 @@ TEST(SnapPoints, ArcEndpointsMatchKernelBits) {
     namespace g = solid_space::geom2d;
     constexpr double kDegree = kPi / 180.0;
     // Non-axis directions, a wrapped arc and a whole-circle arc exercise the
-    // entity-to-kernel sweep translation as well as endpoint rounding.
+    // entity-to-kernel sweep translation as well as endpoint rounding. Keep
+    // this translation independent of curveOf() to catch changes on either side.
     for (const Arc& arc : std::array{Arc{{3, -7}, 13, 10 * kDegree, 110 * kDegree},
                                      Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
                                      Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
@@ -71,6 +72,25 @@ TEST(SnapPoints, ArcEndpointsOnAxesStayExact) {
             expectSameBits(snaps[0].point, onAxis.at(first));
             expectSameBits(snaps[1].point, onAxis.at(last));
         }
+    }
+}
+
+TEST(SnapPoints, RejectedArcKeepsExactAxisEndpoints) {
+    namespace g = solid_space::geom2d;
+    const Arc degenerate{{1.25, -3.5}, 0.0, 0.0, kPi / 2.0};
+    const Arc outsideDomain{{0.0, 0x1p51}, 13.0, 0.0, kPi / 2.0};
+    for (const Arc& arc : {degenerate, outsideDomain}) {
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const auto rejected = g::endpoints(g::Arc{center, arc.radius, 0.0, kPi / 2.0});
+        ASSERT_FALSE(rejected.hasValue());
+        std::vector<SnapPoint> snaps;
+        appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
+        ASSERT_EQ(snaps.size(), 2U);
+        const std::array actual{snaps[0].point, snaps[1].point};
+        // The second case would retain a cosine residue without the axis
+        // adjustment after the kernel rejects the out-of-domain centre.
+        expectSameBits(actual[0], {arc.center.x + arc.radius, arc.center.y});
+        expectSameBits(actual[1], {arc.center.x, arc.center.y + arc.radius});
     }
 }
 
