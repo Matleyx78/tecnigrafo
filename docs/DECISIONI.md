@@ -1050,8 +1050,17 @@ i rimandi ai documenti che cambia.
     compilato alla fine della 0.7.5, Tecnigrafo deve presentarsi praticamente
     come le schermate di riferimento della #483 ed essere pronto per gli
     ambienti (disegno, parti, assiemi), con documenti in schede e ambiente
-    attivo che guida ribbon, menu e comandi. Il tempo che serve non è un
-    vincolo: cade la durata indicativa di circa 10 giorni del 2026-11-06.
+    attivo che guida ribbon, menu e comandi: passando da un disegno a un file
+    di parti cambiano ribbon, icone e menu, perché i comandi sono altri, e un
+    documento non compatibile con l'ambiente richiesto non perde lavoro
+    (richiesta di salvare prima di chiudere, o ciò che serve). Icone e voci si
+    rifanno per tutti i comandi già esistenti, compresi quelli di modifica della
+    0.7; le icone dei comandi nuovi le disegna la tappa che li porta, con le
+    regole fissate. Il riferimento visivo è il mockup del raccoglitore privato
+    del responsabile, che l'ADR della decisione visiva descrive per intero. Il
+    tempo che serve non è un vincolo: cade la durata indicativa di circa 10
+    giorni del 2026-11-06. I lavori della 0.7.5 che toccano solid-space si
+    fanno fuori tappa, come la #202 di solid-space.
     L'autohide dei pannelli
     ([#534](https://github.com/Matleyx78/tecnigrafo/issues/534)) si analizza e
     si decide in quel lavoro. `PEDIT`
