@@ -11,9 +11,10 @@
 #include <QApplication>
 #include <QFile>
 #include <QImage>
-#include <QStyle>
 #include <QTemporaryDir>
 #include <gtest/gtest.h>
+
+#include <cstdint>
 
 namespace tg::app {
 namespace {
@@ -22,18 +23,50 @@ QApplication& application() {
     return *qobject_cast<QApplication*>(QApplication::instance());
 }
 
-TEST(ThemeTest, FusionPalettesAndSceneColoursMatchBothThemes) {
+render::Color renderColor(const QColor& color) {
+    return {static_cast<std::uint8_t>(color.red()), static_cast<std::uint8_t>(color.green()),
+            static_cast<std::uint8_t>(color.blue())};
+}
+
+TEST(ThemeTest, TokensAreTheValuesOfTheDecision) {
+    // docs/adr/0039, point 2, and docs/adr/0040, point 1.
+    const ThemeTokens& light = themeTokens(Theme::Light);
+    const ThemeTokens& dark = themeTokens(Theme::Dark);
+    EXPECT_EQ(light.chrome, QColor(0xdd, 0xe1, 0xe6));
+    EXPECT_EQ(dark.chrome, QColor(0x1e, 0x22, 0x28));
+    EXPECT_EQ(light.canvas, QColor(0xff, 0xff, 0xff));
+    EXPECT_EQ(dark.canvas, QColor(0x1b, 0x1f, 0x24));
+    EXPECT_EQ(light.text, QColor(0x1f, 0x23, 0x28));
+    EXPECT_EQ(dark.text, QColor(0xe4, 0xe7, 0xeb));
+    EXPECT_EQ(light.accent, QColor(0x1f, 0x6f, 0xbf));
+    EXPECT_EQ(dark.accent, QColor(0x2a, 0x72, 0xb5));
+    EXPECT_EQ(light.selection, QColor(0xdc, 0xe8, 0xf4));
+    EXPECT_EQ(dark.selection, QColor(0x30, 0x43, 0x57));
+    EXPECT_EQ(light.iconGeo, QColor(0x19, 0x71, 0xc2));
+    EXPECT_EQ(dark.iconPt, QColor(0xff, 0x92, 0x2b));
+    for (const ThemeTokens* tokens : {&light, &dark}) {
+        EXPECT_EQ(tokens->iconEsist, tokens->text);
+    }
+}
+
+TEST(ThemeTest, PalettesAndSceneBackgroundComeFromTheTokens) {
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
         applyTheme(application(), theme);
-        EXPECT_EQ(QApplication::style()->objectName(), QStringLiteral("fusion"));
+        const ThemeTokens& tokens = themeTokens(theme);
         const QPalette palette = QApplication::palette();
-        const bool dark = theme == Theme::Dark;
-        EXPECT_EQ(palette.color(QPalette::Text), dark ? QColor(235, 235, 235) : QColor(24, 24, 24));
-        EXPECT_EQ(palette.color(QPalette::Base), dark ? QColor(33, 40, 48) : QColor(255, 255, 255));
+        EXPECT_EQ(palette.color(QPalette::Text), tokens.text);
+        EXPECT_EQ(palette.color(QPalette::WindowText), tokens.text);
+        EXPECT_EQ(palette.color(QPalette::ButtonText), tokens.text);
+        EXPECT_EQ(palette.color(QPalette::Window), tokens.panel);
+        EXPECT_EQ(palette.color(QPalette::Base), tokens.field);
+        EXPECT_EQ(palette.color(QPalette::Highlight), tokens.selection);
+        EXPECT_EQ(palette.color(QPalette::HighlightedText), tokens.text);
+        EXPECT_EQ(palette.color(QPalette::Accent), tokens.accent);
         const render::SceneStyle style = sceneStyle(theme);
+        EXPECT_EQ(style.background, renderColor(tokens.canvas));
+        // The other colours of the drawing do not follow the tokens.
+        const bool dark = theme == Theme::Dark;
         EXPECT_EQ(style.entity, (dark ? render::Color{235, 235, 235} : render::Color{0, 0, 0}));
-        EXPECT_EQ(style.background,
-                  (dark ? render::Color{33, 40, 48} : render::Color{255, 255, 255}));
         EXPECT_EQ(style.devicePixelRatio, 1.0);
     }
     applyTheme(application(), Theme::Light);

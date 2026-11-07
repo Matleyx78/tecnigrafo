@@ -38,6 +38,8 @@ qt_add_library(tg_app_ui STATIC
     src/main_window.hpp
     src/theme.cpp
     src/theme.hpp
+    src/style.cpp
+    src/style.hpp
     src/shortcut_map.cpp
     src/shortcut_map.hpp
     src/shortcuts_dialog.cpp
