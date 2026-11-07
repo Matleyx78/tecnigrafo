@@ -1,11 +1,16 @@
 # Pacchetto di riferimenti
 
-Da leggere quando la issue ha titolo `[X.Y-RN]` o porta l'etichetta
+Da leggere quando la issue ha titolo `[X.Y-RTN]` o porta l'etichetta
 `riferimenti`, o quando tocchi `tests/verifica/casi/` o
 `tests/verifica/sorgenti.json` ([AGENTS.md](../../AGENTS.md), "Se ... leggi
 anche ..."). Vale insieme al nucleo. Perché i riferimenti si scrivono prima e da
 un altro agente: [pacchetto.md](pacchetto.md), "Modalità di controllo e
 riferimenti".
+
+I nomi qui sotto usano i prefissi dalla 0.8: `PT`/`RT`/`CT` in Tecnigrafo,
+`PS`/`RS`/`CS` in solid-space. Per le tappe fino alla 0.7.5 restano `P`/`R`/`C`,
+anche nei file in attesa (`0.7.5-R1.txt`); nulla si rinomina. I rami seguono:
+`pt0.8-05-…` per il lavoro, `rt0.8-05-…` per i riferimenti.
 
 ## Il prossimo pacchetto di riferimenti
 
@@ -15,7 +20,7 @@ pacchetto", sulle issue con l'etichetta `riferimenti`. Se nessuna issue va bene,
 non iniziare: scrivi all'utente quali issue sono tue e cosa le blocca. I
 pacchetti di riferimenti pronti presi di fila sono in [lotti.md](lotti.md).
 
-## In un pacchetto di riferimenti (`[X.Y-RN]`)
+## In un pacchetto di riferimenti (`[X.Y-RTN]`)
 
 - Tocca solo `tests/verifica/casi/`, `tests/verifica/sorgenti.json` e
   `tests/verifica/in-attesa/`: la CI rifiuta una pull request che mescola
@@ -41,10 +46,10 @@ pacchetti di riferimenti pronti presi di fila sono in [lotti.md](lotti.md).
   SHA-256 e licenza, e nella pull request il link alla pagina della licenza. Solo
   licenze compatibili con la GPLv3 che permettano la ridistribuzione; nel dubbio,
   non usare il file e scrivilo nella pull request.
-- Elenca i nuovi casi nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt`
+- Elenca i nuovi casi nel tuo file `tests/verifica/in-attesa/<X.Y>-RT<N>.txt`
   (`X.Y` oppure `X.Y.Z`, con numeri senza zeri iniziali; il tag della tua issue
   di riferimenti, con la lettera se il blocco è diviso:
-  `<X.Y>-R<N>a.txt`), una riga per caso, con il numero della issue del lavoro. Il
+  `<X.Y>-RT<N>a.txt`), una riga per caso, con il numero della issue del lavoro. Il
   file è tuo: nessun altro pacchetto lo tocca.
 - La pull request è finita con la CI verde, **controlli anticipati compresi**
   ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md)): la forma

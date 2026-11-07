@@ -1,6 +1,6 @@
 Closes #<!-- numero della issue del pacchetto o del bug -->
 
-**Tappa e pacchetto:** <!-- es. 0.4 / P5, 0.4 / R5 (riferimenti), oppure "correzione bug" -->
+**Tappa e pacchetto:** <!-- es. 0.8 / PT5, 0.8 / RT5 (riferimenti), oppure "correzione bug" -->
 
 ## Cosa cambia
 
@@ -26,5 +26,5 @@ Closes #<!-- numero della issue del pacchetto o del bug -->
 ## Uso dell'IA
 
 - [ ] Nessuna IA usata
-- [ ] IA usata: <!-- strumento --> — ho letto e capito ogni riga, ne rispondo io,
+- [ ] IA usata: <!-- strumento e modello, es. Claude Code, Claude Opus 5.5 --> — ho letto e capito ogni riga, ne rispondo io,
       e i commit riportano `Assisted-by:`

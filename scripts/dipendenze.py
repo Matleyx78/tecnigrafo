@@ -181,8 +181,9 @@ def heading_index(lines: list[str], pattern: str) -> int | None:
 
 PLAN_COLUMNS = ["Pacchetto", "Scheda", "Issue", "Dipende da", "Riferimenti", "Difficoltà",
                 "Agente", "Modello", "Impegno"]
-TG_ID_RE = re.compile(r"^([PR][0-9]+[a-z]?)\s+(.+)$")
-DEP_RE = re.compile(r"^(?:[PR][0-9]+[a-z]?|#[0-9]+|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+)$")
+TG_ID = r"[PR]T?[0-9]+[a-z]?"
+TG_ID_RE = re.compile(rf"^({TG_ID})\s+(.+)$")
+DEP_RE = re.compile(rf"^(?:{TG_ID}|#[0-9]+|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+)$")
 
 
 @dataclass
@@ -236,13 +237,20 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
         raise Failure(f"{path}: the package table has no column {', '.join(missing)}")
     if not table.rows:
         raise Failure(f"{path}: the package table has no rows")
+    stage = re.search(r"^# Tappa ([0-9]+\.[0-9]+(?:\.[0-9]+)?)(?![0-9.])", text, re.M)
+    if stage is None:
+        raise Failure(f"{path}: no stage version in the title")
+    modern = tuple(map(int, stage.group(1).split(".")[:2])) >= (0, 8)
+    prefix = "T" if modern else ""
+    stage_id = re.compile(rf"[PR]{prefix}[0-9]+[a-z]?")
+    expected = f"P{prefix}N or R{prefix}N for stage {stage.group(1)}"
     rows: list[Row] = []
     problems: list[str] = []
     seen: set[str] = set()
     for line, c in table.rows:
         m = TG_ID_RE.match(c["Pacchetto"])
-        if not m:
-            problems.append(f"line {line}: the first cell must start with PN or RN and a title: "
+        if not m or not stage_id.fullmatch(m.group(1)):
+            problems.append(f"line {line}: the first cell must start with {expected} and a title: "
                             f"\"{c['Pacchetto']}\"")
             continue
         id_ = m.group(1)
@@ -251,11 +259,13 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
         im = re.match(r"^#([0-9]+)$", c["Issue"])
         deps = split_deps(c["Dipende da"])
         for dep in deps:
-            if re.match(r"^[PR][0-9]+[a-z]?$", dep):
+            if re.fullmatch(TG_ID, dep):
+                if not stage_id.fullmatch(dep):
+                    problems.append(f"line {line}: {id_}: dependency {dep} must use {expected}")
                 if dep not in seen:
                     problems.append(f"line {line}: {id_} depends on {dep}, which is not earlier in the table")
             elif not DEP_RE.match(dep):
-                problems.append(f"line {line}: {id_}: dependency \"{dep}\" is not PN, RN, #N or owner/repo#N")
+                problems.append(f"line {line}: {id_}: dependency \"{dep}\" is not {expected}, #N or owner/repo#N")
         if c["Difficoltà"] not in ("facile", "media", "impegnativa"):
             problems.append(f"line {line}: {id_}: difficulty \"{c['Difficoltà']}\" (facile, media, impegnativa)")
         if c["Modello"] not in ("leggero", "medio", "forte"):
@@ -283,7 +293,7 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
                 raise Failure(f"{path}:{line}: no issue in the cell \"Richiesta\"")
             closes = None
             if has_closing:
-                closes = re.findall(r"\b[PR][0-9]+[a-z]?\b", c["Si chiude con"])
+                closes = re.findall(rf"\b{TG_ID}\b", c["Si chiude con"])
                 for id_ in closes:
                     if plan.row(id_) is None:
                         raise Failure(f"{path}:{line}: \"Si chiude con\" names {id_}, not in the package table")
@@ -293,7 +303,7 @@ def parse_plan(text: str, path: str, home: str) -> Plan:
 
 def dep_ref(dep: str, plan: Plan, home: str) -> Ref | None:
     """The issue of a dependency of the plan; None for a row without issue."""
-    if re.match(r"^[PR][0-9]+[a-z]?$", dep):
+    if re.fullmatch(TG_ID, dep):
         row = plan.row(dep)
         return Ref(home, row.issue) if row and row.issue else None
     if dep.startswith("#"):
@@ -304,11 +314,12 @@ def dep_ref(dep: str, plan: Plan, home: str) -> Ref | None:
 
 # --- The plan of solid-space ----------------------------------------------------
 
-# A package of the plan of solid-space: PN or RN with an optional letter (P8,
-# R14a), or the review of the contract of the stage, C, which has no number and
+# A package of solid-space: PN/RN or PSN/RSN, with an optional letter, or
+# the review of the contract of the stage, C/CS, which has no number and
 # never takes part in a range. C must stand alone: without the end of the word
 # it would match the start of any word that begins with C.
-SS_ID = r"(?:[PR][0-9]+[a-z]?|C(?![A-Za-z0-9]))"
+SS_PACKAGE = r"[PR]S?[0-9]+[a-z]?"
+SS_ID = rf"(?:{SS_PACKAGE}|CS?(?![A-Za-z0-9]))"
 
 
 @dataclass
@@ -365,26 +376,29 @@ def parse_ss_roadmap(text: str, tappa: str) -> SsStage | None:
 def expand(cell: str, order: list[str], where: str) -> list[str]:
     """Package ids in a cell: names (P8, R14a), ranges (P4–P10, R14a–c, with
     the long or short dash, over the packages of the same kind in table
-    order) and brackets (they count too). The review of the contract, C, is a
-    name only: it has no range."""
+    order) and brackets (they count too). PS/RS prefixes work the same way.
+    The review of the contract, C or CS, is a name only: it has no range."""
     out: list[str] = []
-    ids = r"(?:([PR][0-9]+[a-z]?)(?:\s*[–-]\s*([PR]?[0-9]+[a-z]?|[a-z]\b))?|(C)(?![A-Za-z0-9]))"
+    ids = rf"(?:({SS_PACKAGE})(?:\s*[–-]\s*((?:[PR]S?)?[0-9]+[a-z]?|[a-z]\b))?|(CS?)(?![A-Za-z0-9]))"
     for m in re.finditer(rf"(?<![A-Za-z0-9]){ids}", cell):
         first, last = m.group(1) or m.group(3), m.group(2)
         if not last:
             names = [first]
         else:
             if re.match(r"^[a-z]$", last):
-                last = re.match(r"^[PR][0-9]+", first).group(0) + last
+                last = re.match(r"^[PR]S?[0-9]+", first).group(0) + last
             elif not last[0] in "PR":
-                last = first[0] + last
+                last = re.match(r"^[PR]S?", first).group(0) + last
             for name in (first, last):
                 if name not in order:
                     raise Failure(f"{where}: {name} is not in the package table")
             a, b = order.index(first), order.index(last)
             if a > b:
                 raise Failure(f"{where}: the range {first}–{last} goes backwards")
-            names = [n for n in order[a:b + 1] if n[0] == first[0]]
+            kind = re.match(r"^[PR]S?", first).group(0)
+            if not last.startswith(kind) or not re.match(rf"^{kind}[0-9]", last):
+                raise Failure(f"{where}: the range {first}–{last} mixes package kinds")
+            names = [n for n in order[a:b + 1] if re.match(rf"^{kind}[0-9]", n)]
         for n in names:
             if n not in order:
                 raise Failure(f"{where}: {n} is not in the package table")
@@ -404,7 +418,7 @@ def parse_ss_plan(text: str, path: str) -> SsPlan:
         m = re.match(rf"^({SS_ID})\s", c["Pacchetto"] + " ")
         im = re.match(r"^#([0-9]+)$", c["Issue"])
         if not m:
-            raise Failure(f"{path}:{line}: the first cell must start with PN, RN or C: \"{c['Pacchetto']}\"")
+            raise Failure(f"{path}:{line}: the first cell must start with PN, RN, C or PSN, RSN, CS: \"{c['Pacchetto']}\"")
         id_ = m.group(1)
         plan.order.append(id_)
         if im:
@@ -679,7 +693,7 @@ def dep_text(dep: str, ctx: Context) -> str:
     """A dependency as the issue text shows it: "#12 (P3)", or for another
     repository "owner/repo#49 (0.2-P8)" with the tag of the issue's title."""
     ref = dep_ref(dep, ctx.plan, ctx.home)
-    if re.match(r"^[PR][0-9]+[a-z]?$", dep):
+    if re.fullmatch(TG_ID, dep):
         return f"#{ref.number} ({dep})"
     if ref.repo.lower() == ctx.home.lower():
         return f"#{ref.number}"
@@ -710,7 +724,7 @@ def propose(ctx: Context) -> dict[str, list[str]]:
     def covered(deps: list[str]) -> set[str]:
         out: set[str] = set()
         for dep in deps:
-            if re.match(r"^[PR][0-9]+[a-z]?$", dep):
+            if re.fullmatch(TG_ID, dep):
                 out |= covered(effective.get(dep, []))
             elif (i := ss_id(dep)):
                 out |= ss.closure([i])

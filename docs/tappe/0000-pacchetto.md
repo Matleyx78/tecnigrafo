@@ -1,8 +1,11 @@
-# [X.Y-PN] Titolo
+# [X.Y-PTN] Titolo
 
 <!--
 Modello della scheda di un pacchetto, dalla tappa 0.5 (vedi 0000-modello.md,
-sezione 6). La scheda sta in docs/tappe/X.Y/PN-<nome>.md e la issue la cita.
+sezione 6). Dalla 0.8: PT/RT/CT in Tecnigrafo, PS/RS/CS in solid-space;
+fino alla 0.7.5 restano P/R/C, senza rinominare nulla. Rami di esempio:
+pt0.8-05-… e rt0.8-05-…. La scheda sta in docs/tappe/X.Y/PTN-<nome>.md
+e la issue la cita.
 
 La scheda è autosufficiente: l'agente legge AGENTS.md, questa scheda, gli ADR
 che cita e CODING_STYLE.md, e nient'altro della tappa. Quello che gli serve
@@ -16,7 +19,7 @@ Le regole per la dimensione sono in LAVORO-IN-PARALLELO.md, "Preparare il piano"
 - **Agente:** claude | codex | gemini | …
 - **Modello e impegno:** leggero | medio | forte; impegno basso | medio | alto
   (tabella in LAVORO-IN-PARALLELO.md)
-- **Riferimenti:** issue `[X.Y-RN]` (#…), agente … | non servono: motivo
+- **Riferimenti:** issue `[X.Y-RTN]` (#…), agente … | non servono: motivo
 - **Dipende da:** —
 - **Modulo:** uno solo (più i suoi test e le righe dei file comuni)
 - **Da leggere:** gli ADR e i file di codice che servono davvero, con il motivo

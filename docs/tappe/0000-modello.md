@@ -51,7 +51,7 @@ scrive "nessuna" e perché.
 
 | Richiesta | Pacchetti che ne dipendono | Si chiude con |
 |---|---|---|
-| [Matleyx78/solid-space#…](https://github.com/Matleyx78/solid-space/issues/…) | P… | P… |
+| [Matleyx78/solid-space#…](https://github.com/Matleyx78/solid-space/issues/…) | PT… | PT… |
 
 *Si chiude con* elenca i pacchetti che usano per primi il pezzo nuovo: la
 richiesta si chiude quando sono uniti, perché il suo «quando è soddisfatta» si
@@ -63,8 +63,8 @@ Un piano con richieste si scrive **in due tempi** (ADR 0030, punto 13):
 1. subito, le schede dei pacchetti che non dipendono da solid-space; i pacchetti
    che ne dipendono hanno una riga nella tabella, con «scheda dopo il contratto»
    al posto del link, e stanno dopo gli altri;
-2. dopo che la issue `[X.Y-C]` di revisione del contratto in solid-space è
-   chiusa, le loro schede, scritte sulle intestazioni accettate e riviste
+2. dopo che la issue `[X.Y-CS]` (prima della 0.8, `[X.Y-C]`) di revisione del
+   contratto in solid-space è chiusa, le loro schede, scritte sulle intestazioni accettate e riviste
    ([CONTRATTI.md di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/CONTRATTI.md)).
    La revisione parte appena le valutazioni sono accettate, anche con la tappa
    in preparazione. Ogni scheda dice quali intestazioni usa, il commit del
@@ -81,13 +81,17 @@ verificano facciata e comandi.
 
 ## 6. Pacchetti di lavoro
 
+Dalla tappa 0.8 si usano `PT`/`RT`/`CT` in Tecnigrafo e `PS`/`RS`/`CS`
+in solid-space; fino alla 0.7.5 restano `P`/`R`/`C`, senza rinominare nulla.
+I rami seguono: `pt0.8-05-…` e `rt0.8-05-…`.
+
 Ogni pacchetto è **una pull request**. I pacchetti senza dipendenze tra loro si
 possono fare in parallelo; due pacchetti che toccano gli stessi file sono legati
 da "Dipende da" ([LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md),
 "Preparare il piano").
 
 Un pacchetto che cambia il comportamento del programma ha anche un pacchetto di
-riferimenti `RN`, scritto da un altro agente e unito prima del lavoro
+riferimenti `RTN`, scritto da un altro agente e unito prima del lavoro
 (ADR 0011). La sua issue si cita in "Dipende da".
 
 **Revisione delle interfacce.** Le schede che introducono tipi o funzioni nuove
@@ -107,7 +111,7 @@ schede dei pacchetti che usano il contratto si rivedono dopo che sono scritte
 (sezione 5, secondo tempo). Esempio: [0.7-P25](0.7/P25-revisione-interfacce.md).
 
 Dalla tappa 0.5 questa sezione contiene **solo la tabella**: ogni pacchetto ha
-una sua **scheda** in `docs/tappe/X.Y/PN-<nome>.md` (modello in
+una sua **scheda** in `docs/tappe/X.Y/PTN-<nome>.md` (modello in
 [0000-pacchetto.md](0000-pacchetto.md)), e la sua issue la cita. Così un agente
 legge la scheda del suo pacchetto e non tutto il piano. Le regole per dividere
 il lavoro sono in [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), sezione
@@ -115,20 +119,20 @@ il lavoro sono in [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), sezione
 
 | Pacchetto | Scheda | Issue | Dipende da | Riferimenti | Difficoltà | Agente | Modello | Impegno |
 |---|---|---|---|---|---|---|---|---|
-| P1 Titolo | [P1](X.Y/P1-nome.md) | #… | — | R1 (gemini) / non servono: motivo | facile / media / impegnativa | claude / codex / gemini | leggero / medio / forte | basso / medio / alto |
+| PT1 Titolo | [PT1](X.Y/PT1-nome.md) | #… | — | RT1 (gemini) / non servono: motivo | facile / media / impegnativa | claude / codex / gemini | leggero / medio / forte | basso / medio / alto |
 
 L'**ordine delle righe** è l'ordine in cui gli agenti prendono "il prossimo
-pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RN]` hanno una riga
+pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RTN]` hanno una riga
 ciascuna, prima del loro pacchetto di lavoro.
 
 La tabella la legge `scripts/apri-tappa.sh`, che crea le issue all'apertura
 (GUIDA-RESPONSABILE.md, B6), quindi segue queste regole: le colonne con questi
-nomi; la prima cella comincia con `PN` o `RN` seguito dal titolo della issue; la
+nomi; la prima cella comincia con `PTN` o `RTN` seguito dal titolo della issue; la
 scheda è un link a un file che esiste, oppure un testo (per esempio «scheda dopo
 il contratto») se non c'è ancora; la colonna Agente contiene solo il nome
 dell'etichetta `agente:…` (`claude`, `codex`, `gemini`), mai il
 modello tra parentesi, che si dice nella colonna Modello; "Dipende da" elenca,
-separati da virgole, pacchetti delle righe precedenti (`P3`, `R3`), issue di
+separati da virgole, pacchetti delle righe precedenti (`PT3`, `RT3`), issue di
 Tecnigrafo (`#12`) o di altri repository (`Matleyx78/solid-space#20`), oppure
 `—`, e mai una pull request: al suo posto la issue che chiude, perché GitHub non
 accetta una issue «bloccata da» una pull request; la colonna Issue resta `#…` finché lo script non ci scrive il numero.
