@@ -25,6 +25,32 @@ QApplication& application() {
     return *qobject_cast<QApplication*>(QApplication::instance());
 }
 
+// Antialiasing and the conversions of the grab round colours by a few units.
+constexpr int kRounding = 8;
+
+bool near(const QColor& pixel, const QColor& colour) {
+    return pixel.alpha() == 255 && std::abs(pixel.red() - colour.red()) <= kRounding &&
+           std::abs(pixel.green() - colour.green()) <= kRounding &&
+           std::abs(pixel.blue() - colour.blue()) <= kRounding;
+}
+
+// The colour at a point in widget coordinates of an image from grab().
+QColor pixelAt(const QImage& image, QPoint point) {
+    const qreal ratio = image.devicePixelRatio();
+    return image.pixelColor(QPoint(qRound(point.x() * ratio), qRound(point.y() * ratio)));
+}
+
+bool anyPixelNear(const QImage& image, const QRect& area, const QColor& colour) {
+    for (int y = area.top(); y <= area.bottom(); ++y) {
+        for (int x = area.left(); x <= area.right(); ++x) {
+            if (near(pixelAt(image, QPoint(x, y)), colour)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 TEST(StyleTest, SheetContainsTheColoursOfTheTokens) {
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
         const ThemeTokens& tokens = themeTokens(theme);
@@ -128,13 +154,41 @@ TEST(StyleTest, ComboArrowIsDrawnInTheTextColour) {
                 }
             }
         }
-        const QColor text = themeTokens(theme).text;
-        constexpr int kRounding = 8;
-        const bool found = strongest.alpha() > 128 &&
-                           std::abs(strongest.red() - text.red()) <= kRounding &&
-                           std::abs(strongest.green() - text.green()) <= kRounding &&
-                           std::abs(strongest.blue() - text.blue()) <= kRounding;
+        const bool found =
+            strongest.alpha() > 128 && near(QColor(strongest.rgb()), themeTokens(theme).text);
         EXPECT_TRUE(found);
+    }
+    applyTheme(application(), Theme::Light);
+}
+
+// The application style is the style sheet style wrapping Style: real
+// widgets must still reach the proxy and the tokens through it.
+TEST(StyleTest, RealWidgetsReachTheProxyThroughTheStyleSheet) {
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        applyTheme(application(), theme);
+        const ThemeTokens& tokens = themeTokens(theme);
+
+        // A page as long as the range: the handle fills the upper half,
+        // in the border colour, on the field colour, with no arrows.
+        QScrollBar bar(Qt::Vertical);
+        bar.setRange(0, 100);
+        bar.setPageStep(100);
+        bar.setValue(0);
+        bar.resize(10, 200);
+        const QImage barImage = bar.grab().toImage();
+        EXPECT_TRUE(near(pixelAt(barImage, QPoint(5, 50)), tokens.border));
+        EXPECT_TRUE(near(pixelAt(barImage, QPoint(5, 150)), tokens.field));
+        EXPECT_TRUE(near(pixelAt(barImage, QPoint(5, 198)), tokens.field));
+
+        // A combo box: field colour inside, border at the edge, and the
+        // arrow in the text colour inside the drop-down area on the right.
+        QComboBox combo;
+        combo.addItem(QStringLiteral("A"));
+        combo.resize(120, 24);
+        const QImage comboImage = combo.grab().toImage();
+        EXPECT_TRUE(near(pixelAt(comboImage, QPoint(60, 12)), tokens.field));
+        EXPECT_TRUE(near(pixelAt(comboImage, QPoint(60, 0)), tokens.border));
+        EXPECT_TRUE(anyPixelNear(comboImage, QRect(100, 2, 18, 20), tokens.text));
     }
     applyTheme(application(), Theme::Light);
 }
