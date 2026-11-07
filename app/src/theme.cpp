@@ -104,8 +104,14 @@ void applyTheme(QApplication& application, Theme theme) {
     // vary by OS (docs/adr/0009, point 5). The style comes first: setting
     // a style resets the palettes that it polishes. The application owns
     // the style, and QApplication deletes the previous one.
+    // clang-analyzer does not see either owner: Qt's headers are system
+    // headers, whose functions it assumes never take a pointer, and the
+    // parent is set in Style's constructor, in another file. QObject
+    // ownership is the documented contract of QApplication::setStyle.
+    // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
     QApplication::setStyle(new Style(tokens, &application));
     QApplication::setPalette(paletteFrom(tokens));
+    // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
     application.setStyleSheet(styleSheet(tokens));
 }
 
