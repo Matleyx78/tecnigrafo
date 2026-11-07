@@ -1143,9 +1143,10 @@ i rimandi ai documenti che cambia.
     [#538](https://github.com/Matleyx78/tecnigrafo/issues/538), la prima
     analisi dei blocchi dell'elettrico. Cambia la
     [scheda della 0.8](tappe/0.8-quote-retini-blocchi.md).
-  - **Richieste dei retini**: non si aprono ora, ma con il piano della 0.8
-    (0.7.5-P34), perché le valuti e le realizzi la tappa di solid-space che
-    corrisponde alla 0.8.
+  - **Richieste dei retini**: non si aprono ora, ma con il piano della 0.8,
+    dopo la chiusura della 0.7.5 e la pausa, perché le valuti e le realizzi la
+    tappa di solid-space che corrisponde alla 0.8; i loro testi sono in un commento della
+    [#576](https://github.com/Matleyx78/tecnigrafo/issues/576).
   - **Revisione delle interfacce delle schede P24–P31** (0.7.5-P23), anche se
     non toccano `core`.
   - **Icone contate a coppie**: nei pacchetti delle icone un'icona a 16 e 32 px
@@ -1178,3 +1179,10 @@ i rimandi ai documenti che cambia.
     con Qt, senza librerie esterne (ADR 0009, punto 3): una puntina nella barra
     del titolo, la linguetta sul bordo, il riquadro sovrapposto dentro la
     finestra (0.7.5-P18). Il pacchetto di analisi 0.7.5-P17 si toglie.
+- **2026-11-07 — Il piano della 0.8 dopo la chiusura della 0.7.5.** Il
+  responsabile toglie dalla tappa 0.7.5 il pacchetto del piano della 0.8
+  (0.7.5-P34, #576): il piano di una tappa si prepara dopo la chiusura della
+  precedente e dopo la pausa (GUIDA-RESPONSABILE.md, B13 e B1), e lo scrive lui
+  con Claude in chat. La 0.7.5 ne prepara le basi
+  ([tappe/0.7.5-correzione-di-rotta.md](tappe/0.7.5-correzione-di-rotta.md),
+  «Modifiche al piano»).

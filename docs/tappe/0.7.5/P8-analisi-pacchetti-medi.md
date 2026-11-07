@@ -21,7 +21,7 @@
 
 La #442 chiede un'analisi vera, non un'adesione: se privilegiare i pacchetti
 medi regge, dove no e con quali condizioni, prima di scrivere il piano della
-0.8 (0.7.5-P34). La 0.7 è chiusa, quindi i suoi dati sono completi.
+0.8, che si prepara dopo la chiusura della 0.7.5. La 0.7 è chiusa, quindi i suoi dati sono completi.
 
 ## File
 
