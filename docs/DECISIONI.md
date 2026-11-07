@@ -1186,3 +1186,16 @@ i rimandi ai documenti che cambia.
   con Claude in chat. La 0.7.5 ne prepara le basi
   ([tappe/0.7.5-correzione-di-rotta.md](tappe/0.7.5-correzione-di-rotta.md),
   «Modifiche al piano»).
+- **2026-11-07 — Qt 6.12.** Con le immagini nuove della CI (0.7.5-P1,
+  [#579](https://github.com/Matleyx78/tecnigrafo/pull/579)) Qt 6.8.3 non
+  collega su `macos-26`: l'SDK di macOS 26 non ha più il framework AGL, che la
+  configurazione di Qt 6.8.3 aggiunge (QTBUG-137687). Il responsabile sceglie di
+  passare alla versione stabile più recente, come per le immagini: **Qt 6.12.0
+  su tutti e tre i sistemi, minima 6.12**. Su Windows aqtinstall 3.3.0 non
+  installa Qt 6.11 e successive: finché non esce una versione pubblicata che lo
+  fa, la CI usa aqtinstall da un commit fissato del suo ramo principale, con
+  `py7zr` fissato. Scartate Qt 6.10.3 (serie chiusa, senza correzioni),
+  l'aggiramento di AGL in CMake, un Xcode più vecchio e `macos-15`. Qt 6.12 si
+  installa a parte anche su Debian 13. Lo scrive
+  l'[ADR 0043](adr/0043-qt-6-12.md), che sostituisce in parte l'ADR 0028; lo
+  applica 0.7.5-P1, la cui [scheda](tappe/0.7.5/P1-immagini-ci.md) è aggiornata.

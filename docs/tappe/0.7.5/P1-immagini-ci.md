@@ -8,10 +8,12 @@
 - **Riferimenti:** non servono: infrastruttura, non cambia il comportamento; i
   test e i casi di verifica esistenti, invariati, sono la prova
 - **Dipende da:** —
-- **Modulo:** `.github/` (più le correzioni al codice che le immagini nuove
-  chiedono, in qualunque modulo)
+- **Modulo:** `.github/` e la versione di Qt (ADR 0043), più le correzioni al
+  codice che le immagini nuove e Qt 6.12 chiedono, in qualunque modulo
 - **Da leggere:** [ADR 0038](../../adr/0038-ci-dei-due-progetti.md), punti 1, 2 e
-  7; [DECISIONI.md](../../DECISIONI.md), 2026-11-07, «Immagini della CI»;
+  7; [ADR 0043](../../adr/0043-qt-6-12.md);
+  [DECISIONI.md](../../DECISIONI.md), 2026-11-07, «Immagini della CI» e
+  «Qt 6.12»;
   `.github/workflows/ci.yml`, `solid-space-main.yml`, `copilot-setup-steps.yml`;
   in solid-space, in sola lettura, `.github/workflows/ci.yml` e la sua #199
   (le correzioni che le immagini nuove avevano chiesto lì)
@@ -20,6 +22,10 @@
 
 - `.github/workflows/ci.yml`, `.github/workflows/solid-space-main.yml`,
   `.github/workflows/copilot-setup-steps.yml`
+- per Qt 6.12 (ADR 0043): `app/CMakeLists.txt`, `tests/CMakeLists.txt`,
+  `tests/verifica/CMakeLists.txt`, `third_party/CMakeLists.txt` (le chiamate
+  `find_package(Qt6 …)`); `README.md`, `docs/AMBIENTE-SVILUPPO.md`,
+  `.github/copilot-instructions.md` (versione e installazione di Qt)
 - i file di codice che il compilatore nuovo rifiuta (MSVC di Visual Studio 2026,
   Apple Clang di `macos-26`): li elenchi nella pull request, ognuno con
   l'avviso o l'errore che lo ha toccato
@@ -28,10 +34,26 @@
 
 1. **Immagini:** il lavoro Windows su `windows-2025-vs2026`, il lavoro macOS su
    `macos-26`; Linux resta `ubuntu-24.04`. Nessuna etichetta `-latest`.
-2. **Qt su Windows:** `install-qt-action` installa ancora Qt 6.8.3; con MSVC
-   2026 si tiene l'architettura `win64_msvc2022_64` se compila e passa (l'ABI di
-   MSVC è compatibile dal 2015). Se non basta, fermati e scrivilo nella issue:
-   cambiare la versione di Qt è una decisione (ADR 0028).
+2. **Qt 6.12** ([ADR 0043](../../adr/0043-qt-6-12.md); decisione del
+   2026-11-07, dopo che Qt 6.8.3 non collegava su `macos-26` per il framework
+   AGL):
+   - in ogni lavoro che installa Qt, `version: '6.12.0'`; su Windows
+     l'architettura resta `win64_msvc2022_64`;
+   - aqtinstall con `aqtsource` dallo SHA intero di un commit del ramo
+     principale di aqtinstall che contiene `7e5a5c3` (al 2026-11-07 l'ultimo è
+     `5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7`), in una sola variabile per
+     workflow, uguale in tutti i workflow, con un commento che dice perché e
+     quando toglierla;
+   - `py7zrversion` a una versione esatta che quel commit accetta (al
+     2026-11-07 l'ultima è la 1.1.4);
+   - `find_package(Qt6 6.12 …)` al posto di `6.8` nei quattro `CMakeLists.txt`
+     della lista;
+   - nei documenti della lista, Qt 6.12 al posto di 6.8 e 6.8.3, e Qt da
+     installare a parte su ogni sistema, Debian 13 compreso.
+
+   Se con Qt 6.12 SARibbon non compila o un suo test fallisce, o se aqtinstall
+   non installa Qt su un sistema, fermati e scrivilo nella issue (ADR 0043,
+   punti 3 e 5).
 3. **Azioni:** per `actions/checkout`, `actions/upload-artifact`,
    `actions/cache` e `actions/setup-python`, l'ultima versione principale
    pubblicata oggi, con il collegamento alla nota di rilascio nella pull request;
@@ -60,6 +82,8 @@ Nessun test nuovo: passano tutti quelli che esistono, sui tre sistemi.
 
 - I lavori Windows e macOS girano sulle immagini nuove e sono verdi, con gli
   avvisi come errori.
+- Ogni lavoro della CI che usa Qt installa Qt 6.12.0, e la configurazione chiede
+  almeno Qt 6.12.
 - Ogni file di `.github/workflows/` usa le stesse versioni principali delle
   azioni comuni.
 - La CI è verde.

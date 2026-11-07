@@ -2,6 +2,8 @@
 
 - **Stato:** Accettato (2026-10-25)
 - **Sostituisce in parte:** ADR 0002, tabella delle decisioni, riga "Interfaccia"
+- **Sostituito in parte da:** ADR 0043 (Qt 6.12: punti 1 e 3, e la versione della
+  CI del punto 2)
 - **Data:** 2026-10-25
 
 ## Contesto
