@@ -102,9 +102,9 @@ void applyTheme(QApplication& application, Theme theme) {
     const ThemeTokens& tokens = themeTokens(theme);
     // Fusion under the proxy style, never a native style or palette which
     // vary by OS (docs/adr/0009, point 5). The style comes first: setting
-    // a style resets the palettes that it polishes. QApplication owns it
-    // and deletes the previous one.
-    QApplication::setStyle(new Style(tokens));
+    // a style resets the palettes that it polishes. The application owns
+    // the style, and QApplication deletes the previous one.
+    QApplication::setStyle(new Style(tokens, &application));
     QApplication::setPalette(paletteFrom(tokens));
     application.setStyleSheet(styleSheet(tokens));
 }

@@ -25,7 +25,9 @@ class Style final : public QProxyStyle {
     Q_OBJECT
 
 public:
-    explicit Style(const ThemeTokens& tokens);
+    /// `parent` owns the style until QApplication::setStyle takes it, as
+    /// Qt does with the styles it creates.
+    Style(const ThemeTokens& tokens, QObject* parent);
 
     [[nodiscard]] const ThemeTokens& tokens() const;
 

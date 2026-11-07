@@ -138,8 +138,10 @@ QString styleSheet(const ThemeTokens& tokens) {
     return sheet;
 }
 
-Style::Style(const ThemeTokens& tokens)
-    : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion"))), m_tokens(tokens) {}
+Style::Style(const ThemeTokens& tokens, QObject* parent)
+    : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion"))), m_tokens(tokens) {
+    setParent(parent);
+}
 
 const ThemeTokens& Style::tokens() const {
     return m_tokens;
