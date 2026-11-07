@@ -103,7 +103,7 @@ sessione attiva: script di livello 2, rapporto e test non cambiano.
 
 ## Regole della tappa che valgono qui
 
-- `main_window.*`, `cad_view.*`, pannelli: prima di te P14, P16 e P18 (se c'è);
+- `main_window.*`, `cad_view.*`, pannelli: prima di te P14, P16 e P18;
   dopo di te P29. `command_runner.*`: non lo tocchi.
 - Con una sessione il programma si comporta come oggi; i casi di verifica di
   livello 2 restano invariati.

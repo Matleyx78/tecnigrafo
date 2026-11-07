@@ -1173,3 +1173,8 @@ i rimandi ai documenti che cambia.
   - **Avvio sulla pagina *Start***, come AutoCAD: il programma parte senza
     documenti, e l'utente crea quello che gli serve fra i tipi registrati (oggi
     il disegno). Gli script partono come oggi da un disegno vuoto (0.7.5-P29).
+  - **Pannelli che si nascondono da soli**
+    ([#534](https://github.com/Matleyx78/tecnigrafo/issues/534)): sì, costruiti
+    con Qt, senza librerie esterne (ADR 0009, punto 3): una puntina nella barra
+    del titolo, la linguetta sul bordo, il riquadro sovrapposto dentro la
+    finestra (0.7.5-P18). Il pacchetto di analisi 0.7.5-P17 si toglie.

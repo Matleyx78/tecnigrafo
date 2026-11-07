@@ -7,7 +7,7 @@
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** non servono: il comportamento non cambia; i test di unità e i
   casi di verifica esistenti, invariati, sono la prova
-- **Dipende da:** P18, P23 (P16 al posto di P18, se P18 non si fa)
+- **Dipende da:** P18, P23
 - **Modulo:** `edit` (più i chiamanti in `cmd`, `script` e `app`, con un cambio
   meccanico)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 2 e
