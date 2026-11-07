@@ -282,6 +282,37 @@ class PlanTable(unittest.TestCase):
         self.assertIn("check 6 skipped", old.notes[0])
 
 
+class StageNumbers(unittest.TestCase):
+    def test_valid_stage_arguments(self):
+        for stage in ("0.7", "0.7.5", "1.0", "10.20.30"):
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                plans = root / "docs" / "tappe"
+                plans.mkdir(parents=True)
+                (plans / f"{stage}-test.md").write_text(
+                    tg_plan([tg_row("P1", None, "—")]).replace("0.7", stage), encoding="utf-8")
+                gh = FakeGitHub({f"repos/{TG}/issues?state=all&per_page=100&labels=tappa-{stage}": []})
+                out = io.StringIO()
+                with redirect_stdout(out):
+                    self.assertEqual(d.main([stage, "--senza-project"], gh=gh, root=root), 0)
+                self.assertIn(f"Stage {stage}, plan docs/tappe/{stage}-test.md", out.getvalue())
+                self.assertEqual(gh.sent, [])
+
+    def test_invalid_stage_arguments(self):
+        for stage in ("0.7.05", "0.7.", "0.7.5.1", "00.7", "0.07", "0", "0.7\n"):
+            with self.subTest(stage=stage), redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    d.main([stage], gh=FakeGitHub({}), root=Path("unused"))
+                self.assertEqual(error.exception.code, 2)
+
+    def test_roadmap_requires_the_whole_stage(self):
+        for stage, other in (("0.7", "0.7.5"), ("0.7.5", "0.7")):
+            with self.subTest(stage=stage):
+                roadmap = SS_ROADMAP.replace("0.7,", f"{stage},")
+                self.assertIsNotNone(d.parse_ss_roadmap(roadmap, stage))
+                self.assertIsNone(d.parse_ss_roadmap(roadmap, other))
+
+
 class RealPlan(unittest.TestCase):
     """The plan of the open stage, as it is in the repository: a change to the
     plan that the tools cannot read shows up here, not when the maintainer runs
