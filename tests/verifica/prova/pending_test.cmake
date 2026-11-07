@@ -62,6 +62,15 @@ if(NOT file_count EQUAL 3)
     message(FATAL_ERROR "valid: the .gitkeep must be ignored, files: ${R_FILES}")
 endif()
 
+# Three-component stages use the same block suffixes as two-component stages.
+fresh(three-component-stage)
+file(WRITE "${dir}/0.7.5-R1.txt" "a/one #539\n")
+file(WRITE "${dir}/0.7.5-R1a.txt" "a/two #539\n")
+read()
+if(NOT "${ERRORS}" STREQUAL "" OR NOT "${R_NAMES}" STREQUAL "a/one;a/two")
+    message(FATAL_ERROR "three-component-stage: unexpected result: ${ERRORS} ${R_NAMES}")
+endif()
+
 # A folder with only the .gitkeep, and a folder that does not exist, are empty lists.
 fresh(only-gitkeep)
 file(WRITE "${dir}/.gitkeep" "")
@@ -92,7 +101,8 @@ expect_one_error("comment-only-file" "0.7-R16.txt lists no case")
 
 # --- a wrong name ------------------------------------------------------------
 foreach(wrong IN ITEMS R16.txt 0.7-R16 0.7-R16.md 0.7-r16.txt 0.7-R16A.txt 0.7-R16ab.txt 0.7-Ra.txt
-                    0.7-R16a.txt.bak in-attesa.txt)
+                    0.7-R16a.txt.bak in-attesa.txt 0.7.05-R1.txt 0.7.-R1.txt 0.7.5.1-R1.txt
+                    00.7-R1.txt 0.07-R1.txt)
     fresh(wrong-name)
     file(WRITE "${dir}/${wrong}" "a/one #361\n")
     read()
