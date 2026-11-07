@@ -107,8 +107,8 @@ int main(int argc, char* argv[]) {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
     QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, settings.path());
     initializeGalleryResources();
-    const int fontId = QFontDatabase::addApplicationFont(
-        QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf"));
+    const QString fontPath = QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf");
+    const int fontId = QFontDatabase::addApplicationFont(fontPath);
     const auto families = QFontDatabase::applicationFontFamilies(fontId);
     if (families.isEmpty()) {
         std::cerr << "Cannot load the application's bundled font\n";
