@@ -299,13 +299,13 @@
 <text x="246" y="945" font-size="12" xml:space="preserve" font-family="Cascadia Mono, DejaVu Sans Mono, monospace"><tspan fill="#1f2328">MOVE </tspan><tspan fill="#1f2328">Specify second point or &lt;use first point as displacement&gt;:</tspan></text>
 <rect x="722.52" y="934" width="1.2" height="13" fill="#1f2328"/>
 <!-- Area 7: dynamic input next to the cursor (ADR 0042): prompt and two fields, the active one in the accent colour -->
-<rect x="448.4" y="643.5" width="332" height="52" rx="3" fill="#f7f8fa" stroke="#cdd3da" stroke-width="1"/>
-<text x="455.9" y="660" fill="#1f2328" font-size="11">Specify second point or &lt;use first point as displacement&gt;:</text>
-<rect x="456.4" y="668.5" width="96" height="20" rx="2" fill="#ffffff" stroke="#1f6fbf" stroke-width="1.5"/>
-<text x="461.9" y="683" fill="#1f6fbf" font-size="12" font-family="Cascadia Mono, DejaVu Sans Mono, monospace">50.0000</text>
-<rect x="513.65" y="672" width="1.2" height="13" fill="#1f6fbf"/>
-<rect x="560.4" y="668.5" width="72" height="20" rx="2" fill="#ffffff" stroke="#cdd3da" stroke-width="1"/>
-<text x="565.9" y="683" fill="#1f2328" font-size="12" font-family="Cascadia Mono, DejaVu Sans Mono, monospace">30°</text>
+<rect x="448.4" y="643.5" width="344" height="58" rx="3" fill="#f7f8fa" stroke="#cdd3da" stroke-width="1"/>
+<text x="457.9" y="662" fill="#1f2328" font-size="11">Specify second point or &lt;use first point as displacement&gt;:</text>
+<rect x="458.4" y="671.5" width="210.67" height="20" rx="2" fill="#ffffff" stroke="#1f6fbf" stroke-width="1.5"/>
+<text x="463.9" y="686" fill="#1f6fbf" font-size="12" font-family="Cascadia Mono, DejaVu Sans Mono, monospace">50.0000</text>
+<rect x="515.44" y="674.5" width="1.2" height="13" fill="#1f6fbf"/>
+<rect x="677.07" y="671.5" width="105.33" height="20" rx="2" fill="#ffffff" stroke="#cdd3da" stroke-width="1"/>
+<text x="682.57" y="686" fill="#1f2328" font-size="12" font-family="Cascadia Mono, DejaVu Sans Mono, monospace">30°</text>
 <!-- Area 8: Properties panel: selection combo with filter and quick select, two-column grid -->
 <rect x="1276" y="184" width="324" height="406" fill="#f7f8fa"/>
 <line x1="1276.5" y1="184" x2="1276.5" y2="590" stroke="#cdd3da" stroke-width="1"/>
