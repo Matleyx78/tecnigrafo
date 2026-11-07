@@ -253,6 +253,37 @@ TEST_F(DynamicInputTest, NoFieldWhileSelectingOrWithNoCommand) {
     EXPECT_TRUE(dynamic().document().isEmpty());
 }
 
+// COPY keeps its base point for the copies after the first, while the last
+// point moves to each copy: the fields measure from the base point, the
+// composed "@" line from the last point (docs/adr/0042, point 3). The
+// guarantee is the composed line, not the point the fields show.
+TEST_F(DynamicInputTest, CopyAfterTheFirstMeasuresFromTheBaseAndMovesFromTheLastPoint) {
+    both("LINE");
+    both("0,0");
+    both("10,0");
+    both("");
+    both("COPY");
+    both("5,0");
+    both("");
+    both("0,0");
+    both("10,0");
+    const DynamicInput empty = dynamicInputFor(dynamic().runner());
+    EXPECT_EQ(empty.prompt, "Specify second point or [Exit/Undo] <Exit>:");
+    EXPECT_EQ(kinds(empty), (std::vector<Kind>{Kind::Length, Kind::Angle}));
+    EXPECT_EQ(dynamicInputShown(empty, dynamic().runner(), {20.0, 0.0}),
+              (std::vector<std::string>{"20.0000", "0"}));
+    enter(fields({"20", "0"}), {20.0, 0.0}, "@20<0");
+
+    // The same copy written as the absolute point (30,0): 20 from the last
+    // point (10,0), not from the base point (0,0).
+    Session absolute;
+    for (const char* text : {"LINE", "0,0", "10,0", "", "COPY", "5,0", "", "0,0", "10,0", "30,0"}) {
+        absolute.runner().submitText(text);
+    }
+    ASSERT_EQ(absolute.document().entityCount(), dynamic().document().entityCount());
+    EXPECT_EQ(absolute.document().entities().back(), dynamic().document().entities().back());
+}
+
 TEST(CommandRunnerDynamicInputTest, BasePointAndClickPointChangeNothing) {
     core::Document document;
     edit::Editor editor{document};

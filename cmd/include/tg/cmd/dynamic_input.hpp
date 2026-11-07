@@ -69,6 +69,12 @@ struct DynamicInput {
 /// Typed fields enter the line as typed, so the runner reads and diagnoses
 /// them as it reads the command line. With a comma in the Length field the
 /// Angle field is not used.
+///
+/// The line is what Enter guarantees, not the point the fields measure: the
+/// runner reads "@" from the last point (docs/adr/0005), while Length and
+/// Angle are shown from the base point (docs/adr/0042, point 2). The two
+/// differ where a command keeps its base point after other points, as COPY
+/// does for the copies after the first.
 [[nodiscard]] std::string dynamicInputText(const DynamicInput& input, const CommandRunner& runner,
                                            core::Vec2 pointer);
 
