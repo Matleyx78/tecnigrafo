@@ -113,6 +113,15 @@ funzione e l'altra: un'informazione decisa esattamente da solid-space che la
 scheda passa avanti solo come valore arrotondato (#359). I buchi trovati li
 decide il responsabile in [DECISIONI.md](DECISIONI.md).
 
+**Comandi nell'interfaccia.** Una tappa che aggiunge comandi li porta anche
+nell'interfaccia, nella stessa tappa: per ogni comando nuovo l'icona a ruoli,
+la voce nel registro delle azioni (menu, ribbon e barre dell'interfaccia
+classica) e la scorciatoia, se ne ha una. I pacchetti dei comandi stanno in
+`cmd` e non toccano `app`, quindi il piano ha un pacchetto di `app` che lo fa
+per i comandi della tappa, dopo di loro, e un criterio di chiusura che lo
+verifica. Nella 0.7 mancava, e i comandi di modifica sono rimasti fuori da menu
+e ribbon ([DECISIONI.md](DECISIONI.md), 2026-11-07).
+
 ### Pacchetti leggeri (dalla tappa 0.5)
 
 Ogni sessione di un agente paga un costo fisso in token prima di scrivere una
@@ -352,6 +361,8 @@ la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
   ciascuno i casi di verifica o i test che lo provano, oppure "da provare a mano";
 - scrive le note di rilascio `docs/rilasci/X.Y.md`, con la tabella della prova
   manuale da compilare;
+- controlla che ogni comando nuovo della tappa abbia icona e voci di menu,
+  ribbon e barre (sezione 1, "Comandi nell'interfaccia");
 - aggiorna il [catalogo di parità](parita/comandi.md): stato, note e riepilogo
   dei comandi toccati dalla tappa, e la versione in cima al riepilogo;
 - aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README;

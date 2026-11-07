@@ -1103,6 +1103,14 @@ i rimandi ai documenti che cambia.
       ferma una volta sola, con un solo commento
       ([agenti/pacchetto.md](agenti/pacchetto.md)).
 
+    Il responsabile aggiunge una regola solo di Tecnigrafo: una tappa che
+    aggiunge comandi li porta anche nell'interfaccia (icona, voci di menu,
+    ribbon e barre, scorciatoia), con un pacchetto di `app` e un criterio di
+    chiusura che la PR di chiusura controlla, perché nella 0.7 i comandi di
+    modifica sono rimasti fuori da menu e ribbon (LAVORO-IN-PARALLELO.md,
+    "Comandi nell'interfaccia" e sezione 8; tappe/0000-modello.md; scheda della
+    0.8).
+
     Le proposte che sono codice o CI diventano lavori della 0.7.5: correggere
     `scripts/ci-attendi.sh`; il commit del sottomodulo automatico e sicuro
     (scelta del 2026-11-06, che vale anche per «gestire il commit del

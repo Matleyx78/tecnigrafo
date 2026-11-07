@@ -25,6 +25,10 @@ vista di chi usa il programma.
 Verificabili, uno per riga, con casella da spuntare alla chiusura.
 
 - [ ] …
+- [ ] Ogni comando nuovo ha la sua icona e le sue voci di menu, ribbon e barre
+      (solo se la tappa aggiunge comandi;
+      [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), "Comandi
+      nell'interfaccia")
 
 ## 4. Progetto di massima
 
