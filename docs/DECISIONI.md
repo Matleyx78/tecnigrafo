@@ -1162,10 +1162,11 @@ i rimandi ai documenti che cambia.
     l'ADR delle entità composte della 0.8.
   - **`NEW` e `OPEN` con i documenti in schede** (strada B, come AutoCAD): aprono
     sempre un documento nuovo, che diventa attivo, e non chiedono di salvare
-    quello di prima, che resta aperto. Eccezione, come il `Drawing1` iniziale di
-    AutoCAD: `OPEN` con attivo un documento mai salvato e mai modificato lo
-    sostituisce invece di aggiungerne uno. Vale nel programma e negli script dei
+    quello di prima, che resta aperto, anche se è un disegno appena creato e mai
+    toccato (provato dal responsabile in AutoCAD LT il 2026-11-07: dopo *Nuovo*,
+    *Apri* apre il file in un'altra scheda). Vale nel programma e negli script dei
     due livelli; il rapporto ha il campo `documents:` con più di un documento
     ([verifica/rapporto.md](verifica/rapporto.md)). I casi di verifica che
-    cambiano si aggiornano con un pacchetto di riferimenti (0.7.5-R28b), prima
-    del lavoro (0.7.5-P28b).
+    cambiano, cioè tutti quelli che usano `NEW` o `OPEN`, si aggiornano con due
+    pacchetti di riferimenti (0.7.5-R28b e R28c), prima del lavoro
+    (0.7.5-P28b).

@@ -46,8 +46,7 @@
 3. **Documenti nuovi e aperti:** il pulsante `+` e la pagina *Start* eseguono
    `NEW` e `OPEN`, come le azioni `file.new` e `file.open` e i comandi scritti;
    ogni documento che P28b aggiunge ha la sua scheda, nell'ordine di apertura, e
-   la scheda attiva segue il documento attivo. Un `OPEN` che sostituisce il
-   disegno appena creato (P28b) cambia la scheda di quello, non ne aggiunge una.
+   la scheda attiva segue il documento attivo.
 4. **Chiudere una scheda** con la crocetta: se il documento è modificato, la
    richiesta di salvare di oggi (*Yes*, *No*, *Cancel*); *Cancel* lascia la scheda
    aperta. Chiusa l'ultima scheda di documento, resta attiva la pagina *Start*.
@@ -72,7 +71,7 @@
   aperta, *No* la chiude; chiusa l'ultima, è attiva la pagina *Start*;
 - aprire due volte lo stesso file attiva la stessa scheda;
 - `NEW` scritto nella riga di comando apre una scheda nuova; `OPEN` all'avvio,
-  con il disegno appena creato, non ne aggiunge una.
+  con il disegno appena creato, ne apre un'altra e il disegno resta.
 
 ## Fatto quando
 

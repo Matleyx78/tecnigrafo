@@ -5,8 +5,8 @@
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
-- **Riferimenti:** issue `[0.7.5-R28b]` (#…), agente gemini
-- **Dipende da:** P27, P28, R28b
+- **Riferimenti:** issue `[0.7.5-R28b]` e `[0.7.5-R28c]` (#…), agente gemini
+- **Dipende da:** P27, P28, R28b, R28c
 - **Modulo:** `cmd` (più l'ospite dei documenti in `script` e in `app`)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 2 e
   3; [ADR 0021](../../adr/0021-comandi-dei-file.md);
@@ -80,10 +80,9 @@ ospite.
 - **`OPEN`:** chiede il file come oggi; niente richiesta di salvare.
   - Se il file è già aperto (`findOpen`), lo attiva e scrive
     `<name> is already open.` nella cronologia.
-  - Se il documento attivo **non ha file e non ha passi di annulla né di
-    ripeti** (il disegno appena creato, come il `Drawing1` iniziale di AutoCAD),
-    il file aperto lo **sostituisce**, come oggi.
-  - Altrimenti il file aperto si aggiunge come documento nuovo, attivo.
+  - Altrimenti il file aperto si aggiunge come documento nuovo, attivo, anche
+    se il documento attivo è un disegno appena creato e mai toccato (come AutoCAD
+    LT: DECISIONI.md, 2026-11-07).
   - Un errore di lettura lascia tutto com'è, con i messaggi di oggi.
 - Le richieste e i messaggi che `NEW` e `OPEN` scrivono oggi restano, tranne la
   domanda `Save changes to …? [Yes/No/Cancel] <Yes>:`, che non c'è più.
@@ -106,16 +105,16 @@ ospite.
 
 - `main_window.*`: prima di te P28, dopo di te P29. `command.hpp`,
   `command_runner.*`: prima di te P27.
-- I casi in attesa di R28b sono i riferimenti di questo pacchetto: togli il loro
-  file da `tests/verifica/in-attesa/` (AGENTS.md, «Prima di dichiarare il lavoro
+- I casi in attesa di R28b e R28c sono i riferimenti di questo pacchetto: togli i
+  loro file da `tests/verifica/in-attesa/` (AGENTS.md, «Prima di dichiarare il lavoro
   finito»). Gli altri casi restano invariati.
 
 ## Test richiesti
 
 - `file_commands_test.cpp`, con un ospite di prova: `NEW` con un documento
-  modificato aggiunge `Drawing2.cadx`, attivo, senza domanda; `OPEN` sul disegno
-  appena creato lo sostituisce; `OPEN` con un documento modificato ne aggiunge
-  uno; `OPEN` di un file già aperto lo attiva e scrive il messaggio; senza ospite,
+  modificato aggiunge `Drawing2.cadx`, attivo, senza domanda; `OPEN` con il
+  disegno appena creato ne aggiunge uno, e il disegno resta; `OPEN` con un
+  documento modificato ne aggiunge uno; `OPEN` di un file già aperto lo attiva e scrive il messaggio; senza ospite,
   `NEW` sostituisce come oggi.
 - `level1_test.cpp`, `report_test.cpp`: due documenti aperti danno `documents:`
   con l'attivo segnato; uno solo non lo scrive.
@@ -124,8 +123,7 @@ ospite.
 
 ## Fatto quando
 
-- `NEW` e `OPEN` aprono un documento nuovo nei due livelli e nel programma, con
-  l'eccezione del disegno appena creato.
-- I casi di R28b passano e sono tolti dall'elenco in attesa; i test qui sopra
+- `NEW` e `OPEN` aprono un documento nuovo nei due livelli e nel programma.
+- I casi di R28b e R28c passano e sono tolti dall'elenco in attesa; i test qui sopra
   esistono e passano.
 - La CI è verde.
