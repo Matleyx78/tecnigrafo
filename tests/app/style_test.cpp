@@ -40,15 +40,23 @@ QColor pixelAt(const QImage& image, QPoint point) {
     return image.pixelColor(QPoint(qRound(point.x() * ratio), qRound(point.y() * ratio)));
 }
 
-bool anyPixelNear(const QImage& image, const QRect& area, const QColor& colour) {
+int distance(const QColor& first, const QColor& second) {
+    return std::abs(first.red() - second.red()) + std::abs(first.green() - second.green()) +
+           std::abs(first.blue() - second.blue());
+}
+
+// The pixel of `area` closest to `colour`.
+QColor closestPixel(const QImage& image, const QRect& area, const QColor& colour) {
+    QColor best = pixelAt(image, area.topLeft());
     for (int y = area.top(); y <= area.bottom(); ++y) {
         for (int x = area.left(); x <= area.right(); ++x) {
-            if (near(pixelAt(image, QPoint(x, y)), colour)) {
-                return true;
+            const QColor pixel = pixelAt(image, QPoint(x, y));
+            if (distance(pixel, colour) < distance(best, colour)) {
+                best = pixel;
             }
         }
     }
-    return false;
+    return best;
 }
 
 TEST(StyleTest, SheetContainsTheColoursOfTheTokens) {
@@ -181,14 +189,18 @@ TEST(StyleTest, RealWidgetsReachTheProxyThroughTheStyleSheet) {
         EXPECT_TRUE(near(pixelAt(barImage, QPoint(5, 198)), tokens.field));
 
         // A combo box: field colour inside, border at the edge, and the
-        // arrow in the text colour inside the drop-down area on the right.
+        // arrow inside the drop-down area on the right. The arrow is a thin
+        // antialiased stroke over the field, so its pixels are a blend: the
+        // closest one must be at least halfway from the field to the text.
         QComboBox combo;
         combo.addItem(QStringLiteral("A"));
         combo.resize(120, 24);
         const QImage comboImage = combo.grab().toImage();
         EXPECT_TRUE(near(pixelAt(comboImage, QPoint(60, 12)), tokens.field));
         EXPECT_TRUE(near(pixelAt(comboImage, QPoint(60, 0)), tokens.border));
-        EXPECT_TRUE(anyPixelNear(comboImage, QRect(100, 2, 18, 20), tokens.text));
+        const QColor arrow = closestPixel(comboImage, QRect(100, 2, 18, 20), tokens.text);
+        EXPECT_LE(2 * distance(arrow, tokens.text), distance(tokens.field, tokens.text))
+            << arrow.name().toStdString();
     }
     applyTheme(application(), Theme::Light);
 }
