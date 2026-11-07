@@ -59,12 +59,14 @@ riferimenti (`[X.Y-RN]`)".
 - La parola `esente` in un file di `tests/verifica/in-attesa/` la aggiunge solo
   un pacchetto che porta un controllo anticipato, se la sua scheda lo dice
   ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punto 9).
-- Se un caso ti sembra sbagliato, **fermati del tutto**, subito, anche se il
-  resto del pacchetto è pronto:
+- Se un caso ti sembra sbagliato, non fermarti al primo: guarda **tutti** i
+  casi del pacchetto, senza cambiare nulla, e poi **fermati del tutto una volta
+  sola**, anche se il resto del pacchetto è pronto:
   1. non adattare il codice al riferimento che ritieni sbagliato, né il
      riferimento al codice; il caso resta com'è;
   2. non aprire la pull request, non avviare la CI e non eseguire altri controlli;
-  3. scrivi nella issue il nome del caso, il valore atteso, quello che dà il
+  3. scrivi nella issue, **in un solo commento** per tutti i casi che ti
+     sembrano sbagliati, il nome di ciascuno, il valore atteso, quello che dà il
      programma e perché il riferimento ti sembra sbagliato;
   4. se hai lavoro non pubblicato, pubblica il ramo **senza** pull request (così
      non parte la CI) e scrivi nel commento il nome del ramo;

@@ -25,6 +25,10 @@ vista di chi usa il programma.
 Verificabili, uno per riga, con casella da spuntare alla chiusura.
 
 - [ ] …
+- [ ] Ogni comando nuovo ha la sua icona e le sue voci di menu, ribbon e barre
+      (solo se la tappa aggiunge comandi;
+      [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), "Comandi
+      nell'interfaccia")
 
 ## 4. Progetto di massima
 
@@ -126,7 +130,8 @@ dell'etichetta `agente:…` (`claude`, `codex`, `gemini`), mai il
 modello tra parentesi, che si dice nella colonna Modello; "Dipende da" elenca,
 separati da virgole, pacchetti delle righe precedenti (`P3`, `R3`), issue di
 Tecnigrafo (`#12`) o di altri repository (`Matleyx78/solid-space#20`), oppure
-`—`; la colonna Issue resta `#…` finché lo script non ci scrive il numero.
+`—`, e mai una pull request: al suo posto la issue che chiude, perché GitHub non
+accetta una issue «bloccata da» una pull request; la colonna Issue resta `#…` finché lo script non ci scrive il numero.
 
 **File comuni.** I file che più pacchetti toccano nello stesso periodo (di norma
 i `CMakeLists.txt` e i registri come `builtin_commands.cpp`): ognuno aggiunge

@@ -35,6 +35,14 @@ indicare una issue o una pull request.
 Il documento della tappa (`docs/tappe/…`) riporta per ogni pacchetto il numero
 della sua issue; ogni pull request riporta in alto la issue che chiude.
 
+**Prefissi dei due progetti, dalla tappa 0.8.** Perché nelle chat non ci siano
+due «P20» (uno di Tecnigrafo e uno di solid-space), i pacchetti di Tecnigrafo si
+scrivono `PT`, `RT`, `CT` (`[0.8-PT5]`, `[0.8-RT5]`) e quelli di solid-space
+`PS`, `RS`, `CS`; i rami seguono (`pt0.8-05-…`). Le tappe già chiuse e la 0.7.5
+restano con `P`, `R`, `C`, e nulla si rinomina. Valgono dopo il pacchetto della
+tappa 0.7.5 che adegua script e controlli della CI
+([tappe/0.7.5-correzione-di-rotta.md](tappe/0.7.5-correzione-di-rotta.md)).
+
 ## Chi fa cosa
 
 | Chi | Etichetta | Lavoro |
@@ -51,7 +59,10 @@ Più sessioni di Claude nello stesso momento usano la stessa etichetta:
 Le issue aperte prima con `agente:claude-2` le prende qualunque sessione di
 Claude; per le nuove l'etichetta non si usa più.
 
-Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Le
+Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Vale
+anche per i **modelli**: chi scrive i riferimenti usa un modello diverso da chi
+realizza il pacchetto, e chi rivede una pull request un modello diverso da chi
+l'ha scritta; pull request e verbali dicono il modello usato. Le
 etichette servono perché gli agenti lavorano tutti attraverso l'account GitHub
 del responsabile, e non si possono distinguere in altro modo. La lista delle
 issue filtrata per etichetta mostra in ogni momento chi sta facendo cosa.
@@ -71,7 +82,9 @@ dice, per ogni pacchetto:
   attesa è un file condiviso, perché è la cartella `tests/verifica/in-attesa/`
   con un file per blocco di riferimenti, che il pacchetto di riferimenti
   aggiunge e quello di lavoro cancella (ADR 0011, punto 7); lo stesso in
-  solid-space. Un pacchetto che
+  solid-space. Una dipendenza da una pull request si scrive come la issue che
+  quella pull request chiude: GitHub non accetta una issue «bloccata da» una
+  pull request. Un pacchetto che
   ha bisogno di solid-space cita qui la richiesta in solid-space (`Matleyx78/solid-space#N`) finché la tappa di
   solid-space non ha i suoi pacchetti, poi il pacchetto di solid-space che gli
   serve; nel piano sta dopo i pacchetti che non ne hanno bisogno
@@ -99,6 +112,15 @@ il contratto di solid-space, ma i buchi più costosi stanno spesso tra una
 funzione e l'altra: un'informazione decisa esattamente da solid-space che la
 scheda passa avanti solo come valore arrotondato (#359). I buchi trovati li
 decide il responsabile in [DECISIONI.md](DECISIONI.md).
+
+**Comandi nell'interfaccia.** Una tappa che aggiunge comandi li porta anche
+nell'interfaccia, nella stessa tappa: per ogni comando nuovo l'icona a ruoli,
+la voce nel registro delle azioni (menu, ribbon e barre dell'interfaccia
+classica) e la scorciatoia, se ne ha una. I pacchetti dei comandi stanno in
+`cmd` e non toccano `app`, quindi il piano ha un pacchetto di `app` che lo fa
+per i comandi della tappa, dopo di loro, e un criterio di chiusura che lo
+verifica. Nella 0.7 mancava, e i comandi di modifica sono rimasti fuori da menu
+e ribbon ([DECISIONI.md](DECISIONI.md), 2026-11-07).
 
 ### Pacchetti leggeri (dalla tappa 0.5)
 
@@ -145,9 +167,12 @@ stessa fonte.
 | **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) | 3.8 Flash medio (40) o alto (41) |
 
 Gemini 3.8 Flash sta nella fascia leggera: i riferimenti con calcoli delicati
-(tolleranze, archi, casi limite geometrici) li scrive un agente di fascia forte,
-diverso da chi farà il pacchetto di lavoro: di norma Codex per i pacchetti di
-Claude, e Claude per quelli di Codex. Gemini 4 Argon (53) ha una capacità da
+(tolleranze, archi, casi limite geometrici; in particolare curve parallele,
+raccordi e intersezioni) li scrive un agente di fascia forte, diverso da chi
+farà il pacchetto di lavoro: di norma Codex per i pacchetti di Claude, e Claude
+per quelli di Codex. A Gemini 3.8 Flash vanno solo i riferimenti ordinari: i
+comandi (sequenze di domande, messaggi, annulla) e i casi senza calcoli
+delicati. Gemini 4 Argon (53) ha una capacità da
 fascia forte secondo la stessa misura, ma una quota settimanale che basta a
 uno o due pacchetti di riferimenti: il piano non gli assegna niente, e il
 responsabile gli passa un pacchetto quando è disponibile.
@@ -313,8 +338,8 @@ un agente senza pacchetto preciso sconfina.
 - Se due pacchetti toccano lo stesso file comune (per esempio
   `tests/CMakeLists.txt`), vale una regola fissa: **chi arriva dopo si aggiorna**.
   Si chiede all'agente di quella pull request di risolvere il conflitto.
-- Quando possibile, una pull request scritta da un modello viene rivista da un
-  modello diverso prima del merge: di norma Gemini rivede le pull request di
+- Una pull request scritta da un modello viene rivista da un modello diverso
+  prima del merge, mai dallo stesso: di norma Gemini rivede le pull request di
   Claude e di Codex. Le pull request impegnative di Claude il responsabile può
   farle rivedere anche a Copilot, che consuma i crediti mensili di Copilot Pro:
   solo dove una seconda opinione forte conta
@@ -336,6 +361,8 @@ la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
   ciascuno i casi di verifica o i test che lo provano, oppure "da provare a mano";
 - scrive le note di rilascio `docs/rilasci/X.Y.md`, con la tabella della prova
   manuale da compilare;
+- controlla che ogni comando nuovo della tappa abbia icona e voci di menu,
+  ribbon e barre (sezione 1, "Comandi nell'interfaccia");
 - aggiorna il [catalogo di parità](parita/comandi.md): stato, note e riepilogo
   dei comandi toccati dalla tappa, e la versione in cima al riepilogo;
 - aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README;
@@ -345,3 +372,9 @@ la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
 Il responsabile esegue la prova manuale su Windows e Linux, compila la tabella,
 unisce la pull request e pubblica la versione (regole in
 [ROADMAP.md](ROADMAP.md), "Chiudere una tappa").
+
+La pull request di chiusura non decide le regole di metodo né le idee: lo si fa
+dopo, nella **pausa tra le tappe**. Con tutto fermo, il responsabile decide le idee
+aperte, le proposte della issue «[X.Y] Proposte di metodo» e le correzioni dei
+documenti, che si applicano in una pull request di soli documenti; solo dopo si
+apre la tappa successiva ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B13).

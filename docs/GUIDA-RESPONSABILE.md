@@ -251,6 +251,7 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B10a. Un agente si ferma su un buco | Tecnigrafo | tu, poi Claude e Codex |
 | B11. Unire i pacchetti | tutti e due | tu |
 | B12. Chiudere le tappe | tutti e due | Gemini, poi tu |
+| B13. La pausa tra le tappe | tutti e due | tu e Claude |
 
 Una tappa che non chiede nulla a solid-space salta B2–B5. Da B7 in poi i passi
 sono gli stessi nei due repository; le frasi indicano il repository con
@@ -296,9 +297,9 @@ senza, lavorano lo stesso e lo dicono.
    altri metti solo la riga nella tabella, con "scheda dopo il contratto".
    Se una scheda introduce tipi o funzioni nuove in core, aggiungi il
    pacchetto di revisione delle interfacce (tappe/0000-modello.md, sezione 6).
-   Elenca anche le issue con etichetta `idea` ancora aperte e dimmi quali,
-   secondo te, potrebbero entrare in questa tappa e perché: le approvo io, una
-   per una; quelle che approvo entrano nella scheda, le altre restano issue.
+   Le idee sono già decise nella pausa (B13): metti nel piano quelle che ho
+   approvato per questa tappa. Se ne trovi altre aperte nate dopo la pausa,
+   dimmi quali potrebbero entrare e perché: le approvo io, una per una.
    ```
 
 3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
@@ -531,9 +532,9 @@ Tecnigrafo.
    forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
    "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
    documentazione. Proponi anche le bozze degli ADR che servono.
-   Elenca anche le issue con etichetta `idea` ancora aperte e dimmi quali,
-   secondo te, potrebbero entrare in questa tappa e perché: le approvo io, una
-   per una; quelle che approvo entrano nella scheda, le altre restano issue.
+   Le idee sono già decise nella pausa (B13): metti nel piano quelle che ho
+   approvato per questa tappa. Se ne trovi altre aperte nate dopo la pausa,
+   dimmi quali potrebbero entrare e perché: le approvo io, una per una.
    ```
 
    Per una richiesta nata a tappa aperta, invece:
@@ -893,11 +894,11 @@ Prima di cominciare, `scripts/dipendenze.py <tappa>` di Tecnigrafo (A4) non deve
 avere niente in *To fix* né in *To check*: le richieste della tappa sono già
 chiuse.
 
-Le regole di metodo cambiano solo qui, alla chiusura della tappa, salvo un vero
-blocco: un lavoro che non può andare avanti con le regole attuali, e lo
-stabilisci tu. Durante la tappa le proposte si raccolgono in una issue per
-tappa, «[X.Y] Proposte di metodo», con l'etichetta `proposta`
-([DECISIONI.md](DECISIONI.md), 2026-11-03).
+Le regole di metodo non cambiano durante una tappa, salvo un vero blocco: un
+lavoro che non può andare avanti con le regole attuali, e lo stabilisci tu.
+Durante la tappa le proposte si raccolgono in una issue per tappa, «[X.Y]
+Proposte di metodo», con l'etichetta `proposta`, e si decidono nella pausa dopo
+la chiusura (B13; [DECISIONI.md](DECISIONI.md), 2026-11-03 e 2026-11-07).
 
 1. Avvia Gemini 3.8 Flash (A2) e scrivi:
 
@@ -911,8 +912,7 @@ tappa, «[X.Y] Proposte di metodo», con l'etichetta `proposta`
 2. Leggi la pull request: per ogni criterio di chiusura deve esserci la prova (un
    caso di verifica o un test), oppure "da provare a mano". In Tecnigrafo
    controlla anche che `project(... VERSION <tappa>.0)` nel `CMakeLists.txt`
-   principale sia aggiornato. Le proposte della issue «[<tappa>] Proposte di
-   metodo» le decidi in questa pull request.
+   principale sia aggiornato.
 3. Fai la **prova manuale** descritta nelle note di rilascio (per Tecnigrafo su
    Windows e su Linux) e scrivi l'esito nella tabella. Puoi chiedere all'agente
    di compilarla per te, dandogli gli esiti.
@@ -931,9 +931,36 @@ tappa, «[X.Y] Proposte di metodo», con l'etichetta `proposta`
 7. Solo per solid-space: le richieste della tappa dovrebbero essere già chiuse
    (B11, punto 3). Per quelle ancora aperte controlla dal lato di Tecnigrafo il
    «quando è soddisfatta» e chiudile, oppure scrivi nella issue che cosa manca.
-8. Torna a B1 per la tappa successiva di Tecnigrafo. Se ha già richieste
-   valutate, prepara anche la sua tappa di solid-space (B5); altrimenti
-   solid-space aspetta le prossime richieste (B2).
+8. Passa alla pausa (B13), e solo dopo a B1 per la tappa successiva di
+   Tecnigrafo. Se ha già richieste valutate, prepara anche la sua tappa di
+   solid-space (B5); altrimenti solid-space aspetta le prossime richieste (B2).
+
+### B13. La pausa tra le tappe
+
+Chiuse le tappe dei due progetti, con **tutto fermo** (nessun pacchetto aperto,
+nessun agente al lavoro), si ragiona prima di ripartire. Solo quando tutto è
+deciso e sistemato si apre la tappa successiva (B1).
+
+1. Apri una chat con Claude nel progetto e scrivi:
+
+   ```text
+   Le tappe sono chiuse. Analizza tutte le issue aperte dei due repository con
+   l'etichetta idea e le issue «Proposte di metodo» e «Documenti da
+   sistemare»: per ognuna dimmi se è già decisa e come, oppure che cosa resta
+   da decidere.
+   ```
+
+2. Decidi, issue per issue: un'idea entra nella prossima tappa, resta per dopo
+   o si scarta; ogni proposta di metodo si applica o si scarta, con il motivo;
+   ogni correzione dei documenti si fa.
+3. Claude apre, in ciascun repository, una pull request di soli documenti che
+   registra le decisioni in `docs/DECISIONI.md`, applica le regole di metodo
+   (lo stesso testo nei due repository per le voci comuni), corregge i
+   documenti, prepara la scheda della tappa successiva e chiude con
+   `Closes #N` le issue esaurite; per le altre scrive un commento con la
+   decisione.
+4. Leggila, falla correggere se serve e uniscila (A3).
+5. Passa a B1.
 
 ---
 

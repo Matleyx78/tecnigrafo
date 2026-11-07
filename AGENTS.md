@@ -90,6 +90,11 @@ fallisce per un motivo estraneo al tuo lavoro (la CI, un servizio esterno), se
 per farlo passare violeresti una regola, o se dopo tre tentativi non passa. Gli
 altri motivi per fermarsi sono nei file della tabella.
 
+Prima di fermarti per un dubbio (un buco, un caso che sembra sbagliato),
+controlla se una regola esistente lo decide già, come fa chi rivede
+([revisione.md](docs/agenti/revisione.md), "Che cosa blocca una revisione"): se
+sì, applicala, scrivilo nella pull request e vai avanti.
+
 Quando ti fermi, **non aspettare la CI** (niente `scripts/ci-attendi.sh`):
 commenta nella pull request o nella issue, togli `AA-Presa in carico` e termina
 la sessione. Se il responsabile chiede correzioni, riprendi in carico e fermati
@@ -112,7 +117,9 @@ allo stesso modo.
 - Niente `git commit -s`: il `Signed-off-by` lo aggiunge il responsabile, che ne
   risponde.
 - Nel commit la riga `Assisted-by: <nome dello strumento>`.
-- Nella pull request compila la sezione sull'uso dell'IA del modello.
+- Nella pull request compila la sezione sull'uso dell'IA del modello, con lo
+  strumento **e il modello** (per esempio «Claude Code, Claude Opus 5.5»); lo
+  stesso nei verbali di revisione.
 - Una issue si chiude con `Closes #N` nella descrizione («Chiude» non basta);
   senza issue da chiudere, nessuna riga di chiusura.
 

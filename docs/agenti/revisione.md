@@ -28,6 +28,10 @@ Vale per ogni revisione, di una correzione come di un pacchetto
 - Una garanzia del contratto si verifica **con i test, non con dimostrazioni
   matematiche**: il revisore che teme un ramo non coperto chiede un test che lo
   raggiunga, non un lemma.
+- Il revisore usa un **modello diverso** da quello dell'autore, che la pull
+  request dichiara nella sezione sull'uso dell'IA: se è il tuo stesso modello,
+  non rivederla e dillo al responsabile. Il tuo verbale dice il modello che hai
+  usato ([DECISIONI.md](../DECISIONI.md), 2026-11-07).
 
 ## Le correzioni delle schede si rivedono
 
