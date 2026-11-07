@@ -17,6 +17,7 @@ snap: on
 ortho: off
 drawing: @sources/ac1015-lwpolyline
 units: 0
+documents: Drawing1.cadx, @sources/ac1015-lwpolyline (active)
 pointer: none
 active snap: none
 statistics:
@@ -40,6 +41,7 @@ ortho: off
 drawing: @sources/ac1015-3dface
 units: 0
 unhandled: 3DFACE 1
+documents: Drawing1.cadx, @sources/ac1015-lwpolyline, @sources/ac1015-3dface (active)
 pointer: none
 active snap: none
 statistics:

@@ -5,7 +5,6 @@ LINE
 20,0
 
 !key Ctrl+N
-N
 !report
 !key Ctrl+O
 @sources/ac1015-lwpolyline
@@ -15,7 +14,6 @@ LINE
 10,0
 
 !key Ctrl+O
-C
+!esc
 !report
 !key Ctrl+N
-N

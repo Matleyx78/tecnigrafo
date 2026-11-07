@@ -3,6 +3,7 @@
 ; TRIM in modo standard con !scr on (autocad-taglio.dxf) e con scelta esplicita del solo bordo esterno
 !view 360,0 0.5 1800x400
 !scr on
+; cambia con #570
 OPEN
 ingresso.dxf
 TR
@@ -18,7 +19,6 @@ TR
 !report
 !scr off
 NEW
-N
 !view 510,0 0.5 400x400
 TRIMEXTENDMODE
 0

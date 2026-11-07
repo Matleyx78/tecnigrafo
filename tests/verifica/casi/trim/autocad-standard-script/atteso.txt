@@ -42,6 +42,7 @@ redo:
 snap: on
 ortho: off
 drawing: ingresso.dxf, modified
+documents: Drawing1.cadx, ingresso.dxf (active)
 pointer: none
 active snap: none
 statistics:
@@ -56,7 +57,6 @@ entities:
   258 LINE start=510,-20 end=510,20
 messages:
   Command: NEW
-  Save changes to ingresso.dxf? [Yes/No/Cancel] <Yes>: N
   Command: TRIMEXTENDMODE
   Enter new value for TRIMEXTENDMODE <1>: 0
   Command: PL
@@ -88,6 +88,7 @@ undo:
 redo:
 snap: on
 ortho: off
+documents: Drawing1.cadx, ingresso.dxf, Drawing2.cadx (active)
 pointer: none
 active snap: none
 statistics:

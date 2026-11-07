@@ -17,6 +17,7 @@ ortho: off
 drawing: disegno.cadx
 units: 0
 unhandled: 3DFACE 1
+documents: Drawing1.cadx, disegno.cadx (active)
 pointer: none
 active snap: none
 statistics:
@@ -41,6 +42,7 @@ ortho: off
 drawing: disegno.cadx, modified
 units: 0
 unhandled: 3DFACE 1
+documents: Drawing1.cadx, disegno.cadx (active)
 pointer: none
 active snap: none
 statistics:
@@ -63,6 +65,7 @@ ortho: off
 drawing: disegno.cadx
 units: 0
 unhandled: 3DFACE 1
+documents: Drawing1.cadx, disegno.cadx (active)
 pointer: none
 active snap: none
 statistics:

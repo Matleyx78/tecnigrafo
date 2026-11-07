@@ -3,6 +3,7 @@
 ; Casi a, b, c di autocad-unione.dxf per JOIN in sequenza script (!scr on, ADR 0032 punto 8)
 !view 120,5 0.5 1400x400
 !scr on
+; cambia con #570
 OPEN
 ingresso.dxf
 ; Caso a: due linee allineate contigue

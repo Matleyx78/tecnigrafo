@@ -1,4 +1,5 @@
-; NEW senza modifiche, annullamento con Cancel ed Esc, No scarta, Yes salva
+; NEW su disegno nuovo e su disegni modificati, con e senza file: apre un documento nuovo senza chiedere di salvare
+; cambia con #570
 NEW
 !report
 LINE
@@ -6,13 +7,6 @@ LINE
 10,0
 
 NEW
-C
-!report
-NEW
-!esc
-!report
-NEW
-N
 !report
 LINE
 0,0
@@ -26,4 +20,3 @@ LINE
 
 !report
 NEW
-

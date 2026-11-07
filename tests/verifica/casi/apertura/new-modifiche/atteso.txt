@@ -12,73 +12,33 @@ undo:
 redo:
 snap: on
 ortho: off
+documents: Drawing1.cadx, Drawing2.cadx (active)
 pointer: none
 active snap: none
 statistics:
 
 [report 2]
 entities:
-  257 LINE start=0,0 end=10,0
 messages:
   Command: LINE
   Specify first point: 0,0
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: NEW
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: C
-  *Cancel*
 prompt: Command:
 preview:
 selection: none
 rectangle: none
 undo:
-  Line
 redo:
 snap: on
 ortho: off
+documents: Drawing1.cadx, Drawing2.cadx, Drawing3.cadx (active)
 pointer: none
 active snap: none
 statistics:
-  LINE 1
 
 [report 3]
-entities:
-  257 LINE start=0,0 end=10,0
-messages:
-  Command: NEW
-  *Cancel*
-prompt: Command:
-preview:
-selection: none
-rectangle: none
-undo:
-  Line
-redo:
-snap: on
-ortho: off
-pointer: none
-active snap: none
-statistics:
-  LINE 1
-
-[report 4]
-entities:
-messages:
-  Command: NEW
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
-prompt: Command:
-preview:
-selection: none
-rectangle: none
-undo:
-redo:
-snap: on
-ortho: off
-pointer: none
-active snap: none
-statistics:
-
-[report 5]
 entities:
   257 LINE start=0,0 end=20,0
   258 LINE start=20,0 end=20,10
@@ -88,7 +48,7 @@ messages:
   Specify next point or [Undo]: 20,0
   Specify next point or [Undo]:
   Command: SAVEAS
-  Save drawing as <Drawing1.cadx>: salvato.cadx
+  Save drawing as <Drawing3.cadx>: salvato.cadx
   Command: LINE
   Specify first point: 20,0
   Specify next point or [Undo]: 20,10
@@ -104,6 +64,7 @@ redo:
 snap: on
 ortho: off
 drawing: salvato.cadx, modified
+documents: Drawing1.cadx, Drawing2.cadx, salvato.cadx (active)
 pointer: none
 active snap: none
 statistics:
@@ -113,7 +74,6 @@ statistics:
 entities:
 messages:
   Command: NEW
-  Save changes to salvato.cadx? [Yes/No/Cancel] <Yes>:
 prompt: Command:
 preview:
 selection: none
@@ -122,6 +82,7 @@ undo:
 redo:
 snap: on
 ortho: off
+documents: Drawing1.cadx, Drawing2.cadx, salvato.cadx, Drawing3.cadx (active)
 pointer: none
 active snap: none
 statistics:

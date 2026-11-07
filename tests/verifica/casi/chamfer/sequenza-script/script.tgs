@@ -3,6 +3,7 @@
 ; CHAMFER nella sequenza degli script (!scr on, ADR 0032 punto 8): terminazione dopo opzioni
 !view 270,60 0.25 2400x800
 !scr on
+; cambia con #570
 OPEN
 ingresso.dxf
 ; Impostazione distanze: il comando termina subito dopo i valori

@@ -1,4 +1,5 @@
 ; OPEN di un file .cadx valido: conservazione dei dati non gestiti e QSAVE successivo
+; cambia con #570
 OPEN
 disegno.cadx
 !report

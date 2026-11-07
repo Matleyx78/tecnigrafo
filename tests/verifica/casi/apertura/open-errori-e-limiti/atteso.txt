@@ -9,7 +9,6 @@ messages:
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: OPEN
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
   Enter name of drawing to open: piano.dwg
   Cannot open piano.dwg: only .cadx and .dxf files are supported.
 prompt: Command:
@@ -31,7 +30,6 @@ entities:
   257 LINE start=0,0 end=10,0
 messages:
   Command: OPEN
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
   Enter name of drawing to open: senza-estensione
   Cannot open senza-estensione: only .cadx and .dxf files are supported.
 prompt: Command:
@@ -53,7 +51,6 @@ entities:
   257 LINE start=0,0 end=10,0
 messages:
   Command: OPEN
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
   Enter name of drawing to open: inesistente.dxf
   Cannot open inesistente.dxf: "inesistente.dxf": does not exist
 prompt: Command:
@@ -75,7 +72,6 @@ entities:
   257 LINE start=0,0 end=10,0
 messages:
   Command: OPEN
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
   Enter name of drawing to open: versione-3.cadx
   Cannot open versione-3.cadx: written by a newer version of Tecnigrafo (format 3; this version reads up to 1)
 prompt: Command:

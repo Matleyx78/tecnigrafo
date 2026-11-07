@@ -7,10 +7,11 @@
 ; Layer 0 has color 7 (62) and linetype DASHED (6); ENTITIES is empty.
 ; Reports expose properties, not table handles. Check them before and after
 ; saving and reopening; do not require byte identity for malformed tables.
+; cambia con #570
 OPEN
 tabelle.dxf
 !report
-SAVEAS
+SAVE
 tabelle-riaperte.dxf
 OPEN
 tabelle-riaperte.dxf
@@ -20,7 +21,7 @@ tabelle-riaperte.dxf
 OPEN
 style-layer.dxf
 !report
-SAVEAS
+SAVE
 style-layer-riaperto.dxf
 OPEN
 style-layer-riaperto.dxf

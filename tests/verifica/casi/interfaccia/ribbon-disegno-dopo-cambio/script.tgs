@@ -7,7 +7,6 @@ LINE
 !report
 RIBBONCLOSE
 NEW
-N
 LINE
 0,0
 10,0
@@ -15,7 +14,6 @@ LINE
 !report
 RIBBON
 NEW
-N
 LINE
 0,0
 10,0

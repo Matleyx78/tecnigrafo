@@ -48,12 +48,12 @@ LINE
 0,0
 10,0
 
-; cambia con #369
 CIRCLE
 20,20
 5
 !report
-SAVEAS
+; cambia con #570
+SAVE
 giro.cadx
 OPEN
 giro.cadx
