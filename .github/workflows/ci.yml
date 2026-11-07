@@ -33,7 +33,7 @@ jobs:
       io: ${{ steps.filter.outputs.io }}
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check whether anything besides documentation changed
@@ -84,7 +84,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check that references and other files are not mixed
@@ -112,7 +112,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check formatting
         run: |
           set -o pipefail
@@ -126,8 +126,8 @@ jobs:
     if: needs.changes.outputs.scripts == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Test the scripts
@@ -147,7 +147,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # The pull request is compared with its base to find the touched files.
           fetch-depth: 0
@@ -161,7 +161,7 @@ jobs:
         with:
           version: '6.8.3'
           cache: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti
@@ -216,7 +216,7 @@ jobs:
     env:
       QT_QPA_PLATFORM: offscreen
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -230,10 +230,10 @@ jobs:
           cache: true
       # install-qt-action puts its own Python first on PATH; the oracle wheels
       # are pinned for CPython 3.12 (tests/verifica/oracolo/requirements.txt).
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti
@@ -274,7 +274,7 @@ jobs:
           exit "$status"
       - name: Upload verification reports and images
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verifica-linux
           path: |
@@ -291,7 +291,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -303,7 +303,7 @@ jobs:
         with:
           version: '6.8.3'
           cache: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti
@@ -325,7 +325,7 @@ jobs:
           ctest --preset asan -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verifica-sanitizers
           path: |
@@ -346,7 +346,7 @@ jobs:
       LSAN_OPTIONS: suppressions=${{ github.workspace }}/tests/sanitizer/lsan.supp:print_suppressions=0
       TG_VERIFICA_SOURCES_DIR: ${{ github.workspace }}/build/verifica-sorgenti
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -354,7 +354,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build clang-18 libclang-rt-18-dev libgtest-dev
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti
@@ -411,7 +411,7 @@ jobs:
           PYTHON
       - name: Upload failing inputs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fuzz-crash
           path: build/fuzz-crash/
@@ -421,9 +421,9 @@ jobs:
     name: Windows (MSVC)
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -433,7 +433,7 @@ jobs:
           version: '6.8.3'
           arch: win64_msvc2022_64
           cache: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti
@@ -465,7 +465,7 @@ jobs:
           exit $status
       - name: Upload verification reports and images
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verifica-windows
           path: |
@@ -478,9 +478,9 @@ jobs:
     name: macOS (Apple Clang)
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -490,7 +490,7 @@ jobs:
         with:
           version: '6.8.3'
           cache: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti
@@ -512,7 +512,7 @@ jobs:
           ctest --preset ci -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verifica-macos
           path: |

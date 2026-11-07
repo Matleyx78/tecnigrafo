@@ -27,7 +27,7 @@ jobs:
     # timeout-minutes of this job: variables go in the steps that need them.
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -48,7 +48,7 @@ jobs:
       - name: Remove the Qt installer log
         run: rm -f aqtinstall.log
       # The oracle of the verification cases, pinned like in ci.yml.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install the oracle
