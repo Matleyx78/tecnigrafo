@@ -100,19 +100,34 @@ const ThemeTokens& themeTokens(Theme theme) {
 
 void applyTheme(QApplication& application, Theme theme) {
     const ThemeTokens& tokens = themeTokens(theme);
-    // Fusion under the proxy style, never a native style or palette which
-    // vary by OS (docs/adr/0009, point 5). The style comes first: setting
-    // a style resets the palettes that it polishes. The application owns
-    // the style, and QApplication deletes the previous one.
-    // clang-analyzer does not see either owner: Qt's headers are system
-    // headers, whose functions it assumes never take a pointer, and the
-    // parent is set in Style's constructor, in another file. QObject
-    // ownership is the documented contract of QApplication::setStyle.
-    // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
-    QApplication::setStyle(new Style(tokens, &application));
-    QApplication::setPalette(paletteFrom(tokens));
+    // Every main window applies its theme when it is built. Installing the
+    // same style, palette or style sheet again would repolish every widget
+    // of every window, which makes building a window several times slower.
+    const Style* current = installedStyle();
+    // Decided before setStyle, which deletes the current style.
+    const bool newStyle = current == nullptr || current->tokens() != tokens;
+    if (newStyle) {
+        // Fusion under the proxy style, never a native style or palette
+        // which vary by OS (docs/adr/0009, point 5). The style comes
+        // first: setting a style resets the palettes that it polishes. The
+        // application owns the style, and QApplication deletes the
+        // previous one.
+        // clang-analyzer does not see either owner: Qt's headers are system
+        // headers, whose functions it assumes never take a pointer, and the
+        // parent is set in Style's constructor, in another file. QObject
+        // ownership is the documented contract of QApplication::setStyle.
+        // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
+        QApplication::setStyle(new Style(tokens, &application));
+    }
+    const QPalette palette = paletteFrom(tokens);
+    if (newStyle || QApplication::palette() != palette) {
+        QApplication::setPalette(palette);
+    }
     // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
-    application.setStyleSheet(styleSheet(tokens));
+    const QString sheet = styleSheet(tokens);
+    if (application.styleSheet() != sheet) {
+        application.setStyleSheet(sheet);
+    }
 }
 
 render::SceneStyle sceneStyle(Theme theme) {

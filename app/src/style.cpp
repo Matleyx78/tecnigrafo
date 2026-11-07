@@ -3,6 +3,7 @@
 
 #include "style.hpp"
 
+#include <QApplication>
 #include <QComboBox>
 #include <QDockWidget>
 #include <QPainter>
@@ -11,6 +12,7 @@
 #include <QPixmap>
 #include <QRegularExpression>
 #include <QString>
+#include <QStyle>
 #include <QStyleFactory>
 #include <QStyleOption>
 #include <QTabBar>
@@ -136,6 +138,19 @@ QString styleSheet(const ThemeTokens& tokens) {
     assert(!sheet.contains(QRegularExpression(QStringLiteral(R"(\{[A-Za-z]+\})"))) &&
            "a token of the style sheet has no colour");
     return sheet;
+}
+
+const Style* installedStyle() {
+    QStyle* style = QApplication::style();
+    if (style == nullptr) {
+        return nullptr;
+    }
+    if (const auto* own = qobject_cast<const Style*>(style)) {
+        return own;
+    }
+    // With a style sheet, QApplication wraps the installed style in its own
+    // style sheet style, which becomes the parent of the installed one.
+    return style->findChild<Style*>();
 }
 
 Style::Style(const ThemeTokens& tokens, QObject* parent)

@@ -49,4 +49,7 @@ private:
     ThemeTokens m_tokens;
 };
 
+/// The Style that applyTheme installed, or nullptr if there is none.
+[[nodiscard]] const Style* installedStyle();
+
 }  // namespace tg::app

@@ -25,6 +25,8 @@ struct ThemeTokens {
     QColor chrome, ribbon, group, tabs, panel, field, canvas;  ///< surfaces
     QColor border, text, textSecondary, accent, selection;
     QColor iconGeo, iconPt, iconCost, iconEsist;  ///< docs/adr/0040, point 1
+
+    friend bool operator==(const ThemeTokens&, const ThemeTokens&) = default;
 };
 
 [[nodiscard]] const ThemeTokens& themeTokens(Theme theme);

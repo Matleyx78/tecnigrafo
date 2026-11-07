@@ -25,16 +25,6 @@ QApplication& application() {
     return *qobject_cast<QApplication*>(QApplication::instance());
 }
 
-// With a style sheet, QApplication wraps the installed style in its own
-// style sheet style, which becomes the parent of the installed one.
-const Style* installedStyle() {
-    QStyle* style = QApplication::style();
-    if (const auto* own = qobject_cast<const Style*>(style)) {
-        return own;
-    }
-    return style->findChild<Style*>();
-}
-
 TEST(StyleTest, SheetContainsTheColoursOfTheTokens) {
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
         const ThemeTokens& tokens = themeTokens(theme);
@@ -62,8 +52,18 @@ TEST(StyleTest, SheetAndStyleChangeWithTheTheme) {
         ASSERT_NE(style, nullptr);
         ASSERT_NE(style->baseStyle(), nullptr);
         EXPECT_EQ(style->baseStyle()->objectName(), QStringLiteral("fusion"));
-        EXPECT_EQ(style->tokens().text, themeTokens(theme).text);
+        EXPECT_EQ(style->tokens(), themeTokens(theme));
     }
+}
+
+TEST(StyleTest, ApplyingTheSameThemeAgainKeepsTheStyle) {
+    applyTheme(application(), Theme::Dark);
+    const Style* style = installedStyle();
+    ASSERT_NE(style, nullptr);
+    applyTheme(application(), Theme::Dark);
+    EXPECT_EQ(installedStyle(), style);
+    applyTheme(application(), Theme::Light);
+    EXPECT_EQ(installedStyle()->tokens(), themeTokens(Theme::Light));
 }
 
 TEST(StyleTest, ScrollBarsAreThinAndRowsAreDense) {
