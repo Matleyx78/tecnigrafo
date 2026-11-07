@@ -35,6 +35,15 @@ std::optional<g::Curve> curveOf(const Entity& entity) {
     return std::nullopt;
 }
 
+std::pair<Vec2, Vec2> arcEndpoints(const Arc& arc) {
+    const auto ends = g::endpoints(*curveOf(arc));
+    if (ends.hasValue()) {
+        return {fromPoint(ends.value().start), fromPoint(ends.value().end)};
+    }
+    const auto geometry = arc.geometry();
+    return {startPoint(geometry), endPoint(geometry)};
+}
+
 g::PolylineSegment pieceOf(const PolylineSegment& segment) {
     return g::PolylineSegment{toPoint(segment.start), toPoint(segment.end),
                               segment.isArc() ? segment.bulge : 0.0};
