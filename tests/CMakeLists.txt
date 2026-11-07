@@ -190,6 +190,7 @@ if(TG_BUILD_APP)
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
         app/file_menu_test.cpp
+        app/gallery_test.cpp
         app/icons_test.cpp
         app/layer_panel_test.cpp
         app/properties_panel_test.cpp
@@ -210,12 +211,13 @@ if(TG_BUILD_APP)
     # a folder for what the tests write, the program and the test tool
     # confronta_immagini (tests/verifica).
     target_compile_definitions(tg_app_tests PRIVATE
+        TG_GALLERY="$<TARGET_FILE:tecnigrafo-galleria>"
         TG_ICONS_DIR="${PROJECT_SOURCE_DIR}/resources/icons"
         TG_SCRIPT_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/script/dati"
         TG_APP_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/app-output"
         TG_TECNIGRAFO="$<TARGET_FILE:tecnigrafo>"
         TG_CONFRONTA_IMMAGINI="$<TARGET_FILE:confronta_immagini>")
-    add_dependencies(tg_app_tests tecnigrafo confronta_immagini)
+    add_dependencies(tg_app_tests tecnigrafo tecnigrafo-galleria confronta_immagini)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
     # Most cases build a whole main window, which takes about a second each
