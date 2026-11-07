@@ -8,6 +8,11 @@
 - **Riferimenti:** non servono: oggi c'è un solo ambiente, quindi nessun comando
   cambia; un ambiente di prova nei test di unità
 - **Dipende da:** P26
+- **Corretta:** 2026-11-07, con la decisione del responsabile su B1 del
+  verbale della revisione delle interfacce (P23,
+  [#563](https://github.com/Matleyx78/tecnigrafo/issues/563);
+  [DECISIONI.md](../../DECISIONI.md)): `U`, `UNDO` e `REDO` in tutti gli
+  ambienti
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punto 6;
   [ADR 0026](../../adr/0026-descrizione-dei-comandi.md);
@@ -46,8 +51,14 @@
    in this environment.` e resta a `Command:`, come per un comando sconosciuto,
    senza transazione. `Invio` dopo, che ripete l'ultimo comando, segue la stessa
    regola.
-4. Il registro dice gli ambienti di un comando per nome
-   (`environmentsOf(std::string_view name)`), per `app` (P30).
+4. **`U`, `UNDO` e `REDO` valgono in tutti gli ambienti** (decisione B1): non
+   passano dal registro, sono del runner, e ogni sessione ha la sua cronologia.
+   `Invio` li ripete in ogni ambiente, con la stessa regola.
+5. Il registro dice gli ambienti di un comando per nome
+   (`environmentsOf(std::string_view name)`), per `app` (P30). Per `U`, `UNDO`
+   e `REDO` dà la **lista vuota**, che vuol dire «tutti gli ambienti»: la
+   stessa convenzione delle azioni globali di `app` (P30, decisione B7). Una
+   lista vuota in una `CommandDescription` vuol dire lo stesso.
 
 ## Regole della tappa che valgono qui
 
@@ -58,9 +69,15 @@
 
 - `command_registry_test.cpp`: un comando di prova con `environments{"test"}`;
   `environmentsOf` per un nome e per un alias.
+- `command_registry_test.cpp`: `environmentsOf` per `U`, `UNDO` e `REDO` dà la
+  lista vuota.
 - `command_runner_test.cpp`: nell'ambiente `drawing2d` il comando di prova non
   parte e la cronologia ha il messaggio; nell'ambiente `test` parte, e `LINE` non
   parte; `Invio` che ripete un comando di un altro ambiente non lo esegue.
+- `command_runner_test.cpp` (B1): nell'ambiente `test` il comando di prova
+  modifica il documento; `U` lo annulla, `REDO` lo rifà; `U` e poi `Invio`
+  annullano due volte, senza il messaggio di P27. Lo stesso in `drawing2d` con
+  `LINE`.
 
 ## Fatto quando
 

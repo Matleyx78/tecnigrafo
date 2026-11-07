@@ -8,6 +8,10 @@
 - **Riferimenti:** non servono: il comportamento non cambia; i test di unità e i
   casi di verifica esistenti, invariati, sono la prova
 - **Dipende da:** P18, P23
+- **Corretta:** 2026-11-07, con il verbale della revisione delle interfacce
+  (P23, [#563](https://github.com/Matleyx78/tecnigrafo/issues/563)): R1 (il file
+  si aggiorna prima della notifica), N1 (il file dato al runner è un prestito),
+  N2 (inizializzatori dei test), N3 (il rapporto legge il file dal runner)
 - **Modulo:** `edit` (più i chiamanti in `cmd`, `script` e `app`, con un cambio
   meccanico)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 2 e
@@ -33,7 +37,11 @@ cronologia resta di `Editor`, e «modificato» resta calcolato da lei.
 - `script/src/report.cpp`
 - `app/src/main_window.cpp`
 - `tests/edit/document_file_test.cpp` (nuovo), `tests/edit/editor_test.cpp`,
-  `tests/cmd/file_commands_test.cpp`, `tests/CMakeLists.txt`
+  `tests/cmd/file_commands_test.cpp`, `tests/app/file_menu_test.cpp`,
+  `tests/CMakeLists.txt`
+- `tests/cmd/arc_command_test.cpp`, `tests/cmd/circle_command_test.cpp`,
+  `tests/cmd/text_command_test.cpp`: solo gli inizializzatori diretti di
+  `CommandContext` (punto 3)
 
 ## Cosa fare
 
@@ -84,14 +92,31 @@ private:
 - `CommandContext` ha `edit::DocumentFile& file`, accanto a `editor`.
 - `CommandRunner` ha `void setDocumentFile(edit::DocumentFile* file)`, come
   `setFileAccess`; finché non gliene si dà uno, usa un `DocumentFile` suo. Così
-  i costruttori e i test di oggi non cambiano.
+  i costruttori e i test di oggi non cambiano. Il `DocumentFile` dato è un
+  prestito: vive più a lungo del runner, e lo dice il commento di
+  `setDocumentFile`, come per `setFileAccess`.
 - `NEW`, `OPEN`, `SAVE`, `SAVEAS` e `QSAVE` leggono e scrivono il nome e il file
   dal contesto, con gli stessi messaggi di oggi: dove oggi chiamano
   `markSaved(name)`, chiamano `markSaved()` e `file.setSaved(name)`; dove
-  chiamano `replaceDocument(doc, name)`, chiamano `replaceDocument(doc)` e poi
-  `file.setSaved(name)`, o `file.reset("Drawing1.cadx")` per `NEW`.
+  chiamano `replaceDocument(doc, name)`, chiamano **prima**
+  `file.setSaved(name)`, o `file.reset("Drawing1.cadx")` per `NEW`, e **poi**
+  `replaceDocument(doc)`. L'ordine conta: `replaceDocument` notifica dentro la
+  chiamata, e chi ascolta (il listener di `MainWindow`, che riconosce un `OPEN`
+  riuscito e lo mette nei file recenti) deve trovare documento e file già
+  coerenti, come oggi. Un errore di lettura non tocca né il file né il
+  documento.
+- `CommandRunner` ha anche
+  `[[nodiscard]] const edit::DocumentFile& documentFile() const`, il file in uso
+  (il suo o quello dato con `setDocumentFile`).
 - `MainWindow` tiene un `DocumentFile`, lo dà al runner e lo legge per il titolo,
-  i dialoghi e la chiusura; il rapporto degli script lo legge dal runner.
+  i dialoghi e la chiusura; il rapporto degli script lo legge dal runner, con
+  `documentFile()` (`ReportInput` ha già il runner: non cambia).
+- I test che costruiscono un `CommandContext` con gli inizializzatori diretti
+  (`CommandContext context{editor, {}, …}` in `arc_command_test.cpp`,
+  `circle_command_test.cpp`, `text_command_test.cpp` e
+  `file_commands_test.cpp`) non compilano più, perché `file` è un riferimento
+  senza valore predefinito: si adeguano in modo meccanico, con un
+  `DocumentFile` locale, senza toccare asserzioni né risultati.
 
 ### 4. Che cosa non cambia
 
@@ -111,6 +136,14 @@ Messaggi, richieste, cronologia, rapporto degli script e casi di verifica.
   `isModified`, riscritti con le firme nuove, con gli stessi risultati.
 - `file_commands_test.cpp`: `SAVEAS` poi `QSAVE` scrivono nel file del contesto;
   un `DocumentFile` dato con `setDocumentFile` riceve il nome.
+- `file_commands_test.cpp`, con un listener installato sull'editor: da
+  `Drawing1.cadx` senza file, `OPEN plan.dxf`; **dentro** la notifica il file
+  dice `plan.dxf`, `hasFile` vero e `isModified` falso. Da un documento aperto
+  come `plan.dxf`, `NEW`: dentro la notifica il file dice `Drawing1.cadx` e
+  `hasFile` falso. Un `OPEN` che non legge il file non notifica e lascia nome e
+  file com'erano (R1 del verbale di P23).
+- `file_menu_test.cpp`: il test di oggi sui file recenti dopo `OPEN`
+  (`SavesOpensCopiesAndUpdatesTitleAndRecents`) passa invariato.
 
 ## Fatto quando
 

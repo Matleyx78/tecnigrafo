@@ -1199,3 +1199,52 @@ i rimandi ai documenti che cambia.
   installa a parte anche su Debian 13. Lo scrive
   l'[ADR 0043](adr/0043-qt-6-12.md), che sostituisce in parte l'ADR 0028; lo
   applica 0.7.5-P1, la cui [scheda](tappe/0.7.5/P1-immagini-ci.md) è aggiornata.
+- **2026-11-07 — Buchi delle schede P24–P31: le decisioni.** Il responsabile
+  decide i buchi B1–B9 del verbale della revisione delle interfacce (0.7.5-P23,
+  [#563](https://github.com/Matleyx78/tecnigrafo/issues/563)), una decisione per
+  commento, letto anche con la revisione del verbale. Tutti restano in
+  Tecnigrafo.
+  - [B1](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711336484), P27: `U`, `UNDO` e `REDO` valgono in tutti gli ambienti, e
+    `Invio` li ripete con la stessa regola; per questi nomi `environmentsOf`
+    dà la lista vuota, che vuol dire «tutti gli ambienti».
+  - [B2](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711336608), P28: il testo scritto e non ancora consegnato al runner (riga di
+    comando e campi dell'immissione dinamica, con il campo attivo) è della
+    sessione: si conserva lasciandola, torna tornandoci, anche da *Start*, e
+    non arriva mai a un'altra sessione.
+  - [B3](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711336738), P28b: un file è aperto al più in un documento; `SAVEAS`, `SAVE` e
+    `QSAVE` rifiutano un nome aperto in un altro documento, prima della
+    domanda di sostituzione, con `Cannot save <name>: it is open in another
+    document.`
+  - [B4](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711336858), P29: chiusa la scheda attiva diventa attiva quella a destra, se
+    no quella a sinistra, se no *Start*; chiudere una scheda non attiva non
+    cambia l'attiva.
+  - [B5](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711336976), P29: chiudere la finestra chiude i documenti uno per uno,
+    nell'ordine delle schede, come la crocetta di ciascuno; un *Cancel* o un
+    salvataggio non riuscito ferma la chiusura, e i documenti già chiusi
+    restano chiusi (ADR 0041, punto 3, come letto nella revisione del verbale).
+  - [B6](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711337104), P30: si corregge la scheda secondo l'ADR 0041, punto 7, che
+    resta com'è: il tipo di documento crea, apre e salva, e la cornice passa
+    dal tipo. Per la misura del pacchetto il lavoro va in un pacchetto nuovo,
+    [P30b](tappe/0.7.5/P30b-aprire-e-salvare-dal-tipo.md).
+  - [B7](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711337203), P29, P30: un'azione ha gli ambienti in cui compare, con la lista
+    vuota per «tutti» (le azioni globali), e un flag separato «richiede un
+    documento»; niente «ambiente Start».
+  - [B8](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711337347), P30, P31: l'ambiente scelto resta della sessione (ADR 0041,
+    punto 1); che cosa succede con un comando in corso non si vede in questa
+    tappa e lo sceglie chi implementa P31.
+  - [B9](https://github.com/Matleyx78/tecnigrafo/issues/563#issuecomment-6711337477), P30, P31: l'indicatore dell'ambiente resta anche con *Start*,
+    senza ambiente spuntato, e il suo menu funziona.
+
+  Le schede si correggono anche con R1 (P24, P28b: il file e i recenti dopo
+  `OPEN`) e con le note N1–N4 del verbale e della revisione, che non chiedono
+  decisioni. Cambiano le schede [P24](tappe/0.7.5/P24-ciclo-di-vita-del-file.md),
+  [P25](tappe/0.7.5/P25-tabelle.md),
+  [P26](tappe/0.7.5/P26-protocollo-dei-comandi.md),
+  [P27](tappe/0.7.5/P27-ambienti-nei-comandi.md),
+  [P28](tappe/0.7.5/P28-sessione-per-documento.md),
+  [P28b](tappe/0.7.5/P28b-new-e-open.md),
+  [P29](tappe/0.7.5/P29-schede-e-pagina-iniziale.md),
+  [P30](tappe/0.7.5/P30-ambiente-attivo-e-tipi.md) e
+  [P31](tappe/0.7.5/P31-ambiente-non-ospitato.md), nasce P30b, e il piano della
+  [tappa 0.7.5](tappe/0.7.5-correzione-di-rotta.md) lo scrive in "Modifiche al
+  piano". Nessun ADR cambia. P23 (#563) si chiude.

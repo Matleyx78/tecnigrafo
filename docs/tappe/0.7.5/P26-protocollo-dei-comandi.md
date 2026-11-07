@@ -8,6 +8,9 @@
 - **Riferimenti:** non servono: il comportamento non cambia; i test di unità e i
   casi di verifica esistenti, invariati, sono la prova
 - **Dipende da:** P15, P25
+- **Corretta:** 2026-11-07, con il verbale della revisione delle interfacce
+  (P23, [#563](https://github.com/Matleyx78/tecnigrafo/issues/563)): N2
+  (inizializzatori dei test)
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punto 5;
   [ADR 0005](../../adr/0005-comandi-e-annullamento.md);
@@ -36,6 +39,9 @@ runner del disegno: non si inventa un ingresso universale.
 - `cmd/src/command_protocol.cpp` (nuovo), solo se il punto 3 sposta funzioni
 - `cmd/CMakeLists.txt`
 - `tests/cmd/command_protocol_test.cpp` (nuovo), `tests/CMakeLists.txt`
+- `tests/cmd/arc_command_test.cpp`, `tests/cmd/circle_command_test.cpp`,
+  `tests/cmd/text_command_test.cpp`, `tests/cmd/file_commands_test.cpp`: solo
+  gli inizializzatori diretti di `CommandContext` (punto 2)
 
 ## Cosa fare
 
@@ -68,7 +74,11 @@ runner del disegno: non si inventa un ingresso universale.
    ```
 
    I comandi continuano a scrivere `context.editor`, `context.message(…)`:
-   nessun comando cambia.
+   nessun comando cambia. I test che costruiscono un `CommandContext` con gli
+   inizializzatori diretti (`CommandContext context{editor, …}`, già adeguati
+   da P24) non compilano più, perché il primo sotto-oggetto è ora
+   `ProtocolContext`: si adeguano in modo meccanico, senza toccare asserzioni né
+   risultati.
 3. **Runner:** resta il runner del disegno. Le funzioni che non usano niente di
    2D (per esempio riconoscere una parola chiave in un testo scritto) passano in
    `command_protocol.*` come funzioni libere, con test loro; le altre restano.
@@ -86,7 +96,8 @@ runner del disegno: non si inventa un ingresso universale.
 - `command_protocol_test.cpp`: si compila includendo solo `command_protocol.hpp`
   (nessuna dipendenza da `core`, `edit`, `io`); le funzioni spostate al punto 3
   con i loro casi.
-- I test di oggi di `cmd` passano senza modifiche, salvo gli `#include`.
+- I test di oggi di `cmd` passano senza modifiche, salvo gli `#include` e gli
+  inizializzatori diretti di `CommandContext` (punto 2).
 
 ## Fatto quando
 

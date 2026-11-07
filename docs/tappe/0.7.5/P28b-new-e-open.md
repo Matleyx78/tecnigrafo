@@ -7,6 +7,12 @@
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.7.5-R28b]` (#…), agente gemini
 - **Dipende da:** P27, P28, R28b
+- **Corretta:** 2026-11-07, con la decisione del responsabile su B3 del verbale
+  della revisione delle interfacce (P23,
+  [#563](https://github.com/Matleyx78/tecnigrafo/issues/563);
+  [DECISIONI.md](../../DECISIONI.md)): un file aperto in un solo documento; più
+  R1 (i file recenti con l'ospite), N1 (durata dell'ospite) e N3 (che cosa
+  riceve il rapporto)
 - **Modulo:** `cmd` (più l'ospite dei documenti in `script` e in `app`)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 2 e
   3; [ADR 0021](../../adr/0021-comandi-dei-file.md);
@@ -34,7 +40,8 @@ già le sessioni nuove.
   `cmd/src/command_runner.cpp` (l'ospite nel contesto)
 - `cmd/src/commands/file_commands.cpp`
 - `script/include/tg/script/level1.hpp`, `script/src/level1.cpp`,
-  `script/src/report.cpp`
+  `script/include/tg/script/report.hpp`, `script/src/report.cpp`, e i chiamanti
+  di `writeState` se `ReportInput` cambia (punto 3)
 - `app/src/main_window.hpp`, `app/src/main_window.cpp`,
   `app/src/script_session.cpp`
 - `tests/cmd/file_commands_test.cpp`, `tests/script/level1_test.cpp`,
@@ -72,6 +79,22 @@ costruiscono da solo) fa `NEW` e `OPEN` come oggi, sostituendo il documento:
 nessun uso nel programma, nei due livelli di script o nel server MCP resta senza
 ospite.
 
+L'ospite è un prestito: vive più a lungo di tutti i runner a cui è dato, e lo
+dice il commento di `setDocumentHost`. Quando `NEW` o `OPEN` aggiunge e attiva
+un documento, il runner da cui il comando parte non si distrugge prima che il
+comando finisca, e un comando sospeso nel documento che torna attivo resta
+sospeso.
+
+**Un file è aperto in un solo documento** (decisione B3). `findOpen` dà al più
+un documento, perché nessun comando ne crea un secondo con lo stesso file:
+`SAVEAS`, `SAVE` e `QSAVE`, con un ospite, rifiutano un nome che `findOpen` dà
+per un **altro** documento. Il rifiuto arriva prima della domanda di
+sostituzione e niente si scrive: `Cannot save <name>: it is open in another
+document.`, con la forma di oggi per un salvataggio non riuscito. Il confronto
+è quello di `findOpen`, sullo stesso testo di `DocumentFile::name()`, senza
+normalizzare i percorsi. Salvare il documento sul suo stesso file resta
+permesso, come oggi.
+
 ### 2. `NEW` e `OPEN` con l'ospite
 
 - **`NEW`:** niente richiesta di salvare; un documento nuovo vuoto, chiamato
@@ -99,7 +122,19 @@ ospite.
   vederle e chiuderle le fa P29.
 - **Rapporto:** il campo `documents:` quando i documenti aperti sono più di uno
   ([rapporto.md](../../verifica/rapporto.md)); gli altri campi descrivono il
-  documento attivo, come prima.
+  documento attivo, come prima. `ReportInput` riceve **esplicitamente** il file
+  dell'attivo e l'elenco dei documenti aperti, in ordine di apertura, con quale
+  è attivo: non si deducono dai nomi né dagli editor. La forma (campi nuovi di
+  `ReportInput` o un accessor dell'ospite) la sceglie chi implementa, e la
+  scrive nella pull request.
+- **File recenti** (R1 del verbale di P23). Con l'ospite, `OPEN` aggiunge una
+  sessione con `addDocument` e non chiama più `replaceDocument`: il listener
+  dell'editor nuovo non scatta per l'apertura, e il percorso di oggi
+  (`m_pendingOpen` nel listener di `MainWindow`) non registrerebbe più il file.
+  Un file aperto con `OPEN`, dal menu, dalla riga di comando o dai recenti,
+  entra nei file recenti come oggi. Se attivare un file già aperto lo porti in
+  cima ai recenti lo sceglie chi implementa (non cambia esito né messaggi), con
+  un test e una riga nella pull request.
 
 ## Regole della tappa che valgono qui
 
@@ -116,10 +151,19 @@ ospite.
   disegno appena creato ne aggiunge uno, e il disegno resta; `OPEN` con un
   documento modificato ne aggiunge uno; `OPEN` di un file già aperto lo attiva e scrive il messaggio; senza ospite,
   `NEW` sostituisce come oggi.
+- `file_commands_test.cpp` (B3), con un ospite di prova: A aperto come
+  `a.cadx`, B come `b.cadx`; in B `SAVEAS a.cadx` scrive `Cannot save a.cadx: it
+  is open in another document.`, non chiede di sostituire, non scrive il file,
+  e B resta `b.cadx`, con la stessa cronologia. Lo stesso con `SAVE a.cadx` (la
+  copia). In A `SAVEAS a.cadx` salva come oggi. Senza ospite, `SAVEAS a.cadx`
+  chiede di sostituire come oggi.
 - `level1_test.cpp`, `report_test.cpp`: due documenti aperti danno `documents:`
   con l'attivo segnato; uno solo non lo scrive.
 - `file_menu_test.cpp`: `Ctrl+N` con un disegno modificato apre una sessione
   nuova senza domanda.
+- `file_menu_test.cpp` (R1): `OPEN plan.dxf` dal menu con un disegno aperto
+  aggiunge una sessione, e `plan.dxf` è in cima ai file recenti; lo stesso con
+  `OPEN` scritto nella riga di comando.
 
 ## Fatto quando
 
