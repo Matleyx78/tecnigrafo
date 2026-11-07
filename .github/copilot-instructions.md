@@ -29,7 +29,7 @@ build). Non installare niente.
 
 ```sh
 export TG_BUILD_SUFFIX=-copilot
-export CMAKE_PREFIX_PATH=/home/runner/qt/Qt/6.8.3/gcc_64
+export CMAKE_PREFIX_PATH=/home/runner/qt/Qt/6.12.0/gcc_64
 git submodule update --init third_party/solid-space
 scripts/controlla.sh --tidy
 ```

@@ -77,7 +77,7 @@ sono memorizzate automaticamente.
 
 ## Compilare
 
-Servono un compilatore C++20, CMake ≥ 3.24, Ninja e Qt ≥ 6.8 (solo il modulo Widgets).
+Servono un compilatore C++20, CMake ≥ 3.24, Ninja e Qt ≥ 6.12 (solo il modulo Widgets).
 GoogleTest viene scaricato da CMake se non è installato.
 
 Il kernel geometrico, solid-space, è un sottomodulo git: dopo il clone, e dopo
@@ -96,21 +96,25 @@ repository Debian sono di un'altra versione):
 [docs/AMBIENTE-SVILUPPO.md](docs/AMBIENTE-SVILUPPO.md). In breve:
 
 ```sh
-sudo apt install build-essential cmake ninja-build git qt6-base-dev libgtest-dev
-cmake --preset release
+sudo apt install build-essential cmake ninja-build git pipx libgl-dev \
+    libxkbcommon-dev libxcb-cursor0 libgtest-dev
+pipx install aqtinstall
+aqt install-qt linux desktop 6.12.0 linux_gcc_64 --outputdir ~/Qt
+cmake --preset release -DCMAKE_PREFIX_PATH=$HOME/Qt/6.12.0/gcc_64
 cmake --build --preset release
 ctest --preset release
 ./build/release/app/tecnigrafo
 ```
 
-Debian 12 e Ubuntu 24.04 hanno Qt 6.4: non basta (ADR 0028). Installa Qt 6.8 a
-parte (installer ufficiale o aqtinstall) e passa a CMake
-`-DCMAKE_PREFIX_PATH=<cartella di Qt 6.8>`; quei sistemi non si provano in CI.
+Nessuna distribuzione ha Qt 6.12 nei pacchetti, nemmeno Debian 13, che ha la 6.8
+(ADR 0043): Qt si installa a parte, con aqtinstall come qui sopra o con
+l'installer ufficiale, e si indica a CMake con `CMAKE_PREFIX_PATH`. Lo stesso
+vale su Debian 12 e Ubuntu 24.04, che però non si provano in CI.
 
 ### Windows
 
 Installa Visual Studio 2022 Community (carico di lavoro "Sviluppo di applicazioni
-desktop con C++") e Qt 6.8 per MSVC 2022 64-bit con l'installer ufficiale.
+desktop con C++") e Qt 6.12 per MSVC 2022 64-bit con l'installer ufficiale.
 
 Serve un terminale **a 64 bit**. Il collegamento "Developer PowerShell for VS 2022"
 del menu Start apre un ambiente a 32 bit, che non si collega a Qt `msvc2022_64`.
@@ -124,13 +128,13 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 La configurazione deve indicare il compilatore `Hostx64/x64/cl.exe`. Poi:
 
 ```powershell
-cmake --preset release -DCMAKE_PREFIX_PATH=C:/Qt/6.8.3/msvc2022_64
+cmake --preset release -DCMAKE_PREFIX_PATH=C:/Qt/6.12.0/msvc2022_64
 cmake --build --preset release
 ctest --preset release
 ```
 
 Prima di avviare `tecnigrafo.exe`, esegui `windeployqt` sull'eseguibile oppure aggiungi
-`C:\Qt\6.8.3\msvc2022_64\bin` al `PATH`.
+`C:\Qt\6.12.0\msvc2022_64\bin` al `PATH`.
 
 ### macOS
 

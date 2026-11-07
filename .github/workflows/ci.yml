@@ -18,6 +18,17 @@ on:
 permissions:
   contents: read
 
+# docs/adr/0043, point 3: aqtinstall 3.3.0, the latest release, cannot install
+# Qt 6.11 or later on Windows. Until a release can, every Qt step installs
+# aqtinstall from this commit of its main branch, which contains 7e5a5c3
+# ("Support Qt 6.11+ for Windows x64"), with py7zr pinned because that
+# aqtinstall asks for it without an upper bound. When a release supports Qt
+# 6.12 on Windows, drop these two values and the aqtsource and py7zrversion
+# lines of the Qt steps. The same values are in copilot-setup-steps.yml.
+env:
+  TG_AQT_SOURCE: git+https://github.com/miurahr/aqtinstall.git@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7
+  TG_PY7ZR_VERSION: '==1.1.4'
+
 # A newer push cancels the run of a pull request, never the run of main: the
 # whole-project tidy takes long and must not be cancelled by the next merge.
 concurrency:
@@ -159,7 +170,9 @@ jobs:
           sudo apt-get install -y ninja-build libgtest-dev clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
@@ -226,7 +239,9 @@ jobs:
           sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       # install-qt-action puts its own Python first on PATH; the oracle wheels
       # are pinned for CPython 3.12 (tests/verifica/oracolo/requirements.txt).
@@ -301,7 +316,9 @@ jobs:
           sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
@@ -430,7 +447,9 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           arch: win64_msvc2022_64
           cache: true
       - uses: actions/cache@v6
@@ -488,7 +507,9 @@ jobs:
         run: brew install ninja
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
           cache: true
       - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''

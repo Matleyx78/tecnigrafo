@@ -20,9 +20,11 @@ servono anche a [solid-space](https://github.com/Matleyx78/solid-space), i cui
 strumenti di compilazione sono nel suo
 [AMBIENTE-SVILUPPO.md](https://github.com/Matleyx78/solid-space/blob/main/docs/AMBIENTE-SVILUPPO.md).
 
-Debian 13 (trixie) ha Qt 6.8 nei pacchetti (minimo del progetto, ADR 0028).
-Debian 12 (bookworm) ha Qt 6.4: serve Qt 6.8 installato a parte, vedi il
-[README](../README.md). Per macOS vedi il [README](../README.md).
+Il progetto chiede Qt 6.12 ([ADR 0043](adr/0043-qt-6-12.md)), che nessuna
+distribuzione ha nei pacchetti: Debian 13 (trixie) ha la 6.8, Debian 12
+(bookworm) la 6.4. Su Debian Qt si installa a parte con aqtinstall (sezione 2.2);
+su Windows con l'installer ufficiale (sezione 4.1). Per macOS vedi il
+[README](../README.md).
 
 ## 1. Quale ambiente: Debian, WSL o Windows
 
@@ -37,7 +39,7 @@ due compilatori, due installazioni di Qt, due cartelle `build`, e anche `git` e
 | Dove scrivo i comandi | PowerShell, prompt `PS C:\...>` | terminale Debian, prompt `utente@PC:~$` |
 | Dove sta il progetto | `C:\progetti\tecnigrafo` | `~/progetti/tecnigrafo`, dentro Debian |
 | Compilatore | MSVC, quello di Visual Studio | GCC di Debian |
-| Qt | installer ufficiale, `C:\Qt\6.8.3\msvc2022_64` | `apt install qt6-base-dev` |
+| Qt | installer ufficiale, `C:\Qt\6.12.0\msvc2022_64` | aqtinstall, `~/Qt/6.12.0/gcc_64` |
 | Il programma si chiama | `build\release\app\tecnigrafo.exe` | `build/ci/app/tecnigrafo` |
 | Separatore dei percorsi | `\` | `/` |
 | VS Code, in basso a sinistra | niente | **WSL: Debian** |
@@ -64,13 +66,30 @@ Gli agenti (sezioni 5 e 6) lavorano in Debian, sul PC Debian o in WSL.
 ```sh
 sudo apt update
 sudo apt install build-essential cmake ninja-build git gdb pipx \
-    qt6-base-dev qt6-wayland libgl-dev libgtest-dev clangd
+    libgl-dev libxkbcommon-dev libxcb-cursor0 libgtest-dev clangd
 ```
 
 Su Debian 12 la GoogleTest dei repository è troppo vecchia: CMake scarica da sola
 la versione giusta alla prima configurazione (serve la rete).
 
-### 2.2 clang-format e clang-tidy versione 18
+### 2.2 Qt 6.12
+
+Qt non si prende dai repository Debian, che hanno la 6.8: il progetto chiede la
+6.12 ([ADR 0043](adr/0043-qt-6-12.md)). Si installa nella cartella di casa con
+aqtinstall, lo stesso strumento che usa la CI:
+
+```sh
+pipx install aqtinstall
+aqt install-qt linux desktop 6.12.0 linux_gcc_64 --outputdir ~/Qt
+echo 'export CMAKE_PREFIX_PATH="$HOME/Qt/6.12.0/gcc_64"' >> ~/.profile
+```
+
+Chiudi la sessione ed entra di nuovo: da lì CMake trova Qt da solo, anche per gli
+agenti che lavorano sullo stesso PC. Se avevi installato `qt6-base-dev`, puoi
+toglierlo (`sudo apt remove qt6-base-dev qt6-wayland`), così CMake non prende la
+6.8 per sbaglio.
+
+### 2.3 clang-format e clang-tidy versione 18
 
 Il progetto fissa la versione 18 (ADR 0002), che i repository Debian non hanno.
 Si installa dai pacchetti ufficiali pubblicati su PyPI:
@@ -92,7 +111,7 @@ Non installare il pacchetto Debian `clang-format`: una versione diversa
 formatterebbe il codice in modo diverso da quello che la CI accetta. Le stesse
 versioni servono a solid-space.
 
-### 2.3 Scaricare il progetto
+### 2.4 Scaricare il progetto
 
 Il progetto usa solid-space, il suo kernel geometrico, come **sottomodulo git**
 in `third_party/solid-space`
@@ -118,7 +137,7 @@ guida del responsabile, A1, spiega perché le due cartelle restano separate):
 git clone https://github.com/Matleyx78/solid-space ~/progetti/solid-space
 ```
 
-### 2.4 Prima compilazione dal terminale
+### 2.5 Prima compilazione dal terminale
 
 ```sh
 cd ~/progetti/tecnigrafo
@@ -130,7 +149,7 @@ Se sullo stesso PC lavorano anche gli agenti, ognuno usa la sua cartella di
 build con `TG_BUILD_SUFFIX` (per esempio `build-codex/ci`, vedi AGENTS.md):
 la tua resta `build/`.
 
-### 2.5 VS Code
+### 2.6 VS Code
 
 1. Apri la cartella del progetto: `code ~/progetti/tecnigrafo`.
 2. Accetta "Installa" sulle estensioni consigliate (`.vscode/extensions.json`):
@@ -197,7 +216,7 @@ echo 'export BROWSER="explorer.exe"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Poi segui le sezioni da 2.1 a 2.4 senza cambiare nulla. Due attenzioni:
+Poi segui le sezioni da 2.1 a 2.5 senza cambiare nulla. Due attenzioni:
 
 - tieni il progetto **dentro Debian** (`~/progetti/tecnigrafo`), non in una
   cartella di Windows sotto `/mnt/c`: la compilazione sarebbe molto più lenta;
@@ -213,7 +232,7 @@ Poi segui le sezioni da 2.1 a 2.4 senza cambiare nulla. Due attenzioni:
 3. Nella barra di stato, in basso a sinistra, deve comparire **WSL: Debian**.
 4. Accetta "Installa" sulle estensioni consigliate: vengono installate dentro
    Debian, non su Windows.
-5. Da qui in avanti vale la sezione 2.5, dal punto 3.
+5. Da qui in avanti vale la sezione 2.6, dal punto 3.
 
 Per avere sempre lo stesso terminale, in Windows Terminal puoi impostare Debian
 come profilo predefinito.
@@ -233,9 +252,9 @@ Debian.**
 
 1. **Visual Studio 2022 Community**, con il carico di lavoro "Sviluppo di
    applicazioni desktop con C++": porta compilatore, CMake e Ninja.
-2. **Qt 6.8** per MSVC 2022 64-bit, con l'installer ufficiale (il componente
+2. **Qt 6.12** per MSVC 2022 64-bit, con l'installer ufficiale (il componente
    "MSVC 2022 64-bit"; il progetto non chiede moduli aggiuntivi). Negli esempi la
-   cartella è `C:\Qt\6.8.3\msvc2022_64`: se hai un'altra versione, cambia il
+   cartella è `C:\Qt\6.12.0\msvc2022_64`: se hai un'altra versione, cambia il
    percorso.
 3. **Git per Windows**, per scaricare il progetto.
 
@@ -251,7 +270,7 @@ cd tecnigrafo
 git submodule update --init third_party/solid-space
 ```
 
-Il quarto comando scarica solid-space, il kernel (sezione 2.3); si ripete dopo ogni
+Il quarto comando scarica solid-space, il kernel (sezione 2.4); si ripete dopo ogni
 `git pull` che sposta il sottomodulo, sempre senza `--recursive`.
 
 È una copia **diversa** da quella che hai in Debian: le modifiche non passano
@@ -288,7 +307,7 @@ qui sopra.
 
 ```powershell
 cd C:\progetti\tecnigrafo
-cmake --preset release -DCMAKE_PREFIX_PATH=C:/Qt/6.8.3/msvc2022_64
+cmake --preset release -DCMAKE_PREFIX_PATH=C:/Qt/6.12.0/msvc2022_64
 cmake --build --preset release
 ctest --preset release
 ```
@@ -317,7 +336,7 @@ solo non parte: Windows non trova le DLL di Qt. Si risolve in uno di due modi.
 finestra di terminale in cui lo scrivi: in una finestra nuova va ripetuto.
 
 ```powershell
-$env:PATH = "C:\Qt\6.8.3\msvc2022_64\bin;$env:PATH"
+$env:PATH = "C:\Qt\6.12.0\msvc2022_64\bin;$env:PATH"
 .\build\release\app\tecnigrafo.exe
 ```
 
@@ -325,7 +344,7 @@ $env:PATH = "C:\Qt\6.8.3\msvc2022_64\bin;$env:PATH"
 cartella di build, e va rifatto solo se la cancelli.
 
 ```powershell
-& C:\Qt\6.8.3\msvc2022_64\bin\windeployqt.exe build\release\app\tecnigrafo.exe
+& C:\Qt\6.12.0\msvc2022_64\bin\windeployqt.exe build\release\app\tecnigrafo.exe
 .\build\release\app\tecnigrafo.exe
 ```
 
@@ -365,11 +384,11 @@ quindi resta solo sul tuo PC):
   "configurePresets": [
     {
       "name": "win-debug",
-      "displayName": "Windows Debug (Qt 6.8.3)",
+      "displayName": "Windows Debug (Qt 6.12.0)",
       "inherits": "debug",
       "architecture": { "value": "x64", "strategy": "external" },
-      "cacheVariables": { "CMAKE_PREFIX_PATH": "C:/Qt/6.8.3/msvc2022_64" },
-      "environment": { "PATH": "C:/Qt/6.8.3/msvc2022_64/bin;$penv{PATH}" }
+      "cacheVariables": { "CMAKE_PREFIX_PATH": "C:/Qt/6.12.0/msvc2022_64" },
+      "environment": { "PATH": "C:/Qt/6.12.0/msvc2022_64/bin;$penv{PATH}" }
     }
   ],
   "buildPresets": [
@@ -383,7 +402,7 @@ Poi:
 1. In Visual Studio scegli **Apri una cartella locale** e seleziona
    `C:\progetti\tecnigrafo`.
 2. Nella barra degli strumenti scegli la configurazione **Windows Debug (Qt
-   6.8.3)**: Visual Studio configura da solo il progetto (l'avanzamento è nella
+   6.12.0)**: Visual Studio configura da solo il progetto (l'avanzamento è nella
    finestra *Output*).
 3. Compila con il menu **Compila**, voce *Compila tutto* (`Ctrl+Maiusc+B`).
 4. Come elemento di avvio scegli `tecnigrafo.exe`, poi `F5` per avviarlo nel
@@ -586,7 +605,7 @@ ricavare un valore atteso (AGENTS.md, "Modalità di controllo e riferimenti").
 
 ### 7.1 Dove si trova e come si avvia
 
-Si compila insieme al resto, con gli stessi preset della sezione 2.4:
+Si compila insieme al resto, con gli stessi preset della sezione 2.5:
 
 ```sh
 cmake --preset ci && cmake --build --preset ci
