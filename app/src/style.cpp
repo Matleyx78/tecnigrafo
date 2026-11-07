@@ -257,7 +257,7 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
                                  kFieldRadius);
         painter->restore();
         if ((combo->subControls & SC_ComboBoxArrow) != 0) {
-            QStyleOption arrow(*combo);
+            QStyleOptionComboBox arrow(*combo);
             arrow.rect = subControlRect(CC_ComboBox, combo, SC_ComboBoxArrow, widget);
             drawPrimitive(PE_IndicatorArrowDown, &arrow, painter, widget);
         }
