@@ -3,61 +3,143 @@
 
 #include "theme.hpp"
 
+#include "style.hpp"
+
 #include <QApplication>
 #include <QColor>
 #include <QFileInfo>
 #include <QPainter>
 #include <QPixmap>
-#include <QStyleFactory>
+
+#include <cstdint>
 
 namespace tg::app {
+namespace {
 
-void applyTheme(QApplication& /*application*/, Theme theme) {
-    // Qt exposes these operations as static functions; the argument makes
-    // the requirement for a live QApplication explicit.
-    // Start from Fusion, never from a native palette which varies by OS.
-    QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
-    QPalette palette(QColor(240, 240, 240));
-    const bool dark = theme == Theme::Dark;
-    const QColor text = dark ? QColor(235, 235, 235) : QColor(24, 24, 24);
-    const QColor window = dark ? QColor(45, 49, 55) : QColor(240, 240, 240);
-    const QColor base = dark ? QColor(33, 40, 48) : QColor(255, 255, 255);
-    palette.setColor(QPalette::Window, window);
-    palette.setColor(QPalette::WindowText, text);
-    palette.setColor(QPalette::Base, base);
-    palette.setColor(QPalette::AlternateBase, window);
-    palette.setColor(QPalette::Text, text);
-    palette.setColor(QPalette::Button, window);
-    palette.setColor(QPalette::ButtonText, text);
-    palette.setColor(QPalette::ToolTipBase, base);
-    palette.setColor(QPalette::ToolTipText, text);
-    palette.setColor(QPalette::BrightText, QColor(255, 255, 255));
-    palette.setColor(QPalette::PlaceholderText, QColor(128, 128, 128));
-    palette.setColor(QPalette::Accent, QColor(40, 110, 200));
-    palette.setColor(QPalette::Highlight, QColor(40, 110, 200));
-    palette.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
-    palette.setColor(QPalette::Link, dark ? QColor(100, 180, 255) : QColor(0, 80, 180));
-    palette.setColor(QPalette::Light, dark ? QColor(75, 80, 88) : QColor(255, 255, 255));
-    palette.setColor(QPalette::Midlight, dark ? QColor(60, 65, 72) : QColor(225, 225, 225));
-    palette.setColor(QPalette::Mid, dark ? QColor(38, 42, 48) : QColor(180, 180, 180));
-    palette.setColor(QPalette::Dark, dark ? QColor(24, 28, 33) : QColor(140, 140, 140));
-    palette.setColor(QPalette::Shadow, QColor(0, 0, 0));
+QColor rgb(QRgb value) {
+    return QColor::fromRgb(value);
+}
+
+render::Color toRenderColor(const QColor& color) {
+    return {static_cast<std::uint8_t>(color.red()), static_cast<std::uint8_t>(color.green()),
+            static_cast<std::uint8_t>(color.blue()), static_cast<std::uint8_t>(color.alpha())};
+}
+
+QPalette paletteFrom(const ThemeTokens& tokens) {
+    // QPalette derives the roles that the interface does not show (light,
+    // midlight, dark, shadow, bright text) from button and window; every
+    // role that the interface shows comes from a token.
+    QPalette palette(tokens.panel, tokens.panel);
+    palette.setColor(QPalette::Window, tokens.panel);
+    palette.setColor(QPalette::WindowText, tokens.text);
+    palette.setColor(QPalette::Base, tokens.field);
+    palette.setColor(QPalette::AlternateBase, tokens.group);
+    palette.setColor(QPalette::Text, tokens.text);
+    palette.setColor(QPalette::Button, tokens.panel);
+    palette.setColor(QPalette::ButtonText, tokens.text);
+    palette.setColor(QPalette::ToolTipBase, tokens.field);
+    palette.setColor(QPalette::ToolTipText, tokens.text);
+    palette.setColor(QPalette::PlaceholderText, tokens.textSecondary);
+    palette.setColor(QPalette::Accent, tokens.accent);
+    // The selection is a light fill under the normal text (docs/adr/0039,
+    // point 2), not white text on the accent colour.
+    palette.setColor(QPalette::Highlight, tokens.selection);
+    palette.setColor(QPalette::HighlightedText, tokens.text);
+    palette.setColor(QPalette::Link, tokens.accent);
+    palette.setColor(QPalette::LinkVisited, tokens.accent);
+    palette.setColor(QPalette::Mid, tokens.border);
     for (const auto role : {QPalette::Text, QPalette::WindowText, QPalette::ButtonText}) {
-        palette.setColor(QPalette::Disabled, role, QColor(128, 128, 128));
+        palette.setColor(QPalette::Disabled, role, tokens.textSecondary);
     }
-    QApplication::setPalette(palette);
+    return palette;
+}
+
+}  // namespace
+
+const ThemeTokens& themeTokens(Theme theme) {
+    // The values of the tables of docs/adr/0039, point 2, and docs/adr/0040,
+    // point 1; iconEsist is the text of the theme.
+    static const ThemeTokens kLight{
+        .chrome = rgb(0xdde1e6U),
+        .ribbon = rgb(0xf4f5f7U),
+        .group = rgb(0xe9ecefU),
+        .tabs = rgb(0xe4e7ebU),
+        .panel = rgb(0xf7f8faU),
+        .field = rgb(0xffffffU),
+        .canvas = rgb(0xffffffU),
+        .border = rgb(0xcdd3daU),
+        .text = rgb(0x1f2328U),
+        .textSecondary = rgb(0x68707aU),
+        .accent = rgb(0x1f6fbfU),
+        .selection = rgb(0xdce8f4U),
+        .iconGeo = rgb(0x1971c2U),
+        .iconPt = rgb(0xe8590cU),
+        .iconCost = rgb(0x868e96U),
+        .iconEsist = rgb(0x1f2328U),
+    };
+    static const ThemeTokens kDark{
+        .chrome = rgb(0x1e2228U),
+        .ribbon = rgb(0x2b3038U),
+        .group = rgb(0x262a31U),
+        .tabs = rgb(0x23272dU),
+        .panel = rgb(0x2b3038U),
+        .field = rgb(0x20242aU),
+        .canvas = rgb(0x1b1f24U),
+        .border = rgb(0x3b424dU),
+        .text = rgb(0xe4e7ebU),
+        .textSecondary = rgb(0x9098a3U),
+        .accent = rgb(0x2a72b5U),
+        .selection = rgb(0x304357U),
+        .iconGeo = rgb(0x4dabf7U),
+        .iconPt = rgb(0xff922bU),
+        .iconCost = rgb(0x8b95a1U),
+        .iconEsist = rgb(0xe4e7ebU),
+    };
+    return theme == Theme::Dark ? kDark : kLight;
+}
+
+void applyTheme(QApplication& application, Theme theme) {
+    const ThemeTokens& tokens = themeTokens(theme);
+    // Every main window applies its theme when it is built. Installing the
+    // same style, palette or style sheet again would repolish every widget
+    // of every window, which makes building a window several times slower.
+    const Style* current = installedStyle();
+    // Decided before setStyle, which deletes the current style.
+    const bool newStyle = current == nullptr || current->tokens() != tokens;
+    if (newStyle) {
+        // Fusion under the proxy style, never a native style or palette
+        // which vary by OS (docs/adr/0009, point 5). The style comes
+        // first: setting a style resets the palettes that it polishes. The
+        // application owns the style, and QApplication deletes the
+        // previous one.
+        // clang-analyzer does not see either owner: Qt's headers are system
+        // headers, whose functions it assumes never take a pointer, and the
+        // parent is set in Style's constructor, in another file. QObject
+        // ownership is the documented contract of QApplication::setStyle.
+        // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
+        QApplication::setStyle(new Style(tokens, &application));
+    }
+    const QPalette palette = paletteFrom(tokens);
+    if (newStyle || QApplication::palette() != palette) {
+        QApplication::setPalette(palette);
+    }
+    // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
+    const QString sheet = styleSheet(tokens);
+    if (application.styleSheet() != sheet) {
+        application.setStyleSheet(sheet);
+    }
 }
 
 render::SceneStyle sceneStyle(Theme theme) {
-    // Grid, sizes and tolerances stay those of the program: only colours
-    // change. Entities are black, as AutoCAD draws colour 7 on white; the
-    // other colours are darker versions of the dark style's, readable on
-    // white.
+    // Grid, sizes and tolerances stay those of the program, and only the
+    // background follows the tokens (docs/adr/0039, point 2).
     render::SceneStyle style;
+    style.background = toRenderColor(themeTokens(theme).canvas);
     if (theme == Theme::Dark) {
         return style;
     }
-    style.background = {255, 255, 255};
+    // Entities are black, as AutoCAD draws colour 7 on white; the other
+    // colours are darker versions of the dark style's, readable on white.
     style.gridMinor = {236, 238, 241};
     style.gridMajor = {214, 218, 224};
     style.axisX = {200, 40, 40};

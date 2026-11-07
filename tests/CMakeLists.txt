@@ -196,6 +196,7 @@ if(TG_BUILD_APP)
         app/quick_select_dialog_test.cpp
         app/recent_files_test.cpp
         app/theme_test.cpp
+        app/style_test.cpp
         app/shortcut_map_test.cpp
         app/shortcuts_dialog_test.cpp
         app/settings_test.cpp
