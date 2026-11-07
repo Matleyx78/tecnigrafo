@@ -47,6 +47,11 @@ constexpr qreal kIconGrid = 16.0;
 /// Sizes of the dock header buttons, including high-DPI variants.
 constexpr std::array kDockIconSizes{10, 12, 16, 20, 24, 32};
 
+// Combo boxes are drawn by Style, not by the style sheet: with a styled
+// drop-down the style sheet draws no arrow at all unless it is given an
+// image, and without one it draws Windows' raised button.
+constexpr qreal kFieldRadius = 2.0;
+
 // The colours of the style sheet are written as {token} and replaced
 // below, so that every colour comes from ThemeTokens.
 constexpr std::string_view kStyleSheetTemplate{R"(
@@ -70,9 +75,9 @@ QTabBar::tab:hover { color: {text}; }
 QTabBar::tab:selected { background: {panel}; color: {text}; border-color: {border}; border-bottom-color: {panel}; border-top: 2px solid {accent}; }
 QDockWidget { color: {text}; }
 QDockWidget::title { background: {ribbon}; border-bottom: 1px solid {border}; padding: 4px 6px; text-align: left; }
-QLineEdit, QAbstractSpinBox, QComboBox { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
-QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus, QComboBox:on { border-color: {accent}; }
-QComboBox::drop-down { border: none; width: 16px; }
+QLineEdit, QAbstractSpinBox { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
+QLineEdit:focus, QAbstractSpinBox:focus { border-color: {accent}; }
+QComboBox QLineEdit { background: transparent; border: none; padding: 0px; }
 QAbstractItemView { background: {field}; alternate-background-color: {group}; color: {text}; border: 1px solid {border}; selection-background-color: {selection}; selection-color: {text}; }
 QComboBox QAbstractItemView { outline: none; }
 QHeaderView::section { background: {group}; color: {textSecondary}; border: none; border-right: 1px solid {border}; border-bottom: 1px solid {border}; padding: 2px 6px; }
@@ -239,6 +244,25 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* option, 
 
 void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex* option,
                                QPainter* painter, const QWidget* widget) const {
+    if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(option);
+        control == CC_ComboBox && combo != nullptr) {
+        // A field with a chevron, as the style sheet draws line edits; the
+        // text is drawn by the combo box itself (CE_ComboBoxLabel).
+        const bool active = (combo->state & (State_HasFocus | State_On)) != 0;
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(active ? m_tokens.accent : m_tokens.border);
+        painter->setBrush(m_tokens.field);
+        painter->drawRoundedRect(QRectF(combo->rect).adjusted(0.5, 0.5, -0.5, -0.5), kFieldRadius,
+                                 kFieldRadius);
+        painter->restore();
+        if ((combo->subControls & SC_ComboBoxArrow) != 0) {
+            QStyleOption arrow(*combo);
+            arrow.rect = subControlRect(CC_ComboBox, combo, SC_ComboBoxArrow, widget);
+            drawPrimitive(PE_IndicatorArrowDown, &arrow, painter, widget);
+        }
+        return;
+    }
     const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(option);
     if (control != CC_ScrollBar || bar == nullptr) {
         QProxyStyle::drawComplexControl(control, option, painter, widget);

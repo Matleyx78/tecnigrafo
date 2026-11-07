@@ -12,15 +12,16 @@ namespace tg::app {
 
 /// The style sheet of the interface, generated from the tokens
 /// (docs/adr/0039, points 2 and 3): surfaces of ribbon, tabs, panels and
-/// panel headers, fields and combo boxes, selected items, borderless
-/// buttons at rest. Every colour in it is one of `tokens`.
+/// panel headers, fields, selected items, borderless buttons at rest.
+/// Every colour in it is one of `tokens`.
 [[nodiscard]] QString styleSheet(const ThemeTokens& tokens);
 
 /// Fusion with what the style sheet does not control well (docs/adr/0039,
-/// point 4): thin scroll bars without arrows, flat tabs, the arrows of the
-/// combo boxes, the buttons of the QDockWidget headers, and rows of 22 px
-/// in the item views (point 3). Colours come from the tokens it is built
-/// with; applyTheme installs a new Style when the theme changes.
+/// point 4): thin scroll bars without arrows, flat tabs, the combo boxes
+/// (a field with a chevron), the buttons of the QDockWidget headers, and
+/// rows of 22 px in the item views (point 3). Colours come from the tokens
+/// it is built with; applyTheme installs a new Style when the theme
+/// changes.
 class Style final : public QProxyStyle {
     Q_OBJECT
 
