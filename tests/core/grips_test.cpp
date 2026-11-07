@@ -47,14 +47,14 @@ TEST(Grips, ArcEndpointsMatchKernelBits) {
     // Non-axis directions, a wrapped arc and a whole-circle arc exercise the
     // entity-to-kernel sweep translation as well as endpoint rounding.
     for (const Arc& arc : std::array{Arc{{3, -7}, 13, 10 * kDegree, 110 * kDegree},
-                                    Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
-                                    Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
+                                     Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
+                                     Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
         double sweep = arc.endAngle - arc.startAngle;
         if (!(sweep > 0.0)) {
             sweep += g::kFullTurn;
         }
-        const auto expected = g::endpoints(g::Arc{{arc.center.x, arc.center.y}, arc.radius,
-                                                  arc.startAngle, sweep});
+        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, sweep};
+        const auto expected = g::endpoints(curve);
         ASSERT_TRUE(expected.hasValue());
         const auto actual = gripPoints(Entity{arc});
         ASSERT_EQ(actual.size(), 4U);
@@ -66,11 +66,11 @@ TEST(Grips, ArcEndpointsMatchKernelBits) {
 TEST(Grips, RejectedArcKeepsGeometryEndpoints) {
     namespace g = solid_space::geom2d;
     for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9},
-                                    Arc{{0x1p51, -7}, 13, 0.2, 1.9},
-                                    Arc{{3, -7}, -13, 0.2, 1.9}}) {
+                                     Arc{{0x1p51, -7}, 13, 0.2, 1.9},
+                                     Arc{{3, -7}, -13, 0.2, 1.9}}) {
         const auto geometry = arc.geometry();
-        const auto rejected = g::endpoints(g::Arc{{arc.center.x, arc.center.y}, arc.radius,
-                                                  arc.startAngle, geometry.sweep});
+        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, geometry.sweep};
+        const auto rejected = g::endpoints(curve);
         ASSERT_FALSE(rejected.hasValue());
         const auto actual = gripPoints(Entity{arc});
         ASSERT_EQ(actual.size(), 4U);

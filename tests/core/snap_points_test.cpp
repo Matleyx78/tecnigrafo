@@ -33,14 +33,14 @@ TEST(SnapPoints, ArcEndpointsMatchKernelBits) {
     // Non-axis directions, a wrapped arc and a whole-circle arc exercise the
     // entity-to-kernel sweep translation as well as endpoint rounding.
     for (const Arc& arc : std::array{Arc{{3, -7}, 13, 10 * kDegree, 110 * kDegree},
-                                    Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
-                                    Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
+                                     Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
+                                     Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
         double sweep = arc.endAngle - arc.startAngle;
         if (!(sweep > 0.0)) {
             sweep += g::kFullTurn;
         }
-        const auto expected = g::endpoints(g::Arc{{arc.center.x, arc.center.y}, arc.radius,
-                                                  arc.startAngle, sweep});
+        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, sweep};
+        const auto expected = g::endpoints(curve);
         ASSERT_TRUE(expected.hasValue());
         std::vector<SnapPoint> snaps;
         appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
@@ -54,11 +54,11 @@ TEST(SnapPoints, ArcEndpointsMatchKernelBits) {
 TEST(SnapPoints, RejectedArcKeepsGeometryEndpoints) {
     namespace g = solid_space::geom2d;
     for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9},
-                                    Arc{{0x1p51, -7}, 13, 0.2, 1.9},
-                                    Arc{{3, -7}, -13, 0.2, 1.9}}) {
+                                     Arc{{0x1p51, -7}, 13, 0.2, 1.9},
+                                     Arc{{3, -7}, -13, 0.2, 1.9}}) {
         const auto geometry = arc.geometry();
-        const auto rejected = g::endpoints(g::Arc{{arc.center.x, arc.center.y}, arc.radius,
-                                                  arc.startAngle, geometry.sweep});
+        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, geometry.sweep};
+        const auto rejected = g::endpoints(curve);
         ASSERT_FALSE(rejected.hasValue());
         std::vector<SnapPoint> snaps;
         appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
@@ -231,7 +231,7 @@ TEST(SnapPoints, RotatedTranslatedArcMidpoint) {
 
 TEST(SnapPoints, EveryEntityTypeHonorsTheModes) {
     const std::vector<Entity> entities{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
-                                       Arc{{0, 0}, 2, 0, kPi / 2.0}, Text{}};
+                                        Arc{{0, 0}, 2, 0, kPi / 2.0}, Text{}};
     for (const Entity& entity : entities) {
         std::vector<SnapPoint> out;
         appendSnapPoints(entity, SnapModes{false, false, false, false}, out);
@@ -298,7 +298,7 @@ TEST(SnapPoints, InsertionModeOnlyAffectsTexts) {
     // The other entities have no insertion point.
     out.clear();
     for (const Entity& entity : std::vector<Entity>{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
-                                                    Arc{{0, 0}, 2, 0, kPi / 2.0}}) {
+                                                     Arc{{0, 0}, 2, 0, kPi / 2.0}}) {
         appendSnapPoints(entity, SnapModes{false, false, false, true}, out);
     }
     EXPECT_TRUE(out.empty());
