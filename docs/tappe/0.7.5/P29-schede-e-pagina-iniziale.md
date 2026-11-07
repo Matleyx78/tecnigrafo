@@ -106,6 +106,10 @@
 
 - il programma si avvia sulla pagina *Start* senza documenti; due `+` danno
   `Drawing1.cadx` e `Drawing2.cadx`; cliccare una scheda attiva la sua sessione;
+- (B2, con P28) in A `LINE` aspetta il secondo punto; scrivo `10,20` nella riga
+  di comando senza `Invio`, attivo la pagina *Start* e torno ad A: il campo ha
+  `10,20`, e `Invio` dà il punto a `LINE` di A. Lo stesso con un valore in un
+  campo dell'immissione dinamica;
 - (B7) con la pagina *Start*, `Ctrl+N` apre un disegno e `Ctrl+O` il dialogo;
   *Undo*, *Save* e `Ctrl+Z` sono disattivati; con un documento attivo tornano;
 - una finestra con `InitialDrawing::Empty` (gli script) parte con un disegno

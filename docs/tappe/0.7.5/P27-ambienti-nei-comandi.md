@@ -70,14 +70,15 @@
 - `command_registry_test.cpp`: un comando di prova con `environments{"test"}`;
   `environmentsOf` per un nome e per un alias.
 - `command_registry_test.cpp`: `environmentsOf` per `U`, `UNDO` e `REDO` dà la
-  lista vuota.
+  lista vuota; un comando di prova registrato con la lista vuota, e il suo
+  alias, danno la lista vuota e partono in `drawing2d` e in `test`.
 - `command_runner_test.cpp`: nell'ambiente `drawing2d` il comando di prova non
   parte e la cronologia ha il messaggio; nell'ambiente `test` parte, e `LINE` non
   parte; `Invio` che ripete un comando di un altro ambiente non lo esegue.
 - `command_runner_test.cpp` (B1): nell'ambiente `test` il comando di prova
   modifica il documento; `U` lo annulla, `REDO` lo rifà; `U` e poi `Invio`
-  annullano due volte, senza il messaggio di P27. Lo stesso in `drawing2d` con
-  `LINE`.
+  annullano due volte, senza il messaggio di P27; `REDO` e poi `Invio` rifanno
+  due volte. Lo stesso in `drawing2d` con `LINE`.
 
 ## Fatto quando
 

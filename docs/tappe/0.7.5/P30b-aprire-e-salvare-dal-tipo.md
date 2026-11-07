@@ -13,7 +13,9 @@
   revisione delle interfacce (P23,
   [#563](https://github.com/Matleyx78/tecnigrafo/issues/563);
   [DECISIONI.md](../../DECISIONI.md)); separata da P30 per la misura del
-  pacchetto
+  pacchetto. Con R2 della revisione della correzione
+  ([#588](https://github.com/Matleyx78/tecnigrafo/pull/588)): il rifiuto di B3
+  prima della conferma di sostituzione
 - **Modulo:** `app`
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 3,
   7 e 9; [ADR 0021](../../adr/0021-comandi-dei-file.md); la scheda
@@ -81,8 +83,8 @@ struct DocumentType {
 ```
 
 Il dialogo lo mostra la cornice: il tipo riceve un percorso già scelto, e la
-sostituzione di un file che esiste l'ha già confermata il dialogo, come oggi in
-`handleFilePrompts`.
+sostituzione di un file che esiste l'ha già confermata la cornice (punto 3,
+*Salva con nome*), come oggi la conferma il dialogo in `handleFilePrompts`.
 
 ### 2. Il disegno
 
@@ -118,11 +120,19 @@ Nessun percorso della cornice esegue più `NEW`, `OPEN`, `QSAVE` o `SAVEAS`:
   `Cannot open <name>: …` (il testo lo sceglie chi implementa, in inglese).
 - **Salva** (`file.save`, *Yes* alla richiesta di salvare quando si chiude):
   `save` con `SaveMode::Save` se il documento ha un file; altrimenti come *Save
-  As*. **Salva con nome** (`file.saveas`): il dialogo con le estensioni del tipo
-  del documento, poi `save` con `SaveMode::SaveAs`. Un percorso aperto in un
-  **altro** documento si rifiuta prima di chiamare il tipo, con il messaggio di
-  B3 (`Cannot save <name>: it is open in another document.`), che compare una
-  volta sola.
+  As*. **Salva con nome** (`file.saveas`), in quest'ordine:
+  1. il dialogo con le estensioni del tipo del documento, che sceglie il
+     percorso **senza** chiedere ancora se sostituire un file che esiste;
+  2. un percorso aperto in un **altro** documento si rifiuta subito, con il
+     messaggio di B3 (`Cannot save <name>: it is open in another document.`),
+     una volta sola: niente domanda di sostituzione, niente si scrive, il tipo
+     non è chiamato e il documento resta com'era (decisione B3: il rifiuto
+     viene prima della domanda di sostituzione, anche nella cornice);
+  3. se il file esiste, la conferma di sostituzione; *No* o *Cancel* non salva;
+  4. `save` con `SaveMode::SaveAs`.
+
+  Come ottenerlo con i dialoghi di Qt (per esempio senza la conferma del
+  dialogo stesso) lo sceglie chi implementa.
 - Un file aperto o salvato entra nei file recenti, come oggi, qualunque sia il
   suo tipo.
 
@@ -155,6 +165,14 @@ e `save` su un file di testo suo:
   messaggio di B3, e il tipo non è chiamato;
 - un file con un'estensione che nessun tipo dichiara non apre niente e lascia il
   messaggio.
+
+In `file_menu_test.cpp`, con due disegni veri aperti, A come `a.cadx` (che
+esiste) e B come `b.cadx` (R2 della revisione della correzione): da B, *Save
+As* con il file `a.cadx` scelto nel dialogo **non** mostra la conferma di
+sostituzione; la cronologia ha il messaggio di B3 una volta sola; nessun
+salvataggio parte e `a.cadx` sul disco è quello di prima; B resta `b.cadx`,
+con lo stesso stato «modificato». Da B, *Save As* con un file `c.cadx` che
+esiste e non è aperto chiede la conferma; con *No* non salva, con *Yes* salva.
 
 In `file_menu_test.cpp`, con il disegno: i test di oggi passano invariati
 (salva, apri, copia, titolo, recenti); dal menu, *Save* di un disegno aperto da
