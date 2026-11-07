@@ -7,8 +7,10 @@
 
 #include <QApplication>
 #include <QDir>
+#include <QDockWidget>
 #include <QFont>
 #include <QFontDatabase>
+#include <QList>
 #include <QMenuBar>
 #include <QMouseEvent>
 #include <QPixmap>
@@ -28,6 +30,7 @@ namespace {
 
 constexpr int kWindowWidth = 1600;
 constexpr int kWindowHeight = 1000;
+constexpr int kDockWidth = 360;
 
 bool saveWidget(QWidget* widget, const QDir& output, const QString& name) {
     if (widget == nullptr || !widget->isVisible() || widget->size().isEmpty() ||
@@ -49,6 +52,23 @@ bool useEmptySettings(const QTemporaryDir& settings) {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
     QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, settings.path());
     return true;
+}
+
+// Fixes the split of the two docks. QMainWindow sizes them from size hints,
+// and those depend on what the process did before (the second window of a
+// run differs from the first), so captures would not line up between themes
+// or between pull requests.
+void pinDocks(tg::app::MainWindow& window) {
+    auto* layers = window.findChild<QDockWidget*>(QStringLiteral("layerPanel"));
+    auto* properties = window.findChild<QDockWidget*>(QStringLiteral("propertiesPanel"));
+    if (layers == nullptr || properties == nullptr) {
+        return;  // saveWidget reports the missing panel.
+    }
+    const QList<QDockWidget*> docks{layers, properties};
+    window.resizeDocks(docks, {kDockWidth, kDockWidth}, Qt::Horizontal);
+    const int half = (layers->height() + properties->height()) / 2;
+    window.resizeDocks(docks, {half, half}, Qt::Vertical);
+    QApplication::processEvents();
 }
 
 bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& output) {
@@ -78,6 +98,7 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
                         Qt::NoModifier);
     QApplication::sendEvent(view, &release);
     QApplication::processEvents();
+    pinDocks(window);
     if (window.selection().size() != 1U || window.size() != QSize(kWindowWidth, kWindowHeight) ||
         window.devicePixelRatioF() != 1.0) {
         std::cerr << "Unexpected gallery geometry, scale or selection\n";
@@ -98,6 +119,7 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
     }
     window.setInterface(tg::app::InterfaceKind::Classic);
     QApplication::processEvents();
+    pinDocks(window);
     return save(&window, QStringLiteral("finestra-classica"));
 }
 
