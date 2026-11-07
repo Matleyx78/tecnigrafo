@@ -38,10 +38,28 @@ bool saveWidget(QWidget* widget, const QDir& output, const QString& name) {
     return true;
 }
 
+// Points QSettings at a new empty folder. Each window needs its own: a shown
+// MainWindow saves its interface and dock layout, and the next window would
+// restore them, so the second theme would inherit the first one's layout.
+bool useEmptySettings(const QTemporaryDir& settings) {
+    if (!settings.isValid()) {
+        std::cerr << "Cannot create temporary settings folder\n";
+        return false;
+    }
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
+    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, settings.path());
+    return true;
+}
+
 bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& output) {
+    const QTemporaryDir settings;
+    if (!useEmptySettings(settings)) {
+        return false;
+    }
     tg::app::MainWindow window;
-    window.show();
+    // Size before the first layout, so docks are split for the final size.
     window.resize(kWindowWidth, kWindowHeight);
+    window.show();
     window.setTheme(theme);
     window.setInterface(tg::app::InterfaceKind::Ribbon);
     QApplication::processEvents();
@@ -98,14 +116,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "Usage: tecnigrafo-galleria <folder>\n";
         return 1;
     }
-    const QTemporaryDir settings;
-    if (!settings.isValid()) {
-        std::cerr << "Cannot create temporary settings folder\n";
-        return 1;
-    }
+    // Never the user's settings: each theme gets an empty folder (captureTheme).
     QSettings::setDefaultFormat(QSettings::IniFormat);
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
-    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, settings.path());
     initializeGalleryResources();
     const QString fontPath = QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf");
     const int fontId = QFontDatabase::addApplicationFont(fontPath);

@@ -55,6 +55,8 @@ TEST(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
                     EXPECT_LT(image.width(), 1600);
                 }
             }
+            // Themes change colours only: equal sizes also show that the
+            // second window did not inherit the first one's saved layout.
             if (theme == QStringLiteral("chiaro")) {
                 lightSize = image.size();
             } else {
