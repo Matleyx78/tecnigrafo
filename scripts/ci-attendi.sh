@@ -28,11 +28,14 @@
 #                   two requests and the anonymous limit of the GitHub API is 60
 #                   an hour; GITHUB_TOKEN raises it)
 # TG_ATTESA_RILANCI how many timeouts (exit 3) are allowed on one run (default 10: about 90 minutes in all)
+# TG_ATTESA_WORKFLOW workflow file or id to wait for (default ci.yml); ignored
+#                   when an explicit run id is given
 #
 # Needs jq, and either gh or curl (the repository is public: no token needed).
 set -euo pipefail
 
 repo=${TG_REPO:-Matleyx78/tecnigrafo}
+workflow=${TG_ATTESA_WORKFLOW:-ci.yml}
 max=${TG_ATTESA_MAX:-540}
 pause=${TG_ATTESA_PAUSA:-90}
 max_timeouts=${TG_ATTESA_RILANCI:-10}
@@ -88,7 +91,7 @@ failed_jobs() {
 
 while :; do
     if reply=$( { if [[ -z $run ]]; then
-                      api "repos/$repo/actions/runs?head_sha=$ref&per_page=1" \
+                      api "repos/$repo/actions/workflows/$workflow/runs?head_sha=$ref&per_page=1" \
                           | jq -c '.workflow_runs[0] // empty'
                   else
                       api "repos/$repo/actions/runs/$run" | jq -c '.'

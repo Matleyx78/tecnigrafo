@@ -1,8 +1,13 @@
 # Pacchetto di lavoro
 
-Da leggere quando la issue ha titolo `[X.Y-PN]` o `[FN]`, o porta l'etichetta
+Da leggere quando la issue ha titolo `[X.Y-PTN]` o `[FN]`, o porta l'etichetta
 `pacchetto` ([AGENTS.md](../../AGENTS.md), "Se ... leggi anche ..."). Vale
 insieme al nucleo, che resta da leggere per intero.
+
+I nomi qui sotto usano i prefissi dalla 0.8: `PT`/`RT`/`CT` in Tecnigrafo,
+`PS`/`RS`/`CS` in solid-space. Per le tappe fino alla 0.7.5 restano `P`/`R`/`C`,
+anche nei file in attesa (`0.7.5-R1.txt`); nulla si rinomina. I rami seguono:
+`pt0.8-05-…` per il lavoro, `rt0.8-05-…` per i riferimenti.
 
 ## Prima di scrivere codice
 
@@ -10,7 +15,7 @@ Leggi, in quest'ordine:
 
 1. [docs/ROADMAP.md](../ROADMAP.md), solo la tabella "Stato": quale tappa è
    **aperta**.
-2. La **scheda** del tuo pacchetto, `docs/tappe/X.Y/PN-<nome>.md`, citata nella
+2. La **scheda** del tuo pacchetto, `docs/tappe/X.Y/PTN-<nome>.md`, citata nella
    issue: file, interfacce, test e criterio di "fatto". Del documento della tappa
    ti basta la tabella dei pacchetti.
 3. Gli ADR citati dalla scheda, e [docs/ARCHITETTURA.md](../ARCHITETTURA.md)
@@ -30,7 +35,7 @@ Scegli **una sola** issue, la prima nell'ordine del piano che:
 1. è aperta e porta la **tua** etichetta `agente:…`;
 2. non porta `AA-Presa in carico`;
 3. ha chiuse tutte le issue della sua riga "Dipende da";
-4. ha chiusa la sua issue di riferimenti (`[X.Y-RN]`), se esiste;
+4. ha chiusa la sua issue di riferimenti (`[X.Y-RTN]`), se esiste;
 5. se usa intestazioni di solid-space, non c'è in solid-space una issue aperta
    con l'etichetta `contratto` che le nomina nel titolo. Controlla le
    intestazioni citate dalla scheda del pacchetto, anche in **Da leggere**.
@@ -47,14 +52,14 @@ Un pacchetto è finito quando la CI confronta il programma con casi di verifica
 scritti **prima** e da **un altro agente**
 ([ADR 0011](../adr/0011-modalita-di-controllo.md)). Le regole per chi scrive i
 riferimenti sono in [riferimenti.md](riferimenti.md), "In un pacchetto di
-riferimenti (`[X.Y-RN]`)".
+riferimenti (`[X.Y-RTN]`)".
 
 ### In un pacchetto di lavoro
 
 - Non modificare mai `tests/verifica/casi/` né `tests/verifica/sorgenti.json`.
 - Cancella da `tests/verifica/in-attesa/` i file dei riferimenti del tuo
-  pacchetto, uno per ogni sua issue di riferimenti: `<X.Y>-R<N>.txt`, con una
-  lettera minuscola in fondo (`<X.Y>-R<N>a.txt`) se i riferimenti sono divisi
+  pacchetto, uno per ogni sua issue di riferimenti: `<X.Y>-RT<N>.txt`, con una
+  lettera minuscola in fondo (`<X.Y>-RT<N>a.txt`) se i riferimenti sono divisi
   in più blocchi. Così i suoi casi diventano obbligatori.
 - La parola `esente` in un file di `tests/verifica/in-attesa/` la aggiunge solo
   un pacchetto che porta un controllo anticipato, se la sua scheda lo dice

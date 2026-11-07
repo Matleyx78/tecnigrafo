@@ -10,6 +10,10 @@ from __future__ import annotations
 
 import base64
 import io
+import json
+import os
+import shutil
+import subprocess
 import re
 import sys
 import tempfile
@@ -241,6 +245,29 @@ def body(deps: str) -> str:
 
 
 class PlanTable(unittest.TestCase):
+    def test_prefixed_plan_and_closing_packages(self):
+        text = tg_plan([tg_row("PT1", 10, "—"), tg_row("RT14a", 11, "PT1", "gemini"),
+                        tg_row("PT14", 12, f"PT1, RT14a, #9, {SS}#20")],
+                       [f"| {SS}#20 | PT14 | PT14 |"])
+        plan = d.parse_plan(text.replace("0.7", "0.8"), "piano.md", TG)
+        self.assertEqual([r.id for r in plan.rows], ["PT1", "RT14a", "PT14"])
+        self.assertEqual([d.dep_ref(x, plan, TG) for x in plan.row("PT14").deps],
+                         [d.Ref(TG, 10), d.Ref(TG, 11), d.Ref(TG, 9), d.Ref(SS, 20)])
+        self.assertEqual(plan.requests[0].closes_with, ["PT14"])
+        ctx = d.Context("0.8", TG, SS, plan, d.Issues(FakeGitHub({})), lambda _: [])
+        self.assertEqual(d.dep_text("RT14a", ctx), "#11 (RT14a)")
+
+    def test_prefix_must_match_stage(self):
+        for stage, id_, expected in (("0.8", "P3", "PTN or RTN"),
+                                     ("0.7.5", "PT3", "PN or RN")):
+            with self.subTest(stage=stage):
+                text = tg_plan([tg_row(id_, 10, "—")]).replace("0.7", stage)
+                with self.assertRaisesRegex(d.Failure, f"{expected} for stage {stage}"):
+                    d.parse_plan(text, "piano.md", TG)
+        text = tg_plan([tg_row("PT3", 10, "P2")]).replace("0.7", "0.8")
+        with self.assertRaisesRegex(d.Failure, "dependency P2 must use PTN or RTN"):
+            d.parse_plan(text, "piano.md", TG)
+
     def test_four_forms(self):
         plan = d.parse_plan(tg_plan([tg_row("P1", 10, "—"), tg_row("R2", 11, "—", "gemini"),
                                      tg_row("P2", 12, f"P1, #9, {SS}#20, R2")]), "piano.md", TG)
@@ -284,13 +311,14 @@ class PlanTable(unittest.TestCase):
 
 class StageNumbers(unittest.TestCase):
     def test_valid_stage_arguments(self):
-        for stage in ("0.7", "0.7.5", "1.0", "10.20.30"):
+        for stage in ("0.7", "0.7.5", "0.8", "0.8.1", "1.0", "10.20.30"):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 plans = root / "docs" / "tappe"
                 plans.mkdir(parents=True)
                 (plans / f"{stage}-test.md").write_text(
-                    tg_plan([tg_row("P1", None, "—")]).replace("0.7", stage), encoding="utf-8")
+                    tg_plan([tg_row("PT1" if tuple(map(int, stage.split(".")[:2])) >= (0, 8) else "P1",
+                                    None, "—")]).replace("0.7", stage), encoding="utf-8")
                 gh = FakeGitHub({f"repos/{TG}/issues?state=all&per_page=100&labels=tappa-{stage}": []})
                 out = io.StringIO()
                 with redirect_stdout(out):
@@ -333,6 +361,22 @@ class RealPlan(unittest.TestCase):
 
 class Unblocks(unittest.TestCase):
     order = [p[0] for p in SS_PACKAGES]
+
+    def test_prefixed_ss_plan_ranges_and_contract(self):
+        packages = [(re.sub(r"^([PR])", r"\1S", id_), n,
+                     re.sub(r"\b([PR])(?=[0-9])", r"\1S", deps))
+                    for id_, n, deps in SS_PACKAGES]
+        packages += [("CS", 133, ""), ("PS19", 130, "PS11 (#56), CS (#133)")]
+        plan = d.parse_ss_plan(ss_plan(packages, [(357, "PS4–PS7, RS14a–c, CS")]), "ss.md")
+        self.assertEqual(plan.unblocks[357], ["PS4", "PS5", "PS6", "PS7",
+                                               "RS14a", "RS14b", "RS14c", "CS"])
+        self.assertEqual(plan.issue["PS11"], 56)
+        self.assertEqual(plan.deps["PS19"], ["PS11", "CS"])
+        self.assertEqual(d.expand("PS4-7", plan.order, "ss.md"), ["PS4", "PS5", "PS6", "PS7"])
+        self.assertEqual(d.expand("RS14a–RS14c", plan.order, "ss.md"),
+                         ["RS14a", "RS14b", "RS14c"])
+        with self.assertRaisesRegex(d.Failure, "mixes package kinds"):
+            d.expand("PS4–RS14a", plan.order, "ss.md")
 
     def test_names_ranges_brackets(self):
         e = lambda cell: d.expand(cell, self.order, "x")  # noqa: E731
@@ -403,7 +447,7 @@ class ContractReview(unittest.TestCase):
 
     def test_bad_first_cell_names_c(self):
         text = ss_plan(SS_PACKAGES + SS_CONTRACT).replace("| C Titolo |", "| Revisione del contratto |")
-        with self.assertRaisesRegex(d.Failure, r"ss\.md:[0-9]+: the first cell must start with PN, RN or C"):
+        with self.assertRaisesRegex(d.Failure, r"ss\.md:[0-9]+: the first cell must start with PN, RN, C or PSN, RSN, CS"):
             d.parse_ss_plan(text, "ss.md")
 
     def test_proposal_names_c(self):
@@ -606,6 +650,172 @@ class Fallbacks(unittest.TestCase):
     def test_json_values(self):
         self.assertEqual(d.json_values('[1, 2]\n[3]'), [[1, 2], [3]])
         self.assertEqual(d.json_values('{"a": 1}'), [{"a": 1}])
+
+
+@unittest.skipUnless(shutil.which("bash") and shutil.which("jq"), "bash and jq required")
+class MethodScripts(unittest.TestCase):
+    """Exercise the shell entry points with isolated git and GitHub answers."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        self.repo = Path(__file__).resolve().parent.parent
+        self.env = {**os.environ, "PATH": f"{self.bin}{os.pathsep}{os.environ['PATH']}",
+                    "CALLS": str(self.root / "calls"), "TG_REPO": TG,
+                    "TG_ATTESA_WORKFLOW": "ci.yml", "TG_ATTESA_MAX": "1",
+                    "TG_ATTESA_PAUSA": "1"}
+        self.write_tool("git", '''#!/usr/bin/env bash
+case "$*" in
+    'rev-parse --show-toplevel') pwd ;;
+    'rev-parse --verify '*) exit 1 ;;
+    'rev-parse '*) echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ;;
+    'ls-remote '*) exit 2 ;;
+    'switch --quiet -c '*) touch .changed ;;
+    'status --porcelain') if [[ -f .changed ]]; then echo ' M docs/ROADMAP.md'; fi ;;
+    *) exit 0 ;;
+esac
+''')
+
+    def write_tool(self, name, text):
+        path = self.bin / name
+        path.write_text(text, encoding="utf-8")
+        path.chmod(0o755)
+
+    def run_script(self, name, *args, **env):
+        return subprocess.run(["bash", str(self.repo / "scripts" / name), *args],
+                              cwd=self.root, env={**self.env, **env},
+                              capture_output=True, text=True, timeout=15)
+
+    def test_wait_selects_workflow_with_default_commit_sha_and_run_id(self):
+        # A second workflow has failed on the same commit: the generic endpoint
+        # deliberately returns that run, so selecting it fails this test.
+        self.write_tool("gh", '''#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "$CALLS"
+case "$2" in
+    */actions/workflows/*/runs?*)
+        echo '{"workflow_runs":[{"id":42,"status":"completed","conclusion":"success"}]}' ;;
+    */actions/runs/42) echo '{"id":42,"status":"completed","conclusion":"success"}' ;;
+    *) echo '{"workflow_runs":[{"id":99,"status":"completed","conclusion":"failure"}]}' ;;
+esac
+''')
+        sha = "a" * 40
+        for args, workflow, endpoint in (([], "ci.yml", f"workflows/ci.yml/runs?head_sha={sha}&per_page=1"),
+                                         (["b" * 40], "ci.yml", f"workflows/ci.yml/runs?head_sha={'b' * 40}&per_page=1"),
+                                         ([], "other.yml", f"workflows/other.yml/runs?head_sha={sha}&per_page=1"),
+                                         (["42"], "other.yml", "runs/42")):
+            with self.subTest(args=args, workflow=workflow):
+                result = self.run_script("ci-attendi.sh", *args, TG_ATTESA_WORKFLOW=workflow)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual((self.root / "calls").read_text(), f"api repos/{TG}/actions/{endpoint}\n")
+                (self.root / "calls").unlink()
+
+    def prepare_stage(self, stage, modern=True, wrong_dep=False):
+        prefix = "T" if modern else ""
+        rows = [tg_row(f"R{prefix}5", None, "—", "gemini"),
+                tg_row(f"P{prefix}5", None, "R5" if wrong_dep else f"R{prefix}5")]
+        text = tg_plan(rows).replace("# Tappa 0.7", f"# Tappa {stage}")
+        text = text.replace("## 5.", "- **Stato:** in preparazione\n\n## 5.")
+        plan = self.root / "docs" / "tappe" / f"{stage}-test.md"
+        plan.parent.mkdir(parents=True)
+        plan.write_text(text, encoding="utf-8")
+        sheet = plan.parent / "0.7" / f"P{prefix}5.md"
+        sheet.parent.mkdir()
+        sheet.write_text("Sheet", encoding="utf-8")
+        (self.root / "docs" / "ROADMAP.md").write_text(
+            "| 7 | 0.7 | old | **chiusa** | old.md |\n"
+            "| 7.5 | 0.7.5 | patch | in preparazione | patch.md |\n"
+            "| 8 | 0.8 | next | in preparazione | next.md |\n", encoding="utf-8")
+        # Every mutation is logged and answered locally; there is no network.
+        self.write_tool("gh", '''#!/usr/bin/env python3
+import json, os, sys
+from pathlib import Path
+args = sys.argv[2:]
+method = args[args.index('-X') + 1] if '-X' in args else 'GET'
+path = next(a for a in args if a.startswith('repos/'))
+data = json.load(sys.stdin) if '--input' in args else None
+with open(os.environ['CALLS'], 'a') as log:
+    log.write(json.dumps([method, path, data]) + '\\n')
+if method == 'GET' and '/labels?' in path:
+    print(json.dumps([{'name': 'agente:' + a} for a in ('claude', 'gemini')]))
+elif method == 'GET' and '/milestones?' in path:
+    print('[{"title":"v''' + stage + '''","number":8}]')
+elif method == 'POST' and path.endswith('/issues'):
+    counter = Path('counter')
+    n = int(counter.read_text()) + 1 if counter.exists() else 10
+    counter.write_text(str(n))
+    print(n)
+elif method == 'GET' and '/issues/' in path:
+    print('1000 closed')
+elif method == 'GET':
+    print('[]')
+elif method == 'POST' and path.endswith('/pulls'):
+    print('https://example.invalid/pull/1')
+else:
+    print('{}')
+''')
+
+    def test_open_stage_uses_new_prefixes_in_issues_dependencies_and_pending_file(self):
+        self.prepare_stage("0.8")
+        result = self.run_script("apri-tappa.sh", "0.8", "--si", "--senza-project", "--senza-pr")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = [json.loads(line) for line in (self.root / "calls").read_text().splitlines()]
+        bodies = [data["body"] for method, _, data in calls if method == "PATCH"]
+        self.assertIn("tests/verifica/in-attesa/0.8-RT5.txt", bodies[0])
+        self.assertIn("**Riferimenti del pacchetto:** PT5 (#11)", bodies[0])
+        self.assertIn("**Dipende da:** #10 (RT5)", bodies[1])
+        titles = [data["title"] for method, path, data in calls
+                  if method == "POST" and path.endswith("/issues")]
+        self.assertEqual(titles, ["[0.8-RT5] Riferimenti RT5", "[0.8-PT5] Lavoro PT5"])
+
+    def test_open_patch_stage_updates_only_the_whole_roadmap_version(self):
+        self.prepare_stage("0.7.5", modern=False)
+        result = self.run_script("apri-tappa.sh", "0.7.5", "--si", "--senza-project")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.root / "docs" / "ROADMAP.md").read_text(),
+                         "| 7 | 0.7 | old | **chiusa** | old.md |\n"
+                         "| 7.5 | 0.7.5 | patch | **aperta** | patch.md |\n"
+                         "| 8 | 0.8 | next | in preparazione | next.md |\n")
+
+    def test_open_stage_rejects_old_prefix_in_rows_and_dependencies(self):
+        for modern, wrong_dep in ((False, False), (True, True)):
+            with self.subTest(modern=modern):
+                # Each fixture gets a separate tree.
+                with tempfile.TemporaryDirectory() as tmp:
+                    previous = self.root
+                    self.root = Path(tmp)
+                    try:
+                        self.prepare_stage("0.8", modern, wrong_dep)
+                        result = self.run_script("apri-tappa.sh", "0.8", "--prova", "--senza-project")
+                    finally:
+                        self.root = previous
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("PTN", result.stderr)
+                self.assertIn("stage 0.8", result.stderr)
+
+    @unittest.skipUnless(shutil.which("cmake"), "CMake required")
+    def test_pending_files_accept_both_prefixes_and_split_blocks(self):
+        pending = self.root / "pending"
+        pending.mkdir()
+        names = ["0.7-R5.txt", "0.7.5-R5a.txt", "0.8-RT5.txt", "0.8-RT14a.txt"]
+        for i, name in enumerate(names):
+            (pending / name).write_text(f"area/case{i} #1\n", encoding="utf-8")
+        check = self.root / "check.cmake"
+        check.write_text(f'''cmake_minimum_required(VERSION 3.20)
+include("{self.repo / 'tests/verifica/pending_list.cmake'}")
+tg_read_pending_list("{pending}" "area/case0;area/case1;area/case2;area/case3" result)
+if(result_ERRORS)
+    message(FATAL_ERROR "${{result_ERRORS}}")
+endif()
+list(LENGTH result_NAMES count)
+if(NOT count EQUAL 4)
+    message(FATAL_ERROR "Expected four pending cases")
+endif()
+''', encoding="utf-8")
+        result = subprocess.run(["cmake", "-P", str(check)], capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

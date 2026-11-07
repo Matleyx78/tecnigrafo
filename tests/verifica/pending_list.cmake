@@ -6,8 +6,8 @@
 # references (X.Y or X.Y.Z, for example 0.7-R16.txt or 0.7.5-R1.txt), or
 # <X.Y>-R<N>a.txt with a lowercase letter when the references of a package
 # are split into smaller blocks (0.7-R16a.txt, 0.7-R16b.txt). The package of
-# references adds its file and
-# the package of work deletes it, so two packages running in parallel never
+# references uses RT from stage 0.8 (0.8-RT5.txt, 0.8-RT14a.txt), adds its
+# file, and the package of work deletes it, so two packages running in parallel never
 # touch the same path and the list needs no merge.
 #
 # A file has one line per case, "<area>/<name> #<issue>" or
@@ -56,9 +56,9 @@ function(tg_read_pending_list directory known_cases prefix)
             continue()
         endif()
         set(shown "${display}/${file_name}")
-        if(IS_DIRECTORY "${entry}" OR NOT file_name MATCHES "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))?-R[0-9]+[a-z]?\\.txt$")
+        if(IS_DIRECTORY "${entry}" OR NOT file_name MATCHES "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))?-RT?[0-9]+[a-z]?\\.txt$")
             list(APPEND errors
-                "${shown}: expected a file named <X.Y>-R<N>.txt or <X.Y>-R<N>a.txt, after the tag of its block of references")
+                "${shown}: expected a file named <X.Y>-R<N>.txt or <X.Y>-R<N>a.txt (RT from stage 0.8), after the tag of its block of references")
             continue()
         endif()
         list(APPEND files "${entry}")

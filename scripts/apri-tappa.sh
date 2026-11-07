@@ -14,7 +14,8 @@
 # confirmation. Then it:
 #
 #   1. creates the label tappa-<tappa> and the milestone v<tappa>, if missing;
-#   2. creates one issue [<tappa>-PN] or [<tappa>-RN] per row, with the labels
+#   2. creates one issue [<tappa>-PTN] or [<tappa>-RTN] per row (PN/RN before
+#      stage 0.8), with the labels
 #      of the plan (tappa, pacchetto or riferimenti, difficulty, agente:...) and
 #      a body that cites the sheet, the dependencies and the references;
 #   3. marks the native "blocked by" dependencies of the new issues, also
@@ -253,6 +254,16 @@ while [[ $# -gt 0 ]]; do
 done
 stage_re='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))?'
 [[ $tappa =~ ^$stage_re$ ]] || usage
+# The prefix follows Tecnigrafo's stage, including patch stages such as 0.7.5.
+work_prefix=P
+ref_prefix=R
+stage_tail=${tappa#*.}
+if (( ${tappa%%.*} > 0 || ${stage_tail%%.*} >= 8 )); then
+    work_prefix=PT
+    ref_prefix=RT
+fi
+package_re="(${work_prefix}|${ref_prefix})[0-9]+[a-z]?"
+reference_re="(${ref_prefix}[0-9]+[a-z]?)([^0-9a-z]|$)"
 if [[ $only_project -eq 1 ]]; then
     [[ $with_project -eq 1 ]] || die "--solo-project and --senza-project exclude each other."
     with_pr=0
@@ -322,15 +333,15 @@ declare -A row_line=() row_name=() row_sheet=() row_issue=() row_deps=() row_ref
 problems=()
 sheet_re='\]\(([^)]+\.md)\)'
 while IFS=$'\x1f' read -r line pkg sheet issue deps refs diff agent model effort; do
-    if [[ ! $pkg =~ ^([PR][0-9]+[a-z]?)[[:space:]]+(.+)$ ]]; then
-        problems+=("line $line: the first cell must start with PN or RN and a title: \"$pkg\"")
+    if [[ ! $pkg =~ ^($package_re)[[:space:]]+(.+)$ ]]; then
+        problems+=("line $line: the first cell must start with ${work_prefix}N or ${ref_prefix}N for stage $tappa and a title: \"$pkg\"")
         continue
     fi
     id=${BASH_REMATCH[1]}
     [[ -z ${row_line[$id]:-} ]] || problems+=("line $line: $id appears twice")
     ids+=("$id")
     row_line[$id]=$line
-    row_name[$id]=${BASH_REMATCH[2]}
+    row_name[$id]=${BASH_REMATCH[3]}
     row_sheet[$id]=''
     if [[ $sheet =~ $sheet_re ]]; then
         row_sheet[$id]=docs/tappe/${BASH_REMATCH[1]}
@@ -363,7 +374,8 @@ split_deps() {
 # earlier in the table.
 declare -A seen=()
 for id in "${ids[@]}"; do
-    work=P${id#?}
+    work=$work_prefix${id#"$ref_prefix"}
+    [[ $id == "$work_prefix"* ]] && work=$id
     row_state[$id]=create
     [[ -n ${row_issue[$id]} ]] && row_state[$id]=exists
     if [[ $id == R* && -z ${row_line[$work]:-} ]]; then
@@ -377,7 +389,7 @@ for id in "${ids[@]}"; do
         fi
     fi
     while IFS= read -r dep; do
-        if [[ $dep =~ ^[PR][0-9]+[a-z]?$ ]]; then
+        if [[ $dep =~ ^$package_re$ ]]; then
             if [[ -z ${seen[$dep]:-} ]]; then
                 problems+=("$id depends on $dep, which is not earlier in the table")
             elif [[ ${row_state[$dep]} == wait && ${row_state[$id]} == create ]]; then
@@ -385,7 +397,7 @@ for id in "${ids[@]}"; do
                 row_why[$id]="depends on $dep, which waits"
             fi
         elif [[ ! $dep =~ ^(#[0-9]+|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+)$ ]]; then
-            problems+=("$id: dependency \"$dep\" is not PN, RN, #N or owner/repo#N")
+            problems+=("$id: dependency \"$dep\" is not ${work_prefix}N, ${ref_prefix}N, #N or owner/repo#N for stage $tappa")
         fi
     done < <(split_deps "${row_deps[$id]}")
     seen[$id]=1
@@ -522,7 +534,7 @@ done
 
 # A dependency as the body shows it: "#12 (P3)" or "Matleyx78/solid-space#20".
 dep_text() { # dep
-    if [[ $1 =~ ^[PR][0-9]+[a-z]?$ ]]; then
+    if [[ $1 =~ ^$package_re$ ]]; then
         printf '#%s (%s)' "${row_issue[$1]}" "$1"
     else
         printf '%s' "$1"
@@ -541,7 +553,7 @@ body_of() { # id
     line="**Tappa:** [$tappa — $stage_title]($blob/$doc)"
     if [[ $id == P* ]]; then
         local refs=${row_refs[$id]}
-        if [[ $refs =~ ^(R[0-9]+[a-z]?)([^0-9a-z]|$) ]]; then
+        if [[ $refs =~ ^$reference_re ]]; then
             local ref=${BASH_REMATCH[1]}
             [[ -z ${row_issue[$ref]:-} ]] || refs="#${row_issue[$ref]} ($ref)"
         fi
@@ -559,7 +571,7 @@ Leggi la **scheda** del pacchetto: file, interfacce, test e criterio di "fatto".
 Scrivi un commento e aspetta l'assegnazione prima di iniziare. Leggi [CONTRIBUTING.md]($blob/CONTRIBUTING.md); se usi un'IA, anche [AGENTS.md]($blob/AGENTS.md).
 EOF
     else
-        work=P${id#?}
+        work=$work_prefix${id#"$ref_prefix"}
         echo "$line · **Riferimenti del pacchetto:** $work (#${row_issue[$work]:-…})"
         [[ -z ${row_sheet[$id]} ]] || echo "**Scheda:** $(sheet_link "${row_sheet[$id]}") (fa fede la scheda)"
         [[ -z ${row_sheet[$work]} ]] || echo "**Scheda del lavoro:** $(sheet_link "${row_sheet[$work]}")"
@@ -574,7 +586,7 @@ Scrivi i casi di verifica del pacchetto $work prima che il lavoro cominci: ogni 
 - Tocca solo \`tests/verifica/casi/\`, \`tests/verifica/sorgenti.json\` e \`tests/verifica/in-attesa/\`.
 - Valori attesi da calcoli, file pubblici o programmi di riferimento, **mai** eseguendo Tecnigrafo, \`tecnigrafo-script\` o \`tecnigrafo-mcp\`.
 - File presi dal web: indirizzo, versione, hash SHA-256 e licenza in \`sorgenti.json\`, link alla licenza nella pull request.
-- I nuovi casi vanno nel tuo file \`tests/verifica/in-attesa/<X.Y>-R<N>.txt\` (il tag di questo blocco, con la lettera se è diviso: \`<X.Y>-R<N>a.txt\`), una riga \`<area>/<nome> #<issue del lavoro>\` per caso.
+- I nuovi casi vanno nel tuo file \`tests/verifica/in-attesa/$tappa-$id.txt\` (il tag di questo blocco, con la lettera se è diviso: \`$tappa-${ref_prefix}<N>a.txt\`), una riga \`<area>/<nome> #<issue del lavoro>\` per caso.
 - La pull request è finita con la CI verde, controlli anticipati compresi ([ADR 0037]($blob/docs/adr/0037-controllo-anticipato-dei-riferimenti.md)): i casi si possono eseguire per sapere se sono validi, mai per ricavare un valore atteso. Non si aggiunge \`esente\`, e lo si toglie dai casi che si correggono.
 EOF
     fi
@@ -591,7 +603,7 @@ done
 # Prints "<id> <state>" of the issue a dependency names, or nothing.
 dep_issue() { # dep
     local where number
-    if [[ $1 =~ ^[PR][0-9]+[a-z]?$ ]]; then
+    if [[ $1 =~ ^$package_re$ ]]; then
         where=$repo number=${row_issue[$1]}
     elif [[ $1 =~ ^#([0-9]+)$ ]]; then
         where=$repo number=${BASH_REMATCH[1]}
@@ -640,7 +652,7 @@ if [[ $only_project -eq 1 ]]; then
         fi
         [[ $state == open ]] || continue
         while IFS= read -r dep; do
-            if [[ $dep =~ ^[PR][0-9]+[a-z]?$ && -z ${row_issue[$dep]} ]]; then
+            if [[ $dep =~ ^$package_re$ && -z ${row_issue[$dep]} ]]; then
                 waiting[$id]=1
                 continue
             fi
@@ -748,7 +760,7 @@ if grep -qE '^- \*\*Stato:\*\* *(in programma|in preparazione)' "$doc"; then
         sed -i -E "/^- \*\*Milestone GitHub:\*\*/a - **Apertura:** $today" "$doc"
     fi
     awk -F'|' -v OFS='|' -v v="$tappa" '
-        /^\| *[0-9]+ *\| *[0-9.]+ *\|/ { c = $3; gsub(/ /, "", c); if (c == v) $5 = " **aperta** " }
+        /^\| *[0-9]+(\.[0-9]+)* *\| *[0-9.]+ *\|/ { c = $3; gsub(/ /, "", c); if (c == v) $5 = " **aperta** " }
         { print }
     ' docs/ROADMAP.md > docs/ROADMAP.md.tmp && mv docs/ROADMAP.md.tmp docs/ROADMAP.md
 fi
