@@ -1151,4 +1151,12 @@ i rimandi ai documenti che cambia.
   - **Icone contate a coppie**: nei pacchetti delle icone un'icona a 16 e 32 px
     conta come un file per la misura del pacchetto.
 
-  Il modello della quota resta da decidere.
+  - **Modello della quota nella 0.8**: la quota della 0.8 è solo
+    un'annotazione, ma il suo modello tiene separate tre cose, perché possa
+    diventare associativa e, negli schizzi, un vincolo che comanda senza rifarla:
+    come si mostra (stile, testo, frecce, posizione), che cosa misura (oggi
+    punti di definizione, domani riferimenti a entità) e chi decide il valore
+    (oggi la misura, domani un vincolo). I dati DXF standard restano nel DXF,
+    quelli propri in `extensions.json`; rigenerare la geometria della quota non
+    cancella i dati sconosciuti (parere di Codex nella #522, punto 5). Lo scrive
+    l'ADR delle entità composte della 0.8.

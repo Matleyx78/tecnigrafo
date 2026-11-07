@@ -18,8 +18,8 @@
   [0040](../../adr/0040-icone-a-ruoli.md); le decisioni del piano della 0.7.5 sui
   blocchi, le quote e i retini (sezione 5); la
   [#538](https://github.com/Matleyx78/tecnigrafo/issues/538), prima analisi dei
-  blocchi dell'elettrico; i testi delle due richieste dei retini, che il
-  responsabile ti dà nella chat
+  blocchi dell'elettrico; i testi delle due richieste dei retini, nel
+  commento del responsabile nella issue di questo pacchetto
 
 ## Perché
 
