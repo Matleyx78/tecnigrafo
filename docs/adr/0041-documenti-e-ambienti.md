@@ -1,6 +1,6 @@
 # ADR 0041: Documenti, ambienti e confini dei moduli
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-07
 - **Completa:** [ADR 0009](0009-interfaccia-grafica.md), punto 1 (gli ambienti
   del registro delle azioni), e [ADR 0030](0030-solid-space-kernel-di-tecnigrafo.md),

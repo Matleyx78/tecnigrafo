@@ -1,6 +1,6 @@
 # ADR 0039: Decisione visiva dell'interfaccia
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-07
 
 ## Contesto

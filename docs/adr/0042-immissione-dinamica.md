@@ -1,6 +1,6 @@
 # ADR 0042: Immissione dinamica vicino al cursore
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-07
 
 ## Contesto

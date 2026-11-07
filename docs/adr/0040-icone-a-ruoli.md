@@ -1,6 +1,6 @@
 # ADR 0040: Icone a ruoli
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-07
 - **Sostituisce in parte:** [ADR 0009](0009-interfaccia-grafica.md), punto 4
   (il secondo comma: icone monocromatiche)

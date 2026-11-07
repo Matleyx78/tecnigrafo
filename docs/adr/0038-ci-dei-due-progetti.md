@@ -1,6 +1,6 @@
 # ADR 0038: La CI dei due progetti
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-07
 
 ## Contesto
