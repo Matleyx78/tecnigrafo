@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QImage>
@@ -9,10 +10,21 @@
 #include <QTemporaryDir>
 #include <gtest/gtest.h>
 
+#include <string>
+
 namespace tg::app {
 namespace {
 
-TEST(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
+// QProcess needs an application object, and gtest_main creates none.
+class GalleryTest : public ::testing::Test {
+private:
+    int m_argc = 1;
+    std::string m_name = "tg_app_gallery_tests";
+    char* m_argv = m_name.data();
+    QCoreApplication m_application{m_argc, &m_argv};
+};
+
+TEST_F(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
     const QTemporaryDir folder;
     ASSERT_TRUE(folder.isValid());
     QProcess process;
@@ -66,7 +78,7 @@ TEST(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
     }
 }
 
-TEST(GalleryTest, RejectsMissingArgumentAndUnwritableDestination) {
+TEST_F(GalleryTest, RejectsMissingArgumentAndUnwritableDestination) {
     const QTemporaryDir folder;
     ASSERT_TRUE(folder.isValid());
     const QString blocked = QDir(folder.path()).filePath(QStringLiteral("file"));
