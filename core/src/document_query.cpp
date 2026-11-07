@@ -238,8 +238,11 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         consider(curveDistance, id.value);
     }
     if (modes.intersection) {
-        // Stable discovery order also resolves intersections of several pairs
-        // at the same point. Shared stretches deliberately supply no points.
+        // Stable discovery order is only a deterministic tie-break. Different
+        // pairs meeting at one point may differ by an ulp, without a visible
+        // effect: snap still picks the point nearest the pointer. solid-space
+        // promises identical bits when swapping a pair, not between pairs.
+        // Shared stretches deliberately supply no points.
         std::ranges::sort(nearbyCurves, {}, &EntityId::value);
         const auto considerCrossings = [&](const Intersections& found, std::uint64_t id) {
             curvePoints.clear();

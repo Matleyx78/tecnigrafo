@@ -26,10 +26,15 @@
 L'intestazione di solid-space dice che Tecnigrafo prende gli estremi di un arco
 da `endpoints()`, non da coseno e seno propri, perché concordino con il
 significato esatto dell'arco che usano intersezioni e unione (0.7-P22, B13).
-Snap e grip li calcolano ancora con `std::cos` e `std::sin`
+Snap e grip fuori dagli assi li calcolano ancora con `std::cos` e `std::sin`
 (`pointAt` in `core/src/arc_geometry.cpp`, `arcEndpoint` in `grips.cpp`), quindi
 il punto agganciato all'estremo di un arco può differire di qualche ulp da
-quello che `TRIM` o `JOIN` considerano l'estremo.
+quello che `TRIM` o `JOIN` considerano l'estremo. Sugli assi resta invece
+l'eccezione già fissata dalla [#422](https://github.com/Matleyx78/tecnigrafo/issues/422):
+gli estremi sono esattamente `centro ± raggio`, anche per lo snap. Non devono
+coincidere bit per bit con `endpoints()` sugli assi: questa correzione conserva
+i casi esistenti e resta entro l'errore dichiarato dal kernel per i dati nel
+dominio di quella garanzia.
 
 ## File
 
@@ -47,7 +52,11 @@ quello che `TRIM` o `JOIN` considerano l'estremo.
    `fromPoint()`. Se solid-space risponde con una diagnosi (arco degenere, fuori
    dominio), la funzione restituisce gli estremi di oggi (`startPoint` e
    `endPoint` della sua `ArcGeometry`): così nessun arco che oggi ha estremi resta
-   senza.
+   senza. Sia con un risultato sia con una diagnosi, conserva gli estremi
+   esatti sugli assi della #422: usa le stesse condizioni di `arcEndpoint`,
+   `normalizeAngle(angle)` uguale a `0.0`, `kPi / 2.0`, `kPi` o
+   `3.0 * kPi / 2.0`, sugli angoli `geometry.startAngle` e
+   `geometry.startAngle + geometry.sweep`.
 2. La usano lo snap agli estremi di un `Arc` (`snap_points.cpp`) e i grip degli
    estremi di un `Arc` (`grips.cpp`, al posto di `arcEndpoint` per quei due
    punti). Gli archi dei segmenti di polilinea non cambiano: i loro estremi sono
@@ -81,10 +90,15 @@ quello che `TRIM` o `JOIN` considerano l'estremo.
   `g::endpoints()`.
 - Un arco degenere (raggio zero, se il documento lo ammette): snap e grip danno
   gli estremi di oggi.
+- Ripiego con diagnosi sugli assi: un arco di raggio zero da 0 a π/2 dà il
+  centro per entrambi gli estremi; un arco con centro `(0, 2^51)`, raggio 13 e
+  gli stessi angoli è fuori dominio e dà esattamente `(13, 2^51)` e
+  `(0, 2^51 + 13)`, per snap e grip, senza residui trigonometrici.
 
 ## Fatto quando
 
-- Snap agli estremi e grip degli estremi di un `Arc` vengono da `endpoints()`.
+- Snap agli estremi e grip degli estremi di un `Arc` vengono da `endpoints()`,
+  salvo il ripiego con diagnosi e gli estremi esatti sugli assi della #422.
 - Il commento di `document_query.cpp` dice che l'ordine è uno spareggio.
 - I test qui sopra esistono e passano, e i casi di verifica sono invariati.
 - La CI è verde.

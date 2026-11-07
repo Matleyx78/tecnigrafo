@@ -3,6 +3,7 @@
 
 #include "tg/core/grips.hpp"
 
+#include "solid_space/geom2d/curves.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/text_metrics.hpp"
@@ -10,7 +11,9 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <bit>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <variant>
 
@@ -29,6 +32,69 @@ void expectPoint(const Vec2& actual, const Vec2& expected) {
 void expectSamePoint(const Vec2& actual, const Vec2& expected) {
     EXPECT_EQ(actual.x, expected.x);
     EXPECT_EQ(actual.y, expected.y);
+}
+
+// Compare representations: even a one-ulp difference would break the
+// agreement with the exact arc used by solid-space intersections and JOIN.
+void expectSameBits(const Vec2& actual, const Vec2& expected) {
+    EXPECT_EQ(std::bit_cast<std::uint64_t>(actual.x), std::bit_cast<std::uint64_t>(expected.x));
+    EXPECT_EQ(std::bit_cast<std::uint64_t>(actual.y), std::bit_cast<std::uint64_t>(expected.y));
+}
+
+TEST(Grips, ArcEndpointsMatchKernelBits) {
+    namespace g = solid_space::geom2d;
+    constexpr double kDegree = kPi / 180.0;
+    // Non-axis directions, a wrapped arc and a whole-circle arc exercise the
+    // entity-to-kernel sweep translation as well as endpoint rounding. Keep
+    // this translation independent of curveOf() to catch changes on either side.
+    for (const Arc& arc : std::array{Arc{{3, -7}, 13, 10 * kDegree, 110 * kDegree},
+                                     Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
+                                     Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
+        double sweep = arc.endAngle - arc.startAngle;
+        if (!(sweep > 0.0)) {
+            sweep += g::kFullTurn;
+        }
+        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, sweep};
+        const auto expected = g::endpoints(curve);
+        ASSERT_TRUE(expected.hasValue());
+        const auto actual = gripPoints(Entity{arc});
+        ASSERT_EQ(actual.size(), 4U);
+        expectSameBits(actual[0], {expected.value().start.x, expected.value().start.y});
+        expectSameBits(actual[1], {expected.value().end.x, expected.value().end.y});
+    }
+}
+
+TEST(Grips, RejectedArcKeepsExactAxisEndpoints) {
+    namespace g = solid_space::geom2d;
+    const Arc degenerate{{1.25, -3.5}, 0.0, 0.0, kPi / 2.0};
+    const Arc outsideDomain{{0.0, 0x1p51}, 13.0, 0.0, kPi / 2.0};
+    for (const Arc& arc : {degenerate, outsideDomain}) {
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const auto rejected = g::endpoints(g::Arc{center, arc.radius, 0.0, kPi / 2.0});
+        ASSERT_FALSE(rejected.hasValue());
+        const auto actual = gripPoints(Entity{arc});
+        ASSERT_EQ(actual.size(), 4U);
+        // The second case would retain a cosine residue without the axis
+        // adjustment after the kernel rejects the out-of-domain centre.
+        expectSameBits(actual[0], {arc.center.x + arc.radius, arc.center.y});
+        expectSameBits(actual[1], {arc.center.x, arc.center.y + arc.radius});
+    }
+}
+
+TEST(Grips, RejectedArcKeepsGeometryEndpoints) {
+    namespace g = solid_space::geom2d;
+    for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9}, Arc{{0x1p51, -7}, 13, 0.2, 1.9},
+                                     Arc{{3, -7}, -13, 0.2, 1.9}}) {
+        const auto geometry = arc.geometry();
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const g::Arc curve{center, arc.radius, arc.startAngle, geometry.sweep};
+        const auto rejected = g::endpoints(curve);
+        ASSERT_FALSE(rejected.hasValue());
+        const auto actual = gripPoints(Entity{arc});
+        ASSERT_EQ(actual.size(), 4U);
+        expectSameBits(actual[0], startPoint(geometry));
+        expectSameBits(actual[1], endPoint(geometry));
+    }
 }
 
 TEST(Grips, PointOrderForEveryEntity) {
@@ -152,13 +218,17 @@ TEST(Grips, ArcAcrossZeroKeepsExactEndpointsOnAxes) {
     expectSamePoint(points[3], center);
 }
 
-TEST(Grips, ArcEndpointsOffAxesMatchTheArcGeometry) {
+TEST(Grips, ArcEndpointsOffAxesMatchTheKernel) {
+    namespace g = solid_space::geom2d;
     const Arc arc{{1.25, -3.5}, 7.0, degreesToRadians(30.0), degreesToRadians(150.0)};
     const auto geometry = arc.geometry();
+    const g::Point2 center{arc.center.x, arc.center.y};
+    const auto ends = g::endpoints(g::Arc{center, arc.radius, arc.startAngle, geometry.sweep});
+    ASSERT_TRUE(ends.hasValue());
     const auto points = gripPoints(arc);
     ASSERT_EQ(points.size(), 4U);
-    expectSamePoint(points[0], startPoint(geometry));
-    expectSamePoint(points[1], endPoint(geometry));
+    expectSameBits(points[0], {ends.value().start.x, ends.value().start.y});
+    expectSameBits(points[1], {ends.value().end.x, ends.value().end.y});
 }
 
 TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {

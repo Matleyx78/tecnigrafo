@@ -3,6 +3,7 @@
 
 #include "tg/core/grips.hpp"
 
+#include "solid_space_bridge.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 
@@ -21,23 +22,6 @@ Vec2 midpoint(const PolylineSegment& segment) {
         return pointAt(arc, arc.startAngle + arc.sweep / 2.0);
     }
     return (segment.start + segment.end) * 0.5;
-}
-
-Vec2 arcEndpoint(const ArcGeometry& arc, double angle) {
-    const double normalized = normalizeAngle(angle);
-    if (normalized == 0.0) {
-        return {arc.center.x + arc.radius, arc.center.y};
-    }
-    if (normalized == kPi / 2.0) {
-        return {arc.center.x, arc.center.y + arc.radius};
-    }
-    if (normalized == kPi) {
-        return {arc.center.x - arc.radius, arc.center.y};
-    }
-    if (normalized == 3.0 * kPi / 2.0) {
-        return {arc.center.x, arc.center.y - arc.radius};
-    }
-    return pointAt(arc, angle);
 }
 
 bool twoPointText(const Text& text) {
@@ -100,9 +84,8 @@ std::vector<Vec2> gripPoints(const Entity& entity) {
                 return {value.start, value.end, (value.start + value.end) * 0.5};
             } else if constexpr (std::is_same_v<T, Arc>) {
                 const auto arc = value.geometry();
-                return {arcEndpoint(arc, arc.startAngle),
-                        arcEndpoint(arc, arc.startAngle + arc.sweep),
-                        pointAt(arc, arc.startAngle + arc.sweep / 2.0), value.center};
+                const auto [start, end] = bridge::arcEndpoints(value);
+                return {start, end, pointAt(arc, arc.startAngle + arc.sweep / 2.0), value.center};
             } else if constexpr (std::is_same_v<T, Circle>) {
                 const auto c = value.center;
                 const double r = value.radius;

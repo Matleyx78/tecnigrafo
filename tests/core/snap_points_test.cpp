@@ -3,19 +3,114 @@
 
 #include "tg/core/snap_points.hpp"
 
+#include "solid_space/geom2d/curves.hpp"
 #include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
+#include <cstdint>
 #include <numbers>
 #include <optional>
 #include <vector>
 
 namespace tg::core {
 namespace {
+
+// Compare representations: even a one-ulp difference would break the
+// agreement with the exact arc used by solid-space intersections and JOIN.
+void expectSameBits(const Vec2& actual, const Vec2& expected) {
+    EXPECT_EQ(std::bit_cast<std::uint64_t>(actual.x), std::bit_cast<std::uint64_t>(expected.x));
+    EXPECT_EQ(std::bit_cast<std::uint64_t>(actual.y), std::bit_cast<std::uint64_t>(expected.y));
+}
+
+TEST(SnapPoints, ArcEndpointsMatchKernelBits) {
+    namespace g = solid_space::geom2d;
+    constexpr double kDegree = kPi / 180.0;
+    // Non-axis directions, a wrapped arc and a whole-circle arc exercise the
+    // entity-to-kernel sweep translation as well as endpoint rounding. Keep
+    // this translation independent of curveOf() to catch changes on either side.
+    for (const Arc& arc : std::array{Arc{{3, -7}, 13, 10 * kDegree, 110 * kDegree},
+                                     Arc{{3, -7}, 13, 350 * kDegree, 25 * kDegree},
+                                     Arc{{3, -7}, 13, 10 * kDegree, 10 * kDegree}}) {
+        double sweep = arc.endAngle - arc.startAngle;
+        if (!(sweep > 0.0)) {
+            sweep += g::kFullTurn;
+        }
+        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, sweep};
+        const auto expected = g::endpoints(curve);
+        ASSERT_TRUE(expected.hasValue());
+        std::vector<SnapPoint> snaps;
+        appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
+        ASSERT_EQ(snaps.size(), 2U);
+        const std::array actual{snaps[0].point, snaps[1].point};
+        expectSameBits(actual[0], {expected.value().start.x, expected.value().start.y});
+        expectSameBits(actual[1], {expected.value().end.x, expected.value().end.y});
+    }
+}
+
+TEST(SnapPoints, ArcEndpointsOnAxesStayExact) {
+    const Vec2 center{1.25, -3.5};
+    constexpr double kRadius = 7.0;
+    constexpr std::array<double, 4> kAngles{0.0, kPi / 2.0, kPi, 3.0 * kPi / 2.0};
+    const std::array<Vec2, 4> onAxis{{{center.x + kRadius, center.y},
+                                      {center.x, center.y + kRadius},
+                                      {center.x - kRadius, center.y},
+                                      {center.x, center.y - kRadius}}};
+    for (std::size_t first = 0; first < kAngles.size(); ++first) {
+        for (std::size_t last = 0; last < kAngles.size(); ++last) {
+            if (first == last) {
+                continue;
+            }
+            const Arc arc{center, kRadius, kAngles.at(first), kAngles.at(last)};
+            std::vector<SnapPoint> snaps;
+            appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
+            ASSERT_EQ(snaps.size(), 2U);
+            expectSameBits(snaps[0].point, onAxis.at(first));
+            expectSameBits(snaps[1].point, onAxis.at(last));
+        }
+    }
+}
+
+TEST(SnapPoints, RejectedArcKeepsExactAxisEndpoints) {
+    namespace g = solid_space::geom2d;
+    const Arc degenerate{{1.25, -3.5}, 0.0, 0.0, kPi / 2.0};
+    const Arc outsideDomain{{0.0, 0x1p51}, 13.0, 0.0, kPi / 2.0};
+    for (const Arc& arc : {degenerate, outsideDomain}) {
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const auto rejected = g::endpoints(g::Arc{center, arc.radius, 0.0, kPi / 2.0});
+        ASSERT_FALSE(rejected.hasValue());
+        std::vector<SnapPoint> snaps;
+        appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
+        ASSERT_EQ(snaps.size(), 2U);
+        const std::array actual{snaps[0].point, snaps[1].point};
+        // The second case would retain a cosine residue without the axis
+        // adjustment after the kernel rejects the out-of-domain centre.
+        expectSameBits(actual[0], {arc.center.x + arc.radius, arc.center.y});
+        expectSameBits(actual[1], {arc.center.x, arc.center.y + arc.radius});
+    }
+}
+
+TEST(SnapPoints, RejectedArcKeepsGeometryEndpoints) {
+    namespace g = solid_space::geom2d;
+    for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9}, Arc{{0x1p51, -7}, 13, 0.2, 1.9},
+                                     Arc{{3, -7}, -13, 0.2, 1.9}}) {
+        const auto geometry = arc.geometry();
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const g::Arc curve{center, arc.radius, arc.startAngle, geometry.sweep};
+        const auto rejected = g::endpoints(curve);
+        ASSERT_FALSE(rejected.hasValue());
+        std::vector<SnapPoint> snaps;
+        appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
+        ASSERT_EQ(snaps.size(), 2U);
+        const std::array actual{snaps[0].point, snaps[1].point};
+        expectSameBits(actual[0], startPoint(geometry));
+        expectSameBits(actual[1], endPoint(geometry));
+    }
+}
 
 TEST(SnapPoints, DefaultsAndEquality) {
     // docs/adr/0033, point 6: the modes of today plus intersection.

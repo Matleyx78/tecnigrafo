@@ -3,6 +3,7 @@
 
 #include "tg/core/snap_points.hpp"
 
+#include "solid_space_bridge.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/math.hpp"
 
@@ -185,8 +186,9 @@ void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<
             [&](const Arc& arc) {
                 const ArcGeometry geometry = arc.geometry();
                 if (modes.endpoint) {
-                    out.push_back({startPoint(geometry), SnapKind::Endpoint});
-                    out.push_back({endPoint(geometry), SnapKind::Endpoint});
+                    const auto [start, end] = bridge::arcEndpoints(arc);
+                    out.push_back({start, SnapKind::Endpoint});
+                    out.push_back({end, SnapKind::Endpoint});
                 }
                 if (modes.midpoint) {
                     out.push_back({pointAt(geometry, geometry.startAngle + (geometry.sweep / 2.0)),
