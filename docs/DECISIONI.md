@@ -1045,15 +1045,21 @@ i rimandi ai documenti che cambia.
   - **Idee.** Entrano nella tappa 0.7.5, di cui c'è ora la
     [scheda](tappe/0.7.5-correzione-di-rotta.md): l'allineamento della CI
     ([#521](https://github.com/Matleyx78/tecnigrafo/issues/521)), l'analisi dei
-    pacchetti medi ([#442](https://github.com/Matleyx78/tecnigrafo/issues/442)),
-    `PEDIT` ([#535](https://github.com/Matleyx78/tecnigrafo/issues/535)), da
-    avere prima della 0.8, e la **base di partenza** dell'interfaccia
-    ([#483](https://github.com/Matleyx78/tecnigrafo/issues/483)), che deve
-    essere pronta prima della 0.8; l'autohide dei pannelli
+    pacchetti medi ([#442](https://github.com/Matleyx78/tecnigrafo/issues/442))
+    e l'**interfaccia** ([#483](https://github.com/Matleyx78/tecnigrafo/issues/483)):
+    compilato alla fine della 0.7.5, Tecnigrafo deve presentarsi praticamente
+    come le schermate di riferimento della #483 ed essere pronto per gli
+    ambienti (disegno, parti, assiemi), con documenti in schede e ambiente
+    attivo che guida ribbon, menu e comandi. Il tempo che serve non è un
+    vincolo: cade la durata indicativa di circa 10 giorni del 2026-11-06.
+    L'autohide dei pannelli
     ([#534](https://github.com/Matleyx78/tecnigrafo/issues/534)) si analizza e
-    si decide quando la 0.7.5 lavora alla #483. La
+    si decide in quel lavoro. `PEDIT`
+    ([#535](https://github.com/Matleyx78/tecnigrafo/issues/535)) entra nella
+    tappa 0.8, nella sua [scheda](tappe/0.8-quote-retini-blocchi.md), perché
+    nella 0.7.5 non c'è posto. La
     [#522](https://github.com/Matleyx78/tecnigrafo/issues/522) aspetta il parere
-    di Codex, poi segue la scheda. La
+    di Codex, poi segue la scheda della 0.7.5. La
     [#62](https://github.com/Matleyx78/tecnigrafo/issues/62) resta fuori, per la
     0.9. La [#61](https://github.com/Matleyx78/tecnigrafo/issues/61) è fatta
     nella 0.7 (P12, #354) e si chiude.
