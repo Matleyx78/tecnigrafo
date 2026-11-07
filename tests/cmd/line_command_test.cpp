@@ -36,7 +36,7 @@ protected:
     [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
 
     [[nodiscard]] const Line& line(std::size_t index) const {
-        return std::get<Line>(document().entities()[index].entity);
+        return std::get<Line>(document().find(document().entities()[index].id)->entity);
     }
 
     void point(double x, double y) { runner().submit(PointInput{{x, y}}); }

@@ -34,7 +34,7 @@ protected:
     [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
 
     [[nodiscard]] const core::Circle& circle() const {
-        return std::get<core::Circle>(document().entities().back().entity);
+        return std::get<core::Circle>(document().find(document().entities().back().id)->entity);
     }
 
     void inputs(std::initializer_list<const char*> lines) {

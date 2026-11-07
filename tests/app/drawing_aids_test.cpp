@@ -167,7 +167,8 @@ protected:
         events::press(input(), Qt::Key_Return);
         std::vector<core::Vec2> vertices;
         if (document().entityCount() == before + 1) {
-            const auto& polyline = std::get<core::Polyline>(document().entities().back().entity);
+            const auto entities = document().entities();
+            const auto& polyline = std::get<core::Polyline>(entities.back().entity);
             for (const core::PolylineVertex& vertex : polyline.vertices()) {
                 vertices.push_back(vertex.position);
             }

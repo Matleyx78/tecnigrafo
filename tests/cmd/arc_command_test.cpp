@@ -33,7 +33,7 @@ protected:
     }
 
     [[nodiscard]] const core::Arc& arc() const {
-        return std::get<core::Arc>(m_document.entities().back().entity);
+        return std::get<core::Arc>(m_document.find(m_document.entities().back().id)->entity);
     }
 
     [[nodiscard]] const core::Document& document() const { return m_document; }
@@ -78,7 +78,8 @@ TEST_F(ArcCommandTest, CenterEndCrossesZeroAndTracksFinalPoint) {
     EXPECT_NEAR(arc().endAngle, 0.0, 1e-12);
     inputs({"L", "@0,0", "@0,1", ""});
     EXPECT_EQ(document().entityCount(), 2U);
-    const auto& line = std::get<core::Line>(document().entities().back().entity);
+    const auto entities = document().entities();
+    const auto& line = std::get<core::Line>(entities.back().entity);
     EXPECT_EQ(line.start, (core::Vec2{10, 0}));
 }
 

@@ -633,7 +633,8 @@ public:
     /// Half of the points near a vertex of the document, so that queries hit.
     Vec2 point(const Document& document) {
         if (unit() < 0.5) {
-            const auto& entity = document.entities()[index(document.entityCount())].entity;
+            const auto entities = document.entities();
+            const auto& entity = entities[index(document.entityCount())].entity;
             const auto vertices = std::get<Polyline>(entity).vertices();
             if (!vertices.empty()) {
                 return vertices[index(vertices.size())].position +

@@ -179,7 +179,7 @@ tg_configure_target(tg_bench)
 # Widgets of the application, driven with the Qt Test module and no display
 # (docs/adr/0005). Built only together with the application.
 if(TG_BUILD_APP)
-    find_package(Qt6 6.8 REQUIRED COMPONENTS Svg Test Widgets)
+    find_package(Qt6 6.12 REQUIRED COMPONENTS Svg Test Widgets)
     add_executable(tg_app_tests
         app/color_dialog_test.cpp
         app/property_widgets_test.cpp

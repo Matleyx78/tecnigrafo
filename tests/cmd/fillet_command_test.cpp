@@ -100,7 +100,8 @@ TEST_F(FilletCommandTest, ParallelLinesUseTheSemicircleAndUndoWithinMultiple) {
     type({"FILLET", "R", "5", "M", "120,0", "120,20"});
     ASSERT_EQ(document().entityCount(), 3U);
     ASSERT_TRUE(std::holds_alternative<Arc>(document().entities().back().entity));
-    const auto& arc = std::get<Arc>(document().entities().back().entity);
+    const auto entities = document().entities();
+    const auto& arc = std::get<Arc>(entities.back().entity);
     EXPECT_EQ(arc.center, (core::Vec2{130, 10}));
     EXPECT_EQ(arc.radius, 10.0);
 

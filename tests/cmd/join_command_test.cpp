@@ -76,7 +76,8 @@ TEST_F(JoinCommandTest, MixedSelectionConsumesOnlyTheChainAndCopiesSourcePropert
     EXPECT_EQ(document().find(adjacent), nullptr);
     EXPECT_NE(document().find(detached), nullptr);
     EXPECT_EQ(document().entities().back().properties, properties);
-    const auto* polyline = std::get_if<Polyline>(&document().entities().back().entity);
+    const auto entities = document().entities();
+    const auto* polyline = std::get_if<Polyline>(&entities.back().entity);
     ASSERT_NE(polyline, nullptr);
     ASSERT_EQ(polyline->vertexCount(), 3U);
     EXPECT_EQ(polyline->vertices()[1].position, (core::Vec2{10, 0}));
@@ -96,7 +97,8 @@ TEST_F(JoinCommandTest, AliasJStartsJoin) {
     type({"J", "5,0", "25,0", ""});
     EXPECT_EQ(messages().back(), "2 lines joined into 1 line");
     ASSERT_EQ(document().entityCount(), 1U);
-    const auto* line = std::get_if<Line>(&document().entities().front().entity);
+    const auto entities = document().entities();
+    const auto* line = std::get_if<Line>(&entities.front().entity);
     ASSERT_NE(line, nullptr);
     EXPECT_EQ(line->start, (core::Vec2{0, 0}));
     EXPECT_EQ(line->end, (core::Vec2{30, 0}));

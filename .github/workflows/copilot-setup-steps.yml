@@ -27,7 +27,7 @@ jobs:
     # timeout-minutes of this job: variables go in the steps that need them.
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
           submodules: true
@@ -38,9 +38,13 @@ jobs:
           sudo apt-get install -y ninja-build libgtest-dev clang-format-18 clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev
       # A fixed folder, so the agent knows where Qt is even if the variables
       # set by this action do not reach its session.
+      # aqtinstall and py7zr as in the env of ci.yml (docs/adr/0043, point 3):
+      # this job ignores workflow variables, so the values are written here.
       - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '6.12.0'
+          aqtsource: git+https://github.com/miurahr/aqtinstall.git@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7
+          py7zrversion: '==1.1.4'
           dir: /home/runner/qt
           cache: true
       # The Qt action leaves its log in the working tree, where the agent
@@ -48,7 +52,7 @@ jobs:
       - name: Remove the Qt installer log
         run: rm -f aqtinstall.log
       # The oracle of the verification cases, pinned like in ci.yml.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install the oracle
@@ -64,5 +68,5 @@ jobs:
           # Same build folder the agent uses (.github/copilot-instructions.md).
           TG_BUILD_SUFFIX: -copilot
         run: |
-          cmake --preset ci -DCMAKE_PREFIX_PATH=/home/runner/qt/Qt/6.8.3/gcc_64
+          cmake --preset ci -DCMAKE_PREFIX_PATH=/home/runner/qt/Qt/6.12.0/gcc_64
           cmake --build --preset ci

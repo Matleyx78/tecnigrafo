@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           submodules: true
           persist-credentials: false
@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build libgtest-dev
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: hashFiles('tests/verifica/sorgenti.json') != ''
         with:
           path: build/verifica-sorgenti

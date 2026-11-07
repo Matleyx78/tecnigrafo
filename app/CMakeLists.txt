@@ -5,7 +5,7 @@
 
 # Svg: the icons are SVG files (docs/ICONE.md). A Qt component, not a new
 # library (docs/adr/0002).
-find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets Svg)
+find_package(Qt6 6.12 REQUIRED COMPONENTS Widgets Svg)
 qt_standard_project_setup()
 
 # Everything but main(): shared by the application and its Qt tests.

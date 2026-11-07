@@ -75,7 +75,7 @@ set_target_properties(tg_zlib PROPERTIES
 # SARibbon: the GUI-only dependency approved by ADR 0009 (0.6-P3).
 # Keep Qt optional for the script, sanitizer and fuzz builds without app.
 if(TG_BUILD_APP)
-    find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
+    find_package(Qt6 6.12 REQUIRED COMPONENTS Widgets)
     add_library(tg_saribbon STATIC saribbon/SARibbon.cpp saribbon/SARibbon.h)
     target_include_directories(tg_saribbon SYSTEM PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/saribbon>)

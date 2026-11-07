@@ -25,12 +25,13 @@ TEST(TextCommandTest, LiteralLinesDefaultsAndSingleUndoStep) {
         runner.submitText(input);
     }
     ASSERT_EQ(document.entityCount(), 3U);
-    const auto& first = std::get<core::Text>(document.entities()[0].entity);
+    const auto entities = document.entities();
+    const auto& first = std::get<core::Text>(entities[0].entity);
     EXPECT_EQ(first.value, "  è %%c  ");
     EXPECT_EQ(first.position, (core::Vec2{10, 20}));
     EXPECT_DOUBLE_EQ(first.height, 3);
     EXPECT_DOUBLE_EQ(first.rotation, std::numbers::pi / 2);
-    const auto& second = std::get<core::Text>(document.entities()[1].entity);
+    const auto& second = std::get<core::Text>(entities[1].entity);
     EXPECT_EQ(second.value, "10,20");
     EXPECT_NEAR(second.position.x, 15, 1e-12);
     EXPECT_NEAR(second.position.y, 20, 1e-12);
@@ -62,7 +63,8 @@ TEST(TextCommandTest, ScriptSequenceFinishesAfterOneLineAndCanBeSwitchedOff) {
     EXPECT_FALSE(editor.inTransaction());
     EXPECT_TRUE(runner.preview().empty());
     ASSERT_EQ(document.entityCount(), 1U);
-    const auto& text = std::get<core::Text>(document.entities().front().entity);
+    const auto entities = document.entities();
+    const auto& text = std::get<core::Text>(entities.front().entity);
     EXPECT_EQ(text.value, "  first line  ");
     EXPECT_EQ(text.position, (core::Vec2{10, 20}));
     EXPECT_DOUBLE_EQ(text.height, 3);
@@ -211,7 +213,8 @@ TEST(TextCommandTest, PointMeasurementsAndPreviewOfNextBaseline) {
     character.value = "M";
     auto checkPreview = [&] {
         ASSERT_EQ(command.preview().size(), 1U);
-        const auto& box = std::get<core::Polyline>(command.preview().front());
+        const auto preview = command.preview();
+        const auto& box = std::get<core::Polyline>(preview.front());
         EXPECT_TRUE(box.isClosed());
         ASSERT_EQ(box.vertexCount(), 4U);
         const auto corners = core::textBox(character);
