@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QImage>
+#include <QPalette>
 #include <QTemporaryDir>
 #include <gtest/gtest.h>
 
@@ -72,29 +73,34 @@ TEST(ThemeTest, PalettesAndSceneBackgroundComeFromTheTokens) {
     applyTheme(application(), Theme::Light);
 }
 
-TEST(ThemeTest, SvgIsTintedWithPaletteTextAndKeepsTransparency) {
+TEST(ThemeTest, IconWithoutRolesIsDrawnInTheTextColourAndKeepsTransparency) {
     const QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
     const QString path = directory.filePath(QStringLiteral("test.svg"));
     QFile file(path);
     ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    // An element without a role class is esist, the text of the theme.
     const QByteArray svg =
-        R"(<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect x="8" y="8" width="16" height="16" fill="black"/></svg>)";
+        R"(<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect x="8" y="8" width="16" height="16" fill="currentColor"/></svg>)";
     ASSERT_EQ(file.write(svg), svg.size());
     file.close();
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
-        applyTheme(application(), theme);
-        const QPalette palette = QApplication::palette();
-        const QIcon icon = themedIcon(path, palette);
+        const QIcon icon = themedIcon(path, theme);
         ASSERT_FALSE(icon.isNull());
         const QImage image = icon.pixmap(32, 32).toImage();
-        EXPECT_EQ(image.pixelColor(image.width() / 2, image.height() / 2),
-                  palette.color(QPalette::Text));
+        EXPECT_EQ(image.pixelColor(image.width() / 2, image.height() / 2), themeTokens(theme).text);
         EXPECT_EQ(image.pixelColor(0, 0).alpha(), 0);
     }
-    EXPECT_TRUE(themedIcon(QStringLiteral("missing-icon"), QPalette{}).isNull());
-    EXPECT_TRUE(themedIcon(QString{}, QPalette{}).isNull());
-    applyTheme(application(), Theme::Light);
+    EXPECT_TRUE(themedIcon(QStringLiteral("missing-icon"), Theme::Light).isNull());
+    EXPECT_TRUE(themedIcon(QString{}, Theme::Dark).isNull());
+}
+
+TEST(ThemeTest, ThemeOfAPaletteIsTheThemeThatBuiltIt) {
+    for (const Theme theme : {Theme::Dark, Theme::Light}) {
+        applyTheme(application(), theme);
+        EXPECT_EQ(themeOf(QApplication::palette()), theme);
+    }
+    EXPECT_EQ(themeOf(QPalette{}), Theme::Light);
 }
 
 TEST(ThemeTest, ActionImmediatelyChangesPaletteAndDrawing) {

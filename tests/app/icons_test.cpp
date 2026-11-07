@@ -8,10 +8,11 @@
 #include "theme.hpp"
 
 #include <QAction>
-#include <QApplication>
 #include <QByteArray>
+#include <QColor>
 #include <QDir>
 #include <QFile>
+#include <QIcon>
 #include <QImage>
 #include <QList>
 #include <QPainter>
@@ -20,6 +21,7 @@
 #include <QString>
 #include <QStringList>
 #include <QSvgRenderer>
+#include <QTemporaryDir>
 #include <QXmlStreamReader>
 #include <gtest/gtest.h>
 
@@ -28,8 +30,10 @@
 namespace tg::app {
 namespace {
 
-// The rules of docs/ICONE.md.
-constexpr int kGrid = 24;         // the icon's width and height, in px
+// The rules of docs/ICONE.md. The old icons, on the 24 px grid, are checked
+// here as they were drawn; the role icons (<name>-16.svg, <name>-32.svg,
+// docs/adr/0040) by scripts/icone.py, and here only as Qt draws them.
+constexpr int kGrid = 24;         // the old icons' width and height, in px
 constexpr int kMargin = 2;        // px of the grid left free of ink
 constexpr int kScale = 4;         // the icons are drawn at 4x to measure the margin
 constexpr int kMarginAlpha = 16;  // alpha (of 255) below which a pixel is not ink
@@ -120,9 +124,31 @@ QStringList problemsOf(const QByteArray& data) {
     return problems;
 }
 
+/// The grid of a role icon from its name (16 or 32), or 0 for an old icon.
+int roleGrid(const QString& fileName) {
+    if (fileName.endsWith(QStringLiteral("-16.svg"))) {
+        return 16;
+    }
+    if (fileName.endsWith(QStringLiteral("-32.svg"))) {
+        return 32;
+    }
+    return 0;
+}
+
+/// The px left free of ink on a role grid (docs/ICONE.md).
+int roleMargin(int grid) {
+    return grid == 16 ? 1 : 2;
+}
+
+/// The icon name of a file: without .svg and without the grid suffix.
+QString iconName(const QString& fileName) {
+    const QString name = fileName.chopped(4);
+    return roleGrid(fileName) == 0 ? name : name.chopped(3);
+}
+
 /// The icon drawn at kScale times its size on a transparent background.
-QImage drawAtScale(QSvgRenderer& renderer) {
-    const int side = kGrid * kScale;
+QImage drawAtScale(QSvgRenderer& renderer, int grid = kGrid) {
+    const int side = grid * kScale;
     QImage image(side, side, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
     QPainter painter(&image);
@@ -138,9 +164,9 @@ struct InkCount {
     int inMargin{0};
 };
 
-InkCount countInk(const QImage& image) {
+InkCount countInk(const QImage& image, int marginPx = kMargin) {
     InkCount count;
-    const int margin = kMargin * kScale;
+    const int margin = marginPx * kScale;
     for (int y = 0; y < image.height(); ++y) {
         for (int x = 0; x < image.width(); ++x) {
             if (qAlpha(image.pixel(x, y)) <= kMarginAlpha) {
@@ -161,6 +187,42 @@ QString resourcePath(const QString& icon) {
     return QStringLiteral(":/tg/icons/%1.svg").arg(icon);
 }
 
+/// Whether the icon `icon` has a file: the old one or a role one.
+bool hasIconFile(const QString& icon) {
+    return QFile::exists(resourcePath(icon)) ||
+           QFile::exists(resourcePath(icon + QStringLiteral("-16"))) ||
+           QFile::exists(resourcePath(icon + QStringLiteral("-32")));
+}
+
+/// The role icons drawn before the action that will use them: the example
+/// of docs/ICONE.md, which the variants of CIRCLE use (docs/tappe/0.7.5 P19).
+bool waitsForItsAction(const QString& icon) {
+    return icon == QStringLiteral("draw-circle-cr");
+}
+
+/// Writes `svg` as `name` in `directory`.
+void writeSvg(const QTemporaryDir& directory, const QString& name, const QByteArray& svg) {
+    QFile file(directory.filePath(name));
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    ASSERT_EQ(file.write(svg), svg.size());
+}
+
+/// A square icon of `grid` px whose whole area is filled in the role `role`.
+QByteArray filledIcon(int grid, const char* role) {
+    return QStringLiteral(R"(<svg xmlns="http://www.w3.org/2000/svg" width="%1" height="%1" )"
+                          R"(viewBox="0 0 %1 %1"><rect class="%2" x="0" y="0" width="%1" )"
+                          R"(height="%1" fill="currentColor"/></svg>)")
+        .arg(grid)
+        .arg(QString::fromLatin1(role))
+        .toUtf8();
+}
+
+/// The colour at the centre of the icon drawn at `size` px.
+QColor centreColour(const QIcon& icon, int size) {
+    const QImage image = icon.pixmap(size, size).toImage();
+    return image.pixelColor(image.width() / 2, image.height() / 2);
+}
+
 /// The actions that have no icon: the separators (no text), the recent files
 /// (the submenu and the run-time list) and Quit (docs/tappe/0.6/P19).
 bool needsNoIcon(const ActionSpec& spec) {
@@ -175,6 +237,9 @@ TEST(IconsTest, EveryFileIsAValidSvgOnTheGrid) {
         directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name);
     EXPECT_GE(names.size(), kFirstIcons + kSecondIcons);
     for (const QString& name : names) {
+        if (roleGrid(name) != 0) {
+            continue;  // RoleIconsAreValidSvgOnTheirGrid
+        }
         SCOPED_TRACE(name.toStdString());
         QFile file(directory.filePath(name));
         ASSERT_TRUE(file.open(QIODevice::ReadOnly));
@@ -195,6 +260,107 @@ TEST(IconsTest, EveryFileIsAValidSvgOnTheGrid) {
     }
 }
 
+TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
+    // The rules are checked by scripts/icone.py; here, what Qt draws.
+    const QDir directory(QStringLiteral(TG_ICONS_DIR));
+    int roleIcons = 0;
+    for (const QString& name :
+         directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name)) {
+        const int grid = roleGrid(name);
+        if (grid == 0) {
+            continue;
+        }
+        ++roleIcons;
+        SCOPED_TRACE(name.toStdString());
+        QSvgRenderer renderer(directory.filePath(name));
+        ASSERT_TRUE(renderer.isValid());
+        EXPECT_EQ(renderer.defaultSize(), QSize(grid, grid));
+        EXPECT_EQ(renderer.viewBoxF(), QRectF(0, 0, grid, grid));
+        const InkCount ink = countInk(drawAtScale(renderer, grid), roleMargin(grid));
+        EXPECT_GT(ink.total, 0) << "nothing is drawn";
+        EXPECT_EQ(ink.inMargin, 0) << "ink in the margin";
+        EXPECT_TRUE(QFile::exists(resourcePath(name.chopped(4)))) << "not in the resources";
+    }
+    EXPECT_GE(roleIcons, 2);  // draw-circle-cr, the example of docs/ICONE.md
+}
+
+TEST(IconsTest, EveryRoleHasTheColourOfItsTokenInBothThemes) {
+    const QTemporaryDir directory;
+    ASSERT_TRUE(directory.isValid());
+    // Squares of 6 px, one per case, in a 32 px icon drawn at 32 px; the
+    // line is 4 px wide. The inner group is geo: its square without a class
+    // is geo, its square of class pt is pt, though the group sets the fill.
+    writeSvg(
+        directory, QStringLiteral("roles.svg"),
+        R"(<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">)"
+        R"(<g fill="currentColor">)"
+        R"(<rect class="geo" x="1" y="1" width="6" height="6"/>)"
+        R"(<rect class="pt" x="17" y="1" width="6" height="6"/>)"
+        R"(<rect class="cost" x="1" y="9" width="6" height="6"/>)"
+        R"(<line class="esist" x1="17" y1="12" x2="23" y2="12" stroke="currentColor" )"
+        R"(stroke-width="4"/>)"
+        R"(<rect x="1" y="17" width="6" height="6"/>)"
+        R"(<rect class="accent" x="17" y="17" width="6" height="6"/>)"
+        R"(<g class="geo"><rect x="1" y="25" width="6" height="6"/>)"
+        R"(<rect class="pt" x="17" y="25" width="6" height="6"/></g>)"
+        R"(</g></svg>)");
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        SCOPED_TRACE(theme == Theme::Dark ? "dark" : "light");
+        const ThemeTokens& tokens = themeTokens(theme);
+        const QIcon icon = themedIcon(directory.filePath(QStringLiteral("roles.svg")), theme);
+        ASSERT_FALSE(icon.isNull());
+        const QImage image = icon.pixmap(32, 32).toImage();
+        ASSERT_EQ(image.size(), QSize(32, 32));
+        EXPECT_EQ(image.pixelColor(4, 4), tokens.iconGeo);
+        EXPECT_EQ(image.pixelColor(20, 4), tokens.iconPt);
+        EXPECT_EQ(image.pixelColor(4, 12), tokens.iconCost);
+        EXPECT_EQ(image.pixelColor(20, 12), tokens.iconEsist);
+        EXPECT_EQ(image.pixelColor(4, 20), tokens.iconEsist) << "no class is esist";
+        EXPECT_EQ(image.pixelColor(20, 20), tokens.iconPt) << "accent is pt";
+        EXPECT_EQ(image.pixelColor(4, 28), tokens.iconGeo) << "the role of the group";
+        EXPECT_EQ(image.pixelColor(20, 28), tokens.iconPt) << "its own role";
+        EXPECT_EQ(image.pixelColor(12, 4).alpha(), 0);
+    }
+}
+
+TEST(IconsTest, SmallSizesUseTheSixteenGridAndLargeOnesTheThirtyTwo) {
+    const QTemporaryDir directory;
+    ASSERT_TRUE(directory.isValid());
+    // Each file fills the icon in its own role, which tells them apart.
+    writeSvg(directory, QStringLiteral("both-16.svg"), filledIcon(16, "geo"));
+    writeSvg(directory, QStringLiteral("both-32.svg"), filledIcon(32, "pt"));
+    writeSvg(directory, QStringLiteral("only32-32.svg"), filledIcon(32, "pt"));
+    writeSvg(directory, QStringLiteral("only16-16.svg"), filledIcon(16, "geo"));
+    // A name without role files uses the old 24 px file; a file of the old
+    // name is not used when role files exist.
+    writeSvg(directory, QStringLiteral("old.svg"), filledIcon(24, "cost"));
+    writeSvg(directory, QStringLiteral("both.svg"), filledIcon(24, "cost"));
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        SCOPED_TRACE(theme == Theme::Dark ? "dark" : "light");
+        const ThemeTokens& tokens = themeTokens(theme);
+        const QIcon both = themedIcon(directory.filePath(QStringLiteral("both")), theme);
+        EXPECT_EQ(centreColour(both, 16), tokens.iconGeo);
+        EXPECT_EQ(centreColour(both, 24), tokens.iconGeo);
+        EXPECT_EQ(centreColour(both, 32), tokens.iconPt);
+        EXPECT_EQ(centreColour(both, 48), tokens.iconPt);
+        const QIcon only32 = themedIcon(directory.filePath(QStringLiteral("only32")), theme);
+        EXPECT_EQ(centreColour(only32, 16), tokens.iconPt);
+        EXPECT_EQ(centreColour(only32, 32), tokens.iconPt);
+        const QIcon only16 = themedIcon(directory.filePath(QStringLiteral("only16")), theme);
+        EXPECT_EQ(centreColour(only16, 16), tokens.iconGeo);
+        EXPECT_EQ(centreColour(only16, 32), tokens.iconGeo);
+        const QIcon old = themedIcon(directory.filePath(QStringLiteral("old")), theme);
+        EXPECT_EQ(centreColour(old, 16), tokens.iconCost);
+        EXPECT_EQ(centreColour(old, 32), tokens.iconCost);
+        // The example of docs/ICONE.md, from the resources: at 32 px the
+        // centre of the circle is its point, of class pt.
+        const QIcon example = themedIcon(QStringLiteral("draw-circle-cr"), theme);
+        ASSERT_FALSE(example.isNull());
+        EXPECT_EQ(centreColour(example, 32), tokens.iconPt);
+    }
+    EXPECT_TRUE(themedIcon(directory.filePath(QStringLiteral("none")), Theme::Light).isNull());
+}
+
 TEST(IconsTest, EveryActionHasAnIconWithItsFile) {
     ActionRegistry registry;
     addBuiltinActions(registry);
@@ -208,9 +374,11 @@ TEST(IconsTest, EveryActionHasAnIconWithItsFile) {
         ++withIcon;
         SCOPED_TRACE(spec->id.toStdString());
         ASSERT_FALSE(spec->icon.isEmpty()) << "the action has no icon";
-        EXPECT_TRUE(QFile::exists(resourcePath(spec->icon)))
+        EXPECT_TRUE(hasIconFile(spec->icon))
             << "no resources/icons/" << spec->icon.toStdString() << ".svg";
-        EXPECT_FALSE(themedIcon(spec->icon, QApplication::palette()).isNull());
+        for (const Theme theme : {Theme::Light, Theme::Dark}) {
+            EXPECT_FALSE(themedIcon(spec->icon, theme).isNull());
+        }
     }
     EXPECT_GE(withIcon, kFirstIcons);
 }
@@ -286,14 +454,17 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     const QStringList names =
         directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name);
     for (const QString& name : names) {
-        const QString icon = name.chopped(4);
+        const QString icon = iconName(name);
         SCOPED_TRACE(icon.toStdString());
+        if (waitsForItsAction(icon)) {
+            continue;
+        }
         EXPECT_TRUE(used.contains(icon)) << "neither an action nor a panel uses this icon";
     }
     // The icons the panels name are all drawn.
     for (const QString& icon : propertiesPanelIconNames()) {
         SCOPED_TRACE(icon.toStdString());
-        EXPECT_TRUE(QFile::exists(resourcePath(icon))) << "icon not in the resources";
+        EXPECT_TRUE(hasIconFile(icon)) << "icon not in the resources";
     }
 }
 
