@@ -8,6 +8,9 @@
 - **Riferimenti:** non servono: il comportamento non cambia; i test di unità e i
   casi di verifica esistenti, invariati, sono la prova
 - **Dipende da:** P14, P18, P24
+- **Corretta:** 2026-11-07, con la nota N1 del verbale della revisione delle
+  interfacce (P23, [#563](https://github.com/Matleyx78/tecnigrafo/issues/563)):
+  di chi è `DocumentTables`
 - **Modulo:** `edit` (più i chiamanti in `cmd`, `script` e `app`, con un cambio
   meccanico)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punto 4;
@@ -78,6 +81,9 @@ public:
   tipi di `Change` di oggi: annulla e ripeti di un passo con entità e tabelle
   insieme funzionano come oggi.
 - `setProperties` resta in `Editor`: cambia un'entità, non una tabella.
+- `DocumentTables` è di `Editor`, che la crea e la distrugge con sé:
+  `tables()` dà un riferimento valido finché vive `Editor`, e non si copia né si
+  sposta fuori da lui. Lo dice il commento di `tables()`.
 - Come `DocumentTables` raggiunge la transazione di `Editor` (amicizia, una
   piccola interfaccia interna) lo scegli tu, senza esporlo nelle intestazioni
   pubbliche oltre a `tables()`.

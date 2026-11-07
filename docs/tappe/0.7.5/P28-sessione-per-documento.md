@@ -8,6 +8,11 @@
 - **Riferimenti:** non servono: con un documento il comportamento non cambia;
   test di unità della sessione e test Qt dell'attivazione
 - **Dipende da:** P14, P16, P18, P24, P26
+- **Corretta:** 2026-11-07, con la decisione del responsabile su B2 del verbale
+  della revisione delle interfacce (P23,
+  [#563](https://github.com/Matleyx78/tecnigrafo/issues/563);
+  [DECISIONI.md](../../DECISIONI.md)): il testo non ancora inviato è della
+  sessione; più N1 (durata dei riferimenti) e N4 (gli accessor senza sessione)
 - **Modulo:** `app` (più la sessione del disegno in `cmd`)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 2 e
   3; `app/src/main_window.hpp` e `.cpp` (i membri in ordine di dipendenza, il
@@ -98,8 +103,28 @@ costruzione: ricevono la sessione con una funzione (`setSession`), e senza
 sessione non disegnano e non accettano immissioni. Il listener di ogni sessione
 aggiorna l'interfaccia solo se la sessione è quella attiva.
 
+**Il testo non ancora inviato è della sessione** (decisione B2). Ciò che
+l'utente ha scritto e non ha ancora consegnato al runner, nel campo della riga
+di comando e nei campi dell'immissione dinamica (P16), con il campo attivo, sta
+nella sessione: lasciandola si conserva, tornandoci si ripristina, e non arriva
+mai a un'altra sessione. Vale anche passando dalla pagina *Start* (P29), che
+non ha sessione. È a parte dal comando sospeso nel runner, che resta com'è.
+
+**Durata dei riferimenti.** `registry` e `files` sono prestiti: lo dice il
+commento del costruttore di `DrawingSession`, con la durata. Prima di
+distruggere una sessione, vista, riga di comando, pannelli e listener se ne
+staccano; nessun widget o callback tiene un riferimento a una sessione
+distrutta o spostata (l'elenco delle sessioni non le sposta: per esempio
+`std::vector<std::unique_ptr<DocumentSession>>`).
+
 `document()`, `editor()` e `runner()` di `MainWindow` restituiscono quelli della
-sessione attiva: script di livello 2, rapporto e test non cambiano.
+sessione attiva: script di livello 2, rapporto e test non cambiano. Hanno come
+**precondizione** che una sessione attiva ci sia: dalla pagina *Start* di P29
+non ce n'è nessuna, e script di livello 2, rapporto e test partono sempre con
+un documento. Per i chiamanti interni (`refresh`, l'aggiornamento delle azioni,
+la chiusura, i listener) `MainWindow` ha
+`[[nodiscard]] DocumentSession* activeSession()`, `nullptr` senza sessione, e
+loro lo controllano.
 
 ## Regole della tappa che valgono qui
 
@@ -116,6 +141,14 @@ sessione attiva: script di livello 2, rapporto e test non cambiano.
   `activate` fa disegnare alla vista l'altro documento, i pannelli mostrano i
   suoi layer, `U` annulla nella sessione attiva e non nell'altra; un comando
   lasciato a metà in una sessione riprende quando torna attiva.
+- `session_test.cpp` (B2): in A `LINE` aspetta il secondo punto; scrivo `10,20`
+  nella riga di comando senza `Invio` e attivo B: il campo di B è vuoto, e
+  `Invio` in B non dà `10,20` a nessun comando di A. Torno ad A: il campo ha
+  `10,20`, e `Invio` dà il punto a `LINE` di A. Lo stesso con un valore scritto
+  in un campo dell'immissione dinamica, che torna nello stesso campo.
+- `session_test.cpp`: distruggere una sessione non attiva, poi lavorare
+  sull'attiva, non tocca riferimenti alla sessione distrutta (il test gira
+  anche con i sanitizer della CI).
 
 ## Fatto quando
 
