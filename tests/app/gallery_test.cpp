@@ -27,9 +27,13 @@ TEST(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
     ASSERT_EQ(process.exitCode(), 0) << process.readAllStandardError().toStdString();
     const QDir output(folder.path());
     EXPECT_EQ(output.entryList({QStringLiteral("*.png")}, QDir::Files).size(), 12);
-    const QStringList stems{QStringLiteral("finestra"), QStringLiteral("finestra-classica"),
-                            QStringLiteral("ribbon"), QStringLiteral("proprieta"),
-                            QStringLiteral("layer"), QStringLiteral("stato")};
+    QStringList stems;
+    stems.append(QStringLiteral("finestra"));
+    stems.append(QStringLiteral("finestra-classica"));
+    stems.append(QStringLiteral("ribbon"));
+    stems.append(QStringLiteral("proprieta"));
+    stems.append(QStringLiteral("layer"));
+    stems.append(QStringLiteral("stato"));
     for (const QString& stem : stems) {
         QSize lightSize;
         for (const QString& theme : {QStringLiteral("chiaro"), QStringLiteral("scuro")}) {
