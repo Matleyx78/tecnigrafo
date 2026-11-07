@@ -5,8 +5,8 @@
 - **Difficoltà:** media
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
-- **Riferimenti:** issue `[0.7.5-R28b]` e `[0.7.5-R28c]` (#…), agente gemini
-- **Dipende da:** P27, P28, R28b, R28c
+- **Riferimenti:** issue `[0.7.5-R28b]` (#…), agente gemini
+- **Dipende da:** P27, P28, R28b
 - **Modulo:** `cmd` (più l'ospite dei documenti in `script` e in `app`)
 - **Da leggere:** [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punti 2 e
   3; [ADR 0021](../../adr/0021-comandi-dei-file.md);
@@ -105,7 +105,7 @@ ospite.
 
 - `main_window.*`: prima di te P28, dopo di te P29. `command.hpp`,
   `command_runner.*`: prima di te P27.
-- I casi in attesa di R28b e R28c sono i riferimenti di questo pacchetto: togli i
+- I casi in attesa di R28b sono i riferimenti di questo pacchetto: togli il
   loro file da `tests/verifica/in-attesa/` (AGENTS.md, «Prima di dichiarare il lavoro
   finito»). Gli altri casi restano invariati.
 
@@ -124,6 +124,6 @@ ospite.
 ## Fatto quando
 
 - `NEW` e `OPEN` aprono un documento nuovo nei due livelli e nel programma.
-- I casi di R28b e R28c passano e sono tolti dall'elenco in attesa; i test qui sopra
+- I casi di R28b passano e sono tolti dall'elenco in attesa; i test qui sopra
   esistono e passano.
 - La CI è verde.

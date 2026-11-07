@@ -1167,8 +1167,8 @@ i rimandi ai documenti che cambia.
     *Apri* apre il file in un'altra scheda). Vale nel programma e negli script dei
     due livelli; il rapporto ha il campo `documents:` con più di un documento
     ([verifica/rapporto.md](verifica/rapporto.md)). I casi di verifica che
-    cambiano, cioè tutti quelli che usano `NEW` o `OPEN`, si aggiornano con due
-    pacchetti di riferimenti (0.7.5-R28b e R28c), prima del lavoro
+    cambiano, cioè tutti quelli che usano `NEW` o `OPEN`, si aggiornano con un
+    pacchetto di riferimenti (0.7.5-R28b), prima del lavoro
     (0.7.5-P28b).
   - **Avvio sulla pagina *Start***, come AutoCAD: il programma parte senza
     documenti, e l'utente crea quello che gli serve fra i tipi registrati (oggi
