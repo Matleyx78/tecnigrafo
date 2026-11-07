@@ -200,13 +200,17 @@ TEST(Grips, ArcAcrossZeroKeepsExactEndpointsOnAxes) {
     expectSamePoint(points[3], center);
 }
 
-TEST(Grips, ArcEndpointsOffAxesMatchTheArcGeometry) {
+TEST(Grips, ArcEndpointsOffAxesMatchTheKernel) {
+    namespace g = solid_space::geom2d;
     const Arc arc{{1.25, -3.5}, 7.0, degreesToRadians(30.0), degreesToRadians(150.0)};
     const auto geometry = arc.geometry();
+    const g::Point2 center{arc.center.x, arc.center.y};
+    const auto ends = g::endpoints(g::Arc{center, arc.radius, arc.startAngle, geometry.sweep});
+    ASSERT_TRUE(ends.hasValue());
     const auto points = gripPoints(arc);
     ASSERT_EQ(points.size(), 4U);
-    expectSamePoint(points[0], startPoint(geometry));
-    expectSamePoint(points[1], endPoint(geometry));
+    expectSameBits(points[0], {ends.value().start.x, ends.value().start.y});
+    expectSameBits(points[1], {ends.value().end.x, ends.value().end.y});
 }
 
 TEST(Grips, PolylineRebuildsAdjacentArcsAndKeepsProperties) {

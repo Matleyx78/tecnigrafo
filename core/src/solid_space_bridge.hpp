@@ -25,8 +25,9 @@ namespace g = solid_space::geom2d;
 /// computed in double in this order. std::nullopt for a Polyline or a Text.
 [[nodiscard]] std::optional<g::Curve> curveOf(const Entity& entity);
 
-/// Arc endpoints consistent with solid-space's exact curve meaning. For a
-/// diagnosis, retain the ArcGeometry endpoints so existing arcs keep theirs.
+/// Arc endpoints from solid-space, with the exact axis endpoints of #422
+/// retained within its declared point error. For a diagnosis, use the
+/// ArcGeometry endpoints, with the same axis adjustment.
 [[nodiscard]] std::pair<Vec2, Vec2> arcEndpoints(const Arc& arc);
 
 /// The piece of one polyline segment: its bulge, or 0 when

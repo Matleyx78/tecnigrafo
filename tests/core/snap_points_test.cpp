@@ -51,6 +51,29 @@ TEST(SnapPoints, ArcEndpointsMatchKernelBits) {
     }
 }
 
+TEST(SnapPoints, ArcEndpointsOnAxesStayExact) {
+    const Vec2 center{1.25, -3.5};
+    constexpr double kRadius = 7.0;
+    constexpr std::array<double, 4> kAngles{0.0, kPi / 2.0, kPi, 3.0 * kPi / 2.0};
+    const std::array<Vec2, 4> onAxis{{{center.x + kRadius, center.y},
+                                      {center.x, center.y + kRadius},
+                                      {center.x - kRadius, center.y},
+                                      {center.x, center.y - kRadius}}};
+    for (std::size_t first = 0; first < kAngles.size(); ++first) {
+        for (std::size_t last = 0; last < kAngles.size(); ++last) {
+            if (first == last) {
+                continue;
+            }
+            const Arc arc{center, kRadius, kAngles.at(first), kAngles.at(last)};
+            std::vector<SnapPoint> snaps;
+            appendSnapPoints(Entity{arc}, SnapModes{true, false, false, false}, snaps);
+            ASSERT_EQ(snaps.size(), 2U);
+            expectSameBits(snaps[0].point, onAxis.at(first));
+            expectSameBits(snaps[1].point, onAxis.at(last));
+        }
+    }
+}
+
 TEST(SnapPoints, RejectedArcKeepsGeometryEndpoints) {
     namespace g = solid_space::geom2d;
     for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9}, Arc{{0x1p51, -7}, 13, 0.2, 1.9},
