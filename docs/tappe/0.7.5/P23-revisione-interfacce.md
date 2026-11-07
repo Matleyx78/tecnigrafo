@@ -1,4 +1,4 @@
-# [0.7.5-P23] Revisione delle interfacce delle schede P24–P31
+# [0.7.5-P23] Revisione delle interfacce delle schede P24–P31 (con P28b)
 
 - **Tappa:** 0.7.5 — [piano](../0.7.5-correzione-di-rotta.md)
 - **Issue:** #…
@@ -41,6 +41,7 @@ In quest'ordine, che è quello in cui le interfacce si usano l'una con l'altra:
 | [P26](P26-protocollo-dei-comandi.md) | `cmd::ProtocolContext`, `command_protocol.hpp` | `CommandContext` del disegno (P24) |
 | [P27](P27-ambienti-nei-comandi.md) | `CommandDescription::environments`, l'ambiente del runner | il registro dei comandi, P26 |
 | [P28](P28-sessione-per-documento.md) | `cmd::DrawingSession`, `app::DocumentSession`, l'attivazione | P24, P26; vista, pannelli, riga di comando, script |
+| [P28b](P28b-new-e-open.md) | `cmd::DocumentHost`; `NEW` e `OPEN` con l'ospite; le sessioni del livello 1 | P28; il rapporto (`documents:`) |
 | [P29](P29-schede-e-pagina-iniziale.md) | le schede dei documenti e la pagina *Start* | le sessioni di P28 |
 | [P30](P30-ambiente-attivo-e-tipi.md) | `app::DocumentTypeRegistry`, `app::EnvironmentRegistry`, l'ambiente attivo | P27, P29, il registro delle azioni |
 | [P31](P31-ambiente-non-ospitato.md) | la scelta di un ambiente non ospitato | P30 |
@@ -73,4 +74,4 @@ dopo il verbale. Il verbale dice strumento e modello.
 
 ## Fatto quando
 
-- Il verbale è nella issue e copre le otto schede.
+- Il verbale è nella issue e copre le nove schede.
