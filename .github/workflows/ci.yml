@@ -41,6 +41,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       code: ${{ steps.filter.outputs.code }}
+      gallery: ${{ steps.filter.outputs.gallery }}
       io: ${{ steps.filter.outputs.io }}
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
@@ -57,6 +58,7 @@ jobs:
              || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
             echo "No usable base commit: running all jobs."
             echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "gallery=true" >> "$GITHUB_OUTPUT"
             echo "io=true" >> "$GITHUB_OUTPUT"
             echo "scripts=true" >> "$GITHUB_OUTPUT"
             exit 0
@@ -68,6 +70,11 @@ jobs:
             echo "io=true" >> "$GITHUB_OUTPUT"
           else
             echo "io=false" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$changed" | grep -qE '^(app/|resources/)'; then
+            echo "gallery=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "gallery=false" >> "$GITHUB_OUTPUT"
           fi
           code=$(echo "$changed" | grep -vE '^docs/|\.md$|^LICENSE$|^\.github/ISSUE_TEMPLATE/' || true)
           if [ -n "$code" ]; then
@@ -188,6 +195,29 @@ jobs:
         run: |
           set -o pipefail
           ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
+      - name: Generate interface gallery
+        if: needs.changes.outputs.gallery == 'true'
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          set -o pipefail
+          build/ci/app/tecnigrafo-galleria build/galleria 2>&1 | scripts/ci-annota.sh
+          test "$(find build/galleria -maxdepth 1 -name '*.png' -size +0c | wc -l)" -eq 12
+          {
+            echo '## Galleria dell’interfaccia'
+            echo 'Scarica **galleria** dalla sezione **Artifacts** di questa esecuzione CI.'
+            echo
+            for image in build/galleria/*.png; do
+              echo "- $(basename "$image")"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload interface gallery
+        if: needs.changes.outputs.gallery == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: galleria
+          path: build/galleria/*.png
+          if-no-files-found: error
       - name: Choose the static analysis
         id: tidy
         env:

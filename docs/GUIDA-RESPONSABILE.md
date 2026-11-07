@@ -113,6 +113,15 @@ Vale per **ogni** pull request, nei due repository.
 1. Apri la pull request su GitHub. In basso tutti i controlli devono essere
    verdi.
 2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
+   In Tecnigrafo, se la pull request tocca `app/` o `resources/`, apri la sua
+   esecuzione **CI** e scarica **galleria** da **Artifacts**. Il riepilogo del
+   lavoro Linux elenca i dodici PNG: finestra con ribbon, finestra classica,
+   ribbon, Properties, Layers e barra di stato, ciascuno nei temi chiaro e
+   scuro. Confrontali con le [immagini dell’ADR 0039](adr/0039/README.md) e con
+   la galleria della pull request precedente prima di unire. Le finestre sono
+   a 1600×1000 pixel, scala 1, con una polilinea selezionata e impostazioni
+   temporanee vuote; i nomi restano uguali fra le pull request. La CI controlla
+   la generazione delle immagini; la valutazione dell’aspetto spetta a te.
 3. **Revisione prima del merge.** In solid-space, se la descrizione comincia con
    **Revisione del contratto: da fare**, la pull request cambia un'intestazione
    del contratto già accettata: uniscila solo dopo il commento **Verbale della
