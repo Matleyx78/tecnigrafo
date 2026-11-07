@@ -9,17 +9,17 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.6.0 — layer, proprietà, interfaccia e server MCP.** Si
-> gestiscono i layer con `-LAYER`, `CLAYER` e il pannello `LAYER`. Si impostano
-> colori (ACI e Truecolor RGB), tipi di linea ISO (`ACAD_ISO02W100`, `ACAD_ISO10W100`),
-> spessori e scale con `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`,
-> `LWDISPLAY` (e pulsante `LWT`), e si modificano le entità con `CHPROP`, il
-> pannello `PROPERTIES` e la selezione rapida `QSELECT`. L'interfaccia offre la
-> barra multifunzione (*ribbon*) e l'interfaccia classica (`RIBBON`, `RIBBONCLOSE`),
-> temi chiaro e scuro e scorciatoie personalizzabili. Gli assistenti IA possono
-> collegarsi a `tecnigrafo-mcp`. Le [note della 0.6](docs/rilasci/0.6.md) riportano
-> novità e limiti noti. Prossima tappa: [0.7](docs/tappe/0.7-modifiche.md),
-> comandi di modifica.
+> Stato: **versione 0.7.0 — comandi di modifica.** Si spostano, copiano,
+> ruotano, scalano e specchiano le entità con `MOVE`, `COPY`, `ROTATE`, `SCALE` e
+> `MIRROR`; si tagliano e prolungano con `TRIM` ed `EXTEND`, si fanno copie
+> parallele con `OFFSET`, raccordi e smussi con `FILLET` e `CHAMFER`, e si
+> scompongono e uniscono con `EXPLODE` e `JOIN`. Le entità selezionate si
+> modificano anche con i grip; ci sono gli snap a intersezione, perpendicolare,
+> tangente e quadrante, il tracciamento polare (`F10`, `POLARANG`) e la finestra
+> di selezione trascinando. Le decisioni geometriche le prende solid-space, il
+> kernel di Tecnigrafo, nel sottomodulo `third_party/solid-space`. Le
+> [note della 0.7](docs/rilasci/0.7.md) riportano novità e limiti noti. Prossima
+> tappa: [0.8](docs/tappe/0.8-quote-retini-blocchi.md), quote, retini, blocchi.
 
 ## Disegnare
 
@@ -31,18 +31,20 @@ completati. Il funzionamento completo è nel
 [manuale dei comandi](docs/manuale/comandi.md) e nel
 [manuale dell'interfaccia](docs/manuale/interfaccia.md).
 
-Per cancellare, scegli le entità sul bordo oppure con un rettangolo a due clic,
-poi premi `Canc`; oppure scrivi `e`, scegli le entità e conferma con `Invio`.
+Per cancellare, scegli le entità sul bordo oppure con un rettangolo, a due clic o
+trascinando, poi premi `Canc`; oppure scrivi `e`, scegli le entità e conferma
+con `Invio`.
 `F3` attiva o spegne lo snap a oggetto, `F8` l'orto; trovi le stesse funzioni nel
 menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo snap
-è acceso con estremo, punto medio, centro e inserimento, mentre l'orto è spento.
+è acceso con estremo, punto medio, centro, inserimento e intersezione, mentre l'orto
+è spento.
 
 | Azione | Come |
 |---|---|
 | Avviare un comando | scriverne il nome e premere `Invio` (anche con la vista in primo piano) |
 | Indicare un punto | clic sinistro, oppure scrivere le coordinate |
 | Selezionare / togliere dalla selezione | clic sul bordo / `Shift`+clic; a riposo o durante `Select objects:` |
-| Finestra / intersezione | primo clic nel vuoto, secondo a destra / a sinistra del primo |
+| Finestra / intersezione | primo clic nel vuoto, secondo a destra / a sinistra del primo; oppure trascinando |
 | Cancellare | `ERASE` o `E`; `Canc` o *Edit → Erase* con una selezione pronta |
 | Svuotare la selezione | `Esc` a riposo; con un rettangolo aperto lo chiude prima |
 | Snap a oggetto / orto | `F3` / `F8`; sui portatili può servire `Fn` |

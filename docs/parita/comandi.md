@@ -23,21 +23,21 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.6.0**.
+Aggiornato alla versione **0.7.0**.
 
 | Stato | Comandi |
 |---|---|
-| completo | 7 |
-| presente | 19 |
-| assente | 51 |
+| completo | 17 |
+| presente | 23 |
+| assente | 39 |
 
 ## Disegno
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `LINE` | `L` | presente | 0.4 | segmenti e chiusura con `Close`; `Invio` alla prima domanda per continuare dall'ultimo punto: 0.7 |
+| `LINE` | `L` | completo | 0.4 | segmenti, *Close* e *Undo*; `Invio` alla prima domanda continua dall'ultimo punto (0.7) |
 | `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), dopo la 1.0 (decisione del 2026-10-28) |
-| `CIRCLE` | `C` | presente | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio nella 0.7 |
+| `CIRCLE` | `C` | completo | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio (*Ttr*) nella 0.7 |
 | `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4; le altre varianti dopo la 1.0 |
 | `RECTANG` | `REC` | assente | — | |
 | `POLYGON` | `POL` | assente | — | |
@@ -55,7 +55,7 @@ Aggiornato alla versione **0.6.0**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; senza *Justify* e *Style* (0.8) |
+| `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; negli script una riga sola, come AutoCAD (0.7); senza *Justify* e *Style* (0.8) |
 | `MTEXT` | `T`, `MT` | assente | 0.8 | |
 | `STYLE` | `ST` | assente | 0.8 | stili di testo |
 | `DIMLINEAR` | `DLI` | assente | 0.8 | |
@@ -73,19 +73,21 @@ Aggiornato alla versione **0.6.0**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `ERASE` | `E` | presente | 0.3 | mancano i modi di selezione scritti (*Last*, *Previous*, *All*, *Fence*, *WPolygon*, *CPolygon*) |
-| `MOVE` | `M` | assente | 0.7 | |
-| `COPY` | `CO`, `CP` | assente | 0.7 | |
-| `ROTATE` | `RO` | assente | 0.7 | |
-| `SCALE` | `SC` | assente | 0.7 | |
-| `MIRROR` | `MI` | assente | 0.7 | |
-| `OFFSET` | `O` | assente | 0.7 | |
-| `TRIM` | `TR` | assente | 0.7 | |
-| `EXTEND` | `EX` | assente | 0.7 | |
-| `FILLET` | `F` | assente | 0.7 | |
-| `CHAMFER` | `CHA` | assente | 0.7 | |
-| `EXPLODE` | `X` | assente | 0.7 | polilinee nella 0.7, blocchi nella 0.8 |
-| `JOIN` | `J` | assente | 0.7 | |
+| `ERASE` | `E` | presente | 0.3 | selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Last*, *Previous*, *Fence*, *WPolygon*, *CPolygon* |
+| `MOVE` | `M` | completo | 0.7 | punto base e secondo punto, *Displacement* |
+| `COPY` | `CO`, `CP` | presente | 0.7 | copie multiple con *Undo* ed *Exit*, *Displacement*; una copia sola negli script; mancano *mOde* e *Array* |
+| `ROTATE` | `RO` | completo | 0.7 | angolo scritto o indicato, *Copy*, *Reference* con *Points* |
+| `SCALE` | `SC` | completo | 0.7 | fattore scritto o indicato, *Copy*, *Reference* con *Points* |
+| `MIRROR` | `MI` | completo | 0.7 | con o senza cancellare gli originali; il testo secondo `MIRRTEXT` |
+| `OFFSET` | `O` | completo | 0.7 | distanza o *Through*, *Erase*, *Layer*, *Multiple*, *Undo*; giunzioni come `OFFSETGAPTYPE` 0, senza le varianti 1 e 2 |
+| `TRIM` | `TR` | presente | 0.7 | modo rapido e standard (*mOde*, `TRIMEXTENDMODE`), `Shift` per prolungare, *Undo*; mancano *cuTting edges*, *Crossing*, *Fence*, *Project*, *Edge*, *eRase* |
+| `EXTEND` | `EX` | presente | 0.7 | modo rapido e standard (*mOde*, `TRIMEXTENDMODE`), `Shift` per tagliare, *Undo*; mancano *Boundary edges*, *Crossing*, *Fence*, *Project*, *Edge* |
+| `FILLET` | `F` | presente | 0.7 | linee, archi, cerchi e segmenti dritti di una polilinea; *Radius*, *Trim*, *Polyline*, *Multiple*, *Undo*, `Shift` per lo spigolo; non raccorda una polilinea con un'altra entità né i suoi segmenti curvi |
+| `CHAMFER` | `CHA` | presente | 0.7 | linee e segmenti dritti di una polilinea; *Distance*, *Angle*, *mEthod*, *Trim*, *Polyline*, *Multiple*, *Undo*, `Shift` per lo spigolo; non smussa una polilinea con un'altra entità |
+| `EXPLODE` | `X` | presente | 0.7 | polilinee in linee e archi nella 0.7; blocchi nella 0.8 |
+| `JOIN` | `J` | completo | 0.7 | linee allineate, archi dello stesso cerchio (anche in un cerchio), catene di linee, archi e polilinee; sequenza degli script con *cLose* |
+| `MIRRTEXT` | | completo | 0.7 | testo specchiato leggibile (0) o riflesso (1) |
+| `TRIMEXTENDMODE` | | completo | 0.7 | modo con cui partono `TRIM` ed `EXTEND` |
 | `ARRAY` | `AR` | assente | — | da valutare dopo la 0.7 |
 | `ALIGN` | `AL` | assente | — | da valutare dopo la 0.7 |
 | `STRETCH` | `S` | assente | — | |
@@ -150,8 +152,8 @@ parte.
 
 | Aiuto | Tasto | Stato | Tappa | Note |
 |---|---|---|---|---|
-| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro, inserimento; intersezione, perpendicolare, tangente, quadrante nella 0.7 |
+| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro, inserimento nella 0.3; intersezione, perpendicolare, tangente, quadrante nella 0.7; mancano vicino, nodo, prolungamento, parallelo, le intersezioni apparenti e prolungate e il tracciamento degli snap |
 | Orto | `F8` | completo | 0.3 | |
-| Tracciamento polare | `F10` | assente | 0.7 | |
-| Selezione: clic, finestra, intersezione | | presente | 0.3 | manca la finestra trascinando (idea #61) |
-| Grip | | assente | 0.7 | |
+| Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
+| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, i poligoni, *Last* e *Previous* |
+| Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
