@@ -1170,3 +1170,6 @@ i rimandi ai documenti che cambia.
     cambiano, cioè tutti quelli che usano `NEW` o `OPEN`, si aggiornano con due
     pacchetti di riferimenti (0.7.5-R28b e R28c), prima del lavoro
     (0.7.5-P28b).
+  - **Avvio sulla pagina *Start***, come AutoCAD: il programma parte senza
+    documenti, e l'utente crea quello che gli serve fra i tipi registrati (oggi
+    il disegno). Gli script partono come oggi da un disegno vuoto (0.7.5-P29).

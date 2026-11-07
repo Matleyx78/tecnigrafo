@@ -22,8 +22,9 @@
 - `app/src/document_tabs.hpp`, `app/src/document_tabs.cpp` (nuovi: la riga delle
   schede)
 - `app/src/start_page.hpp`, `app/src/start_page.cpp` (nuovi)
-- `app/src/main_window.hpp`, `app/src/main_window.cpp`
-- `app/src/builtin_actions.cpp` (le azioni nuove del punto 3)
+- `app/src/main_window.hpp`, `app/src/main_window.cpp`, `app/src/main.cpp`
+  (l'avvio sulla pagina *Start*)
+- `app/src/builtin_actions.cpp` (le azioni dei file, se il punto 3 le tocca)
 - `resources/icons/`: le icone a ruoli che servono (scheda nuova, menu dei
   documenti, tipo disegno), 16 e 32 px
 - `app/CMakeLists.txt`
@@ -41,8 +42,14 @@
    documento e non ha sessione. Mostra *New* (un pulsante per ogni tipo di
    documento: oggi il disegno), *Open…* e l'elenco dei file recenti. Con la
    pagina attiva, vista, riga di comando e pannelli sono senza sessione (P28) e
-   le azioni che chiedono un documento sono disattivate. All'avvio la scheda
-   attiva è il disegno, come oggi; la pagina si raggiunge con un clic.
+   le azioni che chiedono un documento sono disattivate.
+   **Il programma si avvia sulla pagina *Start***, senza documenti aperti, come
+   AutoCAD (DECISIONI.md, 2026-11-07): l'utente crea il documento che gli serve,
+   oggi un disegno, domani anche gli altri tipi del registro (P30). Il disegno di
+   esempio non si apre più all'avvio: `MainWindow::InitialDrawing` ha un valore
+   nuovo, `None` (la pagina *Start*), predefinito per il programma; `Sample`
+   resta per la galleria di schermate (P3) e per i test, `Empty` per gli script
+   di livello 2, che partono come oggi da un disegno vuoto.
 3. **Documenti nuovi e aperti:** il pulsante `+` e la pagina *Start* eseguono
    `NEW` e `OPEN`, come le azioni `file.new` e `file.open` e i comandi scritti;
    ogni documento che P28b aggiunge ha la sua scheda, nell'ordine di apertura, e
@@ -65,8 +72,10 @@
 
 `document_tabs_test.cpp` (test Qt):
 
-- partendo dal disegno iniziale (`Drawing1.cadx`), due `+` danno
-  `Drawing2.cadx` e `Drawing3.cadx`; cliccare una scheda attiva la sua sessione;
+- il programma si avvia sulla pagina *Start* senza documenti; due `+` danno
+  `Drawing1.cadx` e `Drawing2.cadx`; cliccare una scheda attiva la sua sessione;
+- una finestra con `InitialDrawing::Empty` (gli script) parte con un disegno
+  vuoto, attivo, come oggi;
 - una scheda modificata ha `*`; chiuderla chiede di salvare, *Cancel* la lascia
   aperta, *No* la chiude; chiusa l'ultima, è attiva la pagina *Start*;
 - aprire due volte lo stesso file attiva la stessa scheda;
