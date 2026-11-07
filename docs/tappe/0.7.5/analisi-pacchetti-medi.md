@@ -2,7 +2,8 @@
 
 - **Pacchetto:** [0.7.5-P8](P8-analisi-pacchetti-medi.md), issue #549
 - **Autore:** Claude (Claude Code), modello Claude Opus 5.5, impegno alto
-- **Data:** 2026-11-07
+- **Data:** 2026-11-07; rivisto lo stesso giorno dopo il verbale di revisione
+  di Codex e le note del responsabile (sezioni 2.2, 2.5, 3.1, 3.6, 3.9, 5 e 6)
 - **Dati:** API REST di GitHub, lette il 2026-11-07, e `main` al commit
   `54bcda92e3782e583bd31f95c0991a043831bff3` (solid-space al commit fissato
   `73d7e42949018e5e36eb137c3f8ceb4ab6eb1c87`)
@@ -12,19 +13,28 @@
 
 ## In breve
 
-**Raccomandazione: sì, con condizioni.** Dividere conviene quando toglie un
-pezzo da una catena di dipendenze, da un'attesa di solid-space o da file
-comuni, oppure quando il pacchetto supera la misura; non conviene per il solo
-fatto che il pacchetto è impegnativo.
+**Raccomandazione: sì, con condizioni**, con due letture.
 
-I dati delle tappe 0.4–0.7 dicono quattro cose che pesano sulla decisione:
+- **Per il tempo e la qualità** (la domanda della #442): dividere conviene
+  quando toglie un pezzo da una catena di dipendenze, da un'attesa di
+  solid-space o da file comuni, oppure quando il pacchetto supera la misura; non
+  conviene per il solo fatto che il pacchetto è impegnativo.
+- **Per il costo dei modelli** (la valutazione chiesta dal responsabile nella
+  revisione, sezione 3.9): si può spostare in fascia media gran parte del
+  codice degli impegnativi, con un costo stimato sotto il giorno per tappa, se
+  la fascia forte resta dove i dati dicono che rende: i riferimenti delicati, le
+  schede e la revisione delle interfacce.
 
-1. **I giri di correzione in CI non crescono con la misura.** Tra righe cambiate e
-   run fallite non c'è correlazione (Spearman −0,07 su 89 pacchetti di lavoro).
-   Dipendono dal modello e dall'impegno: gli impegnativi di Claude (Opus alto)
-   hanno avuto almeno un giro nel 18 % dei casi, i medi nel 65 %, di Claude
-   (Opus medio) o di Codex. Dividere non fa risparmiare giri: con la fascia dei
-   medi ne aggiunge quasi uno per pull request in più.
+I dati delle tappe 0.4–0.7 dicono cinque cose che pesano sulla decisione:
+
+1. **Nel campione i giri di correzione in CI non crescono con la misura.** Tra
+   righe cambiate e run fallite non c'è un'associazione monotona (Spearman −0,07
+   su 89 pacchetti di lavoro). Sono più frequenti nei medi (65 % con almeno un
+   giro) che negli impegnativi di Claude (18 %). Modello e impegno usati non
+   sono registrati (sezione 1): che i giri dipendano dalla fascia e
+   dall'impegno è un'ipotesi plausibile, non un risultato, e il confronto tra
+   pacchetti diversi non separa la natura del lavoro, il periodo e la scelta dei
+   compiti. Il campione non dimostra che dividere faccia risparmiare giri.
 2. **I ritardi della 0.7 non sono venuti dalla misura dei pacchetti.** Dopo
    l'unione di P25, sul percorso critico ci sono 27 ore di lavoro su 112: il
    resto sono fermi per buchi nelle schede, casi di riferimento sbagliati e
@@ -38,13 +48,23 @@ I dati delle tappe 0.4–0.7 dicono quattro cose che pesano sulla decisione:
    impegnativi della 0.7 i casi delicati restano 73 qualunque divisione si
    faccia; con la regola del 2026-11-07 i pacchetti di riferimenti in fascia
    forte sarebbero 4 senza divisione e 5–6 con la divisione, più piccoli.
+5. **La fascia forte, nei riferimenti, si vede.** Dei 37 pacchetti di
+   riferimenti scritti con Gemini 3.8 Flash, 25 hanno avuto almeno una pull
+   request di correzione (40 in tutto); degli 11 scritti in fascia forte
+   (Claude, Codex, Gemini 4 Argon), uno solo (0.4-R8, due correzioni). Il
+   campione forte è piccolo e i pacchetti non sono gli stessi, ma la differenza
+   è grande, e ogni correzione della 0.7 ha fermato un pacchetto di lavoro.
 
-Le condizioni (sezione 5; il testo proposto per le regole è nella sezione 6) sono: dividere solo lungo un confine che toglie un
-arco di dipendenza o un file comune; misura contata sul codice, test esclusi,
-con una soglia minima; riferimenti divisi per natura (delicati e ordinari) e
-non per pacchetto; revisione delle interfacce prima delle metà; un pacchetto
-iniziale di interfaccia solo dove toglie file comuni a più consumatori, come
-la variante `Entity` nella 0.8.
+Le condizioni (sezione 5; il testo proposto per le regole è nella sezione 6)
+sono: dividere solo lungo un confine che toglie un arco di dipendenza o un file
+comune, o che separa le decisioni da prendere dal codice da scrivere; misura
+contata sul codice, test esclusi, con una soglia minima; fascia forte per chi
+prende decisioni delicate, fascia media possibile per il codice che le
+traduce; riferimenti divisi per natura (delicati e ordinari) e non per
+pacchetto, quelli delicati sempre in fascia forte; revisione delle interfacce
+prima delle parti; modello e impegno registrati in ogni pull request; un
+pacchetto iniziale di interfaccia solo dove toglie file comuni a più
+consumatori, come la variante `Entity` nella 0.8.
 
 ## 1. Metodo e limiti
 
@@ -89,9 +109,18 @@ regola del 2026-11-07 applicata ai casi contati).
 - **Un solo progetto, quattro tappe, una settimana di calendario ciascuna.** Le
   medie su 5–10 pacchetti per gruppo sono fragili; le tabelle danno mediane e
   totali, e i confronti si fanno solo dove la differenza è grande.
+- **Modello e impegno usati non sono registrati.** Nessuna pull request di
+  lavoro dichiara l'impegno; il modello lo dichiarano 20 dei 22 impegnativi di
+  Claude (Opus 5.5), 6 dei 14 medi di Claude (2 Opus, 4 Sonnet) e nessuna pull
+  request di Codex. La fascia del piano è un'indicazione, e il modello lo
+  sceglie il responsabile all'avvio (LAVORO-IN-PARALLELO.md, «Modello e
+  impegno»): l'etichetta di difficoltà non registra l'esecuzione. Il documento
+  confronta quindi autori e difficoltà, e tratta ogni attribuzione a modello e
+  impegno come ipotesi.
 - **Difficoltà e autore si sovrappongono.** Gli impegnativi sono quasi tutti di
-  Claude con Opus alto, i medi in gran parte di Codex. La sezione 2.2 separa i
-  due effetti dove i numeri lo permettono.
+  Claude, i medi in gran parte di Codex. La sezione 2.2 separa i due effetti dove
+  i numeri lo permettono; un confronto tra pacchetti diversi non separa comunque
+  la natura del lavoro, il periodo e la scelta dei compiti.
 - **Le ore sono di calendario, non di lavoro.** Comprendono notti, attese del
   responsabile e fermi; non dicono quanto ha ragionato un agente.
 - **Il consumo di token e la fatica della revisione non sono registrati.** Il
@@ -181,13 +210,22 @@ riferimenti (23 pull request su 22 pacchetti di riferimenti).
 | impegnativa, claude | 22 | 5 | 4 | 18 % | 2 | 1474 | 0,14 |
 | impegnativa, codex | 5 | 4 | 2 | 40 % | 4 | 668 | 1,05 |
 
-A parità di autore (Claude), i medi con Opus medio hanno un giro nel 64 % dei
-casi e gli impegnativi con Opus alto nel 18 %, pur essendo più grandi (mediana
-1474 righe contro 784, test compresi). Codex nei medi si comporta come Claude nei medi (65 %).
-I giri dipendono quindi dall'impegno e dalla fascia scelti, non dalla misura:
-la correlazione di Spearman tra righe e run fallite prima del verde è −0,07 su
+A parità di autore (Claude), i medi hanno avuto un giro nel 64 % dei casi e gli
+impegnativi nel 18 %, pur essendo più grandi (mediana 1474 righe contro 784,
+test compresi). Codex nei medi ha la stessa quota di Claude nei medi (65 %).
+Nel campione, quindi, i giri seguono la difficoltà e non la misura: la
+correlazione di Spearman tra righe e run fallite prima del verde è −0,07 su
 tutti i pacchetti di lavoro, 0,05 sui medi, 0,13 sui medi di Codex, 0,01 sugli
-impegnativi.
+impegnativi, cioè nessuna associazione monotona osservata.
+
+Perché i medi abbiano più giri, i dati non lo dicono. Un'ipotesi è l'impegno
+(gli impegnativi dichiarano Opus 5.5 e il piano chiede impegno alto), ma
+l'impegno non è registrato, e i medi di Claude hanno usato modelli diversi: dei
+14, 2 dichiarano Opus (2 con almeno un giro), 4 Sonnet (4 su 4), 8 nessun
+modello (3 su 8); numeri troppo piccoli per un confronto. Altre spiegazioni
+possibili, non separabili qui: i medi seguono uno schema già nel codice e
+scoprono più spesso in CI le differenze con quello schema; gli impegnativi sono
+stati pianificati con più cura; i periodi sono diversi.
 
 ### 2.3 Costi fissi misurati di una pull request
 
@@ -260,6 +298,27 @@ la mediana è 3,1 ore, sui 20 pacchetti presi dopo essere pronti; con le notti s
 arriva a 17 ore (P2) e 41,5 (P13). Gli altri sei sono stati presi prima di
 essere pronti e si sono fermati.
 
+### 2.5 Correzioni dei riferimenti per chi li ha scritti
+
+Il modello è quello dichiarato nella sezione sull'uso dell'IA della pull request
+principale. Le pull request di correzione sono quelle della sezione 2.1.
+
+| Chi ha scritto i riferimenti | Pacchetti | Con ≥1 correzione | PR di correzione | Righe (med.) |
+|---|---|---|---|---|
+| Gemini 3.8 Flash | 37 | 25 | 40 | 325 |
+| Gemini, modello non dichiarato | 3 | 3 | 4 | 212 |
+| Gemini 4 Argon | 5 | 1 | 2 | 619 |
+| Claude | 5 | 0 | 0 | 298 |
+| Codex | 1 | 0 | 0 | 1461 |
+
+In fascia forte (Gemini 4 Argon, Claude, Codex) gli 11 pacchetti hanno avuto
+una sola volta delle correzioni: 0.4-R8, con due. Dei 37 di Gemini 3.8 Flash,
+25 ne hanno avute, 40 in tutto, sia su casi geometrici (0.7-R14, R17, R19) sia
+su comandi (0.7-R5, R18, R20, R21). I pacchetti forti non sono un campione
+scelto a caso (nella 0.7 Argon ha preso due dei più delicati, R9 e R16), ma la
+differenza è grande. Nella 0.7 ogni correzione ha fermato il pacchetto di
+lavoro che aveva trovato il caso sbagliato (sezione 2.4).
+
 ## 3. Le otto domande
 
 ### 3.1 Costi fissi
@@ -276,12 +335,13 @@ di correzione dei casi in più (stima: il valore basso se le correzioni seguono
 i casi, quello alto se seguono i pacchetti; la correlazione 0,36 dice che
 seguono un poco la misura).
 
-**Quanto si recupera in giri di correzione.** Niente, secondo i dati. Gli
-impegnativi hanno avuto 9 run fallite su 27 pull request (0,33 ciascuna), i medi
-51 su 54 (0,94); la misura non spiega i giri (sezione 2.2). Due medi al posto
-di un impegnativo, con la fascia e l'impegno dei medi, darebbero in media circa
-1,9 run fallite al posto di 0,3 (stima dalle medie). In assoluto costa poco:
-ogni giro è un quarto d'ora di CI e una correzione piccola.
+**Quanto si recupera in giri di correzione.** Questo campione non dimostra un
+risparmio. Gli impegnativi hanno avuto 9 run fallite su 27 pull request (0,33
+ciascuna), i medi 51 su 54 (0,94), e la misura non è associata ai giri (sezione
+2.2). Uno scenario, non un effetto misurato: se le due metà avessero i tassi
+osservati dei medi e l'insieme quello osservato degli impegnativi, due medi
+darebbero circa 1,9 run fallite al posto di 0,3. In assoluto costa poco: ogni
+giro è un quarto d'ora di CI e una correzione piccola.
 
 **Dove potrebbe esserci un guadagno vero, che i dati non misurano:** la
 revisione di una pull request più piccola, e il danno di un errore che tocca
@@ -290,9 +350,9 @@ sistematico (sezione 1), quindi il documento non dice né che ci sono né che
 mancano.
 
 **Conclusione:** dividere ha un costo fisso moderato e misurabile, e nessun
-risparmio misurabile in CI. Conviene solo se dà qualcos'altro: parallelismo,
-attese più corte verso solid-space, una metà meccanica che passa a una fascia
-più leggera.
+risparmio dimostrato in CI. Conviene solo se dà qualcos'altro: parallelismo,
+attese più corte verso solid-space, una parte che passa a una fascia più
+economica (sezione 3.9).
 
 ### 3.2 «Non troppo piccoli» e misura massima
 
@@ -346,6 +406,11 @@ misura, non la fascia. Restano di fascia forte, anche piccoli:
 - la **progettazione di un'interfaccia nuova** di `core` (nella 0.8, le entità
   composte);
 - la **conservazione DXF** che deve rileggere ciò che scrive (0.5-P10, 0.6-P10).
+
+Questa è la lettura per il tempo e la qualità. In quella per il costo dei
+modelli (sezione 3.9) conta chi prende le decisioni, non chi scrive il codice:
+se le decisioni sono scritte prima e coperte da riferimenti forti, il codice di
+quasi tutti questi pacchetti può andare in fascia media.
 
 Con la soglia della sezione 3.2, due dei sei (P10, P17) non si dividono; due
 (P2, P16) si dividono senza guadagno; due (P14, P19) si dividono con un
@@ -437,22 +502,24 @@ decide il responsabile.
 
 ### 3.6 Assegnazione
 
-**Chi prende le metà.** I dati della sezione 2.2: nei medi Claude (Opus medio) e
-Codex hanno la stessa quota di giri (64 % e 65 %), Codex qualche run fallita in
-più per riga (1,63 contro 1,04 ogni 1000 righe); negli impegnativi Claude (Opus
-alto) 18 %, Codex (astra medium) 40 % su soli 5 pacchetti. Non ci sono dati sulla
-qualità dopo l'unione (sezione 1).
+**Chi prende le metà.** I dati della sezione 2.2: nei medi Claude e Codex hanno
+la stessa quota di giri (64 % e 65 %), Codex qualche run fallita in più per riga
+(1,63 contro 1,04 ogni 1000 righe); negli impegnativi Claude 18 %, Codex 40 % su
+soli 5 pacchetti. Con quali modelli e impegni non si sa (sezione 1). Non ci sono
+dati sulla qualità dopo l'unione.
 
-**L'idea sposta verso Codex meno di quanto sembri.** Le metà di un impegnativo
-restano in gran parte di fascia forte (sezione 3.3): vanno a Claude con Opus alto
-o a Codex con astra medium. Passano davvero alla fascia media solo le metà
-meccaniche (opzioni, modi, annulla, `Esc`), che nella 0.7 sarebbero state una
-sola (P16). Per quelle i dati non danno motivi di sfiducia verso Codex: gli
-stessi giri di Claude con Opus medio.
+**Con la lettura per il tempo e la qualità, l'idea sposta verso Codex meno di
+quanto sembri.** Le metà di un impegnativo restano in gran parte di fascia forte
+(sezione 3.3). Passano alla fascia media solo le metà meccaniche (opzioni, modi,
+annulla, `Esc`), che nella 0.7 sarebbero state una sola (P16). Per quelle i dati
+non danno motivi di sfiducia verso Codex: la stessa quota di giri di Claude nei
+medi. La lettura per il costo dei modelli sposta molto di più, a condizioni
+diverse (sezione 3.9).
 
 **Una regola utile, per la fiducia:** la scheda di una metà dice da quale
-pacchetto nasce e quale fascia aveva l'insieme, e una metà non scende di fascia
-se tocca la parte che rendeva impegnativo l'insieme.
+pacchetto nasce e quale fascia aveva l'insieme, e scrive le decisioni delicate
+che la riguardano, prese prima (nella scheda, nel contratto di solid-space o in
+un ADR), così che chi la realizza le traduce e non le prende.
 
 ### 3.7 solid-space
 
@@ -507,6 +574,100 @@ pacchetti è un posto in più per un buco di quel tipo: dividere ne aggiunge.
 **Più un criterio di integrazione:** l'ultima metà ha nel suo «Fatto quando» i
 casi che vedono l'insieme (per esempio un comando che usa tutte e due le metà),
 così nessun test resta solo su un pezzo.
+
+### 3.9 Una valutazione diversa: il costo dei modelli
+
+Nella revisione il responsabile ha chiarito un secondo motivo della #442: con
+pacchetti medi si possono usare Opus 5.5 medio e Codex sol medium (o alto)
+invece della fascia forte, anche al costo di un giorno in più per tappa. Nella
+tabella di LAVORO-IN-PARALLELO.md, «Modello e impegno», Opus 5.5 medio sta già
+sia nella fascia forte sia nella media: per Claude il risparmio è l'impegno
+(alto → medio) sullo stesso modello; per Codex è il modello (astra medium → sol
+medium).
+
+**Che cosa dicono i dati, e che cosa no.**
+
+- **Il tempo regge.** Un giorno sono circa 24 ore di calendario. Un nodo in più
+  sul percorso critico costa circa 4 ore (stima, sezione 3.4); una run fallita
+  in più costa un quarto d'ora di macchina, quasi sempre mentre si lavora ad
+  altro. Nello scenario della sezione 3.1 (tassi dei medi al posto di quelli
+  degli impegnativi) le run fallite in più per un impegnativo sono circa 0,6:
+  per i sei impegnativi della 0.7, circa 4 run, un'ora di CI. Il costo vero
+  sarebbero i fermi in più, se un modello medio si ferma più spesso su un
+  dubbio: non è misurabile. Nella 0.7 i fermi più lunghi li hanno avuti due
+  pacchetti medi di Codex (P22, 73 ore; P15, 45 ore), ma per buchi delle schede,
+  non per il modello: si sono fermati quando dovevano.
+- **La qualità di un modello medio su lavoro impegnativo non è misurata.**
+  Nessun impegnativo dichiara un modello o un impegno di fascia media (20 su 22
+  di Claude dichiarano Opus 5.5 senza impegno, quelli di Codex nessun modello),
+  e i difetti dopo l'unione non sono registrati (sezione 1).
+- **Dove la fascia forte rende è misurato: nei riferimenti.** Le correzioni
+  dei casi stanno quasi tutte sui riferimenti in fascia leggera (sezione 2.5),
+  e ogni correzione ha fermato un pacchetto di lavoro. Un errore di un
+  pacchetto di lavoro contro riferimenti giusti è invece una CI rossa: un giro,
+  che costa poco. La fascia forte rende di più dove un errore non lo prende
+  nessun altro controllo: i casi delicati, le decisioni nelle schede e nel
+  contratto, la revisione delle interfacce.
+
+**Ne viene un modello di lavoro: la fascia forte decide e controlla, la media
+realizza.** Restano in fascia forte i riferimenti delicati, la revisione delle
+interfacce, i pacchetti che progettano un'interfaccia nuova e la revisione
+mirata delle pull request che toccano parti delicate (Copilot o Codex). Va in
+fascia media il codice degli impegnativi le cui decisioni delicate sono già
+scritte (nella scheda, nel contratto di solid-space o in un ADR) e coperte da
+riferimenti forti, scritti prima.
+
+**Per il costo, dividere non è il punto: lo è spostare le decisioni prima.**
+L'etichetta «impegnativa» mette insieme due cose: prendere decisioni difficili
+e scrivere codice difficile. Se le decisioni stanno nella scheda e nei
+riferimenti, il codice resta da scrivere con cura ma secondo regole scritte.
+Dividere serve solo dove un pacchetto mescola le due cose o supera la misura.
+
+**I sei impegnativi della 0.7, con questa lettura** (stima):
+
+| Pacchetto | Codice | In fascia media? | A quale condizione |
+|---|---|---|---|
+| P2 richieste e selezione | 509 | in parte | i tipi nuovi di richiesta nel runner sono progetto di interfaccia: restano forti, o si fissano nella scheda; la selezione scritta va in media |
+| P10 grip nel runner | 269 | sì, senza dividere | comportamento con annulla ed `Esc` già scritto nella scheda; R10 resta leggero |
+| P14 facciata e intersezioni | 1399 | sì, diviso per misura | regola delle tolleranze e traduzione dal contratto di solid-space; R14 forte |
+| P16 `TRIM`, `EXTEND` | 770 | sì | scelta del pezzo da togliere scritta (ADR 0035, punto 5); i 4 casi fini di R16 forti |
+| P17 curva parallela | 288 | sì, senza dividere | lato e tolleranza dal contratto; R17 forte |
+| P19 raccordi e tangenze | 1077 | sì, diviso per misura | parte da tenere decisa nel contratto (Matleyx78/solid-space#184) prima della presa; R19 forte |
+
+In righe di codice andrebbero in fascia media circa 3800 delle 4300 dei sei
+impegnativi (88 %; il 94 % con metà di P2). Restano forti P2 (o la sua parte di
+interfaccia), la revisione delle interfacce (P25) e quattro pacchetti di
+riferimenti (R14, R16, R17, R19) invece di uno solo come nella 0.7: sessioni più
+piccole (le pull request di R14, R17 e R19 della 0.7 hanno 268, 125 e 157 righe;
+R16 ne ha 6889 per i DXF di AutoCAD), ma non meno numerose. Quanto costino in token non si può dire (sezione 1). Sul percorso
+critico della 0.7 si aggiungerebbe al più un nodo (P19 diviso): con questa
+lettura la tappa costerebbe forse qualche ora in più, ben dentro il giorno
+accettato, più i fermi in più, se ci sono.
+
+**Nella 0.8, con questa lettura** (stima sulla tabella della sezione 4):
+restano forti PT1 (interfaccia delle entità composte), PT2 (revisione), PT11
+(la prima quota completa, che prova l'interfaccia) e PT33 (coda comune del
+canale MCP, con accessi concorrenti); possono andare in fascia media, con
+riferimenti forti e decisioni scritte prima, PT6, PT12, PT18, PT20, PT24, PT26,
+PT27 e PT32: 8 dei 12 impegnativi. Per PT26, PT27 e PT32 la condizione è che il
+contratto di solid-space sia scritto prima della scheda, come la scheda della
+0.8 già chiede.
+
+**Che cosa serve per saperlo davvero.** Registrare modello e impegno in ogni
+pull request (oggi l'impegno non lo dichiara nessuno, il modello solo una parte:
+sezione 1), per esempio con una riga in più nella sezione sull'uso dell'IA del
+modello di pull request (è un file di `.github/`, quindi lo decide il
+responsabile); poi, alla chiusura della 0.8, contare con gli script della
+sezione 7 i giri, i fermi, le correzioni dei riferimenti per fascia e le
+correzioni di codice dopo l'unione dei pacchetti fatti in fascia media.
+
+**Conclusione di questa lettura: sì, da provare nella 0.8**, con le condizioni
+del modello «la fascia forte decide e controlla». Il costo atteso in tempo sta
+sotto il giorno per tappa (stima), dominato dai fermi possibili e non dalla CI;
+il rischio è un errore che i riferimenti non coprono, e la difesa è la
+revisione mirata. Quello che i dati sostengono con più forza è il contrario
+dell'ipotesi iniziale sui riferimenti: il risparmio sta nel codice, non nei
+casi delicati, che conviene scrivere sempre in fascia forte.
 
 ## 4. Prova sulla carta sulla 0.8
 
@@ -594,41 +755,55 @@ punto 6); come si verifica il canale MCP al livello 2.
 ## 5. Raccomandazione
 
 **Sì, con condizioni.** Privilegiare i pacchetti medi regge come indirizzo per
-la misura e per staccare dalle catene, non come conversione degli impegnativi.
+la misura, per staccare dalle catene e, se lo scopo è il costo dei modelli, per
+spostare in fascia media il codice degli impegnativi le cui decisioni sono già
+prese (sezione 3.9). Non regge come conversione meccanica degli impegnativi.
 Le condizioni:
 
 1. **Si divide per un motivo che si scrive.** Un pacchetto si divide quando
-   supera la misura, o quando la divisione toglie una metà da una catena di file
-   comuni, da un'attesa di solid-space o dalla fascia forte (una metà
-   meccanica). Il piano scrive il motivo in una riga, come per un impegnativo
-   che resta tale.
+   supera la misura, o quando la divisione toglie una parte da una catena di
+   file comuni o da un'attesa di solid-space, o separa le decisioni da
+   prendere dal codice da scrivere. Il piano scrive il motivo in una riga, come
+   per un impegnativo che resta tale.
 2. **La misura conta il codice.** Al massimo 15 file e circa 600 righe di
    codice, test e documenti esclusi; almeno 150 righe di codice o un'unità che
    si verifica da sola.
-3. **La difficoltà è la natura, non la misura.** Una metà che contiene il motore
-   dei comandi, una facciata con casi limite, un'interfaccia nuova o la
-   conservazione DXF resta di fascia forte, anche se piccola.
-4. **I riferimenti si dividono per natura.** Un pacchetto forte con i casi fini
-   delle metà, uno leggero con gli ordinari, un file di attesa per pacchetto di
-   lavoro servito.
-5. **Revisione delle interfacce prima delle metà**, estesa a tutte le schede nate
-   dallo stesso pacchetto; l'ultima metà ha i casi che vedono l'insieme.
+3. **La fascia segue le decisioni, non la misura.** Resta in fascia forte chi
+   prende decisioni delicate: progetta un'interfaccia nuova, sceglie un
+   comportamento con casi limite che nessun documento fissa, scrive i casi
+   delicati, rivede le interfacce. Il codice che traduce decisioni già scritte
+   (nella scheda, nel contratto di solid-space, in un ADR) e coperte da
+   riferimenti forti può andare in fascia media, anche se un tempo era
+   «impegnativo».
+4. **I riferimenti delicati sono sempre di fascia forte**, e si dividono per
+   natura: un pacchetto forte con i casi fini delle parti, uno leggero con gli
+   ordinari, un file di attesa per pacchetto di lavoro servito. È il punto in
+   cui i dati dicono che la fascia forte rende di più (sezione 2.5).
+5. **Revisione delle interfacce prima delle parti**, estesa a tutte le schede
+   nate dallo stesso pacchetto; l'ultima parte ha i casi che vedono l'insieme. I
+   pacchetti in fascia media che toccano parti delicate hanno una revisione
+   mirata (Copilot o Codex).
 6. **Un pacchetto iniziale di interfaccia solo se toglie file comuni** a più
-   consumatori o sblocca due metà in parallelo (nella 0.8: PT1).
-7. **Si misura di nuovo alla chiusura della 0.7.5**, che è già quasi tutta di
-   medi, con lo script della sezione 7, prima di scrivere il piano della 0.8.
+   consumatori o sblocca due parti in parallelo (nella 0.8: PT1).
+7. **Si registra e si misura.** Ogni pull request dichiara modello e impegno; si
+   misura di nuovo alla chiusura della 0.7.5, che è già quasi tutta di medi, e
+   della 0.8, con gli script della sezione 7: giri, fermi, correzioni dei
+   riferimenti per fascia, correzioni di codice dopo l'unione.
 
-**Dove non regge.** Non riduce i giri di CI (sezione 3.1). Non accorcia una
-tappa i cui ritardi vengono da buchi delle schede, casi sbagliati e solid-space
-(sezione 2.4). Non sposta su Gemini 3.8 Flash i riferimenti delle facciate
-(sezione 3.5). Non vale per i pacchetti impegnativi piccoli (0.7-P10, P17).
+**Dove non regge.** Il campione non dimostra un risparmio di giri di CI
+(sezione 3.1). Non accorcia una tappa i cui ritardi vengono da buchi delle
+schede, casi sbagliati e solid-space (sezione 2.4). Non sposta su Gemini 3.8
+Flash i riferimenti delle facciate (sezione 3.5). La qualità del codice
+impegnativo in fascia media non è misurata: è un'ipotesi da provare, con il
+costo in tempo stimato sotto il giorno per tappa (sezione 3.9).
 
 **Le alternative della #442, alla luce dei dati.** *Lasciare tutto com'è*: gli
-impegnativi con Opus alto sono veloci e puliti, ma la misura resta superata
-quasi sempre e i riferimenti forti restano grandi. *Dividere solo gli
-impegnativi sul percorso critico*: nella 0.7 avrebbe toccato solo P19, l'unico
-impegnativo sul percorso critico realizzato, con un effetto di poche ore in un
-senso o nell'altro; è un caso particolare della condizione 1. *Un pacchetto di interfaccia prima di ogni impegnativo*: no in
+impegnativi di Claude hanno avuto pochi giri, ma la misura resta superata quasi
+sempre, i riferimenti forti restano grandi e il codice resta tutto in fascia
+forte. *Dividere solo gli impegnativi sul percorso critico*: nella 0.7 avrebbe
+toccato solo P19, l'unico impegnativo sul percorso critico realizzato, con un
+effetto di poche ore in un senso o nell'altro; è un caso particolare della
+condizione 1. *Un pacchetto di interfaccia prima di ogni impegnativo*: no in
 generale (sezione 3.8), sì dove toglie file comuni (condizione 6).
 
 ## 6. Testo proposto per le regole (non applicato)
@@ -677,9 +852,9 @@ ha lette e approvate, nella pausa tra le tappe (DECISIONI.md, 2026-11-07).
 
 > **Dividere.** Si preferiscono pacchetti medi, ma un pacchetto si divide solo
 > per un motivo che il piano scrive in una riga: supera la misura; oppure la
-> divisione toglie una parte da una catena di file comuni, da un'attesa di
-> solid-space, o dalla fascia forte (una parte meccanica: domande, opzioni,
-> annulla, `Esc`). Due parti che toccano gli stessi file restano in catena, e
+> divisione toglie una parte da una catena di file comuni o da un'attesa di
+> solid-space, o separa le decisioni da prendere dal codice da scrivere (con la
+> variante B di «Modello e impegno», il codice va in fascia media). Due parti che toccano gli stessi file restano in catena, e
 > dividerle allunga la tappa di un pacchetto. Le schede nate dallo stesso
 > pacchetto si citano a vicenda in «Da leggere», passano insieme dalla
 > revisione delle interfacce, e l'ultima ha i casi che vedono l'insieme. Un
@@ -711,7 +886,7 @@ ha lette e approvate, nella pausa tra le tappe (DECISIONI.md, 2026-11-07).
 > forte e alto. Un pacchetto impegnativo che non si riesce a dividere resta
 > impegnativo; uno che si divide dà spesso due pacchetti medi.
 
-**Proposto:**
+**Proposto, variante A (lettura per il tempo e la qualità):**
 
 > Di norma: facile → leggero e basso; media → medio e medio; impegnativa →
 > forte e alto. La difficoltà viene dalla natura del lavoro, non dalla misura:
@@ -720,6 +895,18 @@ ha lette e approvate, nella pausa tra le tappe (DECISIONI.md, 2026-11-07).
 > pacchetto piccolo, e le parti di un pacchetto diviso che le contengono
 > restano impegnative. Un pacchetto impegnativo che resta tale ha il motivo in
 > una riga del piano.
+
+**Proposto, variante B (lettura per il costo dei modelli, sezione 3.9):**
+
+> Di norma: facile → leggero e basso; media → medio e medio; impegnativa →
+> forte e alto. La fascia forte va a chi prende decisioni delicate: progettare
+> un'interfaccia nuova, scegliere un comportamento con casi limite che nessun
+> documento fissa, scrivere i riferimenti con calcoli delicati, rivedere le
+> interfacce. Un pacchetto che traduce in codice decisioni già scritte (nella
+> scheda, nel contratto di solid-space o in un ADR) e coperte da riferimenti di
+> fascia forte è medio anche se il codice è delicato; la sua pull request ha una
+> revisione mirata. Il piano scrive in una riga perché un pacchetto resta
+> impegnativo.
 
 ### Che cosa ne segue
 
@@ -737,6 +924,10 @@ ha lette e approvate, nella pausa tra le tappe (DECISIONI.md, 2026-11-07).
 - [GUIDA-RESPONSABILE.md](../../GUIDA-RESPONSABILE.md), B1: nel preparare il
   piano, contare i file comuni di ogni catena e cercare prima le divisioni che
   li tolgono.
+- Il modello di pull request in `.github/` (lo cambia solo il responsabile):
+  nella sezione sull'uso dell'IA, oltre allo strumento e al modello, l'impegno
+  scelto; senza, la misura della condizione 7 della sezione 5 non si può
+  fare.
 
 ## 7. Dati grezzi e comandi
 
@@ -1377,6 +1568,61 @@ for g, pats in GROUPS.items():
         per_dir.append(f"{os.path.relpath(d, base)}: domande {qd} (fini {qf}), script {sd} (fini {sf})")
     print(f"{g}: domande {q_tot}, fini {q_fine}; script {s_tot}, fini {s_fine}; fonti {sorted(src)}")
     for p in per_dir: print('   ', p)
+```
+
+</details>
+
+<details>
+<summary><code>riferimenti-fascia.py</code>: correzioni dei riferimenti per modello dichiarato (2.5) e modelli e impegni dichiarati dai pacchetti di lavoro (sezione 1): `python3 riferimenti-fascia.py <cartella>`</summary>
+
+```python
+# Reference corrections by the model declared in the AI-use section of the main PR,
+# and the models (and efforts) declared by the work packages.
+import json, sys, re
+from collections import defaultdict
+S = sys.argv[1]
+rows = json.load(open(f"{S}/dati/pacchetti-analisi.json"))
+pulls = {p['number']: p for p in json.load(open(f"{S}/dati/pulls.json"))}
+def declared(r):
+    b = pulls[r['main']['pr']]['body'] or ''
+    m = re.search(r'(?is)##\s*uso dell.?ia(.{0,400})', b)
+    s = (m.group(1) if m else '').lower()
+    if 'argon' in s: return 'Gemini 4 Argon'
+    if 'flash' in s: return 'Gemini 3.8 Flash'
+    if 'gemini' in s or 'antigravity' in s: return 'Gemini, modello non dichiarato'
+    if r['autore_finale'] == 'gemini-argon': return 'Gemini 4 Argon'
+    if r['autore_finale'] == 'gemini': return 'Gemini, modello non dichiarato'
+    return {'claude': 'Claude', 'codex': 'Codex'}.get(r['autore_finale'], r['autore_finale'])
+g = defaultdict(list)
+for r in rows:
+    if r['kind'] == 'riferimenti':
+        g[declared(r)].append(r)
+print("| Chi ha scritto i riferimenti | Pacchetti | Con ≥1 correzione | PR di correzione | Righe (med.) |")
+print("|---|---|---|---|---|")
+import statistics as st
+for k in ['Gemini 3.8 Flash', 'Gemini, modello non dichiarato', 'Gemini 4 Argon', 'Claude', 'Codex']:
+    rs = g.get(k, [])
+    if not rs: continue
+    print(f"| {k} | {len(rs)} | {sum(1 for r in rs if r['nfix'])} | {sum(r['nfix'] for r in rs)} | {st.median(r['main']['lines_own'] for r in rs):g} |")
+for k in g:
+    print(k, sorted(f"{r['code']}:{r['nfix']}" for r in g[k]), file=sys.stderr)
+
+# Work packages: declared model and whether any effort is declared.
+def section(r):
+    m = re.search(r'(?is)##\s*uso dell.?ia(.{0,500})', pulls[r['main']['pr']]['body'] or '')
+    return (m.group(1) if m else '').lower()
+w = defaultdict(lambda: [0, 0])
+effort = 0
+for r in rows:
+    if r['kind'] != 'pacchetto': continue
+    s = section(r)
+    model = 'Opus' if 'opus' in s else 'Sonnet' if 'sonnet' in s else 'Gemini' if ('gemini' in s or 'antigravity' in s) else 'non dichiarato'
+    if re.search(r'impegno|effort|\bhigh\b|\bmedium\b|\bxhigh\b', s): effort += 1
+    k = (r['diff'], r['autore_finale'], model)
+    w[k][0] += 1; w[k][1] += 1 if r['main']['fail_before_green'] > 0 else 0
+print()
+print("pacchetti di lavoro che dichiarano un impegno:", effort)
+for k, v in sorted(w.items()): print(k, 'pacchetti', v[0], 'con almeno un giro', v[1])
 ```
 
 </details>
