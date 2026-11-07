@@ -168,7 +168,12 @@ Sono funzioni, non grafica, e arrivano con la loro tappa:
 - **Immagini di riferimento** nel repository, in `docs/adr/0039/`, rifatte
   come file propri (0.7.5-P9): finestra intera nei due temi, più un dettaglio
   per ribbon, pannello *Properties*, pannello *Layers*, barra di stato e
-  immissione dinamica.
+  immissione dinamica: [finestra, tema chiaro](0039/finestra-chiaro.svg),
+  [finestra, tema scuro](0039/finestra-scuro.svg), [ribbon](0039/ribbon.svg),
+  [*Properties*](0039/proprieta.svg), [*Layers*](0039/layer.svg),
+  [barra di stato](0039/stato.svg),
+  [immissione dinamica](0039/immissione-dinamica.svg); che cosa mostra ognuna
+  è nel [README](0039/README.md).
 - **Galleria di schermate** generata in CI per ogni pull request che tocca
   `app/` (piattaforma `offscreen` su Linux, due temi), da confrontare con le
   immagini di riferimento senza compilare (0.7.5-P3).
