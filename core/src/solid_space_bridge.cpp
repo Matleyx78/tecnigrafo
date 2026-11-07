@@ -62,7 +62,9 @@ std::optional<g::Curve> curveOf(const Entity& entity) {
 
 std::pair<Vec2, Vec2> arcEndpoints(const Arc& arc) {
     const auto geometry = arc.geometry();
-    const auto ends = g::endpoints(*curveOf(arc));
+    const auto curve = curveOf(arc);
+    assert(curve.has_value());  // An Arc always has a kernel curve.
+    const auto ends = g::endpoints(*curve);
     Vec2 start = ends.hasValue() ? fromPoint(ends.value().start) : startPoint(geometry);
     Vec2 end = ends.hasValue() ? fromPoint(ends.value().end) : endPoint(geometry);
     start = axisEndpoint(geometry, geometry.startAngle).value_or(start);
