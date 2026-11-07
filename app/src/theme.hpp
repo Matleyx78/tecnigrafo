@@ -38,8 +38,21 @@ void applyTheme(QApplication& application, Theme theme);
 /// The colours of the drawing: only the background follows the tokens
 /// (ThemeTokens::canvas); entities, grid and markers keep their own colours.
 [[nodiscard]] render::SceneStyle sceneStyle(Theme theme);
-/// Resource name under :/tg/icons/, or an explicit resource/file path.
-/// Unknown or unreadable images return an empty icon.
-[[nodiscard]] QIcon themedIcon(const QString& name, const QPalette& palette);
+/// The theme that `palette` belongs to: Dark when its window is darker than
+/// its text. For widgets that only know their palette (panels, models).
+[[nodiscard]] Theme themeOf(const QPalette& palette);
+
+/// The icon `name` (docs/adr/0040): the -16 and -32 files when they exist,
+/// else the old 24 px file; each role coloured by the tokens of `theme`.
+///
+/// `name` is a resource name under :/tg/icons/ or a path without extension,
+/// and then <name>-16.svg draws the sizes up to 24 px and <name>-32.svg the
+/// larger ones, either one standing in for the other when it is missing, and
+/// <name>.svg when neither exists; a path ending in .svg is that file only.
+/// Every element whose fill or stroke is currentColor gets the colour of its
+/// role: its class geo, pt, cost or esist, else that of its nearest group
+/// with one, else esist; the old class accent is pt (docs/ICONE.md, "Come si
+/// colorano"). Unknown or unreadable images return an empty icon.
+[[nodiscard]] QIcon themedIcon(const QString& name, Theme theme);
 
 }  // namespace tg::app

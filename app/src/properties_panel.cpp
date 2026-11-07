@@ -114,7 +114,7 @@ QLabel* iconLabel(const QString& name, QWidget* parent, QList<QPair<QLabel*, QSt
 
 void drawIcons(const QList<QPair<QLabel*, QString>>& icons, const QPalette& palette) {
     for (const auto& [label, name] : icons) {
-        label->setPixmap(themedIcon(name, palette).pixmap(kIconSide, kIconSide));
+        label->setPixmap(themedIcon(name, themeOf(palette)).pixmap(kIconSide, kIconSide));
     }
 }
 

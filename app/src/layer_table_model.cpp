@@ -24,7 +24,7 @@ QVariant iconData(const QString& name, const QPalette& palette) {
     if (name.isEmpty()) {
         return {};
     }
-    return QVariant::fromValue(themedIcon(name, palette));
+    return QVariant::fromValue(themedIcon(name, themeOf(palette)));
 }
 
 QVariant centered() {

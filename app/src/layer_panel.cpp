@@ -648,7 +648,7 @@ void LayerControls::sync() {
     const auto showState = [this, layer](QToolButton* button, LayerState state,
                                          const QString& turnOn, const QString& turnOff) {
         const bool value = layer != nullptr && layerStateValue(*layer, state);
-        button->setIcon(themedIcon(layerStateIconName(state, value), palette()));
+        button->setIcon(themedIcon(layerStateIconName(state, value), themeOf(palette())));
         button->setToolTip(value ? turnOff : turnOn);
     };
     showState(m_on, LayerState::On, tr("Turn the current layer on"),

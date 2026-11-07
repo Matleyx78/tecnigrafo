@@ -668,7 +668,7 @@ void MainWindow::updateThemeIcons() {
     for (QAction* action : m_actions->actions()) {
         const ActionSpec* spec = m_actions->spec(action->objectName());
         if (!spec->icon.isEmpty()) {
-            action->setIcon(themedIcon(spec->icon, palette()));
+            action->setIcon(themedIcon(spec->icon, m_theme));
         }
     }
 }

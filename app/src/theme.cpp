@@ -6,12 +6,21 @@
 #include "style.hpp"
 
 #include <QApplication>
+#include <QByteArray>
 #include <QColor>
+#include <QFile>
 #include <QFileInfo>
+#include <QImage>
 #include <QPainter>
 #include <QPixmap>
+#include <QRectF>
+#include <QStringList>
+#include <QSvgRenderer>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 #include <cstdint>
+#include <vector>
 
 namespace tg::app {
 namespace {
@@ -52,6 +61,145 @@ QPalette paletteFrom(const ThemeTokens& tokens) {
         palette.setColor(QPalette::Disabled, role, tokens.textSecondary);
     }
     return palette;
+}
+
+// Icons drawn at up to this many pixels use the 16 px grid, the larger ones
+// the 32 px grid (docs/adr/0040, point 3).
+constexpr int kSmallGridLimit = 24;
+
+/// The colour of the role named in the class attribute `classes`, or null:
+/// geo, pt, cost, esist, and the old accent, which is pt (docs/ICONE.md).
+const QColor* roleColor(const QString& classes, const ThemeTokens& tokens) {
+    for (const QString& token : classes.simplified().split(QLatin1Char(' '), Qt::SkipEmptyParts)) {
+        if (token == QStringLiteral("geo")) {
+            return &tokens.iconGeo;
+        }
+        if (token == QStringLiteral("pt") || token == QStringLiteral("accent")) {
+            return &tokens.iconPt;
+        }
+        if (token == QStringLiteral("cost")) {
+            return &tokens.iconCost;
+        }
+        if (token == QStringLiteral("esist")) {
+            return &tokens.iconEsist;
+        }
+    }
+    return nullptr;
+}
+
+/// What an element passes to its children: its role and its fill and stroke
+/// as written (empty when neither it nor an ancestor sets them).
+struct Inherited {
+    QColor role;
+    QString fill;
+    QString stroke;
+};
+
+/// The SVG `data` with every fill and stroke that is currentColor replaced by
+/// the colour of the element's role (docs/ICONE.md, "Come si colorano").
+/// Each element gets its resolved fill and stroke written on itself, so a
+/// child of another role than its group never inherits the group's colour.
+/// Empty if `data` is not well-formed.
+QByteArray colouredSvg(const QByteArray& data, const ThemeTokens& tokens) {
+    const QString currentColor = QStringLiteral("currentColor");
+    const QString fillKey = QStringLiteral("fill");
+    const QString strokeKey = QStringLiteral("stroke");
+    QXmlStreamReader reader(data);
+    // The namespace declarations stay ordinary attributes, copied as written.
+    reader.setNamespaceProcessing(false);
+    QByteArray result;
+    QXmlStreamWriter writer(&result);
+    std::vector<Inherited> stack;
+    while (!reader.atEnd()) {
+        reader.readNext();
+        if (reader.isStartElement()) {
+            Inherited state = stack.empty() ? Inherited{tokens.iconEsist, {}, {}} : stack.back();
+            const QXmlStreamAttributes attributes = reader.attributes();
+            if (const QColor* role =
+                    roleColor(attributes.value(QStringLiteral("class")).toString(), tokens)) {
+                state.role = *role;
+            }
+            if (attributes.hasAttribute(fillKey)) {
+                state.fill = attributes.value(fillKey).toString();
+            }
+            if (attributes.hasAttribute(strokeKey)) {
+                state.stroke = attributes.value(strokeKey).toString();
+            }
+            writer.writeStartElement(reader.qualifiedName().toString());
+            for (const QXmlStreamAttribute& attribute : attributes) {
+                const QString key = attribute.qualifiedName().toString();
+                if (key != fillKey && key != strokeKey) {
+                    writer.writeAttribute(key, attribute.value().toString());
+                }
+            }
+            const QString colour = state.role.name(QColor::HexRgb);
+            if (!state.fill.isEmpty()) {
+                writer.writeAttribute(fillKey, state.fill == currentColor ? colour : state.fill);
+            }
+            if (!state.stroke.isEmpty()) {
+                writer.writeAttribute(strokeKey,
+                                      state.stroke == currentColor ? colour : state.stroke);
+            }
+            stack.push_back(state);
+        } else if (reader.isEndElement()) {
+            writer.writeEndElement();
+            stack.pop_back();
+        } else if (reader.isCharacters() && !reader.isWhitespace()) {
+            writer.writeCharacters(reader.text().toString());
+        }
+    }
+    if (reader.hasError()) {
+        return {};
+    }
+    return result;
+}
+
+QString existingFile(const QString& path) {
+    return QFileInfo::exists(path) ? path : QString{};
+}
+
+/// The files of an icon: `forSmall` draws the sizes up to kSmallGridLimit,
+/// `forLarge` the others; both empty when the icon has no file.
+struct IconFiles {
+    QString forSmall;
+    QString forLarge;
+};
+
+IconFiles iconFiles(const QString& name) {
+    if (name.endsWith(QStringLiteral(".svg"), Qt::CaseInsensitive)) {
+        const QString file = existingFile(name);
+        return {file, file};
+    }
+    const QString base = name.startsWith(QLatin1Char(':')) || QFileInfo(name).isAbsolute()
+                             ? name
+                             : QStringLiteral(":/tg/icons/%1").arg(name);
+    const QString sixteen = existingFile(base + QStringLiteral("-16.svg"));
+    const QString thirtyTwo = existingFile(base + QStringLiteral("-32.svg"));
+    if (sixteen.isEmpty() && thirtyTwo.isEmpty()) {
+        // The old 24 px grid, until docs/tappe/0.7.5 P22 removes it.
+        const QString old = existingFile(base + QStringLiteral(".svg"));
+        return {old, old};
+    }
+    return {sixteen.isEmpty() ? thirtyTwo : sixteen, thirtyTwo.isEmpty() ? sixteen : thirtyTwo};
+}
+
+QByteArray readFile(const QString& path) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+    return file.readAll();
+}
+
+/// The icon drawn by `renderer` on a transparent square of `size` pixels.
+QPixmap drawnIcon(QSvgRenderer& renderer, int size) {
+    QImage image(size, size, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
+    renderer.render(&painter, QRectF(0, 0, size, size));
+    painter.end();
+    return QPixmap::fromImage(image);
 }
 
 }  // namespace
@@ -155,30 +303,31 @@ render::SceneStyle sceneStyle(Theme theme) {
     return style;
 }
 
-QIcon themedIcon(const QString& name, const QPalette& palette) {
+Theme themeOf(const QPalette& palette) {
+    return palette.color(QPalette::Window).lightnessF() <
+                   palette.color(QPalette::WindowText).lightnessF()
+               ? Theme::Dark
+               : Theme::Light;
+}
+
+QIcon themedIcon(const QString& name, Theme theme) {
     if (name.isEmpty()) {
         return {};
     }
-    const QString path = name.startsWith(QLatin1Char(':')) || QFileInfo(name).isAbsolute()
-                             ? name
-                             : QStringLiteral(":/tg/icons/%1.svg").arg(name);
-    if (!QFileInfo::exists(path)) {
+    const IconFiles files = iconFiles(name);
+    if (files.forSmall.isEmpty()) {
         return {};
     }
-    const QIcon source(path);
+    const ThemeTokens& tokens = themeTokens(theme);
+    QSvgRenderer smallSizes(colouredSvg(readFile(files.forSmall), tokens));
+    QSvgRenderer largeSizes(colouredSvg(readFile(files.forLarge), tokens));
+    if (!smallSizes.isValid() || !largeSizes.isValid()) {
+        return {};
+    }
     QIcon result;
-    // Rasterize at the sizes used by menus, toolbars and ribbon, including
-    // high-DPI variants. SourceIn preserves the SVG's alpha coverage.
+    // The sizes of menus, toolbars and ribbon, with their high-DPI variants.
     for (const int size : {16, 20, 24, 32, 40, 48, 64, 96, 128}) {
-        QPixmap pixmap = source.pixmap(size, size);
-        if (pixmap.isNull()) {
-            continue;
-        }
-        QPainter painter(&pixmap);
-        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        painter.fillRect(pixmap.rect(), palette.color(QPalette::Text));
-        painter.end();
-        result.addPixmap(pixmap);
+        result.addPixmap(drawnIcon(size <= kSmallGridLimit ? smallSizes : largeSizes, size));
     }
     return result;
 }
