@@ -53,11 +53,11 @@ TEST(SnapPoints, ArcEndpointsMatchKernelBits) {
 
 TEST(SnapPoints, RejectedArcKeepsGeometryEndpoints) {
     namespace g = solid_space::geom2d;
-    for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9},
-                                     Arc{{0x1p51, -7}, 13, 0.2, 1.9},
+    for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9}, Arc{{0x1p51, -7}, 13, 0.2, 1.9},
                                      Arc{{3, -7}, -13, 0.2, 1.9}}) {
         const auto geometry = arc.geometry();
-        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, geometry.sweep};
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const g::Arc curve{center, arc.radius, arc.startAngle, geometry.sweep};
         const auto rejected = g::endpoints(curve);
         ASSERT_FALSE(rejected.hasValue());
         std::vector<SnapPoint> snaps;
@@ -231,7 +231,7 @@ TEST(SnapPoints, RotatedTranslatedArcMidpoint) {
 
 TEST(SnapPoints, EveryEntityTypeHonorsTheModes) {
     const std::vector<Entity> entities{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
-                                        Arc{{0, 0}, 2, 0, kPi / 2.0}, Text{}};
+                                       Arc{{0, 0}, 2, 0, kPi / 2.0}, Text{}};
     for (const Entity& entity : entities) {
         std::vector<SnapPoint> out;
         appendSnapPoints(entity, SnapModes{false, false, false, false}, out);
@@ -298,7 +298,7 @@ TEST(SnapPoints, InsertionModeOnlyAffectsTexts) {
     // The other entities have no insertion point.
     out.clear();
     for (const Entity& entity : std::vector<Entity>{Line{{0, 0}, {4, 0}}, Circle{{0, 0}, 2},
-                                                     Arc{{0, 0}, 2, 0, kPi / 2.0}}) {
+                                                    Arc{{0, 0}, 2, 0, kPi / 2.0}}) {
         appendSnapPoints(entity, SnapModes{false, false, false, true}, out);
     }
     EXPECT_TRUE(out.empty());

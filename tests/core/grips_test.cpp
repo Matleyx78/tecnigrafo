@@ -65,11 +65,11 @@ TEST(Grips, ArcEndpointsMatchKernelBits) {
 
 TEST(Grips, RejectedArcKeepsGeometryEndpoints) {
     namespace g = solid_space::geom2d;
-    for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9},
-                                     Arc{{0x1p51, -7}, 13, 0.2, 1.9},
+    for (const Arc& arc : std::array{Arc{{3, -7}, 0, 0.2, 1.9}, Arc{{0x1p51, -7}, 13, 0.2, 1.9},
                                      Arc{{3, -7}, -13, 0.2, 1.9}}) {
         const auto geometry = arc.geometry();
-        const g::Arc curve{{arc.center.x, arc.center.y}, arc.radius, arc.startAngle, geometry.sweep};
+        const g::Point2 center{arc.center.x, arc.center.y};
+        const g::Arc curve{center, arc.radius, arc.startAngle, geometry.sweep};
         const auto rejected = g::endpoints(curve);
         ASSERT_FALSE(rejected.hasValue());
         const auto actual = gripPoints(Entity{arc});
