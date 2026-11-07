@@ -16,7 +16,10 @@
   (`docs/tappe/0.7.5/analisi-pacchetti-medi.md`); gli
   [ADR 0041](../../adr/0041-documenti-e-ambienti.md) e
   [0040](../../adr/0040-icone-a-ruoli.md); le decisioni del piano della 0.7.5 sui
-  blocchi, le quote e i retini (sezione 5)
+  blocchi, le quote e i retini (sezione 5); la
+  [#538](https://github.com/Matleyx78/tecnigrafo/issues/538), prima analisi dei
+  blocchi dell'elettrico; i testi delle due richieste dei retini, che il
+  responsabile ti dà nella chat
 
 ## Perché
 
@@ -43,8 +46,10 @@ fissi:
    impegnativo resta solo con il motivo in una riga;
 3. un primo pacchetto di interfaccia, come la prova sulla carta di Codex nella
    #522 (punto 7), che non diventa un unico pacchetto enorme;
-4. le decisioni sui blocchi (attributi), sul modello della quota e sui retini
-   (le richieste a solid-space, già aperte o da aprire);
+4. le decisioni sui blocchi (attributi al livello (b), con ciò che la #538 dice
+   dei blocchi dell'elettrico) e sul modello della quota; le due richieste dei
+   retini, riviste e aperte in solid-space con `scripts/richiesta.sh` (B2), con
+   il piano in due tempi per i pacchetti che ne dipendono;
 5. il pacchetto di `app` con icone e voci dei comandi nuovi (LAVORO-IN-PARALLELO.md,
    «Comandi nell'interfaccia»);
 6. il canale MCP sulla sessione attiva (ADR 0041, punto 2).
