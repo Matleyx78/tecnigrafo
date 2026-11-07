@@ -1127,3 +1127,36 @@ i rimandi ai documenti che cambia.
 
   La [#526](https://github.com/Matleyx78/tecnigrafo/issues/526) si chiude: la
   sostituisce la scheda della tappa 0.7.5.
+- **2026-11-07 — Decisioni del piano della tappa 0.7.5.** Nella chat del piano
+  ([#537](https://github.com/Matleyx78/tecnigrafo/pull/537)) il responsabile
+  decide:
+  - **F5 fuori tappa**: gli strumenti accettano le tappe con tre numeri prima
+    che la 0.7.5 si apra ([fuori-tappa/F5](tappe/fuori-tappa/F5-tappe-con-tre-numeri.md)).
+  - **Attributi dei blocchi nella 0.8**, al livello (b) della
+    [#522](https://github.com/Matleyx78/tecnigrafo/issues/522): `ATTDEF` e
+    `ATTRIB` letti, rappresentati nel modello e riscritti, senza comandi per
+    crearli o modificarli; le operazioni sugli inserimenti li tengono coerenti
+    (spostare, copiare, cancellare ed esplodere un `INSERT` porta con sé i suoi
+    `ATTRIB`, con handle nuovi sulle copie e un solo passo di annulla); le
+    varianti non gestite si conservano e le operazioni che non le terrebbero
+    coerenti si rifiutano. Chi prepara il piano della 0.8 legge anche la
+    [#538](https://github.com/Matleyx78/tecnigrafo/issues/538), la prima
+    analisi dei blocchi dell'elettrico. Cambia la
+    [scheda della 0.8](tappe/0.8-quote-retini-blocchi.md).
+  - **Richieste dei retini**: non si aprono ora, ma con il piano della 0.8
+    (0.7.5-P34), perché le valuti e le realizzi la tappa di solid-space che
+    corrisponde alla 0.8.
+  - **Revisione delle interfacce delle schede P24–P31** (0.7.5-P23), anche se
+    non toccano `core`.
+  - **Icone contate a coppie**: nei pacchetti delle icone un'icona a 16 e 32 px
+    conta come un file per la misura del pacchetto.
+
+  - **Modello della quota nella 0.8**: la quota della 0.8 è solo
+    un'annotazione, ma il suo modello tiene separate tre cose, perché possa
+    diventare associativa e, negli schizzi, un vincolo che comanda senza rifarla:
+    come si mostra (stile, testo, frecce, posizione), che cosa misura (oggi
+    punti di definizione, domani riferimenti a entità) e chi decide il valore
+    (oggi la misura, domani un vincolo). I dati DXF standard restano nel DXF,
+    quelli propri in `extensions.json`; rigenerare la geometria della quota non
+    cancella i dati sconosciuti (parere di Codex nella #522, punto 5). Lo scrive
+    l'ADR delle entità composte della 0.8.
