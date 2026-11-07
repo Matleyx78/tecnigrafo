@@ -3,7 +3,7 @@
 - **Tappa:** fuori tappa, strumento del responsabile come
   `scripts/apri-tappa.sh` ([F4](F4-dipendenze.md)); serve prima di aprire la
   [tappa 0.7.5](../0.7.5-correzione-di-rotta.md), che è la prima con tre numeri
-- **Issue:** #…
+- **Issue:** #539
 - **Difficoltà:** facile
 - **Agente:** codex
 - **Modello e impegno:** leggero; impegno basso
