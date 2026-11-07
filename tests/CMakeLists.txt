@@ -26,6 +26,7 @@ add_executable(tg_tests
     cmd/command_runner_test.cpp
     cmd/coordinate_input_test.cpp
     cmd/drawing_aids_test.cpp
+    cmd/dynamic_input_test.cpp
     cmd/erase_command_test.cpp
     cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp

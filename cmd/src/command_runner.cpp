@@ -258,6 +258,18 @@ void CommandRunner::setDrawingAids(const DrawingAids& aids) {
     refreshPointer();
 }
 
+std::optional<core::Vec2> CommandRunner::basePoint() const {
+    if (!isActive() || m_askingSelection) {
+        return std::nullopt;
+    }
+    return m_command->basePoint();
+}
+
+core::Vec2 CommandRunner::clickPoint(const core::Vec2& position) const {
+    // The same correction as click() (docs/adr/0042, point 3).
+    return asksForPoint() ? aidedPoint(position, m_command->basePoint()) : position;
+}
+
 std::optional<core::SnapPoint> CommandRunner::activeSnap() const {
     if (!asksForPoint() || !m_pointer) {
         return std::nullopt;
