@@ -1051,9 +1051,14 @@ i rimandi ai documenti che cambia.
     come le schermate di riferimento della #483 ed essere pronto per gli
     ambienti (disegno, parti, assiemi), con documenti in schede e ambiente
     attivo che guida ribbon, menu e comandi: passando da un disegno a un file
-    di parti cambiano ribbon, icone e menu, perché i comandi sono altri, e un
-    documento non compatibile con l'ambiente richiesto non perde lavoro
-    (richiesta di salvare prima di chiudere, o ciò che serve). Icone e voci si
+    di parti cambiano ribbon, icone e menu, perché i comandi sono altri. Se si
+    chiede un ambiente che il documento attivo non può ospitare, il documento
+    resta aperto nella sua scheda e se ne apre o crea uno del tipo giusto in una
+    scheda nuova, come in Inventor (strada A, scelta fra due); la richiesta di
+    salvare compare solo quando un documento modificato si chiude davvero.
+    Entra nella 0.7.5 anche l'immissione dinamica vicino al cursore che si vede
+    nel riferimento visivo; restano fuori i testi in italiano (0.9), i comandi
+    che non esistono ancora e le schede *Modello*/*Layout* (dopo la 1.0). Icone e voci si
     rifanno per tutti i comandi già esistenti, compresi quelli di modifica della
     0.7; le icone dei comandi nuovi le disegna la tappa che li porta, con le
     regole fissate. Il riferimento visivo è il mockup del raccoglitore privato
