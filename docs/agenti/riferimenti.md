@@ -42,7 +42,8 @@ pacchetti di riferimenti pronti presi di fila sono in [lotti.md](lotti.md).
   licenze compatibili con la GPLv3 che permettano la ridistribuzione; nel dubbio,
   non usare il file e scrivilo nella pull request.
 - Elenca i nuovi casi nel tuo file `tests/verifica/in-attesa/<X.Y>-R<N>.txt`
-  (il tag della tua issue di riferimenti, con la lettera se il blocco è diviso:
+  (`X.Y` oppure `X.Y.Z`, con numeri senza zeri iniziali; il tag della tua issue
+  di riferimenti, con la lettera se il blocco è diviso:
   `<X.Y>-R<N>a.txt`), una riga per caso, con il numero della issue del lavoro. Il
   file è tuo: nessun altro pacchetto lo tocca.
 - La pull request è finita con la CI verde, **controlli anticipati compresi**

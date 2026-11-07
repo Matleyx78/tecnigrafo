@@ -352,7 +352,7 @@ def parse_ss_roadmap(text: str, tappa: str) -> SsStage | None:
         return None
     for _, c in table.rows:
         for_tg = c.get("Per la tappa di Tecnigrafo", "")
-        if re.match(rf"^{re.escape(tappa)}(?![0-9])", for_tg):
+        if re.match(rf"^{re.escape(tappa)}(?![0-9.])", for_tg):
             state = c.get("Stato", "")
             plan = re.search(r"\]\((tappe/[^)]+\.md)\)", state)
             milestone = re.search(r"/milestone/([0-9]+)", state)
@@ -947,8 +947,8 @@ def main(argv: list[str] | None = None, gh: GitHub | None = None, root: Path | N
     parser.add_argument("--applica", action="store_true")
     parser.add_argument("--senza-project", action="store_true")
     args = parser.parse_args(argv)
-    if not re.match(r"^[0-9]+\.[0-9]+$", args.tappa):
-        parser.error("the stage is X.Y, for example 0.7")
+    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))?", args.tappa):
+        parser.error("the stage is X.Y or X.Y.Z, without leading zeros, for example 0.7 or 0.7.5")
     ss_repo = os.environ.get("TG_SS_REPO", "Matleyx78/solid-space")
     gh = gh or GitHub(public=[ss_repo])
     if root is None:

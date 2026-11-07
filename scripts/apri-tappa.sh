@@ -251,7 +251,8 @@ while [[ $# -gt 0 ]]; do
     esac
     shift
 done
-[[ $tappa =~ ^[0-9]+\.[0-9]+$ ]] || usage
+stage_re='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))?'
+[[ $tappa =~ ^$stage_re$ ]] || usage
 if [[ $only_project -eq 1 ]]; then
     [[ $with_project -eq 1 ]] || die "--solo-project and --senza-project exclude each other."
     with_pr=0
@@ -279,7 +280,7 @@ fi
 
 # --- Read the plan -----------------------------------------------------------
 
-stage_title=$(sed -nE '1s/^# *Tappa +[0-9]+\.[0-9]+ *(—|-) *//p' "$doc")
+stage_title=$(sed -nE "1s/^# *Tappa +${tappa//./\\.} *(—|-) *//p" "$doc")
 [[ -n $stage_title ]] || die "$doc does not start with \"# Tappa $tappa ...\"."
 
 # Prints one line per row of the package table, fields separated by \x1f:
