@@ -18,7 +18,7 @@ lavora **solo** sui pacchetti di lavoro della tappa aperta.
 | 5 | 0.5 | File: formato nativo e DXF | **chiusa** | [0.5](tappe/0.5-file-e-dxf.md) |
 | 6 | 0.6 | Layer, colori, tipi di linea, proprietà; impianto dell'interfaccia; descrizione dei comandi e server MCP di sviluppo | **chiusa** | [0.6](tappe/0.6-layer-e-proprieta.md) |
 | 7 | 0.7 | Comandi di modifica | **chiusa** | [0.7](tappe/0.7-modifiche.md) |
-| 7.5 | 0.7.5 | Correzione di rotta: CI e metodo, interfaccia rifatta e pronta per gli ambienti, basi della 0.8 e del 3D | in preparazione | [0.7.5](tappe/0.7.5-correzione-di-rotta.md) |
+| 7.5 | 0.7.5 | Correzione di rotta: CI e metodo, interfaccia rifatta e pronta per gli ambienti, basi della 0.8 e del 3D | **aperta** | [0.7.5](tappe/0.7.5-correzione-di-rotta.md) |
 | 8 | 0.8 | Quote, retini, blocchi; canale MCP per l'assistente IA dell'utente | in programma | [0.8](tappe/0.8-quote-retini-blocchi.md) |
 | 9 | 0.9 | Stampa, PDF, traduzioni, installatori | in programma | [0.9](tappe/0.9-stampa-e-distribuzione.md) |
 | 10 | 1.0 | Stabilità e prestazioni: CAD 2D per lavoro reale | in programma | [1.0](tappe/1.0-stabilita.md) |
