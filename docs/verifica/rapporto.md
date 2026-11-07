@@ -73,6 +73,7 @@ statistics:
 | `ltscale:` | solo se diverso da 1: `LTSCALE` |
 | `lwdisplay:` | solo se acceso: `on` |
 | `unhandled:` | solo se ce ne sono: le entità non gestite, per tipo |
+| `documents:` | solo con più di un documento aperto: i nomi, nell'ordine in cui si sono aperti, e `(active)` dopo quello attivo ([vedi sotto](#il-disegno)) |
 | `pointer:` | l'ultimo punto del disegno in cui è stato portato il puntatore (`!move`, `!click`), o `none` |
 | `active snap:` | lo snap su cui si trova il puntatore mentre un comando chiede un punto: il tipo e il punto (`Endpoint 100,50`), o `none` |
 | `statistics:` | per ogni tipo DXF presente nel disegno, in ordine alfabetico, il tipo, uno spazio e il numero di entità (`LWPOLYLINE 2`); i tipi assenti non si scrivono |
@@ -131,6 +132,14 @@ pointer: none
   0018, punto 3), per tipo in ordine alfabetico, separate da `, `: il tipo,
   uno spazio e il numero (`HATCH 2, INSERT 1`). Non stanno in `entities:`
   né in `statistics:`, che elencano solo le entità gestite.
+- **`documents:`** dalla tappa 0.7.5, quando `NEW` e `OPEN` aprono un documento
+  nuovo ([ADR 0041](../adr/0041-documenti-e-ambienti.md); DECISIONI.md,
+  2026-11-07): i documenti aperti, con il loro nome come in `drawing:`
+  (`Drawing2.cadx` anche se non ha un file), separati da `, `, nell'ordine in
+  cui si sono aperti, con ` (active)` dopo quello attivo
+  (`documents: Drawing1.cadx, plan.dxf (active)`). Si scrive solo con più di un
+  documento aperto; tutti gli altri campi del rapporto descrivono il documento
+  attivo. Va dopo `unhandled:`.
 
 ### Layer, tipi di linea e valori correnti
 

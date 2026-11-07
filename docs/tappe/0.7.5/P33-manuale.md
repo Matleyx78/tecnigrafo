@@ -31,8 +31,8 @@ aree dell'ADR 0039:
    un documento all'altro; che cosa succede chiedendo un ambiente che il
    documento attivo non ospita (un documento nuovo in una scheda, niente si
    chiude); quando il programma chiede di salvare;
-3. pannelli *Properties* e *Layers*; i pannelli che si nascondono da soli, se
-   P18 è stato fatto;
+3. pannelli *Properties* e *Layers*; i pannelli che si nascondono da soli
+   (puntina, linguetta, riquadro);
 4. riga di comando e **immissione dinamica**: campi, `Tab`, `Invio`, `F12`, la
    riga equivalente nella cronologia;
 5. barra di stato: coordinate, interruttori con le loro scorciatoie,
@@ -43,8 +43,7 @@ nomi di pulsanti, schede e menu sono quelli in inglese del programma.
 
 ## Regole della tappa che valgono qui
 
-- Se P18 non è stato fatto (il responsabile non l'ha approvato), il punto sui
-  pannelli che si nascondono non c'è.
+Nessuna.
 
 ## Test richiesti
 

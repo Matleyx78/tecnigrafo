@@ -1160,3 +1160,21 @@ i rimandi ai documenti che cambia.
     quelli propri in `extensions.json`; rigenerare la geometria della quota non
     cancella i dati sconosciuti (parere di Codex nella #522, punto 5). Lo scrive
     l'ADR delle entità composte della 0.8.
+  - **`NEW` e `OPEN` con i documenti in schede** (strada B, come AutoCAD): aprono
+    sempre un documento nuovo, che diventa attivo, e non chiedono di salvare
+    quello di prima, che resta aperto, anche se è un disegno appena creato e mai
+    toccato (provato dal responsabile in AutoCAD LT il 2026-11-07: dopo *Nuovo*,
+    *Apri* apre il file in un'altra scheda). Vale nel programma e negli script dei
+    due livelli; il rapporto ha il campo `documents:` con più di un documento
+    ([verifica/rapporto.md](verifica/rapporto.md)). I casi di verifica che
+    cambiano, cioè tutti quelli che usano `NEW` o `OPEN`, si aggiornano con un
+    pacchetto di riferimenti (0.7.5-R28b), prima del lavoro
+    (0.7.5-P28b).
+  - **Avvio sulla pagina *Start***, come AutoCAD: il programma parte senza
+    documenti, e l'utente crea quello che gli serve fra i tipi registrati (oggi
+    il disegno). Gli script partono come oggi da un disegno vuoto (0.7.5-P29).
+  - **Pannelli che si nascondono da soli**
+    ([#534](https://github.com/Matleyx78/tecnigrafo/issues/534)): sì, costruiti
+    con Qt, senza librerie esterne (ADR 0009, punto 3): una puntina nella barra
+    del titolo, la linguetta sul bordo, il riquadro sovrapposto dentro la
+    finestra (0.7.5-P18). Il pacchetto di analisi 0.7.5-P17 si toglie.
