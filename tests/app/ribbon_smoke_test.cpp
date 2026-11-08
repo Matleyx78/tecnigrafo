@@ -181,11 +181,11 @@ TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
     ASSERT_NE(panel, nullptr);
     const ActionRegistry& registry = window.actionRegistry();
     const QStringList ids{
-        QStringLiteral("edit.move"), QStringLiteral("edit.copy"),
-        QStringLiteral("edit.rotate"), QStringLiteral("edit.scale"),
-        QStringLiteral("edit.mirror"), QStringLiteral("edit.explode"),
-        QStringLiteral("edit.trim"), QStringLiteral("edit.extend"),
-        QStringLiteral("edit.offset"), QStringLiteral("edit.fillet"),
+        QStringLiteral("edit.move"),    QStringLiteral("edit.copy"),
+        QStringLiteral("edit.rotate"),  QStringLiteral("edit.scale"),
+        QStringLiteral("edit.mirror"),  QStringLiteral("edit.explode"),
+        QStringLiteral("edit.trim"),    QStringLiteral("edit.extend"),
+        QStringLiteral("edit.offset"),  QStringLiteral("edit.fillet"),
         QStringLiteral("edit.chamfer"), QStringLiteral("edit.join"),
     };
     for (const QString& id : ids) {
