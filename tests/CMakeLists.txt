@@ -220,12 +220,26 @@ if(TG_BUILD_APP)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
     # Most cases build a whole main window, which takes about a second each
-    # on Windows (the suite runs in about two minutes in a Debug build there),
-    # so the limit is far above the time it needs, only to stop a real hang.
+    # on Windows. The suite now needs about four minutes in a Debug build
+    # there, so 300 s is a stopgap until it is split; the limit should only
+    # stop a real hang.
     add_test(NAME app_widgets COMMAND tg_app_tests)
     set_tests_properties(app_widgets PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
-        TIMEOUT 240)
+        TIMEOUT 300)
+    # The screenshot gallery (0.7.5-P3) runs the whole program for two themes,
+    # about ten seconds on Windows: its own entry keeps it out of app_widgets'
+    # time limit.
+    add_executable(tg_app_gallery_tests app/gallery_test.cpp)
+    target_link_libraries(tg_app_gallery_tests PRIVATE Qt6::Gui GTest::gtest_main)
+    target_compile_definitions(tg_app_gallery_tests PRIVATE
+        TG_GALLERY="$<TARGET_FILE:tecnigrafo-galleria>")
+    add_dependencies(tg_app_gallery_tests tecnigrafo-galleria)
+    tg_configure_target(tg_app_gallery_tests)
+    add_test(NAME app_gallery COMMAND tg_app_gallery_tests)
+    set_tests_properties(app_gallery PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+        TIMEOUT 120)
 endif()
 
 # Generate twice, independently of core's table, and compare byte for byte.
