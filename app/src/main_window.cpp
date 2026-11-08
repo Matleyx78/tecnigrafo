@@ -384,7 +384,8 @@ void MainWindow::connectDrawingAids() {
     connect(m_dynamicInputAction, &QAction::toggled, this, [this](bool on) {
         m_view->dynamicInputBox()->setInputEnabled(on && !m_scriptMode);
         if (!m_scriptMode && !m_restoringUi) {
-            m_commandLine->appendToHistory(on ? tr("<Dynamic input on>") : tr("<Dynamic input off>"));
+            const QString message = on ? tr("<Dynamic input on>") : tr("<Dynamic input off>");
+            m_commandLine->appendToHistory(message);
         }
         saveUiSettings();
     });

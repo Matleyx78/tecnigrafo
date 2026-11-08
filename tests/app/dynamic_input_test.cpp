@@ -7,8 +7,8 @@
 #include "dynamic_input_box.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
-#include "theme.hpp"
 #include "tg/core/line.hpp"
+#include "theme.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -50,31 +50,41 @@ protected:
     }
 
     [[nodiscard]] MainWindow& window() { return m_window; }
+
     [[nodiscard]] CadView* view() const { return m_window.view(); }
+
     [[nodiscard]] DynamicInputBox* box() const { return view()->dynamicInputBox(); }
+
     [[nodiscard]] QLineEdit* input() const {
         return m_window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
     }
+
     [[nodiscard]] QLineEdit* field(int index) const {
         return box()->findChild<QLineEdit*>(QStringLiteral("dynamicField%1").arg(index));
     }
+
     [[nodiscard]] QAction* toggle() const {
         return m_window.actionRegistry().action(QStringLiteral("aids.dynmode"));
     }
+
     [[nodiscard]] QString history() const {
-        return m_window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"))
-            ->toPlainText();
+        const auto* widget =
+            m_window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
+        return widget->toPlainText();
     }
+
     void enter(const std::string& text) const {
         events::type(input(), text);
         events::press(input(), Qt::Key_Return);
     }
+
     void firstPoint() const {
         events::type(view(), "10");
         events::press(view(), Qt::Key_Tab);
         events::type(view(), "10");
         events::press(view(), Qt::Key_Return);
     }
+
     void moveTo(core::Vec2 point) const {
         const auto screen = view()->viewport().worldToScreen(point);
         events::move(view(), QPoint(qRound(screen.x), qRound(screen.y)));
