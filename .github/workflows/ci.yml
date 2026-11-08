@@ -494,7 +494,7 @@ jobs:
       - name: Build, warnings as errors
         run: |
           New-Item -ItemType Directory -Force build | Out-Null
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" *> build/ci-build.log
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL "-DCMAKE_MAP_IMPORTED_CONFIG_DEBUG=Release;RelWithDebInfo" *> build/ci-build.log
           $status = $LASTEXITCODE
           if ($status -eq 0) {
             cmake --build --preset ci *>> build/ci-build.log
