@@ -91,7 +91,7 @@ TEST_F(AutoHideTest, UnpinningPropertiesPutsATabOnTheRightAndPinningDocksItThere
     EXPECT_FALSE(button->isHidden());
     button->click();
     settle();
-    AutoHide& autoHide = window.autoHide();
+    const AutoHide& autoHide = window.autoHide();
     EXPECT_TRUE(autoHide.isAutoHidden(panel));
     EXPECT_FALSE(panel->isVisible());
     const AutoHideBar* right = autoHide.bar(Qt::RightDockWidgetArea);
