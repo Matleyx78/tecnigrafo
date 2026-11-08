@@ -83,7 +83,7 @@ class ConfrontaSistemiTest(unittest.TestCase):
         self.assertIn("::error title=Cross-platform comparison::line/base: ottenuto.txt, line 5 differs:%0A", output)
         self.assertNotIn("modello/lunghezza", output)
 
-    def test_one_annotation_per_case_after_the_list(self) -> None:
+    def test_the_annotations_list_the_cases_then_hold_every_difference(self) -> None:
         for index in range(12):
             for system in SYSTEMS:
                 content = REPORT if system != SYSTEMS[2] else REPORT.replace(b"10,5", b"10,6")
@@ -91,12 +91,18 @@ class ConfrontaSistemiTest(unittest.TestCase):
         status, output = self.run_script(environment={"GITHUB_ACTIONS": "true"})
         self.assertEqual(status, 1, output)
         annotations = [line for line in output.splitlines() if line.startswith("::error")]
-        self.assertEqual(len(annotations), 2)
+        self.assertLessEqual(len(annotations), 1 + c.MAX_CASE_ANNOTATIONS)
+        self.assertGreater(len(annotations), 2)
         self.assertIn("cases: caso/n00 (2), caso/n01 (2),", annotations[0])
         self.assertIn("caso/n11 (2)", annotations[0])
-        self.assertIn("caso/n00: ottenuto.txt, line 5 differs:", annotations[1])
-        self.assertIn("%0Acaso/n00: ottenuto.txt, line 11 differs:", annotations[1])
-        self.assertIn("%0Acaso/n11: ottenuto.txt, line 11 differs:", annotations[1])
+        self.assertIn("::caso/n00: ottenuto.txt, line 5 differs:%0A", annotations[1])
+        differences = "\n".join(annotations[1:])
+        for index in range(12):
+            for line in (5, 11):
+                self.assertIn(f"caso/n{index:02}: ottenuto.txt, line {line} differs:", differences)
+        prefix = len("::error title=Cross-platform comparison::")
+        for annotation in annotations[1:]:
+            self.assertLessEqual(len(annotation[prefix:].replace("%0A", "\n")), c.MAX_ANNOTATION_CHARACTERS)
 
     def test_differences_are_packed_into_at_most_nine_annotations(self) -> None:
         with mock.patch.object(c, "MAX_ANNOTATION_CHARACTERS", 10):
