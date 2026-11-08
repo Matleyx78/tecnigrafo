@@ -169,6 +169,85 @@ QToolButton* ribbonButtonOf(SARibbonBar& ribbon, const QAction* action) {
     return nullptr;
 }
 
+TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
+    MainWindow window;
+    window.setScriptMode();
+    window.resize(2400, 900);
+    window.show();
+    QCoreApplication::processEvents();
+    SARibbonBar* ribbon = window.ribbonBar();
+    ASSERT_NE(ribbon, nullptr);
+    auto* panel = ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/modify"));
+    ASSERT_NE(panel, nullptr);
+    const ActionRegistry& registry = window.actionRegistry();
+    const QStringList ids{
+        QStringLiteral("edit.move"), QStringLiteral("edit.copy"),
+        QStringLiteral("edit.rotate"), QStringLiteral("edit.scale"),
+        QStringLiteral("edit.mirror"), QStringLiteral("edit.explode"),
+        QStringLiteral("edit.trim"), QStringLiteral("edit.extend"),
+        QStringLiteral("edit.offset"), QStringLiteral("edit.fillet"),
+        QStringLiteral("edit.chamfer"), QStringLiteral("edit.join")};
+    for (const QString& id : ids) {
+        SCOPED_TRACE(id.toStdString());
+        QAction* action = registry.action(id);
+        ASSERT_NE(action, nullptr);
+        auto* button = dynamic_cast<SARibbonToolButton*>(ribbonButtonOf(*ribbon, action));
+        ASSERT_NE(button, nullptr);
+        EXPECT_TRUE(panel->isAncestorOf(button));
+        EXPECT_TRUE(button->isVisible());
+        EXPECT_EQ(button->buttonType(), SARibbonToolButton::SmallButton);
+        EXPECT_FALSE(button->icon().isNull());
+    }
+    for (const QStringList& stack : {
+             QStringList{QStringLiteral("edit.move"), QStringLiteral("edit.copy"),
+                         QStringLiteral("edit.rotate")},
+             QStringList{QStringLiteral("edit.scale"), QStringLiteral("edit.mirror"),
+                         QStringLiteral("edit.explode")},
+             QStringList{QStringLiteral("edit.trim"), QStringLiteral("edit.extend"),
+                         QStringLiteral("edit.offset")},
+             QStringList{QStringLiteral("edit.fillet"), QStringLiteral("edit.chamfer"),
+                         QStringLiteral("edit.join")}}) {
+        const QToolButton* first = ribbonButtonOf(*ribbon, registry.action(stack[0]));
+        for (qsizetype i = 1; i < stack.size(); ++i) {
+            const QToolButton* button = ribbonButtonOf(*ribbon, registry.action(stack[i]));
+            ASSERT_NE(button, nullptr);
+            EXPECT_EQ(button->x(), first->x());
+            EXPECT_GT(button->y(), first->y());
+        }
+    }
+    // No responses are injected: the buttons start the same mode as typing.
+    auto* input = window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
+    ASSERT_NE(input, nullptr);
+    for (const QString& id : {QStringLiteral("edit.trim"), QStringLiteral("edit.extend")}) {
+        const QString command = registry.spec(id)->command;
+        events::type(input, command.toStdString());
+        events::press(input, Qt::Key_Return);
+        ASSERT_TRUE(window.runner().isActive());
+        const std::string prompt = window.runner().promptText();
+        events::press(input, Qt::Key_Escape);
+        QToolButton* button = ribbonButtonOf(*ribbon, registry.action(id));
+        ASSERT_NE(button, nullptr);
+        events::click(button, Qt::LeftButton, button->rect().center());
+        ASSERT_TRUE(window.runner().isActive());
+        EXPECT_EQ(window.runner().promptText(), prompt);
+        events::press(input, Qt::Key_Escape);
+        ASSERT_FALSE(window.runner().isActive());
+    }
+    registry.action(QStringLiteral("ui.interface"))->trigger();
+    QCoreApplication::processEvents();
+    const auto* toolbar = window.findChild<QToolBar*>(QStringLiteral("home/modify"));
+    ASSERT_NE(toolbar, nullptr);
+    EXPECT_EQ(toolbar->windowTitle(), QStringLiteral("Modify"));
+    for (const QString& id : ids) {
+        SCOPED_TRACE(id.toStdString());
+        QAction* action = registry.action(id);
+        EXPECT_TRUE(toolbar->actions().contains(action));
+        const QWidget* button = toolbar->widgetForAction(action);
+        ASSERT_NE(button, nullptr);
+        EXPECT_TRUE(button->isVisible());
+    }
+}
+
 TEST(RibbonSmoke, CircleAndArcShowTheirVariantsInADropDownWithTheirIcons) {
     MainWindow window;
     window.setScriptMode();
