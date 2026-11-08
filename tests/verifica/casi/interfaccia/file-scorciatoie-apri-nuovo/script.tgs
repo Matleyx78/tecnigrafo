@@ -4,6 +4,7 @@ LINE
 0,0
 20,0
 
+; cambia con #570
 !key Ctrl+N
 !report
 !key Ctrl+O

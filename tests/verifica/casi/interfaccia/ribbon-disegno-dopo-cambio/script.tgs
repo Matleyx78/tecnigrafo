@@ -6,6 +6,7 @@ LINE
 
 !report
 RIBBONCLOSE
+; cambia con #570
 NEW
 LINE
 0,0
