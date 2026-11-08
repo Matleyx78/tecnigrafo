@@ -93,6 +93,10 @@ bool keepsWidth(Qt::DockWidgetArea edge) {
 
 }  // namespace
 
+QStringList autoHideIconNames() {
+    return {QStringLiteral("ui-pin"), QStringLiteral("ui-unpin")};
+}
+
 PanelTitleBar::PanelTitleBar(QDockWidget* panel, bool pinned, QWidget* parent)
     : QWidget(parent),
       m_panel(panel),
@@ -316,6 +320,18 @@ AutoHide::AutoHide(QMainWindow& window, QWidget* drawingArea, QWidget* drawing)
     });
 }
 
+AutoHide::~AutoHide() {
+    // The window is being destroyed: nothing is shown, focused or saved.
+    if (QCoreApplication* application = QCoreApplication::instance(); application != nullptr) {
+        application->removeEventFilter(this);
+    }
+    for (const Hidden& entry : m_hidden) {
+        if (QDockWidget* panel = entry.panel; panel != nullptr && entry.content != nullptr) {
+            panel->setWidget(entry.content);
+        }
+    }
+}
+
 AutoHideBar* AutoHide::bar(Qt::DockWidgetArea edge) const {
     return m_bars.at(edgeIndex(edge));
 }
@@ -414,9 +430,11 @@ bool AutoHide::hidePanel(QDockWidget* panel, Qt::DockWidgetArea edge, int extent
     Hidden entry;
     entry.panel = panel;
     entry.edge = edge;
-    entry.extent =
-        extent > 0 ? extent
-                   : (keepsWidth(edge) ? panel->sizeHint().width() : panel->sizeHint().height());
+    entry.extent = extent;
+    if (entry.extent <= 0) {
+        const QSize hint = panel->sizeHint();
+        entry.extent = keepsWidth(edge) ? hint.width() : hint.height();
+    }
     entry.content = panel->widget();
     // The panel keeps its place in the layout while hidden.
     panel->hide();
@@ -540,16 +558,6 @@ void AutoHide::setEnabled(bool enabled) {
             title->setPinVisible(enabled && !panel->isFloating());
         }
     }
-}
-
-void AutoHide::releaseContents() {
-    close();
-    for (const Hidden& entry : m_hidden) {
-        if (QDockWidget* panel = entry.panel; panel != nullptr && entry.content != nullptr) {
-            panel->setWidget(entry.content);
-        }
-    }
-    m_hidden.clear();
 }
 
 QStringList AutoHide::saveState() const {

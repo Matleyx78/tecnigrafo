@@ -29,6 +29,9 @@ class QToolButton;
 
 namespace tg::app {
 
+/// The icons of the title bars (docs/ICONE.md): no action names them.
+[[nodiscard]] QStringList autoHideIconNames();
+
 /// The title bar of a docked panel (docs/tappe/0.7.5/P18, point 1): the
 /// name, the pin (Auto-hide) and the cross. The same bar heads the panel in
 /// the overlay, where the pin docks it again. A floating panel has no pin.
@@ -155,6 +158,13 @@ public:
     /// The docks belong to `window`, which owns this object.
     AutoHide(QMainWindow& window, QWidget* drawingArea, QWidget* drawing);
 
+    Q_DISABLE_COPY_MOVE(AutoHide)
+
+    /// Gives every hidden panel its content back, without showing it. The
+    /// window deletes this object before the overlay and the panels, and
+    /// a panel's destructor still reaches its content.
+    ~AutoHide() override;
+
     /// The central widget of the window: the bars around the drawing area.
     [[nodiscard]] QWidget* frame() const { return m_frame; }
 
@@ -181,12 +191,6 @@ public:
 
     /// The script mode docks every panel again and hides nothing more.
     void setEnabled(bool enabled);
-
-    /// Gives every hidden panel its content back, without showing it and
-    /// without signals. The window calls it before it is destroyed: a panel
-    /// is deleted after the overlay, and its destructor still reaches its
-    /// content.
-    void releaseContents();
 
     /// The hidden panels in the order they were hidden, as
     /// "<objectName>:<edge>:<extent>", edge being left, right, top or bottom.

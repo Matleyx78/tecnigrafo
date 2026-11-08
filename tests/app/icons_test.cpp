@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "action_registry.hpp"
+#include "auto_hide.hpp"
 #include "builtin_actions.hpp"
 #include "layer_table_model.hpp"
 #include "properties_panel.hpp"
@@ -541,6 +542,8 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     // properties panel and its controls (0.6-P24): no action names them.
     used.append(layerPanelIconNames());
     used.append(propertiesPanelIconNames());
+    // The pins of the panels that hide themselves (0.7.5-P18).
+    used.append(autoHideIconNames());
 
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
     const QStringList names =
