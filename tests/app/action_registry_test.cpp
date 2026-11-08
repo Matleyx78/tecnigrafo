@@ -13,6 +13,7 @@
 
 #include <QAction>
 #include <QDockWidget>
+#include <QFile>
 #include <QIcon>
 #include <QKeySequence>
 #include <QLineEdit>
@@ -333,7 +334,8 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(
         titles(window().menuBar()->actions()),
         (QStringList{QStringLiteral("&File"), QStringLiteral("&Edit"), QStringLiteral("&View"),
-                     QStringLiteral("&Tools"), QStringLiteral("&Draw"), QStringLiteral("&Help")}));
+                     QStringLiteral("&Tools"), QStringLiteral("&Draw"), QStringLiteral("&Modify"),
+                     QStringLiteral("&Help")}));
     const QList<QAction*> menus = window().menuBar()->actions();
     EXPECT_EQ(titles(menus[1]->menu()->actions()),
               (QStringList{QStringLiteral("&Undo"), QStringLiteral("&Redo"), QStringLiteral("-"),
@@ -350,6 +352,60 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     }
 }
 
+TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons) {
+    const QList<std::pair<QString, QString>> expected{
+        {QStringLiteral("edit.move"), QStringLiteral("MOVE")},
+        {QStringLiteral("edit.copy"), QStringLiteral("COPY")},
+        {QStringLiteral("edit.rotate"), QStringLiteral("ROTATE")},
+        {QStringLiteral("edit.scale"), QStringLiteral("SCALE")},
+        {QStringLiteral("edit.mirror"), QStringLiteral("MIRROR")},
+        {QStringLiteral("edit.explode"), QStringLiteral("EXPLODE")},
+        {QStringLiteral("edit.trim"), QStringLiteral("TRIM")},
+        {QStringLiteral("edit.extend"), QStringLiteral("EXTEND")},
+        {QStringLiteral("edit.offset"), QStringLiteral("OFFSET")},
+        {QStringLiteral("edit.fillet"), QStringLiteral("FILLET")},
+        {QStringLiteral("edit.chamfer"), QStringLiteral("CHAMFER")},
+        {QStringLiteral("edit.join"), QStringLiteral("JOIN")}};
+    QMenu* modify = nullptr;
+    for (QAction* item : window().menuBar()->actions()) {
+        if (item->text() == QStringLiteral("&Modify")) {
+            modify = item->menu();
+        }
+    }
+    ASSERT_NE(modify, nullptr);
+    QList<QAction*> menuActions;
+    QSet<QString> mnemonics;
+    for (const auto& [id, command] : expected) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* spec = registry().spec(id);
+        ASSERT_NE(spec, nullptr);
+        QAction* item = registry().action(id);
+        ASSERT_NE(item, nullptr);
+        EXPECT_EQ(spec->command, command);
+        EXPECT_EQ(spec->icon, QString(id).replace(QLatin1Char('.'), QLatin1Char('-')));
+        EXPECT_FALSE(item->icon().isNull());
+        for (const int grid : {16, 32}) {
+            const QString path = QStringLiteral(":/tg/icons/%1-%2.svg").arg(spec->icon).arg(grid);
+            EXPECT_TRUE(QFile::exists(path));
+        }
+        EXPECT_FALSE(spec->description.isEmpty());
+        EXPECT_EQ(spec->menu, QStringLiteral("&Modify"));
+        EXPECT_EQ(spec->ribbon, QStringLiteral("home/modify"));
+        EXPECT_TRUE(spec->responses.isEmpty());
+        EXPECT_TRUE(spec->shortcut.isEmpty());
+        EXPECT_TRUE(item->shortcuts().isEmpty());
+        // Check the declared access keys even on platforms that do not enable them.
+        const qsizetype marker = item->text().indexOf(QLatin1Char('&'));
+        ASSERT_GE(marker, 0);
+        const QString mnemonic = item->text().mid(marker + 1, 1).toUpper();
+        EXPECT_FALSE(mnemonic.isEmpty());
+        EXPECT_FALSE(mnemonics.contains(mnemonic)) << mnemonic.toStdString();
+        mnemonics.insert(mnemonic);
+        menuActions.append(item);
+    }
+    EXPECT_EQ(modify->actions(), menuActions);
+}
+
 TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
     window().setScriptMode();
     io::DiskFiles files;
@@ -363,8 +419,8 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
             withCommands.append(item);
         }
     }
-    // 4 of File, ERASE, 5 of Draw and the variants of CIRCLE (5) and ARC (2).
-    EXPECT_EQ(withCommands.size(), 17);
+    // File (4), ERASE, Modify (12), Draw (5), CIRCLE/ARC variants (7).
+    EXPECT_EQ(withCommands.size(), 29);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());

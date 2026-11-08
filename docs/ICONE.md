@@ -301,6 +301,26 @@ variante che eseguono: la prima finché non se ne usa un'altra.
 | `draw-arc-3p` | `draw.arc.3-point`, *3-Point* (e `draw.arc` all'inizio) | arco di 220° (`geo`) con i due estremi e un punto in cima (`pt`) | sì |
 | `draw-arc-sce` | `draw.arc.start-center-end`, *Start, Center, End* | arco di 170° (`geo`), i due raggi agli estremi (`cost`), inizio, centro e fine (`pt`) | sì |
 
+La tappa 0.7.5 aggiunge le icone dei dodici comandi di modifica della 0.7
+(P20). Ogni riga ha i due file `-16.svg` e `-32.svg`: gli oggetti di partenza
+sono `esist`, i risultati `geo`, le direzioni e le distanze `cost`, i punti
+indicati `pt`. Le icone piccole semplificano i dettagli di costruzione.
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `edit-move` | `edit.move` | rettangolo spostato, freccia di spostamento e punto base | sì |
+| `edit-copy` | `edit.copy` | due rettangoli, freccia di copia e più sulla griglia grande | sì |
+| `edit-rotate` | `edit.rotate` | angolo ruotato, freccia curva e punto base | sì |
+| `edit-scale` | `edit.scale` | due rettangoli con lo stesso punto base e freccia di ingrandimento | sì |
+| `edit-mirror` | `edit.mirror` | due triangoli speculari e asse verticale | sì |
+| `edit-explode` | `edit.explode` | rettangolo e quattro lati separati, con freccia | sì |
+| `edit-trim` | `edit.trim` | limite verticale (`esist`), linea intera (`esist`), porzione conservata (`geo`) e punto di selezione sulla porzione da tagliare (`pt`, `data-on`) | sì |
+| `edit-extend` | `edit.extend` | segmento prolungato fino al limite e freccia verso il limite | sì |
+| `edit-offset` | `edit.offset` | due angoli paralleli e distanza tra i lati | sì |
+| `edit-fillet` | `edit.fillet` | angolo raccordato, raggio e centro sulla griglia grande | sì |
+| `edit-chamfer` | `edit.chamfer` | angolo smussato, estremi dello smusso sulla griglia grande | sì |
+| `edit-join` | `edit.join` | due segmenti e spezzata risultante, punti di giunzione | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

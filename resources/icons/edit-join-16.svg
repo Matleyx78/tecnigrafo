@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+        <line class="esist" x1="2" y1="10" x2="6" y2="6"/>
+        <line class="esist" x1="10" y1="6" x2="14" y2="10"/>
+        <path id="joined" class="geo" d="M 2 10 L 6 6 H 10 L 14 10"/>
+        <circle class="pt" cx="6" cy="6" r="1.25" fill="currentColor" stroke="none" data-on="joined"/>
+        <circle class="pt" cx="10" cy="6" r="1.25" fill="currentColor" stroke="none" data-on="joined"/>
+    </g>
+</svg>

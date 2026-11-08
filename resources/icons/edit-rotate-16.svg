@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+        <path id="original" class="esist" d="M 4 12 H 11 V 8"/>
+        <path id="result" class="geo" d="M 4 12 V 5 H 8"/>
+        <path class="cost" d="M 11 6 A 7 7 0 0 0 7 2 M 7 4 V 2 H 9"/>
+        <circle class="pt" cx="4" cy="12" r="1.25" fill="currentColor" stroke="none" data-on="result"/>
+    </g>
+</svg>
