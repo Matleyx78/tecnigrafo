@@ -12,9 +12,9 @@
 # The plan is the only source: the table of section 6 of
 # docs/tappe/<tappa>-*.md, read with the rules of scripts/apri-tappa.sh, and
 # the table "Richieste a solid-space" of section 5. For every open issue of
-# the table it says whether the issue is ready (every issue of its
-# "Dipende da" is closed) or which open issues block it, in both
-# repositories, and it compares the plan with:
+# the table it says, with the difficulty and the agent of its labels, whether
+# the issue is ready (every issue of its "Dipende da" is closed) or which open
+# issues block it, in both repositories, and it compares the plan with:
 #
 #   2. the "**Dipende da:**" line of the issue text (notes in brackets do not
 #      count);
@@ -77,6 +77,7 @@ STATUS_FIELD = "Status"
 BLOCKED = "Bloccato"
 TODO = "Da fare"
 IN_CHARGE = "AA-Presa in carico"
+DIFFICULTIES = ("facile", "media", "difficile")
 
 
 class Failure(Exception):
@@ -798,11 +799,13 @@ def check(ctx: Context) -> Report:
         mark = " (in charge)" if IN_CHARGE in issue.labels else ""
         agents = [lb for lb in issue.labels if lb.startswith("agente:")]
         who = f" {', '.join(agents)}" if agents else ""
+        levels = [lb for lb in issue.labels if lb in DIFFICULTIES]
+        level = f" {', '.join(levels)}" if levels else ""
         ready = not blockers and not unknown
         if ready:
-            report.ready.append(f"{name}{who}{mark}")
+            report.ready.append(f"{name}{level}{who}{mark}")
         else:
-            report.blocked.append(f"{name}{who}{mark} by " + ", ".join(blockers + [f"{u} (no issue)" for u in unknown]))
+            report.blocked.append(f"{name}{level}{who}{mark} by " + ", ".join(blockers + [f"{u} (no issue)" for u in unknown]))
 
         # 2. text
         m = DEPS_LINE_RE.search(issue.body)
