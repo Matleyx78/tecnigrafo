@@ -174,6 +174,34 @@ TEST(PropertyWidgets, LayerIconsShowEveryStateCombinationInBothThemes) {
     EXPECT_TRUE(spy.isEmpty());
 }
 
+TEST(PropertyWidgets, LayerColourSamplesStaySquareAndSharpAtBothDisplayScales) {
+    auto document = core::Document::newDrawing();
+    core::Layer layer;
+    layer.name = "Colour sample";
+    layer.linetype = document.continuousLinetype();
+    layer.color = core::Color::fromRgb({12, 34, 56});
+    const auto id = document.addLayer(layer);
+    LayerCombo combo;
+    combo.setDocument(&document);
+    const int index = combo.findData(QVariant::fromValue(id));
+    ASSERT_GE(index, 0);
+    for (const int scale : {1, 2}) {
+        SCOPED_TRACE(scale);
+        const QPixmap pixmap = combo.itemIcon(index).pixmap(combo.iconSize(), scale);
+        const QImage image = pixmap.toImage();
+        EXPECT_EQ(image.size(), combo.iconSize() * scale);
+        // A one-logical-pixel frame surrounds an undistorted square of solid colour.
+        for (int y = 2 * scale; y < 14 * scale; ++y) {
+            for (int x = 56 * scale; x < 68 * scale; ++x) {
+                EXPECT_EQ(image.pixelColor(x, y), QColor(12, 34, 56));
+            }
+        }
+        const QImage white = combo.itemIcon(0).pixmap(combo.iconSize(), scale).toImage();
+        EXPECT_EQ(white.pixelColor(58 * scale, 8 * scale), QColor(Qt::white));
+        EXPECT_EQ(white.pixelColor(66 * scale, 8 * scale), QColor(Qt::black));
+    }
+}
+
 TEST(PropertyWidgets, LinetypesIncludeLoadedPatternsAndInheritedTypes) {
     auto document = core::Document::newDrawing();
     core::Linetype linetype;

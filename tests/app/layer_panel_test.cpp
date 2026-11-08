@@ -14,6 +14,7 @@
 #include <QAbstractItemModel>
 #include <QAction>
 #include <QCoreApplication>
+#include <QHeaderView>
 #include <QLineEdit>
 #include <QModelIndex>
 #include <QPlainTextEdit>
@@ -210,6 +211,29 @@ TEST_F(LayerPanelTest, CompactTableFitsThePanelAndUsesIconHeadersAndButtons) {
     ASSERT_NE(color, nullptr);
     EXPECT_FALSE(color->itemIcon(color->currentIndex()).isNull());
     EXPECT_EQ(color->currentText(), QStringLiteral("White"));
+}
+
+TEST_F(LayerPanelTest, PlotHeaderFitsAndCurrentLayerUsesBothSelectionColours) {
+    panel().resize(500, 300);
+    panel().show();
+    QCoreApplication::processEvents();
+    const int plot = static_cast<int>(LayerColumn::Plot);
+    const auto* header = table()->horizontalHeader();
+    const QString title = model()->headerData(plot, Qt::Horizontal).toString();
+    EXPECT_GE(table()->columnWidth(plot), header->fontMetrics().horizontalAdvance(title));
+
+    const auto walls = add("Walls");
+    LayerTableModel snapshot(document());
+    QPalette palette;
+    palette.setColor(QPalette::Highlight, Qt::darkBlue);
+    palette.setColor(QPalette::HighlightedText, Qt::yellow);
+    snapshot.setPalette(palette);
+    const QModelIndex zero = snapshot.index(0, kNameColumn);
+    EXPECT_EQ(zero.data(Qt::BackgroundRole).value<QColor>(), palette.color(QPalette::Highlight));
+    EXPECT_EQ(zero.data(Qt::ForegroundRole).value<QColor>(),
+              palette.color(QPalette::HighlightedText));
+    const QModelIndex other = snapshot.index(snapshot.rowOf(walls), kNameColumn);
+    EXPECT_FALSE(other.data(Qt::ForegroundRole).isValid());
 }
 
 TEST_F(LayerPanelTest, ClickingStateIconsCreatesOneUndoableLayerTransaction) {

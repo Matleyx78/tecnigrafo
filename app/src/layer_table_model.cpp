@@ -143,6 +143,9 @@ QVariant LayerTableModel::data(const QModelIndex& index, int role) const {
     if (role == Qt::BackgroundRole && row.current) {
         return m_palette.color(QPalette::Highlight);
     }
+    if (role == Qt::ForegroundRole && row.current) {
+        return m_palette.color(QPalette::HighlightedText);
+    }
     if (role == kLayerIdRole) {
         return QVariant::fromValue(row.id);
     }

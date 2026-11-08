@@ -25,6 +25,27 @@ constexpr int kLayerIconSide = 16;
 constexpr int kLayerIconStep = 18;
 constexpr int kLayerIconWidth = 3 * kLayerIconStep + kLayerIconSide;
 
+void paintColorSample(QPainter& painter, const QRect& rect, core::Color color,
+                      const QPalette& palette) {
+    if (color.kind() == core::Color::Kind::Index && color.index() == 7) {
+        const int half = rect.width() / 2;
+        painter.fillRect(rect.x(), rect.y(), half, rect.height(), Qt::white);
+        painter.fillRect(rect.x() + half, rect.y(), rect.width() - half, rect.height(), Qt::black);
+    } else {
+        QColor fill = palette.color(QPalette::Text);
+        if (color.kind() == core::Color::Kind::Rgb) {
+            const auto rgb = color.rgb();
+            fill = QColor(rgb.r, rgb.g, rgb.b);
+        } else if (color.kind() == core::Color::Kind::Index) {
+            const auto rgb = core::aciToRgb(color.index());
+            fill = QColor(rgb.r, rgb.g, rgb.b);
+        }
+        painter.fillRect(rect, fill);
+    }
+    painter.setPen(palette.color(QPalette::Text));
+    painter.drawRect(rect.adjusted(0, 0, -1, -1));
+}
+
 QIcon layerIcon(const core::Layer& layer, const QPalette& palette) {
     QIcon icon;
     // Build both display scales so the ribbon stays sharp at 100% and 200%.
@@ -40,8 +61,8 @@ QIcon layerIcon(const core::Layer& layer, const QPalette& palette) {
             stateIcon.paint(&painter, QRect(x, 0, kLayerIconSide, kLayerIconSide));
             x += kLayerIconStep;
         }
-        painter.drawPixmap(QRect(x, 0, kLayerIconSide, kLayerIconSide),
-                           colorIcon(layer.color, palette).pixmap(kPreviewWidth, kPreviewHeight));
+        // Draw on the target device: no rectangular raster is scaled into a square.
+        paintColorSample(painter, QRect(x, 0, kLayerIconSide, kLayerIconSide), layer.color, palette);
         painter.end();
         icon.addPixmap(pixmap);
     }
@@ -142,22 +163,7 @@ QIcon colorIcon(core::Color color, const QPalette& palette) {
     QPixmap pixmap(kPreviewWidth, kPreviewHeight);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
-    if (color.kind() == core::Color::Kind::Index && color.index() == 7) {
-        painter.fillRect(0, 0, kPreviewWidth / 2, kPreviewHeight, Qt::white);
-        painter.fillRect(kPreviewWidth / 2, 0, kPreviewWidth / 2, kPreviewHeight, Qt::black);
-    } else {
-        QColor fill = palette.color(QPalette::Text);
-        if (color.kind() == core::Color::Kind::Rgb) {
-            const auto rgb = color.rgb();
-            fill = QColor(rgb.r, rgb.g, rgb.b);
-        } else if (color.kind() == core::Color::Kind::Index) {
-            const auto rgb = core::aciToRgb(color.index());
-            fill = QColor(rgb.r, rgb.g, rgb.b);
-        }
-        painter.fillRect(pixmap.rect(), fill);
-    }
-    painter.setPen(palette.color(QPalette::Text));
-    painter.drawRect(0, 0, kPreviewWidth - 1, kPreviewHeight - 1);
+    paintColorSample(painter, pixmap.rect(), color, palette);
     return {pixmap};
 }
 
@@ -249,8 +255,6 @@ void LayerCombo::setDocument(const core::Document* document) {
     m_layers.clear();
     if (document != nullptr) {
         m_layers.assign(document->layers().begin(), document->layers().end());
-    }
-    if (document != nullptr) {
         for (const auto& layer : m_layers) {
             const auto name = QString::fromStdString(layer.name);
             const auto on = layer.on ? tr("On") : tr("Off");
