@@ -187,6 +187,11 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(switchSpec(QStringLiteral("aids.lwdisplay"), tr("Line&weight Display"),
                                      tools, tr("Shows lineweights in the drawing.")),
                           QStringLiteral("aids-lwdisplay")));
+    ActionSpec dynamic = switchSpec(QStringLiteral("aids.dynmode"), tr("Dynamic &Input"), tools,
+                                    tr("Turns dynamic input on or off."));
+    dynamic.icon = QStringLiteral("aids-dynmode");
+    dynamic.shortcut = QKeySequence(Qt::Key_F12);
+    registry.add(std::move(dynamic));
     registry.add(withIcon(makeSpec(QStringLiteral("tools.settings"), tr("&Settings…"), tools,
                                    tr("Chooses the interface and theme.")),
                           QStringLiteral("tools-settings")));
