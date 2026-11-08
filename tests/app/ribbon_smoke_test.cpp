@@ -2,19 +2,27 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "action_registry.hpp"
+#include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
+#include "theme.hpp"
 
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
+#include <QColor>
 #include <QCoreApplication>
 #include <QGuiApplication>
+#include <QImage>
 #include <QList>
 #include <QMenu>
+#include <QPalette>
+#include <QPoint>
+#include <QPointF>
 #include <QRect>
 #include <QSignalSpy>
 #include <QSize>
+#include <QStatusBar>
 #include <QString>
 #include <QTimer>
 #include <QToolButton>
@@ -64,14 +72,18 @@ QList<QAction*> quickAccessActions(const ActionRegistry& registry) {
         registry.action(QStringLiteral("edit.redo"))};
 }
 
-TEST(RibbonSmoke, TheCompactRibbonHasAFileTabThatOpensTheApplicationMenu) {
+TEST(RibbonSmoke, TheRibbonHasAFileTabThatOpensTheApplicationMenu) {
     MainWindow window;
     window.setScriptMode();
     window.show();
     QCoreApplication::processEvents();
     SARibbonBar* ribbon = window.ribbonBar();
     ASSERT_NE(ribbon, nullptr);
-    EXPECT_TRUE(SARibbonBar::isCompactStyle(ribbon->currentRibbonStyle()));
+    // Three rows of small buttons in a group (docs/adr/0039, point 3); the
+    // title row of its own only in a window without the system's frame.
+    EXPECT_TRUE(SARibbonBar::isThreeRowStyle(ribbon->currentRibbonStyle()));
+    EXPECT_EQ(SARibbonBar::isLooseStyle(ribbon->currentRibbonStyle()),
+              window.windowButtonBar() != nullptr);
     auto* file = qobject_cast<QToolButton*>(ribbon->applicationButton());
     ASSERT_NE(file, nullptr);
     EXPECT_TRUE(file->isVisible());
@@ -116,10 +128,63 @@ TEST(RibbonSmoke, TheQuickAccessBarHasItsFiveActionsInOrderAsIcons) {
         EXPECT_EQ(button->toolButtonStyle(), Qt::ToolButtonIconOnly);
         EXPECT_FALSE(button->icon().isNull());
     }
-    // In the title row, with the tabs (the compact style).
     const QRect tabs = ribbon->ribbonTabBar()->geometry();
-    EXPECT_LT(quick->geometry().top(), tabs.bottom());
-    EXPECT_GT(quick->geometry().bottom(), tabs.top());
+    const QRect bar = quick->geometry();
+    if (window.windowButtonBar() == nullptr) {
+        // The frame of the system (Wayland): under its title, in the row of
+        // the tabs (docs/adr/0039, point 4).
+        EXPECT_LT(bar.top(), tabs.bottom());
+        EXPECT_GT(bar.bottom(), tabs.top());
+        return;
+    }
+    // Area 1: at the left of the title row, after the icon of the program;
+    // area 2: the tabs right under it, the File tab first.
+    EXPECT_LE(bar.bottom(), tabs.top());
+    EXPECT_LT(bar.right(), ribbon->width() / 4);
+    const QWidget* icon = ribbon->titleIconWidget();
+    if (icon != nullptr && icon->isVisible()) {
+        EXPECT_GE(bar.left(), icon->geometry().right());
+    }
+    const QRect file = ribbon->applicationButton()->geometry();
+    EXPECT_LE(file.right(), tabs.left());
+    EXPECT_LT(file.top(), tabs.bottom());
+    EXPECT_GT(file.bottom(), tabs.top());
+}
+
+TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {
+    // The gallery's order: shown, then the theme, then the event loop, in
+    // which SARibbon would apply its own theme again (docs/adr/0039,
+    // point 2). Every surface outside the ribbon is the panel of the theme.
+    MainWindow window;
+    window.setScriptMode();
+    window.show();
+    for (const InterfaceKind kind : {InterfaceKind::Ribbon, InterfaceKind::Classic}) {
+        for (const Theme theme : {Theme::Dark, Theme::Light, Theme::Dark}) {
+            SCOPED_TRACE(testing::Message()
+                         << (kind == InterfaceKind::Ribbon ? "ribbon " : "classic ")
+                         << (theme == Theme::Dark ? "dark" : "light"));
+            window.setTheme(theme);
+            window.setInterface(kind);
+            QCoreApplication::processEvents();
+            EXPECT_TRUE(window.styleSheet().isEmpty());
+            const QColor panel = themeTokens(theme).panel;
+            QStatusBar* status = window.statusBar();
+            auto* layers = window.findChild<QWidget*>(QStringLiteral("layerPanel"));
+            ASSERT_NE(layers, nullptr);
+            for (const QWidget* widget : {static_cast<QWidget*>(&window), status,
+                                          static_cast<QWidget*>(window.commandLine()), layers}) {
+                EXPECT_EQ(widget->palette().color(QPalette::Window), panel)
+                    << widget->objectName().toStdString();
+            }
+            // As drawn in the whole window, not only in the widget alone: the
+            // middle of the status bar shows the window's background.
+            const QImage image = window.grab().toImage();
+            const QPoint middle =
+                status->mapTo(&window, QPoint(status->width() / 2, status->height() / 2));
+            const qreal ratio = image.devicePixelRatio();
+            EXPECT_EQ(image.pixelColor(QPointF(middle * ratio).toPoint()), panel);
+        }
+    }
 }
 
 TEST(RibbonSmoke, TheWindowDrawsItsOwnFrameExceptUnderWayland) {

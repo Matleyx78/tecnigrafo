@@ -23,6 +23,7 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QColor>
+#include <QCoreApplication>
 #include <QDir>
 #include <QDockWidget>
 #include <QEvent>
@@ -48,7 +49,6 @@
 #include <QSize>
 #include <QStatusBar>
 #include <QStringList>
-#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -190,17 +190,17 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
       m_view(new CadView(m_document, m_runner, this)),
       m_commandLine(new CommandLine(m_runner, this)) {
     // SARibbonMainWindow gives the window the style sheet of its own theme,
-    // and again once the event loop runs. The colours of the interface are
-    // the tokens of theme.cpp, in the application's style sheet
-    // (docs/adr/0039, point 2), which a window's own style sheet would
-    // override: drop it now, and after SARibbon's second time, which is
-    // queued before this one. That style sheet may have set the icons of
-    // the window buttons: ours go back.
+    // and queues a second time for when the event loop runs. The colours of
+    // the interface are the tokens of theme.cpp, in the application's style
+    // sheet (docs/adr/0039, point 2), which a window's own style sheet would
+    // override. Taking such a style sheet away from widgets already shown
+    // leaves on each of them the palette it had at that moment, which no
+    // later theme changes (dark panels with a light status bar): the queued
+    // time is dropped before it runs (QTimer::singleShot(0) posts a call to
+    // the window), and the first one, set before any widget was shown, goes
+    // now.
+    QCoreApplication::removePostedEvents(this, QEvent::MetaCall);
     setStyleSheet(QString{});
-    QTimer::singleShot(0, this, [this] {
-        setStyleSheet(QString{});
-        updateWindowButtons();
-    });
     cmd::registerBuiltinCommands(m_registry);
     // The program as distributed does not check descriptions; --script turns
     // the check on (docs/adr/0026, point 3, and setScriptMode()).

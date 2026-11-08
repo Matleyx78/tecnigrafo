@@ -180,9 +180,9 @@ void UiBuilder::styleRibbon() {
         return;
     }
     const ThemeTokens& tokens = themeTokens(m_theme);
-    // In the compact style the title row is the row of the tabs: all of it
-    // on the surface of the title, the pages of the tabs under it on that of
-    // the ribbon (docs/adr/0039, point 1, areas 1-3, and point 2).
+    // The title row and the row of the tabs on the surface of the title,
+    // the pages of the tabs under them on that of the ribbon (docs/adr/0039,
+    // point 1, areas 1-3, and point 2).
     m_ribbon->setStyleSheet(
         QStringLiteral("SARibbonBar { background: %1; } SARibbonStackedWidget { background: %2; }")
             .arg(tokens.chrome.name(QColor::HexRgb), tokens.ribbon.name(QColor::HexRgb)));
@@ -199,10 +199,19 @@ void UiBuilder::styleRibbon() {
 void UiBuilder::buildRibbon() {
     auto* ribbon = new SARibbonBar(&m_window);
     ribbon->setObjectName(QStringLiteral("ribbonBar"));
-    // The compact style puts the tabs in the title row: no empty band above
-    // them (docs/adr/0039, point 1, areas 1 and 2); three rows of small
-    // buttons in a group (point 3).
-    ribbon->setRibbonStyle(SARibbonBar::RibbonStyleCompactThreeRow);
+    // Three rows of small buttons in a group (docs/adr/0039, point 3). A
+    // window that draws its own frame has a title row of its own, with the
+    // icon and the quick access bar on the left, the title in the middle and
+    // the window buttons on the right, and the tabs right under it (areas 1
+    // and 2): SARibbon's loose style. Its compact style would put the quick
+    // access bar at the right of the title (SARibbonBarLayout::
+    // resizeInCompactStyle). With the frame of the system the title row is
+    // the system's, and the loose one would be the empty band above the
+    // tabs: there the compact style keeps the tabs in the first row, with
+    // the quick access bar under the title (point 4).
+    ribbon->setRibbonStyle(m_window.windowButtonBar() != nullptr
+                               ? SARibbonBar::RibbonStyleLooseThreeRow
+                               : SARibbonBar::RibbonStyleCompactThreeRow);
     m_registry.buildMenus(ribbon);
     auto* application = new QMenu(ribbon);
     application->setObjectName(QStringLiteral("applicationMenu"));
