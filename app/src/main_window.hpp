@@ -12,9 +12,9 @@
 #include "ui_builder.hpp"
 
 #include <QList>
-#include <QMainWindow>
 #include <QString>
 
+#include <SARibbon.h>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -22,6 +22,7 @@
 class QAction;
 class QCloseEvent;
 class QDockWidget;
+class QEvent;
 class QShowEvent;
 class QMenu;
 class QSettings;
@@ -35,7 +36,10 @@ class CadView;
 class CommandLine;
 class RecentFiles;
 
-class MainWindow final : public QMainWindow {
+/// The window draws its own frame, with the quick access bar in its title
+/// row (docs/adr/0039, point 4), except under Wayland, where it keeps the
+/// frame of the system and the quick access bar goes under the title.
+class MainWindow final : public SARibbonMainWindow {
     Q_OBJECT
 
 public:
@@ -105,6 +109,7 @@ public:
     [[nodiscard]] const ActionRegistry& actionRegistry() const { return *m_actions; }
 
 protected:
+    void changeEvent(QEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
     void showEvent(QShowEvent* event) override;
 
@@ -122,14 +127,18 @@ private:
     void restoreUiSettings();
     void saveUiSettings();
     void updateThemeIcons();
+    /// Draws the glyphs of the window buttons of a window without frame,
+    /// which SARibbon gives only through the style sheet it is denied.
+    void updateWindowButtons();
     void connectDrawingAids();
     void createStatusBar();
 
     /// The action `id` of builtin_actions.hpp; it must exist.
     [[nodiscard]] QAction* registeredAction(const char* id) const;
 
-    /// A status bar button that mirrors the checkable `action` both ways.
-    QToolButton* createModeButton(QAction* action, const QString& text, const QString& name);
+    /// A status bar button with the icon of the checkable `action`, no text,
+    /// that mirrors the action both ways (docs/adr/0039, point 1, area 10).
+    QToolButton* createModeButton(QAction* action, const QString& name);
 
     /// Hands the runner the drawing aids chosen in the Tools menu.
     void applyDrawingAids();

@@ -3,12 +3,17 @@
 
 #pragma once
 
+#include "theme.hpp"
+
 #include <QList>
 
 #include <cstdint>
 
-class QMainWindow;
+class QLabel;
 class QToolBar;
+class QToolButton;
+class SARibbonBar;
+class SARibbonMainWindow;
 
 namespace tg::app {
 
@@ -18,20 +23,45 @@ enum class InterfaceKind : std::uint8_t { Ribbon, Classic };
 
 /// Builds the interface from the registry without replacing its actions.
 /// The window owns the widgets and must outlive this builder and the registry.
+///
+/// Both interfaces have the quick access bar (the actions with
+/// ActionSpec::quickAccess, in the registry's order; docs/adr/0039, point 1,
+/// area 1): the ribbon at the left of its title row (in the row of the
+/// tabs, under the title of the system, when the window keeps that frame),
+/// the classic menus at the left of the menu bar. When the window draws its own frame (it has
+/// SARibbonMainWindow::windowButtonBar()), the classic menu bar also shows
+/// the title and leaves room for the window buttons.
 class UiBuilder {
 public:
-    UiBuilder(QMainWindow& window, const ActionRegistry& registry);
+    UiBuilder(SARibbonMainWindow& window, const ActionRegistry& registry);
     void show(InterfaceKind kind);
     [[nodiscard]] InterfaceKind current() const;
+
+    /// Colours the title row and the File tab of the ribbon with the tokens
+    /// of `theme`; kept for the ribbons built later.
+    void setTheme(Theme theme);
+
+    /// Shows the window title, with * for a modified drawing, where the
+    /// interface draws it itself: the title of the classic menu bar. The
+    /// ribbon draws the window's title on its own.
+    void updateTitle();
 
 private:
     void buildRibbon();
     void buildClassic();
+    void styleRibbon();
 
-    QMainWindow& m_window;
+    SARibbonMainWindow& m_window;
     const ActionRegistry& m_registry;
     QList<QToolBar*> m_toolbars;
+    // Widgets of the bar on show, or nullptr. Kept rather than searched for
+    // by name, because Qt deletes a replaced menu bar later and a search
+    // could find the old one; show() forgets them before replacing the bar.
+    SARibbonBar* m_ribbon{nullptr};
+    QToolButton* m_applicationButton{nullptr};
+    QLabel* m_title{nullptr};
     InterfaceKind m_current{InterfaceKind::Ribbon};
+    Theme m_theme{Theme::Light};
     bool m_built{false};
 };
 

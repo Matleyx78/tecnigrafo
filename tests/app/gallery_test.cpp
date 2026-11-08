@@ -61,7 +61,9 @@ TEST_F(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
                 EXPECT_GT(image.height(), 0);
                 EXPECT_LT(image.height(), 1000);
                 if (stem == QStringLiteral("ribbon") || stem == QStringLiteral("stato")) {
-                    EXPECT_EQ(image.width(), 1600);
+                    // The window without frame keeps 2 px on the left and on
+                    // the right, where it is resized (SARibbonMainWindow).
+                    EXPECT_EQ(image.width(), 1596);
                 } else {
                     EXPECT_GT(image.width(), 0);
                     EXPECT_LT(image.width(), 1600);

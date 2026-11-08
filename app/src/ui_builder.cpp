@@ -8,15 +8,22 @@
 #include "properties_panel.hpp"
 
 #include <QAction>
+#include <QApplication>
+#include <QColor>
+#include <QEvent>
+#include <QHBoxLayout>
 #include <QHash>
-#include <QMainWindow>
+#include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMouseEvent>
 #include <QObject>
+#include <QSize>
 #include <QString>
 #include <QStringList>
 #include <QToolBar>
 #include <QToolButton>
+#include <QWidget>
 
 #include <SARibbon.h>
 
@@ -57,9 +64,70 @@ QStringList groups() {
             QStringLiteral("view/navigate"), QStringLiteral("view/aids")};
 }
 
+/// The small icons of the quick access bar: the 16 px grid of docs/adr/0040,
+/// point 3 (docs/adr/0039, point 1, area 1).
+constexpr int kQuickAccessIconSize = 16;
+
+/// Fills `bar` with the quick access actions of `registry`, icons only.
+void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
+    bar.setIconSize(QSize(kQuickAccessIconSize, kQuickAccessIconSize));
+    bar.setToolButtonStyle(Qt::ToolButtonIconOnly);
+    bar.setMovable(false);
+    bar.setFloatable(false);
+    for (QAction* action : registry.actions()) {
+        if (registry.spec(action->objectName())->quickAccess) {
+            bar.addAction(action);
+        }
+    }
+}
+
+/// The text of the File tab, on the accent colour: the lighter of the two
+/// tokens that text is written in (docs/adr/0039, point 1, area 2, where it
+/// is white on the accent in both themes).
+QColor lightText(const ThemeTokens& tokens) {
+    return tokens.field.lightness() > tokens.text.lightness() ? tokens.field : tokens.text;
+}
+
+/// Lets the classic menu bar move and resize a window that draws its own
+/// frame, as SARibbonMainWindow does for its ribbon: the bar covers the top
+/// of the window, where SAFramelessHelper looks for the pointer. A press on
+/// a menu title stays with the bar alone, so that opening a menu never
+/// starts moving the window.
+class FrameForwarder final : public QObject {
+public:
+    FrameForwarder(QMenuBar& bar, QWidget& window) : QObject(&bar), m_bar(bar), m_window(window) {}
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        switch (event->type()) {
+            case QEvent::MouseButtonPress:
+            case QEvent::MouseButtonDblClick: {
+                const auto* mouse = dynamic_cast<const QMouseEvent*>(event);
+                if (mouse != nullptr && m_bar.actionAt(mouse->position().toPoint()) == nullptr) {
+                    QApplication::sendEvent(&m_window, event);
+                }
+                break;
+            }
+            case QEvent::MouseButtonRelease:
+            case QEvent::MouseMove:
+            case QEvent::HoverMove:
+            case QEvent::Leave:
+                QApplication::sendEvent(&m_window, event);
+                break;
+            default:
+                break;
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    QMenuBar& m_bar;
+    QWidget& m_window;
+};
+
 }  // namespace
 
-UiBuilder::UiBuilder(QMainWindow& window, const ActionRegistry& registry)
+UiBuilder::UiBuilder(SARibbonMainWindow& window, const ActionRegistry& registry)
     : m_window(window), m_registry(registry) {
     // Window association keeps shortcuts alive even for menu-only actions
     // while the menu bar is replaced or hidden inside the application menu.
@@ -75,6 +143,9 @@ void UiBuilder::show(InterfaceKind kind) {
         delete toolbar;
     }
     m_toolbars.clear();
+    m_ribbon = nullptr;
+    m_applicationButton = nullptr;
+    m_title = nullptr;
     if (kind == InterfaceKind::Ribbon) {
         buildRibbon();
     } else {
@@ -88,9 +159,59 @@ InterfaceKind UiBuilder::current() const {
     return m_current;
 }
 
+void UiBuilder::setTheme(Theme theme) {
+    m_theme = theme;
+    styleRibbon();
+}
+
+void UiBuilder::updateTitle() {
+    if (m_title == nullptr) {
+        return;
+    }
+    // As the platform does with a window title: [*] marks a modified drawing.
+    QString text = m_window.windowTitle();
+    text.replace(QStringLiteral("[*]"),
+                 m_window.isWindowModified() ? QStringLiteral("*") : QString{});
+    m_title->setText(text);
+}
+
+void UiBuilder::styleRibbon() {
+    if (m_ribbon == nullptr || m_applicationButton == nullptr) {
+        return;
+    }
+    const ThemeTokens& tokens = themeTokens(m_theme);
+    // The title row and the row of the tabs on the surface of the title,
+    // the pages of the tabs under them on that of the ribbon (docs/adr/0039,
+    // point 1, areas 1-3, and point 2).
+    m_ribbon->setStyleSheet(
+        QStringLiteral("SARibbonBar { background: %1; } SARibbonStackedWidget { background: %2; }")
+            .arg(tokens.chrome.name(QColor::HexRgb), tokens.ribbon.name(QColor::HexRgb)));
+    // The whole File tab in the accent colour, without the arrow of its
+    // menu (area 2). A style sheet of the button's own wins over the
+    // application's, which keeps buttons transparent.
+    m_applicationButton->setStyleSheet(
+        QStringLiteral("QToolButton { background: %1; color: %2; border: none; "
+                       "border-radius: 0px; padding: 0px 12px; }"
+                       "QToolButton::menu-indicator { image: none; width: 0px; }")
+            .arg(tokens.accent.name(QColor::HexRgb), lightText(tokens).name(QColor::HexRgb)));
+}
+
 void UiBuilder::buildRibbon() {
     auto* ribbon = new SARibbonBar(&m_window);
     ribbon->setObjectName(QStringLiteral("ribbonBar"));
+    // Three rows of small buttons in a group (docs/adr/0039, point 3). A
+    // window that draws its own frame has a title row of its own, with the
+    // icon and the quick access bar on the left, the title in the middle and
+    // the window buttons on the right, and the tabs right under it (areas 1
+    // and 2): SARibbon's loose style. Its compact style would put the quick
+    // access bar at the right of the title (SARibbonBarLayout::
+    // resizeInCompactStyle). With the frame of the system the title row is
+    // the system's, and the loose one would be the empty band above the
+    // tabs: there the compact style keeps the tabs in the first row, with
+    // the quick access bar under the title (point 4).
+    ribbon->setRibbonStyle(m_window.windowButtonBar() != nullptr
+                               ? SARibbonBar::RibbonStyleLooseThreeRow
+                               : SARibbonBar::RibbonStyleCompactThreeRow);
     m_registry.buildMenus(ribbon);
     auto* application = new QMenu(ribbon);
     application->setObjectName(QStringLiteral("applicationMenu"));
@@ -107,11 +228,14 @@ void UiBuilder::buildRibbon() {
             application->addActions(menu->actions());
         }
     }
-    auto* button = new QToolButton(ribbon);
-    button->setText(QObject::tr("File"));
+    auto* button = new SARibbonApplicationButton(QObject::tr("File"), ribbon);
+    button->setObjectName(QStringLiteral("applicationButton"));
     button->setMenu(application);
-    button->setPopupMode(QToolButton::InstantPopup);
     ribbon->setApplicationButton(button);
+    m_ribbon = ribbon;
+    m_applicationButton = button;
+    styleRibbon();
+    fillQuickAccess(*ribbon->quickAccessBar(), m_registry);
 
     QHash<QString, SARibbonCategory*> categories;
     QHash<QString, SARibbonPanel*> panels;
@@ -156,16 +280,44 @@ void UiBuilder::buildRibbon() {
             panel->addSmallAction(action);
         }
     }
-    // QMainWindow disposes of the previous menu widget with deleteLater().
-    // Actions are owned by the registry, so rebuilding cannot destroy them.
-    m_window.setMenuBar(ribbon);
+    // SARibbonMainWindow disposes of the previous menu widget with
+    // deleteLater(), and gives the new ribbon the title row of a window
+    // without frame. Actions are owned by the registry, so rebuilding
+    // cannot destroy them.
+    m_window.setRibbonBar(ribbon);
 }
 
 void UiBuilder::buildClassic() {
     auto* bar = new QMenuBar(&m_window);
     bar->setObjectName(QStringLiteral("classicMenuBar"));
     m_registry.buildMenus(bar);
+    auto* quickAccess = new QToolBar(bar);
+    quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
+    fillQuickAccess(*quickAccess, m_registry);
+    bar->setCornerWidget(quickAccess, Qt::TopLeftCorner);
+    // A window without frame has no title row but this bar: the bar shows
+    // the title and leaves room for the window buttons, which stay where
+    // the ribbon had them, and moves the window.
+    SARibbonSystemButtonBar* buttons = m_window.windowButtonBar();
+    if (buttons != nullptr) {
+        auto* corner = new QWidget(bar);
+        auto* layout = new QHBoxLayout(corner);
+        layout->setContentsMargins(0, 0, 0, 0);
+        auto* titleLabel = new QLabel(corner);
+        titleLabel->setObjectName(QStringLiteral("classicTitle"));
+        layout->addWidget(titleLabel);
+        layout->addSpacing(buttons->sizeHint().width());
+        bar->setCornerWidget(corner, Qt::TopRightCorner);
+        bar->setMinimumHeight(buttons->windowTitleHeight());
+        bar->installEventFilter(new FrameForwarder(*bar, m_window));
+        m_title = titleLabel;
+    }
     m_window.setMenuBar(bar);
+    if (buttons != nullptr) {
+        // The bar is newer than the buttons, so it would cover them.
+        buttons->raise();
+    }
+    updateTitle();
 
     QHash<QString, QToolBar*> toolbars;
     const auto toolbarFor = [&](const QString& path) {
