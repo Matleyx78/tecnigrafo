@@ -14,6 +14,7 @@
 #include <iterator>
 #include <limits>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,8 +23,13 @@ namespace tg::io {
 namespace {
 
 std::string fixture(std::string_view name) {
-    std::ifstream input{std::filesystem::path{TG_IO_TEST_DATA} / "dxf" / name, std::ios::binary};
-    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+    const std::ifstream input{std::filesystem::path{TG_IO_TEST_DATA} / "dxf" / name,
+                              std::ios::binary};
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream bytes;
+    bytes << input.rdbuf();
+    return std::move(bytes).str();
 }
 
 TEST(DxfWrite, PreservesUnknownSectionsEntitiesAndSpelling) {

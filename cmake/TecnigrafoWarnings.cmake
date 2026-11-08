@@ -14,7 +14,8 @@ function(tg_configure_target target)
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion
             -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual
-            -Wnull-dereference -Wdouble-promotion -Wimplicit-fallthrough)
+            -Wnull-dereference -Wdouble-promotion -Wimplicit-fallthrough
+            -Wcast-align -Wformat=2)
         if(TG_WARNINGS_AS_ERRORS)
             target_compile_options(${target} PRIVATE -Werror)
         endif()

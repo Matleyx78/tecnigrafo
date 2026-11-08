@@ -149,6 +149,20 @@ Se sullo stesso PC lavorano anche gli agenti, ognuno usa la sua cartella di
 build con `TG_BUILD_SUFFIX` (per esempio `build-codex/ci`, vedi AGENTS.md):
 la tua resta `build/`.
 
+Il preset `ci` compila in Debug; `ci-release` fa lo stesso in Release, sempre
+con gli avvisi come errori, ed è quello dei lavori Release della CI (Linux,
+Windows e macOS, [ADR 0038](adr/0038-ci-dei-due-progetti.md), punto 3). Serve
+quando la CI rossa è solo in Release, per esempio per una variabile usata solo
+in un `assert`:
+
+```sh
+cmake --preset ci-release && cmake --build --preset ci-release && ctest --preset ci-release
+```
+
+Con ogni preset la configurazione si ferma se trova `-ffast-math`, `-Ofast`,
+`-funsafe-math-optimizations`, `/fp:fast` o `/fp:contract` (ADR 0038, punto 4):
+gli stessi calcoli devono dare gli stessi numeri sui tre sistemi.
+
 ### 2.6 VS Code
 
 1. Apri la cartella del progetto: `code ~/progetti/tecnigrafo`.

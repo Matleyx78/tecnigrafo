@@ -38,9 +38,10 @@ distrazione.
    | Tecnigrafo | solid-space |
    |---|---|
    | `Formatting (clang-format 18)` | `Formatting (clang-format 18)` |
-   | `Linux (GCC, clang-tidy)` | `Linux (GCC, clang-tidy)` |
-   | `Windows (MSVC)` | `Windows (MSVC)` |
-   | `macOS (Apple Clang)` | `macOS (Apple Clang)` |
+   | `Linux (GCC, Debug, clang-tidy)` | `Linux (GCC, clang-tidy)` |
+   | `Linux (GCC, Release)` | |
+   | `Windows (MSVC, Release)` | `Windows (MSVC)` |
+   | `macOS (Apple Clang, Release)` | `macOS (Apple Clang)` |
    | `Linux (ASan, UBSan)` | `Linux (ASan, UBSan)` |
    | `Reference separation (ADR 0011)` | `Reference separation (ADR 0004)` |
    | `Verifica` | |

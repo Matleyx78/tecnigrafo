@@ -10,9 +10,10 @@
 
 #include <algorithm>
 #include <fstream>
-#include <iterator>
 #include <random>
+#include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace tg::io {
@@ -288,10 +289,14 @@ TEST(Cadx, ConvertsR2000ToR2018) {
 
 TEST(Cadx, ReadsArchiveConstructedWithIndependentZipTool) {
     // This seed was assembled with Info-ZIP, not with writeZip.
-    std::ifstream stream{std::string{TG_IO_TEST_DATA} + "/../../fuzz/corpus/cadx/manual.cadx",
-                         std::ios::binary};
+    const std::ifstream stream{std::string{TG_IO_TEST_DATA} + "/../../fuzz/corpus/cadx/manual.cadx",
+                               std::ios::binary};
     ASSERT_TRUE(stream);
-    const std::string bytes{std::istreambuf_iterator<char>{stream}, {}};
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream buffer;
+    buffer << stream.rdbuf();
+    const std::string bytes = std::move(buffer).str();
     const auto result = readCadx(bytes);
     ASSERT_TRUE(result.ok()) << result.error().message;
 }

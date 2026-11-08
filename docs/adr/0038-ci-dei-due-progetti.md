@@ -103,7 +103,7 @@ tabella qui sotto; una differenza nuova si aggiunge con il suo motivo.
 | `clang-tidy` | Tecnigrafo | regole di stile di Tecnigrafo (`.clang-tidy`); solid-space decide le sue |
 | Fuzzing dei lettori di file | Tecnigrafo | solid-space non legge file |
 | Verifica con `tecnigrafo-script` e oracolo ezdxf | Tecnigrafo | i casi di solid-space stanno nel suo archivio (`tests/corpus/`) |
-| Insiemi di avvisi (`cmake/TecnigrafoWarnings.cmake`, `cmake/SolidSpaceWarnings.cmake`) | ciascuno il suo | li confronta 0.7.5-P4; le differenze che restano si scrivono qui |
+| Insiemi di avvisi (`cmake/TecnigrafoWarnings.cmake`, `cmake/SolidSpaceWarnings.cmake`) | Tecnigrafo: `-Wimplicit-fallthrough`, `/utf-8` | confrontati da 0.7.5-P4: Tecnigrafo ha preso da solid-space `-Wcast-align` e `-Wformat=2`, che il codice regge senza correzioni, e con MSVC i due usano `/W4 /permissive-`. Restano solo in Tecnigrafo `-Wimplicit-fallthrough` (con GCC è già in `-Wextra`, con Clang no) e `/utf-8` di MSVC, che dice la codifica dei sorgenti e non è un avviso |
 
 ## Alternative considerate
 
