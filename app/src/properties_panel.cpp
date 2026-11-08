@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QModelIndex>
 #include <QPalette>
+#include <QScrollArea>
 #include <QSignalBlocker>
 #include <QToolButton>
 #include <QTreeView>
@@ -183,11 +184,16 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
     layout->setContentsMargins(kMargin, kMargin, kMargin, kMargin);
     layout->setSpacing(kMargin);
     layout->addLayout(head);
-    // The grid scrolls rather than impose its size on the window: a window
-    // with both panels docked still fits a small screen.
     layout->addWidget(m_grid, 1);
     layout->addWidget(m_message);
-    setWidget(content);
+    // The panel scrolls rather than impose its size on the window: a window
+    // with both panels docked still fits a small screen.
+    auto* scroll = new QScrollArea(this);
+    scroll->setObjectName(QStringLiteral("propertiesScroll"));
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setWidgetResizable(true);
+    scroll->setWidget(content);
+    setWidget(scroll);
 
     // Only the user's choices change the drawing: the setters of the
     // controls emit nothing (0.6-P21), and the filter listens to activated.
