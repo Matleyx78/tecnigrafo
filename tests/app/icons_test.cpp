@@ -284,6 +284,62 @@ TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
     EXPECT_GE(roleIcons, 2);  // draw-circle-cr, the example of docs/ICONE.md
 }
 
+TEST(IconsTest, ResourceIconsAreReusedPerResolvedFilesAndTheme) {
+    const QString name = QStringLiteral("draw-circle-cr");
+    const QIcon light = themedIcon(name, Theme::Light);
+    const QIcon dark = themedIcon(name, Theme::Dark);
+    ASSERT_FALSE(light.isNull());
+    ASSERT_FALSE(dark.isNull());
+    EXPECT_EQ(themedIcon(name, Theme::Light).cacheKey(), light.cacheKey());
+    EXPECT_EQ(themedIcon(name, Theme::Dark).cacheKey(), dark.cacheKey());
+    EXPECT_NE(light.cacheKey(), dark.cacheKey());
+    // The explicit resource base resolves to the same pair of files.
+    EXPECT_EQ(themedIcon(QStringLiteral(":/tg/icons/draw-circle-cr"), Theme::Light).cacheKey(),
+              light.cacheKey());
+    // One explicit grid is a different pair and must not reuse the two-grid icon.
+    const QIcon single = themedIcon(resourcePath(name + QStringLiteral("-16")), Theme::Light);
+    ASSERT_FALSE(single.isNull());
+    EXPECT_NE(single.cacheKey(), light.cacheKey());
+    EXPECT_EQ(themedIcon(resourcePath(name + QStringLiteral("-16")), Theme::Light).cacheKey(),
+              single.cacheKey());
+}
+
+TEST(IconsTest, MissingIconsStayEmptyOnRepeatedCalls) {
+    const QString missing = QStringLiteral("missing-icon-for-cache-test");
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        for (const QString& name : {missing, resourcePath(missing)}) {
+            EXPECT_TRUE(themedIcon(name, theme).isNull());
+            EXPECT_TRUE(themedIcon(name, theme).isNull());
+        }
+    }
+}
+
+TEST(IconsTest, DiskIconsAreReadAgainAfterTheirFileChanges) {
+    const QTemporaryDir directory;
+    ASSERT_TRUE(directory.isValid());
+    const QString fileName = QStringLiteral("changing.svg");
+    const QString path = directory.filePath(fileName);
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        writeSvg(directory, fileName, filledIcon(32, "geo"));
+        const QIcon first = themedIcon(path, theme);
+        ASSERT_FALSE(first.isNull());
+        const QImage before = first.pixmap(32, 32).toImage();
+        EXPECT_EQ(before.pixelColor(16, 16), themeTokens(theme).iconGeo);
+        // Keep the square and add a point in the centre, at the very same path.
+        writeSvg(directory, fileName,
+                 R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">)"
+                 R"(<rect class="geo" width="32" height="32" fill="currentColor"/>)"
+                 R"(<circle class="pt" cx="16" cy="16" r="6" fill="currentColor"/></svg>)");
+        const QIcon second = themedIcon(path, theme);
+        ASSERT_FALSE(second.isNull());
+        EXPECT_NE(second.cacheKey(), first.cacheKey());
+        const QImage after = second.pixmap(32, 32).toImage();
+        EXPECT_NE(after, before);
+        EXPECT_EQ(after.pixelColor(16, 16), themeTokens(theme).iconPt);
+        EXPECT_EQ(after.pixelColor(2, 2), themeTokens(theme).iconGeo);
+    }
+}
+
 TEST(IconsTest, EveryRoleHasTheColourOfItsTokenInBothThemes) {
     const QTemporaryDir directory;
     ASSERT_TRUE(directory.isValid());
