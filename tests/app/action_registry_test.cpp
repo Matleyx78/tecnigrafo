@@ -329,6 +329,7 @@ TEST_F(MainWindowActionsTest, ShortcutsMatchTheBuiltinDefaults) {
         {"aids.osnap", {QKeySequence(Qt::Key_F3)}},
         {"aids.ortho", {QKeySequence(Qt::Key_F8)}},
         {"aids.polar", {QKeySequence(Qt::Key_F10)}},
+        {"aids.dynmode", {QKeySequence(Qt::Key_F12)}},
     };
     QSet<QString> withKeys;
     for (const auto& [id, keys] : expected) {

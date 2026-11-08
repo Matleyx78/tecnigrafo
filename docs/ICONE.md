@@ -282,6 +282,12 @@ Il pannello Layers (0.7.5-P13) aggiunge una spunta sulla griglia da 16 px:
 |---|---|---|---|
 | `layer-check-16.svg` | layer corrente nella tabella | spunta (`pt`) | sì, solo pannello a 16 px |
 
+La tappa 0.7.5 aggiunge l'immissione dinamica (P16).
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `aids-dynmode-16.svg`, `aids-dynmode-32.svg` | `aids.dynmode` | puntatore (`esist`) e campo vicino al cursore (`pt`) | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

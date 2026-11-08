@@ -3,6 +3,7 @@
 
 #include "cad_view.hpp"
 
+#include "dynamic_input_box.hpp"
 #include "qt_painter.hpp"
 #include "tg/cmd/value_format.hpp"
 #include "tg/core/math.hpp"
@@ -32,7 +33,10 @@ core::Vec2 toVec2(const QPointF& point) {
 }  // namespace
 
 CadView::CadView(const core::Document& document, cmd::CommandRunner& runner, QWidget* parent)
-    : QWidget(parent), m_document(document), m_runner(runner) {
+    : QWidget(parent),
+      m_document(document),
+      m_runner(runner),
+      m_dynamicInput(new DynamicInputBox(runner, this)) {
     setMouseTracking(true);  // cursor coordinates without pressed buttons
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
@@ -110,6 +114,7 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
 void CadView::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     m_viewport.setScreenSize(width(), height());
+    emitCursor(m_cursorPosition);
 }
 
 void CadView::showEvent(QShowEvent* event) {
@@ -215,7 +220,9 @@ void CadView::mouseDoubleClickEvent(QMouseEvent* event) {
 }
 
 void CadView::emitCursor(const QPointF& screenPos) {
+    m_cursorPosition = screenPos;
     const core::Vec2 world = toWorld(screenPos);
+    m_dynamicInput->updatePointer(world, screenPos.toPoint());
     emit cursorMoved(world.x, world.y);
 }
 

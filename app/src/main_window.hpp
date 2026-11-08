@@ -192,6 +192,7 @@ private:
     QAction* m_eraseAction{nullptr};
     QAction* m_objectSnapAction{nullptr};
     QAction* m_orthoAction{nullptr};
+    QAction* m_dynamicInputAction{nullptr};
     QAction* m_polarAction{nullptr};
     QAction* m_endpointAction{nullptr};
     QAction* m_midpointAction{nullptr};

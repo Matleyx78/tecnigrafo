@@ -30,6 +30,8 @@ qt_add_library(tg_app_ui STATIC
     src/ui_builder.hpp
     src/builtin_actions.cpp
     src/builtin_actions.hpp
+    src/dynamic_input_box.cpp
+    src/dynamic_input_box.hpp
     src/cad_view.cpp
     src/cad_view.hpp
     src/command_line.cpp
