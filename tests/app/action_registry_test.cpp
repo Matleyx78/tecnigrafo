@@ -394,7 +394,10 @@ TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons)
         EXPECT_TRUE(spec->responses.isEmpty());
         EXPECT_TRUE(spec->shortcut.isEmpty());
         EXPECT_TRUE(item->shortcuts().isEmpty());
-        const QString mnemonic = QKeySequence::mnemonic(item->text()).toString();
+        // Check the declared access keys even on platforms that do not enable them.
+        const qsizetype marker = item->text().indexOf(QLatin1Char('&'));
+        ASSERT_GE(marker, 0);
+        const QString mnemonic = item->text().mid(marker + 1, 1).toUpper();
         EXPECT_FALSE(mnemonic.isEmpty());
         EXPECT_FALSE(mnemonics.contains(mnemonic)) << mnemonic.toStdString();
         mnemonics.insert(mnemonic);
