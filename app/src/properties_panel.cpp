@@ -277,6 +277,7 @@ void PropertiesPanel::refresh() {
     showTypes();
     readShown();
     m_model->setShown(m_shown);
+    showEditors();
     showGeometry();
     updateEnabled();
     Q_EMIT refreshed();
@@ -411,10 +412,27 @@ void PropertiesPanel::readShown() {
     m_shown.lineweight = sharedValue(doc, ids, &core::EntityProperties::lineweight);
 }
 
+void PropertiesPanel::showEditors() {
+    // A tree view with a layout pending ignores the changes of the data, so
+    // an open editor would keep a value refused or changed elsewhere.
+    for (const PropertyField field :
+         {PropertyField::Color, PropertyField::Layer, PropertyField::Linetype,
+          PropertyField::LinetypeScale, PropertyField::Lineweight}) {
+        const QModelIndex index = m_model->valueIndex(field);
+        if (QWidget* editor = m_grid->indexWidget(index)) {
+            m_delegate->setEditorData(editor, index);
+        }
+    }
+}
+
 void PropertiesPanel::showGeometry() {
     const std::vector<core::EntityId> ids = targets();
     m_model->setEntity(ids.size() == 1 ? document().find(ids.front()) : nullptr);
-    m_grid->setRowHidden(PropertyGridModel::kGeometryGroup, {}, m_model->geometry().isEmpty());
+    const bool hidden = m_model->geometry().isEmpty();
+    // Hiding a row lays the grid out again: only when it changes.
+    if (m_grid->isRowHidden(PropertyGridModel::kGeometryGroup, {}) != hidden) {
+        m_grid->setRowHidden(PropertyGridModel::kGeometryGroup, {}, hidden);
+    }
     showGroups();
 }
 

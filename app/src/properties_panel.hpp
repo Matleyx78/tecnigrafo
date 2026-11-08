@@ -160,6 +160,8 @@ private:
     void readSelection();
     void showTypes();
     void readShown();
+    /// Gives the open editors of the grid the values shown.
+    void showEditors();
     void showGeometry();
     /// Opens or closes the groups as the user left them.
     void showGroups();
