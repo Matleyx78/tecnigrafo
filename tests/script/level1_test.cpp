@@ -26,6 +26,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -35,9 +36,13 @@ namespace {
 const std::filesystem::path kData{TG_SCRIPT_TEST_DATA};
 
 std::string readFile(const std::filesystem::path& path) {
-    std::ifstream file(path, std::ios::binary);
+    const std::ifstream file(path, std::ios::binary);
     EXPECT_TRUE(file.good()) << path;
-    return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{}};
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream bytes;
+    bytes << file.rdbuf();
+    return std::move(bytes).str();
 }
 
 Script parsed(std::string_view text) {

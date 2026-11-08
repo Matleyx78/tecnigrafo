@@ -27,6 +27,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -62,8 +63,12 @@ std::vector<std::string> cases(bool scriptsOnly) {
 }
 
 std::string readFile(const fs::path& path) {
-    std::ifstream file(path, std::ios::binary);
-    return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{}};
+    const std::ifstream file(path, std::ios::binary);
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream bytes;
+    bytes << file.rdbuf();
+    return std::move(bytes).str();
 }
 
 /// The tool `name` of tecnigrafo-mcp with these options.

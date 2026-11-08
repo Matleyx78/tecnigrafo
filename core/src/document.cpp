@@ -26,7 +26,9 @@ BBox boundingBox(const Entity& entity) {
 namespace {
 
 // add() gives the value after the highest one, so the highest is not usable.
-constexpr std::uint64_t kLastUsable = std::numeric_limits<std::uint64_t>::max() - 1;
+// Used only by the assertions, absent in Release.
+[[maybe_unused]] constexpr std::uint64_t kLastUsable =
+    std::numeric_limits<std::uint64_t>::max() - 1;
 
 // The names of the records every drawing has (docs/adr/0025).
 constexpr std::string_view kByBlockName = "ByBlock";

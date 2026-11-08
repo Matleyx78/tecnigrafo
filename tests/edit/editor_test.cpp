@@ -1022,6 +1022,9 @@ TEST(Editor, RollbackToStartLeavesEmptyCommitAndPreservesRedo) {
 }
 
 TEST(EditorDeathTest, EntityEditsAndSavepointsRequireAnOpenTransaction) {
+#ifdef NDEBUG
+    GTEST_SKIP() << "preconditions are checked with assert, disabled in this build";
+#endif
     Document document;
     Editor editor(document);
     EXPECT_DEATH(editor.replace({}, segment(1)), "open transaction");

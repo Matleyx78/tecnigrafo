@@ -21,6 +21,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(TecnigrafoWarnings)
+include(TecnigrafoDeterminism)
+# docs/adr/0038, point 4: refuse forbidden floating-point options before any
+# subproject (solid-space checks its own targets) is configured.
+tg_check_floating_point_flags()
 
 if(TG_ENABLE_CLANG_TIDY)
     find_program(TG_CLANG_TIDY_EXE NAMES clang-tidy-18 clang-tidy REQUIRED)
@@ -78,3 +82,8 @@ endif()
 if(TG_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
+
+# docs/adr/0038, point 4: every target of Tecnigrafo (libraries, programs,
+# tests), wherever it is defined, compiles with the deterministic
+# floating-point options.
+tg_configure_determinism_in("${PROJECT_SOURCE_DIR}")

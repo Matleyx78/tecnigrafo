@@ -158,6 +158,7 @@ Boundary boundaryOf(const Polyline& polyline, const CurvePoint& place) {
         // Vertices belong to the following segment, except the open end.
         assert(!polyline.isClosed() && index == polyline.segmentCount());
     }
+    (void)polyline;  // used only by the assertions, absent in Release
     return {index, place.position.location == Location::Inside};
 }
 
@@ -347,6 +348,7 @@ PartResult extendTo(const Entity& entity, EntityEnd end, const CurvePoint& to) {
         expectedLocation = Location::BeforeStart;
     }
     assert(to.position.location == expectedLocation);
+    (void)expectedLocation;  // used only by the assertion, absent in Release
     return extendPolyline(polyline, end, to);
 }
 

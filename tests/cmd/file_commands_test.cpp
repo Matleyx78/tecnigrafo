@@ -14,7 +14,9 @@
 #include <fstream>
 #include <iterator>
 #include <map>
+#include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace tg::cmd {
@@ -453,9 +455,13 @@ TEST_F(FileCommandsTest, OpenReportsUnhandledTypesAlphabeticallyAndReadWarnings)
 TEST_F(FileCommandsTest, FutureCadxVersionPreservesDrawingAndReportsReaderError) {
     const auto path = std::filesystem::path{__FILE__}.parent_path().parent_path() /
                       "verifica/casi/apertura/open-errori-e-limiti/versione-3.cadx";
-    std::ifstream input(path, std::ios::binary);
+    const std::ifstream input(path, std::ios::binary);
     ASSERT_TRUE(input.is_open());
-    files.contents["future.cadx"] = std::string{std::istreambuf_iterator<char>{input}, {}};
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream bytes;
+    bytes << input.rdbuf();
+    files.contents["future.cadx"] = std::move(bytes).str();
     changeUnits();
     inputs({"OPEN", "N", "future.cadx"});
     EXPECT_FALSE(runner.isActive());

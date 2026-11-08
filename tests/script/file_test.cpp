@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -56,8 +57,12 @@ constexpr std::string_view kDxf =
 constexpr std::string_view kBrokenDxf = "  0\nSECTION\nabc\nHEADER\n";
 
 std::string readFile(const fs::path& path) {
-    std::ifstream file(path, std::ios::binary);
-    return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{}};
+    const std::ifstream file(path, std::ios::binary);
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream bytes;
+    bytes << file.rdbuf();
+    return std::move(bytes).str();
 }
 
 void writeFile(const fs::path& path, std::string_view text) {

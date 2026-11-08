@@ -45,7 +45,8 @@ constexpr std::array<double, Document::kMaxUnits + 1> kUnitInMeters{
     6336000.0 / 3937.0,     // 24: US survey miles
 };
 
-bool validUnits(int units) {
+// Used only by the assertions, absent in Release.
+[[maybe_unused]] bool validUnits(int units) {
     return units >= 0 && units <= Document::kMaxUnits;
 }
 

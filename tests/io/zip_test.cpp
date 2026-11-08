@@ -12,9 +12,11 @@
 #include <fstream>
 #include <iterator>
 #include <random>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace tg::io {
@@ -42,9 +44,13 @@ constexpr std::size_t kMebibyte = std::size_t{1024} * 1024;
 /// An archive of tests/io/dati/zip, made by crea.sh with other tools.
 std::string archiveFile(std::string_view name) {
     const std::string path = std::string{TG_IO_TEST_DATA} + "/zip/" + std::string{name};
-    std::ifstream file{path, std::ios::binary};
+    const std::ifstream file{path, std::ios::binary};
     EXPECT_TRUE(file.good()) << path;
-    return {std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
+    // Not std::istreambuf_iterator: GCC 13 at -O3 warns of a false null
+    // dereference in it (-Wnull-dereference).
+    std::ostringstream bytes;
+    bytes << file.rdbuf();
+    return std::move(bytes).str();
 }
 
 struct Expected {

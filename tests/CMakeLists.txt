@@ -164,6 +164,19 @@ set_tests_properties(mcp_root_must_exist PROPERTIES WILL_FAIL TRUE)
 add_test(NAME mcp_unknown_option COMMAND tecnigrafo-mcp --port 80)
 set_tests_properties(mcp_unknown_option PROPERTIES WILL_FAIL TRUE)
 
+# docs/adr/0038, point 4: the floating-point rule stops a configuration with a
+# forbidden option and gives the deterministic option to every target of ours.
+add_test(NAME cmake_determinism
+    COMMAND "${CMAKE_COMMAND}"
+        "-DTG_DETERMINISM_MODULE=${PROJECT_SOURCE_DIR}/cmake/TecnigrafoDeterminism.cmake"
+        "-DTG_DETERMINISM_PROBE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/determinism"
+        "-DTG_DETERMINISM_OUTPUT=${CMAKE_CURRENT_BINARY_DIR}/cmake/determinism"
+        "-DTG_DETERMINISM_GENERATOR=${CMAKE_GENERATOR}"
+        "-DTG_DETERMINISM_COMPILER=${CMAKE_CXX_COMPILER}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/determinism_test.cmake")
+# Eleven configurations of a small project; MSVC detection is the slowest.
+set_tests_properties(cmake_determinism PROPERTIES TIMEOUT 600)
+
 # Verification cases of the control mode (docs/adr/0011), label "verifica".
 add_subdirectory(verifica)
 

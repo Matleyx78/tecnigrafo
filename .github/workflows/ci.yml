@@ -15,6 +15,13 @@
 # in Verifica out of 648 s (run of #605). Tests must therefore never share a
 # folder with a fixed name; the order of ctest's output changes, its lines do
 # not, and scripts/ci-annota.sh reads them as before.
+#
+# Configurations (docs/adr/0038, point 3): Linux builds Debug (clang-tidy,
+# sanitizers, fuzzing, verification) and Release; Windows and macOS build only
+# Release, with tests and verification. Every Release job uses the preset
+# ci-release, with warnings as errors, and every target has the floating-point
+# options of docs/adr/0038, point 4 (cmake/TecnigrafoDeterminism.cmake). The
+# job names say the configuration.
 name: CI
 
 on:
@@ -174,7 +181,7 @@ jobs:
   # It is a tool of the CI, not a dependency of the program (docs/DECISIONI.md,
   # 2026-11-08). The whole-project tidy (preset tidy) does not use it.
   linux:
-    name: Linux (GCC, clang-tidy)
+    name: Linux (GCC, Debug, clang-tidy)
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
@@ -300,6 +307,100 @@ jobs:
         with:
           path: build/ccache
           key: ${{ runner.os }}-ccache-linux-${{ github.sha }}
+
+  # docs/adr/0038, point 3: Release with warnings as errors on Linux too, with
+  # tests and verification, beside the Debug jobs. No clang-tidy: the Debug
+  # job runs it on the same sources.
+  linux-release:
+    name: Linux (GCC, Release)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      # ccache: see the comment of the linux job.
+      CCACHE_DIR: ${{ github.workspace }}/build/ccache
+      CCACHE_MAXSIZE: 500M
+      CCACHE_COMPILERCHECK: content
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # solid-space (docs/adr/0030): not --recursive, its own submodules are not needed.
+          submodules: true
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
+          mkdir -p "$CCACHE_DIR"
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
+          cache: true
+      - uses: actions/cache@v6
+        if: hashFiles('tests/verifica/sorgenti.json') != ''
+        with:
+          path: build/verifica-sorgenti
+          key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      # docs/adr/0038, point 4: the real project refuses -ffast-math. The rule
+      # stops the configuration before any subproject, so this takes seconds.
+      - name: Forbidden floating-point options stop the configuration
+        run: |
+          mkdir -p build
+          status=0
+          cmake --preset ci-release -B build/fast-math -DTG_BUILD_APP=OFF \
+            -DCMAKE_CXX_FLAGS=-ffast-math > build/fast-math.log 2>&1 || status=$?
+          cat build/fast-math.log
+          expected='CMAKE_CXX_FLAGS has forbidden floating-point options (-ffast-math)'
+          if [ "$status" -eq 0 ]; then
+            echo "::error::The configuration with -ffast-math did not stop (docs/adr/0038, point 4)."
+            exit 1
+          fi
+          if ! tr -s ' \n' '  ' < build/fast-math.log | grep -qF "$expected"; then
+            echo "::error::The configuration with -ffast-math stopped without the message of docs/adr/0038: $expected"
+            exit 1
+          fi
+          echo "Stopped as expected: $expected"
+      - name: Restore the compiler cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-release-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-ccache-release-
+      - name: Build Release, warnings as errors
+        run: |
+          set -o pipefail
+          ccache --zero-stats
+          cmake --preset ci-release -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache 2>&1 | scripts/ci-annota.sh
+          cmake --build --preset ci-release 2>&1 | scripts/ci-annota.sh
+          ccache --show-stats
+      - name: Test
+        run: |
+          set -o pipefail
+          ctest --preset ci-release -LE verifica -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
+      - name: Verifica
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          set -o pipefail
+          ctest --preset ci-release -L verifica --no-tests=error -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
+      - name: Upload verification reports and images
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verifica-linux-release
+          path: |
+            build/ci-release/tests/verifica/casi*/
+            build/ci-release/Testing/Temporary/LastTest.log
+            build/ci-release/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn
+      - name: Save the compiler cache
+        if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+        uses: actions/cache/save@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-release-${{ github.sha }}
 
   verifica:
     name: Verifica
@@ -556,7 +657,7 @@ jobs:
           if-no-files-found: warn
 
   windows:
-    name: Windows (MSVC)
+    name: Windows (MSVC, Release)
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: windows-2025-vs2026
@@ -578,30 +679,24 @@ jobs:
         with:
           path: build/verifica-sorgenti
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
-      # Our code stays Debug (no optimisation, debug info, assertions on, no
-      # NDEBUG), but it links the normal MSVC runtime and the optimised Qt
-      # (0.7.5-P37). Why: with the debug Qt every app_widgets case was 5 to 20
-      # times slower than on Linux; the diagnostic draft #599 measured
-      # app_widgets going from 93.6 s to 8.17 s and the Test step from
-      # 172-361 s to 56 s. What is lost: the iterator and heap checks of the
-      # MSVC debug runtime and Qt's internal assertions. Why it is accepted:
-      # memory errors are searched by the Linux ASan job (docs/adr/0016), and
-      # our own assertions stay active (docs/DECISIONI.md, 2026-11-08).
-      # GoogleTest follows by itself (gtest_force_shared_crt).
+      # docs/adr/0038, point 3: Release, which links the release MSVC runtime
+      # and the optimised Qt by itself. Debug stays on Linux, where the ASan
+      # job looks for memory errors (docs/adr/0016); with Release the
+      # runtime and import mappings of 0.7.5-P37 are no longer needed.
       - name: Build, warnings as errors
         run: |
           New-Item -ItemType Directory -Force build | Out-Null
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL "-DCMAKE_MAP_IMPORTED_CONFIG_DEBUG=Release;RelWithDebInfo" *> build/ci-build.log
+          cmake --preset ci-release -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" *> build/ci-build.log
           $status = $LASTEXITCODE
           if ($status -eq 0) {
-            cmake --build --preset ci *>> build/ci-build.log
+            cmake --build --preset ci-release *>> build/ci-build.log
             $status = $LASTEXITCODE
           }
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-build.log
           exit $status
       - name: Test
         run: |
-          ctest --preset ci -LE verifica -j $env:NUMBER_OF_PROCESSORS *> build/ci-test.log
+          ctest --preset ci-release -LE verifica -j $env:NUMBER_OF_PROCESSORS *> build/ci-test.log
           $status = $LASTEXITCODE
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-test.log
           exit $status
@@ -609,7 +704,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
-          ctest --preset ci -L verifica --no-tests=error -j $env:NUMBER_OF_PROCESSORS *> build/ci-verifica.log
+          ctest --preset ci-release -L verifica --no-tests=error -j $env:NUMBER_OF_PROCESSORS *> build/ci-verifica.log
           $status = $LASTEXITCODE
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-verifica.log
           exit $status
@@ -619,13 +714,13 @@ jobs:
         with:
           name: verifica-windows
           path: |
-            build/ci/tests/verifica/casi*/
-            build/ci/Testing/Temporary/LastTest.log
-            build/ci/Testing/Temporary/LastTestsFailed.log
+            build/ci-release/tests/verifica/casi*/
+            build/ci-release/Testing/Temporary/LastTest.log
+            build/ci-release/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: warn
 
   macos:
-    name: macOS (Apple Clang)
+    name: macOS (Apple Clang, Release)
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
@@ -650,25 +745,25 @@ jobs:
       - name: Build, warnings as errors
         run: |
           set -o pipefail
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
-          cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
+          cmake --preset ci-release -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
+          cmake --build --preset ci-release 2>&1 | scripts/ci-annota.sh
       - name: Test
         run: |
           set -o pipefail
-          ctest --preset ci -LE verifica -j "$(sysctl -n hw.ncpu)" 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci-release -LE verifica -j "$(sysctl -n hw.ncpu)" 2>&1 | scripts/ci-annota.sh
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
           set -o pipefail
-          ctest --preset ci -L verifica --no-tests=error -j "$(sysctl -n hw.ncpu)" 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci-release -L verifica --no-tests=error -j "$(sysctl -n hw.ncpu)" 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: verifica-macos
           path: |
-            build/ci/tests/verifica/casi*/
-            build/ci/Testing/Temporary/LastTest.log
-            build/ci/Testing/Temporary/LastTestsFailed.log
+            build/ci-release/tests/verifica/casi*/
+            build/ci-release/Testing/Temporary/LastTest.log
+            build/ci-release/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: warn
