@@ -159,11 +159,20 @@ jobs:
           fi
           exit "$status"
 
+  # ccache in the three Linux jobs (docs/tappe/0.7.5/P36-tidy-e-ccache.md): a
+  # cache per job, always restored, saved only by a push to main or the nightly
+  # run, so that pull requests do not use up the cache space of the repository.
+  # It is a tool of the CI, not a dependency of the program (docs/DECISIONI.md,
+  # 2026-11-08). The whole-project tidy (preset tidy) does not use it.
   linux:
     name: Linux (GCC, clang-tidy)
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/build/ccache
+      CCACHE_MAXSIZE: 500M
+      CCACHE_COMPILERCHECK: content
     steps:
       - uses: actions/checkout@v7
         with:
@@ -174,7 +183,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev
+          sudo apt-get install -y ninja-build libgtest-dev clang-tidy-18 libgl1-mesa-dev libxkbcommon-dev ccache
+          mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
           version: '6.12.0'
@@ -186,11 +196,20 @@ jobs:
         with:
           path: build/verifica-sorgenti
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      - name: Restore the compiler cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-linux-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-ccache-linux-
       - name: Build, warnings as errors
         run: |
           set -o pipefail
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
+          ccache --zero-stats
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache 2>&1 | scripts/ci-annota.sh
           cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
+          ccache --show-stats
       - name: Test
         run: |
           set -o pipefail
@@ -218,18 +237,34 @@ jobs:
           name: galleria
           path: build/galleria/*.png
           if-no-files-found: error
+      # In a pull request the checkout is the test merge commit that GitHub
+      # builds on top of the latest main, while pull_request.base.sha can be an
+      # older main. Comparing the checkout with that old base counts as changes
+      # of the pull request everything merged into main since then: #585,
+      # opened after #579 had changed this workflow, touched only cmd/ and
+      # tests/ but got the whole-project tidy (62 min). The first parent of the
+      # merge commit is the main it was built on, so the diff against it is
+      # exactly what the pull request adds to today's main. The same base goes
+      # to scripts/controlla.sh as TG_TIDY_BASE.
       - name: Choose the static analysis
         id: tidy
         env:
           EVENT: ${{ github.event_name }}
-          BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           full=true
           if [ "$EVENT" = pull_request ]; then
-            if git diff --name-only "$BASE" | grep -qE '^(\.clang-tidy$|CMakeLists\.txt$|CMakePresets\.json$|cmake/|\.github/workflows/ci\.yml$)'; then
-              echo "The tidy configuration, CMake or this workflow changed: whole project."
+            if ! base=$(git rev-parse --verify --quiet 'HEAD^1'); then
+              echo "The checkout has no parent to compare with: whole project."
             else
-              full=false
+              changed=$(git diff --name-only "$base")
+              echo "Comparing with ${base:0:12}, the main of the test merge commit. Files of the pull request:"
+              echo "$changed"
+              echo "base=$base" >> "$GITHUB_OUTPUT"
+              if echo "$changed" | grep -qE '^(\.clang-tidy$|CMakeLists\.txt$|CMakePresets\.json$|cmake/|\.github/workflows/ci\.yml$)'; then
+                echo "The tidy configuration, CMake or this workflow changed: whole project."
+              else
+                full=false
+              fi
             fi
           fi
           echo "full=$full" >> "$GITHUB_OUTPUT"
@@ -238,7 +273,7 @@ jobs:
       - name: Static analysis (files touched by the pull request)
         if: steps.tidy.outputs.full == 'false'
         env:
-          TG_TIDY_BASE: ${{ github.event.pull_request.base.sha }}
+          TG_TIDY_BASE: ${{ steps.tidy.outputs.base }}
           TG_TIDY_MAX: '100000'
         run: |
           set -o pipefail
@@ -250,6 +285,12 @@ jobs:
           set -o pipefail
           cmake --preset tidy -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
           cmake --build --preset tidy 2>&1 | scripts/ci-annota.sh
+      - name: Save the compiler cache
+        if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+        uses: actions/cache/save@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-linux-${{ github.sha }}
 
   verifica:
     name: Verifica
@@ -258,6 +299,10 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       QT_QPA_PLATFORM: offscreen
+      # ccache: see the comment of the linux job.
+      CCACHE_DIR: ${{ github.workspace }}/build/ccache
+      CCACHE_MAXSIZE: 500M
+      CCACHE_COMPILERCHECK: content
     steps:
       - uses: actions/checkout@v7
         with:
@@ -266,7 +311,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
+          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
+          mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
           version: '6.12.0'
@@ -283,11 +329,20 @@ jobs:
         with:
           path: build/verifica-sorgenti
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      - name: Restore the compiler cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-verifica-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-ccache-verifica-
       - name: Build verification tools
         run: |
           set -o pipefail
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
+          ccache --zero-stats
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache 2>&1 | scripts/ci-annota.sh
           cmake --build --preset ci --target tecnigrafo-script tecnigrafo confronta_immagini 2>&1 | scripts/ci-annota.sh
+          ccache --show-stats
       - name: Verifica
         run: |
           set -o pipefail
@@ -327,6 +382,12 @@ jobs:
             build/ci/Testing/Temporary/LastTest.log
             build/ci/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: warn
+      - name: Save the compiler cache
+        if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+        uses: actions/cache/save@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-verifica-${{ github.sha }}
 
   # docs/adr/0016: every test, verification cases and application included,
   # runs instrumented; a memory error or undefined behaviour fails the job.
@@ -335,6 +396,11 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
+    env:
+      # ccache: see the comment of the linux job.
+      CCACHE_DIR: ${{ github.workspace }}/build/ccache
+      CCACHE_MAXSIZE: 500M
+      CCACHE_COMPILERCHECK: content
     steps:
       - uses: actions/checkout@v7
         with:
@@ -343,7 +409,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
+          sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev ccache
+          mkdir -p "$CCACHE_DIR"
       - uses: jurplel/install-qt-action@v4
         with:
           version: '6.12.0'
@@ -355,11 +422,20 @@ jobs:
         with:
           path: build/verifica-sorgenti
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      - name: Restore the compiler cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-sanitizers-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-ccache-sanitizers-
       - name: Build with AddressSanitizer and UBSan
         run: |
           set -o pipefail
-          cmake --preset asan -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
+          ccache --zero-stats
+          cmake --preset asan -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache 2>&1 | scripts/ci-annota.sh
           cmake --build --preset asan 2>&1 | scripts/ci-annota.sh
+          ccache --show-stats
       - name: Test
         run: |
           set -o pipefail
@@ -380,6 +456,12 @@ jobs:
             build/asan/Testing/Temporary/LastTest.log
             build/asan/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: warn
+      - name: Save the compiler cache
+        if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+        uses: actions/cache/save@v6
+        with:
+          path: build/ccache
+          key: ${{ runner.os }}-ccache-sanitizers-${{ github.sha }}
 
   # docs/adr/0020: discover new readers without changing this job.
   fuzz:
