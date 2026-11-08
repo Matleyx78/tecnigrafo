@@ -53,6 +53,9 @@ REPORT_NAMES = ("ottenuto.txt", "ottenuto.tgq", "ottenuto-confine.txt")
 # At most this many differing lines are written for one report.
 MAX_LINES_PER_REPORT = 20
 
+# Cases with an annotation of their own, after the one that lists them all.
+MAX_CASE_ANNOTATIONS = 9
+
 DEFAULT_EXCEPTIONS = Path(__file__).resolve().parent.parent / "docs" / "verifica" / "sistemi.md"
 EXCEPTIONS_HEADING = "## Eccezioni"
 EXCEPTION_LINE = re.compile(r"- `([a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)`: (\S.*)")
@@ -236,11 +239,21 @@ def main(argv: list[str] | None = None) -> int:
         annotate("warning", warning)
     for error in errors:
         print(f"error: {error}")
-    for error in errors[:10]:
-        annotate("error", error)
     systems_text = ", ".join(system.name for system in systems)
     if errors:
-        print(f"FAILED: {len(errors)} differences in {compared} cases between {systems_text}")
+        summary = f"{len(errors)} differences in {compared} cases between {systems_text}"
+        # GitHub keeps at most ten error annotations of a step, and they are
+        # all an agent without the logs can read (scripts/ci-errori.sh): the
+        # first lists every case that differs, the others hold all the
+        # differences of one case each, in the order of the cases.
+        by_case: dict[str, list[str]] = {}
+        for error in errors:
+            by_case.setdefault(error.split(": ", 1)[0], []).append(error)
+        annotate("error", f"{summary}; cases: "
+                 + ", ".join(f"{case} ({len(items)})" for case, items in by_case.items()))
+        for items in list(by_case.values())[:MAX_CASE_ANNOTATIONS]:
+            annotate("error", "\n".join(items))
+        print(f"FAILED: {summary}")
         return 1
     print(f"OK: {compared} cases equal on {systems_text}, {len(warnings)} exceptions")
     return 0

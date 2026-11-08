@@ -78,8 +78,24 @@ class ConfrontaSistemiTest(unittest.TestCase):
         self.assertIn("error: line/base: ottenuto.txt, line 5 differs:", output)
         self.assertRegex(output, r"verifica-linux-release\s+  257 LINE start=0,0 end=10,5\n")
         self.assertRegex(output, r"verifica-windows\s+  257 LINE start=0,0 end=10\.000000000000002,5\n")
+        self.assertIn("::error title=Cross-platform comparison::1 differences in 2 cases between "
+                      "verifica-linux-release, verifica-windows, verifica-macos; cases: line/base (1)\n", output)
         self.assertIn("::error title=Cross-platform comparison::line/base: ottenuto.txt, line 5 differs:%0A", output)
         self.assertNotIn("modello/lunghezza", output)
+
+    def test_one_annotation_per_case_after_the_list(self) -> None:
+        for index in range(12):
+            for system in SYSTEMS:
+                content = REPORT if system != SYSTEMS[2] else REPORT.replace(b"10,5", b"10,6")
+                self.write(system, f"caso/n{index:02}", "ottenuto.txt", content + content)
+        status, output = self.run_script(environment={"GITHUB_ACTIONS": "true"})
+        self.assertEqual(status, 1, output)
+        annotations = [line for line in output.splitlines() if line.startswith("::error")]
+        self.assertEqual(len(annotations), 1 + c.MAX_CASE_ANNOTATIONS)
+        self.assertIn("cases: caso/n00 (2), caso/n01 (2),", annotations[0])
+        self.assertIn("caso/n11 (2)", annotations[0])
+        self.assertIn("caso/n00: ottenuto.txt, line 5 differs:", annotations[1])
+        self.assertIn("%0Acaso/n00: ottenuto.txt, line 11 differs:", annotations[1])
 
     def test_a_carriage_return_is_a_difference(self) -> None:
         self.write(SYSTEMS[1], "modello/lunghezza", "ottenuto.tgq", QUESTIONS.replace(b"\n", b"\r\n"))
