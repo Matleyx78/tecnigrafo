@@ -53,8 +53,11 @@ REPORT_NAMES = ("ottenuto.txt", "ottenuto.tgq", "ottenuto-confine.txt")
 # At most this many differing lines are written for one report.
 MAX_LINES_PER_REPORT = 20
 
-# Cases with an annotation of their own, after the one that lists them all.
+# GitHub keeps at most ten error annotations of a step: one lists the cases,
+# the others hold their differences, several cases in one annotation up to
+# about this many characters (well below the size GitHub accepts).
 MAX_CASE_ANNOTATIONS = 9
+MAX_ANNOTATION_CHARACTERS = 30000
 
 DEFAULT_EXCEPTIONS = Path(__file__).resolve().parent.parent / "docs" / "verifica" / "sistemi.md"
 EXCEPTIONS_HEADING = "## Eccezioni"
@@ -205,6 +208,23 @@ def compare(systems: list[System], exceptions: dict[str, str]) -> tuple[list[str
     return errors, warnings, compared
 
 
+def pack(texts: list[str]) -> list[str]:
+    """`texts` joined into at most MAX_CASE_ANNOTATIONS messages.
+
+    A text starts a new message when the current one would grow past
+    MAX_ANNOTATION_CHARACTERS; the texts that do not fit any more are left out.
+    """
+    messages: list[str] = []
+    for text in texts:
+        if messages and len(messages[-1]) + 1 + len(text) <= MAX_ANNOTATION_CHARACTERS:
+            messages[-1] += "\n" + text
+        elif len(messages) < MAX_CASE_ANNOTATIONS:
+            messages.append(text[:MAX_ANNOTATION_CHARACTERS])
+        else:
+            break
+    return messages
+
+
 def annotate(kind: str, message: str) -> None:
     """A GitHub annotation, only inside GitHub Actions."""
     if os.environ.get("GITHUB_ACTIONS") != "true":
@@ -242,17 +262,16 @@ def main(argv: list[str] | None = None) -> int:
     systems_text = ", ".join(system.name for system in systems)
     if errors:
         summary = f"{len(errors)} differences in {compared} cases between {systems_text}"
-        # GitHub keeps at most ten error annotations of a step, and they are
-        # all an agent without the logs can read (scripts/ci-errori.sh): the
-        # first lists every case that differs, the others hold all the
-        # differences of one case each, in the order of the cases.
+        # The annotations are all an agent without the logs can read
+        # (scripts/ci-errori.sh): the first lists every case that differs, the
+        # others hold the differences, whole cases in their order.
         by_case: dict[str, list[str]] = {}
         for error in errors:
             by_case.setdefault(error.split(": ", 1)[0], []).append(error)
         annotate("error", f"{summary}; cases: "
                  + ", ".join(f"{case} ({len(items)})" for case, items in by_case.items()))
-        for items in list(by_case.values())[:MAX_CASE_ANNOTATIONS]:
-            annotate("error", "\n".join(items))
+        for chunk in pack(["\n".join(items) for items in by_case.values()]):
+            annotate("error", chunk)
         print(f"FAILED: {summary}")
         return 1
     print(f"OK: {compared} cases equal on {systems_text}, {len(warnings)} exceptions")

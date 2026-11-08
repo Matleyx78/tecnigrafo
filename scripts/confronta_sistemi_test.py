@@ -91,11 +91,18 @@ class ConfrontaSistemiTest(unittest.TestCase):
         status, output = self.run_script(environment={"GITHUB_ACTIONS": "true"})
         self.assertEqual(status, 1, output)
         annotations = [line for line in output.splitlines() if line.startswith("::error")]
-        self.assertEqual(len(annotations), 1 + c.MAX_CASE_ANNOTATIONS)
+        self.assertEqual(len(annotations), 2)
         self.assertIn("cases: caso/n00 (2), caso/n01 (2),", annotations[0])
         self.assertIn("caso/n11 (2)", annotations[0])
         self.assertIn("caso/n00: ottenuto.txt, line 5 differs:", annotations[1])
         self.assertIn("%0Acaso/n00: ottenuto.txt, line 11 differs:", annotations[1])
+        self.assertIn("%0Acaso/n11: ottenuto.txt, line 11 differs:", annotations[1])
+
+    def test_differences_are_packed_into_at_most_nine_annotations(self) -> None:
+        with mock.patch.object(c, "MAX_ANNOTATION_CHARACTERS", 10):
+            self.assertEqual(c.pack(["aaaaaa", "bbbbbb", "cc"]), ["aaaaaa", "bbbbbb\ncc"])
+            self.assertEqual(c.pack(["a" * 15]), ["a" * 10])
+            self.assertEqual(len(c.pack(["a" * 10] * 12)), c.MAX_CASE_ANNOTATIONS)
 
     def test_a_carriage_return_is_a_difference(self) -> None:
         self.write(SYSTEMS[1], "modello/lunghezza", "ottenuto.tgq", QUESTIONS.replace(b"\n", b"\r\n"))
