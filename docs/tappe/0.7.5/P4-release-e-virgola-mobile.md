@@ -7,7 +7,7 @@
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** non servono: infrastruttura; i casi di verifica esistenti,
   invariati, girano anche in Release e sono la prova
-- **Dipende da:** P3, P37 (stesso `ci.yml`; aggiunto il 2026-11-08)
+- **Dipende da:** P3, P38 (stesso `ci.yml`; aggiunto il 2026-11-08)
 - **Modulo:** `cmake/` e `.github/` (più le correzioni al codice che la build
   Release chiede)
 - **Da leggere:** [ADR 0038](../../adr/0038-ci-dei-due-progetti.md), punti 3, 4 e
