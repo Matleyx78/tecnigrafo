@@ -169,10 +169,10 @@ run_step() {
         cmake --preset ci "${app_flag[@]}" && cmake --build --preset ci
         ;;
     test)
-        ctest --preset ci -LE verifica
+        ctest --preset ci -LE verifica -j "$(nproc)"
         ;;
     verifica)
-        ctest --preset ci -L verifica --no-tests=error
+        ctest --preset ci -L verifica --no-tests=error -j "$(nproc)"
         ;;
     tidy)
         tidy_touched
