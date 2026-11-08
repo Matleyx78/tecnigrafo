@@ -169,6 +169,22 @@ class ConfrontaSistemiTest(unittest.TestCase):
         self.assertIn("::warning title=Cross-platform comparison::line/base:", output)
         self.assertIn("OK: 1 cases equal", output)
 
+    def test_an_exception_whose_case_is_equal_everywhere_is_an_error(self) -> None:
+        self.exceptions.write_text("## Eccezioni\n\n- `line/base`: fixed since (#999)\n", encoding="utf-8")
+        status, output = self.run_script()
+        self.assertEqual(status, 1, output)
+        self.assertIn("error: line/base: listed in the exceptions, but equal on every system: "
+                      "remove it from the list", output)
+        self.assertNotIn("warning:", output)
+
+    def test_an_exception_whose_case_is_missing_on_a_system_is_skipped(self) -> None:
+        for system in SYSTEMS[:2]:
+            self.write(system, "arc/nuovo", "ottenuto.txt", REPORT)
+        self.exceptions.write_text("## Eccezioni\n\n- `arc/nuovo`: not on macOS (#999)\n", encoding="utf-8")
+        status, output = self.run_script()
+        self.assertEqual(status, 0, output)
+        self.assertIn("warning: arc/nuovo: not compared, it is an exception", output)
+
     def test_an_exception_no_system_has_is_an_error(self) -> None:
         self.exceptions.write_text("## Eccezioni\n\n- `line/sparito`: gone\n", encoding="utf-8")
         status, output = self.run_script()
@@ -204,7 +220,10 @@ class ConfrontaSistemiTest(unittest.TestCase):
         self.assertIn("vuoto: no case", output.getvalue())
 
     def test_the_list_of_the_repository_is_valid(self) -> None:
-        self.assertEqual(c.read_exceptions(c.DEFAULT_EXCEPTIONS), {})
+        # Every exception is temporary: its reason names the issue that
+        # removes it.
+        for case, reason in c.read_exceptions(c.DEFAULT_EXCEPTIONS).items():
+            self.assertRegex(reason, r"#\d+", case)
 
 
 if __name__ == "__main__":

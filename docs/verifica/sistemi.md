@@ -44,9 +44,34 @@ scrive perché.
 ## Eccezioni
 
 Un caso per riga, nella forma ``- `<area>/<nome>`: <motivo>``, con il motivo e
-la issue che lo segue. Un caso dell'elenco non si confronta, e la CI scrive un
-avviso che lo nomina; un caso dell'elenco che nessun sistema ha più è un
-errore, perché la riga va tolta. Una differenza tra sistemi si corregge; si
+la issue che toglierà la riga. Un caso dell'elenco non si confronta, e la CI
+scrive un avviso che lo nomina. Un'eccezione è provvisoria: la CI dà errore se
+il caso dell'elenco è ormai uguale su tutti i sistemi, o se nessun sistema lo
+ha più, perché la riga va tolta. Una differenza tra sistemi si corregge; si
 aggiunge qui solo con una decisione del responsabile.
 
-Nessuna.
+Il primo confronto (0.7.5-P5) ha trovato 17 casi con le ultime cifre di alcuni
+numeri diverse tra i sistemi: archi, testi ruotati, specchiature e grip, con
+ogni probabilità per le funzioni trigonometriche della libreria di ciascun
+sistema. Restano qui fino alle funzioni deterministiche di solid-space, da
+fare all'inizio della tappa 0.8 ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620);
+[DECISIONI.md](../DECISIONI.md), 2026-11-08). Le righe dei tre sistemi sono nella
+[issue di P5](https://github.com/Matleyx78/tecnigrafo/issues/546#issuecomment-6725181081).
+
+- `arco/geometria`: ultime cifre di alcuni numeri diverse su Windows (3 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `grip/modifica`: ultime cifre di alcuni numeri diverse su Windows e macOS (7 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `grip/punti`: ultime cifre di alcuni numeri diverse su Windows (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `pline/archi-e-linee`: ultime cifre di alcuni numeri diverse su macOS (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `pline/arco-iniziale`: ultime cifre di alcuni numeri diverse su Linux (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `pline/chiusura-arco-e-linea`: ultime cifre di alcuni numeri diverse su macOS (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `testo/aligned-fit`: ultime cifre di alcuni numeri diverse su Linux e macOS (5 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `testo/dxf-proprieta-0022`: ultime cifre di alcuni numeri diverse su Windows (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `testo/geometria`: ultime cifre di alcuni numeri diverse su Windows (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `testo/selezione-parallelogramma`: ultime cifre di alcuni numeri diverse su macOS (4 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `text/altezza-e-rotazione`: ultime cifre di alcuni numeri diverse su Windows (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `trasformazioni/linea-cerchio`: ultime cifre di alcuni numeri diverse su Windows e macOS (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `trasformazioni/polilinea`: ultime cifre di alcuni numeri diverse su Windows (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `trasformazioni/testo`: ultime cifre di alcuni numeri diverse su Windows e macOS (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `trasformazioni/testo-mirrtext-0`: ultime cifre di alcuni numeri diverse su Windows (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `trasformazioni/testo-mirrtext-1`: ultime cifre di alcuni numeri diverse su Windows e macOS (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+- `trim/mezzo-polilinee-larghezze`: ultime cifre di alcuni numeri diverse su macOS (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)

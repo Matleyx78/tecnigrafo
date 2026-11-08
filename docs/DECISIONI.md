@@ -1278,3 +1278,17 @@ i rimandi ai documenti che cambia.
   con tanti processi quanti i processori della macchina, nella CI e in
   `scripts/controlla.sh`. I test non condividono più cartelle di lavoro fisse.
   Restano un processo per caso (`gtest_discover_tests`) e i `TIMEOUT` di oggi.
+- **2026-11-08 — Confronto tra sistemi: eccezioni fino alle funzioni
+  deterministiche.** Il primo giro del confronto tra sistemi
+  ([0.7.5-P5](tappe/0.7.5/P5-confronto-e-controllo-incrociato.md),
+  [ADR 0038](adr/0038-ci-dei-due-progetti.md), punto 5) trova 17 casi con le
+  ultime cifre di alcuni numeri diverse tra Linux, Windows e macOS
+  ([#546](https://github.com/Matleyx78/tecnigrafo/issues/546#issuecomment-6725181081)).
+  Il responsabile sceglie di renderli identici, non di confrontarli con una
+  tolleranza: solid-space fornirà funzioni trigonometriche deterministiche,
+  uguali bit per bit su tutti i sistemi, e `core` le userà. Il lavoro si fa
+  all'inizio della tappa 0.8 ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620)).
+  Fino ad allora i 17 casi sono eccezioni di
+  [verifica/sistemi.md](verifica/sistemi.md), ognuna con il rimando alla #620;
+  il confronto dà errore per un'eccezione il cui caso è già uguale su tutti i
+  sistemi, così il pacchetto della 0.8 deve togliere le righe.

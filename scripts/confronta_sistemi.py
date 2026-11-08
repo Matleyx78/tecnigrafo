@@ -24,7 +24,7 @@
 # difference), except the lines matched by VARIABLE_LINES below, which change
 # by construction and are not results. A case listed in the section
 # "Eccezioni" of docs/verifica/sistemi.md is skipped, with a warning that
-# names it.
+# names it; once it is equal on every system, its line is an error.
 #
 # Exit status: 0 every compared case is equal on every system, 1 at least one
 # difference or missing report, 2 wrong arguments, a folder without cases, or
@@ -179,8 +179,31 @@ def compare_report(case: str, name: str, systems: list[System]) -> list[str]:
     return errors
 
 
+def compare_case(case: str, systems: list[System]) -> list[str]:
+    """The differences of one case between the systems."""
+    missing = [system.name for system in systems if case not in system.cases]
+    if missing:
+        return [f"{case}: missing on {', '.join(missing)}"]
+    errors: list[str] = []
+    # A case with no report on any system is equal everywhere: a level 2
+    # case (!level 2) is skipped at level 1 and writes no report.
+    names = sorted(set().union(*(system.cases[case] for system in systems)))
+    for name in names:
+        missing = [system.name for system in systems if name not in system.cases[case]]
+        if missing:
+            errors.append(f"{case}: {name} missing on {', '.join(missing)}")
+            continue
+        errors.extend(compare_report(case, name, systems))
+    return errors
+
+
 def compare(systems: list[System], exceptions: dict[str, str]) -> tuple[list[str], list[str], int]:
-    """The errors, the warnings and the number of compared cases."""
+    """The errors, the warnings and the number of compared cases.
+
+    An exception is temporary: once its case is equal on every system the
+    line must go, so a listed case that is equal everywhere is an error, as is
+    a listed case that no system has.
+    """
     errors: list[str] = []
     warnings: list[str] = []
     cases = sorted(set().union(*(system.cases for system in systems)))
@@ -188,23 +211,16 @@ def compare(systems: list[System], exceptions: dict[str, str]) -> tuple[list[str
         errors.append(f"{case}: listed in the exceptions, but no system has it: remove it from the list")
     compared = 0
     for case in cases:
+        differences = compare_case(case, systems)
         if case in exceptions:
-            warnings.append(f"{case}: not compared, it is an exception: {exceptions[case]}")
-            continue
-        missing = [system.name for system in systems if case not in system.cases]
-        if missing:
-            errors.append(f"{case}: missing on {', '.join(missing)}")
+            if differences:
+                warnings.append(f"{case}: not compared, it is an exception: {exceptions[case]}")
+            else:
+                errors.append(f"{case}: listed in the exceptions, but equal on every system: "
+                              "remove it from the list")
             continue
         compared += 1
-        # A case with no report on any system is equal everywhere: a level 2
-        # case (!level 2) is skipped at level 1 and writes no report.
-        names = sorted(set().union(*(system.cases[case] for system in systems)))
-        for name in names:
-            missing = [system.name for system in systems if name not in system.cases[case]]
-            if missing:
-                errors.append(f"{case}: {name} missing on {', '.join(missing)}")
-                continue
-            errors.extend(compare_report(case, name, systems))
+        errors.extend(differences)
     return errors, warnings, compared
 
 
