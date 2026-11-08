@@ -51,7 +51,9 @@ class ConfrontaSistemiTest(unittest.TestCase):
         output = io.StringIO()
         arguments = ["--eccezioni", str(self.exceptions), *extra,
                      *(str(self.root / system) for system in SYSTEMS)]
-        with mock.patch.dict("os.environ", environment or {}, clear=False), \
+        # The CI itself sets GITHUB_ACTIONS: every test says the value it wants.
+        environment = {"GITHUB_ACTIONS": "false", **(environment or {})}
+        with mock.patch.dict("os.environ", environment, clear=False), \
                 redirect_stdout(output), redirect_stderr(output):
             status = c.main(arguments)
         return status, output.getvalue()
