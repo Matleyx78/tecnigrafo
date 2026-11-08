@@ -112,7 +112,7 @@ TEST_F(DynamicInputTest, AbsoluteThenPolarMatchesCommandLineAndEchoesBothLines) 
     EXPECT_FALSE(window().runner().isActive());
     EXPECT_FALSE(box()->isVisible());
     ASSERT_EQ(window().document().entityCount(), 1U);
-    const auto& line = std::get<core::Line>(window().document().entities().back().entity);
+    const auto line = std::get<core::Line>(window().document().entities().back().entity);
 
     MainWindow reference(MainWindow::InitialDrawing::Empty);
     reference.setScriptMode();
@@ -122,7 +122,7 @@ TEST_F(DynamicInputTest, AbsoluteThenPolarMatchesCommandLineAndEchoesBothLines) 
         events::press(referenceInput, Qt::Key_Return);
     }
     ASSERT_EQ(reference.document().entityCount(), 1U);
-    const auto& expected = std::get<core::Line>(reference.document().entities().back().entity);
+    const auto expected = std::get<core::Line>(reference.document().entities().back().entity);
     EXPECT_EQ(line.start, expected.start);
     EXPECT_EQ(line.end, expected.end);
     EXPECT_TRUE(history().contains(QStringLiteral("10,10")));
@@ -188,7 +188,7 @@ TEST_F(DynamicInputTest, FreeFieldTracksOrthoWhileTypedFieldStaysLockedAndTabCyc
     events::press(view(), Qt::Key_Tab);
     events::press(view(), Qt::Key_Return);
     ASSERT_EQ(window().document().entityCount(), 1U);
-    const auto& line = std::get<core::Line>(window().document().entities().back().entity);
+    const auto line = std::get<core::Line>(window().document().entities().back().entity);
     EXPECT_EQ(line.end, (core::Vec2{60, 10}));
     // The fields reset after Enter: typing starts in Length again.
     events::type(view(), "25");
@@ -208,7 +208,7 @@ TEST_F(DynamicInputTest, FreeCoordinateUsesSnapAndCommaUsesRelativeCartesianText
     events::type(view(), "5,-2");
     events::press(view(), Qt::Key_Return);
     ASSERT_EQ(window().document().entityCount(), 2U);
-    const auto& line = std::get<core::Line>(window().document().entities().back().entity);
+    const auto line = std::get<core::Line>(window().document().entities().back().entity);
     EXPECT_EQ(line.start, (core::Vec2{30, 10}));
     EXPECT_EQ(line.end, (core::Vec2{35, 8}));
     EXPECT_TRUE(history().contains(QStringLiteral("@5,-2")));
