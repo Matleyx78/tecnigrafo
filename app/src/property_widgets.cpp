@@ -4,7 +4,10 @@
 #include "property_widgets.hpp"
 
 #include "color_dialog.hpp"
+#include "layer_table_model.hpp"
+#include "theme.hpp"
 
+#include <QEvent>
 #include <QPainter>
 #include <QPixmap>
 #include <QSignalBlocker>
@@ -18,6 +21,54 @@ namespace {
 constexpr int kPreviewWidth = 64;
 constexpr int kPreviewHeight = 18;
 constexpr std::size_t kMaxRecentColours = 8;
+constexpr int kLayerIconSide = 16;
+constexpr int kLayerIconStep = 18;
+constexpr int kLayerIconWidth = 3 * kLayerIconStep + kLayerIconSide;
+
+void paintColorSample(QPainter& painter, const QRect& rect, core::Color color,
+                      const QPalette& palette) {
+    if (color.kind() == core::Color::Kind::Index && color.index() == 7) {
+        const int half = rect.width() / 2;
+        painter.fillRect(rect.x(), rect.y(), half, rect.height(), Qt::white);
+        painter.fillRect(rect.x() + half, rect.y(), rect.width() - half, rect.height(), Qt::black);
+    } else {
+        QColor fill = palette.color(QPalette::Text);
+        if (color.kind() == core::Color::Kind::Rgb) {
+            const auto rgb = color.rgb();
+            fill = QColor(rgb.r, rgb.g, rgb.b);
+        } else if (color.kind() == core::Color::Kind::Index) {
+            const auto rgb = core::aciToRgb(color.index());
+            fill = QColor(rgb.r, rgb.g, rgb.b);
+        }
+        painter.fillRect(rect, fill);
+    }
+    painter.setPen(palette.color(QPalette::Text));
+    painter.drawRect(rect.adjusted(0, 0, -1, -1));
+}
+
+QIcon layerIcon(const core::Layer& layer, const QPalette& palette) {
+    QIcon icon;
+    // Build both display scales so the ribbon stays sharp at 100% and 200%.
+    for (const int scale : {1, 2}) {
+        QPixmap pixmap(kLayerIconWidth * scale, kLayerIconSide * scale);
+        pixmap.setDevicePixelRatio(scale);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        int x = 0;
+        for (const LayerState state : {LayerState::On, LayerState::Frozen, LayerState::Locked}) {
+            const QString name = layerStateIconName(state, layerStateValue(layer, state));
+            const QIcon stateIcon = themedIcon(name, themeOf(palette));
+            stateIcon.paint(&painter, QRect(x, 0, kLayerIconSide, kLayerIconSide));
+            x += kLayerIconStep;
+        }
+        // Draw on the target device: no rectangular raster is scaled into a square.
+        const QRect sample(x, 0, kLayerIconSide, kLayerIconSide);
+        paintColorSample(painter, sample, layer.color, palette);
+        painter.end();
+        icon.addPixmap(pixmap);
+    }
+    return icon;
+}
 
 void clearVaries(QComboBox& combo) {
     if (combo.count() > 0 && !combo.itemData(0).isValid()) {
@@ -113,22 +164,7 @@ QIcon colorIcon(core::Color color, const QPalette& palette) {
     QPixmap pixmap(kPreviewWidth, kPreviewHeight);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
-    if (color.kind() == core::Color::Kind::Index && color.index() == 7) {
-        painter.fillRect(0, 0, kPreviewWidth / 2, kPreviewHeight, Qt::white);
-        painter.fillRect(kPreviewWidth / 2, 0, kPreviewWidth / 2, kPreviewHeight, Qt::black);
-    } else {
-        QColor fill = palette.color(QPalette::Text);
-        if (color.kind() == core::Color::Kind::Rgb) {
-            const auto rgb = color.rgb();
-            fill = QColor(rgb.r, rgb.g, rgb.b);
-        } else if (color.kind() == core::Color::Kind::Index) {
-            const auto rgb = core::aciToRgb(color.index());
-            fill = QColor(rgb.r, rgb.g, rgb.b);
-        }
-        painter.fillRect(pixmap.rect(), fill);
-    }
-    painter.setPen(palette.color(QPalette::Text));
-    painter.drawRect(0, 0, kPreviewWidth - 1, kPreviewHeight - 1);
+    paintColorSample(painter, pixmap.rect(), color, palette);
     return {pixmap};
 }
 
@@ -204,6 +240,8 @@ void ColorCombo::choose(int index) {
 }
 
 LayerCombo::LayerCombo(QWidget* parent) : QComboBox(parent) {
+    setIconSize(QSize(kLayerIconWidth, kLayerIconSide));
+    connect(this, &QComboBox::currentIndexChanged, this, [this] { updateDescription(); });
     connect(this, &QComboBox::activated, this, [this](int index) {
         if (itemData(index).isValid()) {
             setValue(itemData(index).value<core::LayerId>());
@@ -215,29 +253,54 @@ LayerCombo::LayerCombo(QWidget* parent) : QComboBox(parent) {
 void LayerCombo::setDocument(const core::Document* document) {
     const QSignalBlocker blocker(this);
     clear();
+    m_layers.clear();
     if (document != nullptr) {
-        for (const auto& layer : document->layers()) {
+        m_layers.assign(document->layers().begin(), document->layers().end());
+        for (const auto& layer : m_layers) {
             const auto name = QString::fromStdString(layer.name);
             const auto on = layer.on ? tr("On") : tr("Off");
             const auto frozen = layer.frozen ? tr("Frozen") : tr("Thawed");
             const auto locked = layer.locked ? tr("Locked") : tr("Unlocked");
             const auto plot = layer.plot ? tr("Plot") : tr("No plot");
             const auto label = tr("%1 [%2, %3, %4, %5]").arg(name, on, frozen, locked, plot);
-            addItem(colorIcon(layer.color, palette()), label, QVariant::fromValue(layer.id));
+            addItem(layerIcon(layer, palette()), name, QVariant::fromValue(layer.id));
+            setItemData(count() - 1, label, Qt::ToolTipRole);
+            setItemData(count() - 1, label, Qt::AccessibleTextRole);
         }
         setValue(document->current().layer);
     } else {
         m_value = {};
     }
+    updateDescription();
 }
 
 void LayerCombo::setValue(core::LayerId value) {
     m_value = value;
     selectValue(*this, value);
+    updateDescription();
 }
 
 void LayerCombo::setVaries() {
     showVaries(*this);
+    updateDescription();
+}
+
+void LayerCombo::updateDescription() {
+    const QString description = currentData(Qt::AccessibleTextRole).toString();
+    setToolTip(description);
+    setAccessibleName(description.isEmpty() ? currentText() : description);
+}
+
+void LayerCombo::changeEvent(QEvent* event) {
+    QComboBox::changeEvent(event);
+    if (event->type() == QEvent::PaletteChange) {
+        for (const auto& layer : m_layers) {
+            const int index = findData(QVariant::fromValue(layer.id));
+            if (index >= 0) {
+                setItemIcon(index, layerIcon(layer, palette()));
+            }
+        }
+    }
 }
 
 LinetypeCombo::LinetypeCombo(QWidget* parent) : QComboBox(parent) {

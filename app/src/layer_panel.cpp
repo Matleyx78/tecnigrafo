@@ -13,8 +13,8 @@
 #include <QHeaderView>
 #include <QItemSelectionModel>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMessageBox>
-#include <QPushButton>
 #include <QSize>
 #include <QTableView>
 #include <QToolButton>
@@ -27,16 +27,10 @@
 namespace tg::app {
 namespace {
 
-// The side of the icons of the table, in pixels.
-constexpr int kIconSide = 18;
-// Rows are tall enough for the drop-down lists of the cells.
-constexpr int kRowHeight = 28;
-constexpr int kStatusWidth = 56;
-constexpr int kNameWidth = 130;
-constexpr int kStateWidth = 52;
-constexpr int kColorWidth = 130;
-constexpr int kLinetypeWidth = 170;
-constexpr int kLineweightWidth = 110;
+// Compact panel geometry, in logical pixels (ADR 0039).
+constexpr int kIconSide = 16;
+constexpr int kRowHeight = 22;
+constexpr int kStateWidth = 22;
 // The width that shows a layer name and its states in the drop-down list.
 constexpr int kLayerComboWidth = 240;
 
@@ -73,9 +67,10 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
       m_model(new LayerTableModel(editor.document(), this)),
       m_table(new QTableView(this)),
       m_message(new QLabel(this)),
-      m_newButton(new QPushButton(tr("New"), this)),
-      m_deleteButton(new QPushButton(tr("Delete"), this)),
-      m_currentButton(new QPushButton(tr("Make Current"), this)) {
+      m_newButton(new QToolButton(this)),
+      m_deleteButton(new QToolButton(this)),
+      m_currentButton(new QToolButton(this)),
+      m_search(new QLineEdit(this)) {
     setObjectName(QStringLiteral("layerPanel"));
     m_model->setPalette(palette());
 
@@ -86,7 +81,19 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
     m_table->setEditTriggers(kNameEditTriggers);
     m_table->setIconSize(QSize(kIconSide, kIconSide));
     m_table->verticalHeader()->setVisible(false);
+    m_table->verticalHeader()->setMinimumSectionSize(kRowHeight);
     m_table->verticalHeader()->setDefaultSectionSize(kRowHeight);
+    m_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    m_table->horizontalHeader()->setMinimumSectionSize(kStateWidth);
+    m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    const auto states = {LayerColumn::Status, LayerColumn::On, LayerColumn::Frozen,
+                         LayerColumn::Locked};
+    for (const LayerColumn column : states) {
+        m_table->horizontalHeader()->setSectionResizeMode(columnOf(column), QHeaderView::Fixed);
+        m_table->setColumnWidth(columnOf(column), kStateWidth);
+    }
+    auto* header = m_table->horizontalHeader();
+    header->setSectionResizeMode(columnOf(LayerColumn::Plot), QHeaderView::ResizeToContents);
     m_table->horizontalHeader()->setStretchLastSection(false);
 
     m_message->setObjectName(QStringLiteral("layerMessage"));
@@ -95,21 +102,39 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
     m_deleteButton->setObjectName(QStringLiteral("layerDelete"));
     m_currentButton->setObjectName(QStringLiteral("layerMakeCurrent"));
 
+    m_newButton->setToolTip(tr("New layer"));
+    m_deleteButton->setToolTip(tr("Delete layer"));
+    m_currentButton->setToolTip(tr("Make current"));
+    for (QToolButton* button : {m_newButton, m_deleteButton, m_currentButton}) {
+        button->setAutoRaise(true);
+        button->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        button->setIconSize(QSize(kIconSide, kIconSide));
+        button->setAccessibleName(button->toolTip());
+    }
+    updateButtonIcons();
+    m_search->setObjectName(QStringLiteral("layerSearch"));
+    m_search->setPlaceholderText(tr("Search layers"));
+    m_search->setAccessibleName(tr("Search layers"));
+    connect(m_search, &QLineEdit::textChanged, this, [this] { applyFilter(); });
+
     auto* content = new QWidget(this);
     auto* layout = new QVBoxLayout(content);
+    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setSpacing(2);
     auto* buttons = new QHBoxLayout;
+    buttons->setSpacing(2);
     buttons->addWidget(m_newButton);
     buttons->addWidget(m_deleteButton);
     buttons->addWidget(m_currentButton);
-    buttons->addStretch(1);
+    buttons->addWidget(m_search, 1);
     layout->addLayout(buttons);
     layout->addWidget(m_table, 1);
     layout->addWidget(m_message);
     setWidget(content);
 
-    connect(m_newButton, &QPushButton::clicked, this, [this] { newLayer(); });
-    connect(m_deleteButton, &QPushButton::clicked, this, [this] { deleteSelected(); });
-    connect(m_currentButton, &QPushButton::clicked, this, [this] { makeSelectedCurrent(); });
+    connect(m_newButton, &QToolButton::clicked, this, [this] { newLayer(); });
+    connect(m_deleteButton, &QToolButton::clicked, this, [this] { deleteSelected(); });
+    connect(m_currentButton, &QToolButton::clicked, this, [this] { makeSelectedCurrent(); });
     connect(m_table, &QTableView::clicked, this,
             [this](const QModelIndex& index) { cellClicked(index); });
     connect(m_table->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
@@ -226,6 +251,7 @@ void LayerPanel::refresh() {
     const core::LayerId selected = selectedLayer();
     m_model->refresh();
     syncCellWidgets();
+    applyFilter();
     if (selected.value != 0 && m_model->rowOf(selected) >= 0 && selectedLayer() != selected) {
         selectLayer(selected);
     }
@@ -244,12 +270,15 @@ void LayerPanel::showAndFocus() {
 
 core::LayerId LayerPanel::selectedLayer() const {
     const QModelIndex index = m_table->currentIndex();
-    return index.isValid() ? m_model->layerAt(index.row()) : core::LayerId{};
+    if (!index.isValid() || m_table->isRowHidden(index.row())) {
+        return {};
+    }
+    return m_model->layerAt(index.row());
 }
 
 void LayerPanel::selectLayer(core::LayerId id) {
     const int row = m_model->rowOf(id);
-    if (row >= 0) {
+    if (row >= 0 && !m_table->isRowHidden(row)) {
         m_table->setCurrentIndex(m_model->index(row, columnOf(LayerColumn::Name)));
         m_table->selectRow(row);
     }
@@ -268,28 +297,26 @@ void LayerPanel::rebuildCellWidgets() {
     for (int row = 0; row < m_model->rowCount(); ++row) {
         const core::LayerId id = m_model->layerAt(row);
         auto* color = new ColorCombo(m_table->viewport());
+        color->setFixedHeight(kRowHeight);
+        color->setIconSize(QSize(kIconSide, kIconSide));
         connect(color, &ColorCombo::valueChosen, this,
                 [this, id](core::Color value) { setColor(id, value); });
         m_table->setIndexWidget(m_model->index(row, columnOf(LayerColumn::Color)), color);
         auto* linetype = new LinetypeCombo(m_table->viewport());
+        linetype->setFixedHeight(kRowHeight);
+        linetype->setIconSize(QSize(kIconSide, kIconSide));
         connect(linetype, &LinetypeCombo::valueChosen, this,
                 [this, id](core::LinetypeId value) { setLinetype(id, value); });
         m_table->setIndexWidget(m_model->index(row, columnOf(LayerColumn::Linetype)), linetype);
         auto* lineweight = new LineweightCombo(m_table->viewport());
+        lineweight->setFixedHeight(kRowHeight);
+        lineweight->setIconSize(QSize(kIconSide, kIconSide));
         connect(lineweight, &LineweightCombo::valueChosen, this,
                 [this, id](int value) { setLineweight(id, value); });
         m_table->setIndexWidget(m_model->index(row, columnOf(LayerColumn::Lineweight)), lineweight);
     }
-    m_table->setColumnWidth(columnOf(LayerColumn::Status), kStatusWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Name), kNameWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::On), kStateWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Frozen), kStateWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Locked), kStateWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Color), kColorWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Linetype), kLinetypeWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Lineweight), kLineweightWidth);
-    m_table->setColumnWidth(columnOf(LayerColumn::Plot), kStateWidth);
     syncCellWidgets();
+    applyFilter();
 }
 
 void LayerPanel::syncCellWidgets() {
@@ -340,6 +367,27 @@ void LayerPanel::syncCellWidgets() {
             lineweight->setEnabled(m_editingEnabled);
         }
     }
+}
+
+void LayerPanel::updateButtonIcons() {
+    const Theme theme = themeOf(palette());
+    m_newButton->setIcon(themedIcon(QStringLiteral("layer-new"), theme));
+    m_deleteButton->setIcon(themedIcon(QStringLiteral("layer-delete"), theme));
+    m_currentButton->setIcon(themedIcon(QStringLiteral("layer-current"), theme));
+}
+
+void LayerPanel::applyFilter() {
+    // Keep source rows and their property widgets stable when the search changes.
+    for (int row = 0; row < m_model->rowCount(); ++row) {
+        const QString name = m_model->index(row, columnOf(LayerColumn::Name)).data().toString();
+        m_table->setRowHidden(row, !name.contains(m_search->text(), Qt::CaseInsensitive));
+    }
+    const QModelIndex current = m_table->currentIndex();
+    if (current.isValid() && m_table->isRowHidden(current.row())) {
+        m_table->clearSelection();
+        m_table->setCurrentIndex({});
+    }
+    updateActions();
 }
 
 void LayerPanel::updateActions() {
@@ -594,6 +642,7 @@ void LayerPanel::changeEvent(QEvent* event) {
     QDockWidget::changeEvent(event);
     if (event->type() == QEvent::PaletteChange && m_model != nullptr) {
         m_model->setPalette(palette());
+        updateButtonIcons();
         // The icons of the drop-downs are drawn with the palette.
         invalidateCells();
         syncCellWidgets();

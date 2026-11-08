@@ -19,7 +19,7 @@
 class QAction;
 class QEvent;
 class QLabel;
-class QPushButton;
+class QLineEdit;
 class QTableView;
 class QToolButton;
 
@@ -114,6 +114,8 @@ private:
     void rebuildCellWidgets();
     void syncCellWidgets();
     void updateActions();
+    void applyFilter();
+    void updateButtonIcons();
     void cellClicked(const QModelIndex& index);
     /// The next syncCellWidgets() sets every control again.
     void invalidateCells();
@@ -122,9 +124,10 @@ private:
     LayerTableModel* m_model;
     QTableView* m_table;
     QLabel* m_message;
-    QPushButton* m_newButton;
-    QPushButton* m_deleteButton;
-    QPushButton* m_currentButton;
+    QToolButton* m_newButton;
+    QToolButton* m_deleteButton;
+    QToolButton* m_currentButton;
+    QLineEdit* m_search;
     QAction* m_newAction{nullptr};
     QAction* m_deleteAction{nullptr};
     QAction* m_currentAction{nullptr};
