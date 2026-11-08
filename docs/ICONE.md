@@ -328,6 +328,14 @@ indicati `pt`. Le icone piccole semplificano i dettagli di costruzione.
 | `edit-chamfer` | `edit.chamfer` | angolo smussato, estremi dello smusso sulla griglia grande | sì |
 | `edit-join` | `edit.join` | due segmenti e spezzata risultante, punti di giunzione | sì |
 
+I pannelli che si nascondono da soli (0.7.5-P18) aggiungono la puntina della
+barra del titolo, sulla sola griglia da 16 px.
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `ui-pin-16.svg` | puntina di un pannello agganciato, *Auto-hide* | puntina in piedi: testa e piattello (`esist`), ago (`pt`) | sì, solo 16 px |
+| `ui-unpin-16.svg` | puntina di un pannello nascosto, nel riquadro: *Dock* | la stessa puntina coricata, con l'ago verso sinistra | sì, solo 16 px |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

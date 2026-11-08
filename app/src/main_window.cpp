@@ -5,6 +5,7 @@
 
 #include "action_registry.hpp"
 #include "app_commands.hpp"
+#include "auto_hide.hpp"
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
@@ -234,7 +235,11 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     layout->setSpacing(0);
     layout->addWidget(m_view, 1);
     layout->addWidget(m_commandLine);
-    setCentralWidget(central);
+    // The tabs of the hidden panels stand around the drawing and the
+    // command line (docs/tappe/0.7.5/P18).
+    m_autoHide = new AutoHide(*this, central, m_view);
+    setCentralWidget(m_autoHide->frame());
+    connect(m_autoHide, &AutoHide::changed, this, &MainWindow::saveUiSettings);
     m_commandLine->forwardKeysFrom(m_view);
     m_view->dynamicInputBox()->routeKeysFrom(
         m_view, m_commandLine->findChild<QLineEdit*>(QStringLiteral("input")));
@@ -653,6 +658,8 @@ void MainWindow::setScriptMode() {
     m_dynamicInputAction->setChecked(false);
     m_dynamicInputAction->setEnabled(false);
     m_view->dynamicInputBox()->setInputEnabled(false);
+    // Nothing is hidden in a script session, and nothing is saved.
+    m_autoHide->setEnabled(false);
     setInterface(InterfaceKind::Ribbon);
     setTheme(Theme::Light);
     // At level 2 a prompt missing from its command's description is written
@@ -918,6 +925,14 @@ void MainWindow::updateThemeIcons() {
             action->setIcon(themedIcon(spec->icon, m_theme));
         }
     }
+    // The tab of a hidden panel shows the icon of the action that opens it.
+    if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel")); layers != nullptr) {
+        layers->setWindowIcon(registeredAction("layer.panel")->icon());
+    }
+    if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"));
+        properties != nullptr) {
+        properties->setWindowIcon(registeredAction("properties.panel")->icon());
+    }
 }
 
 void MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
@@ -927,10 +942,10 @@ void MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
                        QDockWidget::DockWidgetFloatable);
     // restoreDockWidget consumes the saved placeholder. Adding the dock
     // first would discard that placeholder, including its floating state.
-    if (m_uiSettingsReady && !m_scriptMode && restoreDockWidget(panel)) {
-        return;
+    if (!m_uiSettingsReady || m_scriptMode || !restoreDockWidget(panel)) {
+        addDockWidget(area, panel);
     }
-    addDockWidget(area, panel);
+    m_autoHide->addPanel(panel);
 }
 
 void MainWindow::showSettings() {
@@ -985,6 +1000,9 @@ void MainWindow::restoreUiSettings() {
         m_settings->value(QStringLiteral("ui/dynmode"), true).toBool());
     restoreGeometry(m_settings->value(QStringLiteral("ui/geometry")).toByteArray());
     restoreState(m_settings->value(QStringLiteral("ui/state")).toByteArray());
+    // The hidden panels stay hidden in the place that restoreState() gave
+    // them, where docking them again puts them back.
+    m_autoHide->restoreState(m_settings->value(QStringLiteral("ui/autoHide")).toStringList());
     m_uiSettingsReady = true;
 }
 
@@ -1006,6 +1024,7 @@ void MainWindow::saveUiSettings() {
     m_settings->setValue(QStringLiteral("ui/theme"), themeName);
     m_settings->setValue(QStringLiteral("ui/geometry"), saveGeometry());
     m_settings->setValue(QStringLiteral("ui/state"), saveState());
+    m_settings->setValue(QStringLiteral("ui/autoHide"), m_autoHide->saveState());
     m_settings->sync();
 }
 

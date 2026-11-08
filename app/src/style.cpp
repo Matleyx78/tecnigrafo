@@ -75,6 +75,9 @@ QTabBar::tab:hover { color: {text}; }
 QTabBar::tab:selected { background: {panel}; color: {text}; border-color: {border}; border-bottom-color: {panel}; border-top: 2px solid {accent}; }
 QDockWidget { color: {text}; }
 QDockWidget::title { background: {ribbon}; border-bottom: 1px solid {border}; padding: 4px 6px; text-align: left; }
+tg--app--PanelTitleBar { background: {ribbon}; border-bottom: 1px solid {border}; }
+tg--app--AutoHideBar { background: {chrome}; }
+tg--app--AutoHideOverlay { background: {panel}; border: 1px solid {border}; }
 QLineEdit, QAbstractSpinBox { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
 QLineEdit:focus, QAbstractSpinBox:focus { border-color: {accent}; }
 QComboBox QLineEdit { background: transparent; border: none; padding: 0px; }

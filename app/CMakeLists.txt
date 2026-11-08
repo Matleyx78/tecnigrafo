@@ -28,6 +28,8 @@ qt_add_library(tg_app_ui STATIC
     src/action_registry.hpp
     src/app_commands.cpp
     src/app_commands.hpp
+    src/auto_hide.cpp
+    src/auto_hide.hpp
     src/ui_builder.cpp
     src/ui_builder.hpp
     src/builtin_actions.cpp
