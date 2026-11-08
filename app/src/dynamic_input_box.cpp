@@ -13,6 +13,7 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 
 namespace tg::app {
@@ -42,6 +43,7 @@ QString fieldName(cmd::DynamicField::Kind kind) {
 
 DynamicInputBox::DynamicInputBox(const cmd::CommandRunner& runner, QWidget* parent)
     : QWidget(parent), m_runner(runner), m_prompt(new QLabel(this)) {
+    assert(parent != nullptr && "dynamic input needs a parent drawing view");
     setObjectName(QStringLiteral("dynamicInputBox"));
     setFocusPolicy(Qt::NoFocus);
     setAttribute(Qt::WA_TransparentForMouseEvents);

@@ -42,7 +42,7 @@ protected:
     }
 
     void TearDown() override {
-        m_window.close();
+        // Destruction avoids the save prompt of close() for modified drawings.
         QSettings::setDefaultFormat(m_format);
         QCoreApplication::setOrganizationName(m_organization);
         QCoreApplication::setApplicationName(m_application);
@@ -170,6 +170,7 @@ TEST_F(DynamicInputTest, F12AndStatusButtonToggleAndDisabledKeysUseCommandLine) 
     events::type(view(), "10,10");
     EXPECT_EQ(input()->text(), QStringLiteral("10,10"));
     events::press(view(), Qt::Key_Return);
+    EXPECT_TRUE(input()->hasFocus());
     button->click();
     EXPECT_TRUE(toggle()->isChecked());
     EXPECT_TRUE(box()->isVisible());
@@ -181,6 +182,8 @@ TEST_F(DynamicInputTest, FreeFieldTracksOrthoWhileTypedFieldStaysLockedAndTabCyc
     firstPoint();
     window().actionRegistry().action(QStringLiteral("aids.ortho"))->setChecked(true);
     events::type(view(), "50");
+    events::press(view(), Qt::Key_Backspace);
+    events::type(view(), "0");
     moveTo({60, 15});
     EXPECT_EQ(field(0)->text(), QStringLiteral("50"));
     EXPECT_EQ(field(1)->text(), QStringLiteral("0"));

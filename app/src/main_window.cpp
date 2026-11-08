@@ -267,7 +267,7 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         refresh();
         // Return the keyboard to the canvas after a completed command-line
         // exchange; explicitly typing in the command line still works as usual.
-        if (!m_scriptMode && m_runner.isActive()) {
+        if (!m_scriptMode && m_dynamicInputAction->isChecked() && m_runner.isActive()) {
             m_view->setFocus(Qt::OtherFocusReason);
         }
     });

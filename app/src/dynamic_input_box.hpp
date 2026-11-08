@@ -22,6 +22,7 @@ class DynamicInputBox final : public QWidget {
     Q_OBJECT
 
 public:
+    /// The parent drawing view must be non-null and outlive the overlay.
     DynamicInputBox(const cmd::CommandRunner& runner, QWidget* parent);
 
     /// Install after CommandLine::forwardKeysFrom(), so numbers reach us first.
