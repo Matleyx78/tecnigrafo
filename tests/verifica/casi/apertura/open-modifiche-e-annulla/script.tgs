@@ -1,15 +1,15 @@
-; OPEN: modifiche non salvate, annullamento, ripetizione della domanda con Invio vuoto ed Esc
+; OPEN con disegno modificato: Esc, ripetizione della domanda con Invio vuoto e apertura senza richiesta di salvare
 LINE
 0,0
 10,0
 
 OPEN
-C
-!report
-OPEN
 !esc
 !report
+; cambia con #570
 OPEN
-N
 
 !esc
+!report
+OPEN
+@sources/ac1015-lwpolyline

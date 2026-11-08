@@ -50,6 +50,7 @@ redo:
 snap: on
 ortho: off
 drawing: polilinee.dxf, modified
+documents: Drawing1.cadx, polilinee.dxf (active)
 pointer: 402,0
 active snap: none
 statistics:
@@ -92,6 +93,7 @@ redo:
 snap: on
 ortho: off
 drawing: polilinee.dxf
+documents: Drawing1.cadx, polilinee.dxf (active)
 pointer: 402,0
 active snap: none
 statistics:
@@ -134,6 +136,7 @@ redo:
 snap: on
 ortho: off
 drawing: polilinee.dxf, modified
+documents: Drawing1.cadx, polilinee.dxf (active)
 pointer: 402,0
 active snap: none
 statistics:

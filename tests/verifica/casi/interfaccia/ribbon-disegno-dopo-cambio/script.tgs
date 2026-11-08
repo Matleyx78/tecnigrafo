@@ -6,8 +6,8 @@ LINE
 
 !report
 RIBBONCLOSE
+; cambia con #570
 NEW
-N
 LINE
 0,0
 10,0
@@ -15,7 +15,6 @@ LINE
 !report
 RIBBON
 NEW
-N
 LINE
 0,0
 10,0

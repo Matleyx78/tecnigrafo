@@ -19,6 +19,7 @@ layers:
   "0" color=7 linetype="DASHED" lineweight=default
 linetypes:
   "DASHED" pattern=12,-3 description=""
+documents: Drawing1.cadx, tabelle.dxf (active)
 pointer: none
 active snap: none
 statistics:
@@ -26,7 +27,7 @@ statistics:
 [report 2]
 entities:
 messages:
-  Command: SAVEAS
+  Command: SAVE
   Save drawing as <tabelle.dxf>: tabelle-riaperte.dxf
   Command: OPEN
   Enter name of drawing to open: tabelle-riaperte.dxf
@@ -44,6 +45,7 @@ layers:
   "0" color=7 linetype="DASHED" lineweight=default
 linetypes:
   "DASHED" pattern=12,-3 description=""
+documents: Drawing1.cadx, tabelle.dxf, tabelle-riaperte.dxf (active)
 pointer: none
 active snap: none
 statistics:
@@ -63,6 +65,7 @@ snap: on
 ortho: off
 drawing: style-layer.dxf
 units: 0
+documents: Drawing1.cadx, tabelle.dxf, tabelle-riaperte.dxf, style-layer.dxf (active)
 pointer: none
 active snap: none
 statistics:
@@ -70,7 +73,7 @@ statistics:
 [final]
 entities:
 messages:
-  Command: SAVEAS
+  Command: SAVE
   Save drawing as <style-layer.dxf>: style-layer-riaperto.dxf
   Command: OPEN
   Enter name of drawing to open: style-layer-riaperto.dxf
@@ -84,6 +87,7 @@ snap: on
 ortho: off
 drawing: style-layer-riaperto.dxf
 units: 0
+documents: Drawing1.cadx, tabelle.dxf, tabelle-riaperte.dxf, style-layer.dxf, style-layer-riaperto.dxf (active)
 pointer: none
 active snap: none
 statistics:

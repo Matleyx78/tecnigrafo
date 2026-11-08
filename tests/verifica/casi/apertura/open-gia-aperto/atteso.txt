@@ -1,0 +1,129 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,0 end=10,10
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: SAVEAS
+  Save drawing as <Drawing1.cadx>: primo.cadx
+  Command: LINE
+  Specify first point: 10,0
+  Specify next point or [Undo]: 10,10
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+drawing: primo.cadx, modified
+pointer: none
+active snap: none
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  48 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/ac1015-lwpolyline
+  no $DWGCODEPAGE in the file: text read as ANSI_1252
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: @sources/ac1015-lwpolyline
+units: 0
+documents: primo.cadx, @sources/ac1015-lwpolyline (active)
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 3]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=10,0 end=10,10
+messages:
+  Command: OPEN
+  Enter name of drawing to open: primo.cadx
+  primo.cadx is already open.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on
+ortho: off
+drawing: primo.cadx, modified
+documents: primo.cadx (active), @sources/ac1015-lwpolyline
+pointer: none
+active snap: none
+statistics:
+  LINE 2
+
+[report 4]
+entities:
+  257 LINE start=0,0 end=10,0
+messages:
+  Command: U
+  Undone: Line.
+  Command: OPEN
+  Enter name of drawing to open: primo.cadx
+  primo.cadx is already open.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+  Line
+snap: on
+ortho: off
+drawing: primo.cadx
+documents: primo.cadx (active), @sources/ac1015-lwpolyline
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  48 LWPOLYLINE closed=yes vertex=0,0 vertex=4,0 vertex=4,3 vertex=0,3
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/ac1015-lwpolyline
+  @sources/ac1015-lwpolyline is already open.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: @sources/ac1015-lwpolyline
+units: 0
+documents: primo.cadx, @sources/ac1015-lwpolyline (active)
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1

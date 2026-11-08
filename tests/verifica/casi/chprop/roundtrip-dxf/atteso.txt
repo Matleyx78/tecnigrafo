@@ -98,7 +98,7 @@ entities:
   261 LINE start=0,0 end=10,0 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
   262 CIRCLE center=20,20 radius=5 layer="Muri" color=1 ltscale=0.5 lineweight=0.50
 messages:
-  Command: SAVEAS
+  Command: SAVE
   Save drawing as <Drawing1.cadx>: giro.dxf
   Command: OPEN
   Enter name of drawing to open: giro.dxf
@@ -121,6 +121,7 @@ linetypes:
 current: layer="Muri" color=1 linetype="ByLayer" ltscale=0.5 lineweight=0.50
 ltscale: 2
 lwdisplay: on
+documents: Drawing1.cadx, giro.dxf (active)
 pointer: none
 active snap: none
 statistics:

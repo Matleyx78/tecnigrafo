@@ -67,6 +67,7 @@ redo:
 snap: on
 ortho: off
 drawing: primo.cadx
+documents: secondo.cadx, primo.cadx (active)
 pointer: 5,0
 active snap: none
 statistics:

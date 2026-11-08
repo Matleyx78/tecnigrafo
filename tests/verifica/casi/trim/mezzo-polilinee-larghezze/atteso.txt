@@ -32,6 +32,7 @@ redo:
 snap: on
 ortho: off
 drawing: polilinee.dxf, modified
+documents: Drawing1.cadx, polilinee.dxf (active)
 pointer: 10,150
 active snap: none
 statistics:

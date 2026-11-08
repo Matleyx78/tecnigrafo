@@ -8,7 +8,6 @@ messages:
   Specify next point or [Undo]: 20,0
   Specify next point or [Undo]:
   Command: NEW
-  Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>: N
 prompt: Command:
 preview:
 selection: none
@@ -17,6 +16,7 @@ undo:
 redo:
 snap: on
 ortho: off
+documents: Drawing1.cadx, Drawing2.cadx (active)
 pointer: none
 active snap: none
 statistics:
@@ -38,6 +38,7 @@ snap: on
 ortho: off
 drawing: @sources/ac1015-lwpolyline
 units: 0
+documents: Drawing1.cadx, Drawing2.cadx, @sources/ac1015-lwpolyline (active)
 pointer: none
 active snap: none
 statistics:
@@ -53,7 +54,6 @@ messages:
   Specify next point or [Undo]: 10,0
   Specify next point or [Undo]:
   Command: OPEN
-  Save changes to @sources/ac1015-lwpolyline? [Yes/No/Cancel] <Yes>: C
   *Cancel*
 prompt: Command:
 preview:
@@ -66,6 +66,7 @@ snap: on
 ortho: off
 drawing: @sources/ac1015-lwpolyline, modified
 units: 0
+documents: Drawing1.cadx, Drawing2.cadx, @sources/ac1015-lwpolyline (active)
 pointer: none
 active snap: none
 statistics:
@@ -76,7 +77,6 @@ statistics:
 entities:
 messages:
   Command: NEW
-  Save changes to @sources/ac1015-lwpolyline? [Yes/No/Cancel] <Yes>: N
 prompt: Command:
 preview:
 selection: none
@@ -85,6 +85,7 @@ undo:
 redo:
 snap: on
 ortho: off
+documents: Drawing1.cadx, Drawing2.cadx, @sources/ac1015-lwpolyline, Drawing3.cadx (active)
 pointer: none
 active snap: none
 statistics:

@@ -48,6 +48,7 @@ redo:
 snap: on
 ortho: off
 drawing: ingresso.dxf, modified
+documents: Drawing1.cadx, ingresso.dxf (active)
 pointer: none
 active snap: none
 statistics:

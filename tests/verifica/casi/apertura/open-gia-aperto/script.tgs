@@ -1,0 +1,25 @@
+; Riapertura di un file gia aperto: attivazione senza rilettura da disco e conservazione di modifiche e pila di annullamento
+LINE
+0,0
+10,0
+
+SAVEAS
+primo.cadx
+LINE
+10,0
+10,10
+
+!report
+; cambia con #570
+OPEN
+@sources/ac1015-lwpolyline
+!report
+OPEN
+primo.cadx
+!report
+U
+OPEN
+primo.cadx
+!report
+OPEN
+@sources/ac1015-lwpolyline

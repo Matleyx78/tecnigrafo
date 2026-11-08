@@ -1,4 +1,5 @@
 ; OPEN di file pubblici: entità gestite e messaggio delle entità non gestite
+; cambia con #570
 OPEN
 @sources/ac1015-lwpolyline
 !report

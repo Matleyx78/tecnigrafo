@@ -3,6 +3,7 @@
 ; FILLET e CIRCLE Ttr nella sequenza degli script (!scr on, ADR 0032 punto 8)
 !view 270,100 0.25 2400x1200
 !scr on
+; cambia con #570
 OPEN
 ingresso.dxf
 ; Impostazione raggio: il comando termina subito dopo il valore

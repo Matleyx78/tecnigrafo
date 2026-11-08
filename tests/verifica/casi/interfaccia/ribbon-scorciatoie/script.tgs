@@ -16,6 +16,7 @@ LINE
 disegno-ribbon.cadx
 !report
 RIBBONCLOSE
+; cambia con #570
 NEW
 !key F3
 !key F3
