@@ -483,6 +483,16 @@ class Checks(unittest.TestCase):
         self.assertIn(f"Blocked:\n  #12 [0.7-P2] agente:claude by {SS}#56, #11\n", out)
         self.assertIn("Nothing to fix or to check.", out)
 
+    def test_ready_and_blocked_show_the_difficulty(self):
+        w = aligned_world()
+        listed = w.responses[f"repos/{TG}/issues?state=all&per_page=100&labels=tappa-0.7"]
+        listed[1]["labels"].append({"name": "media"})
+        listed[2]["labels"].insert(0, {"name": "facile"})
+        code, out, err, _ = w.run()
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("Ready:\n  #11 [0.7-R2] media agente:gemini\n", out)
+        self.assertIn(f"Blocked:\n  #12 [0.7-P2] facile agente:claude by {SS}#56, #11\n", out)
+
     def test_text_both_ways_and_notes_ignored(self):
         w = aligned_world()
         w.responses[f"repos/{TG}/issues?state=all&per_page=100&labels=tappa-0.7"][2]["body"] = \
