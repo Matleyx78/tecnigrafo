@@ -590,12 +590,6 @@ jobs:
           }
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-build.log
           exit $status
-      # TEMPORARY (0.7.5-P37): proof that the tests load the optimised Qt;
-      # removed before merge.
-      - name: Qt libraries used by the tests
-        run: |
-          dumpbin /dependents build/ci/tests/tg_app_tests.exe
-          dumpbin /dependents build/ci/tests/tg_tests.exe
       - name: Test
         run: |
           ctest --preset ci -LE verifica *> build/ci-test.log

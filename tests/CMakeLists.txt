@@ -221,7 +221,8 @@ if(TG_BUILD_APP)
     # One test entry: listing the cases would already need a QApplication.
     # The limit is three times the duration in the Windows CI with the
     # optimised Qt (0.7.5-P37), rounded up to 30 s and never below 120 s:
-    # draft #599 measured 8.17 s, hence 120 s. It should only stop a real hang.
+    # Windows CI run 42464724166 measured 11.87 s, hence 120 s. It should only
+    # stop a real hang.
     add_test(NAME app_widgets COMMAND tg_app_tests)
     set_tests_properties(app_widgets PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
