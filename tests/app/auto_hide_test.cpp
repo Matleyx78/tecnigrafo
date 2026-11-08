@@ -156,7 +156,7 @@ TEST_F(AutoHideTest, AClickShowsTheOverlayInTheWindowEscClosesItAndAFocusedCellK
     EXPECT_TRUE(grid->isVisible());
 
     // Esc closes it, wherever the keyboard is.
-    QTest::keyClick(window.view(), Qt::Key_Escape);
+    QTest::keyPress(window.view(), Qt::Key_Escape);
     EXPECT_FALSE(overlay->isVisible());
     EXPECT_FALSE(tab->isActive());
     EXPECT_EQ(autoHide.openPanel(), nullptr);
