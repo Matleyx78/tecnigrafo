@@ -169,7 +169,7 @@ TEST(ActionRegistryTest, BuildsMenusSubmenusAndSeparatorsInOrder) {
 QIcon plainIcon(Qt::GlobalColor colour) {
     QPixmap pixmap(16, 16);
     pixmap.fill(colour);
-    return QIcon(pixmap);
+    return {pixmap};
 }
 
 TEST(ActionRegistryTest, VariantsFormTheMenuOfTheirActionWhichRemembersTheLastUsed) {
