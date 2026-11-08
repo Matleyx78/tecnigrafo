@@ -205,18 +205,25 @@ collega alla variante *Center, Radius*; è nella tabella dei comandi di disegno
 qui sotto.
 
 
+P21 (0.7.5) rifà le 24 icone degli aiuti al disegno, dei file,
+dell’annullamento, della vista e dell’interfaccia. Nelle loro righe `-*.svg`
+indica la coppia `-16.svg` e `-32.svg`; i file da 24 px sono tolti. Gli snap
+usano `esist` per l’oggetto e `pt` per il punto agganciato, con geometria
+dichiarata. A 16 px si semplificano pieghe, etichette, suddivisioni, tacche e
+archi accessori; annulla e ripeti restano speculari su entrambe le griglie.
+
 Prima parte (0.6-P18): disegno e modifica, file e annullamento.
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
 | `draw-line-*.svg`, `draw-pline-*.svg`, `draw-text-*.svg`, `draw-circle-*.svg`, `draw-arc-*.svg` | i comandi di disegno: rifatte da 0.7.5-P19, nella tabella della tappa 0.7.5 | | sì |
-| `edit-erase.svg` | `edit.erase` | gomma inclinata | no |
-| `edit-undo.svg` | `edit.undo` | freccia a U verso sinistra | no |
-| `edit-redo.svg` | `edit.redo` | freccia a U verso destra | no |
-| `file-new.svg` | `file.new` | foglio con l'angolo piegato e un più | no |
-| `file-open.svg` | `file.open` | cartella aperta | no |
-| `file-save.svg` | `file.save` | dischetto | no |
-| `file-saveas.svg` | `file.saveas` | due dischetti sovrapposti | no |
+| `edit-erase-*.svg` | `edit.erase` | gomma inclinata | sì |
+| `edit-undo-*.svg` | `edit.undo` | freccia a U verso sinistra | sì |
+| `edit-redo-*.svg` | `edit.redo` | freccia a U verso destra | sì |
+| `file-new-*.svg` | `file.new` | foglio con l'angolo piegato e un più | sì |
+| `file-open-*.svg` | `file.open` | cartella aperta | sì |
+| `file-save-*.svg` | `file.save` | dischetto | sì |
+| `file-saveas-*.svg` | `file.saveas` | due dischetti sovrapposti | sì |
 
 Seconda parte (0.6-P19): vista, aiuti, interfaccia, layer e proprietà. Le icone
 di layer e proprietà esistono prima delle azioni che le useranno (pannelli dei
@@ -224,18 +231,18 @@ layer e delle proprietà, 0.6-P22 e 0.6-P24).
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
-| `view-zoom-extents.svg` | `view.zoom-extents` | quattro angoli verso l'esterno intorno a un rettangolo | no |
-| `aids-osnap.svg` | `aids.osnap` | calamita a ferro di cavallo | no |
-| `aids-ortho.svg` | `aids.ortho` | due assi ad angolo retto con il segno dell'angolo retto | no |
-| `aids-snap-endpoint.svg` | `aids.snap.endpoint` | quadrato con il punto d'accento al centro | no |
-| `aids-snap-midpoint.svg` | `aids.snap.midpoint` | triangolo con il punto d'accento al centro | no |
-| `aids-snap-center.svg` | `aids.snap.center` | cerchio con il punto d'accento al centro | no |
-| `aids-snap-insertion.svg` | `aids.snap.insertion` | due quadrati sovrapposti e sfalsati con il punto d'accento | no |
-| `aids-lwdisplay.svg` | `aids.lwdisplay` | tre barre di spessore crescente | no |
-| `ui-ribbon.svg` | `ui.interface` | finestra con la fascia delle schede e quella dei gruppi | no |
-| `ui-theme.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata | no |
-| `tools-settings.svg` | `tools.settings` | tre cursori a scorrimento | no |
-| `help-about.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro | no |
+| `view-zoom-extents-*.svg` | `view.zoom-extents` | quattro angoli verso l'esterno intorno a un rettangolo | sì |
+| `aids-osnap-*.svg` | `aids.osnap` | calamita a ferro di cavallo | sì |
+| `aids-ortho-*.svg` | `aids.ortho` | due assi ad angolo retto con il segno dell'angolo retto | sì |
+| `aids-snap-endpoint-*.svg` | `aids.snap.endpoint` | quadrato e segmento con il punto agganciato al suo estremo (`pt`, `data-on`) al centro | sì |
+| `aids-snap-midpoint-*.svg` | `aids.snap.midpoint` | triangolo e segmento con il punto medio (`pt`, `data-on`) al centro | sì |
+| `aids-snap-center-*.svg` | `aids.snap.center` | cerchio (`esist`) con il centro (`pt`, `data-center-of`) | sì |
+| `aids-snap-insertion-*.svg` | `aids.snap.insertion` | due quadrati sovrapposti e sfalsati con il punto d’inserimento al vertice del secondo (`pt`, `data-on`) | sì |
+| `aids-lwdisplay-*.svg` | `aids.lwdisplay` | tre barre di spessore crescente | sì |
+| `ui-ribbon-*.svg` | `ui.interface` | finestra con la fascia delle schede e quella dei gruppi | sì |
+| `ui-theme-*.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata | sì |
+| `tools-settings-*.svg` | `tools.settings` | tre cursori a scorrimento | sì |
+| `help-about-*.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro | sì |
 | `layer-panel.svg` | `layer.panel` (0.6-P22) | pila di tre piani | no |
 | `layer-on.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto | no |
 | `layer-off.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato | no |
@@ -261,11 +268,11 @@ La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
-| `aids-snap-intersection.svg` | `aids.snap.intersection` | due segmenti che si incrociano a X | no |
-| `aids-snap-perpendicular.svg` | `aids.snap.perpendicular` | perpendicolare con il segno dell'angolo retto | no |
-| `aids-snap-tangent.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto | no |
-| `aids-snap-quadrant.svg` | `aids.snap.quadrant` | rombo | no |
-| `aids-polar.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo | no |
+| `aids-snap-intersection-*.svg` | `aids.snap.intersection` | due segmenti che si incrociano a X, punto all’intersezione (`pt`, `data-on`) | sì |
+| `aids-snap-perpendicular-*.svg` | `aids.snap.perpendicular` | perpendicolare con il segno dell’angolo retto, punto sul piede (`pt`, `data-on`) | sì |
+| `aids-snap-tangent-*.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto, punto di tangenza (`pt`, `data-on`) | sì |
+| `aids-snap-quadrant-*.svg` | `aids.snap.quadrant` | cerchio (`esist`) con punto sul quadrante destro (`pt`, `data-on`) | sì |
+| `aids-polar-*.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo | sì |
 
 Chi aggiunge icone aggiunge le sue righe alla tabella della sua tappa; chi
 rifà un'icona ne aggiorna la riga.
