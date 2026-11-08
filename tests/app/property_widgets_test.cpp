@@ -4,11 +4,16 @@
 #include "property_widgets.hpp"
 
 #include "color_dialog.hpp"
+#include "layer_table_model.hpp"
+#include "theme.hpp"
 
+#include <QImage>
+#include <QPainter>
 #include <QSignalSpy>
 #include <QTimer>
 #include <gtest/gtest.h>
 
+#include <string>
 #include <type_traits>
 
 namespace tg::app {
@@ -112,15 +117,57 @@ TEST(PropertyWidgets, LayersShowAllStatesAndUseStableIds) {
     EXPECT_EQ(combo.count(), static_cast<int>(document.layers().size()));
     const int index = combo.findData(QVariant::fromValue(id));
     ASSERT_GE(index, 0);
-    EXPECT_TRUE(combo.itemText(index).contains(QStringLiteral("Off")));
-    EXPECT_TRUE(combo.itemText(index).contains(QStringLiteral("Frozen")));
-    EXPECT_TRUE(combo.itemText(index).contains(QStringLiteral("Locked")));
-    EXPECT_TRUE(combo.itemText(index).contains(QStringLiteral("No plot")));
+    EXPECT_EQ(combo.itemText(index), QStringLiteral("Hidden locked"));
+    const QString description = QStringLiteral("Hidden locked [Off, Frozen, Locked, No plot]");
+    EXPECT_EQ(combo.itemData(index, Qt::ToolTipRole).toString(), description);
+    EXPECT_EQ(combo.itemData(index, Qt::AccessibleTextRole).toString(), description);
+    combo.setValue(id);
+    EXPECT_EQ(combo.toolTip(), description);
+    EXPECT_EQ(combo.accessibleName(), description);
     EXPECT_FALSE(combo.itemIcon(index).isNull());
     checkSelection(combo, id);
     EXPECT_EQ(document.current(), current);
     combo.setDocument(nullptr);
     EXPECT_EQ(combo.count(), 0);
+}
+
+TEST(PropertyWidgets, LayerIconsShowEveryStateCombinationInBothThemes) {
+    auto document = core::Document::newDrawing();
+    for (int states = 0; states < 8; ++states) {
+        core::Layer layer;
+        layer.name = "States" + std::to_string(states);
+        layer.linetype = document.continuousLinetype();
+        layer.on = (states & 1) != 0;
+        layer.frozen = (states & 2) != 0;
+        layer.locked = (states & 4) != 0;
+        document.addLayer(layer);
+    }
+    LayerCombo combo;
+    combo.setDocument(&document);
+    const QSignalSpy spy(&combo, &LayerCombo::valueChosen);
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        QPalette palette = combo.palette();
+        palette.setColor(QPalette::Window, themeTokens(theme).panel);
+        palette.setColor(QPalette::Text, themeTokens(theme).text);
+        combo.setPalette(palette);
+        for (const auto& layer : document.layers()) {
+            const int index = combo.findData(QVariant::fromValue(layer.id));
+            ASSERT_GE(index, 0);
+            const QImage actual = combo.itemIcon(index).pixmap(combo.iconSize(), 1.0).toImage();
+            int x = 0;
+            for (const LayerState state : {LayerState::On, LayerState::Frozen, LayerState::Locked}) {
+                QPixmap expected(16, 16);
+                expected.fill(Qt::transparent);
+                QPainter painter(&expected);
+                themedIcon(layerStateIconName(state, layerStateValue(layer, state)), theme)
+                    .paint(&painter, QRect(0, 0, 16, 16));
+                painter.end();
+                EXPECT_EQ(actual.copy(x, 0, 16, 16), expected.toImage());
+                x += 18;
+            }
+        }
+    }
+    EXPECT_TRUE(spy.isEmpty());
 }
 
 TEST(PropertyWidgets, LinetypesIncludeLoadedPatternsAndInheritedTypes) {

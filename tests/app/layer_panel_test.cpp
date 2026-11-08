@@ -17,7 +17,7 @@
 #include <QLineEdit>
 #include <QModelIndex>
 #include <QPlainTextEdit>
-#include <QPushButton>
+#include <QScrollBar>
 #include <QSignalSpy>
 #include <QString>
 #include <QStringList>
@@ -61,8 +61,8 @@ protected:
 
     [[nodiscard]] QAbstractItemModel* model() const { return table()->model(); }
 
-    [[nodiscard]] QPushButton* button(const char* name) const {
-        return m_panel.findChild<QPushButton*>(QString::fromLatin1(name));
+    [[nodiscard]] QToolButton* button(const char* name) const {
+        return m_panel.findChild<QToolButton*>(QString::fromLatin1(name));
     }
 
     /// A layer called `name`; fails the test if there is none.
@@ -150,6 +150,87 @@ TEST_F(LayerPanelTest, ShowsEveryLayerWithItsColumns) {
     const auto zero = document().layerZero();
     EXPECT_TRUE(model()->index(rowOf(zero), 0).data(Qt::DecorationRole).isValid());
     EXPECT_FALSE(model()->index(rowOf(walls), 0).data(Qt::DecorationRole).isValid());
+}
+
+TEST_F(LayerPanelTest, SearchFiltersNamesAndNeverActsOnAHiddenSelection) {
+    const auto walls = add("Walls");
+    const auto doors = add("Doors");
+    auto* search = panel().findChild<QLineEdit*>(QStringLiteral("layerSearch"));
+    ASSERT_NE(search, nullptr);
+    panel().selectLayer(doors);
+    search->setText(QStringLiteral("WALL"));
+    EXPECT_FALSE(table()->isRowHidden(rowOf(walls)));
+    EXPECT_TRUE(table()->isRowHidden(rowOf(doors)));
+    EXPECT_TRUE(table()->isRowHidden(rowOf(document().layerZero())));
+    EXPECT_EQ(panel().selectedLayer(), core::LayerId{});
+    EXPECT_FALSE(button("layerDelete")->isEnabled());
+    EXPECT_FALSE(button("layerMakeCurrent")->isEnabled());
+    EXPECT_FALSE(panel().deleteSelected());
+    EXPECT_NE(document().layer(doors), nullptr);
+    // Refreshes keep the search applied, including after a rename and undo.
+    ASSERT_TRUE(panel().renameLayer(walls, QStringLiteral("Partitions")));
+    EXPECT_TRUE(table()->isRowHidden(rowOf(walls)));
+    ASSERT_TRUE(editor().undo());
+    panel().refresh();
+    EXPECT_FALSE(table()->isRowHidden(rowOf(walls)));
+    const auto wallDetails = add("Wall details");
+    EXPECT_FALSE(table()->isRowHidden(rowOf(wallDetails)));
+    search->clear();
+    for (int row = 0; row < model()->rowCount(); ++row) {
+        EXPECT_FALSE(table()->isRowHidden(row));
+    }
+}
+
+TEST_F(LayerPanelTest, CompactTableFitsThePanelAndUsesIconHeadersAndButtons) {
+    panel().resize(500, 300);
+    panel().show();
+    QCoreApplication::processEvents();
+    EXPECT_FALSE(table()->horizontalScrollBar()->isVisible());
+    EXPECT_EQ(table()->horizontalScrollBar()->maximum(), 0);
+    EXPECT_GE(table()->rowHeight(0), 20);
+    EXPECT_LE(table()->rowHeight(0), 22);
+    for (const LayerColumn column : {LayerColumn::Status, LayerColumn::On, LayerColumn::Frozen,
+                                     LayerColumn::Locked}) {
+        const int section = static_cast<int>(column);
+        EXPECT_TRUE(model()->headerData(section, Qt::Horizontal, Qt::DecorationRole).isValid());
+        EXPECT_TRUE(model()
+                        ->headerData(section, Qt::Horizontal, Qt::DisplayRole)
+                        .toString()
+                        .isEmpty());
+        EXPECT_FALSE(model()
+                         ->headerData(section, Qt::Horizontal, Qt::ToolTipRole)
+                         .toString()
+                         .isEmpty());
+    }
+    for (const char* name : {"layerNew", "layerDelete", "layerMakeCurrent"}) {
+        ASSERT_NE(button(name), nullptr);
+        EXPECT_FALSE(button(name)->icon().isNull());
+        EXPECT_EQ(button(name)->toolButtonStyle(), Qt::ToolButtonIconOnly);
+        EXPECT_FALSE(button(name)->accessibleName().isEmpty());
+    }
+    auto* color = qobject_cast<ColorCombo*>(cellWidget(document().layerZero(), LayerColumn::Color));
+    ASSERT_NE(color, nullptr);
+    EXPECT_FALSE(color->itemIcon(color->currentIndex()).isNull());
+    EXPECT_EQ(color->currentText(), QStringLiteral("White"));
+}
+
+TEST_F(LayerPanelTest, ClickingStateIconsCreatesOneUndoableLayerTransaction) {
+    const auto walls = add("Walls");
+    panel().resize(500, 300);
+    panel().show();
+    QCoreApplication::processEvents();
+    for (const LayerColumn column : {LayerColumn::On, LayerColumn::Frozen, LayerColumn::Locked}) {
+        const QModelIndex index = model()->index(rowOf(walls), static_cast<int>(column));
+        const QVariant before = index.data(Qt::ToolTipRole);
+        const auto count = editor().undoNames().size();
+        events::click(table()->viewport(), Qt::LeftButton, table()->visualRect(index).center());
+        EXPECT_NE(index.data(Qt::ToolTipRole), before);
+        EXPECT_EQ(editor().undoNames().size(), count + 1);
+        EXPECT_EQ(editor().undoName(), "Layer");
+        ASSERT_TRUE(editor().undo());
+        panel().refresh();
+        EXPECT_EQ(index.data(Qt::ToolTipRole), before);
+    }
 }
 
 TEST_F(LayerPanelTest, NewLayerTakesTheFirstFreeNameAndIsSelected) {

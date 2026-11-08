@@ -49,7 +49,12 @@ public:
 Q_SIGNALS:
     void valueChosen(tg::core::LayerId value);
 
+protected:
+    void changeEvent(QEvent* event) override;
+
 private:
+    void updateDescription();
+    std::vector<core::Layer> m_layers;
     core::LayerId m_value;
 };
 

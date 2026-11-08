@@ -18,7 +18,7 @@ namespace {
 constexpr int kColumnCount = static_cast<int>(LayerColumn::Count);
 
 // The mark of the current layer in the status column (docs/ICONE.md).
-const char* const kCurrentIcon = "layer-current";
+const char* const kCurrentIcon = "layer-check";
 
 QVariant iconData(const QString& name, const QPalette& palette) {
     if (name.isEmpty()) {
@@ -122,7 +122,7 @@ QVariant LayerTableModel::stateData(int role, LayerState state, bool value) cons
     if (role == Qt::DecorationRole) {
         return iconData(layerStateIconName(state, value), m_palette);
     }
-    if (role == Qt::ToolTipRole) {
+    if (role == Qt::ToolTipRole || role == Qt::AccessibleTextRole) {
         return stateText(state, value);
     }
     if (role == Qt::TextAlignmentRole) {
@@ -140,6 +140,9 @@ QVariant LayerTableModel::data(const QModelIndex& index, int role) const {
         return {};
     }
     const Row& row = m_rows[static_cast<std::size_t>(index.row())];
+    if (role == Qt::BackgroundRole && row.current) {
+        return m_palette.color(QPalette::Highlight);
+    }
     if (role == kLayerIdRole) {
         return QVariant::fromValue(row.id);
     }
@@ -181,8 +184,34 @@ QVariant LayerTableModel::data(const QModelIndex& index, int role) const {
 }
 
 QVariant LayerTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (orientation != Qt::Horizontal || role != Qt::DisplayRole || section < 0 ||
-        section >= kColumnCount) {
+    if (orientation != Qt::Horizontal || section < 0 || section >= kColumnCount) {
+        return {};
+    }
+    const auto column = static_cast<LayerColumn>(section);
+    QString icon;
+    switch (column) {
+        case LayerColumn::Status:
+            icon = QString::fromLatin1(kCurrentIcon);
+            break;
+        case LayerColumn::On:
+            icon = layerStateIconName(LayerState::On, true);
+            break;
+        case LayerColumn::Frozen:
+            icon = layerStateIconName(LayerState::Frozen, true);
+            break;
+        case LayerColumn::Locked:
+            icon = layerStateIconName(LayerState::Locked, true);
+            break;
+        default:
+            break;
+    }
+    if (role == Qt::DecorationRole) {
+        return iconData(icon, m_palette);
+    }
+    if (role != Qt::DisplayRole && role != Qt::ToolTipRole && role != Qt::AccessibleTextRole) {
+        return {};
+    }
+    if (role == Qt::DisplayRole && !icon.isEmpty()) {
         return {};
     }
     switch (static_cast<LayerColumn>(section)) {
@@ -258,6 +287,7 @@ void LayerTableModel::refresh() {
 void LayerTableModel::setPalette(const QPalette& palette) {
     m_palette = palette;
     notifyAll();
+    Q_EMIT headerDataChanged(Qt::Horizontal, 0, kColumnCount - 1);
 }
 
 core::LayerId LayerTableModel::layerAt(int row) const {

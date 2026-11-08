@@ -276,6 +276,12 @@ La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
 Chi aggiunge icone aggiunge le sue righe alla tabella della sua tappa; chi
 rifà un'icona ne aggiorna la riga.
 
+Il pannello Layers (0.7.5-P13) aggiunge una spunta sulla griglia da 16 px:
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `layer-check-16.svg` | layer corrente nella tabella | spunta (`pt`) | sì, solo pannello a 16 px |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona
