@@ -271,7 +271,7 @@ La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
 | `aids-snap-intersection-*.svg` | `aids.snap.intersection` | due segmenti che si incrociano a X, punto all’intersezione (`pt`, `data-on`) | sì |
 | `aids-snap-perpendicular-*.svg` | `aids.snap.perpendicular` | perpendicolare con il segno dell’angolo retto, punto sul piede (`pt`, `data-on`) | sì |
 | `aids-snap-tangent-*.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto, punto di tangenza (`pt`, `data-on`) | sì |
-| `aids-snap-quadrant-*.svg` | `aids.snap.quadrant` | rombo con punto sul vertice superiore (`pt`, `data-on`) | sì |
+| `aids-snap-quadrant-*.svg` | `aids.snap.quadrant` | cerchio (`esist`) con punto sul quadrante destro (`pt`, `data-on`) | sì |
 | `aids-polar-*.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo | sì |
 
 Chi aggiunge icone aggiunge le sue righe alla tabella della sua tappa; chi
