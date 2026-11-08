@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path class="esist" d="M 5 4 H 22 L 28 10 V 28 H 5 Z"/>
+        <path class="esist" d="M 10 4 V 11 H 20 V 4"/>
+        <rect class="pt" x="10" y="18" width="13" height="10"/>
+        <path class="pt" d="M 13 22 H 20"/>
+    </g>
+</svg>
