@@ -1271,3 +1271,10 @@ i rimandi ai documenti che cambia.
   del runtime di debug di MSVC e le asserzioni interne delle Qt: gli errori di
   memoria li cerca il job ASan su Linux. Dividere `app_widgets` non serve più;
   eseguire i test in parallelo si decide dopo P36, con i tempi del job ASan.
+- **2026-11-08 — Test in parallelo nella CI: P38.** Con i tempi misurati dopo
+  P36 e P37 il responsabile aggiunge alla
+  [tappa 0.7.5](tappe/0.7.5-correzione-di-rotta.md)
+  [P38](tappe/0.7.5/P38-test-in-parallelo.md). `ctest` si esegue in parallelo,
+  con tanti processi quanti i processori della macchina, nella CI e in
+  `scripts/controlla.sh`. I test non condividono più cartelle di lavoro fisse.
+  Restano un processo per caso (`gtest_discover_tests`) e i `TIMEOUT` di oggi.
