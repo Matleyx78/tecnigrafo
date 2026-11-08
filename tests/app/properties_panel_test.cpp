@@ -7,6 +7,7 @@
 #include "command_line.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
+#include "property_grid.hpp"
 #include "property_widgets.hpp"
 #include "quick_select_dialog.hpp"
 #include "tg/cmd/command_registry.hpp"
@@ -14,17 +15,21 @@
 #include "tg/cmd/quick_select.hpp"
 #include "tg/edit/editor.hpp"
 
+#include <QAbstractItemView>
 #include <QAction>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QEvent>
-#include <QGroupBox>
 #include <QLineEdit>
 #include <QMetaObject>
+#include <QModelIndex>
 #include <QPlainTextEdit>
 #include <QSignalSpy>
 #include <QString>
 #include <QStringList>
+#include <QTest>
+#include <QToolButton>
+#include <QTreeView>
 #include <QVariant>
 #include <gtest/gtest.h>
 
@@ -87,6 +92,45 @@ protected:
 
     EntityId addLine(double x) { return add(core::Line{{x, 0.0}, {x + 10.0, 5.0}}); }
 
+    /// A polyline through (x, 0), (x + 40, 0) and (x + 40, 30).
+    EntityId addPolyline(double x) {
+        core::Polyline polyline;
+        polyline.addVertex({x, 0.0});
+        polyline.addVertex({x + 40.0, 0.0});
+        polyline.addVertex({x + 40.0, 30.0});
+        return add(polyline);
+    }
+
+    [[nodiscard]] QTreeView* grid() const { return child<QTreeView>("propertiesGrid"); }
+
+    /// Opens the editor of the value `field` in its cell, as a click on the
+    /// cell does, and returns it.
+    template <typename Widget>
+    [[nodiscard]] Widget* openEditor(PropertyField field) {
+        QTreeView* view = grid();
+        EXPECT_NE(view, nullptr);
+        if (view == nullptr) {
+            return nullptr;
+        }
+        const QModelIndex index = m_panel.grid().valueIndex(field);
+        if (view->indexWidget(index) == nullptr) {
+            // A click makes the cell current and opens its editor; a view
+            // that is not shown only does the first.
+            view->setCurrentIndex(index);
+            if (view->indexWidget(index) == nullptr) {
+                QAbstractItemView* base = view;
+                base->edit(index);
+            }
+        }
+        auto* editor = qobject_cast<Widget*>(view->indexWidget(index));
+        EXPECT_NE(editor, nullptr);
+        return editor;
+    }
+
+    /// Commits the text of `editor`, as the view does on Enter, Tab or when
+    /// the focus leaves the cell.
+    void commit(QWidget* editor) const { Q_EMIT grid() -> itemDelegate()->commitData(editor); }
+
     EntityId addCircle(double x) { return add(core::Circle{{x, 0.0}, 2.0}); }
 
     core::LayerId addLayer(const std::string& name, bool locked = false, bool frozen = false) {
@@ -148,8 +192,9 @@ TEST_F(PropertiesPanelTest, WithoutSelectionShowsAndChangesTheCurrentValues) {
     EXPECT_EQ(panel().shown().lineweight, start.lineweight);
     EXPECT_EQ(panel().shown().linetypeScale, start.linetypeScale);
 
-    // The control shows the current colour, and choosing one changes it.
-    auto* color = child<ColorCombo>("propertiesColor");
+    // The editor of the cell shows the current colour, and choosing one
+    // changes it.
+    auto* color = openEditor<ColorCombo>(PropertyField::Color);
     ASSERT_NE(color, nullptr);
     choose(*color, kRed);
     EXPECT_EQ(document().current().color, kRed);
@@ -193,7 +238,8 @@ TEST_F(PropertiesPanelTest, ASingleEntityShowsItsTypeValuesAndGeometry) {
     EXPECT_EQ(panel().shown().color, core::Color::byLayer());
     EXPECT_EQ(panel().shown().layer, document().layerZero());
     EXPECT_EQ(panel().shown().linetypeScale, 1.0);
-    EXPECT_EQ(child<QLineEdit>("propertiesLinetypeScale")->text(), QStringLiteral("1.0000"));
+    EXPECT_EQ(openEditor<QLineEdit>(PropertyField::LinetypeScale)->text(),
+              QStringLiteral("1.0000"));
 
     const QList<QPair<QString, QString>> expected{
         {QStringLiteral("Start X"), QStringLiteral("0.0000")},
@@ -202,7 +248,7 @@ TEST_F(PropertiesPanelTest, ASingleEntityShowsItsTypeValuesAndGeometry) {
         {QStringLiteral("End Y"), QStringLiteral("5.0000")},
         {QStringLiteral("Length"), QStringLiteral("11.1803")}};
     EXPECT_EQ(panel().geometry(), expected);
-    EXPECT_TRUE(child<QGroupBox>("propertiesGeometry")->isVisibleTo(&panel()));
+    EXPECT_FALSE(grid()->isRowHidden(PropertyGridModel::kGeometryGroup, {}));
 
     const EntityId circle = addCircle(20.0);
     select({circle});
@@ -216,7 +262,7 @@ TEST_F(PropertiesPanelTest, ASingleEntityShowsItsTypeValuesAndGeometry) {
     // Two entities: no geometry.
     select({line, circle});
     EXPECT_TRUE(panel().geometry().isEmpty());
-    EXPECT_FALSE(child<QGroupBox>("propertiesGeometry")->isVisibleTo(&panel()));
+    EXPECT_TRUE(grid()->isRowHidden(PropertyGridModel::kGeometryGroup, {}));
 }
 
 TEST_F(PropertiesPanelTest, AMixedSelectionShowsVaries) {
@@ -238,10 +284,14 @@ TEST_F(PropertiesPanelTest, AMixedSelectionShowsVaries) {
     // The shared ones are shown.
     EXPECT_EQ(panel().shown().layer, document().layerZero());
     EXPECT_EQ(panel().shown().lineweight, core::lineweight::kByLayer);
-    // The P21 controls show their "Varies" item; the scale shows *VARIES*.
-    EXPECT_FALSE(child<ColorCombo>("propertiesColor")->currentData().isValid());
-    EXPECT_TRUE(child<LayerCombo>("propertiesLayer")->currentData().isValid());
-    EXPECT_EQ(child<QLineEdit>("propertiesLinetypeScale")->text(), QStringLiteral("*VARIES*"));
+    // The P21 controls show their "Varies" item; the scale shows *VARIES*,
+    // in its cell and in its editor.
+    EXPECT_FALSE(openEditor<ColorCombo>(PropertyField::Color)->currentData().isValid());
+    EXPECT_TRUE(openEditor<LayerCombo>(PropertyField::Layer)->currentData().isValid());
+    EXPECT_EQ(panel().grid().valueIndex(PropertyField::Color).data().toString(),
+              QStringLiteral("*VARIES*"));
+    EXPECT_EQ(openEditor<QLineEdit>(PropertyField::LinetypeScale)->text(),
+              QStringLiteral("*VARIES*"));
 
     // One colour for both: no longer varies.
     ASSERT_TRUE(panel().setColor(kRed));
@@ -260,33 +310,34 @@ TEST_F(PropertiesPanelTest, EveryPropertyChangesAndUndoes) {
     select({first, second});
     const core::EntityProperties before = propertiesOf(first);
 
-    // Through the controls of the section General.
-    choose(*child<ColorCombo>("propertiesColor"), kBlue);
+    // Through the editors of the cells of General.
+    choose(*openEditor<ColorCombo>(PropertyField::Color), kBlue);
     EXPECT_EQ(propertiesOf(first).color, kBlue);
     EXPECT_EQ(propertiesOf(second).color, kBlue);
     undoProperties();
     EXPECT_EQ(propertiesOf(second).color, before.color);
 
-    choose(*child<LayerCombo>("propertiesLayer"), walls);
+    choose(*openEditor<LayerCombo>(PropertyField::Layer), walls);
     EXPECT_EQ(propertiesOf(first).layer, walls);
     EXPECT_EQ(propertiesOf(second).layer, walls);
     undoProperties();
     EXPECT_EQ(propertiesOf(first).layer, before.layer);
 
-    choose(*child<LinetypeCombo>("propertiesLinetype"), document().continuousLinetype());
+    choose(*openEditor<LinetypeCombo>(PropertyField::Linetype), document().continuousLinetype());
     EXPECT_EQ(propertiesOf(first).linetype, document().continuousLinetype());
     undoProperties();
     EXPECT_EQ(propertiesOf(first).linetype, before.linetype);
 
-    choose(*child<LineweightCombo>("propertiesLineweight"), 50);
+    choose(*openEditor<LineweightCombo>(PropertyField::Lineweight), 50);
     EXPECT_EQ(propertiesOf(second).lineweight, 50);
     undoProperties();
     EXPECT_EQ(propertiesOf(second).lineweight, before.lineweight);
 
-    auto* scale = child<QLineEdit>("propertiesLinetypeScale");
+    auto* scale = openEditor<QLineEdit>(PropertyField::LinetypeScale);
+    ASSERT_NE(scale, nullptr);
     scale->setText(QStringLiteral("2.5"));
     scale->setModified(true);
-    ASSERT_TRUE(QMetaObject::invokeMethod(scale, "editingFinished", Qt::DirectConnection));
+    commit(scale);
     EXPECT_EQ(propertiesOf(first).linetypeScale, 2.5);
     EXPECT_EQ(propertiesOf(second).linetypeScale, 2.5);
     undoProperties();
@@ -297,7 +348,7 @@ TEST_F(PropertiesPanelTest, EveryPropertyChangesAndUndoes) {
     EXPECT_EQ(panel().lastMessage(), QStringLiteral("Requires a positive number."));
     scale->setText(QStringLiteral("abc"));
     scale->setModified(true);
-    ASSERT_TRUE(QMetaObject::invokeMethod(scale, "editingFinished", Qt::DirectConnection));
+    commit(scale);
     EXPECT_EQ(scale->text(), QStringLiteral("1.0000"));
     EXPECT_EQ(propertiesOf(first), before);
 
@@ -362,12 +413,165 @@ TEST_F(PropertiesPanelTest, EntitiesOfLockedLayersAreNeverShownNorChanged) {
 TEST_F(PropertiesPanelTest, NothingChangesWhileEditingIsDisabled) {
     const EntityId line = addLine(0.0);
     select({line});
+    const QModelIndex color = panel().grid().valueIndex(PropertyField::Color);
+    ASSERT_NE(openEditor<ColorCombo>(PropertyField::Color), nullptr);
     panel().setEditingEnabled(false);
-    EXPECT_FALSE(child<QGroupBox>("propertiesGeneral")->isEnabled());
+    // The open editor closes, and no other opens.
+    EXPECT_EQ(grid()->indexWidget(color), nullptr);
+    EXPECT_FALSE(panel().grid().flags(color).testFlag(Qt::ItemIsEditable));
     EXPECT_FALSE(panel().setColor(kRed));
     EXPECT_EQ(propertiesOf(line).color, core::Color::byLayer());
     panel().setEditingEnabled(true);
     EXPECT_TRUE(panel().setColor(kRed));
+}
+
+TEST_F(PropertiesPanelTest, ATypedScaleIsAppliedByEnterAndTabAndDroppedByEsc) {
+    const EntityId line = addLine(0.0);
+    select({line});
+    // Real keys on a shown panel, with the cell's editor holding the focus.
+    panel().show();
+    panel().activateWindow();
+    ASSERT_TRUE(QTest::qWaitForWindowActive(&panel()));
+    const QModelIndex cell = panel().grid().valueIndex(PropertyField::LinetypeScale);
+    const auto type = [this](const QString& text) {
+        auto* scale = openEditor<QLineEdit>(PropertyField::LinetypeScale);
+        if (scale != nullptr) {
+            scale->setFocus();
+            scale->selectAll();
+            QTest::keyClicks(scale, text);
+        }
+        return scale;
+    };
+
+    // Esc closes the editor and drops what was typed: no change, no undo step.
+    QLineEdit* scale = type(QStringLiteral("2.5"));
+    ASSERT_NE(scale, nullptr);
+    EXPECT_TRUE(scale->hasFocus());
+    EXPECT_EQ(scale->text(), QStringLiteral("2.5"));
+    QTest::keyClick(scale, Qt::Key_Escape);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(grid()->indexWidget(cell), nullptr);
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 1.0);
+    EXPECT_EQ(editor().undoName(), "Test");
+    EXPECT_EQ(cell.data().toString(), QStringLiteral("1.0000"));
+
+    // Enter applies it, in one transaction.
+    scale = type(QStringLiteral("2.5"));
+    ASSERT_NE(scale, nullptr);
+    QTest::keyClick(scale, Qt::Key_Return);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 2.5);
+    undoProperties();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 1.0);
+
+    // So does Tab.
+    scale = type(QStringLiteral("3"));
+    ASSERT_NE(scale, nullptr);
+    QTest::keyClick(scale, Qt::Key_Tab);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 3.0);
+    undoProperties();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 1.0);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+}
+
+TEST_F(PropertiesPanelTest, AColourChosenInItsCellIsOneUndoableTransaction) {
+    const EntityId line = addLine(0.0);
+    select({line});
+    const QModelIndex cell = panel().grid().valueIndex(PropertyField::Color);
+    EXPECT_EQ(cell.data().toString(), QStringLiteral("ByLayer"));
+
+    auto* color = openEditor<ColorCombo>(PropertyField::Color);
+    ASSERT_NE(color, nullptr);
+    choose(*color, kRed);
+    EXPECT_EQ(propertiesOf(line).color, kRed);
+    EXPECT_EQ(cell.data().toString(), QStringLiteral("Red"));
+    // The editor stays open on the new value.
+    EXPECT_EQ(grid()->indexWidget(cell), color);
+    EXPECT_EQ(color->currentIndex(), color->findData(QVariant::fromValue(kRed)));
+
+    undoProperties();
+    EXPECT_EQ(propertiesOf(line).color, core::Color::byLayer());
+    EXPECT_EQ(cell.data().toString(), QStringLiteral("ByLayer"));
+    EXPECT_EQ(editor().undoName(), "Test");
+}
+
+TEST_F(PropertiesPanelTest, TheHeadHasTheFilterAndTheGridItsGroups) {
+    auto* filter = child<QToolButton>("propertiesFilter");
+    auto* quickSelect = child<QToolButton>("propertiesQuickSelect");
+    ASSERT_NE(filter, nullptr);
+    ASSERT_NE(quickSelect, nullptr);
+    // Without an action, no quick selection; with one type, nothing to filter.
+    EXPECT_TRUE(quickSelect->isHidden());
+    EXPECT_FALSE(filter->isEnabled());
+    EXPECT_FALSE(filter->icon().isNull());
+
+    const EntityId line = addLine(0.0);
+    const EntityId circle = addCircle(20.0);
+    select({line});
+    EXPECT_FALSE(filter->isEnabled());
+    select({line, circle});
+    EXPECT_TRUE(filter->isEnabled());
+
+    QAction action(QStringLiteral("Quick Select"));
+    panel().setQuickSelectAction(&action);
+    EXPECT_FALSE(quickSelect->isHidden());
+    EXPECT_EQ(quickSelect->defaultAction(), &action);
+
+    // A click on a group closes it, another opens it; a refresh keeps it.
+    select({line});
+    const QModelIndex general = panel().grid().groupIndex(PropertyGridModel::kGeneralGroup);
+    const QModelIndex geometry = panel().grid().groupIndex(PropertyGridModel::kGeometryGroup);
+    EXPECT_TRUE(grid()->isExpanded(general));
+    EXPECT_TRUE(grid()->isExpanded(geometry));
+    ASSERT_TRUE(QMetaObject::invokeMethod(grid(), "clicked", Qt::DirectConnection,
+                                          Q_ARG(QModelIndex, geometry)));
+    EXPECT_FALSE(grid()->isExpanded(geometry));
+    EXPECT_TRUE(grid()->isExpanded(general));
+    select({circle});
+    EXPECT_FALSE(grid()->isExpanded(geometry));
+    ASSERT_TRUE(QMetaObject::invokeMethod(grid(), "clicked", Qt::DirectConnection,
+                                          Q_ARG(QModelIndex, geometry)));
+    EXPECT_TRUE(grid()->isExpanded(geometry));
+    // A click on a row of a group does not close it.
+    ASSERT_TRUE(QMetaObject::invokeMethod(
+        grid(), "clicked", Qt::DirectConnection,
+        Q_ARG(QModelIndex, panel().grid().valueIndex(PropertyField::Layer))));
+    EXPECT_TRUE(grid()->isExpanded(general));
+    panel().setQuickSelectAction(nullptr);
+    EXPECT_TRUE(quickSelect->isHidden());
+}
+
+TEST_F(PropertiesPanelTest, APolylineShowsItsVerticesOneByOne) {
+    const EntityId plate = addPolyline(0.0);
+    select({plate});
+    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Polyline")});
+    const QList<QPair<QString, QString>> first{
+        {QStringLiteral("Vertices"), QStringLiteral("3")},
+        {QStringLiteral("Current Vertex"), QStringLiteral("1")},
+        {QStringLiteral("Vertex X"), QStringLiteral("0.0000")},
+        {QStringLiteral("Vertex Y"), QStringLiteral("0.0000")},
+        {QStringLiteral("Closed"), QStringLiteral("No")},
+        {QStringLiteral("Length"), QStringLiteral("70.0000")}};
+    EXPECT_EQ(panel().geometry(), first);
+
+    // The arrows of the cell ask the grid for another vertex.
+    auto* delegate = qobject_cast<PropertyGridDelegate*>(grid()->itemDelegate());
+    ASSERT_NE(delegate, nullptr);
+    Q_EMIT delegate->nextVertexRequested();
+    Q_EMIT delegate->nextVertexRequested();
+    EXPECT_EQ(panel().geometry().at(1).second, QStringLiteral("3"));
+    EXPECT_EQ(panel().geometry().at(3).second, QStringLiteral("30.0000"));
+    // Past the last vertex nothing changes.
+    Q_EMIT delegate->nextVertexRequested();
+    EXPECT_EQ(panel().geometry().at(1).second, QStringLiteral("3"));
+
+    // A change of its properties keeps the vertex shown.
+    ASSERT_TRUE(panel().setColor(kRed));
+    EXPECT_EQ(panel().geometry().at(1).second, QStringLiteral("3"));
+    Q_EMIT delegate->previousVertexRequested();
+    EXPECT_EQ(panel().geometry().at(2).second, QStringLiteral("40.0000"));
+    EXPECT_EQ(panel().geometry().at(3).second, QStringLiteral("0.0000"));
 }
 
 TEST_F(PropertiesPanelTest, ThePropertyBarChangesTheSelectionOrTheCurrentValues) {

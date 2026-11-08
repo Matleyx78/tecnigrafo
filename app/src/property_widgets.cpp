@@ -89,6 +89,7 @@ void selectValue(QComboBox& combo, Value value) {
     clearVaries(combo);
     combo.setCurrentIndex(combo.findData(QVariant::fromValue(value)));
 }
+}  // namespace
 
 QString colorName(core::Color color) {
     if (color.kind() == core::Color::Kind::ByLayer) {
@@ -120,7 +121,7 @@ QString colorName(core::Color color) {
     return QString::fromStdString(core::formatColor(color));
 }
 
-QIcon lineIcon(const core::LinetypePattern& pattern, const QPalette& palette) {
+QIcon linetypeIcon(const core::LinetypePattern& pattern, const QPalette& palette) {
     QPixmap pixmap(kPreviewWidth, kPreviewHeight);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
@@ -148,17 +149,30 @@ QIcon lineIcon(const core::LinetypePattern& pattern, const QPalette& palette) {
     return {pixmap};
 }
 
-QIcon weightIcon(int weight, const QPalette& palette) {
+QIcon lineweightIcon(int lineweight, const QPalette& palette) {
     QPixmap pixmap(kPreviewWidth, kPreviewHeight);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     // DXF hundredths of a millimetre, displayed at 96 logical pixels/inch.
-    const double width = std::max(1.0, static_cast<double>(weight) * 96.0 / 2540.0);
+    const double width = std::max(1.0, static_cast<double>(lineweight) * 96.0 / 2540.0);
     painter.setPen(QPen(palette.color(QPalette::Text), width));
     painter.drawLine(0, kPreviewHeight / 2, kPreviewWidth, kPreviewHeight / 2);
     return {pixmap};
 }
-}  // namespace
+
+QString lineweightName(int lineweight) {
+    switch (lineweight) {
+        case core::lineweight::kByLayer:
+            return LineweightCombo::tr("ByLayer");
+        case core::lineweight::kByBlock:
+            return LineweightCombo::tr("ByBlock");
+        case core::lineweight::kDefault:
+            return LineweightCombo::tr("Default");
+        default:
+            return LineweightCombo::tr("%1 mm").arg(static_cast<double>(lineweight) / 100.0, 0, 'f',
+                                                    2);
+    }
+}
 
 QIcon colorIcon(core::Color color, const QPalette& palette) {
     QPixmap pixmap(kPreviewWidth, kPreviewHeight);
@@ -321,8 +335,8 @@ void LinetypeCombo::setDocument(const core::Document* document) {
     clear();
     if (document != nullptr) {
         for (const auto& linetype : document->linetypes()) {
-            addItem(lineIcon(linetype.pattern, palette()), QString::fromStdString(linetype.name),
-                    QVariant::fromValue(linetype.id));
+            addItem(linetypeIcon(linetype.pattern, palette()),
+                    QString::fromStdString(linetype.name), QVariant::fromValue(linetype.id));
         }
         setValue(document->current().linetype);
     } else {
@@ -353,13 +367,14 @@ LineweightCombo::LineweightCombo(QWidget* parent) : QComboBox(parent) {
 void LineweightCombo::setDocument(const core::Document* document) {
     const QSignalBlocker blocker(this);
     clear();
-    addItem(tr("ByLayer"), core::lineweight::kByLayer);
-    addItem(tr("ByBlock"), core::lineweight::kByBlock);
-    const int defaultWeight = document != nullptr ? document->lwdefault() : 25;
-    addItem(weightIcon(defaultWeight, palette()), tr("Default"), core::lineweight::kDefault);
+    addItem(lineweightName(core::lineweight::kByLayer), core::lineweight::kByLayer);
+    addItem(lineweightName(core::lineweight::kByBlock), core::lineweight::kByBlock);
+    const int defaultWeight =
+        document != nullptr ? document->lwdefault() : core::Document::kDefaultLwdefault;
+    addItem(lineweightIcon(defaultWeight, palette()), lineweightName(core::lineweight::kDefault),
+            core::lineweight::kDefault);
     for (const int weight : core::lineweight::kAllowed) {
-        addItem(weightIcon(weight, palette()),
-                tr("%1 mm").arg(static_cast<double>(weight) / 100.0, 0, 'f', 2), weight);
+        addItem(lineweightIcon(weight, palette()), lineweightName(weight), weight);
     }
     setValue(document != nullptr ? document->current().lineweight : core::lineweight::kByLayer);
 }

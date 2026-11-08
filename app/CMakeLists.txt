@@ -14,6 +14,8 @@ qt_add_library(tg_app_ui STATIC
     src/color_dialog.hpp
     src/property_widgets.cpp
     src/property_widgets.hpp
+    src/property_grid.cpp
+    src/property_grid.hpp
     src/layer_table_model.cpp
     src/layer_table_model.hpp
     src/layer_panel.cpp

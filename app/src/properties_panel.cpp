@@ -5,22 +5,23 @@
 
 #include "property_widgets.hpp"
 #include "quick_select_dialog.hpp"
-#include "tg/cmd/value_format.hpp"
 #include "theme.hpp"
 
 #include <QAction>
 #include <QComboBox>
 #include <QEvent>
-#include <QFormLayout>
 #include <QFrame>
-#include <QGroupBox>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QIcon>
 #include <QLabel>
 #include <QLineEdit>
+#include <QModelIndex>
 #include <QPalette>
 #include <QScrollArea>
 #include <QSignalBlocker>
+#include <QToolButton>
+#include <QTreeView>
 #include <QVBoxLayout>
 #include <QVariant>
 
@@ -36,19 +37,22 @@ namespace {
 
 // The side of the icons beside the controls, in pixels.
 constexpr int kIconSide = 16;
-// The width that shows a layer name and its states in the drop-down list.
-constexpr int kComboWidth = 160;
+// The width of the names in the grid, as in the reference image
+// (docs/adr/0039/proprieta.svg).
+constexpr int kNameColumnWidth = 124;
+// The space around the controls of the panel and between them.
+constexpr int kMargin = 4;
+constexpr int kSpacing = 2;
 
 // The name of the transaction of every change ("Undo Properties").
 const char* const kTransactionName = "Properties";
-
-// What a value shared by no two of the entities shows, as in AutoCAD.
-const char* const kVaries = "*VARIES*";
 
 // docs/ICONE.md: the icons of the properties (0.6-P19).
 const char* const kColorIcon = "property-color";
 const char* const kLinetypeIcon = "property-linetype";
 const char* const kLineweightIcon = "property-lineweight";
+// The funnel of QSELECT: the filter by type has no icon of its own yet.
+const char* const kFilterIcon = "quick-select";
 
 // The DXF types of core::Entity, in the order of its alternatives.
 constexpr std::array<std::string_view, std::variant_size_v<core::Entity>> kDxfTypes{
@@ -72,14 +76,6 @@ QString typeName(std::string_view type) {
         return PropertiesPanel::tr("Arc");
     }
     return PropertiesPanel::tr("Text");
-}
-
-QString lengthText(double value) {
-    return QString::fromStdString(cmd::formatLength(value));
-}
-
-QString angleText(double radians) {
-    return QString::fromStdString(cmd::formatAngle(radians));
 }
 
 /// The value of `field` that every entity of `ids` has, or std::nullopt if
@@ -118,59 +114,13 @@ void drawIcons(const QList<QPair<QLabel*, QString>>& icons, const QPalette& pale
     }
 }
 
-/// `control` with the icon `name` before it, in one row.
-QWidget* withIcon(QWidget* control, const QString& name, QWidget* parent,
-                  QList<QPair<QLabel*, QString>>& icons) {
-    auto* row = new QWidget(parent);
-    auto* layout = new QHBoxLayout(row);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(4);
-    layout->addWidget(iconLabel(name, row, icons));
-    layout->addWidget(control, 1);
-    return row;
-}
-
-/// The rows of the section Geometry of `entity`: its main coordinates, with
-/// the names of AutoCAD's panel.
-QList<QPair<QString, QString>> geometryRows(const core::Entity& entity) {
-    QList<QPair<QString, QString>> rows;
-    const auto add = [&rows](const QString& name, const QString& value) {
-        rows.append({name, value});
-    };
-    if (const auto* line = std::get_if<core::Line>(&entity)) {
-        add(PropertiesPanel::tr("Start X"), lengthText(line->start.x));
-        add(PropertiesPanel::tr("Start Y"), lengthText(line->start.y));
-        add(PropertiesPanel::tr("End X"), lengthText(line->end.x));
-        add(PropertiesPanel::tr("End Y"), lengthText(line->end.y));
-        add(PropertiesPanel::tr("Length"), lengthText(line->length()));
-    } else if (const auto* circle = std::get_if<core::Circle>(&entity)) {
-        add(PropertiesPanel::tr("Center X"), lengthText(circle->center.x));
-        add(PropertiesPanel::tr("Center Y"), lengthText(circle->center.y));
-        add(PropertiesPanel::tr("Radius"), lengthText(circle->radius));
-    } else if (const auto* arc = std::get_if<core::Arc>(&entity)) {
-        add(PropertiesPanel::tr("Center X"), lengthText(arc->center.x));
-        add(PropertiesPanel::tr("Center Y"), lengthText(arc->center.y));
-        add(PropertiesPanel::tr("Radius"), lengthText(arc->radius));
-        add(PropertiesPanel::tr("Start angle"), angleText(arc->startAngle));
-        add(PropertiesPanel::tr("End angle"), angleText(arc->endAngle));
-    } else if (const auto* polyline = std::get_if<core::Polyline>(&entity)) {
-        add(PropertiesPanel::tr("Vertices"),
-            QString::number(static_cast<qulonglong>(polyline->vertexCount())));
-        if (!polyline->vertices().empty()) {
-            const core::Vec2 first = polyline->vertices().front().position;
-            add(PropertiesPanel::tr("Vertex 1 X"), lengthText(first.x));
-            add(PropertiesPanel::tr("Vertex 1 Y"), lengthText(first.y));
-        }
-        add(PropertiesPanel::tr("Closed"),
-            polyline->isClosed() ? PropertiesPanel::tr("Yes") : PropertiesPanel::tr("No"));
-        add(PropertiesPanel::tr("Length"), lengthText(polyline->length()));
-    } else if (const auto* text = std::get_if<core::Text>(&entity)) {
-        add(PropertiesPanel::tr("Position X"), lengthText(text->position.x));
-        add(PropertiesPanel::tr("Position Y"), lengthText(text->position.y));
-        add(PropertiesPanel::tr("Height"), lengthText(text->height));
-        add(PropertiesPanel::tr("Contents"), QString::fromStdString(text->value));
-    }
-    return rows;
+/// A button of the head of the panel: an icon, no frame at rest.
+QToolButton* headButton(const char* name, QWidget* parent) {
+    auto* button = new QToolButton(parent);
+    button->setObjectName(QString::fromLatin1(name));
+    button->setAutoRaise(true);
+    button->setIconSize(QSize(kIconSide, kIconSide));
+    return button;
 }
 
 }  // namespace
@@ -185,46 +135,58 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
       m_editor(editor),
       m_runner(runner),
       m_types(new QComboBox(this)),
-      m_general(new QGroupBox(tr("General"), this)),
-      m_color(new ColorCombo(this)),
-      m_layer(new LayerCombo(this)),
-      m_linetype(new LinetypeCombo(this)),
-      m_linetypeScale(new QLineEdit(this)),
-      m_lineweight(new LineweightCombo(this)),
-      m_geometryBox(new QGroupBox(tr("Geometry"), this)),
-      m_geometryForm(new QFormLayout(m_geometryBox)),
+      m_filter(headButton("propertiesFilter", this)),
+      m_quickSelect(headButton("propertiesQuickSelect", this)),
+      m_model(new PropertyGridModel(editor.document(), this)),
+      m_delegate(new PropertyGridDelegate(this)),
+      m_grid(new QTreeView(this)),
       m_message(new QLabel(this)) {
     setObjectName(QStringLiteral("propertiesPanel"));
 
     m_types->setObjectName(QStringLiteral("propertiesType"));
-    m_general->setObjectName(QStringLiteral("propertiesGeneral"));
-    m_color->setObjectName(QStringLiteral("propertiesColor"));
-    m_layer->setObjectName(QStringLiteral("propertiesLayer"));
-    m_linetype->setObjectName(QStringLiteral("propertiesLinetype"));
-    m_linetypeScale->setObjectName(QStringLiteral("propertiesLinetypeScale"));
-    m_lineweight->setObjectName(QStringLiteral("propertiesLineweight"));
-    m_geometryBox->setObjectName(QStringLiteral("propertiesGeometry"));
+    m_filter->setToolTip(tr("Filter by type"));
+    m_filter->setAccessibleName(m_filter->toolTip());
+    // Without an action the panel offers no quick selection.
+    m_quickSelect->hide();
     m_message->setObjectName(QStringLiteral("propertiesMessage"));
     m_message->setWordWrap(true);
-    m_layer->setMinimumWidth(kComboWidth);
 
-    auto* general = new QFormLayout(m_general);
-    general->addRow(tr("Color"),
-                    withIcon(m_color, QString::fromLatin1(kColorIcon), m_general, m_icons));
-    general->addRow(tr("Layer"), m_layer);
-    general->addRow(tr("Linetype"),
-                    withIcon(m_linetype, QString::fromLatin1(kLinetypeIcon), m_general, m_icons));
-    general->addRow(tr("Linetype scale"), m_linetypeScale);
-    general->addRow(tr("Lineweight"), withIcon(m_lineweight, QString::fromLatin1(kLineweightIcon),
-                                               m_general, m_icons));
+    m_grid->setObjectName(QStringLiteral("propertiesGrid"));
+    m_grid->setModel(m_model);
+    m_grid->setItemDelegate(m_delegate);
+    m_grid->header()->hide();
+    m_grid->header()->setStretchLastSection(true);
+    m_grid->setColumnWidth(PropertyGridModel::kNameColumn, kNameColumnWidth);
+    // The delegate draws the chevrons of the groups, and a click on a group
+    // opens or closes it (toggleGroup): no column of branches on the left.
+    m_grid->setRootIsDecorated(false);
+    m_grid->setIndentation(0);
+    m_grid->setItemsExpandable(false);
+    m_grid->setUniformRowHeights(true);
+    m_grid->setFrameShape(QFrame::NoFrame);
+    m_grid->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_grid->setSelectionMode(QAbstractItemView::SingleSelection);
+    // A click on a value opens its editor, as in AutoCAD.
+    m_grid->setEditTriggers(QAbstractItemView::CurrentChanged | QAbstractItemView::SelectedClicked |
+                            QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
+    for (int group = 0; group < PropertyGridModel::kGroupCount; ++group) {
+        m_grid->setFirstColumnSpanned(group, {}, true);
+    }
+    m_model->setPalette(palette());
+
+    auto* head = new QHBoxLayout;
+    head->setSpacing(kSpacing);
+    head->addWidget(m_types, 1);
+    head->addWidget(m_filter);
+    head->addWidget(m_quickSelect);
 
     auto* content = new QWidget(this);
     auto* layout = new QVBoxLayout(content);
-    layout->addWidget(m_types);
-    layout->addWidget(m_general);
-    layout->addWidget(m_geometryBox);
+    layout->setContentsMargins(kMargin, kMargin, kMargin, kMargin);
+    layout->setSpacing(kMargin);
+    layout->addLayout(head);
+    layout->addWidget(m_grid, 1);
     layout->addWidget(m_message);
-    layout->addStretch(1);
     // The panel scrolls rather than impose its size on the window: a window
     // with both panels docked still fits a small screen.
     auto* scroll = new QScrollArea(this);
@@ -239,42 +201,39 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
     connect(m_types, &QComboBox::activated, this, [this](int index) {
         setTypeFilter(m_types->itemData(index).toString().toStdString());
     });
-    connect(m_color, &ColorCombo::valueChosen, this,
+    connect(m_filter, &QToolButton::clicked, m_types, &QComboBox::showPopup);
+    connect(m_delegate, &PropertyGridDelegate::colorChosen, this,
             [this](core::Color value) { setColor(value); });
-    connect(m_layer, &LayerCombo::valueChosen, this,
+    connect(m_delegate, &PropertyGridDelegate::layerChosen, this,
             [this](core::LayerId value) { setLayer(value); });
-    connect(m_linetype, &LinetypeCombo::valueChosen, this,
+    connect(m_delegate, &PropertyGridDelegate::linetypeChosen, this,
             [this](core::LinetypeId value) { setLinetype(value); });
-    connect(m_lineweight, &LineweightCombo::valueChosen, this,
+    connect(m_delegate, &PropertyGridDelegate::lineweightChosen, this,
             [this](int value) { setLineweight(value); });
-    connect(m_linetypeScale, &QLineEdit::editingFinished, this, [this] {
-        if (!m_linetypeScale->isModified()) {
-            return;
-        }
-        m_linetypeScale->setModified(false);
-        bool ok = false;
-        const double value = m_linetypeScale->text().trimmed().toDouble(&ok);
-        if (!ok) {
-            refuse(tr("Requires a positive number."));
-            return;
-        }
-        setLinetypeScale(value);
-    });
+    connect(m_model, &PropertyGridModel::linetypeScaleEntered, this,
+            &PropertiesPanel::enterLinetypeScale);
+    connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, m_model,
+            &PropertyGridModel::previousVertex);
+    connect(m_delegate, &PropertyGridDelegate::nextVertexRequested, m_model,
+            &PropertyGridModel::nextVertex);
+    connect(m_grid, &QTreeView::clicked, this, &PropertiesPanel::toggleGroup);
 
     updateIcons();
     refresh();
 }
 
 PropertiesPanel::~PropertiesPanel() {
-    // A window destroys its drawing and its runner before its children: a
-    // control that reports its own teardown (a line edit losing the focus)
+    // A window destroys its drawing and its runner before its children: an
+    // editor that reports its own teardown (a line edit losing the focus)
     // must not reach a drawing that is gone.
-    m_linetypeScale->disconnect(this);
+    m_delegate->disconnect(this);
     m_types->disconnect(this);
 }
 
 void PropertiesPanel::setQuickSelectAction(QAction* action) {
     m_quickSelectAction = action;
+    m_quickSelect->setDefaultAction(action);
+    m_quickSelect->setVisible(action != nullptr);
     if (action != nullptr) {
         connect(action, &QAction::triggered, this, [this] { showQuickSelect(m_idleSelection); });
         // The window destroys its actions before its panels.
@@ -297,6 +256,16 @@ bool PropertiesPanel::canEdit() const {
     return m_editingEnabled && !m_editor.inTransaction() && !m_runner.isActive();
 }
 
+void PropertiesPanel::enterLinetypeScale(const QString& text) {
+    bool ok = false;
+    const double value = text.toDouble(&ok);
+    if (!ok) {
+        refuse(tr("Requires a positive number."));
+        return;
+    }
+    setLinetypeScale(value);
+}
+
 void PropertiesPanel::setMessage(const QString& text) {
     m_lastMessage = text;
     m_message->setText(text);
@@ -314,7 +283,8 @@ void PropertiesPanel::refresh() {
     readSelection();
     showTypes();
     readShown();
-    showValues();
+    m_model->setShown(m_shown);
+    showEditors();
     showGeometry();
     updateEnabled();
     Q_EMIT refreshed();
@@ -449,68 +419,70 @@ void PropertiesPanel::readShown() {
     m_shown.lineweight = sharedValue(doc, ids, &core::EntityProperties::lineweight);
 }
 
-void PropertiesPanel::showValues() {
-    const core::Document& doc = document();
-    // The setters of the controls never emit valueChosen.
-    if (m_shown.color) {
-        m_color->setValue(*m_shown.color);
-    } else {
-        m_color->setVaries();
+void PropertiesPanel::showEditors() {
+    // A tree view with a layout pending ignores the changes of the data, so
+    // an open editor would keep a value refused or changed elsewhere.
+    for (const PropertyField field :
+         {PropertyField::Color, PropertyField::Layer, PropertyField::Linetype,
+          PropertyField::LinetypeScale, PropertyField::Lineweight}) {
+        const QModelIndex index = m_model->valueIndex(field);
+        if (QWidget* editor = m_grid->indexWidget(index)) {
+            m_delegate->setEditorData(editor, index);
+        }
     }
-    m_layer->setDocument(&doc);
-    if (m_shown.layer) {
-        m_layer->setValue(*m_shown.layer);
-    } else {
-        m_layer->setVaries();
-    }
-    m_linetype->setDocument(&doc);
-    if (m_shown.linetype) {
-        m_linetype->setValue(*m_shown.linetype);
-    } else {
-        m_linetype->setVaries();
-    }
-    m_lineweight->setDocument(&doc);
-    if (m_shown.lineweight) {
-        m_lineweight->setValue(*m_shown.lineweight);
-    } else {
-        m_lineweight->setVaries();
-    }
-    const QSignalBlocker blocker(m_linetypeScale);
-    m_linetypeScale->setText(m_shown.linetypeScale ? lengthText(*m_shown.linetypeScale)
-                                                   : QString::fromLatin1(kVaries));
-    m_linetypeScale->setModified(false);
 }
 
 void PropertiesPanel::showGeometry() {
-    m_geometry.clear();
     const std::vector<core::EntityId> ids = targets();
-    if (ids.size() == 1) {
-        if (const core::EntityRecord* record = document().find(ids.front())) {
-            m_geometry = geometryRows(record->entity);
-        }
+    m_model->setEntity(ids.size() == 1 ? document().find(ids.front()) : nullptr);
+    const bool hidden = m_model->geometry().isEmpty();
+    // Hiding a row lays the grid out again: only when it changes.
+    if (m_grid->isRowHidden(PropertyGridModel::kGeometryGroup, {}) != hidden) {
+        m_grid->setRowHidden(PropertyGridModel::kGeometryGroup, {}, hidden);
     }
-    while (m_geometryForm->rowCount() > 0) {
-        m_geometryForm->removeRow(0);
+    showGroups();
+}
+
+void PropertiesPanel::showGroups() {
+    for (int group = 0; group < PropertyGridModel::kGroupCount; ++group) {
+        m_grid->setExpanded(m_model->groupIndex(group),
+                            !m_closed.at(static_cast<std::size_t>(group)));
     }
-    for (const auto& [name, value] : m_geometry) {
-        auto* field = new QLabel(value, m_geometryBox);
-        field->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        m_geometryForm->addRow(name, field);
+}
+
+void PropertiesPanel::toggleGroup(const QModelIndex& index) {
+    if (!index.data(PropertyGridModel::kGroupRole).toBool()) {
+        return;
     }
-    m_geometryBox->setVisible(!m_geometry.isEmpty());
+    bool& closed = m_closed.at(static_cast<std::size_t>(index.row()));
+    closed = !closed;
+    showGroups();
 }
 
 void PropertiesPanel::updateEnabled() {
     const bool editable = m_editingEnabled && !m_runner.isActive();
     m_types->setEnabled(m_types->count() > 1);
-    m_general->setEnabled(editable);
+    m_filter->setEnabled(m_types->isEnabled());
+    m_model->setEditable(editable);
+    // An open editor closes when the current cell moves. What was typed in
+    // it is dropped, as with Esc: moving commits it, and nothing may change
+    // now.
+    const QModelIndex current = m_grid->currentIndex();
+    QWidget* open = current.isValid() ? m_grid->indexWidget(current) : nullptr;
+    if (!editable && open != nullptr) {
+        if (auto* typed = qobject_cast<QLineEdit*>(open)) {
+            typed->setModified(false);
+        }
+        m_grid->setCurrentIndex(m_model->groupIndex(PropertyGridModel::kGeneralGroup));
+    }
     if (m_quickSelectAction != nullptr) {
         m_quickSelectAction->setEnabled(editable);
     }
 }
 
 void PropertiesPanel::updateIcons() {
-    drawIcons(m_icons, palette());
+    m_filter->setIcon(themedIcon(QString::fromLatin1(kFilterIcon), themeOf(palette())));
+    m_model->setPalette(palette());
 }
 
 bool PropertiesPanel::change(const std::function<void(core::EntityProperties&)>& edit) {
