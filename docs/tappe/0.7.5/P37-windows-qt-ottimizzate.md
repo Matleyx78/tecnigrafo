@@ -75,8 +75,9 @@ pull request riporta.
 - Nel log della build di Windows si vede che `tg_app_tests.exe` dipende da
   `Qt6Core.dll` e non da `Qt6Cored.dll`, per esempio con
   `dumpbin /dependents` in un passo che la pull request toglie prima del merge.
-- `ActionRegistryDeathTest.AnIdCanBeAddedOnlyOnce`, che si basa su
-  un'asserzione, passa su Windows.
+- I casi `…DeathTest` (11 oggi, per esempio
+  `EditorDeathTest.DrawingStatePreconditionsAreChecked`), che si basano sulle
+  nostre asserzioni, passano su Windows: è la prova che restano attive.
 
 ## Fatto quando
 
