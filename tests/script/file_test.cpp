@@ -66,9 +66,13 @@ void writeFile(const fs::path& path, std::string_view text) {
     file << text;
 }
 
-/// An empty folder kRoot/<name>.
+/// An empty folder kRoot/<suite>.<test>/<name>, named after the running test:
+/// ctest runs every test in its own process and several at once, so a folder
+/// shared by two tests would be emptied by one while the other uses it.
 fs::path emptyFolder(const std::string& name) {
-    const fs::path folder = kRoot / name;
+    const auto* const info = ::testing::UnitTest::GetInstance()->current_test_info();
+    const fs::path folder =
+        kRoot / (std::string{info->test_suite_name()} + "." + info->name()) / name;
     fs::remove_all(folder);
     fs::create_directories(folder);
     return folder;

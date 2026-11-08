@@ -6,6 +6,15 @@
 # that mention a touched header), on the build of the "Build" step, with no
 # second build. The whole project is checked on every push to main, every
 # night, and in a pull request that changes .clang-tidy, CMake or this file.
+#
+# Every ctest runs as many tests at once as the machine has processors
+# (0.7.5-P38). gtest_discover_tests makes every case of tg_tests a process of
+# its own (1673 of them, 0.21 s each under ASan) and each of the 726
+# verification cases starts the program, while the runners have 3 or 4
+# processors: one test at a time, the ASan job spent 423 s in Test and 146 s
+# in Verifica out of 648 s (run of #605). Tests must therefore never share a
+# folder with a fixed name; the order of ctest's output changes, its lines do
+# not, and scripts/ci-annota.sh reads them as before.
 name: CI
 
 on:
@@ -213,7 +222,7 @@ jobs:
       - name: Test
         run: |
           set -o pipefail
-          ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci -LE verifica -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
       - name: Generate interface gallery
         if: needs.changes.outputs.gallery == 'true'
         env:
@@ -346,7 +355,7 @@ jobs:
       - name: Verifica
         run: |
           set -o pipefail
-          ctest --preset ci -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci -L verifica --no-tests=error -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
       - name: 'Oracolo ezdxf: answers'
         if: always()
         run: |
@@ -439,13 +448,13 @@ jobs:
       - name: Test
         run: |
           set -o pipefail
-          ctest --preset asan -LE verifica 2>&1 | scripts/ci-annota.sh
+          ctest --preset asan -LE verifica -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
           set -o pipefail
-          ctest --preset asan -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
+          ctest --preset asan -L verifica --no-tests=error -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v7
@@ -592,7 +601,7 @@ jobs:
           exit $status
       - name: Test
         run: |
-          ctest --preset ci -LE verifica *> build/ci-test.log
+          ctest --preset ci -LE verifica -j $env:NUMBER_OF_PROCESSORS *> build/ci-test.log
           $status = $LASTEXITCODE
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-test.log
           exit $status
@@ -600,7 +609,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
-          ctest --preset ci -L verifica --no-tests=error *> build/ci-verifica.log
+          ctest --preset ci -L verifica --no-tests=error -j $env:NUMBER_OF_PROCESSORS *> build/ci-verifica.log
           $status = $LASTEXITCODE
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-verifica.log
           exit $status
@@ -646,13 +655,13 @@ jobs:
       - name: Test
         run: |
           set -o pipefail
-          ctest --preset ci -LE verifica 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci -LE verifica -j "$(sysctl -n hw.ncpu)" 2>&1 | scripts/ci-annota.sh
       - name: Verifica
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
           set -o pipefail
-          ctest --preset ci -L verifica --no-tests=error 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci -L verifica --no-tests=error -j "$(sysctl -n hw.ncpu)" 2>&1 | scripts/ci-annota.sh
       - name: Upload verification reports and images
         if: always()
         uses: actions/upload-artifact@v7
