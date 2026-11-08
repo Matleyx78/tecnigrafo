@@ -167,11 +167,14 @@ void ColorCombo::setValue(core::Color value) {
     m_value = value;
     if (value.kind() == core::Color::Kind::Rgb ||
         (value.kind() == core::Color::Kind::Index && value.index() > 7)) {
+        // The newest colour goes first. Not insert(begin()): GCC 13 at -O3
+        // warns of a false null dereference in it (-Wnull-dereference).
         std::erase(m_recent, value);
-        m_recent.insert(m_recent.begin(), value);
-        if (m_recent.size() > kMaxRecentColours) {
+        if (m_recent.size() >= kMaxRecentColours) {
             m_recent.pop_back();
         }
+        m_recent.push_back(value);
+        std::rotate(m_recent.rbegin(), m_recent.rbegin() + 1, m_recent.rend());
     }
     rebuild();
 }
