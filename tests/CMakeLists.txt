@@ -219,13 +219,13 @@ if(TG_BUILD_APP)
     add_dependencies(tg_app_tests tecnigrafo confronta_immagini)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
-    # Windows CI run 42451721653 measured 125.20 s: three times that, rounded
-    # up to 30 s, is 390 s (minimum 120 s). Since it exceeds 180 s, keep 300 s
-    # as required by 0.7.5-P35; the limit should only stop a real hang.
+    # The limit is three times the duration in the Windows CI with the
+    # optimised Qt (0.7.5-P37), rounded up to 30 s and never below 120 s:
+    # draft #599 measured 8.17 s, hence 120 s. It should only stop a real hang.
     add_test(NAME app_widgets COMMAND tg_app_tests)
     set_tests_properties(app_widgets PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
-        TIMEOUT 300)
+        TIMEOUT 120)
     # The screenshot gallery (0.7.5-P3) runs the whole program for two themes,
     # about ten seconds on Windows: its own entry keeps it out of app_widgets'
     # time limit.

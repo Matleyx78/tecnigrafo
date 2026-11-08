@@ -569,10 +569,20 @@ jobs:
         with:
           path: build/verifica-sorgenti
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
+      # Our code stays Debug (no optimisation, debug info, assertions on, no
+      # NDEBUG), but it links the normal MSVC runtime and the optimised Qt
+      # (0.7.5-P37). Why: with the debug Qt every app_widgets case was 5 to 20
+      # times slower than on Linux; the diagnostic draft #599 measured
+      # app_widgets going from 93.6 s to 8.17 s and the Test step from
+      # 172-361 s to 56 s. What is lost: the iterator and heap checks of the
+      # MSVC debug runtime and Qt's internal assertions. Why it is accepted:
+      # memory errors are searched by the Linux ASan job (docs/adr/0016), and
+      # our own assertions stay active (docs/DECISIONI.md, 2026-11-08).
+      # GoogleTest follows by itself (gtest_force_shared_crt).
       - name: Build, warnings as errors
         run: |
           New-Item -ItemType Directory -Force build | Out-Null
-          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" *> build/ci-build.log
+          cmake --preset ci -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL "-DCMAKE_MAP_IMPORTED_CONFIG_DEBUG=Release;RelWithDebInfo" *> build/ci-build.log
           $status = $LASTEXITCODE
           if ($status -eq 0) {
             cmake --build --preset ci *>> build/ci-build.log
@@ -580,6 +590,12 @@ jobs:
           }
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-build.log
           exit $status
+      # TEMPORARY (0.7.5-P37): proof that the tests load the optimised Qt;
+      # removed before merge.
+      - name: Qt libraries used by the tests
+        run: |
+          dumpbin /dependents build/ci/tests/tg_app_tests.exe
+          dumpbin /dependents build/ci/tests/tg_tests.exe
       - name: Test
         run: |
           ctest --preset ci -LE verifica *> build/ci-test.log
