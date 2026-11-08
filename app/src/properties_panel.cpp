@@ -15,6 +15,7 @@
 #include <QHeaderView>
 #include <QIcon>
 #include <QLabel>
+#include <QLineEdit>
 #include <QModelIndex>
 #include <QPalette>
 #include <QScrollArea>
@@ -209,7 +210,7 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
             [this](core::LinetypeId value) { setLinetype(value); });
     connect(m_delegate, &PropertyGridDelegate::lineweightChosen, this,
             [this](int value) { setLineweight(value); });
-    connect(m_delegate, &PropertyGridDelegate::linetypeScaleEntered, this,
+    connect(m_model, &PropertyGridModel::linetypeScaleEntered, this,
             &PropertiesPanel::enterLinetypeScale);
     connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, m_model,
             &PropertyGridModel::previousVertex);
@@ -463,9 +464,15 @@ void PropertiesPanel::updateEnabled() {
     m_types->setEnabled(m_types->count() > 1);
     m_filter->setEnabled(m_types->isEnabled());
     m_model->setEditable(editable);
-    // An open editor closes when the current cell moves.
+    // An open editor closes when the current cell moves. What was typed in
+    // it is dropped, as with Esc: moving commits it, and nothing may change
+    // now.
     const QModelIndex current = m_grid->currentIndex();
-    if (!editable && current.isValid() && m_grid->indexWidget(current) != nullptr) {
+    QWidget* open = current.isValid() ? m_grid->indexWidget(current) : nullptr;
+    if (!editable && open != nullptr) {
+        if (auto* typed = qobject_cast<QLineEdit*>(open)) {
+            typed->setModified(false);
+        }
         m_grid->setCurrentIndex(m_model->groupIndex(PropertyGridModel::kGeneralGroup));
     }
     if (m_quickSelectAction != nullptr) {

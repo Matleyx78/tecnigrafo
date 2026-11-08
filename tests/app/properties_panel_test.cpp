@@ -27,6 +27,7 @@
 #include <QSignalSpy>
 #include <QString>
 #include <QStringList>
+#include <QTest>
 #include <QToolButton>
 #include <QTreeView>
 #include <QVariant>
@@ -116,13 +117,19 @@ protected:
             // A click makes the cell current and opens its editor; a view
             // that is not shown only does the first.
             view->setCurrentIndex(index);
-            QAbstractItemView* base = view;
-            base->edit(index);
+            if (view->indexWidget(index) == nullptr) {
+                QAbstractItemView* base = view;
+                base->edit(index);
+            }
         }
         auto* editor = qobject_cast<Widget*>(view->indexWidget(index));
         EXPECT_NE(editor, nullptr);
         return editor;
     }
+
+    /// Commits the text of `editor`, as the view does on Enter, Tab or when
+    /// the focus leaves the cell.
+    void commit(QWidget* editor) const { Q_EMIT grid() -> itemDelegate()->commitData(editor); }
 
     EntityId addCircle(double x) { return add(core::Circle{{x, 0.0}, 2.0}); }
 
@@ -330,7 +337,7 @@ TEST_F(PropertiesPanelTest, EveryPropertyChangesAndUndoes) {
     ASSERT_NE(scale, nullptr);
     scale->setText(QStringLiteral("2.5"));
     scale->setModified(true);
-    ASSERT_TRUE(QMetaObject::invokeMethod(scale, "editingFinished", Qt::DirectConnection));
+    commit(scale);
     EXPECT_EQ(propertiesOf(first).linetypeScale, 2.5);
     EXPECT_EQ(propertiesOf(second).linetypeScale, 2.5);
     undoProperties();
@@ -341,7 +348,7 @@ TEST_F(PropertiesPanelTest, EveryPropertyChangesAndUndoes) {
     EXPECT_EQ(panel().lastMessage(), QStringLiteral("Requires a positive number."));
     scale->setText(QStringLiteral("abc"));
     scale->setModified(true);
-    ASSERT_TRUE(QMetaObject::invokeMethod(scale, "editingFinished", Qt::DirectConnection));
+    commit(scale);
     EXPECT_EQ(scale->text(), QStringLiteral("1.0000"));
     EXPECT_EQ(propertiesOf(first), before);
 
@@ -416,6 +423,56 @@ TEST_F(PropertiesPanelTest, NothingChangesWhileEditingIsDisabled) {
     EXPECT_EQ(propertiesOf(line).color, core::Color::byLayer());
     panel().setEditingEnabled(true);
     EXPECT_TRUE(panel().setColor(kRed));
+}
+
+TEST_F(PropertiesPanelTest, ATypedScaleIsAppliedByEnterAndTabAndDroppedByEsc) {
+    const EntityId line = addLine(0.0);
+    select({line});
+    // Real keys on a shown panel, with the cell's editor holding the focus.
+    panel().show();
+    panel().activateWindow();
+    ASSERT_TRUE(QTest::qWaitForWindowActive(&panel()));
+    const QModelIndex cell = panel().grid().valueIndex(PropertyField::LinetypeScale);
+    const auto type = [this](const QString& text) {
+        auto* scale = openEditor<QLineEdit>(PropertyField::LinetypeScale);
+        if (scale != nullptr) {
+            scale->setFocus();
+            scale->selectAll();
+            QTest::keyClicks(scale, text);
+        }
+        return scale;
+    };
+
+    // Esc closes the editor and drops what was typed: no change, no undo step.
+    QLineEdit* scale = type(QStringLiteral("2.5"));
+    ASSERT_NE(scale, nullptr);
+    EXPECT_TRUE(scale->hasFocus());
+    EXPECT_EQ(scale->text(), QStringLiteral("2.5"));
+    QTest::keyClick(scale, Qt::Key_Escape);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(grid()->indexWidget(cell), nullptr);
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 1.0);
+    EXPECT_EQ(editor().undoName(), "Test");
+    EXPECT_EQ(cell.data().toString(), QStringLiteral("1.0000"));
+
+    // Enter applies it, in one transaction.
+    scale = type(QStringLiteral("2.5"));
+    ASSERT_NE(scale, nullptr);
+    QTest::keyClick(scale, Qt::Key_Return);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 2.5);
+    undoProperties();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 1.0);
+
+    // So does Tab.
+    scale = type(QStringLiteral("3"));
+    ASSERT_NE(scale, nullptr);
+    QTest::keyClick(scale, Qt::Key_Tab);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 3.0);
+    undoProperties();
+    EXPECT_EQ(propertiesOf(line).linetypeScale, 1.0);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 TEST_F(PropertiesPanelTest, AColourChosenInItsCellIsOneUndoableTransaction) {

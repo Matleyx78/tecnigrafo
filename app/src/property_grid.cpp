@@ -475,6 +475,14 @@ Qt::ItemFlags PropertyGridModel::flags(const QModelIndex& index) const {
     return result;
 }
 
+bool PropertyGridModel::setData(const QModelIndex& index, const QVariant& value, int role) {
+    if (role != Qt::EditRole || !m_editable || index != valueIndex(PropertyField::LinetypeScale)) {
+        return false;
+    }
+    Q_EMIT linetypeScaleEntered(value.toString());
+    return true;
+}
+
 PropertyGridDelegate::PropertyGridDelegate(QObject* parent) : QStyledItemDelegate(parent) {}
 
 QRect PropertyGridDelegate::nextArrow(const QRect& cell) {
@@ -563,8 +571,6 @@ QWidget* PropertyGridDelegate::createEditor(QWidget* parent, const QStyleOptionV
         case PropertyField::LinetypeScale: {
             auto* editor = new QLineEdit(parent);
             editor->setObjectName(QString::fromLatin1(kLinetypeScaleEditor));
-            connect(editor, &QLineEdit::editingFinished, this,
-                    &PropertyGridDelegate::finishLinetypeScale);
             return editor;
         }
         case PropertyField::Lineweight: {
@@ -576,17 +582,6 @@ QWidget* PropertyGridDelegate::createEditor(QWidget* parent, const QStyleOptionV
         }
     }
     return nullptr;
-}
-
-void PropertyGridDelegate::finishLinetypeScale() {
-    auto* editor = qobject_cast<QLineEdit*>(sender());
-    // A line edit also finishes when it loses the focus or closes: only a
-    // text the user changed is a value.
-    if (editor == nullptr || !editor->isModified()) {
-        return;
-    }
-    editor->setModified(false);
-    Q_EMIT linetypeScaleEntered(editor->text().trimmed());
 }
 
 void PropertyGridDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const {
@@ -630,10 +625,17 @@ void PropertyGridDelegate::setEditorData(QWidget* editor, const QModelIndex& ind
     }
 }
 
-void PropertyGridDelegate::setModelData(QWidget* /*editor*/, QAbstractItemModel* /*model*/,
-                                        const QModelIndex& /*index*/) const {
-    // Nothing: the editors report the user's choice with the signals, and
-    // the panel changes the document, which the model shows again.
+void PropertyGridDelegate::setModelData(QWidget* editor, QAbstractItemModel* model,
+                                        const QModelIndex& index) const {
+    // The view commits on Enter, Tab and the focus leaving the cell, never
+    // on Esc. The combos have reported their choice already; the scale is
+    // committed only if the user changed its text.
+    auto* scale = qobject_cast<QLineEdit*>(editor);
+    if (scale == nullptr || !scale->isModified()) {
+        return;
+    }
+    scale->setModified(false);
+    model->setData(index, scale->text().trimmed(), Qt::EditRole);
 }
 
 void PropertyGridDelegate::updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option,

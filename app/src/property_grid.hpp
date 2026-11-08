@@ -120,6 +120,14 @@ public:
     [[nodiscard]] QVariant data(const QModelIndex& index,
                                 int role = Qt::DisplayRole) const override;
     [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
+    /// Only the linetype scale, as Qt::EditRole text, while editable: the
+    /// model stores nothing and reports it with linetypeScaleEntered(), and
+    /// the panel changes the document and shows the result (setShown).
+    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+
+Q_SIGNALS:
+    /// The text the user committed as linetype scale, unchecked.
+    void linetypeScaleEntered(const QString& text);
 
 private:
     [[nodiscard]] QVariant generalData(PropertyField field, int column, int role) const;
@@ -148,10 +156,12 @@ private:
 /// 0.6-P24: ColorCombo, LayerCombo, LinetypeCombo, LineweightCombo and a
 /// line edit for the linetype scale.
 ///
-/// The editors never write into the model: they report the user's choice
-/// with the signals below, and the panel changes the document and shows the
-/// result again (setShown). The arrows of Current Vertex report a click the
-/// same way.
+/// The combos report the user's choice with the signals below as soon as it
+/// is made; the linetype scale goes through the commit of the view (Enter,
+/// Tab, the focus leaving the cell) to PropertyGridModel::setData, so Esc
+/// drops what was typed. Either way the panel changes the document and shows
+/// the result again (setShown). The arrows of Current Vertex report a click
+/// with a signal too.
 class PropertyGridDelegate final : public QStyledItemDelegate {
     Q_OBJECT
 
@@ -183,13 +193,8 @@ Q_SIGNALS:
     void layerChosen(tg::core::LayerId value);
     void linetypeChosen(tg::core::LinetypeId value);
     void lineweightChosen(int value);
-    /// The text the user typed as linetype scale, unchecked.
-    void linetypeScaleEntered(const QString& text);
     void previousVertexRequested();
     void nextVertexRequested();
-
-private:
-    void finishLinetypeScale();
 };
 
 }  // namespace tg::app

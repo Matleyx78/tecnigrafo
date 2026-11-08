@@ -8,7 +8,6 @@
 #include <QAbstractItemModel>
 #include <QIcon>
 #include <QLineEdit>
-#include <QMetaObject>
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QPalette>
@@ -327,15 +326,27 @@ TEST_F(PropertyGridTest, TheDelegateOpensTheEditorsOfGeneral) {
     ASSERT_NE(edit, nullptr);
     EXPECT_EQ(edit->text(), QStringLiteral("2.5000"));
 
-    // A typed scale is reported once, as typed; an untouched one never.
-    const QSignalSpy entered(&delegate, &PropertyGridDelegate::linetypeScaleEntered);
-    ASSERT_TRUE(QMetaObject::invokeMethod(edit, "editingFinished", Qt::DirectConnection));
+    // A committed scale reaches the model once, as typed; an untouched one
+    // never. Editing the text sets the line edit modified.
+    const QModelIndex scaleIndex = model().valueIndex(PropertyField::LinetypeScale);
+    const QSignalSpy entered(&model(), &Model::linetypeScaleEntered);
+    delegate.setModelData(edit, &model(), scaleIndex);
     EXPECT_EQ(entered.size(), 0);
     edit->setText(QStringLiteral(" 3 "));
     edit->setModified(true);
-    ASSERT_TRUE(QMetaObject::invokeMethod(edit, "editingFinished", Qt::DirectConnection));
+    delegate.setModelData(edit, &model(), scaleIndex);
     ASSERT_EQ(entered.size(), 1);
     EXPECT_EQ(entered.at(0).at(0).toString(), QStringLiteral("3"));
+    delegate.setModelData(edit, &model(), scaleIndex);
+    EXPECT_EQ(entered.size(), 1) << "committed once";
+
+    // The model takes only the scale, and only while editable.
+    EXPECT_FALSE(model().setData(model().valueIndex(PropertyField::Color), QStringLiteral("1")));
+    model().setEditable(false);
+    EXPECT_FALSE(model().setData(scaleIndex, QStringLiteral("4")));
+    model().setEditable(true);
+    EXPECT_TRUE(model().setData(scaleIndex, QStringLiteral("4")));
+    EXPECT_EQ(entered.size(), 2);
 
     // Geometry and the names have no editor.
     const core::EntityRecord line = record(257, core::Line{{0.0, 0.0}, {10.0, 5.0}});
