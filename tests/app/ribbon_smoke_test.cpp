@@ -14,22 +14,29 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QImage>
+#include <QLineEdit>
 #include <QList>
 #include <QMenu>
+#include <QMetaObject>
 #include <QPalette>
 #include <QPoint>
 #include <QPointF>
 #include <QRect>
+#include <QSet>
 #include <QSignalSpy>
 #include <QSize>
 #include <QStatusBar>
 #include <QString>
+#include <QStringList>
 #include <QTimer>
+#include <QToolBar>
 #include <QToolButton>
 #include <gtest/gtest.h>
 
 #include <SARibbon.h>
 #include <array>
+#include <string>
+#include <utility>
 
 namespace tg::app {
 namespace {
@@ -150,6 +157,119 @@ TEST(RibbonSmoke, TheQuickAccessBarHasItsFiveActionsInOrderAsIcons) {
     EXPECT_LE(file.right(), tabs.left());
     EXPECT_LT(file.top(), tabs.bottom());
     EXPECT_GT(file.bottom(), tabs.top());
+}
+
+/// The button of the ribbon that runs `action`.
+QToolButton* ribbonButtonOf(SARibbonBar& ribbon, const QAction* action) {
+    for (auto* button : ribbon.findChildren<QToolButton*>()) {
+        if (button->defaultAction() == action) {
+            return button;
+        }
+    }
+    return nullptr;
+}
+
+TEST(RibbonSmoke, CircleAndArcShowTheirVariantsInADropDownWithTheirIcons) {
+    MainWindow window;
+    window.setScriptMode();
+    window.show();
+    QCoreApplication::processEvents();
+    SARibbonBar* ribbon = window.ribbonBar();
+    ASSERT_NE(ribbon, nullptr);
+    const ActionRegistry& registry = window.actionRegistry();
+    const QList<std::pair<QString, QStringList>> expected{
+        {QStringLiteral("draw.circle"),
+         {QStringLiteral("Center, &Radius"), QStringLiteral("Center, &Diameter"),
+          QStringLiteral("&2-Point"), QStringLiteral("&3-Point"),
+          QStringLiteral("&Tan, Tan, Radius")}},
+        {QStringLiteral("draw.arc"),
+         {QStringLiteral("&3-Point"), QStringLiteral("&Start, Center, End")}}};
+    for (const auto& [id, texts] : expected) {
+        SCOPED_TRACE(id.toStdString());
+        QAction* action = registry.action(id);
+        ASSERT_NE(action, nullptr);
+        QToolButton* button = ribbonButtonOf(*ribbon, action);
+        ASSERT_NE(button, nullptr);
+        EXPECT_EQ(button->popupMode(), QToolButton::MenuButtonPopup);
+        QMenu* menu = action->menu();
+        ASSERT_NE(menu, nullptr);
+        EXPECT_EQ(menu->actions(), registry.variants(id));
+        QStringList shown;
+        QSet<qint64> icons;
+        for (const QAction* variant : menu->actions()) {
+            shown.append(variant->text());
+            EXPECT_FALSE(variant->icon().isNull()) << variant->objectName().toStdString();
+            icons.insert(variant->icon().cacheKey());
+        }
+        EXPECT_EQ(shown, texts);
+        EXPECT_EQ(icons.size(), texts.size()) << "each variant has its own icon";
+        // The arrow of the button opens that menu; it closes itself once
+        // shown, as the File tab's does.
+        bool opened = false;
+        const QMetaObject::Connection shownOnce =
+            QObject::connect(menu, &QMenu::aboutToShow, menu, [menu, &opened] {
+                opened = true;
+                QTimer::singleShot(0, menu, &QMenu::close);
+            });
+        button->showMenu();
+        QCoreApplication::processEvents();
+        QObject::disconnect(shownOnce);
+        EXPECT_TRUE(opened);
+    }
+}
+
+TEST(RibbonSmoke, TheButtonOfCircleRemembersTheLastVariantUsed) {
+    MainWindow window;
+    window.setScriptMode();
+    window.show();
+    QCoreApplication::processEvents();
+    SARibbonBar* ribbon = window.ribbonBar();
+    ASSERT_NE(ribbon, nullptr);
+    const ActionRegistry& registry = window.actionRegistry();
+    QAction* circle = registry.action(QStringLiteral("draw.circle"));
+    QAction* twoPoints = registry.action(QStringLiteral("draw.circle.2-point"));
+    ASSERT_NE(circle, nullptr);
+    ASSERT_NE(twoPoints, nullptr);
+    QToolButton* button = ribbonButtonOf(*ribbon, circle);
+    ASSERT_NE(button, nullptr);
+    auto* input = window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
+    ASSERT_NE(input, nullptr);
+    const std::string center = "Specify center point for circle or [3P/2P/Ttr (tan tan radius)]:";
+
+    // At first the button runs Center, Radius, and shows its icon.
+    QAction* first = registry.variants(QStringLiteral("draw.circle")).value(0);
+    EXPECT_EQ(registry.currentVariant(QStringLiteral("draw.circle")), first);
+    EXPECT_EQ(button->icon().cacheKey(), first->icon().cacheKey());
+    button->click();
+    EXPECT_EQ(window.runner().promptText(), center);
+    events::press(input, Qt::Key_Escape);
+    ASSERT_FALSE(window.runner().isActive());
+
+    // 2-Point, chosen from the menu, becomes the button's.
+    twoPoints->trigger();
+    EXPECT_EQ(window.runner().promptText(), "Specify first end point of circle's diameter:");
+    events::press(input, Qt::Key_Escape);
+    ASSERT_FALSE(window.runner().isActive());
+    EXPECT_EQ(registry.currentVariant(QStringLiteral("draw.circle")), twoPoints);
+    EXPECT_EQ(button->icon().cacheKey(), twoPoints->icon().cacheKey());
+    button->click();
+    EXPECT_EQ(window.runner().promptText(), "Specify first end point of circle's diameter:");
+    events::press(input, Qt::Key_Escape);
+
+    // A new theme redraws the icons: the button keeps the variant's.
+    window.setTheme(Theme::Dark);
+    EXPECT_EQ(button->icon().cacheKey(), twoPoints->icon().cacheKey());
+    EXPECT_EQ(twoPoints->icon().cacheKey(),
+              themedIcon(QStringLiteral("draw-circle-2p"), Theme::Dark).cacheKey());
+
+    // The classic interface has the same in its toolbar.
+    window.setInterface(InterfaceKind::Classic);
+    auto* draw = window.findChild<QToolBar*>(QStringLiteral("home/draw"));
+    ASSERT_NE(draw, nullptr);
+    auto* classic = qobject_cast<QToolButton*>(draw->widgetForAction(circle));
+    ASSERT_NE(classic, nullptr);
+    EXPECT_EQ(classic->popupMode(), QToolButton::MenuButtonPopup);
+    EXPECT_EQ(classic->icon().cacheKey(), twoPoints->icon().cacheKey());
 }
 
 TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {

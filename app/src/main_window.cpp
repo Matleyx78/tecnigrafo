@@ -54,6 +54,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstdint>
@@ -64,6 +65,18 @@
 namespace tg::app {
 
 namespace {
+
+/// Whether `response` is an option of `prompt`, by its name or its
+/// shortcut in any case, as CommandRunner reads a typed option.
+bool offers(const cmd::Prompt& prompt, const QString& response) {
+    const auto same = [&response](const std::string& text) {
+        return !text.empty() &&
+               response.compare(QString::fromStdString(text), Qt::CaseInsensitive) == 0;
+    };
+    return std::ranges::any_of(prompt.keywords, [&same](const cmd::Keyword& keyword) {
+        return same(keyword.name) || same(keyword.shortcut);
+    });
+}
 
 /// Observes successful writes, including SAVE copies that do not change
 /// the editor's file name or saved position. Serialization stays in cmd/io.
@@ -289,17 +302,25 @@ void MainWindow::createMenus() {
     addBuiltinActions(*m_actions);
 
     // Actions with a command run it as if typed in the command line, which
-    // shows it; like typing, they wait for the running command to end.
+    // shows it, then give it their responses; like typing, they wait for the
+    // running command to end. An action with variants runs the one used
+    // last (docs/tappe/0.7.5/P19).
     for (QAction* action : m_actions->actions()) {
-        const QString command = m_actions->spec(action->objectName())->command;
-        if (command.isEmpty()) {
+        const ActionSpec* spec = m_actions->spec(action->objectName());
+        if (spec->command.isEmpty()) {
             continue;
         }
         m_idleActions.append(action);
-        connect(action, &QAction::triggered, this, [this, command] {
-            submitFileText(command);
-            refresh();
-        });
+        if (!m_actions->variants(spec->id).isEmpty()) {
+            connect(action, &QAction::triggered, this,
+                    [this, id = spec->id] { m_actions->currentVariant(id)->trigger(); });
+            continue;
+        }
+        connect(action, &QAction::triggered, this,
+                [this, command = spec->command, responses = spec->responses] {
+                    startCommand(command, responses);
+                    refresh();
+                });
     }
 
     m_recentMenu = new QMenu(tr("Recent Files"), this);
@@ -585,6 +606,8 @@ void MainWindow::createStatusBar() {
 }
 
 void MainWindow::refresh() {
+    // An input may be the user's answer that a variant waits for.
+    giveResponses();
     // A click or Esc may have changed the selection the panel shows.
     if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
         properties->refresh();
@@ -664,6 +687,40 @@ void MainWindow::submitFileText(const QString& text) {
         QStringLiteral("%1 %2").arg(QString::fromStdString(m_runner.promptText()), text));
     m_runner.submitText(text.toStdString());
     m_commandLine->refreshPrompt();
+}
+
+void MainWindow::startCommand(const QString& command, const QStringList& responses) {
+    submitFileText(command);
+    m_responses = responses;
+    m_waitingAt.reset();
+    giveResponses();
+}
+
+void MainWindow::giveResponses() {
+    while (!m_responses.isEmpty() && m_runner.isActive()) {
+        const cmd::Prompt prompt = m_runner.prompt();
+        if (m_responses.first() == QString(kWaitForUser)) {
+            // The user answers at this prompt; until it changes, the next
+            // input decides.
+            if (!m_waitingAt.has_value()) {
+                m_waitingAt = prompt;
+                return;
+            }
+            if (*m_waitingAt == prompt) {
+                return;
+            }
+            m_waitingAt.reset();
+            m_responses.removeFirst();
+            continue;
+        }
+        if (!offers(prompt, m_responses.first())) {
+            break;  // the command asks something else: the rest is dropped
+        }
+        submitFileText(m_responses.takeFirst());
+    }
+    // Answered, or the command has ended: nothing waits any more.
+    m_responses.clear();
+    m_waitingAt.reset();
 }
 
 void MainWindow::ensureRecentFiles() {
