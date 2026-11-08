@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+#
+# The commit of solid-space that a package of Tecnigrafo must point the
+# submodule to, written in the issue by itself (docs/adr/0030, point 9;
+# docs/tappe/0.7.5/P6-sottomodulo-automatico.md): every day, and when started
+# by hand from the Actions tab, scripts/dipendenze.py --sottomodulo --applica
+# writes the line "**Sottomodulo di solid-space:**" in every open package whose
+# dependencies in solid-space are all closed, and comments, without changing
+# it, a line that names another commit.
+#
+# It writes issues of Tecnigrafo only. It reads solid-space as a public
+# repository, with no permission on it, and never moves the pointer: that is
+# the pull request of the package, checked by the job "Submodule pointer" of
+# ci.yml. A run fails when a package of solid-space is closed without a pull
+# request merged into main that closes it, or as not planned: the log says
+# which one to check by hand.
+name: Submodule commit
+
+on:
+  schedule:
+    - cron: '41 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+# One run at a time, so that two runs cannot write the same line or comment.
+concurrency:
+  group: sottomodulo
+  cancel-in-progress: false
+
+jobs:
+  write:
+    name: Write the submodule commit in the issues
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Write the missing lines and report the different ones
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TG_REPO: ${{ github.repository }}
+        run: python3 scripts/dipendenze.py --sottomodulo --applica

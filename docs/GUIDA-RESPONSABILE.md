@@ -233,6 +233,30 @@ risposto di no.
 Lo script legge il piano dalla cartella, quindi lancialo **su `main`
 aggiornato**: su un ramo vecchio confronterebbe GitHub con un piano superato.
 
+**Il commit del sottomodulo** (ADR 0030, punto 9) non lo scrivi più a mano. Il
+workflow *Submodule commit* (`.github/workflows/sottomodulo.yml`) gira ogni
+giorno e lancia `scripts/dipendenze.py --sottomodulo --applica`: in ogni issue
+aperta con l'etichetta `pacchetto` le cui dipendenze in solid-space sono tutte
+chiuse, scrive sotto "Dipende da" la riga
+
+```text
+**Sottomodulo di solid-space:** <commit> (chiude <pacchetto> con la pull request Matleyx78/solid-space#N)
+```
+
+con il commit di unione su `main` della pull request più recente che chiude
+quei pacchetti (le richieste non contano). Se la riga c'è già con un altro
+commit **non la cambia**: lo scrive in un commento della issue, una volta sola,
+con i due commit e il perché; la correggi tu, se serve. Non sposta mai il
+puntatore e non scrive in solid-space. Il workflow fallisce, e GitHub te lo
+segnala, se un pacchetto di solid-space è chiuso senza una pull request unita
+che lo chiuda, o come «non pianificato»: il log dice quale controllare.
+
+Dopo il merge di un pacchetto di solid-space non serve aspettare il giorno
+dopo: dalla scheda *Actions* del repository scegli *Submodule commit* e *Run
+workflow*. Dal PC, senza scrivere niente, `scripts/dipendenze.py --sottomodulo`
+mostra che cosa scriverebbe (codice 1 se c'è qualcosa da scrivere, da
+segnalare o da controllare).
+
 ---
 
 ## B. Il ciclo di una tappa
@@ -886,11 +910,19 @@ Ogni pull request si unisce come in A3. In più, durante una tappa:
    che possono partire, e con `s` le sposta da *Bloccato* a *Da fare* nel
    Project. Non chiudere la richiesta anche se tutti i suoi pacchetti sono
    uniti: si chiude al punto 3.
-3. **Quando unisci il pacchetto di Tecnigrafo che usa il pezzo nuovo**, controlla
-   che sposti il sottomodulo al commit che la sua scheda indica (ADR 0030, punto
-   9): nella sua pull request `third_party/solid-space` deve puntare a quel
-   commit. Se è l'ultimo della colonna «Si chiude con» di una richiesta (piano,
-   sezione 5, «Richieste a solid-space»), controlla il «quando è soddisfatta»
+   La riga «Sottomodulo di solid-space» della issue la scrive il workflow
+   *Submodule commit* (A4): lancialo a mano dopo il merge, se l'agente deve
+   partire subito.
+3. **Quando unisci il pacchetto di Tecnigrafo che usa il pezzo nuovo**, il
+   sottomodulo deve stare al commit della riga «Sottomodulo di solid-space»
+   della sua issue, o a uno successivo di `main` di solid-space (ADR 0030, punto
+   9). Lo controlla il lavoro *Submodule pointer (ADR 0030)* della CI: fallisce,
+   dicendo perché, se il puntatore non è su `main` di solid-space, se è
+   precedente al commit della riga, o se la issue non ha la riga (allora lancia
+   *Submodule commit* e rilancia il lavoro). Una tua pull request senza issue da
+   chiudere controlla solo che il commit sia su `main`. Se il pacchetto è
+   l'ultimo della colonna «Si chiude con» di una richiesta (piano, sezione 5,
+   «Richieste a solid-space»), controlla il «quando è soddisfatta»
    della richiesta e chiudi la sua issue in solid-space. `scripts/dipendenze.py
    <tappa>` lo segnala sotto «To check».
 

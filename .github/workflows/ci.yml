@@ -142,6 +142,48 @@ jobs:
           fi
           echo "Reference separation respected."
 
+  # docs/adr/0030, point 9 (0.7.5-P6): a pull request that moves the submodule
+  # of solid-space must point to a commit of main of solid-space, not earlier
+  # than the one written in the issue it closes (the line "Sottomodulo di
+  # solid-space", written by .github/workflows/sottomodulo.yml). The pointer
+  # is compared with the one at the point where the branch left main, so a
+  # branch behind main is not taken for a change. Without an issue to close
+  # (a pull request of the maintainer) only main is checked.
+  submodule:
+    name: Submodule pointer (ADR 0030)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check the pointer of third_party/solid-space
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+          TG_REPO: ${{ github.repository }}
+        run: |
+          fork=$(git merge-base "$BASE" "$HEAD")
+          before=$(git ls-tree "$fork" third_party/solid-space | awk '{print $3}')
+          after=$(git ls-tree "$HEAD" third_party/solid-space | awk '{print $3}')
+          if [ "$before" = "$after" ]; then
+            echo "The submodule of solid-space does not move (${after:-absent})."
+            exit 0
+          fi
+          echo "The submodule of solid-space moves from ${before:-absent} to ${after:-absent}."
+          if [ -z "$after" ]; then
+            echo "::error title=Submodule pointer::this pull request removes third_party/solid-space"
+            exit 1
+          fi
+          python3 scripts/dipendenze.py --controlla-puntatore "$after" --pr "$PR"
+
   format:
     name: Formatting (clang-format 18)
     needs: changes

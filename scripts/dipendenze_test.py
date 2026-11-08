@@ -18,6 +18,7 @@ import re
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -660,6 +661,338 @@ class Fallbacks(unittest.TestCase):
     def test_json_values(self):
         self.assertEqual(d.json_values('[1, 2]\n[3]'), [[1, 2], [3]])
         self.assertEqual(d.json_values('{"a": 1}'), [{"a": 1}])
+
+
+# --- The submodule of solid-space (0.7.5-P6) ------------------------------------------
+
+# Three commits of main of solid-space, in this order, and one outside main.
+OLD, MID, NEW = "1" * 40, "2" * 40, "3" * 40
+OFF = "9" * 40
+MAIN_ORDER = [OLD, MID, NEW]
+
+
+def compare_status(base: str, head: str) -> str | None:
+    """What the compare API of GitHub says of two commits of the fake
+    solid-space: main is NEW; OFF diverges; anything else is unknown."""
+    order = MAIN_ORDER + ["main"]
+    full = {c[:7]: c for c in MAIN_ORDER}
+    base, head = full.get(base, base), full.get(head, head)
+    rank = {c: i for i, c in enumerate(order)}
+    rank["main"] = rank[NEW]
+    if OFF in (base, head):
+        return "diverged"
+    if base not in rank or head not in rank:
+        return None
+    if rank[base] == rank[head]:
+        return "identical"
+    return "ahead" if rank[head] > rank[base] else "behind"
+
+
+def xref(pr: int, text: str, merged: str | None = "2026-11-01T10:00:00Z", repo: str = SS) -> dict:
+    """A "cross-referenced" event of a timeline: a pull request that mentions
+    the issue."""
+    return {"event": "cross-referenced", "source": {"type": "issue", "issue": {
+        "number": pr, "body": text, "pull_request": {"merged_at": merged},
+        "repository": {"full_name": repo}}}}
+
+
+def pull(pr: int, sha: str, merged_at: str, base: str = "main") -> dict:
+    return {"number": pr, "merged_at": merged_at, "merge_commit_sha": sha, "base": {"ref": base}}
+
+
+def package_body(deps: str, line: str | None = None) -> str:
+    text = f"**Tappa:** 0.8 · **Pacchetto:** PT3\n**Dipende da:** {deps}\n"
+    if line:
+        text += line + "\n"
+    return text + "**Riferimenti:** #20\n\nTesto."
+
+
+class SubmoduleWorld:
+    """The answers of GitHub for --sottomodulo and --controlla-puntatore."""
+
+    def __init__(self):
+        self.responses: dict = {f"repos/{TG}/issues?state=open&labels=pacchetto&per_page=100": []}
+
+    def tg_issue(self, number: int, text: str, labels=("pacchetto", "agente:claude"), title: str = "") -> dict:
+        data = issue(number, "open", labels, text, title or f"[0.8-PT{number}] lavoro")
+        self.responses[f"repos/{TG}/issues?state=open&labels=pacchetto&per_page=100"].append(data)
+        self.responses[f"repos/{TG}/issues/{number}"] = data
+        self.responses[f"repos/{TG}/issues/{number}/comments?per_page=100"] = []
+        return data
+
+    def package(self, number: int, state: str = "closed", reason: str | None = "completed",
+                events=(), labels=(), tag: str | None = None) -> None:
+        data = issue(number, state, labels, title=f"[{tag or f'0.3-PS{number}'}] pacchetto")
+        data["state_reason"] = reason
+        self.responses[f"repos/{SS}/issues/{number}"] = data
+        self.responses[f"repos/{SS}/issues/{number}/timeline?per_page=100"] = list(events)
+
+    def pulls(self, *pulls: dict) -> None:
+        for p in pulls:
+            self.responses[f"repos/{SS}/pulls/{p['number']}"] = p
+
+    def run(self, *args: str) -> tuple[int, str, str, "CompareGitHub"]:
+        gh = CompareGitHub(self.responses)
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = d.main(list(args), gh=gh, root=Path("unused"))
+        return code, out.getvalue(), err.getvalue(), gh
+
+
+class CompareGitHub(FakeGitHub):
+    def get(self, path, paginate=False):
+        m = re.fullmatch(rf"repos/{SS}/compare/([^.]+)\.\.\.(.+)", path)
+        if m:
+            self.read.append(path)
+            status = compare_status(m.group(1), m.group(2))
+            if status is None:
+                raise d.Failure(f"GitHub refused: gh api {path}")
+            return {"status": status}
+        return super().get(path, paginate)
+
+
+def ss_line(sha: str, tag: str, pr: int) -> str:
+    return f"**Sottomodulo di solid-space:** {sha} (chiude {tag} con la pull request {SS}#{pr})"
+
+
+class ClosingKeywords(unittest.TestCase):
+    def test_keywords(self):
+        ref = d.Ref(SS, 56)
+        for text in ("Closes #56", "closes: #56", "Fixes #56.", "RESOLVED #56", f"Closes {SS}#56",
+                     "Testo.\n\nClose #56\n"):
+            with self.subTest(text=text):
+                self.assertTrue(d.closes(text, ref, SS))
+        for text in ("Closes #560", "Chiude #56", "See #56", "Closes #5", f"Closes {TG}#56", "Closes#56"):
+            with self.subTest(text=text):
+                self.assertFalse(d.closes(text, ref, SS))
+
+    def test_closed_issues_of_a_pull_request(self):
+        text = f"Closes #12, fixes {TG}#13 and resolves {SS}#14.\nCloses #12\nSee #15."
+        self.assertEqual(d.closed_issues(text, TG), [d.Ref(TG, 12), d.Ref(TG, 13)])
+        self.assertEqual(d.closed_issues("Chiude #12", TG), [])
+
+
+class Submodule(unittest.TestCase):
+    """--sottomodulo: the line of the commit in the open packages."""
+
+    def world(self, line: str | None = None) -> SubmoduleWorld:
+        """PT3 (#30) depends on #29 and on PS56 of solid-space, closed by
+        pull request 80 at commit MID."""
+        w = SubmoduleWorld()
+        w.tg_issue(30, package_body(f"#29 (RT3), {SS}#56 (0.3-PS56)", line))
+        w.package(56, events=[xref(80, "Closes #56")])
+        w.pulls(pull(80, MID, "2026-11-02T10:00:00Z"))
+        return w
+
+    def test_missing_line_is_written(self):
+        w = self.world()
+        code, out, err, gh = w.run("--sottomodulo")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(f"To write:\n  #30 [0.8-PT30]: {ss_line(MID, '0.3-PS56', 80)}", out)
+        self.assertEqual(gh.sent, [])
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(gh.sent, [("PATCH", f"repos/{TG}/issues/30",
+                                    {"body": package_body(f"#29 (RT3), {SS}#56 (0.3-PS56)",
+                                                          ss_line(MID, "0.3-PS56", 80))})])
+
+    def test_same_line_does_nothing(self):
+        for line in (ss_line(MID, "0.3-PS56", 80), f"**Sottomodulo di solid-space:** {MID[:7]} (a mano)"):
+            with self.subTest(line=line):
+                code, out, err, gh = self.world(line).run("--sottomodulo", "--applica")
+                self.assertEqual(code, 0, out + err)
+                self.assertIn("Nothing to write, report or check.", out)
+                self.assertEqual(gh.sent, [])
+                self.assertNotIn(f"repos/{TG}/issues/30/comments?per_page=100", gh.read)
+
+    def test_different_line_is_reported_not_changed(self):
+        w = self.world(ss_line(OLD, "0.3-PS56", 70))
+        code, out, err, gh = w.run("--sottomodulo")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(f"Different line:\n  #30 [0.8-PT30]: the line says {OLD}, the packages {MID}", out)
+        self.assertEqual(gh.sent, [])
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(len(gh.sent), 1)
+        method, path, data = gh.sent[0]
+        self.assertEqual((method, path), ("POST", f"repos/{TG}/issues/30/comments"))
+        self.assertIn(f"dice `{OLD}`", data["body"])
+        self.assertIn(f"è `{MID}` (chiude 0.3-PS56 con la pull request {SS}#80)", data["body"])
+        self.assertIn("più recente", data["body"])
+        self.assertIn("La riga non è stata cambiata", data["body"])
+        self.assertFalse(any(m == "PATCH" for m, _, _ in gh.sent))
+        # Once reported, the same pair of commits is not reported again.
+        w.responses[f"repos/{TG}/issues/30/comments?per_page=100"] = [{"body": data["body"]}]
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(gh.sent, [])
+        self.assertIn("already reported", out)
+
+    def test_why_the_line_differs(self):
+        for line, why in ((NEW, "successivo"), (OFF, "non è su `main`")):
+            with self.subTest(line=line):
+                w = self.world(ss_line(line, "0.3-PS56", 90))
+                _, _, _, gh = w.run("--sottomodulo", "--applica")
+                self.assertIn(why, gh.sent[0][2]["body"])
+
+    def test_dependencies_not_all_closed(self):
+        w = self.world()
+        w.tg_issue(31, package_body(f"{SS}#56, {SS}#57"))
+        w.package(57, state="open", reason=None)
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertNotIn("#31", out)
+        self.assertEqual([p for _, p, _ in gh.sent], [f"repos/{TG}/issues/30"])
+        self.assertNotIn(f"repos/{SS}/issues/57/timeline?per_page=100", gh.read)
+
+    def test_issues_without_solid_space_are_left_alone(self):
+        w = SubmoduleWorld()
+        w.tg_issue(32, package_body("#29 (RT3)"))
+        w.tg_issue(33, "Senza dipendenze.")
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(gh.sent, [])
+
+    def test_two_packages_take_the_latest_commit(self):
+        w = SubmoduleWorld()
+        w.tg_issue(30, package_body(f"{SS}#56 (0.3-PS56), {SS}#57 (0.3-PS57)"))
+        # PS57 merged before PS56: its commit is not the one to point to.
+        w.package(56, events=[xref(80, "Closes #56")])
+        w.package(57, events=[xref(81, f"Fixes {SS}#57")])
+        w.pulls(pull(80, NEW, "2026-11-05T10:00:00Z"), pull(81, MID, "2026-11-03T10:00:00Z"))
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn(ss_line(NEW, "0.3-PS56", 80), gh.sent[0][2]["body"])
+
+    def test_only_merged_pull_requests_into_main_that_close_it(self):
+        w = SubmoduleWorld()
+        w.tg_issue(30, package_body(f"{SS}#56"))
+        w.package(56, events=[
+            xref(80, "Closes #56"),
+            xref(81, "See #56: a later merged pull request that only mentions it"),
+            xref(82, "Closes #56", merged=None),                  # not merged
+            xref(83, "Closes #56"),                               # merged into another branch
+            xref(84, f"Closes {SS}#56", repo=TG),                 # another repository
+            xref(85, "Closes #56"),                               # a fix that closes it again
+        ])
+        w.pulls(pull(80, OLD, "2026-11-01T10:00:00Z"), pull(83, OFF, "2026-11-09T10:00:00Z", base="dev"),
+                pull(85, MID, "2026-11-04T10:00:00Z"))
+        code, out, err, gh = w.run("--sottomodulo")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(ss_line(MID, "0.3-PS56", 85), out)
+        self.assertNotIn(f"repos/{SS}/pulls/81", gh.read)
+        self.assertNotIn(f"repos/{SS}/pulls/82", gh.read)
+
+    def test_closed_without_a_pull_request_or_not_planned(self):
+        w = SubmoduleWorld()
+        w.tg_issue(30, package_body(f"{SS}#56, {SS}#57, {SS}#58"))
+        w.package(56, events=[xref(80, "Closes #56")])
+        w.package(57, events=[])
+        w.package(58, reason="not_planned", events=[xref(81, "Closes #58")])
+        w.pulls(pull(80, MID, "2026-11-02T10:00:00Z"), pull(81, NEW, "2026-11-03T10:00:00Z"))
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(f"#30 [0.8-PT30]: no pull request merged into main of solid-space closes {SS}#57", out)
+        self.assertIn(f"#30 [0.8-PT30]: {SS}#58 was closed as not planned", out)
+        self.assertEqual(gh.sent, [])
+
+    def test_requests_do_not_count(self):
+        w = SubmoduleWorld()
+        w.tg_issue(30, package_body(f"{SS}#20 (richiesta), {SS}#56"))
+        w.tg_issue(31, package_body(f"{SS}#20"))
+        w.package(20, events=[], labels=["richiesta"])
+        w.package(56, events=[xref(80, "Closes #56")])
+        w.pulls(pull(80, MID, "2026-11-02T10:00:00Z"))
+        code, out, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("#31 [0.8-PT31]: its dependencies in solid-space are requests only", out)
+        self.assertEqual([p for _, p, _ in gh.sent], [f"repos/{TG}/issues/30"])
+
+    def test_never_writes_to_solid_space_and_read_failure(self):
+        w = self.world(ss_line(OLD, "0.3-PS56", 70))
+        w.tg_issue(31, package_body(f"{SS}#57"))
+        w.package(57, events=[xref(81, "Closes #57")])
+        w.pulls(pull(81, NEW, "2026-11-03T10:00:00Z"))
+        _, _, _, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(len(gh.sent), 2)
+        self.assertTrue(all(p.startswith(f"repos/{TG}/issues/") for _, p, _ in gh.sent))
+        del w.responses[f"repos/{SS}/pulls/81"]
+        code, _, err, gh = w.run("--sottomodulo", "--applica")
+        self.assertEqual(code, 2)
+        self.assertIn("GitHub refused", err)
+        self.assertEqual(gh.sent, [])
+
+
+class Pointer(unittest.TestCase):
+    """--controlla-puntatore: the check of a pull request that moves the
+    submodule."""
+
+    def world(self, pr_text: str = "Descrizione.\n\nCloses #30", line: str | None = None) -> SubmoduleWorld:
+        w = SubmoduleWorld()
+        w.tg_issue(30, package_body(f"{SS}#56", line if line is not None else ss_line(MID, "0.3-PS56", 80)))
+        w.responses[f"repos/{TG}/pulls/40"] = {"number": 40, "body": pr_text}
+        return w
+
+    def check(self, w: SubmoduleWorld, commit: str, pr: str | None = "40", **env) -> tuple[int, str]:
+        args = ["--controlla-puntatore", commit] + (["--pr", pr] if pr else [])
+        with unittest.mock.patch.dict(os.environ, env):
+            code, out, err, gh = w.run(*args)
+        self.assertEqual(gh.sent, [])
+        return code, out + err
+
+    def test_right_pointer(self):
+        for commit in (MID, NEW, MID.upper()):
+            with self.subTest(commit=commit):
+                code, out = self.check(self.world(), commit)
+                self.assertEqual(code, 0, out)
+                self.assertIn("right", out)
+
+    def test_earlier_than_the_line(self):
+        code, out = self.check(self.world(), OLD)
+        self.assertEqual(code, 1, out)
+        self.assertIn(f"points to {OLD}, earlier than {MID}, the commit that #30 names", out)
+
+    def test_not_on_main(self):
+        code, out = self.check(self.world(), OFF)
+        self.assertEqual(code, 1, out)
+        self.assertIn(f"{OFF}, which is not a commit of main of {SS}", out)
+        code, out = self.check(self.world(), "8" * 40)
+        self.assertEqual(code, 1, out)
+        self.assertIn("unknown commit", out)
+
+    def test_issue_without_the_line(self):
+        code, out = self.check(self.world(line=""), NEW)
+        self.assertEqual(code, 1, out)
+        self.assertIn("#30 has no line \"**Sottomodulo di solid-space:** <commit>\": run the workflow "
+                      "\"Submodule commit\"", out)
+
+    def test_line_off_main(self):
+        code, out = self.check(self.world(line=ss_line(OFF, "0.3-PS56", 80)), NEW)
+        self.assertEqual(code, 1, out)
+        self.assertIn(f"#30 names {OFF}, which is not a commit of main", out)
+
+    def test_without_an_issue_only_main(self):
+        for text, pr in (("Aggiorna il sottomodulo.", "40"), ("Closes #30", None)):
+            with self.subTest(pr=pr):
+                code, out = self.check(self.world(text, line=""), OLD, pr)
+                self.assertEqual(code, 0, out)
+                self.assertIn("only main checked", out)
+        code, out = self.check(self.world("Aggiorna il sottomodulo."), OFF)
+        self.assertEqual(code, 1, out)
+
+    def test_annotation_in_github_actions(self):
+        code, out = self.check(self.world(), OLD, GITHUB_ACTIONS="true")
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=Submodule pointer::third_party/solid-space points to", out)
+
+    def test_arguments(self):
+        for args in (["--sottomodulo", "0.8"], ["--controlla-puntatore", MID, "--sottomodulo"],
+                     ["--pr", "4", "0.8"], ["--controlla-puntatore", "not-a-commit"],
+                     ["--controlla-puntatore", MID, "--applica"], ["--sottomodulo", "--senza-project"], []):
+            with self.subTest(args=args), redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    d.main(args, gh=FakeGitHub({}), root=Path("unused"))
+                self.assertEqual(error.exception.code, 2)
 
 
 @unittest.skipUnless(shutil.which("bash") and shutil.which("jq"), "bash and jq required")

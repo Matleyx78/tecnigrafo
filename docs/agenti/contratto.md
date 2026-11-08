@@ -11,8 +11,10 @@ Vale insieme al nucleo. Leggere e commentare in solid-space:
 Di solid-space usa solo ciò che la scheda cita: le intestazioni accettate come
 contratto, nella versione fissata dal sottomodulo. Una funzione dichiarata ma
 non ancora realizzata non si usa finché il suo pacchetto di solid-space non è
-unito. Il sottomodulo lo sposti solo se la scheda lo dice, al commit che indica
-([ADR 0030](../adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 9).
+unito. Il sottomodulo lo sposti solo se la scheda lo dice, al commit della riga
+«Sottomodulo di solid-space» della issue
+([ADR 0030](../adr/0030-solid-space-kernel-di-tecnigrafo.md), punto 9; sotto,
+"Prima della pull request, se sposti il sottomodulo").
 Un esempio della regola del nucleo su dipendenze, `cmake/` e `.github/` («salvo
 che la scheda lo dica esplicitamente») è il pacchetto che porta il sottomodulo di
 solid-space (ADR 0030, punto 8). Come tenere il sottomodulo al commit giusto dopo
@@ -62,6 +64,16 @@ Se il contratto determina la risposta ma la scheda no, il buco è nella scheda:
 [pacchetto.md](pacchetto.md), "Un buco nella scheda".
 
 ## Prima della pull request, se sposti il sottomodulo
+
+Il commit a cui spostarlo è nella riga
+`**Sottomodulo di solid-space:** <commit> (…)` della issue del pacchetto, che
+scrive da solo il workflow *Submodule commit*
+(`.github/workflows/sottomodulo.yml`): non sceglierlo tu e non cambiare la
+riga. Se la riga manca, o un commento del workflow dice che è diversa dal
+commit che chiude le dipendenze, fermati come per un buco visibile della scheda
+([pacchetto.md](pacchetto.md), "Buchi visibili e no", punti 2–3): lo decide il
+responsabile. Il lavoro *Submodule pointer (ADR 0030)* della CI fallisce se il
+puntatore non è su `main` di solid-space o è precedente al commit della riga.
 
 Era il punto 1 di "Quando fermarsi". Prima di aprire la pull request, se il
 pacchetto sposta il sottomodulo di solid-space, controlla il suo
