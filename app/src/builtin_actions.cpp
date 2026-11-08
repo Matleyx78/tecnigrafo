@@ -53,6 +53,12 @@ ActionSpec withIcon(ActionSpec spec, const QString& icon) {
     return spec;
 }
 
+/// `spec` in the quick access bar (docs/adr/0039, point 1, area 1).
+ActionSpec quickAccess(ActionSpec spec) {
+    spec.quickAccess = true;
+    return spec;
+}
+
 /// A separator of `menu`.
 void addSeparator(ActionRegistry& registry, const QString& id, const QString& menu) {
     ActionSpec spec;
@@ -99,20 +105,21 @@ void BuiltinActions::add(ActionRegistry& registry) {
     const QString file = tr("&File");
     // Some Qt platforms (including offscreen) have no SaveAs binding: keep
     // the platform keys and always offer the CAD shortcut (docs/tappe/0.5).
+    addWithKeys(
+        registry,
+        quickAccess(withIcon(commandSpec(QStringLiteral("file.new"), tr("&New"), file,
+                                         tr("Starts a new drawing."), QStringLiteral("NEW")),
+                             QStringLiteral("file-new"))),
+        keysWith(QKeySequence::New, {}));
     addWithKeys(registry,
-                withIcon(commandSpec(QStringLiteral("file.new"), tr("&New"), file,
-                                     tr("Starts a new drawing."), QStringLiteral("NEW")),
-                         QStringLiteral("file-new")),
-                keysWith(QKeySequence::New, {}));
-    addWithKeys(registry,
-                withIcon(commandSpec(QStringLiteral("file.open"), tr("&Open…"), file,
-                                     tr("Opens a drawing."), QStringLiteral("OPEN")),
-                         QStringLiteral("file-open")),
+                quickAccess(withIcon(commandSpec(QStringLiteral("file.open"), tr("&Open…"), file,
+                                                 tr("Opens a drawing."), QStringLiteral("OPEN")),
+                                     QStringLiteral("file-open"))),
                 keysWith(QKeySequence::Open, {}));
     addWithKeys(registry,
-                withIcon(commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
-                                     tr("Saves the drawing."), QStringLiteral("QSAVE")),
-                         QStringLiteral("file-save")),
+                quickAccess(withIcon(commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
+                                                 tr("Saves the drawing."), QStringLiteral("QSAVE")),
+                                     QStringLiteral("file-save"))),
                 keysWith(QKeySequence::Save, {}));
     addWithKeys(
         registry,
@@ -135,16 +142,16 @@ void BuiltinActions::add(ActionRegistry& registry) {
     // echo of a typed command, so that Ctrl+Z writes only "Undone: ..." in
     // the history, as before the registry. MainWindow connects them.
     addWithKeys(registry,
-                withIcon(makeSpec(QStringLiteral("edit.undo"), tr("&Undo"), edit,
-                                  tr("Undoes the last change.")),
-                         QStringLiteral("edit-undo")),
+                quickAccess(withIcon(makeSpec(QStringLiteral("edit.undo"), tr("&Undo"), edit,
+                                              tr("Undoes the last change.")),
+                                     QStringLiteral("edit-undo"))),
                 keysWith(QKeySequence::Undo, {}));
     // Ctrl+Y as well, which AutoCAD users expect everywhere (CommandLine
     // recognises the same keys).
     addWithKeys(registry,
-                withIcon(makeSpec(QStringLiteral("edit.redo"), tr("&Redo"), edit,
-                                  tr("Redoes the last change undone.")),
-                         QStringLiteral("edit-redo")),
+                quickAccess(withIcon(makeSpec(QStringLiteral("edit.redo"), tr("&Redo"), edit,
+                                              tr("Redoes the last change undone.")),
+                                     QStringLiteral("edit-redo"))),
                 keysWith(QKeySequence::Redo, QKeySequence(Qt::CTRL | Qt::Key_Y)));
     addSeparator(registry, QStringLiteral("edit.separator-erase"), edit);
     ActionSpec erase = commandSpec(QStringLiteral("edit.erase"), tr("&Erase"), edit,

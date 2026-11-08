@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QEvent>
+#include <QLabel>
 #include <QLineEdit>
 #include <QList>
 #include <QMenu>
@@ -21,11 +22,14 @@
 #include <QPointer>
 #include <QSet>
 #include <QSignalSpy>
+#include <QSize>
 #include <QString>
 #include <QTest>
 #include <QToolBar>
 #include <QToolButton>
 #include <gtest/gtest.h>
+
+#include <SARibbon.h>
 
 namespace tg::app {
 namespace {
@@ -156,7 +160,7 @@ TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) 
         events::press(input, Qt::Key_Return);
         const bool ribbon = command == QStringLiteral("RIBBON");
         EXPECT_EQ(window.interfaceKind(), ribbon ? InterfaceKind::Ribbon : InterfaceKind::Classic);
-        EXPECT_EQ(button->text(), ribbon ? QStringLiteral("RIBBON") : QStringLiteral("MENU"));
+        EXPECT_EQ(button->isChecked(), ribbon);
         EXPECT_FALSE(window.runner().isActive());
         EXPECT_EQ(QApplication::focusWidget(), input);
         EXPECT_FALSE(history->toPlainText().contains(QStringLiteral("Unknown command")));
@@ -168,10 +172,79 @@ TEST(UiBuilderTest, CommandsAndStatusButtonSwitchWithoutLosingFocusOrShortcuts) 
     }
     button->click();
     EXPECT_EQ(window.interfaceKind(), InterfaceKind::Ribbon);
-    EXPECT_EQ(button->text(), QStringLiteral("RIBBON"));
+    EXPECT_TRUE(button->isChecked());
     button->click();
     EXPECT_EQ(window.interfaceKind(), InterfaceKind::Classic);
-    EXPECT_EQ(button->text(), QStringLiteral("MENU"));
+    EXPECT_FALSE(button->isChecked());
+}
+
+TEST(UiBuilderTest, BothInterfacesHaveTheQuickAccessBar) {
+    MainWindow window;
+    window.setScriptMode();
+    window.show();
+    const ActionRegistry& registry = window.actionRegistry();
+    const QList<QAction*> expected{
+        registry.action(QStringLiteral("file.new")), registry.action(QStringLiteral("file.open")),
+        registry.action(QStringLiteral("file.save")), registry.action(QStringLiteral("edit.undo")),
+        registry.action(QStringLiteral("edit.redo"))};
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        window.setInterface(InterfaceKind::Classic);
+        // Qt shows a new menu bar from the event loop, and deletes the old one later.
+        QCoreApplication::processEvents();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        EXPECT_EQ(window.ribbonBar(), nullptr);
+        // At the left of the menu bar, before the menus.
+        auto* quick = qobject_cast<QToolBar*>(window.menuBar()->cornerWidget(Qt::TopLeftCorner));
+        ASSERT_NE(quick, nullptr);
+        EXPECT_EQ(quick->objectName(), QStringLiteral("quickAccessBar"));
+        EXPECT_EQ(quick->actions(), expected);
+        EXPECT_EQ(quick->toolButtonStyle(), Qt::ToolButtonIconOnly);
+        EXPECT_EQ(quick->iconSize(), QSize(16, 16));
+        EXPECT_TRUE(quick->isVisible());
+
+        window.setInterface(InterfaceKind::Ribbon);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        SARibbonBar* ribbon = window.ribbonBar();
+        ASSERT_NE(ribbon, nullptr);
+        EXPECT_EQ(ribbon->quickAccessBar()->actions(), expected);
+    }
+}
+
+TEST(UiBuilderTest, TheClassicMenuBarOfAWindowWithoutFrameShowsTheTitle) {
+    MainWindow window(MainWindow::InitialDrawing::Empty);
+    window.setScriptMode();
+    window.show();
+    window.setInterface(InterfaceKind::Classic);
+    QCoreApplication::processEvents();
+    auto* title = window.menuBar()->findChild<QLabel*>(QStringLiteral("classicTitle"));
+    if (window.windowButtonBar() == nullptr) {
+        // The frame of the system shows the title (Wayland).
+        EXPECT_EQ(title, nullptr);
+        return;
+    }
+    ASSERT_NE(title, nullptr);
+    EXPECT_TRUE(title->isVisible());
+    EXPECT_FALSE(title->text().contains(QStringLiteral("[*]")));
+    EXPECT_TRUE(title->text().endsWith(QStringLiteral("— Tecnigrafo")))
+        << title->text().toStdString();
+    // A change marks the title as the platform does.
+    auto* input = window.commandLine()->findChild<QLineEdit*>(QStringLiteral("input"));
+    ASSERT_NE(input, nullptr);
+    events::type(input, "LINE");
+    events::press(input, Qt::Key_Return);
+    events::type(input, "0,0");
+    events::press(input, Qt::Key_Return);
+    events::type(input, "10,0");
+    events::press(input, Qt::Key_Return);
+    events::press(input, Qt::Key_Return);
+    ASSERT_TRUE(window.isWindowModified());
+    EXPECT_TRUE(title->text().contains(QStringLiteral("* — Tecnigrafo")))
+        << title->text().toStdString();
+    // The window buttons stay above the bar.
+    QWidget* buttons = window.windowButtonBar();
+    EXPECT_TRUE(buttons->isVisible());
+    const QList<QObject*> siblings = window.children();
+    EXPECT_GT(siblings.indexOf(buttons), siblings.indexOf(window.menuBar()));
 }
 
 }  // namespace

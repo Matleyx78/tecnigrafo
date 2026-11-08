@@ -32,6 +32,9 @@ struct ActionSpec {
     QStringList environments{QStringLiteral("drawing2d")};
     QString menu;    ///< classic menu path: "&Edit", "&Tools/Object Snap &Modes"
     QString ribbon;  ///< ribbon place "home/draw"; empty: menu only (P16)
+    /// In the quick access bar of both interfaces, in the order of the
+    /// registry (docs/adr/0039, point 1, area 1).
+    bool quickAccess{false};
 };
 
 /// The actions of the main window. Menus, and later the ribbon, toolbars

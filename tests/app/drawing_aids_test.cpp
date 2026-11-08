@@ -13,16 +13,21 @@
 #include <QImage>
 #include <QLabel>
 #include <QLineEdit>
+#include <QList>
 #include <QMouseEvent>
 #include <QPlainTextEdit>
+#include <QPoint>
+#include <QStatusBar>
 #include <QTest>
 #include <QToolButton>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -84,6 +89,8 @@ protected:
     }
 
     [[nodiscard]] CadView* view() const { return m_window.view(); }
+
+    [[nodiscard]] MainWindow& window() { return m_window; }
 
     [[nodiscard]] const core::Document& document() const { return m_window.document(); }
 
@@ -207,8 +214,87 @@ TEST_F(DrawingAidsTest, StartsWithObjectSnapOnWithEveryModeAndOrthoOff) {
     EXPECT_FALSE(button("orthoButton")->isChecked());
     EXPECT_EQ(action("aids.osnap")->shortcut(), QKeySequence(Qt::Key_F3));
     EXPECT_EQ(action("aids.ortho")->shortcut(), QKeySequence(Qt::Key_F8));
-    EXPECT_EQ(button("osnapButton")->text().toStdString(), "OSNAP");
-    EXPECT_EQ(button("orthoButton")->text().toStdString(), "ORTHO");
+}
+
+TEST_F(DrawingAidsTest, EverySwitchOfTheStatusBarIsAnIconThatFollowsItsAction) {
+    // docs/adr/0039, point 1, area 10: icons without text, with the name and
+    // the key in the tooltip.
+    const std::array<std::pair<const char*, const char*>, 4> kSwitches{{
+        {"orthoButton", "aids.ortho"},
+        {"polarButton", "aids.polar"},
+        {"osnapButton", "aids.osnap"},
+        {"lwdisplayButton", "aids.lwdisplay"},
+    }};
+    for (const auto& [name, id] : kSwitches) {
+        SCOPED_TRACE(name);
+        QToolButton* switchButton = button(name);
+        QAction* switchAction = action(id);
+        ASSERT_NE(switchButton, nullptr);
+        ASSERT_NE(switchAction, nullptr);
+        EXPECT_FALSE(switchButton->icon().isNull());
+        EXPECT_EQ(switchButton->icon().cacheKey(), switchAction->icon().cacheKey());
+        EXPECT_TRUE(switchButton->text().isEmpty());
+        EXPECT_EQ(switchButton->toolButtonStyle(), Qt::ToolButtonIconOnly);
+        EXPECT_TRUE(
+            switchButton->toolTip().startsWith(switchAction->text().remove(QLatin1Char('&'))));
+        const QString key = switchAction->shortcut().toString(QKeySequence::NativeText);
+        EXPECT_TRUE(switchButton->toolTip().contains(key));
+        // Both ways, and back.
+        const bool initial = switchAction->isChecked();
+        switchAction->trigger();
+        EXPECT_NE(switchAction->isChecked(), initial);
+        EXPECT_EQ(switchButton->isChecked(), switchAction->isChecked());
+        switchButton->click();
+        EXPECT_EQ(switchAction->isChecked(), initial);
+        EXPECT_EQ(switchButton->isChecked(), initial);
+        switchButton->click();
+        EXPECT_NE(switchAction->isChecked(), initial);
+        switchAction->trigger();
+        EXPECT_EQ(switchButton->isChecked(), initial);
+    }
+    // The ribbon switch is on while the ribbon is shown.
+    QToolButton* ribbon = button("ribbonButton");
+    ASSERT_NE(ribbon, nullptr);
+    EXPECT_FALSE(ribbon->icon().isNull());
+    EXPECT_TRUE(ribbon->text().isEmpty());
+    EXPECT_EQ(ribbon->isChecked(), window().interfaceKind() == InterfaceKind::Ribbon);
+    QToolButton* settings = button("settingsButton");
+    ASSERT_NE(settings, nullptr);
+    EXPECT_FALSE(settings->icon().isNull());
+    EXPECT_EQ(settings->toolButtonStyle(), Qt::ToolButtonIconOnly);
+}
+
+TEST_F(DrawingAidsTest, TheStatusBarHasTheOrderOfTheReference) {
+    // docs/adr/0039, point 1, area 10: the coordinates on the left, then the
+    // place of the environment indicator, the switches, the ribbon, the
+    // scale and the settings, from left to right.
+    QStatusBar* bar = window().statusBar();
+    const auto left = [bar](QWidget* widget) {
+        EXPECT_NE(widget, nullptr);
+        return widget == nullptr ? -1 : widget->mapTo(bar, QPoint(0, 0)).x();
+    };
+    const QList<QWidget*> order{
+        window().findChild<QWidget*>(QStringLiteral("environmentIndicator")),
+        button("orthoButton"),
+        button("polarButton"),
+        button("osnapButton"),
+        button("lwdisplayButton"),
+        button("ribbonButton"),
+        button("settingsButton"),
+    };
+    for (qsizetype i = 1; i < order.size(); ++i) {
+        EXPECT_LT(left(order[i - 1]), left(order[i])) << i;
+    }
+    const auto labels = bar->findChildren<QLabel*>();
+    ASSERT_FALSE(labels.isEmpty());
+    // The coordinates are the leftmost text of the bar.
+    int leftmost = left(order.front());
+    for (QLabel* label : labels) {
+        leftmost = std::min(leftmost, left(label));
+    }
+    EXPECT_TRUE(std::any_of(labels.begin(), labels.end(), [&](QLabel* label) {
+        return left(label) == leftmost && label->text().startsWith(QStringLiteral("X:"));
+    }));
 }
 
 TEST_F(DrawingAidsTest, NewSnapModesHaveTheAdrDefaultsAndReachTheRunner) {

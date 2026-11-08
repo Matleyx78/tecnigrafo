@@ -18,29 +18,43 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/io/file_access.hpp"
 
+#include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
 #include <QCloseEvent>
+#include <QColor>
 #include <QDir>
 #include <QDockWidget>
+#include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGuiApplication>
+#include <QIcon>
 #include <QKeySequence>
 #include <QLabel>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPen>
+#include <QPixmap>
+#include <QPointF>
+#include <QRectF>
 #include <QScopedValueRollback>
 #include <QSettings>
 #include <QShowEvent>
 #include <QSignalBlocker>
+#include <QSize>
 #include <QStatusBar>
 #include <QStringList>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <array>
 #include <cassert>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -90,16 +104,103 @@ constexpr int kCoordinateDecimals = 4;
 constexpr const char* kUndoCommand = "UNDO";
 constexpr const char* kRedoCommand = "REDO";
 
+/// The icons of the status bar: the 16 px grid of docs/adr/0040, point 3.
+constexpr int kStatusIconSize = 16;
+
+/// The frame of the window (docs/adr/0039, point 4). SAFramelessHelper
+/// moves a window without frame with QWidget::move() and global pointer
+/// positions, which Wayland does not give a client: there such a window
+/// could not be moved, nor resized from its left and top edges. Under
+/// Wayland the window keeps the frame of the system, and SARibbon puts the
+/// quick access bar in the row of the tabs, under the title.
+SARibbonMainWindowStyles windowStyles() {
+    const bool wayland = QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
+    return SARibbonMainWindowStyleFlag::UseRibbonMenuBar |
+           (wayland ? SARibbonMainWindowStyleFlag::UseNativeFrame
+                    : SARibbonMainWindowStyleFlag::UseRibbonFrame);
+}
+
+enum class WindowGlyph : std::uint8_t { Minimize, Maximize, Restore, Close };
+
+/// The window buttons are drawn like the buttons of the dock headers
+/// (style.cpp): strokes of 1.25 px on the 16 px grid of docs/adr/0040,
+/// point 3, in its central 7 px, at these sizes for high-DPI screens.
+constexpr qreal kGlyphGrid = 16.0;
+constexpr qreal kGlyphStroke = 1.25;
+constexpr std::array kGlyphSizes{16, 20, 24, 32};
+
+QPixmap windowGlyph(WindowGlyph glyph, int size, const QColor& colour) {
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.scale(size / kGlyphGrid, size / kGlyphGrid);
+    painter.setPen(QPen(colour, kGlyphStroke, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+    painter.setBrush(Qt::NoBrush);
+    switch (glyph) {
+        case WindowGlyph::Minimize:
+            painter.drawLine(QPointF(4.5, 8.5), QPointF(11.5, 8.5));
+            break;
+        case WindowGlyph::Maximize:
+            painter.drawRect(QRectF(4.5, 4.5, 7.0, 7.0));
+            break;
+        case WindowGlyph::Restore: {
+            // The window in front, and the corner of the one behind it.
+            painter.drawRect(QRectF(4.5, 6.5, 5.0, 5.0));
+            const std::array behind{QPointF(6.5, 6.5), QPointF(6.5, 4.5), QPointF(11.5, 4.5),
+                                    QPointF(11.5, 9.5), QPointF(9.5, 9.5)};
+            painter.drawPolyline(behind.data(), static_cast<int>(behind.size()));
+            break;
+        }
+        case WindowGlyph::Close:
+            painter.drawLine(QPointF(4.5, 4.5), QPointF(11.5, 11.5));
+            painter.drawLine(QPointF(11.5, 4.5), QPointF(4.5, 11.5));
+            break;
+    }
+    painter.end();
+    return pixmap;
+}
+
+/// `glyph`, and `checked` for a checked button (the maximize button of a
+/// maximized window).
+QIcon windowButtonIcon(WindowGlyph glyph, WindowGlyph checked, const QColor& colour) {
+    QIcon icon;
+    for (const int size : kGlyphSizes) {
+        icon.addPixmap(windowGlyph(glyph, size, colour), QIcon::Normal, QIcon::Off);
+        icon.addPixmap(windowGlyph(checked, size, colour), QIcon::Normal, QIcon::On);
+    }
+    return icon;
+}
+
+/// The tooltip of a switch of the status bar: its name and its key.
+QString switchToolTip(const QAction& action) {
+    const QString name = action.text().remove(QLatin1Char('&'));
+    const QString key = action.shortcut().toString(QKeySequence::NativeText);
+    return key.isEmpty() ? name : QStringLiteral("%1 (%2)").arg(name, key);
+}
+
 }  // namespace
 
 MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
-    : QMainWindow(parent),
+    : SARibbonMainWindow(parent, windowStyles()),
       m_document(drawing == InitialDrawing::Sample ? makeSampleDrawing()
                                                    : core::Document::newDrawing()),
       m_editor(m_document),
       m_runner(m_registry, m_editor),
       m_view(new CadView(m_document, m_runner, this)),
       m_commandLine(new CommandLine(m_runner, this)) {
+    // SARibbonMainWindow gives the window the style sheet of its own theme,
+    // and again once the event loop runs. The colours of the interface are
+    // the tokens of theme.cpp, in the application's style sheet
+    // (docs/adr/0039, point 2), which a window's own style sheet would
+    // override: drop it now, and after SARibbon's second time, which is
+    // queued before this one. That style sheet may have set the icons of
+    // the window buttons: ours go back.
+    setStyleSheet(QString{});
+    QTimer::singleShot(0, this, [this] {
+        setStyleSheet(QString{});
+        updateWindowButtons();
+    });
     cmd::registerBuiltinCommands(m_registry);
     // The program as distributed does not check descriptions; --script turns
     // the check on (docs/adr/0026, point 3, and setScriptMode()).
@@ -348,14 +449,13 @@ void MainWindow::applyDrawingAids() {
     m_view->update();  // the snap marker and the preview may have changed
 }
 
-QToolButton* MainWindow::createModeButton(QAction* action, const QString& text,
-                                          const QString& name) {
+QToolButton* MainWindow::createModeButton(QAction* action, const QString& name) {
     auto* button = new QToolButton(this);
     button->setObjectName(name);
-    button->setText(text);
-    button->setToolTip(
-        QStringLiteral("%1 (%2)").arg(action->text().remove(QLatin1Char('&')),
-                                      action->shortcut().toString(QKeySequence::NativeText)));
+    button->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    button->setIconSize(QSize(kStatusIconSize, kStatusIconSize));
+    button->setIcon(action->icon());
+    button->setToolTip(switchToolTip(*action));
     button->setCheckable(true);
     button->setChecked(action->isChecked());
     button->setAutoRaise(true);
@@ -366,6 +466,11 @@ QToolButton* MainWindow::createModeButton(QAction* action, const QString& text,
     // two signals do not call each other forever.
     connect(button, &QToolButton::toggled, action, &QAction::setChecked);
     connect(action, &QAction::toggled, button, &QToolButton::setChecked);
+    // The theme changes the icon, the shortcuts window the key.
+    connect(action, &QAction::changed, button, [button, action] {
+        button->setIcon(action->icon());
+        button->setToolTip(switchToolTip(*action));
+    });
     return button;
 }
 
@@ -382,7 +487,7 @@ void MainWindow::setInterface(InterfaceKind kind) {
     // the editor, including the first command typed after the window opens.
     editingFocus->setFocus(Qt::OtherFocusReason);
     if (m_ribbonButton != nullptr) {
-        m_ribbonButton->setText(kind == InterfaceKind::Ribbon ? tr("RIBBON") : tr("MENU"));
+        m_ribbonButton->setChecked(kind == InterfaceKind::Ribbon);
     }
     saveUiSettings();
 }
@@ -392,32 +497,56 @@ InterfaceKind MainWindow::interfaceKind() const {
 }
 
 void MainWindow::createStatusBar() {
+    // docs/adr/0039, point 1, area 10: the coordinates on the left; from the
+    // right the settings, the scale, the ribbon, the switches in the order
+    // of the reference (lineweights, object snap, polar, ortho), then the
+    // place of the environment indicator (point 5).
+    m_cursorLabel = new QLabel(this);
+    m_cursorLabel->setMinimumWidth(260);
+    statusBar()->addWidget(m_cursorLabel);
+    // Empty in the drawing: the indicator comes with the environments
+    // (docs/adr/0041).
+    auto* environment = new QWidget(this);
+    environment->setObjectName(QStringLiteral("environmentIndicator"));
+    statusBar()->addPermanentWidget(environment);
+    statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
+    statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(m_objectSnapAction, QStringLiteral("osnapButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(registeredAction("aids.lwdisplay"), QStringLiteral("lwdisplayButton")));
+
+    // On while the ribbon is shown, which is when ui.interface is off: its
+    // own switch, not a mirror of the action.
+    QAction* interfaceSwitch = registeredAction("ui.interface");
     m_ribbonButton = new QToolButton(this);
     m_ribbonButton->setObjectName(QStringLiteral("ribbonButton"));
-    m_ribbonButton->setText(tr("RIBBON"));
-    m_ribbonButton->setToolTip(tr("Switch between ribbon and classic menus."));
+    m_ribbonButton->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    m_ribbonButton->setIconSize(QSize(kStatusIconSize, kStatusIconSize));
+    m_ribbonButton->setIcon(interfaceSwitch->icon());
+    m_ribbonButton->setToolTip(tr("Ribbon"));
+    m_ribbonButton->setCheckable(true);
+    m_ribbonButton->setChecked(interfaceKind() == InterfaceKind::Ribbon);
     m_ribbonButton->setAutoRaise(true);
     m_ribbonButton->setFocusPolicy(Qt::NoFocus);
     connect(m_ribbonButton, &QToolButton::clicked, this, [this] {
         const bool ribbon = interfaceKind() == InterfaceKind::Ribbon;
         setInterface(ribbon ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
+    connect(interfaceSwitch, &QAction::changed, m_ribbonButton,
+            [this, interfaceSwitch] { m_ribbonButton->setIcon(interfaceSwitch->icon()); });
     statusBar()->addPermanentWidget(m_ribbonButton);
-    QAction* lwdisplay = registeredAction("aids.lwdisplay");
-    statusBar()->addPermanentWidget(
-        createModeButton(lwdisplay, tr("LWT"), QStringLiteral("lwdisplayButton")));
-    // In AutoCAD's order: ORTHO before OSNAP.
-    statusBar()->addPermanentWidget(
-        createModeButton(m_orthoAction, tr("ORTHO"), QStringLiteral("orthoButton")));
-    statusBar()->addPermanentWidget(
-        createModeButton(m_polarAction, tr("POLAR"), QStringLiteral("polarButton")));
-    statusBar()->addPermanentWidget(
-        createModeButton(m_objectSnapAction, tr("OSNAP"), QStringLiteral("osnapButton")));
-    m_cursorLabel = new QLabel(this);
+
     m_scaleLabel = new QLabel(this);
-    m_cursorLabel->setMinimumWidth(260);
     statusBar()->addPermanentWidget(m_scaleLabel);
-    statusBar()->addPermanentWidget(m_cursorLabel);
+    auto* settings = new QToolButton(this);
+    settings->setObjectName(QStringLiteral("settingsButton"));
+    settings->setDefaultAction(registeredAction("tools.settings"));
+    settings->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    settings->setIconSize(QSize(kStatusIconSize, kStatusIconSize));
+    settings->setAutoRaise(true);
+    settings->setFocusPolicy(Qt::NoFocus);
+    statusBar()->addPermanentWidget(settings);
     showCursorPosition(0.0, 0.0);
     showScale(m_view->viewport().scale());
 }
@@ -651,6 +780,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 
 void MainWindow::setTheme(Theme theme) {
     m_theme = theme;
+    m_uiBuilder->setTheme(theme);
     auto* application = qobject_cast<QApplication*>(QApplication::instance());
     assert(application != nullptr);
     applyTheme(*application, theme);
@@ -661,7 +791,29 @@ void MainWindow::setTheme(Theme theme) {
     const QSignalBlocker blocker(registeredAction("ui.theme"));
     registeredAction("ui.theme")->setChecked(theme == Theme::Dark);
     updateThemeIcons();
+    updateWindowButtons();
     saveUiSettings();
+}
+
+void MainWindow::updateWindowButtons() {
+    SARibbonSystemButtonBar* buttons = windowButtonBar();
+    if (buttons == nullptr) {
+        return;  // the frame of the system (windowStyles())
+    }
+    const QColor& colour = themeTokens(m_theme).text;
+    if (QAbstractButton* button = buttons->minimizeButton()) {
+        button->setIcon(windowButtonIcon(WindowGlyph::Minimize, WindowGlyph::Minimize, colour));
+    }
+    if (QAbstractButton* button = buttons->maximizeButton()) {
+        button->setIcon(windowButtonIcon(WindowGlyph::Maximize, WindowGlyph::Restore, colour));
+    }
+    if (QAbstractButton* button = buttons->closeButton()) {
+        button->setIcon(windowButtonIcon(WindowGlyph::Close, WindowGlyph::Close, colour));
+    }
+    // SARibbon checks the maximize button of a maximized window: there the
+    // glyph changes, without the fill of a switch that is on.
+    buttons->setStyleSheet(QStringLiteral(
+        "QToolButton:checked { background: transparent; border-color: transparent; }"));
 }
 
 void MainWindow::updateThemeIcons() {
@@ -703,7 +855,22 @@ void MainWindow::showEvent(QShowEvent* event) {
     if (!m_uiSettingsReady && !m_scriptMode) {
         restoreUiSettings();
     }
-    QMainWindow::showEvent(event);
+    // On Windows SARibbonMainWindow sets the shadow of the frameless window.
+    SARibbonMainWindow::showEvent(event);
+}
+
+void MainWindow::changeEvent(QEvent* event) {
+    // The classic menu bar shows the title of a window without frame; the
+    // ribbon reads the title when it paints.
+    if (event->type() == QEvent::WindowTitleChange || event->type() == QEvent::ModifiedChange) {
+        if (m_uiBuilder) {
+            m_uiBuilder->updateTitle();
+        }
+        if (SARibbonBar* ribbon = ribbonBar()) {
+            ribbon->update();
+        }
+    }
+    SARibbonMainWindow::changeEvent(event);
 }
 
 void MainWindow::restoreUiSettings() {
