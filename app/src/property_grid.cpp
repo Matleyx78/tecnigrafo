@@ -67,6 +67,10 @@ const char* const kLineweightEditor = "propertiesLineweight";
 // What a value shared by no two of the entities shows, as in AutoCAD.
 const char* const kVaries = "*VARIES*";
 
+QString variesText() {
+    return QString::fromLatin1(kVaries);
+}
+
 constexpr std::array kFields{PropertyField::Color, PropertyField::Layer, PropertyField::Linetype,
                              PropertyField::LinetypeScale, PropertyField::Lineweight};
 
@@ -398,28 +402,27 @@ QVariant PropertyGridModel::geometryData(int row, int column, int role) const {
 }
 
 QString PropertyGridModel::valueText(PropertyField field) const {
-    const QString varies = QString::fromLatin1(kVaries);
     switch (field) {
         case PropertyField::Color:
-            return m_shown.color ? colorName(*m_shown.color) : varies;
+            return m_shown.color ? colorName(*m_shown.color) : variesText();
         case PropertyField::Layer: {
             if (!m_shown.layer) {
-                return varies;
+                return variesText();
             }
             const core::Layer* layer = m_document->layer(*m_shown.layer);
             return layer != nullptr ? QString::fromStdString(layer->name) : QString();
         }
         case PropertyField::Linetype: {
             if (!m_shown.linetype) {
-                return varies;
+                return variesText();
             }
             const core::Linetype* linetype = m_document->linetype(*m_shown.linetype);
             return linetype != nullptr ? QString::fromStdString(linetype->name) : QString();
         }
         case PropertyField::LinetypeScale:
-            return m_shown.linetypeScale ? lengthText(*m_shown.linetypeScale) : varies;
+            return m_shown.linetypeScale ? lengthText(*m_shown.linetypeScale) : variesText();
         case PropertyField::Lineweight:
-            return m_shown.lineweight ? lineweightName(*m_shown.lineweight) : varies;
+            return m_shown.lineweight ? lineweightName(*m_shown.lineweight) : variesText();
     }
     return {};
 }
