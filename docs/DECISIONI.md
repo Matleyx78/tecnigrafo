@@ -1261,3 +1261,13 @@ i rimandi ai documenti che cambia.
     nella pull request, come oggi;
   - dividere `app_widgets` ed eseguire i test in parallelo si decide dopo, con
     i tempi misurati da P35 e P36.
+- **2026-11-08 — Su Windows la CI usa le Qt ottimizzate: P37.** Il responsabile
+  aggiunge alla [tappa 0.7.5](tappe/0.7.5-correzione-di-rotta.md)
+  [P37](tappe/0.7.5/P37-windows-qt-ottimizzate.md): nel job Windows la build
+  Debug resta Debug per il nostro codice, asserzioni comprese, ma si collega al
+  runtime normale di MSVC e alle Qt ottimizzate, come già succede su Linux
+  (diagnostica della [#599](https://github.com/Matleyx78/tecnigrafo/pull/599):
+  `app_widgets` da 93,6 s a 8,17 s). Accetta di perdere su Windows i controlli
+  del runtime di debug di MSVC e le asserzioni interne delle Qt: gli errori di
+  memoria li cerca il job ASan su Linux. Dividere `app_widgets` non serve più;
+  eseguire i test in parallelo si decide dopo P36, con i tempi del job ASan.
