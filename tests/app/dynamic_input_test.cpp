@@ -204,7 +204,10 @@ TEST_F(DynamicInputTest, FreeCoordinateUsesSnapAndCommaUsesRelativeCartesianText
     enter("20,20");
     enter("");
     enter("LINE");
-    moveTo({12, 13});  // within the endpoint pickbox of (10, 10)
+    // Within the pickbox of the endpoint (10, 10) and clearly nearer to it
+    // than to the midpoint (15, 15): at (12, 13) the two tie, and the
+    // rounding to pixels picks one by the parity of the view's width.
+    moveTo({11, 12});
     events::type(view(), "30");
     events::press(view(), Qt::Key_Return);
     EXPECT_TRUE(history().contains(QStringLiteral("30,10")));
