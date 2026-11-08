@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 The Tecnigrafo authors
+
+#include "dynamic_input_box.hpp"
+
+#include "theme.hpp"
+
+#include <QEvent>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QLineEdit>
+#include <QVBoxLayout>
+
+#include <algorithm>
+#include <cstddef>
+
+namespace tg::app {
+namespace {
+
+// Keep the overlay clear of the crosshair, including on high-DPI displays.
+constexpr int kCursorOffset = 16;
+constexpr int kFieldWidth = 90;
+
+QString fieldName(cmd::DynamicField::Kind kind) {
+    switch (kind) {
+        case cmd::DynamicField::Kind::X:
+            return QStringLiteral("X");
+        case cmd::DynamicField::Kind::Y:
+            return QStringLiteral("Y");
+        case cmd::DynamicField::Kind::Length:
+            return QStringLiteral("Length");
+        case cmd::DynamicField::Kind::Angle:
+            return QStringLiteral("Angle");
+        case cmd::DynamicField::Kind::Value:
+            return QStringLiteral("Value");
+    }
+    return {};
+}
+
+}  // namespace
+
+DynamicInputBox::DynamicInputBox(const cmd::CommandRunner& runner, QWidget* parent)
+    : QWidget(parent), m_runner(runner), m_prompt(new QLabel(this)) {
+    setObjectName(QStringLiteral("dynamicInputBox"));
+    setFocusPolicy(Qt::NoFocus);
+    setAttribute(Qt::WA_TransparentForMouseEvents);
+    setAutoFillBackground(true);
+    m_prompt->setObjectName(QStringLiteral("dynamicPrompt"));
+    m_prompt->setTextFormat(Qt::PlainText);
+    auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setSpacing(4);
+    layout->addWidget(m_prompt);
+    auto* fields = new QHBoxLayout;
+    layout->addLayout(fields);
+    // The model has at most two fields (ADR 0042, point 2).
+    constexpr std::size_t kMaxFields = 2;
+    for (std::size_t index = 0; index < kMaxFields; ++index) {
+        auto* field = new QLineEdit(this);
+        field->setObjectName(QStringLiteral("dynamicField%1").arg(index));
+        field->setReadOnly(true);
+        field->setFocusPolicy(Qt::NoFocus);
+        field->setFixedWidth(kFieldWidth);
+        fields->addWidget(field);
+        m_fields.push_back(field);
+    }
+    hide();
+}
+
+void DynamicInputBox::routeKeysFrom(QWidget* view, QLineEdit* commandInput) {
+    m_commandInput = commandInput;
+    view->installEventFilter(this);
+}
+
+void DynamicInputBox::setInputEnabled(bool enabled) {
+    m_enabled = enabled;
+    refresh();
+}
+
+void DynamicInputBox::refresh(bool clearTyped) {
+    if (clearTyped) {
+        m_input = cmd::dynamicInputFor(m_runner);
+    }
+    updateFields();
+}
+
+void DynamicInputBox::updatePointer(core::Vec2 pointer, QPoint screenPosition) {
+    m_pointer = pointer;
+    m_screenPosition = screenPosition;
+    updateFields();
+}
+
+void DynamicInputBox::updateFields() {
+    if (!m_enabled || !m_runner.isActive()) {
+        hide();
+        return;
+    }
+    m_prompt->setText(QString::fromStdString(m_input.prompt));
+    // Long prompts stay within even a narrow drawing view.
+    m_prompt->setWordWrap(true);
+    m_prompt->setMaximumWidth(std::max(1, parentWidget()->width() - 8));
+    const auto shown = cmd::dynamicInputShown(m_input, m_runner, m_pointer);
+    const auto& tokens = themeTokens(themeOf(palette()));
+    for (std::size_t index = 0; index < m_fields.size(); ++index) {
+        QLineEdit* field = m_fields[index];
+        const bool exists = index < shown.size();
+        field->setVisible(exists);
+        if (exists) {
+            field->setText(QString::fromStdString(shown[index]));
+            field->setAccessibleName(fieldName(m_input.fields[index].kind));
+            field->setStyleSheet(
+                QStringLiteral("QLineEdit { border: 1px solid %1; background: %2; color: %3; }")
+                    .arg((index == m_input.active ? tokens.accent : tokens.border).name(),
+                         tokens.field.name(), tokens.text.name()));
+        }
+    }
+    adjustSize();
+    // Clip to the parent even if a long prompt exceeds its height.
+    resize(std::min(width(), parentWidget()->width()),
+           std::min(height(), parentWidget()->height()));
+    move(std::clamp(m_screenPosition.x() + kCursorOffset, 0, parentWidget()->width() - width()),
+         std::clamp(m_screenPosition.y() + kCursorOffset, 0, parentWidget()->height() - height()));
+    show();
+    raise();
+}
+
+bool DynamicInputBox::eventFilter(QObject* watched, QEvent* event) {
+    if (event->type() != QEvent::KeyPress || !isVisible() || m_commandInput == nullptr ||
+        !m_commandInput->text().isEmpty()) {
+        return QWidget::eventFilter(watched, event);
+    }
+    const auto* key = dynamic_cast<QKeyEvent*>(event);
+    if (key == nullptr ||
+        key->modifiers().testAnyFlags(Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) {
+        return false;
+    }
+    if (key->key() == Qt::Key_Return || key->key() == Qt::Key_Enter) {
+        const QString text =
+            QString::fromStdString(cmd::dynamicInputText(m_input, m_runner, m_pointer));
+        emit textSubmitted(text);
+        refresh();
+        return true;
+    }
+    if (m_input.fields.empty()) {
+        return false;
+    }
+    if (key->key() == Qt::Key_Tab) {
+        m_input.active = (m_input.active + 1) % m_input.fields.size();
+        updateFields();
+        return true;
+    }
+    if (key->key() == Qt::Key_Backspace) {
+        auto& typed = m_input.fields[m_input.active].typed;
+        if (!typed.empty()) {
+            typed.pop_back();
+        }
+        updateFields();
+        return true;
+    }
+    const QString text = key->text();
+    if (text.size() == 1 && QStringView(u"0123456789.-,").contains(text.front())) {
+        m_input.fields[m_input.active].typed += text.toStdString();
+        updateFields();
+        return true;
+    }
+    return false;
+}
+
+}  // namespace tg::app

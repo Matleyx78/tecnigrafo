@@ -187,6 +187,7 @@ if(TG_BUILD_APP)
         app/action_registry_test.cpp
         app/ui_builder_test.cpp
         app/command_line_test.cpp
+        app/dynamic_input_test.cpp
         app/drawing_aids_test.cpp
         app/drawing_test.cpp
         app/file_menu_test.cpp

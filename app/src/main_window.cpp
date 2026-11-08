@@ -8,6 +8,7 @@
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
+#include "dynamic_input_box.hpp"
 #include "layer_panel.hpp"
 #include "properties_panel.hpp"
 #include "recent_files.hpp"
@@ -33,6 +34,7 @@
 #include <QIcon>
 #include <QKeySequence>
 #include <QLabel>
+#include <QLineEdit>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
@@ -221,6 +223,16 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     layout->addWidget(m_commandLine);
     setCentralWidget(central);
     m_commandLine->forwardKeysFrom(m_view);
+    m_view->dynamicInputBox()->routeKeysFrom(
+        m_view, m_commandLine->findChild<QLineEdit*>(QStringLiteral("input")));
+    connect(m_view->dynamicInputBox(), &DynamicInputBox::textSubmitted, this,
+            [this](const QString& text) {
+                const QString prompt = QString::fromStdString(m_runner.promptText());
+                m_commandLine->appendToHistory(
+                    text.isEmpty() ? prompt : QStringLiteral("%1 %2").arg(prompt, text));
+                m_runner.submitText(text.toStdString());
+                refresh();
+            });
 
     createMenus();
     createStatusBar();
@@ -251,7 +263,14 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         }
     });
     connect(m_view, &CadView::inputHandled, this, &MainWindow::refresh);
-    connect(m_commandLine, &CommandLine::inputHandled, this, &MainWindow::refresh);
+    connect(m_commandLine, &CommandLine::inputHandled, this, [this] {
+        refresh();
+        // Return the keyboard to the canvas after a completed command-line
+        // exchange; explicitly typing in the command line still works as usual.
+        if (!m_scriptMode && m_runner.isActive()) {
+            m_view->setFocus(Qt::OtherFocusReason);
+        }
+    });
     updateEditActions();
     setDockOptions(dockOptions() | QMainWindow::AllowTabbedDocks | QMainWindow::AllowNestedDocks);
     setTheme(Theme::Light);
@@ -360,6 +379,15 @@ void MainWindow::connectDrawingAids() {
     const cmd::DrawingAids& aids = m_runner.drawingAids();
     m_objectSnapAction = registeredAction("aids.osnap");
     m_orthoAction = registeredAction("aids.ortho");
+    m_dynamicInputAction = registeredAction("aids.dynmode");
+    m_dynamicInputAction->setChecked(true);
+    connect(m_dynamicInputAction, &QAction::toggled, this, [this](bool on) {
+        m_view->dynamicInputBox()->setInputEnabled(on && !m_scriptMode);
+        if (!m_scriptMode && !m_restoringUi) {
+            m_commandLine->appendToHistory(on ? tr("<Dynamic input on>") : tr("<Dynamic input off>"));
+        }
+        saveUiSettings();
+    });
     m_polarAction = registeredAction("aids.polar");
     m_endpointAction = registeredAction("aids.snap.endpoint");
     m_midpointAction = registeredAction("aids.snap.midpoint");
@@ -446,6 +474,7 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
     aids.polar = m_polarAction->isChecked();
     m_runner.setDrawingAids(aids);
+    m_view->dynamicInputBox()->refresh(false);
     m_view->update();  // the snap marker and the preview may have changed
 }
 
@@ -516,6 +545,9 @@ void MainWindow::createStatusBar() {
     statusBar()->addPermanentWidget(
         createModeButton(registeredAction("aids.lwdisplay"), QStringLiteral("lwdisplayButton")));
 
+    statusBar()->addPermanentWidget(
+        createModeButton(m_dynamicInputAction, QStringLiteral("dynmodeButton")));
+
     // On while the ribbon is shown, which is when ui.interface is off: its
     // own switch, not a mirror of the action.
     QAction* interfaceSwitch = registeredAction("ui.interface");
@@ -558,6 +590,7 @@ void MainWindow::refresh() {
     }
     m_view->update();
     m_commandLine->refreshPrompt();
+    m_view->dynamicInputBox()->refresh();
     updateDrawingState();
     updateEditActions();
     handleFilePrompts();
@@ -593,6 +626,9 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::setScriptMode() {
     m_scriptMode = true;
+    m_dynamicInputAction->setChecked(false);
+    m_dynamicInputAction->setEnabled(false);
+    m_view->dynamicInputBox()->setInputEnabled(false);
     setInterface(InterfaceKind::Ribbon);
     setTheme(Theme::Light);
     // At level 2 a prompt missing from its command's description is written
@@ -788,6 +824,7 @@ void MainWindow::setTheme(Theme theme) {
     // The window and its icons must already use the new colours now.
     setPalette(QApplication::palette());
     m_view->setStyle(sceneStyle(theme));
+    m_view->dynamicInputBox()->refresh(false);
     const QSignalBlocker blocker(registeredAction("ui.theme"));
     registeredAction("ui.theme")->setChecked(theme == Theme::Dark);
     updateThemeIcons();
@@ -886,6 +923,8 @@ void MainWindow::restoreUiSettings() {
     setTheme(m_settings->value(QStringLiteral("ui/theme")).toString() == QStringLiteral("dark")
                  ? Theme::Dark
                  : Theme::Light);
+    m_dynamicInputAction->setChecked(
+        m_settings->value(QStringLiteral("ui/dynmode"), true).toBool());
     restoreGeometry(m_settings->value(QStringLiteral("ui/geometry")).toByteArray());
     restoreState(m_settings->value(QStringLiteral("ui/state")).toByteArray());
     m_uiSettingsReady = true;
@@ -904,6 +943,7 @@ void MainWindow::saveUiSettings() {
     if (theme() == Theme::Dark) {
         themeName = QStringLiteral("dark");
     }
+    m_settings->setValue(QStringLiteral("ui/dynmode"), m_dynamicInputAction->isChecked());
     m_settings->setValue(QStringLiteral("ui/interface"), interfaceName);
     m_settings->setValue(QStringLiteral("ui/theme"), themeName);
     m_settings->setValue(QStringLiteral("ui/geometry"), saveGeometry());

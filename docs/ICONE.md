@@ -276,6 +276,12 @@ La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
 Chi aggiunge icone aggiunge le sue righe alla tabella della sua tappa; chi
 rifà un'icona ne aggiorna la riga.
 
+La tappa 0.7.5 aggiunge l'immissione dinamica (P16).
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `aids-dynmode-16.svg`, `aids-dynmode-32.svg` | `aids.dynmode` | puntatore (`esist`) e campo vicino al cursore (`pt`) | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

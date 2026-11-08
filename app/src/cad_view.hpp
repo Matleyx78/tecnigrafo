@@ -13,6 +13,8 @@
 
 namespace tg::app {
 
+class DynamicInputBox;
+
 /// Drawing area: shows a document, its selection, the command preview and
 /// the marker of the object snap under the pointer, and handles zoom and
 /// pan. Snap and ortho correct the clicks and the preview in the
@@ -31,6 +33,8 @@ class CadView final : public QWidget {
 public:
     /// The document and the runner must outlive the view.
     CadView(const core::Document& document, cmd::CommandRunner& runner, QWidget* parent = nullptr);
+
+    [[nodiscard]] DynamicInputBox* dynamicInputBox() const { return m_dynamicInput; }
 
     [[nodiscard]] const render::Viewport& viewport() const { return m_viewport; }
 
@@ -74,8 +78,10 @@ private:
 
     const core::Document& m_document;
     cmd::CommandRunner& m_runner;
+    DynamicInputBox* m_dynamicInput{nullptr};
     render::Viewport m_viewport;
     render::SceneStyle m_style;
+    QPointF m_cursorPosition;
     QPointF m_lastPanPos;
     QPointF m_leftPressPos;
     bool m_panning{false};
