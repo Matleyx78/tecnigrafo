@@ -182,6 +182,12 @@ public:
     /// The script mode docks every panel again and hides nothing more.
     void setEnabled(bool enabled);
 
+    /// Gives every hidden panel its content back, without showing it and
+    /// without signals. The window calls it before it is destroyed: a panel
+    /// is deleted after the overlay, and its destructor still reaches its
+    /// content.
+    void releaseContents();
+
     /// The hidden panels in the order they were hidden, as
     /// "<objectName>:<edge>:<extent>", edge being left, right, top or bottom.
     [[nodiscard]] QStringList saveState() const;

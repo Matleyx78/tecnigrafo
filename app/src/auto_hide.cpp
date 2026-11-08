@@ -330,8 +330,12 @@ void AutoHide::addPanel(QDockWidget* panel) {
     auto* title = new PanelTitleBar(panel, true, panel);
     title->setPinVisible(m_enabled && !panel->isFloating());
     panel->setTitleBarWidget(title);
-    connect(panel, &QDockWidget::topLevelChanged, title,
-            [this, title](bool floating) { title->setPinVisible(m_enabled && !floating); });
+    const QPointer<PanelTitleBar> guardedTitle(title);
+    connect(panel, &QDockWidget::topLevelChanged, this, [this, guardedTitle](bool floating) {
+        if (PanelTitleBar* titleBar = guardedTitle; titleBar != nullptr) {
+            titleBar->setPinVisible(m_enabled && !floating);
+        }
+    });
     const QPointer<QDockWidget> guarded(panel);
     connect(title, &PanelTitleBar::pinClicked, this, [this, guarded] {
         if (QDockWidget* target = guarded; target != nullptr) {
@@ -536,6 +540,16 @@ void AutoHide::setEnabled(bool enabled) {
             title->setPinVisible(enabled && !panel->isFloating());
         }
     }
+}
+
+void AutoHide::releaseContents() {
+    close();
+    for (const Hidden& entry : m_hidden) {
+        if (QDockWidget* panel = entry.panel; panel != nullptr && entry.content != nullptr) {
+            panel->setWidget(entry.content);
+        }
+    }
+    m_hidden.clear();
 }
 
 QStringList AutoHide::saveState() const {

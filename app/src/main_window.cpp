@@ -651,7 +651,11 @@ void MainWindow::updateEditActions() {
     m_redoAction->setText(redoName.isEmpty() ? tr("&Redo") : tr("&Redo %1").arg(redoName));
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    // The overlay goes with the central widget, before the panels whose
+    // content it holds.
+    m_autoHide->releaseContents();
+}
 
 void MainWindow::setScriptMode() {
     m_scriptMode = true;
