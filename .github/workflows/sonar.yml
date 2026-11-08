@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+#
+# Nightly SonarQube Cloud analysis of main (decision of 2026-11-08,
+# docs/DECISIONI.md, #625), as in solid-space. It never runs on pull requests
+# or pushes and collects no test coverage; ci.yml stays the only gate for
+# merging.
+name: SonarQube Cloud
+
+on:
+  schedule:
+    # 01:47 UTC, around 02:30 in Italy: off the hour, and half an hour after the
+    # analysis of solid-space (01:17 UTC), so the two do not run together.
+    - cron: '47 1 * * *'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+# Same aqtinstall source and py7zr pin as ci.yml (docs/adr/0043, point 3);
+# drop them here too when ci.yml drops them.
+env:
+  TG_AQT_SOURCE: git+https://github.com/miurahr/aqtinstall.git@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7
+  TG_PY7ZR_VERSION: '==1.1.4'
+
+concurrency:
+  group: sonar-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  analysis:
+    name: Analysis of main
+    # A manual run started from another branch does nothing: only main is analysed.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history for blame information and new-code detection.
+          fetch-depth: 0
+          # solid-space (docs/adr/0030) is needed to build, not --recursive.
+          # It is excluded from the analysis: it has its own.
+          submodules: true
+      # Same packages and Qt as the linux-release job of ci.yml, without ccache.
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build libgtest-dev libgl1-mesa-dev libxkbcommon-dev
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.12.0'
+          aqtsource: ${{ env.TG_AQT_SOURCE }}
+          py7zrversion: ${{ env.TG_PY7ZR_VERSION }}
+          cache: true
+      # The release preset writes build/release/compile_commands.json, which
+      # sonar-project.properties points the C++ analysis to. The build also
+      # generates the moc and uic files that the app sources include.
+      - run: cmake --preset release -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+      - run: cmake --build --preset release --parallel "$(nproc)"
+      - run: test -s build/release/compile_commands.json
+      - name: SonarQube Cloud scan
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
