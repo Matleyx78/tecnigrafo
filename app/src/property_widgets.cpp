@@ -62,7 +62,8 @@ QIcon layerIcon(const core::Layer& layer, const QPalette& palette) {
             x += kLayerIconStep;
         }
         // Draw on the target device: no rectangular raster is scaled into a square.
-        paintColorSample(painter, QRect(x, 0, kLayerIconSide, kLayerIconSide), layer.color, palette);
+        const QRect sample(x, 0, kLayerIconSide, kLayerIconSide);
+        paintColorSample(painter, sample, layer.color, palette);
         painter.end();
         icon.addPixmap(pixmap);
     }

@@ -92,8 +92,8 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
         m_table->horizontalHeader()->setSectionResizeMode(columnOf(column), QHeaderView::Fixed);
         m_table->setColumnWidth(columnOf(column), kStateWidth);
     }
-    m_table->horizontalHeader()->setSectionResizeMode(columnOf(LayerColumn::Plot),
-                                                    QHeaderView::ResizeToContents);
+    auto* header = m_table->horizontalHeader();
+    header->setSectionResizeMode(columnOf(LayerColumn::Plot), QHeaderView::ResizeToContents);
     m_table->horizontalHeader()->setStretchLastSection(false);
 
     m_message->setObjectName(QStringLiteral("layerMessage"));
