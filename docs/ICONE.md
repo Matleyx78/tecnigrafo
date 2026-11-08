@@ -314,7 +314,7 @@ indicati `pt`. Le icone piccole semplificano i dettagli di costruzione.
 | `edit-scale` | `edit.scale` | due rettangoli con lo stesso punto base e freccia di ingrandimento | sì |
 | `edit-mirror` | `edit.mirror` | due triangoli speculari e asse verticale | sì |
 | `edit-explode` | `edit.explode` | rettangolo e quattro lati separati, con freccia | sì |
-| `edit-trim` | `edit.trim` | limite verticale, linea intera e porzione conservata, croce sul lato tagliato | sì |
+| `edit-trim` | `edit.trim` | limite verticale (`esist`), linea intera (`esist`), porzione conservata (`geo`) e punto di selezione sulla porzione da tagliare (`pt`, `data-on`) | sì |
 | `edit-extend` | `edit.extend` | segmento prolungato fino al limite e freccia verso il limite | sì |
 | `edit-offset` | `edit.offset` | due angoli paralleli e distanza tra i lati | sì |
 | `edit-fillet` | `edit.fillet` | angolo raccordato, raggio e centro sulla griglia grande | sì |

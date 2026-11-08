@@ -14,6 +14,7 @@
 #include <QHBoxLayout>
 #include <QHash>
 #include <QLabel>
+#include <QList>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMouseEvent>
@@ -62,6 +63,17 @@ QStringList groups() {
     return {QStringLiteral("home/draw"),     QStringLiteral("home/modify"),
             QStringLiteral("home/layers"),   QStringLiteral("home/properties"),
             QStringLiteral("view/navigate"), QStringLiteral("view/aids")};
+}
+
+/// Keep Quick Select after the modification commands so their columns of
+/// three stay together even though the classic menus register Tools first.
+QList<QAction*> toolActions(const ActionRegistry& registry) {
+    QList<QAction*> actions = registry.actions();
+    QAction* quickSelect = registry.action(QStringLiteral("edit.quick-select"));
+    if (actions.removeOne(quickSelect)) {
+        actions.append(quickSelect);
+    }
+    return actions;
 }
 
 /// The small icons of the quick access bar: the 16 px grid of docs/adr/0040,
@@ -268,7 +280,7 @@ void UiBuilder::buildRibbon() {
         panelFor(QStringLiteral("home/properties"))
             ->addSmallWidget(new PropertyControls(*properties, ribbon));
     }
-    for (QAction* action : m_registry.actions()) {
+    for (QAction* action : toolActions(m_registry)) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
         if (spec->ribbon.isEmpty() || action->isSeparator()) {
             continue;
@@ -346,7 +358,7 @@ void UiBuilder::buildClassic() {
     if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
         toolbarFor(QStringLiteral("home/layers"))->addWidget(new LayerControls(*layers, &m_window));
     }
-    for (QAction* action : m_registry.actions()) {
+    for (QAction* action : toolActions(m_registry)) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
         if (action->isSeparator()) {
             continue;

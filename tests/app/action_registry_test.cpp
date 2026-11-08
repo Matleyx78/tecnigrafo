@@ -333,14 +333,14 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
 TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(
         titles(window().menuBar()->actions()),
-        (QStringList{QStringLiteral("&File"), QStringLiteral("&Edit"), QStringLiteral("&Modify"),
-                     QStringLiteral("&View"), QStringLiteral("&Tools"), QStringLiteral("&Draw"),
+        (QStringList{QStringLiteral("&File"), QStringLiteral("&Edit"), QStringLiteral("&View"),
+                     QStringLiteral("&Tools"), QStringLiteral("&Draw"), QStringLiteral("&Modify"),
                      QStringLiteral("&Help")}));
     const QList<QAction*> menus = window().menuBar()->actions();
     EXPECT_EQ(titles(menus[1]->menu()->actions()),
               (QStringList{QStringLiteral("&Undo"), QStringLiteral("&Redo"), QStringLiteral("-"),
                            QStringLiteral("&Erase")}));
-    EXPECT_EQ(menus[5]->menu()->actions(),
+    EXPECT_EQ(menus[4]->menu()->actions(),
               (QList<QAction*>{action("draw.line"), action("draw.pline"), action("draw.circle"),
                                action("draw.arc"), action("draw.text")}));
     for (QAction* item : registry().actions()) {
@@ -374,6 +374,7 @@ TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons)
     }
     ASSERT_NE(modify, nullptr);
     QList<QAction*> menuActions;
+    QSet<QString> mnemonics;
     for (const auto& [id, command] : expected) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* spec = registry().spec(id);
@@ -393,6 +394,10 @@ TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons)
         EXPECT_TRUE(spec->responses.isEmpty());
         EXPECT_TRUE(spec->shortcut.isEmpty());
         EXPECT_TRUE(item->shortcuts().isEmpty());
+        const QString mnemonic = QKeySequence::mnemonic(item->text()).toString();
+        EXPECT_FALSE(mnemonic.isEmpty());
+        EXPECT_FALSE(mnemonics.contains(mnemonic)) << mnemonic.toStdString();
+        mnemonics.insert(mnemonic);
         menuActions.append(item);
     }
     EXPECT_EQ(modify->actions(), menuActions);
