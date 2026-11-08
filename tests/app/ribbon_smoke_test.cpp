@@ -84,13 +84,16 @@ TEST(RibbonSmoke, TheCompactRibbonHasAFileTabThatOpensTheApplicationMenu) {
          {"file.new", "file.open", "file.save", "file.saveas", "file.recent", "file.quit"}) {
         EXPECT_TRUE(menu->actions().contains(registry.action(QString::fromLatin1(id)))) << id;
     }
-    // A click opens the menu, which runs its own event loop until closed.
+    // A click opens the menu, which runs its own event loop until closed:
+    // the menu closes itself once it is shown. Qt may open it from the
+    // event loop rather than inside the click.
     bool shown = false;
-    QTimer::singleShot(0, menu, [menu, &shown] {
-        shown = menu->isVisible();
-        menu->close();
+    QObject::connect(menu, &QMenu::aboutToShow, menu, [menu, &shown] {
+        shown = true;
+        QTimer::singleShot(0, menu, &QMenu::close);
     });
     events::click(file, Qt::LeftButton, file->rect().center());
+    QCoreApplication::processEvents();
     EXPECT_TRUE(shown);
 }
 
