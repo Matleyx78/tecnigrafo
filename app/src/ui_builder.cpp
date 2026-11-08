@@ -143,9 +143,9 @@ void UiBuilder::show(InterfaceKind kind) {
         delete toolbar;
     }
     m_toolbars.clear();
-    m_ribbon.clear();
-    m_applicationButton.clear();
-    m_title.clear();
+    m_ribbon = nullptr;
+    m_applicationButton = nullptr;
+    m_title = nullptr;
     if (kind == InterfaceKind::Ribbon) {
         buildRibbon();
     } else {
@@ -165,7 +165,7 @@ void UiBuilder::setTheme(Theme theme) {
 }
 
 void UiBuilder::updateTitle() {
-    if (m_title.isNull()) {
+    if (m_title == nullptr) {
         return;
     }
     // As the platform does with a window title: [*] marks a modified drawing.
@@ -176,7 +176,7 @@ void UiBuilder::updateTitle() {
 }
 
 void UiBuilder::styleRibbon() {
-    if (m_ribbon.isNull() || m_applicationButton.isNull()) {
+    if (m_ribbon == nullptr || m_applicationButton == nullptr) {
         return;
     }
     const ThemeTokens& tokens = themeTokens(m_theme);

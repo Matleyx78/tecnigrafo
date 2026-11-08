@@ -6,7 +6,6 @@
 #include "theme.hpp"
 
 #include <QList>
-#include <QPointer>
 
 #include <cstdint>
 
@@ -54,11 +53,12 @@ private:
     SARibbonMainWindow& m_window;
     const ActionRegistry& m_registry;
     QList<QToolBar*> m_toolbars;
-    // Children of the bar on show: Qt deletes a replaced menu bar later,
-    // so a search by name could find the one being replaced.
-    QPointer<SARibbonBar> m_ribbon;
-    QPointer<QToolButton> m_applicationButton;
-    QPointer<QLabel> m_title;
+    // Widgets of the bar on show, or nullptr. Kept rather than searched for
+    // by name, because Qt deletes a replaced menu bar later and a search
+    // could find the old one; show() forgets them before replacing the bar.
+    SARibbonBar* m_ribbon{nullptr};
+    QToolButton* m_applicationButton{nullptr};
+    QLabel* m_title{nullptr};
     InterfaceKind m_current{InterfaceKind::Ribbon};
     Theme m_theme{Theme::Light};
     bool m_built{false};
