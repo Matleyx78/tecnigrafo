@@ -156,20 +156,8 @@ TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
         EXPECT_EQ(ink.inMargin, 0) << "ink in the margin";
         EXPECT_TRUE(QFile::exists(resourcePath(name.chopped(4)))) << "not in the resources";
     }
-    // P22 migrates the last fifteen icons, each with both grids.
-    EXPECT_GE(roleIcons, 2 * 15);
-}
-
-TEST(IconsTest, LegacyGridIsRejected) {
-    EXPECT_EQ(roleGrid(QStringLiteral("legacy.svg")), 0);
-    EXPECT_EQ(roleGrid(QStringLiteral("legacy-24.svg")), 0);
-    const QByteArray data = filledIcon(24, "esist");
-    const QSvgRenderer renderer(data);
-    ASSERT_TRUE(renderer.isValid());
-    for (const int grid : {16, 32}) {
-        EXPECT_NE(renderer.defaultSize(), QSize(grid, grid));
-        EXPECT_NE(renderer.viewBoxF(), QRectF(0, 0, grid, grid));
-    }
+    // The migrated catalog has 62 pairs plus the panel-only check mark.
+    EXPECT_GE(roleIcons, 2 * 62 + 1);
 }
 
 TEST(IconsTest, ResourceIconsAreReusedPerResolvedFilesAndTheme) {

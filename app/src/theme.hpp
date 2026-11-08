@@ -42,13 +42,13 @@ void applyTheme(QApplication& application, Theme theme);
 /// its text. For widgets that only know their palette (panels, models).
 [[nodiscard]] Theme themeOf(const QPalette& palette);
 
-/// The icon `name` (docs/adr/0040): the -16 and -32 files when they exist,
-/// else the old 24 px file; each role coloured by the tokens of `theme`.
+/// The icon `name` (docs/adr/0040): the -16 and -32 files,
+/// each role coloured by the tokens of `theme`.
 ///
 /// `name` is a resource name under :/tg/icons/ or a path without extension,
 /// and then <name>-16.svg draws the sizes up to 24 px and <name>-32.svg the
-/// larger ones, either one standing in for the other when it is missing, and
-/// <name>.svg when neither exists; a path ending in .svg is that file only.
+/// larger ones, either one standing in for the other when it is missing.
+/// No unsuffixed fallback is searched; a path ending in .svg is that file only.
 /// Every element whose fill or stroke is currentColor gets the colour of its
 /// role: its class geo, pt, cost or esist, else that of its nearest group
 /// with one, else esist; the old class accent is pt (docs/ICONE.md, "Come si

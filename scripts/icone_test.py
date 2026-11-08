@@ -175,14 +175,25 @@ class RuleErrors(unittest.TestCase):
         problems = messages(data)
         self.assertTrue(any("fill is not set" in p for p in problems), problems)
 
-    def test_old_grid_keeps_its_rules(self):
+    def test_old_grid_is_rejected(self):
         data = (HEADER + '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
                 '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" '
                 'stroke-linejoin="round"><path d="M5 19 L19 5"/>'
                 '<circle class="accent" cx="5" cy="19" r="1.5" fill="currentColor" stroke="none"/>'
                 '</g></svg>').encode()
-        self.assertEqual(messages(data, "old.svg"), [])
-        self.assertEqual(len(messages(data.replace(b"accent", b"geo"), "old.svg")), 1)
+        for name in ("old.svg", "old-24.svg"):
+            with self.subTest(name=name):
+                problems = messages(data, name)
+                self.assertEqual(len(problems), 1, problems)
+                self.assertIn("unsupported icon name", problems[0])
+        for name in ("old-16.svg", "old-32.svg"):
+            with self.subTest(name=name):
+                self.assertTrue(any("px grid is" in p for p in messages(data, name)))
+
+    def test_missing_grid_suffix_is_rejected_even_for_valid_role_svg(self):
+        problems = messages(icon32('<path class="geo" d="M6 6 L26 26"/>'), "test.svg")
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("unsupported icon name", problems[0])
 
     def test_licence_and_xml(self):
         self.assertIn("no SPDX-License-Identifier comment",
@@ -196,6 +207,13 @@ class CommandLine(unittest.TestCase):
         with redirect_stdout(out), redirect_stderr(err):
             status = icone.main(argv)
         return status, out.getvalue()
+
+    def test_legacy_filename_fails_the_command(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / "old.svg").write_bytes(icon32('<path class="geo" d="M6 6 L26 26"/>'))
+            status, out = self.run_main([folder])
+        self.assertEqual(status, 1)
+        self.assertIn("old.svg:4: unsupported icon name", out)
 
     def test_reports_file_and_line_and_fails(self):
         with tempfile.TemporaryDirectory() as folder:

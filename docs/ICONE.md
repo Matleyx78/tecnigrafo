@@ -58,9 +58,10 @@ classe `accent`.
 - Le dimensioni fino a 24 px si disegnano dal file `-16`, le altre dal `-32`;
   se un'icona ha uno solo dei due file, quello vale per tutte. Le dimensioni
   in mezzo e quelle per gli schermi ad alta densità vengono così dalla griglia
-  più vicina.
+  più vicina. Nel catalogo ogni icona ha entrambe le griglie; l’unica eccezione
+  è `layer-check-16.svg`, usata solo dal pannello e priva della versione da 32.
 - La griglia da 24 px non è più usata: P22 ha migrato le ultime icone e tolto
-  il ripiego su `<nome>.svg`. Il test Qt rifiuta file senza suffisso 16/32 e
+  il ripiego su `<nome>.svg`. Il controllo Python e il test Qt rifiutano file senza suffisso 16/32 e
   SVG con dimensioni o `viewBox` da 24 px.
 
 ## Regole di disegno
@@ -214,9 +215,10 @@ archi accessori; annulla e ripeti restano speculari su entrambe le griglie.
 P22 (0.7.5) completa la migrazione delle 15 icone di layer, proprietà e
 pannelli. Usa `esist` per i simboli e `pt` per il punto corrente, il più,
 la croce e la barra dell'occhio spento. A 16 px la pila ha due piani, l'occhio
-barrato non ha la pupilla, il sole ha quattro raggi, la scheda due righe e
+barrato non ha la pupilla, il sole ha otto raggi, la scheda due righe e
 la goccia perde il riflesso. I lucchetti usano un tratto per la serratura,
 senza punti pieni che sembrino input. A 32 px restano i dettagli aggiuntivi.
+Il lucchetto aperto a 16 px ha l’arco spostato a sinistra e staccato dal corpo.
 La spunta di P13 resta invariata. Non resta nessun file sulla griglia da 24 px,
 e `themedIcon` non cerca più il vecchio nome senza suffisso.
 

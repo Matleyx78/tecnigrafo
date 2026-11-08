@@ -3,8 +3,8 @@
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-        <rect class="esist" x="3" y="7" width="10" height="7"/>
-        <path class="esist" d="M5 7 V5 A3 3 0 0 1 11 5"/>
-        <path class="esist" d="M8 10 V11"/>
+        <rect class="esist" x="4" y="7" width="10" height="7"/>
+        <path class="esist" d="M8 7 V4.5 A2.5 2.5 0 0 0 3 4.5 V5.5"/>
+        <path class="esist" d="M9 10 V11"/>
     </g>
 </svg>
