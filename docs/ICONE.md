@@ -200,22 +200,16 @@ La colonna **Rifatta** dice se l'icona segue già le regole a ruoli, con i
 file `-16` e `-32`; le altre sono ancora sulla griglia da 24 px, e le rifanno
 0.7.5-P19–P22.
 
-Le icone a ruoli (0.7.5-P11): l'esempio di questo documento.
-
-| File | Azione | Disegno | Rifatta |
-|---|---|---|---|
-| `draw-circle-cr-32.svg`, `draw-circle-cr-16.svg` | variante *Center, Radius* di `CIRCLE` (la collega 0.7.5-P19) | circonferenza (`geo`), raggio (`cost`), centro e punto sulla circonferenza (`pt`) | sì |
+Le icone a ruoli (0.7.5-P11): l'esempio di questo documento, che 0.7.5-P19
+collega alla variante *Center, Radius*; è nella tabella dei comandi di disegno
+qui sotto.
 
 
 Prima parte (0.6-P18): disegno e modifica, file e annullamento.
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
-| `draw-line.svg` | `draw.line` | segmento con un punto a ogni estremo | no |
-| `draw-pline.svg` | `draw.pline` | spezzata di tre tratti, punti agli estremi | no |
-| `draw-circle.svg` | `draw.circle` | circonferenza con il suo centro | no |
-| `draw-arc.svg` | `draw.arc` | arco di circa 220° con i due estremi | no |
-| `draw-text.svg` | `draw.text` | cursore di testo | no |
+| `draw-line-*.svg`, `draw-pline-*.svg`, `draw-text-*.svg`, `draw-circle-*.svg`, `draw-arc-*.svg` | i comandi di disegno: rifatte da 0.7.5-P19, nella tabella della tappa 0.7.5 | | sì |
 | `edit-erase.svg` | `edit.erase` | gomma inclinata | no |
 | `edit-undo.svg` | `edit.undo` | freccia a U verso sinistra | no |
 | `edit-redo.svg` | `edit.redo` | freccia a U verso destra | no |
@@ -287,6 +281,25 @@ La tappa 0.7.5 aggiunge l'immissione dinamica (P16).
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
 | `aids-dynmode-16.svg`, `aids-dynmode-32.svg` | `aids.dynmode` | puntatore (`esist`) e campo vicino al cursore (`pt`) | sì |
+
+La tappa 0.7.5 rifà le icone dei comandi di disegno e ne aggiunge una per
+ogni variante di `CIRCLE` e `ARC` (P19). Ogni riga ha i due file, `-16.svg` e
+`-32.svg`; i punti dichiarano dove stanno (`data-on`) e di che cosa sono il
+centro (`data-center-of`). `draw.circle` e `draw.arc` mostrano l'icona della
+variante che eseguono: la prima finché non se ne usa un'altra.
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `draw-line` | `draw.line` | segmento (`geo`) con un punto a ogni estremo (`pt`) | sì |
+| `draw-pline` | `draw.pline` | spezzata di tre tratti (`geo`), punti al primo e all'ultimo vertice (`pt`) | sì |
+| `draw-text` | `draw.text` | due righe di testo (`geo`) sopra la linea di base tratteggiata (`cost`), punto d'inserimento al suo inizio (`pt`) | sì |
+| `draw-circle-cr` | `draw.circle.center-radius`, *Center, Radius* (e `draw.circle` all'inizio) | circonferenza (`geo`), raggio (`cost`), centro e punto sulla circonferenza (`pt`) | sì |
+| `draw-circle-cd` | `draw.circle.center-diameter`, *Center, Diameter* | circonferenza piccola (`geo`), dal centro un segmento lungo il diametro (`cost`), centro e punto in fondo al segmento (`pt`) | sì |
+| `draw-circle-2p` | `draw.circle.2-point`, *2-Point* | circonferenza (`geo`), diametro orizzontale tratteggiato (`cost`), i suoi due estremi (`pt`) | sì |
+| `draw-circle-3p` | `draw.circle.3-point`, *3-Point* | circonferenza (`geo`) con tre punti sopra (`pt`) | sì |
+| `draw-circle-ttr` | `draw.circle.tan-tan-radius`, *Tan, Tan, Radius* | due linee ad angolo retto (`esist`), la circonferenza tangente a entrambe (`geo`), il suo raggio (`cost`), i punti di tangenza sulle linee (`pt`) | sì |
+| `draw-arc-3p` | `draw.arc.3-point`, *3-Point* (e `draw.arc` all'inizio) | arco di 220° (`geo`) con i due estremi e un punto in cima (`pt`) | sì |
+| `draw-arc-sce` | `draw.arc.start-center-end`, *Start, Center, End* | arco di 170° (`geo`), i due raggi agli estremi (`cost`), inizio, centro e fine (`pt`) | sì |
 
 ## Aggiungere un'icona
 

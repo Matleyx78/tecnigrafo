@@ -10,6 +10,7 @@
 #include <QKeySequence>
 #include <QList>
 #include <QString>
+#include <QStringList>
 
 #include <utility>
 
@@ -90,6 +91,22 @@ ActionSpec commandSpec(const QString& id, const QString& text, const QString& me
                        const QString& description, const QString& command) {
     ActionSpec spec = makeSpec(id, text, menu, description);
     spec.command = command;
+    return spec;
+}
+
+/// A variant of the action `of` (docs/tappe/0.7.5/P19): `command`, then
+/// `responses`, with its own icon; it is in the menu of `of` only.
+ActionSpec variantSpec(const QString& of, const QString& id, const QString& text,
+                       const QString& description, const QString& command,
+                       const QStringList& responses, const QString& icon) {
+    ActionSpec spec;
+    spec.id = id;
+    spec.text = text;
+    spec.description = description;
+    spec.command = command;
+    spec.variantOf = of;
+    spec.responses = responses;
+    spec.icon = icon;
     return spec;
 }
 
@@ -269,12 +286,43 @@ void BuiltinActions::add(ActionRegistry& registry) {
         withIcon(commandSpec(QStringLiteral("draw.pline"), tr("&Polyline"), draw,
                              tr("Draws a polyline of lines and arcs."), QStringLiteral("PLINE")),
                  QStringLiteral("draw-pline")));
-    registry.add(withIcon(commandSpec(QStringLiteral("draw.circle"), tr("&Circle"), draw,
-                                      tr("Draws a circle."), QStringLiteral("CIRCLE")),
-                          QStringLiteral("draw-circle")));
-    registry.add(withIcon(commandSpec(QStringLiteral("draw.arc"), tr("&Arc"), draw,
-                                      tr("Draws an arc."), QStringLiteral("ARC")),
-                          QStringLiteral("draw-arc")));
+    // CIRCLE and ARC run their variants, named as in AutoCAD; each action
+    // shows the icon of the variant it runs, the first until another is
+    // used (docs/tappe/0.7.5/P19).
+    const QString circle = QStringLiteral("draw.circle");
+    registry.add(withIcon(
+        commandSpec(circle, tr("&Circle"), draw, tr("Draws a circle."), QStringLiteral("CIRCLE")),
+        QStringLiteral("draw-circle-cr")));
+    registry.add(variantSpec(circle, QStringLiteral("draw.circle.center-radius"),
+                             tr("Center, &Radius"),
+                             tr("Draws a circle from its center and its radius."),
+                             QStringLiteral("CIRCLE"), {}, QStringLiteral("draw-circle-cr")));
+    registry.add(variantSpec(
+        circle, QStringLiteral("draw.circle.center-diameter"), tr("Center, &Diameter"),
+        tr("Draws a circle from its center and its diameter."), QStringLiteral("CIRCLE"),
+        {QString(kWaitForUser), QStringLiteral("D")}, QStringLiteral("draw-circle-cd")));
+    registry.add(variantSpec(circle, QStringLiteral("draw.circle.2-point"), tr("&2-Point"),
+                             tr("Draws a circle from the two ends of a diameter."),
+                             QStringLiteral("CIRCLE"), {QStringLiteral("2P")},
+                             QStringLiteral("draw-circle-2p")));
+    registry.add(variantSpec(circle, QStringLiteral("draw.circle.3-point"), tr("&3-Point"),
+                             tr("Draws a circle through three points."), QStringLiteral("CIRCLE"),
+                             {QStringLiteral("3P")}, QStringLiteral("draw-circle-3p")));
+    registry.add(variantSpec(
+        circle, QStringLiteral("draw.circle.tan-tan-radius"), tr("&Tan, Tan, Radius"),
+        tr("Draws a circle of a given radius tangent to two objects."), QStringLiteral("CIRCLE"),
+        {QStringLiteral("T")}, QStringLiteral("draw-circle-ttr")));
+    const QString arc = QStringLiteral("draw.arc");
+    registry.add(
+        withIcon(commandSpec(arc, tr("&Arc"), draw, tr("Draws an arc."), QStringLiteral("ARC")),
+                 QStringLiteral("draw-arc-3p")));
+    registry.add(variantSpec(arc, QStringLiteral("draw.arc.3-point"), tr("&3-Point"),
+                             tr("Draws an arc through its start, a second point and its end."),
+                             QStringLiteral("ARC"), {}, QStringLiteral("draw-arc-3p")));
+    registry.add(variantSpec(
+        arc, QStringLiteral("draw.arc.start-center-end"), tr("&Start, Center, End"),
+        tr("Draws an arc from its start, its center and its end."), QStringLiteral("ARC"),
+        {QString(kWaitForUser), QStringLiteral("C")}, QStringLiteral("draw-arc-sce")));
     registry.add(withIcon(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
                                       tr("Writes single-line texts."), QStringLiteral("TEXT")),
                           QStringLiteral("draw-text")));

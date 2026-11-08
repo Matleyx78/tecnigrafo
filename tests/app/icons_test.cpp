@@ -194,12 +194,6 @@ bool hasIconFile(const QString& icon) {
            QFile::exists(resourcePath(icon + QStringLiteral("-32")));
 }
 
-/// The role icons drawn before the action that will use them: the example
-/// of docs/ICONE.md, which the variants of CIRCLE use (docs/tappe/0.7.5 P19).
-bool waitsForItsAction(const QString& icon) {
-    return icon == QStringLiteral("draw-circle-cr");
-}
-
 /// Writes `svg` as `name` in `directory`.
 void writeSvg(const QTemporaryDir& directory, const QString& name, const QByteArray& svg) {
     QFile file(directory.filePath(name));
@@ -281,7 +275,9 @@ TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
         EXPECT_EQ(ink.inMargin, 0) << "ink in the margin";
         EXPECT_TRUE(QFile::exists(resourcePath(name.chopped(4)))) << "not in the resources";
     }
-    EXPECT_GE(roleIcons, 2);  // draw-circle-cr, the example of docs/ICONE.md
+    // The drawing commands and their variants (0.7.5-P19), Dynamic Input
+    // (0.7.5-P16): two grids each.
+    EXPECT_GE(roleIcons, 2 * 11);
 }
 
 TEST(IconsTest, ResourceIconsAreReusedPerResolvedFilesAndTheme) {
@@ -442,20 +438,60 @@ TEST(IconsTest, EveryActionHasAnIconWithItsFile) {
 TEST(IconsTest, DrawingEditingAndFileActionsUseTheirOwnIcons) {
     ActionRegistry registry;
     addBuiltinActions(registry);
-    // The icons of 0.6-P18: named like the action, with dashes for dots.
-    const QStringList ids{
-        QStringLiteral("draw.line"), QStringLiteral("draw.pline"), QStringLiteral("draw.circle"),
-        QStringLiteral("draw.arc"),  QStringLiteral("draw.text"),  QStringLiteral("edit.erase"),
-        QStringLiteral("edit.undo"), QStringLiteral("edit.redo"),  QStringLiteral("file.new"),
-        QStringLiteral("file.open"), QStringLiteral("file.save"),  QStringLiteral("file.saveas")};
-    EXPECT_EQ(ids.size(), kFirstIcons);
-    for (const QString& id : ids) {
+    // The icons of 0.6-P18: named like the action, with dashes for dots;
+    // CIRCLE and ARC show the icon of their first variant (0.7.5-P19).
+    const QList<std::pair<QString, QString>> expected{
+        {QStringLiteral("draw.line"), QStringLiteral("draw-line")},
+        {QStringLiteral("draw.pline"), QStringLiteral("draw-pline")},
+        {QStringLiteral("draw.circle"), QStringLiteral("draw-circle-cr")},
+        {QStringLiteral("draw.arc"), QStringLiteral("draw-arc-3p")},
+        {QStringLiteral("draw.text"), QStringLiteral("draw-text")},
+        {QStringLiteral("edit.erase"), QStringLiteral("edit-erase")},
+        {QStringLiteral("edit.undo"), QStringLiteral("edit-undo")},
+        {QStringLiteral("edit.redo"), QStringLiteral("edit-redo")},
+        {QStringLiteral("file.new"), QStringLiteral("file-new")},
+        {QStringLiteral("file.open"), QStringLiteral("file-open")},
+        {QStringLiteral("file.save"), QStringLiteral("file-save")},
+        {QStringLiteral("file.saveas"), QStringLiteral("file-saveas")}};
+    EXPECT_EQ(expected.size(), kFirstIcons);
+    for (const auto& [id, icon] : expected) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* spec = registry.spec(id);
         ASSERT_NE(spec, nullptr);
-        QString expected = id;
-        expected.replace(QLatin1Char('.'), QLatin1Char('-'));
-        EXPECT_EQ(spec->icon, expected);
+        EXPECT_EQ(spec->icon, icon);
+    }
+}
+
+TEST(IconsTest, DrawingCommandsAndTheirVariantsHaveRoleIconsOnBothGrids) {
+    ActionRegistry registry;
+    addBuiltinActions(registry);
+    // docs/tappe/0.7.5/P19: the drawing commands and the variants of CIRCLE
+    // and ARC, each with its own icon on the 16 and 32 px grids, and no
+    // file of the old 24 px grid left.
+    const QList<std::pair<QString, QString>> expected{
+        {QStringLiteral("draw.line"), QStringLiteral("draw-line")},
+        {QStringLiteral("draw.pline"), QStringLiteral("draw-pline")},
+        {QStringLiteral("draw.text"), QStringLiteral("draw-text")},
+        {QStringLiteral("draw.circle.center-radius"), QStringLiteral("draw-circle-cr")},
+        {QStringLiteral("draw.circle.center-diameter"), QStringLiteral("draw-circle-cd")},
+        {QStringLiteral("draw.circle.2-point"), QStringLiteral("draw-circle-2p")},
+        {QStringLiteral("draw.circle.3-point"), QStringLiteral("draw-circle-3p")},
+        {QStringLiteral("draw.circle.tan-tan-radius"), QStringLiteral("draw-circle-ttr")},
+        {QStringLiteral("draw.arc.3-point"), QStringLiteral("draw-arc-3p")},
+        {QStringLiteral("draw.arc.start-center-end"), QStringLiteral("draw-arc-sce")}};
+    for (const auto& [id, icon] : expected) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* spec = registry.spec(id);
+        ASSERT_NE(spec, nullptr);
+        EXPECT_EQ(spec->icon, icon);
+        EXPECT_TRUE(QFile::exists(resourcePath(icon + QStringLiteral("-16"))));
+        EXPECT_TRUE(QFile::exists(resourcePath(icon + QStringLiteral("-32"))));
+        EXPECT_FALSE(QFile::exists(resourcePath(icon)));
+    }
+    EXPECT_EQ(registry.variants(QStringLiteral("draw.circle")).size(), 5);
+    EXPECT_EQ(registry.variants(QStringLiteral("draw.arc")).size(), 2);
+    for (const QString& old : {QStringLiteral("draw-circle"), QStringLiteral("draw-arc")}) {
+        EXPECT_FALSE(QFile::exists(resourcePath(old))) << old.toStdString();
     }
 }
 
@@ -512,9 +548,6 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     for (const QString& name : names) {
         const QString icon = iconName(name);
         SCOPED_TRACE(icon.toStdString());
-        if (waitsForItsAction(icon)) {
-            continue;
-        }
         EXPECT_TRUE(used.contains(icon)) << "neither an action nor a panel uses this icon";
     }
     // The icons the panels name are all drawn.

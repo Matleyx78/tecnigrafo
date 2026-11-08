@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <polyline id="pline" class="geo" points="5,24 12,10 20,22 27,8"/>
+        <circle class="pt" cx="5" cy="24" r="2" fill="currentColor" stroke="none" data-on="pline"/>
+        <circle class="pt" cx="27" cy="8" r="2" fill="currentColor" stroke="none" data-on="pline"/>
+    </g>
+</svg>

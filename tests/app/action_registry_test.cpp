@@ -13,11 +13,13 @@
 
 #include <QAction>
 #include <QDockWidget>
+#include <QIcon>
 #include <QKeySequence>
 #include <QLineEdit>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
+#include <QPixmap>
 #include <QPlainTextEdit>
 #include <QPointF>
 #include <QSet>
@@ -29,6 +31,7 @@
 #include <QWidgetAction>
 #include <gtest/gtest.h>
 
+#include <string>
 #include <utility>
 
 namespace tg::app {
@@ -162,6 +165,62 @@ TEST(ActionRegistryTest, BuildsMenusSubmenusAndSeparatorsInOrder) {
     EXPECT_TRUE(registry.action(QStringLiteral("hidden"))->associatedObjects().isEmpty());
 }
 
+/// An icon of one colour, to tell icons apart by their cache key.
+QIcon plainIcon(Qt::GlobalColor colour) {
+    QPixmap pixmap(16, 16);
+    pixmap.fill(colour);
+    return {pixmap};
+}
+
+TEST(ActionRegistryTest, VariantsFormTheMenuOfTheirActionWhichRemembersTheLastUsed) {
+    ActionRegistry registry;
+    QAction* circle = registry.add(
+        spec(QStringLiteral("draw.circle"), QStringLiteral("&Circle"), QStringLiteral("&Draw")));
+    EXPECT_EQ(circle->menu(), nullptr);
+    EXPECT_TRUE(registry.variants(QStringLiteral("draw.circle")).isEmpty());
+    EXPECT_EQ(registry.currentVariant(QStringLiteral("draw.circle")), nullptr);
+
+    ActionSpec radius = spec(QStringLiteral("draw.circle.center-radius"), QStringLiteral("Radius"));
+    radius.variantOf = QStringLiteral("draw.circle");
+    ActionSpec diameter =
+        spec(QStringLiteral("draw.circle.center-diameter"), QStringLiteral("Diameter"));
+    diameter.variantOf = QStringLiteral("draw.circle");
+    diameter.description = QStringLiteral("By its diameter.");
+    diameter.responses = {QString(kWaitForUser), QStringLiteral("D")};
+    QAction* first = registry.add(radius);
+    QAction* second = registry.add(diameter);
+    first->setIcon(plainIcon(Qt::red));
+    second->setIcon(plainIcon(Qt::blue));
+
+    const QList<QAction*> variants{first, second};
+    EXPECT_EQ(registry.variants(QStringLiteral("draw.circle")), variants);
+    ASSERT_NE(circle->menu(), nullptr);
+    EXPECT_EQ(circle->menu()->actions(), variants);
+    EXPECT_EQ(registry.spec(QStringLiteral("draw.circle.center-diameter"))->responses,
+              (QStringList{QStringLiteral("\\"), QStringLiteral("D")}));
+    // The first variant until another is used, with its icon.
+    EXPECT_EQ(registry.currentVariant(QStringLiteral("draw.circle")), first);
+    EXPECT_EQ(circle->icon().cacheKey(), first->icon().cacheKey());
+
+    second->trigger();
+    EXPECT_EQ(registry.currentVariant(QStringLiteral("draw.circle")), second);
+    EXPECT_EQ(circle->icon().cacheKey(), second->icon().cacheKey());
+    EXPECT_EQ(circle->toolTip(), QStringLiteral("By its diameter."));
+    // A new icon of the current variant, as a new theme gives, follows.
+    second->setIcon(plainIcon(Qt::green));
+    EXPECT_EQ(circle->icon().cacheKey(), second->icon().cacheKey());
+
+    // In the classic menus the action is the submenu of its variants.
+    QMenuBar bar;
+    registry.buildMenus(&bar);
+    ASSERT_EQ(bar.actions().size(), 1);
+    QMenu* draw = bar.actions().first()->menu();
+    ASSERT_NE(draw, nullptr);
+    EXPECT_EQ(draw->actions(), QList<QAction*>{circle});
+    EXPECT_EQ(titles(circle->menu()->actions()),
+              (QStringList{QStringLiteral("Radius"), QStringLiteral("Diameter")}));
+}
+
 class MainWindowActionsTest : public testing::Test {
 protected:
     void SetUp() override {
@@ -188,6 +247,25 @@ protected:
             m_window.findChild<QPlainTextEdit*>(QStringLiteral("history"))->toPlainText();
         return history.split(QLatin1Char('\n')).count(line);
     }
+
+    /// How many lines of the history end with `end`.
+    [[nodiscard]] qsizetype linesEndingWith(const QString& end) const {
+        const QString history =
+            m_window.findChild<QPlainTextEdit*>(QStringLiteral("history"))->toPlainText();
+        qsizetype count = 0;
+        for (const QString& line : history.split(QLatin1Char('\n'))) {
+            count += line.endsWith(end) ? 1 : 0;
+        }
+        return count;
+    }
+
+    /// Types `text` in the command line and presses Enter.
+    void enter(const std::string& text) {
+        events::type(input(), text);
+        events::press(input(), Qt::Key_Return);
+    }
+
+    [[nodiscard]] std::string prompt() const { return m_window.runner().promptText(); }
 
     void click(const core::Vec2& world) {
         const core::Vec2 pixel = m_window.view()->viewport().worldToScreen(world);
@@ -285,7 +363,8 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
             withCommands.append(item);
         }
     }
-    EXPECT_EQ(withCommands.size(), 10);  // 4 of File, ERASE, 5 of Draw
+    // 4 of File, ERASE, 5 of Draw and the variants of CIRCLE (5) and ARC (2).
+    EXPECT_EQ(withCommands.size(), 17);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());
@@ -299,6 +378,86 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
         EXPECT_EQ(linesEqualTo(echo), before + 1);
         events::press(input(), Qt::Key_Escape);
         // A NEW or OPEN of a changed drawing first asks about saving it.
+        events::press(input(), Qt::Key_Escape);
+        ASSERT_FALSE(window().runner().isActive());
+    }
+}
+
+TEST_F(MainWindowActionsTest, AVariantWaitsForThePointThenGivesItsResponse) {
+    window().setScriptMode();
+    const QString diameter = QStringLiteral(": D");
+    action("draw.circle.center-diameter")->trigger();
+    EXPECT_EQ(linesEqualTo(QStringLiteral("Command: CIRCLE")), 1);
+    ASSERT_TRUE(window().runner().isActive());
+    // "\": the variant waits for the centre, which only the user gives.
+    EXPECT_TRUE(prompt().starts_with("Specify center point for circle")) << prompt();
+    EXPECT_EQ(linesEndingWith(diameter), 0);
+    // An answer that the prompt rejects is no answer: still waiting.
+    enter("nonsense");
+    EXPECT_TRUE(prompt().starts_with("Specify center point for circle")) << prompt();
+    EXPECT_EQ(linesEndingWith(diameter), 0);
+
+    click({100.0, 40.0});
+    // Then the response, shown in the history as if typed.
+    EXPECT_TRUE(prompt().starts_with("Specify diameter of circle")) << prompt();
+    EXPECT_EQ(linesEndingWith(diameter), 1);
+    enter("20");
+    EXPECT_FALSE(window().runner().isActive());
+    // Nothing is left to give to the next command.
+    enter("CIRCLE");
+    click({110.0, 40.0});
+    EXPECT_TRUE(prompt().starts_with("Specify radius of circle")) << prompt();
+    EXPECT_EQ(linesEndingWith(diameter), 1);
+    events::press(input(), Qt::Key_Escape);
+}
+
+TEST_F(MainWindowActionsTest, ACommandThatEndsOrAsksSomethingElseFirstDropsTheResponsesLeft) {
+    window().setScriptMode();
+    const QString diameter = QStringLiteral(": D");
+    // Esc ends CIRCLE while the variant waits for the centre.
+    action("draw.circle.center-diameter")->trigger();
+    ASSERT_TRUE(window().runner().isActive());
+    events::press(input(), Qt::Key_Escape);
+    ASSERT_FALSE(window().runner().isActive());
+    // The next command, typed, does not receive the "D" left.
+    enter("CIRCLE");
+    click({100.0, 40.0});
+    EXPECT_TRUE(prompt().starts_with("Specify radius of circle")) << prompt();
+    EXPECT_EQ(linesEndingWith(diameter), 0);
+    events::press(input(), Qt::Key_Escape);
+
+    // An option instead of the centre: CIRCLE asks for something else,
+    // which "D" does not answer, so it is dropped as well.
+    action("draw.circle.center-diameter")->trigger();
+    enter("2P");
+    EXPECT_EQ(prompt(), "Specify first end point of circle's diameter:");
+    click({100.0, 40.0});
+    EXPECT_EQ(prompt(), "Specify second end point of circle's diameter:");
+    EXPECT_EQ(linesEndingWith(diameter), 0);
+    events::press(input(), Qt::Key_Escape);
+
+    // ARC, Start, Center, End: the start from the user, then "C".
+    action("draw.arc.start-center-end")->trigger();
+    click({100.0, 40.0});
+    EXPECT_EQ(prompt(), "Specify center point of arc:");
+    EXPECT_EQ(linesEndingWith(QStringLiteral(": C")), 1);
+    events::press(input(), Qt::Key_Escape);
+}
+
+TEST_F(MainWindowActionsTest, VariantsWithoutAWaitGiveTheirResponsesAtOnce) {
+    window().setScriptMode();
+    const QList<std::pair<const char*, std::string>> expected{
+        {"draw.circle.center-radius",
+         "Specify center point for circle or [3P/2P/Ttr (tan tan "
+         "radius)]:"},
+        {"draw.circle.2-point", "Specify first end point of circle's diameter:"},
+        {"draw.circle.3-point", "Specify first point on circle:"},
+        {"draw.circle.tan-tan-radius", "Specify point on object for first tangent of circle:"},
+        {"draw.arc.3-point", "Specify start point of arc:"}};
+    for (const auto& [id, first] : expected) {
+        SCOPED_TRACE(id);
+        action(id)->trigger();
+        EXPECT_EQ(prompt(), first);
         events::press(input(), Qt::Key_Escape);
         ASSERT_FALSE(window().runner().isActive());
     }

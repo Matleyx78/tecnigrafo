@@ -274,7 +274,12 @@ void UiBuilder::buildRibbon() {
             continue;
         }
         SARibbonPanel* panel = panelFor(spec->ribbon);
-        if (spec->ribbon == QStringLiteral("home/draw")) {
+        if (action->menu() != nullptr) {
+            // An action with variants: a large button that runs the one
+            // used last, and the menu of all of them in its drop-down
+            // (docs/adr/0039, point 1, area 3).
+            panel->addLargeAction(action, QToolButton::MenuButtonPopup);
+        } else if (spec->ribbon == QStringLiteral("home/draw")) {
             panel->addLargeAction(action);
         } else {
             panel->addSmallAction(action);
@@ -350,7 +355,14 @@ void UiBuilder::buildClassic() {
             spec->id == QStringLiteral("edit.undo") || spec->id == QStringLiteral("edit.redo")) {
             standard->addAction(action);
         } else if (!spec->ribbon.isEmpty()) {
-            toolbarFor(spec->ribbon)->addAction(action);
+            QToolBar* toolbar = toolbarFor(spec->ribbon);
+            toolbar->addAction(action);
+            // As in the ribbon: a click runs the variant used last, the
+            // arrow shows them all.
+            auto* button = qobject_cast<QToolButton*>(toolbar->widgetForAction(action));
+            if (action->menu() != nullptr && button != nullptr) {
+                button->setPopupMode(QToolButton::MenuButtonPopup);
+            }
         }
     }
     // The controls of the properties come after the panel's button: a

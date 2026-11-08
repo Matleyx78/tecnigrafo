@@ -13,11 +13,13 @@
 
 #include <QList>
 #include <QString>
+#include <QStringList>
 
 #include <SARibbon.h>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 
 class QAction;
 class QCloseEvent;
@@ -149,6 +151,12 @@ private:
     void updateEditActions();
     void updateDrawingState();
     void submitFileText(const QString& text);
+    /// Runs `command` as typed, then gives it `responses`
+    /// (ActionSpec::responses, docs/tappe/0.7.5/P19).
+    void startCommand(const QString& command, const QStringList& responses);
+    /// Gives the running command the responses of its action still due:
+    /// after an input, the ones that follow the user's answer.
+    void giveResponses();
     void handleFilePrompts();
     void ensureRecentFiles();
     void addRecentFile(const QString& path);
@@ -173,6 +181,11 @@ private:
     // The actions that wait for the running command to end: those with a
     // command, as typing does.
     QList<QAction*> m_idleActions;
+    // The responses of the action that started the running command, still
+    // to give, and the prompt at which the first one, kWaitForUser, waits
+    // for the user's answer.
+    QStringList m_responses;
+    std::optional<cmd::Prompt> m_waitingAt;
     ActionRegistry* m_actions{nullptr};
     std::unique_ptr<UiBuilder> m_uiBuilder;
     QToolButton* m_ribbonButton{nullptr};
