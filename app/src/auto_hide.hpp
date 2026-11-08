@@ -8,7 +8,6 @@
 #include <QFrame>
 #include <QList>
 #include <QObject>
-#include <QPointer>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -208,7 +207,7 @@ protected:
 
 private:
     struct Hidden {
-        QPointer<QDockWidget> panel;
+        QDockWidget* panel{nullptr};
         Qt::DockWidgetArea edge{Qt::RightDockWidgetArea};
         /// Width (left, right) or height (top, bottom) it had docked.
         int extent{0};
@@ -240,9 +239,11 @@ private:
     std::vector<Hidden> m_hidden;
     std::vector<Pending> m_pending;
     /// Every panel given a title bar, hidden or not.
-    std::vector<QPointer<QDockWidget>> m_panels;
-    QPointer<QDockWidget> m_open;
-    QPointer<AutoHideTab> m_hoverTab;
+    std::vector<QDockWidget*> m_panels;
+    // Plain pointers: the panels live as long as the window, and a tab
+    // stops being hovered before setAutoHidden() deletes it.
+    QDockWidget* m_open{nullptr};
+    AutoHideTab* m_hoverTab{nullptr};
     QTimer m_showTimer;
     QTimer m_closeTimer;
     bool m_pointerInside{false};

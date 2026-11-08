@@ -302,9 +302,8 @@ AutoHide::AutoHide(QMainWindow& window, QWidget* drawingArea, QWidget* drawing)
     m_showTimer.setSingleShot(true);
     m_showTimer.setInterval(kShowDelayMs);
     connect(&m_showTimer, &QTimer::timeout, this, [this] {
-        const AutoHideTab* hovered = m_hoverTab;
-        if (hovered != nullptr) {
-            open(hovered->panel(), false);
+        if (m_hoverTab != nullptr) {
+            open(m_hoverTab->panel(), false);
         }
     });
     m_closeTimer.setSingleShot(true);
@@ -326,8 +325,8 @@ AutoHide::~AutoHide() {
         application->removeEventFilter(this);
     }
     for (const Hidden& entry : m_hidden) {
-        if (QDockWidget* panel = entry.panel; panel != nullptr && entry.content != nullptr) {
-            panel->setWidget(entry.content);
+        if (entry.content != nullptr) {
+            entry.panel->setWidget(entry.content);
         }
     }
 }
@@ -346,18 +345,11 @@ void AutoHide::addPanel(QDockWidget* panel) {
     auto* title = new PanelTitleBar(panel, true, panel);
     title->setPinVisible(m_enabled && !panel->isFloating());
     panel->setTitleBarWidget(title);
-    const QPointer<PanelTitleBar> guardedTitle(title);
-    connect(panel, &QDockWidget::topLevelChanged, this, [this, guardedTitle](bool floating) {
-        if (PanelTitleBar* titleBar = guardedTitle; titleBar != nullptr) {
-            titleBar->setPinVisible(m_enabled && !floating);
-        }
-    });
-    const QPointer<QDockWidget> guarded(panel);
-    connect(title, &PanelTitleBar::pinClicked, this, [this, guarded] {
-        if (QDockWidget* target = guarded; target != nullptr) {
-            setAutoHidden(target, true);
-        }
-    });
+    // The title bar lives as long as its panel, and the panel as long as
+    // the window.
+    connect(panel, &QDockWidget::topLevelChanged, this,
+            [this, title](bool floating) { title->setPinVisible(m_enabled && !floating); });
+    connect(title, &PanelTitleBar::pinClicked, this, [this, panel] { setAutoHidden(panel, true); });
     connect(title, &PanelTitleBar::closeClicked, panel, &QWidget::close);
     panel->installEventFilter(this);
     m_panels.emplace_back(panel);
@@ -400,6 +392,10 @@ bool AutoHide::setAutoHidden(QDockWidget* panel, bool hidden) {
     }
     const Hidden entry = *found;
     m_hidden.erase(found);
+    if (m_hoverTab == entry.tab) {
+        m_showTimer.stop();
+        m_hoverTab = nullptr;
+    }
     bar(entry.edge)->removeTab(entry.tab);
     if (entry.content != nullptr) {
         // setWidget() takes the content back from the page and shows it.
@@ -455,17 +451,11 @@ bool AutoHide::hidePanel(QDockWidget* panel, Qt::DockWidgetArea edge, int extent
     }
     m_overlay->pages()->addWidget(page);
     entry.page = page;
-    const QPointer<QDockWidget> guarded(panel);
-    connect(header, &PanelTitleBar::pinClicked, this, [this, guarded] {
-        if (QDockWidget* target = guarded; target != nullptr) {
-            setAutoHidden(target, false);
-        }
-    });
-    connect(header, &PanelTitleBar::closeClicked, this, [this, guarded] {
-        if (QDockWidget* target = guarded; target != nullptr) {
-            setAutoHidden(target, false);
-            target->close();
-        }
+    connect(header, &PanelTitleBar::pinClicked, this,
+            [this, panel] { setAutoHidden(panel, false); });
+    connect(header, &PanelTitleBar::closeClicked, this, [this, panel] {
+        setAutoHidden(panel, false);
+        panel->close();
     });
 
     AutoHideBar* edgeBar = bar(edge);
@@ -541,19 +531,10 @@ void AutoHide::setEnabled(bool enabled) {
     if (!enabled) {
         m_pending.clear();
         while (!m_hidden.empty()) {
-            QDockWidget* panel = m_hidden.back().panel;
-            if (panel == nullptr) {
-                m_hidden.pop_back();
-                continue;
-            }
-            setAutoHidden(panel, false);
+            setAutoHidden(m_hidden.back().panel, false);
         }
     }
-    for (const QPointer<QDockWidget>& guarded : m_panels) {
-        const QDockWidget* panel = guarded;
-        if (panel == nullptr) {
-            continue;
-        }
+    for (const QDockWidget* panel : m_panels) {
         if (auto* title = qobject_cast<PanelTitleBar*>(panel->titleBarWidget()); title != nullptr) {
             title->setPinVisible(enabled && !panel->isFloating());
         }
@@ -563,11 +544,9 @@ void AutoHide::setEnabled(bool enabled) {
 QStringList AutoHide::saveState() const {
     QStringList state;
     for (const Hidden& entry : m_hidden) {
-        if (const QDockWidget* panel = entry.panel; panel != nullptr) {
-            state.append(QStringLiteral("%1:%2:%3")
-                             .arg(panel->objectName(), edgeName(entry.edge))
-                             .arg(entry.extent));
-        }
+        state.append(QStringLiteral("%1:%2:%3")
+                         .arg(entry.panel->objectName(), edgeName(entry.edge))
+                         .arg(entry.extent));
     }
     return state;
 }
@@ -589,9 +568,8 @@ void AutoHide::restoreState(const QStringList& state) {
             continue;
         }
         QDockWidget* panel = nullptr;
-        for (const QPointer<QDockWidget>& guarded : m_panels) {
-            if (QDockWidget* candidate = guarded;
-                candidate != nullptr && candidate->objectName() == parts.at(0)) {
+        for (QDockWidget* candidate : m_panels) {
+            if (candidate->objectName() == parts.at(0)) {
                 panel = candidate;
                 break;
             }
@@ -642,12 +620,7 @@ bool AutoHide::eventFilter(QObject* watched, QEvent* event) {
             // command that opens it) shows it in the overlay instead.
             if (auto* panel = qobject_cast<QDockWidget*>(watched);
                 panel != nullptr && isAutoHidden(panel)) {
-                const QPointer<QDockWidget> guarded(panel);
-                QTimer::singleShot(0, this, [this, guarded] {
-                    if (QDockWidget* target = guarded; target != nullptr) {
-                        reopen(target);
-                    }
-                });
+                QTimer::singleShot(0, this, [this, panel] { reopen(panel); });
             }
             break;
         case QEvent::Resize:
