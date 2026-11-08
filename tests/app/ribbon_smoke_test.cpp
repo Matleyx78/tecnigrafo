@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include <SARibbon.h>
+#include <array>
 
 namespace tg::app {
 namespace {
@@ -171,8 +172,9 @@ TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {
             QStatusBar* status = window.statusBar();
             auto* layers = window.findChild<QWidget*>(QStringLiteral("layerPanel"));
             ASSERT_NE(layers, nullptr);
-            for (const QWidget* widget : {static_cast<QWidget*>(&window), status,
-                                          static_cast<QWidget*>(window.commandLine()), layers}) {
+            const std::array<const QWidget*, 4> surfaces{&window, status, window.commandLine(),
+                                                         layers};
+            for (const QWidget* widget : surfaces) {
                 EXPECT_EQ(widget->palette().color(QPalette::Window), panel)
                     << widget->objectName().toStdString();
             }
