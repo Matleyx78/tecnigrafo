@@ -189,18 +189,16 @@ TEST_F(LayerPanelTest, CompactTableFitsThePanelAndUsesIconHeadersAndButtons) {
     EXPECT_EQ(table()->horizontalScrollBar()->maximum(), 0);
     EXPECT_GE(table()->rowHeight(0), 20);
     EXPECT_LE(table()->rowHeight(0), 22);
-    for (const LayerColumn column : {LayerColumn::Status, LayerColumn::On, LayerColumn::Frozen,
-                                     LayerColumn::Locked}) {
+    const auto columns = {LayerColumn::Status, LayerColumn::On, LayerColumn::Frozen,
+                          LayerColumn::Locked};
+    for (const LayerColumn column : columns) {
         const int section = static_cast<int>(column);
-        EXPECT_TRUE(model()->headerData(section, Qt::Horizontal, Qt::DecorationRole).isValid());
-        EXPECT_TRUE(model()
-                        ->headerData(section, Qt::Horizontal, Qt::DisplayRole)
-                        .toString()
-                        .isEmpty());
-        EXPECT_FALSE(model()
-                         ->headerData(section, Qt::Horizontal, Qt::ToolTipRole)
-                         .toString()
-                         .isEmpty());
+        const auto icon = model()->headerData(section, Qt::Horizontal, Qt::DecorationRole);
+        const auto text = model()->headerData(section, Qt::Horizontal, Qt::DisplayRole);
+        const auto tip = model()->headerData(section, Qt::Horizontal, Qt::ToolTipRole);
+        EXPECT_TRUE(icon.isValid());
+        EXPECT_TRUE(text.toString().isEmpty());
+        EXPECT_FALSE(tip.toString().isEmpty());
     }
     for (const char* name : {"layerNew", "layerDelete", "layerMakeCurrent"}) {
         ASSERT_NE(button(name), nullptr);

@@ -155,7 +155,8 @@ TEST(PropertyWidgets, LayerIconsShowEveryStateCombinationInBothThemes) {
             ASSERT_GE(index, 0);
             const QImage actual = combo.itemIcon(index).pixmap(combo.iconSize(), 1.0).toImage();
             int x = 0;
-            for (const LayerState state : {LayerState::On, LayerState::Frozen, LayerState::Locked}) {
+            const auto states = {LayerState::On, LayerState::Frozen, LayerState::Locked};
+            for (const LayerState state : states) {
                 QPixmap expected(16, 16);
                 expected.fill(Qt::transparent);
                 QPainter painter(&expected);

@@ -35,8 +35,8 @@ QIcon layerIcon(const core::Layer& layer, const QPalette& palette) {
         QPainter painter(&pixmap);
         int x = 0;
         for (const LayerState state : {LayerState::On, LayerState::Frozen, LayerState::Locked}) {
-            const QIcon stateIcon =
-                themedIcon(layerStateIconName(state, layerStateValue(layer, state)), themeOf(palette));
+            const QString name = layerStateIconName(state, layerStateValue(layer, state));
+            const QIcon stateIcon = themedIcon(name, themeOf(palette));
             stateIcon.paint(&painter, QRect(x, 0, kLayerIconSide, kLayerIconSide));
             x += kLayerIconStep;
         }

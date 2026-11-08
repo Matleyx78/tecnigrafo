@@ -268,9 +268,10 @@ void LayerPanel::showAndFocus() {
 
 core::LayerId LayerPanel::selectedLayer() const {
     const QModelIndex index = m_table->currentIndex();
-    return index.isValid() && !m_table->isRowHidden(index.row())
-               ? m_model->layerAt(index.row())
-               : core::LayerId{};
+    if (!index.isValid() || m_table->isRowHidden(index.row())) {
+        return {};
+    }
+    return m_model->layerAt(index.row());
 }
 
 void LayerPanel::selectLayer(core::LayerId id) {
