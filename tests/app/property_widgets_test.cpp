@@ -146,11 +146,14 @@ TEST(PropertyWidgets, LayerIconsShowEveryStateCombinationInBothThemes) {
     combo.setDocument(&document);
     const QSignalSpy spy(&combo, &LayerCombo::valueChosen);
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        SCOPED_TRACE(static_cast<int>(theme));
         QPalette palette = combo.palette();
         palette.setColor(QPalette::Window, themeTokens(theme).panel);
         palette.setColor(QPalette::Text, themeTokens(theme).text);
+        palette.setColor(QPalette::WindowText, themeTokens(theme).text);
         combo.setPalette(palette);
         for (const auto& layer : document.layers()) {
+            SCOPED_TRACE(layer.name);
             const int index = combo.findData(QVariant::fromValue(layer.id));
             ASSERT_GE(index, 0);
             const QImage actual = combo.itemIcon(index).pixmap(combo.iconSize(), 1.0).toImage();

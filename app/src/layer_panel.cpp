@@ -112,7 +112,6 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
     m_search->setObjectName(QStringLiteral("layerSearch"));
     m_search->setPlaceholderText(tr("Search layers"));
     m_search->setAccessibleName(tr("Search layers"));
-    m_search->setClearButtonEnabled(true);
     connect(m_search, &QLineEdit::textChanged, this, [this] { applyFilter(); });
 
     auto* content = new QWidget(this);
