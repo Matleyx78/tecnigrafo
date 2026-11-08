@@ -1248,3 +1248,16 @@ i rimandi ai documenti che cambia.
   [P31](tappe/0.7.5/P31-ambiente-non-ospitato.md), nasce P30b, e il piano della
   [tappa 0.7.5](tappe/0.7.5-correzione-di-rotta.md) lo scrive in "Modifiche al
   piano". Nessun ADR cambia. P23 (#563) si chiude.
+- **2026-11-08 — Test e CI più rapidi: P35 e P36.** Il responsabile aggiunge alla
+  [tappa 0.7.5](tappe/0.7.5-correzione-di-rotta.md) due pacchetti:
+  [P35](tappe/0.7.5/P35-icone-calcolate-una-volta.md), le icone colorate
+  calcolate una volta per tema, con il limite di `app_widgets` riportato a un
+  valore che ferma solo un blocco vero; e
+  [P36](tappe/0.7.5/P36-tidy-e-ccache.md), il confronto giusto per scegliere
+  il tidy nelle pull request e ccache nei job Linux. Decide:
+  - **ccache ammesso nella CI**, nei job Linux: è uno strumento della CI, non
+    una dipendenza del programma;
+  - **un cambio di `.github/workflows/ci.yml` fa ancora il tidy completo**
+    nella pull request, come oggi;
+  - dividere `app_widgets` ed eseguire i test in parallelo si decide dopo, con
+    i tempi misurati da P35 e P36.
