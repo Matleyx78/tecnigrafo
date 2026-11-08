@@ -9,9 +9,8 @@
 #     scripts/icone.py [folder]        (default: resources/icons/)
 #
 # Every *.svg of the folder is read. The grid comes from the name:
-# <name>-16.svg and <name>-32.svg follow the role rules of ADR 0040; any other
-# name is an icon of the old 24 px grid, checked with the rules it was drawn
-# with, until 0.7.5-P22 removes that grid. A problem is printed as
+# only <name>-16.svg and <name>-32.svg are accepted (ADR 0040).
+# The old 24 px grid is no longer supported. A problem is printed as
 # "file:line: message"; the exit status is 1 when there is any.
 #
 # The geometry is declared on a point (a filled circle):
@@ -55,22 +54,20 @@ class Grid:
     stroke: float  # width of every stroke
     margin: float  # px of each side left free of ink
     dot: float  # radius of a point
-    roles: bool  # whether the role classes of ADR 0040 apply
 
 
 GRIDS = {
-    16: Grid(16, 1.25, 1.0, 1.25, True),
-    24: Grid(24, 1.5, 2.0, 1.5, False),
-    32: Grid(32, 1.75, 2.0, 2.0, True),
+    16: Grid(16, 1.25, 1.0, 1.25),
+    32: Grid(32, 1.75, 2.0, 2.0),
 }
 
 
-def grid_of(name: str) -> Grid:
+def grid_of(name: str) -> Grid | None:
     """The grid of the file `name`, from its suffix."""
     for size in (16, 32):
         if name.endswith(f"-{size}.svg"):
             return GRIDS[size]
-    return GRIDS[24]
+    return None
 
 
 @dataclass
@@ -507,11 +504,6 @@ class Checker:
                                          f'{fmt(2 * g.stroke)} (twice the stroke)')
 
     def classes(self, element: Element, tokens: list[str]) -> None:
-        if not self.grid.roles:
-            for token in tokens:
-                if token != "accent":
-                    self.report(element, f'class="{token}": the 24 px icons only know accent')
-            return
         for token in tokens:
             if token == "accent":
                 self.report(element, 'class="accent" is gone: an indicated point or an active element is pt')
@@ -530,13 +522,13 @@ class Checker:
         if fill is None or stroke is None:
             missing = "fill" if fill is None else "stroke"
             self.report(element, f"{missing} is not set: the default would be black")
-        if g.roles and role_of(element) is None:
+        if role_of(element) is None:
             self.report(element, f"no role class ({', '.join(ROLES)}) on the element or its group")
         if fill == "currentColor":
             radius = number(element.attributes.get("r"))
             if not self.is_dot(element) or radius is None or abs(radius - g.dot) > EPSILON:
                 self.report(element, f'only points are filled: circles with r="{fmt(g.dot)}" and no stroke')
-            elif g.roles and role_of(element) != "pt":
+            elif role_of(element) != "pt":
                 self.report(element, "a point is of class pt")
         width = 0.0
         if stroke == "currentColor":
@@ -564,7 +556,7 @@ class Checker:
         declared = [key for key in DECLARATIONS if key in element.attributes]
         if not declared:
             return
-        if not self.is_dot(element) or (self.grid.roles and role_of(element) != "pt"):
+        if not self.is_dot(element) or role_of(element) != "pt":
             self.report(element, f"{declared[0]} is declared on a point only (a filled circle of class pt)")
             return
         pieces = geometry.get(id(element))
@@ -621,7 +613,10 @@ def check_data(data: bytes, name: str) -> list[Problem]:
         return [Problem(e.line, str(e))]
     if root is None:
         return [Problem(1, "no root element")]
-    checker = Checker(grid_of(name))
+    grid = grid_of(name)
+    if grid is None:
+        return [Problem(root.line, "unsupported icon name: use -16.svg or -32.svg; the 24 px grid is not supported")]
+    checker = Checker(grid)
     if not any("SPDX-License-Identifier: GPL-3.0-or-later" in c for c in comments):
         checker.report(1, "no SPDX-License-Identifier comment")
     checker.root(root)

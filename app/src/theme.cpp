@@ -186,11 +186,6 @@ IconFiles iconFiles(const QString& name) {
                              : QStringLiteral(":/tg/icons/%1").arg(name);
     const QString sixteen = existingFile(base + QStringLiteral("-16.svg"));
     const QString thirtyTwo = existingFile(base + QStringLiteral("-32.svg"));
-    if (sixteen.isEmpty() && thirtyTwo.isEmpty()) {
-        // The old 24 px grid, until docs/tappe/0.7.5 P22 removes it.
-        const QString old = existingFile(base + QStringLiteral(".svg"));
-        return {old, old};
-    }
     return {sixteen.isEmpty() ? thirtyTwo : sixteen, thirtyTwo.isEmpty() ? sixteen : thirtyTwo};
 }
 

@@ -23,7 +23,6 @@
 #include <QStringList>
 #include <QSvgRenderer>
 #include <QTemporaryDir>
-#include <QXmlStreamReader>
 #include <gtest/gtest.h>
 
 #include <utility>
@@ -31,101 +30,13 @@
 namespace tg::app {
 namespace {
 
-// The rules of docs/ICONE.md. The old icons, on the 24 px grid, are checked
-// here as they were drawn; the role icons (<name>-16.svg, <name>-32.svg,
-// docs/adr/0040) by scripts/icone.py, and here only as Qt draws them.
-constexpr int kGrid = 24;         // the old icons' width and height, in px
-constexpr int kMargin = 2;        // px of the grid left free of ink
-constexpr int kScale = 4;         // the icons are drawn at 4x to measure the margin
+// SVG rules and declared geometry are checked by scripts/icone.py;
+// these tests also check the grids and margins as Qt draws them.
+constexpr int kScale = 4;         // draw at 4x to measure the margin
 constexpr int kMarginAlpha = 16;  // alpha (of 255) below which a pixel is not ink
 constexpr int kFirstIcons = 12;   // the icons of 0.6-P18
-constexpr int kSecondIcons = 25;  // the icons of 0.6-P19
 
-bool isAllowedElement(const QString& name) {
-    // The elements that Qt SVG draws predictably and the theme can tint.
-    static const QStringList kAllowedElements{
-        QStringLiteral("svg"),      QStringLiteral("g"),      QStringLiteral("path"),
-        QStringLiteral("circle"),   QStringLiteral("line"),   QStringLiteral("rect"),
-        QStringLiteral("polyline"), QStringLiteral("polygon")};
-    return kAllowedElements.contains(name);
-}
-
-/// What an element of the icon does against docs/ICONE.md: one sentence per
-/// problem.
-void checkElement(const QXmlStreamReader& reader, bool isRoot, QStringList& problems) {
-    const QString name = reader.name().toString();
-    if (isRoot && name != QStringLiteral("svg")) {
-        problems.append(QStringLiteral("the root element is <%1>, not <svg>").arg(name));
-    }
-    if (!isAllowedElement(name)) {
-        problems.append(QStringLiteral("element <%1> is not allowed").arg(name));
-    }
-    const QXmlStreamAttributes attributes = reader.attributes();
-    if (isRoot) {
-        const QString size = QString::number(kGrid);
-        if (attributes.value(QStringLiteral("width")).toString() != size ||
-            attributes.value(QStringLiteral("height")).toString() != size ||
-            attributes.value(QStringLiteral("viewBox")).toString() != QStringLiteral("0 0 24 24")) {
-            problems.append(
-                QStringLiteral("the grid must be width=24 height=24 viewBox=0 0 24 24"));
-        }
-    }
-    for (const QXmlStreamAttribute& attribute : attributes) {
-        const QString key = attribute.name().toString();
-        const QString value = attribute.value().toString();
-        if ((key == QStringLiteral("fill") || key == QStringLiteral("stroke")) &&
-            value != QStringLiteral("none") && value != QStringLiteral("currentColor")) {
-            problems.append(QStringLiteral("%1=\"%2\": only none or currentColor").arg(key, value));
-        }
-        if (key == QStringLiteral("fill") && value == QStringLiteral("currentColor") &&
-            (name != QStringLiteral("circle") ||
-             attributes.value(QStringLiteral("r")).toString() != QStringLiteral("1.5"))) {
-            problems.append(QStringLiteral("only dots (circles with r=1.5) are filled"));
-        }
-        if (key == QStringLiteral("class") && value != QStringLiteral("accent")) {
-            problems.append(QStringLiteral("class=\"%1\": only accent").arg(value));
-        }
-        if (key == QStringLiteral("style")) {
-            problems.append(QStringLiteral("style attributes are not allowed"));
-        }
-        if (key == QStringLiteral("stroke-width") && value != QStringLiteral("1.5")) {
-            problems.append(QStringLiteral("stroke-width=\"%1\": the stroke is 1.5").arg(value));
-        }
-        if ((key == QStringLiteral("stroke-linecap") || key == QStringLiteral("stroke-linejoin")) &&
-            value != QStringLiteral("round")) {
-            problems.append(QStringLiteral("%1=\"%2\": caps and joins are round").arg(key, value));
-        }
-    }
-}
-
-/// What is wrong with the file `data` as an icon; empty if it follows
-/// docs/ICONE.md in everything that can be read from its text.
-QStringList problemsOf(const QByteArray& data) {
-    QStringList problems;
-    QXmlStreamReader reader(data);
-    bool hasLicense = false;
-    bool sawRoot = false;
-    while (!reader.atEnd()) {
-        reader.readNext();
-        if (reader.isComment()) {
-            hasLicense =
-                hasLicense ||
-                reader.text().contains(QStringLiteral("SPDX-License-Identifier: GPL-3.0-or-later"));
-        } else if (reader.isStartElement()) {
-            checkElement(reader, !sawRoot, problems);
-            sawRoot = true;
-        }
-    }
-    if (reader.hasError()) {
-        problems.append(QStringLiteral("not well-formed XML: %1").arg(reader.errorString()));
-    }
-    if (!hasLicense) {
-        problems.append(QStringLiteral("no SPDX-License-Identifier comment"));
-    }
-    return problems;
-}
-
-/// The grid of a role icon from its name (16 or 32), or 0 for an old icon.
+/// The grid of a role icon from its name (16 or 32), or 0 for an unsupported name.
 int roleGrid(const QString& fileName) {
     if (fileName.endsWith(QStringLiteral("-16.svg"))) {
         return 16;
@@ -148,7 +59,7 @@ QString iconName(const QString& fileName) {
 }
 
 /// The icon drawn at kScale times its size on a transparent background.
-QImage drawAtScale(QSvgRenderer& renderer, int grid = kGrid) {
+QImage drawAtScale(QSvgRenderer& renderer, int grid) {
     const int side = grid * kScale;
     QImage image(side, side, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
@@ -165,7 +76,7 @@ struct InkCount {
     int inMargin{0};
 };
 
-InkCount countInk(const QImage& image, int marginPx = kMargin) {
+InkCount countInk(const QImage& image, int marginPx) {
     InkCount count;
     const int margin = marginPx * kScale;
     for (int y = 0; y < image.height(); ++y) {
@@ -188,11 +99,11 @@ QString resourcePath(const QString& icon) {
     return QStringLiteral(":/tg/icons/%1.svg").arg(icon);
 }
 
-/// Whether the icon `icon` has a file: the old one or a role one.
+/// Whether the icon has both grids, except the panel-only 16 px check mark.
 bool hasIconFile(const QString& icon) {
-    return QFile::exists(resourcePath(icon)) ||
-           QFile::exists(resourcePath(icon + QStringLiteral("-16"))) ||
-           QFile::exists(resourcePath(icon + QStringLiteral("-32")));
+    return QFile::exists(resourcePath(icon + QStringLiteral("-16"))) &&
+           (icon == QStringLiteral("layer-check") ||
+            QFile::exists(resourcePath(icon + QStringLiteral("-32"))));
 }
 
 /// Writes `svg` as `name` in `directory`.
@@ -226,35 +137,6 @@ bool needsNoIcon(const ActionSpec& spec) {
            spec.id.startsWith(QStringLiteral("file.recent."));
 }
 
-TEST(IconsTest, EveryFileIsAValidSvgOnTheGrid) {
-    const QDir directory(QStringLiteral(TG_ICONS_DIR));
-    const QStringList names =
-        directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name);
-    EXPECT_GE(names.size(), kFirstIcons + kSecondIcons);
-    for (const QString& name : names) {
-        if (roleGrid(name) != 0) {
-            continue;  // RoleIconsAreValidSvgOnTheirGrid
-        }
-        SCOPED_TRACE(name.toStdString());
-        QFile file(directory.filePath(name));
-        ASSERT_TRUE(file.open(QIODevice::ReadOnly));
-        const QByteArray data = file.readAll();
-
-        const QStringList problems = problemsOf(data);
-        EXPECT_TRUE(problems.isEmpty()) << problems.join(QStringLiteral("; ")).toStdString();
-
-        QSvgRenderer renderer(data);
-        ASSERT_TRUE(renderer.isValid());
-        EXPECT_EQ(renderer.defaultSize(), QSize(kGrid, kGrid));
-        EXPECT_EQ(renderer.viewBoxF(), QRectF(0, 0, kGrid, kGrid));
-        const InkCount ink = countInk(drawAtScale(renderer));
-        EXPECT_GT(ink.total, 0) << "nothing is drawn";
-        EXPECT_EQ(ink.inMargin, 0) << "ink in the 2 px margin";
-
-        EXPECT_TRUE(QFile::exists(resourcePath(name.chopped(4)))) << "not in the resources";
-    }
-}
-
 TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
     // The rules are checked by scripts/icone.py; here, what Qt draws.
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
@@ -262,11 +144,10 @@ TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
     for (const QString& name :
          directory.entryList({QStringLiteral("*.svg")}, QDir::Files, QDir::Name)) {
         const int grid = roleGrid(name);
-        if (grid == 0) {
-            continue;
-        }
-        ++roleIcons;
         SCOPED_TRACE(name.toStdString());
+        ASSERT_NE(grid, 0) << "only -16.svg and -32.svg icons are supported";
+        EXPECT_TRUE(hasIconFile(iconName(name))) << "missing companion grid";
+        ++roleIcons;
         QSvgRenderer renderer(directory.filePath(name));
         ASSERT_TRUE(renderer.isValid());
         EXPECT_EQ(renderer.defaultSize(), QSize(grid, grid));
@@ -276,9 +157,8 @@ TEST(IconsTest, RoleIconsAreValidSvgOnTheirGrid) {
         EXPECT_EQ(ink.inMargin, 0) << "ink in the margin";
         EXPECT_TRUE(QFile::exists(resourcePath(name.chopped(4)))) << "not in the resources";
     }
-    // The drawing commands and their variants (0.7.5-P19), Dynamic Input
-    // (0.7.5-P16): two grids each.
-    EXPECT_GE(roleIcons, 2 * 11);
+    // The migrated catalog has 62 pairs plus the panel-only check mark.
+    EXPECT_GE(roleIcons, 2 * 62 + 1);
 }
 
 TEST(IconsTest, ResourceIconsAreReusedPerResolvedFilesAndTheme) {
@@ -384,8 +264,7 @@ TEST(IconsTest, SmallSizesUseTheSixteenGridAndLargeOnesTheThirtyTwo) {
     writeSvg(directory, QStringLiteral("both-32.svg"), filledIcon(32, "pt"));
     writeSvg(directory, QStringLiteral("only32-32.svg"), filledIcon(32, "pt"));
     writeSvg(directory, QStringLiteral("only16-16.svg"), filledIcon(16, "geo"));
-    // A name without role files uses the old 24 px file; a file of the old
-    // name is not used when role files exist.
+    // Unsuffixed legacy files are never a fallback, even without role files.
     writeSvg(directory, QStringLiteral("old.svg"), filledIcon(24, "cost"));
     writeSvg(directory, QStringLiteral("both.svg"), filledIcon(24, "cost"));
     for (const Theme theme : {Theme::Light, Theme::Dark}) {
@@ -403,8 +282,7 @@ TEST(IconsTest, SmallSizesUseTheSixteenGridAndLargeOnesTheThirtyTwo) {
         EXPECT_EQ(centreColour(only16, 16), tokens.iconGeo);
         EXPECT_EQ(centreColour(only16, 32), tokens.iconGeo);
         const QIcon old = themedIcon(directory.filePath(QStringLiteral("old")), theme);
-        EXPECT_EQ(centreColour(old, 16), tokens.iconCost);
-        EXPECT_EQ(centreColour(old, 32), tokens.iconCost);
+        EXPECT_TRUE(old.isNull());
         // The example of docs/ICONE.md, from the resources: at 32 px the
         // centre of the circle is its point, of class pt.
         const QIcon example = themedIcon(QStringLiteral("draw-circle-cr"), theme);
