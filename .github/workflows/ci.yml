@@ -191,6 +191,10 @@ jobs:
           set -o pipefail
           cmake --preset ci -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" 2>&1 | scripts/ci-annota.sh
           cmake --build --preset ci 2>&1 | scripts/ci-annota.sh
+      # Diagnostic only, never to be merged: per-case times of app_widgets.
+      - name: 'Diagnostic: app_widgets case times'
+        continue-on-error: true
+        run: ctest --preset ci -R '^app_widgets$' -V
       - name: Test
         run: |
           set -o pipefail
@@ -498,6 +502,12 @@ jobs:
           }
           & "$env:ProgramFiles\Git\bin\bash.exe" scripts/ci-annota.sh build/ci-build.log
           exit $status
+      # Diagnostic only, never to be merged: per-case times of app_widgets.
+      - name: 'Diagnostic: app_widgets case times'
+        continue-on-error: true
+        run: |
+          dumpbin /dependents build/ci/tests/tg_app_tests.exe | Select-String 'Qt6'
+          ctest --preset ci -R '^app_widgets$' -V
       - name: Test
         run: |
           ctest --preset ci -LE verifica *> build/ci-test.log
