@@ -181,12 +181,19 @@ TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
     ASSERT_NE(panel, nullptr);
     const ActionRegistry& registry = window.actionRegistry();
     const QStringList ids{
-        QStringLiteral("edit.move"), QStringLiteral("edit.copy"),
-        QStringLiteral("edit.rotate"), QStringLiteral("edit.scale"),
-        QStringLiteral("edit.mirror"), QStringLiteral("edit.explode"),
-        QStringLiteral("edit.trim"), QStringLiteral("edit.extend"),
-        QStringLiteral("edit.offset"), QStringLiteral("edit.fillet"),
-        QStringLiteral("edit.chamfer"), QStringLiteral("edit.join")};
+        QStringLiteral("edit.move"),
+        QStringLiteral("edit.copy"),
+        QStringLiteral("edit.rotate"),
+        QStringLiteral("edit.scale"),
+        QStringLiteral("edit.mirror"),
+        QStringLiteral("edit.explode"),
+        QStringLiteral("edit.trim"),
+        QStringLiteral("edit.extend"),
+        QStringLiteral("edit.offset"),
+        QStringLiteral("edit.fillet"),
+        QStringLiteral("edit.chamfer"),
+        QStringLiteral("edit.join"),
+    };
     for (const QString& id : ids) {
         SCOPED_TRACE(id.toStdString());
         QAction* action = registry.action(id);
@@ -198,18 +205,13 @@ TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
         EXPECT_EQ(button->buttonType(), SARibbonToolButton::SmallButton);
         EXPECT_FALSE(button->icon().isNull());
     }
-    for (const QStringList& stack : {
-             QStringList{QStringLiteral("edit.move"), QStringLiteral("edit.copy"),
-                         QStringLiteral("edit.rotate")},
-             QStringList{QStringLiteral("edit.scale"), QStringLiteral("edit.mirror"),
-                         QStringLiteral("edit.explode")},
-             QStringList{QStringLiteral("edit.trim"), QStringLiteral("edit.extend"),
-                         QStringLiteral("edit.offset")},
-             QStringList{QStringLiteral("edit.fillet"), QStringLiteral("edit.chamfer"),
-                         QStringLiteral("edit.join")}}) {
-        const QToolButton* first = ribbonButtonOf(*ribbon, registry.action(stack[0]));
-        for (qsizetype i = 1; i < stack.size(); ++i) {
-            const QToolButton* button = ribbonButtonOf(*ribbon, registry.action(stack[i]));
+    // ADR 0039: three small buttons in each column.
+    constexpr qsizetype kStackRows = 3;
+    for (qsizetype start = 0; start < ids.size(); start += kStackRows) {
+        const QToolButton* first = ribbonButtonOf(*ribbon, registry.action(ids[start]));
+        ASSERT_NE(first, nullptr);
+        for (qsizetype i = start + 1; i < start + kStackRows; ++i) {
+            const QToolButton* button = ribbonButtonOf(*ribbon, registry.action(ids[i]));
             ASSERT_NE(button, nullptr);
             EXPECT_EQ(button->x(), first->x());
             EXPECT_GT(button->y(), first->y());

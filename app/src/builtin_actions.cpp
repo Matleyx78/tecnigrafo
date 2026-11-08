@@ -187,40 +187,31 @@ void BuiltinActions::add(ActionRegistry& registry) {
                                       tr("Copies selected objects."), QStringLiteral("COPY")),
                           QStringLiteral("edit-copy")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.rotate"), tr("&Rotate"), modify,
-                                      tr("Rotates objects about a base point."),
-                                      QStringLiteral("ROTATE")),
+                                      tr("Rotates selected objects."), QStringLiteral("ROTATE")),
                           QStringLiteral("edit-rotate")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.scale"), tr("&Scale"), modify,
-                                      tr("Scales objects about a base point."),
-                                      QStringLiteral("SCALE")),
+                                      tr("Scales selected objects."), QStringLiteral("SCALE")),
                           QStringLiteral("edit-scale")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.mirror"), tr("M&irror"), modify,
-                                      tr("Mirrors objects about a line."),
-                                      QStringLiteral("MIRROR")),
+                                      tr("Mirrors selected objects."), QStringLiteral("MIRROR")),
                           QStringLiteral("edit-mirror")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.explode"), tr("E&xplode"), modify,
-                                      tr("Explodes polylines into separate objects."),
-                                      QStringLiteral("EXPLODE")),
+                                      tr("Explodes polylines."), QStringLiteral("EXPLODE")),
                           QStringLiteral("edit-explode")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.trim"), tr("&Trim"), modify,
-                                      tr("Trims objects to cutting edges."),
-                                      QStringLiteral("TRIM")),
+                                      tr("Trims to cutting edges."), QStringLiteral("TRIM")),
                           QStringLiteral("edit-trim")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.extend"), tr("E&xtend"), modify,
-                                      tr("Extends objects to boundary edges."),
-                                      QStringLiteral("EXTEND")),
+                                      tr("Extends to boundary edges."), QStringLiteral("EXTEND")),
                           QStringLiteral("edit-extend")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.offset"), tr("&Offset"), modify,
-                                      tr("Creates parallel or concentric copies."),
-                                      QStringLiteral("OFFSET")),
+                                      tr("Creates parallel copies."), QStringLiteral("OFFSET")),
                           QStringLiteral("edit-offset")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.fillet"), tr("&Fillet"), modify,
-                                      tr("Rounds the corner between objects."),
-                                      QStringLiteral("FILLET")),
+                                      tr("Rounds a corner."), QStringLiteral("FILLET")),
                           QStringLiteral("edit-fillet")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.chamfer"), tr("C&hamfer"), modify,
-                                      tr("Bevels the corner between objects."),
-                                      QStringLiteral("CHAMFER")),
+                                      tr("Bevels a corner."), QStringLiteral("CHAMFER")),
                           QStringLiteral("edit-chamfer")));
     registry.add(withIcon(commandSpec(QStringLiteral("edit.join"), tr("&Join"), modify,
                                       tr("Joins objects into one object."), QStringLiteral("JOIN")),
