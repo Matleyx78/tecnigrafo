@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include <QIcon>
 #include <QPalette>
+#include <QString>
 
 #include <vector>
 
@@ -15,6 +16,21 @@ namespace tg::app {
 
 /// ACI 7 is deliberately shown as both black and white, on either theme.
 [[nodiscard]] QIcon colorIcon(core::Color color, const QPalette& palette);
+
+/// The name ColorCombo gives `color`: ByLayer, ByBlock, the names of ACI 1–7,
+/// the number of the other indexes, the RGB values.
+[[nodiscard]] QString colorName(core::Color color);
+
+/// The sample of `pattern` that LinetypeCombo shows.
+[[nodiscard]] QIcon linetypeIcon(const core::LinetypePattern& pattern, const QPalette& palette);
+
+/// The sample of an allowed lineweight (core::lineweight::kAllowed), in
+/// hundredths of a millimetre, that LineweightCombo shows.
+[[nodiscard]] QIcon lineweightIcon(int lineweight, const QPalette& palette);
+
+/// The name LineweightCombo gives `lineweight`: ByLayer, ByBlock, Default or
+/// the millimetres ("0.25 mm").
+[[nodiscard]] QString lineweightName(int lineweight);
 
 /// Programmatic setters never emit valueChosen; only user activation does.
 /// The document is borrowed and never modified. Call setDocument to refresh it.

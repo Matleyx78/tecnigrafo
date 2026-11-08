@@ -197,6 +197,7 @@ if(TG_BUILD_APP)
     add_executable(tg_app_tests
         app/color_dialog_test.cpp
         app/property_widgets_test.cpp
+        app/property_grid_test.cpp
         app/action_registry_test.cpp
         app/ui_builder_test.cpp
         app/command_line_test.cpp

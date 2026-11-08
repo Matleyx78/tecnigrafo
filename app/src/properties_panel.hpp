@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "property_grid.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/cmd/quick_select.hpp"
 #include "tg/core/document.hpp"
@@ -15,18 +16,18 @@
 #include <QStringList>
 #include <QWidget>
 
+#include <array>
 #include <functional>
-#include <optional>
 #include <string>
 #include <vector>
 
 class QAction;
 class QComboBox;
 class QEvent;
-class QFormLayout;
-class QGroupBox;
 class QLabel;
-class QLineEdit;
+class QModelIndex;
+class QToolButton;
+class QTreeView;
 
 namespace tg::app {
 
@@ -39,23 +40,18 @@ class LineweightCombo;
 /// names: those of colour, linetype and lineweight (docs/ICONE.md).
 [[nodiscard]] QStringList propertiesPanelIconNames();
 
-/// The values the panel shows: the one every entity shares, or nothing when
-/// they differ (*VARIES*). With no selection, the current values.
-struct ShownProperties {
-    std::optional<core::Color> color;
-    std::optional<core::LayerId> layer;
-    std::optional<core::LinetypeId> linetype;
-    std::optional<double> linetypeScale;
-    std::optional<int> lineweight;
-};
-
 /// The properties of the selection in a panel that can be docked
 /// (docs/adr/0023, points 2–4; docs/tappe/0.6/P24).
 ///
-/// At the top, the type of the selection with a filter by type; then the
-/// section General (colour, layer, linetype, linetype scale, lineweight) and,
-/// for a single entity, the section Geometry, read only. Without a selection
-/// the panel shows and changes the current values, as in AutoCAD.
+/// At the top, the type of the selection with a filter by type and two
+/// buttons: Filter, which opens the list of the filter by type, and Quick
+/// Select, the action of setQuickSelectAction(). Below, a grid of two columns
+/// (docs/adr/0039, point 1, area 8; PropertyGridModel): the group General
+/// (colour, layer, linetype, linetype scale, lineweight), whose values change
+/// in their cells, and, for a single entity, the group Geometry, read only,
+/// with the browsing of the vertices of a polyline. A click on a group's row
+/// closes or opens it. Without a selection the panel shows and changes the
+/// current values, as in AutoCAD.
 ///
 /// Every change is one transaction "Properties" of the editor, so U and
 /// Ctrl+Z undo it. Entities on locked layers are never among those shown or
@@ -112,9 +108,14 @@ public:
 
     [[nodiscard]] const std::string& typeFilter() const { return m_typeFilter; }
 
-    /// The rows of the section Geometry: name and value. Empty unless the
+    /// The rows of the group Geometry: name and value. Empty unless the
     /// panel shows a single entity.
-    [[nodiscard]] const QList<QPair<QString, QString>>& geometry() const { return m_geometry; }
+    [[nodiscard]] const QList<QPair<QString, QString>>& geometry() const {
+        return m_model->geometry();
+    }
+
+    /// The model of the grid: General, Geometry and the current vertex.
+    [[nodiscard]] PropertyGridModel& grid() { return *m_model; }
 
     /// Each changes the targets, or the current value without a selection.
     /// False if nothing changed, or the change was refused (lastMessage()).
@@ -159,31 +160,31 @@ private:
     void readSelection();
     void showTypes();
     void readShown();
-    void showValues();
     void showGeometry();
+    /// Opens or closes the groups as the user left them.
+    void showGroups();
+    void toggleGroup(const QModelIndex& index);
+    void enterLinetypeScale(const QString& text);
     void updateIcons();
     void updateEnabled();
 
     edit::Editor& m_editor;
     cmd::CommandRunner& m_runner;
     QComboBox* m_types;
-    QGroupBox* m_general;
-    ColorCombo* m_color;
-    LayerCombo* m_layer;
-    LinetypeCombo* m_linetype;
-    QLineEdit* m_linetypeScale;
-    LineweightCombo* m_lineweight;
-    QGroupBox* m_geometryBox;
-    QFormLayout* m_geometryForm;
+    QToolButton* m_filter;
+    QToolButton* m_quickSelect;
+    PropertyGridModel* m_model;
+    PropertyGridDelegate* m_delegate;
+    QTreeView* m_grid;
     QLabel* m_message;
-    QList<QPair<QLabel*, QString>> m_icons;
     QAction* m_quickSelectAction{nullptr};
 
     std::vector<core::EntityId> m_selection;
     std::vector<core::EntityId> m_idleSelection;
     std::string m_typeFilter;
     ShownProperties m_shown;
-    QList<QPair<QString, QString>> m_geometry;
+    /// The groups the user closed, by PropertyGridModel group.
+    std::array<bool, PropertyGridModel::kGroupCount> m_closed{};
     QString m_lastMessage;
     bool m_editingEnabled{true};
 };
