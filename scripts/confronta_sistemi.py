@@ -55,9 +55,9 @@ MAX_LINES_PER_REPORT = 20
 
 # GitHub keeps at most ten error annotations of a step: one lists the cases,
 # the others hold their differences, several cases in one annotation up to
-# about this many characters (well below the size GitHub accepts).
+# this many characters (GitHub cuts a message after 4096 characters).
 MAX_CASE_ANNOTATIONS = 9
-MAX_ANNOTATION_CHARACTERS = 30000
+MAX_ANNOTATION_CHARACTERS = 4000
 
 DEFAULT_EXCEPTIONS = Path(__file__).resolve().parent.parent / "docs" / "verifica" / "sistemi.md"
 EXCEPTIONS_HEADING = "## Eccezioni"
