@@ -219,10 +219,9 @@ if(TG_BUILD_APP)
     add_dependencies(tg_app_tests tecnigrafo confronta_immagini)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
-    # Most cases build a whole main window, which takes about a second each
-    # on Windows. The suite now needs about four minutes in a Debug build
-    # there, so 300 s is a stopgap until it is split; the limit should only
-    # stop a real hang.
+    # Windows CI run 42451721653 measured 125.20 s: three times that, rounded
+    # up to 30 s, is 390 s (minimum 120 s). Since it exceeds 180 s, keep 300 s
+    # as required by 0.7.5-P35; the limit should only stop a real hang.
     add_test(NAME app_widgets COMMAND tg_app_tests)
     set_tests_properties(app_widgets PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"

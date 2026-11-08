@@ -20,6 +20,8 @@
 #include <QXmlStreamWriter>
 
 #include <cstdint>
+#include <map>
+#include <tuple>
 #include <vector>
 
 namespace tg::app {
@@ -164,6 +166,15 @@ struct IconFiles {
     QString forSmall;
     QString forLarge;
 };
+
+using IconKey = std::tuple<QString, QString, Theme>;
+using IconCache = std::map<IconKey, QIcon>;
+
+IconCache& iconCache() {
+    // Only the UI thread calls themedIcon, so the process-wide cache needs no lock.
+    static IconCache cache;
+    return cache;
+}
 
 IconFiles iconFiles(const QString& name) {
     if (name.endsWith(QStringLiteral(".svg"), Qt::CaseInsensitive)) {
@@ -318,6 +329,15 @@ QIcon themedIcon(const QString& name, Theme theme) {
     if (files.forSmall.isEmpty()) {
         return {};
     }
+    const bool cacheable = files.forSmall.startsWith(QStringLiteral(":/")) &&
+                           files.forLarge.startsWith(QStringLiteral(":/"));
+    const IconKey key{files.forSmall, files.forLarge, theme};
+    if (cacheable) {
+        const auto found = iconCache().find(key);
+        if (found != iconCache().end()) {
+            return found->second;
+        }
+    }
     const ThemeTokens& tokens = themeTokens(theme);
     QSvgRenderer smallSizes(colouredSvg(readFile(files.forSmall), tokens));
     QSvgRenderer largeSizes(colouredSvg(readFile(files.forLarge), tokens));
@@ -328,6 +348,9 @@ QIcon themedIcon(const QString& name, Theme theme) {
     // The sizes of menus, toolbars and ribbon, with their high-DPI variants.
     for (const int size : {16, 20, 24, 32, 40, 48, 64, 96, 128}) {
         result.addPixmap(drawnIcon(size <= kSmallGridLimit ? smallSizes : largeSizes, size));
+    }
+    if (cacheable && !result.isNull()) {
+        iconCache().emplace(key, result);
     }
     return result;
 }

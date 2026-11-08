@@ -53,6 +53,7 @@ void applyTheme(QApplication& application, Theme theme);
 /// role: its class geo, pt, cost or esist, else that of its nearest group
 /// with one, else esist; the old class accent is pt (docs/ICONE.md, "Come si
 /// colorano"). Unknown or unreadable images return an empty icon.
+/// Resource icons are calculated once per theme and reused.
 [[nodiscard]] QIcon themedIcon(const QString& name, Theme theme);
 
 }  // namespace tg::app
