@@ -21,7 +21,9 @@
 # Release, with tests and verification. Every Release job uses the preset
 # ci-release, with warnings as errors, and every target has the floating-point
 # options of docs/adr/0038, point 4 (cmake/TecnigrafoDeterminism.cmake). The
-# job names say the configuration.
+# job names say the configuration. After the three Release jobs, the job
+# "Cross-platform comparison" checks that their verification reports are the
+# same (docs/adr/0038, point 5; docs/verifica/sistemi.md).
 name: CI
 
 on:
@@ -767,3 +769,33 @@ jobs:
             build/ci-release/Testing/Temporary/LastTest.log
             build/ci-release/Testing/Temporary/LastTestsFailed.log
           if-no-files-found: warn
+
+  # docs/adr/0038, point 5 (0.7.5-P5): the reports of the verification cases
+  # must be the same on the three Release jobs, line by line. The artifacts are
+  # the ones the three jobs already upload; the images are not compared here.
+  # A difference blocks; a case listed in docs/verifica/sistemi.md, section
+  # "Eccezioni", is skipped with a warning. The job runs only when the three
+  # jobs passed: a failing case already blocks there.
+  cross-platform:
+    name: Cross-platform comparison
+    needs: [changes, linux-release, windows, macos]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: verifica-linux-release
+          path: build/sistemi/verifica-linux-release
+      - uses: actions/download-artifact@v8
+        with:
+          name: verifica-windows
+          path: build/sistemi/verifica-windows
+      - uses: actions/download-artifact@v8
+        with:
+          name: verifica-macos
+          path: build/sistemi/verifica-macos
+      - name: Compare the reports of Linux, Windows and macOS
+        run: |
+          python3 scripts/confronta_sistemi.py \
+            build/sistemi/verifica-linux-release build/sistemi/verifica-windows build/sistemi/verifica-macos

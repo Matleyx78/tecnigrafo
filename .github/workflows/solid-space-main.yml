@@ -1,27 +1,50 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 The Tecnigrafo authors
-# Advisory integration check; never updates the committed submodule pointer.
+#
+# Cross-check from Tecnigrafo towards solid-space (docs/adr/0038, point 6;
+# 0.7.5-P5): Tecnigrafo builds with the latest main of solid-space, only
+# locally in the job, in Debug (preset ci) and Release (preset ci-release),
+# warnings as errors, without app, on Linux, and runs the tests of Tecnigrafo
+# and the tests of solid-space. It is the mirror of tecnigrafo-core.yml of
+# solid-space.
+#
+# It is advisory and never moves the submodule pointer (docs/adr/0030,
+# point 9):
+# - on a pull request a failure is a warning, the job stays green;
+# - every day on main, and when started by hand, a failure fails the job and
+#   opens or updates the issue "solid-space main rompe Tecnigrafo".
+# scripts/ci-attendi.sh waits only for ci.yml (0.7.5-P2), so this workflow
+# does not decide when a pull request is done.
 name: solid-space main
 
 on:
   schedule:
-    - cron: '17 5 * * 1'
+    - cron: '17 5 * * *'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'core/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - 'third_party/solid-space'
+      - '.github/workflows/solid-space-main.yml'
 
 permissions:
   contents: read
   issues: write
 
-# Serialize scheduled and manual runs so they cannot create duplicate issues.
+# Serialize scheduled and manual runs so they cannot create duplicate issues;
+# a newer push cancels the run of the same pull request.
 concurrency:
-  group: solid-space-main
-  cancel-in-progress: false
+  group: solid-space-main-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
     name: Linux integration with solid-space main
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 120
     permissions:
       contents: read
     steps:
@@ -43,17 +66,61 @@ jobs:
         with:
           path: build/verifica-sorgenti
           key: ${{ runner.os }}-verifica-sorgenti-${{ hashFiles('tests/verifica/sorgenti.json') }}
-      - name: Configure without Qt, warnings as errors
-        run: cmake --preset ci -DTG_BUILD_APP=OFF -DTG_WARNINGS_AS_ERRORS=ON
-      - name: Build
-        run: cmake --build --preset ci --parallel 2
-      - name: Test
-        run: ctest --preset ci --no-tests=error
+      # On a pull request every check below continues on failure and the last
+      # step writes a warning; elsewhere a failure fails the job. The checks
+      # after a failure still run, so one run says everything that breaks.
+      # Both presets have warnings as errors (TG_WARNINGS_AS_ERRORS), and the
+      # targets of solid-space follow it (third_party/CMakeLists.txt).
+      - name: Tecnigrafo Debug (ci), without app
+        id: debug
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -o pipefail
+          cmake --preset ci -DTG_BUILD_APP=OFF 2>&1 | scripts/ci-annota.sh
+          cmake --build --preset ci --parallel "$(nproc)" 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci --no-tests=error -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
+      - name: Tecnigrafo Release (ci-release), without app
+        id: release
+        if: ${{ !cancelled() }}
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -o pipefail
+          cmake --preset ci-release -DTG_BUILD_APP=OFF 2>&1 | scripts/ci-annota.sh
+          cmake --build --preset ci-release --parallel "$(nproc)" 2>&1 | scripts/ci-annota.sh
+          ctest --preset ci-release --no-tests=error -j "$(nproc)" 2>&1 | scripts/ci-annota.sh
+      # Inside Tecnigrafo solid-space builds only the components core links,
+      # without its tests (third_party/CMakeLists.txt): they are built here
+      # from its own presets, with warnings as errors, in Debug and Release.
+      # The kernel and features components are left out, as in Tecnigrafo.
+      - name: solid-space tests, Debug and Release
+        id: solidspace
+        if: ${{ !cancelled() }}
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        working-directory: third_party/solid-space
+        run: |
+          set -o pipefail
+          for preset in debug release; do
+            echo "::group::solid-space $preset"
+            cmake --preset "$preset" -DSOLID_SPACE_BUILD_KERNEL=OFF 2>&1 | ../../scripts/ci-annota.sh
+            cmake --build --preset "$preset" --parallel "$(nproc)" 2>&1 | ../../scripts/ci-annota.sh
+            ctest --preset "$preset" --no-tests=error -j "$(nproc)" 2>&1 | ../../scripts/ci-annota.sh
+            echo "::endgroup::"
+          done
+      - name: Warn about a failure on a pull request
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && (steps.debug.outcome == 'failure' || steps.release.outcome == 'failure' || steps.solidspace.outcome == 'failure') }}
+        env:
+          DEBUG: ${{ steps.debug.outcome }}
+          RELEASE: ${{ steps.release.outcome }}
+          SOLID_SPACE: ${{ steps.solidspace.outcome }}
+        run: |
+          message="Tecnigrafo does not pass with main of solid-space (Debug: $DEBUG, Release: $RELEASE, solid-space tests: $SOLID_SPACE). Advisory only: the submodule stays at its pinned commit (docs/adr/0038, point 6)."
+          echo "::warning title=solid-space main::$message"
+          echo "$message" >> "$GITHUB_STEP_SUMMARY"
 
   report:
     name: Report integration failure
     needs: check
-    if: ${{ failure() && needs.check.result == 'failure' }}
+    if: ${{ failure() && needs.check.result == 'failure' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
