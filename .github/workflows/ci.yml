@@ -29,7 +29,14 @@ name: CI
 on:
   push:
     branches: [main]
+  # "edited" too, for the job "Submodule pointer": it reads the issues that the
+  # description of the pull request closes, so a new "Closes #N" must check the
+  # pointer again. The whole run starts again, not that job only: a run with
+  # that job only would cancel the build of the same pull request (concurrency
+  # below) and would be the latest run of the commit, the one that
+  # scripts/ci-attendi.sh waits for.
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   schedule:
     - cron: '23 2 * * *'
 

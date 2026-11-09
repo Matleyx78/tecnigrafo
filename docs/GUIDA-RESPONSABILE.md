@@ -919,8 +919,10 @@ Ogni pull request si unisce come in A3. In più, durante una tappa:
    9). Lo controlla il lavoro *Submodule pointer (ADR 0030)* della CI: fallisce,
    dicendo perché, se il puntatore non è su `main` di solid-space, se è
    precedente al commit della riga, o se la issue non ha la riga (allora lancia
-   *Submodule commit* e rilancia il lavoro). Una tua pull request senza issue da
-   chiudere controlla solo che il commit sia su `main`. Se il pacchetto è
+   *Submodule commit* e rilancia il lavoro). Ogni issue chiusa deve avere la
+   sua riga. Una tua pull request senza issue da chiudere controlla solo che il
+   commit sia su `main`. Il controllo legge i `Closes #N` della descrizione,
+   quindi la CI riparte, tutta, anche quando la descrizione cambia. Se il pacchetto è
    l'ultimo della colonna «Si chiude con» di una richiesta (piano, sezione 5,
    «Richieste a solid-space»), controlla il «quando è soddisfatta»
    della richiesta e chiudi la sua issue in solid-space. `scripts/dipendenze.py

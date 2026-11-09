@@ -68,20 +68,23 @@
 #                 request, is listed under "To check". With --applica the line
 #                 and the comments are written without asking: they only add,
 #                 never change (.github/workflows/sottomodulo.yml runs it every
-#                 day). It never moves the pointer and never writes to
-#                 solid-space.
+#                 day). Just before each write the issue is read again: if its
+#                 text changed after the first read, the write is skipped and
+#                 left to the next run. It never moves the pointer and never
+#                 writes to solid-space.
 # --controlla-puntatore <commit> [--pr <number>]
 #                 the check of a pull request that moves the submodule to
 #                 <commit> (job "Submodule pointer" of ci.yml): it fails if the
 #                 commit is not on main of solid-space and, for every issue the
-#                 pull request closes (Closes #N in its text), if the issue has
-#                 no "Sottomodulo di solid-space" line or the commit is earlier
-#                 than the one of the line. Without --pr, or when the pull
+#                 pull request closes (Closes #N in its text), if that issue
+#                 has no "Sottomodulo di solid-space" line, even when another
+#                 one has it, or the commit is earlier than the one of the line. Without --pr, or when the pull
 #                 request closes no issue, only main is checked.
 #
 # Exit status of --sottomodulo: 0 nothing to write, report or check (or all
 # written, with --applica), 1 something to write or report (without
-# --applica) or to check, 2 a read or a write failed. Of
+# --applica) or to check, or a write skipped because the issue changed, 2 a
+# read or a write failed. Of
 # --controlla-puntatore: 0 the pointer is right, 1 it is wrong (the message
 # says why), 2 a read failed.
 #
@@ -499,6 +502,25 @@ def json_values(text: str) -> list:
     return out
 
 
+# The blank line between the headers and the body of an HTTP response. curl
+# prints CRLF, but subprocess.run(text=True) turns it into LF: both are fine.
+HEADERS_END = re.compile(r"\r?\n\r?\n")
+
+
+def split_response(text: str) -> tuple[str, str]:
+    """The headers and the body of what curl -D - prints; the headers of a
+    proxy (HTTP/1.1 200 Connection established) come first and are skipped."""
+    head, _, body = _split_once(text)
+    while head.startswith("HTTP/") and body.startswith("HTTP/"):
+        head, _, body = _split_once(body)
+    return head, body
+
+
+def _split_once(text: str) -> tuple[str, str, str]:
+    m = HEADERS_END.search(text)
+    return (text[:m.start()], m.group(0), text[m.end():]) if m else (text, "", "")
+
+
 class GitHub:
     """Reads and writes through gh; reads of a public repository fall back to
     curl without a token. Tests replace get() and send()."""
@@ -531,9 +553,7 @@ class GitHub:
                                 url], capture_output=True, text=True)
             if r.returncode != 0:
                 raise Failure(f"GitHub did not answer: {url}\n{r.stderr.strip()}")
-            head, _, body = r.stdout.partition("\r\n\r\n")
-            while head.startswith("HTTP/") and body.startswith("HTTP/"):  # proxy headers
-                head, _, body = body.partition("\r\n\r\n")
+            head, body = split_response(r.stdout)
             value = json.loads(body)
             if not paginate or not isinstance(value, list):
                 return value
@@ -697,6 +717,10 @@ class Change:
     method: str
     path: str
     body: dict | None = None
+    # The text of the issue the change was computed from: when it is given,
+    # apply() reads the issue again just before writing and skips the change if
+    # the text is no longer the same (someone edited it in the meantime).
+    read_body: str | None = None
 
 
 @dataclass
@@ -1101,7 +1125,7 @@ def submodule(gh: GitHub, home: str, ss_repo: str) -> SubmoduleReport:
         if have is None:
             report.write.append(f"{name}: {line}")
             body = issue.body[:deps.end()] + "\n" + line + issue.body[deps.end():]
-            report.changes.append(Change(issue.ref, f"line: {line}", "PATCH", path, {"body": body}))
+            report.changes.append(Change(issue.ref, f"line: {line}", "PATCH", path, {"body": body}, issue.body))
             continue
         old = have.group(1).lower()
         if best.commit.lower().startswith(old):
@@ -1123,7 +1147,7 @@ def submodule(gh: GitHub, home: str, ss_repo: str) -> SubmoduleReport:
                    "punto 9).\n\n"
                    f"Scritto da `scripts/dipendenze.py --sottomodulo`.\n\n{marker}")
         report.changes.append(Change(issue.ref, f"comment: the line says {old}, the packages {best.commit}",
-                                     "POST", f"{path}/comments", {"body": comment}))
+                                     "POST", f"{path}/comments", {"body": comment}, issue.body))
     return report
 
 
@@ -1151,10 +1175,12 @@ def check_pointer(gh: GitHub, home: str, ss_repo: str, commit: str, pr: int | No
         m = SUBMODULE_LINE_RE.search(issues[ref].body)
         if m:
             lines.append((ref, m.group(1).lower()))
-    if not lines:
-        names = ", ".join(r.text(home) for r in refs)
-        errors.append(f"{names} has no line \"{SUBMODULE_LINE} <commit>\": run the workflow \"Submodule commit\" "
-                      "(.github/workflows/sottomodulo.yml) from the Actions tab, then run this job again")
+        else:
+            # Every issue the pull request closes needs its line, even when
+            # another one has it.
+            errors.append(f"{ref.text(home)} has no line \"{SUBMODULE_LINE} <commit>\": run the workflow "
+                          "\"Submodule commit\" (.github/workflows/sottomodulo.yml) from the Actions tab, then "
+                          "run this job again")
     for ref, line in lines:
         status = compare(gh, ss_repo, line, commit)
         if status == "behind":
@@ -1181,11 +1207,12 @@ def run_submodule(gh: GitHub, home: str, ss_repo: str, applica: bool) -> int:
         print("Nothing to write, report or check.")
     if not applica or not report.changes:
         return 1 if report.changes or report.verify else 0
-    failed = apply(report.changes, gh, home, os.environ.get("TG_PROJECT_OWNER", "Matleyx78"))
+    skipped: list[str] = []
+    failed = apply(report.changes, gh, home, os.environ.get("TG_PROJECT_OWNER", "Matleyx78"), skipped)
     if failed:
         print("Failed:\n  " + "\n  ".join(failed), file=sys.stderr)
         return 2
-    return 1 if report.verify else 0
+    return 1 if report.verify or skipped else 0
 
 
 def run_pointer(gh: GitHub, home: str, ss_repo: str, commit: str, pr: int | None) -> int:
@@ -1243,14 +1270,24 @@ def build_context(tappa: str, root: Path, gh: GitHub, with_project: bool) -> Con
     return ctx
 
 
-def apply(changes: list[Change], gh: GitHub, home: str, owner: str) -> list[str]:
+def apply(changes: list[Change], gh: GitHub, home: str, owner: str,
+          skipped: list[str] | None = None) -> list[str]:
     """Makes the changes; returns the ones that failed. Only issues of `home`
-    and the Project are ever written."""
+    and the Project are ever written. A change with read_body whose issue has
+    changed since is not made: it goes in `skipped`."""
     failed = []
     for c in changes:
         if not (c.path.startswith(f"repos/{home}/") or c.path.startswith(f"users/{owner}/projectsV2/")):
             raise AssertionError(f"refusing to write {c.path}")
         try:
+            if c.read_body is not None:
+                now = (gh.get(f"repos/{home}/issues/{c.issue.number}") or {}).get("body") or ""
+                if now != c.read_body:
+                    print(f"skipped #{c.issue.number} {c.what}: the issue changed after it was read; "
+                          "the next run reads it again")
+                    if skipped is not None:
+                        skipped.append(f"#{c.issue.number} {c.what}")
+                    continue
             gh.send(c.method, c.path, c.body)
             print(f"done   #{c.issue.number} {c.what}")
         except Failure as e:

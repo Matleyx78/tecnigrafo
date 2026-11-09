@@ -755,6 +755,54 @@ def ss_line(sha: str, tag: str, pr: int) -> str:
     return f"**Sottomodulo di solid-space:** {sha} (chiude {tag} con la pull request {SS}#{pr})"
 
 
+class Transport(unittest.TestCase):
+    """GitHub.get itself, with subprocess.run replaced: gh refuses a read of
+    solid-space and curl, without a token, answers."""
+
+    def answers(self, *curl_outputs: str):
+        calls: list[list[str]] = []
+        outputs = list(curl_outputs)
+
+        def run(args, **kwargs):
+            calls.append(args)
+            if args[0] == "gh":
+                return subprocess.CompletedProcess(args, 1, "", "HTTP 403: blocked")
+            return subprocess.CompletedProcess(args, 0, outputs.pop(0), "")
+        return calls, unittest.mock.patch.object(d.subprocess, "run", run)
+
+    @staticmethod
+    def http(body: str, link: str = "", crlf: bool = False, proxy: bool = False) -> str:
+        """What curl -D - prints, after text=True (LF) or as it is (CRLF)."""
+        head = "HTTP/2 200\ncontent-type: application/json\n" + (f'link: <{link}>; rel="next"\n' if link else "")
+        text = ("HTTP/1.1 200 Connection established\n\n" if proxy else "") + head + "\n" + body
+        return text.replace("\n", "\r\n") if crlf else text
+
+    def test_fallback_reads_the_body(self):
+        for crlf in (False, True):
+            for proxy in (False, True):
+                with self.subTest(crlf=crlf, proxy=proxy):
+                    calls, patch = self.answers(self.http('{"number": 56, "state": "closed"}', crlf=crlf,
+                                                          proxy=proxy))
+                    with patch:
+                        value = d.GitHub(public=[SS]).get(f"repos/{SS}/issues/56")
+                    self.assertEqual(value, {"number": 56, "state": "closed"})
+                    self.assertEqual([c[0] for c in calls], ["gh", "curl"])
+                    self.assertNotIn("Authorization", " ".join(calls[1]))
+
+    def test_fallback_follows_the_pages(self):
+        url = f"https://api.github.com/repos/{SS}/issues/56/timeline?per_page=100&page=2"
+        calls, patch = self.answers(self.http('[{"event": "a"}]', link=url), self.http('[{"event": "b"}]'))
+        with patch:
+            value = d.GitHub(public=[SS]).get(f"repos/{SS}/issues/56/timeline?per_page=100", paginate=True)
+        self.assertEqual(value, [{"event": "a"}, {"event": "b"}])
+        self.assertEqual(calls[2][-1], url)
+
+    def test_no_fallback_for_tecnigrafo(self):
+        _, patch = self.answers()
+        with patch, self.assertRaises(d.Failure):
+            d.GitHub(public=[SS]).get(f"repos/{TG}/issues/1")
+
+
 class ClosingKeywords(unittest.TestCase):
     def test_keywords(self):
         ref = d.Ref(SS, 56)
@@ -908,6 +956,21 @@ class Submodule(unittest.TestCase):
         self.assertIn("#31 [0.8-PT31]: its dependencies in solid-space are requests only", out)
         self.assertEqual([p for _, p, _ in gh.sent], [f"repos/{TG}/issues/30"])
 
+    def test_issue_changed_after_the_list_is_not_overwritten(self):
+        # The maintainer writes the line by hand after the list was read: the
+        # issue is read again before the write, and nothing is written.
+        for line in (ss_line(MID, "0.3-PS56", 80), ss_line(OLD, "0.3-PS56", 70)):
+            with self.subTest(line=line):
+                w = self.world(None if line.endswith("#80)") else line)
+                w.responses[f"repos/{TG}/issues/30"] = dict(
+                    w.responses[f"repos/{TG}/issues/30"],
+                    body=package_body(f"#29 (RT3), {SS}#56 (0.3-PS56), #44", ss_line(NEW, "a mano", 1)))
+                code, out, err, gh = w.run("--sottomodulo", "--applica")
+                self.assertEqual(code, 1, out + err)
+                self.assertEqual(gh.sent, [])
+                self.assertIn("skipped #30", out)
+                self.assertIn("the issue changed after it was read", out)
+
     def test_never_writes_to_solid_space_and_read_failure(self):
         w = self.world(ss_line(OLD, "0.3-PS56", 70))
         w.tg_issue(31, package_body(f"{SS}#57"))
@@ -979,6 +1042,16 @@ class Pointer(unittest.TestCase):
                 self.assertIn("only main checked", out)
         code, out = self.check(self.world("Aggiorna il sottomodulo."), OFF)
         self.assertEqual(code, 1, out)
+
+    def test_every_closed_issue_needs_its_line(self):
+        # #30 has a right line, #31 none: the line of #30 is not enough.
+        w = self.world("Closes #30, closes #31")
+        w.tg_issue(31, package_body(f"{SS}#57"))
+        code, out = self.check(w, NEW)
+        self.assertEqual(code, 1, out)
+        self.assertIn("#31 has no line", out)
+        self.assertNotIn("#30 has no line", out)
+        self.assertIn(f"#30 names {MID}: {NEW} is the same or later", out)
 
     def test_annotation_in_github_actions(self):
         code, out = self.check(self.world(), OLD, GITHUB_ACTIONS="true")
