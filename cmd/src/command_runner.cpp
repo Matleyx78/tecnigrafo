@@ -358,6 +358,15 @@ void CommandRunner::setDescriptionCheck(DescriptionCheck check) {
     m_descriptionCheck = std::move(check);
 }
 
+void CommandRunner::setEnvironment(std::string id) {
+    assert(!isActive() && "the environment can only change while idle");
+    m_environment = std::move(id);
+}
+
+const std::string& CommandRunner::environment() const {
+    return m_environment;
+}
+
 void CommandRunner::startCommand(std::string_view text) {
     if (isUndo(text)) {
         m_lastCommand = kUndo;
@@ -371,20 +380,26 @@ void CommandRunner::startCommand(std::string_view text) {
         redo();
         return;
     }
-    const std::optional<std::string> name = m_registry.canonicalName(text);
-    if (!name) {
+    const CommandDescription* description = m_registry.describe(text);
+    if (description == nullptr) {
         // Composed from a template with one argument, as the plan of stage
         // 0.2 prescribes; translation is decided in stage 0.9.
         message("Unknown command: " + std::string{text} + ".");
         return;
     }
-    m_command = m_registry.create(*name);
+    const auto& environments = description->environments;
+    if (!environments.empty() &&
+        std::ranges::find(environments, m_environment) == environments.end()) {
+        message("Command \"" + description->name + "\" is not available in this environment.");
+        return;
+    }
+    m_command = m_registry.create(description->name);
     assert(m_command && "a registered factory returned no command");
     if (!m_command) {
         return;
     }
-    m_lastCommand = *name;
-    m_description = m_registry.describe(*name);
+    m_lastCommand = description->name;
+    m_description = description;
     if (m_command->needsSelection() && m_selection.isEmpty()) {
         m_askingSelection = true;
         return;

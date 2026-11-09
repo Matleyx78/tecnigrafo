@@ -102,6 +102,11 @@ protected:
     CommandRunnerTest() {
         m_registry.add(fakeDescription("FAKE", {"FK", "F2"}),
                        [this] { return std::make_unique<FakeCommand>(m_journal); });
+        auto testCommand = fakeDescription("TEST", {"TST"});
+        testCommand.environments = {"test"};
+        m_registry.add(std::move(testCommand),
+                       [this] { return std::make_unique<FakeCommand>(m_journal); });
+        registerBuiltinCommands(m_registry);
         m_runner.setMessageSink(
             [this](std::string text) { m_messages.push_back(std::move(text)); });
     }
@@ -132,6 +137,77 @@ private:
     CommandRunner m_runner{m_registry, m_editor};
     std::vector<std::string> m_messages;
 };
+
+TEST_F(CommandRunnerTest, CommandsAndAliasesRequireTheirEnvironment) {
+    EXPECT_EQ(runner().environment(), "drawing2d");
+    runner().submitText("TEST");
+    ASSERT_FALSE(messages().empty());
+    EXPECT_EQ(messages().back(), "Command \"TEST\" is not available in this environment.");
+    runner().submitText("tst");
+    EXPECT_EQ(messages().back(), "Command \"TEST\" is not available in this environment.");
+    EXPECT_EQ(journal().started, 0);
+    EXPECT_FALSE(editor().inTransaction());
+    EXPECT_EQ(runner().promptText(), "Command:");
+
+    runner().setEnvironment("test");
+    EXPECT_EQ(runner().environment(), "test");
+    runner().submitText("LINE");
+    EXPECT_EQ(messages().back(), "Command \"LINE\" is not available in this environment.");
+    EXPECT_FALSE(editor().inTransaction());
+    EXPECT_EQ(runner().promptText(), "Command:");
+
+    runner().submitText("tst");
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(journal().started, 1);
+    runner().submitText("");
+    ASSERT_FALSE(runner().isActive());
+
+    runner().setEnvironment("drawing2d");
+    runner().submitText("");
+    EXPECT_EQ(messages().back(), "Command \"TEST\" is not available in this environment.");
+    runner().submit(ConfirmInput{});
+    EXPECT_EQ(messages().back(), "Command \"TEST\" is not available in this environment.");
+    EXPECT_EQ(journal().started, 1);
+    EXPECT_FALSE(editor().inTransaction());
+    EXPECT_EQ(runner().promptText(), "Command:");
+}
+
+TEST_F(CommandRunnerTest, UndoAndRedoRepeatInEveryEnvironment) {
+    for (const char* environment : {"test", "drawing2d"}) {
+        runner().setEnvironment(environment);
+        const auto initialCount = document().entityCount();
+        const std::string command = runner().environment() == "test" ? "TEST" : "LINE";
+        for (int index = 0; index < 2; ++index) {
+            runner().submitText(command);
+            runner().submitText("1,1");
+            if (command == "LINE") {
+                runner().submitText("2,2");
+            }
+            runner().submitText("");
+        }
+        ASSERT_EQ(document().entityCount(), initialCount + 2);
+
+        runner().submitText("U");
+        EXPECT_EQ(document().entityCount(), initialCount + 1);
+        runner().submitText("REDO");
+        EXPECT_EQ(document().entityCount(), initialCount + 2);
+
+        runner().submitText("UNDO");
+        EXPECT_EQ(document().entityCount(), initialCount + 1);
+        runner().submitText("REDO");
+        EXPECT_EQ(document().entityCount(), initialCount + 2);
+
+        runner().submitText("U");
+        runner().submitText("");
+        EXPECT_EQ(document().entityCount(), initialCount);
+        EXPECT_TRUE(messages().back().starts_with("Undone:"));
+
+        runner().submitText("REDO");
+        runner().submit(ConfirmInput{});
+        EXPECT_EQ(document().entityCount(), initialCount + 2);
+        EXPECT_TRUE(messages().back().starts_with("Redone:"));
+    }
+}
 
 TEST_F(CommandRunnerTest, ReplaceSelectionIsSilentAndClosesTheRectangle) {
     editor().beginTransaction("Create test entities");

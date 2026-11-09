@@ -42,6 +42,12 @@ public:
     /// The description of a command, or nullptr if the name is unknown.
     [[nodiscard]] const CommandDescription* describe(std::string_view nameOrAlias) const;
 
+    /// Environments of a command by name or alias. An empty list means all
+    /// environments for a known command, including the runner's U, UNDO and
+    /// REDO. Unknown names also return an empty list; use describe() to
+    /// check for a registered command.
+    [[nodiscard]] std::vector<std::string> environmentsOf(std::string_view name) const;
+
 private:
     struct Entry {
         CommandDescription description;

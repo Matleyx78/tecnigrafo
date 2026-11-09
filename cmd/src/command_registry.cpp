@@ -175,6 +175,15 @@ const CommandDescription* CommandRegistry::describe(std::string_view nameOrAlias
     return entry != nullptr ? &entry->description : nullptr;
 }
 
+std::vector<std::string> CommandRegistry::environmentsOf(std::string_view name) const {
+    if (detail::equalsIgnoringCase(name, "U") || detail::equalsIgnoringCase(name, "UNDO") ||
+        detail::equalsIgnoringCase(name, "REDO")) {
+        return {};
+    }
+    const CommandDescription* description = describe(name);
+    return description != nullptr ? description->environments : std::vector<std::string>{};
+}
+
 const CommandRegistry::Entry* CommandRegistry::find(std::string_view nameOrAlias) const {
     const auto matches = [nameOrAlias](std::string_view candidate) {
         return detail::equalsIgnoringCase(candidate, nameOrAlias);

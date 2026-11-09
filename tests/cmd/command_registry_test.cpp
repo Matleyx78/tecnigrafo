@@ -5,6 +5,7 @@
 
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_description.hpp"
+#include "tg/cmd/command_runner.hpp"
 
 #include <gtest/gtest.h>
 
@@ -157,6 +158,56 @@ TEST(CommandDescriptionValidity, ChecksNamesSummaryIdsAndKeywords) {
 }
 
 // --- Registry -----------------------------------------------------------------
+
+TEST(CommandRegistry, EnvironmentsByNameAndAlias) {
+    CommandRegistry registry;
+    const CommandDescription defaultEnvironment = description("DRAW");
+    CommandDescription testEnvironment = defaultEnvironment;
+    testEnvironment.environments = {"test"};
+    EXPECT_NE(defaultEnvironment, testEnvironment);
+
+    registry.add(defaultEnvironment, idleFactory());
+    testEnvironment.name = "TEST";
+    testEnvironment.aliases = {"T"};
+    registry.add(testEnvironment, idleFactory());
+
+    EXPECT_EQ(registry.environmentsOf("DRAW"), (std::vector<std::string>{"drawing2d"}));
+    EXPECT_EQ(registry.environmentsOf("TEST"), testEnvironment.environments);
+    EXPECT_EQ(registry.environmentsOf("t"), testEnvironment.environments);
+}
+
+TEST(CommandRegistry, UnknownCommandHasNoDescriptionOrEnvironments) {
+    CommandRegistry registry;
+    registry.add(description("LINE", {"L"}), idleFactory());
+
+    EXPECT_TRUE(registry.environmentsOf("NOPE").empty());
+    EXPECT_EQ(registry.describe("NOPE"), nullptr);
+}
+
+TEST(CommandRegistry, GlobalCommandsHaveAnEmptyEnvironmentList) {
+    CommandRegistry registry;
+    core::Document document;
+    edit::Editor editor{document};
+    CommandRunner runner{registry, editor};
+    int starts = 0;
+    registry.add({"GLOBAL", {"G"}, "Does nothing.", false, {}, {}}, [&starts] {
+        ++starts;
+        return std::make_unique<IdleCommand>();
+    });
+
+    EXPECT_TRUE(registry.environmentsOf("U").empty());
+    EXPECT_TRUE(registry.environmentsOf("undo").empty());
+    EXPECT_TRUE(registry.environmentsOf("REDO").empty());
+    EXPECT_TRUE(registry.environmentsOf("GLOBAL").empty());
+    EXPECT_TRUE(registry.environmentsOf("g").empty());
+
+    for (const char* environment : {"drawing2d", "test"}) {
+        runner.setEnvironment(environment);
+        runner.submitText("GLOBAL");
+        runner.submitText("g");
+    }
+    EXPECT_EQ(starts, 4);
+}
 
 TEST(CommandRegistry, FindsNamesAndAliasesIgnoringCase) {
     CommandRegistry registry;
