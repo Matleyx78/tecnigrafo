@@ -170,7 +170,7 @@ void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
     // A reference cannot be rebound. Carry the command session state over
     // when rebuilding the context around a different file.
     CommandContext previous = std::move(context());
-    m_context.emplace(previous.editor, file ? *file : m_ownFile, previous.lastPoint,
+    m_context.emplace(previous.editor, file != nullptr ? *file : m_ownFile, previous.lastPoint,
                       std::move(previous.message), previous.defaults, previous.files,
                       previous.documentReplaced, previous.scriptSequences);
 }
