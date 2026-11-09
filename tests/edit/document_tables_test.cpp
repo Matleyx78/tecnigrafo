@@ -19,7 +19,10 @@ TEST(DocumentTables, LayerAndEntityShareOneHistoryStep) {
 
     editor.beginTransaction("Add layer and line");
     const auto layerId = editor.tables().addLayer(layer);
-    ASSERT_TRUE(layerId.has_value());
+    if (!layerId) {
+        ADD_FAILURE() << "Layer creation must succeed";
+        return;
+    }
     const auto entityId = editor.add(core::Line{{0.0, 0.0}, {1.0, 0.0}});
     auto properties = document.current();
     properties.layer = *layerId;
