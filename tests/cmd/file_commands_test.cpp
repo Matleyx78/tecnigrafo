@@ -609,7 +609,7 @@ public:
 
     [[nodiscard]] DrawingSession* findOpen(std::string_view name) override {
         for (const auto& session : m_sessions) {
-            if (session->file().name() == name) {
+            if (session->file().hasFile() && session->file().name() == name) {
                 return session.get();
             }
         }
@@ -790,6 +790,32 @@ TEST_F(HostedFileCommandsTest, QsaveOfAnUntitledDocumentOnAnOpenFileIsRefused) {
     EXPECT_FALSE(host.active().runner().isActive());
     EXPECT_EQ(messages.back(), "Cannot save a.cadx: it is open in another document.");
     EXPECT_FALSE(host.active().file().hasFile());
+}
+
+TEST_F(HostedFileCommandsTest, OpenOfAFileNamedAsAnUntitledDocumentReadsIt) {
+    // The untitled Drawing1.cadx has no file: a file of that name is not open.
+    files.contents["Drawing1.cadx"] = files.contents.at("plan.cadx");
+    inputs({"OPEN", "Drawing1.cadx"});
+    ASSERT_EQ(host.size(), 2U);
+    EXPECT_EQ(&host.active(), &session(1));
+    EXPECT_TRUE(session(1).file().hasFile());
+    EXPECT_EQ(session(1).file().name(), "Drawing1.cadx");
+    EXPECT_FALSE(session(0).file().hasFile());
+    EXPECT_TRUE(messages.empty());
+}
+
+TEST_F(HostedFileCommandsTest, SavingOnTheNameOfAnUntitledDocumentIsNotRefused) {
+    inputs({"NEW"});
+    line();
+    inputs({"SAVEAS", "Drawing1.cadx"});
+    // The first document is still Drawing1.cadx, without a file.
+    EXPECT_FALSE(session(0).file().hasFile());
+    EXPECT_EQ(session(0).file().name(), "Drawing1.cadx");
+    EXPECT_FALSE(session(1).runner().isActive());
+    EXPECT_TRUE(session(1).file().hasFile());
+    EXPECT_EQ(session(1).file().name(), "Drawing1.cadx");
+    EXPECT_TRUE(files.exists("Drawing1.cadx"));
+    EXPECT_TRUE(messages.empty());
 }
 
 }  // namespace

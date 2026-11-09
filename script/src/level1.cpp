@@ -128,8 +128,10 @@ public:
     }
 
     [[nodiscard]] cmd::DrawingSession* findOpen(std::string_view name) override {
-        const auto found = std::ranges::find_if(
-            m_sessions, [name](const auto& session) { return session->file().name() == name; });
+        // A document without a file has none to be open, whatever its name.
+        const auto found = std::ranges::find_if(m_sessions, [name](const auto& session) {
+            return session->file().hasFile() && session->file().name() == name;
+        });
         return found != m_sessions.end() ? found->get() : nullptr;
     }
 

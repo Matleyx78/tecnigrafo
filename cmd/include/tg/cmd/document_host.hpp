@@ -33,7 +33,9 @@ public:
     virtual DrawingSession& addDocument(core::Document document, edit::DocumentFile file) = 0;
 
     /// The open document whose file is `name` (the same text as
-    /// DocumentFile::name()), or nullptr.
+    /// DocumentFile::name()), or nullptr. A document without a file
+    /// (DocumentFile::hasFile() false, "Drawing1.cadx") has no file to be
+    /// open: it is never found, even with the same name.
     [[nodiscard]] virtual DrawingSession* findOpen(std::string_view name) = 0;
 
     /// Makes `session`, one of the open documents, active.

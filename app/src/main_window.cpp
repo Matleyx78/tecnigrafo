@@ -213,8 +213,9 @@ public:
     }
 
     [[nodiscard]] cmd::DrawingSession* findOpen(std::string_view name) override {
+        // A document without a file has none to be open, whatever its name.
         for (const auto& session : m_window.m_sessions) {
-            if (session->file().name() == name) {
+            if (session->file().hasFile() && session->file().name() == name) {
                 return &session->drawing();
             }
         }
@@ -1081,41 +1082,56 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         event->accept();
         return;
     }
-    // With one session, the window closes as its document does. Several
-    // sessions, each with its own question, are the tabs' job (P29).
-    if (m_active == nullptr) {
-        saveUiSettings();
-        event->accept();
-        return;
+    // NEW and OPEN leave the other documents open with their changes: every
+    // modified one is asked for, the active one first, then the others in
+    // the order they were opened, so that none is lost in silence. The tabs
+    // that close one document at a time are P29's.
+    std::vector<DocumentSession*> order;
+    if (m_active != nullptr) {
+        order.push_back(m_active);
     }
-    // Finish/cancel the current transaction before checking the dirty flag:
-    // Esc preserves completed LINE/PLINE work, just like the command line.
-    if (m_active->runner().isActive()) {
-        m_active->runner().submit(cmd::CancelInput{});
-        refresh();
+    for (const auto& session : m_sessions) {
+        if (session.get() != m_active) {
+            order.push_back(session.get());
+        }
     }
-    if (!m_active->editor().isModified()) {
-        saveUiSettings();
-        event->accept();
-        return;
-    }
-    const auto choice = QMessageBox::question(
-        this, tr("Tecnigrafo"), tr("Save changes to %1?").arg(QFileInfo(documentName()).fileName()),
-        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
-    if (choice == QMessageBox::Cancel) {
-        event->ignore();
-        return;
-    }
-    if (choice == QMessageBox::Save) {
-        submitFileText(QStringLiteral("QSAVE"));
-        refresh();
-        if (m_active->editor().isModified()) {
+    for (DocumentSession* session : order) {
+        if (!confirmClose(*session)) {
             event->ignore();
             return;
         }
     }
     saveUiSettings();
     event->accept();
+}
+
+bool MainWindow::confirmClose(DocumentSession& session) {
+    // A command left halfway in a session not shown has its transaction
+    // open too.
+    if (session.runner().isActive() || session.editor().isModified()) {
+        activate(session);
+    }
+    // Finish/cancel the current transaction before checking the dirty flag:
+    // Esc preserves completed LINE/PLINE work, just like the command line.
+    if (session.runner().isActive()) {
+        session.runner().submit(cmd::CancelInput{});
+        refresh();
+    }
+    if (!session.editor().isModified()) {
+        return true;
+    }
+    const auto choice = QMessageBox::question(
+        this, tr("Tecnigrafo"), tr("Save changes to %1?").arg(QFileInfo(documentName()).fileName()),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
+    if (choice == QMessageBox::Cancel) {
+        return false;
+    }
+    if (choice == QMessageBox::Save) {
+        submitFileText(QStringLiteral("QSAVE"));
+        refresh();
+        return !session.editor().isModified();
+    }
+    return true;
 }
 
 void MainWindow::setTheme(Theme theme) {

@@ -8,6 +8,7 @@
 #include "recent_files.hpp"
 #include "script_session.hpp"
 #include "tg/io/file_access.hpp"
+#include "tg/io/io.hpp"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -28,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <utility>
 
@@ -477,6 +479,72 @@ TEST_F(FileMenuTest, OpenOfAFileAlreadyOpenActivatesItAndLeavesTheRecentsAsTheyA
     EXPECT_TRUE(history().contains(QStringLiteral("%1 is already open.").arg(plan)));
     // Activating it moves nothing in the recent files.
     EXPECT_EQ(recent(), before);
+}
+
+TEST_F(FileMenuTest, ClosingAsksForAModifiedDocumentThatIsNotActive) {
+    line();
+    const DocumentSession* first = window()->activeSession();
+    action("file.new")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    ASSERT_NE(window()->activeSession(), first);
+    ASSERT_FALSE(window()->editor().isModified());
+    QString asked;
+    QTimer::singleShot(0, window(), [&asked] {
+        auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        ASSERT_NE(box, nullptr);
+        asked = box->text();
+        box->button(QMessageBox::Cancel)->click();
+    });
+    QCloseEvent event;
+    QCoreApplication::sendEvent(window(), &event);
+    // The active drawing is clean, the first one is not: it is shown and
+    // asked for, and Cancel keeps the window open.
+    EXPECT_FALSE(event.isAccepted());
+    EXPECT_EQ(asked, QStringLiteral("Save changes to Drawing1.cadx?"));
+    EXPECT_EQ(window()->activeSession(), first);
+    EXPECT_TRUE(first->editor().isModified());
+    EXPECT_TRUE(closeWith(QMessageBox::Discard));
+}
+
+/// Files in memory, for names typed on the command line in a script session.
+class MemoryFiles final : public io::FileAccess {
+public:
+    io::Result<std::string> read(std::string_view name) override {
+        const auto found = m_contents.find(std::string{name});
+        if (found == m_contents.end()) {
+            return io::Error{io::Error::Kind::File, 0, "File not found."};
+        }
+        return found->second;
+    }
+
+    std::optional<io::Error> write(std::string_view name, std::string_view bytes) override {
+        m_contents[std::string{name}] = bytes;
+        return {};
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override {
+        return m_contents.contains(std::string{name});
+    }
+
+private:
+    std::map<std::string, std::string> m_contents;
+};
+
+TEST_F(FileMenuTest, OpenOfAFileNamedAsTheUntitledDrawingReadsIt) {
+    window()->setScriptMode();
+    MemoryFiles files;
+    const auto bytes = io::writeCadx(core::Document::newDrawing());
+    ASSERT_TRUE(bytes.ok());
+    ASSERT_FALSE(files.write("Drawing1.cadx", bytes.value()).has_value());
+    window()->setFileAccess(&files);
+    // A relative name typed on the command line: the untitled Drawing1.cadx
+    // has no file, so the file of that name is not open.
+    enter(QStringLiteral("OPEN"));
+    enter(QStringLiteral("Drawing1.cadx"));
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
+    EXPECT_TRUE(window()->runner().documentFile().hasFile());
+    EXPECT_FALSE(history().contains(QStringLiteral("is already open")));
 }
 
 }  // namespace

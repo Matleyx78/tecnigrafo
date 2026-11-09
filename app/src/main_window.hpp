@@ -208,6 +208,10 @@ private:
 
     /// Makes `session` active; nullptr for none (activate()).
     void switchTo(DocumentSession* session);
+    /// Before the window closes: cancels the command of `session`, if any,
+    /// and asks whether to save it if it is modified, showing it. False if
+    /// the user cancels, or saving fails.
+    bool confirmClose(DocumentSession& session);
     /// What NEW and OPEN do through the host: a session for `document`,
     /// with `file`, after the others, made active. A file read by OPEN goes
     /// to the recent files.

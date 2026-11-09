@@ -8,6 +8,8 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
+#include "tg/io/file_access.hpp"
+#include "tg/io/io.hpp"
 #include "tg/script/case_check.hpp"
 #include "tg/script/compare.hpp"
 #include "tg/script/number_format.hpp"
@@ -22,6 +24,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <locale>
+#include <map>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -360,6 +363,44 @@ TEST(RunLevel1, ANewDocumentKeepsViewDrawingAidsAndScriptSequences) {
     expectContains(section(report, "report 1"), "selection: 257\n");
     expectContains(section(report, "report 1"), "snap: off\n");
     expectContains(section(report, "final"), "prompt: Command:\n");
+}
+
+/// Files in memory, for the file commands of a run.
+class MemoryFiles final : public io::FileAccess {
+public:
+    io::Result<std::string> read(std::string_view name) override {
+        const auto found = m_contents.find(std::string{name});
+        if (found == m_contents.end()) {
+            return io::Error{io::Error::Kind::File, 0, "File not found."};
+        }
+        return found->second;
+    }
+
+    std::optional<io::Error> write(std::string_view name, std::string_view bytes) override {
+        m_contents[std::string{name}] = bytes;
+        return {};
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override {
+        return m_contents.contains(std::string{name});
+    }
+
+private:
+    std::map<std::string, std::string> m_contents;
+};
+
+TEST(RunLevel1, OpenOfAFileNamedAsTheUntitledDrawingReadsIt) {
+    MemoryFiles files;
+    const auto bytes = io::writeCadx(core::Document::newDrawing());
+    ASSERT_TRUE(bytes.ok());
+    ASSERT_FALSE(files.write("Drawing1.cadx", bytes.value()).has_value());
+    // The drawing of a new session is Drawing1.cadx without a file: the file
+    // of that name is not open, so OPEN reads it into a second document.
+    const std::string report = runLevel1(parsed("OPEN\nDrawing1.cadx\n"), {.files = &files});
+    const std::string final = section(report, "final");
+    expectContains(final,
+                   "drawing: Drawing1.cadx\ndocuments: Drawing1.cadx, Drawing1.cadx (active)\n");
+    EXPECT_EQ(final.find("is already open"), std::string::npos);
 }
 
 TEST(WriteState, SnapModesOffAreListed) {
