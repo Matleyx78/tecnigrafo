@@ -26,6 +26,7 @@
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QKeySequence>
+#include <QLabel>
 #include <QLineEdit>
 #include <QList>
 #include <QMenu>
@@ -180,6 +181,23 @@ protected:
         }
         out.write(bytes.value().data(), static_cast<qint64>(bytes.value().size()));
         return path;
+    }
+
+    /// The path of `file` in the folder of the test.
+    [[nodiscard]] QString directoryPath(const char* file) const {
+        return m_directory.filePath(QString::fromLatin1(file));
+    }
+
+    /// The recent file `path` chosen on the Start page.
+    void chooseRecent(const QString& path) const {
+        // A click on its entry emits this signal (StartPage).
+        QMetaObject::invokeMethod(window()->startPage(), "recentRequested", Qt::DirectConnection,
+                                  Q_ARG(QString, path));
+    }
+
+    /// The messages of the Start page.
+    [[nodiscard]] QLabel* messagesLabel() const {
+        return window()->startPage()->findChild<QLabel*>(QStringLiteral("startMessages"));
     }
 
     [[nodiscard]] QStringList& fileAnswers() { return m_fileAnswers; }
@@ -510,9 +528,76 @@ TEST_F(DocumentTabsTest, TheStartPageListsTheRecentFilesAndOpensThem) {
     ASSERT_TRUE(window()->sessions().empty());
     EXPECT_EQ(window()->startPage()->recentFiles(),
               QStringList{QFileInfo(path).absoluteFilePath()});
-    Q_EMIT window() -> startPage()->recentRequested(QFileInfo(path).absoluteFilePath());
+    chooseRecent(QFileInfo(path).absoluteFilePath());
     ASSERT_EQ(window()->sessions().size(), 1U);
     EXPECT_EQ(bar()->tabText(1), QStringLiteral("recent.cadx"));
+}
+
+TEST_F(DocumentTabsTest, AFileThatCannotBeOpenedFromTheStartPageSaysWhyThere) {
+    const QString path = directoryPath("broken.cadx");
+    QFile broken(path);
+    ASSERT_TRUE(broken.open(QIODevice::WriteOnly));
+    broken.write("not a drawing");
+    broken.close();
+    fileAnswers() << path;
+    action("file.open")->trigger();
+    EXPECT_TRUE(window()->sessions().empty());
+    EXPECT_EQ(window()->activeSession(), nullptr);
+    ASSERT_TRUE(window()->startPage()->isVisible());
+    const QString said = window()->startPage()->messages();
+    EXPECT_TRUE(said.startsWith(QStringLiteral("Cannot open "))) << said.toStdString();
+    EXPECT_TRUE(said.contains(QStringLiteral("broken.cadx"))) << said.toStdString();
+    EXPECT_TRUE(messagesLabel()->isVisible());
+    // The history has it too, for when the command line is shown again.
+    EXPECT_TRUE(history().contains(said));
+
+    // A drawing shown takes the message away.
+    plus();
+    clickTab(0);
+    EXPECT_TRUE(window()->startPage()->messages().isEmpty());
+    EXPECT_FALSE(messagesLabel()->isVisible());
+}
+
+TEST_F(DocumentTabsTest, ARecentFileNoLongerOnDiskSaysWhyOnTheStartPage) {
+    const QString path = drawingFile("gone.cadx");
+    ASSERT_FALSE(path.isEmpty());
+    fileAnswers() << path;
+    action("file.open")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 1U);
+    closeTab(0);
+    ASSERT_TRUE(window()->sessions().empty());
+    const QString absolute = QFileInfo(path).absoluteFilePath();
+    ASSERT_EQ(window()->startPage()->recentFiles(), QStringList{absolute});
+    ASSERT_TRUE(QFile::remove(path));
+
+    chooseRecent(absolute);
+    EXPECT_TRUE(window()->sessions().empty());
+    EXPECT_EQ(window()->startPage()->messages(),
+              QStringLiteral("Cannot open %1: file no longer exists.").arg(absolute));
+    EXPECT_TRUE(messagesLabel()->isVisible());
+    EXPECT_TRUE(window()->startPage()->recentFiles().isEmpty());
+}
+
+TEST_F(DocumentTabsTest, TheEntriesOfTheRecentFilesNeedNoDocument) {
+    const QString path = drawingFile("listed.cadx");
+    ASSERT_FALSE(path.isEmpty());
+    fileAnswers() << path;
+    action("file.open")->trigger();
+    closeTab(0);
+    ASSERT_TRUE(window()->sessions().empty());
+    auto* menu = window()->findChild<QMenu*>(QStringLiteral("recentMenu"));
+    ASSERT_NE(menu, nullptr);
+    QMetaObject::invokeMethod(menu, "aboutToShow", Qt::DirectConnection);
+    ASSERT_EQ(menu->actions().size(), 1);
+    const ActionSpec* entry = window()->actionRegistry().spec(QStringLiteral("file.recent.1"));
+    ASSERT_NE(entry, nullptr);
+    EXPECT_FALSE(entry->requiresDocument);
+    EXPECT_TRUE(menu->actions().front()->isEnabled());
+    EXPECT_TRUE(action("file.recent")->isEnabled());
+    // With the Start page the entry opens the file.
+    menu->actions().front()->trigger();
+    ASSERT_EQ(window()->sessions().size(), 1U);
+    EXPECT_EQ(bar()->tabText(1), QStringLiteral("listed.cadx"));
 }
 
 }  // namespace

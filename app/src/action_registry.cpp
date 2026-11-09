@@ -135,6 +135,11 @@ QList<QAction*> ActionRegistry::dynamicActions(const QString& prefix, int count)
         if (existing == nullptr) {
             ActionSpec spec;
             spec.id = id;
+            // An entry of the list works where the list does: without a
+            // document, for the recent files (docs/tappe/0.7.5/P29, B7).
+            if (const ActionSpec* list = this->spec(prefix); list != nullptr) {
+                spec.requiresDocument = list->requiresDocument;
+            }
             existing = add(std::move(spec));
         }
         result.append(existing);

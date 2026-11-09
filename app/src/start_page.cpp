@@ -57,7 +57,8 @@ QToolButton* pageButton(const QString& name, const QString& text, QWidget* paren
 
 }  // namespace
 
-StartPage::StartPage(QWidget* parent) : QWidget(parent), m_newRow(new QHBoxLayout) {
+StartPage::StartPage(QWidget* parent)
+    : QWidget(parent), m_newRow(new QHBoxLayout), m_messages(new QLabel(this)) {
     setObjectName(QStringLiteral("startPage"));
     setAutoFillBackground(true);
 
@@ -83,6 +84,14 @@ StartPage::StartPage(QWidget* parent) : QWidget(parent), m_newRow(new QHBoxLayou
     m_newRow->addWidget(m_openButton);
     m_newRow->addStretch(1);
     content->addLayout(m_newRow);
+
+    // What OPEN and the recent files say, under New and Open….
+    m_messages->setObjectName(QStringLiteral("startMessages"));
+    m_messages->setWordWrap(true);
+    m_messages->setTextFormat(Qt::PlainText);
+    m_messages->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_messages->hide();
+    content->addWidget(m_messages);
 
     content->addWidget(heading(tr("Recent Files"), column));
     m_recent = new QListWidget(column);
@@ -143,6 +152,21 @@ QStringList StartPage::recentFiles() const {
         paths.append(m_recent->item(row)->data(kPathRole).toString());
     }
     return paths;
+}
+
+void StartPage::addMessage(const QString& line) {
+    const QString shown = m_messages->text();
+    m_messages->setText(shown.isEmpty() ? line : shown + QLatin1Char('\n') + line);
+    m_messages->show();
+}
+
+void StartPage::clearMessages() {
+    m_messages->clear();
+    m_messages->hide();
+}
+
+QString StartPage::messages() const {
+    return m_messages->text();
 }
 
 void StartPage::setTheme(Theme theme) {

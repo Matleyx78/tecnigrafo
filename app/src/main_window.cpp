@@ -282,12 +282,11 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     // the check on (docs/adr/0026, point 3, and setScriptMode()): the empty
     // function of m_descriptionCheck.
     // The runner of the Start page: no command line shows it, so its
-    // messages ("... is already open.") go to the history here.
+    // messages ("Cannot open ...") go to the history and to the page.
     m_startSession = std::make_unique<cmd::DrawingSession>(m_registry, m_files);
     configureRunner(m_startSession->runner());
-    m_startSession->runner().setMessageSink([this](const std::string& text) {
-        m_commandLine->appendToHistory(QString::fromStdString(text));
-    });
+    m_startSession->runner().setMessageSink(
+        [this](const std::string& text) { showStartMessage(QString::fromStdString(text)); });
     // The session the window opens with, if any; activated once the
     // interface that follows it exists.
     DocumentSession* first = nullptr;
@@ -1003,6 +1002,9 @@ void MainWindow::setStartPageShown(bool shown) {
     if (m_startPage == nullptr || m_destroying) {
         return;
     }
+    if (!shown) {
+        m_startPage->clearMessages();
+    }
     m_startPage->setVisible(shown);
     m_view->setVisible(!shown);
     m_commandLine->setVisible(!shown);
@@ -1056,6 +1058,14 @@ void MainWindow::refreshTabs() {
                           documentIcon(session->documentType()), session->editor().isModified()});
     }
     m_documentTabs->setDocuments(documents, active);
+}
+
+void MainWindow::showStartMessage(const QString& line) {
+    m_commandLine->appendToHistory(line);
+    // The command line is hidden with the Start page: the page shows it too.
+    if (m_active == nullptr && m_startPage != nullptr && !m_destroying) {
+        m_startPage->addMessage(line);
+    }
 }
 
 void MainWindow::refreshStartPage() {
@@ -1130,6 +1140,10 @@ void MainWindow::submitFileText(const QString& text) {
 void MainWindow::startCommand(const QString& command, const QStringList& responses) {
     // With the Start page, the runner of the window: only NEW and OPEN, the
     // actions that need no document, run there, and they have no responses.
+    // What the page said about the last one goes.
+    if (m_active == nullptr && m_startPage != nullptr) {
+        m_startPage->clearMessages();
+    }
     const cmd::CommandRunner* runner = &commandRunner();
     submitFileText(command);
     // NEW, or OPEN of a file already open, ends by making another session
@@ -1216,8 +1230,11 @@ void MainWindow::openRecentFile(const QString& path) {
     if (commandRunner().isActive()) {
         return;
     }
+    if (m_active == nullptr && m_startPage != nullptr) {
+        m_startPage->clearMessages();
+    }
     if (!QFileInfo::exists(path)) {
-        m_commandLine->appendToHistory(tr("Cannot open %1: file no longer exists.").arg(path));
+        showStartMessage(tr("Cannot open %1: file no longer exists.").arg(path));
         ensureRecentFiles();
         m_recentFiles->remove(path);
         refreshStartPage();

@@ -258,6 +258,9 @@ private:
     void refreshTabs();
     /// The Start page shows the recent files.
     void refreshStartPage();
+    /// Writes `line` in the history and, with the Start page, on the page,
+    /// where it is seen (the command line is hidden).
+    void showStartMessage(const QString& line);
     /// Runs the action `id` if it is enabled, as its shortcut would.
     void triggerAction(const char* id);
     /// The runner that the actions with a command and the file dialogs use:

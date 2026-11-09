@@ -11,6 +11,7 @@
 #include <QWidget>
 
 class QHBoxLayout;
+class QLabel;
 class QListWidget;
 class QToolButton;
 
@@ -37,6 +38,17 @@ public:
 
     [[nodiscard]] QStringList recentFiles() const;
 
+    /// Adds `line` to the messages the page shows under New and Open…: what
+    /// NEW, OPEN and the recent files say while no command line is shown,
+    /// such as why a file could not be opened.
+    void addMessage(const QString& line);
+
+    /// Takes the messages away.
+    void clearMessages();
+
+    /// The messages shown, one per line; empty for none.
+    [[nodiscard]] QString messages() const;
+
     void setTheme(Theme theme);
 
 Q_SIGNALS:
@@ -58,6 +70,7 @@ private:
     QHBoxLayout* m_newRow{nullptr};
     QList<TypeButton> m_typeButtons;
     QToolButton* m_openButton{nullptr};
+    QLabel* m_messages{nullptr};
     QListWidget* m_recent{nullptr};
     Theme m_theme{Theme::Light};
 };

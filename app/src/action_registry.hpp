@@ -54,7 +54,7 @@ struct ActionSpec {
     QStringList responses;
     // Shortcuts included (decision B7 of docs/DECISIONI.md, docs/tappe/
     // 0.7.5/P29); separate from `environments`. The run-time actions of
-    // dynamicActions() keep the default: their menu decides for them.
+    // dynamicActions() take it from the action of their prefix.
     bool requiresDocument{true};  ///< disabled while no document is active (the Start page)
 };
 
@@ -101,6 +101,8 @@ public:
     /// Actions created at run time by the registry itself, for lists such
     /// as the recent files: ids "<prefix>.1"... "<prefix>.<count>". Actions
     /// created by an earlier call are returned again, not created twice.
+    /// They have the ActionSpec::requiresDocument of the action `prefix`,
+    /// if there is one.
     QList<QAction*> dynamicActions(const QString& prefix, int count);
 
     /// Builds the classic menus into `bar` from ActionSpec::menu, in order:
