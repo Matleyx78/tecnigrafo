@@ -230,7 +230,7 @@ TEST_F(SessionTest, ACommandLeftHalfwayResumesWhenItsSessionIsActiveAgain) {
     enter("");
     EXPECT_FALSE(window().runner().isActive());
     ASSERT_EQ(first().document().entityCount(), 1U);
-    const auto& made = std::get<core::Line>(first().document().entities().front().entity);
+    const auto made = std::get<core::Line>(first().document().entities().front().entity);
     EXPECT_EQ(made.start, (core::Vec2{0.0, 0.0}));
     EXPECT_EQ(made.end, (core::Vec2{10.0, 0.0}));
     EXPECT_EQ(second.document().entityCount(), 1U);
@@ -253,7 +253,7 @@ TEST_F(SessionTest, TextTypedAndNotSentStaysInItsSession) {
     EXPECT_EQ(input()->text(), QStringLiteral("10,20"));
     events::press(input(), Qt::Key_Return);
     ASSERT_EQ(first().document().entityCount(), 1U);
-    const auto& made = std::get<core::Line>(first().document().entities().front().entity);
+    const auto made = std::get<core::Line>(first().document().entities().front().entity);
     EXPECT_EQ(made.end, (core::Vec2{10.0, 20.0}));
     EXPECT_TRUE(second.document().isEmpty());
 }
@@ -287,7 +287,7 @@ TEST_F(SessionTest, ValuesTypedInTheDynamicInputComeBackInTheirFields) {
     EXPECT_EQ(field(1)->text(), QStringLiteral("90"));
     events::press(view(), Qt::Key_Return);
     ASSERT_EQ(first().document().entityCount(), 1U);
-    const auto& made = std::get<core::Line>(first().document().entities().front().entity);
+    const auto made = std::get<core::Line>(first().document().entities().front().entity);
     EXPECT_NEAR(made.end.x, 0.0, kTolerance);
     EXPECT_NEAR(made.end.y, 5.0, kTolerance);
     EXPECT_TRUE(second.document().isEmpty());
