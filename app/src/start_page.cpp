@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QScrollArea>
 #include <QSize>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -60,7 +61,7 @@ StartPage::StartPage(QWidget* parent) : QWidget(parent) {
     setObjectName(QStringLiteral("startPage"));
     setAutoFillBackground(true);
 
-    auto* column = new QWidget(this);
+    auto* column = new QWidget;
     column->setMaximumWidth(kColumnWidth);
     auto* content = new QVBoxLayout(column);
     content->setContentsMargins(0, 0, 0, 0);
@@ -95,10 +96,20 @@ StartPage::StartPage(QWidget* parent) : QWidget(parent) {
     });
     content->addWidget(m_recent, 1);
 
-    auto* page = new QHBoxLayout(this);
-    page->setContentsMargins(kMargin, kMargin, kMargin, kMargin);
-    page->addWidget(column, 1);
-    page->addStretch(1);
+    // In a scroll area: the page asks the window for no more room than the
+    // drawing and the command line it replaces.
+    auto* sheet = new QWidget;
+    auto* row = new QHBoxLayout(sheet);
+    row->setContentsMargins(kMargin, kMargin, kMargin, kMargin);
+    row->addWidget(column, 1);
+    row->addStretch(1);
+    auto* scroll = new QScrollArea(this);
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setWidgetResizable(true);
+    scroll->setWidget(sheet);
+    auto* page = new QVBoxLayout(this);
+    page->setContentsMargins(0, 0, 0, 0);
+    page->addWidget(scroll);
 
     updateIcons();
 }

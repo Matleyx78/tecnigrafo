@@ -7,6 +7,7 @@
 
 #include <QList>
 #include <QString>
+#include <QStringList>
 #include <QWidget>
 
 class QMenu;
@@ -14,6 +15,10 @@ class QTabBar;
 class QToolButton;
 
 namespace tg::app {
+
+/// The icons of the row of the tabs and of the Start page (docs/ICONE.md):
+/// no action names them.
+[[nodiscard]] QStringList documentTabsIconNames();
 
 /// The row of the document tabs under the ribbon (docs/adr/0039, point 1,
 /// area 4; docs/tappe/0.7.5/P29): the button of the menu of the open
