@@ -8,6 +8,13 @@
 # and B11).
 #
 #     scripts/dipendenze.py <tappa> [--applica] [--senza-project]
+#     scripts/dipendenze.py --sottomodulo [--applica]
+#     scripts/dipendenze.py --controlla-puntatore <commit> [--pr <number>]
+#
+# The last two forms are about the commit of solid-space that the submodule
+# third_party/solid-space points to (docs/adr/0030, point 9;
+# docs/tappe/0.7.5/P6-sottomodulo-automatico.md); they are described after the
+# stage form.
 #
 # The plan is the only source: the table of section 6 of
 # docs/tappe/<tappa>-*.md, read with the rules of scripts/apri-tappa.sh, and
@@ -43,6 +50,43 @@
 # Exit status: 0 nothing to fix or to check (checks 2-6), 1 something to fix
 # or to check, 2 a read failed, a table cannot be read, or a change of
 # --applica failed (the others are still made), 3 not confirmed.
+#
+# --sottomodulo   for every open issue of Tecnigrafo with the label "pacchetto"
+#                 whose dependencies in solid-space (its "**Dipende da:**" line)
+#                 are all closed: for each closed package (requests do not
+#                 count) it finds the pull requests merged into main of
+#                 solid-space that close it ("Closes #N" and the other GitHub
+#                 keywords, read from the timeline of the issue) and takes the
+#                 merge commit of the latest one; the latest of those commits is
+#                 the one to point to. If the issue has no line
+#                   **Sottomodulo di solid-space:** <commit> (chiude <pacchetto>
+#                   con la pull request <owner/repo#N>)
+#                 it writes it under "Dipende da"; if the line names another
+#                 commit, it never changes it: it says so in a comment of the
+#                 issue, with the two commits and why, once per pair of commits.
+#                 A package closed as not planned, or without such a pull
+#                 request, is listed under "To check". With --applica the line
+#                 and the comments are written without asking: they only add,
+#                 never change (.github/workflows/sottomodulo.yml runs it every
+#                 day). Just before each write the issue is read again: if its
+#                 text changed after the first read, the write is skipped and
+#                 left to the next run. It never moves the pointer and never
+#                 writes to solid-space.
+# --controlla-puntatore <commit> [--pr <number>]
+#                 the check of a pull request that moves the submodule to
+#                 <commit> (job "Submodule pointer" of ci.yml): it fails if the
+#                 commit is not on main of solid-space and, for every issue the
+#                 pull request closes (Closes #N in its text), if that issue
+#                 has no "Sottomodulo di solid-space" line, even when another
+#                 one has it, or the commit is earlier than the one of the line. Without --pr, or when the pull
+#                 request closes no issue, only main is checked.
+#
+# Exit status of --sottomodulo: 0 nothing to write, report or check (or all
+# written, with --applica), 1 something to write or report (without
+# --applica) or to check, or a write skipped because the issue changed, 2 a
+# read or a write failed. Of
+# --controlla-puntatore: 0 the pointer is right, 1 it is wrong (the message
+# says why), 2 a read failed.
 #
 # Needs Python 3.11 and gh, logged in with read access to Tecnigrafo (write
 # access for --applica). The Project needs the "project" scope, once:
@@ -458,6 +502,25 @@ def json_values(text: str) -> list:
     return out
 
 
+# The blank line between the headers and the body of an HTTP response. curl
+# prints CRLF, but subprocess.run(text=True) turns it into LF: both are fine.
+HEADERS_END = re.compile(r"\r?\n\r?\n")
+
+
+def split_response(text: str) -> tuple[str, str]:
+    """The headers and the body of what curl -D - prints; the headers of a
+    proxy (HTTP/1.1 200 Connection established) come first and are skipped."""
+    head, _, body = _split_once(text)
+    while head.startswith("HTTP/") and body.startswith("HTTP/"):
+        head, _, body = _split_once(body)
+    return head, body
+
+
+def _split_once(text: str) -> tuple[str, str, str]:
+    m = HEADERS_END.search(text)
+    return (text[:m.start()], m.group(0), text[m.end():]) if m else (text, "", "")
+
+
 class GitHub:
     """Reads and writes through gh; reads of a public repository fall back to
     curl without a token. Tests replace get() and send()."""
@@ -490,9 +553,7 @@ class GitHub:
                                 url], capture_output=True, text=True)
             if r.returncode != 0:
                 raise Failure(f"GitHub did not answer: {url}\n{r.stderr.strip()}")
-            head, _, body = r.stdout.partition("\r\n\r\n")
-            while head.startswith("HTTP/") and body.startswith("HTTP/"):  # proxy headers
-                head, _, body = body.partition("\r\n\r\n")
+            head, body = split_response(r.stdout)
             value = json.loads(body)
             if not paginate or not isinstance(value, list):
                 return value
@@ -521,6 +582,7 @@ class Issue:
     open: bool
     labels: list[str]
     body: str
+    reason: str | None = None  # state_reason: completed, not_planned, reopened
 
     @property
     def tag(self) -> str | None:
@@ -530,7 +592,8 @@ class Issue:
 
 def to_issue(repo: str, data: dict) -> Issue:
     return Issue(Ref(repo, data["number"]), data["id"], data.get("title", ""), data["state"] == "open",
-                 [label["name"] for label in data.get("labels", [])], data.get("body") or "")
+                 [label["name"] for label in data.get("labels", [])], data.get("body") or "",
+                 data.get("state_reason"))
 
 
 class Issues:
@@ -654,6 +717,10 @@ class Change:
     method: str
     path: str
     body: dict | None = None
+    # The text of the issue the change was computed from: when it is given,
+    # apply() reads the issue again just before writing and skips the change if
+    # the text is no longer the same (someone edited it in the meantime).
+    read_body: str | None = None
 
 
 @dataclass
@@ -900,6 +967,270 @@ def _diff(missing: list[Ref], extra: list[Ref], home: str) -> str:
     return ": " + "; ".join(parts)
 
 
+# --- The submodule of solid-space ------------------------------------------------
+
+SUBMODULE_LINE = "**Sottomodulo di solid-space:**"
+SUBMODULE_LINE_RE = re.compile(r"^\*\*Sottomodulo di solid-space:\*\*[ \t]*([0-9A-Fa-f]{7,40})\b.*$", re.M)
+SHA_RE = re.compile(r"^[0-9a-f]{7,40}$")
+# The comment that reports a different line ends with this marker, so that the
+# same pair of commits is reported once.
+MARKER = "<!-- tecnigrafo-sottomodulo {old} {new} -->"
+MAIN = "main"
+
+
+def closes(text: str, ref: Ref, home: str) -> bool:
+    """Whether a pull request of `home` closes the issue `ref` with one of the
+    keywords of GitHub: close, closes, closed, fix, fixes, fixed, resolve,
+    resolves, resolved, followed by #N (same repository) or owner/repo#N."""
+    repo = rf"(?:{re.escape(ref.repo)})?" if ref.repo.lower() == home.lower() else re.escape(ref.repo)
+    keyword = r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b:?\s+"
+    return re.search(rf"{keyword}{repo}#{ref.number}(?![0-9])", text or "", re.I) is not None
+
+
+def closed_issues(text: str, home: str) -> list[Ref]:
+    """The issues of `home` that a pull request text closes, in order."""
+    keyword = r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b:?\s+"
+    out: list[Ref] = []
+    for m in re.finditer(rf"{keyword}(?:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#([0-9]+)(?![0-9])", text or "", re.I):
+        if m.group(1) and m.group(1).lower() != home.lower():
+            continue
+        ref = Ref(home, int(m.group(2)))
+        if ref not in out:
+            out.append(ref)
+    return out
+
+
+@dataclass
+class Closing:
+    """The pull request merged into main that closes a package of solid-space."""
+
+    package: Ref
+    name: str           # the tag of the issue, "0.2-P11", or owner/repo#N
+    pull: int
+    commit: str         # its merge commit on main
+    merged_at: str      # ISO 8601, so that the order of the strings is the order of time
+
+    def line(self) -> str:
+        return (f"{SUBMODULE_LINE} {self.commit} (chiude {self.name} con la pull request "
+                f"{self.package.repo}#{self.pull})")
+
+
+def closing_of(gh: GitHub, issue: Issue) -> Closing | None:
+    """The latest pull request merged into main of the repository of `issue`
+    whose text closes it; None if there is none. The timeline of the issue
+    lists the pull requests that mention it: the API does not say which one
+    closed it."""
+    ref = issue.ref
+    events = gh.get(f"repos/{ref.repo}/issues/{ref.number}/timeline?per_page=100", paginate=True) or []
+    found: list[Closing] = []
+    seen: set[int] = set()
+    for event in events:
+        source = (event.get("source") or {}).get("issue") or {}
+        if event.get("event") != "cross-referenced" or not source.get("pull_request"):
+            continue
+        repo = (source.get("repository") or {}).get("full_name") or _repo_of(source)
+        number = source.get("number")
+        if repo.lower() != ref.repo.lower() or number in seen or not source["pull_request"].get("merged_at"):
+            continue
+        seen.add(number)
+        if not closes(source.get("body") or "", ref, ref.repo):
+            continue
+        pull = gh.get(f"repos/{ref.repo}/pulls/{number}")
+        if pull.get("merged_at") and pull.get("merge_commit_sha") and (pull.get("base") or {}).get("ref") == MAIN:
+            found.append(Closing(ref, issue.tag or ref.text(""), number, pull["merge_commit_sha"],
+                                 pull["merged_at"]))
+    return max(found, key=lambda c: (c.merged_at, c.pull)) if found else None
+
+
+def compare(gh: GitHub, repo: str, base: str, head: str) -> str | None:
+    """How `head` relates to `base` in `repo`: identical, ahead (head comes
+    after base), behind or diverged; None if GitHub does not know one of the
+    two commits."""
+    try:
+        return (gh.get(f"repos/{repo}/compare/{base}...{head}") or {}).get("status")
+    except Failure:
+        return None
+
+
+@dataclass
+class SubmoduleReport:
+    write: list[str] = field(default_factory=list)
+    differ: list[str] = field(default_factory=list)
+    verify: list[str] = field(default_factory=list)
+    info: list[str] = field(default_factory=list)
+    changes: list[Change] = field(default_factory=list)
+
+    def lines(self) -> list[str]:
+        out = []
+        for title, items in (("To write", self.write), ("Different line", self.differ),
+                             ("To check", self.verify), ("Information", self.info)):
+            if items:
+                out.append(f"{title}:")
+                out.extend(f"  {i}" for i in items)
+        return out
+
+
+def why_different(gh: GitHub, ss_repo: str, old: str, new: Closing) -> str:
+    """Why the line of an issue names `old` while the packages say `new`, in
+    the words of the comment."""
+    status = compare(gh, ss_repo, old, new.commit)
+    if status == "ahead":
+        return ("una pull request unita dopo il commit della riga chiude una delle dipendenze, quindi il "
+                "commit da puntare è più recente")
+    if status == "behind":
+        return ("la riga punta a un commit successivo a quello che chiude le dipendenze: forse è stata "
+                "scritta a mano, o una dipendenza è cambiata")
+    return f"il commit della riga non è su `{MAIN}` di solid-space"
+
+
+def submodule(gh: GitHub, home: str, ss_repo: str) -> SubmoduleReport:
+    """The --sottomodulo mode: the line of every open package of Tecnigrafo
+    whose dependencies in solid-space are all closed."""
+    report = SubmoduleReport()
+    issues = Issues(gh)
+    listed = gh.get(f"repos/{home}/issues?state=open&labels=pacchetto&per_page=100", paginate=True) or []
+    for data in listed:
+        if "pull_request" in data:
+            continue
+        issue = to_issue(home, data)
+        name = f"#{issue.ref.number}" + (f" [{issue.tag}]" if issue.tag else "")
+        deps = DEPS_LINE_RE.search(issue.body)
+        if deps is None:
+            continue
+        ss_refs = [r for r in refs_in(deps.group(0), home) if r.repo.lower() == ss_repo.lower()]
+        if not ss_refs or any(issues[r].open for r in ss_refs):
+            continue
+        packages = [issues[r] for r in ss_refs if "richiesta" not in issues[r].labels]
+        if not packages:
+            report.info.append(f"{name}: its dependencies in solid-space are requests only: no commit to point to")
+            continue
+        closings: list[Closing] = []
+        for package in packages:
+            text = package.ref.text(home)
+            if package.reason == "not_planned":
+                report.verify.append(f"{name}: {text} was closed as not planned: fix \"Dipende da\" by hand")
+                continue
+            closing = closing_of(gh, package)
+            if closing is None:
+                report.verify.append(f"{name}: no pull request merged into {MAIN} of solid-space closes {text}: "
+                                     "find its commit by hand")
+                continue
+            closings.append(closing)
+        if len(closings) < len(packages):
+            continue
+        best = max(closings, key=lambda c: (c.merged_at, c.pull))
+        line = best.line()
+        have = SUBMODULE_LINE_RE.search(issue.body)
+        path = f"repos/{home}/issues/{issue.ref.number}"
+        if have is None:
+            report.write.append(f"{name}: {line}")
+            body = issue.body[:deps.end()] + "\n" + line + issue.body[deps.end():]
+            report.changes.append(Change(issue.ref, f"line: {line}", "PATCH", path, {"body": body}, issue.body))
+            continue
+        old = have.group(1).lower()
+        if best.commit.lower().startswith(old):
+            continue
+        marker = MARKER.format(old=old, new=best.commit)
+        comments = gh.get(f"{path}/comments?per_page=100", paginate=True) or []
+        if any(marker in (c.get("body") or "") for c in comments):
+            report.info.append(f"{name}: the line says {old}, the packages {best.commit}: already reported")
+            continue
+        why = why_different(gh, ss_repo, old, best)
+        report.differ.append(f"{name}: the line says {old}, the packages {best.commit} "
+                             f"({best.name}, {best.package.repo}#{best.pull}): left as it is")
+        comment = (f"La riga «Sottomodulo di solid-space» di questa issue dice `{old}`, ma il commit di "
+                   f"`{MAIN}` di solid-space che chiude le sue dipendenze è `{best.commit}` (chiude "
+                   f"{best.name} con la pull request {best.package.repo}#{best.pull}): {why}.\n\n"
+                   "La riga non è stata cambiata: se va aggiornata, la correggi a mano "
+                   f"([ADR 0030](https://github.com/{home}/blob/main/docs/adr/"
+                   "0030-solid-space-kernel-di-tecnigrafo.md), "
+                   "punto 9).\n\n"
+                   f"Scritto da `scripts/dipendenze.py --sottomodulo`.\n\n{marker}")
+        report.changes.append(Change(issue.ref, f"comment: the line says {old}, the packages {best.commit}",
+                                     "POST", f"{path}/comments", {"body": comment}, issue.body))
+    return report
+
+
+def check_pointer(gh: GitHub, home: str, ss_repo: str, commit: str, pr: int | None) -> tuple[list[str], list[str]]:
+    """The --controlla-puntatore mode: the errors and the notes about moving
+    the submodule to `commit` in the pull request `pr`."""
+    errors: list[str] = []
+    notes: list[str] = []
+    status = compare(gh, ss_repo, commit, MAIN)
+    if status not in ("identical", "ahead"):
+        errors.append(f"third_party/solid-space points to {commit}, which is not a commit of {MAIN} of "
+                      f"{ss_repo} ({status or 'unknown commit'}): point it to the commit of {MAIN} that the "
+                      "issue names (docs/adr/0030, point 9)")
+    if pr is None:
+        notes.append("no pull request given: only main checked")
+        return errors, notes
+    body = (gh.get(f"repos/{home}/pulls/{pr}") or {}).get("body") or ""
+    refs = closed_issues(body, home)
+    if not refs:
+        notes.append(f"pull request #{pr} closes no issue: only main checked")
+        return errors, notes
+    issues = Issues(gh)
+    lines = []
+    for ref in refs:
+        m = SUBMODULE_LINE_RE.search(issues[ref].body)
+        if m:
+            lines.append((ref, m.group(1).lower()))
+        else:
+            # Every issue the pull request closes needs its line, even when
+            # another one has it.
+            errors.append(f"{ref.text(home)} has no line \"{SUBMODULE_LINE} <commit>\": run the workflow "
+                          "\"Submodule commit\" (.github/workflows/sottomodulo.yml) from the Actions tab, then "
+                          "run this job again")
+    for ref, line in lines:
+        status = compare(gh, ss_repo, line, commit)
+        if status == "behind":
+            errors.append(f"third_party/solid-space points to {commit}, earlier than {line}, the commit that "
+                          f"{ref.text(home)} names: move it to {line} or later")
+        elif status not in ("identical", "ahead"):
+            errors.append(f"{ref.text(home)} names {line}, which is not a commit of {MAIN} of {ss_repo} or does "
+                          f"not come before {commit} ({status or 'unknown commit'}): fix the line of the issue")
+        else:
+            notes.append(f"{ref.text(home)} names {line}: {commit} is the same or later")
+    return errors, notes
+
+
+def run_submodule(gh: GitHub, home: str, ss_repo: str, applica: bool) -> int:
+    try:
+        report = submodule(gh, home, ss_repo)
+    except Failure as e:
+        print(e, file=sys.stderr)
+        return 2
+    print(f"Submodule of solid-space, open packages of {home}")
+    for line in report.lines():
+        print(line)
+    if not report.changes and not report.verify:
+        print("Nothing to write, report or check.")
+    if not applica or not report.changes:
+        return 1 if report.changes or report.verify else 0
+    skipped: list[str] = []
+    failed = apply(report.changes, gh, home, os.environ.get("TG_PROJECT_OWNER", "Matleyx78"), skipped)
+    if failed:
+        print("Failed:\n  " + "\n  ".join(failed), file=sys.stderr)
+        return 2
+    return 1 if report.verify or skipped else 0
+
+
+def run_pointer(gh: GitHub, home: str, ss_repo: str, commit: str, pr: int | None) -> int:
+    try:
+        errors, notes = check_pointer(gh, home, ss_repo, commit, pr)
+    except Failure as e:
+        print(e, file=sys.stderr)
+        return 2
+    for note in notes:
+        print(note)
+    annotate = os.environ.get("GITHUB_ACTIONS") == "true"
+    for error in errors:
+        print(f"::error title=Submodule pointer::{error}" if annotate else f"error: {error}")
+    if not errors:
+        print(f"third_party/solid-space at {commit}: right.")
+    return 1 if errors else 0
+
+
 # --- Main ------------------------------------------------------------------------
 
 
@@ -939,14 +1270,24 @@ def build_context(tappa: str, root: Path, gh: GitHub, with_project: bool) -> Con
     return ctx
 
 
-def apply(changes: list[Change], gh: GitHub, home: str, owner: str) -> list[str]:
+def apply(changes: list[Change], gh: GitHub, home: str, owner: str,
+          skipped: list[str] | None = None) -> list[str]:
     """Makes the changes; returns the ones that failed. Only issues of `home`
-    and the Project are ever written."""
+    and the Project are ever written. A change with read_body whose issue has
+    changed since is not made: it goes in `skipped`."""
     failed = []
     for c in changes:
         if not (c.path.startswith(f"repos/{home}/") or c.path.startswith(f"users/{owner}/projectsV2/")):
             raise AssertionError(f"refusing to write {c.path}")
         try:
+            if c.read_body is not None:
+                now = (gh.get(f"repos/{home}/issues/{c.issue.number}") or {}).get("body") or ""
+                if now != c.read_body:
+                    print(f"skipped #{c.issue.number} {c.what}: the issue changed after it was read; "
+                          "the next run reads it again")
+                    if skipped is not None:
+                        skipped.append(f"#{c.issue.number} {c.what}")
+                    continue
             gh.send(c.method, c.path, c.body)
             print(f"done   #{c.issue.number} {c.what}")
         except Failure as e:
@@ -960,14 +1301,36 @@ def main(argv: list[str] | None = None, gh: GitHub | None = None, root: Path | N
     parser = argparse.ArgumentParser(
         prog="dipendenze.py",
         description="Check the dependencies of the issues of a stage against its plan, also across solid-space.")
-    parser.add_argument("tappa")
+    parser.add_argument("tappa", nargs="?")
     parser.add_argument("--applica", action="store_true")
     parser.add_argument("--senza-project", action="store_true")
+    parser.add_argument("--sottomodulo", action="store_true",
+                        help="write the line of the submodule commit in the open packages")
+    parser.add_argument("--controlla-puntatore", metavar="COMMIT",
+                        help="check a pull request that moves the submodule to COMMIT")
+    parser.add_argument("--pr", type=int, metavar="NUMBER", help="the pull request of --controlla-puntatore")
     args = parser.parse_args(argv)
-    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))?", args.tappa):
-        parser.error("the stage is X.Y or X.Y.Z, without leading zeros, for example 0.7 or 0.7.5")
+    modes = [args.tappa is not None, args.sottomodulo, args.controlla_puntatore is not None]
+    if sum(modes) != 1:
+        parser.error("give a stage, or --sottomodulo, or --controlla-puntatore COMMIT")
+    if args.pr is not None and args.controlla_puntatore is None:
+        parser.error("--pr goes with --controlla-puntatore")
+    if args.senza_project and args.tappa is None:
+        parser.error("--senza-project goes with a stage")
+    if args.applica and args.controlla_puntatore is not None:
+        parser.error("--controlla-puntatore never writes: no --applica")
+    home = os.environ.get("TG_REPO", "Matleyx78/tecnigrafo")
     ss_repo = os.environ.get("TG_SS_REPO", "Matleyx78/solid-space")
     gh = gh or GitHub(public=[ss_repo])
+    if args.sottomodulo:
+        return run_submodule(gh, home, ss_repo, args.applica)
+    if args.controlla_puntatore is not None:
+        commit = args.controlla_puntatore.lower()
+        if not SHA_RE.fullmatch(commit):
+            parser.error(f"not a commit: {args.controlla_puntatore}")
+        return run_pointer(gh, home, ss_repo, commit, args.pr)
+    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))?", args.tappa):
+        parser.error("the stage is X.Y or X.Y.Z, without leading zeros, for example 0.7 or 0.7.5")
     if root is None:
         r = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True)
         if r.returncode != 0:
