@@ -176,6 +176,14 @@ TEST(CommandRegistry, EnvironmentsByNameAndAlias) {
     EXPECT_EQ(registry.environmentsOf("t"), testEnvironment.environments);
 }
 
+TEST(CommandRegistry, UnknownCommandHasNoDescriptionOrEnvironments) {
+    CommandRegistry registry;
+    registry.add(description("LINE", {"L"}), idleFactory());
+
+    EXPECT_TRUE(registry.environmentsOf("NOPE").empty());
+    EXPECT_EQ(registry.describe("NOPE"), nullptr);
+}
+
 TEST(CommandRegistry, GlobalCommandsHaveAnEmptyEnvironmentList) {
     CommandRegistry registry;
     core::Document document;

@@ -102,7 +102,7 @@ protected:
     CommandRunnerTest() {
         m_registry.add(fakeDescription("FAKE", {"FK", "F2"}),
                        [this] { return std::make_unique<FakeCommand>(m_journal); });
-        auto testCommand = fakeDescription("TEST", {"T"});
+        auto testCommand = fakeDescription("TEST", {"TST"});
         testCommand.environments = {"test"};
         m_registry.add(std::move(testCommand),
                        [this] { return std::make_unique<FakeCommand>(m_journal); });
@@ -143,7 +143,7 @@ TEST_F(CommandRunnerTest, CommandsAndAliasesRequireTheirEnvironment) {
     runner().submitText("TEST");
     ASSERT_FALSE(messages().empty());
     EXPECT_EQ(messages().back(), "Command \"TEST\" is not available in this environment.");
-    runner().submitText("t");
+    runner().submitText("tst");
     EXPECT_EQ(messages().back(), "Command \"TEST\" is not available in this environment.");
     EXPECT_EQ(journal().started, 0);
     EXPECT_FALSE(editor().inTransaction());
@@ -156,7 +156,7 @@ TEST_F(CommandRunnerTest, CommandsAndAliasesRequireTheirEnvironment) {
     EXPECT_FALSE(editor().inTransaction());
     EXPECT_EQ(runner().promptText(), "Command:");
 
-    runner().submitText("t");
+    runner().submitText("tst");
     EXPECT_TRUE(runner().isActive());
     EXPECT_EQ(journal().started, 1);
     runner().submitText("");
