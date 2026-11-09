@@ -56,9 +56,12 @@ bool hasShortcutModifier(const QKeyEvent& event) {
 
 }  // namespace
 
-CommandLine::CommandLine(cmd::CommandRunner& runner, QWidget* parent)
+CommandLine::CommandLine(cmd::CommandRunner& runner, QWidget* parent) : CommandLine(parent) {
+    attachRunner(&runner);
+}
+
+CommandLine::CommandLine(QWidget* parent)
     : QWidget(parent),
-      m_runner(runner),
       m_history(new QPlainTextEdit(this)),
       m_prompt(new QLabel(this)),
       m_input(new QLineEdit(this)) {
@@ -88,14 +91,39 @@ CommandLine::CommandLine(cmd::CommandRunner& runner, QWidget* parent)
 
     setFocusProxy(m_input);
     m_input->installEventFilter(this);
-
-    // The guard keeps the sink harmless if the runner outlives this widget.
-    m_runner.setMessageSink([self = QPointer<CommandLine>(this)](const std::string& text) {
-        if (!self.isNull()) {
-            self->appendToHistory(QString::fromStdString(text));
-        }
-    });
+    m_input->setEnabled(false);
     refreshPrompt();
+}
+
+void CommandLine::attachRunner(cmd::CommandRunner* runner) {
+    if (m_runner != nullptr) {
+        // A runner that is not shown has nobody to tell anything to.
+        m_runner->setMessageSink({});
+    }
+    m_runner = runner;
+    if (m_runner != nullptr) {
+        // The guard keeps the sink harmless if the runner outlives this widget.
+        m_runner->setMessageSink([self = QPointer<CommandLine>(this)](const std::string& text) {
+            if (!self.isNull()) {
+                self->appendToHistory(QString::fromStdString(text));
+            }
+        });
+    }
+    m_input->setEnabled(m_runner != nullptr);
+    refreshPrompt();
+}
+
+void CommandLine::setSession(DocumentSession* session) {
+    if (session == m_session) {
+        return;
+    }
+    if (m_session != nullptr) {
+        m_session->pendingInput().commandLine = m_input->text();
+    }
+    m_session = session;
+    m_input->setText(session != nullptr ? std::exchange(session->pendingInput().commandLine, {})
+                                        : QString{});
+    attachRunner(session != nullptr ? &session->runner() : nullptr);
 }
 
 void CommandLine::forwardKeysFrom(QWidget* widget) {
@@ -146,13 +174,16 @@ bool CommandLine::eventFilter(QObject* watched, QEvent* event) {
 }
 
 bool CommandLine::handleControlKey(const QKeyEvent& event) {
+    if (m_runner == nullptr) {
+        return false;
+    }
     switch (event.key()) {
         case Qt::Key_Return:
         case Qt::Key_Enter:
             submit();
             return true;
         case Qt::Key_Space:
-            if (m_runner.acceptsText()) {
+            if (m_runner->acceptsText()) {
                 m_input->setFocus(Qt::OtherFocusReason);
                 m_input->insert(QStringLiteral(" "));
             } else {
@@ -168,8 +199,11 @@ bool CommandLine::handleControlKey(const QKeyEvent& event) {
 }
 
 bool CommandLine::forwardTextKey(const QKeyEvent& event) {
+    if (m_runner == nullptr) {
+        return false;
+    }
     const QString text = event.text();
-    const bool textInput = m_runner.acceptsText() && !text.isEmpty();
+    const bool textInput = m_runner->acceptsText() && !text.isEmpty();
     if (!textInput && (text.size() != 1 || !isForwardedCharacter(text.front()))) {
         return false;
     }
@@ -184,20 +218,21 @@ void CommandLine::submit() {
     appendToHistory(text.isEmpty() ? m_prompt->text()
                                    : QStringLiteral("%1 %2").arg(m_prompt->text(), text));
     m_input->clear();
-    m_runner.submitText(text.toStdString());
+    m_runner->submitText(text.toStdString());
     refreshPrompt();
     emit inputHandled();
 }
 
 void CommandLine::cancel() {
     m_input->clear();
-    m_runner.submit(cmd::CancelInput{});
+    m_runner->submit(cmd::CancelInput{});
     refreshPrompt();
     emit inputHandled();
 }
 
 void CommandLine::refreshPrompt() {
-    m_prompt->setText(QString::fromStdString(m_runner.promptText()));
+    m_prompt->setText(m_runner != nullptr ? QString::fromStdString(m_runner->promptText())
+                                          : QString{});
 }
 
 }  // namespace tg::app

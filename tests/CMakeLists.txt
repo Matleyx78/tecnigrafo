@@ -27,6 +27,7 @@ add_executable(tg_tests
     cmd/command_runner_test.cpp
     cmd/coordinate_input_test.cpp
     cmd/drawing_aids_test.cpp
+    cmd/drawing_session_test.cpp
     cmd/dynamic_input_test.cpp
     cmd/erase_command_test.cpp
     cmd/explode_command_test.cpp
@@ -231,6 +232,7 @@ if(TG_BUILD_APP)
         app/ribbon_smoke_test.cpp
         app/script_session_test.cpp
         app/selection_test.cpp
+        app/session_test.cpp
         app/text_input_test.cpp
     )
     target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Svg Qt6::Test Qt6::Widgets GTest::gtest)

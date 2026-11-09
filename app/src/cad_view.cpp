@@ -32,11 +32,7 @@ core::Vec2 toVec2(const QPointF& point) {
 
 }  // namespace
 
-CadView::CadView(const core::Document& document, cmd::CommandRunner& runner, QWidget* parent)
-    : QWidget(parent),
-      m_document(document),
-      m_runner(runner),
-      m_dynamicInput(new DynamicInputBox(runner, this)) {
+CadView::CadView(QWidget* parent) : QWidget(parent), m_dynamicInput(new DynamicInputBox(this)) {
     setMouseTracking(true);  // cursor coordinates without pressed buttons
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
@@ -44,21 +40,71 @@ CadView::CadView(const core::Document& document, cmd::CommandRunner& runner, QWi
     setMinimumSize(200, 150);
 }
 
+void CadView::setSession(DocumentSession* session) {
+    if (session == m_session) {
+        return;
+    }
+    // A view not yet fitted to its drawing has nothing worth keeping.
+    if (m_session != nullptr && m_initialFitDone) {
+        m_session->setViewState({m_viewport.center(), m_viewport.scale()});
+    }
+    m_session = session;
+    // A gesture in progress belonged to the session left.
+    if (m_panning) {
+        m_panning = false;
+        setCursor(Qt::CrossCursor);
+    }
+    m_dragSelecting = false;
+    m_dynamicInput->setSession(session);
+    if (session == nullptr) {
+        update();
+        return;
+    }
+    if (const auto& state = session->viewState()) {
+        // The runner of the session kept its own pixel size: it received
+        // nothing while another session was shown.
+        m_initialFitDone = true;
+        m_viewport.setScale(state->scale);
+        m_viewport.setCenter(state->center);
+        emit scaleChanged(m_viewport.scale());
+        emitCursor(m_cursorPosition);
+        update();
+        return;
+    }
+    // First shown: fitted to its drawing now, or when the view is shown.
+    m_initialFitDone = false;
+    if (isVisible()) {
+        m_initialFitDone = true;
+        m_viewport.setScreenSize(width(), height());
+        zoomExtents();
+        // The pointer stays, the drawing under it changes: its coordinates
+        // are those of the new view.
+        emitCursor(m_cursorPosition);
+    }
+    update();
+}
+
 void CadView::zoomExtents() {
-    m_viewport.zoomToBox(m_document.extents());
-    m_runner.setPixelSize(1.0 / m_viewport.scale());
+    if (m_session == nullptr) {
+        return;
+    }
+    m_viewport.zoomToBox(m_session->document().extents());
+    m_session->runner().setPixelSize(1.0 / m_viewport.scale());
     emit scaleChanged(m_viewport.scale());
     update();
 }
 
 void CadView::setView(const core::Vec2& center, double unitsPerPixel) {
     assert(unitsPerPixel > 0.0 && "a view needs a positive scale");
+    if (m_session == nullptr) {
+        return;
+    }
     m_initialFitDone = true;
     m_viewport.setScale(1.0 / unitsPerPixel);
     m_viewport.setCenter(center);
     // Not 1 / m_viewport.scale(): the round trip may change the last bit,
     // and the pick and snap tolerances in pixels must be those of level 1.
-    m_runner.setPixelSize(unitsPerPixel);
+    m_session->runner().setPixelSize(unitsPerPixel);
     emit scaleChanged(m_viewport.scale());
     update();
 }
@@ -72,14 +118,20 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
     QPainter painter(this);
     m_style.devicePixelRatio = devicePixelRatioF();
     QtPainter backend(painter);
-    render::renderScene(m_document, m_viewport, m_style, backend);
-    render::renderHighlight(m_document, m_runner.selection().ids(), m_viewport, m_style, backend);
-    render::renderPreview(m_runner.preview(), m_viewport, m_style, backend);
-    if (const auto rectangle = m_runner.selectionRectangle()) {
+    if (m_session == nullptr) {
+        backend.clear(m_style.background);
+        return;
+    }
+    const core::Document& document = m_session->document();
+    const cmd::CommandRunner& runner = m_session->runner();
+    render::renderScene(document, m_viewport, m_style, backend);
+    render::renderHighlight(document, runner.selection().ids(), m_viewport, m_style, backend);
+    render::renderPreview(runner.preview(), m_viewport, m_style, backend);
+    if (const auto rectangle = runner.selectionRectangle()) {
         render::renderSelectionRectangle(rectangle->first, rectangle->second, rectangle->crossing,
                                          m_viewport, m_style, backend);
     }
-    if (const auto polar = m_runner.activePolar()) {
+    if (const auto polar = runner.activePolar()) {
         const core::Vec2 direction = polar->point - polar->base;
         const double distance = direction.length();
         // A zero-length ray has no visible direction or angle.
@@ -104,9 +156,9 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
             painter.drawText(QPointF(point.x + kHintOffsetPx, point.y - kHintOffsetPx), text);
         }
     }
-    render::renderGrips(m_runner.grips(), m_runner.hotGrip(), m_viewport, m_style, backend);
+    render::renderGrips(runner.grips(), runner.hotGrip(), m_viewport, m_style, backend);
     // Above everything, so that the preview never hides it.
-    if (const auto snap = m_runner.activeSnap()) {
+    if (const auto snap = runner.activeSnap()) {
         render::renderSnapMarker(*snap, m_viewport, m_style, backend);
     }
 }
@@ -128,12 +180,12 @@ void CadView::showEvent(QShowEvent* event) {
 
 void CadView::wheelEvent(QWheelEvent* event) {
     const double notches = event->angleDelta().y() / kWheelNotch;
-    if (notches == 0.0) {
+    if (notches == 0.0 || m_session == nullptr) {
         event->ignore();
         return;
     }
     m_viewport.zoomAt(toVec2(event->position()), std::pow(kZoomPerNotch, notches));
-    m_runner.setPixelSize(1.0 / m_viewport.scale());
+    m_session->runner().setPixelSize(1.0 / m_viewport.scale());
     emit scaleChanged(m_viewport.scale());
     emitCursor(event->position());
     update();
@@ -141,14 +193,19 @@ void CadView::wheelEvent(QWheelEvent* event) {
 }
 
 void CadView::mousePressEvent(QMouseEvent* event) {
+    if (m_session == nullptr) {
+        QWidget::mousePressEvent(event);
+        return;
+    }
+    cmd::CommandRunner& runner = m_session->runner();
     if (event->button() == Qt::LeftButton) {
-        const bool hadRectangle = m_runner.selectionRectangle().has_value();
+        const bool hadRectangle = runner.selectionRectangle().has_value();
         const cmd::PickAction action = event->modifiers().testFlag(Qt::ShiftModifier)
                                            ? cmd::PickAction::Remove
                                            : cmd::PickAction::Add;
-        m_runner.click(toWorld(event->position()), action);
+        runner.click(toWorld(event->position()), action);
         m_leftPressPos = event->position();
-        m_dragSelecting = !hadRectangle && m_runner.selectionRectangle().has_value();
+        m_dragSelecting = !hadRectangle && runner.selectionRectangle().has_value();
         update();
         emit inputHandled();
         event->accept();
@@ -176,25 +233,29 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         m_viewport.panByPixels(toVec2(delta));
         update();
     }
-    m_runner.pointerMoved(toWorld(event->position()));
-    if (m_runner.isActive() || m_runner.selectionRectangle()) {
-        update();  // the preview or selection rectangle follows the pointer
+    if (m_session != nullptr) {
+        cmd::CommandRunner& runner = m_session->runner();
+        runner.pointerMoved(toWorld(event->position()));
+        if (runner.isActive() || runner.selectionRectangle()) {
+            update();  // the preview or selection rectangle follows the pointer
+        }
     }
     emitCursor(event->position());
     QWidget::mouseMoveEvent(event);
 }
 
 void CadView::mouseReleaseEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton && m_dragSelecting) {
+    if (event->button() == Qt::LeftButton && m_dragSelecting && m_session != nullptr) {
         m_dragSelecting = false;
         const double dx = event->position().x() - m_leftPressPos.x();
         const double dy = event->position().y() - m_leftPressPos.y();
         const double distance = std::hypot(dx, dy);
-        if (distance > kDragThresholdPixels && m_runner.selectionRectangle()) {
+        cmd::CommandRunner& runner = m_session->runner();
+        if (distance > kDragThresholdPixels && runner.selectionRectangle()) {
             const cmd::PickAction action = event->modifiers().testFlag(Qt::ShiftModifier)
                                                ? cmd::PickAction::Remove
                                                : cmd::PickAction::Add;
-            m_runner.click(toWorld(event->position()), action);
+            runner.click(toWorld(event->position()), action);
             update();
             emit inputHandled();
             event->accept();
@@ -231,7 +292,7 @@ core::Vec2 CadView::toWorld(const QPointF& screenPos) const {
 }
 
 void CadView::submit(const cmd::Input& input) {
-    m_runner.submit(input);
+    m_session->runner().submit(input);
     update();
     emit inputHandled();
 }

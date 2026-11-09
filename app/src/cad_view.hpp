@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "document_session.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/render/scene_renderer.hpp"
@@ -27,25 +28,38 @@ class DynamicInputBox;
 ///   wheel                 zoom towards the cursor
 ///   middle drag           pan
 ///   middle double-click   zoom extents
+///
+/// The view shows the session of setSession(), the active one
+/// (docs/adr/0041, point 2). Without a session it paints only the
+/// background and takes no input.
 class CadView final : public QWidget {
     Q_OBJECT
 
 public:
-    /// The document and the runner must outlive the view.
-    CadView(const core::Document& document, cmd::CommandRunner& runner, QWidget* parent = nullptr);
+    explicit CadView(QWidget* parent = nullptr);
+
+    /// Shows `session` from now on; nullptr for none. The view the session
+    /// left keeps its centre and scale in it (DocumentSession::viewState),
+    /// and `session` gets its own back; a session never shown is fitted to
+    /// its drawing. The session is borrowed: the owner calls setSession()
+    /// again, with another session or nullptr, before destroying it.
+    void setSession(DocumentSession* session);
+
+    [[nodiscard]] DocumentSession* session() const { return m_session; }
 
     [[nodiscard]] DynamicInputBox* dynamicInputBox() const { return m_dynamicInput; }
 
     [[nodiscard]] const render::Viewport& viewport() const { return m_viewport; }
 
-    /// Fits the whole drawing in the view.
+    /// Fits the whole drawing in the view. Nothing without a session.
     void zoomExtents();
 
     /// Shows `center` in the middle of the view, at `unitsPerPixel` drawing
     /// units per pixel: the "!view" of the control mode (docs/adr/0011).
     /// The runner gets exactly `unitsPerPixel` as its pixel size, as at
     /// level 1, and the view is no longer fitted to the drawing when it is
-    /// first shown. Precondition: unitsPerPixel > 0.
+    /// first shown. Nothing without a session. Precondition:
+    /// unitsPerPixel > 0.
     void setView(const core::Vec2& center, double unitsPerPixel);
 
     /// Draws with `style` from now on: the colours of grid, entities,
@@ -76,8 +90,7 @@ private:
     [[nodiscard]] core::Vec2 toWorld(const QPointF& screenPos) const;
     void submit(const cmd::Input& input);
 
-    const core::Document& m_document;
-    cmd::CommandRunner& m_runner;
+    DocumentSession* m_session{nullptr};
     DynamicInputBox* m_dynamicInput{nullptr};
     render::Viewport m_viewport;
     render::SceneStyle m_style;

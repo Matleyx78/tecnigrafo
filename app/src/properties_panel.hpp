@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "document_session.hpp"
 #include "property_grid.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/cmd/quick_select.hpp"
@@ -58,15 +59,31 @@ class LineweightCombo;
 /// changed. Changes that come from elsewhere reach the panel when the owner
 /// calls refresh().
 ///
-/// The editor and the runner are borrowed and must outlive the panel.
+/// The panel shows the session of setSession(), the active one
+/// (docs/adr/0041, point 2): its document, its selection and its editor; or
+/// the editor and the runner of the constructor that takes them. Without
+/// either it shows the values of an empty document and changes nothing.
 class PropertiesPanel final : public QDockWidget {
     Q_OBJECT
 
 public:
     Q_DISABLE_COPY_MOVE(PropertiesPanel)
 
+    /// A panel without a session, until setSession().
+    explicit PropertiesPanel(QWidget* parent = nullptr);
+
+    /// A panel working on `editor` and `runner` alone, without sessions, as
+    /// the widget tests use it. Both must outlive the panel.
     PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runner, QWidget* parent = nullptr);
+
     ~PropertiesPanel() override;
+
+    /// Shows and changes `session` from now on; nullptr for none. The
+    /// session is borrowed: the owner calls setSession() again, with another
+    /// session or nullptr, before destroying it.
+    void setSession(DocumentSession* session);
+
+    [[nodiscard]] DocumentSession* session() const { return m_session; }
 
     /// The action that opens the QSELECT window on the selection. The panel
     /// enables and disables it. May be null.
@@ -75,9 +92,13 @@ public:
     /// While a command runs the panel shows the properties but changes nothing.
     void setEditingEnabled(bool enabled);
 
-    [[nodiscard]] bool editingEnabled() const { return m_editingEnabled; }
+    /// False also without a session.
+    [[nodiscard]] bool editingEnabled() const { return m_editingEnabled && m_editor != nullptr; }
 
-    [[nodiscard]] const core::Document& document() const { return m_editor.document(); }
+    /// The document shown; without a session, an empty document.
+    [[nodiscard]] const core::Document& document() const {
+        return m_editor != nullptr ? m_editor->document() : m_noDocument;
+    }
 
     /// Reads the selection and the document again and shows them.
     void refresh();
@@ -147,10 +168,24 @@ Q_SIGNALS:
     /// The panel changed the drawing or the selection: the window updates.
     void changed();
 
+    /// setSession() is about to show another session: what reads the one
+    /// shown now lets it go.
+    void sessionAboutToChange();
+
 protected:
     void changeEvent(QEvent* event) override;
 
 private:
+    /// The editor and the runner shown. Precondition: there are some.
+    [[nodiscard]] edit::Editor& editor() const;
+    [[nodiscard]] cmd::CommandRunner& runner() const;
+    /// True while the runner shown runs a command.
+    [[nodiscard]] bool commandRunning() const;
+    /// Shows and changes `editor` with `runner` from now on, both nullptr
+    /// for none: a new model for its document.
+    void attach(edit::Editor* editor, cmd::CommandRunner* runner);
+    /// Gives the grid m_model, made for document(), and connects it.
+    void connectModel();
     [[nodiscard]] bool canEdit() const;
     /// Gives every target, or the current values, the properties that
     /// `edit` makes of their own, in one transaction "Properties".
@@ -170,8 +205,12 @@ private:
     void updateIcons();
     void updateEnabled();
 
-    edit::Editor& m_editor;
-    cmd::CommandRunner& m_runner;
+    // Shown without a session; declared first, since m_model is made for it.
+    core::Document m_noDocument;
+    DocumentSession* m_session{nullptr};
+    // Those of m_session, or of the constructor; nullptr for none.
+    edit::Editor* m_editor{nullptr};
+    cmd::CommandRunner* m_runner{nullptr};
     QComboBox* m_types;
     QToolButton* m_filter;
     QToolButton* m_quickSelect;
