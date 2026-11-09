@@ -4,6 +4,7 @@
 // One session per document and the contract of activation
 // (docs/adr/0041, point 2; docs/tappe/0.7.5/P28).
 
+#include "action_registry.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "document_session.hpp"
