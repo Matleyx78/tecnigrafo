@@ -29,6 +29,7 @@
 
 #include <SARibbon.h>
 #include <algorithm>
+#include <ranges>
 
 namespace tg::app {
 namespace {
@@ -218,9 +219,9 @@ void UiBuilder::showMenus(QMenuBar& bar) const {
     }
     // From the last: a submenu is decided before the menu it is in, which is
     // shown while it has something to offer.
-    for (auto menu = menus.crbegin(); menu != menus.crend(); ++menu) {
-        const QList<QAction*> items = (*menu)->menu()->actions();
-        (*menu)->setVisible(std::ranges::any_of(
+    for (QAction* menu : std::views::reverse(menus)) {
+        const QList<QAction*> items = menu->menu()->actions();
+        menu->setVisible(std::ranges::any_of(
             items, [](const QAction* item) { return !item->isSeparator() && item->isVisible(); }));
     }
 }
