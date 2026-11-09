@@ -47,6 +47,7 @@ private:
     friend class Editor;
 
     explicit DocumentTables(Editor& editor) : m_editor(editor) {}
+
     ~DocumentTables() = default;
 
     Editor& m_editor;

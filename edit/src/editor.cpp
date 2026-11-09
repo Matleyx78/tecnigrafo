@@ -11,8 +11,7 @@
 
 namespace tg::edit {
 
-bool Editor::validProperties(const core::Document& doc,
-                             const core::EntityProperties& properties) {
+bool Editor::validProperties(const core::Document& doc, const core::EntityProperties& properties) {
     return doc.layer(properties.layer) != nullptr && doc.linetype(properties.linetype) != nullptr &&
            std::isfinite(properties.linetypeScale) && properties.linetypeScale > 0.0 &&
            (properties.lineweight == core::lineweight::kByLayer ||
