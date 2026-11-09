@@ -255,7 +255,7 @@ public:
         }
         // Same 10-pixel snap aperture as aidedPoint() (ADR 0033, point 9).
         constexpr double kPolarAperturePixels = 10.0;
-        const auto point = polarPoint(*base, *m_pointer, m_context.defaults.polarAngle,
+        const auto point = polarPoint(*base, *m_pointer, context().defaults.polarAngle,
                                       kPolarAperturePixels * m_pixelSize);
         if (!point) {
             return std::nullopt;
@@ -313,6 +313,13 @@ public:
 
     /// File access for commands, not owned. nullptr disables file commands.
     void setFileAccess(io::FileAccess* files);
+
+    /// Document file for commands, borrowed and required to outlive this runner.
+    /// Passing nullptr selects the runner's own file.
+    void setDocumentFile(edit::DocumentFile* file);
+
+    /// The active file, either borrowed or owned by the runner.
+    [[nodiscard]] const edit::DocumentFile& documentFile() const { return context().file; }
 
     /// AutoCAD script sequences (ADR 0032, points 6-8). Default false.
     void setScriptSequences(bool on);
@@ -398,9 +405,13 @@ private:
     void redo();
     void message(std::string text) const;
 
+    [[nodiscard]] CommandContext& context();
+    [[nodiscard]] const CommandContext& context() const;
+
     const CommandRegistry& m_registry;
     edit::Editor& m_editor;
-    CommandContext m_context;
+    edit::DocumentFile m_ownFile;
+    std::optional<CommandContext> m_context;
     std::unique_ptr<Command> m_command;
     std::string m_lastCommand;            ///< canonical name, empty before the first one
     std::optional<core::Vec2> m_pointer;  ///< as given, before the drawing aids

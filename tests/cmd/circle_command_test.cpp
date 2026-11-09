@@ -169,7 +169,8 @@ TEST_F(CircleCommandTest, TangentCircleDistinguishesBeyondDomainFromNoSolution) 
 TEST(CircleCommandPreview, GeometryAndBasePointsFollowEachConstruction) {
     core::Document document;
     edit::Editor editor(document);
-    CommandContext context{editor, {}, [](const std::string&) {
+    edit::DocumentFile file;
+    CommandContext context{editor, file, {}, [](const std::string&) {
                            }};
     CircleCommand command;
     command.start(context);

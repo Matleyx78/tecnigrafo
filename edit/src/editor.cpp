@@ -327,22 +327,18 @@ bool Editor::isModified() const {
            (m_open && !m_open->changes.empty()) || m_document.lwdisplay() != m_savedLwdisplay;
 }
 
-void Editor::markSaved(std::string name) {
-    m_fileName = std::move(name);
-    m_hasFile = true;
+void Editor::markSaved() {
     m_savedPosition = m_undo.size();
     m_savedLwdisplay = m_document.lwdisplay();
 }
 
-void Editor::replaceDocument(core::Document document, std::string name) {
+void Editor::replaceDocument(core::Document document) {
     assert(!m_open && "replaceDocument() requires no open transaction");
     m_document = std::move(document);
     m_undo.clear();
     m_redo.clear();
     m_savedPosition = 0;
     m_savedLwdisplay = m_document.lwdisplay();
-    m_hasFile = !name.empty();
-    m_fileName = m_hasFile ? std::move(name) : "Drawing1.cadx";
     notify();
 }
 

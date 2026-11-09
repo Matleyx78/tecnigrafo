@@ -8,6 +8,7 @@
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/vec2.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <cstdint>
@@ -85,12 +86,14 @@ struct CommandDefaults {
     bool trimMode{true};
 };
 
-/// What a command works with. The runner keeps one context for its whole
-/// life, so `lastPoint` carries over from one command to the next, as the
-/// "@" of AutoCAD does. Ortho does not use it: it belongs to the running
-/// command (Command::basePoint()).
+/// What a command works with. The runner preserves this state between commands,
+/// so `lastPoint` carries over, as the "@" of AutoCAD does. Ortho uses the
+/// running command's base point (Command::basePoint()).
+/// When adding a field, update CommandRunner::setDocumentFile to preserve it
+/// when rebinding the file reference.
 struct CommandContext {
     edit::Editor& editor;
+    edit::DocumentFile& file;
     std::optional<core::Vec2> lastPoint;       ///< updated by the command
     std::function<void(std::string)> message;  ///< writes to the history
     CommandDefaults defaults{};

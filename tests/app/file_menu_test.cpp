@@ -214,7 +214,7 @@ TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
     answers().append(copy);
     enter(QStringLiteral("SAVE"));
     EXPECT_TRUE(QFileInfo::exists(copy));
-    EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), original);
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), original);
     EXPECT_EQ(recent().first(), copy);
     action("file.new")->trigger();
     EXPECT_TRUE(window()->document().isEmpty());
@@ -229,7 +229,7 @@ TEST_F(FileMenuTest, SavesOpensCopiesAndUpdatesTitleAndRecents) {
     const QString renamed = path("renamed.cadx");
     answers().append(renamed);
     action("file.saveas")->trigger();
-    EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), renamed);
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), renamed);
     EXPECT_EQ(recent().first(), renamed);
     line();
     action("file.save")->trigger();
@@ -269,7 +269,7 @@ TEST_F(FileMenuTest, InvalidDrawingDoesNotEnterRecentList) {
     answers().append(invalid);
     action("file.open")->trigger();
     EXPECT_TRUE(window()->document().isEmpty());
-    EXPECT_FALSE(window()->editor().hasFile());
+    EXPECT_FALSE(window()->runner().documentFile().hasFile());
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot open")));
 }
@@ -283,7 +283,7 @@ TEST_F(FileMenuTest, SavingModifiedCopyPreservesDirtyFlagAndRecentOrderOnUndo) {
     const QString copy = path("copy.cadx");
     answers().append(copy);
     enter(QStringLiteral("SAVE"));
-    EXPECT_EQ(QString::fromStdString(window()->editor().fileName()), original);
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), original);
     EXPECT_TRUE(window()->isWindowModified());
     EXPECT_EQ(recent(), (QStringList{copy, original}));
     enter(QStringLiteral("U"));
