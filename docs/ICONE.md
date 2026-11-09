@@ -58,8 +58,8 @@ classe `accent`.
 - Le dimensioni fino a 24 px si disegnano dal file `-16`, le altre dal `-32`;
   se un'icona ha uno solo dei due file, quello vale per tutte. Le dimensioni
   in mezzo e quelle per gli schermi ad alta densità vengono così dalla griglia
-  più vicina. Nel catalogo ogni icona ha entrambe le griglie; l’unica eccezione
-  è `layer-check-16.svg`, usata solo dal pannello e priva della versione da 32.
+  più vicina. Nel catalogo ogni icona ha entrambe le griglie, tranne
+  `layer-check`, `ui-pin` e `ui-unpin`, usate solo nei pannelli a 16 px.
 - La griglia da 24 px non è più usata: P22 ha migrato le ultime icone e tolto
   il ripiego su `<nome>.svg`. Il controllo Python e il test Qt rifiutano file senza suffisso 16/32 e
   SVG con dimensioni o `viewBox` da 24 px.
@@ -196,8 +196,9 @@ somigliano alle vecchie:
 
 ## Le icone
 
-Tutte le icone seguono le regole a ruoli, con i file `-16` e `-32`;
-la spunta `layer-check` è usata solo dal pannello a 16 px. La colonna
+Tutte le icone seguono le regole a ruoli, con i file `-16` e `-32`.
+La spunta `layer-check` e le puntine `ui-pin` e `ui-unpin` sono usate
+solo nei pannelli e hanno soltanto il file `-16`. La colonna
 **Rifatta** registra la migrazione completata da P19–P22.
 
 Le icone a ruoli (0.7.5-P11): l'esempio di questo documento, che 0.7.5-P19

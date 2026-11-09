@@ -99,10 +99,11 @@ QString resourcePath(const QString& icon) {
     return QStringLiteral(":/tg/icons/%1.svg").arg(icon);
 }
 
-/// Whether the icon has both grids, except the panel-only 16 px check mark.
+/// Whether the icon has both grids, except panel-only 16 px icons.
 bool hasIconFile(const QString& icon) {
     return QFile::exists(resourcePath(icon + QStringLiteral("-16"))) &&
-           (icon == QStringLiteral("layer-check") ||
+           (icon == QStringLiteral("layer-check") || icon == QStringLiteral("ui-pin") ||
+            icon == QStringLiteral("ui-unpin") ||
             QFile::exists(resourcePath(icon + QStringLiteral("-32"))));
 }
 
