@@ -318,6 +318,7 @@ public:
     /// Passing nullptr selects the runner's own file.
     void setDocumentFile(edit::DocumentFile* file);
 
+    /// The active file, either borrowed or owned by the runner.
     [[nodiscard]] const edit::DocumentFile& documentFile() const { return context().file; }
 
     /// AutoCAD script sequences (ADR 0032, points 6-8). Default false.

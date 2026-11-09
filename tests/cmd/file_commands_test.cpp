@@ -114,9 +114,12 @@ TEST_F(FileCommandsTest, SaveasAndQsaveUseTheBorrowedDocumentFile) {
 }
 
 TEST_F(FileCommandsTest, OpenAndNewUpdateTheFileBeforeNotifying) {
-    const auto saved = io::writeDxf(core::Document::newDrawing(), io::DxfVersion::R2018);
+    auto drawing = core::Document::newDrawing();
+    drawing.setUnits(6);
+    const auto saved = io::writeDxf(drawing, io::DxfVersion::R2018);
     ASSERT_TRUE(saved.ok());
     files.contents["plan.dxf"] = saved.value();
+    files.contents["invalid.cadx"] = "invalid drawing";
     ASSERT_EQ(file.name(), "Drawing1.cadx");
     ASSERT_FALSE(file.hasFile());
     int notifications = 0;
@@ -134,10 +137,16 @@ TEST_F(FileCommandsTest, OpenAndNewUpdateTheFileBeforeNotifying) {
 
     inputs({"OPEN", "plan.dxf"});
     EXPECT_EQ(notifications, 1);
-    inputs({"OPEN", "missing.dxf"});
-    EXPECT_EQ(notifications, 1);
-    EXPECT_EQ(file.name(), "plan.dxf");
-    EXPECT_TRUE(file.hasFile());
+    for (const char* name : {"missing.dxf", "invalid.cadx"}) {
+        inputs({"OPEN", name});
+        ASSERT_FALSE(messages.empty());
+        EXPECT_TRUE(messages.back().starts_with(std::string{"Cannot open "} + name + ":"));
+        EXPECT_EQ(notifications, 1);
+        EXPECT_EQ(file.name(), "plan.dxf");
+        EXPECT_TRUE(file.hasFile());
+        EXPECT_EQ(document.units(), 6);
+        EXPECT_FALSE(editor.isModified());
+    }
     inputs({"NEW"});
     EXPECT_EQ(notifications, 2);
 }
