@@ -49,7 +49,7 @@ protected:
         layer.name = "Walls";
         layer.linetype = m_document.continuousLinetype();
         m_editor.beginTransaction("Test");
-        m_walls = m_editor.addLayer(layer).value_or(core::LayerId{});
+        m_walls = m_editor.tables().addLayer(layer).value_or(core::LayerId{});
         m_redLine = m_editor.add(core::Line{{0.0, 0.0}, {10.0, 0.0}});
         m_circle = m_editor.add(core::Circle{{20.0, 0.0}, 2.0});
         m_wallLine = m_editor.add(core::Line{{0.0, 10.0}, {10.0, 10.0}});

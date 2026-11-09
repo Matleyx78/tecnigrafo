@@ -79,7 +79,7 @@ protected:
         fresh.name = name;
         fresh.linetype = m_document.continuousLinetype();
         m_editor.beginTransaction("Test");
-        const auto id = m_editor.addLayer(fresh);
+        const auto id = m_editor.tables().addLayer(fresh);
         m_editor.commit();
         m_panel.refresh();
         return id.value_or(core::LayerId{});
@@ -492,7 +492,7 @@ TEST_F(LayerPanelTest, LinetypeChangesAndUndoes) {
     custom.description = "Test pattern";
     custom.pattern.elements = {0.5, -0.25};
     editor().beginTransaction("Test");
-    const auto type = editor().addLinetype(custom);
+    const auto type = editor().tables().addLinetype(custom);
     editor().commit();
     ASSERT_TRUE(type.has_value());
     const core::LinetypeId customId = type.value_or(core::LinetypeId{});
@@ -598,7 +598,7 @@ TEST_F(LayerPanelTest, WhileACommandRunsThePanelChangesNothing) {
 TEST_F(LayerPanelTest, FollowsChangesMadeElsewhere) {
     const auto walls = add("Walls");
     editor().beginTransaction("Elsewhere");
-    ASSERT_TRUE(editor().removeLayer(walls));
+    ASSERT_TRUE(editor().tables().removeLayer(walls));
     editor().commit();
     panel().refresh();
     EXPECT_EQ(rowOf(walls), -1);

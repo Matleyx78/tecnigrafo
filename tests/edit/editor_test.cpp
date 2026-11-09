@@ -327,9 +327,9 @@ TEST(Editor, UnitsCanBeUndoneRedoneAndRolledBackWithEntities) {
     Editor editor(document);
     editor.beginTransaction("Units and polyline");
     const EntityId id = editor.add(segment(1.0));
-    EXPECT_TRUE(editor.setUnits(0));
+    EXPECT_TRUE(editor.tables().setUnits(0));
     EXPECT_EQ(document.units(), 0);
-    EXPECT_TRUE(editor.setUnits(Document::kMaxUnits));
+    EXPECT_TRUE(editor.tables().setUnits(Document::kMaxUnits));
     editor.commit();
 
     ASSERT_TRUE(editor.undo());
@@ -340,8 +340,8 @@ TEST(Editor, UnitsCanBeUndoneRedoneAndRolledBackWithEntities) {
     EXPECT_EQ(entityOf(document, id), Entity{segment(1.0)});
 
     editor.beginTransaction("Discard units");
-    EXPECT_TRUE(editor.setUnits(1));
-    EXPECT_TRUE(editor.setUnits(2));
+    EXPECT_TRUE(editor.tables().setUnits(1));
+    EXPECT_TRUE(editor.tables().setUnits(2));
     editor.rollback();
     EXPECT_EQ(document.units(), Document::kMaxUnits);
     EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Units and polyline"}));
@@ -351,7 +351,7 @@ TEST(Editor, UnchangedUnitsCreateNoUndoStepOrModification) {
     Document document;
     Editor editor(document);
     editor.beginTransaction("Same units");
-    EXPECT_FALSE(editor.setUnits(Document::kDefaultUnits));
+    EXPECT_FALSE(editor.tables().setUnits(Document::kDefaultUnits));
     editor.commit();
     EXPECT_FALSE(editor.canUndo());
     EXPECT_FALSE(editor.isModified());
@@ -424,11 +424,11 @@ TEST(Editor, EmptyCommitAndRollbackPreserveSavedStateAndRedo) {
     EXPECT_FALSE(editor.isModified());
     ASSERT_TRUE(editor.undo());
     editor.beginTransaction("Empty below saved position");
-    EXPECT_FALSE(editor.setUnits(document.units()));
+    EXPECT_FALSE(editor.tables().setUnits(document.units()));
     editor.commit();
     EXPECT_TRUE(editor.isModified());
     editor.beginTransaction("Discarded");
-    editor.setUnits(0);
+    editor.tables().setUnits(0);
     editor.add(segment(2.0));
     editor.rollback();
     EXPECT_TRUE(editor.isModified());
@@ -490,10 +490,10 @@ TEST(EditorDeathTest, DrawingStatePreconditionsAreChecked) {
 #endif
     Document document;
     Editor editor(document);
-    EXPECT_DEATH(editor.setUnits(0), "open transaction");
+    EXPECT_DEATH(editor.tables().setUnits(0), "open transaction");
     editor.beginTransaction("Units");
-    EXPECT_DEATH(editor.setUnits(-1), "invalid units");
-    EXPECT_DEATH(editor.setUnits(Document::kMaxUnits + 1), "invalid units");
+    EXPECT_DEATH(editor.tables().setUnits(-1), "invalid units");
+    EXPECT_DEATH(editor.tables().setUnits(Document::kMaxUnits + 1), "invalid units");
     EXPECT_DEATH(editor.replaceDocument(Document{}), "no open transaction");
 }
 
@@ -561,9 +561,9 @@ TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
     Editor editor(doc);
     const auto before = stateOf(doc);
     editor.beginTransaction("Layers");
-    const auto first = editor.addLayer(namedLayer(doc, "First"));
-    const auto second = editor.addLayer(namedLayer(doc, "Second"));
-    const auto third = editor.addLayer(namedLayer(doc, "Third"));
+    const auto first = editor.tables().addLayer(namedLayer(doc, "First"));
+    const auto second = editor.tables().addLayer(namedLayer(doc, "Second"));
+    const auto third = editor.tables().addLayer(namedLayer(doc, "Third"));
     if (!first || !second || !third) {
         ADD_FAILURE() << "Layer creation must succeed";
         return;
@@ -573,7 +573,7 @@ TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
     expectRoundTrip(editor, before, added);
     editor.markSaved();
     editor.beginTransaction("Remove middle");
-    EXPECT_TRUE(editor.removeLayer(*second));
+    EXPECT_TRUE(editor.tables().removeLayer(*second));
     editor.commit();
     const auto removed = stateOf(doc);
     EXPECT_EQ(doc.layers()[2].id, *third);
@@ -582,8 +582,8 @@ TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
     ASSERT_TRUE(editor.undo());
     EXPECT_FALSE(editor.isModified());
     editor.beginTransaction("Discard removal");
-    EXPECT_TRUE(editor.removeLayer(*first));
-    EXPECT_TRUE(editor.removeLayer(*third));
+    EXPECT_TRUE(editor.tables().removeLayer(*first));
+    EXPECT_TRUE(editor.tables().removeLayer(*third));
     editor.rollback();
     EXPECT_EQ(stateOf(doc), added);
 }
@@ -614,8 +614,8 @@ TEST(Editor, RenameRestoresRawSpellingsAndPreservesOtherReferences) {
     Editor editor(doc);
     const auto before = stateOf(doc);
     editor.beginTransaction("Rename twice");
-    EXPECT_TRUE(editor.renameLayer(layer, "Partitions"));
-    EXPECT_TRUE(editor.renameLayer(layer, "Dividers"));
+    EXPECT_TRUE(editor.tables().renameLayer(layer, "Partitions"));
+    EXPECT_TRUE(editor.tables().renameLayer(layer, "Dividers"));
     editor.commit();
     EXPECT_EQ(doc.rawEntities()[0].groups[1].value, "Dividers");
     EXPECT_EQ(doc.rawEntities()[0].groups[3].value, "Walls");
@@ -626,7 +626,7 @@ TEST(Editor, RenameRestoresRawSpellingsAndPreservesOtherReferences) {
     const auto after = stateOf(doc);
     expectRoundTrip(editor, before, after);
     editor.beginTransaction("Discard rename");
-    EXPECT_TRUE(editor.renameLayer(layer, "Other"));
+    EXPECT_TRUE(editor.tables().renameLayer(layer, "Other"));
     editor.rollback();
     EXPECT_EQ(stateOf(doc), after);
 }
@@ -646,7 +646,7 @@ TEST(Editor, LayerStatesAndPropertiesPreserveIdentityNameAndExtras) {
     changed.locked = true;
     changed.plot = false;
     editor.beginTransaction("States");
-    EXPECT_TRUE(editor.changeLayer(changed));
+    EXPECT_TRUE(editor.tables().changeLayer(changed));
     editor.commit();
     EXPECT_EQ(doc.layer(id)->name, "Walls");
     EXPECT_EQ(doc.layer(id)->extras, before.layers[1].extras);
@@ -666,8 +666,8 @@ TEST(Editor, LinetypeCurrentScalePropertiesAndEntitiesShareOneStep) {
     linetype.name = "Custom";
     linetype.description = "Test pattern";
     linetype.extras = {{1000, "preserved"}};
-    const auto type = editor.addLinetype(linetype);
-    const auto layer = editor.addLayer(namedLayer(doc, "Walls"));
+    const auto type = editor.tables().addLinetype(linetype);
+    const auto layer = editor.tables().addLayer(namedLayer(doc, "Walls"));
     if (!type || !layer) {
         ADD_FAILURE() << "Linetype and layer creation must succeed";
         return;
@@ -678,22 +678,22 @@ TEST(Editor, LinetypeCurrentScalePropertiesAndEntitiesShareOneStep) {
     current.linetypeScale = 2.5;
     current.lineweight = 50;
     current.color = core::Color::fromIndex(3);
-    EXPECT_TRUE(editor.setCurrent(current));
+    EXPECT_TRUE(editor.tables().setCurrent(current));
     const auto id = editor.add(segment(2));
     EXPECT_EQ(doc.find(id)->properties, current);
     auto properties = current;
     properties.color = core::Color::byBlock();
     EXPECT_TRUE(editor.setProperties(id, properties));
-    EXPECT_TRUE(editor.setLtscale(3.5));
-    EXPECT_TRUE(editor.setUnits(0));
+    EXPECT_TRUE(editor.tables().setLtscale(3.5));
+    EXPECT_TRUE(editor.tables().setUnits(0));
     editor.commit();
     EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Mixed"}));
     const auto after = stateOf(doc);
     expectRoundTrip(editor, before, after);
     editor.beginTransaction("Discard properties");
-    EXPECT_TRUE(editor.setCurrent(before.current));
+    EXPECT_TRUE(editor.tables().setCurrent(before.current));
     EXPECT_TRUE(editor.setProperties(id, current));
-    EXPECT_TRUE(editor.setLtscale(1.0));
+    EXPECT_TRUE(editor.tables().setLtscale(1.0));
     EXPECT_TRUE(editor.remove(id));
     editor.rollback();
     EXPECT_EQ(stateOf(doc), after);
@@ -738,39 +738,39 @@ TEST(Editor, RejectedAndUnchangedLayerEditsKeepRedoAndSavedState) {
     ASSERT_TRUE(editor.undo());
     const auto before = stateOf(doc);
     editor.beginTransaction("Nothing");
-    EXPECT_FALSE(editor.addLayer(namedLayer(doc, "walls")));
-    EXPECT_FALSE(editor.addLayer(namedLayer(doc, "bad/name")));
-    EXPECT_FALSE(editor.renameLayer(layer, "Walls"));
-    EXPECT_FALSE(editor.renameLayer(layer, "0"));
-    EXPECT_FALSE(editor.renameLayer({}, "Other"));
-    EXPECT_FALSE(editor.renameLayer(doc.layerZero(), "Other"));
-    EXPECT_FALSE(editor.removeLayer(doc.layerZero()));
-    EXPECT_FALSE(editor.removeLayer({}));
-    EXPECT_FALSE(editor.changeLayer(*doc.layer(layer)));
+    EXPECT_FALSE(editor.tables().addLayer(namedLayer(doc, "walls")));
+    EXPECT_FALSE(editor.tables().addLayer(namedLayer(doc, "bad/name")));
+    EXPECT_FALSE(editor.tables().renameLayer(layer, "Walls"));
+    EXPECT_FALSE(editor.tables().renameLayer(layer, "0"));
+    EXPECT_FALSE(editor.tables().renameLayer({}, "Other"));
+    EXPECT_FALSE(editor.tables().renameLayer(doc.layerZero(), "Other"));
+    EXPECT_FALSE(editor.tables().removeLayer(doc.layerZero()));
+    EXPECT_FALSE(editor.tables().removeLayer({}));
+    EXPECT_FALSE(editor.tables().changeLayer(*doc.layer(layer)));
     auto zero = *doc.layer(doc.layerZero());
     zero.frozen = true;
-    EXPECT_FALSE(editor.changeLayer(zero));
+    EXPECT_FALSE(editor.tables().changeLayer(zero));
     auto missing = zero;
     missing.id = {};
-    EXPECT_FALSE(editor.changeLayer(missing));
-    EXPECT_FALSE(editor.setCurrent(doc.current()));
+    EXPECT_FALSE(editor.tables().changeLayer(missing));
+    EXPECT_FALSE(editor.tables().setCurrent(doc.current()));
     auto current = doc.current();
     current.layer = frozenId;
-    EXPECT_FALSE(editor.setCurrent(current));
+    EXPECT_FALSE(editor.tables().setCurrent(current));
     current.layer = {};
-    EXPECT_FALSE(editor.setCurrent(current));
+    EXPECT_FALSE(editor.tables().setCurrent(current));
     EXPECT_FALSE(editor.setProperties({}, doc.current()));
-    EXPECT_FALSE(editor.setLtscale(doc.ltscale()));
+    EXPECT_FALSE(editor.tables().setLtscale(doc.ltscale()));
     const auto infinity = std::numeric_limits<double>::infinity();
     const auto nan = std::numeric_limits<double>::quiet_NaN();
     for (const double invalid : {0.0, -1.0, infinity, nan}) {
-        EXPECT_FALSE(editor.setLtscale(invalid));
+        EXPECT_FALSE(editor.tables().setLtscale(invalid));
     }
     core::Linetype type;
     type.name = "continuous";
-    EXPECT_FALSE(editor.addLinetype(type));
+    EXPECT_FALSE(editor.tables().addLinetype(type));
     type.name = "";
-    EXPECT_FALSE(editor.addLinetype(type));
+    EXPECT_FALSE(editor.tables().addLinetype(type));
     editor.commit();
     EXPECT_EQ(stateOf(doc), before);
     EXPECT_FALSE(editor.canUndo());
@@ -786,14 +786,14 @@ TEST(Editor, CurrentLayerMayBeOffOrLockedButNotRemovedOrFrozen) {
     editor.beginTransaction("Current");
     auto current = doc.current();
     current.layer = id;
-    EXPECT_TRUE(editor.setCurrent(current));
+    EXPECT_TRUE(editor.tables().setCurrent(current));
     auto layer = *doc.layer(id);
     layer.on = false;
     layer.locked = true;
-    EXPECT_TRUE(editor.changeLayer(layer));
-    EXPECT_FALSE(editor.removeLayer(id));
+    EXPECT_TRUE(editor.tables().changeLayer(layer));
+    EXPECT_FALSE(editor.tables().removeLayer(id));
     layer.frozen = true;
-    EXPECT_FALSE(editor.changeLayer(layer));
+    EXPECT_FALSE(editor.tables().changeLayer(layer));
     const auto entity = editor.add(segment(1));
     EXPECT_EQ(doc.find(entity)->properties, current);
     editor.commit();
@@ -805,9 +805,9 @@ TEST(Editor, LwdisplayHasNoUndoStepPreservesRedoAndTracksSavedValue) {
     Editor editor(doc);
     int notifications = 0;
     editor.setChangeListener([&] { ++notifications; });
-    editor.setLwdisplay(false);
+    editor.tables().setLwdisplay(false);
     EXPECT_EQ(notifications, 0);
-    editor.setLwdisplay(true);
+    editor.tables().setLwdisplay(true);
     EXPECT_EQ(notifications, 1);
     EXPECT_TRUE(editor.isModified());
     EXPECT_FALSE(editor.canUndo());
@@ -816,17 +816,17 @@ TEST(Editor, LwdisplayHasNoUndoStepPreservesRedoAndTracksSavedValue) {
     EXPECT_FALSE(editor.isModified());
     addCommitted(editor, 1);
     ASSERT_TRUE(editor.undo());
-    editor.setLwdisplay(false);
+    editor.tables().setLwdisplay(false);
     EXPECT_TRUE(editor.canRedo());
     EXPECT_TRUE(editor.isModified());
     ASSERT_TRUE(editor.redo());
     EXPECT_FALSE(doc.lwdisplay());
     ASSERT_TRUE(editor.undo());
     EXPECT_TRUE(editor.isModified());
-    editor.setLwdisplay(true);
+    editor.tables().setLwdisplay(true);
     EXPECT_FALSE(editor.isModified());
     editor.beginTransaction("View setting is not transactional");
-    editor.setLwdisplay(false);
+    editor.tables().setLwdisplay(false);
     editor.rollback();
     EXPECT_FALSE(doc.lwdisplay());
     EXPECT_TRUE(editor.isModified());
@@ -838,7 +838,7 @@ TEST(Editor, OpenTransactionReportsPropertyModificationsAndRollbackClearsThem) {
     Document doc = Document::newDrawing();
     Editor editor(doc);
     editor.beginTransaction("Scale");
-    EXPECT_TRUE(editor.setLtscale(2));
+    EXPECT_TRUE(editor.tables().setLtscale(2));
     EXPECT_TRUE(editor.isModified());
     editor.rollback();
     EXPECT_FALSE(editor.isModified());
@@ -850,14 +850,14 @@ TEST(EditorDeathTest, LayerAndPropertyEditsRequireATransaction) {
 #endif
     Document doc = Document::newDrawing();
     Editor editor(doc);
-    EXPECT_DEATH(editor.addLayer(namedLayer(doc, "Walls")), "open transaction");
-    EXPECT_DEATH(editor.renameLayer({}, "Name"), "open transaction");
-    EXPECT_DEATH(editor.removeLayer({}), "open transaction");
-    EXPECT_DEATH(editor.changeLayer(*doc.layer(doc.layerZero())), "open transaction");
-    EXPECT_DEATH(editor.addLinetype(core::Linetype{}), "open transaction");
+    EXPECT_DEATH(editor.tables().addLayer(namedLayer(doc, "Walls")), "open transaction");
+    EXPECT_DEATH(editor.tables().renameLayer({}, "Name"), "open transaction");
+    EXPECT_DEATH(editor.tables().removeLayer({}), "open transaction");
+    EXPECT_DEATH(editor.tables().changeLayer(*doc.layer(doc.layerZero())), "open transaction");
+    EXPECT_DEATH(editor.tables().addLinetype(core::Linetype{}), "open transaction");
     EXPECT_DEATH(editor.setProperties({}, doc.current()), "open transaction");
-    EXPECT_DEATH(editor.setCurrent(doc.current()), "open transaction");
-    EXPECT_DEATH(editor.setLtscale(2), "open transaction");
+    EXPECT_DEATH(editor.tables().setCurrent(doc.current()), "open transaction");
+    EXPECT_DEATH(editor.tables().setLtscale(2), "open transaction");
 }
 
 TEST(Editor, ReplaceRejectsAbsentUnchangedAndForbiddenTypesWithoutHistory) {

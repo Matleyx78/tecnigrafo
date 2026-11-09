@@ -496,7 +496,7 @@ bool PropertiesPanel::change(const std::function<void(core::EntityProperties&)>&
     if (!hasSelection) {
         core::CurrentProperties current = document().current();
         edit(current);
-        done = m_editor.setCurrent(current);
+        done = m_editor.tables().setCurrent(current);
     } else {
         for (const core::EntityId id : ids) {
             const core::EntityRecord* record = document().find(id);

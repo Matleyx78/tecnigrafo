@@ -3,8 +3,6 @@
 
 #include "tg/edit/editor.hpp"
 
-#include "tg/edit/layer_rules.hpp"
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -12,9 +10,8 @@
 #include <utility>
 
 namespace tg::edit {
-namespace {
 
-bool validProperties(const core::Document& doc, const core::EntityProperties& properties) {
+bool Editor::validProperties(const core::Document& doc, const core::EntityProperties& properties) {
     return doc.layer(properties.layer) != nullptr && doc.linetype(properties.linetype) != nullptr &&
            std::isfinite(properties.linetypeScale) && properties.linetypeScale > 0.0 &&
            (properties.lineweight == core::lineweight::kByLayer ||
@@ -23,19 +20,8 @@ bool validProperties(const core::Document& doc, const core::EntityProperties& pr
             core::isAllowedLineweight(properties.lineweight));
 }
 
-bool validLayerProperties(const core::Document& doc, const core::Layer& layer) {
-    return (layer.color.kind() == core::Color::Kind::Index ||
-            layer.color.kind() == core::Color::Kind::Rgb) &&
-           doc.linetype(layer.linetype) != nullptr && layer.linetype != doc.byLayerLinetype() &&
-           layer.linetype != doc.byBlockLinetype() &&
-           (layer.lineweight == core::lineweight::kDefault ||
-            core::isAllowedLineweight(layer.lineweight));
-}
-
-}  // namespace
-
 Editor::Editor(core::Document& document)
-    : m_document(document), m_savedLwdisplay(document.lwdisplay()) {}
+    : m_document(document), m_tables(*this), m_savedLwdisplay(document.lwdisplay()) {}
 
 void Editor::beginTransaction(std::string name) {
     assert(!m_open && "a transaction is already open");
@@ -131,140 +117,6 @@ void Editor::rollbackTo(Savepoint mark) {
     }
 }
 
-bool Editor::setUnits(int units) {
-    assert(m_open && "setUnits() needs an open transaction");
-    assert(units >= 0 && units <= core::Document::kMaxUnits && "invalid units");
-    const int previous = m_document.units();
-    if (previous == units) {
-        return false;
-    }
-    Change change;
-    change.kind = Change::Kind::Units;
-    change.previousUnits = previous;
-    change.units = units;
-    m_open->changes.push_back(std::move(change));
-    m_document.setUnits(units);
-    return true;
-}
-
-std::optional<core::LayerId> Editor::addLayer(core::Layer layer) {
-    assert(m_open && "addLayer() needs an open transaction");
-    if (checkNewLayer(m_document, layer.name) != LayerProblem::None ||
-        !validLayerProperties(m_document, layer)) {
-        return std::nullopt;
-    }
-    // New records always get a fresh handle, never a caller's stale identifier.
-    layer.id = {};
-    const std::size_t position = m_document.layers().size();
-    const core::LayerId id = m_document.addLayer(std::move(layer));
-    Change change;
-    change.kind = Change::Kind::LayerAdded;
-    change.data = LayerTableChange{*m_document.layer(id), position};
-    m_open->changes.push_back(std::move(change));
-    return id;
-}
-
-bool Editor::renameLayer(core::LayerId id, std::string name) {
-    assert(m_open && "renameLayer() needs an open transaction");
-    if (checkRename(m_document, id, name) != LayerProblem::None) {
-        return false;
-    }
-    core::Layer renamed = *m_document.layer(id);
-    if (renamed.name == name) {
-        return false;
-    }
-    LayerUpdate update{renamed, {}};
-    // Record the original spellings too: undo must not normalize raw data.
-    const auto collect = [&](const core::RawGroups& groups, std::optional<core::EntityId> entity,
-                             std::size_t section) {
-        bool extended = false;
-        for (std::size_t i = 0; i < groups.size(); ++i) {
-            const core::RawGroup& group = groups[i];
-            if (group.code == 0) {
-                extended = false;
-            } else if (group.code == 1001) {
-                extended = true;
-            }
-            if (group.code == 8 && !extended && core::sameTableName(group.value, renamed.name)) {
-                update.rawValues.push_back(RawValueChange{entity, section, i, name});
-            }
-        }
-    };
-    for (const core::RawEntity& entity : m_document.rawEntities()) {
-        collect(entity.groups, entity.id, 0);
-    }
-    const auto& sections = m_document.raw().sections;
-    for (std::size_t i = 0; i < sections.size(); ++i) {
-        if (core::sameTableName(sections[i].name, "BLOCKS")) {
-            collect(sections[i].groups, std::nullopt, i);
-        }
-    }
-    renamed.name = std::move(name);
-    update.record = std::move(renamed);
-    Change change;
-    change.kind = Change::Kind::LayerUpdated;
-    change.data = std::move(update);
-    swapUpdate(change);
-    m_open->changes.push_back(std::move(change));
-    return true;
-}
-
-bool Editor::removeLayer(core::LayerId id) {
-    assert(m_open && "removeLayer() needs an open transaction");
-    if (checkRemove(m_document, id) != LayerProblem::None) {
-        return false;
-    }
-    auto removed = m_document.removeLayer(id);
-    assert(removed && "the checked layer must exist");
-    Change change;
-    change.kind = Change::Kind::LayerRemoved;
-    change.data = LayerTableChange{std::move(removed->first), removed->second};
-    m_open->changes.push_back(std::move(change));
-    return true;
-}
-
-bool Editor::changeLayer(const core::Layer& layer) {
-    assert(m_open && "changeLayer() needs an open transaction");
-    const core::Layer* previous = m_document.layer(layer.id);
-    if (previous == nullptr || !validLayerProperties(m_document, layer) ||
-        (layer.frozen && checkFreeze(m_document, layer.id) != LayerProblem::None)) {
-        return false;
-    }
-    core::Layer next = *previous;
-    next.color = layer.color;
-    next.linetype = layer.linetype;
-    next.lineweight = layer.lineweight;
-    next.on = layer.on;
-    next.frozen = layer.frozen;
-    next.locked = layer.locked;
-    next.plot = layer.plot;
-    if (next == *previous) {
-        return false;
-    }
-    Change change;
-    change.kind = Change::Kind::LayerUpdated;
-    change.data = LayerUpdate{std::move(next), {}};
-    swapUpdate(change);
-    m_open->changes.push_back(std::move(change));
-    return true;
-}
-
-std::optional<core::LinetypeId> Editor::addLinetype(core::Linetype linetype) {
-    assert(m_open && "addLinetype() needs an open transaction");
-    if (!core::isValidTableName(linetype.name) ||
-        m_document.findLinetype(linetype.name) != nullptr) {
-        return std::nullopt;
-    }
-    linetype.id = {};
-    const std::size_t position = m_document.linetypes().size();
-    const core::LinetypeId id = m_document.addLinetype(std::move(linetype));
-    Change change;
-    change.kind = Change::Kind::LinetypeAdded;
-    change.data = LinetypeTableChange{*m_document.linetype(id), position};
-    m_open->changes.push_back(std::move(change));
-    return id;
-}
-
 bool Editor::setProperties(core::EntityId id, const core::EntityProperties& properties) {
     assert(m_open && "setProperties() needs an open transaction");
     const core::EntityRecord* previous = m_document.find(id);
@@ -285,41 +137,6 @@ bool Editor::setProperties(core::EntityId id, const core::EntityProperties& prop
     swapUpdate(change);
     m_open->changes.push_back(std::move(change));
     return true;
-}
-
-bool Editor::setCurrent(const core::CurrentProperties& current) {
-    assert(m_open && "setCurrent() needs an open transaction");
-    const core::Layer* layer = m_document.layer(current.layer);
-    if (layer == nullptr || layer->frozen || current == m_document.current() ||
-        !validProperties(m_document, current)) {
-        return false;
-    }
-    Change change;
-    change.kind = Change::Kind::Current;
-    change.data = current;
-    swapUpdate(change);
-    m_open->changes.push_back(std::move(change));
-    return true;
-}
-
-bool Editor::setLtscale(double scale) {
-    assert(m_open && "setLtscale() needs an open transaction");
-    if (!std::isfinite(scale) || scale <= 0.0 || scale == m_document.ltscale()) {
-        return false;
-    }
-    Change change;
-    change.kind = Change::Kind::Ltscale;
-    change.data = scale;
-    swapUpdate(change);
-    m_open->changes.push_back(std::move(change));
-    return true;
-}
-
-void Editor::setLwdisplay(bool on) {
-    if (on != m_document.lwdisplay()) {
-        m_document.setLwdisplay(on);
-        notify();
-    }
 }
 
 bool Editor::isModified() const {

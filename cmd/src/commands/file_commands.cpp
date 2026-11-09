@@ -296,7 +296,7 @@ Status InsunitsCommand::handle(CommandContext& context, const Input& input) {
         return Status::Continue;
     }
     context.editor.beginTransaction("INSUNITS");
-    context.editor.setUnits(units);
+    context.editor.tables().setUnits(units);
     context.editor.commit();
     return Status::Finished;
 }

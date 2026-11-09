@@ -4,6 +4,7 @@
 #pragma once
 
 #include "tg/core/document.hpp"
+#include "tg/edit/document_tables.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -75,28 +76,14 @@ public:
     /// Precondition: mark comes from the open transaction.
     void rollbackTo(Savepoint mark);
 
-    /// Changes INSUNITS (docs/adr/0021). Returns false without changes if
-    /// the value is already `units`.
-    /// Preconditions: a transaction is open; 0 <= units <= 24.
-    bool setUnits(int units);
-
-    /// Layer and property edits require an open transaction. They return false
-    /// (or nullopt) for rejected or unchanged values, without recording a change.
-    std::optional<core::LayerId> addLayer(core::Layer layer);
-    bool renameLayer(core::LayerId id, std::string name);
-    bool removeLayer(core::LayerId id);
-    /// Changes colour, linetype, lineweight and states; preserves name/id/extras.
-    /// Freezing the current layer is refused.
-    bool changeLayer(const core::Layer& layer);
-    std::optional<core::LinetypeId> addLinetype(core::Linetype linetype);
+    /// Changes the properties of an entity.
+    /// Returns false without recording a change for rejected or unchanged values.
+    /// Precondition: a transaction is open.
     bool setProperties(core::EntityId id, const core::EntityProperties& properties);
-    /// Refuses a frozen current layer.
-    bool setCurrent(const core::CurrentProperties& current);
-    bool setLtscale(double scale);  ///< finite and > 0
 
-    /// Saved view setting: modifies the drawing without an undo step.
-    /// No transaction is needed. Notifies the change listener on a change.
-    void setLwdisplay(bool on);
+    /// Accesses the tables owned by this editor. The reference is valid for
+    /// the lifetime of this editor and the component cannot be copied or moved.
+    [[nodiscard]] DocumentTables& tables() { return m_tables; }
 
     /// True if the undo stack is not at the last save or load position.
     [[nodiscard]] bool isModified() const;
@@ -154,6 +141,8 @@ public:
     void setChangeListener(Listener listener);
 
 private:
+    friend class DocumentTables;
+
     struct LayerTableChange {
         core::Layer record;
         std::size_t position{0};
@@ -210,6 +199,9 @@ private:
         std::vector<Change> changes;
     };
 
+    static bool validProperties(const core::Document& doc,
+                                const core::EntityProperties& properties);
+
     void apply(Change& change);
     void revert(Change& change);
     void notify() const;
@@ -217,6 +209,7 @@ private:
     void swapRawValues(std::vector<RawValueChange>& values);
 
     core::Document& m_document;
+    DocumentTables m_tables;
     std::optional<Step> m_open;
     std::vector<Step> m_undo;
     std::vector<Step> m_redo;
