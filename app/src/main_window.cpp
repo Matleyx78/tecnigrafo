@@ -201,6 +201,10 @@ QString switchToolTip(const QAction& action) {
 
 MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     : SARibbonMainWindow(parent, windowStyles()),
+      m_diskFiles(
+          std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
+                                         [this](const QString& path) { m_pendingOpen = path; })),
+      m_files(m_diskFiles.get()),
       m_view(new CadView(this)),
       m_commandLine(new CommandLine(this)) {
     // SARibbonMainWindow gives the window the style sheet of its own theme,
@@ -219,10 +223,6 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     // The program as distributed does not check descriptions; --script turns
     // the check on (docs/adr/0026, point 3, and setScriptMode()): the empty
     // function of m_descriptionCheck.
-    m_diskFiles =
-        std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
-                                       [this](const QString& path) { m_pendingOpen = path; });
-    m_files = m_diskFiles.get();
     // One session, as the program opens; activated once the interface that
     // follows it exists.
     DocumentSession& first = openSession(

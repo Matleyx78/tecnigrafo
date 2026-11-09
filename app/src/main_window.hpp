@@ -67,6 +67,8 @@ public:
         Empty,
     };
 
+    Q_DISABLE_COPY_MOVE(MainWindow)
+
     explicit MainWindow(InitialDrawing drawing = InitialDrawing::Sample, QWidget* parent = nullptr);
 
     ~MainWindow() override;
