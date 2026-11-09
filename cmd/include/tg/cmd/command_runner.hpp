@@ -211,6 +211,10 @@ public:
     /// Precondition: > 0. Default 1.
     void setPixelSize(double drawingUnitsPerPixel);
 
+    /// The size of a pixel last set with setPixelSize(): what a host hands
+    /// the runner of a document it opens, as the view stays.
+    [[nodiscard]] double pixelSize() const { return m_pixelSize; }
+
     /// Left click in the view, in drawing coordinates (docs/adr/0008). While
     /// selecting it is a selection gesture; at an Object prompt it picks an
     /// entity; at a Point, Distance, Angle or Number prompt it becomes a
@@ -325,6 +329,12 @@ public:
 
     /// The active file, either borrowed or owned by the runner.
     [[nodiscard]] const edit::DocumentFile& documentFile() const { return context().file; }
+
+    /// The documents NEW and OPEN open (docs/adr/0041, point 2), borrowed:
+    /// the host must outlive this runner. nullptr, the default: NEW and OPEN
+    /// replace the document of this runner, as in the unit tests that build
+    /// a runner alone.
+    void setDocumentHost(DocumentHost* host);
 
     /// AutoCAD script sequences (ADR 0032, points 6-8). Default false.
     void setScriptSequences(bool on);

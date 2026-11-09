@@ -6,10 +6,12 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/cmd/document_host.hpp"
 #include "tg/cmd/drawing_aids.hpp"
+#include "tg/cmd/drawing_session.hpp"
 #include "tg/cmd/input.hpp"
 #include "tg/core/document.hpp"
-#include "tg/edit/editor.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/script/report.hpp"
 
 #include <algorithm>
@@ -77,33 +79,37 @@ std::optional<std::string_view> unknownCommand(std::string_view text) {
 
 }  // namespace
 
-/// The state of one run: the drawing, the runner and what the report needs
-/// besides them.
-class Level1Session::State {
+/// The state of one run: the open drawings, one of them active, and what
+/// the report needs besides them. The state is the host of the documents
+/// that NEW and OPEN open (docs/adr/0041, point 2), as the main window is at
+/// level 2: one history for all of them, and the drawing aids, the script
+/// sequences and the size of a pixel of the view carried to a new document,
+/// as the window keeps them.
+class Level1Session::State final : public cmd::DocumentHost {
 public:
-    explicit State(io::FileAccess* files)
-        : m_editor(m_document), m_runner(builtinRegistry(), m_editor), m_files(files) {
-        m_runner.setFileAccess(files);
-        m_runner.setMessageSink([this](std::string text) { write(std::move(text)); });
-        // A prompt missing from its command's description is written in the
-        // history: the report differs from any expected one, so the case
-        // fails and prints the message among its differences
-        // (docs/adr/0026, point 3).
-        m_runner.setDescriptionCheck([this](const std::string& message) { write(message); });
+    explicit State(io::FileAccess* files) : m_files(files) {
+        m_active = &add(core::Document::newDrawing(), edit::DocumentFile{});
     }
 
     State(const State&) = delete;
     State& operator=(const State&) = delete;
     State(State&&) = delete;
     State& operator=(State&&) = delete;
-    ~State() = default;
+    ~State() override = default;
 
     void run(const Action& action) {
         std::visit([this](const auto& concrete) { this->perform(concrete); }, action);
     }
 
     void report(std::string_view title) {
-        writeState({title, m_editor, m_runner, m_messages, m_pointer}, m_report);
+        std::vector<ReportDocument> documents;
+        documents.reserve(m_sessions.size());
+        for (const auto& session : m_sessions) {
+            documents.push_back({session->file().name(), session.get() == m_active});
+        }
+        writeState({title, m_active->editor(), m_active->runner(), m_active->file(), m_messages,
+                    m_pointer, documents},
+                   m_report);
         m_messages.clear();
     }
 
@@ -111,9 +117,65 @@ public:
 
     [[nodiscard]] std::span<const std::string> history() const { return m_history; }
 
-    [[nodiscard]] const cmd::CommandRunner& runner() const { return m_runner; }
+    [[nodiscard]] const cmd::CommandRunner& runner() const { return m_active->runner(); }
+
+    cmd::DrawingSession& addDocument(core::Document document, edit::DocumentFile file) override {
+        cmd::DrawingSession& session = add(std::move(document), std::move(file));
+        // What the view and the switches of the window keep at level 2.
+        session.runner().setPixelSize(m_active->runner().pixelSize());
+        activate(session);
+        return session;
+    }
+
+    [[nodiscard]] cmd::DrawingSession* findOpen(std::string_view name) override {
+        const auto found = std::ranges::find_if(
+            m_sessions, [name](const auto& session) { return session->file().name() == name; });
+        return found != m_sessions.end() ? found->get() : nullptr;
+    }
+
+    void activate(cmd::DrawingSession& session) override {
+        assert(std::ranges::any_of(
+                   m_sessions, [&session](const auto& open) { return open.get() == &session; }) &&
+               "the session is not open here");
+        // The drawing aids are the window's at level 2: the runner shown gets
+        // them. The runner left keeps its command, halfway or not.
+        session.runner().setDrawingAids(m_active->runner().drawingAids());
+        m_active = &session;
+    }
+
+    [[nodiscard]] std::vector<std::string> openNames() const override {
+        std::vector<std::string> names;
+        for (const auto& session : m_sessions) {
+            if (!session->file().hasFile()) {
+                names.push_back(session->file().name());
+            }
+        }
+        return names;
+    }
 
 private:
+    /// Opens a session after the others, not active, with the settings that
+    /// every runner of the run shares.
+    cmd::DrawingSession& add(core::Document document, edit::DocumentFile file) {
+        // A unique_ptr each: the vector may grow, the sessions stay where
+        // they are, and none is destroyed before the run ends.
+        cmd::DrawingSession& session = *m_sessions.emplace_back(
+            std::make_unique<cmd::DrawingSession>(builtinRegistry(), m_files, std::move(document)));
+        session.file() = std::move(file);
+        cmd::CommandRunner& runner = session.runner();
+        runner.setDocumentHost(this);
+        runner.setScriptSequences(m_scriptSequences);
+        runner.setMessageSink([this](std::string text) { write(std::move(text)); });
+        // A prompt missing from its command's description is written in the
+        // history: the report differs from any expected one, so the case
+        // fails and prints the message among its differences
+        // (docs/adr/0026, point 3).
+        runner.setDescriptionCheck([this](const std::string& message) { write(message); });
+        return session;
+    }
+
+    [[nodiscard]] cmd::CommandRunner& active() { return m_active->runner(); }
+
     /// A line of the history: for the next section of the report, and for
     /// the whole history of a live session.
     void write(std::string line) {
@@ -124,31 +186,35 @@ private:
     void perform(const TypedLine& line) {
         // The command line echoes the exchange before handing the text to
         // the runner, as AutoCAD does ("Command: PL").
-        const std::string prompt = m_runner.promptText();
+        cmd::CommandRunner& runner = active();
+        const std::string prompt = runner.promptText();
         write(line.text.empty() ? prompt : prompt + " " + line.text);
-        m_runner.submitText(line.text);
+        // NEW and OPEN may make another document active: the runner of this
+        // one lives on, and the next action goes to the active one.
+        runner.submitText(line.text);
     }
 
-    void perform(const ViewDirective& view) { m_runner.setPixelSize(view.scale); }
+    void perform(const ViewDirective& view) { active().setPixelSize(view.scale); }
 
     void perform(const MoveDirective& move) {
         m_pointer = move.point;
-        m_runner.pointerMoved(move.point);
+        active().pointerMoved(move.point);
     }
 
     void perform(const ClickDirective& click) {
         // A real mouse reaches the point before it clicks there.
         m_pointer = click.point;
-        m_runner.pointerMoved(click.point);
-        m_runner.click(click.point, click.remove ? cmd::PickAction::Remove : cmd::PickAction::Add);
+        cmd::CommandRunner& runner = active();
+        runner.pointerMoved(click.point);
+        runner.click(click.point, click.remove ? cmd::PickAction::Remove : cmd::PickAction::Add);
     }
 
-    void perform(const RightClickDirective& /*directive*/) { m_runner.submit(cmd::ConfirmInput{}); }
+    void perform(const RightClickDirective& /*directive*/) { active().submit(cmd::ConfirmInput{}); }
 
-    void perform(const EscDirective& /*directive*/) { m_runner.submit(cmd::CancelInput{}); }
+    void perform(const EscDirective& /*directive*/) { active().submit(cmd::CancelInput{}); }
 
     void perform(const AidDirective& directive) {
-        cmd::DrawingAids aids = m_runner.drawingAids();
+        cmd::DrawingAids aids = active().drawingAids();
         switch (directive.aid) {
             case AidDirective::Aid::Snap:
                 aids.objectSnap = directive.on;
@@ -164,17 +230,21 @@ private:
                 aids.ortho = aids.ortho && !directive.on;
                 break;
         }
-        m_runner.setDrawingAids(aids);
+        active().setDrawingAids(aids);
     }
 
     void perform(const OsnapDirective& directive) {
-        cmd::DrawingAids aids = m_runner.drawingAids();
+        cmd::DrawingAids aids = active().drawingAids();
         aids.snapModes = directive.modes;
-        m_runner.setDrawingAids(aids);
+        active().setDrawingAids(aids);
     }
 
     void perform(const ScriptSequencesDirective& directive) {
-        m_runner.setScriptSequences(directive.on);
+        // For every runner, as the main window does at level 2.
+        m_scriptSequences = directive.on;
+        for (const auto& session : m_sessions) {
+            session->runner().setScriptSequences(directive.on);
+        }
     }
 
     void perform(const ReportDirective& /*directive*/) {
@@ -195,12 +265,11 @@ private:
 
     void perform(const ToleranceDirective& /*directive*/) {}
 
-    core::Document m_document{core::Document::newDrawing()};
-    edit::Editor m_editor;
-    cmd::CommandRunner m_runner;
-    // Kept for the file commands: package P15 of milestone 0.5 gives it to
-    // the runner. Unused until then, hence [[maybe_unused]].
-    [[maybe_unused]] io::FileAccess* m_files;
+    io::FileAccess* m_files;
+    bool m_scriptSequences{false};
+    /// In the order they were opened; never moved nor closed during a run.
+    std::vector<std::unique_ptr<cmd::DrawingSession>> m_sessions;
+    cmd::DrawingSession* m_active{nullptr};
     std::vector<std::string> m_messages;  ///< since the previous section
     std::vector<std::string> m_history;   ///< since the start
     std::optional<core::Vec2> m_pointer;

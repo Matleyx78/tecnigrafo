@@ -5,6 +5,7 @@
 
 #include "cad_view.hpp"
 #include "command_line.hpp"
+#include "document_session.hpp"
 #include "main_window.hpp"
 #include "tg/script/case_files.hpp"
 #include "tg/script/report.hpp"
@@ -36,6 +37,7 @@
 #include <string_view>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace tg::app {
 namespace {
@@ -346,7 +348,16 @@ void ScriptSession::collectMessages(bool report) {
 }
 
 void ScriptSession::writeSection(const std::string& title) {
-    script::writeState({title, m_window.editor(), m_window.runner(), m_messages, m_pointer},
+    // The window keeps the documents: every field describes the active one,
+    // "documents:" lists them all, in the order they were opened.
+    const DocumentSession* active = m_window.activeSession();
+    std::vector<script::ReportDocument> documents;
+    documents.reserve(m_window.sessions().size());
+    for (const auto& session : m_window.sessions()) {
+        documents.push_back({session->file().name(), session.get() == active});
+    }
+    script::writeState({title, m_window.editor(), m_window.runner(), active->file(), m_messages,
+                        m_pointer, documents},
                        m_report);
     m_messages.clear();
 }

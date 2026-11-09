@@ -4,13 +4,19 @@
 #include "tg/cmd/commands/file_commands.hpp"
 
 #include "../text.hpp"
+#include "tg/cmd/document_host.hpp"
+#include "tg/cmd/drawing_session.hpp"
 #include "tg/io/file_access.hpp"
 #include "tg/io/io.hpp"
 
+#include <algorithm>
 #include <charconv>
+#include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <variant>
+#include <vector>
 
 namespace tg::cmd {
 namespace {
@@ -42,6 +48,17 @@ io::DxfVersion originalVersion(const core::Document& document) {
         return io::DxfVersion::R2013;
     }
     return io::DxfVersion::R2018;
+}
+
+/// "Drawing<N>.cadx" with the first N from 1 that no open document without a
+/// file is called (docs/tappe/0.7.5/P28b, point 2).
+std::string untitledName(const std::vector<std::string>& taken) {
+    for (int number = 1;; ++number) {
+        std::string name = "Drawing" + std::to_string(number) + ".cadx";
+        if (std::ranges::find(taken, name) == taken.end()) {
+            return name;
+        }
+    }
 }
 
 }  // namespace
@@ -89,6 +106,14 @@ Status SaveCommand::chooseName(CommandContext& context, std::string name) {
     m_dxf = detail::equalsIgnoringCase(extension(m_name), ".dxf");
     if (!m_dxf && !detail::equalsIgnoringCase(extension(m_name), ".cadx")) {
         return fail(context, "only .cadx and .dxf files are supported.");
+    }
+    // A file is open in one document only (decision B3 of docs/DECISIONI.md,
+    // 2026-11-07): the name is compared as findOpen() does, as written.
+    if (context.host != nullptr) {
+        const DrawingSession* open = context.host->findOpen(m_name);
+        if (open != nullptr && &open->file() != &context.file) {
+            return fail(context, "it is open in another document.");
+        }
     }
     const bool quickCurrent =
         m_mode == Mode::Qsave && context.file.hasFile() && m_name == context.file.name();
@@ -145,7 +170,9 @@ Prompt SaveCommand::prompt() const {
 
 void NewCommand::start(CommandContext& context) {
     m_currentName = context.file.name();
-    if (context.editor.isModified()) {
+    // With a host the document stays open, so there is nothing to save
+    // (docs/DECISIONI.md, 2026-11-07, "NEW e OPEN con i documenti in schede").
+    if (context.host == nullptr && context.editor.isModified()) {
         m_stage = Stage::Changes;
     } else {
         proceed(context);
@@ -162,10 +189,17 @@ Status NewCommand::proceed(CommandContext& context) {
         m_stage = Stage::Name;
         return Status::Continue;
     }
+    m_stage = Stage::Done;
+    if (context.host != nullptr) {
+        edit::DocumentFile file;
+        file.reset(untitledName(context.host->openNames()));
+        // The host keeps this runner alive: nothing of `context` is used after.
+        context.host->addDocument(core::Document::newDrawing(), std::move(file));
+        return Status::Finished;
+    }
     context.file.reset("Drawing1.cadx");
     context.editor.replaceDocument(core::Document::newDrawing());
     context.documentReplaced = true;
-    m_stage = Stage::Done;
     return Status::Finished;
 }
 
@@ -225,6 +259,15 @@ Status NewCommand::open(CommandContext& context, const std::string& name) {
     if (!dxf && !detail::equalsIgnoringCase(extension(name), ".cadx")) {
         return fail({io::Error::Kind::Unsupported, 0, "only .cadx and .dxf files are supported."});
     }
+    if (context.host != nullptr) {
+        if (DrawingSession* open = context.host->findOpen(name)) {
+            // The messages go first: they belong to the history of the
+            // document the command runs in, before another one is shown.
+            context.message(name + " is already open.");
+            context.host->activate(*open);
+            return Status::Finished;
+        }
+    }
     const auto bytes = context.files->read(name);
     if (!bytes.ok()) {
         return fail(bytes.error());
@@ -233,9 +276,6 @@ Status NewCommand::open(CommandContext& context, const std::string& name) {
     if (!result.ok()) {
         return fail(result.error());
     }
-    context.file.setSaved(name);
-    context.editor.replaceDocument(std::move(result.value().document));
-    context.documentReplaced = true;
     const auto& report = result.value().report;
     int total = 0;
     std::string types;
@@ -254,6 +294,18 @@ Status NewCommand::open(CommandContext& context, const std::string& name) {
     for (const auto& warning : report.warnings) {
         context.message(warning);
     }
+    if (context.host != nullptr) {
+        // A new document, even next to a drawing never touched (as AutoCAD
+        // LT does: docs/DECISIONI.md, 2026-11-07). The messages are already
+        // written, and nothing of `context` is used after.
+        edit::DocumentFile file;
+        file.setSaved(name);
+        context.host->addDocument(std::move(result.value().document), std::move(file));
+        return Status::Finished;
+    }
+    context.file.setSaved(name);
+    context.editor.replaceDocument(std::move(result.value().document));
+    context.documentReplaced = true;
     return Status::Finished;
 }
 

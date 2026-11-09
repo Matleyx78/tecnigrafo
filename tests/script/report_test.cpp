@@ -13,6 +13,7 @@
 #include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/text.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 #include "tg/script/entity_reader.hpp"
 #include "tg/script/number_format.hpp"
@@ -22,6 +23,7 @@
 #include <array>
 #include <cstddef>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -312,7 +314,7 @@ std::string stateOf(core::Document& document) {
     cmd::registerBuiltinCommands(registry);
     const cmd::CommandRunner runner(registry, editor);
     std::string out;
-    writeState({"final", editor, runner, {}, std::nullopt}, out);
+    writeState({"final", editor, runner, runner.documentFile(), {}, std::nullopt, {}}, out);
     return out;
 }
 
@@ -576,6 +578,49 @@ TEST(SnapKindName, EveryKind) {
     EXPECT_EQ(snapKindName(core::SnapKind::Midpoint), "Midpoint");
     EXPECT_EQ(snapKindName(core::SnapKind::Center), "Center");
     EXPECT_EQ(snapKindName(core::SnapKind::Insertion), "Insertion");
+}
+
+// ---------------------------------------------------------------------------
+// Several documents open (stage 0.7.5, package P28b)
+
+/// One section of the report of an empty document with file `file` among
+/// `documents`.
+std::string stateWith(const edit::DocumentFile& file, std::span<const ReportDocument> documents) {
+    core::Document document = core::Document::newDrawing();
+    edit::Editor editor(document);
+    cmd::CommandRegistry registry;
+    cmd::registerBuiltinCommands(registry);
+    const cmd::CommandRunner runner(registry, editor);
+    std::string out;
+    writeState({"final", editor, runner, file, {}, std::nullopt, documents}, out);
+    return out;
+}
+
+TEST(ReportDocuments, TwoDocumentsAreListedInOrderWithTheActiveMarked) {
+    edit::DocumentFile plan;
+    plan.setSaved("plan.dxf");
+    const std::array<ReportDocument, 2> documents{{{"Drawing1.cadx", false}, {"plan.dxf", true}}};
+    const std::string out = stateWith(plan, documents);
+    // After "drawing:", the field of the active document, and before "pointer:".
+    expectContains(out, "drawing: plan.dxf\ndocuments: Drawing1.cadx, plan.dxf (active)\npointer:");
+}
+
+TEST(ReportDocuments, TheActiveOneCanBeAnyOfThem) {
+    const edit::DocumentFile untitled;
+    const std::array<ReportDocument, 3> documents{
+        {{"Drawing1.cadx", true}, {"plan.dxf", false}, {"Drawing2.cadx", false}}};
+    expectContains(stateWith(untitled, documents),
+                   "ortho: off\ndocuments: Drawing1.cadx (active), plan.dxf, Drawing2.cadx\n");
+}
+
+TEST(ReportDocuments, OneDocumentWritesNoField) {
+    edit::DocumentFile plan;
+    plan.setSaved("plan.dxf");
+    const std::array<ReportDocument, 1> one{{{"plan.dxf", true}}};
+    const std::string out = stateWith(plan, one);
+    expectContains(out, "drawing: plan.dxf\npointer:");
+    EXPECT_EQ(out.find("documents:"), std::string::npos);
+    EXPECT_EQ(stateWith(plan, {}).find("documents:"), std::string::npos);
 }
 
 }  // namespace

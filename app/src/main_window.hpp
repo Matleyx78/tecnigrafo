@@ -8,6 +8,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/snap_points.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 #include "theme.hpp"
 #include "ui_builder.hpp"
@@ -50,7 +51,9 @@ class RecentFiles;
 /// frame of the system and the quick access bar goes under the title.
 ///
 /// The window owns a session for each open document (docs/adr/0041, point
-/// 2), one of them active; the program opens with one. View, command line,
+/// 2), one of them active; the program opens with one, and NEW and OPEN, in
+/// the runner of any session, add another and activate it (the window is the
+/// host of their documents, cmd::DocumentHost). View, command line,
 /// the panels Layers and Properties, Undo and Redo, the drawing aids, title
 /// and status follow the active session (activate()); the listener of every
 /// session updates the interface only while that session is active.
@@ -205,8 +208,12 @@ private:
 
     /// Makes `session` active; nullptr for none (activate()).
     void switchTo(DocumentSession* session);
+    /// What NEW and OPEN do through the host: a session for `document`,
+    /// with `file`, after the others, made active. A file read by OPEN goes
+    /// to the recent files.
+    DocumentSession& addDocument(core::Document document, edit::DocumentFile file);
     /// The settings of the window that every runner gets: file access,
-    /// description check, script sequences.
+    /// description check, script sequences, the host of the documents.
     void configureRunner(cmd::CommandRunner& runner) const;
     /// What the listener of the active session does after a change.
     void documentChanged();
@@ -233,10 +240,13 @@ private:
     [[nodiscard]] QString dialogPath();
     [[nodiscard]] QString chooseFile(cmd::FilePrompt prompt, const QString& path);
 
-    // Declared in dependency order: the sessions borrow the registry and the
-    // file access, so they are destroyed first. The sample drawing goes
-    // straight into the document of the first session, without a
-    // transaction, so it cannot be undone.
+    /// The host of the documents for the runners (cmd::DocumentHost).
+    class Host;
+
+    // Declared in dependency order: the sessions borrow the registry, the
+    // file access and the host, so they are destroyed first. The sample
+    // drawing goes straight into the document of the first session, without
+    // a transaction, so it cannot be undone.
     cmd::CommandRegistry m_registry;
     std::unique_ptr<io::FileAccess> m_diskFiles;
     // The file access the runners get: m_diskFiles, setFileAccess()'s, or
@@ -244,6 +254,7 @@ private:
     io::FileAccess* m_files{nullptr};
     cmd::CommandRunner::DescriptionCheck m_descriptionCheck;
     bool m_scriptSequences{false};
+    std::unique_ptr<Host> m_host;
     std::vector<std::unique_ptr<DocumentSession>> m_sessions;
     DocumentSession* m_active{nullptr};
     std::unique_ptr<QSettings> m_settings;

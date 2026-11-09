@@ -428,7 +428,7 @@ std::string section(edit::Editor& editor, edit::DocumentFile& file) {
     cmd::CommandRunner runner(registry, editor);
     runner.setDocumentFile(&file);
     std::string out;
-    writeState({"final", editor, runner, {}, std::nullopt}, out);
+    writeState({"final", editor, runner, runner.documentFile(), {}, std::nullopt, {}}, out);
     return out;
 }
 

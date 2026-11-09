@@ -339,6 +339,29 @@ TEST(RunLevel1, EntitiesAreListedByIdentifier) {
                    "messages:");
 }
 
+TEST(RunLevel1, TwoDocumentsWriteDocumentsWithTheActiveMarked) {
+    const std::string report = reportOf("LINE\n0,0\n10,0\n\n!report\nNEW\n");
+    // One document: no field.
+    EXPECT_EQ(section(report, "report 1").find("documents:"), std::string::npos);
+    const std::string final = section(report, "final");
+    expectContains(final, "documents: Drawing1.cadx, Drawing2.cadx (active)\n");
+    // Every other field is the active document's, the new empty drawing;
+    // the history of the command line is one for both.
+    expectContains(final, "entities:\nmessages:\n  Command: NEW\nprompt: Command:\n");
+    expectContains(final, "undo:\nredo:\n");
+}
+
+TEST(RunLevel1, ANewDocumentKeepsViewDrawingAidsAndScriptSequences) {
+    // The pick box of !view, 30 units, and the switches stay as the window
+    // keeps them at level 2.
+    const std::string report = reportOf(
+        "!view 0,0 10 800x600\n!snap off\n!scr on\nNEW\nPLINE\n0,0\n100,0\n\n"
+        "!click 50,20\n!report\nTEXT\n0,0\n\n\nOne\n");
+    expectContains(section(report, "report 1"), "selection: 257\n");
+    expectContains(section(report, "report 1"), "snap: off\n");
+    expectContains(section(report, "final"), "prompt: Command:\n");
+}
+
 TEST(WriteState, SnapModesOffAreListed) {
     core::Document document;
     edit::Editor editor(document);
@@ -350,7 +373,7 @@ TEST(WriteState, SnapModesOffAreListed) {
     aids.snapModes.center = false;
     runner.setDrawingAids(aids);
     std::string out;
-    writeState({"final", editor, runner, {}, std::nullopt}, out);
+    writeState({"final", editor, runner, runner.documentFile(), {}, std::nullopt, {}}, out);
     // Perpendicular, tangent and quadrant start off (docs/adr/0033, point 6).
     expectContains(out, "snap: on, modes off: midpoint center perpendicular tangent quadrant\n");
 }
@@ -362,7 +385,7 @@ TEST(WriteState, AllSnapModesOnAreSilentAtTheDefaultAndNamedWhenNoneIsOff) {
     cmd::registerBuiltinCommands(registry);
     cmd::CommandRunner runner(registry, editor);
     std::string defaults;
-    writeState({"final", editor, runner, {}, std::nullopt}, defaults);
+    writeState({"final", editor, runner, runner.documentFile(), {}, std::nullopt, {}}, defaults);
     expectContains(defaults, "snap: on\n");
     EXPECT_EQ(defaults.find("modes off"), std::string::npos);
 
@@ -370,7 +393,7 @@ TEST(WriteState, AllSnapModesOnAreSilentAtTheDefaultAndNamedWhenNoneIsOff) {
     aids.snapModes = core::SnapModes{true, true, true, true, true, true, true, true};
     runner.setDrawingAids(aids);
     std::string all;
-    writeState({"final", editor, runner, {}, std::nullopt}, all);
+    writeState({"final", editor, runner, runner.documentFile(), {}, std::nullopt, {}}, all);
     expectContains(all, "snap: on, modes off: none\n");
 }
 
