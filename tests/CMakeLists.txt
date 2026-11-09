@@ -22,6 +22,7 @@ add_executable(tg_tests
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
     cmd/fillet_command_test.cpp
+    cmd/command_protocol_test.cpp
     cmd/command_registry_test.cpp
     cmd/command_runner_test.cpp
     cmd/coordinate_input_test.cpp
@@ -134,6 +135,14 @@ target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src"
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
+
+# The protocol of commands depends on nothing of the drawing (docs/adr/0041,
+# point 5): its test also compiles with the include folder of cmd alone, so
+# that an include of core, edit or io in command_protocol.hpp stops the build.
+add_library(tg_command_protocol_alone OBJECT cmd/command_protocol_test.cpp)
+target_include_directories(tg_command_protocol_alone PRIVATE "${PROJECT_SOURCE_DIR}/cmd/include")
+target_link_libraries(tg_command_protocol_alone PRIVATE GTest::gtest)
+tg_configure_target(tg_command_protocol_alone)
 
 # tecnigrafo-script describe (docs/adr/0026): the twelve built-in commands,
 # one of them by alias, and an unknown name (exit code 2).

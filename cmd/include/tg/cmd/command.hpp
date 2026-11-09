@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/cmd/command_protocol.hpp"
 #include "tg/cmd/input.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/math.hpp"
@@ -11,54 +12,14 @@
 #include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 
-#include <cstdint>
-#include <functional>
 #include <optional>
 #include <span>
-#include <string>
-#include <vector>
 
 namespace tg::io {
 class FileAccess;
 }
 
 namespace tg::cmd {
-
-/// An option of a prompt: {"Close", "C"}. The user can type either string,
-/// in any case.
-struct Keyword {
-    std::string name;
-    std::string shortcut;
-
-    friend bool operator==(const Keyword&, const Keyword&) = default;
-};
-
-/// File dialogs may replace these text questions in the application (ADR 0021).
-enum class FilePrompt : std::uint8_t { None, Open, Save };
-
-/// What a prompt asks for, which decides how CommandRunner reads the answer
-/// (docs/adr/0014 and docs/adr/0032):
-/// - Point, Distance, Angle: a point, or a bare number for Distance and Angle;
-/// - Text: a line, as typed;
-/// - Object: one entity, picked with a click or a typed point (ObjectInput);
-/// - Number: a pure number, with no unit or angle (ValueInput), or a point;
-/// - Selection: a selection built with the runner's gestures and written
-///   options, handed over with Enter (SelectionInput).
-enum class PromptKind : std::uint8_t { Point, Distance, Angle, Text, Object, Number, Selection };
-
-/// What a command asks the user. `text` is the complete sentence shown on
-/// the command line, keywords included ("Specify next point or
-/// [Close/Undo]:"): it is never assembled from pieces, so that it can be
-/// translated as a whole (docs/adr/0005). `keywords` lists the options the
-/// runner recognises in typed text.
-struct Prompt {
-    std::string text;
-    std::vector<Keyword> keywords;
-    PromptKind kind{PromptKind::Point};
-    FilePrompt file{FilePrompt::None};
-
-    friend bool operator==(const Prompt&, const Prompt&) = default;
-};
 
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
@@ -86,23 +47,21 @@ struct CommandDefaults {
     bool trimMode{true};
 };
 
-/// What a command works with. The runner preserves this state between commands,
-/// so `lastPoint` carries over, as the "@" of AutoCAD does. Ortho uses the
-/// running command's base point (Command::basePoint()).
+/// What a command of the drawing works with: the protocol's context
+/// (docs/adr/0041, point 5) and the drawing's. The runner preserves this
+/// state between commands, so `lastPoint` carries over, as the "@" of
+/// AutoCAD does. Ortho uses the running command's base point
+/// (Command::basePoint()).
 /// When adding a field, update CommandRunner::setDocumentFile to preserve it
 /// when rebinding the file reference.
-struct CommandContext {
+struct CommandContext : ProtocolContext {
     edit::Editor& editor;
     edit::DocumentFile& file;
-    std::optional<core::Vec2> lastPoint;       ///< updated by the command
-    std::function<void(std::string)> message;  ///< writes to the history
+    std::optional<core::Vec2> lastPoint;  ///< updated by the command
     CommandDefaults defaults{};
     io::FileAccess* files{nullptr};
     bool documentReplaced{false};
-    bool scriptSequences{false};  ///< AutoCAD script sequences (ADR 0032, points 6-8).
 };
-
-enum class Status : std::uint8_t { Continue, Finished };
 
 /// An interactive command (docs/adr/0005). Commands never read text: they
 /// receive inputs already interpreted by CommandRunner.

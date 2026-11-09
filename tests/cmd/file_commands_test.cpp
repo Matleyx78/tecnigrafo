@@ -297,8 +297,11 @@ TEST_F(FileCommandsTest, MissingFileAccessEndsSaveCommandsAndPreservesDrawing) {
 }
 
 TEST_F(FileCommandsTest, FileNamePromptHasSaveDialogHint) {
-    CommandContext context{editor, file, {}, [](const std::string&) {
-                           }};
+    CommandContext context{{[](const std::string&) {
+                           }},
+                           editor,
+                           file,
+                           {}};
     context.files = &files;
     SaveCommand command;
     command.start(context);
@@ -549,8 +552,11 @@ TEST_F(FileCommandsTest, OpenEmitsEveryReaderWarningAfterUnsupportedSummary) {
 }
 
 TEST_F(FileCommandsTest, OpenPromptHasDialogHintAndMissingAccessEndsCommand) {
-    CommandContext context{editor, file, {}, [](const std::string&) {
-                           }};
+    CommandContext context{{[](const std::string&) {
+                           }},
+                           editor,
+                           file,
+                           {}};
     context.files = &files;
     OpenCommand command;
     command.start(context);

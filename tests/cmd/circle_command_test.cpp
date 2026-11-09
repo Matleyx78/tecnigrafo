@@ -170,8 +170,11 @@ TEST(CircleCommandPreview, GeometryAndBasePointsFollowEachConstruction) {
     core::Document document;
     edit::Editor editor(document);
     edit::DocumentFile file;
-    CommandContext context{editor, file, {}, [](const std::string&) {
-                           }};
+    CommandContext context{{[](const std::string&) {
+                           }},
+                           editor,
+                           file,
+                           {}};
     CircleCommand command;
     command.start(context);
     EXPECT_FALSE(command.basePoint());

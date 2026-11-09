@@ -5,6 +5,7 @@
 
 #include "commands/grip_command.hpp"
 #include "text.hpp"
+#include "tg/cmd/command_protocol.hpp"
 #include "tg/cmd/coordinate_input.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
@@ -70,27 +71,18 @@ void abortOnUndescribedPrompt(const std::string& message) {
     std::abort();
 }
 
-bool matches(std::string_view name, std::string_view shortcut, std::string_view text) {
-    return detail::equalsIgnoringCase(text, name) ||
-           (!shortcut.empty() && detail::equalsIgnoringCase(text, shortcut));
-}
-
-bool matches(const Keyword& keyword, std::string_view text) {
-    return matches(keyword.name, keyword.shortcut, text);
-}
-
 // The written selection options of docs/adr/0032, point 4, read like the
 // options of a prompt: the name or the shortcut, in any case.
 bool isWindowOption(std::string_view text) {
-    return matches("Window", "W", text);
+    return matchesKeyword(Keyword{"Window", "W"}, text);
 }
 
 bool isCrossingOption(std::string_view text) {
-    return matches("Crossing", "C", text);
+    return matchesKeyword(Keyword{"Crossing", "C"}, text);
 }
 
 bool isAllOption(std::string_view text) {
-    return matches("ALL", "", text);
+    return matchesKeyword(Keyword{"ALL", ""}, text);
 }
 
 // The questions to the model still find the entities of a locked layer, but
@@ -127,8 +119,15 @@ bool showsGrips(const core::Document& document, const core::EntityRecord& record
 CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& editor)
     : m_registry(registry),
       m_editor(editor),
-      m_context(std::in_place, editor, m_ownFile, std::nullopt,
-                [this](std::string text) { message(std::move(text)); }),
+      // Braces, not std::in_place: the static analyser of clang-tidy 18
+      // crashes on the parenthesised aggregate initialisation of a struct
+      // with a base (C++20), as in std::optional::emplace().
+      m_context(CommandContext{{[this](std::string text) {
+                                   message(std::move(text));
+                               }},
+                               editor,
+                               m_ownFile,
+                               {}}),
       m_descriptionCheck(abortOnUndescribedPrompt) {}
 
 // P23 specifies this owning signature; keep the public API used by the UI.
@@ -170,9 +169,14 @@ void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
     // A reference cannot be rebound. Carry the command session state over
     // when rebuilding the context around a different file.
     CommandContext previous = std::move(context());
-    m_context.emplace(previous.editor, file != nullptr ? *file : m_ownFile, previous.lastPoint,
-                      std::move(previous.message), previous.defaults, previous.files,
-                      previous.documentReplaced, previous.scriptSequences);
+    // Built with braces, then moved in: see the constructor.
+    m_context.emplace(CommandContext{{std::move(previous.message), previous.scriptSequences},
+                                     previous.editor,
+                                     file != nullptr ? *file : m_ownFile,
+                                     previous.lastPoint,
+                                     previous.defaults,
+                                     previous.files,
+                                     previous.documentReplaced});
 }
 
 void CommandRunner::submitText(std::string_view text) {
@@ -448,11 +452,7 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
 }
 
 void CommandRunner::typedText(std::string_view text, const Prompt& prompt) {
-    if (prompt.file != FilePrompt::None && text.size() >= 2 && text.front() == '"' &&
-        text.back() == '"') {
-        text = text.substr(1, text.size() - 2);
-    }
-    forward(TextInput{std::string{text}});
+    forward(TextInput{textAnswer(prompt, text)});
 }
 
 void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
@@ -578,9 +578,8 @@ void CommandRunner::typedSelection(std::string_view text) {
 }
 
 bool CommandRunner::forwardKeyword(std::string_view text, const Prompt& prompt) {
-    const auto keyword = std::ranges::find_if(
-        prompt.keywords, [text](const Keyword& candidate) { return matches(candidate, text); });
-    if (keyword == prompt.keywords.end()) {
+    const Keyword* keyword = findKeyword(prompt, text);
+    if (keyword == nullptr) {
         return false;
     }
     forward(KeywordInput{keyword->name});
