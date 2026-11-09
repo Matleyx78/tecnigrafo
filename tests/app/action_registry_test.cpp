@@ -343,10 +343,21 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(menus[4]->menu()->actions(),
               (QList<QAction*>{action("draw.line"), action("draw.pline"), action("draw.circle"),
                                action("draw.arc"), action("draw.text")}));
+    // The actions of the program are global, in every environment (decision
+    // B7, docs/tappe/0.7.5/P30); the others are of the drawing.
+    const QStringList global{
+        QStringLiteral("file.new"),        QStringLiteral("file.open"),
+        QStringLiteral("file.recent"),     QStringLiteral("file.separator-quit"),
+        QStringLiteral("file.quit"),       QStringLiteral("edit.undo"),
+        QStringLiteral("edit.redo"),       QStringLiteral("tools.settings"),
+        QStringLiteral("tools.shortcuts"), QStringLiteral("ui.theme"),
+        QStringLiteral("ui.interface"),    QStringLiteral("help.about")};
     for (QAction* item : registry().actions()) {
         const ActionSpec* spec = registry().spec(item->objectName());
         ASSERT_NE(spec, nullptr);
-        EXPECT_EQ(spec->environments, QStringList{QStringLiteral("drawing2d")})
+        EXPECT_EQ(spec->environments, global.contains(spec->id)
+                                          ? QStringList{}
+                                          : QStringList{QStringLiteral("drawing2d")})
             << spec->id.toStdString();
         EXPECT_EQ(item->isCheckable(), spec->checkable) << spec->id.toStdString();
     }
