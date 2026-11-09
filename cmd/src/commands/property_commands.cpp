@@ -77,7 +77,7 @@ Status ColorCommand::handle(CommandContext& context, const Input& input) {
     auto current = context.editor.document().current();
     current.color = *color;
     context.editor.beginTransaction("COLOR");
-    context.editor.setCurrent(current);
+    context.editor.tables().setCurrent(current);
     context.editor.commit();
     return Status::Finished;
 }
@@ -123,7 +123,7 @@ void LinetypeCommand::load(CommandContext& context, std::string_view names) {
         type.name = definition->name;
         type.description = definition->description;
         type.pattern = definition->pattern;
-        context.editor.addLinetype(std::move(type));
+        context.editor.tables().addLinetype(std::move(type));
     }
 }
 
@@ -161,7 +161,7 @@ Status LinetypeCommand::handle(CommandContext& context, const Input& input) {
         } else {
             auto current = context.editor.document().current();
             current.linetype = type->id;
-            context.editor.setCurrent(current);
+            context.editor.tables().setCurrent(current);
             m_currentName = type->name;
         }
         m_stage = Stage::Option;
@@ -205,11 +205,11 @@ Status ScaleCommand::handle(CommandContext& context, const Input& input) {
     }
     context.editor.beginTransaction(m_variable == Variable::Global ? "LTSCALE" : "CELTSCALE");
     if (m_variable == Variable::Global) {
-        context.editor.setLtscale(number->a);
+        context.editor.tables().setLtscale(number->a);
     } else {
         auto current = context.editor.document().current();
         current.linetypeScale = number->a;
-        context.editor.setCurrent(current);
+        context.editor.tables().setCurrent(current);
     }
     context.editor.commit();
     return Status::Finished;
@@ -252,7 +252,7 @@ Status LweightCommand::handle(CommandContext& context, const Input& input) {
     auto current = context.editor.document().current();
     current.lineweight = *weight;
     context.editor.beginTransaction("LWEIGHT");
-    context.editor.setCurrent(current);
+    context.editor.tables().setCurrent(current);
     context.editor.commit();
     return Status::Finished;
 }
@@ -277,7 +277,7 @@ Status LwdisplayCommand::handle(CommandContext& context, const Input& input) {
         context.message("Requires ON or OFF.");
         return Status::Continue;
     }
-    context.editor.setLwdisplay(detail::equalsIgnoringCase(*text, "ON"));
+    context.editor.tables().setLwdisplay(detail::equalsIgnoringCase(*text, "ON"));
     return Status::Finished;
 }
 

@@ -5,6 +5,7 @@
 
 add_library(tg_edit
     src/document_file.cpp
+    src/document_tables.cpp
     src/editor.cpp
     src/layer_rules.cpp
 )

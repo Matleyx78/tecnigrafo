@@ -366,7 +366,7 @@ void MainWindow::createMenus() {
         setInterface(classic ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
     connect(registeredAction("aids.lwdisplay"), &QAction::toggled, this, [this](bool on) {
-        m_editor.setLwdisplay(on);
+        m_editor.tables().setLwdisplay(on);
         m_view->update();
     });
 

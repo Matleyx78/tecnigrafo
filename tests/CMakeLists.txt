@@ -77,6 +77,7 @@ add_executable(tg_tests
     core/text_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
+    edit/document_tables_test.cpp
     edit/editor_test.cpp
     edit/layer_rules_test.cpp
     io/dxf_lwpolyline_test.cpp

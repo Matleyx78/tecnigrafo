@@ -454,7 +454,7 @@ bool LayerPanel::newLayer() {
     layer.linetype = document().continuousLinetype();
     std::optional<core::LayerId> created;
     const bool done = run([&] {
-        created = m_editor.addLayer(layer);
+        created = m_editor.tables().addLayer(layer);
         return created.has_value();
     });
     if (done && created.has_value()) {
@@ -482,7 +482,7 @@ bool LayerPanel::deleteLayer(core::LayerId id) {
         case edit::LayerProblem::NameInUse:
             break;
     }
-    return run([&] { return m_editor.removeLayer(id); });
+    return run([&] { return m_editor.tables().removeLayer(id); });
 }
 
 bool LayerPanel::deleteSelected() {
@@ -502,7 +502,7 @@ bool LayerPanel::makeCurrent(core::LayerId id) {
     }
     core::CurrentProperties current = document().current();
     current.layer = id;
-    return run([&] { return m_editor.setCurrent(current); });
+    return run([&] { return m_editor.tables().setCurrent(current); });
 }
 
 bool LayerPanel::makeSelectedCurrent() {
@@ -546,7 +546,7 @@ bool LayerPanel::renameLayer(core::LayerId id, const QString& name) {
         refresh();
         return false;
     }
-    return run([&] { return m_editor.renameLayer(id, text); });
+    return run([&] { return m_editor.tables().renameLayer(id, text); });
 }
 
 bool LayerPanel::setState(core::LayerId id, LayerState state, bool value) {
@@ -581,7 +581,7 @@ bool LayerPanel::setState(core::LayerId id, LayerState state, bool value) {
             next.plot = value;
             break;
     }
-    return run([&] { return m_editor.changeLayer(next); });
+    return run([&] { return m_editor.tables().changeLayer(next); });
 }
 
 bool LayerPanel::setColor(core::LayerId id, core::Color color) {
@@ -598,7 +598,7 @@ bool LayerPanel::setColor(core::LayerId id, core::Color color) {
     }
     core::Layer next = *layer;
     next.color = color;
-    return run([&] { return m_editor.changeLayer(next); });
+    return run([&] { return m_editor.tables().changeLayer(next); });
 }
 
 bool LayerPanel::setLinetype(core::LayerId id, core::LinetypeId linetype) {
@@ -617,7 +617,7 @@ bool LayerPanel::setLinetype(core::LayerId id, core::LinetypeId linetype) {
     }
     core::Layer next = *layer;
     next.linetype = linetype;
-    return run([&] { return m_editor.changeLayer(next); });
+    return run([&] { return m_editor.tables().changeLayer(next); });
 }
 
 bool LayerPanel::setLineweight(core::LayerId id, int lineweight) {
@@ -635,7 +635,7 @@ bool LayerPanel::setLineweight(core::LayerId id, int lineweight) {
     }
     core::Layer next = *layer;
     next.lineweight = lineweight;
-    return run([&] { return m_editor.changeLayer(next); });
+    return run([&] { return m_editor.tables().changeLayer(next); });
 }
 
 void LayerPanel::changeEvent(QEvent* event) {

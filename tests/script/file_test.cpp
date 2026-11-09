@@ -466,7 +466,7 @@ TEST(ReportFields, WrittenOnlyWhenDifferentFromANewSession) {
     expectContains(text, "ortho: off\ndrawing: plan.dxf\npointer: none\n");
 
     editor.beginTransaction("INSUNITS");
-    EXPECT_TRUE(editor.setUnits(6));
+    EXPECT_TRUE(editor.tables().setUnits(6));
     editor.commit();
     text = section(editor, file);
     expectContains(text, "ortho: off\ndrawing: plan.dxf, modified\nunits: 6\npointer: none\n");

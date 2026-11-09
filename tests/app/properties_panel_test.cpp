@@ -140,7 +140,7 @@ protected:
         layer.locked = locked;
         layer.frozen = frozen;
         m_editor.beginTransaction("Test");
-        const auto id = m_editor.addLayer(layer);
+        const auto id = m_editor.tables().addLayer(layer);
         m_editor.commit();
         EXPECT_TRUE(id.has_value());
         return id.value_or(core::LayerId{});

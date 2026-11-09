@@ -32,7 +32,7 @@ bool setCurrent(CommandContext& context, std::string_view name) {
     }
     auto current = document.current();
     current.layer = layer->id;
-    context.editor.setCurrent(current);
+    context.editor.tables().setCurrent(current);
     return true;
 }
 
@@ -52,7 +52,7 @@ void createLayer(CommandContext& context, std::string name) {
     core::Layer layer;
     layer.name = std::move(name);
     layer.linetype = context.editor.document().continuousLinetype();
-    context.editor.addLayer(std::move(layer));
+    context.editor.tables().addLayer(std::move(layer));
 }
 
 Prompt textPrompt(std::string text, std::vector<Keyword> keywords = {}) {
@@ -103,7 +103,7 @@ Status LayerCommand::handle(CommandContext& context, const Input& input) {
         if (detail::equalsIgnoringCase(text, "Yes") || detail::equalsIgnoringCase(text, "Y")) {
             auto layer = *context.editor.document().layer(m_offId);
             layer.on = false;
-            context.editor.changeLayer(layer);
+            context.editor.tables().changeLayer(layer);
         } else if (!text.empty() && !detail::equalsIgnoringCase(text, "No") &&
                    !detail::equalsIgnoringCase(text, "N")) {
             context.message("Invalid option keyword.");
@@ -224,7 +224,7 @@ void LayerCommand::handleName(CommandContext& context, std::string_view text) {
                                 "\" is also named in data Tecnigrafo does not handle; that "
                                 "data keeps the old name.");
             }
-            context.editor.renameLayer(m_renameId, std::string(text));
+            context.editor.tables().renameLayer(m_renameId, std::string(text));
         }
     }
     m_stage = Stage::Option;
@@ -335,7 +335,7 @@ void LayerCommand::applyNames(CommandContext& context, std::string_view text) {
                 layer.plot = m_plot;
                 break;
         }
-        context.editor.changeLayer(layer);
+        context.editor.tables().changeLayer(layer);
     }
 }
 
