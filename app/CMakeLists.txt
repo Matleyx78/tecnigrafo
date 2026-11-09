@@ -44,6 +44,10 @@ qt_add_library(tg_app_ui STATIC
     src/document_session.hpp
     src/document_tabs.cpp
     src/document_tabs.hpp
+    src/document_types.cpp
+    src/document_types.hpp
+    src/environments.cpp
+    src/environments.hpp
     src/main_window.cpp
     src/main_window.hpp
     src/theme.cpp

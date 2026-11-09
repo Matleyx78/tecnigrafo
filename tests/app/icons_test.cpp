@@ -5,8 +5,11 @@
 #include "auto_hide.hpp"
 #include "builtin_actions.hpp"
 #include "document_tabs.hpp"
+#include "document_types.hpp"
+#include "environments.hpp"
 #include "layer_table_model.hpp"
 #include "properties_panel.hpp"
+#include "tg/cmd/command_registry.hpp"
 #include "theme.hpp"
 
 #include <QAction>
@@ -426,6 +429,18 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     used.append(autoHideIconNames());
     // The row of the tabs and the Start page (0.7.5-P29).
     used.append(documentTabsIconNames());
+    // The types of document and the environments (0.7.5-P30): the tabs, the
+    // Start page and the indicator of the status bar show them.
+    const cmd::CommandRegistry commands{};
+    DocumentTypeRegistry types;
+    EnvironmentRegistry environments;
+    registerBuiltinDocumentTypes(types, environments, commands);
+    for (const DocumentType* type : types.list()) {
+        used.append(type->icon);
+    }
+    for (const Environment* environment : environments.list()) {
+        used.append(environment->icon);
+    }
 
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
     const QStringList names =

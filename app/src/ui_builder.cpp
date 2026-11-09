@@ -4,6 +4,7 @@
 #include "ui_builder.hpp"
 
 #include "action_registry.hpp"
+#include "environments.hpp"
 #include "layer_panel.hpp"
 #include "properties_panel.hpp"
 
@@ -63,6 +64,24 @@ QStringList groups() {
     return {QStringLiteral("home/draw"),     QStringLiteral("home/modify"),
             QStringLiteral("home/layers"),   QStringLiteral("home/properties"),
             QStringLiteral("view/navigate"), QStringLiteral("view/aids")};
+}
+
+/// The tabs of the ribbon that every environment has (docs/adr/0039, point
+/// 5): the ones of groups(). The contextual tabs of an environment follow.
+QStringList fixedTabs() {
+    QStringList tabs;
+    for (const QString& path : groups()) {
+        const QString tab = path.section(QLatin1Char('/'), 0, 0);
+        if (!tabs.contains(tab)) {
+            tabs.append(tab);
+        }
+    }
+    return tabs;
+}
+
+/// Whether `action` is one of `registry`, not an action Qt made for a menu.
+bool isRegistered(const ActionRegistry& registry, const QAction* action) {
+    return !action->objectName().isEmpty() && registry.action(action->objectName()) == action;
 }
 
 /// Keep Quick Select after the modification commands so their columns of
@@ -158,6 +177,9 @@ void UiBuilder::show(InterfaceKind kind) {
     m_ribbon = nullptr;
     m_applicationButton = nullptr;
     m_title = nullptr;
+    m_menuBar = nullptr;
+    m_panels.clear();
+    m_categories.clear();
     if (kind == InterfaceKind::Ribbon) {
         buildRibbon();
     } else {
@@ -165,6 +187,111 @@ void UiBuilder::show(InterfaceKind kind) {
     }
     m_current = kind;
     m_built = true;
+    applyEnvironment();
+}
+
+void UiBuilder::setEnvironment(const Environment* environment) {
+    m_environmentSet = true;
+    m_environment = environment != nullptr ? environment->id : QString{};
+    m_contextualRibbon = environment != nullptr ? environment->contextualRibbon : QStringList{};
+    applyEnvironment();
+}
+
+bool UiBuilder::showMenus(QMenu& menu) const {
+    bool offered = false;
+    for (QAction* action : menu.actions()) {
+        if (action->isSeparator()) {
+            continue;
+        }
+        // A submenu of ActionSpec::menu is Qt's: it is shown while it has
+        // something to offer. An action of the registry with a menu of its
+        // own (the recent files, the variants) is offered as itself.
+        if (action->menu() != nullptr && !isRegistered(m_registry, action)) {
+            action->setVisible(showMenus(*action->menu()));
+        }
+        offered = offered || action->isVisible();
+    }
+    return offered;
+}
+
+void UiBuilder::applyEnvironment() {
+    if (!m_environmentSet) {
+        return;
+    }
+    // The groups of the ribbon and the toolbars that offer something.
+    QHash<QString, bool> offeredPlaces;
+    for (QAction* action : m_registry.actions()) {
+        const ActionSpec* spec = m_registry.spec(action->objectName());
+        const bool offered = availableIn(*spec, m_environment);
+        action->setVisible(offered);
+        if (offered && !action->isSeparator() && !spec->ribbon.isEmpty()) {
+            offeredPlaces.insert(spec->ribbon, true);
+        }
+    }
+    if (m_menuBar != nullptr) {
+        for (QAction* action : m_menuBar->actions()) {
+            if (action->menu() != nullptr) {
+                action->setVisible(showMenus(*action->menu()));
+            }
+        }
+    }
+    for (QToolBar* toolbar : m_toolbars) {
+        // The controls of the layers and of the properties go with the
+        // actions of their toolbar.
+        bool offered = false;
+        for (const QAction* action : toolbar->actions()) {
+            offered = offered || (isRegistered(m_registry, action) && !action->isSeparator() &&
+                                  action->isVisible());
+        }
+        toolbar->setVisible(offered);
+    }
+    if (m_ribbon == nullptr) {
+        return;
+    }
+    for (auto panel = m_panels.cbegin(); panel != m_panels.cend(); ++panel) {
+        panel.value()->setVisible(offeredPlaces.value(panel.key(), false));
+    }
+    // The tab chosen, to choose it again once the tabs change.
+    SARibbonCategory* chosen = nullptr;
+    for (const auto& [name, category] : m_categories) {
+        if (m_ribbon->isCategoryVisible(category) &&
+            m_ribbon->categoryIndex(category) == m_ribbon->currentIndex()) {
+            chosen = category;
+        }
+    }
+    const QStringList fixed = fixedTabs();
+    QList<SARibbonCategory*> shown;
+    QList<SARibbonCategory*> hidden;
+    for (const auto& [name, category] : m_categories) {
+        bool offered = false;
+        if (fixed.contains(name) || m_contextualRibbon.contains(name)) {
+            for (auto panel = m_panels.cbegin(); panel != m_panels.cend(); ++panel) {
+                offered = offered || (panel.key().section(QLatin1Char('/'), 0, 0) == name &&
+                                      offeredPlaces.value(panel.key(), false));
+            }
+        }
+        if (offered != m_ribbon->isCategoryVisible(category)) {
+            (offered ? shown : hidden).append(category);
+        }
+    }
+    if (!hidden.isEmpty()) {
+        m_ribbon->setCategoriesVisible(hidden, false);
+    }
+    if (!shown.isEmpty()) {
+        m_ribbon->setCategoriesVisible(shown, true);
+    }
+    if (chosen == nullptr || !m_ribbon->isCategoryVisible(chosen)) {
+        // The first tab shown, if the one chosen went away.
+        chosen = nullptr;
+        for (const auto& [name, category] : m_categories) {
+            if (chosen == nullptr && m_ribbon->isCategoryVisible(category)) {
+                chosen = category;
+            }
+        }
+    }
+    if (chosen != nullptr && m_ribbon->categoryIndex(chosen) != m_ribbon->currentIndex()) {
+        m_ribbon->raiseCategory(chosen);
+    }
 }
 
 InterfaceKind UiBuilder::current() const {
@@ -225,6 +352,7 @@ void UiBuilder::buildRibbon() {
                                ? SARibbonBar::RibbonStyleLooseThreeRow
                                : SARibbonBar::RibbonStyleCompactThreeRow);
     m_registry.buildMenus(ribbon);
+    m_menuBar = ribbon;
     auto* application = new QMenu(ribbon);
     application->setObjectName(QStringLiteral("applicationMenu"));
     // Keep the classic menu actions on the bar as well: the application
@@ -249,20 +377,24 @@ void UiBuilder::buildRibbon() {
     styleRibbon();
     fillQuickAccess(*ribbon->quickAccessBar(), m_registry);
 
+    // Tabs are made in the order of their first group: the fixed ones of
+    // groups() first, the contextual ones of the environments after them
+    // (docs/adr/0039, point 5).
     QHash<QString, SARibbonCategory*> categories;
-    QHash<QString, SARibbonPanel*> panels;
     const auto panelFor = [&](const QString& path) {
-        SARibbonPanel* panel = panels.value(path, nullptr);
+        SARibbonPanel* panel = m_panels.value(path, nullptr);
         if (panel == nullptr) {
             const QString categoryName = path.section(QLatin1Char('/'), 0, 0);
             SARibbonCategory* category = categories.value(categoryName, nullptr);
             if (category == nullptr) {
                 category = ribbon->addCategoryPage(title(categoryName));
+                category->setObjectName(categoryName);
                 categories.insert(categoryName, category);
+                m_categories.append({categoryName, category});
             }
             panel = category->addPanel(title(path.section(QLatin1Char('/'), 1)));
             panel->setObjectName(path);
-            panels.insert(path, panel);
+            m_panels.insert(path, panel);
         }
         return panel;
     };
@@ -308,6 +440,7 @@ void UiBuilder::buildClassic() {
     auto* bar = new QMenuBar(&m_window);
     bar->setObjectName(QStringLiteral("classicMenuBar"));
     m_registry.buildMenus(bar);
+    m_menuBar = bar;
     auto* quickAccess = new QToolBar(bar);
     quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
     fillQuickAccess(*quickAccess, m_registry);

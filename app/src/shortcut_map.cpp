@@ -52,7 +52,13 @@ QString ShortcutMap::conflict(const QString& id, const QKeySequence& sequence) c
         if (other == id || shortcut(other) != sequence) {
             continue;
         }
-        for (const QString& environment : m_specs.value(other).environments) {
+        // A global action (no environments, docs/tappe/0.7.5/P30) is in every
+        // environment: its key conflicts with the key of any other action.
+        const auto otherEnvironments = m_specs.value(other).environments;
+        if (environments.isEmpty() || otherEnvironments.isEmpty()) {
+            return other;
+        }
+        for (const QString& environment : otherEnvironments) {
             if (environments.contains(environment)) {
                 return other;
             }

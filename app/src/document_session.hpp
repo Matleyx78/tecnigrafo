@@ -18,6 +18,7 @@
 #include <QStringList>
 
 #include <optional>
+#include <utility>
 
 namespace tg::app {
 
@@ -31,8 +32,8 @@ namespace tg::app {
 /// is destroyed (docs/tappe/0.7.5/P28, "Durata dei riferimenti").
 class DocumentSession {
 public:
-    /// The identifier of the drawing, the only type of document for now
-    /// (docs/adr/0041, point 7; the registry of the types is P30).
+    /// The identifier of the drawing in the registry of the types
+    /// (DocumentTypeRegistry, docs/adr/0041, point 7).
     static constexpr const char* kDrawingType = "drawing";
 
     /// Where the view of the session looked when it was left: the centre and
@@ -64,9 +65,11 @@ public:
     };
 
     /// `registry` and `files` are borrowed: both must outlive the session
-    /// (cmd::DrawingSession). `files` may be nullptr.
+    /// (cmd::DrawingSession). `files` may be nullptr. `documentType` is the
+    /// id of the session's type in DocumentTypeRegistry.
     DocumentSession(const cmd::CommandRegistry& registry, io::FileAccess* files,
-                    core::Document document = core::Document::newDrawing());
+                    core::Document document = core::Document::newDrawing(),
+                    QString documentType = QString::fromLatin1(kDrawingType));
 
     DocumentSession(const DocumentSession&) = delete;
     DocumentSession& operator=(const DocumentSession&) = delete;
@@ -74,8 +77,17 @@ public:
     DocumentSession& operator=(DocumentSession&&) = delete;
     ~DocumentSession() = default;
 
-    /// The type of the document: kDrawingType.
+    /// The id of the type of the document in DocumentTypeRegistry.
     [[nodiscard]] const QString& documentType() const { return m_documentType; }
+
+    /// The environment the document is edited in (docs/adr/0041, point 1;
+    /// decision B8 of docs/DECISIONI.md): it belongs to the session, so it
+    /// comes back with it. MainWindow gives a new session the default
+    /// environment of its type, and gives the runner the environment of the
+    /// active session (cmd::CommandRunner::setEnvironment()).
+    [[nodiscard]] const QString& environment() const { return m_environment; }
+
+    void setEnvironment(QString environment) { m_environment = std::move(environment); }
 
     [[nodiscard]] cmd::DrawingSession& drawing() { return m_drawing; }
 
@@ -108,7 +120,8 @@ public:
     [[nodiscard]] ActionResponses& actionResponses() { return m_actionResponses; }
 
 private:
-    QString m_documentType{QString::fromLatin1(kDrawingType)};
+    QString m_documentType;
+    QString m_environment;
     cmd::DrawingSession m_drawing;
     std::optional<ViewState> m_viewState;
     PendingInput m_pendingInput;

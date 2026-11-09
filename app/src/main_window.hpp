@@ -4,6 +4,8 @@
 #pragma once
 
 #include "document_session.hpp"
+#include "document_types.hpp"
+#include "environments.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
@@ -62,6 +64,16 @@ class StartPage;
 /// the panels Layers and Properties, Undo and Redo, the drawing aids, title
 /// and status follow the active session (activate()); the listener of every
 /// session updates the interface only while that session is active.
+///
+/// Every session has the environment it is edited in (docs/adr/0041, point
+/// 1), and the window offers the actions of the environment of the active
+/// session: ribbon, menus, toolbars, shortcuts and the commands typed
+/// (UiBuilder::setEnvironment(), cmd::CommandRunner::setEnvironment()); with
+/// the Start page, only the global actions. The indicator of the status bar
+/// names the environment. The types of document and the environments come
+/// from registries (DocumentTypeRegistry, EnvironmentRegistry) that the
+/// window fills when it is built: registerBuiltinDocumentTypes(), then the
+/// extension of the constructor, if any.
 class MainWindow final : public SARibbonMainWindow {
     Q_OBJECT
 
@@ -79,9 +91,27 @@ public:
         None,
     };
 
+    /// The registries the window is put together from, as an extension of
+    /// the constructor sees them (docs/adr/0041, points 6 and 7).
+    struct Registries {
+        DocumentTypeRegistry& types;
+        EnvironmentRegistry& environments;
+        ActionRegistry& actions;
+        cmd::CommandRegistry& commands;
+    };
+
+    /// Adds types, environments, actions and commands to the window's own,
+    /// after the built-in ones and before the interface is built from them.
+    /// The window does with them what it does with the built-in ones: today
+    /// only the tests add any (the environment of test, docs/tappe/0.7.5/
+    /// P30). The registries are the window's: what is added must not
+    /// outlive it.
+    using Extension = std::function<void(const Registries&)>;
+
     Q_DISABLE_COPY_MOVE(MainWindow)
 
-    explicit MainWindow(InitialDrawing drawing = InitialDrawing::Sample, QWidget* parent = nullptr);
+    explicit MainWindow(InitialDrawing drawing = InitialDrawing::Sample, QWidget* parent = nullptr,
+                        const Extension& extension = {});
 
     ~MainWindow() override;
 
@@ -134,9 +164,24 @@ public:
         return m_sessions;
     }
 
-    /// Opens a session for `document`, with an empty history and no file,
-    /// and returns it, not active: activate() shows it.
+    /// Opens a session for `document`, a drawing, with an empty history and
+    /// no file, and returns it, not active: activate() shows it.
     DocumentSession& openSession(core::Document document = core::Document::newDrawing());
+
+    /// Opens a new document of `type` (DocumentType::create()), in the
+    /// default environment of its type, and returns it, not active, as the
+    /// other openSession(). Precondition: `type` is one of documentTypes(),
+    /// and its environments are in environments().
+    DocumentSession& openSession(const DocumentType& type);
+
+    /// The types of document of the window.
+    [[nodiscard]] const DocumentTypeRegistry& documentTypes() const { return m_types; }
+
+    /// The environments of the window.
+    [[nodiscard]] const EnvironmentRegistry& environments() const { return m_environments; }
+
+    /// The environment of the active session; nullptr with the Start page.
+    [[nodiscard]] const Environment* activeEnvironment() const;
 
     /// The contract of activation (docs/adr/0041, point 2; docs/tappe/0.7.5/
     /// P28): the view keeps the centre and scale of the session it leaves;
@@ -212,9 +257,9 @@ private:
     void showScale(double pixelsPerUnit);
     void showAbout();
 
-    /// Declares the actions in the registry, connects them and builds the
-    /// menus from it.
-    void createMenus();
+    /// Declares the actions in the registry, with those of `extension`,
+    /// connects them and builds the menus from it.
+    void createMenus(const Extension& extension);
     void showSettings();
     void restoreUiSettings();
     void saveUiSettings();
@@ -256,6 +301,16 @@ private:
     void setDocumentActionsAvailable(bool available);
     /// The tabs show the sessions, in their order, and the active one.
     void refreshTabs();
+    /// Settings, listener and environment of a session just made, taken
+    /// among the sessions, not active.
+    DocumentSession& adoptSession(std::unique_ptr<DocumentSession> owned);
+    /// The interface offers the actions of the environment of the active
+    /// session, and the indicator names it (activeEnvironment()).
+    void showEnvironment();
+    /// The icon and the name of the environment in the indicator.
+    void updateEnvironmentIndicator();
+    /// The icon of the tab of a document of the type `type`.
+    [[nodiscard]] QString documentIcon(const QString& type) const;
     /// The Start page shows the recent files.
     void refreshStartPage();
     /// Writes `line` in the history and, with the Start page, on the page,
@@ -307,6 +362,9 @@ private:
     // drawing goes straight into the document of the first session, without
     // a transaction, so it cannot be undone.
     cmd::CommandRegistry m_registry;
+    // The types create sessions that borrow m_registry.
+    DocumentTypeRegistry m_types;
+    EnvironmentRegistry m_environments;
     std::unique_ptr<io::FileAccess> m_diskFiles;
     // The file access the runners get: m_diskFiles, setFileAccess()'s, or
     // nullptr in a script session.
@@ -368,6 +426,7 @@ private:
     QAction* m_perpendicularAction{nullptr};
     QAction* m_tangentAction{nullptr};
     QAction* m_quadrantAction{nullptr};
+    QToolButton* m_environmentIndicator{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
 };

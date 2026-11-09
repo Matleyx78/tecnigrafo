@@ -35,6 +35,10 @@ struct ActionSpec {
     QKeySequence shortcut;  ///< default; empty for none
     QString command;        ///< cmd command it runs ("LINE"), or empty
     bool checkable{false};
+    /// The environments the action is offered in (docs/adr/0041, point 6);
+    /// empty: all of them, a global action (decision B7 of docs/
+    /// DECISIONI.md), as the empty list of a command (cmd::
+    /// CommandDescription::environments). availableIn() decides.
     QStringList environments{QStringLiteral("drawing2d")};
     QString menu;    ///< classic menu path: "&Edit", "&Tools/Object Snap &Modes"
     QString ribbon;  ///< ribbon place "home/draw"; empty: menu only (P16)
@@ -57,6 +61,12 @@ struct ActionSpec {
     // dynamicActions() take it from the action of their prefix.
     bool requiresDocument{true};  ///< disabled while no document is active (the Start page)
 };
+
+/// Whether the action of `spec` is offered in the environment `environment`
+/// (docs/adr/0041, point 6): a global action in every environment and with
+/// no environment, the others only in theirs. An empty `environment` is
+/// none, as with the Start page, where only the global actions are offered.
+[[nodiscard]] bool availableIn(const ActionSpec& spec, const QString& environment);
 
 /// The actions of the main window. Menus, and later the ribbon, toolbars
 /// and the shortcuts window, are built from it; the registry only declares,
@@ -101,8 +111,8 @@ public:
     /// Actions created at run time by the registry itself, for lists such
     /// as the recent files: ids "<prefix>.1"... "<prefix>.<count>". Actions
     /// created by an earlier call are returned again, not created twice.
-    /// They have the ActionSpec::requiresDocument of the action `prefix`,
-    /// if there is one.
+    /// They have the ActionSpec::requiresDocument and ActionSpec::
+    /// environments of the action `prefix`, if there is one.
     QList<QAction*> dynamicActions(const QString& prefix, int count);
 
     /// Builds the classic menus into `bar` from ActionSpec::menu, in order:

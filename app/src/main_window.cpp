@@ -10,7 +10,9 @@
 #include "cad_view.hpp"
 #include "command_line.hpp"
 #include "document_tabs.hpp"
+#include "document_types.hpp"
 #include "dynamic_input_box.hpp"
+#include "environments.hpp"
 #include "layer_panel.hpp"
 #include "properties_panel.hpp"
 #include "recent_files.hpp"
@@ -23,6 +25,7 @@
 #include "tg/cmd/document_host.hpp"
 #include "tg/cmd/drawing_session.hpp"
 #include "tg/io/file_access.hpp"
+#include "theme.hpp"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -196,13 +199,6 @@ QIcon windowButtonIcon(WindowGlyph glyph, WindowGlyph checked, const QColor& col
     return icon;
 }
 
-/// The icon of the tab of a document of `type` (docs/ICONE.md).
-QString documentIcon(const QString& type) {
-    return type == QString::fromLatin1(DocumentSession::kDrawingType)
-               ? QStringLiteral("doc-drawing")
-               : QString{};
-}
-
 /// The tooltip of a switch of the status bar: its name and its key.
 QString switchToolTip(const QAction& action) {
     const QString name = action.text().remove(QLatin1Char('&'));
@@ -256,7 +252,7 @@ private:
     MainWindow& m_window;
 };
 
-MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
+MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension& extension)
     : SARibbonMainWindow(parent, windowStyles()),
       m_diskFiles(
           std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
@@ -278,6 +274,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     QCoreApplication::removePostedEvents(this, QEvent::MetaCall);
     setStyleSheet(QString{});
     cmd::registerBuiltinCommands(m_registry);
+    // The types and environments of the program (docs/adr/0041, point 7);
+    // the extension adds its own with the actions (createMenus()).
+    registerBuiltinDocumentTypes(m_types, m_environments, m_registry);
     // The program as distributed does not check descriptions; --script turns
     // the check on (docs/adr/0026, point 3, and setScriptMode()): the empty
     // function of m_descriptionCheck.
@@ -305,8 +304,6 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     m_drawingArea = central;
     m_documentTabs = new DocumentTabs(central);
     m_startPage = new StartPage(central);
-    m_startPage->addDocumentType(QString::fromLatin1(DocumentSession::kDrawingType), tr("Drawing"),
-                                 QStringLiteral("doc-drawing"));
     m_startPage->hide();
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -336,8 +333,12 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
                 refresh();
             });
 
-    createMenus();
+    createMenus(extension);
     createStatusBar();
+    // A button New for each type, the extension's too (docs/adr/0041, point 9).
+    for (const DocumentType* type : m_types.list()) {
+        m_startPage->addDocumentType(type->id, type->name, type->icon);
+    }
 
     connect(m_view, &CadView::cursorMoved, this, &MainWindow::showCursorPosition);
     connect(m_view, &CadView::scaleChanged, this, &MainWindow::showScale);
@@ -358,6 +359,7 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     } else {
         setDocumentActionsAvailable(false);
         setStartPageShown(true);
+        showEnvironment();
         updateEditActions();
         refreshTabs();
     }
@@ -371,16 +373,23 @@ QAction* MainWindow::registeredAction(const char* id) const {
     return action;
 }
 
-void MainWindow::createMenus() {
+void MainWindow::createMenus(const Extension& extension) {
     // Every action comes from the registry (docs/adr/0009, point 1); the
     // window only connects what the actions do.
     m_actions = new ActionRegistry(this);
     addBuiltinActions(*m_actions);
+    if (extension) {
+        extension({m_types, m_environments, *m_actions, m_registry});
+    }
     // The actions that need a document, disabled with the Start page
     // (ActionSpec::requiresDocument). The run-time actions of the recent
-    // files are not among them: their menu, file.recent, works there.
+    // files are not among them: their menu, file.recent, works there. Nor
+    // are the actions of an environment: the Start page has none, so they
+    // are hidden there, which disables them (UiBuilder::setEnvironment()),
+    // and they come back as they were.
     for (QAction* action : m_actions->actions()) {
-        if (!action->isSeparator() && m_actions->spec(action->objectName())->requiresDocument) {
+        const ActionSpec* spec = m_actions->spec(action->objectName());
+        if (!action->isSeparator() && spec->requiresDocument && availableIn(*spec, QString{})) {
             m_documentActions.append(action);
         }
     }
@@ -580,8 +589,20 @@ void MainWindow::connectDocumentTabs() {
     });
     connect(m_documentTabs, &DocumentTabs::newRequested, this,
             [this] { triggerAction("file.new"); });
-    connect(m_startPage, &StartPage::newRequested, this,
-            [this](const QString& /*type*/) { triggerAction("file.new"); });
+    connect(m_startPage, &StartPage::newRequested, this, [this](const QString& id) {
+        // The first type, the drawing, is NEW's, as file.new and `+`; the
+        // others are made by their type (opening and saving through the
+        // type are docs/tappe/0.7.5/P30b).
+        const QList<const DocumentType*> types = m_types.list();
+        const DocumentType* type = m_types.find(id);
+        if (type == nullptr || types.isEmpty() || type == types.first()) {
+            triggerAction("file.new");
+            return;
+        }
+        if (!commandRunner().isActive()) {
+            activate(openSession(*type));
+        }
+    });
     connect(m_startPage, &StartPage::openRequested, this, [this] { triggerAction("file.open"); });
     connect(m_startPage, &StartPage::recentRequested, this, &MainWindow::openRecentFile);
 }
@@ -693,11 +714,17 @@ void MainWindow::createStatusBar() {
     m_cursorLabel = new QLabel(this);
     m_cursorLabel->setMinimumWidth(260);
     statusBar()->addWidget(m_cursorLabel);
-    // Empty in the drawing: the indicator comes with the environments
-    // (docs/adr/0041).
-    auto* environment = new QWidget(this);
-    environment->setObjectName(QStringLiteral("environmentIndicator"));
-    statusBar()->addPermanentWidget(environment);
+    // The environment of the active session, or none with the Start page
+    // (docs/adr/0041, point 1; decision B9 of docs/DECISIONI.md). It is where
+    // an environment will be chosen (docs/tappe/0.7.5/P31).
+    m_environmentIndicator = new QToolButton(this);
+    m_environmentIndicator->setObjectName(QStringLiteral("environmentIndicator"));
+    m_environmentIndicator->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_environmentIndicator->setIconSize(QSize(kStatusIconSize, kStatusIconSize));
+    m_environmentIndicator->setAutoRaise(true);
+    m_environmentIndicator->setFocusPolicy(Qt::NoFocus);
+    statusBar()->addPermanentWidget(m_environmentIndicator);
+    updateEnvironmentIndicator();
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
     statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
     statusBar()->addPermanentWidget(
@@ -852,9 +879,31 @@ void MainWindow::configureRunner(cmd::CommandRunner& runner) const {
 }
 
 DocumentSession& MainWindow::openSession(core::Document document) {
-    // A unique_ptr each: the vector may grow, the sessions stay where they are.
-    auto& session = *m_sessions.emplace_back(
+    return adoptSession(
         std::make_unique<DocumentSession>(m_registry, m_files, std::move(document)));
+}
+
+DocumentSession& MainWindow::openSession(const DocumentType& type) {
+    assert(m_types.find(type.id) == &type && "a type of another registry");
+    std::unique_ptr<DocumentSession> session = type.create();
+    assert(session != nullptr && session->documentType() == type.id &&
+           "a type creates documents of its own type");
+    return adoptSession(std::move(session));
+}
+
+DocumentSession& MainWindow::adoptSession(std::unique_ptr<DocumentSession> owned) {
+    // A unique_ptr each: the vector may grow, the sessions stay where they are.
+    auto& session = *m_sessions.emplace_back(std::move(owned));
+    // A new document is in the default environment of its type (docs/adr/
+    // 0041, point 1), and its runner knows it from the start.
+    const DocumentType* type = m_types.find(session.documentType());
+    assert(type != nullptr && "a session of a type not registered");
+    if (type != nullptr) {
+        assert(m_environments.find(type->environments.value(0)) != nullptr &&
+               "the default environment of a type is registered");
+        session.setEnvironment(type->environments.value(0));
+    }
+    session.runner().setEnvironment(session.environment().toStdString());
     configureRunner(session.runner());
     refreshTabs();
     // The editor's listener runs inside commit(), while the command that
@@ -941,14 +990,59 @@ void MainWindow::switchTo(DocumentSession* session) {
     if (session == nullptr) {
         setStartPageShown(true);
     }
+    if (session != nullptr) {
+        // The environment is the session's (decision B8): its runner has it
+        // from adoptSession(), and gets it again if it is idle and differs.
+        cmd::CommandRunner& runner = session->runner();
+        const std::string environment = session->environment().toStdString();
+        if (runner.environment() != environment && !runner.isActive()) {
+            runner.setEnvironment(environment);
+        }
+    }
     if (m_actions != nullptr) {
         // The switches are the window's: the runner shown now gets them.
         applyDrawingAids();
+        showEnvironment();
     }
     updateDrawingState();
     if (m_actions != nullptr) {
         updateEditActions();
     }
+}
+
+const Environment* MainWindow::activeEnvironment() const {
+    return m_active != nullptr ? m_environments.find(m_active->environment()) : nullptr;
+}
+
+void MainWindow::showEnvironment() {
+    if (m_destroying || !m_uiBuilder) {
+        return;
+    }
+    m_uiBuilder->setEnvironment(activeEnvironment());
+    updateEnvironmentIndicator();
+}
+
+void MainWindow::updateEnvironmentIndicator() {
+    if (m_environmentIndicator == nullptr) {
+        return;
+    }
+    const Environment* environment = activeEnvironment();
+    if (environment == nullptr) {
+        // The Start page: no environment (decision B9).
+        m_environmentIndicator->setIcon(QIcon());
+        m_environmentIndicator->setText(tr("No environment"));
+        m_environmentIndicator->setToolTip(tr("No document is open in an environment."));
+        return;
+    }
+    m_environmentIndicator->setIcon(
+        environment->icon.isEmpty() ? QIcon() : themedIcon(environment->icon, m_theme));
+    m_environmentIndicator->setText(environment->name);
+    m_environmentIndicator->setToolTip(tr("Environment: %1").arg(environment->name));
+}
+
+QString MainWindow::documentIcon(const QString& type) const {
+    const DocumentType* found = m_types.find(type);
+    return found != nullptr ? found->icon : QString{};
 }
 
 void MainWindow::closeSession(DocumentSession& session) {
@@ -1413,6 +1507,7 @@ void MainWindow::updateThemeIcons() {
     if (m_startPage != nullptr) {
         m_startPage->setTheme(m_theme);
     }
+    updateEnvironmentIndicator();
     // The tab of a hidden panel shows the icon of the action that opens it.
     if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel")); layers != nullptr) {
         layers->setWindowIcon(registeredAction("layer.panel")->icon());
@@ -1492,6 +1587,9 @@ void MainWindow::restoreUiSettings() {
     // The hidden panels stay hidden in the place that restoreState() gave
     // them, where docking them again puts them back.
     m_autoHide->restoreState(m_settings->value(QStringLiteral("ui/autoHide")).toStringList());
+    // restoreState() shows the toolbars as they were saved, maybe with
+    // another environment: the active one decides again.
+    showEnvironment();
     m_uiSettingsReady = true;
 }
 
