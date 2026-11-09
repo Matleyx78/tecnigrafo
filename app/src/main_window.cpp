@@ -80,7 +80,7 @@ bool offers(const cmd::Prompt& prompt, const QString& response) {
 }
 
 /// Observes successful writes, including SAVE copies that do not change
-/// the editor's file name or saved position. Serialization stays in cmd/io.
+/// the document file or the editor's saved position. Serialization stays in cmd/io.
 class DesktopFiles final : public io::FileAccess {
 public:
     DesktopFiles(std::function<void(const QString&)> saved,
@@ -225,6 +225,7 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
                                        [this](const QString& path) { m_pendingOpen = path; });
     m_runner.setFileAccess(m_diskFiles.get());
+    m_runner.setDocumentFile(&m_documentFile);
     updateDrawingState();
     resize(1100, 720);
 
@@ -274,9 +275,8 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         }
         // Only a decoded OPEN replaces the document after reading bytes.
         // A failed parse, undo or a no-op edit must not reorder recent files.
-        if (!m_pendingOpen.isEmpty() &&
-            m_pendingOpen == QString::fromStdString(m_editor.fileName()) && m_editor.hasFile() &&
-            !m_editor.isModified()) {
+        if (!m_pendingOpen.isEmpty() && m_documentFile.hasFile() && !m_editor.isModified() &&
+            m_pendingOpen == QString::fromStdString(m_documentFile.name())) {
             addRecentFile(std::exchange(m_pendingOpen, {}));
         }
     });
@@ -685,7 +685,7 @@ void MainWindow::updateDrawingState() {
         registeredAction("aids.lwdisplay")->setChecked(m_document.lwdisplay());
     }
     setWindowTitle(tr("%1[*] — Tecnigrafo")
-                       .arg(QFileInfo(QString::fromStdString(m_editor.fileName())).fileName()));
+                       .arg(QFileInfo(QString::fromStdString(m_documentFile.name())).fileName()));
     setWindowModified(m_editor.isModified());
 }
 
@@ -781,13 +781,13 @@ void MainWindow::openRecentFile(const QString& path) {
 }
 
 QString MainWindow::dialogPath() {
-    if (m_editor.hasFile()) {
-        return QFileInfo(QString::fromStdString(m_editor.fileName())).absoluteFilePath();
+    if (m_documentFile.hasFile()) {
+        return QFileInfo(QString::fromStdString(m_documentFile.name())).absoluteFilePath();
     }
     ensureRecentFiles();
     const QString folder =
         m_settings->value(QStringLiteral("lastFileDirectory"), QDir::homePath()).toString();
-    return QDir(folder).filePath(QString::fromStdString(m_editor.fileName()));
+    return QDir(folder).filePath(QString::fromStdString(m_documentFile.name()));
 }
 
 QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path) {
@@ -861,7 +861,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     const auto choice = QMessageBox::question(
         this, tr("Tecnigrafo"),
         tr("Save changes to %1?")
-            .arg(QFileInfo(QString::fromStdString(m_editor.fileName())).fileName()),
+            .arg(QFileInfo(QString::fromStdString(m_documentFile.name())).fileName()),
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
     if (choice == QMessageBox::Cancel) {
         event->ignore();

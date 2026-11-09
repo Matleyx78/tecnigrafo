@@ -7,6 +7,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/snap_points.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 #include "theme.hpp"
 #include "ui_builder.hpp"
@@ -175,6 +176,7 @@ private:
     // transaction, so it cannot be undone.
     core::Document m_document;
     edit::Editor m_editor;
+    edit::DocumentFile m_documentFile;
     cmd::CommandRegistry m_registry;
     cmd::CommandRunner m_runner;
     std::unique_ptr<io::FileAccess> m_diskFiles;

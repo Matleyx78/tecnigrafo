@@ -55,6 +55,7 @@ public:
     FileCommandsTest() : editor(document), runner(registry, editor) {
         registerBuiltinCommands(registry);
         runner.setFileAccess(&files);
+        runner.setDocumentFile(&file);
         runner.setMessageSink(
             [this](std::string message) { messages.push_back(std::move(message)); });
     }
@@ -69,6 +70,7 @@ public:
 
     core::Document document;
     edit::Editor editor;
+    edit::DocumentFile file;
     CommandRegistry registry;
     CommandRunner runner;
     MemoryFiles files;
@@ -76,6 +78,7 @@ public:
 };
 
 TEST_F(FileCommandsTest, QsaveAsksOnceAndThenSavesImmediately) {
+    runner.setDocumentFile(nullptr);
     changeUnits();
     runner.submitText("QSAVE");
     EXPECT_TRUE(runner.acceptsText());
@@ -83,7 +86,8 @@ TEST_F(FileCommandsTest, QsaveAsksOnceAndThenSavesImmediately) {
     runner.submitText("");
     EXPECT_FALSE(runner.isActive());
     EXPECT_TRUE(files.exists("Drawing1.cadx"));
-    EXPECT_TRUE(editor.hasFile());
+    EXPECT_TRUE(runner.documentFile().hasFile());
+    EXPECT_FALSE(file.hasFile());
     EXPECT_FALSE(editor.isModified());
     inputs({"INSUNITS", "24", "QSAVE"});
     EXPECT_FALSE(runner.isActive());
@@ -94,13 +98,57 @@ TEST_F(FileCommandsTest, QsaveAsksOnceAndThenSavesImmediately) {
     EXPECT_TRUE(messages.empty());
 }
 
+TEST_F(FileCommandsTest, SaveasAndQsaveUseTheBorrowedDocumentFile) {
+    inputs({"SAVEAS", "plan.cadx"});
+    EXPECT_EQ(&runner.documentFile(), &file);
+    EXPECT_TRUE(file.hasFile());
+    EXPECT_EQ(file.name(), "plan.cadx");
+    ASSERT_TRUE(files.exists("plan.cadx"));
+
+    inputs({"INSUNITS", "6", "QSAVE"});
+    EXPECT_EQ(files.writes, 2);
+    const auto saved = io::readCadx(files.contents.at("plan.cadx"));
+    ASSERT_TRUE(saved.ok());
+    EXPECT_EQ(saved.value().document.units(), 6);
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST_F(FileCommandsTest, OpenAndNewUpdateTheFileBeforeNotifying) {
+    const auto saved = io::writeDxf(core::Document::newDrawing(), io::DxfVersion::R2018);
+    ASSERT_TRUE(saved.ok());
+    files.contents["plan.dxf"] = saved.value();
+    ASSERT_EQ(file.name(), "Drawing1.cadx");
+    ASSERT_FALSE(file.hasFile());
+    int notifications = 0;
+    editor.setChangeListener([&] {
+        ++notifications;
+        EXPECT_FALSE(editor.isModified());
+        if (notifications == 1) {
+            EXPECT_EQ(file.name(), "plan.dxf");
+            EXPECT_TRUE(file.hasFile());
+        } else {
+            EXPECT_EQ(file.name(), "Drawing1.cadx");
+            EXPECT_FALSE(file.hasFile());
+        }
+    });
+
+    inputs({"OPEN", "plan.dxf"});
+    EXPECT_EQ(notifications, 1);
+    inputs({"OPEN", "missing.dxf"});
+    EXPECT_EQ(notifications, 1);
+    EXPECT_EQ(file.name(), "plan.dxf");
+    EXPECT_TRUE(file.hasFile());
+    inputs({"NEW"});
+    EXPECT_EQ(notifications, 2);
+}
+
 TEST_F(FileCommandsTest, SaveCopyPreservesAssociationAndSavedUndoPosition) {
     changeUnits();
     inputs({"SAVE", "copy.cadx"});
-    EXPECT_FALSE(editor.hasFile());
+    EXPECT_FALSE(file.hasFile());
     EXPECT_TRUE(editor.isModified());
     inputs({"SAVEAS", "current.cadx", "INSUNITS", "0", "SAVE", "other.cadx"});
-    EXPECT_EQ(editor.fileName(), "current.cadx");
+    EXPECT_EQ(file.name(), "current.cadx");
     EXPECT_TRUE(editor.isModified());
     inputs({"SAVE", ""});
     EXPECT_TRUE(runner.isActive());
@@ -114,15 +162,15 @@ TEST_F(FileCommandsTest, SaveCopyPreservesAssociationAndSavedUndoPosition) {
 
 TEST_F(FileCommandsTest, FormatsExtensionsAndQuotedNamesWithSpaces) {
     inputs({"SAVEAS", "\"a plan.CADX\""});
-    EXPECT_EQ(editor.fileName(), "a plan.CADX");
+    EXPECT_EQ(file.name(), "a plan.CADX");
     ASSERT_TRUE(io::readCadx(files.contents.at("a plan.CADX")).ok());
     inputs({"SAVEAS", "drawing.DXF"});
     ASSERT_TRUE(io::readDxf(files.contents.at("drawing.DXF")).ok());
     inputs({"SAVEAS", "folder.with.dot/plan"});
-    EXPECT_EQ(editor.fileName(), "folder.with.dot/plan.cadx");
+    EXPECT_EQ(file.name(), "folder.with.dot/plan.cadx");
     inputs({"SAVEAS", "plan.dwg"});
     EXPECT_FALSE(runner.isActive());
-    EXPECT_EQ(editor.fileName(), "folder.with.dot/plan.cadx");
+    EXPECT_EQ(file.name(), "folder.with.dot/plan.cadx");
     ASSERT_EQ(messages.size(), 1U);
     EXPECT_EQ(messages.back(), "Cannot save plan.dwg: only .cadx and .dxf files are supported.");
     EXPECT_EQ(files.writes, 3);
@@ -136,7 +184,8 @@ TEST_F(FileCommandsTest, CurrentDxfPreservesReadVersionAndSaveasWritesR2018) {
         auto opened = io::readDxf(bytes);
         ASSERT_TRUE(opened.ok());
         const auto original = opened.value().document.raw().version;
-        editor.replaceDocument(std::move(opened.value().document), "old.dxf");
+        file.setSaved("old.dxf");
+        editor.replaceDocument(std::move(opened.value().document));
         files.contents["old.dxf"] = bytes;
         inputs({"INSUNITS", "6", "QSAVE"});
         auto saved = io::readDxf(files.contents.at("old.dxf"));
@@ -159,7 +208,7 @@ TEST_F(FileCommandsTest, ReplaceDefaultsToNoAndEscapeNeverWrites) {
     changeUnits();
     runner.submitText("SAVEAS");
     runner.submit(CancelInput{});
-    EXPECT_FALSE(editor.hasFile());
+    EXPECT_FALSE(file.hasFile());
     for (const char* answer : {"", "N", "No"}) {
         inputs({"SAVEAS", "existing.cadx"});
         EXPECT_FALSE(runner.acceptsText());
@@ -188,7 +237,7 @@ TEST_F(FileCommandsTest, WriteErrorKeepsFileDrawingAndUndoHistory) {
     files.failWrites = true;
     inputs({"SAVEAS", "other.cadx"});
     EXPECT_FALSE(runner.isActive());
-    EXPECT_EQ(editor.fileName(), "original.cadx");
+    EXPECT_EQ(file.name(), "original.cadx");
     EXPECT_TRUE(editor.isModified());
     EXPECT_EQ(document.units(), 6);
     EXPECT_EQ(editor.undoNames(), history);
@@ -234,12 +283,12 @@ TEST_F(FileCommandsTest, MissingFileAccessEndsSaveCommandsAndPreservesDrawing) {
         EXPECT_FALSE(runner.isActive());
         EXPECT_EQ(messages.back(), "File access is not available.");
         EXPECT_TRUE(editor.isModified());
-        EXPECT_FALSE(editor.hasFile());
+        EXPECT_FALSE(file.hasFile());
     }
 }
 
 TEST_F(FileCommandsTest, FileNamePromptHasSaveDialogHint) {
-    CommandContext context{editor, {}, [](const std::string&) {
+    CommandContext context{editor, file, {}, [](const std::string&) {
                            }};
     context.files = &files;
     SaveCommand command;
@@ -254,8 +303,8 @@ TEST_F(FileCommandsTest, NewResetsDocumentAndHistoryWithoutAskingWhenClean) {
     EXPECT_TRUE(messages.empty());
     changeUnits();
     inputs({"QSAVE", "old.cadx", "NEW"});
-    EXPECT_FALSE(editor.hasFile());
-    EXPECT_EQ(editor.fileName(), "Drawing1.cadx");
+    EXPECT_FALSE(file.hasFile());
+    EXPECT_EQ(file.name(), "Drawing1.cadx");
     EXPECT_EQ(document.units(), 4);
     EXPECT_FALSE(editor.isModified());
     EXPECT_FALSE(editor.canUndo());
@@ -304,7 +353,8 @@ TEST_F(FileCommandsTest, CancelAndEscapePreserveUnsavedDrawingForBothCommands) {
 TEST_F(FileCommandsTest, SavingBeforeReplacementUsesQsaveWithAndWithoutCurrentFile) {
     for (const char* command : {"NEW", "OPEN"}) {
         for (const char* answer : {"Y", "Yes", ""}) {
-            editor.replaceDocument(core::Document{}, "");
+            file.reset("Drawing1.cadx");
+            editor.replaceDocument(core::Document{});
             files.contents.clear();
             changeUnits();
             inputs({command, answer});
@@ -317,7 +367,8 @@ TEST_F(FileCommandsTest, SavingBeforeReplacementUsesQsaveWithAndWithoutCurrentFi
             if (runner.isActive()) {
                 runner.submit(CancelInput{});
             }
-            editor.replaceDocument(core::Document{}, "saved.cadx");
+            file.setSaved("saved.cadx");
+            editor.replaceDocument(core::Document{});
             changeUnits();
             const int writes = files.writes;
             inputs({command, answer});
@@ -333,7 +384,8 @@ TEST_F(FileCommandsTest, SavingBeforeReplacementUsesQsaveWithAndWithoutCurrentFi
 
 TEST_F(FileCommandsTest, FailedOrCancelledSaveStopsReplacement) {
     for (const char* command : {"NEW", "OPEN"}) {
-        editor.replaceDocument(core::Document{}, "");
+        file.reset("Drawing1.cadx");
+        editor.replaceDocument(core::Document{});
         changeUnits();
         inputs({command, "Y"});
         runner.submit(CancelInput{});
@@ -346,7 +398,8 @@ TEST_F(FileCommandsTest, FailedOrCancelledSaveStopsReplacement) {
         EXPECT_TRUE(editor.isModified());
         EXPECT_TRUE(editor.canUndo());
         EXPECT_EQ(messages.back(), "Cannot save failed.cadx: Permission denied.");
-        editor.markSaved("current.cadx");
+        file.setSaved("current.cadx");
+        editor.markSaved();
         inputs({"INSUNITS", "0", command, "Y"});
         EXPECT_FALSE(runner.isActive());
         EXPECT_TRUE(editor.isModified());
@@ -375,7 +428,7 @@ TEST_F(FileCommandsTest, OpenReadsBothFormatsAndQsaveWritesOpenedFile) {
         EXPECT_EQ(runner.promptText(), "Enter name of drawing to open:");
         runner.submitText(name);
         EXPECT_FALSE(runner.isActive());
-        EXPECT_EQ(editor.fileName(), name);
+        EXPECT_EQ(file.name(), name);
         EXPECT_EQ(document.units(), 1);
         EXPECT_FALSE(editor.isModified());
         EXPECT_FALSE(editor.canUndo());
@@ -487,7 +540,7 @@ TEST_F(FileCommandsTest, OpenEmitsEveryReaderWarningAfterUnsupportedSummary) {
 }
 
 TEST_F(FileCommandsTest, OpenPromptHasDialogHintAndMissingAccessEndsCommand) {
-    CommandContext context{editor, {}, [](const std::string&) {
+    CommandContext context{editor, file, {}, [](const std::string&) {
                            }};
     context.files = &files;
     OpenCommand command;

@@ -8,6 +8,7 @@
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/vec2.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <cstdint>
@@ -91,6 +92,7 @@ struct CommandDefaults {
 /// command (Command::basePoint()).
 struct CommandContext {
     edit::Editor& editor;
+    edit::DocumentFile& file;
     std::optional<core::Vec2> lastPoint;       ///< updated by the command
     std::function<void(std::string)> message;  ///< writes to the history
     CommandDefaults defaults{};

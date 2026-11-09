@@ -462,10 +462,10 @@ std::string unhandledText(const core::Document& document) {
 /// when it differs from a new session, so that older reports stay valid.
 /// A drawing never opened nor saved has no file to name: its changes alone
 /// do not write "drawing:", or every report of milestone 0.4 would change.
-void writeDrawing(const edit::Editor& editor, std::string& out) {
+void writeDrawing(const edit::Editor& editor, const edit::DocumentFile& file, std::string& out) {
     const core::Document& document = editor.document();
-    if (editor.hasFile()) {
-        appendField("drawing", editor.fileName() + (editor.isModified() ? ", modified" : ""), out);
+    if (file.hasFile()) {
+        appendField("drawing", file.name() + (editor.isModified() ? ", modified" : ""), out);
     }
     if (document.units() != core::Document::kDefaultUnits) {
         appendField("units", std::to_string(document.units()), out);
@@ -519,7 +519,7 @@ void writeState(const ReportInput& input, std::string& out) {
     }
     appendField("snap", snapText(runner.drawingAids()), out);
     appendField("ortho", onOff(runner.drawingAids().ortho), out);
-    writeDrawing(input.editor, out);
+    writeDrawing(input.editor, input.runner.documentFile(), out);
     appendField("pointer", input.pointer ? formatPoint(*input.pointer) : "none", out);
     appendField("active snap", snapPointText(runner.activeSnap()), out);
     writeStatistics(document, out);

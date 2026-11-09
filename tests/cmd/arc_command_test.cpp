@@ -123,7 +123,8 @@ TEST_F(ArcCommandTest, CancelAtEveryStageRollsBack) {
 TEST(ArcCommandPreview, PreviewUsesAvailablePoints) {
     core::Document document;
     edit::Editor editor(document);
-    CommandContext context{editor, {}, [](const std::string&) {
+    edit::DocumentFile file;
+    CommandContext context{editor, file, {}, [](const std::string&) {
                            }};
     ArcCommand command;
     command.start(context);

@@ -127,10 +127,8 @@ bool showsGrips(const core::Document& document, const core::EntityRecord& record
 CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& editor)
     : m_registry(registry),
       m_editor(editor),
-      m_context{editor, std::nullopt,
-                [this](std::string text) {
-                    message(std::move(text));
-                }},
+      m_context(std::in_place, editor, m_ownFile, std::nullopt,
+                [this](std::string text) { message(std::move(text)); }),
       m_descriptionCheck(abortOnUndescribedPrompt) {}
 
 // P23 specifies this owning signature; keep the public API used by the UI.
@@ -147,11 +145,20 @@ bool CommandRunner::replaceSelection(std::vector<core::EntityId> ids) {
 }
 
 void CommandRunner::setScriptSequences(bool on) {
-    m_context.scriptSequences = on;
+    m_context.value().scriptSequences = on;
 }
 
 void CommandRunner::setFileAccess(io::FileAccess* files) {
-    m_context.files = files;
+    m_context.value().files = files;
+}
+
+void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
+    // A reference cannot be rebound. Carry the command session state over
+    // when rebuilding the context around a different file.
+    CommandContext context = std::move(m_context.value());
+    m_context.emplace(context.editor, file ? *file : m_ownFile, context.lastPoint,
+                      std::move(context.message), context.defaults, context.files,
+                      context.documentReplaced, context.scriptSequences);
 }
 
 void CommandRunner::submitText(std::string_view text) {
@@ -373,7 +380,7 @@ void CommandRunner::beginCommand() {
     SelectionInput selection;
     selection.ids.assign(m_selection.ids().begin(), m_selection.ids().end());
     clearSelection();
-    m_command->start(m_context);
+    m_command->start(m_context.value());
     // Immediate commands finish in start() and have no question to ask.
     if (m_command->prompt().text.empty()) {
         finish();
@@ -456,9 +463,10 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
         // on the polar ray the pointer is on (docs/adr/0033, point 9):
         // within a command it is the base point; for the first point of a
         // command it may come from the previous one, as "@" does.
-        const core::Vec2 pointer = m_pointer ? aidedPoint(*m_pointer, m_context.lastPoint)
-                                             : m_context.lastPoint.value_or(core::Vec2{});
-        if (const std::optional<core::Vec2> point = resolve(*spec, m_context.lastPoint, pointer)) {
+        const auto& lastPoint = m_context.value().lastPoint;
+        const core::Vec2 pointer =
+            m_pointer ? aidedPoint(*m_pointer, lastPoint) : lastPoint.value_or(core::Vec2{});
+        if (const std::optional<core::Vec2> point = resolve(*spec, lastPoint, pointer)) {
             forward(PointInput{*point});
             return;
         }
@@ -572,7 +580,7 @@ std::optional<core::Vec2> CommandRunner::typedPosition(std::string_view text) co
     if (!spec || spec->kind == PointSpec::Kind::Distance) {
         return std::nullopt;
     }
-    return resolve(*spec, m_context.lastPoint, core::Vec2{});
+    return resolve(*spec, m_context.value().lastPoint, core::Vec2{});
 }
 
 void CommandRunner::submitWhileAskingSelection(const Input& input) {
@@ -681,7 +689,7 @@ bool CommandRunner::clickGrip(const core::Vec2& point) {
     m_description = nullptr;  // its prompt is the runner's (docs/adr/0026, point 3)
     m_command = std::make_unique<GripCommand>(best->record->id, best->record->entity, best->index,
                                               best->grip);
-    m_command->start(m_context);
+    m_command->start(m_context.value());
     refreshPointer();  // the preview follows the pointer from the start
     return true;
 }
@@ -750,7 +758,7 @@ void CommandRunner::forward(const Input& input) {
     if (promptKind() == PromptKind::Selection) {
         clearSelection();
     }
-    if (m_command->handle(m_context, input) == Status::Finished) {
+    if (m_command->handle(m_context.value(), input) == Status::Finished) {
         finish();
         return;
     }
@@ -804,7 +812,7 @@ core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
     if (m_drawingAids.polar) {
         // The polar aperture is the snap aperture (docs/adr/0033, point 9).
         if (const std::optional<core::Vec2> polar =
-                polarPoint(*orthoBase, point, m_context.defaults.polarAngle,
+                polarPoint(*orthoBase, point, m_context.value().defaults.polarAngle,
                            kSnapAperturePixels * m_pixelSize)) {
             return *polar;
         }
@@ -848,7 +856,7 @@ void CommandRunner::cancel() {
         clearSelection();
     }
     if (started) {
-        command->cancel(m_context);
+        command->cancel(m_context.value());
     }
     const bool closed = !m_editor.inTransaction();
     assert(closed && "a command cancelled without closing its transaction");
@@ -859,9 +867,9 @@ void CommandRunner::cancel() {
 }
 
 void CommandRunner::finish() {
-    if (m_context.documentReplaced) {
-        m_context.lastPoint.reset();
-        m_context.documentReplaced = false;
+    if (m_context.value().documentReplaced) {
+        m_context.value().lastPoint.reset();
+        m_context.value().documentReplaced = false;
     }
     m_command.reset();
     // A grip edit leaves the selection with its grips (docs/adr/0034,

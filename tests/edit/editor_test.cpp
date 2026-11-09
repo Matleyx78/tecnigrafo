@@ -361,15 +361,11 @@ TEST(Editor, ModifiedStateFollowsTheSavedPositionInBothDirections) {
     Document document;
     Editor editor(document);
     EXPECT_FALSE(editor.isModified());
-    EXPECT_EQ(editor.fileName(), "Drawing1.cadx");
-    EXPECT_FALSE(editor.hasFile());
 
     addCommitted(editor, 1.0);
     EXPECT_TRUE(editor.isModified());
-    editor.markSaved("pianta-caffè.cadx");
+    editor.markSaved();
     EXPECT_FALSE(editor.isModified());
-    EXPECT_TRUE(editor.hasFile());
-    EXPECT_EQ(editor.fileName(), "pianta-caffè.cadx");
 
     addCommitted(editor, 2.0);
     EXPECT_TRUE(editor.isModified());
@@ -387,7 +383,7 @@ TEST(Editor, DiscardedSavedBranchCannotBeReachedAtTheSameStackDepth) {
     Document document;
     Editor editor(document);
     addCommitted(editor, 1.0);
-    editor.markSaved("saved.cadx");
+    editor.markSaved();
     ASSERT_TRUE(editor.undo());
     addCommitted(editor, 2.0);
     EXPECT_TRUE(editor.isModified());
@@ -396,7 +392,7 @@ TEST(Editor, DiscardedSavedBranchCannotBeReachedAtTheSameStackDepth) {
     EXPECT_TRUE(editor.isModified());
     ASSERT_TRUE(editor.redo());
     EXPECT_TRUE(editor.isModified());
-    editor.markSaved("branch.cadx");
+    editor.markSaved();
     EXPECT_FALSE(editor.isModified());
 }
 
@@ -404,7 +400,7 @@ TEST(Editor, BranchingAtOrAfterSavedPositionPreservesIt) {
     Document document;
     Editor editor(document);
     addCommitted(editor, 1.0);
-    editor.markSaved("saved.cadx");
+    editor.markSaved();
     addCommitted(editor, 2.0);
     addCommitted(editor, 3.0);
     ASSERT_TRUE(editor.undo());
@@ -422,7 +418,7 @@ TEST(Editor, EmptyCommitAndRollbackPreserveSavedStateAndRedo) {
     Document document;
     Editor editor(document);
     addCommitted(editor, 1.0);
-    editor.markSaved("saved.cadx");
+    editor.markSaved();
     editor.beginTransaction("Empty at saved position");
     editor.commit();
     EXPECT_FALSE(editor.isModified());
@@ -445,7 +441,7 @@ TEST(Editor, SavingAfterUndoKeepsRedoAndMovesTheSavedPosition) {
     Editor editor(document);
     addCommitted(editor, 1.0);
     ASSERT_TRUE(editor.undo());
-    editor.markSaved("empty.cadx");
+    editor.markSaved();
     EXPECT_FALSE(editor.isModified());
     ASSERT_TRUE(editor.redo());
     EXPECT_TRUE(editor.isModified());
@@ -474,21 +470,17 @@ TEST(Editor, ReplaceDocumentKeepsTheReferenceAndNotifiesAfterResettingState) {
         EXPECT_TRUE(editor.redoNames().empty());
         EXPECT_FALSE(editor.isModified());
         if (calls == 1) {
-            EXPECT_TRUE(editor.hasFile());
-            EXPECT_EQ(editor.fileName(), "opened.dxf");
             EXPECT_EQ(reference.units(), 0);
             EXPECT_EQ(entityOf(reference, id), Entity{segment(3.0)});
         } else {
-            EXPECT_FALSE(editor.hasFile());
-            EXPECT_EQ(editor.fileName(), "Drawing1.cadx");
             EXPECT_TRUE(reference.isEmpty());
             EXPECT_EQ(reference.units(), Document::kDefaultUnits);
         }
     });
 
-    editor.replaceDocument(std::move(opened), "opened.dxf");
+    editor.replaceDocument(std::move(opened));
     EXPECT_EQ(calls, 1);
-    editor.replaceDocument(Document{}, "");
+    editor.replaceDocument(Document{});
     EXPECT_EQ(calls, 2);
 }
 
@@ -502,7 +494,7 @@ TEST(EditorDeathTest, DrawingStatePreconditionsAreChecked) {
     editor.beginTransaction("Units");
     EXPECT_DEATH(editor.setUnits(-1), "invalid units");
     EXPECT_DEATH(editor.setUnits(Document::kMaxUnits + 1), "invalid units");
-    EXPECT_DEATH(editor.replaceDocument(Document{}, ""), "no open transaction");
+    EXPECT_DEATH(editor.replaceDocument(Document{}), "no open transaction");
 }
 
 TEST(EditorDeathTest, TransactionPreconditionsAreChecked) {
@@ -579,7 +571,7 @@ TEST(Editor, LayerCreationRemovalAndTablePositionsRoundTripExactly) {
     editor.commit();
     const auto added = stateOf(doc);
     expectRoundTrip(editor, before, added);
-    editor.markSaved("layers.cadx");
+    editor.markSaved();
     editor.beginTransaction("Remove middle");
     EXPECT_TRUE(editor.removeLayer(*second));
     editor.commit();
@@ -820,7 +812,7 @@ TEST(Editor, LwdisplayHasNoUndoStepPreservesRedoAndTracksSavedValue) {
     EXPECT_TRUE(editor.isModified());
     EXPECT_FALSE(editor.canUndo());
     EXPECT_FALSE(editor.canRedo());
-    editor.markSaved("view.cadx");
+    editor.markSaved();
     EXPECT_FALSE(editor.isModified());
     addCommitted(editor, 1);
     ASSERT_TRUE(editor.undo());
@@ -838,7 +830,7 @@ TEST(Editor, LwdisplayHasNoUndoStepPreservesRedoAndTracksSavedValue) {
     editor.rollback();
     EXPECT_FALSE(doc.lwdisplay());
     EXPECT_TRUE(editor.isModified());
-    editor.replaceDocument(Document::newDrawing(), "");
+    editor.replaceDocument(Document::newDrawing());
     EXPECT_FALSE(editor.isModified());
 }
 

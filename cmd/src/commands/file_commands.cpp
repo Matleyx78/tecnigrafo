@@ -47,12 +47,12 @@ io::DxfVersion originalVersion(const core::Document& document) {
 }  // namespace
 
 void SaveCommand::start(CommandContext& context) {
-    m_defaultName = context.editor.fileName();
+    m_defaultName = context.file.name();
     m_stage = Stage::Name;
     if (context.files == nullptr) {
         context.message("File access is not available.");
         m_stage = Stage::Done;
-    } else if (m_mode == Mode::Qsave && context.editor.hasFile()) {
+    } else if (m_mode == Mode::Qsave && context.file.hasFile()) {
         chooseName(context, m_defaultName);
     }
 }
@@ -91,7 +91,7 @@ Status SaveCommand::chooseName(CommandContext& context, std::string name) {
         return fail(context, "only .cadx and .dxf files are supported.");
     }
     const bool quickCurrent =
-        m_mode == Mode::Qsave && context.editor.hasFile() && m_name == context.editor.fileName();
+        m_mode == Mode::Qsave && context.file.hasFile() && m_name == context.file.name();
     if (!quickCurrent && context.files->exists(m_name)) {
         m_stage = Stage::Replace;
         return Status::Continue;
@@ -100,7 +100,7 @@ Status SaveCommand::chooseName(CommandContext& context, std::string name) {
 }
 
 Status SaveCommand::save(CommandContext& context) {
-    const bool current = context.editor.hasFile() && m_name == context.editor.fileName();
+    const bool current = context.file.hasFile() && m_name == context.file.name();
     const io::DxfVersion version = current && m_mode != Mode::Saveas
                                        ? originalVersion(context.editor.document())
                                        : io::DxfVersion::R2018;
@@ -113,8 +113,9 @@ Status SaveCommand::save(CommandContext& context) {
         return fail(context, error->message);
     }
     // Saving a copy must not move the undo stack's saved position.
-    if (m_mode != Mode::Save || m_name == context.editor.fileName()) {
-        context.editor.markSaved(m_name);
+    if (m_mode != Mode::Save || m_name == context.file.name()) {
+        context.editor.markSaved();
+        context.file.setSaved(m_name);
     }
     m_stage = Stage::Done;
     return Status::Finished;
@@ -143,7 +144,7 @@ Prompt SaveCommand::prompt() const {
 }
 
 void NewCommand::start(CommandContext& context) {
-    m_currentName = context.editor.fileName();
+    m_currentName = context.file.name();
     if (context.editor.isModified()) {
         m_stage = Stage::Changes;
     } else {
@@ -161,7 +162,8 @@ Status NewCommand::proceed(CommandContext& context) {
         m_stage = Stage::Name;
         return Status::Continue;
     }
-    context.editor.replaceDocument(core::Document::newDrawing(), "");
+    context.file.reset("Drawing1.cadx");
+    context.editor.replaceDocument(core::Document::newDrawing());
     context.documentReplaced = true;
     m_stage = Stage::Done;
     return Status::Finished;
@@ -231,7 +233,8 @@ Status NewCommand::open(CommandContext& context, const std::string& name) {
     if (!result.ok()) {
         return fail(result.error());
     }
-    context.editor.replaceDocument(std::move(result.value().document), name);
+    context.file.setSaved(name);
+    context.editor.replaceDocument(std::move(result.value().document));
     context.documentReplaced = true;
     const auto& report = result.value().report;
     int total = 0;

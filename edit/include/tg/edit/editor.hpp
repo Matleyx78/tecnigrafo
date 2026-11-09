@@ -101,19 +101,12 @@ public:
     /// True if the undo stack is not at the last save or load position.
     [[nodiscard]] bool isModified() const;
 
-    /// Records that the drawing has just been saved as `name` (UTF-8).
-    void markSaved(std::string name);
-
-    /// The drawing name, "Drawing1.cadx" before the first save.
-    [[nodiscard]] const std::string& fileName() const { return m_fileName; }
-
-    /// True once the drawing has been saved or loaded under a name.
-    [[nodiscard]] bool hasFile() const { return m_hasFile; }
+    /// Records the current history position and LWDISPLAY as saved.
+    void markSaved();
 
     /// Replaces the referenced document, clears history and notifies once.
-    /// An empty name starts a new "Drawing1.cadx" without an associated file.
     /// Precondition: no transaction is open.
-    void replaceDocument(core::Document document, std::string name);
+    void replaceDocument(core::Document document);
 
     /// Closes the open transaction, keeping its changes. A transaction that
     /// changed something becomes an undo step and clears the redo steps; an
@@ -229,8 +222,6 @@ private:
     std::vector<Step> m_redo;
     // A discarded redo branch can make the saved position unreachable.
     std::optional<std::size_t> m_savedPosition{0};
-    std::string m_fileName{"Drawing1.cadx"};
-    bool m_hasFile{false};
     bool m_savedLwdisplay{false};
     Listener m_listener;
 };

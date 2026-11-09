@@ -423,9 +423,10 @@ TEST(Level1WithFiles, AReportOfMilestone04StaysTheSame) {
 }
 
 /// The section of the report for this editor, with an idle runner.
-std::string section(edit::Editor& editor) {
+std::string section(edit::Editor& editor, edit::DocumentFile& file) {
     const cmd::CommandRegistry registry;
-    const cmd::CommandRunner runner(registry, editor);
+    cmd::CommandRunner runner(registry, editor);
+    runner.setDocumentFile(&file);
     std::string out;
     writeState({"final", editor, runner, {}, std::nullopt}, out);
     return out;
@@ -445,7 +446,8 @@ std::string field(const std::string& text, std::string_view name) {
 TEST(ReportFields, WrittenOnlyWhenDifferentFromANewSession) {
     core::Document document;
     edit::Editor editor(document);
-    std::string text = section(editor);
+    edit::DocumentFile file;
+    std::string text = section(editor, file);
     EXPECT_EQ(field(text, "drawing"), "");
     EXPECT_EQ(field(text, "units"), "");
     EXPECT_EQ(field(text, "unhandled"), "");
@@ -454,10 +456,11 @@ TEST(ReportFields, WrittenOnlyWhenDifferentFromANewSession) {
     editor.beginTransaction("Line");
     static_cast<void>(editor.add(core::Line{{0.0, 0.0}, {1.0, 0.0}}));
     editor.commit();
-    EXPECT_EQ(field(section(editor), "drawing"), "");
+    EXPECT_EQ(field(section(editor, file), "drawing"), "");
 
-    editor.markSaved("plan.dxf");
-    text = section(editor);
+    file.setSaved("plan.dxf");
+    editor.markSaved();
+    text = section(editor, file);
     EXPECT_EQ(field(text, "drawing"), "drawing: plan.dxf");
     // After ortho, before pointer, in this order.
     expectContains(text, "ortho: off\ndrawing: plan.dxf\npointer: none\n");
@@ -465,12 +468,12 @@ TEST(ReportFields, WrittenOnlyWhenDifferentFromANewSession) {
     editor.beginTransaction("INSUNITS");
     EXPECT_TRUE(editor.setUnits(6));
     editor.commit();
-    text = section(editor);
+    text = section(editor, file);
     expectContains(text, "ortho: off\ndrawing: plan.dxf, modified\nunits: 6\npointer: none\n");
 
     // Undo back to the saved position: not modified, units of a new drawing.
     EXPECT_TRUE(editor.undo());
-    text = section(editor);
+    text = section(editor, file);
     EXPECT_EQ(field(text, "drawing"), "drawing: plan.dxf");
     EXPECT_EQ(field(text, "units"), "");
 }
@@ -482,8 +485,10 @@ TEST(ReportFields, UnhandledEntitiesByTypeInAlphabeticalOrder) {
     read.insertRaw({core::EntityId{0x32}, 3, "HATCH", {}});
     core::Document document;
     edit::Editor editor(document);
-    editor.replaceDocument(std::move(read), "plan.dxf");
-    const std::string text = section(editor);
+    edit::DocumentFile file;
+    file.setSaved("plan.dxf");
+    editor.replaceDocument(std::move(read));
+    const std::string text = section(editor, file);
     expectContains(text, "ortho: off\ndrawing: plan.dxf\nunhandled: HATCH 2, INSERT 1\n");
     // Not drawn, not listed among the entities nor in the statistics.
     expectContains(text, "entities:\nmessages:\n");
