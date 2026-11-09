@@ -13,6 +13,7 @@
 #include "layer_panel.hpp"
 #include "main_window.hpp"
 #include "properties_panel.hpp"
+#include "property_grid.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
 #include "theme.hpp"
@@ -21,8 +22,12 @@
 #include <QAction>
 #include <QApplication>
 #include <QImage>
+#include <QLabel>
 #include <QLineEdit>
+#include <QPersistentModelIndex>
+#include <QPoint>
 #include <QSettings>
+#include <QStatusBar>
 #include <QString>
 #include <QStringList>
 #include <QTableView>
@@ -32,6 +37,7 @@
 
 #include <string>
 #include <variant>
+#include <vector>
 
 namespace tg::app {
 namespace {
@@ -49,6 +55,16 @@ core::Document wallsDrawing() {
     core::Line line;
     line.start = {-50.0, -50.0};
     line.end = {50.0, 50.0};
+    document.add(line);
+    return document;
+}
+
+/// A drawing far from the origin: a line from (1000, 1000) to (1100, 1100).
+core::Document farDrawing() {
+    core::Document document = core::Document::newDrawing();
+    core::Line line;
+    line.start = {1000.0, 1000.0};
+    line.end = {1100.0, 1100.0};
     document.add(line);
     return document;
 }
@@ -129,6 +145,27 @@ protected:
 
     [[nodiscard]] QImage picture() const { return view()->grab().toImage(); }
 
+    /// The coordinates the status bar shows.
+    [[nodiscard]] QString cursorText() const {
+        for (const QLabel* label : m_window.statusBar()->findChildren<QLabel*>()) {
+            if (label->text().startsWith(QStringLiteral("X:"))) {
+                return label->text();
+            }
+        }
+        return {};
+    }
+
+    /// The text the status bar shows for the point under `screen` in the
+    /// view as it is now, as MainWindow writes it.
+    [[nodiscard]] QString cursorTextAt(QPoint screen) const {
+        constexpr int kDecimals = 4;
+        const core::Vec2 world = view()->viewport().screenToWorld(
+            {static_cast<double>(screen.x()), static_cast<double>(screen.y())});
+        return QStringLiteral("X: %1   Y: %2")
+            .arg(world.x, 0, 'f', kDecimals)
+            .arg(world.y, 0, 'f', kDecimals);
+    }
+
 private:
     QTemporaryDir m_directory;
     QString m_organization{QCoreApplication::organizationName()};
@@ -184,6 +221,20 @@ TEST_F(SessionTest, TheViewOfASessionComesBackWithIt) {
     window().activate(second);
     EXPECT_EQ(view()->viewport().center(), (core::Vec2{7.0, 3.0}));
     EXPECT_DOUBLE_EQ(view()->viewport().scale(), 4.0);
+}
+
+TEST_F(SessionTest, TheStatusBarShowsTheCoordinatesOfADrawingShownForTheFirstTime) {
+    const QPoint pointer(20, 30);
+    events::move(view(), pointer);
+    const QString before = cursorText();
+    ASSERT_EQ(before, cursorTextAt(pointer));
+    DocumentSession& far = window().openSession(farDrawing());
+    // The pointer does not move: the drawing under it changes.
+    window().activate(far);
+    EXPECT_EQ(cursorText(), cursorTextAt(pointer));
+    EXPECT_NE(cursorText(), before);
+    window().activate(first());
+    EXPECT_EQ(cursorText(), before);
 }
 
 TEST_F(SessionTest, UndoActsOnTheActiveSessionOnly) {
@@ -315,6 +366,32 @@ TEST_F(SessionTest, ClosingAnInactiveSessionLeavesNothingPointingAtIt) {
     layers()->refresh();
     EXPECT_FALSE(picture().isNull());
     EXPECT_TRUE(input()->text().isEmpty());
+}
+
+TEST_F(SessionTest, ThePanelsLetAClosedSessionGoAtOnce) {
+    DocumentSession& second = window().openSession(wallsDrawing());
+    window().activate(second);
+    const core::EntityId id = second.document().entities().front().id;
+    ASSERT_TRUE(second.runner().replaceSelection(std::vector<core::EntityId>{id}));
+    properties()->refresh();
+    // Indexes kept across the change, as a view or a delegate may keep them.
+    const QPersistentModelIndex layerCell(properties()->grid().valueIndex(PropertyField::Layer));
+    ASSERT_EQ(layerCell.data().toString(), QStringLiteral("0"));
+    const auto* table = layers()->findChild<QTableView*>(QStringLiteral("layerTable"));
+    const QPersistentModelIndex layerRow(
+        table->model()->index(1, static_cast<int>(LayerColumn::Name)));
+    ASSERT_EQ(layerRow.data().toString(), QStringLiteral("Walls"));
+
+    // No event is processed between the two: nothing deferred may still
+    // read the closed document (the sanitizers of the CI check it).
+    window().activate(first());
+    window().closeSession(second);
+    EXPECT_FALSE(layerCell.isValid());
+    EXPECT_FALSE(layerCell.data().isValid());
+    EXPECT_FALSE(layerRow.isValid());
+    EXPECT_FALSE(layerRow.data().isValid());
+    EXPECT_EQ(properties()->grid().valueIndex(PropertyField::Layer).data().toString(),
+              QStringLiteral("0"));
 }
 
 TEST_F(SessionTest, ClosingTheActiveSessionActivatesAnother) {

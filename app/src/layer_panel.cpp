@@ -21,6 +21,7 @@
 #include <QVBoxLayout>
 
 #include <cassert>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -170,13 +171,15 @@ void LayerPanel::setSession(DocumentSession* session) {
 
 void LayerPanel::attachEditor(edit::Editor* editor) {
     m_editor = editor;
-    // The model reads its document at every refresh: one for each document,
-    // and the old one stops before the session it shows can go.
-    LayerTableModel* old = std::exchange(m_model, new LayerTableModel(document(), this));
+    // The model reads its document at every refresh: one for each document.
+    // The old one goes now, not later: the session it shows may be destroyed
+    // before the event loop runs, and its persistent indexes must not reach
+    // it (docs/tappe/0.7.5/P28, "Durata dei riferimenti").
+    const std::unique_ptr<LayerTableModel> old(
+        std::exchange(m_model, new LayerTableModel(document(), this)));
     old->disconnect(this);
     m_table->selectionModel()->disconnect(this);
     connectModel();
-    old->deleteLater();
     setMessage({});
     refresh();
 }

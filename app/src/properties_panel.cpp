@@ -29,6 +29,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <memory>
 #include <string_view>
 #include <utility>
 #include <variant>
@@ -245,14 +246,17 @@ void PropertiesPanel::setSession(DocumentSession* session) {
 void PropertiesPanel::attach(edit::Editor* editor, cmd::CommandRunner* runner) {
     m_editor = editor;
     m_runner = runner;
-    // The model reads its document while the grid paints: one for each
-    // document, and the old one stops before the session it shows can go.
-    // Setting the new model closes an open editor without committing it.
-    PropertyGridModel* old = std::exchange(m_model, new PropertyGridModel(document(), this));
+    // The model reads its document while the grid paints and whenever an
+    // index asks for its data: one for each document. The old one goes now,
+    // not later: the session it shows may be destroyed before the event loop
+    // runs, and its persistent indexes must not reach it (docs/tappe/0.7.5/
+    // P28, "Durata dei riferimenti"). Setting the new model first closes an
+    // open editor without committing it.
+    const std::unique_ptr<PropertyGridModel> old(
+        std::exchange(m_model, new PropertyGridModel(document(), this)));
     old->disconnect(this);
-    m_delegate->disconnect(old);
+    m_delegate->disconnect(old.get());
     connectModel();
-    old->deleteLater();
     m_typeFilter.clear();
     m_idleSelection.clear();
     setMessage({});

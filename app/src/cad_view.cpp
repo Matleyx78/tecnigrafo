@@ -77,6 +77,9 @@ void CadView::setSession(DocumentSession* session) {
         m_initialFitDone = true;
         m_viewport.setScreenSize(width(), height());
         zoomExtents();
+        // The pointer stays, the drawing under it changes: its coordinates
+        // are those of the new view.
+        emitCursor(m_cursorPosition);
     }
     update();
 }
