@@ -119,10 +119,15 @@ bool showsGrips(const core::Document& document, const core::EntityRecord& record
 CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& editor)
     : m_registry(registry),
       m_editor(editor),
-      m_context(std::in_place, ProtocolContext{[this](std::string text) {
-                    message(std::move(text));
-                }},
-                editor, m_ownFile, std::nullopt),
+      // Braces, not std::in_place: the static analyser of clang-tidy 18
+      // crashes on the parenthesised aggregate initialisation of a struct
+      // with a base (C++20), as in std::optional::emplace().
+      m_context(CommandContext{{[this](std::string text) {
+                                   message(std::move(text));
+                               }},
+                               editor,
+                               m_ownFile,
+                               {}}),
       m_descriptionCheck(abortOnUndescribedPrompt) {}
 
 // P23 specifies this owning signature; keep the public API used by the UI.
@@ -164,9 +169,14 @@ void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
     // A reference cannot be rebound. Carry the command session state over
     // when rebuilding the context around a different file.
     CommandContext previous = std::move(context());
-    m_context.emplace(ProtocolContext{std::move(previous.message), previous.scriptSequences},
-                      previous.editor, file != nullptr ? *file : m_ownFile, previous.lastPoint,
-                      previous.defaults, previous.files, previous.documentReplaced);
+    // Built with braces, then moved in: see the constructor.
+    m_context.emplace(CommandContext{{std::move(previous.message), previous.scriptSequences},
+                                     previous.editor,
+                                     file != nullptr ? *file : m_ownFile,
+                                     previous.lastPoint,
+                                     previous.defaults,
+                                     previous.files,
+                                     previous.documentReplaced});
 }
 
 void CommandRunner::submitText(std::string_view text) {
