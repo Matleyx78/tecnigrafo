@@ -116,8 +116,17 @@ public:
             const std::uint64_t value = (static_cast<std::uint64_t>(random()) << 32U) | random();
             std::ostringstream name;
             name << "tecnigrafo-mcp-" << std::hex << std::setw(16) << std::setfill('0') << value;
-            if (fs::create_directory(base / name.str(), error) && !error) {
-                m_path = base / name.str();
+            const fs::path candidate = base / name.str();
+            if (fs::create_directory(candidate, error) && !error) {
+                // The temporary folder of the system is writable by everyone:
+                // the new folder is for its owner only, or it is not used.
+                fs::permissions(candidate, fs::perms::owner_all, fs::perm_options::replace, error);
+                if (error) {
+                    std::error_code ignored;
+                    fs::remove(candidate, ignored);
+                } else {
+                    m_path = candidate;
+                }
             }
         }
     }
