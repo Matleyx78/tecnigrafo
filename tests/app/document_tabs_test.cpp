@@ -172,7 +172,7 @@ protected:
 
     /// A drawing file `file` in the folder of the test.
     [[nodiscard]] QString drawingFile(const char* file) const {
-        const QString path = m_directory.filePath(QString::fromLatin1(file));
+        QString path = m_directory.filePath(QString::fromLatin1(file));
         const auto bytes = io::writeCadx(core::Document::newDrawing());
         QFile out(path);
         if (!bytes.ok() || !out.open(QIODevice::WriteOnly)) {

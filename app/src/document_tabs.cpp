@@ -4,7 +4,6 @@
 #include "document_tabs.hpp"
 
 #include <QAction>
-#include <QActionGroup>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QMenu>
@@ -55,17 +54,19 @@ QStringList documentTabsIconNames() {
             QString::fromLatin1(kDrawingIcon)};
 }
 
-DocumentTabs::DocumentTabs(QWidget* parent) : QWidget(parent) {
+DocumentTabs::DocumentTabs(QWidget* parent)
+    : QWidget(parent),
+      m_menuButton(rowButton(this, QStringLiteral("documentsMenuButton"), tr("Open documents"))),
+      m_menu(new QMenu(this)),
+      m_tabs(new QTabBar(this)),
+      m_newButton(rowButton(this, QStringLiteral("newTabButton"), tr("New drawing"))) {
     setObjectName(QStringLiteral("documentTabs"));
 
-    m_menuButton = rowButton(this, QStringLiteral("documentsMenuButton"), tr("Open documents"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
-    m_menu = new QMenu(this);
     m_menu->setObjectName(QStringLiteral("documentsMenu"));
     m_menuButton->setMenu(m_menu);
     connect(m_menu, &QMenu::aboutToShow, this, &DocumentTabs::populateMenu);
 
-    m_tabs = new QTabBar(this);
     m_tabs->setObjectName(QStringLiteral("documentTabBar"));
     m_tabs->setDocumentMode(true);
     m_tabs->setExpanding(false);
@@ -85,7 +86,6 @@ DocumentTabs::DocumentTabs(QWidget* parent) : QWidget(parent) {
         }
     });
 
-    m_newButton = rowButton(this, QStringLiteral("newTabButton"), tr("New drawing"));
     connect(m_newButton, &QToolButton::clicked, this, &DocumentTabs::newRequested);
 
     // The `+` follows the last tab; the row is as wide as the drawing.
@@ -157,12 +157,10 @@ void DocumentTabs::choose(int tab) {
 
 void DocumentTabs::populateMenu() {
     m_menu->clear();
-    auto* group = new QActionGroup(m_menu);
     for (int tab = 0; tab < m_tabs->count(); ++tab) {
         QAction* item = m_menu->addAction(m_tabs->tabIcon(tab), m_tabs->tabText(tab));
         item->setCheckable(true);
         item->setChecked(tab == m_tabs->currentIndex());
-        group->addAction(item);
         // Through the bar, as a click on the tab: a tab already shown asks
         // nothing.
         connect(item, &QAction::triggered, this, [this, tab] { m_tabs->setCurrentIndex(tab); });

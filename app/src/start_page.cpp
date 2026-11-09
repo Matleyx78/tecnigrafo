@@ -57,7 +57,7 @@ QToolButton* pageButton(const QString& name, const QString& text, QWidget* paren
 
 }  // namespace
 
-StartPage::StartPage(QWidget* parent) : QWidget(parent) {
+StartPage::StartPage(QWidget* parent) : QWidget(parent), m_newRow(new QHBoxLayout) {
     setObjectName(QStringLiteral("startPage"));
     setAutoFillBackground(true);
 
@@ -76,7 +76,6 @@ StartPage::StartPage(QWidget* parent) : QWidget(parent) {
 
     // New, with a button for each type, then Open… on the same row.
     content->addWidget(heading(tr("New"), column));
-    m_newRow = new QHBoxLayout;
     m_newRow->setSpacing(kSpacing);
     m_openButton = pageButton(QStringLiteral("startOpen"), tr("Open…"), column);
     m_openButton->setToolTip(tr("Opens a drawing."));
