@@ -28,6 +28,7 @@
 #include <QWidget>
 
 #include <SARibbon.h>
+#include <algorithm>
 
 namespace tg::app {
 namespace {
@@ -197,21 +198,31 @@ void UiBuilder::setEnvironment(const Environment* environment) {
     applyEnvironment();
 }
 
-bool UiBuilder::showMenus(QMenu& menu) const {
-    bool offered = false;
-    for (QAction* action : menu.actions()) {
-        if (action->isSeparator()) {
-            continue;
+void UiBuilder::showMenus(QMenuBar& bar) const {
+    // Qt's menus of ActionSpec::menu, each after the menu it is in: those of
+    // the bar, then their submenus. An action of the registry with a menu of
+    // its own (the recent files, the variants) is offered as itself.
+    QList<QAction*> menus;
+    for (QAction* action : bar.actions()) {
+        if (action->menu() != nullptr) {
+            menus.append(action);
         }
-        // A submenu of ActionSpec::menu is Qt's: it is shown while it has
-        // something to offer. An action of the registry with a menu of its
-        // own (the recent files, the variants) is offered as itself.
-        if (action->menu() != nullptr && !isRegistered(m_registry, action)) {
-            action->setVisible(showMenus(*action->menu()));
-        }
-        offered = offered || action->isVisible();
     }
-    return offered;
+    for (qsizetype i = 0; i < menus.size(); ++i) {
+        const QList<QAction*> items = menus.at(i)->menu()->actions();
+        for (QAction* item : items) {
+            if (item->menu() != nullptr && !isRegistered(m_registry, item)) {
+                menus.append(item);
+            }
+        }
+    }
+    // From the last: a submenu is decided before the menu it is in, which is
+    // shown while it has something to offer.
+    for (auto menu = menus.crbegin(); menu != menus.crend(); ++menu) {
+        const QList<QAction*> items = (*menu)->menu()->actions();
+        (*menu)->setVisible(std::ranges::any_of(
+            items, [](const QAction* item) { return !item->isSeparator() && item->isVisible(); }));
+    }
 }
 
 void UiBuilder::applyEnvironment() {
@@ -229,11 +240,7 @@ void UiBuilder::applyEnvironment() {
         }
     }
     if (m_menuBar != nullptr) {
-        for (QAction* action : m_menuBar->actions()) {
-            if (action->menu() != nullptr) {
-                action->setVisible(showMenus(*action->menu()));
-            }
-        }
+        showMenus(*m_menuBar);
     }
     for (QToolBar* toolbar : m_toolbars) {
         // The controls of the layers and of the properties go with the

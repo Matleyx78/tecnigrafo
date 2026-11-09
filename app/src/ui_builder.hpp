@@ -14,7 +14,6 @@
 #include <cstdint>
 
 class QLabel;
-class QMenu;
 class QMenuBar;
 class QToolBar;
 class QToolButton;
@@ -78,9 +77,9 @@ private:
     /// Shows and hides the actions, menus, groups, toolbars and tabs for
     /// the environment of setEnvironment().
     void applyEnvironment();
-    /// Shows the submenus of `menu` that have an action offered, and hides
-    /// the others; true if `menu` itself has one.
-    bool showMenus(QMenu& menu) const;
+    /// Shows the menus and submenus of `bar` that have an action offered,
+    /// and hides the others.
+    void showMenus(QMenuBar& bar) const;
 
     SARibbonMainWindow& m_window;
     const ActionRegistry& m_registry;
