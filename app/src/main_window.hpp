@@ -13,6 +13,7 @@
 #include "theme.hpp"
 #include "ui_builder.hpp"
 
+#include <QHash>
 #include <QList>
 #include <QString>
 #include <QStringList>
@@ -42,17 +43,21 @@ class ActionRegistry;
 class AutoHide;
 class CadView;
 class CommandLine;
+class DocumentTabs;
 class LayerPanel;
 class PropertiesPanel;
 class RecentFiles;
+class StartPage;
 
 /// The window draws its own frame, with the quick access bar in its title
 /// row (docs/adr/0039, point 4), except under Wayland, where it keeps the
 /// frame of the system and the quick access bar goes under the title.
 ///
 /// The window owns a session for each open document (docs/adr/0041, point
-/// 2), one of them active; the program opens with one, and NEW and OPEN, in
-/// the runner of any session, add another and activate it (the window is the
+/// 2), shown in a tab of its own, one of them active, or none while the
+/// Start page is (docs/adr/0041, point 9; docs/tappe/0.7.5/P29). The program
+/// opens on the Start page; NEW and OPEN, in the runner of any session or
+/// from the Start page, add a session and activate it (the window is the
 /// host of their documents, cmd::DocumentHost). View, command line,
 /// the panels Layers and Properties, Undo and Redo, the drawing aids, title
 /// and status follow the active session (activate()); the listener of every
@@ -63,11 +68,15 @@ class MainWindow final : public SARibbonMainWindow {
 public:
     /// What the window shows when it opens.
     enum class InitialDrawing : std::uint8_t {
-        /// The sample drawing of sample_drawing.hpp, as the program opens.
+        /// The sample drawing of sample_drawing.hpp, active: the gallery of
+        /// screenshots and the tests.
         Sample,
-        /// Nothing: the control mode starts from an empty drawing
+        /// An empty drawing, active: the control mode starts from it
         /// (docs/adr/0011, level 2).
         Empty,
+        /// No document: the Start page, as the program opens, like AutoCAD
+        /// (docs/DECISIONI.md, 2026-11-07).
+        None,
     };
 
     Q_DISABLE_COPY_MOVE(MainWindow)
@@ -140,11 +149,32 @@ public:
     void activate(DocumentSession& session);
 
     /// Closes `session` without asking anything: a closed modified drawing
-    /// is lost (the question to save is the job of the tabs, P29). View,
-    /// command line, panels and listener let it go first; if it was active,
-    /// the session opened before it, or else after it, becomes active, or
-    /// none. Precondition: `session` is one of sessions().
+    /// is lost (closeDocument() asks). View, command line, panels and
+    /// listener let it go first; if it was active, the session after it
+    /// becomes active, or else the one before it, or none: the Start page
+    /// (decision B4 of docs/DECISIONI.md). Precondition: `session` is one
+    /// of sessions().
     void closeSession(DocumentSession& session);
+
+    /// What the cross of the tab of `session` does (docs/tappe/0.7.5/P29,
+    /// point 4): a command in progress ends first, as with Esc; then, if
+    /// the document is modified, the question to save it, with the document
+    /// shown. Cancel, or a save cancelled or failed, leaves it open; the
+    /// document active before stays active, unless it was `session` and
+    /// `session` is closed (closeSession()). True if it is closed.
+    /// Precondition: `session` is one of sessions().
+    bool closeDocument(DocumentSession& session);
+
+    /// Shows the Start page: no session is active (docs/adr/0041, point 9).
+    /// The session left keeps its command and what was typed, as with
+    /// activate().
+    void showStartPage();
+
+    /// The row of the tabs of the documents.
+    [[nodiscard]] DocumentTabs* documentTabs() const { return m_documentTabs; }
+
+    /// The Start page, shown while no session is active.
+    [[nodiscard]] StartPage* startPage() const { return m_startPage; }
 
     /// Sets all snap switches and the runner, without writing in the history.
     void setSnapModes(const core::SnapModes& modes);
@@ -194,6 +224,8 @@ private:
     void updateWindowButtons();
     void connectDrawingAids();
     void createStatusBar();
+    /// Connects what the tabs and the Start page ask.
+    void connectDocumentTabs();
 
     /// The action `id` of builtin_actions.hpp; it must exist.
     [[nodiscard]] QAction* registeredAction(const char* id) const;
@@ -206,12 +238,32 @@ private:
     /// the Tools menu.
     void applyDrawingAids();
 
-    /// Makes `session` active; nullptr for none (activate()).
+    /// Makes `session` active; nullptr for none, the Start page (activate()).
     void switchTo(DocumentSession* session);
-    /// Before the window closes: cancels the command of `session`, if any,
-    /// and asks whether to save it if it is modified, showing it. False if
-    /// the user cancels, or saving fails.
+    /// Before `session` closes: cancels its command, if any, and asks
+    /// whether to save it if it is modified, showing it. False if the user
+    /// cancels, or saving fails.
     bool confirmClose(DocumentSession& session);
+    /// closeDocument(); when the user keeps `session` open, `keepShown`
+    /// leaves it active, as closing the window does, instead of the session
+    /// active before.
+    bool closeAsked(DocumentSession& session, bool keepShown);
+    /// Shows the Start page in place of the drawing and the command line,
+    /// or the other way round.
+    void setStartPageShown(bool shown);
+    /// Takes the actions that need a document away while the Start page is
+    /// shown, and gives them back as they were (ActionSpec::requiresDocument).
+    void setDocumentActionsAvailable(bool available);
+    /// The tabs show the sessions, in their order, and the active one.
+    void refreshTabs();
+    /// The Start page shows the recent files.
+    void refreshStartPage();
+    /// Runs the action `id` if it is enabled, as its shortcut would.
+    void triggerAction(const char* id);
+    /// The runner that the actions with a command and the file dialogs use:
+    /// the active session's, or with the Start page a runner of the window
+    /// whose document is never shown, so that NEW and OPEN work there too.
+    [[nodiscard]] cmd::CommandRunner& commandRunner();
     /// What NEW and OPEN do through the host: a session for `document`,
     /// with `file`, after the others, made active. A file read by OPEN goes
     /// to the recent files.
@@ -259,6 +311,9 @@ private:
     cmd::CommandRunner::DescriptionCheck m_descriptionCheck;
     bool m_scriptSequences{false};
     std::unique_ptr<Host> m_host;
+    // The runner of the Start page (commandRunner()): its document is never
+    // shown, nor in sessions(), and never changes.
+    std::unique_ptr<cmd::DrawingSession> m_startSession;
     std::vector<std::unique_ptr<DocumentSession>> m_sessions;
     DocumentSession* m_active{nullptr};
     std::unique_ptr<QSettings> m_settings;
@@ -269,6 +324,12 @@ private:
     // The actions that wait for the running command to end: those with a
     // command, as typing does.
     QList<QAction*> m_idleActions;
+    // The actions declared with ActionSpec::requiresDocument, and, while the
+    // Start page is shown, whether each was enabled before it.
+    QList<QAction*> m_documentActions;
+    QHash<QAction*, bool> m_documentActionStates;
+    bool m_documentActionsAvailable{true};
+    bool m_destroying{false};
     ActionRegistry* m_actions{nullptr};
     std::unique_ptr<UiBuilder> m_uiBuilder;
     QToolButton* m_ribbonButton{nullptr};
@@ -283,6 +344,9 @@ private:
     bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};
     CommandLine* m_commandLine{nullptr};
+    DocumentTabs* m_documentTabs{nullptr};
+    StartPage* m_startPage{nullptr};
+    QWidget* m_drawingArea{nullptr};
     LayerPanel* m_layerPanel{nullptr};
     PropertiesPanel* m_propertiesPanel{nullptr};
     AutoHide* m_autoHide{nullptr};

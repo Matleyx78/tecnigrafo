@@ -363,8 +363,14 @@ TEST_F(FileMenuTest, CloseCancelDiscardSaveAndCancelledSave) {
     answers().append(path("closed.cadx"));
     EXPECT_TRUE(closeWith(QMessageBox::Save));
     EXPECT_TRUE(QFileInfo::exists(path("closed.cadx")));
+    // Closing the window closed the document saved (decision B5): the
+    // Start page is left, where New opens another.
+    EXPECT_TRUE(window()->sessions().empty());
+    action("file.new")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 1U);
     line();
     EXPECT_TRUE(closeWith(QMessageBox::Discard));
+    EXPECT_TRUE(window()->sessions().empty());
 }
 
 TEST_F(FileMenuTest, ScriptSessionDoesNotReadOrWriteSettingsOrShowDialogs) {

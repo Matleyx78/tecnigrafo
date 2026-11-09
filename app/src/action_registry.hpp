@@ -52,6 +52,10 @@ struct ActionSpec {
     /// (the prompt changes). The responses left when the command ends, or
     /// when its prompt does not offer the next one, are dropped.
     QStringList responses;
+    // Shortcuts included (decision B7 of docs/DECISIONI.md, docs/tappe/
+    // 0.7.5/P29); separate from `environments`. The run-time actions of
+    // dynamicActions() keep the default: their menu decides for them.
+    bool requiresDocument{true};  ///< disabled while no document is active (the Start page)
 };
 
 /// The actions of the main window. Menus, and later the ribbon, toolbars

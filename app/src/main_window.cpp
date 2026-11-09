@@ -9,6 +9,7 @@
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
 #include "command_line.hpp"
+#include "document_tabs.hpp"
 #include "dynamic_input_box.hpp"
 #include "layer_panel.hpp"
 #include "properties_panel.hpp"
@@ -17,6 +18,7 @@
 #include "settings_dialog.hpp"
 #include "shortcut_map.hpp"
 #include "shortcuts_dialog.hpp"
+#include "start_page.hpp"
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/document_host.hpp"
 #include "tg/cmd/drawing_session.hpp"
@@ -37,6 +39,7 @@
 #include <QIcon>
 #include <QKeySequence>
 #include <QLabel>
+#include <QLayout>
 #include <QLineEdit>
 #include <QList>
 #include <QMenu>
@@ -193,6 +196,13 @@ QIcon windowButtonIcon(WindowGlyph glyph, WindowGlyph checked, const QColor& col
     return icon;
 }
 
+/// The icon of the tab of a document of `type` (docs/ICONE.md).
+QString documentIcon(const QString& type) {
+    return type == QString::fromLatin1(DocumentSession::kDrawingType)
+               ? QStringLiteral("doc-drawing")
+               : QString{};
+}
+
 /// The tooltip of a switch of the status bar: its name and its key.
 QString switchToolTip(const QAction& action) {
     const QString name = action.text().remove(QLatin1Char('&'));
@@ -271,18 +281,39 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     // The program as distributed does not check descriptions; --script turns
     // the check on (docs/adr/0026, point 3, and setScriptMode()): the empty
     // function of m_descriptionCheck.
-    // One session, as the program opens; activated once the interface that
-    // follows it exists.
-    DocumentSession& first = openSession(
-        drawing == InitialDrawing::Sample ? makeSampleDrawing() : core::Document::newDrawing());
+    // The runner of the Start page: no command line shows it, so its
+    // messages ("... is already open.") go to the history here.
+    m_startSession = std::make_unique<cmd::DrawingSession>(m_registry, m_files);
+    configureRunner(m_startSession->runner());
+    m_startSession->runner().setMessageSink([this](const std::string& text) {
+        m_commandLine->appendToHistory(QString::fromStdString(text));
+    });
+    // The session the window opens with, if any; activated once the
+    // interface that follows it exists.
+    DocumentSession* first = nullptr;
+    if (drawing != InitialDrawing::None) {
+        first = &openSession(drawing == InitialDrawing::Sample ? makeSampleDrawing()
+                                                               : core::Document::newDrawing());
+    }
     updateDrawingState();
     resize(1100, 720);
 
-    // The command line sits below the drawing, as in AutoCAD.
+    // The tabs of the documents under the ribbon (docs/adr/0039, point 1,
+    // area 4), with both interfaces; the command line sits below the
+    // drawing, as in AutoCAD. The Start page takes the place of both while
+    // no document is active.
     auto* central = new QWidget(this);
+    m_drawingArea = central;
+    m_documentTabs = new DocumentTabs(central);
+    m_startPage = new StartPage(central);
+    m_startPage->addDocumentType(QString::fromLatin1(DocumentSession::kDrawingType), tr("Drawing"),
+                                 QStringLiteral("doc-drawing"));
+    m_startPage->hide();
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
+    layout->addWidget(m_documentTabs);
+    layout->addWidget(m_startPage, 1);
     layout->addWidget(m_view, 1);
     layout->addWidget(m_commandLine);
     // The tabs of the hidden panels stand around the drawing and the
@@ -322,7 +353,15 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
             m_view->setFocus(Qt::OtherFocusReason);
         }
     });
-    activate(first);
+    connectDocumentTabs();
+    if (first != nullptr) {
+        activate(*first);
+    } else {
+        setDocumentActionsAvailable(false);
+        setStartPageShown(true);
+        updateEditActions();
+        refreshTabs();
+    }
     setDockOptions(dockOptions() | QMainWindow::AllowTabbedDocks | QMainWindow::AllowNestedDocks);
     setTheme(Theme::Light);
 }
@@ -338,6 +377,14 @@ void MainWindow::createMenus() {
     // window only connects what the actions do.
     m_actions = new ActionRegistry(this);
     addBuiltinActions(*m_actions);
+    // The actions that need a document, disabled with the Start page
+    // (ActionSpec::requiresDocument). The run-time actions of the recent
+    // files are not among them: their menu, file.recent, works there.
+    for (QAction* action : m_actions->actions()) {
+        if (!action->isSeparator() && m_actions->spec(action->objectName())->requiresDocument) {
+            m_documentActions.append(action);
+        }
+    }
 
     // Actions with a command run it as if typed in the command line, which
     // shows it, then give it their responses; like typing, they wait for the
@@ -507,6 +554,47 @@ void MainWindow::connectDrawingAids() {
     });
 }
 
+void MainWindow::connectDocumentTabs() {
+    connect(m_documentTabs, &DocumentTabs::startRequested, this, &MainWindow::showStartPage);
+    connect(m_documentTabs, &DocumentTabs::documentRequested, this, [this](int index) {
+        if (index >= 0 && static_cast<std::size_t>(index) < m_sessions.size()) {
+            activate(*m_sessions[static_cast<std::size_t>(index)]);
+        }
+    });
+    // Closed after the click: the cross belongs to the tab that the close
+    // takes away, and the question to save runs an event loop of its own.
+    connect(m_documentTabs, &DocumentTabs::closeRequested, this, [this](int index) {
+        if (index < 0 || static_cast<std::size_t>(index) >= m_sessions.size()) {
+            return;
+        }
+        DocumentSession* const session = m_sessions[static_cast<std::size_t>(index)].get();
+        QMetaObject::invokeMethod(
+            this,
+            [this, session] {
+                const auto open = std::ranges::any_of(
+                    m_sessions, [session](const auto& owned) { return owned.get() == session; });
+                if (open) {
+                    closeDocument(*session);
+                }
+            },
+            Qt::QueuedConnection);
+    });
+    connect(m_documentTabs, &DocumentTabs::newRequested, this,
+            [this] { triggerAction("file.new"); });
+    connect(m_startPage, &StartPage::newRequested, this,
+            [this](const QString& /*type*/) { triggerAction("file.new"); });
+    connect(m_startPage, &StartPage::openRequested, this, [this] { triggerAction("file.open"); });
+    connect(m_startPage, &StartPage::recentRequested, this, &MainWindow::openRecentFile);
+}
+
+void MainWindow::triggerAction(const char* id) {
+    // QAction::trigger() runs a disabled action too.
+    QAction* action = registeredAction(id);
+    if (action->isEnabled()) {
+        action->trigger();
+    }
+}
+
 void MainWindow::setSnapModes(const core::SnapModes& modes) {
     m_endpointAction->setChecked(modes.endpoint);
     m_midpointAction->setChecked(modes.midpoint);
@@ -557,6 +645,7 @@ QToolButton* MainWindow::createModeButton(QAction* action, const QString& name) 
     button->setToolTip(switchToolTip(*action));
     button->setCheckable(true);
     button->setChecked(action->isChecked());
+    button->setEnabled(action->isEnabled());
     button->setAutoRaise(true);
     // A click must not take the keyboard away from the drawing and the
     // command line.
@@ -565,10 +654,12 @@ QToolButton* MainWindow::createModeButton(QAction* action, const QString& name) 
     // two signals do not call each other forever.
     connect(button, &QToolButton::toggled, action, &QAction::setChecked);
     connect(action, &QAction::toggled, button, &QToolButton::setChecked);
-    // The theme changes the icon, the shortcuts window the key.
+    // The theme changes the icon, the shortcuts window the key, the Start
+    // page whether it works.
     connect(action, &QAction::changed, button, [button, action] {
         button->setIcon(action->icon());
         button->setToolTip(switchToolTip(*action));
+        button->setEnabled(action->isEnabled());
     });
     return button;
 }
@@ -673,19 +764,20 @@ void MainWindow::refresh() {
 
 void MainWindow::updateEditActions() {
     // Undo and redo wait for the running command to end (docs/tappe/0.2).
-    // Without a session there is no runner to type into.
-    const bool idle = m_active != nullptr && !m_active->runner().isActive();
+    // With the Start page, NEW and OPEN wait for the runner of the window.
+    const bool idle = !commandRunner().isActive();
+    const bool editing = idle && m_active != nullptr;
     for (QAction* action : m_idleActions) {
         action->setEnabled(idle);
     }
     m_recentMenu->setEnabled(idle && !m_scriptMode);
     m_recentAction->setEnabled(idle && !m_scriptMode);
-    m_eraseAction->setEnabled(idle && !m_active->runner().selection().isEmpty());
+    m_eraseAction->setEnabled(editing && !m_active->runner().selection().isEmpty());
     if (m_layerPanel != nullptr) {
-        m_layerPanel->setEditingEnabled(idle);
+        m_layerPanel->setEditingEnabled(editing);
     }
     if (m_propertiesPanel != nullptr) {
-        m_propertiesPanel->setEditingEnabled(idle);
+        m_propertiesPanel->setEditingEnabled(editing);
     }
     QString undoName;
     QString redoName;
@@ -693,15 +785,28 @@ void MainWindow::updateEditActions() {
         undoName = QString::fromStdString(m_active->editor().undoName());
         redoName = QString::fromStdString(m_active->editor().redoName());
     }
-    m_undoAction->setEnabled(idle && m_active->editor().canUndo());
-    m_redoAction->setEnabled(idle && m_active->editor().canRedo());
+    m_undoAction->setEnabled(editing && m_active->editor().canUndo());
+    m_redoAction->setEnabled(editing && m_active->editor().canRedo());
     m_undoAction->setText(undoName.isEmpty() ? tr("&Undo") : tr("&Undo %1").arg(undoName));
     m_redoAction->setText(redoName.isEmpty() ? tr("&Redo") : tr("&Redo %1").arg(redoName));
+    // With the Start page the actions that need a document stay disabled,
+    // whatever the lines above gave them.
+    if (m_active == nullptr) {
+        for (QAction* action : m_documentActions) {
+            action->setEnabled(false);
+        }
+    }
+}
+
+cmd::CommandRunner& MainWindow::commandRunner() {
+    return m_active != nullptr ? m_active->runner() : m_startSession->runner();
 }
 
 MainWindow::~MainWindow() {
     // Every widget and callback lets the sessions go before they are
     // destroyed with the members: the widgets outlive them, as children.
+    // Nothing more is shown: no Start page, no tabs.
+    m_destroying = true;
     switchTo(nullptr);
     for (const auto& session : m_sessions) {
         session->editor().setChangeListener({});
@@ -725,6 +830,7 @@ const cmd::CommandRunner& MainWindow::runner() const {
 
 void MainWindow::setScriptSequences(bool on) {
     m_scriptSequences = on;
+    m_startSession->runner().setScriptSequences(on);
     for (const auto& session : m_sessions) {
         session->runner().setScriptSequences(on);
     }
@@ -733,6 +839,7 @@ void MainWindow::setScriptSequences(bool on) {
 void MainWindow::setFileAccess(io::FileAccess* files) {
     m_externalFiles = true;
     m_files = files;
+    m_startSession->runner().setFileAccess(files);
     for (const auto& session : m_sessions) {
         session->runner().setFileAccess(files);
     }
@@ -750,6 +857,7 @@ DocumentSession& MainWindow::openSession(core::Document document) {
     auto& session = *m_sessions.emplace_back(
         std::make_unique<DocumentSession>(m_registry, m_files, std::move(document)));
     configureRunner(session.runner());
+    refreshTabs();
     // The editor's listener runs inside commit(), while the command that
     // commits is still running: the inputs' own signals refresh again once
     // the runner is idle, so that Undo is enabled when the command ends.
@@ -812,6 +920,13 @@ void MainWindow::switchTo(DocumentSession* session) {
     if (session == m_active) {
         return;
     }
+    if (session == nullptr) {
+        setDocumentActionsAvailable(false);
+    } else if (m_active == nullptr) {
+        // The view is shown and laid out before it fits a new session.
+        setStartPageShown(false);
+        setDocumentActionsAvailable(true);
+    }
     // The widgets save in the session they leave what is of that session
     // (the view, the text typed and not sent) and show what the new one
     // kept. The listener of a session acts only while it is m_active.
@@ -823,6 +938,9 @@ void MainWindow::switchTo(DocumentSession* session) {
     }
     if (m_propertiesPanel != nullptr) {
         m_propertiesPanel->setSession(session);
+    }
+    if (session == nullptr) {
+        setStartPageShown(true);
     }
     if (m_actions != nullptr) {
         // The switches are the window's: the runner shown now gets them.
@@ -839,17 +957,116 @@ void MainWindow::closeSession(DocumentSession& session) {
         m_sessions, [&session](const auto& owned) { return owned.get() == &session; });
     assert(found != m_sessions.end() && "the session belongs to another window");
     if (m_active == &session) {
-        // The one opened before, or else after, or none.
+        // The tab on its right, or else on its left, or the Start page
+        // (decision B4).
         DocumentSession* next = nullptr;
-        if (found != m_sessions.begin()) {
-            next = std::prev(found)->get();
-        } else if (std::next(found) != m_sessions.end()) {
+        if (std::next(found) != m_sessions.end()) {
             next = std::next(found)->get();
+        } else if (found != m_sessions.begin()) {
+            next = std::prev(found)->get();
         }
         switchTo(next);
     }
     session.editor().setChangeListener({});
     m_sessions.erase(found);
+    refreshTabs();
+}
+
+bool MainWindow::closeDocument(DocumentSession& session) {
+    return closeAsked(session, false);
+}
+
+bool MainWindow::closeAsked(DocumentSession& session, bool keepShown) {
+    DocumentSession* const before = m_active;
+    // It shows `session` if it asks anything.
+    const bool closing = confirmClose(session);
+    if (!closing && keepShown) {
+        return false;
+    }
+    if (before != &session) {
+        // Closing a tab that is not active does not change the active one.
+        switchTo(before);
+    }
+    if (!closing) {
+        refreshTabs();
+        return false;
+    }
+    closeSession(session);
+    return true;
+}
+
+void MainWindow::showStartPage() {
+    switchTo(nullptr);
+}
+
+void MainWindow::setStartPageShown(bool shown) {
+    if (m_startPage == nullptr || m_destroying) {
+        return;
+    }
+    m_startPage->setVisible(shown);
+    m_view->setVisible(!shown);
+    m_commandLine->setVisible(!shown);
+    // Laid out now: a session shown for the first time fits the view at
+    // its real size (CadView::setSession).
+    m_drawingArea->layout()->activate();
+    if (shown) {
+        refreshStartPage();
+    } else if (!m_scriptMode && isActiveWindow()) {
+        m_view->setFocus(Qt::OtherFocusReason);
+    }
+}
+
+void MainWindow::setDocumentActionsAvailable(bool available) {
+    if (m_actions == nullptr || m_destroying || available == m_documentActionsAvailable) {
+        return;
+    }
+    m_documentActionsAvailable = available;
+    if (!available) {
+        m_documentActionStates.clear();
+        for (QAction* action : m_documentActions) {
+            m_documentActionStates.insert(action, action->isEnabled());
+            action->setEnabled(false);
+        }
+        return;
+    }
+    // Back as they were; updateEditActions() and the panels then give the
+    // ones that depend on the session their state.
+    for (auto state = m_documentActionStates.cbegin(); state != m_documentActionStates.cend();
+         ++state) {
+        state.key()->setEnabled(state.value());
+    }
+    m_documentActionStates.clear();
+}
+
+void MainWindow::refreshTabs() {
+    if (m_documentTabs == nullptr || m_destroying) {
+        return;
+    }
+    QList<DocumentTabs::Document> documents;
+    documents.reserve(static_cast<qsizetype>(m_sessions.size()));
+    int active = -1;
+    for (const auto& session : m_sessions) {
+        const QString name = QString::fromStdString(session->file().name());
+        const QFileInfo info(name);
+        if (session.get() == m_active) {
+            active = static_cast<int>(documents.size());
+        }
+        documents.append({info.fileName(),
+                          session->file().hasFile() ? info.absoluteFilePath() : info.fileName(),
+                          documentIcon(session->documentType()), session->editor().isModified()});
+    }
+    m_documentTabs->setDocuments(documents, active);
+}
+
+void MainWindow::refreshStartPage() {
+    // The settings are read only for a window on the screen, never by a
+    // script session (createMenus()).
+    if (m_startPage == nullptr || m_destroying || m_scriptMode || !isVisible() ||
+        !m_startPage->isVisibleTo(this)) {
+        return;
+    }
+    ensureRecentFiles();
+    m_startPage->setRecentFiles(m_recentFiles->files());
 }
 
 void MainWindow::setScriptMode() {
@@ -870,6 +1087,7 @@ void MainWindow::setScriptMode() {
     if (!m_externalFiles) {
         m_files = nullptr;
     }
+    configureRunner(m_startSession->runner());
     for (const auto& session : m_sessions) {
         configureRunner(session->runner());
     }
@@ -887,6 +1105,7 @@ QString MainWindow::documentName() const {
 }
 
 void MainWindow::updateDrawingState() {
+    refreshTabs();
     if (m_active == nullptr) {
         setWindowTitle(tr("Tecnigrafo"));
         setWindowModified(false);
@@ -901,10 +1120,7 @@ void MainWindow::updateDrawingState() {
 }
 
 void MainWindow::submitFileText(const QString& text) {
-    if (m_active == nullptr) {
-        return;
-    }
-    cmd::CommandRunner& runner = m_active->runner();
+    cmd::CommandRunner& runner = commandRunner();
     m_commandLine->appendToHistory(
         QStringLiteral("%1 %2").arg(QString::fromStdString(runner.promptText()), text));
     runner.submitText(text.toStdString());
@@ -912,14 +1128,13 @@ void MainWindow::submitFileText(const QString& text) {
 }
 
 void MainWindow::startCommand(const QString& command, const QStringList& responses) {
-    if (m_active == nullptr) {
-        return;
-    }
-    const DocumentSession* session = m_active;
+    // With the Start page, the runner of the window: only NEW and OPEN, the
+    // actions that need no document, run there, and they have no responses.
+    const cmd::CommandRunner* runner = &commandRunner();
     submitFileText(command);
     // NEW, or OPEN of a file already open, ends by making another session
     // active: the command has ended, and nothing is left to answer.
-    if (session != m_active) {
+    if (m_active == nullptr || runner != &m_active->runner()) {
         return;
     }
     DocumentSession::ActionResponses& pending = m_active->actionResponses();
@@ -974,6 +1189,7 @@ void MainWindow::addRecentFile(const QString& path) {
     }
     ensureRecentFiles();
     m_recentFiles->add(QFileInfo(path).absoluteFilePath());
+    refreshStartPage();
 }
 
 void MainWindow::populateRecentMenu() {
@@ -997,12 +1213,14 @@ void MainWindow::populateRecentMenu() {
 }
 
 void MainWindow::openRecentFile(const QString& path) {
-    if (m_active == nullptr || m_active->runner().isActive()) {
+    if (commandRunner().isActive()) {
         return;
     }
     if (!QFileInfo::exists(path)) {
         m_commandLine->appendToHistory(tr("Cannot open %1: file no longer exists.").arg(path));
+        ensureRecentFiles();
         m_recentFiles->remove(path);
+        refreshStartPage();
         return;
     }
     // Handed to the question for the file, instead of the dialog.
@@ -1040,14 +1258,14 @@ QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path) {
 }
 
 void MainWindow::handleFilePrompts() {
-    if (m_scriptMode || m_handlingFilePrompt || m_active == nullptr) {
+    if (m_scriptMode || m_handlingFilePrompt) {
         return;
     }
     const QScopedValueRollback<bool> guard(m_handlingFilePrompt, true);
     // The dialogs are modal: only the answer of OPEN, by adding or
     // activating a session, changes the active one, and ends the command of
-    // this runner, which stays alive.
-    cmd::CommandRunner& runner = m_active->runner();
+    // this runner, which stays alive (the Start page's too).
+    cmd::CommandRunner& runner = commandRunner();
     while (runner.prompt().file != cmd::FilePrompt::None) {
         const cmd::FilePrompt kind = runner.prompt().file;
         const bool recent = kind == cmd::FilePrompt::Open && !m_pendingRecent.isEmpty();
@@ -1082,21 +1300,13 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         event->accept();
         return;
     }
-    // NEW and OPEN leave the other documents open with their changes: every
-    // modified one is asked for, the active one first, then the others in
-    // the order they were opened, so that none is lost in silence. The tabs
-    // that close one document at a time are P29's.
-    std::vector<DocumentSession*> order;
-    if (m_active != nullptr) {
-        order.push_back(m_active);
-    }
-    for (const auto& session : m_sessions) {
-        if (session.get() != m_active) {
-            order.push_back(session.get());
-        }
-    }
-    for (DocumentSession* session : order) {
-        if (!confirmClose(*session)) {
+    // The documents close one by one, in the order of the tabs, as the cross
+    // of each (decision B5; docs/adr/0041, point 3). A Cancel, or a save
+    // cancelled or failed, stops there: that document, shown, and the
+    // following ones stay open, the ones closed stay closed, and so does
+    // the window.
+    while (!m_sessions.empty()) {
+        if (!closeAsked(*m_sessions.front(), true)) {
             event->ignore();
             return;
         }
@@ -1180,6 +1390,12 @@ void MainWindow::updateThemeIcons() {
             action->setIcon(themedIcon(spec->icon, m_theme));
         }
     }
+    if (m_documentTabs != nullptr) {
+        m_documentTabs->setTheme(m_theme);
+    }
+    if (m_startPage != nullptr) {
+        m_startPage->setTheme(m_theme);
+    }
     // The tab of a hidden panel shows the icon of the action that opens it.
     if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel")); layers != nullptr) {
         layers->setWindowIcon(registeredAction("layer.panel")->icon());
@@ -1222,6 +1438,7 @@ void MainWindow::showEvent(QShowEvent* event) {
     }
     // On Windows SARibbonMainWindow sets the shadow of the frameless window.
     SARibbonMainWindow::showEvent(event);
+    refreshStartPage();
 }
 
 void MainWindow::changeEvent(QEvent* event) {
