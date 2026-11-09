@@ -116,8 +116,11 @@ TEST(TextCommandTest, EscapeAtEveryStageAndInvalidHeightsPreserveRedo) {
     core::Document document;
     edit::Editor editor(document);
     edit::DocumentFile file;
-    CommandContext context{editor, file, {}, [](const std::string&) {
-                           }};
+    CommandContext context{{[](const std::string&) {
+                           }},
+                           editor,
+                           file,
+                           {}};
     TextCommand command;
     for (int stage = 0; stage < 4; ++stage) {
         command.start(context);
@@ -160,8 +163,11 @@ TEST(TextCommandTest, AbandonedSetupKeepsDefaultsAndFirstLineUpdatesThem) {
     core::Document document;
     edit::Editor editor(document);
     edit::DocumentFile file;
-    CommandContext context{editor, file, {}, [](const std::string&) {
-                           }};
+    CommandContext context{{[](const std::string&) {
+                           }},
+                           editor,
+                           file,
+                           {}};
     TextCommand command;
     for (const bool escape : {false, true}) {
         command.start(context);
@@ -196,8 +202,11 @@ TEST(TextCommandTest, PointMeasurementsAndPreviewOfNextBaseline) {
     core::Document document;
     edit::Editor editor(document);
     edit::DocumentFile file;
-    CommandContext context{editor, file, {}, [](const std::string&) {
-                           }};
+    CommandContext context{{[](const std::string&) {
+                           }},
+                           editor,
+                           file,
+                           {}};
     TextCommand command;
     command.start(context);
     EXPECT_FALSE(command.basePoint());

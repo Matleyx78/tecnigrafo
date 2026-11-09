@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "tg/cmd/command.hpp"
+#include "tg/cmd/command_protocol.hpp"
 
 #include <cstdint>
 #include <string>

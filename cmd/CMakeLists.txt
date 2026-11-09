@@ -28,6 +28,7 @@ add_library(tg_cmd
     src/commands/rotate_scale_commands.cpp
     src/commands/text_command.cpp
     src/commands/trim_extend_commands.cpp
+    src/command_protocol.cpp
     src/command_registry.cpp
     src/command_runner.cpp
     src/coordinate_input.cpp
