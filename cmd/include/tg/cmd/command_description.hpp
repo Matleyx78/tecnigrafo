@@ -51,6 +51,7 @@ struct CommandDescription {
     std::string summary;  ///< one English sentence, ending with a full stop
     bool selectsFirst{false};
     std::vector<PromptDescription> prompts;
+    std::vector<std::string> environments{"drawing2d"};  ///< empty means all environments
 
     friend bool operator==(const CommandDescription&, const CommandDescription&) = default;
 };

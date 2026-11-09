@@ -186,6 +186,11 @@ public:
     CommandRunner& operator=(CommandRunner&&) = delete;
     ~CommandRunner() = default;
 
+    /// The environment commands are typed in (docs/adr/0041, point 6):
+    /// "drawing2d" until set. Precondition: no command is running.
+    void setEnvironment(std::string id);
+    [[nodiscard]] const std::string& environment() const;
+
     /// Text from the command line; empty text means Enter. Leading and
     /// trailing white space is ignored except at a Text prompt.
     void submitText(std::string_view text);
@@ -413,6 +418,7 @@ private:
     edit::DocumentFile m_ownFile;
     std::optional<CommandContext> m_context;
     std::unique_ptr<Command> m_command;
+    std::string m_environment{"drawing2d"};
     std::string m_lastCommand;            ///< canonical name, empty before the first one
     std::optional<core::Vec2> m_pointer;  ///< as given, before the drawing aids
     std::function<void(std::string)> m_sink;
