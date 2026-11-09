@@ -27,7 +27,7 @@ Prompt promptWith(std::vector<Keyword> keywords, FilePrompt file = FilePrompt::N
 
 TEST(CommandProtocol, ContextCarriesOnlyWhatEveryCommandNeeds) {
     std::vector<std::string> history;
-    ProtocolContext context{[&history](std::string text) {
+    const ProtocolContext context{[&history](std::string text) {
         history.push_back(std::move(text));
     }};
     EXPECT_FALSE(context.scriptSequences);
