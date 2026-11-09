@@ -186,7 +186,7 @@ private:
                 return false;
             }
             constexpr unsigned int kSupplementary = 0x10000;
-            *code = kSupplementary + ((*code - kHighFirst) << 10) + (*low - kLowFirst);
+            code = kSupplementary + ((*code - kHighFirst) << 10) + (*low - kLowFirst);
         } else if (*code >= kLowFirst && *code <= kLowLast) {
             return false;
         }
