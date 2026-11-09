@@ -255,7 +255,7 @@ public:
         }
         // Same 10-pixel snap aperture as aidedPoint() (ADR 0033, point 9).
         constexpr double kPolarAperturePixels = 10.0;
-        const auto point = polarPoint(*base, *m_pointer, m_context.value().defaults.polarAngle,
+        const auto point = polarPoint(*base, *m_pointer, context().defaults.polarAngle,
                                       kPolarAperturePixels * m_pixelSize);
         if (!point) {
             return std::nullopt;
@@ -318,7 +318,7 @@ public:
     /// Passing nullptr selects the runner's own file.
     void setDocumentFile(edit::DocumentFile* file);
 
-    [[nodiscard]] const edit::DocumentFile& documentFile() const { return m_context.value().file; }
+    [[nodiscard]] const edit::DocumentFile& documentFile() const { return context().file; }
 
     /// AutoCAD script sequences (ADR 0032, points 6-8). Default false.
     void setScriptSequences(bool on);
@@ -403,6 +403,9 @@ private:
     void undo();
     void redo();
     void message(std::string text) const;
+
+    [[nodiscard]] CommandContext& context();
+    [[nodiscard]] const CommandContext& context() const;
 
     const CommandRegistry& m_registry;
     edit::Editor& m_editor;
