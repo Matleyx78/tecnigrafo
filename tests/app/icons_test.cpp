@@ -4,6 +4,7 @@
 #include "action_registry.hpp"
 #include "auto_hide.hpp"
 #include "builtin_actions.hpp"
+#include "document_tabs.hpp"
 #include "layer_table_model.hpp"
 #include "properties_panel.hpp"
 #include "theme.hpp"
@@ -423,6 +424,8 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     used.append(propertiesPanelIconNames());
     // The pins of the panels that hide themselves (0.7.5-P18).
     used.append(autoHideIconNames());
+    // The row of the tabs and the Start page (0.7.5-P29).
+    used.append(documentTabsIconNames());
 
     const QDir directory(QStringLiteral(TG_ICONS_DIR));
     const QStringList names =

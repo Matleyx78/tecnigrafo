@@ -63,7 +63,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    tg::app::MainWindow window;
+    // The program opens on the Start page, without documents, as AutoCAD
+    // does (docs/DECISIONI.md, 2026-11-07).
+    tg::app::MainWindow window(tg::app::MainWindow::InitialDrawing::None);
     window.show();
 
     if (parser.isSet(screenshotOption)) {

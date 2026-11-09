@@ -60,6 +60,13 @@ ActionSpec quickAccess(ActionSpec spec) {
     return spec;
 }
 
+/// `spec` usable without a document, on the Start page (ActionSpec::
+/// requiresDocument, docs/tappe/0.7.5/P29).
+ActionSpec anyDocument(ActionSpec spec) {
+    spec.requiresDocument = false;
+    return spec;
+}
+
 /// A separator of `menu`.
 void addSeparator(ActionRegistry& registry, const QString& id, const QString& menu) {
     ActionSpec spec;
@@ -122,16 +129,17 @@ void BuiltinActions::add(ActionRegistry& registry) {
     const QString file = tr("&File");
     // Some Qt platforms (including offscreen) have no SaveAs binding: keep
     // the platform keys and always offer the CAD shortcut (docs/tappe/0.5).
-    addWithKeys(
-        registry,
-        quickAccess(withIcon(commandSpec(QStringLiteral("file.new"), tr("&New"), file,
-                                         tr("Starts a new drawing."), QStringLiteral("NEW")),
-                             QStringLiteral("file-new"))),
-        keysWith(QKeySequence::New, {}));
     addWithKeys(registry,
-                quickAccess(withIcon(commandSpec(QStringLiteral("file.open"), tr("&Open…"), file,
-                                                 tr("Opens a drawing."), QStringLiteral("OPEN")),
-                                     QStringLiteral("file-open"))),
+                anyDocument(quickAccess(
+                    withIcon(commandSpec(QStringLiteral("file.new"), tr("&New"), file,
+                                         tr("Starts a new drawing."), QStringLiteral("NEW")),
+                             QStringLiteral("file-new")))),
+                keysWith(QKeySequence::New, {}));
+    addWithKeys(registry,
+                anyDocument(quickAccess(
+                    withIcon(commandSpec(QStringLiteral("file.open"), tr("&Open…"), file,
+                                         tr("Opens a drawing."), QStringLiteral("OPEN")),
+                             QStringLiteral("file-open")))),
                 keysWith(QKeySequence::Open, {}));
     addWithKeys(registry,
                 quickAccess(withIcon(commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
@@ -146,11 +154,11 @@ void BuiltinActions::add(ActionRegistry& registry) {
         keysWith(QKeySequence::SaveAs, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)));
     // The Recent Files submenu: MainWindow gives this action its menu and
     // fills it with the run-time actions file.recent.1...
-    registry.add(makeSpec(QStringLiteral("file.recent"), tr("Recent Files"), file,
-                          tr("Opens a drawing used recently.")));
+    registry.add(anyDocument(makeSpec(QStringLiteral("file.recent"), tr("Recent Files"), file,
+                                      tr("Opens a drawing used recently."))));
     addSeparator(registry, QStringLiteral("file.separator-quit"), file);
-    ActionSpec quit =
-        makeSpec(QStringLiteral("file.quit"), tr("&Quit"), file, tr("Closes Tecnigrafo."));
+    ActionSpec quit = anyDocument(
+        makeSpec(QStringLiteral("file.quit"), tr("&Quit"), file, tr("Closes Tecnigrafo.")));
     quit.shortcut = QKeySequence(QKeySequence::Quit);
     registry.add(std::move(quit));
 
@@ -209,20 +217,22 @@ void BuiltinActions::add(ActionRegistry& registry) {
     dynamic.icon = QStringLiteral("aids-dynmode");
     dynamic.shortcut = QKeySequence(Qt::Key_F12);
     registry.add(std::move(dynamic));
-    registry.add(withIcon(makeSpec(QStringLiteral("tools.settings"), tr("&Settings…"), tools,
-                                   tr("Chooses the interface and theme.")),
-                          QStringLiteral("tools-settings")));
-    registry.add(withIcon(makeSpec(QStringLiteral("tools.shortcuts"), tr("&Shortcuts…"), tools,
-                                   tr("Customizes keyboard shortcuts.")),
-                          QStringLiteral("tools-settings")));
-    registry.add(withIcon(switchSpec(QStringLiteral("ui.theme"), tr("&Dark Theme"), tools,
-                                     tr("Switches between light and dark themes.")),
-                          QStringLiteral("ui-theme")));
+    registry.add(anyDocument(withIcon(makeSpec(QStringLiteral("tools.settings"), tr("&Settings…"),
+                                               tools, tr("Chooses the interface and theme.")),
+                                      QStringLiteral("tools-settings"))));
+    registry.add(anyDocument(withIcon(makeSpec(QStringLiteral("tools.shortcuts"), tr("&Shortcuts…"),
+                                               tools, tr("Customizes keyboard shortcuts.")),
+                                      QStringLiteral("tools-settings"))));
+    registry.add(
+        anyDocument(withIcon(switchSpec(QStringLiteral("ui.theme"), tr("&Dark Theme"), tools,
+                                        tr("Switches between light and dark themes.")),
+                             QStringLiteral("ui-theme"))));
     // The switch is between the ribbon and the classic menus: its icon is
     // the ribbon's (docs/ICONE.md).
-    registry.add(withIcon(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"),
-                                     tools, tr("Switches between ribbon and classic menus.")),
-                          QStringLiteral("ui-ribbon")));
+    registry.add(
+        anyDocument(withIcon(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"),
+                                        tools, tr("Switches between ribbon and classic menus.")),
+                             QStringLiteral("ui-ribbon"))));
     // The layers panel (0.6-P22). No command: the actions work on the panel,
     // and LAYER (app_commands.cpp) only shows it.
     const QString layers = tools + QLatin1Char('/') + tr("&Layers");
@@ -367,10 +377,10 @@ void BuiltinActions::add(ActionRegistry& registry) {
                                       tr("Joins objects into one object."), QStringLiteral("JOIN")),
                           QStringLiteral("edit-join")));
 
-    registry.add(
+    registry.add(anyDocument(
         withIcon(makeSpec(QStringLiteral("help.about"), tr("&About Tecnigrafo"), tr("&Help"),
                           tr("Shows the version and the license of Tecnigrafo.")),
-                 QStringLiteral("help-about")));
+                 QStringLiteral("help-about"))));
 }
 
 }  // namespace

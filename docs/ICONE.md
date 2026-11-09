@@ -347,6 +347,16 @@ barra del titolo, sulla sola griglia da 16 px.
 | `ui-pin-16.svg` | puntina di un pannello agganciato, *Auto-hide* | puntina in piedi: testa e piattello (`esist`), ago (`pt`) | sì, solo 16 px |
 | `ui-unpin-16.svg` | puntina di un pannello nascosto, nel riquadro: *Dock* | la stessa puntina coricata, con l'ago verso sinistra | sì, solo 16 px |
 
+I documenti in schede e la pagina *Start* (0.7.5-P29) aggiungono tre icone,
+con i due file `-16.svg` e `-32.svg`; nessuna azione le nomina, le usa la riga
+delle schede (`documentTabsIconNames()`).
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `ui-tab-new` | pulsante `+` della riga delle schede: un disegno nuovo | bordo di una scheda (`esist`) e un più (`pt`) | sì |
+| `ui-tab-menu` | pulsante del menu dei documenti aperti | righe dell'elenco (`esist`) e una freccia aperta verso il basso (`pt`) | sì |
+| `doc-drawing` | tipo disegno: icona della scheda di un disegno, del pulsante *Drawing* di *Start* e dei file recenti | foglio con l'angolo piegato (`esist`) e una spezzata disegnata (`geo`) | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

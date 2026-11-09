@@ -42,6 +42,8 @@ qt_add_library(tg_app_ui STATIC
     src/command_line.hpp
     src/document_session.cpp
     src/document_session.hpp
+    src/document_tabs.cpp
+    src/document_tabs.hpp
     src/main_window.cpp
     src/main_window.hpp
     src/theme.cpp
@@ -52,6 +54,8 @@ qt_add_library(tg_app_ui STATIC
     src/shortcut_map.hpp
     src/shortcuts_dialog.cpp
     src/shortcuts_dialog.hpp
+    src/start_page.cpp
+    src/start_page.hpp
     src/settings_dialog.cpp
     src/settings_dialog.hpp
     src/recent_files.cpp
