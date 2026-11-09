@@ -245,12 +245,17 @@ TEST(McpSession, SaveAndOpenInsideRoot) {
     ASSERT_FALSE(tools.call("open", json{{"path", "sotto/copia.cadx"}}).isError);
     EXPECT_EQ(field(tools.report(), "entities"), "\n  257 LINE start=0,0 end=10,0");
 
-    // A modified drawing: OPEN asks first whether to save the changes.
+    // Each OPEN added a document; a modified one stays open without a
+    // question, and OPEN of a file already open makes it active again
+    // (docs/adr/0041, point 2; docs/tappe/0.7.5/P28b).
     ASSERT_FALSE(tools.run({"LINE", "0,0", "0,10", ""}).isError);
-    const ToolResult changes = tools.call("open", json{{"path", "disegno.dxf"}});
-    EXPECT_FALSE(changes.isError);
-    EXPECT_TRUE(changes.text.starts_with("Command: OPEN\nprompt: Save changes to "))
-        << changes.text;
+    const ToolResult again = tools.call("open", json{{"path", "disegno.dxf"}});
+    EXPECT_FALSE(again.isError);
+    EXPECT_EQ(again.text,
+              "Command: OPEN\nEnter name of drawing to open: disegno.dxf\n"
+              "disegno.dxf is already open.\nprompt: Command:");
+    EXPECT_EQ(field(tools.report(), "documents"),
+              " Drawing1.cadx, disegno.dxf (active), sotto/copia.cadx");
 }
 
 TEST(McpSession, FileToolsStayInsideRoot) {

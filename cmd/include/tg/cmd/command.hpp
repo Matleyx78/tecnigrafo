@@ -21,6 +21,8 @@ class FileAccess;
 
 namespace tg::cmd {
 
+class DocumentHost;
+
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
     double textHeight{2.5};
@@ -61,6 +63,9 @@ struct CommandContext : ProtocolContext {
     CommandDefaults defaults{};
     io::FileAccess* files{nullptr};
     bool documentReplaced{false};
+    /// Who keeps the open documents, for NEW and OPEN (docs/adr/0041, point
+    /// 2); nullptr: NEW and OPEN replace the document of this context.
+    DocumentHost* host{nullptr};
 };
 
 /// An interactive command (docs/adr/0005). Commands never read text: they

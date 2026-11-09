@@ -176,7 +176,12 @@ void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
                                      previous.lastPoint,
                                      previous.defaults,
                                      previous.files,
-                                     previous.documentReplaced});
+                                     previous.documentReplaced,
+                                     previous.host});
+}
+
+void CommandRunner::setDocumentHost(DocumentHost* host) {
+    context().host = host;
 }
 
 void CommandRunner::submitText(std::string_view text) {

@@ -2,11 +2,13 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "command_line.hpp"
+#include "document_session.hpp"
 #include "input_events.hpp"
 #include "main_window.hpp"
 #include "recent_files.hpp"
 #include "script_session.hpp"
 #include "tg/io/file_access.hpp"
+#include "tg/io/io.hpp"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -27,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <utility>
 
@@ -252,9 +255,10 @@ TEST_F(FileMenuTest, CancelAndFailuresPreserveDrawingAndRecentFiles) {
     EXPECT_TRUE(window()->editor().isModified());
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot save")));
-    enter(QStringLiteral("OPEN"));
+    // OPEN asks nothing about the modified drawing: the dialog comes at once.
     answers().append(path("missing.cadx"));
-    enter(QStringLiteral("N"));
+    enter(QStringLiteral("OPEN"));
+    EXPECT_EQ(window()->sessions().size(), 1U);
     EXPECT_EQ(window()->document().entityCount(), 1U);
     EXPECT_TRUE(recent().isEmpty());
     EXPECT_TRUE(history().contains(QStringLiteral("Cannot open")));
@@ -318,23 +322,33 @@ TEST_F(FileMenuTest, PickerConfirmationReplacesExistingFileWithoutSecondQuestion
     EXPECT_TRUE(history().contains(QStringLiteral("[Yes/No] <No>: Yes")));
 }
 
-TEST_F(FileMenuTest, RecentOpenSurvivesUnsavedChangesAndRemovesMissingEntries) {
-    const QString drawing = path("recent.cadx");
+TEST_F(FileMenuTest, RecentOpenAddsASessionAndRemovesMissingEntries) {
+    const QString original = path("original.cadx");
     line();
-    answers().append(drawing);
+    answers().append(original);
     action("file.save")->trigger();
+    // A copy of one line, in the recent files but not open.
+    const QString drawing = path("recent.cadx");
+    answers().append(drawing);
+    enter(QStringLiteral("SAVE"));
     line();
-    ASSERT_EQ(recentMenu()->actions().size(), 1);
+    ASSERT_EQ(recentMenu()->actions().size(), 2);
+    ASSERT_EQ(recentMenu()->actions().first()->text(), drawing);
     recentMenu()->actions().first()->trigger();
-    EXPECT_TRUE(window()->runner().isActive());
-    enter(QStringLiteral("N"));
+    // No question about the modified drawing, which stays open.
+    EXPECT_FALSE(window()->runner().isActive());
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
     EXPECT_EQ(window()->document().entityCount(), 1U);
-    EXPECT_EQ(dialogKinds().size(), 1);
+    EXPECT_EQ(window()->sessions().front()->document().entityCount(), 2U);
+    EXPECT_EQ(dialogKinds().size(), 2);
+    EXPECT_EQ(recent(), (QStringList{drawing, original}));
     ASSERT_TRUE(QFile::remove(drawing));
     recentMenu()->actions().first()->trigger();
-    EXPECT_TRUE(recent().isEmpty());
+    EXPECT_EQ(recent(), QStringList{original});
     EXPECT_TRUE(history().contains(QStringLiteral("file no longer exists")));
-    EXPECT_TRUE(recentMenu()->actions().isEmpty());
+    EXPECT_EQ(recentMenu()->actions().size(), 1);
+    EXPECT_EQ(window()->sessions().size(), 2U);
 }
 
 TEST_F(FileMenuTest, CloseCancelDiscardSaveAndCancelledSave) {
@@ -378,6 +392,159 @@ TEST_F(FileMenuTest, ScriptSessionDoesNotReadOrWriteSettingsOrShowDialogs) {
               QStringList{path("untouched.cadx")});
     EXPECT_EQ(settings.value(QStringLiteral("lastFileDirectory")).toString(),
               QStringLiteral("untouched"));
+}
+
+TEST_F(FileMenuTest, CtrlNWithAModifiedDrawingOpensANewSessionWithoutAQuestion) {
+    line();
+    const DocumentSession* first = window()->activeSession();
+    auto* input = window()->findChild<QLineEdit*>(QStringLiteral("input"));
+    input->setFocus();
+    const auto combination = action("file.new")->shortcut()[0];
+    events::press(input, combination.key(), combination.keyboardModifiers());
+    QKeyEvent release(QEvent::KeyRelease, combination.key(), combination.keyboardModifiers());
+    QCoreApplication::sendEvent(input, &release);
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_NE(window()->activeSession(), first);
+    EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
+    EXPECT_FALSE(window()->runner().isActive());
+    EXPECT_TRUE(window()->document().isEmpty());
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()),
+              QStringLiteral("Drawing2.cadx"));
+    EXPECT_EQ(window()->windowTitle(), QStringLiteral("Drawing2.cadx[*] — Tecnigrafo"));
+    // The drawing left keeps its changes; nothing asked to save them.
+    EXPECT_TRUE(first->editor().isModified());
+    EXPECT_FALSE(first->runner().isActive());
+    EXPECT_FALSE(history().contains(QStringLiteral("Save changes")));
+    EXPECT_TRUE(dialogKinds().isEmpty());
+}
+
+/// Writes a DXF file of one line with the program, from a session closed
+/// afterwards, so that only the window's first session is left.
+void writePlan(MainWindow& window, const QString& plan) {
+    io::DiskFiles files;
+    DocumentSession& writer = window.openSession();
+    writer.runner().setFileAccess(&files);
+    for (const char* text : {"LINE", "0,0", "10,0", "", "SAVEAS"}) {
+        writer.runner().submitText(text);
+    }
+    writer.runner().submitText(plan.toStdString());
+    window.closeSession(writer);
+}
+
+TEST_F(FileMenuTest, OpenFromTheMenuAddsASessionAndPutsTheFileFirstInRecents) {
+    const QString plan = path("plan.dxf");
+    writePlan(*window(), plan);
+    ASSERT_TRUE(QFileInfo::exists(plan));
+    line();
+    answers().append(plan);
+    action("file.open")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), plan);
+    EXPECT_EQ(window()->document().entityCount(), 1U);
+    EXPECT_EQ(recent().first(), plan);
+}
+
+TEST_F(FileMenuTest, OpenTypedOnTheCommandLineAddsASessionAndPutsTheFileFirstInRecents) {
+    const QString plan = path("plan.dxf");
+    writePlan(*window(), plan);
+    line();
+    // The dialog gives the name the command asks for, as FILEDIA 1 does.
+    answers().append(plan);
+    enter(QStringLiteral("OPEN"));
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
+    EXPECT_EQ(recent().first(), plan);
+    EXPECT_EQ(dialogKinds(), QList<cmd::FilePrompt>{cmd::FilePrompt::Open});
+}
+
+TEST_F(FileMenuTest, OpenOfAFileAlreadyOpenActivatesItAndLeavesTheRecentsAsTheyAre) {
+    const QString plan = path("plan.dxf");
+    writePlan(*window(), plan);
+    answers().append(plan);
+    action("file.open")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    const DocumentSession* opened = window()->activeSession();
+    const QString other = path("other.cadx");
+    answers().append(other);
+    action("file.new")->trigger();
+    action("file.saveas")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 3U);
+    ASSERT_EQ(recent().first(), other);
+    const QStringList before = recent();
+    answers().append(plan);
+    action("file.open")->trigger();
+    EXPECT_EQ(window()->sessions().size(), 3U);
+    EXPECT_EQ(window()->activeSession(), opened);
+    EXPECT_TRUE(history().contains(QStringLiteral("%1 is already open.").arg(plan)));
+    // Activating it moves nothing in the recent files.
+    EXPECT_EQ(recent(), before);
+}
+
+TEST_F(FileMenuTest, ClosingAsksForAModifiedDocumentThatIsNotActive) {
+    line();
+    const DocumentSession* first = window()->activeSession();
+    action("file.new")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    ASSERT_NE(window()->activeSession(), first);
+    ASSERT_FALSE(window()->editor().isModified());
+    QString asked;
+    QTimer::singleShot(0, window(), [&asked] {
+        auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        ASSERT_NE(box, nullptr);
+        asked = box->text();
+        box->button(QMessageBox::Cancel)->click();
+    });
+    QCloseEvent event;
+    QCoreApplication::sendEvent(window(), &event);
+    // The active drawing is clean, the first one is not: it is shown and
+    // asked for, and Cancel keeps the window open.
+    EXPECT_FALSE(event.isAccepted());
+    EXPECT_EQ(asked, QStringLiteral("Save changes to Drawing1.cadx?"));
+    EXPECT_EQ(window()->activeSession(), first);
+    EXPECT_TRUE(first->editor().isModified());
+    EXPECT_TRUE(closeWith(QMessageBox::Discard));
+}
+
+/// Files in memory, for names typed on the command line in a script session.
+class MemoryFiles final : public io::FileAccess {
+public:
+    io::Result<std::string> read(std::string_view name) override {
+        const auto found = m_contents.find(std::string{name});
+        if (found == m_contents.end()) {
+            return io::Error{io::Error::Kind::File, 0, "File not found."};
+        }
+        return found->second;
+    }
+
+    std::optional<io::Error> write(std::string_view name, std::string_view bytes) override {
+        m_contents[std::string{name}] = bytes;
+        return {};
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override {
+        return m_contents.contains(std::string{name});
+    }
+
+private:
+    std::map<std::string, std::string> m_contents;
+};
+
+TEST_F(FileMenuTest, OpenOfAFileNamedAsTheUntitledDrawingReadsIt) {
+    window()->setScriptMode();
+    MemoryFiles files;
+    const auto bytes = io::writeCadx(core::Document::newDrawing());
+    ASSERT_TRUE(bytes.ok());
+    ASSERT_FALSE(files.write("Drawing1.cadx", bytes.value()).has_value());
+    window()->setFileAccess(&files);
+    // A relative name typed on the command line: the untitled Drawing1.cadx
+    // has no file, so the file of that name is not open.
+    enter(QStringLiteral("OPEN"));
+    enter(QStringLiteral("Drawing1.cadx"));
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
+    EXPECT_TRUE(window()->runner().documentFile().hasFile());
+    EXPECT_FALSE(history().contains(QStringLiteral("is already open")));
 }
 
 }  // namespace

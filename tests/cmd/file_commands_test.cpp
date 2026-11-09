@@ -5,6 +5,8 @@
 
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/cmd/document_host.hpp"
+#include "tg/cmd/drawing_session.hpp"
 #include "tg/io/file_access.hpp"
 #include "tg/io/io.hpp"
 
@@ -14,6 +16,7 @@
 #include <fstream>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -25,6 +28,7 @@ namespace {
 class MemoryFiles final : public io::FileAccess {
 public:
     io::Result<std::string> read(std::string_view name) override {
+        ++reads;
         const auto found = contents.find(std::string{name});
         if (found == contents.end()) {
             return io::Error{io::Error::Kind::File, 0, "File not found."};
@@ -47,6 +51,7 @@ public:
 
     std::map<std::string, std::string> contents;
     int writes{0};
+    int reads{0};
     bool failWrites{false};
 };
 
@@ -566,6 +571,251 @@ TEST_F(FileCommandsTest, OpenPromptHasDialogHintAndMissingAccessEndsCommand) {
     runner.submitText("OPEN");
     EXPECT_FALSE(runner.isActive());
     EXPECT_EQ(messages.back(), "File access is not available.");
+}
+
+TEST_F(FileCommandsTest, WithoutHostNewOfAModifiedDrawingAsksAndReplaces) {
+    changeUnits();
+    inputs({"NEW"});
+    EXPECT_EQ(runner.promptText(), "Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>:");
+    inputs({"N"});
+    EXPECT_FALSE(runner.isActive());
+    EXPECT_EQ(document.units(), 4);
+    EXPECT_FALSE(editor.canUndo());
+}
+
+TEST_F(FileCommandsTest, WithoutHostSaveasOfAnExistingFileAsksToReplace) {
+    inputs({"SAVEAS", "a.cadx"});
+    changeUnits();
+    inputs({"NEW", "N", "SAVEAS", "a.cadx"});
+    EXPECT_EQ(runner.promptText(),
+              "A drawing with this name already exists. Do you want to replace it? [Yes/No] <No>:");
+}
+
+/// The host of NEW and OPEN for the tests: the sessions in a list, in the
+/// order they were opened, one of them active, all writing to one history.
+class TestHost final : public DocumentHost {
+public:
+    TestHost(const CommandRegistry& registry, io::FileAccess& files,
+             std::vector<std::string>& messages)
+        : m_registry(registry), m_files(files), m_messages(messages) {
+        m_active = &add(core::Document::newDrawing(), edit::DocumentFile{});
+    }
+
+    DrawingSession& addDocument(core::Document document, edit::DocumentFile file) override {
+        DrawingSession& session = add(std::move(document), std::move(file));
+        activate(session);
+        return session;
+    }
+
+    [[nodiscard]] DrawingSession* findOpen(std::string_view name) override {
+        for (const auto& session : m_sessions) {
+            if (session->file().hasFile() && session->file().name() == name) {
+                return session.get();
+            }
+        }
+        return nullptr;
+    }
+
+    void activate(DrawingSession& session) override { m_active = &session; }
+
+    [[nodiscard]] std::vector<std::string> openNames() const override {
+        std::vector<std::string> names;
+        for (const auto& session : m_sessions) {
+            if (!session->file().hasFile()) {
+                names.push_back(session->file().name());
+            }
+        }
+        return names;
+    }
+
+    [[nodiscard]] DrawingSession& active() const { return *m_active; }
+
+    [[nodiscard]] DrawingSession& session(std::size_t index) const { return *m_sessions.at(index); }
+
+    [[nodiscard]] std::size_t size() const { return m_sessions.size(); }
+
+private:
+    DrawingSession& add(core::Document document, edit::DocumentFile file) {
+        DrawingSession& session = *m_sessions.emplace_back(
+            std::make_unique<DrawingSession>(m_registry, &m_files, std::move(document)));
+        session.file() = std::move(file);
+        session.runner().setDocumentHost(this);
+        session.runner().setMessageSink(
+            [this](std::string message) { m_messages.push_back(std::move(message)); });
+        return session;
+    }
+
+    const CommandRegistry& m_registry;
+    io::FileAccess& m_files;
+    std::vector<std::string>& m_messages;
+    std::vector<std::unique_ptr<DrawingSession>> m_sessions;
+    DrawingSession* m_active{nullptr};
+};
+
+class HostedFileCommandsTest : public ::testing::Test {
+public:
+    HostedFileCommandsTest() {
+        registerBuiltinCommands(registry);
+        const auto plan = io::writeCadx(core::Document::newDrawing());
+        EXPECT_TRUE(plan.ok());
+        files.contents["plan.cadx"] = plan.value();
+    }
+
+    /// Each line goes to the runner of the document active at that moment.
+    void inputs(std::initializer_list<const char*> lines) const {
+        for (const char* line : lines) {
+            host.active().runner().submitText(line);
+        }
+    }
+
+    void line() const { inputs({"LINE", "0,0", "10,0", ""}); }
+
+    [[nodiscard]] DrawingSession& session(std::size_t index) const { return host.session(index); }
+
+    CommandRegistry registry;
+    MemoryFiles files;
+    std::vector<std::string> messages;
+    TestHost host{registry, files, messages};
+};
+
+TEST_F(HostedFileCommandsTest, NewWithAModifiedDocumentAddsDrawing2WithoutAsking) {
+    line();
+    inputs({"NEW"});
+    ASSERT_EQ(host.size(), 2U);
+    EXPECT_EQ(&host.active(), &session(1));
+    EXPECT_EQ(session(1).file().name(), "Drawing2.cadx");
+    EXPECT_FALSE(session(1).file().hasFile());
+    EXPECT_TRUE(session(1).document().isEmpty());
+    // The first one stays, as it was, with its history and no question.
+    EXPECT_FALSE(session(0).runner().isActive());
+    EXPECT_TRUE(session(0).editor().isModified());
+    EXPECT_EQ(session(0).document().entityCount(), 1U);
+    EXPECT_EQ(session(0).editor().undoName(), "Line");
+    EXPECT_TRUE(messages.empty());
+}
+
+TEST_F(HostedFileCommandsTest, NewTakesTheFirstUntitledNameNotOpen) {
+    inputs({"SAVEAS", "a.cadx", "NEW", "NEW"});
+    ASSERT_EQ(host.size(), 3U);
+    // Drawing1.cadx is now a.cadx: its name is free again.
+    EXPECT_EQ(session(1).file().name(), "Drawing1.cadx");
+    EXPECT_EQ(session(2).file().name(), "Drawing2.cadx");
+}
+
+TEST_F(HostedFileCommandsTest, OpenNextToANewDrawingAddsADocumentAndKeepsTheDrawing) {
+    inputs({"OPEN", "plan.cadx"});
+    ASSERT_EQ(host.size(), 2U);
+    EXPECT_EQ(&host.active(), &session(1));
+    EXPECT_TRUE(session(1).file().hasFile());
+    EXPECT_EQ(session(1).file().name(), "plan.cadx");
+    EXPECT_FALSE(session(1).editor().isModified());
+    EXPECT_FALSE(session(0).file().hasFile());
+    EXPECT_EQ(session(0).file().name(), "Drawing1.cadx");
+    EXPECT_FALSE(session(0).runner().isActive());
+}
+
+TEST_F(HostedFileCommandsTest, OpenWithAModifiedDocumentAddsADocumentWithoutAsking) {
+    line();
+    inputs({"OPEN"});
+    EXPECT_EQ(host.active().runner().promptText(), "Enter name of drawing to open:");
+    inputs({"plan.cadx"});
+    ASSERT_EQ(host.size(), 2U);
+    EXPECT_EQ(&host.active(), &session(1));
+    EXPECT_TRUE(session(0).editor().isModified());
+    EXPECT_EQ(session(0).document().entityCount(), 1U);
+}
+
+TEST_F(HostedFileCommandsTest, OpenOfAFileAlreadyOpenActivatesItWithoutReading) {
+    inputs({"OPEN", "plan.cadx"});
+    line();
+    host.activate(session(0));
+    const int reads = files.reads;
+    inputs({"OPEN", "plan.cadx"});
+    ASSERT_EQ(host.size(), 2U);
+    EXPECT_EQ(&host.active(), &session(1));
+    EXPECT_EQ(files.reads, reads);
+    ASSERT_FALSE(messages.empty());
+    EXPECT_EQ(messages.back(), "plan.cadx is already open.");
+    // Its changes and its history stay.
+    EXPECT_TRUE(session(1).editor().isModified());
+    EXPECT_EQ(session(1).document().entityCount(), 1U);
+    EXPECT_FALSE(session(0).runner().isActive());
+}
+
+TEST_F(HostedFileCommandsTest, OpenFailuresLeaveTheDocumentsAsTheyAre) {
+    line();
+    inputs({"OPEN", "missing.cadx"});
+    EXPECT_EQ(host.size(), 1U);
+    EXPECT_EQ(&host.active(), &session(0));
+    EXPECT_EQ(messages.back(), "Cannot open missing.cadx: File not found.");
+    EXPECT_TRUE(session(0).editor().isModified());
+}
+
+TEST_F(HostedFileCommandsTest, SavingOnAFileOpenInAnotherDocumentIsRefused) {
+    line();
+    inputs({"SAVEAS", "a.cadx", "NEW"});
+    line();
+    inputs({"SAVEAS", "b.cadx"});
+    DrawingSession& b = session(1);
+    ASSERT_EQ(&host.active(), &b);
+    line();
+    const int writes = files.writes;
+    const std::vector<std::string> undo = b.editor().undoNames();
+    for (const char* command : {"SAVEAS", "SAVE"}) {
+        SCOPED_TRACE(command);
+        inputs({command, "a.cadx"});
+        // Refused before the question to replace, and nothing is written.
+        EXPECT_FALSE(b.runner().isActive());
+        EXPECT_EQ(messages.back(), "Cannot save a.cadx: it is open in another document.");
+        EXPECT_EQ(files.writes, writes);
+        EXPECT_EQ(b.file().name(), "b.cadx");
+        EXPECT_TRUE(b.editor().isModified());
+        EXPECT_EQ(b.editor().undoNames(), undo);
+    }
+    // The document of a.cadx saves on its own file, as it always did.
+    host.activate(session(0));
+    inputs({"SAVEAS", "a.cadx"});
+    EXPECT_EQ(session(0).runner().promptText(),
+              "A drawing with this name already exists. Do you want to replace it? [Yes/No] <No>:");
+    inputs({"Y"});
+    EXPECT_FALSE(session(0).runner().isActive());
+    EXPECT_EQ(files.writes, writes + 1);
+    EXPECT_EQ(session(0).file().name(), "a.cadx");
+}
+
+TEST_F(HostedFileCommandsTest, QsaveOfAnUntitledDocumentOnAnOpenFileIsRefused) {
+    inputs({"SAVEAS", "a.cadx", "NEW"});
+    line();
+    inputs({"QSAVE", "a"});
+    EXPECT_FALSE(host.active().runner().isActive());
+    EXPECT_EQ(messages.back(), "Cannot save a.cadx: it is open in another document.");
+    EXPECT_FALSE(host.active().file().hasFile());
+}
+
+TEST_F(HostedFileCommandsTest, OpenOfAFileNamedAsAnUntitledDocumentReadsIt) {
+    // The untitled Drawing1.cadx has no file: a file of that name is not open.
+    files.contents["Drawing1.cadx"] = files.contents.at("plan.cadx");
+    inputs({"OPEN", "Drawing1.cadx"});
+    ASSERT_EQ(host.size(), 2U);
+    EXPECT_EQ(&host.active(), &session(1));
+    EXPECT_TRUE(session(1).file().hasFile());
+    EXPECT_EQ(session(1).file().name(), "Drawing1.cadx");
+    EXPECT_FALSE(session(0).file().hasFile());
+    EXPECT_TRUE(messages.empty());
+}
+
+TEST_F(HostedFileCommandsTest, SavingOnTheNameOfAnUntitledDocumentIsNotRefused) {
+    inputs({"NEW"});
+    line();
+    inputs({"SAVEAS", "Drawing1.cadx"});
+    // The first document is still Drawing1.cadx, without a file.
+    EXPECT_FALSE(session(0).file().hasFile());
+    EXPECT_EQ(session(0).file().name(), "Drawing1.cadx");
+    EXPECT_FALSE(session(1).runner().isActive());
+    EXPECT_TRUE(session(1).file().hasFile());
+    EXPECT_EQ(session(1).file().name(), "Drawing1.cadx");
+    EXPECT_TRUE(files.exists("Drawing1.cadx"));
+    EXPECT_TRUE(messages.empty());
 }
 
 }  // namespace

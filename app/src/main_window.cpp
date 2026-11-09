@@ -18,6 +18,8 @@
 #include "shortcut_map.hpp"
 #include "shortcuts_dialog.hpp"
 #include "tg/cmd/builtin_commands.hpp"
+#include "tg/cmd/document_host.hpp"
+#include "tg/cmd/drawing_session.hpp"
 #include "tg/io/file_access.hpp"
 
 #include <QAbstractButton>
@@ -64,6 +66,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace tg::app {
 
@@ -199,12 +202,57 @@ QString switchToolTip(const QAction& action) {
 
 }  // namespace
 
+/// The window as the host of the documents of NEW and OPEN: every session
+/// it owns, in the order they were opened.
+class MainWindow::Host final : public cmd::DocumentHost {
+public:
+    explicit Host(MainWindow& window) : m_window(window) {}
+
+    cmd::DrawingSession& addDocument(core::Document document, edit::DocumentFile file) override {
+        return m_window.addDocument(std::move(document), std::move(file)).drawing();
+    }
+
+    [[nodiscard]] cmd::DrawingSession* findOpen(std::string_view name) override {
+        // A document without a file has none to be open, whatever its name.
+        for (const auto& session : m_window.m_sessions) {
+            if (session->file().hasFile() && session->file().name() == name) {
+                return &session->drawing();
+            }
+        }
+        return nullptr;
+    }
+
+    void activate(cmd::DrawingSession& session) override {
+        const auto found = std::ranges::find_if(m_window.m_sessions, [&session](const auto& owned) {
+            return &owned->drawing() == &session;
+        });
+        assert(found != m_window.m_sessions.end() && "the session belongs to another window");
+        if (found != m_window.m_sessions.end()) {
+            m_window.activate(**found);
+        }
+    }
+
+    [[nodiscard]] std::vector<std::string> openNames() const override {
+        std::vector<std::string> names;
+        for (const auto& session : m_window.m_sessions) {
+            if (!session->file().hasFile()) {
+                names.push_back(session->file().name());
+            }
+        }
+        return names;
+    }
+
+private:
+    MainWindow& m_window;
+};
+
 MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     : SARibbonMainWindow(parent, windowStyles()),
       m_diskFiles(
           std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
                                          [this](const QString& path) { m_pendingOpen = path; })),
       m_files(m_diskFiles.get()),
+      m_host(std::make_unique<Host>(*this)),
       m_view(new CadView(this)),
       m_commandLine(new CommandLine(this)) {
     // SARibbonMainWindow gives the window the style sheet of its own theme,
@@ -694,6 +742,7 @@ void MainWindow::configureRunner(cmd::CommandRunner& runner) const {
     runner.setFileAccess(m_files);
     runner.setDescriptionCheck(m_descriptionCheck);
     runner.setScriptSequences(m_scriptSequences);
+    runner.setDocumentHost(m_host.get());
 }
 
 DocumentSession& MainWindow::openSession(core::Document document) {
@@ -718,20 +767,38 @@ void MainWindow::documentChanged() {
     // Called inside the runner: never ask another question reentrantly.
     updateDrawingState();
     m_view->update();
-    // The panel shows what a command, undo, redo, NEW or OPEN changed.
+    // The panel shows what a command, undo or redo changed.
     if (m_layerPanel != nullptr) {
         m_layerPanel->refresh();
     }
     if (m_propertiesPanel != nullptr) {
         m_propertiesPanel->refresh();
     }
-    // Only a decoded OPEN replaces the document after reading bytes.
-    // A failed parse, undo or a no-op edit must not reorder recent files.
-    const edit::DocumentFile& file = m_active->file();
-    if (!m_pendingOpen.isEmpty() && file.hasFile() && !m_active->editor().isModified() &&
-        m_pendingOpen == QString::fromStdString(file.name())) {
+}
+
+DocumentSession& MainWindow::addDocument(core::Document document, edit::DocumentFile file) {
+    DocumentSession* left = m_active;
+    DocumentSession& session = openSession(std::move(document));
+    session.file() = std::move(file);
+    if (left != nullptr) {
+        session.runner().setPixelSize(left->runner().pixelSize());
+        // A script sees the view it set with !view, as at level 1, where a
+        // new document keeps the size of a pixel (docs/verifica/script.md):
+        // the view of a new session is the one left, not fitted to it.
+        if (m_scriptMode) {
+            session.setViewState({m_view->viewport().center(), m_view->viewport().scale()});
+        }
+    }
+    // Only a decoded OPEN adds a session with a file after reading bytes: a
+    // failed read or parse adds none, and never reaches the recent files.
+    // OPEN of a file already open reads nothing, and leaves them as they are.
+    const edit::DocumentFile& added = session.file();
+    if (!m_pendingOpen.isEmpty() && added.hasFile() &&
+        m_pendingOpen == QString::fromStdString(added.name())) {
         addRecentFile(std::exchange(m_pendingOpen, {}));
     }
+    activate(session);
+    return session;
 }
 
 void MainWindow::activate(DocumentSession& session) {
@@ -848,7 +915,13 @@ void MainWindow::startCommand(const QString& command, const QStringList& respons
     if (m_active == nullptr) {
         return;
     }
+    const DocumentSession* session = m_active;
     submitFileText(command);
+    // NEW, or OPEN of a file already open, ends by making another session
+    // active: the command has ended, and nothing is left to answer.
+    if (session != m_active) {
+        return;
+    }
     DocumentSession::ActionResponses& pending = m_active->actionResponses();
     pending.responses = responses;
     pending.waitingAt.reset();
@@ -932,7 +1005,7 @@ void MainWindow::openRecentFile(const QString& path) {
         m_recentFiles->remove(path);
         return;
     }
-    // Keep the selection through a possible unsaved-changes/save exchange.
+    // Handed to the question for the file, instead of the dialog.
     m_pendingRecent = path;
     submitFileText(QStringLiteral("OPEN"));
     refresh();
@@ -971,7 +1044,9 @@ void MainWindow::handleFilePrompts() {
         return;
     }
     const QScopedValueRollback<bool> guard(m_handlingFilePrompt, true);
-    // The dialogs are modal: the active session cannot change meanwhile.
+    // The dialogs are modal: only the answer of OPEN, by adding or
+    // activating a session, changes the active one, and ends the command of
+    // this runner, which stays alive.
     cmd::CommandRunner& runner = m_active->runner();
     while (runner.prompt().file != cmd::FilePrompt::None) {
         const cmd::FilePrompt kind = runner.prompt().file;
@@ -989,7 +1064,7 @@ void MainWindow::handleFilePrompts() {
                              QFileInfo(absolutePath).absolutePath());
         submitFileText(absolutePath);
         // The picker already confirmed replacement. Only answer this
-        // two-keyword question, never a NEW/OPEN unsaved-changes question.
+        // two-keyword question.
         const cmd::Prompt next = runner.prompt();
         if (kind == cmd::FilePrompt::Save &&
             next.keywords == std::vector<cmd::Keyword>{{"Yes", "Y"}, {"No", "N"}}) {
@@ -1007,41 +1082,56 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         event->accept();
         return;
     }
-    // With one session, the window closes as its document does. Several
-    // sessions, each with its own question, are the tabs' job (P29).
-    if (m_active == nullptr) {
-        saveUiSettings();
-        event->accept();
-        return;
+    // NEW and OPEN leave the other documents open with their changes: every
+    // modified one is asked for, the active one first, then the others in
+    // the order they were opened, so that none is lost in silence. The tabs
+    // that close one document at a time are P29's.
+    std::vector<DocumentSession*> order;
+    if (m_active != nullptr) {
+        order.push_back(m_active);
     }
-    // Finish/cancel the current transaction before checking the dirty flag:
-    // Esc preserves completed LINE/PLINE work, just like the command line.
-    if (m_active->runner().isActive()) {
-        m_active->runner().submit(cmd::CancelInput{});
-        refresh();
+    for (const auto& session : m_sessions) {
+        if (session.get() != m_active) {
+            order.push_back(session.get());
+        }
     }
-    if (!m_active->editor().isModified()) {
-        saveUiSettings();
-        event->accept();
-        return;
-    }
-    const auto choice = QMessageBox::question(
-        this, tr("Tecnigrafo"), tr("Save changes to %1?").arg(QFileInfo(documentName()).fileName()),
-        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
-    if (choice == QMessageBox::Cancel) {
-        event->ignore();
-        return;
-    }
-    if (choice == QMessageBox::Save) {
-        submitFileText(QStringLiteral("QSAVE"));
-        refresh();
-        if (m_active->editor().isModified()) {
+    for (DocumentSession* session : order) {
+        if (!confirmClose(*session)) {
             event->ignore();
             return;
         }
     }
     saveUiSettings();
     event->accept();
+}
+
+bool MainWindow::confirmClose(DocumentSession& session) {
+    // A command left halfway in a session not shown has its transaction
+    // open too.
+    if (session.runner().isActive() || session.editor().isModified()) {
+        activate(session);
+    }
+    // Finish/cancel the current transaction before checking the dirty flag:
+    // Esc preserves completed LINE/PLINE work, just like the command line.
+    if (session.runner().isActive()) {
+        session.runner().submit(cmd::CancelInput{});
+        refresh();
+    }
+    if (!session.editor().isModified()) {
+        return true;
+    }
+    const auto choice = QMessageBox::question(
+        this, tr("Tecnigrafo"), tr("Save changes to %1?").arg(QFileInfo(documentName()).fileName()),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
+    if (choice == QMessageBox::Cancel) {
+        return false;
+    }
+    if (choice == QMessageBox::Save) {
+        submitFileText(QStringLiteral("QSAVE"));
+        refresh();
+        return !session.editor().isModified();
+    }
+    return true;
 }
 
 void MainWindow::setTheme(Theme theme) {

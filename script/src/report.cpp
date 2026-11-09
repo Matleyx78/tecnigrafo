@@ -462,7 +462,9 @@ std::string unhandledText(const core::Document& document) {
 /// when it differs from a new session, so that older reports stay valid.
 /// A drawing never opened nor saved has no file to name: its changes alone
 /// do not write "drawing:", or every report of milestone 0.4 would change.
-void writeDrawing(const edit::Editor& editor, const edit::DocumentFile& file, std::string& out) {
+void writeDrawing(const ReportInput& input, std::string& out) {
+    const edit::Editor& editor = input.editor;
+    const edit::DocumentFile& file = input.file;
     const core::Document& document = editor.document();
     if (file.hasFile()) {
         appendField("drawing", file.name() + (editor.isModified() ? ", modified" : ""), out);
@@ -473,6 +475,21 @@ void writeDrawing(const edit::Editor& editor, const edit::DocumentFile& file, st
     writeTables(document, out);
     if (!document.rawEntities().empty()) {
         appendField("unhandled", unhandledText(document), out);
+    }
+    // Only with several documents open (docs/verifica/rapporto.md), so that
+    // the reports of a single document stay as they were.
+    if (input.documents.size() > 1) {
+        std::string names;
+        for (const ReportDocument& open : input.documents) {
+            if (!names.empty()) {
+                names += ", ";
+            }
+            names += open.name;
+            if (open.active) {
+                names += " (active)";
+            }
+        }
+        appendField("documents", names, out);
     }
 }
 
@@ -519,7 +536,7 @@ void writeState(const ReportInput& input, std::string& out) {
     }
     appendField("snap", snapText(runner.drawingAids()), out);
     appendField("ortho", onOff(runner.drawingAids().ortho), out);
-    writeDrawing(input.editor, input.runner.documentFile(), out);
+    writeDrawing(input, out);
     appendField("pointer", input.pointer ? formatPoint(*input.pointer) : "none", out);
     appendField("active snap", snapPointText(runner.activeSnap()), out);
     writeStatistics(document, out);

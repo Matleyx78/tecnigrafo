@@ -7,6 +7,7 @@
 #include "tg/core/document.hpp"
 #include "tg/core/snap_points.hpp"
 #include "tg/core/vec2.hpp"
+#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <optional>
@@ -25,18 +26,33 @@ inline constexpr std::string_view kReportHeader = "tecnigrafo-report 1";
 /// Title of the last section, always written at the end of a script.
 inline constexpr std::string_view kFinalSection = "final";
 
-/// What one section of the report shows.
+/// One open document, for the field "documents:" (docs/verifica/rapporto.md).
+struct ReportDocument {
+    /// The name of its file, as DocumentFile::name() ("Drawing2.cadx" when
+    /// the document has no file).
+    std::string_view name;
+    bool active{false};
+};
+
+/// What one section of the report shows. Every field but `documents`
+/// describes the active document.
 struct ReportInput {
     /// "report <n>" for the n-th !report, kFinalSection at the end.
     std::string_view title;
     const edit::Editor& editor;
     const cmd::CommandRunner& runner;
+    /// The file of the active document, for "drawing:".
+    const edit::DocumentFile& file;
     /// The lines written in the history of the command line since the
     /// previous section (docs/verifica/rapporto.md, "messages").
     std::span<const std::string> messages;
     /// The last point the pointer was moved to, in drawing coordinates;
     /// std::nullopt before the first movement.
     std::optional<core::Vec2> pointer;
+    /// Every open document, in the order they were opened, with the active
+    /// one marked; "documents:" is written only with more than one. Given by
+    /// whoever keeps the documents, never deduced from names or editors.
+    std::span<const ReportDocument> documents;
 };
 
 /// Writes one section of the report: the state of `editor` and `runner`
