@@ -47,7 +47,6 @@ classe `accent`.
 |---|---|---|---|---|---|---|
 | 32 px | pulsanti grandi del ribbon, pagina iniziale | `<nome>-32.svg` | 1,75 | 2 px | 2 | 3,5 |
 | 16 px | menu, pulsanti piccoli, barre, barra di stato, pannelli | `<nome>-16.svg` | 1,25 | 1 px | 1,25 | 2,5 |
-| 24 px | le icone di oggi, finché P19–P22 non le rifanno | `<nome>.svg` | 1,5 | 2 px | 1,5 | 3 |
 
 - La griglia da 16 si **disegna a parte**, non si rimpicciolisce la 32:
   meno dettagli, punti di almeno 2 px di diametro, tratteggi che restano
@@ -59,10 +58,11 @@ classe `accent`.
 - Le dimensioni fino a 24 px si disegnano dal file `-16`, le altre dal `-32`;
   se un'icona ha uno solo dei due file, quello vale per tutte. Le dimensioni
   in mezzo e quelle per gli schermi ad alta densità vengono così dalla griglia
-  più vicina.
-- La griglia da 24 px resta solo per le icone non ancora rifatte, con le sue
-  regole di prima (una sola classe, `accent`); un'icona rifatta ha i due file
-  nuovi e perde quello da 24. P22 toglie il ripiego.
+  più vicina. Nel catalogo ogni icona ha entrambe le griglie, tranne
+  `layer-check`, `ui-pin` e `ui-unpin`, usate solo nei pannelli a 16 px.
+- La griglia da 24 px non è più usata: P22 ha migrato le ultime icone e tolto
+  il ripiego su `<nome>.svg`. Il controllo Python e il test Qt rifiutano file senza suffisso 16/32 e
+  SVG con dimensioni o `viewBox` da 24 px.
 
 ## Regole di disegno
 
@@ -114,8 +114,8 @@ verifica entro **0,1 px**:
 ## Come si colorano
 
 `themedIcon(nome, tema)` (`app/src/theme.cpp`) sceglie i file (`<nome>-16.svg`
-e `<nome>-32.svg` dalle risorse `:/tg/icons/`, o `<nome>.svg` se mancano
-entrambi) e, prima di disegnarli, ne **riscrive il testo**:
+e `<nome>-32.svg` dalle risorse `:/tg/icons/`) e, prima di disegnarli, ne
+**riscrive il testo**:
 
 1. legge il file con `QXmlStreamReader` e lo riscrive con `QXmlStreamWriter`,
    elemento per elemento;
@@ -196,27 +196,45 @@ somigliano alle vecchie:
 
 ## Le icone
 
-La colonna **Rifatta** dice se l'icona segue già le regole a ruoli, con i
-file `-16` e `-32`; le altre sono ancora sulla griglia da 24 px, e le rifanno
-0.7.5-P19–P22.
+Tutte le icone seguono le regole a ruoli, con i file `-16` e `-32`.
+La spunta `layer-check` e le puntine `ui-pin` e `ui-unpin` sono usate
+solo nei pannelli e hanno soltanto il file `-16`. La colonna
+**Rifatta** registra la migrazione completata da P19–P22.
 
 Le icone a ruoli (0.7.5-P11): l'esempio di questo documento, che 0.7.5-P19
 collega alla variante *Center, Radius*; è nella tabella dei comandi di disegno
 qui sotto.
 
 
+P21 (0.7.5) rifà le 24 icone degli aiuti al disegno, dei file,
+dell’annullamento, della vista e dell’interfaccia. Nelle loro righe `-*.svg`
+indica la coppia `-16.svg` e `-32.svg`; i file da 24 px sono tolti. Gli snap
+usano `esist` per l’oggetto e `pt` per il punto agganciato, con geometria
+dichiarata. A 16 px si semplificano pieghe, etichette, suddivisioni, tacche e
+archi accessori; annulla e ripeti restano speculari su entrambe le griglie.
+
+P22 (0.7.5) completa la migrazione delle 15 icone di layer, proprietà e
+pannelli. Usa `esist` per i simboli e `pt` per il punto corrente, il più,
+la croce e la barra dell'occhio spento. A 16 px la pila ha due piani, l'occhio
+barrato non ha la pupilla, il sole ha otto raggi, la scheda due righe e
+la goccia perde il riflesso. I lucchetti usano un tratto per la serratura,
+senza punti pieni che sembrino input. A 32 px restano i dettagli aggiuntivi.
+Il lucchetto aperto a 16 px ha l’arco spostato a sinistra e staccato dal corpo.
+La spunta di P13 resta invariata. Non resta nessun file sulla griglia da 24 px,
+e `themedIcon` non cerca più il vecchio nome senza suffisso.
+
 Prima parte (0.6-P18): disegno e modifica, file e annullamento.
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
 | `draw-line-*.svg`, `draw-pline-*.svg`, `draw-text-*.svg`, `draw-circle-*.svg`, `draw-arc-*.svg` | i comandi di disegno: rifatte da 0.7.5-P19, nella tabella della tappa 0.7.5 | | sì |
-| `edit-erase.svg` | `edit.erase` | gomma inclinata | no |
-| `edit-undo.svg` | `edit.undo` | freccia a U verso sinistra | no |
-| `edit-redo.svg` | `edit.redo` | freccia a U verso destra | no |
-| `file-new.svg` | `file.new` | foglio con l'angolo piegato e un più | no |
-| `file-open.svg` | `file.open` | cartella aperta | no |
-| `file-save.svg` | `file.save` | dischetto | no |
-| `file-saveas.svg` | `file.saveas` | due dischetti sovrapposti | no |
+| `edit-erase-*.svg` | `edit.erase` | gomma inclinata | sì |
+| `edit-undo-*.svg` | `edit.undo` | freccia a U verso sinistra | sì |
+| `edit-redo-*.svg` | `edit.redo` | freccia a U verso destra | sì |
+| `file-new-*.svg` | `file.new` | foglio con l'angolo piegato e un più | sì |
+| `file-open-*.svg` | `file.open` | cartella aperta | sì |
+| `file-save-*.svg` | `file.save` | dischetto | sì |
+| `file-saveas-*.svg` | `file.saveas` | due dischetti sovrapposti | sì |
 
 Seconda parte (0.6-P19): vista, aiuti, interfaccia, layer e proprietà. Le icone
 di layer e proprietà esistono prima delle azioni che le useranno (pannelli dei
@@ -224,48 +242,48 @@ layer e delle proprietà, 0.6-P22 e 0.6-P24).
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
-| `view-zoom-extents.svg` | `view.zoom-extents` | quattro angoli verso l'esterno intorno a un rettangolo | no |
-| `aids-osnap.svg` | `aids.osnap` | calamita a ferro di cavallo | no |
-| `aids-ortho.svg` | `aids.ortho` | due assi ad angolo retto con il segno dell'angolo retto | no |
-| `aids-snap-endpoint.svg` | `aids.snap.endpoint` | quadrato con il punto d'accento al centro | no |
-| `aids-snap-midpoint.svg` | `aids.snap.midpoint` | triangolo con il punto d'accento al centro | no |
-| `aids-snap-center.svg` | `aids.snap.center` | cerchio con il punto d'accento al centro | no |
-| `aids-snap-insertion.svg` | `aids.snap.insertion` | due quadrati sovrapposti e sfalsati con il punto d'accento | no |
-| `aids-lwdisplay.svg` | `aids.lwdisplay` | tre barre di spessore crescente | no |
-| `ui-ribbon.svg` | `ui.interface` | finestra con la fascia delle schede e quella dei gruppi | no |
-| `ui-theme.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata | no |
-| `tools-settings.svg` | `tools.settings` | tre cursori a scorrimento | no |
-| `help-about.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro | no |
-| `layer-panel.svg` | `layer.panel` (0.6-P22) | pila di tre piani | no |
-| `layer-on.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto | no |
-| `layer-off.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato | no |
-| `layer-frozen.svg` | stato del layer, pannello dei layer (0.6-P22) | fiocco di neve | no |
-| `layer-thawed.svg` | stato del layer, pannello dei layer (0.6-P22) | sole | no |
-| `layer-locked.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso | no |
-| `layer-unlocked.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto aperto | no |
-| `layer-current.svg` | `layer.current` (0.6-P22) | pila di tre piani, il primo con il punto d'accento | no |
-| `layer-new.svg` | `layer.new` (0.6-P22) | pila di tre piani, il primo con un più | no |
-| `layer-delete.svg` | `layer.delete` (0.6-P22) | pila di tre piani, il primo con una croce | no |
-| `properties-panel.svg` | `properties.panel` (0.6-P24) | scheda con un elenco di voci | no |
-| `quick-select.svg` | `edit.quick-select` (0.6-P24) | imbuto | no |
-| `property-color.svg` | controllo del colore, pannello delle proprietà (0.6-P24) | goccia | no |
-| `property-linetype.svg` | controllo del tipo di linea, pannello delle proprietà (0.6-P24) | linee continua, tratteggiata, tratto e punto | no |
-| `property-lineweight.svg` | controllo dello spessore, pannello delle proprietà (0.6-P24) | barra con la freccia dello spessore | no |
+| `view-zoom-extents-*.svg` | `view.zoom-extents` | quattro angoli verso l'esterno intorno a un rettangolo | sì |
+| `aids-osnap-*.svg` | `aids.osnap` | calamita a ferro di cavallo | sì |
+| `aids-ortho-*.svg` | `aids.ortho` | due assi ad angolo retto con il segno dell'angolo retto | sì |
+| `aids-snap-endpoint-*.svg` | `aids.snap.endpoint` | quadrato e segmento con il punto agganciato al suo estremo (`pt`, `data-on`) al centro | sì |
+| `aids-snap-midpoint-*.svg` | `aids.snap.midpoint` | triangolo e segmento con il punto medio (`pt`, `data-on`) al centro | sì |
+| `aids-snap-center-*.svg` | `aids.snap.center` | cerchio (`esist`) con il centro (`pt`, `data-center-of`) | sì |
+| `aids-snap-insertion-*.svg` | `aids.snap.insertion` | due quadrati sovrapposti e sfalsati con il punto d’inserimento al vertice del secondo (`pt`, `data-on`) | sì |
+| `aids-lwdisplay-*.svg` | `aids.lwdisplay` | tre barre di spessore crescente | sì |
+| `ui-ribbon-*.svg` | `ui.interface` | finestra con la fascia delle schede e quella dei gruppi | sì |
+| `ui-theme-*.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata | sì |
+| `tools-settings-*.svg` | `tools.settings` | tre cursori a scorrimento | sì |
+| `help-about-*.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro | sì |
+| `layer-panel-*.svg` | `layer.panel` (0.6-P22) | pila di tre piani | sì |
+| `layer-on-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto | sì |
+| `layer-off-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato | sì |
+| `layer-frozen-*.svg` | stato del layer, pannello dei layer (0.6-P22) | fiocco di neve | sì |
+| `layer-thawed-*.svg` | stato del layer, pannello dei layer (0.6-P22) | sole | sì |
+| `layer-locked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso | sì |
+| `layer-unlocked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto aperto | sì |
+| `layer-current-*.svg` | `layer.current` (0.6-P22) | pila di tre piani, il primo con il punto attivo (`pt`) | sì |
+| `layer-new-*.svg` | `layer.new` (0.6-P22) | pila di tre piani, il primo con un più | sì |
+| `layer-delete-*.svg` | `layer.delete` (0.6-P22) | pila di tre piani, il primo con una croce | sì |
+| `properties-panel-*.svg` | `properties.panel` (0.6-P24) | scheda con un elenco di voci | sì |
+| `quick-select-*.svg` | `edit.quick-select` (0.6-P24) | imbuto | sì |
+| `property-color-*.svg` | controllo del colore, pannello delle proprietà (0.6-P24) | goccia | sì |
+| `property-linetype-*.svg` | controllo del tipo di linea, pannello delle proprietà (0.6-P24) | linee continua, tratteggiata, tratto e punto | sì |
+| `property-lineweight-*.svg` | controllo dello spessore, pannello delle proprietà (0.6-P24) | barra con la freccia dello spessore | sì |
 
-Le voci di layer e proprietà non hanno ancora un'azione registrata: le
-collegano i pacchetti indicati, che le tolgono dall'elenco delle icone riservate
-in `tests/app/icons_test.cpp`. `ui.interface` ha l'icona `ui-ribbon` perché il
+Le azioni e i pannelli dei layer e delle proprietà usano queste icone;
+i test verificano anche quelle nominate direttamente dai pannelli.
+`ui.interface` ha l'icona `ui-ribbon` perché il
 suo interruttore passa dai menu classici al ribbon.
 
 La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
 
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
-| `aids-snap-intersection.svg` | `aids.snap.intersection` | due segmenti che si incrociano a X | no |
-| `aids-snap-perpendicular.svg` | `aids.snap.perpendicular` | perpendicolare con il segno dell'angolo retto | no |
-| `aids-snap-tangent.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto | no |
-| `aids-snap-quadrant.svg` | `aids.snap.quadrant` | rombo | no |
-| `aids-polar.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo | no |
+| `aids-snap-intersection-*.svg` | `aids.snap.intersection` | due segmenti che si incrociano a X, punto all’intersezione (`pt`, `data-on`) | sì |
+| `aids-snap-perpendicular-*.svg` | `aids.snap.perpendicular` | perpendicolare con il segno dell’angolo retto, punto sul piede (`pt`, `data-on`) | sì |
+| `aids-snap-tangent-*.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto, punto di tangenza (`pt`, `data-on`) | sì |
+| `aids-snap-quadrant-*.svg` | `aids.snap.quadrant` | cerchio (`esist`) con punto sul quadrante destro (`pt`, `data-on`) | sì |
+| `aids-polar-*.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo | sì |
 
 Chi aggiunge icone aggiunge le sue righe alla tabella della sua tappa; chi
 rifà un'icona ne aggiorna la riga.
@@ -321,6 +339,14 @@ indicati `pt`. Le icone piccole semplificano i dettagli di costruzione.
 | `edit-chamfer` | `edit.chamfer` | angolo smussato, estremi dello smusso sulla griglia grande | sì |
 | `edit-join` | `edit.join` | due segmenti e spezzata risultante, punti di giunzione | sì |
 
+I pannelli che si nascondono da soli (0.7.5-P18) aggiungono la puntina della
+barra del titolo, sulla sola griglia da 16 px.
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `ui-pin-16.svg` | puntina di un pannello agganciato, *Auto-hide* | puntina in piedi: testa e piattello (`esist`), ago (`pt`) | sì, solo 16 px |
+| `ui-unpin-16.svg` | puntina di un pannello nascosto, nel riquadro: *Dock* | la stessa puntina coricata, con l'ago verso sinistra | sì, solo 16 px |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona
@@ -329,8 +355,7 @@ indicati `pt`. Le icone piccole semplificano i dettagli di costruzione.
    `data-center-of`), con gli `id` che servono.
 2. Salvala in `resources/icons/<nome>-32.svg` e `<nome>-16.svg` con
    l'intestazione. I file entrano da soli nelle risorse `/tg/icons`:
-   `app/CMakeLists.txt` include tutti gli `*.svg` della cartella. Se rifai
-   un'icona da 24 px, togli il file vecchio.
+   `app/CMakeLists.txt` include tutti gli `*.svg` della cartella.
 3. Lancia `scripts/icone.py`: deve finire senza problemi.
 4. Scrivi `<nome>` (senza griglia) nel campo `icon` dell'azione, in
    `app/src/builtin_actions.cpp`.

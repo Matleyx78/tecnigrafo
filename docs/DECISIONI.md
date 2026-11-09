@@ -1292,3 +1292,19 @@ i rimandi ai documenti che cambia.
   [verifica/sistemi.md](verifica/sistemi.md), ognuna con il rimando alla #620;
   il confronto dà errore per un'eccezione il cui caso è già uguale su tutti i
   sistemi, così il pacchetto della 0.8 deve togliere le righe.
+- **2026-11-08 — Analisi notturna con SonarQube Cloud
+  ([#625](https://github.com/Matleyx78/tecnigrafo/issues/625)).** Il
+  responsabile aggiunge a Tecnigrafo l'analisi di SonarQube Cloud già attiva in
+  solid-space (sua decisione del 2026-11-03), fuori dai pacchetti della tappa.
+  Si analizza solo il ramo `main`, ogni notte verso le 02:30 italiane (cron
+  `47 1 * * *`, in UTC, mezz'ora dopo solid-space) e a mano con
+  `workflow_dispatch`, nel workflow separato `.github/workflows/sonar.yml`, che
+  non tocca `ci.yml` e non blocca le pull request. Nessuna analisi sulle pull
+  request né sui push, nessuna copertura dei test per ora. L'azione
+  `SonarSource/sonarqube-scan-action` è fissata a uno SHA preciso; il C++ si
+  analizza dal `compile_commands.json` del preset `release`
+  (`build/release/compile_commands.json`), senza Build Wrapper, con le Qt
+  installate come nel job `linux-release`, così entra anche `app`. La
+  configurazione sta in `sonar-project.properties`; solid-space
+  (`third_party/**`) è escluso, perché ha la sua analisi. L'analisi automatica
+  di Sonar è spenta e il token sta nel secret `SONAR_TOKEN`.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path class="esist" d="M3 16 C10 4 22 4 29 16 C22 28 10 28 3 16 Z"/>
+        <circle class="esist" cx="16" cy="16" r="4"/>
+        <path class="pt" d="M6 26 L26 6"/>
+    </g>
+</svg>

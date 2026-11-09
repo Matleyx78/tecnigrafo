@@ -34,6 +34,7 @@ class QToolButton;
 namespace tg::app {
 
 class ActionRegistry;
+class AutoHide;
 class CadView;
 class CommandLine;
 class RecentFiles;
@@ -101,8 +102,12 @@ public:
 
     [[nodiscard]] Theme theme() const { return m_theme; }
 
-    /// Panels must have a unique, stable, nonempty objectName.
+    /// Panels must have a unique, stable, nonempty objectName. A docked
+    /// panel can hide itself (docs/tappe/0.7.5/P18).
     void addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
+
+    /// The panels that hide themselves and their tabs.
+    [[nodiscard]] AutoHide& autoHide() const { return *m_autoHide; }
 
     void setInterface(InterfaceKind kind);
     [[nodiscard]] InterfaceKind interfaceKind() const;
@@ -200,6 +205,7 @@ private:
     bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};
     CommandLine* m_commandLine{nullptr};
+    AutoHide* m_autoHide{nullptr};
     QAction* m_undoAction{nullptr};
     QAction* m_redoAction{nullptr};
     QAction* m_eraseAction{nullptr};
