@@ -59,6 +59,8 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <iterator>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -199,12 +201,8 @@ QString switchToolTip(const QAction& action) {
 
 MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     : SARibbonMainWindow(parent, windowStyles()),
-      m_document(drawing == InitialDrawing::Sample ? makeSampleDrawing()
-                                                   : core::Document::newDrawing()),
-      m_editor(m_document),
-      m_runner(m_registry, m_editor),
-      m_view(new CadView(m_document, m_runner, this)),
-      m_commandLine(new CommandLine(m_runner, this)) {
+      m_view(new CadView(this)),
+      m_commandLine(new CommandLine(this)) {
     // SARibbonMainWindow gives the window the style sheet of its own theme,
     // and queues a second time for when the event loop runs. The colours of
     // the interface are the tokens of theme.cpp, in the application's style
@@ -219,13 +217,16 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     setStyleSheet(QString{});
     cmd::registerBuiltinCommands(m_registry);
     // The program as distributed does not check descriptions; --script turns
-    // the check on (docs/adr/0026, point 3, and setScriptMode()).
-    m_runner.setDescriptionCheck({});
+    // the check on (docs/adr/0026, point 3, and setScriptMode()): the empty
+    // function of m_descriptionCheck.
     m_diskFiles =
         std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
                                        [this](const QString& path) { m_pendingOpen = path; });
-    m_runner.setFileAccess(m_diskFiles.get());
-    m_runner.setDocumentFile(&m_documentFile);
+    m_files = m_diskFiles.get();
+    // One session, as the program opens; activated once the interface that
+    // follows it exists.
+    DocumentSession& first = openSession(
+        drawing == InitialDrawing::Sample ? makeSampleDrawing() : core::Document::newDrawing());
     updateDrawingState();
     resize(1100, 720);
 
@@ -246,10 +247,14 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
         m_view, m_commandLine->findChild<QLineEdit*>(QStringLiteral("input")));
     connect(m_view->dynamicInputBox(), &DynamicInputBox::textSubmitted, this,
             [this](const QString& text) {
-                const QString prompt = QString::fromStdString(m_runner.promptText());
+                if (m_active == nullptr) {
+                    return;
+                }
+                cmd::CommandRunner& runner = m_active->runner();
+                const QString prompt = QString::fromStdString(runner.promptText());
                 m_commandLine->appendToHistory(
                     text.isEmpty() ? prompt : QStringLiteral("%1 %2").arg(prompt, text));
-                m_runner.submitText(text.toStdString());
+                runner.submitText(text.toStdString());
                 refresh();
             });
 
@@ -259,37 +264,17 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent)
     connect(m_view, &CadView::cursorMoved, this, &MainWindow::showCursorPosition);
     connect(m_view, &CadView::scaleChanged, this, &MainWindow::showScale);
 
-    // The editor's listener runs inside commit(), while the command that
-    // commits is still running: the inputs' own signals refresh again once
-    // the runner is idle, so that Undo is enabled when the command ends.
-    m_editor.setChangeListener([this] {
-        // Called inside the runner: never ask another question reentrantly.
-        updateDrawingState();
-        m_view->update();
-        // The panel shows what a command, undo, redo, NEW or OPEN changed.
-        if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
-            layers->refresh();
-        }
-        if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
-            properties->refresh();
-        }
-        // Only a decoded OPEN replaces the document after reading bytes.
-        // A failed parse, undo or a no-op edit must not reorder recent files.
-        if (!m_pendingOpen.isEmpty() && m_documentFile.hasFile() && !m_editor.isModified() &&
-            m_pendingOpen == QString::fromStdString(m_documentFile.name())) {
-            addRecentFile(std::exchange(m_pendingOpen, {}));
-        }
-    });
     connect(m_view, &CadView::inputHandled, this, &MainWindow::refresh);
     connect(m_commandLine, &CommandLine::inputHandled, this, [this] {
         refresh();
         // Return the keyboard to the canvas after a completed command-line
         // exchange; explicitly typing in the command line still works as usual.
-        if (!m_scriptMode && m_dynamicInputAction->isChecked() && m_runner.isActive()) {
+        if (!m_scriptMode && m_dynamicInputAction->isChecked() && m_active != nullptr &&
+            m_active->runner().isActive()) {
             m_view->setFocus(Qt::OtherFocusReason);
         }
     });
-    updateEditActions();
+    activate(first);
     setDockOptions(dockOptions() | QMainWindow::AllowTabbedDocks | QMainWindow::AllowNestedDocks);
     setTheme(Theme::Light);
 }
@@ -339,13 +324,17 @@ void MainWindow::createMenus() {
 
     m_undoAction = registeredAction("edit.undo");
     connect(m_undoAction, &QAction::triggered, this, [this] {
-        m_runner.submitText(kUndoCommand);
-        refresh();
+        if (m_active != nullptr) {
+            m_active->runner().submitText(kUndoCommand);
+            refresh();
+        }
     });
     m_redoAction = registeredAction("edit.redo");
     connect(m_redoAction, &QAction::triggered, this, [this] {
-        m_runner.submitText(kRedoCommand);
-        refresh();
+        if (m_active != nullptr) {
+            m_active->runner().submitText(kRedoCommand);
+            refresh();
+        }
     });
     m_eraseAction = registeredAction("edit.erase");
 
@@ -366,7 +355,9 @@ void MainWindow::createMenus() {
         setInterface(classic ? InterfaceKind::Classic : InterfaceKind::Ribbon);
     });
     connect(registeredAction("aids.lwdisplay"), &QAction::toggled, this, [this](bool on) {
-        m_editor.tables().setLwdisplay(on);
+        if (m_active != nullptr) {
+            m_active->editor().tables().setLwdisplay(on);
+        }
         m_view->update();
     });
 
@@ -374,7 +365,8 @@ void MainWindow::createMenus() {
 
     // The layers panel (0.6-P22). It exists before the interface is built:
     // the ribbon and the toolbar find it to place their layer controls.
-    auto* layers = new LayerPanel(m_editor, this);
+    auto* layers = new LayerPanel(this);
+    m_layerPanel = layers;
     layers->setActions(registeredAction("layer.new"), registeredAction("layer.delete"),
                        registeredAction("layer.current"));
     connect(registeredAction("layer.panel"), &QAction::triggered, layers,
@@ -385,7 +377,8 @@ void MainWindow::createMenus() {
 
     // The properties panel and QSELECT (0.6-P24). Like the layers panel, it
     // exists before the interface, which places its controls.
-    auto* properties = new PropertiesPanel(m_editor, m_runner, this);
+    auto* properties = new PropertiesPanel(this);
+    m_propertiesPanel = properties;
     properties->setQuickSelectAction(registeredAction("edit.quick-select"));
     connect(registeredAction("properties.panel"), &QAction::triggered, properties,
             &PropertiesPanel::showAndFocus);
@@ -400,9 +393,9 @@ void MainWindow::createMenus() {
 }
 
 void MainWindow::connectDrawingAids() {
-    // The switches start from the runner's settings, the defaults of
+    // The switches start from the settings of a new runner, the defaults of
     // docs/adr/0008: object snap on with every mode, ortho off.
-    const cmd::DrawingAids& aids = m_runner.drawingAids();
+    const cmd::DrawingAids aids{};
     m_objectSnapAction = registeredAction("aids.osnap");
     m_orthoAction = registeredAction("aids.ortho");
     m_dynamicInputAction = registeredAction("aids.dynmode");
@@ -500,7 +493,9 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.tangent = m_tangentAction->isChecked();
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
     aids.polar = m_polarAction->isChecked();
-    m_runner.setDrawingAids(aids);
+    if (m_active != nullptr) {
+        m_active->runner().setDrawingAids(aids);
+    }
     m_view->dynamicInputBox()->refresh(false);
     m_view->update();  // the snap marker and the preview may have changed
 }
@@ -614,8 +609,8 @@ void MainWindow::refresh() {
     // An input may be the user's answer that a variant waits for.
     giveResponses();
     // A click or Esc may have changed the selection the panel shows.
-    if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
-        properties->refresh();
+    if (m_propertiesPanel != nullptr) {
+        m_propertiesPanel->refresh();
     }
     m_view->update();
     m_commandLine->refreshPrompt();
@@ -630,28 +625,165 @@ void MainWindow::refresh() {
 
 void MainWindow::updateEditActions() {
     // Undo and redo wait for the running command to end (docs/tappe/0.2).
-    const bool idle = !m_runner.isActive();
+    // Without a session there is no runner to type into.
+    const bool idle = m_active != nullptr && !m_active->runner().isActive();
     for (QAction* action : m_idleActions) {
         action->setEnabled(idle);
     }
     m_recentMenu->setEnabled(idle && !m_scriptMode);
     m_recentAction->setEnabled(idle && !m_scriptMode);
-    m_eraseAction->setEnabled(idle && !m_runner.selection().isEmpty());
-    if (auto* layers = findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
-        layers->setEditingEnabled(idle);
+    m_eraseAction->setEnabled(idle && !m_active->runner().selection().isEmpty());
+    if (m_layerPanel != nullptr) {
+        m_layerPanel->setEditingEnabled(idle);
     }
-    if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
-        properties->setEditingEnabled(idle);
+    if (m_propertiesPanel != nullptr) {
+        m_propertiesPanel->setEditingEnabled(idle);
     }
-    const QString undoName = QString::fromStdString(m_editor.undoName());
-    const QString redoName = QString::fromStdString(m_editor.redoName());
-    m_undoAction->setEnabled(idle && m_editor.canUndo());
-    m_redoAction->setEnabled(idle && m_editor.canRedo());
+    QString undoName;
+    QString redoName;
+    if (m_active != nullptr) {
+        undoName = QString::fromStdString(m_active->editor().undoName());
+        redoName = QString::fromStdString(m_active->editor().redoName());
+    }
+    m_undoAction->setEnabled(idle && m_active->editor().canUndo());
+    m_redoAction->setEnabled(idle && m_active->editor().canRedo());
     m_undoAction->setText(undoName.isEmpty() ? tr("&Undo") : tr("&Undo %1").arg(undoName));
     m_redoAction->setText(redoName.isEmpty() ? tr("&Redo") : tr("&Redo %1").arg(redoName));
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    // Every widget and callback lets the sessions go before they are
+    // destroyed with the members: the widgets outlive them, as children.
+    switchTo(nullptr);
+    for (const auto& session : m_sessions) {
+        session->editor().setChangeListener({});
+    }
+}
+
+const core::Document& MainWindow::document() const {
+    assert(m_active != nullptr && "no active session");
+    return m_active->document();
+}
+
+const edit::Editor& MainWindow::editor() const {
+    assert(m_active != nullptr && "no active session");
+    return m_active->editor();
+}
+
+const cmd::CommandRunner& MainWindow::runner() const {
+    assert(m_active != nullptr && "no active session");
+    return m_active->runner();
+}
+
+void MainWindow::setScriptSequences(bool on) {
+    m_scriptSequences = on;
+    for (const auto& session : m_sessions) {
+        session->runner().setScriptSequences(on);
+    }
+}
+
+void MainWindow::setFileAccess(io::FileAccess* files) {
+    m_externalFiles = true;
+    m_files = files;
+    for (const auto& session : m_sessions) {
+        session->runner().setFileAccess(files);
+    }
+}
+
+void MainWindow::configureRunner(cmd::CommandRunner& runner) const {
+    runner.setFileAccess(m_files);
+    runner.setDescriptionCheck(m_descriptionCheck);
+    runner.setScriptSequences(m_scriptSequences);
+}
+
+DocumentSession& MainWindow::openSession(core::Document document) {
+    // A unique_ptr each: the vector may grow, the sessions stay where they are.
+    auto& session = *m_sessions.emplace_back(
+        std::make_unique<DocumentSession>(m_registry, m_files, std::move(document)));
+    configureRunner(session.runner());
+    // The editor's listener runs inside commit(), while the command that
+    // commits is still running: the inputs' own signals refresh again once
+    // the runner is idle, so that Undo is enabled when the command ends.
+    // A session that is not shown receives no input, but a change to it
+    // must never reach the interface of another one.
+    session.editor().setChangeListener([this, changed = &session] {
+        if (changed == m_active) {
+            documentChanged();
+        }
+    });
+    return session;
+}
+
+void MainWindow::documentChanged() {
+    // Called inside the runner: never ask another question reentrantly.
+    updateDrawingState();
+    m_view->update();
+    // The panel shows what a command, undo, redo, NEW or OPEN changed.
+    if (m_layerPanel != nullptr) {
+        m_layerPanel->refresh();
+    }
+    if (m_propertiesPanel != nullptr) {
+        m_propertiesPanel->refresh();
+    }
+    // Only a decoded OPEN replaces the document after reading bytes.
+    // A failed parse, undo or a no-op edit must not reorder recent files.
+    const edit::DocumentFile& file = m_active->file();
+    if (!m_pendingOpen.isEmpty() && file.hasFile() && !m_active->editor().isModified() &&
+        m_pendingOpen == QString::fromStdString(file.name())) {
+        addRecentFile(std::exchange(m_pendingOpen, {}));
+    }
+}
+
+void MainWindow::activate(DocumentSession& session) {
+    assert(std::ranges::any_of(m_sessions,
+                               [&session](const auto& owned) { return owned.get() == &session; }) &&
+           "the session belongs to another window");
+    switchTo(&session);
+}
+
+void MainWindow::switchTo(DocumentSession* session) {
+    if (session == m_active) {
+        return;
+    }
+    // The widgets save in the session they leave what is of that session
+    // (the view, the text typed and not sent) and show what the new one
+    // kept. The listener of a session acts only while it is m_active.
+    m_active = session;
+    m_view->setSession(session);
+    m_commandLine->setSession(session);
+    if (m_layerPanel != nullptr) {
+        m_layerPanel->setSession(session);
+    }
+    if (m_propertiesPanel != nullptr) {
+        m_propertiesPanel->setSession(session);
+    }
+    if (m_actions != nullptr) {
+        // The switches are the window's: the runner shown now gets them.
+        applyDrawingAids();
+    }
+    updateDrawingState();
+    if (m_actions != nullptr) {
+        updateEditActions();
+    }
+}
+
+void MainWindow::closeSession(DocumentSession& session) {
+    const auto found = std::ranges::find_if(
+        m_sessions, [&session](const auto& owned) { return owned.get() == &session; });
+    assert(found != m_sessions.end() && "the session belongs to another window");
+    if (m_active == &session) {
+        // The one opened before, or else after, or none.
+        DocumentSession* next = nullptr;
+        if (found != m_sessions.begin()) {
+            next = std::prev(found)->get();
+        } else if (std::next(found) != m_sessions.end()) {
+            next = std::next(found)->get();
+        }
+        switchTo(next);
+    }
+    session.editor().setChangeListener({});
+    m_sessions.erase(found);
+}
 
 void MainWindow::setScriptMode() {
     m_scriptMode = true;
@@ -665,11 +797,14 @@ void MainWindow::setScriptMode() {
     // At level 2 a prompt missing from its command's description is written
     // in the history: the report differs from any expected one, so the case
     // fails and prints the message among its differences (docs/adr/0026).
-    m_runner.setDescriptionCheck([this](const std::string& message) {
+    m_descriptionCheck = [this](const std::string& message) {
         m_commandLine->appendToHistory(QString::fromStdString(message));
-    });
+    };
     if (!m_externalFiles) {
-        m_runner.setFileAccess(nullptr);
+        m_files = nullptr;
+    }
+    for (const auto& session : m_sessions) {
+        configureRunner(session->runner());
     }
     m_recentMenu->setEnabled(false);
     m_recentAction->setEnabled(false);
@@ -679,55 +814,78 @@ void MainWindow::setFileDialog(FileDialog dialog) {
     m_fileDialog = std::move(dialog);
 }
 
+QString MainWindow::documentName() const {
+    return QString::fromStdString(m_active != nullptr ? m_active->file().name()
+                                                      : edit::DocumentFile{}.name());
+}
+
 void MainWindow::updateDrawingState() {
+    if (m_active == nullptr) {
+        setWindowTitle(tr("Tecnigrafo"));
+        setWindowModified(false);
+        return;
+    }
     if (m_actions != nullptr) {
         const QSignalBlocker blocker(registeredAction("aids.lwdisplay"));
-        registeredAction("aids.lwdisplay")->setChecked(m_document.lwdisplay());
+        registeredAction("aids.lwdisplay")->setChecked(m_active->document().lwdisplay());
     }
-    setWindowTitle(tr("%1[*] — Tecnigrafo")
-                       .arg(QFileInfo(QString::fromStdString(m_documentFile.name())).fileName()));
-    setWindowModified(m_editor.isModified());
+    setWindowTitle(tr("%1[*] — Tecnigrafo").arg(QFileInfo(documentName()).fileName()));
+    setWindowModified(m_active->editor().isModified());
 }
 
 void MainWindow::submitFileText(const QString& text) {
+    if (m_active == nullptr) {
+        return;
+    }
+    cmd::CommandRunner& runner = m_active->runner();
     m_commandLine->appendToHistory(
-        QStringLiteral("%1 %2").arg(QString::fromStdString(m_runner.promptText()), text));
-    m_runner.submitText(text.toStdString());
+        QStringLiteral("%1 %2").arg(QString::fromStdString(runner.promptText()), text));
+    runner.submitText(text.toStdString());
     m_commandLine->refreshPrompt();
 }
 
 void MainWindow::startCommand(const QString& command, const QStringList& responses) {
+    if (m_active == nullptr) {
+        return;
+    }
     submitFileText(command);
-    m_responses = responses;
-    m_waitingAt.reset();
+    DocumentSession::ActionResponses& pending = m_active->actionResponses();
+    pending.responses = responses;
+    pending.waitingAt.reset();
     giveResponses();
 }
 
 void MainWindow::giveResponses() {
-    while (!m_responses.isEmpty() && m_runner.isActive()) {
-        const cmd::Prompt prompt = m_runner.prompt();
-        if (m_responses.first() == QString(kWaitForUser)) {
+    if (m_active == nullptr) {
+        return;
+    }
+    // They belong to the command of the active session's runner.
+    const cmd::CommandRunner& runner = m_active->runner();
+    DocumentSession::ActionResponses& pending = m_active->actionResponses();
+    while (!pending.responses.isEmpty() && runner.isActive()) {
+        const cmd::Prompt prompt = runner.prompt();
+        if (pending.responses.first() == QString(kWaitForUser)) {
             // The user answers at this prompt; until it changes, the next
             // input decides.
-            if (!m_waitingAt.has_value()) {
-                m_waitingAt = prompt;
+            if (!pending.waitingAt.has_value()) {
+                pending.waitingAt = prompt;
                 return;
             }
-            if (*m_waitingAt == prompt) {
+            if (*pending.waitingAt == prompt) {
                 return;
             }
-            m_waitingAt.reset();
-            m_responses.removeFirst();
+            pending.waitingAt.reset();
+            pending.responses.removeFirst();
             continue;
         }
-        if (!offers(prompt, m_responses.first())) {
+        if (!offers(prompt, pending.responses.first())) {
             break;  // the command asks something else: the rest is dropped
         }
-        submitFileText(m_responses.takeFirst());
+        submitFileText(pending.responses.takeFirst());
     }
     // Answered, or the command has ended: nothing waits any more.
-    m_responses.clear();
-    m_waitingAt.reset();
+    pending.responses.clear();
+    pending.waitingAt.reset();
 }
 
 void MainWindow::ensureRecentFiles() {
@@ -766,7 +924,7 @@ void MainWindow::populateRecentMenu() {
 }
 
 void MainWindow::openRecentFile(const QString& path) {
-    if (m_runner.isActive()) {
+    if (m_active == nullptr || m_active->runner().isActive()) {
         return;
     }
     if (!QFileInfo::exists(path)) {
@@ -781,13 +939,13 @@ void MainWindow::openRecentFile(const QString& path) {
 }
 
 QString MainWindow::dialogPath() {
-    if (m_documentFile.hasFile()) {
-        return QFileInfo(QString::fromStdString(m_documentFile.name())).absoluteFilePath();
+    if (m_active != nullptr && m_active->file().hasFile()) {
+        return QFileInfo(documentName()).absoluteFilePath();
     }
     ensureRecentFiles();
     const QString folder =
         m_settings->value(QStringLiteral("lastFileDirectory"), QDir::homePath()).toString();
-    return QDir(folder).filePath(QString::fromStdString(m_documentFile.name()));
+    return QDir(folder).filePath(documentName());
 }
 
 QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path) {
@@ -809,18 +967,20 @@ QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path) {
 }
 
 void MainWindow::handleFilePrompts() {
-    if (m_scriptMode || m_handlingFilePrompt) {
+    if (m_scriptMode || m_handlingFilePrompt || m_active == nullptr) {
         return;
     }
     const QScopedValueRollback<bool> guard(m_handlingFilePrompt, true);
-    while (m_runner.prompt().file != cmd::FilePrompt::None) {
-        const cmd::FilePrompt kind = m_runner.prompt().file;
+    // The dialogs are modal: the active session cannot change meanwhile.
+    cmd::CommandRunner& runner = m_active->runner();
+    while (runner.prompt().file != cmd::FilePrompt::None) {
+        const cmd::FilePrompt kind = runner.prompt().file;
         const bool recent = kind == cmd::FilePrompt::Open && !m_pendingRecent.isEmpty();
         const QString path =
             recent ? std::exchange(m_pendingRecent, {}) : chooseFile(kind, dialogPath());
         if (path.isEmpty()) {
             m_pendingRecent.clear();
-            m_runner.submit(cmd::CancelInput{});
+            runner.submit(cmd::CancelInput{});
             break;
         }
         const QString absolutePath = QFileInfo(path).absoluteFilePath();
@@ -830,13 +990,13 @@ void MainWindow::handleFilePrompts() {
         submitFileText(absolutePath);
         // The picker already confirmed replacement. Only answer this
         // two-keyword question, never a NEW/OPEN unsaved-changes question.
-        const cmd::Prompt next = m_runner.prompt();
+        const cmd::Prompt next = runner.prompt();
         if (kind == cmd::FilePrompt::Save &&
             next.keywords == std::vector<cmd::Keyword>{{"Yes", "Y"}, {"No", "N"}}) {
             submitFileText(QStringLiteral("Yes"));
         }
     }
-    if (!m_runner.isActive()) {
+    if (!runner.isActive()) {
         m_pendingRecent.clear();
     }
     m_commandLine->refreshPrompt();
@@ -847,21 +1007,26 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         event->accept();
         return;
     }
+    // With one session, the window closes as its document does. Several
+    // sessions, each with its own question, are the tabs' job (P29).
+    if (m_active == nullptr) {
+        saveUiSettings();
+        event->accept();
+        return;
+    }
     // Finish/cancel the current transaction before checking the dirty flag:
     // Esc preserves completed LINE/PLINE work, just like the command line.
-    if (m_runner.isActive()) {
-        m_runner.submit(cmd::CancelInput{});
+    if (m_active->runner().isActive()) {
+        m_active->runner().submit(cmd::CancelInput{});
         refresh();
     }
-    if (!m_editor.isModified()) {
+    if (!m_active->editor().isModified()) {
         saveUiSettings();
         event->accept();
         return;
     }
     const auto choice = QMessageBox::question(
-        this, tr("Tecnigrafo"),
-        tr("Save changes to %1?")
-            .arg(QFileInfo(QString::fromStdString(m_documentFile.name())).fileName()),
+        this, tr("Tecnigrafo"), tr("Save changes to %1?").arg(QFileInfo(documentName()).fileName()),
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
     if (choice == QMessageBox::Cancel) {
         event->ignore();
@@ -870,7 +1035,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     if (choice == QMessageBox::Save) {
         submitFileText(QStringLiteral("QSAVE"));
         refresh();
-        if (m_editor.isModified()) {
+        if (m_active->editor().isModified()) {
             event->ignore();
             return;
         }

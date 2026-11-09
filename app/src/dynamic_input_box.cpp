@@ -41,8 +41,7 @@ QString fieldName(cmd::DynamicField::Kind kind) {
 
 }  // namespace
 
-DynamicInputBox::DynamicInputBox(const cmd::CommandRunner& runner, QWidget* parent)
-    : QWidget(parent), m_runner(runner), m_prompt(new QLabel(this)) {
+DynamicInputBox::DynamicInputBox(QWidget* parent) : QWidget(parent), m_prompt(new QLabel(this)) {
     assert(parent != nullptr && "dynamic input needs a parent drawing view");
     setObjectName(QStringLiteral("dynamicInputBox"));
     setFocusPolicy(Qt::NoFocus);
@@ -70,6 +69,29 @@ DynamicInputBox::DynamicInputBox(const cmd::CommandRunner& runner, QWidget* pare
     hide();
 }
 
+void DynamicInputBox::setSession(DocumentSession* session) {
+    if (session == m_session) {
+        return;
+    }
+    if (m_session != nullptr) {
+        m_session->pendingInput().dynamicInput = m_input;
+    }
+    m_session = session;
+    m_input = {};
+    if (m_session != nullptr) {
+        // The runner of a session that is not shown receives nothing: what
+        // its fields held still answers its prompt.
+        auto& saved = m_session->pendingInput().dynamicInput;
+        m_input = saved.has_value() ? *saved : cmd::dynamicInputFor(m_session->runner());
+        saved.reset();
+    }
+    updateFields();
+}
+
+bool DynamicInputBox::commandRunning() const {
+    return m_session != nullptr && m_session->runner().isActive();
+}
+
 void DynamicInputBox::routeKeysFrom(QWidget* view, QLineEdit* commandInput) {
     m_commandInput = commandInput;
     view->installEventFilter(this);
@@ -82,7 +104,8 @@ void DynamicInputBox::setInputEnabled(bool enabled) {
 
 void DynamicInputBox::refresh(bool clearTyped) {
     if (clearTyped) {
-        m_input = cmd::dynamicInputFor(m_runner);
+        m_input =
+            m_session != nullptr ? cmd::dynamicInputFor(m_session->runner()) : cmd::DynamicInput{};
     }
     updateFields();
 }
@@ -94,7 +117,7 @@ void DynamicInputBox::updatePointer(core::Vec2 pointer, QPoint screenPosition) {
 }
 
 void DynamicInputBox::updateFields() {
-    if (!m_enabled || !m_runner.isActive()) {
+    if (!m_enabled || !commandRunning()) {
         hide();
         return;
     }
@@ -102,7 +125,7 @@ void DynamicInputBox::updateFields() {
     // Long prompts stay within even a narrow drawing view.
     m_prompt->setWordWrap(true);
     m_prompt->setMaximumWidth(std::max(1, parentWidget()->width() - 8));
-    const auto shown = cmd::dynamicInputShown(m_input, m_runner, m_pointer);
+    const auto shown = cmd::dynamicInputShown(m_input, m_session->runner(), m_pointer);
     const auto& tokens = themeTokens(themeOf(palette()));
     for (std::size_t index = 0; index < m_fields.size(); ++index) {
         QLineEdit* field = m_fields[index];
@@ -128,8 +151,8 @@ void DynamicInputBox::updateFields() {
 }
 
 bool DynamicInputBox::eventFilter(QObject* watched, QEvent* event) {
-    if (event->type() != QEvent::KeyPress || !isVisible() || m_commandInput == nullptr ||
-        !m_commandInput->text().isEmpty()) {
+    if (event->type() != QEvent::KeyPress || !isVisible() || m_session == nullptr ||
+        m_commandInput == nullptr || !m_commandInput->text().isEmpty()) {
         return QWidget::eventFilter(watched, event);
     }
     const auto* key = dynamic_cast<QKeyEvent*>(event);
@@ -139,7 +162,7 @@ bool DynamicInputBox::eventFilter(QObject* watched, QEvent* event) {
     }
     if (key->key() == Qt::Key_Return || key->key() == Qt::Key_Enter) {
         const QString text =
-            QString::fromStdString(cmd::dynamicInputText(m_input, m_runner, m_pointer));
+            QString::fromStdString(cmd::dynamicInputText(m_input, m_session->runner(), m_pointer));
         emit textSubmitted(text);
         refresh();
         return true;

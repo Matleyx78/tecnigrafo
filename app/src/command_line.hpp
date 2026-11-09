@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "document_session.hpp"
 #include "tg/cmd/command_runner.hpp"
 
 #include <QString>
@@ -28,14 +29,31 @@ namespace tg::app {
 /// Delete reaches the window's Erase action only while the input is empty;
 /// otherwise it edits the text normally.
 ///
+/// The command line works with the runner of the session of setSession(),
+/// the active one (docs/adr/0041, point 2), and is that runner's message
+/// sink. The text typed and not yet sent belongs to the session (decision B2
+/// of docs/DECISIONI.md): setSession() leaves it in the session it leaves
+/// and shows what the new one kept. Without a runner the input field is
+/// disabled and keys are not taken. The history belongs to the window.
+///
 /// Child widget names, used by tests: "history", "prompt", "input".
 class CommandLine final : public QWidget {
     Q_OBJECT
 
 public:
-    /// The runner must outlive the command line; the command line becomes
-    /// the runner's message sink.
+    /// A command line without a runner, until setSession().
+    explicit CommandLine(QWidget* parent = nullptr);
+
+    /// A command line working with `runner` alone, without sessions, as the
+    /// widget tests use it. The runner must outlive the command line.
     explicit CommandLine(cmd::CommandRunner& runner, QWidget* parent = nullptr);
+
+    /// Works with the runner of `session` from now on; nullptr for none. The
+    /// session is borrowed: the owner calls setSession() again, with
+    /// another session or nullptr, before destroying it.
+    void setSession(DocumentSession* session);
+
+    [[nodiscard]] DocumentSession* session() const { return m_session; }
 
     /// Sends to the command line the keys typed in `widget` while it has the
     /// focus: text keys (letters, digits, @ < , . -) are written in the input
@@ -46,8 +64,9 @@ public:
     /// Adds a line at the end of the history.
     void appendToHistory(const QString& line);
 
-    /// Shows the runner's current prompt. Call it after sending the runner
-    /// an input from elsewhere, such as a click in the view.
+    /// Shows the runner's current prompt, empty without a runner. Call it
+    /// after sending the runner an input from elsewhere, such as a click in
+    /// the view.
     void refreshPrompt();
 
 signals:
@@ -64,8 +83,12 @@ private:
     bool forwardTextKey(const QKeyEvent& event);
     void submit();
     void cancel();
+    /// Works with `runner` from now on, nullptr for none: the message sink
+    /// moves to it, and the input field is enabled with it.
+    void attachRunner(cmd::CommandRunner* runner);
 
-    cmd::CommandRunner& m_runner;
+    DocumentSession* m_session{nullptr};
+    cmd::CommandRunner* m_runner{nullptr};
     QPlainTextEdit* m_history{nullptr};
     QLabel* m_prompt{nullptr};
     QLineEdit* m_input{nullptr};

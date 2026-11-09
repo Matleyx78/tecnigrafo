@@ -20,6 +20,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <cassert>
 #include <optional>
 #include <string>
 #include <utility>
@@ -61,10 +62,9 @@ QString layerName(const core::Layer* layer) {
 
 }  // namespace
 
-LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
+LayerPanel::LayerPanel(QWidget* parent)
     : QDockWidget(tr("Layers"), parent),
-      m_editor(editor),
-      m_model(new LayerTableModel(editor.document(), this)),
+      m_model(new LayerTableModel(m_noDocument, this)),
       m_table(new QTableView(this)),
       m_message(new QLabel(this)),
       m_newButton(new QToolButton(this)),
@@ -72,10 +72,8 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
       m_currentButton(new QToolButton(this)),
       m_search(new QLineEdit(this)) {
     setObjectName(QStringLiteral("layerPanel"));
-    m_model->setPalette(palette());
 
     m_table->setObjectName(QStringLiteral("layerTable"));
-    m_table->setModel(m_model);
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::SingleSelection);
     m_table->setEditTriggers(kNameEditTriggers);
@@ -84,17 +82,6 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
     m_table->verticalHeader()->setMinimumSectionSize(kRowHeight);
     m_table->verticalHeader()->setDefaultSectionSize(kRowHeight);
     m_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    m_table->horizontalHeader()->setMinimumSectionSize(kStateWidth);
-    m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    const auto states = {LayerColumn::Status, LayerColumn::On, LayerColumn::Frozen,
-                         LayerColumn::Locked};
-    for (const LayerColumn column : states) {
-        m_table->horizontalHeader()->setSectionResizeMode(columnOf(column), QHeaderView::Fixed);
-        m_table->setColumnWidth(columnOf(column), kStateWidth);
-    }
-    auto* header = m_table->horizontalHeader();
-    header->setSectionResizeMode(columnOf(LayerColumn::Plot), QHeaderView::ResizeToContents);
-    m_table->horizontalHeader()->setStretchLastSection(false);
 
     m_message->setObjectName(QStringLiteral("layerMessage"));
     m_message->setWordWrap(true);
@@ -137,6 +124,26 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
     connect(m_currentButton, &QToolButton::clicked, this, [this] { makeSelectedCurrent(); });
     connect(m_table, &QTableView::clicked, this,
             [this](const QModelIndex& index) { cellClicked(index); });
+    connectModel();
+    updateActions();
+}
+
+void LayerPanel::connectModel() {
+    m_model->setPalette(palette());
+    // A new model gets a new selection model, and its columns lose their
+    // widths: both are set again for every model.
+    m_table->setModel(m_model);
+    m_table->horizontalHeader()->setMinimumSectionSize(kStateWidth);
+    m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    const auto states = {LayerColumn::Status, LayerColumn::On, LayerColumn::Frozen,
+                         LayerColumn::Locked};
+    for (const LayerColumn column : states) {
+        m_table->horizontalHeader()->setSectionResizeMode(columnOf(column), QHeaderView::Fixed);
+        m_table->setColumnWidth(columnOf(column), kStateWidth);
+    }
+    auto* header = m_table->horizontalHeader();
+    header->setSectionResizeMode(columnOf(LayerColumn::Plot), QHeaderView::ResizeToContents);
+    m_table->horizontalHeader()->setStretchLastSection(false);
     connect(m_table->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
             [this] { updateActions(); });
     connect(m_model, &QAbstractItemModel::modelReset, this, [this] { rebuildCellWidgets(); });
@@ -146,9 +153,37 @@ LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent)
         m_model, &LayerTableModel::renameRequested, this,
         [this](core::LayerId id, const QString& name) { renameLayer(id, name); },
         Qt::QueuedConnection);
-
     rebuildCellWidgets();
-    updateActions();
+}
+
+LayerPanel::LayerPanel(edit::Editor& editor, QWidget* parent) : LayerPanel(parent) {
+    attachEditor(&editor);
+}
+
+void LayerPanel::setSession(DocumentSession* session) {
+    if (session == m_session) {
+        return;
+    }
+    m_session = session;
+    attachEditor(session != nullptr ? &session->editor() : nullptr);
+}
+
+void LayerPanel::attachEditor(edit::Editor* editor) {
+    m_editor = editor;
+    // The model reads its document at every refresh: one for each document,
+    // and the old one stops before the session it shows can go.
+    LayerTableModel* old = std::exchange(m_model, new LayerTableModel(document(), this));
+    old->disconnect(this);
+    m_table->selectionModel()->disconnect(this);
+    connectModel();
+    old->deleteLater();
+    setMessage({});
+    refresh();
+}
+
+edit::Editor& LayerPanel::editor() const {
+    assert(m_editor != nullptr && "the panel changes a document only with an editor");
+    return *m_editor;
 }
 
 LayerPanel::~LayerPanel() {
@@ -200,7 +235,7 @@ void LayerPanel::setConfirm(Confirm answer) {
 }
 
 bool LayerPanel::canEdit() const {
-    return m_editingEnabled && !m_editor.inTransaction();
+    return m_editingEnabled && m_editor != nullptr && !m_editor->inTransaction();
 }
 
 bool LayerPanel::confirm(const QString& text) {
@@ -229,13 +264,13 @@ bool LayerPanel::run(const std::function<bool()>& change) {
     if (!canEdit()) {
         return false;
     }
-    m_editor.beginTransaction(kTransactionName);
+    editor().beginTransaction(kTransactionName);
     const bool done = change();
     if (done) {
-        m_editor.commit();
+        editor().commit();
         setMessage({});
     } else {
-        m_editor.rollback();
+        editor().rollback();
     }
     // The owner's listener refreshes too; this keeps a panel without one right.
     // A change that was not made leaves the drop-downs showing the choice.
@@ -454,7 +489,7 @@ bool LayerPanel::newLayer() {
     layer.linetype = document().continuousLinetype();
     std::optional<core::LayerId> created;
     const bool done = run([&] {
-        created = m_editor.tables().addLayer(layer);
+        created = editor().tables().addLayer(layer);
         return created.has_value();
     });
     if (done && created.has_value()) {
@@ -482,7 +517,7 @@ bool LayerPanel::deleteLayer(core::LayerId id) {
         case edit::LayerProblem::NameInUse:
             break;
     }
-    return run([&] { return m_editor.tables().removeLayer(id); });
+    return run([&] { return editor().tables().removeLayer(id); });
 }
 
 bool LayerPanel::deleteSelected() {
@@ -502,7 +537,7 @@ bool LayerPanel::makeCurrent(core::LayerId id) {
     }
     core::CurrentProperties current = document().current();
     current.layer = id;
-    return run([&] { return m_editor.tables().setCurrent(current); });
+    return run([&] { return editor().tables().setCurrent(current); });
 }
 
 bool LayerPanel::makeSelectedCurrent() {
@@ -546,7 +581,7 @@ bool LayerPanel::renameLayer(core::LayerId id, const QString& name) {
         refresh();
         return false;
     }
-    return run([&] { return m_editor.tables().renameLayer(id, text); });
+    return run([&] { return editor().tables().renameLayer(id, text); });
 }
 
 bool LayerPanel::setState(core::LayerId id, LayerState state, bool value) {
@@ -581,7 +616,7 @@ bool LayerPanel::setState(core::LayerId id, LayerState state, bool value) {
             next.plot = value;
             break;
     }
-    return run([&] { return m_editor.tables().changeLayer(next); });
+    return run([&] { return editor().tables().changeLayer(next); });
 }
 
 bool LayerPanel::setColor(core::LayerId id, core::Color color) {
@@ -598,7 +633,7 @@ bool LayerPanel::setColor(core::LayerId id, core::Color color) {
     }
     core::Layer next = *layer;
     next.color = color;
-    return run([&] { return m_editor.tables().changeLayer(next); });
+    return run([&] { return editor().tables().changeLayer(next); });
 }
 
 bool LayerPanel::setLinetype(core::LayerId id, core::LinetypeId linetype) {
@@ -617,7 +652,7 @@ bool LayerPanel::setLinetype(core::LayerId id, core::LinetypeId linetype) {
     }
     core::Layer next = *layer;
     next.linetype = linetype;
-    return run([&] { return m_editor.tables().changeLayer(next); });
+    return run([&] { return editor().tables().changeLayer(next); });
 }
 
 bool LayerPanel::setLineweight(core::LayerId id, int lineweight) {
@@ -635,7 +670,7 @@ bool LayerPanel::setLineweight(core::LayerId id, int lineweight) {
     }
     core::Layer next = *layer;
     next.lineweight = lineweight;
-    return run([&] { return m_editor.tables().changeLayer(next); });
+    return run([&] { return editor().tables().changeLayer(next); });
 }
 
 void LayerPanel::changeEvent(QEvent* event) {

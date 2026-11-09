@@ -26,6 +26,7 @@
 #include <QVariant>
 
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <string_view>
@@ -130,14 +131,12 @@ QStringList propertiesPanelIconNames() {
             QString::fromLatin1(kLineweightIcon)};
 }
 
-PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runner, QWidget* parent)
+PropertiesPanel::PropertiesPanel(QWidget* parent)
     : QDockWidget(tr("Properties"), parent),
-      m_editor(editor),
-      m_runner(runner),
       m_types(new QComboBox(this)),
       m_filter(headButton("propertiesFilter", this)),
       m_quickSelect(headButton("propertiesQuickSelect", this)),
-      m_model(new PropertyGridModel(editor.document(), this)),
+      m_model(new PropertyGridModel(m_noDocument, this)),
       m_delegate(new PropertyGridDelegate(this)),
       m_grid(new QTreeView(this)),
       m_message(new QLabel(this)) {
@@ -152,11 +151,9 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
     m_message->setWordWrap(true);
 
     m_grid->setObjectName(QStringLiteral("propertiesGrid"));
-    m_grid->setModel(m_model);
     m_grid->setItemDelegate(m_delegate);
     m_grid->header()->hide();
     m_grid->header()->setStretchLastSection(true);
-    m_grid->setColumnWidth(PropertyGridModel::kNameColumn, kNameColumnWidth);
     // The delegate draws the chevrons of the groups, and a click on a group
     // opens or closes it (toggleGroup): no column of branches on the left.
     m_grid->setRootIsDecorated(false);
@@ -169,10 +166,6 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
     // A click on a value opens its editor, as in AutoCAD.
     m_grid->setEditTriggers(QAbstractItemView::CurrentChanged | QAbstractItemView::SelectedClicked |
                             QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
-    for (int group = 0; group < PropertyGridModel::kGroupCount; ++group) {
-        m_grid->setFirstColumnSpanned(group, {}, true);
-    }
-    m_model->setPalette(palette());
 
     auto* head = new QHBoxLayout;
     head->setSpacing(kSpacing);
@@ -210,16 +203,74 @@ PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runne
             [this](core::LinetypeId value) { setLinetype(value); });
     connect(m_delegate, &PropertyGridDelegate::lineweightChosen, this,
             [this](int value) { setLineweight(value); });
+    connect(m_grid, &QTreeView::clicked, this, &PropertiesPanel::toggleGroup);
+    connectModel();
+
+    updateIcons();
+    refresh();
+}
+
+void PropertiesPanel::connectModel() {
+    m_model->setPalette(palette());
+    // A new model resets the widths of the columns and the rows that span
+    // them: both are set again for every model.
+    m_grid->setModel(m_model);
+    m_grid->setColumnWidth(PropertyGridModel::kNameColumn, kNameColumnWidth);
+    for (int group = 0; group < PropertyGridModel::kGroupCount; ++group) {
+        m_grid->setFirstColumnSpanned(group, {}, true);
+    }
     connect(m_model, &PropertyGridModel::linetypeScaleEntered, this,
             &PropertiesPanel::enterLinetypeScale);
     connect(m_delegate, &PropertyGridDelegate::previousVertexRequested, m_model,
             &PropertyGridModel::previousVertex);
     connect(m_delegate, &PropertyGridDelegate::nextVertexRequested, m_model,
             &PropertyGridModel::nextVertex);
-    connect(m_grid, &QTreeView::clicked, this, &PropertiesPanel::toggleGroup);
+}
 
-    updateIcons();
+PropertiesPanel::PropertiesPanel(edit::Editor& editor, cmd::CommandRunner& runner, QWidget* parent)
+    : PropertiesPanel(parent) {
+    attach(&editor, &runner);
+}
+
+void PropertiesPanel::setSession(DocumentSession* session) {
+    if (session == m_session) {
+        return;
+    }
+    Q_EMIT sessionAboutToChange();
+    m_session = session;
+    attach(session != nullptr ? &session->editor() : nullptr,
+           session != nullptr ? &session->runner() : nullptr);
+}
+
+void PropertiesPanel::attach(edit::Editor* editor, cmd::CommandRunner* runner) {
+    m_editor = editor;
+    m_runner = runner;
+    // The model reads its document while the grid paints: one for each
+    // document, and the old one stops before the session it shows can go.
+    // Setting the new model closes an open editor without committing it.
+    PropertyGridModel* old = std::exchange(m_model, new PropertyGridModel(document(), this));
+    old->disconnect(this);
+    m_delegate->disconnect(old);
+    connectModel();
+    old->deleteLater();
+    m_typeFilter.clear();
+    m_idleSelection.clear();
+    setMessage({});
     refresh();
+}
+
+edit::Editor& PropertiesPanel::editor() const {
+    assert(m_editor != nullptr && "the panel changes a document only with an editor");
+    return *m_editor;
+}
+
+cmd::CommandRunner& PropertiesPanel::runner() const {
+    assert(m_runner != nullptr && "the panel changes a selection only with a runner");
+    return *m_runner;
+}
+
+bool PropertiesPanel::commandRunning() const {
+    return m_runner != nullptr && m_runner->isActive();
 }
 
 PropertiesPanel::~PropertiesPanel() {
@@ -253,7 +304,8 @@ void PropertiesPanel::setEditingEnabled(bool enabled) {
 }
 
 bool PropertiesPanel::canEdit() const {
-    return m_editingEnabled && !m_editor.inTransaction() && !m_runner.isActive();
+    return m_editingEnabled && m_editor != nullptr && !m_editor->inTransaction() &&
+           !commandRunning();
 }
 
 void PropertiesPanel::enterLinetypeScale(const QString& text) {
@@ -302,7 +354,11 @@ void PropertiesPanel::showAndFocus() {
 void PropertiesPanel::readSelection() {
     const core::Document& doc = document();
     m_selection.clear();
-    for (const core::EntityId id : m_runner.selection().ids()) {
+    if (m_runner == nullptr) {
+        m_idleSelection.clear();
+        return;
+    }
+    for (const core::EntityId id : m_runner->selection().ids()) {
         const core::EntityRecord* record = doc.find(id);
         if (record == nullptr) {
             continue;
@@ -314,7 +370,7 @@ void PropertiesPanel::readSelection() {
         }
         m_selection.push_back(id);
     }
-    if (!m_runner.isActive()) {
+    if (!commandRunning()) {
         m_idleSelection = m_selection;
     }
 }
@@ -460,7 +516,7 @@ void PropertiesPanel::toggleGroup(const QModelIndex& index) {
 }
 
 void PropertiesPanel::updateEnabled() {
-    const bool editable = m_editingEnabled && !m_runner.isActive();
+    const bool editable = m_editingEnabled && m_editor != nullptr && !commandRunning();
     m_types->setEnabled(m_types->count() > 1);
     m_filter->setEnabled(m_types->isEnabled());
     m_model->setEditable(editable);
@@ -491,12 +547,12 @@ bool PropertiesPanel::change(const std::function<void(core::EntityProperties&)>&
     }
     const bool hasSelection = !m_selection.empty();
     const std::vector<core::EntityId> ids = targets();
-    m_editor.beginTransaction(kTransactionName);
+    editor().beginTransaction(kTransactionName);
     bool done = false;
     if (!hasSelection) {
         core::CurrentProperties current = document().current();
         edit(current);
-        done = m_editor.tables().setCurrent(current);
+        done = editor().tables().setCurrent(current);
     } else {
         for (const core::EntityId id : ids) {
             const core::EntityRecord* record = document().find(id);
@@ -505,14 +561,14 @@ bool PropertiesPanel::change(const std::function<void(core::EntityProperties&)>&
             }
             core::EntityProperties properties = record->properties;  // a copy: the record changes
             edit(properties);
-            done = m_editor.setProperties(id, properties) || done;
+            done = editor().setProperties(id, properties) || done;
         }
     }
     if (done) {
-        m_editor.commit();
+        editor().commit();
         setMessage({});
     } else {
-        m_editor.rollback();
+        editor().rollback();
     }
     // The owner's listener refreshes too; this keeps a panel without one right.
     refresh();
@@ -575,18 +631,29 @@ bool PropertiesPanel::setLineweight(int lineweight) {
 }
 
 void PropertiesPanel::showQuickSelect(std::vector<core::EntityId> current) {
-    if (m_editor.inTransaction()) {
+    if (m_editor == nullptr || m_editor->inTransaction()) {
         return;
     }
     auto* dialog = new QuickSelectDialog(document(), current, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
+    // The window reads the document of the session it was opened for: it
+    // closes before the panel shows another session, which may then go. As
+    // Cancel does, it gives that session its selection back, quietly: the
+    // window is changing session.
+    connect(this, &PropertiesPanel::sessionAboutToChange, dialog, [this, dialog, current] {
+        const QSignalBlocker blocker(dialog);
+        dialog->close();
+        if (!current.empty() && m_runner != nullptr && runner().selection().isEmpty()) {
+            static_cast<void>(runner().replaceSelection(current));
+        }
+    });
     connect(dialog, &QDialog::accepted, this,
             [this, dialog] { applyQuickSelect(dialog->criteria(), dialog->within()); });
     // A typed QSELECT starts a command, which clears the selection (ADR
     // 0008): Cancel gives it back, as the window found it.
     connect(dialog, &QDialog::rejected, this, [this, previous = std::move(current)] {
-        if (!previous.empty() && m_runner.selection().isEmpty() &&
-            m_runner.replaceSelection(previous)) {
+        if (!previous.empty() && m_runner != nullptr && runner().selection().isEmpty() &&
+            runner().replaceSelection(previous)) {
             refresh();
             Q_EMIT changed();
         }
@@ -596,12 +663,12 @@ void PropertiesPanel::showQuickSelect(std::vector<core::EntityId> current) {
 
 bool PropertiesPanel::applyQuickSelect(const cmd::QuickSelectCriteria& criteria,
                                        const std::vector<core::EntityId>& within) {
-    if (m_runner.isActive()) {
+    if (m_runner == nullptr || commandRunning()) {
         return false;
     }
     std::vector<core::EntityId> found = cmd::quickSelect(document(), within, criteria);
     const auto count = static_cast<qulonglong>(found.size());
-    if (!m_runner.replaceSelection(std::move(found))) {
+    if (!runner().replaceSelection(std::move(found))) {
         return false;
     }
     const QString text = tr("%1 item(s) selected.").arg(count);

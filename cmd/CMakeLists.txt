@@ -33,6 +33,7 @@ add_library(tg_cmd
     src/command_runner.cpp
     src/coordinate_input.cpp
     src/drawing_aids.cpp
+    src/drawing_session.cpp
     src/dynamic_input.cpp
     src/name_list.cpp
     src/quick_select.cpp

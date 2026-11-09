@@ -3,11 +3,11 @@
 
 #pragma once
 
+#include "document_session.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/snap_points.hpp"
-#include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 #include "theme.hpp"
 #include "ui_builder.hpp"
@@ -17,10 +17,13 @@
 #include <QStringList>
 
 #include <SARibbon.h>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 class QAction;
 class QCloseEvent;
@@ -38,11 +41,19 @@ class ActionRegistry;
 class AutoHide;
 class CadView;
 class CommandLine;
+class LayerPanel;
+class PropertiesPanel;
 class RecentFiles;
 
 /// The window draws its own frame, with the quick access bar in its title
 /// row (docs/adr/0039, point 4), except under Wayland, where it keeps the
 /// frame of the system and the quick access bar goes under the title.
+///
+/// The window owns a session for each open document (docs/adr/0041, point
+/// 2), one of them active; the program opens with one. View, command line,
+/// the panels Layers and Properties, Undo and Redo, the drawing aids, title
+/// and status follow the active session (activate()); the listener of every
+/// session updates the interface only while that session is active.
 class MainWindow final : public SARibbonMainWindow {
     Q_OBJECT
 
@@ -63,8 +74,9 @@ public:
     /// Script sessions never show dialogs or access application settings.
     void setScriptMode();
 
-    /// Chooses the AutoCAD script sequences without writing to the history.
-    void setScriptSequences(bool on) { m_runner.setScriptSequences(on); }
+    /// Chooses the AutoCAD script sequences, for the runner of every session,
+    /// without writing to the history.
+    void setScriptSequences(bool on);
 
     /// Replaces the platform file picker; an empty answer means Cancel.
     using FileDialog = std::function<QString(cmd::FilePrompt, const QString&)>;
@@ -74,23 +86,60 @@ public:
 
     [[nodiscard]] CommandLine* commandLine() const { return m_commandLine; }
 
-    [[nodiscard]] const core::Document& document() const { return m_document; }
+    /// The document of the active session. Precondition: a session is
+    /// active, as it always is for scripts of level 2, the report of the
+    /// control mode and the tests; callers inside the window check
+    /// activeSession() instead.
+    [[nodiscard]] const core::Document& document() const;
 
-    /// The drawing's undo history, read by the report of the control mode.
-    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+    /// The undo history of the active session, read by the report of the
+    /// control mode. Precondition: a session is active.
+    [[nodiscard]] const edit::Editor& editor() const;
 
-    /// The runner of the commands, read by the report of the control mode.
-    [[nodiscard]] const cmd::CommandRunner& runner() const { return m_runner; }
+    /// The runner of the active session, read by the report of the control
+    /// mode. Precondition: a session is active.
+    [[nodiscard]] const cmd::CommandRunner& runner() const;
 
-    /// File access for the commands, not owned; it must outlive the window.
-    void setFileAccess(io::FileAccess* files) {
-        m_externalFiles = true;
-        m_runner.setFileAccess(files);
+    /// File access for the commands of every session, not owned; it must
+    /// outlive the window.
+    void setFileAccess(io::FileAccess* files);
+
+    /// The selection of the active session. Precondition: a session is active.
+    [[nodiscard]] const cmd::SelectionSet& selection() const { return runner().selection(); }
+
+    /// The drawing aids of the active session's runner. Precondition: a
+    /// session is active.
+    [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return runner().drawingAids(); }
+
+    /// The active session; nullptr when there is none.
+    [[nodiscard]] DocumentSession* activeSession() const { return m_active; }
+
+    /// Every session, in the order they were opened. The window never moves
+    /// them: a session stays at its address until closeSession().
+    [[nodiscard]] const std::vector<std::unique_ptr<DocumentSession>>& sessions() const {
+        return m_sessions;
     }
 
-    [[nodiscard]] const cmd::SelectionSet& selection() const { return m_runner.selection(); }
+    /// Opens a session for `document`, with an empty history and no file,
+    /// and returns it, not active: activate() shows it.
+    DocumentSession& openSession(core::Document document = core::Document::newDrawing());
 
-    [[nodiscard]] const cmd::DrawingAids& drawingAids() const { return m_runner.drawingAids(); }
+    /// The contract of activation (docs/adr/0041, point 2; docs/tappe/0.7.5/
+    /// P28): the view keeps the centre and scale of the session it leaves;
+    /// view, command line, panels, Undo and Redo, the drawing aids (which
+    /// stay settings of the window) and the listener follow `session`, whose
+    /// view comes back; title and status show it. The runner of the session
+    /// left keeps its command, halfway or not, and the text typed and not
+    /// sent stays in that session. Precondition: `session` is one of
+    /// sessions().
+    void activate(DocumentSession& session);
+
+    /// Closes `session` without asking anything: a closed modified drawing
+    /// is lost (the question to save is the job of the tabs, P29). View,
+    /// command line, panels and listener let it go first; if it was active,
+    /// the session opened before it, or else after it, becomes active, or
+    /// none. Precondition: `session` is one of sessions().
+    void closeSession(DocumentSession& session);
 
     /// Sets all snap switches and the runner, without writing in the history.
     void setSnapModes(const core::SnapModes& modes);
@@ -148,8 +197,19 @@ private:
     /// that mirrors the action both ways (docs/adr/0039, point 1, area 10).
     QToolButton* createModeButton(QAction* action, const QString& name);
 
-    /// Hands the runner the drawing aids chosen in the Tools menu.
+    /// Hands the runner of the active session the drawing aids chosen in
+    /// the Tools menu.
     void applyDrawingAids();
+
+    /// Makes `session` active; nullptr for none (activate()).
+    void switchTo(DocumentSession* session);
+    /// The settings of the window that every runner gets: file access,
+    /// description check, script sequences.
+    void configureRunner(cmd::CommandRunner& runner) const;
+    /// What the listener of the active session does after a change.
+    void documentChanged();
+    /// The name of the file of the active session, or "Drawing1.cadx".
+    [[nodiscard]] QString documentName() const;
 
     /// After any input or change: redraws the view and updates the prompt
     /// and the Edit actions.
@@ -171,15 +231,19 @@ private:
     [[nodiscard]] QString dialogPath();
     [[nodiscard]] QString chooseFile(cmd::FilePrompt prompt, const QString& path);
 
-    // Declared in dependency order: each member is built from the ones above.
-    // The sample drawing goes straight into the document, without a
+    // Declared in dependency order: the sessions borrow the registry and the
+    // file access, so they are destroyed first. The sample drawing goes
+    // straight into the document of the first session, without a
     // transaction, so it cannot be undone.
-    core::Document m_document;
-    edit::Editor m_editor;
-    edit::DocumentFile m_documentFile;
     cmd::CommandRegistry m_registry;
-    cmd::CommandRunner m_runner;
     std::unique_ptr<io::FileAccess> m_diskFiles;
+    // The file access the runners get: m_diskFiles, setFileAccess()'s, or
+    // nullptr in a script session.
+    io::FileAccess* m_files{nullptr};
+    cmd::CommandRunner::DescriptionCheck m_descriptionCheck;
+    bool m_scriptSequences{false};
+    std::vector<std::unique_ptr<DocumentSession>> m_sessions;
+    DocumentSession* m_active{nullptr};
     std::unique_ptr<QSettings> m_settings;
     std::unique_ptr<RecentFiles> m_recentFiles;
     FileDialog m_fileDialog;
@@ -188,11 +252,6 @@ private:
     // The actions that wait for the running command to end: those with a
     // command, as typing does.
     QList<QAction*> m_idleActions;
-    // The responses of the action that started the running command, still
-    // to give, and the prompt at which the first one, kWaitForUser, waits
-    // for the user's answer.
-    QStringList m_responses;
-    std::optional<cmd::Prompt> m_waitingAt;
     ActionRegistry* m_actions{nullptr};
     std::unique_ptr<UiBuilder> m_uiBuilder;
     QToolButton* m_ribbonButton{nullptr};
@@ -207,6 +266,8 @@ private:
     bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};
     CommandLine* m_commandLine{nullptr};
+    LayerPanel* m_layerPanel{nullptr};
+    PropertiesPanel* m_propertiesPanel{nullptr};
     AutoHide* m_autoHide{nullptr};
     QAction* m_undoAction{nullptr};
     QAction* m_redoAction{nullptr};

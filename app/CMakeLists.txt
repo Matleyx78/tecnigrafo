@@ -40,6 +40,8 @@ qt_add_library(tg_app_ui STATIC
     src/cad_view.hpp
     src/command_line.cpp
     src/command_line.hpp
+    src/document_session.cpp
+    src/document_session.hpp
     src/main_window.cpp
     src/main_window.hpp
     src/theme.cpp

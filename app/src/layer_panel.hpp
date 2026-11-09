@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "document_session.hpp"
 #include "layer_table_model.hpp"
 #include "tg/core/document.hpp"
 #include "tg/edit/editor.hpp"
@@ -36,7 +37,9 @@ class LayerCombo;
 /// from elsewhere (a command, undo, redo, NEW, OPEN) reach the panel when the
 /// owner calls refresh().
 ///
-/// The editor is borrowed and must outlive the panel.
+/// The panel shows the session of setSession(), the active one
+/// (docs/adr/0041, point 2), or the editor of the constructor that takes
+/// one. Without either it shows no layers and changes nothing.
 class LayerPanel final : public QDockWidget {
     Q_OBJECT
 
@@ -46,8 +49,21 @@ public:
 
     Q_DISABLE_COPY_MOVE(LayerPanel)
 
+    /// A panel without a session, until setSession().
+    explicit LayerPanel(QWidget* parent = nullptr);
+
+    /// A panel working on `editor` alone, without sessions, as the widget
+    /// tests use it. The editor must outlive the panel.
     explicit LayerPanel(edit::Editor& editor, QWidget* parent = nullptr);
+
     ~LayerPanel() override;
+
+    /// Shows and changes `session` from now on; nullptr for none. The
+    /// session is borrowed: the owner calls setSession() again, with another
+    /// session or nullptr, before destroying it.
+    void setSession(DocumentSession* session);
+
+    [[nodiscard]] DocumentSession* session() const { return m_session; }
 
     /// The actions that do what the buttons do, on the layer selected in the
     /// table. The panel enables and disables them. Each may be null.
@@ -56,13 +72,17 @@ public:
     /// While a command runs the panel shows the layers but changes nothing.
     void setEditingEnabled(bool enabled);
 
-    [[nodiscard]] bool editingEnabled() const { return m_editingEnabled; }
+    /// False also without a session.
+    [[nodiscard]] bool editingEnabled() const { return m_editingEnabled && m_editor != nullptr; }
 
     /// Replaces the question boxes, which wait for the user. An empty
     /// function brings back the default.
     void setConfirm(Confirm answer);
 
-    [[nodiscard]] const core::Document& document() const { return m_editor.document(); }
+    /// The document shown; without a session, an empty document.
+    [[nodiscard]] const core::Document& document() const {
+        return m_editor != nullptr ? m_editor->document() : m_noDocument;
+    }
 
     /// Shows the document again: the rows, the cells and the controls.
     void refresh();
@@ -103,6 +123,13 @@ protected:
     void changeEvent(QEvent* event) override;
 
 private:
+    /// The editor shown. Precondition: there is one.
+    [[nodiscard]] edit::Editor& editor() const;
+    /// Shows and changes `editor` from now on, nullptr for none: a new model
+    /// for its document.
+    void attachEditor(edit::Editor* editor);
+    /// Gives the table m_model, made for document(), and connects it.
+    void connectModel();
     /// Runs `change` in a transaction "Layer": committed if it returns true,
     /// rolled back if not. Refreshes the panel.
     [[nodiscard]] bool canEdit() const;
@@ -120,7 +147,11 @@ private:
     /// The next syncCellWidgets() sets every control again.
     void invalidateCells();
 
-    edit::Editor& m_editor;
+    // Shown without a session; declared first, since m_model is made for it.
+    core::Document m_noDocument;
+    DocumentSession* m_session{nullptr};
+    // The editor of m_session, or of the constructor; nullptr for none.
+    edit::Editor* m_editor{nullptr};
     LayerTableModel* m_model;
     QTableView* m_table;
     QLabel* m_message;
