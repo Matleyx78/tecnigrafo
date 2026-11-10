@@ -61,8 +61,11 @@
 #
 # Planned difficulty, agent, model and effort come from the table of
 # section 6 of each plan; the declared tool, model and effort from the
-# section "Uso dell'IA" of the main pull request. Where they are missing the
-# value is "non dichiarato", never deduced. The only exception is written in
+# section "Uso dell'IA" of the main pull request, and only from there. Where
+# they are missing the value is "non dichiarato", never deduced. The author is
+# the declared tool; only for an old pull request with no such section it is
+# the first tool named in its description, as in the analysis, and that guess
+# is never used as a declared value. The only exception is written in
 # DECLARED_BY_MAINTAINER and always marked as such.
 #
 # Exit status: 0 done, 2 a read failed or a saved file is missing.
@@ -199,15 +202,24 @@ class Declared:
     effort: str    # basso, medio, alto, molto alto, massimo, non noto, or NOT_DECLARED
 
 
+NO_AI = "nessuna"
+
+
+def first_tool(text: str) -> str:
+    low = text.lower()
+    hits = [(low.find(k), v) for k, v in TOOLS if k in low]
+    return min(hits)[1] if hits else "?"
+
+
 def declared(body: str | None) -> Declared:
-    """Tool, model and effort written in the section "Uso dell'IA"."""
+    """Tool, model and effort written in the section "Uso dell'IA", and only
+    there: "?" and NOT_DECLARED where the section does not say them, NO_AI
+    when it ticks "Nessuna IA usata" and not "IA usata"."""
     s = ai_section(body)
     low = s.lower()
-    hits = [(low.find(k), v) for k, v in TOOLS if k in low]
-    if not hits:  # no tool in the section: the first one named in the text
-        whole = clean(body).lower()
-        hits = [(whole.find(k), v) for k, v in TOOLS if k in whole]
-    tool = min(hits)[1] if hits else "?"
+    if re.search(r"\[x\]\s*nessuna ia", low) and not re.search(r"\[x\]\s*ia usata", low):
+        return Declared(NO_AI, NOT_DECLARED, NOT_DECLARED)
+    tool = first_tool(s)
     found: list[tuple[int, str]] = []
     for rx, name in MODEL_RES:
         for m in rx.finditer(s):
@@ -232,6 +244,13 @@ def declared(body: str | None) -> Declared:
         en = EFFORT_EN_RE.search(s)
         effort = EFFORT_EN[(en.group(1) or en.group(2)).lower()] if en else NOT_DECLARED
     return Declared(tool, " + ".join(models) if models else NOT_DECLARED, effort)
+
+
+def author_hint(body: str | None) -> str:
+    """For the author of old pull requests without the section "Uso dell'IA"
+    (before the template had it): the first tool named in the description, as
+    in the analysis. Never a declared value; "?" when the section exists."""
+    return first_tool(clean(body)) if not ai_section(body) else "?"
 
 
 def model_family(model: str) -> str:
@@ -375,8 +394,9 @@ def download(gh: GitHub, store: Store, stages: list[str], root: Path) -> None:
     store.save("pulls.json", [{
         "number": p["number"], "title": p["title"], "state": p["state"], "created_at": p["created_at"],
         "merged_at": p["merged_at"], "closed_at": p["closed_at"], "body": p["body"],
-        "head": p["head"]["ref"], "labels": [lb["name"] for lb in p["labels"]],
+        "head": p["head"]["ref"], "head_sha": p["head"]["sha"], "labels": [lb["name"] for lb in p["labels"]],
     } for p in pulls])
+    head_sha = {p["number"]: p["head"]["sha"] for p in pulls}
 
     def older(page: list) -> bool:
         return since is not None and ts(page[-1]["created_at"]) < since
@@ -388,12 +408,14 @@ def download(gh: GitHub, store: Store, stages: list[str], root: Path) -> None:
     m = measure(store, stages, need_details=False)
     details = store.load("pull-details.json") if store.has("pull-details.json") else {}
     for n in sorted(m.used_pulls):
-        if str(n) in details:
+        # Saved details are reused only for the same head commit: a pull
+        # request pushed again since the last download is read again.
+        if str(n) in details and details[str(n)].get("head_sha") == head_sha.get(n):
             continue
         o = gh.get(f"repos/{REPO}/pulls/{n}")
         files = gh.pages(f"repos/{REPO}/pulls/{n}/files")
-        details[str(n)] = {"commits": o["commits"], "additions": o["additions"], "deletions": o["deletions"],
-                           "changed_files": o["changed_files"],
+        details[str(n)] = {"head_sha": o["head"]["sha"], "commits": o["commits"], "additions": o["additions"],
+                           "deletions": o["deletions"], "changed_files": o["changed_files"],
                            "files": [[f["filename"], f["additions"] + f["deletions"]] for f in files]}
     store.save("pull-details.json", details)
 
@@ -585,6 +607,7 @@ def measure(store: Store, stages: list[str], need_details: bool = True) -> Measu
                 "lines_code": sum(ln for f, ln in own if is_code(f)),
                 "touches_app": any(f.startswith(("app/", "tests/app/")) for f, _ in own),
                 "kind": correction_kind(d["files"]), "declared": declared(p["body"]).__dict__,
+                "author_hint": author_hint(p["body"]),
                 **ci(p)}
 
     rows = []
@@ -631,7 +654,8 @@ def author(row: dict) -> str:
         return AUTHOR_OVERRIDE[row["code"]]
     if not row["main"]:
         return "?"
-    return row["main"]["declared"]["tool"]
+    tool = row["main"]["declared"]["tool"]
+    return tool if tool != "?" else row["main"].get("author_hint", "?")
 
 
 def declaration(row: dict) -> dict:
@@ -646,7 +670,8 @@ def declaration(row: dict) -> dict:
     out["modello"] = d["model"]
     if d["effort"] not in (NOT_DECLARED, "non noto"):
         out["impegno"], out["fonte_impegno"] = d["effort"], "pull request"
-    by_maint = DECLARED_BY_MAINTAINER.get((row["tappa"], row["diff"], row["autore"]))
+    # Keyed on the tool declared in the pull request, never on a guessed author.
+    by_maint = DECLARED_BY_MAINTAINER.get((row["tappa"], row["diff"], d["tool"]))
     if by_maint:
         model, effort = by_maint
         if out["impegno"] == NOT_DECLARED:

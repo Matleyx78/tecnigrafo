@@ -78,9 +78,12 @@ script:
   conta le righe senza test (`tests/`, `*_test.*`), documenti (`docs/`,
   `*.md`) e risorse (`resources/`, cioè le icone), per la misura della
   condizione 2. Script, file di CMake e della CI contano come codice.
-- **Autore.** Lo strumento nominato per primo nella sezione «Uso dell'IA»; se
-  la sezione non ne nomina, il primo nominato nella descrizione, come
-  nell'analisi (0.6-P16 non ha la sezione).
+- **Autore.** Lo strumento dichiarato, cioè il primo nominato nella sezione
+  «Uso dell'IA»; «nessuna» se la sezione spunta «Nessuna IA usata». Solo per
+  le pull request vecchie che la sezione non l'hanno (0.6-P16), il primo
+  strumento nominato nella descrizione, come nell'analisi: vale come autore,
+  mai come dato dichiarato, e non fa scattare la dichiarazione del
+  responsabile, che si applica allo strumento dichiarato.
 - **Previsti e dichiarati.** Difficoltà, agente, fascia e impegno previsti
   vengono dalla tabella della sezione 6 del piano; strumento, modello e impegno
   dichiarati dalla sezione «Uso dell'IA» della pull request principale, senza i

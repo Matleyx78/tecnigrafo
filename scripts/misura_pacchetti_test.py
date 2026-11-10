@@ -110,11 +110,31 @@ class Declared(unittest.TestCase):
         self.assertEqual(d.model, "Gemini 3.8 Flash + Gemini 4 Argon")
 
     def test_no_section(self):
-        # The tool falls back to the first one named in the text; model and
-        # effort come only from the section.
-        d = mp.declared("Closes #3\n\nScritto con Codex, GPT-6, impegno alto; rivisto con Claude Code.")
-        self.assertEqual((d.tool, d.model, d.effort), ("codex", mp.NOT_DECLARED, mp.NOT_DECLARED))
-        self.assertEqual(mp.declared("Closes #3\n\nNiente.").tool, "?")
+        # Nothing is declared without the section; for the author of an old
+        # pull request the first tool named in the text is only a hint.
+        body = "Closes #3\n\nScritto con Codex, GPT-6, impegno alto; rivisto con Claude Code."
+        d = mp.declared(body)
+        self.assertEqual((d.tool, d.model, d.effort), ("?", mp.NOT_DECLARED, mp.NOT_DECLARED))
+        self.assertEqual(mp.author_hint(body), "codex")
+        self.assertEqual(mp.author_hint("Closes #3\n\nNiente."), "?")
+
+    def test_mention_outside_the_section_is_not_declared(self):
+        body = ("Corregge un problema trovato da Claude.\n\n## Uso dell'IA\n\n"
+                "- [x] Nessuna IA usata\n- [ ] IA usata: <!-- strumento, modello e impegno -->\n")
+        d = mp.declared(body)
+        self.assertEqual((d.tool, d.model, d.effort), (mp.NO_AI, mp.NOT_DECLARED, mp.NOT_DECLARED))
+        self.assertEqual(mp.author_hint(body), "?")
+        # A section that names no tool: still nothing taken from the text.
+        body = "Corregge un problema trovato da Claude.\n\n## Uso dell'IA\n\n- [x] IA usata\n"
+        self.assertEqual((mp.declared(body).tool, mp.author_hint(body)), ("?", "?"))
+
+    def test_no_ai_and_maintainer_declaration(self):
+        row = {"tappa": "0.7.5", "diff": "media", "autore": "nessuna",
+               "main": {"declared": {"tool": mp.NO_AI, "model": mp.NOT_DECLARED, "effort": mp.NOT_DECLARED}}}
+        self.assertEqual(mp.declaration(row)["impegno"], mp.NOT_DECLARED)
+        row["main"]["author_hint"] = "claude"
+        row["code"] = "0.7.5-P1"
+        self.assertEqual(mp.author(row), mp.NO_AI)
 
 
 class Plan(unittest.TestCase):
@@ -433,7 +453,8 @@ class Download(unittest.TestCase):
                 {"workflow_runs": [r | {"head_sha": "0"} for r in RUNS]},
         }
         for n, d in DETAILS.items():
-            answers[f"{R}/pulls/{n}"] = {k: d[k] for k in ("commits", "additions", "deletions", "changed_files")}
+            answers[f"{R}/pulls/{n}"] = {k: d[k] for k in ("commits", "additions", "deletions", "changed_files")} | {
+                "head": {"sha": "0"}}
             answers[f"{R}/pulls/{n}/files?per_page=100&page=1"] = [
                 {"filename": f, "additions": ln, "deletions": 0} for f, ln in d["files"]]
         for n, cs in COMMENTS.items():
@@ -463,11 +484,28 @@ class Download(unittest.TestCase):
             self.assertEqual(list(cases), ["tests/verifica/casi/apertura/new"])
             rows = {r["code"]: r for r in json.loads((Path(tmp) / "misura.json").read_text(encoding="utf-8"))}
             self.assertEqual(rows["0.7.5-R2"]["casi"]["script_fini"], 1)
-            # A second download reads lists and comments again, details only if missing.
+            # A second download reads lists and comments again, details only
+            # for a pull request whose head changed in between.
             gh.asked.clear()
             with redirect_stdout(io.StringIO()):
                 mp.main(["--tappe", "0.7.5", "--dati", tmp, "--scarica"], gh=gh, root=r)
             self.assertFalse(any(p.endswith("/pulls/20") for p in gh.asked))
+            pulls = [gh_pull(p) for p in PULLS]
+            pulls[0]["head"]["sha"] = "1"
+            answers[f"{R}/pulls?state=all&per_page=100&page=1"] = pulls
+            answers[f"{R}/pulls/20"] = {"commits": 3, "additions": 70, "deletions": 0, "changed_files": 3,
+                                        "head": {"sha": "1"}}
+            answers[f"{R}/pulls/20/files?per_page=100&page=1"] = [
+                {"filename": f, "additions": ln, "deletions": 0}
+                for f, ln in DETAILS["20"]["files"] + [["scripts/ci.sh", 20]]]
+            gh.asked.clear()
+            with redirect_stdout(io.StringIO()):
+                mp.main(["--tappe", "0.7.5", "--dati", tmp, "--scarica"], gh=gh, root=r)
+            self.assertTrue(any(p.endswith("/pulls/20") for p in gh.asked))
+            self.assertFalse(any(p.endswith("/pulls/26") for p in gh.asked))
+            rows = {r["code"]: r for r in json.loads((Path(tmp) / "misura.json").read_text(encoding="utf-8"))}
+            main = rows["0.7.5-P1"]["main"]
+            self.assertEqual((main["commits"], main["files_own"], main["lines_own"]), (3, 3, 70))
 
     def test_bad_stage(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
