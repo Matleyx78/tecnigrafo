@@ -118,8 +118,9 @@ allo stesso modo.
   risponde.
 - Nel commit la riga `Assisted-by: <nome dello strumento>`.
 - Nella pull request compila la sezione sull'uso dell'IA del modello, con lo
-  strumento **e il modello** (per esempio «Claude Code, Claude Opus 5.5»); lo
-  stesso nei verbali di revisione.
+  strumento, **il modello e l'impegno** (per esempio «Claude Code, Claude Opus
+  5.5, impegno medio»); se non sai con quale impegno sei stato avviato, scrivi
+  «impegno non noto». Lo stesso nei verbali di revisione.
 - Una issue si chiude con `Closes #N` nella descrizione («Chiude» non basta);
   senza issue da chiudere, nessuna riga di chiusura.
 

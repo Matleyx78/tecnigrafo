@@ -106,6 +106,11 @@ modello in uso è scritto in basso a destra; *Effort* si sceglie con le frecce
 seconda volta). Come installare e configurare Antigravity:
 [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
 
+Ogni pull request dichiara strumento, modello e impegno: servono alla misura
+dei pacchetti ([DECISIONI.md](DECISIONI.md), 2026-11-10). Se l'agente scrive
+«impegno non noto», correggi la riga prima di unire, con l'impegno che hai
+scelto all'avvio.
+
 ### A3. Unire una pull request
 
 Vale per **ogni** pull request, nei due repository.

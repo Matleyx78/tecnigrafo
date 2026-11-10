@@ -62,7 +62,7 @@ Claude; per le nuove l'etichetta non si usa più.
 Chi lavora a un pacchetto non scrive i suoi riferimenti, e viceversa. Vale
 anche per i **modelli**: chi scrive i riferimenti usa un modello diverso da chi
 realizza il pacchetto, e chi rivede una pull request un modello diverso da chi
-l'ha scritta; pull request e verbali dicono il modello usato. Le
+l'ha scritta; pull request e verbali dicono il modello e l'impegno usati. Le
 etichette servono perché gli agenti lavorano tutti attraverso l'account GitHub
 del responsabile, e non si possono distinguere in altro modo. La lista delle
 issue filtrata per etichetta mostra in ogni momento chi sta facendo cosa.

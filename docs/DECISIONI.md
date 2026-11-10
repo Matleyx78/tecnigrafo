@@ -1308,3 +1308,42 @@ i rimandi ai documenti che cambia.
   configurazione sta in `sonar-project.properties`; solid-space
   (`third_party/**`) è escluso, perché ha la sua analisi. L'analisi automatica
   di Sonar è spenta e il token sta nel secret `SONAR_TOKEN`.
+- **2026-11-10 — Pacchetti medi: le condizioni dell'analisi della #442 e le due
+  misure.** Letta l'analisi di
+  [0.7.5-P8](tappe/0.7.5/analisi-pacchetti-medi.md) (#549), il responsabile
+  approva la raccomandazione «sì, con condizioni»: le condizioni 1–7 della
+  sezione 5 e il modello di lavoro della sezione 3.9, «la fascia forte decide e
+  controlla, la media realizza». In fascia forte restano i riferimenti con casi
+  delicati, la revisione delle interfacce, i pacchetti che progettano
+  un'interfaccia nuova e la revisione mirata delle pull request in fascia media
+  che toccano parti delicate; va in fascia media il codice che traduce decisioni
+  già scritte (nella scheda, nel contratto di solid-space o in un ADR) e coperte
+  da riferimenti di fascia forte. Delle due varianti proposte per «Modello e
+  impegno» vale la B.
+  - **Quando valgono.** Dalla tappa 0.8. Le regole di metodo non cambiano a
+    tappa aperta (2026-11-07, «La pausa tra le tappe»): il testo della sezione 6
+    dell'analisi lo applica la pull request di documenti della pausa dopo la
+    0.7.5, prima del piano della 0.8, che nasce già con le regole nuove.
+  - **Riferimenti divisi per natura.** La forma proposta (un solo pacchetto di
+    riferimenti per le parti di un pacchetto diviso, con un file di attesa per
+    ogni pacchetto di lavoro) va confrontata con l'[ADR
+    0011](adr/0011-modalita-di-controllo.md), punto 7, che lega i riferimenti
+    `RN` a un solo pacchetto `PN`, e con i nomi dei file che
+    `tests/verifica/pending_list.cmake` accetta. Nella pausa il responsabile
+    decide se correggere l'ADR o tenere, per ogni parte, blocchi di riferimenti
+    con la lettera, uno forte con i casi delicati e uno leggero con gli
+    ordinari, che le regole di oggi già permettono.
+  - **Impegno registrato.** Da subito ogni pull request dichiara, nella sezione
+    sull'uso dell'IA, strumento, modello e impegno: senza, la misura non si può
+    fare (condizione 7). Il responsabile autorizza la riga nel modello di pull
+    request in `.github/` ([AGENTS.md](../AGENTS.md), «Commit e pull request»;
+    [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), A2). È un dato in più, non
+    un cambio di metodo.
+  - **Due misure.** Alla fine della 0.7.5 il pacchetto nuovo
+    [0.7.5-P39](tappe/0.7.5/P39-misura-pacchetti.md) rende ripetibili gli
+    script della sezione 7 dell'analisi e misura la tappa, quasi tutta di
+    pacchetti medi. Alla fine della 0.8 l'ultimo pacchetto del suo piano rifà
+    la misura con lo stesso script e propone la decisione definitiva: è un
+    criterio di chiusura della [scheda della 0.8](tappe/0.8-quote-retini-blocchi.md).
+    La qualità del codice impegnativo realizzato in fascia media è un'ipotesi
+    finché la seconda misura non la conferma.
