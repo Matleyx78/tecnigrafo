@@ -1587,9 +1587,10 @@ void MainWindow::restoreUiSettings() {
     // The hidden panels stay hidden in the place that restoreState() gave
     // them, where docking them again puts them back.
     m_autoHide->restoreState(m_settings->value(QStringLiteral("ui/autoHide")).toStringList());
-    // restoreState() shows the toolbars as they were saved, maybe with
-    // another environment: the active one decides again.
-    showEnvironment();
+    // restoreState() shows and hides the toolbars as the user left them
+    // (UiBuilder::saveWindowState()); the active environment hides again
+    // the ones it does not offer.
+    m_uiBuilder->layoutRestored();
     m_uiSettingsReady = true;
 }
 
@@ -1610,7 +1611,7 @@ void MainWindow::saveUiSettings() {
     m_settings->setValue(QStringLiteral("ui/interface"), interfaceName);
     m_settings->setValue(QStringLiteral("ui/theme"), themeName);
     m_settings->setValue(QStringLiteral("ui/geometry"), saveGeometry());
-    m_settings->setValue(QStringLiteral("ui/state"), saveState());
+    m_settings->setValue(QStringLiteral("ui/state"), m_uiBuilder->saveWindowState());
     m_settings->setValue(QStringLiteral("ui/autoHide"), m_autoHide->saveState());
     m_settings->sync();
 }

@@ -35,6 +35,7 @@
 #include <QStringList>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QToolBar>
 #include <QToolButton>
 #include <gtest/gtest.h>
 
@@ -205,6 +206,11 @@ protected:
                ribbon()->isCategoryVisible(category);
     }
 
+    /// The toolbar `path` of the classic interface ("home/draw").
+    [[nodiscard]] QToolBar* toolbar(const char* path) const {
+        return m_window->findChild<QToolBar*>(latin1(path));
+    }
+
     /// Whether the bar of the menus on show has the menu `title` ("&Draw").
     [[nodiscard]] bool hasMenu(const char* title) const {
         const auto* bar = m_window->findChild<QMenuBar*>(QStringLiteral("classicMenuBar"));
@@ -359,6 +365,77 @@ TEST_F(EnvironmentsTest, BackToTheDrawingRibbonMenusAndCommandsAreTheDrawingsAga
     EXPECT_FALSE(history().split(QLatin1Char('\n')).contains(kNotAvailable));
     events::press(input(), Qt::Key_Escape);
     EXPECT_FALSE(drawing().runner().isActive());
+}
+
+TEST_F(EnvironmentsTest, AToolbarTheUserHidStaysHiddenAcrossTheTabs) {
+    window().setInterface(InterfaceKind::Classic);
+    QToolBar* draw = toolbar("home/draw");
+    QToolBar* modify = toolbar("home/modify");
+    ASSERT_NE(draw, nullptr);
+    ASSERT_NE(modify, nullptr);
+    EXPECT_FALSE(draw->isHidden());
+    // As QMainWindow's menu of the toolbars does.
+    draw->toggleViewAction()->trigger();
+    ASSERT_TRUE(draw->isHidden());
+
+    // Another drawing: the same environment.
+    DocumentSession& other = window().openSession();
+    window().activate(other);
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_FALSE(modify->isHidden());
+    // The test environment hides the other one too, and gives it back.
+    window().activate(test());
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_TRUE(modify->isHidden());
+    window().activate(drawing());
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_FALSE(modify->isHidden());
+    // So does the Start page.
+    window().showStartPage();
+    EXPECT_TRUE(modify->isHidden());
+    window().activate(other);
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_FALSE(modify->isHidden());
+
+    // Shown again by the user, it follows the environment.
+    draw->toggleViewAction()->trigger();
+    EXPECT_FALSE(draw->isHidden());
+    window().activate(test());
+    EXPECT_TRUE(draw->isHidden());
+    window().activate(drawing());
+    EXPECT_FALSE(draw->isHidden());
+}
+
+TEST_F(EnvironmentsTest, ARestoredLayoutKeepsTheToolbarsAsTheUserLeftThem) {
+    window().setInterface(InterfaceKind::Classic);
+    ASSERT_NE(toolbar("home/draw"), nullptr);
+    toolbar("home/draw")->toggleViewAction()->trigger();
+    // Closed from a tab of the test, where the toolbars of the drawing are
+    // all hidden by the environment; closing ends on the Start page.
+    window().activate(test());
+    ASSERT_TRUE(window().close());
+
+    MainWindow restored(MainWindow::InitialDrawing::Empty, nullptr, addTestEnvironment);
+    restored.show();
+    ASSERT_EQ(restored.interfaceKind(), InterfaceKind::Classic);
+    auto* draw = restored.findChild<QToolBar*>(QStringLiteral("home/draw"));
+    auto* modify = restored.findChild<QToolBar*>(QStringLiteral("home/modify"));
+    ASSERT_NE(draw, nullptr);
+    ASSERT_NE(modify, nullptr);
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_FALSE(modify->isHidden());
+
+    // A drawing opened after the restore keeps them as they are.
+    DocumentSession& first = *restored.activeSession();
+    DocumentSession& other = restored.openSession();
+    restored.activate(other);
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_FALSE(modify->isHidden());
+    restored.activate(restored.openSession(*restored.documentTypes().find(latin1(kTest))));
+    EXPECT_TRUE(modify->isHidden());
+    restored.activate(first);
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_FALSE(modify->isHidden());
 }
 
 TEST_F(EnvironmentsTest, TheChosenRibbonTabStaysWhileItIsShown) {

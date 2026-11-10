@@ -30,6 +30,7 @@
 #include <SARibbon.h>
 #include <algorithm>
 #include <ranges>
+#include <utility>
 
 namespace tg::app {
 namespace {
@@ -182,6 +183,7 @@ void UiBuilder::show(InterfaceKind kind) {
     m_menuBar = nullptr;
     m_panels.clear();
     m_categories.clear();
+    m_hiddenByEnvironment.clear();
     if (kind == InterfaceKind::Ribbon) {
         buildRibbon();
     } else {
@@ -190,6 +192,27 @@ void UiBuilder::show(InterfaceKind kind) {
     m_current = kind;
     m_built = true;
     applyEnvironment();
+}
+
+void UiBuilder::layoutRestored() {
+    m_hiddenByEnvironment.clear();
+    applyEnvironment();
+}
+
+QByteArray UiBuilder::saveWindowState() {
+    // The state saved has the toolbars as the user left them: the ones the
+    // environment hid are shown for the moment of saveState(), with no
+    // event processed in between, so nothing is drawn.
+    m_applying = true;
+    for (QToolBar* toolbar : std::as_const(m_hiddenByEnvironment)) {
+        toolbar->show();
+    }
+    QByteArray state = m_window.saveState();
+    for (QToolBar* toolbar : std::as_const(m_hiddenByEnvironment)) {
+        toolbar->hide();
+    }
+    m_applying = false;
+    return state;
 }
 
 void UiBuilder::setEnvironment(const Environment* environment) {
@@ -243,6 +266,10 @@ void UiBuilder::applyEnvironment() {
     if (m_menuBar != nullptr) {
         showMenus(*m_menuBar);
     }
+    // A toolbar without actions offered is hidden, and shown again only if
+    // the environment hid it: one the user hid stays hidden (QMainWindow's
+    // menu of the toolbars, restoreState()).
+    m_applying = true;
     for (QToolBar* toolbar : m_toolbars) {
         // The controls of the layers and of the properties go with the
         // actions of their toolbar.
@@ -251,8 +278,14 @@ void UiBuilder::applyEnvironment() {
             offered = offered || (isRegistered(m_registry, action) && !action->isSeparator() &&
                                   action->isVisible());
         }
-        toolbar->setVisible(offered);
+        if (!offered && !toolbar->isHidden()) {
+            toolbar->hide();
+            m_hiddenByEnvironment.insert(toolbar);
+        } else if (offered && m_hiddenByEnvironment.remove(toolbar)) {
+            toolbar->show();
+        }
     }
+    m_applying = false;
     if (m_ribbon == nullptr) {
         return;
     }
@@ -488,6 +521,13 @@ void UiBuilder::buildClassic() {
             toolbar->setObjectName(path);
             m_window.addToolBar(toolbar);
             m_toolbars.append(toolbar);
+            // A toolbar the user shows is the user's again: the environment
+            // will not show it a second time.
+            QObject::connect(toolbar, &QToolBar::visibilityChanged, toolbar, [this, toolbar] {
+                if (!m_applying) {
+                    m_hiddenByEnvironment.remove(toolbar);
+                }
+            });
             toolbars.insert(path, toolbar);
         }
         return toolbar;

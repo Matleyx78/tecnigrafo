@@ -5,9 +5,11 @@
 
 #include "theme.hpp"
 
+#include <QByteArray>
 #include <QHash>
 #include <QList>
 #include <QPair>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -53,13 +55,24 @@ public:
     /// the global actions are offered. The others are hidden, which in Qt
     /// also disables them and their shortcuts. A menu, a group of the
     /// ribbon, a toolbar or a tab of the ribbon left without actions is
-    /// hidden too. The tabs of the ribbon are the fixed ones (Home, View)
+    /// hidden too; a toolbar comes back when its actions do, unless the user
+    /// hid it. The tabs of the ribbon are the fixed ones (Home, View)
     /// and, at their right, the contextual tabs of `environment`
     /// (Environment::contextualRibbon, docs/adr/0039, point 5); the tab
     /// chosen stays chosen while it is shown. Nothing is rebuilt, and the
     /// choice holds for the interfaces shown later. Until the first call
     /// every action is offered.
     void setEnvironment(const Environment* environment);
+
+    /// The toolbars have just been shown and hidden as saved
+    /// (QMainWindow::restoreState()): that is the user's choice, and the
+    /// environment hides again the ones it does not offer.
+    void layoutRestored();
+
+    /// The window's QMainWindow::saveState() with the toolbars as the user
+    /// left them, as if no environment had hidden any: restoreState() and
+    /// layoutRestored() bring them back with any environment.
+    [[nodiscard]] QByteArray saveWindowState();
 
     /// Colours the title row and the File tab of the ribbon with the tokens
     /// of `theme`; kept for the ribbons built later.
@@ -100,6 +113,11 @@ private:
     bool m_environmentSet{false};
     QString m_environment;
     QStringList m_contextualRibbon;
+    // The toolbars the environment hid, to show again when it offers them;
+    // a toolbar the user hid is not among them. m_applying is true while
+    // the builder itself shows and hides them.
+    QSet<QToolBar*> m_hiddenByEnvironment;
+    bool m_applying{false};
     InterfaceKind m_current{InterfaceKind::Ribbon};
     Theme m_theme{Theme::Light};
     bool m_built{false};
