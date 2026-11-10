@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "cad_view.hpp"
+#include "log_file.hpp"
 #include "main_window.hpp"
 #include "script_session.hpp"
 
@@ -61,6 +62,13 @@ int main(int argc, char* argv[]) {
     if (parser.isSet(outputOption)) {
         std::cerr << "--output needs --script\n";
         return 1;
+    }
+
+    // The log of an interactive session: what Qt and the program report,
+    // and the stack of a crash (log_file.hpp). Scripts and screenshots of
+    // the CI run without it.
+    if (!parser.isSet(screenshotOption)) {
+        (void)tg::app::startLogFile();
     }
 
     // The program opens on the Start page, without documents, as AutoCAD

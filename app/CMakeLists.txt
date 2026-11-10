@@ -20,6 +20,8 @@ qt_add_library(tg_app_ui STATIC
     src/layer_table_model.hpp
     src/layer_panel.cpp
     src/layer_panel.hpp
+    src/log_file.cpp
+    src/log_file.hpp
     src/properties_panel.cpp
     src/properties_panel.hpp
     src/quick_select_dialog.cpp

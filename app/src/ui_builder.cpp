@@ -118,14 +118,16 @@ void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
     }
 }
 
-/// Gives the quick access bar of the classic menus the size of its contents.
-/// The bar is a corner widget of a QMenuBar, which places it again whenever
-/// the layout of the window asks its height (QMenuBar::heightForWidth()),
-/// and the bar, resized, shows its buttons, which asks the layout of the
-/// window again: without the title row of a window without frame this did
-/// not end (a stack overflow with the frame of the system, the crash of the
-/// manual test of 0.7.5-P40). With a fixed size, placing it again changes
-/// nothing. Hidden actions take no room (QToolBar), so the size follows them.
+/// Gives a quick access bar that is the corner widget of a menu bar the size
+/// of its contents. QMenuBar places its corner widgets again whenever the
+/// layout of the window asks its height (QMenuBar::heightForWidth()), at
+/// their size hint, and the compact ribbon places its own at the height of
+/// its row (SARibbonBarLayout::resizeInCompactStyle()): each resize made the
+/// bar show its buttons, which asked both layouts again, and this did not
+/// end (a stack overflow with the frame of the system, the crash of the
+/// manual test of 0.7.5-P40). With a fixed size neither resizes it, and
+/// placing it again changes nothing. Hidden actions take no room (QToolBar),
+/// so the size follows them.
 void fitQuickAccess(QToolBar& bar) {
     bar.ensurePolished();
     bar.setFixedSize(bar.sizeHint());
@@ -259,7 +261,7 @@ void UiBuilder::show(InterfaceKind kind) {
     m_ribbon = nullptr;
     m_applicationButton = nullptr;
     m_title = nullptr;
-    m_classicQuickAccess = nullptr;
+    m_cornerQuickAccess = nullptr;
     m_menuBar = nullptr;
     m_panels.clear();
     m_categories.clear();
@@ -346,8 +348,8 @@ void UiBuilder::applyEnvironment() {
     if (m_menuBar != nullptr) {
         showMenus(*m_menuBar);
     }
-    if (m_classicQuickAccess != nullptr) {
-        fitQuickAccess(*m_classicQuickAccess);
+    if (m_cornerQuickAccess != nullptr) {
+        fitQuickAccess(*m_cornerQuickAccess);
     }
     // A toolbar without actions offered is hidden, and shown again only if
     // the environment hid it: one the user hid stays hidden (QMainWindow's
@@ -526,6 +528,8 @@ void UiBuilder::buildRibbon() {
         quickAccess->setStyleSheet(
             QStringLiteral("QToolBar { background: transparent; border: none; padding: 0px; }"));
         fillQuickAccess(*quickAccess, m_registry);
+        fitQuickAccess(*quickAccess);
+        m_cornerQuickAccess = quickAccess;
         ribbon->setCornerWidget(quickAccess, Qt::TopLeftCorner);
         quickAccess->installEventFilter(new CornerKeeper(*ribbon, *quickAccess));
     }
@@ -598,7 +602,7 @@ void UiBuilder::buildClassic() {
     quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
     fillQuickAccess(*quickAccess, m_registry);
     fitQuickAccess(*quickAccess);
-    m_classicQuickAccess = quickAccess;
+    m_cornerQuickAccess = quickAccess;
     bar->setCornerWidget(quickAccess, Qt::TopLeftCorner);
     // A window without frame has no title row but this bar: the bar shows
     // the title and leaves room for the window buttons, which stay where
