@@ -1349,3 +1349,24 @@ i rimandi ai documenti che cambia.
     criterio di chiusura della [scheda della 0.8](tappe/0.8-quote-retini-blocchi.md).
     La qualità del codice impegnativo realizzato in fascia media è un'ipotesi
     finché la seconda misura non la conferma.
+- **2026-11-10 — Icone a tratto da 1 px e correzioni della prova manuale
+  (nuovo 0.7.5-P40).** Nella prova manuale della chiusura della 0.7.5
+  ([#647](https://github.com/Matleyx78/tecnigrafo/pull/647)), su Debian sotto
+  Wayland a scala 100%, i comportamenti passano e l'aspetto no: barra di
+  accesso rapido a destra con la cornice del sistema, schede del ribbon più
+  basse di *File*, riquadri dei pannelli a scomparsa che non si allargano,
+  icone spesse e sfocate. Il responsabile decide:
+  - **Tratto da 1 px.** Nelle due griglie, 16 e 32 px, il tratto è 1 px, con
+    le linee orizzontali e verticali sulla mezzeria di un pixel
+    (coordinata `n + 0,5`), così che coprano una riga o una colonna intera
+    di pixel. Sostituisce il tratto dell'[ADR 0040](adr/0040-icone-a-ruoli.md),
+    punto 3 (1,75 a 32 e 1,25 a 16), che resta scritto così com'è: fanno fede
+    questa voce e [ICONE.md](ICONE.md). Il resto dell'ADR 0040 non cambia.
+    Punti, tratteggi e margini seguono, come dice la scheda di P40.
+  - **Un pacchetto solo, subito.** Le quattro correzioni e le icone
+    ridisegnate sono un pacchetto unico,
+    [0.7.5-P40](tappe/0.7.5/P40-correzioni-della-prova-manuale.md) (Claude,
+    forte), anche se va oltre la quindicina di file
+    ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), «Preparare il piano»):
+    le icone contano come un gruppo. La chiusura della 0.7.5 riprende dopo
+    P40, con i punti 2, 4 e 7 della prova manuale ripetuti.
