@@ -160,13 +160,15 @@ creazione di un disegno la cronologia di annullamento si azzera.
 | `SAVEAS` | `Ctrl+Shift+S` | Save As… | Salva il disegno con un nome diverso, che diventa il file corrente |
 | `INSUNITS` | — | — | Visualizza o cambia l'unità di misura del disegno |
 
-Le voci del menu File e le scorciatoie corrispondenti si disattivano mentre un
-altro comando è in corso.
+I pulsanti della barra di accesso rapido, le voci della scheda *File* (o del menu
+*File* classico) e le scorciatoie corrispondenti si disattivano mentre un altro
+comando è in corso.
 
 ### Finestre di dialogo e riga di comando
 
 Nell'interfaccia grafica, quando lanci `NEW`, `OPEN`, `QSAVE` (senza nome di file
-ancora assegnato) o `SAVEAS` dal menu, con le scorciatoie da tastiera oppure
+ancora assegnato) o `SAVEAS` dalla barra di accesso rapido, dalla scheda *File*, dal
+menu classico, dalla pagina *Start*, con le scorciatoie da tastiera oppure
 scrivendo il comando senza argomenti, si apre la consueta finestra di dialogo del
 sistema operativo per scegliere dove salvare o quale file aprire. Se chiudi o
 annulli la finestra di dialogo, il comando si interrompe, esattamente come se
@@ -203,8 +205,9 @@ modifiche (`Discard`) o annullare la chiusura (`Cancel`).
 
 Per salvare il disegno hai a disposizione tre comandi:
 
-- **`QSAVE`** (*Quick Save*): è il comando richiamato da `Ctrl+S` e dalla voce
-  *Save* del menu File. Se il disegno ha già un file associato, salva subito
+- **`QSAVE`** (*Quick Save*): è il comando richiamato da `Ctrl+S`, dal pulsante
+  *Save* nella barra di accesso rapido e dalla voce *Save* della scheda *File*
+  (o del menu classico). Se il disegno ha già un file associato, salva subito
   senza fare domande. Se invece il disegno è nuovo (si chiama ancora
   `Drawing1.cadx`), chiede il nome:
   ```
@@ -329,11 +332,12 @@ può essere annullato con il comando `U` (*Undo*).
 
 ### File recenti
 
-Nell'interfaccia grafica, il menu **File ▸ Recent Files** mostra l'elenco degli
-ultimi nove file aperti o salvati, ordinati a partire dal più recente. Selezionando
-un file dall'elenco, Tecnigrafo avvia l'apertura con `OPEN`. Se un file recente è
-stato spostato o cancellato dal disco, il programma mostra un messaggio di errore
-e rimuove automaticamente la voce dall'elenco.
+Nell'interfaccia grafica, la scheda **File ▸ Recent Files** (e la pagina
+iniziale *Start*) mostra l'elenco degli ultimi nove file aperti o salvati,
+ordinati a partire dal più recente. Selezionando un file dall'elenco, Tecnigrafo
+avvia l'apertura con `OPEN`. Se un file recente è stato spostato o cancellato dal
+disco, il programma mostra un messaggio di errore e rimuove automaticamente la
+voce dall'elenco.
 
 ## Selezione
 
@@ -513,9 +517,9 @@ si applica lo snap.
 
 ### Attivare e scegliere i modi
 
-- `F3`, *Tools → Object Snap* e il pulsante **OSNAP** nella barra di stato
-  attivano o spengono insieme lo snap. Lo storico mostra `<Osnap on>` oppure
-  `<Osnap off>`.
+- `F3`, *Tools → Object Snap* e l'interruttore a icona **OSNAP** nella barra di
+  stato attivano o spengono insieme lo snap. Lo storico mostra `<Osnap on>`
+  oppure `<Osnap off>`.
 - In *Tools → Object Snap Modes* puoi attivare o disattivare separatamente
   i singoli modi, anche quando OSNAP è spento. Spegnere `F3` conserva i modi scelti.
   Se tutti i modi sono disattivati, non c'è alcun aggancio anche con OSNAP acceso.
@@ -550,8 +554,8 @@ per scegliere solo il centro. `F3` spegne tutti gli agganci senza cambiare i mod
 
 ## Orto
 
-`F8`, *Tools → Ortho* e il pulsante **ORTHO** nella barra di stato attivano o
-spengono il vincolo ortogonale. Lo storico mostra `<Ortho on>` oppure
+`F8`, *Tools → Ortho* e l'interruttore a icona **ORTHO** nella barra di stato
+attivano o spengono il vincolo ortogonale. Lo storico mostra `<Ortho on>` oppure
 `<Ortho off>`. All'avvio l'orto è spento; l'impostazione non si conserva alla
 chiusura del programma.
 
@@ -592,7 +596,8 @@ dall'orto rispetto a quel punto. Nella 0.3.0 anche il primo clic veniva
 allineato ([bug #64](https://github.com/Matleyx78/tecnigrafo/issues/64)).
 
 Su alcuni portatili e su macOS `F3` e `F8` possono richiedere `Fn`. Puoi sempre
-usare le voci di *Tools* o i pulsanti OSNAP e ORTHO.
+usare le voci di *Tools* o gli interruttori a icona OSNAP e ORTHO nella barra di
+stato.
 
 ## LINE — linee concatenate
 
@@ -643,6 +648,11 @@ scegli il metodo:
 | due punti | scrivi `2P`, poi i due estremi del diametro |
 | tre punti | scrivi `3P`, poi tre punti sulla circonferenza |
 | tangente, tangente, raggio | scrivi `T` o `Ttr`, indica due oggetti, poi il raggio |
+
+Nella barra multifunzione i cinque metodi sono disponibili direttamente dal menu
+a tendina del pulsante **Circle** nel gruppo *Draw* (e nel menu classico sotto
+*Draw → Circle*): *Center, Radius*; *Center, Diameter*; *2-Point*; *3-Point*;
+*Tan, Tan, Radius*. Il pulsante ricorda l'ultima variante utilizzata.
 
 Il raggio o diametro deve essere positivo: altrimenti compare
 `Value must be positive and nonzero.` e puoi riprovare. In `3P`, punti
@@ -712,6 +722,10 @@ Sono disponibili due metodi:
   punto finale. L’arco va in senso **antiorario** dall’inizio verso la direzione
   centro-fine. Il raggio è la distanza inizio-centro: se l’ultimo punto è a
   un’altra distanza, determina solo la direzione della fine.
+
+Nella barra multifunzione i due metodi corrispondono alle varianti del pulsante
+**Arc** nel gruppo *Draw* (e nel menu classico sotto *Draw → Arc*): *3-Point* e
+*Start, Center, End*. Il pulsante ricorda l'ultima variante utilizzata.
 
 **Esempi:** `A`, `10,0`, `0,10`, `-10,0` disegna il semicerchio superiore di
 raggio 10. `A`, `10,0`, `C`, `0,0`, `0,20` disegna un quarto di cerchio di
@@ -1668,7 +1682,8 @@ Enter new value for POLARANG <90>:
 - Valori $\le 0$ o $> 180$ danno l'errore `Value must be between 0 and 180.` e la domanda resta.
 - Premendo `Invio` a vuoto si conferma l'angolo corrente indicato tra parentesi angolari.
 
-Quando il tracciamento polare è attivo (`F10` o pulsante **POLAR** nella barra di stato),
+Quando il tracciamento polare è attivo (`F10` o l'interruttore a icona **POLAR**
+nella barra di stato),
 il cursore si aggancia a tutte le semirette che formano angoli multipli di questo valore
 a partire dal punto base del comando (0°, 45°, 90°, 135°, 180°, ecc.).
 
@@ -2019,10 +2034,10 @@ di un `TEXT` sono un solo passo per comando, anche se conservate con `Esc`; lo
 stesso vale per i tagli di un `TRIM`, le copie di un `OFFSET` e i raccordi di un
 `FILLET` con *Multiple*.
 
-| Azione | Menu | Tastiera | Riga di comando |
+| Azione | Accesso rapido e Menu | Tastiera | Riga di comando |
 |---|---|---|---|
-| Annulla | *Edit → Undo* | `Ctrl+Z` (`Cmd+Z` su macOS) | `U` o `UNDO` |
-| Ripeti | *Edit → Redo* | `Ctrl+Y` (`Cmd+Y` su macOS), oppure la combinazione standard del sistema, per esempio `Ctrl+Shift+Z` su Linux e `Cmd+Shift+Z` su macOS | `REDO` |
+| Annulla | Barra di accesso rapido, *Edit → Undo* | `Ctrl+Z` (`Cmd+Z` su macOS) | `U` o `UNDO` |
+| Ripeti | Barra di accesso rapido, *Edit → Redo* | `Ctrl+Y` (`Cmd+Y` su macOS), oppure la combinazione standard del sistema, per esempio `Ctrl+Shift+Z` su Linux e `Cmd+Shift+Z` su macOS | `REDO` |
 
 - Le voci del menu dicono che cosa annullano o ripetono, per esempio
   *Undo Polyline* o *Undo Erase*, e sono disattivate quando non c'è nulla da fare.
