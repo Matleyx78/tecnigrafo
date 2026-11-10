@@ -151,17 +151,20 @@ void BuiltinActions::add(ActionRegistry& registry) {
                                          tr("Opens a drawing."), QStringLiteral("OPEN")),
                              QStringLiteral("file-open"))))),
                 keysWith(QKeySequence::Open, {}));
-    addWithKeys(registry,
-                quickAccess(withIcon(commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
-                                                 tr("Saves the drawing."), QStringLiteral("QSAVE")),
-                                     QStringLiteral("file-save"))),
-                keysWith(QKeySequence::Save, {}));
+    // Save and Save As go through the type of the document (docs/tappe/
+    // 0.7.5/P30b): they work in every environment, with a document.
     addWithKeys(
         registry,
-        withIcon(commandSpec(QStringLiteral("file.saveas"), tr("Save &As…"), file,
-                             tr("Saves the drawing with a new name."), QStringLiteral("SAVEAS")),
-                 QStringLiteral("file-saveas")),
-        keysWith(QKeySequence::SaveAs, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)));
+        global(quickAccess(withIcon(commandSpec(QStringLiteral("file.save"), tr("&Save"), file,
+                                                tr("Saves the drawing."), QStringLiteral("QSAVE")),
+                                    QStringLiteral("file-save")))),
+        keysWith(QKeySequence::Save, {}));
+    addWithKeys(registry,
+                global(withIcon(
+                    commandSpec(QStringLiteral("file.saveas"), tr("Save &As…"), file,
+                                tr("Saves the drawing with a new name."), QStringLiteral("SAVEAS")),
+                    QStringLiteral("file-saveas"))),
+                keysWith(QKeySequence::SaveAs, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S)));
     // The Recent Files submenu: MainWindow gives this action its menu and
     // fills it with the run-time actions file.recent.1...
     registry.add(global(anyDocument(makeSpec(QStringLiteral("file.recent"), tr("Recent Files"),

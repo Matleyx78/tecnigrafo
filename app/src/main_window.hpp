@@ -58,9 +58,14 @@ class StartPage;
 /// The window owns a session for each open document (docs/adr/0041, point
 /// 2), shown in a tab of its own, one of them active, or none while the
 /// Start page is (docs/adr/0041, point 9; docs/tappe/0.7.5/P29). The program
-/// opens on the Start page; NEW and OPEN, in the runner of any session or
-/// from the Start page, add a session and activate it (the window is the
-/// host of their documents, cmd::DocumentHost). View, command line,
+/// opens on the Start page; NEW and OPEN typed in the runner of a drawing add
+/// a session and activate it (the window is the host of their documents,
+/// cmd::DocumentHost). New, Open, Save and Save As of the frame (menus,
+/// tabs, Start page, recent files, the question to save when closing) go
+/// through the type of the document (DocumentType::create, open and save,
+/// docs/tappe/0.7.5/P30b): the window shows the dialogs and asks to replace
+/// a file, and runs no command of a type; a script session, which shows no
+/// dialog, runs NEW, OPEN, QSAVE and SAVEAS as typed. View, command line,
 /// the panels Layers and Properties, Undo and Redo, the drawing aids, title
 /// and status follow the active session (activate()); the listener of every
 /// session updates the interface only while that session is active.
@@ -318,6 +323,41 @@ private:
     void showStartMessage(const QString& line);
     /// Runs the action `id` if it is enabled, as its shortcut would.
     void triggerAction(const char* id);
+    /// New of the frame: a document of `type` (DocumentType::create), named
+    /// as NEW names a drawing if it has no file, after the others, made
+    /// active.
+    void newDocument(const DocumentType& type);
+    /// Open of the frame: `path`, or with an empty one the file chosen in the
+    /// dialog, which offers the extensions of every type. A file already open
+    /// is activated; otherwise the type of its extension opens it
+    /// (DocumentType::open), after the others, made active, and it goes to
+    /// the recent files.
+    void openDocument(const QString& path);
+    /// Save of the frame: on the file of `session`, or as Save As if it has
+    /// none. True if saved. Precondition: `session` is active.
+    bool saveDocument(DocumentSession& session);
+    /// Save As of the frame: the dialog chooses the path; a path open in
+    /// another document is refused, before the question to replace a file
+    /// that exists (decision B3); then the type saves (DocumentType::save).
+    /// True if saved. Precondition: `session` is active.
+    bool saveDocumentAs(DocumentSession& session);
+    /// `session` saved by its type as `path`; a file saved goes to the
+    /// recent files.
+    bool saveWithType(DocumentSession& session, SaveMode mode, const QString& path);
+    /// Whether the user replaces the file `path`, which exists.
+    bool confirmReplace(const QString& path);
+    /// The name of a new document without a file, `session`: the name its
+    /// type gave it, with the first number from 1 that no other document
+    /// without a file has ("Drawing2.cadx", as NEW, docs/tappe/0.7.5/P28b).
+    [[nodiscard]] std::string untitledName(const DocumentSession& session) const;
+    /// A session just added by the frame takes the size of a pixel of the
+    /// session `left`, if any, as with NEW, and becomes active.
+    void showAdded(DocumentSession& session, const DocumentSession* left);
+    /// The folder of `path` is where the next dialog starts.
+    void rememberFolder(const QString& path);
+    /// Writes `line` in the history and, with the Start page, on the page:
+    /// the messages of the types (HistoryMessage).
+    [[nodiscard]] HistoryMessage historyMessage();
     /// The runner that the actions with a command and the file dialogs use:
     /// the active session's, or with the Start page a runner of the window
     /// whose document is never shown, so that NEW and OPEN work there too.
@@ -352,7 +392,14 @@ private:
     void populateRecentMenu();
     void openRecentFile(const QString& path);
     [[nodiscard]] QString dialogPath();
-    [[nodiscard]] QString chooseFile(cmd::FilePrompt prompt, const QString& path);
+    /// The file dialog of `prompt`, from `path`, with the extensions of
+    /// `types`; `dialogConfirms`: whether the save dialog itself asks before
+    /// replacing a file (the frame asks after it, decision B3). An empty
+    /// answer means Cancel.
+    [[nodiscard]] QString chooseFile(cmd::FilePrompt prompt, const QString& path,
+                                     const QList<const DocumentType*>& types, bool dialogConfirms);
+    /// The type of the drawing, whose commands ask for files.
+    [[nodiscard]] QList<const DocumentType*> drawingTypes() const;
 
     /// The host of the documents for the runners (cmd::DocumentHost).
     class Host;
@@ -380,7 +427,6 @@ private:
     std::unique_ptr<QSettings> m_settings;
     std::unique_ptr<RecentFiles> m_recentFiles;
     FileDialog m_fileDialog;
-    QString m_pendingRecent;
     QString m_pendingOpen;
     // The actions that wait for the running command to end: those with a
     // command, as typing does.

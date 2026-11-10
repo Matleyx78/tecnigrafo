@@ -13,6 +13,7 @@
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
+#include <QByteArray>
 #include <QCloseEvent>
 #include <QFile>
 #include <QFileInfo>
@@ -31,6 +32,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace tg::app {
@@ -551,6 +553,130 @@ TEST_F(FileMenuTest, OpenOfAFileNamedAsTheUntitledDrawingReadsIt) {
     EXPECT_EQ(window()->activeSession(), window()->sessions().back().get());
     EXPECT_TRUE(window()->runner().documentFile().hasFile());
     EXPECT_FALSE(history().contains(QStringLiteral("is already open")));
+}
+
+/// The bytes of the file `path`; empty if it cannot be read.
+QByteArray contents(const QString& path) {
+    QFile file(path);
+    return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+}
+
+/// While it lives, answers every question box of the window with `choice`,
+/// and records its text.
+class QuestionAnswer {
+public:
+    explicit QuestionAnswer(QMessageBox::StandardButton choice) {
+        QObject::connect(&m_timer, &QTimer::timeout, &m_timer, [this, choice] {
+            auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            if (box != nullptr && box->button(choice) != nullptr) {
+                m_asked.append(box->text());
+                box->button(choice)->click();
+            }
+        });
+        m_timer.start(0);
+    }
+
+    [[nodiscard]] const QStringList& asked() const { return m_asked; }
+
+private:
+    QTimer m_timer;
+    QStringList m_asked;
+};
+
+TEST_F(FileMenuTest, SaveAsOverADrawingOpenElsewhereIsRefusedBeforeTheQuestionToReplace) {
+    // R2 of the revision of the correction (#588): A is a.cadx, B is b.cadx.
+    const QString a = path("a.cadx");
+    line();
+    answers().append(a);
+    action("file.save")->trigger();
+    ASSERT_TRUE(QFileInfo::exists(a));
+    const DocumentSession* first = window()->activeSession();
+    action("file.new")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    ASSERT_NE(window()->activeSession(), first);
+    const QString b = path("b.cadx");
+    line();
+    answers().append(b);
+    action("file.saveas")->trigger();
+    line();
+    ASSERT_EQ(QString::fromStdString(window()->runner().documentFile().name()), b);
+    ASSERT_TRUE(window()->editor().isModified());
+    const QByteArray before = contents(a);
+    ASSERT_FALSE(before.isEmpty());
+    const qsizetype saves = history().count(QStringLiteral("Command: SAVEAS"));
+
+    // From B, a.cadx chosen in the dialog: refused at once, without the
+    // question, once, and nothing is saved.
+    {
+        const QuestionAnswer answer(QMessageBox::No);
+        answers().append(a);
+        action("file.saveas")->trigger();
+        EXPECT_TRUE(answer.asked().isEmpty());
+    }
+    const QString refused =
+        QStringLiteral("Cannot save %1: it is open in another document.").arg(a);
+    EXPECT_EQ(history().split(QLatin1Char('\n')).count(refused), 1);
+    EXPECT_EQ(history().count(QStringLiteral("Command: SAVEAS")), saves);
+    EXPECT_EQ(contents(a), before);
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), b);
+    EXPECT_TRUE(window()->editor().isModified());
+
+    // c.cadx exists and is not open: the question; No saves nothing.
+    const QString c = path("c.cadx");
+    QFile existing(c);
+    ASSERT_TRUE(existing.open(QIODevice::WriteOnly));
+    ASSERT_EQ(existing.write("existing"), 8);
+    existing.close();
+    {
+        const QuestionAnswer answer(QMessageBox::No);
+        answers().append(c);
+        action("file.saveas")->trigger();
+        EXPECT_EQ(answer.asked().size(), 1);
+    }
+    EXPECT_EQ(contents(c), QByteArray("existing"));
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), b);
+    EXPECT_TRUE(window()->editor().isModified());
+    // Yes saves.
+    {
+        const QuestionAnswer answer(QMessageBox::Yes);
+        answers().append(c);
+        action("file.saveas")->trigger();
+        EXPECT_EQ(answer.asked().size(), 1);
+    }
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), c);
+    EXPECT_FALSE(window()->editor().isModified());
+    EXPECT_NE(contents(c), QByteArray("existing"));
+    EXPECT_EQ(recent().first(), c);
+}
+
+TEST_F(FileMenuTest, SaveFromTheMenuKeepsTheVersionOfAnOldDxfAndSaveAsWritesR2018) {
+    // As CurrentDxfPreservesReadVersionAndSaveasWritesR2018 of the commands.
+    const QString old = path("old.dxf");
+    QFile file(old);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write(
+        "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n0\nENDSEC\n"
+        "0\nSECTION\n2\nENTITIES\n0\nENDSEC\n0\nEOF\n");
+    file.close();
+    answers().append(old);
+    action("file.open")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    ASSERT_EQ(QString::fromStdString(window()->runner().documentFile().name()), old);
+    line();
+    action("file.save")->trigger();
+    EXPECT_FALSE(window()->editor().isModified());
+    auto saved = io::readDxf(contents(old).toStdString());
+    ASSERT_TRUE(saved.ok());
+    EXPECT_EQ(saved.value().document.raw().version, "AC1015");
+    EXPECT_EQ(saved.value().document.entityCount(), 1U);
+
+    const QString renamed = path("new.dxf");
+    answers().append(renamed);
+    action("file.saveas")->trigger();
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), renamed);
+    saved = io::readDxf(contents(renamed).toStdString());
+    ASSERT_TRUE(saved.ok());
+    EXPECT_EQ(saved.value().document.raw().version, "AC1032");
 }
 
 }  // namespace
