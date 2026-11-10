@@ -24,21 +24,29 @@
 #include "tg/io/io.hpp"
 
 #include <QAction>
+#include <QApplication>
 #include <QByteArray>
+#include <QComboBox>
 #include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QFile>
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QLineEdit>
 #include <QList>
+#include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPlainTextEdit>
+#include <QPushButton>
 #include <QSettings>
 #include <QString>
 #include <QStringList>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 #include <gtest/gtest.h>
@@ -193,10 +201,11 @@ protected:
         QCoreApplication::setApplicationName(QFileInfo(m_directory.path()).fileName());
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_directory.path());
-        m_window = std::make_unique<MainWindow>(MainWindow::InitialDrawing::Empty, nullptr,
-                                                [this](const MainWindow::Registries& registries) {
-                                                    addTestEnvironmentWith(registries, &m_calls);
-                                                });
+        m_window = std::make_unique<MainWindow>(
+            initialDrawing(), nullptr, [this](const MainWindow::Registries& registries) {
+                addTestEnvironmentWith(registries, &m_calls);
+                addOtherTypes(registries);
+            });
         m_window->setFileDialog([this](cmd::FilePrompt kind, const QString& /*path*/) {
             m_dialogs.append(kind);
             return m_answers.isEmpty() ? QString{} : m_answers.takeFirst();
@@ -204,6 +213,9 @@ protected:
         m_window->show();
         m_window->activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(m_window.get()));
+        if (initialDrawing() == MainWindow::InitialDrawing::None) {
+            return;
+        }
         m_drawing = m_window->activeSession();
         ASSERT_NE(m_drawing, nullptr);
         const DocumentType* type = m_window->documentTypes().find(latin1(kTest));
@@ -241,6 +253,31 @@ protected:
 
     [[nodiscard]] QToolButton* indicator() const {
         return m_window->findChild<QToolButton*>(QStringLiteral("environmentIndicator"));
+    }
+
+    [[nodiscard]] QList<QAction*> openEnvironmentMenu() const {
+        QMenu* menu = indicator()->menu();
+        if (menu == nullptr) {
+            return {};
+        }
+        QList<QAction*> actions;
+        const auto connection = QObject::connect(menu, &QMenu::aboutToShow, menu, [menu, &actions] {
+            actions = menu->actions();
+            QTimer::singleShot(0, menu, &QMenu::close);
+        });
+        events::click(indicator(), Qt::LeftButton, indicator()->rect().center());
+        QCoreApplication::processEvents();
+        QObject::disconnect(connection);
+        return actions;
+    }
+
+    [[nodiscard]] QAction* environmentAction(const QString& name) const {
+        for (QAction* action : openEnvironmentMenu()) {
+            if (action->text() == name) {
+                return action;
+            }
+        }
+        return nullptr;
     }
 
     [[nodiscard]] SARibbonBar* ribbon() const { return m_window->ribbonBar(); }
@@ -329,6 +366,12 @@ protected:
         return file;
     }
 
+    [[nodiscard]] virtual MainWindow::InitialDrawing initialDrawing() const {
+        return MainWindow::InitialDrawing::Empty;
+    }
+
+    virtual void addOtherTypes(const MainWindow::Registries& /*registries*/) {}
+
 private:
     QTemporaryDir m_directory;
     const QString m_oldOrganization{QCoreApplication::organizationName()};
@@ -340,6 +383,53 @@ private:
     QList<cmd::FilePrompt> m_dialogs;
     QStringList m_answers;
     TypeCalls m_calls;
+};
+
+class StartEnvironmentTest : public EnvironmentsTest {
+protected:
+    [[nodiscard]] MainWindow::InitialDrawing initialDrawing() const override {
+        return MainWindow::InitialDrawing::None;
+    }
+};
+
+class SharedEnvironmentTest : public EnvironmentsTest {
+protected:
+    void addOtherTypes(const MainWindow::Registries& registries) override {
+        const QString alternate = QStringLiteral("alternate");
+        DocumentType type = *registries.types.find(latin1(kTest));
+        type.id = alternate;
+        type.name = QStringLiteral("Alternate Type");
+        type.extensions = {QStringLiteral("tgalternate")};
+        type.environments = {QStringLiteral("drawing2d"), latin1(kTest)};
+        const cmd::CommandRegistry* commands = &registries.commands;
+        type.create = [commands, alternate] {
+            return std::make_unique<DocumentSession>(
+                *commands, nullptr, core::Document::newDrawing(), alternate);
+        };
+        registries.types.add(std::move(type));
+    }
+
+    void answerTypeDialog(QDialogButtonBox::StandardButton button) {
+        QTimer::singleShot(0, &window(), [button] {
+            auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            ASSERT_NE(dialog, nullptr);
+            auto* choices = dialog->findChild<QComboBox*>();
+            auto* buttons = dialog->findChild<QDialogButtonBox*>();
+            EXPECT_NE(choices, nullptr);
+            EXPECT_NE(buttons, nullptr);
+            if (choices == nullptr || buttons == nullptr) {
+                dialog->reject();
+                return;
+            }
+            QStringList names;
+            for (int index = 0; index < choices->count(); ++index) {
+                names.append(choices->itemText(index));
+            }
+            EXPECT_EQ(names, (QStringList{QStringLiteral("Test"), QStringLiteral("Alternate Type")}));
+            choices->setCurrentIndex(1);
+            buttons->button(button)->click();
+        });
+    }
 };
 
 TEST(DocumentTypesTest, TheProgramHasTheDrawingInDrawing2d) {
@@ -685,6 +775,132 @@ TEST_F(EnvironmentsTest, TheIndicatorStaysOnTheStartPageAndNamesNoEnvironment) {
     EXPECT_FALSE(indicator()->icon().isNull());
     window().activate(test());
     EXPECT_EQ(indicator()->text(), QStringLiteral("Test"));
+}
+
+TEST_F(EnvironmentsTest, AnUnhostedEnvironmentOpensANewTabAndKeepsTheDrawingCommand) {
+    for (const char* text : {"LINE", "0,0", "10,0", "", "LINE", "20,0"}) {
+        enter(text);
+    }
+    ASSERT_TRUE(drawing().editor().isModified());
+    ASSERT_TRUE(drawing().runner().isActive());
+    const auto actions = openEnvironmentMenu();
+    ASSERT_EQ(actions.size(), 2);
+    EXPECT_EQ(actions[0]->text(), QStringLiteral("Drawing"));
+    EXPECT_TRUE(actions[0]->isChecked());
+    EXPECT_EQ(actions[1]->text(), QStringLiteral("Test"));
+    EXPECT_FALSE(actions[1]->isChecked());
+    EXPECT_TRUE(actions[1]->isEnabled());
+
+    bool askedToSave = false;
+    QTimer saveWatcher;
+    QObject::connect(&saveWatcher, &QTimer::timeout, &window(), [&askedToSave] {
+        if (auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget())) {
+            askedToSave = true;
+            dialog->reject();
+        }
+    });
+    saveWatcher.start();
+    actions[1]->trigger();
+    saveWatcher.stop();
+
+    ASSERT_EQ(window().sessions().size(), 3U);
+    ASSERT_EQ(window().sessions().front().get(), &drawing());
+    ASSERT_EQ(window().sessions()[1].get(), &test());
+    const DocumentSession* created = window().activeSession();
+    ASSERT_EQ(created, window().sessions().back().get());
+    EXPECT_EQ(created->documentType(), latin1(kTest));
+    EXPECT_EQ(created->runner().environment(), kTest);
+    ASSERT_NE(window().activeEnvironment(), nullptr);
+    EXPECT_EQ(window().activeEnvironment()->id, latin1(kTest));
+    EXPECT_TRUE(drawing().editor().isModified());
+    EXPECT_TRUE(drawing().runner().isActive());
+    EXPECT_FALSE(askedToSave);
+    EXPECT_TRUE(dialogs().isEmpty());
+    window().activate(drawing());
+    enter("30,0");
+    enter("");
+    EXPECT_EQ(drawing().document().entityCount(), 2U);
+}
+
+TEST_F(EnvironmentsTest, ChoosingDrawingFromTheTestTabOpensANewDrawing) {
+    window().activate(test());
+    QAction* action = environmentAction(QStringLiteral("Drawing"));
+    ASSERT_NE(action, nullptr);
+    action->trigger();
+    ASSERT_EQ(window().sessions().size(), 3U);
+    const DocumentSession* created = window().activeSession();
+    ASSERT_EQ(created, window().sessions().back().get());
+    EXPECT_EQ(created->documentType(), latin1(DocumentSession::kDrawingType));
+    EXPECT_EQ(created->environment(), QStringLiteral("drawing2d"));
+    EXPECT_TRUE(created->document().isEmpty());
+}
+
+TEST_F(StartEnvironmentTest, TheStartMenuHasNoCheckAndCreatesADocument) {
+    ASSERT_TRUE(window().sessions().empty());
+    ASSERT_EQ(window().activeSession(), nullptr);
+    const auto actions = openEnvironmentMenu();
+    ASSERT_EQ(actions.size(), 2);
+    for (const QAction* action : actions) {
+        EXPECT_TRUE(action->isCheckable());
+        EXPECT_FALSE(action->isChecked());
+    }
+    ASSERT_EQ(actions[1]->text(), QStringLiteral("Test"));
+    actions[1]->trigger();
+    ASSERT_EQ(window().sessions().size(), 1U);
+    ASSERT_EQ(window().activeSession(), window().sessions().front().get());
+    EXPECT_EQ(window().activeSession()->documentType(), latin1(kTest));
+    ASSERT_NE(window().activeEnvironment(), nullptr);
+    EXPECT_EQ(window().activeEnvironment()->id, latin1(kTest));
+}
+
+TEST_F(SharedEnvironmentTest, TheTypeDialogCanCancelOrOpenTheSelectedTypeInTheRequestedEnvironment) {
+    QAction* action = environmentAction(QStringLiteral("Test"));
+    ASSERT_NE(action, nullptr);
+    answerTypeDialog(QDialogButtonBox::Cancel);
+    action->trigger();
+    EXPECT_EQ(window().sessions().size(), 2U);
+    EXPECT_EQ(window().activeSession(), &drawing());
+
+    action = environmentAction(QStringLiteral("Test"));
+    ASSERT_NE(action, nullptr);
+    answerTypeDialog(QDialogButtonBox::Ok);
+    action->trigger();
+    ASSERT_EQ(window().sessions().size(), 3U);
+    const DocumentSession* created = window().activeSession();
+    ASSERT_EQ(created, window().sessions().back().get());
+    EXPECT_EQ(created->documentType(), QStringLiteral("alternate"));
+    EXPECT_EQ(created->environment(), latin1(kTest));
+    EXPECT_EQ(created->runner().environment(), kTest);
+}
+
+TEST_F(SharedEnvironmentTest, TheChosenEnvironmentStaysWithTheTabAndCannotChangeDuringACommand) {
+    const DocumentType* type = window().documentTypes().find(QStringLiteral("alternate"));
+    ASSERT_NE(type, nullptr);
+    auto& session = window().openSession(*type);
+    window().activate(session);
+    ASSERT_EQ(session.environment(), QStringLiteral("drawing2d"));
+
+    enter("LINE");
+    ASSERT_TRUE(session.runner().isActive());
+    QAction* action = environmentAction(QStringLiteral("Test"));
+    ASSERT_NE(action, nullptr);
+    EXPECT_FALSE(action->isEnabled());
+    EXPECT_EQ(session.environment(), QStringLiteral("drawing2d"));
+    events::press(input(), Qt::Key_Escape);
+    ASSERT_FALSE(session.runner().isActive());
+
+    action = environmentAction(QStringLiteral("Test"));
+    ASSERT_NE(action, nullptr);
+    ASSERT_TRUE(action->isEnabled());
+    action->trigger();
+    EXPECT_EQ(window().activeSession(), &session);
+    EXPECT_EQ(window().sessions().size(), 3U);
+    EXPECT_EQ(session.environment(), latin1(kTest));
+    window().activate(drawing());
+    window().activate(session);
+    ASSERT_NE(window().activeEnvironment(), nullptr);
+    EXPECT_EQ(window().activeEnvironment()->id, latin1(kTest));
+    EXPECT_EQ(session.runner().environment(), kTest);
 }
 
 TEST_F(EnvironmentsTest, TheStartPageOffersEveryType) {

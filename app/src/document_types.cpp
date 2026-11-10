@@ -214,6 +214,16 @@ QList<const DocumentType*> DocumentTypeRegistry::list() const {
     return result;
 }
 
+QList<const DocumentType*> DocumentTypeRegistry::hosting(const QString& environment) const {
+    QList<const DocumentType*> result;
+    for (const DocumentType& type : m_types) {
+        if (type.environments.contains(environment)) {
+            result.append(&type);
+        }
+    }
+    return result;
+}
+
 void registerBuiltinDocumentTypes(DocumentTypeRegistry& types, EnvironmentRegistry& environments,
                                   const cmd::CommandRegistry& commands, FileAccessSource files) {
     BuiltinDocumentTypes::add(types, environments, commands, std::move(files));
