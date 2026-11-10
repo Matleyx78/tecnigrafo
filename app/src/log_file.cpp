@@ -63,8 +63,8 @@ static void tgOnFatalSignal(int signalNumber) {
     const int descriptor = g_logDescriptor;
     if (descriptor >= 0) {
         constexpr std::string_view kHeader{"fatal signal; the stack of the crash follows\n"};
-        // write() is async-signal-safe.
-        (void)write(descriptor, kHeader.data(), kHeader.size());
+        // write() is async-signal-safe; nothing is left to do if it fails.
+        [[maybe_unused]] const auto written = write(descriptor, kHeader.data(), kHeader.size());
         std::array<void*, kCrashFrames> frames{};
         // backtrace() and backtrace_symbols_fd() are not in the POSIX list
         // of async-signal-safe functions, but glibc and macOS document them
@@ -97,7 +97,8 @@ void installCrashHandler(std::FILE* stream) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
     action.sa_handler = tgOnFatalSignal;
     (void)sigemptyset(&action.sa_mask);
-    action.sa_flags = SA_ONSTACK | SA_RESETHAND;
+    // SA_RESETHAND is the sign bit on Linux: sa_flags is an int.
+    action.sa_flags = static_cast<int>(static_cast<unsigned int>(SA_ONSTACK | SA_RESETHAND));
     for (const int signalNumber : {SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT}) {
         if (sigaction(signalNumber, &action, nullptr) != 0) {
             return;
