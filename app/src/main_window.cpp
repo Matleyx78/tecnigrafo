@@ -960,7 +960,6 @@ void MainWindow::createStatusBar() {
     m_environmentIndicator->setAutoRaise(true);
     m_environmentIndicator->setFocusPolicy(Qt::NoFocus);
     auto* environmentMenu = new QMenu(m_environmentIndicator);
-    populateEnvironmentMenu(*environmentMenu);
     m_environmentIndicator->setMenu(environmentMenu);
     m_environmentIndicator->setPopupMode(QToolButton::InstantPopup);
     connect(environmentMenu, &QMenu::aboutToShow, this,
