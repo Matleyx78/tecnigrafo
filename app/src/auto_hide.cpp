@@ -701,19 +701,20 @@ void AutoHide::placeOverlay() {
     m_overlay->setGeometry(rect);
     // The handle on the edge towards the drawing area.
     QWidget* handle = m_overlay->handle();
-    constexpr int thickness = kHandleThickness;
     switch (hidden->edge) {
         case Qt::LeftDockWidgetArea:
-            handle->setGeometry(rect.width() - thickness, 0, thickness, rect.height());
+            handle->setGeometry(rect.width() - kHandleThickness, 0, kHandleThickness,
+                                rect.height());
             break;
         case Qt::RightDockWidgetArea:
-            handle->setGeometry(0, 0, thickness, rect.height());
+            handle->setGeometry(0, 0, kHandleThickness, rect.height());
             break;
         case Qt::TopDockWidgetArea:
-            handle->setGeometry(0, rect.height() - thickness, rect.width(), thickness);
+            handle->setGeometry(0, rect.height() - kHandleThickness, rect.width(),
+                                kHandleThickness);
             break;
         case Qt::BottomDockWidgetArea:
-            handle->setGeometry(0, 0, rect.width(), thickness);
+            handle->setGeometry(0, 0, rect.width(), kHandleThickness);
             break;
         default:
             break;
