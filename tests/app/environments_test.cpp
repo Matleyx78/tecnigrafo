@@ -320,7 +320,7 @@ protected:
         line.end = {10.0, 0.0};
         document.add(line);
         const auto bytes = io::writeCadx(document);
-        const QString file = path(name);
+        QString file = path(name);
         QFile out(file);
         if (!bytes.ok() || !out.open(QIODevice::WriteOnly)) {
             return {};
