@@ -2,10 +2,10 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-    <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-        <path id="original" class="esist" d="M 4 12 H 11 V 8"/>
-        <path id="result" class="geo" d="M 4 12 V 5 H 8"/>
-        <path class="cost" d="M 11 6 A 7 7 0 0 0 7 2 M 7 4 V 2 H 9"/>
-        <circle class="pt" cx="4" cy="12" r="1.25" fill="currentColor" stroke="none" data-on="result"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path id="original" class="esist" d="M4.5 11.5 H10.5 V7.5"/>
+        <path id="result" class="geo" d="M4.5 11.5 V5.5 H7.5"/>
+        <path class="cost" d="M10.418 6.514 A6 6 0 0 0 7.587 2.355 M7.5 4.5 V2.5 H9.5"/>
+        <circle class="pt" cx="4.5" cy="11.5" r="1.5" fill="currentColor" stroke="none" data-on="result"/>
     </g>
 </svg>

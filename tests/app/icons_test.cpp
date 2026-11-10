@@ -21,6 +21,7 @@
 #include <QImage>
 #include <QList>
 #include <QPainter>
+#include <QPixmap>
 #include <QRectF>
 #include <QSize>
 #include <QString>
@@ -295,6 +296,66 @@ TEST(IconsTest, SmallSizesUseTheSixteenGridAndLargeOnesTheThirtyTwo) {
         EXPECT_EQ(centreColour(example, 32), tokens.iconPt);
     }
     EXPECT_TRUE(themedIcon(directory.filePath(QStringLiteral("none")), Theme::Light).isNull());
+}
+
+TEST(IconsTest, EverySizeIsDrawnAtThePixelsOfTheDeviceFromTheGridOfItsLogicalSize) {
+    // docs/tappe/0.7.5/P40, point 4: size times device pixel ratio, the
+    // grid chosen from the logical size, the ratio kept on the image.
+    const QTemporaryDir directory;
+    ASSERT_TRUE(directory.isValid());
+    writeSvg(directory, QStringLiteral("both-16.svg"), filledIcon(16, "geo"));
+    writeSvg(directory, QStringLiteral("both-32.svg"), filledIcon(32, "pt"));
+    for (const Theme theme : {Theme::Light, Theme::Dark}) {
+        SCOPED_TRACE(theme == Theme::Dark ? "dark" : "light");
+        const ThemeTokens& tokens = themeTokens(theme);
+        const QIcon both = themedIcon(directory.filePath(QStringLiteral("both")), theme);
+        ASSERT_FALSE(both.isNull());
+        const QPixmap twice = both.pixmap(QSize(16, 16), 2.0);
+        EXPECT_EQ(twice.size(), QSize(32, 32));
+        EXPECT_DOUBLE_EQ(twice.devicePixelRatio(), 2.0);
+        const QImage image = twice.toImage();
+        EXPECT_EQ(image.pixelColor(image.width() / 2, image.height() / 2), tokens.iconGeo)
+            << "a logical 16 is drawn from the -16 file";
+        const QPixmap quarter = both.pixmap(QSize(16, 16), 1.25);
+        EXPECT_EQ(quarter.size(), QSize(20, 20));
+        const QPixmap large = both.pixmap(QSize(32, 32), 1.0);
+        EXPECT_EQ(large.size(), QSize(32, 32));
+        EXPECT_EQ(large.toImage().pixelColor(16, 16), tokens.iconPt);
+    }
+    // The same for an icon of the resources.
+    const QIcon save = themedIcon(QStringLiteral("file-save"), Theme::Light);
+    const QPixmap twice = save.pixmap(QSize(16, 16), 2.0);
+    EXPECT_EQ(twice.size(), QSize(32, 32));
+    EXPECT_DOUBLE_EQ(twice.devicePixelRatio(), 2.0);
+}
+
+TEST(IconsTest, HorizontalLinesCoverWholeRowsOfPixels) {
+    // docs/tappe/0.7.5/P40, point 4: the bottom of the floppy disk of
+    // file-save-16 is the line from x = 3.5 to 12.5 at y = 13.5, one row of
+    // pixels at 100% and two at 200%, and the rows above and below it have
+    // no pixel partly covered, there is no blur. kFull and kEmpty leave room
+    // only for the rounding of the rasteriser.
+    constexpr int kFull = 250;
+    constexpr int kEmpty = 5;
+    const auto whole = [](int alpha) {
+        return alpha >= kFull || alpha <= kEmpty;
+    };
+    const QIcon save = themedIcon(QStringLiteral("file-save"), Theme::Light);
+    ASSERT_FALSE(save.isNull());
+    for (const int scale : {1, 2}) {
+        SCOPED_TRACE(scale);
+        const QImage image = save.pixmap(QSize(16, 16), static_cast<qreal>(scale)).toImage();
+        ASSERT_EQ(image.size(), QSize(16 * scale, 16 * scale));
+        // Columns 4 to 11 of the grid, away from the round corners.
+        for (int x = 4 * scale; x < 12 * scale; ++x) {
+            SCOPED_TRACE(x);
+            for (int y = 13 * scale; y < 14 * scale; ++y) {
+                EXPECT_GE(qAlpha(image.pixel(x, y)), kFull) << "the line, row " << y;
+            }
+            EXPECT_TRUE(whole(qAlpha(image.pixel(x, 13 * scale - 1)))) << "the row above";
+            EXPECT_LE(qAlpha(image.pixel(x, 14 * scale)), kEmpty) << "the row below";
+        }
+    }
 }
 
 TEST(IconsTest, EveryActionHasAnIconWithItsFile) {

@@ -5,16 +5,20 @@ stile, in SVG, con la licenza del progetto, senza forme copiate da altri
 programmi o raccolte, nemmeno ridisegnate ([ADR 0009](adr/0009-interfaccia-grafica.md),
 punto 4). Seguono l'[ADR 0040](adr/0040-icone-a-ruoli.md): ogni elemento ha un
 **ruolo**, che il tema colora, e ogni icona è disegnata su **due griglie**,
-16 e 32 px. Questo documento dà le regole, il modo in cui si colorano, un
-esempio completo, l'elenco delle icone e i passi per aggiungerne una.
+16 e 32 px, con un **tratto da 1 px allineato ai pixel** (decisione del
+2026-11-10 in [DECISIONI.md](DECISIONI.md), che sostituisce il tratto
+dell'ADR 0040, punto 3). Questo documento dà le regole, il modo in cui si
+colorano, un esempio completo, l'elenco delle icone e i passi per aggiungerne
+una.
 
 I file stanno in [`resources/icons/`](../resources/icons/). Li controllano:
 
 - `scripts/icone.py` (nel lavoro «Scripts (Python)» della CI, con i suoi test
-  `scripts/icone_test.py`): le regole di questo documento e la geometria
-  dichiarata, con file e riga di ogni problema;
+  `scripts/icone_test.py`): le regole di questo documento, l'allineamento ai
+  pixel e la geometria dichiarata, con file e riga di ogni problema;
 - `tests/app/icons_test.cpp`: come Qt le disegna (dimensioni, margine,
-  colori dei ruoli, scelta della griglia) e che ogni azione abbia la sua icona.
+  colori dei ruoli, scelta della griglia, misura e densità, righe di pixel
+  pieni) e che ogni azione abbia la sua icona.
 
 ```sh
 scripts/icone.py                   # tutte le icone di resources/icons/
@@ -43,23 +47,25 @@ classe `accent`.
 
 ## Due griglie
 
-| Griglia | Dove | File | Tratto | Margine | Punti (raggio) | Tratteggio, ogni trattino e vuoto almeno |
-|---|---|---|---|---|---|---|
-| 32 px | pulsanti grandi del ribbon, pagina iniziale | `<nome>-32.svg` | 1,75 | 2 px | 2 | 3,5 |
-| 16 px | menu, pulsanti piccoli, barre, barra di stato, pannelli | `<nome>-16.svg` | 1,25 | 1 px | 1,25 | 2,5 |
+| Griglia | Dove | File | Tratto | Linee orizzontali e verticali | Margine | Punti (raggio) | Tratteggio, ogni trattino e vuoto almeno |
+|---|---|---|---|---|---|---|---|
+| 32 px | pulsanti grandi del ribbon, pagina iniziale | `<nome>-32.svg` | 1 | mezzeria in `n + 0,5` | 2 px | 2,5 | 2 |
+| 16 px | menu, pulsanti piccoli, barre, barra di stato, pannelli | `<nome>-16.svg` | 1 | mezzeria in `n + 0,5` | 1 px | 1,5 | 2 |
 
 - La griglia da 16 si **disegna a parte**, non si rimpicciolisce la 32:
-  meno dettagli, punti di almeno 2 px di diametro, tratteggi che restano
-  visibili. Il tratteggio minimo è il doppio del tratto perché le estremità
-  arrotondate allungano ogni trattino di mezzo tratto per parte.
+  meno dettagli, punti di 3 px di diametro, tratteggi che restano visibili.
+  Il tratteggio minimo è il doppio del tratto perché le estremità arrotondate
+  allungano ogni trattino di mezzo tratto per parte.
 - La radice dice la griglia: `width="32" height="32" viewBox="0 0 32 32"` (o
   16). Nel **margine** non c'è inchiostro, tratto compreso: una linea di
   mezzeria sta almeno a margine più mezzo tratto dal bordo.
-- Le dimensioni fino a 24 px si disegnano dal file `-16`, le altre dal `-32`;
-  se un'icona ha uno solo dei due file, quello vale per tutte. Le dimensioni
-  in mezzo e quelle per gli schermi ad alta densità vengono così dalla griglia
-  più vicina. Nel catalogo ogni icona ha entrambe le griglie, tranne
-  `layer-check`, `ui-pin` e `ui-unpin`, usate solo nei pannelli a 16 px.
+- Le dimensioni **logiche** fino a 24 px si disegnano dal file `-16`, le altre
+  dal `-32`; se un'icona ha uno solo dei due file, quello vale per tutte. Ogni
+  dimensione si disegna alla sua misura in pixel del dispositivo, misura per
+  rapporto di densità: a 200% un'icona da 16 si disegna dal file `-16` a 32
+  pixel, con il tratto da 2, e mai riscalando l'immagine di un'altra misura.
+  Nel catalogo ogni icona ha entrambe le griglie, tranne `layer-check`,
+  `ui-pin` e `ui-unpin`, usate solo nei pannelli a 16 px.
 - La griglia da 24 px non è più usata: P22 ha migrato le ultime icone e tolto
   il ripiego su `<nome>.svg`. Il controllo Python e il test Qt rifiutano file senza suffisso 16/32 e
   SVG con dimensioni o `viewBox` da 24 px.
@@ -75,9 +81,32 @@ classe `accent`.
   geometria si scrive in coordinate della griglia, così il controllo la legge
   com'è). Ogni elemento disegnato ha `fill` e `stroke` decisi, su di sé o su un
   gruppo: lasciati al valore predefinito sarebbero neri in ogni tema.
-- **Tratto.** Lo spessore della griglia, estremità e giunzioni arrotondate
+- **Tratto.** 1 px nelle due griglie, estremità e giunzioni arrotondate
   (`stroke-linecap="round"`, `stroke-linejoin="round"`). Di solito tutto
   questo sta sul gruppo `g` che contiene il disegno.
+- **Allineamento ai pixel.** Le regole qui sotto, entro 0,01 px, fanno sì che
+  il tratto da 1 px copra righe e colonne intere di pixel, senza sfumature,
+  a 100% e a ogni scala intera:
+  - ogni segmento orizzontale o verticale con tratto (`line`, `polyline`,
+    `polygon`, `rect`, i tratti di un `path`) ha la mezzeria su un mezzo
+    pixel, `n + 0,5`: la coordinata che non cambia lungo il segmento;
+  - un cerchio o un arco con tratto ha centro più e meno raggio su un mezzo
+    pixel, in x e in y: centro su un mezzo pixel e raggio intero, o centro
+    su un pixel intero e raggio con il mezzo;
+  - un punto ha il centro in `n + 0,5` e il raggio della tabella, così i suoi
+    bordi stanno su pixel interi e il punto sta sulla mezzeria della linea su
+    cui si trova;
+  - un riempimento senza tratto ha i lati orizzontali e verticali su pixel
+    interi;
+  - diagonali e curve restano sfumate: non si allineano.
+
+  Lo spostamento di mezzo pixel si sceglie verso l'interno, perché il margine
+  resti libero. Un cerchio con un punto al centro (`data-center-of`) ha il
+  centro su un mezzo pixel e il raggio intero; i punti che ci stanno sopra
+  sono quelli a distanza intera, come (8, −6) da un centro con raggio 10 o i
+  quattro quadranti. Un cerchio senza punto al centro può stare al centro
+  della griglia (16, 16 o 8, 8) con un raggio che finisce in 0,5, e allora un
+  punto in `n + 0,5` accanto a un quadrante gli sta sopra entro 0,1 px.
 - **Riempimenti.** Solo i **punti**: cerchi pieni (`fill="currentColor"`,
   `stroke="none"`) del raggio della griglia, di classe `pt`.
 - **Ruolo.** Uno per elemento, come detto sopra; un elemento senza ruolo è un
@@ -125,9 +154,12 @@ e `<nome>-32.svg` dalle risorse `:/tg/icons/`) e, prima di disegnarli, ne
 3. scrive sull'elemento stesso il `fill` e lo `stroke` risolti, con il colore
    del gettone del ruolo al posto di `currentColor`. Così un elemento di un
    ruolo dentro un gruppo di un altro ha il colore suo, non quello del gruppo;
-4. disegna il testo riscritto con `QSvgRenderer` a 16, 20 e 24 px dal file
-   `-16`, a 32, 40, 48, 64, 96 e 128 px dal `-32`, e mette le immagini in un
-   `QIcon`.
+4. mette i due testi riscritti, ciascuno nel suo `QSvgRenderer`, in un
+   motore di icona (`QIconEngine`, non esposto): a ogni richiesta il motore
+   disegna l'icona alla misura in pixel del dispositivo, misura per rapporto
+   di densità, dal file della griglia che la misura logica sceglie, e
+   restituisce un'immagine con quel rapporto; le immagini disegnate si
+   conservano per misura e densità (0.7.5-P40).
 
 Il meccanismo usa solo Qt Widgets e Qt SVG, che il programma ha già, e non
 dipende da come Qt SVG tratta i fogli di stile o `currentColor`: il risultato
@@ -140,7 +172,9 @@ ricavano il tema con `themeOf(palette)`.
 La variante *Center, Radius* di `CIRCLE`: la circonferenza che il comando crea
 (`geo`), il raggio di costruzione (`cost`), il centro e il punto che dà il
 raggio (`pt`). Il centro dichiara di essere il centro della circonferenza, il
-punto dichiara di starci sopra (a 45°: 11 · cos 45° ≈ 7,778).
+punto dichiara di starci sopra. Il centro è su un mezzo pixel, quindi il
+raggio è intero, 10, e il punto è a (8, −6) dal centro, proprio sulla
+circonferenza.
 
 `resources/icons/draw-circle-cr-32.svg`:
 
@@ -149,35 +183,38 @@ punto dichiara di starci sopra (a 45°: 11 · cos 45° ≈ 7,778).
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <circle id="circle" class="geo" cx="16" cy="16" r="11"/>
-        <line class="cost" x1="16" y1="16" x2="23.778" y2="8.222"/>
-        <circle class="pt" cx="16" cy="16" r="2" fill="currentColor" stroke="none" data-center-of="circle"/>
-        <circle class="pt" cx="23.778" cy="8.222" r="2" fill="currentColor" stroke="none" data-on="circle"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <circle id="circle" class="geo" cx="15.5" cy="15.5" r="10"/>
+        <line class="cost" x1="15.5" y1="15.5" x2="23.5" y2="9.5"/>
+        <circle class="pt" cx="15.5" cy="15.5" r="2.5" fill="currentColor" stroke="none" data-center-of="circle"/>
+        <circle class="pt" cx="23.5" cy="9.5" r="2.5" fill="currentColor" stroke="none" data-on="circle"/>
     </g>
 </svg>
 ```
 
-`resources/icons/draw-circle-cr-16.svg`, disegnata a parte (raggio 5,5,
-punti di raggio 1,25):
+`resources/icons/draw-circle-cr-16.svg`, disegnata a parte (raggio 5, punti
+di raggio 1,5, il punto a (4, −3) dal centro):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-    <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-        <circle id="circle" class="geo" cx="8" cy="8" r="5.5"/>
-        <line class="cost" x1="8" y1="8" x2="11.889" y2="4.111"/>
-        <circle class="pt" cx="8" cy="8" r="1.25" fill="currentColor" stroke="none" data-center-of="circle"/>
-        <circle class="pt" cx="11.889" cy="4.111" r="1.25" fill="currentColor" stroke="none" data-on="circle"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <circle id="circle" class="geo" cx="7.5" cy="7.5" r="5"/>
+        <line class="cost" x1="7.5" y1="7.5" x2="11.5" y2="4.5"/>
+        <circle class="pt" cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" data-center-of="circle"/>
+        <circle class="pt" cx="11.5" cy="4.5" r="1.5" fill="currentColor" stroke="none" data-on="circle"/>
     </g>
 </svg>
 ```
 
-Se il punto sulla circonferenza fosse a `cx="23" cy="9"`, `scripts/icone.py`
-risponderebbe con la riga del punto:
-`draw-circle-cr-32.svg:9: the point (23, 9) is 1.101 px from 'circle', which it is declared on (tolerance 0.1)`.
+Se il punto sulla circonferenza fosse a `cx="23.5" cy="10.5"`,
+`scripts/icone.py` risponderebbe con la riga del punto:
+`draw-circle-cr-32.svg:9: the point (23.5, 10.5) is 0.566 px from 'circle', which it is declared on (tolerance 0.1)`.
+Con un raggio di 10,5 il centro su un mezzo pixel darebbe bordi su pixel
+interi, e ognuno sarebbe segnalato:
+`draw-circle-cr-32.svg:6: 'circle': the circle (centre (15.5, 15.5), radius 10.5) at x=5 is not on the middle of a pixel (n + 0.5)`.
 
 ## Forme che si ripetono
 
@@ -193,10 +230,18 @@ somigliano alle vecchie:
 - **Fogli e dischetti:** contorno con un angolo tagliato in alto a destra; i
   dettagli interni (piega, finestrella, etichetta) con lo stesso tratto.
 - **Forme inclinate:** a 45° esatti.
+- **Forme simmetriche:** su una griglia pari una linea da 1 px non sta nel
+  mezzo esatto; si sposta di mezzo pixel, sempre dalla stessa parte nelle
+  icone della stessa famiglia (i due lucchetti).
 
 ## Le icone
 
 Tutte le icone seguono le regole a ruoli, con i file `-16` e `-32`.
+0.7.5-P40 le ridisegna tutte con il tratto da 1 px su mezzo pixel, senza
+cambiare forma, ruoli, `id` e `data-on`: le coordinate si spostano di mezzo
+pixel verso l'interno, i punti diventano più grandi (raggio 2,5 e 1,5), i
+cerchi e gli archi con un punto sopra cambiano di poco raggio o centro perché
+i punti stiano sui mezzi pixel.
 La spunta `layer-check` e le puntine `ui-pin` e `ui-unpin` sono usate
 solo nei pannelli e hanno soltanto il file `-16`. La colonna
 **Rifatta** registra la migrazione completata da P19–P22.

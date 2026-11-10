@@ -2,11 +2,11 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path class="esist" d="M 4 4 H 17 L 21 8 V 21 H 4 Z"/>
-        <path class="esist" d="M 8 4 V 9 H 15 V 4"/>
-        <path class="esist" d="M 8 21 V 15 H 17 V 21"/>
-        <path class="pt" d="M 21 11 H 24 L 28 15 V 28 H 11 V 21"/>
-        <path class="pt" d="M 22 21 H 24 V 28"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path class="esist" d="M4.5 4.5 H16.5 L20.5 8.5 V20.5 H4.5 Z"/>
+        <path class="esist" d="M8.5 4.5 V9.5 H15.5 V4.5"/>
+        <path class="esist" d="M8.5 20.5 V15.5 H16.5 V20.5"/>
+        <path class="pt" d="M20.5 11.5 H23.5 L27.5 15.5 V27.5 H11.5 V20.5"/>
+        <path class="pt" d="M21.5 20.5 H23.5 V27.5"/>
     </g>
 </svg>

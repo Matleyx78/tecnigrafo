@@ -15,9 +15,11 @@
 #include <QHBoxLayout>
 #include <QHash>
 #include <QLabel>
+#include <QLayout>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMetaObject>
 #include <QMouseEvent>
 #include <QObject>
 #include <QSize>
@@ -114,6 +116,52 @@ void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
         }
     }
 }
+
+/// SARibbon's compact style gives the controls of its single row the height
+/// of the row less this many pixels, one above and one below
+/// (SARibbonBarLayout::resizeInCompactStyle).
+constexpr int kCompactRowInset = 2;
+
+/// Keeps the quick access bar of the compact ribbon where SARibbon's layout
+/// puts it, first in the row of the tabs (docs/tappe/0.7.5/P40, point 1).
+/// SARibbonBar derives from QMenuBar, which also places its corner widgets
+/// when it is resized or one of them is shown, in the middle of its whole
+/// height: whenever the bar moves, changes size or asks for a new layout,
+/// the ribbon lays itself out again, once the events in progress are over.
+class CornerKeeper final : public QObject {
+public:
+    CornerKeeper(SARibbonBar& ribbon, QWidget& corner) : QObject(&corner), m_ribbon(ribbon) {}
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        switch (event->type()) {
+            case QEvent::Move:
+            case QEvent::Resize:
+            case QEvent::Show:
+            case QEvent::LayoutRequest:
+                if (!m_pending) {
+                    m_pending = true;
+                    QMetaObject::invokeMethod(
+                        this,
+                        [this] {
+                            m_pending = false;
+                            if (QLayout* layout = m_ribbon.layout(); layout != nullptr) {
+                                layout->setGeometry(m_ribbon.rect());
+                            }
+                        },
+                        Qt::QueuedConnection);
+                }
+                break;
+            default:
+                break;
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    SARibbonBar& m_ribbon;
+    bool m_pending{false};
+};
 
 /// The text of the File tab, on the accent colour: the lighter of the two
 /// tokens that text is written in (docs/adr/0039, point 1, area 2, where it
@@ -378,6 +426,14 @@ void UiBuilder::styleRibbon() {
                        "border-radius: 0px; padding: 0px 12px; }"
                        "QToolButton::menu-indicator { image: none; width: 0px; }")
             .arg(tokens.accent.name(QColor::HexRgb), lightText(tokens).name(QColor::HexRgb)));
+    // File and the tabs share their top edge and their height (docs/tappe/
+    // 0.7.5/P40, point 2). The loose style gives both the height of the row
+    // of the tabs. The compact one gives File the height of its single row
+    // less kCompactRowInset, and the tabs the height of their own row,
+    // aligned to its bottom: the row of the tabs takes the height of File.
+    if (!m_ribbon->isLooseStyle()) {
+        m_ribbon->setTabBarHeight(m_ribbon->titleBarHeight() - kCompactRowInset);
+    }
 }
 
 void UiBuilder::buildRibbon() {
@@ -391,11 +447,11 @@ void UiBuilder::buildRibbon() {
     // access bar at the right of the title (SARibbonBarLayout::
     // resizeInCompactStyle). With the frame of the system the title row is
     // the system's, and the loose one would be the empty band above the
-    // tabs: there the compact style keeps the tabs in the first row, with
-    // the quick access bar under the title (point 4).
-    ribbon->setRibbonStyle(m_window.windowButtonBar() != nullptr
-                               ? SARibbonBar::RibbonStyleLooseThreeRow
-                               : SARibbonBar::RibbonStyleCompactThreeRow);
+    // tabs: there the compact style keeps the tabs in the first row (point
+    // 4), and the quick access bar goes before File (below).
+    const bool ownFrame = m_window.windowButtonBar() != nullptr;
+    ribbon->setRibbonStyle(ownFrame ? SARibbonBar::RibbonStyleLooseThreeRow
+                                    : SARibbonBar::RibbonStyleCompactThreeRow);
     m_registry.buildMenus(ribbon);
     m_menuBar = ribbon;
     auto* application = new QMenu(ribbon);
@@ -420,7 +476,24 @@ void UiBuilder::buildRibbon() {
     m_ribbon = ribbon;
     m_applicationButton = button;
     styleRibbon();
-    fillQuickAccess(*ribbon->quickAccessBar(), m_registry);
+    if (ownFrame) {
+        fillQuickAccess(*ribbon->quickAccessBar(), m_registry);
+    } else {
+        // The compact style would put SARibbon's quick access bar at the
+        // right of the tabs; the one of the classic menus takes its place, at
+        // the top left, as the corner widget that the compact style lays out
+        // first, before File (docs/adr/0039, point 1, area 1; docs/tappe/
+        // 0.7.5/P40, point 1).
+        ribbon->quickAccessBar()->hide();
+        auto* quickAccess = new QToolBar(ribbon);
+        quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
+        // On the surface of the row, without the box of the toolbars.
+        quickAccess->setStyleSheet(
+            QStringLiteral("QToolBar { background: transparent; border: none; padding: 0px; }"));
+        fillQuickAccess(*quickAccess, m_registry);
+        ribbon->setCornerWidget(quickAccess, Qt::TopLeftCorner);
+        quickAccess->installEventFilter(new CornerKeeper(*ribbon, *quickAccess));
+    }
 
     // Tabs are made in the order of their first group: the fixed ones of
     // groups() first, the contextual ones of the environments after them

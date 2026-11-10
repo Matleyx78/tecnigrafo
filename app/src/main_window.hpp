@@ -51,9 +51,19 @@ class PropertiesPanel;
 class RecentFiles;
 class StartPage;
 
+/// The frame of the window (docs/adr/0039, point 4).
+enum class WindowFrame : std::uint8_t {
+    Automatic,  ///< The system's under Wayland, the ribbon's own elsewhere.
+    System,     ///< Always the frame of the system.
+    Own,        ///< Always the ribbon's own frame.
+};
+
 /// The window draws its own frame, with the quick access bar in its title
 /// row (docs/adr/0039, point 4), except under Wayland, where it keeps the
-/// frame of the system and the quick access bar goes under the title.
+/// frame of the system and the quick access bar goes at the left of the row
+/// of the tabs, before File (docs/tappe/0.7.5/P40, point 1). The program
+/// always lets the platform decide (WindowFrame::Automatic); the tests and
+/// the gallery choose a frame.
 ///
 /// The window owns a session for each open document (docs/adr/0041, point
 /// 2), shown in a tab of its own, one of them active, or none while the
@@ -116,7 +126,8 @@ public:
     Q_DISABLE_COPY_MOVE(MainWindow)
 
     explicit MainWindow(InitialDrawing drawing = InitialDrawing::Sample, QWidget* parent = nullptr,
-                        const Extension& extension = {});
+                        const Extension& extension = {},
+                        WindowFrame frame = WindowFrame::Automatic);
 
     ~MainWindow() override;
 

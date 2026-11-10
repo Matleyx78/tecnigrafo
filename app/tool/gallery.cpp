@@ -18,7 +18,9 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QTemporaryDir>
+#include <QWidget>
 
+#include <SARibbon.h>
 #include <iostream>
 
 // Keep the font resource in static builds before the first window is created.
@@ -76,7 +78,9 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
     if (!useEmptySettings(settings)) {
         return false;
     }
-    tg::app::MainWindow window;
+    // The ribbon's own frame, as the platform offscreen of the CI gives it.
+    tg::app::MainWindow window(tg::app::MainWindow::InitialDrawing::Sample, nullptr, {},
+                               tg::app::WindowFrame::Own);
     // Size before the first layout, so docks are split for the final size.
     window.resize(kWindowWidth, kWindowHeight);
     window.show();
@@ -123,6 +127,37 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
     return save(&window, QStringLiteral("finestra-classica"));
 }
 
+// The ribbon of a window that keeps the frame of the system, as under
+// Wayland (docs/tappe/0.7.5/P40, point 5): the quick access bar at the left
+// of File, which the tool checks before it saves the image.
+bool captureSystemFrame(tg::app::Theme theme, const QString& suffix, const QDir& output) {
+    const QTemporaryDir settings;
+    if (!useEmptySettings(settings)) {
+        return false;
+    }
+    tg::app::MainWindow window(tg::app::MainWindow::InitialDrawing::Sample, nullptr, {},
+                               tg::app::WindowFrame::System);
+    window.resize(kWindowWidth, kWindowHeight);
+    window.show();
+    window.setTheme(theme);
+    window.setInterface(tg::app::InterfaceKind::Ribbon);
+    // The ribbon lays its corner widget out again once the events in
+    // progress are over (UiBuilder).
+    for (int round = 0; round < 3; ++round) {
+        QApplication::processEvents();
+    }
+    SARibbonBar* ribbon = window.ribbonBar();
+    const QWidget* quick = ribbon != nullptr ? ribbon->cornerWidget(Qt::TopLeftCorner) : nullptr;
+    const QWidget* file = ribbon != nullptr ? ribbon->applicationButton() : nullptr;
+    if (window.windowButtonBar() != nullptr || quick == nullptr || file == nullptr ||
+        !quick->isVisible() || quick->geometry().right() > file->geometry().left()) {
+        std::cerr << "The quick access bar is not at the left of File\n";
+        return false;
+    }
+    return saveWidget(ribbon, output,
+                      QStringLiteral("ribbon-cornice-sistema-") + suffix + QStringLiteral(".png"));
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -157,7 +192,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     return captureTheme(tg::app::Theme::Light, QStringLiteral("chiaro"), output) &&
-                   captureTheme(tg::app::Theme::Dark, QStringLiteral("scuro"), output)
+                   captureTheme(tg::app::Theme::Dark, QStringLiteral("scuro"), output) &&
+                   captureSystemFrame(tg::app::Theme::Light, QStringLiteral("chiaro"), output) &&
+                   captureSystemFrame(tg::app::Theme::Dark, QStringLiteral("scuro"), output)
                ? 0
                : 1;
 }

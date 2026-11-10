@@ -2,10 +2,10 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-    <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-        <circle id="circle" class="geo" cx="8" cy="8" r="5.5"/>
-        <line class="cost" x1="8" y1="8" x2="11.889" y2="4.111"/>
-        <circle class="pt" cx="8" cy="8" r="1.25" fill="currentColor" stroke="none" data-center-of="circle"/>
-        <circle class="pt" cx="11.889" cy="4.111" r="1.25" fill="currentColor" stroke="none" data-on="circle"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <circle id="circle" class="geo" cx="7.5" cy="7.5" r="5"/>
+        <line class="cost" x1="7.5" y1="7.5" x2="11.5" y2="4.5"/>
+        <circle class="pt" cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" data-center-of="circle"/>
+        <circle class="pt" cx="11.5" cy="4.5" r="1.5" fill="currentColor" stroke="none" data-on="circle"/>
     </g>
 </svg>

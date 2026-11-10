@@ -2,9 +2,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path class="geo" d="M7 9H25 M7 16H19"/>
-        <line id="baseline" class="cost" x1="7" y1="23" x2="25" y2="23" stroke-dasharray="3.5 3.5"/>
-        <circle class="pt" cx="7" cy="23" r="2" fill="currentColor" stroke="none" data-on="baseline"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path class="geo" d="M7.5 8.5H24.5 M7.5 15.5H18.5"/>
+        <line id="baseline" class="cost" x1="7.5" y1="22.5" x2="24.5" y2="22.5" stroke-dasharray="3.5 3.5"/>
+        <circle class="pt" cx="7.5" cy="22.5" r="2.5" fill="currentColor" stroke="none" data-on="baseline"/>
     </g>
 </svg>
