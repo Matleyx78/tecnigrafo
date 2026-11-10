@@ -7,11 +7,14 @@
 #include "environments.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/io/file_access.hpp"
 
 #include <QCoreApplication>
 
 #include <cassert>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -41,7 +44,10 @@ bool asksToReplace(const cmd::CommandRunner& runner) {
 
 /// What OPEN does from the menu, in the runner of a new drawing without the
 /// host of the window: OPEN then reads the file into that drawing, with its
-/// messages, instead of adding a document (cmd::NewCommand).
+/// messages, instead of adding a document (cmd::NewCommand). The lines typed
+/// go to `message` as the window wrote them in the history before
+/// docs/tappe/0.7.5/P30b (MainWindow::submitFileText()), then the messages
+/// of OPEN: the last one is the reason of a failure.
 std::unique_ptr<DocumentSession> openDrawing(const cmd::CommandRegistry& commands,
                                              const FileAccessSource& files, const QString& path,
                                              const HistoryMessage& message) {
@@ -49,11 +55,9 @@ std::unique_ptr<DocumentSession> openDrawing(const cmd::CommandRegistry& command
     cmd::CommandRunner& runner = session->runner();
     runner.setMessageSink(
         [&message](const std::string& text) { message(QString::fromStdString(text)); });
-    // Only the messages of OPEN: the document is not shown yet, and with the
-    // Start page they are what the page says (MainWindow::showStartMessage()).
-    runner.submitText(kOpenCommand);
+    typeIn(runner, QString::fromLatin1(kOpenCommand), message);
     if (runner.prompt().file == cmd::FilePrompt::Open) {
-        runner.submitText(path.toStdString());
+        typeIn(runner, path, message);
     }
     if (runner.isActive()) {
         runner.submit(cmd::CancelInput{});
@@ -67,13 +71,52 @@ std::unique_ptr<DocumentSession> openDrawing(const cmd::CommandRegistry& command
     return session;
 }
 
+/// The file access of a save: `files`, and whether the file `name` was
+/// written. QSAVE and SAVEAS end the same way when they write and when they
+/// fail, and a drawing already saved on its own file has the same name and
+/// state after a failed QSAVE: only the write says what happened.
+class SaveWatch final : public io::FileAccess {
+public:
+    SaveWatch(io::FileAccess& files, std::string name) : m_files(files), m_name(std::move(name)) {}
+
+    [[nodiscard]] io::Result<std::string> read(std::string_view name) override {
+        return m_files.read(name);
+    }
+
+    [[nodiscard]] std::optional<io::Error> write(std::string_view name,
+                                                 std::string_view bytes) override {
+        auto error = m_files.write(name, bytes);
+        if (!error && name == m_name) {
+            m_written = true;
+        }
+        return error;
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override { return m_files.exists(name); }
+
+    [[nodiscard]] bool written() const { return m_written; }
+
+private:
+    io::FileAccess& m_files;
+    std::string m_name;
+    bool m_written{false};
+};
+
 /// What QSAVE and SAVEAS do from the menu, with the name chosen in the
 /// dialog and the replacement already confirmed (MainWindow::
-/// handleFilePrompts() before docs/tappe/0.7.5/P30b).
-bool saveDrawing(DocumentSession& session, SaveMode mode, const QString& path,
-                 const HistoryMessage& message) {
+/// handleFilePrompts() before docs/tappe/0.7.5/P30b). The runner of
+/// `session` reads and writes with `files()`, as the window gives it to every
+/// runner: while the command runs it writes through a SaveWatch instead, so
+/// that true means that `path` was written.
+bool saveDrawing(const FileAccessSource& files, DocumentSession& session, SaveMode mode,
+                 const QString& path, const HistoryMessage& message) {
     cmd::CommandRunner& runner = session.runner();
     assert(!runner.isActive() && "a document is saved with no command running");
+    io::FileAccess* const access = files ? files() : nullptr;
+    std::optional<SaveWatch> watch;
+    if (access != nullptr) {
+        runner.setFileAccess(&watch.emplace(*access, path.toStdString()));
+    }
     typeIn(runner, QString::fromLatin1(mode == SaveMode::Save ? kSaveCommand : kSaveAsCommand),
            message);
     if (runner.prompt().file == cmd::FilePrompt::Save) {
@@ -85,10 +128,11 @@ bool saveDrawing(DocumentSession& session, SaveMode mode, const QString& path,
     if (runner.isActive()) {
         // Nothing else is asked; never leave the document halfway.
         runner.submit(cmd::CancelInput{});
-        return false;
     }
+    runner.setFileAccess(access);
     const edit::DocumentFile& file = session.file();
-    return file.hasFile() && file.name() == path.toStdString() && !session.editor().isModified();
+    return watch.has_value() && watch->written() && file.hasFile() &&
+           file.name() == path.toStdString() && !session.editor().isModified();
 }
 
 /// Gives the names of the types and environments their own translation
@@ -116,11 +160,13 @@ void BuiltinDocumentTypes::add(DocumentTypeRegistry& types, EnvironmentRegistry&
     drawing.create = [&commands] {
         return std::make_unique<DocumentSession>(commands, nullptr);
     };
-    drawing.open = [&commands, source = std::move(files)](const QString& path,
-                                                          const HistoryMessage& message) {
-        return openDrawing(commands, source, path, message);
+    drawing.open = [&commands, files](const QString& path, const HistoryMessage& message) {
+        return openDrawing(commands, files, path, message);
     };
-    drawing.save = saveDrawing;
+    drawing.save = [files = std::move(files)](DocumentSession& session, SaveMode mode,
+                                              const QString& path, const HistoryMessage& message) {
+        return saveDrawing(files, session, mode, path, message);
+    };
     types.add(std::move(drawing));
 }
 

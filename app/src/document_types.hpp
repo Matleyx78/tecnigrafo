@@ -97,16 +97,20 @@ using FileAccessSource = std::function<io::FileAccess*()>;
 /// The types and environments of the program: today the drawing in drawing2d
 /// (docs/adr/0041, point 7). `commands` are the commands the runners of the
 /// new documents read: borrowed, they must outlive the documents. The
-/// drawing opens its files with `files`.
+/// drawing opens and saves its files with `files`, the file access the
+/// window gives to every runner.
 ///
 /// The drawing opens and saves as OPEN, QSAVE and SAVEAS do from the menu
 /// (docs/tappe/0.7.5/P30b, point 2). `open` runs OPEN in the runner of the
-/// new document, not shown yet, and its messages (errors of reading,
-/// entities not handled) go to `message`. `save` runs QSAVE (SaveMode::Save)
-/// or SAVEAS (SaveMode::SaveAs) in the runner of the document, answering the
-/// name and the question to replace: the lines typed go to `message`, as the
-/// window writes them in the history, and the messages of QSAVE and SAVEAS
-/// go where the runner of the active session writes them, the same history.
+/// new document, not shown yet: the lines typed (`Command: OPEN`, the name)
+/// and its messages (errors of reading, entities not handled) go to
+/// `message`, the reason of a failure last. `save` runs QSAVE
+/// (SaveMode::Save) or SAVEAS (SaveMode::SaveAs) in the runner of the
+/// document, answering the name and the question to replace: the lines typed
+/// go to `message`, as the window writes them in the history, and the
+/// messages of QSAVE and SAVEAS go where the runner of the active session
+/// writes them, the same history. It succeeds only if the command wrote
+/// `path` with `files`.
 void registerBuiltinDocumentTypes(DocumentTypeRegistry& types, EnvironmentRegistry& environments,
                                   const cmd::CommandRegistry& commands,
                                   FileAccessSource files = {});

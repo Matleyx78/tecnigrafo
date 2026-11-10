@@ -32,11 +32,56 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace tg::app {
 namespace {
+
+/// The bytes of the file `path`; empty if it cannot be read.
+QByteArray contents(const QString& path) {
+    QFile file(path);
+    return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+}
+
+/// While it lives, answers every question box of the window with `choice`,
+/// and records its text.
+class QuestionAnswer {
+public:
+    explicit QuestionAnswer(QMessageBox::StandardButton choice) {
+        QObject::connect(&m_timer, &QTimer::timeout, &m_timer, [this, choice] {
+            auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            if (box != nullptr && box->button(choice) != nullptr) {
+                m_asked.append(box->text());
+                box->button(choice)->click();
+            }
+        });
+        m_timer.start(0);
+    }
+
+    [[nodiscard]] const QStringList& asked() const { return m_asked; }
+
+private:
+    QTimer m_timer;
+    QStringList m_asked;
+};
+
+/// The disk, where nothing can be written.
+class ReadOnlyFiles final : public io::FileAccess {
+public:
+    io::Result<std::string> read(std::string_view name) override { return m_disk.read(name); }
+
+    std::optional<io::Error> write(std::string_view /*name*/, std::string_view /*bytes*/) override {
+        return io::Error{io::Error::Kind::File, 0, "Read-only."};
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override { return m_disk.exists(name); }
+
+private:
+    io::DiskFiles m_disk;
+};
 
 class FileMenuTest : public testing::Test {
 protected:
@@ -317,11 +362,70 @@ TEST_F(FileMenuTest, PickerConfirmationReplacesExistingFileWithoutSecondQuestion
     answers().append(drawing);
     action("file.save")->trigger();
     line();
-    answers().append(drawing);
-    action("file.saveas")->trigger();
+    {
+        // The confirmation is the window's now (docs/tappe/0.7.5/P30b, point
+        // 3): asked once, and SAVEAS does not ask again.
+        const QuestionAnswer answer(QMessageBox::Yes);
+        answers().append(drawing);
+        action("file.saveas")->trigger();
+        EXPECT_EQ(answer.asked().size(), 1);
+    }
     EXPECT_FALSE(window()->runner().isActive());
     EXPECT_FALSE(window()->editor().isModified());
     EXPECT_TRUE(history().contains(QStringLiteral("[Yes/No] <No>: Yes")));
+}
+
+TEST_F(FileMenuTest, SaveAsOnTheDrawingsOwnFileAsksAndNoSavesNothing) {
+    // Point 3 of docs/tappe/0.7.5/P30b: the file exists, so the question,
+    // its own file too.
+    const QString drawing = path("own.cadx");
+    line();
+    answers().append(drawing);
+    action("file.save")->trigger();
+    ASSERT_FALSE(window()->editor().isModified());
+    const QByteArray before = contents(drawing);
+    ASSERT_FALSE(before.isEmpty());
+    line();
+    const qsizetype saves = history().count(QStringLiteral("Command: SAVEAS"));
+    {
+        const QuestionAnswer answer(QMessageBox::No);
+        answers().append(drawing);
+        action("file.saveas")->trigger();
+        EXPECT_EQ(answer.asked().size(), 1);
+    }
+    EXPECT_FALSE(window()->runner().isActive());
+    EXPECT_TRUE(window()->editor().isModified());
+    EXPECT_EQ(contents(drawing), before);
+    EXPECT_EQ(history().count(QStringLiteral("Command: SAVEAS")), saves);
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), drawing);
+}
+
+TEST_F(FileMenuTest, AFailedSaveOfADrawingAlreadySavedIsNoSave) {
+    // A is a.cadx and not modified, B is b.cadx, first in the recent files.
+    const QString a = path("a.cadx");
+    line();
+    answers().append(a);
+    action("file.save")->trigger();
+    const DocumentSession* first = window()->activeSession();
+    action("file.new")->trigger();
+    const QString b = path("b.cadx");
+    answers().append(b);
+    action("file.saveas")->trigger();
+    ASSERT_EQ(recent(), (QStringList{b, a}));
+    answers().append(a);
+    action("file.open")->trigger();
+    ASSERT_EQ(window()->activeSession(), first);
+    ASSERT_FALSE(window()->editor().isModified());
+
+    // The write is refused: QSAVE leaves name and state as they were, and
+    // the save failed, so a.cadx does not come first in the recent files.
+    ReadOnlyFiles files;
+    window()->setFileAccess(&files);
+    action("file.save")->trigger();
+    EXPECT_TRUE(history().contains(QStringLiteral("Cannot save %1: Read-only.").arg(a)));
+    EXPECT_EQ(recent(), (QStringList{b, a}));
+    EXPECT_EQ(QString::fromStdString(window()->runner().documentFile().name()), a);
+    EXPECT_FALSE(window()->editor().isModified());
 }
 
 TEST_F(FileMenuTest, RecentOpenAddsASessionAndRemovesMissingEntries) {
@@ -453,6 +557,40 @@ TEST_F(FileMenuTest, OpenFromTheMenuAddsASessionAndPutsTheFileFirstInRecents) {
     EXPECT_EQ(recent().first(), plan);
 }
 
+TEST_F(FileMenuTest, OpenFromTheMenuWritesTheLinesOfOpenInTheHistory) {
+    // Point 2 of docs/tappe/0.7.5/P30b: the history of the menu's OPEN, with
+    // a drawing active, a file read and a file that cannot be read.
+    const QString plan = path("plan.dxf");
+    writePlan(*window(), plan);
+    const QString broken = path("broken.cadx");
+    QFile file(broken);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write("not a drawing");
+    file.close();
+    line();
+    const auto lines = [this](const QString& text) {
+        return history().split(QLatin1Char('\n')).count(text);
+    };
+    const QString typed = QStringLiteral("Enter name of drawing to open: %1");
+
+    answers().append(plan);
+    action("file.open")->trigger();
+    ASSERT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(lines(QStringLiteral("Command: OPEN")), 1);
+    EXPECT_EQ(lines(typed.arg(plan)), 1);
+
+    answers().append(broken);
+    action("file.open")->trigger();
+    EXPECT_EQ(window()->sessions().size(), 2U);
+    EXPECT_EQ(lines(QStringLiteral("Command: OPEN")), 2);
+    EXPECT_EQ(lines(typed.arg(broken)), 1);
+    // The reason comes after them.
+    const QStringList all = history().split(QLatin1Char('\n'));
+    ASSERT_FALSE(all.isEmpty());
+    EXPECT_TRUE(all.last().startsWith(QStringLiteral("Cannot open %1: ").arg(broken)))
+        << all.last().toStdString();
+}
+
 TEST_F(FileMenuTest, OpenTypedOnTheCommandLineAddsASessionAndPutsTheFileFirstInRecents) {
     const QString plan = path("plan.dxf");
     writePlan(*window(), plan);
@@ -554,34 +692,6 @@ TEST_F(FileMenuTest, OpenOfAFileNamedAsTheUntitledDrawingReadsIt) {
     EXPECT_TRUE(window()->runner().documentFile().hasFile());
     EXPECT_FALSE(history().contains(QStringLiteral("is already open")));
 }
-
-/// The bytes of the file `path`; empty if it cannot be read.
-QByteArray contents(const QString& path) {
-    QFile file(path);
-    return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
-}
-
-/// While it lives, answers every question box of the window with `choice`,
-/// and records its text.
-class QuestionAnswer {
-public:
-    explicit QuestionAnswer(QMessageBox::StandardButton choice) {
-        QObject::connect(&m_timer, &QTimer::timeout, &m_timer, [this, choice] {
-            auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-            if (box != nullptr && box->button(choice) != nullptr) {
-                m_asked.append(box->text());
-                box->button(choice)->click();
-            }
-        });
-        m_timer.start(0);
-    }
-
-    [[nodiscard]] const QStringList& asked() const { return m_asked; }
-
-private:
-    QTimer m_timer;
-    QStringList m_asked;
-};
 
 TEST_F(FileMenuTest, SaveAsOverADrawingOpenElsewhereIsRefusedBeforeTheQuestionToReplace) {
     // R2 of the revision of the correction (#588): A is a.cadx, B is b.cadx.

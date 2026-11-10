@@ -757,10 +757,21 @@ void MainWindow::openDocument(const QString& path) {
         return;
     }
     DocumentSession* const left = m_active;
-    std::unique_ptr<DocumentSession> opened = type->open(absolutePath, historyMessage());
+    // Every line goes to the history, the lines typed by the drawing
+    // included; the Start page says only why the file did not open, the last
+    // line (DocumentType::open), as it said only the messages of OPEN.
+    QString reason;
+    std::unique_ptr<DocumentSession> opened =
+        type->open(absolutePath, [this, &reason](const QString& line) {
+            m_commandLine->appendToHistory(line);
+            reason = line;
+        });
     // The read of the drawing's file access is not a typed OPEN.
     m_pendingOpen.clear();
     if (opened == nullptr) {
+        if (m_active == nullptr && m_startPage != nullptr && !m_destroying && !reason.isEmpty()) {
+            m_startPage->addMessage(reason);
+        }
         return;
     }
     assert(opened->documentType() == type->id && "a type opens documents of its own type");
@@ -791,7 +802,6 @@ bool MainWindow::saveDocumentAs(DocumentSession& session) {
     const QString path = QFileInfo(chosen).absoluteFilePath();
     rememberFolder(path);
     const std::string name = path.toStdString();
-    const bool ownFile = session.file().hasFile() && session.file().name() == name;
     // 2. A file open in another document is refused before the question to
     // replace it, and nothing is written (decision B3).
     const bool openElsewhere = std::ranges::any_of(m_sessions, [&session,
@@ -802,9 +812,10 @@ bool MainWindow::saveDocumentAs(DocumentSession& session) {
         showStartMessage(tr("Cannot save %1: it is open in another document.").arg(path));
         return false;
     }
-    // 3. Replacing a file that exists is confirmed; the document's own file
-    // is no other file, and is saved on as QSAVE does.
-    if (!ownFile && QFileInfo::exists(path) && !confirmReplace(path)) {
+    // 3. Replacing a file that exists is confirmed, the document's own file
+    // too, as the dialog of SAVEAS confirmed it: once, here, and the type
+    // answers the question of the command.
+    if (QFileInfo::exists(path) && !confirmReplace(path)) {
         return false;
     }
     // 4. The type saves.
