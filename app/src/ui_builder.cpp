@@ -149,11 +149,12 @@ protected:
                         this,
                         [this] {
                             m_pending = false;
-                            if (m_ribbon.isNull()) {
+                            SARibbonBar* ribbon = m_ribbon.data();
+                            if (ribbon == nullptr) {
                                 return;
                             }
-                            if (QLayout* layout = m_ribbon->layout(); layout != nullptr) {
-                                layout->setGeometry(m_ribbon->rect());
+                            if (QLayout* layout = ribbon->layout(); layout != nullptr) {
+                                layout->setGeometry(ribbon->rect());
                             }
                         },
                         Qt::QueuedConnection);
