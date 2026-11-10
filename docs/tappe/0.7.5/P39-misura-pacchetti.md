@@ -51,6 +51,10 @@ responsabile ha deciso.
      pull request principale che ne citano il codice (`0.7.5-P24`) nel titolo o
      nella descrizione, distinte in correzioni di riferimenti e correzioni di
      codice;
+   - per le pull request della 0.7.5 senza impegno dichiarato usa la
+     dichiarazione del responsabile del 2026-11-10 (sotto, «Regole della tappa
+     che valgono qui») e la segna come tale, distinta dall'impegno scritto
+     nella pull request;
    - le pagine si chiedono una per una con `&page=N`, come nell'analisi, perché
      il proxy delle sessioni cloud rifiuta `gh api --paginate`; solo API REST;
    - salva i dati scaricati in una cartella che riceve come argomento, e i
@@ -87,6 +91,14 @@ responsabile ha deciso.
 
 - Il documento distingue ciò che è misurato da ciò che è stimato.
 - Scrive l'autore e il modello in testa (LAVORO-IN-PARALLELO.md, «Chi fa cosa»).
+- **Impegno usato nella 0.7.5, dichiarato dal responsabile** il 2026-11-10,
+  perché le pull request non lo scrivevano: per i pacchetti medi Opus 5.5 con
+  impegno medio, o Codex sol con impegno medio; per gli impegnativi Opus 5.5
+  con impegno alto, o Codex sol con impegno alto o astra light. Sonnet 5.5 non
+  si usa più per i pacchetti di lavoro. È un dato dichiarato, non letto dalle
+  pull request: il documento lo dice. Dove il modello scritto nella pull
+  request non torna con questa dichiarazione, vale la pull request, e il
+  documento segnala la differenza.
 - Nessuna regola cambia con questo documento: se la misura suggerisce di
   correggere una condizione, lo scrive come proposta per il responsabile.
 
