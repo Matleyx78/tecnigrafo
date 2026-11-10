@@ -22,6 +22,7 @@
 #include <QMetaObject>
 #include <QMouseEvent>
 #include <QObject>
+#include <QPointer>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -128,9 +129,12 @@ constexpr int kCompactRowInset = 2;
 /// when it is resized or one of them is shown, in the middle of its whole
 /// height: whenever the bar moves, changes size or asks for a new layout,
 /// the ribbon lays itself out again, once the events in progress are over.
+/// The ribbon is watched, not borrowed: UiBuilder::show() takes the bar off
+/// a ribbon it replaces, but a layout asked for while the ribbon goes away
+/// finds nothing to lay out.
 class CornerKeeper final : public QObject {
 public:
-    CornerKeeper(SARibbonBar& ribbon, QWidget& corner) : QObject(&corner), m_ribbon(ribbon) {}
+    CornerKeeper(SARibbonBar& ribbon, QWidget& corner) : QObject(&corner), m_ribbon(&ribbon) {}
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override {
@@ -145,8 +149,11 @@ protected:
                         this,
                         [this] {
                             m_pending = false;
-                            if (QLayout* layout = m_ribbon.layout(); layout != nullptr) {
-                                layout->setGeometry(m_ribbon.rect());
+                            if (m_ribbon.isNull()) {
+                                return;
+                            }
+                            if (QLayout* layout = m_ribbon->layout(); layout != nullptr) {
+                                layout->setGeometry(m_ribbon->rect());
                             }
                         },
                         Qt::QueuedConnection);
@@ -159,7 +166,7 @@ protected:
     }
 
 private:
-    SARibbonBar& m_ribbon;
+    QPointer<SARibbonBar> m_ribbon;
     bool m_pending{false};
 };
 
@@ -225,6 +232,16 @@ void UiBuilder::show(InterfaceKind kind) {
         delete toolbar;
     }
     m_toolbars.clear();
+    if (m_ribbon != nullptr) {
+        // QMainWindow::setMenuBar() hands the corner widgets of the bar it
+        // replaces to the new one: the quick access bar of the compact
+        // ribbon would take the place of the classic one, and outlive the
+        // ribbon it lays out. It goes away with its ribbon.
+        if (QWidget* corner = m_ribbon->cornerWidget(Qt::TopLeftCorner); corner != nullptr) {
+            m_ribbon->setCornerWidget(nullptr, Qt::TopLeftCorner);
+            corner->hide();
+        }
+    }
     m_ribbon = nullptr;
     m_applicationButton = nullptr;
     m_title = nullptr;
