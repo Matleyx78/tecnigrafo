@@ -22,7 +22,6 @@
 #include <QMetaObject>
 #include <QMouseEvent>
 #include <QObject>
-#include <QPointer>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -144,12 +143,15 @@ constexpr int kCompactRowInset = 2;
 /// when it is resized or one of them is shown, in the middle of its whole
 /// height: whenever the bar moves, changes size or asks for a new layout,
 /// the ribbon lays itself out again, once the events in progress are over.
-/// The ribbon is watched, not borrowed: UiBuilder::show() takes the bar off
-/// a ribbon it replaces, but a layout asked for while the ribbon goes away
-/// finds nothing to lay out.
+/// The bar is a child of the ribbon, and the keeper a child of the bar, so
+/// the keeper never outlives its ribbon. UiBuilder::show() takes the bar off
+/// a ribbon it replaces before QMainWindow::setMenuBar() could hand it to
+/// the classic menus; if it ever had another parent, the keeper would lay
+/// nothing out.
 class CornerKeeper final : public QObject {
 public:
-    CornerKeeper(SARibbonBar& ribbon, QWidget& corner) : QObject(&corner), m_ribbon(&ribbon) {}
+    CornerKeeper(SARibbonBar& ribbon, QWidget& corner)
+        : QObject(&corner), m_ribbon(ribbon), m_corner(corner) {}
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override {
@@ -164,12 +166,13 @@ protected:
                         this,
                         [this] {
                             m_pending = false;
-                            SARibbonBar* ribbon = m_ribbon.data();
-                            if (ribbon == nullptr) {
+                            // Only the parent is compared: no other ribbon
+                            // is reached.
+                            if (m_corner.parentWidget() != &m_ribbon) {
                                 return;
                             }
-                            if (QLayout* layout = ribbon->layout(); layout != nullptr) {
-                                layout->setGeometry(ribbon->rect());
+                            if (QLayout* layout = m_ribbon.layout(); layout != nullptr) {
+                                layout->setGeometry(m_ribbon.rect());
                             }
                         },
                         Qt::QueuedConnection);
@@ -182,7 +185,8 @@ protected:
     }
 
 private:
-    QPointer<SARibbonBar> m_ribbon;
+    SARibbonBar& m_ribbon;
+    QWidget& m_corner;
     bool m_pending{false};
 };
 

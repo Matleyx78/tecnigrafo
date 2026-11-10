@@ -42,13 +42,13 @@ namespace {
 // The descriptor of the log, for the handler of the fatal signals, which
 // can only reach state through a global; -1 before the log is open.
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-volatile std::sig_atomic_t g_logDescriptor = -1;
+volatile std::sig_atomic_t logDescriptor = -1;
 
 // The handler runs here: a stack overflow leaves no room on the stack of
 // the program (SA_ONSTACK).
-constexpr std::size_t kSignalStackSize = 64 * 1024;
+constexpr std::size_t kSignalStackSize = std::size_t{64} * 1024;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::array<std::byte, kSignalStackSize> g_signalStack{};
+std::array<std::byte, kSignalStackSize> signalStack{};
 
 constexpr std::size_t kCrashFrames = 64;
 
@@ -61,7 +61,7 @@ extern "C" {
 /// namespace cannot give: it stays static.
 // NOLINTNEXTLINE(misc-use-anonymous-namespace)
 static void tgOnFatalSignal(int signalNumber) {
-    const int descriptor = g_logDescriptor;
+    const int descriptor = logDescriptor;
     if (descriptor >= 0) {
         constexpr std::string_view kHeader{"fatal signal; the stack of the crash follows\n"};
         // write() is async-signal-safe; nothing is left to do if it fails.
@@ -85,10 +85,10 @@ namespace {
 /// Calls tgOnFatalSignal() for the signals of a crash, on a stack of its own;
 /// it writes to `descriptor`, that of the log.
 void installCrashHandler(int descriptor) {
-    g_logDescriptor = descriptor;
+    logDescriptor = descriptor;
     stack_t alternate{};
-    alternate.ss_sp = g_signalStack.data();
-    alternate.ss_size = g_signalStack.size();
+    alternate.ss_sp = signalStack.data();
+    alternate.ss_size = signalStack.size();
     if (sigaltstack(&alternate, nullptr) != 0) {
         return;
     }
@@ -177,12 +177,12 @@ QString startLogFile() {
     if (folder.isEmpty() || !QDir().mkpath(folder)) {
         return {};
     }
-    const QString path = QDir(folder).filePath(QStringLiteral("tecnigrafo.log"));
-    const QString old = path + QStringLiteral(".old");
+    const QString logPath = QDir(folder).filePath(QStringLiteral("tecnigrafo.log"));
+    const QString keptPath = logPath + QStringLiteral(".old");
     // The log of the session before; a log that cannot be kept is lost.
-    (void)QFile::remove(old);
-    (void)QFile::rename(path, old);
-    auto file = std::make_unique<QFile>(path);
+    (void)QFile::remove(keptPath);
+    (void)QFile::rename(logPath, keptPath);
+    auto file = std::make_unique<QFile>(logPath);
     if (!file->open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text |
                     QIODevice::Unbuffered)) {
         return {};
@@ -197,7 +197,7 @@ QString startLogFile() {
                       .arg(QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs),
                            QCoreApplication::applicationVersion(), QLatin1String(qVersion()),
                            QSysInfo::prettyProductName(), QGuiApplication::platformName(),
-                           QDir::toNativeSeparators(path)));
+                           QDir::toNativeSeparators(logPath)));
     }
     const QtMessageHandler previous = qInstallMessageHandler(logMessage);
     {
@@ -207,7 +207,7 @@ QString startLogFile() {
 #ifdef TG_LOG_CRASH_STACK
     installCrashHandler(state.file->handle());
 #endif
-    return path;
+    return state.file->fileName();
 }
 
 }  // namespace tg::app
