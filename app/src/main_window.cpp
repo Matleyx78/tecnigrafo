@@ -1284,7 +1284,8 @@ void MainWindow::updateEnvironmentIndicator() {
 
 void MainWindow::populateEnvironmentMenu(QMenu& menu) {
     menu.clear();
-    const DocumentType* type = m_active != nullptr ? m_types.find(m_active->documentType()) : nullptr;
+    const DocumentType* type =
+        m_active != nullptr ? m_types.find(m_active->documentType()) : nullptr;
     for (const Environment* environment : m_environments.list()) {
         const bool current = environment == activeEnvironment();
         QAction* action = menu.addAction(environment->name);
@@ -1340,8 +1341,7 @@ const DocumentType* MainWindow::chooseDocumentType(const QList<const DocumentTyp
     for (const DocumentType* type : types) {
         choices->addItem(type->name);
     }
-    auto* buttons =
-        new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
     connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
     layout->addWidget(label);

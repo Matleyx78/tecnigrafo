@@ -201,11 +201,11 @@ protected:
         QCoreApplication::setApplicationName(QFileInfo(m_directory.path()).fileName());
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_directory.path());
-        m_window = std::make_unique<MainWindow>(
-            initialDrawing(), nullptr, [this](const MainWindow::Registries& registries) {
-                addTestEnvironmentWith(registries, &m_calls);
-                addOtherTypes(registries);
-            });
+        const auto extend = [this](const MainWindow::Registries& registries) {
+            addTestEnvironmentWith(registries, &m_calls);
+            addOtherTypes(registries);
+        };
+        m_window = std::make_unique<MainWindow>(initialDrawing(), nullptr, extend);
         m_window->setFileDialog([this](cmd::FilePrompt kind, const QString& /*path*/) {
             m_dialogs.append(kind);
             return m_answers.isEmpty() ? QString{} : m_answers.takeFirst();
@@ -395,16 +395,16 @@ protected:
 class SharedEnvironmentTest : public EnvironmentsTest {
 protected:
     void addOtherTypes(const MainWindow::Registries& registries) override {
-        const QString alternate = QStringLiteral("alternate");
+        const QString id = QStringLiteral("alternate");
         DocumentType type = *registries.types.find(latin1(kTest));
-        type.id = alternate;
+        type.id = id;
         type.name = QStringLiteral("Alternate Type");
         type.extensions = {QStringLiteral("tgalternate")};
         type.environments = {QStringLiteral("drawing2d"), latin1(kTest)};
         const cmd::CommandRegistry* commands = &registries.commands;
-        type.create = [commands, alternate] {
-            return std::make_unique<DocumentSession>(
-                *commands, nullptr, core::Document::newDrawing(), alternate);
+        type.create = [commands, id] {
+            auto drawing = core::Document::newDrawing();
+            return std::make_unique<DocumentSession>(*commands, nullptr, std::move(drawing), id);
         };
         registries.types.add(std::move(type));
     }
@@ -425,7 +425,8 @@ protected:
             for (int index = 0; index < choices->count(); ++index) {
                 names.append(choices->itemText(index));
             }
-            EXPECT_EQ(names, (QStringList{QStringLiteral("Test"), QStringLiteral("Alternate Type")}));
+            const QStringList expected{QStringLiteral("Test"), QStringLiteral("Alternate Type")};
+            EXPECT_EQ(names, expected);
             choices->setCurrentIndex(1);
             buttons->button(button)->click();
         });
@@ -853,7 +854,7 @@ TEST_F(StartEnvironmentTest, TheStartMenuHasNoCheckAndCreatesADocument) {
     EXPECT_EQ(window().activeEnvironment()->id, latin1(kTest));
 }
 
-TEST_F(SharedEnvironmentTest, TheTypeDialogCanCancelOrOpenTheSelectedTypeInTheRequestedEnvironment) {
+TEST_F(SharedEnvironmentTest, TheTypeDialogCanCancelOrOpenTheSelectedType) {
     QAction* action = environmentAction(QStringLiteral("Test"));
     ASSERT_NE(action, nullptr);
     answerTypeDialog(QDialogButtonBox::Cancel);
