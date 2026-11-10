@@ -357,6 +357,14 @@ delle schede (`documentTabsIconNames()`).
 | `ui-tab-menu` | pulsante del menu dei documenti aperti | righe dell'elenco (`esist`) e una freccia aperta verso il basso (`pt`) | sì |
 | `doc-drawing` | tipo disegno: icona della scheda di un disegno, del pulsante *Drawing* di *Start* e dei file recenti | foglio con l'angolo piegato (`esist`) e una spezzata disegnata (`geo`) | sì |
 
+Gli ambienti (0.7.5-P30) hanno un'icona ciascuno, nell'indicatore
+dell'ambiente della barra di stato; la nomina l'ambiente
+(`registerBuiltinDocumentTypes()`), con i due file `-16.svg` e `-32.svg`.
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `env-drawing2d` | ambiente `drawing2d`, il disegno 2D: indicatore dell'ambiente | squadra (`esist`) e un segmento tracciato lungo il suo lato inclinato, a 45°, con i due estremi (`geo`, `pt`) | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

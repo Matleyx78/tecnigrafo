@@ -8,7 +8,7 @@
 namespace tg::app {
 
 DocumentSession::DocumentSession(const cmd::CommandRegistry& registry, io::FileAccess* files,
-                                 core::Document document)
-    : m_drawing(registry, files, std::move(document)) {}
+                                 core::Document document, QString documentType)
+    : m_documentType(std::move(documentType)), m_drawing(registry, files, std::move(document)) {}
 
 }  // namespace tg::app

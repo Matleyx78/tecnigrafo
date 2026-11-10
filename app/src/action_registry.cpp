@@ -21,6 +21,11 @@ constexpr QChar kMenuSeparator = QLatin1Char('/');
 
 }  // namespace
 
+bool availableIn(const ActionSpec& spec, const QString& environment) {
+    return spec.environments.isEmpty() ||
+           (!environment.isEmpty() && spec.environments.contains(environment));
+}
+
 ActionRegistry::ActionRegistry(QObject* parent) : QObject(parent) {}
 
 ActionRegistry::~ActionRegistry() {
@@ -136,9 +141,11 @@ QList<QAction*> ActionRegistry::dynamicActions(const QString& prefix, int count)
             ActionSpec spec;
             spec.id = id;
             // An entry of the list works where the list does: without a
-            // document, for the recent files (docs/tappe/0.7.5/P29, B7).
+            // document and in every environment, for the recent files
+            // (docs/tappe/0.7.5/P29 and P30, B7).
             if (const ActionSpec* list = this->spec(prefix); list != nullptr) {
                 spec.requiresDocument = list->requiresDocument;
+                spec.environments = list->environments;
             }
             existing = add(std::move(spec));
         }

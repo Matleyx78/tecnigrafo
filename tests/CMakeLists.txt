@@ -217,6 +217,7 @@ if(TG_BUILD_APP)
         app/document_tabs_test.cpp
         app/dynamic_input_test.cpp
         app/drawing_aids_test.cpp
+        app/environments_test.cpp
         app/drawing_test.cpp
         app/file_menu_test.cpp
         app/icons_test.cpp
