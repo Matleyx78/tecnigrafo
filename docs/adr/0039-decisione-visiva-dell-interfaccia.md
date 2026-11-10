@@ -135,6 +135,17 @@ nei pacchetti, tenendo i nomi; la galleria (punto 7) mostra l'effetto.
   (per esempio sotto Wayland), si tiene la cornice del sistema, con la barra di
   accesso rapido sotto il titolo: la differenza si scrive in questo ADR quando
   il pacchetto l'ha provata.
+- **Esito di 0.7.5-P12** ([#608](https://github.com/Matleyx78/tecnigrafo/pull/608)):
+  con Windows e X11 la finestra è senza cornice, con la barra di accesso rapido
+  nella fascia del titolo. Sotto Wayland (`QGuiApplication::platformName()` che
+  comincia con `wayland`) la finestra tiene la cornice del sistema e SARibbon
+  mette la barra di accesso rapido nella riga delle schede, sotto il titolo:
+  SARibbon 2.9.5 sposta e ridimensiona la finestra senza cornice con
+  `QWidget::move()` e le posizioni globali del puntatore, che Wayland non dà al
+  programma, e non usa `QWindow::startSystemMove()` né `startSystemResize()`.
+  L'esito viene dalla lettura del codice di SARibbon e dalla CI con la
+  piattaforma `offscreen`; lo conferma la prova manuale della tappa 0.7.5
+  (passo 2), su Windows, X11 e Wayland.
 - Nessuna libreria nuova per lo stile.
 
 ### 5. Posto per ambienti e documenti
@@ -199,4 +210,5 @@ Sono funzioni, non grafica, e arrivano con la loro tappa:
   il responsabile lo controlla dalla galleria.
 - Le tappe successive aggiungono gruppi e schede del ribbon nello stesso stile,
   e le loro icone con le regole dell'ADR 0040.
-- Il punto 4 ha una parte da completare dopo la prova di SARibbon con Wayland.
+- Il punto 4 riporta l'esito di 0.7.5-P12 sotto Wayland, da confermare con la
+  prova manuale della tappa 0.7.5.
