@@ -106,6 +106,9 @@ private:
     SARibbonBar* m_ribbon{nullptr};
     QToolButton* m_applicationButton{nullptr};
     QLabel* m_title{nullptr};
+    // The quick access bar of the classic menus, with a size of its own
+    // (fitQuickAccess() in ui_builder.cpp), or nullptr with the ribbon.
+    QToolBar* m_classicQuickAccess{nullptr};
     // The bar of the menus on show (the ribbon is one), its groups by their
     // place ("home/draw") and its tabs by their name ("home"), in order.
     QMenuBar* m_menuBar{nullptr};

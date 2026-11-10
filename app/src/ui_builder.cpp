@@ -118,6 +118,19 @@ void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
     }
 }
 
+/// Gives the quick access bar of the classic menus the size of its contents.
+/// The bar is a corner widget of a QMenuBar, which places it again whenever
+/// the layout of the window asks its height (QMenuBar::heightForWidth()),
+/// and the bar, resized, shows its buttons, which asks the layout of the
+/// window again: without the title row of a window without frame this did
+/// not end (a stack overflow with the frame of the system, the crash of the
+/// manual test of 0.7.5-P40). With a fixed size, placing it again changes
+/// nothing. Hidden actions take no room (QToolBar), so the size follows them.
+void fitQuickAccess(QToolBar& bar) {
+    bar.ensurePolished();
+    bar.setFixedSize(bar.sizeHint());
+}
+
 /// SARibbon's compact style gives the controls of its single row the height
 /// of the row less this many pixels, one above and one below
 /// (SARibbonBarLayout::resizeInCompactStyle).
@@ -246,6 +259,7 @@ void UiBuilder::show(InterfaceKind kind) {
     m_ribbon = nullptr;
     m_applicationButton = nullptr;
     m_title = nullptr;
+    m_classicQuickAccess = nullptr;
     m_menuBar = nullptr;
     m_panels.clear();
     m_categories.clear();
@@ -331,6 +345,9 @@ void UiBuilder::applyEnvironment() {
     }
     if (m_menuBar != nullptr) {
         showMenus(*m_menuBar);
+    }
+    if (m_classicQuickAccess != nullptr) {
+        fitQuickAccess(*m_classicQuickAccess);
     }
     // A toolbar without actions offered is hidden, and shown again only if
     // the environment hid it: one the user hid stays hidden (QMainWindow's
@@ -580,6 +597,8 @@ void UiBuilder::buildClassic() {
     auto* quickAccess = new QToolBar(bar);
     quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
     fillQuickAccess(*quickAccess, m_registry);
+    fitQuickAccess(*quickAccess);
+    m_classicQuickAccess = quickAccess;
     bar->setCornerWidget(quickAccess, Qt::TopLeftCorner);
     // A window without frame has no title row but this bar: the bar shows
     // the title and leaves room for the window buttons, which stay where
