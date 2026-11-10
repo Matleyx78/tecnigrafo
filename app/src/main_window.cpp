@@ -32,7 +32,10 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QColor>
+#include <QComboBox>
 #include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QDockWidget>
 #include <QEvent>
@@ -658,8 +661,8 @@ void MainWindow::triggerAction(const char* id) {
     }
 }
 
-void MainWindow::newDocument(const DocumentType& type) {
-    if (commandRunner().isActive()) {
+void MainWindow::newDocument(const DocumentType& type, const Environment* environment) {
+    if (environment == nullptr && commandRunner().isActive()) {
         return;
     }
     if (m_active == nullptr && m_startPage != nullptr) {
@@ -667,6 +670,10 @@ void MainWindow::newDocument(const DocumentType& type) {
     }
     DocumentSession* const left = m_active;
     DocumentSession& session = openSession(type);
+    if (environment != nullptr) {
+        session.runner().setEnvironment(environment->id.toStdString());
+        session.setEnvironment(environment->id);
+    }
     if (!session.file().hasFile()) {
         session.file().reset(untitledName(session));
     }
@@ -945,14 +952,18 @@ void MainWindow::createStatusBar() {
     m_cursorLabel->setMinimumWidth(260);
     statusBar()->addWidget(m_cursorLabel);
     // The environment of the active session, or none with the Start page
-    // (docs/adr/0041, point 1; decision B9 of docs/DECISIONI.md). It is where
-    // an environment will be chosen (docs/tappe/0.7.5/P31).
+    // (docs/adr/0041, point 1; decision B9 of docs/DECISIONI.md).
     m_environmentIndicator = new QToolButton(this);
     m_environmentIndicator->setObjectName(QStringLiteral("environmentIndicator"));
     m_environmentIndicator->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_environmentIndicator->setIconSize(QSize(kStatusIconSize, kStatusIconSize));
     m_environmentIndicator->setAutoRaise(true);
     m_environmentIndicator->setFocusPolicy(Qt::NoFocus);
+    auto* environmentMenu = new QMenu(m_environmentIndicator);
+    m_environmentIndicator->setMenu(environmentMenu);
+    m_environmentIndicator->setPopupMode(QToolButton::InstantPopup);
+    connect(environmentMenu, &QMenu::aboutToShow, this,
+            [this, environmentMenu] { populateEnvironmentMenu(*environmentMenu); });
     statusBar()->addPermanentWidget(m_environmentIndicator);
     updateEnvironmentIndicator();
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
@@ -1268,6 +1279,76 @@ void MainWindow::updateEnvironmentIndicator() {
         environment->icon.isEmpty() ? QIcon() : themedIcon(environment->icon, m_theme));
     m_environmentIndicator->setText(environment->name);
     m_environmentIndicator->setToolTip(tr("Environment: %1").arg(environment->name));
+}
+
+void MainWindow::populateEnvironmentMenu(QMenu& menu) {
+    menu.clear();
+    const DocumentType* type =
+        m_active != nullptr ? m_types.find(m_active->documentType()) : nullptr;
+    const Environment* active = activeEnvironment();
+    for (const Environment* environment : m_environments.list()) {
+        const bool current = active != nullptr && environment == active;
+        QAction* action = menu.addAction(environment->name);
+        if (!environment->icon.isEmpty()) {
+            action->setIcon(themedIcon(environment->icon, m_theme));
+        }
+        action->setCheckable(true);
+        action->setChecked(current);
+        // A command can be suspended by leaving its tab, but changing its
+        // runner's environment in place requires it to be idle.
+        action->setEnabled(current || type == nullptr ||
+                           !type->environments.contains(environment->id) ||
+                           !m_active->runner().isActive());
+        connect(action, &QAction::triggered, this,
+                [this, environment] { chooseEnvironment(*environment); });
+    }
+}
+
+void MainWindow::chooseEnvironment(const Environment& environment) {
+    if (&environment == activeEnvironment()) {
+        return;
+    }
+    const DocumentType* current =
+        m_active != nullptr ? m_types.find(m_active->documentType()) : nullptr;
+    if (current != nullptr && current->environments.contains(environment.id)) {
+        if (!m_active->runner().isActive()) {
+            m_active->runner().setEnvironment(environment.id.toStdString());
+            m_active->setEnvironment(environment.id);
+            showEnvironment();
+            refresh();
+        }
+        return;
+    }
+
+    const QList<const DocumentType*> types = m_types.hosting(environment.id);
+    if (types.isEmpty()) {
+        return;
+    }
+    const DocumentType* chosen = types.size() == 1 ? types.first() : chooseDocumentType(types);
+    if (chosen != nullptr) {
+        newDocument(*chosen, &environment);
+        refresh();
+    }
+}
+
+const DocumentType* MainWindow::chooseDocumentType(const QList<const DocumentType*>& types) {
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("New Document"));
+    auto* layout = new QVBoxLayout(&dialog);
+    auto* label = new QLabel(tr("Choose a document type:"), &dialog);
+    auto* choices = new QComboBox(&dialog);
+    label->setBuddy(choices);
+    for (const DocumentType* type : types) {
+        choices->addItem(type->name);
+    }
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addWidget(label);
+    layout->addWidget(choices);
+    layout->addWidget(buttons);
+    choices->setFocus();
+    return dialog.exec() == QDialog::Accepted ? types.at(choices->currentIndex()) : nullptr;
 }
 
 QString MainWindow::documentIcon(const QString& type) const {

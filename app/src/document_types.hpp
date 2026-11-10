@@ -83,6 +83,9 @@ public:
     /// Every type, in the order they were added.
     [[nodiscard]] QList<const DocumentType*> list() const;
 
+    /// The types that host this environment, in registry order.
+    [[nodiscard]] QList<const DocumentType*> hosting(const QString& environment) const;
+
 private:
     // A deque keeps the types where they are when others are added, so that
     // the pointers returned by find() stay valid.

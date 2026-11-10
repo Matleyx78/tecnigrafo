@@ -314,6 +314,9 @@ private:
     void showEnvironment();
     /// The icon and the name of the environment in the indicator.
     void updateEnvironmentIndicator();
+    void populateEnvironmentMenu(QMenu& menu);
+    void chooseEnvironment(const Environment& environment);
+    [[nodiscard]] const DocumentType* chooseDocumentType(const QList<const DocumentType*>& types);
     /// The icon of the tab of a document of the type `type`.
     [[nodiscard]] QString documentIcon(const QString& type) const;
     /// The Start page shows the recent files.
@@ -325,8 +328,9 @@ private:
     void triggerAction(const char* id);
     /// New of the frame: a document of `type` (DocumentType::create), named
     /// as NEW names a drawing if it has no file, after the others, made
-    /// active.
-    void newDocument(const DocumentType& type);
+    /// active. An explicit environment starts a new tab even if the
+    /// previous tab has a running command.
+    void newDocument(const DocumentType& type, const Environment* environment = nullptr);
     /// Open of the frame: `path`, or with an empty one the file chosen in the
     /// dialog, which offers the extensions of every type. A file already open
     /// is activated; otherwise the type of its extension opens it
