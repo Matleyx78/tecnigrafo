@@ -1324,15 +1324,17 @@ i rimandi ai documenti che cambia.
     tappa aperta (2026-11-07, «La pausa tra le tappe»): il testo della sezione 6
     dell'analisi lo applica la pull request di documenti della pausa dopo la
     0.7.5, prima del piano della 0.8, che nasce già con le regole nuove.
-  - **Riferimenti divisi per natura.** La forma proposta (un solo pacchetto di
-    riferimenti per le parti di un pacchetto diviso, con un file di attesa per
-    ogni pacchetto di lavoro) va confrontata con l'[ADR
-    0011](adr/0011-modalita-di-controllo.md), punto 7, che lega i riferimenti
-    `RN` a un solo pacchetto `PN`, e con i nomi dei file che
-    `tests/verifica/pending_list.cmake` accetta. Nella pausa il responsabile
-    decide se correggere l'ADR o tenere, per ogni parte, blocchi di riferimenti
-    con la lettera, uno forte con i casi delicati e uno leggero con gli
-    ordinari, che le regole di oggi già permettono.
+  - **Riferimenti divisi per natura: ogni `RN` al suo `PN`.** La forma
+    proposta dall'analisi (un solo pacchetto di riferimenti per tutte le parti
+    di un pacchetto diviso, con un file di attesa per ogni pacchetto di lavoro)
+    non si adotta: l'[ADR 0011](adr/0011-modalita-di-controllo.md), punto 7, e i
+    nomi dei file che `tests/verifica/pending_list.cmake` accetta restano come
+    sono. Ogni parte di un pacchetto diviso ha i suoi riferimenti; dove
+    servono casi delicati e ordinari, si dividono in blocchi con la lettera
+    (per esempio `RT14a` di fascia forte con i casi delicati e `RT14b` leggero
+    con gli ordinari), come le regole di oggi già permettono. La pausa applica
+    il punto «Riferimenti della stessa misura» in questa forma, non in quella
+    della sezione 6 dell'analisi.
   - **Impegno registrato.** Da subito ogni pull request dichiara, nella sezione
     sull'uso dell'IA, strumento, modello e impegno: senza, la misura non si può
     fare (condizione 7). Il responsabile autorizza la riga nel modello di pull
