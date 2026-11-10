@@ -344,9 +344,12 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
               (QList<QAction*>{action("draw.line"), action("draw.pline"), action("draw.circle"),
                                action("draw.arc"), action("draw.text")}));
     // The actions of the program are global, in every environment (decision
-    // B7, docs/tappe/0.7.5/P30); the others are of the drawing.
+    // B7, docs/tappe/0.7.5/P30), and so are Save and Save As, which go through
+    // the type of the document (docs/tappe/0.7.5/P30b); the others are of the
+    // drawing.
     const QStringList global{
         QStringLiteral("file.new"),        QStringLiteral("file.open"),
+        QStringLiteral("file.save"),       QStringLiteral("file.saveas"),
         QStringLiteral("file.recent"),     QStringLiteral("file.separator-quit"),
         QStringLiteral("file.quit"),       QStringLiteral("edit.undo"),
         QStringLiteral("edit.redo"),       QStringLiteral("tools.settings"),

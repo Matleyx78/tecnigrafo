@@ -276,7 +276,7 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     cmd::registerBuiltinCommands(m_registry);
     // The types and environments of the program (docs/adr/0041, point 7);
     // the extension adds its own with the actions (createMenus()).
-    registerBuiltinDocumentTypes(m_types, m_environments, m_registry);
+    registerBuiltinDocumentTypes(m_types, m_environments, m_registry, [this] { return m_files; });
     // The program as distributed does not check descriptions; --script turns
     // the check on (docs/adr/0026, point 3, and setScriptMode()): the empty
     // function of m_descriptionCheck.
@@ -394,6 +394,38 @@ void MainWindow::createMenus(const Extension& extension) {
         }
     }
 
+    // The file actions go through the types of document (docs/tappe/0.7.5/
+    // P30b): the window shows the dialogs, the type creates, opens and
+    // saves. A script session shows no dialog: there they run their
+    // commands as typed, as before.
+    const auto fileAction = [this](const QString& id) -> std::function<void()> {
+        if (id == QLatin1String("file.new")) {
+            return [this] {
+                newDocument(*m_types.list().first());
+            };
+        }
+        if (id == QLatin1String("file.open")) {
+            return [this] {
+                openDocument(QString{});
+            };
+        }
+        if (id == QLatin1String("file.save")) {
+            return [this] {
+                if (m_active != nullptr) {
+                    saveDocument(*m_active);
+                }
+            };
+        }
+        if (id == QLatin1String("file.saveas")) {
+            return [this] {
+                if (m_active != nullptr) {
+                    saveDocumentAs(*m_active);
+                }
+            };
+        }
+        return {};
+    };
+
     // Actions with a command run it as if typed in the command line, which
     // shows it, then give it their responses; like typing, they wait for the
     // running command to end. An action with variants runs the one used
@@ -404,6 +436,19 @@ void MainWindow::createMenus(const Extension& extension) {
             continue;
         }
         m_idleActions.append(action);
+        if (std::function<void()> viaType = fileAction(spec->id)) {
+            connect(action, &QAction::triggered, this,
+                    [this, frame = std::move(viaType), command = spec->command,
+                     responses = spec->responses] {
+                        if (m_scriptMode) {
+                            startCommand(command, responses);
+                        } else {
+                            frame();
+                        }
+                        refresh();
+                    });
+            continue;
+        }
         if (!m_actions->variants(spec->id).isEmpty()) {
             connect(action, &QAction::triggered, this,
                     [this, id = spec->id] { m_actions->currentVariant(id)->trigger(); });
@@ -590,18 +635,16 @@ void MainWindow::connectDocumentTabs() {
     connect(m_documentTabs, &DocumentTabs::newRequested, this,
             [this] { triggerAction("file.new"); });
     connect(m_startPage, &StartPage::newRequested, this, [this](const QString& id) {
-        // The first type, the drawing, is NEW's, as file.new and `+`; the
-        // others are made by their type (opening and saving through the
-        // type are docs/tappe/0.7.5/P30b).
+        // The first type is the one of file.new and `+`, as its action makes
+        // it; the others are made by their type the same way.
         const QList<const DocumentType*> types = m_types.list();
         const DocumentType* type = m_types.find(id);
         if (type == nullptr || types.isEmpty() || type == types.first()) {
             triggerAction("file.new");
             return;
         }
-        if (!commandRunner().isActive()) {
-            activate(openSession(*type));
-        }
+        newDocument(*type);
+        refresh();
     });
     connect(m_startPage, &StartPage::openRequested, this, [this] { triggerAction("file.open"); });
     connect(m_startPage, &StartPage::recentRequested, this, &MainWindow::openRecentFile);
@@ -613,6 +656,193 @@ void MainWindow::triggerAction(const char* id) {
     if (action->isEnabled()) {
         action->trigger();
     }
+}
+
+void MainWindow::newDocument(const DocumentType& type) {
+    if (commandRunner().isActive()) {
+        return;
+    }
+    if (m_active == nullptr && m_startPage != nullptr) {
+        m_startPage->clearMessages();
+    }
+    DocumentSession* const left = m_active;
+    DocumentSession& session = openSession(type);
+    if (!session.file().hasFile()) {
+        session.file().reset(untitledName(session));
+    }
+    showAdded(session, left);
+}
+
+std::string MainWindow::untitledName(const DocumentSession& session) const {
+    // "Drawing1.cadx": the stem without its number, then the extension.
+    const QFileInfo given(QString::fromStdString(session.file().name()));
+    QString stem = given.completeBaseName();
+    while (!stem.isEmpty() && stem.back().isDigit()) {
+        stem.chop(1);
+    }
+    const QString suffix =
+        given.suffix().isEmpty() ? QString{} : QString(QLatin1Char('.') + given.suffix());
+    std::vector<std::string> taken;
+    for (const auto& other : m_sessions) {
+        if (other.get() != &session && !other->file().hasFile()) {
+            taken.push_back(other->file().name());
+        }
+    }
+    for (int number = 1;; ++number) {
+        std::string name = (stem + QString::number(number) + suffix).toStdString();
+        if (std::ranges::find(taken, name) == taken.end()) {
+            return name;
+        }
+    }
+}
+
+void MainWindow::showAdded(DocumentSession& session, const DocumentSession* left) {
+    if (left != nullptr) {
+        session.runner().setPixelSize(left->runner().pixelSize());
+    }
+    activate(session);
+}
+
+HistoryMessage MainWindow::historyMessage() {
+    return [this](const QString& line) {
+        showStartMessage(line);
+    };
+}
+
+void MainWindow::rememberFolder(const QString& path) {
+    ensureRecentFiles();
+    m_settings->setValue(QStringLiteral("lastFileDirectory"), QFileInfo(path).absolutePath());
+}
+
+void MainWindow::openDocument(const QString& path) {
+    if (commandRunner().isActive()) {
+        return;
+    }
+    if (m_active == nullptr && m_startPage != nullptr) {
+        m_startPage->clearMessages();
+    }
+    const QString chosen =
+        path.isEmpty() ? chooseFile(cmd::FilePrompt::Open, dialogPath(), m_types.list(), true)
+                       : path;
+    if (chosen.isEmpty()) {
+        return;
+    }
+    const QString absolutePath = QFileInfo(chosen).absoluteFilePath();
+    rememberFolder(absolutePath);
+    // A file is open in one document only (decision B3): compared as
+    // cmd::DocumentHost::findOpen() does, as written.
+    const std::string name = absolutePath.toStdString();
+    for (const auto& session : m_sessions) {
+        if (session->file().hasFile() && session->file().name() == name) {
+            showStartMessage(tr("%1 is already open.").arg(absolutePath));
+            activate(*session);
+            return;
+        }
+    }
+    const DocumentType* type = m_types.findByExtension(QFileInfo(absolutePath).suffix());
+    if (type == nullptr) {
+        // ".cadx and .dxf", as OPEN says with the drawing alone.
+        QStringList extensions;
+        for (const DocumentType* known : m_types.list()) {
+            for (const QString& extension : known->extensions) {
+                extensions.append(QLatin1Char('.') + extension);
+            }
+        }
+        const QString last = extensions.takeLast();
+        const QString listed =
+            extensions.isEmpty() ? last
+                                 : tr("%1 and %2").arg(extensions.join(QStringLiteral(", ")), last);
+        showStartMessage(
+            tr("Cannot open %1: only %2 files are supported.").arg(absolutePath, listed));
+        return;
+    }
+    DocumentSession* const left = m_active;
+    // Every line goes to the history, the lines typed by the drawing
+    // included; the Start page says only why the file did not open, the last
+    // line (DocumentType::open), as it said only the messages of OPEN.
+    QString reason;
+    std::unique_ptr<DocumentSession> opened =
+        type->open(absolutePath, [this, &reason](const QString& line) {
+            m_commandLine->appendToHistory(line);
+            reason = line;
+        });
+    // The read of the drawing's file access is not a typed OPEN.
+    m_pendingOpen.clear();
+    if (opened == nullptr) {
+        if (m_active == nullptr && m_startPage != nullptr && !m_destroying && !reason.isEmpty()) {
+            m_startPage->addMessage(reason);
+        }
+        return;
+    }
+    assert(opened->documentType() == type->id && "a type opens documents of its own type");
+    DocumentSession& session = adoptSession(std::move(opened));
+    showAdded(session, left);
+    addRecentFile(absolutePath);
+}
+
+bool MainWindow::saveDocument(DocumentSession& session) {
+    if (!session.file().hasFile()) {
+        return saveDocumentAs(session);
+    }
+    return saveWithType(session, SaveMode::Save, QString::fromStdString(session.file().name()));
+}
+
+bool MainWindow::saveDocumentAs(DocumentSession& session) {
+    assert(&session == m_active && "the document saved is the one shown");
+    const DocumentType* type = m_types.find(session.documentType());
+    assert(type != nullptr && "a session of a type not registered");
+    if (m_scriptMode || type == nullptr) {
+        return false;
+    }
+    // 1. The path, without asking yet whether to replace a file.
+    const QString chosen = chooseFile(cmd::FilePrompt::Save, dialogPath(), {type}, false);
+    if (chosen.isEmpty()) {
+        return false;
+    }
+    const QString path = QFileInfo(chosen).absoluteFilePath();
+    rememberFolder(path);
+    const std::string name = path.toStdString();
+    // 2. A file open in another document is refused before the question to
+    // replace it, and nothing is written (decision B3).
+    const bool openElsewhere = std::ranges::any_of(m_sessions, [&session,
+                                                                &name](const auto& other) {
+        return other.get() != &session && other->file().hasFile() && other->file().name() == name;
+    });
+    if (openElsewhere) {
+        showStartMessage(tr("Cannot save %1: it is open in another document.").arg(path));
+        return false;
+    }
+    // 3. Replacing a file that exists is confirmed, the document's own file
+    // too, as the dialog of SAVEAS confirmed it: once, here, and the type
+    // answers the question of the command.
+    if (QFileInfo::exists(path) && !confirmReplace(path)) {
+        return false;
+    }
+    // 4. The type saves.
+    return saveWithType(session, SaveMode::SaveAs, path);
+}
+
+bool MainWindow::saveWithType(DocumentSession& session, SaveMode mode, const QString& path) {
+    assert(&session == m_active && "the document saved is the one shown");
+    const DocumentType* type = m_types.find(session.documentType());
+    assert(type != nullptr && "a session of a type not registered");
+    if (type == nullptr) {
+        return false;
+    }
+    const bool saved = type->save(session, mode, path, historyMessage());
+    if (saved) {
+        addRecentFile(path);
+    }
+    refresh();
+    return saved;
+}
+
+bool MainWindow::confirmReplace(const QString& path) {
+    const auto choice = QMessageBox::question(
+        this, tr("Tecnigrafo"),
+        tr("%1 already exists.\nDo you want to replace it?").arg(QFileInfo(path).fileName()),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    return choice == QMessageBox::Yes;
 }
 
 void MainWindow::setSnapModes(const core::SnapModes& modes) {
@@ -1334,9 +1564,7 @@ void MainWindow::openRecentFile(const QString& path) {
         refreshStartPage();
         return;
     }
-    // Handed to the question for the file, instead of the dialog.
-    m_pendingRecent = path;
-    submitFileText(QStringLiteral("OPEN"));
+    openDocument(path);
     refresh();
 }
 
@@ -1350,21 +1578,47 @@ QString MainWindow::dialogPath() {
     return QDir(folder).filePath(documentName());
 }
 
-QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path) {
+QList<const DocumentType*> MainWindow::drawingTypes() const {
+    const DocumentType* drawing = m_types.find(QString::fromLatin1(DocumentSession::kDrawingType));
+    assert(drawing != nullptr && "the drawing is a built-in type");
+    return {drawing};
+}
+
+QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path,
+                               const QList<const DocumentType*>& types, bool dialogConfirms) {
     if (m_fileDialog) {
         return m_fileDialog(prompt, path);
     }
-    const QString filters = tr("Tecnigrafo drawing (*.cadx);;DXF (*.dxf)");
-    if (prompt == cmd::FilePrompt::Open) {
-        return QFileDialog::getOpenFileName(this, tr("Open drawing"), path, filters);
+    assert(!types.isEmpty() && "a dialog offers the files of a type at least");
+    // One filter for each extension, the first one named after its type:
+    // "Tecnigrafo drawing (*.cadx);;DXF (*.dxf)" with the drawing.
+    QStringList filters;
+    QStringList suffixes;
+    for (const DocumentType* type : types) {
+        for (const QString& extension : type->extensions) {
+            filters.append(extension == type->extensions.first()
+                               ? tr("Tecnigrafo %1 (*.%2)").arg(type->name.toLower(), extension)
+                               : QStringLiteral("%1 (*.%2)").arg(extension.toUpper(), extension));
+            suffixes.append(extension);
+        }
     }
-    QFileDialog dialog(this, tr("Save drawing"), path, filters);
+    const QString filter = filters.join(QStringLiteral(";;"));
+    if (prompt == cmd::FilePrompt::Open) {
+        const QString title =
+            types.size() == 1 ? tr("Open %1").arg(types.first()->name.toLower()) : tr("Open");
+        return QFileDialog::getOpenFileName(this, title, path, filter);
+    }
+    QFileDialog dialog(this, tr("Save %1").arg(types.first()->name.toLower()), path, filter);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setDefaultSuffix(QStringLiteral("cadx"));
-    connect(&dialog, &QFileDialog::filterSelected, &dialog, [&dialog](const QString& filter) {
-        dialog.setDefaultSuffix(filter.contains(QStringLiteral("*.dxf")) ? QStringLiteral("dxf")
-                                                                         : QStringLiteral("cadx"));
-    });
+    dialog.setOption(QFileDialog::DontConfirmOverwrite, !dialogConfirms);
+    dialog.setDefaultSuffix(suffixes.first());
+    connect(&dialog, &QFileDialog::filterSelected, &dialog,
+            [&dialog, filters, suffixes](const QString& selected) {
+                const qsizetype index = filters.indexOf(selected);
+                if (index >= 0) {
+                    dialog.setDefaultSuffix(suffixes[index]);
+                }
+            });
     return dialog.exec() == QDialog::Accepted ? dialog.selectedFiles().value(0) : QString{};
 }
 
@@ -1379,18 +1633,15 @@ void MainWindow::handleFilePrompts() {
     cmd::CommandRunner& runner = commandRunner();
     while (runner.prompt().file != cmd::FilePrompt::None) {
         const cmd::FilePrompt kind = runner.prompt().file;
-        const bool recent = kind == cmd::FilePrompt::Open && !m_pendingRecent.isEmpty();
-        const QString path =
-            recent ? std::exchange(m_pendingRecent, {}) : chooseFile(kind, dialogPath());
+        // Only the commands of the drawing ask for files; the dialog itself
+        // confirms replacing one, as before.
+        const QString path = chooseFile(kind, dialogPath(), drawingTypes(), true);
         if (path.isEmpty()) {
-            m_pendingRecent.clear();
             runner.submit(cmd::CancelInput{});
             break;
         }
         const QString absolutePath = QFileInfo(path).absoluteFilePath();
-        ensureRecentFiles();
-        m_settings->setValue(QStringLiteral("lastFileDirectory"),
-                             QFileInfo(absolutePath).absolutePath());
+        rememberFolder(absolutePath);
         submitFileText(absolutePath);
         // The picker already confirmed replacement. Only answer this
         // two-keyword question.
@@ -1399,9 +1650,6 @@ void MainWindow::handleFilePrompts() {
             next.keywords == std::vector<cmd::Keyword>{{"Yes", "Y"}, {"No", "N"}}) {
             submitFileText(QStringLiteral("Yes"));
         }
-    }
-    if (!runner.isActive()) {
-        m_pendingRecent.clear();
     }
     m_commandLine->refreshPrompt();
 }
@@ -1448,9 +1696,13 @@ bool MainWindow::confirmClose(DocumentSession& session) {
         return false;
     }
     if (choice == QMessageBox::Save) {
-        submitFileText(QStringLiteral("QSAVE"));
-        refresh();
-        return !session.editor().isModified();
+        // A script session shows no dialog: QSAVE as typed, as before.
+        if (m_scriptMode) {
+            submitFileText(QStringLiteral("QSAVE"));
+            refresh();
+            return !session.editor().isModified();
+        }
+        return saveDocument(session);
     }
     return true;
 }

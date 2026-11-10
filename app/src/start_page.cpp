@@ -85,7 +85,8 @@ StartPage::StartPage(QWidget* parent)
     m_newRow->addStretch(1);
     content->addLayout(m_newRow);
 
-    // What OPEN and the recent files say, under New and Open….
+    // What opening a file and the recent files say (the types of document,
+    // docs/tappe/0.7.5/P30b), under New and Open….
     m_messages->setObjectName(QStringLiteral("startMessages"));
     m_messages->setWordWrap(true);
     m_messages->setTextFormat(Qt::PlainText);

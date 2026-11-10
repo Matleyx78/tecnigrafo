@@ -4,7 +4,8 @@
 // The active environment and the registries of the types of document
 // (docs/adr/0041, points 1, 6 and 7; docs/tappe/0.7.5/P30), shown with an
 // environment and a type of document that exist only here: module app knows
-// nothing of them.
+// nothing of them. The type of the test opens and saves files of its own,
+// through the frame of the window (docs/tappe/0.7.5/P30b).
 
 #include "environments.hpp"
 
@@ -20,9 +21,12 @@
 #include "tg/cmd/command_registry.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/line.hpp"
+#include "tg/io/io.hpp"
 
 #include <QAction>
+#include <QByteArray>
 #include <QCoreApplication>
+#include <QFile>
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QKeySequence>
@@ -53,6 +57,9 @@ constexpr const char* kTest = "test";
 
 /// The extension of the test files, which only the type of the test opens.
 constexpr const char* kTestExtension = "tgtest";
+
+/// What the type of the test writes in its files, and reads back.
+constexpr const char* kTestContents = "a document of the test\n";
 
 /// The action and the command of the environment of the test.
 constexpr const char* kTestAction = "test.draw";
@@ -94,10 +101,18 @@ public:
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
 };
 
+/// What the window asked of the type of the test.
+struct TypeCalls {
+    QList<SaveMode> saves;  ///< DocumentType::save, in order
+    QStringList saved;      ///< the paths of the saves
+    QStringList opened;     ///< DocumentType::open
+};
+
 /// The environment `test`, with its ribbon tab, its action and its command,
 /// and the type `test`, which hosts only it: what a second environment adds
-/// to the window, through the registries alone.
-void addTestEnvironment(const MainWindow::Registries& registries) {
+/// to the window, through the registries alone. The type writes its files
+/// with kTestContents, and records in `calls`, if any, what it is asked.
+void addTestEnvironmentWith(const MainWindow::Registries& registries, TypeCalls* calls) {
     registries.environments.add(
         {latin1(kTest), QStringLiteral("Test"), QStringLiteral("help-about"), {latin1(kTest)}});
 
@@ -130,7 +145,44 @@ void addTestEnvironment(const MainWindow::Registries& registries) {
         return std::make_unique<DocumentSession>(*commands, nullptr, core::Document::newDrawing(),
                                                  latin1(kTest));
     };
+    type.open = [commands, calls](
+                    const QString& path,
+                    const HistoryMessage& message) -> std::unique_ptr<DocumentSession> {
+        if (calls != nullptr) {
+            calls->opened.append(path);
+        }
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly) || file.readAll() != QByteArray(kTestContents)) {
+            message(QStringLiteral("Cannot open %1: not a document of the test.").arg(path));
+            return nullptr;
+        }
+        auto session = std::make_unique<DocumentSession>(
+            *commands, nullptr, core::Document::newDrawing(), latin1(kTest));
+        session->file().setSaved(path.toStdString());
+        return session;
+    };
+    type.save = [calls](DocumentSession& session, SaveMode mode, const QString& path,
+                        const HistoryMessage& message) {
+        if (calls != nullptr) {
+            calls->saves.append(mode);
+            calls->saved.append(path);
+        }
+        QFile file(path);
+        const QByteArray contents(kTestContents);
+        if (!file.open(QIODevice::WriteOnly) || file.write(contents) != contents.size()) {
+            message(QStringLiteral("Cannot save %1.").arg(path));
+            return false;
+        }
+        session.editor().markSaved();
+        session.file().setSaved(path.toStdString());
+        return true;
+    };
     registries.types.add(std::move(type));
+}
+
+/// The environment and the type of the test, recording nothing.
+void addTestEnvironment(const MainWindow::Registries& registries) {
+    addTestEnvironmentWith(registries, nullptr);
 }
 
 class EnvironmentsTest : public testing::Test {
@@ -142,10 +194,12 @@ protected:
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_directory.path());
         m_window = std::make_unique<MainWindow>(MainWindow::InitialDrawing::Empty, nullptr,
-                                                addTestEnvironment);
+                                                [this](const MainWindow::Registries& registries) {
+                                                    addTestEnvironmentWith(registries, &m_calls);
+                                                });
         m_window->setFileDialog([this](cmd::FilePrompt kind, const QString& /*path*/) {
             m_dialogs.append(kind);
-            return QString{};
+            return m_answers.isEmpty() ? QString{} : m_answers.takeFirst();
         });
         m_window->show();
         m_window->activateWindow();
@@ -243,6 +297,38 @@ protected:
     /// The file dialogs shown, by kind.
     [[nodiscard]] const QList<cmd::FilePrompt>& dialogs() const { return m_dialogs; }
 
+    /// What the next file dialogs answer, in order; none left: Cancel.
+    [[nodiscard]] QStringList& answers() { return m_answers; }
+
+    /// What the window asked of the type of the test.
+    [[nodiscard]] const TypeCalls& calls() const { return m_calls; }
+
+    /// The path of `name` in the folder of the test.
+    [[nodiscard]] QString path(const char* name) const {
+        return m_directory.filePath(QString::fromLatin1(name));
+    }
+
+    /// How many lines of the history are `line`.
+    [[nodiscard]] qsizetype historyLines(const QString& line) const {
+        return history().split(QLatin1Char('\n')).count(line);
+    }
+
+    /// A drawing of one line saved as `name`, in the folder of the test.
+    [[nodiscard]] QString drawingFile(const char* name) const {
+        core::Document document = core::Document::newDrawing();
+        core::Line line;
+        line.end = {10.0, 0.0};
+        document.add(line);
+        const auto bytes = io::writeCadx(document);
+        QString file = path(name);
+        QFile out(file);
+        if (!bytes.ok() || !out.open(QIODevice::WriteOnly)) {
+            return {};
+        }
+        out.write(bytes.value().data(), static_cast<qint64>(bytes.value().size()));
+        return file;
+    }
+
 private:
     QTemporaryDir m_directory;
     const QString m_oldOrganization{QCoreApplication::organizationName()};
@@ -252,6 +338,8 @@ private:
     DocumentSession* m_drawing{nullptr};
     DocumentSession* m_test{nullptr};
     QList<cmd::FilePrompt> m_dialogs;
+    QStringList m_answers;
+    TypeCalls m_calls;
 };
 
 TEST(DocumentTypesTest, TheProgramHasTheDrawingInDrawing2d) {
@@ -496,7 +584,14 @@ TEST_F(EnvironmentsTest, TheGlobalActionsWorkOnTheStartPage) {
     // Undo is there, without a document to undo.
     EXPECT_TRUE(action("edit.undo")->isVisible());
     EXPECT_FALSE(action("edit.undo")->isEnabled());
-    for (const char* id : {"draw.line", "file.save", "edit.erase", "aids.osnap", kTestAction}) {
+    // Save and Save As are there too, without a document to save
+    // (docs/tappe/0.7.5/P30b).
+    for (const char* id : {"file.save", "file.saveas"}) {
+        SCOPED_TRACE(id);
+        EXPECT_TRUE(action(id)->isVisible());
+        EXPECT_FALSE(action(id)->isEnabled());
+    }
+    for (const char* id : {"draw.line", "edit.erase", "aids.osnap", kTestAction}) {
         SCOPED_TRACE(id);
         EXPECT_FALSE(action(id)->isVisible());
         EXPECT_FALSE(action(id)->isEnabled());
@@ -526,8 +621,8 @@ TEST_F(EnvironmentsTest, TheGlobalActionsWorkOnTheStartPage) {
 
 TEST_F(EnvironmentsTest, TheGlobalActionsAreInTheTestEnvironmentAndUndoItsCommand) {
     window().activate(test());
-    for (const char* id : {"file.new", "file.open", "file.quit", "edit.undo", "edit.redo",
-                           "tools.settings", "help.about"}) {
+    for (const char* id : {"file.new", "file.open", "file.save", "file.saveas", "file.quit",
+                           "edit.undo", "edit.redo", "tools.settings", "help.about"}) {
         SCOPED_TRACE(id);
         EXPECT_TRUE(action(id)->isVisible());
     }
@@ -604,6 +699,144 @@ TEST_F(EnvironmentsTest, TheStartPageOffersEveryType) {
     ASSERT_NE(window().activeSession(), nullptr);
     EXPECT_EQ(window().activeSession()->documentType(), latin1(kTest));
     EXPECT_EQ(window().activeEnvironment()->id, latin1(kTest));
+}
+
+TEST_F(EnvironmentsTest, SaveAsAndSaveOfTheTestTypeGoThroughTheType) {
+    // B6 of docs/DECISIONI.md: the type saves, the frame shows the dialog.
+    window().activate(test());
+    const QString file = path("a.tgtest");
+    answers().append(file);
+    action("file.saveas")->trigger();
+    EXPECT_EQ(calls().saves, QList<SaveMode>{SaveMode::SaveAs});
+    EXPECT_EQ(calls().saved, QStringList{file});
+    EXPECT_EQ(dialogs(), QList<cmd::FilePrompt>{cmd::FilePrompt::Save});
+    EXPECT_TRUE(QFileInfo::exists(file));
+    EXPECT_EQ(QString::fromStdString(test().file().name()), file);
+    EXPECT_FALSE(test().editor().isModified());
+    EXPECT_EQ(window().windowTitle(), QStringLiteral("a.tgtest[*] — Tecnigrafo"));
+    EXPECT_FALSE(window().isWindowModified());
+    // No command of the drawing ran for it.
+    EXPECT_FALSE(history().contains(QStringLiteral("not available in this environment")));
+    EXPECT_FALSE(history().contains(QStringLiteral("SAVEAS")));
+
+    enter(kTestCommand);
+    ASSERT_TRUE(window().isWindowModified());
+    action("file.save")->trigger();
+    EXPECT_EQ(calls().saves, (QList<SaveMode>{SaveMode::SaveAs, SaveMode::Save}));
+    EXPECT_EQ(calls().saved, (QStringList{file, file}));
+    // Its own file: no dialog.
+    EXPECT_EQ(dialogs().size(), 1);
+    EXPECT_FALSE(window().isWindowModified());
+    EXPECT_FALSE(history().contains(QStringLiteral("QSAVE")));
+}
+
+TEST_F(EnvironmentsTest, OpenOfATestFileOpensATabOfTheTestTypeAndThenActivatesIt) {
+    window().activate(test());
+    const QString file = path("a.tgtest");
+    answers().append(file);
+    action("file.saveas")->trigger();
+    ASSERT_TRUE(QFileInfo::exists(file));
+    window().closeSession(test());
+    ASSERT_EQ(window().sessions().size(), 1U);
+
+    answers().append(file);
+    action("file.open")->trigger();
+    EXPECT_EQ(calls().opened, QStringList{file});
+    ASSERT_EQ(window().sessions().size(), 2U);
+    DocumentSession* opened = window().activeSession();
+    ASSERT_EQ(opened, window().sessions().back().get());
+    EXPECT_EQ(opened->documentType(), latin1(kTest));
+    EXPECT_EQ(opened->environment(), latin1(kTest));
+    EXPECT_EQ(opened->runner().environment(), kTest);
+    ASSERT_NE(window().activeEnvironment(), nullptr);
+    EXPECT_EQ(window().activeEnvironment()->id, latin1(kTest));
+    EXPECT_EQ(QString::fromStdString(opened->file().name()), file);
+    EXPECT_FALSE(opened->editor().isModified());
+
+    // Again, from the drawing: the same tab, with the message, and the type
+    // is not asked.
+    window().activate(drawing());
+    answers().append(file);
+    action("file.open")->trigger();
+    EXPECT_EQ(window().sessions().size(), 2U);
+    EXPECT_EQ(window().activeSession(), opened);
+    EXPECT_EQ(historyLines(QStringLiteral("%1 is already open.").arg(file)), 1);
+    EXPECT_EQ(calls().opened, QStringList{file});
+}
+
+TEST_F(EnvironmentsTest, NewAndOpenOfADrawingFromTheTestTabRunNoCommandThere) {
+    const QString plan = drawingFile("plan.cadx");
+    ASSERT_FALSE(plan.isEmpty());
+    window().activate(test());
+    action("file.new")->trigger();
+    ASSERT_EQ(window().sessions().size(), 3U);
+    DocumentSession* created = window().activeSession();
+    ASSERT_EQ(created, window().sessions().back().get());
+    EXPECT_EQ(created->documentType(), latin1(DocumentSession::kDrawingType));
+    EXPECT_EQ(created->environment(), QStringLiteral("drawing2d"));
+    EXPECT_TRUE(created->document().isEmpty());
+
+    window().activate(test());
+    answers().append(plan);
+    action("file.open")->trigger();
+    ASSERT_EQ(window().sessions().size(), 4U);
+    DocumentSession* opened = window().activeSession();
+    ASSERT_EQ(opened, window().sessions().back().get());
+    EXPECT_EQ(opened->documentType(), latin1(DocumentSession::kDrawingType));
+    EXPECT_EQ(opened->environment(), QStringLiteral("drawing2d"));
+    EXPECT_EQ(opened->document().entityCount(), 1U);
+    EXPECT_EQ(QString::fromStdString(opened->file().name()), plan);
+
+    // Nothing reached the runner of the test: no command, no message of P27.
+    EXPECT_FALSE(test().runner().isActive());
+    EXPECT_FALSE(test().editor().canUndo());
+    EXPECT_FALSE(history().contains(QStringLiteral("not available in this environment")));
+    EXPECT_TRUE(calls().opened.isEmpty());
+    EXPECT_TRUE(calls().saves.isEmpty());
+}
+
+TEST_F(EnvironmentsTest, SaveAsOverADrawingOpenElsewhereIsRefusedWithoutCallingTheType) {
+    const QString plan = drawingFile("plan.cadx");
+    ASSERT_FALSE(plan.isEmpty());
+    answers().append(plan);
+    action("file.open")->trigger();
+    ASSERT_EQ(window().sessions().size(), 3U);
+    const QByteArray before = [&plan] {
+        QFile file(plan);
+        return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+    }();
+
+    window().activate(test());
+    enter(kTestCommand);
+    answers().append(plan);
+    action("file.saveas")->trigger();
+    EXPECT_EQ(
+        historyLines(QStringLiteral("Cannot save %1: it is open in another document.").arg(plan)),
+        1);
+    EXPECT_TRUE(calls().saves.isEmpty());
+    EXPECT_FALSE(test().file().hasFile());
+    EXPECT_TRUE(test().editor().isModified());
+    QFile file(plan);
+    ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+    EXPECT_EQ(file.readAll(), before);
+}
+
+TEST_F(EnvironmentsTest, AFileOfAnExtensionNoTypeHasOpensNothing) {
+    const QString file = path("notes.txt");
+    QFile out(file);
+    ASSERT_TRUE(out.open(QIODevice::WriteOnly));
+    out.write("notes");
+    out.close();
+    answers().append(file);
+    action("file.open")->trigger();
+    EXPECT_EQ(window().sessions().size(), 2U);
+    EXPECT_EQ(window().activeSession(), &drawing());
+    EXPECT_TRUE(calls().opened.isEmpty());
+    // "Cannot open <name>: …", with the extensions of every type.
+    EXPECT_EQ(historyLines(QStringLiteral(
+                               "Cannot open %1: only .cadx, .dxf and .tgtest files are supported.")
+                               .arg(file)),
+              1);
 }
 
 }  // namespace
