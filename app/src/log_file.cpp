@@ -14,6 +14,7 @@
 #include <QtGlobal>
 
 #include <cstdio>
+#include <memory>
 #include <mutex>
 
 // The stack of a crash: glibc and macOS have backtrace(). Not under a
@@ -81,9 +82,10 @@ static void tgOnFatalSignal(int signalNumber) {
 
 namespace {
 
-/// Calls tgOnFatalSignal() for the signals of a crash, on a stack of its own.
-void installCrashHandler(std::FILE* stream) {
-    g_logDescriptor = fileno(stream);
+/// Calls tgOnFatalSignal() for the signals of a crash, on a stack of its own;
+/// it writes to `descriptor`, that of the log.
+void installCrashHandler(int descriptor) {
+    g_logDescriptor = descriptor;
     stack_t alternate{};
     alternate.ss_sp = g_signalStack.data();
     alternate.ss_size = g_signalStack.size();
@@ -114,7 +116,9 @@ namespace {
 
 struct LogState {
     std::mutex mutex;
-    std::FILE* stream{nullptr};
+    // Open until the program ends, unbuffered: what is written is in the
+    // file, before a crash too.
+    QFile* file{nullptr};
     QtMessageHandler previous{nullptr};
 };
 
@@ -139,11 +143,8 @@ const char* kindName(QtMsgType type) {
     return "message";
 }
 
-void writeLine(std::FILE* stream, const QString& line) {
-    const QByteArray bytes = line.toUtf8();
-    (void)std::fputs(bytes.constData(), stream);
-    (void)std::fputc('\n', stream);
-    (void)std::fflush(stream);
+void writeLine(QFile& file, const QString& line) {
+    (void)file.write(line.toUtf8() + '\n');
 }
 
 void logMessage(QtMsgType type, const QMessageLogContext& context, const QString& message) {
@@ -151,8 +152,8 @@ void logMessage(QtMsgType type, const QMessageLogContext& context, const QString
     QtMessageHandler previous = nullptr;
     {
         const std::lock_guard lock(state.mutex);
-        if (state.stream != nullptr) {
-            writeLine(state.stream,
+        if (state.file != nullptr) {
+            writeLine(*state.file,
                       QStringLiteral("%1 %2: %3")
                           .arg(QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs),
                                QLatin1String(kindName(type)), message));
@@ -181,15 +182,17 @@ QString startLogFile() {
     // The log of the session before; a log that cannot be kept is lost.
     (void)QFile::remove(old);
     (void)QFile::rename(path, old);
-    std::FILE* stream = std::fopen(QFile::encodeName(path).constData(), "w");
-    if (stream == nullptr) {
+    auto file = std::make_unique<QFile>(path);
+    if (!file->open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text |
+                    QIODevice::Unbuffered)) {
         return {};
     }
     LogState& state = logState();
     {
         const std::lock_guard lock(state.mutex);
-        state.stream = stream;
-        writeLine(stream,
+        // The log stays open as long as the program runs.
+        state.file = file.release();
+        writeLine(*state.file,
                   QStringLiteral("%1 Tecnigrafo %2, Qt %3, %4, platform %5; log %6")
                       .arg(QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs),
                            QCoreApplication::applicationVersion(), QLatin1String(qVersion()),
@@ -202,7 +205,7 @@ QString startLogFile() {
         state.previous = previous;
     }
 #ifdef TG_LOG_CRASH_STACK
-    installCrashHandler(stream);
+    installCrashHandler(state.file->handle());
 #endif
     return path;
 }
