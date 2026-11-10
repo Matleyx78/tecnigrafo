@@ -9,17 +9,19 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.7.0 — comandi di modifica.** Si spostano, copiano,
-> ruotano, scalano e specchiano le entità con `MOVE`, `COPY`, `ROTATE`, `SCALE` e
-> `MIRROR`; si tagliano e prolungano con `TRIM` ed `EXTEND`, si fanno copie
-> parallele con `OFFSET`, raccordi e smussi con `FILLET` e `CHAMFER`, e si
-> scompongono e uniscono con `EXPLODE` e `JOIN`. Le entità selezionate si
-> modificano anche con i grip; ci sono gli snap a intersezione, perpendicolare,
-> tangente e quadrante, il tracciamento polare (`F10`, `POLARANG`) e la finestra
-> di selezione trascinando. Le decisioni geometriche le prende solid-space, il
-> kernel di Tecnigrafo, nel sottomodulo `third_party/solid-space`. Le
-> [note della 0.7](docs/rilasci/0.7.md) riportano novità e limiti noti. Prossima
-> tappa: [0.8](docs/tappe/0.8-quote-retini-blocchi.md), quote, retini, blocchi.
+> Stato: **versione 0.7.5 — correzione di rotta.** L'interfaccia è rifatta:
+> ribbon compatto con la barra di accesso rapido, pannelli *Layers* e
+> *Properties* nuovi, che si nascondono da soli, barra di stato a icone e icone
+> a ruoli per ogni comando, compresi quelli di modifica della 0.7. Si lavora su
+> più disegni in schede, a partire dalla pagina *Start*, e la finestra è pronta
+> per gli ambienti del 3D; l'immissione dinamica (`F12`) mostra domande e campi
+> vicino al cursore. Restano i comandi della 0.7: `MOVE`, `COPY`, `ROTATE`,
+> `SCALE`, `MIRROR`, `TRIM`, `EXTEND`, `OFFSET`, `FILLET`, `CHAMFER`, `EXPLODE`
+> e `JOIN`, i grip, gli snap e il tracciamento polare; le decisioni geometriche
+> le prende solid-space, il kernel di Tecnigrafo, nel sottomodulo
+> `third_party/solid-space`. Le [note della 0.7.5](docs/rilasci/0.7.5.md)
+> riportano novità e limiti noti. Prossima tappa:
+> [0.8](docs/tappe/0.8-quote-retini-blocchi.md), quote, retini, blocchi.
 
 ## Disegnare
 
@@ -35,9 +37,9 @@ Per cancellare, scegli le entità sul bordo oppure con un rettangolo, a due clic
 trascinando, poi premi `Canc`; oppure scrivi `e`, scegli le entità e conferma
 con `Invio`.
 `F3` attiva o spegne lo snap a oggetto, `F8` l'orto; trovi le stesse funzioni nel
-menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo snap
-è acceso con estremo, punto medio, centro, inserimento e intersezione, mentre l'orto
-è spento.
+menu *Tools* e negli interruttori a icona OSNAP e ORTHO della barra di stato.
+All'avvio lo snap è acceso con estremo, punto medio, centro, inserimento e
+intersezione, mentre l'orto è spento.
 
 | Azione | Come |
 |---|---|
@@ -52,13 +54,14 @@ menu *Tools* e nei pulsanti OSNAP e ORTHO della barra di stato. All'avvio lo sna
 | Annullare il comando in corso | `Esc` |
 | Ripetere l'ultimo comando | `Invio` a riga vuota |
 | Annulla / Ripeti | `Ctrl+Z` / `Ctrl+Y`, oppure i comandi `U` e `REDO` |
-| Nuovo / Apri / Salva | `Ctrl+N` / `Ctrl+O` / `Ctrl+S`, oppure i comandi `NEW`, `OPEN`, `QSAVE` |
+| Nuovo / Apri / Salva | `Ctrl+N` / `Ctrl+O` / `Ctrl+S`, la barra di accesso rapido, oppure i comandi `NEW`, `OPEN`, `QSAVE`; nuovo e apri aggiungono una scheda |
+| Immissione dinamica | `F12` o l'interruttore DYN della barra di stato |
 | Gestire i layer | `-LAYER` da riga di comando, oppure `LAYER` / `LA` per il pannello |
 | Impostare il layer corrente | `CLAYER` da riga di comando o menu a tendina nella barra |
 | Colore / Tipi di linea / Spessori | `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`, `LWDISPLAY` |
 | Modificare proprietà entità | `CHPROP` da riga di comando o pannello `PROPERTIES` (`PR`) |
 | Selezione rapida | `QSELECT` per filtrare entità per tipo e proprietà |
-| Ribbon / Interfaccia classica | pulsante `RIBBON`/`MENU` nella barra di stato, o comandi `RIBBON` e `RIBBONCLOSE` |
+| Ribbon / Interfaccia classica | interruttore RIBBON nella barra di stato, o comandi `RIBBON` e `RIBBONCLOSE` |
 
 Nel campo comandi `Canc` cancella entità solo se il campo è vuoto; con testo
 presente modifica il testo. Le coordinate scritte restano esatte anche con snap

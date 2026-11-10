@@ -23,7 +23,7 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.7.0**.
+Aggiornato alla versione **0.7.5**.
 
 | Stato | Comandi |
 |---|---|
@@ -37,8 +37,8 @@ Aggiornato alla versione **0.7.0**.
 |---|---|---|---|---|
 | `LINE` | `L` | completo | 0.4 | segmenti, *Close* e *Undo*; `Invio` alla prima domanda continua dall'ultimo punto (0.7) |
 | `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), dopo la 1.0 (decisione del 2026-10-28) |
-| `CIRCLE` | `C` | completo | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio (*Ttr*) nella 0.7 |
-| `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4; le altre varianti dopo la 1.0 |
+| `CIRCLE` | `C` | completo | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio (*Ttr*) nella 0.7; le cinque varianti nel menu del pulsante del ribbon (0.7.5) |
+| `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4, anche dal menu del pulsante del ribbon (0.7.5); le altre varianti dopo la 1.0 |
 | `RECTANG` | `REC` | assente | — | |
 | `POLYGON` | `POL` | assente | — | |
 | `ELLIPSE` | `EL` | assente | — | ellissi dopo la 1.0 |
@@ -93,7 +93,7 @@ Aggiornato alla versione **0.7.0**.
 | `STRETCH` | `S` | assente | — | |
 | `BREAK` | `BR` | assente | — | |
 | `LENGTHEN` | `LEN` | assente | — | |
-| `PEDIT` | `PE` | assente | — | |
+| `PEDIT` | `PE` | assente | 0.8 | conversione in polilinea e *Join* (decisione del 2026-11-07) |
 | `MATCHPROP` | `MA` | assente | — | |
 
 ## Annullamento
@@ -108,10 +108,10 @@ Aggiornato alla versione **0.7.0**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `LAYER` | `LA` | presente | 0.6 | pannello agganciabile con tabella degli stati, colori, tipi e spessori |
+| `LAYER` | `LA` | presente | 0.6 | pannello agganciabile con tabella degli stati, colori, tipi e spessori; nella 0.7.5 barra di icone, ricerca per nome, stati a icone e linguetta quando non è fissato |
 | `-LAYER` | `-LA` | presente | 0.6 | dalla riga di comando per gli script; elenchi con virgola e caratteri jolly, opzioni principali |
 | `CLAYER` | | completo | 0.6 | imposta il layer corrente da riga di comando |
-| `PROPERTIES` | `PR`, `CH`, `MO`, `PROPS` | presente | 0.6 | pannello agganciabile con sezione generale e geometria in sola lettura |
+| `PROPERTIES` | `PR`, `CH`, `MO`, `PROPS` | presente | 0.6 | pannello agganciabile; nella 0.7.5 griglia con *General* modificabile nella cella e *Geometry* in sola lettura, con lo scorrimento dei vertici delle polilinee |
 | `CHPROP` | | presente | 0.6 | colore, layer, tipo, scala del tipo, spessore; mancano Thickness e Transparency (0.9) |
 | `COLOR` | `COL`, `COLOUR`, `-COLOR` | presente | 0.6 | indice AutoCAD, nomi standard e Truecolor RGB; niente cataloghi di colori |
 | `QSELECT` | | presente | 0.6 | finestra di dialogo per filtrare per tipo e proprietà |
@@ -126,8 +126,8 @@ Aggiornato alla versione **0.7.0**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `NEW` | | presente | 0.5 | azzera il documento e la cronologia; usa lo scheletro interno (mancano i template DWT) |
-| `OPEN` | | presente | 0.5 | apre `.cadx` e DXF (AC1015–AC1032); supporto DWG dopo la 1.0 |
+| `NEW` | | presente | 0.5 | dalla 0.7.5 un documento nuovo in una scheda nuova, senza chiudere gli altri, come AutoCAD; usa lo scheletro interno (mancano i template DWT) |
+| `OPEN` | | presente | 0.5 | apre `.cadx` e DXF (AC1015–AC1032) in una scheda nuova (0.7.5); un file già aperto attiva la sua scheda; supporto DWG dopo la 1.0 |
 | `QSAVE` / `SAVE` | | presente | 0.5 | salvataggio rapido atomico nel file corrente o salvataggio di una copia; formato `.cadx` e DXF |
 | `SAVEAS` | | presente | 0.5 | salva con nuovo nome in formato `.cadx` e DXF R2018 |
 | `PLOT` | | assente | 0.9 | stampa e PDF |
@@ -157,3 +157,4 @@ parte.
 | Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
 | Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, i poligoni, *Last* e *Previous* |
 | Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
+| Immissione dinamica | `F12` | presente | 0.7.5 | domanda del comando, coordinate e, dopo il primo punto, lunghezza e angolo vicino al cursore, con `Tab` e `Invio`; manca la variabile `DYNMODE` |
