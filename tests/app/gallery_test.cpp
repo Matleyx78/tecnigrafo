@@ -24,7 +24,7 @@ private:
     QCoreApplication m_application{m_argc, &m_argv};
 };
 
-TEST_F(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
+TEST_F(GalleryTest, WritesFourteenImagesAtUnitScaleWithStableSizes) {
     const QTemporaryDir folder;
     ASSERT_TRUE(folder.isValid());
     QProcess process;
@@ -38,7 +38,7 @@ TEST_F(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
     ASSERT_EQ(process.exitStatus(), QProcess::NormalExit);
     ASSERT_EQ(process.exitCode(), 0) << process.readAllStandardError().toStdString();
     const QDir output(folder.path());
-    EXPECT_EQ(output.entryList({QStringLiteral("*.png")}, QDir::Files).size(), 12);
+    EXPECT_EQ(output.entryList({QStringLiteral("*.png")}, QDir::Files).size(), 14);
     QStringList stems;
     stems.append(QStringLiteral("finestra"));
     stems.append(QStringLiteral("finestra-classica"));
@@ -46,6 +46,9 @@ TEST_F(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
     stems.append(QStringLiteral("proprieta"));
     stems.append(QStringLiteral("layer"));
     stems.append(QStringLiteral("stato"));
+    // The ribbon of a window with the frame of the system (docs/tappe/
+    // 0.7.5/P40, point 5).
+    stems.append(QStringLiteral("ribbon-cornice-sistema"));
     for (const QString& stem : stems) {
         QSize lightSize;
         for (const QString& theme : {QStringLiteral("chiaro"), QStringLiteral("scuro")}) {
@@ -64,6 +67,10 @@ TEST_F(GalleryTest, WritesTwelveImagesAtUnitScaleWithStableSizes) {
                     // The window without frame keeps 2 px on the left and on
                     // the right, where it is resized (SARibbonMainWindow).
                     EXPECT_EQ(image.width(), 1596);
+                } else if (stem == QStringLiteral("ribbon-cornice-sistema")) {
+                    // The system draws the frame, outside the window.
+                    EXPECT_GE(image.width(), 1596);
+                    EXPECT_LE(image.width(), 1600);
                 } else {
                     EXPECT_GT(image.width(), 0);
                     EXPECT_LT(image.width(), 1600);

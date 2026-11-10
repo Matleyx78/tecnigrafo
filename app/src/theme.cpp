@@ -10,18 +10,28 @@
 #include <QColor>
 #include <QFile>
 #include <QFileInfo>
+#include <QIconEngine>
 #include <QImage>
+#include <QPaintDevice>
 #include <QPainter>
 #include <QPixmap>
+#include <QRect>
 #include <QRectF>
+#include <QSize>
 #include <QStringList>
+#include <QStyle>
+#include <QStyleOption>
 #include <QSvgRenderer>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace tg::app {
@@ -65,9 +75,13 @@ QPalette paletteFrom(const ThemeTokens& tokens) {
     return palette;
 }
 
-// Icons drawn at up to this many pixels use the 16 px grid, the larger ones
-// the 32 px grid (docs/adr/0040, point 3).
+// Icons of up to this many logical pixels use the 16 px grid, the larger
+// ones the 32 px grid (docs/adr/0040, point 3): the logical size decides, so
+// at 200% an icon of 16 is drawn from the 16 px grid at 32 pixels, with a
+// stroke of 2 (docs/tappe/0.7.5/P40, point 4).
 constexpr int kSmallGridLimit = 24;
+// Scales of the device are kept in the cache of an icon in thousandths.
+constexpr double kScaleKeyUnit = 1000.0;
 
 /// The colour of the role named in the class attribute `classes`, or null:
 /// geo, pt, cost, esist, and the old accent, which is pt (docs/ICONE.md).
@@ -197,16 +211,93 @@ QByteArray readFile(const QString& path) {
     return file.readAll();
 }
 
-/// The icon drawn by `renderer` on a transparent square of `size` pixels.
-QPixmap drawnIcon(QSvgRenderer& renderer, int size) {
-    QImage image(size, size, QImage::Format_ARGB32_Premultiplied);
+/// The icon drawn by `renderer` on a transparent square of `pixels` pixels
+/// of the device, for a device pixel ratio of `scale`.
+QPixmap drawnIcon(QSvgRenderer& renderer, int pixels, qreal scale) {
+    QImage image(pixels, pixels, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
     QPainter painter(&image);
     painter.setRenderHint(QPainter::Antialiasing);
-    renderer.render(&painter, QRectF(0, 0, size, size));
+    renderer.render(&painter, QRectF(0, 0, pixels, pixels));
     painter.end();
-    return QPixmap::fromImage(image);
+    QPixmap pixmap = QPixmap::fromImage(image);
+    pixmap.setDevicePixelRatio(scale);
+    return pixmap;
 }
+
+/// The engine of a role icon (docs/tappe/0.7.5/P40, point 4): every size is
+/// drawn when it is asked for, at the pixels of the device, size times
+/// device pixel ratio, from the grid that the logical size chooses, so that
+/// Qt never rescales an image drawn for another size. The lines of 1 px on
+/// the middle of a pixel stay whole pixels at every scale that is a whole
+/// number (docs/ICONE.md). The images drawn are kept by size, scale and mode.
+///
+/// Qt 6.8 and later ask scaledPixmap() for the logical size and the scale
+/// (QIcon::pixmap(size, devicePixelRatio)); the program needs Qt 6.12.
+class RoleIconEngine final : public QIconEngine {
+public:
+    /// The coloured SVG of the 16 px grid and that of the 32 px grid; each
+    /// renderer must be valid.
+    RoleIconEngine(std::shared_ptr<QSvgRenderer> small, std::shared_ptr<QSvgRenderer> large)
+        : m_small(std::move(small)), m_large(std::move(large)) {}
+
+    RoleIconEngine(const RoleIconEngine&) = delete;
+    RoleIconEngine(RoleIconEngine&&) = delete;
+    RoleIconEngine& operator=(const RoleIconEngine&) = delete;
+    RoleIconEngine& operator=(RoleIconEngine&&) = delete;
+    ~RoleIconEngine() override = default;
+
+    void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode,
+               QIcon::State state) override {
+        const QPaintDevice* device = painter->device();
+        const qreal scale = device != nullptr ? device->devicePixelRatio() : 1.0;
+        painter->drawPixmap(rect, scaledPixmap(rect.size(), mode, state, scale));
+    }
+
+    QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override {
+        return scaledPixmap(size, mode, state, 1.0);
+    }
+
+    QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State /*state*/,
+                         qreal scale) override {
+        const int side = std::min(size.width(), size.height());
+        if (side <= 0 || scale <= 0.0) {
+            return {};
+        }
+        const Key key{side, static_cast<int>(std::lround(scale * kScaleKeyUnit)), mode};
+        if (const auto found = m_pixmaps.find(key); found != m_pixmaps.end()) {
+            return found->second;
+        }
+        const int pixels = static_cast<int>(std::lround(side * scale));
+        QPixmap result = drawnIcon(side <= kSmallGridLimit ? *m_small : *m_large, pixels, scale);
+        if (mode != QIcon::Normal) {
+            // Disabled and selected icons as Qt derives them from a pixmap
+            // (QPixmapIconEngine): the style makes them from the normal one.
+            QStyleOption option;
+            option.palette = QApplication::palette();
+            if (const QStyle* style = QApplication::style(); style != nullptr) {
+                result = style->generatedIconPixmap(mode, result, &option);
+                result.setDevicePixelRatio(scale);
+            }
+        }
+        m_pixmaps.emplace(key, result);
+        return result;
+    }
+
+    /// The same renderers; the images are drawn again.
+    [[nodiscard]] QIconEngine* clone() const override {
+        return new RoleIconEngine(m_small, m_large);
+    }
+
+    [[nodiscard]] QString key() const override { return QStringLiteral("tg-role-icon"); }
+
+private:
+    using Key = std::tuple<int, int, QIcon::Mode>;
+
+    std::shared_ptr<QSvgRenderer> m_small;
+    std::shared_ptr<QSvgRenderer> m_large;
+    std::map<Key, QPixmap> m_pixmaps;
+};
 
 }  // namespace
 
@@ -334,20 +425,17 @@ QIcon themedIcon(const QString& name, Theme theme) {
         }
     }
     const ThemeTokens& tokens = themeTokens(theme);
-    QSvgRenderer smallSizes(colouredSvg(readFile(files.forSmall), tokens));
-    QSvgRenderer largeSizes(colouredSvg(readFile(files.forLarge), tokens));
-    if (!smallSizes.isValid() || !largeSizes.isValid()) {
+    auto smallSizes = std::make_shared<QSvgRenderer>(colouredSvg(readFile(files.forSmall), tokens));
+    auto largeSizes = std::make_shared<QSvgRenderer>(colouredSvg(readFile(files.forLarge), tokens));
+    if (!smallSizes->isValid() || !largeSizes->isValid()) {
         return {};
     }
-    QIcon result;
-    // The sizes of menus, toolbars and ribbon, with their high-DPI variants.
-    for (const int size : {16, 20, 24, 32, 40, 48, 64, 96, 128}) {
-        result.addPixmap(drawnIcon(size <= kSmallGridLimit ? smallSizes : largeSizes, size));
+    // QIcon owns its engine.
+    QIcon icon(new RoleIconEngine(std::move(smallSizes), std::move(largeSizes)));
+    if (cacheable) {
+        return iconCache().emplace(key, std::move(icon)).first->second;
     }
-    if (cacheable && !result.isNull()) {
-        iconCache().emplace(key, result);
-    }
-    return result;
+    return icon;
 }
 
 }  // namespace tg::app

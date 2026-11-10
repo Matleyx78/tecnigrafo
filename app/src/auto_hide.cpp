@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QLayoutItem>
 #include <QMainWindow>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPoint>
 #include <QRect>
@@ -252,7 +253,7 @@ void AutoHideBar::removeTab(AutoHideTab* tab) {
 }
 
 AutoHideOverlay::AutoHideOverlay(QWidget* parent)
-    : QFrame(parent), m_pages(new QStackedWidget(this)) {
+    : QFrame(parent), m_pages(new QStackedWidget(this)), m_handle(new QWidget(this)) {
     setObjectName(QStringLiteral("autoHideOverlay"));
     setAutoFillBackground(true);
     m_pages->setObjectName(QStringLiteral("autoHidePages"));
@@ -260,6 +261,10 @@ AutoHideOverlay::AutoHideOverlay(QWidget* parent)
     layout->setContentsMargins(1, 1, 1, 1);
     layout->setSpacing(0);
     layout->addWidget(m_pages);
+    // Outside the layout: AutoHide::placeOverlay() puts it on the edge
+    // towards the drawing area, over the border and the pages. It draws
+    // nothing; the cursor shows it.
+    m_handle->setObjectName(QStringLiteral("autoHideHandle"));
 }
 
 void AutoHideOverlay::keyPressEvent(QKeyEvent* event) {
@@ -295,6 +300,7 @@ AutoHide::AutoHide(QMainWindow& window, QWidget* drawingArea, QWidget* drawing)
 
     m_overlay->hide();
     m_overlay->installEventFilter(this);
+    m_overlay->handle()->installEventFilter(this);
     connect(m_overlay, &AutoHideOverlay::escapePressed, this, &AutoHide::close);
     // The overlay follows the drawing when the window changes size.
     m_drawing->installEventFilter(this);
@@ -313,7 +319,7 @@ AutoHide::AutoHide(QMainWindow& window, QWidget* drawingArea, QWidget* drawing)
     assert(application != nullptr);
     connect(application, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
         const bool inside = now != nullptr && (now == m_overlay || m_overlay->isAncestorOf(now));
-        if (m_open != nullptr && !inside && !m_pointerInside) {
+        if (m_open != nullptr && !inside && !m_pointerInside && !m_resizing) {
             m_closeTimer.start();
         }
     });
@@ -478,6 +484,12 @@ const AutoHide::Hidden* AutoHide::find(const QDockWidget* panel) const {
     return found == m_hidden.end() ? nullptr : &*found;
 }
 
+AutoHide::Hidden* AutoHide::find(const QDockWidget* panel) {
+    const auto found = std::find_if(m_hidden.begin(), m_hidden.end(),
+                                    [panel](const Hidden& item) { return item.panel == panel; });
+    return found == m_hidden.end() ? nullptr : &*found;
+}
+
 void AutoHide::open(QDockWidget* panel, bool focus) {
     const Hidden* hidden = find(panel);
     if (hidden == nullptr) {
@@ -515,6 +527,7 @@ void AutoHide::close() {
     m_open = nullptr;
     m_closeTimer.stop();
     m_pointerInside = false;
+    m_resizing = false;
     QCoreApplication::instance()->removeEventFilter(this);
     m_overlay->hide();
     if (hadFocus) {
@@ -583,6 +596,21 @@ void AutoHide::restoreState(const QStringList& state) {
 }
 
 bool AutoHide::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == m_overlay->handle()) {
+        switch (event->type()) {
+            case QEvent::MouseButtonPress:
+            case QEvent::MouseMove:
+            case QEvent::MouseButtonRelease:
+                if (const auto* mouse = dynamic_cast<const QMouseEvent*>(event);
+                    mouse != nullptr && dragHandle(*mouse)) {
+                    return true;
+                }
+                break;
+            default:
+                break;
+        }
+        return QObject::eventFilter(watched, event);
+    }
     auto* hoveredTab = qobject_cast<AutoHideTab*>(watched);
     const AutoHideTab* openTab = m_open == nullptr ? nullptr : tab(m_open);
     switch (event->type()) {
@@ -601,7 +629,9 @@ bool AutoHide::eventFilter(QObject* watched, QEvent* event) {
                 m_showTimer.stop();
                 m_hoverTab = nullptr;
             }
-            if (watched == m_overlay || (openTab != nullptr && watched == openTab)) {
+            // While the handle is dragged the pointer counts as inside.
+            if (!m_resizing &&
+                (watched == m_overlay || (openTab != nullptr && watched == openTab))) {
                 m_pointerInside = false;
                 m_closeTimer.start();
             }
@@ -669,6 +699,91 @@ void AutoHide::placeOverlay() {
             break;
     }
     m_overlay->setGeometry(rect);
+    // The handle on the edge towards the drawing area.
+    QWidget* handle = m_overlay->handle();
+    switch (hidden->edge) {
+        case Qt::LeftDockWidgetArea:
+            handle->setGeometry(rect.width() - kHandleThickness, 0, kHandleThickness,
+                                rect.height());
+            break;
+        case Qt::RightDockWidgetArea:
+            handle->setGeometry(0, 0, kHandleThickness, rect.height());
+            break;
+        case Qt::TopDockWidgetArea:
+            handle->setGeometry(0, rect.height() - kHandleThickness, rect.width(),
+                                kHandleThickness);
+            break;
+        case Qt::BottomDockWidgetArea:
+            handle->setGeometry(0, 0, rect.width(), kHandleThickness);
+            break;
+        default:
+            break;
+    }
+    handle->setCursor(keepsWidth(hidden->edge) ? Qt::SizeHorCursor : Qt::SizeVerCursor);
+    handle->raise();
+    handle->show();
+}
+
+bool AutoHide::dragHandle(const QMouseEvent& event) {
+    const QEvent::Type type = event.type();
+    Hidden* hidden = find(m_open);
+    if (hidden == nullptr) {
+        return false;
+    }
+    const QPoint global = event.globalPosition().toPoint();
+    if (type == QEvent::MouseButtonPress) {
+        if (event.button() != Qt::LeftButton) {
+            return false;
+        }
+        m_resizing = true;
+        m_resizeStart = global;
+        m_resizeExtent = hidden->extent;
+        m_pointerInside = true;
+        m_closeTimer.stop();
+        return true;
+    }
+    if (!m_resizing) {
+        return false;
+    }
+    if (type == QEvent::MouseMove) {
+        // The overlay grows towards the drawing area: leftwards from the
+        // right edge, rightwards from the left one, and so on.
+        const QPoint moved = global - m_resizeStart;
+        int delta = 0;
+        int area = 0;
+        switch (hidden->edge) {
+            case Qt::LeftDockWidgetArea:
+                delta = moved.x();
+                area = m_drawing->width();
+                break;
+            case Qt::RightDockWidgetArea:
+                delta = -moved.x();
+                area = m_drawing->width();
+                break;
+            case Qt::TopDockWidgetArea:
+                delta = moved.y();
+                area = m_drawing->height();
+                break;
+            case Qt::BottomDockWidgetArea:
+                delta = -moved.y();
+                area = m_drawing->height();
+                break;
+            default:
+                break;
+        }
+        const int largest = std::max(kMinimumExtent, area - kMinimumExtent);
+        hidden->extent = std::clamp(m_resizeExtent + delta, kMinimumExtent, largest);
+        placeOverlay();
+        return true;
+    }
+    // The release: the new extent is the one to save.
+    m_resizing = false;
+    m_pointerInside = m_overlay->rect().contains(m_overlay->mapFromGlobal(global));
+    if (!m_pointerInside && !focusInOverlay()) {
+        m_closeTimer.start();
+    }
+    emit changed();
+    return true;
 }
 
 bool AutoHide::focusInOverlay() const {
@@ -677,7 +792,7 @@ bool AutoHide::focusInOverlay() const {
 }
 
 void AutoHide::closeIfLeft() {
-    if (m_open == nullptr || m_pointerInside || focusInOverlay()) {
+    if (m_open == nullptr || m_pointerInside || m_resizing || focusInOverlay()) {
         return;
     }
     // A list or a window opened from the panel, such as a combo box's list

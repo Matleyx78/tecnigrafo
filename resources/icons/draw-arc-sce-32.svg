@@ -2,12 +2,12 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path id="arc" class="geo" d="M23.397 22.42A10 10 0 0 0 5.34 14"/>
-        <line class="cost" x1="14" y1="19" x2="23.397" y2="22.42"/>
-        <line class="cost" x1="14" y1="19" x2="5.34" y2="14"/>
-        <circle class="pt" cx="23.397" cy="22.42" r="2" fill="currentColor" stroke="none" data-on="arc"/>
-        <circle class="pt" cx="14" cy="19" r="2" fill="currentColor" stroke="none" data-center-of="arc"/>
-        <circle class="pt" cx="5.34" cy="14" r="2" fill="currentColor" stroke="none" data-on="arc"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path id="arc" class="geo" d="M24.45 19.495A10 10 0 0 0 6.5 12.5"/>
+        <line class="cost" x1="14.5" y1="18.5" x2="24.5" y2="19.5"/>
+        <line class="cost" x1="14.5" y1="18.5" x2="6.5" y2="12.5"/>
+        <circle class="pt" cx="24.5" cy="19.5" r="2.5" fill="currentColor" stroke="none" data-on="arc"/>
+        <circle class="pt" cx="14.5" cy="18.5" r="2.5" fill="currentColor" stroke="none" data-center-of="arc"/>
+        <circle class="pt" cx="6.5" cy="12.5" r="2.5" fill="currentColor" stroke="none" data-on="arc"/>
     </g>
 </svg>

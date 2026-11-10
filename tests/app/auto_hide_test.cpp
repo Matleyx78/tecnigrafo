@@ -12,9 +12,12 @@
 #include <QAction>
 #include <QApplication>
 #include <QCoreApplication>
+#include <QCursor>
 #include <QDockWidget>
 #include <QEvent>
+#include <QMouseEvent>
 #include <QPoint>
+#include <QPointF>
 #include <QRect>
 #include <QSettings>
 #include <QStackedWidget>
@@ -23,6 +26,8 @@
 #include <QToolButton>
 #include <QTreeView>
 #include <gtest/gtest.h>
+
+#include <functional>
 
 namespace tg::app {
 namespace {
@@ -57,6 +62,26 @@ protected:
         QWidget* title = panel->titleBarWidget();
         return title == nullptr ? nullptr
                                 : title->findChild<QToolButton*>(QStringLiteral("autoHidePin"));
+    }
+
+    /// Drags `handle` by `delta` with the left button, from its middle:
+    /// `during` runs with the button still down.
+    static void drag(QWidget* handle, QPoint delta, const std::function<void()>& during = {}) {
+        const QPoint local(handle->width() / 2, handle->height() / 2);
+        const QPoint start = handle->mapToGlobal(local);
+        QMouseEvent press(QEvent::MouseButtonPress, QPointF(local), QPointF(start), Qt::LeftButton,
+                          Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(handle, &press);
+        const QPoint end = start + delta;
+        QMouseEvent move(QEvent::MouseMove, QPointF(handle->mapFromGlobal(end)), QPointF(end),
+                         Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(handle, &move);
+        if (during) {
+            during();
+        }
+        QMouseEvent release(QEvent::MouseButtonRelease, QPointF(handle->mapFromGlobal(end)),
+                            QPointF(end), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QApplication::sendEvent(handle, &release);
     }
 
     /// Runs what the event loop has queued, deletions included.
@@ -245,6 +270,88 @@ TEST_F(AutoHideTest, TheHiddenStateIsSavedRestoredAndKeptAcrossTheInterfaces) {
     settle();
     EXPECT_TRUE(panel->isVisible());
     EXPECT_EQ(restored.dockWidgetArea(panel), Qt::RightDockWidgetArea);
+    EXPECT_TRUE(restored.close());
+}
+
+TEST_F(AutoHideTest, TheHandleOfTheOverlayResizesItWithinItsLimitsAndTheSizeIsKept) {
+    // docs/tappe/0.7.5/P40, point 3.
+    constexpr int kWider = 80;
+    int widened = 0;
+    {
+        MainWindow window(MainWindow::InitialDrawing::Empty);
+        window.resize(1400, 900);
+        window.show();
+        ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+        QDockWidget* panel = properties(window);
+        ASSERT_NE(panel, nullptr);
+        AutoHide& autoHide = window.autoHide();
+        ASSERT_TRUE(autoHide.setAutoHidden(panel, true));
+        settle();
+        autoHide.open(panel, false);
+        settle();
+        AutoHideOverlay* overlay = autoHide.overlay();
+        ASSERT_TRUE(overlay->isVisible());
+        QWidget* handle = overlay->handle();
+        ASSERT_NE(handle, nullptr);
+        EXPECT_EQ(handle->objectName(), QStringLiteral("autoHideHandle"));
+        EXPECT_TRUE(handle->isVisible());
+        // On the edge towards the drawing: the left one of a panel hidden on
+        // the right, 4 px wide, as high as the overlay.
+        EXPECT_EQ(handle->geometry(), QRect(0, 0, AutoHide::kHandleThickness, overlay->height()));
+        EXPECT_EQ(handle->cursor().shape(), Qt::SizeHorCursor);
+        const int before = overlay->width();
+        const int right = overlay->mapTo(&window, QPoint(overlay->width(), 0)).x();
+
+        // 80 px towards the drawing; the pointer leaving the overlay while
+        // the button is down does not close it.
+        drag(handle, QPoint(-kWider, 0), [&] {
+            QEvent leave(QEvent::Leave);
+            QApplication::sendEvent(overlay, &leave);
+            QTest::qWait(2 * AutoHide::kHideDelayMs);
+            EXPECT_TRUE(overlay->isVisible()) << "open while the handle is dragged";
+        });
+        settle();
+        EXPECT_TRUE(overlay->isVisible());
+        widened = overlay->width();
+        EXPECT_EQ(widened, before + kWider);
+        EXPECT_EQ(overlay->mapTo(&window, QPoint(overlay->width(), 0)).x(), right)
+            << "it grows from the edge it stands on";
+        const QStringList state = autoHide.saveState();
+        ASSERT_EQ(state.size(), 1);
+        EXPECT_EQ(state.front(), QStringLiteral("propertiesPanel:right:%1").arg(widened));
+        EXPECT_TRUE(window.close());
+    }
+
+    // After the restart the overlay opens as wide.
+    MainWindow restored(MainWindow::InitialDrawing::Empty);
+    restored.resize(1400, 900);
+    restored.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&restored));
+    settle();
+    QDockWidget* panel = properties(restored);
+    ASSERT_NE(panel, nullptr);
+    AutoHide& autoHide = restored.autoHide();
+    ASSERT_TRUE(autoHide.isAutoHidden(panel));
+    autoHide.open(panel, false);
+    settle();
+    AutoHideOverlay* overlay = autoHide.overlay();
+    ASSERT_TRUE(overlay->isVisible());
+    EXPECT_EQ(overlay->width(), widened);
+
+    // The two limits: 120 px, and the drawing area less 120 px.
+    drag(overlay->handle(), QPoint(5000, 0));
+    settle();
+    EXPECT_EQ(overlay->width(), AutoHide::kMinimumExtent);
+    drag(overlay->handle(), QPoint(-5000, 0));
+    settle();
+    EXPECT_EQ(overlay->width(), restored.view()->width() - AutoHide::kMinimumExtent);
+    EXPECT_TRUE(overlay->isVisible());
+
+    // The extent of the overlay is the one saved, and the one the panel
+    // docks again with (AutoHide::setAutoHidden()).
+    const QStringList state = autoHide.saveState();
+    ASSERT_EQ(state.size(), 1);
+    EXPECT_EQ(state.front(), QStringLiteral("propertiesPanel:right:%1").arg(overlay->width()));
     EXPECT_TRUE(restored.close());
 }
 

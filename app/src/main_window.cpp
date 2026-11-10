@@ -141,13 +141,16 @@ constexpr int kStatusIconSize = 16;
 /// moves a window without frame with QWidget::move() and global pointer
 /// positions, which Wayland does not give a client: there such a window
 /// could not be moved, nor resized from its left and top edges. Under
-/// Wayland the window keeps the frame of the system, and SARibbon puts the
-/// quick access bar in the row of the tabs, under the title.
-SARibbonMainWindowStyles windowStyles() {
-    const bool wayland = QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
+/// Wayland the window keeps the frame of the system (WindowFrame::
+/// Automatic), and the ribbon puts the quick access bar at the left of the
+/// row of the tabs (UiBuilder).
+SARibbonMainWindowStyles windowStyles(WindowFrame frame) {
+    const bool system = frame == WindowFrame::System ||
+                        (frame == WindowFrame::Automatic &&
+                         QGuiApplication::platformName().startsWith(QLatin1String("wayland")));
     return SARibbonMainWindowStyleFlag::UseRibbonMenuBar |
-           (wayland ? SARibbonMainWindowStyleFlag::UseNativeFrame
-                    : SARibbonMainWindowStyleFlag::UseRibbonFrame);
+           (system ? SARibbonMainWindowStyleFlag::UseNativeFrame
+                   : SARibbonMainWindowStyleFlag::UseRibbonFrame);
 }
 
 enum class WindowGlyph : std::uint8_t { Minimize, Maximize, Restore, Close };
@@ -255,8 +258,9 @@ private:
     MainWindow& m_window;
 };
 
-MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension& extension)
-    : SARibbonMainWindow(parent, windowStyles()),
+MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension& extension,
+                       WindowFrame frame)
+    : SARibbonMainWindow(parent, windowStyles(frame)),
       m_diskFiles(
           std::make_unique<DesktopFiles>([this](const QString& path) { addRecentFile(path); },
                                          [this](const QString& path) { m_pendingOpen = path; })),

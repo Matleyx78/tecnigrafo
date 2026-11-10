@@ -2,10 +2,10 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path id="arc" class="geo" d="M26.337 21.762A11 11 0 1 0 5.663 21.762"/>
-        <circle class="pt" cx="26.337" cy="21.762" r="2" fill="currentColor" stroke="none" data-on="arc"/>
-        <circle class="pt" cx="16" cy="7" r="2" fill="currentColor" stroke="none" data-on="arc"/>
-        <circle class="pt" cx="5.663" cy="21.762" r="2" fill="currentColor" stroke="none" data-on="arc"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path id="arc" class="geo" d="M25.489 20.495A10.5 10.5 0 1 0 6.511 20.495"/>
+        <circle class="pt" cx="25.5" cy="20.5" r="2.5" fill="currentColor" stroke="none" data-on="arc"/>
+        <circle class="pt" cx="15.5" cy="5.5" r="2.5" fill="currentColor" stroke="none" data-on="arc"/>
+        <circle class="pt" cx="6.5" cy="20.5" r="2.5" fill="currentColor" stroke="none" data-on="arc"/>
     </g>
 </svg>

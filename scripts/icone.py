@@ -21,8 +21,18 @@
 #   data-center-of="<id>"  its centre is the centre of the circle with that
 #                          id, or of every arc of the path with that id.
 #
-# Both are checked within kTolerance pixels. Standard library only, Python
-# 3.11 (the CI job "Scripts (Python)").
+# Both are checked within kTolerance pixels.
+#
+# The ink is aligned to the pixels (docs/tappe/0.7.5/P40, point 4; the
+# decision of 2026-11-10 in docs/DECISIONI.md): the stroke is 1 px, and every
+# horizontal or vertical stroked segment has its middle line on the middle of
+# a pixel (n + 0.5), so that it covers one whole row or column; a stroked
+# circle or arc has its centre plus and minus its radius there, in x and in y;
+# a point has its centre there (its edges on whole pixels); a filled shape
+# without stroke has its horizontal and vertical sides on whole pixels.
+# Diagonals and other curves are not aligned. Checked within ALIGNMENT.
+#
+# Standard library only, Python 3.11 (the CI job "Scripts (Python)").
 
 from __future__ import annotations
 
@@ -34,6 +44,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 TOLERANCE = 0.1  # px, docs/adr/0040, point 4
+ALIGNMENT = 0.01  # px, docs/tappe/0.7.5/P40, point 4
 EPSILON = 1e-6  # px, for comparisons of written numbers
 
 ALLOWED_ELEMENTS = frozenset(
@@ -54,11 +65,14 @@ class Grid:
     stroke: float  # width of every stroke
     margin: float  # px of each side left free of ink
     dot: float  # radius of a point
+    dash: float  # shortest dash or gap of a dashed stroke
 
 
+# The stroke of 1 px of the decision of 2026-11-10, which replaces the one of
+# docs/adr/0040, point 3 (docs/ICONE.md, "Due griglie").
 GRIDS = {
-    16: Grid(16, 1.25, 1.0, 1.25),
-    32: Grid(32, 1.75, 2.0, 2.0),
+    16: Grid(16, 1.0, 1.0, 1.5, 2.0),
+    32: Grid(32, 1.0, 2.0, 2.5, 2.0),
 }
 
 
@@ -394,6 +408,14 @@ def fmt(value: float) -> str:
     return f"{value:.3f}".rstrip("0").rstrip(".")
 
 
+def on_whole(value: float) -> bool:
+    return abs(value - round(value)) <= ALIGNMENT
+
+
+def on_half(value: float) -> bool:
+    return on_whole(value - 0.5)
+
+
 def point_text(p: Point) -> str:
     return f"({fmt(p[0])}, {fmt(p[1])})"
 
@@ -499,9 +521,9 @@ class Checker:
                 self.report(element, f"the attribute {key} is not one of {', '.join(DECLARATIONS)}")
             elif key == "stroke-dasharray" and value != "none":
                 dashes = numbers_in(value)
-                if not dashes or min(dashes) < 2 * g.stroke - EPSILON:
+                if not dashes or min(dashes) < g.dash - EPSILON:
                     self.report(element, f'stroke-dasharray="{value}": every dash and gap is at least '
-                                         f'{fmt(2 * g.stroke)} (twice the stroke)')
+                                         f'{fmt(g.dash)}')
 
     def classes(self, element: Element, tokens: list[str]) -> None:
         for token in tokens:
@@ -539,6 +561,61 @@ class Checker:
                 if resolved(element, key) != "round":
                     self.report(element, f"{key} must be round")
         self.margin(element, pieces, width / 2)
+        if stroke == "currentColor":
+            self.stroked_alignment(element, pieces)
+        elif self.is_dot(element):
+            self.dot_alignment(element, pieces)
+        elif fill == "currentColor":
+            self.fill_alignment(element, pieces)
+
+    def misaligned(self, element: Element, what: str, axis: str, value: float, target: str) -> None:
+        name = element.attributes.get("id")
+        owner = f"'{name}'" if name is not None else f"<{element.name}>"
+        self.report(element, f"{owner}: {what} at {axis}={fmt(value)} is not on {target}")
+
+    def stroked_alignment(self, element: Element, pieces: list[Piece]) -> None:
+        """A stroke of 1 px covers whole pixels: its middle line on n + 0.5."""
+        target = "the middle of a pixel (n + 0.5)"
+        for piece in pieces:
+            if isinstance(piece, Segment):
+                (ax, ay), (bx, by) = piece.a, piece.b
+                if math.dist(piece.a, piece.b) <= EPSILON:
+                    continue
+                if abs(ay - by) <= EPSILON and not on_half(ay):
+                    self.misaligned(element, "the horizontal segment", "y", ay, target)
+                elif abs(ax - bx) <= EPSILON and not on_half(ax):
+                    self.misaligned(element, "the vertical segment", "x", ax, target)
+            elif isinstance(piece, Circle):
+                self.round_alignment(element, "the circle", piece.center, piece.r, piece.r, target)
+            elif isinstance(piece, Arc):
+                self.round_alignment(element, "the arc", piece.center, piece.rx, piece.ry, target)
+
+    def round_alignment(self, element: Element, what: str, center: Point, rx: float, ry: float,
+                        target: str) -> None:
+        for axis, c, r in (("x", center[0], rx), ("y", center[1], ry)):
+            for edge in (c - r, c + r):
+                if not on_half(edge):
+                    self.misaligned(element, f"{what} (centre {point_text(center)}, radius {fmt(r)})",
+                                    axis, edge, target)
+
+    def dot_alignment(self, element: Element, pieces: list[Piece]) -> None:
+        """A point has its centre on n + 0.5, and so its edges on whole pixels."""
+        center = pieces[0].center  # type: ignore[union-attr]
+        for axis, value in (("x", center[0]), ("y", center[1])):
+            if not on_half(value):
+                self.misaligned(element, f"the centre of the point {point_text(center)}", axis, value,
+                                "the middle of a pixel (n + 0.5)")
+
+    def fill_alignment(self, element: Element, pieces: list[Piece]) -> None:
+        """A fill without stroke has its horizontal and vertical sides on whole pixels."""
+        for piece in pieces:
+            if not isinstance(piece, Segment) or math.dist(piece.a, piece.b) <= EPSILON:
+                continue
+            (ax, ay), (bx, by) = piece.a, piece.b
+            if abs(ay - by) <= EPSILON and not on_whole(ay):
+                self.misaligned(element, "the horizontal side", "y", ay, "a whole pixel")
+            elif abs(ax - bx) <= EPSILON and not on_whole(ax):
+                self.misaligned(element, "the vertical side", "x", ax, "a whole pixel")
 
     def margin(self, element: Element, pieces: list[Piece], half_width: float) -> None:
         points = [p for piece in pieces for p in samples(piece)]

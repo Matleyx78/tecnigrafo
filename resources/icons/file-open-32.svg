@@ -2,8 +2,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-    <g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path class="esist" d="M 4 25 V 7 H 12 L 15 11 H 25 V 15"/>
-        <path class="pt" d="M 4 25 L 8 15 H 28 L 24 25 Z"/>
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path class="esist" d="M4.5 24.5 V7.5 H12.5 L15.5 11.5 H24.5 V15.5"/>
+        <path class="pt" d="M4.5 24.5 L8.5 15.5 H27.5 L23.5 24.5 Z"/>
     </g>
 </svg>

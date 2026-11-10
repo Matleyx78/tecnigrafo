@@ -8,6 +8,7 @@
 #include <QFrame>
 #include <QList>
 #include <QObject>
+#include <QPoint>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -22,6 +23,7 @@ class QEvent;
 class QKeyEvent;
 class QLabel;
 class QMainWindow;
+class QMouseEvent;
 class QPaintEvent;
 class QStackedWidget;
 class QToolButton;
@@ -126,6 +128,11 @@ public:
 
     [[nodiscard]] QStackedWidget* pages() const { return m_pages; }
 
+    /// The handle on the edge towards the drawing area, named
+    /// autoHideHandle, which AutoHide places and drags (docs/tappe/0.7.5/
+    /// P40, point 3).
+    [[nodiscard]] QWidget* handle() const { return m_handle; }
+
 Q_SIGNALS:
     /// Esc that no widget of the panel used, such as a cell in editing.
     void escapePressed();
@@ -135,6 +142,7 @@ protected:
 
 private:
     QStackedWidget* m_pages{nullptr};
+    QWidget* m_handle{nullptr};
 };
 
 /// Panels that hide themselves (docs/tappe/0.7.5/P18), built with Qt only
@@ -143,6 +151,13 @@ private:
 /// A hidden panel leaves its place: the QDockWidget is hidden where it was
 /// docked, so showing it again puts it back there, and its content moves to
 /// a page of the overlay. A tab on the same edge stands for it.
+///
+/// The overlay is as wide (or, on the top and bottom edges, as high) as the
+/// extent of its panel, the one it had docked. The handle of the overlay
+/// changes the extent (docs/tappe/0.7.5/P40, point 3), between
+/// kMinimumExtent and the drawing area less kMinimumExtent: the new extent
+/// is saved (saveState()) and the panel docks again with it. While the
+/// handle is dragged the pointer counts as inside the overlay.
 class AutoHide final : public QObject {
     Q_OBJECT
 
@@ -151,6 +166,11 @@ public:
     static constexpr int kShowDelayMs = 300;
     /// How long the pointer stays out of the overlay before it closes.
     static constexpr int kHideDelayMs = 500;
+    /// The thickness of the handle of the overlay, in pixels.
+    static constexpr int kHandleThickness = 4;
+    /// The smallest extent of an overlay, and how much of the drawing area
+    /// it always leaves free.
+    static constexpr int kMinimumExtent = 120;
 
     /// `drawingArea` (the drawing and the command line) goes inside frame(),
     /// between the bars; the overlay covers `drawing`, a descendant of it.
@@ -224,7 +244,11 @@ private:
 
     bool hidePanel(QDockWidget* panel, Qt::DockWidgetArea edge, int extent);
     [[nodiscard]] const Hidden* find(const QDockWidget* panel) const;
+    [[nodiscard]] Hidden* find(const QDockWidget* panel);
     void placeOverlay();
+    /// A press, a move or a release of the pointer on the handle; true if
+    /// it was used.
+    bool dragHandle(const QMouseEvent& event);
     [[nodiscard]] bool focusInOverlay() const;
     /// Closes the overlay unless the pointer or the keyboard is in it.
     void closeIfLeft();
@@ -248,6 +272,11 @@ private:
     QTimer m_closeTimer;
     bool m_pointerInside{false};
     bool m_enabled{true};
+    /// While the handle is dragged: where the pointer was pressed, in global
+    /// coordinates, and the extent at that moment.
+    bool m_resizing{false};
+    QPoint m_resizeStart;
+    int m_resizeExtent{0};
 };
 
 }  // namespace tg::app

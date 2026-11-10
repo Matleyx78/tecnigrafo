@@ -54,6 +54,13 @@ constexpr qreal kFieldRadius = 2.0;
 
 // The colours of the style sheet are written as {token} and replaced
 // below, so that every colour comes from ThemeTokens.
+//
+// The tabs of the documents and those of the ribbon have rules of their own
+// (docs/tappe/0.7.5/P40, point 2): SARibbonTabBar derives from QTabBar, and
+// the padding and the top border of the tabs of the documents made the tabs
+// of the ribbon taller than their row and than File. A tab of the ribbon is
+// as tall as its bar (SARibbonTabBar::tabSizeHint), with the text in the
+// middle.
 constexpr std::string_view kStyleSheetTemplate{R"(
 QMainWindow::separator { background: {border}; width: 1px; height: 1px; }
 QMenuBar { background: {chrome}; color: {text}; }
@@ -67,12 +74,14 @@ QToolButton:hover { background: {selection}; border-color: {border}; }
 QToolButton:pressed, QToolButton:checked { background: {selection}; border-color: {accent}; }
 SARibbonBar { background: {ribbon}; color: {text}; border-bottom: 1px solid {border}; }
 SARibbonTabBar { background: {chrome}; }
-SARibbonTabBar::tab:selected { background: {ribbon}; }
+SARibbonTabBar::tab { background: transparent; color: {textSecondary}; border: none; margin: 0px; padding: 0px 12px; }
+SARibbonTabBar::tab:hover { color: {text}; }
+SARibbonTabBar::tab:selected { background: {ribbon}; color: {text}; }
 SARibbonPanelLabel { background: {group}; color: {textSecondary}; }
 QTabWidget::pane { background: {panel}; border: 1px solid {border}; top: -1px; }
-QTabBar::tab { background: {tabs}; color: {textSecondary}; border: 1px solid transparent; border-top: 2px solid transparent; padding: 4px 12px; }
-QTabBar::tab:hover { color: {text}; }
-QTabBar::tab:selected { background: {panel}; color: {text}; border-color: {border}; border-bottom-color: {panel}; border-top: 2px solid {accent}; }
+QTabBar#documentTabBar::tab { background: {tabs}; color: {textSecondary}; border: 1px solid transparent; border-top: 2px solid transparent; padding: 4px 12px; }
+QTabBar#documentTabBar::tab:hover { color: {text}; }
+QTabBar#documentTabBar::tab:selected { background: {panel}; color: {text}; border-color: {border}; border-bottom-color: {panel}; border-top: 2px solid {accent}; }
 QDockWidget { color: {text}; }
 QDockWidget::title { background: {ribbon}; border-bottom: 1px solid {border}; padding: 4px 6px; text-align: left; }
 tg--app--PanelTitleBar { background: {ribbon}; border-bottom: 1px solid {border}; }

@@ -36,9 +36,12 @@ enum class InterfaceKind : std::uint8_t { Ribbon, Classic };
 ///
 /// Both interfaces have the quick access bar (the actions with
 /// ActionSpec::quickAccess, in the registry's order; docs/adr/0039, point 1,
-/// area 1): the ribbon at the left of its title row (in the row of the
-/// tabs, under the title of the system, when the window keeps that frame),
-/// the classic menus at the left of the menu bar. When the window draws its own frame (it has
+/// area 1): the ribbon at the left of its title row, or, when the window
+/// keeps the frame of the system, a toolbar named quickAccessBar at the left
+/// of the row of the tabs, before File, as the ribbon's corner widget
+/// Qt::TopLeftCorner (docs/tappe/0.7.5/P40, point 1); the classic menus at
+/// the left of the menu bar. File and the tabs of the ribbon have the same
+/// top edge and height, within 1 px (point 2). When the window draws its own frame (it has
 /// SARibbonMainWindow::windowButtonBar()), the classic menu bar also shows
 /// the title and leaves room for the window buttons.
 ///

@@ -9,30 +9,59 @@
 #include "input_events.hpp"
 #include "main_window.hpp"
 
+#include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
+#include <QColor>
 #include <QCoreApplication>
 #include <QEvent>
+#include <QImage>
 #include <QLabel>
 #include <QLineEdit>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
 #include <QPlainTextEdit>
+#include <QPoint>
 #include <QPointer>
+#include <QRect>
 #include <QSet>
 #include <QSignalSpy>
 #include <QSize>
 #include <QString>
+#include <QTabBar>
 #include <QTest>
 #include <QToolBar>
 #include <QToolButton>
 #include <gtest/gtest.h>
 
 #include <SARibbon.h>
+#include <cstdlib>
 
 namespace tg::app {
 namespace {
+
+/// Runs what the event loop has queued, the deletions and the layouts
+/// that the ribbon asks once the events in progress are over.
+void settle() {
+    for (int round = 0; round < 3; ++round) {
+        QCoreApplication::processEvents();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    }
+}
+
+/// The geometry of `widget` in the coordinates of `ribbon`.
+QRect inRibbon(const QWidget& widget, const SARibbonBar& ribbon) {
+    return {widget.mapTo(&ribbon, QPoint(0, 0)), widget.size()};
+}
+
+/// The actions of the quick access bar, in their order.
+QList<QAction*> quickAccessActions(const ActionRegistry& registry) {
+    return {
+        registry.action(QStringLiteral("file.new")), registry.action(QStringLiteral("file.open")),
+        registry.action(QStringLiteral("file.save")), registry.action(QStringLiteral("edit.undo")),
+        registry.action(QStringLiteral("edit.redo"))};
+}
 
 void collectMenu(const QMenu& menu, QSet<QAction*>& found) {
     QList<const QMenu*> pending{&menu};
@@ -245,6 +274,121 @@ TEST(UiBuilderTest, TheClassicMenuBarOfAWindowWithoutFrameShowsTheTitle) {
     EXPECT_TRUE(buttons->isVisible());
     const QList<QObject*> siblings = window.children();
     EXPECT_GT(siblings.indexOf(buttons), siblings.indexOf(window.menuBar()));
+}
+
+TEST(UiBuilderTest, WithTheFrameOfTheSystemTheQuickAccessBarIsTheFirstOfTheRowOfTheTabs) {
+    // docs/tappe/0.7.5/P40, point 1: under Wayland the ribbon has the
+    // compact style, whose own quick access bar would be at the right of
+    // the tabs; a toolbar takes its place at the top left, before File.
+    MainWindow window(MainWindow::InitialDrawing::Empty, nullptr, {}, WindowFrame::System);
+    window.setScriptMode();
+    window.resize(1200, 800);
+    window.show();
+    settle();
+    ASSERT_EQ(window.windowButtonBar(), nullptr) << "the frame of the system";
+    SARibbonBar* ribbon = window.ribbonBar();
+    ASSERT_NE(ribbon, nullptr);
+    QAbstractButton* file = ribbon->applicationButton();
+    ASSERT_NE(file, nullptr);
+    for (const int width : {1200, 1500}) {
+        SCOPED_TRACE(width);
+        // A resize of the bar must not move it: QMenuBar places corner
+        // widgets of its own accord.
+        window.resize(width, 800);
+        settle();
+        auto* quick = qobject_cast<QToolBar*>(ribbon->cornerWidget(Qt::TopLeftCorner));
+        ASSERT_NE(quick, nullptr);
+        EXPECT_EQ(quick->objectName(), QStringLiteral("quickAccessBar"));
+        EXPECT_TRUE(quick->isVisible());
+        EXPECT_FALSE(ribbon->quickAccessBar()->isVisible());
+        EXPECT_EQ(quick->actions(), quickAccessActions(window.actionRegistry()));
+        const QRect bar = inRibbon(*quick, *ribbon);
+        const QRect button = inRibbon(*file, *ribbon);
+        // Its right edge at the left of File (SARibbon lays File out from
+        // the last column of the bar), in the same row.
+        EXPECT_LE(bar.right(), button.left());
+        EXPECT_LT(bar.left(), button.left());
+        EXPECT_LE(bar.top(), button.top());
+        EXPECT_GT(bar.center().y(), button.top());
+        EXPECT_LT(bar.center().y(), button.bottom());
+    }
+}
+
+TEST(UiBuilderTest, WithItsOwnFrameTheQuickAccessBarStaysInTheTitleRow) {
+    MainWindow window(MainWindow::InitialDrawing::Empty, nullptr, {}, WindowFrame::Own);
+    window.setScriptMode();
+    window.resize(1200, 800);
+    window.show();
+    settle();
+    ASSERT_NE(window.windowButtonBar(), nullptr) << "the ribbon's own frame";
+    SARibbonBar* ribbon = window.ribbonBar();
+    ASSERT_NE(ribbon, nullptr);
+    EXPECT_EQ(ribbon->cornerWidget(Qt::TopLeftCorner), nullptr);
+    SARibbonQuickAccessBar* quick = ribbon->quickAccessBar();
+    EXPECT_TRUE(quick->isVisible());
+    EXPECT_EQ(quick->actions(), quickAccessActions(window.actionRegistry()));
+    const QRect bar = inRibbon(*quick, *ribbon);
+    // Above the row of the tabs and at the left of the title.
+    EXPECT_LE(bar.bottom(), inRibbon(*ribbon->ribbonTabBar(), *ribbon).top());
+    const auto* layout = qobject_cast<SARibbonBarLayout*>(ribbon->layout());
+    ASSERT_NE(layout, nullptr);
+    if (!layout->titleRect().isEmpty()) {
+        EXPECT_LE(bar.right(), layout->titleRect().left());
+    }
+}
+
+TEST(UiBuilderTest, TheTabsOfTheRibbonAreAsHighAsFileAndTheDocumentTabKeepsItsAccent) {
+    // docs/tappe/0.7.5/P40, point 2: same top edge and same height as File,
+    // within 1 px, with both frames and in both themes; the rules of the
+    // tabs of the documents stay theirs.
+    constexpr int kTolerance = 1;
+    constexpr int kRounding = 8;
+    auto* application = qobject_cast<QApplication*>(QApplication::instance());
+    ASSERT_NE(application, nullptr);
+    for (const WindowFrame frame : {WindowFrame::System, WindowFrame::Own}) {
+        for (const Theme theme : {Theme::Light, Theme::Dark}) {
+            SCOPED_TRACE(frame == WindowFrame::System ? "system frame" : "own frame");
+            SCOPED_TRACE(theme == Theme::Dark ? "dark" : "light");
+            MainWindow window(MainWindow::InitialDrawing::Sample, nullptr, {}, frame);
+            window.setScriptMode();
+            window.resize(1200, 800);
+            window.setTheme(theme);
+            window.show();
+            settle();
+            SARibbonBar* ribbon = window.ribbonBar();
+            ASSERT_NE(ribbon, nullptr);
+            SARibbonTabBar* tabs = ribbon->ribbonTabBar();
+            ASSERT_NE(tabs, nullptr);
+            ASSERT_GE(tabs->count(), 2) << "Home and View";
+            const QRect file = inRibbon(*ribbon->applicationButton(), *ribbon);
+            const QPoint origin = tabs->mapTo(ribbon, QPoint(0, 0));
+            for (int index = 0; index < tabs->count(); ++index) {
+                SCOPED_TRACE(tabs->tabText(index).toStdString());
+                const QRect tab = tabs->tabRect(index).translated(origin);
+                ASSERT_FALSE(tab.isEmpty());
+                EXPECT_LE(std::abs(tab.top() - file.top()), kTolerance)
+                    << "tab " << tab.top() << ", File " << file.top();
+                EXPECT_LE(std::abs(tab.height() - file.height()), kTolerance)
+                    << "tab " << tab.height() << ", File " << file.height();
+            }
+
+            // The tab of the document shown has its top edge in the accent.
+            auto* documents = window.findChild<QTabBar*>(QStringLiteral("documentTabBar"));
+            ASSERT_NE(documents, nullptr);
+            ASSERT_GE(documents->currentIndex(), 0);
+            const QRect current = documents->tabRect(documents->currentIndex());
+            const QImage image = documents->grab().toImage();
+            const qreal ratio = image.devicePixelRatio();
+            const QColor top = image.pixelColor(qRound(current.center().x() * ratio),
+                                                qRound(current.top() * ratio));
+            const QColor& accent = themeTokens(theme).accent;
+            EXPECT_LE(std::abs(top.red() - accent.red()), kRounding) << top.name().toStdString();
+            EXPECT_LE(std::abs(top.green() - accent.green()), kRounding);
+            EXPECT_LE(std::abs(top.blue() - accent.blue()), kRounding);
+            EXPECT_TRUE(window.close());
+        }
+    }
+    applyTheme(*application, Theme::Light);
 }
 
 }  // namespace
