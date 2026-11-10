@@ -1285,8 +1285,9 @@ void MainWindow::populateEnvironmentMenu(QMenu& menu) {
     menu.clear();
     const DocumentType* type =
         m_active != nullptr ? m_types.find(m_active->documentType()) : nullptr;
+    const Environment* active = activeEnvironment();
     for (const Environment* environment : m_environments.list()) {
-        const bool current = environment == activeEnvironment();
+        const bool current = active != nullptr && environment == active;
         QAction* action = menu.addAction(environment->name);
         if (!environment->icon.isEmpty()) {
             action->setIcon(themedIcon(environment->icon, m_theme));
