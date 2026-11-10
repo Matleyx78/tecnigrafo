@@ -369,6 +369,8 @@ TEST_F(EnvironmentsTest, BackToTheDrawingRibbonMenusAndCommandsAreTheDrawingsAga
 
 TEST_F(EnvironmentsTest, AToolbarTheUserHidStaysHiddenAcrossTheTabs) {
     window().setInterface(InterfaceKind::Classic);
+    // Qt shows the new toolbars a moment later.
+    QCoreApplication::processEvents();
     QToolBar* draw = toolbar("home/draw");
     QToolBar* modify = toolbar("home/modify");
     ASSERT_NE(draw, nullptr);
@@ -383,7 +385,23 @@ TEST_F(EnvironmentsTest, AToolbarTheUserHidStaysHiddenAcrossTheTabs) {
     window().activate(other);
     EXPECT_TRUE(draw->isHidden());
     EXPECT_FALSE(modify->isHidden());
-    // The test environment hides the other one too, and gives it back.
+    // The test environment hides the other one too, and gives it back; a
+    // new interface does the same.
+    window().activate(test());
+    EXPECT_TRUE(draw->isHidden());
+    EXPECT_TRUE(modify->isHidden());
+    window().setInterface(InterfaceKind::Ribbon);
+    window().setInterface(InterfaceKind::Classic);
+    QCoreApplication::processEvents();
+    EXPECT_TRUE(toolbar("home/modify")->isHidden());
+    window().setInterface(InterfaceKind::Ribbon);
+    window().activate(drawing());
+    window().setInterface(InterfaceKind::Classic);
+    QCoreApplication::processEvents();
+    draw = toolbar("home/draw");
+    modify = toolbar("home/modify");
+    ASSERT_FALSE(draw->isHidden());
+    draw->toggleViewAction()->trigger();
     window().activate(test());
     EXPECT_TRUE(draw->isHidden());
     EXPECT_TRUE(modify->isHidden());
@@ -408,6 +426,7 @@ TEST_F(EnvironmentsTest, AToolbarTheUserHidStaysHiddenAcrossTheTabs) {
 
 TEST_F(EnvironmentsTest, ARestoredLayoutKeepsTheToolbarsAsTheUserLeftThem) {
     window().setInterface(InterfaceKind::Classic);
+    QCoreApplication::processEvents();
     ASSERT_NE(toolbar("home/draw"), nullptr);
     toolbar("home/draw")->toggleViewAction()->trigger();
     // Closed from a tab of the test, where the toolbars of the drawing are
@@ -417,6 +436,7 @@ TEST_F(EnvironmentsTest, ARestoredLayoutKeepsTheToolbarsAsTheUserLeftThem) {
 
     MainWindow restored(MainWindow::InitialDrawing::Empty, nullptr, addTestEnvironment);
     restored.show();
+    QCoreApplication::processEvents();
     ASSERT_EQ(restored.interfaceKind(), InterfaceKind::Classic);
     auto* draw = restored.findChild<QToolBar*>(QStringLiteral("home/draw"));
     auto* modify = restored.findChild<QToolBar*>(QStringLiteral("home/modify"));

@@ -278,7 +278,11 @@ void UiBuilder::applyEnvironment() {
             offered = offered || (isRegistered(m_registry, action) && !action->isSeparator() &&
                                   action->isVisible());
         }
-        if (!offered && !toolbar->isHidden()) {
+        // A toolbar just made is hidden until Qt shows it, unless it was
+        // hidden on purpose: only a toolbar hidden on purpose stays hidden.
+        const bool hiddenOnPurpose =
+            toolbar->isHidden() && toolbar->testAttribute(Qt::WA_WState_ExplicitShowHide);
+        if (!offered && !hiddenOnPurpose) {
             toolbar->hide();
             m_hiddenByEnvironment.insert(toolbar);
         } else if (offered && m_hiddenByEnvironment.remove(toolbar)) {
