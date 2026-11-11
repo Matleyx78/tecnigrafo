@@ -154,6 +154,9 @@ QList<QAction*> toolActions(const ActionRegistry& registry) {
 /// The small icons of the quick access bar: the 16 px grid of docs/adr/0040,
 /// point 3 (docs/adr/0039, point 1, area 1).
 constexpr int kQuickAccessIconSize = 16;
+/// The logo of the program fills the title row less one pixel above and one
+/// below, as SARibbon's own title icon.
+constexpr int kLogoInset = 2;
 
 /// Fills `bar` with the quick access actions of `registry`, icons only.
 void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
@@ -680,6 +683,16 @@ void UiBuilder::buildRibbon() {
         // On the surface of the row, without the box of the toolbars.
         quickAccess->setStyleSheet(
             QStringLiteral("QToolBar { background: transparent; border: none; padding: 0px; }"));
+        // The logo before the quick access bar, as in the reference: the
+        // compact style lays out the corner widget before its own title
+        // icon, which would put the logo between the bar and File.
+        ribbon->setTitleIconVisible(false);
+        auto* logo = new SARibbonTitleIconWidget(quickAccess);
+        logo->setObjectName(QStringLiteral("programLogo"));
+        logo->setIcon(programIcon());
+        const int logoSide = ribbon->titleBarHeight() - kLogoInset;
+        logo->setFixedSize(logoSide, logoSide);
+        quickAccess->addWidget(logo);
         fillQuickAccess(*quickAccess, m_registry);
         fitQuickAccess(*quickAccess);
         m_cornerQuickAccess = quickAccess;

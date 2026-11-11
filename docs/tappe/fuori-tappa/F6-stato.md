@@ -239,8 +239,7 @@ Secondo giro (2026-11-11), sulle risposte del responsabile:
 
 Punti aperti dell'area:
 
-- logo del programma: fatto, da guardare nella finestra vera (sotto,
-  decisioni);
+- logo del programma: fatto e approvato (sotto, decisioni);
 - testi dei pulsanti grandi: restano *Layers Panel* e *Properties Panel*
   (decisione del responsabile);
 - menu della barra di accesso rapido dopo *Redo*: da decidere;
@@ -303,11 +302,10 @@ approvato, commit fatto. Con la cornice di sistema il logo stava fra la
 barra di accesso rapido e *File* (lo stile compatto di SARibbon dispone prima
 il widget d'angolo, poi la sua icona): ora l'icona di SARibbon è nascosta e il
 logo è il primo elemento della barra di accesso rapido d'angolo
-(`programLogo`), da far vedere al responsabile. A fine sessione la modifica
-(`app/src/ui_builder.cpp`) è nel ramo locale senza commit: si fa il commit
-quando il responsabile la approva.
+(`programLogo`), approvato dal responsabile nella finestra vera, commit
+fatto.
 
-Prossima sessione: far vedere il logo con la cornice di sistema, poi le aree
+Prossimi passi: le aree
 rimaste (8–9 pannelli, 10 barra di stato, 4 dettagli delle schede dei
 documenti, 5 barra di navigazione se le azioni esistono, 7 immissione
 dinamica, interfaccia classica, finestre di dialogo e icone).
