@@ -11,6 +11,7 @@
 #include <QWidget>
 
 class QMenu;
+class QPaintEvent;
 class QTabBar;
 class QToolButton;
 
@@ -73,6 +74,9 @@ Q_SIGNALS:
     void closeRequested(int index);
     /// The user clicked `+`.
     void newRequested();
+
+protected:
+    void paintEvent(QPaintEvent* event) override;
 
 private:
     void choose(int tab);

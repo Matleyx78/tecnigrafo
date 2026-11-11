@@ -4,10 +4,28 @@ Stato del pacchetto [F6](F6-aspetto-dell-interfaccia.md) (#658), aggiornato a
 ogni sessione. Le aree 1–10 sono quelle dell'[ADR 0039](../../adr/0039-decisione-visiva-dell-interfaccia.md),
 punto 1.
 
+## Come si guarda
+
+Sul PC del responsabile, dopo ogni giro (fuori dal repository, in `build/`):
+
+- `build/galleria/`: le immagini della galleria;
+- `build/riferimento/`: le immagini di `docs/adr/0039/` in PNG;
+- `build/confronto/`: riferimento sopra e galleria sotto, una per tema;
+- `build/crop/`: i ritagli usati per confrontare un'area.
+
+## Regola per tutte le aree: le traduzioni
+
+L'interfaccia sarà tradotta (tappa 0.9, con gli strumenti di Qt; scelta del
+responsabile, 2026-11-11). Ogni testo nuovo passa da `tr()`, e nessuna misura
+si fissa sulla lunghezza del testo inglese: pulsanti, colonne, combo ed
+etichette devono reggere testi più lunghi (l'italiano lo è spesso di un
+terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
+
 ## Aree
 
 | Area | Stato |
 |---|---|
+| Superfici e colori di tutte le aree | approvata dal responsabile, 2026-11-11 |
 | 1. Barra del titolo e barra di accesso rapido | da fare |
 | 2. Schede del ribbon | da fare |
 | 3. Ribbon a gruppi | da fare |
@@ -65,9 +83,8 @@ schede del ribbon), `surface.ribbon`, `surface.group`, `surface.canvas`,
   a sinistra), *Utilities* (Quick Select grande). Nella galleria: *Text* in
   *Draw*, *Undo/Redo* in *Modify*, *Quick Select* piccolo in *Modify*,
   pulsanti testuali *Delete Layer*, *Layers Panel*, *New Layer*, *Properties
-  Panel*; mancano i gruppi *Annotation* e *Utilities*. **Da decidere col
-  responsabile**: la disposizione dei comandi tocca solo l'aspetto (stesse
-  azioni, stessi `objectName`), ma va confermata.
+  Panel*; mancano i gruppi *Annotation* e *Utilities*. Si dispongono come
+  nel riferimento (sotto, "Decisioni del responsabile").
 - La combo dei layer nel riferimento mostra le icone di stato colorate e il
   campione di colore piccolo; nella galleria il campione è un grande
   rettangolo bianco e le icone sono grigie e ripetute fuori dalla combo.
@@ -145,9 +162,8 @@ schede del ribbon), `surface.ribbon`, `surface.group`, `surface.canvas`,
   orizzontale. Nella galleria: colonne strette con testi tagliati
   (`.inetype`, `neweig`), combo dentro le celle (`V`, `C`, `D`), colonna
   *Plot* con casella, intestazioni con icone e bordi di cella.
-- **Da decidere col responsabile**: la galleria ha colonne in più
-  (*Lineweight*, *Plot*) del riferimento; nasconderle o restringerle è
-  aspetto, toglierle cambierebbe il comportamento.
+- La galleria ha colonne in più (*Lineweight*, *Plot*) del riferimento:
+  restano (sotto, "Decisioni del responsabile").
 - Barra di icone: nel riferimento tre icone di layer (nuovo, elimina, rendi
   corrente) a 16 px; nella galleria tre rombi arancioni.
 - Campo di ricerca con l'icona della lente nel riferimento.
@@ -188,11 +204,41 @@ a tutta larghezza.
 
 ## Area in corso
 
-Nessuna: l'ordine lo sceglie il responsabile.
+**Superfici e colori** (scelta del responsabile, 2026-11-11): fondi, bordi e
+separatori di tutte le aree, prima del ribbon, dei pannelli e della riga di
+comando.
+
+Fatto nel giro del 2026-11-11, da far vedere al responsabile:
+
+- riga delle schede dei documenti su `surface.tabs`, con il bordo sopra e
+  sotto; la scheda corrente su `surface.canvas`, con il bordo d'accento in
+  alto e il bordo sotto aperto, così si unisce all'area di disegno;
+- barra di stato su `surface.chrome`, con il bordo sopra; gli interruttori
+  accesi su `selection` senza il bordo d'accento;
+- pannelli: fondo `surface.panel` sotto griglia e tabella, senza la cornice
+  intorno;
+- separatori dei gruppi del ribbon nel colore `border`;
+- barra di accesso rapido senza il riquadro, sulla fascia del titolo.
+
+Punti aperti dell'area: margini interni dei pannelli (riquadro di ~6 px),
+gruppi della griglia *Properties* su `surface.group`, separatore a sinistra
+dei pulsanti della finestra, fascia vuota sopra la riga di comando (con
+l'area 6).
+
+## Decisioni del responsabile
+
+- 2026-11-11, ribbon (area 3): i comandi si dispongono come nel riferimento,
+  con i gruppi *Annotation* e *Utilities*, *Undo*/*Redo* fuori da *Modify*,
+  *Layer Properties* e *Properties* come pulsanti grandi; azioni e
+  `objectName` restano.
+- 2026-11-11, *Layers* (area 9): le colonne *Lineweight* e *Plot*, che il
+  riferimento non ha, restano.
+- 2026-11-11, barra di navigazione (area 5): si fa, se le azioni esistono già;
+  altrimenti si chiede al responsabile.
 
 ## Scostamenti dal riferimento decisi
 
-Nessuno.
+- *Layers*: le colonne *Lineweight* e *Plot* restano (sopra).
 
 ## Cose rimandate
 

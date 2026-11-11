@@ -73,15 +73,19 @@ QToolButton { background: transparent; border: 1px solid transparent; border-rad
 QToolButton:hover { background: {selection}; border-color: {border}; }
 QToolButton:pressed, QToolButton:checked { background: {selection}; border-color: {accent}; }
 SARibbonBar { background: {ribbon}; color: {text}; border-bottom: 1px solid {border}; }
+SARibbonQuickAccessBar, QToolBar#quickAccessBar { background: transparent; border: none; }
+SARibbonSeparatorWidget { color: {border}; }
 SARibbonTabBar { background: {chrome}; }
 SARibbonTabBar::tab { background: transparent; color: {textSecondary}; border: none; margin: 0px; padding: 0px 12px; }
 SARibbonTabBar::tab:hover { color: {text}; }
 SARibbonTabBar::tab:selected { background: {ribbon}; color: {text}; }
 SARibbonPanelLabel { background: {group}; color: {textSecondary}; }
 QTabWidget::pane { background: {panel}; border: 1px solid {border}; top: -1px; }
-QTabBar#documentTabBar::tab { background: {tabs}; color: {textSecondary}; border: 1px solid transparent; border-top: 2px solid transparent; padding: 4px 12px; }
+QWidget#documentTabs { background: {tabs}; border-top: 1px solid {border}; }
+QTabBar#documentTabBar { background: {tabs}; }
+QTabBar#documentTabBar::tab { background: {tabs}; color: {textSecondary}; border: 1px solid transparent; border-top: 2px solid transparent; border-bottom: none; padding: 4px 12px; }
 QTabBar#documentTabBar::tab:hover { color: {text}; }
-QTabBar#documentTabBar::tab:selected { background: {panel}; color: {text}; border-color: {border}; border-bottom-color: {panel}; border-top: 2px solid {accent}; }
+QTabBar#documentTabBar::tab:selected { background: {canvas}; color: {text}; border-left-color: {border}; border-right-color: {border}; border-top: 2px solid {accent}; }
 QDockWidget { color: {text}; }
 QDockWidget::title { background: {ribbon}; border-bottom: 1px solid {border}; padding: 4px 6px; text-align: left; }
 tg--app--PanelTitleBar { background: {ribbon}; border-bottom: 1px solid {border}; }
@@ -90,6 +94,10 @@ tg--app--AutoHideOverlay { background: {panel}; border: 1px solid {border}; }
 QLineEdit, QAbstractSpinBox { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
 QLineEdit:focus, QAbstractSpinBox:focus { border-color: {accent}; }
 QComboBox QLineEdit { background: transparent; border: none; padding: 0px; }
+QStatusBar { background: {chrome}; border-top: 1px solid {border}; }
+QStatusBar QToolButton:checked { border-color: transparent; }
+QDockWidget QScrollArea, QDockWidget QScrollArea > QWidget > QWidget { background: {panel}; }
+QDockWidget QAbstractItemView { background: {panel}; border: none; }
 QAbstractItemView { background: {field}; alternate-background-color: {group}; color: {text}; border: 1px solid {border}; selection-background-color: {selection}; selection-color: {text}; }
 QComboBox QAbstractItemView { outline: none; }
 QHeaderView::section { background: {group}; color: {textSecondary}; border: none; border-right: 1px solid {border}; border-bottom: 1px solid {border}; padding: 2px 6px; }
@@ -135,13 +143,14 @@ void drawFloat(QPainter& painter, const QRectF& box) {
 }  // namespace
 
 QString styleSheet(const ThemeTokens& tokens) {
-    const std::array<std::pair<QString, const QColor*>, 11> colours{{
+    const std::array<std::pair<QString, const QColor*>, 12> colours{{
         {QStringLiteral("{chrome}"), &tokens.chrome},
         {QStringLiteral("{ribbon}"), &tokens.ribbon},
         {QStringLiteral("{group}"), &tokens.group},
         {QStringLiteral("{tabs}"), &tokens.tabs},
         {QStringLiteral("{panel}"), &tokens.panel},
         {QStringLiteral("{field}"), &tokens.field},
+        {QStringLiteral("{canvas}"), &tokens.canvas},
         {QStringLiteral("{border}"), &tokens.border},
         {QStringLiteral("{textSecondary}"), &tokens.textSecondary},
         {QStringLiteral("{text}"), &tokens.text},
