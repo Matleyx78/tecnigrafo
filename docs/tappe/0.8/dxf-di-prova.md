@@ -28,7 +28,7 @@ Le hash SHA-256 si scrivono qui quando i file sono pubblicati.
 | `autocad-quote.dxf` | con `ISO-25`: lineari orizzontale, verticale e ruotata, allineata, angolare fra due linee, radiale e diametrale su un cerchio e su un arco, le quote **strette** dei quattro casi dell'adattamento (testo e frecce dentro, solo il testo dentro, solo le frecce dentro, tutto fuori) sia lineari sia allineate, e radiali e diametrali in un cerchio piccolo; con uno stile `PROVA` (`DIMTAD` 0, `DIMDEC` 3, `DIMDSEP` `.`, `DIMTXT` 3,5); una con testo sostituito `<> mm`; una quota ruotata, una scalata e una specchiata dopo la creazione; una quota coordinata (tipo che Tecnigrafo conserva soltanto) | RT22, RT23, RT24, RT25, RT26, RT27, RT28 |
 | `autocad-retini.dxf` | `ANSI31`, `NET` e `SOLID` su un rettangolo di quattro linee con un cerchio dentro (punto interno) e con isole annidate; un retino da *Select objects*; un motivo ruotato di 30° e scalato 2; gli stili *Normal*, *Outer* e *Ignore*; un retino con un motivo diverso (`ANSI37`) | RT30, RT31, RT42, RT43, RT44 |
 | `autocad-pedit.dxf` | linee e archi convertiti in polilinee; *Join* con distanza 0; *Multiple* con distanza 2 e *Extend*, *Add* e *Both*, su linee che non si toccano, su linee che si sovrappongono e su un arco seguito da una linea; *Close*, *Open*, *Reverse*, *Ltype gen* | RT32, RT33 |
-| `campioni-elettrico/` | otto simboli della libreria dell'elettrico (`TG_EL_CONTACT_NO`, `TG_EL_COIL_DELAY_OFF`, `TG_EL_BREAKER_3P`, `TG_EL_TRANSFORMER_1PH`, `TG_EL_MOTOR_3PH`, `TG_EL_TERMINAL`, `TG_EL_FOLIO_OUT`, `TG_EL_PUSHBUTTON_NO`) e lo schema `avviamento-diretto.dxf`, scritti dallo script della libreria (DXF R2000), non da AutoCAD; campioni di prova, non la libreria (decisione del 2026-11-11, punto 8); commit da scrivere qui | RT18, RT19, RT21 |
+| `campioni-elettrico/` | otto simboli della libreria dell'elettrico (`TG_EL_CONTACT_NO`, `TG_EL_COIL_DELAY_OFF`, `TG_EL_BREAKER_3P`, `TG_EL_TRANSFORMER_1PH`, `TG_EL_MOTOR_3PH`, `TG_EL_TERMINAL`, `TG_EL_FOLIO_OUT`, `TG_EL_PUSHBUTTON_NO`) e lo schema `avviamento-diretto.dxf`, scritti dallo script della libreria (DXF R2000), non da AutoCAD; campioni di prova, non la libreria (decisione del 2026-11-11, punto 8); commit `764dfdb9420623d26636e1552769cc223e484231`, hash qui sotto | RT18, RT19, RT21 |
 
 ## Che cosa provare a mano in AutoCAD LT
 
@@ -38,3 +38,22 @@ Oltre ai disegni, da scrivere nella pull request che li pubblica:
    `acadiso.dwt` (ADR 0047, punto 2).
 2. Tracciamento: in `LINE`, acquisiti due punti, dopo aver indicato il primo
    punto i segni dei punti acquisiti restano o spariscono? (ADR 0049, punto 2.)
+
+## Campioni dell'elettrico
+
+Commit `764dfdb9420623d26636e1552769cc223e484231` di
+[Matleyx78/dxf-test-file](https://github.com/Matleyx78/dxf-test-file/tree/764dfdb9420623d26636e1552769cc223e484231/campioni-elettrico),
+cartella `campioni-elettrico/`, CC0. Copiati da `tec-ss-grafica` al commit
+`cec2edd`; scritti dallo script della libreria (DXF R2000, fine riga CRLF).
+
+| File | SHA-256 |
+|---|---|
+| `TG_EL_BREAKER_3P.dxf` | `cfde6e3f8597cbface5b47df3ffaf306eeb80a1d455f7faebae879ac4c755c05` |
+| `TG_EL_COIL_DELAY_OFF.dxf` | `fdba66ca1135c7cf32ee730cf37a21db6aebd05e8e7854042bcd4475d94f972d` |
+| `TG_EL_CONTACT_NO.dxf` | `f576ba399064f16520794ef217214e5dbcdec1612c9886898ed3e510d2a89d21` |
+| `TG_EL_FOLIO_OUT.dxf` | `0ef1d6e6ed516f785df6eb3256b02bac91481e527ca38a2cef15a0569b1f0a9d` |
+| `TG_EL_MOTOR_3PH.dxf` | `15d778e0b43c9acb755b23d995db984f51e089f4679f99dc3adaccc04635c833` |
+| `TG_EL_PUSHBUTTON_NO.dxf` | `82b394687bda6d262ac42aad530e04cc9a392c8d4a813c74dab9629382d668a1` |
+| `TG_EL_TERMINAL.dxf` | `7edaa904c0e2846d10e4285faa248ea6a81b7be12eff13a067b96fe52d2149fe` |
+| `TG_EL_TRANSFORMER_1PH.dxf` | `9ee89223b747a6e5ef115d33e17c8f231b37b55f2af5c5794223d29f3ad0f6ba` |
+| `avviamento-diretto.dxf` | `efeef9c563c4142f3bf9a2fedaa7d2cd6ecf80069703b04a6df2854bdab620b5` |
