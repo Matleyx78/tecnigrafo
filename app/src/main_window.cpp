@@ -1902,6 +1902,14 @@ void MainWindow::changeEvent(QEvent* event) {
         }
     }
     SARibbonMainWindow::changeEvent(event);
+    // A change of the desktop's theme (under GNOME it also arrives late,
+    // after the window is shown) repolishes the window, and the style sheet
+    // puts back the palette that the window had when it was first polished:
+    // the light one, set before the saved theme. The window keeps the
+    // palette of its theme (setTheme).
+    if (event->type() == QEvent::ThemeChange && palette() != QApplication::palette()) {
+        setPalette(QApplication::palette());
+    }
 }
 
 void MainWindow::restoreUiSettings() {
