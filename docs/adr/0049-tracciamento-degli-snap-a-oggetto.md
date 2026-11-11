@@ -1,6 +1,6 @@
 # ADR 0049: Tracciamento degli snap a oggetto
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto

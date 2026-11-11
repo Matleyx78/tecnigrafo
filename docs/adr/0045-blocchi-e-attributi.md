@@ -1,6 +1,6 @@
 # ADR 0045: Blocchi e attributi
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto

@@ -1,6 +1,6 @@
 # ADR 0044: Entità composte e geometria generata
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto

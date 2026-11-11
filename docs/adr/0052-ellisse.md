@@ -1,6 +1,6 @@
 # ADR 0052: Ellisse
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto

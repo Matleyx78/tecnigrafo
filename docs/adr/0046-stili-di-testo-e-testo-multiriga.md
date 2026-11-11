@@ -1,6 +1,6 @@
 # ADR 0046: Stili di testo e testo multiriga
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto

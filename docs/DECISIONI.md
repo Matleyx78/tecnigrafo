@@ -1521,3 +1521,9 @@ i rimandi ai documenti che cambia.
      `campioni-elettrico/` (CC0), dichiarati come campioni e non come la
      libreria, che resta in lavorazione in `tec-ss-grafica` fino a lavoro
      finito.
+- **2026-11-11 — ADR della 0.8 accettati e richieste approvate.** Il
+  responsabile accetta gli ADR [0044](adr/0044-entita-composte-e-geometria-generata.md)–[0052](adr/0052-ellisse.md)
+  e approva i testi delle quattro richieste a solid-space del piano della 0.8
+  (contorni e isole; parti di una curva in una regione; tangente, arcocoseno e
+  `hypot`; l'ellisse in `geom2d`), scritti nei commenti di
+  [#661](https://github.com/Matleyx78/tecnigrafo/pull/661).

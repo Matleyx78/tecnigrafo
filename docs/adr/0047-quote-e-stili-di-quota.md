@@ -1,6 +1,6 @@
 # ADR 0047: Quote e stili di quota
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto

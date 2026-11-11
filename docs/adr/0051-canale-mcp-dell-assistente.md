@@ -1,6 +1,6 @@
 # ADR 0051: Canale MCP per l'assistente dell'utente
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-11
 
 ## Contesto
