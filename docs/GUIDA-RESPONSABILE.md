@@ -95,16 +95,11 @@ Poi, nella stessa cartella, avvia l'agente:
 |---|---|---|
 | Claude Code | `claude` | quello che il piano indica per il pacchetto |
 | Codex | `codex` | quello che il piano indica per il pacchetto |
-| Gemini 3.8 Flash | `agy --mode auto` | `/model` → **Gemini 3.8 Flash**, *Effort* **medium** |
-| Gemini 4 Argon, se ha quota (B7) | `agy --mode auto`, in un altro terminale | `/model` → **Gemini 4 Argon**, *Effort* **high** |
 
 Modello e impegno di ogni pacchetto sono nella tabella del piano; le fasce sono
 in [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno", e
-quando cambiano i modelli disponibili si segue quella tabella. In Antigravity il
-modello in uso è scritto in basso a destra; *Effort* si sceglie con le frecce
-`←` `→` dopo `/model`. Per uscire da `agy` premi `Ctrl+C` (se non basta, una
-seconda volta). Come installare e configurare Antigravity:
-[AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
+quando cambiano i modelli disponibili si segue quella tabella. Dal 2026-11-11
+gli agenti sono solo Claude e Codex ([DECISIONI.md](DECISIONI.md)).
 
 Ogni pull request dichiara strumento, modello e impegno: servono alla misura
 dei pacchetti ([DECISIONI.md](DECISIONI.md), 2026-11-10). Se l'agente scrive
@@ -230,7 +225,7 @@ risposto di no.
 | Subito dopo aver aperto la tappa di solid-space (B6, passo 5) | le righe che citano le richieste devono citare i pacchetti: lo script ti dà le celle nuove da copiare nel piano | `<tappa>`, poi `--applica` dopo la pull request del piano |
 | Ogni volta che unisci un pacchetto di solid-space (B11, punto 2) | qualche issue di Tecnigrafo diventa pronta | `--applica` |
 | Ogni volta che unisci un pacchetto di Tecnigrafo che sta in «Si chiude con» (B11, punto 3) | una richiesta può chiudersi | `<tappa>`, sezione *To check* |
-| Prima di avviare un lotto di Gemini o un agente in Tecnigrafo (B7, B8) | sai già chi ha lavoro pronto, e non avvii un agente per sentirti dire che non c'è niente | `<tappa>`, sezione *Ready* |
+| Prima di avviare un lotto o un agente in Tecnigrafo (B7, B8) | sai già chi ha lavoro pronto, e non avvii un agente per sentirti dire che non c'è niente | `<tappa>`, sezione *Ready* |
 | Quando un agente risponde che nessun pacchetto è pronto e non te lo aspetti | vedi chi lo blocca, oppure un "Dipende da" rimasto indietro | `<tappa>` |
 | Dopo aver cambiato "Dipende da" nel piano a tappa aperta (una richiesta nuova, "Modifiche al piano") | issue e relazioni devono seguire il piano | `--applica` |
 | Prima di chiudere le tappe (B12) | niente in *To fix* né in *To check*, e nessuna richiesta della tappa ancora aperta | `<tappa>` |
@@ -282,13 +277,13 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B4. Le schede dopo la revisione del contratto | Tecnigrafo | tu e Claude |
 | B5. Preparare il piano di solid-space | solid-space | tu e Claude |
 | B6. Aprire le tappe | tutti e due | tu, con lo script o con Claude |
-| B7. Riferimenti | tutti e due | Gemini, a lotti |
+| B7. Riferimenti | tutti e due | Codex o Claude, l'agente che non fa il lavoro; anche a lotti |
 | B8. Lavoro | tutti e due | Claude e Codex |
-| B9. Seconda opinione | tutti e due | Gemini, a lotti; Copilot sulle impegnative |
+| B9. Seconda opinione | tutti e due | chi ha scritto i riferimenti; anche a lotti |
 | B10. Un riferimento contestato | tutti e due | chi ha scritto i riferimenti |
 | B10a. Un agente si ferma su un buco | Tecnigrafo | tu, poi Claude e Codex |
 | B11. Unire i pacchetti | tutti e due | tu |
-| B12. Chiudere le tappe | tutti e due | Gemini, poi tu |
+| B12. Chiudere le tappe | tutti e due | Codex, poi tu |
 | B13. La pausa tra le tappe | tutti e due | tu e Claude |
 
 Una tappa che non chiede nulla a solid-space salta B2–B5. Da B7 in poi i passi
@@ -325,10 +320,12 @@ senza, lavorano lo stesso e lo dicono.
    docs/tappe e dai modelli tappe/0000-modello.md e tappe/0000-pacchetto.md,
    con le regole di docs/LAVORO-IN-PARALLELO.md ("Preparare il piano"). Per ogni
    pacchetto indica difficoltà, agente del lavoro, fascia di modello e impegno,
-   e chi scrive i riferimenti: Gemini per quelli ordinari, un agente di fascia
-   forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
-   "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
-   documentazione. Proponi anche le bozze degli ADR che servono, e i bisogni da
+   e chi scrive i riferimenti: l'altro agente, che poi rivede la pull request
+   del lavoro (Codex per i pacchetti di Claude, Claude per quelli di Codex), in
+   fascia forte per i casi delicati e leggera per gli ordinari, oppure "non
+   servono" con il motivo. Per ogni divisione e per ogni impegnativo scrivi il
+   motivo in una riga, e cerca prima le divisioni che tolgono file comuni dalle
+   catene. Proponi anche le bozze degli ADR che servono, e i bisogni da
    chiedere a solid-space (docs/RICHIESTE-A-SOLID-SPACE.md) con il testo delle
    richieste, ciascuna nella forma del file di scripts/richiesta.sh. Scrivi
    subito le schede dei pacchetti che non dipendono da solid-space; per gli
@@ -566,10 +563,11 @@ Tecnigrafo.
    e i DXF di Tecnigrafo entrano nei pacchetti di riferimenti, come dice
    tests/corpus/README.md. Per ogni
    pacchetto indica difficoltà, agente del lavoro, fascia di modello e impegno,
-   e chi scrive i riferimenti: Gemini per quelli ordinari, un agente di fascia
-   forte diverso da chi fa il lavoro per quelli con calcoli delicati, oppure
-   "non servono" con il motivo. Assegna a Gemini anche i pacchetti facili di
-   documentazione. Proponi anche le bozze degli ADR che servono.
+   e chi scrive i riferimenti: l'altro agente, che poi rivede la pull request
+   del lavoro (Codex per i pacchetti di Claude, Claude per quelli di Codex), in
+   fascia forte per i casi delicati e leggera per gli ordinari, oppure "non
+   servono" con il motivo. Per ogni divisione e per ogni impegnativo scrivi il
+   motivo in una riga. Proponi anche le bozze degli ADR che servono.
    Le idee sono già decise nella pausa (B13): metti nel piano quelle che ho
    approvato per questa tappa. Se ne trovi altre aperte nate dopo la pausa,
    dimmi quali potrebbero entrare e perché: le approvo io, una per una.
@@ -695,21 +693,18 @@ quelli si creano solo le issue nuove.
    piano né solid-space. Rilancialo senza opzioni: deve dire «Nothing to fix or
    to check.».
 
-### B7. Riferimenti (Gemini, a lotti)
+### B7. Riferimenti (l'altro agente, anche a lotti)
 
-Gemini 3.8 Flash scrive i riferimenti ordinari. Quelli con calcoli delicati il
-piano li assegna a un agente di fascia forte diverso da chi farà il lavoro: di
-norma Codex per i pacchetti di Claude, e Claude per quelli di Codex, con la
-frase di B8. Gemini 4 Argon non ha pacchetti nel piano, perché la sua quota
-settimanale basta a uno o due pacchetti di riferimenti: se ha quota e ti serve,
-passagli tu un pacchetto di Codex, cambiando l'etichetta da `agente:codex` a
-`agente:gemini-argon`, e avvialo con la sua frase qui sotto. La revisione al
-punto 3 è la stessa per tutti.
+I riferimenti di un pacchetto li scrive l'agente che non lo realizza: Codex per
+i pacchetti di Claude, Claude per quelli di Codex, in fascia forte per i casi
+delicati e leggera per gli ordinari, come dice il piano. Puoi avviarlo su un
+solo pacchetto, con la frase di B8, o su tutti quelli pronti, a lotti, con la
+frase qui sotto.
 
-1. Aggiorna la cartella del repository e avvia `agy --mode auto` con Gemini 3.8
-   Flash (A2). In Tecnigrafo, prima, lancia `scripts/dipendenze.py <tappa>`
-   (A4): se sotto *Ready* non c'è nessun pacchetto di riferimenti con
-   l'etichetta di Gemini, non avviarlo.
+1. Aggiorna la cartella del repository e avvia l'agente con il modello e
+   l'impegno del piano (A2). In Tecnigrafo, prima, lancia
+   `scripts/dipendenze.py <tappa>` (A4): se sotto *Ready* non c'è nessun
+   pacchetto di riferimenti con la sua etichetta, non avviarlo.
 2. Scrivi:
 
    ```text
@@ -720,22 +715,8 @@ punto 3 è la stessa per tutti.
    un solo riepilogo.
    ```
 
-   Gemini lavora da solo finché i pacchetti pronti non finiscono. Puoi
+   L'agente lavora da solo finché i pacchetti pronti non finiscono. Puoi
    allontanarti: alla fine trovi il riepilogo con tutte le pull request.
-
-   **Lotto di Gemini 4 Argon.** Una sessione sua, che può lavorare insieme a
-   quella di Gemini 3.8 Flash: in un altro terminale aggiorna la cartella e
-   avvia `agy --mode auto` con Gemini 4 Argon (A2). Poi scrivi questo
-   messaggio, che gli dice quale etichetta e quale cartella di build sono sue:
-
-   ```text
-   Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
-   lettera. Sei Gemini 4 Argon: la tua etichetta è agente:gemini-argon e il
-   suffisso della tua cartella di build è -gemini-argon. Prendi i pacchetti di
-   riferimenti pronti della tappa <tappa> con la tua etichetta, uno dopo
-   l'altro, come dice AGENTS.md in "Lavoro a lotti". Per ognuno apri la pull
-   request e porta la CI al verde; alla fine scrivimi un solo riepilogo.
-   ```
 
 3. Rivedi tu **ogni** pull request del lotto, una alla volta. È il controllo più
    importante di tutta la tappa. Guarda queste cose:
@@ -754,7 +735,8 @@ punto 3 è la stessa per tutti.
          il caso, con percorso e commit;
    - [ ] la pull request tocca solo i casi di verifica (`tests/verifica/` in
          Tecnigrafo, `tests/corpus/` in solid-space).
-4. Se qualcosa non va, scrivilo come commento nella pull request e di' a Gemini:
+4. Se qualcosa non va, scrivilo come commento nella pull request e di'
+   all'agente che l'ha scritta:
 
    ```text
    Leggi i commenti della pull request #<numero> e correggi.
@@ -789,10 +771,13 @@ request di soli documenti, commenti o casi non si compila in locale (AGENTS.md,
 "Prima di dichiarare il lavoro finito"). Per te non cambia niente: conta solo la
 CI verde della pull request.
 
-### B9. Seconda opinione (Gemini, a lotti)
+### B9. Seconda opinione (chi ha scritto i riferimenti, anche a lotti)
 
-Quando ci sono alcune pull request di lavoro aperte, in una sessione di
-Antigravity (A2):
+Una pull request di lavoro con la CI verde la rivede l'agente che ha scritto i
+riferimenti del pacchetto: Codex le pull request di Claude, Claude quelle di
+Codex. Le pull request in fascia media che toccano parti delicate hanno una
+revisione mirata in fascia forte. Quando ci sono alcune pull request di lavoro
+aperte, avvia l'agente (A2) e scrivi:
 
 ```text
 Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
@@ -800,20 +785,10 @@ lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
 lotti", e alla fine scrivimi un solo riepilogo.
 ```
 
-Gemini lascia un commento di revisione in ognuna, senza modificare file. Leggi i
-commenti prima di unire: se uno chiede correzioni che condividi, passalo
-all'agente che ha scritto la pull request.
-
-**Copilot, sulle pull request impegnative.** Per le pull request di lavoro
-impegnative di Claude (geometria, motore dei comandi, facciata di solid-space)
-puoi chiedere anche la revisione di Copilot: nella pagina della pull request,
-**Reviewers** → **Copilot**. Copilot legge la pull request e lascia i suoi
-commenti, come Gemini; non modifica file e non apre pull request. Ogni
-revisione consuma i crediti mensili di Copilot Pro: dopo le prime guarda in
-**Settings** → **Billing and licensing** quanto è costata, e regola di
-conseguenza quante chiederne al mese. I commenti di Copilot si trattano come
-quelli di Gemini: le correzioni che condividi le passi all'agente della pull
-request.
+L'agente lascia un commento di revisione in ognuna, senza modificare file, e
+rivede solo quelle scritte da un modello diverso dal suo. Leggi i commenti prima
+di unire: se uno chiede correzioni che condividi, passalo all'agente che ha
+scritto la pull request.
 
 ### B10. Un riferimento contestato
 
@@ -892,7 +867,8 @@ visibili, ogni volta:
    request. Il secondo giro segue A3, punto 3.
 5. **Unisci** (A3). Se una decisione cambia una risposta che si vede con una
    domanda del catalogo ([verifica/domande.md](verifica/domande.md)), apri una
-   issue di riferimenti con la lettera dopo il numero (`[X.Y-R<N>b]`, Gemini) e
+   issue di riferimenti con la lettera dopo il numero (`[X.Y-R<N>b]`, di chi ha
+   scritto i riferimenti del pacchetto) e
    aggiungila in "Dipende da" del pacchetto; altrimenti bastano i test della
    scheda.
 6. **Riprendi il pacchetto** con la frase di B8.
@@ -902,8 +878,8 @@ visibili, ogni volta:
 Ogni pull request si unisce come in A3. In più, durante una tappa:
 
 1. **Riavvia** l'agente di lavoro che ha finito con la stessa frase di B8:
-   prenderà il pacchetto successivo. Gemini invece non va riavviato dopo ogni
-   merge: rilancia il lotto di B7 quando un merge ha sbloccato nuovi pacchetti
+   prenderà il pacchetto successivo. I lotti invece non si rilanciano dopo ogni
+   merge: rilancia quello di B7 quando un merge ha sbloccato nuovi pacchetti
    di riferimenti (la loro riga "Dipende da" è tutta chiusa), e quello di B9
    quando si sono accumulate nuove pull request da rivedere.
 2. **Quando unisci un pacchetto di solid-space**, la sua pull request elenca
@@ -948,7 +924,7 @@ Durante la tappa le proposte si raccolgono in una issue per tappa, «[X.Y]
 Proposte di metodo», con l'etichetta `proposta`, e si decidono nella pausa dopo
 la chiusura (B13; [DECISIONI.md](DECISIONI.md), 2026-11-03 e 2026-11-07).
 
-1. Avvia Gemini 3.8 Flash (A2) e scrivi:
+1. Avvia Codex, in fascia leggera (A2), e scrivi:
 
    ```text
    Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md. Tutte le issue
@@ -1023,8 +999,6 @@ deciso e sistemato si apre la tappa successiva (B1).
 | Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
 | Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
 | Arriva una pull request fuori pacchetto, fuori tappa o con la CI rossa da chi contribuisce | Chiudila con un rimando a `CONTRIBUTING.md`, senza discutere il codice ([ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori dalla tappa aperta"). |
-| Gemini si ferma a chiedere conferma per un comando | Se il comando serve al lavoro ed è sicuro (legge, compila, prova), approvalo e aggiungilo alle regole con `/permissions`, così non lo chiede più. Se cancella, unisce o pubblica su `main`, rifiuta. Regole in [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6. |
-| Gemini ha finito il limite di uso (`/usage`) | Riprendi quando il limite si azzera, oppure fai scrivere quei riferimenti a un agente che **non** lavora a quel pacchetto. |
 | Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta valutazione e revisione del contratto (B3, B3a, B4). Se non serve, rispondi nella issue e fallo continuare. |
 | Un riferimento di Tecnigrafo e l'archivio dei casi di solid-space non concordano | Apri una issue in solid-space con i due valori: decide l'archivio (ADR 0030, punto 14; in solid-space, `tests/corpus/README.md`, "Disaccordi con Tecnigrafo"). Se è sbagliato l'archivio, lo corregge un pacchetto di riferimenti di solid-space; se è sbagliato il riferimento, un pacchetto di riferimenti di Tecnigrafo. |
 | Il controllo automatico ha commentato una richiesta di solid-space | Completa la issue come dice il commento (B2). Il commento si aggiorna da solo a ogni modifica; non decide nulla, quindi puoi anche ignorarlo se il riferimento che segnala è voluto. |

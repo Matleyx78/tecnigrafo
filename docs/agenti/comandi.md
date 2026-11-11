@@ -7,9 +7,8 @@ leggi anche ..."). Vale insieme al nucleo.
 ## Comandi
 
 Prima di ogni comando imposta la tua cartella di build, così più agenti sullo
-stesso PC non si bloccano a vicenda: `export TG_BUILD_SUFFIX=-claude` (o `-codex`,
-`-gemini`, `-gemini-argon`; una seconda sessione di Claude sullo stesso PC usa
-`-claude-2`); i preset compilano in `build-<nome>/<preset>`, e i percorsi
+stesso PC non si bloccano a vicenda: `export TG_BUILD_SUFFIX=-claude` (o `-codex`;
+una seconda sessione di Claude sullo stesso PC usa `-claude-2`); i preset compilano in `build-<nome>/<preset>`, e i percorsi
 `./build/...` della documentazione diventano i tuoi.
 
 Dopo il clone e dopo ogni `git pull` esegui (il nucleo lo dice per ogni

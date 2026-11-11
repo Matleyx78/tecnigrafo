@@ -12,7 +12,7 @@ etichette e Project in [MANUTENZIONE.md](MANUTENZIONE.md).
 | [3](#3-windows-con-wsl) | Windows con WSL: Debian dentro Windows, poi la sezione 2 | Tecnigrafo e solid-space |
 | [4](#4-windows-nativo-con-visual-studio) | Windows nativo con Visual Studio | Tecnigrafo |
 | [5](#5-github-dal-terminale-gh) | GitHub dal terminale (`gh`) | Tecnigrafo e solid-space |
-| [6](#6-antigravity-cli-gemini) | Antigravity CLI (Gemini): installazione e permessi | Tecnigrafo e solid-space |
+| [6](#6-antigravity-cli-gemini) | Antigravity CLI (Gemini): installazione e permessi; non usato dal 2026-11-11 | Tecnigrafo e solid-space |
 | [7](#7-tecnigrafo-mcp-per-gli-agenti) | `tecnigrafo-mcp` per gli agenti | Tecnigrafo |
 
 Le sezioni 3, 5 e 6 riguardano il PC e non il repository: si fanno una volta e
@@ -454,6 +454,10 @@ lavorano lo stesso, ma non scrivono nel Project e lo dicono.
 
 ## 6. Antigravity CLI (Gemini)
 
+> **Non usato dal 2026-11-11.** Gli agenti sono solo Claude e Codex
+> ([DECISIONI.md](DECISIONI.md)). La sezione resta per un eventuale ritorno di
+> Gemini; non serve installare niente.
+
 Gemini lavora come Claude Code e Codex: un programma nel terminale, dentro la
 cartella del progetto, che usa il tuo account GitHub. Il programma si chiama
 **Antigravity CLI** e il comando è `agy`. Dal 18 giugno 2026 il vecchio Gemini
@@ -711,6 +715,8 @@ quella della documentazione di Codex nel repository
 errore, fa fede la pagina.
 
 ### 7.4 Antigravity
+
+Non usato dal 2026-11-11, come la sezione 6.
 
 Antigravity non ha, nella sua documentazione, un comando per aggiungere un
 server: si modifica il file `mcp_config.json`. Per Tecnigrafo usa quello

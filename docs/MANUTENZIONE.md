@@ -82,9 +82,10 @@ una volta.
 | `pacchetto` | issue di un pacchetto di lavoro (`[X.Y-PN]`) | sì | sì |
 | `riferimenti` | casi di verifica di un pacchetto (`[X.Y-RN]`, ADR 0011 in Tecnigrafo, ADR 0004 in solid-space) | sì | sì |
 | `tappa-X.Y` | tappa a cui appartiene la issue (una per tappa) | sì | sì |
-| `agente:claude`, `agente:codex`, `agente:gemini` | a chi è assegnata la issue | sì | sì |
+| `agente:claude`, `agente:codex` | a chi è assegnata la issue | sì | sì |
+| `agente:gemini`, `agente:copilot` | non si assegnano più: gli agenti sono solo Claude e Codex dal 2026-11-11 (DECISIONI.md); restano per un eventuale ritorno | sì | sì |
 | `agente:claude-2` | solo issue aperte prima della tappa 0.8 di Tecnigrafo: le prende qualunque sessione di Claude; si elimina quando non ne restano | sì | sì |
-| `agente:gemini-argon` | issue che il responsabile passa a Gemini 4 Argon, quando ha quota disponibile | sì | sì |
+| `agente:gemini-argon` | non si assegna più, come `agente:gemini` | sì | sì |
 | `AA-Presa in carico` | qualcuno ci sta lavorando adesso: non toccare | sì | sì |
 | `facile`, `media`, `impegnativa` | difficoltà del pacchetto | sì | — |
 | `idea` | proposta per le tappe future: si discute, non si implementa | sì | sì |
@@ -123,8 +124,7 @@ stato delle richieste.
 
 ## 4. Aggiungere un agente o un modello
 
-Quando entra un agente nuovo, o un modello che lavora in una sessione sua come
-Gemini 4 Argon:
+Quando entra un agente nuovo, o un modello che lavora in una sessione sua:
 
 1. Decidilo e scrivilo in [DECISIONI.md](DECISIONI.md) (e nella
    ROADMAP di solid-space, se lavora anche lì).
@@ -133,10 +133,10 @@ Gemini 4 Argon:
    "Chi fa cosa" e, se è un modello nuovo, la sua fascia in "Modello e impegno";
    lo stesso nel documento omonimo di solid-space.
 4. In [AGENTS.md](../AGENTS.md), "Comandi", aggiungi il suo suffisso alla lista
-   di `TG_BUILD_SUFFIX` (per esempio `-gemini-argon`), così la sua cartella di
+   di `TG_BUILD_SUFFIX` (per esempio `-codex`), così la sua cartella di
    build non si scontra con quelle degli altri.
 5. Nella guida del responsabile aggiungi la riga nella tabella di A2 (comando e
-   modello) e, se lavora a lotti in una sessione sua, la sua frase in B7.
+   modello).
 6. Se è un programma nuovo e non solo un modello: la sua installazione e i suoi
    permessi in [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), e un suo file di
    istruzioni che rimanda ad `AGENTS.md`, come `CLAUDE.md` e `GEMINI.md`.
