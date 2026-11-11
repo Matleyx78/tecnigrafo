@@ -54,6 +54,13 @@ ActionSpec withIcon(ActionSpec spec, const QString& icon) {
     return spec;
 }
 
+/// `spec` in no group of the ribbon, only in its menu (and wherever else
+/// the spec puts it).
+ActionSpec outOfRibbon(ActionSpec spec) {
+    spec.ribbon.clear();
+    return spec;
+}
+
 /// `spec` in the quick access bar (docs/adr/0039, point 1, area 1).
 ActionSpec quickAccess(ActionSpec spec) {
     spec.quickAccess = true;
@@ -179,17 +186,21 @@ void BuiltinActions::add(ActionRegistry& registry) {
     // No command: undo and redo send the runner UNDO and REDO without the
     // echo of a typed command, so that Ctrl+Z writes only "Undone: ..." in
     // the history, as before the registry. MainWindow connects them.
-    addWithKeys(registry,
-                global(quickAccess(withIcon(makeSpec(QStringLiteral("edit.undo"), tr("&Undo"), edit,
-                                                     tr("Undoes the last change.")),
-                                            QStringLiteral("edit-undo")))),
-                keysWith(QKeySequence::Undo, {}));
+    // Undo and redo are in the quick access bar, not in a group of the
+    // ribbon (docs/adr/0039, point 1, areas 1 and 3).
+    addWithKeys(
+        registry,
+        global(quickAccess(withIcon(outOfRibbon(makeSpec(QStringLiteral("edit.undo"), tr("&Undo"),
+                                                         edit, tr("Undoes the last change."))),
+                                    QStringLiteral("edit-undo")))),
+        keysWith(QKeySequence::Undo, {}));
     // Ctrl+Y as well, which AutoCAD users expect everywhere (CommandLine
     // recognises the same keys).
     addWithKeys(registry,
-                global(quickAccess(withIcon(makeSpec(QStringLiteral("edit.redo"), tr("&Redo"), edit,
-                                                     tr("Redoes the last change undone.")),
-                                            QStringLiteral("edit-redo")))),
+                global(quickAccess(
+                    withIcon(outOfRibbon(makeSpec(QStringLiteral("edit.redo"), tr("&Redo"), edit,
+                                                  tr("Redoes the last change undone."))),
+                             QStringLiteral("edit-redo")))),
                 keysWith(QKeySequence::Redo, QKeySequence(Qt::CTRL | Qt::Key_Y)));
     addSeparator(registry, QStringLiteral("edit.separator-erase"), edit);
     ActionSpec erase = commandSpec(QStringLiteral("edit.erase"), tr("&Erase"), edit,
@@ -272,9 +283,12 @@ void BuiltinActions::add(ActionRegistry& registry) {
                  QStringLiteral("properties-panel"));
     properties.ribbon = QStringLiteral("home/properties");
     registry.add(std::move(properties));
-    registry.add(withIcon(makeSpec(QStringLiteral("edit.quick-select"), tr("&Quick Select…"), tools,
-                                   tr("Selects objects by type and property.")),
-                          QStringLiteral("quick-select")));
+    ActionSpec quickSelect =
+        withIcon(makeSpec(QStringLiteral("edit.quick-select"), tr("&Quick Select…"), tools,
+                          tr("Selects objects by type and property.")),
+                 QStringLiteral("quick-select"));
+    quickSelect.ribbon = QStringLiteral("home/utilities");
+    registry.add(std::move(quickSelect));
     const QString modes = tools + QLatin1Char('/') + tr("Object Snap &Modes");
     registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.endpoint"), tr("&Endpoint"), modes,
                                      tr("Snaps to the endpoints of lines, arcs and polylines.")),
@@ -348,9 +362,11 @@ void BuiltinActions::add(ActionRegistry& registry) {
         arc, QStringLiteral("draw.arc.start-center-end"), tr("&Start, Center, End"),
         tr("Draws an arc from its start, its center and its end."), QStringLiteral("ARC"),
         {QString(kWaitForUser), QStringLiteral("C")}, QStringLiteral("draw-arc-sce")));
-    registry.add(withIcon(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
-                                      tr("Writes single-line texts."), QStringLiteral("TEXT")),
-                          QStringLiteral("draw-text")));
+    ActionSpec text = withIcon(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
+                                           tr("Writes single-line texts."), QStringLiteral("TEXT")),
+                               QStringLiteral("draw-text"));
+    text.ribbon = QStringLiteral("home/annotation");
+    registry.add(std::move(text));
 
     const QString modify = tr("&Modify");
     // Keep each column of three small buttons together: TRIM/EXTEND/OFFSET

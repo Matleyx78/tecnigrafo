@@ -87,6 +87,15 @@ qt_add_resources(tg_app_ui icons
     BASE "${PROJECT_SOURCE_DIR}/resources/icons"
     FILES ${TG_ICON_FILES})
 
+# The logo of the program, with its own colours: not an icon with roles of
+# docs/ICONE.md. The full drawing from 48 px up, a simpler one at 16 and 32.
+qt_add_resources(tg_app_ui logo
+    PREFIX "/tg/logo"
+    BASE "${PROJECT_SOURCE_DIR}/resources/logo"
+    FILES "${PROJECT_SOURCE_DIR}/resources/logo/tecnigrafo.svg"
+          "${PROJECT_SOURCE_DIR}/resources/logo/tecnigrafo-16.svg"
+          "${PROJECT_SOURCE_DIR}/resources/logo/tecnigrafo-32.svg")
+
 target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Tecnigrafo::script writes the report of the control mode at level 2
 # (--script, docs/adr/0011).

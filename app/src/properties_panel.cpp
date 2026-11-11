@@ -11,6 +11,7 @@
 #include <QComboBox>
 #include <QEvent>
 #include <QFrame>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QIcon>
@@ -45,6 +46,12 @@ constexpr int kNameColumnWidth = 124;
 // The space around the controls of the panel and between them.
 constexpr int kMargin = 4;
 constexpr int kSpacing = 2;
+// The combos of the controls one under the other, in the Properties group
+// of the ribbon, as wide as in the reference image (docs/adr/0039, area 3),
+// with room for longer names in other languages; the icons keep this space
+// from them.
+constexpr int kStackedComboWidth = 170;
+constexpr int kStackedIconSpace = 6;
 
 // The name of the transaction of every change ("Undo Properties").
 const char* const kTransactionName = "Properties";
@@ -690,14 +697,15 @@ void PropertiesPanel::changeEvent(QEvent* event) {
     }
 }
 
-PropertyControls::PropertyControls(PropertiesPanel& panel, QWidget* parent)
+PropertyControls::PropertyControls(PropertiesPanel& panel, Qt::Orientation orientation,
+                                   QWidget* parent)
     : QWidget(parent),
       m_panel(&panel),
       m_color(new ColorCombo(this)),
       m_linetype(new LinetypeCombo(this)),
       m_lineweight(new LineweightCombo(this)) {
     setObjectName(QStringLiteral("propertyControls"));
-    auto* layout = new QHBoxLayout(this);
+    auto* layout = new QGridLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(2);
     m_color->setObjectName(QStringLiteral("propertyColorCombo"));
@@ -705,12 +713,24 @@ PropertyControls::PropertyControls(PropertiesPanel& panel, QWidget* parent)
     m_lineweight->setObjectName(QStringLiteral("propertyLineweightCombo"));
     const std::array<std::pair<QComboBox*, const char*>, 3> controls{
         {{m_color, kColorIcon}, {m_linetype, kLinetypeIcon}, {m_lineweight, kLineweightIcon}}};
+    int place = 0;
     for (const auto& [combo, icon] : controls) {
         // A click must not take the keyboard away from the drawing and the
         // command line.
         combo->setFocusPolicy(Qt::NoFocus);
-        layout->addWidget(iconLabel(QString::fromLatin1(icon), this, m_icons));
-        layout->addWidget(combo);
+        QLabel* label = iconLabel(QString::fromLatin1(icon), this, m_icons);
+        if (orientation == Qt::Vertical) {
+            combo->setMinimumWidth(kStackedComboWidth);
+            layout->addWidget(label, place, 0);
+            layout->addWidget(combo, place, 1);
+        } else {
+            layout->addWidget(label, 0, 2 * place);
+            layout->addWidget(combo, 0, (2 * place) + 1);
+        }
+        ++place;
+    }
+    if (orientation == Qt::Vertical) {
+        layout->setHorizontalSpacing(kStackedIconSpace);
     }
     connect(m_color, &ColorCombo::valueChosen, this, [this](core::Color value) {
         if (m_panel != nullptr) {

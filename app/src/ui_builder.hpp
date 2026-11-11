@@ -15,6 +15,7 @@
 
 #include <cstdint>
 
+class QAction;
 class QLabel;
 class QMenuBar;
 class QToolBar;
@@ -116,6 +117,9 @@ private:
     QMenuBar* m_menuBar{nullptr};
     QHash<QString, SARibbonPanel*> m_panels;
     QList<QPair<QString, SARibbonCategory*>> m_categories;
+    // The actions of the arrows at the corner of the groups that open a
+    // panel, owned by their group: their icon follows the theme.
+    QList<QAction*> m_launchers;
     // The environment of setEnvironment(): its id, empty for none, and its
     // contextual tabs; m_environmentSet stays false until the first call.
     bool m_environmentSet{false};

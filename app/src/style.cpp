@@ -55,6 +55,10 @@ constexpr qreal kFieldRadius = 2.0;
 // The colours of the style sheet are written as {token} and replaced
 // below, so that every colour comes from ThemeTokens.
 //
+// SARibbon gives the names of the groups a font of 80% of the height of
+// their band (SARibbonPanel::PrivateData::resetTitleLabelFont); the style
+// sheet keeps them at the 11 px of docs/adr/0039 (point 1, area 3).
+//
 // The tabs of the documents and those of the ribbon have rules of their own
 // (docs/tappe/0.7.5/P40, point 2): SARibbonTabBar derives from QTabBar, and
 // the padding and the top border of the tabs of the documents made the tabs
@@ -73,13 +77,13 @@ QToolButton { background: transparent; border: 1px solid transparent; border-rad
 QToolButton:hover { background: {selection}; border-color: {border}; }
 QToolButton:pressed, QToolButton:checked { background: {selection}; border-color: {accent}; }
 SARibbonBar { background: {ribbon}; color: {text}; border-bottom: 1px solid {border}; }
-SARibbonQuickAccessBar, QToolBar#quickAccessBar { background: transparent; border: none; }
+SARibbonButtonGroupWidget, QToolBar#quickAccessBar { background: transparent; border: none; }
 SARibbonSeparatorWidget { color: {border}; }
 SARibbonTabBar { background: {chrome}; }
-SARibbonTabBar::tab { background: transparent; color: {textSecondary}; border: none; margin: 0px; padding: 0px 12px; }
-SARibbonTabBar::tab:hover { color: {text}; }
-SARibbonTabBar::tab:selected { background: {ribbon}; color: {text}; }
-SARibbonPanelLabel { background: {group}; color: {textSecondary}; }
+SARibbonTabBar::tab { background: transparent; color: {text}; border: none; border-top: 2px solid transparent; margin: 0px; padding: 0px 12px; }
+SARibbonTabBar::tab:hover { background: {ribbon}; }
+SARibbonTabBar::tab:selected { background: {ribbon}; border-top-color: {accent}; }
+SARibbonPanelLabel { background: {group}; color: {textSecondary}; font-size: 11px; }
 QTabWidget::pane { background: {panel}; border: 1px solid {border}; top: -1px; }
 QWidget#documentTabs { background: {tabs}; border-top: 1px solid {border}; }
 QTabBar#documentTabBar { background: {tabs}; }

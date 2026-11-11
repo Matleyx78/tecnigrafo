@@ -26,6 +26,7 @@
 #include <QXmlStreamWriter>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <map>
@@ -458,6 +459,36 @@ QIcon themedIcon(const QString& name, Theme theme) {
     QIcon icon(new RoleIconEngine(std::move(smallSizes), std::move(largeSizes)));
     if (cacheable) {
         return iconCache().emplace(key, std::move(icon)).first->second;
+    }
+    return icon;
+}
+
+QIcon programIcon() {
+    struct Size {
+        int side;
+        const char* file;
+    };
+
+    // The full drawing from 48 px up, the simple one below (resources/logo).
+    constexpr std::array<Size, 7> kSizes{{{16, ":/tg/logo/tecnigrafo-16.svg"},
+                                          {32, ":/tg/logo/tecnigrafo-32.svg"},
+                                          {48, ":/tg/logo/tecnigrafo.svg"},
+                                          {64, ":/tg/logo/tecnigrafo.svg"},
+                                          {128, ":/tg/logo/tecnigrafo.svg"},
+                                          {256, ":/tg/logo/tecnigrafo.svg"},
+                                          {512, ":/tg/logo/tecnigrafo.svg"}}};
+    QIcon icon;
+    for (const Size& size : kSizes) {
+        QSvgRenderer renderer(QString::fromLatin1(size.file));
+        if (!renderer.isValid()) {
+            continue;
+        }
+        QImage image(size.side, size.side, QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::transparent);
+        QPainter painter(&image);
+        renderer.render(&painter);
+        painter.end();
+        icon.addPixmap(QPixmap::fromImage(image));
     }
     return icon;
 }

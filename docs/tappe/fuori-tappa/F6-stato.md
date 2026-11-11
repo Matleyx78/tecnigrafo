@@ -26,9 +26,9 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | Area | Stato |
 |---|---|
 | Superfici e colori di tutte le aree | approvata dal responsabile, 2026-11-11 |
-| 1. Barra del titolo e barra di accesso rapido | da fare |
-| 2. Schede del ribbon | da fare |
-| 3. Ribbon a gruppi | da fare |
+| 1. Barra del titolo e barra di accesso rapido | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
+| 2. Schede del ribbon | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
+| 3. Ribbon a gruppi | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 4. Riga delle schede dei documenti | da fare |
 | 5. Area di disegno e barra di navigazione | da fare |
 | 6. Riga di comando mobile | da fare |
@@ -204,26 +204,50 @@ a tutta larghezza.
 
 ## Area in corso
 
-**Superfici e colori** (scelta del responsabile, 2026-11-11): fondi, bordi e
-separatori di tutte le aree, prima del ribbon, dei pannelli e della riga di
-comando.
+**Aree 1–3: barra del titolo, schede e ribbon** (2026-11-11), approvate come inizio; i punti aperti qui sotto restano per i giri successivi.
 
 Fatto nel giro del 2026-11-11, da far vedere al responsabile:
 
-- riga delle schede dei documenti su `surface.tabs`, con il bordo sopra e
-  sotto; la scheda corrente su `surface.canvas`, con il bordo d'accento in
-  alto e il bordo sotto aperto, così si unisce all'area di disegno;
-- barra di stato su `surface.chrome`, con il bordo sopra; gli interruttori
-  accesi su `selection` senza il bordo d'accento;
-- pannelli: fondo `surface.panel` sotto griglia e tabella, senza la cornice
-  intorno;
-- separatori dei gruppi del ribbon nel colore `border`;
-- barra di accesso rapido senza il riquadro, sulla fascia del titolo.
+- gruppi di *Home* come il riferimento: *Draw*, *Modify*, *Annotation*
+  (*Text*), *Layers*, *Properties*, *Utilities* (*Quick Select*); *Undo* e
+  *Redo* solo nella barra di accesso rapido e nei menu;
+- pulsanti grandi (icona 32 px) in *Draw*, *Annotation*, *Utilities* e per
+  *Layers Panel* e *Properties Panel*, primi nel loro gruppo; pulsanti piccoli
+  da 16 px;
+- *Modify* in colonne: Move/Copy/Rotate, Mirror/Scale/Offset,
+  Trim/Extend/Join, Fillet/Chamfer/Explode, Erase;
+- le tre combo di *Properties* una sotto l'altra, ognuna con la sua icona;
+- pagina del ribbon di 96 px con la fascia dei nomi di 22 px e i nomi a
+  11 px (SARibbon li faceva all'80% della fascia);
+- scheda corrente con il bordo superiore d'accento, le altre nel testo
+  normale;
+- tolta la fascia chiara a sinistra dei pulsanti della finestra (la barra
+  vuota dei pulsanti aggiuntivi di SARibbon).
 
-Punti aperti dell'area: margini interni dei pannelli (riquadro di ~6 px),
-gruppi della griglia *Properties* su `surface.group`, separatore a sinistra
-dei pulsanti della finestra, fascia vuota sopra la riga di comando (con
-l'area 6).
+Secondo giro (2026-11-11), sulle risposte del responsabile:
+
+- *Layers* come il riferimento: sotto la combo *New* e *Delete* solo icona
+  (il nome nel suggerimento), un separatore e *Make Current* con il testo;
+  gli interruttori dello stato del layer corrente restano a destra della
+  combo, perché il riferimento non ha dove metterli e toglierli cambierebbe
+  il comportamento;
+- *Properties*: combo larghe 170 px come nel riferimento (prima stavano sul
+  contenuto e il gruppo sembrava sparire), 6 px tra icona e combo;
+- freccia ↘ all'angolo di *Layers* e *Properties*: apre il pannello, come il
+  pulsante grande; icona nuova `ui-panel-launcher` (16 e 32 px, ruolo
+  `esist`), centrata nel quadrato che SARibbon dà al pulsante.
+
+Punti aperti dell'area:
+
+- logo del programma: fatto, da guardare nella finestra vera (sotto,
+  decisioni);
+- testi dei pulsanti grandi: restano *Layers Panel* e *Properties Panel*
+  (decisione del responsabile);
+- menu della barra di accesso rapido dopo *Redo*: da decidere;
+- interfaccia classica: *Text* e *Quick Select* stanno ora in due barre
+  proprie, *Annotation* e *Utilities* (da riprendere con l'area classica);
+- le icone piccole dei layer sono meno curate di quelle del riferimento
+  (giudizio del responsabile): da riprendere con l'area delle icone.
 
 ## Decisioni del responsabile
 
@@ -242,10 +266,24 @@ l'area 6).
   Sans a 13 px e mostra il font della finestra vera.
 - 2026-11-11, barra di navigazione (area 5): si fa, se le azioni esistono già;
   altrimenti si chiede al responsabile.
+- 2026-11-11: testi dei pulsanti grandi *Layers Panel* e *Properties
+  Panel*, non quelli del riferimento; gruppo *Layers* come il riferimento;
+  frecce ↘ dei gruppi dove servono (aprono il pannello).
+- 2026-11-11, logo (area 1): il logo del responsabile (repository
+  tec-ss-grafica, `icon/program/gemini-svg.svg`) senza la versione, in
+  `resources/logo/tecnigrafo.svg` da 48 px in su; a 16 e 32 px una versione
+  semplificata (stessi colori, la T più spessa, senza griglia e quote), per
+  ora. Sta in `resources/logo/`, non in `resources/icons/` che ammette solo
+  icone a ruoli; il responsabile ha permesso la cartella e la riga di
+  `ui-panel-launcher` in `docs/ICONE.md`.
 
 ## Scostamenti dal riferimento decisi
 
 - *Layers*: le colonne *Lineweight* e *Plot* restano (sopra).
+- Ribbon: i pulsanti grandi si chiamano *Layers Panel* e *Properties Panel*
+  (sopra).
+- Ribbon, gruppo *Layers*: gli interruttori acceso, congelato, bloccato del
+  layer corrente restano a destra della combo, che il riferimento non ha.
 
 ## Cose rimandate
 

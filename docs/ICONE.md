@@ -410,6 +410,18 @@ dell'ambiente della barra di stato; la nomina l'ambiente
 |---|---|---|---|
 | `env-drawing2d` | ambiente `drawing2d`, il disegno 2D: indicatore dell'ambiente | squadra (`esist`) e un segmento tracciato lungo il suo lato inclinato, a 45°, con i due estremi (`geo`, `pt`) | sì |
 
+Il ribbon sul riferimento (F6) aggiunge la freccia all'angolo dei gruppi che
+apre il pannello, con i due file `-16.svg` e `-32.svg`; nessuna azione la
+nomina, la usa il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che
+la disegna da 16 px al centro del quadrato del pulsante.
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `ui-panel-launcher` | freccia ↘ dei gruppi *Layers* e *Properties*: apre il pannello | diagonale verso il basso a destra con la punta ad angolo retto (`esist`) | sì |
+
+Il logo del programma non è un'icona a ruoli: ha colori suoi e sta in
+[`resources/logo/`](../resources/logo/), fuori da questo controllo.
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

@@ -280,6 +280,8 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     // now.
     QCoreApplication::removePostedEvents(this, QEvent::MetaCall);
     setStyleSheet(QString{});
+    // The logo in the title row of the ribbon, and for the system.
+    setWindowIcon(programIcon());
     cmd::registerBuiltinCommands(m_registry);
     // The types and environments of the program (docs/adr/0041, point 7);
     // the extension adds its own with the actions (createMenus()).

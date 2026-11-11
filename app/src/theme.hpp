@@ -67,4 +67,9 @@ void applyTheme(QApplication& application, Theme theme);
 /// Resource icons are calculated once per theme and reused.
 [[nodiscard]] QIcon themedIcon(const QString& name, Theme theme);
 
+/// The logo of the program, the same in every theme: the simple drawing of
+/// resources/logo at 16 and 32 px, where the full one could not be read, and
+/// the full one from 48 px up.
+[[nodiscard]] QIcon programIcon();
+
 }  // namespace tg::app
