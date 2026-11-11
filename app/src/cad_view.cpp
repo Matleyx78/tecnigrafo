@@ -10,6 +10,7 @@
 
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPixmap>
 #include <QWheelEvent>
 
 #include <cassert>
@@ -30,13 +31,40 @@ core::Vec2 toVec2(const QPointF& point) {
     return {point.x(), point.y()};
 }
 
+// The pointer over the drawing: a thin cross whose arms stop at a square as
+// large as the pick box (kPickBoxPixels of command_runner.cpp, 3 pixels on
+// each side of the point), white on a dark background and black on a light one.
+constexpr int kCursorArm = 30;
+constexpr int kCursorBox = 3;
+constexpr double kDarkLuminance = 128.0;
+
+QCursor drawingCursor(const render::Color& background) {
+    constexpr int kSide = (2 * kCursorArm) + 1;
+    QPixmap pixmap(kSide, kSide);
+    pixmap.fill(Qt::transparent);
+    const double luminance =
+        (0.299 * background.r) + (0.587 * background.g) + (0.114 * background.b);
+    QPainter painter(&pixmap);
+    painter.setPen(luminance < kDarkLuminance ? Qt::white : Qt::black);
+    constexpr int kInner = kCursorArm - kCursorBox;
+    constexpr int kOuter = kCursorArm + kCursorBox;
+    painter.drawLine(0, kCursorArm, kInner - 1, kCursorArm);
+    painter.drawLine(kOuter + 1, kCursorArm, kSide - 1, kCursorArm);
+    painter.drawLine(kCursorArm, 0, kCursorArm, kInner - 1);
+    painter.drawLine(kCursorArm, kOuter + 1, kCursorArm, kSide - 1);
+    painter.drawRect(kInner, kInner, 2 * kCursorBox, 2 * kCursorBox);
+    painter.end();
+    return QCursor(pixmap, kCursorArm, kCursorArm);
+}
+
 }  // namespace
 
 CadView::CadView(QWidget* parent) : QWidget(parent), m_dynamicInput(new DynamicInputBox(this)) {
     setMouseTracking(true);  // cursor coordinates without pressed buttons
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
-    setCursor(Qt::CrossCursor);
+    m_cursor = drawingCursor(m_style.background);
+    setCursor(m_cursor);
     setMinimumSize(200, 150);
 }
 
@@ -52,7 +80,7 @@ void CadView::setSession(DocumentSession* session) {
     // A gesture in progress belonged to the session left.
     if (m_panning) {
         m_panning = false;
-        setCursor(Qt::CrossCursor);
+        setCursor(m_cursor);
     }
     m_dragSelecting = false;
     m_dynamicInput->setSession(session);
@@ -111,6 +139,10 @@ void CadView::setView(const core::Vec2& center, double unitsPerPixel) {
 
 void CadView::setStyle(const render::SceneStyle& style) {
     m_style = style;
+    m_cursor = drawingCursor(m_style.background);
+    if (!m_panning) {
+        setCursor(m_cursor);
+    }
     update();
 }
 
@@ -264,7 +296,7 @@ void CadView::mouseReleaseEvent(QMouseEvent* event) {
     }
     if (event->button() == Qt::MiddleButton && m_panning) {
         m_panning = false;
-        setCursor(Qt::CrossCursor);
+        setCursor(m_cursor);
         event->accept();
         return;
     }

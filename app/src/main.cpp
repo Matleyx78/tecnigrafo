@@ -5,6 +5,7 @@
 #include "log_file.hpp"
 #include "main_window.hpp"
 #include "script_session.hpp"
+#include "theme.hpp"
 
 #include <QApplication>
 #include <QCommandLineParser>
@@ -73,6 +74,10 @@ int main(int argc, char* argv[]) {
 
     // The program opens on the Start page, without documents, as AutoCAD
     // does (docs/DECISIONI.md, 2026-11-07).
+    // The font of the interface before any widget exists: the ribbon and the
+    // Start page, built with the window, would otherwise keep the desktop's
+    // font (Cantarell 11 under GNOME) that they had when first polished.
+    tg::app::applyInterfaceFont();
     tg::app::MainWindow window(tg::app::MainWindow::InitialDrawing::None);
     window.show();
 

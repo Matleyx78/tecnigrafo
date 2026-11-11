@@ -9,6 +9,7 @@
 #include "tg/render/scene_renderer.hpp"
 #include "tg/render/viewport.hpp"
 
+#include <QCursor>
 #include <QPointF>
 #include <QWidget>
 
@@ -97,6 +98,8 @@ private:
     QPointF m_cursorPosition;
     QPointF m_lastPanPos;
     QPointF m_leftPressPos;
+    /// The pointer over the drawing, coloured against its background.
+    QCursor m_cursor;
     bool m_panning{false};
     bool m_dragSelecting{false};
     bool m_initialFitDone{false};

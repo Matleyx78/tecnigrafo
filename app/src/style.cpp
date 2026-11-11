@@ -98,6 +98,11 @@ tg--app--AutoHideOverlay { background: {panel}; border: 1px solid {border}; }
 QLineEdit, QAbstractSpinBox { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
 QLineEdit:focus, QAbstractSpinBox:focus { border-color: {accent}; }
 QComboBox QLineEdit { background: transparent; border: none; padding: 0px; }
+QWidget#commandLine { background: {panel}; border: 1px solid {border}; border-radius: 4px; }
+QWidget#commandLine QPlainTextEdit#history { background: transparent; color: {textSecondary}; border: none; }
+QFrame#commandInput { background: {field}; border: 1px solid {border}; border-radius: 3px; }
+QFrame#commandInput QLineEdit { background: transparent; border: none; padding: 0px; }
+QLabel#promptMark { color: {accent}; }
 QStatusBar { background: {chrome}; border-top: 1px solid {border}; }
 QStatusBar QToolButton:checked { border-color: transparent; }
 QDockWidget QScrollArea, QDockWidget QScrollArea > QWidget > QWidget { background: {panel}; }

@@ -31,7 +31,7 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 3. Ribbon a gruppi | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 4. Riga delle schede dei documenti | da fare |
 | 5. Area di disegno e barra di navigazione | da fare |
-| 6. Riga di comando mobile | da fare |
+| 6. Riga di comando mobile | in corso |
 | 7. Immissione dinamica | da fare |
 | 8. Pannello *Properties* | da fare |
 | 9. Pannello *Layers* | da fare |
@@ -249,6 +249,61 @@ Punti aperti dell'area:
 - le icone piccole dei layer sono meno curate di quelle del riferimento
   (giudizio del responsabile): da riprendere con l'area delle icone.
 
+**Area 6: riga di comando mobile** (2026-11-11), da far vedere al
+responsabile:
+
+- riquadro sopra il fondo del disegno, al centro, largo il 68% del disegno
+  (876 su 1276 px nel riferimento, almeno 560 px), a 12 px dal fondo: fondo
+  `surface.panel`, bordo `border`, angoli arrotondati; è fratello della vista
+  e non figlio, così l'immagine della vista (`grab()`, lo screenshot degli
+  script) mostra solo il disegno;
+- tre righe di cronologia a passo fisso nel colore del testo secondario, le
+  opzioni tra parentesi quadre nel colore d'accento;
+- riga di immissione su `surface.field`: crocetta che annulla come Esc
+  (icona nuova `ui-cancel`, suggerimento «Cancel (Esc)» tradotto con
+  `tr()`), `>` nel colore d'accento, richiesta e campo;
+- la galleria cattura la finestra con `MOVE` in corso, dopo i pannelli (che
+  `MOVE` lascia senza selezione).
+
+Punti aperti dell'area 6:
+
+- il riquadro non si sposta col mouse: «mobile» dell'ADR letto come
+  «sopra il disegno»; il responsabile non lo vuole trascinabile, per ora;
+- le opzioni nella riga della richiesta restano nel colore del testo: il
+  testo della richiesta è un'etichetta semplice, che i test e l'eco nella
+  cronologia leggono;
+- la cronologia con meno di tre righe sta in alto, non vicino alla riga di
+  immissione come nel riferimento;
+- la riga di `ui-cancel` è in `docs/ICONE.md`, con quella di `ui-panel-launcher`.
+
+Sulla prova del responsabile nella finestra vera (2026-11-11):
+
+- font: il ribbon, *File* e i titoli della pagina *Start* tornavano in
+  Cantarell 11. Qt tiene anche un font per classe di widget, che
+  `setStyle` e il cambio di tema tardivo di GNOME riempiono con quelli del
+  desktop; ora il font dell'interfaccia si mette dopo lo stile, prima di
+  costruire la finestra e a ogni cambio di tema del desktop. La galleria
+  (`offscreen`) non lo mostrava: si guarda la finestra vera;
+- puntatore sul disegno (area 5): non più la croce del tema del desktop ma
+  una croce sottile con il quadratino della selezione al centro (3 px per
+  lato, come la tolleranza di selezione), bianca sul fondo scuro e nera su
+  quello chiaro; braccia di 27 px fuori dal quadratino (il responsabile le
+  ha chieste lunghe il triplo dei primi 9 px);
+- font a 10 pt (13 px) invece di 9 pt (12 px): nella finestra vera il
+  responsabile lo trovava un po' piccolo. Da guardare: *Properties Panel*
+  va su due righe, e nelle intestazioni di *Layers* *Linetype* e
+  *Lineweight* sono tagliate;
+- ribbon: aprendo un disegno dalla pagina *Start* la scheda scelta era
+  *Home* ma la pagina sotto restava quella di *View*. Con tutte le schede
+  nascoste, SARibbon rende corrente la prima scheda rimessa prima di
+  legarla alla sua pagina; ora la pagina si riallinea alla scheda scelta.
+
+Test da allineare alla chiusura (oltre a quelli del ribbon):
+`DrawingAidsTest.F10AndF8...` cerca la cronologia nel genitore del campo;
+`EnvironmentsTest.TheChosenRibbonTabStaysWhileItIsShown` usa *Home*, che
+nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
+*Modify*.
+
 ## Decisioni del responsabile
 
 - 2026-11-11, ribbon (area 3): i comandi si dispongono come nel riferimento,
@@ -269,6 +324,9 @@ Punti aperti dell'area:
 - 2026-11-11: testi dei pulsanti grandi *Layers Panel* e *Properties
   Panel*, non quelli del riferimento; gruppo *Layers* come il riferimento;
   frecce ↘ dei gruppi dove servono (aprono il pannello).
+- 2026-11-11, riga di comando (area 6): sopra il disegno, ferma in basso
+  al centro, per ora non trascinabile; riga di `ui-cancel` in
+  `docs/ICONE.md` permessa.
 - 2026-11-11, logo (area 1): il logo del responsabile (repository
   tec-ss-grafica, `icon/program/gemini-svg.svg`) senza la versione, in
   `resources/logo/tecnigrafo.svg` da 48 px in su; a 16 e 32 px una versione

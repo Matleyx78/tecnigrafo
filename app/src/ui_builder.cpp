@@ -560,6 +560,13 @@ void UiBuilder::applyEnvironment() {
     if (chosen != nullptr && m_ribbon->categoryIndex(chosen) != m_ribbon->currentIndex()) {
         m_ribbon->raiseCategory(chosen);
     }
+    // With every tab hidden (the Start page), the first tab shown again
+    // becomes the current one before SARibbon links it to its page, and the
+    // page last shown stays under it: Home chosen over the page of View.
+    SARibbonStackedWidget* pages = m_ribbon->ribbonStackedWidget();
+    if (chosen != nullptr && pages->currentWidget() != chosen) {
+        pages->setCurrentWidget(chosen);
+    }
 }
 
 InterfaceKind UiBuilder::current() const {

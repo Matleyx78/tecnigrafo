@@ -7,6 +7,7 @@
 
 #include <QEvent>
 #include <QFontMetrics>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QKeySequence>
@@ -14,9 +15,17 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPointer>
+#include <QRect>
+#include <QRegularExpression>
+#include <QSize>
+#include <QTextBlock>
+#include <QTextCharFormat>
+#include <QTextCursor>
 #include <QTextDocument>
+#include <QToolButton>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <cmath>
 #include <initializer_list>
 #include <string>
@@ -33,6 +42,20 @@ constexpr int kVisibleHistoryLines = 3;
 // Older lines are dropped beyond this, so a long session does not grow the
 // history without bound.
 constexpr int kMaxHistoryLines = 2000;
+
+// The box over the drawing (docs/adr/0039, area 6): as wide as this part
+// of the drawing (876 px of 1276 in the reference), never narrower than
+// kMinimumWidth unless the drawing is, this far from the edges of the
+// drawing, with this space between its border and what it holds.
+constexpr double kWidthRatio = 0.68;
+constexpr int kMinimumWidth = 560;
+constexpr int kOuterMargin = 12;
+constexpr int kInnerMargin = 4;
+// The input row, as high as in the reference, and the side of its icons.
+constexpr int kInputHeight = 24;
+constexpr int kIconSide = 16;
+
+constexpr const char* kCancelIcon = "ui-cancel";
 
 // Characters of coordinates and command names typed in the view and sent to
 // the command line, besides ASCII letters and digits (docs/tappe/0.2).
@@ -67,39 +90,128 @@ CommandLine::CommandLine(QWidget* parent)
     : QWidget(parent),
       m_history(new QPlainTextEdit(this)),
       m_prompt(new QLabel(this)),
-      m_input(new QLineEdit(this)) {
+      m_input(new QLineEdit(this)),
+      m_cancel(new QToolButton(this)) {
+    setObjectName(QStringLiteral("commandLine"));
+    // The box is drawn by the style sheet (docs/adr/0039, area 6); a plain
+    // QWidget draws no background of its own.
+    setAttribute(Qt::WA_StyledBackground);
     m_history->setObjectName(QStringLiteral("history"));
     m_prompt->setObjectName(QStringLiteral("prompt"));
     m_input->setObjectName(QStringLiteral("input"));
+    m_cancel->setObjectName(QStringLiteral("cancelButton"));
+
+    // The input row on the surface of a field, with the cross that cancels
+    // and the mark of the prompt before the prompt (area 6).
+    auto* field = new QFrame(this);
+    field->setObjectName(QStringLiteral("commandInput"));
+    field->setMinimumHeight(kInputHeight);
+    auto* mark = new QLabel(QStringLiteral(">"), field);
+    mark->setObjectName(QStringLiteral("promptMark"));
 
     // Fixed pitch, as in the reference of docs/adr/0039 (area 6).
-    for (QWidget* widget : std::initializer_list<QWidget*>{m_history, m_prompt, m_input}) {
+    for (QWidget* widget : std::initializer_list<QWidget*>{m_history, m_prompt, m_input, mark}) {
         widget->setFont(fixedFont());
     }
     m_history->setReadOnly(true);
     m_history->setFocusPolicy(Qt::NoFocus);
+    m_history->setUndoRedoEnabled(false);
     m_history->setMaximumBlockCount(kMaxHistoryLines);
-    m_history->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    m_history->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     const QFontMetrics metrics(m_history->font());
     const int margins = static_cast<int>(std::ceil(2.0 * m_history->document()->documentMargin())) +
                         (2 * m_history->frameWidth());
     m_history->setFixedHeight((metrics.lineSpacing() * kVisibleHistoryLines) + margins);
 
-    auto* inputRow = new QHBoxLayout;
-    inputRow->setContentsMargins(0, 0, 0, 0);
+    m_cancel->setAutoRaise(true);
+    m_cancel->setIconSize(QSize(kIconSide, kIconSide));
+    m_cancel->setToolTip(tr("Cancel (Esc)"));
+    // A click must not take the keyboard away from the drawing and the
+    // command line.
+    m_cancel->setFocusPolicy(Qt::NoFocus);
+    m_cancel->setEnabled(false);
+    connect(m_cancel, &QToolButton::clicked, this, [this] {
+        if (m_runner != nullptr) {
+            cancel();
+        }
+    });
+
+    auto* inputRow = new QHBoxLayout(field);
+    inputRow->setContentsMargins(2, 0, kInnerMargin, 0);
+    inputRow->setSpacing(kInnerMargin);
+    inputRow->addWidget(m_cancel);
+    inputRow->addWidget(mark);
     inputRow->addWidget(m_prompt);
     inputRow->addWidget(m_input, 1);
 
     auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(kInnerMargin, kInnerMargin, kInnerMargin, kInnerMargin);
     layout->setSpacing(0);
     layout->addWidget(m_history);
-    layout->addLayout(inputRow);
+    layout->addWidget(field);
 
     setFocusProxy(m_input);
     m_input->installEventFilter(this);
     m_input->setEnabled(false);
+    m_cancel->setIcon(themedIcon(QString::fromLatin1(kCancelIcon), themeOf(palette())));
     refreshPrompt();
+}
+
+void CommandLine::floatOver(QWidget* area) {
+    const bool visible = isVisible();
+    // A sibling of the area laid over it, not a child: an image of the area
+    // (QWidget::grab(), the screenshot of a script) shows the drawing alone.
+    setParent(area->parentWidget());
+    m_area = area;
+    area->installEventFilter(this);
+    place();
+    if (visible) {
+        show();
+    }
+}
+
+void CommandLine::place() {
+    if (m_area == nullptr) {
+        return;
+    }
+    const QRect area = m_area->geometry();
+    const int available = std::max(area.width() - (2 * kOuterMargin), 0);
+    const int wanted = static_cast<int>(std::lround(area.width() * kWidthRatio));
+    const int width = std::clamp(wanted, std::min(kMinimumWidth, available), available);
+    const int height = sizeHint().height();
+    setGeometry(area.x() + ((area.width() - width) / 2),
+                area.y() + area.height() - height - kOuterMargin, width, height);
+    raise();
+}
+
+void CommandLine::colourOptions(const QTextBlock& block) {
+    // Options in square brackets, as AutoCAD writes them ("[Close/Undo]").
+    static const QRegularExpression kOption(QStringLiteral(R"(\[[^\]]*\])"));
+    QTextCursor cursor(block);
+    cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+    cursor.setCharFormat(QTextCharFormat{});
+    QTextCharFormat option;
+    option.setForeground(themeTokens(themeOf(palette())).accent);
+    for (auto match = kOption.globalMatch(block.text()); match.hasNext();) {
+        const QRegularExpressionMatch found = match.next();
+        cursor.setPosition(block.position() + static_cast<int>(found.capturedStart()));
+        cursor.setPosition(block.position() + static_cast<int>(found.capturedEnd()),
+                           QTextCursor::KeepAnchor);
+        cursor.mergeCharFormat(option);
+    }
+}
+
+void CommandLine::changeEvent(QEvent* event) {
+    QWidget::changeEvent(event);
+    if (event->type() == QEvent::PaletteChange) {
+        m_cancel->setIcon(themedIcon(QString::fromLatin1(kCancelIcon), themeOf(palette())));
+        for (QTextBlock block = m_history->document()->firstBlock(); block.isValid();
+             block = block.next()) {
+            colourOptions(block);
+        }
+    } else if (event->type() == QEvent::FontChange || event->type() == QEvent::StyleChange) {
+        place();
+    }
 }
 
 void CommandLine::attachRunner(cmd::CommandRunner* runner) {
@@ -117,6 +229,7 @@ void CommandLine::attachRunner(cmd::CommandRunner* runner) {
         });
     }
     m_input->setEnabled(m_runner != nullptr);
+    m_cancel->setEnabled(m_runner != nullptr);
     refreshPrompt();
 }
 
@@ -139,9 +252,13 @@ void CommandLine::forwardKeysFrom(QWidget* widget) {
 
 void CommandLine::appendToHistory(const QString& line) {
     m_history->appendPlainText(line);
+    colourOptions(m_history->document()->lastBlock());
 }
 
 bool CommandLine::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == m_area && (event->type() == QEvent::Resize || event->type() == QEvent::Move)) {
+        place();
+    }
     const bool keyEvent =
         event->type() == QEvent::KeyPress || event->type() == QEvent::ShortcutOverride;
     const auto* key = keyEvent ? dynamic_cast<const QKeyEvent*>(event) : nullptr;

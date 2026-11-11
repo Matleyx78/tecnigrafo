@@ -13,6 +13,8 @@ class QKeyEvent;
 class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
+class QTextBlock;
+class QToolButton;
 
 namespace tg::app {
 
@@ -36,7 +38,13 @@ namespace tg::app {
 /// and shows what the new one kept. Without a runner the input field is
 /// disabled and keys are not taken. The history belongs to the window.
 ///
-/// Child widget names, used by tests: "history", "prompt", "input".
+/// It looks as in the reference of docs/adr/0039 (area 6): a box with the
+/// last lines of the history, options in square brackets in the accent
+/// colour, and under them the input row with a cross that cancels like Esc.
+/// floatOver() lays it over the bottom of the drawing.
+///
+/// Child widget names, used by tests: "history", "prompt", "input",
+/// "cancelButton".
 class CommandLine final : public QWidget {
     Q_OBJECT
 
@@ -61,6 +69,11 @@ public:
     /// field. Keys with Ctrl, Alt or Cmd are left alone: they are shortcuts.
     void forwardKeysFrom(QWidget* widget);
 
+    /// Lays the command line over the bottom of `area`, in the middle, as a
+    /// child of the parent of `area`, and keeps it there when `area` moves
+    /// or changes size (area 6).
+    void floatOver(QWidget* area);
+
     /// Adds a line at the end of the history.
     void appendToHistory(const QString& line);
 
@@ -76,6 +89,7 @@ signals:
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
+    void changeEvent(QEvent* event) override;
 
 private:
     /// Enter, context-sensitive space and Esc; true when handled.
@@ -86,12 +100,18 @@ private:
     /// Works with `runner` from now on, nullptr for none: the message sink
     /// moves to it, and the input field is enabled with it.
     void attachRunner(cmd::CommandRunner* runner);
+    /// Puts the command line in its place over the area of floatOver().
+    void place();
+    /// The options in square brackets of `block` in the accent colour.
+    void colourOptions(const QTextBlock& block);
 
     DocumentSession* m_session{nullptr};
     cmd::CommandRunner* m_runner{nullptr};
     QPlainTextEdit* m_history{nullptr};
     QLabel* m_prompt{nullptr};
     QLineEdit* m_input{nullptr};
+    QToolButton* m_cancel{nullptr};
+    QWidget* m_area{nullptr};
 };
 
 }  // namespace tg::app

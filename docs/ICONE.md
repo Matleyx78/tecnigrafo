@@ -410,14 +410,16 @@ dell'ambiente della barra di stato; la nomina l'ambiente
 |---|---|---|---|
 | `env-drawing2d` | ambiente `drawing2d`, il disegno 2D: indicatore dell'ambiente | squadra (`esist`) e un segmento tracciato lungo il suo lato inclinato, a 45°, con i due estremi (`geo`, `pt`) | sì |
 
-Il ribbon sul riferimento (F6) aggiunge la freccia all'angolo dei gruppi che
-apre il pannello, con i due file `-16.svg` e `-32.svg`; nessuna azione la
-nomina, la usa il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che
-la disegna da 16 px al centro del quadrato del pulsante.
+Il ribbon e la riga di comando sul riferimento (F6) aggiungono la freccia
+all'angolo dei gruppi che apre il pannello e la crocetta che annulla, con i
+due file `-16.svg` e `-32.svg`; nessuna azione le nomina: la freccia la usa
+il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che la disegna da
+16 px al centro del quadrato del pulsante, la crocetta la riga di comando.
 
 | File | Uso | Disegno | Rifatta |
 |---|---|---|---|
 | `ui-panel-launcher` | freccia ↘ dei gruppi *Layers* e *Properties*: apre il pannello | diagonale verso il basso a destra con la punta ad angolo retto (`esist`) | sì |
+| `ui-cancel` | crocetta della riga di comando: annulla come Esc | due diagonali a X (`esist`) | sì |
 
 Il logo del programma non è un'icona a ruoli: ha colori suoi e sta in
 [`resources/logo/`](../resources/logo/), fuori da questo controllo.

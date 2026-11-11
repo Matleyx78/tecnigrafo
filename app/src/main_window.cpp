@@ -306,9 +306,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     resize(1100, 720);
 
     // The tabs of the documents under the ribbon (docs/adr/0039, point 1,
-    // area 4), with both interfaces; the command line sits below the
-    // drawing, as in AutoCAD. The Start page takes the place of both while
-    // no document is active.
+    // area 4), with both interfaces; the command line floats over the
+    // bottom of the drawing (area 6). The Start page takes the place of
+    // both while no document is active.
     auto* central = new QWidget(this);
     m_drawingArea = central;
     m_documentTabs = new DocumentTabs(central);
@@ -320,7 +320,7 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     layout->addWidget(m_documentTabs);
     layout->addWidget(m_startPage, 1);
     layout->addWidget(m_view, 1);
-    layout->addWidget(m_commandLine);
+    m_commandLine->floatOver(m_view);
     // The tabs of the hidden panels stand around the drawing and the
     // command line (docs/tappe/0.7.5/P18).
     m_autoHide = new AutoHide(*this, central, m_view);
@@ -1911,6 +1911,11 @@ void MainWindow::changeEvent(QEvent* event) {
     // palette of its theme (setTheme).
     if (event->type() == QEvent::ThemeChange && palette() != QApplication::palette()) {
         setPalette(QApplication::palette());
+    }
+    // The same change gives the classes of widgets the desktop's fonts
+    // (applyInterfaceFont).
+    if (event->type() == QEvent::ThemeChange) {
+        applyInterfaceFont();
     }
 }
 

@@ -8,6 +8,8 @@
 #include <QApplication>
 #include <QDir>
 #include <QDockWidget>
+#include <QKeyEvent>
+#include <QLineEdit>
 #include <QList>
 #include <QMenuBar>
 #include <QMouseEvent>
@@ -106,17 +108,30 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
         std::cerr << "Unexpected gallery geometry, scale or selection\n";
         return false;
     }
-
     const auto save = [&output, &suffix](QWidget* widget, const QString& stem) {
         return saveWidget(widget, output,
                           stem + QLatin1Char('-') + suffix + QStringLiteral(".png"));
     };
-    if (!save(&window, QStringLiteral("finestra")) ||
-        !save(window.menuBar(), QStringLiteral("ribbon")) ||
+    if (!save(window.menuBar(), QStringLiteral("ribbon")) ||
         !save(window.findChild<QWidget*>(QStringLiteral("propertiesPanel")),
               QStringLiteral("proprieta")) ||
         !save(window.findChild<QWidget*>(QStringLiteral("layerPanel")), QStringLiteral("layer")) ||
         !save(window.statusBar(), QStringLiteral("stato"))) {
+        return false;
+    }
+    // The whole window with a command in progress, as in the reference:
+    // MOVE on the selection, typed in the command line (area 6). After the
+    // panels, which MOVE leaves without a selection.
+    auto* input = window.findChild<QLineEdit*>(QStringLiteral("input"));
+    if (input == nullptr) {
+        std::cerr << "Cannot find the command line\n";
+        return false;
+    }
+    input->setText(QStringLiteral("MOVE"));
+    QKeyEvent enter(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    QApplication::sendEvent(input, &enter);
+    QApplication::processEvents();
+    if (!save(&window, QStringLiteral("finestra"))) {
         return false;
     }
     window.setInterface(tg::app::InterfaceKind::Classic);

@@ -81,8 +81,9 @@ QPalette paletteFrom(const ThemeTokens& tokens) {
 // at 200% an icon of 16 is drawn from the 16 px grid at 32 pixels, with a
 // stroke of 2 (docs/tappe/0.7.5/P40, point 4).
 constexpr int kSmallGridLimit = 24;
-// 9 points are the 12 px of the text of docs/adr/0039 at 96 dpi.
-constexpr int kInterfacePointSize = 9;
+// 10 points, 13 px at 96 dpi: the 12 px of the reference of docs/adr/0039
+// looked small in the real window (docs/tappe/fuori-tappa/F6-stato.md).
+constexpr int kInterfacePointSize = 10;
 // Scales of the device are kept in the cache of an icon in thousandths.
 constexpr double kScaleKeyUnit = 1000.0;
 
@@ -364,11 +365,25 @@ QFont fixedFont() {
     return font;
 }
 
-void applyTheme(QApplication& application, Theme theme) {
+void applyInterfaceFont() {
+    // Besides its font, the application keeps a font per class of widget
+    // that setStyle and a change of the desktop's theme fill from the
+    // platform (Cantarell 11 under GNOME) and that setFont empties: menu
+    // bars, as the ribbon, and tool buttons, as File, would take them.
+    static constexpr std::array kClasses{
+        "QMenuBar",          "QMenu",       "QToolButton", "QLabel", "QPushButton", "QStatusBar",
+        "QAbstractItemView", "QHeaderView", "QComboBox"};
     const QFont font = interfaceFont();
-    if (QApplication::font() != font) {
+    const bool applied =
+        QApplication::font() == font && std::ranges::all_of(kClasses, [&font](const char* name) {
+            return QApplication::font(name) == font;
+        });
+    if (!applied) {
         QApplication::setFont(font);
     }
+}
+
+void applyTheme(QApplication& application, Theme theme) {
     const ThemeTokens& tokens = themeTokens(theme);
     // Every main window applies its theme when it is built. Installing the
     // same style, palette or style sheet again would repolish every widget
@@ -389,6 +404,8 @@ void applyTheme(QApplication& application, Theme theme) {
         // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
         QApplication::setStyle(new Style(tokens, &application));
     }
+    // After the style, which fills the fonts per class again.
+    applyInterfaceFont();
     const QPalette palette = paletteFrom(tokens);
     if (newStyle || QApplication::palette() != palette) {
         QApplication::setPalette(palette);
