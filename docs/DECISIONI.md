@@ -1526,4 +1526,8 @@ i rimandi ai documenti che cambia.
   e approva i testi delle quattro richieste a solid-space del piano della 0.8
   (contorni e isole; parti di una curva in una regione; tangente, arcocoseno e
   `hypot`; l'ellisse in `geom2d`), scritti nei commenti di
-  [#661](https://github.com/Matleyx78/tecnigrafo/pull/661).
+  [#661](https://github.com/Matleyx78/tecnigrafo/pull/661), e chiede a Claude
+  di aprirle: sono [solid-space#214](https://github.com/Matleyx78/solid-space/issues/214),
+  [#215](https://github.com/Matleyx78/solid-space/issues/215),
+  [#216](https://github.com/Matleyx78/solid-space/issues/216) e
+  [#217](https://github.com/Matleyx78/solid-space/issues/217), tappa `ss-0.3`.
