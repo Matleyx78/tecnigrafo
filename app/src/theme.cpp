@@ -80,6 +80,8 @@ QPalette paletteFrom(const ThemeTokens& tokens) {
 // at 200% an icon of 16 is drawn from the 16 px grid at 32 pixels, with a
 // stroke of 2 (docs/tappe/0.7.5/P40, point 4).
 constexpr int kSmallGridLimit = 24;
+// 9 points are the 12 px of the text of docs/adr/0039 at 96 dpi.
+constexpr int kInterfacePointSize = 9;
 // Scales of the device are kept in the cache of an icon in thousandths.
 constexpr double kScaleKeyUnit = 1000.0;
 
@@ -343,7 +345,29 @@ const ThemeTokens& themeTokens(Theme theme) {
     return theme == Theme::Dark ? kDark : kLight;
 }
 
+QFont interfaceFont() {
+    QFont font;
+    font.setFamilies(
+        {QStringLiteral("Segoe UI"), QStringLiteral("Noto Sans"), QStringLiteral("DejaVu Sans")});
+    font.setStyleHint(QFont::SansSerif);
+    font.setPointSize(kInterfacePointSize);
+    return font;
+}
+
+QFont fixedFont() {
+    QFont font;
+    font.setFamilies({QStringLiteral("Cascadia Mono"), QStringLiteral("DejaVu Sans Mono")});
+    font.setStyleHint(QFont::Monospace);
+    font.setFixedPitch(true);
+    font.setPointSize(kInterfacePointSize);
+    return font;
+}
+
 void applyTheme(QApplication& application, Theme theme) {
+    const QFont font = interfaceFont();
+    if (QApplication::font() != font) {
+        QApplication::setFont(font);
+    }
     const ThemeTokens& tokens = themeTokens(theme);
     // Every main window applies its theme when it is built. Installing the
     // same style, palette or style sheet again would repolish every widget

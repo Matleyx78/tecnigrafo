@@ -233,6 +233,13 @@ l'area 6).
   `objectName` restano.
 - 2026-11-11, *Layers* (area 9): le colonne *Lineweight* e *Plot*, che il
   riferimento non ha, restano.
+- 2026-11-11, font (tutte le aree): Tecnigrafo fissa il font
+  dell'interfaccia, Segoe UI, altrimenti Noto Sans, altrimenti DejaVu Sans, a
+  9 pt (i 12 px del riferimento al 100%), e quello a passo fisso della riga
+  di comando, Cascadia Mono, altrimenti DejaVu Sans Mono; non segue il font del
+  desktop. Sotto GNOME il font del sistema era Cantarell 11 pt (15 px), che
+  faceva sembrare il testo in grassetto. La galleria non forza più Liberation
+  Sans a 13 px e mostra il font della finestra vera.
 - 2026-11-11, barra di navigazione (area 5): si fa, se le azioni esistono già;
   altrimenti si chiede al responsabile.
 

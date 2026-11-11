@@ -8,8 +8,6 @@
 #include <QApplication>
 #include <QDir>
 #include <QDockWidget>
-#include <QFont>
-#include <QFontDatabase>
 #include <QList>
 #include <QMenuBar>
 #include <QMouseEvent>
@@ -176,16 +174,6 @@ int main(int argc, char* argv[]) {
     // Never the user's settings: each theme gets an empty folder (captureTheme).
     QSettings::setDefaultFormat(QSettings::IniFormat);
     initializeGalleryResources();
-    const QString fontPath = QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf");
-    const int fontId = QFontDatabase::addApplicationFont(fontPath);
-    const auto families = QFontDatabase::applicationFontFamilies(fontId);
-    if (families.isEmpty()) {
-        std::cerr << "Cannot load the application's bundled font\n";
-        return 1;
-    }
-    QFont font(families.first());
-    font.setPixelSize(13);
-    QApplication::setFont(font);
     const QDir output(arguments.at(1));
     if (!QDir().mkpath(output.absolutePath())) {
         std::cerr << "Cannot create gallery output folder\n";

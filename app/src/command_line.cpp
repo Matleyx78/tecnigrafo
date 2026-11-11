@@ -3,6 +3,8 @@
 
 #include "command_line.hpp"
 
+#include "theme.hpp"
+
 #include <QEvent>
 #include <QFontMetrics>
 #include <QHBoxLayout>
@@ -16,6 +18,7 @@
 #include <QVBoxLayout>
 
 #include <cmath>
+#include <initializer_list>
 #include <string>
 #include <utility>
 
@@ -69,6 +72,10 @@ CommandLine::CommandLine(QWidget* parent)
     m_prompt->setObjectName(QStringLiteral("prompt"));
     m_input->setObjectName(QStringLiteral("input"));
 
+    // Fixed pitch, as in the reference of docs/adr/0039 (area 6).
+    for (QWidget* widget : std::initializer_list<QWidget*>{m_history, m_prompt, m_input}) {
+        widget->setFont(fixedFont());
+    }
     m_history->setReadOnly(true);
     m_history->setFocusPolicy(Qt::NoFocus);
     m_history->setMaximumBlockCount(kMaxHistoryLines);

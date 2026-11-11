@@ -6,6 +6,7 @@
 #include "tg/render/scene_renderer.hpp"
 
 #include <QColor>
+#include <QFont>
 #include <QIcon>
 #include <QPalette>
 #include <QString>
@@ -31,7 +32,17 @@ struct ThemeTokens {
 
 [[nodiscard]] const ThemeTokens& themeTokens(Theme theme);
 
-/// Installs the proxy style over Fusion (style.hpp), a palette built from
+/// The font of the interface (docs/adr/0039, point 1, and
+/// docs/tappe/fuori-tappa/F6-stato.md): Segoe UI, else Noto Sans, else
+/// DejaVu Sans, else the platform's sans serif, at 9 points, the 12 px of the
+/// reference at 100%. It does not follow the desktop's font, which on GNOME
+/// is Cantarell at 11 points, so that the window looks the same everywhere.
+[[nodiscard]] QFont interfaceFont();
+/// The fixed-pitch font of the command line, at the size of interfaceFont():
+/// Cascadia Mono, else DejaVu Sans Mono, else the platform's monospace.
+[[nodiscard]] QFont fixedFont();
+
+/// Installs interfaceFont(), the proxy style over Fusion (style.hpp), a palette built from
 /// themeTokens(theme) and the style sheet generated from the same tokens.
 /// The result is the same on every platform: nothing comes from the OS.
 void applyTheme(QApplication& application, Theme theme);
