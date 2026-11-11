@@ -10,24 +10,28 @@ e la issue la cita.
 La scheda è autosufficiente: l'agente legge AGENTS.md, questa scheda, gli ADR
 che cita e CODING_STYLE.md, e nient'altro della tappa. Quello che gli serve
 del piano (regole sui testi, file comuni, decisioni) si ripete qui, in breve.
-Le regole per la dimensione sono in LAVORO-IN-PARALLELO.md, "Preparare il piano".
+Le regole per la dimensione sono in LAVORO-IN-PARALLELO.md, "Preparare il piano":
+la misura conta il codice (al massimo una quindicina di file e circa 600 righe;
+test, documenti e casi di riferimento non contano).
 -->
 
 - **Tappa:** X.Y — [piano](../X.Y-titolo.md)
 - **Issue:** #…
 - **Difficoltà:** facile | media | impegnativa
-- **Agente:** claude | codex | gemini | …
+- **Agente:** claude | codex
 - **Modello e impegno:** leggero | medio | forte; impegno basso | medio | alto
   (tabella in LAVORO-IN-PARALLELO.md)
 - **Riferimenti:** issue `[X.Y-RTN]` (#…), agente … | non servono: motivo
 - **Dipende da:** —
 - **Modulo:** uno solo (più i suoi test e le righe dei file comuni)
-- **Da leggere:** gli ADR e i file di codice che servono davvero, con il motivo
+- **Da leggere:** gli ADR e i file di codice che servono davvero, con il motivo;
+  se il pacchetto nasce dalla divisione di un altro, le schede sorelle
 
 ## File
 
-L'elenco completo dei file da creare o modificare. Al massimo una quindicina;
-se ne servono di più, il pacchetto va diviso.
+L'elenco completo dei file da creare o modificare. Al massimo una quindicina
+di file di codice, test e documenti esclusi; se ne servono di più, il pacchetto
+va diviso.
 
 ## Cosa fare
 

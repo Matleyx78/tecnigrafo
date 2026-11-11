@@ -48,11 +48,16 @@ tappa 0.7.5 che adegua script e controlli della CI
 | Chi | Etichetta | Lavoro |
 |---|---|---|
 | Responsabile | — | piano della tappa, ADR, revisione dei riferimenti, merge, prova manuale, rilascio |
-| Claude | `agente:claude` | pacchetti impegnativi e la maggior parte dei medi, anche in più sessioni nello stesso momento; riferimenti dei pacchetti di lavoro di Codex; piano della tappa insieme al responsabile |
-| Codex | `agente:codex` | revisione del contratto di ogni tappa di solid-space e delle sue correzioni; revisione delle interfacce delle schede di Tecnigrafo (sezione 1); riferimenti con calcoli delicati dei pacchetti di lavoro di Claude, in fascia forte; pacchetti facili e medi che il piano non dà a Claude |
-| Gemini (con Antigravity CLI, `agy`) | `agente:gemini` | pacchetti di riferimenti ordinari, revisione delle pull request di lavoro, pull request di chiusura della tappa, pacchetti facili; lavora a lotti (sezioni 3 e 4) |
-| Gemini 4 Argon (con Antigravity CLI, `agy`) | `agente:gemini-argon` | nessun pacchetto nel piano: la sua quota settimanale basta a uno o due pacchetti di riferimenti. Se è disponibile e serve, il responsabile gli passa un pacchetto che il piano dava a Codex, cambiandone l'etichetta; lavora a lotti, in una sessione sua, sullo stesso PC di Gemini |
-| Copilot (GitHub Copilot Pro) | — | solo revisione mirata delle pull request impegnative, chiesta dal responsabile (sezione 6); non prende pacchetti e non apre pull request |
+| Claude | `agente:claude` | pacchetti impegnativi e la maggior parte dei medi, anche in più sessioni nello stesso momento; riferimenti e revisione delle pull request dei pacchetti di Codex; piano della tappa insieme al responsabile |
+| Codex | `agente:codex` | revisione del contratto di ogni tappa di solid-space e delle sue correzioni; revisione delle interfacce delle schede di Tecnigrafo (sezione 1); riferimenti e revisione delle pull request dei pacchetti di Claude; pacchetti facili e medi che il piano non dà a Claude; pull request di chiusura della tappa |
+
+Gli agenti sono due ([DECISIONI.md](DECISIONI.md), 2026-11-11). Ogni pacchetto
+fa un **giro a tre**: un agente scrive i riferimenti, l'altro realizza il
+pacchetto, e chi ha scritto i riferimenti rivede la pull request del lavoro.
+Quindi Codex, Claude, Codex per i pacchetti di Claude, e Claude, Codex, Claude
+per quelli di Codex. Riferimenti e revisioni si possono fare a lotti (sezioni 3
+e 4). Le etichette `agente:gemini`, `agente:gemini-argon` e `agente:copilot`
+restano su GitHub, ma non si assegnano.
 
 Più sessioni di Claude nello stesso momento usano la stessa etichetta:
 `AA-Presa in carico` basta perché due sessioni non prendano la stessa issue.
@@ -135,16 +140,33 @@ moltiplica il secondo:
   l'agente legge quella, non il piano intero. Le regole della tappa che lo
   riguardano si ripetono nella scheda, in breve.
 - **Un modulo per pacchetto**, più i suoi test e le righe dei file comuni.
-- **Misura.** Al massimo una quindicina di file e qualche centinaio di righe
-  cambiate (indicativamente fino a 600). Un pacchetto più grande si divide, di
-  solito lungo i confini naturali (un'entità, un comando, una famiglia di
-  domande).
-- **Non troppo piccoli.** Un pacchetto che tocca una sola funzione o un solo
-  file si unisce a un vicino dello stesso modulo: ogni pacchetto costa comunque
-  una sessione, una CI, una revisione e un merge, e spesso una pull request di
-  riferimenti.
+- **Misura.** Al massimo una quindicina di file e circa 600 righe di codice
+  cambiate; test, documenti e casi di riferimento non contano, né per i file né
+  per le righe. Un pacchetto più grande si divide, di solito lungo i confini
+  naturali (un'entità, un comando, una famiglia di domande, un'intestazione di
+  solid-space).
+- **Non troppo piccoli.** Un pacchetto con meno di circa 150 righe di codice si
+  unisce a un vicino dello stesso modulo, salvo che sia un'unità che si verifica
+  da sola (un'entità, un comando, una famiglia di domande) o infrastruttura:
+  ogni pacchetto costa comunque una sessione, una CI, una revisione e un merge,
+  e spesso una pull request di riferimenti.
+- **Dividere.** Si preferiscono pacchetti medi, ma un pacchetto si divide solo
+  per un motivo che il piano scrive in una riga: supera la misura; oppure la
+  divisione toglie una parte da una catena di file comuni o da un'attesa di
+  solid-space, o separa le decisioni da prendere dal codice da scrivere (con
+  «Modello e impegno», qui sotto, il codice va in fascia media). Due parti che
+  toccano gli stessi file restano in catena, e dividerle allunga la tappa di un
+  pacchetto. Le schede nate dallo stesso pacchetto si citano a vicenda in «Da
+  leggere», passano insieme dalla revisione delle interfacce, e l'ultima ha i
+  casi che vedono l'insieme. Un pacchetto iniziale di sola interfaccia si fa
+  solo se toglie file comuni a più pacchetti o ne fa partire due in parallelo.
 - **Riferimenti della stessa misura.** Un pacchetto di riferimenti copre un
-  solo pacchetto di lavoro; oltre una ventina di casi si divide per area.
+  solo pacchetto di lavoro, anche quando questo è una parte di un pacchetto
+  diviso: ogni `RN` al suo `PN` ([ADR 0011](adr/0011-modalita-di-controllo.md),
+  punto 7). Dove un pacchetto chiede casi delicati e casi ordinari, i suoi
+  riferimenti si dividono in blocchi con la lettera: per esempio `RT14a`, di
+  fascia forte, con i casi delicati, e `RT14b`, leggero, con gli ordinari.
+  Oltre una ventina di casi si divide per area.
 
 ### Modello e impegno
 
@@ -153,29 +175,25 @@ l'**impegno** (quanto ragionamento chiedere, dove lo strumento lo permette).
 Sono indicazioni: il responsabile sceglie il modello quando avvia l'agente. I
 nomi dei modelli cambiano, la fascia resta.
 
-La tabella elenca i modelli disponibili al responsabile a ottobre 2026, con il
+La tabella elenca i modelli disponibili al responsabile a novembre 2026, con il
 livello di ragionamento da scegliere. I modelli della stessa riga hanno capacità
 simile secondo una misura indipendente dai produttori, l'Intelligence Index di
 [Artificial Analysis](https://artificialanalysis.ai/models) (tra parentesi;
 più alto è meglio). Quando cambiano i modelli si aggiorna la tabella con la
 stessa fonte.
 
-| Fascia | Per | Claude | Codex | Gemini |
-|---|---|---|---|---|
-| **forte** | pacchetti impegnativi: geometria, nuovi moduli, motore dei comandi, riferimenti con calcoli delicati | Opus 5.5 medio (51) o alto (54) | astra medium (50) | 4 Argon alto (53), se disponibile |
-| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta | Opus 5.5 medio (51) | sol medium (48) o astra light (46) | — |
-| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) | 3.8 Flash medio (40) o alto (41) |
+| Fascia | Per | Claude | Codex |
+|---|---|---|---|
+| **forte** | decisioni delicate: interfacce nuove, comportamenti con casi limite che nessun documento fissa, riferimenti con calcoli delicati, revisione delle interfacce | Opus 5.5 medio (51) o alto (54) | astra medium (50) |
+| **medio** | pacchetti medi: un comando, un'entità sul modello di una già fatta, codice che traduce decisioni già scritte | Opus 5.5 medio (51) | sol medium (48) o astra light (46) |
+| **leggero** | pacchetti facili: documentazione, note di rilascio, piccoli ritocchi; riferimenti ordinari e revisioni | Haiku 5.5 alto (38) o Sonnet 5.5 medio (41) | luna alto (32) o sol light (42) |
 
-Gemini 3.8 Flash sta nella fascia leggera: i riferimenti con calcoli delicati
-(tolleranze, archi, casi limite geometrici; in particolare curve parallele,
-raccordi e intersezioni) li scrive un agente di fascia forte, diverso da chi
-farà il pacchetto di lavoro: di norma Codex per i pacchetti di Claude, e Claude
-per quelli di Codex. A Gemini 3.8 Flash vanno solo i riferimenti ordinari: i
-comandi (sequenze di domande, messaggi, annulla) e i casi senza calcoli
-delicati. Gemini 4 Argon (53) ha una capacità da
-fascia forte secondo la stessa misura, ma una quota settimanale che basta a
-uno o due pacchetti di riferimenti: il piano non gli assegna niente, e il
-responsabile gli passa un pacchetto quando è disponibile.
+I riferimenti con calcoli delicati (tolleranze, archi, casi limite geometrici;
+in particolare curve parallele, raccordi e intersezioni) li scrive un agente di
+fascia forte, diverso da chi farà il pacchetto di lavoro: Codex per i pacchetti
+di Claude, e Claude per quelli di Codex. I riferimenti ordinari (i comandi:
+sequenze di domande, messaggi, annulla; i casi senza calcoli delicati) possono
+andare in fascia leggera, sempre all'altro agente.
 
 Per i pacchetti medi Claude lavora con Opus medio, non con Sonnet: la quota del
 piano Max lo permette, e un modello più forte fa meno giri di correzione.
@@ -187,8 +205,15 @@ piano Max lo permette, e un modello più forte fa meno giri di correzione.
 | **basso** | il lavoro è meccanico: testi, elenchi, documenti |
 
 Di norma: facile → leggero e basso; media → medio e medio; impegnativa →
-forte e alto. Un pacchetto impegnativo che non si riesce a dividere resta
-impegnativo; uno che si divide dà spesso due pacchetti medi.
+forte e alto. La fascia forte va a chi prende decisioni delicate: progettare
+un'interfaccia nuova, scegliere un comportamento con casi limite che nessun
+documento fissa, scrivere i riferimenti con calcoli delicati, rivedere le
+interfacce. Un pacchetto che traduce in codice decisioni già scritte (nella
+scheda, nel contratto di solid-space o in un ADR) e coperte da riferimenti di
+fascia forte è medio anche se il codice è delicato; la sua pull request ha una
+revisione mirata, in fascia forte, dall'altro agente. Il piano scrive in una
+riga perché un pacchetto resta impegnativo
+([DECISIONI.md](DECISIONI.md), 2026-11-10).
 
 ## 2. Aprire la tappa: issue ed etichette
 
@@ -245,8 +270,9 @@ regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI al
 verde e fermati, come dice AGENTS.md.
 ```
 
-Per Gemini i messaggi sono a lotti: una sessione fa tutto il lavoro pronto, e
-il responsabile non deve riavviarla per ogni pacchetto.
+Per i riferimenti e le revisioni i messaggi possono essere a lotti: una
+sessione fa tutto il lavoro pronto, e il responsabile non deve riavviarla per
+ogni pacchetto.
 
 ```text
 Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
@@ -260,10 +286,6 @@ Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
 lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
 lotti", e alla fine scrivimi un solo riepilogo.
 ```
-
-Perché Gemini lavori senza chiedere conferma a ogni comando, Antigravity CLI va
-configurato una volta: istruzioni in
-[AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md), sezione 6.
 
 Se serve far partire un pacchetto preciso, si indicano issue e ramo:
 
@@ -339,12 +361,10 @@ un agente senza pacchetto preciso sconfina.
   `tests/CMakeLists.txt`), vale una regola fissa: **chi arriva dopo si aggiorna**.
   Si chiede all'agente di quella pull request di risolvere il conflitto.
 - Una pull request scritta da un modello viene rivista da un modello diverso
-  prima del merge, mai dallo stesso: di norma Gemini rivede le pull request di
-  Claude e di Codex. Le pull request impegnative di Claude il responsabile può
-  farle rivedere anche a Copilot, che consuma i crediti mensili di Copilot Pro:
-  solo dove una seconda opinione forte conta
-  ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B9). La decisione resta del
-  responsabile.
+  prima del merge, mai dallo stesso: la rivede l'agente che ha scritto i
+  riferimenti del pacchetto, quindi Codex le pull request di Claude e Claude
+  quelle di Codex ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B9). La
+  decisione resta del responsabile.
 
 ## 7. Chiudere un pacchetto
 
@@ -354,7 +374,7 @@ dopo 14 giorni senza notizie il pacchetto torna libero (CONTRIBUTING.md).
 
 ## 8. Chiudere la tappa
 
-Quando tutte le issue del milestone sono chiuse, un agente (di norma Gemini) apre
+Quando tutte le issue del milestone sono chiuse, un agente (di norma Codex) apre
 la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
 
 - spunta nel documento della tappa ogni criterio di chiusura, indicando per

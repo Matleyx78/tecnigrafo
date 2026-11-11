@@ -49,7 +49,7 @@ permissions:
 # ("Support Qt 6.11+ for Windows x64"), with py7zr pinned because that
 # aqtinstall asks for it without an upper bound. When a release supports Qt
 # 6.12 on Windows, drop these two values and the aqtsource and py7zrversion
-# lines of the Qt steps. The same values are in copilot-setup-steps.yml.
+# lines of the Qt steps.
 env:
   TG_AQT_SOURCE: git+https://github.com/miurahr/aqtinstall.git@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7
   TG_PY7ZR_VERSION: '==1.1.4'

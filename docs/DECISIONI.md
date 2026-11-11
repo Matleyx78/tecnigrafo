@@ -1370,3 +1370,79 @@ i rimandi ai documenti che cambia.
     ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), «Preparare il piano»):
     le icone contano come un gruppo. La chiusura della 0.7.5 riprende dopo
     P40, con i punti 2, 4 e 7 della prova manuale ripetuti.
+- **2026-11-11 — La pausa dopo la 0.7.5.** Nella chat del 2026-11-11, dopo
+  l'analisi delle issue aperte dei due repository, il responsabile decide:
+  - **Proposte di metodo**
+    ([#600](https://github.com/Matleyx78/tecnigrafo/issues/600)), che si chiude:
+    - *Galleria approvata*: non si adotta. L'interfaccia è migliorata molto e
+      resta com'è; la grafica non deve frenare lo sviluppo, e la forma
+      definitiva la darà una tappa dedicata prima degli installatori, con un
+      metodo da trovare ([#655](https://github.com/Matleyx78/tecnigrafo/issues/655)).
+    - *Regole della #442*: si applicano come deciso il 2026-11-10, anche in
+      solid-space, con lo stesso testo per le voci comuni
+      ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), «Pacchetti leggeri» e
+      «Modello e impegno»; [tappe/0000-modello.md](tappe/0000-modello.md),
+      sezione 6; [tappe/0000-pacchetto.md](tappe/0000-pacchetto.md);
+      [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B1).
+    - *Agenti*: dal 19 novembre Gemini (3.8 Flash e 4 Argon) e Copilot non ci
+      sono più, e gli agenti sono Claude e Codex. Ogni pacchetto fa un giro a
+      tre: un agente scrive i riferimenti, l'altro realizza il pacchetto, e
+      chi ha scritto i riferimenti rivede la pull request (Codex, Claude, Codex
+      oppure Claude, Codex, Claude), perché riferimenti fatti bene si sono
+      dimostrati ciò che fa avanzare il lavoro. Riferimenti e revisioni si
+      possono fare a lotti. La pull request di chiusura della tappa passa a
+      Codex; i pacchetti facili seguono lo stesso giro. Le etichette
+      `agente:gemini`, `agente:gemini-argon` e `agente:copilot` restano, ma non
+      si assegnano; le istruzioni di Antigravity in
+      [AMBIENTE-SVILUPPO.md](AMBIENTE-SVILUPPO.md) restano, segnate come non
+      usate. I file di Copilot (`.github/copilot-instructions.md` e il workflow
+      `copilot-setup-steps.yml`) si tolgono; l'[ADR 0043](adr/0043-qt-6-12.md),
+      accettato, ne parla ancora, e fa fede questa voce.
+    - *Codex che chiama `@claude` a fine pacchetto*: rimandata a quando anche
+      Codex potrà prendere comandi dai commenti
+      ([#656](https://github.com/Matleyx78/tecnigrafo/issues/656)).
+  - **Idee per la 0.8** (nella [scheda](tappe/0.8-quote-retini-blocchi.md)):
+    - *Tracciamento degli snap a oggetto*
+      ([#653](https://github.com/Matleyx78/tecnigrafo/issues/653)): dentro
+      acquisizione, guide orizzontali e verticali, incrocio di due guide e
+      distanza scritta; fuori le guide polari dai punti acquisiti
+      (`POLARMODE`), `TRACKPATH`, *Prolungamento* e *Parallelo*. Spento in un
+      disegno nuovo; negli script il punto si acquisisce con una direttiva
+      nuova, così `!move` non cambia significato.
+    - *Funzioni trigonometriche deterministiche*
+      ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620)): sono
+      quelle di `solid_space::robust`, che ha già `sinCos` e `atan2`, scritte
+      senza librerie esterne. Un pacchetto all'inizio della 0.8 le usa al posto
+      di `<cmath>` in `core`, `cmd` e `render`, e svuota le eccezioni; `tan`,
+      `acos` e `hypot` si chiedono a `robust` con il piano, allo stesso modo.
+    - *Blocchi, pensando all'elettrico*
+      ([#538](https://github.com/Matleyx78/tecnigrafo/issues/538)): l'entità
+      `SOLID` (diversa dal motivo SOLID dei retini) si legge, si disegna e si
+      riscrive, insieme ai retini; `INSERT` inserisce un file DXF come blocco,
+      come AutoCAD, perché le librerie di simboli sono un file per simbolo
+      (anche in AutoCAD Electrical); un blocco con `ATTDEF` crea i suoi
+      `ATTRIB` con i valori predefiniti, senza domande, come AutoCAD con
+      `ATTREQ` = 0. La #538 resta aperta per l'elettrico dopo la 1.0.
+    - *Errori e crash*
+      ([#62](https://github.com/Matleyx78/tecnigrafo/issues/62)): nella 0.8 la
+      traccia dello stack su Windows e l'avviso al riavvio dopo un crash; il
+      resto nella 0.9.
+  - **La 0.8 non si divide.** È densa, ma il piano cerca di far avanzare in
+    parallelo il più possibile i flussi indipendenti; ed è la prima tappa con
+    le regole nuove dei pacchetti, che una tappa densa mette meglio alla prova.
+  - **Idee per la 0.9** (nella [scheda](tappe/0.9-stampa-e-distribuzione.md)):
+    l'icona del programma
+    ([#654](https://github.com/Matleyx78/tecnigrafo/issues/654)), dal disegno
+    SVG del raccoglitore grafico, senza versione, con licenza CC0 e versioni
+    semplificate per le misure piccole (l'immagine JPG non si usa); la parte
+    generale della segnalazione di errori e crash (#62, ADR 0010).
+  - **Altre idee.** La
+    [#522](https://github.com/Matleyx78/tecnigrafo/issues/522) è esaurita
+    (ADR 0041, decisioni per la 0.8, separazioni P24–P27, traccia 2.x rivista
+    da P32) e si chiude; ciò che rimanda è nell'ADR 0041, punto 12, e nella
+    [#634](https://github.com/Matleyx78/tecnigrafo/issues/634), che riguarda il
+    dopo-1.0 e resta com'è.
+  - **Una chat su due repository.** Per questa pausa il responsabile autorizza
+    la chat di Tecnigrafo a scrivere anche in solid-space (una pull request,
+    commenti), in deroga ad [AGENTS.md](../AGENTS.md), "Dove puoi scrivere",
+    che non cambia.

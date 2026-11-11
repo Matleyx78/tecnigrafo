@@ -119,18 +119,27 @@ il lavoro sono in [LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), sezione
 
 | Pacchetto | Scheda | Issue | Dipende da | Riferimenti | Difficoltà | Agente | Modello | Impegno |
 |---|---|---|---|---|---|---|---|---|
-| PT1 Titolo | [PT1](X.Y/PT1-nome.md) | #… | — | RT1 (gemini) / non servono: motivo | facile / media / impegnativa | claude / codex / gemini | leggero / medio / forte | basso / medio / alto |
+| PT1 Titolo | [PT1](X.Y/PT1-nome.md) | #… | — | RT1 (codex) / non servono: motivo | facile / media / impegnativa | claude / codex | leggero / medio / forte | basso / medio / alto |
 
 L'**ordine delle righe** è l'ordine in cui gli agenti prendono "il prossimo
 pacchetto" (AGENTS.md). Le issue di riferimenti `[X.Y-RTN]` hanno una riga
-ciascuna, prima del loro pacchetto di lavoro.
+ciascuna, prima del loro pacchetto di lavoro; i riferimenti di un pacchetto li
+scrive l'altro agente, che poi ne rivede la pull request (Codex per i pacchetti
+di Claude, Claude per quelli di Codex).
+
+**Motivi, sotto la tabella.** Una riga per ogni pacchetto che resta
+impegnativo (perché la fascia forte serve lì) e una per ogni divisione (supera
+la misura; toglie una parte da una catena di file comuni o da un'attesa di
+solid-space; separa le decisioni dal codice). Regole in
+[LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), «Pacchetti leggeri» e
+«Modello e impegno».
 
 La tabella la legge `scripts/apri-tappa.sh`, che crea le issue all'apertura
 (GUIDA-RESPONSABILE.md, B6), quindi segue queste regole: le colonne con questi
 nomi; la prima cella comincia con `PTN` o `RTN` seguito dal titolo della issue; la
 scheda è un link a un file che esiste, oppure un testo (per esempio «scheda dopo
 il contratto») se non c'è ancora; la colonna Agente contiene solo il nome
-dell'etichetta `agente:…` (`claude`, `codex`, `gemini`), mai il
+dell'etichetta `agente:…` (`claude`, `codex`), mai il
 modello tra parentesi, che si dice nella colonna Modello; "Dipende da" elenca,
 separati da virgole, pacchetti delle righe precedenti (`PT3`, `RT3`), issue di
 Tecnigrafo (`#12`) o di altri repository (`Matleyx78/solid-space#20`), oppure
