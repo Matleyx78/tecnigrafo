@@ -145,16 +145,21 @@ termina l’inserimento. Un clic nella vista non scrive una riga di testo.
 Dalla tappa 0.5 puoi aprire e salvare i disegni, sia nel formato nativo di
 Tecnigrafo (`.cadx`) sia nel formato DXF di AutoCAD.
 
-Tecnigrafo lavora su un solo disegno alla volta: l'apertura di un file o la
-creazione di un nuovo disegno sostituiscono il disegno corrente. All'apertura o
-creazione di un disegno la cronologia di annullamento si azzera.
+Dalla 0.7.5 puoi tenere aperti più disegni, ciascuno nella sua scheda
+([manuale dell'interfaccia](interfaccia.md#2-schede-dei-documenti-e-pagina-iniziale-start)).
+`NEW` e `OPEN` aprono sempre un disegno nuovo in una scheda nuova, che diventa
+quella attiva, senza chiudere né cambiare i disegni già aperti, come in AutoCAD.
+Se il file da aprire è già aperto, `OPEN` attiva la sua scheda senza rileggerlo
+dal disco, con le modifiche e la cronologia di annullamento che aveva. Ogni
+disegno ha la sua cronologia di annullamento: per un disegno nuovo o appena
+aperto è vuota.
 
 ### I comandi
 
 | Comando | Scorciatoia | Menu File | Effetto |
 |---|---|---|---|
-| `NEW` | `Ctrl+N` | New | Crea un nuovo disegno vuoto |
-| `OPEN` | `Ctrl+O` | Open… | Apre un file `.cadx` o `.dxf` esistente |
+| `NEW` | `Ctrl+N` | New | Crea un nuovo disegno vuoto in una scheda nuova |
+| `OPEN` | `Ctrl+O` | Open… | Apre un file `.cadx` o `.dxf` esistente in una scheda nuova |
 | `QSAVE` | `Ctrl+S` | Save | Salva rapidamente nel file corrente; se il disegno non ha ancora un nome, chiede come salvarlo |
 | `SAVE` | — | — | Salva una copia del disegno corrente con un nome diverso |
 | `SAVEAS` | `Ctrl+Shift+S` | Save As… | Salva il disegno con un nome diverso, che diventa il file corrente |
@@ -180,26 +185,21 @@ sulla riga di comando, chiedendo di digitare il percorso del file.
 
 ### Modifiche non salvate
 
-Quando provi ad aprire un altro disegno con `OPEN`, a crearne uno nuovo con `NEW`
-o a chiudere la finestra di Tecnigrafo e ci sono modifiche non salvate, il
-programma ti chiede prima se vuoi salvare il lavoro:
+`NEW` e `OPEN` non chiedono mai di salvare, perché lasciano aperti i disegni di
+prima. La richiesta compare solo quando chiudi davvero un disegno modificato:
+con la crocetta della sua scheda, oppure chiudendo la finestra di Tecnigrafo,
+che chiede per ogni disegno modificato, nell'ordine delle schede.
 
-```
-Save changes to Drawing1.cadx? [Yes/No/Cancel] <Yes>:
-```
+- *Save*: salva il disegno e lo chiude. Se il disegno non ha ancora un nome, ti
+  chiede con quale nome salvarlo; se il salvataggio fallisce o viene annullato,
+  il disegno resta aperto.
+- *Discard*: scarta le modifiche non salvate e chiude il disegno.
+- *Cancel*: annulla la chiusura e lascia il disegno aperto, senza perdere nulla;
+  chiudendo la finestra, restano aperti anche i disegni che vengono dopo, e la
+  finestra non si chiude.
 
-- `Yes` (oppure `Invio` a riga vuota, confermando il valore predefinito): salva
-  il disegno corrente prima di procedere. Se il disegno non ha ancora un nome,
-  ti chiederà con quale nome salvarlo. Se il salvataggio fallisce o viene annullato,
-  l'operazione si interrompe e il disegno modificato resta aperto.
-- `No`: scarta tutte le modifiche non salvate e procede con l'apertura, la
-  creazione del nuovo disegno o la chiusura.
-- `Cancel` (oppure `Esc`): annulla il comando e ti riporta al disegno corrente,
-  senza perdere nulla.
-
-Se chiudi la finestra dell'applicazione con modifiche non salvate, compare una
-finestra di avviso che ti permette di scegliere tra salvare (`Save`), scartare le
-modifiche (`Discard`) o annullare la chiusura (`Cancel`).
+I dettagli sono nel manuale dell'interfaccia, «Quando il programma chiede di
+salvare».
 
 ### Salvare un disegno: `QSAVE`, `SAVE` e `SAVEAS`
 
