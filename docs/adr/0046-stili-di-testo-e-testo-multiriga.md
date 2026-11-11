@@ -66,7 +66,8 @@ come AutoCAD, e usano uno stile di testo (`DIMTXSTY`).
 - **`MTEXT`** nella forma da riga di comando di AutoCAD: primo angolo, angolo
   opposto con le opzioni *Height*, *Justify*, *Line spacing*, *Rotation*,
   *Style* e *Width*, poi le righe del testo, ognuna un paragrafo, fino a una
-  riga vuota. L'editor nella finestra resta fuori, dopo la 0.8.
+  riga vuota. L'editor nella finestra resta fuori, dopo la 0.8 (idea
+  [#662](https://github.com/Matleyx78/tecnigrafo/issues/662), con `TEXTEDIT`).
 
 ## Alternative considerate
 

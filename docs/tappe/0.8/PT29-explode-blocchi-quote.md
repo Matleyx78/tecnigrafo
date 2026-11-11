@@ -6,7 +6,7 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT29]` (#…), agente codex
-- **Dipende da:** PT4 (revisione delle interfacce), PT17, PT23, RT29
+- **Dipende da:** PT4 (revisione delle interfacce), PT17, PT23, PT48, RT29
 - **Modulo:** `core` (più il comando in `cmd`)
 - **Da leggere:** [ADR 0045](../../adr/0045-blocchi-e-attributi.md), punto 4;
   [ADR 0047](../../adr/0047-quote-e-stili-di-quota.md), punto 4;
@@ -37,12 +37,17 @@
    ```
 
    - **Inserimento** (ADR 0045, punto 4): le entità della definizione
-     trasformate (`transformed`, è una similitudine), ognuna con le **sue**
-     proprietà ed `extras` senza i gruppi 102; gli inserimenti annidati restano
-     inserimenti (con la trasformazione composta); al posto degli `ATTRIB`, gli
-     `ATTDEF` della definizione trasformati (anche i costanti). Rifiuti:
-     `Cannot explode a non-uniformly scaled block reference.` (scala non
-     uniforme) e `Block "<nome>" cannot be exploded.` (non esplodibile). Le
+     trasformate, ognuna con le **sue** proprietà ed `extras` senza i gruppi
+     102: con una similitudine `transformed`; con scala non uniforme
+     `transformedShape` (PT6), così cerchi e archi diventano `Ellipse` e i
+     testi si deformano, come AutoCAD (ADR 0052, punto 2). Gli inserimenti
+     annidati restano inserimenti con la trasformazione composta, se è ancora
+     scala più rotazione (le colonne della parte lineare sono ortogonali);
+     altrimenti l'esplosione si rifiuta con
+     `Block "<nome>" contains a nested block that cannot stay a block reference.`
+     Al posto degli `ATTRIB`, gli `ATTDEF` della definizione trasformati (anche
+     i costanti). Rifiuto anche per un blocco non esplodibile:
+     `Block "<nome>" cannot be exploded.` (o il messaggio di AutoCAD). Le
      entità grezze del blocco: quelle senza coordinate da trasformare si
      copiano; le altre rifiutano l'esplosione con
      `Block "<nome>" contains objects Tecnigrafo cannot explode.`
@@ -64,7 +69,9 @@
 
 - `explode_test.cpp`: un inserimento ruotato e scalato 2; un blocco annidato
   (resta un inserimento); un blocco con attributi (tornano gli `ATTDEF`); scala
-  non uniforme e non esplodibile rifiutati; una quota lineare.
+  non uniforme `(2, 1)` con un cerchio e un arco (diventano ellissi) e con un
+  blocco annidato ruotato di 30° (rifiutato); non esplodibile rifiutato; una
+  quota lineare.
 - `explode_command_test.cpp`: selezione mista di una polilinea, un inserimento
   e una quota; `U`.
 

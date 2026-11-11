@@ -6,9 +6,10 @@
 ## Contesto
 
 La tappa 0.8 ([scheda](../tappe/0.8-quote-retini-blocchi.md)) porta nel
-modello sei tipi di entità che oggi restano dati non gestiti
+modello sette tipi di entità che oggi restano dati non gestiti
 ([ADR 0018](0018-conservazione-dati-non-gestiti.md), punto 3): `SOLID`,
-`MTEXT`, `ATTDEF`, `INSERT` (con i suoi `ATTRIB`), `DIMENSION` e `HATCH`. Tre di
+`ELLIPSE`, `MTEXT`, `ATTDEF`, `INSERT` (con i suoi `ATTRIB`), `DIMENSION` e
+`HATCH`. Tre di
 loro non si disegnano da sé: un inserimento mostra le entità di un blocco, una
 quota le entità di un blocco anonimo `*D…` che il file porta con sé, un retino
 righe e riempimenti calcolati dal contorno. Anche il testo multiriga si disegna
@@ -16,7 +17,7 @@ come righe di testo calcolate.
 
 Il modello dei tipi chiuso (`std::variant`, [ADR 0004](0004-modello-geometrico-2d.md))
 fa fallire la compilazione di ogni visita che non tratta un tipo nuovo. È voluto,
-ma con sei tipi e una ventina di visite vuol dire che il primo pacchetto che ne
+ma con sette tipi e una ventina di visite vuol dire che il primo pacchetto che ne
 aggiunge uno tocca file di quattro moduli, e ogni pacchetto dopo di lui gli
 stessi file: una catena lunga quanto la tappa. Lo stesso vale per le tabelle
 nuove (stili di testo, stili di quota, blocchi) dentro `Document` e per le loro
@@ -31,20 +32,21 @@ chi decide il valore.
 ### 1. Tipi nuovi
 
 - `core::Entity` diventa
-  `std::variant<Polyline, Line, Circle, Arc, Text, Solid, MText,
+  `std::variant<Polyline, Line, Circle, Arc, Text, Solid, Ellipse, MText,
   AttributeDefinition, Insert, Dimension, Hatch>`, in quest'ordine. I campi di
   ciascun tipo sono negli ADR [0045](0045-blocchi-e-attributi.md) (`Insert`,
   `AttributeDefinition`), [0046](0046-stili-di-testo-e-testo-multiriga.md)
   (`MText`), [0047](0047-quote-e-stili-di-quota.md) (`Dimension`) e
-  [0048](0048-retini.md) (`Hatch`); `Solid` è nel punto 7.
+  [0048](0048-retini.md) (`Hatch`) e [0052](0052-ellisse.md) (`Ellipse`); `Solid` è
+  nel punto 7.
 - Ogni tipo nuovo ha la sua intestazione e il suo file in `core`
-  (`solid.hpp`, `mtext.hpp`, `attribute_definition.hpp`, `insert.hpp`,
+  (`solid.hpp`, `ellipse.hpp`, `mtext.hpp`, `attribute_definition.hpp`, `insert.hpp`,
   `dimension.hpp`, `hatch.hpp`) con le funzioni che le visite chiamano:
   ingombro, trasformazione, punti di snap, grip, distanza dal puntatore. Le
   visite comuni (`similarity.cpp`, `proximity.cpp`, `snap_points.cpp`,
   `grips.cpp`, `dashes.cpp`, `document.cpp`, e quelle di `render`, `script`,
   `app` e `io`) chiamano solo quelle funzioni, una riga per tipo.
-- **Uno scheletro, poi i tipi.** Un solo pacchetto aggiunge i sei tipi, le
+- **Uno scheletro, poi i tipi.** Un solo pacchetto aggiunge i sette tipi, le
   intestazioni e tutte le righe delle visite, con funzioni che per un tipo non
   ancora realizzato non sono mai raggiunte: finché il pacchetto di un tipo non
   è unito, nessun lettore e nessun comando crea entità di quel tipo (restano
@@ -56,24 +58,23 @@ chi decide il valore.
 
 - `core::generate(const Document&, const EntityRecord&)` restituisce la
   **geometria generata** di un'entità: un elenco di `GeneratedItem`, ognuno con
-  una forma, una trasformazione affine e le proprietà effettive con cui si
+  una forma, già nel sistema del disegno, e le proprietà effettive con cui si
   disegna.
-- Le forme sono `Line`, `Arc`, `Circle`, `Polyline`, `Text`, `Solid` e
-  `FilledRegion` (una regione piena: anelli chiusi di segmenti e archi, riempiti
-  con la regola pari-dispari). Per le entità semplici l'elenco ha un solo
-  elemento, l'entità stessa.
+- Le forme sono `Line`, `Arc`, `Circle`, `Ellipse`, `Polyline`, `Text`, `Solid`
+  e `FilledRegion` (una regione piena: anelli chiusi di segmenti e archi,
+  riempiti con la regola pari-dispari, con una trasformazione affine propria).
+  Per le entità semplici l'elenco ha un solo elemento, l'entità stessa.
 - **Trasformazione.** Quando la trasformazione che porta una forma nel disegno
-  è una similitudine, la forma arriva già trasformata (`core::transformed`,
-  [ADR 0031](0031-modifiche-alle-entita.md)) e la trasformazione dell'elemento
-  è l'identità. Altrimenti (inserimento con scala non uniforme):
-  - linee, polilinee senza archi, `Solid` e `Text` arrivano trasformati
-    esattamente: un'affinità porta segmenti in segmenti, e il testo si scompone
-    in rotazione, altezza, fattore di larghezza, obliquo e specchiatura
-    (scomposizione QR della parte lineare);
-  - archi, cerchi e polilinee con archi (che diventerebbero ellissi) arrivano
-    non trasformati, con l'affinità nell'elemento: `render` li disegna come
-    spezzate calcolate sullo schermo, e per snap e grip contano solo i loro
-    estremi trasformati.
+  è una similitudine, la forma arriva trasformata con `core::transformed`
+  ([ADR 0031](0031-modifiche-alle-entita.md)). Altrimenti (inserimento con
+  scala non uniforme) arriva trasformata **esattamente** lo stesso:
+  - linee, `Solid` ed ellissi restano linee, `Solid` ed ellissi (ADR 0052);
+  - cerchi e archi diventano ellissi e archi d'ellisse; una polilinea con archi
+    si divide nei suoi segmenti, linee e archi d'ellisse;
+  - il testo si scompone in rotazione, altezza, fattore di larghezza, obliquo e
+    specchiatura (scomposizione QR della parte lineare);
+  - solo una `FilledRegion` (un retino dentro un blocco) tiene l'affinità con
+    sé, e `render` la applica quando la riempie.
 - **Chi la usa:** `render` disegna gli elementi; la selezione con un clic e con
   la finestra e lo snap a oggetto li interrogano; l'ingombro di un'entità
   composta, nell'indice spaziale, è quello dei suoi elementi.
@@ -169,9 +170,9 @@ arrotonda in modo esatto (decisione del 2026-11-08, [#620](https://github.com/Ma
 - **Geometria generata memorizzata nel documento:** più veloce da disegnare, ma
   ogni modifica di un blocco o di uno stile dovrebbe tenerla allineata. Si
   rimanda alla tappa 1.0, se le misure lo chiederanno.
-- **Ellissi nel modello** per i blocchi scalati in modo non uniforme: un'entità
-  nuova (`ELLIPSE`) con le sue intersezioni in solid-space, per un caso raro nei
-  disegni 2D. Si disegnano come spezzate sullo schermo.
+- **Spezzate sullo schermo** per i blocchi scalati in modo non uniforme, senza
+  l'entità ellisse: era la proposta del piano; il responsabile ha scelto
+  l'ellisse (ADR 0052).
 - **Rigenerare sempre la grafica delle quote lette:** cambierebbe l'aspetto di
   ogni quota fatta con opzioni che Tecnigrafo non ha.
 
@@ -180,6 +181,6 @@ arrotonda in modo esatto (decisione del 2026-11-08, [#620](https://github.com/Ma
 - Lo scheletro è un pacchetto di sola interfaccia: si giustifica perché toglie
   le visite comuni da tutte le catene dei tipi ([LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md),
   «Pacchetti leggeri»).
-- `render` impara a riempire più anelli con la regola pari-dispari e a disegnare
-  forme sotto un'affinità.
+- `render` impara a riempire più anelli con la regola pari-dispari (anche sotto
+  un'affinità) e a disegnare le ellissi.
 - Il rapporto cambia formato per le entità nuove; i casi esistenti non cambiano.

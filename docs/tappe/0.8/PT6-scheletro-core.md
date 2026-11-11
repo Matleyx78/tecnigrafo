@@ -23,7 +23,7 @@
 
 ## File
 
-- nuovi in `core/include/tg/core/` e `core/src/`: `solid`, `mtext`,
+- nuovi in `core/include/tg/core/` e `core/src/`: `solid`, `ellipse`, `mtext`,
   `attribute_definition`, `insert`, `dimension`, `hatch`, `generated`,
   `text_style_table`, `dim_style_table`, `block_table` (`.hpp` e `.cpp`)
 - `core/include/tg/core/document.hpp`, `core/src/document.cpp`
@@ -43,12 +43,19 @@
 
 ### 1. I tipi
 
-`Entity` = `std::variant<Polyline, Line, Circle, Arc, Text, Solid, MText,
+`Entity` = `std::variant<Polyline, Line, Circle, Arc, Text, Solid, Ellipse, MText,
 AttributeDefinition, Insert, Dimension, Hatch>`. Ogni tipo ha `operator==`
 predefinito. Angoli in radianti, come `Arc` e `Text`.
 
 ```cpp
 struct Solid { std::array<Vec2, 4> vertices; };  // DXF 10, 11, 12, 13
+
+struct Ellipse {  // docs/adr/0052
+    Vec2 center; Vec2 majorAxis;   // 10; 11, relative to the center
+    double ratio{1.0};             // 40, in (0, 1]
+    double startParameter{0.0};    // 41, radians
+    double endParameter{0.0};      // 42, radians; 2*pi with 0 = full
+};
 
 enum class MTextAttachment : std::uint8_t { TopLeft = 1, TopCenter, TopRight,
     MiddleLeft, MiddleCenter, MiddleRight, BottomLeft, BottomCenter, BottomRight };
@@ -139,14 +146,21 @@ per tipo (punto 4) di un tipo non realizzato hanno la stessa precondizione.
 `generated.hpp`:
 
 ```cpp
-struct FilledRegion { std::vector<Polyline> loops; };  // closed, even-odd
-using GeneratedShape = std::variant<Line, Arc, Circle, Polyline, Text, Solid,
-                                    FilledRegion>;
+struct FilledRegion {
+    std::vector<Polyline> loops;   // closed, even-odd
+    Transform2D transform;         // identity unless inside a non-uniform insert
+};
+using GeneratedShape = std::variant<Line, Arc, Circle, Ellipse, Polyline, Text,
+                                    Solid, FilledRegion>;
 struct GeneratedItem {
-    GeneratedShape shape;
-    Transform2D transform;            // identity unless docs/adr/0044, point 2
+    GeneratedShape shape;             // in drawing coordinates (docs/adr/0044, point 2)
     EffectiveProperties properties;   // resolved
 };
+/// The exact image of a shape under an affine map (docs/adr/0044, point 2;
+/// docs/adr/0052, point 2): circles and arcs become ellipses, a polyline with
+/// arcs splits into lines and elliptical arcs, text is decomposed.
+[[nodiscard]] std::vector<GeneratedShape> transformedShape(const GeneratedShape&,
+                                                           const Transform2D&);
 [[nodiscard]] std::vector<GeneratedItem> generate(const Document&, const EntityRecord&);
 [[nodiscard]] BBox extent(const Document&, const EntityRecord&);
 [[nodiscard]] double distance(const Document&, const EntityRecord&, const Vec2&);
@@ -164,10 +178,11 @@ struct TransformOutcome { std::optional<Entity> entity; std::string refusal; };
 - Per le cinque entità di oggi, ognuna di queste fa ciò che fanno le funzioni
   di oggi (`boundingBox`, `distance`, …), e `generate` dà l'entità stessa con
   `effectiveProperties`, `transformedIn` dà `transformed` e nessun rifiuto.
-- Per i tipi nuovi chiamano le funzioni per tipo (punto 4). Le forme sotto
-  un'affinità non simile contano per `distance`, `isInside` e `intersects` con i
-  loro punti trasformati e, per archi e cerchi, con la spezzata che `render`
-  disegna (stesso passo, documentato qui); per lo snap solo gli estremi.
+- Per i tipi nuovi chiamano le funzioni per tipo (punto 4). Le forme generate
+  sono già nel sistema del disegno: `distance`, `isInside`, `intersects` e lo
+  snap le trattano come le entità dello stesso tipo. `transformedShape` qui
+  si dichiara e tratta le similitudini con `transformed`; la parte affine la
+  realizzano PT48 (ellissi e archi), PT17 (testo) e PT16 (il resto).
 - `Document` registra nell'indice spaziale `extent()` invece di
   `boundingBox()`, e `pickEntity`, `selectInRectangle` e `findSnap`
   (`document_query.cpp`) usano `distance`, `isInside`, `intersects` e
@@ -177,7 +192,7 @@ struct TransformOutcome { std::optional<Entity> entity; std::string refusal; };
 
 Ogni tipo nuovo `T` ha, nel suo file, le funzioni che le visite chiamano, qui
 con un corpo che non è mai raggiunto (precondizione del punto 2):
-`BBox boundingBox(const T&)` (solo per `Solid` e `AttributeDefinition`, che non
+`BBox boundingBox(const T&)` (solo per `Solid`, `Ellipse` e `AttributeDefinition`, che non
 dipendono dal documento), `std::vector<GeneratedItem> generateOf(const
 Document&, const EntityRecord&, const T&)`, `TransformOutcome transformedOf(const
 Document&, const T&, const Similarity&, MirrorText)`, `std::vector<Vec2>
@@ -222,7 +237,7 @@ li scrive mai (non ci sono). Nessun comportamento cambia.
 
 ## Test richiesti
 
-- `new_entities_test.cpp`: i sei tipi si costruiscono e si confrontano;
+- `new_entities_test.cpp`: i sette tipi si costruiscono e si confrontano;
   `isSupported` è falso per loro e vero per i cinque di oggi.
 - `generated_test.cpp`: per `Line`, `Arc`, `Circle`, `Polyline` e `Text`,
   `generate` dà un elemento con l'entità e le proprietà effettive; `extent`,
@@ -233,6 +248,6 @@ li scrive mai (non ci sono). Nessun comportamento cambia.
 
 ## Fatto quando
 
-- I sei tipi, le funzioni per tipo, la geometria generata e le tre tabelle
+- I sette tipi, le funzioni per tipo, la geometria generata e le tre tabelle
   esistono, e tutte le visite li trattano.
 - I casi di verifica sono invariati; la CI è verde.

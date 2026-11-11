@@ -27,10 +27,11 @@ In quest'ordine, che è quello in cui le interfacce si usano l'una con l'altra:
 
 | Scheda | Interfacce nuove | Come usa le altre |
 |---|---|---|
-| [PT6](PT6-scheletro-core.md) | i sei tipi, `isSupported`, `GeneratedItem`, `generate`, `extent`, `distance`, `transformedIn`, `moveGripIn`, le tre tabelle in `Document` | le visite di oggi, `document_query`, l'indice spaziale |
+| [PT6](PT6-scheletro-core.md) | i sette tipi, `transformedShape`, `isSupported`, `GeneratedItem`, `generate`, `extent`, `distance`, `transformedIn`, `moveGripIn`, le tre tabelle in `Document` | le visite di oggi, `document_query`, l'indice spaziale |
 | [PT7](PT7-tabelle-edit.md) | i due cambiamenti generici di `Editor`, `DocumentTables::replace…` | PT6; i comandi di trasformazione |
 | [PT8](PT8-geometria-generata-render.md) | `Painter::fillLoops`; il disegno della geometria generata | PT6, punto 3 |
 | [PT10](PT10-solid.md) | `Solid` e le sue funzioni; il codec DXF | PT6 |
+| [PT48](PT48-ellisse.md) | `Ellipse`, le sue trasformazioni affini esatte, il codec DXF | PT6, PT8 |
 | [PT11](PT11-stili-di-testo.md) | `TextStyle`, `TextStyleTable`; il codec della tabella | PT6, PT7 |
 | [PT16](PT16-blocchi-core.md) | `BlockDefinition`, `BlockTable`, `Insert` e la sua geometria generata, `dependsOnBlock` | PT6, PT8 |
 | [PT17](PT17-attributi-core.md) | `AttributeDefinition`, `Attribute`, gli attributi di un inserimento nel disegno | PT16 |

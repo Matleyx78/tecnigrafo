@@ -1480,3 +1480,44 @@ i rimandi ai documenti che cambia.
     pacchetto) e alla misura dei pacchetti
     ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), «Preparare il piano»),
     che non cambiano.
+- **2026-11-11 — Piano della 0.8: le otto decisioni.** Nella chat del piano
+  ([#661](https://github.com/Matleyx78/tecnigrafo/pull/661)) il responsabile
+  decide, punto per punto della sezione 5 del
+  [piano](tappe/0.8-quote-retini-blocchi.md):
+  1. **`PEDIT` con *Multiple*.** In AutoCAD distanza di tolleranza e tipo di
+     unione esistono solo dentro *Multiple*: senza, la decisione del
+     2026-11-07 non avrebbe la sequenza di AutoCAD
+     ([ADR 0050](adr/0050-pedit.md), punto 1).
+  2. **Incrocio fra una guida del tracciamento e la guida polare** dal punto
+     precedente, con l'intersezione di solid-space già nel contratto
+     ([ADR 0049](adr/0049-tracciamento-degli-snap-a-oggetto.md), punto 4).
+     Le guide polari dai punti acquisiti (`POLARMODE`) restano fuori.
+  3. **`!hover x,y`** è la direttiva che acquisisce: descrive il gesto, come
+     `!move` e `!click` (ADR 0049, punto 7).
+  4. **Canale MCP spento a ogni avvio**, senza «accendi all'avvio» per ora; il
+     **ponte `tecnigrafo --mcp` resta vivo** e si collega al programma a ogni
+     richiesta, così l'assistente funziona appena il canale si accende, senza
+     riavviarlo ([ADR 0051](adr/0051-canale-mcp-dell-assistente.md), punti 1
+     e 3).
+  5. **`MTEXT` e quote solo dalla riga di comando** nella 0.8. L'editor nella
+     finestra, l'opzione *Mtext* delle quote e `TEXTEDIT` sono l'idea
+     [#662](https://github.com/Matleyx78/tecnigrafo/issues/662), da pianificare
+     dopo F6.
+  6. **Testo e frecce delle quote strette come AutoCAD con `ISO-25`**
+     (`DIMATFIT` 3, `DIMTMOVE` 0): le soglie e le posizioni si ricavano dai
+     disegni di AutoCAD LT del responsabile; con altri valori di quelle
+     variabili la quota non è rigenerabile
+     ([ADR 0047](adr/0047-quote-e-stili-di-quota.md), punti 2 e 4). Sostituisce
+     la proposta «testo sempre in mezzo».
+  7. **L'ellisse entra nella 0.8**, «anche se è la strada più in salita»:
+     entità `ELLIPSE`, comando `ELLIPSE`, inserimenti con scala diversa in X e
+     in Y che generano ed esplodono in ellissi come AutoCAD, e una quarta
+     richiesta a solid-space per selezione e intersezioni
+     ([ADR 0052](adr/0052-ellisse.md)). `TRIM`, `EXTEND`, `OFFSET` e `FILLET`
+     sulle ellissi restano fuori: idea
+     [#663](https://github.com/Matleyx78/tecnigrafo/issues/663).
+  8. **Otto simboli della libreria dell'elettrico e lo schema d'esempio come
+     campioni di prova**, copiati in `Matleyx78/dxf-test-file`,
+     `campioni-elettrico/` (CC0), dichiarati come campioni e non come la
+     libreria, che resta in lavorazione in `tec-ss-grafica` fino a lavoro
+     finito.

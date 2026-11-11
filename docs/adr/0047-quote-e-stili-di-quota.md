@@ -43,9 +43,10 @@ blocchi), testo (`MTEXT`), punti. Le variabili correnti stanno nell'intestazione
   con le sovrascritture, queste variabili hanno il valore dello stile `ISO-25`:
   `DIMBLK`, `DIMBLK1`, `DIMBLK2` e `DIMLDRBLK` (freccia piena chiusa),
   `DIMSAH` 0, `DIMTOL` 0, `DIMLIM` 0, `DIMALT` 0, `DIMLUNIT` 2 (decimale),
-  `DIMAUNIT` 0 (gradi decimali), `DIMJUST` 0, `DIMTVP` 0, `DIMTMOVE` 0,
-  `DIMFRAC` 0, `DIMTSZ` 0 (frecce, non tratti obliqui). Altrimenti la quota
-  non è rigenerabile (punto 4).
+  `DIMAUNIT` 0 (gradi decimali), `DIMJUST` 0, `DIMTVP` 0, `DIMFRAC` 0,
+  `DIMTSZ` 0 (frecce, non tratti obliqui), e le variabili dell'adattamento,
+  `DIMATFIT` 3, `DIMTMOVE` 0, `DIMTIX` 0, `DIMSOXD` 0 e `DIMTOFL` con il valore
+  di `ISO-25` (punto 4). Altrimenti la quota non è rigenerabile.
 - **Disegno nuovo:** gli stili `Standard` e `ISO-25`, corrente `ISO-25`, con i
   valori del modello `acadiso.dwt` di AutoCAD, che il responsabile conferma con
   `-DIMSTYLE` → *STatus* in AutoCAD LT (piano della tappa, «Prerequisiti»).
@@ -78,11 +79,15 @@ blocchi), testo (`MTEXT`), punti. Le variabili correnti stanno nell'intestazione
   come `MTEXT`, sul layer `0` con colori e spessori *DaBlocco* salvo le
   variabili di colore e spessore. Non contiene `POINT` ai punti di definizione.
 - **Le regole geometriche** (dove vanno linee d'estensione, frecce e testo per
-  ogni tipo, e quando le frecce vanno fuori) le scrivono le schede delle quote
-  in `core`, con la regola di AutoCAD per i casi in cui il testo e le frecce
-  stanno fra le linee d'estensione. Quando non ci stanno, le frecce vanno fuori
-  e il **testo resta in mezzo**: AutoCAD lo sposterebbe (`DIMATFIT`); è una
-  differenza voluta, scritta nel manuale.
+  ogni tipo) le scrivono le schede delle quote in `core`.
+- **Quando non ci stanno** (decisione del 2026-11-11, punto 6 del piano), come
+  AutoCAD con `DIMATFIT` 3 e `DIMTMOVE` 0, in quest'ordine: testo e frecce
+  dentro; solo il testo dentro e le frecce fuori; solo le frecce dentro e il
+  testo fuori, accanto a una linea d'estensione con la linea di quota
+  prolungata fino a lui; tutto fuori. AutoCAD non pubblica le soglie né le
+  posizioni esatte: le schede le ricavano dai disegni di AutoCAD LT del
+  responsabile (quote strette in `autocad-quote.dxf`), e dove un caso
+  contraddice la scheda vale il disegno di AutoCAD.
 - **Quando si rigenera:** alla creazione; e a ogni modifica, tranne la
   traslazione (`MOVE`, `COPY`, grip sul testo che si sposta soltanto), che
   sposta punti e grafica senza ricalcolare. Rotazione, scala, specchiatura e
@@ -109,7 +114,8 @@ copia dalla cronologia di AutoCAD LT (piano, «Prerequisiti»):
   *Angle*.
 
 L'opzione *Mtext* (l'editor nella finestra) resta fuori, come per `MTEXT`
-([ADR 0046](0046-stili-di-testo-e-testo-multiriga.md)). Ogni comando scrive alla
+([ADR 0046](0046-stili-di-testo-e-testo-multiriga.md); idea
+[#662](https://github.com/Matleyx78/tecnigrafo/issues/662)). Ogni comando scrive alla
 fine `Dimension text = <testo>`.
 
 ### 6. Associatività
@@ -124,8 +130,12 @@ con un file della tappa.
 
 - **Rigenerare sempre le quote lette:** cambierebbe l'aspetto di ogni quota con
   opzioni che Tecnigrafo non ha.
-- **La regola di AutoCAD per spostare il testo che non ci sta (`DIMATFIT`,
-  `DIMTMOVE`):** molte varianti, poco documentate; si rimanda.
+- **Testo sempre in mezzo** quando non ci sta (la prima proposta): più
+  semplice, ma con le quote strette, frequenti nel disegno meccanico, il testo
+  si sovrapporrebbe alle linee d'estensione, e le quote di AutoCAD cambierebbero
+  aspetto alla prima rigenerazione.
+- **Tutte le varianti di `DIMATFIT` e `DIMTMOVE`:** molte, poco documentate; si
+  rimandano. Con valori diversi da `ISO-25` la quota si conserva e si sposta.
 - **Tutte le variabili di quota nel modello:** sono più di settanta; le altre
   si conservano e bloccano la rigenerazione solo se cambiano la grafica.
 - **Quote associative già nella 0.8:** la scheda le mette dopo la 1.0.

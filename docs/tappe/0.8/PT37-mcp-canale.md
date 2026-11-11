@@ -49,10 +49,14 @@ operativi, con decisioni che emergono scrivendo il codice (piano, «Motivi»).
    non accettano input (lo accodano).
 4. **Cronologia** (punto 8): le righe scritte dall'assistente compaiono con
    `[AI] ` davanti (solo nella finestra; il rapporto degli script non cambia).
-5. **Ponte** (punto 1): `tecnigrafo --mcp` non crea finestre, si collega al
-   server locale e copia le righe fra stdin/stdout e il socket finché uno dei
-   due si chiude; se non c'è il server risponde a `initialize` con l'errore
-   dell'ADR ed esce con codice 1.
+5. **Ponte che resta vivo** (ADR 0051, punto 1): `tecnigrafo --mcp` non crea
+   finestre e resta acceso finché stdin non si chiude. Risponde da solo a
+   `initialize` e a `tools/list` (con l'elenco degli strumenti del programma
+   di PT36, senza sessione); per ogni `tools/call` si collega al server locale
+   se non lo è già, passa la richiesta e restituisce la risposta. Se il server
+   non c'è, o il collegamento cade, quella chiamata risponde con l'errore dello
+   strumento dell'ADR e la successiva riprova. Le notifiche si passano solo a
+   collegamento attivo.
 6. Ogni comando dell'assistente è un passo di annullamento come quelli
    dell'utente (punto 7).
 
@@ -69,11 +73,13 @@ operativi, con decisioni che emergono scrivendo il codice (piano, «Motivi»).
   secondo client rifiutato; un comando dell'utente in corso fa aspettare la
   richiesta, che parte quando il comando finisce (con il tempo simulato anche il
   rifiuto dopo 30 s); senza documenti, `No drawing is open.`.
-- Il ponte: con il server, le righe passano nei due sensi; senza, l'errore.
+- Il ponte: `initialize` e `tools/list` senza server; una `tools/call` senza
+  server dà l'errore e la successiva, a server acceso, passa; il server che si
+  spegne e si riaccende fra due chiamate.
 
 ## Fatto quando
 
 - Un client locale disegna nella sessione attiva solo con i comandi, e `U`
   annulla; il canale è spento all'avvio e non è una porta di rete.
 - I test passano su Windows, Linux e macOS; la CI è verde; la prova manuale con
-  un assistente vero resta al responsabile (piano, sezione 7, punto 7).
+  un assistente vero resta al responsabile (piano, sezione 7, punto 8).

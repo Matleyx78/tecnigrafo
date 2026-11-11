@@ -44,10 +44,12 @@
      spessore compresi), dopo la trasformazione dell'elemento;
    - `Solid` con `fillPolygon` sul quadrilatero `v0, v1, v3, v2` (ADR 0044,
      punto 7);
-   - `FilledRegion` con `fillLoops`, gli anelli resi come spezzate;
-   - sotto un'affinità che non è una similitudine, archi, cerchi e archi di
-     polilinea si disegnano come spezzate calcolate sullo schermo, con lo stesso
-     passo delle spezzate di PT6, punto 3 (scritto in un solo posto, in `core`).
+   - `Ellipse` come spezzata calcolata sullo schermo, con lo stesso passo
+     angolare degli archi, tipo di linea compreso (ADR 0052, punto 3);
+   - `FilledRegion` con `fillLoops`, gli anelli resi come spezzate dopo la sua
+     trasformazione (un retino dentro un inserimento stirato).
+   Le forme arrivano già nel sistema del disegno (PT6, punto 3): niente altre
+   affinità da applicare.
    Per le cinque entità di oggi il disegno non cambia: `generate` le dà così
    come sono.
 3. Gli attributi invisibili e le entità sui layer spenti o congelati non
@@ -64,9 +66,9 @@
 
 - Pittore di prova: una `FilledRegion` di un quadrato con un quadrato dentro
   chiama `fillLoops` con due anelli; un `Solid` chiama `fillPolygon` con i
-  quattro vertici nell'ordine `v0, v1, v3, v2`; un arco sotto un'affinità
-  `scaling(2, 1)` è una spezzata i cui punti stanno sull'ellisse; un `Text`
-  sotto la stessa affinità ha fattore di larghezza 2.
+  quattro vertici nell'ordine `v0, v1, v3, v2`; un'`Ellipse` di rapporto 0,5 è
+  una spezzata i cui punti stanno sull'ellisse; una `FilledRegion` con
+  trasformazione `scaling(2, 1)` riempie anelli allargati in X.
 - Il disegno di un documento con le cinque entità di oggi dà le stesse chiamate
   di prima.
 - Un test Qt: `fillLoops` di due quadrati annidati lascia vuoto il centro in un
@@ -74,5 +76,5 @@
 
 ## Fatto quando
 
-- La scena disegna la geometria generata, con riempimenti e affinità.
+- La scena disegna la geometria generata, con riempimenti ed ellissi.
 - I test qui sopra passano; la galleria di schermate non cambia; la CI è verde.

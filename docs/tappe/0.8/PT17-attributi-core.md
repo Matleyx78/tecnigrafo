@@ -19,6 +19,7 @@
 - `core/include/tg/core/attribute_definition.hpp`, `core/src/attribute_definition.cpp`
 - `core/include/tg/core/insert.hpp`, `core/src/insert.cpp` (la parte degli
   attributi)
+- `core/src/generated.cpp` (la parte del testo di `transformedShape`, dopo PT16)
 - `core/src/text_affine.cpp`, `core/include/tg/core/text_affine.hpp` (nuovi: un
   testo sotto un'affinità)
 - `tests/core/attributes_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
@@ -30,7 +31,8 @@
    L'`ATTDEF` si comporta come un `TEXT` che mostra l'etichetta (ingombro,
    disegno, selezione, snap, grip, trasformazioni), tranne quando è dentro un
    blocco, dove non si disegna (punto 4).
-2. **Testo sotto un'affinità** (ADR 0044, punto 2): `Text transformedText(const
+2. **Testo sotto un'affinità** (ADR 0044, punto 2; è la parte del testo di
+   `transformedShape`, PT6): `Text transformedText(const
    Text&, const Transform2D&)` scompone la parte lineare `A` in
    `R(θ)·[[a, b], [0, c]]` con `c > 0` (QR); se `det A < 0` prima si riflette in
    X (segnale all'indietro invertito, come `MIRRTEXT` = 1). Allora: rotazione

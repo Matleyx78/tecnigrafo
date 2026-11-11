@@ -23,8 +23,12 @@
 
 ## Cosa fare
 
-Le misure sono già per `DIMSCALE`; frecce, colori, spessori, testo e
-rigenerazione come PT23.
+Le misure sono già per `DIMSCALE`; frecce, colori, spessori, testo,
+adattamento quando testo e frecce non ci stanno (i quattro casi di PT23,
+misurati lungo l'arco per l'angolare) e rigenerazione come PT23. Per le radiali
+e diametrali in un cerchio piccolo valgono i casi di RT24, presi da
+`autocad-quote.dxf`, con la stessa regola: dove contraddicono la scheda vale il
+caso.
 
 1. **Angolare fra due linee.** Prima linea `point13 → point14`, seconda
    `linePoint → point15`, punto dell'arco `point16`. Vertice `v` = intersezione

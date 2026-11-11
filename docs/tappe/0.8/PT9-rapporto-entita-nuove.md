@@ -23,7 +23,7 @@
 
 «Un tipo nuovo di entità si aggiunge a [rapporto.md] prima del pacchetto che lo
 realizza» (rapporto.md, «Come cresce il formato»). Questo pacchetto fissa e
-realizza il formato di tutti e sei i tipi, delle tre tabelle e della domanda
+realizza il formato di tutti e sette i tipi, delle tre tabelle e della domanda
 `generated`, così tutti i pacchetti di riferimenti della tappa possono partire.
 
 ## File
@@ -53,6 +53,14 @@ SOLID vertex=0,0 vertex=10,0 vertex=0,5 vertex=10,5
 ```
 
 I quattro vertici nell'ordine del DXF (10, 11, 12, 13), sempre quattro.
+
+```
+ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=0 end=90
+```
+
+`center` (10/20), `major-axis` (11/21, relativo al centro), `ratio` (40);
+`start` ed `end` sono i parametri 41 e 42 **in gradi**, scritti solo per un
+arco d'ellisse (non per l'ellisse intera, 0 e 360).
 
 ```
 MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Prima\\Pseconda" ~lines=2
@@ -147,7 +155,7 @@ In domande.md:
 
 | Domanda | Risposta | Note |
 |---|---|---|
-| `generated <E>` | elenco di forme separate da `;`, o `none` | la geometria generata dell'entità (ADR 0044, punto 2), in ordine: ogni forma nel formato delle entità (`LINE`, `ARC`, `CIRCLE`, `LWPOLYLINE`, `TEXT`, `SOLID`, e `REGION` con i suoi `loop=` come `HATCH`), seguita dalle proprietà effettive diverse dal predefinito e da `~affine=a,b,c,d,e,f` se la trasformazione non è l'identità |
+| `generated <E>` | elenco di forme separate da `;`, o `none` | la geometria generata dell'entità (ADR 0044, punto 2), in ordine: ogni forma nel formato delle entità (`LINE`, `ARC`, `CIRCLE`, `ELLIPSE`, `LWPOLYLINE`, `TEXT`, `SOLID`, e `REGION` con i suoi `loop=` come `HATCH`), seguita dalle proprietà effettive diverse dal predefinito; una `REGION` con trasformazione diversa dall'identità ha anche `~affine=a,b,c,d,e,f` |
 
 ### 4. Definizioni di blocchi nelle domande
 

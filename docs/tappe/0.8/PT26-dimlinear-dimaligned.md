@@ -34,7 +34,8 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
      `LWPOLYLINE`: le origini sono i suoi estremi);
    - `Specify second extension line origin:`
    - `Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]:`
-     — senza *Mtext* (decisione 5 del piano): la richiesta lo omette. *Text*:
+     — senza *Mtext* (decisione del 2026-11-11; idea #662): la richiesta lo
+     omette. *Text*:
      `Enter dimension text <valore>:` (testo sostituito); *Angle*: `Specify
      angle of dimension text:` (rotazione del testo); *Horizontal* e *Vertical*
      fissano la direzione; *Rotated*: `Specify angle of dimension line <0>:`.

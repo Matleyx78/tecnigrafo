@@ -20,18 +20,25 @@ stdout. Il disegno però è nel programma già aperto.
 
 ## Decisione
 
-1. **Ponte.** L'assistente avvia `tecnigrafo --mcp`: lo stesso eseguibile,
-   senza finestre, che collega stdin e stdout al programma aperto attraverso un
-   canale locale e passa i messaggi così come sono. Se il programma non è
-   aperto o il canale è spento, risponde all'`initialize` con l'errore
-   `Tecnigrafo is not running, or its assistant channel is off.` ed esce.
+1. **Ponte che resta vivo** (decisione del 2026-11-11). L'assistente avvia
+   `tecnigrafo --mcp`: lo stesso eseguibile, senza finestre, che parla MCP su
+   stdin e stdout e **resta acceso** finché l'assistente non lo chiude, anche se
+   il programma è chiuso o il canale spento. Risponde da solo a `initialize` e
+   a `tools/list` (l'elenco dei sei strumenti del punto 4, che conosce perché è
+   lo stesso eseguibile); a ogni `tools/call` prova a collegarsi al programma
+   attraverso il canale locale e passa la richiesta così com'è. Se non ci
+   riesce, quella chiamata risponde con un errore dello strumento,
+   `Tecnigrafo is not running, or its assistant channel is off.`, e la
+   successiva riprova. Così il canale si accende quando si vuole, e
+   l'assistente funziona subito, senza riavviarlo.
 2. **Canale locale.** `QLocalServer`, con un nome che contiene l'utente del
    sistema, accessibile solo a lui (`QLocalServer::UserAccessOption`): un socket
    di dominio Unix su Linux e macOS, una named pipe locale su Windows. Nessuna
    porta di rete. **Un client alla volta**: un secondo si rifiuta.
-3. **Spento finché l'utente non lo accende**, a ogni avvio: un interruttore del
-   ribbon e della barra di stato con la sua icona. Un'impostazione «accendi
-   all'avvio», spenta per difetto, è fuori dalla 0.8.
+3. **Spento a ogni avvio** (decisione del 2026-11-11): l'utente lo accende con
+   un interruttore del ribbon e della barra di stato con la sua icona. Per ora
+   niente impostazione «accendi all'avvio»; se il clic a ogni sessione pesa, la
+   si propone come `idea`.
 4. **Protocollo e strumenti.** La libreria di `mcp` (JSON-RPC, revisione del
    protocollo e limiti dell'ADR 0027) gira dentro il programma. Gli strumenti:
    `run`, `report`, `list_commands`, `describe_command`, `open`, `save`, con gli
@@ -65,6 +72,9 @@ stdout. Il disegno però è nel programma già aperto.
   canale non raggiungibile dalla rete.
 - **Un eseguibile ponte a parte:** un file in più da installare e da tenere
   allineato; lo stesso eseguibile con un'opzione basta.
+- **Ponte che esce se il programma non c'è:** gli assistenti avviano i server
+  MCP una volta sola, al loro avvio; con il canale spento a ogni avvio
+  l'utente dovrebbe riavviare l'assistente ogni volta.
 - **Coda senza limite di tempo:** l'assistente resterebbe bloccato finché
   l'utente non finisce un comando, senza saperlo.
 - **Esporre `reset` e le domande al modello:** il primo butterebbe via il

@@ -81,9 +81,12 @@ La geometria generata porta le proprietà già risolte (ADR 0044, punto 2).
   - gli inserimenti annidati restano inserimenti (si esplode un livello);
   - gli attributi spariscono con i loro valori, e al loro posto compaiono gli
     `ATTDEF` della definizione, trasformati;
-  - un blocco non esplodibile (280 = 0) o un inserimento con scala non uniforme
-    si rifiutano, con un messaggio. AutoCAD esplode il secondo in ellissi, che
-    Tecnigrafo non ha (ADR 0044, alternative).
+  - con **scala non uniforme**, come AutoCAD, cerchi e archi diventano ellissi
+    e archi d'ellisse ([ADR 0052](0052-ellisse.md)), i testi si deformano con
+    fattore di larghezza e obliquo (ADR 0044, punto 2); un inserimento annidato
+    resta un inserimento solo se la trasformazione composta è ancora scala più
+    rotazione, altrimenti l'esplosione si rifiuta con un messaggio che lo dice;
+  - un blocco non esplodibile (280 = 0) si rifiuta, con il messaggio di AutoCAD.
 - **Grip:** uno solo, sul punto d'inserimento, che sposta l'inserimento con i
   suoi attributi. **Snap:** inserimento (`ins`) sul punto d'inserimento, e gli
   snap delle entità del blocco sulla geometria generata.
@@ -158,7 +161,7 @@ La geometria generata porta le proprietà già risolte (ADR 0044, punto 2).
 - **Domande sugli attributi all'inserimento (`ATTREQ` = 1):** il responsabile
   le ha rimandate ai comandi degli attributi, dopo la 0.8.
 - **Esplodere la scala non uniforme in polilinee approssimate:** cambierebbe
-  la geometria senza dirlo. Si rifiuta.
+  la geometria senza dirlo. Con l'ellisse (ADR 0052) l'esplosione è esatta.
 - **XDATA o `extensions.json` per i dati dell'elettrico:** la specifica dei
   blocchi intelligenti li ha scartati (sezione 9): gli attributi si vedono in
   ogni CAD.

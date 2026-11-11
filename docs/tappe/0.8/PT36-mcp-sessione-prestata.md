@@ -48,7 +48,10 @@
    offrire: `tecnigrafo-mcp` quelli di oggi (con `ask` solo con `--questions`);
    il programma (PT37) `run`, `report`, `list_commands`, `describe_command`,
    `open`, `save`, senza `reset`, `run_script`, `check_case`, `ask`. Uno
-   strumento non offerto risponde come uno sconosciuto.
+   strumento non offerto risponde come uno sconosciuto. La descrizione degli
+   strumenti del programma (la risposta a `tools/list`) si ottiene **senza un
+   ospite**: il ponte di PT37 la dà da solo, prima di collegarsi (ADR 0051,
+   punto 1).
 3. **Trasporto separato.** Il server legge e scrive messaggi JSON-RPC da
    un'interfaccia di righe (`readLine`/`writeLine`), così PT37 gli dà un socket
    locale al posto di stdin e stdout. Limiti e protocollo dell'ADR 0027 non

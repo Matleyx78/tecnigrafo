@@ -10,22 +10,25 @@ lo script eseguito (`.scr`) e la **cronologia dei comandi** copiata da `F2`:
 richieste e messaggi dei comandi di Tecnigrafo si prendono da lì.
 
 Chi scrive i riferimenti legge il risultato di AutoCAD con l'oracolo ezdxf
-(ADR 0020, esteso alle entità della tappa da PT3); i valori attesi si copiano
+(ADR 0020, esteso alle entità della tappa da PT3), anche per i campioni
+dell'elettrico, che non vengono da AutoCAD; i valori attesi si copiano
 dal log dell'oracolo, non si calcolano a mano e non si ricavano da Tecnigrafo.
 Le hash SHA-256 si scrivono qui quando i file sono pubblicati.
 
 | File | Che cosa contiene | Riferimenti |
 |---|---|---|
 | `autocad-solid.dxf` | `SOLID` da 3 e da 4 vertici, uno «a farfalla», uno su un layer con colore, uno specchiato | RT10 |
+| `autocad-ellissi.dxf` | ellissi fatte con `ELLIPSE` in tutti i modi (asse e distanza, *Center*, *Rotation*), archi d'ellisse con angoli e con *Included angle*, un'ellisse ruotata di 30°, una specchiata, una scalata `(2, 1)` dentro un blocco ed esplosa | RT48, RT49, RT50 |
 | `autocad-stili-testo.dxf` | stili `Standard`, uno con altezza fissa 5, uno con fattore di larghezza 0,8 e obliquo 15°; un `TEXT` per stile | RT11, RT12 |
 | `autocad-testo-multiriga.dxf` | `MTEXT` con larghezza 0 e 60, i nove punti di allineamento, due paragrafi (`\P`), una parola più larga della colonna, interlinea 1,5, rotazione 30°; uno con formati (`\f`, `\H`, `\C`, `\S1/2;`) | RT13, RT14, RT15 |
 | `autocad-blocchi.dxf` | un blocco semplice; uno con entità sul layer `0` e colore *DaBlocco*; uno annidato in un altro; inserimenti con scala 1, 2, −1 (specchiato), 2 e 1 (non uniforme) e rotazione 30°; un blocco con `ATTDEF` variabile, invisibile, costante e preimpostato, inserito con i valori predefiniti (`ATTREQ` 0); un inserimento specchiato con `MIRROR` e `MIRRTEXT` 0; un blocco ridefinito dopo l'inserimento; un blocco non esplodibile | RT16, RT17, RT18, RT20, RT21 |
-| `autocad-esplodi.dxf` | copie degli inserimenti di `autocad-blocchi.dxf` esplose, compreso il blocco con attributi; una quota esplosa | RT29 |
+| `autocad-esplodi.dxf` | copie degli inserimenti di `autocad-blocchi.dxf` esplose, compreso il blocco con attributi; un inserimento con scala `(2, 1)` di un blocco con un cerchio, un arco e un testo, esploso (dà ellissi); una quota esplosa | RT29 |
 | `simbolo-contatto.dxf`, `simbolo-con-tipo-di-linea.dxf` | due «simboli» da inserire come file: `$INSBASE` diverso dall'origine, un `ATTDEF` costante e uno variabile, un layer e un tipo di linea che il disegno di destinazione ha con proprietà diverse | RT19, RT21 |
 | `autocad-inserisci-file.dxf` | il disegno in cui i due simboli sono stati inseriti con `-INSERT`, una volta con il nome già esistente e *Redefine* = *Yes* | RT19, RT21 |
-| `autocad-quote.dxf` | con `ISO-25`: lineari orizzontale, verticale e ruotata, allineata, angolare fra due linee, radiale e diametrale su un cerchio e su un arco, una quota stretta con le frecce fuori; con uno stile `PROVA` (`DIMTAD` 0, `DIMDEC` 3, `DIMDSEP` `.`, `DIMTXT` 3,5); una con testo sostituito `<> mm`; una quota ruotata, una scalata e una specchiata dopo la creazione; una quota coordinata (tipo che Tecnigrafo conserva soltanto) | RT22, RT23, RT24, RT25, RT26, RT27, RT28 |
+| `autocad-quote.dxf` | con `ISO-25`: lineari orizzontale, verticale e ruotata, allineata, angolare fra due linee, radiale e diametrale su un cerchio e su un arco, le quote **strette** dei quattro casi dell'adattamento (testo e frecce dentro, solo il testo dentro, solo le frecce dentro, tutto fuori) sia lineari sia allineate, e radiali e diametrali in un cerchio piccolo; con uno stile `PROVA` (`DIMTAD` 0, `DIMDEC` 3, `DIMDSEP` `.`, `DIMTXT` 3,5); una con testo sostituito `<> mm`; una quota ruotata, una scalata e una specchiata dopo la creazione; una quota coordinata (tipo che Tecnigrafo conserva soltanto) | RT22, RT23, RT24, RT25, RT26, RT27, RT28 |
 | `autocad-retini.dxf` | `ANSI31`, `NET` e `SOLID` su un rettangolo di quattro linee con un cerchio dentro (punto interno) e con isole annidate; un retino da *Select objects*; un motivo ruotato di 30° e scalato 2; gli stili *Normal*, *Outer* e *Ignore*; un retino con un motivo diverso (`ANSI37`) | RT30, RT31, RT42, RT43, RT44 |
 | `autocad-pedit.dxf` | linee e archi convertiti in polilinee; *Join* con distanza 0; *Multiple* con distanza 2 e *Extend*, *Add* e *Both*, su linee che non si toccano, su linee che si sovrappongono e su un arco seguito da una linea; *Close*, *Open*, *Reverse*, *Ltype gen* | RT32, RT33 |
+| `campioni-elettrico/` | otto simboli della libreria dell'elettrico (`TG_EL_CONTACT_NO`, `TG_EL_COIL_DELAY_OFF`, `TG_EL_BREAKER_3P`, `TG_EL_TRANSFORMER_1PH`, `TG_EL_MOTOR_3PH`, `TG_EL_TERMINAL`, `TG_EL_FOLIO_OUT`, `TG_EL_PUSHBUTTON_NO`) e lo schema `avviamento-diretto.dxf`, scritti dallo script della libreria (DXF R2000), non da AutoCAD; campioni di prova, non la libreria (decisione del 2026-11-11, punto 8); commit da scrivere qui | RT18, RT19, RT21 |
 
 ## Che cosa provare a mano in AutoCAD LT
 

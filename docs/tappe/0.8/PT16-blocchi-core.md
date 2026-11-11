@@ -6,7 +6,7 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT16]` (#…), agente codex, fascia forte
-- **Dipende da:** PT4 (revisione delle interfacce), PT6, PT8, PT9, RT16
+- **Dipende da:** PT4 (revisione delle interfacce), PT6, PT8, PT9, PT48, RT16
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0045](../../adr/0045-blocchi-e-attributi.md), punti 1–4;
   [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md), punti 2–4;
@@ -19,6 +19,7 @@
 
 - `core/include/tg/core/block_table.hpp`, `core/src/block_table.cpp`
 - `core/include/tg/core/insert.hpp`, `core/src/insert.cpp`
+- `core/src/generated.cpp` (la sua parte di `transformedShape`, dopo PT48)
 - `core/src/effective_properties.cpp`, `core/include/tg/core/effective_properties.hpp`
   (le proprietà dentro un blocco)
 - `tests/core/block_table_test.cpp`, `tests/core/insert_test.cpp` (nuovi),
@@ -62,9 +63,11 @@
 3. **Geometria generata** (ADR 0044, punto 2): per ogni entità della
    definizione, in ordine, la sua geometria generata (ricorsiva per gli
    inserimenti annidati) composta con la trasformazione dell'inserimento:
-   similitudine → forme trasformate esattamente; altrimenti la regola di PT6,
-   punto 3 (linee, polilinee senza archi, `Solid` e `Text` esatte; archi e
-   cerchi con l'affinità). Poi gli attributi (PT17). Un blocco che non c'è dà
+   similitudine → `transformed`; altrimenti `transformedShape` (PT6, punto 3),
+   esatta per ogni forma: questo pacchetto realizza la sua parte per linee,
+   polilinee (divise in linee e archi d'ellisse quando hanno archi), `Solid` e
+   `FilledRegion` (che tiene l'affinità); ellissi e archi vengono da PT48, il
+   testo da PT17. Poi gli attributi (PT17). Un blocco che non c'è dà
    nessun elemento (non succede: il lettore lo lascia non gestito).
 4. **Proprietà** (ADR 0045, punto 3) in `effective_properties`: una funzione
    che, date le proprietà effettive dell'inserimento e un'entità del blocco,

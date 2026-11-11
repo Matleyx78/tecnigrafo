@@ -47,7 +47,7 @@ scritto, come `TEXT` (ADR 0015); senza righe non crea nulla.
 ## Regole della tappa che valgono qui
 
 - Il comando non ha l'editor nella finestra: anche nel programma si scrive
-  nella riga di comando (decisione 5 del piano, da confermare).
+  nella riga di comando (decisione del 2026-11-11; l'editor è l'idea #662).
 - File comuni: `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt`,
   `tests/CMakeLists.txt`.
 

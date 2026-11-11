@@ -7,7 +7,7 @@
 - **Modello e impegno:** medio; impegno medio
 - **Riferimenti:** non servono: azioni sopra comandi verificati; test Qt e
   controllo della geometria delle icone
-- **Dipende da:** PT12, PT15, PT20, PT21, PT26, PT27, PT28, PT33, PT38
+- **Dipende da:** PT12, PT15, PT20, PT21, PT26, PT27, PT28, PT33, PT38, PT49
 - **Modulo:** `app`
 - **Da leggere:** [LAVORO-IN-PARALLELO.md](../../LAVORO-IN-PARALLELO.md),
   «Comandi nell'interfaccia»; [ADR 0040](../../adr/0040-icone-a-ruoli.md),
@@ -17,9 +17,10 @@
 
 ## File
 
-- le icone (a 16 e 32 px, coppie) in `resources/`: `PEDIT`, `-BLOCK`,
-  `-INSERT`, `-STYLE`, `MTEXT`, `-DIMSTYLE`, `DIMLINEAR`, `DIMALIGNED`,
-  `DIMANGULAR`, `DIMRADIUS`, `DIMDIAMETER` (11 coppie, contate come 11 file)
+- le icone (a 16 e 32 px, coppie) in `resources/`: `ELLIPSE`, `PEDIT`,
+  `-BLOCK`, `-INSERT`, `-STYLE`, `MTEXT`, `-DIMSTYLE`, `DIMLINEAR`,
+  `DIMALIGNED`, `DIMANGULAR`, `DIMRADIUS`, `DIMDIAMETER` (12 coppie, contate
+  come 12 file)
 - `app/src/builtin_actions.cpp`, `app/src/ui_builder.cpp`
 - `docs/ICONE.md`
 - `tests/app/…`
@@ -30,12 +31,14 @@ Per ogni comando dell'elenco: l'icona a ruoli con le regole di ICONE.md (tratto
 da 1 px), l'azione nel registro con il nome del comando, la voce nel ribbon e
 nei menu e barre dell'interfaccia classica:
 
-- scheda *Home* del ribbon: `MTEXT` accanto a `TEXT` (gruppo *Annotation*);
+- scheda *Home* del ribbon: `ELLIPSE` nel gruppo *Draw* accanto a `ARC` (con
+  le varianti *Center*, *Axis, End* e *Arc* in un pulsante a discesa, come
+  `CIRCLE`); `MTEXT` accanto a `TEXT` (gruppo *Annotation*);
   `PEDIT` nel gruppo *Modify*; `-INSERT` e `-BLOCK` in un gruppo *Block*;
 - scheda *Annotate* (nuova se non c'è): gruppo *Dimensions* con le cinque quote
   (le prime due come varianti di un pulsante a discesa, come `CIRCLE`) e
   `-DIMSTYLE`; gruppo *Text* con `MTEXT` e `-STYLE`;
-- menu *Draw*: `MTEXT`, *Block* → `-BLOCK`; menu *Insert*: `-INSERT`; menu
+- menu *Draw*: `ELLIPSE`, `MTEXT`, *Block* → `-BLOCK`; menu *Insert*: `-INSERT`; menu
   *Dimension*: le cinque quote e `-DIMSTYLE`; menu *Format*: `-STYLE`,
   `-DIMSTYLE`; menu *Modify*: `PEDIT`.
 

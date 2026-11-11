@@ -27,7 +27,7 @@ pacchetti di riferimenti partano.
 
 ## Cosa fare
 
-1. `managed()` riconosce gestiti anche `SOLID`, `MTEXT`, `ATTDEF`, `INSERT`,
+1. `managed()` riconosce gestiti anche `SOLID`, `ELLIPSE`, `MTEXT`, `ATTDEF`, `INSERT`,
    `DIMENSION` e `HATCH`, con le eccezioni dell'ADR 0044, punto 4 (`MINSERT`,
    blocchi esterni o mancanti, `ATTRIB` o `ATTDEF` multiriga, `MTEXT` con
    colonne, `HATCH` con ellissi, spline o sfumature, quote che non sono dei
@@ -43,8 +43,7 @@ pacchetti di riferimenti partano.
    - `? generated D <handle>` per `INSERT` e `DIMENSION`: le entità che ezdxf dà
      con `virtual_entities()`, nel formato delle forme di `generated`
      (domande.md), con le proprietà effettive. Per un `INSERT` con scala non
-     uniforme e archi, ezdxf dà ellissi: la risposta lo dice
-     (`; ellipse: not comparable`) e quelle righe non si copiano.
+     uniforme ezdxf dà ellissi, come Tecnigrafo (ADR 0052): si confrontano.
 4. Il README descrive le risposte nuove.
 
 ## Regole della tappa che valgono qui

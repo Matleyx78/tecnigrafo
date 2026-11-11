@@ -53,10 +53,24 @@
      `fᵢ + DIMEXE·eᵢ`, con `eᵢ` = versore da `pᵢ` a `fᵢ`; se `pᵢ = fᵢ` nessuna.
    - **Frecce** piene chiuse: un `SOLID` triangolare con la punta in `fᵢ`,
      lunghezza `a = DIMASZ` lungo la linea, base larga `a/3`.
-   - **Dentro o fuori:** con `L = |f2 − f1|`, frecce dentro se `L ≥ 2a`,
-     puntate verso le linee d'estensione, e linea di quota da `f1` a `f2`;
-     altrimenti fuori, puntate verso l'interno, con la linea di quota da
-     `f1 − 2a·w` a `f2 + 2a·w` (`w` = versore da `f1` a `f2`).
+   - **Dentro o fuori** (ADR 0047, punto 4; `DIMATFIT` 3, `DIMTMOVE` 0), con
+     `L = |f2 − f1|`, `t` = larghezza del testo (impaginazione di PT13) e
+     `w` = versore da `f1` a `f2`, nell'ordine:
+     1. testo e frecce dentro se ci stanno tutti e due;
+     2. altrimenti il testo dentro e le frecce fuori, se ci sta il testo;
+     3. altrimenti le frecce dentro e il testo fuori, se ci stanno le frecce;
+     4. altrimenti tutto fuori.
+     Le **soglie** di «ci sta» e la **posizione del testo fuori** non sono
+     pubblicate da AutoCAD: si ricavano dai casi di RT23, presi dalle quote
+     strette di `autocad-quote.dxf`. Ipotesi di partenza, da confermare con
+     quei casi: le frecce ci stanno se `L ≥ 2a`; il testo se
+     `L ≥ t + 2·DIMGAP`; tutti e due se `L ≥ t + 2·DIMGAP + 2a`; il testo fuori
+     sta oltre la seconda linea d'estensione, sulla linea di quota prolungata,
+     a `a + DIMGAP` da essa. Frecce fuori: puntate verso l'interno, con un
+     tratto di linea di quota lungo `a` oltre ciascuna; con `DIMTOFL` di
+     `ISO-25` la linea di quota resta anche fra le linee d'estensione. Se un
+     caso di RT23 contraddice un'ipotesi, vale il caso e la pull request lo
+     scrive (è il disegno di AutoCAD, la fonte decisa dal responsabile).
    - **Testo** (`MTEXT`, altezza `DIMTXT`, stile `DIMTXSTY`, valore di
      `dimensionText`): se `userTextPosition`, in `textPoint`; altrimenti al
      centro `c = (f1 + f2)/2`. Con `DIMTAD` = 1 e testo allineato (`DIMTIH`/
@@ -65,8 +79,9 @@
      nella lettura (fra −90° escluso e 90° compreso). Con `DIMTAD` = 0: in
      mezzo al centro, e la linea di quota si interrompe per la larghezza del
      testo più `DIMGAP` per lato. Con `DIMTIH`/`DIMTOH` 1: testo orizzontale,
-     in mezzo, linea interrotta. Il testo **resta in mezzo** anche quando non ci
-     sta (ADR 0047, punto 4). `textPoint` si aggiorna al centro del testo.
+     in mezzo, linea interrotta. Quando il testo va fuori (casi 3 e 4), stesse
+     regole nella sua posizione fuori. `textPoint` si aggiorna al centro del
+     testo.
    - Colori e spessori: `DIMCLRD`/`DIMLWD` per linea di quota e frecce,
      `DIMCLRE`/`DIMLWE` per le linee d'estensione, `DIMCLRT` per il testo.
 5. **Creazione e rigenerazione:**
@@ -102,7 +117,8 @@
   `DIMRND`, `DIMLFAC`, `DIMPOST` con `<>`, testo sostituito; grafica di una
   lineare orizzontale larga e di una stretta (frecce fuori); `DIMTAD` 0 e 1;
   allineata a 30°; rotazione, scala e specchiatura con rigenerazione; quota con
-  `DIMTOL` 1 rifiutata; spostamento senza rigenerazione.
+  `DIMTOL` 1 rifiutata; `DIMATFIT` 1 non rigenerabile; i quattro casi
+  dell'adattamento; spostamento senza rigenerazione.
 
 ## Fatto quando
 

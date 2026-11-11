@@ -54,4 +54,4 @@
 ## Fatto quando
 
 - Interruttore, `F11`, acquisizione con la pausa e guide funzionano; la CI è
-  verde; la prova manuale (piano, sezione 7, punto 6) resta al responsabile.
+  verde; la prova manuale (piano, sezione 7, punto 7) resta al responsabile.
