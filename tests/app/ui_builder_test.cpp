@@ -314,6 +314,49 @@ TEST(UiBuilderTest, WithTheFrameOfTheSystemTheQuickAccessBarIsTheFirstOfTheRowOf
     }
 }
 
+TEST(UiBuilderTest, WithTheFrameOfTheSystemTheInterfacesSwitchAndKeepTheirOwnQuickAccessBar) {
+    // QMainWindow::setMenuBar() hands the corner widgets of the bar it
+    // replaces to the new one: the quick access bar of the compact ribbon
+    // must not reach the classic menu bar, nor outlive its ribbon (the crash
+    // of the manual test of #651, from the dark ribbon to the light classic
+    // menus, and at the next start, which restores the classic menus).
+    MainWindow window(MainWindow::InitialDrawing::Empty, nullptr, {}, WindowFrame::System);
+    window.setScriptMode();
+    window.resize(1200, 800);
+    window.show();
+    settle();
+    const QList<QAction*> expected = quickAccessActions(window.actionRegistry());
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        SCOPED_TRACE(cycle);
+        window.setTheme(Theme::Light);
+        window.setInterface(InterfaceKind::Classic);
+        settle();
+        ASSERT_EQ(window.ribbonBar(), nullptr);
+        QMenuBar* bar = window.menuBar();
+        auto* quick = qobject_cast<QToolBar*>(bar->cornerWidget(Qt::TopLeftCorner));
+        ASSERT_NE(quick, nullptr);
+        EXPECT_EQ(quick->parentWidget(), bar) << "the bar of the classic menus";
+        EXPECT_EQ(quick->actions(), expected);
+        EXPECT_TRUE(quick->isVisible());
+        // Moves and resizes after the ribbon is gone lay nothing out.
+        window.resize(1300 + 50 * cycle, 820);
+        settle();
+
+        window.setTheme(Theme::Dark);
+        window.setInterface(InterfaceKind::Ribbon);
+        settle();
+        SARibbonBar* ribbon = window.ribbonBar();
+        ASSERT_NE(ribbon, nullptr);
+        auto* corner = qobject_cast<QToolBar*>(ribbon->cornerWidget(Qt::TopLeftCorner));
+        ASSERT_NE(corner, nullptr);
+        EXPECT_EQ(corner->parentWidget(), ribbon);
+        EXPECT_EQ(corner->actions(), expected);
+        window.resize(1200, 800);
+        settle();
+    }
+    applyTheme(*qobject_cast<QApplication*>(QApplication::instance()), Theme::Light);
+}
+
 TEST(UiBuilderTest, WithItsOwnFrameTheQuickAccessBarStaysInTheTitleRow) {
     MainWindow window(MainWindow::InitialDrawing::Empty, nullptr, {}, WindowFrame::Own);
     window.setScriptMode();
