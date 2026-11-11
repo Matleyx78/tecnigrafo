@@ -1446,3 +1446,37 @@ i rimandi ai documenti che cambia.
     la chat di Tecnigrafo a scrivere anche in solid-space (una pull request,
     commenti), in deroga ad [AGENTS.md](../AGENTS.md), "Dove puoi scrivere",
     che non cambia.
+- **2026-11-11 — L'aspetto dell'interfaccia si corregge fuori tappa, in locale
+  (F6).** Nella chat del 2026-11-11, dopo l'analisi di fattibilità, il
+  responsabile decide:
+  - **È una correzione.** Portare l'aspetto dell'interfaccia al riferimento
+    dell'[ADR 0039](adr/0039-decisione-visiva-dell-interfaccia.md) è una
+    correzione della 0.7.5 ([ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori
+    dalla tappa aperta"), e si fa con il pacchetto fuori tappa
+    [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
+    ([#658](https://github.com/Matleyx78/tecnigrafo/issues/658)), **in
+    parallelo** alla tappa 0.8: la 0.8 si apre e avanza senza aspettarlo. È il
+    metodo che la voce «La pausa dopo la 0.7.5» lasciava da trovare
+    ([#655](https://github.com/Matleyx78/tecnigrafo/issues/655)); se dopo F6
+    serva ancora una tappa dedicata, e la galleria approvata che la CI
+    confronta, lo decide il responsabile alla chiusura di F6, e fino ad allora
+    la #655 resta aperta.
+  - **In locale, con il responsabile.** Si lavora sul suo PC Debian, in una
+    cartella dedicata (`~/progetti/tecnigrafo-grafica`), con Claude Code:
+    l'agente compila, lancia la galleria e guarda le immagini, il responsabile
+    guarda la finestra, e si ripete finché l'area è a posto. Durante il lavoro
+    non ci sono pull request né CI.
+  - **Un ramo solo, che tocca solo la grafica.** Il ramo `f6-grafica` tocca
+    `app/`, le icone e i loro test, mai `core`, `cmd`, `io` e gli altri
+    moduli; il comportamento non cambia. SARibbon resta copiato senza
+    modifiche. Dopo ogni pull request unita in `main` il ramo ne assorbe le
+    novità con un merge commit.
+  - **Un'unione sola, alla fine.** Dal ramo si unisce una volta, a lavoro
+    approvato, con una sola pull request, anche se è grande da rivedere per
+    Codex: niente unioni a pezzi, per non rischiare rotture nel resto di
+    Tecnigrafo.
+  - **Deroghe.** Per il solo F6, la scheda deroga ad [AGENTS.md](../AGENTS.md)
+    ("Quando fermarsi", l'etichetta `AA-Presa in carico` tenuta per tutto il
+    pacchetto) e alla misura dei pacchetti
+    ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), «Preparare il piano»),
+    che non cambiano.
