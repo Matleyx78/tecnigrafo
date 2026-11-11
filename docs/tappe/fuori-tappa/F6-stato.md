@@ -298,7 +298,23 @@ Sulla prova del responsabile nella finestra vera (2026-11-11):
   nascoste, SARibbon rende corrente la prima scheda rimessa prima di
   legarla alla sua pagina; ora la pagina si riallinea alla scheda scelta.
 
+Terzo giro (2026-11-11), sulla prova del responsabile: font a 10 pt
+approvato, commit fatto. Con la cornice di sistema il logo stava fra la
+barra di accesso rapido e *File* (lo stile compatto di SARibbon dispone prima
+il widget d'angolo, poi la sua icona): ora l'icona di SARibbon è nascosta e il
+logo è il primo elemento della barra di accesso rapido d'angolo
+(`programLogo`), da far vedere al responsabile. A fine sessione la modifica
+(`app/src/ui_builder.cpp`) è nel ramo locale senza commit: si fa il commit
+quando il responsabile la approva.
+
+Prossima sessione: far vedere il logo con la cornice di sistema, poi le aree
+rimaste (8–9 pannelli, 10 barra di stato, 4 dettagli delle schede dei
+documenti, 5 barra di navigazione se le azioni esistono, 7 immissione
+dinamica, interfaccia classica, finestre di dialogo e icone).
+
 Test da allineare alla chiusura (oltre a quelli del ribbon):
+`UiBuilderTest.WithTheFrameOfTheSystem...` (due test) confrontano le azioni
+della barra d'angolo, che ora comincia con il logo;
 `DrawingAidsTest.F10AndF8...` cerca la cronologia nel genitore del campo;
 `EnvironmentsTest.TheChosenRibbonTabStaysWhileItIsShown` usa *Home*, che
 nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
