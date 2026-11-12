@@ -25,7 +25,8 @@
   `core/include/tg/core/intersections.hpp`, `proximity.hpp`,
   `document_query.hpp` (`pickEntity`, `selectInRectangle`, `findSnap`);
   `core/src/solid_space_bridge.hpp`; l'idea
-  [#663](https://github.com/Matleyx78/tecnigrafo/issues/663)
+  [#663](https://github.com/Matleyx78/tecnigrafo/issues/663); il [verbale della revisione PT40](https://github.com/Matleyx78/tecnigrafo/issues/735)
+  (note non bloccanti per chi realizza)
 
 ## Intestazioni di solid-space che usa
 

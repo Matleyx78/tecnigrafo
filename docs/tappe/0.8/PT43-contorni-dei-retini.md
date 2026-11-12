@@ -25,7 +25,8 @@
   segnali); `core/src/solid_space_bridge.hpp`, `core/include/tg/core/tolerance.hpp`,
   `core/src/document_query.cpp` (quali layer si interrogano);
   [verifica/domande.md](../../verifica/domande.md) e la riga `HATCH` di
-  [verifica/rapporto.md](../../verifica/rapporto.md) (PT9)
+  [verifica/rapporto.md](../../verifica/rapporto.md) (PT9); il [verbale della revisione PT40](https://github.com/Matleyx78/tecnigrafo/issues/735)
+  (note non bloccanti per chi realizza)
 
 ## Intestazioni di solid-space che usa
 
@@ -162,7 +163,7 @@ struct ChosenContours {
                                                  std::span<const EntityId> chosen);
 ```
 
-- Un `Circle` diventa il `g::Circle`; una `Polyline` chiusa (`closed()`) la
+- Un `Circle` diventa il `g::Circle`; una `Polyline` chiusa (`isClosed()`) la
   `closedPolylineOf`; ogni altra entità va in `leftOut`, anche una polilinea
   aperta e un'ellisse (ADR 0048, punto 6).
 - Le profondità sono quelle di `nestContours`: un conflitto non aggiunge nulla

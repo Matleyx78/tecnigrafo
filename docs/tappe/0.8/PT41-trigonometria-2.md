@@ -19,7 +19,8 @@
   (aggiornamento in cima); [verifica/sistemi.md](../../verifica/sistemi.md),
   «Eccezioni»; [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md),
   punto 8; l'[ADR 0016 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0016-tangente-arcocoseno-e-lunghezza-deterministici.md)
-  (Decisione); in `third_party/solid-space` l'intestazione qui sotto
+  (Decisione); in `third_party/solid-space` l'intestazione qui sotto; il [verbale della revisione PT40](https://github.com/Matleyx78/tecnigrafo/issues/735)
+  (note non bloccanti per chi realizza)
 
 ## Intestazioni di solid-space che usa
 
@@ -78,10 +79,13 @@ scheda li cita e non li ripete.
    [[nodiscard]] double acos(double x);
    /// Length of (x, y), robust::hypot: exact when the length is a double,
    /// never below max(|x|, |y|), the same bits for (x, y), (y, x), (-x, y).
-   /// Beyond robust's range (kMaxHypotArgument) the arguments are halved and
-   /// the result doubled, which is exact and may give +inf; with an infinite
-   /// argument the result is +inf, with a NaN and no infinity it is NaN, as
-   /// std::hypot.
+   /// Beyond robust's range (an argument above kMaxHypotArgument; at the
+   /// limit robust answers, with a finite result) both arguments are halved
+   /// and the result doubled, which may give +inf (halving a subnormal may
+   /// round it, far below the error of the result; near the overflow the
+   /// result is finite, within the error, or +inf, both valid); with an
+   /// infinite argument the result is +inf, with a NaN and no infinity it
+   /// is NaN, as std::hypot.
    [[nodiscard]] double hypot(double x, double y);
    ```
 
@@ -127,9 +131,21 @@ scheda li cita e non li ripete.
   di `robust` per una decina di argomenti; `tan` di un angolo oltre `2^20` dà
   lo stesso risultato dell'angolo ridotto; `acos(1) == 0`, `acos(-1)` è il
   `double` più vicino a π; `hypot(3, 4) == 5`, `hypot(x, 0) == |x|`,
-  `hypot(x, y) == hypot(y, -x)` bit per bit; `hypot(2^1023, 2^1023)` è
-  `+inf`, `hypot(inf, NaN)` è `+inf`, `hypot(1, NaN)` è NaN;
+  `hypot(x, y) == hypot(y, -x)` bit per bit; `hypot(2^1023, 2^1023)`, al
+  limite di `kMaxHypotArgument`, è finito (circa `1.2711610061536464e308`) e
+  ha gli stessi bit di `robust::hypot`; `hypot(DBL_MAX, DBL_MAX)`, oltre il
+  limite, è `+inf`; `hypot(nextafter(2^1023, +inf), 0)` e la coppia
+  scambiata danno esattamente il primo argomento (con `±0`);
+  `hypot(inf, NaN)` è `+inf`, `hypot(1, NaN)` è NaN;
   `Vec2{3, 4}.length() == 5`.
+
+**Fascia del raddoppio** ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+punto 4): oltre il limite, quando la lunghezza dimezzata sta entro l'errore di
+`robust::hypot` da `DBL_MAX / 2`, il risultato può essere finito (con l'errore
+dichiarato, raddoppiato) oppure `+inf`, e sono validi tutti e due: per
+`hypot(DBL_MAX, 1)` il finito è `DBL_MAX`, per
+`hypot(nextafter(DBL_MAX, 0), 1)` può essere anche `nextafter(DBL_MAX, 0)`. Il
+commento di `hypot` lo dice e i test non fissano l'esito in quella fascia.
 
 ## Fatto quando
 

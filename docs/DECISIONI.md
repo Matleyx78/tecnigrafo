@@ -1551,3 +1551,61 @@ i rimandi ai documenti che cambia.
   3. **Le righe del motivo lungo un lato del contorno si disegnano:** i tratti
      di bordo di `clipToRegion` fanno parte del retino come quelli interni
      ([0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md); ADR 0048, punto 3).
+- **2026-11-12 — Direzioni cardinali esatte delle righe dei motivi.** Nella
+  rilettura della correzione di PT40
+  ([#751](https://github.com/Matleyx78/tecnigrafo/pull/751)) Codex trova un
+  buco visibile: la direzione di una famiglia viene da `sinCos` dell'angolo in
+  radianti, e a 90° il coseno del `double` di π/2 è circa `6e-17`, non 0. Una
+  riga verticale di `NET` sul lato verticale di un contorno lo tocca solo
+  nello spigolo e il tratto di bordo sparisce, o cade appena dentro, contro la
+  decisione 3 del 2026-11-12 qui sopra. Il responsabile sceglie l'uscita **A**:
+  la direzione di una famiglia (e di un retino) è quella di `sinCos`, ma una
+  componente sotto `2^-48` in modulo diventa esattamente 0 e l'altra
+  esattamente ±1, col suo segno. Vale anche dopo `ROTATE` e `MIRROR` e per lo
+  scostamento calcolato dai `.pat`: la funzione è `cardinalSinCos` di
+  [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md) (voce successiva), usata da
+  [0.8-PT30](tappe/0.8/PT30-retini-core.md) e
+  [0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md). Scartata l'uscita B (angoli
+  presi alla lettera, con il tratto di bordo verticale che a volte c'è e a
+  volte no).
+- **2026-11-12 — Quarti di giro esatti.** Nel secondo giro di rilettura di
+  [#751](https://github.com/Matleyx78/tecnigrafo/pull/751) Codex trova che la
+  voce precedente non basta: con `ROTATE` di 90° del retino e del suo
+  contorno, `Similarity::matrix` usa ancora il coseno del `double` di π/2, il
+  lato che era sull'asse y si inclina di `6e-16` mentre la riga resta esatta,
+  e il tratto di bordo sparisce. Il responsabile sceglie l'uscita **A1**: la
+  funzione con la soglia diventa `cardinalSinCos` in
+  `tg/core/math.hpp` ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md)), e la usa
+  anche `Similarity::matrix`, per tutte le entità: `ROTATE` e `MIRROR` di un
+  multiplo di 90° danno coordinate esatte, e riga e lato restano
+  coincidenti anche quando il contorno è fatto di entità separate. Scartate
+  A2 (quarti esatti solo nella trasformazione del retino: due modi di
+  ruotare) e B (direzione presa dalla matrice effettiva: il retino
+  cambierebbe dopo salvataggio e rilettura del DXF, dove la direzione si
+  ricalcola dall'angolo). Nel terzo giro Codex trova che la soglia proposta
+  da Claude, `2^-40`, era troppo larga: raddrizzava anche angoli soltanto
+  vicini a un quarto di giro, e a 16 km dall'origine gli spostamenti
+  superavano la tolleranza (matrice e angolo della similitudine non
+  concordavano più; `MIRROR` su un asse quasi diagonale spostava i punti
+  dell'asse). Il responsabile approva la soglia **`2^-48`**: sta sopra il
+  residuo di un quarto di giro scritto come `double` (circa `2^-50`) e sposta
+  i punti al più di circa `2^-46` volte la grandezza dei dati, sotto la
+  tolleranza relativa `2^-42`. Quei casi diventano una fascia dichiarata nel
+  commento di `cardinalSinCos` (ADR 0013 di solid-space, punto 4).
+- **2026-11-12 — Angoli in gradi ridotti a un giro.** Nel quarto giro di
+  rilettura di [#751](https://github.com/Matleyx78/tecnigrafo/pull/751) Codex
+  trova che un angolo del retino di molti giri (3600° in *Properties* di
+  `-HATCH`) arriva a `cardinalSinCos` come circa 64 radianti, con l'errore
+  della conversione da gradi sopra la soglia `2^-48`: il quarto di giro non
+  si riconosce e il tratto di bordo sparisce. Il responsabile sceglie di
+  ridurre l'angolo **in gradi**, con `std::fmod(gradi, 360)` (esatto), nel
+  punto in cui entra, prima di convertirlo: la funzione è
+  `reducedDegreesToRadians` di [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md),
+  usata dalla lettura dei gruppi 52 e 53
+  ([0.8-PT31](tappe/0.8/PT31-retini-dxf.md); il DXF si riscrive con
+  l'angolo ridotto, come già gli archi, e l'ADR 0018, punto 6, confronta i
+  valori del modello) e dall'angolo digitato in `-HATCH`
+  ([0.8-PT44](tappe/0.8/PT44-comando-hatch.md)). Ridurre dopo, in radianti,
+  non basta: l'errore nasce nella conversione. Scartata l'altra uscita
+  (angolo in radianti senza riduzione, con il quarto di giro riconosciuto
+  solo fino a qualche decina di radianti).

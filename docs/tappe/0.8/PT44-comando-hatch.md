@@ -21,7 +21,8 @@
   (`CommandDefaults`); `cmd/src/commands/mirror_commands.cpp` (`MIRRTEXT`, una
   variabile come comando); un comando che chiede una selezione, per esempio
   `cmd/src/commands/offset_command.cpp`; la cronologia di `-HATCH` copiata dal
-  responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md))
+  responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md)); il [verbale della revisione PT40](https://github.com/Matleyx78/tecnigrafo/issues/735)
+  (note non bloccanti per chi realizza)
 
 ## Intestazioni di solid-space che usa
 
@@ -92,8 +93,12 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
      minuscole, e l'opzione *Solid*. Un altro nome: il messaggio di AutoCAD
      per un motivo che non trova, e la richiesta si ripete. Per un motivo che
      non è `SOLID`: `Specify a scale for the pattern <1.0000>:` (maggiore di
-     0) e `Specify an angle for the pattern <0>:` (gradi). Poi la richiesta
-     del punto 1.
+     0) e `Specify an angle for the pattern <0>:` (gradi; il valore entra con
+     `reducedDegreesToRadians` di PT1, [DECISIONI.md](../../DECISIONI.md),
+     2026-11-12, «Angoli in gradi ridotti a un giro», e il valore corrente
+     fra `<>` è quello ridotto). La richiesta usa `PromptKind::Number`, che
+     consegna i gradi senza convertirli, non `PromptKind::Angle`, che
+     consegna radianti (`command_runner.cpp`). Poi la richiesta del punto 1.
    - **`Invio`:** se ci sono contorni, si crea il retino (punto 3) e il
      comando finisce; senza contorni il comando finisce senza creare nulla.
      `Esc` annulla tutto.
@@ -105,9 +110,10 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
    non lo dice, come un disegno nuovo in millimetri), i punti interni e i
    contorni: prima quelli dei punti, nell'ordine dei punti, poi quelli scelti,
    ciascuno con i segnali di PT43. Associatività 0.
-3. **Troppo fitto:** se `patternLines` (PT42) dà `TooDense`, il messaggio di
-   AutoCAD (`Hatch spacing too dense, or dash size too small.`) e il retino non
-   si crea; il comando finisce.
+3. **Troppo fitto:** solo per un motivo (con `SOLID` `patternLines` non si
+   chiama: precondizione di PT42). Se `patternLines` dà `TooDense`, il
+   messaggio di AutoCAD (`Hatch spacing too dense, or dash size too small.`) e
+   il retino non si crea; il comando finisce.
 4. Un passo di annullamento: `Hatch`. Nessuna anteprima, come `-HATCH` di
    AutoCAD.
 
@@ -126,7 +132,11 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
   area (un contorno solo); un punto dentro il cerchio dopo uno fuori (il
   cerchio due volte, la regola pari-dispari riempie tutto); un punto fuori da
   ogni contorno (messaggio, nulla); *Select objects* due volte (vale la
-  seconda); *Properties* con `NET`, scala 2 e angolo 30; *Solid*; un nome
+  seconda); *Properties* con `NET`, scala 2 e angolo 30; *Properties* con
+  `NET`, scala 1 e angolo 0, 3600 e −3600 su un punto nel rettangolo
+  `[−10, 0] × [0, 10]` con l'origine in `(0, 0)`, digitati come testo
+  attraverso il runner: le stesse righe nei tre casi, compreso il tratto di
+  bordo verticale lungo 10, e angolo del retino `+0`; *Solid*; un nome
   sconosciuto; `HPISLANDDETECTION` 0 e 2; un motivo troppo fitto; `Invio`
   senza contorni; `U`.
 
