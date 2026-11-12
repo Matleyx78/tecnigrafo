@@ -23,11 +23,15 @@
 1. **Comandi:** una voce per `-STYLE`, `TEXTSTYLE`, `MTEXT`, `-BLOCK`,
    `-INSERT` (anche con un file), `DIMLINEAR`, `DIMALIGNED`, `DIMANGULAR`,
    `DIMRADIUS`, `DIMDIAMETER`, `-DIMSTYLE` e le variabili di quota, `-HATCH`,
-   `PEDIT`, `PEDITACCEPT`, con le opzioni che ci sono e quelle rimaste fuori;
+   `HPISLANDDETECTION`, `PEDIT`, `PEDITACCEPT`, con le opzioni che ci sono e
+   quelle rimaste fuori;
    `EXPLODE` con inserimenti e quote; il tracciamento (`F11`).
 2. **Differenze da AutoCAD** scritte dove servono: testo delle quote che resta
    in mezzo, inserimenti a scala non uniforme non esplodibili, codici di formato
-   di `MTEXT` mostrati come testo semplice, retini senza associatività.
+   di `MTEXT` mostrati come testo semplice, retini senza associatività, contorni
+   dei retini rilevati solo fra linee, archi, cerchi e polilinee (non dentro
+   blocchi e quote, [PT43](PT43-contorni-dei-retini.md)), niente snap *Vicino*
+   (idea [#665](https://github.com/Matleyx78/tecnigrafo/issues/665)).
 3. **Assistente:** `assistente.md` spiega come accendere il canale, come
    configurare un assistente (`tecnigrafo --mcp`, con un esempio per Claude
    Desktop e uno per Claude Code), che cosa può fare e che cosa no, come

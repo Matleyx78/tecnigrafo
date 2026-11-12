@@ -55,7 +55,8 @@
 5. **Snap** *Centro*, *Quadrante* (i quattro estremi degli assi che stanno
    sull'arco), *Estremo* (per un arco); **grip** sul centro e sugli estremi
    degli assi (uno sposta, gli altri cambiano assi e rapporto come AutoCAD).
-   *Vicino* e *Intersezione* arrivano dopo il contratto (PT50).
+   *Intersezione* arriva dopo il contratto (PT50); *Vicino* resta fuori dalla
+   0.8 per tutte le entità (idea [#665](https://github.com/Matleyx78/tecnigrafo/issues/665)).
 6. **Selezione** fino a PT50: con la finestra se l'ingombro ci sta tutto
    dentro; con un clic e con l'attraversamento della finestra no (la distanza
    restituisce l'infinito). È il limite scritto nell'ADR 0052, punto 4.

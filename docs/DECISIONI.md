@@ -1531,3 +1531,23 @@ i rimandi ai documenti che cambia.
   [#215](https://github.com/Matleyx78/solid-space/issues/215),
   [#216](https://github.com/Matleyx78/solid-space/issues/216) e
   [#217](https://github.com/Matleyx78/solid-space/issues/217), tappa `ss-0.3`.
+- **2026-11-12 — Schede della 0.8 dopo il contratto: tre decisioni.** Nella
+  chat delle schede scritte dopo la revisione del contratto di solid-space
+  (`[0.3-CS]`, Matleyx78/solid-space#222), il responsabile decide
+  ([piano della 0.8](tappe/0.8-quote-retini-blocchi.md), «Modifiche al piano»):
+  1. **Snap *Vicino* fuori dalla 0.8.** Tecnigrafo non lo ha per nessuna
+     entità: l'ellisse non lo porta da sola (l'[ADR 0052](adr/0052-ellisse.md),
+     punto 4, lo nominava). Il punto più vicino di solid-space serve nella 0.8
+     alla scelta con un clic e alla domanda `closest`
+     ([0.8-PT50](tappe/0.8/PT50-ellisse-selezione-snap.md)); lo snap, per tutte
+     le entità insieme, è l'idea
+     [#665](https://github.com/Matleyx78/tecnigrafo/issues/665).
+  2. **Curve candidate del contorno rilevato:** le entità linea, arco, cerchio
+     e polilinea del disegno, sui layer accesi e non congelati come la
+     selezione. Non contano le forme generate di inserimenti e quote né le
+     ellissi: un contorno fatto da un blocco non si rileva, una differenza da
+     AutoCAD ([0.8-PT43](tappe/0.8/PT43-contorni-dei-retini.md); ADR 0048,
+     punto 5).
+  3. **Le righe del motivo lungo un lato del contorno si disegnano:** i tratti
+     di bordo di `clipToRegion` fanno parte del retino come quelli interni
+     ([0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md); ADR 0048, punto 3).
