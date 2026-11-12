@@ -21,7 +21,8 @@
   (Decisione); in `third_party/solid-space` le intestazioni qui sotto; la
   scheda [PT30](PT30-retini-core.md) (il modello, i motivi, la regione piena);
   la scheda sorella [PT43](PT43-contorni-dei-retini.md) (stessa funzione del
-  ponte); `core/src/solid_space_bridge.hpp`
+  ponte); `core/src/solid_space_bridge.hpp`; il [verbale della revisione PT40](https://github.com/Matleyx78/tecnigrafo/issues/735)
+  (note non bloccanti per chi realizza)
 
 ## Intestazioni di solid-space che usa
 

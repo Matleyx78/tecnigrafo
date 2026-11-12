@@ -21,7 +21,8 @@
   (`CommandDefaults`); `cmd/src/commands/mirror_commands.cpp` (`MIRRTEXT`, una
   variabile come comando); un comando che chiede una selezione, per esempio
   `cmd/src/commands/offset_command.cpp`; la cronologia di `-HATCH` copiata dal
-  responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md))
+  responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md)); il [verbale della revisione PT40](https://github.com/Matleyx78/tecnigrafo/issues/735)
+  (note non bloccanti per chi realizza)
 
 ## Intestazioni di solid-space che usa
 
@@ -105,9 +106,10 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
    non lo dice, come un disegno nuovo in millimetri), i punti interni e i
    contorni: prima quelli dei punti, nell'ordine dei punti, poi quelli scelti,
    ciascuno con i segnali di PT43. Associatività 0.
-3. **Troppo fitto:** se `patternLines` (PT42) dà `TooDense`, il messaggio di
-   AutoCAD (`Hatch spacing too dense, or dash size too small.`) e il retino non
-   si crea; il comando finisce.
+3. **Troppo fitto:** solo per un motivo (con `SOLID` `patternLines` non si
+   chiama: precondizione di PT42). Se `patternLines` dà `TooDense`, il
+   messaggio di AutoCAD (`Hatch spacing too dense, or dash size too small.`) e
+   il retino non si crea; il comando finisce.
 4. Un passo di annullamento: `Hatch`. Nessuna anteprima, come `-HATCH` di
    AutoCAD.
 
