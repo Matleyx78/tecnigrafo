@@ -3,6 +3,7 @@
 
 #include "log_file.hpp"
 
+#include <QByteArray>
 #include <QGuiApplication>
 #include <QStringList>
 #include <QTextStream>
@@ -14,12 +15,24 @@
 #include <qt_windows.h>
 #endif
 
+namespace {
+
+void writeTestMessage(QtMsgType, const QMessageLogContext&, const QString& message) {
+    const QByteArray text = message.toUtf8();
+    (void)std::fputs(text.constData(), stderr);
+    (void)std::fputc('\n', stderr);
+}
+
+}  // namespace
+
 int main(int argc, char* argv[]) {
     const QGuiApplication application(argc, argv);
     const QStringList arguments = QGuiApplication::arguments();
     if (arguments.size() < 2) {
         return 1;
     }
+    // The default Qt diagnostic destination depends on the platform.
+    (void)qInstallMessageHandler(writeTestMessage);
     const tg::app::LogStart log = tg::app::startLogFileIn(arguments.at(1));
     if (log.path.isEmpty()) {
         return 2;
