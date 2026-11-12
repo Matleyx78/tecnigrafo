@@ -85,7 +85,7 @@ void writeCrashFrame(const void* address) {
             }
             const auto units = static_cast<int>(name.size());
             nameLength = WideCharToMultiByte(CP_UTF8, 0, name.data(), units, line.data(),
-                                            kModuleNameBytes, nullptr, nullptr);
+                                             kModuleNameBytes, nullptr, nullptr);
         }
     }
     if (nameLength == 0) {
