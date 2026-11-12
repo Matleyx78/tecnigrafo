@@ -32,8 +32,10 @@
    - `acad.pat`: `ANSI31` = una famiglia a 45°, origine 0,0, scostamento
      `0, 0.125`; `NET` = due famiglie a 0° e 90°, scostamento `0, 0.125`;
    - `acadiso.pat` (disegno metrico): gli stessi con scostamento `0, 3.175`;
-   - la funzione che, dati nome, scala `s`, angolo `θ` del retino e
-     `$MEASUREMENT`, dà le righe come le scrive AutoCAD nel `HATCH`. Per una
+   - la funzione che, dati nome, scala `s`, angolo `θ` del retino (in
+     radianti, già ridotto a un giro dal chiamante con
+     `reducedDegreesToRadians` di PT1: PT31, PT44) e `$MEASUREMENT`, dà le
+     righe come le scrive AutoCAD nel `HATCH`. Per una
      famiglia ad angolo `a` del `.pat`, la `PatternLine` ha: angolo `a + θ`
      (gruppo 53); origine = l'origine del `.pat` ruotata di `θ` e
      moltiplicata per `s` (43/44); **scostamento = `(dx, dy)` ruotato di

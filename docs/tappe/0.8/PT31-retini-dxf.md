@@ -30,7 +30,13 @@
 2. **Grezzi** (ADR 0048, punto 1): lati d'ellisse (72 = 3) o spline (4), sfumatura
    (450 diverso da 0), contorni non chiusi (PT30, `supported`), estrusione
    diversa da `(0,0,1)` e `(0,0,-1)`.
-3. Un `HATCH` letto e scritto senza modifiche resta identico (ADR 0018, punto 6).
+3. **Angoli** ([DECISIONI.md](../../DECISIONI.md), 2026-11-12, «Angoli in
+   gradi ridotti a un giro»): i gruppi 52 (angolo del motivo) e 53 (angolo di
+   ogni riga) entrano nel modello con `reducedDegreesToRadians` di PT1, come
+   gli angoli degli archi letti dal DXF (`dxf_circle_arc.cpp`), e si
+   riscrivono ridotti: un 53 = 3690 torna 90.
+4. Un `HATCH` letto e scritto senza modifiche resta identico (ADR 0018, punto
+   6: i valori del modello sono gli stessi, anche con gli angoli ridotti).
 
 ## Regole della tappa che valgono qui
 
@@ -41,7 +47,11 @@
 
 - `dxf_hatch_test.cpp`: giro di un `SOLID` con una polilinea e un cerchio
   (lato d'arco intero), di un `ANSI31` con contorno a lati e due punti interni;
-  un retino con un lato d'ellisse resta grezzo; estrusione `(0,0,-1)`.
+  un retino con un lato d'ellisse resta grezzo; estrusione `(0,0,-1)`;
+  un `NET` con 52 = 3600 e righe con 53 = 3600 e 3690 (dieci giri più quelli
+  di 0 e 90): si legge con angolo `+0` e righe a `+0` e a
+  `degreesToRadians(90)`, si riscrive con 0, 0 e 90; lo stesso con 52 = −3600
+  e 53 = −3600 e −3510.
 
 ## Fatto quando
 

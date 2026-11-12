@@ -93,8 +93,10 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
      minuscole, e l'opzione *Solid*. Un altro nome: il messaggio di AutoCAD
      per un motivo che non trova, e la richiesta si ripete. Per un motivo che
      non è `SOLID`: `Specify a scale for the pattern <1.0000>:` (maggiore di
-     0) e `Specify an angle for the pattern <0>:` (gradi). Poi la richiesta
-     del punto 1.
+     0) e `Specify an angle for the pattern <0>:` (gradi; il valore entra con
+     `reducedDegreesToRadians` di PT1, [DECISIONI.md](../../DECISIONI.md),
+     2026-11-12, «Angoli in gradi ridotti a un giro», e il valore corrente
+     fra `<>` è quello ridotto). Poi la richiesta del punto 1.
    - **`Invio`:** se ci sono contorni, si crea il retino (punto 3) e il
      comando finisce; senza contorni il comando finisce senza creare nulla.
      `Esc` annulla tutto.
@@ -128,7 +130,11 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
   area (un contorno solo); un punto dentro il cerchio dopo uno fuori (il
   cerchio due volte, la regola pari-dispari riempie tutto); un punto fuori da
   ogni contorno (messaggio, nulla); *Select objects* due volte (vale la
-  seconda); *Properties* con `NET`, scala 2 e angolo 30; *Solid*; un nome
+  seconda); *Properties* con `NET`, scala 2 e angolo 30; *Properties* con
+  `NET`, scala 1 e angolo 0, 3600 e −3600 su un punto nel rettangolo
+  `[−10, 0] × [0, 10]` con l'origine in `(0, 0)`: le stesse righe nei tre
+  casi, compreso il tratto di bordo verticale lungo 10, e angolo del retino
+  `+0`; *Solid*; un nome
   sconosciuto; `HPISLANDDETECTION` 0 e 2; un motivo troppo fitto; `Invio`
   senza contorni; `U`.
 

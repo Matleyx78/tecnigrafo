@@ -1592,3 +1592,20 @@ i rimandi ai documenti che cambia.
   i punti al più di circa `2^-46` volte la grandezza dei dati, sotto la
   tolleranza relativa `2^-42`. Quei casi diventano una fascia dichiarata nel
   commento di `cardinalSinCos` (ADR 0013 di solid-space, punto 4).
+- **2026-11-12 — Angoli in gradi ridotti a un giro.** Nel quarto giro di
+  rilettura di [#751](https://github.com/Matleyx78/tecnigrafo/pull/751) Codex
+  trova che un angolo del retino di molti giri (3600° in *Properties* di
+  `-HATCH`) arriva a `cardinalSinCos` come circa 64 radianti, con l'errore
+  della conversione da gradi sopra la soglia `2^-48`: il quarto di giro non
+  si riconosce e il tratto di bordo sparisce. Il responsabile sceglie di
+  ridurre l'angolo **in gradi**, con `std::fmod(gradi, 360)` (esatto), nel
+  punto in cui entra, prima di convertirlo: la funzione è
+  `reducedDegreesToRadians` di [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md),
+  usata dalla lettura dei gruppi 52 e 53
+  ([0.8-PT31](tappe/0.8/PT31-retini-dxf.md); il DXF si riscrive con
+  l'angolo ridotto, come già gli archi, e l'ADR 0018, punto 6, confronta i
+  valori del modello) e dall'angolo digitato in `-HATCH`
+  ([0.8-PT44](tappe/0.8/PT44-comando-hatch.md)). Ridurre dopo, in radianti,
+  non basta: l'errore nasce nella conversione. Scartata l'altra uscita
+  (angolo in radianti senza riduzione, con il quarto di giro riconosciuto
+  solo fino a qualche decina di radianti).

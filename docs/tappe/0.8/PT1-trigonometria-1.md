@@ -69,8 +69,17 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    /// and the angle kept by a Similarity, a composition and its two
    /// applications, a reflection and the axis given by two points agree
    /// within the tolerance, not bit for bit. Beyond a few tens of radians a
-   /// quarter turn may not be recognised: the result is then sinCos.
+   /// quarter turn may not be recognised: the result is then sinCos. Angles
+   /// given in degrees stay within that range when they enter through
+   /// reducedDegreesToRadians.
    [[nodiscard]] SinCos cardinalSinCos(double angle);
+   /// An angle given in degrees, reduced to [0, 360) with std::fmod (exact;
+   /// a negative remainder gets 360 added, and a result that rounds to 360
+   /// or is -0 becomes +0), then converted with degreesToRadians: whatever
+   /// its number of turns, a multiple of 90 degrees stays a quarter turn for
+   /// cardinalSinCos (docs/DECISIONI.md, 2026-11-12, "Angoli in gradi
+   /// ridotti a un giro").
+   [[nodiscard]] double reducedDegreesToRadians(double degrees);
    ```
 
    Precondizione: argomenti finiti (come oggi: un angolo non finito è già un
@@ -114,6 +123,10 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
   `(0, −1)`, `(0, 1)` come `(cosine, sine)`; a 0 dà `(1, 0)`; a `π/2 − 2^-50`
   dà `(0, 1)`; a `π/4`, a `π/2 − 2^-30` e a `π/2 − 2^-46` dà gli stessi bit di
   `sinCos`;
+- `math_test.cpp`, `reducedDegreesToRadians`: 3600, 360, 0 e −0 danno `+0`;
+  3690, −270 e 90 danno gli stessi bit di `degreesToRadians(90)`; −3600 dà
+  `+0`; `−1e-20` dà `+0` (il resto più 360 arrotonda a 360);
+  `cardinalSinCos(reducedDegreesToRadians(3690))` è esattamente `(0, 1)`;
 - `similarity_test.cpp`: rotazione di
   +90° attorno a `(0, 0)`: `(0, 10)` va esattamente in `(−10, 0)` e `(10, 0)`
   in `(0, 10)`; lo stesso con −90° e 180°, e con +90° attorno a `(5, 5)`;
