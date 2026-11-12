@@ -30,7 +30,8 @@
 - `render/src/scene_renderer.cpp`
 - `docs/verifica/sistemi.md`
 - `core/CMakeLists.txt` (file comune: una riga)
-- `tests/core/math_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+- `tests/core/math_test.cpp` (nuovo), `tests/core/similarity_test.cpp`,
+  `tests/CMakeLists.txt` (file comune)
 
 Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi»).
 
@@ -51,6 +52,14 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    [[nodiscard]] double atan2(double y, double x);
    /// atan2(x, 1.0): the same bits on every platform.
    [[nodiscard]] double atan(double x);
+   /// Below this magnitude a component of cardinalSinCos is taken as 0.
+   inline constexpr double kCardinalSnap = 0x1p-40;
+   /// sinCos(angle), except that a component below kCardinalSnap in
+   /// magnitude becomes exactly 0 and the other exactly +1 or -1, with its
+   /// sign: quarter turns are exact (docs/DECISIONI.md, 2026-11-12, "Quarti
+   /// di giro esatti"). For rotations and directions, not for evaluating
+   /// sine and cosine as numbers.
+   [[nodiscard]] SinCos cardinalSinCos(double angle);
    ```
 
    Precondizione: argomenti finiti (come oggi: un angolo non finito è già un
@@ -63,7 +72,14 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    non è trigonometrica.
 3. Dove serviva `sin` e `cos` dello stesso angolo, una sola chiamata a
    `sinCos`.
-4. **Eccezioni.** La CI dà errore per un'eccezione il cui caso è ormai uguale su
+4. **Quarti di giro esatti** ([DECISIONI.md](../../DECISIONI.md), 2026-11-12,
+   «Quarti di giro esatti»): `Similarity::matrix` (`similarity.cpp`) prende
+   coseno e seno con `cardinalSinCos(m_angle)`, per la rotazione e per la
+   riflessione, così `ROTATE` e `MIRROR` di qualunque entità di un multiplo
+   di 90° (riflessione su un asse a un multiplo di 45°) danno coordinate
+   esatte. Il resto del punto 2 usa `sinCos`. I casi di verifica non cambiano:
+   la differenza è sotto ogni tolleranza.
+5. **Eccezioni.** La CI dà errore per un'eccezione il cui caso è ormai uguale su
    tutti i sistemi. Togli da [verifica/sistemi.md](../../verifica/sistemi.md)
    le righe che il job del confronto segnala così; lascia le altre, che
    aspettano la seconda parte, e aggiorna il paragrafo sopra l'elenco: la prima
@@ -81,7 +97,15 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
 - `math_test.cpp`: `sinCos` e `atan2` di `tg::core` danno gli stessi bit di
   `robust` per una decina di angoli; un angolo oltre `2^20` dà lo stesso
   risultato dell'angolo ridotto; `atan(x) == atan2(x, 1)` bit per bit;
-  `sin(0) == 0`, `cos(0) == 1`.
+  `sin(0) == 0`, `cos(0) == 1`;
+- `math_test.cpp`, `cardinalSinCos`: a `π/2` (il `double`), `π`, `3π/2`,
+  `−π/2` e `π/2 + 2π` dà esattamente `(0, 1)`, `(−1, 0)`, `(0, −1)`,
+  `(0, −1)`, `(0, 1)` come `(cosine, sine)`; a 0 dà `(1, 0)`; a `π/4` e a
+  `π/2 − 2^-30` dà gli stessi bit di `sinCos`;
+- `similarity_test.cpp`: rotazione di
+  +90° attorno a `(0, 0)`: `(0, 10)` va esattamente in `(−10, 0)` e `(10, 0)`
+  in `(0, 10)`; lo stesso con −90° e 180°, e con +90° attorno a `(5, 5)`;
+  riflessione sull'asse a 45°: `(1, 0)` va esattamente in `(0, 1)`.
 
 ## Fatto quando
 

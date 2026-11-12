@@ -134,9 +134,10 @@ struct PatternLines {
 Per ogni famiglia (`PatternLine`, nell'ordine del file), con le funzioni di
 `tg/core/math.hpp`:
 
-1. `d = (cos a, sin a)` con `patternDirection(angle)` di PT30 (le famiglie a
+1. `d = (cos a, sin a)` con `cardinalSinCos(angle)` di PT1 (le famiglie a
    multipli di 90° corrono esattamente lungo gli assi: [DECISIONI.md](../../DECISIONI.md),
-   2026-11-12, «Direzioni cardinali esatte»), `n = (−sin a, cos a)`; il passo
+   2026-11-12, «Direzioni cardinali esatte»), `n = (−sin a, cos a)` con le
+   stesse componenti, comprese quelle portate a 0 o a ±1; il passo
    `h = offset · n` (con segno) e lo spostamento lungo la riga
    `s = offset · d`. Con `h` uguale a 0, o non finito, la famiglia non dà
    righe.
@@ -211,6 +212,12 @@ generata come le altre (PT6).
     tratto sul lato sinistro. Lo stesso con l'angolo della famiglia a 90° più
     un giro intero (`ROTATE` di 360°) e dopo `MIRROR` sull'asse x (angolo −90°
     o 270°): la direzione è `(0, ±1)` esatta e il tratto di bordo c'è;
+  - lo stesso quadrato `[0, 10] × [0, 10]` come polilinea chiusa, ruotato
+    con `ROTATE` insieme al retino di +90° e di −90° attorno a `(0, 0)`, e di
+    +90° attorno a `(5, 5)`: il lato che era sull'asse y resta esattamente su
+    un asse (quarti di giro esatti, PT1), la famiglia che lo seguiva ha
+    direzione esatta e il tratto di bordo lungo 10 c'è; un tratto interno
+    a passo 3,175 dal bordo resta un tratto interno;
   - un motivo con trattini, spazi e un punto (`49`: 5, −2.5, 0, −2.5) su una
     riga obliqua: la fase parte da `p_k`, e la riga `k + 1` è spostata di `s`;
   - stile *solo esterno* con un'isola nell'isola segnata come in AutoCAD

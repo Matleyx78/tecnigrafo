@@ -83,9 +83,9 @@ scheda li cita e non li ripete.
    /// limit robust answers, with a finite result) both arguments are halved
    /// and the result doubled, which may give +inf (halving a subnormal may
    /// round it, far below the error of the result; near the overflow the
-   /// result is DBL_MAX or +inf, both valid); with an infinite
-   /// argument the result is +inf, with a NaN and no infinity it is NaN, as
-   /// std::hypot.
+   /// result is finite, within the error, or +inf, both valid); with an
+   /// infinite argument the result is +inf, with a NaN and no infinity it
+   /// is NaN, as std::hypot.
    [[nodiscard]] double hypot(double x, double y);
    ```
 
@@ -141,9 +141,11 @@ scheda li cita e non li ripete.
 
 **Fascia del raddoppio** ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
 punto 4): oltre il limite, quando la lunghezza dimezzata sta entro l'errore di
-`robust::hypot` da `DBL_MAX / 2`, il raddoppio può dare `DBL_MAX` o `+inf`, e
-sono validi tutti e due (per esempio `hypot(DBL_MAX, 1)`). Il commento di
-`hypot` lo dice e i test non fissano l'esito in quella fascia.
+`robust::hypot` da `DBL_MAX / 2`, il risultato può essere finito (con l'errore
+dichiarato, raddoppiato) oppure `+inf`, e sono validi tutti e due: per
+`hypot(DBL_MAX, 1)` il finito è `DBL_MAX`, per
+`hypot(nextafter(DBL_MAX, 0), 1)` può essere anche `nextafter(DBL_MAX, 0)`. Il
+commento di `hypot` lo dice e i test non fissano l'esito in quella fascia.
 
 ## Fatto quando
 

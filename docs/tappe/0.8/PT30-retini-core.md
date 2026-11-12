@@ -6,7 +6,7 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT30]` (#…), agente codex
-- **Dipende da:** PT1 (`sinCos`), PT5 (revisione delle interfacce), PT8, PT9,
+- **Dipende da:** PT1 (`sinCos`, `cardinalSinCos`), PT5 (revisione delle interfacce), PT8, PT9,
   RT30
 - **Modulo:** `core`
 - **Da leggere:** [ADR 0048](../../adr/0048-retini.md), punti 1–4;
@@ -32,21 +32,6 @@
    - `acad.pat`: `ANSI31` = una famiglia a 45°, origine 0,0, scostamento
      `0, 0.125`; `NET` = due famiglie a 0° e 90°, scostamento `0, 0.125`;
    - `acadiso.pat` (disegno metrico): gli stessi con scostamento `0, 3.175`;
-   - la direzione di una famiglia, usata qui e da PT42
-     ([DECISIONI.md](../../DECISIONI.md), 2026-11-12, «Direzioni cardinali
-     esatte»), in `hatch.hpp`:
-
-     ```cpp
-     /// Below this magnitude a component of a pattern direction is taken as 0.
-     inline constexpr double kCardinalSnap = 0x1p-40;
-     /// Direction (cosine, sine) of a pattern family or of a hatch at `angle`
-     /// (radians): sinCos(angle), except that a component below
-     /// kCardinalSnap in magnitude becomes exactly 0 and the other exactly
-     /// +1 or -1 with its sign, so the families at multiples of 90 degrees,
-     /// also after ROTATE and MIRROR, run exactly along the axes.
-     [[nodiscard]] SinCos patternDirection(double angle);
-     ```
-
    - la funzione che, dati nome, scala `s`, angolo `θ` del retino e
      `$MEASUREMENT`, dà le righe come le scrive AutoCAD nel `HATCH`. Per una
      famiglia ad angolo `a` del `.pat`, la `PatternLine` ha: angolo `a + θ`
@@ -54,10 +39,15 @@
      moltiplicata per `s` (43/44); **scostamento = `(dx, dy)` ruotato di
      `a + θ`, l'angolo della famiglia, e moltiplicato per `s`** (45/46,
      vettore nel sistema del disegno, quello che PT42 proietta); tratti
-     moltiplicati per `s` (49). Le rotazioni si fanno con
-     `patternDirection`: lo scostamento è `s · (dx · d + dy · n)`, con
-     `d = patternDirection(a + θ)` e `n = (−d.sine, d.cosine)`; l'origine
-     ruota con `patternDirection(θ)`. Così il passo fra due righe,
+     moltiplicati per `s` (49). Le rotazioni si fanno con `cardinalSinCos`
+     di PT1 (quarti di giro esatti: [DECISIONI.md](../../DECISIONI.md),
+     2026-11-12, «Direzioni cardinali esatte» e «Quarti di giro esatti»): lo
+     scostamento è `s · (dx · d + dy · n)`, con `d = cardinalSinCos(a + θ)`
+     come `(cosine, sine)` e `n = (−d.sine, d.cosine)`, cioè con le
+     componenti che `cardinalSinCos` restituisce, comprese quelle portate a 0
+     o a ±1; l'origine ruota con `cardinalSinCos(θ)`. Le trasformazioni del
+     punto 4 usano `Similarity::matrix`, che con PT1 dà anch'essa i quarti di
+     giro esatti. Così il passo fra due righe,
      `offset · (−sin(a + θ), cos(a + θ))`, vale `s · dy`, e lo spostamento
      lungo la riga vale `s · dx`, per ogni famiglia e ogni angolo. Un nome che
      non c'è dà nessuna riga. È ciò che AutoCAD scrive: un `ANSI31` in
@@ -110,9 +100,6 @@
   - una riga con angolo 0, scostamento `(2, 3)` e trattini, riflessa con
     `MIRROR` sull'asse x: scostamento `(2, −3)`, passo −3, spostamento lungo
     la riga 2, trattini invariati;
-  - `patternDirection`: a `π/2` (il `double`), `π`, `3π/2`, `−π/2` e
-    `π/2 + 2π` dà esattamente `(0, 1)`, `(−1, 0)`, `(0, −1)`, `(0, −1)`,
-    `(0, 1)`; a 0 dà `(1, 0)`; a `π/4` dà i bit di `sinCos(π/4)`;
   - `NET` a 90°: scostamento esattamente `(−3.175, 0)` in millimetri e
     `(−0.125, 0)` in pollici.
 
