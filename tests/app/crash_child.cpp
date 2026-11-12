@@ -17,8 +17,8 @@
 
 namespace {
 
-void writeTestMessage(QtMsgType, const QMessageLogContext&, const QString& message) {
-    const QByteArray text = message.toUtf8();
+void writeTestMessage(QtMsgType type, const QMessageLogContext& context, const QString& message) {
+    const QByteArray text = qFormatLogMessage(type, context, message).toUtf8();
     (void)std::fputs(text.constData(), stderr);
     (void)std::fputc('\n', stderr);
 }
