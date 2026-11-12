@@ -1609,3 +1609,15 @@ i rimandi ai documenti che cambia.
   non basta: l'errore nasce nella conversione. Scartata l'altra uscita
   (angolo in radianti senza riduzione, con il quarto di giro riconosciuto
   solo fino a qualche decina di radianti).
+- **2026-11-12 — `dipendenze.py` allinea nel Project anche solid-space.**
+  `scripts/dipendenze.py <tappa>` sposta tra *Bloccato* e *Da fare* solo le
+  issue del piano di Tecnigrafo; quelle della tappa gemella di solid-space il
+  responsabile le spostava a mano. Il responsabile sceglie di estendere lo
+  script di Tecnigrafo invece di farne uno gemello in solid-space: quando la
+  tappa di solid-space è aperta, le righe del suo piano compaiono in *Ready* e
+  *Blocked* e il controllo del Project vale anche per loro, con `--applica`.
+  Il Project è del responsabile, quindi cambiarne lo *Status* non è scrivere in
+  solid-space: testo, etichette, relazioni e stato delle issue di solid-space
+  restano non toccati. Lo fa il pacchetto fuori tappa
+  [F7](tappe/fuori-tappa/F7-project-di-solid-space.md), strumento del
+  responsabile come F4 (#752).
