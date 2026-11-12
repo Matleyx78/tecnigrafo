@@ -1609,3 +1609,23 @@ i rimandi ai documenti che cambia.
   non basta: l'errore nasce nella conversione. Scartata l'altra uscita
   (angolo in radianti senza riduzione, con il quarto di giro riconosciuto
   solo fino a qualche decina di radianti).
+- **2026-11-12 — Angoli digitati ridotti a un giro.** Partendo da
+  [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), Codex si ferma su due casi
+  ([#667](https://github.com/Matleyx78/tecnigrafo/issues/667)): `ROTATE` di
+  3600000° lascia un estremo a `2^24` fuori di `2,5e-5`, oltre la tolleranza,
+  mentre il punto 4 di PT1 promette quarti di giro esatti; una coordinata
+  polare `1<1e308` dà un angolo infinito, che con PT1 farebbe scattare la
+  precondizione di `sinCos`. Il responsabile decide di estendere la riduzione
+  in gradi della voce «Angoli in gradi ridotti a un giro» agli angoli
+  digitati: una richiesta `PromptKind::Angle` (`ROTATE`, la sua opzione
+  *Reference*, la rotazione di `TEXT`) e l'angolo delle coordinate polari
+  entrano con `reducedDegreesToRadians`. Per gli angoli calcolati (per
+  esempio da due punti) vale la fascia dichiarata in `cardinalSinCos`.
+- **2026-11-12 — Ingressi fuori dall'uso reale.** Dopo tre arresti nello
+  stesso giorno su casi come 3600° o 3600000°, il responsabile rende stabile,
+  in via eccezionale a tappa aperta, la regola già usata nella rilettura di
+  [#751](https://github.com/Matleyx78/tecnigrafo/pull/751): un ingresso fuori
+  da ogni uso reale non è un buco visibile, né per chi rivede né per chi
+  realizza; basta che non arresti il programma, poi vale la fascia dichiarata
+  o una diagnosi. Scritta in [revisione.md](agenti/revisione.md), «Che cosa
+  blocca una revisione».
