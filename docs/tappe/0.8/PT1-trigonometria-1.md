@@ -52,13 +52,24 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    [[nodiscard]] double atan2(double y, double x);
    /// atan2(x, 1.0): the same bits on every platform.
    [[nodiscard]] double atan(double x);
-   /// Below this magnitude a component of cardinalSinCos is taken as 0.
-   inline constexpr double kCardinalSnap = 0x1p-40;
+   /// Below this magnitude a component of cardinalSinCos is taken as 0:
+   /// above the rounding left by a quarter turn given as a double (at most
+   /// about 2^-50 for angles up to a few turns), far below the relative
+   /// tolerance 2^-42 of solid_space::robust::TolerancePolicy.
+   inline constexpr double kCardinalSnap = 0x1p-48;
    /// sinCos(angle), except that a component below kCardinalSnap in
    /// magnitude becomes exactly 0 and the other exactly +1 or -1, with its
    /// sign: quarter turns are exact (docs/DECISIONI.md, 2026-11-12, "Quarti
    /// di giro esatti"). For rotations and directions, not for evaluating
    /// sine and cosine as numbers.
+   ///
+   /// Band (solid-space ADR 0013, point 4): an angle within kCardinalSnap of
+   /// a quarter turn is taken as that quarter turn. A point at distance r
+   /// from the centre then moves by at most about r * 2^-48, so the matrix
+   /// and the angle kept by a Similarity, a composition and its two
+   /// applications, a reflection and the axis given by two points agree
+   /// within the tolerance, not bit for bit. Beyond a few tens of radians a
+   /// quarter turn may not be recognised: the result is then sinCos.
    [[nodiscard]] SinCos cardinalSinCos(double angle);
    ```
 
@@ -100,12 +111,24 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
   `sin(0) == 0`, `cos(0) == 1`;
 - `math_test.cpp`, `cardinalSinCos`: a `π/2` (il `double`), `π`, `3π/2`,
   `−π/2` e `π/2 + 2π` dà esattamente `(0, 1)`, `(−1, 0)`, `(0, −1)`,
-  `(0, −1)`, `(0, 1)` come `(cosine, sine)`; a 0 dà `(1, 0)`; a `π/4` e a
-  `π/2 − 2^-30` dà gli stessi bit di `sinCos`;
+  `(0, −1)`, `(0, 1)` come `(cosine, sine)`; a 0 dà `(1, 0)`; a `π/2 − 2^-50`
+  dà `(0, 1)`; a `π/4`, a `π/2 − 2^-30` e a `π/2 − 2^-46` dà gli stessi bit di
+  `sinCos`;
 - `similarity_test.cpp`: rotazione di
   +90° attorno a `(0, 0)`: `(0, 10)` va esattamente in `(−10, 0)` e `(10, 0)`
   in `(0, 10)`; lo stesso con −90° e 180°, e con +90° attorno a `(5, 5)`;
-  riflessione sull'asse a 45°: `(1, 0)` va esattamente in `(0, 1)`.
+  riflessione sull'asse a 45°: `(1, 0)` va esattamente in `(0, 1)`;
+- `similarity_test.cpp`, la fascia (confronti con
+  `TolerancePolicy::coincident`, disegno in millimetri, `P = (2^24, 0)`):
+  due rotazioni di `3 · 2^-50` attorno all'origine, ciascuna dentro la soglia
+  e la somma fuori, e due rotazioni di `π/2 − 2^-47` e `2^-47`, ciascuna fuori
+  e la somma dentro: `(a * b).apply(P)` e `a.apply(b.apply(P))` coincidono;
+  lo stesso con gli angoli di segno opposto; una linea e un arco di raggio
+  `2^24` centrato nell'origine con estremo comune in `P`, ruotati insieme di
+  `3 · 2^-50`: gli estremi restano coincidenti; `MIRROR` sull'asse da
+  `(0, 0)` a `(2^24, 2^24 + 2^-27)`, data nei due ordini: i due punti
+  dell'asse restano coincidenti con se stessi e le due riflessioni danno
+  punti coincidenti.
 
 ## Fatto quando
 

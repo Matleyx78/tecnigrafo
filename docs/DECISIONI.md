@@ -1560,7 +1560,7 @@ i rimandi ai documenti che cambia.
   nello spigolo e il tratto di bordo sparisce, o cade appena dentro, contro la
   decisione 3 del 2026-11-12 qui sopra. Il responsabile sceglie l'uscita **A**:
   la direzione di una famiglia (e di un retino) è quella di `sinCos`, ma una
-  componente sotto `2^-40` in modulo diventa esattamente 0 e l'altra
+  componente sotto `2^-48` in modulo diventa esattamente 0 e l'altra
   esattamente ±1, col suo segno. Vale anche dopo `ROTATE` e `MIRROR` e per lo
   scostamento calcolato dai `.pat`: la funzione è `cardinalSinCos` di
   [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md) (voce successiva), usata da
@@ -1574,7 +1574,7 @@ i rimandi ai documenti che cambia.
   contorno, `Similarity::matrix` usa ancora il coseno del `double` di π/2, il
   lato che era sull'asse y si inclina di `6e-16` mentre la riga resta esatta,
   e il tratto di bordo sparisce. Il responsabile sceglie l'uscita **A1**: la
-  funzione con la soglia `2^-40` diventa `cardinalSinCos` in
+  funzione con la soglia diventa `cardinalSinCos` in
   `tg/core/math.hpp` ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md)), e la usa
   anche `Similarity::matrix`, per tutte le entità: `ROTATE` e `MIRROR` di un
   multiplo di 90° danno coordinate esatte, e riga e lato restano
@@ -1582,4 +1582,13 @@ i rimandi ai documenti che cambia.
   A2 (quarti esatti solo nella trasformazione del retino: due modi di
   ruotare) e B (direzione presa dalla matrice effettiva: il retino
   cambierebbe dopo salvataggio e rilettura del DXF, dove la direzione si
-  ricalcola dall'angolo).
+  ricalcola dall'angolo). Nel terzo giro Codex trova che la soglia proposta
+  da Claude, `2^-40`, era troppo larga: raddrizzava anche angoli soltanto
+  vicini a un quarto di giro, e a 16 km dall'origine gli spostamenti
+  superavano la tolleranza (matrice e angolo della similitudine non
+  concordavano più; `MIRROR` su un asse quasi diagonale spostava i punti
+  dell'asse). Il responsabile approva la soglia **`2^-48`**: sta sopra il
+  residuo di un quarto di giro scritto come `double` (circa `2^-50`) e sposta
+  i punti al più di circa `2^-46` volte la grandezza dei dati, sotto la
+  tolleranza relativa `2^-42`. Quei casi diventano una fascia dichiarata nel
+  commento di `cardinalSinCos` (ADR 0013 di solid-space, punto 4).
