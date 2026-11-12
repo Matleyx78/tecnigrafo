@@ -82,7 +82,8 @@ scheda li cita e non li ripete.
    /// Beyond robust's range (an argument above kMaxHypotArgument; at the
    /// limit robust answers, with a finite result) both arguments are halved
    /// and the result doubled, which may give +inf (halving a subnormal may
-   /// round it, far below the error of the result); with an infinite
+   /// round it, far below the error of the result; near the overflow the
+   /// result is DBL_MAX or +inf, both valid); with an infinite
    /// argument the result is +inf, with a NaN and no infinity it is NaN, as
    /// std::hypot.
    [[nodiscard]] double hypot(double x, double y);
@@ -133,8 +134,16 @@ scheda li cita e non li ripete.
   `hypot(x, y) == hypot(y, -x)` bit per bit; `hypot(2^1023, 2^1023)`, al
   limite di `kMaxHypotArgument`, è finito (circa `1.2711610061536464e308`) e
   ha gli stessi bit di `robust::hypot`; `hypot(DBL_MAX, DBL_MAX)`, oltre il
-  limite, è `+inf`; `hypot(inf, NaN)` è `+inf`, `hypot(1, NaN)` è NaN;
+  limite, è `+inf`; `hypot(nextafter(2^1023, +inf), 0)` e la coppia
+  scambiata danno esattamente il primo argomento (con `±0`);
+  `hypot(inf, NaN)` è `+inf`, `hypot(1, NaN)` è NaN;
   `Vec2{3, 4}.length() == 5`.
+
+**Fascia del raddoppio** ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+punto 4): oltre il limite, quando la lunghezza dimezzata sta entro l'errore di
+`robust::hypot` da `DBL_MAX / 2`, il raddoppio può dare `DBL_MAX` o `+inf`, e
+sono validi tutti e due (per esempio `hypot(DBL_MAX, 1)`). Il commento di
+`hypot` lo dice e i test non fissano l'esito in quella fascia.
 
 ## Fatto quando
 

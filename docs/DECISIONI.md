@@ -1551,3 +1551,19 @@ i rimandi ai documenti che cambia.
   3. **Le righe del motivo lungo un lato del contorno si disegnano:** i tratti
      di bordo di `clipToRegion` fanno parte del retino come quelli interni
      ([0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md); ADR 0048, punto 3).
+- **2026-11-12 — Direzioni cardinali esatte delle righe dei motivi.** Nella
+  rilettura della correzione di PT40
+  ([#751](https://github.com/Matleyx78/tecnigrafo/pull/751)) Codex trova un
+  buco visibile: la direzione di una famiglia viene da `sinCos` dell'angolo in
+  radianti, e a 90° il coseno del `double` di π/2 è circa `6e-17`, non 0. Una
+  riga verticale di `NET` sul lato verticale di un contorno lo tocca solo
+  nello spigolo e il tratto di bordo sparisce, o cade appena dentro, contro la
+  decisione 3 del 2026-11-12 qui sopra. Il responsabile sceglie l'uscita **A**:
+  la direzione di una famiglia (e di un retino) è quella di `sinCos`, ma una
+  componente sotto `2^-40` in modulo diventa esattamente 0 e l'altra
+  esattamente ±1, col suo segno. Vale anche dopo `ROTATE` e `MIRROR` e per lo
+  scostamento calcolato dai `.pat`: la funzione è `patternDirection` di
+  [0.8-PT30](tappe/0.8/PT30-retini-core.md), usata da
+  [0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md). Scartata l'uscita B (angoli
+  presi alla lettera, con il tratto di bordo verticale che a volte c'è e a
+  volte no).

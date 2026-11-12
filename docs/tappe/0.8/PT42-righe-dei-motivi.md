@@ -134,7 +134,9 @@ struct PatternLines {
 Per ogni famiglia (`PatternLine`, nell'ordine del file), con le funzioni di
 `tg/core/math.hpp`:
 
-1. `d = (cos a, sin a)` con `sinCos(angle)`, `n = (−sin a, cos a)`; il passo
+1. `d = (cos a, sin a)` con `patternDirection(angle)` di PT30 (le famiglie a
+   multipli di 90° corrono esattamente lungo gli assi: [DECISIONI.md](../../DECISIONI.md),
+   2026-11-12, «Direzioni cardinali esatte»), `n = (−sin a, cos a)`; il passo
    `h = offset · n` (con segno) e lo spostamento lungo la riga
    `s = offset · d`. Con `h` uguale a 0, o non finito, la famiglia non dà
    righe.
@@ -203,6 +205,12 @@ generata come le altre (PT6).
     riga che lo attraversa dà due tratti;
   - `NET` con origine nello spigolo: le righe che corrono lungo i lati ci
     sono (tratti di bordo);
+  - `NET` metrico, scala 1, origine `(0, 0)`, sul rettangolo
+    `[−10, 0] × [0, 10]`: la riga verticale di indice 0 dà un tratto di bordo
+    lungo 10 sul lato destro; sul rettangolo `[0, 10] × [0, 10]` lo stesso
+    tratto sul lato sinistro. Lo stesso con l'angolo della famiglia a 90° più
+    un giro intero (`ROTATE` di 360°) e dopo `MIRROR` sull'asse x (angolo −90°
+    o 270°): la direzione è `(0, ±1)` esatta e il tratto di bordo c'è;
   - un motivo con trattini, spazi e un punto (`49`: 5, −2.5, 0, −2.5) su una
     riga obliqua: la fase parte da `p_k`, e la riga `k + 1` è spostata di `s`;
   - stile *solo esterno* con un'isola nell'isola segnata come in AutoCAD
