@@ -8,7 +8,6 @@
 #include <QTextStream>
 #include <QtGlobal>
 
-#include <cstdint>
 #include <cstdio>
 
 #ifdef Q_OS_WIN
@@ -17,7 +16,7 @@
 
 int main(int argc, char* argv[]) {
     const QGuiApplication application(argc, argv);
-    const QStringList arguments = application.arguments();
+    const QStringList arguments = QGuiApplication::arguments();
     if (arguments.size() < 2) {
         return 1;
     }
@@ -36,10 +35,8 @@ int main(int argc, char* argv[]) {
         (void)SetErrorMode(SEM_NOGPFAULTERRORBOX);
 #endif
         // A volatile read keeps the deliberate fault in optimised builds.
-        const volatile std::uintptr_t address = 0;
-        // This child deliberately faults at the null address to exercise the crash handler.
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        *reinterpret_cast<volatile int*>(address) = 1;
+        volatile int* const volatile address = nullptr;
+        *address = 1;
     }
     return 0;
 }
