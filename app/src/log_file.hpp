@@ -8,9 +8,12 @@
 namespace tg::app {
 
 struct LogStart {
-    QString path;                ///< The log of this session, empty if it cannot be written.
-    QString previousPath;        ///< tecnigrafo.log.old, empty if absent.
-    bool previousCrashed{false};  ///< The previous log contains the crash header.
+    /// The log of this session, empty if it cannot be written.
+    QString path;
+    /// tecnigrafo.log.old, empty if absent.
+    QString previousPath;
+    /// The previous log contains the crash header.
+    bool previousCrashed{false};
 };
 
 /// The log of the program: what Qt and the program report (qDebug(),

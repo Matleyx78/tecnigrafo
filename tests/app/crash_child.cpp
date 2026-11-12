@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
         return 2;
     }
     QTextStream report(stdout);
-    report << log.path << '\n' << log.previousPath << '\n' << (log.previousCrashed ? 1 : 0)
-           << Qt::endl;
+    report << log.path << '\n' << log.previousPath << '\n';
+    report << (log.previousCrashed ? 1 : 0) << Qt::endl;
     qWarning("message of the log test, %d", 42);
 
     if (arguments.size() == 3 && arguments.at(2) == QStringLiteral("--crash")) {

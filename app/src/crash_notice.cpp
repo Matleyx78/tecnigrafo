@@ -23,14 +23,14 @@ void showCrashNotice(QWidget& parent, const QString& previousPath) {
         "Tecnigrafo closed unexpectedly last time. The log of that session, with the stack of "
         "the crash, is in:"));
     notice.setInformativeText(QDir::toNativeSeparators(previousPath));
-    const QPushButton* openFolder =
-        notice.addButton(QCoreApplication::translate("CrashNotice", "Open folder"),
-                         QMessageBox::ActionRole);
+    const QString openFolderText = QCoreApplication::translate("CrashNotice", "Open folder");
+    const QPushButton* openFolder = notice.addButton(openFolderText, QMessageBox::ActionRole);
     notice.setStandardButtons(QMessageBox::Ok);
     notice.setDefaultButton(QMessageBox::Ok);
     (void)notice.exec();
     if (notice.clickedButton() == openFolder) {
-        (void)QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(previousPath).absolutePath()));
+        const QString folder = QFileInfo(previousPath).absolutePath();
+        (void)QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
     }
 }
 

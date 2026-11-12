@@ -28,12 +28,11 @@
 #endif
 #if defined(Q_OS_WIN) && !defined(TG_LOG_UNDER_SANITIZER)
 #define TG_LOG_CRASH_STACK
-#include <qt_windows.h>
-
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <io.h>
+#include <qt_windows.h>
 #elif (defined(__GLIBC__) || defined(__APPLE__)) && !defined(TG_LOG_UNDER_SANITIZER)
 #define TG_LOG_CRASH_STACK
 #include <array>
@@ -73,18 +72,19 @@ void writeCrashFrame(const void* address) {
     constexpr int kModuleNameBytes = MAX_PATH * 4;
     std::array<char, kModuleNameBytes + 32> line{};
     int nameLength = 0;
-    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                          reinterpret_cast<LPCWSTR>(address), &module) != 0) {
+    constexpr DWORD kModuleFlags =
+        GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+    if (GetModuleHandleExW(kModuleFlags, reinterpret_cast<LPCWSTR>(address), &module) != 0) {
         const DWORD length =
             GetModuleFileNameW(module, path.data(), static_cast<DWORD>(path.size()));
         if (length > 0 && length < path.size()) {
-            const std::wstring_view modulePath(path.data(), length);
-            const auto separator = modulePath.find_last_of(L"\\/");
-            const auto basename =
-                separator == std::wstring_view::npos ? modulePath : modulePath.substr(separator + 1);
-            nameLength = WideCharToMultiByte(CP_UTF8, 0, basename.data(),
-                                            static_cast<int>(basename.size()), line.data(),
+            std::wstring_view name(path.data(), length);
+            const auto slash = name.find_last_of(L"\\/");
+            if (slash != std::wstring_view::npos) {
+                name.remove_prefix(slash + 1);
+            }
+            const auto units = static_cast<int>(name.size());
+            nameLength = WideCharToMultiByte(CP_UTF8, 0, name.data(), units, line.data(),
                                             kModuleNameBytes, nullptr, nullptr);
         }
     }
@@ -114,8 +114,7 @@ LONG WINAPI onUnhandledException(EXCEPTION_POINTERS* exception) {
     const EXCEPTION_RECORD& record = *exception->ExceptionRecord;
     std::array<char, 64> description{};
     const int size = std::snprintf(
-        description.data(), description.size(), "exception 0x%lx at 0x%llx\n",
-        record.ExceptionCode,
+        description.data(), description.size(), "exception 0x%lx at 0x%llx\n", record.ExceptionCode,
         static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(record.ExceptionAddress)));
     if (size > 0 && static_cast<std::size_t>(size) < description.size()) {
         writeCrashText(std::string_view(description.data(), static_cast<std::size_t>(size)));

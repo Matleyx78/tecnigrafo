@@ -97,7 +97,8 @@ TEST(LogFileTest, ACrashWritesAHeaderAndStackFrames) {
     const qsizetype header = lines.indexOf(QLatin1String(kCrashHeader));
     ASSERT_GE(header, 0);
 #ifdef Q_OS_WIN
-    const QRegularExpression exception(QStringLiteral("^exception 0x[cC]0000005 at 0x[0-9a-fA-F]+$"));
+    const QString accessViolation = QStringLiteral("^exception 0x[cC]0000005 at 0x[0-9a-fA-F]+$");
+    const QRegularExpression exception(accessViolation);
     ASSERT_LT(header + 1, lines.size());
     EXPECT_TRUE(exception.match(lines.at(header + 1)).hasMatch());
     const qsizetype firstFrame = header + 2;
