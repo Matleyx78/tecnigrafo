@@ -36,8 +36,16 @@
    cronologia del responsabile; quelle attese:
    - `Enter block name or [?] <ultimo>:` — un nome di blocco della tabella;
      oppure un **percorso** di un file DXF (finisce con `.dxf`, senza distinguere
-     maiuscole, o contiene `/` o `\`): allora `importBlock` (PT19), e se il
-     blocco esiste `Block "<nome>" already exists. Redefine it? [Yes/No] <N>:`;
+     maiuscole, o contiene `/` o `\`): allora `importBlock` (PT19); se un
+     blocco con il nome del file esiste già, si inserisce **la definizione che
+     c'è**, senza domande e senza leggere il file, come AutoCAD;
+     oppure **`nome=percorso`**: `importBlock` del percorso e il blocco `nome`
+     si definisce o, se c'è, si **ridefinisce senza domande**, con
+     `Block "<nome>" redefined`, come AutoCAD da script (decisione del
+     2026-11-13, cronologia di `autocad-inserisci-file.dxf`); il primo `=`
+     separa **sempre** il nome dal percorso, come AutoCAD, e un secondo `=`
+     è un errore, `Invalid file name.`, e la richiesta si ripete: nessun nome
+     di file con `=` si inserisce con `-INSERT`;
      un blocco che non c'è e non è un file: `Unknown block name: "<nome>".`;
    - `Specify insertion point or [Basepoint/Scale/Rotate]:` — *Basepoint* cambia
      il punto base solo per questo inserimento; *Scale* e *Rotate* li chiedono
@@ -46,10 +54,22 @@
      (l'angolo opposto dà le scale dalla diagonale; *XYZ* chiede X e Y; Z si
      accetta e si conserva); `Enter Y scale factor <use X scale factor>:`;
    - `Specify rotation angle <0>:`.
-   La scala proposta è moltiplicata per `unitFactor` (PT19). Gli attributi
-   hanno i valori predefiniti, senza domande (`ATTREQ` = 0). Un passo di
-   annullamento: `Insert`. Scala 0: `Value must be nonzero.` e la richiesta
-   si ripete.
+   La scala proposta è moltiplicata per il fattore delle unità: per un file
+   letto, `unitFactor` (PT19); per un blocco preso per nome, anche quando il
+   percorso di un file ne riusa la definizione senza leggerlo, la stessa regola
+   con le unità della definizione (gruppo 70 del suo `BLOCK_RECORD`) al posto
+   di `$INSUNITS` del file, come AutoCAD; un codice di unità fuori dalla
+   tabella di `$INSUNITS` (per esempio 25) vale come unità sconosciuta, quindi
+   fattore 1, e si conserva com'è. Gli attributi hanno i valori
+   predefiniti, senza domande (`ATTREQ` = 0). Un passo di annullamento:
+   `Insert`. Scala 0: `Value must be nonzero.` e la richiesta si ripete.
+   Con `nome=percorso`, `Esc` alla richiesta del punto **conserva la
+   definizione** (nuova o ridefinita) e le tabelle importate, senza un
+   inserimento nuovo: un passo `Insert`, e gli inserimenti che c'erano
+   mostrano la definizione nuova; vale anche per `Esc` alle richieste di
+   scala e rotazione.
+   È il modo di AutoCAD di ridefinire un blocco senza inserirlo (decisione del
+   2026-11-13, «Buchi della revisione della #756»).
 3. **File negli script:** il percorso segue le regole dei comandi dei file
    (ADR 0021: in modalità di controllo solo dentro la cartella del caso o
    `@sources/…`).
@@ -63,8 +83,19 @@
 ## Test richiesti
 
 - `insert_command_test.cpp`: un blocco per nome, con scala `(2, 1)` e rotazione;
-  un file con un nome nuovo; un file con un nome che esiste, *Redefine* *Yes* e
-  *No*; *Basepoint*; scala 0; `U`.
+  un file con un nome nuovo; un file con un nome che esiste (definizione
+  esistente, nessuna domanda); `nome=percorso` con un nome che esiste
+  (ridefinito, gli inserimenti che c'erano cambiano) e con uno nuovo;
+  `a=b.dxf` con i file `a=b.dxf` e `b.dxf` tutti e due presenti (si legge
+  `b.dxf` e il blocco è `a`); `Contatto=a=b.dxf` (`Invalid file name.`, la
+  richiesta si ripete, nessuna lettura); un percorso che riusa una definizione in
+  millimetri in un disegno in metri, con il file assente (scala proposta
+  0,001, nessuna lettura); un blocco per nome con unità diverse dal disegno,
+  e con i codici di unità 0, 24 e 25 (25: fattore 1, codice conservato);
+  `nome=percorso` seguito da `Esc` al punto (ridefinizione e tabelle
+  importate restano, nessun inserimento nuovo, un passo; `U` riporta la
+  definizione e le tabelle di prima), e lo stesso con un nome nuovo (blocco e
+  layer importati restano; `U` li toglie); *Basepoint*; scala 0; `U`.
 - `blocks_test.cpp`: `addInsert` dà handle nuovi agli attributi; `applyImport`
   si annulla in un passo.
 
