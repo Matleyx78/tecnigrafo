@@ -36,8 +36,13 @@
    cronologia del responsabile; quelle attese:
    - `Enter block name or [?] <ultimo>:` — un nome di blocco della tabella;
      oppure un **percorso** di un file DXF (finisce con `.dxf`, senza distinguere
-     maiuscole, o contiene `/` o `\`): allora `importBlock` (PT19), e se il
-     blocco esiste `Block "<nome>" already exists. Redefine it? [Yes/No] <N>:`;
+     maiuscole, o contiene `/` o `\`): allora `importBlock` (PT19); se un
+     blocco con il nome del file esiste già, si inserisce **la definizione che
+     c'è**, senza domande e senza leggere il file, come AutoCAD;
+     oppure **`nome=percorso`**: `importBlock` del percorso e il blocco `nome`
+     si definisce o, se c'è, si **ridefinisce senza domande**, con
+     `Block "<nome>" redefined`, come AutoCAD da script (decisione del
+     2026-11-13, cronologia di `autocad-inserisci-file.dxf`);
      un blocco che non c'è e non è un file: `Unknown block name: "<nome>".`;
    - `Specify insertion point or [Basepoint/Scale/Rotate]:` — *Basepoint* cambia
      il punto base solo per questo inserimento; *Scale* e *Rotate* li chiedono
@@ -63,8 +68,10 @@
 ## Test richiesti
 
 - `insert_command_test.cpp`: un blocco per nome, con scala `(2, 1)` e rotazione;
-  un file con un nome nuovo; un file con un nome che esiste, *Redefine* *Yes* e
-  *No*; *Basepoint*; scala 0; `U`.
+  un file con un nome nuovo; un file con un nome che esiste (definizione
+  esistente, nessuna domanda); `nome=percorso` con un nome che esiste
+  (ridefinito, gli inserimenti che c'erano cambiano) e con uno nuovo;
+  *Basepoint*; scala 0; `U`.
 - `blocks_test.cpp`: `addInsert` dà handle nuovi agli attributi; `applyImport`
   si annulla in un passo.
 

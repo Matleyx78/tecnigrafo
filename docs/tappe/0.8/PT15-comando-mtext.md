@@ -31,7 +31,10 @@ quelle attese:
 3. `Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]:`
    - *Height*: `Specify height <2.5>:`; *Justify*: le nove sigle `TL`, `TC`,
      `TR`, `ML`, `MC`, `MR`, `BL`, `BC`, `BR`; *Line spacing*: tipo (`At least`,
-     `Exactly`) e fattore; *Rotation*: `Specify rotation angle <0>:`; *Style*:
+     `Exactly`) e fattore, che **restano** per i `MTEXT` successivi, come le
+     variabili `TSPACETYPE` e `TSPACEFAC` di AutoCAD, non salvate nel disegno
+     (a ogni avvio *At least* 1; decisione del 2026-11-13); *Rotation*:
+     `Specify rotation angle <0>:`, che non resta; *Style*:
      nome di uno stile che c'è; *Width*: `Specify width:` (scrivere la larghezza
      salta l'angolo opposto). Ogni opzione torna alla richiesta 3.
 4. Le righe del testo, ognuna un paragrafo: `MText:`; una riga vuota termina.
@@ -54,7 +57,9 @@ scritto, come `TEXT` (ADR 0015); senza righe non crea nulla.
 ## Test richiesti
 
 - `mtext_command_test.cpp`: due righe; *Width* al posto dell'angolo; *Justify*
-  `MC`; *Style* con uno stile che non c'è; `Esc` dopo una riga; `U`.
+  `MC`; *Style* con uno stile che non c'è; `Esc` dopo una riga; `U`;
+  *Line spacing* 1,5 in un `MTEXT` e il `MTEXT` dopo, senza l'opzione, ancora
+  a 1,5, con la rotazione tornata a 0.
 
 ## Fatto quando
 
