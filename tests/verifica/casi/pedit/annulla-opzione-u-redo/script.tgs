@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PEDIT (0.8-PT33, #727): Undo dopo due opzioni toglie solo l'ultima (Reverse) e lascia Close;
+; tutto il comando e' un passo Pedit, che U annulla e REDO ripete (ADR 0050, punto 5).
+PLINE
+0,0
+30,0
+30,20
+
+PEDIT
+15,0
+C
+R
+U
+
+!report
+U
+!report
+REDO
