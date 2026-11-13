@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
-// The MCP server over stdio (docs/adr/0027, point 3). It follows the
+// The MCP server over a transport of lines (docs/adr/0027, point 3): stdio
+// for tecnigrafo-mcp, a local socket for the program (docs/adr/0051). It follows the
 // specification at https://modelcontextprotocol.io/specification: revision
 // 2026-07-28 for requests that carry their version in `_meta`, and the
 // initialize handshake of revision 2025-11-25 for older clients (the
@@ -13,7 +14,6 @@
 #include "tg/mcp/tool.hpp"
 
 #include <cstddef>
-#include <cstdint>
 #include <exception>
 #include <istream>
 #include <memory>
@@ -71,20 +71,30 @@ json modernResult(json result) {
     return result;
 }
 
-enum class LineStatus : std::uint8_t { Line, TooLong, End };
+bool isBlank(std::string_view line) {
+    return line.find_first_not_of(" \t\r") == std::string_view::npos;
+}
 
-/// Reads one line without its '\n' (and a '\r' before it). A line longer
-/// than `maxBytes` is read to its end but not kept, so that it costs no
-/// memory: TooLong. End when nothing is left.
-LineStatus readLine(std::streambuf& buffer, std::size_t maxBytes, std::string& line) {
+/// A request id of MCP: a string or an integer, never null.
+bool isValidId(const json& id) {
+    return id.is_string() || id.is_number_integer();
+}
+
+}  // namespace
+
+LineTransport::Read StreamTransport::readLine(std::string& line, std::size_t maxBytes) {
     line.clear();
+    std::streambuf* buffer = m_in.rdbuf();
+    if (buffer == nullptr) {
+        return Read::End;
+    }
     std::size_t length = 0;
     bool any = false;
     for (;;) {
-        const std::streambuf::int_type next = buffer.sbumpc();
+        const std::streambuf::int_type next = buffer->sbumpc();
         if (std::streambuf::traits_type::eq_int_type(next, std::streambuf::traits_type::eof())) {
             if (!any) {
-                return LineStatus::End;
+                return Read::End;
             }
             break;
         }
@@ -99,58 +109,69 @@ LineStatus readLine(std::streambuf& buffer, std::size_t maxBytes, std::string& l
         }
     }
     if (length > maxBytes) {
-        return LineStatus::TooLong;
+        line.clear();
+        return Read::TooLong;
     }
     if (!line.empty() && line.back() == '\r') {
         line.pop_back();
     }
-    return LineStatus::Line;
+    return Read::Line;
 }
 
-bool isBlank(std::string_view line) {
-    return line.find_first_not_of(" \t\r") == std::string_view::npos;
+bool StreamTransport::writeLine(std::string_view line) {
+    m_out << line << '\n' << std::flush;
+    return static_cast<bool>(m_out);
 }
-
-/// A request id of MCP: a string or an integer, never null.
-bool isValidId(const json& id) {
-    return id.is_string() || id.is_number_integer();
-}
-
-}  // namespace
 
 Server::Server(std::vector<std::unique_ptr<Tool>> tools, ServerOptions options)
     : m_tools(std::move(tools)), m_options(options) {}
 
-int Server::run(std::istream& in, std::ostream& out, std::ostream& log) {
-    std::streambuf* buffer = in.rdbuf();
-    if (buffer == nullptr) {
-        return 0;
-    }
+int Server::run(LineTransport& transport, std::ostream& log) {
     std::string line;
     for (;;) {
-        const LineStatus status = readLine(*buffer, m_options.maxMessageBytes, line);
-        if (status == LineStatus::End) {
+        const LineTransport::Read status = transport.readLine(line, m_options.maxMessageBytes);
+        if (status == LineTransport::Read::End) {
             return 0;
         }
-        std::optional<json> answer;
-        if (status == LineStatus::TooLong) {
-            // Not parsed at all: its id is unknown (docs/adr/0027, point 3).
-            log << kServerName << ": a message of more than " << m_options.maxMessageBytes
-                << " bytes was refused\n";
-            answer = errorResponse(nullptr, kInvalidRequest,
-                                   "Message too large: the limit is " +
-                                       std::to_string(m_options.maxMessageBytes) + " bytes.");
-        } else if (!isBlank(line)) {
-            answer = handle(line, log);
-        }
-        if (answer) {
-            out << text(*answer) << '\n' << std::flush;
-            if (!out) {
-                log << kServerName << ": cannot write the answer\n";
-                return 1;
-            }
+        const std::optional<std::string> reply = status == LineTransport::Read::TooLong
+                                                     ? std::optional{text(tooLarge(log))}
+                                                     : answer(line, log);
+        if (reply && !transport.writeLine(*reply)) {
+            log << kServerName << ": cannot write the answer\n";
+            return 1;
         }
     }
+}
+
+int Server::run(std::istream& in, std::ostream& out, std::ostream& log) {
+    StreamTransport transport{in, out};
+    return run(transport, log);
+}
+
+std::optional<std::string> Server::answer(std::string_view message, std::ostream& log) {
+    if (message.size() > m_options.maxMessageBytes) {
+        return text(tooLarge(log));
+    }
+    if (message.ends_with('\r')) {
+        message.remove_suffix(1);
+    }
+    if (isBlank(message)) {
+        return std::nullopt;
+    }
+    std::optional<json> reply = handle(message, log);
+    if (!reply) {
+        return std::nullopt;
+    }
+    return text(*reply);
+}
+
+json Server::tooLarge(std::ostream& log) const {
+    // Not parsed at all: its id is unknown (docs/adr/0027, point 3).
+    log << kServerName << ": a message of more than " << m_options.maxMessageBytes
+        << " bytes was refused\n";
+    return errorResponse(
+        nullptr, kInvalidRequest,
+        "Message too large: the limit is " + std::to_string(m_options.maxMessageBytes) + " bytes.");
 }
 
 std::optional<json> Server::handle(std::string_view line, std::ostream& log) {

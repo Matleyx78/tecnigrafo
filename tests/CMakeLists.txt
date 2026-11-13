@@ -97,6 +97,7 @@ add_executable(tg_tests
     io/json_test.cpp
     mcp/server_test.cpp
     mcp/session_test.cpp
+    mcp/tool_host_test.cpp
     render/linework_test.cpp
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
