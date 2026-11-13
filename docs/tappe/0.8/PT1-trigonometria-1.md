@@ -33,6 +33,8 @@
 - `core/CMakeLists.txt` (file comune: una riga)
 - `tests/core/math_test.cpp` (nuovo), `tests/core/similarity_test.cpp`,
   `tests/CMakeLists.txt` (file comune)
+- in `tests/cmd`: `coordinate_input_test.cpp`, `rotate_scale_commands_test.cpp`,
+  `text_command_test.cpp`
 
 Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi»).
 
@@ -113,6 +115,16 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    `1<1e308` dà infinito e romperebbe la precondizione di `sinCos`). Così un
    multiplo di 90° digitato resta un quarto di giro esatto qualunque sia il
    numero di giri, e nessun angolo finito digitato diventa infinito.
+   **Rotazione di `TEXT`** ([DECISIONI.md](../../DECISIONI.md), 2026-11-13,
+   «Rotazione di TEXT in [0°, 360°)»): il valore che `TEXT` propone alla
+   domanda successiva e quello che salva nell'entità (gruppo DXF 50) stanno
+   sempre in [0°, 360°), qualunque sia il percorso d'ingresso, come AutoCAD.
+   Il numero digitato ci arriva già dal runner; l'angolo dato con un punto
+   (`text_command.cpp`, `Stage::Rotation`: oggi `atan2`, in (−180°, 180°])
+   diventa `reducedDegreesToRadians(radiansToDegrees(atan2(…)))`, così `-90`
+   digitato e il punto a −90° danno gli stessi bit di `270`, e un angolo che
+   arrotonda al giro intero, o −0, dà +0. Le entità lette da un DXF tengono la
+   loro rotazione (ADR 0006): la regola vale per il comando.
 6. **Eccezioni.** La CI dà errore per un'eccezione il cui caso è ormai uguale su
    tutti i sistemi. Togli da [verifica/sistemi.md](../../verifica/sistemi.md)
    le righe che il job del confronto segnala così; lascia le altre, che
@@ -146,6 +158,13 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
   90, 3600090 e −270: l'estremo va esattamente in `(0, 16777216)` nei tre
   casi; con 3600000: l'estremo resta esattamente in `(16777216, 0)`; con
   *Reference* 3600000 e nuovo angolo 3600090: lo stesso quarto di giro;
+- `text_command_test.cpp`, digitando come testo attraverso il runner, con
+  inizio `0,0` e altezza `2.5`: alla rotazione `-90`, e in un secondo `TEXT`
+  il punto `0,-10`; in tutti e due i casi l'entità creata ha rotazione con
+  gli stessi bit di `reducedDegreesToRadians(270)` e il `TEXT` successivo
+  chiede `Specify rotation angle of text <270>:`; con `360` digitato, e con i
+  punti `10,-0` e `10,-1e-20`, la rotazione salvata è `+0` e la domanda
+  successiva propone `<0>`;
 - `coordinate_input_test.cpp`: `1<1e308` dà un punto finito (nessuna
   asserzione), uguale a `1<` dell'angolo `fmod(1e308, 360)`; `100<3690` dà lo
   stesso punto di `100<90`;

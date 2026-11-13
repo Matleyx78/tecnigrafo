@@ -1687,3 +1687,13 @@ i rimandi ai documenti che cambia.
   dalla tabella di `$INSUNITS` vale come unità sconosciuta (fattore 1) e si
   conserva; scartato il rifiuto dell'inserimento (2, 3 e 4 in
   [0.8-PT21](tappe/0.8/PT21-comando-insert.md)).
+- **2026-11-13 — Rotazione di TEXT in [0°, 360°).** Il verbale di Codex
+  sulla [#755](https://github.com/Matleyx78/tecnigrafo/pull/755) trova che,
+  con la riduzione degli angoli digitati, `-90` digitato arriva a `TEXT` come
+  270°, mentre il punto `(0,-10)` passa per `atan2` e dà −90°: la stessa
+  direzione con due valori diversi per la domanda successiva e per il gruppo
+  DXF 50. Il responsabile decide che il valore proposto e quello salvato
+  nell'entità stanno sempre in **[0°, 360°)**, qualunque sia il percorso
+  d'ingresso: tutti e due danno 270°, e un giro intero dà 0°, come AutoCAD
+  ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartata la
+  rappresentazione distinta per percorso (270° da numero, −90° da punto).
