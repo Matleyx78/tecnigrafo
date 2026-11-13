@@ -1,0 +1,33 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Il risultato di AutoCAD LT 2026 per autocad-pedit.scr (0.8-RT33): i valori attesi dei casi pedit/
+; vengono da qui, e il passo Oracolo ezdxf della CI li confronta con ezdxf.
+D = DXF source=autocad-pedit
+? version D -> AC1032
+? units D -> 4
+? count D -> LWPOLYLINE 16
+? unhandled D -> none
+; d: Close, Open, Reverse, Ltype gen
+? entity D A3 -> LWPOLYLINE closed=yes vertex=0,-160 vertex=30,-160 vertex=30,-140
+? entity D A4 -> LWPOLYLINE closed=no vertex=50,-160 vertex=80,-160 vertex=80,-140 vertex=50,-140
+? entity D A5 -> LWPOLYLINE closed=no vertex=130,-140 vertex=130,-160 vertex=100,-160
+; A6 (Ltype gen, 70 = 128) manca: l'oracolo non scrive linetype-generation; la verifica il caso pedit/opzioni.
+; a: una linea e un arco convertiti
+? entity D A7 -> LWPOLYLINE closed=no vertex=0,0 vertex=30,0
+? entity D AA -> LWPOLYLINE closed=no vertex=60,0 bulge=0.9999999999999998 vertex=40,1.2e-15
+; b: Join con distanza 0
+? entity D AB -> LWPOLYLINE closed=no vertex=0,-30 vertex=20,-30 vertex=20,-10 bulge=0.5 vertex=0,-10
+; c: Multiple, distanza 2; Extend
+? entity D AC -> LWPOLYLINE closed=no vertex=0,-60 vertex=21,-60 vertex=21,-45
+? entity D AE -> LWPOLYLINE closed=no vertex=18,-90 vertex=40,-90
+? entity D AF -> LWPOLYLINE closed=no vertex=0,-90 vertex=20,-90
+? entity D B0 -> LWPOLYLINE closed=no vertex=0,-120 bulge=-1 vertex=20,-120 vertex=40,-120
+; c: Add
+? entity D B2 -> LWPOLYLINE closed=no vertex=100,-60 vertex=120,-60 vertex=121,-59 vertex=121,-45
+? entity D B4 -> LWPOLYLINE closed=no vertex=100,-90 vertex=120,-90 vertex=118,-90 vertex=140,-90
+? entity D B6 -> LWPOLYLINE closed=no vertex=100,-120 bulge=-0.9999999999999998 vertex=120,-120 vertex=121,-120 vertex=140,-120
+; c: Both
+? entity D B8 -> LWPOLYLINE closed=no vertex=200,-60 vertex=221,-60 vertex=221,-45
+? entity D BA -> LWPOLYLINE closed=no vertex=200,-90 vertex=220,-90 vertex=218,-90 vertex=240,-90
+? entity D BC -> LWPOLYLINE closed=no vertex=200,-120 bulge=-1 vertex=220,-120 vertex=240,-120

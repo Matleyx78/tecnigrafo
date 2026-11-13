@@ -1,0 +1,60 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=30,0
+  258 ARC center=50,0 radius=10 start-angle=0 end-angle=180
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: ARC
+  Specify start point of arc: 40,0
+  Specify second point of arc or [Center]: 50,10
+  Specify end point of arc: 60,0
+  Command: PEDIT
+  Select polyline or [Multiple]: 15,0
+  Object selected is not a polyline
+prompt: Do you want to turn it into one? <Y>
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Arc
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ARC 1
+  LINE 1
+
+[final]
+entities:
+  259 LWPOLYLINE closed=no vertex=0,0 vertex=30,0
+  260 LWPOLYLINE closed=no vertex=60,0 bulge=1 vertex=40,0
+messages:
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]:
+  Command: PEDIT
+  Select polyline or [Multiple]: 50,10
+  Object selected is not a polyline
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Arc
+  Pedit
+  Pedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 2
