@@ -42,7 +42,9 @@
      oppure **`nome=percorso`**: `importBlock` del percorso e il blocco `nome`
      si definisce o, se c'è, si **ridefinisce senza domande**, con
      `Block "<nome>" redefined`, come AutoCAD da script (decisione del
-     2026-11-13, cronologia di `autocad-inserisci-file.dxf`);
+     2026-11-13, cronologia di `autocad-inserisci-file.dxf`); il primo `=`
+     separa **sempre** il nome dal percorso, come AutoCAD: un file con `=` nel
+     nome non si inserisce con `-INSERT`;
      un blocco che non c'è e non è un file: `Unknown block name: "<nome>".`;
    - `Specify insertion point or [Basepoint/Scale/Rotate]:` — *Basepoint* cambia
      il punto base solo per questo inserimento; *Scale* e *Rotate* li chiedono
@@ -51,10 +53,18 @@
      (l'angolo opposto dà le scale dalla diagonale; *XYZ* chiede X e Y; Z si
      accetta e si conserva); `Enter Y scale factor <use X scale factor>:`;
    - `Specify rotation angle <0>:`.
-   La scala proposta è moltiplicata per `unitFactor` (PT19). Gli attributi
-   hanno i valori predefiniti, senza domande (`ATTREQ` = 0). Un passo di
-   annullamento: `Insert`. Scala 0: `Value must be nonzero.` e la richiesta
-   si ripete.
+   La scala proposta è moltiplicata per il fattore delle unità: per un file
+   letto, `unitFactor` (PT19); per un blocco preso per nome, anche quando il
+   percorso di un file ne riusa la definizione senza leggerlo, la stessa regola
+   con le unità della definizione (gruppo 70 del suo `BLOCK_RECORD`) al posto
+   di `$INSUNITS` del file, come AutoCAD. Gli attributi hanno i valori
+   predefiniti, senza domande (`ATTREQ` = 0). Un passo di annullamento:
+   `Insert`. Scala 0: `Value must be nonzero.` e la richiesta si ripete.
+   Con `nome=percorso`, `Esc` alla richiesta del punto **conserva la
+   ridefinizione** e le tabelle importate, senza un inserimento nuovo: un
+   passo `Insert`, e gli inserimenti che c'erano mostrano la definizione nuova.
+   È il modo di AutoCAD di ridefinire un blocco senza inserirlo (decisione del
+   2026-11-13, «Buchi della revisione della #756»).
 3. **File negli script:** il percorso segue le regole dei comandi dei file
    (ADR 0021: in modalità di controllo solo dentro la cartella del caso o
    `@sources/…`).
@@ -71,7 +81,13 @@
   un file con un nome nuovo; un file con un nome che esiste (definizione
   esistente, nessuna domanda); `nome=percorso` con un nome che esiste
   (ridefinito, gli inserimenti che c'erano cambiano) e con uno nuovo;
-  *Basepoint*; scala 0; `U`.
+  `a=b.dxf` con i file `a=b.dxf` e `b.dxf` tutti e due presenti (si legge
+  `b.dxf` e il blocco è `a`); un percorso che riusa una definizione in
+  millimetri in un disegno in metri, con il file assente (scala proposta
+  0,001, nessuna lettura); un blocco per nome con unità diverse dal disegno;
+  `nome=percorso` seguito da `Esc` al punto (ridefinizione e tabelle
+  importate restano, nessun inserimento nuovo, un passo; `U` riporta la
+  definizione e le tabelle di prima); *Basepoint*; scala 0; `U`.
 - `blocks_test.cpp`: `addInsert` dà handle nuovi agli attributi; `applyImport`
   si annulla in un passo.
 

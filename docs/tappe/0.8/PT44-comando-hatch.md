@@ -37,7 +37,8 @@ sottomodulo non si sposta: lo hanno già portato PT42 e PT43.
 
 - `cmd/include/tg/cmd/commands/hatch_command.hpp`,
   `cmd/src/commands/hatch_command.cpp` (nuovi)
-- `cmd/include/tg/cmd/command.hpp` (`CommandDefaults`: quattro campi)
+- `cmd/include/tg/cmd/command.hpp` (`CommandDefaults`: quattro campi; file
+  comune con PT15)
 - `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt` (file comuni)
 - `tests/cmd/hatch_command_test.cpp` (nuovo), `tests/CMakeLists.txt` (file
   comune)

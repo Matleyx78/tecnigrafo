@@ -1627,3 +1627,28 @@ i rimandi ai documenti che cambia.
   `nome=file` si romperebbero alla domanda in più), tenere `$INSBASE` come
   punto base (dati diversi da quelli di AutoCAD per lo stesso disegno),
   interlinea a 1 per ogni testo (differenza da dichiarare).
+- **2026-11-13 — Buchi della revisione della #756.** Il verbale di Codex
+  sulla [#756](https://github.com/Matleyx78/tecnigrafo/pull/756) apre sei
+  buchi visibili; il responsabile decide. (1) Un file con `$INSBASE` non
+  nullo e un'entità che non si sa spostare (non gestita, conservata com'è):
+  la definizione tiene come punto base `$INSBASE` e tutte le entità intatte,
+  come prima; il disegno è lo stesso e niente si perde
+  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)); scartato il rifiuto
+  dell'inserimento. (2) In `-INSERT` il primo `=` separa sempre il nome del
+  blocco dal percorso, come AutoCAD; un file con `=` nel nome non si inserisce
+  così; scartata la precedenza al file letterale. (3) Quando il percorso di un
+  file riusa una definizione che c'è, e per ogni blocco preso per nome, la
+  scala proposta converte le unità della definizione in quelle del disegno,
+  come AutoCAD; scartata la scala 1. (4) Con `nome=percorso`, `Esc` al punto
+  d'inserimento conserva la ridefinizione e le tabelle importate, in un passo
+  `Insert`, come AutoCAD (è il suo modo di ridefinire senza inserire);
+  scartato l'annullamento di tutto il comando (2, 3 e 4 in
+  [0.8-PT21](tappe/0.8/PT21-comando-insert.md)). (5) L'interlinea di `MTEXT`
+  la ricorda ogni disegno, fra i valori dei comandi, e a ogni avvio riparte da
+  *At least* 1, come `POLARANG` e `TRIMEXTENDMODE`; scartato il
+  comportamento di AutoCAD (tipo nel profilo, comune ai disegni e conservato
+  dopo il riavvio), che avrebbe chiesto il primo valore condiviso fra le
+  schede e salvato nelle impostazioni. (6) L'interlinea scelta diventa
+  corrente appena confermata, anche se poi `Esc` non crea il testo; scartato
+  l'aggiornamento solo alla creazione del testo (5 e 6 in
+  [0.8-PT15](tappe/0.8/PT15-comando-mtext.md)).

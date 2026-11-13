@@ -17,6 +17,8 @@
 
 - `cmd/include/tg/cmd/commands/mtext_command.hpp`,
   `cmd/src/commands/mtext_command.cpp` (nuovi)
+- `cmd/include/tg/cmd/command.hpp` (`CommandDefaults`: tipo e fattore
+  dell'interlinea; file comune con PT44)
 - `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt` (file comuni)
 - `tests/cmd/mtext_command_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
 
@@ -31,9 +33,14 @@ quelle attese:
 3. `Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]:`
    - *Height*: `Specify height <2.5>:`; *Justify*: le nove sigle `TL`, `TC`,
      `TR`, `ML`, `MC`, `MR`, `BL`, `BC`, `BR`; *Line spacing*: tipo (`At least`,
-     `Exactly`) e fattore, che **restano** per i `MTEXT` successivi, come le
-     variabili `TSPACETYPE` e `TSPACEFAC` di AutoCAD, non salvate nel disegno
-     (a ogni avvio *At least* 1; decisione del 2026-11-13); *Rotation*:
+     `Exactly`) e fattore, che **restano** per i `MTEXT` successivi del
+     disegno, fra i valori che i comandi ricordano (`CommandDefaults`, ADR
+     0014): diventano correnti appena confermati, anche se poi `Esc` non crea
+     il testo; a ogni avvio, e in ogni disegno che si apre, *At least* 1.
+     Differenza da AutoCAD, che tiene il tipo nel profilo (`TSPACETYPE`,
+     comune a tutti i disegni e conservato dopo il riavvio) e il fattore in
+     `TSPACEFAC`: qui sono di ogni disegno e ripartono a ogni avvio, come
+     `POLARANG` e `TRIMEXTENDMODE` (decisioni del 2026-11-13); *Rotation*:
      `Specify rotation angle <0>:`, che non resta; *Style*:
      nome di uno stile che c'è; *Width*: `Specify width:` (scrivere la larghezza
      salta l'angolo opposto). Ogni opzione torna alla richiesta 3.
@@ -58,8 +65,12 @@ scritto, come `TEXT` (ADR 0015); senza righe non crea nulla.
 
 - `mtext_command_test.cpp`: due righe; *Width* al posto dell'angolo; *Justify*
   `MC`; *Style* con uno stile che non c'è; `Esc` dopo una riga; `U`;
-  *Line spacing* 1,5 in un `MTEXT` e il `MTEXT` dopo, senza l'opzione, ancora
-  a 1,5, con la rotazione tornata a 0.
+  *Line spacing* *Exactly* 1,5 in un `MTEXT` e il `MTEXT` dopo, senza
+  l'opzione, ancora *Exactly* 1,5, con la rotazione tornata a 0; *Line
+  spacing* *Exactly* 1,5 e `Esc` prima del testo (nessuna entità) e il
+  `MTEXT` dopo a *Exactly* 1,5; `Esc` dopo una riga (testo conservato, con
+  l'interlinea scelta); due runner (due disegni): *Exactly* 1,5 nel primo, il
+  secondo parte da *At least* 1, e il primo la conserva.
 
 ## Fatto quando
 
