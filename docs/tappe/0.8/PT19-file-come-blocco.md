@@ -26,7 +26,7 @@
 /// What inserting `source` into `target` as a block brings (docs/adr/0045,
 /// point 7). Nothing changes in `target`: the command applies it.
 struct BlockImport {
-    core::BlockDefinition definition;               // name of the file, $INSBASE
+    core::BlockDefinition definition;               // name of the file, base (0,0) or $INSBASE
     std::vector<core::BlockDefinition> nested;      // the file's blocks that the drawing lacks
     std::vector<core::Layer> layers; std::vector<core::Linetype> linetypes;
     std::vector<core::TextStyle> textStyles; std::vector<core::DimStyle> dimStyles;
@@ -41,9 +41,19 @@ struct BlockImport {
 1. Legge il file con il lettore di sempre (stessi limiti, stessi messaggi
    d'errore).
 2. La definizione ha come nome il nome del file senza estensione (come
-   l'utente lo ha scritto, maiuscole comprese), come punto base `$INSBASE`
-   (0,0 se manca), le entità dello spazio modello del file nel loro ordine, e
-   unità = `$INSUNITS` del file; lo spazio carta non entra.
+   l'utente lo ha scritto, maiuscole comprese), come punto base **(0,0)**, le
+   entità dello spazio modello del file nel loro ordine **spostate di
+   −`$INSBASE`** (nessuno spostamento se manca), come le scrive AutoCAD
+   (decisione del 2026-11-13, `autocad-inserisci-file.dxf`), e unità =
+   `$INSUNITS` del file; lo spazio carta non entra. Se `$INSBASE` non è nullo
+   e lo **spazio modello** del file ha un'entità che non si sa spostare
+   (un'entità non gestita, conservata com'è, ADR 0006), la definizione tiene
+   come punto base
+   `$INSBASE` e **tutte** le entità intatte: il disegno è lo stesso e niente si
+   perde, solo i dati differiscono da quelli di AutoCAD (decisione del
+   2026-11-13, «Buchi della revisione della #756»). Contano solo le entità
+   dello spazio modello, le sole da spostare: lo spazio carta non entra, e un
+   blocco annidato tiene le sue coordinate (si sposta il suo inserimento).
 3. **Tabelle** (ADR 0045, punto 7): entrano solo i record il cui nome il
    disegno non ha (`sameTableName`); a parità di nome vince quello del disegno,
    e le entità che lo usavano usano quello del disegno. Lo stesso per le
@@ -64,7 +74,12 @@ struct BlockImport {
 
 ## Test richiesti
 
-- `block_import_test.cpp`: un file con `$INSBASE`, un layer e un tipo di linea
+- `block_import_test.cpp`: un file con `$INSBASE` (100, 120): base (0,0) ed
+  entità spostate di (−100, −120), attributi compresi; lo stesso file con
+  una `SPLINE`: base (100, 120), entità e gruppi della `SPLINE` intatti; con
+  `$INSBASE` (0, 0) e la `SPLINE`: base (0,0), gruppi intatti; la `SPLINE` solo
+  nello spazio carta, e poi solo in un blocco annidato: base (0,0) ed entità
+  dello spazio modello spostate (la definizione annidata intatta); un layer e un tipo di linea
   che il disegno ha con altre proprietà (vince il disegno) e uno che non ha
   (entra); handle rinumerati e proprietari aggiornati; unità 4 nel file e 6 nel
   disegno (fattore 0,001); un file che si inserisce in sé stesso.

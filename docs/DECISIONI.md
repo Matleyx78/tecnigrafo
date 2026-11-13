@@ -1629,3 +1629,61 @@ i rimandi ai documenti che cambia.
   realizza; basta che non arresti il programma, poi vale la fascia dichiarata
   o una diagnosi. Scritta in [revisione.md](agenti/revisione.md), «Che cosa
   blocca una revisione».
+- **2026-11-13 — Inserimento di file, punto base e interlinea come AutoCAD.**
+  Pubblicando i DXF di prova della 0.8
+  ([tappe/0.8/dxf-di-prova.md](tappe/0.8/dxf-di-prova.md)) le cronologie di
+  AutoCAD mostrano tre comportamenti diversi dalle schede; il responsabile
+  sceglie per tutti e tre quello di AutoCAD. (1) `-INSERT` con il percorso di
+  un file il cui nome è già un blocco del disegno inserisce la definizione che
+  c'è, senza domande; `nome=percorso` ridefinisce il blocco senza domande,
+  come AutoCAD da script, così gli script di AutoCAD funzionano uguali
+  ([0.8-PT21](tappe/0.8/PT21-comando-insert.md)). (2) Il blocco preso da un
+  file ha punto base (0,0) e le entità spostate di −`$INSBASE`, come le
+  scrive AutoCAD ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)). (1) e (2)
+  correggono l'[ADR 0045](adr/0045-blocchi-e-attributi.md), punto 7.
+  (3) L'interlinea di `MTEXT` resta per i testi successivi, come `TSPACETYPE`
+  e `TSPACEFAC` ([0.8-PT15](tappe/0.8/PT15-comando-mtext.md)). Scartate le
+  alternative: chiedere sempre se ridefinire (gli script di AutoCAD con
+  `nome=file` si romperebbero alla domanda in più), tenere `$INSBASE` come
+  punto base (dati diversi da quelli di AutoCAD per lo stesso disegno),
+  interlinea a 1 per ogni testo (differenza da dichiarare).
+- **2026-11-13 — Buchi della revisione della #756.** Il verbale di Codex
+  sulla [#756](https://github.com/Matleyx78/tecnigrafo/pull/756) apre sei
+  buchi visibili; il responsabile decide. (1) Un file con `$INSBASE` non
+  nullo e un'entità che non si sa spostare (non gestita, conservata com'è):
+  la definizione tiene come punto base `$INSBASE` e tutte le entità intatte,
+  come prima; il disegno è lo stesso e niente si perde
+  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)); scartato il rifiuto
+  dell'inserimento. (2) In `-INSERT` il primo `=` separa sempre il nome del
+  blocco dal percorso, come AutoCAD; un file con `=` nel nome non si inserisce
+  così; scartata la precedenza al file letterale. (3) Quando il percorso di un
+  file riusa una definizione che c'è, e per ogni blocco preso per nome, la
+  scala proposta converte le unità della definizione in quelle del disegno,
+  come AutoCAD; scartata la scala 1. (4) Con `nome=percorso`, `Esc` al punto
+  d'inserimento conserva la ridefinizione e le tabelle importate, in un passo
+  `Insert`, come AutoCAD (è il suo modo di ridefinire senza inserire);
+  scartato l'annullamento di tutto il comando (2, 3 e 4 in
+  [0.8-PT21](tappe/0.8/PT21-comando-insert.md)). (5) L'interlinea di `MTEXT`
+  la ricorda ogni disegno, fra i valori dei comandi, e a ogni avvio riparte da
+  *At least* 1, come `POLARANG` e `TRIMEXTENDMODE`; scartato il
+  comportamento di AutoCAD (tipo nel profilo, comune ai disegni e conservato
+  dopo il riavvio), che avrebbe chiesto il primo valore condiviso fra le
+  schede e salvato nelle impostazioni. (6) L'interlinea scelta diventa
+  corrente appena confermata, anche se poi `Esc` non crea il testo; scartato
+  l'aggiornamento solo alla creazione del testo (5 e 6 in
+  [0.8-PT15](tappe/0.8/PT15-comando-mtext.md)).
+- **2026-11-13 — Buchi del secondo giro della #756.** Il secondo verbale di
+  Codex apre quattro buchi visibili; il responsabile decide. (1) L'eccezione
+  di PT19 (punto base `$INSBASE` con le entità intatte) vale solo per le
+  entità dello **spazio modello** che non si sanno spostare: lo spazio carta
+  non entra nel blocco, e un blocco annidato tiene le sue coordinate
+  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)). (2) In `-INSERT` un
+  secondo `=` è un errore, `Invalid file name.`: nessun nome di file con `=`
+  si inserisce, e il primo resta il separatore di `nome=percorso`; scartato
+  il percorso letterale dopo il primo `=`. (3) Con `nome=percorso` e un nome
+  nuovo, `Esc` al punto conserva la definizione e le tabelle importate, in un
+  passo `Insert`, come per la ridefinizione e come AutoCAD; scartato
+  l'annullamento dell'importazione. (4) Un codice di unità del blocco fuori
+  dalla tabella di `$INSUNITS` vale come unità sconosciuta (fattore 1) e si
+  conserva; scartato il rifiuto dell'inserimento (2, 3 e 4 in
+  [0.8-PT21](tappe/0.8/PT21-comando-insert.md)).
