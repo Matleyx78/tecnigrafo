@@ -1,0 +1,16 @@
+# 0.8-RT33: reference cases of PEDIT and PEDITACCEPT, work [0.8-PT33] #727
+pedit/annulla-opzione-u-redo #727
+pedit/conversione-esc #727
+pedit/conversione-linea-arco #727
+pedit/multiplo-aggiungi-arco-e-linea #727
+pedit/multiplo-aggiungi-linee-separate #727
+pedit/multiplo-aggiungi-linee-sovrapposte #727
+pedit/multiplo-entrambi-arco-e-linea #727
+pedit/multiplo-entrambi-linee-separate #727
+pedit/multiplo-entrambi-linee-sovrapposte #727
+pedit/multiplo-estendi-arco-e-linea #727
+pedit/multiplo-estendi-linee-separate #727
+pedit/multiplo-estendi-linee-sovrapposte #727
+pedit/opzioni #727
+pedit/peditaccept-1 #727
+pedit/unisci-distanza-0 #727

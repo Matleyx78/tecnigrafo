@@ -1,0 +1,24 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PEDIT (0.8-PT33, #727): con PEDITACCEPT 1 linee e archi si convertono senza domanda.
+; Come AutoCAD, con 1 non compare neppure "Object selected is not a polyline"
+; (PEDITACCEPT: "Suppresses display of the Object Selected Is Not a Polyline prompt").
+; PEDITACCEPT e' un valore della sessione, come MIRRTEXT: nessun passo di annullamento.
+PEDITACCEPT
+1
+LINE
+0,0
+30,0
+
+PEDIT
+15,0
+
+PEDITACCEPT
+
+ARC
+40,0
+50,10
+60,0
+PEDIT
+50,10
+

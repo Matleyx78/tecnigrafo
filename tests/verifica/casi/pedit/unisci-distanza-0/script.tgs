@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PEDIT (0.8-PT33, #727): conversione e Join con distanza 0 di una linea e di un arco (caso b).
+; Valori da autocad-pedit.dxf e autocad-pedit.txt di Matleyx78/dxf-test-file, commit 1ad04b0b8a568fb9dd4960719a8f17289129f788 (CC0-1.0).
+; La domanda di conversione non finisce con ":": si conferma <Y> con il clic destro, come Invio ma senza eco (docs/adr/0037, punto 3).
+LINE
+0,-30
+20,-30
+
+LINE
+20,-30
+20,-10
+
+ARC
+20,-10
+10,-5
+0,-10
+PEDIT
+10,-30
+!rightclick
+J
+20,-20
+10,-5
+
+
