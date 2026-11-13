@@ -2,6 +2,10 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-11-11
+- **Corretto:** 2026-11-13 — punto 7: il blocco preso da un file ha punto base
+  (0,0) e le entità spostate di −`$INSBASE`; con un nome che esiste già
+  `-INSERT` usa la definizione che c'è, e `nome=percorso` ridefinisce senza
+  domande, come AutoCAD (decisione del 2026-11-13 in `docs/DECISIONI.md`).
 
 ## Contesto
 
@@ -133,8 +137,8 @@ La geometria generata porta le proprietà già risolte (ADR 0044, punto 2).
 (come AutoCAD con un file DWG):
 
 - la definizione ha il **nome del file** senza estensione, le entità dello
-  spazio modello del file e come punto base il suo `$INSBASE`; lo spazio carta
-  del file non entra;
+  spazio modello del file spostate di −`$INSBASE` e come punto base (0,0),
+  come le scrive AutoCAD; lo spazio carta del file non entra;
 - le **tabelle si fondono**: layer, tipi di linea, stili di testo, stili di
   quota e definizioni di blocchi del file entrano nel disegno, ma a parità di
   nome vince quella del disegno, senza messaggi, come AutoCAD; così una libreria
@@ -145,8 +149,9 @@ La geometria generata porta le proprietà già risolte (ADR 0044, punto 2).
 - **unità:** se il file e il disegno hanno tutti e due `$INSUNITS` diverso da
   zero e diversi tra loro, la scala proposta dell'inserimento si moltiplica per
   il fattore di conversione; altrimenti è 1;
-- se un blocco con quel nome **esiste già**, il comando chiede se ridefinirlo
-  (punto 5); con *No* inserisce la definizione che c'è;
+- se un blocco con quel nome **esiste già**, il comando inserisce la
+  definizione che c'è, senza domande; la forma **`nome=percorso`** definisce o
+  ridefinisce il blocco `nome` dal file senza domande, come AutoCAD da script;
 - un file illeggibile, o che contiene un inserimento di sé stesso, si rifiuta
   con il messaggio del lettore.
 

@@ -1617,15 +1617,13 @@ i rimandi ai documenti che cambia.
   un file il cui nome è già un blocco del disegno inserisce la definizione che
   c'è, senza domande; `nome=percorso` ridefinisce il blocco senza domande,
   come AutoCAD da script, così gli script di AutoCAD funzionano uguali
-  ([0.8-PT21](tappe/0.8/PT21-comando-insert.md); vale al posto dell'ultimo
-  caso dell'[ADR 0045](adr/0045-blocchi-e-attributi.md), punto 7, «chiede se
-  ridefinirlo»). (2) Il blocco preso da un file ha punto base (0,0) e le
-  entità spostate di −`$INSBASE`, come le scrive AutoCAD
-  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md); vale al posto di «come
-  punto base il suo `$INSBASE`» dell'ADR 0045, punto 7). (3) L'interlinea di
-  `MTEXT` resta per i testi successivi, come `TSPACETYPE` e `TSPACEFAC`
-  ([0.8-PT15](tappe/0.8/PT15-comando-mtext.md)). Scartate le alternative:
-  chiedere sempre se ridefinire (gli script di AutoCAD con `nome=file` si
-  romperebbero alla domanda in più), tenere `$INSBASE` come punto base (dati
-  diversi da quelli di AutoCAD per lo stesso disegno), interlinea a 1 per ogni
-  testo (differenza da dichiarare).
+  ([0.8-PT21](tappe/0.8/PT21-comando-insert.md)). (2) Il blocco preso da un
+  file ha punto base (0,0) e le entità spostate di −`$INSBASE`, come le
+  scrive AutoCAD ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)). (1) e (2)
+  correggono l'[ADR 0045](adr/0045-blocchi-e-attributi.md), punto 7.
+  (3) L'interlinea di `MTEXT` resta per i testi successivi, come `TSPACETYPE`
+  e `TSPACEFAC` ([0.8-PT15](tappe/0.8/PT15-comando-mtext.md)). Scartate le
+  alternative: chiedere sempre se ridefinire (gli script di AutoCAD con
+  `nome=file` si romperebbero alla domanda in più), tenere `$INSBASE` come
+  punto base (dati diversi da quelli di AutoCAD per lo stesso disegno),
+  interlinea a 1 per ogni testo (differenza da dichiarare).
