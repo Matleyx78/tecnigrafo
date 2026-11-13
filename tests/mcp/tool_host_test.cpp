@@ -358,6 +358,78 @@ TEST(McpTransport, StreamTransportReadsLinesAsBefore) {
     EXPECT_EQ(out.str(), "{}\n");
 }
 
+/// A valid ping of exactly `bytes` bytes: its JSON followed by blanks.
+std::string pingOf(std::size_t bytes) {
+    std::string message = request(7, "ping").dump();
+    EXPECT_LE(message.size(), bytes);
+    message.resize(bytes, ' ');
+    return message;
+}
+
+/// The answers that run() writes over a StreamTransport reading `input`.
+std::vector<json> streamAnswers(const std::string& input, std::size_t maxBytes) {
+    std::istringstream in(input);
+    std::ostringstream out;
+    Server server(tg::mcp::programTools(nullptr),
+                  tg::mcp::ServerOptions{.maxMessageBytes = maxBytes});
+    std::ostringstream log;
+    EXPECT_EQ(server.run(in, out, log), 0);
+    std::vector<json> answers;
+    std::istringstream written(out.str());
+    for (std::string line; std::getline(written, line);) {
+        answers.push_back(json::parse(line));
+    }
+    return answers;
+}
+
+bool isPong(const json& answer) {
+    return answer.value("id", json()) == 7 && answer.contains("result");
+}
+
+bool isTooLarge(const json& answer) {
+    return answer.at("id").is_null() && answer.at("error").at("code") == tg::mcp::kInvalidRequest;
+}
+
+// The limit counts every byte before the "\n", the "\r" of a "\r\n"
+// included, in StreamTransport (as tecnigrafo-mcp always did) and in
+// Server::answer() alike.
+TEST(McpTransport, TheLimitCountsTheSameBytesWithLfCrLfAndAnswer) {
+    constexpr std::size_t kLimit = 128;
+    const std::string atLimit = pingOf(kLimit);
+    const std::string belowLimit = pingOf(kLimit - 1);
+
+    std::string line;
+    std::istringstream in(atLimit + "\n" + atLimit + "\r\n" + belowLimit + "\r\n");
+    std::ostringstream out;
+    tg::mcp::StreamTransport transport{in, out};
+    EXPECT_EQ(transport.readLine(line, kLimit), LineTransport::Read::Line);
+    EXPECT_EQ(line, atLimit);
+    EXPECT_EQ(transport.readLine(line, kLimit), LineTransport::Read::TooLong);
+    EXPECT_EQ(line, "");
+    EXPECT_EQ(transport.readLine(line, kLimit), LineTransport::Read::Line);
+    EXPECT_EQ(line, belowLimit);
+    EXPECT_EQ(transport.readLine(line, kLimit), LineTransport::Read::End);
+
+    const std::vector<json> lf = streamAnswers(atLimit + "\n", kLimit);
+    ASSERT_EQ(lf.size(), 1U);
+    EXPECT_TRUE(isPong(lf[0])) << lf[0].dump();
+    const std::vector<json> crlf = streamAnswers(atLimit + "\r\n", kLimit);
+    ASSERT_EQ(crlf.size(), 1U);
+    EXPECT_TRUE(isTooLarge(crlf[0])) << crlf[0].dump();
+    const std::vector<json> crlfBelow = streamAnswers(belowLimit + "\r\n", kLimit);
+    ASSERT_EQ(crlfBelow.size(), 1U);
+    EXPECT_TRUE(isPong(crlfBelow[0])) << crlfBelow[0].dump();
+
+    // answer() takes what comes before the "\n" and gives the same answers.
+    Server server(tg::mcp::programTools(nullptr),
+                  tg::mcp::ServerOptions{.maxMessageBytes = kLimit});
+    std::ostringstream log;
+    EXPECT_TRUE(isPong(parsed(server.answer(atLimit, log))));
+    EXPECT_TRUE(isTooLarge(parsed(server.answer(atLimit + "\r", log))));
+    EXPECT_TRUE(isPong(parsed(server.answer(belowLimit + "\r", log))));
+    EXPECT_FALSE(server.answer(" \r", log));
+}
+
 TEST(McpTransport, AnswerTakesOneMessageAtATime) {
     auto host = std::make_shared<FakeHost>();
     Server server(tg::mcp::programTools(host), tg::mcp::ServerOptions{.maxMessageBytes = 512});

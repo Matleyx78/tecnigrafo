@@ -152,6 +152,9 @@ std::optional<std::string> Server::answer(std::string_view message, std::ostream
     if (message.size() > m_options.maxMessageBytes) {
         return text(tooLarge(log));
     }
+    if (message.ends_with('\r')) {
+        message.remove_suffix(1);
+    }
     if (isBlank(message)) {
         return std::nullopt;
     }

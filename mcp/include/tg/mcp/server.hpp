@@ -58,8 +58,13 @@ public:
     virtual ~LineTransport() = default;
 
     /// Waits for the next message and puts it in `line`, without its line
-    /// end ("\n", or "\r\n"). A longer message than `maxBytes` is read to
-    /// its end and reported as TooLong, so that it costs no memory.
+    /// end ("\n", or "\r\n"). The limit counts every byte before the "\n",
+    /// a final "\r" included, as tecnigrafo-mcp always did: with
+    /// maxBytes = 128, 128 bytes and "\n" are a Line, the same 128 bytes and
+    /// "\r\n" are TooLong. A longer message than `maxBytes` is read to its
+    /// end and reported as TooLong, so that it costs no memory. The final
+    /// "\r" is removed only from a Line. Server::answer() counts the same
+    /// bytes: a transport may hand it what comes before the "\n" instead.
     [[nodiscard]] virtual Read readLine(std::string& line, std::size_t maxBytes) = 0;
 
     /// Writes one message followed by "\n". False if the transport failed.
@@ -99,11 +104,13 @@ public:
     /// Returns 0, or 1 if `out` failed.
     int run(std::istream& in, std::ostream& out, std::ostream& log);
 
-    /// The answer to one message (a line without its end), as run() would
-    /// write it, or std::nullopt for none (a notification or a blank line):
-    /// for a transport that brings its messages one at a time instead of
-    /// waiting for them. A message longer than maxMessageBytes is refused
-    /// as run() refuses it.
+    /// The answer to one message, as run() would write it, or std::nullopt
+    /// for none (a notification or a blank line): for a transport that
+    /// brings its messages one at a time instead of waiting for them.
+    /// `message` is what comes before the "\n", and may keep the "\r" of a
+    /// "\r\n": as in LineTransport::readLine(), the limit counts every byte
+    /// of it, the "\r" included, and a message longer than maxMessageBytes
+    /// is refused as run() refuses it; the "\r" is removed after the check.
     [[nodiscard]] std::optional<std::string> answer(std::string_view message, std::ostream& log);
 
 private:
