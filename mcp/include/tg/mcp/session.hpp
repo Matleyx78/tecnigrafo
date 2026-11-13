@@ -4,6 +4,7 @@
 #pragma once
 
 #include "tg/mcp/tool.hpp"
+#include "tg/mcp/tool_host.hpp"
 
 #include <cstddef>
 #include <filesystem>
@@ -13,6 +14,10 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
+namespace tg::cmd {
+class CommandRegistry;
+}  // namespace tg::cmd
 
 namespace tg::mcp {
 
@@ -40,15 +45,16 @@ struct SessionOptions {
 /// document, the editor and a cmd::CommandRunner with the built-in commands
 /// and the description check on, driven exactly as a level 1 script
 /// (script::Level1Session): same echo, same directives, same determinism.
-/// Files go through script::CaseFiles inside --root.
-class Session {
+/// Files go through script::CaseFiles inside --root. It is the ToolHost of
+/// tecnigrafo-mcp (docs/adr/0051, point 4).
+class Session final : public ToolHost {
 public:
     explicit Session(SessionOptions options);
     Session(const Session&) = delete;
     Session& operator=(const Session&) = delete;
     Session(Session&&) = delete;
     Session& operator=(Session&&) = delete;
-    ~Session();
+    ~Session() override;
 
     [[nodiscard]] const SessionOptions& options() const { return m_options; }
 
@@ -58,12 +64,12 @@ public:
     /// The text is the lines written in the history since the previous call,
     /// then the sections of any "!report" among the lines, then
     /// "prompt: <the prompt now>".
-    [[nodiscard]] ToolResult run(std::span<const std::string> lines);
+    [[nodiscard]] ToolResult run(std::span<const std::string> lines) override;
 
     /// The report of the state now (docs/verifica/rapporto.md): its first
     /// line and a section [final], whose messages are those written since
     /// the previous section (the previous report or "!report").
-    [[nodiscard]] std::string report();
+    [[nodiscard]] std::string report() override;
 
     /// Starts again from an empty document: "prompt: Command:".
     [[nodiscard]] std::string reset();
@@ -72,13 +78,17 @@ public:
     /// If OPEN asks first whether to save the changes, it stops at that
     /// question. An invalid name, a missing file, no --root or a command
     /// still running is an error, and nothing runs.
-    [[nodiscard]] ToolResult open(std::string_view path);
+    [[nodiscard]] ToolResult open(std::string_view path) override;
 
     /// SAVEAS with `path` inside --root, as run() would with the two lines.
     /// If the file exists, `replace` answers Y to the question to replace
     /// it; otherwise the question stays. An invalid name, no --root or a
     /// command still running is an error, and nothing runs.
-    [[nodiscard]] ToolResult save(std::string_view path, bool replace);
+    [[nodiscard]] ToolResult save(std::string_view path, bool replace) override;
+
+    /// The built-in commands, the same as those the session runs; they stay
+    /// the same across reset().
+    [[nodiscard]] const cmd::CommandRegistry& commands() const override;
 
 private:
     class State;
@@ -88,6 +98,7 @@ private:
                                          bool mustExist, bool replace);
 
     SessionOptions m_options;
+    std::unique_ptr<const cmd::CommandRegistry> m_commands;
     std::unique_ptr<State> m_state;
 };
 
@@ -99,7 +110,8 @@ private:
                                                        std::string_view name, bool mustExist);
 
 /// run, report, reset, open and save over the live `session`
-/// (docs/adr/0027, point 5). Precondition: `session` is not null.
+/// (docs/adr/0027, point 5): hostTools() with FilePaths::Root, and reset in
+/// the third place. Precondition: `session` is not null.
 [[nodiscard]] std::vector<std::unique_ptr<Tool>> sessionTools(std::shared_ptr<Session> session);
 
 /// run_script, check_case and, only with `options.questions`, ask

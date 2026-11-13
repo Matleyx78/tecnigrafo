@@ -7,6 +7,7 @@
 #include "tg/mcp/tool.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <iosfwd>
 #include <memory>
 #include <optional>
@@ -38,8 +39,49 @@ struct ServerOptions {
     std::size_t maxMessageBytes{4 * 1024 * 1024};
 };
 
-/// MCP over stdio: one JSON-RPC message per line on `in`, answers on `out`,
-/// logs on `log` (docs/adr/0027, point 3). Returns at the end of `in`.
+/// Where the server reads and writes its messages, one JSON-RPC message per
+/// line: stdin and stdout for tecnigrafo-mcp, a local socket for the
+/// program (docs/adr/0051, point 2).
+class LineTransport {
+public:
+    enum class Read : std::uint8_t {
+        Line,     ///< a message, in `line`
+        TooLong,  ///< a message of more than `maxBytes` bytes, not kept
+        End,      ///< no more messages will come
+    };
+
+    LineTransport() = default;
+    LineTransport(const LineTransport&) = delete;
+    LineTransport& operator=(const LineTransport&) = delete;
+    LineTransport(LineTransport&&) = delete;
+    LineTransport& operator=(LineTransport&&) = delete;
+    virtual ~LineTransport() = default;
+
+    /// Waits for the next message and puts it in `line`, without its line
+    /// end ("\n", or "\r\n"). A longer message than `maxBytes` is read to
+    /// its end and reported as TooLong, so that it costs no memory.
+    [[nodiscard]] virtual Read readLine(std::string& line, std::size_t maxBytes) = 0;
+
+    /// Writes one message followed by "\n". False if the transport failed.
+    [[nodiscard]] virtual bool writeLine(std::string_view line) = 0;
+};
+
+/// The transport over two streams: stdin and stdout, or streams in memory.
+class StreamTransport final : public LineTransport {
+public:
+    StreamTransport(std::istream& in, std::ostream& out) : m_in(in), m_out(out) {}
+
+    [[nodiscard]] Read readLine(std::string& line, std::size_t maxBytes) override;
+    [[nodiscard]] bool writeLine(std::string_view line) override;
+
+private:
+    std::istream& m_in;
+    std::ostream& m_out;
+};
+
+/// MCP over a transport of lines: one JSON-RPC message per line, logs on
+/// `log` (docs/adr/0027, point 3). It offers exactly the tools it is built
+/// with; a call to any other is answered as an unknown tool.
 ///
 /// Methods: server/discover, tools/list and tools/call for requests that
 /// carry the modern `_meta`; initialize, notifications/initialized, ping,
@@ -49,12 +91,26 @@ class Server {
 public:
     Server(std::vector<std::unique_ptr<Tool>> tools, ServerOptions options = {});
 
-    /// Serves until the end of `in`. Returns 0, or 1 if `out` failed.
+    /// Serves until the end of the transport. Returns 0, or 1 if a write
+    /// failed.
+    int run(LineTransport& transport, std::ostream& log);
+
+    /// run() over StreamTransport{in, out}: serves until the end of `in`.
+    /// Returns 0, or 1 if `out` failed.
     int run(std::istream& in, std::ostream& out, std::ostream& log);
+
+    /// The answer to one message (a line without its end), as run() would
+    /// write it, or std::nullopt for none (a notification or a blank line):
+    /// for a transport that brings its messages one at a time instead of
+    /// waiting for them. A message longer than maxMessageBytes is refused
+    /// as run() refuses it.
+    [[nodiscard]] std::optional<std::string> answer(std::string_view message, std::ostream& log);
 
 private:
     /// The answer to one message, or std::nullopt for none (a notification).
     [[nodiscard]] std::optional<nlohmann::json> handle(std::string_view line, std::ostream& log);
+    /// The answer to a message of more than maxMessageBytes.
+    [[nodiscard]] nlohmann::json tooLarge(std::ostream& log) const;
     [[nodiscard]] nlohmann::json handleRequest(const nlohmann::json& id, const std::string& method,
                                                const nlohmann::json& params);
     [[nodiscard]] nlohmann::json handleModern(const nlohmann::json& id, const std::string& method,
