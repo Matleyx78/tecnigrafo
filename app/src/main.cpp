@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "cad_view.hpp"
+#include "crash_notice.hpp"
 #include "log_file.hpp"
 #include "main_window.hpp"
 #include "script_session.hpp"
@@ -67,16 +68,15 @@ int main(int argc, char* argv[]) {
     // The log of an interactive session: what Qt and the program report,
     // and the stack of a crash (log_file.hpp). Scripts and screenshots of
     // the CI run without it.
-    if (!parser.isSet(screenshotOption)) {
-        (void)tg::app::startLogFile();
-    }
+    const bool screenshot = parser.isSet(screenshotOption);
+    const tg::app::LogStart log = screenshot ? tg::app::LogStart{} : tg::app::startLogFile();
 
     // The program opens on the Start page, without documents, as AutoCAD
     // does (docs/DECISIONI.md, 2026-11-07).
     tg::app::MainWindow window(tg::app::MainWindow::InitialDrawing::None);
     window.show();
 
-    if (parser.isSet(screenshotOption)) {
+    if (screenshot) {
         const QString path = parser.value(screenshotOption);
         QTimer::singleShot(0, &window, [&window, path]() {
             const bool saved = window.grab().save(path, "PNG");
@@ -84,6 +84,10 @@ int main(int argc, char* argv[]) {
                 qWarning("Cannot write screenshot to %s", qPrintable(path));
             }
             QApplication::exit(saved ? 0 : 1);
+        });
+    } else if (log.previousCrashed) {
+        QTimer::singleShot(0, &window, [&window, path = log.previousPath]() {
+            tg::app::showCrashNotice(window, path);
         });
     }
 
