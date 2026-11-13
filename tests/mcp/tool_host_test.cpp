@@ -263,7 +263,8 @@ TEST(McpToolHost, WithoutAHostTheToolsDescribeThemselvesAndCallsFail) {
     for (std::size_t i = 2; i < answers.size(); ++i) {
         const json& result = answers[i].at("result");
         EXPECT_TRUE(result.at("isError").get<bool>()) << answers[i].dump();
-        EXPECT_EQ(result.at("content")[0].at("text"), tg::mcp::kNotRunning);
+        EXPECT_EQ(result.at("content")[0].at("text").get<std::string>(),
+                  std::string{tg::mcp::kNotRunning});
     }
 }
 
