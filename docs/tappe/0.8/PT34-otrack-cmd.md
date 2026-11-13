@@ -61,7 +61,11 @@
    stessa età, vince l'orizzontale, come l'orto a 45° esatti (ADR 0008,
    punto 5; [DECISIONI.md](../../DECISIONI.md), 2026-11-13, «Pareggio fra le
    guide dello stesso punto»). Due guide di punti diversi entro l'apertura
-   danno l'incrocio, quindi non arrivano a questo pareggio. Con il polare
+   danno l'incrocio, quindi non arrivano a questo pareggio. Fra due incroci
+   alla stessa distanza vince quello che usa la guida orizzontale del punto
+   più recente; se l'orizzontale è dello stesso punto, quello che usa la
+   verticale del punto più recente ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-13, «Pareggio fra due incroci»). Con il polare
    acceso e un punto base, conta anche la semiretta polare, e il suo incrocio
    con una guida si chiede a solid-space con `core::intersections` sulle rette
    estese. Priorità: snap a oggetto, incrocio, guida, polare, orto, puntatore.
@@ -70,7 +74,11 @@
    puntatore.
 5. **Script** (punto 7): `!hover x,y` (livelli 1 e 2) chiama `pointerHeld`;
    `!otrack on` / `!otrack off` cambiano lo stato senza scrivere nella
-   cronologia. In [script.md](../../verifica/script.md) le due righe nuove.
+   cronologia. Le loro righe in [script.md](../../verifica/script.md) e
+   l'annuncio in `kAnnouncedDirectives` li porta prima
+   [F8](../fuori-tappa/F8-annuncio-hover-otrack.md) (#760), perché RT34 possa
+   usarle: PT34 toglie `hover` e `otrack` da `kAnnouncedDirectives` e dal
+   paragrafo di script.md sulle direttive non ancora realizzate.
 6. **Rapporto** (punto 8), righe nuove dopo `active snap:`, solo quando diverse
    da una sessione nuova (rapporto.md, «Come cresce il formato»):
    - `tracking: on`;
@@ -96,6 +104,11 @@
   quadranti, in `(-8,8)`, `(-8,-8)` e `(8,-8)`, dà `(-8,0)`, `(-8,0)` e
   `(8,0)`. Senza pareggio vince la più vicina: in `(7,8)` la verticale,
   `(0,8)` con `Vertical 0,8 from 0,0`.
+- Pareggio fra due incroci (punto 3): disegno con il solo segmento da `(0,0)`
+  a `(18,18)`, snap solo sugli estremi, orto e polare spenti, apertura di 10
+  unità; acquisiti `(0,0)` e poi `(18,18)`, il puntatore in `(9,9)` è a 9 da
+  tutte e quattro le guide e dà `(0,18)`, con `active tracking: Crossing
+  0,18`; acquisiti nell'ordine inverso, dà `(18,0)`.
 - Test di `script`: `!hover` e `!otrack`, e le righe del rapporto.
 
 ## Fatto quando

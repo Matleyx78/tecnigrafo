@@ -71,6 +71,8 @@ punto decimale, segno ed esponente facoltativi, nessuno spazio dentro un punto
 | `!ortho on` / `!ortho off` | orto acceso o spento, senza scrivere nella cronologia | 1 e 2 |
 | `!osnap <modi>` / `!osnap none` | i modi dello snap a oggetto, con le abbreviazioni di AutoCAD separate da virgole: `end`, `mid`, `cen`, `ins`, `int`, `per`, `tan`, `qua`; senza scrivere nella cronologia (dalla tappa 0.7, pacchetto P7) | 1 e 2 |
 | `!polar on` / `!polar off` | tracciamento polare acceso o spento, senza scrivere nella cronologia; accenderlo spegne l'orto e viceversa (dalla tappa 0.7, pacchetto P8) | 1 e 2 |
+| `!hover x,y` | il puntatore va al punto del disegno e si ferma lì quanto basta per acquisire un punto del tracciamento degli snap a oggetto, o per rilasciarlo se è già acquisito (dalla tappa 0.8, pacchetto PT34) | 1 e 2 |
+| `!otrack on` / `!otrack off` | tracciamento degli snap a oggetto acceso o spento, senza scrivere nella cronologia (dalla tappa 0.8, pacchetto PT34) | 1 e 2 |
 | `!scr on` / `!scr off` | le sequenze degli script di AutoCAD (sotto) accese o spente (dalla tappa 0.7, pacchetto P3) | 1 e 2 |
 | `!report` | aggiunge al rapporto una sezione con lo stato in quel momento | 1 e 2 |
 | `!level 1` / `!level 2` | il livello che lo script richiede | 1 e 2 |
@@ -182,7 +184,8 @@ mancanti o in più, un numero scritto con la virgola, `!key` senza `!level 2`.
 
 Non è un errore, ma un caso non superato, una direttiva che questa specifica
 descrive e il programma non ha ancora: `!osnap`, `!polar` e `!scr`, fino ai
-pacchetti P7, P8 e P3 della tappa 0.7. Lo script ferma la lettura con "not
+pacchetti P7, P8 e P3 della tappa 0.7; `!hover` e `!otrack`, fino al pacchetto
+PT34 della tappa 0.8. Lo script ferma la lettura con "not
 implemented yet" (codice 1; con `--pending`, codice 0): se è elencato in
 `tests/verifica/in-attesa/` aspetta il suo lavoro senza bloccare la CI.
 

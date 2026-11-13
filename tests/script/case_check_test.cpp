@@ -280,7 +280,8 @@ TEST(CheckCase, ChangesWithStopsTheComparisonOfAPendingCaseOnly) {
 // makes the case invalid. Skipped once the program has every directive.
 TEST(CheckCase, AnnouncedDirectiveIsTheFrontier) {
     std::string announced;
-    for (const std::string_view text : {"!polar on", "!osnap none", "!scr on"}) {
+    for (const std::string_view text :
+         {"!polar on", "!osnap none", "!scr on", "!hover 0,0", "!otrack on"}) {
         const std::variant<Script, ParseError> parsed = parseScript(text);
         if (const auto* error = std::get_if<ParseError>(&parsed);
             error != nullptr && error->notImplemented) {

@@ -1675,3 +1675,22 @@ i rimandi ai documenti che cambia.
   acquisito `(0,0)`, con il puntatore in `(8,8)` sono tutte e due a 8. Il
   responsabile decide che vince l'**orizzontale**, come l'orto a 45° esatti
   (ADR 0008, punto 5): il punto è `(8,0)`; scartata la verticale.
+- **2026-11-13 — Pareggio fra due incroci.** Dopo la correzione del pareggio
+  fra le guide dello stesso punto, resta un caso che la regola della più
+  recente non decide: acquisiti `(0,0)` e poi `(10,10)`, con il puntatore in
+  `(5,5)` gli incroci `(0,10)` e `(10,0)` sono alla stessa distanza, e
+  ognuno usa una guida di tutti e due i punti. Il responsabile decide che
+  vince l'incrocio con la **guida orizzontale del punto più recente**, qui
+  `(0,10)`; a pari orizzontale, quello con la verticale del punto più recente.
+  Unisce le due regole già scelte (la più recente, poi l'orizzontale);
+  scartata la precedenza alla verticale del più recente
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-13 — Direttive del tracciamento annunciate prima di PT34.** Codex
+  si ferma di nuovo su RT34
+  ([#728](https://github.com/Matleyx78/tecnigrafo/issues/728)): `!hover` e
+  `!otrack` non sono né nel catalogo né fra le direttive annunciate, e un caso
+  che le usa è non valido invece che in attesa. Il responsabile affida a
+  Claude il pacchetto fuori tappa
+  [F8](tappe/fuori-tappa/F8-annuncio-hover-otrack.md) (#760), che le descrive
+  in [verifica/script.md](verifica/script.md) e le annuncia; PT34 le realizza
+  e le toglie dall'elenco. Scartata l'attesa di PT34, che dipende da RT34.
