@@ -6,7 +6,7 @@
 D = DXF source=autocad-pedit
 ? version D -> AC1032
 ? units D -> 4
-? count D -> LWPOLYLINE 16
+? count D -> LWPOLYLINE 17
 ? unhandled D -> none
 ; d: Close, Open, Reverse, Ltype gen
 ? entity D A3 -> LWPOLYLINE closed=yes vertex=0,-160 vertex=30,-160 vertex=30,-140
