@@ -69,6 +69,13 @@
    acceso e un punto base, conta anche la semiretta polare, e il suo incrocio
    con una guida si chiede a solid-space con `core::intersections` sulle rette
    estese. Priorità: snap a oggetto, incrocio, guida, polare, orto, puntatore.
+   A pari distanza fra l'incrocio di due guide acquisite e l'incrocio di una
+   guida con la semiretta polare vince il primo, come nella priorità
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-13, «Pareggio fra un incrocio
+   di guide e uno con il polare»). Le distanze si confrontano come le calcola
+   il programma in `double`: un pareggio che nasce da una differenza di un ulp
+   è un dato senza senso pratico ([revisione.md](../../agenti/revisione.md),
+   «Che cosa blocca una revisione») e vale la regola del pareggio.
 4. **Distanza scritta** (punto 6): con una guida singola attiva, una distanza
    scritta mette il punto a quella distanza da `from` lungo la guida, verso il
    puntatore.
@@ -108,7 +115,18 @@
   a `(18,18)`, snap solo sugli estremi, orto e polare spenti, apertura di 10
   unità; acquisiti `(0,0)` e poi `(18,18)`, il puntatore in `(9,9)` è a 9 da
   tutte e quattro le guide e dà `(0,18)`, con `active tracking: Crossing
-  0,18`; acquisiti nell'ordine inverso, dà `(18,0)`.
+  0,18`; acquisiti nell'ordine inverso, dà `(18,0)`. Stessa orizzontale:
+  segmenti da `(50,0)` a `(50,-20)` e da `(14,30)` a `(26,30)`, acquisiti
+  nell'ordine `(50,0)`, `(14,30)`, `(26,30)`, il puntatore in `(20,5)` ha gli
+  incroci `(14,0)` e `(26,0)` a `√61` e dà `(26,0)`; scambiando le ultime
+  due acquisizioni, `(14,0)`.
+- Pareggio fra un incrocio di guide e uno con il polare (punto 3): segmento
+  da `(40,0)` a `(0,40)`, snap solo sugli estremi, polare acceso con
+  `POLARANG` 90°, apertura di 10 unità; `LINE` con il primo punto
+  `(-20,10)`, acquisiti `(40,0)` e `(0,40)`, il puntatore in `(2,5)` è entro
+  l'apertura da `y=0`, da `x=0` e dalla semiretta polare `y=10`; gli incroci
+  `(0,0)` e `(0,10)` sono tutti e due a `√29` e vince `(0,0)`, con
+  `active tracking: Crossing 0,0`.
 - Test di `script`: `!hover` e `!otrack`, e le righe del rapporto.
 
 ## Fatto quando

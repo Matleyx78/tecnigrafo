@@ -1694,3 +1694,13 @@ i rimandi ai documenti che cambia.
   [F8](tappe/fuori-tappa/F8-annuncio-hover-otrack.md) (#760), che le descrive
   in [verifica/script.md](verifica/script.md) e le annuncia; PT34 le realizza
   e le toglie dall'elenco. Scartata l'attesa di PT34, che dipende da RT34.
+- **2026-11-13 — Pareggio fra un incrocio di guide e uno con il polare.**
+  Dalla rilettura della correzione di PT34
+  ([#761](https://github.com/Matleyx78/tecnigrafo/pull/761)): con il polare
+  acceso, l'incrocio di due guide acquisite e quello di una guida con la
+  semiretta polare possono essere alla stessa distanza dal puntatore, e la
+  regola dei due incroci non li ordina (quello con il polare ha una sola
+  guida acquisita). Il responsabile decide che vince l'**incrocio delle due
+  guide acquisite**, come nella priorità dell'ADR 0049, punto 5, dove le
+  guide vengono prima del polare; scartato l'incrocio con il polare
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
