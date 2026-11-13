@@ -139,8 +139,8 @@ La geometria generata porta le proprietà già risolte (ADR 0044, punto 2).
 
 - la definizione ha il **nome del file** senza estensione, le entità dello
   spazio modello del file spostate di −`$INSBASE` e come punto base (0,0),
-  come le scrive AutoCAD; se però `$INSBASE` non è nullo e il file ha
-  un'entità che non si sa spostare, il punto base resta `$INSBASE` con le
+  come le scrive AutoCAD; se però `$INSBASE` non è nullo e lo spazio modello
+  del file ha un'entità che non si sa spostare, il punto base resta `$INSBASE` con le
   entità intatte; lo spazio carta del file non entra;
 - le **tabelle si fondono**: layer, tipi di linea, stili di testo, stili di
   quota e definizioni di blocchi del file entrano nel disegno, ma a parità di
@@ -154,9 +154,10 @@ La geometria generata porta le proprietà già risolte (ADR 0044, punto 2).
   il fattore di conversione; altrimenti è 1;
 - se un blocco con quel nome **esiste già**, il comando inserisce la
   definizione che c'è, senza domande e con le sue unità; la forma
-  **`nome=percorso`** (il primo `=` separa sempre il nome) definisce o
+  **`nome=percorso`** (il primo `=` separa il nome; un secondo `=` è un
+  nome di file non valido) definisce o
   ridefinisce il blocco `nome` dal file senza domande, come AutoCAD da script,
-  e `Esc` al punto d'inserimento conserva la ridefinizione;
+  e `Esc` al punto d'inserimento conserva la definizione importata;
 - un file illeggibile, o che contiene un inserimento di sé stesso, si rifiuta
   con il messaggio del lettore.
 

@@ -46,11 +46,14 @@ struct BlockImport {
    −`$INSBASE`** (nessuno spostamento se manca), come le scrive AutoCAD
    (decisione del 2026-11-13, `autocad-inserisci-file.dxf`), e unità =
    `$INSUNITS` del file; lo spazio carta non entra. Se `$INSBASE` non è nullo
-   e il file ha un'entità che non si sa spostare (un'entità non gestita,
-   conservata com'è, ADR 0006), la definizione tiene come punto base
+   e lo **spazio modello** del file ha un'entità che non si sa spostare
+   (un'entità non gestita, conservata com'è, ADR 0006), la definizione tiene
+   come punto base
    `$INSBASE` e **tutte** le entità intatte: il disegno è lo stesso e niente si
    perde, solo i dati differiscono da quelli di AutoCAD (decisione del
-   2026-11-13, «Buchi della revisione della #756»).
+   2026-11-13, «Buchi della revisione della #756»). Contano solo le entità
+   dello spazio modello, le sole da spostare: lo spazio carta non entra, e un
+   blocco annidato tiene le sue coordinate (si sposta il suo inserimento).
 3. **Tabelle** (ADR 0045, punto 7): entrano solo i record il cui nome il
    disegno non ha (`sameTableName`); a parità di nome vince quello del disegno,
    e le entità che lo usavano usano quello del disegno. Lo stesso per le
@@ -74,7 +77,9 @@ struct BlockImport {
 - `block_import_test.cpp`: un file con `$INSBASE` (100, 120): base (0,0) ed
   entità spostate di (−100, −120), attributi compresi; lo stesso file con
   una `SPLINE`: base (100, 120), entità e gruppi della `SPLINE` intatti; con
-  `$INSBASE` (0, 0) e la `SPLINE`: base (0,0), gruppi intatti; un layer e un tipo di linea
+  `$INSBASE` (0, 0) e la `SPLINE`: base (0,0), gruppi intatti; la `SPLINE` solo
+  nello spazio carta, e poi solo in un blocco annidato: base (0,0) ed entità
+  dello spazio modello spostate (la definizione annidata intatta); un layer e un tipo di linea
   che il disegno ha con altre proprietà (vince il disegno) e uno che non ha
   (entra); handle rinumerati e proprietari aggiornati; unità 4 nel file e 6 nel
   disegno (fattore 0,001); un file che si inserisce in sé stesso.

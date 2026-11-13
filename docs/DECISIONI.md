@@ -1652,3 +1652,18 @@ i rimandi ai documenti che cambia.
   corrente appena confermata, anche se poi `Esc` non crea il testo; scartato
   l'aggiornamento solo alla creazione del testo (5 e 6 in
   [0.8-PT15](tappe/0.8/PT15-comando-mtext.md)).
+- **2026-11-13 — Buchi del secondo giro della #756.** Il secondo verbale di
+  Codex apre quattro buchi visibili; il responsabile decide. (1) L'eccezione
+  di PT19 (punto base `$INSBASE` con le entità intatte) vale solo per le
+  entità dello **spazio modello** che non si sanno spostare: lo spazio carta
+  non entra nel blocco, e un blocco annidato tiene le sue coordinate
+  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)). (2) In `-INSERT` un
+  secondo `=` è un errore, `Invalid file name.`: nessun nome di file con `=`
+  si inserisce, e il primo resta il separatore di `nome=percorso`; scartato
+  il percorso letterale dopo il primo `=`. (3) Con `nome=percorso` e un nome
+  nuovo, `Esc` al punto conserva la definizione e le tabelle importate, in un
+  passo `Insert`, come per la ridefinizione e come AutoCAD; scartato
+  l'annullamento dell'importazione. (4) Un codice di unità del blocco fuori
+  dalla tabella di `$INSUNITS` vale come unità sconosciuta (fattore 1) e si
+  conserva; scartato il rifiuto dell'inserimento (2, 3 e 4 in
+  [0.8-PT21](tappe/0.8/PT21-comando-insert.md)).
