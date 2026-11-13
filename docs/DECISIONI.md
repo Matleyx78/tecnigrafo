@@ -1667,3 +1667,11 @@ i rimandi ai documenti che cambia.
   dalla tabella di `$INSUNITS` vale come unità sconosciuta (fattore 1) e si
   conserva; scartato il rifiuto dell'inserimento (2, 3 e 4 in
   [0.8-PT21](tappe/0.8/PT21-comando-insert.md)).
+- **2026-11-13 — Pareggio fra le guide dello stesso punto.** Partendo da
+  [0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), Codex si ferma su RT34
+  ([#728](https://github.com/Matleyx78/tecnigrafo/issues/728)): il punto 3
+  risolve il pareggio fra guide con la più recente, ma l'orizzontale e la
+  verticale dello stesso punto acquisito nascono con la stessa acquisizione;
+  acquisito `(0,0)`, con il puntatore in `(8,8)` sono tutte e due a 8. Il
+  responsabile decide che vince l'**orizzontale**, come l'orto a 45° esatti
+  (ADR 0008, punto 5): il punto è `(8,0)`; scartata la verticale.

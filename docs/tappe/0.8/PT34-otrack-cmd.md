@@ -56,7 +56,12 @@
    orizzontale (`y = py`) e la verticale (`x = px`); il puntatore entro
    l'apertura da due guide di punti diversi va all'incrocio esatto
    (`x` dell'una, `y` dell'altra); entro una sola, si proietta su di essa; fra
-   più guide vince la più vicina, a pari distanza la più recente. Con il polare
+   più guide vince la più vicina, a pari distanza la più recente; fra
+   l'orizzontale e la verticale dello stesso punto acquisito, che hanno la
+   stessa età, vince l'orizzontale, come l'orto a 45° esatti (ADR 0008,
+   punto 5; [DECISIONI.md](../../DECISIONI.md), 2026-11-13, «Pareggio fra le
+   guide dello stesso punto»). Due guide di punti diversi entro l'apertura
+   danno l'incrocio, quindi non arrivano a questo pareggio. Con il polare
    acceso e un punto base, conta anche la semiretta polare, e il suo incrocio
    con una guida si chiede a solid-space con `core::intersections` sulle rette
    estese. Priorità: snap a oggetto, incrocio, guida, polare, orto, puntatore.
@@ -84,6 +89,13 @@
 - `object_tracking_test.cpp`: acquisire e rilasciare; l'ottavo punto; guida
   orizzontale; incrocio di due guide; guida più vicina; incrocio con il polare;
   distanza scritta lungo una guida; azzeramento dopo un punto.
+- Pareggio fra le guide dello stesso punto (punto 3): disegno con il solo
+  segmento da `(-100,0)` a `(0,0)`, snap solo sugli estremi, orto e polare
+  spenti, apertura di 10 unità; acquisito `(0,0)`, il puntatore in `(8,8)` dà
+  `(8,0)`, con `active tracking: Horizontal 8,0 from 0,0`; negli altri tre
+  quadranti, in `(-8,8)`, `(-8,-8)` e `(8,-8)`, dà `(-8,0)`, `(-8,0)` e
+  `(8,0)`. Senza pareggio vince la più vicina: in `(7,8)` la verticale,
+  `(0,8)` con `Vertical 0,8 from 0,0`.
 - Test di `script`: `!hover` e `!otrack`, e le righe del rapporto.
 
 ## Fatto quando
