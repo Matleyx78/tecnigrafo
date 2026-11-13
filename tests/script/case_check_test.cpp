@@ -332,10 +332,12 @@ TEST(CheckCase, TrackingDirectivesAreFrontiersUntilPT34) {
             continue;
         }
         ++checked;
-        const std::string script = std::string{kScript} + first + "\n" + second + "\n";
+        std::string script{kScript};
+        script.append(first).append("\n").append(second).append("\n");
+        std::string name{"frontier-tracking-"};
+        name.append(first, 1, first.find(' ') - 1);
         const fs::path waiting =
-            makeCase("frontier-tracking-" + first.substr(1, first.find(' ') - 1),
-                     {{"script.tgs", script}, {"atteso.txt", std::string{kReport}}});
+            makeCase(name, {{"script.tgs", script}, {"atteso.txt", std::string{kReport}}});
         const Result result = check(waiting, true);
         EXPECT_EQ(result.code, kExitPassed) << first;
         expectContains(result.output, "; as expected up to script.tgs, line 5: ");
