@@ -215,7 +215,8 @@ std::array<Vec2, kMarkerCircleSegments> markerCircle(const Vec2& center, double 
     for (std::size_t i = 0; i < points.size(); ++i) {
         const double angle =
             core::kTwoPi * static_cast<double>(i) / static_cast<double>(points.size());
-        points.at(i) = center + Vec2{std::cos(angle), std::sin(angle)} * radius;
+        const auto direction = core::sinCos(angle);
+        points.at(i) = center + Vec2{direction.cosine, direction.sine} * radius;
     }
     return points;
 }

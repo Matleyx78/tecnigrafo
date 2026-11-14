@@ -32,6 +32,7 @@ add_library(tg_core
     src/offset.cpp
     src/layer.cpp
     src/line.cpp
+    src/math.cpp
     src/polyline.cpp
     src/proximity.cpp
     src/similarity.cpp

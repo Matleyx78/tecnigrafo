@@ -485,7 +485,7 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
             // Multiply by the ratio so even large finite degree values do
             // not overflow before division by 180.
             const double value =
-                prompt.kind == PromptKind::Angle ? spec->a * (core::kPi / 180.0) : spec->a;
+                prompt.kind == PromptKind::Angle ? core::reducedDegreesToRadians(spec->a) : spec->a;
             forward(ValueInput{value});
             return;
         }

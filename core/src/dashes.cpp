@@ -3,6 +3,8 @@
 
 #include "tg/core/dashes.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -96,7 +98,8 @@ DashPiece dotAtDistance(const CurveSegment& segment, double offset) {
     if (segment.arc) {
         const double angle = angleAtDistance(segment, offset);
         const double sign = std::copysign(1.0, segment.arc->sweep);
-        direction = Vec2{-std::sin(angle), std::cos(angle)} * sign;
+        const auto components = sinCos(angle);
+        direction = Vec2{-components.sine, components.cosine} * sign;
     } else {
         direction = (segment.end - segment.start) * (1.0 / segment.length);
     }

@@ -4,6 +4,7 @@
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
 
 #include "tg/cmd/value_format.hpp"
+#include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 
 #include <cmath>
@@ -37,7 +38,7 @@ std::vector<SelectedEntity> snapshot(const CommandContext& context,
 
 /// The direction of `vector` from +X, in radians; 0 for the null vector.
 double directionOf(const core::Vec2& vector) {
-    return std::atan2(vector.y, vector.x);
+    return core::atan2(vector.y, vector.x);
 }
 
 /// Writes the transformed selection: in place, with the same identity and

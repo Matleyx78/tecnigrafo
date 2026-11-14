@@ -58,7 +58,7 @@ void appendArcPerpendiculars(const ArcGeometry& arc, const Vec2& from,
         return;
     }
     const Vec2 offset = radial * (arc.radius / length);
-    const double angle = std::atan2(radial.y, radial.x);
+    const double angle = atan2(radial.y, radial.x);
     if (containsAngle(arc, angle)) {
         out.push_back({arc.center + offset, SnapKind::Perpendicular});
     }

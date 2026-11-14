@@ -4,6 +4,7 @@
 #include "tg/core/proximity.hpp"
 
 #include "tg/core/arc_geometry.hpp"
+#include "tg/core/math.hpp"
 #include "tg/core/text.hpp"
 
 #include <algorithm>
@@ -235,7 +236,7 @@ Vec2 closestPoint(const PolylineSegment& segment, const Vec2& point) {
     const ArcGeometry arc = arcFromBulge(segment.start, segment.end, segment.bulge);
     const Vec2 radial = point - arc.center;
     const double length = radial.length();
-    if (!(length > 0.0) || !containsAngle(arc, std::atan2(radial.y, radial.x))) {
+    if (!(length > 0.0) || !containsAngle(arc, atan2(radial.y, radial.x))) {
         return endpoint;
     }
     const Vec2 projected = arc.center + radial * (arc.radius / length);
