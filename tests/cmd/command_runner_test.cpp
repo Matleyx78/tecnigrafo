@@ -1943,16 +1943,16 @@ std::string invalidMessage(PromptKind kind) {
 
 TEST_P(NumericPromptTest, BareNumbersAreValuesWithoutAPointerDirection) {
     start(GetParam());
-    const double factor = GetParam() == PromptKind::Angle ? core::kPi / 180.0 : 1.0;
+    const bool angle = GetParam() == PromptKind::Angle;
     for (const char* text : {"50", " -2.5 ", "+3E1", ".5", "0", "-0"}) {
         runner().submitText(text);
     }
     ASSERT_EQ(journal().inputs.size(), 6U);
-    const std::vector<double> expected{50, -2.5, 30, 0.5, 0, 0};
+    const std::vector<double> expected{50, angle ? 357.5 : -2.5, 30, 0.5, 0, 0};
     for (std::size_t i = 0; i < expected.size(); ++i) {
         const auto* value = std::get_if<ValueInput>(&journal().inputs[i]);
         ASSERT_NE(value, nullptr);
-        EXPECT_DOUBLE_EQ(value->value, expected[i] * factor);
+        EXPECT_DOUBLE_EQ(value->value, angle ? core::degreesToRadians(expected[i]) : expected[i]);
     }
     EXPECT_TRUE(messages().empty());
     EXPECT_FALSE(runner().acceptsText());
@@ -2059,7 +2059,7 @@ TEST_F(PromptRunnerTest, LargeFiniteAnglesDoNotOverflowDuringConversion) {
     const auto* value = std::get_if<ValueInput>(&journal().inputs.front());
     ASSERT_NE(value, nullptr);
     EXPECT_TRUE(std::isfinite(value->value));
-    EXPECT_DOUBLE_EQ(value->value, 1e308 * (core::kPi / 180.0));
+    EXPECT_DOUBLE_EQ(value->value, core::degreesToRadians(std::fmod(1e308, 360.0)));
 }
 
 TEST_F(PromptRunnerTest, TextPreservesSpacesAndUtf8WithoutParsing) {
