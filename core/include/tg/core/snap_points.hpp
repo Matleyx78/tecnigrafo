@@ -63,7 +63,9 @@ void appendSnapPoints(const PolylineSegment& segment, const SnapModes& modes,
 ///   quadrants inside the arc (the 0°, 90°, 180° and 270° points of its
 ///   circle, end points included when they are one of them);
 /// - Circle: the centre and the four quadrants;
-/// - Text: only the insertion point, its position.
+/// - Text: only the insertion point, its position;
+/// - Solid and Ellipse: appendSnapPointsOf() of the type.
+/// The other types of the 0.8 snap through the document (generated.hpp).
 ///
 /// The Perpendicular points need `from` (see the segment overload). A line
 /// has one, at most; a circle or arc has the two points of its circle on the

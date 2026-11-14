@@ -6,10 +6,18 @@
 add_library(tg_core
     src/arc.cpp
     src/arc_geometry.cpp
+    src/attribute_definition.cpp
+    src/block_table.cpp
     src/circle.cpp
     src/color.cpp
     src/curve_parts.cpp
     src/dashes.cpp
+    src/dim_style_table.cpp
+    src/dimension.cpp
+    src/ellipse.cpp
+    src/generated.cpp
+    src/hatch.cpp
+    src/insert.cpp
     src/lineweight.cpp
     src/linetype_pattern.cpp
     src/document.cpp
@@ -20,6 +28,7 @@ add_library(tg_core
     src/grips.cpp
     src/intersections.cpp
     src/join.cpp
+    src/mtext.cpp
     src/offset.cpp
     src/layer.cpp
     src/line.cpp
@@ -27,11 +36,13 @@ add_library(tg_core
     src/polyline.cpp
     src/proximity.cpp
     src/similarity.cpp
+    src/solid.cpp
     src/solid_space_bridge.cpp
     src/snap_points.cpp
     src/spatial_index.cpp
     src/text.cpp
     src/text_metrics.cpp
+    src/text_style_table.cpp
     src/tolerance.cpp
     src/transform2d.cpp
 )

@@ -50,7 +50,8 @@ std::vector<CurveSegment> segmentsOf(const Entity& entity) {
                 return segments;
             } else if constexpr (std::is_same_v<Shape, Line>) {
                 return {{shape.start, shape.end, std::nullopt, shape.length()}};
-            } else if constexpr (std::is_same_v<Shape, Text>) {
+            } else if constexpr (!std::is_same_v<Shape, Circle> && !std::is_same_v<Shape, Arc>) {
+                // Text, and the types of the 0.8: continuous (dashes()).
                 return {};
             } else {
                 return {arcSegment(shape.geometry())};
@@ -186,8 +187,10 @@ std::optional<std::vector<DashPiece>> dashes(const Entity& entity, const Linetyp
     assert(std::isfinite(scale) && scale > 0.0);
     assert(std::ranges::all_of(pattern.elements, [](double v) { return std::isfinite(v); }));
     const double patternLength = pattern.length() * scale;
-    if (pattern.continuous() || std::holds_alternative<Text>(entity) ||
-        !std::isfinite(patternLength) || patternLength <= 0.0) {
+    const bool curve =
+        std::holds_alternative<Polyline>(entity) || std::holds_alternative<Line>(entity) ||
+        std::holds_alternative<Circle>(entity) || std::holds_alternative<Arc>(entity);
+    if (pattern.continuous() || !curve || !std::isfinite(patternLength) || patternLength <= 0.0) {
         return std::nullopt;
     }
     // Underflow would turn a nonzero element into a non-advancing step.

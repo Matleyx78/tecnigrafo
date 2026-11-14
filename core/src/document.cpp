@@ -3,6 +3,7 @@
 
 #include "tg/core/document.hpp"
 
+#include "tg/core/generated.hpp"
 #include "tg/core/start_handles.hpp"
 
 #include <algorithm>
@@ -14,13 +15,45 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace tg::core {
 
 BBox boundingBox(const Entity& entity) {
-    return std::visit([](const auto& concrete) { return concrete.boundingBox(); }, entity);
+    assert(isSupported(entity));
+    return std::visit(
+        [](const auto& concrete) -> BBox {
+            using T = std::decay_t<decltype(concrete)>;
+            if constexpr (std::is_same_v<T, Solid> || std::is_same_v<T, Ellipse> ||
+                          std::is_same_v<T, AttributeDefinition>) {
+                return boundingBox(concrete);
+            } else if constexpr (std::is_same_v<T, MText> || std::is_same_v<T, Insert> ||
+                                 std::is_same_v<T, Dimension> || std::is_same_v<T, Hatch>) {
+                return {};
+            } else {
+                return concrete.boundingBox();
+            }
+        },
+        entity);
+}
+
+bool isSupported(const Entity& entity) {
+    return std::visit(
+        [](const auto& concrete) {
+            using T = std::decay_t<decltype(concrete)>;
+            if constexpr (std::is_same_v<T, Polyline> || std::is_same_v<T, Line> ||
+                          std::is_same_v<T, Circle> || std::is_same_v<T, Arc> ||
+                          std::is_same_v<T, Text>) {
+                return true;
+            } else {
+                return supported(concrete);
+            }
+        },
+        entity);
 }
 
 namespace {
@@ -101,6 +134,7 @@ Document Document::newDrawing() {
 }
 
 EntityId Document::add(Entity entity) {
+    assert(isSupported(entity));
     assert(m_nextId <= kLastUsable && m_nextOrder <= kLastUsable);
     const EntityId id{m_nextId++};
     place(EntityRecord{id, std::move(entity), EntityExtras{}, m_nextOrder++, m_current});
@@ -121,12 +155,7 @@ std::optional<EntityRecord> Document::remove(EntityId id) {
     m_positions.erase(it);
 
     EntityRecord removed = std::move(m_entities[position]);
-    // The same entity gives the same box it was indexed with.
-    const BBox box = boundingBox(removed.entity);
-    if (!box.isEmpty()) {
-        [[maybe_unused]] const bool indexed = m_index.erase(id, box);
-        assert(indexed && "an entity with a box is always in the index");
-    }
+    unindex(id);
 
     // Erasing keeps the order of the drawing, which is also the order of
     // the DXF file: the entities that follow move back by one. The record
@@ -140,6 +169,7 @@ std::optional<EntityRecord> Document::remove(EntityId id) {
 }
 
 Entity Document::replaceEntity(EntityId id, Entity entity) {
+    assert(isSupported(entity));
     const auto it = m_positions.find(id.value);
     assert(it != m_positions.end() && "the replaced entity must exist");
     // A broken precondition must not become undefined behavior in Release.
@@ -147,21 +177,15 @@ Entity Document::replaceEntity(EntityId id, Entity entity) {
         std::abort();
     }
     EntityRecord& record = m_entities[it->second];
-    const BBox previousBox = boundingBox(record.entity);
-    if (!previousBox.isEmpty()) {
-        [[maybe_unused]] const bool indexed = m_index.erase(id, previousBox);
-        assert(indexed && "an entity with a box is always in the index");
-    }
+    unindex(id);
     Entity previous = std::exchange(record.entity, std::move(entity));
-    const BBox nextBox = boundingBox(record.entity);
-    if (!nextBox.isEmpty()) {
-        m_index.insert(id, nextBox);
-    }
+    index(record);
     return previous;
 }
 
 void Document::restore(EntityRecord record) {
     assert(record.id.value != 0 && !isUsed(record.id));
+    assert(isSupported(record.entity));
     // Keep the "never reused" guarantee even for records that did not come
     // from this document's own counter.
     advancePast(record.id, record.order);
@@ -170,6 +194,7 @@ void Document::restore(EntityRecord record) {
 
 void Document::insert(EntityRecord record) {
     assert(record.id.value != 0 && !isUsed(record.id));
+    assert(isSupported(record.entity));
     advancePast(record.id, record.order);
     place(std::move(record));
 }
@@ -281,7 +306,14 @@ void Document::replaceLayer(const Layer& layer) {
     const auto found = std::ranges::find(m_layers, layer.id, &Layer::id);
     assert(found != m_layers.end());
     checkLayer(layer);
+    const bool thawedOrFrozen = found->frozen != layer.frozen;
     *found = layer;
+    if (thawedOrFrozen) {
+        // The extent leaves out the shapes on frozen layers (generated.hpp).
+        for (std::size_t position = 0; position < m_entities.size(); ++position) {
+            reindex(position);
+        }
+    }
 }
 
 LinetypeId Document::addLinetype(Linetype linetype) {
@@ -316,6 +348,47 @@ void Document::setProperties(EntityId id, const EntityProperties& properties) {
     }
     checkProperties(properties);
     m_entities[it->second].properties = properties;
+    reindex(it->second);
+}
+
+void Document::replaceTextStyles(TextStyleTable table) {
+    m_textStyles = table;
+}
+
+void Document::replaceDimStyles(DimStyleTable table) {
+    m_dimStyles = table;
+}
+
+void Document::replaceBlock(std::string name, std::optional<BlockDefinition> definition) {
+    // The entities that depend on the definition before or after the change.
+    std::unordered_set<std::uint64_t> dependent;
+    const auto collect = [&] {
+        for (const EntityRecord& record : m_entities) {
+            if (dependsOnBlock(*this, record, name)) {
+                dependent.insert(record.id.value);
+            }
+        }
+    };
+    collect();
+    std::vector<BlockDefinition>& definitions = m_blocks.m_definitions;
+    const auto found = std::ranges::find_if(
+        definitions, [&](const BlockDefinition& block) { return sameTableName(block.name, name); });
+    if (!definition) {
+        if (found != definitions.end()) {
+            definitions.erase(found);
+        }
+    } else if (found != definitions.end()) {
+        std::string written = std::move(found->name);
+        *found = std::move(*definition);
+        found->name = std::move(written);
+    } else {
+        definition->name = name;
+        definitions.push_back(std::move(*definition));
+    }
+    collect();
+    for (const std::uint64_t id : dependent) {
+        reindex(m_positions.at(id));
+    }
 }
 
 void Document::setCurrent(const CurrentProperties& current) {
@@ -384,10 +457,7 @@ void Document::advancePast(EntityId id, std::uint64_t order) {
 }
 
 void Document::place(EntityRecord record) {
-    const BBox box = boundingBox(record.entity);
-    if (!box.isEmpty()) {
-        m_index.insert(record.id, box);
-    }
+    index(record);
     // After the entities with the same key: equal keys keep insertion order.
     // add() and a file read in order always land at the end; only restore()
     // lands in the middle, and moves the entities that follow by one.
@@ -398,6 +468,38 @@ void Document::place(EntityRecord record) {
         ++m_positions[moved->id.value];
     }
     m_positions.emplace(inserted->id.value, position);
+}
+
+void Document::index(const EntityRecord& record) {
+    const BBox box = extent(*this, record);
+    if (!box.isEmpty()) {
+        m_index.insert(record.id, box);
+        m_indexed.insert_or_assign(record.id.value, box);
+    }
+}
+
+void Document::unindex(EntityId id) {
+    const auto found = m_indexed.find(id.value);
+    if (found == m_indexed.end()) {
+        return;
+    }
+    [[maybe_unused]] const bool indexed = m_index.erase(id, found->second);
+    assert(indexed && "an entity with an extent is always in the index");
+    m_indexed.erase(found);
+}
+
+void Document::reindex(std::size_t position) {
+    const EntityRecord& record = m_entities[position];
+    const BBox box = extent(*this, record);
+    const auto found = m_indexed.find(record.id.value);
+    const bool same = found == m_indexed.end()
+                          ? box.isEmpty()
+                          : !box.isEmpty() && box.min() == found->second.min() &&
+                                box.max() == found->second.max();
+    if (!same) {
+        unindex(record.id);
+        index(record);
+    }
 }
 
 }  // namespace tg::core

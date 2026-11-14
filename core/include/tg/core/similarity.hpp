@@ -42,6 +42,9 @@ private:
 enum class MirrorText : std::uint8_t { Readable, Mirrored };
 
 /// Transform geometry without changing any drawing record or its metadata.
+/// The types of the 0.8 go through transformedOf() of the type without a
+/// document, and stay as they are if it refuses: with a document, use
+/// transformedIn() (generated.hpp). Precondition: isSupported(entity).
 [[nodiscard]] Entity transformed(const Entity& entity, const Similarity& similarity,
                                  MirrorText mirrorText = MirrorText::Readable);
 

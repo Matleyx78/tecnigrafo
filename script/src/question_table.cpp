@@ -197,12 +197,16 @@ template <typename... Lambdas>
 Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
 
 /// The length of the entity's curve; std::nullopt for a text, which is a
-/// region (docs/verifica/domande.md).
+/// region (docs/verifica/domande.md), and for the types of the 0.8 until the
+/// questions learn them (docs/tappe/0.8/PT9).
 std::optional<double> lengthOf(const core::Entity& entity) {
     return std::visit(
         Overloaded{
-            [](const core::Text& /*text*/) -> std::optional<double> { return std::nullopt; },
-            [](const auto& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Polyline& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Line& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Circle& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Arc& curve) -> std::optional<double> { return curve.length(); },
+            [](const auto& /*region*/) -> std::optional<double> { return std::nullopt; },
         },
         entity);
 }
@@ -245,6 +249,8 @@ std::optional<core::Vec2> closestOn(const core::Entity& entity, const core::Vec2
             [&point](const core::Text& text) -> std::optional<core::Vec2> {
                 return core::closestPoint(text, point);
             },
+            // The types of the 0.8, until the questions learn them (PT9).
+            [](const auto& /*entity*/) -> std::optional<core::Vec2> { return std::nullopt; },
         },
         entity);
 }

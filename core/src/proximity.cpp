@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <limits>
 #include <span>
@@ -106,6 +107,21 @@ struct Overloaded : Lambdas... {
 // Explicit deduction guide: aggregate CTAD is missing from Apple Clang 15.
 template <typename... Lambdas>
 Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
+
+/// The types of the 0.8 that are not shapes (MText, AttributeDefinition,
+/// Insert, Dimension, Hatch) answer through the document (generated.hpp).
+/// Release builds, without the assertion, give "far away, never selected".
+[[maybe_unused]] constexpr const char* kThroughTheDocument =
+    "this entity answers through the document";
+
+/// True for the five entities of before the 0.8, which this file answers for,
+/// and for the shapes Solid and Ellipse, which answer by their own functions.
+[[maybe_unused]] bool answersHere(const Entity& entity) {
+    return std::holds_alternative<Polyline>(entity) || std::holds_alternative<Line>(entity) ||
+           std::holds_alternative<Circle>(entity) || std::holds_alternative<Arc>(entity) ||
+           std::holds_alternative<Text>(entity) || std::holds_alternative<Solid>(entity) ||
+           std::holds_alternative<Ellipse>(entity);
+}
 
 double polylineDistance(const Polyline& polyline, const Vec2& point) {
     double nearest = std::numeric_limits<double>::infinity();
@@ -233,6 +249,7 @@ double distance(const PolylineSegment& segment, const Vec2& point) {
 }
 
 double distance(const Entity& entity, const Vec2& point) {
+    assert(answersHere(entity) && kThroughTheDocument);
     return std::visit(
         Overloaded{
             [&point](const Polyline& polyline) { return polylineDistance(polyline, point); },
@@ -246,15 +263,34 @@ double distance(const Entity& entity, const Vec2& point) {
                 return distance(closestPoint(arc.geometry(), point), point);
             },
             [&point](const Text& text) { return nearestOnText(text, point).distance; },
+            [&point](const Solid& solid) { return distanceOf(solid, point); },
+            [&point](const Ellipse& ellipse) { return distanceOf(ellipse, point); },
+            [](const auto& /*throughTheDocument*/) {
+                return std::numeric_limits<double>::infinity();
+            },
         },
         entity);
 }
 
 bool isInside(const Entity& entity, const BBox& rectangle) {
+    if (const auto* solid = std::get_if<Solid>(&entity)) {
+        return isInsideOf(*solid, rectangle);
+    }
+    if (const auto* ellipse = std::get_if<Ellipse>(&entity)) {
+        return isInsideOf(*ellipse, rectangle);
+    }
+    assert(answersHere(entity) && kThroughTheDocument);
     return boxInside(boundingBox(entity), rectangle);
 }
 
 bool intersects(const Entity& entity, const BBox& rectangle) {
+    if (const auto* solid = std::get_if<Solid>(&entity)) {
+        return intersectsOf(*solid, rectangle);
+    }
+    if (const auto* ellipse = std::get_if<Ellipse>(&entity)) {
+        return intersectsOf(*ellipse, rectangle);
+    }
+    assert(answersHere(entity) && kThroughTheDocument);
     if (boxInside(boundingBox(entity), rectangle)) {
         return true;
     }
@@ -269,6 +305,7 @@ bool intersects(const Entity& entity, const BBox& rectangle) {
             [&rectangle](const Circle& circle) { return intersects(circle.geometry(), rectangle); },
             [&rectangle](const Arc& arc) { return intersects(arc.geometry(), rectangle); },
             [&rectangle](const Text& text) { return textIntersects(text, rectangle); },
+            [](const auto& /*throughTheDocument*/) { return false; },
         },
         entity);
 }

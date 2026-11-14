@@ -4,6 +4,7 @@
 #include "tg/core/grips.hpp"
 
 #include "solid_space_bridge.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 
@@ -15,6 +16,18 @@
 
 namespace tg::core {
 namespace {
+
+/// The five entities of before the 0.8, whose grips are computed here.
+template <typename T>
+constexpr bool kGripsHere =
+    std::is_same_v<T, Polyline> || std::is_same_v<T, Line> || std::is_same_v<T, Circle> ||
+    std::is_same_v<T, Arc> || std::is_same_v<T, Text>;
+
+/// The document of moveGrip(), which has none: its types answer without it.
+const Document& noDocument() {
+    static const Document kEmpty;
+    return kEmpty;
+}
 
 Vec2 midpoint(const PolylineSegment& segment) {
     if (segment.isArc()) {
@@ -96,6 +109,8 @@ std::vector<Vec2> gripPoints(const Entity& entity) {
                     return {value.position, value.alignmentPoint};
                 }
                 return {textFrame(value).insertion};
+            } else if constexpr (!kGripsHere<T>) {
+                return gripPointsOf(value);
             } else {
                 std::vector<Vec2> points;
                 for (std::size_t i = 0; i < value.vertexCount(); ++i) {
@@ -113,68 +128,73 @@ std::vector<Vec2> gripPoints(const Entity& entity) {
 GripResult moveGrip(const Entity& entity, std::size_t index, const Vec2& target) {
     const auto points = gripPoints(entity);
     assert(index < points.size());
-    GripResult invalid{GripOutcome::Invalid, entity};
+    GripResult invalid{GripOutcome::Invalid, entity, {}};
     if (!std::isfinite(target.x) || !std::isfinite(target.y)) {
         return invalid;
     }
     const auto translate = [&] {
         return GripResult{GripOutcome::Moved,
-                          transformed(entity, Similarity::translation(target - points[index]))};
+                          transformed(entity, Similarity::translation(target - points[index])),
+                          {}};
     };
     return std::visit(
         [&](const auto& value) -> GripResult {
             using T = std::decay_t<decltype(value)>;
-            auto result = value;
-            if constexpr (std::is_same_v<T, Line>) {
-                if (index == 2) {
-                    return translate();
-                }
-                (index == 0 ? result.start : result.end) = target;
-                if (!(distance(result.start, result.end) > 0.0)) {
-                    return invalid;
-                }
-            } else if constexpr (std::is_same_v<T, Circle>) {
-                if (index == 0) {
-                    return translate();
-                }
-                result.radius = distance(value.center, target);
-                if (!(result.radius > 0.0) || !std::isfinite(result.radius)) {
-                    return invalid;
-                }
-            } else if constexpr (std::is_same_v<T, Arc>) {
-                if (index == 3) {
-                    return translate();
-                }
-                auto moved = points;
-                moved[index] = target;
-                const auto arc = arcThroughPoints(moved[0], moved[2], moved[1]);
-                if (!arc) {
-                    return invalid;
-                }
-                result = *arc;
-            } else if constexpr (std::is_same_v<T, Text>) {
-                if (index == 0) {
-                    return translate();
-                }
-                result.alignmentPoint = target;
-                if (!(distance(result.position, target) > 0.0)) {
-                    return invalid;
-                }
-                const auto frame = textFrame(result);
-                result.rotation = frame.rotation;
-                if (result.horizontal == TextHorizontal::Aligned) {
-                    result.height = frame.height;
-                } else {
-                    result.widthFactor = frame.widthFactor;
-                }
+            if constexpr (!kGripsHere<T>) {
+                return moveGripOf(noDocument(), value, index, target);
             } else {
-                const auto polyline = movedPoly(value, index, target);
-                if (!polyline) {
-                    return invalid;
+                auto result = value;
+                if constexpr (std::is_same_v<T, Line>) {
+                    if (index == 2) {
+                        return translate();
+                    }
+                    (index == 0 ? result.start : result.end) = target;
+                    if (!(distance(result.start, result.end) > 0.0)) {
+                        return invalid;
+                    }
+                } else if constexpr (std::is_same_v<T, Circle>) {
+                    if (index == 0) {
+                        return translate();
+                    }
+                    result.radius = distance(value.center, target);
+                    if (!(result.radius > 0.0) || !std::isfinite(result.radius)) {
+                        return invalid;
+                    }
+                } else if constexpr (std::is_same_v<T, Arc>) {
+                    if (index == 3) {
+                        return translate();
+                    }
+                    auto moved = points;
+                    moved[index] = target;
+                    const auto arc = arcThroughPoints(moved[0], moved[2], moved[1]);
+                    if (!arc) {
+                        return invalid;
+                    }
+                    result = *arc;
+                } else if constexpr (std::is_same_v<T, Text>) {
+                    if (index == 0) {
+                        return translate();
+                    }
+                    result.alignmentPoint = target;
+                    if (!(distance(result.position, target) > 0.0)) {
+                        return invalid;
+                    }
+                    const auto frame = textFrame(result);
+                    result.rotation = frame.rotation;
+                    if (result.horizontal == TextHorizontal::Aligned) {
+                        result.height = frame.height;
+                    } else {
+                        result.widthFactor = frame.widthFactor;
+                    }
+                } else {
+                    const auto polyline = movedPoly(value, index, target);
+                    if (!polyline) {
+                        return invalid;
+                    }
+                    result = *polyline;
                 }
-                result = *polyline;
+                return {GripOutcome::Moved, std::move(result), {}};
             }
-            return {GripOutcome::Moved, std::move(result)};
         },
         entity);
 }
