@@ -124,7 +124,13 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    diventa `reducedDegreesToRadians(radiansToDegrees(atan2(…)))`, così `-90`
    digitato e il punto a −90° danno gli stessi bit di `270`, e un angolo che
    arrotonda al giro intero, o −0, dà +0. Le entità lette da un DXF tengono la
-   loro rotazione (ADR 0006): la regola vale per il comando.
+   loro rotazione (ADR 0006): la regola vale per il comando. Anche il
+   **testo della domanda** segue [0°, 360°) ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-13, «Domanda di TEXT a 360°»): quando `formatAngle` arrotonda a
+   quattro decimali e scrive `360`, la domanda mostra `<0>`, come fa già
+   `formatDirection` dell'input dinamico (`text_command.cpp`, il predefinito
+   di `Specify rotation angle of text <…>:`). Il valore memorizzato non
+   cambia: Invio e il gruppo DXF 50 usano la rotazione memorizzata.
 6. **Eccezioni.** La CI dà errore per un'eccezione il cui caso è ormai uguale su
    tutti i sistemi. Togli da [verifica/sistemi.md](../../verifica/sistemi.md)
    le righe che il job del confronto segnala così; lascia le altre, che
@@ -164,7 +170,9 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
   gli stessi bit di `reducedDegreesToRadians(270)` e il `TEXT` successivo
   chiede `Specify rotation angle of text <270>:`; con `360` digitato, e con i
   punti `10,-0` e `10,-1e-20`, la rotazione salvata è `+0` e la domanda
-  successiva propone `<0>`;
+  successiva propone `<0>`; con `359.99996` digitato, il `TEXT` successivo
+  chiede `Specify rotation angle of text <0>:` e, con Invio, la nuova entità
+  ha rotazione con gli stessi bit di `reducedDegreesToRadians(359.99996)`;
 - `coordinate_input_test.cpp`: `1<1e308` dà un punto finito (nessuna
   asserzione), uguale a `1<` dell'angolo `fmod(1e308, 360)`; `100<3690` dà lo
   stesso punto di `100<90`;

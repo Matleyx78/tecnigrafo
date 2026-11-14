@@ -1705,3 +1705,14 @@ i rimandi ai documenti che cambia.
   d'ingresso: tutti e due danno 270°, e un giro intero dà 0°, come AutoCAD
   ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartata la
   rappresentazione distinta per percorso (270° da numero, −90° da punto).
+- **2026-11-13 — Domanda di TEXT a 360°.** Il secondo verbale di Codex sulla
+  [#755](https://github.com/Matleyx78/tecnigrafo/pull/755) trova che una
+  rotazione memorizzata appena sotto 360° (per esempio `359.99996` digitato)
+  appare come `<360>` nella domanda del `TEXT` successivo, perché il
+  predefinito si mostra con quattro decimali. Il responsabile decide che il
+  testo della domanda segue lo stesso intervallo [0°, 360°): quando
+  l'arrotondamento scrive `360`, la domanda mostra `<0>`, come l'input
+  dinamico; il valore memorizzato non cambia, e Invio e il gruppo DXF 50
+  usano la rotazione memorizzata
+  ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartato `<360>`
+  come arrotondamento ammesso.
