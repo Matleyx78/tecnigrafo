@@ -26,12 +26,15 @@
   `snap_points.cpp`, `text.cpp`, `transform2d.cpp`
 - in `cmd/src`: `commands/arc_command.cpp`, `commands/pline_command.cpp`,
   `commands/rotate_scale_commands.cpp`, `commands/text_command.cpp`,
-  `coordinate_input.cpp`, `drawing_aids.cpp`, `dynamic_input.cpp`
+  `command_runner.cpp`, `coordinate_input.cpp`, `drawing_aids.cpp`,
+  `dynamic_input.cpp`
 - `render/src/scene_renderer.cpp`
 - `docs/verifica/sistemi.md`
 - `core/CMakeLists.txt` (file comune: una riga)
 - `tests/core/math_test.cpp` (nuovo), `tests/core/similarity_test.cpp`,
   `tests/CMakeLists.txt` (file comune)
+- in `tests/cmd`: `coordinate_input_test.cpp`, `rotate_scale_commands_test.cpp`,
+  `text_command_test.cpp`
 
 Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi»).
 
@@ -97,9 +100,38 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
    coseno e seno con `cardinalSinCos(m_angle)`, per la rotazione e per la
    riflessione, così `ROTATE` e `MIRROR` di qualunque entità di un multiplo
    di 90° (riflessione su un asse a un multiplo di 45°) danno coordinate
-   esatte. Il resto del punto 2 usa `sinCos`. I casi di verifica non cambiano:
+   esatte, per gli angoli digitati (punto 5) e per quelli che arrivano entro
+   la fascia dichiarata nel commento di `cardinalSinCos`; un angolo calcolato
+   oltre quella fascia dà il risultato di `sinCos`, come prima di questa
+   tappa. Il resto del punto 2 usa `sinCos`. I casi di verifica non cambiano:
    la differenza è sotto ogni tolleranza.
-5. **Eccezioni.** La CI dà errore per un'eccezione il cui caso è ormai uguale su
+5. **Angoli digitati in gradi** ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-12, «Angoli digitati ridotti a un giro»): entrano con
+   `reducedDegreesToRadians` il valore di una richiesta `PromptKind::Angle`
+   (`command_runner.cpp`, `typedPoint`: oggi `spec->a * (kPi / 180)`; vale
+   per l'angolo di `ROTATE`, quelli della sua opzione *Reference* e la
+   rotazione di `TEXT`) e l'angolo di una coordinata polare `d<a`
+   (`coordinate_input.cpp`, `polar`: oggi `degreesToRadians`, che con
+   `1<1e308` dà infinito e romperebbe la precondizione di `sinCos`). Così un
+   multiplo di 90° digitato resta un quarto di giro esatto qualunque sia il
+   numero di giri, e nessun angolo finito digitato diventa infinito.
+   **Rotazione di `TEXT`** ([DECISIONI.md](../../DECISIONI.md), 2026-11-13,
+   «Rotazione di TEXT in [0°, 360°)»): il valore che `TEXT` propone alla
+   domanda successiva e quello che salva nell'entità (gruppo DXF 50) stanno
+   sempre in [0°, 360°), qualunque sia il percorso d'ingresso, come AutoCAD.
+   Il numero digitato ci arriva già dal runner; l'angolo dato con un punto
+   (`text_command.cpp`, `Stage::Rotation`: oggi `atan2`, in (−180°, 180°])
+   diventa `reducedDegreesToRadians(radiansToDegrees(atan2(…)))`, così `-90`
+   digitato e il punto a −90° danno gli stessi bit di `270`, e un angolo che
+   arrotonda al giro intero, o −0, dà +0. Le entità lette da un DXF tengono la
+   loro rotazione (ADR 0006): la regola vale per il comando. Anche il
+   **testo della domanda** segue [0°, 360°) ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-13, «Domanda di TEXT a 360°»): quando `formatAngle` arrotonda a
+   quattro decimali e scrive `360`, la domanda mostra `<0>`, come fa già
+   `formatDirection` dell'input dinamico (`text_command.cpp`, il predefinito
+   di `Specify rotation angle of text <…>:`). Il valore memorizzato non
+   cambia: Invio e il gruppo DXF 50 usano la rotazione memorizzata.
+6. **Eccezioni.** La CI dà errore per un'eccezione il cui caso è ormai uguale su
    tutti i sistemi. Togli da [verifica/sistemi.md](../../verifica/sistemi.md)
    le righe che il job del confronto segnala così; lascia le altre, che
    aspettano la seconda parte, e aggiorna il paragrafo sopra l'elenco: la prima
@@ -127,6 +159,23 @@ Più di una quindicina di file, ma ogni modifica è di una riga (piano, «Motivi
   3690, −270 e 90 danno gli stessi bit di `degreesToRadians(90)`; −3600 dà
   `+0`; `−1e-20` dà `+0` (il resto più 360 arrotonda a 360);
   `cardinalSinCos(reducedDegreesToRadians(3690))` è esattamente `(0, 1)`;
+- `rotate_scale_commands_test.cpp`, digitando come testo attraverso il runner:
+  `ROTATE` di una linea da `(0, 0)` a `(16777216, 0)` attorno a `(0, 0)` con
+  90, 3600090 e −270: l'estremo va esattamente in `(0, 16777216)` nei tre
+  casi; con 3600000: l'estremo resta esattamente in `(16777216, 0)`; con
+  *Reference* 3600000 e nuovo angolo 3600090: lo stesso quarto di giro;
+- `text_command_test.cpp`, digitando come testo attraverso il runner, con
+  inizio `0,0` e altezza `2.5`: alla rotazione `-90`, e in un secondo `TEXT`
+  il punto `0,-10`; in tutti e due i casi l'entità creata ha rotazione con
+  gli stessi bit di `reducedDegreesToRadians(270)` e il `TEXT` successivo
+  chiede `Specify rotation angle of text <270>:`; con `360` digitato, e con i
+  punti `10,-0` e `10,-1e-20`, la rotazione salvata è `+0` e la domanda
+  successiva propone `<0>`; con `359.99996` digitato, il `TEXT` successivo
+  chiede `Specify rotation angle of text <0>:` e, con Invio, la nuova entità
+  ha rotazione con gli stessi bit di `reducedDegreesToRadians(359.99996)`;
+- `coordinate_input_test.cpp`: `1<1e308` dà un punto finito (nessuna
+  asserzione), uguale a `1<` dell'angolo `fmod(1e308, 360)`; `100<3690` dà lo
+  stesso punto di `100<90`;
 - `similarity_test.cpp`: rotazione di
   +90° attorno a `(0, 0)`: `(0, 10)` va esattamente in `(−10, 0)` e `(10, 0)`
   in `(0, 10)`; lo stesso con −90° e 180°, e con +90° attorno a `(5, 5)`;

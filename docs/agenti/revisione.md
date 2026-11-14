@@ -25,6 +25,14 @@ Vale per ogni revisione, di una correzione come di un pacchetto
   come buco, e non blocca il merge. Con queste regole si trattano anche i dati
   privi di senso pratico, come lunghezze sotto la tolleranza o ampiezze di un
   ulp.
+- **Un ingresso fuori da ogni uso reale non è un buco visibile**
+  ([DECISIONI.md](../DECISIONI.md), 2026-11-12, «Ingressi fuori dall'uso
+  reale»), né per chi rivede né per chi realizza: angoli di migliaia di giri,
+  coordinate o scale di molti ordini di grandezza oltre ciò che si disegna,
+  numeri al limite del `double`. Basta che il programma non si arresti
+  (niente asserzioni, infiniti o NaN che proseguono): poi vale la fascia
+  dichiarata o una diagnosi, e si scrive come nota non bloccante. Se serve
+  perché non si arresti, la correzione è la più piccola che basta.
 - Una garanzia del contratto si verifica **con i test, non con dimostrazioni
   matematiche**: il revisore che teme un ramo non coperto chiede un test che lo
   raggiunga, non un lemma.
