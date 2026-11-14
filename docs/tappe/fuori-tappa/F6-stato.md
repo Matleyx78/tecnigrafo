@@ -36,8 +36,8 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 8. Pannello *Properties* | approvata dal responsabile, 2026-11-14 |
 | 9. Pannello *Layers* | approvata dal responsabile, 2026-11-14 |
 | 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
-| Interfaccia classica (menu e barre) | in corso |
-| Finestre di dialogo | da fare |
+| Interfaccia classica (menu e barre) | approvata dal responsabile, 2026-11-14 |
+| Finestre di dialogo | approvata dal responsabile, 2026-11-14 |
 | Icone | da fare |
 
 ## Prima lettura: differenze dal riferimento
@@ -246,7 +246,9 @@ Punti aperti dell'area:
 - interfaccia classica: *Text* e *Quick Select* stanno ora in due barre
   proprie, *Annotation* e *Utilities* (da riprendere con l'area classica);
 - le icone piccole dei layer sono meno curate di quelle del riferimento
-  (giudizio del responsabile): da riprendere con l'area delle icone.
+  (giudizio del responsabile): da riprendere con l'area delle icone;
+- le icone della barra di accesso rapido sono brutte (giudizio del
+  responsabile, 2026-11-14): da rifare con l'area delle icone.
 
 **Area 6: riga di comando mobile** (2026-11-11), da far vedere al
 responsabile:
@@ -405,7 +407,8 @@ rimandata. Restano l'**interfaccia classica** (menu e barre), le **finestre
 di dialogo** (da aggiungere alla galleria se il responsabile vuole
 confrontarle) e le **icone** (i punti aperti delle aree 1, 4 e 9: ≡ e `+`
 delle schede, la casa di *Start*, la lente e le icone della barra di
-*Layers*, le icone di stato colorate). Poi la chiusura: i test qui sotto,
+*Layers*, le icone di stato colorate; in più le icone della barra di
+accesso rapido, brutte per il responsabile, e quelle delle `QMessageBox`). Poi la chiusura: i test qui sotto,
 `scripts/controlla.sh --tidy`, la galleria approvata e la pull request.
 
 **Interfaccia classica: menu e barre** (2026-11-14), da far vedere al
@@ -434,6 +437,47 @@ Punti aperti dell'interfaccia classica:
   senza Alt, come fa Fusion: da decidere;
 - le barre *Layers* e *Properties* ripetono gli interruttori dello stato
   del layer e i pulsanti grandi come icone (scelte del ribbon).
+
+Merge di `main` nel ramo (2026-11-14, 14 commit, senza conflitti): la
+galleria non cambia. Da `main` arriva l'avviso al riavvio dopo un crash
+(0.8-PT2, `crash_notice.cpp`, una `QMessageBox`), guardato con le
+finestre di dialogo.
+
+**Finestre di dialogo** (2026-11-14), da far vedere al responsabile. Non
+entrano nella galleria (decisione del responsabile): si guardano con un
+programma di prova fuori dal repository, che salva in `build/dialoghi/`
+*Settings*, *Colour*, *Quick Select*, *Shortcuts*, l'avviso del crash e la
+domanda di salvataggio, nei due temi. Senza un riferimento proprio, con i
+gettoni e la densità del resto:
+
+- pulsanti piatti su `surface.field` con bordo `border` e angoli di 3 px,
+  `selection` sotto il mouse, bordo `accent` per il pulsante predefinito e
+  per quello che ha la tastiera, invece del rilievo di Fusion; nelle
+  file di pulsanti larghi almeno 64 px;
+- le tessere dei colori (22×22) restano tessere, ora piatte;
+- schede delle finestre (*Index*/*RGB*) come quelle dei documenti: la
+  corrente su `surface.panel` con il bordo superiore d'accento;
+- spinbox disegnati da `Style` come le combo: campo con bordo, `accent`
+  con la tastiera, frecce sottili (prima rotte);
+- caselle e pulsanti radio su `surface.field` con bordo `border`, il segno
+  in `accent` quando sono accesi; solo nelle finestre, non nelle tabelle
+  (la colonna *Plot* di *Layers* resta com'è);
+- riquadri (*How to apply*) con un bordo sottile, senza fondo e rilievo.
+
+Le immagini della galleria sono rimaste uguali al pixel.
+
+Punti aperti delle finestre di dialogo:
+
+- le icone delle `QMessageBox` (triangolo giallo, punto di domanda blu)
+  sono quelle della piattaforma: con l'area delle icone (risposta del
+  responsabile);
+- la finestra *About* e quelle dei file (`QFileDialog`, della piattaforma)
+  le guarda il responsabile nella finestra vera.
+
+Sulle risposte del responsabile, *Shortcuts*: i nomi delle azioni senza la
+`&` delle scorciatoie, come nei menu (anche nell'avviso «Shortcut already
+used by …», e il suo test lo segue); niente numeri di riga; *Description*
+prende lo spazio che resta, così *Shortcut* e *Default* non si tagliano.
 
 Test da allineare alla chiusura (oltre a quelli del ribbon):
 `GalleryTest.WritesFourteenImages...` conta ora 16 immagini (le due

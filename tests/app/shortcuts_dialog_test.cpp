@@ -51,7 +51,8 @@ TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) 
     editShortcut(dialog, QStringLiteral("F6"));
     EXPECT_TRUE(registry.action(QStringLiteral("draw.circle"))->shortcut().isEmpty());
     auto* warning = dialog.findChild<QLabel*>(QStringLiteral("shortcutWarning"));
-    EXPECT_TRUE(warning->text().contains(registry.spec(QStringLiteral("draw.line"))->text));
+    EXPECT_TRUE(warning->text().contains(
+        QString(registry.spec(QStringLiteral("draw.line"))->text).remove(QLatin1Char('&'))));
     dialog.accept();
     EXPECT_NE(dialog.result(), QDialog::Accepted);
     editShortcut(dialog, QStringLiteral("F7"));
