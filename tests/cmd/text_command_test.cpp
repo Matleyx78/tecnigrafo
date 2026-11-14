@@ -61,21 +61,7 @@ TEST(TextCommandTest, RotationUsesOneTurnAndFormatsTheDefaultWithoutChangingIt) 
     CommandRunner runner(registry, editor);
     runner.setScriptSequences(true);
 
-    struct RotationCase {
-        const char* input;
-        double degrees;
-        const char* displayed;
-    };
-
-    const RotationCase cases[] = {
-        {"-90", 270.0, "270"},
-        {"0,-10", 270.0, "270"},
-        {"360", 0.0, "0"},
-        {"10,-0", 0.0, "0"},
-        {"10,-1e-20", 0.0, "0"},
-        {"359.99996", 359.99996, "0"},
-    };
-    for (const auto& [input, degrees, displayed] : cases) {
+    const auto checkRotation = [&](const char* input, double degrees, const char* displayed) {
         SCOPED_TRACE(input);
         const auto before = document.entityCount();
         for (const char* entry : {"TEXT", "0,0", "2.5", input, "First"}) {
@@ -97,7 +83,13 @@ TEST(TextCommandTest, RotationUsesOneTurnAndFormatsTheDefaultWithoutChangingIt) 
         EXPECT_EQ(std::bit_cast<std::uint64_t>(
                       std::get<core::Text>(document.entities().back().entity).rotation),
                   expected);
-    }
+    };
+    checkRotation("-90", 270.0, "270");
+    checkRotation("0,-10", 270.0, "270");
+    checkRotation("360", 0.0, "0");
+    checkRotation("10,-0", 0.0, "0");
+    checkRotation("10,-1e-20", 0.0, "0");
+    checkRotation("359.99996", 359.99996, "0");
 }
 
 TEST(TextCommandTest, ScriptSequenceFinishesAfterOneLineAndCanBeSwitchedOff) {
