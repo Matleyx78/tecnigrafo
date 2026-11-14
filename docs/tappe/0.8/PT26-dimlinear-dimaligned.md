@@ -64,7 +64,9 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
 
 - `dimension_commands_test.cpp`: le due quote con punti scritti; *select
   object* su una linea; *Text* con `<>`; *Rotated*; scelta automatica
-  orizzontale e verticale; `U`.
+  orizzontale e verticale; `U`; `DIMALIGNED` con la seconda origine uguale
+  alla prima: nessuna quota, il motivo e di nuovo
+  `Specify second extension line origin:`.
 
 ## Fatto quando
 

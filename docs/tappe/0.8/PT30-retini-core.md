@@ -85,7 +85,8 @@
 
 - `hatch_test.cpp`: contorno aperto non supportato; regione piena di un
   rettangolo con un cerchio dentro (due anelli); trasformazione con
-  riflessione; un clic nel pieno prende il retino, uno nel foro no; un motivo
+  riflessione; un clic nel pieno prende il retino, uno al centro di un foro
+  il cui bordo è più lontano dell'apertura del clic no; un motivo
   con una famiglia a 30° ruotato di 90° ha la famiglia a 120°;
 - le righe dei motivi predefiniti (punto 2), con una tolleranza assoluta di
   `1e-12` sulle componenti, origine sempre `(0, 0)`:

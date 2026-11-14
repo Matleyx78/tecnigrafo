@@ -40,11 +40,13 @@
      trasformate, ognuna con le **sue** proprietà ed `extras` senza i gruppi
      102: con una similitudine `transformed`; con scala non uniforme
      `transformedShape` (PT6), così cerchi e archi diventano `Ellipse` e i
-     testi si deformano, come AutoCAD (ADR 0052, punto 2); i pezzi ellittici
-     di una polilinea con larghezza escono senza larghezza, come EXPLODE di
-     AutoCAD (PT4, punto P8). Con una scala non uniforme, un `MTEXT`, una
-     quota o un retino nel blocco rifiutano l'esplosione con
-     `Block "<nome>" contains objects Tecnigrafo cannot explode.`; un `ATTDEF`
+     testi si deformano, come AutoCAD (ADR 0052, punto 2); le polilinee con
+     larghezza escono senza larghezza, su tutti i pezzi (PT4, punto P8; PT8).
+     Con una scala non uniforme, un `MTEXT`, una quota o un retino nel blocco
+     rifiutano l'esplosione con
+     `Block "<nome>" contains objects Tecnigrafo cannot explode.`; se nello
+     stesso blocco c'è anche un inserimento annidato non rappresentabile, vale
+     questo messaggio, qualunque sia l'ordine delle entità ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle revisioni PT4 e PT5»); un `ATTDEF`
      torna `ATTDEF`, trasformato come un testo (`transformedText`, PT17)
      (PT4, punto P25: [DECISIONI.md](../../DECISIONI.md), 2026-11-14,
      «Revisione delle interfacce PT4»). Entità e grezzi tornano
@@ -87,7 +89,9 @@
   quota lineare; una quota con un `POINT` grezzo nella grafica (rifiutata); un
   blocco con un `MTEXT` sotto scala `(2, 1)` (rifiutato) e un `ATTDEF` sotto
   la stessa scala (torna `ATTDEF`); un blocco con `Line A`, un grezzo e
-  `Line B` (stesso ordine dopo).
+  `Line B` (stesso ordine dopo); un blocco `A` con un `MTEXT` e un
+  inserimento di `B` ruotato di 30°, inserito con scala `(2, 1)`, nei due
+  ordini: sempre `contains objects Tecnigrafo cannot explode.`
 - `explode_command_test.cpp`: selezione mista di una polilinea, un inserimento
   e una quota; `U`.
 

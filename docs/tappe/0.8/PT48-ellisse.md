@@ -61,9 +61,13 @@
    sull'arco), *Estremo* (per un arco); **grip** sul centro (sposta) e sugli
    estremi degli assi: il grip di un asse cambia solo la lunghezza di quel
    semiasse, uguale alla distanza dal centro al punto, e l'orientamento resta;
-   se il minore supera il maggiore gli assi si scambiano (il rapporto resta in
-   (0, 1]); un arco tiene i suoi parametri, riportati dopo uno scambio; un
-   semiasse nullo si rifiuta (PT4, punto P14).
+   se il minore supera il maggiore, o il maggiore scende sotto il minore, gli
+   assi si scambiano (il rapporto resta in (0, 1]); a rapporto 1 esatto vale
+   il verso del punto 3 (asse su X positivo); un arco tiene i suoi estremi
+   negli stessi punti angolari, con i parametri riportati sui nuovi assi; un
+   semiasse nullo si rifiuta (PT4, punto P14;
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle
+   revisioni PT4 e PT5»).
    *Intersezione* arriva dopo il contratto (PT50); *Vicino* resta fuori dalla
    0.8 per tutte le entità (idea [#665](https://github.com/Matleyx78/tecnigrafo/issues/665)).
 6. **Selezione** fino a PT50: con la finestra se l'ingombro ci sta tutto
@@ -88,7 +92,9 @@
   (parametri), una deformazione con taglio; ingombro di un arco che passa e non
   passa per un estremo; snap e grip: asse `(4,0)`, rapporto 0,5, il grip del
   minore portato in `(1,5)` dà un minore di lunghezza `√26` lungo Y, quindi
-  assi scambiati (maggiore `(0,√26)`, rapporto `4/√26`); un'ellisse d'asse
+  assi scambiati (maggiore `(0,√26)`, rapporto `4/√26`); il grip del maggiore
+  portato da `(4,0)` a `(1,0)` dà maggiore `(0,2)` e rapporto 0,5, a `(2,0)`
+  un cerchio con l'asse `(2,0)`, anche partendo da un'ellisse inclinata; un'ellisse d'asse
   `(0,2)` e rapporto 0,5 sotto scala `(2, 1)` dà un cerchio con l'asse
   maggiore `(2,0)`; un'ellisse con asse maggiore a 200° dopo una rotazione si
   scrive con l'asse a 20°.

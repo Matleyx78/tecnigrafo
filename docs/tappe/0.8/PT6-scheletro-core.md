@@ -92,7 +92,7 @@ struct DimensionDefinition {      // what it measures (DXF definition points)
 struct DimensionPresentation {    // how it shows
     std::string style{"ISO-25"}; Vec2 textPoint;  // 11
     std::string textOverride;     // 1
-    double textRotation{0.0};     // 53
+    std::optional<double> textRotation;  // 53; empty = automatic (PT5, B10)
     bool userTextPosition{false}; // 70 bit 128
     // essential overrides, by variable name (PT22 fixes the value type)
     std::vector<std::pair<std::string, std::string>> overrides;
@@ -171,6 +171,8 @@ void appendSnapPoints(const Document&, const EntityRecord&, const SnapModes&,
 struct TransformOutcome { std::optional<Entity> entity; std::string refusal; };
 [[nodiscard]] TransformOutcome transformedIn(const Document&, const Entity&,
                                              const Similarity&, MirrorText);
+// GripResult gains `std::string refusal` (empty: none), filled like
+// TransformOutcome when the grip cannot apply (PT4, P7; PT5, B12).
 [[nodiscard]] GripResult moveGripIn(const Document&, const Entity&, std::size_t index,
                                     const Vec2& target);
 ```

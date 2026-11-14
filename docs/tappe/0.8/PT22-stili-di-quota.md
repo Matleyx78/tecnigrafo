@@ -54,9 +54,13 @@
        [[nodiscard]] const DimVariables& currentVariables() const;  // header $DIM…
        [[nodiscard]] const RawGroups& currentExtras() const;  // other $DIM… as read
        /// True when every variable that blocks regeneration (docs/adr/0047,
-       /// point 2) has the ISO-25 value in `extras` (absent counts as ISO-25),
-       /// and every essential variable is in the range DIMSTYLE accepts.
+       /// point 2) has the ISO-25 value in `extras` (absent counts as ISO-25).
        [[nodiscard]] static bool regenerable(const RawGroups& extras);
+       /// True when the effective essential variables (style plus overrides)
+       /// are in the ranges DIMSTYLE accepts and DIMTXSTY names a text style
+       /// of `styles` (PT5, B07; checked after the overrides).
+       [[nodiscard]] static bool inDomain(const DimVariables& effective,
+                                          const TextStyleTable& styles);
        // put/setCurrent/setCurrentVariables like TextStyleTable (PT11)
    };
    ```
@@ -90,7 +94,10 @@
 ## Test richiesti
 
 - `dim_style_table_test.cpp`: `find`, corrente, `regenerable` con `DIMTOL` 1 e
-  con `DIMBLK` diverso, con `DIMDEC` −1 e con `DIMTXT` 0 (falso).
+  con `DIMBLK` diverso; `inDomain` falso con `DIMDEC` −1 e con `DIMTXT` 0, e
+  sulle variabili effettive nei due versi: stile valido con una
+  sovrascrittura `DIMDEC` −1 (falso), stile con `DIMDEC` −1 e sovrascrittura
+  2 (vero); `DIMTXSTY` che non c'è (falso).
 - `dxf_dimstyle_test.cpp`: `$DIMSTYLE=PROVA` che non c'è: corrente
   `Standard`; una quota con gruppo 3 `PROVA` tiene il nome e usa `Standard`.
 - `dxf_dimstyle_test.cpp`: giro della tabella e dell'intestazione di un file di

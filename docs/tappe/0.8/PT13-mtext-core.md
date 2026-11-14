@@ -33,8 +33,8 @@
    testo fra `\S` e `;` con `^` e `#` sostituiti da `/`; `\L`, `\l`, `\O`, `\o`,
    `\K`, `\k` si tolgono; un `\` seguito da altro resta com'è. I codici si
    decodificano **una volta sola**: il testo semplice che ne esce si mostra
-   così com'è, senza un secondo passaggio di `displayText` (`%%%%c` mostra
-   `%c`). Un codice con argomento senza il suo `;` resta letterale, ma un
+   così com'è, senza un secondo passaggio di `displayText` (`%%%c` mostra
+   `%c`; `%%%%c` mostra `%%c`, non il simbolo del diametro). Un codice con argomento senza il suo `;` resta letterale, ma un
    `\P` dentro va comunque a capo: `A\H2\PB` dà le righe `A\H2` e `B`. `\~`
    si misura come uno spazio normale (PT5, punti B01 e B02: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT5»).
 3. **Impaginazione** (ADR 0046, punto 2), con `h` = altezza dell'entità, `f` =
@@ -90,7 +90,7 @@
 - `mtext_test.cpp`: ogni codice del punto 2; a capo con una parola più larga
   della colonna; i nove punti di allineamento con due righe; interlinea 1,5;
   rotazione 30°; riflessione con `MIRRTEXT` 0 e 1 (stesso risultato,
-  leggibile), anche con uno stile all'indietro; `%%%%c` dà la riga `%c`;
+  leggibile), anche con uno stile all'indietro; `%%%c` dà la riga `%c` e `%%%%c` la riga `%%c`;
   `A\H2\PB` dà `A\H2` e `B`; `A\~B C` in una colonna larga quanto `A B`
   tiene `A B` insieme e manda `C` a capo; `"  \PZ"` dà due linee di base e un
   solo `Text` (`Z`); un `MTEXT` vuoto si prende con un clic sul punto

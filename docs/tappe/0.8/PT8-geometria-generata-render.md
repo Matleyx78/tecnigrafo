@@ -52,9 +52,9 @@
    affinità da applicare. Limite della 0.8 (PT4, punto P8: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»):
    in un inserimento stirato il tipo di linea si calcola in lunghezza su ogni
    forma generata e il motivo riparte da capo a ogni forma, anche dove una
-   polilinea con `PLINEGEN` si divide in linee e archi d'ellisse; i pezzi
-   ellittici di una polilinea con larghezza si disegnano senza larghezza (le
-   parti dritte la tengono, trasformata). L'impronta completa è nell'idea
+   polilinea con `PLINEGEN` si divide in linee e archi d'ellisse; sotto una
+   scala non uniforme le larghezze di una polilinea si perdono su tutti i
+   pezzi, dritti ed ellittici ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle revisioni PT4 e PT5»). L'impronta completa è nell'idea
    #762.
    Per le cinque entità di oggi il disegno non cambia: `generate` le dà così
    come sono.
@@ -78,9 +78,8 @@
 - Evidenziazione e anteprima di un inserimento disegnano le stesse forme
   generate della scena, con il colore della selezione.
 - Una polilinea con un arco e larghezza 2, in un inserimento con scala
-  `(2, 1)`: il pezzo ellittico arriva senza larghezza, quelli dritti con la
-  larghezza trasformata; il motivo tratteggiato riparte all'inizio di ogni
-  pezzo.
+  `(2, 1)`: tutti i pezzi, dritti ed ellittici, arrivano senza larghezza; il
+  motivo tratteggiato riparte all'inizio di ogni pezzo.
 - Il disegno di un documento con le cinque entità di oggi dà le stesse chiamate
   di prima.
 - Un test Qt: `fillLoops` di due quadrati annidati lascia vuoto il centro in un

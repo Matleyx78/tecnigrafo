@@ -35,6 +35,8 @@
 
    ```cpp
    /// The text a dimension shows (docs/adr/0047, point 3), with %%c, %%d.
+   /// measurement: drawing units for lengths, degrees for angular ones;
+   /// DIMLFAC and DIMRND apply to lengths only (PT24, point 1).
    [[nodiscard]] std::string dimensionText(const DimVariables&, DimensionKind,
                                            double measurement,
                                            std::string_view textOverride);
@@ -81,11 +83,14 @@
      centro `c = (f1 + f2)/2`. Con `DIMTAD` = 1 e testo allineato (`DIMTIH`/
      `DIMTOH` 0): allineamento in basso al centro, in `c + DIMGAP·n'`, con `n'`
      la normale verso l'alto della lettura; rotazione `= angolo di u` portata
-     nella lettura (fra −90° escluso e 90° compreso); con un angolo del testo
-     esplicito (*Angle* di PT26 e PT27), quello, assoluto nel disegno. Con `DIMTAD` = 0: in
+     nella lettura (fra −90° escluso e 90° compreso). Con `DIMTAD` = 0: in
      mezzo al centro, e la linea di quota si interrompe per la larghezza del
      testo più `DIMGAP` per lato. Con `DIMTIH`/`DIMTOH` 1: testo orizzontale,
-     in mezzo, linea interrotta. Quando il testo va fuori (casi 3 e 4), stesse
+     in mezzo, linea interrotta. Un **angolo esplicito** del testo (*Angle* di
+     PT26 e PT27) vale sempre, per ogni tipo di quota e posizione, anche con
+     `DIMTIH`/`DIMTOH` 1: lo stile decide solo l'angolo automatico; *Angle* 0°
+     dà il testo orizzontale anche dove l'automatico sarebbe obliquo
+     ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle revisioni PT4 e PT5»). Quando il testo va fuori (casi 3 e 4), stesse
      regole nella sua posizione fuori. `textPoint` si aggiorna al centro del
      testo. **Posizione e angolo** (PT5, punto B10): `textPoint` è sempre il
      centro del testo (gruppo DXF 11); con `userTextPosition` il testo ha
@@ -98,7 +103,9 @@
    - **Soppressioni** (PT5, punto B11): `DIMSD1` toglie la metà della linea di
      quota dal lato di `f1`, fino al centro o al testo interrotto, con la
      freccia in `f1` e, con le frecce fuori, il tratto esterno da quel lato;
-     `DIMSD2` lo stesso dal lato di `f2`.
+     `DIMSD2` lo stesso dal lato di `f2`. L'adattamento si sceglie prima, con
+     i quattro casi e due frecce; le soppressioni si applicano dopo, senza
+     cambiarlo ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle revisioni PT4 e PT5»).
    - Colori e spessori: `DIMCLRD`/`DIMLWD` per linea di quota e frecce,
      `DIMCLRE`/`DIMLWE` per le linee d'estensione, `DIMCLRT` per il testo.
 5. **Creazione e rigenerazione:**
@@ -143,7 +150,13 @@
   misura 10, frecce lunghe `2·DIMASZ`; `DIMSD1` 1 con due piedi `(0,0)` e
   `(20,0)`: nessuna freccia in `(0,0)` e nessuna linea fra `(0,0)` e il
   centro; *Angle* 30° poi `ROTATE` 90°: angolo 120°; `textPoint` trascinato in
-  `(15,8)` con `DIMTAD` 1: centro del testo in `(15,8)`.
+  `(15,8)` con `DIMTAD` 1: centro del testo in `(15,8)`; *Angle* 30° con
+  `DIMTIH` 1: testo a 30°; *Angle* 0° su un'allineata a 45°: testo a 0°;
+  `L` = 8, freccia 2, testo largo 6 margini compresi, `DIMSD1` 1: frecce fuori
+  come con due frecce (caso 2), quella in `f1` soppressa, e lo stesso con
+  `DIMSD2`; `dimensionText` di un angolo retto con `DIMLFAC` 2 e `DIMRND` 4:
+  `90%%d`; un grip di `point13` su una quota con `DIMTOL` 1 lascia la quota
+  ferma con il rifiuto.
 
 ## Fatto quando
 

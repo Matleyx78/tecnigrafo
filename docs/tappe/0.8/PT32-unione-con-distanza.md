@@ -97,7 +97,9 @@
 
 - `polyline_test.cpp`: `reversed` con archi e larghezze, aperta e chiusa.
 - `pedit_join_test.cpp`: due linee a 1 di distanza con `fuzz` 2 nei tre tipi;
-  linee che si sovrappongono (*Extend* accorcia); arco seguito da una linea;
+  linee che si sovrappongono senza un estremo in comune (nessuna unione con
+  *Extend*, come AutoCAD in `dxf-di-prova.md`; con *Both* un ponte), anche
+  all'inizio della sorgente; arco seguito da una linea;
   linee parallele (con *Extend* nessuna unione, con *Both* un segmento);
   chiusura; `fuzz` 0 come `join`; sorgente `(-4,0)→(0,0)` e candidato
   `(1,0)→(3,0)` con `fuzz` 2: con *Extend* nessuna unione, con *Both* un

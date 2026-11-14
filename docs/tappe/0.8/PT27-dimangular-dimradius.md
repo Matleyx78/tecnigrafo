@@ -54,7 +54,11 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
 
 - `dimension_angular_commands_test.cpp`: angolare con il punto nei quattro
   quadranti e con *Quadrant*; linee parallele; un arco scelto per l'angolare;
-  radiale e diametrale su un cerchio e su un arco di polilinea; `U`.
+  radiale e diametrale su un cerchio e su un arco di polilinea; `U`;
+  angolare con la posizione dell'arco nel vertice: il motivo e di nuovo la
+  richiesta della posizione; *Quadrant* con il punto del settore nel primo
+  quadrante e la posizione dell'arco nel terzo: la quota misura il primo, con
+  il raggio dato dalla posizione.
 
 ## Fatto quando
 

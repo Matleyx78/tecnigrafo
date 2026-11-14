@@ -33,16 +33,14 @@
    blocco, dove non si disegna (punto 4).
 2. **Testo sotto un'affinità** (ADR 0044, punto 2; è la parte del testo di
    `transformedShape`, PT6): `Text transformedText(const
-   Text&, const Transform2D&)` scompone la parte lineare `A` in
-   `R(θ)·[[a, b], [0, c]]` con `c > 0` (QR); se `det A < 0` prima si riflette in
-   X (segnale all'indietro invertito, come `MIRRTEXT` = 1). La scomposizione
-   si fa sulla base del testo, cioè sulla parte lineare `A·R(r)` con `r` la
-   rotazione del testo, non su `A` da sola: il risultato è la geometria vera
-   del testo trasformato (PT4, punto P20). Per un testo `Fit` o `Aligned`
-   altezza e rotazione vengono dai due punti trasformati. Allora: rotazione
-   `+θ`, altezza `·c`, fattore di larghezza `·a/c`, obliquo
-   `atan2(b, c)` sommato con la regola delle tangenti
-   (`tan(o') = tan(o) + b/c`, con `core::atan2`), punti trasformati con `A`.
+   Text&, const Transform2D&)` prende `B = A·R(r)`, la parte lineare `A`
+   composta con la rotazione `r` del testo (la sua base: PT4, punto P20), e la
+   scompone in `R(θ)·[[a, b], [0, c]]` con `c > 0` (QR); se `det B < 0` prima
+   si riflette in X (segnale all'indietro invertito, come `MIRRTEXT` = 1).
+   Allora: rotazione `= θ` (già l'angolo finale), altezza `·c`, fattore di
+   larghezza `·a/c`, obliquo con `tan(o') = (a·tan(o) + b)/c` (con
+   `core::atan2`), punti trasformati con `A`. Per un testo `Fit` o `Aligned`
+   altezza e rotazione vengono dai due punti trasformati.
    Con una similitudine coincide con `transformed` dell'ADR 0031 e
    `MIRRTEXT` = 1.
 3. **`ATTRIB` all'inserimento** (ADR 0045, punto 6):
@@ -71,7 +69,10 @@
    maiuscole e minuscole (`findAttribute(…, tag)`); con due etichette uguali
    (`PIN` e `pin`) `findAttribute` dà la prima nell'ordine di `attributesOf`.
    Un `ATTRIB` nuovo prende layer, colore, tipo di linea, spessore e flag dal
-   suo `ATTDEF` (PT4, punto P21: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
+   suo `ATTDEF` (PT4, punto P21: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»); i flag che
+   `Attribute` non modella (verifica, preimpostato, posizione bloccata)
+   restano nei suoi dati DXF conservati (gruppo 70) e si riscrivono com'erano
+   nell'`ATTDEF`.
 5. **Geometria generata dell'inserimento** (completa PT16): gli `ATTDEF` della
    definizione **non** si disegnano; gli `ATTRIB` visibili si disegnano come
    `Text` con le loro proprietà (layer `0` e *DaBlocco* come le entità del
@@ -96,7 +97,9 @@
   `transformedText` con una scala `(2, 1)`, con una riflessione, e con una
   similitudine (uguale a `transformed`); un testo ruotato di 90°, altezza 2 e
   larghezza 1, sotto `diag(2, 1)`: altezza 4, fattore di larghezza 0,5,
-  rotazione 90°; `MIRROR` con `MIRRTEXT` 0; un `ATTDEF` sul layer `PINS` con
+  rotazione 90° (non 180°); un testo con `tan(o)` = 1/4 sotto `diag(2, 1)`:
+  `tan(o')` = 1/2; un `ATTDEF` con il flag di verifica dà un `ATTRIB` che lo
+  riscrive; `MIRROR` con `MIRRTEXT` 0; un `ATTDEF` sul layer `PINS` con
   colore 1 dà un `ATTRIB` sul layer `PINS` con colore 1; `findAttribute` con
   `PIN` e `pin` nella stessa istanza dà il primo.
 

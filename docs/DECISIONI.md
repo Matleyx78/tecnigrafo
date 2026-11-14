@@ -1812,3 +1812,21 @@ i rimandi ai documenti che cambia.
   tiene la larghezza dell'estremo; B25, `added` conta i segmenti aggiunti,
   ponti compresi. Le schede corrette: PT13, PT22, PT23, PT24, PT26, PT27,
   PT30, PT32.
+- **2026-11-14 — Secondo giro delle revisioni PT4 e PT5.** Dalla rilettura di
+  Codex della [#763](https://github.com/Matleyx78/tecnigrafo/pull/763), sei
+  buchi visibili nuovi; il responsabile approva le proposte di Claude, scelte
+  fra le opzioni del verbale:
+  P8, sotto una scala non uniforme le larghezze di una polilinea si perdono su
+  tutti i pezzi, dritti ed ellittici, nel disegno e in EXPLODE (una `Line`
+  non porta larghezza; l'impronta completa resta nell'idea #762); P14, gli
+  assi dell'ellisse si scambiano anche quando il grip accorcia il maggiore
+  sotto il minore, e a rapporto 1 esatto vale l'asse su X positivo (P12); P25,
+  con un `MTEXT` (o quota, o retino) e un inserimento annidato non
+  rappresentabile nello stesso blocco, vale sempre il messaggio degli
+  oggetti che non si esplodono; B10, l'angolo esplicito del testo vale per
+  ogni tipo e posizione, anche con `DIMTIH`/`DIMTOH` 1, e lo stile decide
+  solo l'automatico; B11, l'adattamento si sceglie con due frecce e le
+  soppressioni si applicano dopo; B16, con `DIMCEN` negativo e un raggio fino
+  a `2·|DIMCEN|` niente linee d'asse, solo la croce. Gli altri rilievi del
+  verbale erano errori della correzione o regole già decise, sistemati nella
+  stessa pull request.

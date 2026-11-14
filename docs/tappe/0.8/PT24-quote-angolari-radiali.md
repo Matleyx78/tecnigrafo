@@ -23,7 +23,8 @@
 
 ## Cosa fare
 
-Le misure sono già per `DIMSCALE`; frecce, colori, spessori, testo,
+Le grandezze grafiche sono già per `DIMSCALE`, la misura no (PT23, punto 2);
+frecce, colori, spessori, testo,
 adattamento quando testo e frecce non ci stanno (i quattro casi di PT23,
 misurati lungo l'arco per l'angolare) e rigenerazione come PT23. Per le radiali
 e diametrali in un cerchio piccolo valgono i casi di RT24, presi da
@@ -34,9 +35,10 @@ caso.
    `linePoint → point15`, punto dell'arco `point16`. Vertice `v` = intersezione
    delle due rette (da solid-space, `intersections.hpp`); rette parallele: non
    rigenerabile. Le quattro semirette da `v` lungo le due rette dividono il
-   piano in quattro angoli; la quota misura quello che contiene `point16`
-   (sulla bisettrice esatta vale il primo in senso antiorario dalla prima
-   semiretta). Un `point16` su una delle quattro semirette appartiene
+   piano in quattro angoli; la quota misura quello che contiene `point16`,
+   deciso con il lato di `point16` rispetto alle due rette originali
+   (`sideOf`), non rispetto al vertice costruito. Un `point16` su una delle
+   quattro semirette appartiene
    all'angolo che viene dopo di essa in senso antiorario; `point16 = v` non è
    rigenerabile; rette coincidenti come le parallele, `Lines are parallel.`
    (PT5, punto B13: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT5»). Raggio dell'arco `R = |point16 − v|`; arco di quota da una
@@ -59,7 +61,9 @@ caso.
    centro non è rigenerabile. Segno del centro: se `DIMCEN > 0`, due segmenti
    lunghi `2·DIMCEN` a croce sul centro; se `< 0`, la croce lunga `2·|DIMCEN|`
    più le linee d'asse, staccate dalla croce di `|DIMCEN|` e che finiscono
-   `|DIMCEN|` oltre il cerchio, come AutoCAD; se 0, niente (PT5, punto B16).
+   `|DIMCEN|` oltre il cerchio, come AutoCAD; se la fine non supera l'inizio
+   (raggio fino a `2·|DIMCEN|`), niente linee d'asse, solo la croce ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle revisioni PT4 e PT5»);
+   se 0, niente (PT5, punto B16).
 3. **Diametrale.** Punti opposti `point15` e `linePoint`, centro nel mezzo.
    Testo dentro: linea da un punto all'altro con due frecce verso l'esterno;
    testo fuori: come la radiale dal punto più vicino al testo; a pari
@@ -86,7 +90,8 @@ caso.
   radiale di raggio 5 con il testo in `(5,0)` (dentro) e nel centro (non
   rigenerabile); diametrale `(±5,0)` con il testo in `(0,6)` (dal lato di
   `point15`); `DIMCEN` −2 su raggio 5: croce da −2 a 2, assi da 4 a 7 per
-  lato.
+  lato; `DIMCEN` −2 su raggio 1 e su raggio 2, radiale e diametrale: solo la
+  croce.
 
 ## Fatto quando
 

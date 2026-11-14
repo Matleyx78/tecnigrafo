@@ -74,7 +74,8 @@
    un cerchio (PT4, punto P18). La trasformazione composta:
    similitudine → `transformed`; altrimenti `transformedShape` (PT6, punto 3),
    esatta per ogni forma: questo pacchetto realizza la sua parte per linee,
-   polilinee (divise in linee e archi d'ellisse quando hanno archi), `Solid` e
+   polilinee (divise in linee e archi d'ellisse quando hanno archi; sotto una
+   scala non uniforme senza larghezze, PT8), `Solid` e
    `FilledRegion` (che tiene l'affinità); ellissi e archi vengono da PT48, il
    testo da PT17. Poi gli attributi (PT17). Un blocco che non c'è dà
    nessun elemento (non succede: il lettore lo lascia non gestito).
