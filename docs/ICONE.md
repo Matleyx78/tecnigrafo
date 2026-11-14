@@ -299,16 +299,16 @@ layer e delle proprietà, 0.6-P22 e 0.6-P24).
 | `ui-theme-*.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata | sì |
 | `tools-settings-*.svg` | `tools.settings` | tre cursori a scorrimento | sì |
 | `help-about-*.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro | sì |
-| `layer-panel-*.svg` | `layer.panel` (0.6-P22) | pila di tre piani | sì |
-| `layer-on-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto | sì |
-| `layer-off-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato | sì |
+| `layer-panel-*.svg` | `layer.panel` (0.6-P22) | pila di tre piani; da F6 piani inclinati a 45°, come nel riferimento | sì |
+| `layer-on-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto; a 16 px la pupilla è un punto (`pt`) (F6) | sì |
+| `layer-off-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato; a 16 px l'occhio è `cost`, spento (F6) | sì |
 | `layer-frozen-*.svg` | stato del layer, pannello dei layer (0.6-P22) | fiocco di neve | sì |
-| `layer-thawed-*.svg` | stato del layer, pannello dei layer (0.6-P22) | sole | sì |
-| `layer-locked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso | sì |
+| `layer-thawed-*.svg` | stato del layer, pannello dei layer (0.6-P22) | sole; a 16 px il centro è `pt` e i raggi più lunghi (F6) | sì |
+| `layer-locked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso; a 16 px la serratura è `pt` (F6) | sì |
 | `layer-unlocked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto aperto | sì |
-| `layer-current-*.svg` | `layer.current` (0.6-P22) | pila di tre piani, il primo con il punto attivo (`pt`) | sì |
-| `layer-new-*.svg` | `layer.new` (0.6-P22) | pila di tre piani, il primo con un più | sì |
-| `layer-delete-*.svg` | `layer.delete` (0.6-P22) | pila di tre piani, il primo con una croce | sì |
+| `layer-current-*.svg` | `layer.current` (0.6-P22) | da F6 pila di due piani inclinati e una spunta (`pt`) in alto a destra | sì |
+| `layer-new-*.svg` | `layer.new` (0.6-P22) | da F6 pila di due piani inclinati e un più (`pt`) in alto a destra | sì |
+| `layer-delete-*.svg` | `layer.delete` (0.6-P22) | da F6 pila di due piani inclinati e una croce (`pt`) in alto a destra | sì |
 | `properties-panel-*.svg` | `properties.panel` (0.6-P24) | scheda con un elenco di voci | sì |
 | `quick-select-*.svg` | `edit.quick-select` (0.6-P24) | imbuto | sì |
 | `property-color-*.svg` | controllo del colore, pannello delle proprietà (0.6-P24) | goccia | sì |

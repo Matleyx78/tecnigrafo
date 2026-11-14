@@ -491,6 +491,23 @@ sarebbero fuori da `ICONE.md` (solo i punti si riempiono): da decidere
 col responsabile, se servono. Un separatore fra i file e *Undo* (dove cambia il gruppo
 delle azioni), come nel riferimento. Righe di `docs/ICONE.md` aggiornate.
 
+Secondo gruppo delle icone (2026-11-14), i layer, a due toni come la
+barra di accesso rapido, da far vedere al responsabile:
+
+- *Layers Panel*, *New*, *Delete*, *Make Current* (16 e 32 px): pila di
+  piani inclinati a 45° come nel riferimento invece dei rombi; tre piani
+  per il pannello, due con un segno `pt` in alto a destra (più, croce,
+  spunta) per le azioni;
+- stati (16 px): occhio acceso con la pupilla `pt`, spento in `cost` con la
+  barra `pt`; sole con il centro `pt`; lucchetto chiuso con la serratura
+  `pt`; fiocco e lucchetto aperto come prima. L'occhio resta al posto
+  della lampadina del riferimento (forme nostre, `ICONE.md`).
+
+Icone della barra di accesso rapido e dei layer approvate dal
+responsabile (2026-11-14) «per le regole che abbiamo adesso»: a lavoro
+finito si farà un'analisi delle regole di `ICONE.md`, perché così le
+icone restano scarne (forme velate, altro).
+
 Test da allineare alla chiusura (oltre a quelli del ribbon):
 `GalleryTest.WritesFourteenImages...` conta ora 16 immagini (le due
 dell'immissione dinamica) e le misure di alcune sono cambiate;
