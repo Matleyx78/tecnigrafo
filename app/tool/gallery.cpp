@@ -73,6 +73,42 @@ void pinDocks(tg::app::MainWindow& window) {
     QApplication::processEvents();
 }
 
+// The dynamic input next to the cursor (area 7), as in
+// docs/adr/0039/immissione-dinamica.svg: MOVE, already waiting for its base
+// point, gets it from a click on the corner of the plate, and the cursor goes
+// 50 units away at 30 degrees. The image is the part of the drawing around
+// the box.
+bool captureDynamicInput(tg::app::MainWindow& window, const QDir& output, const QString& suffix) {
+    auto* view = window.view();
+    const auto send = [view](QEvent::Type type, tg::core::Vec2 world, Qt::MouseButton button,
+                             Qt::MouseButtons buttons) {
+        const auto pixel = view->viewport().worldToScreen(world);
+        const QPointF local(pixel.x, pixel.y);
+        QMouseEvent event(type, local, view->mapToGlobal(local), button, buttons, Qt::NoModifier);
+        QApplication::sendEvent(view, &event);
+    };
+    const tg::core::Vec2 base{0.0, 0.0};
+    send(QEvent::MouseMove, base, Qt::NoButton, Qt::NoButton);
+    send(QEvent::MouseButtonPress, base, Qt::LeftButton, Qt::LeftButton);
+    send(QEvent::MouseButtonRelease, base, Qt::LeftButton, Qt::NoButton);
+    send(QEvent::MouseMove, {43.3013, 25.0}, Qt::NoButton, Qt::NoButton);
+    QApplication::processEvents();
+    const auto* box = view->findChild<QWidget*>(QStringLiteral("dynamicInputBox"));
+    if (box == nullptr || !box->isVisible()) {
+        std::cerr << "The dynamic input is not shown\n";
+        return false;
+    }
+    constexpr int kAround = 120;
+    const QRect area =
+        box->geometry().adjusted(-kAround, -kAround, kAround, kAround) & view->rect();
+    const QString name = QStringLiteral("immissione-") + suffix + QStringLiteral(".png");
+    if (!view->grab(area).save(output.filePath(name), "PNG")) {
+        std::cerr << "Cannot capture " << name.toStdString() << '\n';
+        return false;
+    }
+    return true;
+}
+
 bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& output) {
     const QTemporaryDir settings;
     if (!useEmptySettings(settings)) {
@@ -137,7 +173,10 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
     window.setInterface(tg::app::InterfaceKind::Classic);
     QApplication::processEvents();
     pinDocks(window);
-    return save(&window, QStringLiteral("finestra-classica"));
+    if (!save(&window, QStringLiteral("finestra-classica"))) {
+        return false;
+    }
+    return captureDynamicInput(window, output, suffix);
 }
 
 // The ribbon of a window that keeps the frame of the system, as under

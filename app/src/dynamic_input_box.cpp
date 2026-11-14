@@ -22,6 +22,9 @@ namespace {
 // Keep the overlay clear of the crosshair, including on high-DPI displays.
 constexpr int kCursorOffset = 16;
 constexpr int kFieldWidth = 90;
+// The space inside the box and between its rows (docs/adr/0039, area 7).
+constexpr int kBoxMargin = 8;
+constexpr int kBoxSpacing = 6;
 
 QString fieldName(cmd::DynamicField::Kind kind) {
     switch (kind) {
@@ -46,12 +49,13 @@ DynamicInputBox::DynamicInputBox(QWidget* parent) : QWidget(parent), m_prompt(ne
     setObjectName(QStringLiteral("dynamicInputBox"));
     setFocusPolicy(Qt::NoFocus);
     setAttribute(Qt::WA_TransparentForMouseEvents);
-    setAutoFillBackground(true);
+    // The style sheet draws the box: surface.panel, a border, round corners.
+    setAttribute(Qt::WA_StyledBackground);
     m_prompt->setObjectName(QStringLiteral("dynamicPrompt"));
     m_prompt->setTextFormat(Qt::PlainText);
     auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(4, 4, 4, 4);
-    layout->setSpacing(4);
+    layout->setContentsMargins(kBoxMargin, kBoxMargin, kBoxMargin, kBoxMargin);
+    layout->setSpacing(kBoxSpacing);
     layout->addWidget(m_prompt);
     auto* fields = new QHBoxLayout;
     layout->addLayout(fields);
@@ -62,8 +66,12 @@ DynamicInputBox::DynamicInputBox(QWidget* parent) : QWidget(parent), m_prompt(ne
         field->setObjectName(QStringLiteral("dynamicField%1").arg(index));
         field->setReadOnly(true);
         field->setFocusPolicy(Qt::NoFocus);
-        field->setFixedWidth(kFieldWidth);
-        fields->addWidget(field);
+        field->setMinimumWidth(kFieldWidth);
+        // Numbers at fixed pitch, as in the reference.
+        field->setFont(fixedFont());
+        // The fields fill the row, equally wide (the responsible's choice,
+        // docs/tappe/fuori-tappa/F6-stato.md, area 7).
+        fields->addWidget(field, 1);
         m_fields.push_back(field);
     }
     hide();
@@ -121,10 +129,15 @@ void DynamicInputBox::updateFields() {
         hide();
         return;
     }
-    m_prompt->setText(QString::fromStdString(m_input.prompt));
-    // Long prompts stay within even a narrow drawing view.
+    const QString prompt = QString::fromStdString(m_input.prompt);
+    m_prompt->setText(prompt);
+    // On one line when the drawing view has room for it; long prompts wrap
+    // and stay within even a narrow view.
     m_prompt->setWordWrap(true);
-    m_prompt->setMaximumWidth(std::max(1, parentWidget()->width() - 8));
+    const int room = std::max(1, parentWidget()->width() - (2 * kBoxMargin) - 8);
+    m_prompt->setMaximumWidth(room);
+    m_prompt->setMinimumWidth(
+        std::min(m_prompt->fontMetrics().horizontalAdvance(prompt) + 1, room));
     const auto shown = cmd::dynamicInputShown(m_input, m_session->runner(), m_pointer);
     const auto& tokens = themeTokens(themeOf(palette()));
     for (std::size_t index = 0; index < m_fields.size(); ++index) {
@@ -134,10 +147,14 @@ void DynamicInputBox::updateFields() {
         if (exists) {
             field->setText(QString::fromStdString(shown[index]));
             field->setAccessibleName(fieldName(m_input.fields[index].kind));
+            // The active field, border and text, in the colour of the points
+            // of the icons (iconPt, docs/adr/0040), the responsible's choice.
+            const bool active = index == m_input.active;
             field->setStyleSheet(
-                QStringLiteral("QLineEdit { border: 1px solid %1; background: %2; color: %3; }")
-                    .arg((index == m_input.active ? tokens.accent : tokens.border).name(),
-                         tokens.field.name(), tokens.text.name()));
+                QStringLiteral("QLineEdit { border: 1px solid %1; border-radius: 2px; "
+                               "padding: 1px 4px; background: %2; color: %3; }")
+                    .arg((active ? tokens.iconPt : tokens.border).name(), tokens.field.name(),
+                         (active ? tokens.iconPt : tokens.text).name()));
         }
     }
     adjustSize();

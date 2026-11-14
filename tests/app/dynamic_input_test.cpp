@@ -229,10 +229,10 @@ TEST_F(DynamicInputTest, OverlayStaysInsideViewAndUsesCurrentThemeAccent) {
     EXPECT_TRUE(view()->rect().contains(box()->geometry()));
     window().setTheme(Theme::Dark);
     events::move(view(), {1, 1});
-    EXPECT_TRUE(field(0)->styleSheet().contains(themeTokens(Theme::Dark).accent.name()));
+    EXPECT_TRUE(field(0)->styleSheet().contains(themeTokens(Theme::Dark).iconPt.name()));
     events::press(view(), Qt::Key_Tab);
-    EXPECT_TRUE(field(1)->styleSheet().contains(themeTokens(Theme::Dark).accent.name()));
-    EXPECT_FALSE(field(0)->styleSheet().contains(themeTokens(Theme::Dark).accent.name()));
+    EXPECT_TRUE(field(1)->styleSheet().contains(themeTokens(Theme::Dark).iconPt.name()));
+    EXPECT_FALSE(field(0)->styleSheet().contains(themeTokens(Theme::Dark).iconPt.name()));
 }
 
 TEST_F(DynamicInputTest, PreferencePersistsAndScriptModeSuppressesOverlayAndHistory) {

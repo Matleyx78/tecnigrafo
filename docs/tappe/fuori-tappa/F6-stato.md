@@ -30,9 +30,9 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 2. Schede del ribbon | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 3. Ribbon a gruppi | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 4. Riga delle schede dei documenti | approvata dal responsabile, 2026-11-14 |
-| 5. Area di disegno e barra di navigazione | da fare |
+| 5. Area di disegno e barra di navigazione | rimandata (decisione del responsabile, 2026-11-14) |
 | 6. Riga di comando mobile | in corso |
-| 7. Immissione dinamica | da fare |
+| 7. Immissione dinamica | approvata dal responsabile, 2026-11-14 |
 | 8. Pannello *Properties* | approvata dal responsabile, 2026-11-14 |
 | 9. Pannello *Layers* | approvata dal responsabile, 2026-11-14 |
 | 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
@@ -381,12 +381,36 @@ Punti aperti dell'area 4, con l'area delle icone:
 - l'indicatore di modifica: ora `nome*`, nel riferimento `nome  *` staccato
   (testo, che un test può leggere).
 
-Prossimi passi: le aree
-rimaste (8–9 pannelli, 10 barra di stato, 4 dettagli delle schede dei
-documenti, 5 barra di navigazione se le azioni esistono, 7 immissione
-dinamica, interfaccia classica, finestre di dialogo e icone).
+**Area 7: immissione dinamica** (2026-11-14), approvata dal responsabile:
+
+- la galleria ha due immagini nuove, `immissione-chiaro.png` e
+  `immissione-scuro.png`: dopo le altre, `MOVE` riceve il punto base con un
+  clic sull'angolo della piastra e il puntatore va a 50 unità a 30°; si
+  salva il pezzo di disegno intorno al riquadro;
+- riquadro su `surface.panel` con bordo `border` e angoli arrotondati
+  (prima il fondo della tavolozza, senza bordo), margini di 8 px;
+- la richiesta su una riga quando il disegno ha spazio, a capo solo se non
+  entra;
+- campi a passo fisso, che riempiono la riga, larghi uguali (almeno 90 px);
+  il campo attivo ha bordo e testo nel colore dei punti delle icone
+  (`iconPt`, l'arancio), scelte del responsabile.
+
+Punti aperti dell'area 7:
+
+- l'angolo è «30», nel riferimento «30°»: il testo viene da
+  `cmd::dynamicInputShown`, fuori dal perimetro di F6.
+
+Prossimi passi (2026-11-14): le aree 1–4 e 6–10 sono approvate, la 5 è
+rimandata. Restano l'**interfaccia classica** (menu e barre), le **finestre
+di dialogo** (da aggiungere alla galleria se il responsabile vuole
+confrontarle) e le **icone** (i punti aperti delle aree 1, 4 e 9: ≡ e `+`
+delle schede, la casa di *Start*, la lente e le icone della barra di
+*Layers*, le icone di stato colorate). Poi la chiusura: i test qui sotto,
+`scripts/controlla.sh --tidy`, la galleria approvata e la pull request.
 
 Test da allineare alla chiusura (oltre a quelli del ribbon):
+`GalleryTest.WritesFourteenImages...` conta ora 16 immagini (le due
+dell'immissione dinamica) e le misure di alcune sono cambiate;
 `UiBuilderTest.WithTheFrameOfTheSystem...` (due test) confrontano le azioni
 della barra d'angolo, che ora comincia con il logo;
 `DrawingAidsTest.F10AndF8...` cerca la cronologia nel genitore del campo;
@@ -428,7 +452,17 @@ nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
 - 2026-11-14, barra di stato (area 10): le coordinate restano `X: … Y: …`
   e la scala `px/unit`, non `x, y, z` e `1:1` del riferimento.
 
+- 2026-11-14, barra di navigazione (area 5): delle tre azioni del
+  riferimento (sposta, zoom, zoom estensioni) esiste solo `view.zoom-extents`;
+  la barra si rimanda a quando sposta e zoom esisteranno come azioni, con un
+  pacchetto loro.
+
+- 2026-11-14, immissione dinamica (area 7): campi larghi uguali; campo
+  attivo nel colore `iconPt` invece di `accent`.
+
 ## Scostamenti dal riferimento decisi
+
+- Immissione dinamica: campi uguali e campo attivo in `iconPt` (sopra).
 
 - Barra di stato: coordinate `X: … Y: …` e scala in `px/unit` (sopra).
 
@@ -440,4 +474,4 @@ nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
 
 ## Cose rimandate
 
-Nessuna.
+- Area 5, barra di navigazione: aspetta le azioni sposta e zoom (sopra).

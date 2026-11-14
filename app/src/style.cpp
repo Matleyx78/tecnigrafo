@@ -104,6 +104,8 @@ QWidget#commandLine QPlainTextEdit#history { background: transparent; color: {te
 QFrame#commandInput { background: {field}; border: 1px solid {border}; border-radius: 3px; }
 QFrame#commandInput QLineEdit { background: transparent; border: none; padding: 0px; }
 QLabel#promptMark { color: {accent}; }
+QWidget#dynamicInputBox { background: {panel}; border: 1px solid {border}; border-radius: 4px; }
+QWidget#dynamicInputBox QLabel { background: transparent; }
 QStatusBar { background: {chrome}; border-top: 1px solid {border}; }
 QStatusBar QToolButton:checked { border-color: transparent; }
 QStatusBar QFrame#statusSeparator { background: {border}; }
