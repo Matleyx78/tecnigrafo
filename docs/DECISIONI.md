@@ -1704,3 +1704,16 @@ i rimandi ai documenti che cambia.
   guide acquisite**, come nella priorità dell'ADR 0049, punto 5, dove le
   guide vengono prima del polare; scartato l'incrocio con il polare
   ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-14 — Pareggio fra due incroci con il polare.** Dal terzo giro
+  della rilettura di [#761](https://github.com/Matleyx78/tecnigrafo/pull/761):
+  due incroci con la stessa semiretta polare, ognuno con una sola guida
+  acquisita, possono essere alla stessa distanza dal puntatore. Il
+  responsabile decide che vince quello con la **guida del punto acquisito più
+  di recente**, come la regola generale della più recente; scartata la
+  precedenza all'incrocio più vicino al punto base
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-14 — Distanze confrontate al quadrato.** Nello stesso giro: dopo
+  la radice due distanze diverse possono dare lo stesso `double`. Il
+  responsabile decide che il tracciamento confronta le distanze **al
+  quadrato** (`dx*dx + dy*dy`), senza radice; a quadrati uguali valgono le
+  regole del pareggio. Scartato il confronto dopo la radice.
