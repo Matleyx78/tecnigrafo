@@ -1609,6 +1609,26 @@ i rimandi ai documenti che cambia.
   non basta: l'errore nasce nella conversione. Scartata l'altra uscita
   (angolo in radianti senza riduzione, con il quarto di giro riconosciuto
   solo fino a qualche decina di radianti).
+- **2026-11-12 — Angoli digitati ridotti a un giro.** Partendo da
+  [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), Codex si ferma su due casi
+  ([#667](https://github.com/Matleyx78/tecnigrafo/issues/667)): `ROTATE` di
+  3600000° lascia un estremo a `2^24` fuori di `2,5e-5`, oltre la tolleranza,
+  mentre il punto 4 di PT1 promette quarti di giro esatti; una coordinata
+  polare `1<1e308` dà un angolo infinito, che con PT1 farebbe scattare la
+  precondizione di `sinCos`. Il responsabile decide di estendere la riduzione
+  in gradi della voce «Angoli in gradi ridotti a un giro» agli angoli
+  digitati: una richiesta `PromptKind::Angle` (`ROTATE`, la sua opzione
+  *Reference*, la rotazione di `TEXT`) e l'angolo delle coordinate polari
+  entrano con `reducedDegreesToRadians`. Per gli angoli calcolati (per
+  esempio da due punti) vale la fascia dichiarata in `cardinalSinCos`.
+- **2026-11-12 — Ingressi fuori dall'uso reale.** Dopo tre arresti nello
+  stesso giorno su casi come 3600° o 3600000°, il responsabile rende stabile,
+  in via eccezionale a tappa aperta, la regola già usata nella rilettura di
+  [#751](https://github.com/Matleyx78/tecnigrafo/pull/751): un ingresso fuori
+  da ogni uso reale non è un buco visibile, né per chi rivede né per chi
+  realizza; basta che non arresti il programma, poi vale la fascia dichiarata
+  o una diagnosi. Scritta in [revisione.md](agenti/revisione.md), «Che cosa
+  blocca una revisione».
 - **2026-11-13 — Inserimento di file, punto base e interlinea come AutoCAD.**
   Pubblicando i DXF di prova della 0.8
   ([tappe/0.8/dxf-di-prova.md](tappe/0.8/dxf-di-prova.md)) le cronologie di
@@ -1675,6 +1695,27 @@ i rimandi ai documenti che cambia.
   acquisito `(0,0)`, con il puntatore in `(8,8)` sono tutte e due a 8. Il
   responsabile decide che vince l'**orizzontale**, come l'orto a 45° esatti
   (ADR 0008, punto 5): il punto è `(8,0)`; scartata la verticale.
+- **2026-11-13 — Rotazione di TEXT in [0°, 360°).** Il verbale di Codex
+  sulla [#755](https://github.com/Matleyx78/tecnigrafo/pull/755) trova che,
+  con la riduzione degli angoli digitati, `-90` digitato arriva a `TEXT` come
+  270°, mentre il punto `(0,-10)` passa per `atan2` e dà −90°: la stessa
+  direzione con due valori diversi per la domanda successiva e per il gruppo
+  DXF 50. Il responsabile decide che il valore proposto e quello salvato
+  nell'entità stanno sempre in **[0°, 360°)**, qualunque sia il percorso
+  d'ingresso: tutti e due danno 270°, e un giro intero dà 0°, come AutoCAD
+  ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartata la
+  rappresentazione distinta per percorso (270° da numero, −90° da punto).
+- **2026-11-13 — Domanda di TEXT a 360°.** Il secondo verbale di Codex sulla
+  [#755](https://github.com/Matleyx78/tecnigrafo/pull/755) trova che una
+  rotazione memorizzata appena sotto 360° (per esempio `359.99996` digitato)
+  appare come `<360>` nella domanda del `TEXT` successivo, perché il
+  predefinito si mostra con quattro decimali. Il responsabile decide che il
+  testo della domanda segue lo stesso intervallo [0°, 360°): quando
+  l'arrotondamento scrive `360`, la domanda mostra `<0>`, come l'input
+  dinamico; il valore memorizzato non cambia, e Invio e il gruppo DXF 50
+  usano la rotazione memorizzata
+  ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartato `<360>`
+  come arrotondamento ammesso.
 - **2026-11-13 — Pareggio fra due incroci.** Dopo la correzione del pareggio
   fra le guide dello stesso punto, resta un caso che la regola della più
   recente non decide: acquisiti `(0,0)` e poi `(10,10)`, con il puntatore in
