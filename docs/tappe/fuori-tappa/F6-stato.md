@@ -508,6 +508,20 @@ responsabile (2026-11-14) «per le regole che abbiamo adesso»: a lavoro
 finito si farà un'analisi delle regole di `ICONE.md`, perché così le
 icone restano scarne (forme velate, altro).
 
+Terzo, quarto e quinto gruppo delle icone (2026-11-14), da far vedere al
+responsabile:
+
+- schede dei documenti: il menu è ≡ (tre righe, senza la freccia del menu
+  di Qt), il `+` senza l'angolo della scheda e in `pt`, *Start* con la
+  casa (`ui-home`, nuova);
+- *Layers*: la lente all'inizio del campo di ricerca (`ui-search`, nuova,
+  in `cost` come il testo d'aiuto);
+- finestre di avvertimento e di domanda: `Style` dà `ui-warning` e
+  `ui-question` (nuove) al posto delle icone della piattaforma. «!» e «?»
+  sono segni, non lettere (`ICONE.md` vieta le lettere disegnate): da
+  confermare col responsabile. Le altre (informazione, errore) il programma
+  non le usa.
+
 Test da allineare alla chiusura (oltre a quelli del ribbon):
 `GalleryTest.WritesFourteenImages...` conta ora 16 immagini (le due
 dell'immissione dinamica) e le misure di alcune sono cambiate;

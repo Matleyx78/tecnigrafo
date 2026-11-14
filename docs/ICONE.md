@@ -398,8 +398,9 @@ delle schede (`documentTabsIconNames()`).
 
 | File | Uso | Disegno | Rifatta |
 |---|---|---|---|
-| `ui-tab-new` | pulsante `+` della riga delle schede: un disegno nuovo | bordo di una scheda (`esist`) e un più (`pt`) | sì |
-| `ui-tab-menu` | pulsante del menu dei documenti aperti | righe dell'elenco (`esist`) e una freccia aperta verso il basso (`pt`) | sì |
+| `ui-tab-new` | pulsante `+` della riga delle schede: un disegno nuovo | un più (`pt`); prima di F6 anche il bordo di una scheda | sì |
+| `ui-tab-menu` | pulsante del menu dei documenti aperti | tre righe uguali (`esist`), ≡ come nel riferimento (F6); la freccia del menu non si mostra | sì |
+| `ui-home` | scheda *Start*, come nel riferimento (F6) | casa (`esist`) con la porta (`pt`) | sì |
 | `doc-drawing` | tipo disegno: icona della scheda di un disegno, del pulsante *Drawing* di *Start* e dei file recenti | foglio con l'angolo piegato (`esist`) e una spezzata disegnata (`geo`) | sì |
 
 Gli ambienti (0.7.5-P30) hanno un'icona ciascuno, nell'indicatore
@@ -412,7 +413,9 @@ dell'ambiente della barra di stato; la nomina l'ambiente
 
 Il ribbon e la riga di comando sul riferimento (F6) aggiungono la freccia
 all'angolo dei gruppi che apre il pannello e la crocetta che annulla, con i
-due file `-16.svg` e `-32.svg`; nessuna azione le nomina: la freccia la usa
+due file `-16.svg` e `-32.svg`; F6 aggiunge poi la lente della ricerca dei
+layer e le icone delle finestre di avvertimento e di domanda, che `Style`
+disegna al posto di quelle della piattaforma; nessuna azione le nomina: la freccia la usa
 il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che la disegna da
 16 px al centro del quadrato del pulsante, la crocetta la riga di comando.
 
@@ -420,6 +423,9 @@ il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che la disegna da
 |---|---|---|---|
 | `ui-panel-launcher` | freccia ↘ dei gruppi *Layers* e *Properties*: apre il pannello | diagonale verso il basso a destra con la punta ad angolo retto (`esist`) | sì |
 | `ui-cancel` | crocetta della riga di comando: annulla come Esc | due diagonali a X (`esist`) | sì |
+| `ui-search` | lente all'inizio del campo di ricerca del pannello *Layers* (`layerPanelIconNames()`) | cerchio e manico (`cost`), discreti come il testo d'aiuto del campo | sì |
+| `ui-warning` | icona delle finestre di avvertimento, al posto di quella della piattaforma (`styleIconNames()`) | triangolo (`esist`), barra e punto (`pt`) | sì |
+| `ui-question` | icona delle domande («Save changes?»), al posto di quella della piattaforma (`styleIconNames()`) | cerchio (`esist`), uncino e punto (`pt`): un segno, non una lettera | sì |
 
 Il logo del programma non è un'icona a ruoli: ha colori suoi e sta in
 [`resources/logo/`](../resources/logo/), fuori da questo controllo.

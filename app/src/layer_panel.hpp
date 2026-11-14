@@ -160,6 +160,8 @@ private:
     QToolButton* m_deleteButton;
     QToolButton* m_currentButton;
     QLineEdit* m_search;
+    /// The magnifier at the start of the search field (docs/adr/0039, area 9).
+    QAction* m_searchIcon{nullptr};
     QAction* m_newAction{nullptr};
     QAction* m_deleteAction{nullptr};
     QAction* m_currentAction{nullptr};

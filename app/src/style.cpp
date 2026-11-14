@@ -139,6 +139,7 @@ QStatusBar { background: {chrome}; border-top: 1px solid {border}; }
 QStatusBar QToolButton:checked { border-color: transparent; }
 QStatusBar QFrame#statusSeparator { background: {border}; }
 QStatusBar QToolButton#environmentIndicator::menu-indicator { image: none; width: 0px; }
+QToolButton#documentsMenuButton::menu-indicator { image: none; width: 0px; }
 QDockWidget QScrollArea, QDockWidget QScrollArea > QWidget > QWidget { background: {panel}; }
 QDockWidget QAbstractItemView { background: {panel}; border: none; }
 QAbstractItemView { background: {field}; alternate-background-color: {group}; color: {text}; border: 1px solid {border}; selection-background-color: {selection}; selection-color: {text}; }
@@ -553,8 +554,25 @@ QRect Style::subControlRect(ComplexControl control, const QStyleOptionComplex* o
     return visualRect(bar->direction, groove, result);
 }
 
+QStringList styleIconNames() {
+    return {QStringLiteral("ui-warning"), QStringLiteral("ui-question")};
+}
+
 QIcon Style::standardIcon(StandardPixmap icon, const QStyleOption* option,
                           const QWidget* widget) const {
+    // The message boxes with icons of the program, coloured by role, instead
+    // of the platform's (docs/ICONE.md). The tokens tell the theme: its text
+    // is lighter than its panels in the dark one.
+    const Theme theme =
+        m_tokens.text.lightness() > m_tokens.panel.lightness() ? Theme::Dark : Theme::Light;
+    switch (icon) {
+        case SP_MessageBoxWarning:
+            return themedIcon(QStringLiteral("ui-warning"), theme);
+        case SP_MessageBoxQuestion:
+            return themedIcon(QStringLiteral("ui-question"), theme);
+        default:
+            break;
+    }
     if (isDockHeader(widget)) {
         switch (icon) {
             case SP_TitleBarCloseButton:

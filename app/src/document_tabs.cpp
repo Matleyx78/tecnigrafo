@@ -27,6 +27,8 @@ constexpr int kTabIconSize = 16;
 constexpr const char* kMenuIcon = "ui-tab-menu";
 constexpr const char* kNewIcon = "ui-tab-new";
 constexpr const char* kDrawingIcon = "doc-drawing";
+/// The tab of the Start page, as in the reference (docs/adr/0039, area 4).
+constexpr const char* kHomeIcon = "ui-home";
 
 /// The tab of the Start page, always the first.
 constexpr int kStartTab = 0;
@@ -54,7 +56,7 @@ QToolButton* rowButton(QWidget* parent, const QString& name, const QString& tip)
 
 QStringList documentTabsIconNames() {
     return {QString::fromLatin1(kMenuIcon), QString::fromLatin1(kNewIcon),
-            QString::fromLatin1(kDrawingIcon)};
+            QString::fromLatin1(kDrawingIcon), QString::fromLatin1(kHomeIcon)};
 }
 
 DocumentTabs::DocumentTabs(QWidget* parent)
@@ -213,6 +215,7 @@ void DocumentTabs::dropStartCloseButton() {
 void DocumentTabs::updateIcons() {
     m_menuButton->setIcon(themedIcon(QString::fromLatin1(kMenuIcon), m_theme));
     m_newButton->setIcon(themedIcon(QString::fromLatin1(kNewIcon), m_theme));
+    m_tabs->setTabIcon(kStartTab, themedIcon(QString::fromLatin1(kHomeIcon), m_theme));
     for (int i = 0; i < m_documents.size(); ++i) {
         m_tabs->setTabIcon(i + 1, themedIcon(m_documents[i].icon, m_theme));
     }

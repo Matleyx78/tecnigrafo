@@ -76,10 +76,10 @@ QString layerStateIconName(LayerState state, bool value) {
 }
 
 QStringList layerPanelIconNames() {
-    return {QString::fromLatin1(kCurrentIcon),    QString::fromLatin1("layer-on"),
-            QString::fromLatin1("layer-off"),     QString::fromLatin1("layer-frozen"),
-            QString::fromLatin1("layer-thawed"),  QString::fromLatin1("layer-locked"),
-            QString::fromLatin1("layer-unlocked")};
+    return {QString::fromLatin1(kCurrentIcon),     QString::fromLatin1("layer-on"),
+            QString::fromLatin1("layer-off"),      QString::fromLatin1("layer-frozen"),
+            QString::fromLatin1("layer-thawed"),   QString::fromLatin1("layer-locked"),
+            QString::fromLatin1("layer-unlocked"), QString::fromLatin1("ui-search")};
 }
 
 LayerTableModel::LayerTableModel(const core::Document& document, QObject* parent)

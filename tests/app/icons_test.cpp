@@ -9,6 +9,7 @@
 #include "environments.hpp"
 #include "layer_table_model.hpp"
 #include "properties_panel.hpp"
+#include "style.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "theme.hpp"
 
@@ -490,6 +491,8 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     used.append(autoHideIconNames());
     // The row of the tabs and the Start page (0.7.5-P29).
     used.append(documentTabsIconNames());
+    // The message boxes (F6).
+    used.append(styleIconNames());
     // The types of document and the environments (0.7.5-P30): the tabs, the
     // Start page and the indicator of the status bar show them.
     const cmd::CommandRegistry commands{};

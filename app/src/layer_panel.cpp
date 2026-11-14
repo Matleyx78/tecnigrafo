@@ -150,6 +150,7 @@ LayerPanel::LayerPanel(QWidget* parent)
         button->setIconSize(QSize(kIconSide, kIconSide));
         button->setAccessibleName(button->toolTip());
     }
+    m_searchIcon = m_search->addAction(QIcon{}, QLineEdit::LeadingPosition);
     updateButtonIcons();
     m_search->setObjectName(QStringLiteral("layerSearch"));
     m_search->setPlaceholderText(tr("Search layers"));
@@ -517,6 +518,7 @@ void LayerPanel::updateButtonIcons() {
     m_newButton->setIcon(themedIcon(QStringLiteral("layer-new"), theme));
     m_deleteButton->setIcon(themedIcon(QStringLiteral("layer-delete"), theme));
     m_currentButton->setIcon(themedIcon(QStringLiteral("layer-current"), theme));
+    m_searchIcon->setIcon(themedIcon(QStringLiteral("ui-search"), theme));
 }
 
 void LayerPanel::applyFilter() {
