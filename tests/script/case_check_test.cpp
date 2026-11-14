@@ -280,7 +280,8 @@ TEST(CheckCase, ChangesWithStopsTheComparisonOfAPendingCaseOnly) {
 // makes the case invalid. Skipped once the program has every directive.
 TEST(CheckCase, AnnouncedDirectiveIsTheFrontier) {
     std::string announced;
-    for (const std::string_view text : {"!polar on", "!osnap none", "!scr on"}) {
+    for (const std::string_view text :
+         {"!polar on", "!osnap none", "!scr on", "!hover 0,0", "!otrack on"}) {
         const std::variant<Script, ParseError> parsed = parseScript(text);
         if (const auto* error = std::get_if<ParseError>(&parsed);
             error != nullptr && error->notImplemented) {
@@ -315,6 +316,35 @@ TEST(CheckCase, AnnouncedDirectiveIsTheFrontier) {
     result = check(malformed, true);
     EXPECT_EQ(result.code, kExitInvalid);
     expectContains(result.output, "script.tgs, line 6: wrong arguments for !snap");
+}
+
+// F8 announces !otrack and !hover until PT34 realizes them: a case of RT34 is
+// pending whichever of the two comes first, with the other one below the
+// frontier. Each order is checked while its first line is still announced.
+TEST(CheckCase, TrackingDirectivesAreFrontiersUntilPT34) {
+    const std::vector<std::pair<std::string, std::string>> orders{{"!otrack on", "!hover 0,0"},
+                                                                  {"!hover 0,0", "!otrack on"}};
+    int checked = 0;
+    for (const auto& [first, second] : orders) {
+        const std::variant<Script, ParseError> parsed = parseScript(first);
+        const auto* error = std::get_if<ParseError>(&parsed);
+        if (error == nullptr || !error->notImplemented) {
+            continue;
+        }
+        ++checked;
+        std::string script{kScript};
+        script.append(first).append("\n").append(second).append("\n");
+        std::string name{"frontier-tracking-"};
+        name.append(first, 1, first.find(' ') - 1);
+        const fs::path waiting =
+            makeCase(name, {{"script.tgs", script}, {"atteso.txt", std::string{kReport}}});
+        const Result result = check(waiting, true);
+        EXPECT_EQ(result.code, kExitPassed) << first;
+        expectContains(result.output, "; as expected up to script.tgs, line 5: ");
+    }
+    if (checked == 0) {
+        GTEST_SKIP() << "PT34 has realized !otrack and !hover";
+    }
 }
 
 TEST(CheckCase, LevelTwoCaseIsSkipped) {

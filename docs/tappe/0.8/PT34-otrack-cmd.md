@@ -61,16 +61,35 @@
    stessa età, vince l'orizzontale, come l'orto a 45° esatti (ADR 0008,
    punto 5; [DECISIONI.md](../../DECISIONI.md), 2026-11-13, «Pareggio fra le
    guide dello stesso punto»). Due guide di punti diversi entro l'apertura
-   danno l'incrocio, quindi non arrivano a questo pareggio. Con il polare
+   danno l'incrocio, quindi non arrivano a questo pareggio. Fra due incroci
+   alla stessa distanza vince quello che usa la guida orizzontale del punto
+   più recente; se l'orizzontale è dello stesso punto, quello che usa la
+   verticale del punto più recente ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-13, «Pareggio fra due incroci»). Con il polare
    acceso e un punto base, conta anche la semiretta polare, e il suo incrocio
    con una guida si chiede a solid-space con `core::intersections` sulle rette
    estese. Priorità: snap a oggetto, incrocio, guida, polare, orto, puntatore.
+   A pari distanza fra l'incrocio di due guide acquisite e l'incrocio di una
+   guida con la semiretta polare vince il primo, come nella priorità
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-13, «Pareggio fra un incrocio
+   di guide e uno con il polare»). Fra due incroci con la stessa semiretta
+   polare, ognuno con una sola guida acquisita, vince quello la cui guida è
+   del punto acquisito più di recente ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-14, «Pareggio fra due incroci con il polare»). Le distanze dal
+   puntatore si confrontano al quadrato, `dx*dx + dy*dy` in `double`, senza
+   radice; a quadrati uguali valgono le regole del pareggio
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Distanze confrontate al
+   quadrato»).
 4. **Distanza scritta** (punto 6): con una guida singola attiva, una distanza
    scritta mette il punto a quella distanza da `from` lungo la guida, verso il
    puntatore.
 5. **Script** (punto 7): `!hover x,y` (livelli 1 e 2) chiama `pointerHeld`;
    `!otrack on` / `!otrack off` cambiano lo stato senza scrivere nella
-   cronologia. In [script.md](../../verifica/script.md) le due righe nuove.
+   cronologia. Le loro righe in [script.md](../../verifica/script.md) e
+   l'annuncio in `kAnnouncedDirectives` li porta prima
+   [F8](../fuori-tappa/F8-annuncio-hover-otrack.md) (#760), perché RT34 possa
+   usarle: PT34 toglie `hover` e `otrack` da `kAnnouncedDirectives` e dal
+   paragrafo di script.md sulle direttive non ancora realizzate.
 6. **Rapporto** (punto 8), righe nuove dopo `active snap:`, solo quando diverse
    da una sessione nuova (rapporto.md, «Come cresce il formato»):
    - `tracking: on`;
@@ -96,6 +115,36 @@
   quadranti, in `(-8,8)`, `(-8,-8)` e `(8,-8)`, dà `(-8,0)`, `(-8,0)` e
   `(8,0)`. Senza pareggio vince la più vicina: in `(7,8)` la verticale,
   `(0,8)` con `Vertical 0,8 from 0,0`.
+- Pareggio fra due incroci (punto 3): disegno con il solo segmento da `(0,0)`
+  a `(18,18)`, snap solo sugli estremi, orto e polare spenti, apertura di 10
+  unità; acquisiti `(0,0)` e poi `(18,18)`, il puntatore in `(9,9)` è a 9 da
+  tutte e quattro le guide e dà `(0,18)`, con `active tracking: Crossing
+  0,18`; acquisiti nell'ordine inverso, dà `(18,0)`. Stessa orizzontale:
+  segmenti da `(50,0)` a `(50,-20)` e da `(14,30)` a `(26,30)`, acquisiti
+  nell'ordine `(50,0)`, `(14,30)`, `(26,30)`, il puntatore in `(20,5)` ha gli
+  incroci `(14,0)` e `(26,0)` a `√61` e dà `(26,0)`; scambiando le ultime
+  due acquisizioni, `(14,0)`.
+- Pareggio fra un incrocio di guide e uno con il polare (punto 3): segmento
+  da `(40,0)` a `(0,40)`, snap solo sugli estremi, polare acceso con
+  `POLARANG` 90°, apertura di 10 unità; `LINE` con il primo punto
+  `(-20,10)`, acquisiti `(40,0)` e `(0,40)`, il puntatore in `(2,5)` è entro
+  l'apertura da `y=0`, da `x=0` e dalla semiretta polare `y=10`; gli incroci
+  `(0,0)` e `(0,10)` sono tutti e due a `√29` e vince `(0,0)`, con
+  `active tracking: Crossing 0,0`.
+- Pareggio fra due incroci con il polare (punto 3): segmenti da `(0,30)` a
+  `(0,60)` e da `(12,40)` a `(12,70)`, snap solo sugli estremi, polare acceso
+  con `POLARANG` 90°, apertura di 10 unità; `LINE` con il primo punto
+  `(-20,0)`, acquisiti `(0,30)` e poi `(12,40)`, il puntatore in `(6,2)` ha
+  gli incroci con la semiretta `y=0` in `(0,0)` e `(12,0)`, tutti e due a
+  `√40`, e dà `(12,0)`, con `active tracking: Polar crossing 12,0`;
+  acquisiti nell'ordine inverso, dà `(0,0)`.
+- Distanze al quadrato (punto 3): segmenti da `(0,40)` a `(0,60)`, da
+  `(40,-15)` a `(60,-15)` e da `(40,1)` a `(60,1)`, snap solo sugli estremi,
+  orto e polare spenti, apertura di 10 unità; acquisiti `(0,40)`, `(40,-15)`
+  e `(40,1)`, il puntatore in `(1,-7.000000000000001)` ha gli incroci
+  `(0,-15)` e `(0,1)` con quadrati `64.99999999999999` e `65` e dà
+  `(0,-15)`, con `active tracking: Crossing 0,-15` (dopo la radice i due
+  valori sarebbero uguali).
 - Test di `script`: `!hover` e `!otrack`, e le righe del rapporto.
 
 ## Fatto quando
