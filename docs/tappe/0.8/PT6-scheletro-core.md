@@ -183,6 +183,10 @@ struct TransformOutcome { std::optional<Entity> entity; std::string refusal; };
   snap le trattano come le entità dello stesso tipo. `transformedShape` qui
   si dichiara e tratta le similitudini con `transformed`; la parte affine la
   realizzano PT48 (ellissi e archi), PT17 (testo) e PT16 (il resto).
+- `extent` è l'ingombro di tutta la geometria dell'entità, compresa quella
+  sui layer spenti (non quella sui congelati), come lo zoom estensioni di
+  AutoCAD; `generate` invece dà solo ciò che si disegna. Così riaccendere un
+  layer non chiede di ricalcolare l'indice (PT4, punto P2: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
 - `Document` registra nell'indice spaziale `extent()` invece di
   `boundingBox()`, e `pickEntity`, `selectInRectangle` e `findSnap`
   (`document_query.cpp`) usano `distance`, `isInside`, `intersects` e
@@ -243,6 +247,9 @@ li scrive mai (non ci sono). Nessun comportamento cambia.
   `generate` dà un elemento con l'entità e le proprietà effettive; `extent`,
   `distance`, `isInside`, `intersects` e `appendSnapPoints` danno gli stessi
   risultati delle funzioni di oggi; `transformedIn` dà `transformed`.
+- `generated_test.cpp`: per un inserimento (con PT16) la cui linea interna,
+  da X=0 a X=10, sta su un layer spento, `extent` va da 0 a 10 e `generate`
+  non la dà; con il layer congelato non entra neanche nell'ingombro.
 - `document_test.cpp` (esistente): `replaceTextStyles`, `replaceDimStyles` e
   `replaceBlock` cambiano le tabelle; nessuna entità cambia.
 

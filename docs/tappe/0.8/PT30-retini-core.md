@@ -67,7 +67,13 @@
    dopo una rotazione il passo resta `s · dy`; dopo una riflessione cambia
    segno (la famiglia è la stessa, con `k` contato al contrario) e lo
    spostamento lungo la riga resta `s · dx`.
-5. **Selezione** dalla geometria generata (PT6); **snap** e **grip**: nessuno.
+5. **Selezione** dalla geometria generata (PT6): per la regione piena la
+   distanza è 0 nell'area riempita (pari-dispari, con la sua affinità) e
+   quella dal bordo fuori, foro compreso, come in un blocco (PT4, punto P3:
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle
+   interfacce PT4»); **snap** e **grip**: nessuno. Anche l'angolo di ogni
+   famiglia di righe ruota con il retino, come lo scostamento (punto 4; PT5,
+   punto B19).
 6. **Ingombro:** quello dei contorni.
 
 ## Regole della tappa che valgono qui
@@ -79,7 +85,8 @@
 
 - `hatch_test.cpp`: contorno aperto non supportato; regione piena di un
   rettangolo con un cerchio dentro (due anelli); trasformazione con
-  riflessione;
+  riflessione; un clic nel pieno prende il retino, uno nel foro no; un motivo
+  con una famiglia a 30° ruotato di 90° ha la famiglia a 120°;
 - le righe dei motivi predefiniti (punto 2), con una tolleranza assoluta di
   `1e-12` sulle componenti, origine sempre `(0, 0)`:
   - `ANSI31` in pollici, `θ` = 0, `s` = 1: angolo 45, scostamento

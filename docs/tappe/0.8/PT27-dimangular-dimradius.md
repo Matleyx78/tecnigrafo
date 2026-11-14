@@ -38,7 +38,10 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
    [Text/Angle]:`. Il punto sulla curva è quello nella direzione del punto
    indicato dal centro.
 3. Fine: `Dimension text = <testo>`. Stile, proprietà, anteprima e annullamento
-   come PT26.
+   come PT26, anche per una quota che non si rigenera (motivo e la richiesta si
+   ripete: per esempio la posizione dell'arco nel vertice, o la posizione di
+   una radiale nel centro). *Quadrant* costruisce `point16` nell'angolo
+   scelto, alla distanza della posizione dell'arco (PT5, punti B12 e B14).
 
 ## Regole della tappa che valgono qui
 

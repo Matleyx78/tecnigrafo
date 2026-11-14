@@ -1716,3 +1716,57 @@ i rimandi ai documenti che cambia.
   usano la rotazione memorizzata
   ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartato `<360>`
   come arrotondamento ammesso.
+- **2026-11-14 — Revisione delle interfacce PT4.** Sul verbale di Codex nella
+  [#669](https://github.com/Matleyx78/tecnigrafo/issues/669) (25 punti, nove
+  schede), il responsabile approva lo smistamento proposto da Claude. Dodici
+  punti li decide una regola che c'è già o sono buchi non visibili, che sceglie
+  chi realizza (P1, P2, P5, P7, P9, P10, P13, P18, P19, P20, P22, P23); dove la
+  scheda diceva altro si allinea: ingombro anche sui layer spenti, non sui
+  congelati, come lo zoom estensioni di AutoCAD (PT6); figura del `SOLID` =
+  regione del pittore (PT10); trasformazioni annidate composte prima (PT16);
+  testo scomposto sulla sua base (PT17). Tredici decisioni, quasi tutte come
+  AutoCAD:
+  P3, selezione di un inserimento dalle forme visibili (clic: la più vicina;
+  finestra: tutte dentro; blocco senza forme visibili solo con la finestra sul
+  punto d'inserimento; retino pieno preso nel pieno, non nel foro); P4, snap
+  *Intersezione* anche dentro lo stesso inserimento e snap inserimento sempre;
+  P6, l'annullamento rimette la posizione del blocco, ridefinire con un nome
+  uguale senza maiuscole tiene posizione e grafia; P8, limite della 0.8: tipo
+  di linea che riparte a ogni forma e larghezza persa sui pezzi ellittici
+  (idea [#762](https://github.com/Matleyx78/tecnigrafo/issues/762)); P11, un
+  grip per i vertici uguali di un `SOLID`, collasso rifiutato; P12, cerchio
+  con l'asse su X positivo, altrimenti asse in [0°, 180°); P14, il grip di un
+  asse dell'ellisse ne cambia solo la lunghezza, con scambio se serve; P15,
+  stile di testo corrente mancante → `Standard`, creato se manca; P16, `put`
+  tiene handle e posizione; P17, un blocco usato non si toglie, profondità
+  massima 64 livelli; P21, l'`ATTRIB` eredita i dati dell'`ATTDEF` e fra
+  etichette uguali vale la prima; P24, EXPLODE di una quota con grafica grezza
+  rifiutato; P25, EXPLODE con scala non uniforme rifiutato per `MTEXT`, quote
+  e retini, `ATTDEF` trasformato come testo. Le schede corrette: PT6, PT7,
+  PT8, PT10, PT11, PT16, PT17, PT29, PT30, PT48.
+- **2026-11-14 — Revisione delle interfacce PT5.** Sul verbale di Codex nella
+  [#670](https://github.com/Matleyx78/tecnigrafo/issues/670) (B01–B26), il
+  responsabile approva lo smistamento proposto da Claude. Nove punti li decide
+  una regola che c'è già o li sceglie chi realizza (B05, B09, B14, B17, B18,
+  B19, B20, B23, B26). Diciassette decisioni, quasi tutte come AutoCAD:
+  B01, codici di `MTEXT` decodificati una volta sola, sequenza senza `;`
+  letterale con `\P` che va a capo; B02, `\~` misurato come uno spazio, riga
+  di soli spazi senza testo; B03, `MTEXT` sempre leggibile dopo una
+  riflessione, qualunque sia `MIRRTEXT`; B04, `MTEXT` vuoto preso sul punto
+  d'inserimento; B06, stile di quota mancante → `Standard`, come gli stili di
+  testo; B07, valori fuori dominio → quota conservata e non rigenerabile; B08,
+  lineare di misura zero con testo `0`, allineata con origini uguali non
+  rigenerabile; B10, `textPoint` = centro del testo, angolo esplicito assoluto
+  e distinto dall'automatico; B11, `DIMSD1`/`DIMSD2` tolgono mezza linea e la
+  freccia del loro lato, `DIMSCALE` solo sulle grandezze grafiche; B12,
+  creazione non riuscita → messaggio e richiesta ripetuta; B13, punto su una
+  semiretta → l'angolo dopo in senso antiorario, nel vertice non
+  rigenerabile; B15, adattamento angolare con i quattro casi lungo l'arco,
+  `DIMLFAC` e `DIMRND` non sugli angoli; B16, testo sulla curva = dentro,
+  pareggio della diametrale a `point15`, assi di `DIMCEN` negativo come
+  AutoCAD; B21, estremi alla stessa distanza → l'inizio, coincidenza prima
+  della graduatoria per `fuzz`; B22, senza un incrocio isolato *Extend* non
+  unisce e si prova il seguente, *Both* fa un ponte; B24, il prolungamento
+  tiene la larghezza dell'estremo; B25, `added` conta i segmenti aggiunti,
+  ponti compresi. Le schede corrette: PT13, PT22, PT23, PT24, PT26, PT27,
+  PT30, PT32.

@@ -54,7 +54,8 @@
        [[nodiscard]] const DimVariables& currentVariables() const;  // header $DIM…
        [[nodiscard]] const RawGroups& currentExtras() const;  // other $DIM… as read
        /// True when every variable that blocks regeneration (docs/adr/0047,
-       /// point 2) has the ISO-25 value in `extras` (absent counts as ISO-25).
+       /// point 2) has the ISO-25 value in `extras` (absent counts as ISO-25),
+       /// and every essential variable is in the range DIMSTYLE accepts.
        [[nodiscard]] static bool regenerable(const RawGroups& extras);
        // put/setCurrent/setCurrentVariables like TextStyleTable (PT11)
    };
@@ -67,8 +68,18 @@
 3. `io` legge la tabella `DIMSTYLE` nel modello (variabili essenziali per codice
    di gruppo; il resto in `extras`, compreso l'handle 105) e le variabili
    `$DIM…` dell'intestazione (le essenziali nel modello, le altre in
-   `currentExtras`); riscrive tutto com'era.
-4. **Sovrascritture di una quota** (XDATA `ACAD`, `DSTYLE`): una funzione legge
+   `currentExtras`); riscrive tutto com'era. **Stile mancante** (PT5, punto
+   B06: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT5»): come per gli stili di testo (PT11, punto 3),
+   se `$DIMSTYLE` manca o nomina uno stile che non c'è, lo stile corrente è
+   `Standard`, e se `Standard` non c'è si crea con i valori di AutoCAD; una
+   quota che nomina (gruppo 3) uno stile che non c'è tiene quel nome e usa le
+   variabili di `Standard`.
+4. **Valori fuori dominio** (PT5, punto B07): una quota la cui variabile
+   essenziale effettiva (stile più sovrascritture) è fuori dai limiti che
+   `DIMSTYLE` accetta (PT28; per esempio `DIMDEC` −1 o `DIMTXT` 0), o il cui
+   `DIMTXSTY` non si risolve in uno stile di testo, si conserva ma non è
+   rigenerabile, come per le variabili dell'ADR 0047, punto 2.
+5. **Sovrascritture di una quota** (XDATA `ACAD`, `DSTYLE`): una funzione legge
    dagli `extras` di una quota le variabili sovrascritte (essenziali e no) e
    le scrive; le userà PT23.
 
@@ -79,7 +90,9 @@
 ## Test richiesti
 
 - `dim_style_table_test.cpp`: `find`, corrente, `regenerable` con `DIMTOL` 1 e
-  con `DIMBLK` diverso.
+  con `DIMBLK` diverso, con `DIMDEC` −1 e con `DIMTXT` 0 (falso).
+- `dxf_dimstyle_test.cpp`: `$DIMSTYLE=PROVA` che non c'è: corrente
+  `Standard`; una quota con gruppo 3 `PROVA` tiene il nome e usa `Standard`.
 - `dxf_dimstyle_test.cpp`: giro della tabella e dell'intestazione di un file di
   AutoCAD (`autocad-quote.dxf` se pubblicato, altrimenti uno scritto dal test);
   sovrascritture `DSTYLE` lette e riscritte.

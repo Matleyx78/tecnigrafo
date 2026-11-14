@@ -38,8 +38,11 @@ stessa transazione e nella stessa cronologia:
   `replaceDimStyles`); annullare rimette la tabella di prima;
 - **sostituzione di una definizione di blocco**: per nome, con la definizione
   di prima e quella nuova, ciascuna presente o no
-  (`Document::replaceBlock`); annullare rimette quella di prima, e il documento
-  ricalcola l'ingombro degli inserimenti (PT6).
+  (`Document::replaceBlock`); annullare rimette quella di prima **nella sua
+  posizione** della tabella, e il documento ricalcola l'ingombro degli
+  inserimenti (PT6). Ridefinire `A` con il nome `a` (stesso nome senza
+  maiuscole) tiene la posizione e la grafia di prima (PT4, punto P6:
+  [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
 
 `DocumentTables` le offre ai pacchetti delle tabelle, che ci scrivono sopra le
 loro operazioni nei loro file:
@@ -63,7 +66,10 @@ vuoto), il comando:
 
 - la lascia com'è, scrive il rifiuto nella cronologia una volta per ogni
   entità rifiutata, e applica le altre;
-- nell'anteprima la mostra ferma.
+- nell'anteprima la mostra ferma;
+- per un grip (`moveGripIn`) che non si può applicare per lo stesso motivo,
+  il grip non si sposta e il comando scrive lo stesso messaggio del rifiuto
+  (PT4, punto P7).
 
 Con i tipi di oggi non c'è mai un rifiuto: i casi di verifica non cambiano.
 
@@ -77,6 +83,8 @@ Con i tipi di oggi non c'è mai un rifiuto: i casi di verifica non cambiano.
 - `editor_test.cpp`: sostituire la tabella degli stili di testo, poi `undo` e
   `redo`; lo stesso per una definizione di blocco aggiunta, cambiata e tolta;
   una transazione con un'entità e una tabella si annulla in un passo.
+- `editor_test.cpp`: con i blocchi `[A, B]`, togliere `A` e annullare dà di
+  nuovo `[A, B]`; ridefinire `A` come `a` lascia `[A, B]` con la grafia `A`.
 - `document_tables_test.cpp`: una tabella uguale a quella di prima non registra
   nulla.
 - `move_copy_commands_test.cpp`: un documento di prova in cui `transformedIn`

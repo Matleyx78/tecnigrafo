@@ -30,11 +30,16 @@
    geometria generata = la forma stessa con le proprietà effettive;
    trasformazione = i quattro vertici trasformati (una riflessione non cambia
    l'ordine: la figura `v0, v1, v3, v2` resta la stessa regione); grip sui
-   quattro vertici (un vertice ripetuto, come nel caso da tre, ha un grip solo:
-   il primo dei due), e spostare il grip del terzo vertice di un `SOLID` da tre
-   sposta anche il quarto; snap estremo sui vertici distinti; distanza 0 dentro
-   la figura (i due triangoli `v0 v1 v3` e `v0 v3 v2`), altrimenti la distanza
-   dal bordo; finestra e intersezione con il rettangolo sui due triangoli.
+   quattro vertici: vertici uguali (uguaglianza esatta dei dati, come nel caso
+   da tre) hanno un grip solo, e spostarlo li sposta tutti insieme; un grip
+   che porterebbe tutti e quattro i vertici nello stesso punto si rifiuta,
+   come il lettore che lascia non gestito quel `SOLID` (PT4, punto P11:
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»); snap estremo sui vertici distinti; distanza 0 dentro la
+   figura, altrimenti la distanza dal bordo; finestra e intersezione con il
+   rettangolo sulla stessa figura. **La figura** è la regione che il pittore
+   riempie: il quadrilatero `v0, v1, v3, v2` con la regola pari-dispari; per
+   una farfalla sono i due lobi che si incontrano nell'incrocio (ADR 0044,
+   punto 7; PT4, punto P10).
 3. Codec DXF `SOLID`: gruppi 10/20, 11/21, 12/22, 13/23 (13 mancante = 12),
    quota (30…), spessore (39) ed estrusione come dice l'ADR 0018, punto 5 (con
    `(0,0,-1)` la geometria arriva nel sistema del disegno, `x → −x`), il resto in
@@ -53,7 +58,12 @@
 ## Test richiesti
 
 - `solid_test.cpp`: ingombro, trasformazione con riflessione, grip del caso da
-  tre vertici, distanza dentro e fuori da un `SOLID` «a farfalla».
+  tre vertici, distanza dentro e fuori da un `SOLID` «a farfalla»: con
+  `v0=(0,0), v1=(2,2), v2=(2,0), v3=(0,2)` i lobi si incontrano in `(1,1)`,
+  `(0.25,1)` è fuori (distanza maggiore di 0) e `(1,0.25)` dentro; lo stesso
+  per un clic e per una finestra piccola attorno a quei punti. Grip: con
+  `v0=v1` un grip solo, che sposta tutti e due; il grip che porterebbe i
+  quattro vertici in un punto si rifiuta.
 - `dxf_solid_test.cpp`: lettura e scrittura di un `SOLID` da tre e da quattro
   vertici, con estrusione `(0,0,-1)` e con gruppi sconosciuti conservati.
 

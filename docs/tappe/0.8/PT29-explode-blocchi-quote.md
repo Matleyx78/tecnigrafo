@@ -40,7 +40,15 @@
      trasformate, ognuna con le **sue** proprietà ed `extras` senza i gruppi
      102: con una similitudine `transformed`; con scala non uniforme
      `transformedShape` (PT6), così cerchi e archi diventano `Ellipse` e i
-     testi si deformano, come AutoCAD (ADR 0052, punto 2). Gli inserimenti
+     testi si deformano, come AutoCAD (ADR 0052, punto 2); i pezzi ellittici
+     di una polilinea con larghezza escono senza larghezza, come EXPLODE di
+     AutoCAD (PT4, punto P8). Con una scala non uniforme, un `MTEXT`, una
+     quota o un retino nel blocco rifiutano l'esplosione con
+     `Block "<nome>" contains objects Tecnigrafo cannot explode.`; un `ATTDEF`
+     torna `ATTDEF`, trasformato come un testo (`transformedText`, PT17)
+     (PT4, punto P25: [DECISIONI.md](../../DECISIONI.md), 2026-11-14,
+     «Revisione delle interfacce PT4»). Entità e grezzi tornano
+     nell'ordine della definizione. Gli inserimenti
      annidati restano inserimenti con la trasformazione composta, se è ancora
      scala più rotazione (le colonne della parte lineare sono ortogonali);
      altrimenti l'esplosione si rifiuta con
@@ -53,7 +61,12 @@
      `Block "<nome>" contains objects Tecnigrafo cannot explode.`
    - **Quota:** le entità della grafica come sono (sono già nel disegno), con le
      loro proprietà risolte come in un blocco: layer `0` → layer della quota,
-     *DaBlocco* → della quota (come AutoCAD).
+     *DaBlocco* → della quota (come AutoCAD). Se la grafica ha entità grezze
+     (non gestite), l'esplosione si rifiuta con
+     `Dimension contains objects Tecnigrafo cannot explode.` e la quota resta
+     (PT4, punto P24).
+   - Gli `ATTRIB` di un inserimento figlio che resta inserimento si
+     trasformano con lui e prendono handle nuovi (PT17, punto 7).
 2. **`EXPLODE`** usa queste funzioni per `INSERT` e `DIMENSION`, oltre alle
    polilinee di oggi: le entità nuove prendono handle nuovi e vanno in fondo
    all'ordine (ADR 0031, punto 6); un rifiuto si scrive nella cronologia e
@@ -71,7 +84,10 @@
   (resta un inserimento); un blocco con attributi (tornano gli `ATTDEF`); scala
   non uniforme `(2, 1)` con un cerchio e un arco (diventano ellissi) e con un
   blocco annidato ruotato di 30° (rifiutato); non esplodibile rifiutato; una
-  quota lineare.
+  quota lineare; una quota con un `POINT` grezzo nella grafica (rifiutata); un
+  blocco con un `MTEXT` sotto scala `(2, 1)` (rifiutato) e un `ATTDEF` sotto
+  la stessa scala (torna `ATTDEF`); un blocco con `Line A`, un grezzo e
+  `Line B` (stesso ordine dopo).
 - `explode_command_test.cpp`: selezione mista di una polilinea, un inserimento
   e una quota; `U`.
 
