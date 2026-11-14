@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "tg/core/polyline.hpp"
+#include "tg/core/math.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -30,8 +31,8 @@ ArcGeometry arcFromBulge(const Vec2& start, const Vec2& end, double bulge) {
     const Vec2 center = midpoint + normal * (signedRadius - sagitta);
 
     const Vec2 fromCenter = start - center;
-    return ArcGeometry{center, std::abs(signedRadius), std::atan2(fromCenter.y, fromCenter.x),
-                       4.0 * std::atan(bulge)};
+    return ArcGeometry{center, std::abs(signedRadius), atan2(fromCenter.y, fromCenter.x),
+                       4.0 * atan(bulge)};
 }
 
 bool PolylineSegment::isArc() const {

@@ -54,7 +54,7 @@ bool sweepsThrough(const ArcGeometry& arc, double angle) {
 
 bool containsPoint(const ArcGeometry& arc, const Vec2& point) {
     const Vec2 relative = point - arc.center;
-    return containsAngle(arc, std::atan2(relative.y, relative.x));
+    return containsAngle(arc, atan2(relative.y, relative.x));
 }
 
 // Where the arc crosses one side of a rectangle: the vertical side
@@ -98,7 +98,8 @@ double normalizeAngle(double radians) {
 }
 
 Vec2 pointAt(const ArcGeometry& arc, double angle) {
-    return arc.center + Vec2{std::cos(angle), std::sin(angle)} * arc.radius;
+    const auto direction = sinCos(angle);
+    return arc.center + Vec2{direction.cosine, direction.sine} * arc.radius;
 }
 
 Vec2 startPoint(const ArcGeometry& arc) {

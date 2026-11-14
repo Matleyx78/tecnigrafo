@@ -24,7 +24,7 @@ using Kind = DynamicField::Kind;
 /// [0, 360) degrees; "0" when the two points coincide.
 std::string formatDirection(const core::Vec2& base, const core::Vec2& point) {
     const core::Vec2 delta = point - base;
-    double angle = std::atan2(delta.y, delta.x);  // 0 for a null delta
+    double angle = core::atan2(delta.y, delta.x);  // 0 for a null delta
     if (angle < 0.0) {
         angle += core::kTwoPi;
     }

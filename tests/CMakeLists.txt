@@ -68,6 +68,7 @@ add_executable(tg_tests
     core/layer_test.cpp
     core/geometry_test.cpp
     core/line_test.cpp
+    core/math_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
     core/raw_data_test.cpp

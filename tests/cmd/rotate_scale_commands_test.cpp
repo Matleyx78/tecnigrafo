@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -189,6 +190,30 @@ TEST_F(RotateScaleTest, RotateCopyKeepsTheSourceAndAddsARotatedCopy) {
     EXPECT_NE(document().entities()[1].id, source);
     expectLine(std::get<Line>(document().entities()[1].entity), {0, 0}, {0, 10});
     EXPECT_EQ(editor().undoName(), "Rotate");
+}
+
+TEST_F(RotateScaleTest, TypedQuarterTurnsAreExactAfterAnyNumberOfTurns) {
+    constexpr double kLength = 0x1p24;
+    for (const char* angle : {"90", "3600090", "-270", "3600000"}) {
+        SCOPED_TRACE(angle);
+        const EntityId id = seed(lineAt(0, 0, kLength, 0));
+        begin(id, "ROTATE");
+        runner().submitText("0,0");
+        runner().submitText(angle);
+        EXPECT_FALSE(runner().isActive());
+        const Line expected = std::string_view{angle} == "3600000"
+                                  ? lineAt(0, 0, kLength, 0)
+                                  : lineAt(0, 0, 0, kLength);
+        EXPECT_EQ(lineOf(id), expected);
+    }
+
+    const EntityId id = seed(lineAt(0, 0, kLength, 0));
+    begin(id, "ROTATE");
+    for (const char* input : {"0,0", "Reference", "3600000", "3600090"}) {
+        runner().submitText(input);
+    }
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(lineOf(id), lineAt(0, 0, 0, kLength));
 }
 
 TEST_F(RotateScaleTest, RotateReferenceWithValuesTurnsByTheDifference) {

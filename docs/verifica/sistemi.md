@@ -53,8 +53,9 @@ aggiunge qui solo con una decisione del responsabile.
 Il primo confronto (0.7.5-P5) ha trovato 17 casi con le ultime cifre di alcuni
 numeri diverse tra i sistemi: archi, testi ruotati, specchiature e grip, con
 ogni probabilità per le funzioni trigonometriche della libreria di ciascun
-sistema. Restano qui fino alle funzioni deterministiche di solid-space, da
-fare all'inizio della tappa 0.8 ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620);
+sistema. PT1 ha sostituito seno, coseno e arcotangente con le funzioni
+deterministiche di solid-space. Le eccezioni residue aspettano la seconda
+parte, PT41 ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620);
 [DECISIONI.md](../DECISIONI.md), 2026-11-08). Le righe dei tre sistemi sono nella
 [issue di P5](https://github.com/Matleyx78/tecnigrafo/issues/546#issuecomment-6725181081).
 

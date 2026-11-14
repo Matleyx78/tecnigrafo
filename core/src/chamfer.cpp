@@ -87,8 +87,7 @@ Cuts solve(const Vec2& corner, const Ray& first, const Ray& second, const Chamfe
             return {CornerOutcome::DistanceTooLarge, {}, {}, false};
         }
         const Vec2 inward = -first.direction;
-        const double opening =
-            std::atan2(std::abs(cross(inward, second.direction)), dot(inward, second.direction));
+        const double opening = atan2(std::abs(cross(inward, second.direction)), dot(inward, second.direction));
         // A half turn gives the same carrying line. The sine rule computes
         // the second distance without constructing a far-away intersection.
         const double turn = std::remainder(angle.angle, kPi);
@@ -96,7 +95,7 @@ Cuts solve(const Vec2& corner, const Ray& first, const Ray& second, const Chamfe
         if (crossing == 0.0 || turn == 0.0 || angle.length == 0.0) {
             return {};
         }
-        const double secondLength = angle.length * (std::sin(turn) / std::sin(opening - turn));
+        const double secondLength = angle.length * (sin(turn) / sin(opening - turn));
         if (!(secondLength > 0.0)) {
             return {};
         }

@@ -35,7 +35,8 @@ core::Vec2 direction(double angle) {
         const auto quarter = static_cast<std::int64_t>(nearest);
         return kAxes.at(static_cast<std::size_t>(((quarter % 4) + 4) % 4));
     }
-    return {std::cos(angle), std::sin(angle)};
+    const auto components = core::sinCos(angle);
+    return {components.cosine, components.sine};
 }
 
 }  // namespace
@@ -61,7 +62,7 @@ std::optional<core::Vec2> polarPoint(const core::Vec2& base, const core::Vec2& p
     // division forgiven, so that 180 / 45 gives the rays at +-180 degrees.
     const double turnsToHalf = core::kPi / increment;
     const double lastRay = std::floor(turnsToHalf + (kRoundoff * turnsToHalf));
-    const double angle = std::atan2(offset.y, offset.x);  // in [-pi, pi]
+    const double angle = core::atan2(offset.y, offset.x);  // in [-pi, pi]
 
     std::optional<core::Vec2> best;
     double bestDistance = std::numeric_limits<double>::infinity();

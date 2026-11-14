@@ -4,6 +4,7 @@
 #include "tg/core/text.hpp"
 
 #include "tg/core/text_metrics.hpp"
+#include "tg/core/math.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -59,7 +60,7 @@ TextFrame textFrame(const Text& text) {
         const double length = delta.length();
         // Guard exact degeneracy only: arbitrarily short baselines remain valid.
         if (length > 0.0 && lineWidth > 0.0) {
-            frame.rotation = std::atan2(delta.y, delta.x);
+            frame.rotation = atan2(delta.y, delta.x);
             if (text.horizontal == TextHorizontal::Aligned) {
                 frame.height = length / (lineWidth * text.widthFactor);
             } else {
@@ -100,7 +101,8 @@ TextFrame textFrame(const Text& text) {
             }
         }
     }
-    const Vec2 along{std::cos(frame.rotation), std::sin(frame.rotation)};
+    const auto direction = sinCos(frame.rotation);
+    const Vec2 along{direction.cosine, direction.sine};
     frame.xAxis = along * (text.mirroredX ? -1.0 : 1.0);
     frame.yAxis = frame.xAxis * std::tan(text.obliqueAngle) +
                   along.perpendicular() * (text.mirroredY ? -1.0 : 1.0);

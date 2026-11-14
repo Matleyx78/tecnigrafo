@@ -3,6 +3,8 @@
 
 #include "tg/cmd/commands/pline_command.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <cmath>
 #include <numbers>
 #include <utility>
@@ -157,10 +159,10 @@ std::optional<double> PlineCommand::segmentBulge(const core::Vec2& end) const {
         const auto previousChord = m_vertices.back().position - previous.position;
         // The end tangent is rotated by half the signed sweep from the chord.
         tangentAngle =
-            std::atan2(previousChord.y, previousChord.x) + (2.0 * std::atan(previous.bulge));
+            core::atan2(previousChord.y, previousChord.x) + (2.0 * core::atan(previous.bulge));
     }
     const double alpha =
-        std::remainder(std::atan2(chord.y, chord.x) - tangentAngle, 2.0 * std::numbers::pi);
+        std::remainder(core::atan2(chord.y, chord.x) - tangentAngle, 2.0 * std::numbers::pi);
     if (std::numbers::pi - std::abs(alpha) <= kAngleTolerance) {
         return std::nullopt;
     }
