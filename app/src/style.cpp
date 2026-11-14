@@ -105,6 +105,8 @@ QFrame#commandInput QLineEdit { background: transparent; border: none; padding: 
 QLabel#promptMark { color: {accent}; }
 QStatusBar { background: {chrome}; border-top: 1px solid {border}; }
 QStatusBar QToolButton:checked { border-color: transparent; }
+QStatusBar QFrame#statusSeparator { background: {border}; }
+QStatusBar QToolButton#environmentIndicator::menu-indicator { image: none; width: 0px; }
 QDockWidget QScrollArea, QDockWidget QScrollArea > QWidget > QWidget { background: {panel}; }
 QDockWidget QAbstractItemView { background: {panel}; border: none; }
 QAbstractItemView { background: {field}; alternate-background-color: {group}; color: {text}; border: 1px solid {border}; selection-background-color: {selection}; selection-color: {text}; }

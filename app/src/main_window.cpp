@@ -41,6 +41,7 @@
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFrame>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QKeySequence>
@@ -899,6 +900,15 @@ void MainWindow::applyDrawingAids() {
     m_view->update();  // the snap marker and the preview may have changed
 }
 
+QFrame* MainWindow::createStatusSeparator() {
+    // The thin vertical line of the reference between the groups of the
+    // status bar (docs/adr/0039, area 10).
+    auto* line = new QFrame(this);
+    line->setObjectName(QStringLiteral("statusSeparator"));
+    line->setFixedSize(1, kStatusIconSize);
+    return line;
+}
+
 QToolButton* MainWindow::createModeButton(QAction* action, const QString& name) {
     auto* button = new QToolButton(this);
     button->setObjectName(name);
@@ -954,7 +964,12 @@ void MainWindow::createStatusBar() {
     // right the settings, the scale, the ribbon, the switches in the order
     // of the reference (lineweights, object snap, polar, ortho), then the
     // place of the environment indicator (point 5).
+    // The reference has no size grip; the window edge resizes.
+    statusBar()->setSizeGripEnabled(false);
     m_cursorLabel = new QLabel(this);
+    m_cursorLabel->setObjectName(QStringLiteral("cursorLabel"));
+    // Fixed pitch, so the digits do not move as the cursor does (area 10).
+    m_cursorLabel->setFont(fixedFont());
     m_cursorLabel->setMinimumWidth(260);
     statusBar()->addWidget(m_cursorLabel);
     // The environment of the active session, or none with the Start page
@@ -972,6 +987,7 @@ void MainWindow::createStatusBar() {
             [this, environmentMenu] { populateEnvironmentMenu(*environmentMenu); });
     statusBar()->addPermanentWidget(m_environmentIndicator);
     updateEnvironmentIndicator();
+    statusBar()->addPermanentWidget(createStatusSeparator());
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
     statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
     statusBar()->addPermanentWidget(
@@ -1002,6 +1018,7 @@ void MainWindow::createStatusBar() {
     connect(interfaceSwitch, &QAction::changed, m_ribbonButton,
             [this, interfaceSwitch] { m_ribbonButton->setIcon(interfaceSwitch->icon()); });
     statusBar()->addPermanentWidget(m_ribbonButton);
+    statusBar()->addPermanentWidget(createStatusSeparator());
 
     m_scaleLabel = new QLabel(this);
     statusBar()->addPermanentWidget(m_scaleLabel);

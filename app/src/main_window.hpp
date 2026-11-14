@@ -34,6 +34,7 @@ class QCloseEvent;
 class QDockWidget;
 class QEvent;
 class QShowEvent;
+class QFrame;
 class QMenu;
 class QSettings;
 class QLabel;
@@ -293,6 +294,7 @@ private:
 
     /// A status bar button with the icon of the checkable `action`, no text,
     /// that mirrors the action both ways (docs/adr/0039, point 1, area 10).
+    QFrame* createStatusSeparator();
     QToolButton* createModeButton(QAction* action, const QString& name);
 
     /// Hands the runner of the active session the drawing aids chosen in

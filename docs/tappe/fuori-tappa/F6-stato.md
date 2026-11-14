@@ -35,7 +35,7 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 7. Immissione dinamica | da fare |
 | 8. Pannello *Properties* | da fare |
 | 9. Pannello *Layers* | da fare |
-| 10. Barra di stato | da fare |
+| 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
 | Interfaccia classica (menu e barre) | da fare |
 | Finestre di dialogo | da fare |
 | Icone | da fare |
@@ -305,6 +305,21 @@ logo è il primo elemento della barra di accesso rapido d'angolo
 (`programLogo`), approvato dal responsabile nella finestra vera, commit
 fatto.
 
+**Area 10: barra di stato** (2026-11-13), approvata dal responsabile il 2026-11-14:
+
+- tolta la maniglia di ridimensionamento in basso a destra;
+- coordinate nel font a passo fisso;
+- tolta la freccia ⌄ dell'indicatore dell'ambiente (il menu resta, al clic);
+- separatori sottili (`border`) dopo l'indicatore dell'ambiente e prima
+  della scala, come nel riferimento.
+
+Coordinate (`X: … Y: …`) e scala (`px/unit`) restano come sono, per
+decisione del responsabile (sotto); lo spazio a sinistra per *Model*/*Layout*
+riguarda funzioni che non ci sono.
+
+I test di `app_widgets` e `app_gallery` che falliscono sono gli stessi di
+prima di questo giro (ribbon, logo, icone): da allineare alla chiusura.
+
 Prossimi passi: le aree
 rimaste (8–9 pannelli, 10 barra di stato, 4 dettagli delle schede dei
 documenti, 5 barra di navigazione se le azioni esistono, 7 immissione
@@ -349,7 +364,12 @@ nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
   icone a ruoli; il responsabile ha permesso la cartella e la riga di
   `ui-panel-launcher` in `docs/ICONE.md`.
 
+- 2026-11-14, barra di stato (area 10): le coordinate restano `X: … Y: …`
+  e la scala `px/unit`, non `x, y, z` e `1:1` del riferimento.
+
 ## Scostamenti dal riferimento decisi
+
+- Barra di stato: coordinate `X: … Y: …` e scala in `px/unit` (sopra).
 
 - *Layers*: le colonne *Lineweight* e *Plot* restano (sopra).
 - Ribbon: i pulsanti grandi si chiamano *Layers Panel* e *Properties Panel*
