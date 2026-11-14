@@ -5,7 +5,7 @@
 # when the owner merges a pull request whose description has lines
 # "Avvia dopo il merge: #N", start or resume issue N with its agent. The
 # mention must come from the owner, because the agents ignore bots:
-# scripts/avvia.sh writes it with the CATENA_PAT secret, and does not start
+# scripts/avvia.sh writes it with the RELAY_PAT secret, and does not start
 # an issue that still waits for another one ("Dipende da", "Riferimenti").
 name: Dopo il merge
 
@@ -27,7 +27,7 @@ jobs:
       - name: Start the issues named in the description
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_TOKEN_UTENTE: ${{ secrets.CATENA_PAT }}
+          GH_TOKEN_UTENTE: ${{ secrets.RELAY_PAT }}
           BODY: ${{ github.event.pull_request.body }}
           PR: ${{ github.event.pull_request.number }}
         run: |

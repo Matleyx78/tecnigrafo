@@ -155,7 +155,7 @@ metti un carattere invisibile dopo la chiocciola, o scrivi il nome senza.
    and variables → Actions*).
 3. Crea un token personale a grana fine valido solo per il repository, con
    *Issues* e *Pull requests* in lettura e scrittura e *Contents* in lettura,
-   e mettilo nel secret `CATENA_PAT`. Serve perché gli agenti rispondono solo
+   e mettilo nel secret `RELAY_PAT`. Serve perché gli agenti rispondono solo
    a te e Codex non risponde ai bot: con quel token scrivono gli script, e
    Claude apre le pull request in modo che parta la CI.
 4. In Codex crea un **ambiente legacy** per il repository (le menzioni usano

@@ -16,7 +16,7 @@
 #
 # With DRY_RUN=1 it only prints the comment it would write.
 #
-# Token: GH_TOKEN_UTENTE if set (the CATENA_PAT secret), otherwise GH_TOKEN,
+# Token: GH_TOKEN_UTENTE if set (the RELAY_PAT secret), otherwise GH_TOKEN,
 # otherwise the one of `gh auth login` (the owner in a terminal).
 # The agents answer only to the owner, so the comment must use the owner's
 # token; the reads use the same one.

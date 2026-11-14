@@ -10,7 +10,7 @@
 #     scripts/passa.sh <claude|codex> <pr> correzioni <round>
 #     scripts/passa.sh <claude|codex> <pr> analisi
 #
-# Token: GH_TOKEN_UTENTE if set (Claude in GitHub Actions, the CATENA_PAT
+# Token: GH_TOKEN_UTENTE if set (Claude in GitHub Actions, the RELAY_PAT
 # secret), otherwise GH_TOKEN (Codex, whose token already belongs to the
 # owner), otherwise the one of `gh auth login` (the owner in a terminal).
 #

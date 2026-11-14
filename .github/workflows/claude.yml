@@ -5,13 +5,13 @@
 # Code when a comment, a review or a new issue of the owner mentions @claude.
 # Only the owner can start it: Codex writes with the owner's token, the
 # automations through scripts/passa.sh and scripts/avvia.sh with the
-# CATENA_PAT secret. Claude runs on the owner's Max plan, through the
+# RELAY_PAT secret. Claude runs on the owner's Max plan, through the
 # CLAUDE_CODE_OAUTH_TOKEN secret (created with `claude setup-token`).
 #
 # "[modello: …]" and "[impegno: …]" in the text choose model and effort; only
 # known values are accepted, anything else falls back to opus and medium.
 #
-# gh inside Claude's shell uses CATENA_PAT, not the default GITHUB_TOKEN: a
+# gh inside Claude's shell uses RELAY_PAT, not the default GITHUB_TOKEN: a
 # pull request opened with GITHUB_TOKEN would start no workflow, so ci.yml,
 # which runs on pull requests only, would never run. Pushes come from the
 # Claude GitHub App and start it as usual.
@@ -50,8 +50,8 @@ jobs:
       checks: read
       id-token: write
     env:
-      GH_TOKEN: ${{ secrets.CATENA_PAT }}
-      GH_TOKEN_UTENTE: ${{ secrets.CATENA_PAT }}
+      GH_TOKEN: ${{ secrets.RELAY_PAT }}
+      GH_TOKEN_UTENTE: ${{ secrets.RELAY_PAT }}
       TG_BUILD_SUFFIX: -claude
     steps:
       - uses: actions/checkout@v7
@@ -91,5 +91,5 @@ jobs:
           claude_args: >-
             --model ${{ steps.opts.outputs.model }}
             --effort ${{ steps.opts.outputs.effort }}
-            --append-system-prompt "Sei stato avviato dalla catena degli agenti (docs/agenti/catena.md) con il modello ${{ steps.opts.outputs.model }} e l'impegno ${{ steps.opts.outputs.effort }}: scrivili cosi nelle pull request e nei verbali."
+            --append-system-prompt "Sei stato avviato dalla catena degli agenti (docs/agenti/catena.md) con il modello ${{ steps.opts.outputs.model }} e l'impegno ${{ steps.opts.outputs.effort }}: scrivili cosi nelle pull request e nei verbali. Non scrivere mai @claude né @codex nei commenti, nemmeno citando un comando: i tuoi commenti hanno l'identità del responsabile e avvierebbero un agente."
             --allowedTools "Edit,Write,Bash(gh:*),Bash(git:*),Bash(python3:*),Bash(jq:*),Bash(clang-format:*),Bash(clang-format-18:*),Bash(scripts/controlla.sh:*),Bash(scripts/ci-attendi.sh:*),Bash(bash scripts/ci-attendi.sh:*),Bash(scripts/ci-errori.sh:*),Bash(bash scripts/ci-errori.sh:*),Bash(scripts/dipendenze.py:*),Bash(scripts/passa.sh:*),Bash(bash scripts/passa.sh:*)"

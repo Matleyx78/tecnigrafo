@@ -39,7 +39,7 @@ si sono ridotti a decisioni e merge.
 3. **Passaggi solo con gli script.** `scripts/passa.sh` (revisione, correzioni,
    analisi di una CI rossa) e `scripts/avvia.sh` scrivono la menzione a nome
    del responsabile, con un token personale a grana fine (secret
-   `CATENA_PAT`) quando scrive Claude da GitHub Actions. Nessun agente scrive
+   `RELAY_PAT`) quando scrive Claude da GitHub Actions. Nessun agente scrive
    a mano la chiocciola davanti al nome di un agente: ogni menzione avvia una
    sessione. Le richieste di revisione e di analisi per Codex vanno nella
    issue collegata, perché su una pull request attiverebbero la sua revisione
@@ -117,5 +117,5 @@ si sono ridotti a decisioni e merge.
 - Il workflow di Claude gira fino a cinque ore, perché aspetta la CI di
   Tecnigrafo; consuma il piano Max, non l'API.
 - Serve una preparazione una volta per repository: app di Claude, secret
-  `CLAUDE_CODE_OAUTH_TOKEN` e `CATENA_PAT`, un ambiente legacy di Codex per le
+  `CLAUDE_CODE_OAUTH_TOKEN` e `RELAY_PAT`, un ambiente legacy di Codex per le
   menzioni (guida, A2a).
