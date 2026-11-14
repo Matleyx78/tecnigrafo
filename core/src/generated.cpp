@@ -140,15 +140,36 @@ bool curveIntersects(const GeneratedShape& shape, const BBox& rectangle) {
 
 // --- Filled regions ----------------------------------------------------------
 
+/// The side of `point` with respect to the line from `start` to `end`: the
+/// sign of cross(end - start, point - start), positive on the left. It is
+/// computed from the endpoints in a fixed order, so the reversed segment gives
+/// exactly the opposite value. A point on the line goes where the ray test of
+/// crossSegment() puts it: moved right (+X), then up (+Y), so that neither an
+/// edge through it nor a vertex at its height counts.
+double sideOf(const Vec2& start, const Vec2& end, const Vec2& point) {
+    const bool inOrder = start.x < end.x || (start.x == end.x && start.y < end.y);
+    double side = inOrder ? cross(end - start, point - start) : -cross(start - end, point - end);
+    if (side == 0.0) {
+        const Vec2 chord = end - start;
+        side = chord.y != 0.0 ? -chord.y : chord.x;
+    }
+    return side;
+}
+
 /// Flips `inside` when the ray from `point` towards +X crosses the segment
 /// from `start` to `end` with `bulge`: once for its chord, once more when the
-/// point lies between the chord and the arc. `bulge` is 0 for a segment that
-/// PolylineSegment::isArc() takes as straight (docs/adr/0036, point 7).
+/// point lies between the chord and the arc. Both decisions use the same side
+/// of the chord (sideOf()), whichever the direction of the loop. `bulge` is 0
+/// for a segment that PolylineSegment::isArc() takes as straight
+/// (docs/adr/0036, point 7).
 void crossSegment(const Vec2& start, const Vec2& end, double bulge, const Vec2& point,
                   bool& inside) {
+    const double pointSide = sideOf(start, end, point);
     if ((start.y > point.y) != (end.y > point.y)) {
-        const double x = start.x + ((point.y - start.y) * (end.x - start.x) / (end.y - start.y));
-        if (point.x < x) {
+        // The chord crosses the height of the point: to its right when the
+        // point is left of a chord going up, or right of one going down.
+        const bool up = end.y > start.y;
+        if (up ? pointSide > 0.0 : pointSide < 0.0) {
             inside = !inside;
         }
     }
@@ -159,13 +180,6 @@ void crossSegment(const Vec2& start, const Vec2& end, double bulge, const Vec2& 
     const Vec2 chord = end - start;
     // A positive bulge runs counter-clockwise: the arc lies right of the chord.
     const Vec2 middle = ((start + end) * 0.5) + (Vec2{chord.y, -chord.x} * (bulge * 0.5));
-    double pointSide = cross(chord, point - start);
-    if (pointSide == 0.0) {
-        // On the chord: the side the ray test above puts it on. It does not
-        // count an edge through the point (as if moved right, along +X) nor
-        // a vertex at its height (as if moved up, along +Y).
-        pointSide = chord.y != 0.0 ? -chord.y : chord.x;
-    }
     const double arcSide = cross(chord, middle - start);
     if (distance(point, arc.center) < arc.radius &&
         ((pointSide > 0.0 && arcSide > 0.0) || (pointSide < 0.0 && arcSide < 0.0))) {

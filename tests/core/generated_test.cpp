@@ -364,6 +364,23 @@ TEST(Generated, APointOnTheChordOfAnArcIsFilled) {
     }
 }
 
+TEST(Generated, APointOnASlantedChordIsFilledInBothDirections) {
+    // The chord from (0,0) to (3,11), closed by a half circle outside the
+    // quadrilateral: p lies on it, inside the region, in both directions.
+    const std::vector<Polyline> loops{
+        Polyline{{{{0, 0}, -1.0}, {{3, 11}}, {{14, 8}}, {{11, -3}}}, true},
+        Polyline{{{{11, -3}}, {{14, 8}}, {{3, 11}, 1.0}, {{0, 0}}}, true}};
+    const Vec2 p{15.0 / 11.0, 5.0};
+    for (const Polyline& loop : loops) {
+        const FilledRegion region{{loop}, Transform2D{}};
+        EXPECT_EQ(shapeDistance(region, p), 0.0);
+        EXPECT_TRUE(shapeIntersects(region, {p, p + Vec2{0.01, 0.01}}));
+        EXPECT_EQ(shapeDistance(region, {7, 4}), 0.0);
+        EXPECT_EQ(shapeDistance(region, {-1, 6}), 0.0);  // under the arc
+        EXPECT_GT(shapeDistance(region, {20, 20}), 0.0);
+    }
+}
+
 TEST(Generated, AFilledRegionUnderAMapAnswersInDrawingCoordinates) {
     FilledRegion region = squareWithHole();
     region.transform = Transform2D::translation({100, 0});
