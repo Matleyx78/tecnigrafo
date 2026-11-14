@@ -23,7 +23,8 @@
 
 ## Cosa fare
 
-Le misure sono già per `DIMSCALE`; frecce, colori, spessori, testo,
+Le grandezze grafiche sono già per `DIMSCALE`, la misura no (PT23, punto 2);
+frecce, colori, spessori, testo,
 adattamento quando testo e frecce non ci stanno (i quattro casi di PT23,
 misurati lungo l'arco per l'angolare) e rigenerazione come PT23. Per le radiali
 e diametrali in un cerchio piccolo valgono i casi di RT24, presi da
@@ -34,26 +35,39 @@ caso.
    `linePoint → point15`, punto dell'arco `point16`. Vertice `v` = intersezione
    delle due rette (da solid-space, `intersections.hpp`); rette parallele: non
    rigenerabile. Le quattro semirette da `v` lungo le due rette dividono il
-   piano in quattro angoli; la quota misura quello che contiene `point16`
-   (sulla bisettrice esatta vale il primo in senso antiorario dalla prima
-   semiretta). Raggio dell'arco `R = |point16 − v|`; arco di quota da una
+   piano in quattro angoli; la quota misura quello che contiene `point16`,
+   deciso con il lato di `point16` rispetto alle due rette originali
+   (`sideOf`), non rispetto al vertice costruito. Un `point16` su una delle
+   quattro semirette appartiene
+   all'angolo che viene dopo di essa in senso antiorario; `point16 = v` non è
+   rigenerabile; rette coincidenti come le parallele, `Lines are parallel.`
+   (PT5, punto B13: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT5»). Raggio dell'arco `R = |point16 − v|`; arco di quota da una
    semiretta all'altra. Linee d'estensione: solo se l'arco sta oltre la linea,
    dall'estremo della linea più vicino all'arco (più `DIMEXO`) fino all'arco più
    `DIMEXE`, lungo la semiretta. Frecce tangenti all'arco nei suoi estremi
-   (dentro se la lunghezza dell'arco ≥ `2a`, altrimenti fuori). Testo al punto
+   secondo i quattro casi dell'adattamento di PT23, con le misure (`L`, il
+   testo, le frecce) prese lungo l'arco (PT5, punto B15). Testo al punto
    medio dell'arco, sopra di `DIMGAP` se `DIMTAD` = 1, ruotato come la tangente
    portata nella lettura; valore in gradi con `DIMADEC` (−1 = `DIMDEC`),
-   `DIMAZIN`, e `%%d` in fondo.
+   `DIMAZIN`, e `%%d` in fondo; `DIMLFAC` e `DIMRND` non si applicano agli
+   angoli, come AutoCAD (`dimensionText` lo dice nel suo commento: ingresso in
+   gradi per l'angolare, in unità del disegno per le lunghezze).
 2. **Radiale.** Centro `c = linePoint`, punto sulla curva `q = point15`,
    `R = |q − c|`; posizione del testo `t = textPoint`. Se `t` è fuori dal
    cerchio: linea da `q` a `t`, freccia in `q` puntata verso `c` dall'esterno;
    se è dentro: linea da `c` a `q`, freccia in `q` puntata verso l'esterno.
    Testo in `t`, prefisso `R`, allineato alla linea (`DIMTOH`/`DIMTIH` 0) o
-   orizzontale. Segno del centro: se `DIMCEN > 0`, due segmenti lunghi
-   `2·DIMCEN` a croce sul centro; se `< 0`, anche le linee d'asse; se 0, niente.
+   orizzontale. Un `t` esattamente sulla curva conta come dentro; un `t` nel
+   centro non è rigenerabile. Segno del centro: se `DIMCEN > 0`, due segmenti
+   lunghi `2·DIMCEN` a croce sul centro; se `< 0`, la croce lunga `2·|DIMCEN|`
+   più le linee d'asse, staccate dalla croce di `|DIMCEN|` e che finiscono
+   `|DIMCEN|` oltre il cerchio, come AutoCAD; se la fine non supera l'inizio
+   (raggio fino a `2·|DIMCEN|`), niente linee d'asse, solo la croce ([DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Secondo giro delle revisioni PT4 e PT5»);
+   se 0, niente (PT5, punto B16).
 3. **Diametrale.** Punti opposti `point15` e `linePoint`, centro nel mezzo.
    Testo dentro: linea da un punto all'altro con due frecce verso l'esterno;
-   testo fuori: come la radiale dal punto più vicino al testo. Prefisso `%%c`.
+   testo fuori: come la radiale dal punto più vicino al testo; a pari
+   distanza `point15`. Prefisso `%%c`.
    Segno del centro come la radiale.
 4. **Trasformazioni e grip** come PT23: i punti si trasformano e la quota si
    rigenera; grip su tutti i punti di definizione e sul testo.
@@ -68,7 +82,16 @@ caso.
 - `dimension_angular_test.cpp`: angolare a 90° e a 30° con `point16` in ognuno
   dei quattro angoli; linee che non arrivano all'arco (linee d'estensione);
   linee parallele (non rigenerabile); radiale con il testo fuori e dentro;
-  diametrale; `DIMCEN` positivo, negativo e 0.
+  diametrale; `DIMCEN` positivo, negativo e 0; assi X e Y con `point16=(5,0)`
+  (l'angolo che viene dopo in senso antiorario, cioè il primo quadrante) e
+  con `point16=(0,0)` (non rigenerabile); rette coincidenti (non
+  rigenerabile); arco lungo 8 con frecce da 2 e testo largo 7 margini compresi
+  (testo dentro e frecce fuori, il caso 2 di PT23); angolo retto con `DIMLFAC` 2 e `DIMRND` 4: `90%%d`;
+  radiale di raggio 5 con il testo in `(5,0)` (dentro) e nel centro (non
+  rigenerabile); diametrale `(±5,0)` con il testo in `(0,6)` (dal lato di
+  `point15`); `DIMCEN` −2 su raggio 5: croce da −2 a 2, assi da 4 a 7 per
+  lato; `DIMCEN` −2 su raggio 1 e su raggio 2, radiale e diametrale: solo la
+  croce.
 
 ## Fatto quando
 

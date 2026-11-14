@@ -49,7 +49,11 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
 3. La quota nasce con lo stile corrente, le variabili correnti diverse dallo
    stile come sovrascritture, `regenerated` (PT23), layer e proprietà correnti.
    Anteprima della quota mentre si sceglie la posizione. Un passo di
-   annullamento con il nome del comando.
+   annullamento con il nome del comando. Se `regenerated` non riesce (per
+   esempio un'allineata con le due origini uguali), il comando scrive il
+   motivo e ripete la richiesta che l'ha causato (PT5, punto B12:
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle
+   interfacce PT5»).
 
 ## Regole della tappa che valgono qui
 
@@ -60,7 +64,9 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
 
 - `dimension_commands_test.cpp`: le due quote con punti scritti; *select
   object* su una linea; *Text* con `<>`; *Rotated*; scelta automatica
-  orizzontale e verticale; `U`.
+  orizzontale e verticale; `U`; `DIMALIGNED` con la seconda origine uguale
+  alla prima: nessuna quota, il motivo e di nuovo
+  `Specify second extension line origin:`.
 
 ## Fatto quando
 

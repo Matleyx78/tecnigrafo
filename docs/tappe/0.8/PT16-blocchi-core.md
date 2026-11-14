@@ -52,7 +52,13 @@
    };
    ```
 
-   `Document::replaceBlock` (PT6) ha la precondizione `!wouldCycle`.
+   `Document::replaceBlock` (PT6) ha la precondizione `!wouldCycle`. Togliere
+   (`nullopt`) un blocco usato da un inserimento, anche annidato, si rifiuta e
+   non cambia nulla, come PURGE di AutoCAD (`DocumentTables::replaceBlock`
+   restituisce `false`). Profondità massima degli inserimenti annidati:
+   **64 livelli**; un inserimento più profondo si tratta come un riferimento
+   mancante (nessuna geometria da lì in giù), con un messaggio alla lettura
+   (PT4, punto P17: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
 2. **Inserimento.** `supported(const Insert&)` restituisce `true` se ogni
    attributo è valido (PT17); scala X e Y diverse da zero.
    - `Transform2D insertTransform(const Document&, const Insert&)`: togliere il
@@ -61,11 +67,15 @@
    - `dependsOnBlock(document, record, name)`: vero se l'inserimento usa `name`
      o un blocco che lo contiene, a qualunque profondità.
 3. **Geometria generata** (ADR 0044, punto 2): per ogni entità della
-   definizione, in ordine, la sua geometria generata (ricorsiva per gli
-   inserimenti annidati) composta con la trasformazione dell'inserimento:
+   definizione, in ordine, la sua geometria generata composta con la
+   trasformazione dell'inserimento. Per gli inserimenti annidati le
+   trasformazioni si **compongono prima** e si applicano una volta sola alla
+   forma originale: un cerchio dentro scale `(0.5, 1)` e poi `(2, 1)` resta
+   un cerchio (PT4, punto P18). La trasformazione composta:
    similitudine → `transformed`; altrimenti `transformedShape` (PT6, punto 3),
    esatta per ogni forma: questo pacchetto realizza la sua parte per linee,
-   polilinee (divise in linee e archi d'ellisse quando hanno archi), `Solid` e
+   polilinee (divise in linee e archi d'ellisse quando hanno archi; sotto una
+   scala non uniforme senza larghezze, PT8), `Solid` e
    `FilledRegion` (che tiene l'affinità); ellissi e archi vengono da PT48, il
    testo da PT17. Poi gli attributi (PT17). Un blocco che non c'è dà
    nessun elemento (non succede: il lettore lo lascia non gestito).
@@ -84,7 +94,18 @@
    riflette, φ viene dalla sua scomposizione (ADR 0031, punto 3). Gli
    attributi li trasforma PT17.
 6. **Grip** sul punto d'inserimento; **snap** inserimento sul punto
-   d'inserimento più quelli della geometria generata (PT6).
+   d'inserimento, sempre, anche lontano dalla geometria (l'indice lo considera
+   come parte dell'ingombro per lo snap), più quelli della geometria generata
+   (PT6); lo snap *Intersezione* trova anche gli incroci fra due forme dello
+   stesso inserimento e fra una sua forma e un'altra entità (PT4, punto P4:
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
+7. **Selezione** (PT4, punto P3): con un clic, la distanza di un inserimento è
+   la minima fra le sue forme visibili; con la finestra è dentro se tutte le
+   sue forme visibili sono dentro, e la attraversa se una la attraversa. Un
+   inserimento senza forme visibili (blocco vuoto o tutto nascosto) non si
+   prende con un clic, e con la finestra solo se il punto d'inserimento è
+   dentro. Le forme che ancora non rispondono alle domande (l'ellisse prima di
+   PT50) si ignorano; un retino pieno risponde con la sua area (PT30).
 
 ## Regole della tappa che valgono qui
 
@@ -100,7 +121,14 @@
 - `insert_test.cpp`: geometria generata con scala 1, 2, −1, (2, 1) e rotazione
   30°; blocco annidato; proprietà con layer `0` e *DaBlocco* su due livelli;
   layer congelato dell'inserimento; `MIRROR` di un inserimento; ingombro che
-  cambia quando la definizione cambia (`Document::replaceBlock`).
+  cambia quando la definizione cambia (`Document::replaceBlock`); un cerchio
+  in `B`, `B` in `A` con scala `(0.5, 1)`, `A` inserito con `(2, 1)`: resta
+  un `Circle`; togliere un blocco usato si rifiuta; una catena di 65 livelli
+  si ferma al 64°; snap inserimento con il punto base lontano dalla geometria;
+  intersezione fra due linee dello stesso blocco e fra una linea del blocco e
+  una esterna; clic a un'unità da una linea del blocco; finestra che contiene
+  tutto il blocco e una sola parte; blocco vuoto preso solo dalla finestra sul
+  punto d'inserimento.
 
 ## Fatto quando
 

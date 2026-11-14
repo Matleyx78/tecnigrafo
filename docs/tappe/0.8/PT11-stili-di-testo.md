@@ -68,9 +68,17 @@
    corrente.
 3. `io` legge la tabella `STYLE` nel modello e la riscrive dal modello,
    nell'ordine del file; i record con 70 bit 1 (file di forme) restano grezzi
-   nel loro posto. `$TEXTSTYLE` diventa lo stile corrente; manca → `Standard`.
+   nel loro posto, e la riscrittura ricostruisce l'ordine misto come era
+   letto. `$TEXTSTYLE` diventa lo stile corrente; se manca, o nomina uno stile
+   che non c'è, lo stile corrente è `Standard`, e se `Standard` non c'è si
+   crea come in un disegno nuovo, con un handle nuovo, come all'apertura in
+   AutoCAD (PT4, punto P15: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
    Un file che nomina uno stile che non c'è nella tabella (in un `TEXT`) si
    legge come oggi: il nome resta nel testo.
+
+4. **Aggiornare uno stile:** `put` con il nome di uno stile che c'è già ne
+   tiene l'handle e la posizione nella tabella, anche se lo stile passato ha
+   `id` 0 (PT4, punto P16).
 
 ## Regole della tappa che valgono qui
 
@@ -81,6 +89,12 @@
 
 - `text_style_table_test.cpp`: `put`, `find` senza distinguere maiuscole,
   stile corrente.
+- `text_style_table_test.cpp`: `put` di `custom` con `id` 0 su uno stile
+  `Custom` che c'è tiene il suo handle e la sua posizione.
+- `dxf_tables_test.cpp`: `$TEXTSTYLE=Missing` con una tabella che ha solo
+  `Custom`: corrente `Standard`, creato; `$TEXTSTYLE` assente con `Standard`
+  presente: corrente `Standard`; `[Standard, ShapeGrezzo, Custom]` si riscrive
+  nello stesso ordine.
 - `dxf_tables_test.cpp`: giro di una tabella con `Standard`, uno stile con
   altezza fissa e uno con un file di forme (che resta grezzo); `$TEXTSTYLE`.
 
