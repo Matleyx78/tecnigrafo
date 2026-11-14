@@ -2,14 +2,19 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 // run, report, reset, open and save: the tools of the live session
-// (docs/adr/0027, point 5).
+// (docs/adr/0027, point 5). All but reset act on a ToolHost, so that the
+// program can lend its active session (docs/adr/0051, point 4).
 
 #include "nlohmann_json/json.hpp"
 #include "tg/mcp/session.hpp"
 #include "tg/mcp/tool.hpp"
+#include "tg/mcp/tool_host.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -60,21 +65,34 @@ json pathProperty(std::string_view description) {
     return json{{"type", "string"}, {"description", description}};
 }
 
-/// What every tool of the session shares: the session itself.
-class SessionTool : public Tool {
+/// What every tool over a host shares: the host, which may be missing,
+/// and what the tools say of paths.
+class HostTool : public Tool {
 public:
-    explicit SessionTool(std::shared_ptr<Session> session) : m_session(std::move(session)) {}
+    HostTool(std::shared_ptr<ToolHost> host, FilePaths paths)
+        : m_host(std::move(host)), m_paths(paths) {}
+
+    [[nodiscard]] ToolResult call(const json& arguments) final {
+        if (m_host == nullptr) {
+            return ToolResult::error(std::string{kNotRunning});
+        }
+        return callOn(*m_host, arguments);
+    }
 
 protected:
-    [[nodiscard]] Session& session() const { return *m_session; }
+    /// The call, with a host.
+    [[nodiscard]] virtual ToolResult callOn(ToolHost& host, const json& arguments) = 0;
+
+    [[nodiscard]] FilePaths paths() const { return m_paths; }
 
 private:
-    std::shared_ptr<Session> m_session;
+    std::shared_ptr<ToolHost> m_host;
+    FilePaths m_paths;
 };
 
-class Run final : public SessionTool {
+class Run final : public HostTool {
 public:
-    using SessionTool::SessionTool;
+    using HostTool::HostTool;
 
     [[nodiscard]] std::string name() const override { return "run"; }
 
@@ -99,7 +117,8 @@ public:
                     {"additionalProperties", false}};
     }
 
-    [[nodiscard]] ToolResult call(const json& arguments) override {
+protected:
+    [[nodiscard]] ToolResult callOn(ToolHost& host, const json& arguments) override {
         if (auto error = unknownArgument(name(), arguments, {"lines"})) {
             return std::move(*error);
         }
@@ -119,13 +138,13 @@ public:
             }
             text.push_back(line.get<std::string>());
         }
-        return session().run(text);
+        return host.run(text);
     }
 };
 
-class Report final : public SessionTool {
+class Report final : public HostTool {
 public:
-    using SessionTool::SessionTool;
+    using HostTool::HostTool;
 
     [[nodiscard]] std::string name() const override { return "report"; }
 
@@ -137,17 +156,18 @@ public:
 
     [[nodiscard]] json inputSchema() const override { return noArguments(); }
 
-    [[nodiscard]] ToolResult call(const json& arguments) override {
+protected:
+    [[nodiscard]] ToolResult callOn(ToolHost& host, const json& arguments) override {
         if (auto error = unknownArgument(name(), arguments, {})) {
             return std::move(*error);
         }
-        return ToolResult::success(session().report());
+        return ToolResult::success(host.report());
     }
 };
 
-class Reset final : public SessionTool {
+class Reset final : public Tool {
 public:
-    using SessionTool::SessionTool;
+    explicit Reset(std::shared_ptr<Session> session) : m_session(std::move(session)) {}
 
     [[nodiscard]] std::string name() const override { return "reset"; }
 
@@ -162,49 +182,68 @@ public:
         if (auto error = unknownArgument(name(), arguments, {})) {
             return std::move(*error);
         }
-        return ToolResult::success(session().reset());
+        return ToolResult::success(m_session->reset());
     }
+
+private:
+    std::shared_ptr<Session> m_session;
 };
 
-class Open final : public SessionTool {
+class Open final : public HostTool {
 public:
-    using SessionTool::SessionTool;
+    using HostTool::HostTool;
 
     [[nodiscard]] std::string name() const override { return "open"; }
 
     [[nodiscard]] std::string description() const override {
+        if (paths() == FilePaths::Computer) {
+            return "Opens a .dxf or .cadx file of this computer with the command OPEN, as run "
+                   "would with the lines OPEN and the path. Returns what run returns.";
+        }
         return "Opens a .dxf or .cadx file inside --root with the command OPEN, as run would "
                "with the lines OPEN and the name; with unsaved changes it stops at the question "
                "whether to save them. Returns what run returns.";
     }
 
     [[nodiscard]] json inputSchema() const override {
+        const std::string_view path = paths() == FilePaths::Computer
+                                          ? "The path of the file on this computer."
+                                          : "The file, relative to --root: no \"..\", no "
+                                            "absolute path.";
         return json{{"type", "object"},
-                    {"properties", json{{"path", pathProperty("The file, relative to --root: "
-                                                              "no \"..\", no absolute path.")}}},
+                    {"properties", json{{"path", pathProperty(path)}}},
                     {"required", json::array({"path"})},
                     {"additionalProperties", false}};
     }
 
-    [[nodiscard]] ToolResult call(const json& arguments) override {
+protected:
+    [[nodiscard]] ToolResult callOn(ToolHost& host, const json& arguments) override {
         if (auto error = unknownArgument(name(), arguments, {"path"})) {
             return std::move(*error);
         }
         const std::optional<std::string> path = stringArgument(arguments, "path");
         if (!path) {
-            return ToolResult::error("open needs \"path\", a file relative to --root.");
+            return ToolResult::error(paths() == FilePaths::Computer
+                                         ? "open needs \"path\", the path of a file."
+                                         : "open needs \"path\", a file relative to --root.");
         }
-        return session().open(*path);
+        return host.open(*path);
     }
 };
 
-class Save final : public SessionTool {
+class Save final : public HostTool {
 public:
-    using SessionTool::SessionTool;
+    using HostTool::HostTool;
 
     [[nodiscard]] std::string name() const override { return "save"; }
 
     [[nodiscard]] std::string description() const override {
+        if (paths() == FilePaths::Computer) {
+            return "Saves the drawing to a .dxf or .cadx file of this computer with the command "
+                   "SAVEAS, as run would with the lines SAVEAS and the path. If the file exists, "
+                   "replace true answers Y to the question to replace it; otherwise the question "
+                   "stays. Returns what run returns.";
+        }
         return "Saves the drawing to a .dxf or .cadx file inside --root with the command SAVEAS, "
                "as run would with the lines SAVEAS and the name. If the file exists, replace "
                "true answers Y to the question to replace it; otherwise the question stays. "
@@ -212,25 +251,31 @@ public:
     }
 
     [[nodiscard]] json inputSchema() const override {
+        const std::string_view path =
+            paths() == FilePaths::Computer
+                ? "The path of the file on this computer. Without an extension, .cadx."
+                : "The file, relative to --root: no \"..\", no absolute path. Without an "
+                  "extension, .cadx.";
         return json{
             {"type", "object"},
-            {"properties",
-             json{{"path", pathProperty("The file, relative to --root: no \"..\", no absolute "
-                                        "path. Without an extension, .cadx.")},
-                  {"replace", json{{"type", "boolean"},
-                                   {"description", "Replace the file if it exists."},
-                                   {"default", false}}}}},
+            {"properties", json{{"path", pathProperty(path)},
+                                {"replace", json{{"type", "boolean"},
+                                                 {"description", "Replace the file if it exists."},
+                                                 {"default", false}}}}},
             {"required", json::array({"path"})},
             {"additionalProperties", false}};
     }
 
-    [[nodiscard]] ToolResult call(const json& arguments) override {
+protected:
+    [[nodiscard]] ToolResult callOn(ToolHost& host, const json& arguments) override {
         if (auto error = unknownArgument(name(), arguments, {"path", "replace"})) {
             return std::move(*error);
         }
         const std::optional<std::string> path = stringArgument(arguments, "path");
         if (!path) {
-            return ToolResult::error("save needs \"path\", a file relative to --root.");
+            return ToolResult::error(paths() == FilePaths::Computer
+                                         ? "save needs \"path\", the path of a file."
+                                         : "save needs \"path\", a file relative to --root.");
         }
         bool replace = false;
         if (const auto value = arguments.find("replace"); value != arguments.end()) {
@@ -239,20 +284,34 @@ public:
             }
             replace = value->get<bool>();
         }
-        return session().save(*path, replace);
+        return host.save(*path, replace);
     }
 };
 
 }  // namespace
 
+std::vector<std::unique_ptr<Tool>> hostTools(std::shared_ptr<ToolHost> host, FilePaths paths) {
+    std::vector<std::unique_ptr<Tool>> tools;
+    tools.push_back(std::make_unique<Run>(host, paths));
+    tools.push_back(std::make_unique<Report>(host, paths));
+    tools.push_back(std::make_unique<Open>(host, paths));
+    tools.push_back(std::make_unique<Save>(std::move(host), paths));
+    return tools;
+}
+
+std::vector<std::unique_ptr<Tool>> programTools(std::shared_ptr<ToolHost> host) {
+    std::vector<std::unique_ptr<Tool>> tools = hostCommandTools(host);
+    std::ranges::move(hostTools(std::move(host), FilePaths::Computer), std::back_inserter(tools));
+    return tools;
+}
+
 std::vector<std::unique_ptr<Tool>> sessionTools(std::shared_ptr<Session> session) {
     assert(session != nullptr);
-    std::vector<std::unique_ptr<Tool>> tools;
-    tools.push_back(std::make_unique<Run>(session));
-    tools.push_back(std::make_unique<Report>(session));
-    tools.push_back(std::make_unique<Reset>(session));
-    tools.push_back(std::make_unique<Open>(session));
-    tools.push_back(std::make_unique<Save>(std::move(session)));
+    // run, report, reset, open, save: reset sits where tecnigrafo-mcp has
+    // always listed it.
+    std::vector<std::unique_ptr<Tool>> tools = hostTools(session, FilePaths::Root);
+    constexpr std::ptrdiff_t kResetPlace = 2;
+    tools.insert(tools.begin() + kResetPlace, std::make_unique<Reset>(std::move(session)));
     return tools;
 }
 
