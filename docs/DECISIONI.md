@@ -1716,3 +1716,45 @@ i rimandi ai documenti che cambia.
   usano la rotazione memorizzata
   ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartato `<360>`
   come arrotondamento ammesso.
+- **2026-11-13 — Pareggio fra due incroci.** Dopo la correzione del pareggio
+  fra le guide dello stesso punto, resta un caso che la regola della più
+  recente non decide: acquisiti `(0,0)` e poi `(10,10)`, con il puntatore in
+  `(5,5)` gli incroci `(0,10)` e `(10,0)` sono alla stessa distanza, e
+  ognuno usa una guida di tutti e due i punti. Il responsabile decide che
+  vince l'incrocio con la **guida orizzontale del punto più recente**, qui
+  `(0,10)`; a pari orizzontale, quello con la verticale del punto più recente.
+  Unisce le due regole già scelte (la più recente, poi l'orizzontale);
+  scartata la precedenza alla verticale del più recente
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-13 — Direttive del tracciamento annunciate prima di PT34.** Codex
+  si ferma di nuovo su RT34
+  ([#728](https://github.com/Matleyx78/tecnigrafo/issues/728)): `!hover` e
+  `!otrack` non sono né nel catalogo né fra le direttive annunciate, e un caso
+  che le usa è non valido invece che in attesa. Il responsabile affida a
+  Claude il pacchetto fuori tappa
+  [F8](tappe/fuori-tappa/F8-annuncio-hover-otrack.md) (#760), che le descrive
+  in [verifica/script.md](verifica/script.md) e le annuncia; PT34 le realizza
+  e le toglie dall'elenco. Scartata l'attesa di PT34, che dipende da RT34.
+- **2026-11-13 — Pareggio fra un incrocio di guide e uno con il polare.**
+  Dalla rilettura della correzione di PT34
+  ([#761](https://github.com/Matleyx78/tecnigrafo/pull/761)): con il polare
+  acceso, l'incrocio di due guide acquisite e quello di una guida con la
+  semiretta polare possono essere alla stessa distanza dal puntatore, e la
+  regola dei due incroci non li ordina (quello con il polare ha una sola
+  guida acquisita). Il responsabile decide che vince l'**incrocio delle due
+  guide acquisite**, come nella priorità dell'ADR 0049, punto 5, dove le
+  guide vengono prima del polare; scartato l'incrocio con il polare
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-14 — Pareggio fra due incroci con il polare.** Dal terzo giro
+  della rilettura di [#761](https://github.com/Matleyx78/tecnigrafo/pull/761):
+  due incroci con la stessa semiretta polare, ognuno con una sola guida
+  acquisita, possono essere alla stessa distanza dal puntatore. Il
+  responsabile decide che vince quello con la **guida del punto acquisito più
+  di recente**, come la regola generale della più recente; scartata la
+  precedenza all'incrocio più vicino al punto base
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-14 — Distanze confrontate al quadrato.** Nello stesso giro: dopo
+  la radice due distanze diverse possono dare lo stesso `double`. Il
+  responsabile decide che il tracciamento confronta le distanze **al
+  quadrato** (`dx*dx + dy*dy`), senza radice; a quadrati uguali valgono le
+  regole del pareggio. Scartato il confronto dopo la radice.
