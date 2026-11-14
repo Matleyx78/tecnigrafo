@@ -5,6 +5,8 @@
 
 #include "tg/core/math.hpp"
 
+#include <cmath>
+
 namespace tg::core {
 
 /// A point or vector in the 2D drawing plane, in drawing units.
