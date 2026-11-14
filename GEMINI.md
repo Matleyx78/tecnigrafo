@@ -8,9 +8,7 @@ lettera.
 Questo file lo leggono Gemini CLI e Antigravity CLI, e tiene solo le note proprie
 di Gemini.
 
-Riferimenti e revisioni si fanno **a lotti**: una sessione prende di fila tutto
-il lavoro pronto, con una pull request per pacchetto
-([docs/agenti/lotti.md](docs/agenti/lotti.md)). Usa la cartella di build
+Usa la cartella di build
 `build-gemini` (`TG_BUILD_SUFFIX=-gemini`) e, se devi compilare o provare,
 `scripts/controlla.sh` ([docs/agenti/comandi.md](docs/agenti/comandi.md)).
 

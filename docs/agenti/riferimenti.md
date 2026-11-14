@@ -17,8 +17,9 @@ anche nei file in attesa (`0.7.5-R1.txt`); nulla si rinomina. I rami seguono:
 Per "il prossimo pacchetto di riferimenti" valgono le condizioni 1–3 e 5 di
 [pacchetto.md](pacchetto.md), "Se ti chiedono di prendere il prossimo
 pacchetto", sulle issue con l'etichetta `riferimenti`. Se nessuna issue va bene,
-non iniziare: scrivi all'utente quali issue sono tue e cosa le blocca. I
-pacchetti di riferimenti pronti presi di fila sono in [lotti.md](lotti.md).
+non iniziare: scrivi all'utente quali issue sono tue e cosa le blocca. Un
+pacchetto di riferimenti per sessione: il successivo si prende in una nuova
+sessione.
 
 ## In un pacchetto di riferimenti (`[X.Y-RTN]`)
 
@@ -73,9 +74,17 @@ pacchetti di riferimenti pronti presi di fila sono in [lotti.md](lotti.md).
   confermano il tuo valore, la differenza può essere un errore del programma:
   non adattare il riferimento, fermati e scrivilo nella issue, con il caso, il
   valore atteso e quello che dà il programma; decide il responsabile (ADR 0037,
-  punto 7).
+  punto 7). Nella catena ti fermi come dice [catena.md](catena.md), "Fermarsi
+  per una decisione"; che cosa segue (correggere il programma, aprire un
+  pacchetto) lo dice la decisione.
 - Non aggiungere `esente` in `tests/verifica/in-attesa/`; toglilo dalla riga di
   un caso che correggi.
+- Nella descrizione della pull request scrivi la riga
+  `Avvia dopo il merge: #<issue del lavoro>`, una per ogni pacchetto di lavoro
+  che i tuoi casi sbloccano: al merge il pacchetto parte da solo, se non
+  aspetta altro ([catena.md](catena.md), "Dopo il merge"). Nella catena, con
+  la CI verde la pull request prende l'etichetta `pronta`: i riferimenti li
+  rivede il responsabile.
 
 ## I buchi fermano anche i riferimenti
 

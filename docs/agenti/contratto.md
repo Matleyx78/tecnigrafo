@@ -41,6 +41,10 @@ con una soglia tua, o un calcolo di tangenza), **non scriverlo**:
    nel commento il nome del ramo;
 4. togli `AA-Presa in carico` e termina la sessione.
 
+Nella catena il commento del punto 1 è anche quello di
+[catena.md](catena.md), "Fermarsi per una decisione": etichetta `decisione` e
+riga per riprendere, che il responsabile usa quando solid-space ha risposto.
+
 Non aprire la richiesta di tua iniziativa: la apre in solid-space il
 responsabile, o un agente a cui lui lo chiede ([AGENTS.md](../../AGENTS.md),
 "Dove puoi scrivere").

@@ -1830,3 +1830,19 @@ i rimandi ai documenti che cambia.
   a `2·|DIMCEN|` niente linee d'asse, solo la croce. Gli altri rilievi del
   verbale erano errori della correzione o regole già decise, sistemati nella
   stessa pull request.
+- **2026-11-14 — Catena degli agenti, a tappa aperta.** Dopo il giro di prove
+  generale in [Matleyx78/prova-orchestratore](https://github.com/Matleyx78/prova-orchestratore)
+  con tutti i tipi di lavoro, il responsabile applica subito la proposta della
+  [#764](https://github.com/Matleyx78/tecnigrafo/issues/764), in via
+  eccezionale a tappa aperta invece che nella pausa dopo la 0.8 (regola del
+  2026-11-03 e del 2026-11-07), perché la ritiene molto più veloce del metodo
+  attuale: un lavoro si avvia con un solo commento, gli agenti si passano il
+  lavoro con `scripts/passa.sh` e `scripts/avvia.sh`, la revisione va a giri
+  con le classi [bloccante], [decisione] e [facoltativa], le decisioni si
+  scrivono sempre in una issue, il merge avvia le issue di
+  `Avvia dopo il merge: #N` e una sentinella mette `ferma` sulle catene senza
+  movimento da 60 minuti. Il lavoro a lotti non c'è più. Gli ambienti degli
+  agenti nella catena li decide il responsabile. Solo lui avvia gli agenti, e
+  l'automazione non ha limiti di quota. In solid-space arriva con una pull
+  request sua. [ADR 0053](adr/0053-catena-degli-agenti.md);
+  [agenti/catena.md](agenti/catena.md); [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), A2a.
