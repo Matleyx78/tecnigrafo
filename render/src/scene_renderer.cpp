@@ -129,6 +129,22 @@ public:
             frame.rotation, frame.widthFactor, text.obliqueAngle, text.mirroredX, text.mirroredY});
     }
 
+    // The types of the 0.8 are drawn from their generated geometry
+    // (docs/adr/0044, point 2; docs/tappe/0.8/PT8): nothing until then.
+    void operator()(const core::Solid& /*solid*/) {}
+
+    void operator()(const core::Ellipse& /*ellipse*/) {}
+
+    void operator()(const core::MText& /*mtext*/) {}
+
+    void operator()(const core::AttributeDefinition& /*definition*/) {}
+
+    void operator()(const core::Insert& /*insert*/) {}
+
+    void operator()(const core::Dimension& /*dimension*/) {}
+
+    void operator()(const core::Hatch& /*hatch*/) {}
+
 private:
     void drawArc(const core::ArcGeometry& arc, bool closed) {
         const double toleranceWorld = m_style.tessellationTolerancePx / m_viewport.scale();
@@ -151,6 +167,13 @@ private:
     std::vector<Vec2> m_worldPoints;   // reused buffer
     std::vector<Vec2> m_screenPoints;  // reused buffer
 };
+
+// Draws one entity with `drawer`. A function of its own, so that the drawer
+// is seen as changed: with more than eleven alternatives std::visit goes
+// through a table of function pointers, which clang-tidy does not follow.
+void drawEntity(EntityDrawer& drawer, const core::Entity& entity) {
+    std::visit(drawer, entity);
+}
 
 // Index 7 follows the theme; no other colour does, not even a white RGB
 // (docs/adr/0024, point 5).
@@ -241,7 +264,7 @@ void renderPreview(std::span<const core::Entity> entities, const Viewport& viewp
     painter.setPen(style.preview, 0.0, LineStyle::Solid);
     for (const core::Entity& entity : entities) {
         if (overlaps(core::boundingBox(entity), visible)) {
-            std::visit(drawer, entity);
+            drawEntity(drawer, entity);
         }
     }
 }
@@ -254,7 +277,7 @@ void renderHighlight(const core::Document& document, std::span<const core::Entit
     for (const core::EntityId id : ids) {
         const core::EntityRecord* record = document.find(id);
         if (record != nullptr && overlaps(core::boundingBox(record->entity), visible)) {
-            std::visit(drawer, record->entity);
+            drawEntity(drawer, record->entity);
         }
     }
 }

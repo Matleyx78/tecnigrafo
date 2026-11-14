@@ -8,6 +8,7 @@
 #include "tg/core/math.hpp"
 
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <numeric>
@@ -165,6 +166,10 @@ void appendSnapPoints(const PolylineSegment& segment, const SnapModes& modes,
 
 void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<SnapPoint>& out,
                       const std::optional<Vec2>& from) {
+    assert(!std::holds_alternative<MText>(entity) &&
+           !std::holds_alternative<AttributeDefinition>(entity) &&
+           !std::holds_alternative<Insert>(entity) && !std::holds_alternative<Dimension>(entity) &&
+           !std::holds_alternative<Hatch>(entity) && "this entity snaps through the document");
     std::visit(
         Overloaded{
             [&](const Polyline& polyline) { appendPolylineSnapPoints(polyline, modes, out, from); },
@@ -209,6 +214,11 @@ void appendSnapPoints(const Entity& entity, const SnapModes& modes, std::vector<
                     out.push_back({textFrame(text).insertion, SnapKind::Insertion});
                 }
             },
+            [&](const Solid& solid) { appendSnapPointsOf(solid, modes, out, from); },
+            [&](const Ellipse& ellipse) { appendSnapPointsOf(ellipse, modes, out, from); },
+            // MText, AttributeDefinition, Insert, Dimension and Hatch snap
+            // through the document (generated.hpp): the assertion above.
+            [](const auto& /*throughTheDocument*/) {},
         },
         entity);
 }

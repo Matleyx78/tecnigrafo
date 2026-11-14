@@ -3,6 +3,7 @@
 
 #include "tg/core/similarity.hpp"
 
+#include "tg/core/generated.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/text_metrics.hpp"
 
@@ -163,6 +164,12 @@ Entity transformed(const Entity& entity, const Similarity& similarity, MirrorTex
                 return result;
             } else if constexpr (std::is_same_v<Shape, Line>) {
                 return Line{similarity.apply(shape.start), similarity.apply(shape.end)};
+            } else if constexpr (!std::is_same_v<Shape, Circle> && !std::is_same_v<Shape, Arc>) {
+                // The types of the 0.8 (docs/adr/0044, point 1): a refusal
+                // leaves the entity as it is; transformedIn() says why.
+                static const Document kNoDocument;
+                return transformedOf(kNoDocument, shape, similarity, mirrorText)
+                    .entity.value_or(entity);
             } else {
                 Shape result = shape;
                 result.center = similarity.apply(shape.center);

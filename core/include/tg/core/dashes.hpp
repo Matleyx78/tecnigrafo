@@ -37,7 +37,8 @@ using DashPiece = std::variant<DashLine, DashArc, DashPoint>;
 inline constexpr std::size_t kMaxDashPieces = 100'000;
 
 /// Pieces in drawing coordinates, in order along the entity (ADR 0025, point 4).
-/// nullopt means continuous: an empty pattern, TEXT, a curve shorter than one
+/// nullopt means continuous: an empty pattern, TEXT or a type of the 0.8 (the
+/// renderer dashes their generated shapes, docs/adr/0044), a curve shorter than one
 /// scaled pattern (every segment for a polyline without continuous generation),
 /// or more than kMaxDashPieces. Zero-length and unrepresentable scaled patterns
 /// also fall back to continuous. An empty vector means the curve falls in gaps.

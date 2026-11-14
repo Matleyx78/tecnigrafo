@@ -60,6 +60,7 @@ add_executable(tg_tests
     core/dashes_test.cpp
     core/chamfer_test.cpp
     core/fillet_test.cpp
+    core/generated_test.cpp
     core/lineweight_test.cpp
     core/linetype_pattern_test.cpp
     core/document_query_test.cpp
@@ -68,6 +69,7 @@ add_executable(tg_tests
     core/layer_test.cpp
     core/geometry_test.cpp
     core/line_test.cpp
+    core/new_entities_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
     core/raw_data_test.cpp
