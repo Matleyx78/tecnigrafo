@@ -201,9 +201,8 @@ TEST_F(RotateScaleTest, TypedQuarterTurnsAreExactAfterAnyNumberOfTurns) {
         runner().submitText("0,0");
         runner().submitText(angle);
         EXPECT_FALSE(runner().isActive());
-        const Line expected = std::string_view{angle} == "3600000"
-                                  ? lineAt(0, 0, kLength, 0)
-                                  : lineAt(0, 0, 0, kLength);
+        const bool fullTurns = std::string_view{angle} == "3600000";
+        const Line expected = fullTurns ? lineAt(0, 0, kLength, 0) : lineAt(0, 0, 0, kLength);
         EXPECT_EQ(lineOf(id), expected);
     }
 

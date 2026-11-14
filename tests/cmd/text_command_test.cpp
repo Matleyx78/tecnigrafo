@@ -60,14 +60,21 @@ TEST(TextCommandTest, RotationUsesOneTurnAndFormatsTheDefaultWithoutChangingIt) 
     registerBuiltinCommands(registry);
     CommandRunner runner(registry, editor);
     runner.setScriptSequences(true);
+
     struct RotationCase {
         const char* input;
         double degrees;
         const char* displayed;
     };
-    const RotationCase cases[] = {{"-90", 270.0, "270"}, {"0,-10", 270.0, "270"},
-                                  {"360", 0.0, "0"}, {"10,-0", 0.0, "0"},
-                                  {"10,-1e-20", 0.0, "0"}, {"359.99996", 359.99996, "0"}};
+
+    const RotationCase cases[] = {
+        {"-90", 270.0, "270"},
+        {"0,-10", 270.0, "270"},
+        {"360", 0.0, "0"},
+        {"10,-0", 0.0, "0"},
+        {"10,-1e-20", 0.0, "0"},
+        {"359.99996", 359.99996, "0"},
+    };
     for (const auto& [input, degrees, displayed] : cases) {
         SCOPED_TRACE(input);
         const auto before = document.entityCount();

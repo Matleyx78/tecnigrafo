@@ -3,8 +3,8 @@
 
 #include "tg/core/text.hpp"
 
-#include "tg/core/text_metrics.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/text_metrics.hpp"
 
 #include <cmath>
 #include <cstddef>

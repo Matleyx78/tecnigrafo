@@ -2,6 +2,7 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "tg/core/polyline.hpp"
+
 #include "tg/core/math.hpp"
 
 #include <cassert>

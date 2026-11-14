@@ -81,7 +81,8 @@ TEST(Similarity, CardinalBandPreservesCoincidence) {
         const auto step = Similarity::rotation(sign * 0x1p-47, {});
         EXPECT_TRUE(
             rule.coincident((inside * inside).apply(point), inside.apply(inside.apply(point))));
-        EXPECT_TRUE(rule.coincident((outside * step).apply(point), outside.apply(step.apply(point))));
+        EXPECT_TRUE(
+            rule.coincident((outside * step).apply(point), outside.apply(step.apply(point))));
     }
 
     const auto rotation = Similarity::rotation(kWithinBand, {});

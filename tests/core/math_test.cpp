@@ -44,6 +44,7 @@ TEST(Math, CardinalTrigonometrySnapsOnlyWithinTheBand) {
         double cosine;
         double sine;
     };
+
     const Direction cases[] = {{0.0, 1.0, 0.0},
                                {kPi / 2.0, 0.0, 1.0},
                                {kPi, -1.0, 0.0},
