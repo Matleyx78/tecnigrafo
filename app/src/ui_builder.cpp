@@ -786,8 +786,18 @@ void UiBuilder::buildClassic() {
     bar->setObjectName(QStringLiteral("classicMenuBar"));
     m_registry.buildMenus(bar);
     m_menuBar = bar;
+    SARibbonSystemButtonBar* buttons = m_window.windowButtonBar();
     auto* quickAccess = new QToolBar(bar);
     quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
+    // The logo first, as in the title row of the ribbon (area 1), as tall
+    // as the row less one pixel above and one below.
+    auto* logo = new SARibbonTitleIconWidget(quickAccess);
+    logo->setObjectName(QStringLiteral("programLogo"));
+    logo->setIcon(programIcon());
+    const int row = buttons != nullptr ? buttons->windowTitleHeight() : bar->sizeHint().height();
+    const int logoSide = std::max(row, kQuickAccessIconSize + kLogoInset) - kLogoInset;
+    logo->setFixedSize(logoSide, logoSide);
+    quickAccess->addWidget(logo);
     fillQuickAccess(*quickAccess, m_registry);
     fitQuickAccess(*quickAccess);
     m_cornerQuickAccess = quickAccess;
@@ -795,7 +805,6 @@ void UiBuilder::buildClassic() {
     // A window without frame has no title row but this bar: the bar shows
     // the title and leaves room for the window buttons, which stay where
     // the ribbon had them, and moves the window.
-    SARibbonSystemButtonBar* buttons = m_window.windowButtonBar();
     if (buttons != nullptr) {
         auto* corner = new QWidget(bar);
         auto* layout = new QHBoxLayout(corner);
@@ -825,6 +834,9 @@ void UiBuilder::buildClassic() {
                                        : title(path.section(QLatin1Char('/'), 1)),
                                    &m_window);
             toolbar->setObjectName(path);
+            // The small icons of the ribbon (area 3): the 16 px grid of
+            // docs/adr/0040, point 3.
+            toolbar->setIconSize(QSize(kSmallIconSize, kSmallIconSize));
             m_window.addToolBar(toolbar);
             m_toolbars.append(toolbar);
             // A toolbar the user shows is the user's again: the environment
@@ -852,7 +864,11 @@ void UiBuilder::buildClassic() {
         }
         if (spec->id.startsWith(QStringLiteral("file.")) ||
             spec->id == QStringLiteral("edit.undo") || spec->id == QStringLiteral("edit.redo")) {
-            standard->addAction(action);
+            // A toolbar of icons: Recent Files and Quit, which have none,
+            // stay in the File menu.
+            if (!spec->icon.isEmpty()) {
+                standard->addAction(action);
+            }
         } else if (!spec->ribbon.isEmpty()) {
             QToolBar* toolbar = toolbarFor(spec->ribbon);
             toolbar->addAction(action);

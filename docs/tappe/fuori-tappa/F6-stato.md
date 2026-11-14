@@ -36,7 +36,7 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 8. Pannello *Properties* | approvata dal responsabile, 2026-11-14 |
 | 9. Pannello *Layers* | approvata dal responsabile, 2026-11-14 |
 | 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
-| Interfaccia classica (menu e barre) | da fare |
+| Interfaccia classica (menu e barre) | in corso |
 | Finestre di dialogo | da fare |
 | Icone | da fare |
 
@@ -408,11 +408,40 @@ delle schede, la casa di *Start*, la lente e le icone della barra di
 *Layers*, le icone di stato colorate). Poi la chiusura: i test qui sotto,
 `scripts/controlla.sh --tidy`, la galleria approvata e la pull request.
 
+**Interfaccia classica: menu e barre** (2026-11-14), da far vedere al
+responsabile; senza un riferimento proprio, con i gettoni e la densità del
+ribbon:
+
+- il logo è il primo elemento della barra di accesso rapido d'angolo, come
+  nel ribbon (`programLogo`), alto quanto la riga meno un pixel sopra e uno
+  sotto;
+- icone delle barre a 16 px, come i pulsanti piccoli del ribbon (prima 24):
+  le barre stanno su due righe di ~30 px invece di ~38;
+- *Recent Files* e *Quit*, che non hanno icona, non sono più nella barra
+  *Standard* come testo: restano nel menu *File*;
+- interruttori accesi su `selection` senza il bordo d'accento, come nella
+  barra di stato; la freccia delle varianti (*Circle*, *Arc*) senza il
+  riquadro bordato a parte;
+- separatori sottili (`border`), non a tutta altezza, come fra i gruppi del
+  ribbon; la maniglia delle barre resta (le barre si spostano), con
+  puntini piccoli nel colore `border` invece del rilievo di Fusion.
+
+Punti aperti dell'interfaccia classica:
+
+- il titolo della finestra sta a destra, prima dei pulsanti della finestra;
+  nel ribbon è al centro;
+- i menu mostrano le lettere sottolineate delle scorciatoie (`&File`) anche
+  senza Alt, come fa Fusion: da decidere;
+- le barre *Layers* e *Properties* ripetono gli interruttori dello stato
+  del layer e i pulsanti grandi come icone (scelte del ribbon).
+
 Test da allineare alla chiusura (oltre a quelli del ribbon):
 `GalleryTest.WritesFourteenImages...` conta ora 16 immagini (le due
 dell'immissione dinamica) e le misure di alcune sono cambiate;
 `UiBuilderTest.WithTheFrameOfTheSystem...` (due test) confrontano le azioni
 della barra d'angolo, che ora comincia con il logo;
+`UiBuilderTest.BothInterfacesHaveTheQuickAccessBar` confronta le azioni
+della barra d'angolo classica, che ora comincia con il logo;
 `DrawingAidsTest.F10AndF8...` cerca la cronologia nel genitore del campo;
 `EnvironmentsTest.TheChosenRibbonTabStaysWhileItIsShown` usa *Home*, che
 nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in

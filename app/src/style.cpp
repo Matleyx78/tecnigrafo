@@ -47,6 +47,13 @@ constexpr qreal kIconGrid = 16.0;
 /// Sizes of the dock header buttons, including high-DPI variants.
 constexpr std::array kDockIconSizes{10, 12, 16, 20, 24, 32};
 
+/// Space left above and below the separators and the handles of the
+/// toolbars, which are not as tall as the bar (area 3).
+constexpr int kToolBarLineInset = 4;
+/// The dots of the handle of a toolbar, and their pitch.
+constexpr int kHandleDot = 2;
+constexpr int kHandleDotStep = 4;
+
 // Combo boxes are drawn by Style, not by the style sheet: with a styled
 // drop-down the style sheet draws no arrow at all unless it is given an
 // image, and without one it draws Windows' raised button.
@@ -76,6 +83,9 @@ QToolBar { background: {ribbon}; border: none; border-bottom: 1px solid {border}
 QToolButton { background: transparent; border: 1px solid transparent; border-radius: 3px; padding: 2px; }
 QToolButton:hover { background: {selection}; border-color: {border}; }
 QToolButton:pressed, QToolButton:checked { background: {selection}; border-color: {accent}; }
+QToolBar QToolButton:checked { border-color: transparent; }
+QToolBar QToolButton[popupMode="1"] { padding-right: 12px; }
+QToolBar QToolButton::menu-button { background: transparent; border: none; width: 10px; }
 SARibbonBar { background: {ribbon}; color: {text}; border-bottom: 1px solid {border}; }
 SARibbonButtonGroupWidget, QToolBar#quickAccessBar { background: transparent; border: none; }
 SARibbonSeparatorWidget { color: {border}; }
@@ -273,6 +283,49 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* option, 
                              Qt::SolidLine, Qt::RoundCap));
         painter->drawLine(centre + QPointF(-arm, -arm), centre + QPointF(arm, arm));
         painter->drawLine(centre + QPointF(arm, -arm), centre + QPointF(-arm, arm));
+        painter->restore();
+        return;
+    }
+    if (element == PE_IndicatorToolBarSeparator) {
+        // A thin line, not as tall as the bar, as between the groups of the
+        // ribbon (area 3), instead of Fusion's light relief.
+        const QRect rect = option->rect;
+        const bool across = (option->state & State_Horizontal) != 0;
+        painter->save();
+        painter->setPen(m_tokens.border);
+        if (across) {
+            const int x = rect.center().x();
+            painter->drawLine(x, rect.top() + kToolBarLineInset, x,
+                              rect.bottom() - kToolBarLineInset);
+        } else {
+            const int y = rect.center().y();
+            painter->drawLine(rect.left() + kToolBarLineInset, y, rect.right() - kToolBarLineInset,
+                              y);
+        }
+        painter->restore();
+        return;
+    }
+    if (element == PE_IndicatorToolBarHandle) {
+        // A column of small dots in the colour of the borders: the handle
+        // stays, so that the toolbars can be moved, without standing out.
+        const QRect rect = option->rect;
+        const bool across = (option->state & State_Horizontal) != 0;
+        painter->save();
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(m_tokens.border);
+        if (across) {
+            const int x = rect.center().x() - (kHandleDot / 2);
+            for (int y = rect.top() + kToolBarLineInset;
+                 y + kHandleDot <= rect.bottom() - kToolBarLineInset; y += kHandleDotStep) {
+                painter->drawRect(x, y, kHandleDot, kHandleDot);
+            }
+        } else {
+            const int y = rect.center().y() - (kHandleDot / 2);
+            for (int x = rect.left() + kToolBarLineInset;
+                 x + kHandleDot <= rect.right() - kToolBarLineInset; x += kHandleDotStep) {
+                painter->drawRect(x, y, kHandleDot, kHandleDot);
+            }
+        }
         painter->restore();
         return;
     }
