@@ -756,8 +756,13 @@ Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
    Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
    lettera. Prendi il prossimo pacchetto della tappa <tappa> assegnato a te,
    secondo le regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI
-   al verde e fermati, come dice AGENTS.md.
+   al verde e fermati, come dice AGENTS.md. Se è una revisione delle
+   interfacce, segui invece la sua scheda: verbale nella issue, senza
+   correggere le schede né aprire pull request, poi fermati.
    ```
+
+   La stessa frase vale per i pacchetti di revisione delle interfacce, che il
+   piano mette nella tabella con gli altri (B4, "Revisione delle interfacce").
 
 3. Se l'agente risponde che nessun pacchetto è pronto, è normale: vuol dire che
    aspetta un merge (una dipendenza o i suoi riferimenti). Riprovi dopo. In

@@ -1,0 +1,44 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  259 LWPOLYLINE closed=no vertex=100,-60 vertex=120,-60 vertex=121,-59 vertex=121,-45
+messages:
+  Command: LINE
+  Specify first point: 100,-60
+  Specify next point or [Undo]: 120,-60
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 121,-59
+  Specify next point or [Undo]: 121,-45
+  Specify next point or [Undo]:
+  Command: PEDIT
+  Select polyline or [Multiple]: M
+  Select objects: 121,-50
+  1 found, 1 total
+  Select objects: 110,-60
+  1 found, 2 total
+  Select objects:
+  Enter an option [Close/Open/Join/Ltype gen/Reverse/Undo]: J
+  Join Type = Extend
+  Enter fuzz distance or [Jointype] <0.0000>: J
+  Enter join type [Extend/Add/Both] <Extend>: A
+  Join Type = Add segment
+  Enter fuzz distance or [Jointype] <0.0000>: 2
+  2 segments added to polyline
+  Enter an option [Close/Open/Join/Ltype gen/Reverse/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Pedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1

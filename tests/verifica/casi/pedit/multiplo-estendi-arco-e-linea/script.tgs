@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PEDIT (0.8-PT33, #727): Multiple, distanza 2, tipo Extend, un arco seguito da una linea (caso c).
+; Valori da autocad-pedit.dxf e autocad-pedit.txt di Matleyx78/dxf-test-file, commit 1ad04b0b8a568fb9dd4960719a8f17289129f788 (CC0-1.0).
+; Gli oggetti si scelgono nell'ordine in cui li prende la selezione a finestra incrociata di AutoCAD
+; (il piu' recente prima): si convertono in quell'ordine, e il primo e' la polilinea che resta.
+; La domanda di conversione non finisce con ":": si conferma <Y> con il clic destro, come Invio ma senza eco (docs/adr/0037, punto 3).
+ARC
+0,-120
+10,-110
+20,-120
+LINE
+21,-120
+40,-120
+
+PEDIT
+M
+30,-120
+10,-110
+
+!rightclick
+J
+J
+E
+2
+

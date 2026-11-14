@@ -1,0 +1,12 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PEDIT (0.8-PT33, #727): Esc alla domanda di conversione e alla prima domanda non cambia nulla.
+LINE
+0,0
+30,0
+
+PEDIT
+15,0
+!esc
+PEDIT
+!esc

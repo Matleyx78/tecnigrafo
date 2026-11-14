@@ -1,0 +1,45 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  260 LWPOLYLINE closed=no vertex=0,-30 vertex=20,-30 vertex=20,-10 bulge=0.5 vertex=0,-10
+messages:
+  Command: LINE
+  Specify first point: 0,-30
+  Specify next point or [Undo]: 20,-30
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 20,-30
+  Specify next point or [Undo]: 20,-10
+  Specify next point or [Undo]:
+  Command: ARC
+  Specify start point of arc: 20,-10
+  Specify second point of arc or [Center]: 10,-5
+  Specify end point of arc: 0,-10
+  Command: PEDIT
+  Select polyline or [Multiple]: 10,-30
+  Object selected is not a polyline
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]: J
+  Select objects: 20,-20
+  1 found, 1 total
+  Select objects: 10,-5
+  1 found, 2 total
+  Select objects:
+  2 segments added to polyline
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Arc
+  Pedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1

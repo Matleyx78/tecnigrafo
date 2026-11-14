@@ -1,0 +1,125 @@
+# [0.8-PT23] `core`: quote lineari e allineate, valore e grafica
+
+- **Tappa:** 0.8 — [piano](../0.8-quote-retini-blocchi.md)
+- **Issue:** #…
+- **Difficoltà:** media
+- **Agente:** claude
+- **Modello e impegno:** medio; impegno alto
+- **Riferimenti:** issue `[0.8-RT23]` (#…), agente codex, fascia forte
+- **Dipende da:** PT5 (revisione delle interfacce), PT10, PT13, PT22, RT23
+- **Modulo:** `core`
+- **Da leggere:** [ADR 0047](../../adr/0047-quote-e-stili-di-quota.md) per intero;
+  [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md), punto 5;
+  le schede [PT6](PT6-scheletro-core.md), [PT13](PT13-mtext-core.md),
+  [PT22](PT22-stili-di-quota.md) e [PT24](PT24-quote-angolari-radiali.md)
+  (sorella)
+
+## File
+
+- `core/include/tg/core/dimension.hpp`, `core/src/dimension.cpp`
+- `core/src/dimension_text.cpp`, `core/src/dimension_linear.cpp`,
+  `core/src/dimension_graphics.hpp` (nuovi, privati)
+- `tests/core/dimension_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+
+## Cosa fare
+
+1. `supported(const Dimension&)` restituisce `true`. Ogni quota si mostra con la
+   sua `graphics` (geometria generata = le entità della grafica, con le
+   proprietà del layer `0`/*DaBlocco* come in un blocco, ADR 0045, punto 3).
+2. **Variabili usate:** quelle dello stile della quota con le sovrascritture
+   (PT22). `s` = `DIMSCALE`; tutte le misure qui sotto sono già moltiplicate per
+   `s`.
+3. **Testo** (ADR 0047, punto 3):
+
+   ```cpp
+   /// The text a dimension shows (docs/adr/0047, point 3), with %%c, %%d.
+   [[nodiscard]] std::string dimensionText(const DimVariables&, DimensionKind,
+                                           double measurement,
+                                           std::string_view textOverride);
+   ```
+
+   Lunghezze: `m · DIMLFAC`, arrotondata a un multiplo di `DIMRND` se > 0
+   (metà in su, lontano da zero), scritta con `std::to_chars` fissa a `DIMDEC`
+   cifre, `.` sostituito da `DIMDSEP`, poi senza zeri finali (e senza il
+   separatore se resta in fondo) se `DIMZIN & 8`; `-0` si scrive `0`. `DIMPOST`:
+   se contiene `<>` il valore va al suo posto, altrimenti si aggiunge in fondo.
+   Testo sostituito come nell'ADR.
+4. **Grafica lineare e allineata.** `p1 = point13`, `p2 = point14`,
+   `d = linePoint`. Direzione `u`: lineare `(cos r, sin r)` con `r = rotation`;
+   allineata `(p2 − p1)/|p2 − p1|`. `n` = `u` ruotato di +90°. Misura
+   `|(p2 − p1)·u|`. Piedi `f1`, `f2` = proiezioni di `p1`, `p2` sulla retta per
+   `d` con direzione `u`.
+   - **Linee d'estensione** (se non soppresse): da `pᵢ + DIMEXO·eᵢ` a
+     `fᵢ + DIMEXE·eᵢ`, con `eᵢ` = versore da `pᵢ` a `fᵢ`; se `pᵢ = fᵢ` nessuna.
+   - **Frecce** piene chiuse: un `SOLID` triangolare con la punta in `fᵢ`,
+     lunghezza `a = DIMASZ` lungo la linea, base larga `a/3`.
+   - **Dentro o fuori** (ADR 0047, punto 4; `DIMATFIT` 3, `DIMTMOVE` 0), con
+     `L = |f2 − f1|`, `t` = larghezza del testo (impaginazione di PT13) e
+     `w` = versore da `f1` a `f2`, nell'ordine:
+     1. testo e frecce dentro se ci stanno tutti e due;
+     2. altrimenti il testo dentro e le frecce fuori, se ci sta il testo;
+     3. altrimenti le frecce dentro e il testo fuori, se ci stanno le frecce;
+     4. altrimenti tutto fuori.
+     Le **soglie** di «ci sta» e la **posizione del testo fuori** non sono
+     pubblicate da AutoCAD: si ricavano dai casi di RT23, presi dalle quote
+     strette di `autocad-quote.dxf`. Ipotesi di partenza, da confermare con
+     quei casi: le frecce ci stanno se `L ≥ 2a`; il testo se
+     `L ≥ t + 2·DIMGAP`; tutti e due se `L ≥ t + 2·DIMGAP + 2a`; il testo fuori
+     sta oltre la seconda linea d'estensione, sulla linea di quota prolungata,
+     a `a + DIMGAP` da essa. Frecce fuori: puntate verso l'interno, con un
+     tratto di linea di quota lungo `a` oltre ciascuna; con `DIMTOFL` di
+     `ISO-25` la linea di quota resta anche fra le linee d'estensione. Se un
+     caso di RT23 contraddice un'ipotesi, vale il caso e la pull request lo
+     scrive (è il disegno di AutoCAD, la fonte decisa dal responsabile).
+   - **Testo** (`MTEXT`, altezza `DIMTXT`, stile `DIMTXSTY`, valore di
+     `dimensionText`): se `userTextPosition`, in `textPoint`; altrimenti al
+     centro `c = (f1 + f2)/2`. Con `DIMTAD` = 1 e testo allineato (`DIMTIH`/
+     `DIMTOH` 0): allineamento in basso al centro, in `c + DIMGAP·n'`, con `n'`
+     la normale verso l'alto della lettura; rotazione `= angolo di u` portata
+     nella lettura (fra −90° escluso e 90° compreso). Con `DIMTAD` = 0: in
+     mezzo al centro, e la linea di quota si interrompe per la larghezza del
+     testo più `DIMGAP` per lato. Con `DIMTIH`/`DIMTOH` 1: testo orizzontale,
+     in mezzo, linea interrotta. Quando il testo va fuori (casi 3 e 4), stesse
+     regole nella sua posizione fuori. `textPoint` si aggiorna al centro del
+     testo.
+   - Colori e spessori: `DIMCLRD`/`DIMLWD` per linea di quota e frecce,
+     `DIMCLRE`/`DIMLWE` per le linee d'estensione, `DIMCLRT` per il testo.
+5. **Creazione e rigenerazione:**
+
+   ```cpp
+   /// Measurement, text and graphics from definition and presentation.
+   /// nullopt (with the reason) when not regenerable (docs/adr/0047, point 4).
+   [[nodiscard]] std::optional<Dimension> regenerated(const Document&, Dimension,
+                                                      std::string* reason = nullptr);
+   ```
+
+   I record della grafica nuova hanno handle 0 (li assegna l'editor) e nessun
+   `extras`; la grafica vecchia sparisce.
+6. **Trasformazioni** (`transformedOf`): traslazione → punti e grafica
+   traslati, senza rigenerare; altrimenti punti trasformati (rotazione della
+   lineare più l'angolo della similitudine; con una riflessione anche il testo
+   resta leggibile), poi `regenerated`; se non è rigenerabile, rifiuto con
+   `Dimension cannot be regenerated by Tecnigrafo.` (PT6, punto 3).
+7. **Grip:** `point13`, `point14`, `linePoint`, `textPoint`; il grip del testo
+   sposta solo il testo (`userTextPosition`) e la grafica del testo senza
+   rigenerare il resto; gli altri rigenerano. **Snap:** quelli della grafica.
+8. I tipi angolare, radiale, diametrale li fa PT24; fino ad allora
+   `regenerated` per loro dà «non rigenerabile», e il tipo *altro* sempre.
+
+## Regole della tappa che valgono qui
+
+- Niente funzioni trigonometriche di `<cmath>`; distanze con `std::sqrt`.
+- File comune: `tests/CMakeLists.txt`.
+
+## Test richiesti
+
+- `dimension_test.cpp`: `dimensionText` con `DIMDEC` 2 e 3, `DIMZIN` 8 e 0,
+  `DIMRND`, `DIMLFAC`, `DIMPOST` con `<>`, testo sostituito; grafica di una
+  lineare orizzontale larga e di una stretta (frecce fuori); `DIMTAD` 0 e 1;
+  allineata a 30°; rotazione, scala e specchiatura con rigenerazione; quota con
+  `DIMTOL` 1 rifiutata; `DIMATFIT` 1 non rigenerabile; i quattro casi
+  dell'adattamento; spostamento senza rigenerazione.
+
+## Fatto quando
+
+- I casi di RT23 passano; la CI è verde.

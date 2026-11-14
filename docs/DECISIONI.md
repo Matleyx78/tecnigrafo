@@ -1480,3 +1480,281 @@ i rimandi ai documenti che cambia.
     pacchetto) e alla misura dei pacchetti
     ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), «Preparare il piano»),
     che non cambiano.
+- **2026-11-11 — Piano della 0.8: le otto decisioni.** Nella chat del piano
+  ([#661](https://github.com/Matleyx78/tecnigrafo/pull/661)) il responsabile
+  decide, punto per punto della sezione 5 del
+  [piano](tappe/0.8-quote-retini-blocchi.md):
+  1. **`PEDIT` con *Multiple*.** In AutoCAD distanza di tolleranza e tipo di
+     unione esistono solo dentro *Multiple*: senza, la decisione del
+     2026-11-07 non avrebbe la sequenza di AutoCAD
+     ([ADR 0050](adr/0050-pedit.md), punto 1).
+  2. **Incrocio fra una guida del tracciamento e la guida polare** dal punto
+     precedente, con l'intersezione di solid-space già nel contratto
+     ([ADR 0049](adr/0049-tracciamento-degli-snap-a-oggetto.md), punto 4).
+     Le guide polari dai punti acquisiti (`POLARMODE`) restano fuori.
+  3. **`!hover x,y`** è la direttiva che acquisisce: descrive il gesto, come
+     `!move` e `!click` (ADR 0049, punto 7).
+  4. **Canale MCP spento a ogni avvio**, senza «accendi all'avvio» per ora; il
+     **ponte `tecnigrafo --mcp` resta vivo** e si collega al programma a ogni
+     richiesta, così l'assistente funziona appena il canale si accende, senza
+     riavviarlo ([ADR 0051](adr/0051-canale-mcp-dell-assistente.md), punti 1
+     e 3).
+  5. **`MTEXT` e quote solo dalla riga di comando** nella 0.8. L'editor nella
+     finestra, l'opzione *Mtext* delle quote e `TEXTEDIT` sono l'idea
+     [#662](https://github.com/Matleyx78/tecnigrafo/issues/662), da pianificare
+     dopo F6.
+  6. **Testo e frecce delle quote strette come AutoCAD con `ISO-25`**
+     (`DIMATFIT` 3, `DIMTMOVE` 0): le soglie e le posizioni si ricavano dai
+     disegni di AutoCAD LT del responsabile; con altri valori di quelle
+     variabili la quota non è rigenerabile
+     ([ADR 0047](adr/0047-quote-e-stili-di-quota.md), punti 2 e 4). Sostituisce
+     la proposta «testo sempre in mezzo».
+  7. **L'ellisse entra nella 0.8**, «anche se è la strada più in salita»:
+     entità `ELLIPSE`, comando `ELLIPSE`, inserimenti con scala diversa in X e
+     in Y che generano ed esplodono in ellissi come AutoCAD, e una quarta
+     richiesta a solid-space per selezione e intersezioni
+     ([ADR 0052](adr/0052-ellisse.md)). `TRIM`, `EXTEND`, `OFFSET` e `FILLET`
+     sulle ellissi restano fuori: idea
+     [#663](https://github.com/Matleyx78/tecnigrafo/issues/663).
+  8. **Otto simboli della libreria dell'elettrico e lo schema d'esempio come
+     campioni di prova**, copiati in `Matleyx78/dxf-test-file`,
+     `campioni-elettrico/` (CC0), dichiarati come campioni e non come la
+     libreria, che resta in lavorazione in `tec-ss-grafica` fino a lavoro
+     finito.
+- **2026-11-11 — ADR della 0.8 accettati e richieste approvate.** Il
+  responsabile accetta gli ADR [0044](adr/0044-entita-composte-e-geometria-generata.md)–[0052](adr/0052-ellisse.md)
+  e approva i testi delle quattro richieste a solid-space del piano della 0.8
+  (contorni e isole; parti di una curva in una regione; tangente, arcocoseno e
+  `hypot`; l'ellisse in `geom2d`), scritti nei commenti di
+  [#661](https://github.com/Matleyx78/tecnigrafo/pull/661), e chiede a Claude
+  di aprirle: sono [solid-space#214](https://github.com/Matleyx78/solid-space/issues/214),
+  [#215](https://github.com/Matleyx78/solid-space/issues/215),
+  [#216](https://github.com/Matleyx78/solid-space/issues/216) e
+  [#217](https://github.com/Matleyx78/solid-space/issues/217), tappa `ss-0.3`.
+- **2026-11-12 — Schede della 0.8 dopo il contratto: tre decisioni.** Nella
+  chat delle schede scritte dopo la revisione del contratto di solid-space
+  (`[0.3-CS]`, Matleyx78/solid-space#222), il responsabile decide
+  ([piano della 0.8](tappe/0.8-quote-retini-blocchi.md), «Modifiche al piano»):
+  1. **Snap *Vicino* fuori dalla 0.8.** Tecnigrafo non lo ha per nessuna
+     entità: l'ellisse non lo porta da sola (l'[ADR 0052](adr/0052-ellisse.md),
+     punto 4, lo nominava). Il punto più vicino di solid-space serve nella 0.8
+     alla scelta con un clic e alla domanda `closest`
+     ([0.8-PT50](tappe/0.8/PT50-ellisse-selezione-snap.md)); lo snap, per tutte
+     le entità insieme, è l'idea
+     [#665](https://github.com/Matleyx78/tecnigrafo/issues/665).
+  2. **Curve candidate del contorno rilevato:** le entità linea, arco, cerchio
+     e polilinea del disegno, sui layer accesi e non congelati come la
+     selezione. Non contano le forme generate di inserimenti e quote né le
+     ellissi: un contorno fatto da un blocco non si rileva, una differenza da
+     AutoCAD ([0.8-PT43](tappe/0.8/PT43-contorni-dei-retini.md); ADR 0048,
+     punto 5).
+  3. **Le righe del motivo lungo un lato del contorno si disegnano:** i tratti
+     di bordo di `clipToRegion` fanno parte del retino come quelli interni
+     ([0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md); ADR 0048, punto 3).
+- **2026-11-12 — Direzioni cardinali esatte delle righe dei motivi.** Nella
+  rilettura della correzione di PT40
+  ([#751](https://github.com/Matleyx78/tecnigrafo/pull/751)) Codex trova un
+  buco visibile: la direzione di una famiglia viene da `sinCos` dell'angolo in
+  radianti, e a 90° il coseno del `double` di π/2 è circa `6e-17`, non 0. Una
+  riga verticale di `NET` sul lato verticale di un contorno lo tocca solo
+  nello spigolo e il tratto di bordo sparisce, o cade appena dentro, contro la
+  decisione 3 del 2026-11-12 qui sopra. Il responsabile sceglie l'uscita **A**:
+  la direzione di una famiglia (e di un retino) è quella di `sinCos`, ma una
+  componente sotto `2^-48` in modulo diventa esattamente 0 e l'altra
+  esattamente ±1, col suo segno. Vale anche dopo `ROTATE` e `MIRROR` e per lo
+  scostamento calcolato dai `.pat`: la funzione è `cardinalSinCos` di
+  [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md) (voce successiva), usata da
+  [0.8-PT30](tappe/0.8/PT30-retini-core.md) e
+  [0.8-PT42](tappe/0.8/PT42-righe-dei-motivi.md). Scartata l'uscita B (angoli
+  presi alla lettera, con il tratto di bordo verticale che a volte c'è e a
+  volte no).
+- **2026-11-12 — Quarti di giro esatti.** Nel secondo giro di rilettura di
+  [#751](https://github.com/Matleyx78/tecnigrafo/pull/751) Codex trova che la
+  voce precedente non basta: con `ROTATE` di 90° del retino e del suo
+  contorno, `Similarity::matrix` usa ancora il coseno del `double` di π/2, il
+  lato che era sull'asse y si inclina di `6e-16` mentre la riga resta esatta,
+  e il tratto di bordo sparisce. Il responsabile sceglie l'uscita **A1**: la
+  funzione con la soglia diventa `cardinalSinCos` in
+  `tg/core/math.hpp` ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md)), e la usa
+  anche `Similarity::matrix`, per tutte le entità: `ROTATE` e `MIRROR` di un
+  multiplo di 90° danno coordinate esatte, e riga e lato restano
+  coincidenti anche quando il contorno è fatto di entità separate. Scartate
+  A2 (quarti esatti solo nella trasformazione del retino: due modi di
+  ruotare) e B (direzione presa dalla matrice effettiva: il retino
+  cambierebbe dopo salvataggio e rilettura del DXF, dove la direzione si
+  ricalcola dall'angolo). Nel terzo giro Codex trova che la soglia proposta
+  da Claude, `2^-40`, era troppo larga: raddrizzava anche angoli soltanto
+  vicini a un quarto di giro, e a 16 km dall'origine gli spostamenti
+  superavano la tolleranza (matrice e angolo della similitudine non
+  concordavano più; `MIRROR` su un asse quasi diagonale spostava i punti
+  dell'asse). Il responsabile approva la soglia **`2^-48`**: sta sopra il
+  residuo di un quarto di giro scritto come `double` (circa `2^-50`) e sposta
+  i punti al più di circa `2^-46` volte la grandezza dei dati, sotto la
+  tolleranza relativa `2^-42`. Quei casi diventano una fascia dichiarata nel
+  commento di `cardinalSinCos` (ADR 0013 di solid-space, punto 4).
+- **2026-11-12 — Angoli in gradi ridotti a un giro.** Nel quarto giro di
+  rilettura di [#751](https://github.com/Matleyx78/tecnigrafo/pull/751) Codex
+  trova che un angolo del retino di molti giri (3600° in *Properties* di
+  `-HATCH`) arriva a `cardinalSinCos` come circa 64 radianti, con l'errore
+  della conversione da gradi sopra la soglia `2^-48`: il quarto di giro non
+  si riconosce e il tratto di bordo sparisce. Il responsabile sceglie di
+  ridurre l'angolo **in gradi**, con `std::fmod(gradi, 360)` (esatto), nel
+  punto in cui entra, prima di convertirlo: la funzione è
+  `reducedDegreesToRadians` di [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md),
+  usata dalla lettura dei gruppi 52 e 53
+  ([0.8-PT31](tappe/0.8/PT31-retini-dxf.md); il DXF si riscrive con
+  l'angolo ridotto, come già gli archi, e l'ADR 0018, punto 6, confronta i
+  valori del modello) e dall'angolo digitato in `-HATCH`
+  ([0.8-PT44](tappe/0.8/PT44-comando-hatch.md)). Ridurre dopo, in radianti,
+  non basta: l'errore nasce nella conversione. Scartata l'altra uscita
+  (angolo in radianti senza riduzione, con il quarto di giro riconosciuto
+  solo fino a qualche decina di radianti).
+- **2026-11-12 — Angoli digitati ridotti a un giro.** Partendo da
+  [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), Codex si ferma su due casi
+  ([#667](https://github.com/Matleyx78/tecnigrafo/issues/667)): `ROTATE` di
+  3600000° lascia un estremo a `2^24` fuori di `2,5e-5`, oltre la tolleranza,
+  mentre il punto 4 di PT1 promette quarti di giro esatti; una coordinata
+  polare `1<1e308` dà un angolo infinito, che con PT1 farebbe scattare la
+  precondizione di `sinCos`. Il responsabile decide di estendere la riduzione
+  in gradi della voce «Angoli in gradi ridotti a un giro» agli angoli
+  digitati: una richiesta `PromptKind::Angle` (`ROTATE`, la sua opzione
+  *Reference*, la rotazione di `TEXT`) e l'angolo delle coordinate polari
+  entrano con `reducedDegreesToRadians`. Per gli angoli calcolati (per
+  esempio da due punti) vale la fascia dichiarata in `cardinalSinCos`.
+- **2026-11-12 — Ingressi fuori dall'uso reale.** Dopo tre arresti nello
+  stesso giorno su casi come 3600° o 3600000°, il responsabile rende stabile,
+  in via eccezionale a tappa aperta, la regola già usata nella rilettura di
+  [#751](https://github.com/Matleyx78/tecnigrafo/pull/751): un ingresso fuori
+  da ogni uso reale non è un buco visibile, né per chi rivede né per chi
+  realizza; basta che non arresti il programma, poi vale la fascia dichiarata
+  o una diagnosi. Scritta in [revisione.md](agenti/revisione.md), «Che cosa
+  blocca una revisione».
+- **2026-11-13 — Inserimento di file, punto base e interlinea come AutoCAD.**
+  Pubblicando i DXF di prova della 0.8
+  ([tappe/0.8/dxf-di-prova.md](tappe/0.8/dxf-di-prova.md)) le cronologie di
+  AutoCAD mostrano tre comportamenti diversi dalle schede; il responsabile
+  sceglie per tutti e tre quello di AutoCAD. (1) `-INSERT` con il percorso di
+  un file il cui nome è già un blocco del disegno inserisce la definizione che
+  c'è, senza domande; `nome=percorso` ridefinisce il blocco senza domande,
+  come AutoCAD da script, così gli script di AutoCAD funzionano uguali
+  ([0.8-PT21](tappe/0.8/PT21-comando-insert.md)). (2) Il blocco preso da un
+  file ha punto base (0,0) e le entità spostate di −`$INSBASE`, come le
+  scrive AutoCAD ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)). (1) e (2)
+  correggono l'[ADR 0045](adr/0045-blocchi-e-attributi.md), punto 7.
+  (3) L'interlinea di `MTEXT` resta per i testi successivi, come `TSPACETYPE`
+  e `TSPACEFAC` ([0.8-PT15](tappe/0.8/PT15-comando-mtext.md)). Scartate le
+  alternative: chiedere sempre se ridefinire (gli script di AutoCAD con
+  `nome=file` si romperebbero alla domanda in più), tenere `$INSBASE` come
+  punto base (dati diversi da quelli di AutoCAD per lo stesso disegno),
+  interlinea a 1 per ogni testo (differenza da dichiarare).
+- **2026-11-13 — Buchi della revisione della #756.** Il verbale di Codex
+  sulla [#756](https://github.com/Matleyx78/tecnigrafo/pull/756) apre sei
+  buchi visibili; il responsabile decide. (1) Un file con `$INSBASE` non
+  nullo e un'entità che non si sa spostare (non gestita, conservata com'è):
+  la definizione tiene come punto base `$INSBASE` e tutte le entità intatte,
+  come prima; il disegno è lo stesso e niente si perde
+  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)); scartato il rifiuto
+  dell'inserimento. (2) In `-INSERT` il primo `=` separa sempre il nome del
+  blocco dal percorso, come AutoCAD; un file con `=` nel nome non si inserisce
+  così; scartata la precedenza al file letterale. (3) Quando il percorso di un
+  file riusa una definizione che c'è, e per ogni blocco preso per nome, la
+  scala proposta converte le unità della definizione in quelle del disegno,
+  come AutoCAD; scartata la scala 1. (4) Con `nome=percorso`, `Esc` al punto
+  d'inserimento conserva la ridefinizione e le tabelle importate, in un passo
+  `Insert`, come AutoCAD (è il suo modo di ridefinire senza inserire);
+  scartato l'annullamento di tutto il comando (2, 3 e 4 in
+  [0.8-PT21](tappe/0.8/PT21-comando-insert.md)). (5) L'interlinea di `MTEXT`
+  la ricorda ogni disegno, fra i valori dei comandi, e a ogni avvio riparte da
+  *At least* 1, come `POLARANG` e `TRIMEXTENDMODE`; scartato il
+  comportamento di AutoCAD (tipo nel profilo, comune ai disegni e conservato
+  dopo il riavvio), che avrebbe chiesto il primo valore condiviso fra le
+  schede e salvato nelle impostazioni. (6) L'interlinea scelta diventa
+  corrente appena confermata, anche se poi `Esc` non crea il testo; scartato
+  l'aggiornamento solo alla creazione del testo (5 e 6 in
+  [0.8-PT15](tappe/0.8/PT15-comando-mtext.md)).
+- **2026-11-13 — Buchi del secondo giro della #756.** Il secondo verbale di
+  Codex apre quattro buchi visibili; il responsabile decide. (1) L'eccezione
+  di PT19 (punto base `$INSBASE` con le entità intatte) vale solo per le
+  entità dello **spazio modello** che non si sanno spostare: lo spazio carta
+  non entra nel blocco, e un blocco annidato tiene le sue coordinate
+  ([0.8-PT19](tappe/0.8/PT19-file-come-blocco.md)). (2) In `-INSERT` un
+  secondo `=` è un errore, `Invalid file name.`: nessun nome di file con `=`
+  si inserisce, e il primo resta il separatore di `nome=percorso`; scartato
+  il percorso letterale dopo il primo `=`. (3) Con `nome=percorso` e un nome
+  nuovo, `Esc` al punto conserva la definizione e le tabelle importate, in un
+  passo `Insert`, come per la ridefinizione e come AutoCAD; scartato
+  l'annullamento dell'importazione. (4) Un codice di unità del blocco fuori
+  dalla tabella di `$INSUNITS` vale come unità sconosciuta (fattore 1) e si
+  conserva; scartato il rifiuto dell'inserimento (2, 3 e 4 in
+  [0.8-PT21](tappe/0.8/PT21-comando-insert.md)).
+- **2026-11-13 — Pareggio fra le guide dello stesso punto.** Partendo da
+  [0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), Codex si ferma su RT34
+  ([#728](https://github.com/Matleyx78/tecnigrafo/issues/728)): il punto 3
+  risolve il pareggio fra guide con la più recente, ma l'orizzontale e la
+  verticale dello stesso punto acquisito nascono con la stessa acquisizione;
+  acquisito `(0,0)`, con il puntatore in `(8,8)` sono tutte e due a 8. Il
+  responsabile decide che vince l'**orizzontale**, come l'orto a 45° esatti
+  (ADR 0008, punto 5): il punto è `(8,0)`; scartata la verticale.
+- **2026-11-13 — Rotazione di TEXT in [0°, 360°).** Il verbale di Codex
+  sulla [#755](https://github.com/Matleyx78/tecnigrafo/pull/755) trova che,
+  con la riduzione degli angoli digitati, `-90` digitato arriva a `TEXT` come
+  270°, mentre il punto `(0,-10)` passa per `atan2` e dà −90°: la stessa
+  direzione con due valori diversi per la domanda successiva e per il gruppo
+  DXF 50. Il responsabile decide che il valore proposto e quello salvato
+  nell'entità stanno sempre in **[0°, 360°)**, qualunque sia il percorso
+  d'ingresso: tutti e due danno 270°, e un giro intero dà 0°, come AutoCAD
+  ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartata la
+  rappresentazione distinta per percorso (270° da numero, −90° da punto).
+- **2026-11-13 — Domanda di TEXT a 360°.** Il secondo verbale di Codex sulla
+  [#755](https://github.com/Matleyx78/tecnigrafo/pull/755) trova che una
+  rotazione memorizzata appena sotto 360° (per esempio `359.99996` digitato)
+  appare come `<360>` nella domanda del `TEXT` successivo, perché il
+  predefinito si mostra con quattro decimali. Il responsabile decide che il
+  testo della domanda segue lo stesso intervallo [0°, 360°): quando
+  l'arrotondamento scrive `360`, la domanda mostra `<0>`, come l'input
+  dinamico; il valore memorizzato non cambia, e Invio e il gruppo DXF 50
+  usano la rotazione memorizzata
+  ([0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punto 5). Scartato `<360>`
+  come arrotondamento ammesso.
+- **2026-11-13 — Pareggio fra due incroci.** Dopo la correzione del pareggio
+  fra le guide dello stesso punto, resta un caso che la regola della più
+  recente non decide: acquisiti `(0,0)` e poi `(10,10)`, con il puntatore in
+  `(5,5)` gli incroci `(0,10)` e `(10,0)` sono alla stessa distanza, e
+  ognuno usa una guida di tutti e due i punti. Il responsabile decide che
+  vince l'incrocio con la **guida orizzontale del punto più recente**, qui
+  `(0,10)`; a pari orizzontale, quello con la verticale del punto più recente.
+  Unisce le due regole già scelte (la più recente, poi l'orizzontale);
+  scartata la precedenza alla verticale del più recente
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-13 — Direttive del tracciamento annunciate prima di PT34.** Codex
+  si ferma di nuovo su RT34
+  ([#728](https://github.com/Matleyx78/tecnigrafo/issues/728)): `!hover` e
+  `!otrack` non sono né nel catalogo né fra le direttive annunciate, e un caso
+  che le usa è non valido invece che in attesa. Il responsabile affida a
+  Claude il pacchetto fuori tappa
+  [F8](tappe/fuori-tappa/F8-annuncio-hover-otrack.md) (#760), che le descrive
+  in [verifica/script.md](verifica/script.md) e le annuncia; PT34 le realizza
+  e le toglie dall'elenco. Scartata l'attesa di PT34, che dipende da RT34.
+- **2026-11-13 — Pareggio fra un incrocio di guide e uno con il polare.**
+  Dalla rilettura della correzione di PT34
+  ([#761](https://github.com/Matleyx78/tecnigrafo/pull/761)): con il polare
+  acceso, l'incrocio di due guide acquisite e quello di una guida con la
+  semiretta polare possono essere alla stessa distanza dal puntatore, e la
+  regola dei due incroci non li ordina (quello con il polare ha una sola
+  guida acquisita). Il responsabile decide che vince l'**incrocio delle due
+  guide acquisite**, come nella priorità dell'ADR 0049, punto 5, dove le
+  guide vengono prima del polare; scartato l'incrocio con il polare
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-14 — Pareggio fra due incroci con il polare.** Dal terzo giro
+  della rilettura di [#761](https://github.com/Matleyx78/tecnigrafo/pull/761):
+  due incroci con la stessa semiretta polare, ognuno con una sola guida
+  acquisita, possono essere alla stessa distanza dal puntatore. Il
+  responsabile decide che vince quello con la **guida del punto acquisito più
+  di recente**, come la regola generale della più recente; scartata la
+  precedenza all'incrocio più vicino al punto base
+  ([0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3).
+- **2026-11-14 — Distanze confrontate al quadrato.** Nello stesso giro: dopo
+  la radice due distanze diverse possono dare lo stesso `double`. Il
+  responsabile decide che il tracciamento confronta le distanze **al
+  quadrato** (`dx*dx + dy*dy`), senza radice; a quadrati uguali valgono le
+  regole del pareggio. Scartato il confronto dopo la radice.

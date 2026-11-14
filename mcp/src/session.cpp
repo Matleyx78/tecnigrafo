@@ -6,7 +6,9 @@
 
 #include "tg/mcp/session.hpp"
 
+#include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command.hpp"
+#include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/io/result.hpp"
 #include "tg/script/case_files.hpp"
@@ -82,10 +84,18 @@ std::string describe(const script::ParseError& error) {
     return "line " + std::to_string(error.line) + ": " + error.message;
 }
 
+std::unique_ptr<const cmd::CommandRegistry> builtinCommands() {
+    auto registry = std::make_unique<cmd::CommandRegistry>();
+    cmd::registerBuiltinCommands(*registry);
+    return registry;
+}
+
 }  // namespace
 
 Session::Session(SessionOptions options)
-    : m_options(std::move(options)), m_state(std::make_unique<State>(m_options)) {}
+    : m_options(std::move(options)),
+      m_commands(builtinCommands()),
+      m_state(std::make_unique<State>(m_options)) {}
 
 Session::~Session() = default;
 
@@ -119,6 +129,10 @@ ToolResult Session::run(std::span<const std::string> lines) {
         m_state->perform(action);
     }
     return ToolResult::success(m_state->exchange());
+}
+
+const cmd::CommandRegistry& Session::commands() const {
+    return *m_commands;
 }
 
 std::string Session::report() {

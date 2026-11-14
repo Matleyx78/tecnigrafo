@@ -97,6 +97,7 @@ add_executable(tg_tests
     io/json_test.cpp
     mcp/server_test.cpp
     mcp/session_test.cpp
+    mcp/tool_host_test.cpp
     render/linework_test.cpp
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
@@ -206,6 +207,10 @@ tg_configure_target(tg_bench)
 # (docs/adr/0005). Built only together with the application.
 if(TG_BUILD_APP)
     find_package(Qt6 6.12 REQUIRED COMPONENTS Svg Test Widgets)
+    add_executable(tg_crash_child app/crash_child.cpp)
+    target_link_libraries(tg_crash_child PRIVATE tg_app_ui)
+    tg_configure_target(tg_crash_child)
+
     add_executable(tg_app_tests
         app/color_dialog_test.cpp
         app/property_widgets_test.cpp
@@ -246,9 +251,13 @@ if(TG_BUILD_APP)
         TG_ICONS_DIR="${PROJECT_SOURCE_DIR}/resources/icons"
         TG_SCRIPT_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/script/dati"
         TG_APP_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/app-output"
+        TG_CRASH_CHILD="$<TARGET_FILE:tg_crash_child>"
         TG_TECNIGRAFO="$<TARGET_FILE:tecnigrafo>"
         TG_CONFRONTA_IMMAGINI="$<TARGET_FILE:confronta_immagini>")
-    add_dependencies(tg_app_tests tecnigrafo confronta_immagini)
+    if(TG_SANITIZE OR TG_FUZZ)
+        target_compile_definitions(tg_app_tests PRIVATE TG_CRASH_TEST_UNDER_SANITIZER)
+    endif()
+    add_dependencies(tg_app_tests tecnigrafo confronta_immagini tg_crash_child)
     tg_configure_target(tg_app_tests)
     # One test entry: listing the cases would already need a QApplication.
     # The limit is three times the duration in the Windows CI with the

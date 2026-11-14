@@ -56,12 +56,17 @@ git submodule update --init third_party/solid-space
 git config user.email   # deve essere l'indirizzo noreply di GitHub
 git switch -c f6-grafica
 git push -u origin f6-grafica
-cmake --preset debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+cmake --preset debug -DCMAKE_PREFIX_PATH=$HOME/Qt/6.12.0/gcc_64 \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
 cmake --build --preset debug --target tecnigrafo tecnigrafo-galleria
 ./build/debug/app/tecnigrafo
 code .
 ```
 
+- `-DCMAKE_PREFIX_PATH` dice dove sta Qt 6.12 anche se il terminale non ha
+  la variabile della sezione 2.2 di AMBIENTE-SVILUPPO.md; CMake lo ricorda
+  nella cartella di build, e lo trovano anche VS Code (preset **Debug**) e le
+  sessioni successive.
 - `ccache` rende rapide le ricompilazioni; `rsvg-convert` (di `librsvg2-bin`)
   trasforma in PNG le immagini di riferimento; `compare` di ImageMagick
   confronta due PNG.

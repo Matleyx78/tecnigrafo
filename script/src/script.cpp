@@ -29,12 +29,12 @@ constexpr double kMaxPercent = 100.0;
 
 using Words = std::vector<std::string_view>;
 
-// The directives that the catalogue describes from stage 0.7 (docs/verifica/
-// script.md) and the program does not have yet. This list is read only after
-// every directive the program has (parseDirective), so an entry left here
-// when its package realizes it does nothing; remove it to keep the list
-// short. Every directive of stage 0.7 is realized: the list is empty.
-constexpr std::array<std::string_view, 0> kAnnouncedDirectives{};
+// The directives that the catalogue describes (docs/verifica/script.md) and
+// the program does not have yet. This list is read only after every directive
+// the program has (parseDirective), so an entry left here when its package
+// realizes it does nothing; remove it to keep the list short. Stage 0.8:
+// !hover and !otrack, realized by PT34 (docs/adr/0049, point 7).
+constexpr std::array<std::string_view, 2> kAnnouncedDirectives{"hover", "otrack"};
 
 /// An abbreviation of AutoCAD for a snap mode, and the member of
 /// core::SnapModes that it turns on (docs/adr/0033, point 7).

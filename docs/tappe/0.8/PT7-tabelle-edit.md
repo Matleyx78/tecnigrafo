@@ -1,0 +1,92 @@
+# [0.8-PT7] `edit` e `cmd`: tabelle nuove annullabili; trasformazioni attraverso il documento
+
+- **Tappa:** 0.8 — [piano](../0.8-quote-retini-blocchi.md)
+- **Issue:** #…
+- **Difficoltà:** media
+- **Agente:** codex
+- **Modello e impegno:** medio; impegno medio
+- **Riferimenti:** non servono: con i tipi di oggi niente cambia; test di unità,
+  casi di verifica invariati
+- **Dipende da:** PT4 (revisione delle interfacce), PT6
+- **Modulo:** `edit` (più le righe dei comandi di trasformazione in `cmd`)
+- **Da leggere:** [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md),
+  punti 3 e 5; [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punto 4;
+  [ADR 0031](../../adr/0031-modifiche-alle-entita.md), punti 5–6;
+  `edit/include/tg/edit/editor.hpp`, `edit/src/editor.cpp`,
+  `edit/include/tg/edit/document_tables.hpp`, `edit/src/document_tables.cpp`;
+  la scheda [PT6](PT6-scheletro-core.md), punti 3 e 5; i comandi di
+  `cmd/src/commands/` che chiamano `core::transformed` e `core::moveGrip`
+
+## File
+
+- `edit/include/tg/edit/editor.hpp`, `edit/src/editor.cpp`
+- `edit/include/tg/edit/document_tables.hpp`, `edit/src/document_tables.cpp`
+- `cmd/src/commands/move_copy_commands.cpp`, `rotate_scale_commands.cpp`,
+  `mirror_commands.cpp`, `grip_command.cpp`
+- `tests/edit/editor_test.cpp`, `tests/edit/document_tables_test.cpp`,
+  `tests/cmd/move_copy_commands_test.cpp`
+
+## Cosa fare
+
+### 1. Cambiamenti generici delle tabelle
+
+`Editor::Change` ha due tipi nuovi, applicati e annullati come gli altri, nella
+stessa transazione e nella stessa cronologia:
+
+- **sostituzione di una tabella**: la tabella degli stili di testo o quella
+  degli stili di quota, per intero (`Document::replaceTextStyles`,
+  `replaceDimStyles`); annullare rimette la tabella di prima;
+- **sostituzione di una definizione di blocco**: per nome, con la definizione
+  di prima e quella nuova, ciascuna presente o no
+  (`Document::replaceBlock`); annullare rimette quella di prima, e il documento
+  ricalcola l'ingombro degli inserimenti (PT6).
+
+`DocumentTables` le offre ai pacchetti delle tabelle, che ci scrivono sopra le
+loro operazioni nei loro file:
+
+```cpp
+/// Replace a whole table in one undoable change (docs/adr/0044, point 3).
+/// Return false without recording when the table is unchanged.
+/// Precondition: a transaction is open.
+bool replaceTextStyles(core::TextStyleTable table);
+bool replaceDimStyles(core::DimStyleTable table);
+/// Puts, replaces or (nullopt) removes one block definition.
+bool replaceBlock(std::string name, std::optional<core::BlockDefinition> definition);
+```
+
+### 2. Trasformazioni e grip attraverso il documento
+
+`MOVE`, `COPY`, `ROTATE`, `SCALE`, `MIRROR` e i grip chiamano
+`core::transformedIn` e `core::moveGripIn` invece di `core::transformed` e
+`core::moveGrip`. Se un'entità dà un rifiuto (`TransformOutcome::refusal` non
+vuoto), il comando:
+
+- la lascia com'è, scrive il rifiuto nella cronologia una volta per ogni
+  entità rifiutata, e applica le altre;
+- nell'anteprima la mostra ferma.
+
+Con i tipi di oggi non c'è mai un rifiuto: i casi di verifica non cambiano.
+
+## Regole della tappa che valgono qui
+
+- `editor.*` e `document_tables.*` dopo questo pacchetto si toccano solo per le
+  operazioni di una tabella, nei file nuovi dei pacchetti PT12, PT20 e PT28.
+
+## Test richiesti
+
+- `editor_test.cpp`: sostituire la tabella degli stili di testo, poi `undo` e
+  `redo`; lo stesso per una definizione di blocco aggiunta, cambiata e tolta;
+  una transazione con un'entità e una tabella si annulla in un passo.
+- `document_tables_test.cpp`: una tabella uguale a quella di prima non registra
+  nulla.
+- `move_copy_commands_test.cpp`: un documento di prova in cui `transformedIn`
+  rifiuta (con un tipo di prova o simulando il rifiuto attraverso un'entità di
+  un tipo realizzato in un test) scrive il rifiuto e muove le altre entità; se
+  non è possibile senza un tipo nuovo, il test si scrive con PT23 e qui resta
+  la prova che i comandi chiamano le funzioni nuove con gli stessi risultati.
+
+## Fatto quando
+
+- Le tabelle nuove e le definizioni di blocco si cambiano in modo annullabile.
+- I comandi di trasformazione e i grip passano dal documento.
+- I casi di verifica sono invariati; la CI è verde.

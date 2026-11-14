@@ -1,0 +1,67 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,-160 vertex=30,-160 vertex=30,-140
+  258 LWPOLYLINE closed=no vertex=50,-160 vertex=80,-160 vertex=80,-140 vertex=50,-140
+  259 LWPOLYLINE closed=no vertex=130,-140 vertex=130,-160 vertex=100,-160
+  260 LWPOLYLINE closed=no linetype-generation=yes vertex=150,-160 vertex=180,-160 vertex=180,-140
+messages:
+  Command: PLINE
+  Specify start point: 0,-160
+  Specify next point or [Arc/Undo]: 30,-160
+  Specify next point or [Arc/Undo]: 30,-140
+  Specify next point or [Arc/Close/Undo]:
+  Command: PLINE
+  Specify start point: 50,-160
+  Specify next point or [Arc/Undo]: 80,-160
+  Specify next point or [Arc/Undo]: 80,-140
+  Specify next point or [Arc/Close/Undo]: 50,-140
+  Specify next point or [Arc/Close/Undo]: C
+  Command: PLINE
+  Specify start point: 100,-160
+  Specify next point or [Arc/Undo]: 130,-160
+  Specify next point or [Arc/Undo]: 130,-140
+  Specify next point or [Arc/Close/Undo]:
+  Command: PLINE
+  Specify start point: 150,-160
+  Specify next point or [Arc/Undo]: 180,-160
+  Specify next point or [Arc/Undo]: 180,-140
+  Specify next point or [Arc/Close/Undo]:
+  Command: PEDIT
+  Select polyline or [Multiple]: 15,-160
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]: C
+  Enter an option [Open/Join/Ltype gen/Reverse/Undo]:
+  Command: PEDIT
+  Select polyline or [Multiple]: 65,-160
+  Enter an option [Open/Join/Ltype gen/Reverse/Undo]: O
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]:
+  Command: PEDIT
+  Select polyline or [Multiple]: 115,-160
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]: R
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]:
+  Command: PEDIT
+  Select polyline or [Multiple]: 165,-160
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]: L
+  Enter polyline linetype generation option [ON/OFF] <Off>: ON
+  Enter an option [Close/Join/Ltype gen/Reverse/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Polyline
+  Polyline
+  Polyline
+  Pedit
+  Pedit
+  Pedit
+  Pedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 4

@@ -9,6 +9,7 @@
 #include "tg/cmd/command_description.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/mcp/tool.hpp"
+#include "tg/mcp/tool_host.hpp"
 
 #include <cassert>
 #include <initializer_list>
@@ -113,10 +114,31 @@ ToolResult unknownArgumentError(const std::string& tool, const std::string& argu
     return ToolResult::error("Unknown argument \"" + argument + "\" of " + tool + ".");
 }
 
+/// Where the descriptions come from: a registry of its own, or the commands
+/// of a host, which may be missing.
+class Commands {
+public:
+    explicit Commands(std::shared_ptr<const cmd::CommandRegistry> registry)
+        : m_registry(std::move(registry)) {}
+
+    explicit Commands(std::shared_ptr<const ToolHost> host) : m_host(std::move(host)) {}
+
+    /// The registry, or nullptr for tools over a missing host.
+    [[nodiscard]] const cmd::CommandRegistry* get() const {
+        if (m_registry != nullptr) {
+            return m_registry.get();
+        }
+        return m_host != nullptr ? &m_host->commands() : nullptr;
+    }
+
+private:
+    std::shared_ptr<const cmd::CommandRegistry> m_registry;
+    std::shared_ptr<const ToolHost> m_host;
+};
+
 class ListCommands final : public Tool {
 public:
-    explicit ListCommands(std::shared_ptr<const cmd::CommandRegistry> registry)
-        : m_registry(std::move(registry)) {}
+    explicit ListCommands(Commands commands) : m_commands(std::move(commands)) {}
 
     [[nodiscard]] std::string name() const override { return "list_commands"; }
 
@@ -131,11 +153,15 @@ public:
     }
 
     [[nodiscard]] ToolResult call(const json& arguments) override {
+        const cmd::CommandRegistry* registry = m_commands.get();
+        if (registry == nullptr) {
+            return ToolResult::error(std::string{kNotRunning});
+        }
         if (const std::string extra = unknownArgument(arguments, {}); !extra.empty()) {
             return unknownArgumentError(name(), extra);
         }
         json commands = json::array();
-        for (const cmd::CommandDescription* description : m_registry->descriptions()) {
+        for (const cmd::CommandDescription* description : registry->descriptions()) {
             commands.push_back(json{{"name", description->name},
                                     {"aliases", description->aliases},
                                     {"summary", description->summary}});
@@ -144,13 +170,12 @@ public:
     }
 
 private:
-    std::shared_ptr<const cmd::CommandRegistry> m_registry;
+    Commands m_commands;
 };
 
 class DescribeCommand final : public Tool {
 public:
-    explicit DescribeCommand(std::shared_ptr<const cmd::CommandRegistry> registry)
-        : m_registry(std::move(registry)) {}
+    explicit DescribeCommand(Commands commands) : m_commands(std::move(commands)) {}
 
     [[nodiscard]] std::string name() const override { return "describe_command"; }
 
@@ -172,6 +197,10 @@ public:
     }
 
     [[nodiscard]] ToolResult call(const json& arguments) override {
+        const cmd::CommandRegistry* registry = m_commands.get();
+        if (registry == nullptr) {
+            return ToolResult::error(std::string{kNotRunning});
+        }
         if (const std::string extra = unknownArgument(arguments, {"name"}); !extra.empty()) {
             return unknownArgumentError(name(), extra);
         }
@@ -182,7 +211,7 @@ public:
                 "describe_command needs \"name\", the name or an alias of a command.");
         }
         const auto& requested = command->get_ref<const std::string&>();
-        const cmd::CommandDescription* description = m_registry->describe(requested);
+        const cmd::CommandDescription* description = registry->describe(requested);
         if (description == nullptr) {
             return ToolResult::error("Unknown command \"" + requested + "\".");
         }
@@ -190,18 +219,26 @@ public:
     }
 
 private:
-    std::shared_ptr<const cmd::CommandRegistry> m_registry;
+    Commands m_commands;
 };
+
+std::vector<std::unique_ptr<Tool>> toolsOver(const Commands& commands) {
+    std::vector<std::unique_ptr<Tool>> tools;
+    tools.push_back(std::make_unique<ListCommands>(commands));
+    tools.push_back(std::make_unique<DescribeCommand>(commands));
+    return tools;
+}
 
 }  // namespace
 
 std::vector<std::unique_ptr<Tool>> commandTools(
     std::shared_ptr<const cmd::CommandRegistry> registry) {
     assert(registry != nullptr);
-    std::vector<std::unique_ptr<Tool>> tools;
-    tools.push_back(std::make_unique<ListCommands>(registry));
-    tools.push_back(std::make_unique<DescribeCommand>(std::move(registry)));
-    return tools;
+    return toolsOver(Commands{std::move(registry)});
+}
+
+std::vector<std::unique_ptr<Tool>> hostCommandTools(std::shared_ptr<const ToolHost> host) {
+    return toolsOver(Commands{std::move(host)});
 }
 
 }  // namespace tg::mcp
