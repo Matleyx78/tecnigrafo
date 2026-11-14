@@ -5,12 +5,16 @@
 
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
 
+#include <bit>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <numbers>
+#include <string>
 
 namespace tg::cmd {
 namespace {
@@ -47,6 +51,45 @@ TEST(TextCommandTest, LiteralLinesDefaultsAndSingleUndoStep) {
     runner.submitText("");
     EXPECT_EQ(runner.promptText(), "Specify rotation angle of text <90>:");
     runner.submit(CancelInput{});
+}
+
+TEST(TextCommandTest, RotationUsesOneTurnAndFormatsTheDefaultWithoutChangingIt) {
+    core::Document document;
+    edit::Editor editor(document);
+    CommandRegistry registry;
+    registerBuiltinCommands(registry);
+    CommandRunner runner(registry, editor);
+    runner.setScriptSequences(true);
+
+    const auto checkRotation = [&](const char* input, double degrees, const char* displayed) {
+        SCOPED_TRACE(input);
+        const auto before = document.entityCount();
+        for (const char* entry : {"TEXT", "0,0", "2.5", input, "First"}) {
+            runner.submitText(entry);
+        }
+        ASSERT_EQ(document.entityCount(), before + 1);
+        const auto expected = std::bit_cast<std::uint64_t>(core::reducedDegreesToRadians(degrees));
+        EXPECT_EQ(std::bit_cast<std::uint64_t>(
+                      std::get<core::Text>(document.entities().back().entity).rotation),
+                  expected);
+        for (const char* entry : {"TEXT", "0,0", "2.5"}) {
+            runner.submitText(entry);
+        }
+        EXPECT_EQ(runner.promptText(),
+                  std::string{"Specify rotation angle of text <"} + displayed + ">:");
+        runner.submitText("");
+        runner.submitText("Second");
+        ASSERT_EQ(document.entityCount(), before + 2);
+        EXPECT_EQ(std::bit_cast<std::uint64_t>(
+                      std::get<core::Text>(document.entities().back().entity).rotation),
+                  expected);
+    };
+    checkRotation("-90", 270.0, "270");
+    checkRotation("0,-10", 270.0, "270");
+    checkRotation("360", 0.0, "0");
+    checkRotation("10,-0", 0.0, "0");
+    checkRotation("10,-1e-20", 0.0, "0");
+    checkRotation("359.99996", 359.99996, "0");
 }
 
 TEST(TextCommandTest, ScriptSequenceFinishesAfterOneLineAndCanBeSwitchedOff) {

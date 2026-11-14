@@ -3,14 +3,15 @@
 
 #include "tg/core/transform2d.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <cmath>
 
 namespace tg::core {
 
 Transform2D Transform2D::rotation(double radians) {
-    const double cosA = std::cos(radians);
-    const double sinA = std::sin(radians);
-    return {cosA, sinA, -sinA, cosA, 0.0, 0.0};
+    const auto direction = sinCos(radians);
+    return {direction.cosine, direction.sine, -direction.sine, direction.cosine, 0.0, 0.0};
 }
 
 std::optional<Transform2D> Transform2D::inverted() const {

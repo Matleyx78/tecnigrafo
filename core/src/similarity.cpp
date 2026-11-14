@@ -49,9 +49,9 @@ Text transformedText(const Text& text, const Similarity& similarity, MirrorText 
     const bool coincident = !(length > 0.0);
     const bool fitted = baseline && !coincident && textWidth(displayText(text.value)) > 0.0;
     if (fitted) {
-        result.alignmentPoint =
-            result.position + Vec2{std::cos(result.rotation), std::sin(result.rotation)} *
-                                  (similarity.scale() * length);
+        const auto direction = sinCos(result.rotation);
+        result.alignmentPoint = result.position + Vec2{direction.cosine, direction.sine} *
+                                                      (similarity.scale() * length);
     }
 
     // The center determines placement for every justification, without a
@@ -103,7 +103,7 @@ std::optional<Similarity> Similarity::reflection(const Vec2& a, const Vec2& b) {
         return std::nullopt;
     }
     Similarity result;
-    result.m_angle = normalizeAngle(2.0 * std::atan2(delta.y, delta.x));
+    result.m_angle = normalizeAngle(2.0 * atan2(delta.y, delta.x));
     result.m_reflects = true;
     result.m_offset = a - result.apply(a);
     return result;
@@ -126,8 +126,9 @@ bool Similarity::reflects() const {
 }
 
 Transform2D Similarity::matrix() const {
-    const double cosine = m_scale * std::cos(m_angle);
-    const double sine = m_scale * std::sin(m_angle);
+    const auto direction = cardinalSinCos(m_angle);
+    const double cosine = m_scale * direction.cosine;
+    const double sine = m_scale * direction.sine;
     const double xFromY = m_reflects ? sine : -sine;
     const double yFromY = m_reflects ? -cosine : cosine;
     return {cosine, sine, xFromY, yFromY, m_offset.x, m_offset.y};
