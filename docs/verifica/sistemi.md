@@ -50,19 +50,4 @@ il caso dell'elenco è ormai uguale su tutti i sistemi, o se nessun sistema lo
 ha più, perché la riga va tolta. Una differenza tra sistemi si corregge; si
 aggiunge qui solo con una decisione del responsabile.
 
-Il primo confronto (0.7.5-P5) ha trovato 17 casi con le ultime cifre di alcuni
-numeri diverse tra i sistemi: archi, testi ruotati, specchiature e grip, con
-ogni probabilità per le funzioni trigonometriche della libreria di ciascun
-sistema. PT1 ha sostituito seno, coseno e arcotangente con le funzioni
-deterministiche di solid-space. Le eccezioni residue aspettano la seconda
-parte, PT41 ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620);
-[DECISIONI.md](../DECISIONI.md), 2026-11-08). Le righe dei tre sistemi sono nella
-[issue di P5](https://github.com/Matleyx78/tecnigrafo/issues/546#issuecomment-6725181081).
-
-- `grip/modifica`: ultime cifre di alcuni numeri diverse su Windows e macOS (7 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
-- `pline/archi-e-linee`: ultime cifre di alcuni numeri diverse su macOS (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
-- `pline/arco-iniziale`: ultime cifre di alcuni numeri diverse su Linux (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
-- `pline/chiusura-arco-e-linea`: ultime cifre di alcuni numeri diverse su macOS (1 riga); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
-- `testo/aligned-fit`: ultime cifre di alcuni numeri diverse su Linux e macOS (5 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
-- `testo/selezione-parallelogramma`: ultime cifre di alcuni numeri diverse su macOS (4 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
-- `trim/mezzo-polilinee-larghezze`: ultime cifre di alcuni numeri diverse su macOS (2 righe); si toglie con [#620](https://github.com/Matleyx78/tecnigrafo/issues/620)
+PT1 e PT41 hanno sostituito seno, coseno, arcotangente, tangente, arcocoseno e lunghezza con le funzioni deterministiche di solid-space ([#620](https://github.com/Matleyx78/tecnigrafo/issues/620); [DECISIONI.md](../DECISIONI.md), 2026-11-08). L'elenco delle eccezioni è vuoto.

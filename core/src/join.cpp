@@ -7,6 +7,7 @@
 #include "solid_space/robust/predicates.hpp"
 #include "solid_space/robust/trigonometry.hpp"
 #include "solid_space_bridge.hpp"
+#include "tg/core/math.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -96,7 +97,7 @@ std::vector<Piece> piecesOf(const Entity& entity, const Policy& policy) {
         }
         const auto& arc = std::get<g::Arc>(*curve);
         if (const auto ends = arcEnds(arc)) {
-            Piece piece{{bridge::fromPoint(ends->start), std::tan(arc.sweep / 4.0)},
+            Piece piece{{bridge::fromPoint(ends->start), tg::core::tan(arc.sweep / 4.0)},
                         bridge::fromPoint(ends->end)};
             const auto straight = g::isStraight(curveOf(piece), policy);
             if (straight.hasValue()) {
