@@ -18,6 +18,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QModelIndex>
+#include <QMouseEvent>
 #include <QPalette>
 #include <QScrollArea>
 #include <QSignalBlocker>
@@ -26,10 +27,12 @@
 #include <QVBoxLayout>
 #include <QVariant>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string_view>
 #include <utility>
@@ -43,6 +46,10 @@ constexpr int kIconSide = 16;
 // The width of the names in the grid, as in the reference image
 // (docs/adr/0039/proprieta.svg).
 constexpr int kNameColumnWidth = 124;
+// How near the line between names and values a press starts a drag, and how
+// narrow the drag leaves either column, in pixels.
+constexpr int kDividerGrip = 3;
+constexpr int kMinColumnWidth = 40;
 // The space around the controls of the panel and between them.
 constexpr int kMargin = 4;
 constexpr int kSpacing = 2;
@@ -132,6 +139,77 @@ QToolButton* headButton(const char* name, QWidget* parent) {
     return button;
 }
 
+/// Drags the line between the names and the values, which the grid shows
+/// without a header (docs/adr/0039, area 8), so that a longer name or value
+/// can be given more room.
+class ColumnDivider final : public QObject {
+public:
+    ColumnDivider(QTreeView* grid, std::function<void(int)> resized)
+        : QObject(grid), m_grid(grid), m_resized(std::move(resized)) {
+        m_grid->viewport()->setMouseTracking(true);
+        m_grid->viewport()->installEventFilter(this);
+    }
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        QWidget* viewport = m_grid->viewport();
+        if (watched != viewport) {
+            return false;
+        }
+        switch (event->type()) {
+            case QEvent::MouseButtonPress: {
+                const auto* mouse = static_cast<QMouseEvent*>(event);
+                if (mouse->button() == Qt::LeftButton && near(mouse->position().x())) {
+                    m_dragging = true;
+                    return true;
+                }
+                return false;
+            }
+            case QEvent::MouseMove: {
+                const auto* mouse = static_cast<QMouseEvent*>(event);
+                const int x = qRound(mouse->position().x());
+                if (m_dragging) {
+                    const int width =
+                        std::clamp(x, kMinColumnWidth,
+                                   std::max(kMinColumnWidth, viewport->width() - kMinColumnWidth));
+                    m_grid->setColumnWidth(PropertyGridModel::kNameColumn, width);
+                    m_resized(width);
+                    return true;
+                }
+                if (near(x)) {
+                    viewport->setCursor(Qt::SplitHCursor);
+                } else {
+                    viewport->unsetCursor();
+                }
+                return false;
+            }
+            case QEvent::MouseButtonRelease:
+                if (m_dragging) {
+                    m_dragging = false;
+                    return true;
+                }
+                return false;
+            case QEvent::Leave:
+                if (!m_dragging) {
+                    viewport->unsetCursor();
+                }
+                return false;
+            default:
+                return false;
+        }
+    }
+
+private:
+    [[nodiscard]] bool near(double x) const {
+        const int line = m_grid->columnWidth(PropertyGridModel::kNameColumn);
+        return std::abs(qRound(x) - line) <= kDividerGrip;
+    }
+
+    QTreeView* m_grid;
+    std::function<void(int)> m_resized;
+    bool m_dragging{false};
+};
+
 }  // namespace
 
 QStringList propertiesPanelIconNames() {
@@ -147,7 +225,8 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
       m_model(new PropertyGridModel(m_noDocument, this)),
       m_delegate(new PropertyGridDelegate(this)),
       m_grid(new QTreeView(this)),
-      m_message(new QLabel(this)) {
+      m_message(new QLabel(this)),
+      m_nameWidth(kNameColumnWidth) {
     setObjectName(QStringLiteral("propertiesPanel"));
 
     m_types->setObjectName(QStringLiteral("propertiesType"));
@@ -212,6 +291,7 @@ PropertiesPanel::PropertiesPanel(QWidget* parent)
     connect(m_delegate, &PropertyGridDelegate::lineweightChosen, this,
             [this](int value) { setLineweight(value); });
     connect(m_grid, &QTreeView::clicked, this, &PropertiesPanel::toggleGroup);
+    new ColumnDivider(m_grid, [this](int width) { m_nameWidth = width; });
     connectModel();
 
     updateIcons();
@@ -223,7 +303,7 @@ void PropertiesPanel::connectModel() {
     // A new model resets the widths of the columns and the rows that span
     // them: both are set again for every model.
     m_grid->setModel(m_model);
-    m_grid->setColumnWidth(PropertyGridModel::kNameColumn, kNameColumnWidth);
+    m_grid->setColumnWidth(PropertyGridModel::kNameColumn, m_nameWidth);
     for (int group = 0; group < PropertyGridModel::kGroupCount; ++group) {
         m_grid->setFirstColumnSpanned(group, {}, true);
     }

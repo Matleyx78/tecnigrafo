@@ -531,7 +531,7 @@ void MainWindow::createMenus(const Extension& extension) {
             &LayerPanel::showAndFocus);
     connect(layers, &LayerPanel::messageShown, m_commandLine, &CommandLine::appendToHistory);
     connect(layers, &LayerPanel::changed, this, &MainWindow::refresh);
-    addPanel(layers, Qt::RightDockWidgetArea);
+    const bool layersPlaced = addPanel(layers, Qt::RightDockWidgetArea);
 
     // The properties panel and QSELECT (0.6-P24). Like the layers panel, it
     // exists before the interface, which places its controls.
@@ -543,7 +543,12 @@ void MainWindow::createMenus(const Extension& extension) {
     connect(properties, &PropertiesPanel::messageShown, m_commandLine,
             &CommandLine::appendToHistory);
     connect(properties, &PropertiesPanel::changed, this, &MainWindow::refresh);
-    addPanel(properties, Qt::RightDockWidgetArea);
+    const bool propertiesPlaced = addPanel(properties, Qt::RightDockWidgetArea);
+    // docs/adr/0039, area 8: properties above, layers below, unless the
+    // user's own layout put them elsewhere.
+    if (layersPlaced && propertiesPlaced) {
+        splitDockWidget(properties, layers, Qt::Vertical);
+    }
 
     m_uiBuilder = std::make_unique<UiBuilder>(*this, *m_actions);
     registerAppCommands(m_registry, *this);
@@ -1874,17 +1879,19 @@ void MainWindow::updateThemeIcons() {
     }
 }
 
-void MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
+bool MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
     assert(panel != nullptr && !panel->objectName().isEmpty());
     panel->setAllowedAreas(Qt::AllDockWidgetAreas);
     panel->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable |
                        QDockWidget::DockWidgetFloatable);
     // restoreDockWidget consumes the saved placeholder. Adding the dock
     // first would discard that placeholder, including its floating state.
-    if (!m_uiSettingsReady || m_scriptMode || !restoreDockWidget(panel)) {
+    const bool placed = !m_uiSettingsReady || m_scriptMode || !restoreDockWidget(panel);
+    if (placed) {
         addDockWidget(area, panel);
     }
     m_autoHide->addPanel(panel);
+    return placed;
 }
 
 void MainWindow::showSettings() {

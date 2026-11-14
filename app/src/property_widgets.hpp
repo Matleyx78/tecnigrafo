@@ -16,6 +16,9 @@ namespace tg::app {
 
 /// ACI 7 is deliberately shown as both black and white, on either theme.
 [[nodiscard]] QIcon colorIcon(core::Color color, const QPalette& palette);
+/// The small square sample of a colour, as in the panels of docs/adr/0039:
+/// 12 logical pixels in an icon of 16, sharp at both display scales.
+[[nodiscard]] QIcon colorSampleIcon(core::Color color, const QPalette& palette);
 
 /// The name ColorCombo gives `color`: ByLayer, ByBlock, the names of ACI 1–7,
 /// the number of the other indexes, the RGB values.

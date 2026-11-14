@@ -251,7 +251,8 @@ public:
 
     /// Panels must have a unique, stable, nonempty objectName. A docked
     /// panel can hide itself (docs/tappe/0.7.5/P18).
-    void addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
+    /// True when the panel was placed in area, false when the saved layout placed it.
+    bool addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
 
     /// The panels that hide themselves and their tabs.
     [[nodiscard]] AutoHide& autoHide() const { return *m_autoHide; }

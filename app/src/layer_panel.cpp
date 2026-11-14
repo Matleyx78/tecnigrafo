@@ -8,18 +8,27 @@
 #include "theme.hpp"
 
 #include <QAction>
+#include <QApplication>
+#include <QComboBox>
 #include <QEvent>
+#include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QIcon>
 #include <QItemSelectionModel>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPainter>
 #include <QSize>
+#include <QStyle>
+#include <QStyleOptionViewItem>
+#include <QStyledItemDelegate>
 #include <QTableView>
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <optional>
@@ -61,6 +70,44 @@ QString layerName(const core::Layer* layer) {
     return layer != nullptr ? QString::fromStdString(layer->name) : QString();
 }
 
+bool hasCellControl(int column) {
+    return column == columnOf(LayerColumn::Color) || column == columnOf(LayerColumn::Linetype) ||
+           column == columnOf(LayerColumn::Lineweight);
+}
+
+/// Paints only the row (its selection and its line) under the drop-downs,
+/// which are transparent: the text of the model stays for the tests and the
+/// screen readers, and is not drawn twice (docs/adr/0039, area 9).
+class LayerCellDelegate : public QStyledItemDelegate {
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override {
+        if (!hasCellControl(index.column())) {
+            QStyledItemDelegate::paint(painter, option, index);
+            return;
+        }
+        QStyleOptionViewItem row = option;
+        initStyleOption(&row, index);
+        row.text.clear();
+        row.icon = QIcon();
+        row.features &= ~QStyleOptionViewItem::HasDisplay;
+        row.features &= ~QStyleOptionViewItem::HasDecoration;
+        const QWidget* widget = option.widget;
+        QStyle* style = widget != nullptr ? widget->style() : QApplication::style();
+        style->drawControl(QStyle::CE_ItemViewItem, &row, painter, widget);
+    }
+};
+
+/// As wide as the value shown with its sample, whatever the size policy of
+/// the drop-down computed before it had its choices.
+int comboWidth(const QComboBox& combo) {
+    constexpr int kFrame = 16;
+    const QFontMetrics metrics(combo.font());
+    return metrics.horizontalAdvance(combo.currentText()) + combo.iconSize().width() + kFrame;
+}
+
 }  // namespace
 
 LayerPanel::LayerPanel(QWidget* parent)
@@ -83,6 +130,10 @@ LayerPanel::LayerPanel(QWidget* parent)
     m_table->verticalHeader()->setMinimumSectionSize(kRowHeight);
     m_table->verticalHeader()->setDefaultSectionSize(kRowHeight);
     m_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    // docs/adr/0039, area 9: rows parted by a line, no grid of cells.
+    m_table->setShowGrid(false);
+    m_table->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_table->setItemDelegate(new LayerCellDelegate(m_table));
 
     m_message->setObjectName(QStringLiteral("layerMessage"));
     m_message->setWordWrap(true);
@@ -145,6 +196,13 @@ void LayerPanel::connectModel() {
     auto* header = m_table->horizontalHeader();
     header->setSectionResizeMode(columnOf(LayerColumn::Plot), QHeaderView::ResizeToContents);
     m_table->horizontalHeader()->setStretchLastSection(false);
+    // The states before the name, as in the reference (area 9); only the
+    // view moves, the columns of the model stay.
+    int place = 0;
+    for (const LayerColumn column : states) {
+        header->moveSection(header->visualIndex(columnOf(column)), place);
+        ++place;
+    }
     connect(m_table->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
             [this] { updateActions(); });
     connect(m_model, &QAbstractItemModel::modelReset, this, [this] { rebuildCellWidgets(); });
@@ -154,6 +212,8 @@ void LayerPanel::connectModel() {
         m_model, &LayerTableModel::renameRequested, this,
         [this](core::LayerId id, const QString& name) { renameLayer(id, name); },
         Qt::QueuedConnection);
+    // A new model resets the widths of its columns.
+    m_columnsFitted = false;
     rebuildCellWidgets();
 }
 
@@ -357,6 +417,46 @@ void LayerPanel::rebuildCellWidgets() {
     applyFilter();
 }
 
+void LayerPanel::fitCellColumns() {
+    // The name and the drop-downs are at least as wide as the longest value
+    // they show, never cut: the panel scrolls when it is narrower
+    // (docs/tappe/fuori-tappa/F6-stato.md, "le traduzioni"). The user can
+    // widen them by dragging the header; a fit never narrows a column the
+    // user widened, until a new drawing resets the widths.
+    auto* header = m_table->horizontalHeader();
+    const auto fit = [this, header](int section, int width) {
+        header->setSectionResizeMode(section, QHeaderView::Interactive);
+        if (m_columnsFitted) {
+            width = std::max(width, header->sectionSize(section));
+        }
+        m_table->setColumnWidth(section, width);
+    };
+    for (const LayerColumn column :
+         {LayerColumn::Color, LayerColumn::Linetype, LayerColumn::Lineweight}) {
+        const int section = columnOf(column);
+        int width = header->sectionSizeHint(section);
+        for (int row = 0; row < m_model->rowCount(); ++row) {
+            if (const auto* cell = qobject_cast<const QComboBox*>(
+                    m_table->indexWidget(m_model->index(row, section)))) {
+                width = std::max(width, comboWidth(*cell));
+            }
+        }
+        fit(section, width);
+    }
+    constexpr int kNamePadding = 12;
+    const int name = columnOf(LayerColumn::Name);
+    int nameWidth = header->sectionSizeHint(name);
+    for (int row = 0; row < m_model->rowCount(); ++row) {
+        const QString text = m_model->index(row, name).data().toString();
+        nameWidth =
+            std::max(nameWidth, m_table->fontMetrics().horizontalAdvance(text) + kNamePadding);
+    }
+    fit(name, nameWidth);
+    m_columnsFitted = true;
+    // The drop-downs follow their columns now, not at the next layout.
+    m_table->doItemsLayout();
+}
+
 void LayerPanel::syncCellWidgets() {
     const core::Document& doc = document();
     const std::size_t linetypes = doc.linetypes().size();
@@ -368,6 +468,7 @@ void LayerPanel::syncCellWidgets() {
         invalidateCells();
     }
     m_cells.resize(static_cast<std::size_t>(m_model->rowCount()));
+    bool changed = false;
     for (int row = 0; row < m_model->rowCount(); ++row) {
         const core::Layer* layer = doc.layer(m_model->layerAt(row));
         if (layer == nullptr) {
@@ -383,6 +484,7 @@ void LayerPanel::syncCellWidgets() {
         cell.lineweight = layer->lineweight;
         cell.enabled = m_editingEnabled;
         cell.valid = true;
+        changed = true;
         // The setters of the controls never emit valueChosen.
         auto* color = qobject_cast<ColorCombo*>(
             m_table->indexWidget(m_model->index(row, columnOf(LayerColumn::Color))));
@@ -404,6 +506,9 @@ void LayerPanel::syncCellWidgets() {
             lineweight->setValue(layer->lineweight);
             lineweight->setEnabled(m_editingEnabled);
         }
+    }
+    if (changed) {
+        fitCellColumns();
     }
 }
 

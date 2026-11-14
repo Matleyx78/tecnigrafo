@@ -23,6 +23,7 @@
 #include <QLineEdit>
 #include <QMetaObject>
 #include <QModelIndex>
+#include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QSignalSpy>
 #include <QString>
@@ -228,6 +229,29 @@ TEST_F(PropertiesPanelTest, WithoutSelectionShowsAndChangesTheCurrentValues) {
     EXPECT_EQ(panel().lastMessage(), QStringLiteral("Cannot set current to a frozen layer."));
     EXPECT_EQ(messages.size(), 1);
     EXPECT_EQ(document().current().layer, start.layer);
+}
+
+TEST_F(PropertiesPanelTest, TheLineBetweenNamesAndValuesCanBeDraggedAndTheWidthStays) {
+    panel().resize(360, 400);
+    panel().show();
+    QCoreApplication::processEvents();
+    QTreeView* view = grid();
+    ASSERT_NE(view, nullptr);
+    const int before = view->columnWidth(PropertyGridModel::kNameColumn);
+    const int y = view->visualRect(panel().grid().valueIndex(PropertyField::Color)).center().y();
+    QTest::mousePress(view->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(before, y));
+    QMouseEvent move(QEvent::MouseMove, QPointF(before + 40, y),
+                     view->viewport()->mapToGlobal(QPointF(before + 40, y)), Qt::NoButton,
+                     Qt::LeftButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(view->viewport(), &move);
+    QTest::mouseRelease(view->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(before + 40, y));
+    EXPECT_EQ(view->columnWidth(PropertyGridModel::kNameColumn), before + 40);
+    // The press on the line opened no editor.
+    EXPECT_EQ(view->indexWidget(panel().grid().valueIndex(PropertyField::Color)), nullptr);
+    // A selection and a refresh keep it.
+    select({addLine(0.0)});
+    QCoreApplication::processEvents();
+    EXPECT_EQ(grid()->columnWidth(PropertyGridModel::kNameColumn), before + 40);
 }
 
 TEST_F(PropertiesPanelTest, ASingleEntityShowsItsTypeValuesAndGeometry) {

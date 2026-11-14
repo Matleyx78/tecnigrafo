@@ -218,6 +218,8 @@ private:
     PropertyGridDelegate* m_delegate;
     QTreeView* m_grid;
     QLabel* m_message;
+    // The width of the names, which the user can drag; a new model keeps it.
+    int m_nameWidth;
     QAction* m_quickSelectAction{nullptr};
 
     std::vector<core::EntityId> m_selection;

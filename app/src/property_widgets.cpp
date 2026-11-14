@@ -182,6 +182,23 @@ QIcon colorIcon(core::Color color, const QPalette& palette) {
     return {pixmap};
 }
 
+QIcon colorSampleIcon(core::Color color, const QPalette& palette) {
+    constexpr int kSampleSide = 12;
+    constexpr int kSampleMargin = (kLayerIconSide - kSampleSide) / 2;
+    QIcon icon;
+    for (const int scale : {1, 2}) {
+        QPixmap pixmap(kLayerIconSide * scale, kLayerIconSide * scale);
+        pixmap.setDevicePixelRatio(scale);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        paintColorSample(painter, QRect(kSampleMargin, kSampleMargin, kSampleSide, kSampleSide),
+                         color, palette);
+        painter.end();
+        icon.addPixmap(pixmap);
+    }
+    return icon;
+}
+
 ColorCombo::ColorCombo(QWidget* parent) : QComboBox(parent) {
     rebuild();
     connect(this, &QComboBox::activated, this, &ColorCombo::choose);
@@ -191,7 +208,7 @@ void ColorCombo::rebuild() {
     const QSignalBlocker blocker(this);
     clear();
     const auto add = [this](core::Color color) {
-        addItem(colorIcon(color, palette()), colorName(color), QVariant::fromValue(color));
+        addItem(colorSampleIcon(color, palette()), colorName(color), QVariant::fromValue(color));
     };
     add(core::Color::byLayer());
     add(core::Color::byBlock());

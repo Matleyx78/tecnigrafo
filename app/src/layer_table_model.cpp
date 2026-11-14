@@ -229,7 +229,7 @@ QVariant LayerTableModel::headerData(int section, Qt::Orientation orientation, i
         case LayerColumn::Locked:
             return tr("Locked");
         case LayerColumn::Color:
-            return tr("Colour");
+            return tr("Color");
         case LayerColumn::Linetype:
             return tr("Linetype");
         case LayerColumn::Lineweight:

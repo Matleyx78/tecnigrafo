@@ -33,8 +33,8 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 5. Area di disegno e barra di navigazione | da fare |
 | 6. Riga di comando mobile | in corso |
 | 7. Immissione dinamica | da fare |
-| 8. Pannello *Properties* | da fare |
-| 9. Pannello *Layers* | da fare |
+| 8. Pannello *Properties* | approvata dal responsabile, 2026-11-14 |
+| 9. Pannello *Layers* | approvata dal responsabile, 2026-11-14 |
 | 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
 | Interfaccia classica (menu e barre) | da fare |
 | Finestre di dialogo | da fare |
@@ -319,6 +319,48 @@ riguarda funzioni che non ci sono.
 
 I test di `app_widgets` e `app_gallery` che falliscono sono gli stessi di
 prima di questo giro (ribbon, logo, icone): da allineare alla chiusura.
+
+**Aree 8 e 9: pannelli *Properties* e *Layers*** (2026-11-14), approvate dal
+responsabile nella finestra vera:
+
+- *Properties* sopra e *Layers* sotto, se non c'è una disposizione salvata
+  (chi l'ha salvata tiene la sua);
+- campione del colore quadrato (12 px in un'icona da 16) nelle combo dei
+  colori e nella griglia di *Properties*; la barra 64×18 resta solo nella
+  finestra dei colori (`colorIcon`);
+- *Layers*: colonne dello stato prima del nome (si sposta solo la vista, le
+  colonne del modello restano), niente griglia di celle ma una riga sotto
+  ogni layer, intestazioni a sinistra, *Colour* diventa *Color* come nel
+  riferimento e in *Properties*;
+- *Layers*: le combo delle celle restano (comportamento) ma senza bordo e
+  senza freccia; sotto di loro la tabella disegna solo la riga, non il testo
+  del modello, che resta per i test e i lettori di schermo;
+- *Layers*: *Name*, *Color*, *Linetype* e *Lineweight* larghe quanto il
+  valore più lungo mostrato, mai tagliate: a 360 px, con *Lineweight* e
+  *Plot* che il riferimento non ha, la tabella scorre in orizzontale.
+
+Sulla prova del responsabile: le colonne si devono poter allargare per i
+testi più lunghi.
+
+- *Layers*: *Name*, *Color*, *Linetype* e *Lineweight* si trascinano
+  dall'intestazione; il programma le allarga se un valore lo chiede, ma non
+  le stringe sotto la larghezza data dall'utente (fino a un nuovo disegno);
+- *Properties*: la griglia non ha intestazione (come il riferimento), e la
+  linea fra nomi e valori si trascina (cursore ↔ a 3 px dalla linea, almeno
+  40 px per parte); la larghezza resta anche con una nuova selezione o un
+  altro disegno.
+
+Punti aperti delle aree 8 e 9:
+
+- il pulsante per fissare il pannello (📌) resta: è l'auto-nascondi;
+- la combo della selezione dice «Polyline», non «Polyline (1)»: è testo
+  del comportamento, da decidere;
+- la freccia sinistra di *Current Vertex* è nel colore del bordo quando è
+  spenta (primo vertice): il riferimento la mostra accesa;
+- *Lineweight* *ByLayer* senza campione in *Properties*: scelta del codice
+  («ByLayer and ByBlock have no width of their own»);
+- icone della barra di *Layers* (rombi), lente nel campo di ricerca e icone
+  di stato colorate: con l'area delle icone (non c'è un'icona della lente).
 
 Prossimi passi: le aree
 rimaste (8–9 pannelli, 10 barra di stato, 4 dettagli delle schede dei

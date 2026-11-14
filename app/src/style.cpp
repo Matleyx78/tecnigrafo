@@ -111,6 +111,11 @@ QDockWidget QScrollArea, QDockWidget QScrollArea > QWidget > QWidget { backgroun
 QDockWidget QAbstractItemView { background: {panel}; border: none; }
 QAbstractItemView { background: {field}; alternate-background-color: {group}; color: {text}; border: 1px solid {border}; selection-background-color: {selection}; selection-color: {text}; }
 QComboBox QAbstractItemView { outline: none; }
+QTableView#layerTable { border: none; }
+QTableView#layerTable::item { border-bottom: 1px solid {border}; }
+QTableView#layerTable QComboBox { background: transparent; border: none; }
+QTableView#layerTable QComboBox::drop-down { width: 0px; border: none; }
+QTableView#layerTable QComboBox::down-arrow { image: none; }
 QHeaderView::section { background: {group}; color: {textSecondary}; border: none; border-right: 1px solid {border}; border-bottom: 1px solid {border}; padding: 2px 6px; }
 )"};
 

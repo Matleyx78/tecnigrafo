@@ -139,6 +139,7 @@ private:
     bool confirm(const QString& text);
     void setMessage(const QString& text);
     void rebuildCellWidgets();
+    void fitCellColumns();
     void syncCellWidgets();
     void updateActions();
     void applyFilter();
@@ -176,6 +177,8 @@ private:
     std::vector<CellValues> m_cells;
     std::size_t m_linetypeCount{0};
     int m_lwdefault{0};
+    // The columns have their first widths: later fits only widen them.
+    bool m_columnsFitted{false};
     Confirm m_confirm;
     QString m_lastMessage;
     bool m_editingEnabled{true};
