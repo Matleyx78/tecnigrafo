@@ -4,20 +4,31 @@
 #pragma once
 
 #include "tg/core/arc.hpp"
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/bbox.hpp"
+#include "tg/core/block_table.hpp"
 #include "tg/core/circle.hpp"
+#include "tg/core/dim_style_table.hpp"
+#include "tg/core/dimension.hpp"
+#include "tg/core/ellipse.hpp"
 #include "tg/core/entity_extras.hpp"
 #include "tg/core/entity_id.hpp"
+#include "tg/core/hatch.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/raw_drawing.hpp"
+#include "tg/core/solid.hpp"
 #include "tg/core/spatial_index.hpp"
 #include "tg/core/text.hpp"
+#include "tg/core/text_style_table.hpp"
 
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -29,8 +40,10 @@ namespace tg::core {
 
 /// Every drawable entity. New entity types are added to this variant;
 /// code that visits entities then fails to compile until it handles them,
-/// which is intentional (see docs/adr/0004).
-using Entity = std::variant<Polyline, Line, Circle, Arc, Text>;
+/// which is intentional (see docs/adr/0004). The types after Text arrive in
+/// the 0.8 (docs/adr/0044, point 1).
+using Entity = std::variant<Polyline, Line, Circle, Arc, Text, Solid, Ellipse, MText,
+                            AttributeDefinition, Insert, Dimension, Hatch>;
 
 struct EntityRecord {
     EntityId id;
@@ -49,7 +62,15 @@ struct EntityRecord {
     friend bool operator==(const EntityRecord&, const EntityRecord&) = default;
 };
 
+/// The bounding box of the entity's own geometry. Empty for MText, Insert,
+/// Dimension and Hatch, whose geometry depends on the document: their box is
+/// extent() (generated.hpp), which the spatial index registers.
+/// Precondition: isSupported(entity).
 [[nodiscard]] BBox boundingBox(const Entity& entity);
+
+/// False for a type whose package is not merged yet (docs/adr/0044, point 1):
+/// supported() of the type. True for the five types of before the 0.8.
+[[nodiscard]] bool isSupported(const Entity& entity);
 
 /// A drawing: the owner of all entities, handled or not, and of what its
 /// file brought that the model does not represent (docs/adr/0018).
@@ -61,7 +82,10 @@ struct EntityRecord {
 ///
 /// The document keeps a spatial index of its entities and a table from
 /// identifier to position, both updated by add, remove, restore and insert,
-/// so that they never disagree with the entities (docs/adr/0007).
+/// so that they never disagree with the entities (docs/adr/0007). The index
+/// holds the extent() of each entity (generated.hpp), which can depend on the
+/// block definitions and on which layers are frozen: replaceBlock(),
+/// replaceLayer() and setProperties() register it again when it can change.
 ///
 /// Every entity, handled or not, has an order key. The handled entities are
 /// kept in key order, and so are the unhandled ones; the writer merges the
@@ -96,7 +120,7 @@ public:
 
     /// Adds an entity with a new identifier and the next order key, after
     /// every entity the document has held, so it comes last. The entity gets
-    /// the current properties.
+    /// the current properties. Precondition: isSupported(entity).
     EntityId add(Entity entity);
 
     /// The entity with identifier `id`, or nullptr if the document has none.
@@ -111,16 +135,18 @@ public:
 
     /// Replaces the geometry, keeping identifier, order, extras and properties,
     /// and updates the spatial index. Returns the previous entity.
-    /// Precondition: the record exists.
+    /// Preconditions: the record exists; isSupported(entity).
     Entity replaceEntity(EntityId id, Entity entity);
 
     /// Puts back an entity previously returned by remove(), with its
     /// original identifier, extras and order key, at its place in key order.
-    /// Precondition: `record.id` is valid and not already in the document.
+    /// Preconditions: `record.id` is valid and not already in the document;
+    /// isSupported(record.entity).
     void restore(EntityRecord record);
 
     /// Adds an entity read from a file, with its handle, order and extras.
-    /// Precondition: record.id is not 0 and not used (handled, raw or reserved).
+    /// Preconditions: record.id is not 0 and not used (handled, raw or
+    /// reserved); isSupported(record.entity).
     void insert(EntityRecord record);
 
     /// Adds an unhandled entity. Same precondition on raw.id.
@@ -160,14 +186,13 @@ public:
 
     [[nodiscard]] bool isEmpty() const { return m_entities.empty(); }
 
-    /// Bounding box of every entity (empty for an empty document), from the
+    /// Extent of every entity (empty for an empty document), from the
     /// spatial index: it does not visit the entities.
     [[nodiscard]] BBox extents() const;
 
-    /// Appends to `out` the identifiers of the entities whose bounding box
+    /// Appends to `out` the identifiers of the entities whose extent
     /// overlaps `area`, borders included, in no particular order. Entities
-    /// with an empty bounding box (a polyline without vertices) are never
-    /// found.
+    /// with an empty extent (a polyline without vertices) are never found.
     void query(const BBox& area, std::vector<EntityId>& out) const;
 
     // --- Tables (docs/adr/0023, point 1) -----------------------------------
@@ -195,6 +220,29 @@ public:
     [[nodiscard]] LinetypeId byBlockLinetype() const;
     [[nodiscard]] LinetypeId continuousLinetype() const;
     [[nodiscard]] LayerId layerZero() const;
+
+    // --- Text styles, dimension styles, blocks (docs/adr/0044, point 3) ----
+
+    [[nodiscard]] const TextStyleTable& textStyles() const { return m_textStyles; }
+
+    [[nodiscard]] const DimStyleTable& dimStyles() const { return m_dimStyles; }
+
+    [[nodiscard]] const BlockTable& blocks() const { return m_blocks; }
+
+    // Changed only by edit and io, like the entities.
+
+    void replaceTextStyles(TextStyleTable table);
+
+    void replaceDimStyles(DimStyleTable table);
+
+    /// Puts, replaces or (nullopt) removes the definition `name`; then
+    /// re-indexes every entity for which dependsOnBlock() is true.
+    ///
+    /// A new name is appended to the table. A definition whose name is
+    /// already there (sameTableName) takes its place, and keeps the name as
+    /// it was written there (docs/DECISIONI.md, 2026-11-14, "Revisione delle
+    /// interfacce PT4", P6). Removing a name that is not there changes nothing.
+    void replaceBlock(std::string name, std::optional<BlockDefinition> definition);
 
     // --- Current values (docs/adr/0023, point 3) ---------------------------
 
@@ -229,7 +277,9 @@ public:
     std::optional<std::pair<Layer, std::size_t>> removeLayer(LayerId id);
 
     /// Changes every field of the layer with the same id. Preconditions: the
-    /// layer exists, and the new values satisfy those of addLayer().
+    /// layer exists, and the new values satisfy those of addLayer(). Freezing
+    /// or thawing it registers again the extent of every entity, which can
+    /// include shapes on that layer.
     void replaceLayer(const Layer& layer);
 
     /// Appends a linetype, with the same rules on the identifier as
@@ -265,6 +315,15 @@ private:
     /// Puts the record at its place in key order and registers it.
     void place(EntityRecord record);
 
+    /// Registers the extent of `record` in the spatial index, if not empty.
+    void index(const EntityRecord& record);
+
+    /// Removes the entity `id` from the spatial index, if it is there.
+    void unindex(EntityId id);
+
+    /// Registers again the extent of the entity at `position`.
+    void reindex(std::size_t position);
+
     /// Gives a table record a new handle if `id` is 0, otherwise registers
     /// it; returns the record's handle.
     std::uint64_t claimRecordHandle(std::uint64_t id);
@@ -280,7 +339,10 @@ private:
 
     std::vector<EntityRecord> m_entities;                        ///< in order key
     std::unordered_map<std::uint64_t, std::size_t> m_positions;  ///< id -> index in m_entities
-    SpatialIndex m_index;                          ///< entities with a non-empty bounding box
+    SpatialIndex m_index;  ///< entities with a non-empty extent
+    /// The extent each entity of m_index was registered with: it can no
+    /// longer be computed from the entity once a block or a layer changes.
+    std::unordered_map<std::uint64_t, BBox> m_indexed;
     std::vector<RawEntity> m_rawEntities;          ///< in order key
     std::unordered_set<std::uint64_t> m_otherIds;  ///< unhandled and reserved handles
     std::uint64_t m_nextId{1};
@@ -293,6 +355,9 @@ private:
     double m_ltscale{1.0};
     int m_lwdefault{kDefaultLwdefault};
     bool m_lwdisplay{false};
+    TextStyleTable m_textStyles;
+    DimStyleTable m_dimStyles;
+    BlockTable m_blocks;
 };
 
 }  // namespace tg::core

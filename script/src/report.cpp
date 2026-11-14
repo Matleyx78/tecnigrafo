@@ -245,6 +245,14 @@ void writePlacementProperties(const core::Entity& entity, const core::EntityExtr
                 writePlacementNumber(extras, 30, "z", out);
                 writePlacementNumber(extras, 31, "alignment-z", out);
             },
+            // The types of the 0.8: their package writes them (docs/tappe/0.8/PT9).
+            [](const core::Solid& /*solid*/) {},
+            [](const core::Ellipse& /*ellipse*/) {},
+            [](const core::MText& /*mtext*/) {},
+            [](const core::AttributeDefinition& /*definition*/) {},
+            [](const core::Insert& /*insert*/) {},
+            [](const core::Dimension& /*dimension*/) {},
+            [](const core::Hatch& /*hatch*/) {},
         },
         entity);
     writePlacementNumber(extras, 39, "thickness", out);
@@ -362,6 +370,9 @@ void writeModel(const core::Entity& entity, std::string& out) {
                    [&out](const core::Circle& circle) { writeCircle(circle, out); },
                    [&out](const core::Arc& arc) { writeArc(arc, out); },
                    [&out](const core::Text& text) { writeText(text, out); },
+                   // The types of the 0.8: only the DXF type until their
+                   // fields are written (docs/tappe/0.8/PT9).
+                   [&out, &entity](const auto& /*composite*/) { out += dxfType(entity); },
                },
                entity);
 }
@@ -549,6 +560,13 @@ std::string_view dxfType(const core::Entity& entity) {
                           [](const core::Circle& /*circle*/) { return "CIRCLE"; },
                           [](const core::Arc& /*arc*/) { return "ARC"; },
                           [](const core::Text& /*text*/) { return "TEXT"; },
+                          [](const core::Solid& /*solid*/) { return "SOLID"; },
+                          [](const core::Ellipse& /*ellipse*/) { return "ELLIPSE"; },
+                          [](const core::MText& /*mtext*/) { return "MTEXT"; },
+                          [](const core::AttributeDefinition& /*definition*/) { return "ATTDEF"; },
+                          [](const core::Insert& /*insert*/) { return "INSERT"; },
+                          [](const core::Dimension& /*dimension*/) { return "DIMENSION"; },
+                          [](const core::Hatch& /*hatch*/) { return "HATCH"; },
                       },
                       entity);
 }

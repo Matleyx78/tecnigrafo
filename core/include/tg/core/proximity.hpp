@@ -20,6 +20,9 @@ namespace tg::core {
 /// Distance to the entity's curve, not its interior. A single vertex is a
 /// point; an empty polyline has infinite distance. A text is a region
 /// (docs/adr/0013, point 6): the distance is to its box, 0 inside it.
+/// Solid and Ellipse answer with distanceOf() of the type, as for isInside()
+/// and intersects(). The other types of the 0.8 answer through the document
+/// (generated.hpp): precondition, the entity is not one of them.
 [[nodiscard]] double distance(const Entity& entity, const Vec2& point);
 
 /// Window selection, borders included. An empty entity or rectangle is false.
