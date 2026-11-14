@@ -79,6 +79,7 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
   exit 0
 fi
 
-# A resumed issue is no longer waiting for a decision.
-gh api -X DELETE "repos/$repo/issues/$issue/labels/decisione" >/dev/null 2>&1 || true
+# The label decisione stays: the agent removes it when it takes the issue in
+# charge (docs/agenti/catena.md, "Ripresa dopo una decisione"), so a start
+# that fails or is never picked up leaves the issue marked.
 gh api "repos/$repo/issues/$issue/comments" -f body="$text" --jq '.html_url'

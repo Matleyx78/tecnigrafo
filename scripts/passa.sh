@@ -18,7 +18,7 @@
 # review instead of a task. Review and analysis requests for Codex therefore go
 # to an issue: the one the pull request closes or, for a pull request that
 # closes none (a correction of the specs, of references), the one of its line
-# "Avvia dopo il merge: #N".
+# "Avvia dopo il merge: #N" (scripts/catena.py).
 set -euo pipefail
 
 repo="${GITHUB_REPOSITORY:-Matleyx78/tecnigrafo}"
@@ -62,13 +62,8 @@ fi
 
 target="$pr"
 if [ "$agent" = codex ] && [ "$kind" != correzioni ]; then
-  body="$(GH_TOKEN="$token" gh api "repos/$repo/pulls/$pr" --jq '.body // ""')"
-  target="$(printf '%s\n' "$body" | grep -oiE '(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
-    | head -n 1 | grep -oE '[0-9]+' || true)"
-  if [ -z "$target" ]; then
-    target="$(printf '%s\n' "$body" | grep -oiE 'avvia dopo il merge:[[:space:]]*#[0-9]+' \
-      | head -n 1 | grep -oE '[0-9]+' || true)"
-  fi
+  target="$(GH_TOKEN="$token" gh api "repos/$repo/pulls/$pr" --jq '.body // ""' \
+    | python3 "$(dirname "$0")/catena.py" collegata)"
   if [ -z "$target" ]; then
     echo "pull request #$pr names no issue (Closes #N or Avvia dopo il merge: #N):" \
       "cannot hand it to Codex" >&2

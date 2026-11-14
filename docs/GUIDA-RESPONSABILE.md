@@ -154,8 +154,10 @@ metti un carattere invisibile dopo la chiocciola, o scrivi il nome senza.
    metti il token nel secret `CLAUDE_CODE_OAUTH_TOKEN` (*Settings → Secrets
    and variables → Actions*).
 3. Crea un token personale a grana fine valido solo per il repository, con
-   *Issues* e *Pull requests* in lettura e scrittura e *Contents* in lettura,
-   e mettilo nel secret `RELAY_PAT`. Serve perché gli agenti rispondono solo
+   *Issues* e *Pull requests* in lettura e scrittura, *Contents* e *Actions*
+   in lettura, e mettilo nel secret `RELAY_PAT`. *Actions* serve perché con
+   quel token gli agenti aspettano e leggono la CI (`scripts/ci-attendi.sh`,
+   `scripts/ci-errori.sh`), sia Claude in GitHub Actions sia Codex. Serve perché gli agenti rispondono solo
    a te e Codex non risponde ai bot: con quel token scrivono gli script, e
    Claude apre le pull request in modo che parta la CI.
 4. In Codex crea un **ambiente legacy** per il repository (le menzioni usano

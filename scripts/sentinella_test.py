@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 The Tecnigrafo authors
 #
-# Tests of scripts/sentinella.py, without network: only the choice of the
-# stuck chains (docs/agenti/catena.md, "Sentinella").
+# Tests of scripts/sentinella.py, without network: the choice of the stuck
+# chains (docs/agenti/catena.md, "Sentinella"), with GitHub replaced by
+# answers written here.
 #
 #     python3 -m unittest discover -s scripts -p '*_test.py'
 
 from __future__ import annotations
 
+import datetime as dt
 import sys
 import unittest
 from pathlib import Path
@@ -85,6 +87,84 @@ class Stuck(unittest.TestCase):
         it = item(labels={"agente:codex", "decisione", "ferma"},
                   comments=[comment("@codex Decisione del responsabile: A")])
         self.assertIsNone(s.stuck(it, 60))
+
+    def test_resume_written_by_avvia_and_not_picked_up(self):
+        it = item(labels={"agente:claude", "decisione"},
+                  comments=[comment("Presa in carico da Claude"),
+                            comment("@claude [modello: opus] [impegno: medio] Leggi AGENTS.md …")])
+        self.assertIn("Decisione non ripresa", s.stuck(it, 60))
+
+    def test_agent_name_without_mention_is_not_a_start(self):
+        it = item(labels={"agente:codex", "decisione"},
+                  comments=[comment("Presa in carico da Codex"),
+                            comment("codex Decisione del responsabile: A")])
+        self.assertIsNone(s.stuck(it, 60))
+
+
+NOW = dt.datetime(2026, 11, 14, 20, 0, tzinfo=dt.timezone.utc)
+
+
+def raw(number: int, minutes_ago: int, labels=(), body: str = "", pr: bool = False) -> dict:
+    updated = (NOW - dt.timedelta(minutes=minutes_ago)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    r = {"number": number, "updated_at": updated, "body": body,
+         "labels": [{"name": n} for n in labels]}
+    if pr:
+        r["pull_request"] = {}
+    return r
+
+
+class FakeGitHub:
+    def __init__(self, comments: dict[int, list[dict]], running=()):
+        self._comments, self._running = comments, set(running)
+
+    def ci_running(self, number: int) -> bool:
+        return number in self._running
+
+    def comments(self, number: int) -> list[dict]:
+        return list(self._comments.get(number, []))
+
+
+def handover(number: int, at: str) -> dict:
+    c = comment(f"@codex Prima di tutto esegui git fetch origin. Sei il revisore della pull request #{number} …")
+    c["created_at"] = at
+    return c
+
+
+class Find(unittest.TestCase):
+    def test_handover_in_the_issue_without_answer(self):
+        # Claude opened PR 20, the CI passed, the hand-over to Codex went to
+        # issue 10, and Codex never took it (quota).
+        items = [raw(10, 90, {"agente:claude"}),
+                 raw(20, 95, {}, "Closes #10", pr=True)]
+        gh = FakeGitHub({10: [comment("Presa in carico da Claude"),
+                              handover(20, "2026-11-14T18:30:00Z")]})
+        found = s.find(items, NOW, 60, gh)
+        self.assertEqual([it.number for it, _ in found], [20])
+        self.assertIn("90 minuti", found[0][1])
+
+    def test_handover_linked_by_the_start_line(self):
+        items = [raw(10, 90, {"agente:codex"}),
+                 raw(20, 95, {}, "Revisione della correzione: da fare\n\nAvvia dopo il merge: #10", pr=True)]
+        gh = FakeGitHub({10: [handover(20, "2026-11-14T18:30:00Z")]})
+        self.assertEqual([it.number for it, _ in s.find(items, NOW, 60, gh)], [20])
+
+    def test_recent_movement_in_the_issue_keeps_the_chain_alive(self):
+        items = [raw(10, 10, {"agente:claude"}),
+                 raw(20, 95, {}, "Closes #10", pr=True)]
+        gh = FakeGitHub({10: [handover(20, "2026-11-14T19:50:00Z")]})
+        self.assertEqual(s.find(items, NOW, 60, gh), [])
+
+    def test_running_ci_keeps_the_chain_alive(self):
+        items = [raw(10, 90, {"agente:claude"}),
+                 raw(20, 95, {}, "Closes #10", pr=True)]
+        gh = FakeGitHub({10: [handover(20, "2026-11-14T18:30:00Z")]}, running={20})
+        self.assertEqual(s.find(items, NOW, 60, gh), [])
+
+    def test_quoted_start_line_does_not_link(self):
+        items = [raw(10, 90, {"agente:claude"}),
+                 raw(20, 95, {}, "Abbiamo tolto la riga Avvia dopo il merge: #10", pr=True)]
+        gh = FakeGitHub({10: [comment("Presa in carico da Claude")]})
+        self.assertEqual([it.number for it, _ in s.find(items, NOW, 60, gh)], [10])
 
 
 if __name__ == "__main__":

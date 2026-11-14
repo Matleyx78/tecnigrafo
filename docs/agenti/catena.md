@@ -190,7 +190,11 @@ Al merge di una pull request, il workflow *Dopo il merge*
 (`.github/workflows/dopo-il-merge.yml`) legge le righe
 `Avvia dopo il merge: #N` della descrizione e avvia la issue N con il suo
 agente (`scripts/avvia.sh`), se non aspetta ancora un'altra issue della sua
-riga "Dipende da" o "Riferimenti". Ogni agente legge l'AGENTS.md del suo
+riga "Dipende da" o "Riferimenti". Conta solo una **riga a sé**, che comincia
+con quelle parole (al più dopo un trattino di elenco) e porta una sola issue:
+le stesse parole dentro una frase sono una citazione e non avviano niente
+(`scripts/catena.py`). L'avvio non toglie `decisione`: la toglie l'agente
+quando prende in carico. Ogni agente legge l'AGENTS.md del suo
 ramo: una pull request nata prima di un cambio di queste regole va aggiornata
 su `main` prima di entrare nella catena.
 
@@ -200,5 +204,7 @@ Ogni 30 minuti il workflow *Sentinella* (`.github/workflows/sentinella.yml`)
 mette `ferma`, con un commento, sulle issue e pull request della catena
 senza movimento da almeno 60 minuti che non portano `pronta` né `decisione`, e
 sulle decisioni scritte dal responsabile e mai riprese (per esempio per la
-quota di Codex). Lascia stare le pull request con la CI ancora in corso e
-segnala `AA-Presa in carico` rimasta.
+quota di Codex). Una pull request e le issue collegate (`Closes #N`, la riga
+`Avvia dopo il merge: #N`) sono una catena sola: i passaggi a Codex scritti
+nella issue contano per la pull request. Lascia stare le pull request con la
+CI ancora in corso e segnala `AA-Presa in carico` rimasta.

@@ -31,7 +31,8 @@ jobs:
           BODY: ${{ github.event.pull_request.body }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          numbers="$(printf '%s\n' "$BODY" | grep -oiE 'avvia dopo il merge:[[:space:]]*#[0-9]+' | grep -oE '[0-9]+' | sort -u || true)"
+          # Only lines of their own count, not the words quoted in a sentence.
+          numbers="$(printf '%s\n' "$BODY" | python3 scripts/catena.py avvia)"
           if [ -z "$numbers" ]; then
             echo "Nothing to start."
             exit 0

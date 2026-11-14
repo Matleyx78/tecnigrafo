@@ -11,12 +11,18 @@
 #   an agent);
 # - it has none of the labels that mean "waiting for the owner" or "finished"
 #   (pronta, decisione, ferma, proposta), unless it has `decisione` and the
-#   last comment of a person is the owner's decision that no agent picked up;
-# - an issue has an agente: label and no open pull request that closes it;
+#   last comment of a person is a start written for an agent (a decision, a
+#   resume, a hand-over) that no agent picked up;
+# - an issue has an agente: label and no open pull request linked to it;
 # - a pull request has no CI run still going on its last commit (the CI of
 #   Tecnigrafo can take more than an hour);
 # - nothing has moved for at least SOGLIA_MINUTI minutes (and at most 24
 #   hours: older items predate the chain and are left alone).
+#
+# A pull request and its linked issues (Closes #N, "Avvia dopo il merge: #N",
+# scripts/catena.py) are one chain: the hand-overs to Codex are written in the
+# issue, so the pull request counts their comments and their movement too,
+# and the issue is left to the pull request.
 #
 # Environment: GITHUB_TOKEN, GITHUB_REPOSITORY, SOGLIA_MINUTI (default 60),
 # DRY_RUN=1 to only print.
@@ -29,14 +35,20 @@ import os
 import re
 import sys
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import catena  # noqa: E402
 
 API = "https://api.github.com"
 STOP_LABELS = {"pronta", "decisione", "ferma", "proposta"}
 HELD = "AA-Presa in carico"
 STARTED = re.compile(r"Presa in carico|@claude|@codex", re.IGNORECASE)
-DECIDED = re.compile(r"^\s*@\w+ Decisione del responsabile:", re.IGNORECASE)
-CLOSES = re.compile(r"(?:closes|fixes|resolves)\s+#(\d+)", re.IGNORECASE)
+# A comment of the owner that starts an agent: a decision, a resume written by
+# scripts/avvia.sh, a hand-over written by scripts/passa.sh.
+AGENT_START = re.compile(r"^\s*@(?:claude|codex)\b", re.IGNORECASE)
 MAX_IDLE = 24 * 60
 
 
@@ -45,10 +57,12 @@ class Item:
     number: int
     is_pr: bool
     labels: set[str]
-    idle: float               # minutes since the last update
-    comments: list[dict]      # {"login": ..., "body": ..., "created_at": ...}
+    idle: float               # minutes since the last update, linked issues included
+    comments: list[dict]      # {"login": ..., "body": ..., "created_at": ...},
+                              # of the linked issues too, by time
     handled_by_pr: bool = False
     ci_running: bool = False
+    linked: list[int] = field(default_factory=list)
 
 
 def decision_pending(labels: set[str]) -> bool:
@@ -80,7 +94,7 @@ def stuck(it: Item, soglia: int) -> str | None:
         # Waiting for the owner is fine; an answered decision that nobody
         # picked up is not. Bot replies (for example usage limits) do not count.
         people = [c for c in it.comments if not c["login"].endswith("[bot]")]
-        if not people or not DECIDED.search(people[-1]["body"]):
+        if not people or not AGENT_START.search(people[-1]["body"]):
             return None
     last = it.comments[-1] if it.comments else None
     text = ("**Decisione non ripresa** (sentinella): " if pending
@@ -122,25 +136,30 @@ class GitHub:
                  "created_at": c["created_at"]} for c in raw]
 
 
-def main() -> int:
-    repo = os.environ["GITHUB_REPOSITORY"]
-    gh = GitHub(repo, os.environ["GITHUB_TOKEN"])
-    soglia = int(os.environ.get("SOGLIA_MINUTI") or "60")
-    dry_run = os.environ.get("DRY_RUN") == "1"
-    now = dt.datetime.now(dt.timezone.utc)
-
-    raw = gh.call("GET", "/issues?state=open&per_page=100")
-    handled = set()
-    for it in raw:
-        if "pull_request" in it:
-            handled.update(int(n) for n in CLOSES.findall(it.get("body") or ""))
-
+def find(raw: list[dict], now: dt.datetime, soglia: int, gh) -> list[tuple[Item, str]]:
+    """The stuck chains among the open issues and pull requests `raw` (as the
+    REST API lists them), with the comment to write. `gh` gives
+    ci_running(number) and comments(number)."""
+    idle_of = {}
     for r in raw:
         updated = dt.datetime.fromisoformat(r["updated_at"].replace("Z", "+00:00"))
-        it = Item(number=r["number"], is_pr="pull_request" in r,
+        idle_of[r["number"]] = (now - updated).total_seconds() / 60
+    handled = set()
+    linked_of = {}
+    for r in raw:
+        if "pull_request" in r:
+            linked_of[r["number"]] = catena.collegate(r.get("body") or "")
+            handled.update(linked_of[r["number"]])
+
+    found = []
+    for r in raw:
+        is_pr = "pull_request" in r
+        linked = linked_of.get(r["number"], []) if is_pr else []
+        idle = min([idle_of[r["number"]]] + [idle_of[n] for n in linked if n in idle_of])
+        it = Item(number=r["number"], is_pr=is_pr,
                   labels={lab["name"] for lab in r["labels"]},
-                  idle=(now - updated).total_seconds() / 60, comments=[],
-                  handled_by_pr=r["number"] in handled)
+                  idle=idle, comments=[], handled_by_pr=r["number"] in handled,
+                  linked=linked)
         if not needs_comments(it, soglia):
             continue
         if it.is_pr:
@@ -148,9 +167,22 @@ def main() -> int:
             if it.ci_running:
                 continue
         it.comments = gh.comments(it.number)
+        for n in it.linked:
+            it.comments += gh.comments(n)
+        it.comments.sort(key=lambda c: c["created_at"])
         text = stuck(it, soglia)
-        if text is None:
-            continue
+        if text is not None:
+            found.append((it, text))
+    return found
+
+
+def main() -> int:
+    gh = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
+    soglia = int(os.environ.get("SOGLIA_MINUTI") or "60")
+    dry_run = os.environ.get("DRY_RUN") == "1"
+    now = dt.datetime.now(dt.timezone.utc)
+    raw = gh.call("GET", "/issues?state=open&per_page=100")
+    for it, text in find(raw, now, soglia, gh):
         kind = "PR" if it.is_pr else "issue"
         print(f"{kind} #{it.number}: ferma da {int(it.idle)} min"
               + (" (AA rimasta)" if HELD in it.labels else ""))
@@ -158,7 +190,6 @@ def main() -> int:
             gh.call("POST", f"/issues/{it.number}/labels", {"labels": ["ferma"]})
             gh.call("POST", f"/issues/{it.number}/comments", {"body": text})
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
