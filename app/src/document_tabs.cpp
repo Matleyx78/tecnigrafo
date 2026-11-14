@@ -4,6 +4,7 @@
 #include "document_tabs.hpp"
 
 #include <QAction>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QMenu>
@@ -101,6 +102,12 @@ DocumentTabs::DocumentTabs(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 1);
     layout->setSpacing(0);
     layout->addWidget(m_menuButton);
+    // The thin line after the menu of the reference (docs/adr/0039, area 4).
+    auto* separator = new QFrame(this);
+    separator->setObjectName(QStringLiteral("documentsSeparator"));
+    separator->setFixedSize(1, kTabIconSize + 2);
+    layout->addWidget(separator, 0, Qt::AlignVCenter);
+    layout->addSpacing(4);
     layout->addWidget(m_tabs);
     layout->addWidget(m_newButton);
     layout->addStretch(1);

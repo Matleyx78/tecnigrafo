@@ -86,9 +86,10 @@ SARibbonTabBar::tab:selected { background: {ribbon}; border-top-color: {accent};
 SARibbonPanelLabel { background: {group}; color: {textSecondary}; font-size: 11px; }
 QTabWidget::pane { background: {panel}; border: 1px solid {border}; top: -1px; }
 QWidget#documentTabs { background: {tabs}; border-top: 1px solid {border}; }
+QFrame#documentsSeparator { background: {border}; }
 QTabBar#documentTabBar { background: {tabs}; }
-QTabBar#documentTabBar::tab { background: {tabs}; color: {textSecondary}; border: 1px solid transparent; border-top: 2px solid transparent; border-bottom: none; padding: 4px 12px; }
-QTabBar#documentTabBar::tab:hover { color: {text}; }
+QTabBar#documentTabBar::tab { background: {tabs}; color: {text}; border: 1px solid transparent; border-top: 2px solid transparent; border-bottom: none; padding: 4px 12px; }
+QTabBar#documentTabBar::tab:hover:!selected { background: {ribbon}; }
 QTabBar#documentTabBar::tab:selected { background: {canvas}; color: {text}; border-left-color: {border}; border-right-color: {border}; border-top: 2px solid {accent}; }
 QDockWidget { color: {text}; }
 QDockWidget::title { background: {ribbon}; border-bottom: 1px solid {border}; padding: 4px 6px; text-align: left; }
@@ -246,6 +247,30 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* option, 
         chevron.lineTo(centre + QPointF(0.0, kArrowHalfHeight));
         chevron.lineTo(centre + QPointF(kArrowHalfWidth, -kArrowHalfHeight));
         painter->drawPath(chevron);
+        painter->restore();
+        return;
+    }
+    if (element == PE_IndicatorTabClose) {
+        // A thin grey cross, lighter under the mouse, as in the reference
+        // of docs/adr/0039 (area 4), instead of the platform's icon.
+        const bool hover = (option->state & State_MouseOver) != 0;
+        const QRectF box = QRectF(option->rect).adjusted(0.5, 0.5, -0.5, -0.5);
+        const qreal side = std::min(box.width(), box.height());
+        constexpr qreal kCrossArm = 4.0;
+        const qreal arm = std::min(side / 4.0, kCrossArm);
+        const QPointF centre = box.center();
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        if (hover) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(m_tokens.selection);
+            painter->drawRoundedRect(
+                QRectF(centre.x() - side / 2, centre.y() - side / 2, side, side), 2.0, 2.0);
+        }
+        painter->setPen(QPen(hover ? m_tokens.text : m_tokens.textSecondary, kStrokeWidth,
+                             Qt::SolidLine, Qt::RoundCap));
+        painter->drawLine(centre + QPointF(-arm, -arm), centre + QPointF(arm, arm));
+        painter->drawLine(centre + QPointF(arm, -arm), centre + QPointF(-arm, arm));
         painter->restore();
         return;
     }

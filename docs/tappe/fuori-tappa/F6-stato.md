@@ -29,7 +29,7 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 1. Barra del titolo e barra di accesso rapido | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 2. Schede del ribbon | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 3. Ribbon a gruppi | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
-| 4. Riga delle schede dei documenti | da fare |
+| 4. Riga delle schede dei documenti | approvata dal responsabile, 2026-11-14 |
 | 5. Area di disegno e barra di navigazione | da fare |
 | 6. Riga di comando mobile | in corso |
 | 7. Immissione dinamica | da fare |
@@ -361,6 +361,25 @@ Punti aperti delle aree 8 e 9:
   («ByLayer and ByBlock have no width of their own»);
 - icone della barra di *Layers* (rombi), lente nel campo di ricerca e icone
   di stato colorate: con l'area delle icone (non c'è un'icona della lente).
+
+**Area 4: riga delle schede dei documenti** (2026-11-14), approvata dal
+responsabile:
+
+- crocetta delle schede disegnata dallo stile (`PE_IndicatorTabClose`):
+  × sottile di 8 px nel testo secondario, nel testo normale su un quadrato
+  `selection` sotto il mouse, invece dell'icona della piattaforma (un
+  quadrato rosso);
+- linea sottile (`border`) dopo il pulsante del menu;
+- schede non correnti nel testo normale, come nel riferimento; sotto il
+  mouse il fondo `surface.ribbon`.
+
+Punti aperti dell'area 4, con l'area delle icone:
+
+- il menu delle schede nel riferimento è ≡, ora `ui-tab-menu` (due righe e
+  una freccia); il `+` del riferimento è senza l'angolo di `ui-tab-new`;
+- *Start* nel riferimento ha l'icona della casa, che non esiste;
+- l'indicatore di modifica: ora `nome*`, nel riferimento `nome  *` staccato
+  (testo, che un test può leggere).
 
 Prossimi passi: le aree
 rimaste (8–9 pannelli, 10 barra di stato, 4 dettagli delle schede dei
