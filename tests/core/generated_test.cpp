@@ -337,6 +337,33 @@ TEST(Generated, AFilledRegionWithArcsIsFilledInsideTheArcs) {
     EXPECT_GT(shapeDistance(region, {1.9, -1.9}), 0.0);
 }
 
+TEST(Generated, AFilledRegionTakesATinyBulgeAsStraight) {
+    // docs/adr/0036, point 7: below the threshold of PolylineSegment::isArc().
+    const FilledRegion region{{Polyline{{{{0, 0}, 1e-13}, {{10, 0}}, {{10, 10}}, {{0, 10}}}, true}},
+                              Transform2D{}};
+    EXPECT_EQ(shapeDistance(region, {5, 5}), 0.0);
+    EXPECT_EQ(shapeDistance(region, {5, 12}), 2.0);
+}
+
+TEST(Generated, APointOnTheChordOfAnArcIsFilled) {
+    // A rectangle below the X axis closed above by a half circle on its top
+    // side, in both directions: (0,0) lies on the chord, inside the region.
+    const std::vector<Polyline> loops{
+        Polyline{{{{2, 0}, 1.0}, {{-2, 0}}, {{-2, -2}}, {{2, -2}}}, true},
+        Polyline{{{{2, -2}}, {{-2, -2}}, {{-2, 0}, -1.0}, {{2, 0}}}, true}};
+    for (const Polyline& loop : loops) {
+        const FilledRegion region{{loop}, Transform2D{}};
+        EXPECT_EQ(shapeDistance(region, {0, 0}), 0.0);
+        EXPECT_EQ(shapeDistance(region, {1, 0}), 0.0);
+        EXPECT_EQ(shapeDistance(region, {0, 1}), 0.0);
+        EXPECT_EQ(shapeDistance(region, {0, -1}), 0.0);
+        EXPECT_TRUE(shapeIntersects(region, {{0, 0}, {0.25, 0.25}}));
+        EXPECT_TRUE(shapeIntersects(region, {{-0.25, -0.25}, {0, 0}}));
+        EXPECT_NEAR(shapeDistance(region, {0, 3}), 1.0, 1e-12);
+        EXPECT_EQ(shapeDistance(region, {3, -1}), 1.0);
+    }
+}
+
 TEST(Generated, AFilledRegionUnderAMapAnswersInDrawingCoordinates) {
     FilledRegion region = squareWithHole();
     region.transform = Transform2D::translation({100, 0});

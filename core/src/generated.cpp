@@ -142,7 +142,8 @@ bool curveIntersects(const GeneratedShape& shape, const BBox& rectangle) {
 
 /// Flips `inside` when the ray from `point` towards +X crosses the segment
 /// from `start` to `end` with `bulge`: once for its chord, once more when the
-/// point lies between the chord and the arc.
+/// point lies between the chord and the arc. `bulge` is 0 for a segment that
+/// PolylineSegment::isArc() takes as straight (docs/adr/0036, point 7).
 void crossSegment(const Vec2& start, const Vec2& end, double bulge, const Vec2& point,
                   bool& inside) {
     if ((start.y > point.y) != (end.y > point.y)) {
@@ -158,7 +159,13 @@ void crossSegment(const Vec2& start, const Vec2& end, double bulge, const Vec2& 
     const Vec2 chord = end - start;
     // A positive bulge runs counter-clockwise: the arc lies right of the chord.
     const Vec2 middle = ((start + end) * 0.5) + (Vec2{chord.y, -chord.x} * (bulge * 0.5));
-    const double pointSide = cross(chord, point - start);
+    double pointSide = cross(chord, point - start);
+    if (pointSide == 0.0) {
+        // On the chord: the side the ray test above puts it on. It does not
+        // count an edge through the point (as if moved right, along +X) nor
+        // a vertex at its height (as if moved up, along +Y).
+        pointSide = chord.y != 0.0 ? -chord.y : chord.x;
+    }
     const double arcSide = cross(chord, middle - start);
     if (distance(point, arc.center) < arc.radius &&
         ((pointSide > 0.0 && arcSide > 0.0) || (pointSide < 0.0 && arcSide < 0.0))) {
@@ -171,7 +178,8 @@ bool loopEncloses(const Polyline& loop, const Vec2& point) {
     bool inside = false;
     for (std::size_t i = 0; i < loop.segmentCount(); ++i) {
         const PolylineSegment segment = loop.segment(i);
-        crossSegment(segment.start, segment.end, segment.bulge, point, inside);
+        crossSegment(segment.start, segment.end, segment.isArc() ? segment.bulge : 0.0, point,
+                     inside);
     }
     if (!loop.isClosed() && loop.vertexCount() > 1) {
         crossSegment(loop.vertices().back().position, loop.vertices().front().position, 0.0, point,
