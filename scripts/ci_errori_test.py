@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+#
+# Tests of scripts/ci-errori.sh, without network: gh and curl are replaced by
+# fakes that answer with fixed JSON and write down how they were called. They
+# check which credential reads the error annotations (docs/agenti/catena.md):
+# the job token of GH_TOKEN_LETTURA where it is set, otherwise none.
+#
+#     python3 -m unittest discover -s scripts -p '*_test.py'
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+SCRIPT = Path(__file__).resolve().parent / "ci-errori.sh"
+
+# Answers by the end of the API path. The fakes log one line per call:
+# "<tool> <credential> <path>", where the credential is the GH_TOKEN that gh
+# sees, or the Authorization header curl was given ("-" when there is none).
+FAKE = r'''#!/usr/bin/env bash
+tool=${0##*/}
+if [ "$tool" = gh ]; then
+    path=$2
+    cred=${GH_TOKEN:--}
+else
+    path=${*: -1}
+    path=${path#https://api.github.com/}
+    cred=-
+    prev=
+    for a in "$@"; do
+        if [ "$prev" = -H ] && [[ $a == Authorization:* ]]; then cred=${a#Authorization: Bearer }; fi
+        prev=$a
+    done
+fi
+echo "$tool $cred $path" >> "$FAKE_LOG"
+case $path in
+    */annotations*) echo '[{"annotation_level":"failure","path":"core/a.cpp","start_line":3,"title":"","message":"boom"}]' ;;
+    */jobs*) echo '{"jobs":[{"id":5,"name":"Linux","conclusion":"failure","steps":[{"name":"Build","conclusion":"failure"}]}]}' ;;
+    */runs/*) echo '{"id":7,"status":"completed","conclusion":"failure","html_url":"https://example.invalid/7"}' ;;
+    *) echo '{}' ;;
+esac
+'''
+
+
+@unittest.skipUnless(shutil.which("jq") and shutil.which("bash"), "needs bash and jq")
+class Annotations(unittest.TestCase):
+    def run_script(self, env_extra: dict[str, str], tools=("gh", "curl")) -> tuple[str, list[str]]:
+        with tempfile.TemporaryDirectory() as tmp:
+            bin_dir = Path(tmp) / "bin"
+            bin_dir.mkdir()
+            for tool in tools:
+                fake = bin_dir / tool
+                fake.write_text(FAKE)
+                fake.chmod(0o755)
+            log = Path(tmp) / "log"
+            log.touch()
+            # Only the fakes, bash and jq: no real gh or curl can be reached.
+            for tool in ("jq", "bash"):
+                (bin_dir / tool).symlink_to(shutil.which(tool))
+            env = {"PATH": str(bin_dir), "FAKE_LOG": str(log), "HOME": tmp}
+            env.update(env_extra)
+            out = subprocess.run(["bash", str(SCRIPT), "7"], env=env, capture_output=True,
+                                 text=True, check=True).stdout
+            return out, log.read_text().splitlines()
+
+    def annotation_calls(self, calls: list[str]) -> list[str]:
+        return [c for c in calls if "/annotations" in c]
+
+    def test_job_token_in_github_actions(self):
+        out, calls = self.run_script({"GH_TOKEN": "personale", "GH_TOKEN_LETTURA": "lettura"})
+        self.assertIn("core/a.cpp:3 boom", out)
+        self.assertEqual([c.split()[:2] for c in self.annotation_calls(calls)], [["gh", "lettura"]])
+        # The other calls keep the personal token.
+        self.assertTrue(all(c.split()[1] == "personale" for c in calls if "/annotations" not in c))
+
+    def test_job_token_without_gh(self):
+        out, calls = self.run_script({"GH_TOKEN_LETTURA": "lettura"}, tools=("curl",))
+        self.assertIn("core/a.cpp:3 boom", out)
+        self.assertEqual([c.split()[:2] for c in self.annotation_calls(calls)], [["curl", "lettura"]])
+
+    def test_no_authentication_elsewhere(self):
+        out, calls = self.run_script({"GH_TOKEN": "personale", "GITHUB_TOKEN": "altro"})
+        self.assertIn("core/a.cpp:3 boom", out)
+        self.assertEqual([c.split()[:2] for c in self.annotation_calls(calls)], [["curl", "-"]])
+
+
+if __name__ == "__main__":
+    unittest.main()

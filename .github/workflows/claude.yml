@@ -52,6 +52,9 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.RELAY_PAT }}
       GH_TOKEN_UTENTE: ${{ secrets.RELAY_PAT }}
+      # The job token, for what the personal token cannot read: the error
+      # annotations of scripts/ci-errori.sh (checks: read above).
+      GH_TOKEN_LETTURA: ${{ github.token }}
       TG_BUILD_SUFFIX: -claude
     steps:
       - uses: actions/checkout@v7

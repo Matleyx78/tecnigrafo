@@ -19,6 +19,10 @@
 # - nothing has moved for at least SOGLIA_MINUTI minutes (and at most 24
 #   hours: older items predate the chain and are left alone).
 #
+# Only comments of the owner of the repository count as a start or a decision
+# (the agents write with the owner's account too); a comment of anyone else,
+# for example a contributor, never does.
+#
 # A pull request and its linked issues (Closes #N, "Avvia dopo il merge: #N",
 # scripts/catena.py) are one chain: the hand-overs to Codex are written in the
 # issue, so the pull request counts their comments and their movement too,
@@ -83,18 +87,20 @@ def needs_comments(it: Item, soglia: int) -> bool:
     return soglia <= it.idle <= MAX_IDLE
 
 
-def stuck(it: Item, soglia: int) -> str | None:
-    """The comment to write if the item is a stuck chain, else None."""
+def stuck(it: Item, soglia: int, owner: str) -> str | None:
+    """The comment to write if the item is a stuck chain, else None. `owner`
+    is the login of the owner of the repository."""
     if not needs_comments(it, soglia):
         return None
-    if not any(STARTED.search(c["body"]) for c in it.comments):
+    mine = [c for c in it.comments if c["login"].lower() == owner.lower()]
+    if not any(STARTED.search(c["body"]) for c in mine):
         return None
     pending = decision_pending(it.labels)
     if pending:
-        # Waiting for the owner is fine; an answered decision that nobody
-        # picked up is not. Bot replies (for example usage limits) do not count.
-        people = [c for c in it.comments if not c["login"].endswith("[bot]")]
-        if not people or not AGENT_START.search(people[-1]["body"]):
+        # Waiting for the owner is fine; a start that nobody picked up is not:
+        # the last comment of the owner's account (agents included) starts an
+        # agent. Bots and other accounts do not count.
+        if not mine or not AGENT_START.search(mine[-1]["body"]):
             return None
     last = it.comments[-1] if it.comments else None
     text = ("**Decisione non ripresa** (sentinella): " if pending
@@ -136,7 +142,8 @@ class GitHub:
                  "created_at": c["created_at"]} for c in raw]
 
 
-def find(raw: list[dict], now: dt.datetime, soglia: int, gh) -> list[tuple[Item, str]]:
+def find(raw: list[dict], now: dt.datetime, soglia: int, gh,
+         owner: str) -> list[tuple[Item, str]]:
     """The stuck chains among the open issues and pull requests `raw` (as the
     REST API lists them), with the comment to write. `gh` gives
     ci_running(number) and comments(number)."""
@@ -170,19 +177,20 @@ def find(raw: list[dict], now: dt.datetime, soglia: int, gh) -> list[tuple[Item,
         for n in it.linked:
             it.comments += gh.comments(n)
         it.comments.sort(key=lambda c: c["created_at"])
-        text = stuck(it, soglia)
+        text = stuck(it, soglia, owner)
         if text is not None:
             found.append((it, text))
     return found
 
 
 def main() -> int:
-    gh = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
+    repo = os.environ["GITHUB_REPOSITORY"]
+    gh = GitHub(repo, os.environ["GITHUB_TOKEN"])
     soglia = int(os.environ.get("SOGLIA_MINUTI") or "60")
     dry_run = os.environ.get("DRY_RUN") == "1"
     now = dt.datetime.now(dt.timezone.utc)
     raw = gh.call("GET", "/issues?state=open&per_page=100")
-    for it, text in find(raw, now, soglia, gh):
+    for it, text in find(raw, now, soglia, gh, repo.split("/")[0]):
         kind = "PR" if it.is_pr else "issue"
         print(f"{kind} #{it.number}: ferma da {int(it.idle)} min"
               + (" (AA rimasta)" if HELD in it.labels else ""))

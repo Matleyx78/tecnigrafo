@@ -43,6 +43,38 @@ class AvviaDopoIlMerge(unittest.TestCase):
         self.assertEqual(c.avvia_dopo_il_merge(None), [])
 
 
+class CodeBlocks(unittest.TestCase):
+    def test_example_in_backtick_block(self):
+        text = "Esempio:\n\n```text\nAvvia dopo il merge: #31\nCloses #8\n```\n\nAvvia dopo il merge: #32\n"
+        self.assertEqual(c.avvia_dopo_il_merge(text), [32])
+        self.assertEqual(c.chiude(text), [])
+        self.assertEqual(c.collegate(text), [32])
+
+    def test_example_in_tilde_block(self):
+        text = "~~~\nAvvia dopo il merge: #31\n~~~\nCloses #8"
+        self.assertEqual(c.avvia_dopo_il_merge(text), [])
+        self.assertEqual(c.chiude(text), [8])
+
+    def test_closing_fence_must_match(self):
+        # ~~~ does not close a ``` block, a shorter fence does not close a
+        # longer one, and a fence with text after it is not a closing fence.
+        for text in ("```\n~~~\nAvvia dopo il merge: #31\n```",
+                     "````\n```\nAvvia dopo il merge: #31\n````",
+                     "```\n``` x\nAvvia dopo il merge: #31\n```"):
+            with self.subTest(text=text):
+                self.assertEqual(c.avvia_dopo_il_merge(text), [])
+
+    def test_unclosed_block_runs_to_the_end(self):
+        self.assertEqual(c.avvia_dopo_il_merge("```\nAvvia dopo il merge: #31"), [])
+
+    def test_indented_fence_and_crlf(self):
+        text = "   ```\r\nAvvia dopo il merge: #31\r\n   ```\r\nAvvia dopo il merge: #32\r\n"
+        self.assertEqual(c.avvia_dopo_il_merge(text), [32])
+
+    def test_inline_backticks_are_not_a_fence(self):
+        self.assertEqual(c.avvia_dopo_il_merge("```a``` testo\nAvvia dopo il merge: #5"), [5])
+
+
 class Collegate(unittest.TestCase):
     def test_closes_first_then_start_lines(self):
         text = "Avvia dopo il merge: #5\nCloses #9\nFixes #9"

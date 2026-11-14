@@ -12,6 +12,8 @@
 # "Avvia dopo il merge: #N" counts only as a line of its own: the phrase at
 # the start of the line (after spaces or a list mark), one issue, nothing
 # after it. The same words inside a sentence are a quotation, not an order.
+# Lines inside fenced code blocks (``` or ~~~) are examples and never count,
+# for "Closes #N" either.
 
 from __future__ import annotations
 
@@ -21,16 +23,38 @@ import sys
 AVVIA = re.compile(r"^[ \t]*(?:[-*][ \t]+)?Avvia dopo il merge:[ \t]*#(\d+)[ \t\r]*$",
                    re.IGNORECASE | re.MULTILINE)
 CLOSES = re.compile(r"\b(?:closes|fixes|resolves)\s+#(\d+)", re.IGNORECASE)
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+
+
+def fuori_dal_codice(text: str) -> str:
+    """The text without the lines of fenced code blocks, fences included. As in
+    CommonMark, a block closes with a fence of the same character at least as
+    long, with nothing after it, and a block never closed runs to the end."""
+    out = []
+    fence = ""
+    for line in (text or "").splitlines():
+        if fence:
+            m = FENCE.match(line)
+            if (m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence)
+                    and not line[m.end():].strip()):
+                fence = ""
+            continue
+        m = FENCE.match(line)
+        if m and not (m.group(1)[0] == "`" and "`" in line[m.end():]):
+            fence = m.group(1)
+            continue
+        out.append(line)
+    return "\n".join(out)
 
 
 def avvia_dopo_il_merge(text: str) -> list[int]:
     """The issues of the lines "Avvia dopo il merge: #N", sorted, no repeats."""
-    return sorted({int(n) for n in AVVIA.findall(text or "")})
+    return sorted({int(n) for n in AVVIA.findall(fuori_dal_codice(text))})
 
 
 def chiude(text: str) -> list[int]:
     """The issues that the description closes, in order of appearance."""
-    return [int(n) for n in CLOSES.findall(text or "")]
+    return [int(n) for n in CLOSES.findall(fuori_dal_codice(text))]
 
 
 def collegate(text: str) -> list[int]:

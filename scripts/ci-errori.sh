@@ -14,6 +14,12 @@
 # Needs jq, and either gh or curl (the repository is public, so curl works
 # without a token; set GITHUB_TOKEN to raise the anonymous limit of 60
 # requests an hour). Wait for the run to finish first (AGENTS.md).
+#
+# The error annotations are read without the personal token of the chain of
+# agents (docs/agenti/catena.md), whose permissions do not include checks:
+# with GH_TOKEN_LETTURA (the job token that .github/workflows/claude.yml
+# passes, with checks: read) where it is set, otherwise with no token at all,
+# since the repository is public (Codex, a terminal).
 set -euo pipefail
 
 repo=${TG_REPO:-Matleyx78/tecnigrafo}
@@ -34,6 +40,24 @@ api() {
     else
         echo "ci-errori.sh needs gh or curl." >&2
         return 2
+    fi
+}
+
+# The error annotations of a check run, for a path such as
+# repos/<repo>/check-runs/<id>/annotations.
+annotations() {
+    if [[ -n ${GH_TOKEN_LETTURA:-} ]]; then
+        if command -v gh > /dev/null 2>&1; then
+            GH_TOKEN=$GH_TOKEN_LETTURA gh api "$1"
+        else
+            curl -fsS -H 'Accept: application/vnd.github+json' \
+                -H "Authorization: Bearer $GH_TOKEN_LETTURA" \
+                "https://api.github.com/$1"
+        fi
+    elif command -v curl > /dev/null 2>&1; then
+        curl -fsS -H 'Accept: application/vnd.github+json' "https://api.github.com/$1"
+    else
+        api "$1"
     fi
 }
 
@@ -76,7 +100,7 @@ fi
 while IFS=$'\t' read -r id name step; do
     echo
     echo "== $name (job $id): failed step: ${step:-?}"
-    api "repos/$repo/check-runs/$id/annotations?per_page=50" | jq -r '
+    annotations "repos/$repo/check-runs/$id/annotations?per_page=50" | jq -r '
         .[] | select(.annotation_level == "failure")
         | select(.message | test("^Process completed with exit code") | not)
         | "\(if .path == ".github" then "" else "\(.path):\(.start_line) " end)\(if (.title // "") == "" then "" else "[\(.title)] " end)\(.message | gsub("\n"; " | ") | .[0:400])"' \

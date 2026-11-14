@@ -192,8 +192,9 @@ Al merge di una pull request, il workflow *Dopo il merge*
 agente (`scripts/avvia.sh`), se non aspetta ancora un'altra issue della sua
 riga "Dipende da" o "Riferimenti". Conta solo una **riga a sé**, che comincia
 con quelle parole (al più dopo un trattino di elenco) e porta una sola issue:
-le stesse parole dentro una frase sono una citazione e non avviano niente
-(`scripts/catena.py`). L'avvio non toglie `decisione`: la toglie l'agente
+le stesse parole dentro una frase sono una citazione e non avviano niente, e
+le righe dentro un blocco di codice (fra tre backtick o tre tilde) sono esempi
+e non contano, nemmeno per `Closes #N` (`scripts/catena.py`). L'avvio non toglie `decisione`: la toglie l'agente
 quando prende in carico. Ogni agente legge l'AGENTS.md del suo
 ramo: una pull request nata prima di un cambio di queste regole va aggiornata
 su `main` prima di entrare nella catena.
@@ -207,4 +208,6 @@ sulle decisioni scritte dal responsabile e mai riprese (per esempio per la
 quota di Codex). Una pull request e le issue collegate (`Closes #N`, la riga
 `Avvia dopo il merge: #N`) sono una catena sola: i passaggi a Codex scritti
 nella issue contano per la pull request. Lascia stare le pull request con la
-CI ancora in corso e segnala `AA-Presa in carico` rimasta.
+CI ancora in corso e segnala `AA-Presa in carico` rimasta. Come avvio o
+decisione conta solo un commento dell'account del responsabile, che è anche
+quello degli agenti; i commenti di altri account non contano.
