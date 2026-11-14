@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <bit>
 #include <cmath>
 #include <cstdint>
@@ -45,13 +46,15 @@ TEST(Math, CardinalTrigonometrySnapsOnlyWithinTheBand) {
         double sine;
     };
 
-    const Direction cases[] = {{0.0, 1.0, 0.0},
-                               {kPi / 2.0, 0.0, 1.0},
-                               {kPi, -1.0, 0.0},
-                               {3.0 * kPi / 2.0, 0.0, -1.0},
-                               {-kPi / 2.0, 0.0, -1.0},
-                               {kPi / 2.0 + kTwoPi, 0.0, 1.0},
-                               {kPi / 2.0 - 0x1p-50, 0.0, 1.0}};
+    const std::array cases{
+        Direction{0.0, 1.0, 0.0},
+        Direction{kPi / 2.0, 0.0, 1.0},
+        Direction{kPi, -1.0, 0.0},
+        Direction{3.0 * kPi / 2.0, 0.0, -1.0},
+        Direction{-kPi / 2.0, 0.0, -1.0},
+        Direction{kPi / 2.0 + kTwoPi, 0.0, 1.0},
+        Direction{kPi / 2.0 - 0x1p-50, 0.0, 1.0},
+    };
     for (const auto& [angle, cosine, sine] : cases) {
         SCOPED_TRACE(angle);
         const auto direction = cardinalSinCos(angle);

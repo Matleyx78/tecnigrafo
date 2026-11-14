@@ -53,7 +53,10 @@ std::optional<Vec2> pointFor(std::string_view text, std::optional<Vec2> lastPoin
 
 TEST(CoordinateInputTest, PolarAnglesAreReducedBeforeConvertingToRadians) {
     const auto large = pointFor("1<1e308", std::nullopt);
-    ASSERT_TRUE(large.has_value());
+    if (!large) {
+        FAIL() << "Expected a point for a large finite polar angle";
+        return;
+    }
     EXPECT_TRUE(std::isfinite(large->x));
     EXPECT_TRUE(std::isfinite(large->y));
     const auto reduced = std::format("1<{}", std::fmod(1e308, 360.0));
