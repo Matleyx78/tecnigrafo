@@ -38,7 +38,7 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
 | Interfaccia classica (menu e barre) | approvata dal responsabile, 2026-11-14 |
 | Finestre di dialogo | approvata dal responsabile, 2026-11-14 |
-| Icone | da fare |
+| Icone | in corso |
 
 ## Prima lettura: differenze dal riferimento
 
@@ -479,6 +479,18 @@ Sulle risposte del responsabile, *Shortcuts*: i nomi delle azioni senza la
 used by …», e il suo test lo segue); niente numeri di riga; *Description*
 prende lo spazio che resta, così *Shortcut* e *Default* non si tagliano.
 
+**Icone** (2026-11-14), primo gruppo, da far vedere al responsabile:
+barra di accesso rapido. Le icone da 16 px di *New*, *Open*, *Save*,
+*Undo* e *Redo* ridisegnate: grandi quanto la griglia, come nel
+riferimento. Una prima versione tutta `esist` (come il riferimento) era
+«meglio di prima ma molto basic» per il responsabile; fra tre varianti
+(tutta `esist`, a due toni, a due toni con dettagli) ha scelto quella a
+due toni: il più del foglio, il lembo della cartella, l'etichetta del
+dischetto e le punte delle frecce in `pt`, il resto `esist`. Le 32 px restano. Forme velate (fondo nel colore del ruolo)
+sarebbero fuori da `ICONE.md` (solo i punti si riempiono): da decidere
+col responsabile, se servono. Un separatore fra i file e *Undo* (dove cambia il gruppo
+delle azioni), come nel riferimento. Righe di `docs/ICONE.md` aggiornate.
+
 Test da allineare alla chiusura (oltre a quelli del ribbon):
 `GalleryTest.WritesFourteenImages...` conta ora 16 immagini (le due
 dell'immissione dinamica) e le misure di alcune sono cambiate;
@@ -486,6 +498,9 @@ dell'immissione dinamica) e le misure di alcune sono cambiate;
 della barra d'angolo, che ora comincia con il logo;
 `UiBuilderTest.BothInterfacesHaveTheQuickAccessBar` confronta le azioni
 della barra d'angolo classica, che ora comincia con il logo;
+`UiBuilderTest.WithItsOwnFrameTheQuickAccessBarStaysInTheTitleRow` e
+`RibbonSmoke.TheQuickAccessBarHasItsFiveActionsInOrderAsIcons` contano le
+azioni della barra di accesso rapido, che ora ha un separatore;
 `DrawingAidsTest.F10AndF8...` cerca la cronologia nel genitore del campo;
 `EnvironmentsTest.TheChosenRibbonTabStaysWhileItIsShown` usa *Home*, che
 nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in

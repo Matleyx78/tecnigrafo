@@ -164,10 +164,20 @@ void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
     bar.setToolButtonStyle(Qt::ToolButtonIconOnly);
     bar.setMovable(false);
     bar.setFloatable(false);
+    // A separator where the group of the actions changes, between the files
+    // and undo, as in the reference (area 1).
+    QString group;
     for (QAction* action : registry.actions()) {
-        if (registry.spec(action->objectName())->quickAccess) {
-            bar.addAction(action);
+        const ActionSpec* spec = registry.spec(action->objectName());
+        if (!spec->quickAccess) {
+            continue;
         }
+        const QString actionGroup = spec->id.section(QLatin1Char('.'), 0, 0);
+        if (!group.isEmpty() && actionGroup != group) {
+            bar.addSeparator();
+        }
+        group = actionGroup;
+        bar.addAction(action);
     }
 }
 

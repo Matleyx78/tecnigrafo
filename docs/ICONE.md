@@ -274,11 +274,11 @@ Prima parte (0.6-P18): disegno e modifica, file e annullamento.
 |---|---|---|---|
 | `draw-line-*.svg`, `draw-pline-*.svg`, `draw-text-*.svg`, `draw-circle-*.svg`, `draw-arc-*.svg` | i comandi di disegno: rifatte da 0.7.5-P19, nella tabella della tappa 0.7.5 | | sì |
 | `edit-erase-*.svg` | `edit.erase` | gomma inclinata | sì |
-| `edit-undo-*.svg` | `edit.undo` | freccia a U verso sinistra | sì |
-| `edit-redo-*.svg` | `edit.redo` | freccia a U verso destra | sì |
-| `file-new-*.svg` | `file.new` | foglio con l'angolo piegato e un più | sì |
-| `file-open-*.svg` | `file.open` | cartella aperta | sì |
-| `file-save-*.svg` | `file.save` | dischetto | sì |
+| `edit-undo-*.svg` | `edit.undo` | freccia a U verso sinistra; a 16 px larga quanto la griglia, la punta (`pt`) in arancio (F6) | sì |
+| `edit-redo-*.svg` | `edit.redo` | freccia a U verso destra; a 16 px larga quanto la griglia, la punta (`pt`) in arancio (F6) | sì |
+| `file-new-*.svg` | `file.new` | foglio con l'angolo piegato e un più; a 16 px il foglio alto quanto la griglia e il più (`pt`) fuori, in basso a destra (F6) | sì |
+| `file-open-*.svg` | `file.open` | cartella aperta; a 16 px larga quanto la griglia, con il lembo aperto (`pt`) (F6) | sì |
+| `file-save-*.svg` | `file.save` | dischetto; a 16 px con la finestrella e l'etichetta (`pt`) (F6) | sì |
 | `file-saveas-*.svg` | `file.saveas` | due dischetti sovrapposti | sì |
 
 Seconda parte (0.6-P19): vista, aiuti, interfaccia, layer e proprietà. Le icone
