@@ -43,8 +43,7 @@ Scegli **una sola** issue, la prima nell'ordine del piano che:
 Per "il prossimo pacchetto di riferimenti" le condizioni sono in
 [riferimenti.md](riferimenti.md). Se nessuna issue va bene, non iniziare: scrivi
 all'utente quali issue sono tue e cosa le blocca. Il pacchetto successivo si
-prende in una nuova sessione, dopo il merge; le eccezioni sono in
-[lotti.md](lotti.md).
+prende in una nuova sessione, dopo il merge.
 
 ## Modalità di controllo e riferimenti
 
@@ -78,7 +77,9 @@ riferimenti (`[X.Y-RTN]`)".
   5. togli `AA-Presa in carico` e termina la sessione.
 
   Il caso lo corregge un pacchetto di riferimenti; poi il pacchetto si
-  riprende. In un lotto passa al pacchetto successivo. Se la pull request è già
+  riprende. Nella catena il commento del punto 3 è quello di
+  [catena.md](catena.md), "Fermarsi per una decisione", con la riga per chi ha
+  scritto i riferimenti. Se la pull request è già
   aperta (per esempio te ne accorgi da un controllo della CI che fallisce), vale
   questa regola e non quella dei controlli che falliscono: scrivi nella pull
   request ciò che chiede il punto 3, togli l'etichetta e termina la sessione,
@@ -121,7 +122,10 @@ quando, per dati dentro il dominio, cambia almeno una di queste cose:
    pubblicato senza pull request, etichetta tolta e sessione terminata.
 
 Decide il responsabile, in [docs/DECISIONI.md](../DECISIONI.md); la scheda si
-corregge con la decisione e il pacchetto si riprende dopo il merge.
+corregge con la decisione e il pacchetto si riprende dopo il merge. Nella
+catena ti fermi come dice [catena.md](catena.md), "Fermarsi per una
+decisione", e alla ripresa scrivi tu la correzione della scheda ("Ripresa dopo
+una decisione").
 
 **Un buco non visibile non ferma.** Lo sceglie chi implementa: la scelta più
 semplice, scritta nella scheda o nel commento dell'interfaccia, fissata da un

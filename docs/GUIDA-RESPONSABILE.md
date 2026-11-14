@@ -106,6 +106,72 @@ dei pacchetti ([DECISIONI.md](DECISIONI.md), 2026-11-10). Se l'agente scrive
 «impegno non noto», correggi la riga prima di unire, con l'impegno che hai
 scelto all'avvio.
 
+### A2a. Avviare un lavoro con un commento (la catena)
+
+In Tecnigrafo un lavoro si avvia di norma con **un solo commento** nella sua
+issue, e gli agenti si passano il lavoro da soli
+([agenti/catena.md](agenti/catena.md);
+[ADR 0053](adr/0053-catena-degli-agenti.md)). In solid-space la catena arriva
+con una sua pull request: fino ad allora lì valgono le frasi da chat di A2 e
+di B7–B9.
+
+**Avvio.** Nella issue, secondo la sua etichetta `agente:…`, con l'impegno del
+piano (la riga **Impegno** della issue):
+
+```text
+@claude [modello: opus] [impegno: <basso|medio|alto|molto alto|massimo>] Leggi AGENTS.md e seguilo alla lettera. Realizza questa issue come dice docs/agenti/catena.md.
+```
+
+```text
+@codex Prima di tutto esegui git fetch origin. Leggi AGENTS.md e seguilo alla lettera. Realizza questa issue come dice docs/agenti/catena.md.
+```
+
+Lo stesso commento lo scrive `scripts/avvia.sh <issue>` dal terminale, con
+l'impegno della issue, e solo se la issue non aspetta altro ("Dipende da",
+"Riferimenti"); con `DRY_RUN=1` davanti mostra il testo senza scriverlo.
+Codex avviato da un commento usa il suo modello predefinito, con impegno non
+noto: se il piano chiede un modello preciso, avvialo dalla **chat** di Codex
+con la frase di B8 e in più «alla fine fai il passaggio come dice
+docs/agenti/catena.md»: la catena prosegue lo stesso.
+
+**Che cosa ti torna.** Gli agenti lavorano finché non trovi una di queste
+etichette, sulla issue o sulla pull request:
+
+| Etichetta | Che cosa fai |
+|---|---|
+| `pronta` | lettura finale, DCO e merge (A3). Al merge, le issue delle righe `Avvia dopo il merge: #N` partono da sole |
+| `decisione` | leggi il commento «Serve una decisione del responsabile» e rispondi **nella issue** che indica, con la riga che ti lascia, aggiungendo la chiocciola davanti al nome: `@<agente> Decisione del responsabile: <decisione>` |
+| `ferma` | la sentinella ha visto una catena senza movimento da 60 minuti: guarda l'ultimo commento, togli `AA-Presa in carico` se è rimasta, togli `ferma` e riavvia l'ultimo passaggio (un avvio, una decisione o `scripts/passa.sh`) |
+
+Non scrivere mai la chiocciola davanti al nome di un agente in un commento che
+non deve avviarlo, nemmeno in un esempio: lo avvia comunque. Negli esempi
+metti un carattere invisibile dopo la chiocciola, o scrivi il nome senza.
+
+**Preparazione, una volta sola per repository.**
+
+1. Installa l'app <https://github.com/apps/claude> sul repository.
+2. Nel Debian in WSL lancia `claude setup-token` con l'account del piano Max e
+   metti il token nel secret `CLAUDE_CODE_OAUTH_TOKEN` (*Settings → Secrets
+   and variables → Actions*).
+3. Crea un token personale a grana fine valido solo per il repository, con
+   *Issues* e *Pull requests* in lettura e scrittura e *Contents* in lettura,
+   e mettilo nel secret `CATENA_PAT`. Serve perché gli agenti rispondono solo
+   a te e Codex non risponde ai bot: con quel token scrivono gli script, e
+   Claude apre le pull request in modo che parta la CI.
+4. In Codex crea un **ambiente legacy** per il repository (le menzioni usano
+   solo quelli; non migrarlo), con rete solo verso `api.github.com` e
+   `github.com`, tutti i metodi HTTP, il token come segreto, `gh auth login`
+   nello script di preparazione e la **cache spenta**. Per la chat di Codex
+   basta l'ambiente nuovo con il segreto HTTP `GH_TOKEN`. Che cosa mettere
+   negli script di preparazione lo decidi tu
+   ([agenti/comandi.md](agenti/comandi.md), "Gli ambienti della catena").
+5. Le etichette `pronta`, `decisione` e `ferma` le crea GitHub la prima volta
+   che un agente le mette; puoi crearle prima tu, con i colori che preferisci.
+
+**Che cosa rallenta.** La quota di Codex (cinque ore e settimanale): una
+decisione scritta e non ripresa la segnala la sentinella. E la coda di GitHub
+Actions, uno o due minuti per passaggio.
+
 ### A3. Unire una pull request
 
 Vale per **ogni** pull request, nei due repository.
@@ -277,9 +343,9 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B4. Le schede dopo la revisione del contratto | Tecnigrafo | tu e Claude |
 | B5. Preparare il piano di solid-space | solid-space | tu e Claude |
 | B6. Aprire le tappe | tutti e due | tu, con lo script o con Claude |
-| B7. Riferimenti | tutti e due | Codex o Claude, l'agente che non fa il lavoro; anche a lotti |
+| B7. Riferimenti | tutti e due | Codex o Claude, l'agente che non fa il lavoro |
 | B8. Lavoro | tutti e due | Claude e Codex |
-| B9. Seconda opinione | tutti e due | chi ha scritto i riferimenti; anche a lotti |
+| B9. Seconda opinione | tutti e due | chi ha scritto i riferimenti, chiamato dalla catena |
 | B10. Un riferimento contestato | tutti e due | chi ha scritto i riferimenti |
 | B10a. Un agente si ferma su un buco | Tecnigrafo | tu, poi Claude e Codex |
 | B11. Unire i pacchetti | tutti e due | tu |
@@ -693,19 +759,18 @@ quelli si creano solo le issue nuove.
    piano né solid-space. Rilancialo senza opzioni: deve dire «Nothing to fix or
    to check.».
 
-### B7. Riferimenti (l'altro agente, anche a lotti)
+### B7. Riferimenti (l'altro agente)
 
 I riferimenti di un pacchetto li scrive l'agente che non lo realizza: Codex per
 i pacchetti di Claude, Claude per quelli di Codex, in fascia forte per i casi
-delicati e leggera per gli ordinari, come dice il piano. Puoi avviarlo su un
-solo pacchetto, con la frase di B8, o su tutti quelli pronti, a lotti, con la
-frase qui sotto.
+delicati e leggera per gli ordinari, come dice il piano.
 
-1. Aggiorna la cartella del repository e avvia l'agente con il modello e
-   l'impegno del piano (A2). In Tecnigrafo, prima, lancia
-   `scripts/dipendenze.py <tappa>` (A4): se sotto *Ready* non c'è nessun
-   pacchetto di riferimenti con la sua etichetta, non avviarlo.
-2. Scrivi:
+1. Lancia `scripts/dipendenze.py <tappa>` (A4) e avvia con un commento (A2a)
+   ogni pacchetto di riferimenti sotto *Ready*, anche molti nello stesso
+   momento. La pull request porta `Avvia dopo il merge: #<pacchetto>` e, con la
+   CI verde, prende l'etichetta `pronta`: i riferimenti li rivedi tu.
+2. In solid-space, finché non ha la catena, aggiorna la cartella, avvia
+   l'agente con il modello e l'impegno del piano (A2) e scrivi:
 
    ```text
    Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
@@ -736,7 +801,8 @@ frase qui sotto.
    - [ ] la pull request tocca solo i casi di verifica (`tests/verifica/` in
          Tecnigrafo, `tests/corpus/` in solid-space).
 4. Se qualcosa non va, scrivilo come commento nella pull request e di'
-   all'agente che l'ha scritta:
+   all'agente che l'ha scritta (in Tecnigrafo con un commento nella issue
+   `[X.Y-RTN]`, con la chiocciola davanti al suo nome):
 
    ```text
    Leggi i commenti della pull request #<numero> e correggi.
@@ -746,7 +812,11 @@ frase qui sotto.
 
 ### B8. Lavoro (Claude e Codex)
 
-Ogni agente in una sessione sua. Possono lavorare nello stesso momento.
+Ogni agente in una sessione sua. Possono lavorare nello stesso momento. In
+Tecnigrafo un pacchetto parte da solo al merge dei suoi riferimenti
+(`Avvia dopo il merge`); quelli senza riferimenti li avvii con un commento
+(A2a), e la catena ne chiede anche la revisione (B9). La frase qui sotto serve
+per la chat, per esempio per scegliere il modello di Codex, e per solid-space.
 
 1. Aggiorna la cartella del repository e avvia l'agente (Claude Code o Codex)
    con il modello e l'impegno che il piano indica per il pacchetto (A2).
@@ -776,13 +846,17 @@ request di soli documenti, commenti o casi non si compila in locale (AGENTS.md,
 "Prima di dichiarare il lavoro finito"). Per te non cambia niente: conta solo la
 CI verde della pull request.
 
-### B9. Seconda opinione (chi ha scritto i riferimenti, anche a lotti)
+### B9. Seconda opinione (chi ha scritto i riferimenti)
 
 Una pull request di lavoro con la CI verde la rivede l'agente che ha scritto i
 riferimenti del pacchetto: Codex le pull request di Claude, Claude quelle di
 Codex. Le pull request in fascia media che toccano parti delicate hanno una
-revisione mirata in fascia forte. Quando ci sono alcune pull request di lavoro
-aperte, avvia l'agente (A2) e scrivi:
+revisione mirata in fascia forte. In Tecnigrafo la revisione la chiede la
+catena: l'esecutore passa la pull request al revisore con `scripts/passa.sh`,
+fino a tre giri, e tu la trovi con `pronta`, o con `decisione` se serve una
+tua scelta ([agenti/catena.md](agenti/catena.md), "Revisione"). In solid-space,
+finché non ha la catena, quando ci sono alcune pull request di lavoro aperte
+avvia l'agente (A2) e scrivi:
 
 ```text
 Lavora sul repository Matleyx78/<repository>. Leggi AGENTS.md e seguilo alla
@@ -813,6 +887,12 @@ un commento della issue.
 
 Quando i riferimenti corretti sono uniti, il pacchetto di lavoro si riprende con
 la frase di B8.
+
+Nella catena l'agente di lavoro mette `decisione` e lascia la riga per chi ha
+scritto i riferimenti, da scrivere nella issue `[X.Y-RTN]`: se ha ragione,
+scrivi lì la decisione; i riferimenti corretti portano
+`Avvia dopo il merge: #<pacchetto>` e, al merge, il pacchetto riparte da solo.
+Se ha torto, scrivi la decisione nella issue del pacchetto, con il suo nome.
 
 ### B10a. Un agente si ferma su un buco (tu, poi Claude e Codex)
 
@@ -878,15 +958,26 @@ visibili, ogni volta:
    scheda.
 6. **Riprendi il pacchetto** con la frase di B8.
 
+Nella catena i passi 3–6 li fanno gli agenti: tu scrivi le decisioni (passo 2)
+nella issue del pacchetto con la riga che l'agente ti ha lasciato. L'agente
+fermo scrive la pull request di correzione, che porta
+`Avvia dopo il merge: #<pacchetto>`, e la passa all'altro agente per la
+rilettura; tu la trovi con `pronta` o `decisione`, la unisci, e il pacchetto
+riparte da solo ([agenti/catena.md](agenti/catena.md), "Ripresa dopo una
+decisione").
+
 ### B11. Unire i pacchetti
 
 Ogni pull request si unisce come in A3. In più, durante una tappa:
 
-1. **Riavvia** l'agente di lavoro che ha finito con la stessa frase di B8:
-   prenderà il pacchetto successivo. I lotti invece non si rilanciano dopo ogni
-   merge: rilancia quello di B7 quando un merge ha sbloccato nuovi pacchetti
-   di riferimenti (la loro riga "Dipende da" è tutta chiusa), e quello di B9
-   quando si sono accumulate nuove pull request da rivedere.
+1. **Avvia ciò che il merge ha sbloccato.** In Tecnigrafo le issue delle righe
+   `Avvia dopo il merge: #N` partono da sole; le altre che il merge sblocca (i
+   pacchetti di riferimenti e di lavoro con la riga "Dipende da" ora tutta
+   chiusa) le avvii con un commento (A2a), guardando *Ready* di
+   `scripts/dipendenze.py <tappa>`. In solid-space, finché non ha la catena,
+   riavvia l'agente che ha finito con la frase di B8, il lotto di B7 quando
+   un merge ha sbloccato nuovi pacchetti di riferimenti e quello di B9 quando
+   si sono accumulate nuove pull request da rivedere.
 2. **Quando unisci un pacchetto di solid-space**, la sua pull request elenca
    nella riga «Sblocca:» le issue di Tecnigrafo che aspettavano proprio quel
    pacchetto: possono partire subito, senza aspettare la fine della tappa di
@@ -1002,6 +1093,8 @@ deciso e sistemato si apre la tappa successiva (B1).
 | Un agente dice che un riferimento è sbagliato | B10. |
 | Conflitto con `main` | Scrivi all'agente di quella pull request: `Aggiorna la pull request #<numero> con main e risolvi i conflitti.` |
 | Una issue ha `AA-Presa in carico` ma nessuno ci lavora più | Togli l'etichetta a mano e riavvia l'agente. |
+| Una issue o pull request ha `ferma` | A2a, "Che cosa ti torna". |
+| La catena non parte dopo un commento o un merge | Guarda *Actions* (*Claude*, *Dopo il merge*) e, per Codex, i lavori sul suo sito: la causa più comune è la quota di Codex, o una issue che aspetta ancora un'altra (lo dice il log di *Dopo il merge*). Riavvia con un commento (A2a). |
 | Un agente non risponde da 14 giorni | Il pacchetto torna libero: cambi l'etichetta `agente:…` e lo assegni a un altro. |
 | Arriva una pull request fuori pacchetto, fuori tappa o con la CI rossa da chi contribuisce | Chiudila con un rimando a `CONTRIBUTING.md`, senza discutere il codice ([ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori dalla tappa aperta"). |
 | Un agente di Tecnigrafo si ferma e scrive il testo di una richiesta a solid-space nella issue | Leggi il testo. Se serve davvero, aprila in solid-space come in B2 (lo script legge quel testo così com'è, salvato in un file), e annota la modifica nel piano in "Modifiche al piano"; il pacchetto aspetta valutazione e revisione del contratto (B3, B3a, B4). Se non serve, rispondi nella issue e fallo continuare. |

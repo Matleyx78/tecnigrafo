@@ -55,8 +55,9 @@ Gli agenti sono due ([DECISIONI.md](DECISIONI.md), 2026-11-11). Ogni pacchetto
 fa un **giro a tre**: un agente scrive i riferimenti, l'altro realizza il
 pacchetto, e chi ha scritto i riferimenti rivede la pull request del lavoro.
 Quindi Codex, Claude, Codex per i pacchetti di Claude, e Claude, Codex, Claude
-per quelli di Codex. Riferimenti e revisioni si possono fare a lotti (sezioni 3
-e 4). Le etichette `agente:gemini`, `agente:gemini-argon` e `agente:copilot`
+per quelli di Codex. I passaggi da un agente all'altro li fa la **catena degli
+agenti**, avviata con un commento ([agenti/catena.md](agenti/catena.md);
+[ADR 0053](adr/0053-catena-degli-agenti.md)). Le etichette `agente:gemini`, `agente:gemini-argon` e `agente:copilot`
 restano su GitHub, ma non si assegnano.
 
 Più sessioni di Claude nello stesso momento usano la stessa etichetta:
@@ -251,11 +252,9 @@ le loro schede sono unite, e crea solo le issue nuove. Lo lancia il responsabile
    adatta (la CI controlla l'hash, non la licenza).
 3. Unita la pull request, il pacchetto di lavoro collegato può partire.
 
-I pacchetti di riferimenti non dipendono l'uno dal merge dell'altro, quindi
-l'agente li fa **a lotti**: in una sola sessione prende di fila tutti quelli
-pronti, con un ramo e una pull request per ciascuno (regola in
-[AGENTS.md](../AGENTS.md), "Lavoro a lotti"). Il responsabile li rivede poi uno
-alla volta, come sopra.
+Il lavoro a lotti non c'è più ([ADR 0053](adr/0053-catena-degli-agenti.md)):
+ogni pacchetto di riferimenti si avvia con il suo commento, anche molti nello
+stesso momento, e il responsabile li rivede uno alla volta, come sopra.
 
 ## 4. Avviare l'agente
 
@@ -270,22 +269,9 @@ regole di AGENTS.md. Realizzalo, apri la pull request, porta la CI al
 verde e fermati, come dice AGENTS.md.
 ```
 
-Per i riferimenti e le revisioni i messaggi possono essere a lotti: una
-sessione fa tutto il lavoro pronto, e il responsabile non deve riavviarla per
-ogni pacchetto.
-
-```text
-Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-lettera. Prendi i pacchetti di riferimenti pronti della tappa 0.5 assegnati a
-te, uno dopo l'altro, come dice AGENTS.md in "Lavoro a lotti". Per ognuno apri
-la pull request e porta la CI al verde; alla fine scrivimi un solo riepilogo.
-```
-
-```text
-Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
-lettera. Rivedi le pull request aperte, come dice AGENTS.md in "Lavoro a
-lotti", e alla fine scrivimi un solo riepilogo.
-```
+Di norma però un lavoro si avvia con un commento nella sua issue, e la
+revisione la chiede la catena: le frasi sono nella
+[guida del responsabile](GUIDA-RESPONSABILE.md), A2.
 
 Se serve far partire un pacchetto preciso, si indicano issue e ramo:
 
