@@ -897,7 +897,7 @@ TEST(WriteState, ANewSessionHasNoFieldOfTheStylesAndBlocks) {
 }
 
 TEST(WriteGeneratedItem, AShapeWithTheEffectivePropertiesThatAreNotTheDefault) {
-    Tables tables = drawingWithLayers();
+    const Tables tables = drawingWithLayers();
     const core::Document& document = tables.document;
     core::EntityRecord record = lineOf(document);
     const core::GeneratedItem plain{core::Line{{0.0, 0.0}, {10.0, 0.0}},

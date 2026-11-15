@@ -210,7 +210,9 @@ std::string overridesText(std::vector<std::pair<std::string, std::string>> overr
     std::string text;
     for (const auto& [name, value] : overrides) {
         text += text.empty() ? "" : ",";
-        text += name + ':' + value;
+        text += name;
+        text += ':';
+        text += value;
     }
     return text;
 }
@@ -549,10 +551,12 @@ public:
         const std::optional<double> number = parseNumber(*text);
         if (!number || (rule == NumberRule::Positive && !(*number > 0.0)) ||
             (rule == NumberRule::NonZero && *number == 0.0)) {
-            const std::string_view expected = rule == NumberRule::Positive ? "a number above 0"
-                                              : rule == NumberRule::NonZero
-                                                  ? "a number other than 0"
-                                                  : "a number";
+            std::string_view expected = "a number";
+            if (rule == NumberRule::Positive) {
+                expected = "a number above 0";
+            } else if (rule == NumberRule::NonZero) {
+                expected = "a number other than 0";
+            }
             return Error{std::string{name} + " needs " + std::string{expected} + ", found " +
                          quoted(*text)};
         }
@@ -706,7 +710,8 @@ Read<core::Entity> readEllipse(PropertyTokens tokens) {
     // The checks of the DXF format (docs/adr/0052): a ratio in (0, 1] and a
     // major axis that has a length.
     if (ellipse.ratio > 1.0) {
-        return Error{"ratio needs a number in (0, 1], found " + quoted(*fields.value("ratio"))};
+        return Error{"ratio needs a number in (0, 1], found " +
+                     quoted(fields.value("ratio").value_or(""))};
     }
     if (ellipse.majorAxis == core::Vec2{}) {
         return Error{"major-axis needs a vector other than 0,0"};
@@ -746,7 +751,8 @@ Read<core::Entity> readMText(PropertyTokens tokens) {
         return std::move(*error);
     }
     if (width < 0.0) {
-        return Error{"width needs a number not below 0, found " + quoted(*fields.value("width"))};
+        return Error{"width needs a number not below 0, found " +
+                     quoted(fields.value("width").value_or(""))};
     }
     mtext.width = width;
     mtext.attachment = static_cast<core::MTextAttachment>(attachment + 1);
@@ -974,7 +980,7 @@ Read<core::Entity> readDimension(PropertyTokens tokens) {
         const auto whole = static_cast<int>(type);
         if (static_cast<double>(whole) != type || whole < 0 || whole > kLastDxfDimensionType) {
             return Error{"type needs an integer from 0 to 7, found " +
-                         quoted(*fields.value("type"))};
+                         quoted(fields.value("type").value_or(""))};
         }
         definition.dxfType = whole;
     }
@@ -1004,7 +1010,7 @@ Read<std::uint32_t> readLoopSignals(std::string_view text) {
             return Error{"the signal " + quoted(name) + " of loop is given more than once"};
         }
         seen.push_back(name);
-        const auto signal = std::ranges::find(kLoopSignals, name, &LoopSignal::name);
+        const auto* const signal = std::ranges::find(kLoopSignals, name, &LoopSignal::name);
         if (signal != kLoopSignals.end()) {
             flags |= signal->bit;
         } else if (name == "polyline") {
@@ -1075,7 +1081,7 @@ Read<core::HatchEdge> readEdge(const Property& property) {
     const auto inTurn = [&](const std::optional<double>& angle) {
         return angle && *angle >= 0.0 && *angle < kFullTurnDegrees;
     };
-    if (!inTurn(start) || !inTurn(end) || *start == *end) {
+    if (!start || !end || !inTurn(start) || !inTurn(end) || *start == *end) {
         return failed("cx,cy;r;a1;a2 with different angles in [0, 360)");
     }
     return core::HatchEdge{

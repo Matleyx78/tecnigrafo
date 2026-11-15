@@ -543,7 +543,7 @@ std::vector<core::Entity> entitiesOfStageEight() {
 
     core::MText mtext;
     mtext.width = 60.0;
-    mtext.value = "Prima\\Pseconda \"citata\"";
+    mtext.value = R"(Prima\Pseconda "citata")";
     entities.emplace_back(mtext);
     mtext.attachment = core::MTextAttachment::MiddleCenter;
     mtext.style = "Note";
@@ -625,7 +625,7 @@ TEST(ReadNewEntity, LinesWithoutAnglesReadBackTheSameEntity) {
         EXPECT_EQ(readsBack(entities.at(index)), entities.at(index)) << written(entities.at(index));
     }
     // A whole circle of a boundary reads back as written: 0 to 2*pi.
-    const core::Entity hatch = entities.at(entities.size() - 2);
+    const core::Entity& hatch = entities.at(entities.size() - 2);
     const core::Entity read = readsBack(hatch);
     const auto& edge = std::get<core::Hatch>(read).loops.at(1).edges.at(0);
     EXPECT_EQ(std::get<core::Arc>(edge.curve), (core::Arc{{5.0, 5.0}, 2.0, 0.0, core::kTwoPi}));
