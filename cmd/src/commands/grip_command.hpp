@@ -19,7 +19,7 @@ namespace tg::cmd {
 /// belongs to the runner (docs/adr/0026, point 3).
 ///
 /// start() writes "** STRETCH **" and asks "Specify stretch point:". A point
-/// moves the grip with core::moveGrip() and replaces the entity in one
+/// moves the grip with core::moveGripIn() and replaces the entity in one
 /// "Grip edit" transaction; an invalid result changes nothing and writes
 /// "Invalid grip edit.". Enter leaves the grip without changes, like Esc.
 class GripCommand final : public Command {
@@ -38,6 +38,7 @@ public:
     [[nodiscard]] std::optional<core::Vec2> basePoint() const override { return m_grip; }
 
 private:
+    const core::Document* m_document{nullptr};  ///< the editor's document, also for previews
     core::EntityId m_id;
     core::Entity m_entity;  ///< as it was when the grip became hot
     std::size_t m_index{0};

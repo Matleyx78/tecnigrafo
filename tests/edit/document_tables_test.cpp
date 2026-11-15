@@ -42,6 +42,63 @@ TEST(DocumentTables, LayerAndEntityShareOneHistoryStep) {
     EXPECT_FALSE(editor.canRedo());
 }
 
+TEST(DocumentTables, UnchangedStyleTablesPreserveHistoryAndSavedState) {
+    core::Document document;
+    Editor editor(document);
+    editor.beginTransaction("Setup");
+    const auto id = editor.add(core::Line{{0.0, 0.0}, {1.0, 0.0}});
+    editor.commit();
+    ASSERT_TRUE(editor.undo());
+    ASSERT_TRUE(editor.canRedo());
+
+    editor.beginTransaction("Unchanged styles");
+    // PT6 style tables are empty: distinct styles become constructible in
+    // PT11/PT22. Both generic replacement paths must already reject no-ops.
+    EXPECT_FALSE(editor.tables().replaceTextStyles(core::TextStyleTable{}));
+    EXPECT_FALSE(editor.tables().replaceDimStyles(core::DimStyleTable{}));
+    EXPECT_EQ(editor.savepoint().changes, 0U);
+    EXPECT_FALSE(editor.isModified());
+    editor.commit();
+
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_TRUE(editor.canRedo());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_NE(document.find(id), nullptr);
+}
+
+TEST(DocumentTables, UnchangedOrAbsentBlocksDoNotRecordChanges) {
+    core::Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    editor.beginTransaction("Unchanged blocks");
+    EXPECT_FALSE(editor.tables().replaceBlock("missing", std::nullopt));
+    EXPECT_FALSE(editor.tables().replaceBlock("A", core::BlockDefinition{"A"}));
+    EXPECT_FALSE(editor.tables().replaceBlock("a", core::BlockDefinition{"different"}));
+    EXPECT_EQ(editor.savepoint().changes, 0U);
+    EXPECT_FALSE(editor.isModified());
+    editor.commit();
+    EXPECT_EQ(document.blocks(), initial);
+    EXPECT_FALSE(editor.canUndo());
+}
+
+TEST(DocumentTables, NewBlockUsesTheLookupName) {
+    core::Document document;
+    Editor editor(document);
+    editor.beginTransaction("Add block");
+    ASSERT_TRUE(editor.tables().replaceBlock("A", core::BlockDefinition{"different"}));
+    editor.commit();
+    ASSERT_NE(document.blocks().find("A"), nullptr);
+    EXPECT_EQ(document.blocks().find("A")->name, "A");
+    EXPECT_EQ(document.blocks().find("different"), nullptr);
+    ASSERT_TRUE(editor.undo());
+    EXPECT_TRUE(document.blocks().definitions().empty());
+    ASSERT_TRUE(editor.redo());
+    ASSERT_NE(document.blocks().find("A"), nullptr);
+    EXPECT_EQ(document.blocks().find("A")->name, "A");
+}
+
 #ifndef NDEBUG
 TEST(DocumentTables, AddingLayerRequiresOpenTransaction) {
     auto document = core::Document::newDrawing();
@@ -51,6 +108,14 @@ TEST(DocumentTables, AddingLayerRequiresOpenTransaction) {
     layer.linetype = document.continuousLinetype();
 
     EXPECT_DEATH(editor.tables().addLayer(layer), "open transaction");
+}
+
+TEST(DocumentTables, NewTableChangesRequireOpenTransaction) {
+    core::Document document;
+    Editor editor(document);
+    EXPECT_DEATH(editor.tables().replaceTextStyles(core::TextStyleTable{}), "open transaction");
+    EXPECT_DEATH(editor.tables().replaceDimStyles(core::DimStyleTable{}), "open transaction");
+    EXPECT_DEATH(editor.tables().replaceBlock("A", core::BlockDefinition{"A"}), "open transaction");
 }
 #endif
 

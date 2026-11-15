@@ -391,6 +391,16 @@ void Document::replaceBlock(std::string name, std::optional<BlockDefinition> def
     }
 }
 
+void Document::insertBlock(BlockDefinition definition, std::size_t position) {
+    assert(blocks().find(definition.name) == nullptr && "the block name must be absent");
+    assert(position <= blocks().definitions().size() && "invalid block position");
+    const std::string name = definition.name;
+    replaceBlock(name, std::move(definition));
+    auto& definitions = m_blocks.m_definitions;
+    const auto where = definitions.begin() + static_cast<std::ptrdiff_t>(position);
+    std::rotate(where, definitions.end() - 1, definitions.end());
+}
+
 void Document::setCurrent(const CurrentProperties& current) {
     checkProperties(current);
     m_current = current;

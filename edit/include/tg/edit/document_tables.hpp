@@ -39,6 +39,17 @@ public:
     bool setCurrent(const core::CurrentProperties& current);
     bool setLtscale(double scale);  ///< finite and > 0
 
+    /// Replace a whole table in one undoable change (docs/adr/0044, point 3).
+    /// Return false without recording when the table is unchanged.
+    /// Precondition: a transaction is open.
+    bool replaceTextStyles(core::TextStyleTable table);
+    bool replaceDimStyles(core::DimStyleTable table);
+    /// Puts, replaces or (nullopt) removes one block definition.
+    /// Preserves the position and spelling of an existing name.
+    /// Returns false without recording when the definition is unchanged.
+    /// Precondition: a transaction is open.
+    bool replaceBlock(std::string name, std::optional<core::BlockDefinition> definition);
+
     /// Saved view setting: modifies the drawing without an undo step.
     /// No transaction is needed. Notifies the change listener on a change.
     void setLwdisplay(bool on);

@@ -3,6 +3,7 @@
 
 #include "grip_command.hpp"
 
+#include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
 
 #include <cassert>
@@ -30,6 +31,7 @@ GripCommand::GripCommand(core::EntityId id, core::Entity entity, std::size_t ind
 }
 
 void GripCommand::start(CommandContext& context) {
+    m_document = &context.editor.document();
     // Typed relative coordinates ("@5,0") start from the hot grip, as in
     // AutoCAD, where the grip becomes the last point.
     context.lastPoint = m_grip;
@@ -43,7 +45,12 @@ Status GripCommand::handle(CommandContext& context, const Input& input) {
         // no change, as Esc does.
         return std::holds_alternative<ConfirmInput>(input) ? Status::Finished : Status::Continue;
     }
-    const core::GripResult result = core::moveGrip(m_entity, m_index, point->point);
+    const core::GripResult result =
+        core::moveGripIn(context.editor.document(), m_entity, m_index, point->point);
+    if (!result.refusal.empty()) {
+        context.message(result.refusal);
+        return Status::Finished;
+    }
     if (result.outcome == core::GripOutcome::Invalid) {
         context.message(std::string{kInvalidGripEdit});
         return Status::Finished;
@@ -59,8 +66,10 @@ Status GripCommand::handle(CommandContext& context, const Input& input) {
 
 void GripCommand::pointerMoved(const core::Vec2& point) {
     m_preview.clear();
-    core::GripResult result = core::moveGrip(m_entity, m_index, point);
-    if (result.outcome == core::GripOutcome::Moved) {
+    core::GripResult result = core::moveGripIn(*m_document, m_entity, m_index, point);
+    if (!result.refusal.empty()) {
+        m_preview.push_back(m_entity);
+    } else if (result.outcome == core::GripOutcome::Moved) {
         m_preview.push_back(std::move(result.entity));
     }
 }

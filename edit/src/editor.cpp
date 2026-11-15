@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include <ranges>
+#include <type_traits>
 #include <utility>
 
 namespace tg::edit {
@@ -356,6 +357,38 @@ void Editor::swapUpdate(Change& change) {
             const double previous = m_document.ltscale();
             m_document.setLtscale(scale);
             scale = previous;
+            break;
+        }
+        case Change::Kind::StyleTable: {
+            auto& table = std::get<StyleTableChange>(change.data).table;
+            std::visit(
+                [&](auto& styles) {
+                    using Table = std::decay_t<decltype(styles)>;
+                    if constexpr (std::is_same_v<Table, core::TextStyleTable>) {
+                        const Table previous = m_document.textStyles();
+                        m_document.replaceTextStyles(styles);
+                        styles = previous;
+                    } else {
+                        const Table previous = m_document.dimStyles();
+                        m_document.replaceDimStyles(styles);
+                        styles = previous;
+                    }
+                },
+                table);
+            break;
+        }
+        case Change::Kind::Block: {
+            auto& block = std::get<BlockTableChange>(change.data);
+            std::optional<core::BlockDefinition> previous;
+            if (const auto* found = m_document.blocks().find(block.name)) {
+                previous = *found;
+            }
+            if (block.definition && !previous) {
+                m_document.insertBlock(std::move(*block.definition), block.position);
+            } else {
+                m_document.replaceBlock(block.name, std::move(block.definition));
+            }
+            block.definition = std::move(previous);
             break;
         }
         default:
