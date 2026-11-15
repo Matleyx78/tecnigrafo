@@ -49,7 +49,7 @@ case "$kind" in
   revisione)
     task="Rivedi questa pull request come dice docs/agenti/catena.md in \"Revisione (revisore)\" (giro $round)." ;;
   correzioni)
-    task="Correggi le segnalazioni [bloccante] del giro di revisione $round (e della ripresa dopo la decisione, se c'è) come dice docs/agenti/catena.md in \"Correzioni (esecutore)\"." ;;
+    task="Correggi le segnalazioni [bloccante] del giro di revisione $round (e della ripresa dopo la decisione, se c'è) come dice docs/agenti/catena.md in \"Correzioni (esecutore)\", e pubblica i commit con git push sullo stesso ramo." ;;
   analisi)
     task="La CI di questa pull request non passa dopo tre tentativi: analizzala come dice docs/agenti/catena.md in \"Analisi di una CI rossa (revisore)\"." ;;
 esac

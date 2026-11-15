@@ -56,6 +56,13 @@ avviato, come chiede il nucleo; se non li sai, «modello e impegno non noti».
 
 ## Fine del lavoro (esecutore)
 
+Il lavoro **esiste solo su GitHub**: un commit rimasto nel tuo ambiente non lo
+vede nessuno, e la catena si ferma senza dirlo. Pubblica sempre il ramo con
+`git push` e apri tu la pull request con `gh pr create`, anche se il tuo
+strumento propone di «preparare» la pull request in un altro modo. Se `git
+push` o `gh pr create` falliscono, scrivi l'errore esatto in un commento nella
+issue e fermati ("Fermarsi per una decisione").
+
 Prima di terminare, come **ultima cosa**, dopo i passi del nucleo ("Quando
 fermarsi"):
 
@@ -179,7 +186,8 @@ Non fare commit.
 Prendi in carico, lavora sul ramo della pull request
 (`gh pr checkout <numero>`), correggi solo le **[bloccante]** del giro
 indicato e, se c'è, del commento «Ripresa dopo la decisione» di quel giro (le
-[facoltativa] e le [decisione] non si toccano). Aspetta la CI come dice il
+[facoltativa] e le [decisione] non si toccano). Pubblica i commit con `git
+push` sullo stesso ramo ("Fine del lavoro"), aspetta la CI come dice il
 nucleo, rispondi con un commento che dice che cosa hai corretto, togli
 l'etichetta e, come ultima cosa,
 `scripts/passa.sh <revisore> <numero> revisione <N+1>`.
