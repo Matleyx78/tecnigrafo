@@ -166,7 +166,7 @@ std::optional<double> PlineCommand::segmentBulge(const core::Vec2& end) const {
     if (std::numbers::pi - std::abs(alpha) <= kAngleTolerance) {
         return std::nullopt;
     }
-    return std::tan(alpha / 2.0);
+    return tg::core::tan(alpha / 2.0);
 }
 
 }  // namespace tg::cmd

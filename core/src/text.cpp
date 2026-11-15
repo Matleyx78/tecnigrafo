@@ -104,7 +104,7 @@ TextFrame textFrame(const Text& text) {
     const auto direction = sinCos(frame.rotation);
     const Vec2 along{direction.cosine, direction.sine};
     frame.xAxis = along * (text.mirroredX ? -1.0 : 1.0);
-    frame.yAxis = frame.xAxis * std::tan(text.obliqueAngle) +
+    frame.yAxis = frame.xAxis * tg::core::tan(text.obliqueAngle) +
                   along.perpendicular() * (text.mirroredY ? -1.0 : 1.0);
     frame.origin = frame.insertion - frame.xAxis * offset.x - frame.yAxis * offset.y;
     return frame;

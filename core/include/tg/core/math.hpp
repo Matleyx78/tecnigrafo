@@ -35,6 +35,23 @@ struct SinCos {
 [[nodiscard]] double atan2(double y, double x);
 /// atan2(x, 1.0); precondition: finite x.
 [[nodiscard]] double atan(double x);
+/// Tangent of an angle in radians, the same bits on every platform
+/// (solid_space::robust::tan, docs/adr/0044, point 8). Angles beyond
+/// robust's range are first reduced as sinCos() reduces them (std::fmod by
+/// 2*pi). Precondition: finite angle.
+[[nodiscard]] double tan(double angle);
+/// Arccosine in [0, pi], robust::acos. Precondition: -1 <= x <= 1.
+[[nodiscard]] double acos(double x);
+/// Length of (x, y), robust::hypot: exact when the length is a double,
+/// never below max(|x|, |y|), the same bits for (x, y), (y, x), (-x, y).
+/// Beyond robust's range (an argument above kMaxHypotArgument; at the
+/// limit robust answers, with a finite result) both arguments are halved
+/// and the result doubled, which may give +inf (halving a subnormal may
+/// round it, far below the error of the result; near the overflow the
+/// result is finite, within the error, or +inf, both valid); with an
+/// infinite argument the result is +inf, with a NaN and no infinity it
+/// is NaN, as std::hypot.
+[[nodiscard]] double hypot(double x, double y);
 /// Below this magnitude a component of cardinalSinCos is taken as 0:
 /// above the rounding left by a quarter turn given as a double (at most
 /// about 2^-50 for angles up to a few turns), far below the relative

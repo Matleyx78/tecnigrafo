@@ -189,7 +189,7 @@ double cutBulge(const PolylineSegment& original, const Vec2& from, const Vec2& t
     const double forward = normalizeAngle(corrected.last - corrected.first);
     const double backward = normalizeAngle(corrected.first - corrected.last);
     const double sweep = original.bulge > 0.0 ? forward : -backward;
-    return std::tan(sweep / 4.0);
+    return tg::core::tan(sweep / 4.0);
 }
 
 Polyline withVertices(const Polyline& source, std::vector<PolylineVertex> vertices) {
@@ -269,7 +269,7 @@ PartResult extendPolyline(const Polyline& polyline, EntityEnd end, const CurvePo
         }
         const double sweep = segment.bulge > 0.0 ? normalizeAngle(lastAngle - firstAngle)
                                                  : -normalizeAngle(firstAngle - lastAngle);
-        bulge = std::tan(sweep / 4.0);
+        bulge = tg::core::tan(sweep / 4.0);
     }
     std::vector<PolylineVertex> vertices{polyline.vertices().begin(), polyline.vertices().end()};
     // The caller's exact position identifies the first/last non-point

@@ -78,7 +78,7 @@ std::optional<Polyline> movedPoly(const Polyline& input, std::size_t index, cons
             // traversal direction, including a possible reversal at the grip.
             const double direction = cross(middle - startPointNew, endPointNew - startPointNew);
             const double sweep = arc->geometry().sweep;
-            vertices[i].bulge = std::tan((direction > 0.0 ? sweep : -sweep) / 4.0);
+            vertices[i].bulge = tg::core::tan((direction > 0.0 ? sweep : -sweep) / 4.0);
         }
     }
     Polyline result{std::move(vertices), input.isClosed()};
