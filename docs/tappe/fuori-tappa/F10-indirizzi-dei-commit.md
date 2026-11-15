@@ -4,7 +4,7 @@
   ([ROADMAP.md](../../ROADMAP.md), "Cosa si può fare fuori dalla tappa
   aperta"; [DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Solo indirizzi
   noreply nei commit»)
-- **Issue:** da aprire
+- **Issue:** #787
 - **Difficoltà:** facile
 - **Agente:** da assegnare dal responsabile
 - **Modello e impegno:** medio; impegno medio
