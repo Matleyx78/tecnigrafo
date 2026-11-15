@@ -76,7 +76,10 @@ private:
 TEST_F(PeditCommandTest, ConversionCanBeDeclinedCancelledOrAcceptedWithSourceData) {
     const auto source = document().add(Line{{0, 0}, {30, 0}});
     auto record = document().remove(source);
-    ASSERT_TRUE(record.has_value());
+    if (!record) {
+        FAIL() << "missing source record";
+        return;
+    }
     record->properties.color = core::Color::fromIndex(3);
     record->extras.extended = {{1001, "PEDIT_TEST"}, {1000, "kept"}};
     const auto original = *record;
