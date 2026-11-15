@@ -1,0 +1,29 @@
+; Tipi di unione con distanza (ADR 0050, PT32).
+; Coordinate e conteggi sono calcolati a mano dalle intersezioni delle rette.
+
+S = LWPOLYLINE vertex=-4,0 vertex=0,0
+L = LINE start=1,0 end=3,0
+? pedit-join S L fuzz=2 type=extend -> none
+? pedit-join S L fuzz=2 type=add -> S LWPOLYLINE closed=no vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L
+? pedit-join S L fuzz=2 type=both -> S LWPOLYLINE closed=no vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L
+; Il tipo predefinito e Extend.
+? pedit-join S L fuzz=2 -> none
+
+; Le rette estese si incontrano in (2,0): non serve un ponte.
+X = LWPOLYLINE vertex=0,0 vertex=1,0
+V = LINE start=2,1 end=2,3
+? pedit-join X V fuzz=2 type=extend -> X LWPOLYLINE closed=no vertex=0,0 vertex=2,0 vertex=2,3 added=1 consumed=V
+? pedit-join X V fuzz=2 type=add -> X LWPOLYLINE closed=no vertex=0,0 vertex=1,0 vertex=2,1 vertex=2,3 added=2 consumed=V
+? pedit-join X V fuzz=2 type=both -> X LWPOLYLINE closed=no vertex=0,0 vertex=2,0 vertex=2,3 added=1 consumed=V
+
+; Due tratti sovrapposti non hanno un'intersezione isolata.
+O = LWPOLYLINE vertex=0,0 vertex=2,0
+OL = LINE start=1,0 end=3,0
+? pedit-join O OL fuzz=1 type=extend -> none
+? pedit-join O OL fuzz=1 type=both -> O LWPOLYLINE closed=no vertex=0,0 vertex=2,0 vertex=1,0 vertex=3,0 added=2 consumed=OL
+
+; Parallele disgiunte: Extend fallisce, Both inserisce il ponte.
+P = LWPOLYLINE vertex=0,0 vertex=1,0
+PL = LINE start=2,1 end=3,1
+? pedit-join P PL fuzz=2 type=extend -> none
+? pedit-join P PL fuzz=2 type=both -> P LWPOLYLINE closed=no vertex=0,0 vertex=1,0 vertex=2,1 vertex=3,1 added=2 consumed=PL

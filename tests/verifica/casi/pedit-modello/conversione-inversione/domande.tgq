@@ -1,0 +1,17 @@
+; Conversione e inversione delle polilinee (ADR 0050, PT32).
+; I valori sono ricavati direttamente dalle regole DXF per bulge e larghezze.
+
+L = LINE start=-2,3 end=4,7
+A = ARC center=0,0 radius=10 start-angle=0 end-angle=90
+? to-polyline L -> LWPOLYLINE closed=no vertex=-2,3 vertex=4,7
+? to-polyline A -> LWPOLYLINE closed=no vertex=10,0 bulge=0.41421356237309503 vertex=0,10
+
+; I dati senza segmento dell'ultimo vertice restano tali anche dopo l'inversione.
+P = LWPOLYLINE vertex=0,0 bulge=0.5 start-width=1 end-width=2 vertex=10,0 bulge=-0.25 start-width=3 end-width=4 vertex=20,0 bulge=0.75 start-width=5 end-width=6
+PR = LWPOLYLINE vertex=20,0 bulge=0.25 start-width=4 end-width=3 vertex=10,0 bulge=-0.5 start-width=2 end-width=1 vertex=0,0 bulge=0.75 start-width=5 end-width=6
+? reverse P -> LWPOLYLINE closed=no vertex=20,0 bulge=0.25 start-width=4 end-width=3 vertex=10,0 bulge=-0.5 start-width=2 end-width=1 vertex=0,0 bulge=0.75 start-width=5 end-width=6
+? reverse PR -> LWPOLYLINE closed=no vertex=0,0 bulge=0.5 start-width=1 end-width=2 vertex=10,0 bulge=-0.25 start-width=3 end-width=4 vertex=20,0 bulge=0.75 start-width=5 end-width=6
+
+; Una chiusa conserva il primo vertice; ogni segmento cambia verso.
+C = LWPOLYLINE closed=yes vertex=0,0 bulge=0.5 start-width=1 end-width=2 vertex=10,0 bulge=-0.25 start-width=3 end-width=4 vertex=10,10 bulge=1 start-width=5 end-width=6
+? reverse C -> LWPOLYLINE closed=yes vertex=0,0 bulge=-1 start-width=6 end-width=5 vertex=10,10 bulge=0.25 start-width=4 end-width=3 vertex=10,0 bulge=-0.5 start-width=2 end-width=1
