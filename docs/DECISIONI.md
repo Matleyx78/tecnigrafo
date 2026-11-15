@@ -1939,3 +1939,13 @@ i rimandi ai documenti che cambia.
   `tests/render/generated_drawing_test.cpp` fra i suoi file. Scartati il
   lasciare le schede come sono, senza che nessuno scriva i test con un
   inserimento vero, e l'anticipo in PT8 del supporto di `Insert` in `core`.
+- **2026-11-15 — La riga per riprendere porta le regole della catena.** Nella
+  prima decisione della catena in solid-space (PS7 → correzione dei riferimenti
+  di RS7a, Matleyx78/solid-space#247) Codex ha ricevuto una riga con il solo
+  dato da applicare: ha corretto i casi, ma non ha preso in carico la issue e
+  ha lasciato il commit nel suo ambiente. Da qui, in tutti e due i progetti,
+  la riga da copiare finisce sempre con la frase che rimanda ad AGENTS.md e a
+  catena.md e chiede `git push` e `gh pr create`, come il commento di avvio,
+  quando chiede di cambiare dei file ([agenti/catena.md](agenti/catena.md),
+  "Fermarsi per una decisione"). La guida (A2a) dice che la catena è
+  arrivata anche in solid-space (Matleyx78/solid-space#293).
