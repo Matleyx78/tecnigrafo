@@ -1881,6 +1881,10 @@ i rimandi ai documenti che cambia.
   sbagliato, la riga da copiare dice di riaprire la issue dei riferimenti e di
   scrivere lì, e la pull request di correzione porta `Closes` di quella issue
   oltre a `Avvia dopo il merge`, altrimenti il pacchetto resta ad aspettarla;
-  chi corregge un caso lo ricontrolla con la scheda, passi seguenti compresi,
+  se chi si ferma propone una correzione concreta (un dato, un valore), la
+  riga da copiare la contiene già scritta, perché chi corregge applichi il
+  dato esatto invece di interpretarlo (la decisione per la #775 diceva solo
+  «spostando PAR più lontano»); chi corregge un caso lo ricontrolla con la
+  scheda, passi seguenti compresi,
   prima di aprire la pull request (nella #775 lo spostamento dell'estremo
   sbagliato di `PAR` ha lasciato il caso `ordine-conteggi` com'era).

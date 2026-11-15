@@ -98,7 +98,10 @@ lavoro:
 2. scrivi **un solo** commento (nella pull request se c'è, altrimenti nella
    issue) che comincia con «Serve una decisione del responsabile», con il
    problema, le scelte possibili e, come ultima riga, quella da copiare,
-   **senza la chiocciola**, e **dove** scriverla:
+   **senza la chiocciola**, e **dove** scriverla. Se proponi una correzione
+   concreta (un dato, un valore, un caso riscritto), la riga la contiene già
+   scritta per intero, così chi corregge applica il dato esatto invece di
+   interpretarlo:
    «Per riprendere scrivi **nella issue #<numero>**, con @ davanti:
    `<nome> Decisione del responsabile: …`». Il posto è sempre una **issue**:
    su una pull request la menzione di Codex avvia la sua revisione
