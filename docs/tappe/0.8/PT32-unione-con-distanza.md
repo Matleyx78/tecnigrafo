@@ -6,23 +6,27 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT32]` (#…), agente codex, fascia forte
-- **Dipende da:** PT5 (revisione delle interfacce), RT32
-- **Modulo:** `core`
+- **Dipende da:** PT5 (revisione delle interfacce), F9 (#771), RT32
+- **Modulo:** `core` (più tre domande in `script`)
 - **Da leggere:** [ADR 0050](../../adr/0050-pedit.md);
   [ADR 0035](../../adr/0035-taglio-offset-raccordi-unione.md) (unione e
   prolungamento); [ADR 0031](../../adr/0031-modifiche-alle-entita.md), punto 7;
   `core/include/tg/core/join.hpp`, `core/src/join.cpp`,
   `core/include/tg/core/intersections.hpp`, `core/include/tg/core/tolerance.hpp`,
   `core/src/solid_space_bridge.hpp`; la scheda [PT33](PT33-comando-pedit.md)
-  (sorella)
+  (sorella); [verifica/domande.md](../../verifica/domande.md), «Polilinee
+  (tappa 0.8)», e `script/src/curve_questions.cpp` (`askJoin`, il modello)
 
 ## File
 
 - `core/include/tg/core/pedit_join.hpp`, `core/src/pedit_join.cpp` (nuovi)
 - `core/include/tg/core/polyline.hpp`, `core/src/polyline.cpp` (`reversed`,
   `toPolyline`)
+- `script/src/pedit_questions.cpp` (nuovo), `script/src/question_table.cpp`,
+  `script/CMakeLists.txt` (file comuni)
 - `tests/core/pedit_join_test.cpp` (nuovo), `tests/core/polyline_test.cpp`,
-  `tests/CMakeLists.txt` (file comune)
+  `tests/script/questions_test.cpp`, `tests/CMakeLists.txt` (file comune)
+- `tests/verifica/in-attesa/0.8-RT32.txt` (da cancellare)
 
 ## Cosa fare
 
@@ -85,13 +89,34 @@
      (secondo `rule`), la polilinea diventa chiusa e l'unione finisce.
 4. Le polilinee chiuse fra gli `others` non si uniscono; neanche quelle con
    quota diversa dalla sorgente.
+5. **Le domande.** Le tre domande della sezione «Polilinee (tappa 0.8)» di
+   [domande.md](../../verifica/domande.md), annunciate da
+   [F9](../fuori-tappa/F9-domande-pedit.md) (decisione del 2026-11-15,
+   [DECISIONI.md](../../DECISIONI.md), «Domande di PT32 annunciate prima del
+   lavoro»): si realizzano in `pedit_questions.cpp`, e in `kQuestions` la loro
+   funzione prende il posto di `nullptr` (il commento sull'annuncio si
+   toglie). Sono il canale dei casi di RT32: rispondono con le funzioni di
+   questa scheda, senza logica propria.
+   - `to-polyline <E>` → `toPolyline`; `reverse <P>` → `reversed`; la
+     risposta è l'entità come la scrive il rapporto.
+   - `pedit-join <P> <B> … fuzz=<d> [type=extend|add|both] [units=<n>]` →
+     `joinWithGaps(P, others, fuzz, type, rule)`, con le altre entità
+     nell'ordine scritto e la regola di `units=` (4 se manca); la risposta è
+     `P <polilinea> added=<added> consumed=<nomi>`, con i nomi degli indici di
+     `consumed` nel loro ordine, separati da `,`; `none` se `consumed` è
+     vuoto.
+   - Errori del caso (`ArgumentError`): `to-polyline` di un'entità che non è
+     `LINE` né `ARC`, `reverse` e la sorgente di `pedit-join` che non sono
+     `LWPOLYLINE`, `fuzz=` che manca, non è un numero o è negativo, `type=`
+     diverso dai tre valori.
 
 ## Regole della tappa che valgono qui
 
 - Le decisioni geometriche sono di solid-space; nessuna soglia propria tranne
   `fuzz`, che è un valore dell'utente.
 - Niente funzioni trigonometriche di `<cmath>`.
-- File comune: `tests/CMakeLists.txt`.
+- File comuni: `script/src/question_table.cpp`, `script/CMakeLists.txt`,
+  `tests/CMakeLists.txt`.
 
 ## Test richiesti
 
@@ -109,6 +134,13 @@
   lunghezza: larghezza finale 3; `added` 3 con un ponte e un oggetto di due
   segmenti; doppia inversione di una polilinea aperta con dati sull'ultimo
   vertice.
+- `questions_test.cpp`: le tre domande nella forma di domande.md; l'esempio
+  del catalogo, sorgente `S = LWPOLYLINE vertex=-4,0 vertex=0,0` e
+  `L = LINE start=1,0 end=3,0`: `? pedit-join S L fuzz=2 type=extend -> none`
+  e `? pedit-join S L fuzz=2 type=both -> S LWPOLYLINE closed=no
+  vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L`; senza
+  `type=` come *Extend*; due oggetti agganciati in ordine diverso da quello
+  scritto (`consumed` nell'ordine di aggancio); ogni errore del punto 5.
 
 ## Fatto quando
 

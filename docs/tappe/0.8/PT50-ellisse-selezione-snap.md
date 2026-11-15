@@ -190,8 +190,8 @@ Nella tabella «Come ogni tipo di entità risponde» di domande.md:
 - Niente funzioni trigonometriche di `<cmath>` (ADR 0044, punto 8).
 - File comuni: `core/src/solid_space_bridge.*` (PT42, PT43 e PT50: ognuno la
   sua funzione, in ordine alfabetico), `tests/CMakeLists.txt`.
-- `docs/verifica/domande.md` lo toccano PT9, PT34, PT43 e PT50: solo le tue
-  righe; chi arriva dopo si aggiorna.
+- `docs/verifica/domande.md` lo toccano PT9, PT34, PT43, PT50 e F9: solo le
+  tue righe; chi arriva dopo si aggiorna.
 
 ## Test richiesti
 

@@ -271,6 +271,35 @@ ADR 0035, punti 17–20)
 |---|---|---|
 | `join <A> <B> … [circle=no] [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente e le altre nell'ordine scritto: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla. Una linea o un arco solo se tutte le entità sono linee allineate alla sorgente o archi del suo cerchio; altrimenti la catena (decisione B16 della #464, 2026-11-01). Gli archi dello stesso cerchio si coprono in senso antiorario a partire dall'inizio della sorgente; se arrivano al giro intero la risposta è il cerchio (`new CIRCLE …`), come con *Yes* alla domanda *Convert to circle?*, e con `circle=no`, come con *No*, è `none` (decisione B11, rivista il 2026-11-02) |
 
+### Polilinee (tappa 0.8)
+
+Le domande della conversione, dell'inversione e dell'unione con distanza di
+`PEDIT` ([ADR 0050](../adr/0050-pedit.md), punti 2–4), pubblicate prima del
+pacchetto che le realizza perché i riferimenti si possano scrivere prima del
+lavoro (decisione del 2026-11-15, F9). Chiedono delle funzioni di `core`,
+non del comando: le entità delle risposte si scrivono come
+[definizioni](rapporto.md#entità), senza proprietà, come in `join`; `units=`
+è `INSUNITS` del disegno, 4 (millimetri) se manca.
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `to-polyline <E>` | `LWPOLYLINE …` | la linea o l'arco `E` come polilinea aperta di un segmento (`toPolyline`): dall'inizio della linea alla sua fine; per l'arco dal punto dell'angolo iniziale a quello dell'angolo finale, con il bulge dell'arco (antiorario, positivo). Un'entità che non è `LINE` né `ARC` è un errore del caso |
+| `reverse <P>` | `LWPOLYLINE …` | la polilinea `P` invertita (`reversed`, opzione *Reverse*), con le regole della scheda PT32, punto 2: vertici in ordine opposto, bulge con il segno cambiato sul segmento opposto, larghezze iniziale e finale scambiate, una chiusa con lo stesso primo vertice, i dati dell'ultimo vertice di un'aperta sul nuovo ultimo vertice. Un'entità che non è `LWPOLYLINE` è un errore del caso |
+| `pedit-join <P> <B> … fuzz=<d> [type=extend\|add\|both] [units=<n>]` | `<P> LWPOLYLINE … added=<n> consumed=<nomi>`, o `none` | l'unione con distanza (`joinWithGaps`) con la polilinea `P` come sorgente e le altre entità come `others`, nell'ordine scritto; `fuzz=` è la distanza di tolleranza (≥ 0, obbligatoria), `type=` il tipo di unione, *Extend* se manca, come *Jointype* di AutoCAD. La risposta è la polilinea unita, il numero dei segmenti aggiunti, ponti compresi, e i nomi degli oggetti usati nell'ordine di aggancio, separati da `,`; `none` se non si unisce nessun oggetto. Le polilinee chiuse e quelle con quota diversa da `P` non si uniscono mai. Una sorgente che non è `LWPOLYLINE` è un errore del caso (la conversione si chiede con `to-polyline`) |
+
+Esempio, dalla scheda PT32 (le due curve stanno sulla stessa retta, quindi
+non c'è un punto d'intersezione isolato):
+
+```
+S = LWPOLYLINE vertex=-4,0 vertex=0,0
+L = LINE start=1,0 end=3,0
+? pedit-join S L fuzz=2 type=extend -> none
+? pedit-join S L fuzz=2 type=both   -> S LWPOLYLINE closed=no vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L
+```
+
+Le realizza il pacchetto PT32 della 0.8; fino ad allora rispondono
+`error: question not implemented yet`.
+
 ### File
 
 Le domande sui disegni letti da un file: la lettura e la scrittura dei
