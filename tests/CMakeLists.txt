@@ -40,6 +40,7 @@ add_executable(tg_tests
     cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/offset_command_test.cpp
+    cmd/pedit_command_test.cpp
     cmd/pline_command_test.cpp
     cmd/property_commands_test.cpp
     cmd/quick_select_test.cpp

@@ -25,6 +25,7 @@ class DocumentHost;
 
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
+    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
     double textHeight{2.5};
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
