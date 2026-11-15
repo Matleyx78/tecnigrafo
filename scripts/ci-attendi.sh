@@ -7,7 +7,11 @@
 #
 #     scripts/ci-attendi.sh              # the run of the commit you are on
 #     scripts/ci-attendi.sh <sha>        # the run of that commit
+#     scripts/ci-attendi.sh <pr number>  # the run of the last commit of that pull request
 #     scripts/ci-attendi.sh <run id>     # that run
+#
+# A number of up to 6 digits is a pull request, a longer one a run id (run ids
+# have 10 digits and more).
 #
 # Exit status:
 #   0  the run succeeded
@@ -60,7 +64,7 @@ api() {
 }
 
 if (( $# > 1 )); then
-    echo "usage: ci-attendi.sh [commit sha | run id]" >&2
+    echo "usage: ci-attendi.sh [commit sha | pull request number | run id]" >&2
     exit 2
 fi
 ref=${1:-$(git rev-parse HEAD)}
@@ -74,7 +78,16 @@ run=
 status=
 conclusion=
 
-if [[ $ref =~ ^[0-9]{1,12}$ ]]; then
+if [[ $ref =~ ^[0-9]{1,6}$ ]]; then
+    # A pull request number: wait for the run of its last commit.
+    pr=$ref
+    ref=$(api "repos/$repo/pulls/$pr" | jq -r '.head.sha // empty') || ref=
+    if [[ -z $ref ]]; then
+        echo "No pull request #$pr in $repo." >&2
+        exit 2
+    fi
+    echo "pull request #$pr: commit $ref"
+elif [[ $ref =~ ^[0-9]{7,}$ ]]; then
     run=$ref
 fi
 

@@ -9,7 +9,11 @@
 #
 #     scripts/ci-errori.sh              # the run of the commit you are on
 #     scripts/ci-errori.sh <sha>        # the run of that commit
+#     scripts/ci-errori.sh <pr number>  # the run of the last commit of that pull request
 #     scripts/ci-errori.sh <run id>     # that run
+#
+# A number of up to 6 digits is a pull request, a longer one a run id (run ids
+# have 10 digits and more).
 #
 # Needs jq, and either gh or curl (the repository is public, so curl works
 # without a token; set GITHUB_TOKEN to raise the anonymous limit of 60
@@ -62,12 +66,23 @@ annotations() {
 }
 
 if (( $# > 1 )); then
-    echo "usage: ci-errori.sh [commit sha | run id]" >&2
+    echo "usage: ci-errori.sh [commit sha | pull request number | run id]" >&2
     exit 2
 fi
 ref=${1:-$(git rev-parse HEAD)}
 
-if [[ $ref =~ ^[0-9]{1,12}$ ]]; then
+if [[ $ref =~ ^[0-9]{1,6}$ ]]; then
+    # A pull request number: its last commit.
+    pr=$ref
+    ref=$(api "repos/$repo/pulls/$pr" | jq -r '.head.sha // empty')
+    if [[ -z $ref ]]; then
+        echo "No pull request #$pr in $repo." >&2
+        exit 2
+    fi
+    echo "pull request #$pr: commit $ref"
+fi
+
+if [[ $ref =~ ^[0-9]{7,}$ ]]; then
     run=$ref
 else
     # The newest run of the commit; several appear after a re-run.
