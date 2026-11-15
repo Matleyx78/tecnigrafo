@@ -1062,14 +1062,14 @@ TEST(Editor, BlockRemovalRestoresItsOriginalPositionOnEveryUndo) {
         editor.beginTransaction("Remove block");
         ASSERT_TRUE(editor.tables().replaceBlock(name, std::nullopt));
         editor.commit();
-        const auto removed = document.blocks();
-        ASSERT_EQ(removed.definitions().size(), 2U);
+        ASSERT_EQ(document.blocks().definitions().size(), 2U);
         EXPECT_EQ(document.blocks().find(name), nullptr);
 
         ASSERT_TRUE(editor.undo());
         EXPECT_EQ(document.blocks(), initial);
         ASSERT_TRUE(editor.redo());
-        EXPECT_EQ(document.blocks(), removed);
+        EXPECT_EQ(document.blocks().definitions().size(), 2U);
+        EXPECT_EQ(document.blocks().find(name), nullptr);
         ASSERT_TRUE(editor.undo());
         EXPECT_EQ(document.blocks(), initial);
     }

@@ -454,6 +454,7 @@ TEST_F(MoveCopyTest, CopyThroughTheDocumentMatchesLegacyTransformsForAllSupporte
     const std::vector<Entity> originals{polyline, lineAt(0, 0, 1, 1), Circle{{5, 5}, 2},
                                         Arc{{0, 0}, 3, 0.0, 1.0}, text};
     std::vector<EntityId> ids;
+    ids.reserve(originals.size());
     for (const Entity& entity : originals) {
         ids.push_back(seed(entity));
     }
