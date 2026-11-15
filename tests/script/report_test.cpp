@@ -65,6 +65,18 @@ TEST(WriteEntity, Line) {
     EXPECT_EQ(dxfType(line), "LINE");
 }
 
+TEST(WriteEntity, PolylineLinetypeGenerationAppearsOnlyWhenEnabled) {
+    core::Polyline polyline;
+    polyline.addVertex({0, 0});
+    polyline.addVertex({10, 0});
+    EXPECT_EQ(written(polyline), "LWPOLYLINE closed=no vertex=0,0 vertex=10,0");
+    polyline.setContinuousLinetype(true);
+    const std::string expected =
+        "LWPOLYLINE closed=no linetype-generation=yes vertex=0,0 vertex=10,0";
+    EXPECT_EQ(written(polyline), expected);
+    EXPECT_EQ(read(expected), core::Entity{polyline});
+}
+
 TEST(WriteEntity, Circle) {
     const core::Entity circle = core::Circle{{5.0, 5.0}, 7.0710678118654755};
     EXPECT_EQ(written(circle), "CIRCLE center=5,5 radius=7.0710678118654755");

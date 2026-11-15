@@ -80,6 +80,9 @@ std::string_view onOff(bool value) {
 void writePolyline(const core::Polyline& polyline, std::string& out) {
     out += "LWPOLYLINE closed=";
     out += yesNo(polyline.isClosed());
+    if (polyline.continuousLinetype()) {
+        out += " linetype-generation=yes";
+    }
     if (polyline.constantWidth() != 0.0) {
         out += " width=";
         out += formatNumber(polyline.constantWidth());
