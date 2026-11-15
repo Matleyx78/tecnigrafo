@@ -40,6 +40,7 @@ add_executable(tg_tests
     cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/offset_command_test.cpp
+    cmd/pedit_command_test.cpp
     cmd/pline_command_test.cpp
     cmd/property_commands_test.cpp
     cmd/quick_select_test.cpp
@@ -133,11 +134,12 @@ target_compile_definitions(tg_tests PRIVATE
     TG_SCRIPT_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/script-output"
     TG_IO_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/io-output"
     TG_IO_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/io/dati")
-# The ZIP container is internal to io (io/src/zip.hpp), and the lineweights and
-# linetypes on the screen to render (render/src/linework.hpp); their tests
-# reach them here.
+# The ZIP container is internal to io (io/src/zip.hpp), the lineweights and
+# linetypes on the screen to render (render/src/linework.hpp), and the lines
+# of the entity types of stage 0.8 to script
+# (script/src/new_entities_format.hpp); their tests reach them here.
 target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src"
-    "${PROJECT_SOURCE_DIR}/render/src")
+    "${PROJECT_SOURCE_DIR}/render/src" "${PROJECT_SOURCE_DIR}/script/src")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)

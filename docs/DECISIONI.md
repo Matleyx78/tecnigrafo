@@ -1908,6 +1908,20 @@ i rimandi ai documenti che cambia.
   `tests/script/questions_test.cpp`), come file comuni. Scartati l'aggiunta
   dei campi in `core` da parte di PT9, in anticipo sulle interfacce di quei
   pacchetti, e un pacchetto nuovo dopo PT11, PT16 e PT22.
+- **2026-11-15 — Solo indirizzi noreply nei commit.** Alcuni commit scritti da
+  agenti in sessioni cloud portavano come autore l'indirizzo personale del
+  responsabile, preso dall'account dello strumento e non dalla configurazione
+  del repository; lo squash and merge di GitHub lo ha copiato in una riga
+  `Co-authored-by` del commit su `main`, dove resta pubblico. Il responsabile
+  decide: autore, committer e righe `Co-authored-by` di ogni commit usano solo
+  indirizzi noreply, e ogni agente controlla `git config user.email` prima del
+  primo commit ([AGENTS.md](../AGENTS.md), "Commit e pull request"). La regola
+  non basta da sola, perché nessuno la legge mentre lo strumento firma: il
+  pacchetto fuori tappa
+  [F10](tappe/fuori-tappa/F10-indirizzi-dei-commit.md) aggiunge alla CI un
+  controllo che fa fallire una pull request con un commit firmato da un
+  indirizzo diverso. Scartata la riscrittura della storia di `main`: romperebbe
+  i rami e le pull request aperti.
 - **2026-11-15 — Test di PT8 con un inserimento vero in PT16.** Nel primo
   giro di revisione di PT8 ([#779](https://github.com/Matleyx78/tecnigrafo/pull/779))
   la scheda chiede due test con un inserimento, che passi da `core::generate`

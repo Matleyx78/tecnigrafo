@@ -3,8 +3,11 @@
 
 #include "tg/script/report.hpp"
 
+#include "new_entities_format.hpp"
 #include "text.hpp"
 #include "tg/core/color.hpp"
+#include "tg/core/effective_properties.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
@@ -80,6 +83,9 @@ std::string_view onOff(bool value) {
 void writePolyline(const core::Polyline& polyline, std::string& out) {
     out += "LWPOLYLINE closed=";
     out += yesNo(polyline.isClosed());
+    if (polyline.continuousLinetype()) {
+        out += " linetype-generation=yes";
+    }
     if (polyline.constantWidth() != 0.0) {
         out += " width=";
         out += formatNumber(polyline.constantWidth());
@@ -130,77 +136,9 @@ void writeArc(const core::Arc& arc, std::string& out) {
     out += formatNumber(core::radiansToDegrees(arc.endAngle));
 }
 
-std::string_view textHorizontalName(core::TextHorizontal horizontal) {
-    switch (horizontal) {
-        case core::TextHorizontal::Left:
-            return "left";
-        case core::TextHorizontal::Center:
-            return "center";
-        case core::TextHorizontal::Right:
-            return "right";
-        case core::TextHorizontal::Aligned:
-            return "aligned";
-        case core::TextHorizontal::Middle:
-            return "middle";
-        case core::TextHorizontal::Fit:
-            return "fit";
-    }
-    return "unknown";
-}
-
-std::string_view textVerticalName(core::TextVertical vertical) {
-    switch (vertical) {
-        case core::TextVertical::Baseline:
-            return "baseline";
-        case core::TextVertical::Bottom:
-            return "bottom";
-        case core::TextVertical::Middle:
-            return "middle";
-        case core::TextVertical::Top:
-            return "top";
-    }
-    return "unknown";
-}
-
-/// The corners of the text box, as points separated by ';'.
-std::string textBoxText(const core::Text& text) {
-    std::string out;
-    for (const core::Vec2& corner : core::textBox(text)) {
-        if (!out.empty()) {
-            out += ';';
-        }
-        out += formatPoint(corner);
-    }
-    return out;
-}
-
 void writeText(const core::Text& text, std::string& out) {
-    // Every property, in the order of docs/verifica/rapporto.md; angles in
-    // degrees, as in DXF groups 50 and 51.
-    out += "TEXT position=";
-    out += formatPoint(text.position);
-    out += " alignment-point=";
-    out += formatPoint(text.alignmentPoint);
-    out += " height=";
-    out += formatNumber(text.height);
-    out += " rotation=";
-    out += formatNumber(core::radiansToDegrees(text.rotation));
-    out += " width-factor=";
-    out += formatNumber(text.widthFactor);
-    out += " oblique=";
-    out += formatNumber(core::radiansToDegrees(text.obliqueAngle));
-    out += " style=";
-    out += quoteText(text.style);
-    out += " mirror-x=";
-    out += yesNo(text.mirroredX);
-    out += " mirror-y=";
-    out += yesNo(text.mirroredY);
-    out += " horizontal=";
-    out += textHorizontalName(text.horizontal);
-    out += " vertical=";
-    out += textVerticalName(text.vertical);
-    out += " value=";
-    out += quoteText(text.value);
+    out += "TEXT ";
+    detail::writeTextProperties(text, out);
 }
 
 /// The value of the first placement group with `code`, if it is a number.
@@ -245,7 +183,8 @@ void writePlacementProperties(const core::Entity& entity, const core::EntityExtr
                 writePlacementNumber(extras, 30, "z", out);
                 writePlacementNumber(extras, 31, "alignment-z", out);
             },
-            // The types of the 0.8: their package writes them (docs/tappe/0.8/PT9).
+            // The types of the 0.8 have no quota in docs/verifica/rapporto.md:
+            // only thickness and extrusion.
             [](const core::Solid& /*solid*/) {},
             [](const core::Ellipse& /*ellipse*/) {},
             [](const core::MText& /*mtext*/) {},
@@ -354,27 +293,29 @@ void writeTables(const core::Document& document, std::string& out) {
     }
 }
 
-/// The derived properties (names starting with '~'), last on the line.
+/// The derived properties (names starting with '~'), last on the line,
+/// but those that need the generated geometry (writeGeneratedDerived()).
 void writeDerived(const core::Entity& entity, std::string& out) {
     if (const auto* text = std::get_if<core::Text>(&entity)) {
-        out += " ~box=";
-        out += textBoxText(*text);
+        detail::writeTextBox(*text, out);
+    } else {
+        detail::writeNewDerived(entity, out);
     }
 }
 
 /// The type and the properties of the model, without the derived ones.
 void writeModel(const core::Entity& entity, std::string& out) {
-    std::visit(Overloaded{
-                   [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
-                   [&out](const core::Line& line) { writeLine(line, out); },
-                   [&out](const core::Circle& circle) { writeCircle(circle, out); },
-                   [&out](const core::Arc& arc) { writeArc(arc, out); },
-                   [&out](const core::Text& text) { writeText(text, out); },
-                   // The types of the 0.8: only the DXF type until their
-                   // fields are written (docs/tappe/0.8/PT9).
-                   [&out, &entity](const auto& /*composite*/) { out += dxfType(entity); },
-               },
-               entity);
+    std::visit(
+        Overloaded{
+            [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
+            [&out](const core::Line& line) { writeLine(line, out); },
+            [&out](const core::Circle& circle) { writeCircle(circle, out); },
+            [&out](const core::Arc& arc) { writeArc(arc, out); },
+            [&out](const core::Text& text) { writeText(text, out); },
+            // The types of the 0.8 (docs/verifica/rapporto.md, "Tappa 0.8").
+            [&out, &entity](const auto& /*composite*/) { detail::writeNewEntity(entity, out); },
+        },
+        entity);
 }
 
 std::string selectionText(const cmd::SelectionSet& selection) {
@@ -434,21 +375,21 @@ std::string snapPointText(const std::optional<core::SnapPoint>& snap) {
     return std::string{snapKindName(snap->kind)} + " " + formatPoint(snap->point);
 }
 
-void writeEntities(const core::Document& document, std::string& out) {
+/// Every record of the document, for entityLines() and statisticsLines().
+std::vector<const core::EntityRecord*> documentRecords(const core::Document& document) {
     std::vector<const core::EntityRecord*> records;
     records.reserve(document.entityCount());
     for (const core::EntityRecord& record : document.entities()) {
         records.push_back(&record);
     }
-    // The document keeps the drawing order, which undo and redo change:
-    // the report lists entities by identifier (docs/adr/0011, point 5).
-    std::ranges::sort(records, {},
-                      [](const core::EntityRecord* record) { return record->id.value; });
+    return records;
+}
+
+void writeEntities(const core::Document& document, std::string& out) {
     appendLine("entities:", out);
-    for (const core::EntityRecord* record : records) {
-        std::string line = std::to_string(record->id.value) + " ";
-        writeEntity(*record, document, line);
-        appendItem(line, out);
+    for (const detail::EntityLine& line :
+         detail::entityLines(documentRecords(document), document)) {
+        appendItem(line.text, out);
     }
 }
 
@@ -505,17 +446,143 @@ void writeDrawing(const ReportInput& input, std::string& out) {
 }
 
 void writeStatistics(const core::Document& document, std::string& out) {
-    std::map<std::string_view, std::size_t> counts;  // sorted by type name
-    for (const core::EntityRecord& record : document.entities()) {
-        ++counts[dxfType(record.entity)];
-    }
     appendLine("statistics:", out);
-    for (const auto& [type, count] : counts) {
-        appendItem(std::string{type} + " " + std::to_string(count), out);
+    for (const std::string& item : detail::statisticsLines(documentRecords(document))) {
+        appendItem(item, out);
+    }
+}
+
+/// The colour, linetype, linetype scale and lineweight of `properties` as
+/// the question `effective` writes them (docs/verifica/domande.md), and
+/// locked=yes for an entity on a locked layer.
+std::vector<std::string> effectiveTexts(const core::EffectiveProperties& properties) {
+    std::vector<std::string> texts{
+        "color=" + core::formatColor(core::Color::fromRgb(properties.color)),
+        "linetype=" + quoteText(properties.linetype->name),
+        "ltscale=" + formatNumber(properties.linetypeScale),
+        "lineweight=" + core::formatLineweight(properties.lineweight)};
+    if (properties.locked) {
+        texts.emplace_back("locked=yes");
+    }
+    return texts;
+}
+
+/// The effective properties of an entity with the default properties in a
+/// new session: those that the question `generated` leaves out.
+const std::vector<std::string>& defaultEffectiveTexts() {
+    static const std::vector<std::string> kDefaults = [] {
+        const core::Document document = core::Document::newDrawing();
+        core::EntityRecord record{core::EntityId{}, core::Line{}};
+        record.properties.layer = document.layerZero();
+        record.properties.linetype = document.byLayerLinetype();
+        return effectiveTexts(core::effectiveProperties(document, record));
+    }();
+    return kDefaults;
+}
+
+/// The six coefficients of `transform` (transform2d.hpp), "a,b,c,d,e,f".
+std::string affineText(const core::Transform2D& transform) {
+    const core::Vec2 x = transform.applyToVector({1.0, 0.0});
+    const core::Vec2 y = transform.applyToVector({0.0, 1.0});
+    const core::Vec2 offset = transform.apply({0.0, 0.0});
+    return formatNumber(x.x) + ',' + formatNumber(x.y) + ',' + formatNumber(y.x) + ',' +
+           formatNumber(y.y) + ',' + formatNumber(offset.x) + ',' + formatNumber(offset.y);
+}
+
+/// A filled region of the generated geometry: "REGION loop=polyline
+/// vertex=… bulge=…", one loop= per loop, as the boundary paths of HATCH.
+void writeRegion(const core::FilledRegion& region, std::string& out) {
+    out += "REGION";
+    for (const core::Polyline& loop : region.loops) {
+        out += " loop=polyline";
+        for (const core::PolylineVertex& vertex : loop.vertices()) {
+            out += " vertex=";
+            out += formatPoint(vertex.position);
+            if (vertex.bulge != 0.0) {
+                out += " bulge=";
+                out += formatNumber(vertex.bulge);
+            }
+        }
     }
 }
 
 }  // namespace
+
+void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& out) {
+    const std::optional<core::Entity> entity = core::shapeEntity(item.shape);
+    const auto* region = std::get_if<core::FilledRegion>(&item.shape);
+    if (entity) {
+        writeModel(*entity, out);
+    } else if (region != nullptr) {
+        writeRegion(*region, out);
+    }
+    const std::vector<std::string>& defaults = defaultEffectiveTexts();
+    for (const std::string& text : effectiveTexts(item.properties)) {
+        if (std::ranges::find(defaults, text) == defaults.end()) {
+            out += ' ';
+            out += text;
+        }
+    }
+    if (entity) {
+        writeDerived(*entity, out);
+    } else if (region != nullptr) {
+        // The identity is the default of Transform2D: exact on purpose, a
+        // map computed to be the identity writes its coefficients.
+        const std::string affine = affineText(region->transform);
+        if (affine != affineText(core::Transform2D::identity())) {
+            out += " ~affine=";
+            out += affine;
+        }
+    }
+}
+
+std::vector<detail::EntityLine> detail::entityLines(
+    std::span<const core::EntityRecord* const> records, const core::Document& document) {
+    std::vector<EntityLine> lines;
+    lines.reserve(records.size());
+    for (const core::EntityRecord* record : records) {
+        std::string line = std::to_string(record->id.value) + " ";
+        writeEntity(*record, document, line);
+        lines.push_back(EntityLine{record->id.value, std::move(line)});
+        const auto* insert = std::get_if<core::Insert>(&record->entity);
+        if (insert == nullptr) {
+            continue;
+        }
+        // The ATTRIB are entities of the DXF, with their own identifier and
+        // properties (docs/verifica/rapporto.md, "Tappa 0.8"); their quotas
+        // are those of a TEXT.
+        for (const core::Attribute& attribute : insert->attributes) {
+            std::string text = std::to_string(attribute.id.value) + " ";
+            writeAttribute(attribute, record->id, text);
+            writePlacementProperties(core::Entity{attribute.text}, attribute.extras, text);
+            writeProperties(attribute.properties, document, text);
+            writeTextBox(attribute.text, text);
+            lines.push_back(EntityLine{attribute.id.value, std::move(text)});
+        }
+    }
+    // The document keeps the drawing order, which undo and redo change:
+    // the report lists entities by identifier (docs/adr/0011, point 5).
+    std::ranges::stable_sort(lines, {}, &EntityLine::id);
+    return lines;
+}
+
+std::vector<std::string> detail::statisticsLines(
+    std::span<const core::EntityRecord* const> records) {
+    std::map<std::string_view, std::size_t> counts;  // sorted by type name
+    for (const core::EntityRecord* record : records) {
+        ++counts[dxfType(record->entity)];
+        if (const auto* insert = std::get_if<core::Insert>(&record->entity);
+            insert != nullptr && !insert->attributes.empty()) {
+            counts["ATTRIB"] += insert->attributes.size();
+        }
+    }
+    std::vector<std::string> lines;
+    lines.reserve(counts.size());
+    for (const auto& [type, count] : counts) {
+        lines.push_back(std::string{type} + " " + std::to_string(count));
+    }
+    return lines;
+}
 
 void writeState(const ReportInput& input, std::string& out) {
     const cmd::CommandRunner& runner = input.runner;
@@ -531,8 +598,11 @@ void writeState(const ReportInput& input, std::string& out) {
     appendField("prompt", runner.promptText(), out);
     appendLine("preview:", out);
     for (const core::Entity& entity : runner.preview()) {
+        // The document gives the derived properties of the generated
+        // geometry (~lines of an MTEXT, ~text of a DIMENSION).
         std::string line;
         writeEntity(entity, line);
+        detail::writeGeneratedDerived(document, core::EntityRecord{core::EntityId{}, entity}, line);
         appendItem(line, out);
     }
     appendField("selection", selectionText(runner.selection()), out);
@@ -588,6 +658,7 @@ void writeEntity(const core::EntityRecord& record, const core::Document& documen
     writePlacementProperties(record.entity, record.extras, out);
     writeProperties(record.properties, document, out);
     writeDerived(record.entity, out);
+    detail::writeGeneratedDerived(document, record, out);
 }
 
 std::vector<std::string> layerLines(const core::Document& document) {

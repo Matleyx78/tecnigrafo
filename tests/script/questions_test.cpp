@@ -112,10 +112,19 @@ TEST(Questions, PrefixStopsAtChangesWithAndRejectsMalformedLinesAboveIt) {
 }
 
 TEST(Questions, PrefixStopsAtUnimplementedDefinitionsWhenAvailable) {
-    // The current catalogue has no planned entity definitions. Keep the
-    // frontier contract covered when a future package announces one.
-    for (const std::string_view type : {"ELLIPSE", "SPLINE", "HATCH", "INSERT"}) {
-        const std::string definition = "B = " + std::string{type} + "\n";
+    // A valid definition of a type of the 0.8 whose package is not merged
+    // yet (docs/tappe/0.8/PT9, point 5). Keep the frontier contract covered
+    // while one of them is still refused.
+    for (const std::string_view entity : {
+             "SOLID vertex=0,0 vertex=1,0 vertex=0,1 vertex=1,1",
+             "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5",
+             R"(MTEXT insertion=0,0 value="A")",
+             R"(ATTDEF position=0,0 value="N" tag="T")",
+             R"(INSERT block="B" insertion=0,0)",
+             "DIMENSION kind=radius center=0,0 point=1,0 text-point=1,0 measurement=1",
+             R"(HATCH pattern="SOLID" solid=yes)",
+         }) {
+        const std::string definition = "B = " + std::string{entity} + "\n";
         const auto whole = answerQuestions(definition);
         const auto* error = std::get_if<ParseError>(&whole);
         if (error == nullptr || !error->notImplemented) {
@@ -711,6 +720,84 @@ TEST(Questions, PolylineQuestionsRejectWrongArguments) {
         EXPECT_EQ(error.line, 4) << question;
         EXPECT_FALSE(error.message.empty()) << question;
         EXPECT_FALSE(error.notImplemented) << question;
+    }
+}
+
+TEST(Questions, TypesOfStageEightAreNotSupportedUntilTheirPackage) {
+    // docs/tappe/0.8/PT9, point 5: the case is not passed, it is not invalid.
+    for (const std::string_view entity : {
+             "SOLID vertex=0,0 vertex=1,0 vertex=0,1 vertex=1,1",
+             "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5",
+             R"(MTEXT insertion=0,0 value="A")",
+             R"(ATTDEF position=0,0 value="N" tag="T")",
+             R"(INSERT block="B" insertion=0,0)",
+             "DIMENSION kind=radius center=0,0 point=1,0 text-point=1,0 measurement=1",
+             R"(HATCH pattern="SOLID" solid=yes)",
+         }) {
+        const std::string text = "A = " + std::string{entity} + "\n";
+        const auto whole = answerQuestions(text);
+        const auto* error = std::get_if<ParseError>(&whole);
+        if (error == nullptr) {
+            continue;  // its package is merged
+        }
+        const std::string type{entity.substr(0, entity.find(' '))};
+        EXPECT_EQ(error->line, 1) << entity;
+        EXPECT_EQ(error->message, type + " is not supported yet.");
+        EXPECT_TRUE(error->notImplemented) << entity;
+    }
+    // A line with an error is an error of the file, supported or not.
+    const ParseError error = failure("A = SOLID vertex=0,0\n");
+    EXPECT_FALSE(error.notImplemented);
+    EXPECT_EQ(error.message, "a SOLID has four vertices");
+}
+
+TEST(Questions, GeneratedOfAnEntityOfBeforeTheStageIsTheEntityItself) {
+    const std::vector<Answer> list = answers(
+        "L = LINE start=0,0 end=10,0\n"
+        "? generated L -> LINE start=0,0 end=10,0\n"
+        "C = CIRCLE center=1,2 radius=3 color=1\n"
+        "? generated C -> CIRCLE center=1,2 radius=3 color=255,0,0\n"
+        "P = LWPOLYLINE closed=yes vertex=0,0 bulge=1 vertex=10,0\n"
+        "? generated P -> LWPOLYLINE closed=yes vertex=0,0 bulge=1 vertex=10,0\n"
+        "Z = LAYER name=\"Spento\" off\n"
+        "H = LINE start=0,0 end=1,0 layer=\"Spento\"\n"
+        "? generated H -> none\n"
+        "K = LAYER name=\"Bloccato\" locked\n"
+        "B = ARC center=0,0 radius=1 start-angle=0 end-angle=90 layer=\"Bloccato\"\n"
+        "? generated B -> ARC center=0,0 radius=1 start-angle=0 end-angle=90 locked=yes\n");
+    ASSERT_EQ(list.size(), 5U);
+    for (const Answer& answer : list) {
+        EXPECT_TRUE(answer.matches) << "line " << answer.line << ": " << answer.actual;
+    }
+}
+
+TEST(Questions, GeneratedComparesTheShapesInOrder) {
+    const std::vector<Answer> list = answers(
+        "L = LINE start=0,0 end=10,0\n"
+        "? generated L -> LINE start=10,0 end=0,0\n"
+        "? generated L -> none\n");
+    ASSERT_EQ(list.size(), 2U);
+    EXPECT_FALSE(list[0].matches);
+    EXPECT_FALSE(list[1].matches);
+    EXPECT_EQ(list[0].actual, "LINE start=0,0 end=10,0");
+}
+
+TEST(Questions, GeneratedRejectsWrongArguments) {
+    for (const std::string_view question : {"generated", "generated L L", "generated X"}) {
+        const std::string text =
+            "L = LINE start=0,0 end=10,0\n? " + std::string{question} + " -> none\n";
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 2) << question;
+        EXPECT_FALSE(error.notImplemented) << question;
+    }
+}
+
+TEST(Questions, BlockDirectivesAreInvalidUntilTheirPackage) {
+    // !block and !endblock are realized by PT16 (docs/verifica/domande.md).
+    for (const std::string_view line : {"!block \"TG_EL\" base=0,0", "!endblock"}) {
+        const ParseError error = failure(std::string{line} + "\n");
+        EXPECT_EQ(error.line, 1) << line;
+        EXPECT_FALSE(error.notImplemented) << line;
     }
 }
 
