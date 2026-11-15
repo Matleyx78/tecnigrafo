@@ -1,0 +1,12 @@
+; ELLIPSE: opzione Center, anche minuscola e con asse obliquo (autocad-ellissi, c e j)
+ELLIPSE
+C
+150,0
+170,0
+8
+!report
+ELLIPSE
+c
+10,-145
+25,-137
+6
