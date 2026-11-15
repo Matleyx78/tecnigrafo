@@ -11,6 +11,7 @@
 #include <QFontDatabase>
 #include <QGlyphRun>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPen>
 #include <QRawFont>
 #include <QResource>
@@ -90,6 +91,34 @@ void QtPainter::fillPolygon(std::span<const core::Vec2> points, const render::Co
     m_painter.setBrush(QBrush(toQColor(color), Qt::SolidPattern));
     m_painter.setRenderHint(QPainter::Antialiasing, true);
     m_painter.drawPolygon(m_buffer);
+    m_painter.restore();
+}
+
+void QtPainter::fillLoops(std::span<const std::vector<core::Vec2>> loops,
+                          const render::Color& color) {
+    QPainterPath path;
+    path.setFillRule(Qt::OddEvenFill);
+    for (const std::vector<core::Vec2>& loop : loops) {
+        if (loop.size() < 3) {
+            continue;
+        }
+        m_buffer.clear();
+        m_buffer.reserve(static_cast<qsizetype>(loop.size()));
+        for (const core::Vec2& point : loop) {
+            m_buffer.append(QPointF(point.x, point.y));
+        }
+        path.addPolygon(m_buffer);
+        path.closeSubpath();
+    }
+    if (path.isEmpty()) {
+        return;
+    }
+    // As fillPolygon: no outline, and the pen of the next calls is untouched.
+    m_painter.save();
+    m_painter.setPen(Qt::NoPen);
+    m_painter.setBrush(QBrush(toQColor(color), Qt::SolidPattern));
+    m_painter.setRenderHint(QPainter::Antialiasing, true);
+    m_painter.drawPath(path);
     m_painter.restore();
 }
 
