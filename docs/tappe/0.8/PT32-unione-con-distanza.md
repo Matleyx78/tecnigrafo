@@ -87,8 +87,12 @@
      `consumed` è nell'ordine di aggancio.
    - Se dopo un'unione l'estremità libera della polilinea coincide con l'altra
      (secondo `rule`), la polilinea diventa chiusa e l'unione finisce.
-4. Le polilinee chiuse fra gli `others` non si uniscono; neanche quelle con
-   quota diversa dalla sorgente.
+4. Le polilinee chiuse fra gli `others` non si uniscono. La quota non arriva
+   a `joinWithGaps`, che riceve solo le `Entity` (sta negli `EntityExtras`,
+   gruppo 38), né alle domande: le polilinee con quota diversa dalla sorgente
+   le toglie il comando `PEDIT`, e la regola si verifica lì
+   ([PT33](PT33-comando-pedit.md), punto 6; [DECISIONI.md](../../DECISIONI.md),
+   2026-11-15, «Quota delle polilinee unite verificata in PT33»).
 5. **Le domande.** Le tre domande della sezione «Polilinee (tappa 0.8)» di
    [domande.md](../../verifica/domande.md), annunciate da
    [F9](../fuori-tappa/F9-domande-pedit.md) (decisione del 2026-11-15,

@@ -52,6 +52,13 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
    polilinea con handle nuovo e i dati dell'origine; la polilinea che si unisce
    resta la stessa entità; gli oggetti usati si cancellano. Tutto il comando è
    un passo (`Pedit`).
+6. **Quota.** In *Join*, anche in *Multiple*, le polilinee con quota (gruppo
+   38 negli `EntityExtras`) diversa da quella della polilinea che si unisce non
+   si passano a `joinWithGaps`; una quota che manca vale 0, quindi la regola
+   vale nei due versi (sorgente con quota e oggetto senza, e il contrario). Gli
+   indici di `consumed` si riportano agli oggetti scelti. La regola era in PT32,
+   punto 4, ma lì la quota non arriva ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-15, «Quota delle polilinee unite verificata in PT33»).
 
 ## Regole della tappa che valgono qui
 
@@ -62,7 +69,11 @@ Richieste e messaggi dalla cronologia di AutoCAD LT; quelle attese:
 
 - `pedit_command_test.cpp`: conversione con `PEDITACCEPT` 0 e 1; *Close*,
   *Open*, *Reverse*, *Ltype gen*; *Undo* dopo due opzioni; *Join* con distanza
-  0; *Multiple* con distanza 2 e i tre tipi; `U` dopo il comando.
+  0; *Multiple* con distanza 2 e i tre tipi; `U` dopo il comando; *Join* con
+  `fuzz` 0 di `BASE = (0,0)→(1,0)` e `HIGH = (1,0)→(2,0)` a quota 1: `HIGH`
+  non si unisce (`0 segments added to polyline`, o il messaggio di AutoCAD) e
+  resta nel disegno; lo stesso con `BASE` a quota 1 e `HIGH` senza quota; con
+  le due a quota 1, `HIGH` si unisce.
 
 ## Fatto quando
 

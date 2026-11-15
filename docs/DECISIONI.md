@@ -1860,3 +1860,31 @@ i rimandi ai documenti che cambia.
   avrebbe lasciato PT32 senza riferimenti scritti prima del lavoro.
   [verifica/domande.md](verifica/domande.md), «Polilinee (tappa 0.8)»;
   [PT32](tappe/0.8/PT32-unione-con-distanza.md), punto 5.
+- **2026-11-15 — Quota delle polilinee unite verificata in PT33.** Claude si
+  ferma su PT32 ([#725](https://github.com/Matleyx78/tecnigrafo/issues/725)):
+  la regola «neanche le polilinee con quota diversa dalla sorgente» (PT32,
+  punto 4) chiede un dato che non arriva né a `joinWithGaps`, che riceve solo
+  le `Entity`, né alle domande, perché il lettore delle definizioni scarta
+  `elevation=`. Il responsabile sceglie, nella
+  [#724](https://github.com/Matleyx78/tecnigrafo/issues/724), di togliere la
+  quota dal caso `pedit-modello/limiti` di RT32
+  ([#775](https://github.com/Matleyx78/tecnigrafo/pull/775)) e di verificarla
+  nel comando `PEDIT`, che vede gli `EntityExtras`: la regola passa a
+  [PT33](tappe/0.8/PT33-comando-pedit.md) (punto 6 e un test), esce da PT32
+  e dalla domanda `pedit-join` di [verifica/domande.md](verifica/domande.md).
+  Scartati il lettore che conserva la quota e un parametro in più di
+  `joinWithGaps`.
+- **2026-11-15 — Correzioni della catena dopo il secondo pilota.** Dal pilota
+  RT32 → PT32 il responsabile corregge [agenti/catena.md](agenti/catena.md):
+  il revisore non aspetta la CI, perché la catena gli passa la pull request
+  solo a CI finita; quando un caso di riferimento già unito si rivela
+  sbagliato, la riga da copiare dice di riaprire la issue dei riferimenti e di
+  scrivere lì, e la pull request di correzione porta `Closes` di quella issue
+  oltre a `Avvia dopo il merge`, altrimenti il pacchetto resta ad aspettarla;
+  se chi si ferma propone una correzione concreta (un dato, un valore), la
+  riga da copiare la contiene già scritta, perché chi corregge applichi il
+  dato esatto invece di interpretarlo (la decisione per la #775 diceva solo
+  «spostando PAR più lontano»); chi corregge un caso lo ricontrolla con la
+  scheda, passi seguenti compresi,
+  prima di aprire la pull request (nella #775 lo spostamento dell'estremo
+  sbagliato di `PAR` ha lasciato il caso `ordine-conteggi` com'era).
