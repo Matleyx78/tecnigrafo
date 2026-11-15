@@ -634,5 +634,85 @@ TEST(Questions, ObtainedFileHasTheActualAnswers) {
               "? text-width \"a -> b\" -> 3.757274662881476\n");
 }
 
+/// The one answer of `text`, which must match.
+void expectMatch(const std::string& text) {
+    const std::vector<Answer> list = answers(text);
+    ASSERT_EQ(list.size(), 1U) << text;
+    EXPECT_TRUE(list[0].matches) << text << "\n  obtained: " << list[0].actual;
+}
+
+TEST(Questions, ToPolylineAndReverseAnswerWithThePolyline) {
+    const std::string defined =
+        "L = LINE start=-2,3 end=4,7\n"
+        "A = ARC center=0,0 radius=10 start-angle=0 end-angle=90\n"
+        "P = LWPOLYLINE vertex=0,0 bulge=0.5 start-width=1 end-width=2 vertex=10,0 bulge=0.25\n";
+    expectMatch(defined + "? to-polyline L -> LWPOLYLINE closed=no vertex=-2,3 vertex=4,7\n");
+    expectMatch(defined +
+                "? to-polyline A -> LWPOLYLINE closed=no vertex=10,0 "
+                "bulge=0.41421356237309503 vertex=0,10\n");
+    expectMatch(defined +
+                "? reverse P -> LWPOLYLINE closed=no vertex=10,0 bulge=-0.5 start-width=2 "
+                "end-width=1 vertex=0,0 bulge=0.25\n");
+}
+
+// The example of the catalogue (docs/verifica/domande.md, "Polilinee").
+TEST(Questions, PeditJoinAnswersTheExampleOfTheCatalogue) {
+    const std::string defined =
+        "S = LWPOLYLINE vertex=-4,0 vertex=0,0\n"
+        "L = LINE start=1,0 end=3,0\n";
+    expectMatch(defined + "? pedit-join S L fuzz=2 type=extend -> none\n");
+    expectMatch(defined +
+                "? pedit-join S L fuzz=2 type=both -> S LWPOLYLINE closed=no vertex=-4,0 "
+                "vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L\n");
+    expectMatch(defined +
+                "? pedit-join S L units=4 type=add fuzz=2 -> S LWPOLYLINE closed=no "
+                "vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L\n");
+}
+
+TEST(Questions, PeditJoinWithoutTypeExtends) {
+    const std::string defined =
+        "X = LWPOLYLINE vertex=0,0 vertex=1,0\n"
+        "V = LINE start=2,1 end=2,3\n";
+    expectMatch(defined +
+                "? pedit-join X V fuzz=2 -> X LWPOLYLINE closed=no vertex=0,0 vertex=2,0 "
+                "vertex=2,3 added=1 consumed=V\n");
+}
+
+TEST(Questions, PeditJoinNamesTheObjectsInTheOrderTheyAttach) {
+    // B attaches at the end first, then A at the start.
+    const std::string defined =
+        "S = LWPOLYLINE vertex=0,0 vertex=4,0\n"
+        "A = LINE start=-2,0 end=-1,0\n"
+        "B = LINE start=5,0 end=6,0\n";
+    expectMatch(defined +
+                "? pedit-join S A B fuzz=2 type=add -> S LWPOLYLINE closed=no vertex=-2,0 "
+                "vertex=-1,0 vertex=0,0 vertex=4,0 vertex=5,0 vertex=6,0 added=4 "
+                "consumed=B,A\n");
+}
+
+TEST(Questions, PolylineQuestionsRejectWrongArguments) {
+    const std::string defined =
+        "S = LWPOLYLINE vertex=0,0 vertex=1,0\n"
+        "L = LINE start=2,0 end=3,0\n"
+        "C = CIRCLE center=0,0 radius=1\n";  // lines 1-3
+    for (const std::string_view question : {
+             "to-polyline S",
+             "to-polyline C",
+             "reverse L",
+             "pedit-join L S fuzz=1",
+             "pedit-join S L",
+             "pedit-join S L fuzz=x",
+             "pedit-join S L fuzz=-1",
+             "pedit-join S L fuzz=1 type=join",
+             "pedit-join S fuzz=1",
+         }) {
+        const std::string text = defined + "? " + std::string{question} + " -> none\n";
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 4) << question;
+        EXPECT_FALSE(error.message.empty()) << question;
+        EXPECT_FALSE(error.notImplemented) << question;
+    }
+}
+
 }  // namespace
 }  // namespace tg::script

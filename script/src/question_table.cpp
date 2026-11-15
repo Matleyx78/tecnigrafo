@@ -525,6 +525,11 @@ QuestionResult askGrips(const QuestionModel& model, Arguments arguments);
 QuestionResult askGrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askTransform(const QuestionModel& model, Arguments arguments);
 
+// Defined in pedit_questions.cpp.
+QuestionResult askToPolyline(const QuestionModel& model, Arguments arguments);
+QuestionResult askReverse(const QuestionModel& model, Arguments arguments);
+QuestionResult askPeditJoin(const QuestionModel& model, Arguments arguments);
+
 // Defined in property_questions.cpp.
 QuestionResult askQuickSelect(const QuestionModel& model, Arguments arguments);
 QuestionResult askAci(const QuestionModel& model, Arguments arguments);
@@ -593,11 +598,10 @@ constexpr std::array kQuestions{
     QuestionRow{"circle-ttr", AnswerShape::Single, &askCircleTtr},                 // P19
     QuestionRow{"chamfer", AnswerShape::Single, &askChamfer},                      // P21
     QuestionRow{"join", AnswerShape::Single, &askJoin},                            // P22
-    // Stage 0.8: announced for package PT32 (F9), so that the references of
-    // RT32 are pending, not invalid, until PT32 answers them.
-    QuestionRow{"to-polyline", AnswerShape::Single, nullptr},
-    QuestionRow{"reverse", AnswerShape::Single, nullptr},
-    QuestionRow{"pedit-join", AnswerShape::Single, nullptr},
+    // Stage 0.8: polylines (pedit_questions.cpp).
+    QuestionRow{"to-polyline", AnswerShape::Single, &askToPolyline},  // PT32
+    QuestionRow{"reverse", AnswerShape::Single, &askReverse},         // PT32
+    QuestionRow{"pedit-join", AnswerShape::Single, &askPeditJoin},    // PT32
 };
 
 }  // namespace

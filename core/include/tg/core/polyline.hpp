@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include "tg/core/arc.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/vec2.hpp"
 
 #include <cstddef>
@@ -106,5 +108,27 @@ private:
     double m_constantWidth{0.0};
     bool m_continuousLinetype{false};
 };
+
+/// The line as an open polyline of one straight segment, from its start to
+/// its end (docs/adr/0050, point 2).
+[[nodiscard]] Polyline toPolyline(const Line& line);
+
+/// The arc as an open polyline of one segment, from the point of its start
+/// angle to that of its end angle, with the bulge of the arc, tan(sweep / 4),
+/// counter-clockwise and so positive (docs/adr/0050, point 2). The end points
+/// are those of solid-space, with the exact points on the axes (the arc
+/// endpoints of core's bridge to solid-space); the sweep is endAngle -
+/// startAngle, plus 2*pi when not positive, as solid-space reads an Arc.
+[[nodiscard]] Polyline toPolyline(const Arc& arc);
+
+/// The polyline run the other way (docs/adr/0050, point 3, Reverse): the
+/// vertices in the opposite order; each segment gets the bulge of the
+/// segment it runs backwards, with its sign changed, and that segment's start
+/// and end widths, swapped. A closed polyline stays closed with the same first
+/// vertex. In an open polyline the data of the last vertex (bulge and widths,
+/// which belong to no segment) go to the new last vertex unchanged, so that
+/// reversing twice gives the polyline back (docs/adr/0006). Closure, constant
+/// width and linetype generation stay.
+[[nodiscard]] Polyline reversed(const Polyline& polyline);
 
 }  // namespace tg::core

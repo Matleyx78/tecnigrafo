@@ -3,6 +3,7 @@
 
 #include "tg/core/polyline.hpp"
 
+#include "solid_space_bridge.hpp"
 #include "tg/core/math.hpp"
 
 #include <cassert>
@@ -124,6 +125,53 @@ std::vector<Vec2> Polyline::tessellate(double maxChordError) const {
         points.pop_back();  // the closing segment ends on the first point
     }
     return points;
+}
+
+Polyline toPolyline(const Line& line) {
+    return Polyline{{PolylineVertex{line.start}, PolylineVertex{line.end}}};
+}
+
+Polyline toPolyline(const Arc& arc) {
+    const auto [start, end] = bridge::arcEndpoints(arc);
+    // The sweep as bridge::curveOf gives it to solid-space.
+    double sweep = arc.endAngle - arc.startAngle;
+    if (!(sweep > 0.0)) {
+        sweep += bridge::g::kFullTurn;
+    }
+    return Polyline{{PolylineVertex{start, tg::core::tan(sweep / 4.0)}, PolylineVertex{end}}};
+}
+
+Polyline reversed(const Polyline& polyline) {
+    const auto vertices = polyline.vertices();
+    const std::size_t count = vertices.size();
+    const bool closed = polyline.isClosed();
+    std::vector<PolylineVertex> result;
+    result.reserve(count);
+    for (std::size_t j = 0; j < count; ++j) {
+        // A closed polyline keeps its first vertex: 0, n-1, ..., 1.
+        const std::size_t position = closed ? (count - j) % count : count - 1 - j;
+        PolylineVertex vertex = vertices[position];
+        if (closed || j + 1 < count) {
+            // The segment that runs from `position` here ran into it there.
+            const PolylineVertex& original =
+                vertices[closed ? (count - j - 1) % count : count - 2 - j];
+            vertex.bulge = -original.bulge;
+            vertex.startWidth = original.endWidth;
+            vertex.endWidth = original.startWidth;
+        } else {
+            // The last vertex of an open polyline keeps the data that the old
+            // last vertex had: they belong to no segment (docs/adr/0006).
+            const PolylineVertex& last = vertices[count - 1];
+            vertex.bulge = last.bulge;
+            vertex.startWidth = last.startWidth;
+            vertex.endWidth = last.endWidth;
+        }
+        result.push_back(vertex);
+    }
+    Polyline out{std::move(result), closed};
+    out.setConstantWidth(polyline.constantWidth());
+    out.setContinuousLinetype(polyline.continuousLinetype());
+    return out;
 }
 
 }  // namespace tg::core

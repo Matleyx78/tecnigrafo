@@ -1,5 +1,0 @@
-# 0.8-RT32: reference cases for gap joining and reversal, work [0.8-PT32] #725
-pedit-modello/conversione-inversione #725
-pedit-modello/limiti #725
-pedit-modello/ordine-conteggi #725
-pedit-modello/tipi-unione #725

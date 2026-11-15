@@ -162,5 +162,61 @@ TEST(Polyline, WidthsChangeNeitherLengthNorBoundingBox) {
     EXPECT_EQ(wide.tessellate(0.01), plain.tessellate(0.01));
 }
 
+TEST(Polyline, ToPolylineOfALineIsOneStraightSegment) {
+    const Polyline polyline = toPolyline(Line{{-2.0, 3.0}, {4.0, 7.0}});
+    EXPECT_EQ(polyline, (Polyline{{PolylineVertex{{-2.0, 3.0}}, PolylineVertex{{4.0, 7.0}}}}));
+}
+
+TEST(Polyline, ToPolylineOfAnArcKeepsItsEndsAndBulge) {
+    const Polyline quarter = toPolyline(Arc{{0.0, 0.0}, 10.0, 0.0, kPi / 2.0});
+    ASSERT_EQ(quarter.vertexCount(), 2U);
+    EXPECT_FALSE(quarter.isClosed());
+    EXPECT_EQ(quarter.vertices()[0].position, (Vec2{10.0, 0.0}));
+    EXPECT_EQ(quarter.vertices()[1].position, (Vec2{0.0, 10.0}));
+    EXPECT_NEAR(quarter.vertices()[0].bulge, std::sqrt(2.0) - 1.0, kEps);
+    EXPECT_EQ(quarter.vertices()[1].bulge, 0.0);
+
+    // Across angle 0: the sweep is end - start + 2*pi, counter-clockwise.
+    const Polyline across = toPolyline(Arc{{1.0, 1.0}, 2.0, 3.0 * kPi / 2.0, kPi / 2.0});
+    expectNear(across.vertices()[0].position, {1.0, -1.0});
+    expectNear(across.vertices()[1].position, {1.0, 3.0});
+    EXPECT_NEAR(across.vertices()[0].bulge, 1.0, kEps);
+}
+
+TEST(Polyline, ReversedOpenPolylineMovesBulgesAndWidthsToTheOppositeSegment) {
+    const Polyline polyline{{{{0.0, 0.0}, 0.5, 1.0, 2.0},
+                             {{10.0, 0.0}, -0.25, 3.0, 4.0},
+                             {{20.0, 0.0}, 0.75, 5.0, 6.0}}};
+    const Polyline expected{{{{20.0, 0.0}, 0.25, 4.0, 3.0},
+                             {{10.0, 0.0}, -0.5, 2.0, 1.0},
+                             {{0.0, 0.0}, 0.75, 5.0, 6.0}}};
+    EXPECT_EQ(reversed(polyline), expected);
+}
+
+TEST(Polyline, ReversedTwiceGivesBackAnOpenPolylineWithDataOnItsLastVertex) {
+    Polyline polyline{
+        {{{0.0, 0.0}, 1.0, 0.5, 1.5}, {{4.0, 0.0}, 0.0, 2.0, 2.5}, {{4.0, 4.0}, -0.5, 3.0, 3.5}}};
+    polyline.setConstantWidth(0.25);
+    polyline.setContinuousLinetype(true);
+    const Polyline once = reversed(polyline);
+    EXPECT_EQ(once.vertices().back(), (PolylineVertex{{0.0, 0.0}, -0.5, 3.0, 3.5}));
+    EXPECT_EQ(once.constantWidth(), 0.25);
+    EXPECT_TRUE(once.continuousLinetype());
+    EXPECT_EQ(reversed(once), polyline);
+}
+
+TEST(Polyline, ReversedClosedPolylineKeepsItsFirstVertex) {
+    const Polyline polyline{{{{0.0, 0.0}, 0.5, 1.0, 2.0},
+                             {{10.0, 0.0}, -0.25, 3.0, 4.0},
+                             {{10.0, 10.0}, 1.0, 5.0, 6.0}},
+                            true};
+    const Polyline expected{{{{0.0, 0.0}, -1.0, 6.0, 5.0},
+                             {{10.0, 10.0}, 0.25, 4.0, 3.0},
+                             {{10.0, 0.0}, -0.5, 2.0, 1.0}},
+                            true};
+    EXPECT_EQ(reversed(polyline), expected);
+    EXPECT_EQ(reversed(expected), polyline);
+}
+
 }  // namespace
 }  // namespace tg::core
