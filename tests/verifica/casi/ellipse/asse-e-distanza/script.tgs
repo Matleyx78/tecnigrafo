@@ -1,0 +1,10 @@
+; ELLIPSE: due estremi dell'asse e distanza; l'asse maggiore va dal centro al primo punto (autocad-ellissi, a)
+ELLIPSE
+0,0
+40,0
+10
+!report
+ELLIPSE
+0,0
+30,16
+6
