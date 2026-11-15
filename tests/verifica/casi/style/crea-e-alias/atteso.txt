@@ -1,0 +1,61 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: Note
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: times.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 0.8
+  Specify obliquing angle <0>: 15
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "Note" is now the current text style.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+redo:
+snap: on
+ortho: off
+text styles:
+  "Note" font="times.ttf" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
+text style: "Note"
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: STYLE
+  Enter name of text style or [?] <Note>: Titolo
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 5
+  Specify width factor <1.0000>: 1.2
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: Yes
+  Display text upside-down? [Yes/No] <No>: Yes
+  "Titolo" is now the current text style.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Style
+redo:
+snap: on
+ortho: off
+text styles:
+  "Note" font="times.ttf" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
+  "Titolo" font="arial.ttf" height=5 width-factor=1.2 oblique=0 backwards=yes upside-down=yes
+text style: "Titolo"
+pointer: none
+active snap: none
+statistics:
