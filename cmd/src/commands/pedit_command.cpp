@@ -395,7 +395,8 @@ Status PeditCommand::handle(CommandContext& context, const Input& input) {
                         // final vertex of an open polyline carries a bulge.
                         if (!polyline.isClosed() && polyline.vertexCount() != 0) {
                             const auto points = polyline.vertices();
-                            std::vector<core::PolylineVertex> vertices(points.begin(), points.end());
+                            std::vector<core::PolylineVertex> vertices(points.begin(),
+                                                                       points.end());
                             vertices.back().bulge = 0.0;
                             core::Polyline closed{std::move(vertices), true};
                             closed.setConstantWidth(polyline.constantWidth());
@@ -480,10 +481,11 @@ Prompt PeditCommand::prompt() const {
             return {"Enter fuzz distance or [Jointype] <0.0000>:",
                     {{"Jointype", "J"}},
                     PromptKind::Distance};
-        case Stage::Type:
-            return {
-                "Enter join type [Extend/Add/Both] <" + std::string{joinTypeName(m_joinType)} + ">:",
-                {{"Extend", "E"}, {"Add", "A"}, {"Both", "B"}}};
+        case Stage::Type: {
+            const std::string name{joinTypeName(m_joinType)};
+            return {"Enter join type [Extend/Add/Both] <" + name + ">:",
+                    {{"Extend", "E"}, {"Add", "A"}, {"Both", "B"}}};
+        }
         case Stage::Ltype:
             return {"Enter polyline linetype generation option [ON/OFF] <" +
                         std::string{m_ltype ? "On" : "Off"} + ">:",
