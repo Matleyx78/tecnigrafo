@@ -1,0 +1,45 @@
+; Crossing ties use the most recent horizontal guide, then vertical guide (PT34 point 3)
+!view 0,0 1 800x600
+LINE
+0,0
+18,18
+
+!osnap end
+!otrack on
+LINE
+-20,-20
+!hover 0,0
+!hover 18,18
+!move 9,9
+!report
+!esc
+LINE
+-20,-20
+!hover 18,18
+!hover 0,0
+!move 9,9
+!report
+!esc
+LINE
+50,0
+50,-20
+
+LINE
+14,30
+26,30
+
+LINE
+-20,-20
+!hover 50,0
+!hover 14,30
+!hover 26,30
+!move 20,5
+!report
+!esc
+LINE
+-20,-20
+!hover 50,0
+!hover 26,30
+!hover 14,30
+!move 20,5
+

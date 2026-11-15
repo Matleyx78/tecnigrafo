@@ -1,0 +1,44 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,40 end=0,60
+  258 LINE start=40,-15 end=60,-15
+  259 LINE start=40,1 end=60,1
+messages:
+  Command: LINE
+  Specify first point: 0,40
+  Specify next point or [Undo]: 0,60
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 40,-15
+  Specify next point or [Undo]: 60,-15
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 40,1
+  Specify next point or [Undo]: 60,1
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: -20,-20
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-20,-20 end=0,-15
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 1,-7.000000000000001
+active snap: none
+tracking: on
+acquired:
+  0,40
+  40,-15
+  40,1
+active tracking: Crossing 0,-15
+statistics:
+  LINE 3
