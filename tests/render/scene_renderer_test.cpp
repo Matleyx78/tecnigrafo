@@ -37,6 +37,8 @@ class RecordingPainter final : public Painter {
 public:
     std::vector<std::vector<core::Vec2>> fills;
     std::vector<Color> fillColors;
+    std::vector<std::vector<std::vector<core::Vec2>>> loopFills;  ///< every fillLoops
+    std::vector<Color> loopFillColors;
     std::vector<TextRun> runs;
     std::vector<Pen> textPens;  ///< the pen at each drawText, in step with runs
     std::vector<std::vector<core::Vec2>> outlines;
@@ -53,6 +55,11 @@ public:
     void fillPolygon(std::span<const core::Vec2> points, const Color& color) override {
         fills.emplace_back(points.begin(), points.end());
         fillColors.push_back(color);
+    }
+
+    void fillLoops(std::span<const std::vector<core::Vec2>> loops, const Color& color) override {
+        loopFills.emplace_back(loops.begin(), loops.end());
+        loopFillColors.push_back(color);
     }
 
     void drawText(const TextRun& run) override {
@@ -147,7 +154,7 @@ TEST(SceneRendererText, UsesTextFrameForEveryAlignmentAndTransformation) {
     for (const auto& text : texts) {
         RecordingPainter painter;
         const std::array<core::Entity, 1> entities{text};
-        renderPreview(entities, viewport, {}, painter);
+        renderPreview(core::Document{}, entities, viewport, {}, painter);
         ASSERT_EQ(painter.runs.size(), 1U);
         EXPECT_TRUE(painter.outlines.empty());
         const auto frame = core::textFrame(text);
@@ -177,7 +184,7 @@ TEST(SceneRendererText, TinyTextUsesTransformedBoxAndDerivedHeight) {
     text.mirroredY = true;
     RecordingPainter painter;
     const std::array<core::Entity, 1> entities{text};
-    renderPreview(entities, viewport, {}, painter);
+    renderPreview(core::Document{}, entities, viewport, {}, painter);
     EXPECT_TRUE(painter.runs.empty());
     ASSERT_EQ(painter.outlines.size(), 1U);
     ASSERT_TRUE(painter.closed.front());
@@ -608,7 +615,7 @@ TEST(SceneRendererProperties, HighlightAndPreviewIgnoreTheEntityProperties) {
 
     RecordingPainter preview;
     const std::array<core::Entity, 1> entities{horizontalLine(30.0)};
-    renderPreview(entities, strokeViewport(), style, preview);
+    renderPreview(core::Document{}, entities, strokeViewport(), style, preview);
     ASSERT_EQ(preview.strokes.size(), 1U);
     EXPECT_FALSE(preview.strokes.front().line);
     EXPECT_EQ(preview.strokes.front().pen.color, style.preview);

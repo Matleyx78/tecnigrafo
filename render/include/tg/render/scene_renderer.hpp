@@ -54,8 +54,9 @@ struct SceneStyle {
 
 /// Draws grid, axes and every visible entity of `document` as seen through
 /// `viewport`: those on a layer that is off or frozen are skipped, those on a
-/// locked layer are drawn (docs/adr/0023). Each entity takes its effective
-/// properties (core::effectiveProperties()):
+/// locked layer are drawn (docs/adr/0023). Each entity is drawn as its
+/// generated geometry (core::generate(), docs/adr/0044, point 2): every shape
+/// with its effective properties:
 /// - colour: its RGB, except index 7, which is style.entity, the main colour of
 ///   the theme (docs/adr/0024, point 5);
 /// - lineweight: with document.lwdisplay() on, a pen of
@@ -72,14 +73,27 @@ struct SceneStyle {
 /// origin, used height, rotation and width factor, together with its oblique
 /// angle and mirroring (docs/adr/0022). A text whose used capital height is
 /// below kMinTextHeightPx is drawn as its transformed core::textBox().
+/// A Solid is filled with Painter::fillPolygon on v0, v1, v3, v2 (docs/adr/0044,
+/// point 7); a filled region with Painter::fillLoops, its loops mapped by its
+/// transform; both take only the colour. An ellipse is a polyline computed for
+/// the screen with the angular step of the arcs, its linetype running across
+/// the polyline (docs/adr/0052, point 3). The linetype pattern starts again at
+/// the start of every shape.
 void renderScene(const core::Document& document, const Viewport& viewport, const SceneStyle& style,
                  Painter& painter);
 
-/// Draws preview entities without clearing the background or drawing grid and axes.
-void renderPreview(std::span<const core::Entity> entities, const Viewport& viewport,
-                   const SceneStyle& style, Painter& painter);
+/// Draws preview entities without clearing the background or drawing grid and
+/// axes, in style.preview with the cosmetic pen. An entity of a shape type
+/// (line, arc, circle, polyline, text, Solid, ellipse) is drawn as itself,
+/// whatever its layer; the others with the shapes of core::generate() in
+/// `document`, which resolves their blocks and styles (an insert at the
+/// pointer). A Solid or a filled region is filled with style.preview.
+void renderPreview(const core::Document& document, std::span<const core::Entity> entities,
+                   const Viewport& viewport, const SceneStyle& style, Painter& painter);
 
-/// Draws selected entities dashed without clearing; absent ids are skipped.
+/// Draws selected entities dashed without clearing, with the shapes of
+/// core::generate(), as the scene; a Solid or a filled region is filled with
+/// style.highlight. Absent ids are skipped.
 void renderHighlight(const core::Document& document, std::span<const core::EntityId> ids,
                      const Viewport& viewport, const SceneStyle& style, Painter& painter);
 

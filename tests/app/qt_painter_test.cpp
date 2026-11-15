@@ -14,6 +14,7 @@
 #include <limits>
 #include <numbers>
 #include <string>
+#include <vector>
 
 namespace tg::app {
 namespace {
@@ -39,6 +40,25 @@ QRect inkBounds(const QImage& image) {
         }
     }
     return bounds;
+}
+
+TEST(QtPainterFill, NestedSquaresLeaveTheCentreEmpty) {
+    QImage image(100, 100, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    {
+        QPainter painter(&image);
+        QtPainter backend(painter);
+        const std::vector<std::vector<core::Vec2>> loops{
+            {{10.0, 10.0}, {90.0, 10.0}, {90.0, 90.0}, {10.0, 90.0}},
+            {{30.0, 30.0}, {70.0, 30.0}, {70.0, 70.0}, {30.0, 70.0}}};
+        backend.fillLoops(loops, {200, 40, 40, 255});
+    }
+    // Between the squares: filled; inside the inner one and outside: empty.
+    EXPECT_EQ(qAlpha(image.pixel(20, 50)), 255);
+    EXPECT_EQ(qRed(image.pixel(20, 50)), 200);
+    EXPECT_EQ(qAlpha(image.pixel(50, 20)), 255);
+    EXPECT_EQ(qAlpha(image.pixel(50, 50)), 0);
+    EXPECT_EQ(qAlpha(image.pixel(5, 5)), 0);
 }
 
 TEST(QtPainterText, CapitalHeightAndAdvanceAgreeWithCoreWithinOnePixel) {
