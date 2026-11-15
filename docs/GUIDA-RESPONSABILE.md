@@ -111,9 +111,12 @@ scelto all'avvio.
 In Tecnigrafo un lavoro si avvia di norma con **un solo commento** nella sua
 issue, e gli agenti si passano il lavoro da soli
 ([agenti/catena.md](agenti/catena.md);
-[ADR 0053](adr/0053-catena-degli-agenti.md)). In solid-space la catena arriva
-con una sua pull request: fino ad allora lì valgono le frasi da chat di A2 e
-di B7–B9.
+[ADR 0053](adr/0053-catena-degli-agenti.md)). Dal 15 novembre lo stesso vale
+in solid-space ([ADR 0018 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0018-catena-degli-agenti.md)),
+con la stessa preparazione per quel repository: secret propri, un token a
+grana fine limitato a solid-space e i suoi ambienti di Codex. Lì la riga
+**Impegno** è la riga **Modello e impegno** della issue, e la decisione su un
+buco nel contratto si scrive nella issue `contratto` che l'agente apre.
 
 **Avvio.** Nella issue, secondo la sua etichetta `agente:…`, con l'impegno del
 piano (la riga **Impegno** della issue):

@@ -101,7 +101,13 @@ lavoro:
    **senza la chiocciola**, e **dove** scriverla. Se proponi una correzione
    concreta (un dato, un valore, un caso riscritto), la riga la contiene già
    scritta per intero, così chi corregge applica il dato esatto invece di
-   interpretarlo:
+   interpretarlo. Se chiede di cambiare dei file, la riga finisce sempre con
+   «Leggi AGENTS.md e docs/agenti/catena.md e seguili alla lettera. Il lavoro
+   esiste solo su GitHub: pubblica il ramo con git push e apri tu la pull
+   request con gh pr create» (per una pull request già aperta: «pubblica i
+   commit con git push sullo stesso ramo»): una riga che porta solo il dato
+   lascia l'agente senza le regole della catena, e il lavoro resta nel suo
+   ambiente (solid-space, #247):
    «Per riprendere scrivi **nella issue #<numero>**, con @ davanti:
    `<nome> Decisione del responsabile: …`». Il posto è sempre una **issue**:
    su una pull request la menzione di Codex avvia la sua revisione
@@ -194,7 +200,9 @@ con la causa probabile e la correzione che suggerisci. Poi fermati come in
 "Fermarsi per una decisione", punti 1, 3 e 4: l'ultima riga del commento è
 quella da copiare per l'**esecutore**, nella issue collegata alla pull request
 (`Closes #N` o `Avvia dopo il merge: #N`) («`<esecutore> Decisione del responsabile: applica l'analisi della pull
-request #<numero>`»), perché decidere se seguirla spetta al responsabile.
+request #<numero>`», con la frase finale di "Fermarsi per una decisione",
+punto 2, nella forma per una pull request già aperta), perché decidere se
+seguirla spetta al responsabile.
 Non fare commit.
 
 ## Correzioni (esecutore)
