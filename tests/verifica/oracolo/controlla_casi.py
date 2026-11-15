@@ -22,7 +22,7 @@ from ezdxf_attesi import DrawingAnswers, aci_answer, print_standard_answers
 # Quoted text is indivisible: digits inside a text value are never approximate.
 TOKEN = re.compile(r'"(?:\\.|[^"\\])*"|[A-Za-z_~][\w~-]*|[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|[^\s]')
 DEFINITION = re.compile(r"(\w+)\s*=\s*DXF\s+source=([a-z0-9-]+)\s*$")
-QUESTION = re.compile(r"\?\s*(version|units|count|unhandled|entity|layers|linetypes)\s+(\w+)(?:\s+([0-9A-Fa-f]+))?\s*->\s*(.*)$")
+QUESTION = re.compile(r"\?\s*(version|units|count|unhandled|entity|layers|linetypes|blocks|styles|dimstyles|generated)\s+(\w+)(?:\s+([0-9A-Fa-f]+))?\s*->\s*(.*)$")
 
 ACI_QUESTION = re.compile(r"\?\s*aci\s+([+-]?\d+)\s*->\s*(.*)$")
 
@@ -55,7 +55,7 @@ def equal_tokens(expected, actual, absolute, relative):
 
 
 def equal_answer(question, expected, actual, absolute, relative):
-    if question in {"count", "unhandled", "layers", "linetypes"}:
+    if question in {"count", "unhandled", "layers", "linetypes", "blocks", "styles", "dimstyles"}:
         remaining = answer_items(actual)
         for item in answer_items(expected):
             match = next((i for i, value in enumerate(remaining)
@@ -119,7 +119,7 @@ def check_case(path, sources):
         question, name, handle, expected = match.groups()
         if name not in drawings:
             raise ValueError(f"{path}:{line_number}: no oracle source for {name}")
-        if (question == "entity") != (handle is not None):
+        if (question in {"entity", "generated"}) != (handle is not None):
             raise ValueError(f"{path}:{line_number}: invalid oracle question: {line}")
         drawing = drawings[name]
         if question == "entity":
@@ -291,6 +291,37 @@ def self_test():
                 pass
             else:
                 require(False, "invalid ACI index must fail")
+
+        # A drawing written by ezdxf exercises every stage 0.8 answer family.
+        stage = root / "stage-0.8.dxf"
+        document = ezdxf.new("R2018", setup=True)
+        block = document.blocks.new("TAGGED", base_point=(1, 2))
+        block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
+        block.add_line((0, 0), (4, 0))
+        model = document.modelspace()
+        insert = model.add_blockref("TAGGED", (10, 20))
+        insert.add_attrib("CODE", "A1", insert=(10, 20), height=1.8)
+        model.add_solid([(0, 0), (2, 0), (0, 1), (2, 1)])
+        model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
+                                                        "char_height": 2.5,
+                                                        "width": 20})
+        dimension = model.add_linear_dim(base=(0, 8), p1=(0, 0), p2=(5, 0))
+        dimension.render()
+        hatch = model.add_hatch(color=2)
+        hatch.paths.add_polyline_path([(0, 0), (5, 0), (5, 5), (0, 5)],
+                                      is_closed=True)
+        document.saveas(stage)
+        stage_answers = DrawingAnswers(stage)
+        require("SOLID 1" in stage_answers.answer("count"), "stage SOLID classification")
+        require("MTEXT 1" in stage_answers.answer("count"), "stage MTEXT classification")
+        require("HATCH 1" in stage_answers.answer("count"), "stage HATCH classification")
+        require('"TAGGED" base=1,2' in stage_answers.answer("blocks"), "block rows")
+        require('"Standard"' in stage_answers.answer("styles"), "STYLE rows")
+        require('"ISO-25"' in stage_answers.answer("dimstyles"), "DIMSTYLE rows")
+        require(stage_answers.answer("generated", insert.dxf.handle) != "none",
+                "INSERT virtual entities")
+        require(stage_answers.answer("generated", dimension.dimension.dxf.handle) != "none",
+                "DIMENSION virtual entities")
 
         # The original owner, paper-space flag and degenerate values must survive
         # ezdxf's document layout binding and affect classification.
