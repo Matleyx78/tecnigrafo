@@ -26,7 +26,10 @@ Su ogni issue lavorano due agenti:
 - l'**esecutore** è quello dell'etichetta `agente:…` della issue: realizza il
   lavoro e poi corregge;
 - il **revisore** è **l'altro** (Claude se l'esecutore è Codex, e viceversa):
-  rivede e non fa mai commit sulla pull request.
+  rivede e non fa mai commit sulla pull request. **Non aspetta la CI** (niente
+  `scripts/ci-attendi.sh`): la catena gli passa la pull request solo quando la
+  CI è finita, verde per una revisione, rossa dopo tre tentativi per
+  un'analisi ("Fine del lavoro").
 
 Vale per pacchetti, riferimenti e revisioni delle interfacce. Il revisore
 lavora sulla pull request indicata anche se la richiesta arriva nella issue
@@ -101,7 +104,13 @@ lavoro:
    su una pull request la menzione di Codex avvia la sua revisione
    automatica. Nome e issue sono di norma i tuoi; per un caso di riferimento
    sbagliato sono quelli di chi ha scritto i riferimenti e della sua issue
-   `[X.Y-RTN]`, perché chi realizza un pacchetto non ne tocca i casi;
+   `[X.Y-RTN]`, perché chi realizza un pacchetto non ne tocca i casi. Quella
+   issue è già chiusa, perché i riferimenti sono uniti: la riga comincia con
+   «Riapri la issue #<numero> e scrivi lì, con @ davanti:» e chiede una pull
+   request di soli riferimenti con `Closes #<numero>` e
+   `Avvia dopo il merge: #<issue del pacchetto>`. Senza `Closes` la issue dei
+   riferimenti resta aperta e il pacchetto, che la aspetta nella sua riga
+   «Riferimenti», non riparte ("Dopo il merge");
 3. se il commento è nella pull request, scrivi nella issue «Serve una
    decisione del responsabile: vedi la pull request #<numero>»;
 4. togli `AA-Presa in carico` e termina, senza aspettare la CI.
@@ -128,7 +137,11 @@ carico, togli `decisione` dalla issue e dalla pull request, e poi:
   revisione>`;
 - **se hai scritto i riferimenti** e la decisione dice che un tuo caso è
   sbagliato: correggilo in una pull request di soli riferimenti con
-  `Avvia dopo il merge: #<issue del pacchetto>`, come in "Fine del lavoro";
+  `Closes #<issue dei riferimenti>` (riaperta dal responsabile) e
+  `Avvia dopo il merge: #<issue del pacchetto>`, come in "Fine del lavoro".
+  Prima di aprirla ricontrolla il caso corretto con la scheda, compreso ogni
+  passo che segue dall'estremità o dallo stato nuovi: la correzione deve
+  togliere il motivo indicato da chi si è fermato, non solo cambiare i dati;
 - **se eri il revisore**: scrivi **un solo** commento che comincia con
   «Ripresa dopo la decisione (giro N)», dove N è il giro che si era fermato
   (senza scrivere «Giro di revisione:»: non è un giro nuovo), con ogni modifica
