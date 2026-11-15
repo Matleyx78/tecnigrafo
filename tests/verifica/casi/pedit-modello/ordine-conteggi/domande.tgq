@@ -10,7 +10,7 @@ B = LINE start=5,1 end=6,1
 ; A pari distanza prevale il primo oggetto; un candidato parallelo che non si
 ; estende non impedisce di provare il successivo della graduatoria.
 E = LWPOLYLINE vertex=0,0 vertex=1,0
-PAR = LINE start=2,1 end=3,1
+PAR = LINE start=2,1 end=4,1
 OK = LINE start=2,1 end=2,3
 ? pedit-join E PAR OK fuzz=2 type=extend -> E LWPOLYLINE closed=no vertex=0,0 vertex=2,0 vertex=2,3 added=1 consumed=OK
 
