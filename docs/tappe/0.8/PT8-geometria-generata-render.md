@@ -75,11 +75,15 @@
   quattro vertici nell'ordine `v0, v1, v3, v2`; un'`Ellipse` di rapporto 0,5 è
   una spezzata i cui punti stanno sull'ellisse; una `FilledRegion` con
   trasformazione `scaling(2, 1)` riempie anelli allargati in X.
-- Evidenziazione e anteprima di un inserimento disegnano le stesse forme
-  generate della scena, con il colore della selezione.
-- Una polilinea con un arco e larghezza 2, in un inserimento con scala
-  `(2, 1)`: tutti i pezzi, dritti ed ellittici, arrivano senza larghezza; il
-  motivo tratteggiato riparte all'inizio di ogni pezzo.
+- Evidenziazione e anteprima disegnano le stesse forme della scena, con il
+  colore della selezione e dell'anteprima.
+- Le forme che darà un inserimento con scala `(2, 1)` di una polilinea con un
+  arco e larghezza 2, cioè una linea e un arco d'ellisse senza larghezza,
+  passate al disegno della geometria generata: il motivo tratteggiato riparte
+  all'inizio di ogni pezzo. Con un inserimento vero li scrive PT16, che rende
+  `Insert` supportato e dipende da PT8
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Test di PT8 con un
+  inserimento vero in PT16»).
 - Il disegno di un documento con le cinque entità di oggi dà le stesse chiamate
   di prima.
 - Un test Qt: `fillLoops` di due quadrati annidati lascia vuoto il centro in un

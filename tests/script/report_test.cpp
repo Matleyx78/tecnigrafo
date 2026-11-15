@@ -3,15 +3,26 @@
 
 #include "tg/script/report.hpp"
 
+#include "new_entities_format.hpp"
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/color.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/effective_properties.hpp"
+#include "tg/core/ellipse.hpp"
+#include "tg/core/generated.hpp"
+#include "tg/core/hatch.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/mtext.hpp"
+#include "tg/core/polyline.hpp"
+#include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
 #include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
@@ -63,6 +74,18 @@ TEST(WriteEntity, Line) {
     const core::Entity line = core::Line{{0.0, 0.0}, {10.0, 5.0}};
     EXPECT_EQ(written(line), "LINE start=0,0 end=10,5");
     EXPECT_EQ(dxfType(line), "LINE");
+}
+
+TEST(WriteEntity, PolylineLinetypeGenerationAppearsOnlyWhenEnabled) {
+    core::Polyline polyline;
+    polyline.addVertex({0, 0});
+    polyline.addVertex({10, 0});
+    EXPECT_EQ(written(polyline), "LWPOLYLINE closed=no vertex=0,0 vertex=10,0");
+    polyline.setContinuousLinetype(true);
+    const std::string expected =
+        "LWPOLYLINE closed=no linetype-generation=yes vertex=0,0 vertex=10,0";
+    EXPECT_EQ(written(polyline), expected);
+    EXPECT_EQ(read(expected), core::Entity{polyline});
 }
 
 TEST(WriteEntity, Circle) {
@@ -621,6 +644,308 @@ TEST(ReportDocuments, OneDocumentWritesNoField) {
     expectContains(out, "drawing: plan.dxf\npointer:");
     EXPECT_EQ(out.find("documents:"), std::string::npos);
     EXPECT_EQ(stateWith(plan, {}).find("documents:"), std::string::npos);
+}
+
+// ---------------------------------------------------------------------------
+// The entity types of stage 0.8 (docs/tappe/0.8/PT9-rapporto-entita-nuove.md)
+
+TEST(WriteNewEntity, SolidHasItsFourVerticesInDxfOrder) {
+    const core::Solid solid{{{{0.0, 0.0}, {10.0, 0.0}, {0.0, 5.0}, {10.0, 5.0}}}};
+    EXPECT_EQ(written(solid), "SOLID vertex=0,0 vertex=10,0 vertex=0,5 vertex=10,5");
+}
+
+TEST(WriteNewEntity, EllipseWritesStartAndEndOnlyForAnArc) {
+    core::Ellipse ellipse{{0.0, 0.0}, {10.0, 0.0}, 0.5, 0.0, core::kTwoPi};
+    EXPECT_EQ(written(ellipse), "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5");
+    ellipse.endParameter = core::kPi / 2.0;
+    EXPECT_EQ(written(ellipse), "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=0 end=90");
+    // Starting elsewhere, even up to a whole turn, is an arc.
+    ellipse.startParameter = core::kPi;
+    ellipse.endParameter = core::kTwoPi;
+    EXPECT_EQ(written(ellipse), "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=180 end=360");
+}
+
+TEST(WriteNewEntity, MTextWithAndWithoutItsOptionalProperties) {
+    core::MText mtext;
+    mtext.width = 60.0;
+    mtext.value = "Prima\\Pseconda";
+    // ~lines needs the generated geometry, which comes with the package of
+    // MTEXT: until then it is not written.
+    EXPECT_EQ(written(mtext),
+              R"(MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=0 )"
+              R"(style="Standard" value="Prima\\Pseconda")");
+    mtext.insertion = {1.0, 2.0};
+    mtext.height = 3.5;
+    mtext.width = 0.0;
+    mtext.attachment = core::MTextAttachment::BottomRight;
+    mtext.rotation = core::kPi / 2.0;
+    mtext.style = "Note";
+    mtext.lineSpacing = 1.5;
+    mtext.exactSpacing = true;
+    mtext.directionByStyle = true;
+    EXPECT_EQ(written(mtext),
+              R"(MTEXT insertion=1,2 height=3.5 width=0 attachment=bottom-right rotation=90 )"
+              R"(style="Note" line-spacing=1.5 line-spacing-style=exactly direction=by-style )"
+              R"(value="Prima\\Pseconda")");
+}
+
+/// The TEXT properties of a text "N" at the origin, as every line writes them.
+constexpr std::string_view kTextProperties =
+    R"(position=0,0 alignment-point=0,0 height=1.8 rotation=0 width-factor=1 oblique=0 )"
+    R"(style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N")";
+
+core::Text textN() {
+    core::Text text;
+    text.height = 1.8;
+    text.value = "N";
+    return text;
+}
+
+TEST(WriteNewEntity, AttributeDefinitionWritesItsFlagsOnlyWhenYes) {
+    core::AttributeDefinition definition{textN(), "TG_PIN1", "", {}};
+    std::string line = written(definition);
+    EXPECT_EQ(line.substr(0, line.find(" ~box=")),
+              "ATTDEF " + std::string{kTextProperties} + R"( tag="TG_PIN1" prompt="")");
+    // The derived box is that of its TEXT.
+    std::string box;
+    detail::writeTextBox(definition.text, box);
+    EXPECT_EQ(line.substr(line.find(" ~box=")), box);
+
+    definition.prompt = "Pin";
+    definition.flags = {true, true, true, true};
+    line = written(definition);
+    expectContains(
+        line,
+        R"( tag="TG_PIN1" prompt="Pin" invisible=yes constant=yes verify=yes preset=yes ~box=)");
+    definition.flags = {false, true, false, false};
+    expectContains(written(definition), R"( prompt="Pin" constant=yes ~box=)");
+}
+
+TEST(WriteNewEntity, InsertWritesBlockInsertionScaleAndRotation) {
+    core::Insert insert;
+    insert.block = "TG_EL_CONTACT_NO";
+    insert.insertion = {10.0, 20.0};
+    EXPECT_EQ(written(insert),
+              R"(INSERT block="TG_EL_CONTACT_NO" insertion=10,20 scale=1,1 rotation=0)");
+    insert.scaleX = -2.0;
+    insert.scaleY = 0.5;
+    insert.rotation = core::kPi;
+    EXPECT_EQ(written(insert),
+              R"(INSERT block="TG_EL_CONTACT_NO" insertion=10,20 scale=-2,0.5 rotation=180)");
+}
+
+core::Dimension dimensionOf(core::DimensionKind kind) {
+    core::Dimension dimension;
+    dimension.definition.kind = kind;
+    dimension.definition.linePoint = {50.0, 10.0};
+    dimension.definition.point13 = {0.0, 0.0};
+    dimension.definition.point14 = {50.0, 0.0};
+    dimension.definition.point15 = {7.0, 8.0};
+    dimension.definition.point16 = {3.0, 4.0};
+    dimension.presentation.textPoint = {25.0, 10.625};
+    dimension.value.measurement = 50.0;
+    return dimension;
+}
+
+TEST(WriteNewEntity, DimensionWritesThePointsOfItsKind) {
+    constexpr std::string_view kStyle = R"(style="ISO-25")";
+    constexpr std::string_view kTail = " text-point=25,10.625 measurement=50";
+
+    struct Case {
+        core::DimensionKind kind;
+        std::string_view points;
+    };
+
+    for (const Case& test : {
+             Case{core::DimensionKind::Linear,
+                  "kind=linear style origin1=0,0 origin2=50,0 line-point=50,10 rotation=0"},
+             Case{core::DimensionKind::Aligned,
+                  "kind=aligned style origin1=0,0 origin2=50,0 line-point=50,10"},
+             Case{core::DimensionKind::Angular,
+                  "kind=angular style line-point=50,10 first=0,0;50,0 second=50,10;7,8 "
+                  "arc-point=3,4"},
+             Case{core::DimensionKind::Radius, "kind=radius style center=50,10 point=7,8"},
+             Case{core::DimensionKind::Diameter, "kind=diameter style point1=7,8 point2=50,10"},
+         }) {
+        std::string expected{test.points};
+        expected.replace(expected.find("style"), 5, kStyle);
+        EXPECT_EQ(written(dimensionOf(test.kind)), "DIMENSION " + expected + std::string{kTail});
+    }
+    core::Dimension other = dimensionOf(core::DimensionKind::Other);
+    other.definition.dxfType = 6;
+    EXPECT_EQ(written(other),
+              "DIMENSION kind=other " + std::string{kStyle} + " type=6" + std::string{kTail});
+}
+
+TEST(WriteNewEntity, DimensionWritesItsOptionalPropertiesOnlyWhenSet) {
+    core::Dimension dimension = dimensionOf(core::DimensionKind::Aligned);
+    dimension.presentation.style = "Elettrico";
+    dimension.presentation.textRotation = 0.0;  // explicit, but 0: not written
+    const std::string plain = written(dimension);
+    EXPECT_EQ(plain.find("text-rotation"), std::string::npos);
+    dimension.presentation.textOverride = "<> mm";
+    dimension.presentation.textRotation = core::kPi / 2.0;
+    dimension.presentation.userTextPosition = true;
+    dimension.presentation.overrides = {{"DIMTXT", "3.5"}, {"DIMASZ", "2"}};
+    EXPECT_EQ(written(dimension),
+              R"(DIMENSION kind=aligned style="Elettrico" origin1=0,0 origin2=50,0 )"
+              R"(line-point=50,10 text-point=25,10.625 measurement=50 text="<> mm" )"
+              R"(text-rotation=90 user-text-position=yes overrides=DIMASZ:2,DIMTXT:3.5)");
+}
+
+core::Hatch hatchOfTheCard() {
+    core::Hatch hatch;
+    hatch.pattern = "ANSI31";
+    core::HatchLoop outer;
+    outer.flags = 1U | 2U;  // external, polyline
+    outer.polyline = core::Polyline{
+        {{{0.0, 0.0}, 0.0}, {{10.0, 0.0}, 0.0}, {{10.0, 10.0}, 0.0}, {{0.0, 10.0}, 0.0}}, true};
+    core::HatchLoop hole;
+    hole.edges.push_back({core::Arc{{5.0, 5.0}, 2.0, 0.0, core::kTwoPi}});
+    hatch.loops = {outer, hole};
+    hatch.seeds = {{1.0, 1.0}};
+    return hatch;
+}
+
+TEST(WriteNewEntity, HatchWritesItsLoopsAndSeeds) {
+    core::Hatch hatch = hatchOfTheCard();
+    EXPECT_EQ(written(hatch),
+              R"(HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal )"
+              "loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10 "
+              "loop=edges circle=5,5;2 seed=1,1");
+    hatch.pattern = "SOLID";
+    hatch.solid = true;
+    hatch.angle = core::kPi / 4.0;
+    hatch.scale = 2.0;
+    hatch.doubled = true;
+    hatch.islands = core::IslandStyle::Outer;
+    hatch.loops[0].flags = 16U | 4U | 2U;  // outermost, derived, polyline
+    hatch.loops[0].polyline = core::Polyline{{{{0.0, 0.0}, 1.0}, {{10.0, 0.0}, 0.0}}, true};
+    hatch.loops[1].edges = {{core::Line{{0.0, 0.0}, {1.0, 0.0}}},
+                            {core::Arc{{0.0, 0.0}, 1.0, 0.0, core::kPi}}};
+    hatch.seeds.clear();
+    EXPECT_EQ(written(hatch),
+              R"(HATCH pattern="SOLID" solid=yes angle=45 scale=2 double=yes islands=outer )"
+              "loop=outermost+derived+polyline vertex=0,0 bulge=1 vertex=10,0 "
+              "loop=edges line=0,0;1,0 arc=0,0;1;0;180");
+}
+
+TEST(WriteNewEntity, PlacementAndPropertiesComeBeforeTheDerived) {
+    const Tables tables = drawingWithLayers();
+    const core::Document& document = tables.document;
+    core::EntityRecord record{{300}, core::AttributeDefinition{textN(), "T", "", {}}};
+    record.properties = lineOf(document).properties;
+    record.properties.layer = tables.walls;
+    record.extras.placement = {{39, "2"}};
+    expectContains(written(record, document),
+                   R"( tag="T" prompt="" thickness=2 layer="Muri esterni" ~box=)");
+}
+
+/// An INSERT 300 on layer 0 with two ATTRIB, 301 and 302, and a LINE 257.
+struct InsertWithAttributes {
+    Tables tables{drawingWithLayers()};
+    core::EntityRecord line;
+    core::EntityRecord insert;
+};
+
+InsertWithAttributes insertWithAttributes() {
+    InsertWithAttributes drawing;
+    const core::Document& document = drawing.tables.document;
+    drawing.line = lineOf(document);
+    core::Insert insert;
+    insert.block = "TG_EL";
+    insert.insertion = {10.0, 20.0};
+    core::Attribute reference{{301}, textN(), "TG_REF", false, {}, lineOf(document).properties};
+    reference.text.value = "-K1";
+    core::Attribute pin{{302}, textN(), "TG_PIN", true, {}, lineOf(document).properties};
+    pin.properties.layer = drawing.tables.walls;
+    pin.extras.placement = {{30, "1"}};
+    insert.attributes = {reference, pin};
+    drawing.insert = core::EntityRecord{{300}, insert};
+    drawing.insert.properties = lineOf(document).properties;
+    return drawing;
+}
+
+TEST(WriteNewEntity, TheAttributesOfAnInsertAreEntitiesWithTheirOwner) {
+    const InsertWithAttributes drawing = insertWithAttributes();
+    const core::Document& document = drawing.tables.document;
+    // In the order of the identifiers, whatever the order of the records.
+    const std::array<const core::EntityRecord*, 2> records{&drawing.insert, &drawing.line};
+    const std::vector<detail::EntityLine> lines = detail::entityLines(records, document);
+    ASSERT_EQ(lines.size(), 4U);
+    EXPECT_EQ(lines[0].text, "257 LINE start=0,0 end=10,5");
+    EXPECT_EQ(lines[1].text, R"(300 INSERT block="TG_EL" insertion=10,20 scale=1,1 rotation=0)");
+    std::string reference = R"(301 ATTRIB owner=300 )" + std::string{kTextProperties};
+    reference.replace(reference.find(R"(value="N")"), 9, R"(value="-K1")");
+    EXPECT_EQ(lines[2].text.substr(0, lines[2].text.find(" ~box=")),
+              reference + R"( tag="TG_REF")");
+    // The quotas of a TEXT and the properties of the attribute itself.
+    EXPECT_EQ(lines[3].text.substr(0, lines[3].text.find(" ~box=")),
+              "302 ATTRIB owner=300 " + std::string{kTextProperties} +
+                  R"( tag="TG_PIN" invisible=yes z=1 layer="Muri esterni")");
+    for (const detail::EntityLine& line : lines) {
+        EXPECT_EQ(line.text.substr(0, line.text.find(' ')), std::to_string(line.id));
+    }
+
+    EXPECT_EQ(detail::statisticsLines(records),
+              (std::vector<std::string>{"ATTRIB 2", "INSERT 1", "LINE 1"}));
+    // An INSERT without attributes writes no ATTRIB.
+    core::EntityRecord bare = drawing.insert;
+    std::get<core::Insert>(bare.entity).attributes.clear();
+    const std::array<const core::EntityRecord*, 1> alone{&bare};
+    EXPECT_EQ(detail::entityLines(alone, document).size(), 1U);
+    EXPECT_EQ(detail::statisticsLines(alone), (std::vector<std::string>{"INSERT 1"}));
+}
+
+TEST(WriteState, ANewSessionHasNoFieldOfTheStylesAndBlocks) {
+    // They are written by PT11, PT16 and PT22, when core has their fields.
+    core::Document document = core::Document::newDrawing();
+    const std::string report = stateOf(document);
+    for (const std::string_view field :
+         {"text styles:", "text style:", "dimension styles:", "dimension style:",
+          "dimension overrides:", "blocks:", "ATTRIB"}) {
+        EXPECT_EQ(report.find(field), std::string::npos) << field;
+    }
+}
+
+TEST(WriteGeneratedItem, AShapeWithTheEffectivePropertiesThatAreNotTheDefault) {
+    const Tables tables = drawingWithLayers();
+    const core::Document& document = tables.document;
+    core::EntityRecord record = lineOf(document);
+    const core::GeneratedItem plain{core::Line{{0.0, 0.0}, {10.0, 0.0}},
+                                    core::effectiveProperties(document, record)};
+    std::string out;
+    detail::writeGeneratedItem(plain, out);
+    EXPECT_EQ(out, "LINE start=0,0 end=10,0");
+
+    record.properties.color = core::Color::fromIndex(1);
+    record.properties.linetypeScale = 2.0;
+    record.properties.linetype = tables.dashed;
+    record.properties.lineweight = 50;
+    core::GeneratedItem coloured{core::Text{}, core::effectiveProperties(document, record)};
+    std::get<core::Text>(coloured.shape).value = "A";
+    out.clear();
+    detail::writeGeneratedItem(coloured, out);
+    // The derived box of a TEXT comes last.
+    expectContains(out, R"( value="A" color=255,0,0 linetype="ACAD_ISO02W100" ltscale=2 )"
+                        R"(lineweight=0.50 ~box=)");
+}
+
+TEST(WriteGeneratedItem, ARegionWritesItsLoopsAndAMapOtherThanTheIdentity) {
+    const core::Document document = core::Document::newDrawing();
+    const core::EntityRecord record = lineOf(document);
+    core::FilledRegion region{
+        {core::Polyline{{{{0.0, 0.0}, 0.0}, {{10.0, 0.0}, 0.5}, {{10.0, 10.0}, 0.0}}, true}},
+        core::Transform2D::identity()};
+    std::string out;
+    detail::writeGeneratedItem({region, core::effectiveProperties(document, record)}, out);
+    EXPECT_EQ(out, "REGION loop=polyline vertex=0,0 vertex=10,0 bulge=0.5 vertex=10,10");
+    region.transform = core::Transform2D{2.0, 0.0, 0.0, 1.0, 5.0, -1.0};
+    out.clear();
+    detail::writeGeneratedItem({region, core::effectiveProperties(document, record)}, out);
+    EXPECT_EQ(out,
+              "REGION loop=polyline vertex=0,0 vertex=10,0 bulge=0.5 vertex=10,10 "
+              "~affine=2,0,0,1,5,-1");
 }
 
 }  // namespace

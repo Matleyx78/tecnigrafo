@@ -4,6 +4,7 @@
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
 
 #include "tg/cmd/value_format.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 
@@ -47,19 +48,30 @@ double directionOf(const core::Vec2& vector) {
 void writeTransformed(CommandContext& context, const std::vector<SelectedEntity>& selected,
                       const core::Similarity& similarity, bool copy) {
     for (const SelectedEntity& item : selected) {
-        core::Entity result = core::transformed(item.entity, similarity);
-        if (copy) {
-            context.editor.addCopy(item.id, std::move(result));
-        } else {
-            context.editor.replace(item.id, std::move(result));
+        auto result = core::transformedIn(context.editor.document(), item.entity, similarity,
+                                          core::MirrorText::Readable);
+        if (!result.refusal.empty()) {
+            context.message(std::move(result.refusal));
+        } else if (result.entity) {
+            if (copy) {
+                context.editor.addCopy(item.id, std::move(*result.entity));
+            } else {
+                context.editor.replace(item.id, std::move(*result.entity));
+            }
         }
     }
 }
 
-void appendTransformed(const std::vector<SelectedEntity>& selected,
+void appendTransformed(const core::Document& document, const std::vector<SelectedEntity>& selected,
                        const core::Similarity& similarity, std::vector<core::Entity>& out) {
     for (const SelectedEntity& item : selected) {
-        out.push_back(core::transformed(item.entity, similarity));
+        auto result =
+            core::transformedIn(document, item.entity, similarity, core::MirrorText::Readable);
+        if (!result.refusal.empty() || !result.entity) {
+            out.push_back(item.entity);
+        } else {
+            out.push_back(std::move(*result.entity));
+        }
     }
 }
 
@@ -68,6 +80,7 @@ void appendTransformed(const std::vector<SelectedEntity>& selected,
 // RotateCommand
 
 void RotateCommand::start(CommandContext& context) {
+    m_document = &context.editor.document();
     m_stage = Stage::Selection;
     m_selected.clear();
     m_base = {};
@@ -273,13 +286,15 @@ void RotateCommand::updatePreview() {
         return;
     }
     if (const std::optional<double> rotation = rotationAt(*m_pointer)) {
-        appendTransformed(m_selected, core::Similarity::rotation(*rotation, m_base), m_preview);
+        appendTransformed(*m_document, m_selected, core::Similarity::rotation(*rotation, m_base),
+                          m_preview);
     }
 }
 
 // ScaleObjectsCommand
 
 void ScaleObjectsCommand::start(CommandContext& context) {
+    m_document = &context.editor.document();
     m_stage = Stage::Selection;
     m_selected.clear();
     m_base = {};
@@ -514,7 +529,7 @@ void ScaleObjectsCommand::updatePreview() {
     // A pointer on the base point gives a zero factor: nothing to draw.
     if (const std::optional<core::Similarity> scaling =
             core::Similarity::scaling(*factor, m_base)) {
-        appendTransformed(m_selected, *scaling, m_preview);
+        appendTransformed(*m_document, m_selected, *scaling, m_preview);
     }
 }
 

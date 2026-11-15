@@ -4,10 +4,12 @@
 #include "tg/cmd/commands/move_copy_commands.hpp"
 
 #include "tg/cmd/value_format.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/similarity.hpp"
 
 #include <span>
 #include <string>
+#include <utility>
 #include <variant>
 
 namespace tg::cmd {
@@ -37,14 +39,21 @@ std::vector<DisplacedEntity> snapshot(const CommandContext& context,
 
 /// `entity` moved by `displacement`. A translation never reflects, so the
 /// text mirroring mode does not matter.
-core::Entity displaced(const core::Entity& entity, const core::Vec2& displacement) {
-    return core::transformed(entity, core::Similarity::translation(displacement));
+core::TransformOutcome displaced(const core::Document& document, const core::Entity& entity,
+                                 const core::Vec2& displacement) {
+    return core::transformedIn(document, entity, core::Similarity::translation(displacement),
+                               core::MirrorText::Readable);
 }
 
-void appendDisplaced(const std::vector<DisplacedEntity>& selected, const core::Vec2& displacement,
-                     std::vector<core::Entity>& out) {
+void appendDisplaced(const core::Document& document, const std::vector<DisplacedEntity>& selected,
+                     const core::Vec2& displacement, std::vector<core::Entity>& out) {
     for (const DisplacedEntity& item : selected) {
-        out.push_back(displaced(item.entity, displacement));
+        auto result = displaced(document, item.entity, displacement);
+        if (!result.refusal.empty() || !result.entity) {
+            out.push_back(item.entity);
+        } else {
+            out.push_back(std::move(*result.entity));
+        }
     }
 }
 
@@ -70,6 +79,7 @@ bool isDisplacementKeyword(const Input& input) {
 // MoveCommand
 
 void MoveCommand::start(CommandContext& context) {
+    m_document = &context.editor.document();
     m_stage = Stage::Selection;
     m_selected.clear();
     m_base = {};
@@ -159,7 +169,12 @@ Status MoveCommand::apply(CommandContext& context, const core::Vec2& displacemen
     for (const DisplacedEntity& item : m_selected) {
         // Same identity, same data; an unchanged entity (a zero displacement)
         // leaves no change in the step.
-        context.editor.replace(item.id, displaced(item.entity, displacement));
+        auto result = displaced(context.editor.document(), item.entity, displacement);
+        if (!result.refusal.empty()) {
+            context.message(std::move(result.refusal));
+        } else if (result.entity) {
+            context.editor.replace(item.id, std::move(*result.entity));
+        }
     }
     context.editor.commit();
     m_preview.clear();
@@ -172,15 +187,16 @@ void MoveCommand::updatePreview() {
         return;
     }
     if (m_stage == Stage::Second) {
-        appendDisplaced(m_selected, *m_pointer - m_base, m_preview);
+        appendDisplaced(*m_document, m_selected, *m_pointer - m_base, m_preview);
     } else if (m_stage == Stage::Displacement) {
-        appendDisplaced(m_selected, *m_pointer, m_preview);
+        appendDisplaced(*m_document, m_selected, *m_pointer, m_preview);
     }
 }
 
 // CopyCommand
 
 void CopyCommand::start(CommandContext& context) {
+    m_document = &context.editor.document();
     m_stage = Stage::Selection;
     m_selected.clear();
     m_base = {};
@@ -302,7 +318,12 @@ Status CopyCommand::copyBy(CommandContext& context, const core::Vec2& displaceme
     for (const DisplacedEntity& item : m_selected) {
         // The copies take the properties and the unhandled data of their
         // source (docs/adr/0031, point 6).
-        context.editor.addCopy(item.id, displaced(item.entity, displacement));
+        auto result = displaced(context.editor.document(), item.entity, displacement);
+        if (!result.refusal.empty()) {
+            context.message(std::move(result.refusal));
+        } else if (result.entity) {
+            context.editor.addCopy(item.id, std::move(*result.entity));
+        }
     }
     // A typed displacement makes one copy, and so does the sequence of the
     // AutoCAD scripts (docs/adr/0032, points 6-8).
@@ -327,9 +348,9 @@ void CopyCommand::updatePreview() {
         return;
     }
     if (m_stage == Stage::First || m_stage == Stage::More) {
-        appendDisplaced(m_selected, *m_pointer - m_base, m_preview);
+        appendDisplaced(*m_document, m_selected, *m_pointer - m_base, m_preview);
     } else if (m_stage == Stage::Displacement) {
-        appendDisplaced(m_selected, *m_pointer, m_preview);
+        appendDisplaced(*m_document, m_selected, *m_pointer, m_preview);
     }
 }
 

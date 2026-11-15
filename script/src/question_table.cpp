@@ -3,9 +3,11 @@
 
 #include "question_table.hpp"
 
+#include "new_entities_format.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/snap_points.hpp"
@@ -487,6 +489,32 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     return snap ? snapText(*snap) : std::string{"none"};
 }
 
+/// "generated <E>": the generated geometry of the entity, in order
+/// (docs/verifica/domande.md, "Blocchi e geometria generata").
+QuestionResult askGenerated(const QuestionModel& model, Arguments arguments) {
+    if (arguments.size() != 1) {
+        return usage("generated <E>");
+    }
+    const std::optional<core::EntityId> id = model.find(arguments.front());
+    if (!id) {
+        return ArgumentError{"no entity named " + quoted(arguments.front()) + " is defined above"};
+    }
+    const core::EntityRecord* record = model.document.find(*id);
+    assert(record != nullptr && "every named entity is in the document");
+    const std::vector<core::GeneratedItem> items = core::generate(model.document, *record);
+    if (items.empty()) {
+        return std::string{"none"};
+    }
+    std::string answer;
+    for (const core::GeneratedItem& item : items) {
+        if (!answer.empty()) {
+            answer += "; ";
+        }
+        writeGeneratedItem(item, answer);
+    }
+    return answer;
+}
+
 }  // namespace
 
 // Defined in construction_questions.cpp.
@@ -602,6 +630,8 @@ constexpr std::array kQuestions{
     QuestionRow{"to-polyline", AnswerShape::Single, &askToPolyline},  // PT32
     QuestionRow{"reverse", AnswerShape::Single, &askReverse},         // PT32
     QuestionRow{"pedit-join", AnswerShape::Single, &askPeditJoin},    // PT32
+    // Stage 0.8: generated geometry. In order, so Single and not Items.
+    QuestionRow{"generated", AnswerShape::Single, &askGenerated},  // PT9
 };
 
 }  // namespace

@@ -108,3 +108,8 @@ cambia e non ne propone di nuovi nella pull request del suo lavoro: se gli
 manca qualcosa, vale la regola sopra (niente installazioni, solo i passi
 possibili, il resto alla CI) e lo scrive nella pull request; una proposta di
 cambio va nella issue «Proposte di metodo» della tappa.
+
+In GitHub Actions ogni comando di Claude gira in primo piano, al massimo
+10 minuti, e non si può mandare in background: un comando in background
+morirebbe con la sessione, e con lui il lavoro non ancora pubblicato. Le
+attese lunghe si fanno come sopra, rilanciando `scripts/ci-attendi.sh`.

@@ -191,6 +191,25 @@ jobs:
           fi
           python3 scripts/dipendenze.py --controlla-puntatore "$after" --pr "$PR"
 
+  # Only noreply addresses in the commits of a pull request: the squash and
+  # merge copies every author into a Co-authored-by line of the commit on main
+  # (docs/DECISIONI.md, 2026-11-15; docs/tappe/fuori-tappa/F10). It runs on
+  # documentation-only pull requests too, so it does not need "changes".
+  commit-addresses:
+    name: Commit addresses
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check the addresses of the commits
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/indirizzi_commit.py "$BASE" "$HEAD"
+
   format:
     name: Formatting (clang-format 18)
     needs: changes

@@ -13,7 +13,10 @@
   `io/src/dxf_tables.cpp`, `io/src/dxf_header.cpp`, `io/src/dxf_skeleton.cpp`;
   le schede [PT6](PT6-scheletro-core.md), punto 5, e [PT11](PT11-stili-di-testo.md)
   (lo stesso schema per un'altra tabella); i valori di `Standard` e `ISO-25`
-  confermati dal responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md))
+  confermati dal responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md));
+  [verifica/rapporto.md](../../verifica/rapporto.md) (i campi
+  `dimension styles:`, `dimension style:` e `dimension overrides:`, fissati
+  da PT9) e `script/src/report.cpp`
 
 ## File
 
@@ -21,8 +24,11 @@
 - `io/src/dxf_dimstyle.cpp` (nuovo), `io/src/dxf_tables.cpp`,
   `io/src/dxf_header.cpp`, `io/src/dxf_skeleton.cpp`, `io/CMakeLists.txt`
   (file comune)
+- `script/src/report.cpp` (file comune: i campi `dimension styles:`,
+  `dimension style:` e `dimension overrides:`)
 - `tests/core/dim_style_table_test.cpp`, `tests/io/dxf_dimstyle_test.cpp` (nuovi),
-  `tests/CMakeLists.txt` (file comune)
+  `tests/script/report_test.cpp` (file comune), `tests/CMakeLists.txt` (file
+  comune)
 
 ## Cosa fare
 
@@ -86,10 +92,19 @@
 5. **Sovrascritture di una quota** (XDATA `ACAD`, `DSTYLE`): una funzione legge
    dagli `extras` di una quota le variabili sovrascritte (essenziali e no) e
    le scrive; le userà PT23.
+6. **Rapporto.** `script` scrive i campi `dimension styles:`,
+   `dimension style:` e `dimension overrides:` nel formato di
+   [verifica/rapporto.md](../../verifica/rapporto.md), fissato da PT9, solo
+   quando sono diversi da una sessione nuova: gli stili se la tabella è
+   diversa da quella di una sessione nuova, lo stile corrente se non è
+   `ISO-25`, le variabili correnti diverse da quelle dello stile corrente
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Campi delle tabelle nel
+   rapporto scritti da chi li crea»). rapporto.md non si tocca.
 
 ## Regole della tappa che valgono qui
 
-- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`.
+- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`,
+  `script/src/report.cpp`, `tests/script/report_test.cpp`.
 
 ## Test richiesti
 
@@ -103,6 +118,12 @@
 - `dxf_dimstyle_test.cpp`: giro della tabella e dell'intestazione di un file di
   AutoCAD (`autocad-quote.dxf` se pubblicato, altrimenti uno scritto dal test);
   sovrascritture `DSTYLE` lette e riscritte.
+- `report_test.cpp`: una sessione nuova non ha `dimension styles:`,
+  `dimension style:` né `dimension overrides:`; con `DIMTXT` 3.5 in `ISO-25`
+  il rapporto ha `dimension styles:` con `"ISO-25" DIMTXT:3.5` e nessuno dei
+  due altri campi; con `ISO-25` invariato e la variabile corrente `DIMTXT` 5,
+  solo `dimension overrides:` con `DIMTXT:5`; con `Standard` corrente,
+  `dimension style:` con `"Standard"`.
 
 ## Fatto quando
 

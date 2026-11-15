@@ -47,6 +47,7 @@ struct CommandDefaults {
     double chamferAngle{0.0};  ///< radians
     bool chamferUseAngle{false};
     bool trimMode{true};
+    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
 };
 
 /// What a command of the drawing works with: the protocol's context

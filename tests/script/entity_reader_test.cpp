@@ -3,14 +3,24 @@
 
 #include "tg/script/entity_reader.hpp"
 
+#include "new_entities_format.hpp"
+#include "text.hpp"
 #include "tg/core/arc.hpp"
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/circle.hpp"
 #include "tg/core/color.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/ellipse.hpp"
+#include "tg/core/hatch.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/lineweight.hpp"
+#include "tg/core/math.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
 #include "tg/script/report.hpp"
 #include "tg/script/text_format.hpp"
@@ -485,5 +495,293 @@ TEST(TextFormat, UnquoteRejectsMalformedStrings) {
         EXPECT_FALSE(unquoteText(text).has_value()) << text;
     }
 }
+
+// ---------------------------------------------------------------------------
+// The entity types of stage 0.8 (docs/tappe/0.8/PT9-rapporto-entita-nuove.md).
+// Until the package of a type is merged readEntity() refuses it, so the
+// lines are read back with the reader of the seven types.
+
+std::variant<core::Entity, EntityError> readNew(std::string_view text) {
+    const std::optional<std::vector<std::string_view>> tokens = detail::splitTokens(text);
+    if (!tokens || tokens->empty()) {
+        return EntityError{"no tokens"};
+    }
+    const std::vector<std::string_view> properties(tokens->begin() + 1, tokens->end());
+    auto read = detail::readNewEntity(tokens->front(), properties);
+    if (!read) {
+        return EntityError{"not a type of the 0.8"};
+    }
+    return std::move(*read);
+}
+
+/// Writes `entity`, reads the line back and checks that it writes the same
+/// line; returns the entity read.
+core::Entity readsBack(const core::Entity& entity) {
+    const std::string line = written(entity);
+    std::variant<core::Entity, EntityError> read = readNew(line);
+    if (const auto* error = std::get_if<EntityError>(&read)) {
+        ADD_FAILURE() << line << ": " << error->message;
+        return entity;
+    }
+    EXPECT_EQ(written(std::get<core::Entity>(read)), line);
+    return std::get<core::Entity>(std::move(read));
+}
+
+core::Text textOf(std::string_view value) {
+    core::Text text;
+    text.position = {1.0, 2.0};
+    text.height = 1.8;
+    text.value = value;
+    return text;
+}
+
+std::vector<core::Entity> entitiesOfStageEight() {
+    std::vector<core::Entity> entities;
+    entities.emplace_back(core::Solid{{{{0.0, 0.0}, {10.0, 0.0}, {0.0, 5.0}, {10.0, 5.0}}}});
+    entities.emplace_back(core::Ellipse{{1.0, 2.0}, {10.0, 0.0}, 0.5, 0.0, core::kTwoPi});
+    entities.emplace_back(core::Ellipse{{1.0, 2.0}, {0.0, -3.0}, 1.0, core::kPi, 0.25});
+
+    core::MText mtext;
+    mtext.width = 60.0;
+    mtext.value = R"(Prima\Pseconda "citata")";
+    entities.emplace_back(mtext);
+    mtext.attachment = core::MTextAttachment::MiddleCenter;
+    mtext.style = "Note";
+    mtext.lineSpacing = 2.0;
+    mtext.exactSpacing = true;
+    mtext.directionByStyle = true;
+    entities.emplace_back(mtext);
+
+    entities.emplace_back(core::AttributeDefinition{textOf("N"), "TG_PIN1", "", {}});
+    entities.emplace_back(
+        core::AttributeDefinition{textOf(""), "TG_REF", "Riferimento", {true, false, true, true}});
+
+    core::Insert insert;
+    insert.block = "TG_EL_CONTACT_NO";
+    insert.insertion = {10.0, 20.0};
+    entities.emplace_back(insert);
+    insert.scaleX = -1.0;
+    insert.scaleY = 2.5;
+    insert.rotation = core::kPi / 2.0;
+    entities.emplace_back(insert);
+
+    core::Dimension dimension;
+    dimension.definition.linePoint = {50.0, 10.0};
+    dimension.definition.point13 = {0.0, 0.0};
+    dimension.definition.point14 = {50.0, 0.0};
+    dimension.definition.point15 = {7.0, 8.0};
+    dimension.definition.point16 = {3.0, 4.0};
+    dimension.presentation.textPoint = {25.0, 10.625};
+    dimension.value.measurement = 50.0;
+    for (const core::DimensionKind kind :
+         {core::DimensionKind::Linear, core::DimensionKind::Aligned, core::DimensionKind::Angular,
+          core::DimensionKind::Radius, core::DimensionKind::Diameter, core::DimensionKind::Other}) {
+        dimension.definition.kind = kind;
+        entities.emplace_back(dimension);
+    }
+    dimension.definition.kind = core::DimensionKind::Other;
+    dimension.definition.dxfType = 6;
+    dimension.presentation.style = "Elettrico";
+    dimension.presentation.textOverride = "<> mm";
+    dimension.presentation.textRotation = core::kPi / 4.0;
+    dimension.presentation.userTextPosition = true;
+    dimension.presentation.overrides = {{"DIMASZ", "2"}, {"DIMTXT", "3.5"}};
+    entities.emplace_back(dimension);
+
+    core::Hatch hatch;
+    hatch.pattern = "ANSI31";
+    core::HatchLoop outer;
+    outer.flags = 1U | 2U;
+    outer.polyline =
+        core::Polyline{{{{0.0, 0.0}, 0.5}, {{10.0, 0.0}, 0.0}, {{10.0, 10.0}, 0.0}}, true};
+    core::HatchLoop hole;
+    hole.flags = 16U | 4U;
+    hole.edges = {{core::Arc{{5.0, 5.0}, 2.0, 0.0, core::kTwoPi}},
+                  {core::Line{{0.0, 0.0}, {1.0, 1.0}}},
+                  {core::Arc{{0.0, 0.0}, 1.0, core::kPi, core::kPi / 2.0}}};
+    hatch.loops = {outer, hole};
+    hatch.seeds = {{1.0, 1.0}, {2.0, 2.0}};
+    entities.emplace_back(hatch);
+    hatch.solid = true;
+    hatch.doubled = true;
+    hatch.angle = core::kPi / 6.0;
+    hatch.scale = 0.5;
+    hatch.islands = core::IslandStyle::Ignore;
+    hatch.loops.clear();
+    hatch.seeds.clear();
+    entities.emplace_back(hatch);
+    return entities;
+}
+
+TEST(ReadNewEntity, EveryLineWrittenReadsBackTheSame) {
+    for (const core::Entity& entity : entitiesOfStageEight()) {
+        readsBack(entity);
+    }
+}
+
+TEST(ReadNewEntity, LinesWithoutAnglesReadBackTheSameEntity) {
+    const std::vector<core::Entity> entities = entitiesOfStageEight();
+    for (const std::size_t index : {0U, 1U, 3U, 5U, 6U, 7U}) {
+        EXPECT_EQ(readsBack(entities.at(index)), entities.at(index)) << written(entities.at(index));
+    }
+    // A whole circle of a boundary reads back as written: 0 to 2*pi.
+    const core::Entity& hatch = entities.at(entities.size() - 2);
+    const core::Entity read = readsBack(hatch);
+    const auto& edge = std::get<core::Hatch>(read).loops.at(1).edges.at(0);
+    EXPECT_EQ(std::get<core::Arc>(edge.curve), (core::Arc{{5.0, 5.0}, 2.0, 0.0, core::kTwoPi}));
+}
+
+TEST(ReadNewEntity, DefaultsMayBeLeftOut) {
+    const auto entity = [](std::string_view text) {
+        std::variant<core::Entity, EntityError> read = readNew(text);
+        if (const auto* error = std::get_if<EntityError>(&read)) {
+            ADD_FAILURE() << text << ": " << error->message;
+            return core::Entity{core::Line{}};
+        }
+        return std::get<core::Entity>(std::move(read));
+    };
+    EXPECT_EQ(std::get<core::Ellipse>(entity("ELLIPSE center=0,0 major-axis=1,0 ratio=1")),
+              (core::Ellipse{{0.0, 0.0}, {1.0, 0.0}, 1.0, 0.0, core::kTwoPi}));
+    core::MText mtext;
+    mtext.value = "A";
+    EXPECT_EQ(std::get<core::MText>(entity(R"(MTEXT insertion=0,0 value="A")")), mtext);
+    core::AttributeDefinition definition{textOf("N"), "T", "", {}};
+    definition.text.position = {0.0, 0.0};
+    definition.text.height = 2.5;
+    EXPECT_EQ(std::get<core::AttributeDefinition>(
+                  entity(R"(ATTDEF tag="T" position=0,0 value="N" ~box=whatever)")),
+              definition);
+    core::Insert insert;
+    insert.block = "B";
+    EXPECT_EQ(std::get<core::Insert>(entity(R"(INSERT block="B" insertion=0,0)")), insert);
+    const auto angular = std::get<core::Dimension>(
+        entity("DIMENSION kind=angular first=0,0;1,0 second=2,2;0,1 arc-point=3,3 "
+               "text-point=1,1 measurement=90"));
+    EXPECT_EQ(angular.definition.linePoint, (core::Vec2{2.0, 2.0}));
+    EXPECT_EQ(angular.definition.point15, (core::Vec2{0.0, 1.0}));
+    EXPECT_EQ(angular.definition.dxfType, 2);
+    EXPECT_EQ(angular.presentation.style, "ISO-25");
+    EXPECT_FALSE(angular.presentation.textRotation.has_value());
+    core::Hatch hatch;
+    hatch.pattern = "NET";
+    EXPECT_EQ(std::get<core::Hatch>(entity(R"(HATCH pattern="NET")")), hatch);
+}
+
+TEST(ReadNewEntity, AValidLineIsRefusedUntilItsTypeIsSupported) {
+    for (const core::Entity& entity : entitiesOfStageEight()) {
+        if (core::isSupported(entity)) {
+            continue;  // its package is merged: readEntity() reads it
+        }
+        const std::string line = written(entity);
+        const EntityError error = failure(line);
+        const std::string type = line.substr(0, line.find(' '));
+        EXPECT_EQ(error.message, type + " is not supported yet.");
+        EXPECT_TRUE(error.notImplemented) << line;
+        // With the properties of stages 0.5 and 0.6 too.
+        const EntityError withProperties = failure(line + R"( thickness=1 layer="0" color=1)");
+        EXPECT_EQ(withProperties.message, type + " is not supported yet.");
+    }
+}
+
+TEST(ReadNewEntity, ErrorsOfTheLines) {
+    struct Case {
+        std::string_view text;
+        std::string_view message;
+    };
+
+    for (const Case& test : {
+             Case{"SOLID vertex=0,0 vertex=1,0 vertex=0,1", "a SOLID has four vertices"},
+             Case{"SOLID vertex=0,0 vertex=1,0 vertex=0,1 vertex=1,1 vertex=2,2",
+                  "a SOLID has four vertices"},
+             Case{"SOLID vertex=0,0 vertex=1,0 vertex=0,1 vertex=x",
+                  "vertex needs a point x,y, found 'x'"},
+             Case{"SOLID corner=0,0", "unknown property 'corner' of SOLID"},
+             Case{"ELLIPSE center=0,0 major-axis=10,0", "missing property ratio of ELLIPSE"},
+             Case{"ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=0",
+                  "start and end of an ELLIPSE are given together, or left out together"},
+             Case{"ELLIPSE center=0,0 major-axis=10,0 ratio=2",
+                  "ratio needs a number in (0, 1], found '2'"},
+             Case{"ELLIPSE center=0,0 major-axis=10,0 ratio=0",
+                  "ratio needs a number above 0, found '0'"},
+             Case{"ELLIPSE center=0,0 major-axis=0,0 ratio=1",
+                  "major-axis needs a vector other than 0,0"},
+             Case{"ELLIPSE center=0,0 center=1,1 major-axis=1,0 ratio=1",
+                  "center is given more than once"},
+             Case{"MTEXT insertion=0,0", "missing property value of MTEXT"},
+             Case{R"(MTEXT insertion=0,0 value="a" attachment=top)",
+                  "attachment needs one of top-left, top-center, top-right, middle-left, "
+                  "middle-center, middle-right, bottom-left, bottom-center, bottom-right, "
+                  "found 'top'"},
+             Case{R"(MTEXT insertion=0,0 value="a" width=-1)",
+                  "width needs a number not below 0, found '-1'"},
+             Case{R"(MTEXT insertion=0,0 value="a" line-spacing-style=double)",
+                  "line-spacing-style needs one of at-least, exactly, found 'double'"},
+             Case{R"(ATTDEF position=0,0 value="N")", "missing property tag of ATTDEF"},
+             Case{R"(ATTDEF tag="T" value="N")", "missing property position of ATTDEF"},
+             Case{R"(ATTDEF tag="T" position=0,0 value="N" size=1)",
+                  "unknown property 'size' of ATTDEF"},
+             Case{R"(ATTDEF tag="" position=0,0 value="N")", "tag of an ATTDEF cannot be empty"},
+             Case{R"(ATTDEF tag="T" position=0,0 value="N" constant=si)",
+                  "constant needs yes or no, found 'si'"},
+             Case{"INSERT insertion=0,0", "missing property block of INSERT"},
+             Case{R"(INSERT block="B" insertion=0,0 scale=0,1)",
+                  "scale needs two numbers x,y other than 0, found '0,1'"},
+             Case{"DIMENSION text-point=0,0 measurement=1", "missing property kind of DIMENSION"},
+             Case{"DIMENSION kind=ordinate text-point=0,0 measurement=1",
+                  "kind needs one of linear, aligned, angular, radius, diameter, other, "
+                  "found 'ordinate'"},
+             Case{"DIMENSION kind=radius center=0,0 text-point=0,0 measurement=1",
+                  "missing property point of DIMENSION"},
+             Case{"DIMENSION kind=radius center=0,0 point=1,0 measurement=1",
+                  "missing property text-point of DIMENSION"},
+             Case{"DIMENSION kind=radius center=0,0 point=1,0 origin1=0,0 text-point=0,0 "
+                  "measurement=1",
+                  "origin1 is not a property of DIMENSION kind=radius"},
+             Case{"DIMENSION kind=aligned origin1=0,0 origin2=1,0 line-point=1,1 rotation=0 "
+                  "text-point=0,0 measurement=1",
+                  "rotation is not a property of DIMENSION kind=aligned"},
+             Case{"DIMENSION kind=angular line-point=9,9 first=0,0;1,0 second=2,2;0,1 "
+                  "arc-point=3,3 text-point=1,1 measurement=90",
+                  "line-point of an angular DIMENSION is the first point of second"},
+             Case{"DIMENSION kind=angular first=0,0 second=2,2;0,1 arc-point=3,3 "
+                  "text-point=1,1 measurement=90",
+                  "first needs two points x1,y1;x2,y2, found '0,0'"},
+             Case{"DIMENSION kind=other type=9 text-point=0,0 measurement=1",
+                  "type needs an integer from 0 to 7, found '9'"},
+             Case{"DIMENSION kind=other type=0 text-point=0,0 measurement=1 overrides=DIMTXT",
+                  "overrides needs NAME:value items separated by ',', found 'DIMTXT'"},
+             Case{"DIMENSION kind=other type=0 text-point=0,0 measurement=1 "
+                  "overrides=DIMTXT:1,DIMTXT:2",
+                  "the override 'DIMTXT' is given more than once"},
+             Case{"HATCH loop=polyline vertex=0,0", "missing property pattern of HATCH"},
+             Case{R"(HATCH pattern="A" vertex=0,0)", "vertex belongs to a loop of polyline"},
+             Case{R"(HATCH pattern="A" loop=edges vertex=0,0)",
+                  "vertex belongs to a loop of polyline"},
+             Case{R"(HATCH pattern="A" loop=polyline circle=0,0;1)",
+                  "circle belongs to a loop of edges"},
+             Case{R"(HATCH pattern="A" loop=external)",
+                  "loop needs exactly one of polyline and edges"},
+             Case{R"(HATCH pattern="A" loop=polyline+edges)",
+                  "loop needs exactly one of polyline and edges"},
+             Case{R"(HATCH pattern="A" loop=inner+edges)",
+                  "loop needs signals among external, outermost, derived, polyline, edges "
+                  "joined by '+', found 'inner'"},
+             Case{R"(HATCH pattern="A" loop=edges circle=0,0;0)",
+                  "circle needs cx,cy;r with r above 0, found '0,0;0'"},
+             Case{R"(HATCH pattern="A" loop=edges arc=0,0;1;90;90)",
+                  "arc needs cx,cy;r;a1;a2 with different angles in [0, 360), found "
+                  "'0,0;1;90;90'"},
+             Case{R"(HATCH pattern="A" islands=all)",
+                  "islands needs one of normal, outer, ignore, found 'all'"},
+             Case{R"(HATCH pattern="A" scale=0)", "scale needs a number above 0, found '0'"},
+             Case{R"(ATTRIB owner=300 position=0,0 value="N" tag="T")",
+                  "ATTRIB belongs to an INSERT: it is not defined alone"},
+         }) {
+        const EntityError error = failure(test.text);
+        EXPECT_EQ(error.message, test.message) << test.text;
+        EXPECT_FALSE(error.notImplemented) << test.text;
+    }
+}
+
 }  // namespace
 }  // namespace tg::script

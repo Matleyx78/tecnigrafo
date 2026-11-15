@@ -166,6 +166,16 @@ private:
         std::vector<RawValueChange> rawValues;
     };
 
+    struct StyleTableChange {
+        std::variant<core::TextStyleTable, core::DimStyleTable> table;
+    };
+
+    struct BlockTableChange {
+        std::string name;
+        std::optional<core::BlockDefinition> definition;
+        std::size_t position{0};
+    };
+
     /// One elementary change to the document. While the entity is outside the
     /// document (after an Added change is undone, or a Removed change is
     /// applied) `detached` holds it, so that it can be put back unchanged.
@@ -181,7 +191,9 @@ private:
             LayerUpdated,
             Properties,
             Current,
-            Ltscale
+            Ltscale,
+            StyleTable,
+            Block
         };
 
         Kind kind{Kind::Added};
@@ -190,7 +202,8 @@ private:
         int previousUnits{core::Document::kDefaultUnits};
         int units{core::Document::kDefaultUnits};
         std::variant<std::monostate, LayerTableChange, LinetypeTableChange, LayerUpdate,
-                     core::EntityRecord, core::CurrentProperties, core::Entity, double>
+                     core::EntityRecord, core::CurrentProperties, core::Entity, double,
+                     StyleTableChange, BlockTableChange>
             data;
     };
 

@@ -3,6 +3,7 @@
 
 #include "tg/script/entity_reader.hpp"
 
+#include "new_entities_format.hpp"
 #include "text.hpp"
 #include "tg/core/arc.hpp"
 #include "tg/core/arc_geometry.hpp"
@@ -751,6 +752,12 @@ std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_vie
         entity = readArc(properties);
     } else if (type == "TEXT") {
         entity = readText(properties);
+    } else if (auto read = detail::readNewEntity(type, properties)) {
+        entity = std::move(*read);
+    } else if (type == "ATTRIB") {
+        // In a report an ATTRIB follows its INSERT (docs/verifica/rapporto.md):
+        // a definition cannot give it an owner.
+        return EntityError{"ATTRIB belongs to an INSERT: it is not defined alone"};
     } else if (std::ranges::find(kPlannedTypes, type) != kPlannedTypes.end()) {
         return EntityError{"entity type " + std::string{type} + " is not implemented yet", true};
     } else {
@@ -760,11 +767,30 @@ std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_vie
         return std::move(*error);
     }
     definition.entity = std::get<core::Entity>(std::move(entity));
+    // A type of the 0.8 whose package is not merged yet (docs/adr/0044,
+    // point 1): its line is read and checked, then refused, so that its
+    // cases wait in tests/verifica/in-attesa/ (docs/tappe/0.8/PT9, point 5).
+    if (!core::isSupported(definition.entity)) {
+        return EntityError{std::string{type} + " is not supported yet.", true};
+    }
     if (auto* polyline = std::get_if<core::Polyline>(&definition.entity)) {
         polyline->setContinuousLinetype(definition.linetypeGeneration.value_or(false));
     }
     return definition;
 }
+
+namespace detail {
+
+std::variant<core::Text, EntityError> readTextProperties(PropertyTokens properties) {
+    std::variant<core::Entity, EntityError> text =
+        readText(Tokens(properties.begin(), properties.end()));
+    if (auto* error = std::get_if<EntityError>(&text)) {
+        return std::move(*error);
+    }
+    return std::get<core::Text>(std::get<core::Entity>(std::move(text)));
+}
+
+}  // namespace detail
 
 std::variant<core::Entity, EntityError> readEntity(std::string_view text) {
     std::variant<EntityDefinition, EntityError> definition = readEntityDefinition(text);
