@@ -124,6 +124,17 @@ allo stesso modo.
 - Niente `git commit -s`: il `Signed-off-by` lo aggiunge il responsabile, che ne
   risponde.
 - Nel commit la riga `Assisted-by: <nome dello strumento>`.
+- **Mai un indirizzo personale nei commit**: autore, committer e righe
+  `Co-authored-by` usano solo indirizzi noreply, quello del responsabile
+  (`18114626+Matleyx78@users.noreply.github.com`), un altro
+  `…@users.noreply.github.com`, `noreply@anthropic.com`, `codex@openai.com` o
+  `noreply@github.com`. Prima del primo commit guarda `git config user.email`:
+  se non è uno di questi, `git config user.name Matleyx78` e
+  `git config user.email 18114626+Matleyx78@users.noreply.github.com` nel
+  clone. Lo squash and merge di GitHub copia l'autore di ogni commit in una
+  riga `Co-authored-by` del commit su `main`, e da lì non si toglie più
+  ([DECISIONI.md](docs/DECISIONI.md), 2026-11-15, «Solo indirizzi noreply nei
+  commit»).
 - Nella pull request compila la sezione sull'uso dell'IA del modello, con lo
   strumento, **il modello e l'impegno** (per esempio «Claude Code, Claude Opus
   5.5, impegno medio»); se non sai con quale impegno sei stato avviato, scrivi

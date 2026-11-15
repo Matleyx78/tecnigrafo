@@ -14,7 +14,9 @@
   `core/include/tg/core/layer.hpp` e il codec delle tabelle
   `io/src/dxf_tables.cpp` (come sono fatti `LAYER` e `LTYPE`);
   `io/src/dxf_skeleton.cpp` (lo `Standard` di un disegno nuovo); la scheda
-  [PT6](PT6-scheletro-core.md), punto 5
+  [PT6](PT6-scheletro-core.md), punto 5; [verifica/rapporto.md](../../verifica/rapporto.md)
+  (i campi `text styles:` e `text style:`, fissati da PT9) e
+  `script/src/report.cpp`
 
 ## File
 
@@ -23,8 +25,11 @@
   `Standard` nella tabella (una riga)
 - `io/src/dxf_tables.cpp`, `io/src/dxf_tables.hpp`, `io/src/dxf_header.cpp`
   (`$TEXTSTYLE`), `io/src/dxf_skeleton.cpp`
+- `script/src/report.cpp` (file comune: i campi `text styles:` e
+  `text style:`)
 - `tests/core/text_style_table_test.cpp` (nuovo),
-  `tests/io/dxf_tables_test.cpp`, `tests/CMakeLists.txt` (file comune)
+  `tests/io/dxf_tables_test.cpp`, `tests/script/report_test.cpp` (file
+  comune), `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
 
@@ -79,11 +84,18 @@
 4. **Aggiornare uno stile:** `put` con il nome di uno stile che c'è già ne
    tiene l'handle e la posizione nella tabella, anche se lo stile passato ha
    `id` 0 (PT4, punto P16).
+5. **Rapporto.** `script` scrive i campi `text styles:` e `text style:` nel
+   formato di [verifica/rapporto.md](../../verifica/rapporto.md), fissato da
+   PT9, solo quando sono diversi da una sessione nuova: gli stili diversi da
+   `Standard` di una sessione nuova, e lo stile corrente se non è `Standard`
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Campi delle tabelle nel
+   rapporto scritti da chi li crea»). rapporto.md non si tocca.
 
 ## Regole della tappa che valgono qui
 
 - Il disegno usa sempre il font incluso: `font` si conserva, non si usa.
-- File comune: `tests/CMakeLists.txt`.
+- File comuni: `tests/CMakeLists.txt`, `script/src/report.cpp`,
+  `tests/script/report_test.cpp`.
 
 ## Test richiesti
 
@@ -97,6 +109,11 @@
   nello stesso ordine.
 - `dxf_tables_test.cpp`: giro di una tabella con `Standard`, uno stile con
   altezza fissa e uno con un file di forme (che resta grezzo); `$TEXTSTYLE`.
+- `report_test.cpp`: una sessione nuova non ha né `text styles:` né
+  `text style:`; con lo stile `Note` (font `romans.shx`, altezza 0, fattore
+  di larghezza 0.8) aggiunto e reso corrente, il rapporto ha `text styles:`
+  con la sola riga di `Note` e `text style:` con `"Note"`; con `Note`
+  aggiunto e `Standard` corrente, `text styles:` sì e `text style:` no.
 
 ## Fatto quando
 

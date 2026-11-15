@@ -1888,3 +1888,37 @@ i rimandi ai documenti che cambia.
   scheda, passi seguenti compresi,
   prima di aprire la pull request (nella #775 lo spostamento dell'estremo
   sbagliato di `PAR` ha lasciato il caso `ordine-conteggi` com'era).
+- **2026-11-15 — Campi delle tabelle nel rapporto scritti da chi li crea.**
+  Claude si ferma su PT9 ([#674](https://github.com/Matleyx78/tecnigrafo/issues/674)):
+  la scheda chiede di scrivere `text styles:`, `dimension styles:`,
+  `blocks:` e di realizzare `!block`/`!endblock`, ma dopo PT6
+  `TextStyleTable` e `DimStyleTable` non hanno campi e `BlockDefinition` ha
+  solo il nome; i campi li aggiungono PT11, PT16 e PT22, che dipendono da PT9.
+  Il responsabile sceglie: [PT9](tappe/0.8/PT9-rapporto-entita-nuove.md)
+  fissa in [verifica/rapporto.md](verifica/rapporto.md) e
+  [verifica/domande.md](verifica/domande.md) tutti i formati della scheda e
+  realizza le righe dei sette tipi, la lettura, gli `ATTRIB` e la domanda
+  `generated`; la scrittura di `text styles:` e `text style:` passa a
+  [PT11](tappe/0.8/PT11-stili-di-testo.md), quella di `dimension styles:`,
+  `dimension style:` e `dimension overrides:` a
+  [PT22](tappe/0.8/PT22-stili-di-quota.md), `blocks:` e `!block`/`!endblock`
+  a [PT16](tappe/0.8/PT16-blocchi-core.md), ciascuno con
+  `script/src/report.cpp` e `tests/script/report_test.cpp` fra i suoi file
+  (PT16 anche `script/src/question_table.cpp`, `script/src/questions.cpp` e
+  `tests/script/questions_test.cpp`), come file comuni. Scartati l'aggiunta
+  dei campi in `core` da parte di PT9, in anticipo sulle interfacce di quei
+  pacchetti, e un pacchetto nuovo dopo PT11, PT16 e PT22.
+- **2026-11-15 — Solo indirizzi noreply nei commit.** Alcuni commit scritti da
+  agenti in sessioni cloud portavano come autore l'indirizzo personale del
+  responsabile, preso dall'account dello strumento e non dalla configurazione
+  del repository; lo squash and merge di GitHub lo ha copiato in una riga
+  `Co-authored-by` del commit su `main`, dove resta pubblico. Il responsabile
+  decide: autore, committer e righe `Co-authored-by` di ogni commit usano solo
+  indirizzi noreply, e ogni agente controlla `git config user.email` prima del
+  primo commit ([AGENTS.md](../AGENTS.md), "Commit e pull request"). La regola
+  non basta da sola, perché nessuno la legge mentre lo strumento firma: il
+  pacchetto fuori tappa
+  [F10](tappe/fuori-tappa/F10-indirizzi-dei-commit.md) aggiunge alla CI un
+  controllo che fa fallire una pull request con un commit firmato da un
+  indirizzo diverso. Scartata la riscrittura della storia di `main`: romperebbe
+  i rami e le pull request aperti.

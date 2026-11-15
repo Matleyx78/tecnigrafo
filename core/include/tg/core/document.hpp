@@ -244,6 +244,10 @@ public:
     /// interfacce PT4", P6). Removing a name that is not there changes nothing.
     void replaceBlock(std::string name, std::optional<BlockDefinition> definition);
 
+    /// Restores a removed definition at its original table position (ADR 0044,
+    /// point 3). Preconditions: the name is absent; position <= table size.
+    void insertBlock(BlockDefinition definition, std::size_t position);
+
     // --- Current values (docs/adr/0023, point 3) ---------------------------
 
     [[nodiscard]] const CurrentProperties& current() const { return m_current; }

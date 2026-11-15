@@ -1028,5 +1028,140 @@ TEST(EditorDeathTest, EntityEditsAndSavepointsRequireAnOpenTransaction) {
     editor.rollback();
 }
 
+TEST(Editor, BlockAdditionCanBeUndoneAndRedone) {
+    Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    Editor editor(document);
+    const auto initial = document.blocks();
+
+    editor.beginTransaction("Add block");
+    ASSERT_TRUE(editor.tables().replaceBlock("B", core::BlockDefinition{"B"}));
+    editor.commit();
+    const auto added = document.blocks();
+    ASSERT_EQ(added.definitions().size(), 2U);
+    EXPECT_TRUE(editor.isModified());
+
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(document.blocks(), initial);
+    EXPECT_FALSE(editor.isModified());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(document.blocks(), added);
+    EXPECT_TRUE(editor.isModified());
+}
+
+TEST(Editor, BlockRemovalRestoresItsOriginalPositionOnEveryUndo) {
+    Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    document.replaceBlock("B", core::BlockDefinition{"B"});
+    document.replaceBlock("C", core::BlockDefinition{"C"});
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    for (const std::string name : {"A", "B", "C"}) {
+        SCOPED_TRACE(name);
+        editor.beginTransaction("Remove block");
+        ASSERT_TRUE(editor.tables().replaceBlock(name, std::nullopt));
+        editor.commit();
+        ASSERT_EQ(document.blocks().definitions().size(), 2U);
+        EXPECT_EQ(document.blocks().find(name), nullptr);
+
+        ASSERT_TRUE(editor.undo());
+        EXPECT_EQ(document.blocks(), initial);
+        ASSERT_TRUE(editor.redo());
+        EXPECT_EQ(document.blocks().definitions().size(), 2U);
+        EXPECT_EQ(document.blocks().find(name), nullptr);
+        ASSERT_TRUE(editor.undo());
+        EXPECT_EQ(document.blocks(), initial);
+    }
+}
+
+TEST(Editor, RedefiningABlockKeepsItsPositionAndSpelling) {
+    Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    document.replaceBlock("B", core::BlockDefinition{"B"});
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    editor.beginTransaction("Redefine block");
+    // PT6 definitions contain only their name. Once the spelling is preserved,
+    // there is no other data to change until PT16 adds the block contents.
+    EXPECT_FALSE(editor.tables().replaceBlock("a", core::BlockDefinition{"a"}));
+    editor.commit();
+    EXPECT_EQ(document.blocks(), initial);
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.isModified());
+}
+
+TEST(Editor, BlockAndEntityChangesShareOneUndoStep) {
+    Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    document.replaceBlock("B", core::BlockDefinition{"B"});
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    editor.beginTransaction("Change blocks and entity");
+    ASSERT_TRUE(editor.tables().replaceBlock("A", std::nullopt));
+    ASSERT_TRUE(editor.tables().replaceBlock("C", core::BlockDefinition{"C"}));
+    const EntityId id = editor.add(segment(5));
+    editor.commit();
+    const auto changed = document.blocks();
+
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(document.blocks(), initial);
+    EXPECT_EQ(document.find(id), nullptr);
+    EXPECT_FALSE(editor.canUndo());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(document.blocks(), changed);
+    EXPECT_EQ(entityOf(document, id), Entity{segment(5)});
+    EXPECT_FALSE(editor.canRedo());
+}
+
+TEST(Editor, RecreatingABlockWithDifferentSpellingRestoresBothStates) {
+    Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    document.replaceBlock("B", core::BlockDefinition{"B"});
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    editor.beginTransaction("Recreate block");
+    ASSERT_TRUE(editor.tables().replaceBlock("a", std::nullopt));
+    ASSERT_TRUE(editor.tables().replaceBlock("a", core::BlockDefinition{"a"}));
+    editor.commit();
+    const auto recreated = document.blocks();
+    ASSERT_EQ(recreated.definitions().size(), 2U);
+    EXPECT_EQ(recreated.definitions()[0].name, "B");
+    EXPECT_EQ(recreated.definitions()[1].name, "a");
+
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        ASSERT_TRUE(editor.undo());
+        EXPECT_EQ(document.blocks(), initial);
+        ASSERT_TRUE(editor.redo());
+        EXPECT_EQ(document.blocks(), recreated);
+    }
+}
+
+TEST(Editor, BlockChangesUseSavepointsAndRollback) {
+    Document document;
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    document.replaceBlock("B", core::BlockDefinition{"B"});
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    editor.beginTransaction("Change blocks");
+    ASSERT_TRUE(editor.tables().replaceBlock("C", core::BlockDefinition{"C"}));
+    const auto mark = editor.savepoint();
+    const auto beforeMark = document.blocks();
+    ASSERT_TRUE(editor.tables().replaceBlock("A", std::nullopt));
+    const EntityId id = editor.add(segment(3));
+    editor.rollbackTo(mark);
+    EXPECT_EQ(document.blocks(), beforeMark);
+    EXPECT_EQ(document.find(id), nullptr);
+    EXPECT_EQ(editor.savepoint().changes, mark.changes);
+    editor.rollback();
+    EXPECT_EQ(document.blocks(), initial);
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.isModified());
+}
+
 }  // namespace
 }  // namespace tg::edit
