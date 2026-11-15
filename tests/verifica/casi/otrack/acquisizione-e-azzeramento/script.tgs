@@ -1,4 +1,5 @@
 ; Acquisition toggles, keeps seven newest points and clears on completion and Esc (PT34 point 2)
+!otrack on
 LINE
 0,0
 10,0
@@ -16,7 +17,6 @@ LINE
 70,0
 
 !osnap end
-!otrack on
 LINE
 -10,-10
 !hover 0,0

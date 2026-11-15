@@ -1,5 +1,6 @@
 ; Candidate distances are compared as squared doubles without square roots (PT34 point 3)
 !view 0,0 1 800x600
+!otrack on
 LINE
 0,40
 0,60
@@ -13,7 +14,6 @@ LINE
 60,1
 
 !osnap end
-!otrack on
 LINE
 -20,-20
 !hover 0,40

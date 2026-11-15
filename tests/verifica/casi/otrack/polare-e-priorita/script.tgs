@@ -1,5 +1,6 @@
 ; Guide crossing beats a polar crossing; polar crossings use acquisition recency (PT34 point 3)
 !view 0,0 1 800x600
+!otrack on
 LINE
 40,0
 0,40
@@ -16,7 +17,6 @@ POLARANG
 90
 !osnap end
 !polar on
-!otrack on
 LINE
 -20,10
 !hover 40,0
