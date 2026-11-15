@@ -295,12 +295,13 @@ def self_test():
         # A drawing written by ezdxf exercises every stage 0.8 answer family.
         stage = root / "stage-0.8.dxf"
         document = ezdxf.new("R2018", setup=True)
+        document.dimstyles.new("ISO-25")
         block = document.blocks.new("TAGGED", base_point=(1, 2))
         block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
         block.add_line((0, 0), (4, 0))
         model = document.modelspace()
         insert = model.add_blockref("TAGGED", (10, 20))
-        insert.add_attrib("CODE", "A1", insert=(10, 20), height=1.8)
+        insert.add_attrib("CODE", "A1", insert=(10, 20), dxfattribs={"height": 1.8})
         model.add_solid([(0, 0), (2, 0), (0, 1), (2, 1)])
         model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
                                                         "char_height": 2.5,

@@ -134,7 +134,7 @@ def managed(entity, model_owner):
     if kind == "TEXT" and (d.height <= 0 or d.width <= 0):
         return False
     if kind in {"ATTDEF", "ATTRIB"} and (d.height <= 0 or d.width <= 0
-                                           or d.get("mtext_flag", 0)):
+                                           or entity.has_embedded_mtext_entity):
         return False
     if kind == "MTEXT" and (d.char_height <= 0 or entity.has_columns):
         return False
@@ -288,8 +288,9 @@ def entity_answer(entity, layer_names=None, linetype_names=None):
         add("islands", {0: "normal", 1: "outer", 2: "ignore"}.get(d.get("hatch_style", 0), "normal"))
         for path in entity.paths: fields.extend(hatch_loop(path))
         for seed in entity.seeds: add("seed", point(seed))
-    optional("thickness", d.get("thickness", 0))
-    extrusion = tuple(d.get("extrusion", (0, 0, 1)))
+    if d.is_supported("thickness"):
+        optional("thickness", d.get("thickness", 0))
+    extrusion = tuple(d.get("extrusion", (0, 0, 1))) if d.is_supported("extrusion") else (0, 0, 1)
     fields.extend(extra)
     if extrusion != (0, 0, 1):
         add("extrusion", point(extrusion, 3))
