@@ -1,0 +1,104 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  256 INSERT block="Contatto" insertion=5,5 scale=1,1 rotation=0
+messages:
+  Command: OPEN
+  Enter name of drawing to open: destinazione.dxf
+  1 entity not supported: INSERT 1
+  Command: -INSERT
+  Enter block name or [?]: Contatto=simbolo.dxf
+  Block "Contatto" redefined
+  Specify insertion point or [Basepoint/Scale/Rotate]:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Insert
+redo:
+snap: on
+ortho: off
+drawing: destinazione.dxf, modified
+units: 4
+documents: Drawing1.cadx, destinazione.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  INSERT 1
+
+[report 2]
+entities:
+  256 INSERT block="Contatto" insertion=5,5 scale=1,1 rotation=0
+messages:
+  Command: U
+  Insert
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Insert
+snap: on
+ortho: off
+drawing: destinazione.dxf
+units: 4
+documents: Drawing1.cadx, destinazione.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  INSERT 1
+
+[report 3]
+entities:
+  256 INSERT block="Contatto" insertion=5,5 scale=1,1 rotation=0
+messages:
+  Command: -INSERT
+  Enter block name or [?] <Contatto>: Nuovo=simbolo.dxf
+  Block "Nuovo" defined
+  Specify insertion point or [Basepoint/Scale/Rotate]: Scale
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 2
+  Specify insertion point or [Basepoint/Scale/Rotate]:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Insert
+redo:
+snap: on
+ortho: off
+drawing: destinazione.dxf, modified
+units: 4
+documents: Drawing1.cadx, destinazione.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  INSERT 1
+
+[final]
+entities:
+  256 INSERT block="Contatto" insertion=5,5 scale=1,1 rotation=0
+messages:
+  Command: U
+  Insert
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Insert
+snap: on
+ortho: off
+drawing: destinazione.dxf
+units: 4
+documents: Drawing1.cadx, destinazione.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  INSERT 1

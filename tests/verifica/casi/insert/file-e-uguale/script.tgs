@@ -1,0 +1,13 @@
+; The handwritten files distinguish a=b.dxf (line at 100,100) from b.dxf (circle at the origin).
+OPEN
+destinazione.dxf
+; cambia con #705
+-INSERT
+nuovo.dxf
+10,0
+-INSERT
+b.dxf
+20,0
+-INSERT
+a=b.dxf
+30,0
