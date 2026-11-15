@@ -420,6 +420,7 @@ def main():
         self_test()
     failures = 0
     if not args.check_only:
+        source_errors = []
         print_standard_answers()
         manifest = args.cases.parent / "sorgenti.json"
         sources = json.loads(manifest.read_text(encoding="utf-8"))["sources"] if manifest.exists() else []
@@ -431,7 +432,9 @@ def main():
                 DrawingAnswers(args.sources / source["name"]).print_answers()
             except (OSError, ValueError, ezdxf.DXFError) as error:
                 failures += 1
-                print(f"{source['name']}: {error}")
+                source_errors.append(f"{source['name']}: {error}")
+        for error in source_errors:
+            print(error)
     if not args.print_only:
         cases = questions = 0
         for path in sorted(args.cases.rglob("domande.tgq")):
