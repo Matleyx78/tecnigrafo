@@ -164,18 +164,23 @@ metti un carattere invisibile dopo la chiocciola, o scrivi il nome senza.
    a te e Codex non risponde ai bot: con quel token scrivono gli script, e
    Claude apre le pull request in modo che parta la CI.
 4. In Codex crea un **ambiente legacy** per il repository (le menzioni usano
-   solo quelli; non migrarlo), con rete solo verso `api.github.com` e
-   `github.com`, tutti i metodi HTTP, il token come segreto, `gh auth login`
-   nello script di preparazione e la **cache spenta**. Per la chat di Codex
-   basta l'ambiente nuovo con il segreto HTTP `GH_TOKEN`. Che cosa mettere
+   solo quelli; non migrarlo), con rete solo verso `api.github.com`,
+   `github.com` e `raw.githubusercontent.com` (da qui `scripts/controlla.sh`
+   scarica i file di verifica di `sorgenti.json`), tutti i metodi HTTP, il token
+   come segreto, `gh auth login` nello script di preparazione e la **cache
+   spenta**. Per la chat di Codex basta l'ambiente nuovo con il segreto HTTP
+   `GH_TOKEN` (domini del segreto: solo `api.github.com` e `github.com`) e gli
+   stessi tre domini consentiti. Che cosa mettere
    negli script di preparazione lo decidi tu
    ([agenti/comandi.md](agenti/comandi.md), "Gli ambienti della catena").
 5. Le etichette `pronta`, `decisione` e `ferma` le crea GitHub la prima volta
    che un agente le mette; puoi crearle prima tu, con i colori che preferisci.
 
 **Che cosa rallenta.** La quota di Codex (cinque ore e settimanale): una
-decisione scritta e non ripresa la segnala la sentinella. E la coda di GitHub
-Actions, uno o due minuti per passaggio.
+decisione scritta e non ripresa la segnala la sentinella. La coda di GitHub
+Actions, uno o due minuti per passaggio. E la preparazione dell'ambiente
+legacy senza cache, circa dieci minuti per ogni avvio di Codex (pilota PT41,
+#736: un'ora dal commento a `pronta` per un pacchetto facile, CI compresa).
 
 ### A3. Unire una pull request
 

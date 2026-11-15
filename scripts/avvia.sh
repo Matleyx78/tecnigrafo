@@ -73,7 +73,7 @@ case "$agent" in
     exit 1 ;;
 esac
 
-text="$prefix Leggi AGENTS.md e seguilo alla lettera. ${reason:+$reason }Realizza questa issue, o riprendila da dove si era fermata, come dice docs/agenti/catena.md."
+text="$prefix Leggi AGENTS.md e seguilo alla lettera. ${reason:+$reason }Realizza questa issue, o riprendila da dove si era fermata, come dice docs/agenti/catena.md. Il lavoro esiste solo su GitHub: pubblica il ramo con git push e apri tu la pull request con gh pr create."
 if [ "${DRY_RUN:-0}" = 1 ]; then
   echo "issue #$issue, would write: $text"
   exit 0
