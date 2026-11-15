@@ -30,6 +30,7 @@ add_library(tg_core
     src/join.cpp
     src/mtext.cpp
     src/offset.cpp
+    src/pedit_join.cpp
     src/layer.cpp
     src/line.cpp
     src/math.cpp
