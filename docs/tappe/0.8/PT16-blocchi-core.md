@@ -31,6 +31,7 @@
 - `tests/core/block_table_test.cpp`, `tests/core/insert_test.cpp` (nuovi),
   `tests/script/report_test.cpp`, `tests/script/questions_test.cpp` (file
   comuni), `tests/CMakeLists.txt` (file comune)
+- `tests/render/generated_drawing_test.cpp` (di PT8)
 
 ## Cosa fare
 
@@ -155,6 +156,14 @@
   e `!endblock` creano la definizione `TG_EL` con base `5,0` e quella linea;
   un `INSERT block="TG_EL" insertion=10,20 scale=1,1 rotation=0` definito dopo
   risponde a `generated` con `LINE start=5,20 end=15,20`.
+- `generated_drawing_test.cpp`: evidenziazione e anteprima di un inserimento
+  disegnano le stesse forme generate della scena (`renderScene`,
+  `renderHighlight`, `renderPreview`), con il colore della selezione; una
+  polilinea con un arco e larghezza 2, in un inserimento con scala `(2, 1)`:
+  tutti i pezzi, dritti ed ellittici, arrivano al pittore senza larghezza e il
+  motivo tratteggiato riparte all'inizio di ogni pezzo
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Test di PT8 con un
+  inserimento vero in PT16»).
 
 ## Fatto quando
 

@@ -1922,3 +1922,20 @@ i rimandi ai documenti che cambia.
   controllo che fa fallire una pull request con un commit firmato da un
   indirizzo diverso. Scartata la riscrittura della storia di `main`: romperebbe
   i rami e le pull request aperti.
+- **2026-11-15 — Test di PT8 con un inserimento vero in PT16.** Nel primo
+  giro di revisione di PT8 ([#779](https://github.com/Matleyx78/tecnigrafo/pull/779))
+  la scheda chiede due test con un inserimento, che passi da `core::generate`
+  e dalla scena; ma `supported(const Insert&)` è ancora `false`, `transformedShape`
+  con una scala non uniforme è ancora vuota, e PT16, che rende `Insert`
+  supportato, dipende da PT8. Il responsabile sceglie
+  ([#673](https://github.com/Matleyx78/tecnigrafo/issues/673)): in
+  [PT8](tappe/0.8/PT8-geometria-generata-render.md) l'evidenziazione e
+  l'anteprima disegnano le stesse forme della scena, e le forme che darà un
+  inserimento con scala `(2, 1)` di una polilinea con un arco e larghezza 2
+  (una linea e un arco d'ellisse senza larghezza) passano al disegno della
+  geometria generata, con il motivo tratteggiato che riparte all'inizio di
+  ogni pezzo; le stesse verifiche con un inserimento vero le scrive
+  [PT16](tappe/0.8/PT16-blocchi-core.md), con
+  `tests/render/generated_drawing_test.cpp` fra i suoi file. Scartati il
+  lasciare le schede come sono, senza che nessuno scriva i test con un
+  inserimento vero, e l'anticipo in PT8 del supporto di `Insert` in `core`.
