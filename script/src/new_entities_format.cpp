@@ -72,6 +72,17 @@ struct LoopSignal {
 // docs/verifica/rapporto.md.
 constexpr std::array kLoopSignals{LoopSignal{"external", 1U}, LoopSignal{"outermost", 16U},
                                   LoopSignal{"derived", 4U}};
+
+/// The signal of a loop with this name, or null.
+const LoopSignal* loopSignalNamed(std::string_view name) {
+    for (const LoopSignal& signal : kLoopSignals) {
+        if (signal.name == name) {
+            return &signal;
+        }
+    }
+    return nullptr;
+}
+
 // Bit 2 of group 92: a polyline path; without it the path is made of edges.
 constexpr std::uint32_t kPolylineLoop = 2U;
 
@@ -1010,8 +1021,7 @@ Read<std::uint32_t> readLoopSignals(std::string_view text) {
             return Error{"the signal " + quoted(name) + " of loop is given more than once"};
         }
         seen.push_back(name);
-        const auto* const signal = std::ranges::find(kLoopSignals, name, &LoopSignal::name);
-        if (signal != kLoopSignals.end()) {
+        if (const LoopSignal* const signal = loopSignalNamed(name); signal != nullptr) {
             flags |= signal->bit;
         } else if (name == "polyline") {
             flags |= kPolylineLoop;
