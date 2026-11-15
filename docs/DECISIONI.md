@@ -1846,3 +1846,17 @@ i rimandi ai documenti che cambia.
   l'automazione non ha limiti di quota. In solid-space arriva con una pull
   request sua. [ADR 0053](adr/0053-catena-degli-agenti.md);
   [agenti/catena.md](agenti/catena.md); [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), A2a.
+- **2026-11-15 — Domande di PT32 annunciate prima del lavoro.** Codex si
+  ferma su RT32 ([#724](https://github.com/Matleyx78/tecnigrafo/issues/724)):
+  le funzioni di PT32 (`toPolyline`, `reversed`, `joinWithGaps`) non hanno
+  una domanda al modello, `join` non conosce `fuzz`, il tipo di unione,
+  `added` e `consumed`, e `PEDIT` è PT33, che dipende da PT32. Il responsabile
+  sceglie, fra le due uscite proposte, le **domande al modello**: tre domande
+  nuove, `to-polyline`, `reverse` e `pedit-join`, invece di cambiare `join`
+  (una domanda si aggiunge, non si cambia). Le descrive e le annuncia il
+  pacchetto fuori tappa
+  [F9](tappe/fuori-tappa/F9-domande-pedit.md) (#771), come F8 per RT34; PT32
+  le realizza. Scartato lo spostamento dei casi su RT33 e `PEDIT`, che
+  avrebbe lasciato PT32 senza riferimenti scritti prima del lavoro.
+  [verifica/domande.md](verifica/domande.md), «Polilinee (tappa 0.8)»;
+  [PT32](tappe/0.8/PT32-unione-con-distanza.md), punto 5.

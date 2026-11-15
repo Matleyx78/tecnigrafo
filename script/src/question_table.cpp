@@ -593,6 +593,11 @@ constexpr std::array kQuestions{
     QuestionRow{"circle-ttr", AnswerShape::Single, &askCircleTtr},                 // P19
     QuestionRow{"chamfer", AnswerShape::Single, &askChamfer},                      // P21
     QuestionRow{"join", AnswerShape::Single, &askJoin},                            // P22
+    // Stage 0.8: announced for package PT32 (F9), so that the references of
+    // RT32 are pending, not invalid, until PT32 answers them.
+    QuestionRow{"to-polyline", AnswerShape::Single, nullptr},
+    QuestionRow{"reverse", AnswerShape::Single, nullptr},
+    QuestionRow{"pedit-join", AnswerShape::Single, nullptr},
 };
 
 }  // namespace

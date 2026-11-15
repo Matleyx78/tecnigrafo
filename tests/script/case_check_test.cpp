@@ -485,7 +485,11 @@ TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
 
 TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
     const std::string drawing = "A = LINE start=0,0 end=10,0\n";
-    const std::vector<std::string> forms{"transform A move 1,2", "grips A", "grip A 0,0 1,2"};
+    // Stage 0.7 questions, and those announced for package PT32 of stage 0.8
+    // (docs/tappe/fuori-tappa/F9-domande-pedit.md).
+    const std::vector<std::string> forms{
+        "transform A move 1,2", "grips A",   "grip A 0,0 1,2",
+        "to-polyline A",        "reverse A", "pedit-join A A fuzz=1"};
     int checked = 0;
     for (const std::string& form : forms) {
         std::string text = drawing;
@@ -518,7 +522,7 @@ TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
         expectContains(result.output, "unknown question 'transformx'");
     }
     if (checked == 0) {
-        GTEST_SKIP() << "the program already answers all three announced questions";
+        GTEST_SKIP() << "the program already answers all the announced questions";
     }
 }
 
