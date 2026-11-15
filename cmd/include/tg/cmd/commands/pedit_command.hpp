@@ -15,8 +15,11 @@ public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
     void cancel(CommandContext& context) override;
+
     void pointerMoved(const core::Vec2& /*point*/) override {}
+
     [[nodiscard]] Prompt prompt() const override;
+
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
 
 private:
@@ -30,6 +33,7 @@ private:
         Type,
         Ltype
     };
+
     struct Option {
         edit::Editor::Savepoint mark;
         std::vector<core::EntityId> ids;
@@ -57,8 +61,11 @@ public:
     [[nodiscard]] static CommandDescription description();
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
+
     void pointerMoved(const core::Vec2& /*point*/) override {}
+
     [[nodiscard]] Prompt prompt() const override;
+
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
 
 private:

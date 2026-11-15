@@ -25,7 +25,6 @@ class DocumentHost;
 
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
-    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
     double textHeight{2.5};
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
@@ -48,6 +47,7 @@ struct CommandDefaults {
     double chamferAngle{0.0};  ///< radians
     bool chamferUseAngle{false};
     bool trimMode{true};
+    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
 };
 
 /// What a command of the drawing works with: the protocol's context

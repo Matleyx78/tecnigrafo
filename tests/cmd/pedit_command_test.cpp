@@ -197,8 +197,13 @@ TEST_F(PeditCommandTest, ElevationFiltersJoinCandidatesAndMapsConsumedIndices) {
         std::string_view other;
         bool joined;
     };
-    for (const auto heights : {Heights{"", "1", false}, Heights{"1", "", false},
-                               Heights{"1", "1.0", true}}) {
+
+    const std::vector<Heights> cases{
+        {"", "1", false},
+        {"1", "", false},
+        {"1", "1.0", true},
+    };
+    for (const auto& heights : cases) {
         for (const bool multiple : {false, true}) {
             const auto source = addPolyline({0, 0}, {1, 0}, heights.source);
             const auto other = addPolyline({1, 0}, {2, 0}, heights.other);

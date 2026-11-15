@@ -16,10 +16,8 @@
 namespace tg::cmd {
 namespace {
 
-constexpr std::string_view kOpenOptions =
-    "Enter an option [Close/Join/Ltype gen/Reverse/Undo]:";
-constexpr std::string_view kClosedOptions =
-    "Enter an option [Open/Join/Ltype gen/Reverse/Undo]:";
+constexpr std::string_view kOpenOptions = "Enter an option [Close/Join/Ltype gen/Reverse/Undo]:";
+constexpr std::string_view kClosedOptions = "Enter an option [Open/Join/Ltype gen/Reverse/Undo]:";
 constexpr std::string_view kMultipleOptions =
     "Enter an option [Close/Open/Join/Ltype gen/Reverse/Undo]:";
 
@@ -91,52 +89,84 @@ std::optional<double> elevation(const core::EntityRecord& record) {
 }  // namespace
 
 CommandDescription PeditCommand::description() {
-    return {"PEDIT",
-            {"PE"},
-            "Edits polylines and converts lines and arcs to polylines.",
-            false,
-            {{"source",
-              "Select polyline or [Multiple]:",
-              ValueType::Object,
-              {{"Multiple", "M"}},
-              true},
-             {"selection", "Select objects:", ValueType::Selection, {}, true},
-             {"conversion", "Do you want to turn it into one? <Y>", ValueType::Text, {}, true},
-             {"multiple-conversion",
-              "Convert Lines, Arcs and Splines to polylines [Yes/No]? <Y>",
-              ValueType::Keyword,
-              {{"Yes", "Y"}, {"No", "N"}},
-              true},
-             {"open-options",
-              std::string{kOpenOptions},
-              ValueType::Keyword,
-              optionKeywords(false, false),
-              true},
-             {"closed-options",
-              std::string{kClosedOptions},
-              ValueType::Keyword,
-              optionKeywords(false, true),
-              true},
-             {"multiple-options",
-              std::string{kMultipleOptions},
-              ValueType::Keyword,
-              optionKeywords(true, false),
-              true},
-             {"fuzz",
-              "Enter fuzz distance or [Jointype] <0.0000>:",
-              ValueType::Distance,
-              {{"Jointype", "J"}},
-              true},
-             {"type",
-              "Enter join type [Extend/Add/Both] <{default}>:",
-              ValueType::Keyword,
-              {{"Extend", "E"}, {"Add", "A"}, {"Both", "B"}},
-              true},
-             {"ltype",
-              "Enter polyline linetype generation option [ON/OFF] <{default}>:",
-              ValueType::Keyword,
-              {{"ON", "ON"}, {"OFF", "OFF"}},
-              true}}};
+    return {
+        "PEDIT",
+        {"PE"},
+        "Edits polylines and converts lines and arcs to polylines.",
+        false,
+        {
+            {
+                "source",
+                "Select polyline or [Multiple]:",
+                ValueType::Object,
+                {{"Multiple", "M"}},
+                true,
+            },
+            {
+                "selection",
+                "Select objects:",
+                ValueType::Selection,
+                {},
+                true,
+            },
+            {
+                "conversion",
+                "Do you want to turn it into one? <Y>",
+                ValueType::Text,
+                {},
+                true,
+            },
+            {
+                "multiple-conversion",
+                "Convert Lines, Arcs and Splines to polylines [Yes/No]? <Y>",
+                ValueType::Keyword,
+                {{"Yes", "Y"}, {"No", "N"}},
+                true,
+            },
+            {
+                "open-options",
+                std::string{kOpenOptions},
+                ValueType::Keyword,
+                optionKeywords(false, false),
+                true,
+            },
+            {
+                "closed-options",
+                std::string{kClosedOptions},
+                ValueType::Keyword,
+                optionKeywords(false, true),
+                true,
+            },
+            {
+                "multiple-options",
+                std::string{kMultipleOptions},
+                ValueType::Keyword,
+                optionKeywords(true, false),
+                true,
+            },
+            {
+                "fuzz",
+                "Enter fuzz distance or [Jointype] <0.0000>:",
+                ValueType::Distance,
+                {{"Jointype", "J"}},
+                true,
+            },
+            {
+                "type",
+                "Enter join type [Extend/Add/Both] <{default}>:",
+                ValueType::Keyword,
+                {{"Extend", "E"}, {"Add", "A"}, {"Both", "B"}},
+                true,
+            },
+            {
+                "ltype",
+                "Enter polyline linetype generation option [ON/OFF] <{default}>:",
+                ValueType::Keyword,
+                {{"ON", "ON"}, {"OFF", "OFF"}},
+                true,
+            },
+        },
+    };
 }
 
 void PeditCommand::start(CommandContext& context) {
@@ -364,8 +394,8 @@ Status PeditCommand::handle(CommandContext& context, const Input& input) {
                         // Close adds a straight segment, even if the unused
                         // final vertex of an open polyline carries a bulge.
                         if (!polyline.isClosed() && polyline.vertexCount() != 0) {
-                            std::vector<core::PolylineVertex> vertices(polyline.vertices().begin(),
-                                                                      polyline.vertices().end());
+                            const auto points = polyline.vertices();
+                            std::vector<core::PolylineVertex> vertices(points.begin(), points.end());
                             vertices.back().bulge = 0.0;
                             core::Polyline closed{std::move(vertices), true};
                             closed.setConstantWidth(polyline.constantWidth());
@@ -451,9 +481,9 @@ Prompt PeditCommand::prompt() const {
                     {{"Jointype", "J"}},
                     PromptKind::Distance};
         case Stage::Type:
-            return {"Enter join type [Extend/Add/Both] <" +
-                        std::string{joinTypeName(m_joinType)} + ">:",
-                    {{"Extend", "E"}, {"Add", "A"}, {"Both", "B"}}};
+            return {
+                "Enter join type [Extend/Add/Both] <" + std::string{joinTypeName(m_joinType)} + ">:",
+                {{"Extend", "E"}, {"Add", "A"}, {"Both", "B"}}};
         case Stage::Ltype:
             return {"Enter polyline linetype generation option [ON/OFF] <" +
                         std::string{m_ltype ? "On" : "Off"} + ">:",
@@ -463,15 +493,21 @@ Prompt PeditCommand::prompt() const {
 }
 
 CommandDescription PeditacceptCommand::description() {
-    return {"PEDITACCEPT",
-            {},
-            "Sets whether PEDIT converts lines and arcs without asking.",
-            false,
-            {{"value",
-              "Enter new value for PEDITACCEPT <{default}>:",
-              ValueType::Integer,
-              {},
-              true}}};
+    return {
+        "PEDITACCEPT",
+        {},
+        "Sets whether PEDIT converts lines and arcs without asking.",
+        false,
+        {
+            {
+                "value",
+                "Enter new value for PEDITACCEPT <{default}>:",
+                ValueType::Integer,
+                {},
+                true,
+            },
+        },
+    };
 }
 
 void PeditacceptCommand::start(CommandContext& context) {
