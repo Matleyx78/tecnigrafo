@@ -6,6 +6,7 @@ entities:
 messages:
   Command: OPEN
   Enter name of drawing to open: destinazione.dxf
+  1 entity not supported: INSERT 1
   Command: -INSERT
   Enter block name or [?]: Contatto=simbolo.dxf
   Block "Contatto" redefined
