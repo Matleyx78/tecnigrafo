@@ -40,6 +40,8 @@ fi
 echo "$tool $cred $path" >> "$FAKE_LOG"
 case $path in
     */annotations*) echo '[{"annotation_level":"failure","path":"core/a.cpp","start_line":3,"title":"","message":"boom"}]' ;;
+    */pulls/*) echo '{"head":{"sha":"abc1234"}}' ;;
+    *runs\?head_sha=*) echo '{"workflow_runs":[{"id":4279201937}]}' ;;
     */jobs*) echo '{"jobs":[{"id":5,"name":"Linux","conclusion":"failure","steps":[{"name":"Build","conclusion":"failure"}]}]}' ;;
     */runs/*) echo '{"id":7,"status":"completed","conclusion":"failure","html_url":"https://example.invalid/7"}' ;;
     *) echo '{}' ;;
@@ -49,7 +51,8 @@ esac
 
 @unittest.skipUnless(shutil.which("jq") and shutil.which("bash"), "needs bash and jq")
 class Annotations(unittest.TestCase):
-    def run_script(self, env_extra: dict[str, str], tools=("gh", "curl")) -> tuple[str, list[str]]:
+    def run_script(self, env_extra: dict[str, str], tools=("gh", "curl"),
+                   arg: str = "4279201937") -> tuple[str, list[str]]:
         with tempfile.TemporaryDirectory() as tmp:
             bin_dir = Path(tmp) / "bin"
             bin_dir.mkdir()
@@ -64,7 +67,7 @@ class Annotations(unittest.TestCase):
                 (bin_dir / tool).symlink_to(shutil.which(tool))
             env = {"PATH": str(bin_dir), "FAKE_LOG": str(log), "HOME": tmp}
             env.update(env_extra)
-            out = subprocess.run(["bash", str(SCRIPT), "7"], env=env, capture_output=True,
+            out = subprocess.run(["bash", str(SCRIPT), arg], env=env, capture_output=True,
                                  text=True, check=True).stdout
             return out, log.read_text().splitlines()
 
@@ -87,6 +90,19 @@ class Annotations(unittest.TestCase):
         out, calls = self.run_script({"GH_TOKEN": "personale", "GITHUB_TOKEN": "altro"})
         self.assertIn("core/a.cpp:3 boom", out)
         self.assertEqual([c.split()[:2] for c in self.annotation_calls(calls)], [["curl", "-"]])
+
+
+    def test_pull_request_number(self):
+        # A short number is a pull request: the run of its last commit.
+        out, calls = self.run_script({}, arg="773")
+        self.assertIn("pull request #773: commit abc1234", out)
+        self.assertTrue(any(c.endswith("/pulls/773") for c in calls))
+        self.assertTrue(any("runs?head_sha=abc1234" in c for c in calls))
+
+    def test_run_id(self):
+        out, calls = self.run_script({}, arg="4279201937")
+        self.assertFalse(any("/pulls/" in c for c in calls))
+        self.assertTrue(any(c.endswith("/runs/4279201937") for c in calls))
 
 
 if __name__ == "__main__":
