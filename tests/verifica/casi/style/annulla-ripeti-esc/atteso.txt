@@ -1,0 +1,93 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: Note
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 0.8
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "Note" is now the current text style.
+  Command: U
+  Undone: Style.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Style
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  Command: REDO
+  Redone: Style.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+redo:
+snap: on
+ortho: off
+text styles:
+  "Note" font="arial.ttf" height=0 width-factor=0.8 oblique=0 backwards=no upside-down=no
+text style: "Note"
+pointer: none
+active snap: none
+statistics:
+
+[report 3]
+entities:
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Note>: Bozza
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 3
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+redo:
+snap: on
+ortho: off
+text styles:
+  "Note" font="arial.ttf" height=0 width-factor=0.8 oblique=0 backwards=no upside-down=no
+text style: "Note"
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: U
+  Undone: Style.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Style
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

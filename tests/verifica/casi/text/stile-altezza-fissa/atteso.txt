@@ -1,0 +1,38 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=5 rotation=0 width-factor=1 oblique=0 style="Alto" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=0,-1.540099361249113;16.56139105748758,-1.540099361249113;16.56139105748758,6.579134137686302;0,6.579134137686302
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: Alto
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 5
+  Specify width factor <1.0000>: 1
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "Alto" is now the current text style.
+  Command: TEXT
+  Specify start point of text: 0,0
+  Specify rotation angle of text <0>: 0
+  Enter text: Hello
+  Enter text:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Text
+redo:
+snap: on
+ortho: off
+text styles:
+  "Alto" font="arial.ttf" height=5 width-factor=1 oblique=0 backwards=no upside-down=no
+text style: "Alto"
+pointer: none
+active snap: none
+statistics:
+  TEXT 1
