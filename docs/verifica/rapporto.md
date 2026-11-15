@@ -72,11 +72,12 @@ statistics:
 | `current:` | solo se almeno uno è diverso da una sessione nuova: i cinque valori correnti |
 | `ltscale:` | solo se diverso da 1: `LTSCALE` |
 | `lwdisplay:` | solo se acceso: `on` |
+| `text styles:`, `text style:`, `dimension styles:`, `dimension style:`, `dimension overrides:`, `blocks:` | solo se diversi da una sessione nuova: gli stili e i blocchi della tappa 0.8 ([vedi sotto](#stili-e-blocchi)) |
 | `unhandled:` | solo se ce ne sono: le entità non gestite, per tipo |
 | `documents:` | solo con più di un documento aperto: i nomi, nell'ordine in cui si sono aperti, e `(active)` dopo quello attivo ([vedi sotto](#il-disegno)) |
 | `pointer:` | l'ultimo punto del disegno in cui è stato portato il puntatore (`!move`, `!click`), o `none` |
 | `active snap:` | lo snap su cui si trova il puntatore mentre un comando chiede un punto: il tipo e il punto (`Endpoint 100,50`), o `none` |
-| `statistics:` | per ogni tipo DXF presente nel disegno, in ordine alfabetico, il tipo, uno spazio e il numero di entità (`LWPOLYLINE 2`); i tipi assenti non si scrivono |
+| `statistics:` | per ogni tipo DXF presente nel disegno, in ordine alfabetico, il tipo, uno spazio e il numero di entità (`LWPOLYLINE 2`); i tipi assenti non si scrivono. Dalla tappa 0.8 contano anche gli `ATTRIB` degli `INSERT` ([vedi sotto](#tappa-08-entità-composte)) |
 
 ### La cronologia (`messages:`)
 
@@ -192,6 +193,45 @@ I valori si scrivono come le [proprietà delle entità](#tappa-06-layer-e-propri
 colori con la prima colonna della tabella dell'ADR 0024, punto 6; spessori
 in millimetri con due decimali (`0.50`), `0` o `default`; numeri come sotto.
 I nomi conservano maiuscole e minuscole come nella tabella.
+
+### Stili e blocchi
+
+Sei campi della tappa 0.8 ([ADR 0045](../adr/0045-blocchi-e-attributi.md),
+[ADR 0046](../adr/0046-stili-di-testo-e-testo-multiriga.md),
+[ADR 0047](../adr/0047-quote-e-stili-di-quota.md)). Come ogni campo nuovo si
+scrivono **solo quando sono diversi da una sessione nuova**, dopo
+`lwdisplay:` e prima di `unhandled:`, in quest'ordine; mancano tutti nei
+rapporti delle tappe precedenti, che restano validi. Il formato è fissato
+qui dal pacchetto PT9; li scrivono i pacchetti che creano i loro campi in
+`core` (DECISIONI.md, 2026-11-15): `text styles:` e `text style:` PT11,
+`dimension styles:`, `dimension style:` e `dimension overrides:` PT22,
+`blocks:` PT16. Finché quei pacchetti non sono uniti, nessun rapporto ha
+questi campi.
+
+```
+lwdisplay: on
+text styles:
+  "Note" font="romans.shx" height=0 width-factor=0.8 oblique=0 backwards=no upside-down=no
+text style: "Note"
+dimension styles:
+  "ISO-25"
+  "Elettrico" DIMASZ:2 DIMTXT:2.5
+dimension style: "Elettrico"
+dimension overrides: DIMTXT:3.5
+blocks:
+  "TG_EL" base=0,0 description="Contatto"
+  "TG_EL" 259 LINE start=0,0 end=10,0
+unhandled: HATCH 2
+```
+
+| Riga | Contenuto |
+|---|---|
+| `text styles:` | un elenco degli stili di testo diversi da `Standard` di una sessione nuova, nell'ordine della tabella: il nome tra virgolette, poi `font=` (tra virgolette), `height=`, `width-factor=`, `oblique=` (gradi), `backwards=` e `upside-down=` (`yes` o `no`), sempre |
+| `text style:` | lo stile di testo corrente, tra virgolette, se diverso da `Standard` |
+| `dimension styles:` | un elenco di tutti gli stili di quota, nell'ordine della tabella, se la tabella è diversa da quella di una sessione nuova: il nome tra virgolette, poi le variabili essenziali diverse da quelle di `ISO-25`, `NOME:valore`, separate da uno spazio, in ordine alfabetico |
+| `dimension style:` | lo stile di quota corrente, tra virgolette, se diverso da `ISO-25` |
+| `dimension overrides:` | le variabili di quota correnti diverse da quelle dello stile corrente, `NOME:valore`, separate da uno spazio, in ordine alfabetico |
+| `blocks:` | le definizioni di blocco, nell'ordine della tabella: per ognuna una riga `"NOME" base=x,y`, seguita, solo se diversi dal predefinito, da `explodable=no`, `uniform=yes`, `units=N` e `description="…"`; poi una riga per ogni sua entità, nell'ordine della definizione: il nome del blocco tra virgolette, l'identificativo e l'entità nel formato delle [entità](#entità) |
 
 ## Numeri
 
@@ -391,6 +431,143 @@ dopo `closed=`** (`LWPOLYLINE closed=no linetype-generation=yes vertex=…`).
 Il modello la riceve dal pacchetto 0.6-P10: fino ad allora le definizioni
 la leggono e la controllano, ma il rapporto non la scrive.
 
+### Tappa 0.8: entità composte
+
+I sette tipi nuovi della tappa 0.8
+([ADR 0044](../adr/0044-entita-composte-e-geometria-generata.md),
+[ADR 0045](../adr/0045-blocchi-e-attributi.md),
+[ADR 0046](../adr/0046-stili-di-testo-e-testo-multiriga.md),
+[ADR 0047](../adr/0047-quote-e-stili-di-quota.md),
+[ADR 0048](../adr/0048-retini.md),
+[ADR 0052](../adr/0052-ellisse.md)) e gli `ATTRIB` degli inserimenti. Valgono
+le regole di sempre: proprietà nell'ordine scritto qui; quelle con un valore
+predefinito indicato si scrivono solo quando sono diverse; dopo le proprietà
+del tipo vengono `thickness` ed `extrusion` della
+[tappa 0.5](#tappa-05-quota-spessore-estrusione-e-larghezze) (questi tipi non
+hanno quote, tranne `ATTRIB`, che ha quelle di `TEXT`), poi le proprietà della
+[tappa 0.6](#tappa-06-layer-e-proprietà) e per ultime le derivate. Gli angoli
+sono in gradi.
+
+Il modulo `script` scrive e legge le righe di tutti e sette i tipi dal
+pacchetto PT9. Finché il pacchetto di un tipo non è unito (`core::isSupported`
+falso, PT6), la riga di quel tipo in una definizione delle domande si legge e
+si controlla, poi si rifiuta con l'errore `<TIPO> is not supported yet.`
+(`SOLID is not supported yet.`): i casi di quel tipo restano in attesa in
+`tests/verifica/in-attesa/`.
+
+**`SOLID`**
+
+```
+SOLID vertex=0,0 vertex=10,0 vertex=0,5 vertex=10,5
+```
+
+I quattro vertici nell'ordine del DXF (10, 11, 12, 13), sempre quattro; con
+tre vertici nel file, il quarto è uguale al terzo.
+
+**`ELLIPSE`**
+
+```
+ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=0 end=90
+```
+
+| Proprietà | DXF | Valore |
+|---|---|---|
+| `center` | 10/20 | centro |
+| `major-axis` | 11/21 | estremo dell'asse maggiore, **relativo al centro** |
+| `ratio` | 40 | rapporto fra asse minore e maggiore, in (0, 1] |
+| `start`, `end` | 41, 42 | parametri iniziale e finale **in gradi**, scritti solo per un arco d'ellisse: l'ellisse intera (0 e 360) non li scrive |
+
+**`MTEXT`**
+
+```
+MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Prima\\Pseconda" ~lines=2
+```
+
+| Proprietà | DXF | Valore |
+|---|---|---|
+| `insertion` | 10/20 | punto d'inserimento |
+| `height` | 40 | altezza, > 0 |
+| `width` | 41 | larghezza di riferimento, 0 = senza a capo |
+| `attachment` | 71 | `top-left`, `top-center`, `top-right`, `middle-left`, `middle-center`, `middle-right`, `bottom-left`, `bottom-center`, `bottom-right` |
+| `rotation` | 50 | gradi |
+| `style` | 7 | nome dello stile, tra virgolette |
+| `line-spacing` | 44 | fattore d'interlinea, > 0; solo se diverso da 1 |
+| `line-spacing-style` | 73 | `exactly`, solo se diverso da *at least* (che si legge come `at-least`) |
+| `direction` | 72 | `by-style`, solo se diverso da sinistra a destra (che si legge come `left-to-right`) |
+| `value` | 3 e 1 | il valore intero, codici di formattazione compresi, tra virgolette |
+| `~lines` | — | **derivata**: il numero di righe della geometria generata, cioè delle sue forme `TEXT` ([ADR 0044](../adr/0044-entita-composte-e-geometria-generata.md), punto 2); si scrive solo quando il tipo è realizzato |
+
+**`ATTDEF`, `ATTRIB` e `INSERT`**
+
+```
+ATTDEF position=0,0 alignment-point=0,0 height=1.8 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N" tag="TG_PIN1" prompt="" invisible=yes constant=yes ~box=…
+INSERT block="TG_EL_CONTACT_NO" insertion=10,20 scale=1,1 rotation=0
+ATTRIB owner=300 position=… value="-K1" tag="TG_REF" ~box=…
+```
+
+- **`ATTDEF`**: le proprietà di `TEXT`, nel suo ordine, con `value` il valore
+  predefinito; poi `tag` e `prompt` (tra virgolette, sempre), e `invisible`,
+  `constant`, `verify`, `preset` (DXF 70, bit 1, 2, 4, 8), ognuna solo se
+  `yes`. La derivata `~box` è quella di `TEXT`.
+- **`ATTRIB`**: `owner` (l'identificativo del suo `INSERT`), le proprietà di
+  `TEXT`, nel suo ordine, poi `tag` e `invisible`, solo se `yes`; dopo, le
+  quote di `TEXT` (`z`, `alignment-z`), `thickness`, `extrusion` e le
+  proprietà della tappa 0.6 dell'attributo; per ultima la derivata `~box`. Gli
+  `ATTRIB` stanno nell'elenco `entities:` con il loro identificativo, come
+  entità del DXF, nell'ordine degli identificativi come le altre, e contano in
+  `statistics:` (`ATTRIB 2`). Non si scrivono nell'anteprima e non si
+  definiscono da soli nelle domande: un `ATTRIB` appartiene al suo `INSERT`.
+- **`INSERT`**: `block` (nome tra virgolette), `insertion`, `scale` (X,Y,
+  numeri diversi da 0; uno negativo specchia), `rotation` (gradi).
+
+**`DIMENSION`**
+
+```
+DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=50,0 line-point=50,10 rotation=0 text-point=25,10.625 measurement=50 ~text="50"
+```
+
+| Proprietà | Quando | Valore |
+|---|---|---|
+| `kind` | sempre | `linear`, `aligned`, `angular`, `radius`, `diameter`, `other` |
+| `style` | sempre | nome dello stile, tra virgolette |
+| `origin1`, `origin2` | lineare e allineata | 13/23 e 14/24 |
+| `line-point` | lineare, allineata, angolare | 10/20 |
+| `rotation` | lineare | 50, gradi |
+| `first`, `second` | angolare | le due linee: `x1,y1;x2,y2` (13–14 e 10–15) |
+| `arc-point` | angolare | 16/26 |
+| `center`, `point` | radiale | 10/20 e 15/25 |
+| `point1`, `point2` | diametrale | 15/25 e 10/20 |
+| `type` | altro | il tipo DXF (70 & 7), da 0 a 7 |
+| `text-point` | sempre | 11/21 |
+| `measurement` | sempre | 42 |
+| `text` | se non vuoto | il testo sostituito (1), tra virgolette |
+| `text-rotation` | se diverso da 0 | 53, gradi |
+| `user-text-position` | se `yes` | 70 bit 128 |
+| `overrides` | se ce ne sono | le variabili essenziali sovrascritte, `NOME:valore` separate da virgole, in ordine alfabetico |
+| `~text` | sempre, quando il tipo è realizzato | **derivata**: il testo che la grafica mostra, senza codici: i valori delle forme `TEXT` della geometria generata, con `%%c`, `%%d`, `%%p` e `%%%` convertiti, separati da un a capo (`\u{0A}`) se sono più d'uno |
+
+Le proprietà si scrivono nell'ordine della tabella, solo quelle del tipo di
+quota. In una quota angolare il punto 10 compare due volte, come
+`line-point` e come primo punto di `second`: è lo stesso punto.
+
+**`HATCH`**
+
+```
+HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10 loop=edges circle=5,5;2 seed=1,1
+```
+
+| Proprietà | DXF | Valore |
+|---|---|---|
+| `pattern` | 2 | nome, tra virgolette |
+| `solid` | 70 | `yes` o `no` |
+| `angle`, `scale` | 52, 41 | gradi; scala o passo, > 0 |
+| `double` | 77 | solo se `yes` |
+| `islands` | 75 | `normal`, `outer`, `ignore` |
+| `loop` | 92 | un contorno: i segnali `external`, `outermost`, `derived` (bit 1, 16, 4) che ha, uniti da `+` e in quest'ordine, poi `polyline` o `edges`; seguono i suoi elementi |
+| `vertex`, `bulge` | 10/20, 42 | in un contorno a polilinea, come `LWPOLYLINE`; il contorno è sempre chiuso |
+| `line`, `arc`, `circle` | 72 | in un contorno a lati: `line=x1,y1;x2,y2`, `arc=cx,cy;r;a1;a2` (gradi in [0, 360), sempre antiorario come `ARC`), `circle=cx,cy;r` (un arco intero) |
+| `seed` | 10/20 dopo 98 | un punto interno; si ripete, dopo i contorni |
+
 ### Definizioni nelle domande
 
 Nelle [domande al modello](domande.md) un'entità si scrive nello stesso
@@ -405,6 +582,19 @@ formato, con tre libertà:
   `vertical=baseline`. Le altre sono obbligatorie;
 - le proprietà derivate (`~…`) si accettano e si ignorano, così si può copiare
   una riga del rapporto.
+
+I tipi della [tappa 0.8](#tappa-08-entità-composte) si scrivono con le stesse
+libertà. Si possono omettere: `ELLIPSE` `start` ed `end` insieme (l'ellisse
+intera); `MTEXT` `height=2.5`, `width=0`, `attachment=top-left`,
+`rotation=0`, `style="Standard"`, `line-spacing=1`,
+`line-spacing-style=at-least`, `direction=left-to-right`; `ATTDEF` quelle
+di `TEXT` e `prompt=""`, `invisible`, `constant`, `verify`, `preset` (`no`);
+`INSERT` `scale=1,1`, `rotation=0`; `DIMENSION` `style="ISO-25"`,
+`rotation=0`, `text`, `text-rotation`, `user-text-position=no`,
+`overrides`, e nella quota angolare `line-point` (se c'è, deve essere il
+primo punto di `second`); `HATCH` `solid=no`, `angle=0`, `scale=1`,
+`double=no`, `islands=normal`, i contorni e i punti interni. Una proprietà
+di un altro tipo di quota (`center` in una quota lineare) è un errore.
 
 Le proprietà della [tappa 0.5](#tappa-05-quota-spessore-estrusione-e-larghezze)
 si accettano come le altre, dal pacchetto che le realizza, e si possono
