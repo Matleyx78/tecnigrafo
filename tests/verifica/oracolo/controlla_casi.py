@@ -433,8 +433,11 @@ def main():
             except (OSError, ValueError, ezdxf.DXFError) as error:
                 failures += 1
                 source_errors.append(f"{source['name']}: {error}")
-        for error in source_errors:
-            print(error)
+        if source_errors:
+            # Keep failures inside the short CI annotation tail even after a
+            # source with hundreds of entity answers.
+            print("\n" * 25, end="")
+            print("\n".join(source_errors))
     if not args.print_only:
         cases = questions = 0
         for path in sorted(args.cases.rglob("domande.tgq")):
