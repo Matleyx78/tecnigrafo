@@ -13,7 +13,11 @@
   [ADR 0031](../../adr/0031-modifiche-alle-entita.md), punti 1–6;
   `core/include/tg/core/effective_properties.hpp`, `similarity.hpp`,
   `transform2d.hpp`; le schede [PT6](PT6-scheletro-core.md) e
-  [PT17](PT17-attributi-core.md) (sorella: gli attributi)
+  [PT17](PT17-attributi-core.md) (sorella: gli attributi);
+  [verifica/rapporto.md](../../verifica/rapporto.md) (il campo `blocks:`) e
+  [verifica/domande.md](../../verifica/domande.md) (`!block` e `!endblock`),
+  fissati da PT9; `script/src/report.cpp`, `question_table.cpp`,
+  `questions.cpp`
 
 ## File
 
@@ -22,8 +26,11 @@
 - `core/src/generated.cpp` (la sua parte di `transformedShape`, dopo PT48)
 - `core/src/effective_properties.cpp`, `core/include/tg/core/effective_properties.hpp`
   (le proprietà dentro un blocco)
+- `script/src/report.cpp` (il campo `blocks:`), `script/src/question_table.cpp`,
+  `script/src/questions.cpp` (`!block` e `!endblock`): file comuni
 - `tests/core/block_table_test.cpp`, `tests/core/insert_test.cpp` (nuovi),
-  `tests/CMakeLists.txt` (file comune)
+  `tests/script/report_test.cpp`, `tests/script/questions_test.cpp` (file
+  comuni), `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
 
@@ -106,13 +113,24 @@
    prende con un clic, e con la finestra solo se il punto d'inserimento è
    dentro. Le forme che ancora non rispondono alle domande (l'ellisse prima di
    PT50) si ignorano; un retino pieno risponde con la sua area (PT30).
+8. **Rapporto e domande** ([DECISIONI.md](../../DECISIONI.md), 2026-11-15,
+   «Campi delle tabelle nel rapporto scritti da chi li crea»): `script` scrive
+   il campo `blocks:` nel formato di
+   [verifica/rapporto.md](../../verifica/rapporto.md), fissato da PT9, solo
+   quando la tabella dei blocchi non è vuota; nei file `.tgq`,
+   `!block "NOME" base=x,y` e `!endblock` creano una definizione con le
+   entità fra le due righe, come dice
+   [verifica/domande.md](../../verifica/domande.md) (PT9, punto 4).
+   rapporto.md e domande.md non si toccano.
 
 ## Regole della tappa che valgono qui
 
 - Niente funzioni trigonometriche di `<cmath>` (`core::sinCos`, `core::atan2`).
 - Gli handle delle entità di un blocco sono nello stesso spazio di quelle del
   disegno: `Document` non li riusa.
-- File comune: `tests/CMakeLists.txt`.
+- File comuni: `tests/CMakeLists.txt`, `script/src/report.cpp`,
+  `script/src/question_table.cpp`, `script/src/questions.cpp`,
+  `tests/script/report_test.cpp`, `tests/script/questions_test.cpp`.
 
 ## Test richiesti
 
@@ -129,6 +147,14 @@
   una esterna; clic a un'unità da una linea del blocco; finestra che contiene
   tutto il blocco e una sola parte; blocco vuoto preso solo dalla finestra sul
   punto d'inserimento.
+- `report_test.cpp`: una sessione nuova non ha `blocks:`; il blocco `TG_EL`
+  con base `5,0` e una `LINE start=0,0 end=10,0` dà in `blocks:` la riga
+  `"TG_EL" base=5,0` e poi la riga `"TG_EL" <identificativo> LINE start=0,0 end=10,0`;
+  con `explodable=no` la riga del blocco lo aggiunge.
+- `questions_test.cpp`: `!block "TG_EL" base=5,0`, una `LINE start=0,0 end=10,0`
+  e `!endblock` creano la definizione `TG_EL` con base `5,0` e quella linea;
+  un `INSERT block="TG_EL" insertion=10,20 scale=1,1 rotation=0` definito dopo
+  risponde a `generated` con `LINE start=5,20 end=15,20`.
 
 ## Fatto quando
 
