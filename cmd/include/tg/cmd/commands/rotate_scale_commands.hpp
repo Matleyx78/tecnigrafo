@@ -56,6 +56,7 @@ private:
     [[nodiscard]] std::optional<double> rotationAt(const core::Vec2& pointer) const;
     void updatePreview();
 
+    const core::Document* m_document{nullptr};  ///< the editor's document, also for previews
     Stage m_stage{Stage::Selection};
     std::vector<SelectedEntity> m_selected;
     core::Vec2 m_base;
@@ -105,6 +106,7 @@ private:
     [[nodiscard]] std::optional<double> factorAt(const core::Vec2& pointer) const;
     void updatePreview();
 
+    const core::Document* m_document{nullptr};  ///< the editor's document, also for previews
     Stage m_stage{Stage::Selection};
     std::vector<SelectedEntity> m_selected;
     core::Vec2 m_base;
