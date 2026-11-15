@@ -41,7 +41,7 @@ private:
 
     Status selected(CommandContext& context);
     Status convert(CommandContext& context, bool accept);
-    Status finish(CommandContext& context);
+    static Status finish(CommandContext& context);
     void remember(CommandContext& context);
     void joinSelected(CommandContext& context, double fuzz);
     void updateOptions(const CommandContext& context);

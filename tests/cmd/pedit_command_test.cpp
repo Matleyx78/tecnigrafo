@@ -43,6 +43,10 @@ protected:
         const auto id = m_document.add(polyline);
         if (!height.empty()) {
             auto record = m_document.remove(id);
+            if (!record) {
+                ADD_FAILURE() << "missing polyline record";
+                return id;
+            }
             record->extras.placement.push_back({38, std::string{height}});
             m_document.restore(std::move(*record));
         }
@@ -53,6 +57,15 @@ protected:
         return std::get<Polyline>(m_document.find(id)->entity);
     }
 
+    [[nodiscard]] core::Document& document() { return m_document; }
+
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] std::vector<std::string>& messages() { return m_messages; }
+
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -61,71 +74,73 @@ protected:
 };
 
 TEST_F(PeditCommandTest, ConversionCanBeDeclinedCancelledOrAcceptedWithSourceData) {
-    const auto source = m_document.add(Line{{0, 0}, {30, 0}});
-    auto record = m_document.remove(source);
+    const auto source = document().add(Line{{0, 0}, {30, 0}});
+    auto record = document().remove(source);
+    ASSERT_TRUE(record.has_value());
     record->properties.color = core::Color::fromIndex(3);
     record->extras.extended = {{1001, "PEDIT_TEST"}, {1000, "kept"}};
     const auto original = *record;
-    m_document.restore(std::move(*record));
+    document().restore(std::move(*record));
 
     type({"PEDIT", "15,0", "No"});
-    EXPECT_FALSE(m_runner.isActive());
-    EXPECT_EQ(*m_document.find(source), original);
-    EXPECT_FALSE(m_editor.canUndo());
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_EQ(*document().find(source), original);
+    EXPECT_FALSE(editor().canUndo());
 
     type({"PEDIT", "15,0"});
-    EXPECT_EQ(m_runner.promptText(), "Do you want to turn it into one? <Y>");
-    m_runner.submit(CancelInput{});
-    EXPECT_EQ(*m_document.find(source), original);
-    EXPECT_FALSE(m_editor.canUndo());
+    EXPECT_EQ(runner().promptText(), "Do you want to turn it into one? <Y>");
+    runner().submit(CancelInput{});
+    EXPECT_EQ(*document().find(source), original);
+    EXPECT_FALSE(editor().canUndo());
 
     type({"PE", "15,0", "Yes", ""});
-    ASSERT_EQ(m_document.entityCount(), 1U);
-    EXPECT_EQ(m_document.find(source), nullptr);
-    const auto& converted = m_document.entities().front();
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_EQ(document().find(source), nullptr);
+    const auto& converted = document().entities().front();
     EXPECT_NE(converted.id, source);
     EXPECT_EQ(converted.properties, original.properties);
     EXPECT_EQ(converted.extras, original.extras);
     EXPECT_EQ(std::get<Polyline>(converted.entity),
               core::toPolyline(std::get<Line>(original.entity)));
-    EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Pedit"});
+    EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Pedit"});
     type({"U"});
-    EXPECT_EQ(*m_document.find(source), original);
+    EXPECT_EQ(*document().find(source), original);
     type({"REDO"});
-    EXPECT_EQ(m_document.find(source), nullptr);
-    EXPECT_EQ(m_document.entityCount(), 1U);
+    EXPECT_EQ(document().find(source), nullptr);
+    EXPECT_EQ(document().entityCount(), 1U);
 }
 
 TEST_F(PeditCommandTest, PeditacceptIsValidatedRememberedAndHasNoUndoStep) {
     type({"PEDITACCEPT", "2", "1.0", "-1"});
-    EXPECT_TRUE(m_runner.isActive());
-    EXPECT_EQ(m_messages.back(), "Requires an integer between 0 and 1.");
+    EXPECT_TRUE(runner().isActive());
+    EXPECT_EQ(messages().back(), "Requires an integer between 0 and 1.");
     type({"+1"});
-    EXPECT_FALSE(m_editor.canUndo());
+    EXPECT_FALSE(editor().canUndo());
     type({"PEDITACCEPT"});
-    EXPECT_EQ(m_runner.promptText(), "Enter new value for PEDITACCEPT <1>:");
+    EXPECT_EQ(runner().promptText(), "Enter new value for PEDITACCEPT <1>:");
     type({""});
 
-    const auto source = m_document.add(Arc{{50, 0}, 10, 0, core::kPi});
-    m_messages.clear();
+    const auto source = document().add(Arc{{50, 0}, 10, 0, core::kPi});
+    messages().clear();
     type({"PEDIT", "50,10", ""});
-    EXPECT_EQ(m_document.find(source), nullptr);
-    ASSERT_EQ(m_document.entityCount(), 1U);
-    const auto& result = std::get<Polyline>(m_document.entities().front().entity);
+    EXPECT_EQ(document().find(source), nullptr);
+    ASSERT_EQ(document().entityCount(), 1U);
+    const auto entities = document().entities();
+    const auto& result = std::get<Polyline>(entities.front().entity);
     EXPECT_EQ(result.vertices()[0].position, (core::Vec2{60, 0}));
     EXPECT_EQ(result.vertices()[1].position, (core::Vec2{40, 0}));
     EXPECT_NEAR(result.vertices()[0].bulge, 1.0, 1e-12);
-    EXPECT_EQ(std::ranges::find(m_messages, "Object selected is not a polyline"), m_messages.end());
+    EXPECT_EQ(std::ranges::find(messages(), "Object selected is not a polyline"), messages().end());
     type({"PEDITACCEPT", "0", "PEDITACCEPT"});
-    EXPECT_EQ(m_runner.promptText(), "Enter new value for PEDITACCEPT <0>:");
+    EXPECT_EQ(runner().promptText(), "Enter new value for PEDITACCEPT <0>:");
     type({""});
-    EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Pedit"});
+    EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Pedit"});
 }
 
 TEST_F(PeditCommandTest, OptionsUndoAndGlobalUndoKeepPolylineIdentityAndData) {
     Polyline original{{{{0, 0}, 0.5, 1, 2}, {{30, 0}, -0.25, 3, 4}, {{30, 20}, 0, 5, 6}}};
     original.setConstantWidth(7);
-    const auto id = m_document.add(original);
+    const auto id = document().add(original);
     type({"PEDIT", "30,20", "C", "R", "U"});
     EXPECT_TRUE(polyline(id).isClosed());
     EXPECT_EQ(polyline(id).vertices()[0], original.vertices()[0]);
@@ -133,14 +148,14 @@ TEST_F(PeditCommandTest, OptionsUndoAndGlobalUndoKeepPolylineIdentityAndData) {
     type({"U"});
     EXPECT_EQ(polyline(id), original);
     type({"U"});
-    EXPECT_EQ(m_messages.back(), "Nothing to undo.");
+    EXPECT_EQ(messages().back(), "Nothing to undo.");
     type({"L", "ON", "R"});
     auto expected = core::reversed(original);
     expected.setContinuousLinetype(true);
     EXPECT_EQ(polyline(id), expected);
     type({"C", "O", ""});
     EXPECT_FALSE(polyline(id).isClosed());
-    EXPECT_EQ(m_editor.undoNames(), std::vector<std::string>{"Pedit"});
+    EXPECT_EQ(editor().undoNames(), std::vector<std::string>{"Pedit"});
     type({"U"});
     EXPECT_EQ(polyline(id), original);
     type({"REDO"});
@@ -150,44 +165,45 @@ TEST_F(PeditCommandTest, OptionsUndoAndGlobalUndoKeepPolylineIdentityAndData) {
 
 TEST_F(PeditCommandTest, JoinAtZeroKeepsSourceAndUndoRestoresConsumedObjects) {
     const auto source = addPolyline({0, 0}, {20, 0});
-    const auto line = m_document.add(Line{{20, 0}, {20, 20}});
-    const auto arc = m_document.add(Arc{{10, 20}, 10, 0, core::kPi});
+    const auto line = document().add(Line{{20, 0}, {20, 20}});
+    const auto arc = document().add(Arc{{10, 20}, 10, 0, core::kPi});
     type({"PEDIT", "10,0", "J", "20,10", "10,30", ""});
-    EXPECT_EQ(m_document.entityCount(), 1U);
+    EXPECT_EQ(document().entityCount(), 1U);
     EXPECT_EQ(polyline(source).segmentCount(), 3U);
-    EXPECT_EQ(m_messages.back(), "2 segments added to polyline");
+    EXPECT_EQ(messages().back(), "2 segments added to polyline");
     type({"U"});
-    EXPECT_EQ(m_document.entityCount(), 3U);
-    EXPECT_NE(m_document.find(line), nullptr);
-    EXPECT_NE(m_document.find(arc), nullptr);
+    EXPECT_EQ(document().entityCount(), 3U);
+    EXPECT_NE(document().find(line), nullptr);
+    EXPECT_NE(document().find(arc), nullptr);
     EXPECT_EQ(polyline(source).segmentCount(), 1U);
     type({"J", "20,10", "10,30", "", ""});
-    EXPECT_EQ(m_editor.undoName(), "Pedit");
+    EXPECT_EQ(editor().undoName(), "Pedit");
     type({"U"});
-    EXPECT_EQ(m_document.entityCount(), 3U);
+    EXPECT_EQ(document().entityCount(), 3U);
     EXPECT_EQ(polyline(source).segmentCount(), 1U);
 }
 
 TEST_F(PeditCommandTest, MultipleConvertsInSelectionOrderAndJoinsWithEachType) {
     for (const std::string_view joinType : {"E", "A", "B"}) {
-        const auto first = m_document.add(Line{{0, 0}, {20, 0}});
-        const auto second = m_document.add(Line{{21, 1}, {21, 15}});
+        const auto first = document().add(Line{{0, 0}, {20, 0}});
+        const auto second = document().add(Line{{21, 1}, {21, 15}});
         type({"PEDIT", "M", "21,10", "10,0", ""});
-        EXPECT_EQ(m_runner.promptText(),
+        EXPECT_EQ(runner().promptText(),
                   "Convert Lines, Arcs and Splines to polylines [Yes/No]? <Y>");
         type({"", "J", "J", joinType, "2", ""});
-        ASSERT_EQ(m_document.entityCount(), 1U);
-        const auto& result = std::get<Polyline>(m_document.entities().front().entity);
+        ASSERT_EQ(document().entityCount(), 1U);
+        const auto entities = document().entities();
+        const auto& result = std::get<Polyline>(entities.front().entity);
         const bool add = joinType == "A";
         EXPECT_EQ(result.vertexCount(), add ? 4U : 3U);
         EXPECT_EQ(result.vertices().front().position, (core::Vec2{0, 0}));
         EXPECT_EQ(result.vertices().back().position, (core::Vec2{21, 15}));
         EXPECT_EQ(result.vertices()[1].position, (add ? core::Vec2{20, 0} : core::Vec2{21, 0}));
         type({"U"});
-        EXPECT_NE(m_document.find(first), nullptr);
-        EXPECT_NE(m_document.find(second), nullptr);
-        m_document.remove(first);
-        m_document.remove(second);
+        EXPECT_NE(document().find(first), nullptr);
+        EXPECT_NE(document().find(second), nullptr);
+        document().remove(first);
+        document().remove(second);
     }
 }
 
@@ -216,39 +232,39 @@ TEST_F(PeditCommandTest, ElevationFiltersJoinCandidatesAndMapsConsumedIndices) {
                 type({"PEDIT", "0.5,0", "J", "1,0.5", "1.5,0", "", ""});
             }
             EXPECT_EQ(polyline(source).segmentCount(), heights.joined ? 2U : 1U);
-            EXPECT_EQ(m_document.find(other) == nullptr, heights.joined);
-            EXPECT_NE(m_document.find(filtered), nullptr);
+            EXPECT_EQ(document().find(other) == nullptr, heights.joined);
+            EXPECT_NE(document().find(filtered), nullptr);
             type({"U"});
-            EXPECT_NE(m_document.find(other), nullptr);
-            m_document.remove(source);
-            m_document.remove(other);
-            m_document.remove(filtered);
+            EXPECT_NE(document().find(other), nullptr);
+            document().remove(source);
+            document().remove(other);
+            document().remove(filtered);
         }
     }
 }
 
 TEST_F(PeditCommandTest, EscapeKeepsConversionAndCompletedOptions) {
-    const auto source = m_document.add(Line{{0, 0}, {30, 0}});
+    const auto source = document().add(Line{{0, 0}, {30, 0}});
     type({"PEDIT", "15,0", "Y", "C", "L"});
-    m_runner.submit(CancelInput{});
-    EXPECT_FALSE(m_runner.isActive());
-    ASSERT_EQ(m_document.entityCount(), 1U);
-    const auto id = m_document.entities().front().id;
+    runner().submit(CancelInput{});
+    EXPECT_FALSE(runner().isActive());
+    ASSERT_EQ(document().entityCount(), 1U);
+    const auto id = document().entities().front().id;
     EXPECT_TRUE(polyline(id).isClosed());
     EXPECT_FALSE(polyline(id).continuousLinetype());
-    EXPECT_EQ(m_document.find(source), nullptr);
+    EXPECT_EQ(document().find(source), nullptr);
     type({"U"});
-    EXPECT_NE(m_document.find(source), nullptr);
-    EXPECT_EQ(m_document.find(id), nullptr);
+    EXPECT_NE(document().find(source), nullptr);
+    EXPECT_EQ(document().find(id), nullptr);
 }
 
 TEST_F(PeditCommandTest, MultipleCanDeclineConversionAndEditExistingPolylines) {
     const auto source = addPolyline({0, 0}, {30, 0});
-    const auto line = m_document.add(Line{{0, 20}, {30, 20}});
+    const auto line = document().add(Line{{0, 20}, {30, 20}});
     type({"PEDIT", "M", "15,0", "15,20", "", "No", "C", ""});
     EXPECT_TRUE(polyline(source).isClosed());
-    EXPECT_TRUE(std::holds_alternative<Line>(m_document.find(line)->entity));
-    EXPECT_EQ(m_document.entityCount(), 2U);
+    EXPECT_TRUE(std::holds_alternative<Line>(document().find(line)->entity));
+    EXPECT_EQ(document().entityCount(), 2U);
 }
 
 }  // namespace

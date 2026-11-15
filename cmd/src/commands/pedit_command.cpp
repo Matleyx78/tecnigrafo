@@ -473,10 +473,15 @@ Prompt PeditCommand::prompt() const {
                         {{"Yes", "Y"}, {"No", "N"}}};
             }
             return {"Do you want to turn it into one? <Y>", {}, PromptKind::Text};
-        case Stage::Options:
-            return {std::string{m_multiple ? kMultipleOptions
-                                           : (m_closed ? kClosedOptions : kOpenOptions)},
-                    optionKeywords(m_multiple, m_closed)};
+        case Stage::Options: {
+            std::string_view text = kOpenOptions;
+            if (m_multiple) {
+                text = kMultipleOptions;
+            } else if (m_closed) {
+                text = kClosedOptions;
+            }
+            return {std::string{text}, optionKeywords(m_multiple, m_closed)};
+        }
         case Stage::Fuzz:
             return {"Enter fuzz distance or [Jointype] <0.0000>:",
                     {{"Jointype", "J"}},
