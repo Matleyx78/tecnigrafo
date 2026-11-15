@@ -1,0 +1,35 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 INSERT block="assente" insertion=0,0 scale=0.002,0.002 rotation=0
+messages:
+  Command: OPEN
+  Enter name of drawing to open: metri.dxf
+  Command: -INSERT
+  Enter block name or [?]: Sconosciuto
+  Unknown block name: "Sconosciuto".
+  Enter block name or [?]: Contatto=a=b.dxf
+  Invalid file name.
+  Enter block name or [?]: assente.dxf
+  Specify insertion point or [Basepoint/Scale/Rotate]: Scale
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: 0
+  Value must be nonzero.
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: 2
+  Specify insertion point or [Basepoint/Scale/Rotate]: 0,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Insert
+redo:
+snap: on
+ortho: off
+drawing: metri.dxf, modified
+units: 6
+documents: Drawing1.cadx, metri.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  INSERT 1

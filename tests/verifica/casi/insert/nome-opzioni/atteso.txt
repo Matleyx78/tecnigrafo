@@ -1,0 +1,53 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 INSERT block="Simple" insertion=10,20 scale=0.002,0.001 rotation=30
+  259 INSERT block="U0" insertion=0,0 scale=1,1 rotation=0
+  260 INSERT block="U24" insertion=0,10 scale=1,1 rotation=0
+  261 INSERT block="U25" insertion=0,20 scale=1,1 rotation=0
+messages:
+  Command: OPEN
+  Enter name of drawing to open: blocchi.dxf
+  Command: -INSERT
+  Enter block name or [?]: Simple
+  Specify insertion point or [Basepoint/Scale/Rotate]: Scale
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: XYZ
+  Enter X scale factor <0.001>: 2
+  Enter Y scale factor <use X scale factor>: 1
+  Enter Z scale factor <use X scale factor>: 3
+  Specify insertion point or [Basepoint/Scale/Rotate]: Rotate
+  Specify rotation angle <0>: 30
+  Specify insertion point or [Basepoint/Scale/Rotate]: 10,20
+  Command: INSERT
+  Enter block name or [?] <Simple>: Simple
+  Specify insertion point or [Basepoint/Scale/Rotate]: Basepoint
+  Specify base point <0,0>: 5,0
+  Specify insertion point or [Basepoint/Scale/Rotate]: 15,20
+  Command: U
+  Insert
+  Command: -INSERT
+  Enter block name or [?] <Simple>: U0
+  Specify insertion point or [Basepoint/Scale/Rotate]: 0,0
+  Command: -INSERT
+  Enter block name or [?] <U0>: U24
+  Specify insertion point or [Basepoint/Scale/Rotate]: 0,10
+  Command: -INSERT
+  Enter block name or [?] <U24>: U25
+  Specify insertion point or [Basepoint/Scale/Rotate]: 0,20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Insert
+redo:
+snap: on
+ortho: off
+drawing: blocchi.dxf, modified
+units: 6
+documents: Drawing1.cadx, blocchi.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  INSERT 4

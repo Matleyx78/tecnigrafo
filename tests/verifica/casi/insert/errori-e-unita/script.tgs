@@ -1,0 +1,12 @@
+; The handwritten destination is in metres and its existing assente block record is in millimetres.
+OPEN
+metri.dxf
+; cambia con #705
+-INSERT
+Sconosciuto
+Contatto=a=b.dxf
+assente.dxf
+Scale
+0
+2
+0,0

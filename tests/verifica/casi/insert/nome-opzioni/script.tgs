@@ -1,0 +1,29 @@
+; Blocks are handwritten: each definition contains one line and records units 4, 0, 24, or invalid 25.
+OPEN
+blocchi.dxf
+; cambia con #705
+-INSERT
+Simple
+Scale
+XYZ
+2
+1
+3
+Rotate
+30
+10,20
+INSERT
+Simple
+Basepoint
+5,0
+15,20
+U
+-INSERT
+U0
+0,0
+-INSERT
+U24
+0,10
+-INSERT
+U25
+0,20
