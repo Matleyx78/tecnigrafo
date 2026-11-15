@@ -229,7 +229,7 @@ bool DocumentTables::replaceDimStyles(core::DimStyleTable table) {
 }
 
 bool DocumentTables::replaceBlock(std::string name,
-                                 std::optional<core::BlockDefinition> definition) {
+                                  std::optional<core::BlockDefinition> definition) {
     assert(m_editor.m_open && "replaceBlock() needs an open transaction");
     const auto& document = m_editor.m_document;
     const auto definitions = document.blocks().definitions();
