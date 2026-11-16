@@ -1,0 +1,47 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; PT5 B02/B04: blank lines consume baselines but create no Text.
+Empty = MTEXT insertion=10,20 height=1 width=0 attachment=top-left rotation=0 style="Standard" value=""
+? generated Empty -> none
+? bbox Empty -> 10,20 10,20
+? distance Empty 10,20 -> 0
+? pick 10,20 tolerance=0 -> Empty
+? inside Empty 10,20 10,20 -> yes
+? crosses Empty 10,20 10,20 -> yes
+? snaps Empty modes=insertion -> Insertion 10,20
+? grips Empty -> 10,20
+Spaces = MTEXT insertion=30,20 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="   "
+? generated Spaces -> none
+? bbox Spaces -> 30,20 30,20
+? distance Spaces 30,20 -> 0
+? pick 30,20 tolerance=0 -> Spaces
+? inside Spaces 30,20 30,20 -> yes
+? crosses Spaces 30,20 30,20 -> yes
+? snaps Spaces modes=insertion -> Insertion 30,20
+? grips Spaces -> 30,20
+Paragraphs = MTEXT insertion=50,20 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="\\P\\P"
+? generated Paragraphs -> none
+? bbox Paragraphs -> 50,20 50,20
+? distance Paragraphs 50,20 -> 0
+? pick 50,20 tolerance=0 -> Paragraphs
+? inside Paragraphs 50,20 50,20 -> yes
+? crosses Paragraphs 50,20 50,20 -> yes
+? snaps Paragraphs modes=insertion -> Insertion 50,20
+? grips Paragraphs -> 50,20
+? distance Empty 13,24 -> 5
+? pick 11,20 tolerance=0.1 -> none
+? window 9,19 11,21 -> Empty
+? crossing 10,20 10,20 -> Empty
+BlankLine = MTEXT insertion=70,20 height=3 width=0 attachment=top-left rotation=0 style="Standard" value="  \\PZ"
+? generated BlankLine -> TEXT position=70,12 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Z" ~box=70,11.07594038325053;72.66359119943222,11.07594038325053;72.66359119943222,15.94748048261178;70,15.94748048261178
+Surrounding = MTEXT insertion=90,20 height=3 width=0 attachment=bottom-left rotation=0 style="Standard" value="\\PZ\\P"
+? generated Surrounding -> TEXT position=90,25 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Z" ~box=90,24.07594038325053;92.66359119943222,24.07594038325053;92.66359119943222,28.94748048261178;90,28.94748048261178
