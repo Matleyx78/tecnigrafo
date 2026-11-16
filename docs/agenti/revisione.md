@@ -5,8 +5,10 @@ descrizione comincia con **Revisione della correzione**, o quando modifichi una
 scheda in `docs/tappe/X.Y/` della tappa aperta, anche senza toccare
 `docs/DECISIONI.md` ([AGENTS.md](../../AGENTS.md), "Se ... leggi anche ...").
 Chi scrive una correzione legge "Le correzioni delle schede si rivedono" prima
-di scrivere la descrizione della pull request. Vale insieme al nucleo. Le pull
-request aperte rivedute una dopo l'altra sono in [lotti.md](lotti.md).
+di scrivere la descrizione della pull request. Vale insieme al nucleo. Nella
+catena degli agenti il verbale ha anche i giri e le classi di
+[catena.md](catena.md), "Revisione (revisore)": [bloccante], [decisione] per i
+buchi visibili, [facoltativa] per ciò che qui è «non bloccante».
 
 ## Che cosa blocca una revisione
 
@@ -38,8 +40,9 @@ Vale per ogni revisione, di una correzione come di un pacchetto
   raggiunga, non un lemma.
 - Il revisore usa un **modello diverso** da quello dell'autore, che la pull
   request dichiara nella sezione sull'uso dell'IA: se è il tuo stesso modello,
-  non rivederla e dillo al responsabile. Il tuo verbale dice il modello che hai
-  usato ([DECISIONI.md](../DECISIONI.md), 2026-11-07).
+  non rivederla e dillo al responsabile (nella catena, con
+  [catena.md](catena.md), "Fermarsi per una decisione"). Il tuo verbale dice
+  il modello che hai usato ([DECISIONI.md](../DECISIONI.md), 2026-11-07).
 
 ## Le correzioni delle schede si rivedono
 
@@ -65,8 +68,8 @@ limite.
   intero, due proiezioni uguali)? Scrive nella pull request un commento
   **Verbale della revisione della correzione** e, per ogni buco nuovo che
   nessuna regola esistente decide ("Che cosa blocca una revisione"), un
-  commento con un esempio e le scelte possibili, come un agente che si ferma.
-  Non sceglie lui.
+  commento con un esempio e le scelte possibili, come un agente che si ferma
+  (nella catena, una segnalazione [decisione] nel verbale). Non sceglie lui.
 
 ### Buchi visibili e no
 

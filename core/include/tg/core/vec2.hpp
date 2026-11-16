@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "tg/core/math.hpp"
+
 #include <cmath>
 
 namespace tg::core {
@@ -37,7 +39,7 @@ struct Vec2 {
         return *this;
     }
 
-    [[nodiscard]] double length() const { return std::hypot(x, y); }
+    [[nodiscard]] double length() const { return tg::core::hypot(x, y); }
 
     [[nodiscard]] constexpr double lengthSquared() const { return (x * x) + (y * y); }
 

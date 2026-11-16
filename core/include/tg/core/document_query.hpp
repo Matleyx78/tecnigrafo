@@ -18,7 +18,8 @@
 /// Document::query() and then decides with the exact geometry of
 /// proximity.hpp and snap_points.hpp, so the answers are the same as visiting
 /// every entity. Layers that are off or frozen are ignored; locked layers
-/// remain queryable.
+/// remain queryable. The entities answer through the document (generated.hpp):
+/// the types of the 0.8 with their drawn shapes.
 namespace tg::core {
 
 enum class RectangleMode : std::uint8_t { Window, Crossing };
@@ -61,6 +62,11 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// stretches offer no intersection points (docs/adr/0033, point 3). A pair's
 /// intersection carries its higher entity id; a self-intersection carries
 /// the polyline id. These ids decide equal-distance, equal-rank ties.
+///
+/// The types of the 0.8 offer the points of each of their drawn shapes as
+/// above, the shapes of one entity meeting each other too, and the points of
+/// their own (appendOwnSnapPointsOf()), each within `aperture` of the
+/// pointer like an endpoint.
 ///
 /// `from` is the base point of the running command (Command::basePoint()):
 /// the Perpendicular points start from it, and without it there are none. A

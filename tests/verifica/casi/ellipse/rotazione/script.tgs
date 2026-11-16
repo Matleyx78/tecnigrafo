@@ -1,0 +1,19 @@
+; ELLIPSE: opzione Rotation: rapporto = coseno dell'angolo, fino a 89.4 gradi (autocad-ellissi, d)
+ELLIPSE
+200,0
+240,0
+R
+60
+!report
+ELLIPSE
+C
+300,0
+320,0
+r
+60
+!report
+ELLIPSE
+0,0
+0,10
+R
+89.4

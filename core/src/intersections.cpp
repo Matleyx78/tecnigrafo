@@ -372,7 +372,7 @@ CurvePosition positionOnArc(std::size_t segment, const ArcGeometry& arc, const V
         return CurvePosition{segment, Location::AtEnd, length};
     }
     const Vec2 radial = nearest - arc.center;
-    const double angle = std::atan2(radial.y, radial.x);
+    const double angle = atan2(radial.y, radial.x);
     const double turned = arc.sweep >= 0.0 ? normalizeAngle(angle - arc.startAngle)
                                            : normalizeAngle(arc.startAngle - angle);
     return CurvePosition{segment, Location::Inside, std::min(arc.radius * turned, length)};
@@ -642,7 +642,7 @@ CurvePosition nearestPosition(const Entity& entity, const Vec2& point) {
     const Vec2 radial = point - circle.center;
     // Every point of a circle is inside it (solid-space, Location::inside);
     // the station runs counter-clockwise from angle 0.
-    const double angle = radial == Vec2{} ? 0.0 : normalizeAngle(std::atan2(radial.y, radial.x));
+    const double angle = radial == Vec2{} ? 0.0 : normalizeAngle(atan2(radial.y, radial.x));
     return CurvePosition{0, Location::Inside, circle.radius * angle};
 }
 

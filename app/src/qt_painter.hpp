@@ -7,6 +7,9 @@
 
 #include <QPolygonF>
 
+#include <span>
+#include <vector>
+
 class QPainter;
 
 namespace tg::app {
@@ -19,6 +22,8 @@ public:
     void clear(const render::Color& background) override;
     void setPen(const render::Color& color, double widthPx, render::LineStyle style) override;
     void fillPolygon(std::span<const core::Vec2> points, const render::Color& color) override;
+    void fillLoops(std::span<const std::vector<core::Vec2>> loops,
+                   const render::Color& color) override;
     void drawText(const render::TextRun& run) override;
     void drawLine(const core::Vec2& from, const core::Vec2& to) override;
     void drawPolyline(std::span<const core::Vec2> points, bool closed) override;

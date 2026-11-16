@@ -202,4 +202,58 @@ void DocumentTables::setLwdisplay(bool on) {
     }
 }
 
+bool DocumentTables::replaceTextStyles(core::TextStyleTable table) {
+    assert(m_editor.m_open && "replaceTextStyles() needs an open transaction");
+    if (table == m_editor.m_document.textStyles()) {
+        return false;
+    }
+    Editor::Change change;
+    change.kind = Editor::Change::Kind::StyleTable;
+    change.data = Editor::StyleTableChange{table};
+    m_editor.swapUpdate(change);
+    m_editor.m_open->changes.push_back(std::move(change));
+    return true;
+}
+
+bool DocumentTables::replaceDimStyles(core::DimStyleTable table) {
+    assert(m_editor.m_open && "replaceDimStyles() needs an open transaction");
+    if (table == m_editor.m_document.dimStyles()) {
+        return false;
+    }
+    Editor::Change change;
+    change.kind = Editor::Change::Kind::StyleTable;
+    change.data = Editor::StyleTableChange{table};
+    m_editor.swapUpdate(change);
+    m_editor.m_open->changes.push_back(std::move(change));
+    return true;
+}
+
+bool DocumentTables::replaceBlock(std::string name,
+                                  std::optional<core::BlockDefinition> definition) {
+    assert(m_editor.m_open && "replaceBlock() needs an open transaction");
+    const auto& document = m_editor.m_document;
+    const auto definitions = document.blocks().definitions();
+    const auto* previous = document.blocks().find(name);
+    std::size_t position = definitions.size();
+    if (previous != nullptr) {
+        position = static_cast<std::size_t>(previous - definitions.data());
+        name = previous->name;
+    }
+    if (definition) {
+        // Match Document::replaceBlock: the lookup name is authoritative,
+        // and redefining a block keeps its original spelling (PT4, P6).
+        definition->name = name;
+    }
+    if ((!definition && previous == nullptr) ||
+        (definition && previous != nullptr && *definition == *previous)) {
+        return false;
+    }
+    Editor::Change change;
+    change.kind = Editor::Change::Kind::Block;
+    change.data = Editor::BlockTableChange{std::move(name), std::move(definition), position};
+    m_editor.swapUpdate(change);
+    m_editor.m_open->changes.push_back(std::move(change));
+    return true;
+}
+
 }  // namespace tg::edit

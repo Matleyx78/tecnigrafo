@@ -43,6 +43,7 @@ private:
     Status apply(CommandContext& context, bool eraseSource);
     void updatePreview();
 
+    const core::Document* m_document{nullptr};  ///< the editor's document, also for previews
     Stage m_stage{Stage::Selection};
     std::vector<SelectedEntity> m_selected;
     core::Vec2 m_first;

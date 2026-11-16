@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
+#include <format>
 #include <numbers>
 #include <optional>
 #include <ostream>
@@ -47,6 +49,19 @@ std::optional<Vec2> pointFor(std::string_view text, std::optional<Vec2> lastPoin
         return std::nullopt;
     }
     return resolve(*spec, lastPoint, pointer);
+}
+
+TEST(CoordinateInputTest, PolarAnglesAreReducedBeforeConvertingToRadians) {
+    const auto large = pointFor("1<1e308", std::nullopt);
+    if (!large) {
+        FAIL() << "Expected a point for a large finite polar angle";
+        return;
+    }
+    EXPECT_TRUE(std::isfinite(large->x));
+    EXPECT_TRUE(std::isfinite(large->y));
+    const auto reduced = std::format("1<{}", std::fmod(1e308, 360.0));
+    EXPECT_EQ(large, pointFor(reduced, std::nullopt));
+    EXPECT_EQ(pointFor("100<3690", std::nullopt), pointFor("100<90", std::nullopt));
 }
 
 // --- Reading: every form of ADR 0005 ------------------------------------

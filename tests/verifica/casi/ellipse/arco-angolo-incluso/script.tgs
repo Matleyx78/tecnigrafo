@@ -1,0 +1,19 @@
+; ELLIPSE: arco con Included angle; il parametro finale segue l'iniziale anche oltre 360 (autocad-ellissi, h)
+ELLIPSE
+A
+C
+100,-60
+120,-60
+6
+-45
+I
+120
+!report
+ELLIPSE
+a
+0,0
+40,0
+10
+30
+i
+120

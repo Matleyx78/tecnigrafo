@@ -129,8 +129,8 @@ std::optional<core::Arc> ArcCommand::arcAt(const core::Vec2& point) const {
     if (!(radius > 0.0) || !(endDirection.length() > 0.0) || !std::isfinite(radius)) {
         return std::nullopt;
     }
-    const double start = core::normalizeAngle(std::atan2(startDirection.y, startDirection.x));
-    const double end = core::normalizeAngle(std::atan2(endDirection.y, endDirection.x));
+    const double start = core::normalizeAngle(core::atan2(startDirection.y, startDirection.x));
+    const double end = core::normalizeAngle(core::atan2(endDirection.y, endDirection.x));
     const double sweep = core::normalizeAngle(end - start);
     if (sweep <= kAngleTolerance || core::kTwoPi - sweep <= kAngleTolerance) {
         return std::nullopt;

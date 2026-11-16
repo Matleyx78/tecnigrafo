@@ -4,6 +4,7 @@
 #include "tg/cmd/commands/text_command.hpp"
 
 #include "tg/cmd/value_format.hpp"
+#include "tg/core/math.hpp"
 
 #include <cmath>
 #include <variant>
@@ -57,7 +58,12 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
             if (point != nullptr || value != nullptr || confirm) {
                 double rotation = m_rotation;
                 if (point != nullptr) {
-                    rotation = std::atan2(point->point.y - m_start.y, point->point.x - m_start.x);
+                    const core::Vec2 delta = point->point - m_start;
+                    if (!std::isfinite(delta.x) || !std::isfinite(delta.y)) {
+                        return Status::Continue;
+                    }
+                    rotation = core::reducedDegreesToRadians(
+                        core::radiansToDegrees(core::atan2(delta.y, delta.x)));
                 } else if (value != nullptr) {
                     rotation = value->value;
                 }
@@ -94,8 +100,9 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                 // ADR 0013: advance down the text's local Y axis by 5/3 of its height.
                 constexpr double kLineSpacing = 5.0 / 3.0;
                 const double spacing = kLineSpacing * m_height;
-                m_next = {m_next.x + spacing * std::sin(m_rotation),
-                          m_next.y - spacing * std::cos(m_rotation)};
+                const auto direction = core::sinCos(m_rotation);
+                m_next = {m_next.x + spacing * direction.sine,
+                          m_next.y - spacing * direction.cosine};
             }
             break;
     }
@@ -126,10 +133,12 @@ Prompt TextCommand::prompt() const {
             return {"Specify start point of text:", {}};
         case Stage::Height:
             return {"Specify height <" + formatLength(m_height) + ">:", {}, PromptKind::Distance};
-        case Stage::Rotation:
-            return {"Specify rotation angle of text <" + formatAngle(m_rotation) + ">:",
+        case Stage::Rotation: {
+            const auto angle = formatAngle(m_rotation);
+            return {"Specify rotation angle of text <" + (angle == "360" ? "0" : angle) + ">:",
                     {},
                     PromptKind::Angle};
+        }
         case Stage::Text:
             return {"Enter text:", {}, PromptKind::Text};
     }

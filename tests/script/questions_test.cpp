@@ -112,10 +112,19 @@ TEST(Questions, PrefixStopsAtChangesWithAndRejectsMalformedLinesAboveIt) {
 }
 
 TEST(Questions, PrefixStopsAtUnimplementedDefinitionsWhenAvailable) {
-    // The current catalogue has no planned entity definitions. Keep the
-    // frontier contract covered when a future package announces one.
-    for (const std::string_view type : {"ELLIPSE", "SPLINE", "HATCH", "INSERT"}) {
-        const std::string definition = "B = " + std::string{type} + "\n";
+    // A valid definition of a type of the 0.8 whose package is not merged
+    // yet (docs/tappe/0.8/PT9, point 5). Keep the frontier contract covered
+    // while one of them is still refused.
+    for (const std::string_view entity : {
+             "SOLID vertex=0,0 vertex=1,0 vertex=0,1 vertex=1,1",
+             "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5",
+             R"(MTEXT insertion=0,0 value="A")",
+             R"(ATTDEF position=0,0 value="N" tag="T")",
+             R"(INSERT block="B" insertion=0,0)",
+             "DIMENSION kind=radius center=0,0 point=1,0 text-point=1,0 measurement=1",
+             R"(HATCH pattern="SOLID" solid=yes)",
+         }) {
+        const std::string definition = "B = " + std::string{entity} + "\n";
         const auto whole = answerQuestions(definition);
         const auto* error = std::get_if<ParseError>(&whole);
         if (error == nullptr || !error->notImplemented) {
@@ -632,6 +641,164 @@ TEST(Questions, ObtainedFileHasTheActualAnswers) {
               "? length A -> 10\n"
               "; fine\n"
               "? text-width \"a -> b\" -> 3.757274662881476\n");
+}
+
+/// The one answer of `text`, which must match.
+void expectMatch(const std::string& text) {
+    const std::vector<Answer> list = answers(text);
+    ASSERT_EQ(list.size(), 1U) << text;
+    EXPECT_TRUE(list[0].matches) << text << "\n  obtained: " << list[0].actual;
+}
+
+TEST(Questions, ToPolylineAndReverseAnswerWithThePolyline) {
+    const std::string defined =
+        "L = LINE start=-2,3 end=4,7\n"
+        "A = ARC center=0,0 radius=10 start-angle=0 end-angle=90\n"
+        "P = LWPOLYLINE vertex=0,0 bulge=0.5 start-width=1 end-width=2 vertex=10,0 bulge=0.25\n";
+    expectMatch(defined + "? to-polyline L -> LWPOLYLINE closed=no vertex=-2,3 vertex=4,7\n");
+    expectMatch(defined +
+                "? to-polyline A -> LWPOLYLINE closed=no vertex=10,0 "
+                "bulge=0.41421356237309503 vertex=0,10\n");
+    expectMatch(defined +
+                "? reverse P -> LWPOLYLINE closed=no vertex=10,0 bulge=-0.5 start-width=2 "
+                "end-width=1 vertex=0,0 bulge=0.25\n");
+}
+
+// The example of the catalogue (docs/verifica/domande.md, "Polilinee").
+TEST(Questions, PeditJoinAnswersTheExampleOfTheCatalogue) {
+    const std::string defined =
+        "S = LWPOLYLINE vertex=-4,0 vertex=0,0\n"
+        "L = LINE start=1,0 end=3,0\n";
+    expectMatch(defined + "? pedit-join S L fuzz=2 type=extend -> none\n");
+    expectMatch(defined +
+                "? pedit-join S L fuzz=2 type=both -> S LWPOLYLINE closed=no vertex=-4,0 "
+                "vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L\n");
+    expectMatch(defined +
+                "? pedit-join S L units=4 type=add fuzz=2 -> S LWPOLYLINE closed=no "
+                "vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L\n");
+}
+
+TEST(Questions, PeditJoinWithoutTypeExtends) {
+    const std::string defined =
+        "X = LWPOLYLINE vertex=0,0 vertex=1,0\n"
+        "V = LINE start=2,1 end=2,3\n";
+    expectMatch(defined +
+                "? pedit-join X V fuzz=2 -> X LWPOLYLINE closed=no vertex=0,0 vertex=2,0 "
+                "vertex=2,3 added=1 consumed=V\n");
+}
+
+TEST(Questions, PeditJoinNamesTheObjectsInTheOrderTheyAttach) {
+    // B attaches at the end first, then A at the start.
+    const std::string defined =
+        "S = LWPOLYLINE vertex=0,0 vertex=4,0\n"
+        "A = LINE start=-2,0 end=-1,0\n"
+        "B = LINE start=5,0 end=6,0\n";
+    expectMatch(defined +
+                "? pedit-join S A B fuzz=2 type=add -> S LWPOLYLINE closed=no vertex=-2,0 "
+                "vertex=-1,0 vertex=0,0 vertex=4,0 vertex=5,0 vertex=6,0 added=4 "
+                "consumed=B,A\n");
+}
+
+TEST(Questions, PolylineQuestionsRejectWrongArguments) {
+    const std::string defined =
+        "S = LWPOLYLINE vertex=0,0 vertex=1,0\n"
+        "L = LINE start=2,0 end=3,0\n"
+        "C = CIRCLE center=0,0 radius=1\n";  // lines 1-3
+    for (const std::string_view question : {
+             "to-polyline S",
+             "to-polyline C",
+             "reverse L",
+             "pedit-join L S fuzz=1",
+             "pedit-join S L",
+             "pedit-join S L fuzz=x",
+             "pedit-join S L fuzz=-1",
+             "pedit-join S L fuzz=1 type=join",
+             "pedit-join S fuzz=1",
+         }) {
+        const std::string text = defined + "? " + std::string{question} + " -> none\n";
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 4) << question;
+        EXPECT_FALSE(error.message.empty()) << question;
+        EXPECT_FALSE(error.notImplemented) << question;
+    }
+}
+
+TEST(Questions, TypesOfStageEightAreNotSupportedUntilTheirPackage) {
+    // docs/tappe/0.8/PT9, point 5: the case is not passed, it is not invalid.
+    for (const std::string_view entity : {
+             "SOLID vertex=0,0 vertex=1,0 vertex=0,1 vertex=1,1",
+             "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5",
+             R"(MTEXT insertion=0,0 value="A")",
+             R"(ATTDEF position=0,0 value="N" tag="T")",
+             R"(INSERT block="B" insertion=0,0)",
+             "DIMENSION kind=radius center=0,0 point=1,0 text-point=1,0 measurement=1",
+             R"(HATCH pattern="SOLID" solid=yes)",
+         }) {
+        const std::string text = "A = " + std::string{entity} + "\n";
+        const auto whole = answerQuestions(text);
+        const auto* error = std::get_if<ParseError>(&whole);
+        if (error == nullptr) {
+            continue;  // its package is merged
+        }
+        const std::string type{entity.substr(0, entity.find(' '))};
+        EXPECT_EQ(error->line, 1) << entity;
+        EXPECT_EQ(error->message, type + " is not supported yet.");
+        EXPECT_TRUE(error->notImplemented) << entity;
+    }
+    // A line with an error is an error of the file, supported or not.
+    const ParseError error = failure("A = SOLID vertex=0,0\n");
+    EXPECT_FALSE(error.notImplemented);
+    EXPECT_EQ(error.message, "a SOLID has four vertices");
+}
+
+TEST(Questions, GeneratedOfAnEntityOfBeforeTheStageIsTheEntityItself) {
+    const std::vector<Answer> list = answers(
+        "L = LINE start=0,0 end=10,0\n"
+        "? generated L -> LINE start=0,0 end=10,0\n"
+        "C = CIRCLE center=1,2 radius=3 color=1\n"
+        "? generated C -> CIRCLE center=1,2 radius=3 color=255,0,0\n"
+        "P = LWPOLYLINE closed=yes vertex=0,0 bulge=1 vertex=10,0\n"
+        "? generated P -> LWPOLYLINE closed=yes vertex=0,0 bulge=1 vertex=10,0\n"
+        "Z = LAYER name=\"Spento\" off\n"
+        "H = LINE start=0,0 end=1,0 layer=\"Spento\"\n"
+        "? generated H -> none\n"
+        "K = LAYER name=\"Bloccato\" locked\n"
+        "B = ARC center=0,0 radius=1 start-angle=0 end-angle=90 layer=\"Bloccato\"\n"
+        "? generated B -> ARC center=0,0 radius=1 start-angle=0 end-angle=90 locked=yes\n");
+    ASSERT_EQ(list.size(), 5U);
+    for (const Answer& answer : list) {
+        EXPECT_TRUE(answer.matches) << "line " << answer.line << ": " << answer.actual;
+    }
+}
+
+TEST(Questions, GeneratedComparesTheShapesInOrder) {
+    const std::vector<Answer> list = answers(
+        "L = LINE start=0,0 end=10,0\n"
+        "? generated L -> LINE start=10,0 end=0,0\n"
+        "? generated L -> none\n");
+    ASSERT_EQ(list.size(), 2U);
+    EXPECT_FALSE(list[0].matches);
+    EXPECT_FALSE(list[1].matches);
+    EXPECT_EQ(list[0].actual, "LINE start=0,0 end=10,0");
+}
+
+TEST(Questions, GeneratedRejectsWrongArguments) {
+    for (const std::string_view question : {"generated", "generated L L", "generated X"}) {
+        const std::string text =
+            "L = LINE start=0,0 end=10,0\n? " + std::string{question} + " -> none\n";
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 2) << question;
+        EXPECT_FALSE(error.notImplemented) << question;
+    }
+}
+
+TEST(Questions, BlockDirectivesAreInvalidUntilTheirPackage) {
+    // !block and !endblock are realized by PT16 (docs/verifica/domande.md).
+    for (const std::string_view line : {"!block \"TG_EL\" base=0,0", "!endblock"}) {
+        const ParseError error = failure(std::string{line} + "\n");
+        EXPECT_EQ(error.line, 1) << line;
+        EXPECT_FALSE(error.notImplemented) << line;
+    }
 }
 
 }  // namespace

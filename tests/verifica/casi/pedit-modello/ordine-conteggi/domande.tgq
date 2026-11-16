@@ -1,0 +1,25 @@
+; Graduatoria, orientamento, ordine di consumo e conteggi di PT32.
+; I risultati seguono le distanze euclidee tra gli estremi.
+
+; Si prova prima la fine, poi l'inizio: l'ordine di aggancio non e quello scritto.
+S = LWPOLYLINE vertex=0,0 vertex=4,0
+A = LINE start=-2,1 end=-1,1
+B = LINE start=5,1 end=6,1
+? pedit-join S A B fuzz=2 type=add -> S LWPOLYLINE closed=no vertex=-2,1 vertex=-1,1 vertex=0,0 vertex=4,0 vertex=5,1 vertex=6,1 added=4 consumed=B,A
+
+; A pari distanza prevale il primo oggetto; un candidato parallelo che non si
+; estende non impedisce di provare il successivo della graduatoria.
+E = LWPOLYLINE vertex=0,0 vertex=1,0
+PAR = LINE start=2,-1 end=4,-1
+OK = LINE start=2,1 end=2,3
+? pedit-join E PAR OK fuzz=2 type=extend -> E LWPOLYLINE closed=no vertex=0,0 vertex=2,0 vertex=2,3 added=1 consumed=OK
+
+; I due estremi di T sono equidistanti dall'inizio: si attacca dal suo inizio.
+Q = LWPOLYLINE vertex=0,1 vertex=0,2
+T = LINE start=-1,0 end=1,0
+? pedit-join Q T fuzz=2 type=add -> Q LWPOLYLINE closed=no vertex=1,0 vertex=-1,0 vertex=0,1 vertex=0,2 added=2 consumed=T
+
+; Il ponte e i due segmenti dell'oggetto portano added a 3.
+M = LWPOLYLINE vertex=0,0 vertex=1,0
+P = LWPOLYLINE vertex=2,0 vertex=3,0 vertex=4,0
+? pedit-join M P fuzz=1 type=add -> M LWPOLYLINE closed=no vertex=0,0 vertex=1,0 vertex=2,0 vertex=3,0 vertex=4,0 added=3 consumed=P

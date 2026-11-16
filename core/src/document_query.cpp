@@ -5,6 +5,7 @@
 
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/fillet.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/intersections.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
@@ -13,7 +14,10 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <deque>
 #include <limits>
+#include <type_traits>
+#include <utility>
 #include <variant>
 
 namespace tg::core {
@@ -55,11 +59,32 @@ std::vector<EntityId> candidates(const Document& document, const BBox& area) {
     return ids;
 }
 
-const Entity& entityOf(const Document& document, EntityId id) {
+const EntityRecord& recordOf(const Document& document, EntityId id) {
     const EntityRecord* record = document.find(id);
     assert(record != nullptr && "the spatial index only holds entities of the document");
-    return record->entity;
+    return *record;
 }
+
+/// True for the five entities of before the 0.8, which are their own shape.
+bool isOwnShape(const Entity& entity) {
+    return std::holds_alternative<Polyline>(entity) || std::holds_alternative<Line>(entity) ||
+           std::holds_alternative<Circle>(entity) || std::holds_alternative<Arc>(entity) ||
+           std::holds_alternative<Text>(entity);
+}
+
+/// True for the shapes that take part in tangents and intersections: curves,
+/// not texts. Solids and ellipses wait for their packages (docs/tappe/0.8,
+/// PT10 and PT50).
+bool isSnapCurve(const Entity& shape) {
+    return std::holds_alternative<Polyline>(shape) || std::holds_alternative<Line>(shape) ||
+           std::holds_alternative<Circle>(shape) || std::holds_alternative<Arc>(shape);
+}
+
+/// A shape of an entity for the object snap, with the entity's id.
+struct SnapShape {
+    std::uint64_t id{0};
+    const Entity* shape{nullptr};
+};
 
 /// Rank of a snap kind on equal distance (docs/adr/0033, point 5): endpoint,
 /// intersection, midpoint, quadrant, perpendicular, tangent. The centre and
@@ -130,7 +155,7 @@ std::optional<EntityId> pickEntity(const Document& document, const Vec2& point, 
     std::optional<EntityId> picked;
     Candidate best;
     for (const EntityId id : candidates(document, squareAround(point, tolerance))) {
-        const Candidate candidate{distance(entityOf(document, id), point), 0, id.value};
+        const Candidate candidate{distance(document, recordOf(document, id), point), 0, id.value};
         if (candidate.distance <= tolerance && (!picked || candidate.beats(best))) {
             picked = id;
             best = candidate;
@@ -146,9 +171,10 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
         return selected;
     }
     for (const EntityId id : candidates(document, rectangle)) {
-        const Entity& entity = entityOf(document, id);
-        const bool inside = isInside(entity, rectangle);
-        if (inside || (mode == RectangleMode::Crossing && intersects(entity, rectangle))) {
+        const EntityRecord& record = recordOf(document, id);
+        const bool inside = isInside(document, record, rectangle);
+        if (inside ||
+            (mode == RectangleMode::Crossing && intersects(document, record, rectangle))) {
             selected.push_back(id);
         }
     }
@@ -194,7 +220,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
     // (docs/adr/0033, points 4 and 5): those of a polyline lie on its
     // segments, so each one within the aperture is on a segment within it.
     const auto considerTangents = [&](const Entity& entity, std::uint64_t id) {
-        if (!modes.tangent || !from || std::holds_alternative<Text>(entity)) {
+        if (!modes.tangent || !from || !isSnapCurve(entity)) {
             return;
         }
         const double curveDistance = distance(entity, pointer);
@@ -208,14 +234,13 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         consider(curveDistance, id);
     };
 
-    std::vector<EntityId> nearbyCurves;
-    for (const EntityId id : candidates(document, squareAround(pointer, aperture))) {
-        const Entity& entity = entityOf(document, id);
-        if (modes.intersection && !std::holds_alternative<Text>(entity) &&
-            distance(entity, pointer) <= aperture) {
-            nearbyCurves.push_back(id);
+    // The snap points of one shape of an entity with identifier `id`.
+    std::vector<SnapShape> nearbyCurves;
+    const auto considerShape = [&](const Entity& entity, std::uint64_t id) {
+        if (modes.intersection && isSnapCurve(entity) && distance(entity, pointer) <= aperture) {
+            nearbyCurves.push_back({id, &entity});
         }
-        considerTangents(entity, id.value);
+        considerTangents(entity, id);
         if (const auto* polyline = std::get_if<Polyline>(&entity)) {
             forEachSnapSegment(*polyline, [&](const PolylineSegment& segment) {
                 const double segmentDistance = distance(segment, pointer);
@@ -224,26 +249,66 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                 }
                 curvePoints.clear();
                 appendSnapPoints(segment, modes, curvePoints, from);
-                consider(segmentDistance, id.value);
+                consider(segmentDistance, id);
             });
-            continue;
+            return;
         }
         // Lines, circles, arcs and text boxes are a single curve each.
         const double curveDistance = distance(entity, pointer);
         if (curveDistance > aperture) {
-            continue;
+            return;
         }
         curvePoints.clear();
         appendSnapPoints(entity, modes, curvePoints, from);
-        consider(curveDistance, id.value);
+        consider(curveDistance, id);
+    };
+
+    // The types of the 0.8 snap through their drawn shapes, the same that
+    // appendSnapPoints(document, …) visits, kept here while they are compared.
+    std::deque<Entity> generatedShapes;
+    for (const EntityId id : candidates(document, squareAround(pointer, aperture))) {
+        const EntityRecord& record = recordOf(document, id);
+        if (isOwnShape(record.entity)) {
+            considerShape(record.entity, id.value);
+            continue;
+        }
+        for (const GeneratedItem& item : generate(document, record)) {
+            if (std::optional<Entity> shape = shapeEntity(item.shape)) {
+                generatedShapes.push_back(std::move(*shape));
+                considerShape(generatedShapes.back(), id.value);
+            }
+        }
+        // The points no shape gives (an insertion point) compete by their
+        // own distance from the pointer.
+        curvePoints.clear();
+        std::visit(
+            [&](const auto& value) {
+                if constexpr (!std::is_same_v<std::decay_t<decltype(value)>, Polyline> &&
+                              !std::is_same_v<std::decay_t<decltype(value)>, Line> &&
+                              !std::is_same_v<std::decay_t<decltype(value)>, Circle> &&
+                              !std::is_same_v<std::decay_t<decltype(value)>, Arc> &&
+                              !std::is_same_v<std::decay_t<decltype(value)>, Text>) {
+                    appendOwnSnapPointsOf(document, record, value, modes, curvePoints, from);
+                }
+            },
+            record.entity);
+        for (const SnapPoint& snap : curvePoints) {
+            const Candidate candidate{distance(snap.point, pointer), tieRank(snap.kind), id.value};
+            if (candidate.distance <= aperture && (!point || candidate.beats(bestPoint))) {
+                point = snap;
+                bestPoint = candidate;
+            }
+        }
     }
     if (modes.intersection) {
         // Stable discovery order is only a deterministic tie-break. Different
         // pairs meeting at one point may differ by an ulp, without a visible
         // effect: snap still picks the point nearest the pointer. solid-space
         // promises identical bits when swapping a pair, not between pairs.
-        // Shared stretches deliberately supply no points.
-        std::ranges::sort(nearbyCurves, {}, &EntityId::value);
+        // Shared stretches deliberately supply no points. Two shapes of the
+        // same entity (an insert) meet too (docs/DECISIONI.md, 2026-11-14,
+        // "Revisione delle interfacce PT4", P4).
+        std::ranges::stable_sort(nearbyCurves, {}, &SnapShape::id);
         const auto considerCrossings = [&](const Intersections& found, std::uint64_t id) {
             curvePoints.clear();
             for (const Crossing& crossing : found.crossings) {
@@ -252,16 +317,15 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             consider(0.0, id);
         };
         for (std::size_t i = 0; i < nearbyCurves.size(); ++i) {
-            const EntityId first = nearbyCurves[i];
-            const Entity& entity = entityOf(document, first);
-            if (const auto* polyline = std::get_if<Polyline>(&entity)) {
-                considerCrossings(selfIntersections(*polyline), first.value);
+            const SnapShape first = nearbyCurves[i];
+            if (const auto* polyline = std::get_if<Polyline>(first.shape)) {
+                considerCrossings(selfIntersections(*polyline), first.id);
             }
             for (std::size_t j = i + 1; j < nearbyCurves.size(); ++j) {
-                const EntityId second = nearbyCurves[j];
-                const Entity& other = entityOf(document, second);
-                const auto found = intersect(entity, Extension::None, other, Extension::None);
-                considerCrossings(found, second.value);
+                const SnapShape second = nearbyCurves[j];
+                const auto found =
+                    intersect(*first.shape, Extension::None, *second.shape, Extension::None);
+                considerCrossings(found, second.id);
             }
         }
     }

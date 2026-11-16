@@ -12,7 +12,7 @@ namespace tg::core {
 namespace {
 
 double angleOf(const Vec2& vector) {
-    return normalizeAngle(std::atan2(vector.y, vector.x));
+    return normalizeAngle(atan2(vector.y, vector.x));
 }
 
 }  // namespace

@@ -1,0 +1,49 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 ELLIPSE center=150,0 major-axis=20,0 ratio=0.4
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: C
+  Specify center of ellipse: 150,0
+  Specify endpoint of axis: 170,0
+  Specify distance to other axis or [Rotation]: 8
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[final]
+entities:
+  257 ELLIPSE center=150,0 major-axis=20,0 ratio=0.4
+  258 ELLIPSE center=10,-145 major-axis=15,8 ratio=0.35294117647058826
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: c
+  Specify center of ellipse: 10,-145
+  Specify endpoint of axis: 25,-137
+  Specify distance to other axis or [Rotation]: 6
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 2

@@ -40,6 +40,7 @@ add_executable(tg_tests
     cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/offset_command_test.cpp
+    cmd/pedit_command_test.cpp
     cmd/pline_command_test.cpp
     cmd/property_commands_test.cpp
     cmd/quick_select_test.cpp
@@ -53,6 +54,7 @@ add_executable(tg_tests
     core/intersections_test.cpp
     core/join_test.cpp
     core/offset_test.cpp
+    core/pedit_join_test.cpp
     core/arc_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
@@ -60,6 +62,7 @@ add_executable(tg_tests
     core/dashes_test.cpp
     core/chamfer_test.cpp
     core/fillet_test.cpp
+    core/generated_test.cpp
     core/lineweight_test.cpp
     core/linetype_pattern_test.cpp
     core/document_query_test.cpp
@@ -68,6 +71,8 @@ add_executable(tg_tests
     core/layer_test.cpp
     core/geometry_test.cpp
     core/line_test.cpp
+    core/math_test.cpp
+    core/new_entities_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
     core/raw_data_test.cpp
@@ -98,6 +103,7 @@ add_executable(tg_tests
     mcp/server_test.cpp
     mcp/session_test.cpp
     mcp/tool_host_test.cpp
+    render/generated_drawing_test.cpp
     render/linework_test.cpp
     render/scene_renderer_test.cpp
     render/viewport_test.cpp
@@ -129,11 +135,12 @@ target_compile_definitions(tg_tests PRIVATE
     TG_SCRIPT_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/script-output"
     TG_IO_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/io-output"
     TG_IO_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/io/dati")
-# The ZIP container is internal to io (io/src/zip.hpp), and the lineweights and
-# linetypes on the screen to render (render/src/linework.hpp); their tests
-# reach them here.
+# The ZIP container is internal to io (io/src/zip.hpp), the lineweights and
+# linetypes on the screen to render (render/src/linework.hpp), and the lines
+# of the entity types of stage 0.8 to script
+# (script/src/new_entities_format.hpp); their tests reach them here.
 target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src"
-    "${PROJECT_SOURCE_DIR}/render/src")
+    "${PROJECT_SOURCE_DIR}/render/src" "${PROJECT_SOURCE_DIR}/script/src")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)

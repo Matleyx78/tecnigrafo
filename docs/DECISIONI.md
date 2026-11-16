@@ -1758,3 +1758,194 @@ i rimandi ai documenti che cambia.
   responsabile decide che il tracciamento confronta le distanze **al
   quadrato** (`dx*dx + dy*dy`), senza radice; a quadrati uguali valgono le
   regole del pareggio. Scartato il confronto dopo la radice.
+- **2026-11-14 — Revisione delle interfacce PT4.** Sul verbale di Codex nella
+  [#669](https://github.com/Matleyx78/tecnigrafo/issues/669) (25 punti, nove
+  schede), il responsabile approva lo smistamento proposto da Claude. Dodici
+  punti li decide una regola che c'è già o sono buchi non visibili, che sceglie
+  chi realizza (P1, P2, P5, P7, P9, P10, P13, P18, P19, P20, P22, P23); dove la
+  scheda diceva altro si allinea: ingombro anche sui layer spenti, non sui
+  congelati, come lo zoom estensioni di AutoCAD (PT6); figura del `SOLID` =
+  regione del pittore (PT10); trasformazioni annidate composte prima (PT16);
+  testo scomposto sulla sua base (PT17). Tredici decisioni, quasi tutte come
+  AutoCAD:
+  P3, selezione di un inserimento dalle forme visibili (clic: la più vicina;
+  finestra: tutte dentro; blocco senza forme visibili solo con la finestra sul
+  punto d'inserimento; retino pieno preso nel pieno, non nel foro); P4, snap
+  *Intersezione* anche dentro lo stesso inserimento e snap inserimento sempre;
+  P6, l'annullamento rimette la posizione del blocco, ridefinire con un nome
+  uguale senza maiuscole tiene posizione e grafia; P8, limite della 0.8: tipo
+  di linea che riparte a ogni forma e larghezza persa sui pezzi ellittici
+  (idea [#762](https://github.com/Matleyx78/tecnigrafo/issues/762)); P11, un
+  grip per i vertici uguali di un `SOLID`, collasso rifiutato; P12, cerchio
+  con l'asse su X positivo, altrimenti asse in [0°, 180°); P14, il grip di un
+  asse dell'ellisse ne cambia solo la lunghezza, con scambio se serve; P15,
+  stile di testo corrente mancante → `Standard`, creato se manca; P16, `put`
+  tiene handle e posizione; P17, un blocco usato non si toglie, profondità
+  massima 64 livelli; P21, l'`ATTRIB` eredita i dati dell'`ATTDEF` e fra
+  etichette uguali vale la prima; P24, EXPLODE di una quota con grafica grezza
+  rifiutato; P25, EXPLODE con scala non uniforme rifiutato per `MTEXT`, quote
+  e retini, `ATTDEF` trasformato come testo. Le schede corrette: PT6, PT7,
+  PT8, PT10, PT11, PT16, PT17, PT29, PT30, PT48.
+- **2026-11-14 — Revisione delle interfacce PT5.** Sul verbale di Codex nella
+  [#670](https://github.com/Matleyx78/tecnigrafo/issues/670) (B01–B26), il
+  responsabile approva lo smistamento proposto da Claude. Nove punti li decide
+  una regola che c'è già o li sceglie chi realizza (B05, B09, B14, B17, B18,
+  B19, B20, B23, B26). Diciassette decisioni, quasi tutte come AutoCAD:
+  B01, codici di `MTEXT` decodificati una volta sola, sequenza senza `;`
+  letterale con `\P` che va a capo; B02, `\~` misurato come uno spazio, riga
+  di soli spazi senza testo; B03, `MTEXT` sempre leggibile dopo una
+  riflessione, qualunque sia `MIRRTEXT`; B04, `MTEXT` vuoto preso sul punto
+  d'inserimento; B06, stile di quota mancante → `Standard`, come gli stili di
+  testo; B07, valori fuori dominio → quota conservata e non rigenerabile; B08,
+  lineare di misura zero con testo `0`, allineata con origini uguali non
+  rigenerabile; B10, `textPoint` = centro del testo, angolo esplicito assoluto
+  e distinto dall'automatico; B11, `DIMSD1`/`DIMSD2` tolgono mezza linea e la
+  freccia del loro lato, `DIMSCALE` solo sulle grandezze grafiche; B12,
+  creazione non riuscita → messaggio e richiesta ripetuta; B13, punto su una
+  semiretta → l'angolo dopo in senso antiorario, nel vertice non
+  rigenerabile; B15, adattamento angolare con i quattro casi lungo l'arco,
+  `DIMLFAC` e `DIMRND` non sugli angoli; B16, testo sulla curva = dentro,
+  pareggio della diametrale a `point15`, assi di `DIMCEN` negativo come
+  AutoCAD; B21, estremi alla stessa distanza → l'inizio, coincidenza prima
+  della graduatoria per `fuzz`; B22, senza un incrocio isolato *Extend* non
+  unisce e si prova il seguente, *Both* fa un ponte; B24, il prolungamento
+  tiene la larghezza dell'estremo; B25, `added` conta i segmenti aggiunti,
+  ponti compresi. Le schede corrette: PT13, PT22, PT23, PT24, PT26, PT27,
+  PT30, PT32.
+- **2026-11-14 — Secondo giro delle revisioni PT4 e PT5.** Dalla rilettura di
+  Codex della [#763](https://github.com/Matleyx78/tecnigrafo/pull/763), sei
+  buchi visibili nuovi; il responsabile approva le proposte di Claude, scelte
+  fra le opzioni del verbale:
+  P8, sotto una scala non uniforme le larghezze di una polilinea si perdono su
+  tutti i pezzi, dritti ed ellittici, nel disegno e in EXPLODE (una `Line`
+  non porta larghezza; l'impronta completa resta nell'idea #762); P14, gli
+  assi dell'ellisse si scambiano anche quando il grip accorcia il maggiore
+  sotto il minore, e a rapporto 1 esatto vale l'asse su X positivo (P12); P25,
+  con un `MTEXT` (o quota, o retino) e un inserimento annidato non
+  rappresentabile nello stesso blocco, vale sempre il messaggio degli
+  oggetti che non si esplodono; B10, l'angolo esplicito del testo vale per
+  ogni tipo e posizione, anche con `DIMTIH`/`DIMTOH` 1, e lo stile decide
+  solo l'automatico; B11, l'adattamento si sceglie con due frecce e le
+  soppressioni si applicano dopo; B16, con `DIMCEN` negativo e un raggio fino
+  a `2·|DIMCEN|` niente linee d'asse, solo la croce. Gli altri rilievi del
+  verbale erano errori della correzione o regole già decise, sistemati nella
+  stessa pull request.
+- **2026-11-14 — Catena degli agenti, a tappa aperta.** Dopo il giro di prove
+  generale in [Matleyx78/prova-orchestratore](https://github.com/Matleyx78/prova-orchestratore)
+  con tutti i tipi di lavoro, il responsabile applica subito la proposta della
+  [#764](https://github.com/Matleyx78/tecnigrafo/issues/764), in via
+  eccezionale a tappa aperta invece che nella pausa dopo la 0.8 (regola del
+  2026-11-03 e del 2026-11-07), perché la ritiene molto più veloce del metodo
+  attuale: un lavoro si avvia con un solo commento, gli agenti si passano il
+  lavoro con `scripts/passa.sh` e `scripts/avvia.sh`, la revisione va a giri
+  con le classi [bloccante], [decisione] e [facoltativa], le decisioni si
+  scrivono sempre in una issue, il merge avvia le issue di
+  `Avvia dopo il merge: #N` e una sentinella mette `ferma` sulle catene senza
+  movimento da 60 minuti. Il lavoro a lotti non c'è più. Gli ambienti degli
+  agenti nella catena li decide il responsabile. Solo lui avvia gli agenti, e
+  l'automazione non ha limiti di quota. In solid-space arriva con una pull
+  request sua. [ADR 0053](adr/0053-catena-degli-agenti.md);
+  [agenti/catena.md](agenti/catena.md); [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), A2a.
+- **2026-11-15 — Domande di PT32 annunciate prima del lavoro.** Codex si
+  ferma su RT32 ([#724](https://github.com/Matleyx78/tecnigrafo/issues/724)):
+  le funzioni di PT32 (`toPolyline`, `reversed`, `joinWithGaps`) non hanno
+  una domanda al modello, `join` non conosce `fuzz`, il tipo di unione,
+  `added` e `consumed`, e `PEDIT` è PT33, che dipende da PT32. Il responsabile
+  sceglie, fra le due uscite proposte, le **domande al modello**: tre domande
+  nuove, `to-polyline`, `reverse` e `pedit-join`, invece di cambiare `join`
+  (una domanda si aggiunge, non si cambia). Le descrive e le annuncia il
+  pacchetto fuori tappa
+  [F9](tappe/fuori-tappa/F9-domande-pedit.md) (#771), come F8 per RT34; PT32
+  le realizza. Scartato lo spostamento dei casi su RT33 e `PEDIT`, che
+  avrebbe lasciato PT32 senza riferimenti scritti prima del lavoro.
+  [verifica/domande.md](verifica/domande.md), «Polilinee (tappa 0.8)»;
+  [PT32](tappe/0.8/PT32-unione-con-distanza.md), punto 5.
+- **2026-11-15 — Quota delle polilinee unite verificata in PT33.** Claude si
+  ferma su PT32 ([#725](https://github.com/Matleyx78/tecnigrafo/issues/725)):
+  la regola «neanche le polilinee con quota diversa dalla sorgente» (PT32,
+  punto 4) chiede un dato che non arriva né a `joinWithGaps`, che riceve solo
+  le `Entity`, né alle domande, perché il lettore delle definizioni scarta
+  `elevation=`. Il responsabile sceglie, nella
+  [#724](https://github.com/Matleyx78/tecnigrafo/issues/724), di togliere la
+  quota dal caso `pedit-modello/limiti` di RT32
+  ([#775](https://github.com/Matleyx78/tecnigrafo/pull/775)) e di verificarla
+  nel comando `PEDIT`, che vede gli `EntityExtras`: la regola passa a
+  [PT33](tappe/0.8/PT33-comando-pedit.md) (punto 6 e un test), esce da PT32
+  e dalla domanda `pedit-join` di [verifica/domande.md](verifica/domande.md).
+  Scartati il lettore che conserva la quota e un parametro in più di
+  `joinWithGaps`.
+- **2026-11-15 — Correzioni della catena dopo il secondo pilota.** Dal pilota
+  RT32 → PT32 il responsabile corregge [agenti/catena.md](agenti/catena.md):
+  il revisore non aspetta la CI, perché la catena gli passa la pull request
+  solo a CI finita; quando un caso di riferimento già unito si rivela
+  sbagliato, la riga da copiare dice di riaprire la issue dei riferimenti e di
+  scrivere lì, e la pull request di correzione porta `Closes` di quella issue
+  oltre a `Avvia dopo il merge`, altrimenti il pacchetto resta ad aspettarla;
+  se chi si ferma propone una correzione concreta (un dato, un valore), la
+  riga da copiare la contiene già scritta, perché chi corregge applichi il
+  dato esatto invece di interpretarlo (la decisione per la #775 diceva solo
+  «spostando PAR più lontano»); chi corregge un caso lo ricontrolla con la
+  scheda, passi seguenti compresi,
+  prima di aprire la pull request (nella #775 lo spostamento dell'estremo
+  sbagliato di `PAR` ha lasciato il caso `ordine-conteggi` com'era).
+- **2026-11-15 — Campi delle tabelle nel rapporto scritti da chi li crea.**
+  Claude si ferma su PT9 ([#674](https://github.com/Matleyx78/tecnigrafo/issues/674)):
+  la scheda chiede di scrivere `text styles:`, `dimension styles:`,
+  `blocks:` e di realizzare `!block`/`!endblock`, ma dopo PT6
+  `TextStyleTable` e `DimStyleTable` non hanno campi e `BlockDefinition` ha
+  solo il nome; i campi li aggiungono PT11, PT16 e PT22, che dipendono da PT9.
+  Il responsabile sceglie: [PT9](tappe/0.8/PT9-rapporto-entita-nuove.md)
+  fissa in [verifica/rapporto.md](verifica/rapporto.md) e
+  [verifica/domande.md](verifica/domande.md) tutti i formati della scheda e
+  realizza le righe dei sette tipi, la lettura, gli `ATTRIB` e la domanda
+  `generated`; la scrittura di `text styles:` e `text style:` passa a
+  [PT11](tappe/0.8/PT11-stili-di-testo.md), quella di `dimension styles:`,
+  `dimension style:` e `dimension overrides:` a
+  [PT22](tappe/0.8/PT22-stili-di-quota.md), `blocks:` e `!block`/`!endblock`
+  a [PT16](tappe/0.8/PT16-blocchi-core.md), ciascuno con
+  `script/src/report.cpp` e `tests/script/report_test.cpp` fra i suoi file
+  (PT16 anche `script/src/question_table.cpp`, `script/src/questions.cpp` e
+  `tests/script/questions_test.cpp`), come file comuni. Scartati l'aggiunta
+  dei campi in `core` da parte di PT9, in anticipo sulle interfacce di quei
+  pacchetti, e un pacchetto nuovo dopo PT11, PT16 e PT22.
+- **2026-11-15 — Solo indirizzi noreply nei commit.** Alcuni commit scritti da
+  agenti in sessioni cloud portavano come autore l'indirizzo personale del
+  responsabile, preso dall'account dello strumento e non dalla configurazione
+  del repository; lo squash and merge di GitHub lo ha copiato in una riga
+  `Co-authored-by` del commit su `main`, dove resta pubblico. Il responsabile
+  decide: autore, committer e righe `Co-authored-by` di ogni commit usano solo
+  indirizzi noreply, e ogni agente controlla `git config user.email` prima del
+  primo commit ([AGENTS.md](../AGENTS.md), "Commit e pull request"). La regola
+  non basta da sola, perché nessuno la legge mentre lo strumento firma: il
+  pacchetto fuori tappa
+  [F10](tappe/fuori-tappa/F10-indirizzi-dei-commit.md) aggiunge alla CI un
+  controllo che fa fallire una pull request con un commit firmato da un
+  indirizzo diverso. Scartata la riscrittura della storia di `main`: romperebbe
+  i rami e le pull request aperti.
+- **2026-11-15 — Test di PT8 con un inserimento vero in PT16.** Nel primo
+  giro di revisione di PT8 ([#779](https://github.com/Matleyx78/tecnigrafo/pull/779))
+  la scheda chiede due test con un inserimento, che passi da `core::generate`
+  e dalla scena; ma `supported(const Insert&)` è ancora `false`, `transformedShape`
+  con una scala non uniforme è ancora vuota, e PT16, che rende `Insert`
+  supportato, dipende da PT8. Il responsabile sceglie
+  ([#673](https://github.com/Matleyx78/tecnigrafo/issues/673)): in
+  [PT8](tappe/0.8/PT8-geometria-generata-render.md) l'evidenziazione e
+  l'anteprima disegnano le stesse forme della scena, e le forme che darà un
+  inserimento con scala `(2, 1)` di una polilinea con un arco e larghezza 2
+  (una linea e un arco d'ellisse senza larghezza) passano al disegno della
+  geometria generata, con il motivo tratteggiato che riparte all'inizio di
+  ogni pezzo; le stesse verifiche con un inserimento vero le scrive
+  [PT16](tappe/0.8/PT16-blocchi-core.md), con
+  `tests/render/generated_drawing_test.cpp` fra i suoi file. Scartati il
+  lasciare le schede come sono, senza che nessuno scriva i test con un
+  inserimento vero, e l'anticipo in PT8 del supporto di `Insert` in `core`.
+- **2026-11-15 — La riga per riprendere porta le regole della catena.** Nella
+  prima decisione della catena in solid-space (PS7 → correzione dei riferimenti
+  di RS7a, Matleyx78/solid-space#247) Codex ha ricevuto una riga con il solo
+  dato da applicare: ha corretto i casi, ma non ha preso in carico la issue e
+  ha lasciato il commit nel suo ambiente. Da qui, in tutti e due i progetti,
+  la riga da copiare finisce sempre con la frase che rimanda ad AGENTS.md e a
+  catena.md e chiede `git push` e `gh pr create`, come il commento di avvio,
+  quando chiede di cambiare dei file ([agenti/catena.md](agenti/catena.md),
+  "Fermarsi per una decisione"). La guida (A2a) dice che la catena è
+  arrivata anche in solid-space (Matleyx78/solid-space#293).

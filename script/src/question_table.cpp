@@ -3,9 +3,11 @@
 
 #include "question_table.hpp"
 
+#include "new_entities_format.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/snap_points.hpp"
@@ -197,12 +199,16 @@ template <typename... Lambdas>
 Overloaded(Lambdas...) -> Overloaded<Lambdas...>;
 
 /// The length of the entity's curve; std::nullopt for a text, which is a
-/// region (docs/verifica/domande.md).
+/// region (docs/verifica/domande.md), and for the types of the 0.8 until the
+/// questions learn them (docs/tappe/0.8/PT9).
 std::optional<double> lengthOf(const core::Entity& entity) {
     return std::visit(
         Overloaded{
-            [](const core::Text& /*text*/) -> std::optional<double> { return std::nullopt; },
-            [](const auto& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Polyline& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Line& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Circle& curve) -> std::optional<double> { return curve.length(); },
+            [](const core::Arc& curve) -> std::optional<double> { return curve.length(); },
+            [](const auto& /*region*/) -> std::optional<double> { return std::nullopt; },
         },
         entity);
 }
@@ -245,6 +251,8 @@ std::optional<core::Vec2> closestOn(const core::Entity& entity, const core::Vec2
             [&point](const core::Text& text) -> std::optional<core::Vec2> {
                 return core::closestPoint(text, point);
             },
+            // The types of the 0.8, until the questions learn them (PT9).
+            [](const auto& /*entity*/) -> std::optional<core::Vec2> { return std::nullopt; },
         },
         entity);
 }
@@ -481,6 +489,32 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     return snap ? snapText(*snap) : std::string{"none"};
 }
 
+/// "generated <E>": the generated geometry of the entity, in order
+/// (docs/verifica/domande.md, "Blocchi e geometria generata").
+QuestionResult askGenerated(const QuestionModel& model, Arguments arguments) {
+    if (arguments.size() != 1) {
+        return usage("generated <E>");
+    }
+    const std::optional<core::EntityId> id = model.find(arguments.front());
+    if (!id) {
+        return ArgumentError{"no entity named " + quoted(arguments.front()) + " is defined above"};
+    }
+    const core::EntityRecord* record = model.document.find(*id);
+    assert(record != nullptr && "every named entity is in the document");
+    const std::vector<core::GeneratedItem> items = core::generate(model.document, *record);
+    if (items.empty()) {
+        return std::string{"none"};
+    }
+    std::string answer;
+    for (const core::GeneratedItem& item : items) {
+        if (!answer.empty()) {
+            answer += "; ";
+        }
+        writeGeneratedItem(item, answer);
+    }
+    return answer;
+}
+
 }  // namespace
 
 // Defined in construction_questions.cpp.
@@ -518,6 +552,11 @@ QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
 QuestionResult askGrips(const QuestionModel& model, Arguments arguments);
 QuestionResult askGrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askTransform(const QuestionModel& model, Arguments arguments);
+
+// Defined in pedit_questions.cpp.
+QuestionResult askToPolyline(const QuestionModel& model, Arguments arguments);
+QuestionResult askReverse(const QuestionModel& model, Arguments arguments);
+QuestionResult askPeditJoin(const QuestionModel& model, Arguments arguments);
 
 // Defined in property_questions.cpp.
 QuestionResult askQuickSelect(const QuestionModel& model, Arguments arguments);
@@ -587,6 +626,12 @@ constexpr std::array kQuestions{
     QuestionRow{"circle-ttr", AnswerShape::Single, &askCircleTtr},                 // P19
     QuestionRow{"chamfer", AnswerShape::Single, &askChamfer},                      // P21
     QuestionRow{"join", AnswerShape::Single, &askJoin},                            // P22
+    // Stage 0.8: polylines (pedit_questions.cpp).
+    QuestionRow{"to-polyline", AnswerShape::Single, &askToPolyline},  // PT32
+    QuestionRow{"reverse", AnswerShape::Single, &askReverse},         // PT32
+    QuestionRow{"pedit-join", AnswerShape::Single, &askPeditJoin},    // PT32
+    // Stage 0.8: generated geometry. In order, so Single and not Items.
+    QuestionRow{"generated", AnswerShape::Single, &askGenerated},  // PT9
 };
 
 }  // namespace

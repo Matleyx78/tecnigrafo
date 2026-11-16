@@ -1112,8 +1112,8 @@ esac
 printf '%s\\n' "$*" >> "$CALLS"
 case "$2" in
     */actions/workflows/*/runs?*)
-        echo '{"workflow_runs":[{"id":42,"status":"completed","conclusion":"success"}]}' ;;
-    */actions/runs/42) echo '{"id":42,"status":"completed","conclusion":"success"}' ;;
+        echo '{"workflow_runs":[{"id":4200000042,"status":"completed","conclusion":"success"}]}' ;;
+    */actions/runs/4200000042) echo '{"id":4200000042,"status":"completed","conclusion":"success"}' ;;
     *) echo '{"workflow_runs":[{"id":99,"status":"completed","conclusion":"failure"}]}' ;;
 esac
 ''')
@@ -1121,7 +1121,7 @@ esac
         for args, workflow, endpoint in (([], "ci.yml", f"workflows/ci.yml/runs?head_sha={sha}&per_page=1"),
                                          (["b" * 40], "ci.yml", f"workflows/ci.yml/runs?head_sha={'b' * 40}&per_page=1"),
                                          ([], "other.yml", f"workflows/other.yml/runs?head_sha={sha}&per_page=1"),
-                                         (["42"], "other.yml", "runs/42")):
+                                         (["4200000042"], "other.yml", "runs/4200000042")):
             with self.subTest(args=args, workflow=workflow):
                 result = self.run_script("ci-attendi.sh", *args, TG_ATTESA_WORKFLOW=workflow)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

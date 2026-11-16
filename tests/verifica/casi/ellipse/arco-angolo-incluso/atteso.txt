@@ -1,0 +1,56 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 ELLIPSE center=100,-60 major-axis=20,0 ratio=0.3 start=286.6992442339936 end=445.40417460781634
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: A
+  Specify axis endpoint of elliptical arc or [Center]: C
+  Specify center of elliptical arc: 100,-60
+  Specify endpoint of axis: 120,-60
+  Specify distance to other axis or [Rotation]: 6
+  Specify start angle: -45
+  Specify end angle or [Included angle]: I
+  Specify included angle for arc <180>: 120
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[final]
+entities:
+  257 ELLIPSE center=100,-60 major-axis=20,0 ratio=0.3 start=286.6992442339936 end=445.40417460781634
+  258 ELLIPSE center=20,0 major-axis=-20,0 ratio=0.5 start=49.10660535086909 end=130.8933946491309
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: a
+  Specify axis endpoint of elliptical arc or [Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  Specify distance to other axis or [Rotation]: 10
+  Specify start angle: 30
+  Specify end angle or [Included angle]: i
+  Specify included angle for arc <180>: 120
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 2

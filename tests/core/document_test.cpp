@@ -814,6 +814,68 @@ TEST(Document, ReplaceEntityHandlesEmptyAndNonemptyBoundingBoxes) {
     EXPECT_EQ(document.replaceEntity(id, Polyline{}), Entity{Polyline{}});
 }
 
+TEST(DocumentTables, NewTablesAreReplacedWithoutTouchingTheEntities) {
+    Document document = Document::newDrawing();
+    const EntityId line = document.add(Line{{0, 0}, {10, 0}});
+    const EntityId circle = document.add(Circle{{5, 5}, 2.0});
+    const std::vector<EntityRecord> before(document.entities().begin(), document.entities().end());
+    const BBox extents = document.extents();
+
+    EXPECT_EQ(document.textStyles(), TextStyleTable{});
+    EXPECT_EQ(document.dimStyles(), DimStyleTable{});
+    EXPECT_TRUE(document.blocks().definitions().empty());
+    document.replaceTextStyles(TextStyleTable{});
+    document.replaceDimStyles(DimStyleTable{});
+    EXPECT_EQ(document.textStyles(), TextStyleTable{});
+    EXPECT_EQ(document.dimStyles(), DimStyleTable{});
+
+    document.replaceBlock("A", BlockDefinition{"A"});
+    document.replaceBlock("B", BlockDefinition{"B"});
+    ASSERT_EQ(document.blocks().definitions().size(), 2U);
+    EXPECT_EQ(document.blocks().definitions()[0].name, "A");
+    EXPECT_EQ(document.blocks().definitions()[1].name, "B");
+    ASSERT_NE(document.blocks().find("b"), nullptr);
+    EXPECT_EQ(document.blocks().find("b")->name, "B");
+    EXPECT_EQ(document.blocks().find("C"), nullptr);
+
+    // Redefining with the name in other case keeps place and spelling
+    // (docs/DECISIONI.md, 2026-11-14, "Revisione delle interfacce PT4", P6).
+    document.replaceBlock("a", BlockDefinition{"a"});
+    ASSERT_EQ(document.blocks().definitions().size(), 2U);
+    EXPECT_EQ(document.blocks().definitions()[0].name, "A");
+
+    document.replaceBlock("a", std::nullopt);
+    ASSERT_EQ(document.blocks().definitions().size(), 1U);
+    EXPECT_EQ(document.blocks().definitions()[0].name, "B");
+    document.replaceBlock("missing", std::nullopt);
+    EXPECT_EQ(document.blocks().definitions().size(), 1U);
+
+    const std::vector<EntityRecord> after(document.entities().begin(), document.entities().end());
+    EXPECT_EQ(after, before);
+    EXPECT_EQ(document.extents().min(), extents.min());
+    EXPECT_EQ(document.extents().max(), extents.max());
+    expectEveryEntityFound(document);
+    EXPECT_EQ(indexedQuery(document, BBox{{0, 0}, {10, 7}}),
+              (std::vector<std::uint64_t>{line.value, circle.value}));
+}
+
+TEST(Document, FreezingALayerKeepsTheExtentsOfTheFiveEntitiesOfBefore) {
+    Document document = Document::newDrawing();
+    const EntityId id = document.add(Line{{0, 0}, {10, 0}});
+    Layer zero = *document.layer(document.layerZero());
+    zero.frozen = true;
+    document.replaceLayer(zero);
+    EXPECT_EQ(indexedQuery(document, BBox{{-1, -1}, {1, 1}}),
+              (std::vector<std::uint64_t>{id.value}));
+    zero.frozen = false;
+    document.replaceLayer(zero);
+    EXPECT_EQ(indexedQuery(document, BBox{{-1, -1}, {1, 1}}),
+              (std::vector<std::uint64_t>{id.value}));
+    EXPECT_EQ(document.extents().max(), (Vec2{10, 0}));
+    document.remove(id);
+    EXPECT_TRUE(document.extents().isEmpty());
+}
+
 TEST(DocumentDeathTest, SetPropertiesRequiresAnExistingRecord) {
     Document document = Document::newDrawing();
     EXPECT_DEATH(document.setProperties(EntityId{999}, document.current()), "");

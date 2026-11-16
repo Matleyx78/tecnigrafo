@@ -19,6 +19,7 @@ istruzione; gli spazi all'inizio e alla fine della riga non contano.
 | vuota, o che inizia con `;` | ignorata; con `--pending`, `; cambia con #<numero>` ferma il controllo anticipato prima del comportamento che cambia apposta ([ADR 0037](../adr/0037-controllo-anticipato-dei-riferimenti.md), punti 4–6) |
 | `!tolerance <tipo> <valore>` | cambia una tolleranza, come negli [script](script.md#dettagli), **per le domande che seguono** |
 | `!current <proprietà>` | cambia i valori correnti del documento delle definizioni (dalla tappa 0.6, [Layer e proprietà](#layer-e-proprietà)) |
+| `!block "<NOME>" base=x,y` … `!endblock` | una definizione di blocco nel documento delle definizioni (dalla tappa 0.8, [Blocchi e geometria generata](#blocchi-e-geometria-generata)) |
 | `<Nome> = <entità>` | una **definizione** |
 | `? <domanda> <argomenti> -> <risposta attesa>` | una **domanda** |
 
@@ -271,6 +272,96 @@ ADR 0035, punti 17–20)
 |---|---|---|
 | `join <A> <B> … [circle=no] [units=<n>]` | elenco separato da `;` di `<nome> <entità>`, o `none` | il risultato di `JOIN` interattivo sulle entità nominate, con `A` come sorgente e le altre nell'ordine scritto: le entità che restano come diventano (`A …`), quella nuova se il tipo cambia (`new LWPOLYLINE …`); `none` se non si unisce nulla. Una linea o un arco solo se tutte le entità sono linee allineate alla sorgente o archi del suo cerchio; altrimenti la catena (decisione B16 della #464, 2026-11-01). Gli archi dello stesso cerchio si coprono in senso antiorario a partire dall'inizio della sorgente; se arrivano al giro intero la risposta è il cerchio (`new CIRCLE …`), come con *Yes* alla domanda *Convert to circle?*, e con `circle=no`, come con *No*, è `none` (decisione B11, rivista il 2026-11-02) |
 
+### Polilinee (tappa 0.8)
+
+Le domande della conversione, dell'inversione e dell'unione con distanza di
+`PEDIT` ([ADR 0050](../adr/0050-pedit.md), punti 2–4), pubblicate prima del
+pacchetto che le realizza perché i riferimenti si possano scrivere prima del
+lavoro (decisione del 2026-11-15, F9). Chiedono delle funzioni di `core`,
+non del comando: le entità delle risposte si scrivono come
+[definizioni](rapporto.md#entità), senza proprietà, come in `join`; `units=`
+è `INSUNITS` del disegno, 4 (millimetri) se manca.
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `to-polyline <E>` | `LWPOLYLINE …` | la linea o l'arco `E` come polilinea aperta di un segmento (`toPolyline`): dall'inizio della linea alla sua fine; per l'arco dal punto dell'angolo iniziale a quello dell'angolo finale, con il bulge dell'arco (antiorario, positivo). Un'entità che non è `LINE` né `ARC` è un errore del caso |
+| `reverse <P>` | `LWPOLYLINE …` | la polilinea `P` invertita (`reversed`, opzione *Reverse*), con le regole della scheda PT32, punto 2: vertici in ordine opposto, bulge con il segno cambiato sul segmento opposto, larghezze iniziale e finale scambiate, una chiusa con lo stesso primo vertice, i dati dell'ultimo vertice di un'aperta sul nuovo ultimo vertice. Un'entità che non è `LWPOLYLINE` è un errore del caso |
+| `pedit-join <P> <B> … fuzz=<d> [type=extend\|add\|both] [units=<n>]` | `<P> LWPOLYLINE … added=<n> consumed=<nomi>`, o `none` | l'unione con distanza (`joinWithGaps`) con la polilinea `P` come sorgente e le altre entità come `others`, nell'ordine scritto; `fuzz=` è la distanza di tolleranza (≥ 0, obbligatoria), `type=` il tipo di unione, *Extend* se manca, come *Jointype* di AutoCAD. La risposta è la polilinea unita, il numero dei segmenti aggiunti, ponti compresi, e i nomi degli oggetti usati nell'ordine di aggancio, separati da `,`; `none` se non si unisce nessun oggetto. Le polilinee chiuse non si uniscono mai; la quota non entra nella domanda (la regola della quota è del comando `PEDIT`, PT33). Una sorgente che non è `LWPOLYLINE` è un errore del caso (la conversione si chiede con `to-polyline`) |
+
+Esempio, dalla scheda PT32 (le due curve stanno sulla stessa retta, quindi
+non c'è un punto d'intersezione isolato):
+
+```
+S = LWPOLYLINE vertex=-4,0 vertex=0,0
+L = LINE start=1,0 end=3,0
+? pedit-join S L fuzz=2 type=extend -> none
+? pedit-join S L fuzz=2 type=both   -> S LWPOLYLINE closed=no vertex=-4,0 vertex=0,0 vertex=1,0 vertex=3,0 added=2 consumed=L
+```
+
+Le realizza il pacchetto PT32 della 0.8; fino ad allora rispondono
+`error: question not implemented yet`.
+
+### Blocchi e geometria generata (tappa 0.8)
+
+La geometria generata delle entità composte e le definizioni di blocco nei
+file di domande ([ADR 0044](../adr/0044-entita-composte-e-geometria-generata.md),
+punto 2; [ADR 0045](../adr/0045-blocchi-e-attributi.md)), pubblicate prima dei
+pacchetti che realizzano i tipi perché i riferimenti si possano scrivere prima
+del lavoro (scheda PT9). Le entità della tappa 0.8 si definiscono nel formato
+del [rapporto](rapporto.md#tappa-08-entità-composte); finché il pacchetto di
+un tipo non è unito, la sua definizione ferma il file con
+`<TIPO> is not supported yet.` ([Errori](#errori)).
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `generated <E>` | elenco di forme separate da `;`, **in ordine**, o `none` | la geometria generata dell'entità (ADR 0044, punto 2), nell'ordine in cui si disegna: ogni forma nel formato delle entità (`LINE`, `ARC`, `CIRCLE`, `ELLIPSE`, `LWPOLYLINE`, `TEXT`, `SOLID`, e `REGION` con i suoi `loop=` come `HATCH`), seguita dalle proprietà effettive diverse dal predefinito e, per ultime, dalle derivate |
+
+- Le **forme** si scrivono come le entità delle risposte di `join`, senza
+  proprietà della tappa 0.6; un `TEXT` ha la sua derivata `~box`. Una
+  **`REGION`** è una regione piena (pari e dispari): `REGION` e, per ogni
+  anello, `loop=polyline` seguito dai suoi `vertex=` e `bulge=` come in
+  `LWPOLYLINE` (`REGION loop=polyline vertex=0,0 vertex=10,0 vertex=10,10`); con
+  una trasformazione diversa dall'identità ha anche la derivata
+  `~affine=a,b,c,d,e,f`, i coefficienti di `x' = a·x + c·y + e`,
+  `y' = b·x + d·y + f`.
+- Le **proprietà effettive** sono quelle della domanda `effective`
+  (`color=`, `linetype=`, `ltscale=`, `lineweight=`), ognuna scritta solo se
+  diversa da quella di un'entità con le proprietà predefinite in una sessione
+  nuova (`color=255,255,255 linetype="Continuous" ltscale=1
+  lineweight=0.25`); `locked=yes` solo per una forma su un layer bloccato.
+  Una forma su un layer spento o congelato non si genera.
+- La risposta si confronta **nell'ordine**: le forme sono quelle che la
+  grafica disegna, una dopo l'altra.
+- `generated` di un'entità delle tappe precedenti è l'entità stessa:
+
+```
+L = LINE start=0,0 end=10,0
+? generated L -> LINE start=0,0 end=10,0
+```
+
+**Definizioni di blocco.** `!block "NOME" base=x,y` apre una definizione di
+blocco nel documento delle definizioni e `!endblock` la chiude: le
+definizioni di entità fra le due righe entrano nel blocco, nell'ordine, e non
+nel documento. Così si definiscono `INSERT` da interrogare prima che esistano
+i comandi:
+
+```
+!block "TG_EL" base=0,0
+E1 = LINE start=0,0 end=10,0
+!endblock
+I = INSERT block="TG_EL" insertion=100,50
+? generated I -> LINE start=100,50 end=110,50
+```
+
+Il nome segue le regole dei nomi delle tabelle (ADR 0023, punto 1) e si
+definisce una volta; un `!block` dentro un altro, un `!endblock` senza
+`!block` o un file che finisce dentro un blocco sono errori del file.
+
+Chi le realizza: `generated` il pacchetto PT9 della 0.8, e risponde per i tipi
+già realizzati; `!block` e `!endblock` il pacchetto PT16, quando
+`BlockDefinition` ha il punto base e le entità. Fino ad allora `!block` e
+`!endblock` sono righe non valide del file, come ogni direttiva sconosciuta.
+
 ### File
 
 Le domande sui disegni letti da un file: la lettura e la scrittura dei
@@ -482,7 +573,9 @@ catalogo e non ancora realizzate dal programma:
   `error: question not implemented yet`;
 - una **definizione** di un tipo del [rapporto](rapporto.md#tappa-04) non
   ancora realizzato (`CIRCLE` prima del pacchetto P6) ferma il file con
-  "not implemented yet";
+  "not implemented yet"; dalla tappa 0.8, una definizione di un tipo il cui
+  pacchetto non è ancora unito lo ferma con `<TIPO> is not supported yet.`
+  ([rapporto.md](rapporto.md#tappa-08-entità-composte));
 - un **modo di snap** (`intersection`, `perpendicular`, `tangent`, `quadrant`)
   o un **argomento con nome** (`from=` della domanda `snap`) descritti da questo
   catalogo dalla tappa 0.7, fino al pacchetto P7, fermano il file con

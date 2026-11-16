@@ -95,3 +95,21 @@ dello script e fermati. Dopo dieci attese con exit 3 si arriva comunque a 5.
 
 Nel riepilogo per l'utente, tra ciò che non hai potuto verificare, ci sono per
 esempio Windows e macOS.
+
+## Gli ambienti della catena
+
+Nella catena degli agenti ([catena.md](catena.md)) Claude lavora in GitHub
+Actions (`.github/workflows/claude.yml`) e Codex nel suo ambiente sul web, con
+una cartella di build sua come sopra. **Che cosa c'è in questi ambienti lo
+decide il responsabile**: gli script di preparazione degli ambienti di Codex,
+i passi del workflow `claude.yml` e l'elenco dei comandi che Claude può
+lanciare ([ADR 0053](../adr/0053-catena-degli-agenti.md)). Un agente non li
+cambia e non ne propone di nuovi nella pull request del suo lavoro: se gli
+manca qualcosa, vale la regola sopra (niente installazioni, solo i passi
+possibili, il resto alla CI) e lo scrive nella pull request; una proposta di
+cambio va nella issue «Proposte di metodo» della tappa.
+
+In GitHub Actions ogni comando di Claude gira in primo piano, al massimo
+10 minuti, e non si può mandare in background: un comando in background
+morirebbe con la sessione, e con lui il lavoro non ancora pubblicato. Le
+attese lunghe si fanno come sopra, rilanciando `scripts/ci-attendi.sh`.

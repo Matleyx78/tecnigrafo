@@ -1,0 +1,77 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 ELLIPSE center=220,0 major-axis=-20,0 ratio=0.5
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: 200,0
+  Specify other endpoint of axis: 240,0
+  Specify distance to other axis or [Rotation]: R
+  Specify rotation around major axis: 60
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[report 2]
+entities:
+  257 ELLIPSE center=220,0 major-axis=-20,0 ratio=0.5
+  258 ELLIPSE center=300,0 major-axis=20,0 ratio=0.5
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: C
+  Specify center of ellipse: 300,0
+  Specify endpoint of axis: 320,0
+  Specify distance to other axis or [Rotation]: r
+  Specify rotation around major axis: 60
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 2
+
+[final]
+entities:
+  257 ELLIPSE center=220,0 major-axis=-20,0 ratio=0.5
+  258 ELLIPSE center=300,0 major-axis=20,0 ratio=0.5
+  259 ELLIPSE center=0,5 major-axis=0,-5 ratio=0.010471784116245646
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: 0,0
+  Specify other endpoint of axis: 0,10
+  Specify distance to other axis or [Rotation]: R
+  Specify rotation around major axis: 89.4
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+  Ellipse
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 3

@@ -3,14 +3,14 @@
 
 #include "tg/render/scene_renderer.hpp"
 
-#include "linework.hpp"
-#include "tg/core/arc_geometry.hpp"
-#include "tg/core/effective_properties.hpp"
+#include "generated_drawing.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/math.hpp"
-#include "tg/core/text.hpp"
 
 #include <array>
 #include <cmath>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -84,103 +84,26 @@ void drawAxes(const Viewport& viewport, const SceneStyle& style, Painter& painte
     painter.drawLine({origin.x, 0.0}, {origin.x, viewport.screenHeight()});
 }
 
-class EntityDrawer {
-public:
-    EntityDrawer(const Viewport& viewport, const SceneStyle& style, Painter& painter)
-        : m_viewport(viewport), m_style(style), m_painter(painter) {}
-
-    void operator()(const core::Polyline& polyline) {
-        const double toleranceWorld = m_style.tessellationTolerancePx / m_viewport.scale();
-        m_screenPoints.clear();
-        for (const Vec2& point : polyline.tessellate(toleranceWorld)) {
-            m_screenPoints.push_back(m_viewport.worldToScreen(point));
-        }
-        m_painter.drawPolyline(m_screenPoints, polyline.isClosed());
-    }
-
-    void operator()(const core::Line& line) {
-        const std::array points{m_viewport.worldToScreen(line.start),
-                                m_viewport.worldToScreen(line.end)};
-        m_painter.drawPolyline(points, false);
-    }
-
-    void operator()(const core::Circle& circle) {
-        // A closed polyline: the last point, back on the start, is dropped.
-        drawArc(circle.geometry(), true);
-    }
-
-    void operator()(const core::Arc& arc) { drawArc(arc.geometry(), false); }
-
-    void operator()(const core::Text& text) {
-        const auto frame = core::textFrame(text);
-        const double heightPx = frame.height * m_viewport.scale();
-        if (heightPx < kMinTextHeightPx) {
-            m_screenPoints.clear();
-            for (const Vec2& corner : core::textBox(text)) {
-                m_screenPoints.push_back(m_viewport.worldToScreen(corner));
+// The shapes of a preview entity: an entity of a shape type is its own shape,
+// whatever its layer; the others are their generated geometry (an insert at
+// the pointer, docs/adr/0044, point 2).
+std::vector<core::GeneratedShape> previewShapes(const core::Document& document,
+                                                const core::Entity& entity) {
+    return std::visit(
+        [&](const auto& value) -> std::vector<core::GeneratedShape> {
+            using T = std::decay_t<decltype(value)>;
+            if constexpr (std::is_constructible_v<core::GeneratedShape, const T&>) {
+                return {core::GeneratedShape{std::in_place_type<T>, value}};
+            } else {
+                const core::EntityRecord record{core::EntityId{}, entity};
+                std::vector<core::GeneratedShape> shapes;
+                for (core::GeneratedItem& item : core::generate(document, record)) {
+                    shapes.push_back(std::move(item.shape));
+                }
+                return shapes;
             }
-            m_painter.drawPolyline(m_screenPoints, true);
-            return;
-        }
-        // The screen flips Y and the angle together: a rotation that is
-        // counter-clockwise in the drawing is counter-clockwise as seen.
-        m_painter.drawText(TextRun{
-            core::displayText(text.value), m_viewport.worldToScreen(frame.origin), heightPx,
-            frame.rotation, frame.widthFactor, text.obliqueAngle, text.mirroredX, text.mirroredY});
-    }
-
-private:
-    void drawArc(const core::ArcGeometry& arc, bool closed) {
-        const double toleranceWorld = m_style.tessellationTolerancePx / m_viewport.scale();
-        m_worldPoints.clear();
-        m_worldPoints.push_back(core::startPoint(arc));
-        core::tessellate(arc, toleranceWorld, m_worldPoints);
-        if (closed) {
-            m_worldPoints.pop_back();
-        }
-        m_screenPoints.clear();
-        for (const Vec2& point : m_worldPoints) {
-            m_screenPoints.push_back(m_viewport.worldToScreen(point));
-        }
-        m_painter.drawPolyline(m_screenPoints, closed);
-    }
-
-    const Viewport& m_viewport;
-    const SceneStyle& m_style;
-    Painter& m_painter;
-    std::vector<Vec2> m_worldPoints;   // reused buffer
-    std::vector<Vec2> m_screenPoints;  // reused buffer
-};
-
-// Index 7 follows the theme; no other colour does, not even a white RGB
-// (docs/adr/0024, point 5).
-Color penColor(const core::EffectiveProperties& properties, const SceneStyle& style) {
-    if (properties.colorIsSeven) {
-        return style.entity;
-    }
-    return Color{properties.color.r, properties.color.g, properties.color.b};
-}
-
-// Draws one entity of the document with its effective properties.
-void drawStyled(const core::Document& document, const core::EntityRecord& record,
-                const core::EffectiveProperties& properties, const Viewport& viewport,
-                const SceneStyle& style, EntityDrawer& drawer, Painter& painter) {
-    const Color color = penColor(properties, style);
-    if (std::holds_alternative<core::Text>(record.entity)) {
-        // A text has neither lineweight nor linetype; its tiny box, if it
-        // comes to that, is a plain cosmetic outline.
-        painter.setPen(color, 0.0, LineStyle::Solid);
-        std::visit(drawer, record.entity);
-        return;
-    }
-    const double widthPx =
-        penWidthPx(properties.lineweight, document.lwdisplay(), style.devicePixelRatio);
-    painter.setPen(color, widthPx, LineStyle::Solid);
-    if (const auto pieces = dashPieces(record.entity, properties, viewport.scale())) {
-        drawDashPieces(*pieces, viewport, style.tessellationTolerancePx, painter);
-    } else {
-        std::visit(drawer, record.entity);
-    }
+        },
+        entity);
 }
 
 // The circle of a snap marker: 32 edges keep the default 10 px circle's chord
@@ -192,7 +115,8 @@ std::array<Vec2, kMarkerCircleSegments> markerCircle(const Vec2& center, double 
     for (std::size_t i = 0; i < points.size(); ++i) {
         const double angle =
             core::kTwoPi * static_cast<double>(i) / static_cast<double>(points.size());
-        points.at(i) = center + Vec2{std::cos(angle), std::sin(angle)} * radius;
+        const auto direction = core::sinCos(angle);
+        points.at(i) = center + Vec2{direction.cosine, direction.sine} * radius;
     }
     return points;
 }
@@ -222,26 +146,26 @@ void renderScene(const core::Document& document, const Viewport& viewport, const
     drawAxes(viewport, style, painter);
 
     const BBox visible = viewport.visibleWorldArea();
-    EntityDrawer drawer(viewport, style, painter);
     for (const core::EntityRecord& record : document.entities()) {
-        if (!overlaps(core::boundingBox(record.entity), visible)) {
+        if (!overlaps(core::extent(document, record), visible)) {
             continue;
         }
-        const core::EffectiveProperties properties = core::effectiveProperties(document, record);
-        if (properties.visible) {
-            drawStyled(document, record, properties, viewport, style, drawer, painter);
+        // Nothing on a layer that is off or frozen arrives (core::generate()).
+        for (const core::GeneratedItem& item : core::generate(document, record)) {
+            drawGeneratedItem(item, document.lwdisplay(), viewport, style, painter);
         }
     }
 }
 
-void renderPreview(std::span<const core::Entity> entities, const Viewport& viewport,
-                   const SceneStyle& style, Painter& painter) {
+void renderPreview(const core::Document& document, std::span<const core::Entity> entities,
+                   const Viewport& viewport, const SceneStyle& style, Painter& painter) {
     const BBox visible = viewport.visibleWorldArea();
-    EntityDrawer drawer(viewport, style, painter);
     painter.setPen(style.preview, 0.0, LineStyle::Solid);
     for (const core::Entity& entity : entities) {
-        if (overlaps(core::boundingBox(entity), visible)) {
-            std::visit(drawer, entity);
+        for (const core::GeneratedShape& shape : previewShapes(document, entity)) {
+            if (overlaps(core::shapeBoundingBox(shape), visible)) {
+                drawShape(shape, style.preview, viewport, style.tessellationTolerancePx, painter);
+            }
         }
     }
 }
@@ -249,12 +173,15 @@ void renderPreview(std::span<const core::Entity> entities, const Viewport& viewp
 void renderHighlight(const core::Document& document, std::span<const core::EntityId> ids,
                      const Viewport& viewport, const SceneStyle& style, Painter& painter) {
     const BBox visible = viewport.visibleWorldArea();
-    EntityDrawer drawer(viewport, style, painter);
     painter.setPen(style.highlight, 0.0, LineStyle::Dashed);
     for (const core::EntityId id : ids) {
         const core::EntityRecord* record = document.find(id);
-        if (record != nullptr && overlaps(core::boundingBox(record->entity), visible)) {
-            std::visit(drawer, record->entity);
+        if (record == nullptr || !overlaps(core::extent(document, *record), visible)) {
+            continue;
+        }
+        for (const core::GeneratedItem& item : core::generate(document, *record)) {
+            drawShape(item.shape, style.highlight, viewport, style.tessellationTolerancePx,
+                      painter);
         }
     }
 }

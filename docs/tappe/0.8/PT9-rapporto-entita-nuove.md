@@ -23,8 +23,16 @@
 
 «Un tipo nuovo di entità si aggiunge a [rapporto.md] prima del pacchetto che lo
 realizza» (rapporto.md, «Come cresce il formato»). Questo pacchetto fissa e
-realizza il formato di tutti e sette i tipi, delle tre tabelle e della domanda
-`generated`, così tutti i pacchetti di riferimenti della tappa possono partire.
+realizza il formato di tutti e sette i tipi e della domanda `generated`, e
+fissa quello delle tre tabelle, dei blocchi e di `!block`, così tutti i
+pacchetti di riferimenti della tappa possono partire.
+
+Le tabelle e i blocchi del `core` dopo PT6 non hanno ancora campi
+(`TextStyleTable` e `DimStyleTable` vuote, `BlockDefinition` con il solo
+nome): li scrive il pacchetto che crea i campi, come fa il modello per le
+entità ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Campi delle tabelle
+nel rapporto scritti da chi li crea»). PT9 ne scrive soltanto il formato in
+rapporto.md e domande.md (punti 2 e 4).
 
 ## File
 
@@ -138,7 +146,12 @@ HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+pol
 
 ### 2. Le tabelle e lo stato
 
-Campi nuovi, scritti solo quando sono diversi da una sessione nuova:
+Campi nuovi, scritti solo quando sono diversi da una sessione nuova. PT9 ne
+fissa il formato in rapporto.md, ma **non li scrive**: `text styles:` e
+`text style:` li scrive [PT11](PT11-stili-di-testo.md), `dimension styles:`,
+`dimension style:` e `dimension overrides:` [PT22](PT22-stili-di-quota.md),
+`blocks:` [PT16](PT16-blocchi-core.md). Finché quei pacchetti non sono uniti,
+nessun rapporto ha questi campi.
 
 | Riga | Contenuto |
 |---|---|
@@ -164,6 +177,11 @@ documento delle definizioni e `!endblock` la chiude: le definizioni di entità
 fra le due righe entrano nel blocco. Così si definiscono `INSERT` da
 interrogare prima che esistano i comandi.
 
+PT9 scrive questo formato in domande.md; lo realizza
+[PT16](PT16-blocchi-core.md), quando `BlockDefinition` ha il punto base e le
+entità. Finché PT16 non è unito, `!block` e `!endblock` sono righe non
+valide del file di domande, come ogni direttiva sconosciuta.
+
 ### 5. Lettura
 
 `entity_reader` legge anche le righe nuove (definizioni delle domande, file
@@ -176,20 +194,28 @@ l'errore `<TIPO> is not supported yet.`: i casi di quei tipi restano in attesa
 
 - `rapporto.md` e `domande.md` li toccano solo PT9 e PT34 (righe del
   tracciamento): chi arriva dopo si aggiorna.
-- File comune: `tests/CMakeLists.txt`.
+- File comuni: `tests/CMakeLists.txt`; `script/src/report.cpp` e
+  `tests/script/report_test.cpp` (anche PT11, PT16, PT22 e PT34), e
+  `script/src/questions.cpp` (anche PT16), `script/src/question_table.cpp` e
+  `tests/script/questions_test.cpp` (anche PT16, PT32 e PT43).
 
 ## Test richiesti
 
 - `report_test.cpp`: una riga per ogni tipo nuovo, con e senza le proprietà
-  facoltative; i campi delle tabelle presenti solo quando diversi da una
-  sessione nuova; un rapporto di una sessione nuova invariato.
+  facoltative; un `INSERT` con due `ATTRIB`: i due `ATTRIB` in `entities:`,
+  con `owner=` l'identificativo dell'`INSERT`, e contati in `statistics:`; un
+  rapporto di una sessione nuova invariato, senza `text styles:`,
+  `text style:`, `dimension styles:`, `dimension style:`,
+  `dimension overrides:` né `blocks:` (li scrivono PT11, PT16 e PT22).
 - `entity_reader_test.cpp`: ogni riga scritta si rilegge uguale; righe non
   valide (valore mancante, `kind` sconosciuto) danno l'errore.
-- `questions_test.cpp`: `generated` di una `LINE` è la linea stessa; `!block` e
-  `!endblock` creano una definizione con le entità fra le due righe.
+- `questions_test.cpp`: `generated` di una `LINE` è la linea stessa. Il test
+  di `!block` e `!endblock` è di PT16.
 
 ## Fatto quando
 
-- rapporto.md e domande.md hanno i formati qui sopra, e `script` li scrive e li
-  legge.
+- rapporto.md e domande.md hanno tutti i formati qui sopra; `script` scrive e
+  legge le righe dei sette tipi, mette gli `ATTRIB` in `entities:` e
+  `statistics:` e risponde a `generated`. Le tabelle, `blocks:` e
+  `!block`/`!endblock` restano a PT11, PT16 e PT22.
 - I casi di verifica esistenti sono invariati; la CI è verde.

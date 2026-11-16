@@ -1,0 +1,11 @@
+; ELLIPSE: asse indicato piu' corto dell'altro: l'asse maggiore e' l'altro, ruotato di +90 gradi (autocad-ellissi, b)
+ELLIPSE
+60,0
+80,0
+25
+!report
+ELLIPSE
+C
+0,0
+0,5
+10

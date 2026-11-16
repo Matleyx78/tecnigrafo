@@ -54,7 +54,7 @@ bool sweepsThrough(const ArcGeometry& arc, double angle) {
 
 bool containsPoint(const ArcGeometry& arc, const Vec2& point) {
     const Vec2 relative = point - arc.center;
-    return containsAngle(arc, std::atan2(relative.y, relative.x));
+    return containsAngle(arc, atan2(relative.y, relative.x));
 }
 
 // Where the arc crosses one side of a rectangle: the vertical side
@@ -98,7 +98,8 @@ double normalizeAngle(double radians) {
 }
 
 Vec2 pointAt(const ArcGeometry& arc, double angle) {
-    return arc.center + Vec2{std::cos(angle), std::sin(angle)} * arc.radius;
+    const auto direction = sinCos(angle);
+    return arc.center + Vec2{direction.cosine, direction.sine} * arc.radius;
 }
 
 Vec2 startPoint(const ArcGeometry& arc) {
@@ -148,7 +149,7 @@ BBox boundingBox(const ArcGeometry& arc) {
 void tessellate(const ArcGeometry& arc, double maxChordError, std::vector<Vec2>& out) {
     // Largest angular step whose chord stays within maxChordError of the arc.
     const double tolerance = std::clamp(maxChordError, 1e-12, arc.radius);
-    const double maxStep = 2.0 * std::acos(1.0 - (tolerance / arc.radius));
+    const double maxStep = 2.0 * tg::core::acos(1.0 - (tolerance / arc.radius));
     const double steps = std::ceil(std::abs(arc.sweep) / std::max(maxStep, 1e-9));
     const int count = std::clamp(static_cast<int>(steps), 1, kMaxArcSegments);
 

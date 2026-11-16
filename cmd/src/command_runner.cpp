@@ -485,7 +485,7 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
             // Multiply by the ratio so even large finite degree values do
             // not overflow before division by 180.
             const double value =
-                prompt.kind == PromptKind::Angle ? spec->a * (core::kPi / 180.0) : spec->a;
+                prompt.kind == PromptKind::Angle ? core::reducedDegreesToRadians(spec->a) : spec->a;
             forward(ValueInput{value});
             return;
         }
@@ -705,7 +705,7 @@ bool CommandRunner::clickGrip(const core::Vec2& point) {
             if (std::abs(dx) > halfSide || std::abs(dy) > halfSide) {
                 continue;  // outside the square, edges included in it
             }
-            const double distance = std::hypot(dx, dy);
+            const double distance = tg::core::hypot(dx, dy);
             // The nearest grip; at equal distance the entity with the highest
             // identifier, as core::pickEntity() orders its candidates
             // (docs/adr/0034, point 3); within one entity the first grip.

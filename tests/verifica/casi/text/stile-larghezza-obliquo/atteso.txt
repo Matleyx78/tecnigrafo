@@ -1,0 +1,81 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=0.8 oblique=15 style="Inclinato" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=-0.20633419005519385,-0.7700496806245565;6.418222232939838,-0.7700496806245565;7.50599326253957,3.289567068843151;0.8814368395445378,3.289567068843151
+  258 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=30 width-factor=0.8 oblique=15 style="Inclinato" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10.206334190055193,19.229950319375444;15.943368341172263,22.54222853087296;14.855597311572533,26.601845280340665;9.118563160455462,23.289567068843148
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: Inclinato
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 0.8
+  Specify obliquing angle <0>: 15
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "Inclinato" is now the current text style.
+  Command: TEXT
+  Specify start point of text: 0,0
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Hello
+  Enter text:
+  Command: TEXT
+  Specify start point of text: 10,20
+  Specify height <2.5000>:
+  Specify rotation angle of text <0>: 30
+  Enter text: Hello
+  Enter text:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Text
+  Text
+redo:
+snap: on
+ortho: off
+text styles:
+  "Inclinato" font="arial.ttf" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
+text style: "Inclinato"
+pointer: none
+active snap: none
+statistics:
+  TEXT 2
+
+[final]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=0.8 oblique=15 style="Inclinato" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=-0.20633419005519385,-0.7700496806245565;6.418222232939838,-0.7700496806245565;7.50599326253957,3.289567068843151;0.8814368395445378,3.289567068843151
+  258 TEXT position=10,20 alignment-point=0,0 height=2.5 rotation=30 width-factor=0.8 oblique=15 style="Inclinato" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=10.206334190055193,19.229950319375444;15.943368341172263,22.54222853087296;14.855597311572533,26.601845280340665;9.118563160455462,23.289567068843148
+  259 TEXT position=0,20 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Hello" ~box=0,19.229950319375444;8.28069552874379,19.229950319375444;8.28069552874379,23.28956706884315;0,23.28956706884315
+messages:
+  Command: TEXTSTYLE
+  Enter new value for TEXTSTYLE <"Inclinato">: Standard
+  Command: TEXT
+  Specify start point of text: 0,20
+  Specify height <2.5000>:
+  Specify rotation angle of text <30>: 0
+  Enter text: Hello
+  Enter text:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Text
+  Text
+  TEXTSTYLE
+  Text
+redo:
+snap: on
+ortho: off
+text styles:
+  "Inclinato" font="arial.ttf" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
+pointer: none
+active snap: none
+statistics:
+  TEXT 3

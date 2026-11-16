@@ -1,0 +1,8 @@
+# 0.8-RT49: cases of the ELLIPSE command (PT49, #681)
+ellipse/asse-e-distanza #681
+ellipse/asse-minore #681
+ellipse/centro #681
+ellipse/rotazione #681
+ellipse/arco-angoli #681
+ellipse/arco-angolo-incluso #681
+ellipse/esc-annulla #681

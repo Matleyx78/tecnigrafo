@@ -124,8 +124,8 @@ std::optional<PointSpec> parsePair(std::string_view text, std::size_t separator,
 }
 
 core::Vec2 polar(double distance, double angleDegrees) {
-    const double angle = core::degreesToRadians(angleDegrees);
-    return {distance * std::cos(angle), distance * std::sin(angle)};
+    const auto direction = core::sinCos(core::reducedDegreesToRadians(angleDegrees));
+    return {distance * direction.cosine, distance * direction.sine};
 }
 
 }  // namespace

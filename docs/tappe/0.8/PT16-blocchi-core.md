@@ -13,7 +13,11 @@
   [ADR 0031](../../adr/0031-modifiche-alle-entita.md), punti 1–6;
   `core/include/tg/core/effective_properties.hpp`, `similarity.hpp`,
   `transform2d.hpp`; le schede [PT6](PT6-scheletro-core.md) e
-  [PT17](PT17-attributi-core.md) (sorella: gli attributi)
+  [PT17](PT17-attributi-core.md) (sorella: gli attributi);
+  [verifica/rapporto.md](../../verifica/rapporto.md) (il campo `blocks:`) e
+  [verifica/domande.md](../../verifica/domande.md) (`!block` e `!endblock`),
+  fissati da PT9; `script/src/report.cpp`, `question_table.cpp`,
+  `questions.cpp`
 
 ## File
 
@@ -22,8 +26,12 @@
 - `core/src/generated.cpp` (la sua parte di `transformedShape`, dopo PT48)
 - `core/src/effective_properties.cpp`, `core/include/tg/core/effective_properties.hpp`
   (le proprietà dentro un blocco)
+- `script/src/report.cpp` (il campo `blocks:`), `script/src/question_table.cpp`,
+  `script/src/questions.cpp` (`!block` e `!endblock`): file comuni
 - `tests/core/block_table_test.cpp`, `tests/core/insert_test.cpp` (nuovi),
-  `tests/CMakeLists.txt` (file comune)
+  `tests/script/report_test.cpp`, `tests/script/questions_test.cpp` (file
+  comuni), `tests/CMakeLists.txt` (file comune)
+- `tests/render/generated_drawing_test.cpp` (di PT8)
 
 ## Cosa fare
 
@@ -52,7 +60,13 @@
    };
    ```
 
-   `Document::replaceBlock` (PT6) ha la precondizione `!wouldCycle`.
+   `Document::replaceBlock` (PT6) ha la precondizione `!wouldCycle`. Togliere
+   (`nullopt`) un blocco usato da un inserimento, anche annidato, si rifiuta e
+   non cambia nulla, come PURGE di AutoCAD (`DocumentTables::replaceBlock`
+   restituisce `false`). Profondità massima degli inserimenti annidati:
+   **64 livelli**; un inserimento più profondo si tratta come un riferimento
+   mancante (nessuna geometria da lì in giù), con un messaggio alla lettura
+   (PT4, punto P17: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
 2. **Inserimento.** `supported(const Insert&)` restituisce `true` se ogni
    attributo è valido (PT17); scala X e Y diverse da zero.
    - `Transform2D insertTransform(const Document&, const Insert&)`: togliere il
@@ -61,11 +75,15 @@
    - `dependsOnBlock(document, record, name)`: vero se l'inserimento usa `name`
      o un blocco che lo contiene, a qualunque profondità.
 3. **Geometria generata** (ADR 0044, punto 2): per ogni entità della
-   definizione, in ordine, la sua geometria generata (ricorsiva per gli
-   inserimenti annidati) composta con la trasformazione dell'inserimento:
+   definizione, in ordine, la sua geometria generata composta con la
+   trasformazione dell'inserimento. Per gli inserimenti annidati le
+   trasformazioni si **compongono prima** e si applicano una volta sola alla
+   forma originale: un cerchio dentro scale `(0.5, 1)` e poi `(2, 1)` resta
+   un cerchio (PT4, punto P18). La trasformazione composta:
    similitudine → `transformed`; altrimenti `transformedShape` (PT6, punto 3),
    esatta per ogni forma: questo pacchetto realizza la sua parte per linee,
-   polilinee (divise in linee e archi d'ellisse quando hanno archi), `Solid` e
+   polilinee (divise in linee e archi d'ellisse quando hanno archi; sotto una
+   scala non uniforme senza larghezze, PT8), `Solid` e
    `FilledRegion` (che tiene l'affinità); ellissi e archi vengono da PT48, il
    testo da PT17. Poi gli attributi (PT17). Un blocco che non c'è dà
    nessun elemento (non succede: il lettore lo lascia non gestito).
@@ -84,14 +102,36 @@
    riflette, φ viene dalla sua scomposizione (ADR 0031, punto 3). Gli
    attributi li trasforma PT17.
 6. **Grip** sul punto d'inserimento; **snap** inserimento sul punto
-   d'inserimento più quelli della geometria generata (PT6).
+   d'inserimento, sempre, anche lontano dalla geometria (l'indice lo considera
+   come parte dell'ingombro per lo snap), più quelli della geometria generata
+   (PT6); lo snap *Intersezione* trova anche gli incroci fra due forme dello
+   stesso inserimento e fra una sua forma e un'altra entità (PT4, punto P4:
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT4»).
+7. **Selezione** (PT4, punto P3): con un clic, la distanza di un inserimento è
+   la minima fra le sue forme visibili; con la finestra è dentro se tutte le
+   sue forme visibili sono dentro, e la attraversa se una la attraversa. Un
+   inserimento senza forme visibili (blocco vuoto o tutto nascosto) non si
+   prende con un clic, e con la finestra solo se il punto d'inserimento è
+   dentro. Le forme che ancora non rispondono alle domande (l'ellisse prima di
+   PT50) si ignorano; un retino pieno risponde con la sua area (PT30).
+8. **Rapporto e domande** ([DECISIONI.md](../../DECISIONI.md), 2026-11-15,
+   «Campi delle tabelle nel rapporto scritti da chi li crea»): `script` scrive
+   il campo `blocks:` nel formato di
+   [verifica/rapporto.md](../../verifica/rapporto.md), fissato da PT9, solo
+   quando la tabella dei blocchi non è vuota; nei file `.tgq`,
+   `!block "NOME" base=x,y` e `!endblock` creano una definizione con le
+   entità fra le due righe, come dice
+   [verifica/domande.md](../../verifica/domande.md) (PT9, punto 4).
+   rapporto.md e domande.md non si toccano.
 
 ## Regole della tappa che valgono qui
 
 - Niente funzioni trigonometriche di `<cmath>` (`core::sinCos`, `core::atan2`).
 - Gli handle delle entità di un blocco sono nello stesso spazio di quelle del
   disegno: `Document` non li riusa.
-- File comune: `tests/CMakeLists.txt`.
+- File comuni: `tests/CMakeLists.txt`, `script/src/report.cpp`,
+  `script/src/question_table.cpp`, `script/src/questions.cpp`,
+  `tests/script/report_test.cpp`, `tests/script/questions_test.cpp`.
 
 ## Test richiesti
 
@@ -100,7 +140,30 @@
 - `insert_test.cpp`: geometria generata con scala 1, 2, −1, (2, 1) e rotazione
   30°; blocco annidato; proprietà con layer `0` e *DaBlocco* su due livelli;
   layer congelato dell'inserimento; `MIRROR` di un inserimento; ingombro che
-  cambia quando la definizione cambia (`Document::replaceBlock`).
+  cambia quando la definizione cambia (`Document::replaceBlock`); un cerchio
+  in `B`, `B` in `A` con scala `(0.5, 1)`, `A` inserito con `(2, 1)`: resta
+  un `Circle`; togliere un blocco usato si rifiuta; una catena di 65 livelli
+  si ferma al 64°; snap inserimento con il punto base lontano dalla geometria;
+  intersezione fra due linee dello stesso blocco e fra una linea del blocco e
+  una esterna; clic a un'unità da una linea del blocco; finestra che contiene
+  tutto il blocco e una sola parte; blocco vuoto preso solo dalla finestra sul
+  punto d'inserimento.
+- `report_test.cpp`: una sessione nuova non ha `blocks:`; il blocco `TG_EL`
+  con base `5,0` e una `LINE start=0,0 end=10,0` dà in `blocks:` la riga
+  `"TG_EL" base=5,0` e poi la riga `"TG_EL" <identificativo> LINE start=0,0 end=10,0`;
+  con `explodable=no` la riga del blocco lo aggiunge.
+- `questions_test.cpp`: `!block "TG_EL" base=5,0`, una `LINE start=0,0 end=10,0`
+  e `!endblock` creano la definizione `TG_EL` con base `5,0` e quella linea;
+  un `INSERT block="TG_EL" insertion=10,20 scale=1,1 rotation=0` definito dopo
+  risponde a `generated` con `LINE start=5,20 end=15,20`.
+- `generated_drawing_test.cpp`: evidenziazione e anteprima di un inserimento
+  disegnano le stesse forme generate della scena (`renderScene`,
+  `renderHighlight`, `renderPreview`), con il colore della selezione; una
+  polilinea con un arco e larghezza 2, in un inserimento con scala `(2, 1)`:
+  tutti i pezzi, dritti ed ellittici, arrivano al pittore senza larghezza e il
+  motivo tratteggiato riparte all'inizio di ogni pezzo
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Test di PT8 con un
+  inserimento vero in PT16»).
 
 ## Fatto quando
 

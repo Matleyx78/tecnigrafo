@@ -65,6 +65,9 @@ gh api -X DELETE "repos/Matleyx78/tecnigrafo/issues/<numero>/labels/AA-Presa%20i
 - Dopo clone e ogni `git pull`:
   `git submodule update --init third_party/solid-space` (senza `--recursive`).
 - Codice, commenti e messaggi di commit in inglese.
+- Mai la chiocciola davanti al nome di un agente, nemmeno in un esempio o fra
+  apici: ogni menzione avvia una sessione, e i passaggi si fanno solo con
+  `scripts/passa.sh`.
 - Ogni file nuovo inizia con:
   ```cpp
   // SPDX-License-Identifier: GPL-3.0-or-later
@@ -83,6 +86,10 @@ Il lavoro è finito con **tutti i controlli della CI verdi**:
    correggi sullo stesso ramo, pubblica e aspetta di nuovo.
 3. Con tutto verde togli l'etichetta, scrivi il riepilogo e **termina la
    sessione**.
+
+Se sei stato avviato da un commento su GitHub, prima di terminare passa il
+lavoro, o fermati per una decisione, come dice
+[catena.md](docs/agenti/catena.md).
 
 Mentre aspetti non fare domande e non cominciare altro. Fermati prima del verde,
 scrivendo nella pull request che cosa hai visto e provato, solo se il controllo
@@ -117,6 +124,17 @@ allo stesso modo.
 - Niente `git commit -s`: il `Signed-off-by` lo aggiunge il responsabile, che ne
   risponde.
 - Nel commit la riga `Assisted-by: <nome dello strumento>`.
+- **Mai un indirizzo personale nei commit**: autore, committer e righe
+  `Co-authored-by` usano solo indirizzi noreply, quello del responsabile
+  (`18114626+Matleyx78@users.noreply.github.com`), un altro
+  `…@users.noreply.github.com`, `noreply@anthropic.com`, `codex@openai.com` o
+  `noreply@github.com`. Prima del primo commit guarda `git config user.email`:
+  se non è uno di questi, `git config user.name Matleyx78` e
+  `git config user.email 18114626+Matleyx78@users.noreply.github.com` nel
+  clone. Lo squash and merge di GitHub copia l'autore di ogni commit in una
+  riga `Co-authored-by` del commit su `main`, e da lì non si toglie più
+  ([DECISIONI.md](docs/DECISIONI.md), 2026-11-15, «Solo indirizzi noreply nei
+  commit»).
 - Nella pull request compila la sezione sull'uso dell'IA del modello, con lo
   strumento, **il modello e l'impegno** (per esempio «Claude Code, Claude Opus
   5.5, impegno medio»); se non sai con quale impegno sei stato avviato, scrivi
@@ -133,7 +151,7 @@ Vale ogni riga che corrisponde.
 | issue con titolo `[X.Y-PN]` o `[FN]`, o etichetta `pacchetto` | [pacchetto.md](docs/agenti/pacchetto.md) |
 | issue con titolo `[X.Y-RN]` o etichetta `riferimenti`; tocchi `tests/verifica/casi/` o `sorgenti.json` | [riferimenti.md](docs/agenti/riferimenti.md) |
 | commenti una pull request non tua; la descrizione comincia con **Revisione della correzione**; modifichi una scheda in `docs/tappe/X.Y/` della tappa aperta | [revisione.md](docs/agenti/revisione.md) |
-| il messaggio dice «pacchetti di riferimenti pronti» o «rivedi le pull request aperte» | [lotti.md](docs/agenti/lotti.md) |
+| sei stato avviato da un commento su GitHub; il messaggio cita `docs/agenti/catena.md`, un giro di revisione o una «Decisione del responsabile» | [catena.md](docs/agenti/catena.md) |
 | la scheda cita intestazioni `solid_space/…`; tocchi `third_party/solid-space` o file che le includono; usi `scripts/richiesta.sh` | [contratto.md](docs/agenti/contratto.md) |
 | leggi, cloni o commenti un repository diverso da `Matleyx78/tecnigrafo` | [altro-repository.md](docs/agenti/altro-repository.md) |
 | lanci `scripts/controlla.sh`, `cmake` o `ctest`; `scripts/ci-attendi.sh` non esce con 0 | [comandi.md](docs/agenti/comandi.md) |

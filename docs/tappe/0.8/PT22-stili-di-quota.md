@@ -13,7 +13,10 @@
   `io/src/dxf_tables.cpp`, `io/src/dxf_header.cpp`, `io/src/dxf_skeleton.cpp`;
   le schede [PT6](PT6-scheletro-core.md), punto 5, e [PT11](PT11-stili-di-testo.md)
   (lo stesso schema per un'altra tabella); i valori di `Standard` e `ISO-25`
-  confermati dal responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md))
+  confermati dal responsabile in AutoCAD LT ([dxf-di-prova.md](dxf-di-prova.md));
+  [verifica/rapporto.md](../../verifica/rapporto.md) (i campi
+  `dimension styles:`, `dimension style:` e `dimension overrides:`, fissati
+  da PT9) e `script/src/report.cpp`
 
 ## File
 
@@ -21,8 +24,11 @@
 - `io/src/dxf_dimstyle.cpp` (nuovo), `io/src/dxf_tables.cpp`,
   `io/src/dxf_header.cpp`, `io/src/dxf_skeleton.cpp`, `io/CMakeLists.txt`
   (file comune)
+- `script/src/report.cpp` (file comune: i campi `dimension styles:`,
+  `dimension style:` e `dimension overrides:`)
 - `tests/core/dim_style_table_test.cpp`, `tests/io/dxf_dimstyle_test.cpp` (nuovi),
-  `tests/CMakeLists.txt` (file comune)
+  `tests/script/report_test.cpp` (file comune), `tests/CMakeLists.txt` (file
+  comune)
 
 ## Cosa fare
 
@@ -56,6 +62,11 @@
        /// True when every variable that blocks regeneration (docs/adr/0047,
        /// point 2) has the ISO-25 value in `extras` (absent counts as ISO-25).
        [[nodiscard]] static bool regenerable(const RawGroups& extras);
+       /// True when the effective essential variables (style plus overrides)
+       /// are in the ranges DIMSTYLE accepts and DIMTXSTY names a text style
+       /// of `styles` (PT5, B07; checked after the overrides).
+       [[nodiscard]] static bool inDomain(const DimVariables& effective,
+                                          const TextStyleTable& styles);
        // put/setCurrent/setCurrentVariables like TextStyleTable (PT11)
    };
    ```
@@ -67,22 +78,52 @@
 3. `io` legge la tabella `DIMSTYLE` nel modello (variabili essenziali per codice
    di gruppo; il resto in `extras`, compreso l'handle 105) e le variabili
    `$DIM…` dell'intestazione (le essenziali nel modello, le altre in
-   `currentExtras`); riscrive tutto com'era.
-4. **Sovrascritture di una quota** (XDATA `ACAD`, `DSTYLE`): una funzione legge
+   `currentExtras`); riscrive tutto com'era. **Stile mancante** (PT5, punto
+   B06: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT5»): come per gli stili di testo (PT11, punto 3),
+   se `$DIMSTYLE` manca o nomina uno stile che non c'è, lo stile corrente è
+   `Standard`, e se `Standard` non c'è si crea con i valori di AutoCAD; una
+   quota che nomina (gruppo 3) uno stile che non c'è tiene quel nome e usa le
+   variabili di `Standard`.
+4. **Valori fuori dominio** (PT5, punto B07): una quota la cui variabile
+   essenziale effettiva (stile più sovrascritture) è fuori dai limiti che
+   `DIMSTYLE` accetta (PT28; per esempio `DIMDEC` −1 o `DIMTXT` 0), o il cui
+   `DIMTXSTY` non si risolve in uno stile di testo, si conserva ma non è
+   rigenerabile, come per le variabili dell'ADR 0047, punto 2.
+5. **Sovrascritture di una quota** (XDATA `ACAD`, `DSTYLE`): una funzione legge
    dagli `extras` di una quota le variabili sovrascritte (essenziali e no) e
    le scrive; le userà PT23.
+6. **Rapporto.** `script` scrive i campi `dimension styles:`,
+   `dimension style:` e `dimension overrides:` nel formato di
+   [verifica/rapporto.md](../../verifica/rapporto.md), fissato da PT9, solo
+   quando sono diversi da una sessione nuova: gli stili se la tabella è
+   diversa da quella di una sessione nuova, lo stile corrente se non è
+   `ISO-25`, le variabili correnti diverse da quelle dello stile corrente
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-15, «Campi delle tabelle nel
+   rapporto scritti da chi li crea»). rapporto.md non si tocca.
 
 ## Regole della tappa che valgono qui
 
-- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`.
+- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`,
+  `script/src/report.cpp`, `tests/script/report_test.cpp`.
 
 ## Test richiesti
 
 - `dim_style_table_test.cpp`: `find`, corrente, `regenerable` con `DIMTOL` 1 e
-  con `DIMBLK` diverso.
+  con `DIMBLK` diverso; `inDomain` falso con `DIMDEC` −1 e con `DIMTXT` 0, e
+  sulle variabili effettive nei due versi: stile valido con una
+  sovrascrittura `DIMDEC` −1 (falso), stile con `DIMDEC` −1 e sovrascrittura
+  2 (vero); `DIMTXSTY` che non c'è (falso).
+- `dxf_dimstyle_test.cpp`: `$DIMSTYLE=PROVA` che non c'è: corrente
+  `Standard`; una quota con gruppo 3 `PROVA` tiene il nome e usa `Standard`.
 - `dxf_dimstyle_test.cpp`: giro della tabella e dell'intestazione di un file di
   AutoCAD (`autocad-quote.dxf` se pubblicato, altrimenti uno scritto dal test);
   sovrascritture `DSTYLE` lette e riscritte.
+- `report_test.cpp`: una sessione nuova non ha `dimension styles:`,
+  `dimension style:` né `dimension overrides:`; con `DIMTXT` 3.5 in `ISO-25`
+  il rapporto ha `dimension styles:` con `"ISO-25" DIMTXT:3.5` e nessuno dei
+  due altri campi; con `ISO-25` invariato e la variabile corrente `DIMTXT` 5,
+  solo `dimension overrides:` con `DIMTXT:5`; con `Standard` corrente,
+  `dimension style:` con `"Standard"`.
 
 ## Fatto quando
 

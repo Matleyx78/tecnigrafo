@@ -42,6 +42,8 @@ public:
 
     void fillPolygon(std::span<const Vec2> /*points*/, const Color& /*color*/) override {}
 
+    void fillLoops(std::span<const std::vector<Vec2>> /*loops*/, const Color& /*color*/) override {}
+
     void drawText(const TextRun& /*run*/) override {}
 
     void drawLine(const Vec2& from, const Vec2& to) override {

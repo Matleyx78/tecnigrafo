@@ -7,6 +7,7 @@
 #include "tg/core/circle.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/similarity.hpp"
 #include "tg/core/text.hpp"
 
 #include <gtest/gtest.h>
@@ -120,6 +121,13 @@ TEST_F(MoveCopyTest, MoveMovesEveryKindOfEntity) {
     select({a, b, c, d, e});
     runner().submitText("MOVE");
     point(0, 0);
+    runner().pointerMoved({100, -50});
+    ASSERT_EQ(runner().preview().size(), 5U);
+    const auto translation = core::Similarity::translation({100, -50});
+    const std::vector<EntityId> ids{a, b, c, d, e};
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+        EXPECT_EQ(runner().preview()[i], core::transformed(entityOf(ids[i]), translation));
+    }
     point(100, -50);
     ASSERT_FALSE(runner().isActive());
     EXPECT_EQ(std::get<core::Polyline>(entityOf(a)).vertices()[2].position, (core::Vec2{110, -40}));
@@ -435,6 +443,46 @@ TEST_F(MoveCopyTest, CopyCanBeUndoneAndRedoneAsOneStep) {
     EXPECT_EQ(document().entityCount(), 1U);
     runner().submitText("REDO");
     EXPECT_EQ(document().entityCount(), 3U);
+}
+
+TEST_F(MoveCopyTest, CopyThroughTheDocumentMatchesLegacyTransformsForAllSupportedTypes) {
+    const core::Polyline polyline{{{{0, 0}, 0.0}, {{10, 0}, 1.0}, {{10, 10}, 0.0}}};
+    Text text;
+    text.position = {1, 2};
+    text.alignmentPoint = {1, 2};
+    text.value = "A";
+    const std::vector<Entity> originals{polyline, lineAt(0, 0, 1, 1), Circle{{5, 5}, 2},
+                                        Arc{{0, 0}, 3, 0.0, 1.0}, text};
+    std::vector<EntityId> ids;
+    ids.reserve(originals.size());
+    for (const Entity& entity : originals) {
+        ids.push_back(seed(entity));
+    }
+    select(ids);
+    runner().submitText("COPY");
+    point(0, 0);
+    runner().pointerMoved({10, 20});
+    ASSERT_EQ(runner().preview().size(), originals.size());
+    const auto translation = core::Similarity::translation({10, 20});
+    for (std::size_t i = 0; i < originals.size(); ++i) {
+        EXPECT_EQ(runner().preview()[i], core::transformed(originals[i], translation));
+        EXPECT_EQ(entityOf(ids[i]), originals[i]);
+    }
+    point(10, 20);
+    runner().submitText("");
+    ASSERT_FALSE(runner().isActive());
+    ASSERT_EQ(document().entityCount(), originals.size() * 2);
+    const auto entities = document().entities();
+    for (std::size_t i = 0; i < originals.size(); ++i) {
+        EXPECT_EQ(entityOf(ids[i]), originals[i]);
+        EXPECT_NE(entities[originals.size() + i].id, ids[i]);
+        EXPECT_EQ(entities[originals.size() + i].entity,
+                  core::transformed(originals[i], translation));
+    }
+    ASSERT_TRUE(editor().undo());
+    EXPECT_EQ(document().entityCount(), originals.size());
+    ASSERT_TRUE(editor().redo());
+    EXPECT_EQ(document().entityCount(), originals.size() * 2);
 }
 
 }  // namespace

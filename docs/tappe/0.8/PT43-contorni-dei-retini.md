@@ -204,8 +204,8 @@ della riga `HATCH` di [rapporto.md](../../verifica/rapporto.md) (PT9).
   sua funzione, in ordine alfabetico; `closedPolylineOf` la scrive il primo dei
   due fra PT42 e PT43), `core/CMakeLists.txt`, `script/src/question_table.cpp`,
   `script/CMakeLists.txt`, `tests/CMakeLists.txt`.
-- `docs/verifica/domande.md` lo toccano PT9, PT34, PT43 e PT50: solo le tue
-  righe; chi arriva dopo si aggiorna.
+- `docs/verifica/domande.md` lo toccano PT9, PT34, PT43, PT50 e F9: solo le
+  tue righe; chi arriva dopo si aggiorna.
 
 ## Test richiesti
 

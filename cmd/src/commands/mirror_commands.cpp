@@ -4,6 +4,7 @@
 #include "tg/cmd/commands/mirror_commands.hpp"
 
 #include "../text.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/similarity.hpp"
 
 #include <charconv>
@@ -39,6 +40,7 @@ constexpr int kMaxMirrorText = 1;
 // MirrorCommand
 
 void MirrorCommand::start(CommandContext& context) {
+    m_document = &context.editor.document();
     m_stage = Stage::Selection;
     m_selected.clear();
     m_first = {};
@@ -146,14 +148,22 @@ Status MirrorCommand::apply(CommandContext& context, bool eraseSource) {
     }
     const core::Similarity line = *m_line;
     for (const SelectedEntity& item : m_selected) {
-        core::Entity result = core::transformed(item.entity, line, m_mirrorText);
+        auto result =
+            core::transformedIn(context.editor.document(), item.entity, line, m_mirrorText);
+        if (!result.refusal.empty()) {
+            context.message(std::move(result.refusal));
+            continue;
+        }
+        if (!result.entity) {
+            continue;
+        }
         if (eraseSource) {
             // The source is reflected where it is: same identity, same data.
-            context.editor.replace(item.id, std::move(result));
+            context.editor.replace(item.id, std::move(*result.entity));
         } else {
             // The reflected copies take the properties and the unhandled data
             // of their source (docs/adr/0031, point 6).
-            context.editor.addCopy(item.id, std::move(result));
+            context.editor.addCopy(item.id, std::move(*result.entity));
         }
     }
     context.editor.commit();
@@ -173,7 +183,12 @@ void MirrorCommand::updatePreview() {
         return;
     }
     for (const SelectedEntity& item : m_selected) {
-        m_preview.push_back(core::transformed(item.entity, *line, m_mirrorText));
+        auto result = core::transformedIn(*m_document, item.entity, *line, m_mirrorText);
+        if (!result.refusal.empty() || !result.entity) {
+            m_preview.push_back(item.entity);
+        } else {
+            m_preview.push_back(std::move(*result.entity));
+        }
     }
 }
 

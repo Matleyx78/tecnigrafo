@@ -158,7 +158,7 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
     const cmd::CommandRunner& runner = m_session->runner();
     render::renderScene(document, m_viewport, m_style, backend);
     render::renderHighlight(document, runner.selection().ids(), m_viewport, m_style, backend);
-    render::renderPreview(runner.preview(), m_viewport, m_style, backend);
+    render::renderPreview(document, runner.preview(), m_viewport, m_style, backend);
     if (const auto rectangle = runner.selectionRectangle()) {
         render::renderSelectionRectangle(rectangle->first, rectangle->second, rectangle->crossing,
                                          m_viewport, m_style, backend);

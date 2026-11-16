@@ -5,6 +5,7 @@
 
 #include "tg/core/math.hpp"
 #include "tg/core/text_metrics.hpp"
+#include "tg/core/tolerance.hpp"
 #include "tg/script/questions.hpp"
 
 #include <gtest/gtest.h>
@@ -50,6 +51,53 @@ std::array<Similarity, 5> similarities() {
     const Similarity second = requireSimilarity(Similarity::scaling(1.7, {2.0, 4.0}));
     const Similarity third = requireSimilarity(Similarity::reflection({}, {1.0, 0.0}));
     return {move, rotate, scale, mirror, first * second * third};
+}
+
+TEST(Similarity, CardinalRotationsAndDiagonalReflectionAreExact) {
+    const Vec2 x{10.0, 0.0};
+    const Vec2 y{0.0, 10.0};
+    EXPECT_EQ(Similarity::rotation(kPi / 2.0, {}).apply(x), y);
+    EXPECT_EQ(Similarity::rotation(kPi / 2.0, {}).apply(y), (Vec2{-10.0, 0.0}));
+    EXPECT_EQ(Similarity::rotation(-kPi / 2.0, {}).apply(x), (Vec2{0.0, -10.0}));
+    EXPECT_EQ(Similarity::rotation(-kPi / 2.0, {}).apply(y), x);
+    EXPECT_EQ(Similarity::rotation(kPi, {}).apply(x), (Vec2{-10.0, 0.0}));
+    EXPECT_EQ(Similarity::rotation(kPi, {}).apply(y), (Vec2{0.0, -10.0}));
+    const auto offset = Similarity::rotation(kPi / 2.0, {5.0, 5.0});
+    EXPECT_EQ(offset.apply(x), (Vec2{10.0, 10.0}));
+    EXPECT_EQ(offset.apply(y), (Vec2{0.0, 0.0}));
+    const auto diagonal = requireSimilarity(Similarity::reflection({}, {1.0, 1.0}));
+    EXPECT_EQ(diagonal.apply({1.0, 0.0}), (Vec2{0.0, 1.0}));
+}
+
+TEST(Similarity, CardinalBandPreservesCoincidence) {
+    constexpr int kMillimeters = 4;
+    constexpr double kRadius = 0x1p24;
+    constexpr double kWithinBand = 3.0 * 0x1p-50;
+    const ToleranceRule rule(kMillimeters);
+    const Vec2 point{kRadius, 0.0};
+    for (const double sign : {1.0, -1.0}) {
+        const auto inside = Similarity::rotation(sign * kWithinBand, {});
+        const auto outside = Similarity::rotation(sign * (kPi / 2.0 - 0x1p-47), {});
+        const auto step = Similarity::rotation(sign * 0x1p-47, {});
+        EXPECT_TRUE(
+            rule.coincident((inside * inside).apply(point), inside.apply(inside.apply(point))));
+        EXPECT_TRUE(
+            rule.coincident((outside * step).apply(point), outside.apply(step.apply(point))));
+    }
+
+    const auto rotation = Similarity::rotation(kWithinBand, {});
+    const Line line = std::get<Line>(transformed(Line{{}, point}, rotation));
+    const Arc arc = std::get<Arc>(transformed(Arc{{}, kRadius, 0.0, kPi / 2.0}, rotation));
+    EXPECT_TRUE(rule.coincident(line.end, pointAt(arc.geometry(), arc.startAngle)));
+
+    const Vec2 axisEnd{kRadius, kRadius + 0x1p-27};
+    const auto forward = requireSimilarity(Similarity::reflection({}, axisEnd));
+    const auto reverse = requireSimilarity(Similarity::reflection(axisEnd, {}));
+    for (const auto& endpoint : {Vec2{}, axisEnd}) {
+        EXPECT_TRUE(rule.coincident(endpoint, forward.apply(endpoint)));
+        EXPECT_TRUE(rule.coincident(endpoint, reverse.apply(endpoint)));
+    }
+    EXPECT_TRUE(rule.coincident(forward.apply(point), reverse.apply(point)));
 }
 
 TEST(Similarity, IdentityCentersAndAxisAreFixed) {
