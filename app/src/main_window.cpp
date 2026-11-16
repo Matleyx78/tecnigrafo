@@ -564,6 +564,7 @@ void MainWindow::connectDrawingAids() {
         saveUiSettings();
     });
     m_polarAction = registeredAction("aids.polar");
+    m_trackingAction = registeredAction("aids.otrack");
     m_endpointAction = registeredAction("aids.snap.endpoint");
     m_midpointAction = registeredAction("aids.snap.midpoint");
     m_centerAction = registeredAction("aids.snap.center");
@@ -575,6 +576,7 @@ void MainWindow::connectDrawingAids() {
     m_objectSnapAction->setChecked(aids.objectSnap);
     m_orthoAction->setChecked(aids.ortho);
     m_polarAction->setChecked(aids.polar);
+    m_trackingAction->setChecked(aids.tracking);
     m_endpointAction->setChecked(aids.snapModes.endpoint);
     m_midpointAction->setChecked(aids.snapModes.midpoint);
     m_centerAction->setChecked(aids.snapModes.center);
@@ -610,6 +612,13 @@ void MainWindow::connectDrawingAids() {
         applyDrawingAids();
         if (!m_silentPolar) {
             m_commandLine->appendToHistory(on ? tr("<Polar on>") : tr("<Polar off>"));
+        }
+    });
+    connect(m_trackingAction, &QAction::toggled, this, [this](bool on) {
+        applyDrawingAids();
+        if (!m_silentTracking) {
+            m_commandLine->appendToHistory(on ? tr("<Object Snap Tracking on>")
+                                              : tr("<Object Snap Tracking off>"));
         }
     });
 }
@@ -878,7 +887,8 @@ void MainWindow::setPolar(bool on) {
 }
 
 void MainWindow::setTracking(bool on) {
-    m_tracking = on;
+    const QScopedValueRollback<bool> silence(m_silentTracking, true);
+    m_trackingAction->setChecked(on);
     applyDrawingAids();
 }
 
@@ -895,7 +905,7 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.tangent = m_tangentAction->isChecked();
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
     aids.polar = m_polarAction->isChecked();
-    aids.tracking = m_tracking;
+    aids.tracking = m_trackingAction->isChecked();
     if (m_active != nullptr) {
         m_active->runner().setDrawingAids(aids);
     }
@@ -956,7 +966,7 @@ InterfaceKind MainWindow::interfaceKind() const {
 void MainWindow::createStatusBar() {
     // docs/adr/0039, point 1, area 10: the coordinates on the left; from the
     // right the settings, the scale, the ribbon, the switches in the order
-    // of the reference (lineweights, object snap, polar, ortho), then the
+    // of the reference (lineweights, object snap, tracking, polar, ortho), then the
     // place of the environment indicator (point 5).
     m_cursorLabel = new QLabel(this);
     m_cursorLabel->setMinimumWidth(260);
@@ -978,6 +988,8 @@ void MainWindow::createStatusBar() {
     updateEnvironmentIndicator();
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
     statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(m_trackingAction, QStringLiteral("otrackButton")));
     statusBar()->addPermanentWidget(
         createModeButton(m_objectSnapAction, QStringLiteral("osnapButton")));
     statusBar()->addPermanentWidget(

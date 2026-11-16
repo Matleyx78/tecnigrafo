@@ -74,6 +74,7 @@ protected:
             "aids.snap.midpoint",
             "aids.snap.center",
             "aids.polar",
+            "aids.otrack",
             "aids.snap.intersection",
             "aids.snap.perpendicular",
             "aids.snap.tangent",
@@ -85,6 +86,7 @@ protected:
         ASSERT_NE(button("osnapButton"), nullptr);
         ASSERT_NE(button("orthoButton"), nullptr);
         ASSERT_NE(button("polarButton"), nullptr);
+        ASSERT_NE(button("otrackButton"), nullptr);
         ASSERT_NE(input(), nullptr);
     }
 
@@ -212,16 +214,19 @@ TEST_F(DrawingAidsTest, StartsWithObjectSnapOnWithEveryModeAndOrthoOff) {
     EXPECT_FALSE(action("aids.ortho")->isChecked());
     EXPECT_TRUE(button("osnapButton")->isChecked());
     EXPECT_FALSE(button("orthoButton")->isChecked());
+    EXPECT_FALSE(button("otrackButton")->isChecked());
     EXPECT_EQ(action("aids.osnap")->shortcut(), QKeySequence(Qt::Key_F3));
     EXPECT_EQ(action("aids.ortho")->shortcut(), QKeySequence(Qt::Key_F8));
+    EXPECT_EQ(action("aids.otrack")->shortcut(), QKeySequence(Qt::Key_F11));
 }
 
 TEST_F(DrawingAidsTest, EverySwitchOfTheStatusBarIsAnIconThatFollowsItsAction) {
     // docs/adr/0039, point 1, area 10: icons without text, with the name and
     // the key in the tooltip.
-    const std::array<std::pair<const char*, const char*>, 4> kSwitches{{
+    const std::array<std::pair<const char*, const char*>, 5> kSwitches{{
         {"orthoButton", "aids.ortho"},
         {"polarButton", "aids.polar"},
+        {"otrackButton", "aids.otrack"},
         {"osnapButton", "aids.osnap"},
         {"lwdisplayButton", "aids.lwdisplay"},
     }};
@@ -277,6 +282,7 @@ TEST_F(DrawingAidsTest, TheStatusBarHasTheOrderOfTheReference) {
         window().findChild<QWidget*>(QStringLiteral("environmentIndicator")),
         button("orthoButton"),
         button("polarButton"),
+        button("otrackButton"),
         button("osnapButton"),
         button("lwdisplayButton"),
         button("ribbonButton"),
@@ -359,6 +365,30 @@ TEST_F(DrawingAidsTest, PolarDirectiveUpdatesTheButtonWithoutEchoingPolar) {
     EXPECT_FALSE(aids().polar);
     EXPECT_FALSE(button("polarButton")->isChecked());
     EXPECT_EQ(lastHistoryLine(), before);
+}
+
+TEST_F(DrawingAidsTest, F11ChangesTrackingAndItsStatusButton) {
+    EXPECT_FALSE(aids().tracking);
+    shortcut(view(), Qt::Key_F11);
+    EXPECT_TRUE(aids().tracking);
+    EXPECT_TRUE(action("aids.otrack")->isChecked());
+    EXPECT_TRUE(button("otrackButton")->isChecked());
+    EXPECT_EQ(lastHistoryLine(), "<Object Snap Tracking on>");
+    button("otrackButton")->click();
+    EXPECT_FALSE(aids().tracking);
+    EXPECT_EQ(lastHistoryLine(), "<Object Snap Tracking off>");
+}
+
+TEST_F(DrawingAidsTest, AStationaryPointerAcquiresAndPaintsTrackingGuides) {
+    view()->setView({70.0, 30.0}, 1.0);
+    shortcut(view(), Qt::Key_F11);
+    enter("LINE");
+    moveScreen(screen(kVertex));
+    QTest::qWait(550);
+    ASSERT_EQ(runner().tracking().acquired, (std::vector<core::Vec2>{kVertex}));
+    moveScreen(screen({90.0, 2.0}));
+    ASSERT_EQ(runner().tracking().guide, cmd::CommandRunner::TrackingState::Guide::Horizontal);
+    EXPECT_GT(markerPixels(), 0U);  // acquired-point plus, dashed guide and hint
 }
 
 TEST_F(DrawingAidsTest, PolarOverlayFollowsTheRunnerAndYieldsToObjectSnap) {

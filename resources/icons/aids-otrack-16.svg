@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path class="cost" stroke-dasharray="2 2" d="M2.5 8.5 H13.5 M8.5 2.5 V13.5"/>
+        <path class="pt" d="M5.5 8.5 H11.5 M8.5 5.5 V11.5"/>
+    </g>
+</svg>

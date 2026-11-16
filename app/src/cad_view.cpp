@@ -25,6 +25,9 @@ constexpr double kWheelNotch = 120.0;
 // Minimum pointer movement to consider a mouse press and release a drag
 // gesture (AutoCAD's PICKDRAG = 2, docs/tappe/0.7/P12-finestra-trascinamento.md).
 constexpr double kDragThresholdPixels = 5.0;
+constexpr int kTrackingHoldMilliseconds = 500;
+constexpr double kTrackingMarkHalfSizePx = 3.5;
+constexpr double kHintOffsetPx = 14.0;
 
 core::Vec2 toVec2(const QPointF& point) {
     return {point.x(), point.y()};
@@ -38,6 +41,15 @@ CadView::CadView(QWidget* parent) : QWidget(parent), m_dynamicInput(new DynamicI
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
     setCursor(Qt::CrossCursor);
     setMinimumSize(200, 150);
+    m_holdTimer.setSingleShot(true);
+    m_holdTimer.setInterval(kTrackingHoldMilliseconds);
+    connect(&m_holdTimer, &QTimer::timeout, this, [this] {
+        if (m_session == nullptr) {
+            return;
+        }
+        m_session->runner().pointerHeld(toWorld(m_cursorPosition));
+        update();
+    });
 }
 
 void CadView::setSession(DocumentSession* session) {
@@ -49,6 +61,7 @@ void CadView::setSession(DocumentSession* session) {
         m_session->setViewState({m_viewport.center(), m_viewport.scale()});
     }
     m_session = session;
+    m_holdTimer.stop();
     // A gesture in progress belonged to the session left.
     if (m_panning) {
         m_panning = false;
@@ -152,7 +165,59 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
             const QString text = tr("Polar: %1 < %2°")
                                      .arg(QString::fromStdString(cmd::formatLength(distance)))
                                      .arg(QString::fromStdString(cmd::formatAngle(angle)));
-            constexpr double kHintOffsetPx = 14.0;
+            painter.drawText(QPointF(point.x + kHintOffsetPx, point.y - kHintOffsetPx), text);
+        }
+    }
+    const cmd::CommandRunner::TrackingState& tracking = runner.tracking();
+    backend.setPen(m_style.snapMarker, 0.0, render::LineStyle::Solid);
+    for (const core::Vec2& acquired : tracking.acquired) {
+        const core::Vec2 point = m_viewport.worldToScreen(acquired);
+        backend.drawLine({point.x - kTrackingMarkHalfSizePx, point.y},
+                         {point.x + kTrackingMarkHalfSizePx, point.y});
+        backend.drawLine({point.x, point.y - kTrackingMarkHalfSizePx},
+                         {point.x, point.y + kTrackingMarkHalfSizePx});
+    }
+    if (tracking.guidePoint) {
+        const core::Vec2 point = m_viewport.worldToScreen(*tracking.guidePoint);
+        backend.setPen(m_style.snapMarker, 0.0, render::LineStyle::Dashed);
+        const auto drawHorizontal = [&] {
+            backend.drawLine({0.0, point.y}, {static_cast<double>(width()), point.y});
+        };
+        const auto drawVertical = [&] {
+            backend.drawLine({point.x, 0.0}, {point.x, static_cast<double>(height())});
+        };
+        switch (tracking.guide) {
+            case cmd::CommandRunner::TrackingState::Guide::Horizontal:
+                drawHorizontal();
+                break;
+            case cmd::CommandRunner::TrackingState::Guide::Vertical:
+                drawVertical();
+                break;
+            case cmd::CommandRunner::TrackingState::Guide::Crossing:
+                drawHorizontal();
+                drawVertical();
+                break;
+            case cmd::CommandRunner::TrackingState::Guide::WithPolar:
+                if (tracking.from && std::abs(tracking.guidePoint->y - tracking.from->y) <
+                                         std::abs(tracking.guidePoint->x - tracking.from->x)) {
+                    drawHorizontal();
+                } else {
+                    drawVertical();
+                }
+                break;
+            case cmd::CommandRunner::TrackingState::Guide::None:
+                break;
+        }
+        if (tracking.from) {
+            const core::Vec2 direction = *tracking.guidePoint - *tracking.from;
+            double angle = std::atan2(direction.y, direction.x);
+            if (angle < 0.0) {
+                angle += core::kTwoPi;
+            }
+            const QString text =
+                tr("Endpoint: %1 < %2°")
+                    .arg(QString::fromStdString(cmd::formatLength(direction.length())))
+                    .arg(QString::fromStdString(cmd::formatAngle(angle)));
             painter.drawText(QPointF(point.x + kHintOffsetPx, point.y - kHintOffsetPx), text);
         }
     }
@@ -227,6 +292,7 @@ void CadView::mousePressEvent(QMouseEvent* event) {
 }
 
 void CadView::mouseMoveEvent(QMouseEvent* event) {
+    m_holdTimer.stop();
     if (m_panning) {
         const QPointF delta = event->position() - m_lastPanPos;
         m_lastPanPos = event->position();
@@ -241,6 +307,9 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         }
     }
     emitCursor(event->position());
+    if (m_session != nullptr && !m_panning) {
+        m_holdTimer.start();
+    }
     QWidget::mouseMoveEvent(event);
 }
 
