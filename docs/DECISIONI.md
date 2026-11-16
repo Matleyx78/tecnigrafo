@@ -1990,3 +1990,31 @@ i rimandi ai documenti che cambia.
   `PatternLine` e dei motivi predefiniti. Non si aggiungono formati, domande o
   dipendenze. Scartata l'estensione del sistema di verifica per esporre quei
   dati: anticiperebbe lavoro fuori dal perimetro di RT30.
+- **2026-11-16 — Retini: chiusura dei contorni, domande dal documento, cerchio
+  dei contorni a lati.** Su tre punti fermati da
+  [PT30](tappe/0.8/PT30-retini-core.md) nella
+  [#721](https://github.com/Matleyx78/tecnigrafo/issues/721):
+  1. la chiusura di un contorno a lati dipende dall'unità del disegno
+     (ADR 0036, punto 2), che `supported(const Hatch&)` non conosce, e un
+     `SCALE` poteva rendere non supportato un retino che lo era. `supported`
+     chiede solo che ogni contorno sia una polilinea chiusa o abbia almeno un
+     lato; la chiusura, con la regola del documento, la controllano chi crea
+     il retino: la lettura DXF di [PT31](tappe/0.8/PT31-retini-dxf.md), che
+     lascia grezzo il retino con un contorno aperto, e `-HATCH` di
+     [PT44](tappe/0.8/PT44-comando-hatch.md), i cui contorni sono chiusi per
+     costruzione. La polilinea di un contorno a lati prende i punti dei lati
+     così come sono. Scartate: la regola dei millimetri per ogni disegno, con
+     il rifiuto delle trasformazioni che aprono un contorno; `supported` con
+     la regola o il documento, che cambia l'interfaccia di PT6;
+  2. le domande `bbox` e `snaps` passavano per le funzioni dell'entità senza
+     documento, che per un retino danno un ingombro vuoto e un'asserzione.
+     PT30 modifica anche `script/src/question_table.cpp`: per un'entità del
+     documento `bbox` risponde `core::extent(document, record)` e `snaps` usa
+     `core::appendSnapPoints(document, record, …)`; per i cinque tipi di prima
+     della 0.8 le risposte non cambiano. Scartati un pacchetto a parte e il
+     togliere da RT30 le righe di `bbox` e `snaps`;
+  3. la polilinea del cerchio di un contorno a lati (un `Arc` di giro intero)
+     è quella chiusa di due mezzi giri dal punto dell'angolo iniziale, bulge 1:
+     `circle=5,4;2` dà `vertex=7,4 bulge=1 vertex=3,4 bulge=1`. La risposta di
+     `? generated H` di RT30, che si aspettava `loop=edges circle=…` in una
+     `REGION`, la corregge [#720](https://github.com/Matleyx78/tecnigrafo/issues/720).
