@@ -1,0 +1,24 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf
+dimension styles:
+  "Standard"
+  "ISO-25"
+dimension style: "Standard"
+documents: Drawing1.cadx, ingresso.dxf (active)
+pointer: none
+active snap: none
+statistics:
