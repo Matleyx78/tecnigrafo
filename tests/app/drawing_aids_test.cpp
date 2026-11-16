@@ -19,6 +19,7 @@
 #include <QPoint>
 #include <QStatusBar>
 #include <QTest>
+#include <QTimer>
 #include <QToolButton>
 #include <gtest/gtest.h>
 
@@ -26,6 +27,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -194,6 +196,20 @@ protected:
             for (int x = 0; x < image.width(); ++x) {
                 const QColor color = image.pixelColor(x, y);
                 if (color == QColor(marker.r, marker.g, marker.b)) {
+                    ++count;
+                }
+            }
+        }
+        return count;
+    }
+
+    [[nodiscard]] std::size_t markerPixelsIn(const QRect& area) const {
+        const render::Color marker = sceneStyle(m_window.theme()).snapMarker;
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = area.top(); y <= area.bottom(); ++y) {
+            for (int x = area.left(); x <= area.right(); ++x) {
+                if (image.pixelColor(x, y) == QColor(marker.r, marker.g, marker.b)) {
                     ++count;
                 }
             }
@@ -384,11 +400,44 @@ TEST_F(DrawingAidsTest, AStationaryPointerAcquiresAndPaintsTrackingGuides) {
     shortcut(view(), Qt::Key_F11);
     enter("LINE");
     moveScreen(screen(kVertex));
-    QTest::qWait(550);
+    auto* holdTimer = view()->findChild<QTimer*>(QStringLiteral("trackingHoldTimer"));
+    ASSERT_NE(holdTimer, nullptr);
+    EXPECT_TRUE(holdTimer->isActive());
+    EXPECT_TRUE(holdTimer->isSingleShot());
+    EXPECT_EQ(holdTimer->interval(), 500);
+    holdTimer->stop();
+    ASSERT_TRUE(QMetaObject::invokeMethod(holdTimer, "timeout", Qt::DirectConnection));
     ASSERT_EQ(runner().tracking().acquired, (std::vector<core::Vec2>{kVertex}));
     moveScreen(screen({90.0, 2.0}));
     ASSERT_EQ(runner().tracking().guide, cmd::CommandRunner::TrackingState::Guide::Horizontal);
-    EXPECT_GT(markerPixels(), 0U);  // acquired-point plus, dashed guide and hint
+    const int guideY = screen({0.0, kVertex.y}).toPoint().y();
+    EXPECT_GT(markerPixelsIn(QRect{10, guideY, 200, 1}), 0U);
+}
+
+TEST_F(DrawingAidsTest, PolarCrossingPaintsTheTrackingGuideThatProducedIt) {
+    view()->setView({70.0, 30.0}, 1.0);
+    shortcut(view(), Qt::Key_F11);
+    shortcut(view(), Qt::Key_F10);
+    enter("LINE");
+    enter("80,20");
+    moveScreen(screen(kVertex));
+    auto* holdTimer = view()->findChild<QTimer*>(QStringLiteral("trackingHoldTimer"));
+    ASSERT_NE(holdTimer, nullptr);
+    holdTimer->stop();
+    ASSERT_TRUE(QMetaObject::invokeMethod(holdTimer, "timeout", Qt::DirectConnection));
+    ASSERT_EQ(runner().tracking().acquired, (std::vector<core::Vec2>{kVertex}));
+    moveScreen(screen({82.0, 2.0}));
+    ASSERT_EQ(runner().tracking().guide, cmd::CommandRunner::TrackingState::Guide::WithPolar);
+    const std::optional<core::Vec2> guidePointWorld = runner().tracking().guidePoint;
+    if (!guidePointWorld) {
+        ADD_FAILURE() << "Expected a polar crossing point";
+        return;
+    }
+
+    const QPoint guidePoint = screen(*guidePointWorld).toPoint();
+    const int baseY = screen({80.0, 20.0}).toPoint().y();
+    EXPECT_GT(markerPixelsIn(QRect{10, guidePoint.y(), 200, 1}), 0U);
+    EXPECT_EQ(markerPixelsIn(QRect{guidePoint.x(), 10, 1, baseY - 20}), 0U);
 }
 
 TEST_F(DrawingAidsTest, PolarOverlayFollowsTheRunnerAndYieldsToObjectSnap) {

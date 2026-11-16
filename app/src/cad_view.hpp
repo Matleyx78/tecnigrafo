@@ -101,7 +101,7 @@ private:
     bool m_panning{false};
     bool m_dragSelecting{false};
     bool m_initialFitDone{false};
-    QTimer m_holdTimer;
+    QTimer* m_holdTimer{nullptr};
 };
 
 }  // namespace tg::app

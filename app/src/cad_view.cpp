@@ -12,8 +12,10 @@
 #include <QPainter>
 #include <QWheelEvent>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
 
 namespace tg::app {
 
@@ -35,15 +37,17 @@ core::Vec2 toVec2(const QPointF& point) {
 
 }  // namespace
 
-CadView::CadView(QWidget* parent) : QWidget(parent), m_dynamicInput(new DynamicInputBox(this)) {
+CadView::CadView(QWidget* parent)
+    : QWidget(parent), m_dynamicInput(new DynamicInputBox(this)), m_holdTimer(new QTimer(this)) {
     setMouseTracking(true);  // cursor coordinates without pressed buttons
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
     setCursor(Qt::CrossCursor);
     setMinimumSize(200, 150);
-    m_holdTimer.setSingleShot(true);
-    m_holdTimer.setInterval(kTrackingHoldMilliseconds);
-    connect(&m_holdTimer, &QTimer::timeout, this, [this] {
+    m_holdTimer->setObjectName(QStringLiteral("trackingHoldTimer"));
+    m_holdTimer->setSingleShot(true);
+    m_holdTimer->setInterval(kTrackingHoldMilliseconds);
+    connect(m_holdTimer, &QTimer::timeout, this, [this] {
         if (m_session == nullptr) {
             return;
         }
@@ -61,7 +65,7 @@ void CadView::setSession(DocumentSession* session) {
         m_session->setViewState({m_viewport.center(), m_viewport.scale()});
     }
     m_session = session;
-    m_holdTimer.stop();
+    m_holdTimer->stop();
     // A gesture in progress belonged to the session left.
     if (m_panning) {
         m_panning = false;
@@ -197,14 +201,22 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
                 drawHorizontal();
                 drawVertical();
                 break;
-            case cmd::CommandRunner::TrackingState::Guide::WithPolar:
-                if (tracking.from && std::abs(tracking.guidePoint->y - tracking.from->y) <
-                                         std::abs(tracking.guidePoint->x - tracking.from->x)) {
+            case cmd::CommandRunner::TrackingState::Guide::WithPolar: {
+                double nearestHorizontal = std::numeric_limits<double>::infinity();
+                double nearestVertical = std::numeric_limits<double>::infinity();
+                for (const core::Vec2& acquired : tracking.acquired) {
+                    nearestHorizontal =
+                        std::min(nearestHorizontal, std::abs(tracking.guidePoint->y - acquired.y));
+                    nearestVertical =
+                        std::min(nearestVertical, std::abs(tracking.guidePoint->x - acquired.x));
+                }
+                if (nearestHorizontal < nearestVertical) {
                     drawHorizontal();
                 } else {
                     drawVertical();
                 }
                 break;
+            }
             case cmd::CommandRunner::TrackingState::Guide::None:
                 break;
         }
@@ -292,7 +304,7 @@ void CadView::mousePressEvent(QMouseEvent* event) {
 }
 
 void CadView::mouseMoveEvent(QMouseEvent* event) {
-    m_holdTimer.stop();
+    m_holdTimer->stop();
     if (m_panning) {
         const QPointF delta = event->position() - m_lastPanPos;
         m_lastPanPos = event->position();
@@ -308,7 +320,7 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
     }
     emitCursor(event->position());
     if (m_session != nullptr && !m_panning) {
-        m_holdTimer.start();
+        m_holdTimer->start();
     }
     QWidget::mouseMoveEvent(event);
 }
