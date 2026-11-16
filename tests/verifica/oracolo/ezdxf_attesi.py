@@ -16,6 +16,16 @@ from ezdxf.lldxf.tagger import ascii_tags_loader, tag_compiler
 from ezdxf.sections.header import HeaderSection
 
 
+STAGE_08_ENTITY_TYPES = frozenset({
+    "SOLID", "ELLIPSE", "MTEXT", "ATTDEF", "ATTRIB", "INSERT", "DIMENSION", "HATCH",
+})
+
+# Work packages add a type here when Tecnigrafo starts handling it.  This stage
+# declaration affects only count/unhandled; every other oracle answer remains
+# independent from the application (ADR 0020).
+ACTIVE_STAGE_08_ENTITY_TYPES = frozenset()
+
+
 def number(value):
     value = float(value)
     if value == 0:
@@ -315,7 +325,10 @@ def entity_answer(entity, layer_names=None, linetype_names=None):
 
 
 class DrawingAnswers:
-    def __init__(self, path):
+    def __init__(self, path, active_stage_08_types=None):
+        self.active_stage_08_types = (ACTIVE_STAGE_08_ENTITY_TYPES
+                                      if active_stage_08_types is None
+                                      else frozenset(active_stage_08_types))
         self.document = ezdxf.readfile(path)
         model_owner = self.document.modelspace().block_record_handle
         # ezdxf binds ENTITIES to layouts and may replace their owner/paper-space
@@ -376,8 +389,13 @@ class DrawingAnswers:
         if question == "units":
             return str(self.header.get("$INSUNITS", 0) if self.header else 0)
         if question in {"count", "unhandled"}:
+            def counted_as_managed(entity, supported):
+                kind = entity.dxftype()
+                return supported and (kind not in STAGE_08_ENTITY_TYPES
+                                      or kind in self.active_stage_08_types)
+
             counts = Counter(e.dxftype() for e, supported in self.entities.values()
-                             if supported == (question == "count"))
+                             if counted_as_managed(e, supported) == (question == "count"))
             return "; ".join(f"{kind} {count}" for kind, count in sorted(counts.items())) or "none"
         if question == "layers":
             return "; ".join(layer_answer(entry) for entry in self.layers) or "none"

@@ -313,9 +313,33 @@ def self_test():
                                       is_closed=True)
         document.saveas(stage)
         stage_answers = DrawingAnswers(stage)
-        require("SOLID 1" in stage_answers.answer("count"), "stage SOLID classification")
-        require("MTEXT 1" in stage_answers.answer("count"), "stage MTEXT classification")
-        require("HATCH 1" in stage_answers.answer("count"), "stage HATCH classification")
+        solid_answers = DrawingAnswers(stage, {"SOLID"})
+        require("SOLID 1" not in stage_answers.answer("count"),
+                "inactive stage SOLID is not managed")
+        require("SOLID 1" in stage_answers.answer("unhandled"),
+                "inactive stage SOLID is unhandled")
+        require("SOLID 1" in solid_answers.answer("count"),
+                "active stage SOLID is managed")
+        require("SOLID 1" not in solid_answers.answer("unhandled"),
+                "active stage SOLID is not unhandled")
+        require("MTEXT 1" in solid_answers.answer("unhandled"),
+                "other stage types remain unhandled")
+        require("HATCH 1" in solid_answers.answer("unhandled"),
+                "other stage types remain unhandled")
+
+        unchanged_questions = ("version", "units", "layers", "linetypes", "blocks",
+                               "styles", "dimstyles")
+        for question in unchanged_questions:
+            require(stage_answers.answer(question) == solid_answers.answer(question),
+                    f"activating SOLID must not change {question}")
+        for handle, (entity, _) in stage_answers.entities.items():
+            require(stage_answers.answer("entity", handle) ==
+                    solid_answers.answer("entity", handle),
+                    "activating SOLID must not change entity answers")
+            if entity.dxftype() in {"INSERT", "DIMENSION"}:
+                require(stage_answers.answer("generated", handle) ==
+                        solid_answers.answer("generated", handle),
+                        "activating SOLID must not change generated answers")
         require('"TAGGED" base=1,2' in stage_answers.answer("blocks"), "block rows")
         require('"Standard"' in stage_answers.answer("styles"), "STYLE rows")
         require('"ISO-25"' in stage_answers.answer("dimstyles"), "DIMSTYLE rows")

@@ -47,6 +47,11 @@ The stage 0.8 entity rows cover `SOLID`, `ELLIPSE`, `MTEXT`, `ATTDEF`,
 elliptic/spline/gradient hatch paths) remain unhandled. Unsupported dimension
 types are reported as `kind=other` rather than discarded.
 
+An explicit stage declaration in `ezdxf_attesi.py` records which of those
+types Tecnigrafo currently handles. It affects only `count` and `unhandled`;
+it is not read from Tecnigrafo, and the oracle never runs or links to the
+application.
+
 Layer rows contain color, linetype and lineweight, then active states in order:
 `off frozen locked noplot`. Linetype rows contain the signed group-49 pattern
 (including zero-length dots), or `continuous`, and the quoted description.
