@@ -91,11 +91,11 @@ entities:
   258 LINE start=20,0 end=30,0
   259 LINE start=40,0 end=50,0
   260 LINE start=60,0 end=70,0
-  261 LINE start=-10,-10 end=5,20
+  261 LINE start=-10,-10 end=-15,20
 messages:
-prompt: Specify next point or [Close/Undo]:
+prompt: Specify next point or [Undo]:
 preview:
-  LINE start=5,20 end=6,20
+  LINE start=-15,20 end=12,30
 selection: none
 rectangle: none
 undo:
@@ -103,11 +103,10 @@ undo:
   Line
   Line
   Line
-  Line
 redo:
 snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
-pointer: 6,20
+pointer: 12,30
 active snap: none
 tracking: on
 statistics:
@@ -119,7 +118,7 @@ entities:
   258 LINE start=20,0 end=30,0
   259 LINE start=40,0 end=50,0
   260 LINE start=60,0 end=70,0
-  261 LINE start=-10,-10 end=5,20
+  261 LINE start=-10,-10 end=-15,20
 messages:
   *Cancel*
 prompt: Command:
@@ -147,7 +146,7 @@ entities:
   258 LINE start=20,0 end=30,0
   259 LINE start=40,0 end=50,0
   260 LINE start=60,0 end=70,0
-  261 LINE start=-10,-10 end=5,20
+  261 LINE start=-10,-10 end=-15,20
 messages:
   Command: LINE
   Specify first point: -10,-10
@@ -176,7 +175,7 @@ entities:
   258 LINE start=20,0 end=30,0
   259 LINE start=40,0 end=50,0
   260 LINE start=60,0 end=70,0
-  261 LINE start=-10,-10 end=5,20
+  261 LINE start=-10,-10 end=-15,20
 messages:
   *Cancel*
 prompt: Command:
