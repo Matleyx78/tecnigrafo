@@ -233,9 +233,9 @@ int main(int argc, char* argv[]) {
         std::cerr << "Cannot create gallery output folder\n";
         return 1;
     }
-    // The style and the font of the interface before the first window, as
-    // main.cpp does: otherwise the first window keeps what it had first.
-    tg::app::applyTheme(*qApp, tg::app::Theme::Light);
+    // The font of the interface before the first window, as main.cpp does:
+    // otherwise the first window takes the platform's.
+    tg::app::applyInterfaceFont();
     return captureTheme(tg::app::Theme::Light, QStringLiteral("chiaro"), output) &&
                    captureTheme(tg::app::Theme::Dark, QStringLiteral("scuro"), output) &&
                    captureSystemFrame(tg::app::Theme::Light, QStringLiteral("chiaro"), output) &&

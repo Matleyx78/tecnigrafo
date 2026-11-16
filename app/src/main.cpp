@@ -74,13 +74,10 @@ int main(int argc, char* argv[]) {
 
     // The program opens on the Start page, without documents, as AutoCAD
     // does (docs/DECISIONI.md, 2026-11-07).
-    // The style and the font of the interface before any widget exists: the
-    // ribbon and the Start page, built with the window, would otherwise keep
-    // what they had when first polished, the desktop's font (Cantarell 11
-    // under GNOME) or the system's fonts per class that installing the style
-    // gives back for a moment (Segoe UI 9 under Windows). The window then
-    // applies its own theme.
-    tg::app::applyTheme(*qApp, tg::app::Theme::Light);
+    // The font of the interface before any widget exists: the ribbon and the
+    // Start page, built with the window, would otherwise keep the desktop's
+    // font (Cantarell 11 under GNOME) that they had when first polished.
+    tg::app::applyInterfaceFont();
     tg::app::MainWindow window(tg::app::MainWindow::InitialDrawing::None);
     window.show();
 

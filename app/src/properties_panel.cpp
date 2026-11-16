@@ -160,15 +160,19 @@ protected:
         }
         switch (event->type()) {
             case QEvent::MouseButtonPress: {
-                const auto* mouse = static_cast<QMouseEvent*>(event);
-                if (mouse->button() == Qt::LeftButton && near(mouse->position().x())) {
+                const auto* mouse = dynamic_cast<const QMouseEvent*>(event);
+                if (mouse != nullptr && mouse->button() == Qt::LeftButton &&
+                    near(mouse->position().x())) {
                     m_dragging = true;
                     return true;
                 }
                 return false;
             }
             case QEvent::MouseMove: {
-                const auto* mouse = static_cast<QMouseEvent*>(event);
+                const auto* mouse = dynamic_cast<const QMouseEvent*>(event);
+                if (mouse == nullptr) {
+                    return false;
+                }
                 const int x = qRound(mouse->position().x());
                 if (m_dragging) {
                     const int width =
