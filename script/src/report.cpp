@@ -292,8 +292,17 @@ void writeTables(const core::Document& document, std::string& out) {
         appendField("lwdisplay", onOff(document.lwdisplay()), out);
     }
     std::vector<const core::TextStyle*> changedStyles;
+    const core::TextStyle* defaultStandard = kNewSession.textStyles().find("Standard");
     for (const core::TextStyle& style : document.textStyles().styles()) {
-        if (!core::sameTableName(style.name, "Standard")) {
+        const bool standardLike = core::sameTableName(style.name, "Standard") &&
+                                  defaultStandard != nullptr &&
+                                  style.font == defaultStandard->font &&
+                                  style.fixedHeight == defaultStandard->fixedHeight &&
+                                  style.widthFactor == defaultStandard->widthFactor &&
+                                  style.oblique == defaultStandard->oblique &&
+                                  style.backwards == defaultStandard->backwards &&
+                                  style.upsideDown == defaultStandard->upsideDown;
+        if (!standardLike) {
             changedStyles.push_back(&style);
         }
     }

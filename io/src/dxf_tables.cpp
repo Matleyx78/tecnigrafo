@@ -261,15 +261,17 @@ core::RawGroups styleRecord(const core::TextStyle& style, std::string_view owner
         }
     }
     const std::vector<Wanted> wanted{
-        wantedInteger(70, 0),
         {40, formatNumber(style.fixedHeight), style.fixedHeight},
         {41, formatNumber(style.widthFactor), style.widthFactor},
         {50, formatNumber(obliqueDegrees), obliqueDegrees},
         wantedInteger(71, generation),
         {42, formatNumber(style.lastHeight), style.lastHeight},
     };
-    constexpr std::array kCodes{70, 40, 41, 50, 71, 42};
+    constexpr std::array kCodes{40, 41, 50, 71, 42};
     applyWanted(body, kCodes, wanted, kStyleOrder);
+    if (!firstOwn(body, ownGroups(body), 70)) {
+        dxf_groups::insertInOrder(body, {{70, "0"}}, kStyleOrder);
+    }
     core::RawGroups names{{2, style.name}, {3, style.font}, {4, style.bigFont}};
     for (auto& name : names) {
         const auto at = firstOwn(body, ownGroups(body), name.code);
@@ -297,6 +299,15 @@ struct TableParts {
 
 bool isPlaceholder(const core::RawGroups& item) {
     return item.size() == 1 && item.front().code == kRecordPlaceholder;
+}
+
+bool isSkeletonStyle(const core::RawGroups& item) {
+    if (item.empty() || !isMarker(item.front(), "STYLE")) {
+        return false;
+    }
+    const auto handle = std::ranges::find(item, 5, &core::RawGroup::code);
+    return handle != item.end() &&
+           parseHandle(handle->value) == core::start_handles::kStyleStandard;
 }
 
 /// The table that starts at `i` (a 0 TABLE group); `i` moves past it.
@@ -339,8 +350,10 @@ void writeRecordTable(const TableParts& table, const core::Document& document,
     } else if (styles) {
         records = document.textStyles().styles().size();
     }
-    const auto placeholders =
-        static_cast<std::size_t>(std::ranges::count_if(table.items, isPlaceholder));
+    const auto placeholders = static_cast<std::size_t>(
+        std::ranges::count_if(table.items, [styles](const core::RawGroups& item) {
+            return isPlaceholder(item) || (styles && isSkeletonStyle(item));
+        }));
     std::string owner{"0"};
     bool counted = false;
     for (const auto& group : table.header) {
@@ -374,7 +387,7 @@ void writeRecordTable(const TableParts& table, const core::Document& document,
     };
     for (const auto& item : table.items) {
         const bool skeletonStyle =
-            styles && next < records && !item.empty() && isMarker(item.front(), "STYLE") &&
+            styles && next < records && isSkeletonStyle(item) &&
             document.textStyles().styles()[next].id == core::start_handles::kStyleStandard;
         if (!skeletonStyle && !isPlaceholder(item)) {
             out.insert(out.end(), item.begin(), item.end());
@@ -799,19 +812,27 @@ void TableReader::finish(std::vector<std::string>& warnings,
             warnings.push_back(plural(count, singular, rest));
         }
     };
-    if ((m_styleTable || m_currentTextStyle) && m_textStyles.find(kStandardStyleName) == nullptr) {
+    std::uint64_t candidate = 1;
+    const auto lowFreeHandle = [&]() -> std::uint64_t {
+        while (candidate < m_seed) {
+            const std::uint64_t handle = candidate++;
+            if (!usedHandles.contains(handle)) {
+                return handle;
+            }
+        }
+        return 0;
+    };
+    if (m_textStyles.find(kStandardStyleName) == nullptr) {
         core::TextStyle standard;
+        standard.id = lowFreeHandle();
         standard.name = kStandardStyleName;
         standard.font = "arial.ttf";
         m_textStyles.put(std::move(standard), m_document);
     }
-    if (m_styleTable || m_currentTextStyle) {
-        const std::string current =
-            m_currentTextStyle && m_textStyles.find(*m_currentTextStyle) != nullptr
-                ? *m_currentTextStyle
-                : std::string{kStandardStyleName};
-        m_textStyles.setCurrent(current);
-    }
+    const core::TextStyle* requested =
+        m_currentTextStyle ? m_textStyles.find(*m_currentTextStyle) : nullptr;
+    m_textStyles.setCurrent(requested != nullptr ? requested->name
+                                                 : std::string{kStandardStyleName});
     m_document.replaceTextStyles(std::move(m_textStyles));
     if (!needsRecords()) {
         warn(m_roundedLineweights, "lineweight", " rounded.");
@@ -824,16 +845,6 @@ void TableReader::finish(std::vector<std::string>& warnings,
     // $HANDSEED on: the first entity drawn after OPEN takes $HANDSEED. They
     // take the lowest free handles below it; only a file that spends them
     // all gives them the next ones.
-    std::uint64_t candidate = 1;
-    const auto lowFreeHandle = [&]() -> std::uint64_t {
-        while (candidate < m_seed) {
-            const std::uint64_t handle = candidate++;
-            if (!usedHandles.contains(handle)) {
-                return handle;
-            }
-        }
-        return 0;  // none below $HANDSEED: the document gives the next one
-    };
     for (const std::string_view name : {kByBlockName, kByLayerName, kContinuousName}) {
         if (m_document.findLinetype(name) == nullptr) {
             m_document.addLinetype(
@@ -908,6 +919,18 @@ bool needsLinetypeTable(const core::Document& document) {
     return !std::ranges::all_of(document.linetypes(), isMandatoryLinetype);
 }
 
+bool needsStyleTable(const core::Document& document) {
+    const auto styles = document.textStyles().styles();
+    if (styles.size() != 1 || !core::sameTableName(styles.front().name, kStandardStyleName)) {
+        return !styles.empty();
+    }
+    const core::TextStyle& standard = styles.front();
+    return standard.font != "arial.ttf" || !standard.bigFont.empty() ||
+           standard.fixedHeight != 0.0 || standard.widthFactor != 1.0 || standard.oblique != 0.0 ||
+           standard.backwards || standard.upsideDown || standard.lastHeight != 2.5 ||
+           !standard.extras.empty();
+}
+
 void writeTables(const core::RawGroups& tables, const core::Document& document,
                  std::uint64_t& nextHandle, core::RawGroups& out) {
     // A table already in the section is never added a second time, wherever
@@ -941,7 +964,7 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
         if (!styles &&
             (before.empty() || std::ranges::find(kAfterStyles, before) != kAfterStyles.end())) {
             styles = true;
-            if (!document.textStyles().styles().empty()) {
+            if (needsStyleTable(document)) {
                 writeNewTable("STYLE", document, nextHandle, out);
             }
         }
@@ -994,13 +1017,12 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
     }
     return (!linetypes && needsLinetypeTable(document) ? 1U : 0U) +
            (!layers && needsLayerTable(document) ? 1U : 0U) +
-           (!styles && !document.textStyles().styles().empty() ? 1U : 0U);
+           (!styles && needsStyleTable(document) ? 1U : 0U);
 }
 
 core::RawGroups newTables(const core::Document& document, std::uint64_t& nextHandle) {
     core::RawGroups out;
-    if (needsLinetypeTable(document) || needsLayerTable(document) ||
-        !document.textStyles().styles().empty()) {
+    if (needsLinetypeTable(document) || needsLayerTable(document) || needsStyleTable(document)) {
         writeTables({}, document, nextHandle, out);
     }
     return out;
