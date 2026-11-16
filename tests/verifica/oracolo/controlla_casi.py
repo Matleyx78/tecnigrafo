@@ -202,6 +202,7 @@ def self_test():
         dxf(source, line + unsupported)
         dxf(mirrored, circle, units=4)
         properties = root / "properties"
+        missing_dimstyle = root / "missing-dimstyle"
         tables = [
             (0, "TABLE"), (2, "LTYPE"), (70, 1),
             (0, "LTYPE"), (5, "40"), (100, "AcDbSymbolTableRecord"),
@@ -221,6 +222,13 @@ def self_test():
         styled = [(code, "walls" if code == 8 else value) for code, value in line]
         styled[4:4] = [(62, 1), (420, 66051), (6, "dashdot"), (48, 2.5), (370, 35)]
         dxf(properties, styled, tables=tables)
+        dimstyle_table = [
+            (0, "TABLE"), (2, "DIMSTYLE"), (70, 1),
+            (0, "DIMSTYLE"), (105, "50"), (100, "AcDbSymbolTableRecord"),
+            (100, "AcDbDimStyleTableRecord"), (2, "EMPTY"), (70, 0),
+            (0, "ENDTAB"),
+        ]
+        dxf(missing_dimstyle, [], tables=dimstyle_table)
         for path in (source, mirrored, properties):
             print(f"=== Handwritten DXF probe: {path.name} ===", flush=True)
             output = subprocess.check_output(
@@ -241,6 +249,11 @@ def self_test():
         require(drawing.answer("layers") == "none", "do not invent missing layers")
         require(drawing.answer("linetypes") == "none", "do not invent missing linetypes")
         styled_drawing = DrawingAnswers(properties)
+        require(DrawingAnswers(missing_dimstyle).answer("dimstyles") ==
+                ('"EMPTY" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:46 '
+                 'DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 '
+                 'DIMTOH:1 DIMTXT:0.18 DIMZIN:0'),
+                "missing DIMSTYLE groups use AutoCAD DXF defaults")
         expected_layers = ('"0" color=7 linetype="Continuous" lineweight=default; '
                            '"Walls" color=255,128,0 linetype="DashDot" '
                            'lineweight=0.50 off frozen locked noplot')
@@ -301,9 +314,6 @@ def self_test():
         document.dimstyles.new("ISO-25", dxfattribs={
             name: ISO_25_DEFAULTS[name] for name in DIMSTYLE_FIELDS
         })
-        empty_dimstyle = document.dimstyles.new("EMPTY")
-        for name in DIMSTYLE_FIELDS:
-            empty_dimstyle.dxf.discard(name)
         block = document.blocks.new("TAGGED", base_point=(1, 2))
         attdef = block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
         block_line = block.add_line((0, 0), (4, 0), dxfattribs={"color": 0})
@@ -402,10 +412,7 @@ def self_test():
         require(stage_answers.answer("styles") ==
                 '"Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no',
                 "complete STYLE rows")
-        require(stage_answers.answer("dimstyles") ==
-                ('"Standard"; "ISO-25"; "EMPTY" DIMASZ:0.18 DIMCEN:0.09 '
-                 'DIMDEC:4 DIMDSEP:46 DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 '
-                 'DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0'),
+        require(stage_answers.answer("dimstyles") == '"Standard"; "ISO-25"',
                 "complete DIMSTYLE rows")
         require(stage_answers.answer("generated", insert.dxf.handle) ==
                 ('LINE start=9,18 end=13,18 color=0,255,0; '
