@@ -108,6 +108,15 @@ DIMSTYLE_FIELDS = tuple(sorted(("dimscale", "dimasz", "dimexo", "dimexe", "dimtx
                    "dimzin", "dimazin", "dimlfac", "dimrnd", "dimpost", "dimtxsty",
                    "dimcen", "dimse1", "dimse2", "dimsd1", "dimsd2", "dimclrd",
                    "dimclre", "dimclrt", "dimlwd", "dimlwe")))
+ISO_25_DEFAULTS = {
+    "dimscale": 1.0, "dimasz": 2.5, "dimexo": 0.625, "dimexe": 1.25,
+    "dimtxt": 2.5, "dimgap": 0.625, "dimtad": 1, "dimtih": 0,
+    "dimtoh": 0, "dimdec": 2, "dimadec": 0, "dimdsep": 44,
+    "dimzin": 8, "dimazin": 0, "dimlfac": 1.0, "dimrnd": 0.0,
+    "dimpost": "", "dimtxsty": "Standard", "dimcen": 2.5, "dimse1": 0,
+    "dimse2": 0, "dimsd1": 0, "dimsd2": 0, "dimclrd": 0, "dimclre": 0,
+    "dimclrt": 0, "dimlwd": -2, "dimlwe": -2,
+}
 
 
 def dimstyle_answer(style, baseline=None):
@@ -117,7 +126,7 @@ def dimstyle_answer(style, baseline=None):
     fields = [quoted(d.name)]
     for name in DIMSTYLE_FIELDS:
         value = d.get(name)
-        if value is not None and (baseline is None or value != baseline.dxf.get(name)):
+        if value is not None and (baseline is None or value != baseline.get(name)):
             written = quoted(value) if isinstance(value, str) else number(value)
             fields.append(f"{name.upper()}:{written}")
     return " ".join(fields)
@@ -346,8 +355,6 @@ class DrawingAnswers:
                                       if active_stage_08_types is None
                                       else frozenset(active_stage_08_types))
         self.document = ezdxf.readfile(path)
-        fresh_document = ezdxf.new("R2018", setup=True)
-        self.iso_25_baseline = fresh_document.dimstyles.get("ISO-25")
         model_owner = self.document.modelspace().block_record_handle
         # ezdxf binds ENTITIES to layouts and may replace their owner/paper-space
         # flags. Load the original entity tags independently so that classification
@@ -432,7 +439,7 @@ class DrawingAnswers:
         if question == "styles":
             return "; ".join(style_answer(entry) for entry in self.styles) or "none"
         if question == "dimstyles":
-            return "; ".join(dimstyle_answer(entry, self.iso_25_baseline)
+            return "; ".join(dimstyle_answer(entry, ISO_25_DEFAULTS)
                              for entry in self.dimstyles) or "none"
         if question == "blocks":
             rows = []

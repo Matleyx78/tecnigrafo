@@ -16,7 +16,7 @@ import zipfile
 
 import ezdxf
 from ezdxf.entities import factory
-from ezdxf_attesi import (DIMSTYLE_FIELDS, DrawingAnswers, aci_answer,
+from ezdxf_attesi import (DIMSTYLE_FIELDS, ISO_25_DEFAULTS, DrawingAnswers, aci_answer,
                           entity_answer, print_standard_answers)
 
 
@@ -296,11 +296,10 @@ def self_test():
         # A drawing written by ezdxf exercises every stage 0.8 answer family.
         stage = root / "stage-0.8.dxf"
         document = ezdxf.new("R2018")
-        iso_baseline = ezdxf.new("R2018", setup=True).dimstyles.get("ISO-25")
         for name in DIMSTYLE_FIELDS:
-            document.dimstyles.get("Standard").dxf.set(name, iso_baseline.dxf.get(name))
+            document.dimstyles.get("Standard").dxf.set(name, ISO_25_DEFAULTS[name])
         document.dimstyles.new("ISO-25", dxfattribs={
-            name: iso_baseline.dxf.get(name) for name in DIMSTYLE_FIELDS
+            name: ISO_25_DEFAULTS[name] for name in DIMSTYLE_FIELDS
         })
         block = document.blocks.new("TAGGED", base_point=(1, 2))
         attdef = block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
