@@ -432,10 +432,13 @@ def self_test():
         insert.attribs[0].dxf.extrusion = (1, 0, 0)
         document.saveas(stage)
         unsupported_attribute_answers = DrawingAnswers(stage, {"ATTRIB", "INSERT"})
-        require("ATTRIB 1" in unsupported_attribute_answers.answer("unhandled"),
-                "active unsupported linked ATTRIB is unhandled")
-        require("ATTRIB 1" in unsupported_attribute_answers.answer("count"),
-                "the other active linked ATTRIB remains managed")
+        require("ATTRIB 2" in unsupported_attribute_answers.answer("unhandled"),
+                "every ATTRIB of an unhandled INSERT is unhandled")
+        require("ATTRIB" not in unsupported_attribute_answers.answer("count"),
+                "no ATTRIB of an unhandled INSERT is managed")
+        require(unsupported_attribute_answers.answer(
+                    "entity", insert.attribs[1].dxf.handle) == "unhandled ATTRIB",
+                "an ATTRIB of an unhandled INSERT is unhandled")
 
         exclusions = root / "stage-0.8-exclusions.dxf"
         excluded_document = ezdxf.new("R2018")
@@ -469,6 +472,12 @@ def self_test():
         require(effective_answers.answer("generated", effective_insert.dxf.handle) ==
                 "LINE start=0,0 end=1,0 color=0,0,255",
                 "ByBlock uses the owner's effective layer color")
+        effective_insert.dxf.color = 0
+        effective_document.saveas(effective)
+        require(DrawingAnswers(effective, {"INSERT"}).answer(
+                    "generated", effective_insert.dxf.handle) == "LINE start=0,0 end=1,0",
+                "ByBlock in a ByBlock owner is color 7")
+        effective_insert.dxf.color = 256
         effective_document.layers.get("BLUE").off()
         effective_document.saveas(effective)
         require(DrawingAnswers(effective, {"INSERT"}).answer(

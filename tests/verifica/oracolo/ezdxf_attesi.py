@@ -427,6 +427,12 @@ class DrawingAnswers:
                 if not geometry or geometry.casefold() not in dimension_block_names:
                     supported = False
             self.entities[handle] = (entity, supported)
+        # An unhandled INSERT stays raw as a whole, with its attributes
+        # (ADR 0044, point 4).
+        for attrib_handle, insert_handle in self.attribute_owners.items():
+            if not self.entities[insert_handle.upper()][1]:
+                attrib = self.entities[attrib_handle][0]
+                self.entities[attrib_handle] = (attrib, False)
 
     def answer(self, question, handle=None):
         if question == "version":
@@ -535,9 +541,13 @@ class DrawingAnswers:
                 weight = layer.get("lineweight", -3)
             return 25 if weight == -3 else weight
 
-        owner_color = (color_answer(owner.dxf) if (owner.dxf.hasattr("true_color") or
-                                                    owner.dxf.get("color", 256) != 256)
-                       else color_answer(owner_layer, layer=True))
+        if (owner.dxf.hasattr("true_color") or
+                owner.dxf.get("color", 256) not in (0, 256)):
+            owner_color = color_answer(owner.dxf)
+        elif owner.dxf.get("color", 256) == 0:
+            owner_color = "255,255,255"  # ByBlock outside a block: color 7.
+        else:
+            owner_color = color_answer(owner_layer, layer=True)
         owner_linetype = owner.dxf.get("linetype", "ByLayer")
         if owner_linetype.casefold() == "bylayer":
             owner_linetype = owner_layer.get("linetype", "Continuous")

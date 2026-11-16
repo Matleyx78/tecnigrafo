@@ -70,7 +70,8 @@ not become answers for a file without tables.
 `styles` contains every file `STYLE` record, including `Standard`, in the
 `text styles:` format. `dimstyles` likewise contains all `DIMSTYLE` records,
 including `Standard` and `ISO-25`, with essential values that differ from
-`ISO-25`. `blocks` excludes layout and anonymous dimension blocks and writes
+`ISO-25`. A missing group uses AutoCAD's DXF default, not the `ISO-25` value.
+`blocks` excludes layout and anonymous dimension blocks and writes
 each definition header followed by its entities in `blocks:` format.
 
 Entity answers append `layer=`, `color=`, `linetype=`, `ltscale=` and
