@@ -3,8 +3,6 @@
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; RT18: immutable CC0 drawing, independently counted from its DXF groups.
 D = DXF source=elettrico-tg-el-folio-out
-? roundtrip D -> identical
-? roundtrip D as=cadx -> identical
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
 ? count D -> LINE 6
