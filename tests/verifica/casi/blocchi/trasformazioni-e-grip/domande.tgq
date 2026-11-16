@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT16/ADR 0045.4: reflected rotation = normalize(2*axisAngle - r + 180), X flips.
+; Reflections across X, Y and y=x have axis angles 0,90,45 degrees.
+? window -1,-1 1,1 -> none
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "Line" base=0,0
+Segment = LINE start=0,0 end=10,0
+!endblock
+I = INSERT block="Line" insertion=10,20 scale=2,1 rotation=30
+? transform I move 5,-7 -> INSERT block="Line" insertion=15,13 scale=2,1 rotation=30
+? transform I rotate 90 0,0 -> INSERT block="Line" insertion=-20,10 scale=2,1 rotation=120
+? transform I scale 2 5,10 -> INSERT block="Line" insertion=15,30 scale=4,2 rotation=30
+? transform I mirror 0,0 10,0 -> INSERT block="Line" insertion=10,-20 scale=-2,1 rotation=150
+? transform I mirror 0,0 0,10 -> INSERT block="Line" insertion=-10,20 scale=-2,1 rotation=330
+? transform I mirror 0,0 10,10 -> INSERT block="Line" insertion=20,10 scale=-2,1 rotation=240
+? transform I mirror 0,0 10,0 mirrtext=1 -> INSERT block="Line" insertion=10,-20 scale=-2,1 rotation=150
+? transform I scale 0 0,0 -> invalid
+? transform I mirror 1,1 1,1 -> invalid
+? grips I -> 10,20
+? grip I 10,20 0,0 -> INSERT block="Line" insertion=0,0 scale=2,1 rotation=30
+? grip I 10,20 10,20 -> INSERT block="Line" insertion=10,20 scale=2,1 rotation=30
+? grip I 11,20 0,0 -> none
+; A previously negative X scale must flip back, with the normalized angle.
+Negative = INSERT block="Line" insertion=1,2 scale=-2,1 rotation=270
+? transform Negative mirror 0,0 10,0 -> INSERT block="Line" insertion=1,-2 scale=2,1 rotation=270
