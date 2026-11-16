@@ -153,7 +153,9 @@ int DocumentTabs::activeDocument() const {
 }
 
 QString DocumentTabs::tabText(const Document& document) {
-    return document.modified ? document.name + QLatin1Char('*') : document.name;
+    // The mark of a modified drawing apart from the name, as in the
+    // reference (docs/adr/0039, area 4).
+    return document.modified ? document.name + QStringLiteral("  *") : document.name;
 }
 
 void DocumentTabs::paintEvent(QPaintEvent* event) {

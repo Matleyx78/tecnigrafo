@@ -27,6 +27,8 @@ class SARibbonPanel;
 
 namespace tg::app {
 
+class TitleCentrer;
+
 class ActionRegistry;
 struct Environment;
 
@@ -107,6 +109,8 @@ private:
     SARibbonBar* m_ribbon{nullptr};
     QToolButton* m_applicationButton{nullptr};
     QLabel* m_title{nullptr};
+    /// Keeps m_title in the middle of the classic menu bar.
+    TitleCentrer* m_titleCentrer{nullptr};
     // The quick access bar that is a corner widget of the bar on show, with
     // a size of its own (fitQuickAccess() in ui_builder.cpp): that of the
     // classic menus, or of the ribbon with the frame of the system; nullptr

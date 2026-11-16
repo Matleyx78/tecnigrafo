@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDockWidget>
+#include <QGuiApplication>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
@@ -254,6 +255,14 @@ int Style::pixelMetric(PixelMetric metric, const QStyleOption* option,
         default:
             return QProxyStyle::pixelMetric(metric, option, widget);
     }
+}
+
+int Style::styleHint(StyleHint hint, const QStyleOption* option, const QWidget* widget,
+                     QStyleHintReturn* returnData) const {
+    if (hint == SH_UnderlineShortcut) {
+        return (QGuiApplication::queryKeyboardModifiers() & Qt::AltModifier) != 0 ? 1 : 0;
+    }
+    return QProxyStyle::styleHint(hint, option, widget, returnData);
 }
 
 QSize Style::sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& size,

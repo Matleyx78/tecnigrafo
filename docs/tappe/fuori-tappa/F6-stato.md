@@ -579,9 +579,30 @@ nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
 - 2026-11-14, immissione dinamica (area 7): campi larghi uguali; campo
   attivo nel colore `iconPt` invece di `accent`.
 
+- 2026-11-14, decisioni sui punti aperti:
+  - *Properties* (area 8): la combo della selezione ha sempre il numero
+    degli oggetti, «Polyline (1)», come il riferimento; la freccia di
+    *Current Vertex* che non porta a niente resta spenta ma visibile, nel
+    testo secondario (prima nel colore del bordo);
+  - interfaccia classica: il titolo al centro, come nel ribbon; le lettere
+    delle scorciatoie dei menu sottolineate solo con Alt premuto (tutti i
+    menu, `Style::styleHint`);
+  - schede (area 4): l'asterisco di un disegno modificato staccato dal
+    nome, «Drawing1.cadx  *», come il riferimento;
+  - barra di accesso rapido (area 1): niente menu ⌄ dopo *Redo* (sarebbe
+    una funzione nuova, e non serve);
+  - immissione dinamica (area 7): «30» invece di «30°» resta, il testo è
+    di `cmd`, fuori dal perimetro.
+
 ## Scostamenti dal riferimento decisi
 
 - Immissione dinamica: campi uguali e campo attivo in `iconPt` (sopra).
+
+- Barra di accesso rapido: niente menu ⌄ dopo *Redo* (sopra).
+
+- Icone a due toni (`pt` sull'elemento che dice l'azione) dove il
+  riferimento le ha monocrome; l'occhio invece della lampadina per gli
+  stati dei layer (sopra).
 
 - Barra di stato: coordinate `X: … Y: …` e scala in `px/unit` (sopra).
 
@@ -594,3 +615,7 @@ nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
 ## Cose rimandate
 
 - Area 5, barra di navigazione: aspetta le azioni sposta e zoom (sopra).
+- Segno sul grip del vertice corrente scorso con *Current Vertex*: chiesto
+  dal responsabile il 2026-11-16, è un comportamento nuovo e non aspetto,
+  quindi fuori da F6; aperta l'idea
+  [#799](https://github.com/Matleyx78/tecnigrafo/issues/799).

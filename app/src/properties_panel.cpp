@@ -517,8 +517,9 @@ void PropertiesPanel::showTypes() {
         }
         const std::string_view type = kDxfTypes.at(index);
         const QString name = typeName(type);
-        const QString text = counts.at(index) == 1 ? name : label(name, counts.at(index));
-        m_types->addItem(text,
+        // Always with the number of the objects, as in the reference
+        // (docs/adr/0039, area 8): "Polyline (1)".
+        m_types->addItem(label(name, counts.at(index)),
                          QString::fromLatin1(type.data(), static_cast<qsizetype>(type.size())));
     }
     const int current =

@@ -376,7 +376,7 @@ TEST(DocumentTabsWindowTest, ScriptsStartFromAnEmptyActiveDrawing) {
 TEST_F(DocumentTabsTest, AModifiedTabAsksBeforeItCloses) {
     plus();
     line();
-    EXPECT_EQ(bar()->tabText(1), QStringLiteral("Drawing1.cadx*"));
+    EXPECT_EQ(bar()->tabText(1), QStringLiteral("Drawing1.cadx  *"));
     closeTab(0, {QMessageBox::Cancel});
     EXPECT_EQ(asked(), QStringList{QStringLiteral("Save changes to Drawing1.cadx?")});
     ASSERT_EQ(window()->sessions().size(), 1U);

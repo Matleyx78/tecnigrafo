@@ -50,6 +50,11 @@ public:
                                        const QWidget* widget = nullptr) const override;
     [[nodiscard]] QIcon standardIcon(StandardPixmap icon, const QStyleOption* option = nullptr,
                                      const QWidget* widget = nullptr) const override;
+    /// The letters of the shortcuts of the menus are underlined only while
+    /// Alt is held, as on Windows, not always as in Fusion.
+    [[nodiscard]] int styleHint(StyleHint hint, const QStyleOption* option = nullptr,
+                                const QWidget* widget = nullptr,
+                                QStyleHintReturn* returnData = nullptr) const override;
 
 private:
     ThemeTokens m_tokens;

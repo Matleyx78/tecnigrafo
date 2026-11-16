@@ -512,8 +512,11 @@ void PropertyGridDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
     if (previous.isValid()) {
         const bool hasNext = index.data(PropertyGridModel::kNextVertexRole).toBool();
         const QRect before = previousArrow(option.rect);
-        drawArrow(*painter, before, true, previous.toBool() ? tokens.text : tokens.border);
-        drawArrow(*painter, nextArrow(option.rect), false, hasNext ? tokens.text : tokens.border);
+        // An arrow that leads nowhere is off, in the secondary text, but
+        // still in sight (docs/adr/0039, area 8).
+        drawArrow(*painter, before, true, previous.toBool() ? tokens.text : tokens.textSecondary);
+        drawArrow(*painter, nextArrow(option.rect), false,
+                  hasNext ? tokens.text : tokens.textSecondary);
         content.setRight(before.left() - kIconSpacing);
     }
     const auto icon = index.data(Qt::DecorationRole).value<QIcon>();

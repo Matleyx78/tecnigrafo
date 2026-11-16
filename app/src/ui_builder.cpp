@@ -12,6 +12,7 @@
 #include <QApplication>
 #include <QColor>
 #include <QEvent>
+#include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QHash>
 #include <QIcon>
@@ -26,6 +27,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QRect>
+#include <QSignalBlocker>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -380,7 +382,71 @@ private:
     QWidget& m_window;
 };
 
+/// Space between the title of the classic menu bar and what is beside it.
+constexpr int kTitleGap = 8;
+
 }  // namespace
+
+/// Keeps the title of the classic menu bar in the middle of the window, as
+/// the ribbon does (docs/adr/0039, area 1), in the room between the last
+/// menu and the corner of the window buttons; a title that does not fit
+/// there is shortened with an ellipsis.
+class TitleCentrer final : public QObject {
+public:
+    TitleCentrer(QMenuBar& bar, QLabel& title) : QObject(&bar), m_bar(bar), m_title(title) {
+        bar.installEventFilter(this);
+        title.installEventFilter(this);
+    }
+
+    void place() {
+        int left = 0;
+        if (const QWidget* corner = m_bar.cornerWidget(Qt::TopLeftCorner)) {
+            left = corner->geometry().right();
+        }
+        for (QAction* action : m_bar.actions()) {
+            if (action->isVisible()) {
+                left = std::max(left, m_bar.actionGeometry(action).right());
+            }
+        }
+        int right = m_bar.width();
+        if (const QWidget* corner = m_bar.cornerWidget(Qt::TopRightCorner)) {
+            right = corner->geometry().left();
+        }
+        left += kTitleGap;
+        right -= kTitleGap;
+        const int room = std::max(0, right - left);
+        const QFontMetrics metrics(m_title.font());
+        const QString text = metrics.elidedText(m_full, Qt::ElideRight, room);
+        const int width = std::min(metrics.horizontalAdvance(text), room);
+        const int x = std::clamp((m_bar.width() - width) / 2, left, std::max(left, right - width));
+        const QSignalBlocker blocker(&m_title);
+        m_placing = true;
+        m_title.setText(text);
+        m_title.setGeometry(x, 0, width, m_bar.height());
+        m_placing = false;
+    }
+
+    void setText(const QString& text) {
+        m_full = text;
+        place();
+    }
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        if (!m_placing &&
+            (event->type() == QEvent::Resize || event->type() == QEvent::LayoutRequest ||
+             (watched == &m_bar && event->type() == QEvent::Show))) {
+            place();
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    QMenuBar& m_bar;
+    QLabel& m_title;
+    QString m_full;
+    bool m_placing{false};
+};
 
 UiBuilder::UiBuilder(SARibbonMainWindow& window, const ActionRegistry& registry)
     : m_window(window), m_registry(registry) {
@@ -411,6 +477,7 @@ void UiBuilder::show(InterfaceKind kind) {
     m_ribbon = nullptr;
     m_applicationButton = nullptr;
     m_title = nullptr;
+    m_titleCentrer = nullptr;
     m_cornerQuickAccess = nullptr;
     m_menuBar = nullptr;
     m_panels.clear();
@@ -599,7 +666,11 @@ void UiBuilder::updateTitle() {
     QString text = m_window.windowTitle();
     text.replace(QStringLiteral("[*]"),
                  m_window.isWindowModified() ? QStringLiteral("*") : QString{});
-    m_title->setText(text);
+    if (m_titleCentrer != nullptr) {
+        m_titleCentrer->setText(text);
+    } else {
+        m_title->setText(text);
+    }
 }
 
 void UiBuilder::styleRibbon() {
@@ -816,14 +887,17 @@ void UiBuilder::buildClassic() {
     // the title and leaves room for the window buttons, which stay where
     // the ribbon had them, and moves the window.
     if (buttons != nullptr) {
+        // The corner keeps the room of the window buttons; the title is
+        // placed by TitleCentrer, in the middle as in the ribbon.
         auto* corner = new QWidget(bar);
-        auto* layout = new QHBoxLayout(corner);
-        layout->setContentsMargins(0, 0, 0, 0);
-        auto* titleLabel = new QLabel(corner);
-        titleLabel->setObjectName(QStringLiteral("classicTitle"));
-        layout->addWidget(titleLabel);
-        layout->addSpacing(buttons->sizeHint().width());
+        corner->setFixedWidth(buttons->sizeHint().width());
         bar->setCornerWidget(corner, Qt::TopRightCorner);
+        auto* titleLabel = new QLabel(bar);
+        titleLabel->setObjectName(QStringLiteral("classicTitle"));
+        titleLabel->setAlignment(Qt::AlignCenter);
+        // Presses on the title move the window, as on the rest of the bar.
+        titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+        m_titleCentrer = new TitleCentrer(*bar, *titleLabel);
         bar->setMinimumHeight(buttons->windowTitleHeight());
         bar->installEventFilter(new FrameForwarder(*bar, m_window));
         m_title = titleLabel;
