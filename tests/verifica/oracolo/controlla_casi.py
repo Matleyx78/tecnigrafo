@@ -312,7 +312,8 @@ def self_test():
         mtext = model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
                                                                "char_height": 2.5,
                                                                "width": 20})
-        dimension = model.add_linear_dim(base=(0, 8), p1=(0, 0), p2=(5, 0))
+        dimension = model.add_linear_dim(base=(0, 8), p1=(0, 0), p2=(5, 0),
+                                         dimstyle="ISO-25")
         dimension.render()
         hatch = model.add_hatch(color=2)
         hatch.paths.add_polyline_path([(0, 0), (5, 0), (5, 5), (0, 5)],
@@ -366,7 +367,7 @@ def self_test():
             solid.dxf.handle: "SOLID vertex=0,0 vertex=2,0 vertex=0,1 vertex=2,1",
             mtext.dxf.handle: ('MTEXT insertion=0,5 height=2.5 width=20 attachment=top-left '
                                'rotation=0 style="Standard" value="first\\\\Psecond"'),
-            dimension.dimension.dxf.handle: ('DIMENSION kind=linear style="Standard" '
+            dimension.dimension.dxf.handle: ('DIMENSION kind=linear style="ISO-25" '
                                               'origin1=0,0 origin2=5,0 line-point=0,8 rotation=0 '
                                               'text-point=2.5,8.625 measurement=5'),
             hatch.dxf.handle: ('HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal '
