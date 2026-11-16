@@ -312,7 +312,7 @@ def self_test():
         hatch.paths.add_polyline_path([(0, 0), (5, 0), (5, 5), (0, 5)],
                                       is_closed=True)
         document.saveas(stage)
-        stage_answers = DrawingAnswers(stage)
+        stage_answers = DrawingAnswers(stage, set())
         solid_answers = DrawingAnswers(stage, {"SOLID"})
         require("SOLID 1" not in stage_answers.answer("count"),
                 "inactive stage SOLID is not managed")
@@ -326,6 +326,21 @@ def self_test():
                 "other stage types remain unhandled")
         require("HATCH 1" in solid_answers.answer("unhandled"),
                 "other stage types remain unhandled")
+
+        insert_answers = DrawingAnswers(stage, {"ATTRIB", "INSERT"})
+        for question in ("count", "unhandled"):
+            require("ATTRIB" not in stage_answers.answer(question),
+                    f"inactive linked ATTRIB is absent from {question}")
+        require("ATTRIB 1" in insert_answers.answer("count"),
+                "active linked ATTRIB is managed")
+        require("ATTRIB" not in insert_answers.answer("unhandled"),
+                "active managed ATTRIB is not unhandled")
+        attribute_handle = insert.attribs[0].dxf.handle
+        require(stage_answers.answer("entity", attribute_handle).startswith("ATTRIB owner="),
+                "inactive linked ATTRIB keeps its entity answer")
+        require(stage_answers.answer("entity", attribute_handle) ==
+                insert_answers.answer("entity", attribute_handle),
+                "activating ATTRIB must not change its entity answer")
 
         unchanged_questions = ("version", "units", "layers", "linetypes", "blocks",
                                "styles", "dimstyles")
@@ -347,6 +362,14 @@ def self_test():
                 "INSERT virtual entities")
         require(stage_answers.answer("generated", dimension.dimension.dxf.handle) != "none",
                 "DIMENSION virtual entities")
+
+        insert.attribs[0].dxf.extrusion = (1, 0, 0)
+        document.saveas(stage)
+        unsupported_attribute_answers = DrawingAnswers(stage, {"ATTRIB", "INSERT"})
+        require("ATTRIB 1" in unsupported_attribute_answers.answer("unhandled"),
+                "active unsupported linked ATTRIB is unhandled")
+        require("ATTRIB" not in unsupported_attribute_answers.answer("count"),
+                "active unsupported linked ATTRIB is not managed")
 
         # The original owner, paper-space flag and degenerate values must survive
         # ezdxf's document layout binding and affect classification.

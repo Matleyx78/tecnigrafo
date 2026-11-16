@@ -50,7 +50,9 @@ types are reported as `kind=other` rather than discarded.
 An explicit stage declaration in `ezdxf_attesi.py` records which of those
 types Tecnigrafo currently handles. It affects only `count` and `unhandled`;
 it is not read from Tecnigrafo, and the oracle never runs or links to the
-application.
+application. Linked `ATTRIB` entities remain inside the raw `INSERT` and are
+absent from both counts until `ATTRIB` is active; then they appear in `count`,
+or in `unhandled` if unsupported. Their `entity` answers are always available.
 
 Layer rows contain color, linetype and lineweight, then active states in order:
 `off frozen locked noplot`. Linetype rows contain the signed group-49 pattern

@@ -365,6 +365,11 @@ class DrawingAnswers:
             if handle is None:
                 raise ValueError("oracle entities require an explicit DXF handle")
             self.entities[handle.upper()] = (entity, managed(entity, model_owner))
+        self.linked_attribute_handles = {
+            attrib.dxf.handle.upper()
+            for entity, _ in self.entities.values() if entity.dxftype() == "INSERT"
+            for attrib in self.bound_entities[entity.dxf.handle].attribs
+        }
         self.blocks = []
         for block in self.document.blocks:
             name = block.name
@@ -394,8 +399,11 @@ class DrawingAnswers:
                 return supported and (kind not in STAGE_08_ENTITY_TYPES
                                       or kind in self.active_stage_08_types)
 
-            counts = Counter(e.dxftype() for e, supported in self.entities.values()
-                             if counted_as_managed(e, supported) == (question == "count"))
+            # Inactive linked attributes stay inside Tecnigrafo's raw INSERT.
+            counts = Counter(e.dxftype() for handle, (e, supported) in self.entities.items()
+                             if not (handle in self.linked_attribute_handles
+                                     and "ATTRIB" not in self.active_stage_08_types)
+                             and counted_as_managed(e, supported) == (question == "count"))
             return "; ".join(f"{kind} {count}" for kind, count in sorted(counts.items())) or "none"
         if question == "layers":
             return "; ".join(layer_answer(entry) for entry in self.layers) or "none"
