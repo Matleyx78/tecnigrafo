@@ -1,0 +1,31 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; MTEXT: Height, Justify MC e Width al posto dell'angolo opposto; ogni opzione torna alla
+; richiesta dell'angolo opposto; il MTEXT dopo propone l'ultima altezza usata e torna
+; all'allineamento TL ([0.8-RT15], lavoro #691).
+; Richieste dalla scheda PT15 (punti 1-3). Quella di Justify, che la scheda non scrive, è
+; quella inglese di AutoCAD; la cronologia di AutoCAD 2021 autocad-testo-multiriga.txt
+; (Matleyx78/dxf-test-file, commit 1ad04b0b8a568fb9dd4960719a8f17289129f788) ha
+; «Immettere la giustificazione [AS/AC/AD/MS/MC/MD/BS/BC/BD] <AS>:», con <AS> (TL) anche
+; dopo un MTEXT con un altro allineamento.
+; Altezza: lo stile Standard non ha altezza fissa, quindi l'ultima usata (scheda PT15).
+; Primo testo: inserimento 100,50, larghezza 40 scritta, middle-center, altezza 4.
+; Secondo: larghezza |30 - 0| = 30, top-left, altezza 4.
+MTEXT
+100,50
+H
+4
+J
+MC
+W
+40
+Centro
+
+MTEXT
+0,0
+J
+TL
+30,-10
+Dopo
+

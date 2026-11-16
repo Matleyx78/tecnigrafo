@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; Paragraph and formatting expectations are explicit plain strings.
+Paragraphs = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\P\\PB\\P"
+? generated Paragraphs -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=0,-1.308019872249823;0.9694819020581973,-1.308019872249823;0.9694819020581973,0.3158268275372604;0,0.3158268275372604; TEXT position=0,-4.333333333333333 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" ~box=0,-4.641353205583155;0.9694819020581973,-4.641353205583155;0.9694819020581973,-3.017506505796073;0,-3.017506505796073
+Groups = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="{A{\\LBC\\l}D}"
+? generated Groups -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ABCD" ~box=0,-1.308019872249823;4.038325053229241,-1.308019872249823;4.038325053229241,0.3158268275372604;0,0.3158268275372604
+Escapes = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="\\\\\\{\\}"
+? generated Escapes -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="\\{}" ~box=0,-1.308019872249823;1.374733853797019,-1.308019872249823;1.374733853797019,0.3158268275372604;0,0.3158268275372604
+Unicode = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="\\U+00E9\\U+03A9\\U+2300"
+? generated Unicode -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="éΩ⌀" ~box=0,-1.308019872249823;3.02555003548616,-1.308019872249823;3.02555003548616,0.3158268275372604;0,0.3158268275372604
+Percent = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="%%c %%d %%p %%%"
+? generated Percent -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="⌀ ° ± %" ~box=0,-1.308019872249823;5.013484740951029,-1.308019872249823;5.013484740951029,0.3158268275372604;0,0.3158268275372604
+Toggles = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="\\LA\\l\\OB\\o\\KC\\k"
+? generated Toggles -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ABC" ~box=0,-1.308019872249823;2.988644428672818,-1.308019872249823;2.988644428672818,0.3158268275372604;0,0.3158268275372604
+Arguments = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\fArial;B\\FArial;C\\H2;D\\W2;E\\Q30;F\\T2;G\\A1;H\\C1;I\\c255;J\\px1;K"
+? generated Arguments -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ABCDEFGHIJK" ~box=0,-1.308019872249823;10.17601135557133,-1.308019872249823;10.17601135557133,0.3158268275372604;0,0.3158268275372604
+Stacks = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="\\S1^2; \\S3#4; \\S5/6;"
+? generated Stacks -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="1/2 3/4 5/6" ~box=0,-1.308019872249823;6.869410929737402,-1.308019872249823;6.869410929737402,0.3158268275372604;0,0.3158268275372604

@@ -244,6 +244,11 @@ public:
     /// goes through its switch, as before (docs/adr/0033, point 9).
     void setPolar(bool on);
 
+    /// Sets object snap tracking silently, as !otrack does (docs/adr/0049,
+    /// point 7). The window keeps it, so that the runner of every session
+    /// it shows gets it with the other switches.
+    void setTracking(bool on);
+
     void setTheme(Theme theme);
 
     [[nodiscard]] Theme theme() const { return m_theme; }
@@ -462,6 +467,8 @@ private:
     bool m_restoringUi{false};
     bool m_scriptMode{false};
     bool m_silentPolar{false};
+    /// Object snap tracking, off in a new session (docs/adr/0049, point 1).
+    bool m_tracking{false};
     bool m_externalFiles{false};
     bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};

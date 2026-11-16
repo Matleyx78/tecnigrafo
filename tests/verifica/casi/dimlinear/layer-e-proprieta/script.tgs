@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMLINEAR (PT26, #713): the dimension takes the current dimension style
+; (ISO-25 in a new session), the current layer and the current color.
+; The layer record takes handle 257, as in layer/creazione-e-corrente.
+; Values by hand from PT23 with ISO-25, as in
+; dimlinear/punti-direzione-automatica.
+-LAYER
+Make
+Quote
+
+COLOR
+red
+DIMLINEAR
+0,0
+40,0
+20,10

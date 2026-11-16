@@ -1,5 +1,0 @@
-otrack/pareggio-guida-e-distanza #729
-otrack/incroci-e-ordine #729
-otrack/polare-e-priorita #729
-otrack/distanze-al-quadrato #729
-otrack/acquisizione-e-azzeramento #729

@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; MTEXT: Line spacing Exactly 1.5x e Esc prima del testo non crea nulla, ma l'interlinea
+; resta corrente (decisione del 2026-11-13, punto 6); il MTEXT dopo, senza l'opzione, è a
+; Exactly 1.5, e Esc dopo una riga conserva il testo con quell'interlinea
+; ([0.8-RT15], lavoro #691). Richieste di Line spacing come in
+; mtext/comando-interlinea-resta. Larghezza |40 - 0| = 40, altezza 2.5, allineamento TL.
+MTEXT
+0,0
+L
+E
+1.5x
+!esc
+!report
+MTEXT
+0,0
+40,-10
+Uno
+!esc

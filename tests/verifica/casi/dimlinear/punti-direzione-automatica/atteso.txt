@@ -1,0 +1,45 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,30 line-point=40,40 rotation=0 text-point=20,41.875 measurement=40 ~text="40"
+  264 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,30 line-point=40,-10 rotation=0 text-point=20,-8.125 measurement=40 ~text="40"
+  271 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,30 line-point=50,30 rotation=90 text-point=48.125,15 measurement=30 ~text="30"
+  278 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,30 line-point=-10,30 rotation=90 text-point=-11.875,15 measurement=30 ~text="30"
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,30
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,40
+  Dimension text = 40
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,30
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,-10
+  Dimension text = 40
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,30
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 50,15
+  Dimension text = 30
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,30
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: -10,15
+  Dimension text = 30
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  DIMLINEAR
+  DIMLINEAR
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 4

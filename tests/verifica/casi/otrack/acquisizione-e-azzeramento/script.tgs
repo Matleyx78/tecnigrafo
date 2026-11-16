@@ -30,8 +30,8 @@ LINE
 !report
 !hover 70,0
 !report
-!click 5,20
-!move 6,20
+!click -15,20
+!move 12,30
 !report
 !hover 0,0
 !esc

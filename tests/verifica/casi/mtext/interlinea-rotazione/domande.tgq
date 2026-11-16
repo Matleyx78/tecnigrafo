@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; h=3, spacing=1.5 gives baseline distance 7.5 for either spacing style.
+AtLeast = MTEXT insertion=10,20 height=3 width=0 attachment=top-left rotation=0 style="Standard" line-spacing=1.5 value="A\\PB"
+? generated AtLeast -> TEXT position=10,17 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=10,16.07594038325053;12.90844570617459,16.07594038325053;12.90844570617459,20.94748048261178;10,20.94748048261178; TEXT position=10,9.5 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" ~box=10,8.575940383250533;12.90844570617459,8.575940383250533;12.90844570617459,13.44748048261178;10,13.44748048261178
+Exactly = MTEXT insertion=10,20 height=3 width=0 attachment=top-left rotation=0 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="A\\PB"
+? generated Exactly -> TEXT position=10,17 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=10,16.07594038325053;12.90844570617459,16.07594038325053;12.90844570617459,20.94748048261178;10,20.94748048261178; TEXT position=10,9.5 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" ~box=10,8.575940383250533;12.90844570617459,8.575940383250533;12.90844570617459,13.44748048261178;10,13.44748048261178
+; Rotation 30 degrees: x'=10+sqrt(3)/2*x-y/2, y'=20+x/2+sqrt(3)/2*y.
+Rotated = MTEXT insertion=10,20 height=3 width=0 attachment=top-left rotation=30 style="Standard" value="A\\PB"
+? generated Rotated -> TEXT position=11.5,17.40192378864668 alignment-point=0,0 height=3 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=11.96202980837473,16.60166468593033;14.4808176754497,18.05588753901763;12.04504762576908,22.27476502061904;9.52625975869411,20.82054216753174; TEXT position=14,13.07179676972449 alignment-point=0,0 height=3 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" ~box=14.46202980837473,12.27153766700814;16.9808176754497,13.72576052009544;14.54504762576908,17.94463800169684;12.02625975869411,16.49041514860955

@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; Explicit line breaks from advance sums, not a second wrapping algorithm.
+Unbounded = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A B C"
+? generated Unbounded -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A B C" ~box=0,-1.308019872249823;3.796309439318666,-1.308019872249823;3.796309439318666,0.3158268275372604;0,0.3158268275372604
+Wrap = MTEXT insertion=0,0 height=1 width=3 attachment=top-left rotation=0 style="Standard" value="A B C"
+? generated Wrap -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A B" ~box=0,-1.308019872249823;2.342796309439318,-1.308019872249823;2.342796309439318,0.3158268275372604;0,0.3158268275372604; TEXT position=0,-2.666666666666667 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="C" ~box=0,-2.974686538916489;1.049680624556423,-2.974686538916489;1.049680624556423,-1.350839839129406;0,-1.350839839129406
+LongWord = MTEXT insertion=0,0 height=1 width=2.5 attachment=top-left rotation=0 style="Standard" value="AAAA B CC"
+? generated LongWord -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="AAAA" ~box=0,-1.308019872249823;3.877927608232789,-1.308019872249823;3.877927608232789,0.3158268275372604;0,0.3158268275372604; TEXT position=0,-2.666666666666667 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" ~box=0,-2.974686538916489;0.9694819020581973,-2.974686538916489;0.9694819020581973,-1.350839839129406;0,-1.350839839129406; TEXT position=0,-4.333333333333333 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="CC" ~box=0,-4.641353205583155;2.099361249112846,-4.641353205583155;2.099361249112846,-3.017506505796073;0,-3.017506505796073
+NoBreak = MTEXT insertion=0,0 height=1409 width=3301 attachment=top-left rotation=0 style="Standard" value="A\\~B C"
+? generated NoBreak -> TEXT position=0,-1409 alignment-point=0,0 height=1409 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A B" ~box=0,-1843;3301,-1843;3301,445;0,445; TEXT position=0,-3757.333333333333 alignment-point=0,0 height=1409 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="C" ~box=0,-4191.333333333334;1479,-4191.333333333334;1479,-1903.333333333333;0,-1903.333333333333
+NoBreakNarrow = MTEXT insertion=0,0 height=1 width=1.5 attachment=top-left rotation=0 style="Standard" value="A\\~B C"
+? generated NoBreakNarrow -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A B" ~box=0,-1.308019872249823;2.342796309439318,-1.308019872249823;2.342796309439318,0.3158268275372604;0,0.3158268275372604; TEXT position=0,-2.666666666666667 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="C" ~box=0,-2.974686538916489;1.049680624556423,-2.974686538916489;1.049680624556423,-1.350839839129406;0,-1.350839839129406
+ExactFit = MTEXT insertion=0,0 height=1409 width=3301 attachment=top-left rotation=0 style="Standard" value="A B"
+? generated ExactFit -> TEXT position=0,-1409 alignment-point=0,0 height=1409 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A B" ~box=0,-1843;3301,-1843;3301,445;0,445
+; At height 1409: width("A B")=1366+569+1366=3301 exactly.

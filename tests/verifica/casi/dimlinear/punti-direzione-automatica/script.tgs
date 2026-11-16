@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMLINEAR with typed points: the direction follows where the dimension line
+; location is with respect to the rectangle of the two origins (PT26, #713):
+; above and below give a horizontal dimension, right and left a vertical one.
+; Prompts from autocad-quote.txt (dxf-test-file 1ad04b0), in English.
+; Values by hand from PT23 with ISO-25: line-point is the foot of the second
+; origin, as AutoCAD writes group 10 (autocad-quote.dxf, handles 93 and A1);
+; text-point is the text centre, DIMGAP + DIMTXT/2 = 1.875 above the line.
+; Every dimension has six graphics records (three lines, two arrows, the
+; text): the editor numbers them after the dimension, as AutoCAD does.
+DIMLINEAR
+0,0
+40,30
+20,40
+DIMLINEAR
+0,0
+40,30
+20,-10
+DIMLINEAR
+0,0
+40,30
+50,15
+DIMLINEAR
+0,0
+40,30
+-10,15

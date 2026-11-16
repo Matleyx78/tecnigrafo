@@ -1978,3 +1978,15 @@ i rimandi ai documenti che cambia.
   1, `DIMTOH` 1, `DIMTXT` 0,18 e `DIMZIN` 0), mentre per le altre variabili
   vale `ISO-25`. PT3 e PT22 applicano la regola nella PR #794, sempre con
   revisione nel giro normale.
+- **2026-11-16 — Ripartizione delle verifiche dei retini di PT30.** Durante
+  RT30 ([#720](https://github.com/Matleyx78/tecnigrafo/issues/720)) emerge che
+  il formato di controllo attuale espone contorni, regione piena, selezione,
+  snap, grip, ingombro e le trasformazioni dei campi pubblicati, ma non le
+  famiglie `PatternLine` né `$MEASUREMENT`, necessario per interrogare il
+  generatore dei motivi predefiniti nelle due unità. Il responsabile assegna
+  quindi a RT30 soltanto i comportamenti osservabili dal formato attuale e
+  mantiene obbligatori in `hatch_test.cpp` di
+  [PT30](tappe/0.8/PT30-retini-core.md) tutti i test delle famiglie
+  `PatternLine` e dei motivi predefiniti. Non si aggiungono formati, domande o
+  dipendenze. Scartata l'estensione del sistema di verifica per esporre quei
+  dati: anticiperebbe lavoro fuori dal perimetro di RT30.

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+# RT13: multiline text model and layout, implemented by PT13.
+mtext/codici-semplici #687
+mtext/codici-letterali #687
+mtext/a-capo #687
+mtext/nove-allineamenti #687
+mtext/interlinea-rotazione #687
+mtext/vuoto-e-selezione #687
+mtext/trasformazioni-grip #687
+mtext/proprieta-e-stile-mancante #687

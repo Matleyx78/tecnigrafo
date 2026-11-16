@@ -323,6 +323,40 @@ TEST(RunLevel1, OrthoDirective) {
     expectContains(section(report, "final"), "snap: off\northo: on\n");
 }
 
+// Object snap tracking (docs/adr/0049, points 7 and 8): !otrack switches it
+// without a message, !hover acquires and releases, !move never acquires, and
+// the report lists the state, the points and the guide only when they differ
+// from a new session.
+TEST(RunLevel1, HoverAcquiresAndTheReportShowsTheTracking) {
+    const std::string drawn = "!osnap end\nLINE\n-100,0\n0,0\n\nLINE\n";
+    std::string report = reportOf(drawn + "!hover 0,0\n!move 8,8\n");
+    expectContains(report, "pointer: 8,8\nactive snap: none\nstatistics:\n");
+    EXPECT_EQ(report.find("tracking"), std::string::npos);
+
+    report = reportOf("!otrack on\n" + drawn + "!move 0,0\n!move 8,8\n");
+    expectContains(report, "pointer: 8,8\nactive snap: none\ntracking: on\nstatistics:\n");
+    EXPECT_EQ(report.find('<'), std::string::npos);  // no message in the history
+
+    report = reportOf("!otrack on\n" + drawn + "!hover 0,0\n!move 8,8\n");
+    expectContains(report,
+                   "pointer: 8,8\nactive snap: none\ntracking: on\nacquired:\n  0,0\n"
+                   "active tracking: Horizontal 8,0 from 0,0\nstatistics:\n");
+    expectContains(reportOf("!otrack on\n" + drawn + "!hover 0,0\n!move 7,8\n"),
+                   "active tracking: Vertical 0,8 from 0,0\n");
+    expectContains(reportOf("!otrack on\n" + drawn + "!hover 0,0\n!hover 0,0\n!move 8,8\n"),
+                   "active snap: none\ntracking: on\nstatistics:\n");
+    expectContains(reportOf("!otrack on\n" + drawn + "!hover 0,0\n!otrack off\n!move 8,8\n"),
+                   "pointer: 8,8\nactive snap: none\nstatistics:\n");
+}
+
+TEST(RunLevel1, TheReportShowsACrossingAndAPolarCrossing) {
+    const std::string drawn = "!otrack on\n!osnap end\nLINE\n0,0\n18,18\n\n";
+    expectContains(reportOf(drawn + "LINE\n!hover 0,0\n!hover 18,18\n!move 9,9\n"),
+                   "acquired:\n  0,0\n  18,18\nactive tracking: Crossing 0,18\n");
+    expectContains(reportOf(drawn + "!polar on\nLINE\n-20,4\n!hover 18,18\n!move 16,6\n"),
+                   "acquired:\n  18,18\nactive tracking: Polar crossing 18,4\n");
+}
+
 TEST(RunLevel1, UndoAndRedoNamesInOrder) {
     const std::string report =
         reportOf("PLINE\n0,0\n10,0\n\nPLINE\n0,5\n10,5\n\n!click 5,0\nERASE\nU\n");

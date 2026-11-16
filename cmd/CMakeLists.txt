@@ -37,6 +37,7 @@ add_library(tg_cmd
     src/drawing_session.cpp
     src/dynamic_input.cpp
     src/name_list.cpp
+    src/object_tracking.cpp
     src/quick_select.cpp
     src/selection_set.cpp
     src/value_format.cpp

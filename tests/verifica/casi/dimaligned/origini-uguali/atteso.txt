@@ -1,0 +1,41 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: DIMALIGNED
+  Specify first extension line origin or <select object>: 10,10
+  Specify second extension line origin: 10,10
+  Points coincide.
+prompt: Specify second extension line origin:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 DIMENSION kind=aligned style="ISO-25" origin1=10,10 origin2=40,50 line-point=32,56 text-point=15.5,37.125 measurement=50 ~text="50"
+messages:
+  Specify second extension line origin: 40,50
+  Specify dimension line location or [Text/Angle]: 2,16
+  Dimension text = 50
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMALIGNED
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
