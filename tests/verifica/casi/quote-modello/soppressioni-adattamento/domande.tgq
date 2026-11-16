@@ -9,9 +9,9 @@
 
 ; L=8, a=2, text width plus gaps is between 6 and 7: case 2.
 ; The surviving arrow must stay outside after suppressing its partner.
-Suppress1 = DIMENSION kind=linear origin1=0,-10 origin2=8,-10 line-point=8,0 rotation=0 text-point=0,0 measurement=0 text="MMMMMM" overrides=DIMASZ:2,DIMSD1:1,DIMTXT:1
+Suppress1 = DIMENSION kind=linear origin1=0,-10 origin2=8,-10 line-point=8,0 rotation=0 text-point=0,0 measurement=0 text="MMMM" overrides=DIMASZ:2,DIMSD1:1,DIMTXT:1
 ? distance Suppress1 -1,0.05 -> 1
 ? distance Suppress1 9,0.05 -> 0
-Suppress2 = DIMENSION kind=linear origin1=0,-10 origin2=8,-10 line-point=8,0 rotation=0 text-point=0,0 measurement=0 text="MMMMMM" overrides=DIMASZ:2,DIMSD2:1,DIMTXT:1
+Suppress2 = DIMENSION kind=linear origin1=0,-10 origin2=8,-10 line-point=8,0 rotation=0 text-point=0,0 measurement=0 text="MMMM" overrides=DIMASZ:2,DIMSD2:1,DIMTXT:1
 ? distance Suppress2 -1,0.05 -> 0
 ? distance Suppress2 9,0.05 -> 1
