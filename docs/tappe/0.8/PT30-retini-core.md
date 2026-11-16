@@ -188,6 +188,13 @@
     con bulge 0;
   - un cerchio `circle=5,4;2` da solo: `isClosed` vero con `ToleranceRule{4}`
     e `ToleranceRule{6}`;
+  - lati oltre il dominio di solid-space (2^50, circa 1.13e15; ADR 0035,
+    punto 23), con estremi che coincidono esattamente, così che solo il
+    dominio li lascia aperti: `line=0,0;2e15,0 line=2e15,0;0,0` (una
+    coordinata oltre) e `arc=-1e15,-1e15;1.2e15;0;90 line=-1e15,2e14;2e14,-1e15`
+    (il raggio oltre, gli estremi dentro): `supported` vero, `isClosed` falso
+    con `ToleranceRule{4}`, senza arrestarsi in Debug (nessuna precondizione
+    di `ToleranceRule::coincident` violata) e senza infiniti né NaN;
 - **test unitari obbligatori in `hatch_test.cpp`** per la polilinea di un
   contorno a lati (punto 3):
   - il cerchio `circle=5,4;2`: `vertex=7,4 bulge=1 vertex=3,4 bulge=1`;
