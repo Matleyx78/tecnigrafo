@@ -1961,4 +1961,13 @@ i rimandi ai documenti che cambia.
   [PT18](tappe/0.8/PT18-blocchi-dxf.md), [PT25](tappe/0.8/PT25-quote-dxf.md),
   [PT31](tappe/0.8/PT31-retini-dxf.md) e [PT48](tappe/0.8/PT48-ellisse.md),
   secondo la decisione in [#675](https://github.com/Matleyx78/tecnigrafo/issues/675).
-  Gli `ATTRIB` collegati restano nell’`INSERT` grezzo e fuori da `count` e `unhandled` finché `ATTRIB` non è attivo; poi compaiono in `count`, o in `unhandled` se non gestiti; le altre risposte restano invariate e i casi restano come su `main` fino a PT18: scheda e self-test corretti nella PR #794 e rivisti nel giro normale, senza PR separata, per eccezione del responsabile alla guida B10a.
+  Gli `ATTRIB` collegati restano nell’`INSERT` grezzo e fuori da `count` e
+  `unhandled` finché `ATTRIB` non è attivo; poi compaiono in `count`, o in
+  `unhandled` se non gestiti; le altre risposte restano invariate e i casi
+  restano come su `main` fino a PT18: scheda e self-test corretti nella PR
+  #794 e rivisti nel giro normale, senza PR separata, per eccezione del
+  responsabile alla guida B10a. Nella stessa PR, `generated` scrive una
+  risposta solo quando tutte le entità date da `virtual_entities()` sono
+  forme; altrimenti scrive un commento `outside oracle scope` con i tipi non
+  forma. Anche questa decisione corregge scheda e self-test nella PR #794 e
+  viene rivista nel giro normale per la stessa eccezione.

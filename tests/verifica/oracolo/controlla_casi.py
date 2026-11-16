@@ -16,7 +16,8 @@ import zipfile
 
 import ezdxf
 from ezdxf.entities import factory
-from ezdxf_attesi import DrawingAnswers, aci_answer, print_standard_answers
+from ezdxf_attesi import (DIMSTYLE_FIELDS, DrawingAnswers, aci_answer,
+                          entity_answer, print_standard_answers)
 
 
 # Quoted text is indivisible: digits inside a text value are never approximate.
@@ -294,18 +295,24 @@ def self_test():
 
         # A drawing written by ezdxf exercises every stage 0.8 answer family.
         stage = root / "stage-0.8.dxf"
-        document = ezdxf.new("R2018", setup=True)
-        document.dimstyles.new("ISO-25")
+        document = ezdxf.new("R2018")
+        iso_baseline = ezdxf.new("R2018", setup=True).dimstyles.get("ISO-25")
+        for name in DIMSTYLE_FIELDS:
+            document.dimstyles.get("Standard").dxf.set(name, iso_baseline.dxf.get(name))
+        document.dimstyles.new("ISO-25", dxfattribs={
+            name: iso_baseline.dxf.get(name) for name in DIMSTYLE_FIELDS
+        })
         block = document.blocks.new("TAGGED", base_point=(1, 2))
-        block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
-        block.add_line((0, 0), (4, 0))
+        attdef = block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
+        block_line = block.add_line((0, 0), (4, 0), dxfattribs={"color": 0})
         model = document.modelspace()
         insert = model.add_blockref("TAGGED", (10, 20))
         insert.add_attrib("CODE", "A1", insert=(10, 20), dxfattribs={"height": 1.8})
-        model.add_solid([(0, 0), (2, 0), (0, 1), (2, 1)])
-        model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
-                                                        "char_height": 2.5,
-                                                        "width": 20})
+        insert.dxf.color = 3
+        solid = model.add_solid([(0, 0), (2, 0), (0, 1), (2, 1)])
+        mtext = model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
+                                                               "char_height": 2.5,
+                                                               "width": 20})
         dimension = model.add_linear_dim(base=(0, 8), p1=(0, 0), p2=(5, 0))
         dimension.render()
         hatch = model.add_hatch(color=2)
@@ -355,13 +362,48 @@ def self_test():
                 require(stage_answers.answer("generated", handle) ==
                         solid_answers.answer("generated", handle),
                         "activating SOLID must not change generated answers")
-        require('"TAGGED" base=1,2' in stage_answers.answer("blocks"), "block rows")
-        require('"Standard"' in stage_answers.answer("styles"), "STYLE rows")
-        require('"ISO-25"' in stage_answers.answer("dimstyles"), "DIMSTYLE rows")
-        require(stage_answers.answer("generated", insert.dxf.handle) != "none",
-                "INSERT virtual entities")
-        require(stage_answers.answer("generated", dimension.dimension.dxf.handle) != "none",
-                "DIMENSION virtual entities")
+        attribute = insert.attribs[0]
+        expected_entities = {
+            solid.dxf.handle: "SOLID vertex=0,0 vertex=2,0 vertex=0,1 vertex=2,1",
+            mtext.dxf.handle: ('MTEXT insertion=0,5 height=2.5 width=20 attachment=top-left '
+                               'rotation=0 style="Standard" value="first\\\\Psecond"'),
+            dimension.dimension.dxf.handle: ('DIMENSION kind=linear style="Standard" '
+                                              'origin1=0,0 origin2=5,0 line-point=0,8 rotation=0 '
+                                              'text-point=2.5,8.625 measurement=5'),
+            hatch.dxf.handle: ('HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal '
+                               'loop=external+polyline vertex=0,0 vertex=5,0 vertex=5,5 '
+                               'vertex=0,5'),
+            attribute.dxf.handle: (f'ATTRIB owner={insert.dxf.handle} position=10,20 '
+                                   'alignment-point=0,0 height=1.8 rotation=0 width-factor=1 '
+                                   'oblique=0 style="Standard" mirror-x=no mirror-y=no '
+                                   'horizontal=left vertical=baseline value="A1" tag="CODE"'),
+        }
+        for handle, expected in expected_entities.items():
+            require(stage_answers.answer("entity", handle) == expected,
+                    f"complete {expected.split()[0]} entity answer")
+        expected_attdef = ('ATTDEF position=0,0 alignment-point=0,0 height=1.8 rotation=0 '
+                           'width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no '
+                           'horizontal=left vertical=baseline value="N" tag="CODE" prompt=""')
+        require(entity_answer(attdef) == expected_attdef, "complete ATTDEF entity answer")
+        expected_blocks = (f'"TAGGED" base=1,2; "TAGGED" {attdef.dxf.handle} {expected_attdef}; '
+                           f'"TAGGED" {block_line.dxf.handle} LINE start=0,0 end=4,0 color=byblock')
+        require(stage_answers.answer("blocks") == expected_blocks, "complete block rows")
+        require(stage_answers.answer("styles") ==
+                '"Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no',
+                "complete STYLE rows")
+        require(stage_answers.answer("dimstyles") == '"Standard"; "ISO-25"',
+                "complete DIMSTYLE rows")
+        require(stage_answers.answer("generated", insert.dxf.handle) ==
+                "LINE start=9,18 end=13,18 color=0,255,0",
+                "complete INSERT generated answer with effective properties")
+        require(stage_answers.answer("generated", dimension.dimension.dxf.handle) == "none",
+                "out-of-scope DIMENSION has no generated answer")
+        with redirect_stdout(io.StringIO()) as generated_log:
+            stage_answers.print_answers()
+        outside = (f"; generated {dimension.dimension.dxf.handle}: "
+                   "outside oracle scope (MTEXT,POINT)")
+        require(outside in generated_log.getvalue().splitlines(),
+                "complete outside-oracle-scope log row")
 
         insert.attribs[0].dxf.extrusion = (1, 0, 0)
         document.saveas(stage)

@@ -103,11 +103,11 @@ def style_answer(style):
             f"backwards={'yes' if flags & 2 else 'no'} upside-down={'yes' if flags & 4 else 'no'}")
 
 
-DIMSTYLE_FIELDS = ("dimscale", "dimasz", "dimexo", "dimexe", "dimtxt", "dimgap",
+DIMSTYLE_FIELDS = tuple(sorted(("dimscale", "dimasz", "dimexo", "dimexe", "dimtxt", "dimgap",
                    "dimtad", "dimtih", "dimtoh", "dimdec", "dimadec", "dimdsep",
                    "dimzin", "dimazin", "dimlfac", "dimrnd", "dimpost", "dimtxsty",
                    "dimcen", "dimse1", "dimse2", "dimsd1", "dimsd2", "dimclrd",
-                   "dimclre", "dimclrt", "dimlwd", "dimlwe")
+                   "dimclre", "dimclrt", "dimlwd", "dimlwe")))
 
 
 def dimstyle_answer(style, baseline=None):
@@ -202,7 +202,7 @@ def hatch_loop(path):
     return fields
 
 
-def entity_answer(entity, layer_names=None, linetype_names=None):
+def entity_answer(entity, layer_names=None, linetype_names=None, properties=True):
     d = entity.dxf
     kind = entity.dxftype()
     fields = [kind]
@@ -270,13 +270,17 @@ def entity_answer(entity, layer_names=None, linetype_names=None):
         flags = d.get("flags", 0)
         for bit, name in ((1, "invisible"), (2, "constant"), (4, "verify"), (8, "preset")):
             if flags & bit and (kind == "ATTDEF" or name == "invisible"): add(name, "yes")
+        if kind == "ATTRIB":
+            alignment = d.get("align_point", (0, 0, 0))
+            optional("z", d.insert.z)
+            optional("alignment-z", tuple(alignment)[2])
     elif kind == "INSERT":
         add("block", quoted(d.name)); add("insertion", point(d.insert))
         add("scale", point((d.get("xscale", 1), d.get("yscale", 1))))
         add("rotation", number(d.get("rotation", 0)))
     elif kind == "DIMENSION":
         raw = d.get("dimtype", 0) & 7
-        names = {0: "linear", 1: "aligned", 2: "angular", 3: "diameter", 4: "radius", 5: "angular"}
+        names = {0: "linear", 1: "aligned", 2: "angular", 3: "diameter", 4: "radius"}
         dimkind = names.get(raw, "other"); add("kind", dimkind); add("style", quoted(d.get("dimstyle", "Standard")))
         if dimkind in {"linear", "aligned"}:
             add("origin1", point(d.defpoint2)); add("origin2", point(d.defpoint3)); add("line-point", point(d.defpoint))
@@ -291,6 +295,16 @@ def entity_answer(entity, layer_names=None, linetype_names=None):
         if d.get("text", ""): add("text", quoted(d.text))
         optional("text-rotation", d.get("text_rotation", 0))
         if d.get("dimtype", 0) & 128: add("user-text-position", "yes")
+        if entity.doc is not None:
+            overrides = entity.override().dimstyle_attribs
+            written = []
+            for name in DIMSTYLE_FIELDS:
+                if name in overrides:
+                    value = overrides[name]
+                    value = quoted(value) if isinstance(value, str) else number(value)
+                    written.append(f"{name.upper()}:{value}")
+            if written:
+                add("overrides", ",".join(written))
     elif kind == "HATCH":
         add("pattern", quoted(d.pattern_name)); add("solid", "yes" if d.solid_fill else "no")
         add("angle", number(d.get("pattern_angle", 0))); add("scale", number(d.get("pattern_scale", 1)))
@@ -304,6 +318,8 @@ def entity_answer(entity, layer_names=None, linetype_names=None):
     fields.extend(extra)
     if extrusion != (0, 0, 1):
         add("extrusion", point(extrusion, 3))
+    if not properties:
+        return " ".join(fields)
     layer = d.get("layer", "0")
     layer = (layer_names or {}).get(layer.casefold(), layer)
     if layer.casefold() != "0":
@@ -330,6 +346,8 @@ class DrawingAnswers:
                                       if active_stage_08_types is None
                                       else frozenset(active_stage_08_types))
         self.document = ezdxf.readfile(path)
+        fresh_document = ezdxf.new("R2018", setup=True)
+        self.iso_25_baseline = fresh_document.dimstyles.get("ISO-25")
         model_owner = self.document.modelspace().block_record_handle
         # ezdxf binds ENTITIES to layouts and may replace their owner/paper-space
         # flags. Load the original entity tags independently so that classification
@@ -414,14 +432,20 @@ class DrawingAnswers:
         if question == "styles":
             return "; ".join(style_answer(entry) for entry in self.styles) or "none"
         if question == "dimstyles":
-            baseline = next((entry for entry in self.dimstyles
-                             if entry.dxf.name.casefold() == "iso-25"), None)
-            return "; ".join(dimstyle_answer(entry, baseline) for entry in self.dimstyles) or "none"
+            return "; ".join(dimstyle_answer(entry, self.iso_25_baseline)
+                             for entry in self.dimstyles) or "none"
         if question == "blocks":
             rows = []
             for block in self.blocks:
                 d = block.block.dxf
                 head = f"{quoted(block.name)} base={point(d.base_point)}"
+                record = block.block_record.dxf
+                if record.get("explode", 1) == 0:
+                    head += " explodable=no"
+                if record.get("scale", 0) == 1:
+                    head += " uniform=yes"
+                if record.get("units", 0) != 0:
+                    head += f" units={record.units}"
                 if d.get("description", ""):
                     head += f" description={quoted(d.description)}"
                 rows.append(head)
@@ -430,22 +454,97 @@ class DrawingAnswers:
                         rows.append(f"{quoted(block.name)} {entity.dxf.handle} {entity_answer(entity)}")
             return "; ".join(rows) or "none"
         if question == "generated":
-            record = self.entities.get(format(int(handle, 16), "X"))
-            if record is None or record[0].dxftype() not in {"INSERT", "DIMENSION"}:
-                return "none"
-            try:
-                generated = list(self.bound_entities[record[0].dxf.handle].virtual_entities())
-            except (AttributeError, ezdxf.DXFError):
-                return "none"
-            return "; ".join(entity_answer(entity) for entity in generated) or "none"
+            answer, _ = self.generated_answer(handle)
+            return answer
         if question == "entity":
             record = self.entities.get(format(int(handle, 16), "X"))
             if record is None:
                 return "none"
             entity, supported = record
-            return (entity_answer(entity, self.layer_names, self.linetype_names)
+            answered_entity = (self.bound_entities[entity.dxf.handle]
+                               if entity.dxftype() == "DIMENSION" else entity)
+            return (entity_answer(answered_entity, self.layer_names, self.linetype_names)
                     if supported else "unhandled " + entity.dxftype())
         raise ValueError(f"unsupported oracle question: {question}")
+
+    def effective_properties(self, entity, owner):
+        """Return visible generated properties resolved through owner and layers."""
+        layer_name = entity.dxf.get("layer", "0")
+        if layer_name.casefold() == "0":
+            layer_name = owner.dxf.get("layer", "0")
+        try:
+            layer = self.document.layers.get(layer_name).dxf
+        except ezdxf.DXFTableEntryError:
+            layer = self.document.layers.get("0").dxf
+        flags = layer.get("flags", 0)
+        if layer.get("color", 7) < 0 or flags & 1:
+            return None
+
+        def effective_color(attributes):
+            color = attributes.get("color", 256)
+            if color == 0:
+                return effective_color(owner.dxf) if attributes is not owner.dxf else "255,255,255"
+            if color == 256:
+                return color_answer(layer, layer=True)
+            return color_answer(attributes)
+
+        def effective_linetype(attributes):
+            name = attributes.get("linetype", "ByLayer")
+            if name.casefold() == "byblock":
+                return (effective_linetype(owner.dxf) if attributes is not owner.dxf
+                        else "Continuous")
+            if name.casefold() == "bylayer":
+                return layer.get("linetype", "Continuous")
+            return name
+
+        def effective_weight(attributes):
+            weight = attributes.get("lineweight", -1)
+            if weight == -2:
+                return (effective_weight(owner.dxf) if attributes is not owner.dxf else 25)
+            if weight == -1:
+                weight = layer.get("lineweight", -3)
+            return 25 if weight == -3 else weight
+
+        color = effective_color(entity.dxf)
+        if color.isdigit():
+            color = aci_answer(int(color))
+        fields = []
+        if color != "255,255,255":
+            fields.append(f"color={color}")
+        linetype = effective_linetype(entity.dxf)
+        if linetype.casefold() != "continuous":
+            fields.append(f"linetype={quoted(linetype)}")
+        scale = self.header.get("$LTSCALE", 1) * entity.dxf.get("ltscale", 1)
+        if scale != 1:
+            fields.append(f"ltscale={number(scale)}")
+        weight = effective_weight(entity.dxf)
+        if weight != 25:
+            fields.append(f"lineweight={lineweight_answer(weight)}")
+        if flags & 4:
+            fields.append("locked=yes")
+        return fields
+
+    def generated_answer(self, handle):
+        record = self.entities.get(format(int(handle, 16), "X"))
+        if record is None or record[0].dxftype() not in {"INSERT", "DIMENSION"}:
+            return "none", ()
+        owner = self.bound_entities[record[0].dxf.handle]
+        try:
+            generated = list(owner.virtual_entities())
+        except (AttributeError, ezdxf.DXFError):
+            return "none", ()
+        shape_types = {"LINE", "ARC", "CIRCLE", "ELLIPSE", "LWPOLYLINE", "TEXT", "SOLID"}
+        outside = tuple(sorted({entity.dxftype() for entity in generated
+                                if entity.dxftype() not in shape_types}))
+        if outside:
+            return "none", outside
+        rows = []
+        for entity in generated:
+            properties = self.effective_properties(entity, owner)
+            if properties is not None:
+                row = entity_answer(entity, properties=False)
+                rows.append(" ".join((row, *properties)))
+        return "; ".join(rows) or "none", ()
 
     def print_answers(self, name="D"):
         for question in ("version", "units", "count", "unhandled", "layers", "linetypes",
@@ -458,7 +557,11 @@ class DrawingAnswers:
                 print("; OCS: convert by hand (ADR 0018, point 5)")
             print(f"? entity {name} {handle} -> {self.answer('entity', handle)}")
             if entity.dxftype() in {"INSERT", "DIMENSION"}:
-                print(f"? generated {name} {handle} -> {self.answer('generated', handle)}")
+                generated, outside = self.generated_answer(handle)
+                if outside:
+                    print(f"; generated {handle}: outside oracle scope ({','.join(outside)})")
+                else:
+                    print(f"? generated {name} {handle} -> {generated}")
 
 
 def main():
