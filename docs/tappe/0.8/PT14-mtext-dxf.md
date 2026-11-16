@@ -18,6 +18,9 @@
 - `io/src/dxf_mtext.cpp` (nuovo), `io/CMakeLists.txt`, `io/src/dxf_entities.cpp`,
   `io/src/dxf_entity_common.hpp` (file comuni: una riga ciascuno)
 - `tests/io/dxf_mtext_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+- `tests/verifica/oracolo/ezdxf_attesi.py` (solo l'elenco dei tipi attivi)
+- `tests/verifica/casi/**/domande.tgq` (solo le righe `? count` e
+  `? unhandled`, copiate dal log dell'oracolo)
 
 ## Cosa fare
 
@@ -36,7 +39,10 @@
    `(0,0,-1)`. Sfondo (90, 63, 421, 431, 45, 441) e il resto stanno in `extras`.
 5. Aggiungere `MTEXT` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
    nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
-   `unhandled` di tutti i casi che cambiano.
+   `unhandled` di tutti i casi che cambiano. Questa è l'eccezione a
+   [pacchetto.md](../../agenti/pacchetto.md),
+   «In un pacchetto di lavoro», e all'ADR 0011 (casi scritti da un altro
+   agente), decisa il 2026-11-16 in [DECISIONI.md](../../DECISIONI.md).
 
 ## Regole della tappa che valgono qui
 

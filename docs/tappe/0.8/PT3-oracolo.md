@@ -64,8 +64,11 @@ pacchetti di riferimenti partano.
 - Su un DXF scritto dal test con ezdxf (un blocco con un `ATTDEF`, un `INSERT`
   con `ATTRIB`, un `SOLID`, un `MTEXT`, una quota lineare, un `HATCH`), le
   risposte nuove hanno la forma attesa.
-- Sullo stesso DXF, eseguire l’oracolo con l’elenco dei tipi attivi vuoto e con
-  un tipo attivo: cambiano soltanto le risposte `count` e `unhandled`.
+- Sullo stesso DXF, con l'elenco dei tipi attivi vuoto il `SOLID` compare in
+  `? unhandled` (`SOLID 1`) e non in `? count`; con `SOLID` nell'elenco compare
+  in `? count` (`SOLID 1`) e non più in `? unhandled`; gli altri tipi nuovi
+  restano in `? unhandled`; tutte le altre risposte, compresa `? entity` del
+  `SOLID`, sono identiche nei due casi.
 
 ## Fatto quando
 
