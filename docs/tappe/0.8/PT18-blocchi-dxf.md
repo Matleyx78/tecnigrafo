@@ -63,6 +63,9 @@ Un errore rompe i file in AutoCAD (piano, «Motivi»).
    modifiche resta identico secondo l'ADR 0018, punto 6.
 6. **`$HANDSEED`** oltre l'handle più alto, entità dei blocchi e attributi
    compresi.
+7. Aggiungere `ATTDEF`, `ATTRIB` e `INSERT` all’elenco dei tipi della 0.8 attivi
+   nell’oracolo ezdxf e, nella stessa pull request, aggiornare dal log
+   dell’oracolo le righe `count` e `unhandled` di tutti i casi che cambiano.
 
 ## Regole della tappa che valgono qui
 

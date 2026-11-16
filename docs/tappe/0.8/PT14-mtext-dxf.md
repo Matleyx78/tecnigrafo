@@ -34,6 +34,9 @@
    o dati di colonna), direzione 72 diversa da 1 e 5, altezza o larghezza non
    valide (altezza ≤ 0, larghezza < 0), estrusione diversa da `(0,0,1)` e
    `(0,0,-1)`. Sfondo (90, 63, 421, 431, 45, 441) e il resto stanno in `extras`.
+5. Aggiungere `MTEXT` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
+   nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
+   `unhandled` di tutti i casi che cambiano.
 
 ## Regole della tappa che valgono qui
 

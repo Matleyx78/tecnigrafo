@@ -77,6 +77,9 @@
    l'ADR 0018, punto 5 (con `(0,0,-1)` centro e asse si specchiano in X e i
    parametri si invertono), il resto in `extras`; un'ellisse non supportata
    (punto 1) resta grezza.
+8. Aggiungere `ELLIPSE` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf
+   e, nella stessa pull request, aggiornare dal log dell’oracolo le righe `count`
+   e `unhandled` di tutti i casi che cambiano.
 
 ## Regole della tappa che valgono qui
 

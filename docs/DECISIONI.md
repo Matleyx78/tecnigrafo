@@ -1949,3 +1949,10 @@ i rimandi ai documenti che cambia.
   quando chiede di cambiare dei file ([agenti/catena.md](agenti/catena.md),
   "Fermarsi per una decisione"). La guida (A2a) dice che la catena è
   arrivata anche in solid-space (Matleyx78/solid-space#293).
+
+- **2026-11-16 — Attivazione progressiva dei tipi 0.8 nell’oracolo ezdxf.**
+  L’oracolo descrive subito entità, geometria generata, blocchi e stili dei tipi
+  nuovi, ma `count` e `unhandled` seguono un elenco esplicito dei tipi già
+  realizzati da Tecnigrafo, inizialmente vuoto. Il pacchetto che rende gestito
+  un tipo aggiorna insieme l’elenco e le due risposte dei casi interessati;
+  l’elenco dichiara la tappa e non viene letto dal programma (ADR 0020).

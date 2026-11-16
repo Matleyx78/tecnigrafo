@@ -37,6 +37,9 @@
    riscrivono ridotti: un 53 = 3690 torna 90.
 4. Un `HATCH` letto e scritto senza modifiche resta identico (ADR 0018, punto
    6: i valori del modello sono gli stessi, anche con gli angoli ridotti).
+5. Aggiungere `HATCH` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
+   nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
+   `unhandled` di tutti i casi che cambiano.
 
 ## Regole della tappa che valgono qui
 

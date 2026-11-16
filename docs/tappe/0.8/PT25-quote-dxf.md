@@ -38,6 +38,9 @@
    bit 32 (blocco usato solo da questa quota) e il 128 se `userTextPosition`.
 3. Una quota letta e scritta senza modifiche resta identica (ADR 0018, punto 6),
    blocco compreso.
+4. Aggiungere `DIMENSION` all’elenco dei tipi della 0.8 attivi nell’oracolo
+   ezdxf e, nella stessa pull request, aggiornare dal log dell’oracolo le righe
+   `count` e `unhandled` di tutti i casi che cambiano.
 
 ## Regole della tappa che valgono qui
 

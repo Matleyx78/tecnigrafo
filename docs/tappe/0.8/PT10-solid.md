@@ -46,6 +46,9 @@
    `extras`. Un `SOLID` con tutti i vertici uguali è degenere e resta non
    gestito.
 4. Il rapporto e le domande li scrive già PT9.
+5. Aggiungere `SOLID` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
+   nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
+   `unhandled` di tutti i casi che cambiano.
 
 ## Regole della tappa che valgono qui
 
