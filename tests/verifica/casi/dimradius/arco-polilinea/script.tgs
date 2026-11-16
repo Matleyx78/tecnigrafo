@@ -1,0 +1,18 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMRADIUS on the arc of an LWPOLYLINE (centre 20,10, radius 10), then U and REDO (PT27, #715).
+; The point on the curve is in the direction of the location from the centre (PT27, point 2);
+; text at the location, with bit 128 of group 70 as in autocad-quote.dxf (E1, F3).
+PLINE
+0,0
+20,0
+A
+20,20
+
+DIMRADIUS
+30,10
+35,25
+!report
+U
+!report
+REDO

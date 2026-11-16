@@ -1,0 +1,18 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMRADIUS on a circle: Esc after the pick, the location in the centre (not regenerable,
+; PT24 point 2: the reason and the prompt again), Angle 30, then the location (PT27, #715).
+; The point on the curve is in the direction of the location from the centre (PT27, point 2);
+; text at the location, with bit 128 of group 70 as in autocad-quote.dxf (E1, F3).
+CIRCLE
+0,0
+10
+DIMRADIUS
+10,0
+!esc
+DIMRADIUS
+10,0
+0,0
+A
+30
+20,15

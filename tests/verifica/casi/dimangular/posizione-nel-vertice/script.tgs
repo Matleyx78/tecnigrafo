@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMANGULAR with the arc location in the vertex: not regenerable (PT24, point 1), so the
+; reason (Points coincide., as for coincident points in PT23, point 4) and the location prompt again (PT27, #715).
+; Lines from the vertex 0,0 to 40,0 and to 30,40 (angle 53.13 degrees), picked in this order;
+; AutoCAD stores the first line picked as 15->10 and the second as 13->14 (autocad-quote.dxf, C8).
+; Text centre on the bisector, DIMGAP + DIMTXT/2 = 1.875 above the arc in the reading direction
+; (PT23 point 4, PT24 point 1; autocad-quote.dxf C8: R + 1.875 on the bisector).
+LINE
+0,0
+40,0
+
+LINE
+0,0
+30,40
+
+DIMANGULAR
+20,0
+15,20
+0,0
+30,10
