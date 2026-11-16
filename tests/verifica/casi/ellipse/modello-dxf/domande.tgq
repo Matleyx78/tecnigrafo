@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT48 / PT48 (#679). Expectations from ADR 0052 and PT48, calculated independently.
+; Handwritten ellissi.dxf: full/partial curves, both supported extrusions, XDATA.
+; Z coordinates and extrusion groups must survive roundtrip without loss.
+D = DXF file=ellissi.dxf
+? version D -> AC1032
+? units D -> 4
+; PT48 deliberately changes these entities from raw to supported.
+; cambia con #679
+? count D -> ELLIPSE 4
+? unhandled D -> none
+? entity D 101 -> ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? entity D 102 -> ELLIPSE center=10,20 major-axis=4,0 ratio=0.5 start=30 end=120
+? entity D 103 -> ELLIPSE center=-10,20 major-axis=-4,0 ratio=0.5 extrusion=0,0,-1
+? entity D 104 -> ELLIPSE center=-10,20 major-axis=-4,0 ratio=0.5 start=270 end=0 extrusion=0,0,-1
+? bbox D:101 -> 6,18 14,22
+? bbox D:103 -> -14,18 -6,22
+? snaps D:104 modes=endpoint -> Endpoint -10,22; Endpoint -14,20
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical

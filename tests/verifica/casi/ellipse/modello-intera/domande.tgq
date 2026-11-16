@@ -1,0 +1,24 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT48 / PT48 (#679). Expectations from ADR 0052 and PT48, calculated independently.
+; p(t) = (10,20) + (4*cos(t),2*sin(t)); quadrants test pointAt indirectly.
+E = ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? bbox E -> 6,18 14,22
+? generated E -> ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? snaps E modes=center -> Center 10,20
+? snaps E modes=quadrant -> Quadrant 14,20; Quadrant 10,22; Quadrant 6,20; Quadrant 10,18
+? snaps E modes=endpoint -> none
+? snaps E modes=none -> none
+? grips E -> 10,20; 14,20; 10,22; 6,20; 10,18
+; For a=(4,3), b=(-1.5,2), the extents are sqrt(18.25) and sqrt(13).
+R = ELLIPSE center=0,0 major-axis=4,3 ratio=0.5
+? bbox R -> -4.272001872658765,-3.605551275463989 4.272001872658765,3.605551275463989
+? snaps R modes=quadrant -> Quadrant 4,3; Quadrant -1.5,2; Quadrant -4,-3; Quadrant 1.5,-2
+; Ratio 1 is a supported ellipse, even though it is geometrically a circle.
+C = ELLIPSE center=0,0 major-axis=2,0 ratio=1
+? bbox C -> -2,-2 2,2
+? generated C -> ELLIPSE center=0,0 major-axis=2,0 ratio=1
+; A very small positive ratio stays supported; zero is tested in the DXF case.
+Thin = ELLIPSE center=0,0 major-axis=4,0 ratio=0.000001
+? bbox Thin -> -4,-0.000004 4,0.000004
+? generated Thin -> ELLIPSE center=0,0 major-axis=4,0 ratio=0.000001

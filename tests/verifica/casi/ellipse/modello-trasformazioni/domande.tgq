@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT48 / PT48 (#679). Expectations from ADR 0052 and PT48, calculated independently.
+; Similarity transformations use the same ellipse path as affine transforms.
+E = ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? transform E move 5,-7 -> ELLIPSE center=15,13 major-axis=4,0 ratio=0.5
+? transform E rotate 90 0,0 -> ELLIPSE center=-20,10 major-axis=0,4 ratio=0.5
+? transform E scale 2 10,20 -> ELLIPSE center=10,20 major-axis=8,0 ratio=0.5
+? transform E scale 0 0,0 -> invalid
+? transform E scale -1 0,0 -> invalid
+? transform E mirror 1,1 1,1 -> invalid
+; Reflections swap the endpoints and keep the result counter-clockwise.
+A = ELLIPSE center=10,20 major-axis=4,0 ratio=0.5 start=30 end=120
+? transform A mirror 0,0 1,0 -> ELLIPSE center=10,-20 major-axis=4,0 ratio=0.5 start=240 end=330
+? transform A mirror 0,0 0,1 -> ELLIPSE center=-10,20 major-axis=4,0 ratio=0.5 start=60 end=150
+? transform A rotate 200 10,20 -> ELLIPSE center=10,20 major-axis=3.7587704831436337,1.3680805733026749 ratio=0.5 start=210 end=300
+; A circle must use +X as its major axis, with parameters rebased.
+C = ELLIPSE center=0,0 major-axis=0,2 ratio=1 start=0 end=90
+? transform C rotate 0 0,0 -> ELLIPSE center=0,0 major-axis=2,0 ratio=1 start=90 end=180
+? transform C rotate 90 0,0 -> ELLIPSE center=0,0 major-axis=2,0 ratio=1 start=180 end=270
