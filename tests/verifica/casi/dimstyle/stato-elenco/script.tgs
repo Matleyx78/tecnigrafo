@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; STatus lists the essential variables (ADR 0047, point 2) with the current values, in
+; the order and columns of AutoCAD; ? with Enter and with * lists the styles
+; (Standard and ISO-25 of a new session, in table order); neither adds an undo step
+; ([0.8-RT28], work #717).
+; Expected values: -DIMSTYLE prompts from the PT28 card (point 2); messages from the
+; AutoCAD LT 2026 history autocad-dimstyle.txt (Matleyx78/dxf-test-file, commit
+; 5170f1860953b5d076aa435bd65daa725d431745), translated as DECISIONI.md, 2026-11-02,
+; "Testi inglesi dei messaggi", and the owner's decision in #716.
+DIMTXT
+3.5
+-DIMSTYLE
+ST
+-DIMSTYLE
+?
+
+-DIMSTYLE
+?
+*

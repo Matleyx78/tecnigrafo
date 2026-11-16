@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMTXT 3.5, then Save with a new name: the saved style becomes current without
+; overrides (ADR 0047, point 2); ? through the alias DIMSTYLE lists the styles in table
+; order (Standard and ISO-25 of a new session, PT22 point 2); U undoes the -DIMSTYLE step
+; and the override comes back ([0.8-RT28], work #717).
+; Expected values: -DIMSTYLE prompts from the PT28 card (point 2); messages from the
+; AutoCAD LT 2026 history autocad-dimstyle.txt (Matleyx78/dxf-test-file, commit
+; 5170f1860953b5d076aa435bd65daa725d431745), translated as DECISIONI.md, 2026-11-02,
+; "Testi inglesi dei messaggi", and the owner's decision in #716.
+DIMTXT
+3.5
+-DIMSTYLE
+S
+NUOVO
+DIMSTYLE
+?
+
+U
