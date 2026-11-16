@@ -16,7 +16,12 @@ Every public source listed in `tests/verifica/sorgenti.json` has a heading and
 copyable `? version`, `? units`, `? count`, `? unhandled`, `? layers`,
 `? linetypes`, `? blocks`, `? styles`, `? dimstyles`, `? entity`, and
 `? generated` answers. Generated answers are printed for `INSERT` and
-`DIMENSION` handles and contain ezdxf's `virtual_entities()` in drawing order.
+`DIMENSION` handles when every virtual entity is a supported shape. They keep
+drawing order, resolve effective properties through the owner and its layers,
+and append visible `ATTRIB` entities as `TEXT`; invisible attributes are
+omitted. If a virtual entity is not a supported shape, the log prints
+`; generated <handle>: outside oracle scope (<types>)` instead of a copyable
+answer.
 Answers are printed even when the preceding verification failed. If there
 are no public sources, the log says so explicitly.
 

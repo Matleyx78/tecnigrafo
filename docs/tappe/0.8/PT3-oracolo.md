@@ -56,7 +56,11 @@ pacchetti di riferimenti partano.
      rapporto (escluse quelle dei layout e le `*D…`);
    - `? styles D`, `? dimstyles D`: le tabelle `STYLE` e `DIMSTYLE` nella forma
      di `text styles:` e `dimension styles:` (tutti i record, compresi
-     `Standard` e `ISO-25`);
+     `Standard` e `ISO-25`). Per un gruppo essenziale assente in un record
+     `DIMSTYLE`, valgono i predefiniti DXF di AutoCAD: `DIMASZ` 0,18,
+     `DIMCEN` 0,09, `DIMDEC` 4, `DIMDSEP` `.`, `DIMEXE` 0,18, `DIMEXO`
+     0,0625, `DIMGAP` 0,09, `DIMTAD` 0, `DIMTIH` 1, `DIMTOH` 1, `DIMTXT`
+     0,18 e `DIMZIN` 0; per le altre variabili vale il valore di `ISO-25`;
    - `? generated D <handle>` per `INSERT` e `DIMENSION`: le entità che ezdxf dà
      con `virtual_entities()`, nel formato delle forme di `generated`
      (domande.md), con le proprietà effettive. Per un `INSERT` con scala non
@@ -64,7 +68,11 @@ pacchetti di riferimenti partano.
      L’oracolo scrive la risposta solo se tutte le entità sono forme (`LINE`,
      `ARC`, `CIRCLE`, `ELLIPSE`, `LWPOLYLINE`, `TEXT`, `SOLID`); altrimenti
      scrive `; generated <handle>: outside oracle scope (<tipi>)`, con i tipi
-     non forma, e non scrive una risposta copiabile.
+     non forma, e non scrive una risposta copiabile. Le proprietà *DaBlocco*
+     prendono le proprietà effettive dell'inserimento o della quota, risolte
+     sul suo layer; un proprietario su un layer spento o congelato non genera
+     forme. Dopo le forme di un `INSERT` vengono gli `ATTRIB` visibili come
+     `TEXT`, in ordine; quelli invisibili non vengono generati.
 5. Il README descrive le risposte nuove.
 
 ## Regole della tappa che valgono qui

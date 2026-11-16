@@ -1971,3 +1971,10 @@ i rimandi ai documenti che cambia.
   forme; altrimenti scrive un commento `outside oracle scope` con i tipi non
   forma. Anche questa decisione corregge scheda e self-test nella PR #794 e
   viene rivista nel giro normale per la stessa eccezione.
+  Nella stessa revisione il responsabile stabilisce che i gruppi essenziali
+  assenti da un record `DIMSTYLE` hanno i predefiniti DXF di AutoCAD confermati
+  in `dxf-di-prova.md` (`DIMASZ` 0,18, `DIMCEN` 0,09, `DIMDEC` 4, `DIMDSEP`
+  `.`, `DIMEXE` 0,18, `DIMEXO` 0,0625, `DIMGAP` 0,09, `DIMTAD` 0, `DIMTIH`
+  1, `DIMTOH` 1, `DIMTXT` 0,18 e `DIMZIN` 0), mentre per le altre variabili
+  vale `ISO-25`. PT3 e PT22 applicano la regola nella PR #794, sempre con
+  revisione nel giro normale.

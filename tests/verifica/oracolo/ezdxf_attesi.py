@@ -9,7 +9,7 @@ from pathlib import Path
 
 import ezdxf
 from ezdxf.colors import aci2rgb, int2rgb
-from ezdxf.entities import factory
+from ezdxf.entities import Text, factory
 from ezdxf.lldxf.extendedtags import ExtendedTags
 from ezdxf.lldxf.loader import load_dxf_structure
 from ezdxf.lldxf.tagger import ascii_tags_loader, tag_compiler
@@ -117,6 +117,12 @@ ISO_25_DEFAULTS = {
     "dimse2": 0, "dimsd1": 0, "dimsd2": 0, "dimclrd": 0, "dimclre": 0,
     "dimclrt": 0, "dimlwd": -2, "dimlwe": -2,
 }
+DXF_DIMSTYLE_DEFAULTS = {
+    **ISO_25_DEFAULTS,
+    "dimasz": 0.18, "dimcen": 0.09, "dimdec": 4, "dimdsep": 46,
+    "dimexe": 0.18, "dimexo": 0.0625, "dimgap": 0.09, "dimtad": 0,
+    "dimtih": 1, "dimtoh": 1, "dimtxt": 0.18, "dimzin": 0,
+}
 
 
 def dimstyle_answer(style, baseline=None):
@@ -125,8 +131,8 @@ def dimstyle_answer(style, baseline=None):
     d = style.dxf
     fields = [quoted(d.name)]
     for name in DIMSTYLE_FIELDS:
-        value = d.get(name)
-        if value is not None and (baseline is None or value != baseline.get(name)):
+        value = d.get(name) if d.hasattr(name) else DXF_DIMSTYLE_DEFAULTS[name]
+        if baseline is None or value != baseline.get(name):
             written = quoted(value) if isinstance(value, str) else number(value)
             fields.append(f"{name.upper()}:{written}")
     return " ".join(fields)
@@ -414,6 +420,10 @@ class DrawingAnswers:
                 if bound is not None and any(not managed(attrib, entity.dxf.handle)
                                              for attrib in bound.attribs):
                     supported = False
+            if entity.dxftype() == "DIMENSION":
+                geometry = entity.dxf.get("geometry", "")
+                if not geometry or geometry.casefold() not in block_names:
+                    supported = False
             self.entities[handle] = (entity, supported)
 
     def answer(self, question, handle=None):
@@ -481,13 +491,20 @@ class DrawingAnswers:
 
     def effective_properties(self, entity, owner):
         """Return visible generated properties resolved through owner and layers."""
+        def layer_attributes(name):
+            try:
+                return self.document.layers.get(name).dxf
+            except ezdxf.DXFTableEntryError:
+                return self.document.layers.get("0").dxf
+
+        owner_layer = layer_attributes(owner.dxf.get("layer", "0"))
+        owner_flags = owner_layer.get("flags", 0)
+        if owner_layer.get("color", 7) < 0 or owner_flags & 1:
+            return None
         layer_name = entity.dxf.get("layer", "0")
         if layer_name.casefold() == "0":
             layer_name = owner.dxf.get("layer", "0")
-        try:
-            layer = self.document.layers.get(layer_name).dxf
-        except ezdxf.DXFTableEntryError:
-            layer = self.document.layers.get("0").dxf
+        layer = layer_attributes(layer_name)
         flags = layer.get("flags", 0)
         if layer.get("color", 7) < 0 or flags & 1:
             return None
@@ -495,7 +512,7 @@ class DrawingAnswers:
         def effective_color(attributes):
             color = attributes.get("color", 256)
             if color == 0:
-                return effective_color(owner.dxf) if attributes is not owner.dxf else "255,255,255"
+                return owner_color
             if color == 256:
                 return color_answer(layer, layer=True)
             return color_answer(attributes)
@@ -503,8 +520,7 @@ class DrawingAnswers:
         def effective_linetype(attributes):
             name = attributes.get("linetype", "ByLayer")
             if name.casefold() == "byblock":
-                return (effective_linetype(owner.dxf) if attributes is not owner.dxf
-                        else "Continuous")
+                return owner_linetype
             if name.casefold() == "bylayer":
                 return layer.get("linetype", "Continuous")
             return name
@@ -512,10 +528,24 @@ class DrawingAnswers:
         def effective_weight(attributes):
             weight = attributes.get("lineweight", -1)
             if weight == -2:
-                return (effective_weight(owner.dxf) if attributes is not owner.dxf else 25)
+                return owner_weight
             if weight == -1:
                 weight = layer.get("lineweight", -3)
             return 25 if weight == -3 else weight
+
+        owner_color = (color_answer(owner.dxf) if (owner.dxf.hasattr("true_color") or
+                                                    owner.dxf.get("color", 256) != 256)
+                       else color_answer(owner_layer, layer=True))
+        owner_linetype = owner.dxf.get("linetype", "ByLayer")
+        if owner_linetype.casefold() == "bylayer":
+            owner_linetype = owner_layer.get("linetype", "Continuous")
+        elif owner_linetype.casefold() == "byblock":
+            owner_linetype = "Continuous"
+        owner_weight = owner.dxf.get("lineweight", -1)
+        if owner_weight == -1:
+            owner_weight = owner_layer.get("lineweight", -3)
+        if owner_weight in (-2, -3):
+            owner_weight = 25
 
         color = effective_color(entity.dxf)
         if color.isdigit():
@@ -542,6 +572,12 @@ class DrawingAnswers:
             return "none", ()
         owner = self.bound_entities[record[0].dxf.handle]
         try:
+            owner_layer = self.document.layers.get(owner.dxf.get("layer", "0")).dxf
+        except ezdxf.DXFTableEntryError:
+            owner_layer = self.document.layers.get("0").dxf
+        if owner_layer.get("color", 7) < 0 or owner_layer.get("flags", 0) & 1:
+            return "none", ()
+        try:
             generated = list(owner.virtual_entities())
         except (AttributeError, ezdxf.DXFError):
             return "none", ()
@@ -550,6 +586,13 @@ class DrawingAnswers:
                                 if entity.dxftype() not in shape_types}))
         if outside:
             return "none", outside
+        if record[0].dxftype() == "INSERT":
+            for attrib in owner.attribs:
+                if not attrib.dxf.get("flags", 0) & 1:
+                    attributes = {name: value for name, value in
+                                  attrib.dxf.all_existing_dxf_attribs().items()
+                                  if name in Text.DXFATTRIBS and name not in {"handle", "owner"}}
+                    generated.append(Text.new(dxfattribs=attributes))
         rows = []
         for entity in generated:
             properties = self.effective_properties(entity, owner)

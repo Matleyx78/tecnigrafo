@@ -301,12 +301,17 @@ def self_test():
         document.dimstyles.new("ISO-25", dxfattribs={
             name: ISO_25_DEFAULTS[name] for name in DIMSTYLE_FIELDS
         })
+        empty_dimstyle = document.dimstyles.new("EMPTY")
+        for name in DIMSTYLE_FIELDS:
+            empty_dimstyle.dxf.discard(name)
         block = document.blocks.new("TAGGED", base_point=(1, 2))
         attdef = block.add_attdef("CODE", insert=(0, 0), height=1.8, text="N")
         block_line = block.add_line((0, 0), (4, 0), dxfattribs={"color": 0})
         model = document.modelspace()
         insert = model.add_blockref("TAGGED", (10, 20))
         insert.add_attrib("CODE", "A1", insert=(10, 20), dxfattribs={"height": 1.8})
+        insert.add_attrib("HIDDEN", "secret", insert=(10, 20),
+                          dxfattribs={"height": 1.8, "flags": 1})
         insert.dxf.color = 3
         solid = model.add_solid([(0, 0), (2, 0), (0, 1), (2, 1)])
         mtext = model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
@@ -340,7 +345,7 @@ def self_test():
         for question in ("count", "unhandled"):
             require("ATTRIB" not in stage_answers.answer(question),
                     f"inactive linked ATTRIB is absent from {question}")
-        require("ATTRIB 1" in insert_answers.answer("count"),
+        require("ATTRIB 2" in insert_answers.answer("count"),
                 "active linked ATTRIB is managed")
         require("ATTRIB" not in insert_answers.answer("unhandled"),
                 "active managed ATTRIB is not unhandled")
@@ -397,10 +402,16 @@ def self_test():
         require(stage_answers.answer("styles") ==
                 '"Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no',
                 "complete STYLE rows")
-        require(stage_answers.answer("dimstyles") == '"Standard"; "ISO-25"',
+        require(stage_answers.answer("dimstyles") ==
+                ('"Standard"; "ISO-25"; "EMPTY" DIMASZ:0.18 DIMCEN:0.09 '
+                 'DIMDEC:4 DIMDSEP:46 DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 '
+                 'DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0'),
                 "complete DIMSTYLE rows")
         require(stage_answers.answer("generated", insert.dxf.handle) ==
-                "LINE start=9,18 end=13,18 color=0,255,0",
+                ('LINE start=9,18 end=13,18 color=0,255,0; '
+                 'TEXT position=10,20 alignment-point=0,0 height=1.8 rotation=0 '
+                 'width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no '
+                 'horizontal=left vertical=baseline value="A1"'),
                 "complete INSERT generated answer with effective properties")
         require(stage_answers.answer("generated", dimension.dimension.dxf.handle) == "none",
                 "out-of-scope DIMENSION has no generated answer")
@@ -416,8 +427,52 @@ def self_test():
         unsupported_attribute_answers = DrawingAnswers(stage, {"ATTRIB", "INSERT"})
         require("ATTRIB 1" in unsupported_attribute_answers.answer("unhandled"),
                 "active unsupported linked ATTRIB is unhandled")
-        require("ATTRIB" not in unsupported_attribute_answers.answer("count"),
-                "active unsupported linked ATTRIB is not managed")
+        require("ATTRIB 1" in unsupported_attribute_answers.answer("count"),
+                "the other active linked ATTRIB remains managed")
+
+        exclusions = root / "stage-0.8-exclusions.dxf"
+        excluded_document = ezdxf.new("R2018")
+        excluded_model = excluded_document.modelspace()
+        missing_insert = excluded_model.add_blockref("MISSING", (0, 0))
+        bad_block = excluded_document.blocks.new("BAD_ATTRIBUTE")
+        bad_block.add_attdef("BAD", insert=(0, 0), height=1)
+        bad_insert = excluded_model.add_blockref("BAD_ATTRIBUTE", (0, 0))
+        bad_insert.add_attrib("BAD", "x", insert=(0, 0),
+                              dxfattribs={"height": 1, "extrusion": (1, 0, 0)})
+        missing_dimension = excluded_model.add_linear_dim(base=(0, 2), p1=(0, 0), p2=(1, 0))
+        excluded_document.saveas(exclusions)
+        exclusion_answers = DrawingAnswers(exclusions, {"ATTRIB", "INSERT", "DIMENSION"})
+        for handle, kind in ((missing_insert.dxf.handle, "INSERT"),
+                             (bad_insert.dxf.handle, "INSERT"),
+                             (missing_dimension.dimension.dxf.handle, "DIMENSION")):
+            require(exclusion_answers.answer("entity", handle) == f"unhandled {kind}",
+                    f"excluded {kind} remains unhandled")
+
+        effective = root / "stage-0.8-effective.dxf"
+        effective_document = ezdxf.new("R2018")
+        effective_document.layers.new("RED", dxfattribs={"color": 1})
+        effective_document.layers.new("BLUE", dxfattribs={"color": 5})
+        effective_block = effective_document.blocks.new("BYBLOCK")
+        effective_block.add_line((0, 0), (1, 0),
+                                 dxfattribs={"layer": "RED", "color": 0})
+        effective_insert = effective_document.modelspace().add_blockref(
+            "BYBLOCK", (0, 0), dxfattribs={"layer": "BLUE", "color": 256})
+        effective_document.saveas(effective)
+        effective_answers = DrawingAnswers(effective, {"INSERT"})
+        require(effective_answers.answer("generated", effective_insert.dxf.handle) ==
+                "LINE start=0,0 end=1,0 color=0,0,255",
+                "ByBlock uses the owner's effective layer color")
+        effective_document.layers.get("BLUE").off()
+        effective_document.saveas(effective)
+        require(DrawingAnswers(effective, {"INSERT"}).answer(
+                    "generated", effective_insert.dxf.handle) == "none",
+                "an owner on an off layer generates no shapes")
+        effective_document.layers.get("BLUE").on()
+        effective_document.layers.get("BLUE").freeze()
+        effective_document.saveas(effective)
+        require(DrawingAnswers(effective, {"INSERT"}).answer(
+                    "generated", effective_insert.dxf.handle) == "none",
+                "an owner on a frozen layer generates no shapes")
 
         # The original owner, paper-space flag and degenerate values must survive
         # ezdxf's document layout binding and affect classification.
