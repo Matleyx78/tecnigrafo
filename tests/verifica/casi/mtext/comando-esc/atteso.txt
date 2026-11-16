@@ -1,0 +1,75 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  *Cancel*
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  *Cancel*
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 10,-10
+  *Cancel*
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 10,-10
+  MText:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  257 MTEXT insertion=0,0 height=2.5 width=40 attachment=top-left rotation=0 style="Standard" value="Riga uno" ~lines=1
+messages:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 40,-10
+  MText: Riga uno
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Mtext
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 1
+
+[final]
+entities:
+messages:
+  Command: U
+  Undone: Mtext.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Mtext
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
