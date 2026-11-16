@@ -32,9 +32,9 @@ using Words = std::vector<std::string_view>;
 // The directives that the catalogue describes (docs/verifica/script.md) and
 // the program does not have yet. This list is read only after every directive
 // the program has (parseDirective), so an entry left here when its package
-// realizes it does nothing; remove it to keep the list short. Stage 0.8:
-// !hover and !otrack, realized by PT34 (docs/adr/0049, point 7).
-constexpr std::array<std::string_view, 2> kAnnouncedDirectives{"hover", "otrack"};
+// realizes it does nothing; remove it to keep the list short. Empty: every
+// directive of the catalogue is realized.
+constexpr std::array<std::string_view, 0> kAnnouncedDirectives{};
 
 /// An abbreviation of AutoCAD for a snap mode, and the member of
 /// core::SnapModes that it turns on (docs/adr/0033, point 7).
@@ -127,7 +127,10 @@ DirectiveResult parseView(const Words& arguments) {
 
 DirectiveResult parsePointDirective(std::string_view name, const Words& arguments) {
     const bool click = name == "click";
-    const std::string_view usage = click ? "!click x,y [remove]" : "!move x,y";
+    std::string_view usage = click ? "!click x,y [remove]" : "!move x,y";
+    if (name == "hover") {
+        usage = "!hover x,y";
+    }
     const bool remove = click && arguments.size() == 2 && arguments[1] == "remove";
     if (arguments.empty() || arguments.size() > (remove ? 2U : 1U)) {
         return wrongArguments(name, usage);
@@ -138,6 +141,9 @@ DirectiveResult parsePointDirective(std::string_view name, const Words& argument
     }
     if (click) {
         return Action{ClickDirective{*point, remove}};
+    }
+    if (name == "hover") {
+        return Action{HoverDirective{*point}};
     }
     return Action{MoveDirective{*point}};
 }
@@ -185,7 +191,7 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
     if (name == "view") {
         return parseView(arguments);
     }
-    if (name == "move" || name == "click") {
+    if (name == "move" || name == "click" || name == "hover") {
         return parsePointDirective(name, arguments);
     }
     if (name == "rightclick" || name == "esc" || name == "report") {
@@ -197,7 +203,7 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
         }
         return name == "esc" ? Action{EscDirective{}} : Action{ReportDirective{}};
     }
-    if (name == "snap" || name == "ortho" || name == "polar" || name == "scr") {
+    if (name == "snap" || name == "ortho" || name == "polar" || name == "otrack" || name == "scr") {
         const std::optional<bool> on =
             arguments.size() == 1 ? parseOnOff(arguments[0]) : std::nullopt;
         if (!on) {
@@ -211,6 +217,8 @@ DirectiveResult parseDirective(std::string_view name, const Words& arguments) {
             aid = AidDirective::Aid::Ortho;
         } else if (name == "polar") {
             aid = AidDirective::Aid::Polar;
+        } else if (name == "otrack") {
+            aid = AidDirective::Aid::Tracking;
         }
         return Action{AidDirective{aid, *on}};
     }

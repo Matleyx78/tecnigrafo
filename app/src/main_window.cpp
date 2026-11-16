@@ -877,6 +877,11 @@ void MainWindow::setPolar(bool on) {
     applyDrawingAids();
 }
 
+void MainWindow::setTracking(bool on) {
+    m_tracking = on;
+    applyDrawingAids();
+}
+
 void MainWindow::applyDrawingAids() {
     cmd::DrawingAids aids;
     aids.objectSnap = m_objectSnapAction->isChecked();
@@ -890,6 +895,7 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.tangent = m_tangentAction->isChecked();
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
     aids.polar = m_polarAction->isChecked();
+    aids.tracking = m_tracking;
     if (m_active != nullptr) {
         m_active->runner().setDrawingAids(aids);
     }

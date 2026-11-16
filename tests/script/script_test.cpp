@@ -97,6 +97,9 @@ TEST(ParseScript, EveryDirective) {
     EXPECT_EQ(single("!snap off"), Action(AidDirective{AidDirective::Aid::Snap, false}));
     EXPECT_EQ(single("!ortho on"), Action(AidDirective{AidDirective::Aid::Ortho, true}));
     EXPECT_EQ(single("!ortho off"), Action(AidDirective{AidDirective::Aid::Ortho, false}));
+    EXPECT_EQ(single("!hover -2.5,7"), Action(HoverDirective{{-2.5, 7.0}}));
+    EXPECT_EQ(single("!otrack on"), Action(AidDirective{AidDirective::Aid::Tracking, true}));
+    EXPECT_EQ(single("!otrack off"), Action(AidDirective{AidDirective::Aid::Tracking, false}));
     EXPECT_EQ(single("!report"), Action(ReportDirective{}));
     EXPECT_EQ(single("!level 1"), Action(LevelDirective{1}));
     EXPECT_EQ(single("!tolerance absolute 1e-6"),
@@ -187,6 +190,10 @@ TEST(ParseScript, ErrorsGiveTheirLine) {
              Case{"!move 1, 2", 1},
              Case{"!click 1,2 add", 1},
              Case{"!click remove", 1},
+             Case{"!hover", 1},
+             Case{"!hover 1,2 remove", 1},
+             Case{"!otrack", 1},
+             Case{"!otrack maybe", 1},
              Case{"!rightclick now", 1},
              Case{"\n\n!esc 1", 3},
              Case{"!report all", 1},

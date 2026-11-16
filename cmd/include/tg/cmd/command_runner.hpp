@@ -157,6 +157,20 @@ struct SelectionRectangle {
 /// distance typed alone ("50") at a Point prompt takes its direction from the pointer
 /// corrected against the last point it is measured from, so with ortho on
 /// it follows the horizontal or the vertical through that point.
+/// Object snap tracking (docs/adr/0049). With tracking and object snap on,
+/// pointerHeld() on a snap point, while a command asks for a point,
+/// acquires it, or releases it if it is acquired already; the eighth point
+/// drops the oldest. Every point acquired gives a horizontal and a vertical
+/// guide. The pointer within the snap aperture of two guides of different
+/// points goes to their crossing; within that of one guide, onto the guide;
+/// with polar on and a base point, the polar ray the pointer is on crosses
+/// the guides too. Priority: snap, crossing, guide, polar, ortho, pointer.
+/// A distance typed alone at a Point prompt, while a single guide is active,
+/// puts the point at that distance from the guide's acquired point, along
+/// the guide, towards the pointer. The acquired points are dropped whenever
+/// the command receives an input, finishes or is cancelled, and when
+/// tracking or object snap is switched off.
+///
 /// Points given with submit() are never corrected: they are the exact
 /// points of scripts and tests. While selecting, and at Object prompts,
 /// nothing is corrected: at an Object prompt the command receives the
@@ -204,6 +218,34 @@ public:
     /// command receives it corrected by the drawing aids.
     void pointerMoved(const core::Vec2& point);
 
+    /// The pointer stays on `point` long enough to acquire or release a snap
+    /// point (docs/adr/0049, point 2). Same as pointerMoved() otherwise.
+    void pointerHeld(const core::Vec2& point);
+
+    /// Object snap tracking (docs/adr/0049): the points acquired and what
+    /// the guides do to the pointer.
+    struct TrackingState {
+        std::vector<core::Vec2> acquired;      // oldest first, at most 7
+        std::optional<core::Vec2> guidePoint;  // the point the guides give
+        enum class Guide : std::uint8_t {
+            None,
+            Horizontal,
+            Vertical,
+            Crossing,
+            WithPolar
+        } guide{Guide::None};
+        std::optional<core::Vec2> from;  // the acquired point of a single guide
+    };
+
+    /// At most this many points are acquired (docs/adr/0049, point 2).
+    static constexpr std::size_t kMaxAcquired = 7;
+
+    /// The tracking state: the guide fields are computed on each call, as
+    /// activeSnap() is, from the last pointer position and the drawing as it
+    /// is now; they are empty when no command asks for a point, or when the
+    /// snap wins.
+    [[nodiscard]] const TrackingState& tracking() const;
+
     /// Drawing units per screen pixel; the view sets it at every zoom.
     /// Pick box and snap aperture, defined in pixels, follow it. While a
     /// command asks for a point, a change hands the command the pointer
@@ -247,30 +289,15 @@ public:
     [[nodiscard]] std::optional<core::SnapPoint> activeSnap() const;
 
     /// The base and projected point of an active polar ray, for the view.
-    /// Uses the same aperture, base and snap priority as aidedPoint().
+    /// Uses the same aperture, base and priority as aidedPoint(): none while
+    /// a guide or a crossing of object snap tracking wins; at a crossing of a
+    /// guide with the polar ray, `point` is that crossing.
     struct PolarTracking {
         core::Vec2 base;
         core::Vec2 point;
     };
 
-    [[nodiscard]] std::optional<PolarTracking> activePolar() const {
-        if (!m_drawingAids.polar || m_drawingAids.ortho || !m_pointer || !asksForPoint() ||
-            snapAt(*m_pointer)) {
-            return std::nullopt;
-        }
-        const auto base = m_command->basePoint();
-        if (!base) {
-            return std::nullopt;
-        }
-        // Same 10-pixel snap aperture as aidedPoint() (ADR 0033, point 9).
-        constexpr double kPolarAperturePixels = 10.0;
-        const auto point = polarPoint(*base, *m_pointer, context().defaults.polarAngle,
-                                      kPolarAperturePixels * m_pixelSize);
-        if (!point) {
-            return std::nullopt;
-        }
-        return PolarTracking{*base, *point};
-    }
+    [[nodiscard]] std::optional<PolarTracking> activePolar() const;
 
     /// The base point of the running command's prompt (Command::basePoint()),
     /// which ortho, polar and the dynamic input measure from
@@ -408,8 +435,24 @@ private:
     }
 
     [[nodiscard]] std::optional<core::SnapPoint> snapAt(const core::Vec2& point) const;
-    /// `point` corrected by the snap or, failing that, by ortho from
-    /// `orthoBase`, if any.
+    /// Tracking and object snap on, while a command asks for a point.
+    [[nodiscard]] bool tracksObjectSnaps() const;
+    /// What the guides of the acquired points make of `point`, with the
+    /// polar ray from `polarBase`, if any (docs/adr/0049, points 3-5); the
+    /// guide fields of a TrackingState, Guide::None if no guide catches it.
+    /// Does not look at the snap, which wins anyway.
+    [[nodiscard]] TrackingState trackedPoint(const core::Vec2& point,
+                                             const std::optional<core::Vec2>& polarBase) const;
+    /// The point on the polar ray from `base` that the pointer is on, if any.
+    [[nodiscard]] std::optional<core::Vec2> polarFoot(const core::Vec2& base,
+                                                      const core::Vec2& point) const;
+
+    /// Drops the acquired points.
+    void clearAcquired() { m_tracking.acquired.clear(); }
+
+    /// `point` corrected by the snap or, failing that, by object snap
+    /// tracking or, failing that, by ortho or polar from `orthoBase`, if
+    /// any.
     [[nodiscard]] core::Vec2 aidedPoint(const core::Vec2& point,
                                         const std::optional<core::Vec2>& orthoBase) const;
     void refreshPointer();
@@ -440,6 +483,9 @@ private:
     /// direction, asked for or open.
     std::optional<core::RectangleMode> m_writtenMode;
     DrawingAids m_drawingAids;
+    /// The points acquired are kept here; the other fields are recomputed by
+    /// tracking(), which is const as activeSnap() is.
+    mutable TrackingState m_tracking;
     double m_pixelSize{1.0};
     bool m_askingSelection{false};  ///< m_command exists but is not started yet
     /// The grip being stretched: m_command is then the runner's own grip

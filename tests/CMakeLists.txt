@@ -39,6 +39,7 @@ add_executable(tg_tests
     cmd/mirror_commands_test.cpp
     cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
+    cmd/object_tracking_test.cpp
     cmd/offset_command_test.cpp
     cmd/pedit_command_test.cpp
     cmd/pline_command_test.cpp
