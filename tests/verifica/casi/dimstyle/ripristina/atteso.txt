@@ -1,0 +1,53 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Enter a dimension style option [Save/Restore/STatus/?] <Restore>: R
+  Enter a dimension style name, [?] or <select dimension>: NONC
+  Unknown dimension style.
+  Current dimension style: ISO-25
+  Command: DIMTXT
+  Enter new value for DIMTXT <2.5000>: 3.5
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Current dimension overrides:
+   DIMTXT      3.5000
+  Enter a dimension style option [Save/Restore/STatus/?] <Restore>: R
+  Enter a dimension style name, [?] or <select dimension>: ISO-25
+  Current dimension style: ISO-25
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMTXT
+  -DIMSTYLE
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: U
+  Undone: -DIMSTYLE.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMTXT
+redo:
+  -DIMSTYLE
+snap: on
+ortho: off
+dimension overrides: DIMTXT:3.5
+pointer: none
+active snap: none
+statistics:

@@ -1,0 +1,71 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: DIMTXT
+  Enter new value for DIMTXT <2.5000>: 3.5
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Current dimension overrides:
+   DIMTXT      3.5000
+  Enter a dimension style option [Save/Restore/STatus/?] <Restore>: ST
+  DIMADEC     0                    Angular decimal places
+  DIMASZ      2.5000               Arrow size
+  DIMAZIN     0                    Angular zero suppression
+  DIMCEN      2.5000               Center mark size
+  DIMCLRD     BYBLOCK              Dimension line and leader color
+  DIMCLRE     BYBLOCK              Extension line color
+  DIMCLRT     BYBLOCK              Dimension text color
+  DIMDEC      2                    Decimal places
+  DIMDSEP     ,                    Decimal separator
+  DIMEXE      1.2500               Extension above dimension line
+  DIMEXO      0.6250               Extension line origin offset
+  DIMGAP      0.6250               Gap from dimension line to text
+  DIMLFAC     1.0000               Linear unit scale factor
+  DIMLWD      -2                   Dimension line and leader lineweight
+  DIMLWE      -2                   Extension line lineweight
+  DIMPOST                          Default prefix and suffix for dimension text
+  DIMRND      0.0000               Rounding value
+  DIMSCALE    1.0000               Overall scale factor
+  DIMSD1      Off                  Suppress the first dimension line
+  DIMSD2      Off                  Suppress the second dimension line
+  DIMSE1      Off                  Suppress the first extension line
+  DIMSE2      Off                  Suppress the second extension line
+  DIMTAD      1                    Place text above the dimension line
+  DIMTIH      Off                  Text inside extensions is horizontal
+  DIMTOH      Off                  Text outside horizontal
+  DIMTXSTY    Standard             Text style
+  DIMTXT      3.5000               Text height
+  DIMZIN      8                    Zero suppression
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Current dimension overrides:
+   DIMTXT      3.5000
+  Enter a dimension style option [Save/Restore/STatus/?] <Restore>: ?
+  Enter dimension style(s) to list <*>:
+  Named dimension styles:
+    Standard
+    ISO-25
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Current dimension overrides:
+   DIMTXT      3.5000
+  Enter a dimension style option [Save/Restore/STatus/?] <Restore>: ?
+  Enter dimension style(s) to list <*>: *
+  Named dimension styles:
+    Standard
+    ISO-25
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMTXT
+redo:
+snap: on
+ortho: off
+dimension overrides: DIMTXT:3.5
+pointer: none
+active snap: none
+statistics:
