@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten fixture: raw xrefs, *D dimension block and paper-space LINE.
+; LAST contains a POINT that must remain raw, not be dropped or drawn.
+D = DXF file=dati.dxf
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
+; cambia con #697
+? count D -> INSERT 2
+? unhandled D -> INSERT 2; LINE 1
+? entity D 100 -> INSERT block="FIRST" insertion=0,0 scale=1,1 rotation=0
+? entity D 101 -> INSERT block="LAST" insertion=0,0 scale=1,1 rotation=0
+? entity D 102 -> unhandled INSERT
+? entity D 103 -> unhandled INSERT
+? entity D 104 -> unhandled LINE
+? entity D 83 -> none

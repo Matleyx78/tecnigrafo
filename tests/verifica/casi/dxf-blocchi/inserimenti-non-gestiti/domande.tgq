@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten fixture: separate column/row MINSERT, missing block, zero X/Y
+; scales, a multiline ATTDEF and a multiline ATTRIB. The last INSERT must remain raw as a whole.
+; 100 is the supported control: the case becomes mandatory only with PT18.
+D = DXF file=dati.dxf
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
+; cambia con #697
+? entity D 100 -> INSERT block="SIMPLE" insertion=0,0 scale=1,1 rotation=0
+? entity D 101 -> unhandled INSERT
+? entity D 102 -> unhandled INSERT
+? entity D 103 -> unhandled INSERT
+? entity D 104 -> unhandled INSERT
+? entity D 105 -> unhandled INSERT
+? entity D 106 -> unhandled INSERT
+? entity D 109 -> unhandled ATTDEF

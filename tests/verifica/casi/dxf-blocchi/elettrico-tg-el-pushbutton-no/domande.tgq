@@ -1,0 +1,15 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT18: immutable CC0 drawing, independently counted from its DXF groups.
+D = DXF source=elettrico-tg-el-pushbutton-no
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
+; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
+; cambia con #697
+? count D -> LINE 7
+? unhandled D -> ATTDEF 22
+; TG_PIN1=N, flags=3 (constant + invisible).
+? snaps D:44 -> Insertion 0,0
+; TG_PIN2=S, flags=3 (constant + invisible).
+? snaps D:45 -> Insertion 0,-10
