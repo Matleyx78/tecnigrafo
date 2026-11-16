@@ -145,14 +145,16 @@ QToolButton* headButton(const char* name, QWidget* parent) {
 class ColumnDivider final : public QObject {
 public:
     ColumnDivider(QTreeView* grid, std::function<void(int)> resized)
-        : QObject(grid), m_grid(grid), m_resized(std::move(resized)) {
-        m_grid->viewport()->setMouseTracking(true);
-        m_grid->viewport()->installEventFilter(this);
+        : QObject(grid), m_grid(grid), m_viewport(grid->viewport()), m_resized(std::move(resized)) {
+        m_viewport->setMouseTracking(true);
+        m_viewport->installEventFilter(this);
     }
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override {
-        QWidget* viewport = m_grid->viewport();
+        // The viewport kept from the start: the events of the viewport that
+        // the grid sends while it is destroyed must not call the grid.
+        QWidget* viewport = m_viewport;
         if (watched != viewport) {
             return false;
         }
@@ -206,6 +208,7 @@ private:
     }
 
     QTreeView* m_grid;
+    QWidget* m_viewport;
     std::function<void(int)> m_resized;
     bool m_dragging{false};
 };
