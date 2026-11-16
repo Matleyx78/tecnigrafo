@@ -31,14 +31,14 @@ terzo), allargandosi o accorciando il testo con i puntini, mai tagliandolo.
 | 3. Ribbon a gruppi | approvata dal responsabile, 2026-11-11, come inizio: da rifinire con l'uso |
 | 4. Riga delle schede dei documenti | approvata dal responsabile, 2026-11-14 |
 | 5. Area di disegno e barra di navigazione | rimandata (decisione del responsabile, 2026-11-14) |
-| 6. Riga di comando mobile | in corso |
+| 6. Riga di comando mobile | approvata dal responsabile, 2026-11-14 |
 | 7. Immissione dinamica | approvata dal responsabile, 2026-11-14 |
 | 8. Pannello *Properties* | approvata dal responsabile, 2026-11-14 |
 | 9. Pannello *Layers* | approvata dal responsabile, 2026-11-14 |
 | 10. Barra di stato | approvata dal responsabile, 2026-11-14 |
 | Interfaccia classica (menu e barre) | approvata dal responsabile, 2026-11-14 |
 | Finestre di dialogo | approvata dal responsabile, 2026-11-14 |
-| Icone | in corso |
+| Icone | approvate dal responsabile, 2026-11-14, per le regole di oggi (analisi delle regole dopo F6) |
 
 ## Prima lettura: differenze dal riferimento
 
@@ -536,6 +536,56 @@ azioni della barra di accesso rapido, che ora ha un separatore;
 `EnvironmentsTest.TheChosenRibbonTabStaysWhileItIsShown` usa *Home*, che
 nell'ambiente di prova ora si nasconde perché *Undo*/*Redo* non sono più in
 *Modify*.
+
+## Chiusura
+
+**2026-11-16.** Ultimo merge di `main` (nessun conflitto, galleria identica).
+Test di `tests/app` allineati all'aspetto approvato, nessuno tolto:
+
+- barra di accesso rapido (`UiBuilderTest`, quattro test, e
+  `RibbonSmoke.TheQuickAccessBarHasItsFiveActionsInOrderAsIcons`): i comandi
+  restano quelli, e i test controllano anche il logo davanti nella barra
+  d'angolo e il separatore prima di *Undo*;
+- `UiBuilderTest.TheTabsOfTheRibbonAreAsHighAsFile...`: il bordo d'accento
+  di 2 px allunga la scheda oltre la sua riga, che la taglia; il test misura
+  la parte visibile, alta come *File*. Provato a dare a *File* lo stesso bordo
+  per allineare il testo: *File* si restringe a «...», tolto;
+- `RibbonSmoke.ModifyCommandsUseSmallButtons...`: le colonne di *Modify* del
+  riferimento;
+- `RibbonSmoke.TheWholeWindowTakesEachTheme...`: la barra di stato è su
+  `chrome` (area 10);
+- `EnvironmentsTest.TheChosenRibbonTabStaysWhileItIsShown`: in un ambiente
+  senza azioni in *Home* la scheda si nasconde; il test aggiunge un'azione di
+  prova in *Home* (fixture `SharedTabEnvironmentTest`);
+- `MainWindowActionsTest.EveryActionOfTheWindowIsInTheRegistry`: la lente
+  della ricerca dei layer, le frecce dei gruppi, la riga *New*/*Delete*/*Make
+  Current* e il separatore della barra di accesso rapido non sono comandi;
+- `IconsTest.EveryIconFileHasAnActionOrAPanel`: `ui-cancel` e
+  `ui-panel-launcher` elencate da `commandLineIconNames()` e
+  `uiBuilderIconNames()`, come le altre icone dei pannelli;
+- `DrawingAidsTest.F10AndF8...`: la cronologia si cerca nella riga di
+  comando, che ora è sopra il disegno;
+- `GalleryTest`: 16 immagini (le due dell'immissione dinamica), e lo stesso
+  numero in `.github/workflows/ci.yml`.
+
+Due correzioni trovate dai test:
+
+- `DrawingAidsTest.SelectedAndHotGrips...` e `...TheMarkerShows...`: il
+  riquadro dell'immissione dinamica, più alto dall'area 7, vicino al bordo in
+  basso o a destra copriva il puntatore, il grip e il segno dello snap. Ora,
+  se non ci sta dopo il puntatore, va dall'altra parte (sopra o a sinistra);
+  i test passano senza cambiarli;
+- `GalleryTest` (misure uguali nei due temi): la galleria non applicava il
+  font dell'interfaccia prima della prima finestra, come fa `main.cpp`, e la
+  prima finestra, la chiara, prendeva quello della piattaforma (ribbon alto
+  168 px invece di 156). Ora le immagini chiare sono come la finestra vera.
+
+Documenti: il manuale ([interfaccia.md](../../manuale/interfaccia.md)) dove
+descriveva un aspetto cambiato, la voce di `DECISIONI.md` del 2026-11-16
+con gli scostamenti decisi e le immagini di `docs/adr/0039/` per quegli
+scostamenti (testi, barra di stato, menu ⌄, immissione dinamica); le icone
+segnaposto restano, con una nota nel README delle immagini (decisione del
+responsabile, 2026-11-16).
 
 ## Decisioni del responsabile
 

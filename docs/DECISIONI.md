@@ -1949,3 +1949,31 @@ i rimandi ai documenti che cambia.
   quando chiede di cambiare dei file ([agenti/catena.md](agenti/catena.md),
   "Fermarsi per una decisione"). La guida (A2a) dice che la catena è
   arrivata anche in solid-space (Matleyx78/solid-space#293).
+- **2026-11-16 — Gli scostamenti di F6 dal riferimento.** Nelle sessioni di
+  [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
+  ([#658](https://github.com/Matleyx78/tecnigrafo/issues/658)), dal 2026-11-11
+  al 2026-11-16, il responsabile ha approvato l'interfaccia area per area
+  nella finestra vera e ha deciso dove resta diversa dalle immagini
+  dell'[ADR 0039](adr/0039-decisione-visiva-dell-interfaccia.md), che restano
+  scritte come sono; il verbale, con i motivi, è
+  [F6-stato.md](tappe/fuori-tappa/F6-stato.md):
+  - **Font.** Quello dell'interfaccia lo fissa Tecnigrafo (Segoe UI, Noto Sans,
+    DejaVu Sans, 10 pt) e non segue il desktop; la riga di comando è a passo
+    fisso.
+  - **Ribbon.** I pulsanti grandi si chiamano *Layers Panel* e *Properties
+    Panel*; gli interruttori del layer corrente restano a destra della sua
+    combo; *Undo* e *Redo* sono solo nella barra di accesso rapido e nei menu.
+  - **Barra di accesso rapido.** Niente menu ⌄ dopo *Redo*: sarebbe una
+    funzione nuova, e non serve.
+  - **Icone.** A due toni (`pt` sull'elemento che dice l'azione) dove il
+    riferimento le ha monocrome; l'occhio invece della lampadina per lo stato
+    acceso dei layer. Un'analisi delle regole delle icone, che il responsabile
+    trova scarne, viene dopo F6.
+  - **Pannelli.** In *Layers* restano le colonne *Lineweight* e *Plot*.
+  - **Immissione dinamica.** Campi larghi uguali, campo attivo nel colore
+    `icon.pt` invece di `accent`; «30» senza «°», perché il testo è di `cmd`.
+  - **Barra di stato.** Coordinate `X: … Y: …` e scala in `px/unit`, non
+    `x, y, z` e `1:1`.
+  - **Rimandati.** La barra di navigazione (area 5) aspetta le azioni sposta e
+    zoom, con un pacchetto loro; il segno sul grip del vertice corrente è
+    l'idea [#799](https://github.com/Matleyx78/tecnigrafo/issues/799).
