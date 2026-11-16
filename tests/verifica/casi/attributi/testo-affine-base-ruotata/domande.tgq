@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT17 / PT17 (#695). Expectations from ADR 0045, ADR 0022 and ADR 0031.
+; LiberationSans-Regular.ttf 2.1.5, read independently with fontTools:
+; cap height 1409, ascent 1854, descent -434; advance(A) = 1366.
+; No Tecnigrafo executable was used to derive these expectations.
+
+A = ATTDEF position=100,100 height=1 value="A" tag="A"
+!block "AFFINE" base=0,0
+T0 = TEXT position=0,0 height=2 value="A"
+T90 = TEXT position=5,0 height=2 rotation=90 value="A"
+TS = TEXT position=10,0 height=2 oblique=14.03624346792648 value="A"
+!endblock
+; B=A*R(r); QR rotation is already the final angle (PT4/P20).
+I = INSERT block="AFFINE" insertion=10,20 scale=2,1
+? generated I -> TEXT position=10,20 alignment-point=10,20 height=2 rotation=0 width-factor=2 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=10,19.38396025550036;13.87792760823279,19.38396025550036;13.87792760823279,22.63165365507452;10,22.63165365507452; TEXT position=20,20 alignment-point=10,20 height=4 rotation=90 width-factor=0.5 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=21.23207948899929,20;21.23207948899929,21.93896380411639;14.73669268985096,21.93896380411639;14.73669268985096,20; TEXT position=30,20 alignment-point=10,20 height=2 rotation=0 width-factor=2 oblique=26.56505117707799 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=29.69198012775018,19.38396025550036;33.56990773598297,19.38396025550036;35.19375443577005,22.63165365507452;31.31582682753726,22.63165365507452
+; det<0 toggles mirror-x; tan(oblique) changes from 1/4 to 1/2.
+R = INSERT block="AFFINE" insertion=0,40 scale=-2,1
+? generated R -> TEXT position=0,40 alignment-point=0,40 height=2 rotation=0 width-factor=2 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="A" ~box=0,39.38396025550036;-3.877927608232789,39.38396025550036;-3.877927608232789,42.63165365507452;0,42.63165365507452; TEXT position=-10,40 alignment-point=0,40 height=4 rotation=270 width-factor=0.5 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="A" ~box=-11.23207948899929,40;-11.23207948899929,41.9389638041164;-4.736692689850958,41.9389638041164;-4.736692689850958,40; TEXT position=-20,40 alignment-point=0,40 height=2 rotation=0 width-factor=2 oblique=26.56505117707799 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="A" ~box=-19.69198012775018,39.38396025550036;-23.56990773598297,39.38396025550036;-25.19375443577005,42.63165365507452;-21.31582682753726,42.63165365507452

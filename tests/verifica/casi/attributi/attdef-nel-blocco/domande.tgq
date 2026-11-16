@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT17 / PT17 (#695). Expectations from ADR 0045, ADR 0022 and ADR 0031.
+; LiberationSans-Regular.ttf 2.1.5, read independently with fontTools:
+; cap height 1409, ascent 1854, descent -434; advance(A) = 1366.
+; No Tecnigrafo executable was used to derive these expectations.
+
+A = ATTDEF position=100,0 height=1 value="DEFAULT" tag="A"
+? generated A -> TEXT position=100,0 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=100,-0.3080198722498226;100.9694819020582,-0.3080198722498226;100.9694819020582,1.31582682753726;100,1.31582682753726
+!block "DEFINITIONS" base=1,2
+V = ATTDEF position=1,2 height=1 value="DEFAULT" tag="A"
+H = ATTDEF position=3,4 height=1 value="" tag="PIN" invisible=yes
+C = ATTDEF position=5,6 height=1 value="N" tag="CONST" constant=yes
+P = ATTDEF position=7,8 height=1 value="1" tag="PIN" invisible=yes constant=yes
+L = LINE start=1,2 end=3,2
+!endblock
+; A .tgq INSERT defines a reference with no owned ATTRIBs; it does not
+; simulate -INSERT/defaultAttributes. No ATTDEF is generated, even constant.
+I = INSERT block="DEFINITIONS" insertion=10,20 rotation=90
+? generated I -> LINE start=10,20 end=10,22
+? pick 10,21 tolerance=0.1 -> I
+? pick 9.5,20.5 tolerance=0.01 -> none
