@@ -138,8 +138,12 @@ TEST(NewEntities, DefaultsFollowTheDxfDefaults) {
 
 TEST(NewEntities, AreNotSupportedYet) {
     for (const Entity& entity : newEntities()) {
+        if (std::holds_alternative<Ellipse>(entity)) {
+            continue;  // its package is merged (docs/tappe/0.8, PT48)
+        }
         EXPECT_FALSE(isSupported(entity)) << entity.index();
     }
+    EXPECT_TRUE(isSupported(Entity{sampleEllipse()}));
 }
 
 TEST(NewEntities, TheFiveTypesOfBeforeAreSupported) {

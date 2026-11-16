@@ -58,9 +58,12 @@ struct GeneratedItem {
 /// A similarity (exactly: the linear part is a rotation and a uniform scale,
 /// possibly with a reflection) goes through transformed(), text mirrored as
 /// MIRRTEXT 1 (MirrorText::Mirrored); a filled region keeps the map with it,
-/// composed with its own. The other affine maps are realized by the packages
-/// of the ellipse (circles, arcs, ellipses), of the attributes (text) and of
-/// the blocks (the rest): until then the result is empty.
+/// composed with its own. An ellipse goes through transformed(const Ellipse&,
+/// const Transform2D&) under every map, and so do circles and arcs under the
+/// other affine maps, becoming ellipses; a singular map gives nothing. The
+/// other affine maps are realized for the other shapes by the packages of the
+/// attributes (text) and of the blocks (the rest): until then the result is
+/// empty.
 [[nodiscard]] std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
                                                            const Transform2D& transform);
 

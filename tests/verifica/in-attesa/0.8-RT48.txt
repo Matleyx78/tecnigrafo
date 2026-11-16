@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-ellipse/modello-intera #679
-ellipse/modello-archi #679
-ellipse/modello-selezione #679
-ellipse/modello-trasformazioni #679
-ellipse/modello-grip #679
-ellipse/modello-dxf #679
-ellipse/modello-dxf-non-supportate #679

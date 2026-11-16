@@ -34,7 +34,9 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
                                                  double tolerance);
 
 /// The entities selected by `rectangle`: Window takes those isInside(),
-/// Crossing those isInside() or intersects(). Sorted by id.
+/// Crossing those isInside() or intersects(), but an ellipse only if it
+/// intersects(), which is never true until PT50 (docs/adr/0052, point 4).
+/// Sorted by id.
 /// An empty rectangle selects nothing.
 [[nodiscard]] std::vector<EntityId> selectInRectangle(const Document& document,
                                                       const BBox& rectangle, RectangleMode mode);
