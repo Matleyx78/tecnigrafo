@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT17 / PT17 (#695). Expectations from ADR 0045, ADR 0022 and ADR 0031.
+; LiberationSans-Regular.ttf 2.1.5, read independently with fontTools:
+; cap height 1409, ascent 1854, descent -434; advance(A) = 1366.
+; No Tecnigrafo executable was used to derive these expectations.
+
+P = LAYER name="PINS" color=1 lineweight=0.5
+A = ATTDEF position=0,0 height=1 value="A" tag="A" layer="PINS" color=1
+? generated A -> TEXT position=0,0 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" color=255,0,0 lineweight=0.5 ~box=0,-0.3080198722498226;0.9694819020581973,-0.3080198722498226;0.9694819020581973,1.31582682753726;0,1.31582682753726
+? effective A -> color=255,0,0 linetype="Continuous" ltscale=1 lineweight=0.5 visible=yes locked=no
+I = ATTDEF position=20,0 height=1 value="LONG_DEFAULT" tag="A" invisible=yes
+? generated I -> none
+? pick 20.5,0.5 tolerance=0.1 -> none
+? crossing 19,-1 22,2 -> none
+? window 19,-1 22,2 -> none
+? snap 20.5,0.5 aperture=0.1 modes=insertion -> none
+; A frozen layer suppresses the standalone tag too.
+FROZEN = LAYER name="FROZEN" frozen
+F = ATTDEF position=40,0 height=1 value="A" tag="A" layer="FROZEN"
+? generated F -> none
+? pick 40.5,0.5 tolerance=0.1 -> none

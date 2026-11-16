@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Subtracting base (1000,1000) puts the line far from insertion (0,0).
+; PT16 P17: the spatial snap search still finds the insertion, without a curve hit.
+? window -1,-1 1,1 -> none
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "Far" base=1000,1000
+Line = LINE start=0,0 end=10,0
+!endblock
+Far = INSERT block="Far" insertion=0,0
+? generated Far -> LINE start=-1000,-1000 end=-990,-1000
+? snap 0.1,0.1 aperture=0.5 modes=insertion -> Insertion 0,0
+? snap 0.1,0.1 aperture=0.5 modes=endpoint -> none
+? snap 2,0 aperture=0.5 modes=insertion -> none
+? snap -999.9,-1000 aperture=0.5 modes=endpoint -> Endpoint -1000,-1000
+? snap -995,-999.9 aperture=0.5 modes=midpoint -> Midpoint -995,-1000
+? pick 0,0 tolerance=1 -> none
+? window -1001,-1001 -989,-999 -> Far
+? grips Far -> 0,0
+!block "Empty" base=20,30
+!endblock
+Empty = INSERT block="Empty" insertion=50,60
+? snap 50.1,60 aperture=0.5 modes=insertion -> Insertion 50,60
+? grips Empty -> 50,60

@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT16: p' = insertion + R(rotation) * diag(sx,sy) * (p - base).
+; For 30 degrees, cos = sqrt(3)/2 and sin = 1/2; no Tecnigrafo output used.
+? window -1,-1 1,1 -> none
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "TG_EL" base=5,0
+Horizontal = LINE start=0,0 end=10,0
+Vertical = LINE start=10,0 end=10,4
+!endblock
+Unit = INSERT block="TG_EL" insertion=10,20
+Double = INSERT block="TG_EL" insertion=10,20 scale=2,2
+Negative = INSERT block="TG_EL" insertion=10,20 scale=-1,-1
+Reflected = INSERT block="TG_EL" insertion=10,20 scale=-1,1
+Stretched = INSERT block="TG_EL" insertion=10,20 scale=2,1
+Rotated = INSERT block="TG_EL" insertion=100,50 scale=2,1 rotation=30
+CaseFolded = INSERT block="tg_el" insertion=0,0
+? generated Unit -> LINE start=5,20 end=15,20; LINE start=15,20 end=15,24
+? generated Double -> LINE start=0,20 end=20,20; LINE start=20,20 end=20,28
+? generated Negative -> LINE start=15,20 end=5,20; LINE start=5,20 end=5,16
+? generated Reflected -> LINE start=15,20 end=5,20; LINE start=5,20 end=5,24
+? generated Stretched -> LINE start=0,20 end=20,20; LINE start=20,20 end=20,24
+? generated Rotated -> LINE start=91.33974596215561,45 end=108.66025403784439,55; LINE start=108.66025403784439,55 end=106.66025403784439,58.46410161513776
+? generated CaseFolded -> LINE start=-5,0 end=5,0; LINE start=5,0 end=5,4

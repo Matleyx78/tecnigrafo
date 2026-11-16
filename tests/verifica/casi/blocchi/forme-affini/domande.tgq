@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT16/ADR 0044: exact affine images, preserving definition and segment order.
+; The bulge-1 arc runs from (4,0) to (0,0) via (2,2), center (2,0), radius 2.
+; diag(2,1) makes semiaxes (4,2); width is lost on BOTH its straight and arc pieces.
+? window -1,-1 1,1 -> none
+Dash = LTYPE name="Dash" pattern=1,-1 description="Reference dashes"
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "Shapes" base=0,0
+Bent = LWPOLYLINE linetype-generation=yes width=2 vertex=6,0 vertex=4,0 bulge=1 vertex=0,0 linetype="Dash"
+Straight = LWPOLYLINE vertex=0,5 vertex=2,5 vertex=2,7
+Face = SOLID vertex=0,0 vertex=2,0 vertex=0,2 vertex=2,2
+!endblock
+Affine = INSERT block="Shapes" insertion=10,20 scale=2,1
+? generated Affine -> LINE start=22,20 end=18,20 linetype="Dash"; ELLIPSE center=14,20 major-axis=4,0 ratio=0.5 start=0 end=180 linetype="Dash"; LWPOLYLINE closed=no vertex=10,25 vertex=14,25 vertex=14,27; SOLID vertex=10,20 vertex=14,20 vertex=10,22 vertex=14,22
+!block "Curves" base=0,0
+Round = CIRCLE center=0,0 radius=1
+Quarter = ARC center=0,0 radius=1 start-angle=90 end-angle=180
+!endblock
+Reversed = INSERT block="Curves" insertion=0,0 scale=-2,1
+? generated Reversed -> ELLIPSE center=0,0 major-axis=2,0 ratio=0.5; ELLIPSE center=0,0 major-axis=2,0 ratio=0.5 start=0 end=90

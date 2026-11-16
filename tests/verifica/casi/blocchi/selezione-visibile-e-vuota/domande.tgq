@@ -1,0 +1,39 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT16 P3: select visible shapes, not their bounding box or block members.
+; An empty/all-hidden block has no clickable geometry; a window uses its insertion.
+? window -1,-1 1,1 -> none
+Off = LAYER name="Off" off
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "Pair" base=0,0
+Lower = LINE start=0,0 end=10,0
+Upper = LINE start=0,10 end=10,10
+Hidden = LINE start=0,100 end=10,100 layer="Off"
+!endblock
+Pair = INSERT block="Pair" insertion=100,50
+? generated Pair -> LINE start=100,50 end=110,50; LINE start=100,60 end=110,60
+? pick 105,51 tolerance=1 -> Pair
+? pick 105,51.000001 tolerance=1 -> none
+? pick 100,55 tolerance=1 -> none
+? window 100,50 110,60 -> Pair
+? window 99,49 111,51 -> none
+? crossing 104,49 106,51 -> Pair
+? crossing 104,54 106,56 -> none
+!block "Empty" base=0,0
+!endblock
+Empty = INSERT block="Empty" insertion=200,50
+? generated Empty -> none
+? pick 200,50 tolerance=1 -> none
+? window 199,49 201,51 -> Empty
+? crossing 199,49 201,51 -> Empty
+? window 201,49 202,51 -> none
+!block "AllHidden" base=0,0
+Invisible = LINE start=0,0 end=10,0 layer="Off"
+!endblock
+AllHidden = INSERT block="AllHidden" insertion=300,50
+? generated AllHidden -> none
+? pick 300,50 tolerance=1 -> none
+? window 299,49 301,51 -> AllHidden
+? crossing 299,49 301,51 -> AllHidden
+? window 301,49 311,51 -> none
