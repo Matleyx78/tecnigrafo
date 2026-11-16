@@ -328,14 +328,6 @@
       "sha256": "70157d4fc238e1ab4f6c40c4e2177025f3da4dc8d006fd86ca27948bb2048bcc",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2efd1fd842b0330e6c87fe28c5be6700701b6b54/LICENSE"
-    },
-    {
-      "name": "autocad-stili-testo",
-      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2efd1fd842b0330e6c87fe28c5be6700701b6b54/autocad-stili-testo.dxf",
-      "version": "2efd1fd842b0330e6c87fe28c5be6700701b6b54",
-      "sha256": "bfefbb6223919d7b9c65a513282aeed1f65eae93c0d217aef290d48f2ded6066",
-      "license": "CC0-1.0",
-      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2efd1fd842b0330e6c87fe28c5be6700701b6b54/LICENSE"
     }
   ]
 }
