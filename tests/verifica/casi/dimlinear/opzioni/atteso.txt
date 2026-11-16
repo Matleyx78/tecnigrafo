@@ -1,0 +1,60 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=50,0 line-point=50,10 rotation=0 text-point=25,11.875 measurement=50 text="<> mm" ~text="50 mm"
+  264 DIMENSION kind=linear style="ISO-25" origin1=0,20 origin2=0,50 line-point=10,50 rotation=90 text-point=8.125,35 measurement=30 text-rotation=90 ~text="30"
+  271 DIMENSION kind=linear style="ISO-25" origin1=0,60 origin2=30,100 line-point=30,80 rotation=0 text-point=15,81.875 measurement=30 ~text="30"
+  278 DIMENSION kind=linear style="ISO-25" origin1=60,60 origin2=100,90 line-point=80,90 rotation=90 text-point=78.125,75 measurement=30 ~text="30"
+  285 DIMENSION kind=linear style="ISO-25" origin1=0,120 origin2=0,160 line-point=-0.669872981078,161.160254037844 rotation=30 text-point=-10.267627018922,157.78405166994 measurement=20 ~text="20"
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 50,0
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: T
+  Enter dimension text <50>: <> mm
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 25,10
+  Dimension text = 50
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,20
+  Specify second extension line origin: 0,50
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: A
+  Specify angle of dimension text: 90
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 10,35
+  Dimension text = 30
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,60
+  Specify second extension line origin: 30,100
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: H
+  Specify dimension line location or [Text/Angle]: 40,80
+  Dimension text = 30
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 60,60
+  Specify second extension line origin: 100,90
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: V
+  Specify dimension line location or [Text/Angle]: 80,120
+  Dimension text = 30
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,120
+  Specify second extension line origin: 0,160
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: R
+  Specify angle of dimension line <0>: 30
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: -20,150
+  Dimension text = 20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  DIMLINEAR
+  DIMLINEAR
+  DIMLINEAR
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 5
