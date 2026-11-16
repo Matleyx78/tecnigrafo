@@ -139,6 +139,22 @@ jobs:
           references=$(echo "$changed" | grep -E '^tests/verifica/(casi/|sorgenti\.json$)' || true)
           others=$(echo "$changed" | grep -vE '^tests/verifica/(casi/|sorgenti\.json$|in-attesa/)' | grep -v '^$' || true)
           if [ -n "$references" ] && [ -n "$others" ]; then
+            # docs/DECISIONI.md, 2026-11-16 (PT3, #675): a package that makes a
+            # DXF type handled updates, in the same pull request, the count and
+            # unhandled answers of the existing cases, with the oracle's list.
+            only_counts=yes
+            echo "$changed" | grep -qx 'tests/verifica/oracolo/ezdxf_attesi.py' || only_counts=no
+            for f in $references; do
+              case "$f" in tests/verifica/casi/*/domande.tgq) ;; *) only_counts=no ;; esac
+              if git diff -U0 "$BASE...$HEAD" -- "$f" | grep -E '^[+-]' | grep -vE '^(\+\+\+|---) ' \
+                   | grep -vqE '^[+-]\? (count|unhandled) '; then
+                only_counts=no
+              fi
+            done
+            if [ "$only_counts" = yes ]; then
+              echo "Only count and unhandled answers changed, with the oracle list (docs/DECISIONI.md, 2026-11-16)."
+              exit 0
+            fi
             echo "::error::This pull request changes reference cases together with other files."
             echo "Reference files changed:"
             echo "$references"
