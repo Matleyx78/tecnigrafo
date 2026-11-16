@@ -1,0 +1,17 @@
+; ELLIPSE: arco con angolo iniziale e finale, misurati dall'asse maggiore (autocad-ellissi, g e k)
+ELLIPSE
+A
+0,-60
+40,-60
+10
+30
+200
+!report
+ELLIPSE
+A
+C
+110,-145
+125,-137
+6
+20
+250

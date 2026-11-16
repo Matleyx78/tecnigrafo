@@ -1,0 +1,17 @@
+; The destination and symbol are handwritten; the imported red layer makes table import observable.
+OPEN
+destinazione.dxf
+; cambia con #705
+-INSERT
+Contatto=simbolo.dxf
+!esc
+!report
+U
+!report
+-INSERT
+Nuovo=simbolo.dxf
+Scale
+2
+!esc
+!report
+U

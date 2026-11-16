@@ -114,6 +114,13 @@ public:
         polylinesAtFill = polylines.size();
     }
 
+    void fillLoops(std::span<const std::vector<Vec2>> loops, const Color& color) override {
+        loopFills.emplace_back(loops.begin(), loops.end());
+        fillColor = color;
+    }
+
+    std::vector<std::vector<std::vector<Vec2>>> loopFills;
+
     void drawText(const TextRun& run) override { texts.push_back(run); }
 
     std::vector<TextRun> texts;
@@ -226,7 +233,7 @@ TEST(PreviewRenderer, DrawsTheNewEntitiesAndSkipsThoseOutsideTheView) {
                                                core::Circle{{10.0, 20.0}, 1.0},
                                                core::Arc{{1e6, 1e6}, 1.0, 0.0, 1.0}};  // far away
     RecordingPainter painter;
-    renderPreview(entities, makeViewport(), SceneStyle{}, painter);
+    renderPreview(core::Document{}, entities, makeViewport(), SceneStyle{}, painter);
     EXPECT_EQ(painter.polylines.size(), 2U);
     EXPECT_EQ(painter.polylinePen, SceneStyle{}.preview);
 }
@@ -262,7 +269,7 @@ TEST(PreviewRenderer, DrawsInScreenSpaceWithoutClearingOrDrawingGridAndAxes) {
     const Color expectedPreview{230, 200, 90};
     RecordingPainter painter;
 
-    renderPreview(entities, makeViewport(), style, painter);
+    renderPreview(core::Document{}, entities, makeViewport(), style, painter);
 
     EXPECT_EQ(style.preview, expectedPreview);
     EXPECT_EQ(painter.polylinePen, style.preview);
@@ -290,7 +297,7 @@ TEST(PreviewRenderer, UsesCustomColorAndSharedArcTessellation) {
     RecordingPainter previewPainter;
 
     renderScene(document, makeViewport(), style, scenePainter);
-    renderPreview(entities, makeViewport(), style, previewPainter);
+    renderPreview(core::Document{}, entities, makeViewport(), style, previewPainter);
 
     EXPECT_EQ(previewPainter.polylinePen, style.preview);
     EXPECT_TRUE(previewPainter.lastClosed);
@@ -301,7 +308,7 @@ TEST(PreviewRenderer, UsesCustomColorAndSharedArcTessellation) {
 
 TEST(PreviewRenderer, EmptyPreviewDoesNotDrawOrClear) {
     RecordingPainter painter;
-    renderPreview({}, makeViewport(), SceneStyle{}, painter);
+    renderPreview(core::Document{}, {}, makeViewport(), SceneStyle{}, painter);
     EXPECT_EQ(painter.clears, 0);
     EXPECT_EQ(painter.lines, 0);
     EXPECT_TRUE(painter.polylines.empty());
@@ -313,7 +320,7 @@ TEST(PreviewRenderer, SkipsEntitiesOutsideTheView) {
     faraway.addVertex({1e6 + 1.0, 1e6});
     const std::vector<core::Entity> entities{faraway};
     RecordingPainter painter;
-    renderPreview(entities, makeViewport(), SceneStyle{}, painter);
+    renderPreview(core::Document{}, entities, makeViewport(), SceneStyle{}, painter);
     EXPECT_EQ(painter.clears, 0);
     EXPECT_EQ(painter.lines, 0);
     EXPECT_TRUE(painter.polylines.empty());
@@ -345,7 +352,7 @@ TEST(HighlightRenderer, UsesSharedTessellationAndSkipsAbsentAndOffscreenIds) {
     const std::array<core::Entity, 1> entities{arc};
     renderHighlight(document, ids, makeViewport(), style, highlight);
     renderScene(document, makeViewport(), style, scene);
-    renderPreview(entities, makeViewport(), style, preview);
+    renderPreview(core::Document{}, entities, makeViewport(), style, preview);
     EXPECT_EQ(highlight.polylines, scene.polylines);
     EXPECT_EQ(highlight.polylines, preview.polylines);
     ASSERT_EQ(highlight.polylines.size(), 1U);
@@ -501,7 +508,7 @@ TEST(SceneRenderer, SmallTextsAreDrawnAsTheirBox) {
     text.height = 0.99;
     const std::array<core::Entity, 1> small{text};
     RecordingPainter painter;
-    renderPreview(small, makeViewport(), SceneStyle{}, painter);
+    renderPreview(core::Document{}, small, makeViewport(), SceneStyle{}, painter);
     EXPECT_TRUE(painter.texts.empty());
     ASSERT_EQ(painter.polylines.size(), 1U);
     EXPECT_TRUE(painter.lastClosed);
@@ -514,7 +521,7 @@ TEST(SceneRenderer, SmallTextsAreDrawnAsTheirBox) {
     text.height = 1.0;
     const std::array<core::Entity, 1> readable{text};
     RecordingPainter other;
-    renderPreview(readable, makeViewport(), SceneStyle{}, other);
+    renderPreview(core::Document{}, readable, makeViewport(), SceneStyle{}, other);
     EXPECT_TRUE(other.polylines.empty());
     ASSERT_EQ(other.texts.size(), 1U);
     EXPECT_DOUBLE_EQ(other.texts.front().capHeightPx, kMinTextHeightPx);
@@ -700,7 +707,7 @@ TEST(SceneRenderer, SceneAndPreviewResetDashedOverlayPenToSolid) {
     EXPECT_EQ(painter.polylinePen, style.entity);
     EXPECT_DOUBLE_EQ(painter.polylineWidth, 0.0);
     renderHighlight(document, ids, makeViewport(), style, painter);
-    renderPreview(entities, makeViewport(), style, painter);
+    renderPreview(core::Document{}, entities, makeViewport(), style, painter);
     EXPECT_EQ(painter.polylineStyle, LineStyle::Solid);
     EXPECT_EQ(painter.polylinePen, style.preview);
     EXPECT_DOUBLE_EQ(painter.polylineWidth, 0.0);

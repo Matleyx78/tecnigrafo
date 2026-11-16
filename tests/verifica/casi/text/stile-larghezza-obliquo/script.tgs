@@ -1,0 +1,42 @@
+; TEXT copia nel testo nuovo lo stile corrente, il suo fattore di larghezza e il suo obliquo
+; ([0.8-RT12], lavoro #685; ADR 0046, punto 1); con TEXTSTYLE Standard torna a 1 e 0.
+; Valori attesi: richieste di -STYLE dalla scheda PT12 (punto 2) e dalla cronologia
+; di AutoCAD 2021 autocad-stili-testo.txt (Matleyx78/dxf-test-file, commit
+; 1ad04b0b8a568fb9dd4960719a8f17289129f788): per un nome nuovo "New style." e i
+; predefiniti di uno stile nuovo (txt, 0.0000, 1.0000, 0, No, No), anche se lo stile
+; corrente ne ha altri; senza [Annotative] nella richiesta dell'altezza.
+; ~box come in testo/obliquo: misure di LiberationSans-Regular.ttf 2.1.5, a = 1854/1409,
+; d = -434/1409, L("Hello") = 3.312278211497516 per unità d'altezza; w = L h f;
+; q = S ((x, y) - (ox, oy)), S = [[1, tan(obliquo)], [0, 1]]; p = A + R(rotazione) q.
+; 257: A = 0,0, h = 2.5, f = 0.8, obliquo 15, rotazione 0.
+; 258: A = 10,20, h = 2.5, f = 0.8, obliquo 15, rotazione 30 (lo stesso ~box di O_ROT in testo/obliquo).
+; 259: A = 0,20, h = 2.5, f = 1, obliquo 0, rotazione 0.
+-STYLE
+Inclinato
+arial.ttf
+0
+0.8
+15
+No
+No
+TEXT
+0,0
+2.5
+0
+Hello
+
+TEXT
+10,20
+
+30
+Hello
+
+!report
+TEXTSTYLE
+Standard
+TEXT
+0,20
+
+0
+Hello
+

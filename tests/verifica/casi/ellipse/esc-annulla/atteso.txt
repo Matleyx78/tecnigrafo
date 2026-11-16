@@ -1,0 +1,121 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: ELLIPSE
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: 0,0
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  Specify distance to other axis or [Rotation]: R
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: C
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: C
+  Specify center of ellipse: 0,0
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: A
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: A
+  Specify axis endpoint of elliptical arc or [Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  Specify distance to other axis or [Rotation]: 10
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: A
+  Specify axis endpoint of elliptical arc or [Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  Specify distance to other axis or [Rotation]: 10
+  Specify start angle: 30
+  *Cancel*
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: A
+  Specify axis endpoint of elliptical arc or [Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  Specify distance to other axis or [Rotation]: 10
+  Specify start angle: 30
+  Specify end angle or [Included angle]: I
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  257 ELLIPSE center=20,0 major-axis=-20,0 ratio=0.5
+messages:
+  Command: ELLIPSE
+  Specify axis endpoint of ellipse or [Arc/Center]: 0,0
+  Specify other endpoint of axis: 40,0
+  Specify distance to other axis or [Rotation]: 10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[report 3]
+entities:
+messages:
+  Command: U
+  Undone: Ellipse.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Ellipse
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 ELLIPSE center=20,0 major-axis=-20,0 ratio=0.5
+messages:
+  Command: REDO
+  Redone: Ellipse.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Ellipse
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 1

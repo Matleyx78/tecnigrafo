@@ -17,6 +17,9 @@
 - `io/src/dxf_hatch.cpp` (nuovo), `io/CMakeLists.txt`, `io/src/dxf_entities.cpp`,
   `io/src/dxf_entity_common.hpp` (file comuni)
 - `tests/io/dxf_hatch_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+- `tests/verifica/oracolo/ezdxf_attesi.py` (solo l'elenco dei tipi attivi)
+- `tests/verifica/casi/**/domande.tgq` (solo le righe `? count` e
+  `? unhandled`, copiate dal log dell'oracolo)
 
 ## Cosa fare
 
@@ -37,6 +40,12 @@
    riscrivono ridotti: un 53 = 3690 torna 90.
 4. Un `HATCH` letto e scritto senza modifiche resta identico (ADR 0018, punto
    6: i valori del modello sono gli stessi, anche con gli angoli ridotti).
+5. Aggiungere `HATCH` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
+   nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
+   `unhandled` di tutti i casi che cambiano. Questa è l'eccezione a
+   [pacchetto.md](../../agenti/pacchetto.md),
+   «In un pacchetto di lavoro», e all'ADR 0011 (casi scritti da un altro
+   agente), decisa il 2026-11-16 in [DECISIONI.md](../../DECISIONI.md).
 
 ## Regole della tappa che valgono qui
 

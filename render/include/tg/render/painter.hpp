@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <span>
 #include <string>
+#include <vector>
 
 namespace tg::render {
 
@@ -55,6 +56,10 @@ public:
 
     /// Fills a screen-space polygon, including alpha, without an outline.
     virtual void fillPolygon(std::span<const core::Vec2> points, const Color& color) = 0;
+
+    /// Fills the area enclosed by `loops` (screen pixels) with the even-odd
+    /// rule, without outline: islands stay empty, islands of islands are filled.
+    virtual void fillLoops(std::span<const std::vector<core::Vec2>> loops, const Color& color) = 0;
 
     /// Draws run with the bundled font in the current pen colour.
     virtual void drawText(const TextRun& run) = 0;

@@ -1,0 +1,25 @@
+; TEXT con uno stile ad altezza fissa: non chiede l'altezza, il testo ha l'altezza e il nome
+; dello stile ([0.8-RT12], lavoro #685; ADR 0046, punto 1). Come nella cronologia di AutoCAD
+; (autocad-stili-testo.txt, TEXT con ALTEZZA5): dopo il punto iniziale chiede la rotazione.
+; Valori attesi: richieste di -STYLE dalla scheda PT12 (punto 2) e dalla cronologia
+; di AutoCAD 2021 autocad-stili-testo.txt (Matleyx78/dxf-test-file, commit
+; 1ad04b0b8a568fb9dd4960719a8f17289129f788): per un nome nuovo "New style." e i
+; predefiniti di uno stile nuovo (txt, 0.0000, 1.0000, 0, No, No), anche se lo stile
+; corrente ne ha altri; senza [Annotative] nella richiesta dell'altezza.
+; ~box come in testo/obliquo: misure di LiberationSans-Regular.ttf 2.1.5, a = 1854/1409,
+; d = -434/1409, L("Hello") = 3.312278211497516 per unità d'altezza; w = L h f;
+; q = S ((x, y) - (ox, oy)), S = [[1, tan(obliquo)], [0, 1]]; p = A + R(rotazione) q.
+; A = 0,0, h = 5, f = 1, obliquo 0, rotazione 0.
+-STYLE
+Alto
+arial.ttf
+5
+1
+0
+No
+No
+TEXT
+0,0
+0
+Hello
+

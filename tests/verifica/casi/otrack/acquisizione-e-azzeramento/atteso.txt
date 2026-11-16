@@ -1,0 +1,198 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=20,0 end=30,0
+  259 LINE start=40,0 end=50,0
+  260 LINE start=60,0 end=70,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 20,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 40,0
+  Specify next point or [Undo]: 50,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 60,0
+  Specify next point or [Undo]: 70,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: -10,-10
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-10,-10 end=70,0
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 70,0
+active snap: Endpoint 70,0
+tracking: on
+acquired:
+  10,0
+  20,0
+  30,0
+  40,0
+  50,0
+  60,0
+  70,0
+statistics:
+  LINE 4
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=20,0 end=30,0
+  259 LINE start=40,0 end=50,0
+  260 LINE start=60,0 end=70,0
+messages:
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-10,-10 end=70,0
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 70,0
+active snap: Endpoint 70,0
+tracking: on
+acquired:
+  10,0
+  20,0
+  30,0
+  40,0
+  50,0
+  60,0
+statistics:
+  LINE 4
+
+[report 3]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=20,0 end=30,0
+  259 LINE start=40,0 end=50,0
+  260 LINE start=60,0 end=70,0
+  261 LINE start=-10,-10 end=5,20
+messages:
+prompt: Specify next point or [Close/Undo]:
+preview:
+  LINE start=5,20 end=6,20
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 6,20
+active snap: none
+tracking: on
+statistics:
+  LINE 5
+
+[report 4]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=20,0 end=30,0
+  259 LINE start=40,0 end=50,0
+  260 LINE start=60,0 end=70,0
+  261 LINE start=-10,-10 end=5,20
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 0,0
+active snap: none
+tracking: on
+statistics:
+  LINE 5
+
+[report 5]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=20,0 end=30,0
+  259 LINE start=40,0 end=50,0
+  260 LINE start=60,0 end=70,0
+  261 LINE start=-10,-10 end=5,20
+messages:
+  Command: LINE
+  Specify first point: -10,-10
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-10,-10 end=0,0
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 0,0
+active snap: Endpoint 0,0
+statistics:
+  LINE 5
+
+[final]
+entities:
+  257 LINE start=0,0 end=10,0
+  258 LINE start=20,0 end=30,0
+  259 LINE start=40,0 end=50,0
+  260 LINE start=60,0 end=70,0
+  261 LINE start=-10,-10 end=5,20
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 0,0
+active snap: none
+statistics:
+  LINE 5
