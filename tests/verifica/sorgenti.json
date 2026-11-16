@@ -328,6 +328,14 @@
       "sha256": "70157d4fc238e1ab4f6c40c4e2177025f3da4dc8d006fd86ca27948bb2048bcc",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2efd1fd842b0330e6c87fe28c5be6700701b6b54/LICENSE"
+    },
+    {
+      "name": "autocad-solid",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/autocad-solid.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "44779ab861c04e97cd82c5c67482d3e1273ae943e4c773c1edc69fc8d33552cf",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
     }
   ]
 }

@@ -1,0 +1,37 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT10: the DXF codec of SOLID on a handwritten file (input.dxf, R2018, no tables).
+; Group order as AutoCAD writes it: AcDbTrace, 10..33, 39, 210/220/230.
+; A1 four vertices, z 0.
+; A2 three vertices: no 13/23/33, so the fourth is the third (rapporto.md, SOLID).
+; A3 extrusion (0,0,-1), z 3 on every vertex, thickness 2. OCS vertices
+;    (1,0) (4,0) (1,2) (4,2); world x -> -x (ADR 0018, point 5), order kept.
+; A4 groups the model does not have: transparency 440 in AcDbEntity and XDATA.
+; A5 three equal vertices and a fourth apart: not all equal, so handled.
+; A6 four equal vertices, A7 three equal with 13 missing: degenerate, unhandled.
+; A8 extrusion (1,0,0): unhandled (ADR 0018, point 3).
+; Values by hand from the rules above; ezdxf confirms the raw vertices, but
+; gives (0,0) for a missing 13, so this case is not an oracle case.
+D = DXF file=input.dxf
+? version D -> AC1032
+? units D -> 4
+; PT10 makes SOLID a handled entity: until then every SOLID is unhandled.
+; cambia con #677
+? count D -> SOLID 5
+? unhandled D -> SOLID 3
+? entity D A1 -> SOLID vertex=0,0 vertex=10,0 vertex=0,5 vertex=10,5
+? entity D A2 -> SOLID vertex=0,0 vertex=6,0 vertex=3,4 vertex=3,4
+? entity D A3 -> SOLID vertex=-1,0 vertex=-4,0 vertex=-1,2 vertex=-4,2 thickness=2 extrusion=0,0,-1
+? entity D A4 -> SOLID vertex=10,10 vertex=14,10 vertex=10,13 vertex=14,13
+? entity D A5 -> SOLID vertex=20,0 vertex=20,0 vertex=20,0 vertex=25,0
+? entity D A6 -> unhandled SOLID
+? entity D A7 -> unhandled SOLID
+? entity D A8 -> unhandled SOLID
+? bbox D:A2 -> 0,0 6,4
+? bbox D:A3 -> -4,0 -1,2
+? snaps D:A2 -> Endpoint 0,0; Endpoint 6,0; Endpoint 3,4
+? snaps D:A5 -> Endpoint 20,0; Endpoint 25,0
+; The rewritten file keeps the missing 13, the z, 39 and 210 as read, the
+; extrusion back in the OCS, 440 and the XDATA (ADR 0018, points 4-6).
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical

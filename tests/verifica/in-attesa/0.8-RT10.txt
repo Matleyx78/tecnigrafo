@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+# 0.8-RT10: the SOLID entity (PT10, #677).
+solid/autocad #677
+solid/dxf-codec #677
+solid/farfalla #677
+solid/forma-e-trasformazioni #677
+solid/grip #677
