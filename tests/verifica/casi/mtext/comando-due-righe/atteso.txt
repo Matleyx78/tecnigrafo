@@ -1,0 +1,77 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 MTEXT insertion=10,20 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Prima riga\\PSeconda riga" ~lines=2
+  258 MTEXT insertion=40,-10 height=2.5 width=10 attachment=top-left rotation=0 style="Standard" value="AB" ~lines=1
+messages:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 10,20
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 70,0
+  MText: Prima riga
+  MText: Seconda riga
+  MText:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 40,-10
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 30,-30
+  MText: AB
+  MText:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Mtext
+  Mtext
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 2
+
+[report 2]
+entities:
+  257 MTEXT insertion=10,20 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Prima riga\\PSeconda riga" ~lines=2
+messages:
+  Command: U
+  Undone: Mtext.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Mtext
+redo:
+  Mtext
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 1
+
+[final]
+entities:
+  257 MTEXT insertion=10,20 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Prima riga\\PSeconda riga" ~lines=2
+  258 MTEXT insertion=40,-10 height=2.5 width=10 attachment=top-left rotation=0 style="Standard" value="AB" ~lines=1
+messages:
+  Command: REDO
+  Redone: Mtext.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Mtext
+  Mtext
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 2

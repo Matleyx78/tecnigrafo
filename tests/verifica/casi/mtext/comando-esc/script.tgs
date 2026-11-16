@@ -1,0 +1,29 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; MTEXT: Esc al primo angolo, all'angolo opposto e alla prima riga del testo non crea
+; nulla; una riga vuota subito dopo l'angolo opposto non crea nulla; Esc dopo una riga
+; conserva il testo già scritto, come TEXT (ADR 0015), in un passo Mtext; U lo toglie
+; ([0.8-RT15], lavoro #691). Richieste e regole dalla scheda PT15.
+; Larghezza: |40 - 0| = 40; inserimento sul primo angolo, allineamento TL, altezza 2.5.
+MTEXT
+!esc
+MTEXT
+0,0
+!esc
+MTEXT
+0,0
+10,-10
+!esc
+MTEXT
+0,0
+10,-10
+
+!report
+MTEXT
+0,0
+40,-10
+Riga uno
+!esc
+!report
+U
