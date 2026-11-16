@@ -1,0 +1,47 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40
+  258 CIRCLE center=30,20 radius=8
+  259 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=outer loop=external+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40
+messages:
+  Command: PLINE
+  Specify start point: 0,0
+  Specify next point or [Arc/Undo]: 60,0
+  Specify next point or [Arc/Undo]: 60,40
+  Specify next point or [Arc/Close/Undo]: 0,40
+  Specify next point or [Arc/Close/Undo]: C
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 30,20
+  Specify radius of circle or [Diameter]: 8
+  Command: -HATCH
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]: S
+  Select objects: 38,20
+  1 found, 1 total
+  Select objects:
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]: S
+  Select objects: 30,0
+  1 found, 1 total
+  Select objects:
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Circle
+  Hatch
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  HATCH 1
+  LWPOLYLINE 1
