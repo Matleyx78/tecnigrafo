@@ -78,7 +78,12 @@
 3. `io` legge la tabella `DIMSTYLE` nel modello (variabili essenziali per codice
    di gruppo; il resto in `extras`, compreso l'handle 105) e le variabili
    `$DIM…` dell'intestazione (le essenziali nel modello, le altre in
-   `currentExtras`); riscrive tutto com'era. **Stile mancante** (PT5, punto
+   `currentExtras`); riscrive tutto com'era. Se in un record manca il gruppo
+   di una variabile essenziale, valgono i predefiniti DXF di AutoCAD:
+   `DIMASZ` 0,18, `DIMCEN` 0,09, `DIMDEC` 4, `DIMDSEP` `.`, `DIMEXE` 0,18,
+   `DIMEXO` 0,0625, `DIMGAP` 0,09, `DIMTAD` 0, `DIMTIH` 1, `DIMTOH` 1,
+   `DIMTXT` 0,18 e `DIMZIN` 0; per le altre variabili vale `ISO-25`.
+   **Stile mancante** (PT5, punto
    B06: [DECISIONI.md](../../DECISIONI.md), 2026-11-14, «Revisione delle interfacce PT5»): come per gli stili di testo (PT11, punto 3),
    se `$DIMSTYLE` manca o nomina uno stile che non c'è, lo stile corrente è
    `Standard`, e se `Standard` non c'è si crea con i valori di AutoCAD; una

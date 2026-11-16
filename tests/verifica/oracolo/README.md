@@ -13,7 +13,15 @@ x86_64. `requirements.txt` pins every transitive dependency and its SHA-256.
 
 Open the pull request's CI run, then **Verifica → Oracolo ezdxf: answers**.
 Every public source listed in `tests/verifica/sorgenti.json` has a heading and
-copyable `? version`, `? units`, `? count`, `? unhandled`, `? layers`, `? linetypes`, and `? entity` answers.
+copyable `? version`, `? units`, `? count`, `? unhandled`, `? layers`,
+`? linetypes`, `? blocks`, `? styles`, `? dimstyles`, `? entity`, and
+`? generated` answers. Generated answers are printed for `INSERT` and
+`DIMENSION` handles when every virtual entity is a supported shape. They keep
+drawing order, resolve effective properties through the owner and its layers,
+and append visible `ATTRIB` entities as `TEXT`; invisible attributes are
+omitted. If a virtual entity is not a supported shape, the log prints
+`; generated <handle>: outside oracle scope (<types>)` instead of a copyable
+answer.
 Answers are printed even when the preceding verification failed. If there
 are no public sources, the log says so explicitly.
 
@@ -38,6 +46,18 @@ For negative extrusion the log includes
 `; OCS: convert by hand (ADR 0018, point 5)` and **raw file coordinates**.
 Those entity answers require manual conversion before copying into a case.
 Font-derived properties such as `~box` are outside this oracle's scope.
+The stage 0.8 entity rows cover `SOLID`, `ELLIPSE`, `MTEXT`, `ATTDEF`,
+`ATTRIB`, `INSERT`, `DIMENSION`, and `HATCH`. The exclusions in ADR 0044
+(arrays, missing or external blocks, multiline attributes, MTEXT columns,
+elliptic/spline/gradient hatch paths) remain unhandled. Unsupported dimension
+types are reported as `kind=other` rather than discarded.
+
+An explicit stage declaration in `ezdxf_attesi.py` records which of those
+types Tecnigrafo currently handles. It affects only `count` and `unhandled`;
+it is not read from Tecnigrafo, and the oracle never runs or links to the
+application. Linked `ATTRIB` entities remain inside the raw `INSERT` and are
+absent from both counts until `ATTRIB` is active; then they appear in `count`,
+or in `unhandled` if unsupported. Their `entity` answers are always available.
 
 Layer rows contain color, linetype and lineweight, then active states in order:
 `off frozen locked noplot`. Linetype rows contain the signed group-49 pattern
@@ -46,6 +66,13 @@ The three built-in types ByBlock, ByLayer and Continuous are omitted.
 Both table answers preserve file order and return `none` for an empty table.
 Original table records are read independently: defaults inserted by ezdxf do
 not become answers for a file without tables.
+
+`styles` contains every file `STYLE` record, including `Standard`, in the
+`text styles:` format. `dimstyles` likewise contains all `DIMSTYLE` records,
+including `Standard` and `ISO-25`, with essential values that differ from
+`ISO-25`. A missing group uses AutoCAD's DXF default, not the `ISO-25` value.
+`blocks` excludes layout and anonymous dimension blocks and writes
+each definition header followed by its entities in `blocks:` format.
 
 Entity answers append `layer=`, `color=`, `linetype=`, `ltscale=` and
 `lineweight=`, in that order, only when different from the defaults.
@@ -71,7 +98,8 @@ pull request, read the oracle log, then copy the independent answers into cases.
 Do not derive expected values by executing Tecnigrafo.
 
 `controlla_casi.py` checks version, units, managed/unhandled counts, layers,
-linetypes and entity answers for each source drawing, plus source-independent
+linetypes, blocks, styles, dimension styles, entities and generated geometry
+for each source drawing, plus source-independent
 `aci` questions. Counts and table rows are unordered lists; quoted semicolons
 do not split rows; numbers use the
 case's absolute/relative tolerances, updated by each `!tolerance` directive
