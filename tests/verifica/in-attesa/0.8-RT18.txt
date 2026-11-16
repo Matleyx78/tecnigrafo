@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+dxf-blocchi/definizioni-ordine-annidati #697
+dxf-blocchi/blocchi-grezzi-e-spazio-carta #697
+dxf-blocchi/inserimenti-non-gestiti #697
+dxf-blocchi/cicli-diretto-indiretto #697
+dxf-blocchi/attributi-extra-seqend #697
+dxf-blocchi/autocad-blocchi #697
+dxf-blocchi/elettrico-tg-el-breaker-3p #697
+dxf-blocchi/elettrico-tg-el-coil-delay-off #697
+dxf-blocchi/elettrico-tg-el-contact-no #697
+dxf-blocchi/elettrico-tg-el-folio-out #697
+dxf-blocchi/elettrico-tg-el-motor-3ph #697
+dxf-blocchi/elettrico-tg-el-pushbutton-no #697
+dxf-blocchi/elettrico-tg-el-terminal #697
+dxf-blocchi/elettrico-tg-el-transformer-1ph #697
+dxf-blocchi/elettrico-avviamento-diretto #697
+dxf-blocchi/handseed-blocchi-salvataggio #697

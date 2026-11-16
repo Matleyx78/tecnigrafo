@@ -1,0 +1,59 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  65536 LINE start=100,100 end=110,100
+messages:
+  Command: OPEN
+  Enter name of drawing to open: dati.dxf
+  Command: LINE
+  Specify first point: 100,100
+  Specify next point or [Undo]: 110,100
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: dati.dxf, modified
+blocks:
+  "HIGH" base=5,2 explodable=no uniform=yes units=4
+  "HIGH" 65534 LINE start=0,0 end=10,0
+documents: Drawing1.cadx, dati.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  65536 LINE start=100,100 end=110,100
+messages:
+  Command: U
+  Undone: Line.
+  Command: REDO
+  Redone: Line.
+  Command: SAVEAS
+  Save drawing as <dati.dxf>: salvato.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+redo:
+snap: on
+ortho: off
+drawing: salvato.dxf
+blocks:
+  "HIGH" base=5,2 explodable=no uniform=yes units=4
+  "HIGH" 65534 LINE start=0,0 end=10,0
+documents: Drawing1.cadx, salvato.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  LINE 1

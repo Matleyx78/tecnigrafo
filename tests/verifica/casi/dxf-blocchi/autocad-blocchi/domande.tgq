@@ -1,0 +1,25 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT18: immutable CC0 drawing, independently counted from its DXF groups.
+D = DXF source=autocad-blocchi
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
+; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
+; cambia con #697
+? count D -> none
+? unhandled D -> INSERT 14
+? entity D BF -> INSERT block="SEMPLICE" insertion=0,0 scale=1,1 rotation=0
+? entity D C0 -> INSERT block="SEMPLICE" insertion=40,0 scale=2,2 rotation=0
+? entity D C1 -> INSERT block="SEMPLICE" insertion=120,0 scale=-1,1 rotation=0
+? entity D C2 -> INSERT block="SEMPLICE" insertion=140,0 scale=2,1 rotation=0
+? entity D C3 -> INSERT block="SEMPLICE" insertion=200,0 scale=1,1 rotation=30
+? entity D C4 -> INSERT block="DABLOCCO" insertion=0,-50 scale=1,1 rotation=0
+? entity D C5 -> INSERT block="DABLOCCO" insertion=20,-50 scale=1,1 rotation=0 layer="BLOCCHI"
+? entity D C6 -> INSERT block="DABLOCCO" insertion=40,-50 scale=1,1 rotation=0 color=1
+? entity D C7 -> INSERT block="ESTERNO" insertion=0,-100 scale=1,1 rotation=0
+? entity D C8 -> INSERT block="ATTRIBUTI" insertion=0,-150 scale=1,1 rotation=0
+? entity D CD -> INSERT block="ATTRIBUTI" insertion=120,-150 scale=-1,1 rotation=0
+? entity D D2 -> INSERT block="RIDEFINITO" insertion=0,-200 scale=1,1 rotation=0
+? entity D D3 -> INSERT block="RIDEFINITO" insertion=20,-200 scale=1,1 rotation=0
+? entity D D8 -> INSERT block="NON_ESPLODIBILE" insertion=0,-250 scale=1,1 rotation=0

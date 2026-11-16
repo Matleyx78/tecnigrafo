@@ -338,6 +338,86 @@
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
     },
     {
+      "name": "autocad-blocchi",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/autocad-blocchi.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "347efd4ee75e05d33ba7c4dc0c2257a8d658e6fa825ec265a87c746a0af17f64",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-breaker-3p",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_BREAKER_3P.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "cfde6e3f8597cbface5b47df3ffaf306eeb80a1d455f7faebae879ac4c755c05",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-coil-delay-off",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_COIL_DELAY_OFF.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "fdba66ca1135c7cf32ee730cf37a21db6aebd05e8e7854042bcd4475d94f972d",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-contact-no",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_CONTACT_NO.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "f576ba399064f16520794ef217214e5dbcdec1612c9886898ed3e510d2a89d21",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-folio-out",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_FOLIO_OUT.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "0ef1d6e6ed516f785df6eb3256b02bac91481e527ca38a2cef15a0569b1f0a9d",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-motor-3ph",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_MOTOR_3PH.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "15d778e0b43c9acb755b23d995db984f51e089f4679f99dc3adaccc04635c833",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-pushbutton-no",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_PUSHBUTTON_NO.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "82b394687bda6d262ac42aad530e04cc9a392c8d4a813c74dab9629382d668a1",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-terminal",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_TERMINAL.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "7edaa904c0e2846d10e4285faa248ea6a81b7be12eff13a067b96fe52d2149fe",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-tg-el-transformer-1ph",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/TG_EL_TRANSFORMER_1PH.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "9ee89223b747a6e5ef115d33e17c8f231b37b55f2af5c5794223d29f3ad0f6ba",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "elettrico-avviamento-diretto",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/campioni-elettrico/avviamento-diretto.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "efeef9c563c4142f3bf9a2fedaa7d2cd6ecf80069703b04a6df2854bdab620b5",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
       "name": "autocad-quote",
       "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/autocad-quote.dxf",
       "version": "5170f1860953b5d076aa435bd65daa725d431745",
