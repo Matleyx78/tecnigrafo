@@ -1949,6 +1949,18 @@ i rimandi ai documenti che cambia.
   quando chiede di cambiare dei file ([agenti/catena.md](agenti/catena.md),
   "Fermarsi per una decisione"). La guida (A2a) dice che la catena è
   arrivata anche in solid-space (Matleyx78/solid-space#293).
+- **2026-11-16 — Attivazione progressiva dei tipi 0.8 nell’oracolo ezdxf.**
+  L’oracolo descrive subito entità, geometria generata, blocchi e stili dei tipi
+  nuovi, ma `count` e `unhandled` seguono un elenco esplicito dei tipi già
+  realizzati da Tecnigrafo, inizialmente vuoto. Il pacchetto che rende gestito
+  un tipo aggiorna insieme l’elenco e le due risposte dei casi interessati, come
+  eccezione a `pacchetto.md`, «In un pacchetto di lavoro», e all'ADR 0011 (casi
+  scritti da un altro agente). L'elenco dichiara la tappa e non viene letto dal
+  programma (ADR 0020). Cambiano [PT3](tappe/0.8/PT3-oracolo.md),
+  [PT10](tappe/0.8/PT10-solid.md), [PT14](tappe/0.8/PT14-mtext-dxf.md),
+  [PT18](tappe/0.8/PT18-blocchi-dxf.md), [PT25](tappe/0.8/PT25-quote-dxf.md),
+  [PT31](tappe/0.8/PT31-retini-dxf.md) e [PT48](tappe/0.8/PT48-ellisse.md),
+  secondo la decisione in [#675](https://github.com/Matleyx78/tecnigrafo/issues/675).
 - **2026-11-16 — Gli scostamenti di F6 dal riferimento.** Nelle sessioni di
   [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
   ([#658](https://github.com/Matleyx78/tecnigrafo/issues/658)), dal 2026-11-11

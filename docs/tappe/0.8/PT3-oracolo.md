@@ -27,14 +27,21 @@ pacchetti di riferimenti partano.
 
 ## Cosa fare
 
-1. `managed()` riconosce gestiti anche `SOLID`, `ELLIPSE`, `MTEXT`, `ATTDEF`, `INSERT`,
-   `DIMENSION` e `HATCH`, con le eccezioni dell'ADR 0044, punto 4 (`MINSERT`,
-   blocchi esterni o mancanti, `ATTRIB` o `ATTDEF` multiriga, `MTEXT` con
-   colonne, `HATCH` con ellissi, spline o sfumature, quote che non sono dei
-   tipi della 0.8 restano `DIMENSION` con `kind=other`).
-2. `? entity` risponde per i tipi nuovi con le righe di rapporto.md, «Tappa 0.8»;
+1. L’oracolo ha un elenco esplicito dei tipi della 0.8 già attivi,
+   inizialmente vuoto. Solo `? count` e `? unhandled` lo consultano: un tipo
+   nuovo che non è nell’elenco conta come non gestito, come il segnaposto di
+   Tecnigrafo. L’elenco dichiara la tappa raggiunta e non si ricava dal
+   programma: l’oracolo continua a non eseguire Tecnigrafo né a collegarsi al
+   programma (ADR 0020); il README dell’oracolo lo dice in una frase.
+2. Per tutte le altre risposte l’oracolo riconosce subito `SOLID`, `ELLIPSE`,
+   `MTEXT`, `ATTDEF`, `ATTRIB`, `INSERT`, `DIMENSION` e `HATCH`, con le
+   eccezioni dell’ADR 0044, punto 4 (`MINSERT`, blocchi esterni o mancanti,
+   `ATTRIB` o `ATTDEF` multiriga, `MTEXT` con colonne, `HATCH` con ellissi,
+   spline o sfumature, quote che non sono dei tipi della 0.8 restano
+   `DIMENSION` con `kind=other`).
+3. `? entity` risponde per i tipi nuovi con le righe di rapporto.md, «Tappa 0.8»;
    gli `ATTRIB` hanno la loro risposta con `owner=`.
-3. Domande nuove dell'oracolo, con lo stesso stile delle altre:
+4. Domande nuove dell’oracolo, con lo stesso stile delle altre:
    - `? blocks D`: le definizioni dei blocchi nella forma di `blocks:` del
      rapporto (escluse quelle dei layout e le `*D…`);
    - `? styles D`, `? dimstyles D`: le tabelle `STYLE` e `DIMSTYLE` nella forma
@@ -44,7 +51,7 @@ pacchetti di riferimenti partano.
      con `virtual_entities()`, nel formato delle forme di `generated`
      (domande.md), con le proprietà effettive. Per un `INSERT` con scala non
      uniforme ezdxf dà ellissi, come Tecnigrafo (ADR 0052): si confrontano.
-4. Il README descrive le risposte nuove.
+5. Il README descrive le risposte nuove.
 
 ## Regole della tappa che valgono qui
 
@@ -57,6 +64,11 @@ pacchetti di riferimenti partano.
 - Su un DXF scritto dal test con ezdxf (un blocco con un `ATTDEF`, un `INSERT`
   con `ATTRIB`, un `SOLID`, un `MTEXT`, una quota lineare, un `HATCH`), le
   risposte nuove hanno la forma attesa.
+- Sullo stesso DXF, con l'elenco dei tipi attivi vuoto il `SOLID` compare in
+  `? unhandled` (`SOLID 1`) e non in `? count`; con `SOLID` nell'elenco compare
+  in `? count` (`SOLID 1`) e non più in `? unhandled`; gli altri tipi nuovi
+  restano in `? unhandled`; tutte le altre risposte, compresa `? entity` del
+  `SOLID`, sono identiche nei due casi.
 
 ## Fatto quando
 

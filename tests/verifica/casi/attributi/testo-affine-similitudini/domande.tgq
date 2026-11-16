@@ -1,0 +1,18 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT17 / PT17 (#695). Expectations from ADR 0045, ADR 0022 and ADR 0031.
+; LiberationSans-Regular.ttf 2.1.5, read independently with fontTools:
+; cap height 1409, ascent 1854, descent -434; advance(A) = 1366.
+; No Tecnigrafo executable was used to derive these expectations.
+
+A = ATTDEF position=100,100 height=1 value="A" tag="A"
+!block "TEXTS" base=1,2
+T = TEXT position=3,4 alignment-point=5,6 height=2 rotation=90 value="A"
+!endblock
+; Subtract base, scale by 2, rotate by 90, translate by (10,20).
+I = INSERT block="TEXTS" insertion=10,20 scale=2,2 rotation=90
+? generated I -> TEXT position=6,24 alignment-point=2,28 height=4 rotation=180 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=6,25.23207948899929;2.122072391767211,25.23207948899929;2.12207239176721,18.73669268985096;5.999999999999999,18.73669268985096
+; Reflection in Y, then rotation by 90: same MIRRTEXT=1 rule as ADR 0031.
+R = INSERT block="TEXTS" insertion=0,0 scale=-1,1 rotation=90
+? generated R -> TEXT position=-2,-2 alignment-point=-4,-4 height=2 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=yes mirror-y=no horizontal=left vertical=baseline value="A" ~box=-2,-2.616039744499645;-3.938963804116395,-2.616039744499645;-3.938963804116395,0.6316536550745209;-2,0.6316536550745209

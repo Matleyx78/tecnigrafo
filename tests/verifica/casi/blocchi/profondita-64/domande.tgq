@@ -1,0 +1,209 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT16 P17: the outer INSERT counts as level 1; the maximum is 64.
+; B1 contains a line; each Bn adds one insertion and a translation (1,0).
+; Hence B63/B64 reach the line at x=63/64, but B65 must stop before B1.
+? window -1,-1 1,1 -> none
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "B1" base=0,0
+Leaf = LINE start=1,1 end=2,1
+!endblock
+!block "B2" base=0,0
+Child2 = INSERT block="B1" insertion=1,0
+!endblock
+!block "B3" base=0,0
+Child3 = INSERT block="B2" insertion=1,0
+!endblock
+!block "B4" base=0,0
+Child4 = INSERT block="B3" insertion=1,0
+!endblock
+!block "B5" base=0,0
+Child5 = INSERT block="B4" insertion=1,0
+!endblock
+!block "B6" base=0,0
+Child6 = INSERT block="B5" insertion=1,0
+!endblock
+!block "B7" base=0,0
+Child7 = INSERT block="B6" insertion=1,0
+!endblock
+!block "B8" base=0,0
+Child8 = INSERT block="B7" insertion=1,0
+!endblock
+!block "B9" base=0,0
+Child9 = INSERT block="B8" insertion=1,0
+!endblock
+!block "B10" base=0,0
+Child10 = INSERT block="B9" insertion=1,0
+!endblock
+!block "B11" base=0,0
+Child11 = INSERT block="B10" insertion=1,0
+!endblock
+!block "B12" base=0,0
+Child12 = INSERT block="B11" insertion=1,0
+!endblock
+!block "B13" base=0,0
+Child13 = INSERT block="B12" insertion=1,0
+!endblock
+!block "B14" base=0,0
+Child14 = INSERT block="B13" insertion=1,0
+!endblock
+!block "B15" base=0,0
+Child15 = INSERT block="B14" insertion=1,0
+!endblock
+!block "B16" base=0,0
+Child16 = INSERT block="B15" insertion=1,0
+!endblock
+!block "B17" base=0,0
+Child17 = INSERT block="B16" insertion=1,0
+!endblock
+!block "B18" base=0,0
+Child18 = INSERT block="B17" insertion=1,0
+!endblock
+!block "B19" base=0,0
+Child19 = INSERT block="B18" insertion=1,0
+!endblock
+!block "B20" base=0,0
+Child20 = INSERT block="B19" insertion=1,0
+!endblock
+!block "B21" base=0,0
+Child21 = INSERT block="B20" insertion=1,0
+!endblock
+!block "B22" base=0,0
+Child22 = INSERT block="B21" insertion=1,0
+!endblock
+!block "B23" base=0,0
+Child23 = INSERT block="B22" insertion=1,0
+!endblock
+!block "B24" base=0,0
+Child24 = INSERT block="B23" insertion=1,0
+!endblock
+!block "B25" base=0,0
+Child25 = INSERT block="B24" insertion=1,0
+!endblock
+!block "B26" base=0,0
+Child26 = INSERT block="B25" insertion=1,0
+!endblock
+!block "B27" base=0,0
+Child27 = INSERT block="B26" insertion=1,0
+!endblock
+!block "B28" base=0,0
+Child28 = INSERT block="B27" insertion=1,0
+!endblock
+!block "B29" base=0,0
+Child29 = INSERT block="B28" insertion=1,0
+!endblock
+!block "B30" base=0,0
+Child30 = INSERT block="B29" insertion=1,0
+!endblock
+!block "B31" base=0,0
+Child31 = INSERT block="B30" insertion=1,0
+!endblock
+!block "B32" base=0,0
+Child32 = INSERT block="B31" insertion=1,0
+!endblock
+!block "B33" base=0,0
+Child33 = INSERT block="B32" insertion=1,0
+!endblock
+!block "B34" base=0,0
+Child34 = INSERT block="B33" insertion=1,0
+!endblock
+!block "B35" base=0,0
+Child35 = INSERT block="B34" insertion=1,0
+!endblock
+!block "B36" base=0,0
+Child36 = INSERT block="B35" insertion=1,0
+!endblock
+!block "B37" base=0,0
+Child37 = INSERT block="B36" insertion=1,0
+!endblock
+!block "B38" base=0,0
+Child38 = INSERT block="B37" insertion=1,0
+!endblock
+!block "B39" base=0,0
+Child39 = INSERT block="B38" insertion=1,0
+!endblock
+!block "B40" base=0,0
+Child40 = INSERT block="B39" insertion=1,0
+!endblock
+!block "B41" base=0,0
+Child41 = INSERT block="B40" insertion=1,0
+!endblock
+!block "B42" base=0,0
+Child42 = INSERT block="B41" insertion=1,0
+!endblock
+!block "B43" base=0,0
+Child43 = INSERT block="B42" insertion=1,0
+!endblock
+!block "B44" base=0,0
+Child44 = INSERT block="B43" insertion=1,0
+!endblock
+!block "B45" base=0,0
+Child45 = INSERT block="B44" insertion=1,0
+!endblock
+!block "B46" base=0,0
+Child46 = INSERT block="B45" insertion=1,0
+!endblock
+!block "B47" base=0,0
+Child47 = INSERT block="B46" insertion=1,0
+!endblock
+!block "B48" base=0,0
+Child48 = INSERT block="B47" insertion=1,0
+!endblock
+!block "B49" base=0,0
+Child49 = INSERT block="B48" insertion=1,0
+!endblock
+!block "B50" base=0,0
+Child50 = INSERT block="B49" insertion=1,0
+!endblock
+!block "B51" base=0,0
+Child51 = INSERT block="B50" insertion=1,0
+!endblock
+!block "B52" base=0,0
+Child52 = INSERT block="B51" insertion=1,0
+!endblock
+!block "B53" base=0,0
+Child53 = INSERT block="B52" insertion=1,0
+!endblock
+!block "B54" base=0,0
+Child54 = INSERT block="B53" insertion=1,0
+!endblock
+!block "B55" base=0,0
+Child55 = INSERT block="B54" insertion=1,0
+!endblock
+!block "B56" base=0,0
+Child56 = INSERT block="B55" insertion=1,0
+!endblock
+!block "B57" base=0,0
+Child57 = INSERT block="B56" insertion=1,0
+!endblock
+!block "B58" base=0,0
+Child58 = INSERT block="B57" insertion=1,0
+!endblock
+!block "B59" base=0,0
+Child59 = INSERT block="B58" insertion=1,0
+!endblock
+!block "B60" base=0,0
+Child60 = INSERT block="B59" insertion=1,0
+!endblock
+!block "B61" base=0,0
+Child61 = INSERT block="B60" insertion=1,0
+!endblock
+!block "B62" base=0,0
+Child62 = INSERT block="B61" insertion=1,0
+!endblock
+!block "B63" base=0,0
+Child63 = INSERT block="B62" insertion=1,0
+!endblock
+!block "B64" base=0,0
+Child64 = INSERT block="B63" insertion=1,0
+!endblock
+!block "B65" base=0,0
+Child65 = INSERT block="B64" insertion=1,0
+!endblock
+At63 = INSERT block="B63" insertion=0,0
+At64 = INSERT block="B64" insertion=0,0
+At65 = INSERT block="B65" insertion=0,0
+? generated At63 -> LINE start=63,1 end=64,1
+? generated At64 -> LINE start=64,1 end=65,1
+? generated At65 -> none

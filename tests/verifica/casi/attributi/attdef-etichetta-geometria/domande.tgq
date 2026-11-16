@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT17 / PT17 (#695). Expectations from ADR 0045, ADR 0022 and ADR 0031.
+; LiberationSans-Regular.ttf 2.1.5, read independently with fontTools:
+; cap height 1409, ascent 1854, descent -434; advance(A) = 1366.
+; No Tecnigrafo executable was used to derive these expectations.
+
+; The displayed tag A differs from the longer default LONG_DEFAULT.
+A = ATTDEF position=10,20 height=1 value="LONG_DEFAULT" tag="A" prompt="Reference"
+? bbox A -> 10,19.69198012775018 10.9694819020582,21.31582682753726
+? generated A -> TEXT position=10,20 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=10,19.69198012775018;10.9694819020582,19.69198012775018;10.9694819020582,21.31582682753726;10,21.31582682753726
+? pick 10.5,20.5 tolerance=0.01 -> A
+? pick 13,20.5 tolerance=0.01 -> none
+? window 9,19 12,22 -> A
+? crossing 10.2,20.2 10.8,20.8 -> A
+? window 10.2,20.2 10.8,20.8 -> none
+? crossing 13,20 14,21 -> none
+? snaps A -> Insertion 10,20
+? snaps A modes=endpoint,midpoint -> none
+? grips A -> 10,20
+; A constant standalone definition still displays its tag.
+C = ATTDEF position=30,20 height=1 value="" tag="A" constant=yes
+? generated C -> TEXT position=30,20 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=30,19.69198012775018;30.9694819020582,19.69198012775018;30.9694819020582,21.31582682753726;30,21.31582682753726
+? pick 30.5,20.5 tolerance=0.01 -> C

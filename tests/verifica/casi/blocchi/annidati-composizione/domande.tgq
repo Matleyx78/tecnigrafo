@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT16 P18: diag(2,1) * diag(0.5,1) is identity, before converting any shape.
+; The second hierarchy applies two base offsets, a rotation and a reflection.
+? window -1,-1 1,1 -> none
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "B" base=0,0
+Circle = CIRCLE center=3,4 radius=2
+!endblock
+!block "A" base=0,0
+Inner = INSERT block="B" insertion=0,0 scale=0.5,1
+!endblock
+Restored = INSERT block="A" insertion=0,0 scale=2,1
+StillAffine = INSERT block="A" insertion=10,20 scale=4,1
+? generated Restored -> CIRCLE center=3,4 radius=2
+? generated StillAffine -> ELLIPSE center=16,24 major-axis=4,0 ratio=0.5
+!block "Leaf" base=2,3
+LeafLine = LINE start=2,3 end=6,3
+!endblock
+!block "Parent" base=5,7
+Nested = INSERT block="Leaf" insertion=5,7 scale=2,1 rotation=90
+Tail = LINE start=5,7 end=5,9
+!endblock
+Composed = INSERT block="Parent" insertion=100,200 scale=-1,2 rotation=90
+; Inner line (5,7)-(5,15); outer p'=(100-2*(y-7),200-(x-5)).
+? generated Composed -> LINE start=100,200 end=84,200; LINE start=100,200 end=96,200
