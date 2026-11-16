@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Tabella DIMSTYLE e variabili correnti scritte a mano dai codici DXF della scheda PT22
+; cambia con #699
+OPEN
+ingresso.dxf
+!report
+SAVEAS
+giro.dxf
+OPEN
+giro.dxf
