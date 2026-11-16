@@ -1,0 +1,12 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCH: Esc dopo un punto valido annulla tutto, nessun retino
+PLINE
+0,0
+60,0
+60,40
+0,40
+C
+-HATCH
+30,20
+!esc

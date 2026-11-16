@@ -1,0 +1,52 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=-10,0 vertex=0,0 vertex=0,10 vertex=-10,10
+  258 HATCH pattern="NET" solid=no angle=0 scale=1 islands=outer loop=external+derived+polyline vertex=-10,0 vertex=0,0 vertex=0,10 vertex=-10,10 seed=-5,5
+messages:
+  Command: PLINE
+  Specify start point: -10,0
+  Specify next point or [Arc/Undo]: 0,0
+  Specify next point or [Arc/Undo]: 0,10
+  Specify next point or [Arc/Close/Undo]: -10,10
+  Specify next point or [Arc/Close/Undo]: C
+  Command: -HATCH
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]: P
+  Enter a pattern name or [Solid] <ANSI31>: NET
+  Specify a scale for the pattern <1.0000>: 1
+  Specify an angle for the pattern <0>: 390
+  Current hatch pattern: NET
+  Specify internal point or [Properties/Select objects]: P
+  Enter a pattern name or [Solid] <NET>: NET
+  Specify a scale for the pattern <1.0000>: 1
+  Specify an angle for the pattern <30>: 3600
+  Current hatch pattern: NET
+  Specify internal point or [Properties/Select objects]: P
+  Enter a pattern name or [Solid] <NET>: NET
+  Specify a scale for the pattern <1.0000>: 1
+  Specify an angle for the pattern <0>: -3600
+  Current hatch pattern: NET
+  Specify internal point or [Properties/Select objects]: -5,5
+  Selecting everything...
+  Selecting everything visible...
+  Analyzing the selected data...
+  Analyzing internal islands...
+  Current hatch pattern: NET
+  Specify internal point or [Properties/Select objects]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polyline
+  Hatch
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  HATCH 1
+  LWPOLYLINE 1
