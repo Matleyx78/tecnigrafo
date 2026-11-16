@@ -4,6 +4,8 @@
 #include "dxf_tables.hpp"
 
 #include "dxf_entity_common.hpp"
+#include "tg/core/math.hpp"
+#include "tg/core/start_handles.hpp"
 #include "tg/io/dxf_groups.hpp"
 
 #include <algorithm>
@@ -26,6 +28,7 @@ constexpr std::string_view kByLayerName = "ByLayer";
 constexpr std::string_view kContinuousName = "Continuous";
 constexpr std::string_view kContinuousDescription = "Solid line";
 constexpr std::string_view kLayerZeroName = "0";
+constexpr std::string_view kStandardStyleName = "Standard";
 
 // The colour of a layer without a 62, and of a layer created by the reader
 // (docs/adr/0023, point 5).
@@ -41,6 +44,7 @@ constexpr long long kMaxRgb = 0xFFFFFF;
 constexpr std::array kLayerOrder{2, 70, 62, 420, 6, 290, 370};
 // The same for LTYPE: name, flags, description, alignment, count, length.
 constexpr std::array kLinetypeOrder{2, 70, 3, 72, 73, 40};
+constexpr std::array kStyleOrder{2, 70, 40, 41, 50, 71, 42, 3, 4};
 // The groups of the elements of an LTYPE record (docs/adr/0025, point 1).
 constexpr std::array kElementCodes{73, 40, 49, 74, 75, 340, 46, 50, 44, 45, 9};
 
@@ -50,6 +54,8 @@ constexpr std::array<std::string_view, 7> kAfterLinetypes{"LAYER", "STYLE",    "
                                                           "APPID", "DIMSTYLE", "BLOCK_RECORD"};
 constexpr std::array<std::string_view, 6> kAfterLayers{"STYLE", "VIEW",     "UCS",
                                                        "APPID", "DIMSTYLE", "BLOCK_RECORD"};
+constexpr std::array<std::string_view, 5> kAfterStyles{"VIEW", "UCS", "APPID", "DIMSTYLE",
+                                                       "BLOCK_RECORD"};
 
 bool isMarker(const core::RawGroup& group, std::string_view name) {
     return group.code == 0 && trimDxf(group.value) == name;
@@ -242,6 +248,44 @@ core::RawGroups linetypeRecord(const core::Linetype& linetype, std::string_view 
     return out;
 }
 
+core::RawGroups styleRecord(const core::TextStyle& style, std::string_view owner) {
+    core::RawGroups body =
+        style.extras.empty() ? recordPreamble(owner, "AcDbTextStyleTableRecord") : style.extras;
+    const long long generation = (style.backwards ? 2 : 0) | (style.upsideDown ? 4 : 0);
+    double obliqueDegrees = core::radiansToDegrees(style.oblique);
+    const auto oldOblique = firstOwn(body, ownGroups(body), 50);
+    if (oldOblique) {
+        const auto read = parseNumber(trimDxf(body[*oldOblique].value));
+        if (read && core::degreesToRadians(*read) == style.oblique) {
+            obliqueDegrees = *read;
+        }
+    }
+    const std::vector<Wanted> wanted{
+        wantedInteger(70, 0),
+        {40, formatNumber(style.fixedHeight), style.fixedHeight},
+        {41, formatNumber(style.widthFactor), style.widthFactor},
+        {50, formatNumber(obliqueDegrees), obliqueDegrees},
+        wantedInteger(71, generation),
+        {42, formatNumber(style.lastHeight), style.lastHeight},
+    };
+    constexpr std::array kCodes{70, 40, 41, 50, 71, 42};
+    applyWanted(body, kCodes, wanted, kStyleOrder);
+    core::RawGroups names{{2, style.name}, {3, style.font}, {4, style.bigFont}};
+    for (auto& name : names) {
+        const auto at = firstOwn(body, ownGroups(body), name.code);
+        if (at) {
+            body[*at].value = name.value;
+            name.code = kRecordPlaceholder;
+        }
+    }
+    std::erase_if(names,
+                  [](const core::RawGroup& group) { return group.code == kRecordPlaceholder; });
+    dxf_groups::insertInOrder(body, names, kStyleOrder);
+    core::RawGroups out{{0, "STYLE"}, {5, handleText(style.id)}};
+    out.insert(out.end(), body.begin(), body.end());
+    return out;
+}
+
 /// A table of the TABLES section as read: its header (from 0 TABLE to the
 /// first record), its records and placeholders, and its end.
 struct TableParts {
@@ -288,7 +332,13 @@ TableParts readTable(const core::RawGroups& groups, std::size_t& i) {
 void writeRecordTable(const TableParts& table, const core::Document& document,
                       core::RawGroups& out) {
     const bool layers = table.name == "LAYER";
-    const std::size_t records = layers ? document.layers().size() : document.linetypes().size();
+    const bool styles = table.name == "STYLE";
+    std::size_t records = document.linetypes().size();
+    if (layers) {
+        records = document.layers().size();
+    } else if (styles) {
+        records = document.textStyles().styles().size();
+    }
     const auto placeholders =
         static_cast<std::size_t>(std::ranges::count_if(table.items, isPlaceholder));
     std::string owner{"0"};
@@ -311,13 +361,22 @@ void writeRecordTable(const TableParts& table, const core::Document& document,
     }
     std::size_t next = 0;
     const auto writeNext = [&] {
-        const auto groups = layers ? layerRecord(document.layers()[next], document, owner)
-                                   : linetypeRecord(document.linetypes()[next], owner);
+        core::RawGroups groups;
+        if (layers) {
+            groups = layerRecord(document.layers()[next], document, owner);
+        } else if (styles) {
+            groups = styleRecord(document.textStyles().styles()[next], owner);
+        } else {
+            groups = linetypeRecord(document.linetypes()[next], owner);
+        }
         out.insert(out.end(), groups.begin(), groups.end());
         ++next;
     };
     for (const auto& item : table.items) {
-        if (!isPlaceholder(item)) {
+        const bool skeletonStyle =
+            styles && next < records && !item.empty() && isMarker(item.front(), "STYLE") &&
+            document.textStyles().styles()[next].id == core::start_handles::kStyleStandard;
+        if (!skeletonStyle && !isPlaceholder(item)) {
             out.insert(out.end(), item.begin(), item.end());
         } else if (next < records) {
             writeNext();
@@ -479,11 +538,13 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
                         : std::string{};
             m_layerTable = m_layerTable || table == "LAYER";
             m_linetypeTable = m_linetypeTable || table == "LTYPE";
+            m_styleTable = m_styleTable || table == "STYLE";
         } else if (isMarker(group, "ENDTAB")) {
             table.clear();
         }
         const bool linetype = table == "LTYPE" && isMarker(group, "LTYPE");
-        if (!linetype && !(table == "LAYER" && isMarker(group, "LAYER"))) {
+        const bool style = table == "STYLE" && isMarker(group, "STYLE");
+        if (!linetype && !style && !(table == "LAYER" && isMarker(group, "LAYER"))) {
             out.push_back(group);
             ++i;
             continue;
@@ -496,12 +557,16 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
         const std::size_t line = start < lines.size() ? lines[start] : 0;
         const auto layersBefore = m_layers.size();
         const auto linetypesBefore = m_document.linetypes().size();
+        bool accepted = false;
         if (linetype) {
             readLinetype(record, line, warnings);
+        } else if (style) {
+            accepted = readTextStyle(record, line, warnings);
         } else {
             readLayer(record, line, warnings);
         }
-        if (m_layers.size() > layersBefore || m_document.linetypes().size() > linetypesBefore) {
+        if (accepted || m_layers.size() > layersBefore ||
+            m_document.linetypes().size() > linetypesBefore) {
             out.push_back({kRecordPlaceholder, ""});
             continue;
         }
@@ -516,6 +581,51 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
         out.insert(out.end(), record.begin(), record.end());
     }
     groups = std::move(out);
+}
+
+bool TableReader::readTextStyle(core::RawGroups record, std::size_t line,
+                                std::vector<std::string>& warnings) {
+    const auto own = ownGroups(record);
+    const auto at2 = firstOwn(record, own, 2);
+    const auto at70 = firstOwn(record, own, 70);
+    const long long flags = at70 ? parseInteger(record[*at70].value).value_or(0) : 0;
+    if ((flags & 1) != 0) {
+        m_textStyles.addRawRecord(record);
+        return false;  // shape-file records remain raw and in place
+    }
+    if (!at2 || !core::isValidTableName(record[*at2].value) ||
+        m_textStyles.find(record[*at2].value) != nullptr) {
+        return false;
+    }
+    core::TextStyle style;
+    style.name = record[*at2].value;
+    const auto stringAt = [&](int code) {
+        const auto at = firstOwn(record, ownGroups(record), code);
+        return at ? record[*at].value : std::string{};
+    };
+    const auto numberAt = [&](int code, double fallback) {
+        const auto at = firstOwn(record, ownGroups(record), code);
+        return at ? parseNumber(trimDxf(record[*at].value)).value_or(fallback) : fallback;
+    };
+    style.font = stringAt(3);
+    style.bigFont = stringAt(4);
+    style.fixedHeight = numberAt(40, 0.0);
+    style.widthFactor = numberAt(41, 1.0);
+    if (style.widthFactor <= 0.0) {
+        return false;
+    }
+    style.oblique = core::degreesToRadians(numberAt(50, 0.0));
+    const auto generationAt = firstOwn(record, ownGroups(record), 71);
+    const long long generation =
+        generationAt ? parseInteger(record[*generationAt].value).value_or(0) : 0;
+    style.backwards = (generation & 2) != 0;
+    style.upsideDown = (generation & 4) != 0;
+    style.lastHeight = numberAt(42, 2.5);
+    style.id = recordHandle(record, "STYLE", line, warnings);
+    eraseAt(record, firstOwn(record, ownGroups(record), 2));
+    style.extras = std::move(record);
+    m_textStyles.put(std::move(style), m_document);
+    return true;
 }
 
 bool TableReader::layerPending(std::string_view name) const {
@@ -540,6 +650,9 @@ void TableReader::readHeader(core::RawGroups& header) {
                 m_currentLayer = group.value;
                 continue;  // the writer puts the current layer's name here
             }
+        } else if (variable == "$TEXTSTYLE" && group.code == 7) {
+            m_currentTextStyle = group.value;
+            continue;
         } else if (variable == "$CELTYPE" && group.code == 6) {
             if (core::isValidTableName(group.value)) {
                 m_currentLinetype = group.value;
@@ -686,6 +799,20 @@ void TableReader::finish(std::vector<std::string>& warnings,
             warnings.push_back(plural(count, singular, rest));
         }
     };
+    if ((m_styleTable || m_currentTextStyle) && m_textStyles.find(kStandardStyleName) == nullptr) {
+        core::TextStyle standard;
+        standard.name = kStandardStyleName;
+        standard.font = "arial.ttf";
+        m_textStyles.put(std::move(standard), m_document);
+    }
+    if (m_styleTable || m_currentTextStyle) {
+        const std::string current =
+            m_currentTextStyle && m_textStyles.find(*m_currentTextStyle) != nullptr
+                ? *m_currentTextStyle
+                : std::string{kStandardStyleName};
+        m_textStyles.setCurrent(current);
+    }
+    m_document.replaceTextStyles(std::move(m_textStyles));
     if (!needsRecords()) {
         warn(m_roundedLineweights, "lineweight", " rounded.");
         return;
@@ -787,11 +914,13 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
     // it stands.
     bool linetypes = false;
     bool layers = false;
+    bool styles = false;
     for (std::size_t i = 0; i + 1 < tables.size(); ++i) {
         if (isMarker(tables[i], "TABLE") && tables[i + 1].code == 2) {
             const auto name = trimDxf(tables[i + 1].value);
             linetypes = linetypes || name == "LTYPE";
             layers = layers || name == "LAYER";
+            styles = styles || name == "STYLE";
         }
     }
     const auto addMissing = [&](std::string_view before) {
@@ -809,6 +938,13 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
                 writeNewTable("LAYER", document, nextHandle, out);
             }
         }
+        if (!styles &&
+            (before.empty() || std::ranges::find(kAfterStyles, before) != kAfterStyles.end())) {
+            styles = true;
+            if (!document.textStyles().styles().empty()) {
+                writeNewTable("STYLE", document, nextHandle, out);
+            }
+        }
     };
     std::size_t i = 0;
     while (i < tables.size()) {
@@ -817,8 +953,14 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
             continue;
         }
         const auto table = readTable(tables, i);
-        if (table.name == "LTYPE" || table.name == "LAYER") {
-            (table.name == "LTYPE" ? linetypes : layers) = true;
+        if (table.name == "LTYPE" || table.name == "LAYER" || table.name == "STYLE") {
+            if (table.name == "LTYPE") {
+                linetypes = true;
+            } else if (table.name == "LAYER") {
+                layers = true;
+            } else {
+                styles = true;
+            }
             writeRecordTable(table, document, out);
             continue;
         }
@@ -835,6 +977,7 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
 std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& document) {
     bool linetypes = false;
     bool layers = false;
+    bool styles = false;
     for (const auto& section : raw.sections) {
         if (section.name != "TABLES") {
             continue;
@@ -845,16 +988,19 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
                 const auto name = trimDxf(groups[i + 1].value);
                 linetypes = linetypes || name == "LTYPE";
                 layers = layers || name == "LAYER";
+                styles = styles || name == "STYLE";
             }
         }
     }
     return (!linetypes && needsLinetypeTable(document) ? 1U : 0U) +
-           (!layers && needsLayerTable(document) ? 1U : 0U);
+           (!layers && needsLayerTable(document) ? 1U : 0U) +
+           (!styles && !document.textStyles().styles().empty() ? 1U : 0U);
 }
 
 core::RawGroups newTables(const core::Document& document, std::uint64_t& nextHandle) {
     core::RawGroups out;
-    if (needsLinetypeTable(document) || needsLayerTable(document)) {
+    if (needsLinetypeTable(document) || needsLayerTable(document) ||
+        !document.textStyles().styles().empty()) {
         writeTables({}, document, nextHandle, out);
     }
     return out;

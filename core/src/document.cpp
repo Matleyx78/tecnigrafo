@@ -127,6 +127,13 @@ Document Document::newDrawing() {
     zero.linetype = LinetypeId{start_handles::kContinuous};
     document.addLayer(std::move(zero));
 
+    TextStyle standard;
+    standard.id = start_handles::kStyleStandard;
+    standard.name = "Standard";
+    standard.font = "arial.ttf";
+    document.m_textStyles.put(std::move(standard), document);
+    document.m_textStyles.setCurrent("Standard");
+
     document.m_current.layer = LayerId{start_handles::kLayerZero};
     document.m_current.linetype = LinetypeId{start_handles::kByLayer};
     document.setNextId(start_handles::kFirstEntity);
@@ -352,7 +359,7 @@ void Document::setProperties(EntityId id, const EntityProperties& properties) {
 }
 
 void Document::replaceTextStyles(TextStyleTable table) {
-    m_textStyles = table;
+    m_textStyles = std::move(table);
 }
 
 void Document::replaceDimStyles(DimStyleTable table) {

@@ -908,6 +908,23 @@ TEST(WriteState, ANewSessionHasNoFieldOfTheStylesAndBlocks) {
     }
 }
 
+TEST(WriteState, TextStylesAndCurrentStyleAreWrittenWhenDifferentFromNew) {
+    core::Document document = core::Document::newDrawing();
+    core::TextStyleTable styles = document.textStyles();
+    core::TextStyle note;
+    note.name = "Note";
+    note.font = "romans.shx";
+    note.widthFactor = 0.8;
+    styles.put(std::move(note), document);
+    styles.setCurrent("Note");
+    document.replaceTextStyles(std::move(styles));
+
+    const std::string report = stateOf(document);
+    expectContains(report,
+                   "text styles:\n  \"Note\" font=\"romans.shx\" height=0 width-factor=0.8 "
+                   "oblique=0 backwards=no upside-down=no\ntext style: \"Note\"");
+}
+
 TEST(WriteGeneratedItem, AShapeWithTheEffectivePropertiesThatAreNotTheDefault) {
     const Tables tables = drawingWithLayers();
     const core::Document& document = tables.document;
