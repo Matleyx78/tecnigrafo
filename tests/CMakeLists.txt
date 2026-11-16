@@ -80,6 +80,7 @@ add_executable(tg_tests
     core/similarity_test.cpp
     core/snap_points_test.cpp
     core/solid_space_test.cpp
+    core/solid_test.cpp
     core/spatial_index_test.cpp
     core/text_metrics_test.cpp
     core/text_test.cpp
@@ -91,6 +92,7 @@ add_executable(tg_tests
     io/dxf_lwpolyline_test.cpp
     io/dxf_text_test.cpp
     io/dxf_line_circle_arc_test.cpp
+    io/dxf_solid_test.cpp
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp

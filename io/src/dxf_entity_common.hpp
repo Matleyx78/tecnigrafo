@@ -100,5 +100,6 @@ void insertInOrder(core::RawGroups& groups, const core::RawGroups& additions,
 
 extern const EntityCodec kLwpolylineCodec;
 extern const EntityCodec kTextCodec;
+extern const EntityCodec kSolidCodec;
 
 }  // namespace tg::io

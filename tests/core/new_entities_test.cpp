@@ -138,6 +138,9 @@ TEST(NewEntities, DefaultsFollowTheDxfDefaults) {
 
 TEST(NewEntities, AreNotSupportedYet) {
     for (const Entity& entity : newEntities()) {
+        if (std::holds_alternative<Solid>(entity)) {
+            continue;
+        }
         EXPECT_FALSE(isSupported(entity)) << entity.index();
     }
 }

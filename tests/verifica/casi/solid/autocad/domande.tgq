@@ -11,8 +11,8 @@
 D = DXF source=autocad-solid
 ? version D -> AC1032
 ? units D -> 4
-? count D -> none
-? unhandled D -> SOLID 6
+? count D -> SOLID 6
+? unhandled D -> none
 ; PT10 makes SOLID a handled entity: until then its handles answer "unhandled SOLID".
 ; cambia con #677
 ? entity D 8C -> SOLID vertex=0,0 vertex=50,0 vertex=5,30 vertex=45,25
