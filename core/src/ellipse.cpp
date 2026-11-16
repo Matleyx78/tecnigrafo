@@ -29,8 +29,9 @@ namespace {
 
 constexpr double kQuarterTurn = kPi / 2.0;
 
-/// The centre and the four ends of the axes (gripPointsOf()).
-constexpr std::size_t kGripCount = 5;
+/// The centre and the four ends of the axes (gripPointsOf()); unused in
+/// Release, where assertions are absent.
+[[maybe_unused]] constexpr std::size_t kGripCount = 5;
 
 /// The minor axis b: the major one turned by +90° and multiplied by the
 /// ratio (docs/adr/0052, point 1).
