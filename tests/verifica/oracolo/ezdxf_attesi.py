@@ -412,6 +412,8 @@ class DrawingAnswers:
                 continue
             self.blocks.append(block)
         block_names = {block.name.casefold() for block in self.blocks}
+        dimension_block_names = {block.name.casefold() for block in self.document.blocks
+                                 if not block.block_record.is_any_layout}
         for handle, (entity, supported) in list(self.entities.items()):
             if entity.dxftype() == "INSERT" and entity.dxf.name.casefold() not in block_names:
                 supported = False
@@ -422,7 +424,7 @@ class DrawingAnswers:
                     supported = False
             if entity.dxftype() == "DIMENSION":
                 geometry = entity.dxf.get("geometry", "")
-                if not geometry or geometry.casefold() not in block_names:
+                if not geometry or geometry.casefold() not in dimension_block_names:
                     supported = False
             self.entities[handle] = (entity, supported)
 
