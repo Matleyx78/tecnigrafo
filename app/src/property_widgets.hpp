@@ -49,6 +49,9 @@ public:
 Q_SIGNALS:
     void valueChosen(tg::core::Color value);
 
+protected:
+    void changeEvent(QEvent* event) override;
+
 private:
     void rebuild();
     void choose(int index);

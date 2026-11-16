@@ -145,6 +145,9 @@ void DocumentTabs::setDocuments(const QList<Document>& documents, int active) {
     m_documents = documents;
     const int current = active >= 0 && active < documents.size() ? active + 1 : kStartTab;
     m_tabs->setCurrentIndex(current);
+    // A hidden QTabBar lays its tabs out later without telling the layout of
+    // the row, which would keep the width of the bar from before.
+    m_tabs->updateGeometry();
     update();  // the border under the row follows the current tab
 }
 
