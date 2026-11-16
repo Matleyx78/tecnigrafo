@@ -1,0 +1,38 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; PT13.5: insertion transforms directly; height and width scale.
+T = MTEXT insertion=10,20 height=3 width=12 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T move 5,-7 -> MTEXT insertion=15,13 height=3 width=12 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T rotate 90 0,0 -> MTEXT insertion=-20,10 height=3 width=12 attachment=middle-center rotation=120 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T scale 2 5,10 -> MTEXT insertion=15,30 height=6 width=24 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T scale 1 0,0 -> MTEXT insertion=10,20 height=3 width=12 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+; PT5 B03: beta=normalize(2*axis-r), reduced to a readable direction.
+; MIRRTEXT 0 and 1 give identical MTEXT results.
+? transform T mirror 0,0 1,0 mirrtext=0 -> MTEXT insertion=10,-20 height=3 width=12 attachment=middle-center rotation=330 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T mirror 0,0 1,0 mirrtext=1 -> MTEXT insertion=10,-20 height=3 width=12 attachment=middle-center rotation=330 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T mirror 0,0 0,1 mirrtext=0 -> MTEXT insertion=-10,20 height=3 width=12 attachment=middle-center rotation=330 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T mirror 0,0 0,1 mirrtext=1 -> MTEXT insertion=-10,20 height=3 width=12 attachment=middle-center rotation=330 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T mirror 0,0 1,1 mirrtext=0 -> MTEXT insertion=20,10 height=3 width=12 attachment=middle-center rotation=60 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? transform T mirror 0,0 1,1 mirrtext=1 -> MTEXT insertion=20,10 height=3 width=12 attachment=middle-center rotation=60 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+ObliqueColumn = MTEXT insertion=2,3 height=1 width=0 attachment=top-left rotation=120 style="Standard" value="A"
+? transform ObliqueColumn mirror 0,0 1,0 mirrtext=0 -> MTEXT insertion=2,-3 height=1 width=0 attachment=top-left rotation=60 style="Standard" value="A"
+? transform ObliqueColumn mirror 0,0 1,0 mirrtext=1 -> MTEXT insertion=2,-3 height=1 width=0 attachment=top-left rotation=60 style="Standard" value="A"
+? transform T scale 0 0,0 -> invalid
+? transform T scale -1 0,0 -> invalid
+? transform T mirror 1,1 1,1 -> invalid
+? grips T -> 10,20
+? grip T 10,20 25,35 -> MTEXT insertion=25,35 height=3 width=12 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? grip T 10,20 10,20 -> MTEXT insertion=10,20 height=3 width=12 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly direction=by-style value="A\\PB"
+? grip T 11,20 25,35 -> none
+? grips T -> 10,20
+? snaps T modes=insertion -> Insertion 10,20
+? snaps T modes=endpoint,midpoint -> none
