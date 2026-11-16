@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; PT5 B01: one decoding pass; unknown and unterminated codes stay literal.
+Once = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="%%%c"
+? generated Once -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%c" ~box=0,-1.308019872249823;2.01916252661462,-1.308019872249823;2.01916252661462,0.3158268275372604;0,0.3158268275372604
+Twice = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="%%%%c"
+? generated Twice -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%%c" ~box=0,-1.308019872249823;3.311568488289567,-1.308019872249823;3.311568488289567,0.3158268275372604;0,0.3158268275372604
+Unknown = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\XB"
+? generated Unknown -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A\\XB" ~box=0,-1.308019872249823;3.312278211497516,-1.308019872249823;3.312278211497516,0.3158268275372604;0,0.3158268275372604
+MissingEnd = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\H2\\PB"
+? generated MissingEnd -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A\\H2" ~box=0,-1.308019872249823;3.231369765791341,-1.308019872249823;3.231369765791341,0.3158268275372604;0,0.3158268275372604; TEXT position=0,-2.666666666666667 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" ~box=0,-2.974686538916489;0.9694819020581973,-2.974686538916489;0.9694819020581973,-1.350839839129406;0,-1.350839839129406
+EscapedParagraph = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="\\\\P"
+? generated EscapedParagraph -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="\\P" ~box=0,-1.308019872249823;1.373314407381121,-1.308019872249823;1.373314407381121,0.3158268275372604;0,0.3158268275372604
