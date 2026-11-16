@@ -10,9 +10,10 @@
 
 namespace tg::cmd {
 
-/// Object snap, ortho and polar tracking settings (docs/adr/0008,
-/// docs/adr/0033). The defaults are those of a new session: object snap on
-/// with every mode, ortho and polar off.
+/// Object snap, ortho, polar tracking and object snap tracking settings
+/// (docs/adr/0008, docs/adr/0033, docs/adr/0049). The defaults are those of
+/// a new session: object snap on with every mode, ortho, polar and tracking
+/// off.
 struct DrawingAids {
     bool objectSnap{true};  ///< F3: all object snaps on or off
     core::SnapModes snapModes;
@@ -21,6 +22,9 @@ struct DrawingAids {
     /// switches the other off (the interface, the script directives). If
     /// both are true anyway, ortho is the one that applies.
     bool polar{false};
+    /// F11: object snap tracking (docs/adr/0049, point 1). It works only
+    /// while objectSnap is on too.
+    bool tracking{false};
     friend bool operator==(const DrawingAids&, const DrawingAids&) = default;
 };
 

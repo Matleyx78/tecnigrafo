@@ -584,6 +584,47 @@ std::vector<std::string> detail::statisticsLines(
     return lines;
 }
 
+namespace {
+
+// Object snap tracking (docs/adr/0049, point 8): each line only when it
+// differs from a new session ("Come cresce il formato").
+void writeTracking(const cmd::CommandRunner& runner, std::string& out) {
+    using Guide = cmd::CommandRunner::TrackingState::Guide;
+    if (runner.drawingAids().tracking) {
+        appendField("tracking", "on", out);
+    }
+    const cmd::CommandRunner::TrackingState& tracking = runner.tracking();
+    if (!tracking.acquired.empty()) {
+        appendLine("acquired:", out);
+        for (const core::Vec2& point : tracking.acquired) {
+            appendItem(formatPoint(point), out);
+        }
+    }
+    if (!tracking.guidePoint) {
+        return;
+    }
+    const std::string point = formatPoint(*tracking.guidePoint);
+    const std::string from = tracking.from ? " from " + formatPoint(*tracking.from) : "";
+    switch (tracking.guide) {
+        case Guide::None:
+            break;
+        case Guide::Horizontal:
+            appendField("active tracking", "Horizontal " + point + from, out);
+            break;
+        case Guide::Vertical:
+            appendField("active tracking", "Vertical " + point + from, out);
+            break;
+        case Guide::Crossing:
+            appendField("active tracking", "Crossing " + point, out);
+            break;
+        case Guide::WithPolar:
+            appendField("active tracking", "Polar crossing " + point, out);
+            break;
+    }
+}
+
+}  // namespace
+
 void writeState(const ReportInput& input, std::string& out) {
     const cmd::CommandRunner& runner = input.runner;
     const core::Document& document = input.editor.document();
@@ -620,6 +661,7 @@ void writeState(const ReportInput& input, std::string& out) {
     writeDrawing(input, out);
     appendField("pointer", input.pointer ? formatPoint(*input.pointer) : "none", out);
     appendField("active snap", snapPointText(runner.activeSnap()), out);
+    writeTracking(runner, out);
     writeStatistics(document, out);
 }
 

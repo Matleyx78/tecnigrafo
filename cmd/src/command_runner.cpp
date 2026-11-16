@@ -4,6 +4,7 @@
 #include "tg/cmd/command_runner.hpp"
 
 #include "commands/grip_command.hpp"
+#include "object_tracking.hpp"
 #include "text.hpp"
 #include "tg/cmd/command_protocol.hpp"
 #include "tg/cmd/coordinate_input.hpp"
@@ -258,6 +259,68 @@ void CommandRunner::pointerMoved(const core::Vec2& point) {
     refreshPointer();
 }
 
+void CommandRunner::pointerHeld(const core::Vec2& point) {
+    pointerMoved(point);
+    if (!tracksObjectSnaps()) {
+        return;
+    }
+    const std::optional<core::SnapPoint> snap = snapAt(point);
+    if (!snap) {
+        return;
+    }
+    // Held on a point acquired already, the same point, it releases it;
+    // otherwise it acquires it, and the eighth drops the oldest
+    // (docs/adr/0049, point 2).
+    std::vector<core::Vec2>& acquired = m_tracking.acquired;
+    if (const auto found = std::ranges::find(acquired, snap->point); found != acquired.end()) {
+        acquired.erase(found);
+    } else {
+        if (acquired.size() == kMaxAcquired) {
+            acquired.erase(acquired.begin());
+        }
+        acquired.push_back(snap->point);
+    }
+    refreshPointer();
+}
+
+const CommandRunner::TrackingState& CommandRunner::tracking() const {
+    m_tracking.guide = TrackingState::Guide::None;
+    m_tracking.guidePoint.reset();
+    m_tracking.from.reset();
+    if (!m_pointer || !tracksObjectSnaps() || snapAt(*m_pointer)) {
+        return m_tracking;
+    }
+    TrackingState state = trackedPoint(*m_pointer, m_command->basePoint());
+    m_tracking.guide = state.guide;
+    m_tracking.guidePoint = state.guidePoint;
+    m_tracking.from = state.from;
+    return m_tracking;
+}
+
+std::optional<CommandRunner::PolarTracking> CommandRunner::activePolar() const {
+    if (!m_drawingAids.polar || m_drawingAids.ortho || !m_pointer || !asksForPoint() ||
+        snapAt(*m_pointer)) {
+        return std::nullopt;
+    }
+    const auto base = m_command->basePoint();
+    if (!base) {
+        return std::nullopt;
+    }
+    // Object snap tracking comes before polar (docs/adr/0049, point 5).
+    const TrackingState& state = tracking();
+    if (state.guide == TrackingState::Guide::WithPolar) {
+        return PolarTracking{*base, *state.guidePoint};
+    }
+    if (state.guide != TrackingState::Guide::None) {
+        return std::nullopt;
+    }
+    const auto point = polarFoot(*base, *m_pointer);
+    if (!point) {
+        return std::nullopt;
+    }
+    return PolarTracking{*base, *point};
+}
+
 void CommandRunner::setPixelSize(double drawingUnitsPerPixel) {
     assert(drawingUnitsPerPixel > 0.0);
     m_pixelSize = drawingUnitsPerPixel;
@@ -285,6 +348,9 @@ void CommandRunner::setDrawingAids(const DrawingAids& aids) {
         return;
     }
     m_drawingAids = aids;
+    if (!m_drawingAids.tracking || !m_drawingAids.objectSnap) {
+        clearAcquired();  // tracking works only with object snap
+    }
     refreshPointer();
 }
 
@@ -498,6 +564,17 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
         // within a command it is the base point; for the first point of a
         // command it may come from the previous one, as "@" does.
         const auto& lastPoint = context().lastPoint;
+        // With a single guide of object snap tracking active, the distance
+        // is measured from its acquired point, along it (docs/adr/0049,
+        // point 6).
+        if (spec->kind == PointSpec::Kind::Distance && m_pointer && tracksObjectSnaps() &&
+            !snapAt(*m_pointer)) {
+            if (const std::optional<core::Vec2> point =
+                    detail::pointAlongGuide(trackedPoint(*m_pointer, lastPoint), spec->a)) {
+                forward(PointInput{*point});
+                return;
+            }
+        }
         const core::Vec2 pointer =
             m_pointer ? aidedPoint(*m_pointer, lastPoint) : lastPoint.value_or(core::Vec2{});
         if (const std::optional<core::Vec2> point = resolve(*spec, lastPoint, pointer)) {
@@ -786,6 +863,9 @@ bool CommandRunner::closeRectangle() {
 }
 
 void CommandRunner::forward(const Input& input) {
+    // Any answer ends the question, and with it the points acquired for it
+    // (docs/adr/0049, point 2).
+    clearAcquired();
     // Any answer to a Selection prompt ends that question: what was chosen
     // goes with the SelectionInput, if that is the answer, or is dropped.
     if (promptKind() == PromptKind::Selection) {
@@ -828,13 +908,47 @@ std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) co
                           m_drawingAids.snapModes, from);
 }
 
+bool CommandRunner::tracksObjectSnaps() const {
+    return m_drawingAids.tracking && m_drawingAids.objectSnap && asksForPoint();
+}
+
+std::optional<core::Vec2> CommandRunner::polarFoot(const core::Vec2& base,
+                                                   const core::Vec2& point) const {
+    // The polar aperture is the snap aperture (docs/adr/0033, point 9).
+    return polarPoint(base, point, context().defaults.polarAngle,
+                      kSnapAperturePixels * m_pixelSize);
+}
+
+CommandRunner::TrackingState CommandRunner::trackedPoint(
+    const core::Vec2& point, const std::optional<core::Vec2>& polarBase) const {
+    if (m_tracking.acquired.empty()) {
+        return {};
+    }
+    // The polar ray counts as a guide (docs/adr/0049, point 4); ortho, if a
+    // caller left it on with polar, applies instead of polar.
+    std::optional<detail::PolarRay> ray;
+    if (m_drawingAids.polar && !m_drawingAids.ortho && polarBase) {
+        if (const std::optional<core::Vec2> foot = polarFoot(*polarBase, point);
+            foot && *foot != *polarBase) {
+            ray = detail::PolarRay{*polarBase, *foot};
+        }
+    }
+    return detail::trackPoint(m_tracking.acquired, point, kSnapAperturePixels * m_pixelSize, ray);
+}
+
 core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
                                      const std::optional<core::Vec2>& orthoBase) const {
     // Snap wins over ortho (docs/adr/0008) and over polar tracking
     // (docs/adr/0033, point 9). Ortho and polar start from the same base
-    // point; if a caller left both on, ortho applies.
+    // point; if a caller left both on, ortho applies. Object snap tracking
+    // comes after the snap and before both (docs/adr/0049, point 5).
     if (const std::optional<core::SnapPoint> snap = snapAt(point)) {
         return snap->point;
+    }
+    if (tracksObjectSnaps()) {
+        if (const TrackingState state = trackedPoint(point, orthoBase); state.guidePoint) {
+            return *state.guidePoint;
+        }
     }
     if (!orthoBase) {
         return point;
@@ -843,10 +957,7 @@ core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
         return orthoPoint(*orthoBase, point);
     }
     if (m_drawingAids.polar) {
-        // The polar aperture is the snap aperture (docs/adr/0033, point 9).
-        if (const std::optional<core::Vec2> polar =
-                polarPoint(*orthoBase, point, context().defaults.polarAngle,
-                           kSnapAperturePixels * m_pixelSize)) {
+        if (const std::optional<core::Vec2> polar = polarFoot(*orthoBase, point)) {
             return *polar;
         }
     }
@@ -881,6 +992,7 @@ void CommandRunner::cancel() {
     // Keep the command alive for cancel(), while editor listeners already
     // see the runner idle when its transaction is closed.
     const std::unique_ptr<Command> command = std::move(m_command);
+    clearAcquired();
     const bool started = !m_askingSelection;
     m_askingSelection = false;
     // Esc on a hot grip leaves the selection with its grips (docs/adr/0034,
@@ -905,6 +1017,7 @@ void CommandRunner::finish() {
         context().documentReplaced = false;
     }
     m_command.reset();
+    clearAcquired();
     // A grip edit leaves the selection with its grips (docs/adr/0034,
     // point 3); every other command clears it (docs/adr/0008).
     if (!std::exchange(m_hotGrip, std::nullopt)) {
