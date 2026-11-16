@@ -184,8 +184,7 @@ mancanti o in più, un numero scritto con la virgola, `!key` senza `!level 2`.
 
 Non è un errore, ma un caso non superato, una direttiva che questa specifica
 descrive e il programma non ha ancora: `!osnap`, `!polar` e `!scr`, fino ai
-pacchetti P7, P8 e P3 della tappa 0.7; `!hover` e `!otrack`, fino al pacchetto
-PT34 della tappa 0.8. Lo script ferma la lettura con "not
+pacchetti P7, P8 e P3 della tappa 0.7. Lo script ferma la lettura con "not
 implemented yet" (codice 1; con `--pending`, codice 0): se è elencato in
 `tests/verifica/in-attesa/` aspetta il suo lavoro senza bloccare la CI.
 

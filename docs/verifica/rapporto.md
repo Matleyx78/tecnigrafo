@@ -77,6 +77,9 @@ statistics:
 | `documents:` | solo con più di un documento aperto: i nomi, nell'ordine in cui si sono aperti, e `(active)` dopo quello attivo ([vedi sotto](#il-disegno)) |
 | `pointer:` | l'ultimo punto del disegno in cui è stato portato il puntatore (`!move`, `!click`), o `none` |
 | `active snap:` | lo snap su cui si trova il puntatore mentre un comando chiede un punto: il tipo e il punto (`Endpoint 100,50`), o `none` |
+| `tracking:` | solo se acceso: `on`, il tracciamento degli snap a oggetto ([vedi sotto](#il-tracciamento-degli-snap-a-oggetto)) |
+| `acquired:` | solo se ce ne sono: i punti acquisiti, uno per riga, dal più vecchio |
+| `active tracking:` | solo se una guida aggancia il puntatore: la guida o l'incrocio e il punto che dà |
 | `statistics:` | per ogni tipo DXF presente nel disegno, in ordine alfabetico, il tipo, uno spazio e il numero di entità (`LWPOLYLINE 2`); i tipi assenti non si scrivono. Dalla tappa 0.8 contano anche gli `ATTRIB` degli `INSERT` ([vedi sotto](#tappa-08-entità-composte)) |
 
 ### La cronologia (`messages:`)
@@ -100,6 +103,32 @@ livello 1 lo calcola il runner dei comandi dal puntatore e dalla scala di
 `!view`, esattamente come per il marcatore che il livello 2 disegna. I nomi dei
 tipi sono `Endpoint`, `Midpoint`, `Center` e, dalla tappa 0.4 (pacchetto P13),
 `Insertion`.
+
+### Il tracciamento degli snap a oggetto
+
+Tre campi della tappa 0.8 ([ADR 0049](../adr/0049-tracciamento-degli-snap-a-oggetto.md),
+punto 8), scritti ai due livelli dopo `active snap:` e **solo quando sono
+diversi da una sessione nuova**, in quest'ordine:
+
+```
+pointer: 8,8
+active snap: none
+tracking: on
+acquired:
+  0,0
+  18,18
+active tracking: Horizontal 8,0 from 0,0
+```
+
+- **`tracking:`** `on` se il tracciamento è acceso (`!otrack on`, `F11`).
+- **`acquired:`** i punti acquisiti con `!hover`, uno per riga e dal più
+  vecchio, al più sette; si azzerano quando la richiesta di punto riceve una
+  risposta o il comando finisce.
+- **`active tracking:`** che cosa fanno le guide del puntatore mentre un
+  comando chiede un punto, se lo snap non vince: `Horizontal x,y from x,y` o
+  `Vertical x,y from x,y` per una guida sola (il punto dato e il punto
+  acquisito della guida), `Crossing x,y` per l'incrocio di due guide,
+  `Polar crossing x,y` per l'incrocio di una guida con la semiretta polare.
 
 ### Il disegno
 

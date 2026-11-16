@@ -60,6 +60,14 @@ struct ClickDirective {
     friend bool operator==(const ClickDirective&, const ClickDirective&) = default;
 };
 
+/// !hover x,y: the pointer moves to a point of the drawing and stays there
+/// long enough to acquire a point of object snap tracking, or to release it
+/// if it is acquired already (docs/adr/0049, point 7).
+struct HoverDirective {
+    core::Vec2 point;
+    friend bool operator==(const HoverDirective&, const HoverDirective&) = default;
+};
+
 /// !rightclick: right click, which confirms like Enter.
 struct RightClickDirective {
     friend bool operator==(const RightClickDirective&, const RightClickDirective&) = default;
@@ -70,11 +78,12 @@ struct EscDirective {
     friend bool operator==(const EscDirective&, const EscDirective&) = default;
 };
 
-/// !snap on|off, !ortho on|off and !polar on|off. Ortho and polar tracking
-/// exclude each other (docs/adr/0033, point 9): switching one on switches
-/// the other off; switching one off leaves the other as it is.
+/// !snap on|off, !ortho on|off, !polar on|off and !otrack on|off. Ortho and
+/// polar tracking exclude each other (docs/adr/0033, point 9): switching one
+/// on switches the other off; switching one off leaves the other as it is.
+/// Object snap tracking (docs/adr/0049, point 7) excludes neither.
 struct AidDirective {
-    enum class Aid : std::uint8_t { Snap, Ortho, Polar };
+    enum class Aid : std::uint8_t { Snap, Ortho, Polar, Tracking };
     Aid aid{Aid::Snap};
     bool on{false};
     friend bool operator==(const AidDirective&, const AidDirective&) = default;
@@ -127,10 +136,10 @@ struct ToleranceDirective {
     friend bool operator==(const ToleranceDirective&, const ToleranceDirective&) = default;
 };
 
-using Action =
-    std::variant<TypedLine, ViewDirective, MoveDirective, ClickDirective, RightClickDirective,
-                 EscDirective, AidDirective, OsnapDirective, ScriptSequencesDirective, KeyDirective,
-                 ReportDirective, ScreenshotDirective, LevelDirective, ToleranceDirective>;
+using Action = std::variant<TypedLine, ViewDirective, MoveDirective, ClickDirective, HoverDirective,
+                            RightClickDirective, EscDirective, AidDirective, OsnapDirective,
+                            ScriptSequencesDirective, KeyDirective, ReportDirective,
+                            ScreenshotDirective, LevelDirective, ToleranceDirective>;
 
 /// Where a pending case stops being compared (docs/adr/0037, point 4).
 struct Frontier {
