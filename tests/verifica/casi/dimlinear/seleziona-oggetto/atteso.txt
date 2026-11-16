@@ -1,0 +1,68 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=30,40
+  258 LWPOLYLINE closed=no vertex=50,0 vertex=80,0 vertex=80,20
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,40
+  Specify next point or [Undo]:
+  Command: PLINE
+  Specify start point: 50,0
+  Specify next point or [Arc/Undo]: 80,0
+  Specify next point or [Arc/Undo]: 80,20
+  Specify next point or [Arc/Close/Undo]:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>:
+  Select object to dimension: 200,200
+prompt: Select object to dimension:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Polyline
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+  LWPOLYLINE 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=30,40
+  258 LWPOLYLINE closed=no vertex=50,0 vertex=80,0 vertex=80,20
+  259 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=30,40 line-point=-10,40 rotation=90 text-point=-11.875,20 measurement=40 ~text="40"
+  266 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=80,20 line-point=90,20 rotation=90 text-point=88.125,10 measurement=20 ~text="20"
+messages:
+  Select object to dimension: 15,20
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: -10,20
+  Dimension text = 40
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>:
+  Select object to dimension: 80,10
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 90,10
+  Dimension text = 20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Polyline
+  DIMLINEAR
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 2
+  LINE 1
+  LWPOLYLINE 1

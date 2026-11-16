@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMLINEAR, Enter at the first prompt: Select object to dimension (PT26, #713).
+; A pick on empty space keeps the prompt without a message (ADR 0032, point 1);
+; a LINE gives its endpoints as origins, a segment of an LWPOLYLINE the
+; endpoints of that segment, in vertex order. Values by hand from PT23 with
+; ISO-25, as in dimlinear/punti-direzione-automatica (six graphics records
+; numbered after each dimension).
+LINE
+0,0
+30,40
+
+PLINE
+50,0
+80,0
+80,20
+
+DIMLINEAR
+
+200,200
+!report
+15,20
+-10,20
+DIMLINEAR
+
+80,10
+90,10

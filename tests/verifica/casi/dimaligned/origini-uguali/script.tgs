@@ -1,0 +1,13 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMALIGNED with the second origin equal to the first (PT26, #713): the
+; dimension is not regenerable (PT23, reason "Points coincide."), so the
+; command writes the reason and asks the second origin again (PT5, B12).
+; Values by hand from PT23 with ISO-25, as in dimaligned/punti-testo-angolo:
+; u = (0.6, 0.8), the location 10 along the normal from the first origin.
+DIMALIGNED
+10,10
+10,10
+!report
+40,50
+2,16
