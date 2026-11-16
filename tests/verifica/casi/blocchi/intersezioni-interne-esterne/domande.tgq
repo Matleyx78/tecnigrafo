@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Coordinates from solid-space tests/corpus/casi/geom2d/intersezione-richiesta-x-origine.json
+; and intersezione-richiesta-x-traslato.json, commit fc8cae3da8a737510d6b61075b03ea3272228576.
+; PT16 P4: two generated shapes of ONE insertion must also intersect for snap.
+? window -1,-1 1,1 -> none
+; PT9 section 4 rejects !block today; PT16 deliberately makes it valid.
+; cambia con #693
+!block "Cross" base=0,0
+Rising = LINE start=0,0 end=10,10
+Falling = LINE start=0,10 end=10,0
+!endblock
+Cross = INSERT block="Cross" insertion=0,0
+? snap 5,5.1 aperture=0.5 modes=intersection -> Intersection 5,5
+; A separate region uses the same corpus pair, split between an insert and a line.
+!block "Single" base=0,0
+SingleLine = LINE start=0,0 end=10,10
+!endblock
+Translated = INSERT block="Single" insertion=1000000,1000000
+External = LINE start=1000000,1000010 end=1000010,1000000
+? snap 1000005,1000005.1 aperture=0.5 modes=intersection -> Intersection 1000005,1000005
+? snap 1000005,1000005.1 aperture=0.5 modes=none -> none
