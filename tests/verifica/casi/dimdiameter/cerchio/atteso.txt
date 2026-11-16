@@ -1,0 +1,73 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 CIRCLE center=0,0 radius=10
+  258 DIMENSION kind=diameter style="ISO-25" point1=8,6 point2=-8,-6 text-point=20,15 measurement=20 user-text-position=yes ~text="⌀20"
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 0,0
+  Specify radius of circle or [Diameter]: 10
+  Command: DIMDIAMETER
+  Select arc or circle: 10,0
+  Specify dimension line location or [Text/Angle]: 20,15
+  Dimension text = 20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Dimdiameter
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  DIMENSION 1
+
+[report 2]
+entities:
+  257 CIRCLE center=0,0 radius=10
+messages:
+  Command: U
+  Undone: Dimdiameter.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+  Dimdiameter
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+
+[final]
+entities:
+  257 CIRCLE center=0,0 radius=10
+  258 DIMENSION kind=diameter style="ISO-25" point1=8,6 point2=-8,-6 text-point=20,15 measurement=20 user-text-position=yes ~text="⌀20"
+messages:
+  Command: REDO
+  Redone: Dimdiameter.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Dimdiameter
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  DIMENSION 1
