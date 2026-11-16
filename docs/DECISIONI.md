@@ -1961,3 +1961,15 @@ i rimandi ai documenti che cambia.
   [PT18](tappe/0.8/PT18-blocchi-dxf.md), [PT25](tappe/0.8/PT25-quote-dxf.md),
   [PT31](tappe/0.8/PT31-retini-dxf.md) e [PT48](tappe/0.8/PT48-ellisse.md),
   secondo la decisione in [#675](https://github.com/Matleyx78/tecnigrafo/issues/675).
+- **2026-11-16 — Ripartizione delle verifiche dei retini di PT30.** Durante
+  RT30 ([#720](https://github.com/Matleyx78/tecnigrafo/issues/720)) emerge che
+  il formato di controllo attuale espone contorni, regione piena, selezione,
+  snap, grip, ingombro e le trasformazioni dei campi pubblicati, ma non le
+  famiglie `PatternLine` né `$MEASUREMENT`, necessario per interrogare il
+  generatore dei motivi predefiniti nelle due unità. Il responsabile assegna
+  quindi a RT30 soltanto i comportamenti osservabili dal formato attuale e
+  mantiene obbligatori in `hatch_test.cpp` di
+  [PT30](tappe/0.8/PT30-retini-core.md) tutti i test delle famiglie
+  `PatternLine` e dei motivi predefiniti. Non si aggiungono formati, domande o
+  dipendenze. Scartata l'estensione del sistema di verifica per esporre quei
+  dati: anticiperebbe lavoro fuori dal perimetro di RT30.

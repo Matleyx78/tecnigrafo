@@ -83,12 +83,19 @@
 
 ## Test richiesti
 
-- `hatch_test.cpp`: contorno aperto non supportato; regione piena di un
-  rettangolo con un cerchio dentro (due anelli); trasformazione con
-  riflessione; un clic nel pieno prende il retino, uno al centro di un foro
-  il cui bordo è più lontano dell'apertura del clic no; un motivo
-  con una famiglia a 30° ruotato di 90° ha la famiglia a 120°;
-- le righe dei motivi predefiniti (punto 2), con una tolleranza assoluta di
+- **RT30**, usando soltanto il formato e le domande già pubblicati: contorni;
+  regione piena di un rettangolo con un cerchio dentro (due anelli);
+  selezione (un clic nel pieno prende il retino, uno al centro di un foro il
+  cui bordo è più lontano dell'apertura del clic no); nessuno snap e nessun
+  grip; ingombro dei contorni; trasformazione con riflessione dei campi
+  esposti dal formato attuale. RT30 non aggiunge formati, domande o
+  dipendenze e non verifica le famiglie `PatternLine` né il generatore dei
+  motivi predefiniti, che il formato attuale non espone;
+- **test unitari obbligatori in `hatch_test.cpp`**: contorno aperto non
+  supportato; tutti i comportamenti elencati per RT30; un motivo con una
+  famiglia a 30° ruotato di 90° ha la famiglia a 120°;
+- **test unitari obbligatori in `hatch_test.cpp`** per tutte le righe dei
+  motivi predefiniti (punto 2), con una tolleranza assoluta di
   `1e-12` sulle componenti, origine sempre `(0, 0)`:
   - `ANSI31` in pollici, `θ` = 0, `s` = 1: angolo 45, scostamento
     `(−0.0883883476483184, 0.0883883476483185)`;
@@ -115,4 +122,6 @@
 
 ## Fatto quando
 
-- I casi di RT30 passano; la CI è verde.
+- I casi di RT30 sui comportamenti osservabili dal formato attuale passano;
+  tutti i test unitari obbligatori delle famiglie `PatternLine` e dei motivi
+  predefiniti passano; la CI è verde.
