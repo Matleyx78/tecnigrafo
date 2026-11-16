@@ -1,0 +1,107 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=40,0 end=0,40
+  258 LINE start=0,30 end=0,60
+  259 LINE start=12,40 end=12,70
+messages:
+  Command: LINE
+  Specify first point: 40,0
+  Specify next point or [Undo]: 0,40
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,30
+  Specify next point or [Undo]: 0,60
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 12,40
+  Specify next point or [Undo]: 12,70
+  Specify next point or [Undo]:
+  Command: POLARANG
+  Enter new value for POLARANG <90>: 90
+  Command: LINE
+  Specify first point: -20,10
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-20,10 end=0,0
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 2,5
+active snap: none
+tracking: on
+acquired:
+  40,0
+  0,40
+active tracking: Crossing 0,0
+statistics:
+  LINE 3
+
+[report 2]
+entities:
+  257 LINE start=40,0 end=0,40
+  258 LINE start=0,30 end=0,60
+  259 LINE start=12,40 end=12,70
+messages:
+  *Cancel*
+  Command: LINE
+  Specify first point: -20,0
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-20,0 end=12,0
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 6,2
+active snap: none
+tracking: on
+acquired:
+  0,30
+  12,40
+active tracking: Polar crossing 12,0
+statistics:
+  LINE 3
+
+[final]
+entities:
+  257 LINE start=40,0 end=0,40
+  258 LINE start=0,30 end=0,60
+  259 LINE start=12,40 end=12,70
+messages:
+  *Cancel*
+  Command: LINE
+  Specify first point: -20,0
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-20,0 end=0,0
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 6,2
+active snap: none
+tracking: on
+acquired:
+  12,40
+  0,30
+active tracking: Polar crossing 0,0
+statistics:
+  LINE 3

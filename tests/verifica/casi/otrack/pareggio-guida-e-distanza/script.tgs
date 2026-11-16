@@ -1,0 +1,26 @@
+; Same-point guide tie, nearest guide and typed distance (PT34 point 3-4)
+!view 0,0 1 800x600
+LINE
+-100,0
+0,0
+
+!osnap end
+!ortho off
+!polar off
+!otrack on
+LINE
+-50,-50
+!hover 0,0
+!move 8,8
+!report
+!move -8,8
+!report
+!move -8,-8
+!report
+!move 8,-8
+!report
+!move 7,8
+!report
+!move 9,2
+12
+
