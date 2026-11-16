@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCH: Properties con l'opzione Solid, senza scala né angolo; il retino è pieno
+PLINE
+0,0
+60,0
+60,40
+0,40
+C
+-HATCH
+P
+S
+30,20
+

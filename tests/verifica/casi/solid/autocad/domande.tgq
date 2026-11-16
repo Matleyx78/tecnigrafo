@@ -1,0 +1,46 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT10: SOLID drawn in AutoCAD 2021 (autocad-solid.scr, docs/tappe/0.8/dxf-di-prova.md).
+; 8C irregular quadrilateral; 8D butterfly (points given along the outline);
+; 8F on the red layer SOLIDI; 90 quadrilateral and 91 its MIRROR about x = 400;
+; 92 triangle (Enter at the fourth point: AutoCAD writes 13 = 12).
+; Answers of version ... entity copied from the ezdxf oracle log.
+; count and unhandled are those of the oracle with SOLID not yet active:
+; PT10 activates SOLID and copies the new ones from the log (card, point 5).
+D = DXF source=autocad-solid
+? version D -> AC1032
+? units D -> 4
+? count D -> none
+? unhandled D -> SOLID 6
+; PT10 makes SOLID a handled entity: until then its handles answer "unhandled SOLID".
+; cambia con #677
+? entity D 8C -> SOLID vertex=0,0 vertex=50,0 vertex=5,30 vertex=45,25
+? entity D 8D -> SOLID vertex=100,0 vertex=140,0 vertex=140,30 vertex=100,30
+? entity D 8F -> SOLID vertex=200,0 vertex=240,0 vertex=200,30 vertex=240,30 layer="SOLIDI"
+? entity D 90 -> SOLID vertex=300,0 vertex=350,0 vertex=310,30 vertex=345,20
+? entity D 91 -> SOLID vertex=500,0 vertex=450,0 vertex=490,30 vertex=455,20
+? entity D 92 -> SOLID vertex=0,-60 vertex=40,-60 vertex=20,-30 vertex=20,-30
+; Bounding boxes of the four vertices, by hand.
+? bbox D:8C -> 0,0 50,30
+? bbox D:91 -> 450,0 500,30
+? bbox D:92 -> 0,-60 40,-30
+; MIRROR keeps the vertex order (ADR 0044, point 7): reflecting 90 about x = 400
+; gives exactly what AutoCAD wrote for 91.
+? transform D:90 mirror 400,-10 400,50 -> SOLID vertex=500,0 vertex=450,0 vertex=490,30 vertex=455,20
+; 8D is a butterfly: the figure v0, v1, v3, v2 is (100,0) (140,0) (100,30) (140,30),
+; two triangles meeting in (120,15). The diagonals lie on 3x + 4y = 420 and
+; 3x - 4y = 300; (105,15) is outside, 45/5 = 9 from both, the foot (110.4,22.2)
+; inside the edge; (120,5) is in the lower lobe; (120,15) is the crossing.
+? distance D:8D 105,15 -> 9
+? distance D:8D 120,5 -> 0
+? distance D:8D 120,15 -> 0
+? distance D:8D 120,40 -> 10
+? crosses D:8D 104,14 106,16 -> no
+? crosses D:8D 119,4 121,6 -> yes
+? inside D:8D 99,-1 141,31 -> yes
+? inside D:8D 99,-1 141,20 -> no
+; Snap endpoint on the distinct vertices: the triangle has three.
+? snaps D:92 -> Endpoint 0,-60; Endpoint 40,-60; Endpoint 20,-30
+? grips D:92 -> 0,-60; 40,-60; 20,-30
+? roundtrip D -> identical

@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; HPISLANDDETECTION 0 e 2, poi -HATCH nel rettangolo di LINE con il cerchio: stile normal e ignore,
+; con gli stessi due contorni
+LINE
+0,0
+60,0
+60,40
+0,40
+C
+CIRCLE
+30,20
+8
+HPISLANDDETECTION
+0
+-HATCH
+5,5
+
+HPISLANDDETECTION
+2
+-HATCH
+5,5
+

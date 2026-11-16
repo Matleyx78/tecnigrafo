@@ -1,0 +1,44 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: DIMTXT
+  Enter new value for DIMTXT <2.5000>: 3.5
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Current dimension overrides:
+   DIMTXT      3.5000
+  Enter a dimension style option [Save/Restore/STatus/?] <Restore>: S
+  Enter name for new dimension style or [?]: ISO-25
+  That name is already in use, redefine it? <N>: N
+  Enter name for new dimension style or [?]: ISO-25
+  That name is already in use, redefine it? <N>: Y
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  *Cancel*
+  Command: DIMTXT
+  Enter new value for DIMTXT <3.5000>: 0
+  Cannot set DIMTXT to that value.
+  *Invalid*
+  Command: U
+  Undone: -DIMSTYLE.
+  Command: -DIMSTYLE
+  Current dimension style: ISO-25
+  Current dimension overrides:
+   DIMTXT      3.5000
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMTXT
+redo:
+  -DIMSTYLE
+snap: on
+ortho: off
+dimension overrides: DIMTXT:3.5
+pointer: none
+active snap: none
+statistics:

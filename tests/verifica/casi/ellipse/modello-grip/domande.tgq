@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT48 / PT48 (#679). Expectations from ADR 0052 and PT48, calculated independently.
+; PT48.5: length is distance to the target; orientation is unchanged.
+E = ELLIPSE center=0,0 major-axis=4,0 ratio=0.5
+? grip E 0,0 10,20 -> ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? grip E 4,0 3,4 -> ELLIPSE center=0,0 major-axis=5,0 ratio=0.4
+? grip E 0,2 1,5 -> ELLIPSE center=0,0 major-axis=0,5.0990195135927845 ratio=0.7844645405527362
+? grip E 4,0 1,0 -> ELLIPSE center=0,0 major-axis=0,2 ratio=0.5
+? grip E 4,0 2,0 -> ELLIPSE center=0,0 major-axis=2,0 ratio=1
+? grip E -4,0 -3,4 -> ELLIPSE center=0,0 major-axis=5,0 ratio=0.4
+? grip E 0,-2 0,-1 -> ELLIPSE center=0,0 major-axis=4,0 ratio=0.25
+? grip E 4,0 0,0 -> invalid
+? grip E 0,2 0,0 -> invalid
+? grip E 1,1 2,2 -> none
+; The input major axis lies along +Y; an exact circle must be written along +X.
+T = ELLIPSE center=0,0 major-axis=0,4 ratio=0.5 start=0 end=90
+? grip T 0,4 0,2 -> ELLIPSE center=0,0 major-axis=2,0 ratio=1 start=90 end=180
+; Swapping axes rebases the parameters by -90 degrees.
+A = ELLIPSE center=0,0 major-axis=4,0 ratio=0.5 start=0 end=90
+? grip A 0,2 1,5 -> ELLIPSE center=0,0 major-axis=0,5.0990195135927845 ratio=0.7844645405527362 start=270 end=0
+? grip A 4,0 1,0 -> ELLIPSE center=0,0 major-axis=0,2 ratio=0.5 start=270 end=0

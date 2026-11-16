@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMTXT as a command: Esc leaves nothing, 3.5 is an override of ISO-25, U undoes the
+; step named after the variable ([0.8-RT28], work #717).
+; Expected values: -DIMSTYLE prompts from the PT28 card (point 2); messages from the
+; AutoCAD LT 2026 history autocad-dimstyle.txt (Matleyx78/dxf-test-file, commit
+; 5170f1860953b5d076aa435bd65daa725d431745), translated as DECISIONI.md, 2026-11-02,
+; "Testi inglesi dei messaggi", and the owner's decision in #716.
+DIMTXT
+!esc
+DIMTXT
+3.5
+!report
+U
