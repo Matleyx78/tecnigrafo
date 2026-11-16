@@ -211,7 +211,7 @@ def hatch_loop(path):
     return fields
 
 
-def entity_answer(entity, layer_names=None, linetype_names=None, properties=True):
+def entity_answer(entity, layer_names=None, linetype_names=None, properties=True, owner=None):
     d = entity.dxf
     kind = entity.dxftype()
     fields = [kind]
@@ -273,7 +273,7 @@ def entity_answer(entity, layer_names=None, linetype_names=None, properties=True
         if d.get("flow_direction", 1) != 1: add("direction", "by-style")
         add("value", quoted(entity.text))
     elif kind in {"ATTDEF", "ATTRIB"}:
-        if kind == "ATTRIB": add("owner", d.get("owner", "0"))
+        if kind == "ATTRIB": add("owner", owner or d.get("owner", "0"))
         fields.extend(text_fields(d)); add("tag", quoted(d.tag))
         if kind == "ATTDEF": add("prompt", quoted(d.get("prompt", "")))
         flags = d.get("flags", 0)
@@ -390,11 +390,14 @@ class DrawingAnswers:
             if handle is None:
                 raise ValueError("oracle entities require an explicit DXF handle")
             self.entities[handle.upper()] = (entity, managed(entity, model_owner))
-        self.linked_attribute_handles = {
-            attrib.dxf.handle.upper()
+        # An ATTRIB belongs to the INSERT it follows; group 330 may name the
+        # layout instead (ezdxf writes the block record there).
+        self.attribute_owners = {
+            attrib.dxf.handle.upper(): entity.dxf.handle
             for entity, _ in self.entities.values() if entity.dxftype() == "INSERT"
             for attrib in self.bound_entities[entity.dxf.handle].attribs
         }
+        self.linked_attribute_handles = set(self.attribute_owners)
         self.blocks = []
         for block in self.document.blocks:
             name = block.name
@@ -470,7 +473,9 @@ class DrawingAnswers:
             entity, supported = record
             answered_entity = (self.bound_entities[entity.dxf.handle]
                                if entity.dxftype() == "DIMENSION" else entity)
-            return (entity_answer(answered_entity, self.layer_names, self.linetype_names)
+            owner = self.attribute_owners.get(entity.dxf.handle.upper())
+            return (entity_answer(answered_entity, self.layer_names, self.linetype_names,
+                                  owner=owner)
                     if supported else "unhandled " + entity.dxftype())
         raise ValueError(f"unsupported oracle question: {question}")
 

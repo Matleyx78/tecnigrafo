@@ -315,6 +315,8 @@ def self_test():
         dimension = model.add_linear_dim(base=(0, 8), p1=(0, 0), p2=(5, 0),
                                          dimstyle="ISO-25")
         dimension.render()
+        # AutoCAD always writes group 42; ezdxf's renderer leaves it out.
+        dimension.dimension.dxf.actual_measurement = 5
         hatch = model.add_hatch(color=2)
         hatch.paths.add_polyline_path([(0, 0), (5, 0), (5, 5), (0, 5)],
                                       is_closed=True)
@@ -369,10 +371,10 @@ def self_test():
                                'rotation=0 style="Standard" value="first\\\\Psecond"'),
             dimension.dimension.dxf.handle: ('DIMENSION kind=linear style="ISO-25" '
                                               'origin1=0,0 origin2=5,0 line-point=0,8 rotation=0 '
-                                              'text-point=2.5,8.625 measurement=5'),
+                                              'text-point=2.5,9.875 measurement=5 text="<>"'),
             hatch.dxf.handle: ('HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal '
                                'loop=external+polyline vertex=0,0 vertex=5,0 vertex=5,5 '
-                               'vertex=0,5'),
+                               'vertex=0,5 color=2'),
             attribute.dxf.handle: (f'ATTRIB owner={insert.dxf.handle} position=10,20 '
                                    'alignment-point=0,0 height=1.8 rotation=0 width-factor=1 '
                                    'oblique=0 style="Standard" mirror-x=no mirror-y=no '
@@ -387,7 +389,11 @@ def self_test():
         require(entity_answer(attdef) == expected_attdef, "complete ATTDEF entity answer")
         expected_blocks = (f'"TAGGED" base=1,2; "TAGGED" {attdef.dxf.handle} {expected_attdef}; '
                            f'"TAGGED" {block_line.dxf.handle} LINE start=0,0 end=4,0 color=byblock')
-        require(stage_answers.answer("blocks") == expected_blocks, "complete block rows")
+        # Rendering the dimension adds ezdxf's arrow block; check TAGGED rows only.
+        tagged_rows = "; ".join(row.strip()
+                                for row in answer_items(stage_answers.answer("blocks"))
+                                if row.strip().startswith('"TAGGED" '))
+        require(tagged_rows == expected_blocks, "complete block rows")
         require(stage_answers.answer("styles") ==
                 '"Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no',
                 "complete STYLE rows")
@@ -401,7 +407,7 @@ def self_test():
         with redirect_stdout(io.StringIO()) as generated_log:
             stage_answers.print_answers()
         outside = (f"; generated {dimension.dimension.dxf.handle}: "
-                   "outside oracle scope (MTEXT,POINT)")
+                   "outside oracle scope (INSERT,MTEXT,POINT)")
         require(outside in generated_log.getvalue().splitlines(),
                 "complete outside-oracle-scope log row")
 
