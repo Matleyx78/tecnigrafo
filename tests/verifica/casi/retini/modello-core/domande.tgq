@@ -1,0 +1,33 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT30 / PT30 (#721). Expectations follow ADR 0048 and elementary geometry.
+; The outer rectangle is [0,10] x [0,8]; the circular hole has center (5,4)
+; and radius 2. No Tecnigrafo executable was used to derive the expectations.
+
+; PT9 rejects HATCH until PT30 adds the model entity.
+; cambia con #721
+H = HATCH pattern="SOLID" solid=yes loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 loop=edges circle=5,4;2 seed=1,1
+
+; A solid normal hatch generates one even-odd region from all its contours.
+? generated H -> REGION loop=polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 loop=edges circle=5,4;2
+? bbox H -> 0,0 10,8
+
+; Selection uses the filled region: the hole is not selectable when its edge
+; lies farther away than the click tolerance.
+? pick 1,1 tolerance=0.5 -> H
+? pick 5,4 tolerance=1 -> none
+? window 0,0 10,8 -> H
+? crossing 4.5,3.5 5.5,4.5 -> none
+
+; A hatch deliberately publishes neither object snaps nor grips.
+? snaps H -> none
+? snaps H modes=endpoint,midpoint,center,insertion,intersection,perpendicular,tangent,quadrant -> none
+? grips H -> none
+? grip H 0,0 1,1 -> none
+
+; Reflection in the X axis transforms contours and seeds and negates the
+; exposed pattern angle; the positive similarity scale is unchanged.
+P = HATCH pattern="ANSI31" angle=30 scale=2 double=yes islands=outer loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 seed=1,1 seed=9,7
+? transform P mirror 0,0 10,0 -> HATCH pattern="ANSI31" solid=no angle=-30 scale=2 double=yes islands=outer loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,-8 vertex=0,-8 seed=1,-1 seed=9,-7
+? bbox P -> 0,0 10,8
