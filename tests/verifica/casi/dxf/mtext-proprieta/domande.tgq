@@ -1,0 +1,53 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT14 / PT14 (#689): MTEXT read from and written to DXF (ADR 0046, point 2;
+; ADR 0018, points 3-6; ADR 0044, point 4).
+; mtext.dxf is written by hand, R2018 (UTF-8), groups in AutoCAD's order:
+; 10 20 30 40 41 71 72, the 3 groups, 1, 7, then 50 or 11 21 31, 73 44,
+; then the groups the model does not use. Expectations come from the file
+; and the scheda, checked against ezdxf 1.4.5 (ezdxf_attesi.entity_answer),
+; without running Tecnigrafo.
+;   51: every modelled property; 50 = 30, 73 = 2 (exactly), 44 = 1.5.
+;   52: a 512-character value with accented letters, written as two
+;       250-character 3 groups and the final 1 group (12 characters).
+;   53: direction vector 11/21 = (0.6, 0.8) and no 50: rotation =
+;       atan2(0.8, 0.6) = 53.13010235415598 degrees; 72 = 5 is by-style.
+;   54: background fill (90, 63, 45, 441) and empty column data (75 = 0)
+;       stay in extras.
+;   55: empty value.
+; Unhandled (PT14, point 4), kept raw:
+;   56: columns, group 75 = 2 (ezdxf 1.4.5 does not read R2018 column
+;       groups outside the embedded object, so it calls it handled);
+;   57: height 0; 58: height -2; 59: width -1 (handled for ezdxf);
+;   5A: direction 72 = 3, top to bottom (by-style for ezdxf);
+;   5B: extrusion (0,1,0); 5C: paper space (67 = 1);
+;   5D: static columns in the embedded object (101), 2 columns.
+; ~lines (ADR 0046, point 2) counts the generated TEXT rows. No paragraph
+; wraps: every Liberation Sans advance of these letters is at most one em,
+; 2048/1409 of the height. 51: two paragraphs, the longer shown with 19 characters
+; (\H2x; is skipped), at most 19 * 3.5 * 2048/1409 = 96.7 < 200;
+; 52: width 0, two paragraphs; 53: width 0, one line; 54: "Sfondo",
+; at most 6 * 1 * 2048/1409 = 8.7 < 15, one line; 55: empty, no TEXT
+; (mtext/vuoto-e-selezione).
+D = DXF file=mtext.dxf
+? version D -> AC1032
+; Until PT14 every MTEXT is unhandled.
+; cambia con #689
+? count D -> MTEXT 5
+? unhandled D -> MTEXT 8
+? entity D 51 -> MTEXT insertion=10,20 height=3.5 width=200 attachment=middle-center rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="Prima riga\\Pseconda {\\H2x;grande} riga" ~lines=2
+? entity D 52 -> MTEXT insertion=0,-50 height=2.5 width=0 attachment=top-left rotation=0 style="Standard" value="Città di Tecnigrafo: perché è così? Però più già né sì. Il disegno tecnico è un linguaggio: ogni quota, ogni retino e ogni testo raccontano qualcosa a chi legge. Questo paragrafo è lungo apposta, con lettere accentate (à è é ì ò ù) e un a capo.\\PSecondo paragrafo: le righe più lunghe di duecentocinquanta caratteri si spezzano in gruppi 3 e finiscono con il gruppo 1, come fa AutoCAD. Così il valore resta intero anche quando il file si riscrive: già, perché nessun carattere si perde né si divide a metà. Fine." ~lines=2
+? entity D 53 -> MTEXT insertion=5,5 height=2 width=0 attachment=bottom-left rotation=53.13010235415598 style="Standard" direction=by-style value="Vettore" ~lines=1
+? entity D 54 -> MTEXT insertion=-10,0 height=1 width=15 attachment=bottom-right rotation=0 style="Standard" value="Sfondo" ~lines=1
+? entity D 55 -> MTEXT insertion=0,0 height=2.5 width=0 attachment=top-left rotation=0 style="Standard" value="" ~lines=0
+? entity D 56 -> unhandled MTEXT
+? entity D 57 -> unhandled MTEXT
+? entity D 58 -> unhandled MTEXT
+? entity D 59 -> unhandled MTEXT
+? entity D 5A -> unhandled MTEXT
+? entity D 5B -> unhandled MTEXT
+? entity D 5C -> unhandled MTEXT
+? entity D 5D -> unhandled MTEXT
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
