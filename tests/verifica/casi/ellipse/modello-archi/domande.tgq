@@ -1,0 +1,24 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT48 / PT48 (#679). Expectations from ADR 0052 and PT48, calculated independently.
+; Arc through the positive Y extremum, then an arc excluding it.
+A = ELLIPSE center=0,0 major-axis=4,0 ratio=0.5 start=30 end=150
+? bbox A -> -3.4641016151377544,1 3.4641016151377544,2
+? snaps A modes=endpoint,center,quadrant -> Endpoint 3.4641016151377544,1; Endpoint -3.4641016151377544,1; Center 0,0; Quadrant 0,2
+B = ELLIPSE center=0,0 major-axis=4,0 ratio=0.5 start=30 end=60
+? bbox B -> 2,1 3.4641016151377544,1.7320508075688772
+? snaps B modes=quadrant -> none
+; Wrapped arc includes only the positive major-axis quadrant.
+W = ELLIPSE center=0,0 major-axis=4,0 ratio=0.5 start=300 end=30
+? bbox W -> 2,-1.7320508075688772 4,1
+? snaps W modes=quadrant -> Quadrant 4,0
+; Both bounds of this oblique arc contain interior stationary points.
+; x(t)=4cos(t)-1.5sin(t); y(t)=3cos(t)+2sin(t).
+R = ELLIPSE center=0,0 major-axis=4,3 ratio=0.5 start=0 end=180
+? bbox R -> -4.272001872658765,-3 4,3.605551275463989
+; Non-quadrant endpoint values are copied from solid-space, not recomputed:
+; tests/corpus/casi/geom2d/ellisse-estremi-millimetri.json
+; commit fc8cae3da8a737510d6b61075b03ea3272228576.
+; Radians 0.5 and 2.5 converted to degrees for the report contract.
+S = ELLIPSE center=12.5,-7.25 major-axis=40,30 ratio=0.6 start=28.64788975654116 end=143.2394487827058
+? snaps S modes=endpoint -> Endpoint 38.973642780739254,30.58368978321205; Endpoint -30.318243215748566,-16.920977007913056

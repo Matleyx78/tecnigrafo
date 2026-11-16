@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT48 / PT48 (#679). Expectations from ADR 0052 and PT48, calculated independently.
+; PT48.6 explicitly defers point distance and crossing selection to PT50.
+E = ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? inside E 6,18 14,22 -> yes
+? inside E 6.001,18 14,22 -> no
+? window 6,18 14,22 -> E
+? window 14,22 6,18 -> E
+? window 7,19 13,21 -> none
+? distance E 14,20 -> inf
+? distance E 10,20 -> inf
+? pick 14,20 tolerance=0.1 -> none
+? crosses E 13,19 15,21 -> no
+? crossing 13,19 15,21 -> none
+? crossing 5,17 15,23 -> none
+; Endpoint rather than full-support extents decide a small arc's window.
+A = ELLIPSE center=0,0 major-axis=4,0 ratio=0.5 start=0 end=90
+? inside A 0,0 4,2 -> yes
+? inside A 0,0 3.99,2 -> no
+? window 0,0 4,2 -> A
