@@ -4,6 +4,7 @@
 #include "action_registry.hpp"
 #include "auto_hide.hpp"
 #include "builtin_actions.hpp"
+#include "command_line.hpp"
 #include "document_tabs.hpp"
 #include "document_types.hpp"
 #include "environments.hpp"
@@ -12,6 +13,7 @@
 #include "style.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "theme.hpp"
+#include "ui_builder.hpp"
 
 #include <QAction>
 #include <QByteArray>
@@ -493,6 +495,10 @@ TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     used.append(documentTabsIconNames());
     // The message boxes (F6).
     used.append(styleIconNames());
+    // The cancel button of the command line and the arrow that opens the
+    // panel of a ribbon group (F6).
+    used.append(commandLineIconNames());
+    used.append(uiBuilderIconNames());
     // The types of document and the environments (0.7.5-P30): the tabs, the
     // Start page and the indicator of the status bar show them.
     const cmd::CommandRegistry commands{};

@@ -7,6 +7,7 @@
 #include "tg/cmd/command_runner.hpp"
 
 #include <QString>
+#include <QStringList>
 #include <QWidget>
 
 class QKeyEvent;
@@ -17,6 +18,9 @@ class QTextBlock;
 class QToolButton;
 
 namespace tg::app {
+
+/// The icons the command line draws, which no action names.
+[[nodiscard]] QStringList commandLineIconNames();
 
 /// AutoCAD-style command line: a read-only history (three lines visible,
 /// scrollable) above the prompt of the runner and an input field.

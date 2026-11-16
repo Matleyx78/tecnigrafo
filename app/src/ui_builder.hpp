@@ -32,6 +32,9 @@ class TitleCentrer;
 class ActionRegistry;
 struct Environment;
 
+/// The icons the interface draws, which no action names.
+[[nodiscard]] QStringList uiBuilderIconNames();
+
 enum class InterfaceKind : std::uint8_t { Ribbon, Classic };
 
 /// Builds the interface from the registry without replacing its actions.

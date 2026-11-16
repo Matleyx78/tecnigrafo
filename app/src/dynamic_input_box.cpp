@@ -26,6 +26,18 @@ constexpr int kFieldWidth = 90;
 constexpr int kBoxMargin = 8;
 constexpr int kBoxSpacing = 6;
 
+/// Where the box of `size` starts along one axis of a parent of `extent`:
+/// past the pointer at `pointer`, or before it where it does not fit there,
+/// so that it never covers the pointer and the marker under it; pushed
+/// inside the parent only when it fits on neither side.
+int boxStart(int pointer, int size, int extent) {
+    int start = pointer + kCursorOffset;
+    if (start + size > extent) {
+        start = pointer - kCursorOffset - size;
+    }
+    return std::clamp(start, 0, std::max(0, extent - size));
+}
+
 QString fieldName(cmd::DynamicField::Kind kind) {
     switch (kind) {
         case cmd::DynamicField::Kind::X:
@@ -161,8 +173,8 @@ void DynamicInputBox::updateFields() {
     // Clip to the parent even if a long prompt exceeds its height.
     resize(std::min(width(), parentWidget()->width()),
            std::min(height(), parentWidget()->height()));
-    move(std::clamp(m_screenPosition.x() + kCursorOffset, 0, parentWidget()->width() - width()),
-         std::clamp(m_screenPosition.y() + kCursorOffset, 0, parentWidget()->height() - height()));
+    move(boxStart(m_screenPosition.x(), width(), parentWidget()->width()),
+         boxStart(m_screenPosition.y(), height(), parentWidget()->height()));
     show();
     raise();
 }

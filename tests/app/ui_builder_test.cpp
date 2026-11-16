@@ -33,9 +33,11 @@
 #include <QTest>
 #include <QToolBar>
 #include <QToolButton>
+#include <QWidgetAction>
 #include <gtest/gtest.h>
 
 #include <SARibbon.h>
+#include <algorithm>
 #include <cstdlib>
 
 namespace tg::app {
@@ -61,6 +63,34 @@ QList<QAction*> quickAccessActions(const ActionRegistry& registry) {
         registry.action(QStringLiteral("file.new")), registry.action(QStringLiteral("file.open")),
         registry.action(QStringLiteral("file.save")), registry.action(QStringLiteral("edit.undo")),
         registry.action(QStringLiteral("edit.redo"))};
+}
+
+/// The commands of a quick access bar, in their order: without the logo of
+/// the program that comes first in a corner bar and without the separator
+/// between the files and undo (docs/adr/0039, area 1).
+QList<QAction*> commandsOf(const QList<QAction*>& actions) {
+    QList<QAction*> commands;
+    for (QAction* action : actions) {
+        if (!action->isSeparator() && qobject_cast<QWidgetAction*>(action) == nullptr) {
+            commands.append(action);
+        }
+    }
+    return commands;
+}
+
+/// Whether `actions` has a single separator, right before Undo.
+bool separatesUndo(const QList<QAction*>& actions, const ActionRegistry& registry) {
+    const qsizetype undo = actions.indexOf(registry.action(QStringLiteral("edit.undo")));
+    return undo > 0 && actions.at(undo - 1)->isSeparator() &&
+           std::ranges::count_if(actions,
+                                 [](const QAction* action) { return action->isSeparator(); }) == 1;
+}
+
+/// Whether the corner bar `actions` starts with the logo of the program.
+bool startsWithTheLogo(const QList<QAction*>& actions) {
+    const auto* logo = actions.isEmpty() ? nullptr : qobject_cast<QWidgetAction*>(actions.first());
+    return logo != nullptr && logo->defaultWidget() != nullptr &&
+           logo->defaultWidget()->inherits("SARibbonTitleIconWidget");
 }
 
 void collectMenu(const QMenu& menu, QSet<QAction*>& found) {
@@ -226,7 +256,9 @@ TEST(UiBuilderTest, BothInterfacesHaveTheQuickAccessBar) {
         auto* quick = qobject_cast<QToolBar*>(window.menuBar()->cornerWidget(Qt::TopLeftCorner));
         ASSERT_NE(quick, nullptr);
         EXPECT_EQ(quick->objectName(), QStringLiteral("quickAccessBar"));
-        EXPECT_EQ(quick->actions(), expected);
+        EXPECT_EQ(commandsOf(quick->actions()), expected);
+        EXPECT_TRUE(startsWithTheLogo(quick->actions()));
+        EXPECT_TRUE(separatesUndo(quick->actions(), registry));
         EXPECT_EQ(quick->toolButtonStyle(), Qt::ToolButtonIconOnly);
         EXPECT_EQ(quick->iconSize(), QSize(16, 16));
         EXPECT_TRUE(quick->isVisible());
@@ -235,7 +267,8 @@ TEST(UiBuilderTest, BothInterfacesHaveTheQuickAccessBar) {
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         SARibbonBar* ribbon = window.ribbonBar();
         ASSERT_NE(ribbon, nullptr);
-        EXPECT_EQ(ribbon->quickAccessBar()->actions(), expected);
+        EXPECT_EQ(commandsOf(ribbon->quickAccessBar()->actions()), expected);
+        EXPECT_TRUE(separatesUndo(ribbon->quickAccessBar()->actions(), registry));
     }
 }
 
@@ -301,7 +334,8 @@ TEST(UiBuilderTest, WithTheFrameOfTheSystemTheQuickAccessBarIsTheFirstOfTheRowOf
         EXPECT_EQ(quick->objectName(), QStringLiteral("quickAccessBar"));
         EXPECT_TRUE(quick->isVisible());
         EXPECT_FALSE(ribbon->quickAccessBar()->isVisible());
-        EXPECT_EQ(quick->actions(), quickAccessActions(window.actionRegistry()));
+        EXPECT_EQ(commandsOf(quick->actions()), quickAccessActions(window.actionRegistry()));
+        EXPECT_TRUE(startsWithTheLogo(quick->actions()));
         const QRect bar = inRibbon(*quick, *ribbon);
         const QRect button = inRibbon(*file, *ribbon);
         // Its right edge at the left of File (SARibbon lays File out from
@@ -336,7 +370,8 @@ TEST(UiBuilderTest, WithTheFrameOfTheSystemTheInterfacesSwitchAndKeepTheirOwnQui
         auto* quick = qobject_cast<QToolBar*>(bar->cornerWidget(Qt::TopLeftCorner));
         ASSERT_NE(quick, nullptr);
         EXPECT_EQ(quick->parentWidget(), bar) << "the bar of the classic menus";
-        EXPECT_EQ(quick->actions(), expected);
+        EXPECT_EQ(commandsOf(quick->actions()), expected);
+        EXPECT_TRUE(startsWithTheLogo(quick->actions()));
         EXPECT_TRUE(quick->isVisible());
         // Moves and resizes after the ribbon is gone lay nothing out.
         window.resize(1300 + 50 * cycle, 820);
@@ -350,7 +385,8 @@ TEST(UiBuilderTest, WithTheFrameOfTheSystemTheInterfacesSwitchAndKeepTheirOwnQui
         auto* corner = qobject_cast<QToolBar*>(ribbon->cornerWidget(Qt::TopLeftCorner));
         ASSERT_NE(corner, nullptr);
         EXPECT_EQ(corner->parentWidget(), ribbon);
-        EXPECT_EQ(corner->actions(), expected);
+        EXPECT_EQ(commandsOf(corner->actions()), expected);
+        EXPECT_TRUE(startsWithTheLogo(corner->actions()));
         window.resize(1200, 800);
         settle();
     }
@@ -369,7 +405,8 @@ TEST(UiBuilderTest, WithItsOwnFrameTheQuickAccessBarStaysInTheTitleRow) {
     EXPECT_EQ(ribbon->cornerWidget(Qt::TopLeftCorner), nullptr);
     SARibbonQuickAccessBar* quick = ribbon->quickAccessBar();
     EXPECT_TRUE(quick->isVisible());
-    EXPECT_EQ(quick->actions(), quickAccessActions(window.actionRegistry()));
+    EXPECT_EQ(commandsOf(quick->actions()), quickAccessActions(window.actionRegistry()));
+    EXPECT_TRUE(separatesUndo(quick->actions(), window.actionRegistry()));
     const QRect bar = inRibbon(*quick, *ribbon);
     // Above the row of the tabs and at the left of the title.
     EXPECT_LE(bar.bottom(), inRibbon(*ribbon->ribbonTabBar(), *ribbon).top());
@@ -407,7 +444,9 @@ TEST(UiBuilderTest, TheTabsOfTheRibbonAreAsHighAsFileAndTheDocumentTabKeepsItsAc
             const QPoint origin = tabs->mapTo(ribbon, QPoint(0, 0));
             for (int index = 0; index < tabs->count(); ++index) {
                 SCOPED_TRACE(tabs->tabText(index).toStdString());
-                const QRect tab = tabs->tabRect(index).translated(origin);
+                // The top border of the accent makes a tab taller than its
+                // row, which cuts it: what shows is the part in the row.
+                const QRect tab = tabs->tabRect(index).intersected(tabs->rect()).translated(origin);
                 ASSERT_FALSE(tab.isEmpty());
                 EXPECT_LE(std::abs(tab.top() - file.top()), kTolerance)
                     << "tab " << tab.top() << ", File " << file.top();

@@ -337,7 +337,7 @@ TEST_F(DrawingAidsTest, F10AndF8ExcludeEachOtherAndEchoBothChanges) {
     EXPECT_TRUE(aids().ortho);
     EXPECT_FALSE(action("aids.polar")->isChecked());
     const auto* history =
-        input()->parentWidget()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
+        window().commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
     ASSERT_NE(history, nullptr);
     EXPECT_TRUE(history->toPlainText().contains(QStringLiteral("<Polar off>\n<Ortho on>")));
     shortcut(view(), Qt::Key_F10);

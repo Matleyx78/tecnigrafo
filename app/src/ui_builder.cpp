@@ -43,6 +43,9 @@
 namespace tg::app {
 namespace {
 
+/// The arrow that opens the panel of a group.
+constexpr const char* kLauncherIcon = "ui-panel-launcher";
+
 QString title(const QString& name) {
     if (name == QStringLiteral("home")) {
         return QObject::tr("Home");
@@ -265,7 +268,7 @@ QWidget* layerButtonRow(const ActionRegistry& registry, QWidget* parent) {
 /// names; the arrow, on the 16 px grid, goes in the middle of it, not
 /// stretched to the square.
 QIcon launcherIcon(Theme theme) {
-    const QIcon arrow = themedIcon(QStringLiteral("ui-panel-launcher"), theme);
+    const QIcon arrow = themedIcon(QString::fromLatin1(kLauncherIcon), theme);
     const int offset = (kPanelTitleHeight - kSmallIconSize) / 2;
     QIcon icon;
     for (const qreal ratio : {1.0, 2.0}) {
@@ -386,6 +389,10 @@ private:
 constexpr int kTitleGap = 8;
 
 }  // namespace
+
+QStringList uiBuilderIconNames() {
+    return {QString::fromLatin1(kLauncherIcon)};
+}
 
 /// Keeps the title of the classic menu bar in the middle of the window, as
 /// the ribbon does (docs/adr/0039, area 1), in the room between the last

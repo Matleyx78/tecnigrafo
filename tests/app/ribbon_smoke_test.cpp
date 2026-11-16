@@ -128,7 +128,12 @@ TEST(RibbonSmoke, TheQuickAccessBarHasItsFiveActionsInOrderAsIcons) {
     ASSERT_NE(quick, nullptr);
     EXPECT_TRUE(quick->isVisible());
     const QList<QAction*> expected = quickAccessActions(window.actionRegistry());
-    EXPECT_EQ(quick->actions(), expected);
+    // A separator between the files and undo (docs/adr/0039, area 1).
+    QList<QAction*> commands = quick->actions();
+    const qsizetype separators =
+        commands.removeIf([](const QAction* action) { return action->isSeparator(); });
+    EXPECT_EQ(commands, expected);
+    EXPECT_EQ(separators, 1);
     EXPECT_EQ(quick->iconSize(), QSize(16, 16));
     for (QAction* action : expected) {
         auto* button = qobject_cast<QToolButton*>(quick->widgetForAction(action));
@@ -180,13 +185,14 @@ TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
     auto* panel = ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/modify"));
     ASSERT_NE(panel, nullptr);
     const ActionRegistry& registry = window.actionRegistry();
+    // In the columns of the reference (docs/adr/0039, area 3).
     const QStringList ids{
         QStringLiteral("edit.move"),    QStringLiteral("edit.copy"),
-        QStringLiteral("edit.rotate"),  QStringLiteral("edit.scale"),
-        QStringLiteral("edit.mirror"),  QStringLiteral("edit.explode"),
+        QStringLiteral("edit.rotate"),  QStringLiteral("edit.mirror"),
+        QStringLiteral("edit.scale"),   QStringLiteral("edit.offset"),
         QStringLiteral("edit.trim"),    QStringLiteral("edit.extend"),
-        QStringLiteral("edit.offset"),  QStringLiteral("edit.fillet"),
-        QStringLiteral("edit.chamfer"), QStringLiteral("edit.join"),
+        QStringLiteral("edit.join"),    QStringLiteral("edit.fillet"),
+        QStringLiteral("edit.chamfer"), QStringLiteral("edit.explode"),
     };
     for (const QString& id : ids) {
         SCOPED_TRACE(id.toStdString());
@@ -350,7 +356,8 @@ TEST(RibbonSmoke, TheButtonOfCircleRemembersTheLastVariantUsed) {
 TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {
     // The gallery's order: shown, then the theme, then the event loop, in
     // which SARibbon would apply its own theme again (docs/adr/0039,
-    // point 2). Every surface outside the ribbon is the panel of the theme.
+    // point 2). Every surface outside the ribbon is the panel of the theme,
+    // but the status bar, on the surface of the title (area 10).
     MainWindow window;
     window.setScriptMode();
     window.show();
@@ -364,22 +371,23 @@ TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {
             QCoreApplication::processEvents();
             EXPECT_TRUE(window.styleSheet().isEmpty());
             const QColor panel = themeTokens(theme).panel;
+            const QColor chrome = themeTokens(theme).chrome;
             QStatusBar* status = window.statusBar();
             auto* layers = window.findChild<QWidget*>(QStringLiteral("layerPanel"));
             ASSERT_NE(layers, nullptr);
-            const std::array<const QWidget*, 4> surfaces{&window, status, window.commandLine(),
-                                                         layers};
+            const std::array<const QWidget*, 3> surfaces{&window, window.commandLine(), layers};
             for (const QWidget* widget : surfaces) {
                 EXPECT_EQ(widget->palette().color(QPalette::Window), panel)
                     << widget->objectName().toStdString();
             }
+            EXPECT_EQ(status->palette().color(QPalette::Window), chrome);
             // As drawn in the whole window, not only in the widget alone: the
-            // middle of the status bar shows the window's background.
+            // middle of the status bar shows its own background.
             const QImage image = window.grab().toImage();
             const QPoint middle =
                 status->mapTo(&window, QPoint(status->width() / 2, status->height() / 2));
             const qreal ratio = image.devicePixelRatio();
-            EXPECT_EQ(image.pixelColor(QPointF(middle * ratio).toPoint()), panel);
+            EXPECT_EQ(image.pixelColor(QPointF(middle * ratio).toPoint()), chrome);
         }
     }
 }

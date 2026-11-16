@@ -82,6 +82,10 @@ bool hasShortcutModifier(const QKeyEvent& event) {
 
 }  // namespace
 
+QStringList commandLineIconNames() {
+    return {QString::fromLatin1(kCancelIcon)};
+}
+
 CommandLine::CommandLine(cmd::CommandRunner& runner, QWidget* parent) : CommandLine(parent) {
     attachRunner(&runner);
 }
