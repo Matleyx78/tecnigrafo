@@ -10,6 +10,7 @@
 #include "tg/render/viewport.hpp"
 
 #include <QPointF>
+#include <QTimer>
 #include <QWidget>
 
 namespace tg::app {
@@ -100,6 +101,7 @@ private:
     bool m_panning{false};
     bool m_dragSelecting{false};
     bool m_initialFitDone{false};
+    QTimer* m_holdTimer{nullptr};
 };
 
 }  // namespace tg::app

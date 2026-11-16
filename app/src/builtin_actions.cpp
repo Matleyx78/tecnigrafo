@@ -204,7 +204,7 @@ void BuiltinActions::add(ActionRegistry& registry) {
     extents.shortcut = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E);
     registry.add(std::move(extents));
 
-    // F3 and F8 are AutoCAD's keys. On laptops and on macOS they may need
+    // Function keys are AutoCAD's keys. On laptops and on macOS they may need
     // Fn: the same switches are in the status bar (docs/tappe/0.3).
     const QString tools = tr("&Tools");
     ActionSpec osnap = switchSpec(QStringLiteral("aids.osnap"), tr("Object &Snap"), tools,
@@ -222,6 +222,11 @@ void BuiltinActions::add(ActionRegistry& registry) {
     polar.icon = QStringLiteral("aids-polar");
     polar.shortcut = QKeySequence(Qt::Key_F10);
     registry.add(std::move(polar));
+    ActionSpec tracking = switchSpec(QStringLiteral("aids.otrack"), tr("Object Snap &Tracking"),
+                                     tools, tr("Turns object snap tracking on or off."));
+    tracking.icon = QStringLiteral("aids-otrack");
+    tracking.shortcut = QKeySequence(Qt::Key_F11);
+    registry.add(std::move(tracking));
     registry.add(withIcon(switchSpec(QStringLiteral("aids.lwdisplay"), tr("Line&weight Display"),
                                      tools, tr("Shows lineweights in the drawing.")),
                           QStringLiteral("aids-lwdisplay")));
