@@ -1,0 +1,36 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; BLOCK (alias of -BLOCK) defines Pezzo from a line; -BLOCK redefines it with
+; Yes from a circle, then No and Enter (default N) end the command without
+; changes, and U brings back the first definition (PT20, #703).
+; Prompts and the "redefined" message from autocad-blocchi.txt (dxf-test-file
+; 1ad04b0, block RIDEFINITO), in English as Block "<name>" redefined of PT21.
+; Every entity is drawn before the first block, and the base point is 0,0.
+LINE
+0,0
+10,0
+
+CIRCLE
+30,0
+5
+BLOCK
+Pezzo
+0,0
+5,0
+
+!report
+-BLOCK
+Pezzo
+Yes
+0,0
+35,0
+
+!report
+-BLOCK
+Pezzo
+No
+-BLOCK
+Pezzo
+
+!report
+U

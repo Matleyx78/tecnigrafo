@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -BLOCK without objects: "No objects selected." and no block, no undo step;
+; Esc at the base point and in the selection changes nothing (PT20, #703).
+LINE
+0,0
+10,0
+
+-BLOCK
+Vuoto
+0,0
+
+!report
+-BLOCK
+Vuoto
+!esc
+!report
+-BLOCK
+Vuoto
+0,0
+5,0
+!esc
