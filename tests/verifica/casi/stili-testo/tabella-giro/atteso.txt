@@ -1,0 +1,51 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: stili.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: stili.dxf
+text styles:
+  "Altezza5" font="arial.ttf" height=5 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Larghezza08" font="romans.shx" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
+  "Capovolto" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=yes upside-down=yes
+text style: "Larghezza08"
+documents: Drawing1.cadx, stili.dxf (active)
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: SAVE
+  Save drawing as <stili.dxf>: stili-riscritto.dxf
+  Command: OPEN
+  Enter name of drawing to open: stili-riscritto.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: stili-riscritto.dxf
+text styles:
+  "Altezza5" font="arial.ttf" height=5 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Larghezza08" font="romans.shx" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
+  "Capovolto" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=yes upside-down=yes
+text style: "Larghezza08"
+documents: Drawing1.cadx, stili.dxf, stili-riscritto.dxf (active)
+pointer: none
+active snap: none
+statistics:
