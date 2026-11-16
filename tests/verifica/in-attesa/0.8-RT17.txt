@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+# RT17: attribute definitions and affine text (work #695).
+attributi/attdef-etichetta-geometria #695
+attributi/attdef-allineamenti-grip #695
+attributi/attdef-trasformazioni #695
+attributi/attdef-invisibile-proprieta #695
+attributi/attdef-nel-blocco #695
+attributi/testo-affine-base-ruotata #695
+attributi/testo-affine-similitudini #695

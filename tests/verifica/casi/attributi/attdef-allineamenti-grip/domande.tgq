@@ -1,0 +1,24 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT17 / PT17 (#695). Expectations from ADR 0045, ADR 0022 and ADR 0031.
+; LiberationSans-Regular.ttf 2.1.5, read independently with fontTools:
+; cap height 1409, ascent 1854, descent -434; advance(A) = 1366.
+; No Tecnigrafo executable was used to derive these expectations.
+
+; Tags, not defaults, determine alignment and grip geometry.
+C = ATTDEF position=3,4 alignment-point=20,10 height=1 horizontal=center vertical=middle value="A" tag="A"
+? bbox C -> 19.5152590489709,9.191980127750178 20.4847409510291,10.81582682753726
+? generated C -> TEXT position=3,4 alignment-point=20,10 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="A" ~box=19.5152590489709,9.191980127750178;20.4847409510291,9.191980127750178;20.4847409510291,10.81582682753726;19.5152590489709,10.81582682753726
+? snaps C -> Insertion 20,10
+? grips C -> 20,10
+? grip C 20,10 25,15 -> ATTDEF position=8,9 alignment-point=25,15 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="A" tag="A" prompt="" ~box=24.5152590489709,14.19198012775018;25.4847409510291,14.19198012775018;25.4847409510291,15.81582682753726;24.5152590489709,15.81582682753726
+? grip C 3,4 5,5 -> none
+F = ATTDEF position=40,0 alignment-point=44,0 height=1 horizontal=fit value="A" tag="A"
+? bbox F -> 40,-0.3080198722498226 44,1.31582682753726
+? grips F -> 40,0; 44,0
+? snaps F -> Insertion 40,0
+; Coincident alignment points use Left/Baseline geometry (ADR 0022.3).
+Z = ATTDEF position=60,0 alignment-point=60,0 height=1 horizontal=aligned value="A" tag="A"
+? bbox Z -> 60,-0.3080198722498226 60.9694819020582,1.31582682753726
+? snaps Z -> Insertion 60,0
