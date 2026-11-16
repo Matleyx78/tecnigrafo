@@ -1,0 +1,40 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT10, "Test richiesti": the butterfly SOLID of the card. The figure is the
+; region the painter fills, v0, v1, v3, v2 = (0,0) (2,2) (0,2) (2,0) with the
+; even-odd rule: two triangles, (0,0) (2,0) (1,1) below and (0,2) (2,2) (1,1)
+; above, meeting in (1,1) (ADR 0044, point 7; PT4, point P10). Values by hand.
+; The diagonals lie on y = x and x + y = 2: a point (x,y) of the left or right
+; gap is |x - y| / sqrt(2) or |x + y - 2| / sqrt(2) from them.
+B = SOLID vertex=0,0 vertex=2,2 vertex=2,0 vertex=0,2
+? bbox B -> 0,0 2,2
+? generated B -> SOLID vertex=0,0 vertex=2,2 vertex=2,0 vertex=0,2
+; (0.25,1) is in the left gap: 0.75 / sqrt(2) from both diagonals.
+? distance B 0.25,1 -> 0.5303300858899106
+? distance B 1,0.25 -> 0
+? distance B 1,1.75 -> 0
+? distance B 1,1 -> 0
+? distance B 0,1 -> 0.7071067811865476
+? distance B 1,3 -> 1
+; A click: picked inside the lower lobe, not in the gap unless the tolerance
+; reaches the diagonals.
+? pick 1,0.25 tolerance=0.1 -> B
+? pick 0.25,1 tolerance=0.1 -> none
+? pick 0.25,1 tolerance=0.5 -> none
+? pick 0.25,1 tolerance=0.6 -> B
+; A small window around the same points: the one in the gap, 0.1 from
+; (0.25,1), stays 0.55 / sqrt(2) from the diagonals and meets nothing.
+? crosses B 0.15,0.9 0.35,1.1 -> no
+? crosses B 0.9,0.15 1.1,0.35 -> yes
+? crossing 0.15,0.9 0.35,1.1 -> none
+? crossing 0.9,0.15 1.1,0.35 -> B
+? inside B 0.9,0.15 1.1,0.35 -> no
+? window 0.9,0.15 1.1,0.35 -> none
+; The whole figure only in a window around both lobes.
+? inside B -0.5,-0.5 2.5,2.5 -> yes
+? inside B -0.5,-0.5 2.5,1.5 -> no
+? window -0.5,-0.5 2.5,2.5 -> B
+; A crossing over the crossing point only.
+? crossing 0.9,0.9 1.1,1.1 -> B
+; Endpoint snap on the four vertices, never on the crossing point.
+? snaps B -> Endpoint 0,0; Endpoint 2,2; Endpoint 2,0; Endpoint 0,2
