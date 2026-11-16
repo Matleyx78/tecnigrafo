@@ -4,7 +4,7 @@
 ; Yes from a circle, then No and Enter (default N) end the command without
 ; changes, and U brings back the first definition (PT20, #703).
 ; Prompts and the "redefined" message from autocad-blocchi.txt (dxf-test-file
-; 1ad04b0, block RIDEFINITO), in English as Block "<name>" redefined of PT21.
+; 2efd1fd, block RIDEFINITO), in English as Block "<name>" redefined of PT21.
 ; Every entity is drawn before the first block, and the base point is 0,0.
 LINE
 0,0

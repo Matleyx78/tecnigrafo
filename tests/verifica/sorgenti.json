@@ -323,11 +323,11 @@
     },
     {
       "name": "autocad-pedit",
-      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/1ad04b0b8a568fb9dd4960719a8f17289129f788/autocad-pedit.dxf",
-      "version": "1ad04b0b8a568fb9dd4960719a8f17289129f788",
-      "sha256": "396f68a56cf58e5361aedea5cb594ff08acf2ac2ced0a1125dde0a4482cd33be",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2efd1fd842b0330e6c87fe28c5be6700701b6b54/autocad-pedit.dxf",
+      "version": "2efd1fd842b0330e6c87fe28c5be6700701b6b54",
+      "sha256": "70157d4fc238e1ab4f6c40c4e2177025f3da4dc8d006fd86ca27948bb2048bcc",
       "license": "CC0-1.0",
-      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/1ad04b0b8a568fb9dd4960719a8f17289129f788/LICENSE"
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2efd1fd842b0330e6c87fe28c5be6700701b6b54/LICENSE"
     }
   ]
 }
