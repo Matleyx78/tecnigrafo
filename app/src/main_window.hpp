@@ -467,8 +467,7 @@ private:
     bool m_restoringUi{false};
     bool m_scriptMode{false};
     bool m_silentPolar{false};
-    /// Object snap tracking, off in a new session (docs/adr/0049, point 1).
-    bool m_tracking{false};
+    bool m_silentTracking{false};
     bool m_externalFiles{false};
     bool m_handlingFilePrompt{false};
     CadView* m_view{nullptr};
@@ -486,6 +485,7 @@ private:
     QAction* m_orthoAction{nullptr};
     QAction* m_dynamicInputAction{nullptr};
     QAction* m_polarAction{nullptr};
+    QAction* m_trackingAction{nullptr};
     QAction* m_endpointAction{nullptr};
     QAction* m_midpointAction{nullptr};
     QAction* m_centerAction{nullptr};
