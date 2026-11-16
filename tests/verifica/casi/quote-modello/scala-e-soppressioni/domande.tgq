@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+; PT23.2 and .4: dimensions scale graphics, never measured lengths.
+; A blank substituted text generates no text; no extension lines here.
+
+Scaled = DIMENSION kind=linear origin1=0,0 origin2=40,0 line-point=40,0 rotation=0 text-point=0,0 measurement=0 text=" " overrides=DIMSCALE:2,DIMSE1:1,DIMSE2:1
+? generated Scaled -> LINE start=5,0 end=35,0; SOLID vertex=5,0.8333333333333334 vertex=5,-0.8333333333333334 vertex=0,0 vertex=0,0; SOLID vertex=35,0.8333333333333334 vertex=35,-0.8333333333333334 vertex=40,0 vertex=40,0
+
+FirstSuppressed = DIMENSION kind=linear origin1=0,0 origin2=20,0 line-point=20,0 rotation=0 text-point=0,0 measurement=0 text=" " overrides=DIMASZ:2,DIMSD1:1,DIMSE1:1,DIMSE2:1
+? generated FirstSuppressed -> LINE start=10,0 end=18,0; SOLID vertex=18,0.3333333333333333 vertex=18,-0.3333333333333333 vertex=20,0 vertex=20,0
+
+SecondSuppressed = DIMENSION kind=linear origin1=0,0 origin2=20,0 line-point=20,0 rotation=0 text-point=0,0 measurement=0 text=" " overrides=DIMASZ:2,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated SecondSuppressed -> LINE start=2,0 end=10,0; SOLID vertex=2,0.3333333333333333 vertex=2,-0.3333333333333333 vertex=0,0 vertex=0,0
+
+BothSuppressed = DIMENSION kind=linear origin1=0,0 origin2=20,0 line-point=20,0 rotation=0 text-point=0,0 measurement=0 text=" " overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated BothSuppressed -> none
+
+; L=10, effective a=5: touching arrows, no zero-length dimension line.
+ScaledTen = DIMENSION kind=linear origin1=0,0 origin2=10,0 line-point=10,0 rotation=0 text-point=0,0 measurement=0 text=" " overrides=DIMGAP:0,DIMSCALE:2,DIMSE1:1,DIMSE2:1
+? generated ScaledTen -> SOLID vertex=5,0.8333333333333334 vertex=5,-0.8333333333333334 vertex=0,0 vertex=0,0; SOLID vertex=5,0.8333333333333334 vertex=5,-0.8333333333333334 vertex=10,0 vertex=10,0

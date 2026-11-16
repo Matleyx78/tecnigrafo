@@ -336,6 +336,14 @@
       "sha256": "44779ab861c04e97cd82c5c67482d3e1273ae943e4c773c1edc69fc8d33552cf",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "autocad-quote",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/5170f1860953b5d076aa435bd65daa725d431745/autocad-quote.dxf",
+      "version": "5170f1860953b5d076aa435bd65daa725d431745",
+      "sha256": "7a444a6306ac94f4e049d5d4af3c2df1ca66602fb798a583738ace0bd0cba394",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
     }
   ]
 }

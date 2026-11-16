@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+; L=8, a=2, text width plus gaps is between 6 and 7: case 2.
+; The surviving arrow must stay outside after suppressing its partner.
+Suppress1 = DIMENSION kind=linear origin1=0,-10 origin2=8,-10 line-point=8,0 rotation=0 text-point=0,0 measurement=0 text="MMMMMM" overrides=DIMASZ:2,DIMSD1:1,DIMTXT:1
+? distance Suppress1 -1,0.05 -> 1
+? distance Suppress1 9,0.05 -> 0
+Suppress2 = DIMENSION kind=linear origin1=0,-10 origin2=8,-10 line-point=8,0 rotation=0 text-point=0,0 measurement=0 text="MMMMMM" overrides=DIMASZ:2,DIMSD2:1,DIMTXT:1
+? distance Suppress2 -1,0.05 -> 0
+? distance Suppress2 9,0.05 -> 1

@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+Q = DIMENSION kind=linear origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=15,8 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMTAD:1
+? grips Q -> 0,0; 40,0; 40,10; 15,8
+? transform Q move 5,7 -> DIMENSION kind=linear style="ISO-25" origin1=5,7 origin2=45,7 line-point=45,17 rotation=0 text-point=20,15 measurement=40 text-rotation=30 user-text-position=yes overrides=DIMTAD:1
+? transform Q rotate 90 0,0 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=0,40 line-point=-10,40 rotation=90 text-point=-8,15 measurement=40 text-rotation=120 user-text-position=yes overrides=DIMTAD:1
+? transform Q scale 2 0,0 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=80,0 line-point=80,20 rotation=0 text-point=30,16 measurement=80 text-rotation=30 user-text-position=yes overrides=DIMTAD:1
+? grip Q 15,8 25,35 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=25,35 measurement=40 text-rotation=30 user-text-position=yes overrides=DIMTAD:1
+? grip Q 40,10 40,20 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,20 rotation=0 text-point=15,8 measurement=40 text-rotation=30 user-text-position=yes overrides=DIMTAD:1
+? transform Q scale 0 0,0 -> invalid
+? transform Q scale -1 0,0 -> invalid
+? transform Q mirror 1,1 1,1 -> invalid
