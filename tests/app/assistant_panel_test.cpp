@@ -115,7 +115,7 @@ TEST(AssistantPanelTest, FailedStartResetsActionAndButton) {
     ASSERT_TRUE(ownerClient.waitForConnected(1000));
     ASSERT_TRUE(QTest::qWaitFor([&owner] { return owner.assistantChannel().isConnected(); }));
 
-    MainWindow window;
+    const MainWindow window;
     AssistantChannel& channel = window.assistantChannel();
     channel.stop();
     channel.setServerName(serverName);
