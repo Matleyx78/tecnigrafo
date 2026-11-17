@@ -52,6 +52,42 @@ RawGroups layer(std::string_view handle, std::string_view name, const RawGroups&
     return groups;
 }
 
+RawGroups style(std::string_view handle, std::string_view name, long long flags = 0,
+                std::string_view font = "arial.ttf", double height = 0.0) {
+    return {{0, "STYLE"},
+            {5, std::string{handle}},
+            {330, "3"},
+            {100, "AcDbSymbolTableRecord"},
+            {100, "AcDbTextStyleTableRecord"},
+            {2, std::string{name}},
+            {70, std::to_string(flags)},
+            {40, std::to_string(height)},
+            {41, "1.0"},
+            {50, "0.0"},
+            {71, "0"},
+            {42, "2.5"},
+            {3, std::string{font}},
+            {4, ""}};
+}
+
+std::string drawingWithStyles(const std::vector<RawGroups>& styles, const RawGroups& header = {}) {
+    RawGroups groups{{0, "SECTION"}, {2, "HEADER"},    {9, "$ACADVER"},
+                     {1, "AC1032"},  {9, "$HANDSEED"}, {5, "100"}};
+    groups.insert(groups.end(), header.begin(), header.end());
+    groups.insert(groups.end(), {{0, "ENDSEC"},
+                                 {0, "SECTION"},
+                                 {2, "TABLES"},
+                                 {0, "TABLE"},
+                                 {2, "STYLE"},
+                                 {5, "3"},
+                                 {70, std::to_string(styles.size())}});
+    for (const RawGroups& record : styles) {
+        groups.insert(groups.end(), record.begin(), record.end());
+    }
+    groups.insert(groups.end(), {{0, "ENDTAB"}, {0, "ENDSEC"}, {0, "EOF"}});
+    return writeGroups(groups, TextEncoding::Utf8);
+}
+
 /// The three linetypes every drawing has, and a dashed one with handle 17.
 RawGroups standardLinetypes() {
     RawGroups groups;
@@ -707,6 +743,76 @@ TEST(DxfTables, EveryTableStartsANewOneEvenWithoutEndtab) {
     const auto reread = readOk(writeOk(read.document));
     EXPECT_NE(reread.document.findLinetype("DASHED"), nullptr);
     EXPECT_EQ(reread.document.layers().size(), 1U);
+}
+
+TEST(DxfTables, MissingOrAbsentCurrentTextStyleFallsBackToStandard) {
+    const auto missing =
+        readOk(drawingWithStyles({style("20", "Custom")}, {{9, "$TEXTSTYLE"}, {7, "Missing"}}));
+    ASSERT_NE(missing.document.textStyles().find("Standard"), nullptr);
+    EXPECT_EQ(missing.document.textStyles().current(), "Standard");
+
+    const auto absent = readOk(drawingWithStyles({style("21", "Standard")}));
+    EXPECT_EQ(absent.document.textStyles().current(), "Standard");
+}
+
+TEST(DxfTables, AnImplicitStandardDoesNotAddAStyleTable) {
+    const std::string bytes = drawing({}, {}, {});
+    const auto read = readOk(bytes);
+    ASSERT_NE(read.document.textStyles().find("Standard"), nullptr);
+    EXPECT_EQ(read.document.textStyles().current(), "Standard");
+    EXPECT_EQ(writeOk(read.document), bytes);
+}
+
+TEST(DxfTables, StylesAndShapeRecordsKeepTheirOrderAndFlags) {
+    const auto standard = style("22", "Standard", 64);
+    const auto shape = style("23", "ShapeFile", 1, "ltypeshp.shx");
+    const auto custom = style("24", "Custom", 4, "romans.shx", 2.0);
+    const auto read =
+        readOk(drawingWithStyles({standard, shape, custom}, {{9, "$TEXTSTYLE"}, {7, "Custom"}}));
+    EXPECT_EQ(read.document.textStyles().current(), "Custom");
+    ASSERT_EQ(read.document.textStyles().styles().size(), 2U);
+    EXPECT_EQ(read.document.textStyles().rawRecords().size(), 1U);
+
+    const std::string written = writeOk(read.document);
+    const RawGroups groups = groupsOf(written);
+    std::vector<std::string> names;
+    for (std::size_t i = 0; i + 1 < groups.size(); ++i) {
+        if (groups[i].code == 0 && groups[i].value == "STYLE") {
+            const auto end = std::ranges::find(groups.begin() + static_cast<std::ptrdiff_t>(i + 1),
+                                               groups.end(), 0, &core::RawGroup::code);
+            const auto name = std::ranges::find(groups.begin() + static_cast<std::ptrdiff_t>(i + 1),
+                                                end, 2, &core::RawGroup::code);
+            if (name != end) {
+                names.push_back(name->value);
+            }
+        }
+    }
+    EXPECT_EQ(names, (std::vector<std::string>{"Standard", "ShapeFile", "Custom"}));
+    EXPECT_TRUE(std::ranges::any_of(
+        objectGroups(written, "STYLE", "Standard"),
+        [](const core::RawGroup& group) { return group.code == 70 && group.value == "64"; }));
+    EXPECT_TRUE(std::ranges::any_of(
+        objectGroups(written, "STYLE", "Custom"),
+        [](const core::RawGroup& group) { return group.code == 70 && group.value == "4"; }));
+}
+
+TEST(DxfTables, AShapeBeforeTheSkeletonStandardIsNotReplaced) {
+    const auto read = readOk(
+        drawingWithStyles({style("23", "ShapeFile", 1, "ltypeshp.shx"), style("F2", "Standard")}));
+    const std::string written = writeOk(read.document);
+    EXPECT_FALSE(objectGroups(written, "STYLE", "ShapeFile").empty());
+    EXPECT_FALSE(objectGroups(written, "STYLE", "Standard").empty());
+}
+
+TEST(DxfTables, ANewDrawingStyleTableCountMatchesItsRecords) {
+    const RawGroups groups = groupsOf(writeOk(core::Document::newDrawing()));
+    auto table = std::ranges::find_if(groups, [](const core::RawGroup& group) {
+        return group.code == 2 && group.value == "STYLE";
+    });
+    ASSERT_NE(table, groups.end());
+    const auto count = std::ranges::find(table, groups.end(), 70, &core::RawGroup::code);
+    ASSERT_NE(count, groups.end());
+    EXPECT_EQ(count->value, "1");
 }
 
 // --- Header variables (docs/adr/0023, point 3; docs/adr/0025) -------------

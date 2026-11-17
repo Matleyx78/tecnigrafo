@@ -3,6 +3,7 @@
 ; EXTEND: inizio e fine di linea (anche pareggio al punto medio), arco oltre 2pi, polilinea dritta e curva, entita non prolungabili, Shift, Undo, Esc, U e REDO
 !view 200,50 0.5 1000x300
 ; cambia con #570
+; cambia con #683
 OPEN
 polilinee.dxf
 EXTEND

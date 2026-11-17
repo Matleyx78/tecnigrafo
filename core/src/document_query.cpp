@@ -172,7 +172,12 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
     }
     for (const EntityId id : candidates(document, rectangle)) {
         const EntityRecord& record = recordOf(document, id);
-        const bool inside = isInside(document, record, rectangle);
+        // Until the ellipse of solid-space's geom2d (docs/tappe/0.8, PT50) an
+        // ellipse is selected only by a window that contains it, never by a
+        // crossing (docs/adr/0052, point 4; docs/tappe/0.8, PT48, point 6).
+        const bool windowOnly = std::holds_alternative<Ellipse>(record.entity);
+        const bool inside =
+            (mode == RectangleMode::Window || !windowOnly) && isInside(document, record, rectangle);
         if (inside ||
             (mode == RectangleMode::Crossing && intersects(document, record, rectangle))) {
             selected.push_back(id);

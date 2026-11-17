@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT31 / PT31 (#723): groups 52 and 53 enter the model reduced to one turn with
+; reducedDegreesToRadians (card, point 3; DECISIONI.md, 2026-11-12, "Angoli in
+; gradi ridotti a un giro"). Handwritten file angoli.dxf, $INSUNITS 4:
+; 20 NET with 52 = 3600 and lines with 53 = 3600 and 3690;
+; 21 NET with 52 = -3600 and lines with 53 = -3600 and -3510.
+; fmod(3600, 360) = 0 and fmod(-3600, 360) = -0: both hatches read with angle
+; 0. The angles of the pattern lines are not in the report; their rewriting
+; (0 and 90) is checked by dxf_hatch_test.cpp, so no roundtrip here.
+; Values by hand; not an oracle case (ezdxf keeps 3600).
+D = DXF file=angoli.dxf
+? units D -> 4
+; PT31 makes HATCH a handled entity: until then every HATCH is unhandled.
+; cambia con #723
+? count D -> HATCH 2
+? unhandled D -> none
+? entity D 20 -> HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 seed=1,1
+? entity D 21 -> HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=20,0 vertex=30,0 vertex=30,8 vertex=20,8 seed=21,1

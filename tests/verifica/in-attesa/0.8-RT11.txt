@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# 0.8-RT11: text styles in the model and in the DXF (PT11, #683).
-stili-testo/tabella-giro #683
-stili-testo/corrente-standard #683

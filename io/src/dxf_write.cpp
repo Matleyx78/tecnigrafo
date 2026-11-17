@@ -57,7 +57,7 @@ core::RawGroups headerGroups(const core::RawGroups& original, std::string_view v
 }
 
 std::uint64_t readNextId(const core::Document& document) {
-    // The handles of the unhandled entities, of the table records and of the
+    // The handles of the entities, of the table records and of the
     // retained sections recover the read-time counter without adding groups
     // to HEADER. The records the reader adds to a file that lacks them are
     // counted too: they took their handles when the file was read.
@@ -65,11 +65,19 @@ std::uint64_t readNextId(const core::Document& document) {
     for (const auto& entity : document.rawEntities()) {
         next = std::max(next, entity.id.value + 1);
     }
+    // The handled entities too, as the reader counts every handle of ENTITIES:
+    // a file whose last handle is a handled entity needs no $HANDSEED.
+    for (const auto& record : document.entities()) {
+        next = std::max(next, record.id.value + 1);
+    }
     for (const auto& layer : document.layers()) {
         next = std::max(next, layer.id.value + 1);
     }
     for (const auto& linetype : document.linetypes()) {
         next = std::max(next, linetype.id.value + 1);
+    }
+    for (const auto& style : document.textStyles().styles()) {
+        next = std::max(next, style.id + 1);
     }
     for (const auto& section : document.raw().sections) {
         if (section.name == "HEADER" || section.name == "ENTITIES") {

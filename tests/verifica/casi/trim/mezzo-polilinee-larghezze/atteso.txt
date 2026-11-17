@@ -32,6 +32,8 @@ redo:
 snap: on
 ortho: off
 drawing: polilinee.dxf, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
 documents: Drawing1.cadx, polilinee.dxf (active)
 pointer: 10,150
 active snap: none
