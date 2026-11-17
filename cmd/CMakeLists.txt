@@ -12,6 +12,7 @@ add_library(tg_cmd
     src/commands/chamfer_command.cpp
     src/commands/chprop_command.cpp
     src/commands/circle_command.cpp
+    src/commands/ellipse_command.cpp
     src/commands/file_commands.cpp
     src/commands/erase_command.cpp
     src/commands/explode_command.cpp
