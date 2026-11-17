@@ -1,3 +1,5 @@
+tecnigrafo-report 1
+
 [report 1]
 entities:
   264 LINE start=0,0.625 end=0,11.25
