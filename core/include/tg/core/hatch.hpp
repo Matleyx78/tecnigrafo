@@ -26,6 +26,7 @@ struct GripResult;
 struct SnapModes;
 struct SnapPoint;
 struct TransformOutcome;
+class ToleranceRule;
 enum class MirrorText : std::uint8_t;
 
 /// DXF group 75 (docs/adr/0048, point 1).
@@ -75,23 +76,44 @@ struct Hatch {
 
 // The functions of Hatch that the common visits call, one line per type
 // (docs/adr/0044, point 1; docs/tappe/0.8/PT6-scheletro-core.md, point 4).
-// Each one but supported() has the precondition supported(hatch): until the
-// package of Hatch is merged, no reader and no command makes one, and the
-// precondition is checked.
+// Each one but supported() has the precondition supported(hatch).
 
-/// False until the package of Hatch is merged (docs/adr/0044, point 1).
+/// True when every loop is a closed polyline with a vertex or a loop of at
+/// least one edge (docs/tappe/0.8/PT30-retini-core.md, point 1). Whether the
+/// edges follow one another is not checked: that depends on the unit of the
+/// drawing, and isClosed() answers it for whoever makes a hatch. So the
+/// answer changes neither with the units nor with a transformation.
 [[nodiscard]] bool supported(const Hatch& hatch);
+
+/// Whether `loop` is closed under `rule` (docs/tappe/0.8/PT30-retini-core.md,
+/// point 1): a polyline loop when its polyline is closed; an edge loop when
+/// it has an edge and the end of every edge, run as point 3 says, coincides
+/// under `rule` with the start of the next one, the last with the first (one
+/// edge: its own start). supported() does not check it: whoever makes a
+/// hatch does, with the rule of its document (the DXF reader, -HATCH).
+/// An edge beyond solid-space's domain (docs/adr/0035, point 23) leaves the
+/// loop open.
+[[nodiscard]] bool isClosed(const HatchLoop& loop, const ToleranceRule& rule);
 
 /// Every shape of the entity, in drawing coordinates, with its effective
 /// properties, except those on frozen layers. A shape that is not drawn (on a
 /// layer that is off, an invisible attribute) has properties.visible false:
 /// generate() keeps only the drawn shapes, extent() measures them all
 /// (docs/adr/0044, point 2).
+///
+/// A solid fill with the normal island style gives one FilledRegion with a
+/// closed polyline per loop, in order; the other styles and the patterns give
+/// nothing yet (docs/adr/0048, point 3). An edge loop becomes the polyline of
+/// docs/tappe/0.8/PT30-retini-core.md, point 3: one vertex per edge, at the
+/// point where the edge starts, each edge run in the direction its ends give;
+/// a single whole-turn arc becomes two half turns from the point of its
+/// start angle.
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record, const Hatch& hatch);
 
-/// The extent registered in the spatial index: the bounding box of every
-/// shape of generateOf(), drawn or not.
+/// The extent registered in the spatial index: the bounding box of the loops,
+/// as generateOf() makes them, whatever the fill (docs/tappe/0.8/
+/// PT30-retini-core.md, point 6); empty on a frozen layer.
 [[nodiscard]] BBox extentOf(const Document& document, const EntityRecord& record,
                             const Hatch& hatch);
 
@@ -109,16 +131,24 @@ struct Hatch {
                                 const Hatch& hatch, const BBox& rectangle);
 
 /// Appends the snap points that none of its shapes gives (as the insertion
-/// point of a block reference): none.
+/// point of a block reference): none, as a filled region gives none
+/// (docs/adr/0048, point 4).
 void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record, const Hatch& hatch,
                            const SnapModes& modes, std::vector<SnapPoint>& out,
                            const std::optional<Vec2>& from);
 
-/// The entity transformed by `similarity`, or a refusal (docs/adr/0044).
+/// The entity transformed by `similarity`, never refused (docs/tappe/0.8/
+/// PT30-retini-core.md, point 4): loops, seeds and the origins of the pattern
+/// lines go through the similarity; the angle of the hatch and of every
+/// pattern line gains its rotation, or becomes the rotation minus the angle
+/// with a reflection, not normalized; the scale and the dashes are multiplied
+/// by its factor, and the offset of every pattern line, a vector of the
+/// drawing, gets its linear part. A whole-turn arc of an edge loop stays a
+/// whole turn, from 0 to 2*pi.
 [[nodiscard]] TransformOutcome transformedOf(const Document& document, const Hatch& hatch,
                                              const Similarity& similarity, MirrorText mirrorText);
 
-/// The grips, in order.
+/// The grips: none in the 0.8 (docs/adr/0048, point 4).
 [[nodiscard]] std::vector<Vec2> gripPointsOf(const Hatch& hatch);
 
 /// Moves grip `index` to `target`. Precondition: index < gripPointsOf().size().

@@ -55,6 +55,8 @@ layers:
   "0" color=7 linetype="Continuous" lineweight=default
   "Bloccato" color=1 linetype="Continuous" lineweight=default locked
   "Spento" color=3 linetype="Continuous" lineweight=default off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
 documents: Drawing1.cadx, bordi.dxf (active)
 pointer: none
 active snap: none
@@ -101,6 +103,8 @@ layers:
   "0" color=7 linetype="Continuous" lineweight=default
   "Bloccato" color=1 linetype="Continuous" lineweight=default locked
   "Spento" color=3 linetype="Continuous" lineweight=default off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
 documents: Drawing1.cadx, bordi.dxf (active)
 pointer: none
 active snap: none
