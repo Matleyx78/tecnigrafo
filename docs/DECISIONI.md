@@ -2066,6 +2066,29 @@ i rimandi ai documenti che cambia.
   vietato eseguire Tecnigrafo per ricavare gli attesi. Scartata l’estensione
   dell’oracolo in un pacchetto separato: la lettura indipendente autorizzata
   non richiede modifiche all’oracolo né nuove dipendenze.
+- **2026-11-17 — `importBlock` osservabile nei riferimenti di PT19.** Dopo il
+  blocco di RT19 ([#700](https://github.com/Matleyx78/tecnigrafo/issues/700)),
+  il responsabile decide che PT19 realizza anche la definizione verificabile
+  `BLOCK-IMPORT` e le domande `import-*` del catalogo. La definizione chiama
+  direttamente `io::importBlock` con una copia dichiarabile del documento
+  bersaglio, non lo modifica e conserva anche l'errore. Le domande espongono
+  definizione principale, blocchi annidati, le quattro tabelle, fattore di
+  unità, `nextId`, handle e gruppi DXF conservati che li riferiscono. RT19 può
+  così verificare l'intero `BlockImport`, compreso l'autoriferimento, senza
+  anticipare `-INSERT` di PT21. Scartati lo spostamento dei riferimenti a PT21
+  e un meccanismo indiretto non specificato.
+- **2026-11-17 — Importazione di un blocco annunciata prima di PT19.** La
+  definizione `BLOCK-IMPORT` e le dieci domande `import-*` servono già a RT19,
+  ma prima di PT19 il lettore e la tabella delle domande le renderebbero non
+  valide anche durante il controllo anticipato. Il pacchetto fuori tappa
+  [F11](tappe/fuori-tappa/F11-annuncio-import-blocco.md) (#842) le annuncia:
+  la definizione ferma il file con `not implemented yet` e le domande, presenti
+  in `kQuestions` con funzione nulla, rispondono
+  `error: question not implemented yet`. PT19 le realizza e toglie gli
+  annunci; RT19 (#700) dipende da F11. Scartati sia lo spostamento di RT19
+  dopo PT19, che avrebbe scritto i riferimenti dopo il lavoro, sia la divisione
+  di PT19 in un primo pacchetto della tappa dedicato agli annunci e un secondo
+  dedicato alla realizzazione.
 - **2026-11-17 — Extras ordinati per ciascun contorno dei retini.** Dopo il
   blocco di [PT31](tappe/0.8/PT31-retini-dxf.md) nella
   [#723](https://github.com/Matleyx78/tecnigrafo/issues/723), il responsabile

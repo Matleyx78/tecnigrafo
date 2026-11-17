@@ -6,7 +6,7 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT19]` (#…), agente codex
-- **Dipende da:** PT18, PT22, RT19
+- **Dipende da:** PT18, PT22, RT19 (che dipende da F11)
 - **Modulo:** `io`
 - **Da leggere:** [ADR 0045](../../adr/0045-blocchi-e-attributi.md), punto 7;
   [ADR 0023](../../adr/0023-layer-e-proprieta.md), punto 1;
@@ -19,6 +19,10 @@
 - `io/include/tg/io/block_import.hpp`, `io/src/block_import.cpp` (nuovi)
 - `io/CMakeLists.txt` (file comune)
 - `tests/io/block_import_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+- `script/src/questions.cpp`, `script/src/entity_reader.cpp`,
+  `script/src/question_table.cpp`, `script/src/question_table.hpp`,
+  `script/src/file_questions.cpp` (file comuni)
+- `tests/script/questions_test.cpp` (file comune)
 
 ## Cosa fare
 
@@ -66,11 +70,22 @@ struct BlockImport {
    `unitFactor` è il rapporto delle due unità; altrimenti 1.
 6. Un file che contiene un inserimento di un blocco con il proprio nome (che
    farebbe un ciclo) si rifiuta con `Block "<nome>" references itself.`
+7. Realizza la definizione `BLOCK-IMPORT` e tutte le domande `import-*` del
+   [catalogo](../../verifica/domande.md#importazione-di-un-file-come-blocco).
+   La definizione chiama questa stessa `importBlock` con una copia del
+   documento delle definizioni, conserva anche l'errore e non modifica il
+   documento: RT19 deve poter osservare tutti i campi di `BlockImport`, gli
+   handle e i gruppi che li riferiscono senza passare da `-INSERT` (PT21).
 
 ## Regole della tappa che valgono qui
 
 - Il lettore non cambia: `importBlock` lo usa.
-- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`.
+- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`,
+  `script/src/questions.cpp`, `script/src/entity_reader.cpp`,
+  `script/src/question_table.cpp`, `script/src/question_table.hpp`,
+  `script/src/file_questions.cpp` e `tests/script/questions_test.cpp`.
+- PT19 sostituisce gli annunci della definizione e delle dieci domande messi
+  da F11 con la loro realizzazione.
 
 ## Test richiesti
 
@@ -83,6 +98,11 @@ struct BlockImport {
   che il disegno ha con altre proprietà (vince il disegno) e uno che non ha
   (entra); handle rinumerati e proprietari aggiornati; unità 4 nel file e 6 nel
   disegno (fattore 0,001); un file che si inserisce in sé stesso.
+- `questions_test.cpp`: bersaglio con record e blocco già presenti; verifica
+  definizione principale, annidati, tutte e quattro le tabelle, `unitFactor`,
+  `nextId`, handle e gruppi 330/340/360/102 rinumerati; verifica inoltre
+  `import-error` per l'autoriferimento. Ogni domanda `import-*` ha almeno un
+  caso di lettura e uno di argomenti non validi.
 
 ## Fatto quando
 
