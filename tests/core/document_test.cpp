@@ -824,7 +824,12 @@ TEST(DocumentTables, NewTablesAreReplacedWithoutTouchingTheEntities) {
     ASSERT_EQ(document.textStyles().styles().size(), 1U);
     EXPECT_EQ(document.textStyles().styles().front().name, "Standard");
     EXPECT_EQ(document.textStyles().current(), "Standard");
-    EXPECT_EQ(document.dimStyles(), DimStyleTable{});
+    // docs/adr/0047, point 2: Standard and ISO-25, ISO-25 current.
+    ASSERT_EQ(document.dimStyles().styles().size(), 2U);
+    EXPECT_EQ(document.dimStyles().styles()[0].name, "Standard");
+    EXPECT_EQ(document.dimStyles().styles()[1].name, "ISO-25");
+    EXPECT_EQ(document.dimStyles().current(), "ISO-25");
+    EXPECT_EQ(document.dimStyles().currentVariables(), DimVariables{});
     EXPECT_TRUE(document.blocks().definitions().empty());
     document.replaceTextStyles(TextStyleTable{});
     document.replaceDimStyles(DimStyleTable{});

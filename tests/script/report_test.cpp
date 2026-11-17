@@ -9,6 +9,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/color.hpp"
+#include "tg/core/dim_style_table.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/effective_properties.hpp"
@@ -949,6 +950,62 @@ TEST(WriteState, AChangedStandardTextStyleIsWritten) {
     document.replaceTextStyles(std::move(styles));
 
     expectContains(stateOf(document), "text styles:\n  \"Standard\" font=\"txt.shx\"");
+}
+
+// Package 0.8-PT22, point 6: the three fields of the dimension styles.
+TEST(WriteState, DimensionStylesOnlyWhenTheTableDiffersFromANewSession) {
+    core::Document document = core::Document::newDrawing();
+    core::DimStyleTable styles = document.dimStyles();
+    core::DimStyle iso25 = *styles.find("ISO-25");
+    iso25.vars.textHeight = 3.5;
+    styles.put(iso25, document);
+    styles.setCurrentVariables(iso25.vars);  // as -DIMSTYLE Save does
+    document.replaceDimStyles(std::move(styles));
+
+    const std::string report = stateOf(document);
+    expectContains(report,
+                   "dimension styles:\n  \"Standard\" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 "
+                   "DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 "
+                   "DIMTOH:1 DIMTXT:0.18 DIMZIN:0\n  \"ISO-25\" DIMTXT:3.5\npointer:");
+    EXPECT_EQ(report.find("dimension style:"), std::string::npos);
+    EXPECT_EQ(report.find("dimension overrides:"), std::string::npos);
+}
+
+TEST(WriteState, DimensionOverridesAreTheCurrentVariablesThatDifferFromTheStyle) {
+    core::Document document = core::Document::newDrawing();
+    core::DimStyleTable styles = document.dimStyles();
+    core::DimVariables current = styles.currentVariables();
+    current.textHeight = 5.0;
+    current.decimalSeparator = '.';
+    styles.setCurrentVariables(current);
+    document.replaceDimStyles(std::move(styles));
+
+    const std::string report = stateOf(document);
+    expectContains(report, "ortho: off\ndimension overrides: DIMDSEP:. DIMTXT:5\npointer:");
+    EXPECT_EQ(report.find("dimension styles:"), std::string::npos);
+    EXPECT_EQ(report.find("dimension style:"), std::string::npos);
+}
+
+TEST(WriteState, ACurrentDimensionStyleOtherThanIso25IsWritten) {
+    core::Document document = core::Document::newDrawing();
+    core::DimStyleTable styles = document.dimStyles();
+    styles.setCurrent("Standard");
+    styles.setCurrentVariables(styles.find("Standard")->vars);
+    document.replaceDimStyles(std::move(styles));
+
+    const std::string report = stateOf(document);
+    expectContains(report, "ortho: off\ndimension style: \"Standard\"\npointer:");
+    EXPECT_EQ(report.find("dimension styles:"), std::string::npos);
+    EXPECT_EQ(report.find("dimension overrides:"), std::string::npos);
+}
+
+TEST(WriteState, ADocumentWithoutDimensionStylesWritesNoDimensionField) {
+    core::Document document;
+    const std::string report = stateOf(document);
+    for (const std::string_view field :
+         {"dimension styles:", "dimension style:", "dimension overrides:"}) {
+        EXPECT_EQ(report.find(field), std::string::npos) << field;
+    }
 }
 
 TEST(WriteGeneratedItem, AShapeWithTheEffectivePropertiesThatAreNotTheDefault) {

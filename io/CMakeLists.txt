@@ -18,6 +18,7 @@ add_library(tg_io
     src/dxf_write.cpp
     src/dxf_skeleton.cpp
     src/dxf_tables.cpp
+    src/dxf_dimstyle.cpp
     src/dxf_header.cpp
     src/dxf_groups.cpp
     src/encoding.cpp

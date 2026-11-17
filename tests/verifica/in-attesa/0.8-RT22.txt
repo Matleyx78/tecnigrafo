@@ -1,2 +1,0 @@
-stili-quota/tabella-intestazione #699
-stili-quota/stile-corrente-mancante #699

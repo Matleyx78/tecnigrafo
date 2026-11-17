@@ -51,7 +51,11 @@ inline constexpr std::uint64_t kDictionaryLayouts = 231;
 inline constexpr std::uint64_t kLayoutModel = 230;
 inline constexpr std::uint64_t kLayoutPaper = 229;
 
-inline constexpr std::uint64_t kLowest = kLayoutPaper;  ///< the next object goes below
+// The records of the tables added later, in the document: the dimension
+// style ISO-25 (docs/adr/0047, point 2; package 0.8-PT22).
+inline constexpr std::uint64_t kDimstyleIso25 = 228;
+
+inline constexpr std::uint64_t kLowest = kDimstyleIso25;  ///< the next object goes below
 static_assert(kLowest >= 1);
 
 }  // namespace tg::core::start_handles
