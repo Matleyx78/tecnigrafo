@@ -3,6 +3,7 @@
 ; Casi a-i e m-n di autocad-raccordi.dxf per FILLET e CIRCLE Ttr in sequenza interattiva
 !view 270,100 0.25 2400x1200
 ; cambia con #570
+; cambia con #683
 OPEN
 ingresso.dxf
 ; Caso a: angolo retto, raggio 10
