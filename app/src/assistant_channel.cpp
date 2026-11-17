@@ -62,7 +62,8 @@ using nlohmann::json;
 constexpr std::array<std::string_view, 4> kSessionTools{"run", "report", "open", "save"};
 
 /// How long start() waits to learn whether another program already listens
-/// on the name: a local connection either succeeds or is refused at once.
+/// on the name, before listen() can replace it: a local connection either
+/// succeeds or is refused at once.
 constexpr int kProbeMilliseconds = 1000;
 
 bool isSessionTool(std::string_view tool) {
@@ -517,10 +518,9 @@ bool AssistantChannel::start() {
         return true;
     }
     m_error.clear();
-    if (!m_server->listen(m_name)) {
-        // A socket left by a program that ended badly (Unix) blocks the
-        // name; one that answers belongs to a program still running, whose
-        // channel must not be taken away.
+    // Probe first: with UserAccessOption, Qt can replace an existing Unix
+    // socket or add another Windows pipe instance instead of failing listen().
+    {
         QLocalSocket probe;
         probe.connectToServer(m_name);
         if (probe.waitForConnected(kProbeMilliseconds)) {
@@ -528,6 +528,9 @@ bool AssistantChannel::start() {
             m_error = tr("Another Tecnigrafo of this user has its assistant channel on.");
             return false;
         }
+    }
+    if (!m_server->listen(m_name)) {
+        // A socket left by a program that ended badly (Unix) blocks the name.
         static_cast<void>(QLocalServer::removeServer(m_name));
         if (!m_server->listen(m_name)) {
             m_error = m_server->errorString();
