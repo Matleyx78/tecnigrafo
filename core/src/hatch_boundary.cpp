@@ -157,8 +157,11 @@ ChosenContours chosenHatchContours(const Document& document, std::span<const Ent
     ChosenContours result;
     for (std::size_t i = 0; i < chosen.size(); ++i) {
         const std::optional<std::size_t> index = contourIndex[i];
-        const std::optional<std::size_t> depth =
-            index ? nesting.depth.at(*index) : std::optional<std::size_t>{};
+        if (!index) {
+            result.leftOut.push_back(chosen[i]);
+            continue;
+        }
+        const std::optional<std::size_t> depth = nesting.depth.at(*index);
         if (!depth) {
             result.leftOut.push_back(chosen[i]);
             continue;

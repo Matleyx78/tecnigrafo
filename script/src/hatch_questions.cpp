@@ -103,8 +103,12 @@ QuestionResult askHatchBoundary(const QuestionModel& model, Arguments arguments)
             answer = "enclosed" + loopsText(boundary.loops);
             break;
         case core::BoundaryOutcome::OnCurve:
-            answer = "on-curve ";
-            answer += model.nameOf(*boundary.nearEntity);
+            answer = "on-curve";
+            // detectHatchBoundary always names the entity with OnCurve.
+            if (boundary.nearEntity) {
+                answer += ' ';
+                answer += model.nameOf(*boundary.nearEntity);
+            }
             break;
         case core::BoundaryOutcome::NotEnclosed:
             answer = "not-enclosed";

@@ -62,16 +62,28 @@ void moveToLayer(Document& document, EntityId id, LayerId layer) {
     document.setProperties(id, properties);
 }
 
+void expectStraight(const HatchLoop& loop) {
+    if (!loop.polyline.has_value()) {
+        FAIL() << "Expected a polyline loop";
+    }
+    for (const PolylineVertex& vertex : loop.polyline->vertices()) {
+        EXPECT_EQ(vertex.bulge, 0.0);
+    }
+}
+
 void expectPolylineLoop(const HatchLoop& loop, std::uint32_t flags,
                         const std::vector<PolylineVertex>& vertices) {
     EXPECT_EQ(loop.flags, flags | kPolyline);
     EXPECT_TRUE(loop.edges.empty());
-    ASSERT_TRUE(loop.polyline.has_value());
-    EXPECT_TRUE(loop.polyline->isClosed());
-    EXPECT_EQ(loop.polyline->constantWidth(), 0.0);
-    ASSERT_EQ(loop.polyline->vertexCount(), vertices.size());
+    if (!loop.polyline.has_value()) {
+        FAIL() << "Expected a polyline loop";
+    }
+    const Polyline& polyline = *loop.polyline;
+    EXPECT_TRUE(polyline.isClosed());
+    EXPECT_EQ(polyline.constantWidth(), 0.0);
+    ASSERT_EQ(polyline.vertexCount(), vertices.size());
     for (std::size_t i = 0; i < vertices.size(); ++i) {
-        const PolylineVertex& vertex = loop.polyline->vertices()[i];
+        const PolylineVertex& vertex = polyline.vertices()[i];
         EXPECT_NEAR(vertex.position.x, vertices[i].position.x, kEps) << "vertex " << i;
         EXPECT_NEAR(vertex.position.y, vertices[i].position.y, kEps) << "vertex " << i;
         EXPECT_NEAR(vertex.bulge, vertices[i].bulge, kEps) << "vertex " << i;
@@ -182,9 +194,7 @@ TEST(HatchBoundary, ASegmentThatIsNotAnArcGetsBulgeZero) {
     const DetectedBoundary boundary = detectHatchBoundary(document, {5, 5});
     ASSERT_EQ(boundary.loops.size(), 1U);
     expectPolylineLoop(boundary.loops[0], kExternal | kDerived, kSquare);
-    for (const PolylineVertex& vertex : boundary.loops[0].polyline->vertices()) {
-        EXPECT_EQ(vertex.bulge, 0.0);
-    }
+    expectStraight(boundary.loops[0]);
 }
 
 TEST(HatchBoundary, AnArcOfAPolylineKeepsItsBulge) {
@@ -334,9 +344,7 @@ TEST(ChosenHatchContours, TinyBulgesBecomeZeroAndBadContoursAreLeftOut) {
     EXPECT_EQ(contours.leftOut, (std::vector<EntityId>{point, missing, huge}));
     ASSERT_EQ(contours.loops.size(), 1U);
     expectPolylineLoop(contours.loops[0], kExternal, kSquare);
-    for (const PolylineVertex& vertex : contours.loops[0].polyline->vertices()) {
-        EXPECT_EQ(vertex.bulge, 0.0);
-    }
+    expectStraight(contours.loops[0]);
 }
 
 TEST(ChosenHatchContours, NothingChosenGivesNothing) {
