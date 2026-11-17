@@ -500,6 +500,72 @@ TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
     }
 }
 
+// The definition BLOCK-IMPORT and the questions import-* are announced for
+// package PT19 of stage 0.8 (docs/tappe/fuori-tappa/F11): a case using them
+// waits for the package, while an unknown definition or question keeps the
+// case invalid. What PT19 has realized is left out, as above.
+TEST(CheckCase, AnnouncedBlockImportCanWaitButUnknownFormsStayInvalid) {
+    struct Form {
+        std::string name;
+        std::string text;
+        std::string message;
+    };
+
+    const std::string drawing = "A = LINE start=0,0 end=10,0\n";
+    std::vector<Form> forms{{"announced-block-import",
+                             "I = BLOCK-IMPORT file=pezzo.dxf target-units=6\n? length A -> 10\n",
+                             "is not implemented yet"}};
+    const std::vector<std::string> questions{
+        "import-error A",     "import-definition A",  "import-nested A",     "import-layers A",
+        "import-linetypes A", "import-text-styles A", "import-dim-styles A", "import-unit-factor A",
+        "import-next-id A",   "import-groups A 101"};
+    for (const std::string& question : questions) {
+        std::string text = drawing;
+        text += "? ";
+        text += question;
+        text += " -> none\n";
+        forms.push_back({"announced-" + question.substr(0, question.find(' ')), std::move(text),
+                         "question not implemented yet"});
+    }
+    int checked = 0;
+    for (const Form& form : forms) {
+        const auto answers = answerQuestions(form.text);
+        const auto* list = std::get_if<std::vector<Answer>>(&answers);
+        const auto* failure = std::get_if<ParseError>(&answers);
+        const bool waiting = (list != nullptr && list->size() == 1 &&
+                              (*list)[0].actual == "error: question not implemented yet") ||
+                             (failure != nullptr && failure->notImplemented);
+        // A form realized by PT19 is covered by its package.
+        if (!waiting) {
+            continue;
+        }
+        ++checked;
+        const fs::path folder = makeCase(form.name, {{"domande.tgq", form.text}});
+        const Result failing = check(folder);
+        EXPECT_EQ(failing.code, kExitFailed) << form.name;
+        expectContains(failing.output, form.message);
+        const Result pending = check(folder, true);
+        EXPECT_EQ(pending.code, kExitPassed) << form.name;
+        expectContains(pending.output, "pending: ");
+    }
+
+    const std::vector<std::pair<std::string, std::string>> unknown{
+        {"I = BLOCK-IMPORTS file=pezzo.dxf\n", "unknown entity type 'BLOCK-IMPORTS'"},
+        {drawing + "? import-entity A -> none\n", "unknown question 'import-entity'"},
+    };
+    for (const auto& [text, message] : unknown) {
+        const fs::path folder = makeCase("unknown-import", {{"domande.tgq", text}});
+        for (const bool pending : {false, true}) {
+            const Result result = check(folder, pending);
+            EXPECT_EQ(result.code, kExitInvalid) << text;
+            expectContains(result.output, message);
+        }
+    }
+    if (checked == 0) {
+        GTEST_SKIP() << "the program already has BLOCK-IMPORT and the import-* questions";
+    }
+}
+
 TEST(CheckCase, Questions) {
     const fs::path passing =
         makeCase("questions-pass",
