@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include "assistant_bridge.hpp"
 #include "cad_view.hpp"
 #include "crash_notice.hpp"
 #include "log_file.hpp"
@@ -9,17 +10,37 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QCoreApplication>
 #include <QPixmap>
 #include <QTimer>
 #include <QtGlobal>
 
 #include <iostream>
+#include <string_view>
+
+namespace {
+
+/// The option of the bridge of the assistant (docs/adr/0051, point 1).
+constexpr std::string_view kBridgeOption = "--mcp";
+
+void nameApplication() {
+    QCoreApplication::setApplicationName(QStringLiteral("Tecnigrafo"));
+    QCoreApplication::setOrganizationName(QStringLiteral("Tecnigrafo"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(TG_VERSION));
+}
+
+}  // namespace
 
 int main(int argc, char* argv[]) {
+    // The bridge shows no window: it needs no QApplication, which on Linux
+    // would ask for a display that an assistant may not have.
+    if (argc == 2 && argv[1] == kBridgeOption) {
+        const QCoreApplication bridge(argc, argv);
+        nameApplication();
+        return tg::app::runAssistantBridge();
+    }
     const QApplication application(argc, argv);
-    QApplication::setApplicationName(QStringLiteral("Tecnigrafo"));
-    QApplication::setOrganizationName(QStringLiteral("Tecnigrafo"));
-    QApplication::setApplicationVersion(QStringLiteral(TG_VERSION));
+    nameApplication();
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Tecnigrafo - free 2D/3D CAD"));
@@ -47,7 +68,20 @@ int main(int argc, char* argv[]) {
     parser.addOption(sourcesOption);
     parser.addOption(scriptOption);
     parser.addOption(outputOption);
+    // Read above, before the QApplication: here only for --help, and for an
+    // error if other options come with it.
+    const QCommandLineOption bridgeOption(
+        QStringLiteral("mcp"),
+        QStringLiteral("Run the bridge of the assistant: MCP on stdin and stdout, passed on to "
+                       "the assistant channel of the running program, until stdin ends. It "
+                       "takes no other option."));
+    parser.addOption(bridgeOption);
     parser.process(application);
+
+    if (parser.isSet(bridgeOption)) {
+        std::cerr << "--mcp takes no other option\n";
+        return 1;
+    }
 
     if (parser.isSet(scriptOption)) {
         if (parser.isSet(screenshotOption)) {

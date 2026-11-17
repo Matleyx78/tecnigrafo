@@ -9,12 +9,18 @@
 #include <QString>
 #include <QWidget>
 
+#include <functional>
+
 class QKeyEvent;
 class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
 
 namespace tg::app {
+
+/// What the lines of the assistant start with in the history
+/// (docs/adr/0051, point 8).
+inline constexpr const char* kAssistantPrefix = "[AI] ";
 
 /// AutoCAD-style command line: a read-only history (three lines visible,
 /// scrollable) above the prompt of the runner and an input field.
@@ -64,6 +70,13 @@ public:
     /// Adds a line at the end of the history.
     void appendToHistory(const QString& line);
 
+    /// The lines of the assistant (docs/adr/0051, point 8): while `lines` is
+    /// set, every line added to the history, an echo or a message, is
+    /// written there with kAssistantPrefix in front, and handed to `lines`
+    /// as it is, without it. An empty function ends it. Only the window
+    /// shows the prefix: the report of a script never has one.
+    void setAssistantLines(std::function<void(const QString&)> lines);
+
     /// Shows the runner's current prompt, empty without a runner. Call it
     /// after sending the runner an input from elsewhere, such as a click in
     /// the view.
@@ -92,6 +105,7 @@ private:
     QPlainTextEdit* m_history{nullptr};
     QLabel* m_prompt{nullptr};
     QLineEdit* m_input{nullptr};
+    std::function<void(const QString&)> m_assistantLines;
 };
 
 }  // namespace tg::app
