@@ -878,6 +878,18 @@ TEST(Document, FreezingALayerKeepsTheExtentsOfTheFiveEntitiesOfBefore) {
     EXPECT_TRUE(document.extents().isEmpty());
 }
 
+TEST(Document, RemovingBlockReleasesItsEntityHandlesForModelSpace) {
+    Document document = Document::newDrawing();
+    BlockDefinition block{"Part"};
+    block.entities.push_back({EntityId{500}, Line{{0, 0}, {1, 0}}});
+    document.replaceBlock("Part", block);
+
+    document.replaceBlock("Part", std::nullopt);
+    document.restore(block.entities.front());
+
+    EXPECT_NE(document.find(EntityId{500}), nullptr);
+}
+
 TEST(DocumentDeathTest, SetPropertiesRequiresAnExistingRecord) {
     Document document = Document::newDrawing();
     EXPECT_DEATH(document.setProperties(EntityId{999}, document.current()), "");
