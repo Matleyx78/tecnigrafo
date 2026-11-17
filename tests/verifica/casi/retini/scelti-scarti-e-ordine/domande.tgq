@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/contorni-scarti-in-mezzo.json
+; Keep the corpus outer, huge circle, point polyline, circle and triangle.
+; Add a line and an open polyline, excluded by the Tecnigrafo facade.
+
+Outer = LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+Open = LWPOLYLINE vertex=1,1 vertex=2,1 vertex=1,2
+Huge = CIRCLE center=2251799813685248,0 radius=1
+Point = LWPOLYLINE closed=yes vertex=3,3 vertex=3,3 bulge=1 vertex=3,3
+Line = LINE start=1,1 end=2,2
+Inner = CIRCLE center=5,5 radius=3
+Triangle = LWPOLYLINE closed=yes vertex=14,4 vertex=16,4 vertex=15,6
+? hatch-contours Outer Open Huge Point Line Inner Triangle -> loop=external+polyline vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10 loop=outermost+edges circle=5,5;3 loop=outermost+polyline vertex=14,4 vertex=16,4 vertex=15,6 left-out=Open left-out=Huge left-out=Point left-out=Line
+? hatch-contours Line Triangle Point Inner Huge Open Outer -> loop=outermost+polyline vertex=14,4 vertex=16,4 vertex=15,6 loop=outermost+edges circle=5,5;3 loop=external+polyline vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10 left-out=Line left-out=Point left-out=Huge left-out=Open
+? hatch-contours Point Huge Open Line -> left-out=Point left-out=Huge left-out=Open left-out=Line

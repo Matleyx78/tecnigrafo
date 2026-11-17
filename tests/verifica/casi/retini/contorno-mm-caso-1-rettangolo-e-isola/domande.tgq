@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-ordinary-mm-caso-1-rettangolo-e-isola.json
+
+E0 = LINE start=0,0 end=10,0
+E1 = LINE start=10,0 end=10,10
+E2 = LINE start=10,10 end=0,10
+E3 = LINE start=0,10 end=0,0
+E4 = CIRCLE center=5,5 radius=2
+? hatch-boundary 1,1 -> enclosed loop=external+derived+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10 loop=outermost+derived+edges circle=5,5;2

@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/contorni-uguali-verso-e-inizio.json
+
+E0 = LWPOLYLINE closed=yes vertex=-2,-2 vertex=10,-2 vertex=10,10 vertex=-2,10
+E1 = LWPOLYLINE closed=yes vertex=0,0 vertex=8,0 vertex=8,8 vertex=0,8
+E2 = LWPOLYLINE closed=yes vertex=0,0 vertex=0,8 vertex=8,8 vertex=8,0
+E3 = LWPOLYLINE closed=yes vertex=8,8 vertex=0,8 vertex=0,0 vertex=8,0
+? hatch-contours E0 E1 E2 E3 -> loop=external+polyline vertex=-2,-2 vertex=10,-2 vertex=10,10 vertex=-2,10 loop=outermost+polyline vertex=0,0 vertex=8,0 vertex=8,8 vertex=0,8 loop=outermost+polyline vertex=0,0 vertex=0,8 vertex=8,8 vertex=8,0 loop=outermost+polyline vertex=8,8 vertex=0,8 vertex=0,0 vertex=8,0
+? hatch-contours E3 E2 E1 E0 -> loop=outermost+polyline vertex=8,8 vertex=0,8 vertex=0,0 vertex=8,0 loop=outermost+polyline vertex=0,0 vertex=0,8 vertex=8,8 vertex=8,0 loop=outermost+polyline vertex=0,0 vertex=8,0 vertex=8,8 vertex=0,8 loop=external+polyline vertex=-2,-2 vertex=10,-2 vertex=10,10 vertex=-2,10

@@ -1,0 +1,18 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-tolerance-fillet-arco-fra-due-linee.json
+; The corpus clockwise arc from 180 to 90 degrees is the same set
+; as this DXF counterclockwise arc from 90 to 180 degrees.
+; The shared endpoint names A by boundary.hpp step 4 and nearCurve.
+
+Before = LINE start=0,-2 end=0,0
+A = ARC center=1,0 radius=1 start-angle=90 end-angle=180
+After = LINE start=1,1 end=3,1
+? hatch-boundary 0.75,0.25 -> not-enclosed
+; Both A and After have this endpoint; the earlier candidate names it.
+? hatch-boundary 1,1 -> on-curve A
+? hatch-contours A -> left-out=A

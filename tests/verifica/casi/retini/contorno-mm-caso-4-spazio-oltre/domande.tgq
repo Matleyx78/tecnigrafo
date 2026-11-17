@@ -1,0 +1,13 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-ordinary-mm-caso-4-spazio-oltre.json
+
+E0 = LINE start=0,0 end=10,0
+E1 = LINE start=10,2e-06 end=10,10
+E2 = LINE start=10,10 end=0,10
+E3 = LINE start=0,10 end=0,0
+? hatch-boundary 5,5 -> not-enclosed open=10,0 open=10,2e-06
