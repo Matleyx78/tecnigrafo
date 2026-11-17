@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten R2018 dimension whose *D404 graphics block is deliberately absent.
+D = DXF file=dati.dxf
+? version D -> AC1032
+? units D -> 4
+? count D -> none
+? unhandled D -> DIMENSION 1
+? entity D 101 -> unhandled DIMENSION
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical
