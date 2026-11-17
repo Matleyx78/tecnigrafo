@@ -445,8 +445,10 @@ void appendSnapPoints(const Document& document, const EntityRecord& record, cons
             } else {
                 // The rows of an MTEXT give no snap points of their own: only
                 // its insertion point (docs/adr/0046, point 2;
-                // docs/tappe/0.8/PT13-mtext-core.md, point 6).
-                if constexpr (!std::is_same_v<T, MText>) {
+                // docs/tappe/0.8/PT13-mtext-core.md, point 6). A hatch gives
+                // none at all, as AutoCAD with OSNAPHATCH 0 (docs/adr/0048,
+                // point 4).
+                if constexpr (!std::is_same_v<T, MText> && !std::is_same_v<T, Hatch>) {
                     for (const GeneratedItem& item : generate(document, record)) {
                         appendShapeSnapPoints(item.shape, modes, out, from);
                     }

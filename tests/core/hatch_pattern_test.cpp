@@ -3,17 +3,20 @@
 
 #include "tg/core/color.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/document_query.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/hatch_patterns.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
+#include "tg/core/snap_points.hpp"
 
 #include <gtest/gtest.h>
 
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <numbers>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -93,17 +96,19 @@ Hatch transformedHatch(const Hatch& hatch, const Similarity& similarity) {
     return std::get<Hatch>(*outcome.entity);
 }
 
-/// The number of lines of length 10 that lie on the line x = `x` (vertical)
-/// or y = `y` (horizontal), within the rounding of the ends of solid-space.
-std::size_t sidesOfLengthTen(const std::vector<Line>& lines, std::optional<double> x,
-                             std::optional<double> y) {
+enum class Side : std::uint8_t { Vertical, Horizontal };
+
+/// The number of lines of length 10 that lie on the line x = `at`
+/// (vertical) or y = `at` (horizontal), within the rounding of the ends of
+/// solid-space.
+std::size_t sidesOfLengthTen(const std::vector<Line>& lines, Side side, double at) {
     std::size_t count = 0;
     for (const Line& line : lines) {
-        const auto on = [](double a, double b) {
-            return std::abs(a - b) <= kOnAxis;
+        const auto on = [at](double a) {
+            return std::abs(a - at) <= kOnAxis;
         };
-        const bool along = x ? (on(line.start.x, *x) && on(line.end.x, *x))
-                             : (on(line.start.y, *y) && on(line.end.y, *y));
+        const bool along = side == Side::Vertical ? (on(line.start.x) && on(line.end.x))
+                                                  : (on(line.start.y) && on(line.end.y));
         if (along && std::abs(distance(line.start, line.end) - 10.0) <= kTolerance) {
             ++count;
         }
@@ -176,7 +181,7 @@ TEST(HatchPattern, ASolidFillKeepsOnlyTheLoopsOfItsStyle) {
 TEST(HatchPattern, Ansi31OnASquareInTheOrderOfK) {
     // Metric ANSI31: lines at 45 degrees, step 3.175, so y - x = k * 3.175 *
     // sqrt(2) for k = -2 ... 2.
-    const double c = 3.175 * std::sqrt(2.0);
+    const double c = 3.175 * std::numbers::sqrt2;
     Hatch hatch = metricHatch("ANSI31", {rectangleLoop({0, 0}, {10, 10})});
     expectLines(linesOf(hatch), {{{2 * c, 0}, {10, 10 - (2 * c)}},
                                  {{c, 0}, {10, 10 - c}},
@@ -187,7 +192,7 @@ TEST(HatchPattern, Ansi31OnASquareInTheOrderOfK) {
     // A hole of radius 2 in the middle: the line y = x crosses it and gives
     // two stretches; the others miss it.
     hatch.loops.push_back(circleLoop({5, 5}, 2));
-    const double r = std::sqrt(2.0);
+    const double r = std::numbers::sqrt2;
     expectLines(linesOf(hatch), {{{2 * c, 0}, {10, 10 - (2 * c)}},
                                  {{c, 0}, {10, 10 - c}},
                                  {{0, 0}, {5 - r, 5 - r}},
@@ -204,8 +209,8 @@ TEST(HatchPattern, NetWithItsOriginInACornerDrawsTheLinesAlongTheSides) {
     // vertical one, k = -3 ... 0, the last on the left side.
     expectLine(lines[0], {0, 0}, {10, 0});
     expectLine(lines[7], {0, 0}, {0, 10});
-    EXPECT_EQ(sidesOfLengthTen(lines, std::nullopt, 0.0), 1U);
-    EXPECT_EQ(sidesOfLengthTen(lines, 0.0, std::nullopt), 1U);
+    EXPECT_EQ(sidesOfLengthTen(lines, Side::Horizontal, 0.0), 1U);
+    EXPECT_EQ(sidesOfLengthTen(lines, Side::Vertical, 0.0), 1U);
 }
 
 TEST(HatchPattern, TheVerticalNetLineIsOnTheRightAndLeftSides) {
@@ -213,20 +218,20 @@ TEST(HatchPattern, TheVerticalNetLineIsOnTheRightAndLeftSides) {
         SCOPED_TRACE(left);
         const Vec2 low = left ? Vec2{0, 0} : Vec2{-10, 0};
         const Hatch hatch = metricHatch("NET", {rectangleLoop(low, low + Vec2{10, 10})});
-        EXPECT_EQ(sidesOfLengthTen(linesOf(hatch), 0.0, std::nullopt), 1U);
+        EXPECT_EQ(sidesOfLengthTen(linesOf(hatch), Side::Vertical, 0.0), 1U);
 
         // The family at 90 degrees plus a whole turn: still exactly vertical.
         Hatch turned = hatch;
         turned.patternLines[1].angle += kTwoPi;
-        EXPECT_EQ(sidesOfLengthTen(linesOf(turned), 0.0, std::nullopt), 1U);
+        EXPECT_EQ(sidesOfLengthTen(linesOf(turned), Side::Vertical, 0.0), 1U);
 
         // MIRROR on the x axis: the family at -90 degrees, direction (0, -1).
         const std::optional<Similarity> mirror = Similarity::reflection({0, 0}, {1, 0});
         ASSERT_TRUE(mirror.has_value());
-        const Hatch mirrored = transformedHatch(hatch, *mirror);
+        const Hatch mirrored = transformedHatch(hatch, mirror.value_or(Similarity{}));
         EXPECT_EQ(cardinalSinCos(mirrored.patternLines[1].angle).cosine, 0.0);
         EXPECT_EQ(cardinalSinCos(mirrored.patternLines[1].angle).sine, -1.0);
-        EXPECT_EQ(sidesOfLengthTen(linesOf(mirrored), 0.0, std::nullopt), 1U);
+        EXPECT_EQ(sidesOfLengthTen(linesOf(mirrored), Side::Vertical, 0.0), 1U);
     }
 }
 
@@ -238,7 +243,7 @@ TEST(HatchPattern, QuarterTurnsKeepTheLineAlongTheSide) {
 
     // Every turn takes the left side to y = 0.
     struct Turn {
-        double degrees;
+        double degrees{0.0};
         Vec2 center;
     };
 
@@ -250,7 +255,7 @@ TEST(HatchPattern, QuarterTurnsKeepTheLineAlongTheSide) {
         EXPECT_EQ(d.sine, 0.0);
         EXPECT_EQ(std::abs(d.cosine), 1.0);
         const std::vector<Line> lines = linesOf(rotated);
-        EXPECT_EQ(sidesOfLengthTen(lines, std::nullopt, 0.0), 1U);
+        EXPECT_EQ(sidesOfLengthTen(lines, Side::Horizontal, 0.0), 1U);
         // The inside line 3.175 from that side stays inside, of length 10.
         std::size_t inner = 0;
         for (const Line& line : lines) {
@@ -422,6 +427,24 @@ TEST(HatchPattern, TheLinesAreDrawnContinuousWithTheOtherPropertiesOfTheHatch) {
     for (const GeneratedItem& item : generateOf(bare, record, hatch)) {
         ASSERT_NE(item.properties.linetype, nullptr);
         EXPECT_EQ(item.properties.linetype->name, "Continuous");
+    }
+}
+
+TEST(HatchPattern, TheLinesGiveNoSnapPoints) {
+    // docs/adr/0048, point 4: no snap, as AutoCAD with OSNAPHATCH 0. NET
+    // with its origin in a corner: its lines cross at (0, 0), (3.175, 0)…
+    Document document = Document::newDrawing();
+    const EntityId id = document.add(metricHatch("NET", {rectangleLoop({0, 0}, {10, 10})}));
+    SnapModes every;
+    every.perpendicular = true;
+    every.tangent = true;
+    every.quadrant = true;
+    std::vector<SnapPoint> points;
+    appendSnapPoints(document, *document.find(id), every, points, Vec2{20, 20});
+    EXPECT_TRUE(points.empty());
+    for (const Vec2& pointer : {Vec2{0, 0}, Vec2{3.175, 3.175}, Vec2{5, 0}, Vec2{10, 10}}) {
+        SCOPED_TRACE(pointer.x);
+        EXPECT_EQ(findSnap(document, pointer, 1.0, every, Vec2{20, 20}), std::nullopt);
     }
 }
 

@@ -18,6 +18,7 @@
 #include "tg/core/tolerance.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -190,8 +191,8 @@ RangeOutcome familyRange(const PatternLine& line, const BBox& box, FamilyLines& 
     if (step == 0.0 || !std::isfinite(step)) {
         return RangeOutcome::Lines;
     }
-    const Vec2 corners[] = {
-        box.min(), {box.min().x, box.max().y}, {box.max().x, box.min().y}, box.max()};
+    const std::array<Vec2, 4> corners{box.min(), Vec2{box.min().x, box.max().y},
+                                      Vec2{box.max().x, box.min().y}, box.max()};
     double low = std::numeric_limits<double>::infinity();
     double high = -std::numeric_limits<double>::infinity();
     for (const Vec2& corner : corners) {
@@ -434,13 +435,13 @@ std::vector<GeneratedItem> generateOf(const Document& document, const EntityReco
         }
         return {GeneratedItem{std::move(region), properties}};
     }
-    PatternLines pattern = patternLines(hatch);
+    const PatternLines pattern = patternLines(hatch);
     const Linetype* continuous = document.linetype(document.continuousLinetype());
     properties.linetype = continuous != nullptr ? continuous : &kContinuousLinetype;
     std::vector<GeneratedItem> items;
     items.reserve(pattern.lines.size());
-    for (Line& line : pattern.lines) {
-        items.push_back(GeneratedItem{std::move(line), properties});
+    for (const Line& line : pattern.lines) {
+        items.push_back(GeneratedItem{line, properties});
     }
     return items;
 }
