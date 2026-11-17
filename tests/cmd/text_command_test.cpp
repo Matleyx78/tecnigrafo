@@ -41,7 +41,8 @@ TEST(TextCommandTest, CurrentStyleSuppliesFixedHeightWidthAndOblique) {
     EXPECT_EQ(runner.promptText(), "Specify rotation angle of text <0>:");
     runner.submitText("");
     runner.submitText("Styled");
-    const auto& text = std::get<core::Text>(document.entities().front().entity);
+    const auto entities = document.entities();
+    const auto& text = std::get<core::Text>(entities.front().entity);
     EXPECT_DOUBLE_EQ(text.height, 4.0);
     EXPECT_EQ(text.style, "Fixed");
     EXPECT_DOUBLE_EQ(text.widthFactor, 0.75);
