@@ -261,7 +261,10 @@ Result<std::vector<FileEntity>> fileEntities(const GroupFile& file, std::size_t 
                 return malformed(file.lines[start], "no handle available for an entity");
             }
             document.setNextId(id + 1);
-            entity.groups.insert(entity.groups.begin(), {5, handleText(id)});
+            // Appended and rotated to the front: an insert at begin() makes GCC 13
+            // warn of a false null dereference at -O3 (-Wnull-dereference).
+            entity.groups.push_back({5, handleText(id)});
+            std::rotate(entity.groups.begin(), entity.groups.end() - 1, entity.groups.end());
             warnings.push_back("line " + std::to_string(file.lines[start]) + ": entity " +
                                entity.type + " had no handle; assigned " + handleText(id));
         }

@@ -536,7 +536,10 @@ public:
         if (at != seqend.end()) {
             at->value = handleText(take());
         } else {
-            seqend.insert(seqend.begin(), {5, handleText(take())});
+            // Appended and rotated to the front: an insert at begin() makes GCC 13
+            // warn of a false null dereference at -O3 (-Wnull-dereference).
+            seqend.push_back({5, handleText(take())});
+            std::rotate(seqend.begin(), seqend.end() - 1, seqend.end());
         }
         setOwner(seqend, owner);
         specific.resize(start + 1);

@@ -304,7 +304,10 @@ void writeAttributeGroups(const core::Text& model, const core::EntityExtras& ext
         // locked position an ATTDEF gives its ATTRIB) after the marker.
         first.clear();
         second = specific;
-        second.insert(second.begin(), {100, std::string{marker}});
+        // Appended and rotated to the front: an insert at begin() makes GCC 13
+        // warn of a false null dereference at -O3 (-Wnull-dereference).
+        second.push_back({100, std::string{marker}});
+        std::rotate(second.begin(), second.end() - 1, second.end());
     }
 
     const auto firstOwnNumber = [&first](int code) -> std::optional<long long> {

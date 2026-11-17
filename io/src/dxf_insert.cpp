@@ -13,6 +13,7 @@
 #include "tg/core/math.hpp"
 #include "tg/io/dxf_groups.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <utility>
@@ -137,7 +138,10 @@ void writeInsert(const core::EntityRecord& record, EntityWriteContext& context,
         marker = own[i] && groups[i].code == 100;
     }
     if (!marker) {
-        groups.insert(groups.begin(), {100, std::string{kReferenceMarker}});
+        // Appended and rotated to the front: an insert at begin() makes GCC 13
+        // warn of a false null dereference at -O3 (-Wnull-dereference).
+        groups.push_back({100, std::string{kReferenceMarker}});
+        std::rotate(groups.begin(), groups.end() - 1, groups.end());
     }
     const bool follows = !insert.attributes.empty() || seqend != specific.size();
     using Kind = ModelGroup::Kind;
