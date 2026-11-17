@@ -679,6 +679,11 @@ constexpr std::array kQuestions{
     QuestionRow{"import-unit-factor", AnswerShape::Single, nullptr},  // PT19
     QuestionRow{"import-next-id", AnswerShape::Single, nullptr},      // PT19
     QuestionRow{"import-groups", AnswerShape::Single, nullptr},       // PT19
+    // Stage 0.8: hatch boundaries, announced for PT43
+    // (docs/tappe/fuori-tappa/F12): they answer "not implemented yet".
+    // In order, so Single and not Items.
+    QuestionRow{"hatch-boundary", AnswerShape::Single, nullptr},  // PT43
+    QuestionRow{"hatch-contours", AnswerShape::Single, nullptr},  // PT43
 };
 
 }  // namespace
