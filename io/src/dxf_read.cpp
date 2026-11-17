@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include "dxf_blocks.hpp"
 #include "dxf_entities.hpp"
 #include "dxf_tables.hpp"
 #include "tg/io/dxf_groups.hpp"
@@ -189,6 +190,86 @@ Result<Handles> collectHandles(const GroupFile& file, const std::vector<SectionR
     return handles;
 }
 
+/// The properties of the entities of the blocks come from the tables, as
+/// those of the drawing.
+class TableEntityReader final : public BlockEntityReader {
+public:
+    explicit TableEntityReader(TableReader& tables) : m_tables(tables) {}
+
+    bool properties(core::EntityRecord& record) override {
+        return m_tables.entityProperties(record);
+    }
+
+private:
+    TableReader& m_tables;
+};
+
+/// Gives `properties` the values finish() gave the entity `id`, if any.
+void resolve(const TableReader& tables, core::EntityId id, core::EntityProperties& properties) {
+    if (const core::EntityProperties* resolved = tables.resolvedProperties(id)) {
+        properties = *resolved;
+    }
+}
+
+void resolve(const TableReader& tables, core::EntityRecord& record) {
+    resolve(tables, record.id, record.properties);
+    if (auto* insert = std::get_if<core::Insert>(&record.entity)) {
+        for (auto& attribute : insert->attributes) {
+            resolve(tables, attribute.id, attribute.properties);
+        }
+    }
+}
+
+/// An entity of ENTITIES read: handled, or kept as read.
+struct ReadEntity {
+    std::optional<core::EntityRecord> record;
+    core::RawEntity raw;
+};
+
+/// The entities of the ENTITIES section between `begin` and `end`; an entity
+/// without a handle gets one, with a warning.
+Result<std::vector<FileEntity>> fileEntities(const GroupFile& file, std::size_t begin,
+                                             std::size_t end, core::Document& document,
+                                             std::vector<std::string>& warnings) {
+    std::vector<FileEntity> entities;
+    std::size_t i = begin;
+    while (i < end) {
+        const std::size_t start = i;
+        if (file.groups[i].code != 0) {
+            return malformed(file.lines[i], "expected an entity type (group 0)");
+        }
+        FileEntity entity{file.groups[i++].value, {}, file.lines[start]};
+        if (trimDxf(entity.type).empty()) {
+            return malformed(file.lines[start], "expected a nonempty entity type");
+        }
+        bool handle = false;
+        while (i < end && file.groups[i].code != 0) {
+            const auto& group = file.groups[i];
+            if (group.code == 5) {
+                if (handle) {
+                    return malformed(file.lines[i], "multiple handles on one entity");
+                }
+                handle = true;
+            }
+            entity.groups.push_back(group);
+            ++i;
+        }
+        if (!handle) {
+            constexpr auto kLastUsable = std::numeric_limits<std::uint64_t>::max() - 1;
+            const std::uint64_t id = document.nextId();
+            if (id >= kLastUsable) {
+                return malformed(file.lines[start], "no handle available for an entity");
+            }
+            document.setNextId(id + 1);
+            entity.groups.insert(entity.groups.begin(), {5, handleText(id)});
+            warnings.push_back("line " + std::to_string(file.lines[start]) + ": entity " +
+                               entity.type + " had no handle; assigned " + handleText(id));
+        }
+        entities.push_back(std::move(entity));
+    }
+    return entities;
+}
+
 Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
     ReadResult result;
     result.report.warnings = file.warnings;
@@ -200,11 +281,15 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
     if (!handles.ok()) {
         return handles.error();
     }
-    result.document.setNextId(handles.value().next);
+    auto& document = result.document;
+    auto& warnings = result.report.warnings;
+    document.setNextId(handles.value().next);
     core::RawDrawing raw;
     raw.version = file.version;
     raw.codePage = file.codePage;
-    TableReader tables{result.document};
+    TableReader tables{document};
+    std::optional<std::size_t> tablesSection;
+    std::optional<std::size_t> blocksSection;
     for (const auto& range : parsed.value()) {
         core::RawSection section{range.name, {}};
         if (range.name != "ENTITIES") {
@@ -215,67 +300,78 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
         if (range.name == "TABLES") {
             const std::span<const std::size_t> lines{file.lines.data() + range.begin,
                                                      range.end - range.begin};
-            tables.readTables(section.groups, lines, result.report.warnings);
+            tables.readTables(section.groups, lines, warnings);
+            tablesSection = raw.sections.size();
         } else if (range.name == "HEADER") {
             tables.readHeader(section.groups);
+        } else if (range.name == "BLOCKS") {
+            blocksSection = raw.sections.size();
         }
         raw.sections.push_back(std::move(section));
     }
-    EntityReadContext context{raw.version, raw.codePage,           modelSpaceHandle(raw), {},
-                              0,           result.document.units()};
+    // The definitions before the entities, so that an INSERT knows the
+    // blocks there are (docs/tappe/0.8/PT18-blocchi-dxf.md, point 4).
+    TableEntityReader entityReader{tables};
+    BlocksRead blocks;
+    if (blocksSection) {
+        core::RawGroups noTables;
+        blocks = readBlocks(raw.sections[*blocksSection].groups,
+                            tablesSection ? raw.sections[*tablesSection].groups : noTables,
+                            raw.version, raw.codePage, document.units(), entityReader);
+    }
+    EntityReadContext context{raw.version, raw.codePage,    modelSpaceHandle(raw), {},
+                              0,           document.units()};
+    std::vector<ReadEntity> entities;
     for (const auto& range : parsed.value()) {
         if (range.name != "ENTITIES") {
             continue;
         }
-        std::size_t i = range.begin;
-        while (i < range.end) {
-            const std::size_t start = i;
-            if (file.groups[i].code != 0) {
-                return malformed(file.lines[i], "expected an entity type (group 0)");
+        auto read = fileEntities(file, range.begin, range.end, document, warnings);
+        if (!read.ok()) {
+            return read.error();
+        }
+        for (auto& item : groupItems(std::move(read).value())) {
+            const auto ids = itemHandles(item);
+            // The handles of the ATTRIB and of the SEQEND are spent too.
+            for (std::size_t i = 1; i < ids.size(); ++i) {
+                document.reserveHandle(core::EntityId{ids[i]});
             }
-            core::RawEntity entity;
-            entity.type = file.groups[i++].value;
-            entity.order = ++context.order;
-            if (trimDxf(entity.type).empty()) {
-                return malformed(file.lines[start], "expected a nonempty entity type");
-            }
-            while (i < range.end && file.groups[i].code != 0) {
-                const auto& group = file.groups[i];
-                if (group.code == 5) {
-                    if (entity.id.value != 0) {
-                        return malformed(file.lines[i], "multiple handles on one entity");
-                    }
-                    entity.id.value = *parseHandle(group.value);
-                }
-                entity.groups.push_back(group);
-                ++i;
-            }
-            if (entity.id.value == 0) {
-                constexpr auto kLastUsable = std::numeric_limits<std::uint64_t>::max() - 1;
-                if (result.document.nextId() >= kLastUsable) {
-                    return malformed(file.lines[start], "no handle available for an entity");
-                }
-                entity.id.value = result.document.nextId();
-                entity.groups.push_back({5, handleText(entity.id.value)});
-                std::rotate(entity.groups.begin(), entity.groups.end() - 1, entity.groups.end());
-                result.report.warnings.push_back(
-                    "line " + std::to_string(file.lines[start]) + ": entity " + entity.type +
-                    " had no handle; assigned " + handleText(entity.id.value));
-            }
-            context.id = entity.id;
-            auto record = decodeEntity(findCodec(trimDxf(entity.type)), entity.groups, context);
-            if (record && tables.entityProperties(*record)) {
-                record->id = entity.id;
-                record->order = entity.order;
-                result.document.insert(std::move(*record));
+            ReadEntity entity;
+            entity.raw.id = core::EntityId{ids.front()};
+            entity.raw.order = ++context.order;
+            entity.raw.type = item.front().type;
+            context.id = entity.raw.id;
+            entity.record = readItem(item, context, blocks.names);
+            if (entity.record && takeItemProperties(*entity.record, entityReader)) {
+                entity.record->id = entity.raw.id;
+                entity.record->order = entity.raw.order;
             } else {
-                ++result.report.unhandled[std::string{trimDxf(entity.type)}];
-                result.document.insertRaw(std::move(entity));
+                entity.record.reset();
+                ++result.report.unhandled[std::string{trimDxf(entity.raw.type)}];
+                entity.raw.groups = rawGroupsOf(item);
             }
+            entities.push_back(std::move(entity));
         }
     }
-    tables.finish(result.report.warnings, handles.value().used);
-    result.document.setRaw(std::move(raw));
+    tables.finish(warnings, handles.value().used);
+    for (auto& block : blocks.definitions) {
+        for (auto& record : block.entities) {
+            resolve(tables, record);
+        }
+    }
+    putBlocks(blocks, document, warnings);
+    for (auto& entity : entities) {
+        if (entity.record) {
+            resolve(tables, *entity.record);
+            document.insert(std::move(*entity.record));
+        } else {
+            document.insertRaw(std::move(entity.raw));
+        }
+    }
+    if (auto deep = depthWarning(document)) {
+        warnings.push_back(std::move(*deep));
+    }
+    document.setRaw(std::move(raw));
     return result;
 }
 

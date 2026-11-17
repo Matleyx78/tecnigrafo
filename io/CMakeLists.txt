@@ -13,6 +13,9 @@ add_library(tg_io
     src/dxf_circle_arc.cpp
     src/dxf_ellipse.cpp
     src/dxf_hatch.cpp
+    src/dxf_attdef.cpp
+    src/dxf_insert.cpp
+    src/dxf_blocks.cpp
     src/dxf_extrusion.cpp
     src/dxf_entities.cpp
     src/dxf_read.cpp

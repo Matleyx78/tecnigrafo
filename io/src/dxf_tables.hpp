@@ -10,6 +10,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -77,6 +78,12 @@ public:
     void finish(std::vector<std::string>& warnings,
                 const std::unordered_set<std::uint64_t>& usedHandles);
 
+    /// The properties finish() gave an entity that named a record the file
+    /// lacks and was not in the document then (an entity of a block, an
+    /// attribute, an entity the reader adds after): nullptr for the others,
+    /// whose properties entityProperties() already set.
+    [[nodiscard]] const core::EntityProperties* resolvedProperties(core::EntityId id) const;
+
 private:
     struct PendingLayer {
         core::Layer layer;
@@ -110,6 +117,7 @@ private:
     std::uint64_t m_seed;  ///< the first free handle of the file, before any entity
     std::vector<PendingLayer> m_layers;
     std::vector<PendingEntity> m_entities;
+    std::unordered_map<std::uint64_t, core::EntityProperties> m_resolved;
     std::optional<std::string> m_currentLayer;
     std::optional<std::string> m_currentLinetype;
     std::optional<std::string> m_currentTextStyle;
