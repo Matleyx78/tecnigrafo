@@ -103,5 +103,8 @@ extern const EntityCodec kTextCodec;
 extern const EntityCodec kSolidCodec;
 extern const EntityCodec kEllipseCodec;
 extern const EntityCodec kHatchCodec;
+/// The INSERT alone: readItem() (dxf_blocks.hpp) adds its ATTRIB and SEQEND.
+extern const EntityCodec kInsertCodec;
+extern const EntityCodec kAttdefCodec;
 
 }  // namespace tg::io

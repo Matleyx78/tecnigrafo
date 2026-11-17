@@ -45,6 +45,12 @@ const EntityCodec* findCodec(std::string_view type) {
     if (type == "HATCH") {
         return &kHatchCodec;
     }
+    if (type == "INSERT") {
+        return &kInsertCodec;
+    }
+    if (type == "ATTDEF") {
+        return &kAttdefCodec;
+    }
     return nullptr;
 }
 
@@ -72,6 +78,12 @@ const EntityCodec* findCodec(const core::Entity& entity) {
     }
     if (std::holds_alternative<core::Hatch>(entity)) {
         return &kHatchCodec;
+    }
+    if (std::holds_alternative<core::Insert>(entity)) {
+        return &kInsertCodec;
+    }
+    if (std::holds_alternative<core::AttributeDefinition>(entity)) {
+        return &kAttdefCodec;
     }
     return nullptr;
 }
