@@ -327,6 +327,9 @@ def self_test():
         mtext = model.add_mtext("first\\Psecond", dxfattribs={"insert": (0, 5),
                                                                "char_height": 2.5,
                                                                "width": 20})
+        model.add_mtext("downward", dxfattribs={"insert": (0, 6),
+                                                "char_height": 2.5,
+                                                "extrusion": (0, 0, -1)})
         dimension = model.add_linear_dim(base=(0, 8), p1=(0, 0), p2=(5, 0),
                                          dimstyle="ISO-25")
         dimension.render()
@@ -350,6 +353,12 @@ def self_test():
                 "other stage types remain unhandled")
         require("HATCH 1" in solid_answers.answer("unhandled"),
                 "other stage types remain unhandled")
+
+        mtext_answers = DrawingAnswers(stage, {"MTEXT"})
+        require("MTEXT 1" in mtext_answers.answer("count"),
+                "upward MTEXT is managed")
+        require("MTEXT 1" in mtext_answers.answer("unhandled"),
+                "downward MTEXT is unhandled")
 
         insert_answers = DrawingAnswers(stage, {"ATTRIB", "INSERT"})
         for question in ("count", "unhandled"):

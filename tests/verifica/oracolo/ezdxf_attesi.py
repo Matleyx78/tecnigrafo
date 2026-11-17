@@ -161,7 +161,7 @@ def managed(entity, model_owner):
     if kind in {"ATTDEF", "ATTRIB"} and (d.height <= 0 or d.width <= 0
                                            or entity.has_embedded_mtext_entity):
         return False
-    if kind == "MTEXT" and (d.char_height <= 0 or entity.has_columns):
+    if kind == "MTEXT" and (d.char_height <= 0 or entity.has_columns or z != 1):
         return False
     if kind == "ELLIPSE" and (not 0 < d.ratio <= 1
                                or tuple(d.major_axis) == (0, 0, 0)):
