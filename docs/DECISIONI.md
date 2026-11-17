@@ -2024,6 +2024,20 @@ i rimandi ai documenti che cambia.
   non chiude la #706 e, per istruzione esplicita del responsabile, non avvia
   automaticamente il lavoro al merge. Dopo la revisione di Claude e il merge
   sarà il responsabile a far riprendere RT23 per scrivere i casi.
+- **2026-11-17 — Estensione a RT24 della fonte AutoCAD per le quote.** Dopo il
+  blocco di RT24 nella
+  [#708](https://github.com/Matleyx78/tecnigrafo/issues/708), il responsabile
+  estende a RT24 l’eccezione già concessa a RT23 per la grafica di
+  `autocad-quote.dxf` di
+  [dxf-test-file al commit `5170f1860953b5d076aa435bd65daa725d431745`](https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/autocad-quote.dxf).
+  Per le quote angolari, radiali e diametrali RT24 può leggere direttamente
+  con ezdxf i blocchi anonimi `*D`: `LINE`, `ARC` e `SOLID` danno la geometria,
+  `MTEXT` dà posizione, altezza, rotazione e testo; i `POINT` sono ignorati.
+  La pull request dei riferimenti pubblica lo script di estrazione e la sua
+  uscita insieme ai casi, così che i valori siano ricontrollabili. Resta
+  vietato eseguire Tecnigrafo per ricavare gli attesi. Scartata l’estensione
+  dell’oracolo in un pacchetto separato: la lettura indipendente autorizzata
+  non richiede modifiche all’oracolo né nuove dipendenze.
 - **2026-11-16 — Retini: chiusura dei contorni, domande dal documento, cerchio
   dei contorni a lati.** Su tre punti fermati da
   [PT30](tappe/0.8/PT30-retini-core.md) nella
