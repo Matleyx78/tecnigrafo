@@ -6,6 +6,7 @@ entities:
 messages:
   Command: OPEN
   Enter name of drawing to open: input.dxf
+  line 1: ignored 2 comment groups (999) outside any section
   Command: MIRROR
   Select objects: 0,5
   1 found, 1 total
