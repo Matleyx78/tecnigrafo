@@ -291,6 +291,38 @@ void writeTables(const core::Document& document, std::string& out) {
     if (document.lwdisplay() != kNewSession.lwdisplay()) {
         appendField("lwdisplay", onOff(document.lwdisplay()), out);
     }
+    std::vector<const core::TextStyle*> changedStyles;
+    const core::TextStyle* defaultStandard = kNewSession.textStyles().find("Standard");
+    for (const core::TextStyle& style : document.textStyles().styles()) {
+        const bool standardLike = core::sameTableName(style.name, "Standard") &&
+                                  defaultStandard != nullptr &&
+                                  style.font == defaultStandard->font &&
+                                  style.fixedHeight == defaultStandard->fixedHeight &&
+                                  style.widthFactor == defaultStandard->widthFactor &&
+                                  style.oblique == defaultStandard->oblique &&
+                                  style.backwards == defaultStandard->backwards &&
+                                  style.upsideDown == defaultStandard->upsideDown;
+        if (!standardLike) {
+            changedStyles.push_back(&style);
+        }
+    }
+    if (!changedStyles.empty()) {
+        appendLine("text styles:", out);
+        for (const core::TextStyle* style : changedStyles) {
+            const std::string line =
+                quoteText(style->name) + " font=" + quoteText(style->font) +
+                " height=" + formatNumber(style->fixedHeight) +
+                " width-factor=" + formatNumber(style->widthFactor) +
+                " oblique=" + formatNumber(core::radiansToDegrees(style->oblique)) +
+                " backwards=" + std::string{yesNo(style->backwards)} +
+                " upside-down=" + std::string{yesNo(style->upsideDown)};
+            appendItem(line, out);
+        }
+    }
+    if (!document.textStyles().current().empty() &&
+        !core::sameTableName(document.textStyles().current(), "Standard")) {
+        appendField("text style", quoteText(document.textStyles().current()), out);
+    }
 }
 
 /// The derived properties (names starting with '~'), last on the line,

@@ -97,6 +97,8 @@ private:
 
     void readLinetype(core::RawGroups record, std::size_t line, std::vector<std::string>& warnings);
     void readLayer(core::RawGroups record, std::size_t line, std::vector<std::string>& warnings);
+    bool readTextStyle(core::RawGroups record, std::size_t line,
+                       std::vector<std::string>& warnings);
     /// The handle of a record, or a new one from the counter, with a warning.
     [[nodiscard]] std::uint64_t recordHandle(core::RawGroups& record, std::string_view type,
                                              std::size_t line, std::vector<std::string>& warnings);
@@ -110,9 +112,12 @@ private:
     std::vector<PendingEntity> m_entities;
     std::optional<std::string> m_currentLayer;
     std::optional<std::string> m_currentLinetype;
+    std::optional<std::string> m_currentTextStyle;
+    core::TextStyleTable m_textStyles;
     core::CurrentProperties m_current;
     bool m_layerTable{false};     ///< the file has a LAYER table
     bool m_linetypeTable{false};  ///< the file has an LTYPE table
+    bool m_styleTable{false};     ///< the file has a STYLE table
     int m_missingLayers{0};
     int m_missingLinetypes{0};
     int m_duplicateLayers{0};

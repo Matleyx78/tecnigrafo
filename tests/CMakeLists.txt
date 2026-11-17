@@ -85,6 +85,7 @@ add_executable(tg_tests
     core/spatial_index_test.cpp
     core/text_metrics_test.cpp
     core/text_test.cpp
+    core/text_style_table_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
     edit/document_tables_test.cpp

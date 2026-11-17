@@ -821,7 +821,9 @@ TEST(DocumentTables, NewTablesAreReplacedWithoutTouchingTheEntities) {
     const std::vector<EntityRecord> before(document.entities().begin(), document.entities().end());
     const BBox extents = document.extents();
 
-    EXPECT_EQ(document.textStyles(), TextStyleTable{});
+    ASSERT_EQ(document.textStyles().styles().size(), 1U);
+    EXPECT_EQ(document.textStyles().styles().front().name, "Standard");
+    EXPECT_EQ(document.textStyles().current(), "Standard");
     EXPECT_EQ(document.dimStyles(), DimStyleTable{});
     EXPECT_TRUE(document.blocks().definitions().empty());
     document.replaceTextStyles(TextStyleTable{});
