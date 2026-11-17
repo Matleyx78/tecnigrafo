@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <span>
 #include <utility>
 #include <variant>
 
@@ -100,6 +101,21 @@ solid_space::robust::TolerancePolicy policyOf(const ToleranceRule& rule) {
     // (docs/tappe/0.7/P14-intersezioni.md): a diagnosis here is a bug.
     assert(policy.hasValue());
     return std::move(policy).value();
+}
+
+g::Polyline closedPolylineOf(const Polyline& polyline) {
+    Polyline closed = polyline;
+    closed.setClosed(true);
+    g::Polyline curve;
+    curve.closed = true;
+    curve.vertices.reserve(closed.vertexCount());
+    const std::span<const PolylineVertex> vertices = closed.vertices();
+    for (std::size_t i = 0; i < vertices.size(); ++i) {
+        const bool arc = i < closed.segmentCount() && closed.segment(i).isArc();
+        curve.vertices.push_back(
+            g::PolylineVertex{toPoint(vertices[i].position), arc ? vertices[i].bulge : 0.0});
+    }
+    return curve;
 }
 
 }  // namespace tg::core::bridge

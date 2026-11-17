@@ -845,5 +845,80 @@ TEST(Questions, GeneratedRejectsWrongArguments) {
     }
 }
 
+// docs/verifica/domande.md, "Retini (tappa 0.8)": two cases for each
+// question, in the form of the table.
+TEST(Questions, HatchBoundaryAnswersTheOutcomeOfTheDetection) {
+    const std::string square =
+        "E0 = LINE start=0,0 end=10,0\n"
+        "E1 = LINE start=10,0 end=10,10\n"
+        "E2 = LINE start=10,10 end=0,10\n"
+        "E3 = LINE start=0,10 end=0,0\n";
+    const std::vector<Answer> list =
+        answers(square + "E4 = CIRCLE center=5,5 radius=2\n" +
+                "? hatch-boundary 1,1 -> enclosed loop=external+derived+polyline vertex=0,0 "
+                "vertex=10,0 vertex=10,10 vertex=0,10 loop=outermost+derived+edges circle=5,5;2\n"
+                "? hatch-boundary 5,0 -> on-curve E0\n"
+                "? hatch-boundary -3,5 units=6 -> not-enclosed\n"
+                "P = LINE start=2,2 end=2,2\n"
+                "? hatch-boundary 0,5 -> on-curve E3 incomplete\n");
+    ASSERT_EQ(list.size(), 4U);
+    for (const Answer& answer : list) {
+        EXPECT_TRUE(answer.matches) << "line " << answer.line << ": " << answer.actual;
+    }
+    expectMatch(
+        "E0 = LINE start=0,0 end=10,0\n"
+        "E1 = LINE start=10,2e-06 end=10,10\n"
+        "E2 = LINE start=10,10 end=0,10\n"
+        "E3 = LINE start=0,10 end=0,0\n"
+        "? hatch-boundary 5,5 -> not-enclosed open=10,0 open=10,2e-06\n");
+    // A gap within the tolerance of millimetres is beyond that of kilometres.
+    const std::string gap =
+        "E0 = LINE start=0,0 end=10,0\n"
+        "E1 = LINE start=10,5e-07 end=10,10\n"
+        "E2 = LINE start=10,10 end=0,10\n"
+        "E3 = LINE start=0,10 end=0,0\n";
+    expectMatch(gap + "? hatch-boundary 10,2.5e-07 -> on-curve E0\n");
+    expectMatch(gap + "? hatch-boundary 5,5 units=7 -> not-enclosed open=10,0 open=10,5e-07\n");
+}
+
+TEST(Questions, HatchContoursAnswersTheLoopsThenTheEntitiesLeftOut) {
+    const std::string defined =
+        "Outer = LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10\n"
+        "Open = LWPOLYLINE vertex=1,1 vertex=2,1 vertex=1,2\n"
+        "Inner = CIRCLE center=5,5 radius=3\n"
+        "Line = LINE start=1,1 end=2,2\n"
+        "Triangle = LWPOLYLINE closed=yes vertex=4,4 vertex=6,4 vertex=5,6\n";
+    expectMatch(defined +
+                "? hatch-contours Outer Open Inner Line Triangle -> loop=external+polyline "
+                "vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10 loop=outermost+edges "
+                "circle=5,5;3 loop=polyline vertex=4,4 vertex=6,4 vertex=5,6 left-out=Open "
+                "left-out=Line\n");
+    expectMatch(defined + "? hatch-contours Line Open -> left-out=Line left-out=Open\n");
+    const std::vector<Answer> none = answers(defined + "? hatch-contours Line -> none\n");
+    ASSERT_EQ(none.size(), 1U);
+    EXPECT_FALSE(none[0].matches);
+    EXPECT_EQ(none[0].actual, "left-out=Line");
+}
+
+TEST(Questions, HatchQuestionsRejectWrongArguments) {
+    const std::string defined = "L = LINE start=0,0 end=10,0\n";
+    for (const std::string_view question : {
+             "hatch-boundary",
+             "hatch-boundary x",
+             "hatch-boundary 1,1 units=25",
+             "hatch-boundary 1,1 units=1.5",
+             "hatch-boundary 1,1 fuzz=2",
+             "hatch-boundary 1,1 units=4 units=4",
+             "hatch-contours",
+             "hatch-contours X",
+         }) {
+        const std::string text = defined + "? " + std::string{question} + " -> none\n";
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, 2) << question;
+        EXPECT_FALSE(error.message.empty()) << question;
+        EXPECT_FALSE(error.notImplemented) << question;
+    }
+}
+
 }  // namespace
 }  // namespace tg::script
