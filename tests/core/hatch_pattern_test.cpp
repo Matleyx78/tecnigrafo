@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include "tg/core/block_table.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/document_query.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/hatch_patterns.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
@@ -18,6 +20,7 @@
 #include <cstdint>
 #include <numbers>
 #include <optional>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -446,6 +449,67 @@ TEST(HatchPattern, TheLinesGiveNoSnapPoints) {
         SCOPED_TRACE(pointer.x);
         EXPECT_EQ(findSnap(document, pointer, 1.0, every, Vec2{20, 20}), std::nullopt);
     }
+}
+
+EntityRecord member(const Document& document, Entity entity) {
+    EntityRecord record{EntityId{}, std::move(entity)};
+    record.properties.layer = document.layerZero();
+    record.properties.linetype = document.byLayerLinetype();
+    return record;
+}
+
+Insert insertOf(std::string name, const Vec2& insertion) {
+    Insert insert;
+    insert.block = std::move(name);
+    insert.insertion = insertion;
+    return insert;
+}
+
+TEST(HatchPattern, TheLinesInsideABlockGiveNoSnapPoints) {
+    // docs/adr/0048, point 4, through an insert. The block "Net" holds the
+    // NET hatch of TheLinesGiveNoSnapPoints; the block "Outer" inserts "Net"
+    // at its base and adds the line (0, -5)-(10, -5).
+    Document document = Document::newDrawing();
+    BlockDefinition net{"Net"};
+    net.entities.push_back(member(document, metricHatch("NET", {rectangleLoop({0, 0}, {10, 10})})));
+    document.replaceBlock("Net", std::move(net));
+    BlockDefinition outer{"Outer"};
+    outer.entities.push_back(member(document, insertOf("Net", {0, 0})));
+    outer.entities.push_back(member(document, Line{{0, -5}, {10, -5}}));
+    document.replaceBlock("Outer", std::move(outer));
+    const EntityId direct = document.add(insertOf("Net", {100, 0}));
+    const EntityId nested = document.add(insertOf("Outer", {0, 0}));
+    SnapModes every;
+    every.perpendicular = true;
+    every.tangent = true;
+    every.quadrant = true;
+
+    // The lines are still drawn.
+    EXPECT_FALSE(generate(document, *document.find(direct)).empty());
+    EXPECT_GT(generate(document, *document.find(nested)).size(), 1U);
+
+    // Only the insertion point of "Net"; for "Outer" the points of the line.
+    std::vector<SnapPoint> points;
+    appendSnapPoints(document, *document.find(direct), every, points, Vec2{120, 20});
+    ASSERT_EQ(points.size(), 1U);
+    EXPECT_EQ(points.front().kind, SnapKind::Insertion);
+    EXPECT_EQ(points.front().point, (Vec2{100, 0}));
+    points.clear();
+    appendSnapPoints(document, *document.find(nested), every, points, Vec2{20, 20});
+    EXPECT_FALSE(points.empty());
+    for (const SnapPoint& snap : points) {
+        SCOPED_TRACE(snap.point.x);
+        EXPECT_TRUE(snap.kind == SnapKind::Insertion || snap.point.y == -5.0);
+    }
+
+    for (const Vec2& pointer : {Vec2{103.175, 3.175}, Vec2{105, 0}, Vec2{110, 10},
+                                Vec2{3.175, 3.175}, Vec2{5, 0}, Vec2{10, 10}}) {
+        SCOPED_TRACE(pointer.x);
+        EXPECT_EQ(findSnap(document, pointer, 1.0, every, Vec2{20, 20}), std::nullopt);
+    }
+    // The line of "Outer" still snaps.
+    EXPECT_EQ(findSnap(document, {10, -5.1}, 1.0, every, Vec2{20, 20}),
+              (SnapPoint{{10, -5}, SnapKind::Endpoint}));
 }
 
 }  // namespace

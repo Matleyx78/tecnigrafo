@@ -3,10 +3,12 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "insert_snap.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/fillet.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/intersections.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
@@ -305,7 +307,12 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                 consider(rowDistance, id.value);
             }
         } else {
-            for (const GeneratedItem& item : generate(document, record)) {
+            // Through an insert the hatches of its blocks give nothing either.
+            const auto* insert = std::get_if<Insert>(&record.entity);
+            const std::vector<GeneratedItem> items = insert != nullptr
+                                                         ? snapItemsOf(document, record, *insert)
+                                                         : generate(document, record);
+            for (const GeneratedItem& item : items) {
                 if (std::optional<Entity> shape = shapeEntity(item.shape)) {
                     generatedShapes.push_back(std::move(*shape));
                     considerShape(generatedShapes.back(), id.value);
