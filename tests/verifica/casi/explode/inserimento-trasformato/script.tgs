@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT29 / PT29 (#719): EXPLODE keeps a block entity's own properties and
+; applies the insertion similarity. Coordinates are calculated by hand:
+; scale 2, rotate 90 degrees, then translate by (20,10).
+LINE
+0,0
+10,0
+
+-BLOCK
+Pezzo
+0,0
+5,0
+
+-INSERT
+Pezzo
+Scale
+2
+Rotate
+90
+20,10
+; cambia con #719
+EXPLODE
+20,20
+
+!report
+U
