@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+Properties = DIMENSION kind=linear origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=0,0 measurement=0 text=" " overrides=DIMCLRD:1,DIMCLRE:3,DIMLWD:50,DIMLWE:70
+? generated Properties -> LINE start=0,0.625 end=0,11.25 color=0,255,0 lineweight=0.7; LINE start=40,0.625 end=40,11.25 color=0,255,0 lineweight=0.7; LINE start=2.5,10 end=37.5,10 color=255,0,0 lineweight=0.5; SOLID vertex=2.5,10.41666666666667 vertex=2.5,9.583333333333334 vertex=0,10 vertex=0,10 color=255,0,0 lineweight=0.5; SOLID vertex=37.5,10.41666666666667 vertex=37.5,9.583333333333334 vertex=40,10 vertex=40,10 color=255,0,0 lineweight=0.5
