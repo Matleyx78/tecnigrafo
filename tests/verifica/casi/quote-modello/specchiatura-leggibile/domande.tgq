@@ -1,0 +1,12 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+Mirror = DIMENSION kind=linear origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=15,8 measurement=0 user-text-position=yes
+? transform Mirror mirror 0,0 1,0 mirrtext=0 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,-10 rotation=0 text-point=15,-8 measurement=40 user-text-position=yes
+? transform Mirror mirror 0,0 1,0 mirrtext=1 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,-10 rotation=0 text-point=15,-8 measurement=40 user-text-position=yes

@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+Zero = DIMENSION kind=linear origin1=0,0 origin2=0,10 line-point=0,20 rotation=0 text-point=15,8 measurement=0 user-text-position=yes overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated Zero -> TEXT position=13.98953158268275,6.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="0" ~box=13.98953158268275,5.979950319375444;16.01046841731725,5.979950319375444;16.01046841731725,10.03956706884315;13.98953158268275,10.03956706884315
+? transform Zero move 1,2 -> DIMENSION kind=linear style="ISO-25" origin1=1,2 origin2=1,12 line-point=1,22 rotation=0 text-point=16,10 measurement=0 user-text-position=yes overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+Coincide = DIMENSION kind=aligned origin1=0,0 origin2=24,18 line-point=24,28 text-point=0,0 measurement=0
+? grip Coincide 24,18 0,0 -> invalid
+? grip Coincide 0,0 24,18 -> invalid
+? grip Coincide 123,456 0,0 -> none
