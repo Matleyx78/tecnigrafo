@@ -374,7 +374,7 @@ void Document::replaceTextStyles(TextStyleTable table) {
 }
 
 void Document::replaceDimStyles(DimStyleTable table) {
-    m_dimStyles = table;
+    m_dimStyles = std::move(table);
 }
 
 void Document::replaceBlock(std::string name, std::optional<BlockDefinition> definition) {

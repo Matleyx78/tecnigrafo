@@ -233,13 +233,14 @@ void writeDimOverrides(core::RawGroups& extras, const DimOverrides& overrides,
 /// Continuous, or one of these with a pattern or extras.
 [[nodiscard]] bool needsLinetypeTable(const core::Document& document);
 
-/// The HEADER groups `header` with the values of the document for
+/// The HEADER groups `source` with the values of the document for
 /// $CLAYER, $CECOLOR, $CELTYPE, $CELWEIGHT, $CELTSCALE, $LTSCALE,
-/// $LWDISPLAY and $LWDEFAULT. A value read and not changed keeps its
+/// $LWDISPLAY and $LWDEFAULT, and for the $DIM… variables as
+/// headerDimVariables() gives them. A value read and not changed keeps its
 /// spelling; a variable the header lacks is added at the end when `addAll`
 /// (a new drawing or a conversion) or when the document's value differs
 /// from that of a new drawing.
-[[nodiscard]] core::RawGroups headerProperties(const core::RawGroups& header,
+[[nodiscard]] core::RawGroups headerProperties(const core::RawGroups& source,
                                                const core::Document& document, bool addAll);
 
 /// The objects of the DXF skeleton of a new drawing, with the fixed handles

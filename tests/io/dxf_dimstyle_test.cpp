@@ -61,7 +61,7 @@ RawGroups dimStyleTable(const RawGroups& all) {
     for (std::size_t i = 0; i + 1 < all.size(); ++i) {
         if (all[i].code == 0 && all[i].value == "TABLE" && all[i + 1].value == "DIMSTYLE") {
             std::size_t end = i;
-            while (end < all.size() && !(all[end].code == 0 && all[end].value == "ENDTAB")) {
+            while (end < all.size() && (all[end].code != 0 || all[end].value != "ENDTAB")) {
                 ++end;
             }
             return {all.begin() + static_cast<std::ptrdiff_t>(i),
@@ -226,7 +226,7 @@ TEST(DxfDimStyle, WithoutStandardAndCurrentStyleStandardIsCreated) {
     EXPECT_TRUE(partOf(groupsOf(written), 9, "$DIMSTYLE").empty());
 
     // A table without Standard but with the current style: nothing is created.
-    std::string iso = autocadDrawing({{9, "$DIMSTYLE"}, {2, "ISO-25"}});
+    const std::string iso = autocadDrawing({{9, "$DIMSTYLE"}, {2, "ISO-25"}});
     const auto withIso = readOk(iso);
     EXPECT_EQ(withIso.document.dimStyles().styles().size(), 3U);
     EXPECT_EQ(withIso.document.dimStyles().current(), "ISO-25");
@@ -361,7 +361,7 @@ TEST(DxfDimStyle, ARecordWithoutHandleGetsOneWithAWarning) {
 }
 
 TEST(DxfDimStyle, TheOverridesOfADimensionAreReadAndWritten) {
-    core::Document document = core::Document::newDrawing();
+    const core::Document document = core::Document::newDrawing();
     const core::TextStyleTable& styles = document.textStyles();
     const std::string standard = handleText(core::start_handles::kStyleStandard);
     RawGroups extras{

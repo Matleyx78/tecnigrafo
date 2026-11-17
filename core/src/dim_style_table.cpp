@@ -330,7 +330,7 @@ bool DimStyleTable::regenerable(const RawGroups& extras) {
     constexpr std::array<std::int16_t, 3> kNames{5, 6, 7};
     constexpr std::array<std::int16_t, 4> kHandles{341, 342, 343, 344};
     for (const auto& group : extras) {
-        const auto number = std::ranges::find(kNumbers, group.code, &Number::code);
+        const auto* const number = std::ranges::find(kNumbers, group.code, &Number::code);
         if (number != kNumbers.end()) {
             const auto value = numberOf(group.value);
             if (!value || *value != number->iso25) {

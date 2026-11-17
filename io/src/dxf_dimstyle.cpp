@@ -191,8 +191,8 @@ bool TableReader::readDimStyle(core::RawGroups record, std::size_t line,
     const auto handle = firstOwn(record, ownGroups(record), kHandleCode);
     const auto read = handle ? parseHandle(record[*handle].value) : std::nullopt;
     style.id = read && *read != 0 ? *read : newRecordHandle("DIMSTYLE", line, warnings);
-    record.erase(record.begin() +
-                 static_cast<std::ptrdiff_t>(*firstOwn(record, ownGroups(record), 2)));
+    // The record has not changed since at2 was found.
+    record.erase(record.begin() + static_cast<std::ptrdiff_t>(*at2));
     style.extras = std::move(record);
     m_dimStyles.put(std::move(style), m_document);
     return true;
@@ -412,16 +412,16 @@ core::RawGroups headerDimVariables(const core::RawGroups& header, const core::Do
         out.push_back(group);
         const core::DimValue value = core::dimValue(current, info->name);
         bool written = false;
-        for (const auto& value_group : read) {
-            if (value_group.code == info->headerCode && !written) {
+        for (const auto& valueGroup : read) {
+            if (valueGroup.code == info->headerCode && !written) {
                 written = true;
                 const bool same = info->name == "DIMTXSTY"
-                                      ? value_group.value == std::get<std::string>(value)
-                                      : says(*info, value_group.value, value);
-                out.push_back(same ? value_group
+                                      ? valueGroup.value == std::get<std::string>(value)
+                                      : says(*info, valueGroup.value, value);
+                out.push_back(same ? valueGroup
                                    : core::RawGroup{info->headerCode, valueText(*info, value)});
             } else {
-                out.push_back(value_group);
+                out.push_back(valueGroup);
             }
         }
         if (!written) {
