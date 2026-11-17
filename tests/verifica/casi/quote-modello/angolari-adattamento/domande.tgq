@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Four fit branches: L is arc length, not the chord. Probes are strictly
+; inside a tangent arrow and outside the arc on the opposite side.
+; Case 2 has L=8, a=2 and text+gaps=7 exactly as required by PT24.
+; Literal X width is its hmtx advance divided by capital height times DIMTXT.
+
+BothIn = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=14.14213562373095,14.14213562373095 text-point=0,0 measurement=0 overrides=DIMASZ:2,DIMGAP:0.5,DIMTXT:2.5 text="X"
+? distance BothIn 20.05,1 -> 0
+? crosses BothIn 20.045,-1.005 20.055,-0.995 -> no
+TextIn = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=3.601265264628424,3.601265264628424 text-point=0,0 measurement=0 overrides=DIMASZ:2,DIMGAP:1,DIMTXT:5.157393850658858 text="X"
+? distance TextIn 5.142958178940651,-1 -> 0
+? crosses TextIn 5.137958178940651,0.995 5.147958178940651,1.005 -> no
+Suppressed = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=3.601265264628424,3.601265264628424 text-point=0,0 measurement=0 overrides=DIMASZ:2,DIMGAP:1,DIMSD1:1,DIMTXT:5.157393850658858 text="X"
+? distance Suppressed -1,5.142958178940651 -> 0
+? crosses Suppressed 5.132958178940651,-1.01 5.152958178940651,-0.99 -> no
+ArrowsIn = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=3.601265264628424,3.601265264628424 text-point=0,0 measurement=0 overrides=DIMASZ:2,DIMGAP:1,DIMTXT:2.5 text="WWWWW"
+? distance ArrowsIn 5.142958178940651,1 -> 0
+? crosses ArrowsIn 5.137958178940651,-1.005 5.147958178940651,-0.995 -> no
+BothOut = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=0.7071067811865475,0.7071067811865475 text-point=0,0 measurement=0 overrides=DIMASZ:2,DIMGAP:1,DIMTXT:2.5 text="WWWWW"
+? distance BothOut 1.05,-1 -> 0
+? crosses BothOut 1.045,0.995 1.055,1.005 -> no

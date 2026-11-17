@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Endpoints 1 and 2 lie short of the arc R=10; EXO=0.5, EXE=1.
+A = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;1,0 second=0,0;0,2 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMEXE:1,DIMEXO:0.5
+? distance A 5,0 -> 0
+? distance A 0,7 -> 0
+? distance A 11,0 -> 0
+? distance A 0,11 -> 0
+? crosses A 1.1,-0.05 1.4,0.05 -> no
+? crosses A -0.05,2.1 0.05,2.4 -> no
+? crosses A 11.1,-0.05 11.5,0.05 -> no
+; A line which already reaches beyond the arc has no extension.
+Long = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0
+? generated Long -> ARC center=0,0 radius=10 start-angle=0 end-angle=90
+; The two extension suppressions act independently.
+S1 = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;1,0 second=0,0;0,2 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMEXE:1,DIMEXO:0.5,DIMSE1:1
+? crosses S1 4,-0.05 5,0.05 -> no
+? distance S1 0,7 -> 0
+S2 = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;1,0 second=0,0;0,2 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMEXE:1,DIMEXO:0.5,DIMSE2:1
+? distance S2 5,0 -> 0
+? crosses S2 -0.05,4 0.05,5 -> no

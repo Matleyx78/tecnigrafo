@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; A point exactly on a ray belongs to the next counter-clockwise sector.
+
+R0 = DIMENSION kind=angular style="ISO-25" line-point=0,-100 first=-100,0;100,0 second=0,-100;0,100 arc-point=10,0 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated R0 -> ARC center=0,0 radius=10 start-angle=0 end-angle=90
+R1 = DIMENSION kind=angular style="ISO-25" line-point=0,-100 first=-100,0;100,0 second=0,-100;0,100 arc-point=0,10 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated R1 -> ARC center=0,0 radius=10 start-angle=90 end-angle=180
+R2 = DIMENSION kind=angular style="ISO-25" line-point=0,-100 first=-100,0;100,0 second=0,-100;0,100 arc-point=-10,0 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated R2 -> ARC center=0,0 radius=10 start-angle=180 end-angle=270
+R3 = DIMENSION kind=angular style="ISO-25" line-point=0,-100 first=-100,0;100,0 second=0,-100;0,100 arc-point=0,-10 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated R3 -> ARC center=0,0 radius=10 start-angle=270 end-angle=0

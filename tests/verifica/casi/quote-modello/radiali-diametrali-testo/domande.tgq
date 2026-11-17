@@ -1,0 +1,34 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Suppress both dimension-line halves/arrows and center marks to isolate text.
+; Explicit text position is a center, including with TAD=1; TOH/TIH select
+; horizontal text according to whether the text is outside or inside.
+
+Outside = DIMENSION kind=radius center=0,0 point=30,40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMSD1:1,DIMSD2:1,DIMTOH:1
+? generated Outside -> TEXT position=56.66696238466998,78.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R50" ~box=56.66696238466998,77.97995031937545;63.33303761533002,77.97995031937545;63.33303761533002,82.03956706884316;56.66696238466998,82.03956706884316
+
+Inside = DIMENSION kind=radius center=0,0 point=30,40 text-point=12,16 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMSD1:1,DIMSD2:1,DIMTIH:1
+? generated Inside -> TEXT position=8.666962384669979,14.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R50" ~box=8.666962384669979,13.97995031937544;15.33303761533002,13.97995031937544;15.33303761533002,18.03956706884315;8.666962384669979,18.03956706884315
+
+Aligned = DIMENSION kind=radius center=0,0 point=30,40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMSD1:1,DIMSD2:1
+? generated Aligned -> TEXT position=59.00017743080199,76.58356990773598 alignment-point=0,0 height=2.5 rotation=53.13010235415598 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R50" ~box=59.61621717530164,76.12154009936124;63.61586231369766,81.45440028388927;60.36816891412349,83.8901703335699;56.36852377572747,78.55731014904187
+
+ExplicitZero = DIMENSION kind=radius center=0,0 point=30,40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMSD1:1,DIMSD2:1 text-rotation=0
+? generated ExplicitZero -> TEXT position=56.66696238466998,78.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R50" ~box=56.66696238466998,77.97995031937545;63.33303761533002,77.97995031937545;63.33303761533002,82.03956706884316;56.66696238466998,82.03956706884316
+
+ExplicitAngle = DIMENSION kind=radius center=0,0 point=30,40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMSD1:1,DIMSD2:1,DIMTOH:1 text-rotation=30
+? generated ExplicitAngle -> TEXT position=57.73850475335509,77.25094943760443 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R50" ~box=58.12352959366737,76.58406685200747;63.89652008695718,79.91710446733748;61.86671171222333,83.43283570200533;56.09372121893352,80.09979808667532
+
+ScaledValue = DIMENSION kind=radius center=0,0 point=30,40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMLFAC:2,DIMRND:4,DIMSD1:1,DIMSD2:1 text-rotation=0
+? generated ScaledValue -> TEXT position=55.65649396735273,78.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R100" ~box=55.65649396735273,77.97995031937545;64.34350603264727,77.97995031937545;64.34350603264727,82.03956706884316;55.65649396735273,82.03956706884316
+
+Diameter = DIMENSION kind=diameter point1=30,40 point2=-30,-40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMLFAC:0.5,DIMSD1:1,DIMSD2:1,DIMTOH:1
+? generated Diameter -> TEXT position=56.56582682753726,78.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="⌀50" ~box=56.56582682753726,77.97995031937545;63.43417317246274,77.97995031937545;63.43417317246274,82.03956706884316;56.56582682753726,82.03956706884316
+
+Substitution = DIMENSION kind=radius center=0,0 point=30,40 text-point=60,80 measurement=0 user-text-position=yes overrides=DIMCEN:0,DIMSD1:1,DIMSD2:1,DIMTOH:1 text="<> mm"
+? generated Substitution -> TEXT position=53.13520227111427,78.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R50 mm" ~box=53.13520227111427,77.97995031937545;66.86479772888573,77.97995031937545;66.86479772888573,82.03956706884316;53.13520227111427,82.03956706884316

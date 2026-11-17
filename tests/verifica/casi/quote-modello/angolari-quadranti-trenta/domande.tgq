@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Selected sectors are [0,90), [90,180), [180,270), [270,360) for orthogonal lines.
+; For the 30-degree line they are [0,30), [30,180), [180,210), [210,360).
+; R=10; generated ARC angles are degrees. Stored group 42 uses radians (ADR 0004/DXF).
+
+Q1 = DIMENSION kind=angular style="ISO-25" line-point=-86.60254037844386,-50 first=-100,0;100,0 second=-86.60254037844386,-50;86.60254037844386,50 arc-point=9.659258262890683,2.588190451025207 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated Q1 -> ARC center=0,0 radius=10 start-angle=0 end-angle=30
+? transform Q1 move 1,2 -> DIMENSION kind=angular style="ISO-25" line-point=-85.60254037844386,-48 first=-99,2;101,2 second=-85.60254037844386,-48;87.60254037844386,52 arc-point=10.65925826289068,4.588190451025207 text-point=101,102 measurement=0.5235987755982988 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+
+Q2 = DIMENSION kind=angular style="ISO-25" line-point=-86.60254037844386,-50 first=-100,0;100,0 second=-86.60254037844386,-50;86.60254037844386,50 arc-point=-5,8.660254037844386 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated Q2 -> ARC center=0,0 radius=10 start-angle=30 end-angle=180
+? transform Q2 move 1,2 -> DIMENSION kind=angular style="ISO-25" line-point=-85.60254037844386,-48 first=-99,2;101,2 second=-85.60254037844386,-48;87.60254037844386,52 arc-point=-4,10.66025403784439 text-point=101,102 measurement=2.617993877991494 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+
+Q3 = DIMENSION kind=angular style="ISO-25" line-point=-86.60254037844386,-50 first=-100,0;100,0 second=-86.60254037844386,-50;86.60254037844386,50 arc-point=-9.659258262890683,-2.588190451025207 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated Q3 -> ARC center=0,0 radius=10 start-angle=180 end-angle=210
+? transform Q3 move 1,2 -> DIMENSION kind=angular style="ISO-25" line-point=-85.60254037844386,-48 first=-99,2;101,2 second=-85.60254037844386,-48;87.60254037844386,52 arc-point=-8.659258262890683,-0.588190451025207 text-point=101,102 measurement=0.5235987755982988 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+
+Q4 = DIMENSION kind=angular style="ISO-25" line-point=-86.60254037844386,-50 first=-100,0;100,0 second=-86.60254037844386,-50;86.60254037844386,50 arc-point=5,-8.660254037844386 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated Q4 -> ARC center=0,0 radius=10 start-angle=210 end-angle=0
+? transform Q4 move 1,2 -> DIMENSION kind=angular style="ISO-25" line-point=-85.60254037844386,-48 first=-99,2;101,2 second=-85.60254037844386,-48;87.60254037844386,52 arc-point=6,-6.660254037844386 text-point=101,102 measurement=2.617993877991494 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
