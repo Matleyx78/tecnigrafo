@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten DXF: one model-space line, INSBASE (100,120), millimetres.
+I = BLOCK-IMPORT file=Pezzo.dxf target-units=6
+? import-error I -> none
+? import-definition I -> name="Pezzo" base=0,0 units=4 entities=[1 LINE start=0,0 end=10,0]
+? import-nested I -> none
+? import-layers I -> none
+? import-linetypes I -> none
+? import-text-styles I -> none
+? import-dim-styles I -> none
+? import-unit-factor I -> 0.001
+? import-next-id I -> 2
+? import-groups I 1 -> 5="1"

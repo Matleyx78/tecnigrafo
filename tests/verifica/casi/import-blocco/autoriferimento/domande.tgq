@@ -1,0 +1,5 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Handwritten DXF: importing self.dxf would make block self insert itself.
+I = BLOCK-IMPORT file=self.dxf
+? import-error I -> "Block \"self\" references itself."
