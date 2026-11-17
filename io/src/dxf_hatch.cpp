@@ -248,7 +248,8 @@ std::optional<core::EntityRecord> readHatch(const core::RawGroups& groups,
         hatch.seeds.push_back(extrusion == Extrusion::Down ? flipX(*seed) : *seed);
     }
     while (!read.done()) {
-        if (read.current().code == 450 && parseNumber(read.current().value).value_or(0) != 0) {
+        if (read.current().code == 450 &&
+            parseNumber(trimDxf(read.current().value)).value_or(0) != 0) {
             return std::nullopt;
         }
         parts.extras.specific.push_back(read.current());
