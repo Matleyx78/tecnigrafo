@@ -58,6 +58,7 @@ add_executable(tg_tests
     core/offset_test.cpp
     core/pedit_join_test.cpp
     core/arc_test.cpp
+    core/ellipse_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
     core/curve_parts_test.cpp
@@ -92,6 +93,7 @@ add_executable(tg_tests
     io/dxf_lwpolyline_test.cpp
     io/dxf_text_test.cpp
     io/dxf_line_circle_arc_test.cpp
+    io/dxf_ellipse_test.cpp
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp

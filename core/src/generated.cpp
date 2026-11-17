@@ -285,14 +285,42 @@ bool regionIntersects(const FilledRegion& region, const BBox& rectangle) {
            regionFilledAt(region, rectangle.min());
 }
 
+/// The exact ellipse that `transform` makes of a circle, an arc or an
+/// ellipse (docs/adr/0052, point 2), or std::nullopt for the other shapes.
+/// Nothing for a singular map, whose image is not an ellipse.
+std::optional<std::vector<GeneratedShape>> transformedConic(const GeneratedShape& shape,
+                                                            const Transform2D& transform) {
+    std::optional<Ellipse> ellipse;
+    if (const auto* circle = std::get_if<Circle>(&shape)) {
+        ellipse = asEllipse(*circle);
+    } else if (const auto* arc = std::get_if<Arc>(&shape)) {
+        ellipse = asEllipse(*arc);
+    } else if (const auto* own = std::get_if<Ellipse>(&shape)) {
+        ellipse = *own;
+    }
+    if (!ellipse) {
+        return std::nullopt;
+    }
+    const Ellipse result = transformed(*ellipse, transform);
+    if (!supported(result)) {
+        return std::vector<GeneratedShape>{};
+    }
+    return std::vector<GeneratedShape>{result};
+}
+
 }  // namespace
 
 std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
                                              const Transform2D& transform) {
+    if (std::holds_alternative<Ellipse>(shape)) {
+        // Every affine map, similarities included, on the same exact path.
+        return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
+    }
     const std::optional<Similarity> similarity = similarityOf(transform);
     if (!similarity) {
-        // The other affine maps: docs/tappe/0.8, PT48, PT17 and PT16.
-        return {};
+        // Circles and arcs become ellipses; the other shapes wait for
+        // docs/tappe/0.8, PT17 (text) and PT16 (the rest).
+        return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
     }
     if (const auto* region = std::get_if<FilledRegion>(&shape)) {
         return {FilledRegion{region->loops, transform * region->transform}};

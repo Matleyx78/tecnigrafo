@@ -16,6 +16,9 @@ struct EntityReadContext {
     core::EntityId modelSpace;
     core::EntityId id;
     std::uint64_t order{0};
+    /// INSUNITS of the drawing, for the tolerance rule of a codec
+    /// (core::ToleranceRule); 0 when the file has none.
+    int units{0};
 };
 
 struct EntityWriteContext {

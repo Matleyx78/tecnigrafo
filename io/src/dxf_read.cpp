@@ -221,7 +221,8 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
         }
         raw.sections.push_back(std::move(section));
     }
-    EntityReadContext context{raw.version, raw.codePage, modelSpaceHandle(raw), {}, 0};
+    EntityReadContext context{raw.version, raw.codePage,           modelSpaceHandle(raw), {},
+                              0,           result.document.units()};
     for (const auto& range : parsed.value()) {
         if (range.name != "ENTITIES") {
             continue;

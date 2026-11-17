@@ -282,10 +282,10 @@ TEST(Generated, TransformedShapeTakesSimilaritiesThroughTransformed) {
 }
 
 TEST(Generated, OtherAffineMapsWaitForTheirPackages) {
-    // docs/tappe/0.8: PT48 (circles, arcs, ellipses), PT17 (text), PT16 (the rest).
+    // docs/tappe/0.8: PT17 (text), PT16 (the rest); circles, arcs and
+    // ellipses are PT48's (ellipse_test.cpp).
     const Transform2D stretch = Transform2D::scaling(2.0, 1.0);
     EXPECT_TRUE(transformedShape(Line{{0, 0}, {1, 1}}, stretch).empty());
-    EXPECT_TRUE(transformedShape(Circle{{0, 0}, 1.0}, stretch).empty());
     // A degenerate map is not a similarity either.
     EXPECT_TRUE(
         transformedShape(Line{{0, 0}, {1, 1}}, Transform2D{0.0, 0.0, 0.0, 0.0, 1.0, 1.0}).empty());
