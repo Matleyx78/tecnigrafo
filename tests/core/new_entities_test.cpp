@@ -138,6 +138,9 @@ TEST(NewEntities, DefaultsFollowTheDxfDefaults) {
 
 TEST(NewEntities, AreNotSupportedYet) {
     for (const Entity& entity : newEntities()) {
+        if (std::holds_alternative<Solid>(entity)) {
+            continue;
+        }
         if (std::holds_alternative<Ellipse>(entity)) {
             continue;  // its package is merged (docs/tappe/0.8, PT48)
         }
