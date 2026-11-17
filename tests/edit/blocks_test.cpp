@@ -75,6 +75,50 @@ TEST(BlocksTest, RedefinitionUpdatesInsertExtentAndUndoRestoresIt) {
     EXPECT_EQ(afterUndo.max(), before.max());
 }
 
+TEST(BlocksTest, RedefinitionPreservesDefinitionDataAndUndoRestoresOriginal) {
+    core::Document document = core::Document::newDrawing();
+    core::BlockDefinition original{"Part"};
+    original.base = {1, 2};
+    original.description = "Imported part";
+    original.units = 4;
+    original.explodable = false;
+    original.uniformScale = true;
+    original.entities.push_back({core::EntityId{100}, core::Line{{0, 0}, {1, 0}}});
+    original.recordId = 101;
+    original.blockId = 102;
+    original.endBlockId = 103;
+    original.recordExtras = {{1001, "APP"}, {1000, "record data"}};
+    document.replaceBlock("Part", original);
+    Editor editor(document);
+    editor.beginTransaction("Line");
+    const core::EntityId replacement = editor.add(core::Line{{2, 3}, {8, 9}});
+    editor.commit();
+
+    editor.beginTransaction("Block");
+    ASSERT_TRUE(defineBlock(editor, "part", {3, 4}, std::span{&replacement, 1U}));
+    editor.commit();
+
+    const core::BlockDefinition* redefined = document.blocks().find("Part");
+    ASSERT_NE(redefined, nullptr);
+    EXPECT_EQ(redefined->name, original.name);
+    EXPECT_EQ(redefined->base, (core::Vec2{3, 4}));
+    ASSERT_EQ(redefined->entities.size(), 1U);
+    EXPECT_EQ(redefined->entities.front().id, replacement);
+    EXPECT_EQ(redefined->description, original.description);
+    EXPECT_EQ(redefined->units, original.units);
+    EXPECT_EQ(redefined->explodable, original.explodable);
+    EXPECT_EQ(redefined->uniformScale, original.uniformScale);
+    EXPECT_EQ(redefined->recordId, original.recordId);
+    EXPECT_EQ(redefined->blockId, original.blockId);
+    EXPECT_EQ(redefined->endBlockId, original.endBlockId);
+    EXPECT_EQ(redefined->recordExtras, original.recordExtras);
+
+    ASSERT_TRUE(editor.undo());
+    ASSERT_NE(document.blocks().find("Part"), nullptr);
+    EXPECT_EQ(*document.blocks().find("Part"), original);
+    EXPECT_NE(document.find(replacement), nullptr);
+}
+
 TEST(BlocksTest, RejectsDirectAndIndirectCyclesWithoutChanges) {
     core::Document document = core::Document::newDrawing();
     core::BlockDefinition child{"Child"};

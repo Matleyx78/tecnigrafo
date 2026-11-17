@@ -15,7 +15,12 @@ namespace tg::edit {
 bool defineBlock(Editor& editor, std::string name, const core::Vec2& base,
                  std::span<const core::EntityId> ids) {
     core::BlockDefinition definition{std::move(name)};
+    if (const core::BlockDefinition* existing = editor.document().blocks().find(definition.name)) {
+        definition = *existing;
+    }
     definition.base = base;
+    definition.entities.clear();
+    definition.rawEntities.clear();
     definition.entities.reserve(ids.size());
     for (const core::EntityId id : ids) {
         if (const core::EntityRecord* record = editor.document().find(id)) {
