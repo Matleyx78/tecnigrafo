@@ -99,6 +99,7 @@ add_executable(tg_tests
     edit/layer_rules_test.cpp
     io/dxf_lwpolyline_test.cpp
     io/dxf_text_test.cpp
+    io/dxf_mtext_test.cpp
     io/dxf_line_circle_arc_test.cpp
     io/dxf_solid_test.cpp
     io/dxf_ellipse_test.cpp
