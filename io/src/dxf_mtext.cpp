@@ -48,7 +48,7 @@ bool isColumnData(const core::RawGroup& group) {
 std::optional<core::EntityRecord> readMText(const core::RawGroups& groups,
                                             EntityReadContext& context) {
     const Extrusion extrusion = entityExtrusion(groups);
-    if (extrusion == Extrusion::Other) {
+    if (extrusion != Extrusion::Up) {
         return std::nullopt;
     }
     auto parts = splitEntityGroups(groups);
@@ -169,11 +169,6 @@ std::optional<core::EntityRecord> readMText(const core::RawGroups& groups,
     if (hasDirectionX) {
         mtext.rotation = core::atan2(directionY, directionX);
     }
-    if (extrusion == Extrusion::Down) {
-        mtext.insertion = flipX(mtext.insertion);
-        mtext.rotation = negate(mtext.rotation);
-        parts.extras.flippedExtrusion = true;
-    }
     return core::EntityRecord{context.id, std::move(mtext), std::move(parts.extras), context.order};
 }
 
@@ -203,11 +198,7 @@ void writeValue(std::string_view value, core::RawGroups& out) {
 
 void writeMText(const core::EntityRecord& record, EntityWriteContext& context,
                 core::RawGroups& out) {
-    auto mtext = std::get<core::MText>(record.entity);
-    if (record.extras.flippedExtrusion) {
-        mtext.insertion = flipX(mtext.insertion);
-        mtext.rotation = negate(mtext.rotation);
-    }
+    const auto& mtext = std::get<core::MText>(record.entity);
     core::EntityExtras tailExtras = record.extras;
     writeEntityCommon(record, context, out);
     const std::size_t from = out.size();

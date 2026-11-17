@@ -69,21 +69,37 @@ TEST(DxfMText, ShortTextGoesRoundWithAllProperties) {
 
 TEST(DxfMText, LongUtf8TextUsesGroupsOfAtMost250Characters) {
     std::string value;
-    for (int i = 0; i < 260; ++i) {
-        value += "è";
+    for (int i = 0; i < 125; ++i) {
+        value += "aè";
     }
+    value += "tailè";
     const auto record = decode(basicBody(value));
     ASSERT_TRUE(record.has_value());
-    const core::RawGroups groups = written(record.value_or(core::EntityRecord{}));
+    const core::EntityRecord decoded = record.value_or(core::EntityRecord{});
+    const core::RawGroups groups = written(decoded);
     const auto part = std::find_if(groups.begin(), groups.end(),
                                    [](const core::RawGroup& group) { return group.code == 3; });
     ASSERT_NE(part, groups.end());
-    EXPECT_EQ(part->value.size(), 500U);
+    EXPECT_EQ(part->value.size(), 375U);
     EXPECT_TRUE(part->value.ends_with("è"));
     const auto final = std::find_if(part + 1, groups.end(),
                                     [](const core::RawGroup& group) { return group.code == 1; });
     ASSERT_NE(final, groups.end());
-    EXPECT_EQ(final->value.size(), 20U);
+    EXPECT_EQ(final->value, "tailè");
+
+    auto context = readContext();
+    const auto again = decodeEntity(findCodec(decoded.entity), groups, context);
+    ASSERT_TRUE(again.has_value());
+    const core::EntityRecord roundtrip = again.value_or(core::EntityRecord{});
+    EXPECT_EQ(roundtrip.entity, decoded.entity);
+    EXPECT_EQ(roundtrip.extras, decoded.extras);
+}
+
+TEST(DxfMText, DownwardExtrusionStaysUnhandled) {
+    auto body = basicBody();
+    body.insert(body.end(), {{210, "0"}, {220, "0"}, {230, "-1"}});
+
+    EXPECT_FALSE(decode(body).has_value());
 }
 
 TEST(DxfMText, DirectionVectorIsKeptUntilRotationChanges) {
