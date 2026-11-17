@@ -18,6 +18,7 @@ include(GoogleTest)
 
 add_executable(tg_tests
     cmd/arc_command_test.cpp
+    cmd/block_command_test.cpp
     cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
@@ -95,6 +96,7 @@ add_executable(tg_tests
     core/text_style_table_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
+    edit/blocks_test.cpp
     edit/document_tables_test.cpp
     edit/editor_test.cpp
     edit/layer_rules_test.cpp
