@@ -351,6 +351,17 @@ std::vector<Row> layout(const MText& mtext, double widthFactor) {
     return rows;
 }
 
+std::u32string literalValue(std::u32string_view row) {
+    std::u32string result;
+    result.reserve(row.size());
+    for (std::size_t i = 0; i < row.size(); ++i) {
+        const bool formsCode = row[i] == U'%' && i + kPercentCodeLength <= row.size() &&
+                               row[i + 1] == U'%' && percentCharacter(row[i + 2]).has_value();
+        result += formsCode ? std::u32string_view{U"%%%"} : std::u32string_view{&row[i], 1};
+    }
+    return result;
+}
+
 std::string toUtf8(std::u32string_view text) {
     std::string result;
     result.reserve(text.size());

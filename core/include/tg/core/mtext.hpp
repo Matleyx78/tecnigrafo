@@ -65,8 +65,11 @@ struct MText {
 /// on its baseline, with the height and the rotation of the entity and the
 /// width factor and the oblique angle of its style (1 and 0 when the style is
 /// not in the table), the mirror signals of the style with directionByStyle,
-/// and the plain row as value. Nothing on a frozen layer; properties.visible
-/// false on a layer that is off (docs/adr/0044, point 2).
+/// and as value the plain row written so that displayText() gives it back:
+/// every '%' that forms %%c, %%d, %%p or %%% with the two characters after it
+/// is written %%% (the row "%%c" has the value "%%%%c"). Nothing on a frozen
+/// layer; properties.visible false on a layer that is off (docs/adr/0044,
+/// point 2).
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record, const MText& mtext);
 

@@ -50,7 +50,8 @@ bool onFrozenLayer(const Document& document, const EntityRecord& record) {
 }
 
 /// The Text of every row with a character other than a space, in drawing
-/// coordinates (PT13, point 4).
+/// coordinates, its value written so that displayText() gives the row back
+/// (PT13, point 4).
 std::vector<Text> rowTexts(const Document& document, const MText& mtext) {
     const StyleValues style = styleValues(document, mtext);
     const SinCos direction = sinCos(mtext.rotation);
@@ -72,7 +73,8 @@ std::vector<Text> rowTexts(const Document& document, const MText& mtext) {
         text.mirroredY = mtext.directionByStyle && style.upsideDown;
         text.horizontal = TextHorizontal::Left;
         text.vertical = TextVertical::Baseline;
-        text.value = mtext_layout::toUtf8(row.text);
+        // Decoded once: displayText() of the value gives the row back.
+        text.value = mtext_layout::toUtf8(mtext_layout::literalValue(row.text));
         texts.push_back(std::move(text));
     }
     return texts;

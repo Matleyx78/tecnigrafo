@@ -40,6 +40,13 @@ struct Row {
 /// width factor of its style (1 without a style). The rows are at least one.
 [[nodiscard]] std::vector<Row> layout(const MText& mtext, double widthFactor);
 
+/// `row` written so that displayText() gives it back unchanged (PT13,
+/// point 4): every '%' that forms "%%c", "%%d", "%%p" or "%%%" (in either
+/// case) with the two characters after it in the row is written "%%%"; the
+/// other characters stay as they are. "%%c" becomes "%%%%c", "%%%" becomes
+/// "%%%%%", "%c" and "50%" stay as they are.
+[[nodiscard]] std::u32string literalValue(std::u32string_view row);
+
 /// `text` as UTF-8; a code point that is not a character (a surrogate, or
 /// beyond U+10FFFF) becomes U+FFFD, as decodeUtf8() does.
 [[nodiscard]] std::string toUtf8(std::u32string_view text);

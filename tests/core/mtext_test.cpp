@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numbers>
@@ -113,9 +114,72 @@ TEST(MTextCodes, PercentCodesAsDisplayText) {
     EXPECT_EQ(values(mtext("%%x")), (Values{"%%x"}));
 }
 
+/// The rows of `entity` as they are shown: displayText() of every value.
+std::vector<std::u32string> shown(const MText& entity) {
+    std::vector<std::u32string> result;
+    for (const Text& text : rows(entity)) {
+        result.push_back(displayText(text.value));
+    }
+    return result;
+}
+
+using Shown = std::vector<std::u32string>;
+
 TEST(MTextCodes, CodesAreDecodedOnce) {
-    EXPECT_EQ(values(mtext("%%%c")), (Values{"%c"}));
-    EXPECT_EQ(values(mtext("%%%%c")), (Values{"%%c"}));
+    EXPECT_EQ(shown(mtext("%%%c")), (Shown{U"%c"}));
+    EXPECT_EQ(shown(mtext("%%%%c")), (Shown{U"%%c"}));
+}
+
+// --- The value of a row (PT13, point 4) -----------------------------------------
+
+TEST(MTextValue, PercentCodesOfTheRowAreWrittenSoThatDisplayTextGivesItBack) {
+    // MTEXT values that decode to the rows %%c, %%%, %%D, %c and 50%.
+    const std::array<std::pair<std::string_view, std::string_view>, 5> cases{{
+        {"%%%%c", "%%%%c"},
+        {"%%%%%%%%%", "%%%%%"},
+        {"%%%%%%D", "%%%%D"},
+        {"%%%c", "%c"},
+        {"50%", "50%"},
+    }};
+    const std::array<std::u32string_view, 5> rowsShown{U"%%c", U"%%%", U"%%D", U"%c", U"50%"};
+    for (std::size_t i = 0; i < cases.size(); ++i) {
+        const auto [value, expected] = cases.at(i);
+        EXPECT_EQ(values(mtext(std::string{value})), (Values{std::string{expected}})) << i;
+        EXPECT_EQ(shown(mtext(std::string{value})), (Shown{std::u32string{rowsShown.at(i)}})) << i;
+    }
+}
+
+TEST(MTextValue, EveryRowOfPercentSignsAndLettersComesBack) {
+    // Every row of up to five characters among %, c, D, p and x: written in
+    // the MTEXT with each % as %%%, its Text shows it unchanged.
+    constexpr std::u32string_view kAlphabet = U"%cDpx";
+    constexpr std::size_t kLongest = 5;
+    std::vector<std::u32string> current{U""};
+    for (std::size_t length = 1; length <= kLongest; ++length) {
+        std::vector<std::u32string> next;
+        for (const std::u32string& prefix : current) {
+            for (const char32_t c : kAlphabet) {
+                next.push_back(prefix + c);
+            }
+        }
+        current = std::move(next);
+        for (const std::u32string& row : current) {
+            std::string value;
+            for (const char32_t c : row) {
+                value += c == U'%' ? std::string{"%%%"} : std::string(1, static_cast<char>(c));
+            }
+            ASSERT_EQ(shown(mtext(value)), (Shown{row})) << value;
+        }
+    }
+}
+
+TEST(MTextValue, TheBoxOfARowIsThatOfItsCharacters) {
+    // The row %%c is three characters wide, not the width of the diameter sign.
+    const std::vector<Text> texts = rows(mtext("%%%%c", 2.0));
+    ASSERT_EQ(texts.size(), 1U);
+    const std::array<Vec2, 4> box = textBox(texts[0]);
+    EXPECT_NEAR(box[1].x - box[0].x, widthOf(U"%%c", 2.0), kTolerance);
+    EXPECT_GT(std::abs(widthOf(U"%%c", 2.0) - widthOf(U"⌀", 2.0)), 0.1);
 }
 
 TEST(MTextCodes, CodesWithAnArgumentAreRemoved) {
