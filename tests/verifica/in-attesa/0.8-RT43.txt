@@ -39,7 +39,7 @@ retini/contorno-layer #740
 retini/contorno-scarti-e-indici #740
 retini/contorno-vuoto-e-punto-fuori-dominio #740
 retini/scelti-scarti-e-ordine #740
-retini/contorno-arco-intero #740
+retini/contorno-cerchio-intero #740
 retini/contorno-entita-escluse #740
 retini/contorno-inserimento-escluso #740
 retini/contorno-ordine-delle-isole #740
