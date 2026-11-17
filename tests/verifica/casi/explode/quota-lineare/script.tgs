@@ -11,6 +11,7 @@ DIMLINEAR
 ; cambia con #719
 EXPLODE
 20,10
+
 !report
 U
 tecnigrafo-report 1
