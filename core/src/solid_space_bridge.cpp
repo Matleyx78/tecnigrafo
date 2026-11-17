@@ -60,6 +60,11 @@ std::optional<g::Curve> curveOf(const Entity& entity) {
     return std::nullopt;
 }
 
+g::Ellipse ellipseOf(const Ellipse& ellipse) {
+    return g::Ellipse{toPoint(ellipse.center), toPoint(ellipse.majorAxis), ellipse.ratio,
+                      ellipse.startParameter, ellipse.endParameter};
+}
+
 std::pair<Vec2, Vec2> arcEndpoints(const Arc& arc) {
     const auto geometry = arc.geometry();
     const auto curve = curveOf(arc);

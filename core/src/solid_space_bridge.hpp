@@ -8,6 +8,7 @@
 // core/src includes it, so that no other module sees solid-space.
 
 #include "solid_space/geom2d/curves.hpp"
+#include "solid_space/geom2d/ellipse.hpp"
 #include "solid_space/robust/tolerance.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/polyline.hpp"
@@ -24,6 +25,11 @@ namespace g = solid_space::geom2d;
 /// sweep = endAngle - startAngle, plus g::kFullTurn when not positive,
 /// computed in double in this order. std::nullopt for a Polyline or a Text.
 [[nodiscard]] std::optional<g::Curve> curveOf(const Entity& entity);
+
+/// The ellipse of solid-space for an Ellipse of Tecnigrafo (docs/adr/0052,
+/// point 1): the same doubles, field by field (end parameter 0 and start 0
+/// are the whole ellipse there too: equal parameters, ellipse.hpp).
+[[nodiscard]] g::Ellipse ellipseOf(const Ellipse& ellipse);
 
 /// Arc endpoints from solid-space, with the exact axis endpoints of #422
 /// retained within its declared point error. For a diagnosis, use the
