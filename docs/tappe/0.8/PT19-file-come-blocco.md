@@ -6,7 +6,7 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT19]` (#…), agente codex
-- **Dipende da:** PT18, PT22, RT19
+- **Dipende da:** PT18, PT22, RT19 (che dipende da F11)
 - **Modulo:** `io`
 - **Da leggere:** [ADR 0045](../../adr/0045-blocchi-e-attributi.md), punto 7;
   [ADR 0023](../../adr/0023-layer-e-proprieta.md), punto 1;
@@ -20,7 +20,8 @@
 - `io/CMakeLists.txt` (file comune)
 - `tests/io/block_import_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
 - `script/src/questions.cpp`, `script/src/entity_reader.cpp`,
-  `script/src/question_table.hpp`, `script/src/file_questions.cpp` (file comuni)
+  `script/src/question_table.cpp`, `script/src/question_table.hpp`,
+  `script/src/file_questions.cpp` (file comuni)
 - `tests/script/questions_test.cpp` (file comune)
 
 ## Cosa fare
@@ -79,7 +80,12 @@ struct BlockImport {
 ## Regole della tappa che valgono qui
 
 - Il lettore non cambia: `importBlock` lo usa.
-- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`.
+- File comuni: `io/CMakeLists.txt`, `tests/CMakeLists.txt`,
+  `script/src/questions.cpp`, `script/src/entity_reader.cpp`,
+  `script/src/question_table.cpp`, `script/src/question_table.hpp`,
+  `script/src/file_questions.cpp` e `tests/script/questions_test.cpp`.
+- PT19 sostituisce gli annunci della definizione e delle dieci domande messi
+  da F11 con la loro realizzazione.
 
 ## Test richiesti
 

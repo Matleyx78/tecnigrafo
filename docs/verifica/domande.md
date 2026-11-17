@@ -468,6 +468,9 @@ Queste definizioni e domande, realizzate da PT19, espongono direttamente
 `io::importBlock` prima che il comando `-INSERT` esista. Non applicano il
 risultato e non cambiano il documento delle definizioni.
 
+Fino a PT19 la definizione ferma il file con `not implemented yet` e le
+domande rispondono `error: question not implemented yet`.
+
 **Definizione.** `I = BLOCK-IMPORT source=<nome>` cerca il DXF come le altre
 definizioni `source=`; `I = BLOCK-IMPORT file=<nome>` lo cerca nella cartella
 del caso. Chiama `io::importBlock` passando come bersaglio una copia del
@@ -500,15 +503,17 @@ nell'ordine della definizione.
 | `import-dim-styles <I>` | elenco di record separati da `;`, o `none` | il campo `dimStyles` |
 | `import-unit-factor <I>` | numero | il campo `unitFactor` |
 | `import-next-id <I>` | handle esadecimale | il campo `nextId` |
-| `import-groups <I> <handle>` | gruppi `codice="valore"` separati da spazi, o `none` | tutti i gruppi DXF conservati nell'oggetto restituito con quell'handle, nell'ordine; comprende proprietario, riferimenti e reattori |
+| `import-groups <I> <handle>` | gruppi `codice="valore"` separati da spazi, o `none` | l'handle e tutti i gruppi DXF conservati nell'oggetto restituito con quell'handle, nell'ordine definito sotto; comprende proprietario, riferimenti e reattori |
 
 Una **definizione** risponde `name="NOME" base=x,y units=N entities=[H
 <entità>; …]`: `units=` è sempre presente; `entities=none` per il blocco
-vuoto. Ogni entità ha prima il proprio handle `H` e poi il formato del
-[rapporto](rapporto.md#entità). Un record di tabella comincia sempre con
+vuoto. Le entità gestite e non gestite sono intercalate nell'ordine originale
+della definizione. Ogni entità gestita ha prima il proprio handle `H` e poi il
+formato del [rapporto](rapporto.md#entità); una non gestita risponde `H
+unhandled TIPO`, come la risposta di `entity D <handle>`. Un record di tabella comincia sempre con
 `id=H name="NOME"` e continua con le proprietà della rispettiva riga di
 rapporto: [`layers:` e `linetypes:`](rapporto.md#layer-tipi-di-linea-e-valori-correnti),
-[`text styles:` e `dimension styles:`](rapporto.md#tappa-08-entità-composte).
+[`text styles:` e `dimension styles:`](rapporto.md#stili-e-blocchi).
 Si scrivono anche i valori predefiniti, affinché due record siano distinguibili
 senza dipendere dallo stato del bersaglio. Le definizioni annidate e i record
 mantengono l'ordine dei rispettivi vettori di `BlockImport`.
@@ -518,7 +523,16 @@ Tranne `import-error`, una domanda su un'importazione fallita risponde
 che non appartiene a definizione, annidati o record restituiti è un errore del
 file di domande. Il valore di ogni gruppo è quotato con gli escape dei testi;
 in particolare rende osservabili i gruppi 330, 340, 360 e i gruppi 102 dei
-reattori dopo la rinumerazione.
+reattori dopo la rinumerazione. Per un'entità gestita la risposta comincia con
+il gruppo sintetico `5` del suo handle e prosegue concatenando, in quest'ordine,
+`beforeEntity`, `common`, `specific`, `placement` ed `extended`. Per un'entità
+non gestita restituisce tutti i suoi gruppi grezzi nell'ordine conservato,
+compreso il gruppo `5` nella sua posizione. Per un record di tabella comincia
+con il gruppo sintetico `5` del suo id e prosegue con `extras`. Per una
+definizione, `recordId`, `blockId` ed `endBlockId` rispondono rispettivamente
+con il gruppo sintetico `5` seguito da `recordExtras`, `blockExtras` ed
+`endBlockExtras`. Un gruppo sintetico `5` compare anche quando non ci sono
+altri gruppi, perciò `none` vale soltanto per un oggetto grezzo senza gruppi.
 
 ```
 L = LAYER name="Muri" color=1
