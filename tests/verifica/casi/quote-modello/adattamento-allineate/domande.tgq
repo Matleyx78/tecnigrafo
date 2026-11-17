@@ -1,0 +1,31 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+; Fit cases 1..4 in PT23.4; generous separation from every threshold.
+; Arrow probes are strictly inside the corresponding triangular SOLID.
+; Rectangles are above the dimension line and away from both extension lines.
+; Full source snapshots for cases 1/2/4 are in autocad-lineari/allineate.
+; Case 3 uses long text instead of claiming the source contains that missing branch.
+
+; Case 1: both inside.
+Fit1 = DIMENSION kind=aligned origin1=60,0 origin2=60,40 line-point=50,40 text-point=0,0 measurement=0
+? distance Fit1 49.95,1.25 -> 0
+
+; Case 2: text in, arrows out.
+Fit2 = DIMENSION kind=aligned origin1=60,0 origin2=60,4 line-point=50,4 text-point=0,0 measurement=0
+? distance Fit2 49.95,-1.25 -> 0
+
+; Case 3: arrows in, text out.
+Fit3 = DIMENSION kind=aligned origin1=60,0 origin2=60,12 line-point=50,12 text-point=0,0 measurement=0 text="WWWWW"
+? distance Fit3 49.95,1.25 -> 0
+? crosses Fit3 48,1 47,2 -> no
+
+; Case 4: all outside.
+Fit4 = DIMENSION kind=aligned origin1=60,0 origin2=60,1.5 line-point=50,1.5 text-point=0,0 measurement=0
+? distance Fit4 49.95,-1.25 -> 0

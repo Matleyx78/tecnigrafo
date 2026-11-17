@@ -10,7 +10,7 @@
 H = HATCH pattern="SOLID" solid=yes loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 loop=edges circle=5,4;2 seed=1,1
 
 ; A solid normal hatch generates one even-odd region from all its contours.
-? generated H -> REGION loop=polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 loop=edges circle=5,4;2
+? generated H -> REGION loop=polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 loop=polyline vertex=7,4 bulge=1 vertex=3,4 bulge=1
 ? bbox H -> 0,0 10,8
 
 ; Selection uses the filled region: the hole is not selectable when its edge

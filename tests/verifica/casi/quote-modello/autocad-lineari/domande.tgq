@@ -1,0 +1,83 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+; Source: autocad-quote.dxf, dxf-test-file commit 5170f1860953b5d076aa435bd65daa725d431745.
+; Extraction and raw output: ../autocad-lineari/estrai_autocad.py, autocad-quote.txt.
+; LINE/SOLID coordinates are copied from the anonymous block, not regenerated.
+; MTEXT center/height/angle/value are copied; TEXT layout and ~box follow PT13.
+; PROVA is represented by equivalent essential overrides on ISO-25.
+; PROVA text-gap endpoints use PT13 bundled-font width plus 2*DIMGAP:
+; the stored AutoCAD SHX gap is not the width of the bundled font.
+; AutoCAD fit samples: L=8 keeps arrows in, L=6..3 arrows out, L=1.5 all out.
+; The DXF contains cases 1, 2 and 4; case 3 is isolated in adattamento-*.
+; Stored dimension-line endpoints and outside positions take precedence over hypotheses.
+
+; AutoCAD handle 93, block *D1, measurement 40.
+D93 = DIMENSION kind=linear origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=0,0 measurement=0
+? generated D93 -> LINE start=0,0.625 end=0,11.25; LINE start=40,0.625 end=40,11.25; LINE start=2.5,10 end=37.5,10; SOLID vertex=2.5,10.41666666666666 vertex=2.5,9.583333333333332 vertex=0,10 vertex=0,10; SOLID vertex=37.5,10.41666666666666 vertex=37.5,9.583333333333332 vertex=40,10 vertex=40,10; TEXT position=17.97906316536551,10.625 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40" ~box=17.97906316536551,9.854950319375444;22.02093683463449,9.854950319375444;22.02093683463449,13.91456706884315;17.97906316536551,13.91456706884315
+
+; AutoCAD handle A1, block *D2, measurement 30.00000000000001.
+DA1 = DIMENSION kind=linear origin1=60,0 origin2=60,30 line-point=70.00000000000003,30.00000000000002 rotation=90 text-point=0,0 measurement=0
+? generated DA1 -> LINE start=60.62500000000003,0 end=71.25000000000003,0; LINE start=60.62500000000003,30.00000000000002 end=71.25000000000003,30.00000000000002; LINE start=70.00000000000003,2.500000000000002 end=70.00000000000003,27.50000000000002; SOLID vertex=69.58333333333336,2.500000000000002 vertex=70.4166666666667,2.500000000000002 vertex=70.00000000000003,0 vertex=70.00000000000003,0; SOLID vertex=69.58333333333336,27.50000000000002 vertex=70.4166666666667,27.50000000000002 vertex=70.00000000000003,30.00000000000002 vertex=70.00000000000003,30.00000000000002; TEXT position=69.37500000000001,12.97906316536549 alignment-point=0,0 height=2.5 rotation=90 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="30" ~box=70.14504968062457,12.97906316536549;70.14504968062457,17.02093683463447;66.08543293115686,17.02093683463447;66.08543293115686,12.97906316536549
+
+; AutoCAD handle AE, block *D3, measurement 35.98076211353316.
+DAE = DIMENSION kind=linear origin1=90,0 origin2=120,20 line-point=112.8349364905389,32.41025403784438 rotation=30 text-point=0,0 measurement=0
+? generated DAE -> LINE start=89.6875,0.5412658773652695 end=81.0496824526945,15.50240473580836; LINE start=119.6875,20.54126587736528 end=112.2099364905389,33.49278579257493; LINE start=83.8397459621556,15.66987298107781 end=110.6698729810778,31.16025403784439; SOLID vertex=83.63141262882228,16.03071689932133 vertex=84.04807929548895,15.3090290628343 vertex=81.6746824526945,14.41987298107781 vertex=81.6746824526945,14.41987298107781; SOLID vertex=110.4615396477444,31.52109795608791 vertex=110.8782063144111,30.79941011960087 vertex=112.8349364905389,32.41025403784438 vertex=112.8349364905389,32.41025403784438; TEXT position=92.90061601787122,21.86341919548681 alignment-point=0,0 height=2.5 rotation=29.99999999999999 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="35,98" ~box=93.2856408581835,21.19653660988985;101.1606944323411,25.74320091081249;99.13088605760728,29.25893214548033;91.25583248344964,24.71226784455769
+
+; AutoCAD handle 131, block *D10, measurement 20.
+D131 = DIMENSION kind=linear origin1=0,-60 origin2=20,-60 line-point=20,-50 rotation=0 text-point=0,0 measurement=0
+? generated D131 -> LINE start=0,-59.375 end=0,-48.75; LINE start=20,-59.375 end=20,-48.75; LINE start=2.5,-50 end=17.5,-50; SOLID vertex=2.5,-49.58333333333333 vertex=2.5,-50.41666666666666 vertex=0,-50 vertex=0,-50; SOLID vertex=17.5,-49.58333333333333 vertex=17.5,-50.41666666666666 vertex=20,-50 vertex=20,-50; TEXT position=7.979063165365508,-49.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="20" ~box=7.979063165365508,-50.14504968062456;12.02093683463449,-50.14504968062456;12.02093683463449,-46.08543293115685;7.979063165365508,-46.08543293115685
+
+; AutoCAD handle 13E, block *D11, measurement 8.
+D13E = DIMENSION kind=linear origin1=40,-60 origin2=48,-60 line-point=48,-50 rotation=0 text-point=0,0 measurement=0
+? generated D13E -> LINE start=40,-59.375 end=40,-48.75; LINE start=48,-59.375 end=48,-48.75; LINE start=42.5,-50 end=45.49999999999999,-50; SOLID vertex=42.5,-49.58333333333333 vertex=42.5,-50.41666666666666 vertex=40,-50 vertex=40,-50; SOLID vertex=45.49999999999999,-49.58333333333333 vertex=45.49999999999999,-50.41666666666666 vertex=48,-50 vertex=48,-50; TEXT position=42.98953158268275,-49.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="8" ~box=42.98953158268275,-50.14504968062456;45.01046841731724,-50.14504968062456;45.01046841731724,-46.08543293115685;42.98953158268275,-46.08543293115685
+
+; AutoCAD handle 14B, block *D12, measurement 6.
+D14B = DIMENSION kind=linear origin1=68,-60 origin2=74,-60 line-point=74,-50 rotation=0 text-point=0,0 measurement=0
+? generated D14B -> LINE start=68,-59.375 end=68,-48.75; LINE start=74,-59.375 end=74,-48.75; LINE start=65.5,-50 end=63,-50; LINE start=76.5,-50 end=79,-50; LINE start=68,-50 end=74,-50; SOLID vertex=65.5,-49.58333333333333 vertex=65.5,-50.41666666666666 vertex=68,-50 vertex=68,-50; SOLID vertex=76.5,-49.58333333333333 vertex=76.5,-50.41666666666666 vertex=74,-50 vertex=74,-50; TEXT position=69.98953158268276,-49.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="6" ~box=69.98953158268276,-50.14504968062456;72.01046841731726,-50.14504968062456;72.01046841731726,-46.08543293115685;69.98953158268276,-46.08543293115685
+
+; AutoCAD handle 15A, block *D13, measurement 5.
+D15A = DIMENSION kind=linear origin1=94,-60 origin2=99,-60 line-point=99,-50 rotation=0 text-point=0,0 measurement=0
+? generated D15A -> LINE start=94,-59.375 end=94,-48.75; LINE start=99,-59.375 end=99,-48.75; LINE start=91.5,-50 end=89,-50; LINE start=101.5,-50 end=104,-50; LINE start=94,-50 end=99,-50; SOLID vertex=91.5,-49.58333333333333 vertex=91.5,-50.41666666666666 vertex=94,-50 vertex=94,-50; SOLID vertex=101.5,-49.58333333333333 vertex=101.5,-50.41666666666666 vertex=99,-50 vertex=99,-50; TEXT position=95.48953158268276,-49.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="5" ~box=95.48953158268276,-50.14504968062456;97.51046841731726,-50.14504968062456;97.51046841731726,-46.08543293115685;95.48953158268276,-46.08543293115685
+
+; AutoCAD handle 169, block *D14, measurement 4.
+D169 = DIMENSION kind=linear origin1=119,-60 origin2=123,-60 line-point=123,-50 rotation=0 text-point=0,0 measurement=0
+? generated D169 -> LINE start=119,-59.375 end=119,-48.75; LINE start=123,-59.375 end=123,-48.75; LINE start=116.5,-50 end=114,-50; LINE start=125.5,-50 end=128,-50; LINE start=119,-50 end=123,-50; SOLID vertex=116.5,-49.58333333333333 vertex=116.5,-50.41666666666666 vertex=119,-50 vertex=119,-50; SOLID vertex=125.5,-49.58333333333333 vertex=125.5,-50.41666666666666 vertex=123,-50 vertex=123,-50; TEXT position=119.9895315826828,-49.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="4" ~box=119.9895315826828,-50.14504968062456;122.0104684173173,-50.14504968062456;122.0104684173173,-46.08543293115685;119.9895315826828,-46.08543293115685
+
+; AutoCAD handle 178, block *D15, measurement 3.
+D178 = DIMENSION kind=linear origin1=143,-60 origin2=146,-60 line-point=146,-50 rotation=0 text-point=0,0 measurement=0
+? generated D178 -> LINE start=143,-59.375 end=143,-48.75; LINE start=146,-59.375 end=146,-48.75; LINE start=140.5,-50 end=138,-50; LINE start=148.5,-50 end=151,-50; LINE start=143,-50 end=146,-50; SOLID vertex=140.5,-49.58333333333333 vertex=140.5,-50.41666666666666 vertex=143,-50 vertex=143,-50; SOLID vertex=148.5,-49.58333333333333 vertex=148.5,-50.41666666666666 vertex=146,-50 vertex=146,-50; TEXT position=143.4895315826828,-49.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="3" ~box=143.4895315826828,-50.14504968062456;145.5104684173172,-50.14504968062456;145.5104684173172,-46.08543293115685;143.4895315826828,-46.08543293115685
+
+; AutoCAD handle 187, block *D16, measurement 1.5.
+D187 = DIMENSION kind=linear origin1=166,-60 origin2=167.5,-60 line-point=167.5,-50 rotation=0 text-point=0,0 measurement=0
+? generated D187 -> LINE start=166,-59.375 end=166,-48.75; LINE start=167.5,-59.375 end=167.5,-48.75; LINE start=163.5,-50 end=161,-50; LINE start=170,-50 end=178.3333333333333,-50; LINE start=166,-50 end=167.5,-50; SOLID vertex=163.5,-49.58333333333333 vertex=163.5,-50.41666666666666 vertex=166,-50 vertex=166,-50; SOLID vertex=170,-49.58333333333333 vertex=170,-50.41666666666666 vertex=167.5,-50 vertex=167.5,-50; TEXT position=172.8909392003785,-49.16666666666666 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="1,5" ~box=172.8909392003785,-49.93671634729122;177.9423941329547,-49.93671634729122;177.9423941329547,-45.87709959782351;172.8909392003785,-45.87709959782351
+
+; AutoCAD handle 234, block *D27, measurement 40.
+D234 = DIMENSION kind=linear origin1=0,-150 origin2=40,-150 line-point=40,-140 rotation=0 text-point=0,0 measurement=0 overrides=DIMDEC:3,DIMDSEP:.,DIMTAD:0,DIMTXT:3.5
+? generated D234 -> LINE start=0,-149.375 end=0,-138.75; LINE start=40,-149.375 end=40,-138.75; LINE start=2.5,-140 end=16.54568843151171,-140; LINE start=37.5,-140 end=23.45431156848829,-140; SOLID vertex=2.5,-139.5833333333333 vertex=2.5,-140.4166666666666 vertex=0,-140 vertex=0,-140; SOLID vertex=37.5,-139.5833333333333 vertex=37.5,-140.4166666666666 vertex=40,-140 vertex=40,-140; TEXT position=17.17068843151171,-141.75 alignment-point=0,0 height=3.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40" ~box=17.17068843151171,-142.8280695528744;22.82931156848829,-142.8280695528744;22.82931156848829,-137.1446061036196;17.17068843151171,-137.1446061036196
+
+; AutoCAD handle 262, block *D30, measurement 40.
+D262 = DIMENSION kind=linear origin1=0,-200 origin2=40,-200 line-point=40,-190 rotation=0 text-point=0,0 measurement=0 text="<> mm"
+? generated D262 -> LINE start=0,-199.375 end=0,-188.75; LINE start=40,-199.375 end=40,-188.75; LINE start=2.5,-190 end=37.5,-190; SOLID vertex=2.5,-189.5833333333333 vertex=2.5,-190.4166666666666 vertex=0,-190 vertex=0,-190; SOLID vertex=37.5,-189.5833333333333 vertex=37.5,-190.4166666666666 vertex=40,-190 vertex=40,-190; TEXT position=14.44730305180979,-189.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40 mm" ~box=14.44730305180979,-190.1450496806246;25.5526969481902,-190.1450496806246;25.5526969481902,-186.0854329311568;14.44730305180979,-186.0854329311568
+
+; AutoCAD handle 26F, block *D31, measurement 39.99999999999998.
+D26F = DIMENSION kind=linear origin1=60,-200 origin2=94.64101615137753,-180 line-point=89.64101615137749,-171.3397459621556 rotation=30.00000000000014 text-point=0,0 measurement=0
+? generated D26F -> LINE start=59.68749999999998,-199.4587341226347 end=54.375,-190.2572142074251; LINE start=94.32851615137751,-179.4587341226347 end=89.01601615137749,-170.2572142074251; LINE start=57.16506350946112,-190.0897459621557 end=87.47595264191641,-172.5897459621556; SOLID vertex=56.95673017612778,-189.7289020439121 vertex=57.37339684279444,-190.4505898803991 vertex=55.00000000000002,-191.3397459621556 vertex=55.00000000000002,-191.3397459621556; SOLID vertex=87.26761930858306,-172.2289020439121 vertex=87.68428597524974,-172.9505898803991 vertex=89.64101615137749,-171.3397459621556 vertex=89.64101615137749,-171.3397459621556; TEXT position=70.25782543745156,-181.8089485021076 alignment-point=0,0 height=2.5 rotation=30.00000000000015 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40" ~box=70.64285027776384,-182.4758310877046;74.1432155542382,-180.4548942530701;72.11340717950434,-176.9391630184022;68.61304190302998,-178.9600998530367
+
+; AutoCAD handle 285, block *D32, measurement 80.
+D285 = DIMENSION kind=linear origin1=120,-200 origin2=200,-200 line-point=200,-180 rotation=0 text-point=0,0 measurement=0
+? generated D285 -> LINE start=120,-199.375 end=120,-178.75; LINE start=200,-199.375 end=200,-178.75; LINE start=122.5,-180 end=197.5,-180; SOLID vertex=122.5,-179.5833333333333 vertex=122.5,-180.4166666666666 vertex=120,-180 vertex=120,-180; SOLID vertex=197.5,-179.5833333333333 vertex=197.5,-180.4166666666666 vertex=200,-180 vertex=200,-180; TEXT position=157.9790631653655,-179.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="80" ~box=157.9790631653655,-180.1450496806246;162.0209368346345,-180.1450496806246;162.0209368346345,-176.0854329311568;157.9790631653655,-176.0854329311568
+
+; AutoCAD handle 29B, block *D33, measurement 40.
+D29B = DIMENSION kind=linear origin1=250,-200 origin2=290,-200 line-point=290,-190 rotation=0 text-point=0,0 measurement=0
+? generated D29B -> LINE start=250,-199.375 end=250,-188.75; LINE start=290,-199.375 end=290,-188.75; LINE start=252.5,-190 end=287.5,-190; SOLID vertex=252.5,-189.5833333333333 vertex=252.5,-190.4166666666666 vertex=250,-190 vertex=250,-190; SOLID vertex=287.5,-189.5833333333333 vertex=287.5,-190.4166666666666 vertex=290,-190 vertex=290,-190; TEXT position=267.9790631653655,-189.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40" ~box=267.9790631653655,-190.1450496806246;272.0209368346345,-190.1450496806246;272.0209368346345,-186.0854329311568;267.9790631653655,-186.0854329311568
+
+; AutoCAD handle 2A8, block *D34, measurement 40.
+D2A8 = DIMENSION kind=linear origin1=350,-200 origin2=310,-200 line-point=310,-190 rotation=180 text-point=0,0 measurement=0
+? generated D2A8 -> LINE start=350,-199.375 end=350,-188.75; LINE start=310,-199.375 end=310,-188.75; LINE start=347.5,-190 end=312.5,-190; SOLID vertex=347.5,-189.5833333333333 vertex=347.5,-190.4166666666666 vertex=350,-190 vertex=350,-190; SOLID vertex=312.5,-189.5833333333333 vertex=312.5,-190.4166666666666 vertex=310,-190 vertex=310,-190; TEXT position=327.9790631653655,-189.375 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40" ~box=327.9790631653655,-190.1450496806246;332.0209368346345,-190.1450496806246;332.0209368346345,-186.0854329311568;327.9790631653655,-186.0854329311568

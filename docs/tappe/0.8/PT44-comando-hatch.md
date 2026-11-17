@@ -111,6 +111,16 @@ modo di scegliere lo stile delle isole, perché l'opzione *Advanced* resta fuori
    non lo dice, come un disegno nuovo in millimetri), i punti interni e i
    contorni: prima quelli dei punti, nell'ordine dei punti, poi quelli scelti,
    ciascuno con i segnali di PT43. Associatività 0.
+
+   **La chiusura dei contorni** la controlla chi crea il retino, non
+   `supported` ([PT30](PT30-retini-core.md), punto 1;
+   [DECISIONI.md](../../DECISIONI.md), 2026-11-16, «Retini: chiusura dei
+   contorni, domande dal documento, cerchio dei contorni a lati»). Qui i
+   contorni sono chiusi per costruzione: PT43 (punto 4) dà polilinee chiuse
+   e, per un cerchio, un contorno a lati di un solo `Arc` di giro intero, che
+   `isClosed` di PT30 trova chiuso in ogni unità. Il comando non ripete il
+   controllo e non ha un messaggio per un contorno aperto: un contorno aperto
+   non arriva da PT43, che lo dà come `not-enclosed` o in `leftOut`.
 3. **Troppo fitto:** solo per un motivo (con `SOLID` `patternLines` non si
    chiama: precondizione di PT42). Se `patternLines` dà `TooDense`, il
    messaggio di AutoCAD (`Hatch spacing too dense, or dash size too small.`) e
