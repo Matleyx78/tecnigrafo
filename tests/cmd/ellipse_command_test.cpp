@@ -33,7 +33,8 @@ protected:
     }
 
     [[nodiscard]] const core::Ellipse& ellipse() const {
-        return std::get<core::Ellipse>(m_document.entities().back().entity);
+        const core::EntityId id = m_document.entities().back().id;
+        return std::get<core::Ellipse>(m_document.find(id)->entity);
     }
 
     [[nodiscard]] const core::Document& document() const { return m_document; }
