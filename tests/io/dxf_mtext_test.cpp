@@ -32,9 +32,9 @@ std::optional<core::EntityRecord> decode(const core::RawGroups& body) {
 }
 
 core::RawGroups basicBody(std::string value = "Short") {
-    return {{100, "AcDbMText"}, {10, "10"},       {20, "20"}, {40, "3.5"},
-            {41, "200"},         {71, "5"},        {72, "1"},  {1, std::move(value)},
-            {7, "Standard"},     {50, "30"},       {73, "2"},  {44, "1.5"}};
+    return {{100, "AcDbMText"}, {10, "10"}, {20, "20"}, {40, "3.5"},
+            {41, "200"},        {71, "5"},  {72, "1"},  {1, std::move(value)},
+            {7, "Standard"},    {50, "30"}, {73, "2"},  {44, "1.5"}};
 }
 
 core::RawGroups written(const core::EntityRecord& record) {
@@ -105,14 +105,14 @@ TEST(DxfMText, DirectionVectorIsKeptUntilRotationChanges) {
     EXPECT_TRUE(hasGroup(11, "0.6"));
     EXPECT_TRUE(hasGroup(21, "0.8"));
     EXPECT_TRUE(hasGroup(31, "0.0"));
-    EXPECT_FALSE(std::ranges::any_of(groups,
-                                     [](const core::RawGroup& group) { return group.code == 50; }));
+    EXPECT_FALSE(
+        std::ranges::any_of(groups, [](const core::RawGroup& group) { return group.code == 50; }));
 
     std::get<core::MText>(decoded.entity).rotation = core::kPi / 2;
     groups = written(decoded);
     EXPECT_FALSE(hasGroup(11, "0.6"));
-    EXPECT_FALSE(std::ranges::any_of(groups,
-                                     [](const core::RawGroup& group) { return group.code == 50; }));
+    EXPECT_FALSE(
+        std::ranges::any_of(groups, [](const core::RawGroup& group) { return group.code == 50; }));
 }
 
 TEST(DxfMText, ColumnsAndInvalidGeometryStayUnhandled) {

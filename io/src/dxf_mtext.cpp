@@ -233,24 +233,21 @@ void writeMText(const core::EntityRecord& record, EntityWriteContext& context,
     out.push_back({7, mtext.style});
 
     const DirectionGroups direction = directionOf(tailExtras.specific);
-    const auto rotationGroup = std::find_if(
-        tailExtras.specific.begin(), tailExtras.specific.end(),
-        [](const core::RawGroup& group) { return group.code == 50; });
+    const auto rotationGroup =
+        std::find_if(tailExtras.specific.begin(), tailExtras.specific.end(),
+                     [](const core::RawGroup& group) { return group.code == 50; });
     const std::optional<core::RawGroup> originalRotation =
-        rotationGroup == tailExtras.specific.end() ? std::nullopt
-                                                   : std::optional{*rotationGroup};
-    const auto originalDegrees = originalRotation
-                                     ? parseNumber(trimDxf(originalRotation->value))
-                                     : std::nullopt;
-    const bool preservesDirection = direction.x && direction.y &&
-                                    core::atan2(*direction.y, *direction.x) == mtext.rotation;
-    tailExtras.specific.erase(
-        std::remove_if(tailExtras.specific.begin(), tailExtras.specific.end(),
-                       [](const core::RawGroup& group) {
-                           return group.code == 11 || group.code == 21 || group.code == 31 ||
-                                  group.code == 50;
-                       }),
-        tailExtras.specific.end());
+        rotationGroup == tailExtras.specific.end() ? std::nullopt : std::optional{*rotationGroup};
+    const auto originalDegrees =
+        originalRotation ? parseNumber(trimDxf(originalRotation->value)) : std::nullopt;
+    const bool preservesDirection =
+        direction.x && direction.y && core::atan2(*direction.y, *direction.x) == mtext.rotation;
+    tailExtras.specific.erase(std::remove_if(tailExtras.specific.begin(), tailExtras.specific.end(),
+                                             [](const core::RawGroup& group) {
+                                                 return group.code == 11 || group.code == 21 ||
+                                                        group.code == 31 || group.code == 50;
+                                             }),
+                              tailExtras.specific.end());
     if (preservesDirection) {
         for (const auto& group : record.extras.specific) {
             if (group.code == 11 || group.code == 21 || group.code == 31) {
