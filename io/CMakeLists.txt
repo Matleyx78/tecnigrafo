@@ -9,6 +9,7 @@ add_library(tg_io
     src/dxf_lwpolyline.cpp
     src/dxf_text.cpp
     src/dxf_line.cpp
+    src/dxf_solid.cpp
     src/dxf_circle_arc.cpp
     src/dxf_ellipse.cpp
     src/dxf_extrusion.cpp

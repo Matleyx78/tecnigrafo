@@ -17,7 +17,7 @@ EntityParts splitEntityGroups(const core::RawGroups& groups) {
     EntityParts parts;
     enum class Section : std::uint8_t { Before, Common, Geometry, Extended };
     Section section = Section::Before;
-    constexpr std::array kPlacement{30, 31, 38, 39, 210, 220, 230};
+    constexpr std::array kPlacement{30, 31, 32, 33, 38, 39, 210, 220, 230};
     for (const auto& group : groups) {
         if (group.code == 1001) {
             section = Section::Extended;
@@ -28,7 +28,8 @@ EntityParts splitEntityGroups(const core::RawGroups& groups) {
             section = trimDxf(group.value) == "AcDbEntity" ? Section::Common : Section::Geometry;
             // Subclass markers belong to the codec; unknown markers are retained.
             const auto name = trimDxf(group.value);
-            if (section == Section::Geometry && name != "AcDbPolyline" && name != "AcDbText") {
+            if (section == Section::Geometry && name != "AcDbPolyline" && name != "AcDbText" &&
+                name != "AcDbTrace") {
                 parts.geometry.push_back(group);
             }
         } else if (section == Section::Before) {
