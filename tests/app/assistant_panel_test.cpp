@@ -107,16 +107,19 @@ TEST(AssistantPanelTest, CommandQuotesPathsWithSpaces) {
 TEST(AssistantPanelTest, FailedStartResetsActionAndButton) {
     const QString serverName = uniqueName();
     MainWindow owner;
+    owner.assistantChannel().stop();
     owner.assistantChannel().setServerName(serverName);
     ASSERT_TRUE(owner.assistantChannel().start());
 
     MainWindow window;
     AssistantChannel& channel = window.assistantChannel();
+    channel.stop();
     channel.setServerName(serverName);
     QAction* toggle = window.actionRegistry().action(QStringLiteral("assistant.channel"));
     auto* button = window.findChild<QToolButton*>(QStringLiteral("assistantButton"));
     ASSERT_NE(toggle, nullptr);
     ASSERT_NE(button, nullptr);
+    toggle->setChecked(false);
 
     toggle->setChecked(true);
     QCoreApplication::processEvents();
