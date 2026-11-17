@@ -199,7 +199,7 @@ mcp::ToolResult WindowHost::run(std::span<const std::string> lines) {
         return mcp::ToolResult::error("line " + std::to_string(error->line) + ": " +
                                       error->message);
     }
-    const script::Script& script = std::get<script::Script>(parsed);
+    const auto& script = std::get<script::Script>(parsed);
     if (script.level != 1) {
         return mcp::ToolResult::error(
             "The session runs at level 1: \"!level 2\", \"!key\" and \"!screenshot\" are not "
@@ -218,7 +218,7 @@ mcp::ToolResult WindowHost::run(std::span<const std::string> lines) {
             if (session == nullptr) {
                 break;
             }
-            std::visit([this, session](const auto& concrete) { perform(*session, concrete); },
+            std::visit([this, session](const auto& concrete) { this->perform(*session, concrete); },
                        action);
         }
     }
@@ -668,10 +668,10 @@ void AssistantChannel::processQueue() {
 void AssistantChannel::serveQueue() {
     while (m_client != nullptr && !m_dropPending && !m_queue.empty()) {
         const Pending& next = m_queue.front();
-        const bool needsDocument = next.tool != "open";
-        const bool waits = isSessionTool(next.tool) &&
-                           !(needsDocument && m_window.activeSession() == nullptr) &&
-                           !m_window.isAtCommandPrompt();
+        // Without a document, the tools that need one answer at once.
+        const bool answersAtOnce = next.tool != "open" && m_window.activeSession() == nullptr;
+        const bool waits =
+            isSessionTool(next.tool) && !answersAtOnce && !m_window.isAtCommandPrompt();
         if (waits) {
             if (m_clock() - next.arrived < kAssistantWait) {
                 if (!m_poll.isActive()) {

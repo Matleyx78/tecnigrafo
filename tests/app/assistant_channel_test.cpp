@@ -309,9 +309,11 @@ protected:
         return history != nullptr ? history->toPlainText() : QString{};
     }
 
-    QTemporaryDir m_directory;
+    /// A folder of the test, for settings and files.
+    [[nodiscard]] QString directory() const { return m_directory.path(); }
 
 private:
+    QTemporaryDir m_directory;
     QSettings::Format m_format{QSettings::defaultFormat()};
     std::unique_ptr<MainWindow> m_window;
 };
@@ -457,7 +459,7 @@ TEST_F(AssistantChannelTest, WithoutDocumentsOnlyOpenWorks) {
     ASSERT_TRUE(channel().start());
     const std::unique_ptr<Client> client = connectClient();
     static_cast<void>(client->ask(runRequest(2, {"LINE", "0,0", "10,0", ""})));
-    const QString path = QDir(m_directory.path()).filePath(QStringLiteral("assistant.cadx"));
+    const QString path = QDir(directory()).filePath(QStringLiteral("assistant.cadx"));
     const json save = client->ask(callRequest(3, "save", json{{"path", path.toStdString()}}));
     EXPECT_FALSE(toolFailed(save)) << save.dump();
     ASSERT_TRUE(QFileInfo::exists(path)) << toolText(save);
