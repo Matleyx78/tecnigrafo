@@ -253,6 +253,18 @@ void BuiltinActions::add(ActionRegistry& registry) {
         anyDocument(withIcon(switchSpec(QStringLiteral("ui.interface"), tr("&Classic Interface"),
                                         tools, tr("Switches between ribbon and classic menus.")),
                              QStringLiteral("ui-ribbon")))));
+    ActionSpec assistant = global(
+        anyDocument(withIcon(switchSpec(QStringLiteral("assistant.channel"), tr("AI &Assistant"),
+                                        tools, tr("Turns the assistant channel on or off.")),
+                             QStringLiteral("assistant-channel"))));
+    assistant.ribbon = QStringLiteral("view/assistant");
+    registry.add(std::move(assistant));
+    ActionSpec assistantPanel = global(
+        anyDocument(withIcon(makeSpec(QStringLiteral("assistant.panel"), tr("Assistant &Panel"),
+                                      tools, tr("Shows the assistant panel.")),
+                             QStringLiteral("assistant-panel"))));
+    assistantPanel.ribbon = QStringLiteral("view/assistant");
+    registry.add(std::move(assistantPanel));
     // The layers panel (0.6-P22). No command: the actions work on the panel,
     // and LAYER (app_commands.cpp) only shows it.
     const QString layers = tools + QLatin1Char('/') + tr("&Layers");

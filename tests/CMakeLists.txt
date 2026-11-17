@@ -229,6 +229,7 @@ if(TG_BUILD_APP)
         app/property_grid_test.cpp
         app/action_registry_test.cpp
         app/assistant_channel_test.cpp
+        app/assistant_panel_test.cpp
         app/auto_hide_test.cpp
         app/ui_builder_test.cpp
         app/command_line_test.cpp

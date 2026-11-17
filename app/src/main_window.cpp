@@ -6,6 +6,7 @@
 #include "action_registry.hpp"
 #include "app_commands.hpp"
 #include "assistant_channel.hpp"
+#include "assistant_panel.hpp"
 #include "auto_hide.hpp"
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
@@ -341,6 +342,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
                 refresh();
             });
 
+    // Off at every start (docs/adr/0051, point 3), but already available to
+    // the actions, panel and status bar built below.
+    m_assistant = std::make_unique<AssistantChannel>(*this);
     createMenus(extension);
     createStatusBar();
     // A button New for each type, the extension's too (docs/adr/0041, point 9).
@@ -373,8 +377,6 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     }
     setDockOptions(dockOptions() | QMainWindow::AllowTabbedDocks | QMainWindow::AllowNestedDocks);
     setTheme(Theme::Light);
-    // Off at every start (docs/adr/0051, point 3).
-    m_assistant = std::make_unique<AssistantChannel>(*this);
 }
 
 QAction* MainWindow::registeredAction(const char* id) const {
@@ -544,6 +546,23 @@ void MainWindow::createMenus(const Extension& extension) {
             &CommandLine::appendToHistory);
     connect(properties, &PropertiesPanel::changed, this, &MainWindow::refresh);
     addPanel(properties, Qt::RightDockWidgetArea);
+
+    auto* assistantPanel = new AssistantPanel(*m_assistant, this);
+    connect(registeredAction("assistant.panel"), &QAction::triggered, assistantPanel,
+            &AssistantPanel::showAndFocus);
+    addPanel(assistantPanel, Qt::RightDockWidgetArea);
+    assistantPanel->hide();
+
+    QAction* assistantSwitch = registeredAction("assistant.channel");
+    connect(assistantSwitch, &QAction::toggled, this, [this, assistantSwitch](bool on) {
+        if (on && !m_assistant->start()) {
+            const QSignalBlocker blocker(assistantSwitch);
+            assistantSwitch->setChecked(false);
+            showStartMessage(m_assistant->errorString());
+        } else if (!on) {
+            m_assistant->stop();
+        }
+    });
 
     m_uiBuilder = std::make_unique<UiBuilder>(*this, *m_actions);
     registerAppCommands(m_registry, *this);
@@ -989,6 +1008,30 @@ void MainWindow::createStatusBar() {
             [this, environmentMenu] { populateEnvironmentMenu(*environmentMenu); });
     statusBar()->addPermanentWidget(m_environmentIndicator);
     updateEnvironmentIndicator();
+    QToolButton* assistantButton =
+        createModeButton(registeredAction("assistant.channel"), QStringLiteral("assistantButton"));
+    statusBar()->addPermanentWidget(assistantButton);
+    const auto updateAssistantButton = [this, assistantButton] {
+        const QString state =
+            m_assistant->isConnected()
+                ? tr("AI Assistant: connected")
+                : (m_assistant->isRunning() ? tr("AI Assistant: on") : tr("AI Assistant: off"));
+        assistantButton->setToolTip(state);
+        assistantButton->setAccessibleName(state);
+        assistantButton->setIcon(m_assistant->isConnected()
+                                     ? themedIcon(QStringLiteral("assistant-panel"), m_theme)
+                                     : registeredAction("assistant.channel")->icon());
+        assistantButton->setProperty(
+            "assistantState",
+            m_assistant->isConnected()
+                ? QStringLiteral("connected")
+                : (m_assistant->isRunning() ? QStringLiteral("on") : QStringLiteral("off")));
+    };
+    connect(m_assistant.get(), &AssistantChannel::runningChanged, assistantButton,
+            updateAssistantButton);
+    connect(m_assistant.get(), &AssistantChannel::connectedChanged, assistantButton,
+            updateAssistantButton);
+    updateAssistantButton();
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
     statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
     statusBar()->addPermanentWidget(
@@ -1904,6 +1947,14 @@ void MainWindow::updateThemeIcons() {
     if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"));
         properties != nullptr) {
         properties->setWindowIcon(registeredAction("properties.panel")->icon());
+    }
+    if (auto* assistant = findChild<AssistantPanel*>(QStringLiteral("assistantPanel"));
+        assistant != nullptr) {
+        assistant->setWindowIcon(registeredAction("assistant.panel")->icon());
+    }
+    if (m_assistant->isConnected()) {
+        findChild<QToolButton*>(QStringLiteral("assistantButton"))
+            ->setIcon(themedIcon(QStringLiteral("assistant-panel"), m_theme));
     }
 }
 
