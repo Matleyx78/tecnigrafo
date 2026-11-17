@@ -2145,3 +2145,17 @@ i rimandi ai documenti che cambia.
   l'annuncio; RT43 (#739) dipende da F12 e lo riprende il responsabile dalla
   chat di Codex. Scartata la divisione di PT43 in un pacchetto di annunci e
   uno di lavoro, e l'avvio di PT43 prima dei riferimenti, contro l'ADR 0011.
+
+- **2026-11-17 — Gli MTEXT con estrusione verso il basso restano grezzi.**
+  Per PT14 ([#689](https://github.com/Matleyx78/tecnigrafo/issues/689)) il
+  responsabile decide che un `MTEXT` con estrusione `(0,0,-1)` resta non
+  gestito e si conserva grezzo, come quelli con le altre estrusioni diverse da
+  `(0,0,1)`. `core::MText` non può rappresentare il testo specchiato: inoltre
+  il gruppo 10 e il vettore 11/21 sono nel sistema globale e non possono essere
+  convertiti come geometria OCS. Scartata la rappresentazione leggibile ma non
+  corrispondente al DXF. La scheda
+  [PT14](tappe/0.8/PT14-mtext-dxf.md) richiede il caso verso il basso fra i test.
+  Anche l'oracolo ezdxf classifica non gestito un `MTEXT` con estrusione
+  `(0,0,-1)`. Questo estende all'oracolo l'eccezione del 2026-11-16: PT14 può
+  modificare `ezdxf_attesi.py` e, solo per il self-test di questa regola,
+  `controlla_casi.py`.
