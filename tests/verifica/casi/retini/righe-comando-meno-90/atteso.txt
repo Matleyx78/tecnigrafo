@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [report 1]
 entities:
-  257 HATCH pattern="NET" solid=no angle=-90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,-10 vertex=10,-10 vertex=10,0
+  257 HATCH pattern="NET" solid=no angle=270 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,-10 vertex=10,-10 vertex=10,0
 messages:
   Command: OPEN
   Enter name of drawing to open: input.dxf
@@ -54,7 +54,7 @@ statistics:
 
 [report 3]
 entities:
-  257 HATCH pattern="NET" solid=no angle=-90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,-10 vertex=10,-10 vertex=10,0
+  257 HATCH pattern="NET" solid=no angle=270 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,-10 vertex=10,-10 vertex=10,0
 messages:
   Command: REDO
   Redone: Rotate.
@@ -76,7 +76,7 @@ statistics:
 
 [final]
 entities:
-  257 HATCH pattern="NET" solid=no angle=-90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,-10 vertex=10,-10 vertex=10,0
+  257 HATCH pattern="NET" solid=no angle=270 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,-10 vertex=10,-10 vertex=10,0
 messages:
   Command: ROTATE
   Select objects: 5,-3.175

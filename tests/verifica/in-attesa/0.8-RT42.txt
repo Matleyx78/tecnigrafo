@@ -10,5 +10,4 @@ retini/righe-autocad #738
 retini/righe-comando-piu-90 #738
 retini/righe-comando-meno-90 #738
 retini/righe-comando-centro #738
-retini/righe-comando-giro #738
 retini/righe-comando-specchio #738
