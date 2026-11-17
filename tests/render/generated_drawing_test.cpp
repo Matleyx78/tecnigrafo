@@ -3,14 +3,18 @@
 
 #include "generated_drawing.hpp"
 
+#include "tg/core/document.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/math.hpp"
 #include "tg/render/scene_renderer.hpp"
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -292,6 +296,119 @@ TEST(GeneratedDrawing, HighlightAndPreviewDrawTheShapesOfTheScene) {
         EXPECT_EQ(preview.strokes[i].points, expected.points);
         EXPECT_EQ(preview.strokes[i].color, style.preview);
     }
+}
+
+/// An entity of a block, on the layer 0 and ByLayer, as a new drawing gives.
+core::EntityRecord blockMember(const core::Document& document, core::Entity entity) {
+    core::EntityRecord record{core::EntityId{}, std::move(entity)};
+    record.properties.layer = document.layerZero();
+    record.properties.linetype = document.byLayerLinetype();
+    return record;
+}
+
+core::Insert insertOf(std::string name, const Vec2& insertion, double scaleX, double scaleY) {
+    core::Insert insert;
+    insert.block = std::move(name);
+    insert.insertion = insertion;
+    insert.scaleX = scaleX;
+    insert.scaleY = scaleY;
+    return insert;
+}
+
+// An insert, with a line, a circle and an arc, under a similarity and under a
+// stretch: highlight and preview draw the generated shapes of the scene, in
+// the colour of the selection (docs/tappe/0.8/PT16-blocchi-core.md, tests).
+TEST(GeneratedDrawing, HighlightAndPreviewOfAnInsertDrawTheShapesOfTheScene) {
+    core::Document document = core::Document::newDrawing();
+    core::BlockDefinition block{"B"};
+    block.base = {1.0, 1.0};
+    block.entities = {blockMember(document, core::Line{{0.0, 0.0}, {20.0, 10.0}}),
+                      blockMember(document, core::Circle{{5.0, 5.0}, 7.0}),
+                      blockMember(document, core::Arc{{-5.0, 5.0}, 4.0, 0.2, 2.5})};
+    document.replaceBlock("B", block);
+    const std::array<core::Entity, 2> inserts{insertOf("B", {-20.0, 10.0}, 2.0, 2.0),
+                                              insertOf("B", {30.0, -20.0}, 2.0, 1.0)};
+    const std::array<core::EntityId, 2> ids{document.add(inserts[0]), document.add(inserts[1])};
+    SceneStyle style;
+    style.showGrid = false;
+    style.highlight = {7, 8, 9};
+    style.preview = {4, 5, 6};
+    const auto viewport = testViewport();
+    ShapePainter scene;
+    renderScene(document, viewport, style, scene);
+    ShapePainter highlight;
+    renderHighlight(document, ids, viewport, style, highlight);
+    ShapePainter preview;
+    renderPreview(document, inserts, viewport, style, preview);
+    // The scene draws the two axes first, then three shapes for each insert.
+    ASSERT_EQ(scene.strokes.size(), 2U + 6U);
+    ASSERT_EQ(highlight.strokes.size(), 6U);
+    ASSERT_EQ(preview.strokes.size(), 6U);
+    for (std::size_t i = 0; i < highlight.strokes.size(); ++i) {
+        const auto& expected = scene.strokes[2 + i];
+        EXPECT_EQ(highlight.strokes[i].points, expected.points);
+        EXPECT_EQ(highlight.strokes[i].closed, expected.closed);
+        EXPECT_EQ(highlight.strokes[i].color, style.highlight);
+        EXPECT_EQ(highlight.strokes[i].style, LineStyle::Dashed);
+        EXPECT_EQ(preview.strokes[i].points, expected.points);
+        EXPECT_EQ(preview.strokes[i].color, style.preview);
+    }
+    // The first line of the first insert: (0,0) - (1,1), times 2, plus (-20, 10).
+    expectPoint(scene.strokes[2].points.front(), viewport.worldToScreen({-22.0, 8.0}));
+}
+
+// A polyline with an arc and width 2, dashed, in an insert scaled (2, 1): its
+// pieces, a line and an elliptical arc, reach the painter without width, and
+// the pattern starts again at the start of each (docs/DECISIONI.md,
+// 2026-11-15, "Test di PT8 con un inserimento vero in PT16").
+TEST(GeneratedDrawing, AStretchedPolylineOfAnInsertReachesThePainterInPieces) {
+    core::Document document = core::Document::newDrawing();
+    core::Linetype dash;
+    dash.name = "Dash";
+    // A dash of 3 and a gap of 2: the line piece, 4 long, ends in a gap, so
+    // a pattern carried on would not start the arc with a dash.
+    dash.pattern.elements = {3.0, -2.0};
+    const core::LinetypeId dashId = document.addLinetype(dash);
+    core::Polyline bent;
+    bent.addVertex({6.0, 0.0});
+    bent.addVertex({4.0, 0.0}, 1.0);
+    bent.addVertex({0.0, 0.0});
+    bent.setConstantWidth(2.0);
+    core::EntityRecord member = blockMember(document, bent);
+    member.properties.linetype = dashId;
+    core::BlockDefinition block{"Shapes"};
+    block.entities.push_back(member);
+    document.replaceBlock("Shapes", block);
+    const core::EntityId id = document.add(insertOf("Shapes", {10.0, 20.0}, 2.0, 1.0));
+    const auto items = core::generate(document, *document.find(id));
+    ASSERT_EQ(items.size(), 2U);
+    EXPECT_TRUE(std::holds_alternative<core::Line>(items[0].shape));
+    EXPECT_TRUE(std::holds_alternative<core::Ellipse>(items[1].shape));
+
+    SceneStyle style;
+    style.showGrid = false;
+    const auto viewport = testViewport();
+    ShapePainter painter;
+    renderScene(document, viewport, style, painter);
+    // No width: nothing filled, every stroke a cosmetic solid pen.
+    EXPECT_TRUE(painter.fills.empty());
+    EXPECT_TRUE(painter.loopFills.empty());
+    ASSERT_GT(painter.strokes.size(), 2U);
+    for (const auto& stroke : painter.strokes) {
+        EXPECT_EQ(stroke.widthPx, 0.0);
+        EXPECT_EQ(stroke.style, LineStyle::Solid);
+    }
+    // The line runs from (22, 20) to (18, 20), the arc from (18, 20): each
+    // starts with a dash.
+    const auto startsAt = [&](const Vec2& world) {
+        const Vec2 screen = viewport.worldToScreen(world);
+        return std::ranges::any_of(painter.strokes, [&](const ShapePainter::Stroke& stroke) {
+            return std::abs(stroke.points.front().x - screen.x) < kEps &&
+                   std::abs(stroke.points.front().y - screen.y) < kEps;
+        });
+    };
+    EXPECT_TRUE(startsAt({22.0, 20.0}));
+    EXPECT_TRUE(startsAt({18.0, 20.0}));
 }
 
 // The five entities of before the 0.8 come from core::generate() as they are:

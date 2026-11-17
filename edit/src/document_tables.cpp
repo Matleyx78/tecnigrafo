@@ -3,6 +3,7 @@
 
 #include "tg/edit/document_tables.hpp"
 
+#include "tg/core/insert.hpp"
 #include "tg/edit/editor.hpp"
 #include "tg/edit/layer_rules.hpp"
 
@@ -244,7 +245,8 @@ bool DocumentTables::replaceBlock(std::string name,
         // and redefining a block keeps its original spelling (PT4, P6).
         definition->name = name;
     }
-    if ((!definition && previous == nullptr) ||
+    // A block in use is not removed (core::Document::replaceBlock()).
+    if ((!definition && (previous == nullptr || core::isBlockUsed(document, name))) ||
         (definition && previous != nullptr && *definition == *previous)) {
         return false;
     }
