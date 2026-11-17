@@ -34,9 +34,7 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
                                                  double tolerance);
 
 /// The entities selected by `rectangle`: Window takes those isInside(),
-/// Crossing those isInside() or intersects(), but an ellipse only if it
-/// intersects(), which is never true until PT50 (docs/adr/0052, point 4).
-/// Sorted by id.
+/// Crossing those isInside() or intersects(). Sorted by id.
 /// An empty rectangle selects nothing.
 [[nodiscard]] std::vector<EntityId> selectInRectangle(const Document& document,
                                                       const BBox& rectangle, RectangleMode mode);
@@ -59,8 +57,9 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// (docs/adr/0013, point 6). With every mode disabled the result is always
 /// std::nullopt.
 ///
-/// Intersections come from pairs of visible curves within the aperture and
-/// from self-intersections of each such polyline, without extensions. Shared
+/// Intersections come from pairs of visible curves within the aperture,
+/// ellipses included (intersections.hpp), and from self-intersections of each
+/// such polyline, without extensions. Shared
 /// stretches offer no intersection points (docs/adr/0033, point 3). A pair's
 /// intersection carries its higher entity id; a self-intersection carries
 /// the polyline id. These ids decide equal-distance, equal-rank ties.

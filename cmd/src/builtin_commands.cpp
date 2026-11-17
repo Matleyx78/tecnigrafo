@@ -7,6 +7,7 @@
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/cmd/commands/arc_command.hpp"
+#include "tg/cmd/commands/block_command.hpp"
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
@@ -20,6 +21,7 @@
 #include "tg/cmd/commands/line_command.hpp"
 #include "tg/cmd/commands/mirror_commands.hpp"
 #include "tg/cmd/commands/move_copy_commands.hpp"
+#include "tg/cmd/commands/mtext_command.hpp"
 #include "tg/cmd/commands/offset_command.hpp"
 #include "tg/cmd/commands/pedit_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
@@ -39,6 +41,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(LinetypeCommand::description(),
                  [] { return std::make_unique<LinetypeCommand>(); });
     registry.add(detail::arcDescription(), [] { return std::make_unique<ArcCommand>(); });
+    registry.add(BlockCommand::description(), [] { return std::make_unique<BlockCommand>(); });
     registry.add(ScaleCommand::description(ScaleCommand::Variable::Current),
                  [] { return std::make_unique<ScaleCommand>(ScaleCommand::Variable::Current); });
     registry.add(ChamferCommand::description(), [] { return std::make_unique<ChamferCommand>(); });
@@ -66,6 +69,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(MirrtextCommand::description(),
                  [] { return std::make_unique<MirrtextCommand>(); });
     registry.add(MoveCommand::description(), [] { return std::make_unique<MoveCommand>(); });
+    registry.add(MTextCommand::description(), [] { return std::make_unique<MTextCommand>(); });
     registry.add(detail::newDescription(), [] { return std::make_unique<NewCommand>(); });
     registry.add(OffsetCommand::description(), [] { return std::make_unique<OffsetCommand>(); });
     registry.add(detail::openDescription(), [] { return std::make_unique<OpenCommand>(); });

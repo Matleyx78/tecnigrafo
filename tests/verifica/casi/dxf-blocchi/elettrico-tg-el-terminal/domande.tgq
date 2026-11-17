@@ -8,6 +8,6 @@ D = DXF source=elettrico-tg-el-terminal
 ? count D -> CIRCLE 1; LINE 2
 ? unhandled D -> ATTDEF 19
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:40 -> Insertion 0,0
+? snaps D:40 -> none
 ; TG_PIN2=S, flags=3 (constant + invisible).
-? snaps D:41 -> Insertion 0,-5
+? snaps D:41 -> none

@@ -77,11 +77,17 @@ bool isOwnShape(const Entity& entity) {
 }
 
 /// True for the shapes that take part in tangents and intersections: curves,
-/// not texts. Solids and ellipses wait for their packages (docs/tappe/0.8,
-/// PT10 and PT50).
+/// not texts. Solids wait for their package (docs/tappe/0.8, PT10).
 bool isSnapCurve(const Entity& shape) {
     return std::holds_alternative<Polyline>(shape) || std::holds_alternative<Line>(shape) ||
            std::holds_alternative<Circle>(shape) || std::holds_alternative<Arc>(shape);
+}
+
+/// True for the shapes that take part in intersections: the curves of
+/// isSnapCurve() and ellipses, which give no tangent (docs/adr/0052, point 3;
+/// docs/tappe/0.8/PT50-ellisse-selezione-snap.md, point 4).
+bool meetsOthers(const Entity& shape) {
+    return isSnapCurve(shape) || std::holds_alternative<Ellipse>(shape);
 }
 
 /// A shape of an entity for the object snap, with the entity's id.
@@ -176,13 +182,7 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
     }
     for (const EntityId id : candidates(document, rectangle)) {
         const EntityRecord& record = recordOf(document, id);
-        // Until the ellipse of solid-space's geom2d (docs/tappe/0.8, PT50) an
-        // ellipse is selected only by a window that contains it, never by a
-        // crossing (docs/adr/0052, point 4; docs/tappe/0.8, PT48, point 6).
-        const bool windowOnly = std::holds_alternative<Ellipse>(record.entity);
-        const bool inside =
-            (mode == RectangleMode::Window || !windowOnly) && isInside(document, record, rectangle);
-        if (inside ||
+        if (isInside(document, record, rectangle) ||
             (mode == RectangleMode::Crossing && intersects(document, record, rectangle))) {
             selected.push_back(id);
         }
@@ -246,7 +246,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
     // The snap points of one shape of an entity with identifier `id`.
     std::vector<SnapShape> nearbyCurves;
     const auto considerShape = [&](const Entity& entity, std::uint64_t id) {
-        if (modes.intersection && isSnapCurve(entity) && distance(entity, pointer) <= aperture) {
+        if (modes.intersection && meetsOthers(entity) && distance(entity, pointer) <= aperture) {
             nearbyCurves.push_back({id, &entity});
         }
         considerTangents(entity, id);
