@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT42 / PT42 (#738). Copied clipping points from solid-space at fc8cae3da8a737510d6b61075b03ea3272228576.
+; Paths: tests/corpus/casi/geom2d/<case below>.json. No kernel execution.
+; Handwritten DXF: one family per host, offset 1000 along its normal; k=0 only.
+; Circle loops are two exact semicircles; other loops retain the corpus vertices.
+D = DXF file=input.dxf
+; cambia con #738
+; taglio-richiesta-rettangolo-isola-righe-intere.json, host 0; inside then boundary.
+? generated D:100 -> LINE start=0,5 end=7,5; LINE start=13,5 end=20,5
+; taglio-richiesta-rettangolo-isola-righe-intere.json, host 1; inside then boundary.
+? generated D:101 -> LINE start=5,0 end=7.878679656440357,2.878679656440358; LINE start=12.12132034355964,7.121320343559643 end=15,10
+; taglio-richiesta-rettangolo-isola-righe-intere.json, host 2; inside then boundary.
+? generated D:102 -> LINE start=10,0 end=10,2; LINE start=10,8 end=10,10
+; taglio-richiesta-rettangolo-isola-righe-intere.json, host 3; inside then boundary.
+? generated D:103 -> LINE start=0,1 end=20,1
+; taglio-lato-contorno-concavo.json, host 0; inside then boundary.
+? generated D:104 -> LINE start=0,4 end=4,4; LINE start=4,4 end=8,4
+; taglio-lato-contorno-regione-a-destra.json, host 0; inside then boundary.
+? generated D:105 -> LINE start=8,0 end=0,0
+; taglio-lato-contorno-regione-a-sinistra.json, host 0; inside then boundary.
+? generated D:106 -> LINE start=0,0 end=8,0
+; taglio-tangente-isola-dentro.json, host 0; inside then boundary.
+? generated D:107 -> LINE start=0,6 end=8,6
+; taglio-vertice-entra.json, host 0; inside then boundary.
+? generated D:108 -> LINE start=8,0 end=0,4
+; taglio-regione-vuota.json, host 0; inside then boundary.
+? generated D:109 -> none

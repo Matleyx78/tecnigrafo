@@ -1,0 +1,99 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,-10 vertex=0,-10
+messages:
+  Command: OPEN
+  Enter name of drawing to open: input.dxf
+  Command: MIRROR
+  Select objects: 0,5
+  1 found, 1 total
+  Select objects:
+  Specify first point of mirror line: 0,0
+  Specify second point of mirror line: 10,0
+  Erase source objects? [Yes/No] <No>: Y
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Mirror
+redo:
+snap: off
+ortho: off
+drawing: input.dxf, modified
+documents: Drawing1.cadx, input.dxf (active)
+pointer: 0,-5
+active snap: none
+statistics:
+  HATCH 1
+
+[report 2]
+entities:
+  257 HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+messages:
+  Command: U
+  Undone: Mirror.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Mirror
+snap: off
+ortho: off
+drawing: input.dxf
+documents: Drawing1.cadx, input.dxf (active)
+pointer: 0,-5
+active snap: none
+statistics:
+  HATCH 1
+
+[report 3]
+entities:
+  257 HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,-10 vertex=0,-10
+messages:
+  Command: REDO
+  Redone: Mirror.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Mirror
+redo:
+snap: off
+ortho: off
+drawing: input.dxf, modified
+documents: Drawing1.cadx, input.dxf (active)
+pointer: 0,-5
+active snap: none
+statistics:
+  HATCH 1
+
+[final]
+entities:
+  257 HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,-10 vertex=0,-10
+messages:
+  Command: MIRROR
+  Select objects: 3.175,-5
+  1 found, 1 total
+  Select objects:
+  *Cancel*
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Mirror
+redo:
+snap: off
+ortho: off
+drawing: input.dxf, modified
+documents: Drawing1.cadx, input.dxf (active)
+pointer: 3.175,-5
+active snap: none
+statistics:
+  HATCH 1

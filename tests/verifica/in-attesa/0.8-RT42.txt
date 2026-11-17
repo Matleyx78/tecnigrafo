@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 The Tecnigrafo authors
+retini/righe-ansi31 #738
+retini/righe-net-cardinali #738
+retini/righe-tratteggi #738
+retini/righe-stili-isole #738
+retini/righe-limiti #738
+retini/righe-archivio #738
+retini/righe-autocad #738
+retini/righe-comando-piu-90 #738
+retini/righe-comando-meno-90 #738
+retini/righe-comando-centro #738
+retini/righe-comando-giro #738
+retini/righe-comando-specchio #738

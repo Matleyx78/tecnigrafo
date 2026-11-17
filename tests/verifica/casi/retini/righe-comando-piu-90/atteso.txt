@@ -1,0 +1,100 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 HATCH pattern="NET" solid=no angle=90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,10 vertex=-10,10 vertex=-10,0
+messages:
+  Command: OPEN
+  Enter name of drawing to open: input.dxf
+  Command: ROTATE
+  Select objects: 0,5
+  1 found, 1 total
+  Select objects:
+  Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
+  Specify base point: 0,0
+  Specify rotation angle or [Copy/Reference] <0>: 90
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Rotate
+redo:
+snap: off
+ortho: off
+drawing: input.dxf, modified
+documents: Drawing1.cadx, input.dxf (active)
+pointer: -5,0
+active snap: none
+statistics:
+  HATCH 1
+
+[report 2]
+entities:
+  257 HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+messages:
+  Command: U
+  Undone: Rotate.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Rotate
+snap: off
+ortho: off
+drawing: input.dxf
+documents: Drawing1.cadx, input.dxf (active)
+pointer: -5,0
+active snap: none
+statistics:
+  HATCH 1
+
+[report 3]
+entities:
+  257 HATCH pattern="NET" solid=no angle=90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,10 vertex=-10,10 vertex=-10,0
+messages:
+  Command: REDO
+  Redone: Rotate.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Rotate
+redo:
+snap: off
+ortho: off
+drawing: input.dxf, modified
+documents: Drawing1.cadx, input.dxf (active)
+pointer: -5,0
+active snap: none
+statistics:
+  HATCH 1
+
+[final]
+entities:
+  257 HATCH pattern="NET" solid=no angle=90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=0,10 vertex=-10,10 vertex=-10,0
+messages:
+  Command: ROTATE
+  Select objects: -5,3.175
+  1 found, 1 total
+  Select objects:
+  Current positive angle in UCS:  ANGDIR=counterclockwise  ANGBASE=0
+  *Cancel*
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+  Rotate
+redo:
+snap: off
+ortho: off
+drawing: input.dxf, modified
+documents: Drawing1.cadx, input.dxf (active)
+pointer: -5,3.175
+active snap: none
+statistics:
+  HATCH 1
