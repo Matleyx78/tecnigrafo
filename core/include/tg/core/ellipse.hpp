@@ -74,27 +74,53 @@ struct Ellipse {
 /// it, the points where X or Y is extreme. It does not depend on the document.
 [[nodiscard]] BBox boundingBox(const Ellipse& ellipse);
 
+// The questions of solid-space's ellipse.hpp (docs/adr/0052, point 4;
+// docs/tappe/0.8/PT50-ellisse-selezione-snap.md, point 2). Data solid-space
+// refuses (a coordinate beyond 2^50, a parameter beyond kMaxTrigArgument, a
+// value that is not finite) stays out, as docs/adr/0035, point 23 says: an
+// infinite distance, no nearest point, no crossing. An arc that solid-space
+// reduces to a single direction (degenerateCurve) is its start point,
+// pointAt(ellipse, startParameter).
+
+/// Distance from `point` to the ellipse as given, never its extension
+/// (docs/adr/0052, point 4): solid-space's nearest(), within its declared
+/// error. Precondition: supported(ellipse).
+[[nodiscard]] double distance(const Ellipse& ellipse, const Vec2& point);
+
+/// The point of the ellipse nearest to `point` (nearest()); an end of an
+/// arc is the end of endpoints(), bit for bit. Among candidates almost at the
+/// same distance any may come back (the band of nearest()). std::nullopt for
+/// data solid-space refuses. Precondition: supported(ellipse).
+[[nodiscard]] std::optional<Vec2> closestPoint(const Ellipse& ellipse, const Vec2& point);
+
+/// Crossing selection, borders included: solid-space's meetsRectangle(). A
+/// whole ellipse around the rectangle without touching it is false.
+/// Precondition: supported(ellipse); an empty rectangle is false.
+[[nodiscard]] bool intersects(const Ellipse& ellipse, const BBox& rectangle);
+
 // Ellipse is also a shape of the generated geometry (generated.hpp): the
 // questions on a shape, which do not depend on the document.
 
-/// Distance from `point`, as distance(const Entity&, const Vec2&): until the
-/// ellipse of solid-space's geom2d (docs/adr/0052, point 4; docs/tappe/0.8,
-/// PT50) always infinity, so a click never picks an ellipse.
+/// Distance from `point`, as distance(const Entity&, const Vec2&):
+/// distance(const Ellipse&, const Vec2&).
 [[nodiscard]] double distanceOf(const Ellipse& ellipse, const Vec2& point);
 
 /// Window selection, as isInside(const Entity&, const BBox&): true when the
 /// bounding box lies in `rectangle`, borders included.
 [[nodiscard]] bool isInsideOf(const Ellipse& ellipse, const BBox& rectangle);
 
-/// Crossing selection, as intersects(const Entity&, const BBox&): until PT50
-/// always false (docs/adr/0052, point 4).
+/// Crossing selection, as intersects(const Entity&, const BBox&):
+/// intersects(const Ellipse&, const BBox&).
 [[nodiscard]] bool intersectsOf(const Ellipse& ellipse, const BBox& rectangle);
 
 /// Appends the enabled snap points, as appendSnapPoints(const Entity&, …),
 /// in this order: Endpoint at the start and at the end of an arc (none for a
-/// full ellipse); Center; Quadrant at the ends of the axes that lie on the
-/// curve, end points included, by parameter 0, 90°, 180°, 270°. Intersection
-/// comes with PT50, Nearest after the 0.8; `from` is not used.
+/// full ellipse), from solid-space's endpoints(), so that they are the ends
+/// that nearest() gives bit for bit (pointAt() for data it refuses); Center;
+/// Quadrant at the ends of the axes that lie on the curve, end points
+/// included, by parameter 0, 90°, 180°, 270°. Intersection comes from
+/// findSnap() (document_query.hpp), Nearest after the 0.8; `from` is not
+/// used.
 void appendSnapPointsOf(const Ellipse& ellipse, const SnapModes& modes, std::vector<SnapPoint>& out,
                         const std::optional<Vec2>& from);
 
