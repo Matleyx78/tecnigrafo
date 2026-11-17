@@ -80,6 +80,8 @@ void writeSolid(const core::EntityRecord& record, EntityWriteContext& context,
     out.push_back({100, "AcDbTrace"});
     for (std::size_t i = 0; i < solid.vertices.size(); ++i) {
         if (i == 3 && !solid.fourthVertexPresent) {
+            constexpr std::array kFourthVertexElevation{33};
+            writePlacement(extras, kFourthVertexElevation, out);
             break;
         }
         const core::Vec2 vertex =

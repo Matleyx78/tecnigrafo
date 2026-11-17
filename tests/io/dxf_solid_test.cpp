@@ -6,6 +6,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ranges>
+
 namespace tg::io {
 namespace {
 
@@ -45,6 +47,40 @@ TEST(DxfSolid, ReadsThreeAndFourVertices) {
     ASSERT_TRUE(quadrilateral.has_value());
     const core::EntityRecord quadrilateralRecord = quadrilateral.value_or(core::EntityRecord{});
     EXPECT_EQ(std::get<core::Solid>(quadrilateralRecord.entity).vertices[3], (core::Vec2{6, 7}));
+}
+
+TEST(DxfSolid, WritesThreeVerticesAndPreservesFourthElevation) {
+    const auto record = decode({{100, "AcDbTrace"},
+                                {10, "0"},
+                                {20, "1"},
+                                {30, "2"},
+                                {11, "3"},
+                                {21, "4"},
+                                {31, "5"},
+                                {12, "6"},
+                                {22, "7"},
+                                {32, "8"},
+                                {33, "9"}});
+    ASSERT_TRUE(record.has_value());
+    const core::EntityRecord decoded = record.value_or(core::EntityRecord{});
+
+    EntityWriteContext context{"AC1032", "ANSI_1252", {0x20}};
+    core::RawGroups written;
+    findCodec(decoded.entity)->write(decoded, context, written);
+
+    auto geometry = written | std::views::filter([](const core::RawGroup& group) {
+                        return group.code >= 10 && group.code <= 33;
+                    });
+    EXPECT_EQ(core::RawGroups(geometry.begin(), geometry.end()), (core::RawGroups{{10, "0.0"},
+                                                                                  {20, "1.0"},
+                                                                                  {30, "2"},
+                                                                                  {11, "3.0"},
+                                                                                  {21, "4.0"},
+                                                                                  {31, "5"},
+                                                                                  {12, "6.0"},
+                                                                                  {22, "7.0"},
+                                                                                  {32, "8"},
+                                                                                  {33, "9"}}));
 }
 
 TEST(DxfSolid, NegativeExtrusionAndUnknownGroupsSurviveRoundtrip) {
