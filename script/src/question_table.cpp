@@ -269,13 +269,31 @@ Parsed<const core::Entity*> objectArguments(const QuestionModel& model, Argument
     return entityArgument(model, arguments[0]);
 }
 
+/// The record of the entity named `name`: the questions that answer through
+/// the document (docs/tappe/0.8/PT30-retini-core.md, point 7).
+Parsed<const core::EntityRecord*> recordArgument(const QuestionModel& model,
+                                                 std::string_view name) {
+    const std::optional<core::EntityId> id = model.find(name);
+    if (!id) {
+        return ArgumentError{"no entity named " + quoted(name) + " is defined above"};
+    }
+    const core::EntityRecord* record = model.document.find(*id);
+    assert(record != nullptr && "every named entity is in the document");
+    return record;
+}
+
 QuestionResult askBoundingBox(const QuestionModel& model, Arguments arguments) {
-    const Parsed<const core::Entity*> entity =
-        objectArguments(model, arguments, 0, "bbox <entity>");
-    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+    if (arguments.size() != 1) {
+        return usage("bbox <entity>");
+    }
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
-    const core::BBox box = core::boundingBox(*std::get<const core::Entity*>(entity));
+    // The extent of the generated geometry: for the five entities of before
+    // the 0.8, their bounding box (generated.hpp).
+    const core::BBox box =
+        core::extent(model.document, *std::get<const core::EntityRecord*>(record));
     if (box.isEmpty()) {
         return std::string{"empty"};
     }
@@ -360,8 +378,8 @@ QuestionResult askSnaps(const QuestionModel& model, Arguments arguments) {
     if (arguments.empty()) {
         return usage(kForm);
     }
-    const Parsed<const core::Entity*> entity = entityArgument(model, arguments[0]);
-    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
     constexpr std::array<std::string_view, 1> kKeys{"modes"};
@@ -377,8 +395,10 @@ QuestionResult askSnaps(const QuestionModel& model, Arguments arguments) {
         return *error;
     }
     std::vector<core::SnapPoint> points;
-    core::appendSnapPoints(*std::get<const core::Entity*>(entity), std::get<core::SnapModes>(modes),
-                           points);
+    // Through the generated geometry: for the five entities of before the
+    // 0.8, their own snap points (generated.hpp).
+    core::appendSnapPoints(model.document, *std::get<const core::EntityRecord*>(record),
+                           std::get<core::SnapModes>(modes), points, std::nullopt);
     if (points.empty()) {
         return std::string{"none"};
     }

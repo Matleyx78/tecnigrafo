@@ -4,6 +4,7 @@
 !view 270,100 0.25 2400x1200
 !scr on
 ; cambia con #570
+; cambia con #683
 OPEN
 ingresso.dxf
 ; Impostazione raggio: il comando termina subito dopo il valore

@@ -1,0 +1,54 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT31 / PT31 (#723): the DXF codec of HATCH on a handwritten file
+; (input.dxf, R2018, $INSUNITS 4, no tables). Groups in the order of
+; ADR 0048, point 1, as AutoCAD writes them (autocad-retini.dxf).
+; 10..13 the LINEs of the contour of 23.
+; 20 SOLID: polyline loop and an edge loop with a whole arc (circle).
+; 21 SOLID as AutoCAD writes it: gradient groups with 450 = 0, which is no
+;    gradient (card, point 2), a polyline loop with bulges.
+; 22 the same with 450 = 1: a gradient, unhandled.
+; 23 ANSI31, associative (71 = 1): edge loop of four lines with 97 = 4 and the
+;    330 handles of 10..13 (extras of the loop), two seeds, transparency 440
+;    in AcDbEntity and XDATA at the end.
+; 24 SOLID, islands outer: lines and a counterclockwise arc from 270 to 90.
+; 25 ellipse edge (72 = 3) and 26 spline edge (72 = 4): unhandled.
+; 27 polyline loop without the closed flag (73 = 0), 28 edge loop whose
+;    last line ends 8 units from the first, 29 edge loop without edges:
+;    unhandled (card, point 2; PT30, point 1).
+; 2A extrusion (0,0,-1), elevation 3: OCS polyline (1,0) (4,0) (4,2) (1,2);
+;    world x -> -x (ADR 0018, point 5).
+; 2B extrusion (1,0,0): unhandled (ADR 0018, point 3).
+; Values by hand from the file and the rules above; ezdxf 1.4.5 reads the same
+; loops and seeds, but counts 21 as a gradient and does not check closure, so
+; this is not an oracle case.
+D = DXF file=input.dxf
+? version D -> AC1032
+? units D -> 4
+; PT31 makes HATCH a handled entity: until then every HATCH is unhandled.
+; cambia con #723
+? count D -> HATCH 5; LINE 4
+? unhandled D -> HATCH 7
+? entity D 20 -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 loop=edges circle=5,4;2 seed=1,1
+? entity D 21 -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=50,8 vertex=40,8 vertex=40,0 vertex=50,0 loop=outermost+derived+polyline vertex=43,4 bulge=-1 vertex=47,4 bulge=-1 seed=41,1 seed=41,1
+? entity D 22 -> unhandled HATCH
+? entity D 23 -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=20,0;30,0 line=30,0;30,8 line=30,8;20,8 line=20,8;20,0 seed=21,1 seed=29,7
+? entity D 24 -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=outer loop=external+edges line=60,10;70,10 arc=70,14;4;270;90 line=70,18;60,18 line=60,18;60,10 seed=61,11
+? entity D 25 -> unhandled HATCH
+? entity D 26 -> unhandled HATCH
+? entity D 27 -> unhandled HATCH
+? entity D 28 -> unhandled HATCH
+? entity D 29 -> unhandled HATCH
+? entity D 2B -> unhandled HATCH
+; 2A in world coordinates: the square [-4,-1] x [0,2].
+? bbox D:2A -> -4,0 -1,2
+? bbox D:20 -> 0,0 10,8
+? bbox D:24 -> 60,10 74,18
+; A hatch has neither snaps nor grips (ADR 0048, point 4).
+? snaps D:23 -> none
+? grips D:23 -> none
+; The rewritten file keeps the groups as read: 71, 97 and 330 of each loop,
+; 47, the gradient groups of 21 with 450 = 0, 440, the XDATA, the elevation
+; and the extrusion of 2A back in the OCS (ADR 0018, points 4-6).
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical

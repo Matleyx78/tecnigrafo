@@ -17,6 +17,7 @@ add_library(tg_core
     src/ellipse.cpp
     src/generated.cpp
     src/hatch.cpp
+    src/hatch_patterns.cpp
     src/insert.cpp
     src/lineweight.cpp
     src/linetype_pattern.cpp
