@@ -18,7 +18,9 @@
 - `io/src/dxf_mtext.cpp` (nuovo), `io/CMakeLists.txt`, `io/src/dxf_entities.cpp`,
   `io/src/dxf_entity_common.hpp` (file comuni: una riga ciascuno)
 - `tests/io/dxf_mtext_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
-- `tests/verifica/oracolo/ezdxf_attesi.py` (solo l'elenco dei tipi attivi)
+- `tests/verifica/oracolo/ezdxf_attesi.py` (l'elenco dei tipi attivi e, in
+  `managed()`, un `MTEXT` con estrusione `(0,0,-1)` non gestito)
+- `tests/verifica/oracolo/controlla_casi.py` (solo il self-test di quella regola)
 - `tests/verifica/casi/**/domande.tgq` (solo le righe `? count` e
   `? unhandled`, copiate dal log dell'oracolo)
 
@@ -42,7 +44,9 @@
    `unhandled` di tutti i casi che cambiano. Questa è l'eccezione a
    [pacchetto.md](../../agenti/pacchetto.md),
    «In un pacchetto di lavoro», e all'ADR 0011 (casi scritti da un altro
-   agente), decisa il 2026-11-16 in [DECISIONI.md](../../DECISIONI.md).
+   agente), decisa il 2026-11-16 in [DECISIONI.md](../../DECISIONI.md). Nella
+   stessa pull request l'oracolo classifica non gestito un `MTEXT` con
+   estrusione `(0,0,-1)` (decisione del 2026-11-17).
 
 ## Regole della tappa che valgono qui
 
@@ -55,6 +59,8 @@
   caratteri con lettere accentate; vettore 11/21 conservato; un `MTEXT` con
   colonne resta non gestito; un `MTEXT` con estrusione `210/220/230 = 0,0,-1`
   resta non gestito e si conserva grezzo.
+- un self-test dell'oracolo: un `MTEXT` con 210/220/230 = 0,0,-1 è in
+  `unhandled` e non in `count`.
 
 ## Fatto quando
 
