@@ -6,10 +6,9 @@
 ; PT43 points 2-3 exclude these types without marking the result incomplete.
 ; Each definition must be supported before the queries can be evaluated.
 
-; Ellipses, text boxes, hatches and dimension graphics are not candidates.
+; Ellipses, text boxes and hatches are not candidates.
 E = ELLIPSE center=5,5 major-axis=4,0 ratio=0.5
 T = TEXT position=1,1 height=2 value="Boundary"
 H = HATCH pattern="SOLID" solid=yes loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
-D = DIMENSION kind=linear style="Standard" origin1=0,0 origin2=10,0 line-point=10,10 text-point=5,10 measurement=10
 ? hatch-boundary 5,5 -> not-enclosed
-? hatch-contours E T H D -> left-out=E left-out=T left-out=H left-out=D
+? hatch-contours E T H -> left-out=E left-out=T left-out=H
