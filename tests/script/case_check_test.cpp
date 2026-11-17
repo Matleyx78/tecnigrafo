@@ -458,12 +458,14 @@ TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
     const std::string drawing =
         "A = LINE start=0,0 end=10,0\n"
         "P = LWPOLYLINE vertex=0,0 vertex=0,10\n";
-    // Stage 0.7 questions, and those announced for package PT32 of stage 0.8
+    // Stage 0.7 questions, those announced for package PT32 of stage 0.8
     // (docs/tappe/fuori-tappa/F9-domande-pedit.md), whose sources must be
-    // polylines once realized.
+    // polylines once realized, and those announced for package PT43
+    // (docs/tappe/fuori-tappa/F12-annuncio-domande-contorni.md).
     const std::vector<std::string> forms{
-        "transform A move 1,2", "grips A",   "grip A 0,0 1,2",
-        "to-polyline A",        "reverse P", "pedit-join P A fuzz=1"};
+        "transform A move 1,2", "grips A",         "grip A 0,0 1,2",
+        "to-polyline A",        "reverse P",       "pedit-join P A fuzz=1",
+        "hatch-boundary 5,5",   "hatch-contours A"};
     int checked = 0;
     for (const std::string& form : forms) {
         std::string text = drawing;
@@ -488,12 +490,17 @@ TEST(CheckCase, AnnouncedQuestionsCanWaitButUnknownQuestionsStayInvalid) {
         EXPECT_EQ(pending.code, kExitPassed) << form;
         expectContains(pending.output, "pending: ");
     }
-    const std::string unknownText = drawing + "? transformx A move 1,2 -> none\n";
-    const fs::path unknown = makeCase("unknown-question", {{"domande.tgq", unknownText}});
-    for (const bool pending : {false, true}) {
-        const Result result = check(unknown, pending);
-        EXPECT_EQ(result.code, kExitInvalid);
-        expectContains(result.output, "unknown question 'transformx'");
+    for (const std::string_view name : {"transformx", "hatch-boundaries"}) {
+        std::string unknownText = drawing;
+        unknownText += "? ";
+        unknownText += name;
+        unknownText += " A -> none\n";
+        const fs::path unknown = makeCase("unknown-question", {{"domande.tgq", unknownText}});
+        for (const bool pending : {false, true}) {
+            const Result result = check(unknown, pending);
+            EXPECT_EQ(result.code, kExitInvalid) << name;
+            expectContains(result.output, "unknown question '" + std::string(name) + "'");
+        }
     }
     if (checked == 0) {
         GTEST_SKIP() << "the program already answers all the announced questions";
