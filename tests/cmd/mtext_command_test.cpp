@@ -28,7 +28,7 @@ protected:
         }
     }
 
-    [[nodiscard]] const core::MText& mtext(std::size_t index = 0) const {
+    [[nodiscard]] core::MText mtext(std::size_t index = 0) const {
         return std::get<core::MText>(m_document.entities()[index].entity);
     }
 
@@ -86,7 +86,7 @@ TEST_F(MTextCommandTest, LineSpacingSurvivesCancellationButNotAnotherRunner) {
     for (const char* input : {"MTEXT", "0,0", "40,-10", "One", ""}) {
         otherRunner.submitText(input);
     }
-    const auto& otherMtext = std::get<core::MText>(other.entities().front().entity);
+    const auto otherMtext = std::get<core::MText>(other.entities().front().entity);
     EXPECT_FALSE(otherMtext.exactSpacing);
     EXPECT_DOUBLE_EQ(otherMtext.lineSpacing, 1.0);
 }
