@@ -19,6 +19,35 @@
 namespace tg::cmd {
 namespace {
 
+TEST(TextCommandTest, CurrentStyleSuppliesFixedHeightWidthAndOblique) {
+    core::Document document = core::Document::newDrawing();
+    auto styles = document.textStyles();
+    core::TextStyle style;
+    style.name = "Fixed";
+    style.font = "arial.ttf";
+    style.fixedHeight = 4.0;
+    style.widthFactor = 0.75;
+    style.oblique = core::degreesToRadians(12.0);
+    styles.put(style, document);
+    styles.setCurrent("Fixed");
+    document.replaceTextStyles(std::move(styles));
+    edit::Editor editor(document);
+    CommandRegistry registry;
+    registerBuiltinCommands(registry);
+    CommandRunner runner(registry, editor);
+    runner.setScriptSequences(true);
+    runner.submitText("TEXT");
+    runner.submitText("1,2");
+    EXPECT_EQ(runner.promptText(), "Specify rotation angle of text <0>:");
+    runner.submitText("");
+    runner.submitText("Styled");
+    const auto& text = std::get<core::Text>(document.entities().front().entity);
+    EXPECT_DOUBLE_EQ(text.height, 4.0);
+    EXPECT_EQ(text.style, "Fixed");
+    EXPECT_DOUBLE_EQ(text.widthFactor, 0.75);
+    EXPECT_DOUBLE_EQ(text.obliqueAngle, core::degreesToRadians(12.0));
+}
+
 TEST(TextCommandTest, LiteralLinesDefaultsAndSingleUndoStep) {
     core::Document document;
     edit::Editor editor(document);

@@ -27,6 +27,7 @@ add_library(tg_cmd
     src/commands/pline_command.cpp
     src/commands/property_commands.cpp
     src/commands/rotate_scale_commands.cpp
+    src/commands/style_commands.cpp
     src/commands/text_command.cpp
     src/commands/trim_extend_commands.cpp
     src/command_protocol.cpp
