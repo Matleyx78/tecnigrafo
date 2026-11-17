@@ -42,6 +42,13 @@ namespace g = solid_space::geom2d;
 /// solid-space's tolerance rule for a ToleranceRule.
 [[nodiscard]] solid_space::robust::TolerancePolicy policyOf(const ToleranceRule& rule);
 
+/// The closed polyline of solid-space for a polyline of Tecnigrafo taken as
+/// closed, whatever its flag says: the same vertices, with the bulge of
+/// vertex i set to 0 when Polyline::segment(i).isArc() is false
+/// (docs/adr/0036, point 7), and `closed` set. With fewer than two vertices
+/// there is no segment: every bulge is 0.
+[[nodiscard]] g::Polyline closedPolylineOf(const Polyline& polyline);
+
 /// The point of solid-space for a point of Tecnigrafo, and back.
 [[nodiscard]] g::Point2 toPoint(const Vec2& point);
 [[nodiscard]] Vec2 fromPoint(const g::Point2& point);

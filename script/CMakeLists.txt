@@ -14,6 +14,7 @@ add_library(tg_script
     src/curve_questions.cpp
     src/entity_reader.cpp
     src/file_questions.cpp
+    src/hatch_questions.cpp
     src/level1.cpp
     src/modify_questions.cpp
     src/new_entities_format.cpp
