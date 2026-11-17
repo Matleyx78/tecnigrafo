@@ -29,7 +29,8 @@ enum class MirrorText : std::uint8_t;
 /// v0, v1, v3, v2, filled as the painter fills it: a "butterfly" order gives
 /// two triangles.
 struct Solid {
-    std::array<Vec2, 4> vertices;  ///< DXF 10, 11, 12, 13
+    std::array<Vec2, 4> vertices;    ///< DXF 10, 11, 12, 13
+    bool fourthVertexPresent{true};  ///< false when DXF group 13 was omitted
 
     friend bool operator==(const Solid&, const Solid&) = default;
 };
