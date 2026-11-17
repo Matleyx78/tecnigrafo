@@ -2077,3 +2077,34 @@ i rimandi ai documenti che cambia.
   relativi test. Scartato l'uso di `core::EntityExtras::specific`, perché
   appartiene all'intera entità e perderebbe l'associazione e la posizione dei
   gruppi del singolo contorno.
+- **2026-11-17 — Testo multiriga: righe con `%`, snap delle righe, domande
+  dal documento.** Su tre punti fermati da
+  [PT13](tappe/0.8/PT13-mtext-core.md) nella
+  [#687](https://github.com/Matleyx78/tecnigrafo/issues/687) il responsabile
+  sceglie le uscite A (decisione scritta nella
+  [#686](https://github.com/Matleyx78/tecnigrafo/issues/686)):
+  1. il `Text` generato per una riga misura e mostra `displayText(value)`
+     (ADR 0013, punto 5), quindi `value` non può essere la riga semplice
+     quando questa contiene `%%c`: il `value` è la riga scritta in modo che
+     `displayText` la ridia uguale. Ogni `%` della riga che, con i due
+     caratteri che lo seguono, forma `%%c`, `%%d`, `%%p` o `%%%` (anche
+     maiuscole) si scrive `%%%`: la riga `%%c` ha `value="%%%%c"`, e il
+     riquadro resta quello di tre caratteri. La risposta di
+     `? generated Twice` di `mtext/codici-letterali` la corregge la #686.
+     Scartati `value="%%c"`, che si mostra `⌀` contro PT5, punto B01, e un
+     segnale nuovo in `Text` che cambia un'interfaccia di `core`;
+  2. le righe di un `MTEXT` non danno punti di snap propri: in
+     `core::appendSnapPoints(document, …)` un `MTEXT` dà solo quelli di
+     `appendOwnSnapPointsOf`; in `findSnap` una riga entro l'apertura rende
+     candidato il punto d'inserimento del `MTEXT`, come l'inserimento di un
+     testo, alla distanza dal riquadro della riga. PT13 modifica anche
+     `core/src/generated.cpp` e `core/src/document_query.cpp`, con i loro
+     test, come eccezione all'ADR 0044, punto 1. Scartati un segnale generale
+     in `GeneratedItem` e il lasciare lo snap delle righe, contro l'ADR 0046;
+  3. le domande `distance`, `inside` e `crosses` passano per il documento
+     (`recordArgument`, `core::distance`, `core::isInside` e
+     `core::intersects` con il record), come `bbox` e `snaps` in PT30
+     (2026-11-16, punto 2): PT13 modifica anche
+     `script/src/question_table.cpp`, solo per queste tre domande; per i
+     cinque tipi di prima della 0.8 le risposte non cambiano. Scartato un
+     pacchetto a parte prima di PT13.
