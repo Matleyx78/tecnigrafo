@@ -3,7 +3,6 @@
 
 #include "tg/edit/text_styles.hpp"
 
-#include "tg/core/start_handles.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <cmath>
@@ -18,12 +17,7 @@ bool putTextStyle(Editor& editor, core::TextStyle style) {
         return false;
     }
     auto table = editor.document().textStyles();
-    if (table.find(style.name) == nullptr && style.id == 0) {
-        // New table records use the reserved object-handle range, leaving the
-        // first entity handle unchanged (docs/adr/0023, point 1).
-        style.id = core::start_handles::kLowest - table.styles().size();
-    }
-    // TextStyleTable registers explicit handles through its owning document.
+    // TextStyleTable claims a document handle when a new record has id zero.
     table.put(std::move(style), editor.m_document);
     return editor.tables().replaceTextStyles(std::move(table));
 }

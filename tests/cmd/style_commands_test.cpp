@@ -25,6 +25,7 @@ TEST(StyleCommandsTest, CreatesChangesListsAndSelectsStylesUndoably) {
     }
     const auto* note = document.textStyles().find("Note");
     ASSERT_NE(note, nullptr);
+    EXPECT_EQ(note->id, 257U);
     EXPECT_EQ(note->font, "times.ttf");
     EXPECT_DOUBLE_EQ(note->fixedHeight, 2.5);
     EXPECT_DOUBLE_EQ(note->widthFactor, 0.8);
