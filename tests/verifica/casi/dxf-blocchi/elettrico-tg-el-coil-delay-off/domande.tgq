@@ -8,6 +8,6 @@ D = DXF source=elettrico-tg-el-coil-delay-off
 ? count D -> LINE 10; SOLID 1
 ? unhandled D -> ATTDEF 21
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:48 -> Insertion 0,0
+? snaps D:48 -> none
 ; TG_PIN2=S, flags=3 (constant + invisible).
-? snaps D:49 -> Insertion 0,-10
+? snaps D:49 -> none
