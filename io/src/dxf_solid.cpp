@@ -13,8 +13,6 @@
 
 namespace tg::io {
 
-extern const EntityCodec kSolidCodec;
-
 namespace {
 
 std::optional<core::EntityRecord> readSolid(const core::RawGroups& groups,
@@ -39,24 +37,25 @@ std::optional<core::EntityRecord> readSolid(const core::RawGroups& groups,
             continue;
         }
         const auto number = parseNumber(trimDxf(group.value));
-        if (!number || values[index]) {
+        if (!number || values.at(index)) {
             return std::nullopt;
         }
-        values[index] = *number;
+        values.at(index) = number;
     }
     for (std::size_t i = 0; i < 6; ++i) {
-        if (!values[i]) {
+        if (!values.at(i)) {
             return std::nullopt;
         }
     }
-    if (values[6].has_value() != values[7].has_value()) {
+    if (values.at(6).has_value() != values.at(7).has_value()) {
         return std::nullopt;
     }
-    const bool fourthPresent = values[6].has_value();
+    const bool fourthPresent = values.at(6).has_value();
     core::Solid solid{
-        {core::Vec2{*values[0], *values[1]}, core::Vec2{*values[2], *values[3]},
-         core::Vec2{*values[4], *values[5]},
-         fourthPresent ? core::Vec2{*values[6], *values[7]} : core::Vec2{*values[4], *values[5]}},
+        {core::Vec2{*values.at(0), *values.at(1)}, core::Vec2{*values.at(2), *values.at(3)},
+         core::Vec2{*values.at(4), *values.at(5)},
+         fourthPresent ? core::Vec2{*values.at(6), *values.at(7)}
+                       : core::Vec2{*values.at(4), *values.at(5)}},
         fourthPresent};
     if (extrusion == Extrusion::Down) {
         for (core::Vec2& vertex : solid.vertices) {
@@ -65,7 +64,7 @@ std::optional<core::EntityRecord> readSolid(const core::RawGroups& groups,
         parts.extras.flippedExtrusion = true;
     }
     if (std::ranges::all_of(solid.vertices, [&](const core::Vec2& vertex) {
-            return vertex == solid.vertices[0];
+            return vertex == solid.vertices.front();
         })) {
         return std::nullopt;
     }
@@ -84,7 +83,7 @@ void writeSolid(const core::EntityRecord& record, EntityWriteContext& context,
             break;
         }
         const core::Vec2 vertex =
-            extras.flippedExtrusion ? flipX(solid.vertices[i]) : solid.vertices[i];
+            extras.flippedExtrusion ? flipX(solid.vertices.at(i)) : solid.vertices.at(i);
         out.push_back({static_cast<std::int16_t>(10 + i), formatNumber(vertex.x)});
         out.push_back({static_cast<std::int16_t>(20 + i), formatNumber(vertex.y)});
         const std::array z{static_cast<int>(30 + i)};

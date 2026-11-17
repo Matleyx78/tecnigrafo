@@ -30,6 +30,8 @@ struct EntityCodec {
     void (*write)(const core::EntityRecord&, EntityWriteContext&, core::RawGroups&);
 };
 
+extern const EntityCodec kSolidCodec;
+
 [[nodiscard]] const EntityCodec* findCodec(std::string_view type);
 [[nodiscard]] const EntityCodec* findCodec(const core::Entity& entity);
 

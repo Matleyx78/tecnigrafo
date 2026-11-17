@@ -19,7 +19,6 @@ namespace tg::io {
 extern const EntityCodec kLineCodec;
 extern const EntityCodec kCircleCodec;
 extern const EntityCodec kArcCodec;
-extern const EntityCodec kSolidCodec;
 
 const EntityCodec* findCodec(std::string_view type) {
     if (type == "LWPOLYLINE") {

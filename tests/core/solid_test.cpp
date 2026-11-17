@@ -24,7 +24,7 @@ TEST(Solid, BoundsAndEvenOddFilledRegion) {
 }
 
 TEST(Solid, TransformationKeepsVertexOrder) {
-    Document document;
+    const Document document;
     const auto reflection = Similarity::reflection({0, 0}, {0, 1});
     ASSERT_TRUE(reflection.has_value());
     const auto result = transformedOf(document, kButterfly, *reflection, MirrorText::Mirrored);
