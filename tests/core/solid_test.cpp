@@ -27,9 +27,10 @@ TEST(Solid, TransformationKeepsVertexOrder) {
     const Document document;
     const auto reflection = Similarity::reflection({0, 0}, {0, 1});
     ASSERT_TRUE(reflection.has_value());
-    const auto result = transformedOf(document, kButterfly, *reflection, MirrorText::Mirrored);
+    const auto result = transformedOf(document, kButterfly, reflection.value_or(Similarity{}),
+                                      MirrorText::Mirrored);
     ASSERT_TRUE(result.entity.has_value());
-    const auto& transformed = std::get<Solid>(*result.entity);
+    const auto transformed = std::get<Solid>(result.entity.value_or(Entity{}));
     EXPECT_EQ(transformed.vertices[0], (Vec2{0, 0}));
     EXPECT_EQ(transformed.vertices[1], (Vec2{-2, 2}));
     EXPECT_EQ(transformed.vertices[2], (Vec2{-2, 0}));
@@ -37,7 +38,7 @@ TEST(Solid, TransformationKeepsVertexOrder) {
 }
 
 TEST(Solid, CoincidentVerticesShareGripAndCollapseIsRejected) {
-    Document document;
+    const Document document;
     const Solid triangle{{Vec2{0, 0}, Vec2{0, 0}, Vec2{2, 0}, Vec2{0, 2}}};
     EXPECT_EQ(gripPointsOf(triangle), (std::vector<Vec2>{{0, 0}, {2, 0}, {0, 2}}));
     const auto moved = moveGripOf(document, triangle, 0, {1, 1});
