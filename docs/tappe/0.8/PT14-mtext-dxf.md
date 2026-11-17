@@ -35,8 +35,8 @@
    dividere una sequenza UTF-8) più il gruppo 1 finale, come fa AutoCAD.
 4. **Non gestiti** (restano grezzi, ADR 0044, punto 4): colonne (gruppo 75 > 0
    o dati di colonna), direzione 72 diversa da 1 e 5, altezza o larghezza non
-   valide (altezza ≤ 0, larghezza < 0), estrusione diversa da `(0,0,1)` e
-   `(0,0,-1)`. Sfondo (90, 63, 421, 431, 45, 441) e il resto stanno in `extras`.
+   valide (altezza ≤ 0, larghezza < 0), estrusione diversa da `(0,0,1)`. Sfondo (90, 63, 421, 431, 45, 441) e il
+   resto stanno in `extras`.
 5. Aggiungere `MTEXT` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
    nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
    `unhandled` di tutti i casi che cambiano. Questa è l'eccezione a
@@ -53,7 +53,8 @@
 
 - `dxf_mtext_test.cpp`: giro di un `MTEXT` corto e di uno più lungo di 250
   caratteri con lettere accentate; vettore 11/21 conservato; un `MTEXT` con
-  colonne resta non gestito.
+  colonne resta non gestito; un `MTEXT` con estrusione `210/220/230 = 0,0,-1`
+  resta non gestito e si conserva grezzo.
 
 ## Fatto quando
 
