@@ -1,0 +1,70 @@
+[report 1]
+entities:
+  259 LINE start=20,10 end=20,30
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: -BLOCK
+  Enter block name or [?]: Pezzo
+  Specify insertion base point: 0,0
+  Select objects: 5,0
+  1 found, 1 total
+  Select objects:
+  Command: -INSERT
+  Enter block name or [?]: Pezzo
+  Specify insertion point or [Basepoint/Scale/Rotate]: Scale
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 2
+  Specify insertion point or [Basepoint/Scale/Rotate]: Rotate
+  Specify rotation angle <0>: 90
+  Specify insertion point or [Basepoint/Scale/Rotate]: 20,10
+  Command: EXPLODE
+  Select objects: 20,20
+  1 found, 1 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Block
+  Insert
+  Explode
+redo:
+snap: on
+ortho: off
+blocks:
+  "Pezzo" base=0,0
+  "Pezzo" 257 LINE start=0,0 end=10,0
+pointer: none
+active snap: none
+statistics:
+  LINE 1
+
+[final]
+entities:
+  258 INSERT block="Pezzo" insertion=20,10 scale=2,2 rotation=90
+messages:
+  Command: U
+  Explode
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Block
+  Insert
+redo:
+  Explode
+snap: on
+ortho: off
+blocks:
+  "Pezzo" base=0,0
+  "Pezzo" 257 LINE start=0,0 end=10,0
+pointer: none
+active snap: none
+statistics:
+  INSERT 1
