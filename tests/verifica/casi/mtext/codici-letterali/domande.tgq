@@ -13,7 +13,7 @@
 Once = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="%%%c"
 ? generated Once -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%c" ~box=0,-1.308019872249823;2.01916252661462,-1.308019872249823;2.01916252661462,0.3158268275372604;0,0.3158268275372604
 Twice = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="%%%%c"
-? generated Twice -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%%c" ~box=0,-1.308019872249823;3.311568488289567,-1.308019872249823;3.311568488289567,0.3158268275372604;0,0.3158268275372604
+? generated Twice -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="%%%%c" ~box=0,-1.308019872249823;3.311568488289567,-1.308019872249823;3.311568488289567,0.3158268275372604;0,0.3158268275372604
 Unknown = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\XB"
 ? generated Unknown -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A\\XB" ~box=0,-1.308019872249823;3.312278211497516,-1.308019872249823;3.312278211497516,0.3158268275372604;0,0.3158268275372604
 MissingEnd = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\H2\\PB"

@@ -8,6 +8,7 @@ add_library(tg_edit
     src/document_tables.cpp
     src/editor.cpp
     src/layer_rules.cpp
+    src/text_styles.cpp
 )
 add_library(Tecnigrafo::edit ALIAS tg_edit)
 

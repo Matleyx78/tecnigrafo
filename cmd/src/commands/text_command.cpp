@@ -19,6 +19,15 @@ void TextCommand::start(CommandContext& context) {
     m_rotation = context.defaults.textRotation;
     m_hasLines = false;
     m_preview.clear();
+    const auto& styles = context.editor.document().textStyles();
+    m_style = styles.current();
+    if (const auto* style = styles.find(m_style)) {
+        m_widthFactor = style->widthFactor;
+        m_oblique = style->oblique;
+        if (style->fixedHeight > 0.0) {
+            m_height = style->fixedHeight;
+        }
+    }
     context.editor.beginTransaction("Text");
 }
 
@@ -33,6 +42,10 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                 m_next = m_start;
                 context.lastPoint = m_start;
                 m_stage = Stage::Height;
+                const auto* style = context.editor.document().textStyles().find(m_style);
+                if (style != nullptr && style->fixedHeight > 0.0) {
+                    m_stage = Stage::Rotation;
+                }
             } else if (confirm) {
                 finish(context);
                 return Status::Finished;
@@ -84,6 +97,9 @@ Status TextCommand::handle(CommandContext& context, const Input& input) {
                 line.position = m_next;
                 line.height = m_height;
                 line.rotation = m_rotation;
+                line.style = m_style;
+                line.widthFactor = m_widthFactor;
+                line.obliqueAngle = m_oblique;
                 line.value = text->text;
                 context.editor.add(line);
                 if (!m_hasLines) {
@@ -162,6 +178,9 @@ void TextCommand::updatePreview() {
         character.position = m_next;
         character.height = m_height;
         character.rotation = m_rotation;
+        character.style = m_style;
+        character.widthFactor = m_widthFactor;
+        character.obliqueAngle = m_oblique;
         character.value = "M";
         core::Polyline box;
         for (const auto& corner : core::textBox(character)) {
