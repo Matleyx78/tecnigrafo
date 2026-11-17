@@ -132,6 +132,8 @@ redo:
 snap: on
 ortho: off
 drawing: ingresso.dxf, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
 documents: Drawing1.cadx, ingresso.dxf (active)
 pointer: none
 active snap: none
