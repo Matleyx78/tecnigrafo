@@ -107,8 +107,9 @@ TEST(DxfHatch, SolidLoopsAndTheirAssociatedHandlesGoRoundInPlace) {
     auto context = readContext();
     const auto again = decodeEntity(&kHatchCodec, output, context);
     ASSERT_TRUE(again.has_value());
-    EXPECT_EQ(again->entity, record.entity);
-    EXPECT_EQ(again->extras, record.extras);
+    const auto roundTrip = again.value_or(core::EntityRecord{});
+    EXPECT_EQ(roundTrip.entity, record.entity);
+    EXPECT_EQ(roundTrip.extras, record.extras);
 }
 
 TEST(DxfHatch, Ansi31EdgeLoopAndTwoSeedsGoRound) {
@@ -127,7 +128,7 @@ TEST(DxfHatch, Ansi31EdgeLoopAndTwoSeedsGoRound) {
     auto context = readContext();
     const auto again = decodeEntity(&kHatchCodec, written(record), context);
     ASSERT_TRUE(again.has_value());
-    EXPECT_EQ(again->entity, record.entity);
+    EXPECT_EQ(again.value_or(core::EntityRecord{}).entity, record.entity);
 }
 
 TEST(DxfHatch, EllipseBoundaryAndPaddedGradientStayUnhandled) {
@@ -159,12 +160,14 @@ TEST(DxfHatch, DownwardExtrusionIsMirroredAndRestored) {
     appendSolidTail(groups);
     const core::EntityRecord record = handled(groups);
     EXPECT_TRUE(record.extras.flippedExtrusion);
-    const auto& vertices = std::get<core::Hatch>(record.entity).loops[0].polyline->vertices();
+    const auto polyline =
+        std::get<core::Hatch>(record.entity).loops[0].polyline.value_or(core::Polyline{});
+    const auto& vertices = polyline.vertices();
     EXPECT_EQ(vertices[0].position, (core::Vec2{-1, 2}));
     auto context = readContext();
     const auto again = decodeEntity(&kHatchCodec, written(record), context);
     ASSERT_TRUE(again.has_value());
-    EXPECT_EQ(again->entity, record.entity);
+    EXPECT_EQ(again.value_or(core::EntityRecord{}).entity, record.entity);
 }
 
 TEST(DxfHatch, ClosureToleranceUsesDocumentUnits) {
