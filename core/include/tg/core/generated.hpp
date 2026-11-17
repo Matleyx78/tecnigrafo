@@ -60,10 +60,10 @@ struct GeneratedItem {
 /// MIRRTEXT 1 (MirrorText::Mirrored); a filled region keeps the map with it,
 /// composed with its own. An ellipse goes through transformed(const Ellipse&,
 /// const Transform2D&) under every map, and so do circles and arcs under the
-/// other affine maps, becoming ellipses; a singular map gives nothing. The
-/// other affine maps are realized for the other shapes by the packages of the
-/// attributes (text) and of the blocks (the rest): until then the result is
-/// empty.
+/// other affine maps, becoming ellipses; a singular map gives nothing. Under
+/// the other affine maps lines and polylines have their points mapped, and a
+/// text goes through transformedText() (text_affine.hpp); a singular map
+/// gives no text.
 [[nodiscard]] std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
                                                            const Transform2D& transform);
 

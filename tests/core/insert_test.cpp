@@ -95,10 +95,13 @@ TEST(Insert, SupportedNeedsScalesThatAreNotZero) {
     EXPECT_TRUE(supported(insertOf("A", {0, 0})));
     EXPECT_FALSE(supported(insertOf("A", {0, 0}, 0.0, 1.0)));
     EXPECT_FALSE(supported(insertOf("A", {0, 0}, 1.0, 0.0)));
-    // The attributes arrive with their package (PT17).
+    // Each attribute is checked (docs/tappe/0.8/PT17-attributi-core.md): a
+    // default one has no tag.
     Insert withAttribute = insertOf("A", {0, 0});
     withAttribute.attributes.emplace_back();
     EXPECT_FALSE(supported(withAttribute));
+    withAttribute.attributes.front().tag = "PIN";
+    EXPECT_TRUE(supported(withAttribute));
 }
 
 TEST(Insert, TransformSubtractsTheBaseScalesRotatesAndMoves) {

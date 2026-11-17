@@ -3,7 +3,6 @@
 
 #include "tg/core/generated.hpp"
 
-#include "solid_space/robust/trigonometry.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/dimension.hpp"
@@ -11,11 +10,11 @@
 #include "tg/core/insert.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
+#include "tg/core/text_affine.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <optional>
@@ -45,36 +44,6 @@ bool isIdentity(const Transform2D& transform) {
     return transform.apply(Vec2{}) == Vec2{} &&
            transform.applyToVector({1.0, 0.0}) == Vec2{1.0, 0.0} &&
            transform.applyToVector({0.0, 1.0}) == Vec2{0.0, 1.0};
-}
-
-/// The similarity equal to `transform`, or std::nullopt when its linear part
-/// is not exactly a rotation and a uniform scale, possibly with a reflection.
-std::optional<Similarity> similarityOf(const Transform2D& transform) {
-    const Vec2 xAxis = transform.applyToVector({1.0, 0.0});
-    const Vec2 yAxis = transform.applyToVector({0.0, 1.0});
-    const bool reflects = transform.determinant() < 0.0;
-    const bool similar = reflects ? (yAxis.x == xAxis.y && yAxis.y == -xAxis.x)
-                                  : (yAxis.x == -xAxis.y && yAxis.y == xAxis.x);
-    if (!similar) {
-        return std::nullopt;
-    }
-    const std::optional<Similarity> scaling =
-        Similarity::scaling(std::sqrt(xAxis.lengthSquared()), Vec2{});
-    if (!scaling) {
-        return std::nullopt;
-    }
-    // p' = t + R * s * F * p: F, the reflection across the X axis, first.
-    Similarity result = Similarity::translation(transform.apply(Vec2{})) *
-                        Similarity::rotation(solid_space::robust::atan2(xAxis.y, xAxis.x), Vec2{}) *
-                        *scaling;
-    if (reflects) {
-        const std::optional<Similarity> acrossX = Similarity::reflection(Vec2{}, Vec2{1.0, 0.0});
-        assert(acrossX.has_value());
-        if (acrossX) {
-            result = result * *acrossX;
-        }
-    }
-    return result;
 }
 
 /// An entity of a shape type as the shape.
@@ -382,8 +351,14 @@ std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
         if (const auto* polyline = std::get_if<Polyline>(&shape)) {
             return affinePolyline(*polyline, transform);
         }
-        // Circles and arcs become ellipses; text waits for docs/tappe/0.8,
-        // PT17.
+        if (const auto* text = std::get_if<Text>(&shape)) {
+            // Decomposed (docs/tappe/0.8/PT17-attributi-core.md, point 2).
+            if (transform.determinant() == 0.0) {
+                return {};
+            }
+            return {transformedText(*text, transform)};
+        }
+        // Circles and arcs become ellipses.
         return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
     }
     const std::optional<Entity> entity = shapeEntity(shape);
