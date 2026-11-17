@@ -39,6 +39,7 @@ add_executable(tg_tests
     cmd/layer_commands_test.cpp
     cmd/line_command_test.cpp
     cmd/mirror_commands_test.cpp
+    cmd/mtext_command_test.cpp
     cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/object_tracking_test.cpp
