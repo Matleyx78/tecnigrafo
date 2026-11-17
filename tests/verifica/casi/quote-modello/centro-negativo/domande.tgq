@@ -1,0 +1,34 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Center marks from PT24.2. The leader is diagonal and avoids axis probes.
+; DIMCEN<0: cross [-2,2], gaps (2,4), axes [4,R+2].
+
+R = DIMENSION kind=radius style="ISO-25" center=0,0 point=3,4 text-point=12,16 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:-2
+? distance R 1,0 -> 0
+? distance R -1,0 -> 0
+? distance R 0,1 -> 0
+? distance R 0,-1 -> 0
+? crosses R 2.5,-0.05 3.5,0.05 -> no
+? crosses R -0.05,-3.5 0.05,-2.5 -> no
+? distance R 6,0 -> 0
+? distance R -6,0 -> 0
+? distance R 0,6 -> 0
+? distance R 0,-6 -> 0
+? crosses R 7.1,-0.05 7.5,0.05 -> no
+D = DIMENSION kind=diameter style="ISO-25" point1=3,4 point2=-3,-4 text-point=12,16 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:-2
+? distance D 1,0 -> 0
+? distance D -1,0 -> 0
+? distance D 0,1 -> 0
+? distance D 0,-1 -> 0
+? crosses D 2.5,-0.05 3.5,0.05 -> no
+? crosses D -0.05,-3.5 0.05,-2.5 -> no
+? distance D 6,0 -> 0
+? distance D -6,0 -> 0
+? distance D 0,6 -> 0
+? distance D 0,-6 -> 0
+? crosses D 7.1,-0.05 7.5,0.05 -> no

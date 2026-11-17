@@ -16,6 +16,7 @@
 #include <QVBoxLayout>
 
 #include <cmath>
+#include <functional>
 #include <string>
 #include <utility>
 
@@ -131,7 +132,16 @@ void CommandLine::forwardKeysFrom(QWidget* widget) {
 }
 
 void CommandLine::appendToHistory(const QString& line) {
-    m_history->appendPlainText(line);
+    if (!m_assistantLines) {
+        m_history->appendPlainText(line);
+        return;
+    }
+    m_history->appendPlainText(QString::fromLatin1(kAssistantPrefix) + line);
+    m_assistantLines(line);
+}
+
+void CommandLine::setAssistantLines(std::function<void(const QString&)> lines) {
+    m_assistantLines = std::move(lines);
 }
 
 bool CommandLine::eventFilter(QObject* watched, QEvent* event) {

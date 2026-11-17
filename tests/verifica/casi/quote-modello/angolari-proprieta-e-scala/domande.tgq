@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Isolate dimension line, extension and text to verify their effective properties.
+Arc = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCLRD:3,DIMLWD:50
+? generated Arc -> ARC center=0,0 radius=10 start-angle=0 end-angle=90 color=0,255,0 lineweight=0.5
+Extension = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;1,0 second=0,0;0,2 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMCLRE:5,DIMEXE:1,DIMEXO:0.5,DIMLWE:30,DIMSD1:1,DIMSD2:1,DIMSE2:1
+? generated Extension -> LINE start=1.5,0 end=11,0 color=0,0,255 lineweight=0.3
+Text = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=6,8 text-point=50,50 measurement=0 user-text-position=yes overrides=DIMCLRT:2,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1 text-rotation=30
+? generated Text -> TEXT position=48.24558137373988,47.54371026088337 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" color=255,255,0 ~box=48.63060621405216,46.87682767528641;53.38944346657239,49.62434364405858;51.35963509183854,53.14007487872642;46.6007978393183,50.39255890995425
+; DIMSCALE scales marks and arrows; group 42 remains the geometric radius.
+Scaled = DIMENSION kind=radius style="ISO-25" center=0,0 point=50,0 text-point=80,0 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:2,DIMCEN:-2,DIMSCALE:2
+? distance Scaled 52,0.2 -> 0
+? distance Scaled 0,3 -> 0
+? crosses Scaled -0.05,5 0.05,7 -> no
+? distance Scaled 0,52 -> 0
+? transform Scaled move 0,0 -> DIMENSION kind=radius style="ISO-25" center=0,0 point=50,0 text-point=80,0 measurement=50 text=" " user-text-position=yes overrides=DIMASZ:2,DIMCEN:-2,DIMSCALE:2

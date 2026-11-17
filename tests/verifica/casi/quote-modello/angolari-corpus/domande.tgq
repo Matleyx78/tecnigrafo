@@ -1,0 +1,18 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Kernel corpus at fc8cae3da8a737510d6b61075b03ea3272228576:
+; tests/corpus/casi/geom2d/intersezione-limite-incrocio-estremo.json fixes v=(1,0).
+; tests/corpus/casi/geom2d/intersezione-limite-stessa-retta-intera.json fixes coincident lines.
+; tests/corpus/casi/robust/atan2-asse-y-positivo.json fixes pi/2;
+; tests/corpus/casi/robust/atan2-q1.json fixes pi/4 (the arc midpoint).
+; Extensions and zero-length arrows are removed to expose the selected arc.
+Endpoint = DIMENSION kind=angular style="ISO-25" line-point=1,0 first=0,0;1,0 second=1,0;1,1 arc-point=4,4 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMSE1:1,DIMSE2:1
+? generated Endpoint -> ARC center=1,0 radius=5 start-angle=0 end-angle=90
+? distance Endpoint 4.535533905932738,3.535533905932738 -> 0
+Coincident = DIMENSION kind=angular style="ISO-25" line-point=2,0 first=0,0;1,0 second=2,0;2,1 arc-point=3,2 text-point=100,100 measurement=0 text=" " user-text-position=yes
+? grip Coincident 2,1 3,0 -> invalid
