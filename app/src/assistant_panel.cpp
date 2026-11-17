@@ -9,6 +9,7 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QDir>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
@@ -16,6 +17,14 @@
 #include <QVBoxLayout>
 
 namespace tg::app {
+
+QString assistantCommand(const QString& applicationPath) {
+    QString executable = QDir::toNativeSeparators(applicationPath);
+    if (executable.contains(QLatin1Char(' '))) {
+        executable = QLatin1Char('"') + executable + QLatin1Char('"');
+    }
+    return executable + QStringLiteral(" --mcp");
+}
 
 AssistantPanel::AssistantPanel(AssistantChannel& channel, QWidget* parent)
     : QDockWidget(tr("Assistant"), parent),
@@ -28,7 +37,7 @@ AssistantPanel::AssistantPanel(AssistantChannel& channel, QWidget* parent)
     m_state->setObjectName(QStringLiteral("assistantState"));
     m_command->setObjectName(QStringLiteral("assistantCommand"));
     m_command->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    m_command->setText(QCoreApplication::applicationFilePath() + QStringLiteral(" --mcp"));
+    m_command->setText(assistantCommand(QCoreApplication::applicationFilePath()));
     m_requests->setObjectName(QStringLiteral("assistantRequests"));
     m_requests->setWordWrap(true);
     m_clear->setObjectName(QStringLiteral("assistantClear"));
@@ -75,14 +84,14 @@ void AssistantPanel::addRequest(quint64 request, const QString& tool, const QStr
     if (preview.isEmpty()) {
         preview = tr("(no arguments)");
     }
-    const QString line =
-        tr("%1 — %2\n%3\nPending")
+    const QString requestPreview =
+        tr("%1 — %2\n%3")
             .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")), tool, preview);
-    m_requests->insertItem(0, line);
+    m_requests->insertItem(0, requestPreview + QLatin1Char('\n') + tr("Pending"));
     for (auto row = m_rows.begin(); row != m_rows.end(); ++row) {
-        ++row.value();
+        ++row.value().index;
     }
-    m_rows.insert(request, 0);
+    m_rows.insert(request, {0, requestPreview});
 }
 
 void AssistantPanel::finishRequest(quint64 request, bool failed, const QString& text) {
@@ -90,10 +99,10 @@ void AssistantPanel::finishRequest(quint64 request, bool failed, const QString& 
     if (found == m_rows.cend()) {
         return;
     }
-    QListWidgetItem* item = m_requests->item(found.value());
+    QListWidgetItem* item = m_requests->item(found->index);
     const QString outcome = failed ? tr("Failed") : tr("Succeeded");
     const QString detail = text.section(QLatin1Char('\n'), 0, 1).trimmed();
-    item->setText(item->text().section(QLatin1Char('\n'), 0, 1) + QLatin1Char('\n') + outcome +
+    item->setText(found->preview + QLatin1Char('\n') + outcome +
                   (detail.isEmpty() ? QString{} : QStringLiteral(": ") + detail));
 }
 

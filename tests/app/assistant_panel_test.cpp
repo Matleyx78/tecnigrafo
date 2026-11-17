@@ -11,6 +11,7 @@
 
 #include <QAction>
 #include <QCoreApplication>
+#include <QDir>
 #include <QLabel>
 #include <QListWidget>
 #include <QLocalSocket>
@@ -59,6 +60,9 @@ TEST(AssistantPanelTest, SwitchPanelRequestAndConnectionState) {
     auto* button = window.findChild<QToolButton*>(QStringLiteral("assistantButton"));
     ASSERT_NE(button, nullptr);
     EXPECT_EQ(button->property("assistantState").toString(), QStringLiteral("connected"));
+    toggle->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F12));
+    EXPECT_EQ(button->property("assistantState").toString(), QStringLiteral("connected"));
+    EXPECT_TRUE(button->toolTip().contains(QStringLiteral("connected")));
 
     const json initialize{{"jsonrpc", "2.0"},
                           {"id", 0},
@@ -82,10 +86,43 @@ TEST(AssistantPanelTest, SwitchPanelRequestAndConnectionState) {
     EXPECT_TRUE(requests->item(0)->text().contains(QStringLiteral("report")));
     EXPECT_TRUE(requests->item(0)->text().contains(QStringLiteral("Succeeded")));
 
+    channel.requestReceived(2, QStringLiteral("run"), QStringLiteral("first\nsecond\nthird"));
+    channel.requestFinished(2, false, QStringLiteral("done"));
+    ASSERT_EQ(requests->count(), 2);
+    EXPECT_TRUE(requests->item(0)->text().contains(QStringLiteral("first\nsecond")));
+
     panel->findChild<QPushButton*>(QStringLiteral("assistantClear"))->click();
     EXPECT_EQ(requests->count(), 0);
     toggle->setChecked(false);
     EXPECT_FALSE(channel.isRunning());
+    EXPECT_EQ(button->property("assistantState").toString(), QStringLiteral("off"));
+}
+
+TEST(AssistantPanelTest, CommandQuotesPathsWithSpaces) {
+    const QString path = QStringLiteral("folder with spaces/tecnigrafo");
+    EXPECT_EQ(assistantCommand(path),
+              QLatin1Char('"') + QDir::toNativeSeparators(path) + QStringLiteral("\" --mcp"));
+}
+
+TEST(AssistantPanelTest, FailedStartResetsActionAndButton) {
+    const QString serverName = uniqueName();
+    MainWindow owner;
+    owner.assistantChannel().setServerName(serverName);
+    ASSERT_TRUE(owner.assistantChannel().start());
+
+    MainWindow window;
+    AssistantChannel& channel = window.assistantChannel();
+    channel.setServerName(serverName);
+    QAction* toggle = window.actionRegistry().action(QStringLiteral("assistant.channel"));
+    auto* button = window.findChild<QToolButton*>(QStringLiteral("assistantButton"));
+    ASSERT_NE(toggle, nullptr);
+    ASSERT_NE(button, nullptr);
+
+    toggle->setChecked(true);
+    QCoreApplication::processEvents();
+    EXPECT_FALSE(channel.isRunning());
+    EXPECT_FALSE(toggle->isChecked());
+    EXPECT_FALSE(button->isChecked());
     EXPECT_EQ(button->property("assistantState").toString(), QStringLiteral("off"));
 }
 

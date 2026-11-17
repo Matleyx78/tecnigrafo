@@ -14,6 +14,9 @@ namespace tg::app {
 
 class AssistantChannel;
 
+/// The command an assistant runs to connect to `applicationPath`.
+[[nodiscard]] QString assistantCommand(const QString& applicationPath);
+
 /// The visible history and setup information of the user's assistant channel.
 class AssistantPanel final : public QDockWidget {
     Q_OBJECT
@@ -27,6 +30,11 @@ public:
     void showAndFocus();
 
 private:
+    struct RequestRow {
+        int index;
+        QString preview;
+    };
+
     void updateState();
     void addRequest(quint64 request, const QString& tool, const QString& text);
     void finishRequest(quint64 request, bool failed, const QString& text);
@@ -36,7 +44,7 @@ private:
     QLabel* m_command;
     QListWidget* m_requests;
     QPushButton* m_clear;
-    QHash<quint64, int> m_rows;
+    QHash<quint64, RequestRow> m_rows;
 };
 
 }  // namespace tg::app

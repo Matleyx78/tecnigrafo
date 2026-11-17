@@ -556,8 +556,9 @@ void MainWindow::createMenus(const Extension& extension) {
     QAction* assistantSwitch = registeredAction("assistant.channel");
     connect(assistantSwitch, &QAction::toggled, this, [this, assistantSwitch](bool on) {
         if (on && !m_assistant->start()) {
-            const QSignalBlocker blocker(assistantSwitch);
-            assistantSwitch->setChecked(false);
+            QMetaObject::invokeMethod(
+                assistantSwitch, [assistantSwitch] { assistantSwitch->setChecked(false); },
+                Qt::QueuedConnection);
             showStartMessage(m_assistant->errorString());
         } else if (!on) {
             m_assistant->stop();
@@ -1031,6 +1032,8 @@ void MainWindow::createStatusBar() {
                                      : registeredAction("assistant.channel")->icon());
         assistantButton->setProperty("assistantState", property);
     };
+    connect(registeredAction("assistant.channel"), &QAction::changed, assistantButton,
+            updateAssistantButton);
     connect(m_assistant.get(), &AssistantChannel::runningChanged, assistantButton,
             updateAssistantButton);
     connect(m_assistant.get(), &AssistantChannel::connectedChanged, assistantButton,
@@ -1955,10 +1958,6 @@ void MainWindow::updateThemeIcons() {
     if (auto* assistant = findChild<AssistantPanel*>(QStringLiteral("assistantPanel"));
         assistant != nullptr) {
         assistant->setWindowIcon(registeredAction("assistant.panel")->icon());
-    }
-    if (m_assistant->isConnected()) {
-        findChild<QToolButton*>(QStringLiteral("assistantButton"))
-            ->setIcon(themedIcon(QStringLiteral("assistant-panel"), m_theme));
     }
 }
 
