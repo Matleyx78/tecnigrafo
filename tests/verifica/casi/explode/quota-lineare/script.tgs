@@ -8,6 +8,7 @@ DIMLINEAR
 0,0
 40,0
 20,10
+; cambia con #719
 EXPLODE
 20,10
 !report

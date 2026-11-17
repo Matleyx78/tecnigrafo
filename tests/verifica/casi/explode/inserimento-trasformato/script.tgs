@@ -19,6 +19,7 @@ Scale
 Rotate
 90
 20,10
+; cambia con #719
 EXPLODE
 20,20
 !report
