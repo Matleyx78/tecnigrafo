@@ -43,6 +43,19 @@ Vec2 fromPoint(const g::Point2& point) {
     return Vec2{point.x, point.y};
 }
 
+g::Polyline closedPolylineOf(const Polyline& polyline) {
+    const Polyline closed{{polyline.vertices().begin(), polyline.vertices().end()}, true};
+    g::Polyline curve;
+    curve.closed = true;
+    curve.vertices.reserve(closed.vertexCount());
+    for (std::size_t i = 0; i < closed.vertexCount(); ++i) {
+        const bool arc = i < closed.segmentCount() && closed.segment(i).isArc();
+        curve.vertices.push_back(g::PolylineVertex{toPoint(closed.vertices()[i].position),
+                                                   arc ? closed.vertices()[i].bulge : 0.0});
+    }
+    return curve;
+}
+
 std::optional<g::Curve> curveOf(const Entity& entity) {
     if (const auto* line = std::get_if<Line>(&entity)) {
         return g::Curve{g::Segment{toPoint(line->start), toPoint(line->end)}};
