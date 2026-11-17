@@ -175,7 +175,6 @@ Status MTextCommand::handle(CommandContext& context, const Input& input) {
             return Status::Continue;
         }
         m_mtext.height = height;
-        context.defaults.textHeight = height;
         m_stage = Stage::OppositeCorner;
     } else if (m_stage == Stage::Justify && (keyword != nullptr || confirm)) {
         if (keyword != nullptr) {
@@ -244,6 +243,8 @@ Status MTextCommand::handle(CommandContext& context, const Input& input) {
 
 void MTextCommand::finish(CommandContext& context) {
     if (m_hasLines) {
+        // Defaults describe a created text, not an abandoned setup.
+        context.defaults.textHeight = m_mtext.height;
         context.editor.add(m_mtext);
         context.lastPoint = m_mtext.insertion;
         context.editor.commit();

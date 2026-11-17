@@ -100,13 +100,43 @@ TEST_F(MTextCommandTest, LineSpacingSurvivesCancellationButNotAnotherRunner) {
     const auto otherMtext = std::get<core::MText>(other.entities().front().entity);
     EXPECT_FALSE(otherMtext.exactSpacing);
     EXPECT_DOUBLE_EQ(otherMtext.lineSpacing, 1.0);
+
+    submit({"MTEXT", "0,0", "40,-10", "Two", ""});
+    EXPECT_TRUE(mtext(1).exactSpacing);
+    EXPECT_DOUBLE_EQ(mtext(1).lineSpacing, 1.5);
 }
 
-TEST_F(MTextCommandTest, EscapeAfterLineKeepsText) {
-    submit({"MTEXT", "0,0", "40,-10", "One"});
+TEST_F(MTextCommandTest, CreatedTextKeepsLineSpacingButNotRotation) {
+    submit({"MTEXT", "0,0", "L", "E", "1.5x", "R", "30", "40,-10", "One", ""});
+    ASSERT_EQ(document().entityCount(), 1U);
+    EXPECT_TRUE(mtext().exactSpacing);
+    EXPECT_DOUBLE_EQ(mtext().lineSpacing, 1.5);
+    EXPECT_DOUBLE_EQ(mtext().rotation, core::degreesToRadians(30.0));
+
+    submit({"MTEXT", "0,0", "40,-10", "Two", ""});
+    ASSERT_EQ(document().entityCount(), 2U);
+    EXPECT_TRUE(mtext(1).exactSpacing);
+    EXPECT_DOUBLE_EQ(mtext(1).lineSpacing, 1.5);
+    EXPECT_DOUBLE_EQ(mtext(1).rotation, 0.0);
+}
+
+TEST_F(MTextCommandTest, EscapeAfterLineKeepsTextAndLineSpacing) {
+    submit({"MTEXT", "0,0", "L", "E", "1.5x", "40,-10", "One"});
     runner().submit(CancelInput{});
     ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_EQ(mtext().value, "One");
+    EXPECT_TRUE(mtext().exactSpacing);
+    EXPECT_DOUBLE_EQ(mtext().lineSpacing, 1.5);
+}
+
+TEST_F(MTextCommandTest, AbandonedHeightDoesNotChangeDefault) {
+    submit({"MTEXT", "0,0", "H", "4"});
+    runner().submit(CancelInput{});
+    EXPECT_TRUE(document().isEmpty());
+
+    submit({"MTEXT", "0,0", "H"});
+    EXPECT_EQ(runner().promptText(), "Specify height <2.5000>:");
+    runner().submit(CancelInput{});
 }
 
 }  // namespace
