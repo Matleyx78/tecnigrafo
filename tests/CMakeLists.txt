@@ -79,6 +79,7 @@ add_executable(tg_tests
     core/insert_test.cpp
     core/line_test.cpp
     core/math_test.cpp
+    core/mtext_test.cpp
     core/new_entities_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp

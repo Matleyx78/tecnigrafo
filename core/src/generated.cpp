@@ -464,11 +464,17 @@ void appendSnapPoints(const Document& document, const EntityRecord& record, cons
                       std::vector<SnapPoint>& out, const std::optional<Vec2>& from) {
     std::visit(
         [&](const auto& value) {
-            if constexpr (kAnswersByItself<std::decay_t<decltype(value)>>) {
+            using T = std::decay_t<decltype(value)>;
+            if constexpr (kAnswersByItself<T>) {
                 appendSnapPoints(record.entity, modes, out, from);
             } else {
-                for (const GeneratedItem& item : generate(document, record)) {
-                    appendShapeSnapPoints(item.shape, modes, out, from);
+                // The rows of an MTEXT give no snap points of their own: only
+                // its insertion point (docs/adr/0046, point 2;
+                // docs/tappe/0.8/PT13-mtext-core.md, point 6).
+                if constexpr (!std::is_same_v<T, MText>) {
+                    for (const GeneratedItem& item : generate(document, record)) {
+                        appendShapeSnapPoints(item.shape, modes, out, from);
+                    }
                 }
                 appendOwnSnapPointsOf(document, record, value, modes, out, from);
             }
