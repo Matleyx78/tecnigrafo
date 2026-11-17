@@ -1,7 +1,0 @@
-# 0.8-RT12: -STYLE, TEXTSTYLE and TEXT with the current text style (work #685)
-style/annulla-ripeti-esc #685
-style/cambia-esistente #685
-style/crea-e-alias #685
-style/textstyle #685
-text/stile-altezza-fissa #685
-text/stile-larghezza-obliquo #685

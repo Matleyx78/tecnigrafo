@@ -142,6 +142,7 @@ public:
 
 private:
     friend class DocumentTables;
+    friend bool putTextStyle(Editor& editor, core::TextStyle style);
 
     struct LayerTableChange {
         core::Layer record;

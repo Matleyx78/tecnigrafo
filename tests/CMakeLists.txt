@@ -47,6 +47,7 @@ add_executable(tg_tests
     cmd/quick_select_test.cpp
     cmd/rotate_scale_commands_test.cpp
     cmd/selection_set_test.cpp
+    cmd/style_commands_test.cpp
     cmd/text_command_test.cpp
     cmd/trim_extend_commands_test.cpp
     cmd/value_format_test.cpp
