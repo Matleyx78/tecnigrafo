@@ -19,6 +19,9 @@ text styles:
   "Larghezza08" font="romans.shx" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
   "Capovolto" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=yes upside-down=yes
 text style: "Larghezza08"
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, stili.dxf (active)
 pointer: none
 active snap: none
@@ -45,6 +48,9 @@ text styles:
   "Larghezza08" font="romans.shx" height=0 width-factor=0.8 oblique=15 backwards=no upside-down=no
   "Capovolto" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=yes upside-down=yes
 text style: "Larghezza08"
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, stili.dxf, stili-riscritto.dxf (active)
 pointer: none
 active snap: none

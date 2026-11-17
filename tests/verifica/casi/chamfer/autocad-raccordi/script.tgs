@@ -4,6 +4,7 @@
 !view 70,115 0.5 800x400
 ; cambia con #570
 ; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 ; Caso j: distanze 5 e 8

@@ -17,6 +17,9 @@ ortho: off
 drawing: disegno.cadx
 units: 0
 unhandled: 3DFACE 1
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, disegno.cadx (active)
 pointer: none
 active snap: none
@@ -42,6 +45,9 @@ ortho: off
 drawing: disegno.cadx, modified
 units: 0
 unhandled: 3DFACE 1
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, disegno.cadx (active)
 pointer: none
 active snap: none
@@ -65,6 +71,9 @@ ortho: off
 drawing: disegno.cadx
 units: 0
 unhandled: 3DFACE 1
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, disegno.cadx (active)
 pointer: none
 active snap: none

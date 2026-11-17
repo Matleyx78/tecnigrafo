@@ -4,6 +4,7 @@
 !view 10,80 0.5 600x450
 ; cambia con #570
 ; cambia con #683
+; cambia con #699
 OPEN
 polilinee.dxf
 TRIM

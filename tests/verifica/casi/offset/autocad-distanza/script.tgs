@@ -4,6 +4,7 @@
 !view 250,0 0.25 1200x400
 ; cambia con #570
 ; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 OFFSET
