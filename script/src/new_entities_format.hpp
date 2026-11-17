@@ -43,7 +43,8 @@ void writeNewEntity(const core::Entity& entity, std::string& out);
 void writeAttribute(const core::Attribute& attribute, core::EntityId owner, std::string& out);
 
 /// Appends the derived properties of the seven types that need no document
-/// (the ~box of an ATTDEF), and nothing for the others.
+/// (the ~box of an ATTDEF, that of core::shownText(): the tag), and nothing
+/// for the others.
 void writeNewDerived(const core::Entity& entity, std::string& out);
 
 /// Appends the derived properties that come from the generated geometry

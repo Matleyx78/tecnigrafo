@@ -1258,8 +1258,10 @@ void writeAttribute(const core::Attribute& attribute, core::EntityId owner, std:
 }
 
 void writeNewDerived(const core::Entity& entity, std::string& out) {
+    // In the drawing an ATTDEF shows its tag (docs/adr/0045, point 6): its box
+    // is that of the text it shows, not of its default value.
     if (const auto* definition = std::get_if<core::AttributeDefinition>(&entity)) {
-        writeTextBox(definition->text, out);
+        writeTextBox(core::shownText(*definition), out);
     }
 }
 

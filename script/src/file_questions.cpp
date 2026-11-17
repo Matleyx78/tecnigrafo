@@ -4,6 +4,7 @@
 // Definitions and questions about drawings read from files
 // (docs/verifica/domande.md, "File"; docs/adr/0018, point 6).
 
+#include "new_entities_format.hpp"
 #include "question_table.hpp"
 #include "text.hpp"
 #include "tg/io/dxf_groups.hpp"
@@ -16,10 +17,13 @@
 #include <charconv>
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <span>
 #include <string>
 #include <system_error>
 #include <utility>
+#include <variant>
+#include <vector>
 
 namespace tg::script::detail {
 namespace {
@@ -185,6 +189,58 @@ std::optional<std::string> firstDifference(const io::GroupFile& original,
     return std::nullopt;
 }
 
+/// The text of a DXF value without the blanks around it ("  ATTRIB" as "ATTRIB").
+std::string_view trimmed(std::string_view text) {
+    const std::size_t begin = text.find_first_not_of(" \t\r");
+    if (begin == std::string_view::npos) {
+        return {};
+    }
+    return text.substr(begin, text.find_last_not_of(" \t\r") - begin + 1);
+}
+
+/// The handles of the ATTRIB kept inside an unhandled INSERT: its raw groups
+/// hold a group 0 "ATTRIB" for each, followed by its groups (io keeps an
+/// INSERT whole, with its ATTRIB and SEQEND). Empty for any other entity.
+std::vector<std::uint64_t> rawAttributeHandles(const core::RawEntity& raw) {
+    std::vector<std::uint64_t> handles;
+    if (trimmed(raw.type) != "INSERT") {
+        return handles;
+    }
+    bool attribute = false;  // inside an ATTRIB, before its handle
+    for (const core::RawGroup& group : raw.groups) {
+        if (group.code == 0) {
+            attribute = trimmed(group.value) == "ATTRIB";
+            if (attribute) {
+                handles.push_back(0);  // an ATTRIB without a handle still counts
+            }
+        } else if (attribute && group.code == 5) {
+            handles.back() = parseHandle(trimmed(group.value)).value_or(0);
+            attribute = false;
+        }
+    }
+    return handles;
+}
+
+/// The line of "entities:" of the ATTRIB `handle` of a handled INSERT,
+/// without its identifier, or std::nullopt.
+std::optional<std::string> attributeLine(const core::Document& document, std::uint64_t handle) {
+    for (const core::EntityRecord& record : document.entities()) {
+        const auto* insert = std::get_if<core::Insert>(&record.entity);
+        if (insert == nullptr ||
+            std::ranges::find(insert->attributes, core::EntityId{handle}, &core::Attribute::id) ==
+                insert->attributes.end()) {
+            continue;
+        }
+        const std::array<const core::EntityRecord*, 1> records{&record};
+        for (const EntityLine& line : entityLines(records, document)) {
+            if (line.id == handle) {
+                return line.text.substr(line.text.find(' ') + 1);
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 std::string roundtrip(const FileDrawing& drawing, bool toCadx, const Tolerances& tolerances) {
     const core::Document& document = drawing.read.document;
     const io::DxfVersion version =
@@ -291,30 +347,54 @@ QuestionResult askEntity(const QuestionModel& model, Arguments arguments) {
                 writeEntity(*record, document, text);
                 return text;
             }
+            if (std::optional<std::string> line = attributeLine(document, *handle)) {
+                return *std::move(line);
+            }
             const auto raw = std::ranges::find(document.rawEntities(), core::EntityId{*handle},
                                                &core::RawEntity::id);
-            return raw == document.rawEntities().end() ? std::string{kNone}
-                                                       : "unhandled " + raw->type;
+            if (raw != document.rawEntities().end()) {
+                return "unhandled " + raw->type;
+            }
+            // An ATTRIB of an unhandled INSERT stays inside it (docs/adr/0044,
+            // point 4), with its own handle.
+            const bool inside = std::ranges::any_of(
+                document.rawEntities(), [&handle](const core::RawEntity& entity) {
+                    const std::vector<std::uint64_t> handles = rawAttributeHandles(entity);
+                    return std::ranges::find(handles, *handle) != handles.end();
+                });
+            return inside ? std::string{"unhandled ATTRIB"} : std::string{kNone};
         });
 }
 
 QuestionResult askCount(const QuestionModel& model, Arguments arguments) {
     return askAboutDrawing(
         model, arguments, "count <drawing>", 0, [](const FileDrawing& drawing, Arguments /*more*/) {
-            return countText(
-                drawing.read.document.entities(),
-                [](const core::EntityRecord& record) { return dxfType(record.entity); });
+            // The ATTRIB of an INSERT are counted as "statistics:" counts them.
+            std::vector<const core::EntityRecord*> records;
+            for (const core::EntityRecord& record : drawing.read.document.entities()) {
+                records.push_back(&record);
+            }
+            std::string text;
+            for (const std::string& item : statisticsLines(records)) {
+                text += (text.empty() ? "" : "; ") + item;
+            }
+            return text.empty() ? std::string{kNone} : text;
         });
 }
 
 QuestionResult askUnhandled(const QuestionModel& model, Arguments arguments) {
-    return askAboutDrawing(model, arguments, "unhandled <drawing>", 0,
-                           [](const FileDrawing& drawing, Arguments /*more*/) {
-                               return countText(drawing.read.document.rawEntities(),
-                                                [](const core::RawEntity& raw) -> std::string_view {
-                                                    return raw.type;
-                                                });
-                           });
+    return askAboutDrawing(
+        model, arguments, "unhandled <drawing>", 0,
+        [](const FileDrawing& drawing, Arguments /*more*/) {
+            // An unhandled INSERT stays unhandled as a whole, with its ATTRIB
+            // (docs/adr/0044, point 4): they are counted too.
+            std::vector<std::string_view> types;
+            for (const core::RawEntity& raw : drawing.read.document.rawEntities()) {
+                types.emplace_back(raw.type);
+                types.insert(types.end(), rawAttributeHandles(raw).size(), "ATTRIB");
+            }
+            return countText(types, [](std::string_view type) { return type; });
+        });
 }
 
 QuestionResult askVersion(const QuestionModel& model, Arguments arguments) {

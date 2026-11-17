@@ -706,10 +706,14 @@ TEST(WriteNewEntity, AttributeDefinitionWritesItsFlagsOnlyWhenYes) {
     std::string line = written(definition);
     EXPECT_EQ(line.substr(0, line.find(" ~box=")),
               "ATTDEF " + std::string{kTextProperties} + R"( tag="TG_PIN1" prompt="")");
-    // The derived box is that of its TEXT.
+    // The derived box is that of the text it shows, the tag, not of its
+    // default value (docs/tappe/0.8/PT17-attributi-core.md, point 1).
     std::string box;
-    detail::writeTextBox(definition.text, box);
+    detail::writeTextBox(core::shownText(definition), box);
     EXPECT_EQ(line.substr(line.find(" ~box=")), box);
+    std::string valueBox;
+    detail::writeTextBox(definition.text, valueBox);
+    EXPECT_NE(box, valueBox);
 
     definition.prompt = "Pin";
     definition.flags = {true, true, true, true};
