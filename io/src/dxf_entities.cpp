@@ -36,6 +36,9 @@ const EntityCodec* findCodec(std::string_view type) {
     if (type == "ARC") {
         return &kArcCodec;
     }
+    if (type == "SOLID") {
+        return &kSolidCodec;
+    }
     if (type == "ELLIPSE") {
         return &kEllipseCodec;
     }
@@ -60,6 +63,9 @@ const EntityCodec* findCodec(const core::Entity& entity) {
     }
     if (std::holds_alternative<core::Arc>(entity)) {
         return &kArcCodec;
+    }
+    if (std::holds_alternative<core::Solid>(entity)) {
+        return &kSolidCodec;
     }
     if (std::holds_alternative<core::Ellipse>(entity)) {
         return &kEllipseCodec;

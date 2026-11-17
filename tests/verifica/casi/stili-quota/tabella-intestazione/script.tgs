@@ -5,7 +5,7 @@
 OPEN
 ingresso.dxf
 !report
-SAVEAS
+SAVE
 giro.dxf
 OPEN
 giro.dxf

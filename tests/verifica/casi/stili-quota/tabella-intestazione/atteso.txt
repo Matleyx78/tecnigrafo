@@ -28,7 +28,7 @@ statistics:
 [final]
 entities:
 messages:
-  Command: SAVEAS
+  Command: SAVE
   Save drawing as <ingresso.dxf>: giro.dxf
   Command: OPEN
   Enter name of drawing to open: giro.dxf
