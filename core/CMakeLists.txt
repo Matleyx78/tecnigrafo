@@ -44,6 +44,7 @@ add_library(tg_core
     src/snap_points.cpp
     src/spatial_index.cpp
     src/text.cpp
+    src/text_affine.cpp
     src/text_metrics.cpp
     src/text_style_table.cpp
     src/tolerance.cpp
