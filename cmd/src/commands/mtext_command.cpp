@@ -220,7 +220,8 @@ Status MTextCommand::handle(CommandContext& context, const Input& input) {
         useStyle(context.editor.document(), name);
         m_stage = Stage::OppositeCorner;
     } else if (m_stage == Stage::Width && (point != nullptr || value != nullptr)) {
-        double width = value != nullptr ? value->value : core::distance(m_first, point->point);
+        const double width =
+            value != nullptr ? value->value : core::distance(m_first, point->point);
         if (!(width > 0.0) || !std::isfinite(width)) {
             context.message("Value must be positive and nonzero.");
             return Status::Continue;

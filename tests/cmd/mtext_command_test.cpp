@@ -32,6 +32,17 @@ protected:
         return std::get<core::MText>(m_document.entities()[index].entity);
     }
 
+    [[nodiscard]] core::Document& document() { return m_document; }
+
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
+    [[nodiscard]] CommandRegistry& registry() { return m_registry; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -41,18 +52,18 @@ protected:
 
 TEST_F(MTextCommandTest, CreatesParagraphsAndOneUndoStep) {
     submit({"MTEXT", "10,20", "70,0", "First", "Second", ""});
-    ASSERT_EQ(m_document.entityCount(), 1U);
+    ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_EQ(mtext().insertion, (core::Vec2{10, 20}));
     EXPECT_DOUBLE_EQ(mtext().width, 60.0);
     EXPECT_EQ(mtext().value, "First\\PSecond");
-    EXPECT_EQ(m_editor.undoName(), "Mtext");
-    m_runner.submitText("U");
-    EXPECT_TRUE(m_document.isEmpty());
+    EXPECT_EQ(editor().undoName(), "Mtext");
+    runner().submitText("U");
+    EXPECT_TRUE(document().isEmpty());
 }
 
 TEST_F(MTextCommandTest, WidthJustificationStyleAndRotationOptions) {
     submit({"MTEXT", "100,50", "H", "4", "J", "MC", "R", "30", "W", "40", "Center", ""});
-    ASSERT_EQ(m_document.entityCount(), 1U);
+    ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_DOUBLE_EQ(mtext().height, 4.0);
     EXPECT_DOUBLE_EQ(mtext().width, 40.0);
     EXPECT_EQ(mtext().attachment, core::MTextAttachment::MiddleCenter);
@@ -66,23 +77,23 @@ TEST_F(MTextCommandTest, WidthJustificationStyleAndRotationOptions) {
 
 TEST_F(MTextCommandTest, MissingStyleRepeatsQuestion) {
     submit({"MTEXT", "0,0", "S", "Missing"});
-    ASSERT_FALSE(m_messages.empty());
-    EXPECT_EQ(m_messages.back(), "Cannot find text style \"Missing\".");
-    EXPECT_EQ(m_runner.promptText(), "Enter style name or [?] <Standard>:");
-    m_runner.submit(CancelInput{});
+    ASSERT_FALSE(messages().empty());
+    EXPECT_EQ(messages().back(), "Cannot find text style \"Missing\".");
+    EXPECT_EQ(runner().promptText(), "Enter style name or [?] <Standard>:");
+    runner().submit(CancelInput{});
 }
 
 TEST_F(MTextCommandTest, LineSpacingSurvivesCancellationButNotAnotherRunner) {
     submit({"MTEXT", "0,0", "L", "E", "1.5x"});
-    m_runner.submit(CancelInput{});
-    EXPECT_TRUE(m_document.isEmpty());
+    runner().submit(CancelInput{});
+    EXPECT_TRUE(document().isEmpty());
     submit({"MTEXT", "0,0", "40,-10", "One", ""});
     EXPECT_TRUE(mtext().exactSpacing);
     EXPECT_DOUBLE_EQ(mtext().lineSpacing, 1.5);
 
     core::Document other = core::Document::newDrawing();
     edit::Editor otherEditor(other);
-    CommandRunner otherRunner(m_registry, otherEditor);
+    CommandRunner otherRunner(registry(), otherEditor);
     for (const char* input : {"MTEXT", "0,0", "40,-10", "One", ""}) {
         otherRunner.submitText(input);
     }
@@ -93,8 +104,8 @@ TEST_F(MTextCommandTest, LineSpacingSurvivesCancellationButNotAnotherRunner) {
 
 TEST_F(MTextCommandTest, EscapeAfterLineKeepsText) {
     submit({"MTEXT", "0,0", "40,-10", "One"});
-    m_runner.submit(CancelInput{});
-    ASSERT_EQ(m_document.entityCount(), 1U);
+    runner().submit(CancelInput{});
+    ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_EQ(mtext().value, "One");
 }
 
