@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; PT43 point 2 excludes both block members and generated insert shapes.
+; The four lines of the block must not leak into document candidates.
+
+; PT9 refuses !block until PT16 implements block definitions. This existing
+; behavior changes with PT16, independently of the two new PT43 questions.
+; cambia con #693
+!block "Frame" base=0,0
+Bottom = LINE start=0,0 end=10,0
+Right = LINE start=10,0 end=10,10
+Top = LINE start=10,10 end=0,10
+Left = LINE start=0,10 end=0,0
+!endblock
+I = INSERT block="Frame" insertion=0,0
+? hatch-boundary 5,5 -> not-enclosed
+? hatch-boundary 5,0 -> not-enclosed
+? hatch-contours I -> left-out=I

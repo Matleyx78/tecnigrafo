@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-topology-giro-intero-origini-miste-228.json
+
+E0 = LWPOLYLINE vertex=-10,0 bulge=1 vertex=10,0
+E1 = CIRCLE center=0,0 radius=10
+? hatch-boundary 0,0 units=6 -> enclosed loop=external+derived+polyline vertex=-10,0 bulge=1 vertex=10,0 bulge=1

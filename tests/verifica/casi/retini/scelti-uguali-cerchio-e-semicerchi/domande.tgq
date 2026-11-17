@@ -1,0 +1,13 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/contorni-uguali-cerchio-e-semicerchi.json
+
+E0 = LWPOLYLINE closed=yes vertex=0,0 vertex=8,0 vertex=8,8 vertex=0,8
+E1 = CIRCLE center=4,4 radius=2
+E2 = LWPOLYLINE closed=yes vertex=6,4 bulge=1 vertex=2,4 bulge=1
+? hatch-contours E0 E1 E2 -> loop=external+polyline vertex=0,0 vertex=8,0 vertex=8,8 vertex=0,8 loop=outermost+edges circle=4,4;2 loop=outermost+polyline vertex=6,4 bulge=1 vertex=2,4 bulge=1
+? hatch-contours E2 E1 E0 -> loop=outermost+polyline vertex=6,4 bulge=1 vertex=2,4 bulge=1 loop=outermost+edges circle=4,4;2 loop=external+polyline vertex=0,0 vertex=8,0 vertex=8,8 vertex=0,8
