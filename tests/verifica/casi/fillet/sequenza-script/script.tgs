@@ -5,6 +5,7 @@
 !scr on
 ; cambia con #570
 ; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 ; Impostazione raggio: il comando termina subito dopo il valore

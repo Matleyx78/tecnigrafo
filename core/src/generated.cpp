@@ -4,6 +4,7 @@
 #include "tg/core/generated.hpp"
 
 #include "solid_space/robust/trigonometry.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/hatch.hpp"
@@ -308,6 +309,51 @@ std::optional<std::vector<GeneratedShape>> transformedConic(const GeneratedShape
     return std::vector<GeneratedShape>{result};
 }
 
+/// The exact image of a polyline under an affine map that is not a
+/// similarity (docs/tappe/0.8/PT16-blocchi-core.md, point 3). Without arcs, a
+/// polyline through the mapped vertices; with arcs, its segments in order,
+/// lines and elliptical arcs. The widths are lost on every piece
+/// (docs/DECISIONI.md, 2026-11-14, "Secondo giro delle revisioni PT4 e PT5",
+/// P8).
+std::vector<GeneratedShape> affinePolyline(const Polyline& polyline, const Transform2D& transform) {
+    std::vector<GeneratedShape> pieces;
+    bool hasArc = false;
+    for (std::size_t i = 0; i < polyline.segmentCount(); ++i) {
+        hasArc = hasArc || polyline.segment(i).isArc();
+    }
+    if (!hasArc) {
+        std::vector<PolylineVertex> vertices;
+        vertices.reserve(polyline.vertexCount());
+        for (const PolylineVertex& vertex : polyline.vertices()) {
+            vertices.push_back({transform.apply(vertex.position), 0.0, 0.0, 0.0});
+        }
+        Polyline mapped{std::move(vertices), polyline.isClosed()};
+        mapped.setContinuousLinetype(polyline.continuousLinetype());
+        pieces.emplace_back(std::move(mapped));
+        return pieces;
+    }
+    for (std::size_t i = 0; i < polyline.segmentCount(); ++i) {
+        const PolylineSegment segment = polyline.segment(i);
+        if (!segment.isArc()) {
+            pieces.emplace_back(Line{transform.apply(segment.start), transform.apply(segment.end)});
+            continue;
+        }
+        // The arc counter-clockwise from its start angle: a clockwise
+        // segment (negative sweep) runs from its end.
+        const ArcGeometry geometry = arcFromBulge(segment.start, segment.end, segment.bulge);
+        const double from =
+            geometry.sweep > 0.0 ? geometry.startAngle : geometry.startAngle + geometry.sweep;
+        const double to =
+            geometry.sweep > 0.0 ? geometry.startAngle + geometry.sweep : geometry.startAngle;
+        const Arc arc{geometry.center, geometry.radius, normalizeAngle(from), normalizeAngle(to)};
+        for (GeneratedShape& piece :
+             transformedConic(arc, transform).value_or(std::vector<GeneratedShape>{})) {
+            pieces.push_back(std::move(piece));
+        }
+    }
+    return pieces;
+}
+
 }  // namespace
 
 std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
@@ -316,14 +362,29 @@ std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
         // Every affine map, similarities included, on the same exact path.
         return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
     }
+    if (const auto* region = std::get_if<FilledRegion>(&shape)) {
+        // A region keeps the map, whatever it is (docs/adr/0044, point 2).
+        return {FilledRegion{region->loops, transform * region->transform}};
+    }
+    if (const auto* solid = std::get_if<Solid>(&shape)) {
+        // Its vertices map exactly under every affine map.
+        Solid result = *solid;
+        for (Vec2& vertex : result.vertices) {
+            vertex = transform.apply(vertex);
+        }
+        return {result};
+    }
     const std::optional<Similarity> similarity = similarityOf(transform);
     if (!similarity) {
-        // Circles and arcs become ellipses; the other shapes wait for
-        // docs/tappe/0.8, PT17 (text) and PT16 (the rest).
+        if (const auto* line = std::get_if<Line>(&shape)) {
+            return {Line{transform.apply(line->start), transform.apply(line->end)}};
+        }
+        if (const auto* polyline = std::get_if<Polyline>(&shape)) {
+            return affinePolyline(*polyline, transform);
+        }
+        // Circles and arcs become ellipses; text waits for docs/tappe/0.8,
+        // PT17.
         return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
-    }
-    if (const auto* region = std::get_if<FilledRegion>(&shape)) {
-        return {FilledRegion{region->loops, transform * region->transform}};
     }
     const std::optional<Entity> entity = shapeEntity(shape);
     assert(entity.has_value());
@@ -403,11 +464,17 @@ void appendSnapPoints(const Document& document, const EntityRecord& record, cons
                       std::vector<SnapPoint>& out, const std::optional<Vec2>& from) {
     std::visit(
         [&](const auto& value) {
-            if constexpr (kAnswersByItself<std::decay_t<decltype(value)>>) {
+            using T = std::decay_t<decltype(value)>;
+            if constexpr (kAnswersByItself<T>) {
                 appendSnapPoints(record.entity, modes, out, from);
             } else {
-                for (const GeneratedItem& item : generate(document, record)) {
-                    appendShapeSnapPoints(item.shape, modes, out, from);
+                // The rows of an MTEXT give no snap points of their own: only
+                // its insertion point (docs/adr/0046, point 2;
+                // docs/tappe/0.8/PT13-mtext-core.md, point 6).
+                if constexpr (!std::is_same_v<T, MText>) {
+                    for (const GeneratedItem& item : generate(document, record)) {
+                        appendShapeSnapPoints(item.shape, modes, out, from);
+                    }
                 }
                 appendOwnSnapPointsOf(document, record, value, modes, out, from);
             }

@@ -147,6 +147,9 @@ TEST(NewEntities, AreNotSupportedYet) {
         if (std::holds_alternative<Hatch>(entity)) {
             continue;  // docs/tappe/0.8/PT30-retini-core.md
         }
+        if (std::holds_alternative<MText>(entity)) {
+            continue;  // docs/tappe/0.8/PT13-mtext-core.md, point 1
+        }
         EXPECT_FALSE(isSupported(entity)) << entity.index();
     }
     EXPECT_TRUE(isSupported(Entity{sampleEllipse()}));

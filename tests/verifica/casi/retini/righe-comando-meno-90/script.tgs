@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT42 / PT42 (#738). Handwritten DXF: square and vertical NET family.
+; Exact cardinal transforms, selection on the transformed boundary/interior,
+; undo/redo, then Esc before the next transformation gets its base point.
+!view 0,0 0.01 800x600
+!snap off
+OPEN
+input.dxf
+; PT42 makes the stored pattern selectable.
+; cambia con #738
+ROTATE
+0,5
+
+0,0
+-90
+!click 5,0
+!report
+!esc
+U
+!report
+REDO
+!report
+ROTATE
+5,-3.175
+
+!esc
+!click 5,-3.175

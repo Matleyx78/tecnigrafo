@@ -120,7 +120,6 @@ TEST(Questions, PrefixStopsAtUnimplementedDefinitionsWhenAvailable) {
              "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5",
              R"(MTEXT insertion=0,0 value="A")",
              R"(ATTDEF position=0,0 value="N" tag="T")",
-             R"(INSERT block="B" insertion=0,0)",
              "DIMENSION kind=radius center=0,0 point=1,0 text-point=1,0 measurement=1",
              R"(HATCH pattern="SOLID" solid=yes)",
          }) {
@@ -730,7 +729,6 @@ TEST(Questions, TypesOfStageEightAreNotSupportedUntilTheirPackage) {
              "ELLIPSE center=0,0 major-axis=10,0 ratio=0.5",
              R"(MTEXT insertion=0,0 value="A")",
              R"(ATTDEF position=0,0 value="N" tag="T")",
-             R"(INSERT block="B" insertion=0,0)",
              "DIMENSION kind=radius center=0,0 point=1,0 text-point=1,0 measurement=1",
              R"(HATCH pattern="SOLID" solid=yes)",
          }) {
@@ -749,6 +747,61 @@ TEST(Questions, TypesOfStageEightAreNotSupportedUntilTheirPackage) {
     const ParseError error = failure("A = SOLID vertex=0,0\n");
     EXPECT_FALSE(error.notImplemented);
     EXPECT_EQ(error.message, "a SOLID has four vertices");
+}
+
+TEST(Questions, BlockAndEndBlockDefineABlockThatAnInsertUses) {
+    // docs/tappe/0.8/PT16-blocchi-core.md, point 8.
+    const std::vector<Answer> list = answers(
+        "!block \"TG_EL\" base=5,0\n"
+        "E1 = LINE start=0,0 end=10,0\n"
+        "!endblock\n"
+        "I = INSERT block=\"TG_EL\" insertion=10,20 scale=1,1 rotation=0\n"
+        "? generated I -> LINE start=5,20 end=15,20\n"
+        "? window 4,19 16,21 -> I\n");
+    ASSERT_EQ(list.size(), 2U);
+    EXPECT_TRUE(list[0].matches) << list[0].actual;
+    EXPECT_TRUE(list[1].matches) << list[1].actual;
+}
+
+TEST(Questions, AnEntityOfABlockIsNotInTheDrawing) {
+    // The line of the block is not an entity of the drawing; its name is
+    // taken, and the numbering goes on after it.
+    const std::vector<Answer> list = answers(
+        "!block \"B\" base=0,0\n"
+        "E1 = LINE start=0,0 end=10,0\n"
+        "!endblock\n"
+        "? window -1,-1 11,1 -> none\n");
+    ASSERT_EQ(list.size(), 1U);
+    EXPECT_TRUE(list[0].matches) << list[0].actual;
+    EXPECT_EQ(failure("!block \"B\" base=0,0\nE1 = LINE start=0,0 end=1,0\n!endblock\n"
+                      "E1 = LINE start=0,0 end=1,0\n")
+                  .message,
+              "the name 'E1' is already defined");
+}
+
+TEST(Questions, MalformedBlocksAreErrorsOfTheFile) {
+    const auto expectError = [](std::string_view text, int line, std::string_view message) {
+        const ParseError error = failure(text);
+        EXPECT_EQ(error.line, line) << text;
+        EXPECT_EQ(error.message, message) << text;
+        EXPECT_FALSE(error.notImplemented) << text;
+    };
+    expectError("!block \"A\" base=0,0\n!block \"B\" base=0,0\n", 2,
+                "a !block inside the block 'A': close it first with !endblock");
+    expectError("!endblock\n", 1, "!endblock without a !block");
+    expectError("!block \"A\" base=0,0\nL = LINE start=0,0 end=1,0\n", 2,
+                "the file ends inside the block 'A': close it with !endblock");
+    expectError("!block \"A\" base=0,0\n!endblock\n!block \"a\" base=1,1\n", 3,
+                "the block 'a' is already defined");
+    expectError("!block A base=0,0\n", 1, "expected !block \"NAME\" base=x,y");
+    expectError("!block \"A\"\n", 1, "expected !block \"NAME\" base=x,y");
+    expectError("!block \"A<\" base=0,0\n", 1,
+                "invalid block name 'A<': a table name (docs/adr/0023, point 1)");
+    expectError("!block \"A\" base=0,0\nR = LAYER name=\"R\"\n", 2,
+                "only entities are defined inside the block 'A'");
+    expectError("!block \"A\" base=0,0\n!endblock now\n", 2, "!endblock takes no argument");
+    expectError("I = INSERT block=\"Missing\" insertion=0,0\n", 1,
+                "unknown block 'Missing': define it above with !block");
 }
 
 TEST(Questions, GeneratedOfAnEntityOfBeforeTheStageIsTheEntityItself) {
@@ -789,15 +842,6 @@ TEST(Questions, GeneratedRejectsWrongArguments) {
         const ParseError error = failure(text);
         EXPECT_EQ(error.line, 2) << question;
         EXPECT_FALSE(error.notImplemented) << question;
-    }
-}
-
-TEST(Questions, BlockDirectivesAreInvalidUntilTheirPackage) {
-    // !block and !endblock are realized by PT16 (docs/verifica/domande.md).
-    for (const std::string_view line : {"!block \"TG_EL\" base=0,0", "!endblock"}) {
-        const ParseError error = failure(std::string{line} + "\n");
-        EXPECT_EQ(error.line, 1) << line;
-        EXPECT_FALSE(error.notImplemented) << line;
     }
 }
 

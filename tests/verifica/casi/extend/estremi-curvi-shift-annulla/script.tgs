@@ -4,6 +4,7 @@
 !view 200,50 0.5 1000x300
 ; cambia con #570
 ; cambia con #683
+; cambia con #699
 OPEN
 polilinee.dxf
 EXTEND

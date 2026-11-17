@@ -60,6 +60,7 @@ add_executable(tg_tests
     core/offset_test.cpp
     core/pedit_join_test.cpp
     core/arc_test.cpp
+    core/block_table_test.cpp
     core/ellipse_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
@@ -75,8 +76,10 @@ add_executable(tg_tests
     core/effective_properties_test.cpp
     core/layer_test.cpp
     core/geometry_test.cpp
+    core/insert_test.cpp
     core/line_test.cpp
     core/math_test.cpp
+    core/mtext_test.cpp
     core/new_entities_test.cpp
     core/polyline_test.cpp
     core/proximity_test.cpp
@@ -234,6 +237,7 @@ if(TG_BUILD_APP)
         app/property_grid_test.cpp
         app/action_registry_test.cpp
         app/assistant_channel_test.cpp
+        app/assistant_panel_test.cpp
         app/auto_hide_test.cpp
         app/ui_builder_test.cpp
         app/command_line_test.cpp

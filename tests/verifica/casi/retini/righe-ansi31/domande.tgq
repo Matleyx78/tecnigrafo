@@ -1,0 +1,13 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT42 / PT42 (#738). Handwritten DXF; no Tecnigrafo execution.
+; Square [0,10]^2; ANSI31 normal spacing 3.175, k=-2..2.
+; Intersections: y-x=k*3.175*sqrt(2); circle equation (x-5)^2+(y-5)^2=4.
+; The k=0 line has two stretches around the circular hole.
+D = DXF file=input.dxf
+; PT42 starts drawing the stored pattern families.
+; cambia con #738
+; Handle 100: 5 generated shapes.
+? generated D:100 -> LINE start=8.980256121069152,0 end=10,1.019743878930848; LINE start=4.490128060534576,0 end=10,5.509871939465424; LINE start=0,0 end=10,10; LINE start=0,4.490128060534576 end=5.509871939465424,10; LINE start=0,8.980256121069152 end=1.019743878930848,10
+; Handle 101: 6 generated shapes.
+? generated D:101 -> LINE start=8.980256121069152,0 end=10,1.019743878930848; LINE start=4.490128060534576,0 end=10,5.509871939465424; LINE start=0,0 end=3.585786437626905,3.585786437626905; LINE start=6.414213562373095,6.414213562373095 end=10,10; LINE start=0,4.490128060534576 end=5.509871939465424,10; LINE start=0,8.980256121069152 end=1.019743878930848,10

@@ -8,6 +8,7 @@
 ; Reports expose properties, not table handles. Check them before and after
 ; saving and reopening; do not require byte identity for malformed tables.
 ; cambia con #570
+; cambia con #699
 OPEN
 tabelle.dxf
 !report

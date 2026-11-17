@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT42 / PT42 (#738). Handwritten DXF; no Tecnigrafo execution.
+; 100/101: vertical k=0 lies on the left/right side, length 10.
+; 102: vertical family rotated +360 degrees; 103: MIRROR in the X axis.
+; 104/105: vertical family rotated +90/-90 about (0,0).
+; 106: vertical family rotated +90 about (5,5), origin becomes (10,0).
+; The coordinates are exact quarter-turn transforms; spacing remains 3.175.
+; All lists are family order, then increasing k (including negative step).
+D = DXF file=input.dxf
+; PT42 starts drawing the stored pattern families.
+; cambia con #738
+; Handle 100: 8 generated shapes.
+? generated D:100 -> LINE start=0,0 end=10,0; LINE start=0,3.175 end=10,3.175; LINE start=0,6.35 end=10,6.35; LINE start=0,9.524999999999999 end=10,9.524999999999999; LINE start=9.524999999999999,0 end=9.524999999999999,10; LINE start=6.35,0 end=6.35,10; LINE start=3.175,0 end=3.175,10; LINE start=0,0 end=0,10
+; Handle 101: 8 generated shapes.
+? generated D:101 -> LINE start=-10,0 end=0,0; LINE start=-10,3.175 end=0,3.175; LINE start=-10,6.35 end=0,6.35; LINE start=-10,9.524999999999999 end=0,9.524999999999999; LINE start=0,0 end=0,10; LINE start=-3.175,0 end=-3.175,10; LINE start=-6.35,0 end=-6.35,10; LINE start=-9.524999999999999,0 end=-9.524999999999999,10
+; Handle 102: 4 generated shapes.
+? generated D:102 -> LINE start=9.524999999999999,0 end=9.524999999999999,10; LINE start=6.35,0 end=6.35,10; LINE start=3.175,0 end=3.175,10; LINE start=0,0 end=0,10
+; Handle 103: 4 generated shapes.
+? generated D:103 -> LINE start=9.524999999999999,0 end=9.524999999999999,-10; LINE start=6.35,0 end=6.35,-10; LINE start=3.175,0 end=3.175,-10; LINE start=0,0 end=0,-10
+; Handle 104: 4 generated shapes.
+? generated D:104 -> LINE start=0,9.524999999999999 end=-10,9.524999999999999; LINE start=0,6.35 end=-10,6.35; LINE start=0,3.175 end=-10,3.175; LINE start=0,0 end=-10,0
+; Handle 105: 4 generated shapes.
+? generated D:105 -> LINE start=0,-9.524999999999999 end=10,-9.524999999999999; LINE start=0,-6.35 end=10,-6.35; LINE start=0,-3.175 end=10,-3.175; LINE start=0,0 end=10,0
+; Handle 106: 4 generated shapes.
+? generated D:106 -> LINE start=10,9.524999999999999 end=0,9.524999999999999; LINE start=10,6.35 end=0,6.35; LINE start=10,3.175 end=0,3.175; LINE start=10,0 end=0,0
