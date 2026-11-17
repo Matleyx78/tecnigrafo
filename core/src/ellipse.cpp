@@ -3,6 +3,8 @@
 
 #include "tg/core/ellipse.hpp"
 
+#include "solid_space/geom2d/ellipse.hpp"
+#include "solid_space_bridge.hpp"
 #include "tg/core/arc.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/circle.hpp"
@@ -26,6 +28,8 @@
 
 namespace tg::core {
 namespace {
+
+namespace g = bridge::g;
 
 constexpr double kQuarterTurn = kPi / 2.0;
 
@@ -113,6 +117,35 @@ Ellipse withAxes(const Ellipse& source, const Vec2& center, const Vec2& axis, do
     const double end = reverses ? offset - source.startParameter : offset + source.endParameter;
     setArcParameters(result, start, end, parameterSpan(source));
     return result;
+}
+
+/// True when solid-space reduces the ellipse to a single point: an arc
+/// reduced to one direction (ellipse.hpp, degenerateCurve about input 0).
+template <typename T>
+bool isReducedToAPoint(const g::Result<T>& result) {
+    return !result.hasValue() && result.diagnosis().code == g::DiagnosisCode::degenerateCurve &&
+           result.diagnosis().input == 0;
+}
+
+/// The point of the ellipse nearest to `point` and its distance.
+struct Nearest {
+    Vec2 point;
+    double distance{0.0};
+};
+
+/// solid-space's nearest(); for an arc reduced to a point, its start point
+/// (pointAt(), docs/tappe/0.8/PT50-ellisse-selezione-snap.md, point 2);
+/// std::nullopt for data solid-space refuses.
+std::optional<Nearest> nearestOn(const Ellipse& ellipse, const Vec2& point) {
+    const auto found = g::nearest(bridge::ellipseOf(ellipse), bridge::toPoint(point));
+    if (found.hasValue()) {
+        return Nearest{bridge::fromPoint(found.value().point), found.value().distance};
+    }
+    if (isReducedToAPoint(found)) {
+        const Vec2 start = pointAt(ellipse, ellipse.startParameter);
+        return Nearest{start, distance(start, point)};
+    }
+    return std::nullopt;
 }
 
 }  // namespace
@@ -208,10 +241,36 @@ BBox boundingBox(const Ellipse& ellipse) {
     return BBox{low, high};
 }
 
-double distanceOf([[maybe_unused]] const Ellipse& ellipse, const Vec2& /*point*/) {
+double distance(const Ellipse& ellipse, const Vec2& point) {
     assert(supported(ellipse));
-    // The distance is a question for solid-space (docs/adr/0052, point 4).
-    return std::numeric_limits<double>::infinity();
+    const std::optional<Nearest> nearest = nearestOn(ellipse, point);
+    return nearest ? nearest->distance : std::numeric_limits<double>::infinity();
+}
+
+std::optional<Vec2> closestPoint(const Ellipse& ellipse, const Vec2& point) {
+    assert(supported(ellipse));
+    const std::optional<Nearest> nearest = nearestOn(ellipse, point);
+    if (!nearest) {
+        return std::nullopt;
+    }
+    return nearest->point;
+}
+
+bool intersects(const Ellipse& ellipse, const BBox& rectangle) {
+    assert(supported(ellipse));
+    if (rectangle.isEmpty()) {
+        return false;
+    }
+    const auto met = g::meetsRectangle(bridge::ellipseOf(ellipse), bridge::toPoint(rectangle.min()),
+                                       bridge::toPoint(rectangle.max()));
+    if (met.hasValue()) {
+        return met.value();
+    }
+    return isReducedToAPoint(met) && rectangle.contains(pointAt(ellipse, ellipse.startParameter));
+}
+
+double distanceOf(const Ellipse& ellipse, const Vec2& point) {
+    return distance(ellipse, point);
 }
 
 bool isInsideOf(const Ellipse& ellipse, const BBox& rectangle) {
@@ -223,10 +282,8 @@ bool isInsideOf(const Ellipse& ellipse, const BBox& rectangle) {
     return rectangle.contains(box.min()) && rectangle.contains(box.max());
 }
 
-bool intersectsOf([[maybe_unused]] const Ellipse& ellipse, const BBox& /*rectangle*/) {
-    assert(supported(ellipse));
-    // The crossing is a question for solid-space (docs/adr/0052, point 4).
-    return false;
+bool intersectsOf(const Ellipse& ellipse, const BBox& rectangle) {
+    return intersects(ellipse, rectangle);
 }
 
 void appendSnapPointsOf(const Ellipse& ellipse, const SnapModes& modes, std::vector<SnapPoint>& out,
@@ -234,8 +291,15 @@ void appendSnapPointsOf(const Ellipse& ellipse, const SnapModes& modes, std::vec
     assert(supported(ellipse));
     const bool whole = isWhole(ellipse);
     if (modes.endpoint && !whole) {
-        out.push_back({pointAt(ellipse, ellipse.startParameter), SnapKind::Endpoint});
-        out.push_back({pointAt(ellipse, ellipse.endParameter), SnapKind::Endpoint});
+        // The ends of solid-space, which nearest() gives bit for bit
+        // (ellipse.hpp, endpoints()); pointAt() for data it refuses.
+        const auto ends = g::endpoints(bridge::ellipseOf(ellipse));
+        out.push_back({ends.hasValue() ? bridge::fromPoint(ends.value().start)
+                                       : pointAt(ellipse, ellipse.startParameter),
+                       SnapKind::Endpoint});
+        out.push_back({ends.hasValue() ? bridge::fromPoint(ends.value().end)
+                                       : pointAt(ellipse, ellipse.endParameter),
+                       SnapKind::Endpoint});
     }
     if (modes.center) {
         out.push_back({ellipse.center, SnapKind::Center});

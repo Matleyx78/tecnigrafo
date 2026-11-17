@@ -1,6 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# 0.8-RT20: the -BLOCK command (PT20, #703).
-block/definisci-annulla-ripeti #703
-block/alias-e-ridefinizione #703
-block/senza-oggetti-ed-esc #703

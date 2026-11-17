@@ -118,6 +118,7 @@ Come ogni tipo di entità risponde ([ADR 0008](../adr/0008-selezione-e-snap.md),
 | `LINE` | lunghezza del segmento | dal segmento | estremi, medio |
 | `ARC` | lunghezza dell'arco | dall'arco, mai dal resto del cerchio | estremi, medio sull'arco, centro |
 | `CIRCLE` | circonferenza | dalla circonferenza: il centro è a distanza pari al raggio | centro |
+| `ELLIPSE` | `none` | dalla curva, mai dal resto dell'ellisse di un arco; a pari distanza (entro l'errore di solid-space) uno qualsiasi dei punti più vicini: i casi non ne usano | centro, quadranti sulla curva, estremi di un arco |
 | `TEXT` | `none` | dal parallelogramma d'ingombro, che è una regione: distanza 0 e punto stesso all'interno | punto d'ancoraggio; `position` per `Aligned` e `Fit` (ADR 0022, punto 5) |
 
 ### Sul documento
@@ -303,6 +304,29 @@ L = LINE start=1,0 end=3,0
 ```
 
 Le realizza il pacchetto PT32 della 0.8; fino ad allora rispondono
+`error: question not implemented yet`.
+
+### Retini (tappa 0.8)
+
+Le domande del contorno rilevato da un punto e dei contorni scelti di un
+retino ([ADR 0048](../adr/0048-retini.md), punti 5 e 6), come le specifica la
+scheda [PT43](../tappe/0.8/PT43-contorni-dei-retini.md), punto 5, pubblicate
+prima del pacchetto che le realizza perché i riferimenti si possano scrivere
+prima del lavoro (decisione del 2026-11-17, F12). Chiedono delle funzioni di
+`core` (`detectHatchBoundary`, `chosenHatchContours`), non del comando.
+`<loop>` è un `loop=…` con i suoi elementi, nella forma della riga `HATCH` di
+[rapporto.md](rapporto.md) (PT9): i segnali `external` (profondità 0),
+`outermost` (profondità 1) e `derived` (solo per i contorni rilevati da un
+punto), poi `polyline` o `edges`. Un cerchio è un contorno a lati con un solo
+`circle=`; una polilinea chiusa un contorno a polilinea con gli stessi
+vertici e bulge.
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `hatch-boundary x,y [units=<n>]` | `enclosed <loop> <loop>…`; `on-curve <nome>`; `not-enclosed`, seguito da ` open=x,y` per ogni estremo libero; ognuna con ` incomplete` in fondo se qualcosa è stato scartato | il contorno e le isole rilevati dal punto (`detectHatchBoundary`) fra le curve candidate della scheda PT43, punto 2 (`LINE`, `ARC`, `CIRCLE` e `LWPOLYLINE` sui layer accesi e non congelati, nell'ordine del documento), nell'ordine di solid-space: prima il contorno, poi le isole; `<nome>` è l'entità su cui sta il punto; `units=` è `INSUNITS` del disegno, 4 se manca |
+| `hatch-contours <E1> <E2> …` | `<loop> <loop>…`, poi ` left-out=<nome>` per ogni entità scartata; `none` se non c'è nulla | i contorni scelti (`chosenHatchContours`) nell'ordine dei nomi, con i segnali delle loro profondità: un `CIRCLE` o una `LWPOLYLINE` chiusa danno un contorno; ogni altra entità, anche una polilinea aperta o un'ellisse, va in `left-out` |
+
+Le realizza il pacchetto PT43 della 0.8; fino ad allora rispondono
 `error: question not implemented yet`.
 
 ### Blocchi e geometria generata (tappa 0.8)

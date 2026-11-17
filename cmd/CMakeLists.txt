@@ -9,6 +9,7 @@ add_library(tg_cmd
     src/command_descriptions.cpp
     src/commands/aid_commands.cpp
     src/commands/arc_command.cpp
+    src/commands/block_command.cpp
     src/commands/chamfer_command.cpp
     src/commands/chprop_command.cpp
     src/commands/circle_command.cpp
@@ -23,6 +24,7 @@ add_library(tg_cmd
     src/commands/line_command.cpp
     src/commands/mirror_commands.cpp
     src/commands/move_copy_commands.cpp
+    src/commands/mtext_command.cpp
     src/commands/offset_command.cpp
     src/commands/pedit_command.cpp
     src/commands/pline_command.cpp

@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-ordinary-mm-caso-5-punto-sul-contorno.json
+; Candidate selection follows PT43 point 2; chosen loops follow point 3.
+
+Off = LAYER name="Off" off
+Frozen = LAYER name="Frozen" frozen
+Locked = LAYER name="Locked" locked
+Unplotted = LAYER name="Unplotted" noplot
+Bottom = LINE start=0,0 end=10,0 layer="Locked"
+Right = LINE start=10,0 end=10,10 layer="Unplotted"
+Top = LINE start=10,10 end=0,10
+Left = LINE start=0,10 end=0,0
+; These cross the picked point but must not enter the candidate span.
+HiddenLine = LINE start=0,5 end=10,5 layer="Off"
+FrozenCircle = CIRCLE center=5,5 radius=2 layer="Frozen"
+? hatch-boundary 5,5 -> enclosed loop=external+derived+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+? hatch-boundary 5,0 -> on-curve Bottom
+? hatch-boundary 10,5 -> on-curve Right
+; Unlike detection, Select objects takes the supplied circle regardless of
+; its layer visibility: point 3 has no layer filter.
+? hatch-contours FrozenCircle -> loop=external+edges circle=5,5;2

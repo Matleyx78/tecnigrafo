@@ -371,6 +371,28 @@ void Document::replaceBlock(std::string name, std::optional<BlockDefinition> def
         // As AutoCAD's PURGE (docs/tappe/0.8/PT16-blocchi-core.md, point 1).
         return;
     }
+    const BlockDefinition* previousDefinition = m_blocks.find(name);
+    if (previousDefinition != nullptr) {
+        const auto release = [this](std::uint64_t handle) {
+            if (handle != 0) {
+                m_otherIds.erase(handle);
+            }
+        };
+        release(previousDefinition->recordId);
+        release(previousDefinition->blockId);
+        release(previousDefinition->endBlockId);
+        for (const EntityRecord& record : previousDefinition->entities) {
+            release(record.id.value);
+            if (const auto* insert = std::get_if<Insert>(&record.entity)) {
+                for (const Attribute& attribute : insert->attributes) {
+                    release(attribute.id.value);
+                }
+            }
+        }
+        for (const RawEntity& raw : previousDefinition->rawEntities) {
+            release(raw.id.value);
+        }
+    }
     if (definition) {
         definition->name = name;
         assert(!m_blocks.wouldCycle(*definition) && "a block cannot contain itself");

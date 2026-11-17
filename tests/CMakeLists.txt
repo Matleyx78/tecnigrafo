@@ -18,6 +18,7 @@ include(GoogleTest)
 
 add_executable(tg_tests
     cmd/arc_command_test.cpp
+    cmd/block_command_test.cpp
     cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
@@ -38,6 +39,7 @@ add_executable(tg_tests
     cmd/layer_commands_test.cpp
     cmd/line_command_test.cpp
     cmd/mirror_commands_test.cpp
+    cmd/mtext_command_test.cpp
     cmd/move_copy_commands_test.cpp
     cmd/name_list_test.cpp
     cmd/object_tracking_test.cpp
@@ -60,8 +62,10 @@ add_executable(tg_tests
     core/offset_test.cpp
     core/pedit_join_test.cpp
     core/arc_test.cpp
+    core/attributes_test.cpp
     core/block_table_test.cpp
     core/ellipse_test.cpp
+    core/ellipse_query_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
     core/curve_parts_test.cpp
@@ -94,6 +98,7 @@ add_executable(tg_tests
     core/text_style_table_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
+    edit/blocks_test.cpp
     edit/document_tables_test.cpp
     edit/editor_test.cpp
     edit/layer_rules_test.cpp

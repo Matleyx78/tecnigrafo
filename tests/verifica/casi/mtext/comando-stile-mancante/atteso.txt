@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  257 MTEXT insertion=0,0 height=2.5 width=40 attachment=top-left rotation=0 style="Nota" value="Testo" ~lines=1
+  258 MTEXT insertion=0,0 height=2.5 width=40 attachment=top-left rotation=0 style="Nota" value="Testo" ~lines=1
 messages:
   Command: -STYLE
   Enter name of text style or [?] <Standard>: Nota
