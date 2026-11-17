@@ -12,6 +12,7 @@
 ; an edit: the drawing is not modified and nothing is on the undo stack.
 ; Saving mancante.dxf and reopening it keeps Custom and the current Standard.
 ; cambia con #683
+; cambia con #699
 OPEN
 mancante.dxf
 !report

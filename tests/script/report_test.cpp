@@ -909,6 +909,46 @@ TEST(WriteState, ANewSessionHasNoFieldOfTheStylesAndBlocks) {
     }
 }
 
+/// The block "TG_EL" of docs/tappe/0.8/PT16-blocchi-core.md: base (5, 0) and
+/// a line, with the handle the document gives next.
+core::BlockDefinition tgEl(const core::Document& document) {
+    core::BlockDefinition block{"TG_EL"};
+    block.base = {5.0, 0.0};
+    core::EntityRecord line{core::EntityId{document.nextId()}, core::Line{{0, 0}, {10, 0}}};
+    line.properties.layer = document.layerZero();
+    line.properties.linetype = document.byLayerLinetype();
+    block.entities.push_back(line);
+    return block;
+}
+
+TEST(WriteState, BlocksAreWrittenWithTheirEntitiesInOrder) {
+    core::Document document = core::Document::newDrawing();
+    const core::BlockDefinition block = tgEl(document);
+    const std::string handle = std::to_string(block.entities[0].id.value);
+    document.replaceBlock("TG_EL", block);
+    const std::string report = stateOf(document);
+    expectContains(report, "blocks:\n  \"TG_EL\" base=5,0\n  \"TG_EL\" " + handle +
+                               " LINE start=0,0 end=10,0\n");
+    // The entities of a block are not entities of the drawing.
+    expectContains(report, "entities:\nmessages:\n");
+}
+
+TEST(WriteState, ABlockLineWritesTheValuesThatAreNotTheDefault) {
+    core::Document document = core::Document::newDrawing();
+    core::BlockDefinition block = tgEl(document);
+    block.explodable = false;
+    document.replaceBlock("TG_EL", block);
+    expectContains(stateOf(document), "blocks:\n  \"TG_EL\" base=5,0 explodable=no\n");
+
+    block.explodable = true;
+    block.uniformScale = true;
+    block.units = 4;
+    block.description = "Contatto";
+    document.replaceBlock("TG_EL", block);
+    expectContains(stateOf(document),
+                   "blocks:\n  \"TG_EL\" base=5,0 uniform=yes units=4 description=\"Contatto\"\n");
+}
+
 TEST(WriteState, TextStylesAndCurrentStyleAreWrittenWhenDifferentFromNew) {
     core::Document document = core::Document::newDrawing();
     core::TextStyleTable styles = document.textStyles();

@@ -16,6 +16,9 @@ ortho: off
 drawing: mancante.dxf
 text styles:
   "Custom" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, mancante.dxf (active)
 pointer: none
 active snap: none
@@ -39,6 +42,9 @@ ortho: off
 drawing: mancante-salvato.dxf
 text styles:
   "Custom" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, mancante.dxf, mancante-salvato.dxf (active)
 pointer: none
 active snap: none
@@ -60,6 +66,9 @@ ortho: off
 drawing: senza-standard.dxf
 text styles:
   "Custom" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, mancante.dxf, mancante-salvato.dxf, senza-standard.dxf (active)
 pointer: none
 active snap: none
@@ -81,6 +90,9 @@ ortho: off
 drawing: senza-textstyle.dxf
 text styles:
   "Custom" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, mancante.dxf, mancante-salvato.dxf, senza-standard.dxf, senza-textstyle.dxf (active)
 pointer: none
 active snap: none

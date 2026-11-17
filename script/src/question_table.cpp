@@ -652,6 +652,18 @@ constexpr std::array kQuestions{
     QuestionRow{"pedit-join", AnswerShape::Single, &askPeditJoin},    // PT32
     // Stage 0.8: generated geometry. In order, so Single and not Items.
     QuestionRow{"generated", AnswerShape::Single, &askGenerated},  // PT9
+    // Stage 0.8: importing a file as a block, announced for PT19
+    // (docs/tappe/fuori-tappa/F11): they answer "not implemented yet".
+    QuestionRow{"import-error", AnswerShape::Single, nullptr},        // PT19
+    QuestionRow{"import-definition", AnswerShape::Single, nullptr},   // PT19
+    QuestionRow{"import-nested", AnswerShape::Items, nullptr},        // PT19
+    QuestionRow{"import-layers", AnswerShape::Items, nullptr},        // PT19
+    QuestionRow{"import-linetypes", AnswerShape::Items, nullptr},     // PT19
+    QuestionRow{"import-text-styles", AnswerShape::Items, nullptr},   // PT19
+    QuestionRow{"import-dim-styles", AnswerShape::Items, nullptr},    // PT19
+    QuestionRow{"import-unit-factor", AnswerShape::Single, nullptr},  // PT19
+    QuestionRow{"import-next-id", AnswerShape::Single, nullptr},      // PT19
+    QuestionRow{"import-groups", AnswerShape::Single, nullptr},       // PT19
 };
 
 }  // namespace

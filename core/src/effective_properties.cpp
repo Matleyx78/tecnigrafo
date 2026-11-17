@@ -16,7 +16,11 @@ bool isVisible(const Document& document, const EntityRecord& record) {
 }
 
 EffectiveProperties effectiveProperties(const Document& document, const EntityRecord& record) {
-    const auto& properties = record.properties;
+    return effectiveProperties(document, record.properties);
+}
+
+EffectiveProperties effectiveProperties(const Document& document,
+                                        const EntityProperties& properties) {
     const Layer* layer = document.layer(properties.layer);
     Color color = properties.color;
     if (color.kind() == Color::Kind::ByLayer) {
@@ -48,9 +52,39 @@ EffectiveProperties effectiveProperties(const Document& document, const EntityRe
     result.lineweight = weight == lineweight::kByBlock || weight == lineweight::kDefault
                             ? document.lwdefault()
                             : weight;
-    result.visible = isVisible(document, record);
+    const LayerState state = layerState(document, properties);
+    result.visible = state.on && !state.frozen;
     result.locked = layer != nullptr && layer->locked;
     return result;
+}
+
+EntityProperties propertiesInBlock(const Document& document, const EntityProperties& insert,
+                                   const EntityProperties& entity) {
+    EntityProperties result = entity;
+    if (entity.layer == document.layerZero()) {
+        result.layer = insert.layer;
+    }
+    if (entity.color.kind() == Color::Kind::ByBlock) {
+        result.color = insert.color;
+    }
+    if (entity.linetype == document.byBlockLinetype()) {
+        result.linetype = insert.linetype;
+    }
+    if (entity.lineweight == lineweight::kByBlock) {
+        result.lineweight = insert.lineweight;
+    }
+    return result;
+}
+
+LayerState layerState(const Document& document, const EntityProperties& properties,
+                      const LayerState& outer) {
+    const Layer* layer = document.layer(properties.layer);
+    LayerState state = outer;
+    if (layer != nullptr) {
+        state.on = state.on && layer->on;
+        state.frozen = state.frozen || layer->frozen;
+    }
+    return state;
 }
 
 }  // namespace tg::core

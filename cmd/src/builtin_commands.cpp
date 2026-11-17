@@ -10,6 +10,7 @@
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
+#include "tg/cmd/commands/ellipse_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/file_commands.hpp"
@@ -24,6 +25,7 @@
 #include "tg/cmd/commands/pline_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
+#include "tg/cmd/commands/style_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
 #include "tg/cmd/commands/trim_extend_commands.hpp"
 
@@ -45,6 +47,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(ClayerCommand::description(), [] { return std::make_unique<ClayerCommand>(); });
     registry.add(ColorCommand::description(), [] { return std::make_unique<ColorCommand>(); });
     registry.add(CopyCommand::description(), [] { return std::make_unique<CopyCommand>(); });
+    registry.add(EllipseCommand::description(), [] { return std::make_unique<EllipseCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(ExplodeCommand::description(), [] { return std::make_unique<ExplodeCommand>(); });
     registry.add(TrimExtendCommand::description(TrimExtendCommand::Action::Extend), [] {
@@ -78,7 +81,10 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(detail::saveasDescription(), [] { return std::make_unique<SaveasCommand>(); });
     registry.add(ScaleObjectsCommand::description(),
                  [] { return std::make_unique<ScaleObjectsCommand>(); });
+    registry.add(StyleCommand::description(), [] { return std::make_unique<StyleCommand>(); });
     registry.add(detail::textDescription(), [] { return std::make_unique<TextCommand>(); });
+    registry.add(TextstyleCommand::description(),
+                 [] { return std::make_unique<TextstyleCommand>(); });
     registry.add(TrimExtendCommand::description(TrimExtendCommand::Action::Trim), [] {
         return std::make_unique<TrimExtendCommand>(TrimExtendCommand::Action::Trim);
     });

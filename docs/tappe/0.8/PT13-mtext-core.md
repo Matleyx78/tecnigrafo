@@ -13,13 +13,27 @@
   [ADR 0022](../../adr/0022-allineamenti-obliquo-specchiatura-testo.md) (misure
   del font, `Text`); [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md),
   punto 2; `core/include/tg/core/text.hpp`, `text_metrics.hpp`;
-  la scheda [PT6](PT6-scheletro-core.md), punti 1 e 4
+  la scheda [PT6](PT6-scheletro-core.md), punti 1 e 4;
+  `core/include/tg/core/generated.hpp` (`appendSnapPoints`, `distance`,
+  `isInside` e `intersects` del documento), `core/src/document_query.cpp`
+  (`findSnap`), `script/src/question_table.cpp` (`askDistance`, `askInside`,
+  `askCrosses`)
 
 ## File
 
 - `core/include/tg/core/mtext.hpp`, `core/src/mtext.cpp`
 - `core/src/mtext_layout.cpp`, `core/src/mtext_layout.hpp` (nuovi, privati)
+- `core/src/generated.cpp` (file comune: solo `appendSnapPoints` del
+  documento, punto 6) e `tests/core/generated_test.cpp`
+- `core/src/document_query.cpp` (file comune: solo `findSnap`, punto 6) e
+  `tests/core/document_query_test.cpp`
+- `script/src/question_table.cpp` (file comune: solo `askDistance`,
+  `askInside` e `askCrosses`, punto 7)
 - `tests/core/mtext_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+
+I tre file comuni di `core` e `script` sono un'eccezione all'ADR 0044, punto 1
+([DECISIONI.md](../../DECISIONI.md), 2026-11-17, «Testo multiriga: righe con
+`%`, snap delle righe, domande dal documento»).
 
 ## Cosa fare
 
@@ -64,7 +78,14 @@
    sia uno spazio, `horizontal = Left`,
    `vertical = Baseline`, `position` = inizio della linea di base, altezza `h`,
    rotazione dell'entità, fattore di larghezza e obliquo dello stile, stile
-   dell'entità, `value` = la riga semplice. Un `MTEXT` senza righe da
+   dell'entità, `value` = la riga semplice scritta in modo che `displayText`
+   (ADR 0013, punto 5) la ridia uguale: ogni `%` della riga che, con i due
+   caratteri che lo seguono nella riga, forma `%%c`, `%%d`, `%%p` o `%%%`
+   (anche con la lettera maiuscola) si scrive `%%%`; gli altri caratteri
+   restano come sono. Così il testo mostrato, il riquadro, il disegno e lo
+   snap del `Text` sono quelli della riga, decodificata una volta sola
+   (punto 2). Esempi: la riga `%%c` ha `value="%%%%c"`; la riga `%%%` ha
+   `value="%%%%%"`; le righe `%c`, `50%` e `⌀ ° ± %` restano come sono. Un `MTEXT` senza righe da
    mostrare (valore vuoto o di soli spazi) non genera forme: il suo ingombro
    è il punto d'inserimento, e si prende con un clic o una finestra su quel
    punto (PT5, punto B04). Con `directionByStyle` e lo stile
@@ -76,14 +97,43 @@
    AutoCAD: vale la tabella del testo dell'ADR 0031, punto 3, con `MIRRTEXT`
    = 0, applicata alla direzione della colonna (PT5, punto B03).
 6. **Snap e grip:** inserimento sul punto d'inserimento; grip sul punto
-   d'inserimento, che sposta il testo.
+   d'inserimento, che sposta il testo. Le righe generate **non danno punti di
+   snap propri** (ADR 0046, punto 2):
+   - in `core::appendSnapPoints(document, record, …)` (`core/src/generated.cpp`)
+     un `MTEXT` dà solo i punti di `appendOwnSnapPointsOf`, cioè il suo punto
+     d'inserimento, e nessuno dei `Text` delle righe;
+   - in `findSnap` (`core/src/document_query.cpp`) una riga entro l'apertura
+     rende candidato il punto d'inserimento del `MTEXT`, come oggi il riquadro
+     di un testo rende candidato il suo inserimento, alla distanza dal
+     riquadro della riga (la più vicina, se più righe sono entro
+     l'apertura); il punto d'inserimento della riga non è mai candidato. Un
+     `MTEXT` senza righe da mostrare compete con il suo punto d'inserimento e
+     la sua distanza, come adesso.
+
+   Per gli altri tipi gli snap del documento non cambiano.
+7. **Le domande `distance`, `inside` e `crosses`**
+   (`script/src/question_table.cpp`, file comune; come `bbox` e `snaps` in
+   [PT30](PT30-retini-core.md), punto 7): oggi passano per le funzioni
+   dell'entità senza documento, che per i tipi della 0.8 hanno la
+   precondizione di passare per il documento (PT6) e si fermano su
+   un'asserzione. Ogni entità con un nome è nel documento: con il record di
+   `recordArgument`, `distance` risponde `core::distance(document, record,
+   point)`, `inside` `core::isInside(document, record, rectangle)` e
+   `crosses` `core::intersects(document, record, rectangle)`. Per i cinque
+   tipi di prima della 0.8 le risposte non cambiano, perché le funzioni del
+   documento rimandano a quelle dell'entità (`generated.hpp`). La forma delle
+   risposte, i messaggi d'uso e il catalogo
+   ([verifica/domande.md](../../verifica/domande.md)) non cambiano; le altre
+   domande non si toccano.
 
 ## Regole della tappa che valgono qui
 
 - Niente funzioni trigonometriche di `<cmath>` (`core::sinCos`, PT1).
 - Le misure del font si prendono solo da `text_metrics`: i riferimenti le
   calcolano dal file del font con uno strumento indipendente (come `~box`).
-- File comune: `tests/CMakeLists.txt`.
+- File comuni: `tests/CMakeLists.txt`; `core/src/generated.cpp` e
+  `core/src/document_query.cpp` (solo il punto 6);
+  `script/src/question_table.cpp` (solo le tre domande del punto 7).
 
 ## Test richiesti
 
@@ -94,8 +144,24 @@
   `A\H2\PB` dà `A\H2` e `B`; `A\~B C` in una colonna larga quanto `A B`
   tiene `A B` insieme e manda `C` a capo; `"  \PZ"` dà due linee di base e un
   solo `Text` (`Z`); un `MTEXT` vuoto si prende con un clic sul punto
-  d'inserimento.
+  d'inserimento; il `value` del punto 4: le righe `%%c`, `%%%`, `%%D`,
+  `%c` e `50%` danno `value` `%%%%c`, `%%%%%`, `%%%%D`, `%c` e `50%`, e per
+  ognuna `displayText(value)` è la riga; la riga `%%c` ha il riquadro di tre
+  caratteri (`%`, `%`, `c`), non quello di `⌀`.
+- `generated_test.cpp`: un `MTEXT` di due righe in `(10, 20)` dà con
+  `appendSnapPoints(document, …)` e il modo inserimento il solo punto
+  `(10, 20)`; una linea e un testo danno gli stessi punti di prima.
+- `document_query_test.cpp`: con il solo modo inserimento, un clic con
+  apertura 0,1 sul riquadro della prima riga di un `MTEXT` in `(30, 20)`, che
+  ha la linea di base a `y = 17`, dà `Insertion 30,20` e non l'inizio della
+  riga; un clic lontano più dell'apertura da ogni riga e dal punto non dà
+  niente; un `MTEXT` vuoto in `(5, 5)` dà `(5, 5)` con un clic su quel punto.
+- Le domande del punto 7 su un `MTEXT` rispondono senza fermarsi; per una
+  linea danno le stesse risposte di prima (i casi già esistenti).
 
 ## Fatto quando
 
-- I casi di RT13 passano; la CI è verde.
+- I casi di RT13 passano, con la risposta di `? generated Twice` di
+  `mtext/codici-letterali` corretta in `value="%%%%c"` dalla
+  [#686](https://github.com/Matleyx78/tecnigrafo/issues/686) (punto 4); la CI
+  è verde.

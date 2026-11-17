@@ -378,6 +378,35 @@ void Document::replaceDimStyles(DimStyleTable table) {
 }
 
 void Document::replaceBlock(std::string name, std::optional<BlockDefinition> definition) {
+    if (!definition && isBlockUsed(*this, name)) {
+        // As AutoCAD's PURGE (docs/tappe/0.8/PT16-blocchi-core.md, point 1).
+        return;
+    }
+    if (definition) {
+        definition->name = name;
+        assert(!m_blocks.wouldCycle(*definition) && "a block cannot contain itself");
+        // The handles of a block are in the space of the drawing's: add()
+        // never gives them (docs/tappe/0.8/PT16-blocchi-core.md). 0 is none.
+        const auto reserve = [this](std::uint64_t handle) {
+            if (handle != 0) {
+                reserveHandle(EntityId{handle});
+            }
+        };
+        reserve(definition->recordId);
+        reserve(definition->blockId);
+        reserve(definition->endBlockId);
+        for (const EntityRecord& record : definition->entities) {
+            reserve(record.id.value);
+            if (const auto* insert = std::get_if<Insert>(&record.entity)) {
+                for (const Attribute& attribute : insert->attributes) {
+                    reserve(attribute.id.value);
+                }
+            }
+        }
+        for (const RawEntity& raw : definition->rawEntities) {
+            reserve(raw.id.value);
+        }
+    }
     // The entities that depend on the definition before or after the change.
     std::unordered_set<std::uint64_t> dependent;
     const auto collect = [&] {
@@ -400,7 +429,6 @@ void Document::replaceBlock(std::string name, std::optional<BlockDefinition> def
         *found = std::move(*definition);
         found->name = std::move(written);
     } else {
-        definition->name = name;
         definitions.push_back(std::move(*definition));
     }
     collect();

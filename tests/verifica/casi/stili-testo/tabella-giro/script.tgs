@@ -10,6 +10,7 @@
 ; Expected fields from docs/verifica/rapporto.md, "Stili e blocchi": table order, oblique in
 ; degrees, current style because it is not Standard. Saving and reopening gives the same.
 ; cambia con #683
+; cambia con #699
 OPEN
 stili.dxf
 !report

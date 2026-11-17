@@ -21,6 +21,7 @@ add_executable(tg_tests
     cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
+    cmd/ellipse_command_test.cpp
     cmd/fillet_command_test.cpp
     cmd/command_protocol_test.cpp
     cmd/command_registry_test.cpp
@@ -47,6 +48,7 @@ add_executable(tg_tests
     cmd/quick_select_test.cpp
     cmd/rotate_scale_commands_test.cpp
     cmd/selection_set_test.cpp
+    cmd/style_commands_test.cpp
     cmd/text_command_test.cpp
     cmd/trim_extend_commands_test.cpp
     cmd/value_format_test.cpp
@@ -58,6 +60,7 @@ add_executable(tg_tests
     core/offset_test.cpp
     core/pedit_join_test.cpp
     core/arc_test.cpp
+    core/block_table_test.cpp
     core/ellipse_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
@@ -73,6 +76,7 @@ add_executable(tg_tests
     core/effective_properties_test.cpp
     core/layer_test.cpp
     core/geometry_test.cpp
+    core/insert_test.cpp
     core/line_test.cpp
     core/math_test.cpp
     core/new_entities_test.cpp
@@ -98,6 +102,7 @@ add_executable(tg_tests
     io/dxf_line_circle_arc_test.cpp
     io/dxf_solid_test.cpp
     io/dxf_ellipse_test.cpp
+    io/dxf_hatch_test.cpp
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp

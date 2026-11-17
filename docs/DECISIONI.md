@@ -2066,6 +2066,29 @@ i rimandi ai documenti che cambia.
   vietato eseguire Tecnigrafo per ricavare gli attesi. Scartata l’estensione
   dell’oracolo in un pacchetto separato: la lettura indipendente autorizzata
   non richiede modifiche all’oracolo né nuove dipendenze.
+- **2026-11-17 — `importBlock` osservabile nei riferimenti di PT19.** Dopo il
+  blocco di RT19 ([#700](https://github.com/Matleyx78/tecnigrafo/issues/700)),
+  il responsabile decide che PT19 realizza anche la definizione verificabile
+  `BLOCK-IMPORT` e le domande `import-*` del catalogo. La definizione chiama
+  direttamente `io::importBlock` con una copia dichiarabile del documento
+  bersaglio, non lo modifica e conserva anche l'errore. Le domande espongono
+  definizione principale, blocchi annidati, le quattro tabelle, fattore di
+  unità, `nextId`, handle e gruppi DXF conservati che li riferiscono. RT19 può
+  così verificare l'intero `BlockImport`, compreso l'autoriferimento, senza
+  anticipare `-INSERT` di PT21. Scartati lo spostamento dei riferimenti a PT21
+  e un meccanismo indiretto non specificato.
+- **2026-11-17 — Importazione di un blocco annunciata prima di PT19.** La
+  definizione `BLOCK-IMPORT` e le dieci domande `import-*` servono già a RT19,
+  ma prima di PT19 il lettore e la tabella delle domande le renderebbero non
+  valide anche durante il controllo anticipato. Il pacchetto fuori tappa
+  [F11](tappe/fuori-tappa/F11-annuncio-import-blocco.md) (#842) le annuncia:
+  la definizione ferma il file con `not implemented yet` e le domande, presenti
+  in `kQuestions` con funzione nulla, rispondono
+  `error: question not implemented yet`. PT19 le realizza e toglie gli
+  annunci; RT19 (#700) dipende da F11. Scartati sia lo spostamento di RT19
+  dopo PT19, che avrebbe scritto i riferimenti dopo il lavoro, sia la divisione
+  di PT19 in un primo pacchetto della tappa dedicato agli annunci e un secondo
+  dedicato alla realizzazione.
 - **2026-11-17 — Extras ordinati per ciascun contorno dei retini.** Dopo il
   blocco di [PT31](tappe/0.8/PT31-retini-dxf.md) nella
   [#723](https://github.com/Matleyx78/tecnigrafo/issues/723), il responsabile
@@ -2077,3 +2100,34 @@ i rimandi ai documenti che cambia.
   relativi test. Scartato l'uso di `core::EntityExtras::specific`, perché
   appartiene all'intera entità e perderebbe l'associazione e la posizione dei
   gruppi del singolo contorno.
+- **2026-11-17 — Testo multiriga: righe con `%`, snap delle righe, domande
+  dal documento.** Su tre punti fermati da
+  [PT13](tappe/0.8/PT13-mtext-core.md) nella
+  [#687](https://github.com/Matleyx78/tecnigrafo/issues/687) il responsabile
+  sceglie le uscite A (decisione scritta nella
+  [#686](https://github.com/Matleyx78/tecnigrafo/issues/686)):
+  1. il `Text` generato per una riga misura e mostra `displayText(value)`
+     (ADR 0013, punto 5), quindi `value` non può essere la riga semplice
+     quando questa contiene `%%c`: il `value` è la riga scritta in modo che
+     `displayText` la ridia uguale. Ogni `%` della riga che, con i due
+     caratteri che lo seguono, forma `%%c`, `%%d`, `%%p` o `%%%` (anche
+     maiuscole) si scrive `%%%`: la riga `%%c` ha `value="%%%%c"`, e il
+     riquadro resta quello di tre caratteri. La risposta di
+     `? generated Twice` di `mtext/codici-letterali` la corregge la #686.
+     Scartati `value="%%c"`, che si mostra `⌀` contro PT5, punto B01, e un
+     segnale nuovo in `Text` che cambia un'interfaccia di `core`;
+  2. le righe di un `MTEXT` non danno punti di snap propri: in
+     `core::appendSnapPoints(document, …)` un `MTEXT` dà solo quelli di
+     `appendOwnSnapPointsOf`; in `findSnap` una riga entro l'apertura rende
+     candidato il punto d'inserimento del `MTEXT`, come l'inserimento di un
+     testo, alla distanza dal riquadro della riga. PT13 modifica anche
+     `core/src/generated.cpp` e `core/src/document_query.cpp`, con i loro
+     test, come eccezione all'ADR 0044, punto 1. Scartati un segnale generale
+     in `GeneratedItem` e il lasciare lo snap delle righe, contro l'ADR 0046;
+  3. le domande `distance`, `inside` e `crosses` passano per il documento
+     (`recordArgument`, `core::distance`, `core::isInside` e
+     `core::intersects` con il record), come `bbox` e `snaps` in PT30
+     (2026-11-16, punto 2): PT13 modifica anche
+     `script/src/question_table.cpp`, solo per queste tre domande; per i
+     cinque tipi di prima della 0.8 le risposte non cambiano. Scartato un
+     pacchetto a parte prima di PT13.
