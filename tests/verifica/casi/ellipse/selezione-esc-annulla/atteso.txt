@@ -1,0 +1,124 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+messages:
+  Command: OPEN
+  Enter name of drawing to open: scena.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: off
+ortho: off
+drawing: scena.dxf
+documents: Drawing1.cadx, scena.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[report 2]
+entities:
+  257 ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+messages:
+prompt: Command:
+preview:
+selection: 257
+rectangle: none
+undo:
+redo:
+snap: off
+ortho: off
+drawing: scena.dxf
+documents: Drawing1.cadx, scena.dxf (active)
+pointer: 10,0
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[report 3]
+entities:
+  257 ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+messages:
+  Command: ERASE
+  1 found, 1 total
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: off
+ortho: off
+drawing: scena.dxf
+documents: Drawing1.cadx, scena.dxf (active)
+pointer: 10,0
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[report 4]
+entities:
+messages:
+  Command: ERASE
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: off
+ortho: off
+drawing: scena.dxf, modified
+documents: Drawing1.cadx, scena.dxf (active)
+pointer: 10,0
+active snap: none
+statistics:
+
+[report 5]
+entities:
+  257 ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+messages:
+  Command: U
+  Undone: Erase.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Erase
+snap: off
+ortho: off
+drawing: scena.dxf
+documents: Drawing1.cadx, scena.dxf (active)
+pointer: 10,0
+active snap: none
+statistics:
+  ELLIPSE 1
+
+[final]
+entities:
+messages:
+  Command: REDO
+  Redone: Erase.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: off
+ortho: off
+drawing: scena.dxf, modified
+documents: Drawing1.cadx, scena.dxf (active)
+pointer: 10,0
+active snap: none
+statistics:

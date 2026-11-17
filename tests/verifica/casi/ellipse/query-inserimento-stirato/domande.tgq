@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; PT50 / ADR 0052: circle transformed by scale (2,1), then translated.
+; The resulting carrier is the same as the ellipse corpus at fc8cae3da8a737510d6b61075b03ea3272228576,
+; tests/corpus/casi/geom2d/ellipse-delicate-mm-retta-secante.json.
+; PT16 supplies !block/INSERT; PT50 changes picking/crossing of their ellipse shapes.
+? window -1,-1 1,1 -> none
+; cambia con #744
+!block "StretchedCircle" base=0,0
+SourceCircle = CIRCLE center=0,0 radius=5
+!endblock
+I = INSERT block="StretchedCircle" insertion=100,50 scale=2,1
+? generated I -> ELLIPSE center=100,50 major-axis=10,0 ratio=0.5
+? pick 110.1,50 tolerance=0.5 -> I
+? pick 100,50 tolerance=1 -> none
+? window 89,44 111,56 -> I
+? window 99,49 101,51 -> none
+? crossing 109,49 111,51 -> I
+? crossing 111,51 109,49 -> I
+? crossing 99,49 101,51 -> none
+L = LINE start=80,50 end=120,50
+? snap 110.1,50.1 aperture=0.5 modes=intersection -> Intersection 110,50
+? snap 89.9,50.1 aperture=0.5 modes=intersection -> Intersection 90,50
+? snap 110.1,50.1 aperture=0.5 modes=endpoint -> none
