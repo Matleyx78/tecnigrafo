@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# RT15: the MTEXT command from the command line, implemented by PT15.
-mtext/comando-due-righe #691
-mtext/comando-esc #691
-mtext/comando-opzioni #691
-mtext/comando-stile-mancante #691
-mtext/comando-interlinea-resta #691
-mtext/comando-interlinea-esc #691
