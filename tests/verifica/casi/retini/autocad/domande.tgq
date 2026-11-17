@@ -1,0 +1,32 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT31 / PT31 (#723): the HATCH entities drawn in AutoCAD LT 2026
+; (autocad-retini.scr, docs/tappe/0.8/dxf-di-prova.md, dxf-test-file 5170f18).
+; C8 from Select objects on the closed polyline C5 (an edge loop);
+; CF, D6 ANSI31 and NET from a point between a rectangle of four lines and a
+; circle; E8, F3 the same on nested islands; 109, 114, 11F ANSI31 with the
+; styles Normal, Outer and Ignore; 126 ANSI31 rotated 30 and scaled 2; 12B
+; ANSI37. In this file AutoCAD repeats the seed once per loop.
+; Answers copied from the ezdxf oracle log (ezdxf 1.4.5).
+; The two SOLID hatches DD and FE, and count and unhandled, are in
+; retini/autocad-solid: the oracle classifies them differently from PT31.
+D = DXF source=autocad-retini
+? version D -> AC1032
+? units D -> 4
+; PT31 makes HATCH a handled entity: until then every HATCH is unhandled.
+; cambia con #723
+? entity D C8 -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=0,-240;60,-240 line=60,-240;60,-200 line=60,-200;0,-200 line=0,-200;0,-240 seed=0,0
+? entity D CF -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=60,40 vertex=0,40 vertex=0,0 vertex=60,0 loop=outermost+derived+polyline vertex=22,20 bulge=-1 vertex=38,20 bulge=-1 seed=5,5 seed=5,5
+? entity D D6 -> HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=140,40 vertex=80,40 vertex=80,0 vertex=140,0 loop=outermost+derived+polyline vertex=102,20 bulge=-1 vertex=118,20 bulge=-1 seed=85,5 seed=85,5
+? entity D E8 -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=60,-40 vertex=0,-40 vertex=0,-80 vertex=60,-80 loop=outermost+derived+polyline vertex=10,-75 vertex=10,-45 vertex=50,-45 vertex=50,-75 loop=derived+polyline vertex=24,-60 bulge=-1 vertex=36,-60 bulge=-1 seed=3,-77 seed=3,-77 seed=3,-77
+? entity D F3 -> HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=140,-40 vertex=80,-40 vertex=80,-80 vertex=140,-80 loop=outermost+derived+polyline vertex=90,-75 vertex=90,-45 vertex=130,-45 vertex=130,-75 loop=derived+polyline vertex=104,-60 bulge=-1 vertex=116,-60 bulge=-1 seed=83,-77 seed=83,-77 seed=83,-77
+? entity D 109 -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=60,-120 vertex=0,-120 vertex=0,-160 vertex=60,-160 loop=outermost+derived+polyline vertex=10,-155 vertex=10,-125 vertex=50,-125 vertex=50,-155 loop=derived+polyline vertex=24,-140 bulge=-1 vertex=36,-140 bulge=-1 seed=3,-157 seed=3,-157 seed=3,-157
+? entity D 114 -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=outer loop=external+derived+polyline vertex=140,-120 vertex=80,-120 vertex=80,-160 vertex=140,-160 loop=outermost+derived+polyline vertex=90,-155 vertex=90,-125 vertex=130,-125 vertex=130,-155 loop=derived+polyline vertex=104,-140 bulge=-1 vertex=116,-140 bulge=-1 seed=83,-157 seed=83,-157 seed=83,-157
+? entity D 11F -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=ignore loop=external+derived+polyline vertex=220,-120 vertex=160,-120 vertex=160,-160 vertex=220,-160 loop=outermost+derived+polyline vertex=170,-155 vertex=170,-125 vertex=210,-125 vertex=210,-155 loop=derived+polyline vertex=184,-140 bulge=-1 vertex=196,-140 bulge=-1 seed=163,-157 seed=163,-157 seed=163,-157
+? entity D 126 -> HATCH pattern="ANSI31" solid=no angle=30 scale=2 islands=normal loop=external+derived+polyline vertex=140,-200 vertex=80,-200 vertex=80,-240 vertex=140,-240 loop=outermost+derived+polyline vertex=102,-220 bulge=-1 vertex=118,-220 bulge=-1 seed=85,-237 seed=85,-237
+? entity D 12B -> HATCH pattern="ANSI37" solid=no angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=220,-200 vertex=160,-200 vertex=160,-240 vertex=220,-240 seed=165,-237
+; Every HATCH is closed and has only lines and polylines: the file is
+; rewritten unchanged, with 71, 97 and 330 of the loops (card, point 4).
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical

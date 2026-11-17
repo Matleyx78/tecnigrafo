@@ -1,0 +1,36 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT31 / PT31 (#723): the reading checks that the edge loops are closed with
+; isClosed and the tolerance rule of the document being read (card, point 2;
+; DECISIONI.md, 2026-11-16). Three handwritten files with the same two SOLID
+; hatches, in millimetres ($INSUNITS 4), without $INSUNITS (0, the
+; millimetre rule) and in metres ($INSUNITS 6, tolerance 1e-9):
+; 20 lines 0,0->10,0, 10,0->10,8, 10,8->0,8, 0,8->0.0000005,0: the gap
+;    between the last edge and the first is 5e-7;
+; 21 the same square at x 20..30 with the last line ending in 20,1: a gap of
+;    1, open in every unit.
+; Values from the card; not an oracle case (ezdxf does not check closure).
+M = DXF file=millimetri.dxf
+N = DXF file=senza-unita.dxf
+K = DXF file=metri.dxf
+? units M -> 4
+? units N -> 0
+? units K -> 6
+; PT31 makes HATCH a handled entity: until then every HATCH is unhandled.
+; cambia con #723
+? count M -> HATCH 1
+? unhandled M -> HATCH 1
+? entity M 20 -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+edges line=0,0;10,0 line=10,0;10,8 line=10,8;0,8 line=0,8;0.0000005,0 seed=1,1
+? entity M 21 -> unhandled HATCH
+? count N -> HATCH 1
+? unhandled N -> HATCH 1
+? entity N 20 -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+edges line=0,0;10,0 line=10,0;10,8 line=10,8;0,8 line=0,8;0.0000005,0 seed=1,1
+? entity N 21 -> unhandled HATCH
+? count K -> none
+? unhandled K -> HATCH 2
+? entity K 20 -> unhandled HATCH
+? entity K 21 -> unhandled HATCH
+; Handled or raw, each file is rewritten unchanged (ADR 0018, point 6).
+? roundtrip M -> identical
+? roundtrip N -> identical
+? roundtrip K -> identical
