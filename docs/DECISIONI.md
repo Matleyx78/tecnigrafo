@@ -2066,3 +2066,14 @@ i rimandi ai documenti che cambia.
   vietato eseguire Tecnigrafo per ricavare gli attesi. Scartata l’estensione
   dell’oracolo in un pacchetto separato: la lettura indipendente autorizzata
   non richiede modifiche all’oracolo né nuove dipendenze.
+- **2026-11-17 — Extras ordinati per ciascun contorno dei retini.** Dopo il
+  blocco di [PT31](tappe/0.8/PT31-retini-dxf.md) nella
+  [#723](https://github.com/Matleyx78/tecnigrafo/issues/723), il responsabile
+  sceglie di aggiungere a `core::HatchLoop` un campo `core::RawGroups extras`.
+  Conserva, distinti per ciascun contorno e nel loro ordine e posizione DXF, i
+  gruppi non interpretati del contorno, in particolare 97 e 330; resta
+  invariato nelle trasformazioni. PT31 può modificare
+  `core/include/tg/core/hatch.hpp`, il codice `core` che dipende dal campo e i
+  relativi test. Scartato l'uso di `core::EntityExtras::specific`, perché
+  appartiene all'intera entità e perderebbe l'associazione e la posizione dei
+  gruppi del singolo contorno.
