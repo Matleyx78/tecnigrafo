@@ -18,9 +18,9 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -211,9 +211,9 @@ TEST(MTextLayout, MissingStyleUsesTheDefaults) {
 }
 
 struct AlignmentCase {
-    MTextAttachment attachment;
-    double firstX;  ///< times the width of the row
-    double firstY;  ///< baseline of the first row
+    MTextAttachment attachment{MTextAttachment::TopLeft};
+    double firstX{0.0};  ///< times the width of the row
+    double firstY{0.0};  ///< baseline of the first row
 };
 
 TEST(MTextLayout, NineAttachmentsWithTwoRows) {
@@ -270,7 +270,7 @@ TEST(MTextLayout, RotationTurnsTheColumn) {
     const std::vector<Text> texts = rows(entity);
     ASSERT_EQ(texts.size(), 2U);
     // x' = 10 + sqrt(3)/2 x - y/2, y' = 20 + x/2 + sqrt(3)/2 y.
-    const double root3 = std::sqrt(3.0);
+    const double root3 = std::numbers::sqrt3;
     expectNear(texts[0].position, {11.5, 20 - (1.5 * root3)});
     expectNear(texts[1].position, {14, 20 - (4 * root3)});
     EXPECT_EQ(texts[0].rotation, entity.rotation);
@@ -440,7 +440,8 @@ MText sampleColumn() {
 
 TEST(MTextTransform, MoveRotateScale) {
     const MText entity = sampleColumn();
-    MText moved = transformedMText(entity, Similarity::translation({5, -7}), MirrorText::Readable);
+    const MText moved =
+        transformedMText(entity, Similarity::translation({5, -7}), MirrorText::Readable);
     expectNear(moved.insertion, {15, 13});
     EXPECT_EQ(moved.rotation, entity.rotation);
 
@@ -464,7 +465,7 @@ struct MirrorCase {
     Vec2 a;
     Vec2 b;
     Vec2 insertion;
-    double degrees;
+    double degrees{0.0};
 };
 
 TEST(MTextTransform, ReflectionStaysReadableWhateverMirrtext) {

@@ -123,21 +123,24 @@ std::optional<char32_t> unicodeCode(std::u32string_view text, std::size_t at) {
     return code >= kFirstSurrogate && code <= kLastSurrogate ? kReplacement : code;
 }
 
-/// The index of the ';' that ends the argument starting at `from`, or
-/// std::nullopt when a `\P` or the end of the text comes first.
-std::optional<std::size_t> argumentEnd(std::u32string_view text, std::size_t from) {
+/// No ';' ends the argument: argumentEnd() of a code that stays literal.
+constexpr std::size_t kNoEnd = std::u32string_view::npos;
+
+/// The index of the ';' that ends the argument starting at `from`, or kNoEnd
+/// when a `\P` or the end of the text comes first.
+std::size_t argumentEnd(std::u32string_view text, std::size_t from) {
     for (std::size_t i = from; i < text.size(); ++i) {
         if (text[i] == U';') {
             return i;
         }
         if (text[i] == U'\\' && i + 1 < text.size()) {
             if (text[i + 1] == U'P') {
-                return std::nullopt;
+                return kNoEnd;
             }
             ++i;  // an escaped character never ends the argument
         }
     }
-    return std::nullopt;
+    return kNoEnd;
 }
 
 /// A word and the normal spaces before it; the word is empty only for the
@@ -269,17 +272,17 @@ std::vector<std::u32string> paragraphs(std::string_view value) {
                        code == U'U' ? unicodeCode(text, i) : std::nullopt) {
             current += *unicode;
             i += kUnicodeCodeLength;
-        } else if (const std::optional<std::size_t> end =
-                       takesArgument(code) ? argumentEnd(text, i + 2) : std::nullopt) {
+        } else if (const std::size_t end = takesArgument(code) ? argumentEnd(text, i + 2) : kNoEnd;
+                   end != kNoEnd) {
             if (code == U'S') {
                 // A stacked fraction, shown on one line: "1^2", "1#2" and
                 // "1/2" all become "1/2".
-                for (std::size_t k = i + 2; k < *end; ++k) {
+                for (std::size_t k = i + 2; k < end; ++k) {
                     const char32_t part = text[k];
                     current += part == U'^' || part == U'#' ? U'/' : part;
                 }
             }
-            i = *end + 1;
+            i = end + 1;
         } else {
             // Any other code, and one without its ';', stays as written: the
             // characters after the backslash are read again as text.
