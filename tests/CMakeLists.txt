@@ -21,6 +21,7 @@ add_executable(tg_tests
     cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
+    cmd/ellipse_command_test.cpp
     cmd/fillet_command_test.cpp
     cmd/command_protocol_test.cpp
     cmd/command_registry_test.cpp
