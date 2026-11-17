@@ -5,6 +5,7 @@
 
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
@@ -141,6 +142,39 @@ TEST(Generated, TheFiveEntitiesAnswerAsTheirOwnFunctions) {
             EXPECT_EQ(actual, expected) << i;
         }
     }
+}
+
+TEST(Generated, TheRowsOfAnMTextGiveNoSnapPoints) {
+    // docs/tappe/0.8/PT13-mtext-core.md, point 6: only the insertion point.
+    Document document = Document::newDrawing();
+    MText mtext;
+    mtext.insertion = {10, 20};
+    mtext.height = 2.5;
+    mtext.value = R"(First\PSecond)";
+    const EntityRecord& record = *document.find(document.add(mtext));
+    ASSERT_EQ(generate(document, record).size(), 2U);
+    SnapModes all;
+    all.perpendicular = true;
+    all.tangent = true;
+    all.quadrant = true;
+    for (const std::optional<Vec2>& from : {std::optional<Vec2>{}, std::optional<Vec2>{{3, 9}}}) {
+        std::vector<SnapPoint> points;
+        appendSnapPoints(document, record, all, points, from);
+        EXPECT_EQ(points, (std::vector<SnapPoint>{{{10, 20}, SnapKind::Insertion}}));
+    }
+    SnapModes insertionOnly{};
+    insertionOnly.endpoint = false;
+    insertionOnly.midpoint = false;
+    insertionOnly.center = false;
+    insertionOnly.intersection = false;
+    std::vector<SnapPoint> points;
+    appendSnapPoints(document, record, insertionOnly, points, std::nullopt);
+    EXPECT_EQ(points, (std::vector<SnapPoint>{{{10, 20}, SnapKind::Insertion}}));
+    SnapModes noInsertion = all;
+    noInsertion.insertion = false;
+    points.clear();
+    appendSnapPoints(document, record, noInsertion, points, std::nullopt);
+    EXPECT_TRUE(points.empty());
 }
 
 TEST(Generated, TheFiveEntitiesTransformAsTransformed) {
@@ -281,14 +315,20 @@ TEST(Generated, TransformedShapeTakesSimilaritiesThroughTransformed) {
     EXPECT_EQ(std::get<Arc>(same.front()), std::get<Arc>(transformed(arc, Similarity{})));
 }
 
-TEST(Generated, TextUnderOtherAffineMapsWaitsForItsPackage) {
-    // docs/tappe/0.8: PT17 (text); the other shapes are PT16's
-    // (insert_test.cpp), circles, arcs and ellipses PT48's (ellipse_test.cpp).
+TEST(Generated, TextUnderOtherAffineMapsIsDecomposed) {
+    // docs/tappe/0.8: PT17 (text, attributes_test.cpp); the other shapes are
+    // PT16's (insert_test.cpp), circles, arcs and ellipses PT48's
+    // (ellipse_test.cpp).
     const Transform2D stretch = Transform2D::scaling(2.0, 1.0);
     Text text;
     text.height = 1.0;
     text.value = "A";
-    EXPECT_TRUE(transformedShape(text, stretch).empty());
+    const std::vector<GeneratedShape> stretched = transformedShape(text, stretch);
+    ASSERT_EQ(stretched.size(), 1U);
+    ASSERT_TRUE(std::holds_alternative<Text>(stretched.front()));
+    EXPECT_DOUBLE_EQ(std::get<Text>(stretched.front()).widthFactor, 2.0);
+    // A singular map gives no text.
+    EXPECT_TRUE(transformedShape(text, Transform2D::scaling(2.0, 0.0)).empty());
     // A line has its ends mapped, even by a degenerate map, which is not a
     // similarity either.
     const std::vector<GeneratedShape> flat =

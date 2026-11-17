@@ -37,6 +37,8 @@ qt_add_library(tg_app_ui STATIC
     src/assistant_bridge.hpp
     src/assistant_channel.cpp
     src/assistant_channel.hpp
+    src/assistant_panel.cpp
+    src/assistant_panel.hpp
     src/auto_hide.cpp
     src/auto_hide.hpp
     src/ui_builder.cpp

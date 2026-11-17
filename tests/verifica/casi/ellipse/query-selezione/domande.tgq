@@ -1,0 +1,42 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; solid-space tests/corpus/casi/geom2d/ at fc8cae3da8a737510d6b61075b03ea3272228576:
+; rettangolo-interno-millimetri.json, rettangolo-contiene-millimetri.json, rettangolo-tangente-lato-fuori.json,
+; rettangolo-segmento-secante.json, rettangolo-punto-vertice.json.
+; Cardinal rectangle tests use the same carrier as the corpus tangent/segment/point
+; cases, with start 0. The centre box misses because x^2+4*y^2<=5<100;
+; the containing box includes the exact bbox. Rotated cases below use corpus data verbatim.
+E = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+? window -11,-6 11,6 -> E
+? window -9,-4 9,4 -> none
+; Crossing and point picking intentionally become available in PT50.
+; cambia con #744
+? pick 10.1,0 tolerance=0.2 -> E
+? pick 10.1,0 tolerance=0.05 -> none
+? pick 0,0 tolerance=1 -> none
+? crossing -11,-6 11,6 -> E
+? crosses E -11,-6 11,6 -> yes
+? crossing -1,-1 1,1 -> none
+? crosses E -1,-1 1,1 -> no
+? crosses E 9,-1 11,1 -> yes
+? crossing 11,1 9,-1 -> E
+? crosses E -1,5 1,6 -> yes
+? crosses E -1,5.000001 1,6 -> no
+? crosses E -20,2.5 20,2.5 -> yes
+? crosses E 0,-5 0,-5 -> yes
+? crossing 0,-5 0,-5 -> E
+; These assertions replace RT48's provisional selection/distance assertions.
+; Scale the same carrier by 0.4, then translate by (10,20); centre distance is 2.
+Small = ELLIPSE center=10,20 major-axis=4,0 ratio=0.5
+? distance Small 14,20 -> 0
+? distance Small 10,20 -> 2
+? pick 14,20 tolerance=0.1 -> Small
+? crosses Small 13,19 15,21 -> yes
+? crossing 13,19 15,21 -> Small
+? crossing 5,17 15,23 -> Small
+; Verbatim rotated-ellipse inputs from rettangolo-interno-millimetri.json
+; and rettangolo-contiene-millimetri.json (both booleans from their atteso).
+Rotated = ELLIPSE center=12.5,-7.25 major-axis=40,30 ratio=0.6
+? crosses Rotated 10,-10 15,-5 -> no
+? crosses Rotated 100,100 -100,-100 -> yes

@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; solid-space tests/corpus/casi/geom2d/ellipse-delicate-mm-retta-secante.json
+; at fc8cae3da8a737510d6b61075b03ea3272228576. Start 0 instead of 0.2: (10,0) is atStart.
+E = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+L = LINE start=-20,0 end=20,0
+; cambia con #744
+? intersections E L -> 10,0 crossing 0:start 0:inside; -10,0 crossing 0:inside 0:inside
+? intersections L E -> 10,0 crossing 0:inside 0:start; -10,0 crossing 0:inside 0:inside
+Short = LINE start=-12,0 end=1,0
+? intersections E Short -> -10,0 crossing 0:inside 0:inside
+? intersections E Short extend=b -> 10,0 crossing 0:start 0:after; -10,0 crossing 0:inside 0:inside
+? intersections Short E extend=a -> 10,0 crossing 0:after 0:start; -10,0 crossing 0:inside 0:inside
+; PT50 common-vertex rule. Substitution into x^2+4y^2=100 gives the sole
+; point (10,0) on these finite segments (the other roots are outside them).
+Closed = LWPOLYLINE closed=yes vertex=10,0 vertex=12,2 vertex=12,-2
+? intersections E Closed -> 10,0 crossing 0:start 0:start
+? intersections Closed E -> 10,0 crossing 0:start 0:start
+Open = LWPOLYLINE vertex=12,-2 vertex=10,0 vertex=12,2
+? intersections E Open -> 10,0 crossing 0:start 1:start
+? intersections Open E -> 10,0 crossing 1:start 0:start
+; Equal coordinates on non-adjacent pieces are NOT merged (PT50.4).
+Repeated = LWPOLYLINE vertex=8,-2 vertex=12,2 vertex=12,-2 vertex=8,2
+? intersections E Repeated -> 10,0 crossing 0:start 0:inside; 10,0 crossing 0:start 2:inside
+? intersections Repeated E -> 10,0 crossing 0:inside 0:start; 10,0 crossing 2:inside 0:start

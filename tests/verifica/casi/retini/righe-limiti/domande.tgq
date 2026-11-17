@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT42 / PT42 (#738). Handwritten DXF; no Tecnigrafo execution.
+; 100: >1,000,000 candidate lines, output empty.
+; 101: one host but >1,000,000 dashes, output empty.
+; 102: h=0 family is skipped; second family still draws.
+; 103: empty region. 104: coincident loop vertices are discarded by kernel.
+; 105: same valid remaining line, for comparison.
+D = DXF file=input.dxf
+; PT42 starts drawing the stored pattern families.
+; cambia con #738
+; Handle 100: 0 generated shapes.
+? generated D:100 -> none
+; Handle 101: 0 generated shapes.
+? generated D:101 -> none
+; Handle 102: 1 generated shapes.
+? generated D:102 -> LINE start=0,5 end=10,5
+; Handle 103: 0 generated shapes.
+? generated D:103 -> none
+; Handle 104: 0 generated shapes.
+? generated D:104 -> none
+; Handle 105: 1 generated shapes.
+? generated D:105 -> LINE start=0,5 end=10,5

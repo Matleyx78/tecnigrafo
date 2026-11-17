@@ -9,7 +9,8 @@
 ; 1ad04b0b8a568fb9dd4960719a8f17289129f788). Richiesta di Style: quella inglese di AutoCAD
 ; (scheda PT15: "nome di uno stile che c'è"). Lo stile scelto è quello già corrente, così
 ; il caso non dipende dal fatto che l'opzione cambi o no TEXTSTYLE, che la scheda non dice.
-; Larghezza |40 - 0| = 40; altezza 2.5 (lo stile Nota non ha altezza fissa).
+; Larghezza |40 - 0| = 40; altezza 2.5 (lo stile Nota non ha altezza fissa). Handle 258:
+; lo stile Nota occupa il 257 (ADR 0017, punto 5: tabelle ed entità nello stesso spazio).
 -STYLE
 Nota
 arial.ttf

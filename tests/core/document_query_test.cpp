@@ -4,6 +4,7 @@
 #include "tg/core/document_query.hpp"
 
 #include "tg/core/math.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/text.hpp"
 
@@ -926,6 +927,56 @@ TEST(TextQueries, InsertionAndCentreHaveTheSamePriority) {
     // Inside the text box, 2 from the circle: the insertion point.
     EXPECT_EQ(findSnap(document, {8.0, 1.0}, 2.0, kAllModes),
               (SnapPoint{{0.0, 0.0}, SnapKind::Insertion}));
+}
+
+// docs/tappe/0.8/PT13-mtext-core.md, point 6: the rows of an MTEXT give no
+// snap point of their own, they lead to the insertion point of the MTEXT.
+MText twoRows(const Vec2& insertion) {
+    MText mtext;
+    mtext.insertion = insertion;
+    mtext.height = 3.0;
+    mtext.value = R"(A\PB)";
+    return mtext;
+}
+
+constexpr SnapModes kInsertionOnly{false, false, false, true};
+
+TEST(MTextQueries, ARowLeadsToTheInsertionPointOfTheMText) {
+    Document document;
+    document.add(twoRows({30.0, 20.0}));
+    const SnapPoint insertion{{30.0, 20.0}, SnapKind::Insertion};
+    // On the box of the first row, whose baseline is at y = 17, never the
+    // start of the row.
+    EXPECT_EQ(findSnap(document, {31.0, 17.0}, 0.1, kInsertionOnly), insertion);
+    EXPECT_EQ(findSnap(document, {31.0, 17.0}, 0.1, kAllModes), insertion);
+    // On the second row, five below.
+    EXPECT_EQ(findSnap(document, {31.0, 12.0}, 0.1, kInsertionOnly), insertion);
+    // Farther than the aperture from every row and from the point: nothing.
+    EXPECT_FALSE(findSnap(document, {40.0, 30.0}, 0.1, kInsertionOnly));
+    EXPECT_FALSE(findSnap(document, {31.0, 17.0}, 0.1, SnapModes{true, true, true, false}));
+}
+
+TEST(MTextQueries, TheNearestRowDecidesAgainstAText) {
+    Document document;
+    document.add(twoRows({30.0, 20.0}));
+    document.add(hello({33.0, 16.0}));  // its box starts at x = 33
+    // Inside the first row, 0.5 from the text box: the MTEXT.
+    EXPECT_EQ(findSnap(document, {32.5, 17.0}, 1.0, kInsertionOnly),
+              (SnapPoint{{30.0, 20.0}, SnapKind::Insertion}));
+    // Inside the text box, beyond the first row: the text.
+    EXPECT_EQ(findSnap(document, {34.0, 17.0}, 1.0, kInsertionOnly),
+              (SnapPoint{{33.0, 16.0}, SnapKind::Insertion}));
+}
+
+TEST(MTextQueries, AnEmptyMTextIsItsInsertionPoint) {
+    Document document;
+    MText empty;
+    empty.insertion = {5.0, 5.0};
+    empty.height = 2.5;
+    document.add(empty);
+    EXPECT_EQ(findSnap(document, {5.0, 5.0}, 0.1, kInsertionOnly),
+              (SnapPoint{{5.0, 5.0}, SnapKind::Insertion}));
+    EXPECT_FALSE(findSnap(document, {5.5, 5.0}, 0.1, kInsertionOnly));
 }
 
 TEST_F(RandomDocument, PickMatchesExhaustiveSearch) {

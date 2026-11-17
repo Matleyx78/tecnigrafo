@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/entity_extras.hpp"
 #include "tg/core/entity_id.hpp"
@@ -32,6 +33,10 @@ enum class MirrorText : std::uint8_t;
 
 /// DXF ATTRIB, owned by its Insert (docs/adr/0045, point 2): it has its own
 /// handle, extras and properties, and leaves and comes back with the insert.
+/// The flags the model does not represent (verify 4, preset 8) stay in a
+/// group 70 of extras.specific, with the whole value of the flags; the
+/// locked position (280) in a group 280 there (docs/DECISIONI.md,
+/// 2026-11-14, "Revisione delle interfacce PT4", P21).
 struct Attribute {
     EntityId id;                  ///< its handle
     Text text;                    ///< text.value is the value (1)
@@ -54,6 +59,60 @@ struct Insert {
 
     friend bool operator==(const Insert&, const Insert&) = default;
 };
+
+/// An attribute of an insert in drawing coordinates (docs/adr/0045, point 6):
+/// an ATTRIB of the insert, or a constant ATTDEF of its definition.
+struct PlacedAttribute {
+    std::string tag;
+    std::string value;
+    AttributeFlags flags;
+    Text text;                   ///< in drawing coordinates; text.value is the value
+    bool fromDefinition{false};  ///< a constant ATTDEF of the definition
+
+    friend bool operator==(const PlacedAttribute&, const PlacedAttribute&) = default;
+};
+
+/// The flags of an ATTRIB: invisible from the model, verify and preset from
+/// the group 70 of extras.specific (Attribute); never constant.
+[[nodiscard]] AttributeFlags attributeFlags(const Attribute& attribute);
+
+/// True when the text and the tag of the ATTRIB are valid, as for an ATTDEF
+/// (validAttributeText(), validAttributeTag()).
+[[nodiscard]] bool supported(const Attribute& attribute);
+
+/// The ATTRIBs an insert of `definition` gets with ATTREQ = 0: one per
+/// non-constant ATTDEF, in order, with the default value, placed by the
+/// insert's transform (transformedText), with layer, color, linetype,
+/// lineweight and flags of its ATTDEF. Ids are 0: the editor assigns them.
+///
+/// The properties are those of the ATTDEF as a whole (its linetype scale
+/// too); verify and preset go in a group 70 of extras.specific with the
+/// whole value of the flags, and a group 280 of the ATTDEF (locked
+/// position) is copied there (Attribute). Nothing without the definition;
+/// an ATTDEF that is not supported gives nothing either.
+[[nodiscard]] std::vector<Attribute> defaultAttributes(const Document& document,
+                                                       const Insert& insert);
+
+/// Every attribute of an insert in drawing coordinates: its ATTRIBs, then
+/// the constant ATTDEFs of its definition (fromDefinition), in order.
+///
+/// A constant ATTDEF is placed by transformedText() under insertTransform(),
+/// with its default value as value. The ATTDEFs that are not supported are
+/// left out.
+[[nodiscard]] std::vector<PlacedAttribute> attributesOf(const Document& document,
+                                                        const Insert& insert);
+
+/// The first attribute of attributesOf() whose tag is `tag`, compared without
+/// case for ASCII letters (sameTableName()); std::nullopt when none has it.
+[[nodiscard]] std::optional<PlacedAttribute> findAttribute(const Document& document,
+                                                           const Insert& insert,
+                                                           std::string_view tag);
+
+/// The insert ready to be added as a copy (ADR 0031, point 6): every ATTRIB
+/// with id 0, so that the editor assigns new handles, and without the 102
+/// groups of extras.beforeEntity (reactors and dictionaries of the
+/// original), as Editor::addCopy() does for the insert.
+[[nodiscard]] Insert insertForCopy(const Insert& insert);
 
 /// The deepest insert that is drawn: the insert of the drawing is level 1,
 /// an insert among the entities of its block level 2, and so on. A deeper one
@@ -85,9 +144,8 @@ inline constexpr int kMaxInsertDepth = 64;
 // (docs/adr/0044, point 1; docs/tappe/0.8/PT6-scheletro-core.md, point 4).
 // Each one but supported() has the precondition supported(insert).
 
-/// True when both scales are finite and not zero, and the insert has no
-/// attributes: they arrive with the package of the attributes
-/// (docs/tappe/0.8/PT17-attributi-core.md), which checks each of them.
+/// True when both scales are finite and not zero, and every attribute is
+/// supported (supported(const Attribute&)).
 [[nodiscard]] bool supported(const Insert& insert);
 
 /// Every shape of the entity, in drawing coordinates, with its effective
@@ -102,7 +160,11 @@ inline constexpr int kMaxInsertDepth = 64;
 /// under a scaling (0.5, 1) and then (2, 1) stays a circle. Its properties
 /// are those of propertiesInBlock() and layerState() (docs/adr/0045,
 /// point 3). The attribute definitions of the block are not drawn: the
-/// attributes of the insert are. Nothing from a block that is not there, nor
+/// attributes of the insert are, after the shapes of its block, as texts with
+/// the properties propertiesInBlock() gives them (layer 0 and ByBlock as the
+/// entities of the block); an invisible one is not drawn. The ATTRIBs of a
+/// nested insert are mapped as the entities of the block that holds it.
+/// Nothing from a block that is not there, its attributes included, nor
 /// from an insert deeper than kMaxInsertDepth.
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record,
@@ -144,8 +206,8 @@ void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
 /// added to the rotation. A reflection across an axis at angle φ turns
 /// T(p)·R(r)·S(sx, sy) into T(p')·R(2φ − r + 180°)·S(−sx, sy), as AutoCAD
 /// writes it: the X scale changes sign and the rotation is brought into
-/// [0°, 360°). Never refused. The attributes are transformed by the package
-/// of the attributes (docs/tappe/0.8/PT17-attributi-core.md).
+/// [0°, 360°). Never refused. Each ATTRIB is transformed in the same step as
+/// a text, with `mirrorText` (ADR 0031, point 3).
 [[nodiscard]] TransformOutcome transformedOf(const Document& document, const Insert& insert,
                                              const Similarity& similarity, MirrorText mirrorText);
 

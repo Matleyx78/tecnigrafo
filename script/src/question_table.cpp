@@ -326,12 +326,21 @@ Parsed<std::pair<const core::Entity*, core::Vec2>> entityAndPoint(const Question
 }
 
 QuestionResult askDistance(const QuestionModel& model, Arguments arguments) {
-    const auto parsed = entityAndPoint(model, arguments, "distance <entity> x,y");
-    if (const auto* error = std::get_if<ArgumentError>(&parsed)) {
+    if (arguments.size() != 2) {
+        return usage("distance <entity> x,y");
+    }
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
-    const auto& [entity, point] = std::get<0>(parsed);
-    return formatNumber(core::distance(*entity, point));
+    const Parsed<core::Vec2> point = pointArgument(arguments[1]);
+    if (const auto* error = std::get_if<ArgumentError>(&point)) {
+        return *error;
+    }
+    // Through the document: for the five entities of before the 0.8, their
+    // own distance (generated.hpp; docs/tappe/0.8/PT13-mtext-core.md, point 7).
+    return formatNumber(core::distance(model.document, *std::get<const core::EntityRecord*>(record),
+                                       std::get<core::Vec2>(point)));
 }
 
 QuestionResult askClosest(const QuestionModel& model, Arguments arguments) {
@@ -344,33 +353,39 @@ QuestionResult askClosest(const QuestionModel& model, Arguments arguments) {
     return closest ? formatPoint(*closest) : std::string{"none"};
 }
 
-/// "<question> <entity> x1,y1 x2,y2", answered by `test`.
+/// "<question> <entity> x1,y1 x2,y2", answered by `test` through the
+/// document: for the five entities of before the 0.8, as by themselves
+/// (generated.hpp; docs/tappe/0.8/PT13-mtext-core.md, point 7).
 template <typename Test>
 QuestionResult askRectangle(const QuestionModel& model, Arguments arguments, std::string_view form,
                             const Test& test) {
-    const Parsed<const core::Entity*> entity = objectArguments(model, arguments, 2, form);
-    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+    if (arguments.size() != 3) {
+        return usage(form);
+    }
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
     const Parsed<core::BBox> rectangle = rectangleArgument(arguments[1], arguments[2]);
     if (const auto* error = std::get_if<ArgumentError>(&rectangle)) {
         return *error;
     }
-    return yesNo(test(*std::get<const core::Entity*>(entity), std::get<core::BBox>(rectangle)));
+    return yesNo(test(model.document, *std::get<const core::EntityRecord*>(record),
+                      std::get<core::BBox>(rectangle)));
 }
 
 QuestionResult askInside(const QuestionModel& model, Arguments arguments) {
-    return askRectangle(model, arguments, "inside <entity> x1,y1 x2,y2",
-                        [](const core::Entity& entity, const core::BBox& rectangle) {
-                            return core::isInside(entity, rectangle);
-                        });
+    return askRectangle(
+        model, arguments, "inside <entity> x1,y1 x2,y2",
+        [](const core::Document& document, const core::EntityRecord& record,
+           const core::BBox& rectangle) { return core::isInside(document, record, rectangle); });
 }
 
 QuestionResult askCrosses(const QuestionModel& model, Arguments arguments) {
-    return askRectangle(model, arguments, "crosses <entity> x1,y1 x2,y2",
-                        [](const core::Entity& entity, const core::BBox& rectangle) {
-                            return core::intersects(entity, rectangle);
-                        });
+    return askRectangle(
+        model, arguments, "crosses <entity> x1,y1 x2,y2",
+        [](const core::Document& document, const core::EntityRecord& record,
+           const core::BBox& rectangle) { return core::intersects(document, record, rectangle); });
 }
 
 QuestionResult askSnaps(const QuestionModel& model, Arguments arguments) {
@@ -664,6 +679,11 @@ constexpr std::array kQuestions{
     QuestionRow{"import-unit-factor", AnswerShape::Single, nullptr},  // PT19
     QuestionRow{"import-next-id", AnswerShape::Single, nullptr},      // PT19
     QuestionRow{"import-groups", AnswerShape::Single, nullptr},       // PT19
+    // Stage 0.8: hatch boundaries, announced for PT43
+    // (docs/tappe/fuori-tappa/F12): they answer "not implemented yet".
+    // In order, so Single and not Items.
+    QuestionRow{"hatch-boundary", AnswerShape::Single, nullptr},  // PT43
+    QuestionRow{"hatch-contours", AnswerShape::Single, nullptr},  // PT43
 };
 
 }  // namespace

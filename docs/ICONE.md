@@ -411,6 +411,13 @@ dell'ambiente della barra di stato; la nomina l'ambiente
 |---|---|---|---|
 | `env-drawing2d` | ambiente `drawing2d`, il disegno 2D: indicatore dell'ambiente | squadra (`esist`) e un segmento tracciato lungo il suo lato inclinato, a 45°, con i due estremi (`geo`, `pt`) | sì |
 
+La tappa 0.8 aggiunge il canale e il pannello dell’assistente (PT38).
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `assistant-channel-*.svg` | `assistant.channel` | onde del collegamento sopra il punto dell’assistente (`pt`) | sì |
+| `assistant-panel-*.svg` | `assistant.panel` | fumetto con tre punti (`pt`) | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

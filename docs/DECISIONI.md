@@ -2131,3 +2131,17 @@ i rimandi ai documenti che cambia.
      `script/src/question_table.cpp`, solo per queste tre domande; per i
      cinque tipi di prima della 0.8 le risposte non cambiano. Scartato un
      pacchetto a parte prima di PT13.
+- **2026-11-17 — Domande di PT43 annunciate prima del lavoro.** Codex si
+  ferma su RT43 nella pull request #855: le domande `hatch-boundary` e
+  `hatch-contours` della scheda [PT43](tappe/0.8/PT43-contorni-dei-retini.md),
+  punto 5, non sono né nel catalogo né in `kQuestions`, e i casi risultano
+  non validi invece che in attesa. Il responsabile sceglie la prima uscita
+  proposta, un pacchetto di soli annunci sul modello di F9 e F11: il pacchetto
+  fuori tappa [F12](tappe/fuori-tappa/F12-annuncio-domande-contorni.md) (#859)
+  le descrive in [verifica/domande.md](verifica/domande.md), «Retini (tappa
+  0.8)», esattamente come le specifica PT43, punto 5, e le annuncia in
+  `kQuestions` con funzione nulla, così rispondono
+  `error: question not implemented yet`. PT43 le realizza e toglie
+  l'annuncio; RT43 (#739) dipende da F12 e lo riprende il responsabile dalla
+  chat di Codex. Scartata la divisione di PT43 in un pacchetto di annunci e
+  uno di lavoro, e l'avvio di PT43 prima dei riferimenti, contro l'ADR 0011.

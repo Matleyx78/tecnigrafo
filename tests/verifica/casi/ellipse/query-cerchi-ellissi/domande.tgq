@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; solid-space tests/corpus/casi/geom2d/ at fc8cae3da8a737510d6b61075b03ea3272228576:
+; ellipse-delicate-mm-cerchio-doppia-tangenza.json,
+; ellipse-ordinary-arco-circolare-none.json, ellipse-ordinary-pezzo-curvo-none.json,
+; ellipse-delicate-mm-ellissi-quattro.json. Same whole carrier, start 0.
+E = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+C = CIRCLE center=0,0 radius=5
+; cambia con #744
+? intersections E C -> 0,5 touching 0:inside 0:inside; 0,-5 touching 0:inside 0:inside
+? intersections C E -> 0,5 touching 0:inside 0:inside; 0,-5 touching 0:inside 0:inside
+; Upper semicircle: both corpus points are far from its ends.
+A = ARC center=0,0 radius=6 start-angle=1 end-angle=179
+? intersections E A -> 3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside; -3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside
+? intersections A E -> 3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside; -3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside
+P = LWPOLYLINE vertex=6,0 bulge=1 vertex=-6,0
+? intersections E P -> 3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside; -3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside
+? intersections P E -> 3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside; -3.8297084310253524,4.618802153517006 crossing 0:inside 0:inside
+Vertical = ELLIPSE center=0,0 major-axis=0,10 ratio=0.5
+? intersections E Vertical -> 4.47213595499958,4.47213595499958 crossing 0:inside 0:inside; -4.47213595499958,4.47213595499958 crossing 0:inside 0:inside; -4.47213595499958,-4.47213595499958 crossing 0:inside 0:inside; 4.47213595499958,-4.47213595499958 crossing 0:inside 0:inside
+? intersections Vertical E -> -4.47213595499958,4.47213595499958 crossing 0:inside 0:inside; -4.47213595499958,-4.47213595499958 crossing 0:inside 0:inside; 4.47213595499958,-4.47213595499958 crossing 0:inside 0:inside; 4.47213595499958,4.47213595499958 crossing 0:inside 0:inside
