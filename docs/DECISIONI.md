@@ -2066,3 +2066,14 @@ i rimandi ai documenti che cambia.
   vietato eseguire Tecnigrafo per ricavare gli attesi. Scartata l’estensione
   dell’oracolo in un pacchetto separato: la lettura indipendente autorizzata
   non richiede modifiche all’oracolo né nuove dipendenze.
+- **2026-11-17 — `importBlock` osservabile nei riferimenti di PT19.** Dopo il
+  blocco di RT19 ([#700](https://github.com/Matleyx78/tecnigrafo/issues/700)),
+  il responsabile decide che PT19 realizza anche la definizione verificabile
+  `BLOCK-IMPORT` e le domande `import-*` del catalogo. La definizione chiama
+  direttamente `io::importBlock` con una copia dichiarabile del documento
+  bersaglio, non lo modifica e conserva anche l'errore. Le domande espongono
+  definizione principale, blocchi annidati, le quattro tabelle, fattore di
+  unità, `nextId`, handle e gruppi DXF conservati che li riferiscono. RT19 può
+  così verificare l'intero `BlockImport`, compreso l'autoriferimento, senza
+  anticipare `-INSERT` di PT21. Scartati lo spostamento dei riferimenti a PT21
+  e un meccanismo indiretto non specificato.

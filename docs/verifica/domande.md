@@ -21,6 +21,7 @@ istruzione; gli spazi all'inizio e alla fine della riga non contano.
 | `!current <proprietà>` | cambia i valori correnti del documento delle definizioni (dalla tappa 0.6, [Layer e proprietà](#layer-e-proprietà)) |
 | `!block "<NOME>" base=x,y` … `!endblock` | una definizione di blocco nel documento delle definizioni (dalla tappa 0.8, [Blocchi e geometria generata](#blocchi-e-geometria-generata)) |
 | `<Nome> = <entità>` | una **definizione** |
+| `<Nome> = BLOCK-IMPORT source=<nome> [target-units=N]` / `file=<nome> [target-units=N]` | il risultato dell'importazione di un DXF come blocco (dalla tappa 0.8, [Importazione di un file come blocco](#importazione-di-un-file-come-blocco)) |
 | `? <domanda> <argomenti> -> <risposta attesa>` | una **domanda** |
 
 ```
@@ -54,6 +55,9 @@ B = LWPOLYLINE vertex=20,0 bulge=1 vertex=30,0
   **tipo di linea** al documento delle entità definite
   ([Layer e proprietà](#layer-e-proprietà)); il nome non indica un'entità, e
   come ogni nome si definisce una volta.
+- Dalla tappa 0.8 una definizione può conservare il risultato, riuscito o
+  fallito, di **un'importazione di blocco**. Il nome non indica un'entità e,
+  come ogni nome, si definisce una volta.
 
 ### Domande
 
@@ -457,6 +461,76 @@ D = DXF source=librecad-sample
 ```
 
 I numeri dell'esempio mostrano solo la forma.
+
+### Importazione di un file come blocco
+
+Queste definizioni e domande, realizzate da PT19, espongono direttamente
+`io::importBlock` prima che il comando `-INSERT` esista. Non applicano il
+risultato e non cambiano il documento delle definizioni.
+
+**Definizione.** `I = BLOCK-IMPORT source=<nome>` cerca il DXF come le altre
+definizioni `source=`; `I = BLOCK-IMPORT file=<nome>` lo cerca nella cartella
+del caso. Chiama `io::importBlock` passando come bersaglio una copia del
+documento delle definizioni nello stato raggiunto **prima** della riga: vi
+entrano quindi entità, layer, tipi di linea, stili e blocchi dichiarati sopra,
+insieme ai valori correnti e a `nextId`. L'argomento facoltativo
+`target-units=N`, con `N` intero da 0 a 24, imposta `$INSUNITS` della sola
+copia bersaglio; se manca conserva le unità del documento (0 in una sessione
+nuova). Il nome del file passato a
+`importBlock` è quello scritto dopo `file=`; per `source=` è il percorso
+risolto da `sorgenti.json`, ma il nome della definizione principale resta il
+nome del file della sorgente dichiarato nel catalogo, senza estensione. Le
+regole e gli errori dei nomi sono quelli delle definizioni di [file](#file).
+La definizione conserva anche un `io::Error`: così un rifiuto previsto si può
+interrogare e non rende non valido il `.tgq`.
+
+**Domande.** Nelle risposte seguenti gli identificativi sono handle in
+esadecimale maiuscolo, senza prefisso. Gli elenchi separati da `;` si
+confrontano in qualunque ordine; le entità dentro un blocco restano invece
+nell'ordine della definizione.
+
+| Domanda | Risposta | Significato |
+|---|---|---|
+| `import-error <I>` | il messaggio tra virgolette, o `none` | l'errore restituito da `importBlock`; `none` se è riuscito |
+| `import-definition <I>` | una definizione nel formato sotto | il campo `definition` |
+| `import-nested <I>` | elenco di definizioni separate da `;`, o `none` | il campo `nested` |
+| `import-layers <I>` | elenco di record separati da `;`, o `none` | il campo `layers` |
+| `import-linetypes <I>` | elenco di record separati da `;`, o `none` | il campo `linetypes` |
+| `import-text-styles <I>` | elenco di record separati da `;`, o `none` | il campo `textStyles` |
+| `import-dim-styles <I>` | elenco di record separati da `;`, o `none` | il campo `dimStyles` |
+| `import-unit-factor <I>` | numero | il campo `unitFactor` |
+| `import-next-id <I>` | handle esadecimale | il campo `nextId` |
+| `import-groups <I> <handle>` | gruppi `codice="valore"` separati da spazi, o `none` | tutti i gruppi DXF conservati nell'oggetto restituito con quell'handle, nell'ordine; comprende proprietario, riferimenti e reattori |
+
+Una **definizione** risponde `name="NOME" base=x,y units=N entities=[H
+<entità>; …]`: `units=` è sempre presente; `entities=none` per il blocco
+vuoto. Ogni entità ha prima il proprio handle `H` e poi il formato del
+[rapporto](rapporto.md#entità). Un record di tabella comincia sempre con
+`id=H name="NOME"` e continua con le proprietà della rispettiva riga di
+rapporto: [`layers:` e `linetypes:`](rapporto.md#layer-tipi-di-linea-e-valori-correnti),
+[`text styles:` e `dimension styles:`](rapporto.md#tappa-08-entità-composte).
+Si scrivono anche i valori predefiniti, affinché due record siano distinguibili
+senza dipendere dallo stato del bersaglio. Le definizioni annidate e i record
+mantengono l'ordine dei rispettivi vettori di `BlockImport`.
+
+Tranne `import-error`, una domanda su un'importazione fallita risponde
+`error: <messaggio>` e il caso non è superato. `import-groups` con un handle
+che non appartiene a definizione, annidati o record restituiti è un errore del
+file di domande. Il valore di ogni gruppo è quotato con gli escape dei testi;
+in particolare rende osservabili i gruppi 330, 340, 360 e i gruppi 102 dei
+reattori dopo la rinumerazione.
+
+```
+L = LAYER name="Muri" color=1
+I = BLOCK-IMPORT file=pezzo.dxf target-units=6
+? import-error I          -> none
+? import-definition I     -> name="pezzo" base=0,0 units=4 entities=[101 LINE start=0,0 end=10,0 layer="Muri"]
+? import-unit-factor I    -> 0.001
+? import-next-id I        -> 108
+? import-groups I 101     -> 5="101" 330="100"
+```
+
+I valori dell'esempio mostrano solo la forma.
 
 ### Layer e proprietà
 
