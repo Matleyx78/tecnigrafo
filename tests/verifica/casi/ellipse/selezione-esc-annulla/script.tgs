@@ -6,6 +6,7 @@
 ; Point (10,0) from solid-space tests/corpus/casi/geom2d/
 ; ellisse-intera-parametri-0-2pi.json, commit fc8cae3da8a737510d6b61075b03ea3272228576.
 !view 0,0 0.1 800x600
+; cambia con #699
 OPEN
 scena.dxf
 !snap off

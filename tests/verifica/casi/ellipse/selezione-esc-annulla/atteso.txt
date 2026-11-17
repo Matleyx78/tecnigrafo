@@ -15,6 +15,9 @@ redo:
 snap: off
 ortho: off
 drawing: scena.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, scena.dxf (active)
 pointer: none
 active snap: none
@@ -34,6 +37,9 @@ redo:
 snap: off
 ortho: off
 drawing: scena.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, scena.dxf (active)
 pointer: 10,0
 active snap: none
@@ -56,6 +62,9 @@ redo:
 snap: off
 ortho: off
 drawing: scena.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, scena.dxf (active)
 pointer: 10,0
 active snap: none
@@ -76,6 +85,9 @@ redo:
 snap: off
 ortho: off
 drawing: scena.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, scena.dxf (active)
 pointer: 10,0
 active snap: none
@@ -97,6 +109,9 @@ redo:
 snap: off
 ortho: off
 drawing: scena.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, scena.dxf (active)
 pointer: 10,0
 active snap: none
@@ -118,6 +133,9 @@ redo:
 snap: off
 ortho: off
 drawing: scena.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, scena.dxf (active)
 pointer: 10,0
 active snap: none
