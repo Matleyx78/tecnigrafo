@@ -7,6 +7,7 @@
 #include "tg/core/bbox.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/raw_group.hpp"
 #include "tg/core/vec2.hpp"
 
 #include <cstddef>
@@ -44,6 +45,7 @@ struct HatchLoop {
     std::uint32_t flags{0};            ///< 92
     std::optional<Polyline> polyline;  ///< a polyline path, otherwise the edges
     std::vector<HatchEdge> edges;
+    RawGroups extras;  ///< 97 and 330, in their original order
 
     friend bool operator==(const HatchLoop&, const HatchLoop&) = default;
 };

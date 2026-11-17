@@ -39,6 +39,9 @@ const EntityCodec* findCodec(std::string_view type) {
     if (type == "ELLIPSE") {
         return &kEllipseCodec;
     }
+    if (type == "HATCH") {
+        return &kHatchCodec;
+    }
     return nullptr;
 }
 
@@ -60,6 +63,9 @@ const EntityCodec* findCodec(const core::Entity& entity) {
     }
     if (std::holds_alternative<core::Ellipse>(entity)) {
         return &kEllipseCodec;
+    }
+    if (std::holds_alternative<core::Hatch>(entity)) {
+        return &kHatchCodec;
     }
     return nullptr;
 }
@@ -152,6 +158,7 @@ std::optional<core::EntityRecord> decodeEntity(const EntityCodec* codec,
     }
     // Reactors can also carry 330; only the outer owner places the entity.
     std::size_t depth = 0;
+    bool geometry = false;
     for (const auto& group : groups) {
         const auto value = trimDxf(group.value);
         if (group.code == 1001) {
@@ -165,10 +172,15 @@ std::optional<core::EntityRecord> decodeEntity(const EntityCodec* codec,
             }
             continue;
         }
+        if (group.code == 100) {
+            geometry = value != "AcDbEntity";
+        }
         if (depth != 0) {
             continue;
         }
-        if (group.code == 330 && parseHandle(value) != context.modelSpace.value) {
+        const bool associatedHatchObject = codec == &kHatchCodec && geometry;
+        if (group.code == 330 && !associatedHatchObject &&
+            parseHandle(value) != context.modelSpace.value) {
             return std::nullopt;
         }
         if (group.code == 67 && parseNumber(value) != 0.0) {

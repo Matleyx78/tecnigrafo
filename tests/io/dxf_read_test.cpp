@@ -293,7 +293,7 @@ TEST(DxfRead, KnownCodecIsGatedByOwnerPaperSpaceAndExtrusion) {
     EXPECT_FALSE(decodeEntity(nullptr, {}, context).has_value());
     EXPECT_NE(findCodec(std::string_view{"LINE"}), nullptr);
     EXPECT_EQ(findCodec(std::string_view{"LINE"}), findCodec(core::Entity{core::Line{}}));
-    EXPECT_EQ(findCodec(std::string_view{"HATCH"}), nullptr);
+    EXPECT_NE(findCodec(std::string_view{"HATCH"}), nullptr);
 }
 
 }  // namespace
