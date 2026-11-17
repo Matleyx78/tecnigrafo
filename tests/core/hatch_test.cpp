@@ -263,6 +263,21 @@ TEST(HatchModel, PatternsAndOtherIslandStylesGenerateNothingYet) {
     EXPECT_TRUE(generateOf(document, EntityRecord{EntityId{1}, outer}, outer).empty());
 }
 
+TEST(HatchModel, TransformationsPreserveTheOrderedExtrasOfEachLoop) {
+    Hatch hatch = rectangleWithHole();
+    hatch.loops[0].extras = {{97, "2"}, {330, "A"}, {330, "B"}};
+    hatch.loops[1].extras = {{97, "1"}, {330, "C"}};
+    const std::vector<RawGroups> expected{hatch.loops[0].extras, hatch.loops[1].extras};
+
+    for (const Similarity& similarity :
+         {Similarity::translation({3, 4}), quarterTurn(), scalingBy(2.0), mirrorAcrossX()}) {
+        const Hatch changed = transformedHatch(hatch, similarity);
+        ASSERT_EQ(changed.loops.size(), expected.size());
+        EXPECT_EQ(changed.loops[0].extras, expected[0]);
+        EXPECT_EQ(changed.loops[1].extras, expected[1]);
+    }
+}
+
 /// A drawing with the hatch of RT30 on a layer of its own.
 struct HatchDrawing {
     Document document = Document::newDrawing();

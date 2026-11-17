@@ -1,8 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# 0.8-RT31: HATCH in DXF (PT31, #723).
-retini/dxf-codec #723
-retini/dxf-chiusura #723
-retini/dxf-angoli-ridotti #723
-retini/autocad #723
-retini/autocad-solid #723

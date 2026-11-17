@@ -98,6 +98,7 @@ add_executable(tg_tests
     io/dxf_line_circle_arc_test.cpp
     io/dxf_solid_test.cpp
     io/dxf_ellipse_test.cpp
+    io/dxf_hatch_test.cpp
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp
