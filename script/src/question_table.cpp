@@ -7,6 +7,7 @@
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/ellipse.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
@@ -250,6 +251,10 @@ std::optional<core::Vec2> closestOn(const core::Entity& entity, const core::Vec2
             },
             [&point](const core::Text& text) -> std::optional<core::Vec2> {
                 return core::closestPoint(text, point);
+            },
+            // From solid-space's nearest() (docs/tappe/0.8, PT50, point 2).
+            [&point](const core::Ellipse& ellipse) -> std::optional<core::Vec2> {
+                return core::closestPoint(ellipse, point);
             },
             // The types of the 0.8, until the questions learn them (PT9).
             [](const auto& /*entity*/) -> std::optional<core::Vec2> { return std::nullopt; },

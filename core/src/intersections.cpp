@@ -3,6 +3,7 @@
 
 #include "tg/core/intersections.hpp"
 
+#include "solid_space/geom2d/ellipse.hpp"
 #include "solid_space/geom2d/intersection.hpp"
 #include "solid_space/geom2d/side.hpp"
 #include "solid_space_bridge.hpp"
@@ -324,6 +325,162 @@ SharedStretch stretchOf(std::size_t hostPiece, std::size_t cutterPiece, const g:
 }
 
 // ---------------------------------------------------------------------------
+// Ellipses (docs/tappe/0.8/PT50-ellisse-selezione-snap.md, point 4)
+
+g::Extension kernelExtension(Extension extension) {
+    return extension == Extension::Extended ? g::Extension::extended : g::Extension::none;
+}
+
+/// The answer of solid-space, or std::nullopt when it refused the data. A
+/// curve that is exactly a point meets nothing and costs nothing; any other
+/// refusal, and points beyond the domain, clear `complete` (docs/adr/0035,
+/// point 23).
+std::optional<g::EllipseIntersections> answerOf(g::Result<g::EllipseIntersections> found,
+                                                bool& complete) {
+    if (!found.hasValue()) {
+        if (found.diagnosis().code != g::DiagnosisCode::degenerateCurve) {
+            complete = false;
+        }
+        return std::nullopt;
+    }
+    if (found.value().omittedBeyondDomain > 0) {
+        complete = false;
+    }
+    return std::move(found).value();
+}
+
+/// A position on the ellipse, or on piece `segment` of the other curve: the
+/// station is not given by solid-space, and it is only information (0).
+CurvePosition positionAt(std::size_t segment, g::Location location) {
+    return CurvePosition{segment, locationOf(location), 0.0};
+}
+
+/// Appends what solid-space found between the ellipse, A, and piece `piece`
+/// of B, in its order.
+void appendEllipseAnswer(const g::EllipseIntersections& found, std::size_t piece,
+                         Intersections& result) {
+    for (const g::EllipseIntersectionPoint& point : found.points) {
+        result.crossings.push_back(Crossing{bridge::fromPoint(point.point),
+                                            contactOf(point.contact), positionAt(0, point.onFirst),
+                                            positionAt(piece, point.onSecond)});
+    }
+    for (const g::EllipseOverlap& overlap : found.overlaps) {
+        SharedStretch stretch;
+        stretch.whole = overlap.whole;
+        stretch.from = bridge::fromPoint(overlap.from.point);
+        stretch.to = bridge::fromPoint(overlap.to.point);
+        stretch.fromOnA = positionAt(0, overlap.from.onFirst);
+        stretch.toOnA = positionAt(0, overlap.to.onFirst);
+        stretch.fromOnB = positionAt(piece, overlap.from.onSecond);
+        stretch.toOnB = positionAt(piece, overlap.to.onSecond);
+        result.shared.push_back(stretch);
+    }
+}
+
+/// Where an ellipse, A, meets `other`, B: another ellipse in a single call, a
+/// curve piece by piece (bridge::piecesOf for a polyline), the pieces in
+/// order. A vertex of B where two consecutive pieces meet the ellipse
+/// (atEnd on one, atStart on the one that follows, decided exactly) is kept
+/// once, on the piece that follows, as keepVerticesOnce() does; points of
+/// pieces that are not consecutive are never merged.
+Intersections intersectEllipse(const Ellipse& ellipse, Extension extendEllipse, const Entity& other,
+                               Extension extendOther) {
+    Intersections result;
+    const g::Ellipse first = bridge::ellipseOf(ellipse);
+    const g::Extension firstExtension = kernelExtension(extendEllipse);
+    if (const auto* second = std::get_if<Ellipse>(&other)) {
+        const auto found = answerOf(g::intersect(first, firstExtension, bridge::ellipseOf(*second),
+                                                 kernelExtension(extendOther)),
+                                    result.complete);
+        if (found) {
+            appendEllipseAnswer(*found, 0, result);
+        }
+        return result;
+    }
+    const EntityCurves curves = curvesOf(other, extendOther);
+    std::vector<std::optional<g::EllipseIntersections>> runs(curves.size());
+    for (std::size_t i = 0; i < curves.size(); ++i) {
+        if (curves.isPoint[i]) {
+            continue;  // a piece that is exactly a point meets nothing
+        }
+        const g::Extension pieceExtension = curves.extensionOf(i);
+        auto found = answerOf(g::intersect(first, firstExtension, curves.pieces[i], pieceExtension),
+                              result.complete);
+        if (!found) {
+            continue;
+        }
+        if (curves.mixed) {
+            // The shared stretches of an open polyline that is extended are
+            // searched on its segments only (Extension::Extended).
+            const auto onSegment =
+                g::intersect(first, firstExtension, curves.pieces[i], g::Extension::none);
+            found->overlaps = onSegment.hasValue() ? onSegment.value().overlaps
+                                                   : std::vector<g::EllipseOverlap>{};
+        }
+        std::erase_if(found->points, [&curves, i](const g::EllipseIntersectionPoint& point) {
+            return !curves.allows(i, point.onSecond);
+        });
+        runs[i] = std::move(found);
+    }
+    for (std::size_t i = 0; i < runs.size(); ++i) {
+        const std::size_t following = curves.next(i);
+        if (following == kNone) {
+            continue;
+        }
+        std::optional<g::EllipseIntersections>& here = runs[i];
+        const std::optional<g::EllipseIntersections>& there = runs[following];
+        if (!here.has_value() || !there.has_value()) {
+            continue;
+        }
+        const bool startsThere =
+            std::ranges::any_of(there->points, [](const g::EllipseIntersectionPoint& point) {
+                return point.onSecond == g::Location::atStart;
+            });
+        if (startsThere) {
+            std::erase_if(here->points, [](const g::EllipseIntersectionPoint& point) {
+                return point.onSecond == g::Location::atEnd;
+            });
+        }
+    }
+    for (std::size_t i = 0; i < runs.size(); ++i) {
+        if (const std::optional<g::EllipseIntersections>& run = runs[i]; run.has_value()) {
+            appendEllipseAnswer(*run, i, result);
+        }
+    }
+    return result;
+}
+
+/// True when segment `index` of entity `a` runs clockwise: a polyline arc
+/// with a negative bulge. Lines, circles and arcs do not.
+bool runsClockwise(const Entity& a, std::size_t index) {
+    const auto* polyline = std::get_if<Polyline>(&a);
+    if (polyline == nullptr || index >= polyline->segmentCount()) {
+        return false;
+    }
+    const PolylineSegment segment = polyline->segment(index);
+    return segment.isArc() && segment.bulge < 0.0;
+}
+
+/// The answer of intersectEllipse(B, A) for a curve A and an ellipse B: the
+/// same points, with the positions swapped and in the same order; each shared
+/// stretch in the direction of A (its ends swapped on a clockwise segment).
+Intersections swapped(Intersections found, const Entity& a) {
+    for (Crossing& crossing : found.crossings) {
+        std::swap(crossing.onA, crossing.onB);
+    }
+    for (SharedStretch& stretch : found.shared) {
+        std::swap(stretch.fromOnA, stretch.fromOnB);
+        std::swap(stretch.toOnA, stretch.toOnB);
+        if (runsClockwise(a, stretch.fromOnA.segment)) {
+            std::swap(stretch.from, stretch.to);
+            std::swap(stretch.fromOnA, stretch.toOnA);
+            std::swap(stretch.fromOnB, stretch.toOnB);
+        }
+    }
+    return found;
+}
+
+// ---------------------------------------------------------------------------
 // Side and nearest point
 
 Side sideFrom(g::Side side) {
@@ -399,6 +556,12 @@ CurvePosition positionOnSegment(std::size_t index, const PolylineSegment& segmen
 // ---------------------------------------------------------------------------
 
 Intersections intersect(const Entity& a, Extension extendA, const Entity& b, Extension extendB) {
+    if (const auto* ellipse = std::get_if<Ellipse>(&a)) {
+        return intersectEllipse(*ellipse, extendA, b, extendB);
+    }
+    if (const auto* ellipse = std::get_if<Ellipse>(&b)) {
+        return swapped(intersectEllipse(*ellipse, extendB, a, extendA), a);
+    }
     Intersections result;
     const EntityCurves first = curvesOf(a, extendA);
     const EntityCurves second = curvesOf(b, extendB);
@@ -624,6 +787,7 @@ std::optional<Side> sideOf(const Entity& entity, const Vec2& point) {
 
 CurvePosition nearestPosition(const Entity& entity, const Vec2& point) {
     assert(!std::holds_alternative<Text>(entity));
+    assert(!std::holds_alternative<Ellipse>(entity));
     if (const auto* polyline = std::get_if<Polyline>(&entity)) {
         if (polyline->segmentCount() == 0) {
             return CurvePosition{0, Location::AtStart, 0.0};

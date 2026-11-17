@@ -118,6 +118,7 @@ Come ogni tipo di entità risponde ([ADR 0008](../adr/0008-selezione-e-snap.md),
 | `LINE` | lunghezza del segmento | dal segmento | estremi, medio |
 | `ARC` | lunghezza dell'arco | dall'arco, mai dal resto del cerchio | estremi, medio sull'arco, centro |
 | `CIRCLE` | circonferenza | dalla circonferenza: il centro è a distanza pari al raggio | centro |
+| `ELLIPSE` | `none` | dalla curva, mai dal resto dell'ellisse di un arco; a pari distanza (entro l'errore di solid-space) uno qualsiasi dei punti più vicini: i casi non ne usano | centro, quadranti sulla curva, estremi di un arco |
 | `TEXT` | `none` | dal parallelogramma d'ingombro, che è una regione: distanza 0 e punto stesso all'interno | punto d'ancoraggio; `position` per `Aligned` e `Fit` (ADR 0022, punto 5) |
 
 ### Sul documento
