@@ -65,6 +65,7 @@ add_executable(tg_tests
     core/attributes_test.cpp
     core/block_table_test.cpp
     core/ellipse_test.cpp
+    core/ellipse_query_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
     core/curve_parts_test.cpp

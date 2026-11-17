@@ -272,13 +272,15 @@ TEST(EllipseBox, AnArcThroughAnExtremeAndOneWithout) {
     expectNear(oblique.max(), {4.0, std::sqrt(13.0)});
 }
 
-TEST(EllipseSelection, OnlyAWindowAroundTheBoxSelectsUntilPT50) {
+TEST(EllipseSelection, AWindowAroundTheBoxAndACrossingOfTheCurve) {
     const Ellipse ellipse{{10, 20}, {4, 0}, 0.5, 0.0, kTwoPi};
     EXPECT_TRUE(isInsideOf(ellipse, BBox{{6, 18}, {14, 22}}));
     EXPECT_FALSE(isInsideOf(ellipse, BBox{{6.001, 18}, {14, 22}}));
     EXPECT_FALSE(isInsideOf(ellipse, BBox{}));
-    EXPECT_EQ(distanceOf(ellipse, {14, 20}), std::numeric_limits<double>::infinity());
-    EXPECT_FALSE(intersectsOf(ellipse, BBox{{13, 19}, {15, 21}}));
+    // From solid-space's ellipse.hpp (docs/tappe/0.8, PT50): the end of the
+    // major axis is on the curve, and a rectangle around it crosses it.
+    EXPECT_NEAR(distanceOf(ellipse, {14, 20}), 0.0, kTolerance);
+    EXPECT_TRUE(intersectsOf(ellipse, BBox{{13, 19}, {15, 21}}));
 }
 
 std::vector<SnapPoint> snaps(const Ellipse& ellipse, const SnapModes& modes) {
@@ -379,17 +381,20 @@ TEST(EllipseGrips, AHalfAxisOfLengthZeroIsRefused) {
     EXPECT_EQ(moveGrip(Entity{sample()}, 1, {nan, 0}).outcome, GripOutcome::Invalid);
 }
 
-TEST(EllipseDocument, OnlyAWindowSelectsAnEllipseUntilPT50) {
+TEST(EllipseDocument, AWindowACrossingAndAClickSelectAnEllipse) {
     Document document = Document::newDrawing();
     const EntityId ellipse = document.add(Ellipse{{10, 20}, {4, 0}, 0.5, 0.0, kTwoPi});
     const EntityId line = document.add(Line{{7, 19}, {8, 19}});
     const BBox around{{5, 17}, {15, 23}};
     EXPECT_EQ(selectInRectangle(document, around, RectangleMode::Window),
               (std::vector<EntityId>{ellipse, line}));
-    // A crossing window takes the line inside it, not the ellipse.
     EXPECT_EQ(selectInRectangle(document, around, RectangleMode::Crossing),
-              (std::vector<EntityId>{line}));
-    EXPECT_FALSE(pickEntity(document, {14, 20}, 0.1).has_value());
+              (std::vector<EntityId>{ellipse, line}));
+    // Since PT50 a crossing of the curve and a click on it take the ellipse
+    // too (docs/adr/0052, point 4).
+    EXPECT_EQ(selectInRectangle(document, BBox{{13, 19}, {15, 21}}, RectangleMode::Crossing),
+              (std::vector<EntityId>{ellipse}));
+    EXPECT_EQ(pickEntity(document, {14, 20}, 0.1), ellipse);
 }
 
 TEST(EllipseDocument, GeneratesItselfExceptOnAFrozenLayer) {

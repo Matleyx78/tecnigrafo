@@ -377,27 +377,27 @@ void appendEllipseAnswer(const g::EllipseIntersections& found, std::size_t piece
     }
 }
 
-/// Where an ellipse, A, meets entity B: another ellipse in a single call, a
+/// Where an ellipse, A, meets `other`, B: another ellipse in a single call, a
 /// curve piece by piece (bridge::piecesOf for a polyline), the pieces in
 /// order. A vertex of B where two consecutive pieces meet the ellipse
 /// (atEnd on one, atStart on the one that follows, decided exactly) is kept
 /// once, on the piece that follows, as keepVerticesOnce() does; points of
 /// pieces that are not consecutive are never merged.
-Intersections intersectEllipse(const Ellipse& ellipse, Extension extendEllipse, const Entity& b,
-                               Extension extendB) {
+Intersections intersectEllipse(const Ellipse& ellipse, Extension extendEllipse, const Entity& other,
+                               Extension extendOther) {
     Intersections result;
     const g::Ellipse first = bridge::ellipseOf(ellipse);
     const g::Extension firstExtension = kernelExtension(extendEllipse);
-    if (const auto* second = std::get_if<Ellipse>(&b)) {
+    if (const auto* second = std::get_if<Ellipse>(&other)) {
         const auto found = answerOf(g::intersect(first, firstExtension, bridge::ellipseOf(*second),
-                                                 kernelExtension(extendB)),
+                                                 kernelExtension(extendOther)),
                                     result.complete);
         if (found) {
             appendEllipseAnswer(*found, 0, result);
         }
         return result;
     }
-    const EntityCurves curves = curvesOf(b, extendB);
+    const EntityCurves curves = curvesOf(other, extendOther);
     std::vector<std::optional<g::EllipseIntersections>> runs(curves.size());
     for (std::size_t i = 0; i < curves.size(); ++i) {
         if (curves.isPoint[i]) {
@@ -424,22 +424,27 @@ Intersections intersectEllipse(const Ellipse& ellipse, Extension extendEllipse, 
     }
     for (std::size_t i = 0; i < runs.size(); ++i) {
         const std::size_t following = curves.next(i);
-        if (!runs[i] || following == kNone || !runs[following]) {
+        if (following == kNone) {
             continue;
         }
-        const bool startsThere = std::ranges::any_of(
-            runs[following]->points, [](const g::EllipseIntersectionPoint& point) {
+        std::optional<g::EllipseIntersections>& here = runs[i];
+        const std::optional<g::EllipseIntersections>& there = runs[following];
+        if (!here.has_value() || !there.has_value()) {
+            continue;
+        }
+        const bool startsThere =
+            std::ranges::any_of(there->points, [](const g::EllipseIntersectionPoint& point) {
                 return point.onSecond == g::Location::atStart;
             });
         if (startsThere) {
-            std::erase_if(runs[i]->points, [](const g::EllipseIntersectionPoint& point) {
+            std::erase_if(here->points, [](const g::EllipseIntersectionPoint& point) {
                 return point.onSecond == g::Location::atEnd;
             });
         }
     }
     for (std::size_t i = 0; i < runs.size(); ++i) {
-        if (runs[i]) {
-            appendEllipseAnswer(*runs[i], i, result);
+        if (const std::optional<g::EllipseIntersections>& run = runs[i]; run.has_value()) {
+            appendEllipseAnswer(*run, i, result);
         }
     }
     return result;
