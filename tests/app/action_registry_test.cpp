@@ -354,7 +354,8 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
         QStringLiteral("file.quit"),       QStringLiteral("edit.undo"),
         QStringLiteral("edit.redo"),       QStringLiteral("tools.settings"),
         QStringLiteral("tools.shortcuts"), QStringLiteral("ui.theme"),
-        QStringLiteral("ui.interface"),    QStringLiteral("help.about")};
+        QStringLiteral("ui.interface"),    QStringLiteral("assistant.channel"),
+        QStringLiteral("assistant.panel"), QStringLiteral("help.about")};
     for (QAction* item : registry().actions()) {
         const ActionSpec* spec = registry().spec(item->objectName());
         ASSERT_NE(spec, nullptr);

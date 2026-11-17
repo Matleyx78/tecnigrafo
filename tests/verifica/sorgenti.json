@@ -432,6 +432,14 @@
       "sha256": "232a1d6b5cc9f50d45fb8b45791047e8d7b6a0ae70719cefa9ddf1d1e4f725b9",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/LICENSE"
+    },
+    {
+      "name": "autocad-ellissi",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/1ad04b0b8a568fb9dd4960719a8f17289129f788/autocad-ellissi.dxf",
+      "version": "1ad04b0b8a568fb9dd4960719a8f17289129f788",
+      "sha256": "eacd35327f5a5c9833a6de0f304428e058d50385363673ee3107b647fd38ad6e",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/1ad04b0b8a568fb9dd4960719a8f17289129f788/LICENSE"
     }
   ]
 }

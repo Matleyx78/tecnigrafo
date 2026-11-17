@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; solid-space tests/corpus/casi/geom2d/ellipse-nearest-asse-fuori-dominio.json,
+; ellisse-diagnosi-centro-oltre-dominio.json and ellisse-diagnosi-parametro-oltre-dominio.json
+; at fc8cae3da8a737510d6b61075b03ea3272228576; PT50.2 translates refusal to infinity/none/false.
+Axis = ELLIPSE center=0,0 major-axis=1125899906842625,0 ratio=0.5
+Center = ELLIPSE center=1125899906842625,0 major-axis=10,0 ratio=0.5
+Parameter = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=0 end=100000000
+? distance Axis 0,0 -> inf
+? closest Axis 0,0 -> none
+? crosses Axis -1,-1 1,1 -> no
+? distance Center 0,0 -> inf
+? closest Center 0,0 -> none
+? crosses Center -1,-1 1,1 -> no
+? distance Parameter 0,0 -> inf
+? closest Parameter 0,0 -> none
+? crosses Parameter -1,-1 1,1 -> no
+; ellisse-regola-arc-ridotta-a-un-punto.json: 19080*pi/180 is exactly
+; 0x1.4d02421c87558p+8 in binary64. Kernel degenerateCurve; PT50 uses start (10,0).
+; cambia con #744
+Point = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5 start=0 end=19080
+? distance Point 13,4 -> 5
+? closest Point 13,4 -> 10,0
+? crosses Point 9,-1 11,1 -> yes
+? crosses Point -11,-1 -9,1 -> no
+? pick 10.1,0 tolerance=0.5 -> Point
+? crossing 9,-1 11,1 -> Point

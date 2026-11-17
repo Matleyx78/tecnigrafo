@@ -95,6 +95,8 @@ struct GeneratedItem {
 
 /// appendSnapPoints(const Entity&, …): those of every drawn shape, in order,
 /// then those of the entity that no shape gives (appendOwnSnapPointsOf()).
+/// The rows of an MTEXT give none: only its own points (docs/adr/0046,
+/// point 2).
 void appendSnapPoints(const Document& document, const EntityRecord& record, const SnapModes& modes,
                       std::vector<SnapPoint>& out, const std::optional<Vec2>& from);
 

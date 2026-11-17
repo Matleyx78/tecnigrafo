@@ -68,7 +68,10 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// The types of the 0.8 offer the points of each of their drawn shapes as
 /// above, the shapes of one entity meeting each other too, and the points of
 /// their own (appendOwnSnapPointsOf()), each within `aperture` of the
-/// pointer like an endpoint.
+/// pointer like an endpoint. The rows of an MTEXT offer no points: a row
+/// within `aperture` of the pointer makes the insertion point of the MTEXT
+/// compete as the insertion point of a text, at the distance from the row's
+/// box (docs/adr/0046, point 2).
 ///
 /// `from` is the base point of the running command (Command::basePoint()):
 /// the Perpendicular points start from it, and without it there are none. A
