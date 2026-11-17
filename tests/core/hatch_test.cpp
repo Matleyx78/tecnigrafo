@@ -82,7 +82,7 @@ HatchLoop gapLoop() {
 }
 
 /// The loops of the region that a solid hatch with `loops` generates.
-std::vector<Polyline> regionLoops(const Hatch& hatch) {
+std::vector<Polyline> solidRegionLoops(const Hatch& hatch) {
     const Document document = Document::newDrawing();
     const EntityRecord record{EntityId{1}, hatch};
     const std::vector<GeneratedItem> items = generateOf(document, record, hatch);
@@ -95,7 +95,7 @@ std::vector<Polyline> regionLoops(const Hatch& hatch) {
 
 /// The polyline of one loop (point 3).
 Polyline polylineOf(const HatchLoop& loop) {
-    const std::vector<Polyline> loops = regionLoops(solidHatch({loop}));
+    const std::vector<Polyline> loops = solidRegionLoops(solidHatch({loop}));
     return loops.size() == 1 ? loops.front() : Polyline{};
 }
 
@@ -246,21 +246,10 @@ TEST(HatchLoopPolyline, ASingleArcIsClosedByItsChord) {
 // --- The behaviours of RT30 -------------------------------------------------
 
 TEST(HatchModel, ASolidNormalHatchGeneratesOneRegionOfAllItsLoops) {
-    const std::vector<Polyline> loops = regionLoops(rectangleWithHole());
+    const std::vector<Polyline> loops = solidRegionLoops(rectangleWithHole());
     ASSERT_EQ(loops.size(), 2U);
     expectVertices(loops[0], {{{0, 0}, 0.0}, {{10, 0}, 0.0}, {{10, 8}, 0.0}, {{0, 8}, 0.0}});
     expectVertices(loops[1], {{{7, 4}, 1.0}, {{3, 4}, 1.0}});
-}
-
-TEST(HatchModel, PatternsAndOtherIslandStylesGenerateNothingYet) {
-    const Document document = Document::newDrawing();
-    Hatch pattern = rectangleWithHole();
-    pattern.solid = false;
-    pattern.pattern = "ANSI31";
-    EXPECT_TRUE(generateOf(document, EntityRecord{EntityId{1}, pattern}, pattern).empty());
-    Hatch outer = rectangleWithHole();
-    outer.islands = IslandStyle::Outer;
-    EXPECT_TRUE(generateOf(document, EntityRecord{EntityId{1}, outer}, outer).empty());
 }
 
 TEST(HatchModel, TransformationsPreserveTheOrderedExtrasOfEachLoop) {

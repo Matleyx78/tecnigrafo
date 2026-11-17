@@ -55,6 +55,7 @@ add_executable(tg_tests
     core/arc_geometry_test.cpp
     core/grips_test.cpp
     core/hatch_test.cpp
+    core/hatch_pattern_test.cpp
     core/intersections_test.cpp
     core/join_test.cpp
     core/offset_test.cpp
