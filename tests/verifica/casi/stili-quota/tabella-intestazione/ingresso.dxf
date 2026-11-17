@@ -1,15 +1,23 @@
-999
-SPDX-License-Identifier: GPL-3.0-or-later
-999
-Copyright (C) 2026 The Tecnigrafo authors
   0
 SECTION
   2
 HEADER
+999
+SPDX-License-Identifier: GPL-3.0-or-later
+999
+Copyright (C) 2026 The Tecnigrafo authors
   9
 $ACADVER
   1
-AC1009
+AC1032
+  9
+$INSUNITS
+ 70
+4
+  9
+$HANDSEED
+  5
+100
   9
 $DIMSTYLE
   2
@@ -32,6 +40,8 @@ STYLE
 1
   0
 STYLE
+  5
+21
   2
 Standard
  70
@@ -47,7 +57,7 @@ Standard
  42
 2.5
   3
-txt
+arial.ttf
   4
 
   0
@@ -60,6 +70,8 @@ DIMSTYLE
 3
   0
 DIMSTYLE
+105
+22
   2
 Standard
  70
@@ -90,6 +102,8 @@ Standard
 44
   0
 DIMSTYLE
+105
+23
   2
 ISO-25
  70
@@ -120,6 +134,8 @@ ISO-25
 44
   0
 DIMSTYLE
+105
+24
   2
 Elettrico
  70
