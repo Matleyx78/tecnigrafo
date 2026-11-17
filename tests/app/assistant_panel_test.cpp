@@ -110,6 +110,10 @@ TEST(AssistantPanelTest, FailedStartResetsActionAndButton) {
     owner.assistantChannel().stop();
     owner.assistantChannel().setServerName(serverName);
     ASSERT_TRUE(owner.assistantChannel().start());
+    QLocalSocket ownerClient;
+    ownerClient.connectToServer(serverName);
+    ASSERT_TRUE(ownerClient.waitForConnected(1000));
+    ASSERT_TRUE(QTest::qWaitFor([&owner] { return owner.assistantChannel().isConnected(); }));
 
     MainWindow window;
     AssistantChannel& channel = window.assistantChannel();
