@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; The target already owns Shared: its record wins, while New and Child enter.
+L = LAYER name="Shared" color=1
+I = BLOCK-IMPORT file=tabelle.dxf
+? import-error I -> none
+? import-definition I -> name="tabelle" base=0,0 units=0 entities=[7 INSERT block="Child" insertion=5,6 scale=1,1 rotation=0]
+? import-nested I -> name="Child" base=0,0 units=0 entities=[5 LINE start=0,0 end=2,0]
+? import-layers I -> id=2 name="New" color=3 linetype="Continuous" lineweight=default
+? import-next-id I -> 8
+? import-groups I 5 -> 5="5" 330="4" 340="2" 360="3" 102="{ACAD_REACTORS" 330="4" 102="}"
