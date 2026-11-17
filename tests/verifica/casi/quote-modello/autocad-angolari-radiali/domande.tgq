@@ -1,0 +1,52 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Source: autocad-quote.dxf, commit 5170f1860953b5d076aa435bd65daa725d431745.
+; Reproduce with estrai_autocad.py; raw output is autocad-quote.txt next to this file.
+; Small-circle LINE/SOLID coordinates and MTEXT centers/angles come from that output.
+; TEXT layout/boxes use the bundled Liberation Sans font and PT13.
+; Small-circle geometry overrides the simplified rules of PT24, as PT24 requires.
+; In particular: extra center-to-curve lines, both diameter arrows outside,
+; leader extensions and the reversed arrow in handle 223 are intentional.
+
+; AutoCAD handle C8, block *D5, source measurement 0.5880026035475688.
+DC8 = DIMENSION kind=angular first=200,0;230,20 second=240,0;200,0 arc-point=235.2152269190511,6.991980623524945 text-point=236.1566839020644,10.94736302672169 measurement=0
+? distance DC8 234.3621363523974,10.40401774793088 -> 0
+? distance DC8 235.8446188499748,1.665656210373006 -> 0
+? distance DC8 230.7484654912871,18.49710736959303 -> 0
+
+; AutoCAD handle E1, block *D6, source measurement 10.0.
+DE1 = DIMENSION kind=radius center=280,10 point=288.9442719099992,14.47213595499959 text-point=300,20.00000000000001 measurement=0 user-text-position=yes
+? distance DE1 290.434983894999,15.21749194749952 -> 0
+
+; AutoCAD handle F3, block *D7, source measurement 20.00000000000011.
+DF3 = DIMENSION kind=diameter point1=338,16.00000000000003 point2=321.9999999999999,3.999999999999971 text-point=349.9999999999999,24.99999999999995 measurement=0 user-text-position=yes
+? distance DF3 339.3333333333333,17.00000000000004 -> 0
+
+; AutoCAD handle 109, block *D8, source measurement 9.999999999999972.
+D109 = DIMENSION kind=radius center=380.0000000000001,10.00000000000003 point=385.5470019622524,18.32050294337844 text-point=388.6094092955791,26.29431826411607 measurement=0
+? distance D109 386.4715022892944,19.70725343394151 -> 0
+
+; AutoCAD handle 11B, block *D9, source measurement 19.99999999999998.
+D11B = DIMENSION kind=diameter point1=422.4253562503633,19.70142500145331 point2=417.5746437496368,0.2985749985466839 text-point=425,30 measurement=0 user-text-position=yes
+? distance D11B 422.8295822920905,21.3183291683622 -> 0
+
+; AutoCAD handle 1FB, block *D24, source measurement 2.0.
+D1FB = DIMENSION kind=radius center=250,-59.99999999999999 point=251.6959966080102,-58.94000211999362 text-point=257.2389021888767,-53.26459680412618 measurement=0
+? generated D1FB -> LINE start=260.5293122747298,-53.41917982829381 end=253.8159923680229,-57.61500476998567; TEXT position=255.9318661230314,-55.55555389716334 alignment-point=0,0 height=2.5 rotation=32.00538320808358 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R2" ~box=256.3399916375122,-56.20855472033263;260.2790611192107,-53.74663629427101;258.1274685451737,-50.30408817581174;254.1883990634751,-52.76600660187336; LINE start=250,-59.99999999999999 end=251.6959966080102,-58.94000211999362; SOLID vertex=253.5951594763549,-57.26167214331692 vertex=254.0368252596909,-57.96833739665446 vertex=251.6959966080102,-58.94000211999362 vertex=251.6959966080102,-58.94000211999362
+
+; AutoCAD handle 20D, block *D25, source measurement 4.000000000000056.
+D20D = DIMENSION kind=diameter point1=281.6959966080102,-58.94000211999363 point2=278.3040033919898,-61.05999788000635 text-point=287.2389021888769,-53.26459680412631 measurement=0
+? generated D20D -> LINE start=290.5293122747299,-53.41917982829392 end=283.8159923680229,-57.6150047699857; LINE start=276.1840076319771,-62.38499523001428 end=274.0640118719643,-63.70999258002221; TEXT position=285.8461033421084,-55.60915563524043 alignment-point=0,0 height=2.5 rotation=32.00538320808295 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="⌀4" ~box=286.2542288565892,-56.26215645840972;290.3648239001341,-53.6930345561942;288.2132313260971,-50.25048643773491;284.1026362825522,-52.81960833995043; LINE start=278.3040033919898,-61.05999788000635 end=281.6959966080102,-58.94000211999363; SOLID vertex=275.9631747403091,-62.03166260334549 vertex=276.404840523645,-62.73832785668304 vertex=278.3040033919898,-61.05999788000635 vertex=278.3040033919898,-61.05999788000635; SOLID vertex=283.595159476355,-57.26167214331694 vertex=284.0368252596909,-57.96833739665449 vertex=281.6959966080102,-58.94000211999363 vertex=281.6959966080102,-58.94000211999363
+
+; AutoCAD handle 223, block *D26, source measurement 2.0.
+D223 = DIMENSION kind=radius center=310,-60.00000000000001 point=311.4142135623731,-58.58578643762692 text-point=305.9635987907267,-64.03640120927324 measurement=0 user-text-position=yes
+? generated D223 -> LINE start=304.0485179250131,-65.95148207498676 end=309.6464466094067,-60.35355339059328; TEXT position=303.8793526227954,-65.23676390072148 alignment-point=0,0 height=2.5 rotation=44.99999999999967 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="R2" ~box=304.4238599738155,-65.78127125174164;307.7084688331952,-62.496662392362;304.8378863006282,-59.62607985979487;301.5532774412484,-62.91068871917452; SOLID vertex=309.3518187839123,-60.05892556509886 vertex=309.9410744349011,-60.64818121608769 vertex=311.4142135623731,-58.58578643762692 vertex=311.4142135623731,-58.58578643762692
+
+; AutoCAD handle 250, block *D29, source measurement 9.999999999999991.
+D250 = DIMENSION kind=radius center=130,-140 point=138.9442719099991,-135.5278640450004 text-point=150,-130 measurement=0 user-text-position=yes overrides=DIMDEC:3,DIMDSEP:.,DIMTAD:0,DIMTXT:3.5
+? distance D250 140.434983894999,-134.7825080525005 -> 0

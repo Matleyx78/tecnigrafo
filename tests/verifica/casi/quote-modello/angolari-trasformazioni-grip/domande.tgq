@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Independent affine arithmetic; text Angle=30 then ROTATE 90 gives 120.
+; Text grips move only text, definition grips regenerate; an invalid edit
+; is rejected without changing the entity. The source is queried again after edits.
+
+A = DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;10,0 second=0,1;0,10 arc-point=6,8 text-point=15,8 measurement=0 text=" " text-rotation=30 user-text-position=yes
+? grips A -> 0,0; 10,0; 0,1; 0,10; 6,8; 15,8
+? transform A move 5,7 -> DIMENSION kind=angular style="ISO-25" line-point=5,8 first=5,7;15,7 second=5,8;5,17 arc-point=11,15 text-point=20,15 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? transform A rotate 90 0,0 -> DIMENSION kind=angular style="ISO-25" line-point=-1,0 first=0,0;0,10 second=-1,0;-10,0 arc-point=-8,6 text-point=-8,15 measurement=1.570796326794897 text=" " text-rotation=120 user-text-position=yes
+? transform A scale 2 0,0 -> DIMENSION kind=angular style="ISO-25" line-point=0,2 first=0,0;20,0 second=0,2;0,20 arc-point=12,16 text-point=30,16 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? grip A 0,0 -10,0 -> DIMENSION kind=angular style="ISO-25" line-point=0,1 first=-10,0;10,0 second=0,1;0,10 arc-point=6,8 text-point=15,8 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? grip A 10,0 20,0 -> DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;20,0 second=0,1;0,10 arc-point=6,8 text-point=15,8 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? grip A 0,10 0,20 -> DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;10,0 second=0,1;0,20 arc-point=6,8 text-point=15,8 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? grip A 0,1 0,-1 -> DIMENSION kind=angular style="ISO-25" line-point=0,-1 first=0,0;10,0 second=0,-1;0,10 arc-point=6,8 text-point=15,8 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? grip A 6,8 12,16 -> DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;10,0 second=0,1;0,10 arc-point=12,16 text-point=15,8 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+? grip A 15,8 25,35 -> DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;10,0 second=0,1;0,10 arc-point=6,8 text-point=25,35 measurement=1.570796326794897 text=" " text-rotation=30 user-text-position=yes
+M = DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;10,0 second=0,1;0,10 arc-point=6,8 text-point=15,8 measurement=0 text=" " user-text-position=yes
+? transform M mirror 0,0 1,0 -> DIMENSION kind=angular style="ISO-25" line-point=0,-1 first=0,0;10,0 second=0,-1;0,-10 arc-point=6,-8 text-point=15,-8 measurement=1.570796326794897 text=" " user-text-position=yes
+? transform A scale 0 0,0 -> invalid
+? transform A scale -1 0,0 -> invalid
+? transform A mirror 1,1 1,1 -> invalid

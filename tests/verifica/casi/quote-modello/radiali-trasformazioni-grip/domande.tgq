@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Independent affine arithmetic; text Angle=30 then ROTATE 90 gives 120.
+; Text grips move only text, definition grips regenerate; an invalid edit
+; is rejected without changing the entity. The source is queried again after edits.
+
+A = DIMENSION kind=radius style="ISO-25" center=0,0 point=30,40 text-point=90,120 measurement=0 text=" " text-rotation=30 user-text-position=yes overrides=DIMCEN:0
+? grips A -> 0,0; 30,40; 90,120
+? transform A move 5,7 -> DIMENSION kind=radius style="ISO-25" center=5,7 point=35,47 text-point=95,127 measurement=50 text=" " text-rotation=30 user-text-position=yes overrides=DIMCEN:0
+? transform A rotate 90 0,0 -> DIMENSION kind=radius style="ISO-25" center=0,0 point=-40,30 text-point=-120,90 measurement=50 text=" " text-rotation=120 user-text-position=yes overrides=DIMCEN:0
+? transform A scale 2 0,0 -> DIMENSION kind=radius style="ISO-25" center=0,0 point=60,80 text-point=180,240 measurement=100 text=" " text-rotation=30 user-text-position=yes overrides=DIMCEN:0
+? grip A 30,40 60,80 -> DIMENSION kind=radius style="ISO-25" center=0,0 point=60,80 text-point=90,120 measurement=100 text=" " text-rotation=30 user-text-position=yes overrides=DIMCEN:0
+? grip A 90,120 100,120 -> DIMENSION kind=radius style="ISO-25" center=0,0 point=30,40 text-point=100,120 measurement=50 text=" " text-rotation=30 user-text-position=yes overrides=DIMCEN:0
+? grip A 0,0 30,40 -> invalid
+? grip A 123,456 0,0 -> none
+? grips A -> 0,0; 30,40; 90,120
+? grip A 0,0 -30,-40 -> DIMENSION kind=radius style="ISO-25" center=-30,-40 point=30,40 text-point=90,120 measurement=100 text=" " text-rotation=30 user-text-position=yes overrides=DIMCEN:0
+M = DIMENSION kind=radius style="ISO-25" center=0,0 point=30,40 text-point=90,120 measurement=0 text=" " user-text-position=yes overrides=DIMCEN:0
+? transform M mirror 0,0 1,0 -> DIMENSION kind=radius style="ISO-25" center=0,0 point=30,-40 text-point=90,-120 measurement=50 text=" " user-text-position=yes overrides=DIMCEN:0
+? transform A scale 0 0,0 -> invalid
+? transform A scale -1 0,0 -> invalid
+? transform A mirror 1,1 1,1 -> invalid

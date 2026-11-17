@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Hidden text and DIMCEN=0 isolate the radius line and arrow orientation.
+; R=50 is safely outside the small-circle cases that override the formulas.
+
+Inside = DIMENSION kind=radius style="ISO-25" center=0,0 point=50,0 text-point=20,0 measurement=0 text=" " user-text-position=yes overrides=DIMCEN:0
+? distance Inside 48.75,0.05 -> 0
+? crosses Inside 50.9,0.02 51.1,0.03 -> no
+
+Outside = DIMENSION kind=radius style="ISO-25" center=0,0 point=50,0 text-point=80,0 measurement=0 text=" " user-text-position=yes overrides=DIMCEN:0
+? distance Outside 51.25,0.05 -> 0
+? crosses Outside 19.9,0.02 20.1,0.03 -> no
+
+OnCurve = DIMENSION kind=radius style="ISO-25" center=0,0 point=50,0 text-point=50,0 measurement=0 text=" " user-text-position=yes overrides=DIMCEN:0
+? distance OnCurve 48.75,0.05 -> 0
+? crosses OnCurve 50.9,0.02 51.1,0.03 -> no
+
+; Text at the center is invalid; a zero radius is not a dimension.
+? grip Inside 20,0 0,0 -> invalid
+? grip Inside 50,0 0,0 -> invalid

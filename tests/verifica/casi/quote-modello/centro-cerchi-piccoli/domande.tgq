@@ -1,0 +1,30 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; DIMCEN=-2 with R=1 or R=2: only the cross, no axes.
+; R=1 and R=2 are explicitly required by PT24.
+
+R1 = DIMENSION kind=radius style="ISO-25" center=0,0 point=1,0 text-point=10,10 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:-2
+? distance R1 -1,0 -> 0
+? distance R1 0,-1 -> 0
+? crosses R1 -5.1,-0.05 -3.9,0.05 -> no
+? crosses R1 -0.05,-5.1 0.05,-3.9 -> no
+R2 = DIMENSION kind=radius style="ISO-25" center=0,0 point=2,0 text-point=10,10 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:-2
+? distance R2 -1,0 -> 0
+? distance R2 0,-1 -> 0
+? crosses R2 -5.1,-0.05 -3.9,0.05 -> no
+? crosses R2 -0.05,-5.1 0.05,-3.9 -> no
+D1 = DIMENSION kind=diameter style="ISO-25" point1=1,0 point2=-1,0 text-point=10,10 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:-2
+? distance D1 -1,0 -> 0
+? distance D1 0,-1 -> 0
+? crosses D1 -5.1,-0.05 -3.9,0.05 -> no
+? crosses D1 -0.05,-5.1 0.05,-3.9 -> no
+D2 = DIMENSION kind=diameter style="ISO-25" point1=2,0 point2=-2,0 text-point=10,10 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:-2
+? distance D2 -1,0 -> 0
+? distance D2 0,-1 -> 0
+? crosses D2 -5.1,-0.05 -3.9,0.05 -> no
+? crosses D2 -0.05,-5.1 0.05,-3.9 -> no
