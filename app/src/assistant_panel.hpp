@@ -20,6 +20,7 @@ class AssistantPanel final : public QDockWidget {
 
 public:
     explicit AssistantPanel(AssistantChannel& channel, QWidget* parent = nullptr);
+    ~AssistantPanel() override = default;
 
     Q_DISABLE_COPY_MOVE(AssistantPanel)
 

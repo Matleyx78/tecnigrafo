@@ -32,7 +32,7 @@ QString uniqueName() {
 }
 
 TEST(AssistantPanelTest, SwitchPanelRequestAndConnectionState) {
-    MainWindow window;
+    const MainWindow window;
     AssistantChannel& channel = window.assistantChannel();
     channel.setServerName(uniqueName());
     QAction* toggle = window.actionRegistry().action(QStringLiteral("assistant.channel"));

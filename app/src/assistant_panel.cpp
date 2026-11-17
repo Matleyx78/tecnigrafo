@@ -61,8 +61,13 @@ AssistantPanel::AssistantPanel(AssistantChannel& channel, QWidget* parent)
 }
 
 void AssistantPanel::updateState() {
-    m_state->setText(m_channel.isConnected() ? tr("Connected")
-                                             : (m_channel.isRunning() ? tr("On") : tr("Off")));
+    if (m_channel.isConnected()) {
+        m_state->setText(tr("Connected"));
+    } else if (m_channel.isRunning()) {
+        m_state->setText(tr("On"));
+    } else {
+        m_state->setText(tr("Off"));
+    }
 }
 
 void AssistantPanel::addRequest(quint64 request, const QString& tool, const QString& text) {

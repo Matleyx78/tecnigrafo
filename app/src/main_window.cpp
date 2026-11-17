@@ -1012,20 +1012,24 @@ void MainWindow::createStatusBar() {
         createModeButton(registeredAction("assistant.channel"), QStringLiteral("assistantButton"));
     statusBar()->addPermanentWidget(assistantButton);
     const auto updateAssistantButton = [this, assistantButton] {
-        const QString state =
-            m_assistant->isConnected()
-                ? tr("AI Assistant: connected")
-                : (m_assistant->isRunning() ? tr("AI Assistant: on") : tr("AI Assistant: off"));
+        QString state;
+        QString property;
+        if (m_assistant->isConnected()) {
+            state = tr("AI Assistant: connected");
+            property = QStringLiteral("connected");
+        } else if (m_assistant->isRunning()) {
+            state = tr("AI Assistant: on");
+            property = QStringLiteral("on");
+        } else {
+            state = tr("AI Assistant: off");
+            property = QStringLiteral("off");
+        }
         assistantButton->setToolTip(state);
         assistantButton->setAccessibleName(state);
         assistantButton->setIcon(m_assistant->isConnected()
                                      ? themedIcon(QStringLiteral("assistant-panel"), m_theme)
                                      : registeredAction("assistant.channel")->icon());
-        assistantButton->setProperty(
-            "assistantState",
-            m_assistant->isConnected()
-                ? QStringLiteral("connected")
-                : (m_assistant->isRunning() ? QStringLiteral("on") : QStringLiteral("off")));
+        assistantButton->setProperty("assistantState", property);
     };
     connect(m_assistant.get(), &AssistantChannel::runningChanged, assistantButton,
             updateAssistantButton);
