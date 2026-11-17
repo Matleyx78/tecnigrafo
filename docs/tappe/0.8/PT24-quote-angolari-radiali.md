@@ -31,6 +31,22 @@ e diametrali in un cerchio piccolo valgono i casi di RT24, presi da
 `autocad-quote.dxf`, con la stessa regola: dove contraddicono la scheda vale il
 caso.
 
+### Fonte dei casi RT24
+
+Per la grafica delle quote angolari, radiali e diametrali di
+[`autocad-quote.dxf` al commit
+`5170f1860953b5d076aa435bd65daa725d431745`](https://github.com/Matleyx78/dxf-test-file/blob/5170f1860953b5d076aa435bd65daa725d431745/autocad-quote.dxf),
+RT24 può leggere direttamente con ezdxf il blocco anonimo `*D` associato a
+ogni quota. Legge `LINE`, `ARC` e `SOLID` per la geometria e `MTEXT` per
+posizione, altezza, rotazione e testo; ignora i `POINT` dei punti di
+definizione, che Tecnigrafo non disegna. È l'estensione a RT24 dell'eccezione
+di RT23 alla copia dal log dell'oracolo richiesta da
+[dxf-di-prova.md](dxf-di-prova.md): per queste quote il log segnala
+`outside oracle scope (MTEXT,POINT)` invece di fornire tutta la grafica. La
+pull request dei riferimenti pubblica insieme ai casi lo script di estrazione
+e la sua uscita, così che i valori si possano ricontrollare. Resta vietato
+eseguire Tecnigrafo per ricavare gli attesi.
+
 1. **Angolare fra due linee.** Prima linea `point13 → point14`, seconda
    `linePoint → point15`, punto dell'arco `point16`. Vertice `v` = intersezione
    delle due rette (da solid-space, `intersections.hpp`); rette parallele: non
@@ -79,6 +95,12 @@ caso.
 
 ## Test richiesti
 
+- Fonte AutoCAD: per esempio, quando l'oracolo segnala il blocco radiale `E1`
+  come `outside oracle scope (MTEXT,POINT)`, i riferimenti prendono dal suo
+  blocco anonimo `*D` la geometria di `LINE`, `ARC` e `SOLID` e posizione,
+  altezza, rotazione e testo di `MTEXT`, ignorano i `POINT` e pubblicano script
+  e uscita usati per l'estrazione. Lo stesso vale per le quote angolari e
+  diametrali e per i campioni nei cerchi piccoli.
 - `dimension_angular_test.cpp`: angolare a 90° e a 30° con `point16` in ognuno
   dei quattro angoli; linee che non arrivano all'arco (linee d'estensione);
   linee parallele (non rigenerabile); radiale con il testo fuori e dentro;
