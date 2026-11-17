@@ -218,7 +218,7 @@ tg_configure_target(tg_bench)
 # Widgets of the application, driven with the Qt Test module and no display
 # (docs/adr/0005). Built only together with the application.
 if(TG_BUILD_APP)
-    find_package(Qt6 6.12 REQUIRED COMPONENTS Svg Test Widgets)
+    find_package(Qt6 6.12 REQUIRED COMPONENTS Network Svg Test Widgets)
     add_executable(tg_crash_child app/crash_child.cpp)
     target_link_libraries(tg_crash_child PRIVATE tg_app_ui)
     tg_configure_target(tg_crash_child)
@@ -228,6 +228,7 @@ if(TG_BUILD_APP)
         app/property_widgets_test.cpp
         app/property_grid_test.cpp
         app/action_registry_test.cpp
+        app/assistant_channel_test.cpp
         app/auto_hide_test.cpp
         app/ui_builder_test.cpp
         app/command_line_test.cpp
@@ -255,7 +256,8 @@ if(TG_BUILD_APP)
         app/session_test.cpp
         app/text_input_test.cpp
     )
-    target_link_libraries(tg_app_tests PRIVATE tg_app_ui Qt6::Svg Qt6::Test Qt6::Widgets GTest::gtest)
+    target_link_libraries(tg_app_tests PRIVATE
+        tg_app_ui Qt6::Network Qt6::Svg Qt6::Test Qt6::Widgets GTest::gtest)
     # Level 2 of the control mode: the scripts of module script's own tests,
     # a folder for what the tests write, the program and the test tool
     # confronta_immagini (tests/verifica).

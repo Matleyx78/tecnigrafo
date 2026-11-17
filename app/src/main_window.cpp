@@ -5,6 +5,7 @@
 
 #include "action_registry.hpp"
 #include "app_commands.hpp"
+#include "assistant_channel.hpp"
 #include "auto_hide.hpp"
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
@@ -372,6 +373,8 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     }
     setDockOptions(dockOptions() | QMainWindow::AllowTabbedDocks | QMainWindow::AllowNestedDocks);
     setTheme(Theme::Light);
+    // Off at every start (docs/adr/0051, point 3).
+    m_assistant = std::make_unique<AssistantChannel>(*this);
 }
 
 QAction* MainWindow::registeredAction(const char* id) const {
@@ -1049,6 +1052,34 @@ void MainWindow::refresh() {
     m_pendingOpen.clear();
     updateDrawingState();
     updateEditActions();
+    emit inputHandled();
+}
+
+const cmd::CommandRunner& MainWindow::inputRunner() const {
+    return m_active != nullptr ? m_active->runner() : m_startSession->runner();
+}
+
+bool MainWindow::isAtCommandPrompt() const {
+    // A modal dialog (a file dialog, the question to save) runs its own
+    // event loop: the assistant waits until it is closed.
+    const cmd::CommandRunner& runner = inputRunner();
+    return !runner.isActive() && !runner.selectionRectangle() &&
+           QApplication::activeModalWidget() == nullptr;
+}
+
+void MainWindow::submitAssistantText(const QString& text) {
+    const QScopedValueRollback<bool> guard(m_assistantInput, true);
+    cmd::CommandRunner& runner = commandRunner();
+    const QString prompt = QString::fromStdString(runner.promptText());
+    m_commandLine->appendToHistory(text.isEmpty() ? prompt
+                                                  : QStringLiteral("%1 %2").arg(prompt, text));
+    runner.submitText(text.toStdString());
+    refresh();
+}
+
+void MainWindow::assistantInputHandled() {
+    const QScopedValueRollback<bool> guard(m_assistantInput, true);
+    refresh();
 }
 
 void MainWindow::updateEditActions() {
@@ -1096,6 +1127,8 @@ MainWindow::~MainWindow() {
     // destroyed with the members: the widgets outlive them, as children.
     // Nothing more is shown: no Start page, no tabs.
     m_destroying = true;
+    // The assistant's client goes first: its requests act on the sessions.
+    m_assistant.reset();
     switchTo(nullptr);
     for (const auto& session : m_sessions) {
         session->editor().setChangeListener({});
@@ -1726,7 +1759,8 @@ QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path,
 }
 
 void MainWindow::handleFilePrompts() {
-    if (m_scriptMode || m_handlingFilePrompt) {
+    // The assistant types the paths itself (docs/adr/0051, point 4).
+    if (m_scriptMode || m_handlingFilePrompt || m_assistantInput) {
         return;
     }
     const QScopedValueRollback<bool> guard(m_handlingFilePrompt, true);
