@@ -3,6 +3,7 @@
 
 #include "tg/edit/document_tables.hpp"
 
+#include "tg/core/insert.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <gtest/gtest.h>
@@ -78,6 +79,24 @@ TEST(DocumentTables, UnchangedOrAbsentBlocksDoNotRecordChanges) {
     EXPECT_FALSE(editor.tables().replaceBlock("a", core::BlockDefinition{"different"}));
     EXPECT_EQ(editor.savepoint().changes, 0U);
     EXPECT_FALSE(editor.isModified());
+    editor.commit();
+    EXPECT_EQ(document.blocks(), initial);
+    EXPECT_FALSE(editor.canUndo());
+}
+
+TEST(DocumentTables, ABlockInUseIsNotRemoved) {
+    // As AutoCAD's PURGE (docs/tappe/0.8/PT16-blocchi-core.md, point 1).
+    core::Document document = core::Document::newDrawing();
+    document.replaceBlock("A", core::BlockDefinition{"A"});
+    core::Insert insert;
+    insert.block = "A";
+    document.add(insert);
+    const auto initial = document.blocks();
+    Editor editor(document);
+
+    editor.beginTransaction("Remove a block in use");
+    EXPECT_FALSE(editor.tables().replaceBlock("a", std::nullopt));
+    EXPECT_EQ(editor.savepoint().changes, 0U);
     editor.commit();
     EXPECT_EQ(document.blocks(), initial);
     EXPECT_FALSE(editor.canUndo());

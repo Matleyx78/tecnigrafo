@@ -281,14 +281,20 @@ TEST(Generated, TransformedShapeTakesSimilaritiesThroughTransformed) {
     EXPECT_EQ(std::get<Arc>(same.front()), std::get<Arc>(transformed(arc, Similarity{})));
 }
 
-TEST(Generated, OtherAffineMapsWaitForTheirPackages) {
-    // docs/tappe/0.8: PT17 (text), PT16 (the rest); circles, arcs and
-    // ellipses are PT48's (ellipse_test.cpp).
+TEST(Generated, TextUnderOtherAffineMapsWaitsForItsPackage) {
+    // docs/tappe/0.8: PT17 (text); the other shapes are PT16's
+    // (insert_test.cpp), circles, arcs and ellipses PT48's (ellipse_test.cpp).
     const Transform2D stretch = Transform2D::scaling(2.0, 1.0);
-    EXPECT_TRUE(transformedShape(Line{{0, 0}, {1, 1}}, stretch).empty());
-    // A degenerate map is not a similarity either.
-    EXPECT_TRUE(
-        transformedShape(Line{{0, 0}, {1, 1}}, Transform2D{0.0, 0.0, 0.0, 0.0, 1.0, 1.0}).empty());
+    Text text;
+    text.height = 1.0;
+    text.value = "A";
+    EXPECT_TRUE(transformedShape(text, stretch).empty());
+    // A line has its ends mapped, even by a degenerate map, which is not a
+    // similarity either.
+    const std::vector<GeneratedShape> flat =
+        transformedShape(Line{{0, 0}, {1, 1}}, Transform2D{0.0, 0.0, 0.0, 0.0, 1.0, 1.0});
+    ASSERT_EQ(flat.size(), 1U);
+    EXPECT_EQ(std::get<Line>(flat.front()), (Line{{1, 1}, {1, 1}}));
 }
 
 TEST(Generated, AFilledRegionKeepsTheMapComposedWithItsOwn) {

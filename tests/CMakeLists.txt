@@ -60,6 +60,7 @@ add_executable(tg_tests
     core/offset_test.cpp
     core/pedit_join_test.cpp
     core/arc_test.cpp
+    core/block_table_test.cpp
     core/ellipse_test.cpp
     core/circle_test.cpp
     core/color_test.cpp
@@ -75,6 +76,7 @@ add_executable(tg_tests
     core/effective_properties_test.cpp
     core/layer_test.cpp
     core/geometry_test.cpp
+    core/insert_test.cpp
     core/line_test.cpp
     core/math_test.cpp
     core/new_entities_test.cpp

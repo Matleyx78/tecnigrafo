@@ -5,6 +5,7 @@
 
 #include "new_entities_format.hpp"
 #include "text.hpp"
+#include "tg/core/block_table.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
@@ -22,6 +23,8 @@
 #include <cstddef>
 #include <map>
 #include <optional>
+#include <span>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -262,6 +265,41 @@ std::string currentText(const core::Document& document) {
            " lineweight=" + core::formatLineweight(current.lineweight);
 }
 
+/// The block definitions, only when there are some (docs/verifica/rapporto.md,
+/// "Stili e blocchi"): for each one its line, then one line for each of its
+/// entities, in the order of the definition, with the ATTRIB of an INSERT.
+void writeBlocks(const core::Document& document, std::string& out) {
+    const std::span<const core::BlockDefinition> blocks = document.blocks().definitions();
+    if (blocks.empty()) {
+        return;
+    }
+    appendLine("blocks:", out);
+    for (const core::BlockDefinition& block : blocks) {
+        const std::string name = quoteText(block.name);
+        std::string line = name + " base=" + formatPoint(block.base);
+        // Each one only when different from its default, in this order.
+        if (!block.explodable) {
+            line += " explodable=no";
+        }
+        if (block.uniformScale) {
+            line += " uniform=yes";
+        }
+        if (block.units != 0) {
+            line += " units=" + std::to_string(block.units);
+        }
+        if (!block.description.empty()) {
+            line += " description=" + quoteText(block.description);
+        }
+        appendItem(line, out);
+        for (const core::EntityRecord& record : block.entities) {
+            const std::array<const core::EntityRecord*, 1> alone{&record};
+            for (const detail::EntityLine& entity : detail::entityLines(alone, document)) {
+                appendItem(name + " " + entity.text, out);
+            }
+        }
+    }
+}
+
 /// The tables and the current values (docs/adr/0023, points 1 and 3), each
 /// written only when it differs from a new session. A document read from
 /// a file before stage 0.6-P10 has no tables at all: it writes no layers.
@@ -323,6 +361,7 @@ void writeTables(const core::Document& document, std::string& out) {
         !core::sameTableName(document.textStyles().current(), "Standard")) {
         appendField("text style", quoteText(document.textStyles().current()), out);
     }
+    writeBlocks(document, out);
 }
 
 /// The derived properties (names starting with '~'), last on the line,
