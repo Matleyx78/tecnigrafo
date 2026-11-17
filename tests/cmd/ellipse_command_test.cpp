@@ -10,6 +10,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <string>
 #include <utility>
 #include <variant>
@@ -85,6 +86,22 @@ TEST_F(EllipseCommandTest, ArcAnglesAndIncludedAngle) {
     inputs({"ELLIPSE", "A", "C", "100,-60", "120,-60", "6", "-45", "I", "120"});
     EXPECT_NEAR(ellipse().startParameter, core::degreesToRadians(286.6992442339936), 1e-14);
     EXPECT_NEAR(ellipse().endParameter, core::degreesToRadians(445.40417460781634), 1e-14);
+}
+
+TEST_F(EllipseCommandTest, ArcAnglesFollowShortSpecifiedAxis) {
+    inputs({"ELLIPSE", "A", "60,0", "80,0", "25", "0", "90"});
+    EXPECT_NEAR(ellipse().startParameter, 3.0 * core::kPi / 2.0, 1e-14);
+    EXPECT_NEAR(ellipse().endParameter, core::kTwoPi, 1e-14);
+
+    inputs({"ELLIPSE", "A", "C", "0,0", "10,0", "25", "0", "90"});
+    EXPECT_NEAR(ellipse().startParameter, 3.0 * core::kPi / 2.0, 1e-14);
+    EXPECT_NEAR(ellipse().endParameter, core::kTwoPi, 1e-14);
+}
+
+TEST_F(EllipseCommandTest, ArcAcceptsSubnormalAxisRatio) {
+    inputs({"ELLIPSE", "A", "C", "0,0", "1000000000000000,0", "1e-300", "45", "90"});
+    EXPECT_TRUE(std::isfinite(ellipse().startParameter));
+    EXPECT_TRUE(std::isfinite(ellipse().endParameter));
 }
 
 TEST_F(EllipseCommandTest, CancelAtEveryStageRollsBack) {

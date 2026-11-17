@@ -21,7 +21,7 @@ bool validPoint(const core::Vec2& point) {
 
 double ellipseParameter(double direction, double ratio) {
     const core::SinCos value = core::sinCos(direction);
-    return core::atan2(value.sine / ratio, value.cosine);
+    return core::atan2(value.sine, value.cosine * ratio);
 }
 
 }  // namespace
@@ -247,16 +247,18 @@ Status EllipseCommand::setAngle(CommandContext& context, double angle) {
         context.message("Angle must be finite.");
         return Status::Continue;
     }
+    const double directionOffset = m_otherRadius > m_axis.length() ? core::kPi / 2.0 : 0.0;
     if (m_stage == Stage::StartAngle) {
         m_startDirection = angle;
-        m_ellipse.startParameter = core::normalizeAngle(ellipseParameter(angle, m_ellipse.ratio));
+        m_ellipse.startParameter =
+            core::normalizeAngle(ellipseParameter(angle - directionOffset, m_ellipse.ratio));
         m_ellipse.endParameter = m_ellipse.startParameter + core::kTwoPi;
         m_stage = Stage::EndAngle;
         updatePreview();
         return Status::Continue;
     }
     const double endDirection = m_stage == Stage::IncludedAngle ? m_startDirection + angle : angle;
-    double end = ellipseParameter(endDirection, m_ellipse.ratio);
+    double end = ellipseParameter(endDirection - directionOffset, m_ellipse.ratio);
     while (end <= m_ellipse.startParameter) {
         end += core::kTwoPi;
     }
