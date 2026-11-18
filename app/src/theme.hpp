@@ -34,9 +34,9 @@ struct ThemeTokens {
 
 /// The font of the interface (docs/adr/0039, point 1, and
 /// docs/tappe/fuori-tappa/F6-stato.md): Segoe UI, else Noto Sans, else
-/// DejaVu Sans, else the platform's sans serif, at 10 points, 13 px at
-/// 100%, one more than the reference. It does not follow the desktop's font, which on GNOME
-/// is Cantarell at 11 points, so that the window looks the same everywhere.
+/// DejaVu Sans, else the bundled Liberation Sans (bundledFontFamily()), at
+/// 10 points, 13 px at 100%, one more than the reference. It does not follow the desktop's font,
+/// which on GNOME is Cantarell at 11 points, so that the window looks the same everywhere.
 [[nodiscard]] QFont interfaceFont();
 /// The fixed-pitch font of the command line, at the size of interfaceFont():
 /// Cascadia Mono, else DejaVu Sans Mono, else the platform's monospace.

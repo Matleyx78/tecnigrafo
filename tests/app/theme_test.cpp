@@ -6,10 +6,12 @@
 #include "action_registry.hpp"
 #include "cad_view.hpp"
 #include "main_window.hpp"
+#include "qt_painter.hpp"
 
 #include <QAction>
 #include <QApplication>
 #include <QFile>
+#include <QFontDatabase>
 #include <QImage>
 #include <QPalette>
 #include <QTemporaryDir>
@@ -101,6 +103,19 @@ TEST(ThemeTest, ThemeOfAPaletteIsTheThemeThatBuiltIt) {
         EXPECT_EQ(themeOf(QApplication::palette()), theme);
     }
     EXPECT_EQ(themeOf(QPalette{}), Theme::Light);
+}
+
+// A platform without fonts, as offscreen under Windows, must not lay the
+// first window out with no font: the bundled one is the last fallback, and
+// asking for the interface font registers it (gallery of F6, light and dark
+// of different sizes).
+TEST(ThemeTest, InterfaceFontEndsWithTheBundledFontAlreadyRegistered) {
+    const QStringList families = interfaceFont().families();
+    ASSERT_FALSE(families.isEmpty());
+    EXPECT_EQ(families.first(), QStringLiteral("Segoe UI"));
+    EXPECT_EQ(families.last(), bundledFontFamily());
+    EXPECT_EQ(families.last(), QStringLiteral("Liberation Sans"));
+    EXPECT_TRUE(QFontDatabase::families().contains(families.last()));
 }
 
 TEST(ThemeTest, ActionImmediatelyChangesPaletteAndDrawing) {

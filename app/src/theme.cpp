@@ -3,6 +3,7 @@
 
 #include "theme.hpp"
 
+#include "qt_painter.hpp"
 #include "style.hpp"
 
 #include <QApplication>
@@ -349,8 +350,11 @@ const ThemeTokens& themeTokens(Theme theme) {
 
 QFont interfaceFont() {
     QFont font;
-    font.setFamilies(
-        {QStringLiteral("Segoe UI"), QStringLiteral("Noto Sans"), QStringLiteral("DejaVu Sans")});
+    // The bundled font last: a platform without fonts, as offscreen under
+    // Windows, would otherwise lay the first window out with no font and
+    // paint it with the bundled one, which the drawing registers later.
+    font.setFamilies({QStringLiteral("Segoe UI"), QStringLiteral("Noto Sans"),
+                      QStringLiteral("DejaVu Sans"), bundledFontFamily()});
     font.setStyleHint(QFont::SansSerif);
     font.setPointSize(kInterfacePointSize);
     return font;

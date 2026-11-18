@@ -6,6 +6,7 @@
 #include "tg/render/painter.hpp"
 
 #include <QPolygonF>
+#include <QString>
 
 #include <span>
 #include <vector>
@@ -13,6 +14,11 @@
 class QPainter;
 
 namespace tg::app {
+
+/// The family of the font that the program carries, Liberation Sans
+/// (resources/fonts), registered with the application the first time.
+/// A QGuiApplication must exist.
+[[nodiscard]] QString bundledFontFamily();
 
 /// render::Painter backend implemented with QPainter.
 class QtPainter final : public render::Painter {
