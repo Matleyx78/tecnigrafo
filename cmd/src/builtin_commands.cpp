@@ -12,6 +12,7 @@
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
 #include "tg/cmd/commands/dimension_commands.hpp"
+#include "tg/cmd/commands/dimstyle_commands.hpp"
 #include "tg/cmd/commands/ellipse_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
@@ -56,6 +57,18 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     });
     registry.add(DimensionCommand::description(DimensionCommand::Kind::Linear),
                  [] { return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Linear); });
+    registry.add(DimstyleCommand::description(),
+                 [] { return std::make_unique<DimstyleCommand>(); });
+    for (const auto& variable : core::dimVariableInfos()) {
+        if (variable.name == "DIMCLRD" || variable.name == "DIMCLRE" ||
+            variable.name == "DIMCLRT" || variable.name == "DIMLWD" || variable.name == "DIMLWE") {
+            continue;
+        }
+        registry.add(DimVariableCommand::description(variable.name),
+                     [name = std::string(variable.name)] {
+                         return std::make_unique<DimVariableCommand>(name);
+                     });
+    }
     registry.add(EllipseCommand::description(), [] { return std::make_unique<EllipseCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(ExplodeCommand::description(), [] { return std::make_unique<ExplodeCommand>(); });

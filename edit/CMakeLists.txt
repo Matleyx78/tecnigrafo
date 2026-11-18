@@ -5,6 +5,7 @@
 
 add_library(tg_edit
     src/blocks.cpp
+    src/dim_styles.cpp
     src/document_file.cpp
     src/document_tables.cpp
     src/editor.cpp

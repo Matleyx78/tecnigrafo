@@ -35,6 +35,7 @@ add_executable(tg_tests
     cmd/erase_command_test.cpp
     cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp
+    cmd/dimstyle_commands_test.cpp
     cmd/grip_test.cpp
     cmd/join_command_test.cpp
     cmd/layer_commands_test.cpp
@@ -114,6 +115,7 @@ add_executable(tg_tests
     io/dxf_solid_test.cpp
     io/dxf_ellipse_test.cpp
     io/dxf_hatch_test.cpp
+    io/block_import_test.cpp
     io/dxf_blocks_test.cpp
     io/dxf_insert_test.cpp
     io/dxf_extrusion_test.cpp
