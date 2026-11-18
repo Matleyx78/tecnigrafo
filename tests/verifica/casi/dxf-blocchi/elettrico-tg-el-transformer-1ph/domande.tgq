@@ -5,8 +5,8 @@
 D = DXF source=elettrico-tg-el-transformer-1ph
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
-? count D -> ARC 8; LINE 10
-? unhandled D -> ATTDEF 24
+? count D -> ARC 8; ATTDEF 24; LINE 10
+? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
 ? snaps D:4F -> none
 ; TG_PIN2=N, flags=3 (constant + invisible).

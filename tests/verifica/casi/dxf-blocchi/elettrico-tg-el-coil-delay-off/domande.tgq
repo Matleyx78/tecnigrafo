@@ -5,8 +5,8 @@
 D = DXF source=elettrico-tg-el-coil-delay-off
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
-? count D -> LINE 10; SOLID 1
-? unhandled D -> ATTDEF 21
+? count D -> ATTDEF 21; LINE 10; SOLID 1
+? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
 ? snaps D:48 -> none
 ; TG_PIN2=S, flags=3 (constant + invisible).

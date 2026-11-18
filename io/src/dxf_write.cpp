@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
+#include "dxf_blocks.hpp"
 #include "dxf_entities.hpp"
 #include "dxf_entity_common.hpp"
 #include "dxf_tables.hpp"
@@ -82,6 +83,9 @@ std::uint64_t readNextId(const core::Document& document) {
     for (const auto& style : document.dimStyles().styles()) {
         next = std::max(next, style.id + 1);
     }
+    // The block definitions, the ATTRIB and the SEQEND of the inserts
+    // (docs/tappe/0.8/PT18-blocchi-dxf.md, point 6).
+    next = std::max(next, blockHandlesEnd(document));
     for (const auto& section : document.raw().sections) {
         if (section.name == "HEADER" || section.name == "ENTITIES") {
             continue;
@@ -102,7 +106,7 @@ std::uint64_t readNextId(const core::Document& document) {
 }
 
 std::optional<Error> appendEntities(const core::Document& document, EntityWriteContext& context,
-                                    core::RawGroups& out) {
+                                    const BlockWritePlan& plan, core::RawGroups& out) {
     const auto managed = document.entities();
     const auto raw = document.rawEntities();
     std::size_t m = 0;
@@ -118,9 +122,9 @@ std::optional<Error> appendEntities(const core::Document& document, EntityWriteC
                 return Error{Error::Kind::Unsupported, 0, "no DXF writer for a managed entity"};
             }
             // The codecs write extras.common as it is: there go the
-            // properties of the model (docs/adr/0023, point 2).
-            core::EntityRecord record = managed[m];
-            record.extras.common = entityCommonGroups(managed[m], document);
+            // properties of the model (docs/adr/0023, point 2); an INSERT
+            // takes the handles of the plan for its ATTRIB and SEQEND.
+            const core::EntityRecord record = recordForWriting(managed[m], document, plan);
             out.push_back({0, std::string{codec->type}});
             codec->write(record, context, out);
             ++m;
@@ -161,6 +165,8 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     // their handles here, before $HANDSEED is written.
     std::uint64_t nextHandle = nextId;
     nextId += tablesToAdd(*raw, document);
+    // Then the handles the blocks, the attributes and the SEQEND lack.
+    const BlockWritePlan plan = planBlocks(document, *raw, nextId);
     const std::string codePage = raw->codePage.empty() ? "ANSI_1252" : raw->codePage;
     const bool conversion = source.sections.empty() || target != source.version;
     // An absent DWGCODEPAGE was decoded with the ANSI_1252 fallback.
@@ -172,10 +178,12 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     bool hasHeader = false;
     bool hasEntities = false;
     bool hasTables = false;
+    bool hasBlocks = false;
     for (const auto& section : raw->sections) {
         hasHeader = hasHeader || section.name == "HEADER";
         hasEntities = hasEntities || section.name == "ENTITIES";
         hasTables = hasTables || section.name == "TABLES";
+        hasBlocks = hasBlocks || section.name == "BLOCKS";
     }
     if (!hasHeader) {
         out = {{0, "SECTION"}, {2, "HEADER"}};
@@ -189,7 +197,8 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     // only when the document has layers or linetypes to write.
     const auto appendNewTables = [&] {
         hasTables = true;
-        const auto tables = newTables(document, nextHandle);
+        auto tables = newTables(document, nextHandle);
+        writeBlockRecords(tables, plan);
         if (!tables.empty()) {
             out.push_back({0, "SECTION"});
             out.push_back({2, "TABLES"});
@@ -197,14 +206,29 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
             out.push_back({0, "ENDSEC"});
         }
     };
+    // A file without BLOCKS gets one, before ENTITIES, only when the
+    // document has block definitions.
+    const auto appendNewBlocks = [&] {
+        hasBlocks = true;
+        if (!plan.blocks.empty()) {
+            out.push_back({0, "SECTION"});
+            out.push_back({2, "BLOCKS"});
+            const auto blocks = writeBlocks({}, document, plan, target, codePage);
+            out.insert(out.end(), blocks.begin(), blocks.end());
+            out.push_back({0, "ENDSEC"});
+        }
+    };
     for (const auto& section : raw->sections) {
         if (!hasTables && section.name != "HEADER" && section.name != "CLASSES") {
             appendNewTables();
         }
+        if (!hasBlocks && section.name == "ENTITIES") {
+            appendNewBlocks();
+        }
         out.push_back({0, "SECTION"});
         out.push_back({2, section.name});
         if (section.name == "ENTITIES") {
-            if (auto error = appendEntities(document, context, out)) {
+            if (auto error = appendEntities(document, context, plan, out)) {
                 return *error;
             }
         } else if (section.name == "HEADER") {
@@ -213,7 +237,13 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
                                                  document, conversion);
             out.insert(out.end(), header.begin(), header.end());
         } else if (section.name == "TABLES") {
-            writeTables(section.groups, document, nextHandle, out);
+            core::RawGroups tables;
+            writeTables(section.groups, document, nextHandle, tables);
+            writeBlockRecords(tables, plan);
+            out.insert(out.end(), tables.begin(), tables.end());
+        } else if (section.name == "BLOCKS") {
+            const auto blocks = writeBlocks(section.groups, document, plan, target, codePage);
+            out.insert(out.end(), blocks.begin(), blocks.end());
         } else {
             out.insert(out.end(), section.groups.begin(), section.groups.end());
         }
@@ -222,10 +252,13 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     if (!hasTables) {
         appendNewTables();
     }
+    if (!hasBlocks) {
+        appendNewBlocks();
+    }
     if (!hasEntities && (!document.entities().empty() || !document.rawEntities().empty())) {
         out.push_back({0, "SECTION"});
         out.push_back({2, "ENTITIES"});
-        if (auto error = appendEntities(document, context, out)) {
+        if (auto error = appendEntities(document, context, plan, out)) {
             return *error;
         }
         out.push_back({0, "ENDSEC"});
