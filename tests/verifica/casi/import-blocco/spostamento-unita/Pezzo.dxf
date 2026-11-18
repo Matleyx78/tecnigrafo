@@ -32,6 +32,12 @@ ENTITIES
 LINE
 5
 20
+100
+AcDbEntity
+8
+0
+100
+AcDbLine
 10
 100
 20

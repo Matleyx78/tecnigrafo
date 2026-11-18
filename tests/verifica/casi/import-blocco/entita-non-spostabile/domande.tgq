@@ -3,5 +3,5 @@
 ; Handwritten DXF: a raw SPLINE prevents translating model space from INSBASE.
 I = BLOCK-IMPORT file=grezzo.dxf
 ? import-error I -> none
-? import-definition I -> name="grezzo" base=100,120 units=0 entities=[1 LINE start=100,120 end=110,120; 2 unhandled SPLINE]
-? import-groups I 2 -> 0="SPLINE" 5="2" 100="AcDbEntity" 8="0" 100="AcDbSpline" 70="0" 71="1" 72="0" 73="0" 74="0"
+? import-definition I -> name="grezzo" base=100,120 units=0 entities=[101 LINE start=100,120 end=110,120; 102 unhandled SPLINE]
+? import-groups I 102 -> 0="SPLINE" 5="102" 100="AcDbEntity" 8="0" 100="AcDbSpline" 70="0" 71="1" 72="0" 73="0" 74="0"

@@ -1,9 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# 0.8-RT28: -DIMSTYLE and the dimension variables (PT28, #717).
-dimstyle/variabile-annulla #717
-dimstyle/salva-nuovo #717
-dimstyle/salva-esistente #717
-dimstyle/ripristina #717
-dimstyle/stato-elenco #717
-dimstyle/valori-fuori-limiti #717

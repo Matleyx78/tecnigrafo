@@ -22,3 +22,18 @@ R = ELLIPSE center=100,200 major-axis=0,10 ratio=0.5
 ? closest R 97,212 -> 98.51891555012082,209.5512070132159
 ? distance R 95,200 -> 0
 ? closest R 95,200 -> 95,200
+; solid-space tests/corpus/casi/geom2d/ellipse-nearest-mm-caso-quattro-*.json
+; at 9c89fc37520266e55b6b5685ed16c62822c9efdc (ADR 0017 of solid-space,
+; case 4): ratio 0.01, points on the major axis near the vertex (10,0).
+; Whole carrier, start 0 instead of 0.2. Corpus tolerance 2^-44 N, tighter
+; than the default 1e-9.
+Thin = ELLIPSE center=0,0 major-axis=10,0 ratio=0.01
+; Outside the ellipse.
+? distance Thin 10.001,0 -> 0.0009999999999994458
+? closest Thin 10.001,0 -> 10,0
+; Inside, closer than the radius of curvature at the vertex (b^2/a = 0.001).
+? distance Thin 9.9995,0 -> 0.0005000000000006111
+? closest Thin 9.9995,0 -> 10,0
+; Inside, farther: two symmetric feet, either may be returned (band), so
+; only the distance.
+? distance Thin 9.998,0 -> 0.0017320219369281486

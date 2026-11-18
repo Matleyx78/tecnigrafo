@@ -9,6 +9,8 @@
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/circle.hpp"
 #include "tg/core/color.hpp"
+#include "tg/core/dimension.hpp"
+#include "tg/core/document.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/linetype_pattern.hpp"
@@ -25,6 +27,7 @@
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -733,13 +736,6 @@ std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_vie
         return EntityError{"missing entity type"};
     }
     const std::string_view type = tokens->front();
-    // Announced for package PT19 of stage 0.8 (docs/tappe/fuori-tappa/F11):
-    // the line stops the file as not implemented, so that the cases using it
-    // wait in tests/verifica/in-attesa/ instead of being invalid. PT19
-    // realizes the definition and removes this announcement.
-    if (type == "BLOCK-IMPORT") {
-        return EntityError{"BLOCK-IMPORT is not implemented yet", true};
-    }
     Tokens properties(tokens->begin() + 1, tokens->end());
     if (std::optional<EntityError> error = takePlacement(type, properties)) {
         return std::move(*error);
@@ -779,6 +775,23 @@ std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_vie
     // cases wait in tests/verifica/in-attesa/ (docs/tappe/0.8/PT9, point 5).
     if (!core::isSupported(definition.entity)) {
         return EntityError{std::string{type} + " is not supported yet.", true};
+    }
+    if (auto* dimension = std::get_if<core::Dimension>(&definition.entity)) {
+        // Made as a command makes it (docs/tappe/0.8/PT23, point 9): with the
+        // tables of a new drawing, which a case cannot change for a
+        // dimension; the questions regenerate it again with their document.
+        // A kind whose package is not merged is refused as the other types
+        // not supported yet, until regenerated() realizes it (PT24).
+        std::string reason;
+        std::optional<core::Dimension> made =
+            core::regenerated(core::Document::newDrawing(), std::move(*dimension), &reason);
+        if (!made) {
+            if (reason == core::kDimensionKindNotRealized) {
+                return EntityError{std::string{type} + " is not supported yet.", true};
+            }
+            return EntityError{std::string{core::kDimensionNotRegenerable}};
+        }
+        definition.entity = std::move(*made);
     }
     if (auto* polyline = std::get_if<core::Polyline>(&definition.entity)) {
         polyline->setContinuousLinetype(definition.linetypeGeneration.value_or(false));
