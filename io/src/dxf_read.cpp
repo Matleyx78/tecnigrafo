@@ -337,7 +337,9 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
             const auto ids = itemHandles(item);
             // The handles of the ATTRIB and of the SEQEND are spent too.
             for (std::size_t i = 1; i < ids.size(); ++i) {
-                document.reserveHandle(core::EntityId{ids[i]});
+                if (ids[i] != 0) {
+                    document.reserveHandle(core::EntityId{ids[i]});
+                }
             }
             ReadEntity entity;
             entity.raw.id = core::EntityId{ids.front()};

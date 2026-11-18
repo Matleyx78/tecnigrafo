@@ -245,11 +245,14 @@ std::uint64_t handleOf(const core::RawGroups& groups) {
 }  // namespace
 
 std::vector<std::uint64_t> itemHandles(const EntityItem& item) {
+    // The handle as the reader checked it in ENTITIES: the group 5 wherever
+    // it is, also after a subclass marker, where handleOf() does not look.
+    // One handle for each entity of the item, so the first is the item's.
     std::vector<std::uint64_t> handles;
+    handles.reserve(item.size());
     for (const auto& entity : item) {
-        if (const auto handle = handleOf(entity.groups); handle != 0) {
-            handles.push_back(handle);
-        }
+        const auto group = std::ranges::find(entity.groups, 5, &core::RawGroup::code);
+        handles.push_back(group == entity.groups.end() ? 0 : parseHandle(group->value).value_or(0));
     }
     return handles;
 }

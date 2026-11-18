@@ -283,6 +283,30 @@ TEST(DxfInsert, MinsertAndAMissingBlockStayUnhandledWithTheirAttributes) {
     EXPECT_EQ(rewritten(document), groupsOf(text));
 }
 
+TEST(DxfInsert, AHandleAfterASubclassMarkerIsTheHandleOfItsEntity) {
+    // Found by the fuzzer: the reader takes the group 5 wherever it is, so an
+    // entity whose handle follows a marker has no other, and the item of an
+    // INSERT whose ATTRIB has one there spends it too.
+    Groups entities{{0, "LWPOLYLINE"}, {100, "AcDbEntity"}, {8, "0"}, {5, "7"}, {90, "0"}};
+    append(entities, insert("100", "TAGGED", true));
+    Groups late = attrib("102", "100", "REF", "-K1");
+    std::rotate(late.begin() + 1, late.begin() + 2, late.begin() + 5);  // 5 after the marker
+    append(entities, late);
+    append(entities, seqend("103", "100"));
+    const std::string text = drawing({}, entities);
+
+    const auto read = readDxf(text);
+    ASSERT_TRUE(read.ok());
+    const auto& document = read.value().document;
+    EXPECT_EQ(document.entityCount(), 0U);
+    ASSERT_EQ(document.rawEntities().size(), 2U);
+    EXPECT_EQ(document.rawEntities()[0].id.value, 0x7U);
+    EXPECT_EQ(document.rawEntities()[1].id.value, 0x100U);
+    EXPECT_GT(document.nextId(), 0x103U);
+
+    EXPECT_EQ(rewritten(document), groupsOf(text));
+}
+
 TEST(DxfInsert, AConstantInvisibleAttdefKeepsItsFlagsAndGroups) {
     // A pin of the electrical symbols: constant and invisible (70 = 3).
     const Groups pin = attdef("100", "20", "TG_PIN1", 3);

@@ -113,7 +113,8 @@ using EntityItem = std::vector<FileEntity>;
 /// lower case, as sameTableName compares names.
 [[nodiscard]] std::string blockKey(std::string_view name);
 
-/// Every handle an item spends: those of its entities, ATTRIB and SEQEND.
+/// Every handle an item spends: those of its entities, ATTRIB and SEQEND, one
+/// for each, in their order (0 for an entity without a valid group 5).
 [[nodiscard]] std::vector<std::uint64_t> itemHandles(const EntityItem& item);
 
 // --- Writing -------------------------------------------------------------------
