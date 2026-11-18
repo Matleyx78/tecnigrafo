@@ -355,7 +355,7 @@ Status DimensionCommand::finish(CommandContext& context, const core::Vec2& locat
         }
         graphicEntities.push_back(graphic.entity);
     }
-    context.editor.add(std::move(*dimension));
+    const core::EntityId dimensionId = context.editor.add(std::move(*dimension));
     // The anonymous dimension block consumes handles even though its records
     // keep handle 0 until the DXF writer assigns the block (PT23).
     for (core::Entity& graphic : graphicEntities) {
@@ -364,7 +364,7 @@ Status DimensionCommand::finish(CommandContext& context, const core::Vec2& locat
     }
     context.lastPoint = location;
     const auto& added =
-        std::get<core::Dimension>(context.editor.document().entities().back().entity);
+        std::get<core::Dimension>(context.editor.document().find(dimensionId)->entity);
     const core::DimVariables variables =
         core::dimensionVariables(context.editor.document().dimStyles(), added.presentation.style,
                                  added.presentation.overrides);
