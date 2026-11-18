@@ -8,8 +8,8 @@ D = DXF source=autocad-quote
 ? units D -> 4
 ; These are the current answers; PT25 updates them from the oracle log.
 ; cambia con #711
-? count D -> ARC 2; CIRCLE 6; LINE 2
-? unhandled D -> DIMENSION 36
+? count D -> ARC 2; CIRCLE 6; DIMENSION 36; LINE 2
+? unhandled D -> none
 ; Horizontal, vertical, rotated, and aligned linear dimensions.
 ? entity D 93 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40
 ? entity D A1 -> DIMENSION kind=linear style="ISO-25" origin1=60,0 origin2=60,30 line-point=70.00000000000003,30.00000000000002 rotation=90 text-point=68.12500000000001,14.99999999999998 measurement=30.00000000000001
