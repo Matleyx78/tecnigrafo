@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <span>
 #include <utility>
 #include <variant>
 
@@ -42,6 +41,19 @@ g::Point2 toPoint(const Vec2& point) {
 
 Vec2 fromPoint(const g::Point2& point) {
     return Vec2{point.x, point.y};
+}
+
+g::Polyline closedPolylineOf(const Polyline& polyline) {
+    const Polyline closed{{polyline.vertices().begin(), polyline.vertices().end()}, true};
+    g::Polyline curve;
+    curve.closed = true;
+    curve.vertices.reserve(closed.vertexCount());
+    for (std::size_t i = 0; i < closed.vertexCount(); ++i) {
+        const bool arc = i < closed.segmentCount() && closed.segment(i).isArc();
+        curve.vertices.push_back(g::PolylineVertex{toPoint(closed.vertices()[i].position),
+                                                   arc ? closed.vertices()[i].bulge : 0.0});
+    }
+    return curve;
 }
 
 std::optional<g::Curve> curveOf(const Entity& entity) {
@@ -106,21 +118,6 @@ solid_space::robust::TolerancePolicy policyOf(const ToleranceRule& rule) {
     // (docs/tappe/0.7/P14-intersezioni.md): a diagnosis here is a bug.
     assert(policy.hasValue());
     return std::move(policy).value();
-}
-
-g::Polyline closedPolylineOf(const Polyline& polyline) {
-    Polyline closed = polyline;
-    closed.setClosed(true);
-    g::Polyline curve;
-    curve.closed = true;
-    curve.vertices.reserve(closed.vertexCount());
-    const std::span<const PolylineVertex> vertices = closed.vertices();
-    for (std::size_t i = 0; i < vertices.size(); ++i) {
-        const bool arc = i < closed.segmentCount() && closed.segment(i).isArc();
-        curve.vertices.push_back(
-            g::PolylineVertex{toPoint(vertices[i].position), arc ? vertices[i].bulge : 0.0});
-    }
-    return curve;
 }
 
 }  // namespace tg::core::bridge

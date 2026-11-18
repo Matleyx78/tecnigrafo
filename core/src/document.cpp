@@ -134,6 +134,17 @@ Document Document::newDrawing() {
     document.m_textStyles.put(std::move(standard), document);
     document.m_textStyles.setCurrent("Standard");
 
+    // docs/adr/0047, point 2: Standard with the values in inches of AutoCAD,
+    // ISO-25 current (docs/tappe/0.8/dxf-di-prova.md, "Prove a mano").
+    DimStyle dimStandard;
+    dimStandard.id = start_handles::kDimstyleStandard;
+    dimStandard.name = "Standard";
+    dimStandard.vars = dxfDefaultDimVariables();
+    document.m_dimStyles.put(std::move(dimStandard), document);
+    document.m_dimStyles.put(newIso25DimStyle(), document);
+    document.m_dimStyles.setCurrent("ISO-25");
+    document.m_dimStyles.setCurrentVariables(DimVariables{});
+
     document.m_current.layer = LayerId{start_handles::kLayerZero};
     document.m_current.linetype = LinetypeId{start_handles::kByLayer};
     document.setNextId(start_handles::kFirstEntity);
@@ -363,7 +374,7 @@ void Document::replaceTextStyles(TextStyleTable table) {
 }
 
 void Document::replaceDimStyles(DimStyleTable table) {
-    m_dimStyles = table;
+    m_dimStyles = std::move(table);
 }
 
 void Document::replaceBlock(std::string name, std::optional<BlockDefinition> definition) {
