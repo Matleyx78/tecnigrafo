@@ -13,7 +13,7 @@ public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
 
-    void pointerMoved(const core::Vec2&) override {}
+    void pointerMoved(const core::Vec2& /*point*/) override {}
 
     [[nodiscard]] Prompt prompt() const override;
 
@@ -34,7 +34,7 @@ public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
 
-    void pointerMoved(const core::Vec2&) override {}
+    void pointerMoved(const core::Vec2& /*point*/) override {}
 
     [[nodiscard]] Prompt prompt() const override;
 

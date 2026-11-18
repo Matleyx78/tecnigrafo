@@ -188,13 +188,13 @@ Status DimstyleCommand::handle(CommandContext& context, const Input& input) {
     const auto* keyword = std::get_if<KeywordInput>(&input);
     const bool confirm = std::holds_alternative<ConfirmInput>(input);
     std::string_view entered;
-    if (text) {
+    if (text != nullptr) {
         entered = detail::trim(text->text);
     }
-    if (keyword) {
+    if (keyword != nullptr) {
         entered = keyword->keyword;
     }
-    if (!text && !keyword && !confirm) {
+    if (text == nullptr && keyword == nullptr && !confirm) {
         return Status::Continue;
     }
 
@@ -220,7 +220,7 @@ Status DimstyleCommand::handle(CommandContext& context, const Input& input) {
     } else if (m_stage == Stage::SaveName) {
         if (entered == "?") {
             listStyles(context);
-        } else if (context.editor.document().dimStyles().find(entered)) {
+        } else if (context.editor.document().dimStyles().find(entered) != nullptr) {
             m_name = entered;
             m_stage = Stage::Redefine;
         } else if (edit::saveDimStyle(context.editor, entered)) {
