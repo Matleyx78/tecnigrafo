@@ -7,7 +7,7 @@ entities:
   266 LINE start=2.5,10 end=37.5,10
   267 SOLID vertex=2.5,10.41666666666666 vertex=2.5,9.583333333333332 vertex=0,10 vertex=0,10
   268 SOLID vertex=37.5,10.41666666666666 vertex=37.5,9.583333333333332 vertex=40,10 vertex=40,10
-  269 TEXT position=17.97906316536551,10.625 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="40" ~box=17.97906316536551,9.854950319375444;22.02093683463449,9.854950319375444;22.02093683463449,13.91456706884315;17.97906316536551,13.91456706884315
+  269 MTEXT insertion=20,10.625 height=2.5 width=0 attachment=bottom-center rotation=0 style="Standard" value="40" ~lines=1
 messages:
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
@@ -32,8 +32,8 @@ pointer: none
 active snap: none
 statistics:
   LINE 3
+  MTEXT 1
   SOLID 2
-  TEXT 1
 
 [final]
 entities:
