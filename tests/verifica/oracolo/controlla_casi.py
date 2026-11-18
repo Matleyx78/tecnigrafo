@@ -349,7 +349,7 @@ def self_test():
                 "active stage SOLID is managed")
         require("SOLID 1" not in solid_answers.answer("unhandled"),
                 "active stage SOLID is not unhandled")
-        require("MTEXT 1" in solid_answers.answer("unhandled"),
+        require("MTEXT 2" in solid_answers.answer("unhandled"),
                 "other stage types remain unhandled")
         require("HATCH 1" in solid_answers.answer("unhandled"),
                 "other stage types remain unhandled")
