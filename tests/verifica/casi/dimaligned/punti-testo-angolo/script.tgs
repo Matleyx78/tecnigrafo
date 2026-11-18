@@ -6,9 +6,12 @@
 ; Values by hand from PT23 with ISO-25: direction u = (0.6, 0.8), normal
 ; n = (-0.8, 0.6), the location 10 along n from the first origin; line-point
 ; is the foot of the second origin, as AutoCAD writes group 10
-; (autocad-quote.dxf, handle BB); text-point is 1.875 along n from the middle.
-; The explicit angle 90 equals the automatic one of the vertical third
-; dimension. Six graphics records each, numbered after the dimension.
+; (autocad-quote.dxf, handle BB); text-point is 1.875 along n from the middle
+; for a text above the line, with six graphics records numbered after the
+; dimension. With the explicit angle 90 of the third dimension the text is
+; centred in the middle of the dimension line, which breaks around it (PT23,
+; point 4; decision of the maintainer on #712): text-point 190,15 and seven
+; graphics records.
 DIMALIGNED
 0,0
 30,40
