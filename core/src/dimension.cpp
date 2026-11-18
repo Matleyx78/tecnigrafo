@@ -323,21 +323,34 @@ bool intersectsOf(const Document& document, const EntityRecord& record, const Di
     return drawnItemsIntersect(generateOf(document, record, dimension), rectangle);
 }
 
+std::vector<DrawnMText> drawnMTextsOf(const Document& document, const EntityRecord& record,
+                                      const Dimension& dimension) {
+    std::vector<DrawnMText> texts;
+    visitGraphics(document, record, dimension,
+                  [&](const EntityRecord& local, std::vector<GeneratedItem> shapes) {
+                      if (!std::holds_alternative<MText>(local.entity)) {
+                          return;
+                      }
+                      // Only the drawn rows, as generate().
+                      std::erase_if(shapes, [](const GeneratedItem& item) {
+                          return !item.properties.visible;
+                      });
+                      if (!shapes.empty()) {
+                          texts.push_back({local, std::move(shapes)});
+                      }
+                  });
+    return texts;
+}
+
 void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
                            const Dimension& dimension, const SnapModes& modes,
                            std::vector<SnapPoint>& out, const std::optional<Vec2>& from) {
     // The snap points of a dimension are those of its graphics (PT23, point
     // 7): an MTEXT gives its own, when it is drawn, and its rows none.
-    visitGraphics(
-        document, record, dimension,
-        [&](const EntityRecord& local, const std::vector<GeneratedItem>& shapes) {
-            const auto* mtext = std::get_if<MText>(&local.entity);
-            if (mtext != nullptr && std::ranges::any_of(shapes, [](const GeneratedItem& item) {
-                    return item.properties.visible;
-                })) {
-                appendOwnSnapPointsOf(document, local, *mtext, modes, out, from);
-            }
-        });
+    for (const DrawnMText& text : drawnMTextsOf(document, record, dimension)) {
+        appendOwnSnapPointsOf(document, text.record, std::get<MText>(text.record.entity), modes,
+                              out, from);
+    }
 }
 
 TransformOutcome transformedOf(const Document& document, const Dimension& dimension,

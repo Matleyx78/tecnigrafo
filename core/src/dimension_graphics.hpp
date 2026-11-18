@@ -94,4 +94,19 @@ namespace tg::core {
                                                      const EntityRecord& record,
                                                      const Dimension& dimension);
 
+/// A drawn MTEXT of the graphics of a dimension: its record, with the
+/// properties it is drawn with, and its drawn rows.
+struct DrawnMText {
+    EntityRecord record;
+    std::vector<GeneratedItem> rows;
+};
+
+/// The MTEXTs of the graphics of `dimension`, the entity of `record`, with at
+/// least one drawn row, in drawing order. Within the aperture a row leads to
+/// the points of its MTEXT, as outside a dimension (docs/adr/0046, point 2;
+/// PT13, point 6; PT23, point 7).
+[[nodiscard]] std::vector<DrawnMText> drawnMTextsOf(const Document& document,
+                                                    const EntityRecord& record,
+                                                    const Dimension& dimension);
+
 }  // namespace tg::core

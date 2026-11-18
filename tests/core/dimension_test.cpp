@@ -660,10 +660,19 @@ TEST(DimensionSnaps, TheTextGivesItsInsertionPointNotThoseOfItsRows) {
     // Through the document: the insertion point of the MTEXT, never the
     // start of a row.
     document.add(dimension);
-    const std::optional<SnapPoint> near =
-        findSnap(document, text.insertion + Vec2{0.1, 0.1}, 0.5, only(&SnapModes::insertion));
-    EXPECT_EQ(near, (std::optional<SnapPoint>{SnapPoint{text.insertion, SnapKind::Insertion}}));
-    EXPECT_FALSE(findSnap(document, row.position, 0.5, only(&SnapModes::insertion)).has_value());
+    const SnapPoint insertion{text.insertion, SnapKind::Insertion};
+    EXPECT_EQ(findSnap(document, text.insertion + Vec2{0.1, 0.1}, 0.5, only(&SnapModes::insertion)),
+              insertion);
+    // Passing over the row leads to the insertion point, even farther than
+    // the aperture, as the row of an MTEXT outside a dimension (PT13, point
+    // 6).
+    const Vec2 onTheRow = row.position + Vec2{0.2, row.height / 2.0};
+    ASSERT_GT(distance(onTheRow, text.insertion), 0.5);
+    EXPECT_EQ(findSnap(document, onTheRow, 0.5, only(&SnapModes::insertion)), insertion);
+    EXPECT_EQ(findSnap(document, row.position, 0.5, only(&SnapModes::insertion)), insertion);
+    // Farther than the aperture from the row and from the point: nothing.
+    EXPECT_FALSE(findSnap(document, row.position + Vec2{0.0, 4.0}, 0.5, only(&SnapModes::insertion))
+                     .has_value());
 }
 
 }  // namespace
