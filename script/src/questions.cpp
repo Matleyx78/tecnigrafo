@@ -5,6 +5,7 @@
 
 #include "question_table.hpp"
 #include "text.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/start_handles.hpp"
 #include "tg/edit/editor.hpp"
@@ -16,6 +17,7 @@
 #include <cassert>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <utility>
 
 namespace tg::script {
@@ -359,6 +361,16 @@ private:
             insert != nullptr && m_document.blocks().find(insert->block) == nullptr) {
             return error("unknown block " + quoted(insert->block) +
                          ": define it above with !block");
+        }
+        if (auto* dimension = std::get_if<core::Dimension>(&entity.entity)) {
+            // Regenerated with the document of the definitions, as a command
+            // makes it (docs/tappe/0.8/PT23, point 9).
+            std::optional<core::Dimension> made =
+                core::regenerated(m_document, std::move(*dimension));
+            if (!made) {
+                return error(std::string{core::kDimensionNotRegenerable});
+            }
+            entity.entity = std::move(*made);
         }
         if (m_block) {
             // An entity of a block has a handle of the drawing's space, in

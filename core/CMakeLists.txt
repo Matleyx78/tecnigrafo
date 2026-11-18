@@ -14,6 +14,8 @@ add_library(tg_core
     src/dashes.cpp
     src/dim_style_table.cpp
     src/dimension.cpp
+    src/dimension_linear.cpp
+    src/dimension_text.cpp
     src/ellipse.cpp
     src/generated.cpp
     src/hatch.cpp

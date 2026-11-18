@@ -2,12 +2,14 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "question_table.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
 
+#include <cstddef>
 #include <optional>
 #include <span>
 #include <string>
@@ -17,6 +19,21 @@ namespace tg::script::detail {
 namespace {
 
 using Arguments = std::span<const std::string_view>;
+
+/// The document of the entity named `name`: that of its drawing for an
+/// entity of a file ("D:2F"), otherwise that of the definitions. The types
+/// of the 0.8 are transformed and moved through it (transformedIn(),
+/// moveGripIn(); docs/tappe/0.8/PT23, point 9).
+const core::Document& documentOf(const QuestionModel& model, std::string_view name) {
+    const std::size_t colon = name.find(':');
+    if (colon != std::string_view::npos) {
+        const auto drawing = model.files.find(name.substr(0, colon));
+        if (drawing != model.files.end()) {
+            return drawing->second.read.document;
+        }
+    }
+    return model.document;
+}
 
 ArgumentError transformUsage() {
     std::string message = "expected transform <entity> move dx,dy | rotate <degrees> x,y | ";
@@ -83,8 +100,15 @@ QuestionResult askTransform(const QuestionModel& model, Arguments arguments) {
     }
     const bool mirrored = arguments.back() == "mirrtext=1";
     const auto mirrorText = mirrored ? core::MirrorText::Mirrored : core::MirrorText::Readable;
+    // A refusal (docs/adr/0044; a dimension that cannot be regenerated)
+    // leaves no entity: the transformation has no result.
+    const core::TransformOutcome outcome =
+        core::transformedIn(documentOf(model, arguments[0]), *entity, *similarity, mirrorText);
+    if (!outcome.entity) {
+        return std::string{"invalid"};
+    }
     std::string answer;
-    writeEntity(core::transformed(*entity, *similarity, mirrorText), answer);
+    writeEntity(*outcome.entity, answer);
     return answer;
 }
 
@@ -147,7 +171,8 @@ QuestionResult askGrip(const QuestionModel& model, Arguments arguments) {
     constexpr double kGripLookupTolerance = 1e-9;
     for (std::size_t i = 0; i < points.size(); ++i) {
         if (core::nearlyEqual(points[i], *from, kGripLookupTolerance)) {
-            const auto result = core::moveGrip(entity, i, *target);
+            const auto result =
+                core::moveGripIn(documentOf(model, arguments[0]), entity, i, *target);
             if (result.outcome == core::GripOutcome::Invalid) {
                 return std::string{"invalid"};
             }
