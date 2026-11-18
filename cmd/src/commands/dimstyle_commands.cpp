@@ -240,7 +240,8 @@ Status DimstyleCommand::handle(CommandContext& context, const Input& input) {
             showCurrent(context);
             context.editor.rollback();
             return Status::Finished;
-        } else if (entered == "?") {
+        }
+        if (entered == "?") {
             listStyles(context);
         } else if (!edit::restoreDimStyle(context.editor, entered)) {
             context.message("Unknown dimension style.");
