@@ -203,6 +203,9 @@ protected:
         return count;
     }
 
+    // A guide whose screen coordinate ends in .5, as with a view of odd
+    // height, is painted on the pixel below the rounded one: callers look
+    // one pixel either side (bandAround).
     [[nodiscard]] std::size_t markerPixelsIn(const QRect& area) const {
         const render::Color marker = sceneStyle(m_window.theme()).snapMarker;
         const QImage image = view()->grab().toImage();
@@ -220,6 +223,12 @@ protected:
 private:
     MainWindow m_window;
 };
+
+/// The rows from one above to one below area, or the columns from one left
+/// to one right of it: the pixels where a guide on area can be painted.
+QRect bandAround(const QRect& area) {
+    return area.width() == 1 ? area.adjusted(-1, 0, 1, 0) : area.adjusted(0, -1, 0, 1);
+}
 
 TEST_F(DrawingAidsTest, StartsWithObjectSnapOnWithEveryModeAndOrthoOff) {
     EXPECT_EQ(aids(), cmd::DrawingAids{});
@@ -411,7 +420,7 @@ TEST_F(DrawingAidsTest, AStationaryPointerAcquiresAndPaintsTrackingGuides) {
     moveScreen(screen({90.0, 2.0}));
     ASSERT_EQ(runner().tracking().guide, cmd::CommandRunner::TrackingState::Guide::Horizontal);
     const int guideY = screen({0.0, kVertex.y}).toPoint().y();
-    EXPECT_GT(markerPixelsIn(QRect{10, guideY, 200, 1}), 0U);
+    EXPECT_GT(markerPixelsIn(bandAround(QRect{10, guideY, 200, 1})), 0U);
 }
 
 TEST_F(DrawingAidsTest, PolarCrossingPaintsTheTrackingGuideThatProducedIt) {
@@ -436,8 +445,8 @@ TEST_F(DrawingAidsTest, PolarCrossingPaintsTheTrackingGuideThatProducedIt) {
 
     const QPoint guidePoint = screen(*guidePointWorld).toPoint();
     const int baseY = screen({80.0, 20.0}).toPoint().y();
-    EXPECT_GT(markerPixelsIn(QRect{10, guidePoint.y(), 200, 1}), 0U);
-    EXPECT_EQ(markerPixelsIn(QRect{guidePoint.x(), 10, 1, baseY - 20}), 0U);
+    EXPECT_GT(markerPixelsIn(bandAround(QRect{10, guidePoint.y(), 200, 1})), 0U);
+    EXPECT_EQ(markerPixelsIn(bandAround(QRect{guidePoint.x(), 10, 1, baseY - 20})), 0U);
 }
 
 TEST_F(DrawingAidsTest, PolarOverlayFollowsTheRunnerAndYieldsToObjectSnap) {
