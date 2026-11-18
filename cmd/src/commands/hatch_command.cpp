@@ -44,11 +44,12 @@ int measurementOf(const core::Document& document) {
             continue;
         }
         for (std::size_t i = 0; i + 1 < section.groups.size(); ++i) {
-            if (section.groups[i].code != 9 || section.groups[i].value != "$MEASUREMENT") {
+            if (section.groups[i].code != 9 ||
+                detail::trim(section.groups[i].value) != "$MEASUREMENT") {
                 continue;
             }
             int value = core::kMetricMeasurement;
-            const std::string& text = section.groups[i + 1].value;
+            const std::string_view text = detail::trim(section.groups[i + 1].value);
             const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
             if (result.ec == std::errc{} && result.ptr == text.data() + text.size()) {
                 return value;
@@ -198,8 +199,8 @@ void HatchCommand::usePoint(CommandContext& context, const core::Vec2& point) {
             });
         if (!duplicate) {
             m_pointLoops.insert(m_pointLoops.end(), detected.loops.begin(), detected.loops.end());
+            m_seeds.push_back(point);
         }
-        m_seeds.push_back(point);
     }
     currentPattern(context);
 }
