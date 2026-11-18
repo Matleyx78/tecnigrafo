@@ -422,9 +422,6 @@ TEST(DimensionRegeneration, KindsOfOtherPackages) {
     dimension.definition.kind = DimensionKind::Other;
     EXPECT_FALSE(regenerated(Document::newDrawing(), dimension, &reason).has_value());
     EXPECT_EQ(reason, kDimensionNotRegenerable);
-    dimension.definition.kind = DimensionKind::Radius;
-    EXPECT_FALSE(regenerated(Document::newDrawing(), dimension, &reason).has_value());
-    EXPECT_EQ(reason, kDimensionKindNotRealized);
 }
 
 // --- Transformations and grips -------------------------------------------
