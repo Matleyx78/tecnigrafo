@@ -460,8 +460,28 @@ TEST(DxfDimension, ANewDimensionTakesTheFirstFreeNameAndNewHandles) {
     if (!regenerated) {
         FAIL() << "not regenerated";
     }
-    const core::Dimension& dimension = *regenerated;
+    core::Dimension dimension = *regenerated;
     ASSERT_FALSE(dimension.graphics.empty());
+    // Two graphics kept as groups, with handle 0: one without a group 5 or
+    // an owner, one with a group 5 "0" and an owner "0".
+    const std::uint64_t after = dimension.graphics.back().order + 1;
+    const core::RawEntity bare{core::EntityId{0}, after, "POINT",
+                               Groups{{100, "AcDbEntity"},
+                                      {8, "0"},
+                                      {100, "AcDbPoint"},
+                                      {10, "0.0"},
+                                      {20, "100.0"},
+                                      {30, "0.0"}}};
+    const core::RawEntity zero{core::EntityId{0}, after + 1, "POINT",
+                               Groups{{5, "0"},
+                                      {330, "0"},
+                                      {100, "AcDbEntity"},
+                                      {8, "0"},
+                                      {100, "AcDbPoint"},
+                                      {10, "30.0"},
+                                      {20, "100.0"},
+                                      {30, "0.0"}}};
+    dimension.rawGraphics = {bare, zero};
     const core::EntityId id = document.add(dimension);
 
     const std::string text = written(document);
@@ -480,13 +500,42 @@ TEST(DxfDimension, ANewDimensionTakesTheFirstFreeNameAndNewHandles) {
         EXPECT_EQ(all.count(value), 1U) << value;
         EXPECT_GE(parseHandle(value).value_or(0), first) << value;
     }
+    // The two POINT have a new handle right after their group 0 and the
+    // record of the block as owner (the 330 of its BLOCK).
+    ASSERT_GE(made7.size(), 3U);
+    ASSERT_EQ(made7[2].code, 330);
+    const std::string owner = made7[2].value;
+    std::size_t points = 0;
+    for (std::size_t i = 0; i + 2 < made7.size(); ++i) {
+        if (made7[i].code != 0 || made7[i].value != "POINT") {
+            continue;
+        }
+        ++points;
+        EXPECT_EQ(made7[i + 1].code, 5);
+        EXPECT_GE(parseHandle(made7[i + 1].value).value_or(0), first) << made7[i + 1].value;
+        EXPECT_EQ(made7[i + 2].code, 330);
+        EXPECT_EQ(made7[i + 2].value, owner);
+    }
+    EXPECT_EQ(points, 2U);
+    EXPECT_EQ(std::ranges::count_if(made7,
+                                    [](const core::RawGroup& group) {
+                                        return (group.code == 5 || group.code == 330) &&
+                                               group.value == "0";
+                                    }),
+              0);
 
     // Read again, it is handled, with its graphics.
     const auto again = readDxf(text);
     ASSERT_TRUE(again.ok());
     EXPECT_TRUE(again.value().report.unhandled.empty());
-    EXPECT_EQ(dimensionOf(again.value().document, id.value).graphics.size(),
-              dimension.graphics.size());
+    const auto& reread = dimensionOf(again.value().document, id.value);
+    EXPECT_EQ(reread.graphics.size(), dimension.graphics.size());
+    ASSERT_EQ(reread.rawGraphics.size(), 2U);
+    for (const auto& raw : reread.rawGraphics) {
+        EXPECT_GE(raw.id.value, first);
+        EXPECT_EQ(all.count(handleText(raw.id.value)), 1U);
+    }
+    EXPECT_NE(reread.rawGraphics[0].id, reread.rawGraphics[1].id);
 }
 
 TEST(DxfDimension, ANewDrawingWritesTheBlockOfItsDimension) {

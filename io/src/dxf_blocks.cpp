@@ -744,29 +744,58 @@ std::unordered_set<std::string> keptBlockNames(const core::RawGroups& section) {
 }
 
 /// `raw` with a new handle for each of its entities (the first group 5 of
-/// each, after its group 0), the owners (330) that named an old one naming
-/// the new one, and `owner` as the owner of the first: a copy of an entity
-/// of the block of a dimension, written beside the original.
+/// each, after its group 0; one added right after the group 0 where it has
+/// none), the owners (330) that named an old one naming the new one, and
+/// `owner` as the owner of the first: a copy of an entity of the block of a
+/// dimension, written beside the original, or a new one (handle 0), which
+/// takes the owner right after its handle when it has none.
 core::RawEntity rehandled(core::RawEntity raw, std::uint64_t owner,
                           const std::function<std::uint64_t()>& take) {
+    const bool fresh = raw.id.value == 0;
+    // Where each entity starts: the first at the first group, the others
+    // after their group 0.
+    std::vector<std::size_t> starts{0};
+    for (std::size_t i = 0; i < raw.groups.size(); ++i) {
+        if (raw.groups[i].code == 0) {
+            starts.push_back(i + 1);
+        }
+    }
     std::unordered_map<std::uint64_t, std::uint64_t> renamed;
-    bool start = true;
-    for (auto& group : raw.groups) {
-        if (group.code == 0) {
-            start = true;
-        } else if (group.code == 5 && start) {
-            start = false;
-            const std::uint64_t now = take();
-            if (const auto old = parseHandle(group.value)) {
+    core::RawGroups groups;
+    groups.reserve(raw.groups.size() + starts.size() + 1);
+    std::size_t afterHandle = 0;  // in `groups`, right after the handle of the first
+    for (std::size_t s = 0; s < starts.size(); ++s) {
+        const std::size_t begin = starts[s];
+        const std::size_t end = s + 1 < starts.size() ? starts[s + 1] : raw.groups.size();
+        std::size_t at = begin;
+        while (at < end && raw.groups[at].code != 5) {
+            ++at;
+        }
+        const std::uint64_t now = take();
+        if (s == 0) {
+            raw.id = core::EntityId{now};
+        }
+        if (at == end) {
+            groups.push_back({5, handleText(now)});
+            if (s == 0) {
+                afterHandle = groups.size();
+            }
+        }
+        for (std::size_t i = begin; i < end; ++i) {
+            if (i != at) {
+                groups.push_back(raw.groups[i]);
+                continue;
+            }
+            if (const auto old = parseHandle(raw.groups[i].value); old && *old != 0) {
                 renamed.emplace(*old, now);
             }
-            group.value = handleText(now);
-            if (renamed.size() == 1) {
-                raw.id = core::EntityId{now};
+            groups.push_back({5, handleText(now)});
+            if (s == 0) {
+                afterHandle = groups.size();
             }
         }
     }
-    for (auto& group : raw.groups) {
+    for (auto& group : groups) {
         if (group.code != 330) {
             continue;
         }
@@ -775,7 +804,19 @@ core::RawEntity rehandled(core::RawEntity raw, std::uint64_t owner,
             group.value = handleText(found->second);
         }
     }
-    setOwner(raw.groups, owner);
+    // The owner of the first entity: its own 330, before the group 0 of the
+    // next.
+    const auto next = std::ranges::find(groups, 0, &core::RawGroup::code);
+    const auto own = firstOwn(groups, ownGroups(groups), 330);
+    if (own && groups.begin() + static_cast<std::ptrdiff_t>(*own) < next) {
+        if (parseHandle(groups[*own].value) != owner) {
+            groups[*own].value = handleText(owner);
+        }
+    } else if (fresh) {
+        groups.insert(groups.begin() + static_cast<std::ptrdiff_t>(afterHandle),
+                      {330, handleText(owner)});
+    }
+    raw.groups = std::move(groups);
     return raw;
 }
 
@@ -890,7 +931,7 @@ void planDimensions(const core::RawDrawing& raw, BlockWritePlan& plan, HandlePla
             }
         }
         for (auto& rawGraphic : dimension.rawGraphics) {
-            if (rawGraphic.id.value != 0 && !handles.insert(rawGraphic.id.value).second) {
+            if (rawGraphic.id.value == 0 || !handles.insert(rawGraphic.id.value).second) {
                 rawGraphic = rehandled(std::move(rawGraphic), block.recordId, take);
                 handles.insert(rawGraphic.id.value);
             }
