@@ -48,6 +48,17 @@ std::vector<std::pair<std::string, std::string>> currentOverrides(
 
 CommandDescription DimensionCommand::description(Kind kind) {
     const bool linear = kind == Kind::Linear;
+    // Built before the list: conditional temporaries inside it make GCC
+    // report -Wmaybe-uninitialized.
+    std::string locationPrompt = "Specify dimension line location or [Text/Angle]:";
+    std::vector<Keyword> locationKeywords{{"Text", "T"}, {"Angle", "A"}};
+    if (linear) {
+        locationPrompt =
+            "Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:";
+        locationKeywords.push_back({"Horizontal", "H"});
+        locationKeywords.push_back({"Vertical", "V"});
+        locationKeywords.push_back({"Rotated", "R"});
+    }
     std::vector<PromptDescription> prompts{
         {"first-origin",
          "Specify first extension line origin or <select object>:",
@@ -56,16 +67,7 @@ CommandDescription DimensionCommand::description(Kind kind) {
          true},
         {"select-object", "Select object to dimension:", ValueType::Object, {}, false},
         {"second-origin", "Specify second extension line origin:", ValueType::Point, {}, false},
-        {"location",
-         linear ? "Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:"
-                : "Specify dimension line location or [Text/Angle]:",
-         ValueType::Point,
-         linear ? std::vector<Keyword>{{"Text", "T"},
-                                       {"Angle", "A"},
-                                       {"Horizontal", "H"},
-                                       {"Vertical", "V"},
-                                       {"Rotated", "R"}}
-                : std::vector<Keyword>{{"Text", "T"}, {"Angle", "A"}},
+        {"location", std::move(locationPrompt), ValueType::Point, std::move(locationKeywords),
          false},
         {"location-axis",
          "Specify dimension line location or [Text/Angle]:",
