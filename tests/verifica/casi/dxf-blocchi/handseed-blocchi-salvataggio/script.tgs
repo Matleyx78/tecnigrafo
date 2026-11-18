@@ -4,6 +4,7 @@
 ; The first new entity must be 10000 hex (65536 decimal), never a reused ID.
 ; PT18 makes the BLOCKS table visible in the report and writes it from model.
 ; cambia con #697
+; cambia con #699
 OPEN
 dati.dxf
 LINE

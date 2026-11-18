@@ -24,6 +24,9 @@ redo:
 snap: off
 ortho: off
 drawing: input.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, input.dxf (active)
 pointer: 5,0
 active snap: none
@@ -46,6 +49,9 @@ redo:
 snap: off
 ortho: off
 drawing: input.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, input.dxf (active)
 pointer: 5,0
 active snap: none
@@ -68,6 +74,9 @@ redo:
 snap: off
 ortho: off
 drawing: input.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, input.dxf (active)
 pointer: 5,0
 active snap: none
@@ -94,6 +103,9 @@ redo:
 snap: off
 ortho: off
 drawing: input.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, input.dxf (active)
 pointer: 5,-3.175
 active snap: none
