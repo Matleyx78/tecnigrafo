@@ -7,8 +7,12 @@
 #include "new_entities_format.hpp"
 #include "question_table.hpp"
 #include "text.hpp"
+#include "tg/core/dim_style_table.hpp"
+#include "tg/core/math.hpp"
+#include "tg/io/block_import.hpp"
 #include "tg/io/dxf_groups.hpp"
 #include "tg/script/case_files.hpp"
+#include "tg/script/number_format.hpp"
 #include "tg/script/report.hpp"
 #include "tg/script/text_format.hpp"
 
@@ -16,10 +20,15 @@
 #include <array>
 #include <charconv>
 #include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <iterator>
 #include <map>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 #include <variant>
@@ -455,6 +464,454 @@ QuestionResult askOpenError(const QuestionModel& model, Arguments arguments) {
     const io::Result<io::ReadResult> read =
         cadx ? io::readCadx(bytes.value()) : io::readDxf(bytes.value());
     return read.ok() ? std::string{kNone} : quoteText(describe(read.error()));
+}
+
+// ---------------------------------------------------------------------------
+// Importing a file as a block (docs/verifica/domande.md, "Importazione di un
+// file come blocco"; package 0.8-PT19).
+
+namespace {
+
+/// The files of a definition BLOCK-IMPORT: it remembers whether reading the
+/// file failed, an error of the definition rather than of the import.
+class RecordingFiles final : public io::FileAccess {
+public:
+    explicit RecordingFiles(io::FileAccess& files) : m_files(files) {}
+
+    [[nodiscard]] io::Result<std::string> read(std::string_view name) override {
+        io::Result<std::string> bytes = m_files.read(name);
+        if (!bytes.ok()) {
+            m_failure = bytes.error();
+        }
+        return bytes;
+    }
+
+    [[nodiscard]] std::optional<io::Error> write(std::string_view name,
+                                                 std::string_view bytes) override {
+        return m_files.write(name, bytes);
+    }
+
+    [[nodiscard]] bool exists(std::string_view name) const override { return m_files.exists(name); }
+
+    [[nodiscard]] const std::optional<io::Error>& failure() const { return m_failure; }
+
+private:
+    io::FileAccess& m_files;
+    std::optional<io::Error> m_failure;
+};
+
+constexpr std::string_view kImportForm =
+    "BLOCK-IMPORT source=<name> [target-units=N] or BLOCK-IMPORT file=<name> [target-units=N]";
+
+/// "target-units=N", N an integer from 0 to 24.
+std::optional<int> targetUnits(std::string_view argument) {
+    constexpr std::string_view kPrefix = "target-units=";
+    if (!argument.starts_with(kPrefix)) {
+        return std::nullopt;
+    }
+    argument.remove_prefix(kPrefix.size());
+    int units = -1;
+    const char* end = argument.data() + argument.size();
+    const auto [stop, error] = std::from_chars(argument.data(), end, units);
+    if (argument.empty() || error != std::errc{} || stop != end || units < 0 ||
+        units > core::Document::kMaxUnits) {
+        return std::nullopt;
+    }
+    return units;
+}
+
+/// A handle in upper case hexadecimal, without prefix.
+std::string hexHandle(std::uint64_t value) {
+    std::array<char, 16> buffer{};
+    const auto [end, error] =
+        std::to_chars(buffer.data(), buffer.data() + buffer.size(), value, 16);
+    std::string text(buffer.data(), error == std::errc{} ? end : buffer.data());
+    std::ranges::transform(text, text.begin(), [](char c) {
+        return c >= 'a' && c <= 'f' ? static_cast<char>(c - 'a' + 'A') : c;
+    });
+    return text;
+}
+
+std::string joinItems(const std::vector<std::string>& items) {
+    if (items.empty()) {
+        return std::string{kNone};
+    }
+    std::string text;
+    for (const std::string& item : items) {
+        text += (text.empty() ? "" : "; ") + item;
+    }
+    return text;
+}
+
+/// "item; item" with `text` of each element of `range`, or "none".
+template <typename Range, typename Text>
+std::string listText(const Range& range, const Text& text) {
+    std::vector<std::string> items;
+    items.reserve(std::size(range));
+    for (const auto& item : range) {
+        items.push_back(text(item));
+    }
+    return joinItems(items);
+}
+
+/// The import named `name`, or the error of the question file.
+std::variant<const ImportedBlock*, ArgumentError> importArgument(const QuestionModel& model,
+                                                                 std::string_view name) {
+    const auto found = model.imports.find(name);
+    if (found == model.imports.end()) {
+        return ArgumentError{"no BLOCK-IMPORT named " + named(name) + " is defined above"};
+    }
+    return &found->second;
+}
+
+/// The question "<question> <import>" answered by `answer(import, names)`
+/// when the import succeeded; "error: <message>" when it failed.
+template <typename Answer>
+QuestionResult askAboutImport(const QuestionModel& model, Arguments arguments,
+                              std::string_view question, const Answer& answer) {
+    if (arguments.size() != 1) {
+        return wrongArguments(std::string{question} + " <import>");
+    }
+    auto found = importArgument(model, arguments[0]);
+    if (auto* failure = std::get_if<ArgumentError>(&found)) {
+        return std::move(*failure);
+    }
+    const ImportedBlock& imported = *std::get<const ImportedBlock*>(found);
+    if (!imported.result) {
+        return "error: " + imported.error.message;
+    }
+    return QuestionResult{answer(*imported.result, imported.names)};
+}
+
+/// A definition: name="NAME" base=x,y units=N entities=[H <entity>; …], the
+/// handled and unhandled entities in the order of the definition, each
+/// handled one followed by its ATTRIB.
+std::string definitionText(const core::BlockDefinition& block, const core::Document& names) {
+    std::vector<std::string> entities;
+    auto handled = block.entities.begin();
+    auto raw = block.rawEntities.begin();
+    while (handled != block.entities.end() || raw != block.rawEntities.end()) {
+        if (raw == block.rawEntities.end() ||
+            (handled != block.entities.end() && handled->order <= raw->order)) {
+            const std::array<const core::EntityRecord*, 1> alone{&*handled};
+            for (const EntityLine& line : entityLines(alone, names)) {
+                entities.push_back(hexHandle(line.id) + line.text.substr(line.text.find(' ')));
+            }
+            ++handled;
+        } else {
+            entities.push_back(hexHandle(raw->id.value) + " unhandled " +
+                               std::string{trimmed(raw->type)});
+            ++raw;
+        }
+    }
+    std::string list;
+    for (const std::string& entity : entities) {
+        list += (list.empty() ? "" : "; ") + entity;
+    }
+    return "name=" + quoteText(block.name) + " base=" + formatPoint(block.base) +
+           " units=" + std::to_string(block.units) +
+           " entities=" + (entities.empty() ? std::string{kNone} : "[" + list + "]");
+}
+
+std::string recordStart(std::uint64_t id, std::string_view name) {
+    return "id=" + hexHandle(id) + " name=" + quoteText(name);
+}
+
+std::string linetypeText(const core::Linetype& linetype) {
+    std::string text = recordStart(linetype.id.value, linetype.name) + " pattern=";
+    if (linetype.pattern.continuous()) {
+        text += "continuous";
+    }
+    for (std::size_t i = 0; i < linetype.pattern.elements.size(); ++i) {
+        text += (i == 0 ? "" : ",") + formatNumber(linetype.pattern.elements[i]);
+    }
+    return text + " description=" + quoteText(linetype.description);
+}
+
+std::string textStyleText(const core::TextStyle& style) {
+    return recordStart(style.id, style.name) + " font=" + quoteText(style.font) +
+           " height=" + formatNumber(style.fixedHeight) +
+           " width-factor=" + formatNumber(style.widthFactor) +
+           " oblique=" + formatNumber(core::radiansToDegrees(style.oblique)) +
+           " backwards=" + (style.backwards ? "yes" : "no") +
+           " upside-down=" + (style.upsideDown ? "yes" : "no");
+}
+
+/// Every essential variable, defaults included, NAME:value in alphabetical
+/// order, so that the record does not depend on the target.
+std::string dimStyleText(const core::DimStyle& style) {
+    std::string text = recordStart(style.id, style.name);
+    for (const core::DimVariableInfo& info : core::dimVariableInfos()) {
+        const core::DimValue value = core::dimValue(style.vars, info.name);
+        text += " " + std::string{info.name} + ":";
+        if (const auto* number = std::get_if<double>(&value)) {
+            text += formatNumber(*number);
+        } else {
+            text += std::get<std::string>(value);
+        }
+    }
+    return text;
+}
+
+/// "code="value"" for each group, separated by blanks.
+void appendGroups(const core::RawGroups& groups, std::string& out) {
+    for (const core::RawGroup& group : groups) {
+        out += (out.empty() ? "" : " ") + std::to_string(group.code) + "=" + quoteText(group.value);
+    }
+}
+
+std::string handleGroup(std::uint64_t id) {
+    return "5=" + quoteText(hexHandle(id));
+}
+
+std::string extrasGroups(std::uint64_t id, const core::EntityExtras& extras) {
+    std::string text = handleGroup(id);
+    for (const core::RawGroups* groups : {&extras.beforeEntity, &extras.common, &extras.specific,
+                                          &extras.placement, &extras.extended}) {
+        appendGroups(*groups, text);
+    }
+    return text;
+}
+
+/// The groups of the object with handle `id` in `block`, if it has one.
+std::optional<std::string> blockGroups(const core::BlockDefinition& block, std::uint64_t id) {
+    const std::array<std::pair<std::uint64_t, const core::RawGroups*>, 3> own{
+        {{block.recordId, &block.recordExtras},
+         {block.blockId, &block.blockExtras},
+         {block.endBlockId, &block.endBlockExtras}}};
+    for (const auto& [handle, groups] : own) {
+        if (handle == id) {
+            std::string text = handleGroup(id);
+            appendGroups(*groups, text);
+            return text;
+        }
+    }
+    for (const core::EntityRecord& record : block.entities) {
+        if (record.id.value == id) {
+            return extrasGroups(id, record.extras);
+        }
+        if (const auto* insert = std::get_if<core::Insert>(&record.entity)) {
+            for (const core::Attribute& attribute : insert->attributes) {
+                if (attribute.id.value == id) {
+                    return extrasGroups(id, attribute.extras);
+                }
+            }
+        }
+    }
+    for (const core::RawEntity& raw : block.rawEntities) {
+        if (raw.id.value == id) {
+            // Every group kept, its type (group 0) first, the handle where it was.
+            std::string text = "0=" + quoteText(trimmed(raw.type));
+            appendGroups(raw.groups, text);
+            return text;
+        }
+    }
+    return std::nullopt;
+}
+
+/// The groups of the object with handle `id` returned by the import.
+std::optional<std::string> importGroups(const io::BlockImport& imported, std::uint64_t id) {
+    if (id == 0) {
+        return std::nullopt;
+    }
+    if (auto text = blockGroups(imported.definition, id)) {
+        return text;
+    }
+    for (const core::BlockDefinition& block : imported.nested) {
+        if (auto text = blockGroups(block, id)) {
+            return text;
+        }
+    }
+    const auto record = [id](std::uint64_t handle, const core::RawGroups& extras) {
+        std::optional<std::string> text;
+        if (handle == id) {
+            text = handleGroup(id);
+            appendGroups(extras, *text);
+        }
+        return text;
+    };
+    for (const core::Layer& layer : imported.layers) {
+        if (auto text = record(layer.id.value, layer.extras)) {
+            return text;
+        }
+    }
+    for (const core::Linetype& linetype : imported.linetypes) {
+        if (auto text = record(linetype.id.value, linetype.extras)) {
+            return text;
+        }
+    }
+    for (const core::TextStyle& style : imported.textStyles) {
+        if (auto text = record(style.id, style.extras)) {
+            return text;
+        }
+    }
+    for (const core::DimStyle& style : imported.dimStyles) {
+        if (auto text = record(style.id, style.extras)) {
+            return text;
+        }
+    }
+    return std::nullopt;
+}
+
+/// The target with the layers and linetypes that enter, for their names.
+core::Document namesDocument(core::Document target, const io::BlockImport& imported) {
+    for (const core::Linetype& linetype : imported.linetypes) {
+        target.addLinetype(linetype);
+    }
+    for (const core::Layer& layer : imported.layers) {
+        target.addLayer(layer);
+    }
+    return target;
+}
+
+}  // namespace
+
+std::optional<std::variant<ImportedBlock, FileDefinitionError>> readImportDefinition(
+    std::string_view text, io::FileAccess* access, const core::Document& target) {
+    const std::vector<std::string_view> words = splitWords(text);
+    if (words.empty() || words.front() != "BLOCK-IMPORT") {
+        return std::nullopt;
+    }
+    std::optional<std::string> name;
+    std::optional<int> units;
+    bool valid = words.size() == 2 || words.size() == 3;
+    for (std::size_t i = 1; valid && i < words.size(); ++i) {
+        if (auto file = fileArgument(words[i]); file && !name) {
+            name = std::move(file);
+        } else if (auto value = targetUnits(words[i]); value && !units) {
+            units = value;
+        } else {
+            valid = false;
+        }
+    }
+    if (!valid || !name) {
+        return FileDefinitionError{"wrong arguments, expected: " + std::string{kImportForm}};
+    }
+    if (access == nullptr) {
+        return FileDefinitionError{"cannot read " + *name +
+                                   ": this question file cannot read files"};
+    }
+    core::Document copy = target;
+    if (units) {
+        copy.setUnits(*units);
+    }
+    RecordingFiles files{*access};
+    const std::filesystem::path path{std::u8string{name->begin(), name->end()}};
+    io::Result<io::BlockImport> imported = io::importBlock(path, copy, files);
+    if (const std::optional<io::Error>& failure = files.failure()) {
+        return FileDefinitionError{"cannot read " + *name + ": " + describe(*failure)};
+    }
+    if (!imported.ok()) {
+        return ImportedBlock{nullptr, imported.error(), std::move(copy)};
+    }
+    core::Document names = namesDocument(std::move(copy), imported.value());
+    return ImportedBlock{
+        std::make_shared<const io::BlockImport>(std::move(imported).value()), {}, std::move(names)};
+}
+
+QuestionResult askImportError(const QuestionModel& model, Arguments arguments) {
+    if (arguments.size() != 1) {
+        return wrongArguments("import-error <import>");
+    }
+    auto found = importArgument(model, arguments[0]);
+    if (auto* failure = std::get_if<ArgumentError>(&found)) {
+        return std::move(*failure);
+    }
+    const ImportedBlock& imported = *std::get<const ImportedBlock*>(found);
+    return imported.result ? std::string{kNone} : quoteText(imported.error.message);
+}
+
+QuestionResult askImportDefinition(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-definition",
+                          [](const io::BlockImport& imported, const core::Document& names) {
+                              return definitionText(imported.definition, names);
+                          });
+}
+
+QuestionResult askImportNested(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-nested",
+                          [](const io::BlockImport& imported, const core::Document& names) {
+                              return listText(imported.nested,
+                                              [&names](const core::BlockDefinition& block) {
+                                                  return definitionText(block, names);
+                                              });
+                          });
+}
+
+QuestionResult askImportLayers(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-layers",
+                          [](const io::BlockImport& imported, const core::Document& names) {
+                              // The layers that enter come last in `names`, in their order.
+                              const std::vector<std::string> lines = layerLines(names);
+                              const std::size_t first = lines.size() - imported.layers.size();
+                              std::vector<std::string> items;
+                              items.reserve(imported.layers.size());
+                              for (std::size_t i = 0; i < imported.layers.size(); ++i) {
+                                  items.push_back("id=" + hexHandle(imported.layers[i].id.value) +
+                                                  " name=" + lines[first + i]);
+                              }
+                              return joinItems(items);
+                          });
+}
+
+QuestionResult askImportLinetypes(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-linetypes",
+                          [](const io::BlockImport& imported, const core::Document& /*names*/) {
+                              return listText(imported.linetypes, linetypeText);
+                          });
+}
+
+QuestionResult askImportTextStyles(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-text-styles",
+                          [](const io::BlockImport& imported, const core::Document& /*names*/) {
+                              return listText(imported.textStyles, textStyleText);
+                          });
+}
+
+QuestionResult askImportDimStyles(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-dim-styles",
+                          [](const io::BlockImport& imported, const core::Document& /*names*/) {
+                              return listText(imported.dimStyles, dimStyleText);
+                          });
+}
+
+QuestionResult askImportUnitFactor(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-unit-factor",
+                          [](const io::BlockImport& imported, const core::Document& /*names*/) {
+                              return formatNumber(imported.unitFactor);
+                          });
+}
+
+QuestionResult askImportNextId(const QuestionModel& model, Arguments arguments) {
+    return askAboutImport(model, arguments, "import-next-id",
+                          [](const io::BlockImport& imported, const core::Document& /*names*/) {
+                              return hexHandle(imported.nextId);
+                          });
+}
+
+QuestionResult askImportGroups(const QuestionModel& model, Arguments arguments) {
+    constexpr std::string_view kForm = "import-groups <import> <handle>";
+    if (arguments.size() != 2) {
+        return wrongArguments(kForm);
+    }
+    const std::optional<std::uint64_t> handle = parseHandle(arguments[1]);
+    if (!handle) {
+        return wrongArguments(kForm);
+    }
+    auto found = importArgument(model, arguments[0]);
+    if (auto* failure = std::get_if<ArgumentError>(&found)) {
+        return std::move(*failure);
+    }
+    const ImportedBlock& imported = *std::get<const ImportedBlock*>(found);
+    if (!imported.result) {
+        return "error: " + imported.error.message;
+    }
+    std::optional<std::string> groups = importGroups(*imported.result, *handle);
+    if (!groups) {
+        return ArgumentError{named(arguments[0]) + " returned nothing with handle " +
+                             named(arguments[1])};
+    }
+    return groups->empty() ? std::string{kNone} : *std::move(groups);
 }
 
 }  // namespace tg::script::detail
