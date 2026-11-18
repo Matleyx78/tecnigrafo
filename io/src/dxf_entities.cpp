@@ -54,6 +54,9 @@ const EntityCodec* findCodec(std::string_view type) {
     if (type == "ATTDEF") {
         return &kAttdefCodec;
     }
+    if (type == "DIMENSION") {
+        return &kDimensionCodec;
+    }
     return nullptr;
 }
 
@@ -90,6 +93,9 @@ const EntityCodec* findCodec(const core::Entity& entity) {
     }
     if (std::holds_alternative<core::AttributeDefinition>(entity)) {
         return &kAttdefCodec;
+    }
+    if (std::holds_alternative<core::Dimension>(entity)) {
+        return &kDimensionCodec;
     }
     return nullptr;
 }

@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <ranges>
 #include <utility>
 
 namespace tg::io {
@@ -206,8 +207,57 @@ std::optional<long long> integerOf(const core::RawGroups& groups, int code, long
     return at ? parseInteger(groups[*at].value) : std::optional<long long>{absent};
 }
 
+/// True for the name of an anonymous block of a dimension (*D…).
+bool dimensionName(std::string_view name) {
+    return blockKey(name).starts_with("*d");
+}
+
+/// The fields of `definition` from its blockExtras and recordExtras; false
+/// when they cannot be read or name an external block.
+bool readDefinitionFields(core::BlockDefinition& definition) {
+    const auto& head = definition.blockExtras;
+    const auto own = ownGroups(head);
+    const auto name = firstOwn(head, own, 2);
+    const auto x = firstOwn(head, own, 10);
+    const auto y = firstOwn(head, own, 20);
+    const auto flags = integerOf(head, 70, 0);
+    if (!name || !x || !y || !flags) {
+        return false;
+    }
+    definition.name = head[*name].value;
+    const auto baseX = parseNumber(trimDxf(head[*x].value));
+    const auto baseY = parseNumber(trimDxf(head[*y].value));
+    if (!baseX || !baseY || !validBlockName(definition.name) || (*flags & kExternalBit) != 0) {
+        return false;
+    }
+    // An external block names its file in group 1 (docs/tappe/0.8, PT18,
+    // point 1: "70 bit 4 o 1 xref-dipendente").
+    for (std::size_t i = 0; i < head.size(); ++i) {
+        if (own[i] && head[i].code == 1 && !trimDxf(head[i].value).empty()) {
+            return false;
+        }
+    }
+    definition.base = {*baseX, *baseY};
+    if (const auto description = firstOwn(head, own, 4)) {
+        definition.description = head[*description].value;
+    }
+    definition.anonymous = (*flags & kAnonymousBit) != 0;
+    definition.hasAttributes = (*flags & kAttributesBit) != 0;
+    // The record: units (70), explodable (280), uniform scale (281).
+    const auto units = integerOf(definition.recordExtras, 70, 0);
+    const auto explodable = integerOf(definition.recordExtras, 280, 1);
+    const auto uniform = integerOf(definition.recordExtras, 281, 0);
+    if (!units || *units < 0 || *units > core::Document::kMaxUnits || !explodable || !uniform) {
+        return false;
+    }
+    definition.units = static_cast<int>(*units);
+    definition.explodable = *explodable != 0;
+    definition.uniformScale = *uniform == 1;
+    return true;
+}
+
 /// The block definition of `chunk`, without its entities, or std::nullopt
-/// when it stays out of the table.
+/// when its groups cannot be read.
 std::optional<core::BlockDefinition> definitionOf(const core::RawGroups& blocks, const Chunk& chunk,
                                                   const RecordRead& record,
                                                   const core::RawGroups& tables) {
@@ -220,53 +270,26 @@ std::optional<core::BlockDefinition> definitionOf(const core::RawGroups& blocks,
     definition.blockId = parseHandle(blocks[chunk.begin + 1].value).value_or(0);
     definition.endBlockId = parseHandle(blocks[chunk.endBlock + 1].value).value_or(0);
     definition.recordId = record.id;
-    const core::RawGroups head(blocks.begin() + static_cast<std::ptrdiff_t>(chunk.begin + 2),
-                               blocks.begin() + static_cast<std::ptrdiff_t>(chunk.entities));
-    const auto own = ownGroups(head);
-    const auto name = firstOwn(head, own, 2);
-    const auto x = firstOwn(head, own, 10);
-    const auto y = firstOwn(head, own, 20);
-    const auto flags = integerOf(head, 70, 0);
-    if (!name || !x || !y || !flags || definition.blockId == 0 || definition.endBlockId == 0) {
-        return std::nullopt;
-    }
-    definition.name = head[*name].value;
-    const auto baseX = parseNumber(trimDxf(head[*x].value));
-    const auto baseY = parseNumber(trimDxf(head[*y].value));
-    if (!baseX || !baseY || !validBlockName(definition.name) ||
-        layoutOrDimension(definition.name) || (*flags & kExternalBit) != 0) {
-        return std::nullopt;
-    }
-    // An external block names its file in group 1 (docs/tappe/0.8, PT18,
-    // point 1: "70 bit 4 o 1 xref-dipendente").
-    for (std::size_t i = 0; i < head.size(); ++i) {
-        if (own[i] && head[i].code == 1 && !trimDxf(head[i].value).empty()) {
-            return std::nullopt;
-        }
-    }
-    definition.base = {*baseX, *baseY};
-    if (const auto description = firstOwn(head, own, 4)) {
-        definition.description = head[*description].value;
-    }
-    definition.anonymous = (*flags & kAnonymousBit) != 0;
-    definition.hasAttributes = (*flags & kAttributesBit) != 0;
-    definition.blockExtras = head;
+    definition.blockExtras.assign(blocks.begin() + static_cast<std::ptrdiff_t>(chunk.begin + 2),
+                                  blocks.begin() + static_cast<std::ptrdiff_t>(chunk.entities));
     definition.endBlockExtras.assign(
         blocks.begin() + static_cast<std::ptrdiff_t>(chunk.endBlock + 2),
         blocks.begin() + static_cast<std::ptrdiff_t>(chunk.end));
-    // The record: units (70), explodable (280), uniform scale (281).
     definition.recordExtras.assign(tables.begin() + static_cast<std::ptrdiff_t>(record.begin + 2),
                                    tables.begin() + static_cast<std::ptrdiff_t>(record.end));
-    const auto units = integerOf(definition.recordExtras, 70, 0);
-    const auto explodable = integerOf(definition.recordExtras, 280, 1);
-    const auto uniform = integerOf(definition.recordExtras, 281, 0);
-    if (!units || *units < 0 || *units > core::Document::kMaxUnits || !explodable || !uniform) {
+    if (definition.blockId == 0 || definition.endBlockId == 0 ||
+        !readDefinitionFields(definition)) {
         return std::nullopt;
     }
-    definition.units = static_cast<int>(*units);
-    definition.explodable = *explodable != 0;
-    definition.uniformScale = *uniform == 1;
     return definition;
+}
+
+/// The name of the block of the chunk at `begin` (a group 0 BLOCK), as read.
+std::string chunkName(const core::RawGroups& blocks, const Chunk& chunk) {
+    const core::RawGroups head(blocks.begin() + static_cast<std::ptrdiff_t>(chunk.begin + 1),
+                               blocks.begin() + static_cast<std::ptrdiff_t>(chunk.entities));
+    const auto at = firstOwn(head, ownGroups(head), 2);
+    return at ? head[*at].value : std::string{};
 }
 
 }  // namespace
@@ -323,40 +346,52 @@ BlocksRead readBlocks(core::RawGroups& blocks, core::RawGroups& tables, std::str
     };
 
     std::vector<Accepted> accepted;
+    // The blocks *D…: those a dimension can take, by name.
+    std::vector<std::pair<std::string, Chunk>> dimensions;
+    std::unordered_set<std::string> dimensionNames;
+    std::unordered_set<std::string> ambiguous;
     for (std::size_t i = 0; i < blocks.size(); ++i) {
         if (!isMarker(blocks[i], "BLOCK")) {
             continue;
         }
         const Chunk chunk = chunkAt(blocks, i);
         i = chunk.end - 1;
-        std::string name;
-        const core::RawGroups head(blocks.begin() + static_cast<std::ptrdiff_t>(chunk.begin + 1),
-                                   blocks.begin() + static_cast<std::ptrdiff_t>(chunk.entities));
-        if (const auto at = firstOwn(head, ownGroups(head), 2)) {
-            name = head[*at].value;
+        const std::string key = blockKey(chunkName(blocks, chunk));
+        if (dimensionName(key) && !dimensionNames.insert(key).second) {
+            ambiguous.insert(key);  // two blocks: neither is any dimension's
+            continue;
         }
-        const auto record = recordByName.find(blockKey(name));
+        const auto record = recordByName.find(key);
         if (record == recordByName.end() || records[record->second].used ||
-            read.names.contains(blockKey(name))) {
+            read.names.contains(key)) {
             continue;
         }
         auto definition = definitionOf(blocks, chunk, records[record->second], tables);
-        if (!definition) {
+        if (!definition || layoutOrDimension(definition->name)) {
+            if (definition && dimensionName(definition->name)) {
+                records[record->second].used = true;
+                read.dimensionBlocks.emplace(key, std::move(*definition));
+                dimensions.emplace_back(key, chunk);
+            }
             continue;
         }
         records[record->second].used = true;
-        read.names.insert(blockKey(name));
+        read.names.insert(key);
         read.definitions.push_back(std::move(*definition));
         accepted.push_back({chunk, record->second});
     }
-    read.inserts.resize(read.definitions.size());
-    for (std::size_t d = 0; d < accepted.size(); ++d) {
-        auto& definition = read.definitions[d];
-        const Chunk& chunk = accepted[d].chunk;
+    for (const auto& key : ambiguous) {
+        read.dimensionBlocks.erase(key);
+    }
+    // The entities of a block, read as those of the drawing. A DIMENSION
+    // stays unhandled: its block *D… is not attached to it.
+    const auto readEntities = [&](core::BlockDefinition& definition, const Chunk& chunk,
+                                  std::unordered_map<std::uint64_t, EntityItem>* inserts) {
         auto items = groupItems(entitiesIn(blocks, chunk.entities, chunk.endBlock));
         std::uint64_t order = 0;
         for (auto& item : items) {
             ++order;
+            countDimensionBlock(item, read);
             const std::uint64_t id = handleOf(item.front().groups);
             std::optional<core::EntityRecord> record;
             if (id != 0) {
@@ -365,11 +400,14 @@ BlocksRead readBlocks(core::RawGroups& blocks, core::RawGroups& tables, std::str
                     order,   units};
                 record = readItem(item, context, read.names);
             }
+            if (record && std::holds_alternative<core::Dimension>(record->entity)) {
+                record.reset();
+            }
             if (record && takeItemProperties(*record, reader)) {
                 record->id = core::EntityId{id};
                 record->order = order;
-                if (std::holds_alternative<core::Insert>(record->entity)) {
-                    read.inserts[d].emplace(id, item);
+                if (inserts != nullptr && std::holds_alternative<core::Insert>(record->entity)) {
+                    inserts->emplace(id, item);
                 }
                 definition.entities.push_back(std::move(*record));
             } else {
@@ -378,6 +416,16 @@ BlocksRead readBlocks(core::RawGroups& blocks, core::RawGroups& tables, std::str
                 definition.rawEntities.push_back(
                     {core::EntityId{id}, order, item.front().type, rawGroupsOf(item)});
             }
+        }
+    };
+    read.inserts.resize(read.definitions.size());
+    for (std::size_t d = 0; d < accepted.size(); ++d) {
+        readEntities(read.definitions[d], accepted[d].chunk, &read.inserts[d]);
+    }
+    for (const auto& [key, chunk] : dimensions) {
+        if (const auto found = read.dimensionBlocks.find(key);
+            found != read.dimensionBlocks.end()) {
+            readEntities(found->second, chunk, nullptr);
         }
     }
     // The placeholders, from the last position back, so that the positions
@@ -407,6 +455,91 @@ BlocksRead readBlocks(core::RawGroups& blocks, core::RawGroups& tables, std::str
                       {kRecordPlaceholder, ""});
     }
     return read;
+}
+
+// --- Dimensions ------------------------------------------------------------------
+
+void countDimensionBlock(const EntityItem& item, BlocksRead& read) {
+    if (item.empty() || trimDxf(item.front().type) != "DIMENSION") {
+        return;
+    }
+    // The groups of the subclasses, as the codec reads them.
+    const auto parts = splitEntityGroups(item.front().groups);
+    const std::string name = dimensionBlockName(parts.geometry);
+    if (!trimDxf(name).empty()) {
+        ++read.dimensionReferences[blockKey(name)];
+    }
+}
+
+bool attachDimensionBlock(core::EntityRecord& record, BlocksRead& read) {
+    auto* dimension = std::get_if<core::Dimension>(&record.entity);
+    if (dimension == nullptr) {
+        return true;
+    }
+    auto& specific = record.extras.specific;
+    const std::string key = blockKey(dimensionBlockName(specific));
+    const auto found = read.dimensionBlocks.find(key);
+    const auto references = read.dimensionReferences.find(key);
+    if (found == read.dimensionBlocks.end() || references == read.dimensionReferences.end() ||
+        references->second != 1) {
+        return false;
+    }
+    auto& block = found->second;
+    dimension->graphics = std::move(block.entities);
+    dimension->rawGraphics = std::move(block.rawEntities);
+    specific.resize(dimensionBlockStart(specific));
+    const auto mark = [&specific](std::string_view marker, std::uint64_t handle,
+                                  const core::RawGroups& groups) {
+        specific.push_back({0, std::string{marker}});
+        specific.push_back({5, handleText(handle)});
+        specific.insert(specific.end(), groups.begin(), groups.end());
+    };
+    mark(kDimensionRecordMarker, block.recordId, block.recordExtras);
+    mark(kDimensionBlockMarker, block.blockId, block.blockExtras);
+    mark(kDimensionEndMarker, block.endBlockId, block.endBlockExtras);
+    read.takenDimensionBlocks.emplace_back(block.recordId, block.blockId);
+    read.dimensionBlocks.erase(found);
+    return true;
+}
+
+void takeDimensionBlocks(const BlocksRead& read, core::RawGroups& blocks, core::RawGroups& tables) {
+    if (read.takenDimensionBlocks.empty()) {
+        return;
+    }
+    std::unordered_set<std::uint64_t> recordIds;
+    std::unordered_set<std::uint64_t> blockIds;
+    for (const auto& [record, block] : read.takenDimensionBlocks) {
+        recordIds.insert(record);
+        blockIds.insert(block);
+    }
+    // From the last position back, as readBlocks() does.
+    const auto records = blockRecords(tables);
+    for (const auto& record : std::ranges::reverse_view(records)) {
+        if (record.id == 0 || !recordIds.contains(record.id)) {
+            continue;
+        }
+        tables.erase(tables.begin() + static_cast<std::ptrdiff_t>(record.begin),
+                     tables.begin() + static_cast<std::ptrdiff_t>(record.end));
+        tables.insert(tables.begin() + static_cast<std::ptrdiff_t>(record.begin),
+                      {kRecordPlaceholder, handleText(record.id)});
+    }
+    for (std::size_t i = blocks.size(); i-- > 0;) {
+        if (!isMarker(blocks[i], "BLOCK") || i + 1 >= blocks.size() || blocks[i + 1].code != 5) {
+            continue;
+        }
+        const auto handle = parseHandle(blocks[i + 1].value);
+        if (handle && blockIds.contains(*handle)) {
+            blocks.insert(blocks.begin() + static_cast<std::ptrdiff_t>(i),
+                          {kRecordPlaceholder, handleText(*handle)});
+        }
+    }
+}
+
+void readDimensionOverrides(core::EntityRecord& record, const core::Document& document) {
+    if (auto* dimension = std::get_if<core::Dimension>(&record.entity)) {
+        dimension->presentation.overrides =
+            readDimOverrides(record.extras.extended, document.textStyles()).essential;
+    }
 }
 
 void putBlocks(BlocksRead& read, core::Document& document, std::vector<std::string>& warnings) {
@@ -553,6 +686,99 @@ private:
     std::unordered_set<std::uint64_t> m_seqends;
 };
 
+/// The block a dimension was read with, from the markers of `specific`
+/// (kDimensionRecordMarker), or std::nullopt.
+std::optional<core::BlockDefinition> markedBlock(const core::RawGroups& specific) {
+    constexpr std::array kMarkers{kDimensionRecordMarker, kDimensionBlockMarker,
+                                  kDimensionEndMarker};
+    std::array<core::RawGroups, kMarkers.size()> parts;
+    std::array<std::uint64_t, kMarkers.size()> handles{};
+    std::size_t part = kMarkers.size();
+    bool handle = false;
+    for (std::size_t i = dimensionBlockStart(specific); i < specific.size(); ++i) {
+        const auto& group = specific[i];
+        if (group.code == 0) {
+            part = part == kMarkers.size() ? 0 : part + 1;
+            if (part == kMarkers.size() || group.value != kMarkers.at(part)) {
+                return std::nullopt;
+            }
+            handle = true;
+            continue;
+        }
+        if (handle) {
+            handle = false;
+            handles.at(part) = group.code == 5 ? parseHandle(group.value).value_or(0) : 0;
+            if (handles.at(part) == 0) {
+                return std::nullopt;
+            }
+            continue;
+        }
+        parts.at(part).push_back(group);
+    }
+    if (part != kMarkers.size() - 1 || handle) {
+        return std::nullopt;
+    }
+    core::BlockDefinition block;
+    block.recordId = handles[0];
+    block.blockId = handles[1];
+    block.endBlockId = handles[2];
+    block.recordExtras = std::move(parts[0]);
+    block.blockExtras = std::move(parts[1]);
+    block.endBlockExtras = std::move(parts[2]);
+    if (!readDefinitionFields(block)) {
+        return std::nullopt;
+    }
+    return block;
+}
+
+/// The names of the blocks the BLOCKS groups `section` keeps as read: not
+/// those after a placeholder, which the plan writes.
+std::unordered_set<std::string> keptBlockNames(const core::RawGroups& section) {
+    std::unordered_set<std::string> names;
+    for (std::size_t i = 0; i < section.size(); ++i) {
+        if (isMarker(section[i], "BLOCK") && (i == 0 || !isPlaceholder(section[i - 1]))) {
+            names.insert(blockKey(chunkName(section, chunkAt(section, i))));
+        }
+    }
+    return names;
+}
+
+/// `raw` with a new handle for each of its entities (the first group 5 of
+/// each, after its group 0), the owners (330) that named an old one naming
+/// the new one, and `owner` as the owner of the first: a copy of an entity
+/// of the block of a dimension, written beside the original.
+core::RawEntity rehandled(core::RawEntity raw, std::uint64_t owner,
+                          const std::function<std::uint64_t()>& take) {
+    std::unordered_map<std::uint64_t, std::uint64_t> renamed;
+    bool start = true;
+    for (auto& group : raw.groups) {
+        if (group.code == 0) {
+            start = true;
+        } else if (group.code == 5 && start) {
+            start = false;
+            const std::uint64_t now = take();
+            if (const auto old = parseHandle(group.value)) {
+                renamed.emplace(*old, now);
+            }
+            group.value = handleText(now);
+            if (renamed.size() == 1) {
+                raw.id = core::EntityId{now};
+            }
+        }
+    }
+    for (auto& group : raw.groups) {
+        if (group.code != 330) {
+            continue;
+        }
+        const auto old = parseHandle(group.value);
+        if (const auto found = old ? renamed.find(*old) : renamed.end(); found != renamed.end()) {
+            group.value = handleText(found->second);
+        }
+    }
+    setOwner(raw.groups, owner);
+    return raw;
+}
+
 bool hasTable(const core::RawGroups& tables, std::string_view name) {
     for (std::size_t i = 0; i + 1 < tables.size(); ++i) {
         if (isMarker(tables[i], "TABLE") && tables[i + 1].code == 2 &&
@@ -561,6 +787,124 @@ bool hasTable(const core::RawGroups& tables, std::string_view name) {
         }
     }
     return false;
+}
+
+/// The blocks of the dimensions of `document` (BlockWritePlan::
+/// dimensionBlocks), after the definitions of `plan`.
+void planDimensions(const core::RawDrawing& raw, BlockWritePlan& plan, HandlePlanner& planner,
+                    const core::Document& document) {
+    // The DIMENSION to write: those of the drawing, then those of the
+    // definitions, which are written from the plan.
+    std::vector<core::EntityRecord*> records;
+    for (const auto& record : document.entities()) {
+        if (std::holds_alternative<core::Dimension>(record.entity)) {
+            records.push_back(&plan.dimensions.emplace(record.id.value, record).first->second);
+        }
+    }
+    for (auto& block : plan.blocks) {
+        for (auto& record : block.entities) {
+            if (std::holds_alternative<core::Dimension>(record.entity)) {
+                records.push_back(&record);
+            }
+        }
+    }
+    if (records.empty()) {
+        return;
+    }
+    std::unordered_set<std::string> names;
+    for (const auto& section : raw.sections) {
+        if (section.name == "BLOCKS") {
+            names = keptBlockNames(section.groups);
+        }
+    }
+    for (const auto& block : plan.blocks) {
+        names.insert(blockKey(block.name));
+    }
+    // First the dimensions that keep the block they were read with.
+    std::unordered_set<std::uint64_t> handles;
+    std::vector<bool> own(records.size(), false);
+    std::vector<std::optional<core::BlockDefinition>> kept(records.size());
+    std::vector<std::optional<core::BlockDefinition>> copied(records.size());
+    for (std::size_t i = 0; i < records.size(); ++i) {
+        auto block = markedBlock(records[i]->extras.specific);
+        const std::string key = blockKey(dimensionBlockName(records[i]->extras.specific));
+        if (!block || !dimensionName(key) || blockKey(block->name) != key || names.contains(key) ||
+            handles.contains(block->recordId) || handles.contains(block->blockId) ||
+            handles.contains(block->endBlockId)) {
+            copied[i] = std::move(block);
+            continue;
+        }
+        names.insert(key);
+        handles.insert({block->recordId, block->blockId, block->endBlockId});
+        kept[i] = std::move(block);
+        own[i] = true;
+    }
+    // Then the others, as new dimensions: a copy keeps the groups of the
+    // block of its original.
+    std::size_t number = 1;
+    for (std::size_t i = 0; i < records.size(); ++i) {
+        if (kept[i]) {
+            continue;
+        }
+        core::BlockDefinition block;
+        if (copied[i]) {
+            block = std::move(*copied[i]);
+        } else {
+            block.anonymous = true;
+        }
+        while (names.contains(blockKey("*D" + std::to_string(number)))) {
+            ++number;
+        }
+        block.name = "*D" + std::to_string(number);
+        names.insert(blockKey(block.name));
+        block.recordId = planner.take();
+        block.blockId = planner.take();
+        block.endBlockId = planner.take();
+        kept[i] = std::move(block);
+    }
+    // The graphics: a handle each, the dimensions that kept their block
+    // first, so that the copies are those that change.
+    std::vector<std::size_t> order;
+    for (const bool keeping : {true, false}) {
+        for (std::size_t i = 0; i < records.size(); ++i) {
+            if (own[i] == keeping) {
+                order.push_back(i);
+            }
+        }
+    }
+    const std::function<std::uint64_t()> take = [&planner] {
+        return planner.take();
+    };
+    for (const std::size_t i : order) {
+        auto& record = *records[i];
+        auto& dimension = std::get<core::Dimension>(record.entity);
+        auto& block = *kept[i];
+        for (auto& graphic : dimension.graphics) {
+            if (graphic.id.value == 0 || !handles.insert(graphic.id.value).second) {
+                graphic.id = core::EntityId{planner.take()};
+                handles.insert(graphic.id.value);
+            }
+            if (auto* insert = std::get_if<core::Insert>(&graphic.entity)) {
+                planner.plan(*insert, graphic.extras.specific, graphic.id.value,
+                             graphic.properties);
+            }
+        }
+        for (auto& rawGraphic : dimension.rawGraphics) {
+            if (rawGraphic.id.value != 0 && !handles.insert(rawGraphic.id.value).second) {
+                rawGraphic = rehandled(std::move(rawGraphic), block.recordId, take);
+                handles.insert(rawGraphic.id.value);
+            }
+        }
+        // A dimension that keeps its block keeps the name as it wrote it.
+        const std::string name = own[i] ? dimensionBlockName(record.extras.specific) : block.name;
+        block.entities = dimension.graphics;
+        block.rawEntities = dimension.rawGraphics;
+        record.extras.specific = namedDimensionGroups(dimension, record.extras.specific, name);
+    }
+    // In drawing order.
+    for (auto& block : kept) {
+        plan.dimensionBlocks.push_back(std::move(*block));
+    }
 }
 
 }  // namespace
@@ -598,15 +942,33 @@ BlockWritePlan planBlocks(const core::Document& document, const core::RawDrawing
             plan.insertSpecific.emplace(record.id.value, std::move(specific));
         }
     }
+    planDimensions(raw, plan, planner, document);
     bool tables = false;
     for (const auto& section : raw.sections) {
         tables = tables || (section.name == "TABLES" && hasTable(section.groups, "BLOCK_RECORD"));
     }
-    if (!tables && !plan.blocks.empty()) {
+    if (!tables && !plan.noBlocks()) {
         plan.recordTable = planner.take();
     }
     return plan;
 }
+
+namespace {
+
+/// The overrides of the model in the XDATA of a dimension (writeDimOverrides()),
+/// with the others as read.
+void writeOverrides(core::EntityRecord& record, const core::Document& document) {
+    const auto* dimension = std::get_if<core::Dimension>(&record.entity);
+    if (dimension == nullptr) {
+        return;
+    }
+    auto& extended = record.extras.extended;
+    DimOverrides overrides = readDimOverrides(extended, document.textStyles());
+    overrides.essential = dimension->presentation.overrides;
+    writeDimOverrides(extended, overrides, document.textStyles());
+}
+
+}  // namespace
 
 core::EntityRecord recordForWriting(const core::EntityRecord& record,
                                     const core::Document& document, const BlockWritePlan& plan) {
@@ -620,6 +982,14 @@ core::EntityRecord recordForWriting(const core::EntityRecord& record,
         for (auto& attribute : insert->attributes) {
             attribute.extras.common = attributeCommonGroups(attribute, document);
         }
+    }
+    if (std::holds_alternative<core::Dimension>(out.entity)) {
+        if (const auto found = plan.dimensions.find(record.id.value);
+            found != plan.dimensions.end()) {
+            out.entity = found->second.entity;
+            out.extras.specific = found->second.extras.specific;
+        }
+        writeOverrides(out, document);
     }
     return out;
 }
@@ -739,6 +1109,7 @@ private:
                 attribute.extras.common = attributeCommonGroups(attribute, m_document);
             }
         }
+        writeOverrides(written, m_document);
         EntityWriteContext context{m_version, m_codePage, core::EntityId{block.recordId}};
         core::RawGroups groups{{0, std::string{codec->type}}};
         codec->write(written, context, groups);
@@ -765,7 +1136,27 @@ private:
         EntityWriteContext write{m_version, m_codePage, core::EntityId{block.recordId}};
         core::RawGroups again{{0, std::string{codec.type}}};
         codec.write(*decoded, write, again);
-        return sameGroups(groups, again);
+        return sameGroups(byCommonCode(groups), byCommonCode(again));
+    }
+
+    /// `groups` with the AcDbEntity groups in the order of their codes: the
+    /// writer puts the properties in the order of the DXF reference, the
+    /// groups read say the same in any order (62, 440, 370 in the blocks of
+    /// the dimensions of AutoCAD), as attributeCommonGroups() has it.
+    static core::RawGroups byCommonCode(core::RawGroups groups) {
+        const auto common = std::ranges::find_if(groups, [](const core::RawGroup& group) {
+            return group.code == 100 && trimDxf(group.value) == "AcDbEntity";
+        });
+        if (common == groups.end()) {
+            return groups;
+        }
+        const auto end = std::find_if(common + 1, groups.end(), [](const core::RawGroup& group) {
+            return group.code == 100 || group.code == 0;
+        });
+        std::stable_sort(common + 1, end, [](const core::RawGroup& a, const core::RawGroup& b) {
+            return a.code < b.code;
+        });
+        return groups;
     }
 
     const core::Document& m_document;
@@ -791,29 +1182,47 @@ core::RawGroups writeBlocks(const core::RawGroups& section, const core::Document
         }
     }
     core::RawGroups out;
-    std::size_t next = 0;
-    const auto writeNext = [&] {
-        const auto& block = plan.blocks[next++];
+    const auto writeBlock = [&](const core::BlockDefinition& block) {
         const auto found = sources.find(block.blockId);
         writer.write(block, found != sources.end() ? &section : nullptr,
                      found != sources.end() ? &found->second : nullptr, out);
     };
+    std::size_t next = 0;
+    // The blocks of the dimensions, by the handle of their BLOCK.
+    std::unordered_map<std::uint64_t, std::size_t> dimensions;
+    for (std::size_t d = 0; d < plan.dimensionBlocks.size(); ++d) {
+        dimensions.emplace(plan.dimensionBlocks[d].blockId, d);
+    }
+    std::vector<bool> written(plan.dimensionBlocks.size(), false);
     std::size_t i = 0;
     while (i < section.size()) {
         if (!isPlaceholder(section[i])) {
             out.push_back(section[i++]);
             continue;
         }
+        // The placeholder of the block of a dimension names its BLOCK.
+        const auto handle = parseHandle(section[i].value);
         // The groups of a definition read: written from the model.
         i = i + 1 < section.size() && isMarker(section[i + 1], "BLOCK")
                 ? chunkAt(section, i + 1).end
                 : i + 1;
-        if (next < plan.blocks.size()) {
-            writeNext();
+        if (handle) {
+            const auto found = dimensions.find(*handle);
+            if (found != dimensions.end() && !written[found->second]) {
+                written[found->second] = true;
+                writeBlock(plan.dimensionBlocks[found->second]);
+            }
+        } else if (next < plan.blocks.size()) {
+            writeBlock(plan.blocks[next++]);
         }
     }
     while (next < plan.blocks.size()) {
-        writeNext();
+        writeBlock(plan.blocks[next++]);
+    }
+    for (std::size_t d = 0; d < plan.dimensionBlocks.size(); ++d) {
+        if (!written[d]) {
+            writeBlock(plan.dimensionBlocks[d]);
+        }
     }
     return out;
 }
@@ -852,6 +1261,13 @@ core::RawGroups recordGroups(const core::BlockDefinition& block, std::string_vie
 }  // namespace
 
 void writeBlockRecords(core::RawGroups& tables, const BlockWritePlan& plan) {
+    // The definitions in table order, then the blocks of the dimensions.
+    std::vector<const core::BlockDefinition*> blocks;
+    for (const auto* list : {&plan.blocks, &plan.dimensionBlocks}) {
+        for (const auto& block : *list) {
+            blocks.push_back(&block);
+        }
+    }
     std::size_t begin = tables.size();
     for (std::size_t i = 0; i + 1 < tables.size(); ++i) {
         if (isMarker(tables[i], "TABLE") && tables[i + 1].code == 2 &&
@@ -861,15 +1277,15 @@ void writeBlockRecords(core::RawGroups& tables, const BlockWritePlan& plan) {
         }
     }
     if (begin == tables.size()) {
-        if (plan.blocks.empty()) {
+        if (blocks.empty()) {
             return;
         }
         const std::string owner = handleText(plan.recordTable);
         core::RawGroups table{
             {0, "TABLE"}, {2, "BLOCK_RECORD"},      {5, owner},
-            {330, "0"},   {100, "AcDbSymbolTable"}, {70, std::to_string(plan.blocks.size())}};
-        for (const auto& block : plan.blocks) {
-            const auto record = recordGroups(block, owner);
+            {330, "0"},   {100, "AcDbSymbolTable"}, {70, std::to_string(blocks.size())}};
+        for (const auto* block : blocks) {
+            const auto record = recordGroups(*block, owner);
             table.insert(table.end(), record.begin(), record.end());
         }
         table.push_back({0, "ENDTAB"});
@@ -902,10 +1318,10 @@ void writeBlockRecords(core::RawGroups& tables, const BlockWritePlan& plan) {
     // Each record where the reader took it out, if its definition is still
     // there; the others at the end, in table order.
     std::unordered_map<std::uint64_t, std::size_t> byRecord;
-    for (std::size_t i = 0; i < plan.blocks.size(); ++i) {
-        byRecord.emplace(plan.blocks[i].recordId, i);
+    for (std::size_t i = 0; i < blocks.size(); ++i) {
+        byRecord.emplace(blocks[i]->recordId, i);
     }
-    std::vector<bool> written(plan.blocks.size(), false);
+    std::vector<bool> written(blocks.size(), false);
     core::RawGroups body;
     for (std::size_t i = begin; i < end; ++i) {
         if (!isPlaceholder(tables[i])) {
@@ -915,13 +1331,13 @@ void writeBlockRecords(core::RawGroups& tables, const BlockWritePlan& plan) {
         const auto found = byRecord.find(parseHandle(tables[i].value).value_or(0));
         if (found != byRecord.end() && !written[found->second]) {
             written[found->second] = true;
-            const auto record = recordGroups(plan.blocks[found->second], owner);
+            const auto record = recordGroups(*blocks[found->second], owner);
             body.insert(body.end(), record.begin(), record.end());
         }
     }
-    for (std::size_t i = 0; i < plan.blocks.size(); ++i) {
+    for (std::size_t i = 0; i < blocks.size(); ++i) {
         if (!written[i]) {
-            const auto record = recordGroups(plan.blocks[i], owner);
+            const auto record = recordGroups(*blocks[i], owner);
             body.insert(body.end(), record.begin(), record.end());
         }
     }
@@ -929,9 +1345,8 @@ void writeBlockRecords(core::RawGroups& tables, const BlockWritePlan& plan) {
         // The count follows the records added and removed.
         auto& group = body[*count - begin];
         const long long read = parseInteger(group.value).value_or(0);
-        const long long now =
-            std::max<long long>(0, read + static_cast<long long>(plan.blocks.size()) -
-                                       static_cast<long long>(placeholders));
+        const long long now = std::max<long long>(
+            0, read + static_cast<long long>(blocks.size()) - static_cast<long long>(placeholders));
         if (now != read) {
             group.value = std::to_string(now);
         }
@@ -961,6 +1376,36 @@ std::uint64_t blockHandlesEnd(const core::Document& document) {
                                          specific.end())));
         }
     };
+    // The block of a dimension: the handles of its markers and of its
+    // graphics, those of the entities of a raw one included.
+    const auto dimensionHandles = [&](const core::EntityRecord& record) {
+        const auto* dimension = std::get_if<core::Dimension>(&record.entity);
+        if (dimension == nullptr) {
+            return;
+        }
+        const auto& specific = record.extras.specific;
+        for (std::size_t i = dimensionBlockStart(specific); i + 1 < specific.size(); ++i) {
+            if (specific[i].code == 0 && specific[i + 1].code == 5) {
+                see(parseHandle(specific[i + 1].value).value_or(0));
+            }
+        }
+        for (const auto& graphic : dimension->graphics) {
+            see(graphic.id.value);
+            insertHandles(graphic);
+        }
+        for (const auto& raw : dimension->rawGraphics) {
+            see(raw.id.value);
+            bool start = true;
+            for (const auto& group : raw.groups) {
+                if (group.code == 0) {
+                    start = true;
+                } else if (group.code == 5 && start) {
+                    start = false;
+                    see(parseHandle(group.value).value_or(0));
+                }
+            }
+        }
+    };
     for (const auto& block : document.blocks().definitions()) {
         see(block.recordId);
         see(block.blockId);
@@ -968,6 +1413,7 @@ std::uint64_t blockHandlesEnd(const core::Document& document) {
         for (const auto& record : block.entities) {
             see(record.id.value);
             insertHandles(record);
+            dimensionHandles(record);
         }
         for (const auto& raw : block.rawEntities) {
             see(raw.id.value);
@@ -975,6 +1421,7 @@ std::uint64_t blockHandlesEnd(const core::Document& document) {
     }
     for (const auto& record : document.entities()) {
         insertHandles(record);
+        dimensionHandles(record);
     }
     return next;
 }

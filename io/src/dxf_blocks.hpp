@@ -13,12 +13,14 @@
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 /// Blocks, inserts and attributes in the DXF (docs/adr/0045, points 1, 2 and
 /// 6; package 0.8-PT18): the BLOCKS section and the BLOCK_RECORD table read
 /// into core::BlockTable and written from it, INSERT with its ATTRIB and
-/// SEQEND, ATTDEF.
+/// SEQEND, ATTDEF; the anonymous blocks *D… of the dimensions, read into
+/// their DIMENSION and written from it (docs/tappe/0.8/PT25-quote-dxf.md).
 namespace tg::io {
 
 // --- Groups kept as read, values from the model -----------------------------
@@ -75,6 +77,30 @@ inline constexpr std::string_view kSeqendMarker = "SEQEND";
 /// written as 330 when the attribute brings none.
 void writeAttribute(const core::Attribute& attribute, core::EntityId owner,
                     const EntityWriteContext& context, core::RawGroups& out);
+
+// --- Dimensions (dxf_dimension.cpp) ------------------------------------------
+
+/// In the extras.specific of a DIMENSION, after the groups of its subclasses,
+/// the groups of its block *D… as read: a group 0 with each of these names,
+/// in this order, followed by the groups that follow the group 0 of its
+/// BLOCK_RECORD, BLOCK and ENDBLK, the handle (5) first. Group 0 never
+/// belongs to a subclass, so no group read can be taken for a marker.
+inline constexpr std::string_view kDimensionRecordMarker = "BLOCK_RECORD";
+inline constexpr std::string_view kDimensionBlockMarker = "BLOCK";
+inline constexpr std::string_view kDimensionEndMarker = "ENDBLK";
+
+/// The position of the first marker of the block in `specific`, or its size.
+[[nodiscard]] std::size_t dimensionBlockStart(const core::RawGroups& specific);
+
+/// The name of the block of a DIMENSION: the first own group 2 of its
+/// subclasses in `specific`, or empty.
+[[nodiscard]] std::string dimensionBlockName(const core::RawGroups& specific);
+
+/// The groups of the subclasses of `specific` (those of a new dimension when
+/// it has none) with `name` in group 2, without the block.
+[[nodiscard]] core::RawGroups namedDimensionGroups(const core::Dimension& dimension,
+                                                   const core::RawGroups& specific,
+                                                   const std::string& name);
 
 // --- Entities as they stand in a file ----------------------------------------
 
@@ -135,6 +161,21 @@ struct BlockWritePlan {
     /// The handle of the BLOCK_RECORD table when the file lacks it and the
     /// document has definitions; 0 otherwise.
     std::uint64_t recordTable{0};
+    /// The blocks *D… of the dimensions, in drawing order (the dimensions of
+    /// the drawing, then those of the definitions), with every handle given:
+    /// a dimension keeps the name and the handles it was read with, unless
+    /// another one took them first (a copy); then, as a new dimension, it
+    /// takes the name *D<n> with the first free n and new handles. Its
+    /// graphics take a new handle when they have none or share one.
+    std::vector<core::BlockDefinition> dimensionBlocks;
+    /// The DIMENSION of the drawing, by identifier, ready to be written: the
+    /// graphics with their handles, extras.specific with the name of the
+    /// block in group 2 and without the block. Those of the definitions are
+    /// changed in `blocks`.
+    std::unordered_map<std::uint64_t, core::EntityRecord> dimensions;
+
+    /// True when the document has no block to write.
+    [[nodiscard]] bool noBlocks() const { return blocks.empty() && dimensionBlocks.empty(); }
 };
 
 /// Gives handles from `nextHandle` on to everything of `document` that needs
@@ -145,7 +186,9 @@ struct BlockWritePlan {
 
 /// The record of a handled entity as the writer puts it out: the AcDbEntity
 /// groups of the model in extras.common, its attributes and SEQEND (for an
-/// INSERT) from the plan, with their own AcDbEntity groups.
+/// INSERT) from the plan, with their own AcDbEntity groups; for a DIMENSION
+/// its graphics and groups from the plan, and its overrides in the XDATA
+/// (writeDimOverrides()).
 [[nodiscard]] core::EntityRecord recordForWriting(const core::EntityRecord& record,
                                                   const core::Document& document,
                                                   const BlockWritePlan& plan);
@@ -154,6 +197,8 @@ struct BlockWritePlan {
 /// the groups of `section` (as read, or of the skeleton) with the definitions
 /// of the plan where the reader took them out, in table order, and the
 /// others at the end; the blocks the model does not hold where they were.
+/// The block of a dimension goes where the reader took it out, if the
+/// dimension still has it, otherwise after the definitions.
 [[nodiscard]] core::RawGroups writeBlocks(const core::RawGroups& section,
                                           const core::Document& document,
                                           const BlockWritePlan& plan, std::string_view version,
@@ -161,14 +206,14 @@ struct BlockWritePlan {
 
 /// Puts the BLOCK_RECORD records of the plan in the TABLES groups `tables`
 /// (already written): each at the placeholder the reader left with its
-/// handle as value, the others at the end of the table, in table order; the
-/// count of the table (70) follows. Adds the table when `tables` lacks it
-/// and the plan has definitions.
+/// handle as value, the others at the end of the table, in table order, and
+/// then those of the dimensions; the count of the table (70) follows. Adds
+/// the table when `tables` lacks it and the plan has blocks.
 void writeBlockRecords(core::RawGroups& tables, const BlockWritePlan& plan);
 
-/// The handles the document spends in its block definitions and in the
-/// attributes and SEQEND of its INSERT, for $HANDSEED (docs/tappe/0.8,
-/// PT18, point 6).
+/// The handles the document spends in its block definitions, in the
+/// attributes and SEQEND of its INSERT and in the blocks of its dimensions,
+/// for $HANDSEED (docs/tappe/0.8, PT18, point 6).
 [[nodiscard]] std::uint64_t blockHandlesEnd(const core::Document& document);
 
 // --- Reading -------------------------------------------------------------------
@@ -183,6 +228,17 @@ struct BlocksRead {
     std::vector<std::unordered_map<std::uint64_t, EntityItem>> inserts;
     /// The names of the definitions (blockKey()).
     std::unordered_set<std::string> names;
+    /// The blocks *D… of the dimensions, by blockKey(), read as the
+    /// definitions and still in the groups, until a dimension takes its own
+    /// (attachDimensionBlock()). A name held by two blocks is not here.
+    std::unordered_map<std::string, core::BlockDefinition> dimensionBlocks;
+    /// How many DIMENSION of the file, handled or not, name each block
+    /// (blockKey()): those of the blocks (readBlocks()) and of ENTITIES
+    /// (countDimensionBlock()).
+    std::unordered_map<std::string, std::size_t> dimensionReferences;
+    /// The blocks the dimensions took: the handles of their BLOCK_RECORD and
+    /// of their BLOCK.
+    std::vector<std::pair<std::uint64_t, std::uint64_t>> takenDimensionBlocks;
 };
 
 /// Takes the properties of a handled entity read in a block, as the reader
@@ -211,6 +267,9 @@ struct BlockEntityReader {
 /// the external blocks (70 bit 4, or a path in group 1), the anonymous
 /// blocks *D… of the dimensions, and a block without a BLOCK_RECORD, with a
 /// name that is not valid or already used, or whose groups cannot be read.
+/// The blocks *D… that could be definitions are read in dimensionBlocks,
+/// and stay in the groups. A DIMENSION of a block stays unhandled: its block
+/// *D… is not attached to it (docs/tappe/0.8/PT25-quote-dxf.md).
 [[nodiscard]] BlocksRead readBlocks(core::RawGroups& blocks, core::RawGroups& tables,
                                     std::string_view version, std::string_view codePage, int units,
                                     BlockEntityReader& reader);
@@ -232,6 +291,29 @@ struct BlockEntityReader {
 /// core::kMaxInsertDepth levels: nothing is drawn from there down
 /// (docs/tappe/0.8/PT16-blocchi-core.md, point 1).
 [[nodiscard]] std::optional<std::string> depthWarning(const core::Document& document);
+
+/// Counts the block named by `item` in read.dimensionReferences, if it is a
+/// DIMENSION.
+void countDimensionBlock(const EntityItem& item, BlocksRead& read);
+
+/// Gives a handled DIMENSION of ENTITIES its block *D… (docs/tappe/0.8,
+/// PT25, point 1): the entities of the block become its graphics, handled
+/// (graphics) or not (rawGraphics), and the groups of the block follow those
+/// of its subclasses behind the markers (kDimensionRecordMarker). False,
+/// and the dimension stays unhandled, when the block is missing, cannot be
+/// read, or is named by another DIMENSION too. True for any other entity.
+[[nodiscard]] bool attachDimensionBlock(core::EntityRecord& record, BlocksRead& read);
+
+/// Takes the blocks of read.takenDimensionBlocks out of the BLOCKS groups
+/// `blocks` and of the TABLES groups `tables`, as readBlocks() does with the
+/// definitions: a placeholder before the BLOCK, whose value is the handle of
+/// the BLOCK, and one in place of the BLOCK_RECORD, whose value is its
+/// handle.
+void takeDimensionBlocks(const BlocksRead& read, core::RawGroups& blocks, core::RawGroups& tables);
+
+/// The essential overrides of a dimension read (readDimOverrides() of its
+/// XDATA) in presentation.overrides; nothing for another entity.
+void readDimensionOverrides(core::EntityRecord& record, const core::Document& document);
 
 /// Puts the definitions into `document` in table order. An INSERT that
 /// would make a block contain itself goes back to its groups, unhandled

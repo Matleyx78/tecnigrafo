@@ -118,6 +118,7 @@ add_executable(tg_tests
     io/block_import_test.cpp
     io/dxf_blocks_test.cpp
     io/dxf_insert_test.cpp
+    io/dxf_dimension_test.cpp
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp

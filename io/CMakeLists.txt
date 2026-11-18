@@ -18,6 +18,7 @@ add_library(tg_io
     src/dxf_insert.cpp
     src/dxf_blocks.cpp
     src/block_import.cpp
+    src/dxf_dimension.cpp
     src/dxf_extrusion.cpp
     src/dxf_entities.cpp
     src/dxf_read.cpp
