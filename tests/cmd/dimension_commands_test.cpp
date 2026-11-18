@@ -107,6 +107,26 @@ TEST_F(DimensionCommandsTest, AutomaticDirectionUsesHorizontalAndVerticalAxes) {
     EXPECT_DOUBLE_EQ(dimension().definition.rotation, core::kPi / 2.0);
 }
 
+TEST_F(DimensionCommandsTest, ExplicitTextAngleKeepsTextCenteredOnDimensionLine) {
+    runner().submitText("DIMLINEAR");
+    point(0.0, 20.0);
+    point(0.0, 50.0);
+    runner().submitText("Angle");
+    runner().submitText("90");
+    point(10.0, 35.0);
+
+    EXPECT_EQ(dimension().presentation.textPoint, (core::Vec2{10.0, 35.0}));
+    EXPECT_EQ(dimension().presentation.textRotation, core::kPi / 2.0);
+    EXPECT_EQ(dimension().graphics.size(), 7U);
+    const core::EntityId first = document().entities().back().id;
+
+    runner().submitText("DIMALIGNED");
+    point(0.0, 0.0);
+    point(3.0, 4.0);
+    point(0.0, 5.0);
+    EXPECT_EQ(document().entities().back().id.value, first.value + 8);
+}
+
 TEST_F(DimensionCommandsTest, CoincidentAlignedOriginsRepeatSecondOriginPrompt) {
     runner().submitText("DIMALIGNED");
     point(1.0, 2.0);

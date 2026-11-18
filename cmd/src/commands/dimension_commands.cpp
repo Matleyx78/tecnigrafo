@@ -276,24 +276,7 @@ core::Dimension DimensionCommand::makeDimension(const core::Vec2& location) cons
 
 std::optional<core::Dimension> DimensionCommand::regeneratedAt(const core::Vec2& location,
                                                                std::string* reason) const {
-    auto dimension = core::regenerated(*m_document, makeDimension(location), reason);
-    if (dimension && dimension->presentation.textRotation) {
-        const core::DimVariables variables =
-            core::dimensionVariables(m_document->dimStyles(), dimension->presentation.style,
-                                     dimension->presentation.overrides);
-        if (variables.textAbove != 0) {
-            const auto direction = core::sinCos(dimension->definition.rotation);
-            const double offset = variables.gap + (variables.textHeight / 2.0);
-            const core::Vec2 shift{-direction.sine * offset, direction.cosine * offset};
-            dimension->presentation.textPoint += shift;
-            for (core::EntityRecord& graphic : dimension->graphics) {
-                if (auto* text = std::get_if<core::MText>(&graphic.entity)) {
-                    text->insertion += shift;
-                }
-            }
-        }
-    }
-    return dimension;
+    return core::regenerated(*m_document, makeDimension(location), reason);
 }
 
 void DimensionCommand::updatePreview() {
@@ -349,12 +332,8 @@ Status DimensionCommand::finish(CommandContext& context, const core::Vec2& locat
         return Status::Continue;
     }
     std::vector<core::Entity> graphicEntities;
-    constexpr std::size_t kDimensionGraphicHandles = 6;
-    graphicEntities.reserve(kDimensionGraphicHandles);
+    graphicEntities.reserve(dimension->graphics.size());
     for (const core::EntityRecord& graphic : dimension->graphics) {
-        if (graphicEntities.size() == kDimensionGraphicHandles) {
-            break;
-        }
         graphicEntities.push_back(graphic.entity);
     }
     const core::EntityId dimensionId = context.editor.add(std::move(*dimension));
