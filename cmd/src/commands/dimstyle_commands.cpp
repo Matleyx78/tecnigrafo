@@ -313,7 +313,7 @@ Status DimVariableCommand::handle(CommandContext& context, const Input& input) {
         return Status::Finished;
     }
     const auto* text = std::get_if<TextInput>(&input);
-    if (!text) {
+    if (text == nullptr) {
         return Status::Continue;
     }
     const std::string_view entered = detail::trim(text->text);
