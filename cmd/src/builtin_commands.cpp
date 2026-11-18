@@ -11,6 +11,7 @@
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
+#include "tg/cmd/commands/dimension_commands.hpp"
 #include "tg/cmd/commands/ellipse_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
@@ -50,6 +51,11 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(ClayerCommand::description(), [] { return std::make_unique<ClayerCommand>(); });
     registry.add(ColorCommand::description(), [] { return std::make_unique<ColorCommand>(); });
     registry.add(CopyCommand::description(), [] { return std::make_unique<CopyCommand>(); });
+    registry.add(DimensionCommand::description(DimensionCommand::Kind::Aligned), [] {
+        return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Aligned);
+    });
+    registry.add(DimensionCommand::description(DimensionCommand::Kind::Linear),
+                 [] { return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Linear); });
     registry.add(EllipseCommand::description(), [] { return std::make_unique<EllipseCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(ExplodeCommand::description(), [] { return std::make_unique<ExplodeCommand>(); });
