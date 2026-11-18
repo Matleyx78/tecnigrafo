@@ -326,9 +326,6 @@ vertici e bulge.
 | `hatch-boundary x,y [units=<n>]` | `enclosed <loop> <loop>…`; `on-curve <nome>`; `not-enclosed`, seguito da ` open=x,y` per ogni estremo libero; ognuna con ` incomplete` in fondo se qualcosa è stato scartato | il contorno e le isole rilevati dal punto (`detectHatchBoundary`) fra le curve candidate della scheda PT43, punto 2 (`LINE`, `ARC`, `CIRCLE` e `LWPOLYLINE` sui layer accesi e non congelati, nell'ordine del documento), nell'ordine di solid-space: prima il contorno, poi le isole; `<nome>` è l'entità su cui sta il punto; `units=` è `INSUNITS` del disegno, 4 se manca |
 | `hatch-contours <E1> <E2> …` | `<loop> <loop>…`, poi ` left-out=<nome>` per ogni entità scartata; `none` se non c'è nulla | i contorni scelti (`chosenHatchContours`) nell'ordine dei nomi, con i segnali delle loro profondità: un `CIRCLE` o una `LWPOLYLINE` chiusa danno un contorno; ogni altra entità, anche una polilinea aperta o un'ellisse, va in `left-out` |
 
-Le realizza il pacchetto PT43 della 0.8; fino ad allora rispondono
-`error: question not implemented yet`.
-
 ### Blocchi e geometria generata (tappa 0.8)
 
 La geometria generata delle entità composte e le definizioni di blocco nei
