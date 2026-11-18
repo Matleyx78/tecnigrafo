@@ -3,6 +3,9 @@
 
 #include "tg/core/hatch.hpp"
 
+#include "solid_space/geom2d/clipping.hpp"
+#include "solid_space/geom2d/intersection.hpp"
+#include "solid_space/geom2d/region.hpp"
 #include "solid_space/robust/point.hpp"
 #include "solid_space_bridge.hpp"
 #include "tg/core/document.hpp"
@@ -15,9 +18,12 @@
 #include "tg/core/tolerance.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -139,6 +145,144 @@ bool comparable(const Vec2& point) {
     return within(point.x) && within(point.y);
 }
 
+// --- The lines of a pattern (docs/tappe/0.8/PT42-righe-dei-motivi.md) -----
+
+namespace g = bridge::g;
+
+/// Group 92: the loop is external, and the outermost one.
+constexpr std::uint32_t kExternalLoop = 1;
+constexpr std::uint32_t kOutermostLoop = 16;
+
+/// The linetype of the lines of a pattern when the document has no
+/// Continuous record (a document without tables).
+const Linetype kContinuousLinetype{{}, "Continuous", "Solid line", {}, {}};
+
+/// The loop of solid-space for a loop of the hatch (point 2): the circle of a
+/// single whole-turn arc, the closed polyline of point 3 of PT30 otherwise.
+g::Loop regionLoopOf(const HatchLoop& loop) {
+    if (!loop.polyline && loop.edges.size() == 1 && isWholeTurn(loop.edges.front())) {
+        const Arc& arc = std::get<Arc>(loop.edges.front().curve);
+        return g::Circle{bridge::toPoint(arc.center), arc.radius};
+    }
+    return bridge::closedPolylineOf(loopPolyline(loop));
+}
+
+/// The lines of a family that cross the bounding box of the region (point 3,
+/// step 2): k from `first`, `count` of them.
+struct FamilyLines {
+    std::size_t family{0};
+    SinCos direction;  ///< d = (cosine, sine)
+    double first{0.0};
+    std::size_t count{0};
+};
+
+/// What step 2 gives for one family.
+enum class RangeOutcome : std::uint8_t {
+    Lines,     ///< `lines` holds them (possibly none)
+    Invalid,   ///< the range is not a number: the family is left out
+    TooDense,  ///< an infinite range
+};
+
+RangeOutcome familyRange(const PatternLine& line, const BBox& box, FamilyLines& lines,
+                         double& total) {
+    lines.direction = cardinalSinCos(line.angle);
+    const Vec2 normal{-lines.direction.sine, lines.direction.cosine};
+    const double step = dot(line.offset, normal);
+    if (step == 0.0 || !std::isfinite(step)) {
+        return RangeOutcome::Lines;
+    }
+    const std::array<Vec2, 4> corners{box.min(), Vec2{box.min().x, box.max().y},
+                                      Vec2{box.max().x, box.min().y}, box.max()};
+    double low = std::numeric_limits<double>::infinity();
+    double high = -std::numeric_limits<double>::infinity();
+    for (const Vec2& corner : corners) {
+        const double v = dot(corner - line.origin, normal) / step;
+        if (std::isnan(v)) {
+            return RangeOutcome::Invalid;
+        }
+        low = std::min(low, v);
+        high = std::max(high, v);
+    }
+    if (std::isinf(low) || std::isinf(high)) {
+        return RangeOutcome::TooDense;
+    }
+    lines.first = std::ceil(low);
+    const double last = std::floor(high);
+    if (last < lines.first) {
+        return RangeOutcome::Lines;
+    }
+    total += last - lines.first + 1.0;
+    if (total > static_cast<double>(kMaxHatchLines)) {
+        return RangeOutcome::TooDense;
+    }
+    lines.count = static_cast<std::size_t>(last - lines.first) + 1;
+    return RangeOutcome::Lines;
+}
+
+/// A line of the pattern given to solid-space: its family, p_k and d.
+struct PatternHost {
+    std::size_t family{0};
+    Vec2 base;
+    Vec2 direction;
+};
+
+Vec2 along(const Vec2& base, double u, const Vec2& direction) {
+    return {base.x + (u * direction.x), base.y + (u * direction.y)};
+}
+
+/// Appends the dashes of a stretch from `start` to `end` of the line through
+/// `base` with direction `direction` (point 3, step 5). False when `out`
+/// gets more than kMaxHatchLines lines.
+bool appendDashes(const std::vector<double>& dashes, const Vec2& base, const Vec2& direction,
+                  const Vec2& start, const Vec2& end, std::vector<Line>& out) {
+    // Where each element of the pattern starts within a period, and the period.
+    std::vector<double> offsets{0.0};
+    offsets.reserve(dashes.size() + 1);
+    for (const double dash : dashes) {
+        offsets.push_back(offsets.back() + std::abs(dash));
+    }
+    const double period = offsets.back();
+    const double u0 = dot(start - base, direction);
+    const double u1 = dot(end - base, direction);
+    if (dashes.empty() || !(period > 0.0) || !std::isfinite(period) || !(u0 < u1)) {
+        out.push_back(Line{start, end});
+        return out.size() <= kMaxHatchLines;
+    }
+    if (std::ranges::all_of(dashes, [](double dash) { return dash < 0.0; })) {
+        return true;
+    }
+    // The period before the one of u0 holds a dot at its end that may lie at
+    // u0. Every period after that one and before the one of u1 lies within the
+    // stretch and gives at least one Line, so more than kMaxHatchLines + 3
+    // periods give more than kMaxHatchLines Lines.
+    const double firstPeriod = std::floor(u0 / period) - 1.0;
+    const double periods = std::floor(u1 / period) - firstPeriod + 1.0;
+    if (!(periods <= static_cast<double>(kMaxHatchLines) + 3.0)) {
+        return false;
+    }
+    const auto count = static_cast<std::size_t>(periods);
+    for (std::size_t j = 0; j < count; ++j) {
+        const double origin = (firstPeriod + static_cast<double>(j)) * period;
+        for (std::size_t e = 0; e < dashes.size(); ++e) {
+            const double from = origin + offsets[e];
+            const double to = origin + offsets[e + 1];
+            if (dashes[e] == 0.0) {
+                if (u0 <= from && from <= u1) {
+                    const Vec2 point = along(base, from, direction);
+                    out.push_back(Line{point, point});
+                }
+            } else if (dashes[e] > 0.0 && std::min(u1, to) > std::max(u0, from)) {
+                out.push_back(Line{from <= u0 ? start : along(base, from, direction),
+                                   to >= u1 ? end : along(base, to, direction)});
+            }
+            if (out.size() > kMaxHatchLines) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool onFrozenLayer(const Document& document, const EntityRecord& record) {
     const Layer* layer = document.layer(record.properties.layer);
     return layer != nullptr && layer->frozen;
@@ -188,19 +332,118 @@ bool isClosed(const HatchLoop& loop, const ToleranceRule& rule) {
     return true;
 }
 
+std::vector<std::size_t> regionLoops(const Hatch& hatch) {
+    const auto flagged = [](const HatchLoop& loop, std::uint32_t flags) {
+        return (loop.flags & flags) != 0;
+    };
+    const bool anyExternal = std::ranges::any_of(
+        hatch.loops, [&](const HatchLoop& loop) { return flagged(loop, kExternalLoop); });
+    std::uint32_t kept = 0;
+    if (anyExternal && hatch.islands == IslandStyle::Outer) {
+        kept = kExternalLoop | kOutermostLoop;
+    } else if (anyExternal && hatch.islands == IslandStyle::Ignore) {
+        kept = kExternalLoop;
+    }
+    std::vector<std::size_t> indices;
+    for (std::size_t i = 0; i < hatch.loops.size(); ++i) {
+        if (kept == 0 || flagged(hatch.loops[i], kept)) {
+            indices.push_back(i);
+        }
+    }
+    return indices;
+}
+
+PatternLines patternLines(const Hatch& hatch) {
+    assert(supported(hatch) && kNotSupported);
+    assert(!hatch.solid && "patternLines() of a solid fill");
+    PatternLines result;
+    std::vector<g::Loop> loops;
+    BBox box;
+    for (const std::size_t index : regionLoops(hatch)) {
+        loops.push_back(regionLoopOf(hatch.loops[index]));
+        box.expand(loopPolyline(hatch.loops[index]).boundingBox());
+    }
+    if (box.isEmpty()) {
+        return result;
+    }
+    // Step 2: which lines, and step 3: how many.
+    std::vector<FamilyLines> families;
+    double total = 0.0;
+    for (std::size_t f = 0; f < hatch.patternLines.size(); ++f) {
+        FamilyLines lines;
+        lines.family = f;
+        switch (familyRange(hatch.patternLines[f], box, lines, total)) {
+            case RangeOutcome::Lines:
+                families.push_back(lines);
+                break;
+            case RangeOutcome::Invalid:
+                result.complete = false;
+                break;
+            case RangeOutcome::TooDense:
+                return {PatternOutcome::TooDense, {}, result.complete};
+        }
+    }
+    const double length = std::max({box.width(), box.height(), 1.0});
+    std::vector<g::Curve> hosts;
+    std::vector<PatternHost> bases;
+    hosts.reserve(static_cast<std::size_t>(total));
+    bases.reserve(static_cast<std::size_t>(total));
+    for (const FamilyLines& lines : families) {
+        const PatternLine& family = hatch.patternLines[lines.family];
+        const Vec2 direction{lines.direction.cosine, lines.direction.sine};
+        for (std::size_t i = 0; i < lines.count; ++i) {
+            const double k = lines.first + static_cast<double>(i);
+            const Vec2 base{family.origin.x + (k * family.offset.x),
+                            family.origin.y + (k * family.offset.y)};
+            hosts.emplace_back(
+                g::Segment{bridge::toPoint(base), bridge::toPoint(along(base, length, direction))});
+            bases.push_back({lines.family, base, direction});
+        }
+    }
+    // Step 4: the cut, and step 5: the dashes.
+    const g::RegionClipping clipping = g::clipToRegion(hosts, g::Extension::extended, loops);
+    if (!clipping.skippedHosts.empty() || !clipping.skippedLoops.empty()) {
+        result.complete = false;
+    }
+    for (std::size_t i = 0; i < bases.size(); ++i) {
+        const PatternHost& host = bases[i];
+        const auto append = [&](const auto& stretch) {
+            return appendDashes(hatch.patternLines[host.family].dashes, host.base, host.direction,
+                                bridge::fromPoint(stretch.from.point),
+                                bridge::fromPoint(stretch.to.point), result.lines);
+        };
+        const g::ClippedHost& clipped = clipping.hosts[i];
+        if (!std::ranges::all_of(clipped.inside, append) ||
+            !std::ranges::all_of(clipped.boundary, append)) {
+            return {PatternOutcome::TooDense, {}, result.complete};
+        }
+    }
+    return result;
+}
+
 std::vector<GeneratedItem> generateOf(const Document& document, const EntityRecord& record,
                                       const Hatch& hatch) {
     assert(supported(hatch) && kNotSupported);
-    if (!hatch.solid || hatch.islands != IslandStyle::Normal || onFrozenLayer(document, record)) {
-        // Patterns and the other island styles: docs/tappe/0.8, PT42 and PT43.
+    if (onFrozenLayer(document, record)) {
         return {};
     }
-    FilledRegion region;
-    region.loops.reserve(hatch.loops.size());
-    for (const HatchLoop& loop : hatch.loops) {
-        region.loops.push_back(loopPolyline(loop));
+    EffectiveProperties properties = effectiveProperties(document, record);
+    if (hatch.solid) {
+        FilledRegion region;
+        for (const std::size_t index : regionLoops(hatch)) {
+            region.loops.push_back(loopPolyline(hatch.loops[index]));
+        }
+        return {GeneratedItem{std::move(region), properties}};
     }
-    return {GeneratedItem{std::move(region), effectiveProperties(document, record)}};
+    const PatternLines pattern = patternLines(hatch);
+    const Linetype* continuous = document.linetype(document.continuousLinetype());
+    properties.linetype = continuous != nullptr ? continuous : &kContinuousLinetype;
+    std::vector<GeneratedItem> items;
+    items.reserve(pattern.lines.size());
+    for (const Line& line : pattern.lines) {
+        items.push_back(GeneratedItem{line, properties});
+    }
+    return items;
 }
 
 BBox extentOf(const Document& document, const EntityRecord& record, const Hatch& hatch) {
