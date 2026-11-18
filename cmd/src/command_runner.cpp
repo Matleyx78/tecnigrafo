@@ -117,8 +117,6 @@ bool showsGrips(const core::Document& document, const core::EntityRecord& record
 
 }  // namespace
 
-CommandDefaults::CommandDefaults() = default;
-
 CommandContext::CommandContext(ProtocolContext initialProtocol, edit::Editor& initialEditor,
                                edit::DocumentFile& initialFile,
                                std::optional<core::Vec2> initialLastPoint,

@@ -25,8 +25,6 @@ class DocumentHost;
 
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
-    CommandDefaults();
-
     double textHeight{2.5};
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
