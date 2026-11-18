@@ -588,6 +588,10 @@ QuestionResult askWarnings(const QuestionModel& model, Arguments arguments);
 QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
 
+// Defined in hatch_questions.cpp.
+QuestionResult askHatchBoundary(const QuestionModel& model, Arguments arguments);
+QuestionResult askHatchContours(const QuestionModel& model, Arguments arguments);
+
 // Defined in modify_questions.cpp.
 QuestionResult askGrips(const QuestionModel& model, Arguments arguments);
 QuestionResult askGrip(const QuestionModel& model, Arguments arguments);
@@ -684,11 +688,10 @@ constexpr std::array kQuestions{
     QuestionRow{"import-unit-factor", AnswerShape::Single, nullptr},  // PT19
     QuestionRow{"import-next-id", AnswerShape::Single, nullptr},      // PT19
     QuestionRow{"import-groups", AnswerShape::Single, nullptr},       // PT19
-    // Stage 0.8: hatch boundaries, announced for PT43
-    // (docs/tappe/fuori-tappa/F12): they answer "not implemented yet".
+    // Stage 0.8: hatch boundaries (hatch_questions.cpp).
     // In order, so Single and not Items.
-    QuestionRow{"hatch-boundary", AnswerShape::Single, nullptr},  // PT43
-    QuestionRow{"hatch-contours", AnswerShape::Single, nullptr},  // PT43
+    QuestionRow{"hatch-boundary", AnswerShape::Single, &askHatchBoundary},  // PT43
+    QuestionRow{"hatch-contours", AnswerShape::Single, &askHatchContours},  // PT43
 };
 
 }  // namespace
