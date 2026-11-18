@@ -79,6 +79,9 @@ std::uint64_t readNextId(const core::Document& document) {
     for (const auto& style : document.textStyles().styles()) {
         next = std::max(next, style.id + 1);
     }
+    for (const auto& style : document.dimStyles().styles()) {
+        next = std::max(next, style.id + 1);
+    }
     for (const auto& section : document.raw().sections) {
         if (section.name == "HEADER" || section.name == "ENTITIES") {
             continue;

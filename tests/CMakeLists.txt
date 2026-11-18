@@ -97,6 +97,7 @@ add_executable(tg_tests
     core/text_metrics_test.cpp
     core/text_test.cpp
     core/text_style_table_test.cpp
+    core/dim_style_table_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
     edit/blocks_test.cpp
@@ -114,6 +115,7 @@ add_executable(tg_tests
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp
     io/dxf_tables_test.cpp
+    io/dxf_dimstyle_test.cpp
     io/dxf_groups_test.cpp
     io/encoding_test.cpp
     io/file_access_test.cpp
