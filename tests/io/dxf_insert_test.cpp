@@ -283,6 +283,29 @@ TEST(DxfInsert, MinsertAndAMissingBlockStayUnhandledWithTheirAttributes) {
     EXPECT_EQ(rewritten(document), groupsOf(text));
 }
 
+TEST(DxfInsert, AGroup66ThatDoesNotSayWhatFollowsStaysUnhandled) {
+    // 66 = 1 with no sequence after it, and attributes with no 66: the writer
+    // would give the INSERT the group 66 of what follows it, so both stay
+    // as read (docs/adr/0018).
+    Groups entities = insert("100", "TAGGED", true);
+    append(entities, insert("101", "TAGGED", false));
+    append(entities, attrib("102", "101", "REF", "-K1"));
+    append(entities, seqend("103", "101"));
+    const std::string text = drawing(attdef("43", "40", "REF", 0), entities);
+
+    const auto read = readDxf(text);
+    ASSERT_TRUE(read.ok());
+    const auto& document = read.value().document;
+    EXPECT_EQ(document.entityCount(), 0U);
+    ASSERT_EQ(document.rawEntities().size(), 2U);
+    EXPECT_EQ(document.rawEntities()[0].id.value, 0x100U);
+    EXPECT_EQ(document.rawEntities()[1].id.value, 0x101U);
+    EXPECT_EQ(read.value().report.unhandled.at("INSERT"), 2);
+    EXPECT_GT(document.nextId(), 0x103U);
+
+    EXPECT_EQ(rewritten(document), groupsOf(text));
+}
+
 TEST(DxfInsert, AHandleAfterASubclassMarkerIsTheHandleOfItsEntity) {
     // Found by the fuzzer: the reader takes the group 5 wherever it is, so an
     // entity whose handle follows a marker has no other, and the item of an

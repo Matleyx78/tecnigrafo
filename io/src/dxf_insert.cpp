@@ -21,6 +21,7 @@
 namespace tg::io {
 
 using dxf_groups::ownGroups;
+using dxf_groups::parseInteger;
 
 namespace {
 
@@ -242,6 +243,22 @@ std::uint64_t handleOf(const core::RawGroups& groups) {
     return 0;
 }
 
+/// What the own group 66 of `specific` says: false when it is missing or 0,
+/// true when it is 1, std::nullopt for any other value or spelling.
+std::optional<bool> attributesFollow(const core::RawGroups& specific) {
+    const auto own = ownGroups(specific);
+    for (std::size_t i = 0; i < specific.size(); ++i) {
+        if (own[i] && specific[i].code == 66) {
+            const auto value = parseInteger(specific[i].value);
+            if (value != 0 && value != 1) {
+                return std::nullopt;
+            }
+            return value == 1;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 std::vector<std::uint64_t> itemHandles(const EntityItem& item) {
@@ -274,6 +291,13 @@ std::optional<core::EntityRecord> readItem(const EntityItem& item, EntityReadCon
     }
     auto record = decodeEntity(&kInsertCodec, item.front().groups, context);
     if (!record) {
+        return std::nullopt;
+    }
+    // writeInsert() gives group 66 the value 1 when a SEQEND follows and 0
+    // otherwise: an INSERT whose group 66 says something else, as a 1 with
+    // no sequence after it, stays unhandled, so that the value is not lost
+    // (docs/adr/0018).
+    if (attributesFollow(record->extras.specific) != std::optional<bool>{seqend}) {
         return std::nullopt;
     }
     auto& insert = std::get<core::Insert>(record->entity);
