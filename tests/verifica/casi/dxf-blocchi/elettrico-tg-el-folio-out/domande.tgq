@@ -5,7 +5,7 @@
 D = DXF source=elettrico-tg-el-folio-out
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
-? count D -> LINE 6
-? unhandled D -> ATTDEF 13
+? count D -> ATTDEF 13; LINE 6
+? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
 ? snaps D:43 -> none

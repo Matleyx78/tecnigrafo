@@ -5,6 +5,7 @@
 // "File"; docs/adr/0021, point 4): CaseFiles, the definitions and questions
 // about files, --sources and the drawing fields of the report.
 
+#include "new_entities_format.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/document.hpp"
@@ -51,6 +52,50 @@ constexpr std::string_view kDxf =
     "  0\nLINE\n  5\n2F\n100\nAcDbEntity\n  8\n0\n100\nAcDbLine\n"
     " 10\n0.0\n 20\n0.0\n 30\n0.0\n 11\n10.0\n 21\n5.0\n 31\n0.0\n"
     "  0\nHATCH\n  5\n30\n100\nAcDbEntity\n  8\n0\n"
+    "  0\nENDSEC\n  0\nEOF\n";
+
+// A DXF R2000 written by hand with the block PIN (record 40): the INSERT
+// 100 of PIN with the ATTRIB 101 and 102 and the SEQEND 103, handled; the
+// INSERT 110 of the missing block GONE with the ATTRIB 111 and the SEQEND
+// 112, unhandled as a whole (docs/adr/0044, point 4).
+constexpr std::string_view kAttributesDxf =
+    "  0\nSECTION\n  2\nHEADER\n"
+    "  9\n$ACADVER\n  1\nAC1015\n"
+    "  9\n$HANDSEED\n  5\n200\n"
+    "  0\nENDSEC\n"
+    "  0\nSECTION\n  2\nTABLES\n"
+    "  0\nTABLE\n  2\nBLOCK_RECORD\n  5\n3\n100\nAcDbSymbolTable\n 70\n2\n"
+    "  0\nBLOCK_RECORD\n  5\n20\n330\n3\n100\nAcDbSymbolTableRecord\n"
+    "100\nAcDbBlockTableRecord\n  2\n*Model_Space\n"
+    "  0\nBLOCK_RECORD\n  5\n40\n330\n3\n100\nAcDbSymbolTableRecord\n"
+    "100\nAcDbBlockTableRecord\n  2\nPIN\n"
+    "  0\nENDTAB\n  0\nENDSEC\n"
+    "  0\nSECTION\n  2\nBLOCKS\n"
+    "  0\nBLOCK\n  5\n21\n330\n20\n100\nAcDbEntity\n  8\n0\n100\nAcDbBlockBegin\n"
+    "  2\n*Model_Space\n 70\n0\n 10\n0.0\n 20\n0.0\n 30\n0.0\n  3\n*Model_Space\n"
+    "  0\nENDBLK\n  5\n22\n330\n20\n100\nAcDbEntity\n  8\n0\n100\nAcDbBlockEnd\n"
+    "  0\nBLOCK\n  5\n41\n330\n40\n100\nAcDbEntity\n  8\n0\n100\nAcDbBlockBegin\n"
+    "  2\nPIN\n 70\n2\n 10\n0.0\n 20\n0.0\n 30\n0.0\n  3\nPIN\n"
+    "  0\nLINE\n  5\n43\n330\n40\n100\nAcDbEntity\n  8\n0\n100\nAcDbLine\n"
+    " 10\n0.0\n 20\n0.0\n 30\n0.0\n 11\n1.0\n 21\n0.0\n 31\n0.0\n"
+    "  0\nENDBLK\n  5\n42\n330\n40\n100\nAcDbEntity\n  8\n0\n100\nAcDbBlockEnd\n"
+    "  0\nENDSEC\n"
+    "  0\nSECTION\n  2\nENTITIES\n"
+    "  0\nINSERT\n  5\n100\n330\n20\n100\nAcDbEntity\n  8\n0\n100\nAcDbBlockReference\n"
+    " 66\n1\n  2\nPIN\n 10\n10.0\n 20\n20.0\n 30\n0.0\n"
+    "  0\nATTRIB\n  5\n101\n330\n100\n100\nAcDbEntity\n  8\n0\n 62\n1\n100\nAcDbText\n"
+    " 10\n12.0\n 20\n24.0\n 30\n0.0\n 40\n2.5\n  1\n-K1\n100\nAcDbAttribute\n"
+    "  2\nREF\n 70\n0\n"
+    "  0\nATTRIB\n  5\n102\n330\n100\n100\nAcDbEntity\n  8\n0\n100\nAcDbText\n"
+    " 10\n12.0\n 20\n20.0\n 30\n0.0\n 40\n2.5\n  1\nX9\n100\nAcDbAttribute\n"
+    "  2\nCODE\n 70\n1\n"
+    "  0\nSEQEND\n  5\n103\n330\n100\n100\nAcDbEntity\n  8\n0\n"
+    "  0\nINSERT\n  5\n110\n330\n20\n100\nAcDbEntity\n  8\n0\n100\nAcDbBlockReference\n"
+    " 66\n1\n  2\nGONE\n 10\n0.0\n 20\n0.0\n 30\n0.0\n"
+    "  0\nATTRIB\n  5\n111\n330\n110\n100\nAcDbEntity\n  8\n0\n100\nAcDbText\n"
+    " 10\n0.0\n 20\n0.0\n 30\n0.0\n 40\n2.5\n  1\nV\n100\nAcDbAttribute\n"
+    "  2\nTAG\n 70\n0\n"
+    "  0\nSEQEND\n  5\n112\n330\n110\n100\nAcDbEntity\n  8\n0\n"
     "  0\nENDSEC\n  0\nEOF\n";
 
 // Not a DXF: a group code must be an integer.
@@ -342,6 +387,64 @@ TEST(FileQuestions, QuestionsAboutAHandledEntity) {
         EXPECT_TRUE(answer.matches) << "line " << answer.line << "\n  expected: " << answer.expected
                                     << "\n  obtained: " << answer.actual;
     }
+}
+
+// The ATTRIB of an INSERT are entities of the DXF with their own handle:
+// count counts those of the handled INSERT as "statistics:" does, unhandled
+// those inside an unhandled INSERT, and entity answers with the line of
+// "entities:" (docs/tappe/0.8/PT18-blocchi-dxf.md; decision of 2026-11-17 in
+// issue #697). A SEQEND is no entity.
+TEST(FileQuestions, AttributesOfAnInsertAreEntitiesOfTheDrawing) {
+    const fs::path folder = emptyFolder("attributes");
+    writeFile(folder / "plan.dxf", kAttributesDxf);
+    CaseFiles files{folder, std::nullopt};
+    const std::string text =
+        "D = DXF file=plan.dxf\n"
+        "? count D -> ATTRIB 2; INSERT 1\n"
+        "? unhandled D -> ATTRIB 1; INSERT 1\n"
+        "? entity D 100 -> INSERT block=\"PIN\" insertion=10,20 scale=1,1 rotation=0\n"
+        "? entity D 110 -> unhandled INSERT\n"
+        "? entity D 111 -> unhandled ATTRIB\n"
+        "? entity D 103 -> none\n"
+        "? entity D 112 -> none\n";
+    std::variant<std::vector<Answer>, ParseError> result = ask(text, &files);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result))
+        << std::get<ParseError>(result).message;
+    for (const Answer& answer : std::get<std::vector<Answer>>(result)) {
+        EXPECT_TRUE(answer.matches) << "line " << answer.line << "\n  expected: " << answer.expected
+                                    << "\n  obtained: " << answer.actual;
+    }
+
+    // entity gives the line of "entities:" of the ATTRIB, without its
+    // identifier: owner, TEXT properties, tag, properties and ~box.
+    const std::string answered = [&files] {
+        std::variant<std::vector<Answer>, ParseError> lines =
+            ask("D = DXF file=plan.dxf\n? entity D 102 -> none\n", &files);
+        return std::holds_alternative<std::vector<Answer>>(lines)
+                   ? std::get<std::vector<Answer>>(lines).at(0).actual
+                   : std::string{};
+    }();
+    const auto read = io::readDxf(kAttributesDxf);
+    ASSERT_TRUE(read.ok());
+    const core::Document& document = read.value().document;
+    std::vector<const core::EntityRecord*> records;
+    for (const core::EntityRecord& record : document.entities()) {
+        records.push_back(&record);
+    }
+    std::string expected;
+    for (const detail::EntityLine& line : detail::entityLines(records, document)) {
+        if (line.id == 0x102) {
+            expected = line.text.substr(line.text.find(' ') + 1);
+        }
+    }
+    ASSERT_FALSE(expected.empty());
+    EXPECT_EQ(answered, expected);
+    expectContains(answered, "ATTRIB owner=256 position=12,20 ");
+    expectContains(answered, R"( value="X9" tag="CODE" invisible=yes ~box=)");
+    result = ask("D = DXF file=plan.dxf\n? entity D 101 -> none\n", &files);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result));
+    expectContains(std::get<std::vector<Answer>>(result).at(0).actual,
+                   R"( value="-K1" tag="REF" color=1 ~box=)");
 }
 
 // ---------------------------------------------------------------------------
