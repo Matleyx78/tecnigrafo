@@ -3,7 +3,9 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "dimension_graphics.hpp"
 #include "insert_snap.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/fillet.hpp"
 #include "tg/core/generated.hpp"
@@ -307,11 +309,18 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                 consider(rowDistance, id.value);
             }
         } else {
-            // Through an insert the hatches of its blocks give nothing either.
-            const auto* insert = std::get_if<Insert>(&record.entity);
-            const std::vector<GeneratedItem> items = insert != nullptr
-                                                         ? snapItemsOf(document, record, *insert)
-                                                         : generate(document, record);
+            // Through an insert the hatches of its blocks give nothing either;
+            // through a dimension the rows of its MTEXT give nothing, the MTEXT
+            // its own points below (docs/tappe/0.8/PT23-quote-lineari.md,
+            // point 7).
+            std::vector<GeneratedItem> items;
+            if (const auto* insert = std::get_if<Insert>(&record.entity)) {
+                items = snapItemsOf(document, record, *insert);
+            } else if (const auto* dimension = std::get_if<Dimension>(&record.entity)) {
+                items = snapItemsOf(document, record, *dimension);
+            } else {
+                items = generate(document, record);
+            }
             for (const GeneratedItem& item : items) {
                 if (std::optional<Entity> shape = shapeEntity(item.shape)) {
                     generatedShapes.push_back(std::move(*shape));

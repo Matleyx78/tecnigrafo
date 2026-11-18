@@ -12,6 +12,7 @@
 #include "tg/core/grips.hpp"
 #include "tg/core/lineweight.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
 #include "tg/core/text_metrics.hpp"
@@ -22,6 +23,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <optional>
 #include <span>
 #include <string>
@@ -240,15 +242,20 @@ bool supported(const Dimension& /*dimension*/) {
     return true;
 }
 
-std::vector<GeneratedItem> generateOf(const Document& document, const EntityRecord& record,
-                                      const Dimension& dimension) {
-    std::vector<GeneratedItem> items;
+namespace {
+
+/// Calls `visit(local, items)` for every entity of the graphics of
+/// `dimension` that is generated, in order: `local` carries the properties
+/// it is shown with, `items` are its shapes, those on a layer that is off
+/// not visible. The graphics are in drawing coordinates: an anonymous block
+/// inserted at the origin (docs/adr/0047, point 4).
+template <typename Visit>
+void visitGraphics(const Document& document, const EntityRecord& record, const Dimension& dimension,
+                   Visit visit) {
     const LayerState state = layerState(document, record.properties);
     if (state.frozen) {
-        return items;
+        return;
     }
-    // The graphics are in drawing coordinates: an anonymous block inserted
-    // at the origin (docs/adr/0047, point 4).
     for (const EntityRecord& graphic : dimension.graphics) {
         const EntityRecord local{
             graphic.id,
@@ -260,11 +267,40 @@ std::vector<GeneratedItem> generateOf(const Document& document, const EntityReco
         if (inner.frozen) {
             continue;
         }
-        for (GeneratedItem& item : localItems(document, local)) {
+        std::vector<GeneratedItem> items = localItems(document, local);
+        for (GeneratedItem& item : items) {
             item.properties.visible = item.properties.visible && inner.on;
-            items.push_back(std::move(item));
         }
+        visit(local, std::move(items));
     }
+}
+
+}  // namespace
+
+std::vector<GeneratedItem> generateOf(const Document& document, const EntityRecord& record,
+                                      const Dimension& dimension) {
+    std::vector<GeneratedItem> items;
+    visitGraphics(document, record, dimension,
+                  [&](const EntityRecord& /*local*/, std::vector<GeneratedItem> shapes) {
+                      std::ranges::move(shapes, std::back_inserter(items));
+                  });
+    return items;
+}
+
+std::vector<GeneratedItem> snapItemsOf(const Document& document, const EntityRecord& record,
+                                       const Dimension& dimension) {
+    std::vector<GeneratedItem> items;
+    visitGraphics(document, record, dimension,
+                  [&](const EntityRecord& local, std::vector<GeneratedItem> shapes) {
+                      if (std::holds_alternative<MText>(local.entity)) {
+                          return;  // its rows give no snap points
+                      }
+                      for (GeneratedItem& item : shapes) {
+                          if (item.properties.visible) {  // only the drawn ones, as generate()
+                              items.push_back(std::move(item));
+                          }
+                      }
+                  });
     return items;
 }
 
@@ -287,10 +323,21 @@ bool intersectsOf(const Document& document, const EntityRecord& record, const Di
     return drawnItemsIntersect(generateOf(document, record, dimension), rectangle);
 }
 
-void appendOwnSnapPointsOf(const Document& /*document*/, const EntityRecord& /*record*/,
-                           const Dimension& /*dimension*/, const SnapModes& /*modes*/,
-                           std::vector<SnapPoint>& /*out*/, const std::optional<Vec2>& /*from*/) {
-    // The snap points of a dimension are those of its graphics (PT23, point 7).
+void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
+                           const Dimension& dimension, const SnapModes& modes,
+                           std::vector<SnapPoint>& out, const std::optional<Vec2>& from) {
+    // The snap points of a dimension are those of its graphics (PT23, point
+    // 7): an MTEXT gives its own, when it is drawn, and its rows none.
+    visitGraphics(
+        document, record, dimension,
+        [&](const EntityRecord& local, const std::vector<GeneratedItem>& shapes) {
+            const auto* mtext = std::get_if<MText>(&local.entity);
+            if (mtext != nullptr && std::ranges::any_of(shapes, [](const GeneratedItem& item) {
+                    return item.properties.visible;
+                })) {
+                appendOwnSnapPointsOf(document, local, *mtext, modes, out, from);
+            }
+        });
 }
 
 TransformOutcome transformedOf(const Document& document, const Dimension& dimension,

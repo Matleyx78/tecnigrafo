@@ -150,6 +150,12 @@ std::optional<Dimension> regeneratedLinear(const Document& document, Dimension d
     // Where the text goes. `breaks`: the dimension line stops DIMGAP before
     // the text, on both sides; `beyond`: how far past f2 the dimension line
     // goes on the side of f2 when the arrows are outside or the text is.
+    // The text point is the middle of the text as it is laid out (PT5, point
+    // B10): above the line, the rows go from the last baseline, in the
+    // insertion point, up by their whole height.
+    const auto middleAbove = [&] {
+        return text.insertion + (up * (size.height / 2.0));
+    };
     bool breaks = false;
     double beyond = 2.0 * arrow;
     if (presentation.userTextPosition) {
@@ -162,7 +168,7 @@ std::optional<Dimension> regeneratedLinear(const Document& document, Dimension d
         if (above) {
             text.attachment = MTextAttachment::BottomCenter;
             text.insertion = middle + (up * gap);
-            presentation.textPoint = text.insertion + (up * (text.height / 2.0));
+            presentation.textPoint = middleAbove();
         } else {
             text.attachment = MTextAttachment::MiddleCenter;
             text.insertion = middle;
@@ -179,7 +185,7 @@ std::optional<Dimension> regeneratedLinear(const Document& document, Dimension d
         if (above) {
             text.attachment = MTextAttachment::BottomCenter;
             text.insertion = center + (up * gap);
-            presentation.textPoint = text.insertion + (up * (text.height / 2.0));
+            presentation.textPoint = middleAbove();
             beyond = nearBorder + extent + gap;
         } else {
             text.attachment = MTextAttachment::MiddleCenter;

@@ -159,8 +159,11 @@ inline constexpr std::string_view kDimensionKindNotRealized = "Dimension kind is
 [[nodiscard]] bool intersectsOf(const Document& document, const EntityRecord& record,
                                 const Dimension& dimension, const BBox& rectangle);
 
-/// Appends the snap points that none of its shapes gives: none (the snap
-/// points of a dimension are those of its graphics).
+/// Appends the snap points that none of its shapes gives: those of its own
+/// of every drawn MTEXT of the graphics (appendOwnSnapPointsOf() of the
+/// MTEXT), whose rows give none (docs/adr/0046, point 2). With the points of
+/// the other shapes, these are the snap points of the graphics (PT23,
+/// point 7).
 void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
                            const Dimension& dimension, const SnapModes& modes,
                            std::vector<SnapPoint>& out, const std::optional<Vec2>& from);

@@ -5,6 +5,7 @@
 
 #include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/vec2.hpp"
 
@@ -81,3 +82,16 @@ private:
                                                          std::string* reason);
 
 }  // namespace tg::core::dimension_graphics
+
+namespace tg::core {
+
+/// The items of generate(document, record) for `dimension`, the entity of
+/// `record`, in the same order, without the rows of the MTEXT of its
+/// graphics: a row gives no snap point of its own, only the MTEXT its own
+/// points (appendOwnSnapPointsOf()), as outside a dimension (docs/adr/0046,
+/// point 2; PT23, point 7).
+[[nodiscard]] std::vector<GeneratedItem> snapItemsOf(const Document& document,
+                                                     const EntityRecord& record,
+                                                     const Dimension& dimension);
+
+}  // namespace tg::core

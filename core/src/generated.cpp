@@ -3,6 +3,7 @@
 
 #include "tg/core/generated.hpp"
 
+#include "dimension_graphics.hpp"
 #include "insert_snap.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/attribute_definition.hpp"
@@ -448,8 +449,10 @@ void appendSnapPoints(const Document& document, const EntityRecord& record, cons
                 // its insertion point (docs/adr/0046, point 2;
                 // docs/tappe/0.8/PT13-mtext-core.md, point 6). A hatch gives
                 // none at all, as AutoCAD with OSNAPHATCH 0 (docs/adr/0048,
-                // point 4), not even inside a block.
-                if constexpr (std::is_same_v<T, Insert>) {
+                // point 4), not even inside a block. Nor the rows of the
+                // MTEXT of a dimension: that MTEXT gives its own points
+                // (docs/tappe/0.8/PT23-quote-lineari.md, point 7).
+                if constexpr (std::is_same_v<T, Insert> || std::is_same_v<T, Dimension>) {
                     for (const GeneratedItem& item : snapItemsOf(document, record, value)) {
                         appendShapeSnapPoints(item.shape, modes, out, from);
                     }

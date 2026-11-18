@@ -8,17 +8,21 @@
 
 #include "tg/core/dim_style_table.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/document_query.hpp"
 #include "tg/core/entity_record.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/similarity.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/core/solid.hpp"
+#include "tg/core/text.hpp"
 #include "tg/core/text_metrics.hpp"
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <string>
@@ -568,6 +572,98 @@ TEST(DimensionTextAngle, UserPositionPutsTheMiddleOfTheText) {
     const MText text = textOf(dimension);
     EXPECT_EQ(text.attachment, MTextAttachment::MiddleCenter);
     expectNear(text.insertion, {15, 8});
+}
+
+/// The middle of the rows of the horizontal text of `dimension`, as they are
+/// drawn: from the last baseline to the top of the first row, from the
+/// leftmost start to the rightmost end.
+Vec2 middleOfTheRows(const Document& document, const Dimension& dimension) {
+    const MText text = textOf(dimension);
+    double bottom = 0.0;
+    double top = 0.0;
+    double left = 0.0;
+    double right = 0.0;
+    bool first = true;
+    for (const GeneratedItem& item : generate(document, EntityRecord{EntityId{9}, text})) {
+        const Text& row = std::get<Text>(item.shape);
+        const double end = row.position.x + widthOf(displayText(row.value), row.height);
+        bottom = first ? row.position.y : std::min(bottom, row.position.y);
+        top = first ? row.position.y + row.height : std::max(top, row.position.y + row.height);
+        left = first ? row.position.x : std::min(left, row.position.x);
+        right = first ? end : std::max(right, end);
+        first = false;
+    }
+    EXPECT_FALSE(first) << "no row";
+    return {(left + right) / 2.0, (bottom + top) / 2.0};
+}
+
+TEST(DimensionTextPoint, MiddleOfATextOfTwoRowsAboveTheLine) {
+    const Document document = Document::newDrawing();
+    // Inside: above the line, from its middle (DIMTAD 1 of ISO-25).
+    Dimension inside = linear({0, 0}, {40, 0}, {40, 10});
+    inside.presentation.textOverride = "A\\PB";
+    inside = made(document, std::move(inside));
+    ASSERT_EQ(textOf(inside).attachment, MTextAttachment::BottomCenter);
+    ASSERT_EQ(generate(document, EntityRecord{EntityId{9}, textOf(inside)}).size(), 2U);
+    const Vec2 middleInside = middleOfTheRows(document, inside);
+    expectNear(inside.presentation.textPoint, middleInside);
+    // Higher than the middle of one row (11.875): the second row counts.
+    EXPECT_GT(middleInside.y, 11.875 + 1.0);
+    // Outside (case 3): past f2, above the dimension line extended.
+    Dimension outside = linear({0, 0}, {12, 0}, {12, 10});
+    outside.presentation.textOverride = "WWWWW\\PW";
+    outside = made(document, std::move(outside));
+    const double wide = widthOf(U"WWWWW", 2.5);
+    ASSERT_GT(wide, 12.0);
+    ASSERT_EQ(textOf(outside).attachment, MTextAttachment::BottomCenter);
+    expectNear(textOf(outside).insertion, {12 + 3.125 + (wide / 2.0), 10.625});
+    expectNear(outside.presentation.textPoint, middleOfTheRows(document, outside));
+    // The grip of the text is that point.
+    expectNear(gripPointsOf(outside)[3], middleOfTheRows(document, outside));
+}
+
+// --- Snaps ----------------------------------------------------------------
+
+SnapModes only(bool SnapModes::*mode) {
+    SnapModes modes{false, false, false, false, false, false, false, false};
+    modes.*mode = true;
+    return modes;
+}
+
+TEST(DimensionSnaps, TheTextGivesItsInsertionPointNotThoseOfItsRows) {
+    Document document = Document::newDrawing();
+    const Dimension dimension = made(document, linear({0, 0}, {40, 0}, {40, 10}));
+    const MText text = textOf(dimension);
+    ASSERT_EQ(text.attachment, MTextAttachment::BottomCenter);
+    const EntityRecord record{EntityId{9}, dimension};
+    // The row starts left of the insertion point of the MTEXT.
+    const Text row =
+        std::get<Text>(generate(document, EntityRecord{EntityId{9}, text}).at(0).shape);
+    ASSERT_LT(row.position.x, text.insertion.x - 1.0);
+
+    std::vector<SnapPoint> insertions;
+    appendSnapPoints(document, record, only(&SnapModes::insertion), insertions, std::nullopt);
+    EXPECT_EQ(insertions, (std::vector<SnapPoint>{{text.insertion, SnapKind::Insertion}}));
+
+    // The other shapes of the graphics give theirs, as before.
+    std::vector<SnapPoint> ends;
+    appendSnapPoints(document, record, only(&SnapModes::endpoint), ends, std::nullopt);
+    for (const Vec2& end : {Vec2{0, 0.625}, Vec2{0, 11.25}, Vec2{2.5, 10}, Vec2{37.5, 10}}) {
+        EXPECT_TRUE(std::ranges::any_of(ends,
+                                        [&](const SnapPoint& snap) {
+                                            return snap.kind == SnapKind::Endpoint &&
+                                                   distance(snap.point, end) < kTolerance;
+                                        }))
+            << end.x << ", " << end.y;
+    }
+
+    // Through the document: the insertion point of the MTEXT, never the
+    // start of a row.
+    document.add(dimension);
+    const std::optional<SnapPoint> near =
+        findSnap(document, text.insertion + Vec2{0.1, 0.1}, 0.5, only(&SnapModes::insertion));
+    EXPECT_EQ(near, (std::optional<SnapPoint>{SnapPoint{text.insertion, SnapKind::Insertion}}));
+    EXPECT_FALSE(findSnap(document, row.position, 0.5, only(&SnapModes::insertion)).has_value());
 }
 
 }  // namespace
