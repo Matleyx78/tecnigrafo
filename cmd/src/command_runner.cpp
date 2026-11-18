@@ -169,16 +169,22 @@ const CommandContext& CommandRunner::context() const {
 void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
     // A reference cannot be rebound. Carry the command session state over
     // when rebuilding the context around a different file.
-    CommandContext previous = std::move(context());
+    std::function<void(std::string)> message = std::move(context().message);
+    const bool scriptSequences = context().scriptSequences;
+    const std::optional<core::Vec2> lastPoint = context().lastPoint;
+    CommandDefaults defaults = std::move(context().defaults);
+    io::FileAccess* const files = context().files;
+    const bool documentReplaced = context().documentReplaced;
+    DocumentHost* const host = context().host;
     // Built with braces, then moved in: see the constructor.
-    m_context.emplace(CommandContext{{std::move(previous.message), previous.scriptSequences},
-                                     previous.editor,
+    m_context.emplace(CommandContext{{std::move(message), scriptSequences},
+                                     m_editor,
                                      file != nullptr ? *file : m_ownFile,
-                                     previous.lastPoint,
-                                     previous.defaults,
-                                     previous.files,
-                                     previous.documentReplaced,
-                                     previous.host});
+                                     lastPoint,
+                                     std::move(defaults),
+                                     files,
+                                     documentReplaced,
+                                     host});
 }
 
 void CommandRunner::setDocumentHost(DocumentHost* host) {
