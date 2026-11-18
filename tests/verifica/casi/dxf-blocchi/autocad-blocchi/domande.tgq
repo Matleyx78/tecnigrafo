@@ -7,8 +7,8 @@ D = DXF source=autocad-blocchi
 ? roundtrip D as=cadx -> identical
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
-? count D -> none
-? unhandled D -> INSERT 14
+? count D -> ATTRIB 6; INSERT 14
+? unhandled D -> none
 ? entity D BF -> INSERT block="SEMPLICE" insertion=0,0 scale=1,1 rotation=0
 ? entity D C0 -> INSERT block="SEMPLICE" insertion=40,0 scale=2,2 rotation=0
 ? entity D C1 -> INSERT block="SEMPLICE" insertion=120,0 scale=-1,1 rotation=0

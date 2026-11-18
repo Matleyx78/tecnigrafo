@@ -5,8 +5,8 @@
 D = DXF source=elettrico-avviamento-diretto
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
-? count D -> LINE 26; SOLID 12; TEXT 6
-? unhandled D -> INSERT 11
+? count D -> ATTRIB 89; INSERT 11; LINE 26; SOLID 12; TEXT 6
+? unhandled D -> none
 ? entity D 866 -> INSERT block="TG_EL_BREAKER_3P" insertion=20,0 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
 ? entity D 875 -> INSERT block="TG_EL_CONTACT_POWER_3P" insertion=20,-20 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
 ? entity D 87F -> INSERT block="TG_EL_OVERLOAD_RELAY_3P" insertion=20,-40 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
