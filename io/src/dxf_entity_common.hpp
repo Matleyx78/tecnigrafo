@@ -100,6 +100,7 @@ void insertInOrder(core::RawGroups& groups, const core::RawGroups& additions,
 
 extern const EntityCodec kLwpolylineCodec;
 extern const EntityCodec kTextCodec;
+extern const EntityCodec kMTextCodec;
 extern const EntityCodec kSolidCodec;
 extern const EntityCodec kEllipseCodec;
 extern const EntityCodec kHatchCodec;

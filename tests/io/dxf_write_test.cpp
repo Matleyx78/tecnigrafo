@@ -160,8 +160,9 @@ TEST(DxfWrite, ANewDrawingHasTheFixedStartHandlesWhateverItsEntities) {
         ASSERT_TRUE(again.ok());
         EXPECT_EQ(again.value(), written.value()) << count;
     }
-    // 4 records of the tables and 24 objects of the skeleton.
-    EXPECT_EQ(first.size(), 28U);
+    // 5 records of the tables (with the dimension style ISO-25) and 24
+    // objects of the skeleton.
+    EXPECT_EQ(first.size(), 29U);
     EXPECT_EQ(*first.begin(), core::start_handles::kLowest);
 }
 

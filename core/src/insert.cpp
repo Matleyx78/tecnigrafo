@@ -3,12 +3,14 @@
 
 #include "tg/core/insert.hpp"
 
+#include "insert_snap.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/hatch.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/raw_group.hpp"
@@ -106,12 +108,21 @@ struct Visit {
     std::optional<Transform2D> outer;  ///< the map of the block that holds it
 };
 
+/// Which entities of a block appendBlockItems() visits.
+enum class BlockHatches : std::uint8_t {
+    Drawn,   ///< all of them: the drawn geometry
+    Skipped  ///< all but the hatches: the shapes that give snap points
+};
+
 /// Appends the items of the block of `insert`, an insert of the drawing
 /// shown with `shown` through `state`, and then of its attributes: depth
 /// first, in the order of the entities, without recursion (a nested insert
 /// is a visit on the stack, its attributes appended when it is closed).
+/// With BlockHatches::Skipped the hatches of the blocks, nested ones
+/// included, give nothing.
 void appendBlockItems(const Document& document, const Insert& insert, const EntityProperties& shown,
-                      const LayerState& state, std::vector<GeneratedItem>& out) {
+                      const LayerState& state, BlockHatches hatches,
+                      std::vector<GeneratedItem>& out) {
     std::vector<Visit> stack;
     const auto open = [&](const Insert& inner, const std::optional<Transform2D>& outer,
                           const EntityProperties& properties, const LayerState& layers, int depth) {
@@ -135,7 +146,8 @@ void appendBlockItems(const Document& document, const Insert& insert, const Enti
             continue;
         }
         const EntityRecord& record = visit.definition->entities[visit.next++];
-        if (!isSupported(record.entity)) {
+        if (!isSupported(record.entity) ||
+            (hatches == BlockHatches::Skipped && std::holds_alternative<Hatch>(record.entity))) {
             continue;
         }
         const EntityRecord local{record.id,
@@ -378,7 +390,21 @@ std::vector<GeneratedItem> generateOf(const Document& document, const EntityReco
     if (state.frozen) {
         return items;
     }
-    appendBlockItems(document, insert, record.properties, state, items);
+    appendBlockItems(document, insert, record.properties, state, BlockHatches::Drawn, items);
+    return items;
+}
+
+std::vector<GeneratedItem> snapItemsOf(const Document& document, const EntityRecord& record,
+                                       const Insert& insert) {
+    assert(supported(insert) && kNotSupported);
+    const LayerState state = layerState(document, record.properties);
+    std::vector<GeneratedItem> items;
+    if (state.frozen) {
+        return items;
+    }
+    appendBlockItems(document, insert, record.properties, state, BlockHatches::Skipped, items);
+    // Only the drawn shapes, as generate().
+    std::erase_if(items, [](const GeneratedItem& item) { return !item.properties.visible; });
     return items;
 }
 

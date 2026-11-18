@@ -2,7 +2,9 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 // The header variables of the current values, of the linetype scale and of
-// the lineweights (docs/adr/0023, point 3; docs/adr/0025, points 3 and 6).
+// the lineweights (docs/adr/0023, point 3; docs/adr/0025, points 3 and 6),
+// and the current styles (docs/adr/0046 and 0047; the $DIM… variables are in
+// dxf_dimstyle.cpp).
 // Reading is TableReader::readHeader(), in dxf_tables.cpp.
 
 #include "dxf_entity_common.hpp"
@@ -104,8 +106,9 @@ bool same(const core::RawGroup& read, const Value& wanted) {
 
 }  // namespace
 
-core::RawGroups headerProperties(const core::RawGroups& header, const core::Document& document,
+core::RawGroups headerProperties(const core::RawGroups& source, const core::Document& document,
                                  bool addAll) {
+    const core::RawGroups header = headerDimVariables(source, document, addAll);
     const auto all = variables(document);
     std::vector<bool> found(all.size(), false);
     core::RawGroups out;
