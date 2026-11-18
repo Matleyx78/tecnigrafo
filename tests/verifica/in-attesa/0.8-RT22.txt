@@ -21,3 +21,5 @@ trim/autocad-rapido #699
 trim/autocad-standard-script #699
 trim/casi-limite-bordi #699
 trim/mezzo-polilinee-larghezze #699
+ellipse/selezione-esc-annulla #699
+interfaccia/file-scorciatoie-apri-nuovo #699
