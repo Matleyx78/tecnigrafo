@@ -8,7 +8,9 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <map>
 #include <optional>
 #include <string>
@@ -1004,6 +1006,183 @@ TEST(QuestionsDimension, GripUsesTheDocument) {
         "A = DIMENSION kind=aligned origin1=0,0 origin2=24,18 line-point=24,28 text-point=0,0 "
         "measurement=0\n",
         "grip A 24,18 0,0", "invalid");
+}
+
+// Importing a file as a block (docs/verifica/domande.md, "Importazione di un
+// file come blocco"; docs/tappe/0.8/PT19-file-come-blocco.md).
+
+/// A DXF text from "code value" pairs separated by '|' or new lines; a pair
+/// without a blank has an empty value.
+std::string dxfOf(std::string_view pairs) {
+    std::string text;
+    std::size_t start = 0;
+    while (start < pairs.size()) {
+        const std::size_t end = std::min(pairs.find_first_of("|\n", start), pairs.size());
+        const std::string_view pair = pairs.substr(start, end - start);
+        const std::size_t blank = pair.find(' ');
+        text += std::string{pair.substr(0, blank)} + "\n";
+        text += (blank == std::string_view::npos ? std::string{}
+                                                 : std::string{pair.substr(blank + 1)}) +
+                "\n";
+        start = end + 1;
+    }
+    return text;
+}
+
+// A file in millimetres with the four tables, each with a record the
+// target has (Continuous, Shared, Standard, Standard) and one it lacks (Dots,
+// New, Mono, Fine); the block Child, which the target has, and Leaf, which
+// it lacks, whose LINE names the layer New (340), its record (360) and its
+// BLOCK (reactor); model space inserts both. Handles by hand: the target
+// gives 101 to Shared and 102 to the LINE of its Child, so the file is
+// renumbered from 103 in its order: Dots 103, New 104, Mono 105, Fine 106,
+// record Leaf 107, BLOCK 108, LINE 109, ENDBLK 10A, INSERT 10B and 10C.
+constexpr std::string_view kImported =
+    "0 SECTION|2 HEADER|9 $ACADVER|1 AC1032|9 $INSUNITS|70 4\n"
+    "0 ENDSEC\n"
+    "0 SECTION|2 TABLES\n"
+    "0 TABLE|2 LTYPE|5 5\n"
+    "0 LTYPE|5 14|2 Continuous|70 0|3 Other solid line|72 65|73 0|40 0.0\n"
+    "0 LTYPE|5 15|2 Dots|70 0|3 . . .|72 65|73 0|40 0.0\n"
+    "0 ENDTAB\n"
+    "0 TABLE|2 LAYER|5 2\n"
+    "0 LAYER|5 10|2 Shared|70 0|62 2|6 Continuous\n"
+    "0 LAYER|5 11|2 New|70 0|62 3|6 Dots\n"
+    "0 ENDTAB\n"
+    "0 TABLE|2 STYLE|5 3\n"
+    "0 STYLE|5 16|2 Standard|70 0|40 0.0|41 1.0|50 0.0|71 0|42 2.5|3 arial.ttf|4\n"
+    "0 STYLE|5 17|2 Mono|70 0|40 0.0|41 0.8|50 0.0|71 0|42 2.5|3 cour.ttf|4\n"
+    "0 ENDTAB\n"
+    "0 TABLE|2 DIMSTYLE|5 A|100 AcDbSymbolTable|70 2|100 AcDbDimStyleTable\n"
+    "0 DIMSTYLE|105 18|100 AcDbSymbolTableRecord|100 AcDbDimStyleTableRecord|2 Standard|70 0|340 "
+    "16\n"
+    "0 DIMSTYLE|105 19|100 AcDbSymbolTableRecord|100 AcDbDimStyleTableRecord|2 Fine|70 0|140 "
+    "5.0|340 17\n"
+    "0 ENDTAB\n"
+    "0 TABLE|2 BLOCK_RECORD|70 2\n"
+    "0 BLOCK_RECORD|5 20|2 Child|70 0\n"
+    "0 BLOCK_RECORD|5 24|2 Leaf|70 0\n"
+    "0 ENDTAB\n"
+    "0 ENDSEC\n"
+    "0 SECTION|2 BLOCKS\n"
+    "0 BLOCK|5 21|330 20|2 Child|70 0|10 0|20 0|30 0|3 Child\n"
+    "0 ENDBLK|5 23|330 20\n"
+    "0 BLOCK|5 25|330 24|2 Leaf|70 0|10 0|20 0|30 0|3 Leaf\n"
+    "0 LINE|5 26|330 24|340 11|360 24|102 {ACAD_REACTORS|330 25|102 }|100 AcDbEntity|8 New|100 "
+    "AcDbLine|10 0|20 0|11 2|21 0\n"
+    "0 ENDBLK|5 27|330 24\n"
+    "0 ENDSEC\n"
+    "0 SECTION|2 ENTITIES\n"
+    "0 INSERT|5 30|100 AcDbEntity|8 Shared|100 AcDbBlockReference|2 Leaf|10 5|20 6\n"
+    "0 INSERT|5 31|100 AcDbEntity|8 0|100 AcDbBlockReference|2 Child|10 1|20 1\n"
+    "0 ENDSEC\n"
+    "0 EOF\n";
+
+constexpr std::string_view kTarget =
+    "L = LAYER name=\"Shared\" color=1\n"
+    "!block \"Child\" base=0,0\n"
+    "A = LINE start=0,0 end=1,0\n"
+    "!endblock\n"
+    "I = BLOCK-IMPORT file=full.dxf target-units=6\n";
+
+/// The answers to `questions` after kTarget, with full.dxf and self.dxf.
+std::variant<std::vector<Answer>, ParseError> importAnswers(std::string_view questions) {
+    MemoryFiles files{{{"full.dxf", dxfOf(kImported)},
+                       {"self.dxf", dxfOf("0 SECTION|2 ENTITIES|0 INSERT|5 10|2 self|10 0|20 0|"
+                                          "0 ENDSEC|0 EOF")}}};
+    return answerQuestions(std::string{kTarget} + std::string{questions}, &files);
+}
+
+TEST(Questions, ImportAnswersEveryFieldOfTheImport) {
+    const std::string questions =
+        "? import-error I -> none\n"
+        "? import-definition I -> name=\"full\" base=0,0 units=4 entities=[10B INSERT "
+        "block=\"Leaf\" insertion=5,6 scale=1,1 rotation=0 layer=\"Shared\"; 10C INSERT "
+        "block=\"Child\" insertion=1,1 scale=1,1 rotation=0]\n"
+        "? import-nested I -> name=\"Leaf\" base=0,0 units=0 entities=[109 LINE start=0,0 "
+        "end=2,0 layer=\"New\"]\n"
+        "? import-layers I -> id=104 name=\"New\" color=3 linetype=\"Dots\" "
+        "lineweight=default\n"
+        "? import-linetypes I -> id=103 name=\"Dots\" pattern=continuous description=\". . .\"\n"
+        "? import-text-styles I -> id=105 name=\"Mono\" font=\"cour.ttf\" height=0 "
+        "width-factor=0.8 oblique=0 backwards=no upside-down=no\n"
+        "? import-dim-styles I -> id=106 name=\"Fine\" DIMADEC:0 DIMASZ:0.18 DIMAZIN:0 "
+        "DIMCEN:0.09 DIMCLRD:0 DIMCLRE:0 DIMCLRT:0 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 "
+        "DIMEXO:0.0625 DIMGAP:0.09 DIMLFAC:1 DIMLWD:-2 DIMLWE:-2 DIMPOST: DIMRND:0 DIMSCALE:1 "
+        "DIMSD1:0 DIMSD2:0 DIMSE1:0 DIMSE2:0 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXSTY:Mono DIMTXT:5 "
+        "DIMZIN:0\n"
+        "? import-unit-factor I -> 0.001\n"
+        "? import-next-id I -> 10D\n"
+        // The owner, the pointers and the reactor follow the renumbering.
+        "? import-groups I 109 -> 5=\"109\" 330=\"107\" 340=\"104\" 360=\"107\" "
+        "102=\"{ACAD_REACTORS\" 330=\"108\" 102=\"}\"\n"
+        "? import-groups I 107 -> 5=\"107\" 2=\"Leaf\" 70=\"0\"\n"
+        "? import-groups I 108 -> 5=\"108\" 330=\"107\" 2=\"Leaf\" 70=\"0\" 10=\"0\" 20=\"0\" "
+        "30=\"0\" 3=\"Leaf\"\n"
+        "? import-groups I 10A -> 5=\"10A\" 330=\"107\"\n"
+        // The handle 105 of the dimension style and its text style (340).
+        "? import-groups I 106 -> 5=\"106\" 105=\"106\" 100=\"AcDbSymbolTableRecord\" "
+        "100=\"AcDbDimStyleTableRecord\" 70=\"0\" 140=\"5.0\" 340=\"105\"\n";
+    std::variant<std::vector<Answer>, ParseError> result = importAnswers(questions);
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result))
+        << std::get<ParseError>(result).message;
+    const auto& list = std::get<std::vector<Answer>>(result);
+    ASSERT_EQ(list.size(), 14U);
+    for (const Answer& answer : list) {
+        EXPECT_TRUE(answer.matches) << answer.line << "\n  obtained: " << answer.actual;
+    }
+}
+
+TEST(Questions, ImportKeepsTheErrorOfAFileThatInsertsItself) {
+    std::variant<std::vector<Answer>, ParseError> result = importAnswers(
+        "S = BLOCK-IMPORT file=self.dxf\n"
+        "? import-error S -> \"Block \\\"self\\\" references itself.\"\n"
+        "? import-next-id S -> 101\n");
+    ASSERT_TRUE(std::holds_alternative<std::vector<Answer>>(result))
+        << std::get<ParseError>(result).message;
+    const auto& list = std::get<std::vector<Answer>>(result);
+    ASSERT_EQ(list.size(), 2U);
+    EXPECT_TRUE(list[0].matches) << list[0].actual;
+    // Every other question on a failed import answers the error.
+    EXPECT_FALSE(list[1].matches);
+    EXPECT_EQ(list[1].actual, "error: Block \"self\" references itself.");
+}
+
+TEST(Questions, ImportRejectsWrongArguments) {
+    for (const std::string_view question : {
+             "import-error",        "import-error I I",     "import-error X",
+             "import-error A",      "import-definition",    "import-definition X",
+             "import-nested",       "import-nested X",      "import-layers",
+             "import-layers X",     "import-linetypes",     "import-linetypes X",
+             "import-text-styles",  "import-text-styles X", "import-dim-styles",
+             "import-dim-styles X", "import-unit-factor",   "import-unit-factor I I",
+             "import-next-id",      "import-next-id X",     "import-groups I",
+             "import-groups X 109", "import-groups I zz",   "import-groups I 101",
+             "import-groups I 0",
+         }) {
+        const std::variant<std::vector<Answer>, ParseError> result =
+            importAnswers("? " + std::string{question} + " -> none\n");
+        ASSERT_TRUE(std::holds_alternative<ParseError>(result)) << question;
+        const auto& error = std::get<ParseError>(result);
+        EXPECT_EQ(error.line, 6) << question;
+        EXPECT_FALSE(error.notImplemented) << question;
+    }
+    // The definition: arguments, files and names.
+    for (const std::string_view definition : {
+             "J = BLOCK-IMPORT",
+             "J = BLOCK-IMPORT full.dxf",
+             "J = BLOCK-IMPORT file=full.dxf target-units=25",
+             "J = BLOCK-IMPORT file=full.dxf target-units=x",
+             "J = BLOCK-IMPORT file=full.dxf target-units=4 target-units=4",
+             "J = BLOCK-IMPORT file=full.dxf file=self.dxf",
+             "J = BLOCK-IMPORT file=missing.dxf",
+             "I = BLOCK-IMPORT file=full.dxf",
+         }) {
+        const std::variant<std::vector<Answer>, ParseError> result =
+            importAnswers(std::string{definition} + "\n");
+        ASSERT_TRUE(std::holds_alternative<ParseError>(result)) << definition;
+        EXPECT_EQ(std::get<ParseError>(result).line, 6) << definition;
+    }
 }
 
 }  // namespace

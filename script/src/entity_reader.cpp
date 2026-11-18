@@ -736,13 +736,6 @@ std::variant<EntityDefinition, EntityError> readEntityDefinition(std::string_vie
         return EntityError{"missing entity type"};
     }
     const std::string_view type = tokens->front();
-    // Announced for package PT19 of stage 0.8 (docs/tappe/fuori-tappa/F11):
-    // the line stops the file as not implemented, so that the cases using it
-    // wait in tests/verifica/in-attesa/ instead of being invalid. PT19
-    // realizes the definition and removes this announcement.
-    if (type == "BLOCK-IMPORT") {
-        return EntityError{"BLOCK-IMPORT is not implemented yet", true};
-    }
     Tokens properties(tokens->begin() + 1, tokens->end());
     if (std::optional<EntityError> error = takePlacement(type, properties)) {
         return std::move(*error);
