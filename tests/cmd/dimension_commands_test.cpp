@@ -29,7 +29,7 @@ protected:
     void point(double x, double y) { m_runner.submit(PointInput{{x, y}}); }
 
     [[nodiscard]] const core::Dimension& dimension() const {
-        return std::get<core::Dimension>(m_document.entities().back().entity);
+        return std::get<core::Dimension>(m_document.find(m_document.entities().back().id)->entity);
     }
 
     [[nodiscard]] core::Document& document() { return m_document; }

@@ -79,10 +79,10 @@ CommandDescription DimensionCommand::description(Kind kind) {
         prompts.push_back(
             {"rotation", "Specify angle of dimension line <0>:", ValueType::Angle, {}, true});
     }
-    return {linear ? "DIMLINEAR" : "DIMALIGNED",
-            linear ? std::vector<std::string>{"DIMLIN"} : std::vector<std::string>{"DIMALI"},
-            linear ? "Creates a linear dimension." : "Creates an aligned dimension.", false,
-            std::move(prompts)};
+    if (linear) {
+        return {"DIMLINEAR", {"DIMLIN"}, "Creates a linear dimension.", false, std::move(prompts)};
+    }
+    return {"DIMALIGNED", {"DIMALI"}, "Creates an aligned dimension.", false, std::move(prompts)};
 }
 
 void DimensionCommand::start(CommandContext& context) {
