@@ -50,6 +50,12 @@ struct CommandDefaults {
     bool chamferUseAngle{false};
     bool trimMode{true};
     bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    /// HPISLANDDETECTION: 0 Normal, 1 Outer (the start-up value), 2 Ignore.
+    core::IslandStyle hatchIslands{core::IslandStyle::Outer};
+    /// HPNAME, HPSCALE and HPANG for the next -HATCH (docs/adr/0048, point 6).
+    std::string hatchPattern{"ANSI31"};
+    double hatchScale{1.0};
+    double hatchAngle{0.0};  ///< radians
 };
 
 /// What a command of the drawing works with: the protocol's context
@@ -60,6 +66,11 @@ struct CommandDefaults {
 /// When adding a field, update CommandRunner::setDocumentFile to preserve it
 /// when rebinding the file reference.
 struct CommandContext : ProtocolContext {
+    CommandContext(ProtocolContext initialProtocol, edit::Editor& initialEditor,
+                   edit::DocumentFile& initialFile, std::optional<core::Vec2> initialLastPoint = {},
+                   CommandDefaults initialDefaults = {}, io::FileAccess* initialFiles = nullptr,
+                   bool initiallyReplaced = false, DocumentHost* initialHost = nullptr);
+
     edit::Editor& editor;
     edit::DocumentFile& file;
     std::optional<core::Vec2> lastPoint;  ///< updated by the command
