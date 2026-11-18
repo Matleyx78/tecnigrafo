@@ -19,7 +19,11 @@
 
 - `core/include/tg/core/explode.hpp`, `core/src/explode.cpp` (nuovi)
 - `cmd/src/commands/explode_command.cpp`, `cmd/include/tg/cmd/commands/explode_command.hpp`
+- `edit/include/tg/edit/editor.hpp`, `edit/src/editor.cpp` (solo le due
+  funzioni del punto 3, eccezione alla regola di PT7 su `editor.*`)
+- `io/src/dxf_write.cpp` (solo il proprietario delle entità grezze, punto 4)
 - `tests/core/explode_test.cpp` (nuovo), `tests/cmd/explode_command_test.cpp`,
+  `tests/edit/editor_test.cpp`, `tests/io/dxf_write_test.cpp`,
   `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
@@ -74,11 +78,42 @@
    all'ordine (ADR 0031, punto 6); un rifiuto si scrive nella cronologia e
    quell'entità resta; un solo passo di annullamento. `HATCH`, `MTEXT`,
    `SOLID` e `ATTDEF` non si esplodono nella 0.8: il messaggio è quello di oggi
-   per le entità che non si esplodono.
+   per le entità che non si esplodono. Le entità di `Exploded::entities`
+   entrano con `Editor::addRecord`, quelle di `Exploded::raw` con
+   `Editor::addRaw` (punto 3), nell'ordine in cui `Exploded` le dà.
+3. **Due funzioni di `edit::Editor`** ([DECISIONI.md](../../DECISIONI.md),
+   2026-11-18, «Entità esplose con i loro extras»), eccezione alla regola di
+   [PT7](PT7-tabelle-edit.md) su `editor.*`:
+
+   ```cpp
+   /// Adds an entity with new identity and order, keeping the properties and
+   /// extras of `record` (its id and order are ignored).
+   /// Precondition: a transaction is open.
+   core::EntityId addRecord(core::EntityRecord record);
+
+   /// Adds an unhandled entity with new identity and order; the handle in
+   /// its group 5 becomes the new one (its id and order are ignored).
+   /// Precondition: a transaction is open.
+   core::EntityId addRaw(core::RawEntity raw);
+   ```
+
+   Tutte e due si annullano e si rifanno come `add()`. `addRecord` non tocca
+   gli extras: i gruppi 102 li toglie già `explodeInsert`. Se il gruppo 5
+   manca prima del primo gruppo 100, `addRaw` lo aggiunge in testa ai gruppi.
+4. **Proprietario delle entità grezze.** `io/src/dxf_write.cpp` scrive il
+   gruppo 330 di ogni entità grezza del disegno con l'handle dello spazio
+   modello, come `setOwner` fa per le entità dei blocchi in
+   `io/src/dxf_blocks.cpp`: un'entità grezza copiata da un blocco porta il
+   330 della definizione, che nello spazio modello sarebbe sbagliato. Se il
+   330 manca, non si aggiunge; un'entità grezza letta dallo spazio modello
+   resta identica.
 
 ## Regole della tappa che valgono qui
 
 - File comune: `tests/CMakeLists.txt`.
+- `editor.*` si tocca solo per `addRecord` e `addRaw` (punto 3), eccezione
+  alla regola di PT7 decisa dal responsabile; `io/src/dxf_write.cpp` solo per
+  il punto 4.
 
 ## Test richiesti
 
@@ -94,6 +129,22 @@
   ordini: sempre `contains objects Tecnigrafo cannot explode.`
 - `explode_command_test.cpp`: selezione mista di una polilinea, un inserimento
   e una quota; `U`.
+- Buco deciso il 2026-11-18 (scelta A della
+  [#719](https://github.com/Matleyx78/tecnigrafo/issues/719)). **Esempio:** un
+  DXF con il blocco `B` che contiene una `LINE` con XDATA (`extras.extended`
+  non vuoto) e un'entità grezza senza coordinate; `EXPLODE` di un
+  inserimento di `B`. **Risposta:** la `LINE` esplosa porta le stesse XDATA,
+  l'entità grezza entra nel disegno con un handle nuovo nel gruppo 5 e, dopo
+  la scrittura, il 330 dello spazio modello; al posto dell'inserimento il
+  disegno ha la `LINE` e l'entità grezza; `U` riporta il disegno di prima. Test in `explode_command_test.cpp`.
+- `editor_test.cpp`: `addRecord` di un record con layer, colore ed extras
+  (XDATA e un gruppo nel `beforeEntity`) li tiene e dà un handle nuovo e
+  l'ultimo posto nell'ordine; `addRaw` di un'entità grezza con il gruppo 5
+  `1F` dà un handle nuovo, che si legge anche nel suo gruppo 5; `undo` e
+  `redo` di tutte e due, anche nella stessa transazione.
+- `dxf_write_test.cpp`: un disegno con un'entità grezza dello spazio modello il
+  cui 330 è l'handle di una definizione di blocco si scrive con il 330 dello
+  spazio modello; un'entità grezza con il 330 già giusto si scrive identica.
 
 ## Fatto quando
 
