@@ -140,11 +140,14 @@
 - `editor_test.cpp`: `addRecord` di un record con layer, colore ed extras
   (XDATA e un gruppo nel `beforeEntity`) li tiene e dà un handle nuovo e
   l'ultimo posto nell'ordine; `addRaw` di un'entità grezza con il gruppo 5
-  `1F` dà un handle nuovo, che si legge anche nel suo gruppo 5; `undo` e
-  `redo` di tutte e due, anche nella stessa transazione.
+  `1F` dà un handle nuovo, che si legge anche nel suo gruppo 5; `addRaw` di
+  un'entità grezza senza gruppo 5 prima del primo gruppo 100 lo aggiunge in
+  testa ai gruppi con l'handle nuovo, e gli altri gruppi restano nel loro
+  ordine; `undo` e `redo` di tutte e due, anche nella stessa transazione.
 - `dxf_write_test.cpp`: un disegno con un'entità grezza dello spazio modello il
   cui 330 è l'handle di una definizione di blocco si scrive con il 330 dello
-  spazio modello; un'entità grezza con il 330 già giusto si scrive identica.
+  spazio modello; un'entità grezza con il 330 già giusto si scrive identica;
+  un'entità grezza senza 330 si scrive identica, senza un 330 aggiunto.
 
 ## Fatto quando
 
