@@ -929,7 +929,11 @@ void TableReader::finish(std::vector<std::string>& warnings,
         if (properties.linetype == core::LinetypeId{}) {
             properties.linetype = pending.linetype ? linetypeNamed(*pending.linetype) : byLayer;
         }
-        m_document.setProperties(pending.id, properties);
+        if (m_document.find(pending.id) != nullptr) {
+            m_document.setProperties(pending.id, properties);
+        } else {
+            m_resolved[pending.id.value] = properties;
+        }
     }
     m_current.layer = layerNamed(m_currentLayer.value_or(std::string{kLayerZeroName}));
     m_current.linetype = m_currentLinetype ? linetypeNamed(*m_currentLinetype) : byLayer;
@@ -943,6 +947,11 @@ void TableReader::finish(std::vector<std::string>& warnings,
     warn(m_invalidLinetypes, "invalid linetype", " kept as unhandled data.");
     warn(m_replacedLayerLinetypes, "layer linetype", " replaced by Continuous.");
     warn(m_roundedLineweights, "lineweight", " rounded.");
+}
+
+const core::EntityProperties* TableReader::resolvedProperties(core::EntityId id) const {
+    const auto found = m_resolved.find(id.value);
+    return found != m_resolved.end() ? &found->second : nullptr;
 }
 
 // --- Writing ---------------------------------------------------------------
