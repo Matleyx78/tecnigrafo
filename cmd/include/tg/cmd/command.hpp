@@ -25,6 +25,8 @@ class DocumentHost;
 
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
+    CommandDefaults();
+
     double textHeight{2.5};
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
@@ -66,6 +68,11 @@ struct CommandDefaults {
 /// When adding a field, update CommandRunner::setDocumentFile to preserve it
 /// when rebinding the file reference.
 struct CommandContext : ProtocolContext {
+    CommandContext(ProtocolContext initialProtocol, edit::Editor& initialEditor,
+                   edit::DocumentFile& initialFile, std::optional<core::Vec2> initialLastPoint = {},
+                   CommandDefaults initialDefaults = {}, io::FileAccess* initialFiles = nullptr,
+                   bool initiallyReplaced = false, DocumentHost* initialHost = nullptr);
+
     edit::Editor& editor;
     edit::DocumentFile& file;
     std::optional<core::Vec2> lastPoint;  ///< updated by the command

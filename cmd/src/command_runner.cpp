@@ -117,12 +117,25 @@ bool showsGrips(const core::Document& document, const core::EntityRecord& record
 
 }  // namespace
 
+CommandDefaults::CommandDefaults() = default;
+
+CommandContext::CommandContext(ProtocolContext initialProtocol, edit::Editor& initialEditor,
+                               edit::DocumentFile& initialFile,
+                               std::optional<core::Vec2> initialLastPoint,
+                               CommandDefaults initialDefaults, io::FileAccess* initialFiles,
+                               bool initiallyReplaced, DocumentHost* initialHost)
+    : ProtocolContext(std::move(initialProtocol)),
+      editor(initialEditor),
+      file(initialFile),
+      lastPoint(initialLastPoint),
+      defaults(std::move(initialDefaults)),
+      files(initialFiles),
+      documentReplaced(initiallyReplaced),
+      host(initialHost) {}
+
 CommandRunner::CommandRunner(const CommandRegistry& registry, edit::Editor& editor)
     : m_registry(registry),
       m_editor(editor),
-      // Braces, not std::in_place: the static analyser of clang-tidy 18
-      // crashes on the parenthesised aggregate initialisation of a struct
-      // with a base (C++20), as in std::optional::emplace().
       m_context(CommandContext{{[this](std::string text) {
                                    message(std::move(text));
                                }},
@@ -169,22 +182,15 @@ const CommandContext& CommandRunner::context() const {
 void CommandRunner::setDocumentFile(edit::DocumentFile* file) {
     // A reference cannot be rebound. Carry the command session state over
     // when rebuilding the context around a different file.
-    std::function<void(std::string)> message = std::move(context().message);
-    const bool scriptSequences = context().scriptSequences;
-    const std::optional<core::Vec2> lastPoint = context().lastPoint;
-    CommandDefaults defaults = std::move(context().defaults);
-    io::FileAccess* const files = context().files;
-    const bool documentReplaced = context().documentReplaced;
-    DocumentHost* const host = context().host;
-    // Built with braces, then moved in: see the constructor.
-    m_context.emplace(CommandContext{{std::move(message), scriptSequences},
-                                     m_editor,
+    CommandContext previous = std::move(context());
+    m_context.emplace(CommandContext{{std::move(previous.message), previous.scriptSequences},
+                                     previous.editor,
                                      file != nullptr ? *file : m_ownFile,
-                                     lastPoint,
-                                     std::move(defaults),
-                                     files,
-                                     documentReplaced,
-                                     host});
+                                     previous.lastPoint,
+                                     previous.defaults,
+                                     previous.files,
+                                     previous.documentReplaced,
+                                     previous.host});
 }
 
 void CommandRunner::setDocumentHost(DocumentHost* host) {
