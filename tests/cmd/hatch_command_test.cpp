@@ -44,10 +44,17 @@ protected:
         }
     }
 
+    [[nodiscard]] const core::Document& document() const { return m_document; }
+
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
     [[nodiscard]] const core::Hatch& hatch() const {
-        return std::get<core::Hatch>(m_document.entities().back().entity);
+        return std::get<core::Hatch>(m_document.find(m_document.entities().back().id)->entity);
     }
 
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -58,18 +65,18 @@ protected:
 TEST_F(HatchTest, CreatesHatchFromPointAndDoesNotDuplicateSameArea) {
     type({"-HATCH", "30,20", "30,20", ""});
 
-    ASSERT_EQ(m_document.entities().size(), 2U) << testing::PrintToString(m_messages);
+    ASSERT_EQ(document().entities().size(), 2U) << testing::PrintToString(messages());
     EXPECT_EQ(hatch().pattern, "ANSI31");
     EXPECT_EQ(hatch().islands, core::IslandStyle::Outer);
     EXPECT_EQ(hatch().seeds, (std::vector<core::Vec2>{{30, 20}, {30, 20}}));
     EXPECT_EQ(hatch().loops.size(), 1U);
-    EXPECT_EQ(m_editor.undoName(), "Hatch");
+    EXPECT_EQ(editor().undoName(), "Hatch");
 }
 
 TEST_F(HatchTest, RemembersNetPropertiesAndReducesAngle) {
     type({"HATCH", "P", "NET", "2", "390", "30,20", ""});
 
-    ASSERT_EQ(m_document.entities().size(), 2U);
+    ASSERT_EQ(document().entities().size(), 2U);
     EXPECT_EQ(hatch().pattern, "NET");
     EXPECT_DOUBLE_EQ(hatch().scale, 2.0);
     EXPECT_DOUBLE_EQ(hatch().angle, core::reducedDegreesToRadians(390.0));
@@ -82,13 +89,13 @@ TEST_F(HatchTest, RemembersNetPropertiesAndReducesAngle) {
 TEST_F(HatchTest, IslandVariableAcceptsOnlyZeroThroughTwoAndSolidSkipsDensity) {
     type({"HPISLANDDETECTION", "3", "2", "-HATCH", "P", "S", "30,20", ""});
 
-    ASSERT_EQ(m_document.entities().size(), 2U) << testing::PrintToString(m_messages);
+    ASSERT_EQ(document().entities().size(), 2U) << testing::PrintToString(messages());
     EXPECT_TRUE(hatch().solid);
     EXPECT_EQ(hatch().pattern, "SOLID");
     EXPECT_EQ(hatch().islands, core::IslandStyle::Ignore);
     EXPECT_TRUE(hatch().patternLines.empty());
-    EXPECT_NE(std::ranges::find(m_messages, "Requires an integer between 0 and 2."),
-              m_messages.end());
+    EXPECT_NE(std::ranges::find(messages(), "Requires an integer between 0 and 2."),
+              messages().end());
 }
 
 }  // namespace
