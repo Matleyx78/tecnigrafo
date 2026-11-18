@@ -5,8 +5,8 @@
 D = DXF source=elettrico-tg-el-motor-3ph
 ; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
 ; cambia con #697
-? count D -> CIRCLE 1; LINE 5; TEXT 2
-? unhandled D -> ATTDEF 22
+? count D -> ATTDEF 22; CIRCLE 1; LINE 5; TEXT 2
+? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
 ? snaps D:45 -> none
 ; TG_PIN2=N, flags=3 (constant + invisible).
