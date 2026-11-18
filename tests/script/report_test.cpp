@@ -908,6 +908,89 @@ TEST(WriteState, ANewSessionHasNoFieldOfTheStylesAndBlocks) {
     }
 }
 
+/// The block "TG_EL" of docs/tappe/0.8/PT16-blocchi-core.md: base (5, 0) and
+/// a line, with the handle the document gives next.
+core::BlockDefinition tgEl(const core::Document& document) {
+    core::BlockDefinition block{"TG_EL"};
+    block.base = {5.0, 0.0};
+    core::EntityRecord line{core::EntityId{document.nextId()}, core::Line{{0, 0}, {10, 0}}};
+    line.properties.layer = document.layerZero();
+    line.properties.linetype = document.byLayerLinetype();
+    block.entities.push_back(line);
+    return block;
+}
+
+TEST(WriteState, BlocksAreWrittenWithTheirEntitiesInOrder) {
+    core::Document document = core::Document::newDrawing();
+    const core::BlockDefinition block = tgEl(document);
+    const std::string handle = std::to_string(block.entities[0].id.value);
+    document.replaceBlock("TG_EL", block);
+    const std::string report = stateOf(document);
+    expectContains(report, "blocks:\n  \"TG_EL\" base=5,0\n  \"TG_EL\" " + handle +
+                               " LINE start=0,0 end=10,0\n");
+    // The entities of a block are not entities of the drawing.
+    expectContains(report, "entities:\nmessages:\n");
+}
+
+TEST(WriteState, ABlockLineWritesTheValuesThatAreNotTheDefault) {
+    core::Document document = core::Document::newDrawing();
+    core::BlockDefinition block = tgEl(document);
+    block.explodable = false;
+    document.replaceBlock("TG_EL", block);
+    expectContains(stateOf(document), "blocks:\n  \"TG_EL\" base=5,0 explodable=no\n");
+
+    block.explodable = true;
+    block.uniformScale = true;
+    block.units = 4;
+    block.description = "Contatto";
+    document.replaceBlock("TG_EL", block);
+    expectContains(stateOf(document),
+                   "blocks:\n  \"TG_EL\" base=5,0 uniform=yes units=4 description=\"Contatto\"\n");
+}
+
+TEST(WriteState, TextStylesAndCurrentStyleAreWrittenWhenDifferentFromNew) {
+    core::Document document = core::Document::newDrawing();
+    core::TextStyleTable styles = document.textStyles();
+    core::TextStyle note;
+    note.name = "Note";
+    note.font = "romans.shx";
+    note.widthFactor = 0.8;
+    styles.put(std::move(note), document);
+    styles.setCurrent("Note");
+    document.replaceTextStyles(std::move(styles));
+
+    const std::string report = stateOf(document);
+    expectContains(report,
+                   "text styles:\n  \"Note\" font=\"romans.shx\" height=0 width-factor=0.8 "
+                   "oblique=0 backwards=no upside-down=no\ntext style: \"Note\"");
+}
+
+TEST(WriteState, TextStylesAreWrittenWithoutANonstandardCurrentStyle) {
+    core::Document document = core::Document::newDrawing();
+    core::TextStyleTable styles = document.textStyles();
+    core::TextStyle note;
+    note.name = "Note";
+    note.font = "romans.shx";
+    note.widthFactor = 0.8;
+    styles.put(std::move(note), document);
+    document.replaceTextStyles(std::move(styles));
+
+    const std::string report = stateOf(document);
+    expectContains(report, "text styles:\n  \"Note\"");
+    EXPECT_EQ(report.find("text style:"), std::string::npos);
+}
+
+TEST(WriteState, AChangedStandardTextStyleIsWritten) {
+    core::Document document = core::Document::newDrawing();
+    core::TextStyleTable styles = document.textStyles();
+    core::TextStyle standard = *styles.find("Standard");
+    standard.font = "txt.shx";
+    styles.put(std::move(standard), document);
+    document.replaceTextStyles(std::move(styles));
+
+    expectContains(stateOf(document), "text styles:\n  \"Standard\" font=\"txt.shx\"");
+}
+
 TEST(WriteGeneratedItem, AShapeWithTheEffectivePropertiesThatAreNotTheDefault) {
     const Tables tables = drawingWithLayers();
     const core::Document& document = tables.document;

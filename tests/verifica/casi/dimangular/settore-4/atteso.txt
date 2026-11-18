@@ -1,0 +1,37 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=40,0
+  258 LINE start=0,0 end=30,40
+  259 DIMENSION kind=angular style="ISO-25" line-point=40,0 first=0,0;30,40 second=40,0;0,0 arc-point=10,-30 text-point=13.303610132168526,-26.60722026433706 measurement=126.86989764584402 ~text="127°"
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 40,0
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,40
+  Specify next point or [Undo]:
+  Command: DIMANGULAR
+  Select arc, circle, line, or <specify vertex>: 20,0
+  Select second line: 15,20
+  Specify dimension arc line location or [Text/Angle/Quadrant]: 10,-30
+  Dimension text = 127
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Dimangular
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
+  LINE 2

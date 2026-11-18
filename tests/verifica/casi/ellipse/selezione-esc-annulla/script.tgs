@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; Handwritten scena.dxf: ellipse center (0,0), axes 10 and 5, handle 101 hex.
+; Selection at (10,0), Esc while ERASE selects, then Erase / U / REDO.
+; Point (10,0) from solid-space tests/corpus/casi/geom2d/
+; ellisse-intera-parametri-0-2pi.json, commit fc8cae3da8a737510d6b61075b03ea3272228576.
+!view 0,0 0.1 800x600
+; cambia con #699
+OPEN
+scena.dxf
+!snap off
+!report
+; PT50 makes the ellipse selectable with a click.
+; cambia con #744
+!click 10,0
+!report
+!esc
+ERASE
+!click 10,0
+!esc
+!report
+!click 10,0
+ERASE
+!report
+U
+!report
+REDO

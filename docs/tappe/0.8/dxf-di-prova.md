@@ -30,6 +30,8 @@ Commit e hash SHA-256 dei file pubblicati sono in «File pubblicati».
 | `autocad-quote.dxf` | con `ISO-25`: lineari orizzontale, verticale e ruotata, allineata, angolare fra due linee, radiale e diametrale su un cerchio e su un arco, le quote **strette** dei quattro casi dell'adattamento (testo e frecce dentro, solo il testo dentro, solo le frecce dentro, tutto fuori) sia lineari sia allineate, e radiali e diametrali in un cerchio piccolo; con uno stile `PROVA` (`DIMTAD` 0, `DIMDEC` 3, `DIMDSEP` `.`, `DIMTXT` 3,5); una con testo sostituito `<> mm`; una quota ruotata, una scalata e una specchiata dopo la creazione; una quota coordinata (tipo che Tecnigrafo conserva soltanto) | RT22, RT23, RT24, RT25, RT26, RT27, RT28 |
 | `autocad-retini.dxf` | `ANSI31`, `NET` e `SOLID` su un rettangolo di quattro linee con un cerchio dentro (punto interno) e con isole annidate; un retino da *Select objects*; un motivo ruotato di 30° e scalato 2; gli stili *Normal*, *Outer* e *Ignore*; un retino con un motivo diverso (`ANSI37`) | RT30, RT31, RT42, RT43, RT44 |
 | `autocad-pedit.dxf` | linee e archi convertiti in polilinee; *Join* con distanza 0; *Multiple* con distanza 2 e *Extend*, *Add* e *Both*, su linee che non si toccano, su linee che si sovrappongono e su un arco seguito da una linea; *Close*, *Open*, *Reverse*, *Ltype gen* | RT32, RT33 |
+| `autocad-dimstyle.dxf` | `-DIMSTYLE`: *STatus*, `?` con `Invio` e con `*`, *Save* su `ISO-25` con N e poi con Y, *Save* di uno stile nuovo `NUOVO` annullato con `U`, *Restore* di uno stile che non c'è; `DIMTXT` 3,5 annullato con `U`; valori fuori dai limiti di `DIMDEC`, `DIMTAD`, `DIMTXT` (−1 e 0), `DIMDSEP`, `DIMTXSTY` e `DIMLFAC`. Nessuna entità. Lo script si sospende a ogni valore rifiutato e riprende con `'_RESUME`, che resta nella cronologia | RT28 |
+| `autocad-retini-errori.dxf` | `-HATCH` su un rettangolo (polilinea) da 0,0 a 60,40: `HPISLANDDETECTION` 3; *Properties* con un motivo che non c'è (`PIPPO`) e scala 0 e −1; `Invio` senza contorni; un punto fuori da ogni contorno, uno sopra il lato e uno valido. Un solo `HATCH`. Script sospeso e ripreso con `'_RESUME` come sopra | RT44 |
 | `campioni-elettrico/` | otto simboli della libreria dell'elettrico (`TG_EL_CONTACT_NO`, `TG_EL_COIL_DELAY_OFF`, `TG_EL_BREAKER_3P`, `TG_EL_TRANSFORMER_1PH`, `TG_EL_MOTOR_3PH`, `TG_EL_TERMINAL`, `TG_EL_FOLIO_OUT`, `TG_EL_PUSHBUTTON_NO`) e lo schema `avviamento-diretto.dxf`, scritti dallo script della libreria (DXF R2000), non da AutoCAD; campioni di prova, non la libreria (decisione del 2026-11-11, punto 8); commit `764dfdb9420623d26636e1552769cc223e484231`, hash qui sotto | RT18, RT19, RT21 |
 
 ## Modello
@@ -55,8 +57,8 @@ dipendere dai nomi tradotti dei file `.lin` di AutoCAD.
 
 ## File pubblicati
 
-Commit `1ad04b0b8a568fb9dd4960719a8f17289129f788` di
-[Matleyx78/dxf-test-file](https://github.com/Matleyx78/dxf-test-file/tree/1ad04b0b8a568fb9dd4960719a8f17289129f788),
+Commit `5170f1860953b5d076aa435bd65daa725d431745` di
+[Matleyx78/dxf-test-file](https://github.com/Matleyx78/dxf-test-file/tree/5170f1860953b5d076aa435bd65daa725d431745),
 fine riga CRLF. I DXF sono ripuliti come gli altri del repository
 (`$LASTSAVEDBY` vuoto, GUID fittizi, stampante `none_device`, codice di
 prodotto vuoto, percorsi ridotti al nome del file).
@@ -90,15 +92,21 @@ prodotto vuoto, percorsi ridotti al nome del file).
 | `autocad-inserisci-file.dxf` | AutoCAD 2021 | `7876b8a2bdabf0f782986bc075e27ce842fcdee2b034336ec698fa759b9bfdd2` |
 | `autocad-inserisci-file.scr` | AutoCAD 2021 | `0b3eedcfe6fa71f42a0c23eafb1686cbedc974b826f38ecce7bf54ec23f46e64` |
 | `autocad-inserisci-file.txt` | AutoCAD 2021 | `969bf443af2f833c1c23f77bd48811abe05a644c84911c45063590bfbe89d92e` |
-| `autocad-quote.dxf` | AutoCAD LT 2026 | `63a0cf5a870a2518e24d4afded207680da20d04c28a7299f5d15d100875f7ec1` |
+| `autocad-quote.dxf` | AutoCAD LT 2026 | `7a444a6306ac94f4e049d5d4af3c2df1ca66602fb798a583738ace0bd0cba394` |
 | `autocad-quote.scr` | AutoCAD LT 2026 | `fb5933d007618e7f085cea5f5bbde93a2ba913e93ecb12a5cbb27c9ed5a3d106` |
 | `autocad-quote.txt` | AutoCAD LT 2026 | `3a34f4e798be80489f9e1ae811de974ce730a7d71e173b0148817ff850157483` |
-| `autocad-retini.dxf` | AutoCAD LT 2026 | `53003a6acb7fee57be087cc0a1e7a9733e95181ff557c874752f06e57373e926` |
+| `autocad-retini.dxf` | AutoCAD LT 2026 | `232a1d6b5cc9f50d45fb8b45791047e8d7b6a0ae70719cefa9ddf1d1e4f725b9` |
 | `autocad-retini.scr` | AutoCAD LT 2026 | `0fa9bd76d108ebc7887904911e8a1896888c4ffe9668951f872aab5d1dc3df48` |
 | `autocad-retini.txt` | AutoCAD LT 2026 | `bdf812076096712179a80b99343ec7d1bed793c9a4928338317eaa8230b17550` |
-| `autocad-pedit.dxf` | AutoCAD LT 2026 | `396f68a56cf58e5361aedea5cb594ff08acf2ac2ced0a1125dde0a4482cd33be` |
+| `autocad-pedit.dxf` | AutoCAD LT 2026 | `70157d4fc238e1ab4f6c40c4e2177025f3da4dc8d006fd86ca27948bb2048bcc` |
 | `autocad-pedit.scr` | AutoCAD LT 2026 | `a730c6379d9134caf46fd20f60efa453b27ed174496b743d909aa680b3c4774a` |
 | `autocad-pedit.txt` | AutoCAD LT 2026 | `d998919262b229582eb06bc265fd2c6909058ad76f96e0749db42c8ec0df88fa` |
+| `autocad-dimstyle.dxf` | AutoCAD LT 2026 | `23e7168a9a3002480ecb9b3dc711be7f46e9d7d6b22f8045105b37ad22de5bf6` |
+| `autocad-dimstyle.scr` | AutoCAD LT 2026 | `0b10bc83c32933c1adfd98c9bf35ba22267011df5f01b01fd4cf63e555144a35` |
+| `autocad-dimstyle.txt` | AutoCAD LT 2026 | `5ae187f89dcaa7b84a445cdd39cce41e45d76f36ee15004ef0e5c26164403146` |
+| `autocad-retini-errori.dxf` | AutoCAD LT 2026 | `94a9979b26a47d5eee1e097371a1e8d400d99e8420a1add83b7159d521d9ff29` |
+| `autocad-retini-errori.scr` | AutoCAD LT 2026 | `964745eccbd784d3645d4a627e13668dea3b05037783006ab5c99b0c68dee210` |
+| `autocad-retini-errori.txt` | AutoCAD LT 2026 | `627ea8cc3b15896d15358adf3ee577cb881bfcd3220db1041e8c9d2a50dbde61` |
 | `modello-tecnigrafo.scr` | — | `8f9acad473a1b283e54acfe680ff3e1aaa4a1b888d2210cedeae8d617a99bbab` |
 | `tratto-simbolo.lin` | — | `0e513a06dc39bc1644d421e75cb2bbfcf346b44742fe1da08c39f9ee936a7cb9` |
 | `tratto-destinazione.lin` | — | `8bfb737c139e2a464462c31754df7bc4ca062c5be5148be8eac98097a52dc7de` |

@@ -3,6 +3,8 @@
 ; TRIM in modo rapido sulle figure a, b, c, d, e, g, h di autocad-taglio.dxf
 !view 360,0 0.5 1800x400
 ; cambia con #570
+; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 TRIM

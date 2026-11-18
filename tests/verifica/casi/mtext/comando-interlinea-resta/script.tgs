@@ -1,0 +1,43 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; MTEXT: all'avvio l'interlinea è At least 1; Line spacing Exactly 1.5x con Rotation 30 e
+; l'angolo opposto; il MTEXT dopo, senza opzioni, è ancora Exactly 1.5 con la rotazione
+; tornata a 0; il terzo propone Exactly e 1.5x e torna ad At least 1 ([0.8-RT15], lavoro
+; #691; decisioni del 2026-11-13).
+; Richieste dalla scheda PT15 (punti 1-3). Quelle di Line spacing, che la scheda non
+; scrive, sono quelle inglesi di AutoCAD; la cronologia di AutoCAD 2021
+; autocad-testo-multiriga.txt (Matleyx78/dxf-test-file, commit
+; 1ad04b0b8a568fb9dd4960719a8f17289129f788) ha «Digitare il tipo di spaziatura linea
+; [Almeno/Esatto] <Almeno>:» e «Digitare la distanza o il fattore di spaziatura linea
+; <1x>:», con la risposta 1.5x (il fattore si scrive con x).
+; Larghezza dall'angolo opposto nel sistema ruotato del testo:
+; primo: (20 - 0) cos 30° + (10 - 0) sin 30° = 10 sqrt(3) + 5 = 22.320508075688775;
+; secondo: |50 - 0| = 50; terzo: |40 - 0| = 40. Altezza 2.5, allineamento TL.
+MTEXT
+0,0
+L
+E
+1.5x
+R
+30
+20,10
+Uno
+Due
+
+MTEXT
+0,-30
+50,-40
+Tre
+
+MTEXT
+0,-60
+L
+
+
+L
+A
+1x
+40,-70
+Quattro
+

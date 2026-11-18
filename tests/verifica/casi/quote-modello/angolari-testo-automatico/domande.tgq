@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Suppressions isolate automatic text placement without changing the fit.
+; Text sits at the arc midpoint; TAD=1 adds gap along the readable normal.
+; A 135-degree tangent is read at -45 degrees; horizontal flags select 0.
+; Scale changes height/gap, never the measured angle.
+
+Above = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=12,16 text-point=0,0 measurement=0 overrides=DIMSCALE:1,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTAD:1,DIMTIH:0,DIMTOH:0
+? generated Above -> TEXT position=12.64129018903541,16.52686453490968 alignment-point=0,0 height=2.5 rotation=-45 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=12.09678283801525,15.98235718388952;15.98235718388952,12.09678283801525;18.85293971645662,14.96736537058236;14.96736537058235,18.85293971645662
+
+Centered = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=12,16 text-point=0,0 measurement=0 overrides=DIMSCALE:1,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTAD:0,DIMTIH:0,DIMTOH:0
+? generated Centered -> TEXT position=11.31546497431063,15.2010393201849 alignment-point=0,0 height=2.5 rotation=-45 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=10.77095762329047,14.65653196916474;14.65653196916474,10.77095762329047;17.52711450173185,13.64154015585758;13.64154015585758,17.52711450173184
+
+Horizontal = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=12,16 text-point=0,0 measurement=0 overrides=DIMSCALE:1,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTAD:1,DIMTIH:1,DIMTOH:1
+? generated Horizontal -> TEXT position=11.39461965495877,12.89213562373095 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=11.39461965495877,12.12208594310639;16.88965159250313,12.12208594310639;16.88965159250313,16.1817026925741;11.39461965495877,16.1817026925741
+
+Scale = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=12,16 text-point=0,0 measurement=0 overrides=DIMSCALE:2,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTAD:1,DIMTIH:0,DIMTOH:0
+? generated Scale -> TEXT position=11.14044475433986,18.9115934460884 alignment-point=0,0 height=5 rotation=-45 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=10.05143005229955,17.82257874404808;17.82257874404809,10.05143005229955;23.5637438091823,15.79259511743376;15.79259511743376,23.5637438091823

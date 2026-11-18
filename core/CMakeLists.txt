@@ -17,6 +17,7 @@ add_library(tg_core
     src/ellipse.cpp
     src/generated.cpp
     src/hatch.cpp
+    src/hatch_patterns.cpp
     src/insert.cpp
     src/lineweight.cpp
     src/linetype_pattern.cpp
@@ -29,6 +30,7 @@ add_library(tg_core
     src/intersections.cpp
     src/join.cpp
     src/mtext.cpp
+    src/mtext_layout.cpp
     src/offset.cpp
     src/pedit_join.cpp
     src/layer.cpp
@@ -42,6 +44,7 @@ add_library(tg_core
     src/snap_points.cpp
     src/spatial_index.cpp
     src/text.cpp
+    src/text_affine.cpp
     src/text_metrics.cpp
     src/text_style_table.cpp
     src/tolerance.cpp

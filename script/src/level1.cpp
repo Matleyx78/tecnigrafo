@@ -211,6 +211,11 @@ private:
         runner.click(click.point, click.remove ? cmd::PickAction::Remove : cmd::PickAction::Add);
     }
 
+    void perform(const HoverDirective& hover) {
+        m_pointer = hover.point;
+        active().pointerHeld(hover.point);
+    }
+
     void perform(const RightClickDirective& /*directive*/) { active().submit(cmd::ConfirmInput{}); }
 
     void perform(const EscDirective& /*directive*/) { active().submit(cmd::CancelInput{}); }
@@ -230,6 +235,9 @@ private:
             case AidDirective::Aid::Polar:
                 aids.polar = directive.on;
                 aids.ortho = aids.ortho && !directive.on;
+                break;
+            case AidDirective::Aid::Tracking:
+                aids.tracking = directive.on;
                 break;
         }
         active().setDrawingAids(aids);

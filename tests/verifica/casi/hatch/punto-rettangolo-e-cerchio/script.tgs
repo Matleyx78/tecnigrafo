@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCH: un punto fra un rettangolo di quattro LINE e un cerchio (figura 1 di autocad-retini.scr),
+; HPISLANDDETECTION 1 come all'avvio: due contorni, il cerchio come isola, stile outer, il punto interno
+LINE
+0,0
+60,0
+60,40
+0,40
+C
+CIRCLE
+30,20
+8
+-HATCH
+5,5
+

@@ -1,0 +1,46 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: DIMDEC
+  Enter new value for DIMDEC <2>: 9
+  Requires an integer between 0 and 8.
+  Enter new value for DIMDEC <2>: 3
+  Command: DIMTAD
+  Enter new value for DIMTAD <1>: 5
+  Cannot set DIMTAD to that value.
+  *Invalid*
+  Command: DIMTXT
+  Enter new value for DIMTXT <2.5000>: -1
+  Cannot set DIMTXT to that value.
+  *Invalid*
+  Command: DIMTXT
+  Enter new value for DIMTXT <2.5000>: 0
+  Cannot set DIMTXT to that value.
+  *Invalid*
+  Command: DIMDSEP
+  Enter new value for DIMDSEP <",">: ab
+  Cannot set DIMDSEP to that value.
+  *Invalid*
+  Command: DIMTXSTY
+  Enter new value for DIMTXSTY <"Standard">: NONC
+  Cannot set DIMTXSTY to that value.
+  *Invalid*
+  Command: DIMLFAC
+  Enter new value for DIMLFAC <1.0000>: 0
+  Cannot set DIMLFAC to that value.
+  *Invalid*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMDEC
+redo:
+snap: on
+ortho: off
+dimension overrides: DIMDEC:3
+pointer: none
+active snap: none
+statistics:

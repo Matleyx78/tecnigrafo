@@ -1,7 +1,7 @@
 ; -STYLE su uno stile che esiste: i predefiniti sono i valori dello stile ([0.8-RT12], lavoro #685)
 ; Valori attesi: richieste di -STYLE dalla scheda PT12 (punto 2) e dalla cronologia
 ; di AutoCAD 2021 autocad-stili-testo.txt (Matleyx78/dxf-test-file, commit
-; 1ad04b0b8a568fb9dd4960719a8f17289129f788): per un nome nuovo "New style." e i
+; 2efd1fd842b0330e6c87fe28c5be6700701b6b54): per un nome nuovo "New style." e i
 ; predefiniti di uno stile nuovo (txt, 0.0000, 1.0000, 0, No, No), anche se lo stile
 ; corrente ne ha altri; senza [Annotative] nella richiesta dell'altezza.
 ; Per un nome che esiste AutoCAD scrive "Existing style." (non è nella cronologia: vedi la pull request).

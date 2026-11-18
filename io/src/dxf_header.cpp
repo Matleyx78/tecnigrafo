@@ -49,6 +49,9 @@ std::vector<Variable> variables(const core::Document& document) {
     const core::Linetype* linetype = document.linetype(current.linetype);
     const std::string layerName = layer != nullptr ? layer->name : std::string{"0"};
     const std::string linetypeName = linetype != nullptr ? linetype->name : std::string{"ByLayer"};
+    const std::string textStyle = document.textStyles().current().empty()
+                                      ? std::string{"Standard"}
+                                      : document.textStyles().current();
 
     std::vector<Value> color;
     switch (current.color.kind()) {
@@ -67,6 +70,9 @@ std::vector<Variable> variables(const core::Document& document) {
             break;
     }
     return {
+        {"$TEXTSTYLE",
+         {{{7, textStyle}, std::nullopt}},
+         !core::sameTableName(textStyle, "Standard")},
         {"$CLAYER", {{{8, layerName}, std::nullopt}}, !core::sameTableName(layerName, "0")},
         {"$CECOLOR", color, current.color != core::Color::byLayer()},
         {"$CELTYPE",

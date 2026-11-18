@@ -1,0 +1,53 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+; Suppress all lines/arrows AFTER fitting; user position fixes the text center.
+; Each expected generated TEXT tests the formatted value, not a stored measurement.
+
+Decimals2 = DIMENSION kind=linear origin1=0,0 origin2=12.375,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMDEC:2,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMZIN:0
+? generated Decimals2 -> TEXT position=15.45333569907736,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12,38" ~box=15.45333569907736,27.97995031937544;24.54666430092264,27.97995031937544;24.54666430092264,32.03956706884315;15.45333569907736,32.03956706884315
+
+Decimals3 = DIMENSION kind=linear origin1=0,0 origin2=12.375,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMDEC:3,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMZIN:0
+? generated Decimals3 -> TEXT position=14.44286728176011,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12,375" ~box=14.44286728176011,27.97995031937544;25.55713271823988,27.97995031937544;25.55713271823988,32.03956706884315;14.44286728176011,32.03956706884315
+
+Zeros0 = DIMENSION kind=linear origin1=0,0 origin2=12.5,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMDEC:3,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMZIN:0
+? generated Zeros0 -> TEXT position=14.44286728176011,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12,500" ~box=14.44286728176011,27.97995031937544;25.55713271823988,27.97995031937544;25.55713271823988,32.03956706884315;14.44286728176011,32.03956706884315
+
+Zeros8 = DIMENSION kind=linear origin1=0,0 origin2=12.5,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMDEC:3,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMZIN:8
+? generated Zeros8 -> TEXT position=16.46380411639461,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12,5" ~box=16.46380411639461,27.97995031937544;23.53619588360539,27.97995031937544;23.53619588360539,32.03956706884315;16.46380411639461,32.03956706884315
+
+Separator = DIMENSION kind=linear origin1=0,0 origin2=12.5,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMDSEP:.,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMZIN:0
+? generated Separator -> TEXT position=15.45333569907736,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12.50" ~box=15.45333569907736,27.97995031937544;24.54666430092264,27.97995031937544;24.54666430092264,32.03956706884315;15.45333569907736,32.03956706884315
+
+RoundUp = DIMENSION kind=linear origin1=0,0 origin2=12.25,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMRND:0.5,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated RoundUp -> TEXT position=16.46380411639461,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12,5" ~box=16.46380411639461,27.97995031937544;23.53619588360539,27.97995031937544;23.53619588360539,32.03956706884315;16.46380411639461,32.03956706884315
+
+RoundDown = DIMENSION kind=linear origin1=0,0 origin2=12.125,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMRND:0.5,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated RoundDown -> TEXT position=17.97906316536551,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12" ~box=17.97906316536551,27.97995031937544;22.02093683463449,27.97995031937544;22.02093683463449,32.03956706884315;17.97906316536551,32.03956706884315
+
+Factor = DIMENSION kind=linear origin1=0,0 origin2=5,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMLFAC:2,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated Factor -> TEXT position=17.97906316536551,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="10" ~box=17.97906316536551,27.97995031937544;22.02093683463449,27.97995031937544;22.02093683463449,32.03956706884315;17.97906316536551,32.03956706884315
+
+FactorRound = DIMENSION kind=linear origin1=0,0 origin2=3.125,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMLFAC:2,DIMRND:0.5,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated FactorRound -> TEXT position=17.47427253371185,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="6,5" ~box=17.47427253371185,27.97995031937544;22.52572746628815,27.97995031937544;22.52572746628815,32.03956706884315;17.47427253371185,32.03956706884315
+
+Post = DIMENSION kind=linear origin1=0,0 origin2=12,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMPOST:[<>],DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated Post -> TEXT position=16.9694819020582,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="[12]" ~box=16.9694819020582,27.97995031937544;23.0305180979418,27.97995031937544;23.0305180979418,32.03956706884315;16.9694819020582,32.03956706884315
+
+PostSuffix = DIMENSION kind=linear origin1=0,0 origin2=12,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 user-text-position=yes overrides=DIMPOST:mm,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated PostSuffix -> TEXT position=14.95209368346345,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12mm" ~box=14.95209368346345,27.97995031937544;25.04790631653655,27.97995031937544;25.04790631653655,32.03956706884315;14.95209368346345,32.03956706884315
+
+Substitute = DIMENSION kind=linear origin1=0,0 origin2=12,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 text="<> mm" user-text-position=yes overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated Substitute -> TEXT position=14.44730305180979,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="12 mm" ~box=14.44730305180979,27.97995031937544;25.5526969481902,27.97995031937544;25.5526969481902,32.03956706884315;14.44730305180979,32.03956706884315
+
+Literal = DIMENSION kind=linear origin1=0,0 origin2=12,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 text="REF" user-text-position=yes overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated Literal -> TEXT position=16.36621717530163,28.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="REF" ~box=16.36621717530163,27.97995031937544;23.63378282469837,27.97995031937544;23.63378282469837,32.03956706884315;16.36621717530163,32.03956706884315
+
+Hidden = DIMENSION kind=linear origin1=0,0 origin2=12,0 line-point=40,10 rotation=0 text-point=20,30 measurement=0 text=" " user-text-position=yes overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1
+? generated Hidden -> none

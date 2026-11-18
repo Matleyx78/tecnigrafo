@@ -3,18 +3,18 @@
 
 #include "tg/core/generated.hpp"
 
-#include "solid_space/robust/trigonometry.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
+#include "tg/core/text_affine.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <optional>
@@ -44,36 +44,6 @@ bool isIdentity(const Transform2D& transform) {
     return transform.apply(Vec2{}) == Vec2{} &&
            transform.applyToVector({1.0, 0.0}) == Vec2{1.0, 0.0} &&
            transform.applyToVector({0.0, 1.0}) == Vec2{0.0, 1.0};
-}
-
-/// The similarity equal to `transform`, or std::nullopt when its linear part
-/// is not exactly a rotation and a uniform scale, possibly with a reflection.
-std::optional<Similarity> similarityOf(const Transform2D& transform) {
-    const Vec2 xAxis = transform.applyToVector({1.0, 0.0});
-    const Vec2 yAxis = transform.applyToVector({0.0, 1.0});
-    const bool reflects = transform.determinant() < 0.0;
-    const bool similar = reflects ? (yAxis.x == xAxis.y && yAxis.y == -xAxis.x)
-                                  : (yAxis.x == -xAxis.y && yAxis.y == xAxis.x);
-    if (!similar) {
-        return std::nullopt;
-    }
-    const std::optional<Similarity> scaling =
-        Similarity::scaling(std::sqrt(xAxis.lengthSquared()), Vec2{});
-    if (!scaling) {
-        return std::nullopt;
-    }
-    // p' = t + R * s * F * p: F, the reflection across the X axis, first.
-    Similarity result = Similarity::translation(transform.apply(Vec2{})) *
-                        Similarity::rotation(solid_space::robust::atan2(xAxis.y, xAxis.x), Vec2{}) *
-                        *scaling;
-    if (reflects) {
-        const std::optional<Similarity> acrossX = Similarity::reflection(Vec2{}, Vec2{1.0, 0.0});
-        assert(acrossX.has_value());
-        if (acrossX) {
-            result = result * *acrossX;
-        }
-    }
-    return result;
 }
 
 /// An entity of a shape type as the shape.
@@ -285,17 +255,111 @@ bool regionIntersects(const FilledRegion& region, const BBox& rectangle) {
            regionFilledAt(region, rectangle.min());
 }
 
+/// The exact ellipse that `transform` makes of a circle, an arc or an
+/// ellipse (docs/adr/0052, point 2), or std::nullopt for the other shapes.
+/// Nothing for a singular map, whose image is not an ellipse.
+std::optional<std::vector<GeneratedShape>> transformedConic(const GeneratedShape& shape,
+                                                            const Transform2D& transform) {
+    std::optional<Ellipse> ellipse;
+    if (const auto* circle = std::get_if<Circle>(&shape)) {
+        ellipse = asEllipse(*circle);
+    } else if (const auto* arc = std::get_if<Arc>(&shape)) {
+        ellipse = asEllipse(*arc);
+    } else if (const auto* own = std::get_if<Ellipse>(&shape)) {
+        ellipse = *own;
+    }
+    if (!ellipse) {
+        return std::nullopt;
+    }
+    const Ellipse result = transformed(*ellipse, transform);
+    if (!supported(result)) {
+        return std::vector<GeneratedShape>{};
+    }
+    return std::vector<GeneratedShape>{result};
+}
+
+/// The exact image of a polyline under an affine map that is not a
+/// similarity (docs/tappe/0.8/PT16-blocchi-core.md, point 3). Without arcs, a
+/// polyline through the mapped vertices; with arcs, its segments in order,
+/// lines and elliptical arcs. The widths are lost on every piece
+/// (docs/DECISIONI.md, 2026-11-14, "Secondo giro delle revisioni PT4 e PT5",
+/// P8).
+std::vector<GeneratedShape> affinePolyline(const Polyline& polyline, const Transform2D& transform) {
+    std::vector<GeneratedShape> pieces;
+    bool hasArc = false;
+    for (std::size_t i = 0; i < polyline.segmentCount(); ++i) {
+        hasArc = hasArc || polyline.segment(i).isArc();
+    }
+    if (!hasArc) {
+        std::vector<PolylineVertex> vertices;
+        vertices.reserve(polyline.vertexCount());
+        for (const PolylineVertex& vertex : polyline.vertices()) {
+            vertices.push_back({transform.apply(vertex.position), 0.0, 0.0, 0.0});
+        }
+        Polyline mapped{std::move(vertices), polyline.isClosed()};
+        mapped.setContinuousLinetype(polyline.continuousLinetype());
+        pieces.emplace_back(std::move(mapped));
+        return pieces;
+    }
+    for (std::size_t i = 0; i < polyline.segmentCount(); ++i) {
+        const PolylineSegment segment = polyline.segment(i);
+        if (!segment.isArc()) {
+            pieces.emplace_back(Line{transform.apply(segment.start), transform.apply(segment.end)});
+            continue;
+        }
+        // The arc counter-clockwise from its start angle: a clockwise
+        // segment (negative sweep) runs from its end.
+        const ArcGeometry geometry = arcFromBulge(segment.start, segment.end, segment.bulge);
+        const double from =
+            geometry.sweep > 0.0 ? geometry.startAngle : geometry.startAngle + geometry.sweep;
+        const double to =
+            geometry.sweep > 0.0 ? geometry.startAngle + geometry.sweep : geometry.startAngle;
+        const Arc arc{geometry.center, geometry.radius, normalizeAngle(from), normalizeAngle(to)};
+        for (GeneratedShape& piece :
+             transformedConic(arc, transform).value_or(std::vector<GeneratedShape>{})) {
+            pieces.push_back(std::move(piece));
+        }
+    }
+    return pieces;
+}
+
 }  // namespace
 
 std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
                                              const Transform2D& transform) {
-    const std::optional<Similarity> similarity = similarityOf(transform);
-    if (!similarity) {
-        // The other affine maps: docs/tappe/0.8, PT48, PT17 and PT16.
-        return {};
+    if (std::holds_alternative<Ellipse>(shape)) {
+        // Every affine map, similarities included, on the same exact path.
+        return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
     }
     if (const auto* region = std::get_if<FilledRegion>(&shape)) {
+        // A region keeps the map, whatever it is (docs/adr/0044, point 2).
         return {FilledRegion{region->loops, transform * region->transform}};
+    }
+    if (const auto* solid = std::get_if<Solid>(&shape)) {
+        // Its vertices map exactly under every affine map.
+        Solid result = *solid;
+        for (Vec2& vertex : result.vertices) {
+            vertex = transform.apply(vertex);
+        }
+        return {result};
+    }
+    const std::optional<Similarity> similarity = similarityOf(transform);
+    if (!similarity) {
+        if (const auto* line = std::get_if<Line>(&shape)) {
+            return {Line{transform.apply(line->start), transform.apply(line->end)}};
+        }
+        if (const auto* polyline = std::get_if<Polyline>(&shape)) {
+            return affinePolyline(*polyline, transform);
+        }
+        if (const auto* text = std::get_if<Text>(&shape)) {
+            // Decomposed (docs/tappe/0.8/PT17-attributi-core.md, point 2).
+            if (transform.determinant() == 0.0) {
+                return {};
+            }
+            return {transformedText(*text, transform)};
+        }
+        // Circles and arcs become ellipses.
+        return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
     }
     const std::optional<Entity> entity = shapeEntity(shape);
     assert(entity.has_value());
@@ -375,11 +439,17 @@ void appendSnapPoints(const Document& document, const EntityRecord& record, cons
                       std::vector<SnapPoint>& out, const std::optional<Vec2>& from) {
     std::visit(
         [&](const auto& value) {
-            if constexpr (kAnswersByItself<std::decay_t<decltype(value)>>) {
+            using T = std::decay_t<decltype(value)>;
+            if constexpr (kAnswersByItself<T>) {
                 appendSnapPoints(record.entity, modes, out, from);
             } else {
-                for (const GeneratedItem& item : generate(document, record)) {
-                    appendShapeSnapPoints(item.shape, modes, out, from);
+                // The rows of an MTEXT give no snap points of their own: only
+                // its insertion point (docs/adr/0046, point 2;
+                // docs/tappe/0.8/PT13-mtext-core.md, point 6).
+                if constexpr (!std::is_same_v<T, MText>) {
+                    for (const GeneratedItem& item : generate(document, record)) {
+                        appendShapeSnapPoints(item.shape, modes, out, from);
+                    }
                 }
                 appendOwnSnapPointsOf(document, record, value, modes, out, from);
             }

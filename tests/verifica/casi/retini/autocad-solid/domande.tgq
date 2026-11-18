@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT31 / PT31 (#723): the two SOLID hatches of autocad-retini.dxf (AutoCAD LT
+; 2026, dxf-test-file 5170f18) and the counts of the file.
+; DD SOLID from the point 165,5 between a rectangle of four lines and a
+; circle; FE SOLID on nested islands from 163,-77.
+; AutoCAD writes the gradient groups also for a solid fill, with 450 = 0. By
+; PT31, point 2, only 450 different from 0 is a gradient, so DD and FE are
+; handled; the oracle instead takes every HATCH with group 450 as a gradient
+; and leaves them unhandled. This is therefore not an oracle case: the entity
+; answers are those of entity_answer of ezdxf_attesi.py (ezdxf 1.4.5) for the
+; two entities, the counts are from the oracle log with all twelve HATCH
+; entities handled: every loop is closed (polylines with 73 = 1, the edge
+; loop of C8 a chain of four lines), extrusion (0,0,1), no ellipse or spline.
+D = DXF source=autocad-retini
+? units D -> 4
+; PT31 makes HATCH a handled entity: until then every HATCH is unhandled.
+; cambia con #723
+? count D -> CIRCLE 10; HATCH 12; LINE 40; LWPOLYLINE 8
+? unhandled D -> none
+? entity D DD -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=220,40 vertex=160,40 vertex=160,0 vertex=220,0 loop=outermost+derived+polyline vertex=182,20 bulge=-1 vertex=198,20 bulge=-1 seed=165,5 seed=165,5
+? entity D FE -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+derived+polyline vertex=220,-40 vertex=160,-40 vertex=160,-80 vertex=220,-80 loop=outermost+derived+polyline vertex=170,-75 vertex=170,-45 vertex=210,-45 vertex=210,-75 loop=derived+polyline vertex=184,-60 bulge=-1 vertex=196,-60 bulge=-1 seed=163,-77 seed=163,-77 seed=163,-77

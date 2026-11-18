@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/contorni-richiesta-annidati.json
+
+E0 = LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+E1 = CIRCLE center=5,5 radius=3
+E2 = CIRCLE center=15,5 radius=3
+E3 = LWPOLYLINE closed=yes vertex=14,4 vertex=16,4 vertex=15,6
+? hatch-contours E0 E1 E2 E3 -> loop=external+polyline vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10 loop=outermost+edges circle=5,5;3 loop=outermost+edges circle=15,5;3 loop=polyline vertex=14,4 vertex=16,4 vertex=15,6
+? hatch-contours E3 E2 E1 E0 -> loop=polyline vertex=14,4 vertex=16,4 vertex=15,6 loop=outermost+edges circle=15,5;3 loop=outermost+edges circle=5,5;3 loop=external+polyline vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10

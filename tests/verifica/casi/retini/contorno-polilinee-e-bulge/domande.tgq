@@ -1,0 +1,24 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-ordinary-mm-caso-5-punto-sul-contorno.json
+; The second square is the corpus square translated by (20,0).
+; ADR 0036 point 7 sets abs(bulge) <= 1e-12 to zero at the bridge.
+
+; Constant/variable widths are not geometry. The last tiny bulge is also
+; flattened: closedPolylineOf must inspect the closing segment.
+P = LWPOLYLINE closed=yes width=3 vertex=0,0 bulge=1e-13 start-width=2 end-width=4 vertex=10,0 vertex=10,10 vertex=0,10 bulge=-1e-13
+? hatch-boundary 5,5 -> enclosed loop=external+derived+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+? hatch-boundary 0,5 -> on-curve P
+? hatch-contours P -> loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10
+
+; An open polyline contributes its segments to detection, but cannot be
+; selected as a closed contour. A separate line completes the same square.
+Q = LWPOLYLINE vertex=20,0 vertex=30,0 vertex=30,10 vertex=20,10
+Closing = LINE start=20,10 end=20,0
+? hatch-boundary 25,5 -> enclosed loop=external+derived+polyline vertex=20,0 vertex=30,0 vertex=30,10 vertex=20,10
+? hatch-boundary 30,5 -> on-curve Q
+? hatch-contours Q Closing -> left-out=Q left-out=Closing

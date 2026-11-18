@@ -5,6 +5,8 @@
 
 #include "action_registry.hpp"
 #include "app_commands.hpp"
+#include "assistant_channel.hpp"
+#include "assistant_panel.hpp"
 #include "auto_hide.hpp"
 #include "builtin_actions.hpp"
 #include "cad_view.hpp"
@@ -343,6 +345,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
                 refresh();
             });
 
+    // Off at every start (docs/adr/0051, point 3), but already available to
+    // the actions, panel and status bar built below.
+    m_assistant = std::make_unique<AssistantChannel>(*this);
     createMenus(extension);
     createStatusBar();
     // A button New for each type, the extension's too (docs/adr/0041, point 9).
@@ -550,6 +555,24 @@ void MainWindow::createMenus(const Extension& extension) {
         splitDockWidget(properties, layers, Qt::Vertical);
     }
 
+    auto* assistantPanel = new AssistantPanel(*m_assistant, this);
+    connect(registeredAction("assistant.panel"), &QAction::triggered, assistantPanel,
+            &AssistantPanel::showAndFocus);
+    addPanel(assistantPanel, Qt::RightDockWidgetArea);
+    assistantPanel->hide();
+
+    QAction* assistantSwitch = registeredAction("assistant.channel");
+    connect(assistantSwitch, &QAction::toggled, this, [this, assistantSwitch](bool on) {
+        if (on && !m_assistant->start()) {
+            QMetaObject::invokeMethod(
+                assistantSwitch, [assistantSwitch] { assistantSwitch->setChecked(false); },
+                Qt::QueuedConnection);
+            showStartMessage(m_assistant->errorString());
+        } else if (!on) {
+            m_assistant->stop();
+        }
+    });
+
     m_uiBuilder = std::make_unique<UiBuilder>(*this, *m_actions);
     registerAppCommands(m_registry, *this);
     setInterface(InterfaceKind::Ribbon);
@@ -572,6 +595,7 @@ void MainWindow::connectDrawingAids() {
         saveUiSettings();
     });
     m_polarAction = registeredAction("aids.polar");
+    m_trackingAction = registeredAction("aids.otrack");
     m_endpointAction = registeredAction("aids.snap.endpoint");
     m_midpointAction = registeredAction("aids.snap.midpoint");
     m_centerAction = registeredAction("aids.snap.center");
@@ -583,6 +607,7 @@ void MainWindow::connectDrawingAids() {
     m_objectSnapAction->setChecked(aids.objectSnap);
     m_orthoAction->setChecked(aids.ortho);
     m_polarAction->setChecked(aids.polar);
+    m_trackingAction->setChecked(aids.tracking);
     m_endpointAction->setChecked(aids.snapModes.endpoint);
     m_midpointAction->setChecked(aids.snapModes.midpoint);
     m_centerAction->setChecked(aids.snapModes.center);
@@ -618,6 +643,13 @@ void MainWindow::connectDrawingAids() {
         applyDrawingAids();
         if (!m_silentPolar) {
             m_commandLine->appendToHistory(on ? tr("<Polar on>") : tr("<Polar off>"));
+        }
+    });
+    connect(m_trackingAction, &QAction::toggled, this, [this](bool on) {
+        applyDrawingAids();
+        if (!m_silentTracking) {
+            m_commandLine->appendToHistory(on ? tr("<Object Snap Tracking on>")
+                                              : tr("<Object Snap Tracking off>"));
         }
     });
 }
@@ -885,6 +917,12 @@ void MainWindow::setPolar(bool on) {
     applyDrawingAids();
 }
 
+void MainWindow::setTracking(bool on) {
+    const QScopedValueRollback<bool> silence(m_silentTracking, true);
+    m_trackingAction->setChecked(on);
+    applyDrawingAids();
+}
+
 void MainWindow::applyDrawingAids() {
     cmd::DrawingAids aids;
     aids.objectSnap = m_objectSnapAction->isChecked();
@@ -898,6 +936,7 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.tangent = m_tangentAction->isChecked();
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
     aids.polar = m_polarAction->isChecked();
+    aids.tracking = m_trackingAction->isChecked();
     if (m_active != nullptr) {
         m_active->runner().setDrawingAids(aids);
     }
@@ -967,7 +1006,7 @@ InterfaceKind MainWindow::interfaceKind() const {
 void MainWindow::createStatusBar() {
     // docs/adr/0039, point 1, area 10: the coordinates on the left; from the
     // right the settings, the scale, the ribbon, the switches in the order
-    // of the reference (lineweights, object snap, polar, ortho), then the
+    // of the reference (lineweights, object snap, tracking, polar, ortho), then the
     // place of the environment indicator (point 5).
     // The reference has no size grip; the window edge resizes.
     statusBar()->setSizeGripEnabled(false);
@@ -993,8 +1032,40 @@ void MainWindow::createStatusBar() {
     statusBar()->addPermanentWidget(m_environmentIndicator);
     updateEnvironmentIndicator();
     statusBar()->addPermanentWidget(createStatusSeparator());
+    QToolButton* assistantButton =
+        createModeButton(registeredAction("assistant.channel"), QStringLiteral("assistantButton"));
+    statusBar()->addPermanentWidget(assistantButton);
+    const auto updateAssistantButton = [this, assistantButton] {
+        QString state;
+        QString property;
+        if (m_assistant->isConnected()) {
+            state = tr("AI Assistant: connected");
+            property = QStringLiteral("connected");
+        } else if (m_assistant->isRunning()) {
+            state = tr("AI Assistant: on");
+            property = QStringLiteral("on");
+        } else {
+            state = tr("AI Assistant: off");
+            property = QStringLiteral("off");
+        }
+        assistantButton->setToolTip(state);
+        assistantButton->setAccessibleName(state);
+        assistantButton->setIcon(m_assistant->isConnected()
+                                     ? themedIcon(QStringLiteral("assistant-panel"), m_theme)
+                                     : registeredAction("assistant.channel")->icon());
+        assistantButton->setProperty("assistantState", property);
+    };
+    connect(registeredAction("assistant.channel"), &QAction::changed, assistantButton,
+            updateAssistantButton);
+    connect(m_assistant.get(), &AssistantChannel::runningChanged, assistantButton,
+            updateAssistantButton);
+    connect(m_assistant.get(), &AssistantChannel::connectedChanged, assistantButton,
+            updateAssistantButton);
+    updateAssistantButton();
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
     statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(m_trackingAction, QStringLiteral("otrackButton")));
     statusBar()->addPermanentWidget(
         createModeButton(m_objectSnapAction, QStringLiteral("osnapButton")));
     statusBar()->addPermanentWidget(
@@ -1055,6 +1126,34 @@ void MainWindow::refresh() {
     m_pendingOpen.clear();
     updateDrawingState();
     updateEditActions();
+    emit inputHandled();
+}
+
+const cmd::CommandRunner& MainWindow::inputRunner() const {
+    return m_active != nullptr ? m_active->runner() : m_startSession->runner();
+}
+
+bool MainWindow::isAtCommandPrompt() const {
+    // A modal dialog (a file dialog, the question to save) runs its own
+    // event loop: the assistant waits until it is closed.
+    const cmd::CommandRunner& runner = inputRunner();
+    return !runner.isActive() && !runner.selectionRectangle() &&
+           QApplication::activeModalWidget() == nullptr;
+}
+
+void MainWindow::submitAssistantText(const QString& text) {
+    const QScopedValueRollback<bool> guard(m_assistantInput, true);
+    cmd::CommandRunner& runner = commandRunner();
+    const QString prompt = QString::fromStdString(runner.promptText());
+    m_commandLine->appendToHistory(text.isEmpty() ? prompt
+                                                  : QStringLiteral("%1 %2").arg(prompt, text));
+    runner.submitText(text.toStdString());
+    refresh();
+}
+
+void MainWindow::assistantInputHandled() {
+    const QScopedValueRollback<bool> guard(m_assistantInput, true);
+    refresh();
 }
 
 void MainWindow::updateEditActions() {
@@ -1102,6 +1201,8 @@ MainWindow::~MainWindow() {
     // destroyed with the members: the widgets outlive them, as children.
     // Nothing more is shown: no Start page, no tabs.
     m_destroying = true;
+    // The assistant's client goes first: its requests act on the sessions.
+    m_assistant.reset();
     switchTo(nullptr);
     for (const auto& session : m_sessions) {
         session->editor().setChangeListener({});
@@ -1732,7 +1833,8 @@ QString MainWindow::chooseFile(cmd::FilePrompt prompt, const QString& path,
 }
 
 void MainWindow::handleFilePrompts() {
-    if (m_scriptMode || m_handlingFilePrompt) {
+    // The assistant types the paths itself (docs/adr/0051, point 4).
+    if (m_scriptMode || m_handlingFilePrompt || m_assistantInput) {
         return;
     }
     const QScopedValueRollback<bool> guard(m_handlingFilePrompt, true);
@@ -1876,6 +1978,10 @@ void MainWindow::updateThemeIcons() {
     if (auto* properties = findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"));
         properties != nullptr) {
         properties->setWindowIcon(registeredAction("properties.panel")->icon());
+    }
+    if (auto* assistant = findChild<AssistantPanel*>(QStringLiteral("assistantPanel"));
+        assistant != nullptr) {
+        assistant->setWindowIcon(registeredAction("assistant.panel")->icon());
     }
 }
 

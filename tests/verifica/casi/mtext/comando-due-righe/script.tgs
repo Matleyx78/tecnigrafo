@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; MTEXT: due righe con l'angolo opposto, un angolo opposto a sinistra e sotto il primo;
+; un passo di annullamento Mtext, U e REDO ([0.8-RT15], lavoro #691).
+; Richieste dalla scheda PT15, punti 1-4. Larghezza: la distanza orizzontale fra i due
+; angoli (rotazione 0): |70 - 10| = 60, |30 - 40| = 10. Inserimento sul primo angolo,
+; allineamento TL, altezza 2.5 (TEXTSIZE all'avvio), stile Standard.
+; Le righe si uniscono con \P; nel rapporto la barra si scrive \\.
+; ~lines: un paragrafo per riga, ognuna più corta della larghezza (Liberation Sans,
+; meno di 0,7 altezze per carattere: "Seconda riga" < 21, "AB" < 3,5).
+MTEXT
+10,20
+70,0
+Prima riga
+Seconda riga
+
+MTEXT
+40,-10
+30,-30
+AB
+
+!report
+U
+!report
+REDO

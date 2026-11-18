@@ -3,9 +3,10 @@
 # tecnigrafo: the Qt desktop application. The only module allowed to
 # depend on Qt (docs/adr/0001).
 
-# Svg: the icons are SVG files (docs/ICONE.md). A Qt component, not a new
-# library (docs/adr/0002).
-find_package(Qt6 6.12 REQUIRED COMPONENTS Widgets Svg)
+# Svg: the icons are SVG files (docs/ICONE.md). Network: QLocalServer and
+# QLocalSocket of the assistant channel (docs/adr/0051, point 2). Qt
+# components, not new libraries (docs/adr/0002).
+find_package(Qt6 6.12 REQUIRED COMPONENTS Widgets Svg Network)
 qt_standard_project_setup()
 
 # Everything but main(): shared by the application and its Qt tests.
@@ -32,6 +33,12 @@ qt_add_library(tg_app_ui STATIC
     src/action_registry.hpp
     src/app_commands.cpp
     src/app_commands.hpp
+    src/assistant_bridge.cpp
+    src/assistant_bridge.hpp
+    src/assistant_channel.cpp
+    src/assistant_channel.hpp
+    src/assistant_panel.cpp
+    src/assistant_panel.hpp
     src/auto_hide.cpp
     src/auto_hide.hpp
     src/ui_builder.cpp
@@ -100,9 +107,11 @@ qt_add_resources(tg_app_ui logo
 
 target_include_directories(tg_app_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # Tecnigrafo::script writes the report of the control mode at level 2
-# (--script, docs/adr/0011).
+# (--script, docs/adr/0011). Tecnigrafo::mcp speaks MCP on the assistant
+# channel, inside the program (docs/adr/0051, point 4).
 target_link_libraries(tg_app_ui PUBLIC
-    Tecnigrafo::cmd Tecnigrafo::render Tecnigrafo::script tg_saribbon Qt6::Widgets Qt6::Svg)
+    Tecnigrafo::cmd Tecnigrafo::render Tecnigrafo::script Tecnigrafo::mcp tg_saribbon
+    Qt6::Widgets Qt6::Svg Qt6::Network)
 target_compile_definitions(tg_app_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060400)
 tg_configure_target(tg_app_ui)
 

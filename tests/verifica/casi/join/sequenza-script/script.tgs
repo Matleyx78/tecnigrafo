@@ -4,6 +4,8 @@
 !view 120,5 0.5 1400x400
 !scr on
 ; cambia con #570
+; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 ; Caso a: due linee allineate contigue

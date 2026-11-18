@@ -329,6 +329,7 @@ La tappa 0.7 aggiunge i modi di snap e il tracciamento polare (0.7-P11).
 | `aids-snap-tangent-*.svg` | `aids.snap.tangent` | cerchio con una linea tangente in alto, punto di tangenza (`pt`, `data-on`) | sì |
 | `aids-snap-quadrant-*.svg` | `aids.snap.quadrant` | cerchio (`esist`) con punto sul quadrante destro (`pt`, `data-on`) | sì |
 | `aids-polar-*.svg` | `aids.polar` | assi, semiretta a 45° e arco dell'angolo | sì |
+| `aids-otrack-*.svg` | `aids.otrack` | guide orizzontale e verticale tratteggiate, con il più del punto acquisito (`pt`) | sì |
 
 Chi aggiunge icone aggiunge le sue righe alla tabella della sua tappa; chi
 rifà un'icona ne aggiorna la riga.
@@ -410,6 +411,13 @@ dell'ambiente della barra di stato; la nomina l'ambiente
 | File | Uso | Disegno | Rifatta |
 |---|---|---|---|
 | `env-drawing2d` | ambiente `drawing2d`, il disegno 2D: indicatore dell'ambiente | squadra (`esist`) e un segmento tracciato lungo il suo lato inclinato, a 45°, con i due estremi (`geo`, `pt`) | sì |
+
+La tappa 0.8 aggiunge il canale e il pannello dell’assistente (PT38).
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `assistant-channel-*.svg` | `assistant.channel` | onde del collegamento sopra il punto dell’assistente (`pt`) | sì |
+| `assistant-panel-*.svg` | `assistant.panel` | fumetto con tre punti (`pt`) | sì |
 
 Il ribbon e la riga di comando sul riferimento (F6) aggiungono la freccia
 all'angolo dei gruppi che apre il pannello e la crocetta che annulla, con i

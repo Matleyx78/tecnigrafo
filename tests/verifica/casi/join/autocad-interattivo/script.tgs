@@ -3,6 +3,8 @@
 ; Casi d, e1, e2, f, g di autocad-unione.dxf per JOIN in sequenza interattiva
 !view 190,5 0.5 1900x400
 ; cambia con #570
+; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 ; Caso e1: due linee allineate con spazio 1e-10 (unite in una sola linea)

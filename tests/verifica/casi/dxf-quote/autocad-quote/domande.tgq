@@ -1,0 +1,29 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT25: AutoCAD LT 2026 dimensions from the immutable CC0 drawing.
+; Values below are copied from the ezdxf oracle or directly from its DXF groups.
+D = DXF source=autocad-quote
+? version D -> AC1032
+? units D -> 4
+; These are the current answers; PT25 updates them from the oracle log.
+; cambia con #711
+? count D -> ARC 2; CIRCLE 6; LINE 2
+? unhandled D -> DIMENSION 36
+; Horizontal, vertical, rotated, and aligned linear dimensions.
+? entity D 93 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40
+? entity D A1 -> DIMENSION kind=linear style="ISO-25" origin1=60,0 origin2=60,30 line-point=70.00000000000003,30.00000000000002 rotation=90 text-point=68.12500000000001,14.99999999999998 measurement=30.00000000000001
+? entity D AE -> DIMENSION kind=linear style="ISO-25" origin1=90,0 origin2=120,20 line-point=112.8349364905389,32.41025403784438 rotation=30 text-point=96.21314280495004,25.21928310067868 measurement=35.98076211353316
+? entity D BB -> DIMENSION kind=aligned style="ISO-25" origin1=140,0 origin2=160,20 line-point=150,30 text-point=138.526860872528,21.47313912747197 measurement=28.2842712474619
+; Angular, radial, and diametric dimensions, including user-positioned text.
+? entity D C8 -> DIMENSION kind=angular style="ISO-25" line-point=240,0 first=200,0;230,20 second=240,0;200,0 arc-point=235.2152269190511,6.991980623524945 text-point=236.1566839020644,10.94736302672169 measurement=0.5880026035475688
+? entity D E1 -> DIMENSION kind=radius style="ISO-25" center=280,10 point=288.9442719099992,14.47213595499959 text-point=300,20.00000000000001 measurement=10 user-text-position=yes
+? entity D F3 -> DIMENSION kind=diameter style="ISO-25" point1=338,16.00000000000003 point2=321.9999999999999,3.999999999999971 text-point=349.9999999999999,24.99999999999995 measurement=20.00000000000011 user-text-position=yes
+; A style name and replacement text are retained.
+? entity D 234 -> DIMENSION kind=linear style="PROVA" origin1=0,-150 origin2=40,-150 line-point=40,-140 rotation=0 text-point=20,-140 measurement=40
+? entity D 262 -> DIMENSION kind=linear style="ISO-25" origin1=0,-200 origin2=40,-200 line-point=40,-190 rotation=0 text-point=20,-188.125 measurement=40 text="<> mm"
+; Ordinate dimensions are represented as the documented other kind.
+? entity D 2BE -> DIMENSION kind=other style="ISO-25" type=6 text-point=-1.875000000000066,-233.7500000000001 measurement=5.55e-14
+; The associated anonymous blocks, their graphics, handles, and extras survive unchanged.
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical

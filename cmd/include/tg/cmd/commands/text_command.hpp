@@ -27,6 +27,9 @@ private:
     core::Vec2 m_next;
     double m_height{2.5};
     double m_rotation{0.0};
+    std::string m_style{"Standard"};
+    double m_widthFactor{1.0};
+    double m_oblique{0.0};
     bool m_hasLines{false};
     std::vector<core::Entity> m_preview;
 };

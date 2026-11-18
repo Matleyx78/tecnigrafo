@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-ordinary-mm-curve-scartate-fra-lati-validi.json
+; Only representable .tgq data from the corpus case are retained.
+; nearCurve indexes the compact candidate span, not an entity id.
+
+Bottom = LINE start=0,0 end=10,0
+; Negative-radius circles in the kernel fixture cannot be .tgq entities:
+; use its valid zero-length line and out-of-domain circle as the skips.
+Point = LINE start=2,2 end=2,2
+Right = LINE start=10,0 end=10,10
+Huge = CIRCLE center=5,5 radius=1125899906842624
+Top = LINE start=10,10 end=0,10
+Left = LINE start=0,10 end=0,0
+? hatch-boundary 5,5 -> enclosed loop=external+derived+polyline vertex=0,0 vertex=10,0 vertex=10,10 vertex=0,10 incomplete
+? hatch-boundary 0,5 -> on-curve Left incomplete
+? hatch-boundary -3,5 -> not-enclosed incomplete

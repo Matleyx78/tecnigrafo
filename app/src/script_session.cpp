@@ -195,6 +195,20 @@ bool ScriptSession::perform(const script::ClickDirective& click) {
     return true;
 }
 
+bool ScriptSession::perform(const script::HoverDirective& hover) {
+    moveTo(hover.point, Qt::NoModifier);
+    // The pause that acquires a point (docs/adr/0049, point 2) is the
+    // runner's, at the exact point of the script, as at level 1.
+    DocumentSession* active = m_window.activeSession();
+    if (active == nullptr) {
+        fail(QStringLiteral("!hover needs an open drawing"));
+        return false;
+    }
+    active->runner().pointerHeld(hover.point);
+    m_window.view()->update();  // the snap marker and the preview may have changed
+    return true;
+}
+
 bool ScriptSession::perform(const script::RightClickDirective& /*directive*/) {
     clickAt(m_screenPointer, Qt::RightButton, Qt::NoModifier);
     return true;
@@ -213,6 +227,12 @@ bool ScriptSession::perform(const script::AidDirective& directive) {
         collectMessages();
         m_window.setPolar(directive.on);
         collectMessages(false);
+        return true;
+    }
+    if (directive.aid == script::AidDirective::Aid::Tracking) {
+        // The switch of F11 comes with PT35: the window keeps the state, and
+        // !otrack writes nothing in the history (docs/adr/0049, point 7).
+        m_window.setTracking(directive.on);
         return true;
     }
     const bool snap = directive.aid == script::AidDirective::Aid::Snap;

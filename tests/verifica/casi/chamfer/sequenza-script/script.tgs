@@ -4,6 +4,8 @@
 !view 270,60 0.25 2400x800
 !scr on
 ; cambia con #570
+; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 ; Impostazione distanze: il comando termina subito dopo i valori

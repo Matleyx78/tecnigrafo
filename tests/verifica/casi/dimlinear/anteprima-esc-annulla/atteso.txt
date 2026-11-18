@@ -1,0 +1,97 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,0
+prompt: Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:
+preview:
+  DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,15 rotation=0 text-point=20,16.875 measurement=40 ~text="40"
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: 20,15
+active snap: none
+statistics:
+
+[report 2]
+entities:
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: 20,15
+active snap: none
+statistics:
+
+[report 3]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 ~text="40"
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,0
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,10
+  Dimension text = 40
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+pointer: 20,15
+active snap: none
+statistics:
+  DIMENSION 1
+
+[report 4]
+entities:
+messages:
+  Command: U
+  Undone: DIMLINEAR.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  DIMLINEAR
+snap: on
+ortho: off
+pointer: 20,15
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 ~text="40"
+messages:
+  Command: REDO
+  Redone: DIMLINEAR.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+pointer: 20,15
+active snap: none
+statistics:
+  DIMENSION 1

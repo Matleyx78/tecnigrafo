@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Current text style when $TEXTSTYLE is missing or names no style ([0.8-RT11], work #683).
+; Handwritten files (R2018, LF), each with one STYLE record or two:
+; mancante.dxf: $TEXTSTYLE = Missing, table with Custom only (arial.ttf, 40=0, 41=1, 50=0);
+; senza-standard.dxf: no $TEXTSTYLE, table with Custom only;
+; senza-textstyle.dxf: no $TEXTSTYLE, table with Standard (arial.ttf) and Custom.
+; Sheet PT11 point 3 (PT4, P15): the current style is Standard, created as in a new drawing
+; (arial.ttf, sheet PT11 point 2) when the table lacks it. Standard then equals the one of a
+; new session: "text styles:" lists Custom only and "text style:" is absent
+; (docs/verifica/rapporto.md). Reading creates Standard as AutoCAD does on opening, not
+; an edit: the drawing is not modified and nothing is on the undo stack.
+; Saving mancante.dxf and reopening it keeps Custom and the current Standard.
+; cambia con #683
+; cambia con #699
+OPEN
+mancante.dxf
+!report
+SAVE
+mancante-salvato.dxf
+OPEN
+mancante-salvato.dxf
+!report
+OPEN
+senza-standard.dxf
+!report
+OPEN
+senza-textstyle.dxf

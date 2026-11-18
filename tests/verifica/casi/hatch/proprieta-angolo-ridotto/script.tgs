@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCH: Properties con NET e angolo 390, 3600 e -3600 sul rettangolo [-10, 0] x [0, 10]:
+; l'angolo entra ridotto a un giro (DECISIONI.md, 2026-11-12), <30> e poi <0>, e il retino ha angolo 0
+PLINE
+-10,0
+0,0
+0,10
+-10,10
+C
+-HATCH
+P
+NET
+1
+390
+P
+NET
+1
+3600
+P
+NET
+1
+-3600
+-5,5
+

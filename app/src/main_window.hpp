@@ -43,6 +43,7 @@ class QToolButton;
 namespace tg::app {
 
 class ActionRegistry;
+class AssistantChannel;
 class AutoHide;
 class CadView;
 class CommandLine;
@@ -245,6 +246,11 @@ public:
     /// goes through its switch, as before (docs/adr/0033, point 9).
     void setPolar(bool on);
 
+    /// Sets object snap tracking silently, as !otrack does (docs/adr/0049,
+    /// point 7). The window keeps it, so that the runner of every session
+    /// it shows gets it with the other switches.
+    void setTracking(bool on);
+
     void setTheme(Theme theme);
 
     [[nodiscard]] Theme theme() const { return m_theme; }
@@ -262,6 +268,38 @@ public:
 
     /// Every action of the window (docs/adr/0009, point 1).
     [[nodiscard]] const ActionRegistry& actionRegistry() const { return *m_actions; }
+
+    /// The commands of the window, those its runners run.
+    [[nodiscard]] const cmd::CommandRegistry& commandRegistry() const { return m_registry; }
+
+    /// The channel of the user's assistant (docs/adr/0051), which the window
+    /// owns: off at every start, until AssistantChannel::start().
+    [[nodiscard]] AssistantChannel& assistantChannel() const { return *m_assistant; }
+
+    /// The runner the user types into: the active session's, or with the
+    /// Start page the window's, where only NEW and OPEN run.
+    [[nodiscard]] const cmd::CommandRunner& inputRunner() const;
+
+    /// Whether the user is at "Command:" (docs/adr/0051, point 6): the
+    /// runner of inputRunner() runs no command and traces no selection
+    /// rectangle, and no modal dialog is open.
+    [[nodiscard]] bool isAtCommandPrompt() const;
+
+    /// What the assistant types (docs/adr/0051, points 6 to 8): `text` goes
+    /// to inputRunner(), echoed in the history as the command line echoes
+    /// it; then the interface follows, as after an input of the user, but
+    /// no file dialog opens: the assistant types the paths itself.
+    void submitAssistantText(const QString& text);
+
+    /// The interface follows an input of the assistant other than text (a
+    /// click, Esc, a switch), as after submitAssistantText().
+    void assistantInputHandled();
+
+signals:
+    /// After every input of the user or of the assistant, once the
+    /// interface has followed it: a request of the assistant that waits for
+    /// the user to end a command may start (docs/adr/0051, point 6).
+    void inputHandled();
 
 protected:
     void changeEvent(QEvent* event) override;
@@ -465,8 +503,11 @@ private:
     bool m_restoringUi{false};
     bool m_scriptMode{false};
     bool m_silentPolar{false};
+    bool m_silentTracking{false};
     bool m_externalFiles{false};
     bool m_handlingFilePrompt{false};
+    // An input of the assistant is being handled: no file dialog opens.
+    bool m_assistantInput{false};
     CadView* m_view{nullptr};
     CommandLine* m_commandLine{nullptr};
     DocumentTabs* m_documentTabs{nullptr};
@@ -482,6 +523,7 @@ private:
     QAction* m_orthoAction{nullptr};
     QAction* m_dynamicInputAction{nullptr};
     QAction* m_polarAction{nullptr};
+    QAction* m_trackingAction{nullptr};
     QAction* m_endpointAction{nullptr};
     QAction* m_midpointAction{nullptr};
     QAction* m_centerAction{nullptr};
@@ -493,6 +535,8 @@ private:
     QToolButton* m_environmentIndicator{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};
+    // Last, so that it goes first: its host uses the sessions and widgets.
+    std::unique_ptr<AssistantChannel> m_assistant;
 };
 
 }  // namespace tg::app

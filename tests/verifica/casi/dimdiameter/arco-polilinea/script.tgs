@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMDIAMETER on the arc of an LWPOLYLINE (centre 20,10, radius 10) (PT27, #715).
+; point15 (point1) is the point on the curve towards the location, point 10 (point2) the opposite one
+; (autocad-quote.dxf, F3); text at the location, with bit 128 of group 70 (PT27, point 2).
+PLINE
+0,0
+20,0
+A
+20,20
+
+DIMDIAMETER
+30,10
+35,25

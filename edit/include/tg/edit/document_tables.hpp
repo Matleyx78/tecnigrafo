@@ -46,7 +46,8 @@ public:
     bool replaceDimStyles(core::DimStyleTable table);
     /// Puts, replaces or (nullopt) removes one block definition.
     /// Preserves the position and spelling of an existing name.
-    /// Returns false without recording when the definition is unchanged.
+    /// Returns false without recording when the definition is unchanged,
+    /// and when it would remove a block in use (core::isBlockUsed()).
     /// Precondition: a transaction is open.
     bool replaceBlock(std::string name, std::optional<core::BlockDefinition> definition);
 

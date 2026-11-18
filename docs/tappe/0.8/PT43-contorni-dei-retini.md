@@ -188,9 +188,16 @@ Con gli stessi `double`, senza ricalcoli:
 
 ### 5. Le domande
 
-In domande.md, una sezione «Retini» dopo quelle della tappa 0.7, e in
-`hatch_questions.cpp`; `<loop>` è un `loop=…` con i suoi elementi, nella forma
-della riga `HATCH` di [rapporto.md](../../verifica/rapporto.md) (PT9).
+Le due domande sono già descritte in domande.md, sezione «Retini (tappa
+0.8)», e annunciate in `kQuestions` con funzione `nullptr` dal pacchetto fuori
+tappa [F12](../fuori-tappa/F12-annuncio-domande-contorni.md) (decisione del
+2026-11-17, [DECISIONI.md](../../DECISIONI.md), «Domande di PT43 annunciate
+prima del lavoro»). PT43 le realizza in `hatch_questions.cpp`, mette le sue
+funzioni al posto di `nullptr`, toglie il commento dell'annuncio in
+`question_table.cpp` e, in domande.md, la riga «fino ad allora rispondono
+`error: question not implemented yet`». `<loop>` è un `loop=…` con i suoi
+elementi, nella forma della riga `HATCH` di
+[rapporto.md](../../verifica/rapporto.md) (PT9).
 
 | Domanda | Risposta | Significato |
 |---|---|---|
@@ -204,8 +211,8 @@ della riga `HATCH` di [rapporto.md](../../verifica/rapporto.md) (PT9).
   sua funzione, in ordine alfabetico; `closedPolylineOf` la scrive il primo dei
   due fra PT42 e PT43), `core/CMakeLists.txt`, `script/src/question_table.cpp`,
   `script/CMakeLists.txt`, `tests/CMakeLists.txt`.
-- `docs/verifica/domande.md` lo toccano PT9, PT34, PT43, PT50 e F9: solo le
-  tue righe; chi arriva dopo si aggiorna.
+- `docs/verifica/domande.md` lo toccano PT9, PT34, PT43, PT50, F9 e F12:
+  solo le tue righe; chi arriva dopo si aggiorna.
 
 ## Test richiesti
 

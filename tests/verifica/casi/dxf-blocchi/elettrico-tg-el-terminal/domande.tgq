@@ -1,0 +1,13 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT18: immutable CC0 drawing, independently counted from its DXF groups.
+D = DXF source=elettrico-tg-el-terminal
+; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
+; cambia con #697
+? count D -> CIRCLE 1; LINE 2
+? unhandled D -> ATTDEF 19
+; TG_PIN1=N, flags=3 (constant + invisible).
+? snaps D:40 -> none
+; TG_PIN2=S, flags=3 (constant + invisible).
+? snaps D:41 -> none

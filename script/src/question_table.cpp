@@ -7,6 +7,7 @@
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/ellipse.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
@@ -251,6 +252,10 @@ std::optional<core::Vec2> closestOn(const core::Entity& entity, const core::Vec2
             [&point](const core::Text& text) -> std::optional<core::Vec2> {
                 return core::closestPoint(text, point);
             },
+            // From solid-space's nearest() (docs/tappe/0.8, PT50, point 2).
+            [&point](const core::Ellipse& ellipse) -> std::optional<core::Vec2> {
+                return core::closestPoint(ellipse, point);
+            },
             // The types of the 0.8, until the questions learn them (PT9).
             [](const auto& /*entity*/) -> std::optional<core::Vec2> { return std::nullopt; },
         },
@@ -269,13 +274,31 @@ Parsed<const core::Entity*> objectArguments(const QuestionModel& model, Argument
     return entityArgument(model, arguments[0]);
 }
 
+/// The record of the entity named `name`: the questions that answer through
+/// the document (docs/tappe/0.8/PT30-retini-core.md, point 7).
+Parsed<const core::EntityRecord*> recordArgument(const QuestionModel& model,
+                                                 std::string_view name) {
+    const std::optional<core::EntityId> id = model.find(name);
+    if (!id) {
+        return ArgumentError{"no entity named " + quoted(name) + " is defined above"};
+    }
+    const core::EntityRecord* record = model.document.find(*id);
+    assert(record != nullptr && "every named entity is in the document");
+    return record;
+}
+
 QuestionResult askBoundingBox(const QuestionModel& model, Arguments arguments) {
-    const Parsed<const core::Entity*> entity =
-        objectArguments(model, arguments, 0, "bbox <entity>");
-    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+    if (arguments.size() != 1) {
+        return usage("bbox <entity>");
+    }
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
-    const core::BBox box = core::boundingBox(*std::get<const core::Entity*>(entity));
+    // The extent of the generated geometry: for the five entities of before
+    // the 0.8, their bounding box (generated.hpp).
+    const core::BBox box =
+        core::extent(model.document, *std::get<const core::EntityRecord*>(record));
     if (box.isEmpty()) {
         return std::string{"empty"};
     }
@@ -308,12 +331,21 @@ Parsed<std::pair<const core::Entity*, core::Vec2>> entityAndPoint(const Question
 }
 
 QuestionResult askDistance(const QuestionModel& model, Arguments arguments) {
-    const auto parsed = entityAndPoint(model, arguments, "distance <entity> x,y");
-    if (const auto* error = std::get_if<ArgumentError>(&parsed)) {
+    if (arguments.size() != 2) {
+        return usage("distance <entity> x,y");
+    }
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
-    const auto& [entity, point] = std::get<0>(parsed);
-    return formatNumber(core::distance(*entity, point));
+    const Parsed<core::Vec2> point = pointArgument(arguments[1]);
+    if (const auto* error = std::get_if<ArgumentError>(&point)) {
+        return *error;
+    }
+    // Through the document: for the five entities of before the 0.8, their
+    // own distance (generated.hpp; docs/tappe/0.8/PT13-mtext-core.md, point 7).
+    return formatNumber(core::distance(model.document, *std::get<const core::EntityRecord*>(record),
+                                       std::get<core::Vec2>(point)));
 }
 
 QuestionResult askClosest(const QuestionModel& model, Arguments arguments) {
@@ -326,33 +358,39 @@ QuestionResult askClosest(const QuestionModel& model, Arguments arguments) {
     return closest ? formatPoint(*closest) : std::string{"none"};
 }
 
-/// "<question> <entity> x1,y1 x2,y2", answered by `test`.
+/// "<question> <entity> x1,y1 x2,y2", answered by `test` through the
+/// document: for the five entities of before the 0.8, as by themselves
+/// (generated.hpp; docs/tappe/0.8/PT13-mtext-core.md, point 7).
 template <typename Test>
 QuestionResult askRectangle(const QuestionModel& model, Arguments arguments, std::string_view form,
                             const Test& test) {
-    const Parsed<const core::Entity*> entity = objectArguments(model, arguments, 2, form);
-    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+    if (arguments.size() != 3) {
+        return usage(form);
+    }
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
     const Parsed<core::BBox> rectangle = rectangleArgument(arguments[1], arguments[2]);
     if (const auto* error = std::get_if<ArgumentError>(&rectangle)) {
         return *error;
     }
-    return yesNo(test(*std::get<const core::Entity*>(entity), std::get<core::BBox>(rectangle)));
+    return yesNo(test(model.document, *std::get<const core::EntityRecord*>(record),
+                      std::get<core::BBox>(rectangle)));
 }
 
 QuestionResult askInside(const QuestionModel& model, Arguments arguments) {
-    return askRectangle(model, arguments, "inside <entity> x1,y1 x2,y2",
-                        [](const core::Entity& entity, const core::BBox& rectangle) {
-                            return core::isInside(entity, rectangle);
-                        });
+    return askRectangle(
+        model, arguments, "inside <entity> x1,y1 x2,y2",
+        [](const core::Document& document, const core::EntityRecord& record,
+           const core::BBox& rectangle) { return core::isInside(document, record, rectangle); });
 }
 
 QuestionResult askCrosses(const QuestionModel& model, Arguments arguments) {
-    return askRectangle(model, arguments, "crosses <entity> x1,y1 x2,y2",
-                        [](const core::Entity& entity, const core::BBox& rectangle) {
-                            return core::intersects(entity, rectangle);
-                        });
+    return askRectangle(
+        model, arguments, "crosses <entity> x1,y1 x2,y2",
+        [](const core::Document& document, const core::EntityRecord& record,
+           const core::BBox& rectangle) { return core::intersects(document, record, rectangle); });
 }
 
 QuestionResult askSnaps(const QuestionModel& model, Arguments arguments) {
@@ -360,8 +398,8 @@ QuestionResult askSnaps(const QuestionModel& model, Arguments arguments) {
     if (arguments.empty()) {
         return usage(kForm);
     }
-    const Parsed<const core::Entity*> entity = entityArgument(model, arguments[0]);
-    if (const auto* error = std::get_if<ArgumentError>(&entity)) {
+    const Parsed<const core::EntityRecord*> record = recordArgument(model, arguments[0]);
+    if (const auto* error = std::get_if<ArgumentError>(&record)) {
         return *error;
     }
     constexpr std::array<std::string_view, 1> kKeys{"modes"};
@@ -377,8 +415,10 @@ QuestionResult askSnaps(const QuestionModel& model, Arguments arguments) {
         return *error;
     }
     std::vector<core::SnapPoint> points;
-    core::appendSnapPoints(*std::get<const core::Entity*>(entity), std::get<core::SnapModes>(modes),
-                           points);
+    // Through the generated geometry: for the five entities of before the
+    // 0.8, their own snap points (generated.hpp).
+    core::appendSnapPoints(model.document, *std::get<const core::EntityRecord*>(record),
+                           std::get<core::SnapModes>(modes), points, std::nullopt);
     if (points.empty()) {
         return std::string{"none"};
     }
@@ -632,6 +672,23 @@ constexpr std::array kQuestions{
     QuestionRow{"pedit-join", AnswerShape::Single, &askPeditJoin},    // PT32
     // Stage 0.8: generated geometry. In order, so Single and not Items.
     QuestionRow{"generated", AnswerShape::Single, &askGenerated},  // PT9
+    // Stage 0.8: importing a file as a block, announced for PT19
+    // (docs/tappe/fuori-tappa/F11): they answer "not implemented yet".
+    QuestionRow{"import-error", AnswerShape::Single, nullptr},        // PT19
+    QuestionRow{"import-definition", AnswerShape::Single, nullptr},   // PT19
+    QuestionRow{"import-nested", AnswerShape::Items, nullptr},        // PT19
+    QuestionRow{"import-layers", AnswerShape::Items, nullptr},        // PT19
+    QuestionRow{"import-linetypes", AnswerShape::Items, nullptr},     // PT19
+    QuestionRow{"import-text-styles", AnswerShape::Items, nullptr},   // PT19
+    QuestionRow{"import-dim-styles", AnswerShape::Items, nullptr},    // PT19
+    QuestionRow{"import-unit-factor", AnswerShape::Single, nullptr},  // PT19
+    QuestionRow{"import-next-id", AnswerShape::Single, nullptr},      // PT19
+    QuestionRow{"import-groups", AnswerShape::Single, nullptr},       // PT19
+    // Stage 0.8: hatch boundaries, announced for PT43
+    // (docs/tappe/fuori-tappa/F12): they answer "not implemented yet".
+    // In order, so Single and not Items.
+    QuestionRow{"hatch-boundary", AnswerShape::Single, nullptr},  // PT43
+    QuestionRow{"hatch-contours", AnswerShape::Single, nullptr},  // PT43
 };
 
 }  // namespace

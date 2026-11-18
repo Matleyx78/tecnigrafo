@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; solid-space tests/corpus/casi/geom2d/ at fc8cae3da8a737510d6b61075b03ea3272228576:
+; ellipse-ordinary-ellisse-parziale-none.json and ellipse-ordinary-ellisse-parziale-extended.json:
+; second arc specialised to 60..230 degrees, containing (6,4) but not (6,-4).
+E = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+Partial = ELLIPSE center=12,0 major-axis=10,0 ratio=0.5 start=60 end=230
+; cambia con #744
+? intersections E Partial -> 6,4 crossing 0:inside 0:inside
+? intersections E Partial extend=b -> 6,4 crossing 0:inside 0:inside; 6,-4 crossing 0:inside 0:after
+? intersections Partial E extend=a -> 6,4 crossing 0:inside 0:inside; 6,-4 crossing 0:after 0:inside
+; ellipse-delicate-mm-rapporto-uno-cerchio.json: full overlap. With start 0,
+; ellipse.hpp defines both reported ends as centre+majorAxis = (45,0).
+Round = ELLIPSE center=40,0 major-axis=5,0 ratio=1
+Circle = CIRCLE center=40,0 radius=5
+? intersections Round Circle -> overlap 45,0 45,0
+? intersections Circle Round -> overlap 45,0 45,0
+? snap 45.1,0 aperture=0.5 modes=intersection -> none
+Equal = ELLIPSE center=40,0 major-axis=5,0 ratio=1
+? intersections Round Equal -> overlap 45,0 45,0
+; Same carrier, partial overlap, endpoints 0 and 60 degrees.
+Arc = ELLIPSE center=40,0 major-axis=5,0 ratio=1 start=0 end=60
+? intersections Arc Circle -> overlap 45,0 42.5,4.330127018922193
+? intersections Arc Circle extend=a -> overlap 45,0 45,0
+? intersections Circle Arc extend=b -> overlap 45,0 45,0

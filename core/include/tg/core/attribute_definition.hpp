@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace tg::core {
@@ -45,16 +46,31 @@ struct AttributeDefinition {
     friend bool operator==(const AttributeDefinition&, const AttributeDefinition&) = default;
 };
 
-/// The bounding box: it does not depend on the document.
+/// The text the definition shows when it stands in the drawing: its text
+/// with the tag as value (docs/adr/0045, point 6). Geometry, selection, snap
+/// and grips are those of this text.
+[[nodiscard]] Text shownText(const AttributeDefinition& definition);
+
+/// True when `text` is valid as a TEXT: finite numbers, height > 0 and
+/// width factor > 0 (text.hpp). The rule of the ATTDEF and of the ATTRIB.
+[[nodiscard]] bool validAttributeText(const Text& text);
+
+/// True when `tag` is a valid tag of an ATTDEF or ATTRIB: not empty and
+/// without blanks (space, tab, line feed, …), as AutoCAD asks.
+[[nodiscard]] bool validAttributeTag(std::string_view tag);
+
+/// The bounding box of shownText(): it does not depend on the document.
 [[nodiscard]] BBox boundingBox(const AttributeDefinition& definition);
 
 // The functions of AttributeDefinition that the common visits call, one line per type
 // (docs/adr/0044, point 1; docs/tappe/0.8/PT6-scheletro-core.md, point 4).
-// Each one but supported() has the precondition supported(definition): until the
-// package of AttributeDefinition is merged, no reader and no command makes one, and the
-// precondition is checked.
+// Each one but supported() has the precondition supported(definition), which is checked.
+// In the drawing an ATTDEF behaves as the TEXT shownText(); inside a block it is not
+// drawn (insert.hpp).
 
-/// False until the package of AttributeDefinition is merged (docs/adr/0044, point 1).
+/// True when the text is valid as a TEXT (validAttributeText()) and the tag
+/// is valid (validAttributeTag()) (docs/tappe/0.8/PT17-attributi-core.md,
+/// point 1).
 [[nodiscard]] bool supported(const AttributeDefinition& definition);
 
 /// Every shape of the entity, in drawing coordinates, with its effective
@@ -62,6 +78,8 @@ struct AttributeDefinition {
 /// layer that is off, an invisible attribute) has properties.visible false:
 /// generate() keeps only the drawn shapes, extent() measures them all
 /// (docs/adr/0044, point 2).
+///
+/// The text shownText(), not drawn when the definition is invisible.
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record,
                                                     const AttributeDefinition& definition);
@@ -85,20 +103,24 @@ struct AttributeDefinition {
                                 const AttributeDefinition& definition, const BBox& rectangle);
 
 /// Appends the snap points that none of its shapes gives (as the insertion
-/// point of a block reference): none.
+/// point of a block reference): none, the text gives them.
 void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
                            const AttributeDefinition& definition, const SnapModes& modes,
                            std::vector<SnapPoint>& out, const std::optional<Vec2>& from);
 
-/// The entity transformed by `similarity`, or a refusal (docs/adr/0044).
+/// The entity transformed by `similarity` as the text shownText() with
+/// `mirrorText` (ADR 0031, points 2 and 3), the default value, tag, prompt
+/// and flags kept. Never refused.
 [[nodiscard]] TransformOutcome transformedOf(const Document& document,
                                              const AttributeDefinition& definition,
                                              const Similarity& similarity, MirrorText mirrorText);
 
-/// The grips, in order.
+/// The grips, in order: those of the text shownText().
 [[nodiscard]] std::vector<Vec2> gripPointsOf(const AttributeDefinition& definition);
 
-/// Moves grip `index` to `target`. Precondition: index < gripPointsOf().size().
+/// Moves grip `index` to `target` as for the text shownText(), the default
+/// value, tag, prompt and flags kept. Precondition:
+/// index < gripPointsOf().size().
 [[nodiscard]] GripResult moveGripOf(const Document& document, const AttributeDefinition& definition,
                                     std::size_t index, const Vec2& target);
 

@@ -1,0 +1,47 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: L
+  Enter line spacing type [At least/Exactly] <At least>: E
+  Enter line spacing factor or distance <1x>: 1.5x
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 MTEXT insertion=0,0 height=2.5 width=40 attachment=top-left rotation=0 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="Uno" ~lines=1
+messages:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 40,-10
+  MText: Uno
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Mtext
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 1

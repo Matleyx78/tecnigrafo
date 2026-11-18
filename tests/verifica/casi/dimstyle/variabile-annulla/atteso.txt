@@ -1,0 +1,40 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: DIMTXT
+  *Cancel*
+  Command: DIMTXT
+  Enter new value for DIMTXT <2.5000>: 3.5
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMTXT
+redo:
+snap: on
+ortho: off
+dimension overrides: DIMTXT:3.5
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: U
+  Undone: DIMTXT.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  DIMTXT
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

@@ -7,6 +7,7 @@
 #include "tg/core/fillet.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/intersections.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 
@@ -73,11 +74,17 @@ bool isOwnShape(const Entity& entity) {
 }
 
 /// True for the shapes that take part in tangents and intersections: curves,
-/// not texts. Solids and ellipses wait for their packages (docs/tappe/0.8,
-/// PT10 and PT50).
+/// not texts. Solids wait for their package (docs/tappe/0.8, PT10).
 bool isSnapCurve(const Entity& shape) {
     return std::holds_alternative<Polyline>(shape) || std::holds_alternative<Line>(shape) ||
            std::holds_alternative<Circle>(shape) || std::holds_alternative<Arc>(shape);
+}
+
+/// True for the shapes that take part in intersections: the curves of
+/// isSnapCurve() and ellipses, which give no tangent (docs/adr/0052, point 3;
+/// docs/tappe/0.8/PT50-ellisse-selezione-snap.md, point 4).
+bool meetsOthers(const Entity& shape) {
+    return isSnapCurve(shape) || std::holds_alternative<Ellipse>(shape);
 }
 
 /// A shape of an entity for the object snap, with the entity's id.
@@ -172,8 +179,7 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
     }
     for (const EntityId id : candidates(document, rectangle)) {
         const EntityRecord& record = recordOf(document, id);
-        const bool inside = isInside(document, record, rectangle);
-        if (inside ||
+        if (isInside(document, record, rectangle) ||
             (mode == RectangleMode::Crossing && intersects(document, record, rectangle))) {
             selected.push_back(id);
         }
@@ -237,7 +243,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
     // The snap points of one shape of an entity with identifier `id`.
     std::vector<SnapShape> nearbyCurves;
     const auto considerShape = [&](const Entity& entity, std::uint64_t id) {
-        if (modes.intersection && isSnapCurve(entity) && distance(entity, pointer) <= aperture) {
+        if (modes.intersection && meetsOthers(entity) && distance(entity, pointer) <= aperture) {
             nearbyCurves.push_back({id, &entity});
         }
         considerTangents(entity, id);
@@ -272,10 +278,31 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             considerShape(record.entity, id.value);
             continue;
         }
-        for (const GeneratedItem& item : generate(document, record)) {
-            if (std::optional<Entity> shape = shapeEntity(item.shape)) {
-                generatedShapes.push_back(std::move(*shape));
-                considerShape(generatedShapes.back(), id.value);
+        if (const auto* mtext = std::get_if<MText>(&record.entity)) {
+            // A row of an MTEXT gives no snap point of its own: within the
+            // aperture it makes the insertion point of the MTEXT a candidate,
+            // at the distance from the row's box, as the box of a text does
+            // with its insertion point (docs/tappe/0.8/PT13-mtext-core.md,
+            // point 6). The nearest row decides.
+            for (const GeneratedItem& item : generate(document, record)) {
+                const std::optional<Entity> row = shapeEntity(item.shape);
+                if (!row) {
+                    continue;
+                }
+                const double rowDistance = distance(*row, pointer);
+                if (rowDistance > aperture) {
+                    continue;
+                }
+                curvePoints.clear();
+                appendOwnSnapPointsOf(document, record, *mtext, modes, curvePoints, from);
+                consider(rowDistance, id.value);
+            }
+        } else {
+            for (const GeneratedItem& item : generate(document, record)) {
+                if (std::optional<Entity> shape = shapeEntity(item.shape)) {
+                    generatedShapes.push_back(std::move(*shape));
+                    considerShape(generatedShapes.back(), id.value);
+                }
             }
         }
         // The points no shape gives (an insertion point) compete by their

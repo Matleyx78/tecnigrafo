@@ -28,7 +28,9 @@ struct CommandDefaults {
     double textHeight{2.5};
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
-    double rotation{0.0};                ///< the last rotation of ROTATE, radians
+    double mtextLineSpacing{1.0};
+    bool mtextExactSpacing{false};
+    double rotation{0.0};  ///< the last rotation of ROTATE, radians
     /// MIRRTEXT: 0 (Readable) at start-up (docs/adr/0031, point 3).
     core::MirrorText mirrorText{core::MirrorText::Readable};
     /// POLARANG, the increment of polar tracking, radians: 90 degrees at

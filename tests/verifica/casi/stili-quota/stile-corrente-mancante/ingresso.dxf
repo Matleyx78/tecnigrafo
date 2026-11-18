@@ -1,0 +1,146 @@
+  0
+SECTION
+  2
+HEADER
+999
+SPDX-License-Identifier: GPL-3.0-or-later
+999
+Copyright (C) 2026 The Tecnigrafo authors
+  9
+$ACADVER
+  1
+AC1032
+  9
+$INSUNITS
+ 70
+4
+  9
+$HANDSEED
+  5
+100
+  9
+$DIMSTYLE
+  2
+PROVA
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+STYLE
+  5
+2
+ 70
+1
+  0
+STYLE
+  5
+21
+  2
+Standard
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+arial.ttf
+  4
+
+  0
+ENDTAB
+  0
+TABLE
+  2
+DIMSTYLE
+  5
+3
+ 70
+2
+  0
+DIMSTYLE
+105
+22
+  2
+Standard
+ 70
+0
+ 41
+2.5
+ 42
+0.625
+ 44
+1.25
+140
+2.5
+141
+2.5
+147
+0.625
+ 73
+0
+ 74
+0
+ 77
+1
+ 78
+8
+271
+2
+278
+44
+  0
+DIMSTYLE
+105
+23
+  2
+ISO-25
+ 70
+0
+ 41
+2.5
+ 42
+0.625
+ 44
+1.25
+140
+2.5
+141
+2.5
+147
+0.625
+ 73
+0
+ 74
+0
+ 77
+1
+ 78
+8
+271
+2
+278
+44
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+ENDSEC
+  0
+EOF

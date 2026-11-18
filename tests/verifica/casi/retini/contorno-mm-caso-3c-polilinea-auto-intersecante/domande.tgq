@@ -1,0 +1,13 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT43 / PT43 (#740). No Tecnigrafo executable supplied expected values.
+; Facade and flags: docs/tappe/0.8/PT43-contorni-dei-retini.md, points 2-5.
+; Geometry: Matleyx78/solid-space at d84a40a6255da5fd01ca2918fc645aa77b8d5131.
+; tests/corpus/casi/geom2d/boundary-ordinary-mm-caso-3c-polilinea-auto-intersecante.json
+
+E0 = LINE start=1,1 end=9,9
+E1 = LINE start=9,9 end=1,9
+E2 = LINE start=1,9 end=9,1
+E3 = LINE start=9,1 end=1,1
+? hatch-boundary 5,8 -> enclosed loop=external+derived+polyline vertex=1,9 vertex=5,5 vertex=9,9

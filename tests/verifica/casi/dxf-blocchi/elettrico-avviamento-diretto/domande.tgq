@@ -1,0 +1,20 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT18: immutable CC0 drawing, independently counted from its DXF groups.
+D = DXF source=elettrico-avviamento-diretto
+; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
+; cambia con #697
+? count D -> LINE 26; SOLID 12; TEXT 6
+? unhandled D -> INSERT 11
+? entity D 866 -> INSERT block="TG_EL_BREAKER_3P" insertion=20,0 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 875 -> INSERT block="TG_EL_CONTACT_POWER_3P" insertion=20,-20 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 87F -> INSERT block="TG_EL_OVERLOAD_RELAY_3P" insertion=20,-40 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 88E -> INSERT block="TG_EL_MOTOR_3PH" insertion=20,-60 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8A8 -> INSERT block="TG_EL_EMERGENCY_STOP" insertion=90,-5 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8B2 -> INSERT block="TG_EL_CONTACT_OVERLOAD_NC" insertion=90,-20 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8B8 -> INSERT block="TG_EL_PUSHBUTTON_NO" insertion=90,-35 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8C2 -> INSERT block="TG_EL_CONTACT_NO" insertion=110,-35 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8C8 -> INSERT block="TG_EL_COIL" insertion=90,-55 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8D3 -> INSERT block="TG_EL_CONTACT_NO" insertion=130,-35 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"
+? entity D 8D9 -> INSERT block="TG_EL_LAMP" insertion=130,-55 scale=1,1 rotation=0 layer="TG_EL_SYMBOLS"

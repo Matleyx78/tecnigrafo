@@ -1,0 +1,32 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT13 / PT13 (#687): ADR 0046.2 and PT13, points 2-6.
+; Expectations calculated independently, without running Tecnigrafo.
+; Liberation Sans Regular 2.1.5: fontTools reads OS/2, hhea, cmap and hmtx.
+; cap=1409, ascent=1854, descent=-434; advances(A)=1366, (B)=1366,
+; (C)=1479, (space)=569. Width=sum(advances)/1409*height.
+; Each generated Text box uses y=[-434/1409,1854/1409]*height,
+; then rotation and translation (ADR 0022.4-5). No kerning.
+
+; Missing named styles use default width/oblique; retain the style name.
+Missing = MTEXT insertion=10,20 height=3 width=0 attachment=top-left rotation=0 style="Missing" direction=by-style value="A"
+? generated Missing -> TEXT position=10,17 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Missing" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=10,16.07594038325053;12.90844570617459,16.07594038325053;12.90844570617459,20.94748048261178;10,20.94748048261178
+; Effective entity properties carry into every generated row.
+Pins = LAYER name="PINS" color=1 lineweight=0.5 locked
+Colored = MTEXT insertion=30,20 height=3 width=0 attachment=top-left rotation=0 style="Standard" value="A\\PB" layer="PINS"
+? generated Colored -> TEXT position=30,17 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" color=255,0,0 lineweight=0.5 locked=yes ~box=30,16.07594038325053;32.90844570617459,16.07594038325053;32.90844570617459,20.94748048261178;30,20.94748048261178; TEXT position=30,12 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B" color=255,0,0 lineweight=0.5 locked=yes ~box=30,11.07594038325053;32.90844570617459,11.07594038325053;32.90844570617459,15.94748048261178;30,15.94748048261178
+? bbox Colored -> 30,11.07594038325053 32.90844570617459,20.94748048261178
+? distance Colored 31,17 -> 0
+? distance Colored 29,17 -> 1
+? inside Colored 29,10 34,22 -> yes
+? inside Colored 30,16 32,18 -> no
+? crosses Colored 30,16 32,18 -> yes
+? crosses Colored 40,40 41,41 -> no
+? pick 31,17 tolerance=0.1 -> Colored
+? snap 31,17 aperture=0.1 modes=insertion -> Insertion 30,20
+Off = LAYER name="OFF" off
+Hidden = MTEXT insertion=50,20 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A" layer="OFF"
+? generated Hidden -> none
+? pick 50.5,19 tolerance=0.1 -> none
+? snap 50.5,19 aperture=0.1 modes=insertion -> none

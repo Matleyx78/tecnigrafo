@@ -4,36 +4,81 @@
 #include "tg/core/attribute_definition.hpp"
 
 #include "tg/core/document.hpp"
+#include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <optional>
+#include <string_view>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace tg::core {
 namespace {
 // The message of the precondition supported() (docs/adr/0044, point 1);
 // unused in Release, where assertions are absent.
-[[maybe_unused]] constexpr const char* kNotSupported = "AttributeDefinition is not supported yet";
+[[maybe_unused]] constexpr const char* kNotSupported = "AttributeDefinition is not supported";
+
+bool finite(const Vec2& point) {
+    return std::isfinite(point.x) && std::isfinite(point.y);
+}
+
+/// The definition with the geometry of `text`, a moved or transformed
+/// shownText(): its own default value back.
+AttributeDefinition withGeometry(const AttributeDefinition& definition, const Entity& text) {
+    AttributeDefinition result = definition;
+    result.text = std::get<Text>(text);
+    result.text.value = definition.text.value;
+    return result;
+}
+
 }  // namespace
 
-BBox boundingBox([[maybe_unused]] const AttributeDefinition& definition) {
-    assert(supported(definition) && kNotSupported);
-    return {};
+Text shownText(const AttributeDefinition& definition) {
+    Text text = definition.text;
+    text.value = definition.tag;
+    return text;
 }
 
-bool supported(const AttributeDefinition& /*definition*/) {
-    // The package of AttributeDefinition makes it true (docs/adr/0044, point 1).
-    return false;
+bool validAttributeText(const Text& text) {
+    return finite(text.position) && finite(text.alignmentPoint) && std::isfinite(text.height) &&
+           text.height > 0.0 && std::isfinite(text.widthFactor) && text.widthFactor > 0.0 &&
+           std::isfinite(text.rotation) && std::isfinite(text.obliqueAngle);
 }
 
-std::vector<GeneratedItem> generateOf(const Document& /*document*/, const EntityRecord& /*record*/,
-                                      [[maybe_unused]] const AttributeDefinition& definition) {
+bool validAttributeTag(std::string_view tag) {
+    const auto blank = [](char c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+    };
+    return !tag.empty() && std::ranges::none_of(tag, blank);
+}
+
+BBox boundingBox(const AttributeDefinition& definition) {
     assert(supported(definition) && kNotSupported);
-    return {};
+    return shownText(definition).boundingBox();
+}
+
+bool supported(const AttributeDefinition& definition) {
+    return validAttributeText(definition.text) && validAttributeTag(definition.tag);
+}
+
+std::vector<GeneratedItem> generateOf(const Document& document, const EntityRecord& record,
+                                      const AttributeDefinition& definition) {
+    assert(supported(definition) && kNotSupported);
+    if (layerState(document, record.properties).frozen) {
+        return {};
+    }
+    GeneratedItem item{shownText(definition), effectiveProperties(document, record)};
+    // Not drawn nor selected, but measured (docs/adr/0045, point 6).
+    item.properties.visible = item.properties.visible && !definition.flags.invisible;
+    return {std::move(item)};
 }
 
 BBox extentOf(const Document& document, const EntityRecord& record,
@@ -68,20 +113,25 @@ void appendOwnSnapPointsOf(const Document& /*document*/, const EntityRecord& /*r
 }
 
 TransformOutcome transformedOf(const Document& /*document*/, const AttributeDefinition& definition,
-                               const Similarity& /*similarity*/, MirrorText /*mirrorText*/) {
+                               const Similarity& similarity, MirrorText mirrorText) {
     assert(supported(definition) && kNotSupported);
-    return {Entity{definition}, {}};
+    const Entity text = transformed(Entity{shownText(definition)}, similarity, mirrorText);
+    return {Entity{withGeometry(definition, text)}, {}};
 }
 
-std::vector<Vec2> gripPointsOf([[maybe_unused]] const AttributeDefinition& definition) {
+std::vector<Vec2> gripPointsOf(const AttributeDefinition& definition) {
     assert(supported(definition) && kNotSupported);
-    return {};
+    return gripPoints(Entity{shownText(definition)});
 }
 
 GripResult moveGripOf(const Document& /*document*/, const AttributeDefinition& definition,
-                      std::size_t /*index*/, const Vec2& /*target*/) {
+                      std::size_t index, const Vec2& target) {
     assert(supported(definition) && kNotSupported);
-    return {GripOutcome::Invalid, Entity{definition}, {}};
+    GripResult moved = moveGrip(Entity{shownText(definition)}, index, target);
+    if (moved.outcome != GripOutcome::Moved) {
+        return {moved.outcome, Entity{definition}, std::move(moved.refusal)};
+    }
+    return {GripOutcome::Moved, Entity{withGeometry(definition, moved.entity)}, {}};
 }
 
 }  // namespace tg::core

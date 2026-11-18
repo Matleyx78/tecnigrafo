@@ -1,0 +1,21 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT18: immutable CC0 drawing, independently counted from its DXF groups.
+D = DXF source=elettrico-tg-el-breaker-3p
+; PT18 changes the interpretation of ATTDEF/INSERT and their owned ATTRIBs.
+; cambia con #697
+? count D -> LINE 29; TEXT 1
+? unhandled D -> ATTDEF 30
+; TG_PIN1=N, flags=3 (constant + invisible).
+? snaps D:5B -> none
+; TG_PIN2=S, flags=3 (constant + invisible).
+? snaps D:5C -> none
+; TG_PIN3=N, flags=3 (constant + invisible).
+? snaps D:5D -> none
+; TG_PIN4=S, flags=3 (constant + invisible).
+? snaps D:5E -> none
+; TG_PIN5=N, flags=3 (constant + invisible).
+? snaps D:5F -> none
+; TG_PIN6=S, flags=3 (constant + invisible).
+? snaps D:60 -> none

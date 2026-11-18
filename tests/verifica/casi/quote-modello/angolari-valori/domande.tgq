@@ -1,0 +1,30 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; PT23 suppressions isolate MTEXT layout; angular units ignore LFAC/RND.
+; Font: OS/2.sCapHeight=1409, hhea.ascent=1854, descent=-434; no kerning.
+
+IgnoreLength = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMLFAC:2,DIMRND:4,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated IgnoreLength -> TEXT position=48.24558137373988,47.54371026088337 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=48.63060621405216,46.87682767528641;53.38944346657239,49.62434364405858;51.35963509183854,53.14007487872642;46.6007978393183,50.39255890995425
+
+Precision = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMADEC:2,DIMAZIN:0,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated Precision -> TEXT position=46.05823722489824,46.28084652773929 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90,00°" ~box=46.44326206521052,45.61396394214233;55.57678761541404,50.88720737720266;53.54697924068019,54.4029386118705;44.41345369047666,49.12969517681017
+
+Trim = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMADEC:3,DIMAZIN:8,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated Trim -> TEXT position=48.24558137373988,47.54371026088337 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=48.63060621405216,46.87682767528641;53.38944346657239,49.62434364405858;51.35963509183854,53.14007487872642;46.6007978393183,50.39255890995425
+
+Fallback = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMADEC:-1,DIMAZIN:0,DIMDEC:3,DIMDSEP:.,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated Fallback -> TEXT position=45.18314590577965,45.77561231908067 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90.000°" ~box=45.56817074609192,45.10872973348371;56.45187893453262,51.39244158586128;54.42207055979877,54.90817282052912;43.53836237135807,48.62446096815155
+
+Thirty = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;86.60254037844386,50 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMADEC:2,DIMAZIN:8,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated Thirty -> TEXT position=48.24558137373988,47.54371026088337 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="30°" ~box=48.63060621405216,46.87682767528641;53.38944346657239,49.62434364405858;51.35963509183854,53.14007487872642;46.6007978393183,50.39255890995425
+
+Post = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=30 user-text-position=yes overrides=DIMPOST:[<>],DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated Post -> TEXT position=47.37125835253097,47.03891962922971 alignment-point=0,0 height=2.5 rotation=30 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="[90°]" ~box=47.75628319284324,46.37203704363275;54.26376648778132,50.12913427571224;52.23395811304746,53.64486551038008;45.72647481810939,49.88776827830059
+
+ZeroAngle = DIMENSION kind=angular style="ISO-25" line-point=0,0 first=0,0;100,0 second=0,0;0,100 arc-point=10,3 text-point=50,50 measurement=0 text-rotation=0 user-text-position=yes overrides=DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTIH:1,DIMTOH:1
+? generated ZeroAngle -> TEXT position=47.25248403122782,48.75 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="90°" ~box=47.25248403122782,47.97995031937544;52.74751596877218,47.97995031937544;52.74751596877218,52.03956706884315;47.25248403122782,52.03956706884315

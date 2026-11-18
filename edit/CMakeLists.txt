@@ -4,10 +4,12 @@
 # May depend on tg_core only, never on Qt (docs/adr/0001, docs/adr/0005).
 
 add_library(tg_edit
+    src/blocks.cpp
     src/document_file.cpp
     src/document_tables.cpp
     src/editor.cpp
     src/layer_rules.cpp
+    src/text_styles.cpp
 )
 add_library(Tecnigrafo::edit ALIAS tg_edit)
 

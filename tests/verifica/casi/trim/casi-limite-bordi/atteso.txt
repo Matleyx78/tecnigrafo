@@ -55,6 +55,11 @@ layers:
   "0" color=7 linetype="Continuous" lineweight=default
   "Bloccato" color=1 linetype="Continuous" lineweight=default locked
   "Spento" color=3 linetype="Continuous" lineweight=default off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "Standard" DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, bordi.dxf (active)
 pointer: none
 active snap: none
@@ -101,6 +106,11 @@ layers:
   "0" color=7 linetype="Continuous" lineweight=default
   "Bloccato" color=1 linetype="Continuous" lineweight=default locked
   "Spento" color=3 linetype="Continuous" lineweight=default off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "Standard" DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMZIN:0
+dimension style: "Standard"
 documents: Drawing1.cadx, bordi.dxf (active)
 pointer: none
 active snap: none

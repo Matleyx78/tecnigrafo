@@ -1,0 +1,43 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  258 MTEXT insertion=0,0 height=2.5 width=40 attachment=top-left rotation=0 style="Nota" value="Testo" ~lines=1
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: Nota
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 1
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "Nota" is now the current text style.
+  Command: MTEXT
+  Current text style:  "Nota"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: S
+  Enter style name or [?] <Nota>: Missing
+  Cannot find text style "Missing".
+  Enter style name or [?] <Nota>: Nota
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 40,-10
+  MText: Testo
+  MText:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Mtext
+redo:
+snap: on
+ortho: off
+text styles:
+  "Nota" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+text style: "Nota"
+pointer: none
+active snap: none
+statistics:
+  MTEXT 1

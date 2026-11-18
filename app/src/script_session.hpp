@@ -76,6 +76,7 @@ private:
     [[nodiscard]] bool perform(const script::ViewDirective& view);
     [[nodiscard]] bool perform(const script::MoveDirective& move);
     [[nodiscard]] bool perform(const script::ClickDirective& click);
+    [[nodiscard]] bool perform(const script::HoverDirective& hover);
     [[nodiscard]] bool perform(const script::RightClickDirective& directive);
     [[nodiscard]] bool perform(const script::EscDirective& directive);
     [[nodiscard]] bool perform(const script::AidDirective& directive);

@@ -491,7 +491,8 @@ TEST_F(EnvironmentsTest, ATabOfTheTestTypeActivatesTheTestEnvironment) {
     EXPECT_TRUE(hasTab(kTest));
     EXPECT_TRUE(hasGroup("test/tools"));
     EXPECT_FALSE(hasGroup("home/draw"));
-    EXPECT_FALSE(hasTab("view"));
+    EXPECT_TRUE(hasTab("view"));
+    EXPECT_TRUE(hasGroup("view/assistant"));
     EXPECT_GT(ribbon()->categoryIndex(ribbon()->categoryByObjectName(latin1(kTest))),
               ribbon()->categoryIndex(ribbon()->categoryByObjectName(QStringLiteral("home"))));
     EXPECT_TRUE(action(kTestAction)->isVisible());
@@ -683,12 +684,18 @@ TEST_F(EnvironmentsTest, AShortcutOfTheTestEnvironmentDoesNothingInTheDrawing) {
 TEST_F(EnvironmentsTest, TheGlobalActionsWorkOnTheStartPage) {
     window().showStartPage();
     EXPECT_EQ(window().activeEnvironment(), nullptr);
-    for (const char* id : {"file.new", "file.open", "file.recent", "file.quit", "tools.settings",
-                           "tools.shortcuts", "ui.interface", "ui.theme", "help.about"}) {
+    for (const char* id :
+         {"file.new", "file.open", "file.recent", "file.quit", "tools.settings", "tools.shortcuts",
+          "ui.interface", "ui.theme", "assistant.channel", "assistant.panel", "help.about"}) {
         SCOPED_TRACE(id);
         EXPECT_TRUE(action(id)->isVisible());
         EXPECT_TRUE(action(id)->isEnabled());
     }
+    EXPECT_TRUE(hasTab("view"));
+    EXPECT_TRUE(hasGroup("view/assistant"));
+    auto* assistantButton = window().findChild<QToolButton*>(QStringLiteral("assistantButton"));
+    ASSERT_NE(assistantButton, nullptr);
+    EXPECT_TRUE(assistantButton->isEnabled());
     // Undo is there, without a document to undo.
     EXPECT_TRUE(action("edit.undo")->isVisible());
     EXPECT_FALSE(action("edit.undo")->isEnabled());

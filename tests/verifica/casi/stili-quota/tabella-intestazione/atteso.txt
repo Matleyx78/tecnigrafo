@@ -1,0 +1,53 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: ingresso.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: ingresso.dxf
+dimension styles:
+  "Standard"
+  "ISO-25"
+  "Elettrico" DIMASZ:2 DIMDEC:3 DIMTXT:3.5
+dimension style: "Elettrico"
+dimension overrides: DIMTXT:5
+documents: Drawing1.cadx, ingresso.dxf (active)
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+  Command: SAVE
+  Save drawing as <ingresso.dxf>: giro.dxf
+  Command: OPEN
+  Enter name of drawing to open: giro.dxf
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: giro.dxf
+dimension styles:
+  "Standard"
+  "ISO-25"
+  "Elettrico" DIMASZ:2 DIMDEC:3 DIMTXT:3.5
+dimension style: "Elettrico"
+dimension overrides: DIMTXT:5
+documents: Drawing1.cadx, ingresso.dxf, giro.dxf (active)
+pointer: none
+active snap: none
+statistics:

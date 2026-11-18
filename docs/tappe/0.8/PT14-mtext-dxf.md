@@ -18,7 +18,9 @@
 - `io/src/dxf_mtext.cpp` (nuovo), `io/CMakeLists.txt`, `io/src/dxf_entities.cpp`,
   `io/src/dxf_entity_common.hpp` (file comuni: una riga ciascuno)
 - `tests/io/dxf_mtext_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
-- `tests/verifica/oracolo/ezdxf_attesi.py` (solo l'elenco dei tipi attivi)
+- `tests/verifica/oracolo/ezdxf_attesi.py` (l'elenco dei tipi attivi e, in
+  `managed()`, un `MTEXT` con estrusione `(0,0,-1)` non gestito)
+- `tests/verifica/oracolo/controlla_casi.py` (solo il self-test di quella regola)
 - `tests/verifica/casi/**/domande.tgq` (solo le righe `? count` e
   `? unhandled`, copiate dal log dell'oracolo)
 
@@ -35,14 +37,16 @@
    dividere una sequenza UTF-8) più il gruppo 1 finale, come fa AutoCAD.
 4. **Non gestiti** (restano grezzi, ADR 0044, punto 4): colonne (gruppo 75 > 0
    o dati di colonna), direzione 72 diversa da 1 e 5, altezza o larghezza non
-   valide (altezza ≤ 0, larghezza < 0), estrusione diversa da `(0,0,1)` e
-   `(0,0,-1)`. Sfondo (90, 63, 421, 431, 45, 441) e il resto stanno in `extras`.
+   valide (altezza ≤ 0, larghezza < 0), estrusione diversa da `(0,0,1)`. Sfondo (90, 63, 421, 431, 45, 441) e il
+   resto stanno in `extras`.
 5. Aggiungere `MTEXT` all’elenco dei tipi della 0.8 attivi nell’oracolo ezdxf e,
    nella stessa pull request, aggiornare dal log dell’oracolo le righe `count` e
    `unhandled` di tutti i casi che cambiano. Questa è l'eccezione a
    [pacchetto.md](../../agenti/pacchetto.md),
    «In un pacchetto di lavoro», e all'ADR 0011 (casi scritti da un altro
-   agente), decisa il 2026-11-16 in [DECISIONI.md](../../DECISIONI.md).
+   agente), decisa il 2026-11-16 in [DECISIONI.md](../../DECISIONI.md). Nella
+   stessa pull request l'oracolo classifica non gestito un `MTEXT` con
+   estrusione `(0,0,-1)` (decisione del 2026-11-17).
 
 ## Regole della tappa che valgono qui
 
@@ -53,7 +57,10 @@
 
 - `dxf_mtext_test.cpp`: giro di un `MTEXT` corto e di uno più lungo di 250
   caratteri con lettere accentate; vettore 11/21 conservato; un `MTEXT` con
-  colonne resta non gestito.
+  colonne resta non gestito; un `MTEXT` con estrusione `210/220/230 = 0,0,-1`
+  resta non gestito e si conserva grezzo.
+- un self-test dell'oracolo: un `MTEXT` con 210/220/230 = 0,0,-1 è in
+  `unhandled` e non in `count`.
 
 ## Fatto quando
 

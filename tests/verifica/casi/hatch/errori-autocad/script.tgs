@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCH e HPISLANDDETECTION: i messaggi di autocad-retini-errori.txt (dxf-test-file, 5170f18),
+; tradotti (DECISIONI.md, 2026-11-02): valore 3, nome sconosciuto, scala 0 e -1, Invio senza contorni,
+; punto fuori (NotEnclosed), punto sul contorno (OnCurve), poi un punto valido nello stesso comando
+PLINE
+0,0
+60,0
+60,40
+0,40
+C
+HPISLANDDETECTION
+3
+1
+-HATCH
+P
+PIPPO
+ANSI31
+0
+-1
+1
+0
+
+-HATCH
+100,100
+30,0
+30,20
+

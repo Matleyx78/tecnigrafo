@@ -1,0 +1,36 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 CIRCLE center=0,0 radius=10
+  258 DIMENSION kind=radius style="ISO-25" center=0,0 point=8,6 text-point=20,15 measurement=10 text-rotation=30 user-text-position=yes ~text="R10"
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 0,0
+  Specify radius of circle or [Diameter]: 10
+  Command: DIMRADIUS
+  Select arc or circle: 10,0
+  *Cancel*
+  Command: DIMRADIUS
+  Select arc or circle: 10,0
+  Specify dimension line location or [Text/Angle]: 0,0
+  Points coincide.
+  Specify dimension line location or [Text/Angle]: A
+  Specify angle of dimension text: 30
+  Specify dimension line location or [Text/Angle]: 20,15
+  Dimension text = 10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+  Dimradius
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  DIMENSION 1

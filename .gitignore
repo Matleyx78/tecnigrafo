@@ -13,3 +13,4 @@ CMakeUserPresets.json
 *.user
 .DS_Store
 __pycache__/
+aggiorna-tutto.sh

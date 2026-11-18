@@ -374,7 +374,8 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
         QStringLiteral("file.quit"),       QStringLiteral("edit.undo"),
         QStringLiteral("edit.redo"),       QStringLiteral("tools.settings"),
         QStringLiteral("tools.shortcuts"), QStringLiteral("ui.theme"),
-        QStringLiteral("ui.interface"),    QStringLiteral("help.about")};
+        QStringLiteral("ui.interface"),    QStringLiteral("assistant.channel"),
+        QStringLiteral("assistant.panel"), QStringLiteral("help.about")};
     for (QAction* item : registry().actions()) {
         const ActionSpec* spec = registry().spec(item->objectName());
         ASSERT_NE(spec, nullptr);
@@ -578,6 +579,7 @@ TEST_F(MainWindowActionsTest, ShortcutsMatchTheBuiltinDefaults) {
         {"aids.osnap", {QKeySequence(Qt::Key_F3)}},
         {"aids.ortho", {QKeySequence(Qt::Key_F8)}},
         {"aids.polar", {QKeySequence(Qt::Key_F10)}},
+        {"aids.otrack", {QKeySequence(Qt::Key_F11)}},
         {"aids.dynmode", {QKeySequence(Qt::Key_F12)}},
     };
     QSet<QString> withKeys;

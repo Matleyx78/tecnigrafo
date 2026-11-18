@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; STYLE table read into the model and rewritten from it ([0.8-RT11], work #683).
+; stili.dxf is handwritten (R2018, LF): $TEXTSTYLE = Larghezza08 and the STYLE records
+; in this order: Standard (font arial.ttf, 40=0, 41=1, 50=0, 71=0: the Standard of a new
+; session, sheet PT11 point 2, so not listed in "text styles:"); Altezza5 (40=5, XDATA ACAD
+; kept in extras); a shape file record (70 bit 1, empty name, ltypeshp.shx) that stays raw
+; and is not a text style; Larghezza08 (romans.shx, bigfont gbcbig.shx, 41=0.8, 50=15
+; degrees); Capovolto (71=6: bit 2 backwards, bit 4 upside down; DXF reference, STYLE).
+; Expected fields from docs/verifica/rapporto.md, "Stili e blocchi": table order, oblique in
+; degrees, current style because it is not Standard. Saving and reopening gives the same.
+; cambia con #683
+; cambia con #699
+OPEN
+stili.dxf
+!report
+SAVE
+stili-riscritto.dxf
+OPEN
+stili-riscritto.dxf

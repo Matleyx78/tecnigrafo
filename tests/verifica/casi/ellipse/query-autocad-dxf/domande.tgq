@@ -1,0 +1,75 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT50 / PT50 (#744). Expectations never obtained by running Tecnigrafo.
+; Values from solid-space tests/corpus/casi/geom2d/ellipse-dxf-*.json,
+; commit 5baf9184d90ff0f919e503504153177963112d1b. Each section cites its case.
+; DXF source pinned in sorgenti.json (CC0-1.0); no copied public fixture.
+D = DXF source=autocad-ellissi
+? units D -> 4
+; Decision in #743 (2026-11-15): 9D's almost-full DXF sweep becomes 0..2pi.
+; Its extrusion is nearly +Z; it is supported and has NO endpoints.
+? snaps D:9D modes=endpoint -> none
+; PT50 replaces provisional proximity/intersection results.
+; cambia con #744
+; ellipse-dxf-asse-e-distanza.json / ellipse-dxf-tangenza.json
+Full = ELLIPSE center=20,0 major-axis=-20,0 ratio=0.5
+Axis = LINE start=-20,0 end=60,0
+Tangent = LINE start=-20,10 end=60,10
+? intersections Full Axis -> 0,0 crossing 0:start 0:inside; 40,0 crossing 0:inside 0:inside
+? intersections Axis Full -> 0,0 crossing 0:inside 0:start; 40,0 crossing 0:inside 0:inside
+? intersections Full Tangent -> 20,10 touching 0:inside 0:inside
+? crosses D:8C 39,-1 41,1 -> yes
+? crosses D:8C 19,-1 21,1 -> no
+? distance D:8C 0,0 -> 0
+; ellipse-dxf-asse-invertito.json
+VerticalAxis = LINE start=30,0 end=110,0
+E8D = ELLIPSE center=70,0 major-axis=0,-25 ratio=0.4
+? intersections E8D VerticalAxis -> 80,0 crossing 0:inside 0:inside; 60,0 crossing 0:inside 0:inside
+; ellipse-dxf-centro.json
+CenterAxis = LINE start=110,0 end=190,0
+E8E = ELLIPSE center=150,0 major-axis=20,0 ratio=0.4
+? intersections E8E CenterAxis -> 170,0 crossing 0:start 0:inside; 130,0 crossing 0:inside 0:inside
+; ellipse-dxf-opzione-rotazione.json: ratio is one ulp above 0.5, two crossings.
+AlmostTangent = LINE start=180,10 end=260,10
+E8F = ELLIPSE center=220,0 major-axis=-20,0 ratio=0.5000000000000001
+? intersections E8F AlmostTangent -> 220.00000042146849,10 crossing 0:inside 0:inside; 219.99999957853151,10 crossing 0:inside 0:inside
+; ellipse-dxf-ruotata.json
+RotatedAxis = LINE start=260,0 end=340,0
+E90 = ELLIPSE center=300,0 major-axis=17.32050807568877,9.999999999999998 ratio=0.5
+? intersections E90 RotatedAxis -> 284.8814210796309,0 crossing 0:inside 0:inside; 315.1185789203691,0 crossing 0:inside 0:inside
+; ellipse-dxf-obliqua.json
+ObliqueAxis = LINE start=360,0 end=440,0
+E91 = ELLIPSE center=400,0 major-axis=20,5 ratio=0.3880570000581327
+? intersections E91 ObliqueAxis -> 382.13616412524703,0 crossing 0:inside 0:inside; 417.86383587475297,0 crossing 0:inside 0:inside
+; ellipse-dxf-arco-angoli.json and ellipse-dxf-arco-angolo-incluso.json
+ArcAxis = LINE start=-20,-60 end=60,-60
+IncludedAxis = LINE start=60,-60 end=140,-60
+E93 = ELLIPSE center=20,-60 major-axis=-20,0 ratio=0.5 start=49.106605350869096 end=216.05238873238784
+? intersections E93 ArcAxis -> 40,-60 crossing 0:inside 0:inside
+E94 = ELLIPSE center=100,-60 major-axis=20,0 ratio=0.3 start=286.6992442339936 end=85.40417460781636
+? intersections E94 IncludedAxis -> 120,-60 crossing 0:inside 0:inside
+; ellipse-dxf-arco-prima-specchiatura.json (extended)
+BeforeMirrorAxis = LINE start=180,-60 end=260,-60
+E95 = ELLIPSE center=220,-60 major-axis=-20,0 ratio=0.5 start=0 end=106.10211375198601
+? intersections E95 BeforeMirrorAxis extend=a -> 200,-60 crossing 0:start 0:inside; 240,-60 crossing 0:after 0:inside
+; ellipse-dxf-arco-esploso.json
+ExplodedArcAxis = LINE start=80,-195 end=160,-195
+EA4 = ELLIPSE center=120,-195 major-axis=30.49014016867735,7.201989105668507 ratio=0.2078414727134402 start=53.731122537901236 end=270.52961572198484
+? intersections EA4 ExplodedArcAxis -> 98.73472875397322,-195 crossing 0:inside 0:inside
+; ellipse-dxf-esplosa-intera.json: use normalised 9D, never raw-parameter case.
+? intersections D:9D D:9D -> overlap 50.49014016867735,-187.7980108943315 50.49014016867735,-187.7980108943315
+? closest D:9D 50.49014016867735,-187.7980108943315 -> 50.49014016867735,-187.7980108943315
+? distance D:9D 50.49014016867735,-187.7980108943315 -> 0
+? crosses D:9D 50.4,-187.9 50.6,-187.7 -> yes
+? crosses D:9D 19.9,-195.1 20.1,-194.9 -> no
+; ellipse-dxf-esplose-disgiunte.json
+? intersections D:9D D:A4 extend=b -> none
+; Document questions use definitions. Reproduce the source carrier of 8C for snap.
+? pick 20,-10.1 tolerance=0.5 -> Full
+? window -1,-11 41,11 -> Full
+? snap 40.1,0.1 aperture=0.5 modes=intersection -> Intersection 40,0
+; Reproduce normalised 9D for picking/crossing; the old DXF ends are not snaps.
+Exploded = ELLIPSE center=20,-195 major-axis=30.49014016867735,7.201989105668515 ratio=0.2078414727134397
+? pick 50,-187 tolerance=0.1 -> Exploded
+? crossing 50.4,-187.9 50.6,-187.7 -> Exploded
+? snap 50,-187 aperture=0.1 modes=endpoint -> none

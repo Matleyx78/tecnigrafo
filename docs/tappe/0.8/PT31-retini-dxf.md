@@ -14,16 +14,27 @@
 
 ## File
 
+- `core/include/tg/core/hatch.hpp`, `core/src/hatch.cpp` (estensione autorizzata
+  del modello e conservazione nelle trasformazioni)
 - `io/src/dxf_hatch.cpp` (nuovo), `io/CMakeLists.txt`, `io/src/dxf_entities.cpp`,
   `io/src/dxf_entity_common.hpp` (file comuni)
-- `tests/io/dxf_hatch_test.cpp` (nuovo), `tests/CMakeLists.txt` (file comune)
+- `tests/core/hatch_test.cpp`, `tests/io/dxf_hatch_test.cpp` (nuovo),
+  `tests/CMakeLists.txt` (file comune)
 - `tests/verifica/oracolo/ezdxf_attesi.py` (solo l'elenco dei tipi attivi)
 - `tests/verifica/casi/**/domande.tgq` (solo le righe `? count` e
   `? unhandled`, copiate dal log dell'oracolo)
 
 ## Cosa fare
 
-1. Codec `HATCH` con i gruppi dell'ADR 0048, punto 1, **nell'ordine del DXF**,
+1. Aggiungere a `core::HatchLoop` un campo `core::RawGroups extras`: è la
+   sequenza ordinata dei gruppi non interpretati del singolo contorno, in
+   particolare il 97 e ciascun 330 degli oggetti di contorno associati nella
+   loro posizione DXF. Il campo resta invariato in tutte le trasformazioni del
+   retino; non va confuso con gli `extras` dell'intera entità. PT31 è
+   autorizzato a modificare `core/include/tg/core/hatch.hpp`, il codice `core`
+   che dipende dal nuovo campo e i relativi test.
+   Il codec `HATCH` conserva i gruppi dell'ADR 0048, punto 1,
+   **nell'ordine del DXF**,
    che è rigido: 10/20/30 (punto di quota), 210/220/230, 2, 70, 71, 91 e i
    contorni (92; per la polilinea 72, 73, 93, vertici 10/20 e 42; per i lati
    93, e per ogni lato 72 con 10/20/11/21 o 10/20/40/50/51/73; dopo ogni
@@ -31,8 +42,16 @@
    78 e le righe (53, 43, 44, 45, 46, 79, 49…), 47, 98 e i punti interni, e il
    resto in coda (`extras`).
 2. **Grezzi** (ADR 0048, punto 1): lati d'ellisse (72 = 3) o spline (4), sfumatura
-   (450 diverso da 0), contorni non chiusi (PT30, `supported`), estrusione
-   diversa da `(0,0,1)` e `(0,0,-1)`.
+   (450 diverso da 0), contorni non chiusi, estrusione diversa da `(0,0,1)` e
+   `(0,0,-1)`. **La chiusura la controlla la lettura**, non `supported`
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-16, «Retini: chiusura dei
+   contorni, domande dal documento, cerchio dei contorni a lati»): un retino
+   resta grezzo se `supported` (PT30, punto 1: una polilinea senza il segnale
+   di chiusa, un contorno senza vertici o senza lati) è falso, oppure se un
+   suo contorno non è chiuso secondo `isClosed(loop, ToleranceRule::of(document))`
+   di PT30 (punto 1), con il documento che si sta leggendo: la sua unità è
+   già quella di `$INSUNITS`, letta dall'intestazione prima delle entità (0 se
+   manca, con la regola dei millimetri: `tolerance.hpp`).
 3. **Angoli** ([DECISIONI.md](../../DECISIONI.md), 2026-11-12, «Angoli in
    gradi ridotti a un giro»): i gruppi 52 (angolo del motivo) e 53 (angolo di
    ogni riga) entrano nel modello con `reducedDegreesToRadians` di PT1, come
@@ -54,9 +73,21 @@
 
 ## Test richiesti
 
+- `hatch_test.cpp`: un retino con due contorni, i cui `extras` sono
+  rispettivamente `97, 2, 330, A, 330, B` e `97, 1, 330, C`, conserva nei due
+  `HatchLoop` le sequenze distinte, nello stesso ordine, dopo `MOVE`, `ROTATE`,
+  `SCALE` e `MIRROR`;
 - `dxf_hatch_test.cpp`: giro di un `SOLID` con una polilinea e un cerchio
-  (lato d'arco intero), di un `ANSI31` con contorno a lati e due punti interni;
+  (lato d'arco intero), con dopo i due contorni rispettivamente
+  `97, 2, 330, A, 330, B` e `97, 1, 330, C`: lettura e scrittura mantengono
+  ciascuna sequenza nel suo contorno e nella stessa posizione DXF; giro di un
+  `ANSI31` con contorno a lati e due punti interni;
   un retino con un lato d'ellisse resta grezzo; estrusione `(0,0,-1)`;
+  un `SOLID` con il contorno a lati `0,0→10,0`, `10,0→10,8`, `10,8→0,8`,
+  `0,8→0.0000005,0` (scarto 5e-7 fra l'ultimo lato e il primo): con
+  `$INSUNITS` 4 (o senza `$INSUNITS`) è gestito, con `$INSUNITS` 6 (metri,
+  tolleranza 1e-9) resta grezzo e si riscrive identico; lo stesso con
+  l'ultimo lato che finisce in `0,1` resta grezzo in ogni unità;
   un `NET` con 52 = 3600 e righe con 53 = 3600 e 3690 (dieci giri più quelli
   di 0 e 90): si legge con angolo `+0` e righe a `+0` e a
   `degreesToRadians(90)`, si riscrive con 0, 0 e 90; lo stesso con 52 = −3600

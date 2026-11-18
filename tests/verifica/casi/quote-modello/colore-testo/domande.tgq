@@ -1,0 +1,11 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#707), ADR 0047 and the 2026-11-16 decision in #706.
+; Independent expectations: stored AutoCAD geometry or the formulas of PT23/PT13.
+; Never run Tecnigrafo to derive these values.
+; Text: Liberation Sans Regular, fontTools reads OS/2.sCapHeight=1409,
+; hhea.ascent=1854, descent=-434 and hmtx advances. No kerning.
+
+Red = DIMENSION kind=linear origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=15,8 measurement=0 text="A" user-text-position=yes overrides=DIMCLRT:1,DIMSD1:1,DIMSD2:1,DIMSE1:1,DIMSE2:1,DIMTXT:3
+? generated Red -> TEXT position=13.5457771469127,6.5 alignment-point=0,0 height=3 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" color=255,0,0 ~box=13.5457771469127,5.575940383250533;16.45422285308729,5.575940383250533;16.45422285308729,10.44748048261178;13.5457771469127,10.44748048261178

@@ -821,7 +821,9 @@ TEST(DocumentTables, NewTablesAreReplacedWithoutTouchingTheEntities) {
     const std::vector<EntityRecord> before(document.entities().begin(), document.entities().end());
     const BBox extents = document.extents();
 
-    EXPECT_EQ(document.textStyles(), TextStyleTable{});
+    ASSERT_EQ(document.textStyles().styles().size(), 1U);
+    EXPECT_EQ(document.textStyles().styles().front().name, "Standard");
+    EXPECT_EQ(document.textStyles().current(), "Standard");
     EXPECT_EQ(document.dimStyles(), DimStyleTable{});
     EXPECT_TRUE(document.blocks().definitions().empty());
     document.replaceTextStyles(TextStyleTable{});
@@ -874,6 +876,18 @@ TEST(Document, FreezingALayerKeepsTheExtentsOfTheFiveEntitiesOfBefore) {
     EXPECT_EQ(document.extents().max(), (Vec2{10, 0}));
     document.remove(id);
     EXPECT_TRUE(document.extents().isEmpty());
+}
+
+TEST(Document, RemovingBlockReleasesItsEntityHandlesForModelSpace) {
+    Document document = Document::newDrawing();
+    BlockDefinition block{"Part"};
+    block.entities.push_back({EntityId{500}, Line{{0, 0}, {1, 0}}});
+    document.replaceBlock("Part", block);
+
+    document.replaceBlock("Part", std::nullopt);
+    document.restore(block.entities.front());
+
+    EXPECT_NE(document.find(EntityId{500}), nullptr);
 }
 
 TEST(DocumentDeathTest, SetPropertiesRequiresAnExistingRecord) {

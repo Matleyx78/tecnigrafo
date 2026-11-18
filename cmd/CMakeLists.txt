@@ -9,9 +9,11 @@ add_library(tg_cmd
     src/command_descriptions.cpp
     src/commands/aid_commands.cpp
     src/commands/arc_command.cpp
+    src/commands/block_command.cpp
     src/commands/chamfer_command.cpp
     src/commands/chprop_command.cpp
     src/commands/circle_command.cpp
+    src/commands/ellipse_command.cpp
     src/commands/file_commands.cpp
     src/commands/erase_command.cpp
     src/commands/explode_command.cpp
@@ -22,11 +24,13 @@ add_library(tg_cmd
     src/commands/line_command.cpp
     src/commands/mirror_commands.cpp
     src/commands/move_copy_commands.cpp
+    src/commands/mtext_command.cpp
     src/commands/offset_command.cpp
     src/commands/pedit_command.cpp
     src/commands/pline_command.cpp
     src/commands/property_commands.cpp
     src/commands/rotate_scale_commands.cpp
+    src/commands/style_commands.cpp
     src/commands/text_command.cpp
     src/commands/trim_extend_commands.cpp
     src/command_protocol.cpp
@@ -37,6 +41,7 @@ add_library(tg_cmd
     src/drawing_session.cpp
     src/dynamic_input.cpp
     src/name_list.cpp
+    src/object_tracking.cpp
     src/quick_select.cpp
     src/selection_set.cpp
     src/value_format.cpp

@@ -1,0 +1,42 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMLINEAR options (PT26, #713): Text with <> (the value takes its place),
+; Angle (explicit text angle), Horizontal and Vertical against the automatic
+; choice, Rotated 30 degrees. Prompts from autocad-quote.txt (dxf-test-file
+; 1ad04b0): after Text and Rotated the full prompt comes back; after
+; Horizontal and Vertical only [Text/Angle] (Mtext left out, decision of
+; 2026-11-11). With a replaced text AutoCAD still ends with the measured
+; value ("Testo di quota = 40" after "<> mm").
+; Values by hand from PT23 with ISO-25, as in
+; dimlinear/punti-direzione-automatica (six graphics records each). The
+; explicit angle 90 equals the automatic one of a vertical dimension, so the
+; text centre does not depend on how the angle moves it. Rotated: origins
+; 0,120 and 0,160, u = (cos 30, sin 30), measurement 40 sin 30 = 20.
+DIMLINEAR
+0,0
+50,0
+T
+<> mm
+25,10
+DIMLINEAR
+0,20
+0,50
+A
+90
+10,35
+DIMLINEAR
+0,60
+30,100
+H
+40,80
+DIMLINEAR
+60,60
+100,90
+V
+80,120
+DIMLINEAR
+0,120
+0,160
+R
+30
+-20,150

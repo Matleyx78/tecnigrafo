@@ -1,0 +1,23 @@
+stili-quota/tabella-intestazione #699
+stili-quota/stile-corrente-mancante #699
+# Cases that open a DXF without $DIMSTYLE: the report gains dimension styles: (PT22, #699).
+apertura/open-cadx-valido #699
+apertura/open-dxf-pubblici #699
+apertura/open-gia-aperto #699
+apertura/open-modifiche-e-annulla #699
+dxf/tabelle-senza-endtab #699
+stili-testo/corrente-standard #699
+stili-testo/tabella-giro #699
+chamfer/autocad-raccordi #699
+chamfer/sequenza-script #699
+extend/autocad-rapido-e-standard #699
+extend/estremi-curvi-shift-annulla #699
+fillet/autocad-raccordi #699
+fillet/sequenza-script #699
+join/autocad-interattivo #699
+join/sequenza-script #699
+offset/autocad-distanza #699
+trim/autocad-rapido #699
+trim/autocad-standard-script #699
+trim/casi-limite-bordi #699
+trim/mezzo-polilinee-larghezze #699

@@ -51,6 +51,8 @@ struct CurvePosition {
     /// Arc length from the start of the segment (for an arc, counter-clockwise
     /// from its start angle; for a circle, from angle 0), as solid-space gives
     /// it: rounded, for information only, never to order or compare points.
+    /// Where an ellipse takes part solid-space gives no station: 0 on both
+    /// curves (docs/tappe/0.8/PT50-ellisse-selezione-snap.md, point 4).
     double station{0.0};
     friend bool operator==(const CurvePosition&, const CurvePosition&) = default;
 };
@@ -69,18 +71,36 @@ struct Crossing {
     CurvePosition onB;
 };
 
-/// A stretch two curves share, from its end nearer the start of A.
+/// A stretch two curves share, from its end nearer the start of A, in the
+/// direction of A. With an ellipse, the stretch solid-space gives
+/// (EllipseOverlap): its ends as it orders them, along the ellipse, and
+/// reversed when A is a clockwise polyline arc and the ellipse is B.
 struct SharedStretch {
-    bool whole{false};  ///< the whole line or circle (extended lines, equal circles)
+    /// The whole line or circle (extended lines, equal circles), or the whole
+    /// ellipse; from and to are then the start of the ellipse when one takes
+    /// part (EllipseOverlap::whole).
+    bool whole{false};
     Vec2 from;
     Vec2 to;
     CurvePosition fromOnA, toOnA, fromOnB, toOnB;
 };
 
 struct Intersections {
-    /// In the exact order along A; no two are the same exact point.
+    /// Without an ellipse, in the exact order along A; no two are the same
+    /// exact point.
+    ///
+    /// With an ellipse (docs/tappe/0.8/PT50-ellisse-selezione-snap.md,
+    /// point 4) the order is the one solid-space gives along the ellipse:
+    /// with the ellipse as A, along it, piece by piece for a polyline B; with
+    /// the ellipse as B and a curve as A, the points of intersect(B, A) with
+    /// the positions swapped and in the same order, **not** along A, since
+    /// solid-space gives no stations on the other curve. Points of different
+    /// pieces of a polyline that are not a common vertex are not merged, so
+    /// they may be the same exact point. No caller depends on this order:
+    /// findSnap() picks the point nearest to the pointer, and cutsAlong()
+    /// leaves ellipses out.
     std::vector<Crossing> crossings;
-    /// In the order of their start along A.
+    /// In the order of their start along A (with an ellipse, as crossings).
     std::vector<SharedStretch> shared;
     /// False when solid-space refused some data (beyond its domain, 2^50):
     /// what it refused is left out (docs/adr/0035, point 23).
@@ -89,7 +109,10 @@ struct Intersections {
 
 /// Where the curves of `a` and `b` meet (docs/adr/0035, point 1). A text has no
 /// curve: empty. A line of zero length, or a polyline segment that is exactly a
-/// point, meets nothing.
+/// point, meets nothing; so does an elliptical arc that solid-space reduces to
+/// a point (degenerateCurve). An ellipse meets lines, arcs, circles,
+/// polylines and ellipses through solid-space's ellipse.hpp; Extended is the
+/// whole ellipse.
 ///
 /// A point where several segments of B meet A (a vertex of B, or a point
 /// where B crosses itself) is listed once: at a vertex, on the segment that
@@ -122,7 +145,9 @@ struct HostCuts {
 
 /// The cuts that `cutters` make on `host`, as TRIM and EXTEND need them
 /// (docs/adr/0035, points 4-6), from solid-space's intersectAlong. Texts among
-/// the cutters cut nothing. With `hostCutsItself`, a polyline host also cuts
+/// the cutters cut nothing. An ellipse gives no cuts and takes none, as a
+/// text (docs/adr/0052, point 6): as the host, nothing; among the cutters,
+/// nothing. With `hostCutsItself`, a polyline host also cuts
 /// itself: every vertex is a cut, and so is every point of
 /// selfIntersections(); such cuts may have no cutters.
 [[nodiscard]] HostCuts cutsAlong(const Entity& host, Extension extendHost,
@@ -133,8 +158,8 @@ enum class Side : std::uint8_t { Left, On, Right };
 /// The side of `point` with respect to the line or circle of the entity
 /// (solid-space side()), looking along the curve: for a circle and an arc,
 /// left is inside. For a polyline, of its segment nearest to the point
-/// (closestPoint; on a tie the first). std::nullopt for a text and for a curve
-/// that is exactly a point (and for data solid-space refuses).
+/// (closestPoint; on a tie the first). std::nullopt for a text, an ellipse and
+/// a curve that is exactly a point (and for data solid-space refuses).
 [[nodiscard]] std::optional<Side> sideOf(const Entity& entity, const Vec2& point);
 
 /// The position of the point of the entity nearest to `point`, with
@@ -142,7 +167,7 @@ enum class Side : std::uint8_t { Left, On, Right };
 /// or AtStart or AtEnd when the nearest point is that end. For choosing among
 /// cuts by a pick, not an exact decision (docs/adr/0035, point 5). A polyline
 /// without segments gives AtStart of segment 0.
-/// Precondition: not a Text.
+/// Precondition: not a Text, not an Ellipse (only TRIM and EXTEND use it).
 [[nodiscard]] CurvePosition nearestPosition(const Entity& entity, const Vec2& point);
 
 }  // namespace tg::core

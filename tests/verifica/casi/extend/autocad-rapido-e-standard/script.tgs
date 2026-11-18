@@ -3,6 +3,8 @@
 ; EXTEND sulle figure i, j, k, l di autocad-taglio.dxf in modo rapido e in modo standard con !scr on
 !view 160,205 0.5 900x200
 ; cambia con #570
+; cambia con #683
+; cambia con #699
 OPEN
 ingresso.dxf
 EXTEND

@@ -9,8 +9,11 @@
 #include "tg/core/start_handles.hpp"
 #include "tg/edit/editor.hpp"
 #include "tg/script/entity_reader.hpp"
+#include "tg/script/number_format.hpp"
+#include "tg/script/text_format.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <optional>
 #include <utility>
@@ -137,6 +140,16 @@ public:
 
     [[nodiscard]] std::vector<Answer> takeAnswers() { return std::move(m_answers); }
 
+    /// The end of the file, after line `lastLine`: std::nullopt if it is fine.
+    /// A file that ends inside a block is malformed (docs/verifica/domande.md).
+    [[nodiscard]] std::optional<ParseError> finish(int lastLine) const {
+        if (m_block) {
+            return ParseError{lastLine, "the file ends inside the block " + quoted(m_block->name) +
+                                            ": close it with !endblock"};
+        }
+        return std::nullopt;
+    }
+
 private:
     [[nodiscard]] ParseError error(std::string message, bool notImplemented = false) const {
         return ParseError{m_line, std::move(message), notImplemented};
@@ -147,8 +160,16 @@ private:
         if (!words.empty() && words.front() == "current" && !text.starts_with(' ')) {
             return readCurrent(text.substr(words.front().size()));
         }
+        if (!words.empty() && words.front() == "block" && !text.starts_with(' ')) {
+            return readBlock(text.substr(words.front().size()));
+        }
+        if (!words.empty() && words.front() == "endblock" && !text.starts_with(' ')) {
+            return readEndBlock(words);
+        }
         if (words.empty() || words.front() != "tolerance" || text.starts_with(' ')) {
-            return error("the directives of a question file are !tolerance and !current");
+            return error(
+                "the directives of a question file are !tolerance, !current, !block and "
+                "!endblock");
         }
         const std::vector<std::string_view> arguments(words.begin() + 1, words.end());
         std::variant<ToleranceDirective, std::string> tolerance = parseTolerance(arguments);
@@ -181,6 +202,55 @@ private:
         // document itself, since edit::Editor has no operation for them yet
         // (package 0.6-P6).
         m_document.setCurrent(std::get<core::EntityProperties>(current));
+        return std::nullopt;
+    }
+
+    /// "!block "NAME" base=x,y": opens a block definition; the entities
+    /// defined until !endblock go into it (docs/verifica/domande.md, "Blocchi
+    /// e geometria generata").
+    std::optional<ParseError> readBlock(std::string_view text) {
+        constexpr std::string_view kUsage = "expected !block \"NAME\" base=x,y";
+        if (m_block) {
+            return error("a !block inside the block " + quoted(m_block->name) +
+                         ": close it first with !endblock");
+        }
+        const std::optional<std::vector<std::string_view>> tokens = detail::splitTokens(text);
+        if (!tokens || tokens->size() != 2 || !(*tokens)[1].starts_with("base=")) {
+            return error(std::string{kUsage});
+        }
+        const std::optional<std::string> name = unquoteText((*tokens)[0]);
+        const std::optional<core::Vec2> base =
+            parsePoint((*tokens)[1].substr(std::string_view{"base="}.size()));
+        if (!name || !base) {
+            return error(std::string{kUsage});
+        }
+        if (!core::isValidTableName(*name)) {
+            return error("invalid block name " + quoted(*name) +
+                         ": a table name (docs/adr/0023, point 1)");
+        }
+        if (m_document.blocks().find(*name) != nullptr) {
+            return error("the block " + quoted(*name) + " is already defined");
+        }
+        m_block = core::BlockDefinition{*name};
+        m_block->base = *base;
+        return std::nullopt;
+    }
+
+    /// "!endblock": puts the open block in the document, through the editor.
+    std::optional<ParseError> readEndBlock(std::span<const std::string_view> words) {
+        if (words.size() != 1) {
+            return error("!endblock takes no argument");
+        }
+        if (!m_block) {
+            return error("!endblock without a !block");
+        }
+        core::BlockDefinition block = std::move(*m_block);
+        m_block.reset();
+        const std::string name = block.name;
+        m_editor.beginTransaction("Definition");
+        [[maybe_unused]] const bool put = m_editor.tables().replaceBlock(name, std::move(block));
+        m_editor.commit();
+        assert(put && "a new block always changes the table");
         return std::nullopt;
     }
 
@@ -248,12 +318,18 @@ private:
                          ": a letter or _, then letters, digits and _; not 'none'");
         }
         if (std::ranges::find(m_names, name) != m_names.end() || m_files.contains(name) ||
-            std::ranges::find(m_tableNames, name) != m_tableNames.end()) {
+            std::ranges::find(m_tableNames, name) != m_tableNames.end() ||
+            std::ranges::find(m_blockNames, name) != m_blockNames.end()) {
             return error("the name " + quoted(name) + " is already defined");
         }
         const std::string_view definition = detail::trim(text.substr(equals + 1));
         const std::vector<std::string_view> words = detail::splitWords(definition);
-        if (!words.empty() && (words.front() == "LAYER" || words.front() == "LTYPE")) {
+        const bool table = !words.empty() && (words.front() == "LAYER" || words.front() == "LTYPE");
+        const bool drawing = !words.empty() && (words.front() == "DXF" || words.front() == "CADX");
+        if (m_block && (table || drawing)) {
+            return error("only entities are defined inside the block " + quoted(m_block->name));
+        }
+        if (table) {
             std::optional<ParseError> failure =
                 words.front() == "LAYER" ? readLayer(definition) : readLinetype(definition);
             if (!failure) {
@@ -278,6 +354,25 @@ private:
             resolveProperties(entity.properties, m_document);
         if (auto* failure = std::get_if<EntityError>(&properties)) {
             return error(std::move(failure->message));
+        }
+        if (const auto* insert = std::get_if<core::Insert>(&entity.entity);
+            insert != nullptr && m_document.blocks().find(insert->block) == nullptr) {
+            return error("unknown block " + quoted(insert->block) +
+                         ": define it above with !block");
+        }
+        if (m_block) {
+            // An entity of a block has a handle of the drawing's space, in
+            // the order of the file, and no question asks about it by name.
+            const core::EntityId id{m_document.nextId()};
+            m_document.reserveHandle(id);
+            m_block->entities.push_back(
+                core::EntityRecord{id,
+                                   std::move(entity.entity),
+                                   {},
+                                   m_block->entities.size() + 1,
+                                   std::get<core::EntityProperties>(properties)});
+            m_blockNames.emplace_back(name);
+            return std::nullopt;
         }
         // The entities form a document numbered in the order they appear
         // (docs/adr/0011, point 3). Like every change of a document, they
@@ -378,12 +473,14 @@ private:
     core::Document m_document{core::Document::newDrawing()};
     edit::Editor m_editor;
     io::FileAccess* m_access;
-    detail::FileDrawings m_files;           ///< drawings read from files, by name
-    std::vector<std::string> m_names;       ///< m_names[n] names entity m_ids[n]
-    std::vector<core::EntityId> m_ids;      ///< the defined entities, in order
-    std::vector<std::string> m_tableNames;  ///< names of the LAYER and LTYPE definitions
-    bool m_layerZeroDefined{false};         ///< the layer 0 is defined again at most once
-    Tolerances m_tolerances;                ///< as changed by the lines read so far
+    detail::FileDrawings m_files;                  ///< drawings read from files, by name
+    std::vector<std::string> m_names;              ///< m_names[n] names entity m_ids[n]
+    std::vector<core::EntityId> m_ids;             ///< the defined entities, in order
+    std::vector<std::string> m_tableNames;         ///< names of the LAYER and LTYPE definitions
+    std::vector<std::string> m_blockNames;         ///< names of the entities of the blocks
+    std::optional<core::BlockDefinition> m_block;  ///< the block between !block and !endblock
+    bool m_layerZeroDefined{false};                ///< the layer 0 is defined again at most once
+    Tolerances m_tolerances;                       ///< as changed by the lines read so far
     std::vector<Answer> m_answers;
     int m_line{0};
     bool m_pending{false};
@@ -399,6 +496,9 @@ std::variant<std::vector<Answer>, ParseError> answerQuestions(std::string_view t
         if (std::optional<ParseError> failure = file.read(static_cast<int>(i) + 1, lines[i])) {
             return std::move(*failure);
         }
+    }
+    if (std::optional<ParseError> failure = file.finish(static_cast<int>(lines.size()))) {
+        return std::move(*failure);
     }
     return file.takeAnswers();
 }
@@ -420,6 +520,11 @@ std::variant<QuestionPrefix, ParseError> answerQuestionsUntilFrontier(std::strin
             }
             frontier = Frontier{line, std::move(failure->message)};
             break;
+        }
+    }
+    if (!frontier) {
+        if (std::optional<ParseError> failure = file.finish(static_cast<int>(lines.size()))) {
+            return std::move(*failure);
         }
     }
     return QuestionPrefix{file.takeAnswers(), std::move(frontier)};

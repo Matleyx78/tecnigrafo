@@ -127,6 +127,13 @@ Document Document::newDrawing() {
     zero.linetype = LinetypeId{start_handles::kContinuous};
     document.addLayer(std::move(zero));
 
+    TextStyle standard;
+    standard.id = start_handles::kStyleStandard;
+    standard.name = "Standard";
+    standard.font = "arial.ttf";
+    document.m_textStyles.put(std::move(standard), document);
+    document.m_textStyles.setCurrent("Standard");
+
     document.m_current.layer = LayerId{start_handles::kLayerZero};
     document.m_current.linetype = LinetypeId{start_handles::kByLayer};
     document.setNextId(start_handles::kFirstEntity);
@@ -352,7 +359,7 @@ void Document::setProperties(EntityId id, const EntityProperties& properties) {
 }
 
 void Document::replaceTextStyles(TextStyleTable table) {
-    m_textStyles = table;
+    m_textStyles = std::move(table);
 }
 
 void Document::replaceDimStyles(DimStyleTable table) {
@@ -360,6 +367,57 @@ void Document::replaceDimStyles(DimStyleTable table) {
 }
 
 void Document::replaceBlock(std::string name, std::optional<BlockDefinition> definition) {
+    if (!definition && isBlockUsed(*this, name)) {
+        // As AutoCAD's PURGE (docs/tappe/0.8/PT16-blocchi-core.md, point 1).
+        return;
+    }
+    const BlockDefinition* previousDefinition = m_blocks.find(name);
+    if (previousDefinition != nullptr) {
+        const auto release = [this](std::uint64_t handle) {
+            if (handle != 0) {
+                m_otherIds.erase(handle);
+            }
+        };
+        release(previousDefinition->recordId);
+        release(previousDefinition->blockId);
+        release(previousDefinition->endBlockId);
+        for (const EntityRecord& record : previousDefinition->entities) {
+            release(record.id.value);
+            if (const auto* insert = std::get_if<Insert>(&record.entity)) {
+                for (const Attribute& attribute : insert->attributes) {
+                    release(attribute.id.value);
+                }
+            }
+        }
+        for (const RawEntity& raw : previousDefinition->rawEntities) {
+            release(raw.id.value);
+        }
+    }
+    if (definition) {
+        definition->name = name;
+        assert(!m_blocks.wouldCycle(*definition) && "a block cannot contain itself");
+        // The handles of a block are in the space of the drawing's: add()
+        // never gives them (docs/tappe/0.8/PT16-blocchi-core.md). 0 is none.
+        const auto reserve = [this](std::uint64_t handle) {
+            if (handle != 0) {
+                reserveHandle(EntityId{handle});
+            }
+        };
+        reserve(definition->recordId);
+        reserve(definition->blockId);
+        reserve(definition->endBlockId);
+        for (const EntityRecord& record : definition->entities) {
+            reserve(record.id.value);
+            if (const auto* insert = std::get_if<Insert>(&record.entity)) {
+                for (const Attribute& attribute : insert->attributes) {
+                    reserve(attribute.id.value);
+                }
+            }
+        }
+        for (const RawEntity& raw : definition->rawEntities) {
+            reserve(raw.id.value);
+        }
+    }
     // The entities that depend on the definition before or after the change.
     std::unordered_set<std::uint64_t> dependent;
     const auto collect = [&] {
@@ -382,7 +440,6 @@ void Document::replaceBlock(std::string name, std::optional<BlockDefinition> def
         *found = std::move(*definition);
         found->name = std::move(written);
     } else {
-        definition->name = name;
         definitions.push_back(std::move(*definition));
     }
     collect();

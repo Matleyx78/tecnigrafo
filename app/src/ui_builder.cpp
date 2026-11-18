@@ -77,6 +77,9 @@ QString title(const QString& name) {
     if (name == QStringLiteral("aids")) {
         return QObject::tr("Drawing Aids");
     }
+    if (name == QStringLiteral("assistant")) {
+        return QObject::tr("Assistant");
+    }
     return name;
 }
 
@@ -86,7 +89,8 @@ QStringList groups() {
     return {QStringLiteral("home/draw"),       QStringLiteral("home/modify"),
             QStringLiteral("home/annotation"), QStringLiteral("home/layers"),
             QStringLiteral("home/properties"), QStringLiteral("home/utilities"),
-            QStringLiteral("view/navigate"),   QStringLiteral("view/aids")};
+            QStringLiteral("view/navigate"),   QStringLiteral("view/aids"),
+            QStringLiteral("view/assistant")};
 }
 
 /// The groups whose buttons are all large: icon of 32 px and text under it

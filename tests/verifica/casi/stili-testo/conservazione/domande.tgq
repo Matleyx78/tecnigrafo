@@ -1,0 +1,14 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; The STYLE table rewritten from the model is identical at group level ([0.8-RT11], work #683;
+; ADR 0018, point 6): the same stili.dxf as stili-testo/tabella-giro (handwritten, R2018),
+; with the shape file record raw between Altezza5 and Larghezza08 (mixed order kept),
+; the XDATA ACAD of Altezza5, the bigfont of Larghezza08, 71=6 of Capovolto and
+; $TEXTSTYLE = Larghezza08. No entities.
+D = DXF file=stili.dxf
+? version D -> AC1032
+? units D -> 4
+? count D -> none
+? unhandled D -> none
+? roundtrip D -> identical
+? roundtrip D as=cadx -> identical

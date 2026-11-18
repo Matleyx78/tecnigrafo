@@ -138,8 +138,36 @@ TEST(NewEntities, DefaultsFollowTheDxfDefaults) {
 
 TEST(NewEntities, AreNotSupportedYet) {
     for (const Entity& entity : newEntities()) {
+        if (std::holds_alternative<Solid>(entity)) {
+            continue;
+        }
+        if (std::holds_alternative<Ellipse>(entity)) {
+            continue;  // its package is merged (docs/tappe/0.8, PT48)
+        }
+        if (std::holds_alternative<Hatch>(entity)) {
+            continue;  // docs/tappe/0.8/PT30-retini-core.md
+        }
+        if (std::holds_alternative<MText>(entity)) {
+            continue;  // docs/tappe/0.8/PT13-mtext-core.md, point 1
+        }
+        if (std::holds_alternative<AttributeDefinition>(entity) ||
+            std::holds_alternative<Insert>(entity)) {
+            continue;  // docs/tappe/0.8/PT17-attributi-core.md
+        }
         EXPECT_FALSE(isSupported(entity)) << entity.index();
     }
+    EXPECT_TRUE(isSupported(Entity{sampleEllipse()}));
+}
+
+TEST(NewEntities, AttributesAreSupportedSinceTheirPackage) {
+    // docs/tappe/0.8/PT17-attributi-core.md, point 1: a valid text and tag.
+    EXPECT_TRUE(isSupported(Entity{sampleDefinition()}));
+    EXPECT_TRUE(isSupported(Entity{sampleInsert()}));
+}
+
+TEST(NewEntities, HatchIsSupportedSinceItsPackage) {
+    // docs/tappe/0.8/PT30-retini-core.md, point 1: every loop has an edge.
+    EXPECT_TRUE(isSupported(Entity{sampleHatch()}));
 }
 
 TEST(NewEntities, TheFiveTypesOfBeforeAreSupported) {

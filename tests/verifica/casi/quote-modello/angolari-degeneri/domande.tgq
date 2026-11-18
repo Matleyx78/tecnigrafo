@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT24 / PT24 (#709), ADR 0047 and PT23/PT24 as updated by PR #836.
+; Expectations come from independent arithmetic or stored AutoCAD blocks.
+; No Tecnigrafo executable was used to derive these values.
+
+; Valid dimensions are edited into invalid definitions; invalid definitions cannot
+; be introduced directly in a .tgq file. Rejections must leave the original intact.
+A = DIMENSION kind=angular style="ISO-25" line-point=0,1 first=0,0;10,0 second=0,1;0,10 arc-point=6,8 text-point=100,100 measurement=0 text=" " user-text-position=yes
+? grip A 0,10 10,1 -> invalid
+? grip A 10,0 0,10 -> invalid
+? grip A 6,8 0,0 -> invalid
+? grip A 123,456 0,0 -> none
+? grips A -> 0,0; 10,0; 0,1; 0,10; 6,8; 100,100
+; Parallel and coincident lines: corpus geom2d/intersezione-limite-stessa-retta-intera.
+; A near-parallel but ordinary slope 1/1000 remains valid.
+Near = DIMENSION kind=angular style="ISO-25" line-point=-100,-0.1 first=-100,0;100,0 second=-100,-0.1;100,0.1 arc-point=10,0.005 text-point=100,100 measurement=0 text=" " user-text-position=yes overrides=DIMASZ:0,DIMCEN:0
+? generated Near -> ARC center=0,0 radius=10.00000124999992 start-angle=0 end-angle=0.05729576041450061

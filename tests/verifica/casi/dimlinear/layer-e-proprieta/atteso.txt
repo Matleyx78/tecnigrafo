@@ -1,0 +1,37 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  258 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 layer="Quote" color=1 ~text="40"
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: Make
+  Enter name for new layer (becomes the current layer) <0>: Quote
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: COLOR
+  Enter default object color [Truecolor] <BYLAYER>: red
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 40,0
+  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,10
+  Dimension text = 40
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  COLOR
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Quote" color=7 linetype="Continuous" lineweight=default
+current: layer="Quote" color=1 linetype="ByLayer" ltscale=1 lineweight=bylayer
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
