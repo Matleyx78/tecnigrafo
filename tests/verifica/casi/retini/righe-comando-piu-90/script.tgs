@@ -5,6 +5,7 @@
 ; undo/redo, then Esc before the next transformation gets its base point.
 !view 0,0 0.01 800x600
 !snap off
+; cambia con #699
 OPEN
 input.dxf
 ; PT42 makes the stored pattern selectable.

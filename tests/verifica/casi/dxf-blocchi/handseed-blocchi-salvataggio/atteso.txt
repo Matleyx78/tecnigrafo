@@ -20,6 +20,9 @@ redo:
 snap: on
 ortho: off
 drawing: dati.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 blocks:
   "HIGH" base=5,2 explodable=no uniform=yes units=4
   "HIGH" 65534 LINE start=0,0 end=10,0
@@ -49,6 +52,9 @@ redo:
 snap: on
 ortho: off
 drawing: salvato.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
 blocks:
   "HIGH" base=5,2 explodable=no uniform=yes units=4
   "HIGH" 65534 LINE start=0,0 end=10,0
