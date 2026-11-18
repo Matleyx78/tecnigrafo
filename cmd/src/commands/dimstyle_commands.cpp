@@ -236,7 +236,11 @@ Status DimstyleCommand::handle(CommandContext& context, const Input& input) {
         }
         m_stage = Stage::SaveName;
     } else if (m_stage == Stage::RestoreName) {
-        if (entered == "?") {
+        if (entered.empty()) {
+            showCurrent(context);
+            context.editor.rollback();
+            return Status::Finished;
+        } else if (entered == "?") {
             listStyles(context);
         } else if (!edit::restoreDimStyle(context.editor, entered)) {
             context.message("Unknown dimension style.");

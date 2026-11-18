@@ -60,5 +60,30 @@ TEST(DimstyleCommandsTest, RejectsOutOfRangeVariable) {
     EXPECT_EQ(document.dimStyles().currentVariables().decimals, 3);
 }
 
+TEST(DimstyleCommandsTest, EmptyRestoreKeepsCurrentStyleWithoutUndoStep) {
+    core::Document document = core::Document::newDrawing();
+    const std::string current = document.dimStyles().current();
+    const core::DimVariables variables = document.dimStyles().currentVariables();
+    edit::Editor editor(document);
+    CommandRegistry registry;
+    registerBuiltinCommands(registry);
+    CommandRunner runner(registry, editor);
+    std::vector<std::string> messages;
+    runner.setMessageSink([&](std::string message) { messages.push_back(std::move(message)); });
+
+    for (const char* input : {"-DIMSTYLE", "R", ""}) {
+        runner.submitText(input);
+    }
+
+    EXPECT_FALSE(runner.isActive());
+    EXPECT_EQ(document.dimStyles().current(), current);
+    EXPECT_EQ(document.dimStyles().currentVariables(), variables);
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_NE(std::find(messages.begin(), messages.end(), "Current dimension style: ISO-25"),
+              messages.end());
+    EXPECT_EQ(std::find(messages.begin(), messages.end(), "Unknown dimension style."),
+              messages.end());
+}
+
 }  // namespace
 }  // namespace tg::cmd
