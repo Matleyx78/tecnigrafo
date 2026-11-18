@@ -1,4 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# 0.8-RT14: MTEXT read from and written to DXF (work #689)
-dxf/mtext-proprieta #689

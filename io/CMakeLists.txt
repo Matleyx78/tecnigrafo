@@ -8,6 +8,7 @@ add_library(tg_io
     src/dxf_entity_common.cpp
     src/dxf_lwpolyline.cpp
     src/dxf_text.cpp
+    src/dxf_mtext.cpp
     src/dxf_line.cpp
     src/dxf_solid.cpp
     src/dxf_circle_arc.cpp
@@ -22,6 +23,7 @@ add_library(tg_io
     src/dxf_write.cpp
     src/dxf_skeleton.cpp
     src/dxf_tables.cpp
+    src/dxf_dimstyle.cpp
     src/dxf_header.cpp
     src/dxf_groups.cpp
     src/encoding.cpp

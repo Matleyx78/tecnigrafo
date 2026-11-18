@@ -54,6 +54,7 @@ constexpr std::array<std::string_view, 7> kAfterLinetypes{"LAYER", "STYLE",    "
                                                           "APPID", "DIMSTYLE", "BLOCK_RECORD"};
 constexpr std::array<std::string_view, 6> kAfterLayers{"STYLE", "VIEW",     "UCS",
                                                        "APPID", "DIMSTYLE", "BLOCK_RECORD"};
+constexpr std::array<std::string_view, 1> kAfterDimStyles{"BLOCK_RECORD"};
 constexpr std::array<std::string_view, 5> kAfterStyles{"VIEW", "UCS", "APPID", "DIMSTYLE",
                                                        "BLOCK_RECORD"};
 
@@ -310,6 +311,15 @@ bool isSkeletonStyle(const core::RawGroups& item) {
            parseHandle(handle->value) == core::start_handles::kStyleStandard;
 }
 
+bool isSkeletonDimStyle(const core::RawGroups& item) {
+    if (item.empty() || !isMarker(item.front(), "DIMSTYLE")) {
+        return false;
+    }
+    const auto handle = std::ranges::find(item, 105, &core::RawGroup::code);
+    return handle != item.end() &&
+           parseHandle(handle->value) == core::start_handles::kDimstyleStandard;
+}
+
 /// The table that starts at `i` (a 0 TABLE group); `i` moves past it.
 TableParts readTable(const core::RawGroups& groups, std::size_t& i) {
     TableParts table;
@@ -344,16 +354,23 @@ void writeRecordTable(const TableParts& table, const core::Document& document,
                       core::RawGroups& out) {
     const bool layers = table.name == "LAYER";
     const bool styles = table.name == "STYLE";
+    const bool dimStyles = table.name == "DIMSTYLE";
     std::size_t records = document.linetypes().size();
     if (layers) {
         records = document.layers().size();
     } else if (styles) {
         records = document.textStyles().styles().size();
+    } else if (dimStyles) {
+        records = document.dimStyles().styles().size();
     }
-    const auto placeholders = static_cast<std::size_t>(
-        std::ranges::count_if(table.items, [styles](const core::RawGroups& item) {
-            return isPlaceholder(item) || (styles && isSkeletonStyle(item));
-        }));
+    // The Standard records of the skeleton of a new drawing stand for the
+    // records of the document with their handles.
+    const auto skeletonRecord = [&](const core::RawGroups& item) {
+        return (styles && isSkeletonStyle(item)) || (dimStyles && isSkeletonDimStyle(item));
+    };
+    const auto placeholders = static_cast<std::size_t>(std::ranges::count_if(
+        table.items,
+        [&](const core::RawGroups& item) { return isPlaceholder(item) || skeletonRecord(item); }));
     std::string owner{"0"};
     bool counted = false;
     for (const auto& group : table.header) {
@@ -379,6 +396,8 @@ void writeRecordTable(const TableParts& table, const core::Document& document,
             groups = layerRecord(document.layers()[next], document, owner);
         } else if (styles) {
             groups = styleRecord(document.textStyles().styles()[next], owner);
+        } else if (dimStyles) {
+            groups = dimStyleRecord(document.dimStyles().styles()[next], document, owner);
         } else {
             groups = linetypeRecord(document.linetypes()[next], owner);
         }
@@ -387,8 +406,10 @@ void writeRecordTable(const TableParts& table, const core::Document& document,
     };
     for (const auto& item : table.items) {
         const bool skeletonStyle =
-            styles && next < records && isSkeletonStyle(item) &&
-            document.textStyles().styles()[next].id == core::start_handles::kStyleStandard;
+            (styles && next < records && isSkeletonStyle(item) &&
+             document.textStyles().styles()[next].id == core::start_handles::kStyleStandard) ||
+            (dimStyles && next < records && isSkeletonDimStyle(item) &&
+             document.dimStyles().styles()[next].id == core::start_handles::kDimstyleStandard);
         if (!skeletonStyle && !isPlaceholder(item)) {
             out.insert(out.end(), item.begin(), item.end());
         } else if (next < records) {
@@ -552,12 +573,14 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
             m_layerTable = m_layerTable || table == "LAYER";
             m_linetypeTable = m_linetypeTable || table == "LTYPE";
             m_styleTable = m_styleTable || table == "STYLE";
+            m_dimStyleTable = m_dimStyleTable || table == "DIMSTYLE";
         } else if (isMarker(group, "ENDTAB")) {
             table.clear();
         }
         const bool linetype = table == "LTYPE" && isMarker(group, "LTYPE");
         const bool style = table == "STYLE" && isMarker(group, "STYLE");
-        if (!linetype && !style && !(table == "LAYER" && isMarker(group, "LAYER"))) {
+        const bool dimStyle = table == "DIMSTYLE" && isMarker(group, "DIMSTYLE");
+        if (!linetype && !style && !dimStyle && !(table == "LAYER" && isMarker(group, "LAYER"))) {
             out.push_back(group);
             ++i;
             continue;
@@ -575,6 +598,8 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
             readLinetype(record, line, warnings);
         } else if (style) {
             accepted = readTextStyle(record, line, warnings);
+        } else if (dimStyle) {
+            accepted = readDimStyle(record, line, warnings);
         } else {
             readLayer(record, line, warnings);
         }
@@ -584,7 +609,7 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
             continue;
         }
         // Kept raw: its handle stays reserved, as for any other object.
-        const auto handle = std::ranges::find(record, 5, &core::RawGroup::code);
+        const auto handle = std::ranges::find(record, dimStyle ? 105 : 5, &core::RawGroup::code);
         if (handle != record.end()) {
             if (const auto value = parseHandle(handle->value); value && *value != 0) {
                 m_document.reserveHandle(core::EntityId{*value});
@@ -650,12 +675,23 @@ bool TableReader::layerPending(std::string_view name) const {
 void TableReader::readHeader(core::RawGroups& header) {
     core::RawGroups out;
     std::string_view variable;
+    bool firstValue = false;
     for (const auto& group : header) {
         if (group.code == 9) {
             variable = trimDxf(group.value);
+            firstValue = true;
             out.push_back(group);
             continue;
         }
+        if (variable.starts_with("$DIM")) {
+            const bool keep = readDimHeader(variable, group, firstValue);
+            firstValue = false;
+            if (keep) {
+                out.push_back(group);
+            }
+            continue;
+        }
+        firstValue = false;
         const auto integer = parseInteger(group.value);
         const auto number = parseNumber(trimDxf(group.value));
         if (variable == "$CLAYER" && group.code == 8) {
@@ -834,6 +870,7 @@ void TableReader::finish(std::vector<std::string>& warnings,
     m_textStyles.setCurrent(requested != nullptr ? requested->name
                                                  : std::string{kStandardStyleName});
     m_document.replaceTextStyles(std::move(m_textStyles));
+    finishDimStyles(m_dimStyles.find(kStandardStyleName) == nullptr ? lowFreeHandle() : 0);
     if (!needsRecords()) {
         warn(m_roundedLineweights, "lineweight", " rounded.");
         return;
@@ -947,12 +984,14 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
     bool linetypes = false;
     bool layers = false;
     bool styles = false;
+    bool dimStyles = false;
     for (std::size_t i = 0; i + 1 < tables.size(); ++i) {
         if (isMarker(tables[i], "TABLE") && tables[i + 1].code == 2) {
             const auto name = trimDxf(tables[i + 1].value);
             linetypes = linetypes || name == "LTYPE";
             layers = layers || name == "LAYER";
             styles = styles || name == "STYLE";
+            dimStyles = dimStyles || name == "DIMSTYLE";
         }
     }
     const auto addMissing = [&](std::string_view before) {
@@ -977,6 +1016,13 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
                 writeNewTable("STYLE", document, nextHandle, out);
             }
         }
+        if (!dimStyles && (before.empty() ||
+                           std::ranges::find(kAfterDimStyles, before) != kAfterDimStyles.end())) {
+            dimStyles = true;
+            if (needsDimStyleTable(document)) {
+                writeNewTable("DIMSTYLE", document, nextHandle, out);
+            }
+        }
     };
     std::size_t i = 0;
     while (i < tables.size()) {
@@ -985,13 +1031,16 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
             continue;
         }
         const auto table = readTable(tables, i);
-        if (table.name == "LTYPE" || table.name == "LAYER" || table.name == "STYLE") {
+        if (table.name == "LTYPE" || table.name == "LAYER" || table.name == "STYLE" ||
+            table.name == "DIMSTYLE") {
             if (table.name == "LTYPE") {
                 linetypes = true;
             } else if (table.name == "LAYER") {
                 layers = true;
-            } else {
+            } else if (table.name == "STYLE") {
                 styles = true;
+            } else {
+                dimStyles = true;
             }
             writeRecordTable(table, document, out);
             continue;
@@ -1010,6 +1059,7 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
     bool linetypes = false;
     bool layers = false;
     bool styles = false;
+    bool dimStyles = false;
     for (const auto& section : raw.sections) {
         if (section.name != "TABLES") {
             continue;
@@ -1021,17 +1071,20 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
                 linetypes = linetypes || name == "LTYPE";
                 layers = layers || name == "LAYER";
                 styles = styles || name == "STYLE";
+                dimStyles = dimStyles || name == "DIMSTYLE";
             }
         }
     }
     return (!linetypes && needsLinetypeTable(document) ? 1U : 0U) +
            (!layers && needsLayerTable(document) ? 1U : 0U) +
-           (!styles && needsStyleTable(document) ? 1U : 0U);
+           (!styles && needsStyleTable(document) ? 1U : 0U) +
+           (!dimStyles && needsDimStyleTable(document) ? 1U : 0U);
 }
 
 core::RawGroups newTables(const core::Document& document, std::uint64_t& nextHandle) {
     core::RawGroups out;
-    if (needsLinetypeTable(document) || needsLayerTable(document) || needsStyleTable(document)) {
+    if (needsLinetypeTable(document) || needsLayerTable(document) || needsStyleTable(document) ||
+        needsDimStyleTable(document)) {
         writeTables({}, document, nextHandle, out);
     }
     return out;

@@ -7,6 +7,7 @@
 #include "text.hpp"
 #include "tg/core/block_table.hpp"
 #include "tg/core/color.hpp"
+#include "tg/core/dim_style_table.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/layer.hpp"
@@ -265,6 +266,59 @@ std::string currentText(const core::Document& document) {
            " lineweight=" + core::formatLineweight(current.lineweight);
 }
 
+/// The essential dimension variables of `variables` that differ from
+/// `reference`, `NAME:value`, separated by a space, in alphabetical order
+/// (docs/verifica/rapporto.md, "Stili e blocchi").
+std::string dimVariableDifferences(const core::DimVariables& variables,
+                                   const core::DimVariables& reference) {
+    std::string text;
+    for (const auto& info : core::dimVariableInfos()) {
+        const core::DimValue value = core::dimValue(variables, info.name);
+        if (value == core::dimValue(reference, info.name)) {
+            continue;
+        }
+        if (!text.empty()) {
+            text += ' ';
+        }
+        text += std::string{info.name} + ":";
+        if (const auto* number = std::get_if<double>(&value)) {
+            text += formatNumber(*number);
+        } else {
+            text += std::get<std::string>(value);
+        }
+    }
+    return text;
+}
+
+/// `dimension styles:`, `dimension style:` and `dimension overrides:`, when
+/// they differ from a new session (package 0.8-PT22, point 6).
+void writeDimensionStyles(const core::Document& document, std::string& out) {
+    const core::DimStyleTable& table = document.dimStyles();
+    static const core::Document kFreshDocument = core::Document::newDrawing();
+    const core::DimStyleTable& fresh = kFreshDocument.dimStyles();
+    const auto sameStyles = std::ranges::equal(
+        table.styles(), fresh.styles(), [](const core::DimStyle& a, const core::DimStyle& b) {
+            return a.name == b.name && a.vars == b.vars;
+        });
+    const core::DimVariables iso25;
+    if (!table.styles().empty() && !sameStyles) {
+        appendLine("dimension styles:", out);
+        for (const core::DimStyle& style : table.styles()) {
+            const std::string differences = dimVariableDifferences(style.vars, iso25);
+            appendItem(quoteText(style.name) + (differences.empty() ? "" : " " + differences), out);
+        }
+    }
+    if (!table.current().empty() && !core::sameTableName(table.current(), "ISO-25")) {
+        appendField("dimension style", quoteText(table.current()), out);
+    }
+    const core::DimStyle* current = table.find(table.current());
+    const std::string overrides = dimVariableDifferences(
+        table.currentVariables(), current != nullptr ? current->vars : iso25);
+    if (!overrides.empty()) {
+        appendField("dimension overrides", overrides, out);
+    }
+}
+
 /// The block definitions, only when there are some (docs/verifica/rapporto.md,
 /// "Stili e blocchi"): for each one its line, then one line for each of its
 /// entities, in the order of the definition, with the ATTRIB of an INSERT.
@@ -361,6 +415,7 @@ void writeTables(const core::Document& document, std::string& out) {
         !core::sameTableName(document.textStyles().current(), "Standard")) {
         appendField("text style", quoteText(document.textStyles().current()), out);
     }
+    writeDimensionStyles(document, out);
     writeBlocks(document, out);
 }
 

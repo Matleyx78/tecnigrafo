@@ -80,6 +80,9 @@ std::uint64_t readNextId(const core::Document& document) {
     for (const auto& style : document.textStyles().styles()) {
         next = std::max(next, style.id + 1);
     }
+    for (const auto& style : document.dimStyles().styles()) {
+        next = std::max(next, style.id + 1);
+    }
     // The block definitions, the ATTRIB and the SEQEND of the inserts
     // (docs/tappe/0.8/PT18-blocchi-dxf.md, point 6).
     next = std::max(next, blockHandlesEnd(document));

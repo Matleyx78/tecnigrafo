@@ -21,6 +21,14 @@
 namespace tg::core::bridge {
 namespace g = solid_space::geom2d;
 
+/// The closed polyline of solid-space for a polyline of Tecnigrafo taken as
+/// closed, whatever its flag says: the same vertices, with the bulge of
+/// vertex i set to 0 when Polyline::segment(i).isArc() is false
+/// (docs/adr/0036, point 7), and `closed` set. The segments are those of the
+/// polyline closed, so the last one runs back to the first vertex; a single
+/// vertex has no segment and gets bulge 0.
+[[nodiscard]] g::Polyline closedPolylineOf(const Polyline& polyline);
+
 /// The curve of a Line, Arc or Circle (docs/adr/0035, point 1). An Arc gets
 /// sweep = endAngle - startAngle, plus g::kFullTurn when not positive,
 /// computed in double in this order. std::nullopt for a Polyline or a Text.

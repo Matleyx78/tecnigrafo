@@ -97,19 +97,70 @@ struct Hatch {
 /// loop open.
 [[nodiscard]] bool isClosed(const HatchLoop& loop, const ToleranceRule& rule);
 
+/// The loops of `hatch` that its island style keeps (docs/adr/0048, point 3),
+/// by increasing index in Hatch::loops. Normal: all. Outer: those flagged
+/// external (group 92, bit 1) or outermost (bit 16). Ignore: those flagged
+/// external. When no loop is flagged external (a file written by another
+/// program), all of them, whatever the style.
+[[nodiscard]] std::vector<std::size_t> regionLoops(const Hatch& hatch);
+
+/// HPMAXLINES of AutoCAD at its initial value: a pattern that needs more
+/// lines, or more dashes, is not drawn.
+inline constexpr std::size_t kMaxHatchLines = 1'000'000;
+
+enum class PatternOutcome : std::uint8_t {
+    Done,      ///< `lines` holds the pattern (possibly none)
+    TooDense,  ///< more than kMaxHatchLines lines or dashes: `lines` is empty
+};
+
+struct PatternLines {
+    PatternOutcome outcome{PatternOutcome::Done};
+    std::vector<Line> lines;  ///< drawing coordinates, in the order of point 4
+    /// False when solid-space left out a loop or a line (beyond its domain,
+    /// docs/adr/0035, point 23): what it left out is not drawn.
+    bool complete{true};
+};
+
+/// The lines of the pattern of `hatch` cut on its region (docs/adr/0048,
+/// points 2 and 3). Precondition: supported(hatch) and !hatch.solid.
+///
+/// docs/tappe/0.8/PT42-righe-dei-motivi.md, point 3, gives the steps: the
+/// loops of regionLoops() (a single whole-turn arc as a circle, every other
+/// loop as its closed polyline), the lines of each family that cross the
+/// bounding box of those loops, taken whole, cut by solid-space's
+/// clipToRegion with the stretches inside and then those on the boundary of
+/// each line, and the dashes of line k measured from p_k = origin + k *
+/// offset, the point of the line that the origin of its family gives.
+/// A family whose step is 0 or not finite gives no line; one whose range of
+/// lines is not a number (an origin that is not finite) gives none either,
+/// and makes the result incomplete, as a line left out by solid-space does.
+/// A pattern whose dashes add up to 0, or to a value that is not finite, is
+/// drawn continuous.
+///
+/// Band (solid-space ADR 0013, point 4): the ends of a stretch are rounded
+/// within the errors of clipping.hpp, while the dashes are placed by
+/// comparing them with the positions of the pattern. A dash or a dot that
+/// starts or ends within those errors of an end of a stretch, and a stretch
+/// shorter than them, may give one Line more or less, or a dash shorter by
+/// as much, than the exact ends would; the same holds for the count against
+/// kMaxHatchLines.
+[[nodiscard]] PatternLines patternLines(const Hatch& hatch);
+
 /// Every shape of the entity, in drawing coordinates, with its effective
 /// properties, except those on frozen layers. A shape that is not drawn (on a
 /// layer that is off, an invisible attribute) has properties.visible false:
 /// generate() keeps only the drawn shapes, extent() measures them all
 /// (docs/adr/0044, point 2).
 ///
-/// A solid fill with the normal island style gives one FilledRegion with a
-/// closed polyline per loop, in order; the other styles and the patterns give
-/// nothing yet (docs/adr/0048, point 3). An edge loop becomes the polyline of
-/// docs/tappe/0.8/PT30-retini-core.md, point 3: one vertex per edge, at the
-/// point where the edge starts, each edge run in the direction its ends give;
-/// a single whole-turn arc becomes two half turns from the point of its
-/// start angle.
+/// A solid fill gives one FilledRegion with a closed polyline per loop of
+/// regionLoops(), in order, for every island style (docs/adr/0048, point 3).
+/// An edge loop becomes the polyline of docs/tappe/0.8/PT30-retini-core.md,
+/// point 3: one vertex per edge, at the point where the edge starts, each
+/// edge run in the direction its ends give; a single whole-turn arc becomes
+/// two half turns from the point of its start angle. A pattern gives the
+/// Lines of patternLines(), nothing when it is TooDense, with the effective
+/// properties of the hatch but the linetype Continuous: the dashes come from
+/// the pattern, as in AutoCAD with HPLINETYPE 0.
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record, const Hatch& hatch);
 

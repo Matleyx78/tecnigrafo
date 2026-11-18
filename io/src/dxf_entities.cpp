@@ -27,6 +27,9 @@ const EntityCodec* findCodec(std::string_view type) {
     if (type == "TEXT") {
         return &kTextCodec;
     }
+    if (type == "MTEXT") {
+        return &kMTextCodec;
+    }
     if (type == "LINE") {
         return &kLineCodec;
     }
@@ -60,6 +63,9 @@ const EntityCodec* findCodec(const core::Entity& entity) {
     }
     if (std::holds_alternative<core::Text>(entity)) {
         return &kTextCodec;
+    }
+    if (std::holds_alternative<core::MText>(entity)) {
+        return &kMTextCodec;
     }
     if (std::holds_alternative<core::Line>(entity)) {
         return &kLineCodec;
