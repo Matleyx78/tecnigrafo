@@ -18,6 +18,7 @@
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/file_commands.hpp"
 #include "tg/cmd/commands/fillet_command.hpp"
+#include "tg/cmd/commands/hatch_command.hpp"
 #include "tg/cmd/commands/join_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
@@ -76,6 +77,9 @@ void registerBuiltinCommands(CommandRegistry& registry) {
         return std::make_unique<TrimExtendCommand>(TrimExtendCommand::Action::Extend);
     });
     registry.add(FilletCommand::description(), [] { return std::make_unique<FilletCommand>(); });
+    registry.add(HatchCommand::description(), [] { return std::make_unique<HatchCommand>(); });
+    registry.add(HpislanddetectionCommand::description(),
+                 [] { return std::make_unique<HpislanddetectionCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(JoinCommand::description(), [] { return std::make_unique<JoinCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });

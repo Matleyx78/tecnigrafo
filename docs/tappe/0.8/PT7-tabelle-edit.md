@@ -76,7 +76,10 @@ Con i tipi di oggi non c'è mai un rifiuto: i casi di verifica non cambiano.
 ## Regole della tappa che valgono qui
 
 - `editor.*` e `document_tables.*` dopo questo pacchetto si toccano solo per le
-  operazioni di una tabella, nei file nuovi dei pacchetti PT12, PT20 e PT28.
+  operazioni di una tabella, nei file nuovi dei pacchetti PT12, PT20 e PT28;
+  unica eccezione, `Editor::addRecord` e `Editor::addRaw` di
+  [PT29](PT29-explode-blocchi-quote.md) ([DECISIONI.md](../../DECISIONI.md),
+  2026-11-18, «Entità esplose con i loro extras»).
 
 ## Test richiesti
 
