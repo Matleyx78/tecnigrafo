@@ -154,6 +154,9 @@ TEST(NewEntities, AreNotSupportedYet) {
             std::holds_alternative<Insert>(entity)) {
             continue;  // docs/tappe/0.8/PT17-attributi-core.md
         }
+        if (std::holds_alternative<Dimension>(entity)) {
+            continue;  // docs/tappe/0.8/PT23-quote-lineari.md, point 1
+        }
         EXPECT_FALSE(isSupported(entity)) << entity.index();
     }
     EXPECT_TRUE(isSupported(Entity{sampleEllipse()}));
