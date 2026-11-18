@@ -64,6 +64,21 @@ public:
     /// Precondition: a transaction is open.
     std::optional<core::EntityId> addCopy(core::EntityId source, core::Entity entity);
 
+    /// Adds an entity with new identity and order, keeping the properties and
+    /// extras of `record` (its id and order are ignored). The extras are kept
+    /// as they are: EXPLODE leaves out the 102 groups itself
+    /// (docs/tappe/0.8/PT29-explode-blocchi-quote.md, point 3).
+    /// Precondition: a transaction is open; isSupported(record.entity).
+    core::EntityId addRecord(core::EntityRecord record);
+
+    /// Adds an unhandled entity with new identity and order; the handle in
+    /// its group 5 becomes the new one (its id and order are ignored). The
+    /// group 5 is the first one before the first group 100; without one, a
+    /// group 5 with the new handle goes before every group, which otherwise
+    /// stay as they are, in their order.
+    /// Precondition: a transaction is open.
+    core::EntityId addRaw(core::RawEntity raw);
+
     /// A position in the open transaction (docs/adr/0031, point 11).
     struct Savepoint {
         std::size_t changes{0};
@@ -195,7 +210,8 @@ private:
             Current,
             Ltscale,
             StyleTable,
-            Block
+            Block,
+            RawAdded
         };
 
         Kind kind{Kind::Added};
@@ -205,7 +221,7 @@ private:
         int units{core::Document::kDefaultUnits};
         std::variant<std::monostate, LayerTableChange, LinetypeTableChange, LayerUpdate,
                      core::EntityRecord, core::CurrentProperties, core::Entity, double,
-                     StyleTableChange, BlockTableChange>
+                     StyleTableChange, BlockTableChange, core::RawEntity>
             data;
     };
 

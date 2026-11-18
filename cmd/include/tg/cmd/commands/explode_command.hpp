@@ -8,11 +8,16 @@
 
 namespace tg::cmd {
 
-/// EXPLODE: turns every selected polyline into lines and arcs, in one undo
-/// step, "Explode" (docs/adr/0031, point 8). The new entities are derived
-/// from the polyline (docs/adr/0031, point 6) and the polyline is removed.
-/// Other entities, and polylines with elevation or thickness, are counted
-/// and reported, not exploded.
+/// EXPLODE: turns every selected polyline into lines and arcs, every block
+/// reference into the entities of its block (core::explodeInsert()) and
+/// every dimension into its graphics (core::explodeDimension()), in one undo
+/// step, "Explode" (docs/adr/0031, point 8; docs/adr/0045, point 4;
+/// docs/adr/0047, point 4). The new entities get new handles and come last
+/// (docs/adr/0031, point 6), in the order of the block or of the graphics,
+/// and the exploded entity is removed. A refusal of an insert or of a
+/// dimension is written in the history, and that entity stays. Other
+/// entities, and polylines with elevation or thickness, are counted and
+/// reported, not exploded.
 class ExplodeCommand final : public Command {
 public:
     void start(CommandContext& context) override;

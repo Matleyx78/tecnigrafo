@@ -10,7 +10,12 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstdint>
 #include <exception>
+#include <optional>
+#include <string_view>
+#include <unordered_set>
 #include <utility>
 
 namespace tg::io {
@@ -105,8 +110,74 @@ std::uint64_t readNextId(const core::Document& document) {
     return next;
 }
 
+/// The handles of the BLOCK_RECORD of the paper space layouts
+/// (*Paper_Space, *Paper_Space0, …), which stay in the raw TABLES section.
+std::unordered_set<std::uint64_t> paperSpaceHandles(const core::RawDrawing& raw) {
+    std::unordered_set<std::uint64_t> handles;
+    const auto paper = [](std::string_view name) {
+        constexpr std::string_view kPrefix = "*paper_space";
+        return name.size() >= kPrefix.size() &&
+               std::ranges::equal(name.substr(0, kPrefix.size()), kPrefix, [](char a, char b) {
+                   return std::tolower(static_cast<unsigned char>(a)) == b;
+               });
+    };
+    for (const auto& section : raw.sections) {
+        if (section.name != "TABLES") {
+            continue;
+        }
+        bool blockRecord = false;
+        bool layout = false;
+        std::uint64_t id = 0;
+        const auto close = [&] {
+            if (blockRecord && layout && id != 0) {
+                handles.insert(id);
+            }
+        };
+        for (const auto& group : section.groups) {
+            if (group.code == 0) {
+                close();
+                blockRecord = trimDxf(group.value) == "BLOCK_RECORD";
+                layout = false;
+                id = 0;
+            } else if (group.code == 5) {
+                id = parseHandle(group.value).value_or(0);
+            } else if (group.code == 2) {
+                layout = paper(trimDxf(group.value));
+            }
+        }
+        close();
+    }
+    return handles;
+}
+
+/// The groups of an unhandled entity of the drawing as written: its owner
+/// (the first own 330) becomes the model space, as setOwner() does for the
+/// entities of the blocks, because an entity copied from a block by EXPLODE
+/// still names the BLOCK_RECORD of the definition
+/// (docs/tappe/0.8/PT29-explode-blocchi-quote.md, point 4). Without a 330
+/// nothing is added. An entity of a paper space layout keeps its owner: the
+/// data the model does not handle are kept (docs/adr/0006).
+core::RawGroups rawEntityGroups(const core::RawEntity& entity, core::EntityId modelSpace,
+                                const std::unordered_set<std::uint64_t>& paperSpace) {
+    core::RawGroups groups = entity.groups;
+    if (modelSpace.value == 0) {
+        return groups;
+    }
+    const auto at = dxf_groups::firstOwn(groups, dxf_groups::ownGroups(groups), 330);
+    if (!at) {
+        return groups;
+    }
+    const std::optional<std::uint64_t> owner = parseHandle(groups[*at].value);
+    if (owner != modelSpace.value && !(owner && paperSpace.contains(*owner))) {
+        groups[*at].value = handleText(modelSpace.value);
+    }
+    return groups;
+}
+
 std::optional<Error> appendEntities(const core::Document& document, EntityWriteContext& context,
-                                    const BlockWritePlan& plan, core::RawGroups& out) {
+                                    const BlockWritePlan& plan,
+                                    const std::unordered_set<std::uint64_t>& paperSpace,
+                                    core::RawGroups& out) {
     const auto managed = document.entities();
     const auto raw = document.rawEntities();
     std::size_t m = 0;
@@ -114,7 +185,8 @@ std::optional<Error> appendEntities(const core::Document& document, EntityWriteC
     while (m < managed.size() || r < raw.size()) {
         if (r < raw.size() && (m == managed.size() || raw[r].order < managed[m].order)) {
             out.push_back({0, raw[r].type});
-            out.insert(out.end(), raw[r].groups.begin(), raw[r].groups.end());
+            const core::RawGroups groups = rawEntityGroups(raw[r], context.modelSpace, paperSpace);
+            out.insert(out.end(), groups.begin(), groups.end());
             ++r;
         } else {
             const auto* codec = findCodec(managed[m].entity);
@@ -174,6 +246,7 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
                                          conversion || nextId > readNextId(document),
                                          conversion || document.units() != 0};
     EntityWriteContext context{target, codePage, modelSpaceHandle(*raw)};
+    const std::unordered_set<std::uint64_t> paperSpace = paperSpaceHandles(*raw);
     core::RawGroups out;
     bool hasHeader = false;
     bool hasEntities = false;
@@ -228,7 +301,7 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
         out.push_back({0, "SECTION"});
         out.push_back({2, section.name});
         if (section.name == "ENTITIES") {
-            if (auto error = appendEntities(document, context, plan, out)) {
+            if (auto error = appendEntities(document, context, plan, paperSpace, out)) {
                 return *error;
             }
         } else if (section.name == "HEADER") {
@@ -258,7 +331,7 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
     if (!hasEntities && (!document.entities().empty() || !document.rawEntities().empty())) {
         out.push_back({0, "SECTION"});
         out.push_back({2, "ENTITIES"});
-        if (auto error = appendEntities(document, context, plan, out)) {
+        if (auto error = appendEntities(document, context, plan, paperSpace, out)) {
             return *error;
         }
         out.push_back({0, "ENDSEC"});

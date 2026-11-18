@@ -194,6 +194,33 @@ TEST(Document, AddGivesIncreasingOrderKeys) {
     EXPECT_TRUE(document.find(first)->extras.empty());
 }
 
+TEST(Document, AddRawTakesTheNextIdentifierAndComesLastAndRemoveRawGivesItBack) {
+    Document document;
+    document.insertRaw(RawEntity{EntityId{0x10}, 5, "WIPEOUT", {{5, "10"}}});
+    const EntityId line = document.add(Line{{0, 0}, {1, 0}});
+    const RawEntity raw{EntityId{0x99}, 1, "ACAD_PROXY_ENTITY", {{5, "?"}, {8, "0"}}};
+    const EntityId id = document.addRaw(raw);
+    EXPECT_EQ(id.value, line.value + 1);
+    ASSERT_EQ(document.rawEntities().size(), 2U);
+    const RawEntity added = document.rawEntities()[1];
+    EXPECT_EQ(added.id, id);
+    EXPECT_GT(added.order, document.find(line)->order);
+    EXPECT_EQ(added.groups, raw.groups);
+
+    const std::optional<RawEntity> removed = document.removeRaw(id);
+    if (!removed) {
+        ADD_FAILURE() << "the unhandled entity must be removed";
+        return;
+    }
+    EXPECT_EQ(*removed, added);
+    EXPECT_EQ(document.rawEntities().size(), 1U);
+    EXPECT_FALSE(document.removeRaw(id).has_value());
+    // The identifier is not given again, and the entity can come back.
+    EXPECT_GT(document.add(Line{{0, 1}, {1, 1}}).value, id.value);
+    document.insertRaw(*removed);
+    EXPECT_EQ(document.rawEntities()[1], added);
+}
+
 TEST(Document, InsertWithSparseHandlesThenAddTakesAHigherOne) {
     Document document;
     document.insert(EntityRecord{EntityId{0x2F}, segment({0.0, 0.0}, {1.0, 0.0}), {}, 1});

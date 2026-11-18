@@ -4,10 +4,19 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/arc.hpp"
+#include "tg/core/block_table.hpp"
 #include "tg/core/circle.hpp"
+#include "tg/core/dimension.hpp"
+#include "tg/core/insert.hpp"
+#include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/raw_drawing.hpp"
+#include "tg/core/solid.hpp"
+#include "tg/io/dxf_groups.hpp"
+#include "tg/io/io.hpp"
 
 #include <gtest/gtest.h>
 
@@ -15,7 +24,9 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -240,6 +251,174 @@ TEST_F(ExplodeCommandTest, NewEntitiesTakePropertiesAndUnhandledDataExceptReacto
     runner().submitText("U");
     ASSERT_EQ(document().entityCount(), 1U);
     EXPECT_EQ(*document().find(source.id), source);
+}
+
+/// A block definition named `name` with the entities `entities`, on layer 0
+/// with linetype ByLayer, and order keys 1, 2, ….
+core::BlockDefinition blockOf(const core::Document& document, std::string name,
+                              std::vector<Entity> entities) {
+    core::BlockDefinition definition{std::move(name)};
+    std::uint64_t order = 1;
+    for (Entity& entity : entities) {
+        core::EntityRecord record{EntityId{}, std::move(entity)};
+        record.properties.layer = document.layerZero();
+        record.properties.linetype = document.byLayerLinetype();
+        record.order = order++;
+        definition.entities.push_back(std::move(record));
+    }
+    return definition;
+}
+
+core::Insert insertOf(std::string name, const core::Vec2& insertion, double scaleX = 1.0,
+                      double scaleY = 1.0) {
+    core::Insert insert;
+    insert.block = std::move(name);
+    insert.insertion = insertion;
+    insert.scaleX = scaleX;
+    insert.scaleY = scaleY;
+    return insert;
+}
+
+/// The linear dimension of the case explode/quota-lineare, from (0,0) to
+/// (40,0) with the dimension line through (20,10), its graphics regenerated.
+core::Dimension linearDimension(const core::Document& document) {
+    core::Dimension dimension;
+    dimension.definition.kind = core::DimensionKind::Linear;
+    dimension.definition.point13 = {0, 0};
+    dimension.definition.point14 = {40, 0};
+    dimension.definition.linePoint = {20, 10};
+    const std::optional<core::Dimension> made = core::regenerated(document, dimension);
+    EXPECT_TRUE(made.has_value());
+    return made.value_or(core::Dimension{});
+}
+
+class ExplodeDrawingTest : public ExplodeCommandTest {
+protected:
+    ExplodeDrawingTest() { document() = core::Document::newDrawing(); }
+};
+
+TEST_F(ExplodeDrawingTest, MixedSelectionOfAPolylineAnInsertAndADimensionIsOneUndoStep) {
+    document().replaceBlock("Piece", blockOf(document(), "Piece", {Line{{0, 0}, {10, 0}}}));
+    const EntityId polyline = seed(Polyline{{{{0, 50}, 0.0}, {{10, 50}, 0.0}, {{10, 60}, 0.0}}});
+    const EntityId insert = seed(insertOf("Piece", {20, 10}, 2.0, 2.0));
+    core::Dimension dimension = linearDimension(document());
+    const std::size_t graphics = dimension.graphics.size();
+    ASSERT_EQ(graphics, 6U);
+    // The dimension on its own layer, its graphics on layer 0 with ByBlock.
+    core::Layer dims = *document().layer(document().layerZero());
+    dims.id = core::LayerId{};
+    dims.name = "Dims";
+    const core::LayerId layer = document().addLayer(dims);
+    const EntityId dim = seed(dimension);
+    core::EntityProperties dimensionProperties = document().find(dim)->properties;
+    dimensionProperties.layer = layer;
+    document().setProperties(dim, dimensionProperties);
+    const std::vector<core::EntityRecord> before(document().entities().begin(),
+                                                 document().entities().end());
+
+    explode({polyline, insert, dim});
+    EXPECT_TRUE(messages().empty());
+    EXPECT_EQ(document().find(polyline), nullptr);
+    EXPECT_EQ(document().find(insert), nullptr);
+    EXPECT_EQ(document().find(dim), nullptr);
+    // Two lines of the polyline, the line of the block, the graphics.
+    ASSERT_EQ(document().entityCount(), 2U + 1U + graphics);
+    const auto& line = std::get<Line>(entityAt(2));
+    EXPECT_NEAR(line.start.x, 20.0, kTolerance);
+    EXPECT_NEAR(line.end.x, 40.0, kTolerance);
+    EXPECT_EQ(document().entities()[2].properties.layer, document().layerZero());
+    for (std::size_t index = 0; index < graphics; ++index) {
+        const core::EntityRecord& record = document().entities()[3 + index];
+        EXPECT_EQ(record.entity, dimension.graphics[index].entity);
+        // Layer 0 becomes the layer of the dimension, as AutoCAD.
+        EXPECT_EQ(record.properties.layer, layer);
+    }
+    EXPECT_TRUE(std::holds_alternative<core::MText>(entityAt(3 + graphics - 1)));
+    EXPECT_EQ(editor().undoName(), "Explode");
+    EXPECT_EQ(editor().undoNames().size(), 1U);
+
+    runner().submitText("U");
+    ASSERT_EQ(document().entityCount(), before.size());
+    for (std::size_t index = 0; index < before.size(); ++index) {
+        EXPECT_EQ(document().entities()[index], before[index]);
+    }
+}
+
+TEST_F(ExplodeDrawingTest, ARefusalIsWrittenAndTheEntityStays) {
+    core::BlockDefinition fixed = blockOf(document(), "Fixed", {Line{{0, 0}, {10, 0}}});
+    fixed.explodable = false;
+    document().replaceBlock("Fixed", fixed);
+    document().replaceBlock("Note", blockOf(document(), "Note", {core::MText{}}));
+    const EntityId first = seed(insertOf("Fixed", {0, 0}));
+    const EntityId second = seed(insertOf("Note", {0, 0}, 2.0, 1.0));
+    core::Dimension dimension = linearDimension(document());
+    dimension.rawGraphics.push_back(
+        core::RawEntity{EntityId{}, 9, "POINT", {{100, "AcDbEntity"}, {10, "0.0"}, {20, "0.0"}}});
+    const EntityId third = seed(dimension);
+    const EntityId polyline = seed(Polyline{{{{0, 50}, 0.0}, {{10, 50}, 0.0}}});
+    explode({first, second, third, polyline});
+    EXPECT_EQ(count("Block \"Fixed\" cannot be exploded."), 1U);
+    EXPECT_EQ(count("Block \"Note\" contains objects Tecnigrafo cannot explode."), 1U);
+    EXPECT_EQ(count("Dimension contains objects Tecnigrafo cannot explode."), 1U);
+    EXPECT_NE(document().find(first), nullptr);
+    EXPECT_NE(document().find(second), nullptr);
+    EXPECT_NE(document().find(third), nullptr);
+    EXPECT_EQ(document().find(polyline), nullptr);
+    EXPECT_EQ(document().entityCount(), 4U);
+}
+
+TEST_F(ExplodeDrawingTest, ExplodedEntitiesKeepTheirXdataAndUnhandledEntitiesComeAlong) {
+    // The gap decided on 2026-11-18 (choice A of #719): a block B with a LINE
+    // with XDATA and an unhandled entity without coordinates.
+    core::BlockDefinition definition = blockOf(document(), "B", {Line{{0, 0}, {10, 0}}});
+    definition.recordId = 0x2F0;
+    definition.entities[0].id = EntityId{0x2F1};
+    definition.entities[0].extras.beforeEntity = {{330, "2F0"}};
+    definition.entities[0].extras.extended = {{1001, "APP"}, {1000, "kept"}};
+    definition.rawEntities.push_back(
+        core::RawEntity{EntityId{0x2F2},
+                        2,
+                        "ACAD_PROXY_ENTITY",
+                        {{5, "2F2"}, {330, "2F0"}, {100, "AcDbEntity"}, {8, "0"}, {90, "498"}}});
+    document().replaceBlock("B", definition);
+    const EntityId insert = seed(insertOf("B", {5, 5}));
+    const core::Document before = document();
+
+    explode({insert});
+    EXPECT_TRUE(messages().empty());
+    EXPECT_EQ(document().find(insert), nullptr);
+    ASSERT_EQ(document().entityCount(), 1U);
+    const core::EntityRecord& line = document().entities()[0];
+    EXPECT_EQ(line.extras.extended, definition.entities[0].extras.extended);
+    EXPECT_GT(line.id.value, insert.value);
+    ASSERT_EQ(document().rawEntities().size(), 1U);
+    const core::RawEntity raw = document().rawEntities()[0];
+    EXPECT_GT(raw.id.value, line.id.value);
+    EXPECT_GT(raw.order, line.order);
+    const std::string handle = raw.groups[0].value;
+    EXPECT_EQ(raw.groups[0].code, 5);
+    EXPECT_EQ(std::stoull(handle, nullptr, 16), raw.id.value);
+
+    // Written, the unhandled entity has the model space as owner.
+    const auto written = io::writeDxf(document(), io::DxfVersion::R2018);
+    ASSERT_TRUE(written.ok()) << written.error().message;
+    const auto groups = io::readGroups(written.value());
+    ASSERT_TRUE(groups.ok());
+    const auto& all = groups.value().groups;
+    bool found = false;
+    for (std::size_t i = 0; i + 2 < all.size(); ++i) {
+        if (all[i].code == 0 && all[i].value == "ACAD_PROXY_ENTITY" && all[i + 1].value == handle) {
+            found = true;
+            EXPECT_EQ(all[i + 2].code, 330);
+            EXPECT_EQ(all[i + 2].value, "EF");  // start_handles::kBlockRecordModel
+        }
+    }
+    EXPECT_TRUE(found);
+
+    runner().submitText("U");
+    EXPECT_EQ(document().entityCount(), before.entityCount());
+    EXPECT_EQ(document().entities()[0], before.entities()[0]);
+    EXPECT_TRUE(document().rawEntities().empty());
 }
 
 TEST_F(ExplodeCommandTest, ExplodeAsksForTheSelectionAfterTheCommand) {

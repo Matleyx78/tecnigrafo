@@ -129,6 +129,17 @@ public:
     /// Adds an unhandled entity. Same precondition on raw.id.
     void insertRaw(RawEntity raw);
 
+    /// Adds an unhandled entity with a new identifier, nextId(), and the next
+    /// order key, as add(): it comes last. raw.id and raw.order are ignored;
+    /// the groups are kept as they are. Returns the identifier
+    /// (docs/tappe/0.8/PT29-explode-blocchi-quote.md, point 3).
+    EntityId addRaw(RawEntity raw);
+
+    /// Removes the unhandled entity with identifier `id` and returns it, with
+    /// its order key, or returns std::nullopt if the document has none. The
+    /// identifier is not reused by add(); insertRaw() can put it back.
+    std::optional<RawEntity> removeRaw(EntityId id);
+
     /// Replaces the unhandled entity with the same handle, at its position.
     /// Preconditions: the entity exists and its order key stays unchanged.
     /// Groups are kept opaque; edit uses this for undoable raw data changes.
