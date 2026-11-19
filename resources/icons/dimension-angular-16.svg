@@ -3,10 +3,10 @@
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-        <polyline class="esist" points="1.5,7.5 7.5,2.5 13.5,7.5"/>
-        <path id="dimension-arc" class="geo" d="M 3.5 5.5 A 5 5 0 0 0 11.5 5.5"/>
+        <polyline class="esist" points="1.5,10.5 7.5,2.5 13.5,10.5"/>
+        <path id="dimension-arc" class="geo" d="M 4.5 6.5 A 5 5 0 0 0 10.5 6.5"/>
         <circle class="pt" cx="7.5" cy="2.5" r="1.5" fill="currentColor" stroke="none" data-center-of="dimension-arc"/>
-        <circle class="pt" cx="3.5" cy="5.5" r="1.5" fill="currentColor" stroke="none" data-on="dimension-arc"/>
-        <circle class="pt" cx="11.5" cy="5.5" r="1.5" fill="currentColor" stroke="none" data-on="dimension-arc"/>
+        <circle class="pt" cx="4.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" data-on="dimension-arc"/>
+        <circle class="pt" cx="10.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" data-on="dimension-arc"/>
     </g>
 </svg>
