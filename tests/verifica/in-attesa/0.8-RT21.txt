@@ -1,4 +1,0 @@
-insert/nome-opzioni #705
-insert/file-e-uguale #705
-insert/ridefinizione-esc #705
-insert/errori-e-unita #705

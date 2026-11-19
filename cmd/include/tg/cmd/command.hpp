@@ -14,6 +14,7 @@
 
 #include <optional>
 #include <span>
+#include <string>
 
 namespace tg::io {
 class FileAccess;
@@ -56,6 +57,9 @@ struct CommandDefaults {
     std::string hatchPattern{"ANSI31"};
     double hatchScale{1.0};
     double hatchAngle{0.0};  ///< radians
+    /// INSNAME: the block -INSERT proposes, the last one it accepted; none
+    /// at start-up (docs/tappe/0.8/PT21-comando-insert.md).
+    std::optional<std::string> insertBlock = std::nullopt;
 };
 
 /// What a command of the drawing works with: the protocol's context

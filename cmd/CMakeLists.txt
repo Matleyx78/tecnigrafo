@@ -22,6 +22,7 @@ add_library(tg_cmd
     src/commands/explode_command.cpp
     src/commands/fillet_command.cpp
     src/commands/hatch_command.cpp
+    src/commands/insert_command.cpp
     src/commands/grip_command.cpp
     src/commands/join_command.cpp
     src/commands/layer_commands.cpp
