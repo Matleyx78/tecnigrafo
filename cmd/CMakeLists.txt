@@ -14,6 +14,7 @@ add_library(tg_cmd
     src/commands/chprop_command.cpp
     src/commands/circle_command.cpp
     src/commands/dimension_commands.cpp
+    src/commands/dimension_angular_commands.cpp
     src/commands/dimension_input.cpp
     src/commands/dimstyle_commands.cpp
     src/commands/ellipse_command.cpp
@@ -22,6 +23,7 @@ add_library(tg_cmd
     src/commands/explode_command.cpp
     src/commands/fillet_command.cpp
     src/commands/hatch_command.cpp
+    src/commands/insert_command.cpp
     src/commands/grip_command.cpp
     src/commands/join_command.cpp
     src/commands/layer_commands.cpp

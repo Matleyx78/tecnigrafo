@@ -50,7 +50,7 @@ entities:
   258 INSERT block="Pezzo" insertion=20,10 scale=2,2 rotation=90
 messages:
   Command: U
-  Explode
+  Undone: Explode.
 prompt: Command:
 preview:
 selection: none

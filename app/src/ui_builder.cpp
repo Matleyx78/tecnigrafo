@@ -53,6 +53,9 @@ QString title(const QString& name) {
     if (name == QStringLiteral("view")) {
         return QObject::tr("View");
     }
+    if (name == QStringLiteral("annotate")) {
+        return QObject::tr("Annotate");
+    }
     if (name == QStringLiteral("draw")) {
         return QObject::tr("Draw");
     }
@@ -61,6 +64,15 @@ QString title(const QString& name) {
     }
     if (name == QStringLiteral("annotation")) {
         return QObject::tr("Annotation");
+    }
+    if (name == QStringLiteral("block")) {
+        return QObject::tr("Block");
+    }
+    if (name == QStringLiteral("dimensions")) {
+        return QObject::tr("Dimensions");
+    }
+    if (name == QStringLiteral("text")) {
+        return QObject::tr("Text");
     }
     if (name == QStringLiteral("layers")) {
         return QObject::tr("Layers");
@@ -87,10 +99,11 @@ QString title(const QString& name) {
 /// docs/adr/0039, point 1, area 3.
 QStringList groups() {
     return {QStringLiteral("home/draw"),       QStringLiteral("home/modify"),
-            QStringLiteral("home/annotation"), QStringLiteral("home/layers"),
-            QStringLiteral("home/properties"), QStringLiteral("home/utilities"),
-            QStringLiteral("view/navigate"),   QStringLiteral("view/aids"),
-            QStringLiteral("view/assistant")};
+            QStringLiteral("home/annotation"), QStringLiteral("home/block"),
+            QStringLiteral("home/layers"),     QStringLiteral("home/properties"),
+            QStringLiteral("home/utilities"),  QStringLiteral("annotate/dimensions"),
+            QStringLiteral("annotate/text"),   QStringLiteral("view/navigate"),
+            QStringLiteral("view/aids"),       QStringLiteral("view/assistant")};
 }
 
 /// The groups whose buttons are all large: icon of 32 px and text under it
@@ -865,6 +878,10 @@ void UiBuilder::buildRibbon() {
         } else {
             panel->addSmallAction(action);
         }
+        // MTEXT is beside TEXT on Home and is also offered in Annotate/Text.
+        if (spec->id == QStringLiteral("draw.mtext")) {
+            panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
+        }
     }
     // SARibbonMainWindow disposes of the previous menu widget with
     // deleteLater(), and gives the new ribbon the title row of a window
@@ -972,6 +989,9 @@ void UiBuilder::buildClassic() {
             auto* button = qobject_cast<QToolButton*>(toolbar->widgetForAction(action));
             if (action->menu() != nullptr && button != nullptr) {
                 button->setPopupMode(QToolButton::MenuButtonPopup);
+            }
+            if (spec->id == QStringLiteral("draw.mtext")) {
+                toolbarFor(QStringLiteral("annotate/text"))->addAction(action);
             }
         }
     }

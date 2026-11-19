@@ -443,6 +443,35 @@ TEST(IconsTest, DrawingCommandsAndTheirVariantsHaveRoleIconsOnBothGrids) {
     }
 }
 
+TEST(IconsTest, NewStageCommandsHaveRoleIconsOnBothGrids) {
+    ActionRegistry registry;
+    addBuiltinActions(registry);
+    const QList<std::pair<QString, QString>> expected{
+        {QStringLiteral("draw.ellipse"), QStringLiteral("draw-ellipse")},
+        {QStringLiteral("draw.mtext"), QStringLiteral("draw-mtext")},
+        {QStringLiteral("draw.hatch"), QStringLiteral("draw-hatch")},
+        {QStringLiteral("edit.pedit"), QStringLiteral("edit-pedit")},
+        {QStringLiteral("block.create"), QStringLiteral("block-create")},
+        {QStringLiteral("block.insert"), QStringLiteral("block-insert")},
+        {QStringLiteral("text.style"), QStringLiteral("text-style")},
+        {QStringLiteral("dimension.style"), QStringLiteral("dimension-style")},
+        {QStringLiteral("dimension.linear"), QStringLiteral("dimension-linear")},
+        {QStringLiteral("dimension.aligned"), QStringLiteral("dimension-aligned")},
+        {QStringLiteral("dimension.angular"), QStringLiteral("dimension-angular")},
+        {QStringLiteral("dimension.radius"), QStringLiteral("dimension-radius")},
+        {QStringLiteral("dimension.diameter"), QStringLiteral("dimension-diameter")}};
+    for (const auto& [id, icon] : expected) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* spec = registry.spec(id);
+        ASSERT_NE(spec, nullptr);
+        EXPECT_EQ(spec->icon, icon);
+        EXPECT_TRUE(QFile::exists(resourcePath(icon + QStringLiteral("-16"))));
+        EXPECT_TRUE(QFile::exists(resourcePath(icon + QStringLiteral("-32"))));
+    }
+    EXPECT_EQ(registry.variants(QStringLiteral("draw.ellipse")).size(), 3);
+    EXPECT_EQ(registry.variants(QStringLiteral("dimension.linear")).size(), 2);
+}
+
 TEST(IconsTest, ViewAidsInterfaceAndHelpActionsUseTheirOwnIcons) {
     ActionRegistry registry;
     addBuiltinActions(registry);

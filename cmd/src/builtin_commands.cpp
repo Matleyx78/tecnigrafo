@@ -11,6 +11,7 @@
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
+#include "tg/cmd/commands/dimension_angular_commands.hpp"
 #include "tg/cmd/commands/dimension_commands.hpp"
 #include "tg/cmd/commands/dimstyle_commands.hpp"
 #include "tg/cmd/commands/ellipse_command.hpp"
@@ -19,6 +20,7 @@
 #include "tg/cmd/commands/file_commands.hpp"
 #include "tg/cmd/commands/fillet_command.hpp"
 #include "tg/cmd/commands/hatch_command.hpp"
+#include "tg/cmd/commands/insert_command.hpp"
 #include "tg/cmd/commands/join_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
@@ -56,8 +58,16 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(DimensionCommand::description(DimensionCommand::Kind::Aligned), [] {
         return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Aligned);
     });
+    registry.add(DimangularCommand::description(),
+                 [] { return std::make_unique<DimangularCommand>(); });
+    registry.add(RadialDimensionCommand::description(RadialDimensionCommand::Kind::Diameter), [] {
+        return std::make_unique<RadialDimensionCommand>(RadialDimensionCommand::Kind::Diameter);
+    });
     registry.add(DimensionCommand::description(DimensionCommand::Kind::Linear),
                  [] { return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Linear); });
+    registry.add(RadialDimensionCommand::description(RadialDimensionCommand::Kind::Radius), [] {
+        return std::make_unique<RadialDimensionCommand>(RadialDimensionCommand::Kind::Radius);
+    });
     registry.add(DimstyleCommand::description(),
                  [] { return std::make_unique<DimstyleCommand>(); });
     for (const auto& variable : core::dimVariableInfos()) {
@@ -80,6 +90,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(HatchCommand::description(), [] { return std::make_unique<HatchCommand>(); });
     registry.add(HpislanddetectionCommand::description(),
                  [] { return std::make_unique<HpislanddetectionCommand>(); });
+    registry.add(InsertCommand::description(), [] { return std::make_unique<InsertCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(JoinCommand::description(), [] { return std::make_unique<JoinCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });

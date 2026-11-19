@@ -23,9 +23,11 @@ add_executable(tg_tests
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
     cmd/dimension_commands_test.cpp
+    cmd/dimension_angular_commands_test.cpp
     cmd/ellipse_command_test.cpp
     cmd/fillet_command_test.cpp
     cmd/hatch_command_test.cpp
+    cmd/insert_command_test.cpp
     cmd/command_protocol_test.cpp
     cmd/command_registry_test.cpp
     cmd/command_runner_test.cpp
@@ -83,6 +85,7 @@ add_executable(tg_tests
     core/document_query_test.cpp
     core/document_test.cpp
     core/effective_properties_test.cpp
+    core/explode_test.cpp
     core/layer_test.cpp
     core/geometry_test.cpp
     core/insert_test.cpp

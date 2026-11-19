@@ -438,6 +438,29 @@ il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che la disegna da
 Il logo del programma non è un'icona a ruoli: ha colori suoi e sta in
 [`resources/logo/`](../resources/logo/), fuori da questo controllo.
 
+PT39 porta nell’interfaccia i primi comandi nuovi della tappa.
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `draw-ellipse` | `draw.ellipse` | ellisse e asse maggiore | sì |
+| `draw-mtext` | `draw.mtext` | righe di testo e limite sinistro | sì |
+| `edit-pedit` | `edit.pedit` | polilinea esistente con vertice attivo | sì |
+| `block-create` | `block.create` | due oggetti e simbolo di creazione | sì |
+| `block-insert` | `block.insert` | blocco originale e copia inserita | sì |
+| `text-style` | `text.style` | campioni di righe esistenti con selezione attiva | sì |
+| `dimension-style` | `dimension.style` | linea di quota esistente fra due estensioni | sì |
+| `dimension-linear` | `dimension.linear` | quota lineare orizzontale | sì |
+| `dimension-aligned` | `dimension.aligned` | oggetto e quota paralleli, inclinati a 45° | sì |
+| `dimension-angular` | `dimension.angular` | angolo e arco centrato nel vertice | sì |
+| `dimension-radius` | `dimension.radius` | cerchio e raggio quotato | sì |
+| `dimension-diameter` | `dimension.diameter` | cerchio e diametro quotato | sì |
+
+PT45 aggiunge il retino all'interfaccia.
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `draw-hatch` | `draw.hatch` | contorno esistente e linee del retino | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

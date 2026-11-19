@@ -381,5 +381,23 @@ TEST(DxfBlocks, InsertsDeeperThanTheLimitAreReported) {
     EXPECT_TRUE(limit.value().report.warnings.empty());
 }
 
+TEST(DxfBlocks, AUnitCodeOutsideTheTableIsReadAndWrittenAsItIs) {
+    // INSUNITS stops at 24: a block with 25 is in an unknown unit, kept as
+    // read (docs/tappe/0.8/PT21-comando-insert.md, point 2).
+    Groups unknown = record("40", "U25");
+    std::ranges::find(unknown, core::RawGroup{70, "0"})->value = "25";
+    const std::string text =
+        drawing(unknown, block("41", "40", "U25", 0, line("42", "40", "10"), "43"),
+                insert("100", "20", "U25"));
+    const auto read = readDxf(text);
+    ASSERT_TRUE(read.ok());
+    const auto* definition = read.value().document.blocks().find("U25");
+    ASSERT_NE(definition, nullptr);
+    EXPECT_EQ(definition->units, 25);
+    EXPECT_EQ(read.value().document.entityCount(), 1U);
+    EXPECT_TRUE(read.value().report.unhandled.empty());
+    EXPECT_EQ(valueOf(rewritten(text), "BLOCK_RECORD", "U25", 70), "25");
+}
+
 }  // namespace
 }  // namespace tg::io
