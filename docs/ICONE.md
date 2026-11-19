@@ -434,6 +434,12 @@ PT39 porta nell’interfaccia i primi comandi nuovi della tappa.
 | `dimension-radius` | `dimension.radius` | cerchio e raggio quotato | sì |
 | `dimension-diameter` | `dimension.diameter` | cerchio e diametro quotato | sì |
 
+PT45 aggiunge il retino all'interfaccia.
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `draw-hatch` | `draw.hatch` | contorno esistente e linee del retino | sì |
+
 ## Aggiungere un'icona
 
 1. Disegnala con le regole sopra, sulle due griglie, partendo da un'icona

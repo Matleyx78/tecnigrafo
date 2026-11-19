@@ -446,6 +446,7 @@ TEST(IconsTest, NewStageCommandsHaveRoleIconsOnBothGrids) {
     const QList<std::pair<QString, QString>> expected{
         {QStringLiteral("draw.ellipse"), QStringLiteral("draw-ellipse")},
         {QStringLiteral("draw.mtext"), QStringLiteral("draw-mtext")},
+        {QStringLiteral("draw.hatch"), QStringLiteral("draw-hatch")},
         {QStringLiteral("edit.pedit"), QStringLiteral("edit-pedit")},
         {QStringLiteral("block.create"), QStringLiteral("block-create")},
         {QStringLiteral("block.insert"), QStringLiteral("block-insert")},

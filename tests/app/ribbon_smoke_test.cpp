@@ -254,7 +254,8 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
     ASSERT_NE(ribbon, nullptr);
     const ActionRegistry& registry = window.actionRegistry();
     const QList<std::pair<QString, QStringList>> expected{
-        {QStringLiteral("home/draw"), {QStringLiteral("draw.ellipse")}},
+        {QStringLiteral("home/draw"),
+         {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}},
         {QStringLiteral("home/annotation"), {QStringLiteral("draw.mtext")}},
         {QStringLiteral("home/modify"), {QStringLiteral("edit.pedit")}},
         {QStringLiteral("home/block"),
