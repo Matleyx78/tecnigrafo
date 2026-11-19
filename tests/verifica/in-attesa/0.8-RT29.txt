@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-# Copyright (C) 2026 The Tecnigrafo authors
-# 0.8-RT29: EXPLODE of inserts and dimensions (PT29, #719).
-explode/inserimento-trasformato #719
-explode/quota-lineare #719
