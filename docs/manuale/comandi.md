@@ -282,20 +282,20 @@ Cannot open plan.dxf: line 812: expected a group code, found "abc".
 
 #### Entità non gestite
 
-Nella tappa 0.5 Tecnigrafo gestisce le cinque entità base: linee, cerchi, archi,
-polilinee 2D e testo. Un file DXF creato con altri programmi può contenere molte
-altre entità (per esempio tratteggi `HATCH`, quote o blocchi `INSERT`), oppure
-entità collocate nello spazio carta.
+Oltre alle entità base Tecnigrafo gestisce solidi, ellissi, testo multiriga,
+attributi, blocchi, quote e retini. Un file DXF può comunque contenere varianti
+non rappresentate (per esempio colonne di `MTEXT`, `MINSERT`, riferimenti
+esterni, retini con spline o sfumature), altre entità o oggetti nello spazio carta.
 
 Tecnigrafo non perde questi dati: legge e conserva tutte le entità non gestite
 esattamente come sono nel file originale ([ADR 0018](../adr/0018-conservazione-dati-non-gestiti.md)). Quando apri il file, un
 messaggio sullo storico ti riepiloga le entità non gestite trovate:
 
 ```
-3 entities not supported: HATCH 2, INSERT 1
+3 entities not supported: SPLINE 2, IMAGE 1
 ```
 
-(o `1 entity not supported: HATCH 1` se è una sola). Anche se queste entità non
+(o `1 entity not supported: SPLINE 1` se è una sola). Anche se queste entità non
 vengono visualizzate né selezionate a schermo, quando risalvi il file Tecnigrafo
 le riscrive identiche carattere per carattere, senza perdita di informazioni.
 
@@ -1185,10 +1185,10 @@ Command: mirrtext
 Enter new value for MIRRTEXT <0>: 1
 ```
 
-## EXPLODE — scomporre polilinee
+## EXPLODE — scomporre polilinee, blocchi e quote
 
-Scompone le polilinee 2D selezionate nei singoli segmenti retti (`LINE`) e archi (`ARC`)
-di cui sono composte.
+Scompone le polilinee 2D, gli inserimenti di blocco e le quote selezionati nelle
+entità elementari che li compongono.
 
 - **Nome:** `EXPLODE`
 - **Alias:** `X`
@@ -1200,6 +1200,13 @@ scomporre e conferma con `Invio`.
 
 - Ogni segmento rettilineo della polilinea diventa un'entità `LINE`; ogni segmento curvo
   diventa un'entità `ARC`.
+- Un inserimento diventa una copia trasformata delle entità della definizione; gli
+  inserimenti annidati restano inserimenti e gli attributi diventano le definizioni
+  `ATTDEF`. Con scala non uniforme, cerchi e archi diventano ellissi. Un blocco marcato
+  non esplodibile, o una trasformazione non rappresentabile di un inserimento annidato,
+  viene lasciato intatto.
+- Una quota diventa la sua grafica (linee, frecce e testo) con proprietà risolte. Non
+  conserva più l'associazione fra misura, punti di definizione e stile.
 - Le nuove entità generate ricevono nuovi handle, si aggiungono in fondo all'ordine del
   disegno ed ereditano layer, colore, tipo di linea, spessore e dati non gestiti della
   polilinea di origine.
@@ -1209,7 +1216,7 @@ scomporre e conferma con `Invio`.
   Exploding this polyline has lost width information.
   The UNDO command will restore it.
   ```
-- Entità diverse dalle polilinee 2D (come linee, cerchi, archi, testi), polilinee senza
+- Entità diverse da polilinee 2D, inserimenti e quote (come linee, cerchi, archi e testi), polilinee senza
   segmenti, o polilinee aventi quota z (*elevation*) o spessore 3D (*thickness*)
   diversi da zero (gruppi DXF 38 e 39) non possono essere scomposte. Vengono lasciate
   intatte e segnalate con:
@@ -1967,6 +1974,61 @@ attuali di ogni entità senza modificarli.
 
 Tutte le modifiche apportate durante la sessione di `CHPROP` vengono raggruppate in un'unica
 transazione `CHPROP`: premendo `Esc` si esce dal comando conservando i cambi già confermati.
+
+## Testo multiriga e stili di testo
+
+### `-STYLE` e `TEXTSTYLE`
+
+`-STYLE` (alias `STYLE`) crea o modifica uno stile. Chiede nome (`?` elenca gli stili), font, altezza fissa, fattore di larghezza, angolo obliquo e se mostrare il testo rovesciato orizzontalmente o verticalmente. Uno stile nuovo parte dal font `txt`; lo stile confermato diventa corrente. Tecnigrafo conserva il nome del font del DXF, ma usa il font incluso quando quello richiesto non è disponibile.
+
+`TEXTSTYLE` sceglie invece uno stile esistente come corrente. Lo stile corrente vale per i nuovi `TEXT`, `MTEXT` e per `DIMTXSTY`.
+
+### `MTEXT`
+
+`MTEXT` crea un testo multiriga dentro un rettangolo. Indica il primo angolo e quello opposto; prima del secondo puoi scegliere *Height*, *Justify* (le nove combinazioni `TL`…`BR`), *Line spacing* (`At least` o `Exactly`, poi fattore o distanza), *Rotation*, *Style* e *Width*. Alla richiesta `MText:` ogni riga scritta aggiunge una riga; una riga vuota conclude.
+
+I codici di formato incorporati di AutoCAD non vengono interpretati: sono mostrati come testo semplice. Colonne e varianti non rappresentate restano dati non gestiti e vengono conservate nel file.
+
+## Blocchi: `-BLOCK` e `-INSERT`
+
+`-BLOCK` crea una definizione dal disegno. Scrivi il nome (`?` elenca quelli esistenti), indica il punto base, seleziona le entità e premi `Invio`. Se il nome esiste, il comando chiede se ridefinirlo. Le entità selezionate restano nel disegno; i cicli fra blocchi sono rifiutati.
+
+`-INSERT` (alias `INSERT`) accetta un nome, un percorso DXF oppure `nome=percorso`. `?` elenca i blocchi. Un file diventa un blocco col nome del file e punto base ricavato da `$INSBASE`; `nome=percorso` assegna il nome e ridefinisce senza altre domande. Se il nome esiste, la sua definizione ha la precedenza su un percorso ambiguo.
+
+Dopo il nome indica il punto di inserimento. Le opzioni *Basepoint*, *Scale* e *Rotate* permettono di fissare prima i rispettivi valori. La scala accetta un fattore uniforme, un angolo opposto (*Corner*) o le tre componenti *XYZ*; la scala Z viene conservata ma il disegno resta 2D. Scala zero, riferimenti mancanti e cicli sono rifiutati. Gli `ATTDEF` variabili prendono il valore predefinito, senza domande.
+
+## Quote e stili di quota
+
+### Creare le quote
+
+- `DIMLINEAR` (`DIMLIN`) quota una distanza orizzontale o verticale. Indica i due punti, oppure premi `Invio` e scegli una linea; quindi indica la linea di quota. Sono disponibili *Text*, *Angle*, *Horizontal*, *Vertical* e *Rotated*.
+- `DIMALIGNED` (`DIMALI`) quota la distanza lungo i due punti. Ha le opzioni *Text* e *Angle* prima della posizione.
+- `DIMANGULAR` quota l'angolo fra due linee, un arco o un cerchio, oppure fra tre punti. Alla posizione dell'arco offre *Text*, *Angle* e *Quadrant*.
+- `DIMRADIUS` e `DIMDIAMETER` scelgono un arco o cerchio e poi la posizione; prima di concludere accettano *Text* e *Angle*.
+
+Nel testo sostitutivo `<>` inserisce la misura calcolata. Ogni comando crea una quota con la propria grafica e costituisce un solo passo di annullamento.
+
+### `-DIMSTYLE` e variabili
+
+`-DIMSTYLE` offre *Save*, *Restore*, *Status* e `?`: salva con un nome le variabili correnti, ripristina uno stile, mostra lo stato o elenca gli stili. Le variabili si possono anche eseguire come comandi. Sono disponibili `DIMASZ`, `DIMBLK`, `DIMBLK1`, `DIMBLK2`, `DIMCLRD`, `DIMCLRE`, `DIMCLRT`, `DIMDEC`, `DIMDSEP`, `DIMEXE`, `DIMEXO`, `DIMGAP`, `DIMLFAC`, `DIMLUNIT`, `DIMPOST`, `DIMRND`, `DIMSCALE`, `DIMTAD`, `DIMTIH`, `DIMTOH`, `DIMTSZ`, `DIMTXT`, `DIMTXSTY`, `DIMZIN`, `DIMATFIT`, `DIMTMOVE`, `DIMTIX`, `DIMSOXD` e `DIMTOFL`. `Invio` conserva il valore; valori fuori dominio sono rifiutati.
+
+Tecnigrafo rigenera soltanto le combinazioni compatibili con lo stile `ISO-25`. Una quota letta con `DIMATFIT`, `DIMTMOVE`, `DIMTIX`, `DIMSOXD` o `DIMTOFL` diversi conserva la grafica originale: la si può spostare, ma una modifica che richiederebbe di rigenerarla viene rifiutata.
+
+## Retini: `-HATCH` e `HPISLANDDETECTION`
+
+`-HATCH` crea un retino **non associativo**. Indica un punto interno oppure usa *Select objects*. Con *Properties* scegli `SOLID`, `ANSI31` o `NET`, poi scala e angolo. Il rilevamento del contorno considera linee, archi, cerchi e polilinee visibili; non attraversa blocchi o quote. Contorni aperti o motivi troppo fitti sono segnalati senza creare un'entità.
+
+`HPISLANDDETECTION` sceglie come trattare le isole: `0` *Normal* (alternanza pari-dispari), `1` *Outer* (solo il livello esterno, valore iniziale) e `2` *Ignore*. Il valore resta per la sessione, come motivo, scala e angolo. I retini non seguono le modifiche successive del contorno.
+
+## `PEDIT` e `PEDITACCEPT`
+
+`PEDIT` modifica una polilinea o converte linee e archi. *Multiple* lavora su una selezione. Le opzioni disponibili sono *Close/Open*, *Join*, *Ltype gen*, *Reverse* e *Undo*. *Join* accetta una distanza di tolleranza e *Jointype* (`Extend`, `Add` o `Both`). Le opzioni di AutoCAD *Width*, *Edit vertex*, *Fit*, *Spline* e *Decurve* non sono disponibili.
+
+`PEDITACCEPT` vale `0` o `1`: con `1` linee e archi selezionati vengono convertiti senza la domanda di conferma. È un'impostazione della sessione.
+
+## Limiti delle ellissi e dello snap
+
+Le ellissi si leggono, si scrivono, si mostrano e possono nascere da blocchi a scala non uniforme. In questa tappa `TRIM`, `EXTEND`, `OFFSET`, `FILLET` e gli altri comandi di modifica geometrica non le accettano. Lo snap *Vicino* (*Nearest*) non è disponibile; usa gli snap ai punti notevoli elencati sopra.
 
 ## Comandi dell'applicazione
 
