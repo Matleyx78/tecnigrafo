@@ -3,9 +3,11 @@
 - **Pacchetto:** [0.8-PT47](PT47-misura-pacchetti.md), issue #747
 - **Autore:** Claude (Claude Code), modello Claude Opus 5.5, impegno medio
 - **Data:** 2026-11-19
-- **Dati:** API REST di GitHub, lette il 2026-11-19 alle 17:40 UTC, e `main` al
-  commit `fac434848b89c61fab3d24458e5f53aeb651dd97` (solid-space al commit
-  fissato `d84a40a6255da5fd01ca2918fc645aa77b8d5131`)
+- **Dati:** API REST di GitHub, lette dallo script il 2026-11-19 alle 17:40
+  UTC, e `main` al commit `fac434848b89c61fab3d24458e5f53aeb651dd97`
+  (solid-space al commit fissato `d84a40a6255da5fd01ca2918fc645aa77b8d5131`);
+  i dati della #907 (PT29), unita alle 17:42 UTC, letti a mano dall'API alle
+  18:20 UTC (sezione 1)
 - **Stato:** misura per il responsabile, con la proposta di decisione
   definitiva sulle condizioni della #442 (sezione 6). Nessuna regola cambia
   con questo documento: la decisione la prende il responsabile.
@@ -24,9 +26,9 @@ testo stima, lo dice.
 ## In breve
 
 Lo script trova 79 pull request principali unite. Con le correzioni a mano
-della sezione 1 sono 48 pacchetti di lavoro (39 medi, 4 facili, 5
+della sezione 1 sono 49 pacchetti di lavoro (40 medi, 4 facili, 5
 impegnativi, tre dei quali sono documenti) e 30 pacchetti di riferimenti, più
-RT20 unito a mano; PT29 è ancora in revisione (#907) e non è contato. Cinque cose:
+RT20 unito a mano. Cinque cose:
 
 1. **Gli impegnativi di un tempo, fatti in fascia media, sono andati come i
    medi: senza correzioni dopo l'unione.** Nove pacchetti che la prova sulla
@@ -40,13 +42,13 @@ RT20 unito a mano; PT29 è ancora in revisione (#907) e non è contato. Cinque c
    decisione**: 20, in otto pacchetti su nove (sezione 4).
 2. **Ma la fascia media di Claude è stata Opus 5.5 con impegno alto.** I
    pacchetti medi di Claude che il piano dava con impegno alto sono stati
-   avviati con `[impegno: alto]` e lo dichiarano: 18 pacchetti di Claude su
+   avviati con `[impegno: alto]` e lo dichiarano: 20 pacchetti di Claude su
    26. Nella tabella di [LAVORO-IN-PARALLELO.md](../../LAVORO-IN-PARALLELO.md),
    «Modello e impegno», Opus 5.5 alto è la riga della fascia forte. Il
    risparmio della sezione 3.9 dell'analisi (da alto a medio sullo stesso
    modello) **non è stato provato**; lo sono stati la divisione e lo
    spostamento delle decisioni prima del codice.
-3. **I fermi sono tornati quelli della 0.7.** 249,6 ore di fermi in tutto
+3. **I fermi sono tornati quelli della 0.7.** 257,8 ore di fermi in tutto
    (0.7.5: 5; 0.7: 286), e 64 commenti «Serve una decisione del responsabile»
    (55 nei pacchetti di lavoro). Vengono da buchi delle schede trovati a rate,
    da strumenti di verifica arrivati dopo i riferimenti e da risposte condivise
@@ -58,10 +60,10 @@ RT20 unito a mano; PT29 è ancora in revisione (#907) e non è contato. Cinque c
    correzioni non vengono da un errore di chi li ha scritti, ma da un altro
    pacchetto che ha cambiato una risposta (le righe degli stili di quota di
    PT22).
-5. **I giri di CI non crescono con la misura.** Sui medi Spearman 0,05 tra
-   righe e run fallite (0,01 con le righe di codice), come nelle tappe 0.4–0.7
+5. **I giri di CI non crescono con la misura.** Sui medi Spearman 0,04 tra
+   righe e run fallite (0,00 con le righe di codice), come nelle tappe 0.4–0.7
    (−0,07); la correlazione della 0.7.5 (0,51) non si ripete. I pacchetti fuori
-   da `app` hanno avuto un giro nel 59 % dei casi (0.7.5: 19 %).
+   da `app` hanno avuto un giro nel 61 % dei casi (0.7.5: 19 %).
 
 La proposta (sezione 6): **le condizioni 1–7 diventano definitive**, con
 quattro precisazioni; la più importante dice che la condizione 3 vale come è
@@ -89,13 +91,21 @@ nel titolo e sono state unite prima del codice:
   as AutoCAD»). Il testo usa la #905; le tabelle delle sezioni 2 e 7 sono
   quelle dello script e mostrano la #900.
 - **PT29:** la #897 è la correzione della scheda (dipendenze da PT21 e PT26);
-  la pull request del codice, la #907, è ancora aperta. Il testo non conta
-  PT29 fra i pacchetti uniti; le tabelle dello script lo contano con la #897
-  (29 righe, nessuna run fallita), quindi i medi delle tabelle sono 40 invece
-  di 39.
+  la principale vera è la #907, unita alle 17:42 UTC, due minuti dopo la
+  lettura dei dati dello script. Il testo usa la #907, con i dati letti a mano
+  dall'API alle 18:20 UTC: 3 commit, 17 file, 1344 righe, 617 di codice, non
+  tocca `app/`; 3 run della CI, una fallita prima del verde, nessuna
+  annullata; aperta→unita 4,4 ore; impegno alto dichiarato; ultima presa
+  prima della pull request il 19/11 alle 13:05, quindi fermo 20,8 ore, ultimo
+  lavoro 4,6 ore e presa→unione 25,4 ore. Le tabelle dello script (sezioni
+  2.1–2.7 e 7.1) sono quelle delle 17:40 UTC e mostrano la #897 (29 righe,
+  nessuna run fallita); per scelta del responsabile non sono state rifatte.
+  Dove il testo dà un numero diverso da quello delle tabelle, è quello con la
+  #905 per PT21 e la #907 per PT29.
 
 Con queste due correzioni la «correzione del codice» che lo script trova (la
-#905) sparisce: **nessuna pull request ha corretto il codice di un pacchetto
+#905) sparisce, e la #907, che con i dati di oggi lo script conterebbe allo
+stesso modo per PT29, non lo è: **nessuna pull request ha corretto il codice di un pacchetto
 della 0.8 dopo la sua unione**. L'ho controllato anche a mano sull'elenco delle
 pull request unite dalla #750 che lo script non attribuisce: sono documenti,
 CI, script fuori tappa (F8, F9, F12) e la #883, che aggiorna dei casi (righe
@@ -152,6 +162,10 @@ e della issue, letti dall'API il 2026-11-19:
 
 ## 2. Dati
 
+Le tabelle delle sezioni 2.1–2.7 sono l'uscita dello script letta alle 17:40
+UTC, prima dell'unione della #907; i numeri con la #907 per PT29 sono scritti
+sotto le tabelle e nella sezione 2.8 (sezione 1).
+
 ### 2.1 Tappa 0.8
 
 Colonne come nella misura della 0.7.5, sezione 2.1.
@@ -176,6 +190,10 @@ Pacchetti di lavoro che toccano `app/` o `tests/app/` (Qt): 8, con almeno un gir
 Pacchetti di lavoro che non toccano `app/` o `tests/app/` (Qt): 41, con almeno un giro 24 (0.8-PT1, 0.8-PT9, 0.8-PT3, 0.8-PT10, 0.8-PT48, 0.8-PT49, 0.8-PT11, 0.8-PT14, 0.8-PT15, 0.8-PT16, 0.8-PT18, 0.8-PT22, 0.8-PT21, 0.8-PT23, 0.8-PT25, 0.8-PT26, 0.8-PT27, 0.8-PT28, 0.8-PT31, 0.8-PT33, 0.8-PT36, 0.8-PT42, 0.8-PT43, 0.8-PT44).
 Spearman tra righe e run fallite prima del verde, pacchetti di lavoro tutti (49): 0,28; con le righe di codice: 0,26.
 Spearman tra righe e run fallite prima del verde, pacchetti di lavoro medi (40): 0,05; con le righe di codice: 0,01.
+
+Con la #905 per PT21 e la #907 per PT29 (sezione 1), calcolati a mano con lo
+stesso metodo sui dati della sezione 7.1: tutti (49) 0,29 e 0,27; medi (40)
+0,04 e 0,00.
 
 ### 2.3 Per fascia e impegno, previsti e dichiarati
 
@@ -210,22 +228,25 @@ nella sezione «Uso dell'IA».
 | codex | GPT-6 | non noto | non dichiarato | 3 | 2 | 2 | 499 | 0 |
 | codex | non dichiarato | non dichiarato | non dichiarato | 3 | 2 | 4 | 524 | 0 |
 
-I 18 pacchetti di Claude con impegno alto dichiarato sono tutti medi
-pianificati con impegno alto o impegnativi; i commenti di avvio della catena
-portano `[impegno: alto]` (per esempio nelle issue #687, #693, #707, #725,
-#738). I tre con impegno medio sono PT8, PT21 (la #900, di soli documenti) e
-PT29 (la #897, idem).
+Nella tabella i pacchetti di Claude con impegno alto dichiarato sono 18;
+con la #905 per PT21 e la #907 per PT29, che dichiarano entrambe impegno alto,
+sono 20, tutti medi pianificati con impegno alto o impegnativi. I commenti di
+avvio della catena portano `[impegno: alto]` (per esempio nelle issue #687,
+#693, #707, #725, #738). Resta con impegno medio solo PT8; la #900 e la #897,
+che la tabella conta come medio, sono di soli documenti.
 
 ### 2.4 Misura dei pacchetti (condizione 2)
 
 Pacchetti di lavoro uniti: 49; con più di 15 file (test e documenti compresi): 15; con più di 600 righe di codice: 14; con meno di 150 righe di codice: 11; righe di codice, mediana 405.
 
-Con la #905 al posto della #900 per PT21 e senza PT29: 48 pacchetti di lavoro,
-15 oltre le 600 righe di codice e 9 sotto le 150.
+Con la #905 al posto della #900 per PT21 e la #907 al posto della #897 per
+PT29: 49 pacchetti di lavoro, 16 con più di 15 file, 16 oltre le 600 righe di
+codice e 9 sotto le 150; righe di codice, mediana 429.
 
 Oltre le 600 righe di codice: PT6, PT9, PT13, PT16, PT18, PT19, PT21, PT22,
-PT23, PT24, PT25, PT32, PT33, PT37 e PT48; dieci di loro hanno avuto almeno una
-run fallita prima del verde (67 %), contro 18 su 33 degli altri (55 %). Sotto
+PT23, PT24, PT25, PT29, PT32, PT33, PT37 e PT48; undici di loro hanno avuto
+almeno una run fallita prima del verde (69 %), contro 18 su 33 degli altri
+(55 %). Sotto
 le 150: i documenti (PT3, la cui parte grossa è in `tests/verifica/`, PT4,
 PT5, PT40, PT46), le icone (PT39, PT45), PT35 e PT41.
 
@@ -296,6 +317,12 @@ Orari UTC.
 | PT45 | facile | PT39 19/11 16:08 | 19/11 16:11 | 19/11 16:11 | 19/11 17:04 | 0 | 0,9 | 0,1 |
 | PT46 | facile | PT45 19/11 17:04 | 19/11 17:14 | 19/11 17:14 | 19/11 17:33 | 0 | 0,3 | 0,2 |
 
+Con la #907, PT29 ha fermo 20,8 ore e ultimo lavoro 4,6 ore (ultima presa
+prima della pull request il 19/11 alle 13:05, unito alle 17:42), invece di
+12,6 e 1: i fermi di tutti i pacchetti diventano 257,8 ore. L'ultima unione
+della tappa è PT29 (19/11 17:42); la durata dalla prima issue resta di 178 ore.
+Il percorso critico qui sotto è quello dello script, che finisce con PT46.
+
 Percorso critico realizzato: PT4 → PT6 → PT9 → PT3 → RT11 → PT11 → PT22 → PT23 → PT24 → PT27 → PT39 → PT45 → PT46; dall'unione di PT4 all'ultima unione 130,5 ore, ultimo lavoro dei nodi dopo il primo 57,3 ore; fermi di tutti i pacchetti 249,6 ore; attesa da pronto a presa, mediana 0,2 ore su 49 pacchetti di lavoro; dalla prima issue all'ultima unione 178 ore.
 
 ### 2.7 Riferimenti
@@ -355,17 +382,22 @@ tolta). La #887 aggiunge due casi chiesti da solid-space, non ne corregge.
 
 Gruppi della sezione 4. «Run fallite»: prima del verde; «giri di revisione»
 con la regola della sezione 1; «presa→unione» e «fermi» dallo script, PT21
-con i dati della #900 (circa 4,7 ore in meno della #905).
+con i dati della #900 (circa 4,7 ore in meno della #905), PT29 con quelli
+della #907 (sezione 1). PT29 è nel gruppo B, con un giro di revisione: la #907
+ha due commenti con «Giro di revisione:», ma il secondo è la ripresa del giro
+1 dopo la decisione (catena.md, «Ripresa dopo una decisione»), non un giro
+nuovo. Le sue fermate sono 5 (3 nella issue #719, 2 nella #907); le
+correzioni della sua scheda 3 (#891, #897, #909).
 
 | Gruppo | Pacchetti | Con ≥1 run fallita | Run fallite | Giri di revisione (med.; tot.) | Con ≥2 giri di revisione | Fermate per una decisione (pacchetti) | Correzioni delle schede | Correzioni del codice dopo l'unione | Ore presa→unione (med.) | Fermi (h) | Righe di codice (med.) |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | A. Impegnativi di un tempo, in fascia media (Claude) | 9 | 6 | 7 | 1; 13 | 4 | 20 (8) | 7 | 0 | 8,2 | 25,7 | 752 |
-| B. Altri medi di Claude con impegno alto | 10 | 5 | 7 | 1; 8 | 0 | 14 (8) | 6 | 0 | 9,8 | 70,3 | 696 |
+| B. Altri medi di Claude con impegno alto | 11 | 6 | 8 | 1; 9 | 0 | 19 (9) | 9 | 0 | 10,7 | 91,1 | 648 |
 | C. Medi con impegno medio (19 di Codex e PT8) | 20 | 14 | 22 | 2; 40 | 17 | 12 (8) | 5 | 0 | 6,5 | 4,1 | 364 |
 | D. Impegnativi di codice in fascia forte (PT18, PT37) | 2 | 2 | 7 | 1,5; 3 | 1 | 4 (2) | 0 | 0 | 11,1 | 7,4 | 1980 |
 
 A: PT6, PT13, PT16, PT23, PT25, PT32, PT34, PT42, PT43. B: PT9, PT17, PT19,
-PT21 (#905), PT22, PT24, PT30, PT36, PT48, PT50. C: PT2, PT3, PT7, PT8, PT10,
+PT21 (#905), PT22, PT24, PT29 (#907), PT30, PT36, PT48, PT50. C: PT2, PT3, PT7, PT8, PT10,
 PT11, PT12, PT14, PT15, PT20, PT26, PT27, PT28, PT31, PT33, PT35, PT38, PT39,
 PT44, PT49.
 
@@ -373,16 +405,16 @@ PT44, PT49.
 
 Solo dove la differenza è grande, con la prudenza della sezione 1 dell'analisi
 sui campioni piccoli. I numeri della 0.8 sono con le correzioni a mano della
-sezione 1 (PT21 con la #905, senza PT29).
+sezione 1 (PT21 con la #905, PT29 con la #907).
 
 | Che cosa | 0.4–0.7 | 0.7 | 0.7.5 | 0.8 | Giudizio |
 |---|---|---|---|---|---|
-| Fermi di tutti i pacchetti | — | 286 h | 5 h | 250 h | grande: tornati ai livelli della 0.7 |
-| Durata della tappa (prima issue → ultima unione) | — | circa 198 h | 71 h | 178 h (PT29 escluso) | con 79 pacchetti invece di 39 (0.7.5) e 48 (0.7) |
-| Medi con almeno un giro di CI | 65 % (35 su 54) | 69 % (11 su 16) | 48 % (15 su 31) | 64 % (25 su 39) | la 0.7.5 era l'eccezione |
-| Medi di Claude / di Codex con almeno un giro | 64 % / 65 % | — | 47 % / 50 % | 55 % (11 su 20) / 74 % (14 su 19) | Codex più alto, entro il caso (stima) |
-| Lavoro con almeno un giro, che tocca `app` / gli altri | 60 % / 41 % | — | 59 % / 19 % | 50 % (4 su 8) / 59 % (24 su 40) | l'ipotesi di `app` della 0.7.5 non si ripete |
-| Spearman righe di codice / giri, medi | 0,11 (tutti) | — | 0,38 | 0,01 (dallo script, con PT29) | nessuna relazione, come nell'analisi |
+| Fermi di tutti i pacchetti | — | 286 h | 5 h | 258 h | grande: tornati ai livelli della 0.7 |
+| Durata della tappa (prima issue → ultima unione) | — | circa 198 h | 71 h | 178 h | con 79 pacchetti invece di 39 (0.7.5) e 48 (0.7) |
+| Medi con almeno un giro di CI | 65 % (35 su 54) | 69 % (11 su 16) | 48 % (15 su 31) | 65 % (26 su 40) | la 0.7.5 era l'eccezione |
+| Medi di Claude / di Codex con almeno un giro | 64 % / 65 % | — | 47 % / 50 % | 57 % (12 su 21) / 74 % (14 su 19) | Codex più alto, entro il caso (stima) |
+| Lavoro con almeno un giro, che tocca `app` / gli altri | 60 % / 41 % | — | 59 % / 19 % | 50 % (4 su 8) / 61 % (25 su 41) | l'ipotesi di `app` della 0.7.5 non si ripete |
+| Spearman righe di codice / giri, medi | 0,11 (tutti) | — | 0,38 | 0,00 (0,01 dallo script, con la #900 e la #897) | nessuna relazione, come nell'analisi |
 | Correzioni dei riferimenti per pacchetto di riferimenti | 0,9 | 1,0 | 0 (su 1) | 0,94 (29 su 31) | uguale |
 | Correzioni del codice dopo l'unione | non registrate | — | 0 | 0 | uguale, su finestre corte |
 | Durata mediana di una run verde | 14,9 min | — | 13,0 min | 16,2 min | piccola |
@@ -392,7 +424,7 @@ sezione 1 (PT21 con la #905, senza PT29).
 quelli delle tappe 0.4–0.7, non come la 0.7.5, che aveva medi di natura
 diversa (CI, strumenti, interfaccia). Anche il calo dei giri fuori da `app`
 della 0.7.5 (19 %) non si ripete: nella 0.8 il codice fuori da `app` è
-geometria e DXF, e lì i giri sono tornati al 59 %.
+geometria e DXF, e lì i giri sono tornati al 61 %.
 
 **I fermi.** Tornano quelli della 0.7, per gli stessi motivi che l'analisi
 aveva trovato (sezione 2.4): buchi delle schede, casi sbagliati, solid-space.
@@ -404,7 +436,7 @@ riferimenti (F8, F9, F11, F12).
 
 **Le revisioni.** I medi di Codex rivisti da Claude hanno avuto quasi sempre
 due o più giri (16 su 19); quelli di Claude rivisti da Codex di rado (5 su
-17 con revisione). Non si separa il modello di chi scrive da quello di chi
+18 con revisione). Non si separa il modello di chi scrive da quello di chi
 rivede (sezione 1).
 
 ## 4. Gli impegnativi di un tempo in fascia media
@@ -452,7 +484,8 @@ impegnativi delle tappe 0.4–0.7: 1,9, la 0.7 8,1). Il tempo è andato quasi
 tutto nelle **fermate per una decisione** (20, in otto pacchetti su nove) e
 nelle correzioni delle schede (7, in cinque pacchetti): buchi delle schede,
 casi che sembravano sbagliati, dipendenze mancanti. È lo stesso costo che
-hanno avuto i medi di Claude del gruppo B (14 fermate in otto pacchetti), e
+hanno avuto i medi di Claude del gruppo B (19 fermate in nove pacchetti su
+undici), e
 non dipende dalla difficoltà di un tempo.
 
 **Che cosa ne viene.** Il codice degli impegnativi di un tempo, con le
@@ -468,12 +501,12 @@ Claude è stata Opus 5.5 con impegno alto.
 | Condizione | Che cosa dice la 0.8 | Perché |
 |---|---|---|
 | 1. Si divide per un motivo che si scrive | confermata | Il piano scrive un motivo per ogni divisione (sezione 6, «Motivi»). Le divisioni per modulo e per tipo (modello, DXF, comando) hanno tenuto: nessun pacchetto ha avuto una parte «b» aggiunta durante la tappa. |
-| 2. La misura conta il codice | confermata come indicazione, non come limite | 15 pacchetti su 48 superano le 600 righe di codice, e i giri non crescono con la misura (Spearman 0,01 sui medi). PT6 (2849 righe, scheletro) e PT19 (1100) non hanno avuto giri. |
+| 2. La misura conta il codice | confermata come indicazione, non come limite | 16 pacchetti su 49 superano le 600 righe di codice, e i giri non crescono con la misura (Spearman 0,00 sui medi). PT6 (2849 righe, scheletro) e PT19 (1100) non hanno avuto giri. |
 | 3. La fascia segue le decisioni | confermata per Opus 5.5 alto; non provata per Opus medio | Sezione 4: nessun difetto dopo l'unione, costo di un medio. Ma 8 su 9 dichiarano impegno alto, la riga forte della tabella. |
 | 4. Riferimenti delicati in fascia forte | non smentita, non confermata | 1,0 correzioni per pacchetto forte, 0,9 per leggero; almeno quattro correzioni non sono errori del caso (sezione 2.7). Le correzioni dei riferimenti leggeri di Claude (0,4) e di Codex (1,9) dicono più dell'autore che della fascia. |
 | 5. Revisione delle interfacce prima delle parti | necessaria, non sufficiente | PT4, PT5 e PT40 hanno rivisto tutte le schede prima della presa, eppure 55 fermate nei pacchetti di lavoro. La revisione mirata c'è stata, in fascia media. |
 | 6. Pacchetto iniziale di interfaccia solo se toglie file comuni | confermata | PT6 (con PT7–PT9) ha tolto le visite di `Entity` dalle catene dei tipi; nessun giro, nessun fermo. |
-| 7. Si registra e si misura | in parte | Il modello è dichiarato da 45 pull request di lavoro su 48; l'impegno da 33 (le altre «non noto» o niente, quasi tutte di Codex). |
+| 7. Si registra e si misura | in parte | Il modello è dichiarato da 46 pull request di lavoro su 49; l'impegno da 34 (le altre «non noto» o niente, quasi tutte di Codex). |
 
 ## 6. Proposta di decisione definitiva
 
@@ -525,8 +558,12 @@ approva:
 
 ### 7.1 Per pacchetto
 
-Come nella misura della 0.7.5, sezione 7.1. Per PT21 e PT29 vale la sezione 1
-(la tabella mostra la #900 e la #897, correzioni delle schede).
+Come nella misura della 0.7.5, sezione 7.1, alle 17:40 UTC. Per PT21 e PT29
+vale la sezione 1: la tabella mostra la #900 e la #897, correzioni delle
+schede, e la #907 come «non unita» perché è stata unita dopo la lettura. Con
+la #907 la riga di PT29 sarebbe: PR #907, 3 commit, 17 file, 1344 righe, 617
+di codice, 3 run, 1 fallita, 0 annullate, 1 giro, 4,4 ore di pull request,
+25,4 ore presa→unione, impegno alto (pull request).
 
 | Codice | Issue | Tipo | Diff. | Previsti (agente, fascia, impegno) | Autore | Modello dichiarato | Impegno (fonte) | PR | Commit | File | Righe | Righe di codice | Run | Fallite | Annullate | Giri | Ore PR | Ore presa→unione | Correzioni riferimenti | Correzioni codice | Altre PR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
