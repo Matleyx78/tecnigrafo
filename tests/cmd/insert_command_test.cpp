@@ -109,15 +109,21 @@ public:
         return std::ranges::find(messages, message) != messages.end();
     }
 
-    /// The last insert of the drawing.
-    [[nodiscard]] const core::Insert* lastInsert() const {
+    /// A copy of the last insert of the drawing; a test failure, and a default
+    /// insert, if there is none. A copy rather than a pointer, so that no
+    /// assertion can dereference a null pointer.
+    [[nodiscard]] core::Insert lastInsert() const {
         const core::Insert* last = nullptr;
         for (const core::EntityRecord& record : document.entities()) {
             if (const auto* insert = std::get_if<core::Insert>(&record.entity)) {
                 last = insert;
             }
         }
-        return last;
+        if (last == nullptr) {
+            ADD_FAILURE() << "no insert in the drawing";
+            return {};
+        }
+        return *last;
     }
 
     core::Document document;
@@ -137,13 +143,12 @@ TEST_F(InsertCommandTest, ScaleAndRotationAfterThePoint) {
     EXPECT_EQ(runner.promptText(), kRotation);
     runner.submitText("30");
     EXPECT_FALSE(runner.isActive());
-    const core::Insert* insert = lastInsert();
-    ASSERT_NE(insert, nullptr);
-    EXPECT_EQ(insert->block, "Part");
-    EXPECT_EQ(insert->insertion, (core::Vec2{10, 20}));
-    EXPECT_EQ(insert->scaleX, 2.0);
-    EXPECT_EQ(insert->scaleY, 1.0);
-    EXPECT_DOUBLE_EQ(insert->rotation, core::degreesToRadians(30.0));
+    const core::Insert insert = lastInsert();
+    EXPECT_EQ(insert.block, "Part");
+    EXPECT_EQ(insert.insertion, (core::Vec2{10, 20}));
+    EXPECT_EQ(insert.scaleX, 2.0);
+    EXPECT_EQ(insert.scaleY, 1.0);
+    EXPECT_DOUBLE_EQ(insert.rotation, core::degreesToRadians(30.0));
     EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Insert"}));
 }
 
@@ -156,11 +161,10 @@ TEST_F(InsertCommandTest, ScaleAndRotateBeforeThePointAskNothingAfterIt) {
     EXPECT_EQ(runner.promptText(), kPoint);
     type({"5,5"});
     EXPECT_FALSE(runner.isActive());
-    const core::Insert* insert = lastInsert();
-    ASSERT_NE(insert, nullptr);
-    EXPECT_EQ(insert->scaleX, 3.0);
-    EXPECT_EQ(insert->scaleY, 3.0);
-    EXPECT_DOUBLE_EQ(insert->rotation, core::degreesToRadians(45.0));
+    const core::Insert insert = lastInsert();
+    EXPECT_EQ(insert.scaleX, 3.0);
+    EXPECT_EQ(insert.scaleY, 3.0);
+    EXPECT_DOUBLE_EQ(insert.rotation, core::degreesToRadians(45.0));
 }
 
 TEST_F(InsertCommandTest, OnlyScaleBeforeThePointAsksOnlyTheRotation) {
@@ -168,8 +172,8 @@ TEST_F(InsertCommandTest, OnlyScaleBeforeThePointAsksOnlyTheRotation) {
     EXPECT_EQ(runner.promptText(), kRotation);
     runner.submitText("");
     EXPECT_FALSE(runner.isActive());
-    EXPECT_EQ(lastInsert()->scaleY, 2.0);
-    EXPECT_EQ(lastInsert()->rotation, 0.0);
+    EXPECT_EQ(lastInsert().scaleY, 2.0);
+    EXPECT_EQ(lastInsert().rotation, 0.0);
 }
 
 TEST_F(InsertCommandTest, OnlyRotateBeforeThePointAsksBothScalesButNotTheRotation) {
@@ -179,31 +183,31 @@ TEST_F(InsertCommandTest, OnlyRotateBeforeThePointAsksBothScalesButNotTheRotatio
     EXPECT_EQ(runner.promptText(), kYScale);
     runner.submitText("");
     EXPECT_FALSE(runner.isActive());
-    EXPECT_EQ(lastInsert()->scaleX, 1.0);
-    EXPECT_DOUBLE_EQ(lastInsert()->rotation, core::degreesToRadians(90.0));
+    EXPECT_EQ(lastInsert().scaleX, 1.0);
+    EXPECT_DOUBLE_EQ(lastInsert().rotation, core::degreesToRadians(90.0));
 }
 
 TEST_F(InsertCommandTest, OppositeCornerAndCornerGiveTheScalesFromTheInsertionPoint) {
     type({"-INSERT", "Part", "10,10", "14,12"});
     EXPECT_EQ(runner.promptText(), kRotation);
     runner.submitText("");
-    EXPECT_EQ(lastInsert()->scaleX, 4.0);
-    EXPECT_EQ(lastInsert()->scaleY, 2.0);
+    EXPECT_EQ(lastInsert().scaleX, 4.0);
+    EXPECT_EQ(lastInsert().scaleY, 2.0);
 
     type({"-INSERT", "Part", "0,0", "Corner"});
     EXPECT_EQ(runner.promptText(), "Specify opposite corner:");
     type({"-2,3", ""});
-    EXPECT_EQ(lastInsert()->scaleX, -2.0);
-    EXPECT_EQ(lastInsert()->scaleY, 3.0);
+    EXPECT_EQ(lastInsert().scaleX, -2.0);
+    EXPECT_EQ(lastInsert().scaleY, 3.0);
 
     // Given before the point, the corner waits for it: the diagonal starts
     // from the insertion point.
     type({"-INSERT", "Part", "Scale", "3,4", "1,1"});
     EXPECT_EQ(runner.promptText(), kRotation);
     runner.submitText("");
-    EXPECT_EQ(lastInsert()->insertion, (core::Vec2{1, 1}));
-    EXPECT_EQ(lastInsert()->scaleX, 2.0);
-    EXPECT_EQ(lastInsert()->scaleY, 3.0);
+    EXPECT_EQ(lastInsert().insertion, (core::Vec2{1, 1}));
+    EXPECT_EQ(lastInsert().scaleX, 2.0);
+    EXPECT_EQ(lastInsert().scaleY, 3.0);
 
     // A diagonal without width is no scale.
     type({"-INSERT", "Part", "0,0", "0,5"});
@@ -222,7 +226,7 @@ TEST_F(InsertCommandTest, AFileWithANewNameBecomesABlockWithItsLayer) {
     ASSERT_EQ(block->entities.size(), 1U);
     EXPECT_EQ(std::get<core::Line>(block->entities[0].entity).start, (core::Vec2{2, 3}));
     EXPECT_NE(document.findLayer("IMPORTED"), nullptr);
-    EXPECT_EQ(lastInsert()->block, "nuovo");
+    EXPECT_EQ(lastInsert().block, "nuovo");
     EXPECT_EQ(files.names, (std::vector<std::string>{"nuovo.dxf"}));
     EXPECT_FALSE(heard("Block \"nuovo\" defined"));
     EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Insert"}));
@@ -257,7 +261,7 @@ TEST_F(InsertCommandTest, AFileNamedAsABlockInsertsTheBlockWithoutReadingIt) {
     const core::BlockDefinition* block = document.blocks().find("Part");
     ASSERT_NE(block, nullptr);
     EXPECT_TRUE(std::holds_alternative<core::Line>(block->entities[0].entity));
-    EXPECT_EQ(lastInsert()->block, "Part");
+    EXPECT_EQ(lastInsert().block, "Part");
 }
 
 TEST_F(InsertCommandTest, NameEqualsPathRedefinesAnExistingBlockAndItsInserts) {
@@ -317,35 +321,35 @@ TEST_F(InsertCommandTest, APathReusingABlockInMillimetresInMetresConvertsTheProp
     type({"", "", ""});
     EXPECT_FALSE(runner.isActive());
     EXPECT_TRUE(files.names.empty());
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleX, 0.001);
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleY, 0.001);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleX, 0.001);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleY, 0.001);
 }
 
 TEST_F(InsertCommandTest, EveryScaleFactorIsMultipliedByTheUnitFactor) {
     document.setUnits(6);
     document.replaceBlock("Mm", lineBlock("Mm", 4));
     type({"-INSERT", "Mm", "0,0", "", "", ""});
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleX, 0.001);
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleY, 0.001);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleX, 0.001);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleY, 0.001);
 
     type({"-INSERT", "Mm", "0,0", "2", "", ""});
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleX, 0.002);
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleY, 0.002);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleX, 0.002);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleY, 0.002);
 
     type({"-INSERT", "Mm", "Scale", "XYZ"});
     EXPECT_EQ(runner.promptText(), "Enter X scale factor <1>:");
     type({"2", "1"});
     EXPECT_EQ(runner.promptText(), "Enter Z scale factor <use X scale factor>:");
     type({"3", "0,0", ""});
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleX, 0.002);
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleY, 0.001);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleX, 0.002);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleY, 0.001);
     const core::EntityRecord& record = document.entities().back();
     ASSERT_FALSE(record.extras.specific.empty());
     EXPECT_EQ(record.extras.specific.back().code, 43);
 
     type({"-INSERT", "Mm", "0,0", "4,2", ""});
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleX, 0.004);
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleY, 0.002);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleX, 0.004);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleY, 0.002);
 }
 
 TEST_F(InsertCommandTest, UnitCodesZeroAndOutsideTheTableGiveFactorOne) {
@@ -354,13 +358,13 @@ TEST_F(InsertCommandTest, UnitCodesZeroAndOutsideTheTableGiveFactorOne) {
     document.replaceBlock("U24", lineBlock("U24", 24));
     document.replaceBlock("U25", lineBlock("U25", 25));
     type({"-INSERT", "U0", "0,0", "", "", ""});
-    EXPECT_EQ(lastInsert()->scaleX, 1.0);
+    EXPECT_EQ(lastInsert().scaleX, 1.0);
     type({"-INSERT", "U24", "0,10", "", "", ""});
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleX, 6336000.0 / 3937.0);
-    EXPECT_DOUBLE_EQ(lastInsert()->scaleY, 6336000.0 / 3937.0);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleX, 6336000.0 / 3937.0);
+    EXPECT_DOUBLE_EQ(lastInsert().scaleY, 6336000.0 / 3937.0);
     type({"-INSERT", "U25", "0,20", "", "", ""});
-    EXPECT_EQ(lastInsert()->scaleX, 1.0);
-    EXPECT_EQ(lastInsert()->scaleY, 1.0);
+    EXPECT_EQ(lastInsert().scaleX, 1.0);
+    EXPECT_EQ(lastInsert().scaleY, 1.0);
     EXPECT_EQ(document.blocks().find("U25")->units, 25);
 }
 
@@ -399,13 +403,13 @@ TEST_F(InsertCommandTest, BasepointChangesTheBasePointOfThisInsertOnly) {
     type({"-INSERT", "Part", "Basepoint"});
     EXPECT_EQ(runner.promptText(), "Specify base point <0,0>:");
     type({"5,0", "15,20", "", "", ""});
-    EXPECT_EQ(lastInsert()->insertion, (core::Vec2{10, 20}));
+    EXPECT_EQ(lastInsert().insertion, (core::Vec2{10, 20}));
     EXPECT_EQ(document.blocks().find("Part")->base, (core::Vec2{0, 0}));
 
     // The base point lands on the insertion point after scale and rotation.
     type({"-INSERT", "Part", "Scale", "2", "Rotate", "90", "Basepoint", "5,0", "15,20"});
-    EXPECT_NEAR(lastInsert()->insertion.x, 15.0, 1e-12);
-    EXPECT_NEAR(lastInsert()->insertion.y, 10.0, 1e-12);
+    EXPECT_NEAR(lastInsert().insertion.x, 15.0, 1e-12);
+    EXPECT_NEAR(lastInsert().insertion.y, 10.0, 1e-12);
 }
 
 TEST_F(InsertCommandTest, ScaleZeroRepeatsThePromptAndUUndoesTheInsert) {
