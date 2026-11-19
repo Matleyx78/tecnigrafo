@@ -22,9 +22,12 @@
 - `cmd/src/commands/explode_command.cpp`, `cmd/include/tg/cmd/commands/explode_command.hpp`
 - `edit/include/tg/edit/editor.hpp`, `edit/src/editor.cpp` (solo le due
   funzioni del punto 3, eccezione alla regola di PT7 su `editor.*`)
+- `core/include/tg/core/document.hpp`, `core/src/document.cpp` (solo
+  `Document::addRaw` e `Document::removeRaw`, necessari al punto 3)
 - `io/src/dxf_write.cpp` (solo il proprietario delle entità grezze, punto 4)
 - `tests/core/explode_test.cpp` (nuovo), `tests/cmd/explode_command_test.cpp`,
-  `tests/edit/editor_test.cpp`, `tests/io/dxf_write_test.cpp`,
+  `tests/edit/editor_test.cpp`, `tests/core/document_test.cpp`,
+  `tests/io/dxf_write_test.cpp`,
   `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
@@ -101,13 +104,19 @@
    Tutte e due si annullano e si rifanno come `add()`. `addRecord` non tocca
    gli extras: i gruppi 102 li toglie già `explodeInsert`. Se il gruppo 5
    manca prima del primo gruppo 100, `addRaw` lo aggiunge in testa ai gruppi.
+   `core::Document` aggiunge `addRaw` e `removeRaw`, usate solo per rendere
+   annullabile e ripristinabile `Editor::addRaw`: assegnano la nuova chiave
+   d'ordine e inseriscono o rimuovono l'entità grezza senza ampliare le altre
+   operazioni pubbliche del documento.
 4. **Proprietario delle entità grezze.** `io/src/dxf_write.cpp` scrive il
    gruppo 330 di ogni entità grezza del disegno con l'handle dello spazio
    modello, come `setOwner` fa per le entità dei blocchi in
    `io/src/dxf_blocks.cpp`: un'entità grezza copiata da un blocco porta il
    330 della definizione, che nello spazio modello sarebbe sbagliato. Se il
    330 manca, non si aggiunge; un'entità grezza letta dallo spazio modello
-   resta identica.
+   resta identica. Non riscrive il gruppo 330 delle entità grezze il cui
+   proprietario è un `BLOCK_RECORD` `*Paper_Space…`: restano nello spazio
+   carta, conservando il proprietario secondo l'ADR 0006.
 
 ## Regole della tappa che valgono qui
 
@@ -145,10 +154,15 @@
   un'entità grezza senza gruppo 5 prima del primo gruppo 100 lo aggiunge in
   testa ai gruppi con l'handle nuovo, e gli altri gruppi restano nel loro
   ordine; `undo` e `redo` di tutte e due, anche nella stessa transazione.
+- `document_test.cpp`: `addRaw` assegna una chiave d'ordine nuova e inserisce
+  l'entità grezza; `removeRaw` la toglie, così `Editor::addRaw` può annullare
+  e ripristinare l'aggiunta.
 - `dxf_write_test.cpp`: un disegno con un'entità grezza dello spazio modello il
   cui 330 è l'handle di una definizione di blocco si scrive con il 330 dello
   spazio modello; un'entità grezza con il 330 già giusto si scrive identica;
-  un'entità grezza senza 330 si scrive identica, senza un 330 aggiunto.
+  un'entità grezza senza 330 si scrive identica, senza un 330 aggiunto;
+  un'entità grezza il cui 330 appartiene a un `BLOCK_RECORD`
+  `*Paper_Space…` conserva quel 330 e resta nello spazio carta.
 
 ## Fatto quando
 

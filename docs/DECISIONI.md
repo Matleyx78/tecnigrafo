@@ -2193,6 +2193,22 @@ i rimandi ai documenti che cambia.
   comando che manca, e PT21 e PT26 la tolgono) e l'uscita C (RT29 riscrive i
   casi senza i comandi di altri pacchetti).
 
+- **2026-11-19 — Perimetro delle entità grezze di PT29 e spazio carta.**
+  Codex ferma il primo giro di revisione della pull request di PT29
+  ([#907](https://github.com/Matleyx78/tecnigrafo/pull/907)) su due buchi: per
+  annullare `Editor::addRaw` servono operazioni su `core::Document` non
+  elencate nella scheda, e riscrivere il gruppo 330 di ogni entità grezza
+  sposterebbe nello spazio modello quelle appartenenti a un `BLOCK_RECORD`
+  `*Paper_Space…`. Il responsabile sceglie entrambe le uscite A: PT29 include
+  `core/include/tg/core/document.hpp`, `core/src/document.cpp` e
+  `tests/core/document_test.cpp`, con `Document::addRaw` e
+  `Document::removeRaw` limitate a rendere annullabile e ripristinabile
+  `Editor::addRaw`; `io/src/dxf_write.cpp` non riscrive il 330 delle entità
+  grezze appartenenti ai `BLOCK_RECORD` `*Paper_Space…`, che restano nello
+  spazio carta secondo l'ADR 0006. I test di `Document` e della scrittura DXF
+  fissano entrambe le regole. Scartato lasciare quei file fuori dal perimetro
+  o spostare nello spazio modello le entità grezze dello spazio carta.
+
 - **2026-11-19 — Scala di `-INSERT` e domande dopo il punto come AutoCAD.**
   Claude si ferma su PT21
   ([#705](https://github.com/Matleyx78/tecnigrafo/issues/705)): i casi di

@@ -365,9 +365,44 @@ void BuiltinActions::add(ActionRegistry& registry) {
         arc, QStringLiteral("draw.arc.start-center-end"), tr("&Start, Center, End"),
         tr("Draws an arc from its start, its center and its end."), QStringLiteral("ARC"),
         {QString(kWaitForUser), QStringLiteral("C")}, QStringLiteral("draw-arc-sce")));
-    registry.add(withIcon(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
-                                      tr("Writes single-line texts."), QStringLiteral("TEXT")),
-                          QStringLiteral("draw-text")));
+    const QString ellipse = QStringLiteral("draw.ellipse");
+    registry.add(withIcon(commandSpec(ellipse, tr("&Ellipse"), draw, tr("Draws an ellipse."),
+                                      QStringLiteral("ELLIPSE")),
+                          QStringLiteral("draw-ellipse")));
+    registry.add(variantSpec(ellipse, QStringLiteral("draw.ellipse.axis-end"), tr("&Axis, End"),
+                             tr("Draws an ellipse from an axis and the other semiaxis."),
+                             QStringLiteral("ELLIPSE"), {}, QStringLiteral("draw-ellipse")));
+    registry.add(variantSpec(ellipse, QStringLiteral("draw.ellipse.center"), tr("&Center"),
+                             tr("Draws an ellipse from its center and two semiaxes."),
+                             QStringLiteral("ELLIPSE"), {QStringLiteral("C")},
+                             QStringLiteral("draw-ellipse")));
+    registry.add(variantSpec(ellipse, QStringLiteral("draw.ellipse.arc"), tr("&Arc"),
+                             tr("Draws an elliptical arc."), QStringLiteral("ELLIPSE"),
+                             {QStringLiteral("A")}, QStringLiteral("draw-ellipse")));
+    ActionSpec text = withIcon(commandSpec(QStringLiteral("draw.text"), tr("&Text"), draw,
+                                           tr("Writes single-line texts."), QStringLiteral("TEXT")),
+                               QStringLiteral("draw-text"));
+    text.ribbon = QStringLiteral("home/annotation");
+    registry.add(std::move(text));
+    ActionSpec mtext =
+        withIcon(commandSpec(QStringLiteral("draw.mtext"), tr("&Multiline Text"), draw,
+                             tr("Writes multiline texts."), QStringLiteral("MTEXT")),
+                 QStringLiteral("draw-mtext"));
+    mtext.ribbon = QStringLiteral("home/annotation");
+    registry.add(std::move(mtext));
+    const QString block = draw + QLatin1Char('/') + tr("&Block");
+    ActionSpec createBlock =
+        withIcon(commandSpec(QStringLiteral("block.create"), tr("&Create Block"), block,
+                             tr("Creates a block definition."), QStringLiteral("-BLOCK")),
+                 QStringLiteral("block-create"));
+    createBlock.ribbon = QStringLiteral("home/block");
+    registry.add(std::move(createBlock));
+    ActionSpec insertBlock =
+        withIcon(commandSpec(QStringLiteral("block.insert"), tr("&Insert Block"), tr("&Insert"),
+                             tr("Inserts a block or drawing."), QStringLiteral("-INSERT")),
+                 QStringLiteral("block-insert"));
+    insertBlock.ribbon = QStringLiteral("home/block");
+    registry.add(std::move(insertBlock));
 
     const QString modify = tr("&Modify");
     // Keep each column of three small buttons together: TRIM/EXTEND/OFFSET
@@ -408,6 +443,56 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(commandSpec(QStringLiteral("edit.join"), tr("&Join"), modify,
                                       tr("Joins objects into one object."), QStringLiteral("JOIN")),
                           QStringLiteral("edit-join")));
+    registry.add(withIcon(commandSpec(QStringLiteral("edit.pedit"), tr("Polyline &Edit"), modify,
+                                      tr("Edits polylines."), QStringLiteral("PEDIT")),
+                          QStringLiteral("edit-pedit")));
+
+    const QString dimension = tr("&Dimension");
+    ActionSpec linear =
+        withIcon(commandSpec(QStringLiteral("dimension.linear"), tr("&Linear"), dimension,
+                             tr("Creates a horizontal or vertical linear dimension."),
+                             QStringLiteral("DIMLINEAR")),
+                 QStringLiteral("dimension-linear"));
+    linear.ribbon = QStringLiteral("annotate/dimensions");
+    registry.add(std::move(linear));
+    registry.add(variantSpec(QStringLiteral("dimension.linear"),
+                             QStringLiteral("dimension.linear.variant"), tr("&Linear"),
+                             tr("Creates a horizontal or vertical linear dimension."),
+                             QStringLiteral("DIMLINEAR"), {}, QStringLiteral("dimension-linear")));
+    registry.add(
+        variantSpec(QStringLiteral("dimension.linear"), QStringLiteral("dimension.aligned"),
+                    tr("&Aligned"), tr("Creates a dimension aligned with two points."),
+                    QStringLiteral("DIMALIGNED"), {}, QStringLiteral("dimension-aligned")));
+    for (ActionSpec spec :
+         {withIcon(commandSpec(QStringLiteral("dimension.angular"), tr("&Angular"), dimension,
+                               tr("Creates an angular dimension."), QStringLiteral("DIMANGULAR")),
+                   QStringLiteral("dimension-angular")),
+          withIcon(commandSpec(QStringLiteral("dimension.radius"), tr("&Radius"), dimension,
+                               tr("Creates a radius dimension."), QStringLiteral("DIMRADIUS")),
+                   QStringLiteral("dimension-radius")),
+          withIcon(commandSpec(QStringLiteral("dimension.diameter"), tr("&Diameter"), dimension,
+                               tr("Creates a diameter dimension."), QStringLiteral("DIMDIAMETER")),
+                   QStringLiteral("dimension-diameter"))}) {
+        spec.ribbon = QStringLiteral("annotate/dimensions");
+        registry.add(std::move(spec));
+    }
+    ActionSpec dimensionStyle =
+        withIcon(commandSpec(QStringLiteral("dimension.style"), tr("Dimension &Style"), dimension,
+                             tr("Edits dimension styles."), QStringLiteral("-DIMSTYLE")),
+                 QStringLiteral("dimension-style"));
+    dimensionStyle.ribbon = QStringLiteral("annotate/dimensions");
+    registry.add(std::move(dimensionStyle));
+    ActionSpec textStyle =
+        withIcon(commandSpec(QStringLiteral("text.style"), tr("Text &Style"), tr("&Format"),
+                             tr("Edits text styles."), QStringLiteral("-STYLE")),
+                 QStringLiteral("text-style"));
+    textStyle.ribbon = QStringLiteral("annotate/text");
+    registry.add(std::move(textStyle));
+    // Dimension Style is available from both the Dimension and Format menus.
+    registry.add(withIcon(
+        commandSpec(QStringLiteral("dimension.style.format"), tr("&Dimension Style"), tr("&Format"),
+                    tr("Edits dimension styles."), QStringLiteral("-DIMSTYLE")),
+        QStringLiteral("dimension-style")));
 
     registry.add(global(anyDocument(
         withIcon(makeSpec(QStringLiteral("help.about"), tr("&About Tecnigrafo"), tr("&Help"),
