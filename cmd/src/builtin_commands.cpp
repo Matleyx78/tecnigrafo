@@ -11,6 +11,7 @@
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
+#include "tg/cmd/commands/dimension_angular_commands.hpp"
 #include "tg/cmd/commands/dimension_commands.hpp"
 #include "tg/cmd/commands/dimstyle_commands.hpp"
 #include "tg/cmd/commands/ellipse_command.hpp"
@@ -56,8 +57,16 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(DimensionCommand::description(DimensionCommand::Kind::Aligned), [] {
         return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Aligned);
     });
+    registry.add(DimangularCommand::description(),
+                 [] { return std::make_unique<DimangularCommand>(); });
+    registry.add(RadialDimensionCommand::description(RadialDimensionCommand::Kind::Diameter), [] {
+        return std::make_unique<RadialDimensionCommand>(RadialDimensionCommand::Kind::Diameter);
+    });
     registry.add(DimensionCommand::description(DimensionCommand::Kind::Linear),
                  [] { return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Linear); });
+    registry.add(RadialDimensionCommand::description(RadialDimensionCommand::Kind::Radius), [] {
+        return std::make_unique<RadialDimensionCommand>(RadialDimensionCommand::Kind::Radius);
+    });
     registry.add(DimstyleCommand::description(),
                  [] { return std::make_unique<DimstyleCommand>(); });
     for (const auto& variable : core::dimVariableInfos()) {
