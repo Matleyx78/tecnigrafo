@@ -423,14 +423,14 @@ PT39 porta nell’interfaccia i primi comandi nuovi della tappa.
 |---|---|---|---|
 | `draw-ellipse` | `draw.ellipse` | ellisse e asse maggiore | sì |
 | `draw-mtext` | `draw.mtext` | righe di testo e limite sinistro | sì |
-| `edit-pedit` | `edit.pedit` | polilinea con vertice da modificare | sì |
+| `edit-pedit` | `edit.pedit` | polilinea esistente con vertice attivo | sì |
 | `block-create` | `block.create` | due oggetti e simbolo di creazione | sì |
 | `block-insert` | `block.insert` | blocco originale e copia inserita | sì |
-| `text-style` | `text.style` | lettera T stilizzata | sì |
-| `dimension-style` | `dimension.style` | linea di quota fra due estensioni | sì |
+| `text-style` | `text.style` | campioni di righe esistenti con selezione attiva | sì |
+| `dimension-style` | `dimension.style` | linea di quota esistente fra due estensioni | sì |
 | `dimension-linear` | `dimension.linear` | quota lineare orizzontale | sì |
-| `dimension-aligned` | `dimension.aligned` | quota allineata inclinata | sì |
-| `dimension-angular` | `dimension.angular` | angolo e arco di quota | sì |
+| `dimension-aligned` | `dimension.aligned` | oggetto e quota paralleli, inclinati a 45° | sì |
+| `dimension-angular` | `dimension.angular` | angolo e arco centrato nel vertice | sì |
 | `dimension-radius` | `dimension.radius` | cerchio e raggio quotato | sì |
 | `dimension-diameter` | `dimension.diameter` | cerchio e diametro quotato | sì |
 

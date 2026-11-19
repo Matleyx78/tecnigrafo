@@ -3,7 +3,7 @@
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
     <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-        <polyline class="geo" points="2.5,28.5 15.5,2.5 28.5,28.5"/>
-        <line class="pt" x1="13.5" y1="2.5" x2="17.5" y2="2.5"/>
+        <polyline id="polyline" class="esist" points="2.5,28.5 15.5,4.5 28.5,28.5"/>
+        <circle class="pt" cx="15.5" cy="4.5" r="2.5" fill="currentColor" stroke="none" data-on="polyline"/>
     </g>
 </svg>

@@ -3,8 +3,9 @@
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
     <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-        <line class="geo" x1="4.5" y1="2.5" x2="26.5" y2="2.5"/>
-        <line class="geo" x1="15.5" y1="2.5" x2="15.5" y2="28.5"/>
-        <line class="geo" x1="12.5" y1="28.5" x2="18.5" y2="28.5"/>
+        <line class="esist" x1="2.5" y1="5.5" x2="28.5" y2="5.5"/>
+        <line class="esist" x1="2.5" y1="15.5" x2="22.5" y2="15.5"/>
+        <line class="esist" x1="2.5" y1="25.5" x2="15.5" y2="25.5"/>
+        <circle class="pt" cx="22.5" cy="15.5" r="2.5" fill="currentColor" stroke="none"/>
     </g>
 </svg>

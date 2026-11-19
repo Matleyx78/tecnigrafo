@@ -5,7 +5,7 @@
     <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
         <line class="esist" x1="1.5" y1="3.5" x2="1.5" y2="11.5"/>
         <line class="esist" x1="13.5" y1="3.5" x2="13.5" y2="11.5"/>
-        <line class="cost" x1="1.5" y1="7.5" x2="13.5" y2="7.5"/>
+        <line class="esist" x1="1.5" y1="7.5" x2="13.5" y2="7.5"/>
         <polyline class="pt" points="4.5,5.5 1.5,7.5 4.5,9.5"/>
         <polyline class="pt" points="10.5,5.5 13.5,7.5 10.5,9.5"/>
     </g>

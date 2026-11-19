@@ -346,6 +346,15 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
                            QStringLiteral("&Circle"), QStringLiteral("&Arc"),
                            QStringLiteral("&Ellipse"), QStringLiteral("&Text"),
                            QStringLiteral("&Multiline Text"), QStringLiteral("&Block")}));
+    EXPECT_EQ(titles(menus[4]->menu()->actions().last()->menu()->actions()),
+              (QStringList{QStringLiteral("&Create Block")}));
+    EXPECT_EQ(titles(menus[5]->menu()->actions()), (QStringList{QStringLiteral("&Insert Block")}));
+    EXPECT_EQ(titles(menus[7]->menu()->actions()),
+              (QStringList{QStringLiteral("&Linear"), QStringLiteral("&Angular"),
+                           QStringLiteral("&Radius"), QStringLiteral("&Diameter"),
+                           QStringLiteral("Dimension &Style")}));
+    EXPECT_EQ(titles(menus[8]->menu()->actions()),
+              (QStringList{QStringLiteral("Text &Style"), QStringLiteral("&Dimension Style")}));
     // The actions of the program are global, in every environment (decision
     // B7, docs/tappe/0.7.5/P30), and so are Save and Save As, which go through
     // the type of the document (docs/tappe/0.7.5/P30b); the others are of the
