@@ -17,6 +17,7 @@ messages:
   Value must be nonzero.
   Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: 2
   Specify insertion point or [Basepoint/Scale/Rotate]: 0,0
+  Specify rotation angle <0>:
 prompt: Command:
 preview:
 selection: none
@@ -28,6 +29,12 @@ snap: on
 ortho: off
 drawing: metri.dxf, modified
 units: 6
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "assente" base=0,0 units=4
+  "assente" 66 LINE start=0,0 end=10,0
 documents: Drawing1.cadx, metri.dxf (active)
 pointer: none
 active snap: none
