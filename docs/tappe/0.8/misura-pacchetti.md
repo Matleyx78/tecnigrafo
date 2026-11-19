@@ -127,7 +127,8 @@ e della issue, letti dall'API il 2026-11-19:
 
 - *giri di revisione*: commenti della pull request principale che contengono
   «Giro di revisione:» (la regola di [catena.md](../../agenti/catena.md),
-  «Revisione (revisore)»). Esistono dalla catena (#768, 2026-11-14 sera):
+  «Revisione (revisore)»), tutti, anche quelli che ripetono il numero di un
+  giro (sezione 2.8). Esistono dalla catena (#768, 2026-11-14 sera):
   PT1, PT2, PT4, PT5, PT6, PT36 e PT40 non ne hanno;
 - *fermate per una decisione*: commenti della issue o della pull request
   principale che cominciano con «Serve una decisione del responsabile», tolti
@@ -383,16 +384,19 @@ tolta). La #887 aggiunge due casi chiesti da solid-space, non ne corregge.
 Gruppi della sezione 4. «Run fallite»: prima del verde; «giri di revisione»
 con la regola della sezione 1; «presa→unione» e «fermi» dallo script, PT21
 con i dati della #900 (circa 4,7 ore in meno della #905), PT29 con quelli
-della #907 (sezione 1). PT29 è nel gruppo B, con un giro di revisione: la #907
-ha due commenti con «Giro di revisione:», ma il secondo è la ripresa del giro
-1 dopo la decisione (catena.md, «Ripresa dopo una decisione»), non un giro
-nuovo. Le sue fermate sono 5 (3 nella issue #719, 2 nella #907); le
-correzioni della sua scheda 3 (#891, #897, #909).
+della #907 (sezione 1). PT29 è nel gruppo B, con due giri di revisione: la
+#907 ha due commenti con «Giro di revisione:», e la regola della sezione 1 li
+conta tutti, anche il secondo, che è la ripresa del giro 1 dopo la decisione
+(«Giro di revisione: 1 (ripresa dopo la decisione)»). Allo stesso modo PT13
+conta due giri per i due commenti «Giro di revisione: 1» della #854. Nessun
+altro pacchetto ha un commento simile. Le fermate di PT29 sono 5 (3 nella
+issue #719, 2 nella #907); le correzioni della sua scheda 3 (#891, #897,
+#909).
 
 | Gruppo | Pacchetti | Con ≥1 run fallita | Run fallite | Giri di revisione (med.; tot.) | Con ≥2 giri di revisione | Fermate per una decisione (pacchetti) | Correzioni delle schede | Correzioni del codice dopo l'unione | Ore presa→unione (med.) | Fermi (h) | Righe di codice (med.) |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | A. Impegnativi di un tempo, in fascia media (Claude) | 9 | 6 | 7 | 1; 13 | 4 | 20 (8) | 7 | 0 | 8,2 | 25,7 | 752 |
-| B. Altri medi di Claude con impegno alto | 11 | 6 | 8 | 1; 9 | 0 | 19 (9) | 9 | 0 | 10,7 | 91,1 | 648 |
+| B. Altri medi di Claude con impegno alto | 11 | 6 | 8 | 1; 10 | 1 | 19 (9) | 9 | 0 | 10,7 | 91,1 | 648 |
 | C. Medi con impegno medio (19 di Codex e PT8) | 20 | 14 | 22 | 2; 40 | 17 | 12 (8) | 5 | 0 | 6,5 | 4,1 | 364 |
 | D. Impegnativi di codice in fascia forte (PT18, PT37) | 2 | 2 | 7 | 1,5; 3 | 1 | 4 (2) | 0 | 0 | 11,1 | 7,4 | 1980 |
 
@@ -435,7 +439,7 @@ risposte condivise (PT3, PT22) e gli strumenti di verifica arrivati dopo i
 riferimenti (F8, F9, F11, F12).
 
 **Le revisioni.** I medi di Codex rivisti da Claude hanno avuto quasi sempre
-due o più giri (16 su 19); quelli di Claude rivisti da Codex di rado (5 su
+due o più giri (16 su 19); quelli di Claude rivisti da Codex di rado (6 su
 18 con revisione). Non si separa il modello di chi scrive da quello di chi
 rivede (sezione 1).
 
