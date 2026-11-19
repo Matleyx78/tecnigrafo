@@ -16,6 +16,8 @@
 
 namespace tg::edit {
 
+struct BlockImport;
+
 /// The only way to modify a document (docs/adr/0005).
 ///
 /// Every change happens inside a named transaction. A committed transaction
@@ -144,6 +146,8 @@ private:
     friend class DocumentTables;
     friend bool saveDimStyle(Editor& editor, std::string_view name);
     friend bool putTextStyle(Editor& editor, core::TextStyle style);
+    friend core::EntityId addInsert(Editor& editor, core::Insert insert, core::RawGroups specific);
+    friend bool applyImport(Editor& editor, BlockImport import, bool redefine);
 
     struct LayerTableChange {
         core::Layer record;
