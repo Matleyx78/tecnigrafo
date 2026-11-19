@@ -98,7 +98,10 @@ void addDimension(CommandContext& context, core::Dimension dimension) {
     const core::DimensionKind messageKind = added.definition.kind == core::DimensionKind::Angular
                                                 ? core::DimensionKind::Angular
                                                 : core::DimensionKind::Linear;
-    std::string message = core::dimensionText(variables, messageKind, added.value.measurement, {});
+    const double messageMeasurement = added.definition.kind == core::DimensionKind::Angular
+                                          ? core::radiansToDegrees(added.value.measurement)
+                                          : added.value.measurement;
+    std::string message = core::dimensionText(variables, messageKind, messageMeasurement, {});
     if (message.ends_with("%%d")) {
         message.resize(message.size() - 3);
     }

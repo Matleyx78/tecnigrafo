@@ -68,6 +68,7 @@ TEST_F(DimensionAngularCommandsTest, AngularSelectsLinesAndQuadrantFixesTheSecto
     EXPECT_GT(dimension().definition.point16.y, 0.0);
     EXPECT_NEAR(core::distance(dimension().definition.point16, {0.0, 0.0}), std::sqrt(1800.0),
                 1e-12);
+    EXPECT_EQ(messages().back(), "Dimension text = 53");
 }
 
 TEST_F(DimensionAngularCommandsTest, AngularLocationSelectsAllFourSectors) {
