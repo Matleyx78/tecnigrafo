@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <limits>
 #include <ranges>
 #include <utility>
 
@@ -247,7 +248,10 @@ bool readDefinitionFields(core::BlockDefinition& definition) {
     const auto units = integerOf(definition.recordExtras, 70, 0);
     const auto explodable = integerOf(definition.recordExtras, 280, 1);
     const auto uniform = integerOf(definition.recordExtras, 281, 0);
-    if (!units || *units < 0 || *units > core::Document::kMaxUnits || !explodable || !uniform) {
+    // A code outside the table of $INSUNITS (25 or more) is an unknown unit,
+    // kept as read (docs/tappe/0.8/PT21-comando-insert.md, point 2).
+    if (!units || *units < 0 || *units > std::numeric_limits<int>::max() || !explodable ||
+        !uniform) {
         return false;
     }
     definition.units = static_cast<int>(*units);
