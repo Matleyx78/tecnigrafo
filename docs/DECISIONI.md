@@ -2192,3 +2192,23 @@ i rimandi ai documenti che cambia.
   `tests/verifica/in-attesa/0.8-RT29.txt` una riga per caso con l'issue del
   comando che manca, e PT21 e PT26 la tolgono) e l'uscita C (RT29 riscrive i
   casi senza i comandi di altri pacchetti).
+
+- **2026-11-19 — Scala di `-INSERT` e domande dopo il punto come AutoCAD.**
+  Claude si ferma su PT21
+  ([#705](https://github.com/Matleyx78/tecnigrafo/issues/705)): i casi di
+  RT21 moltiplicano per il fattore delle unità anche la scala scritta, mentre
+  la scheda lo faceva solo per quella proposta, e finiscono il comando al
+  punto d'inserimento, mentre AutoCAD dopo il punto chiede scala e rotazione.
+  Il responsabile sceglie la B, come AutoCAD: la scala proposta è sempre
+  `<1>` e ogni fattore di scala, scritto o proposto, si moltiplica per il
+  fattore delle unità; dopo il punto d'inserimento `-INSERT` chiede scala X
+  (con *Corner*/*XYZ* e l'angolo opposto, la cui diagonale parte dal punto
+  d'inserimento), scala Y e rotazione, salvo quelle già date con *Scale* e
+  *Rotate* ([0.8-PT21](tappe/0.8/PT21-comando-insert.md)). Corregge la
+  decisione del 2026-11-13, «Buchi della revisione della #756», punto 3: la
+  conversione delle unità non sta nella scala proposta ma nella scala
+  dell'inserimento. Scartate la scheda com'era (proposta uguale al fattore,
+  valore scritto senza conversione) e la regola mista dei casi (proposta
+  uguale al fattore e valore scritto moltiplicato anche lui). I casi di RT21
+  ([#704](https://github.com/Matleyx78/tecnigrafo/issues/704)) si correggono
+  a parte; il pacchetto riparte con il loro merge.
