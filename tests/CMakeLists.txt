@@ -84,6 +84,7 @@ add_executable(tg_tests
     core/document_query_test.cpp
     core/document_test.cpp
     core/effective_properties_test.cpp
+    core/explode_test.cpp
     core/layer_test.cpp
     core/geometry_test.cpp
     core/insert_test.cpp

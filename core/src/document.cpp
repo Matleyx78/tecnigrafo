@@ -226,6 +226,29 @@ void Document::insertRaw(RawEntity raw) {
     m_rawEntities.insert(where, std::move(raw));
 }
 
+EntityId Document::addRaw(RawEntity raw) {
+    assert(m_nextId <= kLastUsable && m_nextOrder <= kLastUsable);
+    raw.id = EntityId{m_nextId++};
+    raw.order = m_nextOrder++;
+    const EntityId id = raw.id;
+    m_otherIds.insert(id.value);
+    // The largest key so far: it goes after every unhandled entity.
+    m_rawEntities.push_back(std::move(raw));
+    return id;
+}
+
+std::optional<RawEntity> Document::removeRaw(EntityId id) {
+    const auto found = std::ranges::find(m_rawEntities, id, &RawEntity::id);
+    if (found == m_rawEntities.end()) {
+        return std::nullopt;
+    }
+    RawEntity removed = std::move(*found);
+    m_rawEntities.erase(found);
+    // The counters stay past it, so add() never gives it again.
+    m_otherIds.erase(id.value);
+    return removed;
+}
+
 void Document::replaceRaw(const RawEntity& raw) {
     const auto found = std::ranges::find(m_rawEntities, raw.id, &RawEntity::id);
     assert(found != m_rawEntities.end());
