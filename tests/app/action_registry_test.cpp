@@ -383,7 +383,8 @@ TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons)
         {QStringLiteral("edit.offset"), QStringLiteral("OFFSET")},
         {QStringLiteral("edit.fillet"), QStringLiteral("FILLET")},
         {QStringLiteral("edit.chamfer"), QStringLiteral("CHAMFER")},
-        {QStringLiteral("edit.join"), QStringLiteral("JOIN")}};
+        {QStringLiteral("edit.join"), QStringLiteral("JOIN")},
+        {QStringLiteral("edit.pedit"), QStringLiteral("PEDIT")}};
     QMenu* modify = nullptr;
     for (QAction* item : window().menuBar()->actions()) {
         if (item->text() == QStringLiteral("&Modify")) {
@@ -438,7 +439,7 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
         }
     }
     // File, editing and drawing commands, including the menu/ribbon aliases.
-    EXPECT_EQ(withCommands.size(), 47);
+    EXPECT_EQ(withCommands.size(), 46);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());

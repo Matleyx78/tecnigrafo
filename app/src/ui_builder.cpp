@@ -610,6 +610,10 @@ void UiBuilder::buildRibbon() {
         } else {
             panel->addSmallAction(action);
         }
+        // MTEXT is beside TEXT on Home and is also offered in Annotate/Text.
+        if (spec->id == QStringLiteral("draw.mtext")) {
+            panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
+        }
     }
     // SARibbonMainWindow disposes of the previous menu widget with
     // deleteLater(), and gives the new ribbon the title row of a window
@@ -698,6 +702,9 @@ void UiBuilder::buildClassic() {
             auto* button = qobject_cast<QToolButton*>(toolbar->widgetForAction(action));
             if (action->menu() != nullptr && button != nullptr) {
                 button->setPopupMode(QToolButton::MenuButtonPopup);
+            }
+            if (spec->id == QStringLiteral("draw.mtext")) {
+                toolbarFor(QStringLiteral("annotate/text"))->addAction(action);
             }
         }
     }

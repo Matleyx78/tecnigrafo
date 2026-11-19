@@ -390,14 +390,6 @@ void BuiltinActions::add(ActionRegistry& registry) {
                  QStringLiteral("draw-mtext"));
     mtext.ribbon = QStringLiteral("home/annotation");
     registry.add(std::move(mtext));
-    ActionSpec annotateMtext =
-        withIcon(commandSpec(QStringLiteral("draw.mtext.annotate"), tr("&Multiline Text"), draw,
-                             tr("Writes multiline texts."), QStringLiteral("MTEXT")),
-                 QStringLiteral("draw-mtext"));
-    annotateMtext.menu.clear();
-    annotateMtext.ribbon = QStringLiteral("annotate/text");
-    registry.add(std::move(annotateMtext));
-
     const QString block = draw + QLatin1Char('/') + tr("&Block");
     ActionSpec createBlock =
         withIcon(commandSpec(QStringLiteral("block.create"), tr("&Create Block"), block,
