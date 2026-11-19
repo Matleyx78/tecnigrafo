@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <line class="esist" x1="1.5" y1="2.5" x2="13.5" y2="2.5"/>
+        <line class="esist" x1="1.5" y1="7.5" x2="10.5" y2="7.5"/>
+        <line class="esist" x1="1.5" y1="12.5" x2="7.5" y2="12.5"/>
+        <circle class="pt" cx="10.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/>
+    </g>
+</svg>

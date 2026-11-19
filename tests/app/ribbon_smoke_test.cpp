@@ -244,6 +244,65 @@ TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
     }
 }
 
+TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
+    MainWindow window;
+    window.setScriptMode();
+    window.resize(2400, 900);
+    window.show();
+    QCoreApplication::processEvents();
+    SARibbonBar* ribbon = window.ribbonBar();
+    ASSERT_NE(ribbon, nullptr);
+    const ActionRegistry& registry = window.actionRegistry();
+    const QList<std::pair<QString, QStringList>> expected{
+        {QStringLiteral("home/draw"), {QStringLiteral("draw.ellipse")}},
+        {QStringLiteral("home/annotation"), {QStringLiteral("draw.mtext")}},
+        {QStringLiteral("home/modify"), {QStringLiteral("edit.pedit")}},
+        {QStringLiteral("home/block"),
+         {QStringLiteral("block.create"), QStringLiteral("block.insert")}},
+        {QStringLiteral("annotate/dimensions"),
+         {QStringLiteral("dimension.linear"), QStringLiteral("dimension.angular"),
+          QStringLiteral("dimension.radius"), QStringLiteral("dimension.diameter"),
+          QStringLiteral("dimension.style")}},
+        {QStringLiteral("annotate/text"),
+         {QStringLiteral("draw.mtext"), QStringLiteral("text.style")}},
+    };
+    for (const auto& [path, ids] : expected) {
+        SCOPED_TRACE(path.toStdString());
+        auto* panel = ribbon->findChild<SARibbonPanel*>(path);
+        ASSERT_NE(panel, nullptr);
+        for (const QString& id : ids) {
+            QAction* action = registry.action(id);
+            ASSERT_NE(action, nullptr);
+            bool found = false;
+            for (QToolButton* button : panel->findChildren<QToolButton*>()) {
+                found = found || button->defaultAction() == action;
+            }
+            EXPECT_TRUE(found) << id.toStdString();
+        }
+    }
+
+    for (const QString& id : {QStringLiteral("draw.ellipse"), QStringLiteral("dimension.linear")}) {
+        QAction* action = registry.action(id);
+        ASSERT_NE(action, nullptr);
+        QToolButton* button = ribbonButtonOf(*ribbon, action);
+        ASSERT_NE(button, nullptr);
+        EXPECT_EQ(button->popupMode(), QToolButton::MenuButtonPopup);
+        ASSERT_NE(action->menu(), nullptr);
+        EXPECT_EQ(action->menu()->actions(), registry.variants(id));
+    }
+
+    registry.action(QStringLiteral("ui.interface"))->trigger();
+    QCoreApplication::processEvents();
+    for (const auto& [path, ids] : expected) {
+        SCOPED_TRACE(path.toStdString());
+        const auto* toolbar = window.findChild<QToolBar*>(path);
+        ASSERT_NE(toolbar, nullptr);
+        for (const QString& id : ids) {
+            EXPECT_TRUE(toolbar->actions().contains(registry.action(id))) << id.toStdString();
+        }
+    }
+}
+
 TEST(RibbonSmoke, CircleAndArcShowTheirVariantsInADropDownWithTheirIcons) {
     MainWindow window;
     window.setScriptMode();
