@@ -41,6 +41,20 @@ struct TextSize {
 
 [[nodiscard]] TextSize textSize(const Document& document, const MText& mtext);
 
+/// The four cases of the fit (docs/adr/0047, point 4), in their order.
+enum class Fit : std::uint8_t { BothInside, TextInside, ArrowsInside, BothOutside };
+
+/// The case of the fit for a dimension line of length `length` (for an
+/// angular dimension, the length of the arc), a text that takes `textExtent`
+/// along it and two arrows of `arrow`. The thresholds come from the narrow
+/// dimensions of AutoCAD in the cases of RT23 (they contradict the starting
+/// hypotheses of PT23, point 4, and the cases prevail): with L = 8, an arrow
+/// of 2.5 and the text 8 both stay inside although L < t + 2·DIMGAP + 2a,
+/// and with L = 3 the text stays inside although L < t + 2·DIMGAP. The rule
+/// that gives every case has no DIMGAP: both inside when L >= t + 2a, the
+/// text when L >= t, the arrows when L >= 2a.
+[[nodiscard]] Fit fitOf(double length, double textExtent, double arrow);
+
 /// What a line of the graphics belongs to, for its colour and lineweight.
 enum class Part : std::uint8_t { DimensionLine, ExtensionLine };
 
@@ -53,6 +67,11 @@ public:
     /// A LINE from `start` to `end`; nothing when they coincide (ADR 0036,
     /// point 5: no piece of length zero).
     void line(const Vec2& start, const Vec2& end, Part part);
+
+    /// An ARC of the dimension line, counter-clockwise from `startAngle` to
+    /// `endAngle` (radians, brought into [0, 2π)); nothing when they are
+    /// equal.
+    void arc(const Vec2& center, double radius, double startAngle, double endAngle);
 
     /// A closed filled arrow (docs/adr/0047, point 4): a triangular SOLID with
     /// the tip in `tip`, the base in `base`, as wide as a third of the
@@ -77,6 +96,20 @@ private:
 /// the text and the graphics of `dimension`, with the effective variables
 /// already scaled; nullopt with the reason when the points do not give one.
 [[nodiscard]] std::optional<Dimension> regeneratedLinear(const Document& document,
+                                                         Dimension dimension,
+                                                         const DimVariables& variables,
+                                                         std::string* reason);
+
+/// Angular dimensions (dimension_angular.cpp, PT24, point 1), as
+/// regeneratedLinear().
+[[nodiscard]] std::optional<Dimension> regeneratedAngular(const Document& document,
+                                                          Dimension dimension,
+                                                          const DimVariables& variables,
+                                                          std::string* reason);
+
+/// Radius and diameter dimensions (dimension_radial.cpp, PT24, points 2 and
+/// 3), as regeneratedLinear().
+[[nodiscard]] std::optional<Dimension> regeneratedRadial(const Document& document,
                                                          Dimension dimension,
                                                          const DimVariables& variables,
                                                          std::string* reason);

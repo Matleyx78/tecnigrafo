@@ -9,36 +9,12 @@
 #include "tg/core/math.hpp"
 
 #include <cmath>
-#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
 
 namespace tg::core::dimension_graphics {
 namespace {
-
-/// The four cases of the fit (docs/adr/0047, point 4), in their order.
-enum class Fit : std::uint8_t { BothInside, TextInside, ArrowsInside, BothOutside };
-
-/// The thresholds of the fit, from the narrow dimensions of AutoCAD in the
-/// cases of RT23 (they contradict the starting hypotheses of PT23, point 4,
-/// and the cases prevail): with L = 8, an arrow of 2.5 and the text 8 both
-/// stay inside although L < t + 2·DIMGAP + 2a, and with L = 3 the text stays
-/// inside although L < t + 2·DIMGAP. The rule that gives every case has no
-/// DIMGAP: both inside when L >= t + 2a, the text when L >= t, the arrows when
-/// L >= 2a.
-Fit fitOf(double length, double textExtent, double arrow) {
-    if (textExtent + (2.0 * arrow) <= length) {
-        return Fit::BothInside;
-    }
-    if (textExtent <= length) {
-        return Fit::TextInside;
-    }
-    if (2.0 * arrow <= length) {
-        return Fit::ArrowsInside;
-    }
-    return Fit::BothOutside;
-}
 
 bool finite(const Vec2& point) {
     return std::isfinite(point.x) && std::isfinite(point.y);
