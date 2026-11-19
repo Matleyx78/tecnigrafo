@@ -6,7 +6,6 @@ entities:
 messages:
   Command: OPEN
   Enter name of drawing to open: destinazione.dxf
-  1 entity not supported: INSERT 1
   Command: -INSERT
   Enter block name or [?]: Contatto=simbolo.dxf
   Block "Contatto" redefined
@@ -23,6 +22,15 @@ snap: on
 ortho: off
 drawing: destinazione.dxf, modified
 units: 4
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "IMPORTATO" color=1 linetype="Continuous" lineweight=default
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "Contatto" base=0,0 units=4
+  "Contatto" 258 LINE start=20,0 end=30,0
 documents: Drawing1.cadx, destinazione.dxf (active)
 pointer: none
 active snap: none
@@ -46,6 +54,12 @@ snap: on
 ortho: off
 drawing: destinazione.dxf
 units: 4
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "Contatto" base=0,0 units=4
+  "Contatto" 66 LINE start=0,0 end=10,0
 documents: Drawing1.cadx, destinazione.dxf (active)
 pointer: none
 active snap: none
@@ -74,6 +88,17 @@ snap: on
 ortho: off
 drawing: destinazione.dxf, modified
 units: 4
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "IMPORTATO" color=1 linetype="Continuous" lineweight=default
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "Contatto" base=0,0 units=4
+  "Contatto" 66 LINE start=0,0 end=10,0
+  "Nuovo" base=0,0 units=4
+  "Nuovo" 258 LINE start=20,0 end=30,0
 documents: Drawing1.cadx, destinazione.dxf (active)
 pointer: none
 active snap: none
@@ -97,6 +122,12 @@ snap: on
 ortho: off
 drawing: destinazione.dxf
 units: 4
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "Contatto" base=0,0 units=4
+  "Contatto" 66 LINE start=0,0 end=10,0
 documents: Drawing1.cadx, destinazione.dxf (active)
 pointer: none
 active snap: none

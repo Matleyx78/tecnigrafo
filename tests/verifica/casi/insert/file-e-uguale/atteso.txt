@@ -2,22 +2,31 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  257 INSERT block="nuovo" insertion=10,0 scale=1,1 rotation=0
-  258 INSERT block="b" insertion=20,0 scale=1,1 rotation=0
-  259 INSERT block="a" insertion=30,0 scale=1,1 rotation=0
+  258 INSERT block="nuovo" insertion=10,0 scale=1,1 rotation=0
+  259 INSERT block="b" insertion=20,0 scale=1,1 rotation=0
+  261 INSERT block="a" insertion=30,0 scale=1,1 rotation=0
 messages:
   Command: OPEN
   Enter name of drawing to open: destinazione.dxf
   Command: -INSERT
   Enter block name or [?]: nuovo.dxf
   Specify insertion point or [Basepoint/Scale/Rotate]: 10,0
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
   Command: -INSERT
   Enter block name or [?] <nuovo>: b.dxf
   Specify insertion point or [Basepoint/Scale/Rotate]: 20,0
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
   Command: -INSERT
   Enter block name or [?] <b>: a=b.dxf
   Block "a" defined
   Specify insertion point or [Basepoint/Scale/Rotate]: 30,0
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
 prompt: Command:
 preview:
 selection: none
@@ -29,6 +38,16 @@ snap: on
 ortho: off
 drawing: destinazione.dxf, modified
 units: 4
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "b" base=0,0 units=4
+  "b" 66 LINE start=0,0 end=10,0
+  "nuovo" base=0,0 units=4
+  "nuovo" 257 LINE start=2,3 end=12,3
+  "a" base=0,0 units=4
+  "a" 260 CIRCLE center=0,0 radius=2
 documents: Drawing1.cadx, destinazione.dxf (active)
 pointer: none
 active snap: none
