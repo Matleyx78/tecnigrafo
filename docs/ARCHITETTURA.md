@@ -16,13 +16,13 @@ core  ←  io    ←  cmd                  (dalla tappa 0.5)
 
 | Modulo | Namespace | Contiene | Può usare |
 |---|---|---|---|
-| `core` | `tg::core` | geometria (`Vec2`, `BBox`, `Transform2D`), entità (`Polyline`, `Line`, `Circle`, `Arc`, `Text`), misure del font incluso, `Document`, tabelle dei layer e dei tipi di linea, proprietà delle entità (`color`, `linetype`, `ltscale`, `lineweight`), valori correnti, indice spaziale e interrogazioni (scelta, selezione con rettangolo, snap), trasformazioni delle entità e grip, facciate di solid-space (intersezioni, tolleranze, parti delle curve, curva parallela, raccordi, smussi, unione) | la libreria standard; `solid_space::robust` e `solid_space::geom2d`, in privato |
+| `core` | `tg::core` | geometria ed entità semplici e composte; geometria generata; `Document`; tabelle di layer, tipi di linea, stili di testo, stili di quota e blocchi; proprietà, valori correnti, indice spaziale, interrogazioni, trasformazioni e grip; facciate di solid-space | la libreria standard; `solid_space::robust` e `solid_space::geom2d`, in privato |
 | `render` | `tg::render` | `Viewport` (zoom e pan), `Painter` astratto (`drawPolyline`, `drawText`), disegno della scena | `core` |
 | `edit` | `tg::edit` | `Editor`, transazioni, annulla/ripeti, regole per i layer | `core` |
 | `io` | `tg::io` | lettura e scrittura DXF e formato nativo `.cadx`, astrazione per l'accesso ai file (`FileAccess`) | `core`, zlib (in `third_party/`, collegamento privato) |
 | `cmd` | `tg::cmd` | comandi, riga di comando senza interfaccia, coordinate, richieste di punto, valore, oggetto, numero e selezione, selezione scritta, sequenze degli script di AutoCAD, selezione corrente, selezione rapida, snap, orto, polare e modifica con i grip | `core`, `edit`, `io` |
 | `script` | `tg::script` | modalità di controllo al livello 1: script `.tgs`, rapporto, domande al modello `.tgq`, confronto con i risultati attesi; l'eseguibile di sviluppo `tecnigrafo-script` | `core`, `edit`, `cmd` |
-| `mcp` | `tg::mcp` | server MCP di sviluppo su stdio per assistenti IA (protocollo JSON-RPC, strumenti per eseguire comandi, script e casi di verifica); l'eseguibile di sviluppo `tecnigrafo-mcp` | `script`, `cmd`, `io`, nlohmann/json (in `third_party/`) |
+| `mcp` | `tg::mcp` | protocollo MCP e strumenti condivisi: il server di sviluppo su stdio e i sei strumenti del canale dell'assistente nel programma | `script`, `cmd`, `io`, nlohmann/json (in `third_party/`) |
 | `tools` | — | `fontmetrics`, generatore delle misure del font TrueType durante la build | solo la libreria standard |
 | `app` | `tg::app` | finestre Qt, registro delle azioni (`ActionRegistry`), interfaccia ribbon e classica (`UiBuilder`), temi e tavolozze (`theme`), pannelli agganciabili (`layer_panel`, `properties_panel`), finestre di dialogo (`settings`, `shortcuts`, `quick_select`), input da mouse e tastiera, `QtPainter` | tutti, più Qt e SARibbon (in `third_party/`) |
 
@@ -32,6 +32,36 @@ Solo `app` conosce Qt. Tutto il resto si prova con i test, senza finestre.
 `tecnigrafo-script` e `tecnigrafo-mcp`, che eseguono i casi di verifica scritti prima del lavoro
 ([ADR 0011](adr/0011-modalita-di-controllo.md), [ADR 0027](adr/0027-server-mcp-di-sviluppo.md), specifiche in
 [verifica/](verifica/casi.md)).
+
+## Entità composte, tabelle e geometria generata
+
+Il modello comprende, oltre alle entità semplici, `Solid`, `Ellipse`, `MText`,
+`AttributeDefinition`, `Insert`, `Dimension` e `Hatch`. `Document` possiede le
+tabelle degli stili di testo, degli stili di quota e dei blocchi; `Editor` le
+modifica nella stessa cronologia annullabile delle entità.
+
+`core::generate` traduce ogni record nella geometria effettivamente disegnata,
+con proprietà già risolte. Un'entità semplice genera sé stessa; testo multiriga,
+inserimenti, quote e retini generano più forme. La geometria è calcolata a
+richiesta, non salvata nel documento, salvo la grafica della quota letta dal
+file. `render`, selezione, snap e ingombri interrogano lo stesso risultato. Le
+trasformazioni non uniformi conservano linee, solidi ed ellissi, trasformano
+cerchi e archi in ellissi e portano l'affinità fino alle regioni riempite.
+
+## Canale MCP dell'assistente
+
+Il programma distribuito riusa protocollo e strumenti del modulo `mcp`. Un
+`QLocalServer`, accessibile solo all'utente del sistema e spento a ogni avvio,
+presta all'assistente la sessione attiva. `tecnigrafo --mcp` è il ponte su
+stdin/stdout: resta vivo e inoltra le chiamate al programma quando il canale è
+acceso. Non esiste una porta di rete.
+
+Le chiamate sono serializzate nel thread dell'interfaccia e partono soltanto a
+`Command:`. Il canale espone `run`, `report`, `list_commands`,
+`describe_command`, `open` e `save`; non espone gli strumenti dei casi di prova
+né `reset`. Le operazioni entrano nella normale cronologia di annullamento e
+sono visibili con il prefisso `[AI]`. La configurazione per l'utente è nel
+[manuale dell'assistente](manuale/assistente.md).
 
 ## Il kernel: solid-space
 

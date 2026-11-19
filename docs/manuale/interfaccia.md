@@ -525,6 +525,8 @@ il suggerimento (*tooltip*) con il nome completo e la relativa scorciatoia:
 | **OSNAP** | `F3` | Snap ad oggetto: aggancio geometrico ai punti notevoli delle entità |
 | **LWT** | `LWDISPLAY` | Visualizzazione spessori: mostra a schermo gli spessori reali delle linee anziché un tratto uniforme |
 | **DYN** | `F12` | Immissione dinamica: attiva il riquadro con richieste e campi numerici vicino al cursore |
+| **OTRACK** | `F11` | Tracciamento degli snap: proietta guide dai punti di snap acquisiti |
+| **AI** | clic | Canale locale dell'assistente: spento, in ascolto o collegato |
 | **RIBBON** | `ui.interface` | Alterna la visualizzazione tra la barra multifunzione (*ribbon*) e l'interfaccia classica |
 
 ### Scala e impostazioni
@@ -687,6 +689,16 @@ più vicino al puntatore. Lo snap si attiva con il tasto funzione `F3` o con
 l'interruttore a icona `OSNAP` nella barra di stato.
 
 ---
+
+## Tracciamento degli snap (OTRACK)
+
+`F11`, *Tools → Object Snap Tracking* e l'interruttore **OTRACK** attivano il
+tracciamento. Passa su un punto riconosciuto dallo snap senza fare clic: il
+punto viene acquisito e il programma mostra una guida orizzontale o verticale.
+Il clic successivo può agganciarsi alla guida o alla loro intersezione. Tornare
+sul punto lo rimuove; iniziare un altro comando o spegnere `F11` cancella i
+punti acquisiti. OTRACK richiede OSNAP attivo e non sostituisce lo snap
+*Vicino*, che non è disponibile.
 
 ## Tracciamento polare (POLAR)
 
