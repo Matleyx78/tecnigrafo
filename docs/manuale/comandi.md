@@ -1981,7 +1981,7 @@ transazione `CHPROP`: premendo `Esc` si esce dal comando conservando i cambi gi�
 
 `-STYLE` (alias `STYLE`) crea o modifica uno stile. Chiede nome (`?` elenca gli stili), font, altezza fissa, fattore di larghezza, angolo obliquo e se mostrare il testo rovesciato orizzontalmente o verticalmente. Uno stile nuovo parte dal font `txt`; lo stile confermato diventa corrente. Tecnigrafo conserva il nome del font del DXF, ma usa il font incluso quando quello richiesto non è disponibile.
 
-`TEXTSTYLE` sceglie invece uno stile esistente come corrente. Lo stile corrente vale per i nuovi `TEXT`, `MTEXT` e per `DIMTXSTY`.
+`TEXTSTYLE` sceglie invece uno stile esistente come corrente. Lo stile corrente vale per i nuovi `TEXT` e `MTEXT`; le quote usano lo stile di `DIMTXSTY`.
 
 ### `MTEXT`
 
@@ -1991,7 +1991,7 @@ I codici di formato incorporati di AutoCAD non vengono interpretati: sono mostra
 
 ## Blocchi: `-BLOCK` e `-INSERT`
 
-`-BLOCK` crea una definizione dal disegno. Scrivi il nome (`?` elenca quelli esistenti), indica il punto base, seleziona le entità e premi `Invio`. Se il nome esiste, il comando chiede se ridefinirlo. Le entità selezionate restano nel disegno; i cicli fra blocchi sono rifiutati.
+`-BLOCK` crea una definizione dal disegno. Scrivi il nome (`?` elenca quelli esistenti), indica il punto base, seleziona le entità e premi `Invio`. Se il nome esiste, il comando chiede se ridefinirlo. Le entità selezionate spariscono dal disegno ed entrano nella definizione, come in AutoCAD; `U` le ripristina. I cicli fra blocchi sono rifiutati.
 
 `-INSERT` (alias `INSERT`) accetta un nome, un percorso DXF oppure `nome=percorso`. `?` elenca i blocchi. Un file diventa un blocco col nome del file e punto base ricavato da `$INSBASE`; `nome=percorso` assegna il nome e ridefinisce senza altre domande. Se il nome esiste, la sua definizione ha la precedenza su un percorso ambiguo.
 
@@ -2010,7 +2010,7 @@ Nel testo sostitutivo `<>` inserisce la misura calcolata. Ogni comando crea una 
 
 ### `-DIMSTYLE` e variabili
 
-`-DIMSTYLE` offre *Save*, *Restore*, *Status* e `?`: salva con un nome le variabili correnti, ripristina uno stile, mostra lo stato o elenca gli stili. Le variabili si possono anche eseguire come comandi. Sono disponibili `DIMASZ`, `DIMBLK`, `DIMBLK1`, `DIMBLK2`, `DIMCLRD`, `DIMCLRE`, `DIMCLRT`, `DIMDEC`, `DIMDSEP`, `DIMEXE`, `DIMEXO`, `DIMGAP`, `DIMLFAC`, `DIMLUNIT`, `DIMPOST`, `DIMRND`, `DIMSCALE`, `DIMTAD`, `DIMTIH`, `DIMTOH`, `DIMTSZ`, `DIMTXT`, `DIMTXSTY`, `DIMZIN`, `DIMATFIT`, `DIMTMOVE`, `DIMTIX`, `DIMSOXD` e `DIMTOFL`. `Invio` conserva il valore; valori fuori dominio sono rifiutati.
+`-DIMSTYLE` offre *Save*, *Restore*, *Status* e `?`: salva con un nome le variabili correnti, ripristina uno stile, mostra lo stato o elenca gli stili. Le variabili si possono anche eseguire come comandi. Sono disponibili `DIMSCALE`, `DIMASZ`, `DIMEXO`, `DIMEXE`, `DIMTXT`, `DIMGAP`, `DIMTAD`, `DIMTIH`, `DIMTOH`, `DIMDEC`, `DIMADEC`, `DIMDSEP`, `DIMZIN`, `DIMAZIN`, `DIMLFAC`, `DIMRND`, `DIMPOST`, `DIMTXSTY`, `DIMCEN`, `DIMSE1`, `DIMSE2`, `DIMSD1` e `DIMSD2`. `Invio` conserva il valore; valori fuori dominio sono rifiutati. Colori e spessori delle quote non hanno un comando. Le variabili di adattamento e della freccia si leggono dal DXF, ma non si possono cambiare.
 
 Tecnigrafo rigenera soltanto le combinazioni compatibili con lo stile `ISO-25`. Una quota letta con `DIMATFIT`, `DIMTMOVE`, `DIMTIX`, `DIMSOXD` o `DIMTOFL` diversi conserva la grafica originale: la si può spostare, ma una modifica che richiederebbe di rigenerarla viene rifiutata.
 
