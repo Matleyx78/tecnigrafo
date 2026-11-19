@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <polyline class="geo" points="1.5,13.5 7.5,1.5 13.5,13.5"/>
+        <line class="pt" x1="5.5" y1="1.5" x2="9.5" y2="1.5"/>
+    </g>
+</svg>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <line class="esist" x1="2.5" y1="26.5" x2="28.5" y2="26.5"/>
+        <polyline class="esist" points="2.5,26.5 15.5,2.5 28.5,26.5"/>
+        <path class="geo" d="M 9.5 15.5 A 6 6 0 0 0 21.5 15.5"/>
+    </g>
+</svg>

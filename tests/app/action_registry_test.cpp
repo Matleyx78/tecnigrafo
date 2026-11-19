@@ -334,15 +334,18 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(
         titles(window().menuBar()->actions()),
         (QStringList{QStringLiteral("&File"), QStringLiteral("&Edit"), QStringLiteral("&View"),
-                     QStringLiteral("&Tools"), QStringLiteral("&Draw"), QStringLiteral("&Modify"),
-                     QStringLiteral("&Help")}));
+                     QStringLiteral("&Tools"), QStringLiteral("&Draw"), QStringLiteral("&Insert"),
+                     QStringLiteral("&Modify"), QStringLiteral("&Dimension"),
+                     QStringLiteral("&Format"), QStringLiteral("&Help")}));
     const QList<QAction*> menus = window().menuBar()->actions();
     EXPECT_EQ(titles(menus[1]->menu()->actions()),
               (QStringList{QStringLiteral("&Undo"), QStringLiteral("&Redo"), QStringLiteral("-"),
                            QStringLiteral("&Erase")}));
-    EXPECT_EQ(menus[4]->menu()->actions(),
-              (QList<QAction*>{action("draw.line"), action("draw.pline"), action("draw.circle"),
-                               action("draw.arc"), action("draw.text")}));
+    EXPECT_EQ(titles(menus[4]->menu()->actions()),
+              (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),
+                           QStringLiteral("&Circle"), QStringLiteral("&Arc"),
+                           QStringLiteral("&Ellipse"), QStringLiteral("&Text"),
+                           QStringLiteral("&Multiline Text"), QStringLiteral("&Block")}));
     // The actions of the program are global, in every environment (decision
     // B7, docs/tappe/0.7.5/P30), and so are Save and Save As, which go through
     // the type of the document (docs/tappe/0.7.5/P30b); the others are of the
@@ -434,8 +437,8 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
             withCommands.append(item);
         }
     }
-    // File (4), ERASE, Modify (12), Draw (5), CIRCLE/ARC variants (7).
-    EXPECT_EQ(withCommands.size(), 29);
+    // File, editing and drawing commands, including the menu/ribbon aliases.
+    EXPECT_EQ(withCommands.size(), 47);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());
@@ -451,6 +454,23 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
         // A NEW or OPEN of a changed drawing first asks about saving it.
         events::press(input(), Qt::Key_Escape);
         ASSERT_FALSE(window().runner().isActive());
+    }
+}
+
+TEST_F(MainWindowActionsTest, NewStageActionsReferToRegisteredCommands) {
+    const QStringList ids{
+        QStringLiteral("draw.ellipse"),      QStringLiteral("draw.mtext"),
+        QStringLiteral("edit.pedit"),        QStringLiteral("block.create"),
+        QStringLiteral("block.insert"),      QStringLiteral("text.style"),
+        QStringLiteral("dimension.style"),   QStringLiteral("dimension.linear"),
+        QStringLiteral("dimension.aligned"), QStringLiteral("dimension.angular"),
+        QStringLiteral("dimension.radius"),  QStringLiteral("dimension.diameter")};
+    for (const QString& id : ids) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* actionSpec = registry().spec(id);
+        ASSERT_NE(actionSpec, nullptr);
+        EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
+        EXPECT_TRUE(actionSpec->shortcut.isEmpty());
     }
 }
 
