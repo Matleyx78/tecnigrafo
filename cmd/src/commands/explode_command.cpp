@@ -5,13 +5,18 @@
 
 #include "tg/core/arc.hpp"
 #include "tg/core/arc_geometry.hpp"
+#include "tg/core/dimension.hpp"
+#include "tg/core/effective_properties.hpp"
 #include "tg/core/entity_extras.hpp"
+#include "tg/core/explode.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <variant>
 
 namespace tg::cmd {
@@ -73,6 +78,36 @@ void explode(edit::Editor& editor, core::EntityId id, const core::Polyline& poly
     editor.remove(id);
 }
 
+/// Replaces the entity `id` with what it exploded into, in the order of the
+/// block or of the graphics: the two lists merged by order key, a record
+/// first on a tie (docs/tappe/0.8/PT29-explode-blocchi-quote.md, point 2).
+void replaceWith(edit::Editor& editor, core::EntityId id, core::Exploded exploded) {
+    std::size_t m = 0;
+    std::size_t r = 0;
+    while (m < exploded.entities.size() || r < exploded.raw.size()) {
+        if (r < exploded.raw.size() &&
+            (m == exploded.entities.size() || exploded.raw[r].order < exploded.entities[m].order)) {
+            editor.addRaw(std::move(exploded.raw[r++]));
+        } else {
+            editor.addRecord(std::move(exploded.entities[m++]));
+        }
+    }
+    editor.remove(id);
+}
+
+/// The graphics of the dimension of `record` with the properties they are
+/// shown with: layer 0 and ByBlock become those of the dimension, as AutoCAD
+/// does (PT29, point 1).
+core::Exploded explodeDimensionOf(const core::Document& document, const core::EntityRecord& record,
+                                  const core::Dimension& dimension) {
+    core::Exploded exploded = core::explodeDimension(document, dimension);
+    for (core::EntityRecord& graphic : exploded.entities) {
+        graphic.properties =
+            core::propertiesInBlock(document, record.properties, graphic.properties);
+    }
+    return exploded;
+}
+
 }  // namespace
 
 void ExplodeCommand::start(CommandContext& context) {
@@ -87,8 +122,23 @@ Status ExplodeCommand::handle(CommandContext& context, const Input& input) {
     std::size_t notExploded = 0;
     bool widthLost = false;
     for (const core::EntityId id : selection->ids) {
-        const core::EntityRecord* record = context.editor.document().find(id);
+        const core::Document& document = context.editor.document();
+        const core::EntityRecord* record = document.find(id);
         if (record == nullptr) {
+            continue;
+        }
+        const auto* insert = std::get_if<core::Insert>(&record->entity);
+        const auto* dimension = std::get_if<core::Dimension>(&record->entity);
+        if (insert != nullptr || dimension != nullptr) {
+            core::Exploded exploded = insert != nullptr
+                                          ? core::explodeInsert(document, *insert)
+                                          : explodeDimensionOf(document, *record, *dimension);
+            if (!exploded.refusal.empty()) {
+                // The entity stays (PT29, point 2).
+                context.message(exploded.refusal);
+                continue;
+            }
+            replaceWith(context.editor, id, std::move(exploded));
             continue;
         }
         const auto* polyline = std::get_if<core::Polyline>(&record->entity);

@@ -960,6 +960,117 @@ TEST(Editor, AddCopyKeepsSourceDataExceptComplete102Groups) {
     EXPECT_EQ(*document.find(*copy), copied);
 }
 
+TEST(Editor, AddRecordKeepsPropertiesAndExtrasWithANewHandleLast) {
+    Document document = Document::newDrawing();
+    const EntityId first = document.add(segment(1));
+    core::EntityExtras extras;
+    extras.beforeEntity = {{330, "1F"}};
+    extras.extended = {{1001, "APP"}, {1000, "value"}};
+    core::EntityProperties properties = document.current();
+    properties.color = core::Color::fromIndex(4);
+    properties.layer = document.layerZero();
+    const EntityRecord record{EntityId{0x77}, core::Line{{0, 0}, {5, 5}}, extras, 2, properties};
+    Editor editor(document);
+    editor.beginTransaction("Explode");
+    const EntityId id = editor.addRecord(record);
+    editor.commit();
+    EXPECT_NE(id, record.id);
+    EXPECT_GT(id.value, first.value);
+    const EntityRecord added = *document.find(id);
+    EXPECT_EQ(added.entity, record.entity);
+    EXPECT_EQ(added.extras, extras);
+    EXPECT_EQ(added.properties, properties);
+    EXPECT_GT(added.order, document.find(first)->order);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{first, id}));
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(document.find(id), nullptr);
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(*document.find(id), added);
+}
+
+TEST(Editor, AddRawGivesANewHandleThatItsGroupFiveCarries) {
+    Document document = Document::newDrawing();
+    document.setNextId(0x1AE);
+    const EntityId first = document.add(segment(1));
+    const core::RawEntity raw{EntityId{0x1F},
+                              1,
+                              "ACAD_PROXY_ENTITY",
+                              {{5, "1F"}, {330, "2A"}, {100, "AcDbEntity"}, {8, "0"}}};
+    Editor editor(document);
+    editor.beginTransaction("Explode");
+    const EntityId id = editor.addRaw(raw);
+    editor.commit();
+    EXPECT_GT(id.value, first.value);
+    ASSERT_EQ(document.rawEntities().size(), 1U);
+    const core::RawEntity added = document.rawEntities()[0];
+    EXPECT_EQ(id, EntityId{0x1AF});
+    EXPECT_EQ(added.id, id);
+    EXPECT_EQ(added.type, raw.type);
+    EXPECT_GT(added.order, document.find(first)->order);
+    // The handle in capitals, as AutoCAD writes it; the other groups as they were.
+    core::RawGroups expected = raw.groups;
+    expected[0].value = "1AF";
+    EXPECT_EQ(added.groups, expected);
+    // A new entity takes the next handle: the one of the raw entity is used.
+    EXPECT_GT(document.nextId(), id.value);
+}
+
+TEST(Editor, AddRawWithoutAGroupFiveBeforeTheSubclassesPutsOneFirst) {
+    Document document = Document::newDrawing();
+    document.setNextId(0x1AB);
+    // A group 5 after the first 100 is not the handle of the entity.
+    const core::RawEntity raw{
+        EntityId{}, 0, "WIPEOUT", {{330, "2A"}, {100, "AcDbEntity"}, {5, "keep"}, {8, "0"}}};
+    Editor editor(document);
+    editor.beginTransaction("Explode");
+    const EntityId id = editor.addRaw(raw);
+    editor.commit();
+    EXPECT_EQ(id, EntityId{0x1AB});
+    ASSERT_EQ(document.rawEntities().size(), 1U);
+    core::RawGroups expected{{5, "1AB"}};
+    expected.insert(expected.end(), raw.groups.begin(), raw.groups.end());
+    EXPECT_EQ(document.rawEntities()[0].groups, expected);
+}
+
+TEST(Editor, AddRecordAndAddRawUndoAndRedoInOneTransaction) {
+    Document document = Document::newDrawing();
+    const EntityId kept = document.add(segment(1));
+    Editor editor(document);
+    editor.beginTransaction("Explode");
+    EntityRecord record{EntityId{}, segment(2)};
+    record.properties = document.current();
+    record.extras.extended = {{1001, "APP"}};
+    const EntityId added = editor.addRecord(record);
+    const EntityId raw = editor.addRaw(core::RawEntity{EntityId{}, 0, "WIPEOUT", {{5, "0"}}});
+    const EntityId last = editor.addRecord(record);
+    EXPECT_TRUE(editor.remove(kept));
+    editor.commit();
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{added, last}));
+    ASSERT_EQ(document.rawEntities().size(), 1U);
+    const core::RawEntity rawAdded = document.rawEntities()[0];
+    EXPECT_EQ(rawAdded.id, raw);
+    EXPECT_GT(rawAdded.order, document.find(added)->order);
+    EXPECT_LT(rawAdded.order, document.find(last)->order);
+    const EntityRecord addedRecord = *document.find(added);
+
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{kept}));
+    EXPECT_TRUE(document.rawEntities().empty());
+
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{added, last}));
+    ASSERT_EQ(document.rawEntities().size(), 1U);
+    EXPECT_EQ(document.rawEntities()[0], rawAdded);
+    EXPECT_EQ(*document.find(added), addedRecord);
+
+    // Rolled back, nothing stays.
+    editor.beginTransaction("Rolled back");
+    const EntityId discarded = editor.addRaw(core::RawEntity{EntityId{}, 0, "WIPEOUT", {}});
+    editor.rollback();
+    EXPECT_EQ(document.rawEntities().size(), 1U);
+    EXPECT_NE(document.nextId(), discarded.value);
+}
+
 TEST(Editor, MissingCopyDoesNotAllocateAnIdentifierOrCreateHistory) {
     Document document;
     Editor editor(document);

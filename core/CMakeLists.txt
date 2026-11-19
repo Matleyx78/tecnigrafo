@@ -19,6 +19,7 @@ add_library(tg_core
     src/dimension_radial.cpp
     src/dimension_text.cpp
     src/ellipse.cpp
+    src/explode.cpp
     src/generated.cpp
     src/hatch.cpp
     src/hatch_boundary.cpp

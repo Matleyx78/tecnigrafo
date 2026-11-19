@@ -2,13 +2,17 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "dxf_entities.hpp"
+#include "tg/core/block_table.hpp"
 #include "tg/core/line.hpp"
+#include "tg/core/raw_drawing.hpp"
 #include "tg/core/start_handles.hpp"
 #include "tg/io/dxf_groups.hpp"
 #include "tg/io/io.hpp"
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -16,6 +20,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -164,6 +169,76 @@ TEST(DxfWrite, ANewDrawingHasTheFixedStartHandlesWhateverItsEntities) {
     // objects of the skeleton.
     EXPECT_EQ(first.size(), 29U);
     EXPECT_EQ(*first.begin(), core::start_handles::kLowest);
+}
+
+/// The groups after the group 0 of the entity of ENTITIES whose handle is
+/// `handle`, up to the next group 0.
+core::RawGroups entityGroups(const std::string& bytes, std::string_view handle) {
+    const auto groups = readGroups(bytes);
+    EXPECT_TRUE(groups.ok());
+    const auto& all = groups.value().groups;
+    std::string section;
+    for (std::size_t i = 0; i < all.size(); ++i) {
+        if (all[i].code == 0 && all[i].value == "SECTION" && i + 1 < all.size()) {
+            section = all[i + 1].value;
+        }
+        if (section != "ENTITIES" || all[i].code != 0 || i + 1 >= all.size() ||
+            all[i + 1].code != 5 || all[i + 1].value != handle) {
+            continue;
+        }
+        core::RawGroups entity;
+        for (std::size_t j = i + 1; j < all.size() && all[j].code != 0; ++j) {
+            entity.push_back(all[j]);
+        }
+        return entity;
+    }
+    ADD_FAILURE() << "no entity " << handle;
+    return {};
+}
+
+TEST(DxfWrite, AnUnhandledEntityOfTheDrawingIsWrittenWithTheModelSpaceAsOwner) {
+    // docs/tappe/0.8/PT29-explode-blocchi-quote.md, point 4: an entity copied
+    // from a block by EXPLODE still names the BLOCK_RECORD of the definition.
+    core::Document document = core::Document::newDrawing();
+    core::BlockDefinition definition{"Piece"};
+    definition.recordId = 0x2F0;
+    document.replaceBlock("Piece", definition);
+    const auto raw = [](std::uint64_t id, std::string handle, core::RawGroups owner) {
+        core::RawGroups groups{{5, handle}};
+        groups.insert(groups.end(), owner.begin(), owner.end());
+        groups.push_back({100, "AcDbEntity"});
+        groups.push_back({8, "0"});
+        return core::RawEntity{core::EntityId{id}, id, "ACAD_PROXY_ENTITY", std::move(groups)};
+    };
+    const core::RawEntity copied = raw(0x300, "300", {{330, "2F0"}});
+    const core::RawEntity right = raw(0x301, "301", {{330, "EF"}});
+    const core::RawEntity ownerless = raw(0x302, "302", {});
+    const core::RawEntity paper = raw(0x303, "303", {{330, "EE"}});
+    const core::RawEntity reactors =
+        raw(0x304, "304", {{102, "{ACAD_REACTORS"}, {330, "2F0"}, {102, "}"}, {330, "2F0"}});
+    for (const core::RawEntity& entity : {copied, right, ownerless, paper, reactors}) {
+        document.insertRaw(entity);
+    }
+    const auto written = writeDxf(document, DxfVersion::R2018);
+    ASSERT_TRUE(written.ok()) << written.error().message;
+    const std::string model = handleText(core::start_handles::kBlockRecordModel);
+    ASSERT_EQ(model, "EF");
+    EXPECT_EQ(entityGroups(written.value(), "300"),
+              (core::RawGroups{{5, "300"}, {330, model}, {100, "AcDbEntity"}, {8, "0"}}));
+    // Already right, or without an owner: written as they are.
+    EXPECT_EQ(entityGroups(written.value(), "301"), right.groups);
+    EXPECT_EQ(entityGroups(written.value(), "302"), ownerless.groups);
+    // The paper space keeps its entities (docs/adr/0006).
+    ASSERT_EQ(handleText(core::start_handles::kBlockRecordPaper), "EE");
+    EXPECT_EQ(entityGroups(written.value(), "303"), paper.groups);
+    // Only the owner changes, not a 330 of the reactors.
+    EXPECT_EQ(entityGroups(written.value(), "304"), (core::RawGroups{{5, "304"},
+                                                                     {102, "{ACAD_REACTORS"},
+                                                                     {330, "2F0"},
+                                                                     {102, "}"},
+                                                                     {330, model},
+                                                                     {100, "AcDbEntity"},
+                                                                     {8, "0"}}));
 }
 
 TEST(DxfWrite, SkeletonHandlesNeverCollideWithExistingEntities) {

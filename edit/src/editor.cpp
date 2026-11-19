@@ -4,13 +4,38 @@
 #include "tg/edit/editor.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <charconv>
 #include <cmath>
+#include <cstdint>
+#include <iterator>
 #include <ranges>
+#include <string>
 #include <type_traits>
 #include <utility>
 
 namespace tg::edit {
+namespace {
+
+/// A DXF handle as AutoCAD writes it: hexadecimal, capital letters, no
+/// leading zeros.
+std::string handleText(std::uint64_t value) {
+    constexpr std::size_t kHexDigits = 16;
+    constexpr int kHexBase = 16;
+    std::array<char, kHexDigits> buffer{};
+    const auto result =
+        std::to_chars(buffer.data(), buffer.data() + buffer.size(), value, kHexBase);
+    std::string text(buffer.data(), result.ptr);
+    for (char& digit : text) {
+        if (digit >= 'a' && digit <= 'f') {
+            digit = static_cast<char>(digit - 'a' + 'A');
+        }
+    }
+    return text;
+}
+
+}  // namespace
 
 bool Editor::validProperties(const core::Document& doc, const core::EntityProperties& properties) {
     return doc.layer(properties.layer) != nullptr && doc.linetype(properties.linetype) != nullptr &&
@@ -101,6 +126,51 @@ std::optional<core::EntityId> Editor::addCopy(core::EntityId source, core::Entit
     record->extras = std::move(extras);
     record->properties = properties;
     m_document.restore(std::move(*record));
+    return id;
+}
+
+core::EntityId Editor::addRecord(core::EntityRecord record) {
+    assert(m_open && "addRecord() needs an open transaction");
+    const core::EntityId id = add(std::move(record.entity));
+    // restore() sets extras too; add() already recorded this entity for undo.
+    auto added = m_document.remove(id);
+    assert(added);
+    added->extras = std::move(record.extras);
+    added->properties = record.properties;
+    m_document.restore(std::move(*added));
+    return id;
+}
+
+core::EntityId Editor::addRaw(core::RawEntity raw) {
+    assert(m_open && "addRaw() needs an open transaction");
+    constexpr std::int16_t kHandle = 5;
+    constexpr std::int16_t kSubclass = 100;
+    // Document::addRaw() gives nextId(): its text goes in the group 5 first.
+    const core::EntityId id{m_document.nextId()};
+    const std::string handle = handleText(id.value);
+    const auto end = std::ranges::find(raw.groups, kSubclass, &core::RawGroup::code);
+    const auto group = std::find_if(raw.groups.begin(), end, [](const core::RawGroup& candidate) {
+        return candidate.code == kHandle;
+    });
+    if (group != end) {
+        group->value = handle;
+    } else {
+        // A new vector instead of insert() at begin(): with -O3, GCC 13 sees
+        // a null begin() of an empty vector and warns (-Wnull-dereference).
+        core::RawGroups groups;
+        groups.reserve(raw.groups.size() + 1);
+        groups.push_back(core::RawGroup{kHandle, handle});
+        std::ranges::move(raw.groups, std::back_inserter(groups));
+        raw.groups = std::move(groups);
+    }
+    [[maybe_unused]] const core::EntityId given = m_document.addRaw(raw);
+    assert(given == id);
+    const auto entities = m_document.rawEntities();
+    Change change;
+    change.kind = Change::Kind::RawAdded;
+    change.id = id;
+    change.data = entities.back();
+    m_open->changes.push_back(std::move(change));
     return id;
 }
 
@@ -281,6 +351,9 @@ void Editor::apply(Change& change) {
             m_document.insertLinetype(table.record, table.position);
             break;
         }
+        case Change::Kind::RawAdded:
+            m_document.insertRaw(std::get<core::RawEntity>(change.data));
+            break;
         default:
             swapUpdate(change);
             break;
@@ -314,6 +387,11 @@ void Editor::revert(Change& change) {
         case Change::Kind::LinetypeAdded: {
             const auto& table = std::get<LinetypeTableChange>(change.data);
             m_document.removeLinetype(table.record.id);
+            break;
+        }
+        case Change::Kind::RawAdded: {
+            [[maybe_unused]] const auto removed = m_document.removeRaw(change.id);
+            assert(removed && "the added raw entity must be in the document");
             break;
         }
         default:
