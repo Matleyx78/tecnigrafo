@@ -2178,3 +2178,17 @@ i rimandi ai documenti che cambia.
   3 e 4. Scartata l'uscita B, che rifiutava l'esplosione di ogni blocco con
   extras oltre ai gruppi 102 o con entità grezze, cioè di quasi ogni blocco
   letto da un DXF (gruppo 330).
+
+- **2026-11-19 — PT29 aspetta PT21 e PT26.** Claude si ferma su PT29
+  ([#719](https://github.com/Matleyx78/tecnigrafo/issues/719)) con il codice
+  scritto: i due casi di RT29 preparano il disegno con `-INSERT` (PT21,
+  [#705](https://github.com/Matleyx78/tecnigrafo/issues/705)) e `DIMLINEAR`
+  (PT26, [#713](https://github.com/Matleyx78/tecnigrafo/issues/713)), che non
+  erano fra le dipendenze di PT29, e falliscono prima di `EXPLODE`. Il
+  responsabile sceglie l'uscita B: «Dipende da» di
+  [PT29](tappe/0.8/PT29-explode-blocchi-quote.md) e la tabella del piano
+  aggiungono PT21 e PT26, e il pacchetto riprende dal ramo già pubblicato
+  quando sono uniti tutti e due. Scartate l'uscita A (PT29 lascia in
+  `tests/verifica/in-attesa/0.8-RT29.txt` una riga per caso con l'issue del
+  comando che manca, e PT21 e PT26 la tolgono) e l'uscita C (RT29 riscrive i
+  casi senza i comandi di altri pacchetti).
