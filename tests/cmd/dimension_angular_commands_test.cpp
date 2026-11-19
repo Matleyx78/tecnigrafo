@@ -53,19 +53,54 @@ private:
 
 TEST_F(DimensionAngularCommandsTest, AngularSelectsLinesAndQuadrantFixesTheSector) {
     add(core::Line{{0.0, 0.0}, {40.0, 0.0}});
-    add(core::Line{{0.0, 0.0}, {0.0, 40.0}});
+    add(core::Line{{0.0, 0.0}, {30.0, 40.0}});
 
     runner().submitText("DIMANGULAR");
     runner().click({20.0, 0.0}, PickAction::Add);
-    runner().click({0.0, 20.0}, PickAction::Add);
+    runner().click({15.0, 20.0}, PickAction::Add);
     runner().submitText("Quadrant");
     point(10.0, 10.0);
     point(-30.0, -30.0);
 
     EXPECT_EQ(dimension().definition.kind, core::DimensionKind::Angular);
-    EXPECT_NEAR(dimension().value.measurement, 90.0, 1e-12);
+    EXPECT_NEAR(dimension().value.measurement, std::atan2(4.0, 3.0), 1e-12);
+    EXPECT_GT(dimension().definition.point16.x, 0.0);
+    EXPECT_GT(dimension().definition.point16.y, 0.0);
     EXPECT_NEAR(core::distance(dimension().definition.point16, {0.0, 0.0}), std::sqrt(1800.0),
                 1e-12);
+}
+
+TEST_F(DimensionAngularCommandsTest, AngularLocationSelectsAllFourSectors) {
+    add(core::Line{{-40.0, 0.0}, {40.0, 0.0}});
+    add(core::Line{{-30.0, -40.0}, {30.0, 40.0}});
+    const std::vector<core::Vec2> locations{
+        {10.0, 10.0}, {-10.0, 10.0}, {-10.0, -10.0}, {10.0, -10.0}};
+    const std::vector<double> expected{std::atan2(4.0, 3.0), core::kPi - std::atan2(4.0, 3.0),
+                                       std::atan2(4.0, 3.0), core::kPi - std::atan2(4.0, 3.0)};
+
+    for (std::size_t index = 0; index < locations.size(); ++index) {
+        runner().submitText("DIMANGULAR");
+        runner().click({20.0, 0.0}, PickAction::Add);
+        runner().click({15.0, 20.0}, PickAction::Add);
+        runner().submit(PointInput{locations[index]});
+        EXPECT_NEAR(dimension().value.measurement, expected[index], 1e-12);
+    }
+}
+
+TEST_F(DimensionAngularCommandsTest, AngularRejectsAnArcAndPolylineArc) {
+    add(core::Arc{{0.0, 0.0}, 10.0, 0.0, core::kPi});
+    core::Polyline polyline;
+    polyline.addVertex({0.0, 0.0});
+    polyline.addVertex({20.0, 0.0}, 1.0);
+    polyline.addVertex({20.0, 20.0});
+    add(std::move(polyline));
+
+    runner().submitText("DIMANGULAR");
+    runner().click({0.0, 10.0}, PickAction::Add);
+    EXPECT_EQ(messages().back(), "Object selected is not a line.");
+    runner().click({30.0, 10.0}, PickAction::Add);
+    EXPECT_EQ(messages().back(), "Object selected is not a line.");
+    EXPECT_EQ(runner().promptText(), "Select arc, circle, line, or <specify vertex>:");
 }
 
 TEST_F(DimensionAngularCommandsTest, ParallelLinesRepeatTheSecondSelection) {
@@ -114,6 +149,38 @@ TEST_F(DimensionAngularCommandsTest, RadiusOnPolylineArcAndInvalidCenterRepeatLo
     EXPECT_EQ(runner().promptText(), "Specify dimension line location or [Text/Angle]:");
     point(0.0, -20.0);
     EXPECT_EQ(dimension().definition.kind, core::DimensionKind::Radius);
+
+    runner().submitText("U");
+    runner().submitText("DIMDIAMETER");
+    runner().click({0.0, -10.0}, PickAction::Add);
+    point(0.0, -20.0);
+    EXPECT_EQ(dimension().definition.kind, core::DimensionKind::Diameter);
+    EXPECT_DOUBLE_EQ(dimension().value.measurement, 20.0);
+}
+
+TEST_F(DimensionAngularCommandsTest, RadialRejectsTheStraightPartOfAPolyline) {
+    core::Polyline polyline;
+    polyline.addVertex({0.0, 0.0});
+    polyline.addVertex({20.0, 0.0}, 1.0);
+    polyline.addVertex({20.0, 20.0});
+    add(std::move(polyline));
+
+    runner().submitText("DIMRADIUS");
+    runner().click({10.0, 0.0}, PickAction::Add);
+    EXPECT_EQ(runner().promptText(), "Select arc or circle:");
+}
+
+TEST_F(DimensionAngularCommandsTest, AngularVertexRepeatsLocationPrompt) {
+    add(core::Line{{0.0, 0.0}, {40.0, 0.0}});
+    add(core::Line{{0.0, 0.0}, {30.0, 40.0}});
+
+    runner().submitText("DIMANGULAR");
+    runner().click({20.0, 0.0}, PickAction::Add);
+    runner().click({15.0, 20.0}, PickAction::Add);
+    point(0.0, 0.0);
+    EXPECT_EQ(messages().back(), "Points coincide.");
+    EXPECT_EQ(runner().promptText(),
+              "Specify dimension arc line location or [Text/Angle/Quadrant]:");
 }
 
 }  // namespace

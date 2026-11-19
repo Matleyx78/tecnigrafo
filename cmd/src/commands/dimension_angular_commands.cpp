@@ -53,16 +53,19 @@ std::optional<core::Line> pickedLine(const core::Entity& entity, const core::Vec
         return std::nullopt;
     }
     double best = std::numeric_limits<double>::infinity();
-    std::optional<core::Line> chosen;
+    std::optional<core::PolylineSegment> chosen;
     for (std::size_t index = 0; index < polyline->segmentCount(); ++index) {
         const core::PolylineSegment segment = polyline->segment(index);
         const double distance = core::distance(segment, pick);
-        if (!segment.isArc() && distance < best) {
+        if (distance < best) {
             best = distance;
-            chosen = core::Line{segment.start, segment.end};
+            chosen = segment;
         }
     }
-    return chosen;
+    if (!chosen || chosen->isArc()) {
+        return std::nullopt;
+    }
+    return core::Line{chosen->start, chosen->end};
 }
 
 std::optional<core::Vec2> lineIntersection(const core::Line& first, const core::Line& second) {
@@ -267,13 +270,17 @@ void DimangularCommand::updatePreview() {
 }
 
 Status DimangularCommand::finish(CommandContext& context, const core::Vec2& location) {
+    const core::Vec2 vertex = lineIntersection(m_first, m_second).value_or(core::Vec2{});
+    if (core::distance(location, vertex) == 0.0) {
+        context.message("Points coincide.");
+        return Status::Continue;
+    }
     std::string reason;
     auto dimension = core::regenerated(*m_document, makeDimension(location), &reason);
     if (!dimension) {
-        context.message(reason == core::kDimensionNotRegenerable ? "Points coincide." : reason);
+        context.message(reason);
         return Status::Continue;
     }
-    dimension->value.measurement = core::radiansToDegrees(dimension->value.measurement);
     addDimension(context, std::move(*dimension));
     context.lastPoint = location;
     context.editor.commit();
@@ -382,20 +389,22 @@ bool RadialDimensionCommand::selectCurve(CommandContext& context, const ObjectIn
         m_radius = arc->radius;
     } else if (const auto* polyline = std::get_if<core::Polyline>(&record->entity)) {
         double best = std::numeric_limits<double>::infinity();
-        std::optional<core::ArcGeometry> chosen;
+        std::optional<core::PolylineSegment> chosen;
         for (std::size_t index = 0; index < polyline->segmentCount(); ++index) {
             const core::PolylineSegment segment = polyline->segment(index);
             const double distance = core::distance(segment, object.point);
-            if (segment.isArc() && distance < best) {
+            if (distance < best) {
                 best = distance;
-                chosen = core::arcFromBulge(segment.start, segment.end, segment.bulge);
+                chosen = segment;
             }
         }
-        if (!chosen) {
+        if (!chosen || !chosen->isArc()) {
             return false;
         }
-        m_center = chosen->center;
-        m_radius = chosen->radius;
+        const core::ArcGeometry geometry =
+            core::arcFromBulge(chosen->start, chosen->end, chosen->bulge);
+        m_center = geometry.center;
+        m_radius = geometry.radius;
     } else {
         return false;
     }
