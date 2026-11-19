@@ -211,11 +211,23 @@ void resolve(const TableReader& tables, core::EntityId id, core::EntityPropertie
     }
 }
 
-void resolve(const TableReader& tables, core::EntityRecord& record) {
+/// The record and the attributes of an INSERT.
+void resolveRecord(const TableReader& tables, core::EntityRecord& record) {
     resolve(tables, record.id, record.properties);
     if (auto* insert = std::get_if<core::Insert>(&record.entity)) {
         for (auto& attribute : insert->attributes) {
             resolve(tables, attribute.id, attribute.properties);
+        }
+    }
+}
+
+/// The record and, for a dimension, the entities of its block, read as
+/// those of a definition.
+void resolve(const TableReader& tables, core::EntityRecord& record) {
+    resolveRecord(tables, record);
+    if (auto* dimension = std::get_if<core::Dimension>(&record.entity)) {
+        for (auto& graphic : dimension->graphics) {
+            resolveRecord(tables, graphic);
         }
     }
 }
@@ -346,10 +358,15 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
             entity.raw.order = ++context.order;
             entity.raw.type = item.front().type;
             context.id = entity.raw.id;
+            countDimensionBlock(item, blocks);
             entity.record = readItem(item, context, blocks.names);
             if (entity.record && takeItemProperties(*entity.record, entityReader)) {
                 entity.record->id = entity.raw.id;
                 entity.record->order = entity.raw.order;
+                if (std::holds_alternative<core::Dimension>(entity.record->entity)) {
+                    // Kept until its block is attached, which may fail.
+                    entity.raw.groups = rawGroupsOf(item);
+                }
             } else {
                 entity.record.reset();
                 ++result.report.unhandled[std::string{trimDxf(entity.raw.type)}];
@@ -357,6 +374,18 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
             }
             entities.push_back(std::move(entity));
         }
+    }
+    // The blocks *D… of the dimensions (docs/tappe/0.8/PT25-quote-dxf.md,
+    // point 1): a dimension whose block is missing stays unhandled.
+    for (auto& entity : entities) {
+        if (entity.record && !attachDimensionBlock(*entity.record, blocks)) {
+            entity.record.reset();
+            ++result.report.unhandled[std::string{trimDxf(entity.raw.type)}];
+        }
+    }
+    if (blocksSection && tablesSection) {
+        takeDimensionBlocks(blocks, raw.sections[*blocksSection].groups,
+                            raw.sections[*tablesSection].groups);
     }
     tables.finish(warnings, handles.value().used);
     for (auto& block : blocks.definitions) {
@@ -368,6 +397,7 @@ Result<ReadResult> readDrawing(const GroupFile& file, std::string_view bytes) {
     for (auto& entity : entities) {
         if (entity.record) {
             resolve(tables, *entity.record);
+            readDimensionOverrides(*entity.record, document);
             document.insert(std::move(*entity.record));
         } else {
             document.insertRaw(std::move(entity.raw));

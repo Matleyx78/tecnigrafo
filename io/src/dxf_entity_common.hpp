@@ -107,5 +107,7 @@ extern const EntityCodec kHatchCodec;
 /// The INSERT alone: readItem() (dxf_blocks.hpp) adds its ATTRIB and SEQEND.
 extern const EntityCodec kInsertCodec;
 extern const EntityCodec kAttdefCodec;
+/// The DIMENSION alone: its *D block is attached by dxf_blocks.cpp.
+extern const EntityCodec kDimensionCodec;
 
 }  // namespace tg::io

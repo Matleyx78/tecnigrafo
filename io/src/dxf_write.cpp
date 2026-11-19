@@ -207,10 +207,10 @@ Result<std::string> writeDrawing(const core::Document& document, DxfVersion vers
         }
     };
     // A file without BLOCKS gets one, before ENTITIES, only when the
-    // document has block definitions.
+    // document has block definitions or dimensions.
     const auto appendNewBlocks = [&] {
         hasBlocks = true;
-        if (!plan.blocks.empty()) {
+        if (!plan.noBlocks()) {
             out.push_back({0, "SECTION"});
             out.push_back({2, "BLOCKS"});
             const auto blocks = writeBlocks({}, document, plan, target, codePage);
