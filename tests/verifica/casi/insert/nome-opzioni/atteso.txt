@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  257 INSERT block="Simple" insertion=10,20 scale=2,1 rotation=30
+  257 INSERT block="Simple" insertion=10,20 scale=0.002,0.001 rotation=30
   259 INSERT block="U0" insertion=0,0 scale=1,1 rotation=0
   260 INSERT block="U24" insertion=0,10 scale=1609.3472186944373,1609.3472186944373 rotation=0
   261 INSERT block="U25" insertion=0,20 scale=1,1 rotation=0
@@ -24,7 +24,7 @@ messages:
   Specify insertion point or [Basepoint/Scale/Rotate]: Basepoint
   Specify base point <0,0>: 5,0
   Specify insertion point or [Basepoint/Scale/Rotate]: 15,20
-  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>:
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
   Enter Y scale factor <use X scale factor>:
   Specify rotation angle <0>:
   Command: U
@@ -38,7 +38,7 @@ messages:
   Command: -INSERT
   Enter block name or [?] <U0>: U24
   Specify insertion point or [Basepoint/Scale/Rotate]: 0,10
-  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1609.3472>:
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
   Enter Y scale factor <use X scale factor>:
   Specify rotation angle <0>:
   Command: -INSERT
