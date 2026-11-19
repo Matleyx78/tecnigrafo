@@ -40,7 +40,7 @@ entities:
   257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 ~text="40"
 messages:
   Command: U
-  Explode
+  Undone: Explode.
 prompt: Command:
 preview:
 selection: none
