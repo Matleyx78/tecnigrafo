@@ -6,7 +6,8 @@
 - **Agente:** claude
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8-RT29]` (#…), agente codex
-- **Dipende da:** PT4 (revisione delle interfacce), PT17, PT23, PT48, RT29
+- **Dipende da:** PT4 (revisione delle interfacce), PT17, PT21, PT23, PT26,
+  PT48, RT29 (i casi di RT29 usano `-INSERT` di PT21 e `DIMLINEAR` di PT26)
 - **Modulo:** `core` (più il comando in `cmd`)
 - **Da leggere:** [ADR 0045](../../adr/0045-blocchi-e-attributi.md), punto 4;
   [ADR 0047](../../adr/0047-quote-e-stili-di-quota.md), punto 4;
