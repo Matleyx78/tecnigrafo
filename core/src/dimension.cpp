@@ -57,6 +57,19 @@ double angleOf(const Vec2& direction) {
     return normalizeAngle(atan2(direction.y, direction.x));
 }
 
+Fit fitOf(double length, double textExtent, double arrow) {
+    if (textExtent + (2.0 * arrow) <= length) {
+        return Fit::BothInside;
+    }
+    if (textExtent <= length) {
+        return Fit::TextInside;
+    }
+    if (2.0 * arrow <= length) {
+        return Fit::ArrowsInside;
+    }
+    return Fit::BothOutside;
+}
+
 TextSize textSize(const Document& document, const MText& mtext) {
     const TextStyle* style = document.textStyles().find(mtext.style);
     const double widthFactor = style != nullptr ? style->widthFactor : 1.0;
@@ -96,6 +109,20 @@ void Builder::line(const Vec2& start, const Vec2& end, Part part) {
         m_records.size() + 1,
         properties(extension ? m_variables->extColor : m_variables->dimColor,
                    extension ? m_variables->extLineweight : m_variables->dimLineweight)});
+}
+
+void Builder::arc(const Vec2& center, double radius, double startAngle, double endAngle) {
+    const double start = normalizeAngle(startAngle);
+    const double end = normalizeAngle(endAngle);
+    if (start == end) {
+        return;
+    }
+    m_records.push_back(
+        EntityRecord{EntityId{0},
+                     Arc{center, radius, start, end},
+                     {},
+                     m_records.size() + 1,
+                     properties(m_variables->dimColor, m_variables->dimLineweight)});
 }
 
 void Builder::arrow(const Vec2& tip, const Vec2& base, const Vec2& up) {
@@ -207,17 +234,9 @@ std::optional<Dimension> regenerated(const Document& document, Dimension dimensi
         }
         return std::nullopt;
     };
-    switch (dimension.definition.kind) {
-        case DimensionKind::Linear:
-        case DimensionKind::Aligned:
-            break;
-        case DimensionKind::Angular:
-        case DimensionKind::Radius:
-        case DimensionKind::Diameter:
-            // PT24 realizes them.
-            return refuse(kDimensionKindNotRealized);
-        case DimensionKind::Other:
-            return refuse(kDimensionNotRegenerable);
+    const DimensionKind kind = dimension.definition.kind;
+    if (kind == DimensionKind::Other) {
+        return refuse(kDimensionNotRegenerable);
     }
     const DimStyleTable& table = document.dimStyles();
     const DimensionPresentation& presentation = dimension.presentation;
@@ -234,8 +253,19 @@ std::optional<Dimension> regenerated(const Document& document, Dimension dimensi
     if (!DimStyleTable::inDomain(variables, document.textStyles())) {
         return refuse(kDimensionNotRegenerable);
     }
-    return dimension_graphics::regeneratedLinear(
-        document, std::move(dimension), dimension_graphics::scaledVariables(variables), reason);
+    const DimVariables scaled = dimension_graphics::scaledVariables(variables);
+    switch (kind) {
+        case DimensionKind::Angular:
+            return dimension_graphics::regeneratedAngular(document, std::move(dimension), scaled,
+                                                          reason);
+        case DimensionKind::Radius:
+        case DimensionKind::Diameter:
+            return dimension_graphics::regeneratedRadial(document, std::move(dimension), scaled,
+                                                         reason);
+        default:
+            return dimension_graphics::regeneratedLinear(document, std::move(dimension), scaled,
+                                                         reason);
+    }
 }
 
 bool supported(const Dimension& /*dimension*/) {
@@ -387,13 +417,42 @@ TransformOutcome transformedOf(const Document& document, const Dimension& dimens
     return {Entity{std::move(*regeneration)}, {}};
 }
 
+namespace {
+
+/// The definition points that are grips, in the order of gripPointsOf(),
+/// before the grip of the text.
+std::vector<Vec2*> definitionGrips(DimensionDefinition& definition) {
+    switch (definition.kind) {
+        case DimensionKind::Linear:
+        case DimensionKind::Aligned:
+            return {&definition.point13, &definition.point14, &definition.linePoint};
+        case DimensionKind::Angular:
+            return {&definition.point13, &definition.point14, &definition.linePoint,
+                    &definition.point15, &definition.point16};
+        case DimensionKind::Radius:
+        case DimensionKind::Diameter:
+            return {&definition.linePoint, &definition.point15};
+        case DimensionKind::Other:
+            break;
+    }
+    return {};
+}
+
+}  // namespace
+
 std::vector<Vec2> gripPointsOf(const Dimension& dimension) {
-    const DimensionDefinition& definition = dimension.definition;
-    if (definition.kind != DimensionKind::Linear && definition.kind != DimensionKind::Aligned) {
+    DimensionDefinition definition = dimension.definition;
+    const std::vector<Vec2*> points = definitionGrips(definition);
+    if (points.empty()) {
         return {};
     }
-    return {definition.point13, definition.point14, definition.linePoint,
-            dimension.presentation.textPoint};
+    std::vector<Vec2> grips;
+    grips.reserve(points.size() + 1);
+    for (const Vec2* point : points) {
+        grips.push_back(*point);
+    }
+    grips.push_back(dimension.presentation.textPoint);
+    return grips;
 }
 
 GripResult moveGripOf(const Document& document, const Dimension& dimension, std::size_t index,
@@ -401,9 +460,15 @@ GripResult moveGripOf(const Document& document, const Dimension& dimension, std:
     if (!std::isfinite(target.x) || !std::isfinite(target.y)) {
         return {GripOutcome::Invalid, Entity{dimension}, {}};
     }
-    constexpr std::size_t kTextGrip = 3;
     Dimension moved = dimension;
-    if (index == kTextGrip) {
+    const std::vector<Vec2*> points = definitionGrips(moved.definition);
+    if (index == points.size()) {
+        // The text in the center of a radius gives no dimension line
+        // (PT24, point 2): the edit is refused as one that regenerates.
+        if (dimension.definition.kind == DimensionKind::Radius &&
+            target == dimension.definition.linePoint) {
+            return {GripOutcome::Invalid, Entity{dimension}, std::string{kDimensionNotRegenerable}};
+        }
         // Only the text moves (docs/adr/0047, point 4): the middle of the
         // text in the point (PT5, point B10).
         moved.presentation.textPoint = target;
@@ -416,9 +481,6 @@ GripResult moveGripOf(const Document& document, const Dimension& dimension, std:
         }
         return {GripOutcome::Moved, Entity{std::move(moved)}, {}};
     }
-    DimensionDefinition& definition = moved.definition;
-    const std::array<Vec2*, 3> points{&definition.point13, &definition.point14,
-                                      &definition.linePoint};
     *points.at(index) = target;
     std::optional<Dimension> regeneration = regenerated(document, std::move(moved));
     if (!regeneration) {

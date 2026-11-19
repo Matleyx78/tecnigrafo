@@ -102,6 +102,7 @@ add_executable(tg_tests
     core/text_test.cpp
     core/text_style_table_test.cpp
     core/dim_style_table_test.cpp
+    core/dimension_angular_test.cpp
     core/dimension_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
