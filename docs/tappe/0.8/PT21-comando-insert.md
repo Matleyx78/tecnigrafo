@@ -97,8 +97,9 @@
 - `insert_command_test.cpp`: un blocco per nome, con scala `(2, 1)` e rotazione,
   date dopo il punto; lo stesso con *Scale* e *Rotate* prima del punto
   (nessuna domanda dopo il punto); solo *Scale* prima (dopo il punto si
-  chiede solo la rotazione); l'angolo opposto (diagonale dal punto
-  d'inserimento) e *Corner*;
+  chiede solo la rotazione); solo *Rotate* prima (dopo il punto si chiedono
+  la scala X e la scala Y, e non di nuovo la rotazione); l'angolo opposto
+  (diagonale dal punto d'inserimento) e *Corner*;
   un file con un nome nuovo; un file con un nome che esiste (definizione
   esistente, nessuna domanda); `nome=percorso` con un nome che esiste
   (ridefinito, gli inserimenti che c'erano cambiano) e con uno nuovo;
