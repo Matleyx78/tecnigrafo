@@ -9,6 +9,7 @@
 #include <charconv>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
 #include <ranges>
 #include <string>
 #include <type_traits>
@@ -154,7 +155,13 @@ core::EntityId Editor::addRaw(core::RawEntity raw) {
     if (group != end) {
         group->value = handle;
     } else {
-        raw.groups.insert(raw.groups.begin(), core::RawGroup{kHandle, handle});
+        // A new vector instead of insert() at begin(): with -O3, GCC 13 sees
+        // a null begin() of an empty vector and warns (-Wnull-dereference).
+        core::RawGroups groups;
+        groups.reserve(raw.groups.size() + 1);
+        groups.push_back(core::RawGroup{kHandle, handle});
+        std::ranges::move(raw.groups, std::back_inserter(groups));
+        raw.groups = std::move(groups);
     }
     [[maybe_unused]] const core::EntityId given = m_document.addRaw(raw);
     assert(given == id);
