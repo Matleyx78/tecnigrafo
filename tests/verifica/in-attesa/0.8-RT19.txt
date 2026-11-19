@@ -1,4 +1,0 @@
-import-blocco/autoriferimento #701
-import-blocco/entita-non-spostabile #701
-import-blocco/fusione-e-handle #701
-import-blocco/spostamento-unita #701

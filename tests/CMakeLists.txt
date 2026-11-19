@@ -22,8 +22,10 @@ add_executable(tg_tests
     cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
     cmd/circle_command_test.cpp
+    cmd/dimension_commands_test.cpp
     cmd/ellipse_command_test.cpp
     cmd/fillet_command_test.cpp
+    cmd/hatch_command_test.cpp
     cmd/command_protocol_test.cpp
     cmd/command_registry_test.cpp
     cmd/command_runner_test.cpp
@@ -34,6 +36,7 @@ add_executable(tg_tests
     cmd/erase_command_test.cpp
     cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp
+    cmd/dimstyle_commands_test.cpp
     cmd/grip_test.cpp
     cmd/join_command_test.cpp
     cmd/layer_commands_test.cpp
@@ -99,6 +102,8 @@ add_executable(tg_tests
     core/text_test.cpp
     core/text_style_table_test.cpp
     core/dim_style_table_test.cpp
+    core/dimension_angular_test.cpp
+    core/dimension_test.cpp
     core/tolerance_test.cpp
     edit/document_file_test.cpp
     edit/blocks_test.cpp
@@ -112,8 +117,10 @@ add_executable(tg_tests
     io/dxf_solid_test.cpp
     io/dxf_ellipse_test.cpp
     io/dxf_hatch_test.cpp
+    io/block_import_test.cpp
     io/dxf_blocks_test.cpp
     io/dxf_insert_test.cpp
+    io/dxf_dimension_test.cpp
     io/dxf_extrusion_test.cpp
     io/dxf_read_test.cpp
     io/dxf_write_test.cpp

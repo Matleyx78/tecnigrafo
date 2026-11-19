@@ -142,6 +142,7 @@ public:
 
 private:
     friend class DocumentTables;
+    friend bool saveDimStyle(Editor& editor, std::string_view name);
     friend bool putTextStyle(Editor& editor, core::TextStyle style);
 
     struct LayerTableChange {

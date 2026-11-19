@@ -11,11 +11,14 @@
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
 #include "tg/cmd/commands/circle_command.hpp"
+#include "tg/cmd/commands/dimension_commands.hpp"
+#include "tg/cmd/commands/dimstyle_commands.hpp"
 #include "tg/cmd/commands/ellipse_command.hpp"
 #include "tg/cmd/commands/erase_command.hpp"
 #include "tg/cmd/commands/explode_command.hpp"
 #include "tg/cmd/commands/file_commands.hpp"
 #include "tg/cmd/commands/fillet_command.hpp"
+#include "tg/cmd/commands/hatch_command.hpp"
 #include "tg/cmd/commands/join_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
 #include "tg/cmd/commands/line_command.hpp"
@@ -50,6 +53,23 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(ClayerCommand::description(), [] { return std::make_unique<ClayerCommand>(); });
     registry.add(ColorCommand::description(), [] { return std::make_unique<ColorCommand>(); });
     registry.add(CopyCommand::description(), [] { return std::make_unique<CopyCommand>(); });
+    registry.add(DimensionCommand::description(DimensionCommand::Kind::Aligned), [] {
+        return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Aligned);
+    });
+    registry.add(DimensionCommand::description(DimensionCommand::Kind::Linear),
+                 [] { return std::make_unique<DimensionCommand>(DimensionCommand::Kind::Linear); });
+    registry.add(DimstyleCommand::description(),
+                 [] { return std::make_unique<DimstyleCommand>(); });
+    for (const auto& variable : core::dimVariableInfos()) {
+        if (variable.name == "DIMCLRD" || variable.name == "DIMCLRE" ||
+            variable.name == "DIMCLRT" || variable.name == "DIMLWD" || variable.name == "DIMLWE") {
+            continue;
+        }
+        registry.add(DimVariableCommand::description(variable.name),
+                     [name = std::string(variable.name)] {
+                         return std::make_unique<DimVariableCommand>(name);
+                     });
+    }
     registry.add(EllipseCommand::description(), [] { return std::make_unique<EllipseCommand>(); });
     registry.add(detail::eraseDescription(), [] { return std::make_unique<EraseCommand>(); });
     registry.add(ExplodeCommand::description(), [] { return std::make_unique<ExplodeCommand>(); });
@@ -57,6 +77,9 @@ void registerBuiltinCommands(CommandRegistry& registry) {
         return std::make_unique<TrimExtendCommand>(TrimExtendCommand::Action::Extend);
     });
     registry.add(FilletCommand::description(), [] { return std::make_unique<FilletCommand>(); });
+    registry.add(HatchCommand::description(), [] { return std::make_unique<HatchCommand>(); });
+    registry.add(HpislanddetectionCommand::description(),
+                 [] { return std::make_unique<HpislanddetectionCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(JoinCommand::description(), [] { return std::make_unique<JoinCommand>(); });
     registry.add(detail::lineDescription(), [] { return std::make_unique<LineCommand>(); });

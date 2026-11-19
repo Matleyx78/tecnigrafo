@@ -17,13 +17,26 @@ Simple
 Basepoint
 5,0
 15,20
+
+
+
 U
 -INSERT
 U0
 0,0
+
+
+
 -INSERT
 U24
 0,10
+
+
+
 -INSERT
 U25
 0,20
+
+
+
+; End of case.

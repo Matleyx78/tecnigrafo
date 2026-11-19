@@ -24,3 +24,10 @@ Open = LWPOLYLINE vertex=12,-2 vertex=10,0 vertex=12,2
 Repeated = LWPOLYLINE vertex=8,-2 vertex=12,2 vertex=12,-2 vertex=8,2
 ? intersections E Repeated -> 10,0 crossing 0:start 0:inside; 10,0 crossing 0:start 2:inside
 ? intersections Repeated E -> 10,0 crossing 0:inside 0:start; 10,0 crossing 2:inside 0:start
+; solid-space tests/corpus/casi/geom2d/ellipse-delicate-mm-retta-ulp-esterno.json
+; at 9c89fc37520266e55b6b5685ed16c62822c9efdc: a segment one ulp above the
+; minor-axis vertex (0,5) does not touch the ellipse. Whole carrier, start 0
+; instead of 0.2: no point, so the start does not matter.
+Near = LINE start=-20,5.000000000000001 end=20,5.000000000000001
+? intersections E Near -> none
+? intersections Near E -> none

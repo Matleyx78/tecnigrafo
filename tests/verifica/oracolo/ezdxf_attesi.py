@@ -23,7 +23,7 @@ STAGE_08_ENTITY_TYPES = frozenset({
 # Work packages add a type here when Tecnigrafo starts handling it.  This stage
 # declaration affects only count/unhandled; every other oracle answer remains
 # independent from the application (ADR 0020).
-ACTIVE_STAGE_08_ENTITY_TYPES = frozenset({"ATTDEF", "ATTRIB", "ELLIPSE", "HATCH", "INSERT", "MTEXT", "SOLID"})
+ACTIVE_STAGE_08_ENTITY_TYPES = frozenset({"ATTDEF", "ATTRIB", "DIMENSION", "ELLIPSE", "HATCH", "INSERT", "MTEXT", "SOLID"})
 
 
 def number(value):

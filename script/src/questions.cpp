@@ -5,6 +5,7 @@
 
 #include "question_table.hpp"
 #include "text.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/start_handles.hpp"
 #include "tg/edit/editor.hpp"
@@ -16,6 +17,7 @@
 #include <cassert>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <utility>
 
 namespace tg::script {
@@ -318,6 +320,7 @@ private:
                          ": a letter or _, then letters, digits and _; not 'none'");
         }
         if (std::ranges::find(m_names, name) != m_names.end() || m_files.contains(name) ||
+            m_imports.contains(name) ||
             std::ranges::find(m_tableNames, name) != m_tableNames.end() ||
             std::ranges::find(m_blockNames, name) != m_blockNames.end()) {
             return error("the name " + quoted(name) + " is already defined");
@@ -325,7 +328,8 @@ private:
         const std::string_view definition = detail::trim(text.substr(equals + 1));
         const std::vector<std::string_view> words = detail::splitWords(definition);
         const bool table = !words.empty() && (words.front() == "LAYER" || words.front() == "LTYPE");
-        const bool drawing = !words.empty() && (words.front() == "DXF" || words.front() == "CADX");
+        const bool drawing = !words.empty() && (words.front() == "DXF" || words.front() == "CADX" ||
+                                                words.front() == "BLOCK-IMPORT");
         if (m_block && (table || drawing)) {
             return error("only entities are defined inside the block " + quoted(m_block->name));
         }
@@ -336,6 +340,15 @@ private:
                 m_tableNames.emplace_back(name);
             }
             return failure;
+        }
+        // The import sees the document of the definitions as it is before
+        // this line, and does not change it (docs/verifica/domande.md).
+        if (auto imported = detail::readImportDefinition(definition, m_access, m_document)) {
+            if (auto* failure = std::get_if<detail::FileDefinitionError>(&*imported)) {
+                return error(std::move(failure->message), failure->notImplemented);
+            }
+            m_imports.emplace(name, std::get<detail::ImportedBlock>(std::move(*imported)));
+            return std::nullopt;
         }
         if (auto file = detail::readFileDefinition(definition, m_access)) {
             if (auto* failure = std::get_if<detail::FileDefinitionError>(&*file)) {
@@ -359,6 +372,16 @@ private:
             insert != nullptr && m_document.blocks().find(insert->block) == nullptr) {
             return error("unknown block " + quoted(insert->block) +
                          ": define it above with !block");
+        }
+        if (auto* dimension = std::get_if<core::Dimension>(&entity.entity)) {
+            // Regenerated with the document of the definitions, as a command
+            // makes it (docs/tappe/0.8/PT23, point 9).
+            std::optional<core::Dimension> made =
+                core::regenerated(m_document, std::move(*dimension));
+            if (!made) {
+                return error(std::string{core::kDimensionNotRegenerable});
+            }
+            entity.entity = std::move(*made);
         }
         if (m_block) {
             // An entity of a block has a handle of the drawing's space, in
@@ -453,7 +476,8 @@ private:
                                           aboutFiles ? fileIds : m_ids,
                                           m_files,
                                           m_tolerances,
-                                          m_access};
+                                          m_access,
+                                          m_imports};
         detail::QuestionResult result = row->function(model, arguments);
         if (auto* failure = std::get_if<detail::ArgumentError>(&result)) {
             if (!m_pending || !failure->notImplemented) {
@@ -474,6 +498,7 @@ private:
     edit::Editor m_editor;
     io::FileAccess* m_access;
     detail::FileDrawings m_files;                  ///< drawings read from files, by name
+    detail::ImportedBlocks m_imports;              ///< imports of BLOCK-IMPORT, by name
     std::vector<std::string> m_names;              ///< m_names[n] names entity m_ids[n]
     std::vector<core::EntityId> m_ids;             ///< the defined entities, in order
     std::vector<std::string> m_tableNames;         ///< names of the LAYER and LTYPE definitions

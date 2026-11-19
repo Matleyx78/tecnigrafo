@@ -3,7 +3,9 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "dimension_graphics.hpp"
 #include "insert_snap.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/fillet.hpp"
 #include "tg/core/generated.hpp"
@@ -272,6 +274,30 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         consider(curveDistance, id);
     };
 
+    // A row of an MTEXT gives no snap point of its own: within the aperture
+    // it makes the insertion point of the MTEXT a candidate, at the distance
+    // from the row's box, as the box of a text does with its insertion point
+    // (docs/tappe/0.8/PT13-mtext-core.md, point 6). The nearest row decides.
+    // `mtext` is drawn with the properties of `owner`, the MTEXT itself or
+    // the one in the graphics of a dimension; `id` is the entity of the
+    // document.
+    const auto considerRows = [&](const std::vector<GeneratedItem>& rows, const EntityRecord& owner,
+                                  const MText& mtext, std::uint64_t id) {
+        for (const GeneratedItem& item : rows) {
+            const std::optional<Entity> row = shapeEntity(item.shape);
+            if (!row) {
+                continue;
+            }
+            const double rowDistance = distance(*row, pointer);
+            if (rowDistance > aperture) {
+                continue;
+            }
+            curvePoints.clear();
+            appendOwnSnapPointsOf(document, owner, mtext, modes, curvePoints, from);
+            consider(rowDistance, id);
+        }
+    };
+
     // The types of the 0.8 snap through their drawn shapes, the same that
     // appendSnapPoints(document, …) visits, kept here while they are compared.
     std::deque<Entity> generatedShapes;
@@ -288,30 +314,24 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             continue;
         }
         if (const auto* mtext = std::get_if<MText>(&record.entity)) {
-            // A row of an MTEXT gives no snap point of its own: within the
-            // aperture it makes the insertion point of the MTEXT a candidate,
-            // at the distance from the row's box, as the box of a text does
-            // with its insertion point (docs/tappe/0.8/PT13-mtext-core.md,
-            // point 6). The nearest row decides.
-            for (const GeneratedItem& item : generate(document, record)) {
-                const std::optional<Entity> row = shapeEntity(item.shape);
-                if (!row) {
-                    continue;
-                }
-                const double rowDistance = distance(*row, pointer);
-                if (rowDistance > aperture) {
-                    continue;
-                }
-                curvePoints.clear();
-                appendOwnSnapPointsOf(document, record, *mtext, modes, curvePoints, from);
-                consider(rowDistance, id.value);
-            }
+            considerRows(generate(document, record), record, *mtext, id.value);
         } else {
-            // Through an insert the hatches of its blocks give nothing either.
-            const auto* insert = std::get_if<Insert>(&record.entity);
-            const std::vector<GeneratedItem> items = insert != nullptr
-                                                         ? snapItemsOf(document, record, *insert)
-                                                         : generate(document, record);
+            // Through an insert the hatches of its blocks give nothing either;
+            // through a dimension the rows of its MTEXT give no snap point of
+            // their own but lead to the points of the MTEXT, as outside a
+            // dimension (docs/tappe/0.8/PT23-quote-lineari.md, point 7).
+            std::vector<GeneratedItem> items;
+            if (const auto* insert = std::get_if<Insert>(&record.entity)) {
+                items = snapItemsOf(document, record, *insert);
+            } else if (const auto* dimension = std::get_if<Dimension>(&record.entity)) {
+                items = snapItemsOf(document, record, *dimension);
+                for (const DrawnMText& text : drawnMTextsOf(document, record, *dimension)) {
+                    considerRows(text.rows, text.record, std::get<MText>(text.record.entity),
+                                 id.value);
+                }
+            } else {
+                items = generate(document, record);
+            }
             for (const GeneratedItem& item : items) {
                 if (std::optional<Entity> shape = shapeEntity(item.shape)) {
                     generatedShapes.push_back(std::move(*shape));

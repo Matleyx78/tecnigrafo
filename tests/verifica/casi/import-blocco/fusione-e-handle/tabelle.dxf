@@ -93,7 +93,7 @@ LINE
 5
 22
 330
-21
+20
 340
 11
 360
@@ -104,6 +104,12 @@ LINE
 21
 102
 }
+100
+AcDbEntity
+8
+0
+100
+AcDbLine
 10
 0
 20
@@ -128,6 +134,12 @@ ENTITIES
 INSERT
 5
 30
+100
+AcDbEntity
+8
+0
+100
+AcDbBlockReference
 2
 Child
 10

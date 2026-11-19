@@ -12,12 +12,20 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
+
+namespace tg::io {
+// Declared, not included: tg/io/block_import.hpp brings <filesystem>, whose
+// std::quoted argument-dependent lookup would find beside the quoted() of
+// the files that include this table.
+struct BlockImport;
+}  // namespace tg::io
 
 // The catalogue of questions (docs/verifica/domande.md). Not installed, not
 // public: questions.cpp reads the file, this table answers.
@@ -34,6 +42,21 @@ struct FileDrawing {
 /// The drawings read by the definitions so far, by name.
 using FileDrawings = std::map<std::string, FileDrawing, std::less<>>;
 
+/// What a definition "I = BLOCK-IMPORT ..." keeps (docs/verifica/domande.md,
+/// "Importazione di un file come blocco"): the result of io::importBlock,
+/// or its error, which the questions can ask about.
+struct ImportedBlock {
+    /// What io::importBlock returned, or nullptr if it failed with `error`.
+    std::shared_ptr<const io::BlockImport> result;
+    io::Error error;
+    /// The target passed to io::importBlock with the layers and linetypes
+    /// that enter: it gives the names of the records the entities use.
+    core::Document names;
+};
+
+/// The imports of the definitions so far, by name.
+using ImportedBlocks = std::map<std::string, ImportedBlock, std::less<>>;
+
 /// The drawing the questions of a file ask about: the entities defined so
 /// far, with the names the file gave them, and the drawings read from
 /// files. Entity ids[n] is named names[n]: the identifiers grow in the order
@@ -49,6 +72,8 @@ struct QuestionModel {
     /// Where the definitions and questions about files read them; nullptr
     /// if they cannot (answerQuestions() without files).
     io::FileAccess* access;
+    /// The imports of the definitions "BLOCK-IMPORT" above.
+    const ImportedBlocks& imports;
 
     /// The entity named `name`, or std::nullopt.
     [[nodiscard]] std::optional<core::EntityId> find(std::string_view name) const;
@@ -104,6 +129,16 @@ struct FileDefinitionError {
 /// Defined in file_questions.cpp.
 [[nodiscard]] std::optional<std::variant<FileDrawing, FileDefinitionError>> readFileDefinition(
     std::string_view text, io::FileAccess* access);
+
+/// Reads a definition "BLOCK-IMPORT source=<name> [target-units=N]" or
+/// "BLOCK-IMPORT file=<name> [target-units=N]" (the text after "I ="):
+/// io::importBlock of the file into a copy of `target`, whose INSUNITS is N
+/// if given. std::nullopt if `text` is not one. A file that cannot be read
+/// (missing, invalid name) is an error of the definition, as for "DXF";
+/// any other error of io::importBlock is kept in the ImportedBlock.
+/// Defined in file_questions.cpp.
+[[nodiscard]] std::optional<std::variant<ImportedBlock, FileDefinitionError>> readImportDefinition(
+    std::string_view text, io::FileAccess* access, const core::Document& target);
 
 /// An entity of a drawing read from a file that io keeps unhandled: a
 /// question about it is not passed, not invalid (docs/verifica/casi.md),

@@ -2,18 +2,18 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  257 INSERT block="Simple" insertion=10,20 scale=0.002,0.001 rotation=30
-  259 INSERT block="U0" insertion=0,0 scale=1,1 rotation=0
-  260 INSERT block="U24" insertion=0,10 scale=1,1 rotation=0
-  261 INSERT block="U25" insertion=0,20 scale=1,1 rotation=0
+  4096 INSERT block="Simple" insertion=10,20 scale=0.002,0.001 rotation=30
+  4098 INSERT block="U0" insertion=0,0 scale=1,1 rotation=0
+  4099 INSERT block="U24" insertion=0,10 scale=1609.3472186944373,1609.3472186944373 rotation=0
+  4100 INSERT block="U25" insertion=0,20 scale=1,1 rotation=0
 messages:
   Command: OPEN
   Enter name of drawing to open: blocchi.dxf
   Command: -INSERT
   Enter block name or [?]: Simple
   Specify insertion point or [Basepoint/Scale/Rotate]: Scale
-  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: XYZ
-  Enter X scale factor <0.001>: 2
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: XYZ
+  Enter X scale factor <1>: 2
   Enter Y scale factor <use X scale factor>: 1
   Enter Z scale factor <use X scale factor>: 3
   Specify insertion point or [Basepoint/Scale/Rotate]: Rotate
@@ -24,28 +24,55 @@ messages:
   Specify insertion point or [Basepoint/Scale/Rotate]: Basepoint
   Specify base point <0,0>: 5,0
   Specify insertion point or [Basepoint/Scale/Rotate]: 15,20
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
   Command: U
-  Insert
+  Undone: Insert.
   Command: -INSERT
   Enter block name or [?] <Simple>: U0
   Specify insertion point or [Basepoint/Scale/Rotate]: 0,0
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
   Command: -INSERT
   Enter block name or [?] <U0>: U24
   Specify insertion point or [Basepoint/Scale/Rotate]: 0,10
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
   Command: -INSERT
   Enter block name or [?] <U24>: U25
   Specify insertion point or [Basepoint/Scale/Rotate]: 0,20
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>:
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>:
 prompt: Command:
 preview:
 selection: none
 rectangle: none
 undo:
   Insert
+  Insert
+  Insert
+  Insert
 redo:
 snap: on
 ortho: off
 drawing: blocchi.dxf, modified
 units: 6
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "Simple" base=0,0 units=4
+  "Simple" 66 LINE start=0,0 end=10,0
+  "U0" base=0,0
+  "U0" 82 LINE start=0,0 end=10,0
+  "U24" base=0,0 units=24
+  "U24" 98 LINE start=0,0 end=10,0
+  "U25" base=0,0 units=25
+  "U25" 114 LINE start=0,0 end=10,0
 documents: Drawing1.cadx, blocchi.dxf (active)
 pointer: none
 active snap: none

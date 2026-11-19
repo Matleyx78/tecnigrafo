@@ -2187,3 +2187,56 @@ i rimandi ai documenti che cambia.
   `(0,0,-1)`. Questo estende all'oracolo l'eccezione del 2026-11-16: PT14 può
   modificare `ezdxf_attesi.py` e, solo per il self-test di questa regola,
   `controlla_casi.py`.
+
+- **2026-11-18 — Entità esplose con i loro extras.** Claude si ferma su PT29
+  ([#719](https://github.com/Matleyx78/tecnigrafo/issues/719)): la scheda
+  vuole che le entità esplose entrino nel disegno con le loro proprietà ed
+  `extras` e che le entità grezze del blocco si copino, ma `edit::Editor` non
+  può aggiungere né gli extras di un'entità nuova né un'entità grezza, e la
+  regola di [PT7](tappe/0.8/PT7-tabelle-edit.md) vieta di toccare
+  `editor.*`. Il responsabile sceglie l'uscita A: PT29 aggiunge, come
+  eccezione a quella regola, `core::EntityId Editor::addRecord(core::EntityRecord)`
+  (handle e chiave d'ordine nuovi, proprietà ed extras del record) e
+  `core::EntityId Editor::addRaw(core::RawEntity)` (handle e chiave d'ordine
+  nuovi, gruppo 5 riscritto con il nuovo handle), annullabili come `add()`,
+  con i test in `tests/edit/editor_test.cpp`; `io/src/dxf_write.cpp` riscrive
+  il proprietario (330) delle entità grezze del disegno con lo spazio
+  modello, come `setOwner` fa per i blocchi, con un test in `tests/io`. La
+  scheda [PT29](tappe/0.8/PT29-explode-blocchi-quote.md) lo scrive nei punti
+  3 e 4. Scartata l'uscita B, che rifiutava l'esplosione di ogni blocco con
+  extras oltre ai gruppi 102 o con entità grezze, cioè di quasi ogni blocco
+  letto da un DXF (gruppo 330).
+
+- **2026-11-19 — PT29 aspetta PT21 e PT26.** Claude si ferma su PT29
+  ([#719](https://github.com/Matleyx78/tecnigrafo/issues/719)) con il codice
+  scritto: i due casi di RT29 preparano il disegno con `-INSERT` (PT21,
+  [#705](https://github.com/Matleyx78/tecnigrafo/issues/705)) e `DIMLINEAR`
+  (PT26, [#713](https://github.com/Matleyx78/tecnigrafo/issues/713)), che non
+  erano fra le dipendenze di PT29, e falliscono prima di `EXPLODE`. Il
+  responsabile sceglie l'uscita B: «Dipende da» di
+  [PT29](tappe/0.8/PT29-explode-blocchi-quote.md) e la tabella del piano
+  aggiungono PT21 e PT26, e il pacchetto riprende dal ramo già pubblicato
+  quando sono uniti tutti e due. Scartate l'uscita A (PT29 lascia in
+  `tests/verifica/in-attesa/0.8-RT29.txt` una riga per caso con l'issue del
+  comando che manca, e PT21 e PT26 la tolgono) e l'uscita C (RT29 riscrive i
+  casi senza i comandi di altri pacchetti).
+
+- **2026-11-19 — Scala di `-INSERT` e domande dopo il punto come AutoCAD.**
+  Claude si ferma su PT21
+  ([#705](https://github.com/Matleyx78/tecnigrafo/issues/705)): i casi di
+  RT21 moltiplicano per il fattore delle unità anche la scala scritta, mentre
+  la scheda lo faceva solo per quella proposta, e finiscono il comando al
+  punto d'inserimento, mentre AutoCAD dopo il punto chiede scala e rotazione.
+  Il responsabile sceglie la B, come AutoCAD: la scala proposta è sempre
+  `<1>` e ogni fattore di scala, scritto o proposto, si moltiplica per il
+  fattore delle unità; dopo il punto d'inserimento `-INSERT` chiede scala X
+  (con *Corner*/*XYZ* e l'angolo opposto, la cui diagonale parte dal punto
+  d'inserimento), scala Y e rotazione, salvo quelle già date con *Scale* e
+  *Rotate* ([0.8-PT21](tappe/0.8/PT21-comando-insert.md)). Corregge la
+  decisione del 2026-11-13, «Buchi della revisione della #756», punto 3: la
+  conversione delle unità non sta nella scala proposta ma nella scala
+  dell'inserimento. Scartate la scheda com'era (proposta uguale al fattore,
+  valore scritto senza conversione) e la regola mista dei casi (proposta
+  uguale al fattore e valore scritto moltiplicato anche lui). I casi di RT21
+  ([#704](https://github.com/Matleyx78/tecnigrafo/issues/704)) si correggono
+  a parte; il pacchetto riparte con il loro merge.
