@@ -341,11 +341,12 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(titles(menus[1]->menu()->actions()),
               (QStringList{QStringLiteral("&Undo"), QStringLiteral("&Redo"), QStringLiteral("-"),
                            QStringLiteral("&Erase")}));
-    EXPECT_EQ(titles(menus[4]->menu()->actions()),
-              (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),
-                           QStringLiteral("&Circle"), QStringLiteral("&Arc"),
-                           QStringLiteral("&Ellipse"), QStringLiteral("&Text"),
-                           QStringLiteral("&Multiline Text"), QStringLiteral("&Block")}));
+    EXPECT_EQ(
+        titles(menus[4]->menu()->actions()),
+        (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),
+                     QStringLiteral("&Circle"), QStringLiteral("&Arc"), QStringLiteral("&Ellipse"),
+                     QStringLiteral("&Text"), QStringLiteral("&Multiline Text"),
+                     QStringLiteral("&Hatch"), QStringLiteral("&Block")}));
     EXPECT_EQ(titles(menus[4]->menu()->actions().last()->menu()->actions()),
               (QStringList{QStringLiteral("&Create Block")}));
     EXPECT_EQ(titles(menus[5]->menu()->actions()), (QStringList{QStringLiteral("&Insert Block")}));
@@ -448,7 +449,7 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
         }
     }
     // File, editing and drawing commands, including the menu/ribbon aliases.
-    EXPECT_EQ(withCommands.size(), 46);
+    EXPECT_EQ(withCommands.size(), 47);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());
@@ -468,13 +469,13 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
 }
 
 TEST_F(MainWindowActionsTest, NewStageActionsReferToRegisteredCommands) {
-    const QStringList ids{
-        QStringLiteral("draw.ellipse"),      QStringLiteral("draw.mtext"),
-        QStringLiteral("edit.pedit"),        QStringLiteral("block.create"),
-        QStringLiteral("block.insert"),      QStringLiteral("text.style"),
-        QStringLiteral("dimension.style"),   QStringLiteral("dimension.linear"),
-        QStringLiteral("dimension.aligned"), QStringLiteral("dimension.angular"),
-        QStringLiteral("dimension.radius"),  QStringLiteral("dimension.diameter")};
+    const QStringList ids{QStringLiteral("draw.ellipse"),      QStringLiteral("draw.mtext"),
+                          QStringLiteral("draw.hatch"),        QStringLiteral("edit.pedit"),
+                          QStringLiteral("block.create"),      QStringLiteral("block.insert"),
+                          QStringLiteral("text.style"),        QStringLiteral("dimension.style"),
+                          QStringLiteral("dimension.linear"),  QStringLiteral("dimension.aligned"),
+                          QStringLiteral("dimension.angular"), QStringLiteral("dimension.radius"),
+                          QStringLiteral("dimension.diameter")};
     for (const QString& id : ids) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* actionSpec = registry().spec(id);

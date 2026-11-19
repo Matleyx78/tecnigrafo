@@ -390,6 +390,10 @@ void BuiltinActions::add(ActionRegistry& registry) {
                  QStringLiteral("draw-mtext"));
     mtext.ribbon = QStringLiteral("home/annotation");
     registry.add(std::move(mtext));
+    registry.add(withIcon(
+        commandSpec(QStringLiteral("draw.hatch"), tr("&Hatch"), draw,
+                    tr("Fills an enclosed area with a hatch pattern."), QStringLiteral("-HATCH")),
+        QStringLiteral("draw-hatch")));
     const QString block = draw + QLatin1Char('/') + tr("&Block");
     ActionSpec createBlock =
         withIcon(commandSpec(QStringLiteral("block.create"), tr("&Create Block"), block,
