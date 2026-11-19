@@ -2159,3 +2159,22 @@ i rimandi ai documenti che cambia.
   `(0,0,-1)`. Questo estende all'oracolo l'eccezione del 2026-11-16: PT14 può
   modificare `ezdxf_attesi.py` e, solo per il self-test di questa regola,
   `controlla_casi.py`.
+
+- **2026-11-18 — Entità esplose con i loro extras.** Claude si ferma su PT29
+  ([#719](https://github.com/Matleyx78/tecnigrafo/issues/719)): la scheda
+  vuole che le entità esplose entrino nel disegno con le loro proprietà ed
+  `extras` e che le entità grezze del blocco si copino, ma `edit::Editor` non
+  può aggiungere né gli extras di un'entità nuova né un'entità grezza, e la
+  regola di [PT7](tappe/0.8/PT7-tabelle-edit.md) vieta di toccare
+  `editor.*`. Il responsabile sceglie l'uscita A: PT29 aggiunge, come
+  eccezione a quella regola, `core::EntityId Editor::addRecord(core::EntityRecord)`
+  (handle e chiave d'ordine nuovi, proprietà ed extras del record) e
+  `core::EntityId Editor::addRaw(core::RawEntity)` (handle e chiave d'ordine
+  nuovi, gruppo 5 riscritto con il nuovo handle), annullabili come `add()`,
+  con i test in `tests/edit/editor_test.cpp`; `io/src/dxf_write.cpp` riscrive
+  il proprietario (330) delle entità grezze del disegno con lo spazio
+  modello, come `setOwner` fa per i blocchi, con un test in `tests/io`. La
+  scheda [PT29](tappe/0.8/PT29-explode-blocchi-quote.md) lo scrive nei punti
+  3 e 4. Scartata l'uscita B, che rifiutava l'esplosione di ogni blocco con
+  extras oltre ai gruppi 102 o con entità grezze, cioè di quasi ogni blocco
+  letto da un DXF (gruppo 330).

@@ -6,12 +6,16 @@
 ; 1ad04b0): after Text and Rotated the full prompt comes back; after
 ; Horizontal and Vertical only [Text/Angle] (Mtext left out, decision of
 ; 2026-11-11). With a replaced text AutoCAD still ends with the measured
-; value ("Testo di quota = 40" after "<> mm").
+; value ("Dimension text = 50" after "<> mm").
 ; Values by hand from PT23 with ISO-25, as in
-; dimlinear/punti-direzione-automatica (six graphics records each). The
-; explicit angle 90 equals the automatic one of a vertical dimension, so the
-; text centre does not depend on how the angle moves it. Rotated: origins
-; 0,120 and 0,160, u = (cos 30, sin 30), measurement 40 sin 30 = 20.
+; dimlinear/punti-direzione-automatica: six graphics records, numbered after
+; the dimension, for a text above the line. With an explicit text angle
+; (Angle) the text is centred in the middle of the dimension line, which
+; breaks around it (PT23, point 4; decision of the maintainer on #712):
+; text-point 10,35 and seven graphics records (two extension lines, two
+; pieces of dimension line, two arrows, the text), so the next dimensions
+; are 272, 279 and 286. Rotated: origins 0,120 and 0,160,
+; u = (cos 30, sin 30), measurement 40 sin 30 = 20.
 DIMLINEAR
 0,0
 50,0
