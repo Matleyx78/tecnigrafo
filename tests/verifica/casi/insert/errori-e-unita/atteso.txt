@@ -2,7 +2,7 @@ tecnigrafo-report 1
 
 [final]
 entities:
-  257 INSERT block="assente" insertion=0,0 scale=0.002,0.002 rotation=0
+  4096 INSERT block="assente" insertion=0,0 scale=0.002,0.002 rotation=0
 messages:
   Command: OPEN
   Enter name of drawing to open: metri.dxf
@@ -13,9 +13,9 @@ messages:
   Invalid file name.
   Enter block name or [?]: assente.dxf
   Specify insertion point or [Basepoint/Scale/Rotate]: Scale
-  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: 0
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 0
   Value must be nonzero.
-  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <0.001>: 2
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 2
   Specify insertion point or [Basepoint/Scale/Rotate]: 0,0
   Specify rotation angle <0>:
 prompt: Command:
