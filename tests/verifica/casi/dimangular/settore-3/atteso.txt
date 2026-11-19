@@ -4,7 +4,7 @@ tecnigrafo-report 1
 entities:
   257 LINE start=0,0 end=40,0
   258 LINE start=0,0 end=30,40
-  259 DIMENSION kind=angular style="ISO-25" line-point=40,0 first=0,0;30,40 second=40,0;0,0 arc-point=-30,-10 text-point=-26.60722026433706,-13.303610132168526 measurement=53.13010235415598 ~text="53°"
+  259 DIMENSION kind=angular style="ISO-25" line-point=40,0 first=0,0;30,40 second=40,0;0,0 arc-point=-30,-10 text-point=-26.60722026433706,-13.303610132168526 measurement=0.9272952180016122 ~text="53°"
 messages:
   Command: LINE
   Specify first point: 0,0
