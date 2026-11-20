@@ -21,7 +21,8 @@ eccellenza, prima del computer.
 > della 0.7.5 ha ora l'aspetto del riferimento, con le icone a due toni. Le
 > decisioni geometriche le prende solid-space, il kernel di Tecnigrafo, nel
 > sottomodulo `third_party/solid-space`. Le [note della 0.8](docs/rilasci/0.8.md)
-> riportano novità e limiti noti. Prossima tappa:
+> riportano novità e limiti noti. Prossima tappa: 0.8.1, correzione di
+> mancanze importanti ([ROADMAP](docs/ROADMAP.md)); poi la
 > [0.9](docs/tappe/0.9-stampa-e-distribuzione.md), stampa e distribuzione.
 
 ## Disegnare
