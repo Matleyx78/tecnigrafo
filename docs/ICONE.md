@@ -449,8 +449,8 @@ PT39 porta nell’interfaccia i primi comandi nuovi della tappa.
 | `block-insert` | `block.insert` | blocco originale e copia inserita | sì |
 | `text-style` | `text.style` | campioni di righe esistenti con selezione attiva | sì |
 | `dimension-style` | `dimension.style` | linea di quota esistente fra due estensioni | sì |
-| `dimension-linear` | `dimension.linear` | quota lineare orizzontale | sì |
-| `dimension-aligned` | `dimension.aligned` | oggetto e quota paralleli, inclinati a 45° | sì |
+| `dimension-linear` | `dimension.linear` | oggetto orizzontale (`esist`) con i due punti misurati (`pt`), richiami staccati (`cost`), linea di quota con le frecce sopra (`geo`) | sì |
+| `dimension-aligned` | `dimension.aligned` | come `dimension-linear`, con oggetto e quota paralleli, inclinati a 45° | sì |
 | `dimension-angular` | `dimension.angular` | angolo e arco centrato nel vertice | sì |
 | `dimension-radius` | `dimension.radius` | cerchio e raggio quotato | sì |
 | `dimension-diameter` | `dimension.diameter` | cerchio e diametro quotato | sì |
