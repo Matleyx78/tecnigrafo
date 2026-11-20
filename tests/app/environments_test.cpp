@@ -638,7 +638,24 @@ TEST_F(EnvironmentsTest, ARestoredLayoutKeepsTheToolbarsAsTheUserLeftThem) {
     EXPECT_FALSE(modify->isHidden());
 }
 
-TEST_F(EnvironmentsTest, TheChosenRibbonTabStaysWhileItIsShown) {
+/// With an action of the test in Home, so that Home is a tab of both
+/// environments: no action of the program is in Home in every environment
+/// (undo and redo are in the quick access bar, docs/adr/0039, area 1).
+class SharedTabEnvironmentTest : public EnvironmentsTest {
+protected:
+    void addOtherTypes(const MainWindow::Registries& registries) override {
+        ActionSpec home;
+        home.id = QStringLiteral("test.home");
+        home.text = QStringLiteral("Test &Home");
+        home.description = QStringLiteral("An action of the test in Home.");
+        home.command = latin1(kTestCommand);
+        home.environments = {latin1(kTest)};
+        home.ribbon = QStringLiteral("home/test");
+        registries.actions.add(std::move(home));
+    }
+};
+
+TEST_F(SharedTabEnvironmentTest, TheChosenRibbonTabStaysWhileItIsShown) {
     ribbon()->raiseCategory(ribbon()->categoryByObjectName(QStringLiteral("home")));
     window().activate(test());
     EXPECT_EQ(ribbon()->currentIndex(),

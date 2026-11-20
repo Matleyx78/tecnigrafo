@@ -8,8 +8,8 @@
 #include <QApplication>
 #include <QDir>
 #include <QDockWidget>
-#include <QFont>
-#include <QFontDatabase>
+#include <QKeyEvent>
+#include <QLineEdit>
 #include <QList>
 #include <QMenuBar>
 #include <QMouseEvent>
@@ -73,6 +73,42 @@ void pinDocks(tg::app::MainWindow& window) {
     QApplication::processEvents();
 }
 
+// The dynamic input next to the cursor (area 7), as in
+// docs/adr/0039/immissione-dinamica.svg: MOVE, already waiting for its base
+// point, gets it from a click on the corner of the plate, and the cursor goes
+// 50 units away at 30 degrees. The image is the part of the drawing around
+// the box.
+bool captureDynamicInput(tg::app::MainWindow& window, const QDir& output, const QString& suffix) {
+    auto* view = window.view();
+    const auto send = [view](QEvent::Type type, tg::core::Vec2 world, Qt::MouseButton button,
+                             Qt::MouseButtons buttons) {
+        const auto pixel = view->viewport().worldToScreen(world);
+        const QPointF local(pixel.x, pixel.y);
+        QMouseEvent event(type, local, view->mapToGlobal(local), button, buttons, Qt::NoModifier);
+        QApplication::sendEvent(view, &event);
+    };
+    const tg::core::Vec2 base{0.0, 0.0};
+    send(QEvent::MouseMove, base, Qt::NoButton, Qt::NoButton);
+    send(QEvent::MouseButtonPress, base, Qt::LeftButton, Qt::LeftButton);
+    send(QEvent::MouseButtonRelease, base, Qt::LeftButton, Qt::NoButton);
+    send(QEvent::MouseMove, {43.3013, 25.0}, Qt::NoButton, Qt::NoButton);
+    QApplication::processEvents();
+    const auto* box = view->findChild<QWidget*>(QStringLiteral("dynamicInputBox"));
+    if (box == nullptr || !box->isVisible()) {
+        std::cerr << "The dynamic input is not shown\n";
+        return false;
+    }
+    constexpr int kAround = 120;
+    const QRect area =
+        box->geometry().adjusted(-kAround, -kAround, kAround, kAround) & view->rect();
+    const QString name = QStringLiteral("immissione-") + suffix + QStringLiteral(".png");
+    if (!view->grab(area).save(output.filePath(name), "PNG")) {
+        std::cerr << "Cannot capture " << name.toStdString() << '\n';
+        return false;
+    }
+    return true;
+}
+
 bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& output) {
     const QTemporaryDir settings;
     if (!useEmptySettings(settings)) {
@@ -108,23 +144,39 @@ bool captureTheme(tg::app::Theme theme, const QString& suffix, const QDir& outpu
         std::cerr << "Unexpected gallery geometry, scale or selection\n";
         return false;
     }
-
     const auto save = [&output, &suffix](QWidget* widget, const QString& stem) {
         return saveWidget(widget, output,
                           stem + QLatin1Char('-') + suffix + QStringLiteral(".png"));
     };
-    if (!save(&window, QStringLiteral("finestra")) ||
-        !save(window.menuBar(), QStringLiteral("ribbon")) ||
+    if (!save(window.menuBar(), QStringLiteral("ribbon")) ||
         !save(window.findChild<QWidget*>(QStringLiteral("propertiesPanel")),
               QStringLiteral("proprieta")) ||
         !save(window.findChild<QWidget*>(QStringLiteral("layerPanel")), QStringLiteral("layer")) ||
         !save(window.statusBar(), QStringLiteral("stato"))) {
         return false;
     }
+    // The whole window with a command in progress, as in the reference:
+    // MOVE on the selection, typed in the command line (area 6). After the
+    // panels, which MOVE leaves without a selection.
+    auto* input = window.findChild<QLineEdit*>(QStringLiteral("input"));
+    if (input == nullptr) {
+        std::cerr << "Cannot find the command line\n";
+        return false;
+    }
+    input->setText(QStringLiteral("MOVE"));
+    QKeyEvent enter(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    QApplication::sendEvent(input, &enter);
+    QApplication::processEvents();
+    if (!save(&window, QStringLiteral("finestra"))) {
+        return false;
+    }
     window.setInterface(tg::app::InterfaceKind::Classic);
     QApplication::processEvents();
     pinDocks(window);
-    return save(&window, QStringLiteral("finestra-classica"));
+    if (!save(&window, QStringLiteral("finestra-classica"))) {
+        return false;
+    }
+    return captureDynamicInput(window, output, suffix);
 }
 
 // The ribbon of a window that keeps the frame of the system, as under
@@ -176,21 +228,14 @@ int main(int argc, char* argv[]) {
     // Never the user's settings: each theme gets an empty folder (captureTheme).
     QSettings::setDefaultFormat(QSettings::IniFormat);
     initializeGalleryResources();
-    const QString fontPath = QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf");
-    const int fontId = QFontDatabase::addApplicationFont(fontPath);
-    const auto families = QFontDatabase::applicationFontFamilies(fontId);
-    if (families.isEmpty()) {
-        std::cerr << "Cannot load the application's bundled font\n";
-        return 1;
-    }
-    QFont font(families.first());
-    font.setPixelSize(13);
-    QApplication::setFont(font);
     const QDir output(arguments.at(1));
     if (!QDir().mkpath(output.absolutePath())) {
         std::cerr << "Cannot create gallery output folder\n";
         return 1;
     }
+    // The font of the interface before the first window, as main.cpp does:
+    // otherwise the first window takes the platform's.
+    tg::app::applyInterfaceFont();
     return captureTheme(tg::app::Theme::Light, QStringLiteral("chiaro"), output) &&
                    captureTheme(tg::app::Theme::Dark, QStringLiteral("scuro"), output) &&
                    captureSystemFrame(tg::app::Theme::Light, QStringLiteral("chiaro"), output) &&

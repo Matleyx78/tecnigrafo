@@ -218,6 +218,8 @@ private:
     PropertyGridDelegate* m_delegate;
     QTreeView* m_grid;
     QLabel* m_message;
+    // The width of the names, which the user can drag; a new model keeps it.
+    int m_nameWidth;
     QAction* m_quickSelectAction{nullptr};
 
     std::vector<core::EntityId> m_selection;
@@ -237,8 +239,12 @@ class PropertyControls final : public QWidget {
     Q_OBJECT
 
 public:
-    /// The controls stop working if the panel is destroyed first.
-    explicit PropertyControls(PropertiesPanel& panel, QWidget* parent = nullptr);
+    /// The controls stop working if the panel is destroyed first. Side by
+    /// side (Qt::Horizontal, for a toolbar) or one under the other, each
+    /// with its icon on the left (Qt::Vertical, for a group of the ribbon,
+    /// docs/adr/0039, point 1, area 3).
+    explicit PropertyControls(PropertiesPanel& panel, Qt::Orientation orientation = Qt::Horizontal,
+                              QWidget* parent = nullptr);
 
 protected:
     void changeEvent(QEvent* event) override;

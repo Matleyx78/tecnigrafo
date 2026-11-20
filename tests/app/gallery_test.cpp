@@ -24,7 +24,7 @@ private:
     QCoreApplication m_application{m_argc, &m_argv};
 };
 
-TEST_F(GalleryTest, WritesFourteenImagesAtUnitScaleWithStableSizes) {
+TEST_F(GalleryTest, WritesSixteenImagesAtUnitScaleWithStableSizes) {
     const QTemporaryDir folder;
     ASSERT_TRUE(folder.isValid());
     QProcess process;
@@ -38,7 +38,7 @@ TEST_F(GalleryTest, WritesFourteenImagesAtUnitScaleWithStableSizes) {
     ASSERT_EQ(process.exitStatus(), QProcess::NormalExit);
     ASSERT_EQ(process.exitCode(), 0) << process.readAllStandardError().toStdString();
     const QDir output(folder.path());
-    EXPECT_EQ(output.entryList({QStringLiteral("*.png")}, QDir::Files).size(), 14);
+    EXPECT_EQ(output.entryList({QStringLiteral("*.png")}, QDir::Files).size(), 16);
     QStringList stems;
     stems.append(QStringLiteral("finestra"));
     stems.append(QStringLiteral("finestra-classica"));
@@ -49,6 +49,8 @@ TEST_F(GalleryTest, WritesFourteenImagesAtUnitScaleWithStableSizes) {
     // The ribbon of a window with the frame of the system (docs/tappe/
     // 0.7.5/P40, point 5).
     stems.append(QStringLiteral("ribbon-cornice-sistema"));
+    // The dynamic input box over the drawing (F6, area 7).
+    stems.append(QStringLiteral("immissione"));
     for (const QString& stem : stems) {
         QSize lightSize;
         for (const QString& theme : {QStringLiteral("chiaro"), QStringLiteral("scuro")}) {

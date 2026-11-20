@@ -12,8 +12,10 @@
 #include <QApplication>
 #include <QColor>
 #include <QEvent>
+#include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QHash>
+#include <QIcon>
 #include <QLabel>
 #include <QLayout>
 #include <QList>
@@ -22,6 +24,10 @@
 #include <QMetaObject>
 #include <QMouseEvent>
 #include <QObject>
+#include <QPainter>
+#include <QPixmap>
+#include <QRect>
+#include <QSignalBlocker>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -37,12 +43,18 @@
 namespace tg::app {
 namespace {
 
+/// The arrow that opens the panel of a group.
+constexpr const char* kLauncherIcon = "ui-panel-launcher";
+
 QString title(const QString& name) {
     if (name == QStringLiteral("home")) {
         return QObject::tr("Home");
     }
     if (name == QStringLiteral("view")) {
         return QObject::tr("View");
+    }
+    if (name == QStringLiteral("insert")) {
+        return QObject::tr("Insert");
     }
     if (name == QStringLiteral("annotate")) {
         return QObject::tr("Annotate");
@@ -71,6 +83,9 @@ QString title(const QString& name) {
     if (name == QStringLiteral("properties")) {
         return QObject::tr("Properties");
     }
+    if (name == QStringLiteral("utilities")) {
+        return QObject::tr("Utilities");
+    }
     if (name == QStringLiteral("navigate")) {
         return QObject::tr("Navigate");
     }
@@ -83,13 +98,58 @@ QString title(const QString& name) {
     return name;
 }
 
+/// The groups of the ribbon in their order: those of the Home tab as in
+/// docs/adr/0039, point 1, area 3. The blocks have a tab of their own,
+/// Insert, after Home: the Home of the reference has no room for them
+/// (docs/tappe/fuori-tappa/F6-stato.md, "Dopo PT39 e PT45").
 QStringList groups() {
-    return {QStringLiteral("home/draw"),           QStringLiteral("home/modify"),
-            QStringLiteral("home/annotation"),     QStringLiteral("home/block"),
-            QStringLiteral("home/layers"),         QStringLiteral("home/properties"),
-            QStringLiteral("annotate/dimensions"), QStringLiteral("annotate/text"),
-            QStringLiteral("view/navigate"),       QStringLiteral("view/aids"),
-            QStringLiteral("view/assistant")};
+    return {QStringLiteral("home/draw"),       QStringLiteral("home/modify"),
+            QStringLiteral("home/annotation"), QStringLiteral("home/layers"),
+            QStringLiteral("home/properties"), QStringLiteral("home/utilities"),
+            QStringLiteral("insert/block"),    QStringLiteral("annotate/dimensions"),
+            QStringLiteral("annotate/text"),   QStringLiteral("view/navigate"),
+            QStringLiteral("view/aids"),       QStringLiteral("view/assistant")};
+}
+
+/// The groups whose buttons are all large: icon of 32 px and text under it
+/// (docs/adr/0039, point 1, area 3).
+bool isLargeGroup(const QString& path) {
+    return path == QStringLiteral("home/draw") || path == QStringLiteral("home/annotation") ||
+           path == QStringLiteral("home/utilities");
+}
+
+/// The commands of a large group that take small buttons with the icon
+/// only, in a column after the large ones, the name in their tooltip: Draw
+/// keeps the four large buttons of the reference (docs/tappe/fuori-tappa/
+/// F6-stato.md, "Dopo PT39 e PT45").
+QStringList smallInLargeGroup() {
+    return {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")};
+}
+
+/// The text commands in the drop-down of Text in Home's Annotation, in
+/// order; the button runs the first. Multiline Text has no button of its
+/// own there (docs/tappe/fuori-tappa/F6-stato.md, "Dopo PT39 e PT45").
+QStringList textDropDown() {
+    return {QStringLiteral("draw.text"), QStringLiteral("draw.mtext")};
+}
+
+/// The actions that open a panel: the large button that comes first in its
+/// group, before the controls of the group (area 3: Layer Properties and
+/// Properties in the reference).
+QStringList panelActions() {
+    return {QStringLiteral("layer.panel"), QStringLiteral("properties.panel")};
+}
+
+/// The small buttons of Modify, column by column, three to a column (area
+/// 3); the ones not listed follow in the order of the registry.
+QStringList modifyOrder() {
+    return {QStringLiteral("edit.move"),    QStringLiteral("edit.copy"),
+            QStringLiteral("edit.rotate"),  QStringLiteral("edit.mirror"),
+            QStringLiteral("edit.scale"),   QStringLiteral("edit.offset"),
+            QStringLiteral("edit.trim"),    QStringLiteral("edit.extend"),
+            QStringLiteral("edit.join"),    QStringLiteral("edit.fillet"),
+            QStringLiteral("edit.chamfer"), QStringLiteral("edit.explode"),
+            QStringLiteral("edit.erase")};
 }
 
 /// The tabs of the ribbon that every environment has (docs/adr/0039, point
@@ -110,13 +170,25 @@ bool isRegistered(const ActionRegistry& registry, const QAction* action) {
     return !action->objectName().isEmpty() && registry.action(action->objectName()) == action;
 }
 
-/// Keep Quick Select after the modification commands so their columns of
-/// three stay together even though the classic menus register Tools first.
+/// The actions of `registry` in the order of the ribbon and the toolbars:
+/// those of modifyOrder() in that order, where the first of them is, the
+/// others as registered.
 QList<QAction*> toolActions(const ActionRegistry& registry) {
     QList<QAction*> actions = registry.actions();
-    QAction* quickSelect = registry.action(QStringLiteral("edit.quick-select"));
-    if (actions.removeOne(quickSelect)) {
-        actions.append(quickSelect);
+    QList<QAction*> modify;
+    for (const QString& id : modifyOrder()) {
+        if (QAction* action = registry.action(id); action != nullptr) {
+            modify.append(action);
+        }
+    }
+    const auto first = std::ranges::find_first_of(actions, modify);
+    const qsizetype at = first - actions.begin();
+    for (QAction* action : modify) {
+        actions.removeOne(action);
+    }
+    const qsizetype place = std::min(at, actions.size());
+    for (qsizetype i = 0; i < modify.size(); ++i) {
+        actions.insert(place + i, modify.at(i));
     }
     return actions;
 }
@@ -124,6 +196,9 @@ QList<QAction*> toolActions(const ActionRegistry& registry) {
 /// The small icons of the quick access bar: the 16 px grid of docs/adr/0040,
 /// point 3 (docs/adr/0039, point 1, area 1).
 constexpr int kQuickAccessIconSize = 16;
+/// The logo of the program fills the title row less one pixel above and one
+/// below, as SARibbon's own title icon.
+constexpr int kLogoInset = 2;
 
 /// Fills `bar` with the quick access actions of `registry`, icons only.
 void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
@@ -131,10 +206,20 @@ void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
     bar.setToolButtonStyle(Qt::ToolButtonIconOnly);
     bar.setMovable(false);
     bar.setFloatable(false);
+    // A separator where the group of the actions changes, between the files
+    // and undo, as in the reference (area 1).
+    QString group;
     for (QAction* action : registry.actions()) {
-        if (registry.spec(action->objectName())->quickAccess) {
-            bar.addAction(action);
+        const ActionSpec* spec = registry.spec(action->objectName());
+        if (!spec->quickAccess) {
+            continue;
         }
+        const QString actionGroup = spec->id.section(QLatin1Char('.'), 0, 0);
+        if (!group.isEmpty() && actionGroup != group) {
+            bar.addSeparator();
+        }
+        group = actionGroup;
+        bar.addAction(action);
     }
 }
 
@@ -151,6 +236,108 @@ void fillQuickAccess(QToolBar& bar, const ActionRegistry& registry) {
 void fitQuickAccess(QToolBar& bar) {
     bar.ensurePolished();
     bar.setFixedSize(bar.sizeHint());
+}
+
+/// Icons of the buttons of the ribbon: small on the 16 px grid, large on the
+/// 32 px one (docs/adr/0039, point 3; docs/adr/0040, point 3).
+constexpr int kSmallIconSize = 16;
+constexpr int kLargeIconSize = 32;
+/// The band of the names of the groups under them (area 3).
+constexpr int kPanelTitleHeight = 22;
+/// The page of a tab of the ribbon, with that band: 96 px in the reference
+/// (area 3), room for an icon of 32 px with two lines of text under it.
+constexpr int kCategoryHeight = 96;
+/// Space between the buttons of a group, and so between its columns of
+/// small buttons (area 3).
+constexpr int kButtonSpacing = 6;
+
+/// The actions of the second row of the Layers group, under the list of the
+/// layers (area 3).
+QStringList layerRowActions() {
+    return {QStringLiteral("layer.new"), QStringLiteral("layer.delete"),
+            QStringLiteral("layer.current")};
+}
+
+QToolButton* rowButton(QAction* action, Qt::ToolButtonStyle style, QWidget* parent) {
+    auto* button = new QToolButton(parent);
+    button->setDefaultAction(action);
+    button->setToolButtonStyle(style);
+    button->setIconSize(QSize(kSmallIconSize, kSmallIconSize));
+    button->setAutoRaise(true);
+    // A click must not take the keyboard away from the drawing and the
+    // command line.
+    button->setFocusPolicy(Qt::NoFocus);
+    return button;
+}
+
+/// The second row of the Layers group as in the reference (area 3): New and
+/// Delete as icons, with their name in the tooltip, then Make Current with
+/// its text. Nullptr if the registry has none of them.
+QWidget* layerButtonRow(const ActionRegistry& registry, QWidget* parent) {
+    QAction* add = registry.action(QStringLiteral("layer.new"));
+    QAction* remove = registry.action(QStringLiteral("layer.delete"));
+    QAction* current = registry.action(QStringLiteral("layer.current"));
+    if (add == nullptr && remove == nullptr && current == nullptr) {
+        return nullptr;
+    }
+    auto* row = new QWidget(parent);
+    row->setObjectName(QStringLiteral("layerButtonRow"));
+    auto* layout = new QHBoxLayout(row);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(2);
+    for (QAction* action : {add, remove}) {
+        if (action != nullptr) {
+            layout->addWidget(rowButton(action, Qt::ToolButtonIconOnly, row));
+        }
+    }
+    if (current != nullptr) {
+        if (layout->count() > 0) {
+            layout->addWidget(new SARibbonSeparatorWidget(row));
+        }
+        layout->addWidget(rowButton(current, Qt::ToolButtonTextBesideIcon, row));
+    }
+    layout->addStretch(1);
+    return row;
+}
+
+/// Gives the button of `text` in `panel` the drop-down of textDropDown().
+/// The menu belongs to the button: the action keeps none, so that the
+/// classic menus show it as an item and not as a submenu.
+void addTextDropDown(SARibbonPanel& panel, QAction& text, const ActionRegistry& registry) {
+    SARibbonToolButton* button = panel.actionToRibbonToolButton(&text);
+    if (button == nullptr) {
+        return;
+    }
+    auto* menu = new QMenu(button);
+    menu->setObjectName(QStringLiteral("textDropDown"));
+    for (const QString& id : textDropDown()) {
+        if (QAction* action = registry.action(id); action != nullptr) {
+            menu->addAction(action);
+        }
+    }
+    button->setMenu(menu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    panel.updateItemGeometry();
+}
+
+/// The arrow at the corner of a group that opens its panel (area 3). SARibbon
+/// gives its button, and the icon, a square as high as the band of the
+/// names; the arrow, on the 16 px grid, goes in the middle of it, not
+/// stretched to the square.
+QIcon launcherIcon(Theme theme) {
+    const QIcon arrow = themedIcon(QString::fromLatin1(kLauncherIcon), theme);
+    const int offset = (kPanelTitleHeight - kSmallIconSize) / 2;
+    QIcon icon;
+    for (const qreal ratio : {1.0, 2.0}) {
+        QPixmap pixmap(QSize(kPanelTitleHeight, kPanelTitleHeight) * ratio);
+        pixmap.setDevicePixelRatio(ratio);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        arrow.paint(&painter, QRect(offset, offset, kSmallIconSize, kSmallIconSize));
+        painter.end();
+        icon.addPixmap(pixmap);
+    }
+    return icon;
 }
 
 /// SARibbon's compact style gives the controls of its single row the height
@@ -255,7 +442,75 @@ private:
     QWidget& m_window;
 };
 
+/// Space between the title of the classic menu bar and what is beside it.
+constexpr int kTitleGap = 8;
+
 }  // namespace
+
+QStringList uiBuilderIconNames() {
+    return {QString::fromLatin1(kLauncherIcon)};
+}
+
+/// Keeps the title of the classic menu bar in the middle of the window, as
+/// the ribbon does (docs/adr/0039, area 1), in the room between the last
+/// menu and the corner of the window buttons; a title that does not fit
+/// there is shortened with an ellipsis.
+class TitleCentrer final : public QObject {
+public:
+    TitleCentrer(QMenuBar& bar, QLabel& title) : QObject(&bar), m_bar(bar), m_title(title) {
+        bar.installEventFilter(this);
+        title.installEventFilter(this);
+    }
+
+    void place() {
+        int left = 0;
+        if (const QWidget* corner = m_bar.cornerWidget(Qt::TopLeftCorner)) {
+            left = corner->geometry().right();
+        }
+        for (QAction* action : m_bar.actions()) {
+            if (action->isVisible()) {
+                left = std::max(left, m_bar.actionGeometry(action).right());
+            }
+        }
+        int right = m_bar.width();
+        if (const QWidget* corner = m_bar.cornerWidget(Qt::TopRightCorner)) {
+            right = corner->geometry().left();
+        }
+        left += kTitleGap;
+        right -= kTitleGap;
+        const int room = std::max(0, right - left);
+        const QFontMetrics metrics(m_title.font());
+        const QString text = metrics.elidedText(m_full, Qt::ElideRight, room);
+        const int width = std::min(metrics.horizontalAdvance(text), room);
+        const int x = std::clamp((m_bar.width() - width) / 2, left, std::max(left, right - width));
+        const QSignalBlocker blocker(&m_title);
+        m_placing = true;
+        m_title.setText(text);
+        m_title.setGeometry(x, 0, width, m_bar.height());
+        m_placing = false;
+    }
+
+    void setText(const QString& text) {
+        m_full = text;
+        place();
+    }
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        if (!m_placing &&
+            (event->type() == QEvent::Resize || event->type() == QEvent::LayoutRequest ||
+             (watched == &m_bar && event->type() == QEvent::Show))) {
+            place();
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    QMenuBar& m_bar;
+    QLabel& m_title;
+    QString m_full;
+    bool m_placing{false};
+};
 
 UiBuilder::UiBuilder(SARibbonMainWindow& window, const ActionRegistry& registry)
     : m_window(window), m_registry(registry) {
@@ -286,10 +541,12 @@ void UiBuilder::show(InterfaceKind kind) {
     m_ribbon = nullptr;
     m_applicationButton = nullptr;
     m_title = nullptr;
+    m_titleCentrer = nullptr;
     m_cornerQuickAccess = nullptr;
     m_menuBar = nullptr;
     m_panels.clear();
     m_categories.clear();
+    m_launchers.clear();
     m_hiddenByEnvironment.clear();
     if (kind == InterfaceKind::Ribbon) {
         buildRibbon();
@@ -447,6 +704,13 @@ void UiBuilder::applyEnvironment() {
     if (chosen != nullptr && m_ribbon->categoryIndex(chosen) != m_ribbon->currentIndex()) {
         m_ribbon->raiseCategory(chosen);
     }
+    // With every tab hidden (the Start page), the first tab shown again
+    // becomes the current one before SARibbon links it to its page, and the
+    // page last shown stays under it: Home chosen over the page of View.
+    SARibbonStackedWidget* pages = m_ribbon->ribbonStackedWidget();
+    if (chosen != nullptr && pages->currentWidget() != chosen) {
+        pages->setCurrentWidget(chosen);
+    }
 }
 
 InterfaceKind UiBuilder::current() const {
@@ -466,7 +730,11 @@ void UiBuilder::updateTitle() {
     QString text = m_window.windowTitle();
     text.replace(QStringLiteral("[*]"),
                  m_window.isWindowModified() ? QStringLiteral("*") : QString{});
-    m_title->setText(text);
+    if (m_titleCentrer != nullptr) {
+        m_titleCentrer->setText(text);
+    } else {
+        m_title->setText(text);
+    }
 }
 
 void UiBuilder::styleRibbon() {
@@ -496,6 +764,9 @@ void UiBuilder::styleRibbon() {
     if (!m_ribbon->isLooseStyle()) {
         m_ribbon->setTabBarHeight(m_ribbon->titleBarHeight() - kCompactRowInset);
     }
+    for (QAction* launcher : std::as_const(m_launchers)) {
+        launcher->setIcon(launcherIcon(m_theme));
+    }
 }
 
 void UiBuilder::buildRibbon() {
@@ -514,6 +785,11 @@ void UiBuilder::buildRibbon() {
     const bool ownFrame = m_window.windowButtonBar() != nullptr;
     ribbon->setRibbonStyle(ownFrame ? SARibbonBar::RibbonStyleLooseThreeRow
                                     : SARibbonBar::RibbonStyleCompactThreeRow);
+    ribbon->setPanelToolButtonIconSize(QSize(kSmallIconSize, kSmallIconSize),
+                                       QSize(kLargeIconSize, kLargeIconSize));
+    ribbon->setPanelTitleHeight(kPanelTitleHeight);
+    ribbon->setPanelSpacing(kButtonSpacing);
+    ribbon->setCategoryHeight(kCategoryHeight);
     m_registry.buildMenus(ribbon);
     m_menuBar = ribbon;
     auto* application = new QMenu(ribbon);
@@ -552,6 +828,16 @@ void UiBuilder::buildRibbon() {
         // On the surface of the row, without the box of the toolbars.
         quickAccess->setStyleSheet(
             QStringLiteral("QToolBar { background: transparent; border: none; padding: 0px; }"));
+        // The logo before the quick access bar, as in the reference: the
+        // compact style lays out the corner widget before its own title
+        // icon, which would put the logo between the bar and File.
+        ribbon->setTitleIconVisible(false);
+        auto* logo = new SARibbonTitleIconWidget(quickAccess);
+        logo->setObjectName(QStringLiteral("programLogo"));
+        logo->setIcon(programIcon());
+        const int logoSide = ribbon->titleBarHeight() - kLogoInset;
+        logo->setFixedSize(logoSide, logoSide);
+        quickAccess->addWidget(logo);
         fillQuickAccess(*quickAccess, m_registry);
         fitQuickAccess(*quickAccess);
         m_cornerQuickAccess = quickAccess;
@@ -583,36 +869,74 @@ void UiBuilder::buildRibbon() {
     for (const QString& path : groups()) {
         panelFor(path);
     }
-    // The list of the layers and the state of the current one come first in
-    // their group; they follow the layers panel (0.6-P22).
-    if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
-        panelFor(QStringLiteral("home/layers"))->addSmallWidget(new LayerControls(*layers, ribbon));
+    // The button of a panel comes first in its group, large, and the arrow
+    // at the corner of the group opens the panel too (area 3).
+    for (const QString& id : panelActions()) {
+        QAction* action = m_registry.action(id);
+        const ActionSpec* spec = m_registry.spec(id);
+        if (action != nullptr && spec != nullptr && !spec->ribbon.isEmpty()) {
+            SARibbonPanel* panel = panelFor(spec->ribbon);
+            panel->addLargeAction(action);
+            auto* launcher = new QAction(launcherIcon(m_theme), QString{}, panel);
+            launcher->setToolTip(action->toolTip());
+            QObject::connect(launcher, &QAction::triggered, action, &QAction::trigger);
+            panel->setOptionAction(launcher);
+            m_launchers.append(launcher);
+        }
     }
-    // So do colour, linetype and lineweight in theirs (0.6-P24).
+    // The list of the layers and the state of the current one follow the
+    // button of the layers panel (0.6-P22), with New, Delete and Make
+    // Current under them (area 3).
+    if (auto* layers = m_window.findChild<LayerPanel*>(QStringLiteral("layerPanel"))) {
+        SARibbonPanel* panel = panelFor(QStringLiteral("home/layers"));
+        panel->addSmallWidget(new LayerControls(*layers, ribbon));
+        if (QWidget* row = layerButtonRow(m_registry, ribbon)) {
+            panel->addSmallWidget(row);
+        }
+    }
+    // Colour, linetype and lineweight, one under the other, follow that of
+    // the properties panel (0.6-P24; area 3).
     if (auto* properties =
             m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
         panelFor(QStringLiteral("home/properties"))
-            ->addSmallWidget(new PropertyControls(*properties, ribbon));
+            ->addLargeWidget(new PropertyControls(*properties, Qt::Vertical, ribbon));
     }
     for (QAction* action : toolActions(m_registry)) {
         const ActionSpec* spec = m_registry.spec(action->objectName());
-        if (spec->ribbon.isEmpty() || action->isSeparator()) {
+        if (spec->ribbon.isEmpty() || action->isSeparator() || panelActions().contains(spec->id) ||
+            layerRowActions().contains(spec->id)) {
+            continue;
+        }
+        // MTEXT is in the drop-down of TEXT on Home and has its own button
+        // in Annotate/Text.
+        if (spec->id == QStringLiteral("draw.mtext")) {
+            panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
             continue;
         }
         SARibbonPanel* panel = panelFor(spec->ribbon);
+        const bool small = smallInLargeGroup().contains(spec->id);
         if (action->menu() != nullptr) {
-            // An action with variants: a large button that runs the one
-            // used last, and the menu of all of them in its drop-down
+            // An action with variants: a button that runs the one used
+            // last, and the menu of all of them in its drop-down
             // (docs/adr/0039, point 1, area 3).
-            panel->addLargeAction(action, QToolButton::MenuButtonPopup);
-        } else if (spec->ribbon == QStringLiteral("home/draw")) {
+            if (small) {
+                panel->addSmallAction(action, QToolButton::MenuButtonPopup);
+            } else {
+                panel->addLargeAction(action, QToolButton::MenuButtonPopup);
+            }
+        } else if (isLargeGroup(spec->ribbon) && !small) {
             panel->addLargeAction(action);
         } else {
             panel->addSmallAction(action);
         }
-        // MTEXT is beside TEXT on Home and is also offered in Annotate/Text.
-        if (spec->id == QStringLiteral("draw.mtext")) {
-            panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
+        if (small) {
+            if (SARibbonToolButton* iconOnly = panel->actionToRibbonToolButton(action)) {
+                iconOnly->setToolButtonStyle(Qt::ToolButtonIconOnly);
+                panel->updateItemGeometry();
+            }
+        }
+        if (spec->id == textDropDown().first()) {
+            addTextDropDown(*panel, *action, m_registry);
         }
     }
     // SARibbonMainWindow disposes of the previous menu widget with
@@ -627,8 +951,18 @@ void UiBuilder::buildClassic() {
     bar->setObjectName(QStringLiteral("classicMenuBar"));
     m_registry.buildMenus(bar);
     m_menuBar = bar;
+    SARibbonSystemButtonBar* buttons = m_window.windowButtonBar();
     auto* quickAccess = new QToolBar(bar);
     quickAccess->setObjectName(QStringLiteral("quickAccessBar"));
+    // The logo first, as in the title row of the ribbon (area 1), as tall
+    // as the row less one pixel above and one below.
+    auto* logo = new SARibbonTitleIconWidget(quickAccess);
+    logo->setObjectName(QStringLiteral("programLogo"));
+    logo->setIcon(programIcon());
+    const int row = buttons != nullptr ? buttons->windowTitleHeight() : bar->sizeHint().height();
+    const int logoSide = std::max(row, kQuickAccessIconSize + kLogoInset) - kLogoInset;
+    logo->setFixedSize(logoSide, logoSide);
+    quickAccess->addWidget(logo);
     fillQuickAccess(*quickAccess, m_registry);
     fitQuickAccess(*quickAccess);
     m_cornerQuickAccess = quickAccess;
@@ -636,16 +970,18 @@ void UiBuilder::buildClassic() {
     // A window without frame has no title row but this bar: the bar shows
     // the title and leaves room for the window buttons, which stay where
     // the ribbon had them, and moves the window.
-    SARibbonSystemButtonBar* buttons = m_window.windowButtonBar();
     if (buttons != nullptr) {
+        // The corner keeps the room of the window buttons; the title is
+        // placed by TitleCentrer, in the middle as in the ribbon.
         auto* corner = new QWidget(bar);
-        auto* layout = new QHBoxLayout(corner);
-        layout->setContentsMargins(0, 0, 0, 0);
-        auto* titleLabel = new QLabel(corner);
-        titleLabel->setObjectName(QStringLiteral("classicTitle"));
-        layout->addWidget(titleLabel);
-        layout->addSpacing(buttons->sizeHint().width());
+        corner->setFixedWidth(buttons->sizeHint().width());
         bar->setCornerWidget(corner, Qt::TopRightCorner);
+        auto* titleLabel = new QLabel(bar);
+        titleLabel->setObjectName(QStringLiteral("classicTitle"));
+        titleLabel->setAlignment(Qt::AlignCenter);
+        // Presses on the title move the window, as on the rest of the bar.
+        titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+        m_titleCentrer = new TitleCentrer(*bar, *titleLabel);
         bar->setMinimumHeight(buttons->windowTitleHeight());
         bar->installEventFilter(new FrameForwarder(*bar, m_window));
         m_title = titleLabel;
@@ -666,6 +1002,9 @@ void UiBuilder::buildClassic() {
                                        : title(path.section(QLatin1Char('/'), 1)),
                                    &m_window);
             toolbar->setObjectName(path);
+            // The small icons of the ribbon (area 3): the 16 px grid of
+            // docs/adr/0040, point 3.
+            toolbar->setIconSize(QSize(kSmallIconSize, kSmallIconSize));
             m_window.addToolBar(toolbar);
             m_toolbars.append(toolbar);
             // A toolbar the user shows is the user's again: the environment
@@ -693,7 +1032,11 @@ void UiBuilder::buildClassic() {
         }
         if (spec->id.startsWith(QStringLiteral("file.")) ||
             spec->id == QStringLiteral("edit.undo") || spec->id == QStringLiteral("edit.redo")) {
-            standard->addAction(action);
+            // A toolbar of icons: Recent Files and Quit, which have none,
+            // stay in the File menu.
+            if (!spec->icon.isEmpty()) {
+                standard->addAction(action);
+            }
         } else if (!spec->ribbon.isEmpty()) {
             QToolBar* toolbar = toolbarFor(spec->ribbon);
             toolbar->addAction(action);
@@ -715,7 +1058,7 @@ void UiBuilder::buildClassic() {
     if (auto* properties =
             m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
         QToolBar* toolbar = toolbarFor(QStringLiteral("home/properties"));
-        toolbar->addWidget(new PropertyControls(*properties, &m_window));
+        toolbar->addWidget(new PropertyControls(*properties, Qt::Horizontal, &m_window));
         m_window.insertToolBarBreak(toolbar);
     }
 }

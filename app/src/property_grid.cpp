@@ -431,7 +431,7 @@ QVariant PropertyGridModel::valueIcon(PropertyField field) const {
     switch (field) {
         case PropertyField::Color:
             if (m_shown.color) {
-                return QVariant::fromValue(colorIcon(*m_shown.color, m_palette));
+                return QVariant::fromValue(colorSampleIcon(*m_shown.color, m_palette));
             }
             return {};
         case PropertyField::Linetype:
@@ -512,14 +512,22 @@ void PropertyGridDelegate::paint(QPainter* painter, const QStyleOptionViewItem& 
     if (previous.isValid()) {
         const bool hasNext = index.data(PropertyGridModel::kNextVertexRole).toBool();
         const QRect before = previousArrow(option.rect);
-        drawArrow(*painter, before, true, previous.toBool() ? tokens.text : tokens.border);
-        drawArrow(*painter, nextArrow(option.rect), false, hasNext ? tokens.text : tokens.border);
+        // An arrow that leads nowhere is off, in the secondary text, but
+        // still in sight (docs/adr/0039, area 8).
+        drawArrow(*painter, before, true, previous.toBool() ? tokens.text : tokens.textSecondary);
+        drawArrow(*painter, nextArrow(option.rect), false,
+                  hasNext ? tokens.text : tokens.textSecondary);
         content.setRight(before.left() - kIconSpacing);
     }
     const auto icon = index.data(Qt::DecorationRole).value<QIcon>();
     if (!icon.isNull()) {
-        const QRect sample(content.left(), content.center().y() - kSampleHeight / 2 + 1,
-                           kSampleWidth, kSampleHeight);
+        // A square sample (the colour) keeps its size; a line is drawn in
+        // the strip of the line samples (docs/adr/0039, area 8).
+        const QSize own = icon.actualSize(QSize(kSampleWidth, kSampleWidth));
+        const bool square = own.width() == own.height();
+        const int height = square ? own.height() : kSampleHeight;
+        const QRect sample(content.left(), content.center().y() - height / 2 + (square ? 0 : 1),
+                           square ? own.width() : kSampleWidth, height);
         icon.paint(painter, sample, Qt::AlignCenter);
         content.setLeft(sample.right() + 1 + kIconSpacing);
     }

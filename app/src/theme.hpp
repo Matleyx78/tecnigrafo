@@ -6,6 +6,7 @@
 #include "tg/render/scene_renderer.hpp"
 
 #include <QColor>
+#include <QFont>
 #include <QIcon>
 #include <QPalette>
 #include <QString>
@@ -31,7 +32,21 @@ struct ThemeTokens {
 
 [[nodiscard]] const ThemeTokens& themeTokens(Theme theme);
 
-/// Installs the proxy style over Fusion (style.hpp), a palette built from
+/// The font of the interface (docs/adr/0039, point 1, and
+/// docs/tappe/fuori-tappa/F6-stato.md): Segoe UI, else Noto Sans, else
+/// DejaVu Sans, else the bundled Liberation Sans (bundledFontFamily()), at
+/// 10 points, 13 px at 100%, one more than the reference. It does not follow the desktop's font,
+/// which on GNOME is Cantarell at 11 points, so that the window looks the same everywhere.
+[[nodiscard]] QFont interfaceFont();
+/// The fixed-pitch font of the command line, at the size of interfaceFont():
+/// Cascadia Mono, else DejaVu Sans Mono, else the platform's monospace.
+[[nodiscard]] QFont fixedFont();
+
+/// Makes interfaceFont() the font of the application and of every class of
+/// widget, when it is not already: again after each change of the desktop's
+/// theme, which gives the classes the desktop's fonts.
+void applyInterfaceFont();
+/// Installs interfaceFont(), the proxy style over Fusion (style.hpp), a palette built from
 /// themeTokens(theme) and the style sheet generated from the same tokens.
 /// The result is the same on every platform: nothing comes from the OS.
 void applyTheme(QApplication& application, Theme theme);
@@ -55,5 +70,10 @@ void applyTheme(QApplication& application, Theme theme);
 /// colorano"). Unknown or unreadable images return an empty icon.
 /// Resource icons are calculated once per theme and reused.
 [[nodiscard]] QIcon themedIcon(const QString& name, Theme theme);
+
+/// The logo of the program, the same in every theme: the simple drawing of
+/// resources/logo at 16 and 32 px, where the full one could not be read, and
+/// the full one from 48 px up.
+[[nodiscard]] QIcon programIcon();
 
 }  // namespace tg::app

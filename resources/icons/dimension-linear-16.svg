@@ -3,9 +3,13 @@
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-        <line class="esist" x1="1.5" y1="11.5" x2="13.5" y2="11.5"/>
-        <line class="geo" x1="1.5" y1="3.5" x2="13.5" y2="3.5"/>
-        <line class="cost" x1="1.5" y1="3.5" x2="1.5" y2="11.5"/>
-        <line class="cost" x1="13.5" y1="3.5" x2="13.5" y2="11.5"/>
+        <line id="object" class="esist" x1="3.5" y1="13.5" x2="12.5" y2="13.5"/>
+        <line class="cost" x1="3.5" y1="11.5" x2="3.5" y2="3.5"/>
+        <line class="cost" x1="12.5" y1="11.5" x2="12.5" y2="3.5"/>
+        <line class="geo" x1="3.5" y1="5.5" x2="12.5" y2="5.5"/>
+        <polyline class="geo" points="6.5,3.5 3.5,5.5 6.5,7.5"/>
+        <polyline class="geo" points="9.5,3.5 12.5,5.5 9.5,7.5"/>
+        <circle class="pt" cx="3.5" cy="13.5" r="1.5" fill="currentColor" stroke="none" data-on="object"/>
+        <circle class="pt" cx="12.5" cy="13.5" r="1.5" fill="currentColor" stroke="none" data-on="object"/>
     </g>
 </svg>

@@ -31,7 +31,7 @@ Windows e Linux con server grafico X11; sui sistemi con compositor Wayland viene
 mantenuta la cornice nativa di sistema per garantire il pieno supporto al
 posizionamento e al ridimensionamento della finestra):
 
-- **A sinistra:** l'icona dell'applicazione e la **barra di accesso rapido**;
+- **A sinistra:** il logo di Tecnigrafo e la **barra di accesso rapido**;
 - **Al centro:** l'intestazione con il nome del documento attivo e il programma, ad
   esempio `Drawing1.cadx — Tecnigrafo` (se il documento contiene modifiche non
   salvate compare un asterisco `*` prima del nome: `*Drawing1.cadx — Tecnigrafo`).
@@ -44,7 +44,8 @@ posizionamento e al ridimensionamento della finestra):
 
 La barra di accesso rapido (*Quick Access Toolbar*), situata a sinistra nella fascia
 del titolo, raccoglie le azioni usate più di frequente sotto forma di pulsanti a
-icona compatti da 16 px, senza etichetta di testo, richiamabili con un singolo clic:
+icona compatti da 16 px, senza etichetta di testo, richiamabili con un singolo clic.
+Un separatore divide le azioni dei file da *Undo* e *Redo*:
 
 | Icona / Azione | Identificativo | Scorciatoia | Effetto |
 |---|---|---|---|
@@ -85,19 +86,29 @@ nel colore d'accento e dal fondo coordinato con l'area dei comandi.
 
 Nella scheda **Home** i comandi sono raggruppati per funzione logica:
 
-- **Draw:** strumenti per la creazione di nuove entità grafiche (`Line`, `Polyline`,
-  `Circle`, `Arc`, `Text`);
-- **Modify:** comandi di modifica e manipolazione (`Move`, `Copy`, `Rotate`, `Scale`,
-  `Mirror`, `Trim`, `Extend`, `Fillet`, `Chamfer`, `Join`, `Explode`, `Erase`);
-- **Annotation:** comandi di testo e annotazione (`Text`);
-- **Layers:** controlli rapidi per la gestione dei layer (il menu a tendina
-  `LayerCombo` e il pulsante per aprire il pannello *Layer Properties*);
+- **Draw:** strumenti per la creazione di nuove entità grafiche: `Line`, `Polyline`,
+  `Circle` e `Arc` grandi, poi `Ellipse` e `Hatch` piccoli, con la sola icona e il
+  nome nel suggerimento;
+- **Modify:** comandi di modifica e manipolazione, in colonne di tre (`Move`, `Copy`,
+  `Rotate`; `Mirror`, `Scale`, `Offset`; `Trim`, `Extend`, `Join`; `Fillet`,
+  `Chamfer`, `Explode`; `Erase`, `Polyline Edit`);
+- **Annotation:** `Text`, che scrive un testo su una riga; la sua tendina offre anche
+  `Multiline Text`;
+- **Layers:** controlli rapidi per la gestione dei layer (il pulsante grande
+  *Layers Panel* che apre il pannello, il menu a tendina `LayerCombo` e, sotto,
+  *New Layer* e *Delete Layer* a icona e *Make Current*);
 - **Properties:** controlli per il colore, il tipo di linea e lo spessore correnti
   o degli oggetti selezionati, oltre al pulsante per aprire il pannello *Properties*;
 - **Utilities:** strumenti di selezione rapida (*Quick Select*).
 
+Le altre schede: **Insert** con il gruppo **Block** (`Create Block`, `Insert Block`);
+**Annotate** con **Dimensions** (`Linear` e, nella sua tendina, `Aligned`; `Angular`,
+`Radius`, `Diameter`, `Dimension Style`) e **Text** (`Multiline Text`, `Text Style`);
+**View** con la navigazione, gli aiuti al disegno e l'assistente.
+
 Ciascun gruppo mostra il proprio nome in una fascia inferiore nel colore del testo
-secondario (`text.secondary`).
+secondario (`text.secondary`). Nei gruppi *Layers* e *Properties* una freccetta
+nell'angolo della fascia apre il pannello corrispondente.
 
 La disposizione all'interno dei gruppi combina:
 - **Pulsanti grandi:** icona principale da 32 px con etichetta descrittiva sottostante,
@@ -161,6 +172,10 @@ quella classica a menu e barre degli strumenti (*Standard*, *Draw*, *Modify*,
 
 L'impostazione scelta viene salvata nelle preferenze utente e conservata al riavvio.
 
+Nell'interfaccia classica menu e barre usano gli stessi colori e la stessa densità
+del ribbon: il titolo resta al centro della barra dei menu, e le lettere delle
+scorciatoie dei menu si sottolineano solo tenendo premuto `Alt`.
+
 ---
 
 ## 2. Schede dei documenti e pagina iniziale Start
@@ -178,8 +193,9 @@ La barra delle schede comprende:
   selezionare rapidamente un documento anche quando vi sono molte schede;
 - **Scheda fissa Start:** sempre presente come prima scheda;
 - **Schede dei documenti:** una scheda per ciascun documento aperto, recante l'icona
-  del tipo di file (es. disegno), il nome del documento, un asterisco `*` se il
-  documento è stato modificato rispetto all'ultimo salvataggio, e la crocetta (`×`)
+  del tipo di file (es. disegno), il nome del documento, un asterisco `*` staccato
+  dopo il nome (`Drawing1.cadx  *`) se il documento è stato modificato rispetto
+  all'ultimo salvataggio, e la crocetta (`×`)
   per la chiusura;
 - **Pulsante `+`:** all'estrema destra delle schede, permette di creare
   istantaneamente un nuovo documento vuoto (`NEW`).
@@ -296,7 +312,7 @@ oppure premendo il pulsante dedicato nel gruppo *Properties* del ribbon o dal me
 Il pannello è organizzato in una struttura chiara e compatta:
 
 - **In alto:** casella combinata di selezione che indica il tipo e il numero di
-  oggetti selezionati (es. `Line`, `Circle`, `Polyline`, `All (3)`, oppure
+  oggetti selezionati (es. `Line (1)`, `Polyline (1)`, `All (3)`, oppure
   `No selection`), affiancata da due pulsanti a icona per il filtro rapido e per
   l'apertura della finestra di selezione rapida (*Quick Select*);
 - **Sotto:** **griglia compatta a due colonne** (`QTreeView`) con righe di altezza
@@ -324,8 +340,8 @@ non possono essere modificate dal pannello.
 
 ### Il pannello dei layer (LAYER)
 
-Si apre con il comando `LAYER` (o l'alias `LA`), oppure cliccando sul pulsante *Layer
-Properties* nel gruppo *Layers* del ribbon o nella barra degli strumenti classica.
+Si apre con il comando `LAYER` (o l'alias `LA`), oppure cliccando sul pulsante *Layers
+Panel* nel gruppo *Layers* del ribbon o nella barra degli strumenti classica.
 
 ![Pannello Layers con tabella e icone](../adr/0039/layer.svg)
 
@@ -341,7 +357,7 @@ Il pannello comprende:
   istantaneamente le righe della tabella digitando parte del nome del layer;
 - **Tabella compatta (righe da 20–22 px):**
   - **Stato (spunta verde):** contrassegna il layer correntemente attivo;
-  - **Colonne a icone di stato:** *On/Off* (lampadina), *Freeze/Thaw* (fiocco di
+  - **Colonne a icone di stato:** *On/Off* (occhio), *Freeze/Thaw* (fiocco di
     neve / sole), *Lock/Unlock* (lucchetto). Cliccando direttamente sull'icona nella
     riga si commuta istantaneamente lo stato del layer;
   - **Colonne di testo:** *Name* (doppio clic per rinominare), *Color* (mostra il
@@ -427,8 +443,9 @@ risultati, riproducibilità e compatibilità con gli script e il canale MCP.
 
 #### Cosa mostra il riquadro
 
-Il riquadro appare in basso a destra rispetto al cursore, mantenendosi sempre entro i
-bordi visibili dell'area di disegno:
+Il riquadro appare in basso a destra rispetto al cursore; vicino al bordo destro o a
+quello inferiore dell'area di disegno passa dall'altra parte del cursore (a sinistra
+o sopra), così non copre mai il punto su cui si lavora né il segno dello snap:
 
 | Tipo di richiesta in corso | Contenuto del riquadro |
 |---|---|
@@ -438,8 +455,8 @@ bordi visibili dell'area di disegno:
 | Richiesta di selezione entità o testo letterale | La sola richiesta descrittiva del comando, senza campi numerici |
 
 Sopra i campi è sempre presente il testo della richiesta con le eventuali opzioni tra
-parentesi quadre. Il campo attualmente attivo è evidenziato nel colore d'accento
-(`accent`). I campi non ancora scritti dall'utente seguono in tempo reale la posizione
+parentesi quadre. Il campo attualmente attivo è evidenziato nel colore dei punti delle icone
+(`icon.pt`); i campi hanno la stessa larghezza. I campi non ancora scritti dall'utente seguono in tempo reale la posizione
 del puntatore del mouse.
 
 #### Come si usa

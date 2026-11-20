@@ -3,7 +3,7 @@
 <!-- Copyright (C) 2026 The Tecnigrafo authors -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
     <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-        <path class="esist" d="M3.5 6.5 H10 A2.5 2.5 0 0 1 10 11.5 H6.5"/>
-        <path class="pt" d="M6.5 3.5 L3.5 6.5 L6.5 9.5"/>
+        <path class="esist" d="M3.5 5.5 H10 A3.5 3.5 0 0 1 10 12.5 H5.5"/>
+        <path class="pt" d="M6.5 2.5 L3.5 5.5 L6.5 8.5"/>
     </g>
 </svg>

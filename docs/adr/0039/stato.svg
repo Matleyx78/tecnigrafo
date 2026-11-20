@@ -8,7 +8,7 @@
 <rect x="0" y="972" width="1600" height="28" fill="#dde1e6"/>
 <line x1="0" y1="972.5" x2="1600" y2="972.5" stroke="#cdd3da" stroke-width="1"/>
 <!-- Model and Layout tabs come after 1.0: the room on the left stays empty -->
-<text x="150" y="990.5" fill="#1f2328" font-size="12" font-family="Cascadia Mono, DejaVu Sans Mono, monospace">43.3013, 25.0000, 0.0000</text>
+<text x="150" y="990.5" fill="#1f2328" font-size="12" font-family="Cascadia Mono, DejaVu Sans Mono, monospace">X: 43.3013  Y: 25.0000</text>
 <circle cx="1584" cy="986" r="2.56" fill="none" stroke="#1f2328" stroke-width="1.25"/>
 <line x1="1588.32" y1="986" x2="1590.08" y2="986" stroke="#1f2328" stroke-width="1.25" stroke-linecap="round"/>
 <line x1="1587.05" y1="989.05" x2="1588.3" y2="990.3" stroke="#1f2328" stroke-width="1.25" stroke-linecap="round"/>
@@ -18,7 +18,8 @@
 <line x1="1580.95" y1="982.95" x2="1579.7" y2="981.7" stroke="#1f2328" stroke-width="1.25" stroke-linecap="round"/>
 <line x1="1584" y1="981.68" x2="1584" y2="979.92" stroke="#1f2328" stroke-width="1.25" stroke-linecap="round"/>
 <line x1="1587.05" y1="982.95" x2="1588.3" y2="981.7" stroke="#1f2328" stroke-width="1.25" stroke-linecap="round"/>
-<text x="1560" y="990.5" fill="#1f2328" font-size="12" text-anchor="end">1:1</text>
+<text x="1560" y="990.5" fill="#1f2328" font-size="12" text-anchor="end">1.000 px/unit</text>
+<g transform="translate(-40 0)">
 <line x1="1523.5" y1="978" x2="1523.5" y2="994" stroke="#cdd3da" stroke-width="1"/>
 <path d="M1357.2 980.4 L1357.2 990.8 L1367.6 990.8" fill="none" stroke="#1f2328" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M1357.2 987.92 L1360.08 987.92 L1360.08 990.8" fill="none" stroke="#868e96" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
@@ -50,4 +51,5 @@
 <line x1="1254" y1="989.2" x2="1262" y2="982.8" stroke="#1971c2" stroke-width="1.25" stroke-linecap="round"/>
 <circle cx="1254" cy="989.2" r="1.25" fill="#e8590c"/>
 <text x="1272" y="990.5" fill="#1f2328" font-size="12">Drawing</text>
+</g>
 </svg>

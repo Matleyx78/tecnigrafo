@@ -8,6 +8,7 @@
 #include "theme.hpp"
 
 #include <QEvent>
+#include <QMetaType>
 #include <QPainter>
 #include <QPixmap>
 #include <QSignalBlocker>
@@ -32,7 +33,7 @@ void paintColorSample(QPainter& painter, const QRect& rect, core::Color color,
         painter.fillRect(rect.x(), rect.y(), half, rect.height(), Qt::white);
         painter.fillRect(rect.x() + half, rect.y(), rect.width() - half, rect.height(), Qt::black);
     } else {
-        QColor fill = palette.color(QPalette::Text);
+        QColor fill = palette.color(QPalette::Active, QPalette::Text);
         if (color.kind() == core::Color::Kind::Rgb) {
             const auto rgb = color.rgb();
             fill = QColor(rgb.r, rgb.g, rgb.b);
@@ -42,7 +43,9 @@ void paintColorSample(QPainter& painter, const QRect& rect, core::Color color,
         }
         painter.fillRect(rect, fill);
     }
-    painter.setPen(palette.color(QPalette::Text));
+    // In the colours of an enabled widget: a swatch made while its combo is
+    // still disabled keeps them, and Qt greys the icons of a disabled combo.
+    painter.setPen(palette.color(QPalette::Active, QPalette::Text));
     painter.drawRect(rect.adjusted(0, 0, -1, -1));
 }
 
@@ -182,6 +185,23 @@ QIcon colorIcon(core::Color color, const QPalette& palette) {
     return {pixmap};
 }
 
+QIcon colorSampleIcon(core::Color color, const QPalette& palette) {
+    constexpr int kSampleSide = 12;
+    constexpr int kSampleMargin = (kLayerIconSide - kSampleSide) / 2;
+    QIcon icon;
+    for (const int scale : {1, 2}) {
+        QPixmap pixmap(kLayerIconSide * scale, kLayerIconSide * scale);
+        pixmap.setDevicePixelRatio(scale);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        paintColorSample(painter, QRect(kSampleMargin, kSampleMargin, kSampleSide, kSampleSide),
+                         color, palette);
+        painter.end();
+        icon.addPixmap(pixmap);
+    }
+    return icon;
+}
+
 ColorCombo::ColorCombo(QWidget* parent) : QComboBox(parent) {
     rebuild();
     connect(this, &QComboBox::activated, this, &ColorCombo::choose);
@@ -191,7 +211,7 @@ void ColorCombo::rebuild() {
     const QSignalBlocker blocker(this);
     clear();
     const auto add = [this](core::Color color) {
-        addItem(colorIcon(color, palette()), colorName(color), QVariant::fromValue(color));
+        addItem(colorSampleIcon(color, palette()), colorName(color), QVariant::fromValue(color));
     };
     add(core::Color::byLayer());
     add(core::Color::byBlock());
@@ -203,6 +223,23 @@ void ColorCombo::rebuild() {
     }
     addItem(tr("Select Colour…"), QStringLiteral("selectColour"));
     selectValue(*this, m_value);
+}
+
+void ColorCombo::changeEvent(QEvent* event) {
+    QComboBox::changeEvent(event);
+    // ByLayer and ByBlock are drawn in the colour of the text: a new theme
+    // draws them again, as LayerCombo does its layers.
+    if (event->type() == QEvent::PaletteChange) {
+        for (int index = 0; index < count(); ++index) {
+            const QVariant item = itemData(index);
+            if (item.metaType() == QMetaType::fromType<core::Color>()) {
+                // Color has no default constructor; the metatype was checked.
+                setItemIcon(
+                    index,
+                    colorSampleIcon(*static_cast<const core::Color*>(item.constData()), palette()));
+            }
+        }
+    }
 }
 
 void ColorCombo::setDocument(const core::Document* document) {

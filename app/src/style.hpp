@@ -7,6 +7,7 @@
 
 #include <QProxyStyle>
 #include <QString>
+#include <QStringList>
 
 namespace tg::app {
 
@@ -15,6 +16,10 @@ namespace tg::app {
 /// panel headers, fields, selected items, borderless buttons at rest.
 /// Every colour in it is one of `tokens`.
 [[nodiscard]] QString styleSheet(const ThemeTokens& tokens);
+
+/// The icons Style draws instead of the platform's: those of the message
+/// boxes (docs/ICONE.md).
+[[nodiscard]] QStringList styleIconNames();
 
 /// Fusion with what the style sheet does not control well (docs/adr/0039,
 /// point 4): thin scroll bars without arrows, flat tabs, the combo boxes
@@ -45,6 +50,11 @@ public:
                                        const QWidget* widget = nullptr) const override;
     [[nodiscard]] QIcon standardIcon(StandardPixmap icon, const QStyleOption* option = nullptr,
                                      const QWidget* widget = nullptr) const override;
+    /// The letters of the shortcuts of the menus are underlined only while
+    /// Alt is held, as on Windows, not always as in Fusion.
+    [[nodiscard]] int styleHint(StyleHint hint, const QStyleOption* option = nullptr,
+                                const QWidget* widget = nullptr,
+                                QStyleHintReturn* returnData = nullptr) const override;
 
 private:
     ThemeTokens m_tokens;

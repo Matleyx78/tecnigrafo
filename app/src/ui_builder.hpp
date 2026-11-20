@@ -15,6 +15,7 @@
 
 #include <cstdint>
 
+class QAction;
 class QLabel;
 class QMenuBar;
 class QToolBar;
@@ -26,8 +27,13 @@ class SARibbonPanel;
 
 namespace tg::app {
 
+class TitleCentrer;
+
 class ActionRegistry;
 struct Environment;
+
+/// The icons the interface draws, which no action names.
+[[nodiscard]] QStringList uiBuilderIconNames();
 
 enum class InterfaceKind : std::uint8_t { Ribbon, Classic };
 
@@ -106,6 +112,8 @@ private:
     SARibbonBar* m_ribbon{nullptr};
     QToolButton* m_applicationButton{nullptr};
     QLabel* m_title{nullptr};
+    /// Keeps m_title in the middle of the classic menu bar.
+    TitleCentrer* m_titleCentrer{nullptr};
     // The quick access bar that is a corner widget of the bar on show, with
     // a size of its own (fitQuickAccess() in ui_builder.cpp): that of the
     // classic menus, or of the ribbon with the frame of the system; nullptr
@@ -116,6 +124,9 @@ private:
     QMenuBar* m_menuBar{nullptr};
     QHash<QString, SARibbonPanel*> m_panels;
     QList<QPair<QString, SARibbonCategory*>> m_categories;
+    // The actions of the arrows at the corner of the groups that open a
+    // panel, owned by their group: their icon follows the theme.
+    QList<QAction*> m_launchers;
     // The environment of setEnvironment(): its id, empty for none, and its
     // contextual tabs; m_environmentSet stays false until the first call.
     bool m_environmentSet{false};

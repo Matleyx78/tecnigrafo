@@ -34,6 +34,7 @@ class QCloseEvent;
 class QDockWidget;
 class QEvent;
 class QShowEvent;
+class QFrame;
 class QMenu;
 class QSettings;
 class QLabel;
@@ -256,7 +257,8 @@ public:
 
     /// Panels must have a unique, stable, nonempty objectName. A docked
     /// panel can hide itself (docs/tappe/0.7.5/P18).
-    void addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
+    /// True when the panel was placed in area, false when the saved layout placed it.
+    bool addPanel(QDockWidget* panel, Qt::DockWidgetArea area);
 
     /// The panels that hide themselves and their tabs.
     [[nodiscard]] AutoHide& autoHide() const { return *m_autoHide; }
@@ -331,6 +333,7 @@ private:
 
     /// A status bar button with the icon of the checkable `action`, no text,
     /// that mirrors the action both ways (docs/adr/0039, point 1, area 10).
+    QFrame* createStatusSeparator();
     QToolButton* createModeButton(QAction* action, const QString& name);
 
     /// Hands the runner of the active session the drawing aids chosen in

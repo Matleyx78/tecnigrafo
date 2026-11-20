@@ -27,17 +27,24 @@ void initializeFontResources() {
 
 namespace tg::app {
 
-namespace {
-
-const QRawFont& bundledFont() {
-    static const QRawFont kFont = [] {
+QString bundledFontFamily() {
+    static const QString kFamily = [] {
         initializeFontResources();
         const int id = QFontDatabase::addApplicationFont(
             QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf"));
         if (id < 0) {
             qFatal("Cannot load the bundled font");
         }
-        QFont font(QFontDatabase::applicationFontFamilies(id).first());
+        return QFontDatabase::applicationFontFamilies(id).first();
+    }();
+    return kFamily;
+}
+
+namespace {
+
+const QRawFont& bundledFont() {
+    static const QRawFont kFont = [] {
+        QFont font(bundledFontFamily());
         // A fixed, large size keeps the outline metrics independent of zoom.
         constexpr int kReferencePixelSize = 1024;
         font.setPixelSize(kReferencePixelSize);

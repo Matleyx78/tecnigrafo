@@ -128,7 +128,12 @@ TEST(RibbonSmoke, TheQuickAccessBarHasItsFiveActionsInOrderAsIcons) {
     ASSERT_NE(quick, nullptr);
     EXPECT_TRUE(quick->isVisible());
     const QList<QAction*> expected = quickAccessActions(window.actionRegistry());
-    EXPECT_EQ(quick->actions(), expected);
+    // A separator between the files and undo (docs/adr/0039, area 1).
+    QList<QAction*> commands = quick->actions();
+    const qsizetype separators =
+        commands.removeIf([](const QAction* action) { return action->isSeparator(); });
+    EXPECT_EQ(commands, expected);
+    EXPECT_EQ(separators, 1);
     EXPECT_EQ(quick->iconSize(), QSize(16, 16));
     for (QAction* action : expected) {
         auto* button = qobject_cast<QToolButton*>(quick->widgetForAction(action));
@@ -180,13 +185,14 @@ TEST(RibbonSmoke, ModifyCommandsUseSmallButtonsInStacksAndTheClassicToolbar) {
     auto* panel = ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/modify"));
     ASSERT_NE(panel, nullptr);
     const ActionRegistry& registry = window.actionRegistry();
+    // In the columns of the reference (docs/adr/0039, area 3).
     const QStringList ids{
         QStringLiteral("edit.move"),    QStringLiteral("edit.copy"),
-        QStringLiteral("edit.rotate"),  QStringLiteral("edit.scale"),
-        QStringLiteral("edit.mirror"),  QStringLiteral("edit.explode"),
+        QStringLiteral("edit.rotate"),  QStringLiteral("edit.mirror"),
+        QStringLiteral("edit.scale"),   QStringLiteral("edit.offset"),
         QStringLiteral("edit.trim"),    QStringLiteral("edit.extend"),
-        QStringLiteral("edit.offset"),  QStringLiteral("edit.fillet"),
-        QStringLiteral("edit.chamfer"), QStringLiteral("edit.join"),
+        QStringLiteral("edit.join"),    QStringLiteral("edit.fillet"),
+        QStringLiteral("edit.chamfer"), QStringLiteral("edit.explode"),
     };
     for (const QString& id : ids) {
         SCOPED_TRACE(id.toStdString());
@@ -256,9 +262,9 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
     const QList<std::pair<QString, QStringList>> expected{
         {QStringLiteral("home/draw"),
          {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}},
-        {QStringLiteral("home/annotation"), {QStringLiteral("draw.mtext")}},
+        {QStringLiteral("home/annotation"), {QStringLiteral("draw.text")}},
         {QStringLiteral("home/modify"), {QStringLiteral("edit.pedit")}},
-        {QStringLiteral("home/block"),
+        {QStringLiteral("insert/block"),
          {QStringLiteral("block.create"), QStringLiteral("block.insert")}},
         {QStringLiteral("annotate/dimensions"),
          {QStringLiteral("dimension.linear"), QStringLiteral("dimension.angular"),
@@ -291,6 +297,33 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
         ASSERT_NE(action->menu(), nullptr);
         EXPECT_EQ(action->menu()->actions(), registry.variants(id));
     }
+
+    // Home keeps the large buttons of the reference (docs/tappe/fuori-tappa/
+    // F6-stato.md, "Dopo PT39 e PT45"): Ellipse and Hatch small, with the
+    // icon only; Multiline Text in the drop-down of Text, whose action
+    // keeps no menu, so that the classic Draw menu shows it as an item.
+    for (const QString& id : {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}) {
+        SCOPED_TRACE(id.toStdString());
+        auto* button =
+            dynamic_cast<SARibbonToolButton*>(ribbonButtonOf(*ribbon, registry.action(id)));
+        ASSERT_NE(button, nullptr);
+        EXPECT_EQ(button->buttonType(), SARibbonToolButton::SmallButton);
+        EXPECT_EQ(button->toolButtonStyle(), Qt::ToolButtonIconOnly);
+    }
+    QAction* text = registry.action(QStringLiteral("draw.text"));
+    QAction* mtext = registry.action(QStringLiteral("draw.mtext"));
+    QToolButton* textButton = ribbonButtonOf(*ribbon, text);
+    ASSERT_NE(textButton, nullptr);
+    EXPECT_EQ(textButton->popupMode(), QToolButton::MenuButtonPopup);
+    ASSERT_NE(textButton->menu(), nullptr);
+    EXPECT_EQ(textButton->menu()->actions(), (QList<QAction*>{text, mtext}));
+    EXPECT_EQ(text->menu(), nullptr);
+    auto* annotation = ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/annotation"));
+    ASSERT_NE(annotation, nullptr);
+    for (QToolButton* button : annotation->findChildren<QToolButton*>()) {
+        EXPECT_NE(button->defaultAction(), mtext);
+    }
+    EXPECT_EQ(ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/block")), nullptr);
 
     registry.action(QStringLiteral("ui.interface"))->trigger();
     QCoreApplication::processEvents();
@@ -410,7 +443,8 @@ TEST(RibbonSmoke, TheButtonOfCircleRemembersTheLastVariantUsed) {
 TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {
     // The gallery's order: shown, then the theme, then the event loop, in
     // which SARibbon would apply its own theme again (docs/adr/0039,
-    // point 2). Every surface outside the ribbon is the panel of the theme.
+    // point 2). Every surface outside the ribbon is the panel of the theme,
+    // but the status bar, on the surface of the title (area 10).
     MainWindow window;
     window.setScriptMode();
     window.show();
@@ -424,22 +458,23 @@ TEST(RibbonSmoke, TheWholeWindowTakesEachThemeAfterTheEventLoop) {
             QCoreApplication::processEvents();
             EXPECT_TRUE(window.styleSheet().isEmpty());
             const QColor panel = themeTokens(theme).panel;
+            const QColor chrome = themeTokens(theme).chrome;
             QStatusBar* status = window.statusBar();
             auto* layers = window.findChild<QWidget*>(QStringLiteral("layerPanel"));
             ASSERT_NE(layers, nullptr);
-            const std::array<const QWidget*, 4> surfaces{&window, status, window.commandLine(),
-                                                         layers};
+            const std::array<const QWidget*, 3> surfaces{&window, window.commandLine(), layers};
             for (const QWidget* widget : surfaces) {
                 EXPECT_EQ(widget->palette().color(QPalette::Window), panel)
                     << widget->objectName().toStdString();
             }
+            EXPECT_EQ(status->palette().color(QPalette::Window), chrome);
             // As drawn in the whole window, not only in the widget alone: the
-            // middle of the status bar shows the window's background.
+            // middle of the status bar shows its own background.
             const QImage image = window.grab().toImage();
             const QPoint middle =
                 status->mapTo(&window, QPoint(status->width() / 2, status->height() / 2));
             const qreal ratio = image.devicePixelRatio();
-            EXPECT_EQ(image.pixelColor(QPointF(middle * ratio).toPoint()), panel);
+            EXPECT_EQ(image.pixelColor(QPointF(middle * ratio).toPoint()), chrome);
         }
     }
 }

@@ -302,10 +302,30 @@ TEST_F(MainWindowActionsTest, EveryActionOfTheWindowIsInTheRegistry) {
         // The ribbon and the toolbar each hold the layer controls and the
         // property controls in a QWidgetAction made by the toolkit; the
         // actions of the two panels are in the registry.
+        // The same for the row of New, Delete and Make Current under the
+        // layer controls of the ribbon (F6): its buttons show registry
+        // actions.
         const auto* widgetAction = qobject_cast<const QWidgetAction*>(item);
         if (widgetAction != nullptr &&
             (qobject_cast<const LayerControls*>(widgetAction->defaultWidget()) != nullptr ||
-             qobject_cast<const PropertyControls*>(widgetAction->defaultWidget()) != nullptr)) {
+             qobject_cast<const PropertyControls*>(widgetAction->defaultWidget()) != nullptr ||
+             (widgetAction->defaultWidget() != nullptr &&
+              widgetAction->defaultWidget()->objectName() == QStringLiteral("layerButtonRow")))) {
+            return true;
+        }
+        // The magnifier inside the search field of the layers panel only
+        // draws an icon (F6): a QLineEdit holds it as an action.
+        if (qobject_cast<const QLineEdit*>(item->parent()) != nullptr) {
+            return true;
+        }
+        // The arrow at the corner of a ribbon group triggers the action of
+        // its panel, which is in the registry, and the separator of the
+        // quick access bar is no command (F6). Seen through the metaobject,
+        // as below.
+        const QObject* parent = item->parent();
+        if (item->objectName().isEmpty() && parent != nullptr &&
+            (parent->inherits("SARibbonPanel") ||
+             (item->isSeparator() && parent->inherits("SARibbonQuickAccessBar")))) {
             return true;
         }
         // SARibbon also supplies native-style window controls, including

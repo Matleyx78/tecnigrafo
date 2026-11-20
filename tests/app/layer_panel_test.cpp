@@ -213,6 +213,27 @@ TEST_F(LayerPanelTest, CompactTableFitsThePanelAndUsesIconHeadersAndButtons) {
     EXPECT_EQ(color->currentText(), QStringLiteral("White"));
 }
 
+TEST_F(LayerPanelTest, ColumnsOfNamesAndControlsCanBeWidenedAndARefreshKeepsThem) {
+    panel().resize(500, 300);
+    panel().show();
+    QCoreApplication::processEvents();
+    auto* header = table()->horizontalHeader();
+    for (const LayerColumn column :
+         {LayerColumn::Name, LayerColumn::Color, LayerColumn::Linetype, LayerColumn::Lineweight}) {
+        const int section = static_cast<int>(column);
+        EXPECT_EQ(header->sectionResizeMode(section), QHeaderView::Interactive);
+        const int widened = table()->columnWidth(section) + 30;
+        table()->setColumnWidth(section, widened);
+        add("Walls " + std::to_string(section));
+        EXPECT_EQ(table()->columnWidth(section), widened);
+    }
+    // A longer name widens its column again.
+    const int name = static_cast<int>(LayerColumn::Name);
+    const int before = table()->columnWidth(name);
+    add(std::string(80, 'W'));
+    EXPECT_GT(table()->columnWidth(name), before);
+}
+
 TEST_F(LayerPanelTest, PlotHeaderFitsAndCurrentLayerUsesBothSelectionColours) {
     panel().resize(500, 300);
     panel().show();

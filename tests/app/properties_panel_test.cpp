@@ -23,6 +23,7 @@
 #include <QLineEdit>
 #include <QMetaObject>
 #include <QModelIndex>
+#include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QSignalSpy>
 #include <QString>
@@ -230,10 +231,33 @@ TEST_F(PropertiesPanelTest, WithoutSelectionShowsAndChangesTheCurrentValues) {
     EXPECT_EQ(document().current().layer, start.layer);
 }
 
+TEST_F(PropertiesPanelTest, TheLineBetweenNamesAndValuesCanBeDraggedAndTheWidthStays) {
+    panel().resize(360, 400);
+    panel().show();
+    QCoreApplication::processEvents();
+    QTreeView* view = grid();
+    ASSERT_NE(view, nullptr);
+    const int before = view->columnWidth(PropertyGridModel::kNameColumn);
+    const int y = view->visualRect(panel().grid().valueIndex(PropertyField::Color)).center().y();
+    QTest::mousePress(view->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(before, y));
+    QMouseEvent move(QEvent::MouseMove, QPointF(before + 40, y),
+                     view->viewport()->mapToGlobal(QPointF(before + 40, y)), Qt::NoButton,
+                     Qt::LeftButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(view->viewport(), &move);
+    QTest::mouseRelease(view->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(before + 40, y));
+    EXPECT_EQ(view->columnWidth(PropertyGridModel::kNameColumn), before + 40);
+    // The press on the line opened no editor.
+    EXPECT_EQ(view->indexWidget(panel().grid().valueIndex(PropertyField::Color)), nullptr);
+    // A selection and a refresh keep it.
+    select({addLine(0.0)});
+    QCoreApplication::processEvents();
+    EXPECT_EQ(grid()->columnWidth(PropertyGridModel::kNameColumn), before + 40);
+}
+
 TEST_F(PropertiesPanelTest, ASingleEntityShowsItsTypeValuesAndGeometry) {
     const EntityId line = addLine(0.0);
     select({line});
-    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Line")});
+    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Line (1)")});
     EXPECT_EQ(panel().targets(), std::vector<EntityId>{line});
     EXPECT_EQ(panel().shown().color, core::Color::byLayer());
     EXPECT_EQ(panel().shown().layer, document().layerZero());
@@ -252,7 +276,7 @@ TEST_F(PropertiesPanelTest, ASingleEntityShowsItsTypeValuesAndGeometry) {
 
     const EntityId circle = addCircle(20.0);
     select({circle});
-    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Circle")});
+    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Circle (1)")});
     const QList<QPair<QString, QString>> circleRows{
         {QStringLiteral("Center X"), QStringLiteral("20.0000")},
         {QStringLiteral("Center Y"), QStringLiteral("0.0000")},
@@ -277,8 +301,9 @@ TEST_F(PropertiesPanelTest, AMixedSelectionShowsVaries) {
     setProperties(circle, blue);
 
     select({line, circle});
-    EXPECT_EQ(panel().typeLabels(), (QStringList{QStringLiteral("All (2)"), QStringLiteral("Line"),
-                                                 QStringLiteral("Circle")}));
+    EXPECT_EQ(panel().typeLabels(),
+              (QStringList{QStringLiteral("All (2)"), QStringLiteral("Line (1)"),
+                           QStringLiteral("Circle (1)")}));
     EXPECT_FALSE(panel().shown().color.has_value());
     EXPECT_FALSE(panel().shown().linetypeScale.has_value());
     // The shared ones are shown.
@@ -363,8 +388,9 @@ TEST_F(PropertiesPanelTest, TheFilterByTypeLimitsWhatIsShownAndChanged) {
     const EntityId smallCircle = addCircle(20.0);
     const EntityId largeCircle = addCircle(40.0);
     select({line, smallCircle, largeCircle});
-    EXPECT_EQ(panel().typeLabels(), (QStringList{QStringLiteral("All (3)"), QStringLiteral("Line"),
-                                                 QStringLiteral("Circle (2)")}));
+    EXPECT_EQ(panel().typeLabels(),
+              (QStringList{QStringLiteral("All (3)"), QStringLiteral("Line (1)"),
+                           QStringLiteral("Circle (2)")}));
     EXPECT_EQ(panel().targets().size(), 3U);
 
     auto* types = child<QComboBox>("propertiesType");
@@ -545,7 +571,7 @@ TEST_F(PropertiesPanelTest, TheHeadHasTheFilterAndTheGridItsGroups) {
 TEST_F(PropertiesPanelTest, APolylineShowsItsVerticesOneByOne) {
     const EntityId plate = addPolyline(0.0);
     select({plate});
-    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Polyline")});
+    EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Polyline (1)")});
     const QList<QPair<QString, QString>> first{
         {QStringLiteral("Vertices"), QStringLiteral("3")},
         {QStringLiteral("Current Vertex"), QStringLiteral("1")},

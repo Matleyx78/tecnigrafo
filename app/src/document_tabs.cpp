@@ -4,9 +4,12 @@
 #include "document_tabs.hpp"
 
 #include <QAction>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QMenu>
+#include <QPainter>
+#include <QRect>
 #include <QSignalBlocker>
 #include <QSize>
 #include <QStyle>
@@ -24,6 +27,8 @@ constexpr int kTabIconSize = 16;
 constexpr const char* kMenuIcon = "ui-tab-menu";
 constexpr const char* kNewIcon = "ui-tab-new";
 constexpr const char* kDrawingIcon = "doc-drawing";
+/// The tab of the Start page, as in the reference (docs/adr/0039, area 4).
+constexpr const char* kHomeIcon = "ui-home";
 
 /// The tab of the Start page, always the first.
 constexpr int kStartTab = 0;
@@ -51,7 +56,7 @@ QToolButton* rowButton(QWidget* parent, const QString& name, const QString& tip)
 
 QStringList documentTabsIconNames() {
     return {QString::fromLatin1(kMenuIcon), QString::fromLatin1(kNewIcon),
-            QString::fromLatin1(kDrawingIcon)};
+            QString::fromLatin1(kDrawingIcon), QString::fromLatin1(kHomeIcon)};
 }
 
 DocumentTabs::DocumentTabs(QWidget* parent)
@@ -61,6 +66,9 @@ DocumentTabs::DocumentTabs(QWidget* parent)
       m_tabs(new QTabBar(this)),
       m_newButton(rowButton(this, QStringLiteral("newTabButton"), tr("New drawing"))) {
     setObjectName(QStringLiteral("documentTabs"));
+    // The row is drawn by the style sheet, on surface.tabs (docs/adr/0039,
+    // point 2); a plain QWidget draws no background of its own.
+    setAttribute(Qt::WA_StyledBackground);
 
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
     m_menu->setObjectName(QStringLiteral("documentsMenu"));
@@ -80,6 +88,7 @@ DocumentTabs::DocumentTabs(QWidget* parent)
     m_tabs->setTabToolTip(kStartTab, tr("Start page"));
     dropStartCloseButton();
     connect(m_tabs, &QTabBar::currentChanged, this, &DocumentTabs::choose);
+    connect(m_tabs, &QTabBar::currentChanged, this, qOverload<>(&QWidget::update));
     connect(m_tabs, &QTabBar::tabCloseRequested, this, [this](int tab) {
         if (tab > kStartTab) {
             Q_EMIT closeRequested(tab - 1);
@@ -90,9 +99,17 @@ DocumentTabs::DocumentTabs(QWidget* parent)
 
     // The `+` follows the last tab; the row is as wide as the drawing.
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
+    // The bottom pixel row is left to paintEvent, for the border under the
+    // row that the current tab interrupts.
+    layout->setContentsMargins(0, 0, 0, 1);
     layout->setSpacing(0);
     layout->addWidget(m_menuButton);
+    // The thin line after the menu of the reference (docs/adr/0039, area 4).
+    auto* separator = new QFrame(this);
+    separator->setObjectName(QStringLiteral("documentsSeparator"));
+    separator->setFixedSize(1, kTabIconSize + 2);
+    layout->addWidget(separator, 0, Qt::AlignVCenter);
+    layout->addSpacing(4);
     layout->addWidget(m_tabs);
     layout->addWidget(m_newButton);
     layout->addStretch(1);
@@ -128,6 +145,10 @@ void DocumentTabs::setDocuments(const QList<Document>& documents, int active) {
     m_documents = documents;
     const int current = active >= 0 && active < documents.size() ? active + 1 : kStartTab;
     m_tabs->setCurrentIndex(current);
+    // A hidden QTabBar lays its tabs out later without telling the layout of
+    // the row, which would keep the width of the bar from before.
+    m_tabs->updateGeometry();
+    update();  // the border under the row follows the current tab
 }
 
 int DocumentTabs::activeDocument() const {
@@ -135,11 +156,32 @@ int DocumentTabs::activeDocument() const {
 }
 
 QString DocumentTabs::tabText(const Document& document) {
-    return document.modified ? document.name + QLatin1Char('*') : document.name;
+    // The mark of a modified drawing apart from the name, as in the
+    // reference (docs/adr/0039, area 4).
+    return document.modified ? document.name + QStringLiteral("  *") : document.name;
+}
+
+void DocumentTabs::paintEvent(QPaintEvent* event) {
+    QWidget::paintEvent(event);
+    // A border under the row, open under the current tab, which joins the
+    // drawing below it as in the reference of docs/adr/0039 (area 4).
+    const ThemeTokens& tokens = themeTokens(m_theme);
+    const int bottom = height() - 1;
+    QPainter painter(this);
+    painter.setPen(tokens.border);
+    painter.drawLine(0, bottom, width() - 1, bottom);
+    const int current = m_tabs->currentIndex();
+    if (current >= 0) {
+        const QRect tab = m_tabs->tabRect(current).translated(m_tabs->pos());
+        // The side borders of the tab stay; only the inside is opened.
+        painter.setPen(tokens.canvas);
+        painter.drawLine(tab.left() + 1, bottom, tab.right() - 1, bottom);
+    }
 }
 
 void DocumentTabs::setTheme(Theme theme) {
     m_theme = theme;
+    update();
     updateIcons();
 }
 
@@ -178,6 +220,7 @@ void DocumentTabs::dropStartCloseButton() {
 void DocumentTabs::updateIcons() {
     m_menuButton->setIcon(themedIcon(QString::fromLatin1(kMenuIcon), m_theme));
     m_newButton->setIcon(themedIcon(QString::fromLatin1(kNewIcon), m_theme));
+    m_tabs->setTabIcon(kStartTab, themedIcon(QString::fromLatin1(kHomeIcon), m_theme));
     for (int i = 0; i < m_documents.size(); ++i) {
         m_tabs->setTabIcon(i + 1, themedIcon(m_documents[i].icon, m_theme));
     }

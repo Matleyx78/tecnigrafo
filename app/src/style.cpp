@@ -3,13 +3,17 @@
 
 #include "style.hpp"
 
+#include <QAbstractSpinBox>
 #include <QApplication>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDockWidget>
+#include <QGuiApplication>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
 #include <QPixmap>
+#include <QRadioButton>
 #include <QRegularExpression>
 #include <QString>
 #include <QStyle>
@@ -47,13 +51,29 @@ constexpr qreal kIconGrid = 16.0;
 /// Sizes of the dock header buttons, including high-DPI variants.
 constexpr std::array kDockIconSizes{10, 12, 16, 20, 24, 32};
 
+/// Space left above and below the separators and the handles of the
+/// toolbars, which are not as tall as the bar (area 3).
+constexpr int kToolBarLineInset = 4;
+/// The dots of the handle of a toolbar, and their pitch.
+constexpr int kHandleDot = 2;
+constexpr int kHandleDotStep = 4;
+
 // Combo boxes are drawn by Style, not by the style sheet: with a styled
 // drop-down the style sheet draws no arrow at all unless it is given an
 // image, and without one it draws Windows' raised button.
 constexpr qreal kFieldRadius = 2.0;
+/// The dot of a radio button that is on leaves this share of the circle
+/// free on each side.
+constexpr qreal kRadioDotInset = 0.28;
+/// Pen of the tick of a check box that is on.
+constexpr qreal kCheckStrokeWidth = 1.5;
 
 // The colours of the style sheet are written as {token} and replaced
 // below, so that every colour comes from ThemeTokens.
+//
+// SARibbon gives the names of the groups a font of 80% of the height of
+// their band (SARibbonPanel::PrivateData::resetTitleLabelFont); the style
+// sheet keeps them at the 11 px of docs/adr/0039 (point 1, area 3).
 //
 // The tabs of the documents and those of the ribbon have rules of their own
 // (docs/tappe/0.7.5/P40, point 2): SARibbonTabBar derives from QTabBar, and
@@ -72,26 +92,64 @@ QToolBar { background: {ribbon}; border: none; border-bottom: 1px solid {border}
 QToolButton { background: transparent; border: 1px solid transparent; border-radius: 3px; padding: 2px; }
 QToolButton:hover { background: {selection}; border-color: {border}; }
 QToolButton:pressed, QToolButton:checked { background: {selection}; border-color: {accent}; }
+QToolBar QToolButton:checked { border-color: transparent; }
+QToolBar QToolButton[popupMode="1"] { padding-right: 12px; }
+QToolBar QToolButton::menu-button { background: transparent; border: none; width: 10px; }
 SARibbonBar { background: {ribbon}; color: {text}; border-bottom: 1px solid {border}; }
+SARibbonButtonGroupWidget, QToolBar#quickAccessBar { background: transparent; border: none; }
+SARibbonSeparatorWidget { color: {border}; }
 SARibbonTabBar { background: {chrome}; }
-SARibbonTabBar::tab { background: transparent; color: {textSecondary}; border: none; margin: 0px; padding: 0px 12px; }
-SARibbonTabBar::tab:hover { color: {text}; }
-SARibbonTabBar::tab:selected { background: {ribbon}; color: {text}; }
-SARibbonPanelLabel { background: {group}; color: {textSecondary}; }
+SARibbonTabBar::tab { background: transparent; color: {text}; border: none; border-top: 2px solid transparent; margin: 0px; padding: 0px 12px; }
+SARibbonTabBar::tab:hover { background: {ribbon}; }
+SARibbonTabBar::tab:selected { background: {ribbon}; border-top-color: {accent}; }
+SARibbonPanelLabel { background: {group}; color: {textSecondary}; font-size: 11px; }
 QTabWidget::pane { background: {panel}; border: 1px solid {border}; top: -1px; }
-QTabBar#documentTabBar::tab { background: {tabs}; color: {textSecondary}; border: 1px solid transparent; border-top: 2px solid transparent; padding: 4px 12px; }
-QTabBar#documentTabBar::tab:hover { color: {text}; }
-QTabBar#documentTabBar::tab:selected { background: {panel}; color: {text}; border-color: {border}; border-bottom-color: {panel}; border-top: 2px solid {accent}; }
+QTabWidget > QTabBar::tab { background: transparent; color: {text}; border: 1px solid transparent; border-top: 2px solid transparent; border-bottom: none; padding: 4px 12px; }
+QTabWidget > QTabBar::tab:hover:!selected { background: {ribbon}; }
+QTabWidget > QTabBar::tab:selected { background: {panel}; border-left-color: {border}; border-right-color: {border}; border-top: 2px solid {accent}; }
+QPushButton { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 3px; padding: 3px 12px; }
+QPushButton:hover { background: {selection}; }
+QPushButton:pressed { background: {selection}; border-color: {accent}; }
+QPushButton:default, QPushButton:focus { border-color: {accent}; }
+QPushButton:disabled { color: {textSecondary}; }
+QDialogButtonBox QPushButton { min-width: 64px; }
+QGroupBox { border: 1px solid {border}; border-radius: 3px; margin-top: 1.4em; padding: 4px; }
+QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 0px; padding: 0px; color: {text}; }
+QWidget#documentTabs { background: {tabs}; border-top: 1px solid {border}; }
+QFrame#documentsSeparator { background: {border}; }
+QTabBar#documentTabBar { background: {tabs}; }
+QTabBar#documentTabBar::tab { background: {tabs}; color: {text}; border: 1px solid transparent; border-top: 2px solid transparent; border-bottom: none; padding: 4px 12px; }
+QTabBar#documentTabBar::tab:hover:!selected { background: {ribbon}; }
+QTabBar#documentTabBar::tab:selected { background: {canvas}; color: {text}; border-left-color: {border}; border-right-color: {border}; border-top: 2px solid {accent}; }
 QDockWidget { color: {text}; }
 QDockWidget::title { background: {ribbon}; border-bottom: 1px solid {border}; padding: 4px 6px; text-align: left; }
 tg--app--PanelTitleBar { background: {ribbon}; border-bottom: 1px solid {border}; }
 tg--app--AutoHideBar { background: {chrome}; }
 tg--app--AutoHideOverlay { background: {panel}; border: 1px solid {border}; }
-QLineEdit, QAbstractSpinBox { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
-QLineEdit:focus, QAbstractSpinBox:focus { border-color: {accent}; }
-QComboBox QLineEdit { background: transparent; border: none; padding: 0px; }
+QLineEdit { background: {field}; color: {text}; border: 1px solid {border}; border-radius: 2px; padding: 1px 4px; selection-background-color: {selection}; selection-color: {text}; }
+QLineEdit:focus { border-color: {accent}; }
+QComboBox QLineEdit, QAbstractSpinBox QLineEdit { background: transparent; border: none; padding: 0px; }
+QWidget#commandLine { background: {panel}; border: 1px solid {border}; border-radius: 4px; }
+QWidget#commandLine QPlainTextEdit#history { background: transparent; color: {textSecondary}; border: none; }
+QFrame#commandInput { background: {field}; border: 1px solid {border}; border-radius: 3px; }
+QFrame#commandInput QLineEdit { background: transparent; border: none; padding: 0px; }
+QLabel#promptMark { color: {accent}; }
+QWidget#dynamicInputBox { background: {panel}; border: 1px solid {border}; border-radius: 4px; }
+QWidget#dynamicInputBox QLabel { background: transparent; }
+QStatusBar { background: {chrome}; border-top: 1px solid {border}; }
+QStatusBar QToolButton:checked { border-color: transparent; }
+QStatusBar QFrame#statusSeparator { background: {border}; }
+QStatusBar QToolButton#environmentIndicator::menu-indicator { image: none; width: 0px; }
+QToolButton#documentsMenuButton::menu-indicator { image: none; width: 0px; }
+QDockWidget QScrollArea, QDockWidget QScrollArea > QWidget > QWidget { background: {panel}; }
+QDockWidget QAbstractItemView { background: {panel}; border: none; }
 QAbstractItemView { background: {field}; alternate-background-color: {group}; color: {text}; border: 1px solid {border}; selection-background-color: {selection}; selection-color: {text}; }
 QComboBox QAbstractItemView { outline: none; }
+QTableView#layerTable { border: none; }
+QTableView#layerTable::item { border-bottom: 1px solid {border}; }
+QTableView#layerTable QComboBox { background: transparent; border: none; }
+QTableView#layerTable QComboBox::drop-down { width: 0px; border: none; }
+QTableView#layerTable QComboBox::down-arrow { image: none; }
 QHeaderView::section { background: {group}; color: {textSecondary}; border: none; border-right: 1px solid {border}; border-bottom: 1px solid {border}; padding: 2px 6px; }
 )"};
 
@@ -135,13 +193,14 @@ void drawFloat(QPainter& painter, const QRectF& box) {
 }  // namespace
 
 QString styleSheet(const ThemeTokens& tokens) {
-    const std::array<std::pair<QString, const QColor*>, 11> colours{{
+    const std::array<std::pair<QString, const QColor*>, 12> colours{{
         {QStringLiteral("{chrome}"), &tokens.chrome},
         {QStringLiteral("{ribbon}"), &tokens.ribbon},
         {QStringLiteral("{group}"), &tokens.group},
         {QStringLiteral("{tabs}"), &tokens.tabs},
         {QStringLiteral("{panel}"), &tokens.panel},
         {QStringLiteral("{field}"), &tokens.field},
+        {QStringLiteral("{canvas}"), &tokens.canvas},
         {QStringLiteral("{border}"), &tokens.border},
         {QStringLiteral("{textSecondary}"), &tokens.textSecondary},
         {QStringLiteral("{text}"), &tokens.text},
@@ -198,6 +257,14 @@ int Style::pixelMetric(PixelMetric metric, const QStyleOption* option,
     }
 }
 
+int Style::styleHint(StyleHint hint, const QStyleOption* option, const QWidget* widget,
+                     QStyleHintReturn* returnData) const {
+    if (hint == SH_UnderlineShortcut) {
+        return (QGuiApplication::queryKeyboardModifiers() & Qt::AltModifier) != 0 ? 1 : 0;
+    }
+    return QProxyStyle::styleHint(hint, option, widget, returnData);
+}
+
 QSize Style::sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& size,
                               const QWidget* widget) const {
     QSize result = QProxyStyle::sizeFromContents(type, option, size, widget);
@@ -209,18 +276,136 @@ QSize Style::sizeFromContents(ContentsType type, const QStyleOption* option, con
 
 void Style::drawPrimitive(PrimitiveElement element, const QStyleOption* option, QPainter* painter,
                           const QWidget* widget) const {
-    if (element == PE_IndicatorArrowDown && qobject_cast<const QComboBox*>(widget) != nullptr) {
-        // A thin chevron instead of Fusion's filled triangle.
+    const bool field = qobject_cast<const QComboBox*>(widget) != nullptr ||
+                       qobject_cast<const QAbstractSpinBox*>(widget) != nullptr;
+    const bool up = element == PE_IndicatorArrowUp || element == PE_IndicatorSpinUp ||
+                    element == PE_IndicatorSpinPlus;
+    const bool down = element == PE_IndicatorArrowDown || element == PE_IndicatorSpinDown ||
+                      element == PE_IndicatorSpinMinus;
+    if (field && (up || down)) {
+        // A thin chevron instead of Fusion's filled triangle, in the combo
+        // boxes and in the spin boxes of the dialogs.
         const QPointF centre = QRectF(option->rect).center();
+        const qreal tip = up ? -kArrowHalfHeight : kArrowHalfHeight;
         const bool enabled = (option->state & State_Enabled) != 0;
         painter->save();
         painter->setRenderHint(QPainter::Antialiasing);
         painter->setPen(QPen(enabled ? m_tokens.text : m_tokens.textSecondary, kStrokeWidth,
                              Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        QPainterPath chevron(centre + QPointF(-kArrowHalfWidth, -kArrowHalfHeight));
-        chevron.lineTo(centre + QPointF(0.0, kArrowHalfHeight));
-        chevron.lineTo(centre + QPointF(kArrowHalfWidth, -kArrowHalfHeight));
+        QPainterPath chevron(centre + QPointF(-kArrowHalfWidth, -tip));
+        chevron.lineTo(centre + QPointF(0.0, tip));
+        chevron.lineTo(centre + QPointF(kArrowHalfWidth, -tip));
         painter->drawPath(chevron);
+        painter->restore();
+        return;
+    }
+    if ((element == PE_IndicatorCheckBox && qobject_cast<const QCheckBox*>(widget) != nullptr) ||
+        (element == PE_IndicatorRadioButton &&
+         qobject_cast<const QRadioButton*>(widget) != nullptr)) {
+        // A field with a border, as the line edits, and the mark in the
+        // accent colour when it is on (docs/adr/0039, point 2: the accent of
+        // the active field). Only the boxes of the dialogs: the check boxes
+        // of the item views keep their own look (area 9).
+        const bool radio = element == PE_IndicatorRadioButton;
+        const bool enabled = (option->state & State_Enabled) != 0;
+        const bool on = (option->state & State_On) != 0;
+        const bool hover = (option->state & State_MouseOver) != 0;
+        const QRectF box = QRectF(option->rect).adjusted(0.5, 0.5, -0.5, -0.5);
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen((on || hover) && enabled ? m_tokens.accent : m_tokens.border);
+        painter->setBrush(m_tokens.field);
+        if (radio) {
+            painter->drawEllipse(box);
+        } else {
+            painter->drawRoundedRect(box, kFieldRadius, kFieldRadius);
+        }
+        if (on) {
+            const QColor mark = enabled ? m_tokens.accent : m_tokens.textSecondary;
+            if (radio) {
+                painter->setPen(Qt::NoPen);
+                painter->setBrush(mark);
+                const qreal inset = box.width() * kRadioDotInset;
+                painter->drawEllipse(box.adjusted(inset, inset, -inset, -inset));
+            } else {
+                painter->setPen(
+                    QPen(mark, kCheckStrokeWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+                painter->setBrush(Qt::NoBrush);
+                const QPointF c = box.center();
+                const qreal u = box.width() / 2.0;
+                QPainterPath tick(c + QPointF(-0.55 * u, 0.0));
+                tick.lineTo(c + QPointF(-0.15 * u, 0.4 * u));
+                tick.lineTo(c + QPointF(0.55 * u, -0.4 * u));
+                painter->drawPath(tick);
+            }
+        }
+        painter->restore();
+        return;
+    }
+    if (element == PE_IndicatorTabClose) {
+        // A thin grey cross, lighter under the mouse, as in the reference
+        // of docs/adr/0039 (area 4), instead of the platform's icon.
+        const bool hover = (option->state & State_MouseOver) != 0;
+        const QRectF box = QRectF(option->rect).adjusted(0.5, 0.5, -0.5, -0.5);
+        const qreal side = std::min(box.width(), box.height());
+        constexpr qreal kCrossArm = 4.0;
+        const qreal arm = std::min(side / 4.0, kCrossArm);
+        const QPointF centre = box.center();
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        if (hover) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(m_tokens.selection);
+            painter->drawRoundedRect(
+                QRectF(centre.x() - side / 2, centre.y() - side / 2, side, side), 2.0, 2.0);
+        }
+        painter->setPen(QPen(hover ? m_tokens.text : m_tokens.textSecondary, kStrokeWidth,
+                             Qt::SolidLine, Qt::RoundCap));
+        painter->drawLine(centre + QPointF(-arm, -arm), centre + QPointF(arm, arm));
+        painter->drawLine(centre + QPointF(arm, -arm), centre + QPointF(-arm, arm));
+        painter->restore();
+        return;
+    }
+    if (element == PE_IndicatorToolBarSeparator) {
+        // A thin line, not as tall as the bar, as between the groups of the
+        // ribbon (area 3), instead of Fusion's light relief.
+        const QRect rect = option->rect;
+        const bool across = (option->state & State_Horizontal) != 0;
+        painter->save();
+        painter->setPen(m_tokens.border);
+        if (across) {
+            const int x = rect.center().x();
+            painter->drawLine(x, rect.top() + kToolBarLineInset, x,
+                              rect.bottom() - kToolBarLineInset);
+        } else {
+            const int y = rect.center().y();
+            painter->drawLine(rect.left() + kToolBarLineInset, y, rect.right() - kToolBarLineInset,
+                              y);
+        }
+        painter->restore();
+        return;
+    }
+    if (element == PE_IndicatorToolBarHandle) {
+        // A column of small dots in the colour of the borders: the handle
+        // stays, so that the toolbars can be moved, without standing out.
+        const QRect rect = option->rect;
+        const bool across = (option->state & State_Horizontal) != 0;
+        painter->save();
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(m_tokens.border);
+        if (across) {
+            const int x = rect.center().x() - (kHandleDot / 2);
+            for (int y = rect.top() + kToolBarLineInset;
+                 y + kHandleDot <= rect.bottom() - kToolBarLineInset; y += kHandleDotStep) {
+                painter->drawRect(x, y, kHandleDot, kHandleDot);
+            }
+        } else {
+            const int y = rect.center().y() - (kHandleDot / 2);
+            for (int x = rect.left() + kToolBarLineInset;
+                 x + kHandleDot <= rect.right() - kToolBarLineInset; x += kHandleDotStep) {
+                painter->drawRect(x, y, kHandleDot, kHandleDot);
+            }
+        }
         painter->restore();
         return;
     }
@@ -272,6 +457,40 @@ void Style::drawComplexControl(ComplexControl control, const QStyleOptionComplex
             QStyleOptionComboBox arrow(*combo);
             arrow.rect = subControlRect(CC_ComboBox, combo, SC_ComboBoxArrow, widget);
             drawPrimitive(PE_IndicatorArrowDown, &arrow, painter, widget);
+        }
+        return;
+    }
+    if (const auto* spin = qstyleoption_cast<const QStyleOptionSpinBox*>(option);
+        control == CC_SpinBox && spin != nullptr) {
+        // As the combo boxes: a field with a border, the accent when it has
+        // the keyboard, and thin chevrons; the text is the line edit's.
+        const bool active = (spin->state & State_HasFocus) != 0;
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(active ? m_tokens.accent : m_tokens.border);
+        painter->setBrush(m_tokens.field);
+        painter->drawRoundedRect(QRectF(spin->rect).adjusted(0.5, 0.5, -0.5, -0.5), kFieldRadius,
+                                 kFieldRadius);
+        painter->restore();
+        const bool hover = (spin->state & State_MouseOver) != 0;
+        for (const auto& [sub, arrow] : {std::pair{SC_SpinBoxUp, PE_IndicatorArrowUp},
+                                         std::pair{SC_SpinBoxDown, PE_IndicatorArrowDown}}) {
+            if ((spin->subControls & sub) == 0) {
+                continue;
+            }
+            QStyleOptionSpinBox button(*spin);
+            button.rect = subControlRect(CC_SpinBox, spin, sub, widget);
+            if (hover && (spin->activeSubControls & sub) != 0) {
+                painter->fillRect(button.rect.adjusted(0, 1, -1, -1), m_tokens.selection);
+            }
+            const bool enabled = (spin->state & State_Enabled) != 0 &&
+                                 (spin->stepEnabled &
+                                  (sub == SC_SpinBoxUp ? QAbstractSpinBox::StepUpEnabled
+                                                       : QAbstractSpinBox::StepDownEnabled)) != 0;
+            if (!enabled) {
+                button.state &= ~State_Enabled;
+            }
+            drawPrimitive(arrow, &button, painter, widget);
         }
         return;
     }
@@ -344,8 +563,25 @@ QRect Style::subControlRect(ComplexControl control, const QStyleOptionComplex* o
     return visualRect(bar->direction, groove, result);
 }
 
+QStringList styleIconNames() {
+    return {QStringLiteral("ui-warning"), QStringLiteral("ui-question")};
+}
+
 QIcon Style::standardIcon(StandardPixmap icon, const QStyleOption* option,
                           const QWidget* widget) const {
+    // The message boxes with icons of the program, coloured by role, instead
+    // of the platform's (docs/ICONE.md). The tokens tell the theme: its text
+    // is lighter than its panels in the dark one.
+    const Theme theme =
+        m_tokens.text.lightness() > m_tokens.panel.lightness() ? Theme::Dark : Theme::Light;
+    switch (icon) {
+        case SP_MessageBoxWarning:
+            return themedIcon(QStringLiteral("ui-warning"), theme);
+        case SP_MessageBoxQuestion:
+            return themedIcon(QStringLiteral("ui-question"), theme);
+        default:
+            break;
+    }
     if (isDockHeader(widget)) {
         switch (icon) {
             case SP_TitleBarCloseButton:

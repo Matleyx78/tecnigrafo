@@ -2052,6 +2052,34 @@ i rimandi ai documenti che cambia.
      `circle=5,4;2` dà `vertex=7,4 bulge=1 vertex=3,4 bulge=1`. La risposta di
      `? generated H` di RT30, che si aspettava `loop=edges circle=…` in una
      `REGION`, la corregge [#720](https://github.com/Matleyx78/tecnigrafo/issues/720).     
+- **2026-11-16 — Gli scostamenti di F6 dal riferimento.** Nelle sessioni di
+  [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
+  ([#658](https://github.com/Matleyx78/tecnigrafo/issues/658)), dal 2026-11-11
+  al 2026-11-16, il responsabile ha approvato l'interfaccia area per area
+  nella finestra vera e ha deciso dove resta diversa dalle immagini
+  dell'[ADR 0039](adr/0039-decisione-visiva-dell-interfaccia.md), che restano
+  scritte come sono; il verbale, con i motivi, è
+  [F6-stato.md](tappe/fuori-tappa/F6-stato.md):
+  - **Font.** Quello dell'interfaccia lo fissa Tecnigrafo (Segoe UI, Noto Sans,
+    DejaVu Sans, 10 pt) e non segue il desktop; la riga di comando è a passo
+    fisso.
+  - **Ribbon.** I pulsanti grandi si chiamano *Layers Panel* e *Properties
+    Panel*; gli interruttori del layer corrente restano a destra della sua
+    combo; *Undo* e *Redo* sono solo nella barra di accesso rapido e nei menu.
+  - **Barra di accesso rapido.** Niente menu ⌄ dopo *Redo*: sarebbe una
+    funzione nuova, e non serve.
+  - **Icone.** A due toni (`pt` sull'elemento che dice l'azione) dove il
+    riferimento le ha monocrome; l'occhio invece della lampadina per lo stato
+    acceso dei layer. Un'analisi delle regole delle icone, che il responsabile
+    trova scarne, viene dopo F6.
+  - **Pannelli.** In *Layers* restano le colonne *Lineweight* e *Plot*.
+  - **Immissione dinamica.** Campi larghi uguali, campo attivo nel colore
+    `icon.pt` invece di `accent`; «30» senza «°», perché il testo è di `cmd`.
+  - **Barra di stato.** Coordinate `X: … Y: …` e scala in `px/unit`, non
+    `x, y, z` e `1:1`.
+  - **Rimandati.** La barra di navigazione (area 5) aspetta le azioni sposta e
+    zoom, con un pacchetto loro; il segno sul grip del vertice corrente è
+    l'idea [#799](https://github.com/Matleyx78/tecnigrafo/issues/799).
 - **2026-11-17 — Estensione a RT24 della fonte AutoCAD per le quote.** Dopo il
   blocco di RT24 nella
   [#708](https://github.com/Matleyx78/tecnigrafo/issues/708), il responsabile
@@ -2228,3 +2256,16 @@ i rimandi ai documenti che cambia.
   uguale al fattore e valore scritto moltiplicato anche lui). I casi di RT21
   ([#704](https://github.com/Matleyx78/tecnigrafo/issues/704)) si correggono
   a parte; il pacchetto riparte con il loro merge.
+- **2026-11-20 — Home di F6 con i comandi della 0.8.** Riallineando
+  [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
+  ([#800](https://github.com/Matleyx78/tecnigrafo/pull/800)) dopo
+  [PT39](tappe/0.8/PT39-icone-e-voci-1.md) e
+  [PT45](tappe/0.8/PT45-icone-e-voci-2.md), la scheda Home non stava più in
+  1600 px. Il responsabile sceglie la disposizione di AutoCAD: in *Draw* i
+  quattro pulsanti grandi del riferimento e *Ellipse* e *Hatch* piccoli con la
+  sola icona; in *Annotation* *Text* con una tendina che offre anche
+  *Multiline Text*; il gruppo *Block* in una scheda sua, *Insert*. Le icone
+  di *Linear* e *Aligned* si ridisegnano con le frecce. Scartati: lasciare
+  Home com'era, che sta solo da circa 1900 px; compattare Home tenendo
+  *Block*, che non bastava. Il verbale è in
+  [F6-stato.md](tappe/fuori-tappa/F6-stato.md), "Dopo PT39 e PT45".

@@ -274,11 +274,11 @@ Prima parte (0.6-P18): disegno e modifica, file e annullamento.
 |---|---|---|---|
 | `draw-line-*.svg`, `draw-pline-*.svg`, `draw-text-*.svg`, `draw-circle-*.svg`, `draw-arc-*.svg` | i comandi di disegno: rifatte da 0.7.5-P19, nella tabella della tappa 0.7.5 | | sì |
 | `edit-erase-*.svg` | `edit.erase` | gomma inclinata | sì |
-| `edit-undo-*.svg` | `edit.undo` | freccia a U verso sinistra | sì |
-| `edit-redo-*.svg` | `edit.redo` | freccia a U verso destra | sì |
-| `file-new-*.svg` | `file.new` | foglio con l'angolo piegato e un più | sì |
-| `file-open-*.svg` | `file.open` | cartella aperta | sì |
-| `file-save-*.svg` | `file.save` | dischetto | sì |
+| `edit-undo-*.svg` | `edit.undo` | freccia a U verso sinistra; a 16 px larga quanto la griglia, la punta (`pt`) in arancio (F6) | sì |
+| `edit-redo-*.svg` | `edit.redo` | freccia a U verso destra; a 16 px larga quanto la griglia, la punta (`pt`) in arancio (F6) | sì |
+| `file-new-*.svg` | `file.new` | foglio con l'angolo piegato e un più; a 16 px il foglio alto quanto la griglia e il più (`pt`) fuori, in basso a destra (F6) | sì |
+| `file-open-*.svg` | `file.open` | cartella aperta; a 16 px larga quanto la griglia, con il lembo aperto (`pt`) (F6) | sì |
+| `file-save-*.svg` | `file.save` | dischetto; a 16 px con la finestrella e l'etichetta (`pt`) (F6) | sì |
 | `file-saveas-*.svg` | `file.saveas` | due dischetti sovrapposti | sì |
 
 Seconda parte (0.6-P19): vista, aiuti, interfaccia, layer e proprietà. Le icone
@@ -299,16 +299,16 @@ layer e delle proprietà, 0.6-P22 e 0.6-P24).
 | `ui-theme-*.svg` | `ui.theme` | cerchio diviso a metà, una metà tratteggiata | sì |
 | `tools-settings-*.svg` | `tools.settings` | tre cursori a scorrimento | sì |
 | `help-about-*.svg` | `help.about` | squadra da disegno con una squadra più piccola dentro | sì |
-| `layer-panel-*.svg` | `layer.panel` (0.6-P22) | pila di tre piani | sì |
-| `layer-on-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto | sì |
-| `layer-off-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato | sì |
+| `layer-panel-*.svg` | `layer.panel` (0.6-P22) | pila di tre piani; da F6 piani inclinati a 45°, come nel riferimento | sì |
+| `layer-on-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio aperto; a 16 px la pupilla è un punto (`pt`) (F6) | sì |
+| `layer-off-*.svg` | stato del layer, pannello dei layer (0.6-P22) | occhio barrato; a 16 px l'occhio è `cost`, spento (F6) | sì |
 | `layer-frozen-*.svg` | stato del layer, pannello dei layer (0.6-P22) | fiocco di neve | sì |
-| `layer-thawed-*.svg` | stato del layer, pannello dei layer (0.6-P22) | sole | sì |
-| `layer-locked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso | sì |
+| `layer-thawed-*.svg` | stato del layer, pannello dei layer (0.6-P22) | sole; a 16 px il centro è `pt` e i raggi più lunghi (F6) | sì |
+| `layer-locked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto chiuso; a 16 px la serratura è `pt` (F6) | sì |
 | `layer-unlocked-*.svg` | stato del layer, pannello dei layer (0.6-P22) | lucchetto aperto | sì |
-| `layer-current-*.svg` | `layer.current` (0.6-P22) | pila di tre piani, il primo con il punto attivo (`pt`) | sì |
-| `layer-new-*.svg` | `layer.new` (0.6-P22) | pila di tre piani, il primo con un più | sì |
-| `layer-delete-*.svg` | `layer.delete` (0.6-P22) | pila di tre piani, il primo con una croce | sì |
+| `layer-current-*.svg` | `layer.current` (0.6-P22) | da F6 pila di due piani inclinati e una spunta (`pt`) in alto a destra | sì |
+| `layer-new-*.svg` | `layer.new` (0.6-P22) | da F6 pila di due piani inclinati e un più (`pt`) in alto a destra | sì |
+| `layer-delete-*.svg` | `layer.delete` (0.6-P22) | da F6 pila di due piani inclinati e una croce (`pt`) in alto a destra | sì |
 | `properties-panel-*.svg` | `properties.panel` (0.6-P24) | scheda con un elenco di voci | sì |
 | `quick-select-*.svg` | `edit.quick-select` (0.6-P24) | imbuto | sì |
 | `property-color-*.svg` | controllo del colore, pannello delle proprietà (0.6-P24) | goccia | sì |
@@ -399,8 +399,9 @@ delle schede (`documentTabsIconNames()`).
 
 | File | Uso | Disegno | Rifatta |
 |---|---|---|---|
-| `ui-tab-new` | pulsante `+` della riga delle schede: un disegno nuovo | bordo di una scheda (`esist`) e un più (`pt`) | sì |
-| `ui-tab-menu` | pulsante del menu dei documenti aperti | righe dell'elenco (`esist`) e una freccia aperta verso il basso (`pt`) | sì |
+| `ui-tab-new` | pulsante `+` della riga delle schede: un disegno nuovo | un più (`pt`); prima di F6 anche il bordo di una scheda | sì |
+| `ui-tab-menu` | pulsante del menu dei documenti aperti | tre righe uguali (`esist`), ≡ come nel riferimento (F6); la freccia del menu non si mostra | sì |
+| `ui-home` | scheda *Start*, come nel riferimento (F6) | casa (`esist`) con la porta (`pt`) | sì |
 | `doc-drawing` | tipo disegno: icona della scheda di un disegno, del pulsante *Drawing* di *Start* e dei file recenti | foglio con l'angolo piegato (`esist`) e una spezzata disegnata (`geo`) | sì |
 
 Gli ambienti (0.7.5-P30) hanno un'icona ciascuno, nell'indicatore
@@ -418,7 +419,27 @@ La tappa 0.8 aggiunge il canale e il pannello dell’assistente (PT38).
 | `assistant-channel-*.svg` | `assistant.channel` | onde del collegamento sopra il punto dell’assistente (`pt`) | sì |
 | `assistant-panel-*.svg` | `assistant.panel` | fumetto con tre punti (`pt`) | sì |
 
+Il ribbon e la riga di comando sul riferimento (F6) aggiungono la freccia
+all'angolo dei gruppi che apre il pannello e la crocetta che annulla, con i
+due file `-16.svg` e `-32.svg`; F6 aggiunge poi la lente della ricerca dei
+layer e le icone delle finestre di avvertimento e di domanda, che `Style`
+disegna al posto di quelle della piattaforma; nessuna azione le nomina: la freccia la usa
+il ribbon (`launcherIcon()` in `app/src/ui_builder.cpp`), che la disegna da
+16 px al centro del quadrato del pulsante, la crocetta la riga di comando.
+
+| File | Uso | Disegno | Rifatta |
+|---|---|---|---|
+| `ui-panel-launcher` | freccia ↘ dei gruppi *Layers* e *Properties*: apre il pannello | diagonale verso il basso a destra con la punta ad angolo retto (`esist`) | sì |
+| `ui-cancel` | crocetta della riga di comando: annulla come Esc | due diagonali a X (`esist`) | sì |
+| `ui-search` | lente all'inizio del campo di ricerca del pannello *Layers* (`layerPanelIconNames()`) | cerchio e manico (`cost`), discreti come il testo d'aiuto del campo | sì |
+| `ui-warning` | icona delle finestre di avvertimento, al posto di quella della piattaforma (`styleIconNames()`) | triangolo (`esist`), barra e punto (`pt`) | sì |
+| `ui-question` | icona delle domande («Save changes?»), al posto di quella della piattaforma (`styleIconNames()`) | cerchio (`esist`), uncino e punto (`pt`): un segno, non una lettera | sì |
+
+Il logo del programma non è un'icona a ruoli: ha colori suoi e sta in
+[`resources/logo/`](../resources/logo/), fuori da questo controllo.
+
 PT39 porta nell’interfaccia i primi comandi nuovi della tappa.
+
 | File | Azione | Disegno | Rifatta |
 |---|---|---|---|
 | `draw-ellipse` | `draw.ellipse` | ellisse e asse maggiore | sì |
@@ -428,8 +449,8 @@ PT39 porta nell’interfaccia i primi comandi nuovi della tappa.
 | `block-insert` | `block.insert` | blocco originale e copia inserita | sì |
 | `text-style` | `text.style` | campioni di righe esistenti con selezione attiva | sì |
 | `dimension-style` | `dimension.style` | linea di quota esistente fra due estensioni | sì |
-| `dimension-linear` | `dimension.linear` | quota lineare orizzontale | sì |
-| `dimension-aligned` | `dimension.aligned` | oggetto e quota paralleli, inclinati a 45° | sì |
+| `dimension-linear` | `dimension.linear` | oggetto orizzontale (`esist`) con i due punti misurati (`pt`), richiami staccati (`cost`), linea di quota con le frecce sopra (`geo`) | sì |
+| `dimension-aligned` | `dimension.aligned` | come `dimension-linear`, con oggetto e quota paralleli, inclinati a 45° | sì |
 | `dimension-angular` | `dimension.angular` | angolo e arco centrato nel vertice | sì |
 | `dimension-radius` | `dimension.radius` | cerchio e raggio quotato | sì |
 | `dimension-diameter` | `dimension.diameter` | cerchio e diametro quotato | sì |

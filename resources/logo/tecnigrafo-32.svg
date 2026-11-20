@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a4568"/><stop offset="1" stop-color="#182b45"/></linearGradient></defs>
+  <rect x="1" y="1" width="30" height="30" rx="6" fill="url(#g)"/>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="5.5" fill="none" stroke="#3d638f"/>
+  <path d="M7.5 7.5 H24.5 V12.5 H18.5 V25.5 H13.5 V12.5 H7.5 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+  <g fill="#48cae4"><rect x="6.5" y="6.5" width="2" height="2"/><rect x="23.5" y="6.5" width="2" height="2"/><rect x="12.5" y="24.5" width="2" height="2"/><rect x="17.5" y="24.5" width="2" height="2"/></g>
+</svg>

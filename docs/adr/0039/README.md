@@ -29,7 +29,7 @@ del secondo punto, con il punto base sullo spigolo in basso a sinistra.
 | [`proprieta.svg`](proprieta.svg) | pannello *Properties* con una polilinea selezionata: combo della selezione con filtro e selezione rapida, griglia a gruppi *General* e *Geometry*, scorrimento dei vertici | punto 1, area 8; punto 3 |
 | [`layer.svg`](layer.svg) | pannello *Layers*: barra di icone, campo di ricerca, colonne a icone e di testo, layer corrente con la spunta e il fondo di selezione | punto 1, area 9; punto 3 |
 | [`stato.svg`](stato.svg) | barra di stato: posto vuoto per *Model* e *Layout*, coordinate, indicatore dell'ambiente, interruttori a icone (orto, polare, snap a oggetto, spessori, immissione dinamica, ribbon) con quelli accesi sul fondo di selezione, scala, impostazioni | punto 1, area 10; punto 5 |
-| [`immissione-dinamica.svg`](immissione-dinamica.svg) | immissione dinamica vicino al cursore durante `MOVE`: la richiesta e i due campi, lunghezza (attivo, nel colore d'accento) e angolo | punto 1, area 7 |
+| [`immissione-dinamica.svg`](immissione-dinamica.svg) | immissione dinamica vicino al cursore durante `MOVE`: la richiesta e i due campi, lunghezza (attivo, nel colore `icon.pt`) e angolo, larghi uguali | punto 1, area 7 |
 
 I dettagli sono nel tema chiaro e a scala doppia, tranne `ribbon.svg`, a scala
 uguale alla finestra perché ne prende tutta la larghezza.
@@ -47,3 +47,17 @@ Come chiede il punto 6, e per le schede dei pacchetti della tappa:
   (0.7.5-P14, punto 3);
 - nessuna scheda contestuale nel ribbon: il disegno non ne chiede, e il loro
   posto è a destra della scheda *View* (punto 5).
+
+## Scostamenti decisi con F6
+
+Dopo il pacchetto fuori tappa
+[F6](../../tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md), le immagini
+seguono gli scostamenti decisi dal responsabile
+([DECISIONI.md](../../DECISIONI.md), 2026-11-16): pulsanti grandi *Layers
+Panel* e *Properties Panel*, niente menu ⌄ nella barra di accesso rapido,
+coordinate `X: … Y: …` e scala in `px/unit` nella barra di stato, campi
+dell'immissione dinamica larghi uguali con quello attivo in `icon.pt`.
+
+Le icone restano i segnaposto disegnati qui: le icone vere sono a due toni e,
+per lo stato acceso dei layer, un occhio invece della lampadina. Fanno fede
+[ICONE.md](../../ICONE.md) e `resources/icons/`, non queste immagini.

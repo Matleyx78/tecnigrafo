@@ -18,6 +18,15 @@
 #include <QVBoxLayout>
 
 namespace tg::app {
+namespace {
+
+/// The name of an action as the menus show it, without the & that marks
+/// its mnemonic.
+QString shownText(const ActionSpec& spec) {
+    return QString(spec.text).remove(QLatin1Char('&'));
+}
+
+}  // namespace
 
 ShortcutsDialog::ShortcutsDialog(ActionRegistry& registry, QSettings& settings, QWidget* parent)
     : QDialog(parent),
@@ -53,7 +62,11 @@ ShortcutsDialog::ShortcutsDialog(ActionRegistry& registry, QSettings& settings, 
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::SingleSelection);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // The description takes the room left, so that no column is cut; rows
+    // without numbers, as the other tables (docs/adr/0039, point 3).
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    m_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    m_table->verticalHeader()->hide();
     m_edit->setObjectName(QStringLiteral("shortcutEdit"));
     m_warning->setObjectName(QStringLiteral("shortcutWarning"));
     m_warning->setWordWrap(true);
@@ -117,7 +130,7 @@ void ShortcutsDialog::refresh() {
         }
         const int row = m_table->rowCount();
         m_table->insertRow(row);
-        auto* item = new QTableWidgetItem(spec->text);
+        auto* item = new QTableWidgetItem(shownText(*spec));
         item->setData(Qt::UserRole, spec->id);
         m_table->setItem(row, 0, item);
         m_table->setItem(row, 1, new QTableWidgetItem(spec->description));
@@ -136,7 +149,8 @@ void ShortcutsDialog::change(const QKeySequence& sequence) {
     const QString id = selectedId();
     const QString other = m_map.conflict(id, sequence);
     if (!other.isEmpty()) {
-        m_warning->setText(tr("Shortcut already used by %1.").arg(m_registry.spec(other)->text));
+        m_warning->setText(
+            tr("Shortcut already used by %1.").arg(shownText(*m_registry.spec(other))));
         return;
     }
     if (m_map.set(id, sequence)) {

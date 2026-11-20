@@ -43,6 +43,7 @@
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFrame>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QKeySequence>
@@ -282,6 +283,8 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     // now.
     QCoreApplication::removePostedEvents(this, QEvent::MetaCall);
     setStyleSheet(QString{});
+    // The logo in the title row of the ribbon, and for the system.
+    setWindowIcon(programIcon());
     cmd::registerBuiltinCommands(m_registry);
     // The types and environments of the program (docs/adr/0041, point 7);
     // the extension adds its own with the actions (createMenus()).
@@ -306,9 +309,9 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     resize(1100, 720);
 
     // The tabs of the documents under the ribbon (docs/adr/0039, point 1,
-    // area 4), with both interfaces; the command line sits below the
-    // drawing, as in AutoCAD. The Start page takes the place of both while
-    // no document is active.
+    // area 4), with both interfaces; the command line floats over the
+    // bottom of the drawing (area 6). The Start page takes the place of
+    // both while no document is active.
     auto* central = new QWidget(this);
     m_drawingArea = central;
     m_documentTabs = new DocumentTabs(central);
@@ -320,7 +323,7 @@ MainWindow::MainWindow(InitialDrawing drawing, QWidget* parent, const Extension&
     layout->addWidget(m_documentTabs);
     layout->addWidget(m_startPage, 1);
     layout->addWidget(m_view, 1);
-    layout->addWidget(m_commandLine);
+    m_commandLine->floatOver(m_view);
     // The tabs of the hidden panels stand around the drawing and the
     // command line (docs/tappe/0.7.5/P18).
     m_autoHide = new AutoHide(*this, central, m_view);
@@ -533,7 +536,7 @@ void MainWindow::createMenus(const Extension& extension) {
             &LayerPanel::showAndFocus);
     connect(layers, &LayerPanel::messageShown, m_commandLine, &CommandLine::appendToHistory);
     connect(layers, &LayerPanel::changed, this, &MainWindow::refresh);
-    addPanel(layers, Qt::RightDockWidgetArea);
+    const bool layersPlaced = addPanel(layers, Qt::RightDockWidgetArea);
 
     // The properties panel and QSELECT (0.6-P24). Like the layers panel, it
     // exists before the interface, which places its controls.
@@ -545,7 +548,12 @@ void MainWindow::createMenus(const Extension& extension) {
     connect(properties, &PropertiesPanel::messageShown, m_commandLine,
             &CommandLine::appendToHistory);
     connect(properties, &PropertiesPanel::changed, this, &MainWindow::refresh);
-    addPanel(properties, Qt::RightDockWidgetArea);
+    const bool propertiesPlaced = addPanel(properties, Qt::RightDockWidgetArea);
+    // docs/adr/0039, area 8: properties above, layers below, unless the
+    // user's own layout put them elsewhere.
+    if (layersPlaced && propertiesPlaced) {
+        splitDockWidget(properties, layers, Qt::Vertical);
+    }
 
     auto* assistantPanel = new AssistantPanel(*m_assistant, this);
     connect(registeredAction("assistant.panel"), &QAction::triggered, assistantPanel,
@@ -936,6 +944,15 @@ void MainWindow::applyDrawingAids() {
     m_view->update();  // the snap marker and the preview may have changed
 }
 
+QFrame* MainWindow::createStatusSeparator() {
+    // The thin vertical line of the reference between the groups of the
+    // status bar (docs/adr/0039, area 10).
+    auto* line = new QFrame(this);
+    line->setObjectName(QStringLiteral("statusSeparator"));
+    line->setFixedSize(1, kStatusIconSize);
+    return line;
+}
+
 QToolButton* MainWindow::createModeButton(QAction* action, const QString& name) {
     auto* button = new QToolButton(this);
     button->setObjectName(name);
@@ -991,7 +1008,12 @@ void MainWindow::createStatusBar() {
     // right the settings, the scale, the ribbon, the switches in the order
     // of the reference (lineweights, object snap, tracking, polar, ortho), then the
     // place of the environment indicator (point 5).
+    // The reference has no size grip; the window edge resizes.
+    statusBar()->setSizeGripEnabled(false);
     m_cursorLabel = new QLabel(this);
+    m_cursorLabel->setObjectName(QStringLiteral("cursorLabel"));
+    // Fixed pitch, so the digits do not move as the cursor does (area 10).
+    m_cursorLabel->setFont(fixedFont());
     m_cursorLabel->setMinimumWidth(260);
     statusBar()->addWidget(m_cursorLabel);
     // The environment of the active session, or none with the Start page
@@ -1009,6 +1031,7 @@ void MainWindow::createStatusBar() {
             [this, environmentMenu] { populateEnvironmentMenu(*environmentMenu); });
     statusBar()->addPermanentWidget(m_environmentIndicator);
     updateEnvironmentIndicator();
+    statusBar()->addPermanentWidget(createStatusSeparator());
     QToolButton* assistantButton =
         createModeButton(registeredAction("assistant.channel"), QStringLiteral("assistantButton"));
     statusBar()->addPermanentWidget(assistantButton);
@@ -1071,6 +1094,7 @@ void MainWindow::createStatusBar() {
     connect(interfaceSwitch, &QAction::changed, m_ribbonButton,
             [this, interfaceSwitch] { m_ribbonButton->setIcon(interfaceSwitch->icon()); });
     statusBar()->addPermanentWidget(m_ribbonButton);
+    statusBar()->addPermanentWidget(createStatusSeparator());
 
     m_scaleLabel = new QLabel(this);
     statusBar()->addPermanentWidget(m_scaleLabel);
@@ -1961,17 +1985,19 @@ void MainWindow::updateThemeIcons() {
     }
 }
 
-void MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
+bool MainWindow::addPanel(QDockWidget* panel, Qt::DockWidgetArea area) {
     assert(panel != nullptr && !panel->objectName().isEmpty());
     panel->setAllowedAreas(Qt::AllDockWidgetAreas);
     panel->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable |
                        QDockWidget::DockWidgetFloatable);
     // restoreDockWidget consumes the saved placeholder. Adding the dock
     // first would discard that placeholder, including its floating state.
-    if (!m_uiSettingsReady || m_scriptMode || !restoreDockWidget(panel)) {
+    const bool placed = !m_uiSettingsReady || m_scriptMode || !restoreDockWidget(panel);
+    if (placed) {
         addDockWidget(area, panel);
     }
     m_autoHide->addPanel(panel);
+    return placed;
 }
 
 void MainWindow::showSettings() {
@@ -2008,6 +2034,19 @@ void MainWindow::changeEvent(QEvent* event) {
         }
     }
     SARibbonMainWindow::changeEvent(event);
+    // A change of the desktop's theme (under GNOME it also arrives late,
+    // after the window is shown) repolishes the window, and the style sheet
+    // puts back the palette that the window had when it was first polished:
+    // the light one, set before the saved theme. The window keeps the
+    // palette of its theme (setTheme).
+    if (event->type() == QEvent::ThemeChange && palette() != QApplication::palette()) {
+        setPalette(QApplication::palette());
+    }
+    // The same change gives the classes of widgets the desktop's fonts
+    // (applyInterfaceFont).
+    if (event->type() == QEvent::ThemeChange) {
+        applyInterfaceFont();
+    }
 }
 
 void MainWindow::restoreUiSettings() {

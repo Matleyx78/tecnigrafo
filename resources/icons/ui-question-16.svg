@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <circle class="esist" cx="7.5" cy="7.5" r="6"/>
+        <path class="pt" d="M5.5 6 Q5.5 3.5 7.5 3.5 Q9.5 3.5 9.5 5.5 Q9.5 7 7.5 7.5 V8"/>
+        <circle class="pt" cx="7.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/>
+    </g>
+</svg>

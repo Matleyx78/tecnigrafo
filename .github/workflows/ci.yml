@@ -323,7 +323,7 @@ jobs:
         run: |
           set -o pipefail
           build/ci/app/tecnigrafo-galleria build/galleria 2>&1 | scripts/ci-annota.sh
-          test "$(find build/galleria -maxdepth 1 -name '*.png' -size +0c | wc -l)" -eq 14
+          test "$(find build/galleria -maxdepth 1 -name '*.png' -size +0c | wc -l)" -eq 16
           {
             echo '## Galleria dell’interfaccia'
             echo 'Scarica **galleria** dalla sezione **Artifacts** di questa esecuzione CI.'
