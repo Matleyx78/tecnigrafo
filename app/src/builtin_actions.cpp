@@ -413,13 +413,13 @@ void BuiltinActions::add(ActionRegistry& registry) {
         withIcon(commandSpec(QStringLiteral("block.create"), tr("&Create Block"), block,
                              tr("Creates a block definition."), QStringLiteral("-BLOCK")),
                  QStringLiteral("block-create"));
-    createBlock.ribbon = QStringLiteral("home/block");
+    createBlock.ribbon = QStringLiteral("insert/block");
     registry.add(std::move(createBlock));
     ActionSpec insertBlock =
         withIcon(commandSpec(QStringLiteral("block.insert"), tr("&Insert Block"), tr("&Insert"),
                              tr("Inserts a block or drawing."), QStringLiteral("-INSERT")),
                  QStringLiteral("block-insert"));
-    insertBlock.ribbon = QStringLiteral("home/block");
+    insertBlock.ribbon = QStringLiteral("insert/block");
     registry.add(std::move(insertBlock));
 
     const QString modify = tr("&Modify");

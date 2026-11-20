@@ -262,9 +262,9 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
     const QList<std::pair<QString, QStringList>> expected{
         {QStringLiteral("home/draw"),
          {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}},
-        {QStringLiteral("home/annotation"), {QStringLiteral("draw.mtext")}},
+        {QStringLiteral("home/annotation"), {QStringLiteral("draw.text")}},
         {QStringLiteral("home/modify"), {QStringLiteral("edit.pedit")}},
-        {QStringLiteral("home/block"),
+        {QStringLiteral("insert/block"),
          {QStringLiteral("block.create"), QStringLiteral("block.insert")}},
         {QStringLiteral("annotate/dimensions"),
          {QStringLiteral("dimension.linear"), QStringLiteral("dimension.angular"),
@@ -297,6 +297,33 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
         ASSERT_NE(action->menu(), nullptr);
         EXPECT_EQ(action->menu()->actions(), registry.variants(id));
     }
+
+    // Home keeps the large buttons of the reference (docs/tappe/fuori-tappa/
+    // F6-stato.md, "Dopo PT39 e PT45"): Ellipse and Hatch small, with the
+    // icon only; Multiline Text in the drop-down of Text, whose action
+    // keeps no menu, so that the classic Draw menu shows it as an item.
+    for (const QString& id : {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}) {
+        SCOPED_TRACE(id.toStdString());
+        auto* button =
+            dynamic_cast<SARibbonToolButton*>(ribbonButtonOf(*ribbon, registry.action(id)));
+        ASSERT_NE(button, nullptr);
+        EXPECT_EQ(button->buttonType(), SARibbonToolButton::SmallButton);
+        EXPECT_EQ(button->toolButtonStyle(), Qt::ToolButtonIconOnly);
+    }
+    QAction* text = registry.action(QStringLiteral("draw.text"));
+    QAction* mtext = registry.action(QStringLiteral("draw.mtext"));
+    QToolButton* textButton = ribbonButtonOf(*ribbon, text);
+    ASSERT_NE(textButton, nullptr);
+    EXPECT_EQ(textButton->popupMode(), QToolButton::MenuButtonPopup);
+    ASSERT_NE(textButton->menu(), nullptr);
+    EXPECT_EQ(textButton->menu()->actions(), (QList<QAction*>{text, mtext}));
+    EXPECT_EQ(text->menu(), nullptr);
+    auto* annotation = ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/annotation"));
+    ASSERT_NE(annotation, nullptr);
+    for (QToolButton* button : annotation->findChildren<QToolButton*>()) {
+        EXPECT_NE(button->defaultAction(), mtext);
+    }
+    EXPECT_EQ(ribbon->findChild<SARibbonPanel*>(QStringLiteral("home/block")), nullptr);
 
     registry.action(QStringLiteral("ui.interface"))->trigger();
     QCoreApplication::processEvents();

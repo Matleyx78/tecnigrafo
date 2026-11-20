@@ -53,6 +53,9 @@ QString title(const QString& name) {
     if (name == QStringLiteral("view")) {
         return QObject::tr("View");
     }
+    if (name == QStringLiteral("insert")) {
+        return QObject::tr("Insert");
+    }
     if (name == QStringLiteral("annotate")) {
         return QObject::tr("Annotate");
     }
@@ -96,12 +99,14 @@ QString title(const QString& name) {
 }
 
 /// The groups of the ribbon in their order: those of the Home tab as in
-/// docs/adr/0039, point 1, area 3.
+/// docs/adr/0039, point 1, area 3. The blocks have a tab of their own,
+/// Insert, after Home: the Home of the reference has no room for them
+/// (docs/tappe/fuori-tappa/F6-stato.md, "Dopo PT39 e PT45").
 QStringList groups() {
     return {QStringLiteral("home/draw"),       QStringLiteral("home/modify"),
-            QStringLiteral("home/annotation"), QStringLiteral("home/block"),
-            QStringLiteral("home/layers"),     QStringLiteral("home/properties"),
-            QStringLiteral("home/utilities"),  QStringLiteral("annotate/dimensions"),
+            QStringLiteral("home/annotation"), QStringLiteral("home/layers"),
+            QStringLiteral("home/properties"), QStringLiteral("home/utilities"),
+            QStringLiteral("insert/block"),    QStringLiteral("annotate/dimensions"),
             QStringLiteral("annotate/text"),   QStringLiteral("view/navigate"),
             QStringLiteral("view/aids"),       QStringLiteral("view/assistant")};
 }
@@ -111,6 +116,21 @@ QStringList groups() {
 bool isLargeGroup(const QString& path) {
     return path == QStringLiteral("home/draw") || path == QStringLiteral("home/annotation") ||
            path == QStringLiteral("home/utilities");
+}
+
+/// The commands of a large group that take small buttons with the icon
+/// only, in a column after the large ones, the name in their tooltip: Draw
+/// keeps the four large buttons of the reference (docs/tappe/fuori-tappa/
+/// F6-stato.md, "Dopo PT39 e PT45").
+QStringList smallInLargeGroup() {
+    return {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")};
+}
+
+/// The text commands in the drop-down of Text in Home's Annotation, in
+/// order; the button runs the first. Multiline Text has no button of its
+/// own there (docs/tappe/fuori-tappa/F6-stato.md, "Dopo PT39 e PT45").
+QStringList textDropDown() {
+    return {QStringLiteral("draw.text"), QStringLiteral("draw.mtext")};
 }
 
 /// The actions that open a panel: the large button that comes first in its
@@ -278,6 +298,26 @@ QWidget* layerButtonRow(const ActionRegistry& registry, QWidget* parent) {
     }
     layout->addStretch(1);
     return row;
+}
+
+/// Gives the button of `text` in `panel` the drop-down of textDropDown().
+/// The menu belongs to the button: the action keeps none, so that the
+/// classic menus show it as an item and not as a submenu.
+void addTextDropDown(SARibbonPanel& panel, QAction& text, const ActionRegistry& registry) {
+    SARibbonToolButton* button = panel.actionToRibbonToolButton(&text);
+    if (button == nullptr) {
+        return;
+    }
+    auto* menu = new QMenu(button);
+    menu->setObjectName(QStringLiteral("textDropDown"));
+    for (const QString& id : textDropDown()) {
+        if (QAction* action = registry.action(id); action != nullptr) {
+            menu->addAction(action);
+        }
+    }
+    button->setMenu(menu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    panel.updateItemGeometry();
 }
 
 /// The arrow at the corner of a group that opens its panel (area 3). SARibbon
@@ -867,20 +907,36 @@ void UiBuilder::buildRibbon() {
             layerRowActions().contains(spec->id)) {
             continue;
         }
+        // MTEXT is in the drop-down of TEXT on Home and has its own button
+        // in Annotate/Text.
+        if (spec->id == QStringLiteral("draw.mtext")) {
+            panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
+            continue;
+        }
         SARibbonPanel* panel = panelFor(spec->ribbon);
+        const bool small = smallInLargeGroup().contains(spec->id);
         if (action->menu() != nullptr) {
-            // An action with variants: a large button that runs the one
-            // used last, and the menu of all of them in its drop-down
+            // An action with variants: a button that runs the one used
+            // last, and the menu of all of them in its drop-down
             // (docs/adr/0039, point 1, area 3).
-            panel->addLargeAction(action, QToolButton::MenuButtonPopup);
-        } else if (isLargeGroup(spec->ribbon)) {
+            if (small) {
+                panel->addSmallAction(action, QToolButton::MenuButtonPopup);
+            } else {
+                panel->addLargeAction(action, QToolButton::MenuButtonPopup);
+            }
+        } else if (isLargeGroup(spec->ribbon) && !small) {
             panel->addLargeAction(action);
         } else {
             panel->addSmallAction(action);
         }
-        // MTEXT is beside TEXT on Home and is also offered in Annotate/Text.
-        if (spec->id == QStringLiteral("draw.mtext")) {
-            panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
+        if (small) {
+            if (SARibbonToolButton* iconOnly = panel->actionToRibbonToolButton(action)) {
+                iconOnly->setToolButtonStyle(Qt::ToolButtonIconOnly);
+                panel->updateItemGeometry();
+            }
+        }
+        if (spec->id == textDropDown().first()) {
+            addTextDropDown(*panel, *action, m_registry);
         }
     }
     // SARibbonMainWindow disposes of the previous menu widget with

@@ -2256,3 +2256,16 @@ i rimandi ai documenti che cambia.
   uguale al fattore e valore scritto moltiplicato anche lui). I casi di RT21
   ([#704](https://github.com/Matleyx78/tecnigrafo/issues/704)) si correggono
   a parte; il pacchetto riparte con il loro merge.
+- **2026-11-20 — Home di F6 con i comandi della 0.8.** Riallineando
+  [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
+  ([#800](https://github.com/Matleyx78/tecnigrafo/pull/800)) dopo
+  [PT39](tappe/0.8/PT39-icone-e-voci-1.md) e
+  [PT45](tappe/0.8/PT45-icone-e-voci-2.md), la scheda Home non stava più in
+  1600 px. Il responsabile sceglie la disposizione di AutoCAD: in *Draw* i
+  quattro pulsanti grandi del riferimento e *Ellipse* e *Hatch* piccoli con la
+  sola icona; in *Annotation* *Text* con una tendina che offre anche
+  *Multiline Text*; il gruppo *Block* in una scheda sua, *Insert*. Le icone
+  di *Linear* e *Aligned* si ridisegnano con le frecce. Scartati: lasciare
+  Home com'era, che sta solo da circa 1900 px; compattare Home tenendo
+  *Block*, che non bastava. Il verbale è in
+  [F6-stato.md](tappe/fuori-tappa/F6-stato.md), "Dopo PT39 e PT45".

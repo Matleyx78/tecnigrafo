@@ -657,10 +657,32 @@ responsabile, 2026-11-16).
 - Barra di stato: coordinate `X: … Y: …` e scala in `px/unit` (sopra).
 
 - *Layers*: le colonne *Lineweight* e *Plot* restano (sopra).
+- Home con i comandi della 0.8: *Ellipse* e *Hatch* piccoli, *Multiline Text*
+  nella tendina di *Text*, *Block* nella scheda *Insert* ("Dopo PT39 e PT45").
 - Ribbon: i pulsanti grandi si chiamano *Layers Panel* e *Properties Panel*
   (sopra).
 - Ribbon, gruppo *Layers*: gli interruttori acceso, congelato, bloccato del
   layer corrente restano a destra della combo, che il riferimento non ha.
+
+## Dopo PT39 e PT45
+
+**2026-11-20.** PT39 e PT45 hanno aggiunto a Home *Ellipse* e *Hatch* grandi
+in *Draw*, *Multiline Text* grande in *Annotation*, *Polyline Edit* in
+*Modify* e il gruppo *Block*: a 1600 px *Properties* era tagliato e
+*Utilities* finiva oltre la freccia «›». Il responsabile ha scelto la
+disposizione di AutoCAD:
+
+- *Draw*: i quattro pulsanti grandi del riferimento, poi *Ellipse* (con le
+  varianti) e *Hatch* piccoli, con la sola icona e il nome nel suggerimento;
+- *Annotation*: *Text* grande con una tendina che offre *Text* e *Multiline
+  Text*; *Multiline Text* ha il suo pulsante in *Annotate → Text*, e nei menu
+  classici resta una voce di *Draw*;
+- *Block* va in una scheda sua, *Insert*, dopo Home.
+
+Così Home sta in 1600 px con Noto Sans e con DejaVu Sans, nei due temi.
+Ridisegnate anche le icone di *Linear* e *Aligned* di PT39, che erano un
+rettangolo chiuso: ora la linea di quota ha le frecce e i richiami sono
+staccati dall'oggetto, con i due punti misurati.
 
 ## Cose rimandate
 

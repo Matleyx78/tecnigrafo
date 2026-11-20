@@ -86,18 +86,25 @@ nel colore d'accento e dal fondo coordinato con l'area dei comandi.
 
 Nella scheda **Home** i comandi sono raggruppati per funzione logica:
 
-- **Draw:** strumenti per la creazione di nuove entità grafiche (`Line`, `Polyline`,
-  `Circle`, `Arc`, `Text`);
+- **Draw:** strumenti per la creazione di nuove entità grafiche: `Line`, `Polyline`,
+  `Circle` e `Arc` grandi, poi `Ellipse` e `Hatch` piccoli, con la sola icona e il
+  nome nel suggerimento;
 - **Modify:** comandi di modifica e manipolazione, in colonne di tre (`Move`, `Copy`,
   `Rotate`; `Mirror`, `Scale`, `Offset`; `Trim`, `Extend`, `Join`; `Fillet`,
-  `Chamfer`, `Explode`; `Erase`);
-- **Annotation:** comandi di testo e annotazione (`Text`);
+  `Chamfer`, `Explode`; `Erase`, `Polyline Edit`);
+- **Annotation:** `Text`, che scrive un testo su una riga; la sua tendina offre anche
+  `Multiline Text`;
 - **Layers:** controlli rapidi per la gestione dei layer (il pulsante grande
   *Layers Panel* che apre il pannello, il menu a tendina `LayerCombo` e, sotto,
   *New Layer* e *Delete Layer* a icona e *Make Current*);
 - **Properties:** controlli per il colore, il tipo di linea e lo spessore correnti
   o degli oggetti selezionati, oltre al pulsante per aprire il pannello *Properties*;
 - **Utilities:** strumenti di selezione rapida (*Quick Select*).
+
+Le altre schede: **Insert** con il gruppo **Block** (`Create Block`, `Insert Block`);
+**Annotate** con **Dimensions** (`Linear` e, nella sua tendina, `Aligned`; `Angular`,
+`Radius`, `Diameter`, `Dimension Style`) e **Text** (`Multiline Text`, `Text Style`);
+**View** con la navigazione, gli aiuti al disegno e l'assistente.
 
 Ciascun gruppo mostra il proprio nome in una fascia inferiore nel colore del testo
 secondario (`text.secondary`). Nei gruppi *Layers* e *Properties* una freccetta
