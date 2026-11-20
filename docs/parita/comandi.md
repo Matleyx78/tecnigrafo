@@ -39,8 +39,8 @@ Aggiornato alla versione **0.8**.
 | `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), dopo la 1.0 (decisione del 2026-10-28) |
 | `CIRCLE` | `C` | completo | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio (*Ttr*) nella 0.7; le cinque varianti nel menu del pulsante del ribbon (0.7.5) |
 | `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4, anche dal menu del pulsante del ribbon (0.7.5); le altre varianti dopo la 1.0 |
-| `RECTANG` | `REC` | assente | — | |
-| `POLYGON` | `POL` | assente | — | |
+| `RECTANG` | `REC` | assente | 0.8.2 | |
+| `POLYGON` | `POL` | assente | 0.8.2 | |
 | `ELLIPSE` | `EL` | presente | 0.8 | asse e fine, *Center*, *Rotation*, *Arc*; manca *Isocircle*; manca l'alias `EL` (0.8.1); `TRIM`, `EXTEND`, `OFFSET` e `FILLET` non accettano ellissi (idea #663) |
 | `SPLINE` | `SPL` | assente | — | spline dopo la 1.0 |
 | `POINT` | `PO` | assente | — | |
@@ -75,7 +75,7 @@ Aggiornato alla versione **0.8**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `ERASE` | `E` | presente | 0.3 | selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Last*, *Previous*, *Fence*, *WPolygon*, *CPolygon* |
+| `ERASE` | `E` | presente | 0.3 | selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, *WPolygon*, *CPolygon*; *Last* e *Previous* nella 0.8.1 |
 | `MOVE` | `M` | completo | 0.7 | punto base e secondo punto, *Displacement* |
 | `COPY` | `CO`, `CP` | presente | 0.7 | copie multiple con *Undo* ed *Exit*, *Displacement*; una copia sola negli script; mancano *mOde* e *Array* |
 | `ROTATE` | `RO` | completo | 0.7 | angolo scritto o indicato, *Copy*, *Reference* con *Points* |
@@ -159,6 +159,6 @@ parte.
 | Tracciamento degli snap a oggetto | `F11` | presente | 0.8 | acquisizione fermandosi sopra un punto, guide orizzontali e verticali, incroci di due guide e con il polare, distanza scritta lungo una guida; mancano le guide polari dai punti acquisiti (`POLARMODE`), `TRACKPATH` e gli snap *Prolungamento* e *Parallelo* |
 | Orto | `F8` | completo | 0.3 | |
 | Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
-| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, i poligoni, *Last* e *Previous* |
+| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence* e i poligoni; *Last* e *Previous* nella 0.8.1 |
 | Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
 | Immissione dinamica | `F12` | presente | 0.7.5 | domanda del comando, coordinate e, dopo il primo punto, lunghezza e angolo vicino al cursore, con `Tab` e `Invio`; manca la variabile `DYNMODE` |
