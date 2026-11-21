@@ -18,7 +18,8 @@ proposte di metodo della 0.8»).
   il tracciamento non vale da sé per lo snap. Un caso nuovo che nessuna regola
   copre si tratta come ogni buco di una scheda: se è visibile lo decide il
   responsabile; se non lo è, chi realizza sceglie la risposta più semplice, la
-  fissa con un test e la segnala nella pull request
+  scrive nella scheda o nel commento dell'interfaccia, la fissa con un test e
+  la segnala nella pull request
   ([agenti/pacchetto.md](agenti/pacchetto.md), "Buchi visibili e no").
 
 ## 1. Principi
