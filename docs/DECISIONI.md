@@ -2380,3 +2380,145 @@ i rimandi ai documenti che cambia.
   fermate per approvazione e per `main` rosso sono senza `decisione`
   ([AGENTS.md](../AGENTS.md), «Quando fermarsi»;
   [agenti/catena.md](agenti/catena.md), «Fermate senza decisione»).
+- **2026-11-21 — 0.8.1 e 0.8.2 divise fra kernel e no.** Nella pausa dopo la
+  0.8 il responsabile ridistribuisce il contenuto delle due tappe con tre
+  numeri ([#888](https://github.com/Matleyx78/tecnigrafo/issues/888)): tutto
+  ciò che non chiede nulla a solid-space va nella 0.8.1, le curve nella 0.8.2.
+  - **0.8.1**, senza richieste a solid-space (salta B2–B5 di
+    [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md)): pannello delle proprietà
+    e `QSELECT` per i tipi della 0.8 e `-HATCHEDIT`
+    ([#913](https://github.com/Matleyx78/tecnigrafo/issues/913)), comandi
+    degli attributi, editor del testo con i formati e `TEXTEDIT`
+    ([#662](https://github.com/Matleyx78/tecnigrafo/issues/662)), griglia,
+    snap alla griglia e icona dell'UCS
+    ([#664](https://github.com/Matleyx78/tecnigrafo/issues/664)), snap
+    *Vicino*, *Prolungamento* e *Parallelo*
+    ([#665](https://github.com/Matleyx78/tecnigrafo/issues/665)), segno sul
+    vertice corrente di *Current Vertex*
+    ([#799](https://github.com/Matleyx78/tecnigrafo/issues/799)), *Last* e
+    *Previous*, calamita degli snap, prefisso `#`, contorni evidenziati in
+    `-HATCH`, alias brevi, `ELLIPSE` nel manuale, e `RECTANG` e `POLYGON`,
+    spostati dalla 0.8.2 perché non chiedono nulla al kernel.
+  - **0.8.2**, con la tappa gemella di solid-space: `SPLINE` completa
+    ([#888](https://github.com/Matleyx78/tecnigrafo/issues/888)), ellissi nei
+    comandi di modifica
+    ([#663](https://github.com/Matleyx78/tecnigrafo/issues/663)), `BREAK` e
+    `LENGTHEN` nuovi, contorni dei retini con ellissi e spline, tipi di linea
+    e larghezze continui negli inserimenti stirati
+    ([#762](https://github.com/Matleyx78/tecnigrafo/issues/762)). Stanno
+    insieme perché l'offset dell'ellisse è una spline e la lunghezza d'arco
+    serve a #762, a `LENGTHEN` e alla spline: tagliare in mezzo lascerebbe
+    pezzi per dopo.
+  - **Prestazioni di solid-space**
+    ([solid-space#304](https://github.com/Matleyx78/solid-space/issues/304)):
+    fuori tappa in solid-space, mentre lavora la 0.8.1, come correzione di
+    una tappa chiusa; la gemella della 0.8.2 aggiunge anelli curvi proprio a
+    `detectBoundary` e `clipToRegion`.
+  - **Onda 0:** la correzione di `controlla_casi.py` resta nell'onda 0 della
+    0.8.1; l'oracolo `ezdxf` per la `SPLINE` va nell'onda 0 della 0.8.2.
+    Corregge la voce del 2026-11-19, «Le proposte di metodo della 0.8»,
+    *Autoprove*.
+
+  Le schede sono [0.8.1](tappe/0.8.1-completamenti.md) e
+  [0.8.2](tappe/0.8.2-curve.md). Scartato tenere le curve nella 0.8.1: tutto
+  avrebbe aspettato il contratto più pesante, il bug #913 compreso.
+- **2026-11-21 — Testo formattato, griglia, snap e attributi della 0.8.1.**
+  Le decisioni del responsabile sul perimetro della
+  [0.8.1](tappe/0.8.1-completamenti.md), una per voce:
+  1. *Formati del testo* (#662): sì, nel disegno e nell'editor: grassetto,
+     corsivo, sottolineato, sopralineato, barrato; altezza, colore, fattore di
+     larghezza, obliquo, spaziatura; frazioni impilate (`a/b`, `a#b`, `a^b`).
+     Un `\f` con un nome qualsiasi si disegna con Liberation Sans, con le
+     varianti Bold, Italic e BoldItalic della stessa famiglia e licenza del
+     Regular (ADR 0013, un font solo), e il nome resta nel valore. Restano
+     fuori le colonne e le tabulazioni o rientri di paragrafo (`\p…;`), che si
+     conservano. Un ADR nuovo aggiorna l'impaginazione dell'ADR 0046; le quote
+     con testo formattato cambiano grafica come in AutoCAD. Scartato l'editor
+     senza formati, che avrebbe dovuto perdere i codici o mostrarli grezzi.
+  2. *Stato di griglia e snap* (#664): nel disegno, come AutoCAD. `GRIDMODE`,
+     `GRIDUNIT`, `SNAPMODE`, `SNAPUNIT` e `UCSICON` stanno nella voce
+     `*ACTIVE` della `VPORT`, letti e scritti, con il resto della voce intatto
+     (ADR 0006), e nel formato nativo; `F7` e `F9` cambiano il disegno
+     corrente, non entrano nell'annullamento e lo segnano modificato. Un
+     disegno nuovo prende i valori di `acadiso.dwt` (griglia accesa, snap
+     spento, passi 10, `UCSICON` acceso), da confermare in AutoCAD LT.
+     Scartata la preferenza del programma.
+  3. *Passo della griglia* (#664): `GRIDUNIT` fisso; griglia adattiva
+     (`GRIDDISPLAY` bit 2, acceso) e suddivisione (bit 4, spento); linee
+     principali ogni `GRIDMAJOR` (5); nella `VPORT` i gruppi 60 e 61, da
+     verificare sui DXF di prova, con gli altri bit conservati. Il passo
+     automatico di oggi sparisce. Fuori la griglia a punti (`GRIDSTYLE`).
+  4. *Assi* (#664): per difetto l'icona dell'UCS come AutoCAD (frecce X rossa
+     e Y verde con le lettere, grandezza fissa in pixel, nell'origine o
+     nell'angolo in basso a sinistra se l'origine è fuori vista o con
+     *Noorigin*); `UCSICON` è un dato del disegno (gruppo 74 della `VPORT`);
+     la scelta fra icona e rette di oggi è una preferenza del programma; l'icona
+     riceve origine, due direzioni e due lettere dal sistema di riferimento
+     attivo, così servirà anche allo schizzo del 3D. Misura e forma da una
+     schermata di AutoCAD LT.
+  5. *Verifica e perimetro di `SNAP` e `GRID`* (#664): nessuna direttiva nuova;
+     gli script usano `SNAPMODE`, `SNAPUNIT`, `GRIDMODE` e `SNAP`, i punti si
+     danno con `!click`, i tasti con `!key F7` e `!key F9`; il nodo è
+     deterministico ([REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md), sezione 3);
+     uno snap a oggetto trovato vince sulla griglia e le coordinate scritte
+     non si toccano; griglia con orto e polare da provare in AutoCAD LT; il
+     rapporto ha una riga di stato e una domanda `grid`. Dentro passo X e Y
+     (*Aspect*), *ON*/*OFF*, `SNAPBASE`; fuori stile isometrico e snap polare,
+     conservati; con `SNAPANG` diverso da 0 griglia e snap restano diritti, e
+     il manuale lo dice.
+  6. *Snap* (#665): priorità a tre livelli (snap di punto entro l'apertura;
+     poi centro e inserimento; poi *Vicino*), che estende l'ADR 0033, punto 5;
+     *Vicino* spento per difetto, `nea` in `!osnap` e nelle domande, anche
+     sulla geometria generata; centro contro *Vicino* sul bordo di un cerchio
+     da provare in AutoCAD LT. *Prolungamento* e *Parallelo* entrano nella
+     0.8.1; fuori *Nodo* (manca l'entità `POINT`) e l'intersezione apparente.
+  7. *Attributi*: `-ATTDEF` e `TEXTEDIT` su un `ATTDEF`; domande
+     all'inserimento con `ATTREQ`, predefinito 0 come la decisione del
+     2026-11-11, da verificare in AutoCAD LT (in AutoCAD vale 1); pannello
+     Proprietà con gli attributi dell'inserimento; `TEXTEDIT` e doppio clic su
+     un inserimento aprono una finestra con etichette e valori; `-ATTEDIT` uno
+     per uno e globale; `ATTSYNC` (si aggiungono gli attributi nuovi, si
+     tolgono gli spariti, chi ha la stessa etichetta tiene il valore e
+     riprende posizione e proprietà); `ATTDISP`; `BATTMAN`, con le operazioni
+     annullabili sulla definizione (ordine, modifica, rimozione), insieme ad
+     `ATTSYNC`. Fuori `EATTEDIT` completo, estrazione dei dati e attributi
+     multiriga. Completa l'ADR 0045, punto 6, «Restano fuori». Scartato
+     `BATTMAN` nel pacchetto di grafica a lato: non è solo aspetto.
+  8. *Proprietà* (#913): nomi dei tipi con un test che li impone; proprietà
+     proprie di `ELLIPSE`, `SOLID` (con *Current Vertex*), `MTEXT`, `ATTDEF`,
+     `INSERT` (anche il nome, che sostituisce la definizione), quote (stile,
+     testo sostitutivo, rotazione del testo) e `HATCH` (motivo, scala, angolo,
+     origine, stile delle isole); `-HATCHEDIT` con *Properties*, *Origin* e
+     *Style*. Fuori le opzioni sui contorni e sull'associatività, l'ordine di
+     disegno e le sovrascritture delle variabili di quota nel pannello.
+  9. *Voci piccole*: *Last* (ultima entità creata visibile) e *Previous*
+     (ultimo gruppo del documento), anche negli script; calamita accesa per
+     difetto, nelle Impostazioni (bit 4 di `AUTOSNAP`), che muove solo il
+     cursore; `#` e `*` per l'assoluto con l'immissione dinamica; in `-HATCH`
+     contorni e isole trovati, o oggetti scelti, evidenziati fino a `Invio` o
+     `Esc`; #799 come la issue, anche per i vertici del `SOLID`; alias di
+     AutoCAD dei comandi della 0.8 e della 0.8.1, controllati sull'`acad.pgp`
+     di AutoCAD LT; `RECTANG` con *Chamfer*, *Fillet*, *Width*, *Area*,
+     *Dimensions*, *Rotation*, *Elevation* e *Thickness* (gruppi 38 e 39);
+     `POLYGON` da 3 a 1024 lati, *Inscribed*, *Circumscribed* ed *Edge*.
+- **2026-11-21 — Curve della 0.8.2.** Le decisioni del responsabile sul
+  perimetro della [0.8.2](tappe/0.8.2-curve.md):
+  1. *Ellissi nei comandi di modifica* (#663): `FILLET` con la regola dell'ADR
+     0035, punto 13, estesa all'ellisse (gli archi d'ellisse si tagliano ai
+     punti di tangenza, l'ellisse intera no, da verificare in AutoCAD LT);
+     `TRIM` ed `EXTEND` con l'ellisse come limite e come oggetto (l'ellisse
+     intera tagliata diventa un arco d'ellisse, l'arco si prolunga lungo la sua
+     ellisse); `OFFSET` di un'ellisse o di un arco d'ellisse dà una `SPLINE`
+     approssimata, con la tolleranza del contratto di solid-space; `CHAMFER`
+     resta sugli oggetti lineari, come AutoCAD; `JOIN` unisce gli archi della
+     stessa ellisse come quelli dello stesso cerchio, e un'unione mista con
+     ellissi o spline dà una `SPLINE`.
+  2. *`BREAK` e `LENGTHEN`*, assenti finora, entrano come comandi nuovi per
+     tutti i tipi: `BREAK` con *First point* e `@`, e sul cerchio e
+     sull'ellisse intera toglie il tratto in senso antiorario; `LENGTHEN` con
+     *DElta*, *Percent*, *Total* e *DYnamic* su linee, archi, polilinee aperte,
+     archi d'ellisse e spline aperte (la spline da provare in AutoCAD LT).
+  3. *`SPLINE`*: confermato il perimetro della #888, con le precisazioni della
+     [scheda](tappe/0.8.2-curve.md). Fuori le spline 3D (grezze), l'opzione
+     *Object* e *Fit*, *Spline* e *Decurve* di `PEDIT` (polilinee pesanti, non
+     gestite), il menu dei grip e `BLEND`.

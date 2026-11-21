@@ -210,6 +210,14 @@ proposte di metodo della 0.8»).
    Con `fuzz` uguale a 0 vale la regola di `JOIN`
    ([DECISIONI.md](DECISIONI.md), 2026-11-14, «Revisione delle interfacce
    PT5», B21; [0.8-PT32](tappe/0.8/PT32-unione-con-distanza.md), punto 3).
+6. **Snap alla griglia** (dalla tappa 0.8.1). Con lo snap alla griglia acceso,
+   un punto indicato va sul nodo più vicino, asse per asse: nodo = `SNAPBASE` +
+   `std::round((p - SNAPBASE) / SNAPUNIT) · SNAPUNIT`, con `SNAPUNIT` di X per
+   la x e di Y per la y. Il pareggio esatto a metà fra due nodi va al nodo più
+   lontano da `SNAPBASE`, come fa `std::round` sul quoziente. Le coordinate scritte non passano dallo
+   snap, e uno snap a oggetto trovato vince sulla griglia
+   ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato, griglia, snap
+   e attributi della 0.8.1», punto 5).
 
 ## 4. Pareggi fra candidati
 
@@ -223,6 +231,11 @@ proposte di metodo della 0.8»).
    nessuno è entro l'apertura, valgono centro e inserimento dell'entità su cui
    passa il puntatore ([ADR 0033](adr/0033-nuovi-snap-e-tracciamento-polare.md),
    punto 5; ADR 0008, punto 4).
+   Dalla tappa 0.8.1 c'è un terzo livello: se non vale nemmeno centro o
+   inserimento, vale *Vicino* sull'entità più vicina al puntatore, che
+   altrimenti, essendo per definizione il punto più vicino, vincerebbe sempre
+   ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato, griglia, snap
+   e attributi della 0.8.1», punto 6).
 3. **Identificativo di un'intersezione:** il punto di una coppia porta il
    maggiore dei due identificativi; un'autointersezione porta quello della
    polilinea ([DECISIONI.md](DECISIONI.md), 2026-11-03, «Revisione P15: angoli
