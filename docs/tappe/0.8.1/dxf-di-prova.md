@@ -247,17 +247,10 @@ con l'oracolo):
   217.450335,4.339643. **Sul testo multiriga AutoCAD non aggancia**: «Nessun(o/a)
   trovato(a) per punto specificato. Punto non valido.».
 
-## Da decidere nel piano
+## Decisioni
 
-Fatti che toccano decisioni della scheda; la scelta resta al responsabile.
-
-- *Vicino* «per tutte le entità della 0.8»: AutoCAD non lo dà sul testo
-  multiriga.
-- La griglia di `acadiso.dwt` ha `GRIDDISPLAY` **3** (anche il bit 1, «oltre i
-  limiti»), non solo la griglia adattiva.
-- Lo snap polare (`SNAPTYPE`) non sta nel DXF: «conservato nel file» non ha
-  niente da conservare.
-- `ATTREQ`: il valore di fabbrica secondo Autodesk è 1, anche in LT.
-- La regola fra snap alla griglia, orto e polare non ha prove valide (punti 3 e
-  4 della seduta).
-- Gli alias dell'AutoCAD italiano sono diversi da quelli inglesi della scheda.
+Le domande che questi disegni e la seduta lasciavano aperte le ha chiuse il
+responsabile: [DECISIONI.md](../../DECISIONI.md), 2026-11-21, «Esiti dei DXF di
+prova e della seduta della 0.8.1» (niente *Vicino* sui testi, `GRIDDISPLAY` 3,
+snap polare fuori dal file, `ATTREQ` 1, nodo prima di orto e polare, alias
+inglesi, *Vicino* prima del centro).
