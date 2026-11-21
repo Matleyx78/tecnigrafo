@@ -23,13 +23,13 @@ catalogo dice quanto resta al lavoro reale.
 
 ## Riepilogo
 
-Aggiornato alla versione **0.7.5**.
+Aggiornato alla versione **0.8**.
 
 | Stato | Comandi |
 |---|---|
-| completo | 17 |
-| presente | 23 |
-| assente | 39 |
+| completo | 20 |
+| presente | 36 |
+| assente | 26 |
 
 ## Disegno
 
@@ -39,9 +39,9 @@ Aggiornato alla versione **0.7.5**.
 | `PLINE` | `PL` | presente | 0.4 | archi tangenti, *Arc*, *Line*, *CLose* nella 0.4; mancano *Width*, *Halfwidth*, *Length* e le varianti dell'arco (*Angle*, *CEnter*, *Radius*…), dopo la 1.0 (decisione del 2026-10-28) |
 | `CIRCLE` | `C` | completo | 0.4 | centro e raggio o diametro, `2P`, `3P` nella 0.4; tangente-tangente-raggio (*Ttr*) nella 0.7; le cinque varianti nel menu del pulsante del ribbon (0.7.5) |
 | `ARC` | `A` | presente | 0.4 | tre punti e inizio-centro-fine nella 0.4, anche dal menu del pulsante del ribbon (0.7.5); le altre varianti dopo la 1.0 |
-| `RECTANG` | `REC` | assente | — | |
-| `POLYGON` | `POL` | assente | — | |
-| `ELLIPSE` | `EL` | assente | — | ellissi dopo la 1.0 |
+| `RECTANG` | `REC` | assente | 0.8.2 | |
+| `POLYGON` | `POL` | assente | 0.8.2 | |
+| `ELLIPSE` | `EL` | presente | 0.8 | asse e fine, *Center*, *Rotation*, *Arc*; manca *Isocircle*; manca l'alias `EL` (0.8.1); `TRIM`, `EXTEND`, `OFFSET` e `FILLET` non accettano ellissi (idea #663) |
 | `SPLINE` | `SPL` | assente | — | spline dopo la 1.0 |
 | `POINT` | `PO` | assente | — | |
 | `XLINE` | `XL` | assente | — | |
@@ -55,25 +55,27 @@ Aggiornato alla versione **0.7.5**.
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; negli script una riga sola, come AutoCAD (0.7); senza *Justify* e *Style* (0.8) |
-| `MTEXT` | `T`, `MT` | assente | 0.8 | |
-| `STYLE` | `ST` | assente | 0.8 | stili di testo |
-| `DIMLINEAR` | `DLI` | assente | 0.8 | |
-| `DIMALIGNED` | `DAL` | assente | 0.8 | |
-| `DIMANGULAR` | `DAN` | assente | 0.8 | |
-| `DIMRADIUS` | `DRA` | assente | 0.8 | |
-| `DIMDIAMETER` | `DDI` | assente | 0.8 | |
-| `DIMSTYLE` | `D` | assente | 0.8 | stili di quota essenziali |
-| `HATCH` | `H` | assente | 0.8 | motivi ANSI31, SOLID, NET |
-| `BLOCK` | `B` | assente | 0.8 | |
-| `INSERT` | `I` | assente | 0.8 | |
+| `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; negli script una riga sola, come AutoCAD (0.7); usa lo stile corrente (0.8); mancano le opzioni *Justify* e *Style* |
+| `MTEXT` | `T`, `MT` | presente | 0.8 | dalla riga di comando, con *Height*, *Justify*, *Line spacing*, *Rotation*, *Style*, *Width*; i codici di formato si mostrano come testo; mancano l'editor nella finestra e `TEXTEDIT` (idea #662) e gli alias `T` e `MT` (0.8.1) |
+| `STYLE` | `ST` | presente | 0.8 | `-STYLE` (anche `STYLE`) dalla riga di comando: font, altezza fissa, larghezza, obliquo, rovesciato e capovolto; manca la finestra degli stili e l'alias `ST` (0.8.1) |
+| `TEXTSTYLE` | | completo | 0.8 | stile di testo corrente |
+| `DIMLINEAR` | `DLI`, `DIMLIN` | presente | 0.8 | due punti o un oggetto, *Text*, *Angle*, *Horizontal*, *Vertical*, *Rotated*; manca *Mtext* (idea #662) e l'alias `DLI` (0.8.1) |
+| `DIMALIGNED` | `DAL`, `DIMALI` | presente | 0.8 | *Text* e *Angle*; manca *Mtext* (idea #662) e l'alias `DAL` (0.8.1) |
+| `DIMANGULAR` | `DAN`, `DIMANG` | presente | 0.8 | due linee, arco, cerchio o tre punti, *Text*, *Angle*, *Quadrant*; manca *Mtext* (idea #662) e l'alias `DAN` (0.8.1) |
+| `DIMRADIUS` | `DRA`, `DIMRAD` | presente | 0.8 | *Text* e *Angle*; manca *Mtext* (idea #662) e l'alias `DRA` (0.8.1) |
+| `DIMDIAMETER` | `DDI`, `DIMDIA` | presente | 0.8 | *Text* e *Angle*; manca *Mtext* (idea #662) e l'alias `DDI` (0.8.1) |
+| `DIMSTYLE` | `D` | presente | 0.8 | `-DIMSTYLE` (anche `DIMSTYLE`) con *Save*, *Restore*, *STatus* e `?`, e le variabili di quota come comandi; una quota con adattamento diverso da `ISO-25` non si rigenera; mancano la finestra degli stili, *Variables*, *Apply* e l'alias `D` (0.8.1) |
+| `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; manca la finestra e l'alias `H` (0.8.1) |
+| `HPISLANDDETECTION` | | completo | 0.8 | *Normal*, *Outer*, *Ignore* |
+| `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra e l'alias `B` (0.8.1) |
+| `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o di un file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*), *Rotate*; attributi ai valori predefiniti, senza domande; mancano la finestra, le domande degli attributi e l'alias `I` (0.8.1) |
 | `WBLOCK` | `W` | assente | — | |
 
 ## Modifica
 
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
-| `ERASE` | `E` | presente | 0.3 | selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Last*, *Previous*, *Fence*, *WPolygon*, *CPolygon* |
+| `ERASE` | `E` | presente | 0.3 | selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, *WPolygon*, *CPolygon*; *Last* e *Previous* nella 0.8.1 |
 | `MOVE` | `M` | completo | 0.7 | punto base e secondo punto, *Displacement* |
 | `COPY` | `CO`, `CP` | presente | 0.7 | copie multiple con *Undo* ed *Exit*, *Displacement*; una copia sola negli script; mancano *mOde* e *Array* |
 | `ROTATE` | `RO` | completo | 0.7 | angolo scritto o indicato, *Copy*, *Reference* con *Points* |
@@ -84,7 +86,7 @@ Aggiornato alla versione **0.7.5**.
 | `EXTEND` | `EX` | presente | 0.7 | modo rapido e standard (*mOde*, `TRIMEXTENDMODE`), `Shift` per tagliare, *Undo*; mancano *Boundary edges*, *Crossing*, *Fence*, *Project*, *Edge* |
 | `FILLET` | `F` | presente | 0.7 | linee, archi, cerchi e segmenti dritti di una polilinea; *Radius*, *Trim*, *Polyline*, *Multiple*, *Undo*, `Shift` per lo spigolo; non raccorda una polilinea con un'altra entità né i suoi segmenti curvi |
 | `CHAMFER` | `CHA` | presente | 0.7 | linee e segmenti dritti di una polilinea; *Distance*, *Angle*, *mEthod*, *Trim*, *Polyline*, *Multiple*, *Undo*, `Shift` per lo spigolo; non smussa una polilinea con un'altra entità |
-| `EXPLODE` | `X` | presente | 0.7 | polilinee in linee e archi nella 0.7; blocchi nella 0.8 |
+| `EXPLODE` | `X` | presente | 0.7 | polilinee in linee e archi nella 0.7; inserimenti e quote nella 0.8 (con scala non uniforme cerchi e archi diventano ellissi); non scompone `MTEXT` e retini |
 | `JOIN` | `J` | completo | 0.7 | linee allineate, archi dello stesso cerchio (anche in un cerchio), catene di linee, archi e polilinee; sequenza degli script con *cLose* |
 | `MIRRTEXT` | | completo | 0.7 | testo specchiato leggibile (0) o riflesso (1) |
 | `TRIMEXTENDMODE` | | completo | 0.7 | modo con cui partono `TRIM` ed `EXTEND` |
@@ -93,7 +95,8 @@ Aggiornato alla versione **0.7.5**.
 | `STRETCH` | `S` | assente | — | |
 | `BREAK` | `BR` | assente | — | |
 | `LENGTHEN` | `LEN` | assente | — | |
-| `PEDIT` | `PE` | assente | 0.8 | conversione in polilinea e *Join* (decisione del 2026-11-07) |
+| `PEDIT` | `PE` | presente | 0.8 | conversione di linee e archi, *Multiple*, *Close*/*Open*, *Join* con distanza ed *Extend*/*Add*/*Both*, *Ltype gen*, *Reverse*, *Undo*; mancano *Width*, *Edit vertex*, *Fit*, *Spline*, *Decurve* |
+| `PEDITACCEPT` | | completo | 0.8 | conversione senza domanda |
 | `MATCHPROP` | `MA` | assente | — | |
 
 ## Annullamento
@@ -152,9 +155,10 @@ parte.
 
 | Aiuto | Tasto | Stato | Tappa | Note |
 |---|---|---|---|---|
-| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro, inserimento nella 0.3; intersezione, perpendicolare, tangente, quadrante nella 0.7; mancano vicino, nodo, prolungamento, parallelo, le intersezioni apparenti e prolungate e il tracciamento degli snap |
+| Snap a oggetto | `F3` | presente | 0.3 | estremo, medio, centro, inserimento nella 0.3; intersezione, perpendicolare, tangente, quadrante nella 0.7; sulle entità della 0.8, anche dentro i blocchi; mancano vicino (idea #665), nodo, prolungamento, parallelo, le intersezioni apparenti e prolungate |
+| Tracciamento degli snap a oggetto | `F11` | presente | 0.8 | acquisizione fermandosi sopra un punto, guide orizzontali e verticali, incroci di due guide e con il polare, distanza scritta lungo una guida; mancano le guide polari dai punti acquisiti (`POLARMODE`), `TRACKPATH` e gli snap *Prolungamento* e *Parallelo* |
 | Orto | `F8` | completo | 0.3 | |
 | Tracciamento polare | `F10` | presente | 0.7 | incremento con `POLARANG`, distanza scritta lungo la semiretta; mancano gli angoli aggiuntivi |
-| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence*, i poligoni, *Last* e *Previous* |
+| Selezione: clic, finestra, intersezione | | presente | 0.3 | anche trascinando (0.7); selezione scritta con un punto, `W`, `C`, `ALL` (0.7); mancano *Fence* e i poligoni; *Last* e *Previous* nella 0.8.1 |
 | Grip | | presente | 0.7 | stiramento su linee, archi, cerchi, polilinee e testi; mancano le modalità *Move*, *Rotate*, *Scale*, *Mirror*, più grip caldi e il menu dei grip |
 | Immissione dinamica | `F12` | presente | 0.7.5 | domanda del comando, coordinate e, dopo il primo punto, lunghezza e angolo vicino al cursore, con `Tab` e `Invio`; manca la variabile `DYNMODE` |

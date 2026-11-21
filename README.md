@@ -9,19 +9,21 @@ eccellenza, prima del computer.
 **Obiettivo:** un CAD 2D nello spirito di AutoCAD e, sulla stessa base, un modellatore
 3D parametrico nello spirito di Inventor. Software libero, per sempre (GPLv3).
 
-> Stato: **versione 0.7.5 — correzione di rotta.** L'interfaccia è rifatta:
-> ribbon compatto con la barra di accesso rapido, pannelli *Layers* e
-> *Properties* nuovi, che si nascondono da soli, barra di stato a icone e icone
-> a ruoli per ogni comando, compresi quelli di modifica della 0.7. Si lavora su
-> più disegni in schede, a partire dalla pagina *Start*, e la finestra è pronta
-> per gli ambienti del 3D; l'immissione dinamica (`F12`) mostra domande e campi
-> vicino al cursore. Restano i comandi della 0.7: `MOVE`, `COPY`, `ROTATE`,
-> `SCALE`, `MIRROR`, `TRIM`, `EXTEND`, `OFFSET`, `FILLET`, `CHAMFER`, `EXPLODE`
-> e `JOIN`, i grip, gli snap e il tracciamento polare; le decisioni geometriche
-> le prende solid-space, il kernel di Tecnigrafo, nel sottomodulo
-> `third_party/solid-space`. Le [note della 0.7.5](docs/rilasci/0.7.5.md)
-> riportano novità e limiti noti. Prossima tappa:
-> [0.8](docs/tappe/0.8-quote-retini-blocchi.md), quote, retini, blocchi.
+> Stato: **versione 0.8 — quote, retini e blocchi.** Arrivano le quote
+> lineari, allineate, angolari, radiali e diametrali con i loro stili, i
+> retini (`ANSI31`, `NET`, `SOLID`) con il contorno rilevato da un punto e le
+> isole, i blocchi con gli attributi, anche inserendo un file DXF come blocco,
+> il testo multiriga con gli stili di testo, le ellissi, l'entità `SOLID`,
+> `PEDIT` e il tracciamento degli snap a oggetto (`F11`); tutto si legge e si
+> riscrive nel DXF. Il tuo assistente IA può disegnare nel disegno aperto
+> attraverso un canale locale, spento finché non lo accendi
+> ([manuale dell'assistente](docs/manuale/assistente.md)). L'interfaccia
+> della 0.7.5 ha ora l'aspetto del riferimento, con le icone a due toni. Le
+> decisioni geometriche le prende solid-space, il kernel di Tecnigrafo, nel
+> sottomodulo `third_party/solid-space`. Le [note della 0.8](docs/rilasci/0.8.md)
+> riportano novità e limiti noti. Prossima tappa: 0.8.1, correzione di
+> mancanze importanti ([ROADMAP](docs/ROADMAP.md)); poi la
+> [0.9](docs/tappe/0.9-stampa-e-distribuzione.md), stampa e distribuzione.
 
 ## Disegnare
 
@@ -56,6 +58,8 @@ intersezione, mentre l'orto è spento.
 | Annulla / Ripeti | `Ctrl+Z` / `Ctrl+Y`, oppure i comandi `U` e `REDO` |
 | Nuovo / Apri / Salva | `Ctrl+N` / `Ctrl+O` / `Ctrl+S`, la barra di accesso rapido, oppure i comandi `NEW`, `OPEN`, `QSAVE`; nuovo e apri aggiungono una scheda |
 | Immissione dinamica | `F12` o l'interruttore DYN della barra di stato |
+| Tracciamento degli snap a oggetto | `F11` o l'interruttore OTRACK della barra di stato |
+| Assistente IA | *AI Assistant* in *View → Assistant* o l'interruttore AI della barra di stato, poi `tecnigrafo --mcp` nell'assistente ([manuale](docs/manuale/assistente.md)) |
 | Gestire i layer | `-LAYER` da riga di comando, oppure `LAYER` / `LA` per il pannello |
 | Impostare il layer corrente | `CLAYER` da riga di comando o menu a tendina nella barra |
 | Colore / Tipi di linea / Spessori | `COLOR`, `-LINETYPE`, `LTSCALE`, `CELTSCALE`, `LWEIGHT`, `LWDISPLAY` |
