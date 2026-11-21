@@ -70,7 +70,11 @@ solid-space, e le due avanzano insieme
 3. La prova manuale descritta nel documento è stata eseguita su Windows e Linux.
    Su macOS si esegue quando c'è un revisore che lo usa, e l'esito si annota nelle
    note di rilascio; la sua mancanza non blocca la chiusura ([DECISIONI.md](DECISIONI.md), 2026-10-16).
-4. Si crea il tag `vX.Y.0` con le note di rilascio (`docs/rilasci/X.Y.md`).
+4. Si crea il tag `vX.Y.0` con le note di rilascio (`docs/rilasci/X.Y.md`); per
+   una tappa con tre numeri il tag è `vX.Y.Z` (come `v0.7.5`). Se la tappa
+   gemella di solid-space ha pubblicato una versione, la pull request di
+   chiusura porta il sottomodulo al suo tag ([DECISIONI.md](DECISIONI.md),
+   2026-11-21).
 5. Si aggiorna la tabella. Poi la **pausa tra le tappe**: con tutto fermo, il
    responsabile decide le idee aperte, le proposte di metodo e le correzioni dei
    documenti, che una pull request di soli documenti applica
@@ -79,7 +83,17 @@ solid-space, e le due avanzano insieme
 
 ### Cosa si può fare fuori dalla tappa aperta
 
-- Correggere bug delle tappe chiuse: versioni `X.Y.Z` di sola correzione.
+- Correggere bug delle tappe chiuse e completare: una versione `X.Y.Z`
+  contiene correzioni di bug **e completamenti**, cioè parti di funzioni già
+  presenti che una tappa ha lasciato fuori esplicitamente, o lacune rispetto ad
+  AutoCAD che il responsabile giudica importanti per l'uso reale. Mai funzioni
+  di un'area nuova ([DECISIONI.md](DECISIONI.md), 2026-11-18).
+- Lavorare sulla grafica **a lato** della tappa aperta: in ogni tappa si può
+  aprire un pacchetto fuori tappa che tocca solo l'aspetto dell'interfaccia,
+  come [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md). Corre in
+  parallelo ai pacchetti senza fermarli; alla fine si riallinea con `main`,
+  porta l'aspetto anche sui comandi nuovi e si unisce una volta sola
+  ([DECISIONI.md](DECISIONI.md), 2026-11-21).
 - Migliorare documentazione e test.
 - Proporre idee per le tappe future, con una issue *Idea*. Le idee si discutono,
   non si implementano: se approvate, il responsabile le inserisce in una scheda.
