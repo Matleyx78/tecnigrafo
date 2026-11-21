@@ -2359,3 +2359,24 @@ i rimandi ai documenti che cambia.
   ([REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md), sezione 4, «Orto e polare»).
   Scartata un'altra regola, che avrebbe chiesto un pacchetto per cambiare
   codice e test.
+- **2026-11-21 — Una chat per i due repository, nella pausa dopo la 0.8.** Per
+  applicare le decisioni della
+  [#764](https://github.com/Matleyx78/tecnigrafo/issues/764) anche in
+  solid-space
+  ([solid-space#301](https://github.com/Matleyx78/solid-space/issues/301)), il
+  responsabile autorizza la chat del progetto che lavora su Tecnigrafo a
+  scrivere anche in solid-space, con una pull request di documenti e una di
+  codice e CI, seguendo l'AGENTS.md di solid-space. È una deroga per questa
+  pausa, come quella del 2026-11-11; [AGENTS.md](../AGENTS.md), «Dove puoi
+  scrivere», non cambia.
+- **2026-11-21 — Codice e CI della pausa dopo la 0.8.** Applicato il gruppo 2
+  delle decisioni del 2026-11-19: `claude.yml` passa `RELAY_PAT` anche
+  all'azione, così i push di Claude partono come quelli del responsabile;
+  `scripts/ci-attendi.sh` riconosce `action_required`, scrive una volta «CI da
+  approvare» nella pull request e dopo 20 minuti esce con 6; «Submodule
+  pointer» sta in `.github/workflows/puntatore.yml`, con `edited`, e `ci.yml`
+  parte solo con `opened`, `synchronize` e `reopened`;
+  `.github/workflows/main-rosso.yml` apre e chiude la issue «main rosso». Le
+  fermate per approvazione e per `main` rosso sono senza `decisione`
+  ([AGENTS.md](../AGENTS.md), «Quando fermarsi»;
+  [agenti/catena.md](agenti/catena.md), «Fermate senza decisione»).

@@ -94,8 +94,12 @@ lavoro, o fermati per una decisione, come dice
 Mentre aspetti non fare domande e non cominciare altro. Fermati prima del verde,
 scrivendo nella pull request che cosa hai visto e provato, solo se il controllo
 fallisce per un motivo estraneo al tuo lavoro (la CI, un servizio esterno), se
-per farlo passare violeresti una regola, o se dopo tre tentativi non passa. Gli
-altri motivi per fermarsi sono nei file della tabella.
+per farlo passare violeresti una regola, o se dopo tre tentativi non passa. Sono
+motivi estranei anche una CI che aspetta un'approvazione (`scripts/ci-attendi.sh`
+esce con 6) e una CI che fallisce solo nei casi della issue «main rosso» aperta:
+scrivilo nella pull request, con il rimando alla issue, e fermati **senza**
+l'etichetta `decisione`. Gli altri motivi per fermarsi sono nei file della
+tabella.
 
 Prima di fermarti per un dubbio (un buco, un caso che sembra sbagliato),
 controlla se una regola esistente lo decide già, come fa chi rivede

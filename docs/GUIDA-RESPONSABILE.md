@@ -190,7 +190,10 @@ legacy senza cache, circa dieci minuti per ogni avvio di Codex (pilota PT41,
 Vale per **ogni** pull request, nei due repository.
 
 1. Apri la pull request su GitHub. In basso tutti i controlli devono essere
-   verdi.
+   verdi, compreso *Submodule pointer (ADR 0030)*, che in Tecnigrafo è un
+   workflow a sé e riparte anche quando cambia la descrizione: guardalo tu
+   prima del merge. Se la issue «main rosso» è aperta, prima si corregge
+   `main`.
 2. Scheda **Files changed**: i file devono essere quelli del pacchetto.
    In Tecnigrafo, se la pull request tocca `app/` o `resources/`, apri la sua
    esecuzione **CI** e scarica **galleria** da **Artifacts**. Il riepilogo del

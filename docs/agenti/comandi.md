@@ -81,7 +81,10 @@ consuma token.
 # riprende da dove era); 4 se è stata annullata: non è un guasto, un push più
 # recente sullo stesso ramo l'ha sostituita, quindi aspetta quella; 5 se è
 # ancora in corso dopo dieci attese di fila (circa 90 minuti: la CI di Linux ne
-# richiede più di 30). Accetta anche <sha> o <id>; non serve `gh`.
+# richiede più di 30); 6 se aspetta un'approvazione da più di 20 minuti
+# (action_required): ha già scritto «CI da approvare» nella pull request, e ti
+# fermi senza `decisione` (catena.md, "Fermate senza decisione"). Accetta anche
+# <sha> o <id>; non serve `gh`.
 scripts/ci-attendi.sh
 # perché è fallita: per ogni job fallito, il passo e gli errori (poche righe)
 scripts/ci-errori.sh              # l'ultimo commit su cui sei; oppure <sha> o <id>
@@ -99,8 +102,8 @@ controlli falliti:
 gh run view <id> --repo Matleyx78/tecnigrafo --log-failed
 ```
 
-Con exit 2 o 5 non rilanciare l'attesa: scrivi nella pull request il messaggio
-dello script e fermati. Dopo dieci attese con exit 3 si arriva comunque a 5.
+Con exit 2, 5 o 6 non rilanciare l'attesa: scrivi nella pull request il
+messaggio dello script e fermati (con 6 senza `decisione`). Dopo dieci attese con exit 3 si arriva comunque a 5.
 
 Nel riepilogo per l'utente, tra ciò che non hai potuto verificare, ci sono per
 esempio Windows e macOS.
