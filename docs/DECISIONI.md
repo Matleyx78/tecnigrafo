@@ -2348,3 +2348,14 @@ i rimandi ai documenti che cambia.
   dedicata alla grafica non serve più, la galleria approvata confrontata dalla
   CI resta fuori, e la
   [#655](https://github.com/Matleyx78/tecnigrafo/issues/655) si chiude.
+- **2026-11-21 — Pareggio fra due semirette del polare.** Nella revisione del
+  documento delle regole numeriche
+  ([#916](https://github.com/Matleyx78/tecnigrafo/pull/916)) Codex trova che
+  l'[ADR 0033](adr/0033-nuovi-snap-e-tracciamento-polare.md), punto 9, dice
+  solo che fra due semirette vince la più vicina: con base `(0,0)`, passo 90°
+  e puntatore `(5,5)` le due sono alla stessa distanza. Il responsabile
+  conferma il comportamento del programma dalla tappa 0.7, già fissato da un
+  test: vince la semiretta in senso orario, e il punto va su `(5,0)`
+  ([REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md), sezione 4, «Orto e polare»).
+  Scartata un'altra regola, che avrebbe chiesto un pacchetto per cambiare
+  codice e test.

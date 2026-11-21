@@ -219,7 +219,12 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
    puntatore; a 45° esatti, l'orizzontale (ADR 0008, punto 5).
 2. **Polare:** le direzioni sono i multipli di `POLARANG` misurati dall'asse X
    del disegno; `POLARANG` accetta un valore maggiore di 0 e al più 180. Entro
-   l'apertura da due semirette vince la più vicina (ADR 0033, punti 8 e 9).
+   l'apertura da due semirette vince la più vicina (ADR 0033, punti 8 e 9); a
+   pari distanza vince la semiretta **in senso orario**: base `(0,0)`, passo
+   90° e puntatore `(5,5)` danno `(5,0)`, come fa il programma dalla tappa 0.7
+   (`polarPoint` in `cmd/src/drawing_aids.cpp`, test
+   `HalfwayBetweenTwoRaysTheClockwiseOneWins`; [DECISIONI.md](DECISIONI.md),
+   2026-11-21, «Pareggio fra due semirette del polare»).
 
 ### Tracciamento degli snap
 
