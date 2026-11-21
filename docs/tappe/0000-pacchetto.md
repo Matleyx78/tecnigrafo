@@ -51,3 +51,27 @@ I casi minimi che devono esistere.
 
 Condizioni verificabili per considerare il pacchetto concluso. Ognuna deve avere
 almeno un caso di verifica nel pacchetto di riferimenti.
+
+## Prova a secco dei riferimenti
+
+Solo per le schede con riferimenti; la scrive chi scrive il piano, insieme alla
+scheda (LAVORO-IN-PARALLELO.md, "Preparare il piano"). Uno script e due o tre
+domande (o le righe del rapporto da controllare), **senza i valori attesi**:
+non va in `tests/verifica/casi/`, chi scrive i riferimenti parte da qui. Se
+servono più di qualche riga, il pacchetto è troppo grosso e va diviso.
+
+```text
+# script.tgs
+…
+# domande.tgq
+…
+```
+
+- **Strumenti:** si scrive con le direttive e le domande di `main` (o
+  dell'onda 0: quale pacchetto).
+- **Dipendenze:** ogni comando o entità che usa viene da `main` o dai pacchetti
+  in "Dipende da".
+- **Risposte condivise:** questo pacchetto cambia una risposta di una fonte di
+  verifica (oracolo ezdxf, rapporto, catalogo delle domande, archivio dei casi
+  di solid-space)? Se sì, quali casi già uniti tocca e come restano verdi fino
+  all'ultimo pacchetto che ne dipende; altrimenti «nessuna».

@@ -128,6 +128,42 @@ per i comandi della tappa, dopo di loro, e un criterio di chiusura che lo
 verifica. Nella 0.7 mancava, e i comandi di modifica sono rimasti fuori da menu
 e ribbon ([DECISIONI.md](DECISIONI.md), 2026-11-07).
 
+**A nessun pacchetto deve mancare qualcosa il giorno in cui parte**
+([DECISIONI.md](DECISIONI.md), 2026-11-19, dopo gli arresti della 0.8):
+
+- **Prova a secco dei riferimenti.** Ogni scheda con riferimenti ha
+  un'appendice con un caso d'esempio vero, senza valori attesi
+  ([tappe/0000-pacchetto.md](tappe/0000-pacchetto.md)). Se non si scrive con
+  le direttive e le domande di `main`, manca uno strumento: diventa un
+  pacchetto dell'**onda 0**, da cui dipendono gli RT che lo usano. Se si
+  scrive solo con un comando o un'entità di un pacchetto che non è fra le
+  dipendenze, manca una dipendenza: si aggiunge, oppure quel ramo si rimanda a
+  un pacchetto successivo, scritto nella scheda. Se il pacchetto cambia una
+  risposta di una fonte di verifica (oracolo ezdxf, rapporto, catalogo delle
+  domande, archivio dei casi di solid-space), la prova a secco dice quali casi
+  già uniti tocca e come restano verdi fino all'ultimo pacchetto che ne
+  dipende.
+- **Pacchetti trasversali in testa.** Un pacchetto che cambia righe che tutti i
+  rapporti contengono (come PT22 con `dimension styles:` nella 0.8) si segna
+  come trasversale e va **in testa** all'ordine, così i riferimenti nascono già
+  con le sue righe. In coda solo con un motivo scritto nel piano e l'elenco dei
+  casi da aggiornare; mai in mezzo.
+- **Onde larghe.** L'obiettivo è fino a **8 catene in parallelo**: le onde si
+  costruiscono con fino a 8 pacchetti indipendenti, senza obbligo.
+- **Regole numeriche.** Le regole su pareggi e riduzioni (quarti di giro,
+  angoli ridotti a un giro, pareggi fra guide e fra incroci, distanze al
+  quadrato, ingressi fuori dall'uso reale) stanno in un documento unico,
+  `docs/REGOLE-NUMERICHE.md`; una scheda che confronta angoli, distanze o
+  candidati vi rimanda, e una regola nuova si scrive lì.
+- **Materiale pronto.** I DXF di prova che le schede citano sono pubblicati e
+  puliti prima dell'apertura della tappa.
+- **Revisione del piano.** Prima dell'apertura l'altro agente rilegge il piano
+  intero, in un solo giro ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B4a;
+  i punti in [agenti/revisione.md](agenti/revisione.md), "Revisione del
+  piano"). Le prove a secco restano essenziali: se una richiede più di qualche
+  riga, il pacchetto va diviso. Preparare una tappa non deve costare più che
+  farla.
+
 ### Pacchetti leggeri (dalla tappa 0.5)
 
 Ogni sessione di un agente paga un costo fisso in token prima di scrivere una
@@ -215,6 +251,14 @@ fascia forte è medio anche se il codice è delicato; la sua pull request ha una
 revisione mirata, in fascia forte, dall'altro agente. Il piano scrive in una
 riga perché un pacchetto resta impegnativo
 ([DECISIONI.md](DECISIONI.md), 2026-11-10).
+
+**Pacchetti che estendono una fonte di verifica.** Un pacchetto che estende
+l'oracolo ezdxf, il rapporto o il catalogo delle domande a **più di due** tipi
+o tabelle nuove ha la difficoltà della somma delle schede che descrive: **si
+divide**, un pacchetto per gruppo di tipi, con l'attivazione progressiva dei
+tipi attivi (come l'elenco dei tipi della 0.8 nell'oracolo). Resta la regola
+dei pacchetti non troppo piccoli, qui sopra ([DECISIONI.md](DECISIONI.md),
+2026-11-19, dopo PT3 della 0.8).
 
 ## 2. Aprire la tappa: issue ed etichette
 
@@ -373,7 +417,11 @@ la **pull request di chiusura**, sul ramo `docs/chiusura-X.Y`, che:
   dei comandi toccati dalla tappa, e la versione in cima al riepilogo;
 - aggiorna lo stato in [ROADMAP.md](ROADMAP.md) e nel README;
 - porta `project(... VERSION X.Y.0)` del `CMakeLists.txt` principale alla
-  versione nuova.
+  versione nuova (`VERSION X.Y.Z` per una tappa con tre numeri);
+- se la tappa gemella di solid-space ha appena pubblicato una versione, porta
+  `third_party/solid-space` al suo tag, così ogni versione di Tecnigrafo punta a
+  una versione pubblicata di solid-space ([DECISIONI.md](DECISIONI.md),
+  2026-11-21).
 
 Il responsabile esegue la prova manuale su Windows e Linux, compila la tabella,
 unisce la pull request e pubblica la versione (regole in

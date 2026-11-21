@@ -196,14 +196,24 @@ non lo scegli tu.
 
 Prendi in carico, leggi gli errori con `scripts/ci-errori.sh` e il codice,
 lascia **un solo commento** che comincia con «Analisi di <nome dell'agente>»
-con la causa probabile e la correzione che suggerisci. Poi fermati come in
-"Fermarsi per una decisione", punti 1, 3 e 4: l'ultima riga del commento è
-quella da copiare per l'**esecutore**, nella issue collegata alla pull request
-(`Closes #N` o `Avvia dopo il merge: #N`) («`<esecutore> Decisione del responsabile: applica l'analisi della pull
-request #<numero>`», con la frase finale di "Fermarsi per una decisione",
-punto 2, nella forma per una pull request già aperta), perché decidere se
-seguirla spetta al responsabile.
-Non fare commit.
+con la causa probabile e la correzione che suggerisci. Non fare commit. Poi:
+
+- **Caso diretto.** Se causa e correzione stanno **solo nei file del
+  pacchetto** (codice, test, autoprove), la correzione **non** cambia una
+  scheda, un ADR, un contratto, un caso di riferimento o una regola, e la strada
+  è **una sola**, scrivi nell'analisi una riga con il motivo per cui è un caso
+  diretto, togli l'etichetta e, come ultima cosa,
+  `scripts/passa.sh <esecutore> <numero> correzioni <N>`, **senza
+  `decisione`** ([DECISIONI.md](../DECISIONI.md), 2026-11-19).
+- **Altrimenti fermati** come in "Fermarsi per una decisione", punti 1, 3 e 4:
+  se l'analisi tocca uno di quegli elementi, se le strade sono più di una, e
+  **sempre alla seconda analisi** sulla stessa pull request, segno che il
+  pacchetto non converge. L'ultima riga del commento è quella da copiare per
+  l'**esecutore**, nella issue collegata alla pull request (`Closes #N` o
+  `Avvia dopo il merge: #N`) («`<esecutore> Decisione del responsabile: applica
+  l'analisi della pull request #<numero>`», con la frase finale di "Fermarsi
+  per una decisione", punto 2, nella forma per una pull request già aperta),
+  perché decidere se seguirla spetta al responsabile.
 
 ## Correzioni (esecutore)
 

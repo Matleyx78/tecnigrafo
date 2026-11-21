@@ -235,16 +235,24 @@ Vale per **ogni** pull request, nei due repository.
    commit di correzione; se la correzione rimette un testo di `main` o fa
    esattamente ciò che il revisore ha chiesto, basta il tuo controllo, senza un
    altro giro ([DECISIONI.md](DECISIONI.md), 2026-11-03).
-4. Premi **Squash and merge**.
-5. Nel messaggio che compare, controlla che l'ultima riga sia:
+4. **`main` è cambiato?** Se dopo l'ultima CI verde della pull request su
+   `main` è entrata un'altra pull request che tocca il codice o
+   `tests/verifica/`, prima aggiorna con `main` (**Update branch**, merge
+   commit) e aspetta la CI. Il caso tipico sono due pull request della stessa
+   onda unite a pochi minuti di distanza: verdi ciascuna da sola, insieme
+   possono rompere `main` (il 17 e il 18 novembre, #879 e #883). Non c'è una
+   protezione di `main` che lo chieda: lo controlli tu
+   ([DECISIONI.md](DECISIONI.md), 2026-11-19).
+5. Premi **Squash and merge**.
+6. Nel messaggio che compare, controlla che l'ultima riga sia:
 
    ```text
    Signed-off-by: Matleyx78 <18114626+Matleyx78@users.noreply.github.com>
    ```
 
    Se manca, aggiungila tu.
-6. Premi **Confirm squash and merge**.
-7. Se ci sono altre pull request aperte nello stesso repository, aggiornale con
+7. Premi **Confirm squash and merge**.
+8. Se ci sono altre pull request aperte nello stesso repository, aggiornale con
    `main`: su ognuna premi **Update branch** e scegli sempre **Update with merge
    commit**, mai il rebase ([DECISIONI.md](DECISIONI.md), 2026-11-03). Il
    pulsante si vede con l'impostazione del repository **Always suggest updating
@@ -354,6 +362,7 @@ di Tecnigrafo. Il ciclo è uno solo:
 | B3. Valutare le richieste | solid-space | tu e Claude |
 | B3a. Rivedere il contratto | solid-space | Codex, poi tu |
 | B4. Le schede dopo la revisione del contratto | Tecnigrafo | tu e Claude |
+| B4a. Rivedere il piano | Tecnigrafo | l'altro agente, poi tu |
 | B5. Preparare il piano di solid-space | solid-space | tu e Claude |
 | B6. Aprire le tappe | tutti e due | tu, con lo script o con Claude |
 | B7. Riferimenti | tutti e due | Codex o Claude, l'agente che non fa il lavoro |
@@ -411,15 +420,25 @@ senza, lavorano lo stesso e lo dicono.
    altri metti solo la riga nella tabella, con "scheda dopo il contratto".
    Se una scheda introduce tipi o funzioni nuove in core, aggiungi il
    pacchetto di revisione delle interfacce (tappe/0000-modello.md, sezione 6).
+   Per ogni scheda con riferimenti scrivi la prova a secco
+   (tappe/0000-pacchetto.md): gli strumenti che mancano vanno nell'onda 0, i
+   pacchetti trasversali in testa, le onde fino a 8 pacchetti indipendenti; le
+   regole numeriche si prendono da docs/REGOLE-NUMERICHE.md, e quelle che
+   mancano dimmele. Dimmi anche quali DXF di prova devo preparare.
    Le idee sono già decise nella pausa (B13): metti nel piano quelle che ho
    approvato per questa tappa. Se ne trovi altre aperte nate dopo la pausa,
    dimmi quali potrebbero entrare e perché: le approvo io, una per una.
    ```
 
-3. Discutete finché il piano ti convince. Gli ADR nuovi nascono *Proposti*: li
-   accetti quando ti convincono, anche subito ([GOVERNANCE.md](../GOVERNANCE.md)).
+3. Discutete finché il piano ti convince. Le regole del piano sono in
+   [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Preparare il piano":
+   la prova a secco fa emergere prima dell'apertura gli strumenti e le
+   dipendenze che nella 0.8 sono mancati a tappa aperta
+   ([DECISIONI.md](DECISIONI.md), 2026-11-19). Gli ADR nuovi nascono
+   *Proposti*: li accetti quando ti convincono, anche subito
+   ([GOVERNANCE.md](../GOVERNANCE.md)).
 4. Claude apre una pull request con piano e ADR. Leggila. Se il piano non ha
-   richieste a solid-space, uniscila (A3) e passa a B6. Se le ha, non unirla
+   richieste a solid-space, passa a B4a e poi a B6. Se le ha, non unirla
    ancora: prima B2.
 
 ### B2. Aprire le richieste a solid-space
@@ -574,7 +593,8 @@ docs/tappe/0000-modello.md ("Richieste a solid-space"). Ogni scheda dice quali i
 se sposta il sottomodulo, a quale pacchetto di solid-space. Riferimenti
 limitati alla facciata e ai comandi. Per le schede che introducono tipi o
 funzioni nuove in core aggiungi il pacchetto di revisione delle interfacce
-(docs/tappe/0000-modello.md, sezione 6), prima di loro nella tabella.
+(docs/tappe/0000-modello.md, sezione 6), prima di loro nella tabella. Per ogni
+scheda con riferimenti scrivi la prova a secco (tappe/0000-pacchetto.md).
 Annota la modifica in "Modifiche al piano" e apri una pull request.
 ```
 
@@ -617,6 +637,32 @@ da" (vale per ogni piano, anche per le schede scritte in B1 senza contratto).
 4. Un buco che sta nel contratto di solid-space e non nella scheda segue la
    strada solita (C, buco nel contratto).
 
+### B4a. Rivedere il piano (l'altro agente, poi tu)
+
+Quando piano e schede sono scritti (dopo B1, o dopo B4 se la tappa chiede
+qualcosa a solid-space), e **prima** di B6, l'agente che scriverà la maggior
+parte dei riferimenti (di norma Codex) rilegge il piano intero, in fascia forte
+e con impegno alto, in **un solo giro** ([DECISIONI.md](DECISIONI.md),
+2026-11-19). Prima di avviarlo, i DXF di prova citati dalle prove a secco
+devono essere pubblicati e puliti, e i rami «da registrare» li hai provati tu
+in AutoCAD LT, di solito in una seduta sola.
+
+1. Avvia l'agente con Tecnigrafo in scrittura:
+
+   ```text
+   Lavora sul repository Matleyx78/tecnigrafo. Leggi AGENTS.md e seguilo alla
+   lettera. Rivedi la pull request #<numero> del piano della tappa <tappa>,
+   come dice docs/agenti/revisione.md in "Revisione del piano": un solo
+   verbale nella pull request, con [bloccante], [decisione] e [facoltativa].
+   Prendila in carico e scrivi i commenti, ma non modificarla: niente commit né
+   cambi a file, ramo, titolo o descrizione. Non decidere tu. Poi fermati.
+   ```
+
+2. Decidi le [decisione] e fai correggere a Claude le [bloccante] nella stessa
+   pull request, con le decisioni in `docs/DECISIONI.md`. Le [facoltativa] non
+   si trattano e non c'è un secondo giro.
+3. Uniscila (A3) e passa a B6.
+
 ### B5. Preparare il piano di solid-space (tu e Claude)
 
 Una tappa di solid-space raccoglie tutte le richieste di una tappa di
@@ -646,7 +692,10 @@ Tecnigrafo.
    del lavoro (Codex per i pacchetti di Claude, Claude per quelli di Codex), in
    fascia forte per i casi delicati e leggera per gli ordinari, oppure "non
    servono" con il motivo. Per ogni divisione e per ogni impegnativo scrivi il
-   motivo in una riga. Proponi anche le bozze degli ADR che servono.
+   motivo in una riga. Per ogni scheda con riferimenti scrivi la prova a
+   secco, con la riga delle risposte condivise: se il pacchetto cambia una
+   risposta del corpus, quali casi di Tecnigrafo ne dipendono e quando li
+   aggiorna il sottomodulo. Proponi anche le bozze degli ADR che servono.
    Le idee sono già decise nella pausa (B13): metti nel piano quelle che ho
    approvato per questa tappa. Se ne trovi altre aperte nate dopo la pausa,
    dimmi quali potrebbero entrare e perché: le approvo io, una per una.
@@ -669,7 +718,7 @@ Tecnigrafo.
 
 ### B6. Aprire le tappe
 
-Prima di tutto, nel Project «Tecnigrafo» aggiungi al campo *Tappa* i valori
+Si apre solo dopo la revisione del piano (B4a). Prima di tutto, nel Project «Tecnigrafo» aggiungi al campo *Tappa* i valori
 della tappa nuova: **⋯** → **Settings** → *Tappa* → aggiungi `tg-<tappa>` (e
 `ss-<tappa>` per quella di solid-space). Gli script non possono crearli.
 
@@ -1045,7 +1094,10 @@ la chiusura (B13; [DECISIONI.md](DECISIONI.md), 2026-11-03 e 2026-11-07).
 2. Leggi la pull request: per ogni criterio di chiusura deve esserci la prova (un
    caso di verifica o un test), oppure "da provare a mano". In Tecnigrafo
    controlla anche che `project(... VERSION <tappa>.0)` nel `CMakeLists.txt`
-   principale sia aggiornato.
+   principale sia aggiornato (`VERSION <tappa>` per una tappa con tre numeri,
+   come `0.8.1`) e che `third_party/solid-space` punti al tag della versione
+   di solid-space appena pubblicata, se la tappa gemella c'è
+   ([DECISIONI.md](DECISIONI.md), 2026-11-21).
 3. Fai la **prova manuale** descritta nelle note di rilascio (per Tecnigrafo su
    Windows e su Linux) e scrivi l'esito nella tabella. Puoi chiedere all'agente
    di compilarla per te, dandogli gli esiti.
@@ -1058,8 +1110,11 @@ la chiusura (B13; [DECISIONI.md](DECISIONI.md), 2026-11-03 e 2026-11-07).
    git push origin v<tappa>.0
    ```
 
+   Per una tappa con tre numeri il tag è la tappa stessa, senza `.0`:
+   `v0.8.1`, come per `v0.7.5`.
+
 6. Su GitHub: **Releases** → **Draft a new release** → scegli il tag
-   `v<tappa>.0` → copia nel testo le note di `docs/rilasci/<tappa>.md` →
+   `v<tappa>.0` (o `v<tappa>` per tre numeri) → copia nel testo le note di `docs/rilasci/<tappa>.md` →
    **Publish release**.
 7. Solo per solid-space: le richieste della tappa dovrebbero essere già chiuse
    (B11, punto 3). Per quelle ancora aperte controlla dal lato di Tecnigrafo il

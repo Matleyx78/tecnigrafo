@@ -2207,6 +2207,17 @@ i rimandi ai documenti che cambia.
   extras oltre ai gruppi 102 o con entità grezze, cioè di quasi ogni blocco
   letto da un DXF (gruppo 330).
 
+- **2026-11-18 — Versioni `X.Y.Z`: correzioni e completamenti.** Con la tappa
+  0.8.1 ([#888](https://github.com/Matleyx78/tecnigrafo/issues/888)) il
+  responsabile precisa la regola delle versioni con tre numeri: una versione
+  `X.Y.Z` contiene correzioni di bug **e completamenti**, cioè parti di
+  funzioni già presenti che una tappa ha lasciato fuori esplicitamente, o
+  lacune rispetto ad AutoCAD che il responsabile giudica importanti per l'uso
+  reale; mai funzioni di un'area nuova. La 0.8.1 non è quindi un'eccezione. Per
+  una tappa con tre numeri il tag è `vX.Y.Z` e la versione nel `CMakeLists.txt`
+  è `X.Y.Z`, come si era già fatto a mano per la 0.7.5
+  ([ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori dalla tappa aperta" e
+  "Chiudere una tappa"; [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B12).
 - **2026-11-19 — PT29 aspetta PT21 e PT26.** Claude si ferma su PT29
   ([#719](https://github.com/Matleyx78/tecnigrafo/issues/719)) con il codice
   scritto: i due casi di RT29 preparano il disegno con `-INSERT` (PT21,
@@ -2256,6 +2267,50 @@ i rimandi ai documenti che cambia.
   uguale al fattore e valore scritto moltiplicato anche lui). I casi di RT21
   ([#704](https://github.com/Matleyx78/tecnigrafo/issues/704)) si correggono
   a parte; il pacchetto riparte con il loro merge.
+- **2026-11-19 — Le proposte di metodo della 0.8.** Il responsabile decide le
+  proposte della [#764](https://github.com/Matleyx78/tecnigrafo/issues/764)
+  (commento «Decisioni del responsabile sulle proposte della 0.8»), da
+  applicare nella pausa; le voci comuni valgono anche in solid-space
+  ([solid-space#301](https://github.com/Matleyx78/solid-space/issues/301)).
+  Nella pull request dei documenti:
+  - *Analisi di una CI rossa*: se causa e correzione stanno solo nei file del
+    pacchetto, non cambiano scheda, ADR, contratto, caso di riferimento o
+    regola, e la strada è una sola, il revisore passa le correzioni
+    all'esecutore senza `decisione`, con una riga di motivo; si ferma sempre
+    alla seconda analisi sulla stessa pull request
+    ([agenti/catena.md](agenti/catena.md)).
+  - *Prima del merge*: se dopo l'ultima CI verde su `main` è entrato altro che
+    tocca codice o `tests/verifica/`, si aggiorna con `main` e si aspetta la
+    CI; niente protezione di `main`
+    ([GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), A3).
+  - *Preparazione della tappa*: prova a secco dei riferimenti in ogni scheda,
+    con la riga delle risposte condivise (il paragrafo «Risposte condivise» a
+    sé non si scrive); onda 0 per gli strumenti mancanti; pacchetti trasversali
+    in testa, in coda solo con un motivo; fino a 8 catene in parallelo come
+    obiettivo; DXF di prova pubblicati prima dell'apertura; revisione del piano
+    dell'altro agente in un solo giro, con sei punti; le prove in AutoCAD LT dei
+    rami da registrare restano un'abitudine, non una regola
+    ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Preparare il piano";
+    [tappe/0000-pacchetto.md](tappe/0000-pacchetto.md);
+    [tappe/0000-modello.md](tappe/0000-modello.md), sezione 6;
+    [agenti/revisione.md](agenti/revisione.md), "Revisione del piano";
+    [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B1, B4, B4a, B6).
+  - *Regole numeriche* in un documento unico, `docs/REGOLE-NUMERICHE.md`,
+    raccolto una volta da questo registro; ogni regola nuova si scrive lì. È
+    un lavoro a sé, in una pull request a parte.
+  - *Pacchetti che estendono una fonte di verifica* a più di due tipi o tabelle
+    nuove: si dividono, un pacchetto per gruppo di tipi
+    ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno").
+  - *Autoprove*: raccolgono e stampano tutti i controlli falliti prima di
+    uscire ([agenti/comandi.md](agenti/comandi.md)); la correzione di
+    `controlla_casi.py` va nell'onda 0 della 0.8.1, con il pacchetto che
+    estende l'oracolo per la `SPLINE`.
+
+  Nella pull request di codice e CI, a parte: Claude pubblica con `RELAY_PAT`;
+  `scripts/ci-attendi.sh` riconosce `action_required` e si ferma senza
+  `decisione`; «Submodule pointer» in un workflow suo, con `edited`; issue
+  automatica «main rosso». Alla chiusura della 0.8.1 si contano gli arresti
+  per strumenti mancanti e per dipendenza, e si confrontano con la 0.8.
 - **2026-11-20 — Home di F6 con i comandi della 0.8.** Riallineando
   [F6](tappe/fuori-tappa/F6-aspetto-dell-interfaccia.md)
   ([#800](https://github.com/Matleyx78/tecnigrafo/pull/800)) dopo
@@ -2269,3 +2324,27 @@ i rimandi ai documenti che cambia.
   Home com'era, che sta solo da circa 1900 px; compattare Home tenendo
   *Block*, che non bastava. Il verbale è in
   [F6-stato.md](tappe/fuori-tappa/F6-stato.md), "Dopo PT39 e PT45".
+- **2026-11-21 — Sottomodulo al tag alla chiusura.** Alla chiusura di una
+  tappa di solid-space, la pull request di chiusura della tappa gemella di
+  Tecnigrafo porta `third_party/solid-space` al tag della versione appena
+  pubblicata: ogni versione di Tecnigrafo punta così a una versione pubblicata
+  di solid-space. La chiusura della 0.8 (#914) l'ha già fatto con `v0.3.0`
+  (proposta del 20 novembre nella
+  [#764](https://github.com/Matleyx78/tecnigrafo/issues/764);
+  [LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Chiudere la tappa";
+  [ROADMAP.md](ROADMAP.md), "Chiudere una tappa";
+  [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B12).
+- **2026-11-21 — Grafica a lato in ogni tappa.** La prova di F6
+  ([#658](https://github.com/Matleyx78/tecnigrafo/issues/658)), che ha
+  viaggiato a lato della 0.8, è stata positiva. In ogni tappa di Tecnigrafo si
+  può aprire un pacchetto fuori tappa che lavora solo sull'aspetto
+  dell'interfaccia e corre in parallelo ai pacchetti; alla fine si riallinea
+  con `main`, porta l'aspetto anche sui comandi nuovi e si unisce una volta
+  sola (commento del responsabile del 20 novembre nella
+  [#888](https://github.com/Matleyx78/tecnigrafo/issues/888);
+  [ROADMAP.md](ROADMAP.md), "Cosa si può fare fuori dalla tappa aperta"). È
+  la decisione che la voce del 2026-11-11 «L'aspetto dell'interfaccia si
+  corregge fuori tappa, in locale (F6)» lasciava alla chiusura di F6: la tappa
+  dedicata alla grafica non serve più, la galleria approvata confrontata dalla
+  CI resta fuori, e la
+  [#655](https://github.com/Matleyx78/tecnigrafo/issues/655) si chiude.

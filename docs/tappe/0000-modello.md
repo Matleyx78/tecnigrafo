@@ -127,6 +127,15 @@ ciascuna, prima del loro pacchetto di lavoro; i riferimenti di un pacchetto li
 scrive l'altro agente, che poi ne rivede la pull request (Codex per i pacchetti
 di Claude, Claude per quelli di Codex).
 
+**Onde.** Le righe si raggruppano in onde di pacchetti indipendenti, fino a
+**8** per onda come obiettivo, senza obbligo. L'**onda 0** contiene gli
+strumenti di verifica che le prove a secco hanno trovato mancanti (direttive,
+domande, estensioni dell'oracolo) e i **pacchetti trasversali**, quelli che
+cambiano righe che tutti i rapporti contengono: tutti e due vanno in testa, e
+gli RT che li usano li citano in "Dipende da". Un trasversale in coda solo con
+il motivo e l'elenco dei casi da aggiornare, qui sotto la tabella; mai in mezzo
+([LAVORO-IN-PARALLELO.md](../LAVORO-IN-PARALLELO.md), "Preparare il piano").
+
 **Motivi, sotto la tabella.** Una riga per ogni pacchetto che resta
 impegnativo (perché la fascia forte serve lì) e una per ogni divisione (supera
 la misura; toglie una parte da una catena di file comuni o da un'attesa di

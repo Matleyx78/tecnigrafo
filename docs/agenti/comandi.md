@@ -59,6 +59,15 @@ Come chiede il nucleo ("Prima di dichiarare il lavoro finito"), la pull request
 dice quali passi non hai eseguito e perché. Per i casi di riferimento, se sono
 validi lo dicono i controlli anticipati della CI ([riferimenti.md](riferimenti.md)).
 
+## Autoprove degli script
+
+Un'autoprova scritta in Python o in shell (sotto `scripts/` o
+`tests/verifica/`, per esempio `--self-test` di `controlla_casi.py`) **non si
+ferma al primo errore**: raccoglie tutti i controlli falliti, alla fine li
+stampa tutti, con nome del controllo, valore atteso e valore ottenuto, e solo
+allora esce con errore. Così un giro di CI mostra tutto ciò che c'è da
+correggere ([DECISIONI.md](../DECISIONI.md), 2026-11-19).
+
 ## Aspettare la CI e leggerne gli errori
 
 Si aspetta con un solo comando che blocca, perché ogni controllo ripetuto

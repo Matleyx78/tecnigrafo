@@ -92,3 +92,33 @@ responsabile e il merge non si blocca:
   soglia;
 - l'autore scrive la fascia nella scheda nella stessa pull request, senza un
   altro giro di revisione.
+
+## Revisione del piano
+
+Prima dell'apertura di una tappa (guida del responsabile, B4a), l'agente che
+scriverà la maggior parte dei riferimenti rilegge **il piano intero**, con le
+schede e le prove a secco, in fascia forte. Lavora come in ogni revisione:
+prende in carico, non modifica la pull request del piano, scrive **un solo
+verbale** nella pull request, con le classi [bloccante], [decisione] e
+[facoltativa]. **C'è un solo giro**: le [bloccante] le corregge chi ha scritto
+il piano, le [decisione] le prende il responsabile, le [facoltativa] non si
+trattano. Per ogni scheda controlla:
+
+1. **Raggiungibilità:** ogni "Fatto quando" e ogni ramo dei comandi (Invio,
+   Esc, input sbagliato, opzioni) si raggiunge con le sole dipendenze del
+   pacchetto.
+2. **Strumenti:** la prova a secco si scrive con ciò che c'è su `main` o
+   nell'onda 0.
+3. **Fonte:** ogni ramo che segue AutoCAD ha una riga di cronologia o un DXF
+   che lo mostra; altrimenti è "da registrare" (lo registra il responsabile
+   prima dell'apertura) o "rimandato a PTxx". I DXF citati sono pubblicati.
+4. **Trasversali:** sono segnati e stanno in testa, o in coda con il motivo e
+   l'elenco dei casi.
+5. **Regole numeriche:** per le schede che confrontano angoli, distanze o
+   candidati, la regola di pareggio e di riduzione c'è in
+   `docs/REGOLE-NUMERICHE.md`; altrimenti è [decisione].
+6. **Risposte condivise:** la riga della prova a secco c'è, e dice come restano
+   verdi i casi già uniti.
+
+Guarda anche la larghezza delle onde, fino a 8 pacchetti indipendenti
+([DECISIONI.md](../DECISIONI.md), 2026-11-19).
