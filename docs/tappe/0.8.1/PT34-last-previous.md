@@ -1,0 +1,128 @@
+# [0.8.1-PT34] `cmd`: *Last*, *Previous*, `SELECT`, i prefissi `#` e `*`, l'evidenziazione dei comandi
+
+- **Tappa:** 0.8.1 — [piano](../0.8.1-completamenti.md)
+- **Issue:** #…
+- **Difficoltà:** media
+- **Agente:** claude
+- **Modello e impegno:** medio; impegno medio
+- **Riferimenti:** issue `[0.8.1-RT34]` (#…), agente codex
+- **Dipende da:** PT5, RT34
+- **Modulo:** `cmd`
+- **Da leggere:** [ADR 0008](../../adr/0008-selezione-e-snap.md);
+  [ADR 0032](../../adr/0032-richieste-di-oggetti-e-sequenze-degli-script.md);
+  [ADR 0042](../../adr/0042-immissione-dinamica.md);
+  `cmd/src/command_runner.cpp` (`typedSelection`), `cmd/src/selection_set.cpp`,
+  `cmd/src/coordinate_input.cpp`, `cmd/src/dynamic_input.cpp`; la cronologia
+  `autocad-selezione.txt` ([dxf-di-prova.md](dxf-di-prova.md))
+
+## Perché insieme
+
+Tre voci piccole che passano tutte da `command_runner.cpp`, il file che
+cambiano anche PT28 e PT31: insieme fanno una sola tappa della catena invece di
+tre. `Command::highlighted()` serve a PT26, che così non tocca il runner.
+
+## File
+
+- `cmd/src/command_runner.cpp`, `cmd/include/tg/cmd/command_runner.hpp`
+- `cmd/include/tg/cmd/command.hpp` (`virtual std::span<const core::EntityId>
+  highlighted() const`, vuoto per difetto)
+- `cmd/src/selection_set.cpp`, `cmd/include/tg/cmd/selection_set.hpp`
+- `cmd/src/coordinate_input.cpp`, `cmd/src/dynamic_input.cpp`
+- `cmd/src/commands/select_command.cpp` (nuovo: `SELECT`)
+- `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt` (file comuni)
+- `tests/cmd/command_runner_test.cpp`, `tests/cmd/coordinate_input_test.cpp`,
+  `tests/cmd/dynamic_input_test.cpp`, `tests/cmd/select_command_test.cpp`
+  (nuovo), `tests/CMakeLists.txt` (file comune)
+
+## Cosa fare
+
+1. ***Last*** (`L`) a una richiesta di oggetti: l'entità visibile (layer acceso
+   e scongelato) con l'identificativo più alto, se c'è; sui layer bloccati vale
+   la regola di oggi (`1 was on a locked layer.`). `ERASE` *Last* ripetuto
+   prende ogni volta l'ultima rimasta.
+2. ***Previous*** (`P`): il **gruppo di selezione precedente** del documento,
+   cioè gli oggetti dell'ultima richiesta di oggetti finita (di qualunque
+   comando, anche `SELECT`), senza quelli cancellati; dopo un `U` che annulla il
+   comando, il gruppo resta quello del comando annullato (cronologia). Senza
+   gruppo: `No previous selection set.`. Il gruppo è del documento e non entra
+   nell'annullamento.
+3. **`SELECT`**: una richiesta di oggetti; alla fine il gruppo diventa il
+   precedente e il comando non cambia il disegno.
+4. **`#x,y` e `*x,y`**: coordinate assolute, anche scritte nella riga di
+   comando; con l'immissione dinamica, che rende relativi i numeri scritti
+   nel campo, `#` e `*` li rendono assoluti, come AutoCAD.
+5. `Command::highlighted()` e `CommandRunner::highlighted()`, che dà quello del
+   comando in corso o niente.
+
+## Regole della tappa che valgono qui
+
+- File comuni: `cmd/include/tg/cmd/command.hpp`, `cmd/src/builtin_commands.cpp`,
+  `cmd/CMakeLists.txt`, `tests/CMakeLists.txt`. `command_runner.cpp` lo cambiano
+  dopo PT28 e PT31.
+
+## Test richiesti
+
+- La cronologia di `autocad-selezione`; *Last* con l'ultima entità su un layer
+  spento; *Previous* dopo `ERASE`; `#10,10` dopo un punto, con l'immissione
+  dinamica accesa e spenta.
+
+## Fatto quando
+
+- I casi di RT34 passano; la CI è verde.
+
+## Prova a secco dei riferimenti
+
+```text
+# casi/selezione/last-previous/script.tgs
+LINE
+0,0
+30,0
+
+CIRCLE
+50,0
+5
+LINE
+0,20
+30,20
+
+ERASE
+L
+
+SELECT
+W
+-5,-10
+60,10
+
+MOVE
+P
+
+0,0
+0,-10
+!report
+U
+SELECT
+P
+
+ERASE
+W
+40,-20
+60,0
+
+SELECT
+P
+```
+
+Righe da controllare: in `messages:` `1 found` e `2 found` come la cronologia
+(tradotti), `No previous selection set.` alla fine; `entities:` dopo
+`[report 1]`.
+
+- **Strumenti:** righe normali, `!report`, su `main`.
+- **Dipendenze:** `ERASE`, `MOVE`, `LINE`, `CIRCLE` su `main`; `SELECT` è di
+  questo pacchetto (fino ad allora `Unknown command`: è il confine del caso,
+  ADR 0037, punto 4.2).
+- **Fonte:** `autocad-selezione.txt`, compreso il gruppo di annullamento
+  lasciato aperto da un `SELECT` *Previous* andato a vuoto (per questo è in
+  fondo).
+- **Risposte condivise:** nessuna: `L` e `P` a una richiesta di oggetti oggi
+  sono un punto non valido, e nessun caso li scrive lì (controllato:
+  `L`/`P` nei casi di oggi sono opzioni di altri comandi).

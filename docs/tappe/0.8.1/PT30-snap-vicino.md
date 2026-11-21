@@ -1,0 +1,96 @@
+# [0.8.1-PT30] `core` e `script`: snap *Vicino*
+
+- **Tappa:** 0.8.1 — [piano](../0.8.1-completamenti.md)
+- **Issue:** #…
+- **Difficoltà:** media
+- **Agente:** claude
+- **Modello e impegno:** medio; impegno alto
+- **Riferimenti:** issue `[0.8.1-RT30]` (#…), agente codex, fascia forte
+  (priorità e pareggi)
+- **Dipende da:** PT2, PT5, RT30
+- **Modulo:** `core` (più `!osnap nea`, `modes=nea` e il tipo `Nearest` in
+  `script`)
+- **Da leggere:** [ADR 0057](../../adr/0057-snap-vicino-prolungamento-parallelo.md),
+  punti 1 e 2, con la decisione **[D7]**;
+  [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md), punto 5;
+  [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 4, «Selezione e
+  snap a oggetto»; `core/include/tg/core/snap_points.hpp`,
+  `core/src/document_query.cpp` (`findSnap`), `core/include/tg/core/proximity.hpp`
+
+## File
+
+- `core/include/tg/core/snap_points.hpp` (`nearest`, `extension`, `parallel`
+  in `SnapModes`; `Nearest`, `Extension`, `Parallel` in `SnapKind`: gli ultimi
+  due li usa PT31)
+- `core/src/document_query.cpp`, `core/include/tg/core/document_query.hpp`
+  (anche il filtro: le forme di testo della geometria generata non danno
+  *Vicino*; `generated.cpp` lo cambia PT8 e qui non si tocca)
+- `script/src/script.cpp` (`nea`; `ext` e `par` restano annunciati),
+  `script/src/questions.cpp` (`modes=nea`), `script/src/text_format.cpp`
+  (`Nearest`)
+- `tests/core/document_query_test.cpp`, `tests/script/script_test.cpp`
+
+## Cosa fare
+
+1. I tre modi nuovi, spenti per difetto ([D5]); solo `nearest` fa qualcosa in
+   questo pacchetto.
+2. In `findSnap`, il livello di *Vicino* fra gli snap di punto e centro e
+   inserimento (ADR 0057, punto 2): fra le curve entro l'apertura dal puntatore
+   (anche dentro la geometria generata), escluse le forme di testo, quella più
+   vicina; il punto è `closestPoint` della curva o `nearest()` di solid-space
+   per l'ellisse.
+3. Nessun *Vicino* su `TEXT`, `MTEXT`, `ATTDEF`, `ATTRIB`, sui testi generati e
+   sui retini.
+
+## Regole della tappa che valgono qui
+
+- Priorità: [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 4,
+  «Selezione e snap a oggetto», punto 2.
+- **[D7]**: i pareggi fra due curve e dentro una polilinea, come li decide il
+  responsabile (proposta: l'id più alto; il primo segmento).
+
+## Test richiesti
+
+- I sei oggetti di `autocad-vicino` (testo compreso); centro e *Vicino* sul
+  bordo di un cerchio; un estremo entro l'apertura che vince su *Vicino*; due
+  linee alla stessa distanza; dentro un inserimento e una quota.
+
+## Fatto quando
+
+- I casi di RT30 passano; la CI è verde.
+
+## Prova a secco dei riferimenti
+
+```text
+# casi/snap/vicino-autocad/script.tgs
+OPEN
+@sources/autocad-vicino
+!view 100,0 0.05 800x600
+!osnap nea
+LINE
+!move 20,5.3
+!report
+!move 155,0.3
+!report
+!esc
+
+# casi/snap/vicino-priorita/domande.tgq
+C = CIRCLE center=0,0 radius=10
+? snap 10.2,0.3 aperture=1 modes=cen,nea -> …
+? snap 10.2,0.3 aperture=1 modes=cen -> …
+L = LINE start=0,20 end=10,20
+? snap 9.9,20.2 aperture=1 modes=end,nea -> …
+T = TEXT position=0,40 alignment-point=0,40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="AB"
+? snap 1,41 aperture=1 modes=nea -> …
+```
+
+- **Strumenti:** `!osnap nea` e `modes=nea` annunciati da PT2; `!view`,
+  `!move`, `!report`, `snap` su `main`. RT30 aggiunge `autocad-vicino` a
+  `sorgenti.json`.
+- **Dipendenze:** nessun comando nuovo.
+- **Fonte:** `autocad-vicino.dxf` e la sua cronologia (punti su linea, arco,
+  cerchio, polilinea, ellisse; niente sul `MTEXT`); la seduta della #920, punto
+  5 (centro contro *Vicino*). *Vicino* su `TEXT`, inserimenti, quote, `SOLID` e
+  retini è **da registrare** (decisione del 2026-11-21, «Esiti…», punto 1).
+- **Risposte condivise:** nessuna: con *Vicino* spento per difetto la domanda
+  `snap` senza `nea` e `active snap:` non cambiano.
