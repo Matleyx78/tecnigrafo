@@ -153,7 +153,7 @@ e ribbon ([DECISIONI.md](DECISIONI.md), 2026-11-07).
 - **Regole numeriche.** Le regole su pareggi e riduzioni (quarti di giro,
   angoli ridotti a un giro, pareggi fra guide e fra incroci, distanze al
   quadrato, ingressi fuori dall'uso reale) stanno in un documento unico,
-  `docs/REGOLE-NUMERICHE.md`; una scheda che confronta angoli, distanze o
+  [REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md); una scheda che confronta angoli, distanze o
   candidati vi rimanda, e una regola nuova si scrive lì.
 - **Materiale pronto.** I DXF di prova che le schede citano sono pubblicati e
   puliti prima dell'apertura della tappa.

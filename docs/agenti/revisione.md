@@ -116,7 +116,7 @@ trattano. Per ogni scheda controlla:
    l'elenco dei casi.
 5. **Regole numeriche:** per le schede che confrontano angoli, distanze o
    candidati, la regola di pareggio e di riduzione c'è in
-   `docs/REGOLE-NUMERICHE.md`; altrimenti è [decisione].
+   [REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md); altrimenti è [decisione].
 6. **Risposte condivise:** la riga della prova a secco c'è, e dice come restano
    verdi i casi già uniti.
 
