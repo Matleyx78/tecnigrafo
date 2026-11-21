@@ -2,8 +2,9 @@
 
 Le regole su pareggi, riduzioni e soglie che decidono un risultato quando i
 numeri sono uguali, quasi uguali o fuori misura. Le ha prese il responsabile
-una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
-([DECISIONI.md](DECISIONI.md), 2026-11-19, «Le proposte di metodo della 0.8»).
+una alla volta, dalla tappa 0.3 in poi, quasi tutte nelle tappe 0.7 e 0.8; qui
+sono raccolte in un posto solo ([DECISIONI.md](DECISIONI.md), 2026-11-19, «Le
+proposte di metodo della 0.8»).
 
 - **Chi scrive una scheda** che confronta angoli, distanze o candidati rimanda
   alla regola di questo documento che la decide, invece di riscriverla.
@@ -14,8 +15,11 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
   voce di [DECISIONI.md](DECISIONI.md) o al punto dell'ADR che la decide. Il
   registro resta la storia; questo documento è la regola com'è oggi.
 - **Ogni regola vale dove dice la sua fonte**, non oltre: una regola scritta per
-  il tracciamento non vale da sé per lo snap. Per un caso nuovo che nessuna
-  regola copre serve una decisione.
+  il tracciamento non vale da sé per lo snap. Un caso nuovo che nessuna regola
+  copre si tratta come ogni buco di una scheda: se è visibile lo decide il
+  responsabile; se non lo è, chi realizza sceglie la risposta più semplice, la
+  fissa con un test e la segnala nella pull request
+  ([agenti/pacchetto.md](agenti/pacchetto.md), "Buchi visibili e no").
 
 ## 1. Principi
 
@@ -23,14 +27,14 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
    decisioni del kernel (il lato, se e quante volte due curve si incontrano, la
    coincidenza, quale diagnosi e in che ordine) sono esatte; le costruzioni
    (punti, raggi, centri, stazioni, lunghezze, bulge) valgono entro l'errore
-   dichiarato, senza promettere quale `double` esce. Restano esatti i valori che
-   il contratto copia o fissa per struttura (per esempio il centro conservato
-   di un arco spostato, il raggio richiesto, il bulge 0 dei pezzi dritti); un
-   valore esatto entro `kMaxCoordinate` non si restituisce oltre (se
-   l'arrotondamento lo supererebbe, si restituisce il confine); le costanti
+   dichiarato, senza promettere quale `double` esce. Restano esatti i valori
+   che il contratto copia o fissa per struttura (per esempio il centro
+   conservato di un arco spostato, il raggio richiesto, il bulge 0 dei pezzi
+   dritti); un valore esatto entro `kMaxCoordinate` non si restituisce oltre
+   (se l'arrotondamento lo supererebbe, si restituisce il confine); le costanti
    angolari di `curves.hpp` sono i `double` più vicini ai valori esatti. Tutto
-   è deterministico: stesso ingresso, stessi bit sui tre sistemi
-   ([ADR 0013 di solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
+   è deterministico: stesso ingresso, stessi bit sui tre sistemi ([ADR 0013 di
+   solid-space](https://github.com/Matleyx78/solid-space/blob/main/docs/adr/0013-esatto-dove-serve.md),
    punto 1).
 2. **Le soglie geometriche sono di solid-space.** Tecnigrafo non scrive soglie
    geometriche proprie per le decisioni nuove; dove una decisione di Tecnigrafo
@@ -49,9 +53,13 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
    nel suo commento (ADR 0013 di solid-space, punto 4;
    [agenti/revisione.md](agenti/revisione.md), "La fascia di una soglia").
 4. **Dominio in alto.** Le funzioni di `geom2d` rifiutano con `outOfDomain` una
-   coordinata, un raggio o il punto m di un segmento curvo oltre
-   `kMaxCoordinate` (2^50, circa 1.1e15), e l'angolo iniziale o finale di un
-   `Arc` oltre `kMaxTrigArgument` (`curves.hpp`, «Checking the data»). Le curve
+   coordinata, un raggio o il punto m di un segmento curvo di grandezza oltre
+   `kMaxCoordinate` (2^50, circa 1.1e15, in valore assoluto: anche `-2^51` è
+   fuori), e un `Arc` con `startAngle` o `startAngle + sweep` di grandezza
+   oltre `kMaxTrigArgument`, anche se l'angolo finale riportato a un giro
+   starebbe entro il limite. Nei controlli di ogni curva `outOfDomain` viene
+   dopo `invalidValue` (NaN, infinito, raggio negativo) (`curves.hpp`,
+   «Checking the data»). Le curve
    rifiutate non tagliano, non si raccordano e non si uniscono, e il comando lo
    dice con il messaggio dell'operazione non riuscita
    ([ADR 0035](adr/0035-taglio-offset-raccordi-unione.md), punto 23).
@@ -93,11 +101,11 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
    righe dei motivi» e «Quarti di giro esatti»;
    [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punti 1 e 4).
 2. **Angoli in gradi ridotti a un giro, prima della conversione.**
-   `reducedDegreesToRadians` riduce l'angolo a [0, 360) con `std::fmod`
-   (esatto), aggiunge 360 a un resto negativo, porta a +0 un risultato che
-   arrotonda a 360 o è −0, e solo dopo converte in radianti. Ridurre dopo, in
-   radianti, non basta: l'errore nasce nella conversione. Si applica a questi
-   ingressi, e solo a questi:
+   `reducedDegreesToRadians`, con un argomento finito, riduce l'angolo
+   a [0, 360) con `std::fmod` (esatto), aggiunge 360 a un resto negativo, porta a +0
+   un risultato che arrotonda a 360 o è −0, e solo dopo converte in radianti.
+   Ridurre dopo, in radianti, non basta: l'errore nasce nella conversione. Fra
+   gli angoli che entrano già in gradi si applica a questi, e solo a questi:
    - gli angoli dei retini letti dal DXF (gruppi 52 e 53; il DXF si riscrive
      con l'angolo ridotto) e l'angolo digitato in `-HATCH`;
    - il valore di una richiesta `PromptKind::Angle` (l'angolo di `ROTATE`,
@@ -112,7 +120,8 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
 4. **Rotazione del comando `TEXT` in [0°, 360°).** Il valore che `TEXT`
    propone alla domanda successiva e quello che salva nell'entità (gruppo DXF
    50) stanno sempre in [0°, 360°), qualunque sia il percorso d'ingresso: anche
-   l'angolo dato con un punto passa da `reducedDegreesToRadians`, così `-90`
+   l'angolo dato con un punto, convertito in gradi, passa da
+   `reducedDegreesToRadians(radiansToDegrees(atan2(…)))`, così `-90`
    digitato e il punto a −90° danno gli stessi bit di `270`, e un giro intero
    dà 0°. Il testo della domanda segue lo stesso intervallo: quando
    l'arrotondamento a quattro decimali scrive `360`, la domanda mostra `<0>`,
@@ -178,20 +187,26 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
    lato: nessuna copia, con il messaggio di AutoCAD (ADR 0035, punto 10).
 4. **Distanze di `CHAMFER`.** Una distanza di smusso, o la lunghezza, più lunga
    della parte tenuta della sua linea dà `DistanceTooLarge` (`Chamfer distance
-   too large.`), anche con *Angle* quando il secondo punto cade oltre la fine
-   della seconda linea; con una distanza zero e l'altra troppo lunga prevale
-   `None`, in tutti e due gli ordini. In *Angle* si controlla prima la
-   lunghezza sulla prima linea, anche se la seconda retta è parallela a quella
-   dello smusso o la interseca nello spigolo o dalla parte opposta
-   ([DECISIONI.md](DECISIONI.md), 2026-11-05, «Esiti di `FILLET` e `CHAMFER`
+   too large.`); con una distanza zero e l'altra troppo lunga prevale `None`,
+   in tutti e due gli ordini. Con *Angle*: prima si controlla la lunghezza
+   sulla prima linea, e se supera la parte tenuta l'esito è `DistanceTooLarge`,
+   anche se la retta dello smusso è parallela alla seconda o la incontra nello
+   spigolo o dalla parte opposta; superato quel controllo, una retta parallela
+   alla seconda linea o un incontro nello spigolo o dalla parte opposta dà
+   `None`, e un incontro dalla parte tenuta della seconda linea ma oltre la
+   fine di quella parte dà `DistanceTooLarge`
+   ([0.7-P21](tappe/0.7/P21-chamfer.md), *Angle*; [DECISIONI.md](DECISIONI.md),
+   2026-11-05, «Esiti di `FILLET` e `CHAMFER`
    non riusciti», e 2026-11-06, «P21, precedenza della prima lunghezza in
    Angle»; ADR 0035, punto 15).
-5. **Unione con distanza di `PEDIT`.** A ogni passo si attacca, fra gli oggetti
+5. **Unione con distanza di `PEDIT`.** Si parte dalla fine della polilinea,
+   poi dall'inizio. A ogni passo si attacca, fra gli oggetti
    non usati, quello con un estremo alla distanza minima ≤ `fuzz`
    dall'estremità della polilinea; a pari distanza il primo in `others`; un
    oggetto con i due estremi alla stessa distanza si attacca dal suo inizio. Un
    oggetto che coincide secondo la regola del documento passa prima della
-   graduatoria per `fuzz`, anche quando `fuzz` è più piccolo della tolleranza
+   graduatoria per `fuzz`, anche quando `fuzz` è più piccolo della tolleranza.
+   Con `fuzz` uguale a 0 vale la regola di `JOIN`
    ([DECISIONI.md](DECISIONI.md), 2026-11-14, «Revisione delle interfacce
    PT5», B21; [0.8-PT32](tappe/0.8/PT32-unione-con-distanza.md), punto 3).
 
@@ -214,35 +229,40 @@ una alla volta, dalla tappa 0.7 in poi; qui sono raccolte in un posto solo
 
 ### Orto e polare
 
-1. **Orto:** con l'orto attivo e il punto base del comando in corso, il punto
-   va sull'orizzontale o sulla verticale più vicina alla direzione del
-   puntatore; a 45° esatti, l'orizzontale (ADR 0008, punto 5).
-2. **Polare:** le direzioni sono i multipli di `POLARANG` misurati dall'asse X
-   del disegno; `POLARANG` accetta un valore maggiore di 0 e al più 180. Entro
-   l'apertura da due semirette vince la più vicina (ADR 0033, punti 8 e 9); a
-   pari distanza vince la semiretta **in senso orario**: base `(0,0)`, passo
-   90° e puntatore `(5,5)` danno `(5,0)`, come fa il programma dalla tappa 0.7
-   (`polarPoint` in `cmd/src/drawing_aids.cpp`, test
-   `HalfwayBetweenTwoRaysTheClockwiseOneWins`; [DECISIONI.md](DECISIONI.md),
-   2026-11-21, «Pareggio fra due semirette del polare»).
+1. **Orto:** con l'orto attivo e un punto base del comando in corso, il punto
+   va sull'orizzontale o sulla verticale passante per il punto base, quella più
+   vicina alla direzione del puntatore; a 45° esatti, l'orizzontale (ADR 0008,
+   punto 5).
+2. **Polare:** con un punto base, le semirette escono da quel punto, nelle
+   direzioni multiple di `POLARANG` misurate dall'asse X del disegno;
+   `POLARANG` accetta un valore maggiore di 0 e al più 180. Entro l'apertura da
+   due semirette vince la più vicina (ADR 0033, punti 8 e 9); a pari distanza
+   vince la semiretta **in senso orario**: base `(0,0)`, passo 90° e puntatore
+   `(5,5)` danno `(5,0)`, come fa il programma dalla tappa 0.7 (`polarPoint` in
+   `cmd/src/drawing_aids.cpp`, test `HalfwayBetweenTwoRaysTheClockwiseOneWins`;
+   [DECISIONI.md](DECISIONI.md), 2026-11-21, «Pareggio fra due semirette del
+   polare»).
 
 ### Tracciamento degli snap
 
 La priorità è: snap a oggetto, poi incrocio di due guide, poi una guida, poi il
 polare, poi l'orto, poi il puntatore così com'è
 ([ADR 0049](adr/0049-tracciamento-degli-snap-a-oggetto.md), punto 5). Fra più
-guide vince la più vicina (ADR 0049, punto 4). A pari distanza dal puntatore
-(confrontata al quadrato, sezione 3):
+guide vince la più vicina; il puntatore entro l'apertura da due guide di
+**punti diversi** va al loro incrocio, mentre l'orizzontale e la verticale
+dello stesso punto non fanno incrocio (ADR 0049, punto 4). A pari distanza dal
+puntatore (confrontata al quadrato, sezione 3):
 
 1. **guide di punti diversi:** vince la guida del punto acquisito più di
    recente;
-2. **orizzontale e verticale dello stesso punto:** vince l'orizzontale, come
-   l'orto a 45° ([DECISIONI.md](DECISIONI.md), 2026-11-13, «Pareggio fra le
-   guide dello stesso punto»);
-3. **due incroci di guide:** vince quello che usa la guida orizzontale del
-   punto più recente; se l'orizzontale è dello stesso punto, quello che usa la
-   verticale del punto più recente ([DECISIONI.md](DECISIONI.md), 2026-11-13,
-   «Pareggio fra due incroci»);
+2. **orizzontale e verticale dello stesso punto** (anche con un solo punto
+   acquisito): vince l'orizzontale, come l'orto a 45°
+   ([DECISIONI.md](DECISIONI.md), 2026-11-13, «Pareggio fra le guide dello
+   stesso punto»);
+3. **due incroci di guide di punti diversi:** vince quello che usa la guida
+   orizzontale del punto più recente; se l'orizzontale è dello stesso punto,
+   quello che usa la verticale del punto più recente
+   ([DECISIONI.md](DECISIONI.md), 2026-11-13, «Pareggio fra due incroci»);
 4. **incrocio di due guide e incrocio di una guida con la semiretta polare:**
    vince il primo, come nella priorità ([DECISIONI.md](DECISIONI.md),
    2026-11-13, «Pareggio fra un incrocio di guide e uno con il polare»);
@@ -268,11 +288,16 @@ guide vince la più vicina (ADR 0049, punto 4). A pari distanza dal puntatore
    decisioni», punto 1).
 3. **Archi dello stesso cerchio:** ogni arco si copre in senso antiorario a
    partire dall'inizio della sorgente, e l'arco che risulta va dall'inizio della
-   sorgente al più lontano dei loro estremi. Al giro intero formano un cerchio,
-   con la domanda di conversione; lo stesso quando l'angolo finale tornerebbe
-   uguale a quello iniziale, purché almeno un altro arco si unisca: con la sola
-   sorgente niente si unisce (ADR 0035, punto 17; DECISIONI.md, 2026-11-02,
-   stessa voce, punto 4).
+   sorgente al più lontano dei loro estremi. Prima di tutto almeno un altro arco
+   deve unirsi: con la sola sorgente niente si unisce, anche quando le regole
+   seguenti darebbero il cerchio. Se il più lontano arriva al giro intero o
+   oltre, **oppure** l'angolo finale tornerebbe uguale a quello iniziale, gli
+   archi formano un cerchio, con la domanda di conversione. *cLose* di
+   `joinToSource` è l'eccezione: dà sempre il cerchio, anche con la sola
+   sorgente, senza domanda (ADR 0035, punti 17 e 19;
+   [DECISIONI.md](DECISIONI.md), 2026-11-02, «B6 e B11 riviste dopo le prove
+   in AutoCAD» e «Buchi della scheda P22: le decisioni», punto 4;
+   [0.7-P22](tappe/0.7/P22-unione-core.md)).
 4. **Segmento dritto o curvo:** `isStraight` decide sul segmento com'è nella
    sua entità, con gli estremi e il bulge con cui entra nella catena (girato se
    l'entità si gira), prima dello spostamento sul vertice comune, anche alla
