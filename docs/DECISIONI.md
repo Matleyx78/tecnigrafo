@@ -2295,9 +2295,9 @@ i rimandi ai documenti che cambia.
     [tappe/0000-modello.md](tappe/0000-modello.md), sezione 6;
     [agenti/revisione.md](agenti/revisione.md), "Revisione del piano";
     [GUIDA-RESPONSABILE.md](GUIDA-RESPONSABILE.md), B1, B4, B4a, B6).
-  - *Regole numeriche* in un documento unico, `docs/REGOLE-NUMERICHE.md`,
-    raccolto una volta da questo registro; ogni regola nuova si scrive lì. È
-    un lavoro a sé, in una pull request a parte.
+  - *Regole numeriche* in un documento unico,
+    [REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md), raccolto una volta da questo
+    registro; ogni regola nuova si scrive lì.
   - *Pacchetti che estendono una fonte di verifica* a più di due tipi o tabelle
     nuove: si dividono, un pacchetto per gruppo di tipi
     ([LAVORO-IN-PARALLELO.md](LAVORO-IN-PARALLELO.md), "Modello e impegno").
