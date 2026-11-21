@@ -2522,3 +2522,40 @@ i rimandi ai documenti che cambia.
      [scheda](tappe/0.8.2-curve.md). Fuori le spline 3D (grezze), l'opzione
      *Object* e *Fit*, *Spline* e *Decurve* di `PEDIT` (polilinee pesanti, non
      gestite), il menu dei grip e `BLEND`.
+- **2026-11-21 — Esiti dei DXF di prova e della seduta della 0.8.1.** Con i
+  DXF di prova e la seduta in AutoCAD della
+  [#920](https://github.com/Matleyx78/tecnigrafo/issues/920)
+  ([tappe/0.8.1/dxf-di-prova.md](tappe/0.8.1/dxf-di-prova.md)) il responsabile
+  chiude le domande aperte della voce «Testo formattato, griglia, snap e
+  attributi della 0.8.1»:
+  1. *Vicino sul testo*: come AutoCAD, che sul testo multiriga non aggancia
+     *Vicino* («Punto non valido»): niente *Vicino* su `MTEXT`; su `TEXT` lo
+     stesso, da controllare nella prova a secco.
+  2. *Griglia di un disegno nuovo*: i valori della copia di fabbrica di
+     `acadiso.dwt` (AutoCAD 2021): griglia accesa, `GRIDUNIT` e `SNAPUNIT` 10,
+     snap spento, `SNAPBASE` 0,0, `SNAPANG` 0, **`GRIDDISPLAY` 3** (adattiva e
+     oltre i limiti, suddivisione spenta), `GRIDMAJOR` 5, `UCSICON` 3.
+  3. *Snap polare*: `SNAPTYPE` non sta nel DXF (è del profilo, come
+     `OSMODE`), quindi non c'è niente da conservare nel file; lo snap polare
+     resta fuori dalla 0.8.1. Lo stile isometrico (`SNAPSTYL`, `SNAPISOPAIR`,
+     gruppi 77 e 78 della `VPORT`) e `SNAPANG` restano conservati.
+  4. *`ATTREQ`*: predefinito **1**, come AutoCAD (valore di fabbrica anche in
+     LT secondo la guida di Autodesk): `-INSERT` chiede i valori degli
+     attributi. Gli script che non li vogliono mettono `ATTREQ` 0 in testa,
+     come quelli di AutoCAD; i casi di verifica della 0.8 che inseriscono
+     blocchi con attributi si controllano nella prova a secco. Sostituisce il
+     «predefinito 0» del punto 7 della voce citata.
+  5. *Snap alla griglia con orto e polare*: le prove della seduta non valgono
+     (lo snap non arrotondava nemmeno da solo). Regola: il punto del puntatore
+     va prima sul nodo della griglia, poi l'orto o il polare lo proiettano; con
+     l'orto un nodo resta un nodo. Da confermare con una prova in AutoCAD LT
+     prima del pacchetto.
+  6. *Alias*: solo quelli dell'AutoCAD inglese, come i nomi dei comandi di
+     Tecnigrafo (quelli del [catalogo di parità](parita/comandi.md)).
+     L'AutoCAD italiano ha alias propri (per esempio `T` per `TEXT` e `MT` per
+     `TEXTEDIT`), che non si usano.
+  7. *Centro contro Vicino*: come AutoCAD, che con centro e *Vicino* accesi e
+     il puntatore sul bordo di un cerchio mostra *Vicino*. Nella priorità degli
+     snap *Vicino* passa prima di centro e inserimento
+     ([REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md), sezione 4); cambia il punto
+     6 della voce citata.

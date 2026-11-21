@@ -231,11 +231,14 @@ proposte di metodo della 0.8»).
    nessuno è entro l'apertura, valgono centro e inserimento dell'entità su cui
    passa il puntatore ([ADR 0033](adr/0033-nuovi-snap-e-tracciamento-polare.md),
    punto 5; ADR 0008, punto 4).
-   Dalla tappa 0.8.1 c'è un terzo livello: se non vale nemmeno centro o
-   inserimento, vale *Vicino* sull'entità più vicina al puntatore, che
-   altrimenti, essendo per definizione il punto più vicino, vincerebbe sempre
-   ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato, griglia, snap
-   e attributi della 0.8.1», punto 6).
+   Dalla tappa 0.8.1 c'è un livello per *Vicino*, fra i due: se nessuno snap
+   di punto è entro l'apertura, vale *Vicino* sull'entità più vicina al
+   puntatore, e solo dopo centro e inserimento. Con centro e *Vicino* accesi e
+   il puntatore sul bordo di un cerchio vince *Vicino*, come in AutoCAD; il
+   centro vale con *Vicino* spento o senza un'entità per *Vicino* (testi
+   compresi) ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato,
+   griglia, snap e attributi della 0.8.1», punto 6, ed «Esiti dei DXF di prova
+   e della seduta della 0.8.1», punti 1 e 7).
 3. **Identificativo di un'intersezione:** il punto di una coppia porta il
    maggiore dei due identificativi; un'autointersezione porta quello della
    polilinea ([DECISIONI.md](DECISIONI.md), 2026-11-03, «Revisione P15: angoli
@@ -256,6 +259,11 @@ proposte di metodo della 0.8»).
    `cmd/src/drawing_aids.cpp`, test `HalfwayBetweenTwoRaysTheClockwiseOneWins`;
    [DECISIONI.md](DECISIONI.md), 2026-11-21, «Pareggio fra due semirette del
    polare»).
+3. **Con lo snap alla griglia** (dalla tappa 0.8.1): il punto del puntatore va
+   prima sul nodo (sezione 3, punto 6), poi l'orto o il polare lo proiettano;
+   con l'orto un nodo resta un nodo. Da confermare con una prova in AutoCAD LT
+   prima del pacchetto ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Esiti dei
+   DXF di prova e della seduta della 0.8.1», punto 5).
 
 ### Tracciamento degli snap
 
