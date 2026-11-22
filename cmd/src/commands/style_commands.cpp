@@ -189,7 +189,7 @@ Prompt TextstyleCommand::prompt() const {
 
 CommandDescription StyleCommand::description() {
     return {"-STYLE",
-            {"STYLE"},
+            {"STYLE", "ST"},
             "Creates or changes a text style.",
             false,
             {{"style-name",

@@ -112,7 +112,7 @@ void addDimension(CommandContext& context, core::Dimension dimension) {
 
 CommandDescription DimangularCommand::description() {
     return {"DIMANGULAR",
-            {"DIMANG"},
+            {"DIMANG", "DAN"},
             "Creates an angular dimension.",
             false,
             {{"first-line",
@@ -122,9 +122,9 @@ CommandDescription DimangularCommand::description() {
               true},
              {"second-line", "Select second line:", ValueType::Object, {}, false},
              {"location",
-              "Specify dimension arc line location or [Text/Angle/Quadrant]:",
+              "Specify dimension arc line location or [Mtext/Text/Angle/Quadrant]:",
               ValueType::Point,
-              {{"Text", "T"}, {"Angle", "A"}, {"Quadrant", "Q"}},
+              {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}, {"Quadrant", "Q"}},
               false},
              {"text", "Enter dimension text <{default}>:", ValueType::Text, {}, true},
              {"text-angle", "Specify angle of dimension text:", ValueType::Angle, {}, true},
@@ -157,7 +157,7 @@ Status DimangularCommand::handle(CommandContext& context, const Input& input) {
             return finish(context, point->point);
         }
         if (keyword != nullptr) {
-            if (keyword->keyword == "Text") {
+            if (keyword->keyword == "Mtext" || keyword->keyword == "Text") {
                 m_stage = Stage::Text;
             } else if (keyword->keyword == "Angle") {
                 m_stage = Stage::Angle;
@@ -189,8 +189,8 @@ Prompt DimangularCommand::prompt() const {
         case Stage::SecondLine:
             return {"Select second line:", {}, PromptKind::Object};
         case Stage::Location:
-            return {"Specify dimension arc line location or [Text/Angle/Quadrant]:",
-                    {{"Text", "T"}, {"Angle", "A"}, {"Quadrant", "Q"}}};
+            return {"Specify dimension arc line location or [Mtext/Text/Angle/Quadrant]:",
+                    {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}, {"Quadrant", "Q"}}};
         case Stage::Text:
             return {"Enter dimension text <>:", {}, PromptKind::Text};
         case Stage::Angle:
@@ -294,14 +294,14 @@ Status DimangularCommand::finish(CommandContext& context, const core::Vec2& loca
 CommandDescription RadialDimensionCommand::description(Kind kind) {
     const bool radius = kind == Kind::Radius;
     return {radius ? "DIMRADIUS" : "DIMDIAMETER",
-            {radius ? "DIMRAD" : "DIMDIA"},
+            {radius ? "DIMRAD" : "DIMDIA", radius ? "DRA" : "DDI"},
             radius ? "Creates a radius dimension." : "Creates a diameter dimension.",
             false,
             {{"curve", "Select arc or circle:", ValueType::Object, {}, false},
              {"location",
-              "Specify dimension line location or [Text/Angle]:",
+              "Specify dimension line location or [Mtext/Text/Angle]:",
               ValueType::Point,
-              {{"Text", "T"}, {"Angle", "A"}},
+              {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}},
               false},
              {"text", "Enter dimension text <{default}>:", ValueType::Text, {}, true},
              {"text-angle", "Specify angle of dimension text:", ValueType::Angle, {}, true}}};
@@ -329,7 +329,8 @@ Status RadialDimensionCommand::handle(CommandContext& context, const Input& inpu
             return finish(context, point->point);
         }
         if (keyword != nullptr) {
-            m_stage = keyword->keyword == "Text" ? Stage::Text : Stage::Angle;
+            m_stage = keyword->keyword == "Mtext" || keyword->keyword == "Text" ? Stage::Text
+                                                                                : Stage::Angle;
         }
     } else if ((m_stage == Stage::Text && detail::acceptDimensionText(input, m_textOverride)) ||
                (m_stage == Stage::Angle &&
@@ -350,8 +351,8 @@ Prompt RadialDimensionCommand::prompt() const {
         case Stage::Curve:
             return {"Select arc or circle:", {}, PromptKind::Object};
         case Stage::Location:
-            return {"Specify dimension line location or [Text/Angle]:",
-                    {{"Text", "T"}, {"Angle", "A"}}};
+            return {"Specify dimension line location or [Mtext/Text/Angle]:",
+                    {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}}};
         case Stage::Text: {
             const core::DimStyleTable& styles = m_document->dimStyles();
             const core::DimVariables variables =

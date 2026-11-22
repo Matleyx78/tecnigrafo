@@ -277,7 +277,7 @@ Prompt DimstyleCommand::prompt() const {
 
 CommandDescription DimstyleCommand::description() {
     return {"-DIMSTYLE",
-            {"DIMSTYLE"},
+            {"DIMSTYLE", "D"},
             "Manages dimension styles.",
             false,
             {{"option",
