@@ -30,6 +30,7 @@
 #include "tg/cmd/commands/offset_command.hpp"
 #include "tg/cmd/commands/pedit_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
+#include "tg/cmd/commands/polygon_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
 #include "tg/cmd/commands/style_commands.hpp"
@@ -111,6 +112,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(PeditacceptCommand::description(),
                  [] { return std::make_unique<PeditacceptCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });
+    registry.add(PolygonCommand::description(), [] { return std::make_unique<PolygonCommand>(); });
     registry.add(PolarangCommand::description(),
                  [] { return std::make_unique<PolarangCommand>(); });
     registry.add(detail::qsaveDescription(), [] { return std::make_unique<QsaveCommand>(); });

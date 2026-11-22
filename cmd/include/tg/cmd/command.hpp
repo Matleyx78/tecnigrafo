@@ -60,6 +60,8 @@ struct CommandDefaults {
     /// INSNAME: the block -INSERT proposes, the last one it accepted; none
     /// at start-up (docs/tappe/0.8/PT21-comando-insert.md).
     std::optional<std::string> insertBlock = std::nullopt;
+    int polygonSides{4};
+    bool polygonCircumscribed{false};
 };
 
 /// What a command of the drawing works with: the protocol's context

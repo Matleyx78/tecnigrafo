@@ -51,6 +51,7 @@ add_executable(tg_tests
     cmd/offset_command_test.cpp
     cmd/pedit_command_test.cpp
     cmd/pline_command_test.cpp
+    cmd/polygon_command_test.cpp
     cmd/property_commands_test.cpp
     cmd/quick_select_test.cpp
     cmd/rotate_scale_commands_test.cpp
