@@ -8,8 +8,10 @@
 #include "tg/core/math.hpp"
 
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <variant>
 
@@ -17,6 +19,13 @@ namespace tg::cmd {
 namespace {
 
 constexpr double kBulgeAngle = core::kPi / 8.0;
+
+/// The shortest text that reads back as `value`, for a DXF group.
+std::string groupNumber(double value) {
+    std::array<char, 32> buffer{};
+    const auto [end, error] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
+    return error == std::errc{} ? std::string(buffer.data(), end) : std::string{"0"};
+}
 
 bool validNonnegative(double value) {
     return std::isfinite(value) && value >= 0.0;
@@ -460,11 +469,14 @@ core::Polyline RectangCommand::rectangle(double dx, double dy) const {
 
 Status RectangCommand::finish(CommandContext& context, double dx, double dy) {
     core::EntityExtras extras;
+    if (m_defaults->rectangWidth == 0.0) {
+        extras.specific.push_back({43, "0.0"});
+    }
     if (m_defaults->rectangElevation != 0.0) {
-        extras.placement.push_back({38, formatLength(m_defaults->rectangElevation)});
+        extras.placement.push_back({38, groupNumber(m_defaults->rectangElevation)});
     }
     if (m_defaults->rectangThickness != 0.0) {
-        extras.placement.push_back({39, formatLength(m_defaults->rectangThickness)});
+        extras.placement.push_back({39, groupNumber(m_defaults->rectangThickness)});
     }
     context.editor.addRecord({{}, rectangle(dx, dy), std::move(extras)});
     context.editor.commit();

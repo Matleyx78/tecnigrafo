@@ -25,9 +25,12 @@ protected:
 
     [[nodiscard]] CommandRunner& runner() { return m_runner; }
 
+    [[nodiscard]] const core::EntityRecord& record() const {
+        return *m_document.find(m_document.entities().front().id);
+    }
+
     [[nodiscard]] const core::Polyline& polyline() const {
-        const auto& record = m_document.entities().front();
-        return std::get<core::Polyline>(m_document.find(record.id)->entity);
+        return std::get<core::Polyline>(record().entity);
     }
 
 private:
@@ -56,6 +59,27 @@ TEST_F(RectangCommandTest, DrawsClosedPolylineInOneUndoStep) {
     EXPECT_EQ(polyline().vertices()[0].position, (core::Vec2{0.0, 0.0}));
     EXPECT_EQ(polyline().vertices()[2].position, (core::Vec2{40.0, 20.0}));
     EXPECT_EQ(editor().undoName(), "Rectang");
+}
+
+TEST_F(RectangCommandTest, RecordsZeroConstantWidthForDxfOutput) {
+    text("RECTANG");
+    point(0.0, 0.0);
+    point(40.0, 20.0);
+    ASSERT_EQ(record().extras.specific.size(), 1U);
+    EXPECT_EQ(record().extras.specific.front(), (core::RawGroup{43, "0.0"}));
+}
+
+TEST_F(RectangCommandTest, PreservesElevationAndThicknessPrecision) {
+    text("RECTANG");
+    text("E");
+    text("0.03125");
+    text("T");
+    text("1.234567");
+    point(0.0, 0.0);
+    point(40.0, 20.0);
+    ASSERT_EQ(record().extras.placement.size(), 2U);
+    EXPECT_EQ(record().extras.placement[0], (core::RawGroup{38, "0.03125"}));
+    EXPECT_EQ(record().extras.placement[1], (core::RawGroup{39, "1.234567"}));
 }
 
 TEST_F(RectangCommandTest, RotationAndDimensionsUseExactCardinalDirections) {
