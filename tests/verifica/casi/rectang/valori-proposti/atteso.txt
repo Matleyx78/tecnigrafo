@@ -1,0 +1,39 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,3 bulge=0.414213562373095 vertex=3,0 vertex=37,0 bulge=0.414213562373095 vertex=40,3 vertex=40,17 bulge=0.414213562373095 vertex=37,20 vertex=3,20 bulge=0.414213562373095 vertex=0,17
+  258 LWPOLYLINE closed=yes vertex=60,3 vertex=63,0 vertex=97,0 vertex=100,3 vertex=100,17 vertex=97,20 vertex=63,20 vertex=60,17
+messages:
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 3
+  Specify second chamfer distance for rectangles <3.0000>: 5
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <3.0000>:
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 40,20
+  Command: RECTANG
+  Current rectangle modes:  Fillet=3.0000
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <3.0000>:
+  Specify second chamfer distance for rectangles <3.0000>:
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 60,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 100,20
+  Command: RECTANG
+  Current rectangle modes:  Chamfer=3.0000 x 3.0000
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Rectang
+  Rectang
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 2

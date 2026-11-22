@@ -440,6 +440,22 @@
       "sha256": "eacd35327f5a5c9833a6de0f304428e058d50385363673ee3107b647fd38ad6e",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/1ad04b0b8a568fb9dd4960719a8f17289129f788/LICENSE"
+    },
+    {
+      "name": "autocad-rectang",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-rectang.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "1bd17e3fe42dc43cf321a4f7d19c8c94ecea9e2f57b656a57091a78d69d825d2",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-rectang-opzioni",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/autocad-rectang-opzioni.dxf",
+      "version": "d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9",
+      "sha256": "8bc59f0ab0da1c455d64c308e860e2d6f183cfd0261b30d0ae7f2ab34b04a958",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/LICENSE"
     }
   ]
 }

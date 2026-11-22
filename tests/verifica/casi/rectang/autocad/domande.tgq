@@ -1,0 +1,32 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT35 (#932): the result of AutoCAD 2021 for autocad-rectang.scr (Matleyx78/dxf-test-file,
+; commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736, CC0-1.0; docs/tappe/0.8.1/dxf-di-prova.md).
+; The expected values of the rectang/ scripts come from here; the Oracolo ezdxf step of the CI
+; compares these answers with ezdxf. Every RECTANG writes group 43 (constant width), also when 0.
+D = DXF source=autocad-rectang
+? version D -> AC1032
+? units D -> 4
+? count D -> LWPOLYLINE 10
+? unhandled D -> none
+; a: plain, from 0,0 to 40,20
+? entity D 8C -> LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20
+; b: Chamfer 3 and 5: 3 on the vertical side, 5 on the horizontal one
+? entity D 8D -> LWPOLYLINE closed=yes vertex=60,3 vertex=65,0 vertex=97,0 vertex=100,5 vertex=100,17 vertex=95,20 vertex=63,20 vertex=60,15
+; c: Fillet 4, bulge tan(22.5 degrees)
+? entity D 8E -> LWPOLYLINE closed=yes vertex=120,4 bulge=0.4142135623730951 vertex=124,0 vertex=156,0 bulge=0.4142135623730951 vertex=160,4 vertex=160,16 bulge=0.4142135623730951 vertex=156,20 vertex=124,20 bulge=0.4142135623730951 vertex=120,16
+; d: Width 1
+? entity D 8F -> LWPOLYLINE closed=yes width=1 vertex=180,0 vertex=220,0 vertex=220,20 vertex=180,20
+; e: Area 600 from the length 30
+? entity D 90 -> LWPOLYLINE closed=yes vertex=240,0 vertex=270,0 vertex=270,20 vertex=240,20
+; f: Dimensions 40 x 20, towards 350,30
+? entity D 91 -> LWPOLYLINE closed=yes vertex=300,0 vertex=340,0 vertex=340,20 vertex=300,20
+; h: Elevation 5 (group 38)
+? entity D 92 -> LWPOLYLINE closed=yes vertex=360,0 vertex=400,0 vertex=400,20 vertex=360,20 elevation=5
+; i: Thickness 2 (group 39)
+? entity D 93 -> LWPOLYLINE closed=yes vertex=420,0 vertex=460,0 vertex=460,20 vertex=420,20 thickness=2
+; k: from the top right corner to the bottom left one: both sizes negative, counterclockwise
+? entity D 94 -> LWPOLYLINE closed=yes vertex=520,20 vertex=480,20 vertex=480,0 vertex=520,0
+; g: Rotation 30, then Dimensions 40 x 20, towards 590,40
+? entity D 95 -> LWPOLYLINE closed=yes vertex=540,0 vertex=574.6410161513775,20.00000000000001 vertex=564.6410161513776,37.32050807568877 vertex=530,17.32050807568876

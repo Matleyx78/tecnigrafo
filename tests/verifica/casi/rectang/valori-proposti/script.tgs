@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RECTANG (0.8.1-PT35, #932): proposed values as AutoCAD (DECISIONI.md, 2026-11-22, "Esiti della
+; seconda seduta in AutoCAD della 0.8.1", point 6; docs/tappe/0.8.1/dxf-di-prova.md, second session):
+; after the chamfer 3 and 5 the fillet proposes 3, and Enter makes the mode Fillet=3.0000;
+; after Fillet 3 the chamfer proposes 3 and 3. Vertices by hand, in the order of rectang/autocad
+; (8D, 8E): fillet r from P = 0,0 starts at 0,r; bulge tan(22.5 degrees).
+RECTANG
+C
+3
+5
+F
+
+0,0
+40,20
+RECTANG
+C
+
+
+60,0
+100,20
+RECTANG
+!esc

@@ -1,0 +1,108 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: RECTANG
+  *Cancel*
+  Command: REC
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  *Cancel*
+  Command: RECTANGLE
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: A
+  *Cancel*
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: A
+  Enter area of rectangle in current units <100.0000>: 600
+  *Cancel*
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: D
+  *Cancel*
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: D
+  Specify length for rectangles <10.0000>: 40
+  *Cancel*
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: R
+  *Cancel*
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: R
+  Specify rotation angle or [Pick points] <0>: P
+  Specify first point: 0,0
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20
+messages:
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 40,20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Rectang
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 3]
+entities:
+messages:
+  Command: U
+  Undone: Rectang.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Rectang
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20
+messages:
+  Command: REDO
+  Redone: Rectang.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Rectang
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1

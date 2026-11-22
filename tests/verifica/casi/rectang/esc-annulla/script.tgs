@@ -1,0 +1,46 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RECTANG (0.8.1-PT35, #932): Esc at every prompt leaves no entity, also after an option; the
+; aliases REC and RECTANGLE; one undo step Rectang, U and REDO. The Esc cases change no mode
+; (Chamfer, Elevation, Fillet, Thickness, Width, Rotation), so no "Current rectangle modes" line.
+RECTANG
+!esc
+REC
+0,0
+!esc
+RECTANGLE
+0,0
+A
+!esc
+RECTANG
+0,0
+A
+600
+!esc
+RECTANG
+0,0
+D
+!esc
+RECTANG
+0,0
+D
+40
+!esc
+RECTANG
+0,0
+R
+!esc
+RECTANG
+0,0
+R
+P
+0,0
+!esc
+!report
+RECTANG
+0,0
+40,20
+!report
+U
+!report
+REDO
