@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -483,13 +484,21 @@ TEST(CheckCase, StageEightOneAnnouncedQuestionsArePending) {
         "A = LINE start=0,0 end=10,0\n"
         "H = HATCH pattern=\"SOLID\" solid=yes loop=external+polyline vertex=0,0 vertex=1,0 "
         "vertex=1,1 vertex=0,1\n";
-    for (const std::string_view form : {"grid D", "attdisp D", "properties A",
-                                        "set-property A width=1", "pattern-lines H"}) {
+    constexpr std::array<std::string_view, 5> kForms{
+        "grid D",
+        "attdisp D",
+        "properties A",
+        "set-property A width=1",
+        "pattern-lines H",
+    };
+    for (const std::string_view form : kForms) {
         SCOPED_TRACE(form);
         const std::string questions = definitions + "? " + std::string{form} + " -> none\n";
-        const fs::path folder = makeCase("announced-0.8.1-question",
-                                        {{"domande.tgq", questions},
-                                         {"drawing.dxf", std::string{kDxf}}});
+        const std::map<std::string, std::string> files{
+            {"domande.tgq", questions},
+            {"drawing.dxf", std::string{kDxf}},
+        };
+        const fs::path folder = makeCase("announced-0.8.1-question", files);
         const Result ordinary = check(folder);
         ASSERT_NE(ordinary.code, kExitInvalid) << ordinary.output;
         if (ordinary.output.find("error: question not implemented yet") == std::string::npos) {

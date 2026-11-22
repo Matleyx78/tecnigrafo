@@ -435,11 +435,14 @@ TEST(Questions, ModesAndArgumentsOfTheCatalogueAreNeverInvalid) {
 }
 
 TEST(Questions, MalformedArgumentsStayInvalidAroundAnnouncedOnes) {
-    for (const std::string_view text : {"? snap 0,0 aperture=1 modes=nea,corner -> none",
-                                        "? snap 0,0 aperture=1 modes=nea from=wrong -> none",
-                                        "? text-width A face=bold -> 1",
-                                        "? text-width \"A\" face=unknown -> 1",
-                                        "? font-metrics face= -> ascent=1 descent=0"}) {
+    constexpr std::array<std::string_view, 5> kForms{
+        "? snap 0,0 aperture=1 modes=nea,corner -> none",
+        "? snap 0,0 aperture=1 modes=nea from=wrong -> none",
+        "? text-width A face=bold -> 1",
+        "? text-width \"A\" face=unknown -> 1",
+        "? font-metrics face= -> ascent=1 descent=0",
+    };
+    for (const std::string_view text : kForms) {
         EXPECT_FALSE(failure(text).notImplemented) << text;
     }
 }

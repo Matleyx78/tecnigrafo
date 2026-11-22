@@ -135,7 +135,7 @@ core::SnapModes stageFourModes() {
 /// "modes=endpoint,center", or "modes=none" for none; the four modes of
 /// stage 0.4 when the argument is absent.
 Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text,
-                                     std::string_view announced = {}) {
+                                      std::string_view announced = {}) {
     if (!text) {
         return stageFourModes();
     }
