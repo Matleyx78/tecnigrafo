@@ -24,6 +24,7 @@ protected:
         return std::get<core::Polyline>(m_document.find(record.id)->entity);
     }
 
+private:
     core::Document m_document;
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
