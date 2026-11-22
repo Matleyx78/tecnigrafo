@@ -2655,3 +2655,64 @@ i rimandi ai documenti che cambia.
   `POLYGON` sono quelli della seduta, tradotti. ADR 0054, 0055 e 0057 e le
   schede PT11, PT14, PT18, PT22, PT24, PT26, PT28, PT30, PT31, PT35 e PT36
   sono corretti.
+- **2026-11-22 — Revisione delle interfacce PT4 della 0.8.1.** Sul verbale di
+  Codex nella [#927](https://github.com/Matleyx78/tecnigrafo/issues/927) (7
+  [bloccante], 8 [decisione], 2 [facoltativa], che non si trattano), con lo
+  smistamento di Claude, il responsabile decide cinque punti, uno per commento
+  nella issue:
+  1. *Frazione nell'editor* (punto 2): un'unità sola, come in AutoCAD; il
+     cursore la salta, la scelta la prende intera, si cancella intera (PT10).
+  2. *Linea della frazione diagonale* (punto 3): da `(x, 0)`, sulla linea di
+     base della riga, a `(x + w, 7/3 · h)`, la cima delle maiuscole del
+     numeratore, con il punto medio a `7/6 · h` come la linea di `/` (ADR
+     0054, punto 3; PT8).
+  3. *Valore svuotato nell'editor* (punto 4): un `TEXT` o un `MTEXT` esistente
+     svuotato e confermato si cancella, nello stesso passo `Textedit`, come
+     AutoCAD (da confermare in LT; se LT dice altro, si segue LT); una quota
+     torna alla misura. L'editor consegna il valore con un `TextInput`, anche
+     vuoto; Invio resta `ConfirmInput` e tiene il valore (PT11, PT12).
+  4. *Altezze assolute sotto una similitudine* (punto 5): il fattore `k`
+     moltiplica anche gli argomenti di `\H<n>;`, e solo quelli, come lo stesso
+     testo in un blocco scalato (si suppone come AutoCAD, da confermare in LT)
+     (ADR 0054, punto 1; PT8).
+  5. *Predefinito di `-HATCH`* (punto 6): `-HATCHEDIT` aggiorna `HPNAME` solo
+     con un nome che `-HATCH` sa creare; `HPSCALE` e `HPANG` sempre (PT26).
+
+  Il resto delle [decisione] lo decidono regole che ci sono già: codici
+  nascosti o letterali come oggi e argomenti fuori dominio senza effetto,
+  ingressi fuori dall'uso reale (2026-11-12; punto 1, PT7); righe vuote fuori
+  da `~lines` e dal testo delle quote perché i casi di oggi restano verdi
+  (punto 2, PT8); fascia di soglia sull'a capo e altezze nominali nelle quote
+  (punto 3, PT8); origine cambiata come traslazione delle famiglie, da D10
+  (punto 6, PT23); quota non rigenerabile che rifiuta la modifica (ADR 0047,
+  punto 4; punto 7, PT23); etichette uguali con la prima che vale (P21 del
+  2026-11-14), controlli di `scale-z` e `line-spacing` come nei comandi (ADR
+  0036, punto 6) e gruppi non toccati intatti (ADR 0006) (punto 8, PT24). Sono
+  buchi non visibili, che sceglie chi implementa, dove va il testo scritto
+  accanto a un codice nascosto e la posizione del cursore su un a capo
+  automatico (PT10).
+
+  Le [bloccante] si correggono nelle schede: variante e spaziatura nel testo
+  formattato e in tutte le visite (PT8, PT9); snap senza le forme del testo e
+  con l'inserimento del multiriga (PT8); il formattatore di `report.cpp` (PT8);
+  unità del valore e loro posizioni impaginate (PT7, PT8, PT10);
+  `Command::textEditing()` nel disegno al posto di `Prompt::mtextEditing` nel
+  protocollo, con valore e geometria separati (PT11, PT12); `Editor::replace`
+  con gli extras, e salvataggio e riapertura nei test invece delle domande
+  dopo `set-property` (PT22–PT26); origine e `$MEASUREMENT` in `withPattern`
+  (PT23, PT26). ADR 0054 e schede PT3, PT7–PT12, PT22–PT26 corretti.
+- **2026-11-22 — Rilettura della correzione PT4 della 0.8.1.** Dal verbale di
+  Codex sulla [#993](https://github.com/Matleyx78/tecnigrafo/pull/993) (due
+  [bloccante], due [decisione], una [facoltativa], che non si tratta): il
+  responsabile decide che la misura di una quota, nell'editor, si vede come
+  nel disegno ma è un'unità sola legata a `<>`, come una frazione e come il
+  campo di AutoCAD (ADR 0054, punto 5; PT10). Gli spazi assorbiti da un a capo
+  automatico restano unità raggiungibili, per la regola di PT10 che dà a ogni
+  unità le sue posizioni. Le [bloccante] corrette: l'editor consegna Invio
+  quando il valore non è cambiato, così un `MTEXT` già vuoto non si cancella
+  (PT11, PT12); `target` vuoto anche per *Mtext* di una quota in costruzione
+  (PT11). Dal secondo giro: la richiesta dell'editor porta anche il testo che
+  sostituisce `<>`, già formattato, e solo la prima occorrenza di `<>` è la
+  misura, come in `dimensionText` (PT10, PT11); una misura su più righe ha
+  sempre e solo le sue due posizioni, e `Home`/`End` sulle righe interne
+  portano a quelle, per la decisione appena presa (PT10).

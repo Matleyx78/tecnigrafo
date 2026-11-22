@@ -51,7 +51,7 @@ e i comandi delle quote in PT11): fatto per primo, li toglie dalle loro catene.
    location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]:` e simili, con
    le parole della cronologia della 0.8): chiede `Enter dimension text
    <misura>:` e scrive il testo sostitutivo, con `<>` per la misura, come
-   *Text*. L'editor nella finestra lo aggiunge PT11 (`Prompt::mtextEditing`),
+   *Text*. L'editor nella finestra lo aggiunge PT11 (`Command::textEditing()`),
    senza cambiare la richiesta.
 4. Nel catalogo si tolgono le frasi «manca l'alias …» e «manca *Mtext*».
 
