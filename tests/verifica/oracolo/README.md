@@ -14,7 +14,7 @@ x86_64. `requirements.txt` pins every transitive dependency and its SHA-256.
 Open the pull request's CI run, then **Verifica → Oracolo ezdxf: answers**.
 Every public source listed in `tests/verifica/sorgenti.json` has a heading and
 copyable `? version`, `? units`, `? count`, `? unhandled`, `? layers`,
-`? linetypes`, `? blocks`, `? styles`, `? dimstyles`, `? entity`, and
+`? linetypes`, `? blocks`, `? styles`, `? dimstyles`, `? grid`, `? attdisp`, `? entity`, and
 `? generated` answers. Generated answers are printed for `INSERT` and
 `DIMENSION` handles when every virtual entity is a supported shape. They keep
 drawing order, resolve effective properties through the owner and its layers,
@@ -74,6 +74,11 @@ including `Standard` and `ISO-25`, with essential values that differ from
 `blocks` excludes layout and anonymous dimension blocks and writes
 each definition header followed by its entities in `blocks:` format.
 
+`grid D` reports grid and snap settings from the first `*Active` VPORT
+record in the file. Missing records or groups use the new-drawing values
+in ADR 0055. `attdisp D` reports `off`, `normal` or `on` for `$ATTMODE`
+0, 1 or 2. A missing `$ATTMODE` gives `normal`.
+
 Entity answers append `layer=`, `color=`, `linetype=`, `ltscale=` and
 `lineweight=`, in that order, only when different from the defaults.
 Names use the spelling in the file's tables. RGB (group 420) takes precedence
@@ -98,7 +103,8 @@ pull request, read the oracle log, then copy the independent answers into cases.
 Do not derive expected values by executing Tecnigrafo.
 
 `controlla_casi.py` checks version, units, managed/unhandled counts, layers,
-linetypes, blocks, styles, dimension styles, entities and generated geometry
+linetypes, blocks, styles, dimension styles, grid and snap, attribute display,
+entities and generated geometry
 for each source drawing, plus source-independent
 `aci` questions. Counts and table rows are unordered lists; quoted semicolons
 do not split rows; numbers use the
@@ -145,6 +151,9 @@ A further handwritten DXF has two layers, one dash-dot linetype, RGB colors,
 lineweights and all four layer states. It checks signed gaps and dots, exact
 quoting, case-insensitive table lookup, RGB precedence, inherited properties,
 missing tables, all 255 standard answers, invalid ACI indices, positive
-comparisons and deliberate mismatches for every new question. It never
-adds reference cases or derives expected values from Tecnigrafo. The probe output
-is in **Verifica → Oracolo ezdxf** and is copied into the package PR as text.
+comparisons and deliberate mismatches for every new question. The drawing
+settings probes cover custom grid settings, a named viewport with no
+`*Active`, and a file with no VPORT table. The self-test collects failed
+checks and prints each check's name, expected value and actual value at the
+end before exiting with status 1. The probe output is in **Verifica →
+Oracolo ezdxf** and is copied into the package PR as text.
