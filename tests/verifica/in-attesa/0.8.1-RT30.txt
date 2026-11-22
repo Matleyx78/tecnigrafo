@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 The Tecnigrafo authors
+snap/vicino-autocad #947
+snap/vicino-autocad-altri #947
 snap/vicino-ellisse #947
 snap/vicino-pareggi #947
 snap/vicino-priorita #947

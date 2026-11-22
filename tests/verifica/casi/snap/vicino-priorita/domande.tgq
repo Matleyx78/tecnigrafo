@@ -15,3 +15,11 @@ L = LINE start=0,20 end=10,20
 ? snap 3,20.25 aperture=0 modes=nea -> none
 T = TEXT position=0,40 height=2.5 value="AB"
 ? snap 1,41 aperture=1 modes=nea -> none
+A = ATTDEF position=0,50 height=2.5 value="Default" tag="CODE"
+? snap 1,51 aperture=1 modes=nea -> none
+; An insertion that displays only text has no curve eligible for Nearest.
+!block "Label" base=0,0
+LabelText = TEXT position=0,0 height=2.5 value="AB"
+!endblock
+Label = INSERT block="Label" insertion=0,60
+? snap 1,61 aperture=1 modes=nea -> none

@@ -1,0 +1,337 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/autocad-vicino
+  Command: ERASE
+  1 found, 1 total
+  1 found, 2 total
+  1 found, 3 total
+  1 found, 4 total
+  1 found, 5 total
+  1 found, 6 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 217.5,-29
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 2]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 20,5.3
+active snap: Nearest 20.07058823529412,5.017647058823529
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 3]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 77.28,7.28
+active snap: Nearest 77.07106781186548,7.071067811865473
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 4]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 118.92,5.15
+active snap: Nearest 118.6602390719562,5.000025921589077
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 5]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 155,0.3
+active snap: Nearest 155,0
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 6]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 180.3,10
+active snap: Nearest 180,9.999999999999998
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 7]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 217.5,4.6
+active snap: Nearest 217.4503351974475,4.339642912161662
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[report 8]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 250,7
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
+
+[final]
+entities:
+  140 LINE start=0,0 end=40,10
+  141 ARC center=70,0 radius=10 start-angle=0 end-angle=180
+  142 CIRCLE center=110,0 radius=10
+  143 LWPOLYLINE closed=no vertex=140,0 vertex=170,0 bulge=0.9999999999999998 vertex=170,20 vertex=140,20
+  144 ELLIPSE center=210,0 major-axis=15,0 ratio=0.3333333333333333
+  145 MTEXT insertion=240,10 height=2.5 width=30 attachment=top-left rotation=0 style="Standard" direction=by-style value="Testo multiriga per lo snap Vicino" ~lines=2
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino, modified
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+documents: Drawing1.cadx, @sources/autocad-vicino (active)
+pointer: 250,7
+active snap: none
+statistics:
+  ARC 1
+  CIRCLE 1
+  ELLIPSE 1
+  LINE 1
+  LWPOLYLINE 1
+  MTEXT 1
