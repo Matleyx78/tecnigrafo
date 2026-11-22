@@ -2,6 +2,12 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-11-21
+- **Corretto:** 2026-11-22 — punti 1, 2 e 4, dopo la revisione delle
+  interfacce PT5 (#928): un asse di `gridUnit` a 0 ha il passo dello snap di
+  quell'asse, come `0,10` accettato da AutoCAD; un DXF senza voce `*ACTIVE`
+  riscritto con uno stato diverso da quello di un disegno nuovo riceve la
+  voce, così lo stato non si perde (decisioni del 2026-11-22 in
+  `docs/DECISIONI.md`, «Revisione delle interfacce PT5 della 0.8.1»).
 
 ## Contesto
 
@@ -26,7 +32,7 @@ gruppi della `VPORT`.
 | Campo | `VPORT` | Disegno nuovo |
 |---|---|---|
 | `gridOn` (`GRIDMODE`) | 76 | acceso |
-| `gridUnit` (`GRIDUNIT`, X e Y; 0,0 = segue lo snap) | 15, 25 | 10, 10 |
+| `gridUnit` (`GRIDUNIT`, X e Y; un asse a 0 segue lo snap) | 15, 25 | 10, 10 |
 | `snapOn` (`SNAPMODE`) | 75 | spento |
 | `snapUnit` (`SNAPUNIT`, X e Y, > 0) | 14, 24 | 10, 10 |
 | `snapBase` (`SNAPBASE`) | 13, 23 | 0, 0 |
@@ -47,7 +53,10 @@ profilo): lo snap polare resta fuori. Di `GRIDDISPLAY` contano il bit 2
   punto 1, nello stesso posto; tutti gli altri gruppi e le altre voci restano
   intatti (ADR 0006). Un gruppo che manca vale come in un disegno nuovo, e in
   scrittura si aggiunge solo se il valore è diverso; senza `*ACTIVE` lo stato è
-  quello di un disegno nuovo e la voce si scrive come oggi.
+  quello di un disegno nuovo, e in scrittura, se lo stato è diverso, si
+  aggiunge una voce `*ACTIVE` (e la tabella `VPORT`, se manca) con handle
+  nuovi; le altre voci restano intatte, e con lo stato di un disegno nuovo il
+  file resta com'era.
 - **Formato nativo:** gli stessi campi, con i nomi delle variabili.
 
 ### 3. Comandi e tasti
@@ -82,7 +91,8 @@ nella scheda [PT28](../tappe/0.8.1/PT28-griglia-cmd.md).
   griglia», e «Tracciamento degli snap»); l'incrocio di due guide resta il suo
   punto. Nessuna prova in AutoCAD LT ([DECISIONI.md](../DECISIONI.md),
   2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 3).
-- Con `gridUnit` 0,0 la griglia ha il passo dello snap.
+- Un asse di `gridUnit` a 0 ha il passo dello snap di quell'asse (con 0,0
+  tutti e due); il valore si conserva com'è scritto.
 
 ### 5. Disegno della griglia
 

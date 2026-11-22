@@ -2716,3 +2716,87 @@ i rimandi ai documenti che cambia.
   misura, come in `dimensionText` (PT10, PT11); una misura su più righe ha
   sempre e solo le sue due posizioni, e `Home`/`End` sulle righe interne
   portano a quelle, per la decisione appena presa (PT10).
+- **2026-11-22 — Revisione delle interfacce PT5 della 0.8.1.** Sul verbale di
+  Codex nella [#928](https://github.com/Matleyx78/tecnigrafo/issues/928)
+  (tredici [bloccante] e sette [decisione]), il responsabile approva lo
+  smistamento di Claude: alcune [decisione] le decide già una regola che c'è,
+  e si applicano così. Nella [decisione] 1, fra etichette uguali vale la prima
+  (2026-11-14, «Revisione delle interfacce PT4», P21): ogni `ATTDEF` prende il
+  primo `ATTRIB` libero, quelli in più spariscono e ogni handle si usa una
+  volta sola; l'`ATTRIB` che resta conserva i suoi dati non gestiti (ADR
+  0006). Nella [decisione] 2, il diradamento della griglia con maglie diverse
+  nei due assi non è un buco visibile e lo sceglie chi realizza. Nella
+  [decisione] 3, il `SOLID` si misura dai lati e l'ellisse ha la fascia di
+  `nearest()`. Nella [decisione] 4, il prolungamento acquisito è quello
+  dell'estremo che vince lo snap *Estremo*, la direzione quella del segmento
+  che vince il clic, e una seconda sosta rilascia l'acquisizione. Nella
+  [decisione] 6, un disegno nuovo o aperto non ha gruppo precedente. Nella
+  [decisione] 7, la nuova origine di un motivo non generabile trasla le
+  famiglie con la regola D10, con `k = 1` e `Δ = 0`. Le altre parti le decide
+  il responsabile, un commento per scelta nella #928:
+  1. *[decisione] 2, `GRIDUNIT` con un solo zero* (PT27, PT28, PT29): lo zero
+     vale per il suo asse, che prende il passo dello snap (`0,10` con snap
+     10,10 dà 10 e 10), per i comandi, la lettura DXF e il setter. AutoCAD LT
+     accetta `0,10` (seduta del responsabile nella #928).
+  2. *[decisione] 3, pareggi di Vicino a id uguale* (PT30): vince la prima
+     forma nell'ordine di generazione, come il primo segmento di D7.
+  3. *[decisione] 5, pareggio rimasto fra due incroci* (PT31): vince quello la
+     cui altra guida è più recente; con la stessa coppia di guide, il primo
+     lungo il prolungamento dall'estremo acquisito.
+  4. *[decisione] 5, distanza scritta oltre il tratto di un prolungamento
+     d'arco* (PT31): ripiego senza guida, come distanza diretta verso il
+     puntatore, confine compreso nel tratto; senza prova in AutoCAD LT.
+  5. *[decisione] 6, selezione Previous* (PT34): una richiesta finita senza oggetti
+     non cambia il gruppo precedente, e gli oggetti preselezionati con cui
+     parte un comando lo diventano; senza prova in AutoCAD LT.
+  6. *[decisione] 7, motivo proposto dopo Properties di `-HATCHEDIT`* (PT26):
+     `HPNAME` cambia solo con un motivo che `-HATCH` sa creare.
+
+  Le [bloccante] le corregge la stessa pull request, senza scelte: lo stato
+  del disegno passa da `edit::DocumentTables` e segna modificato il solo
+  documento (PT27, PT18, PT28, PT32); un DXF senza `*ACTIVE` riceve la voce
+  quando lo stato cambia (PT27); l'`ATTDEF` nel disegno si disegna sempre
+  (PT27); il secondo 280 nei record nuovi (PT15); i filtri prima della scelta
+  col clic, e niente attributi annidati (PT15, PT19); il posto degli `ATTDEF`
+  è `order` (PT16); il simbolo di `Nearest` in `render` (PT30, che passa
+  `scene_renderer.cpp` a PT29); un punto solo per clic, preview, rapporto e
+  guide, e la distanza sulla parallela dal punto base (PT28, PT31, e
+  REGOLE-NUMERICHE.md, sezione 4, «Orto e polare», punto 3, precisato); le
+  guide effettive alla vista (PT31, PT33); `#` e `*` nel campo dinamico
+  (PT34); gli id dei contorni trovati (PT26); ogni record `INSERT` una volta
+  nella sincronizzazione (PT16, PT18); *All* dal più recente (PT34). Il punto
+  d'inserimento di un `INSERT` resta fra gli snap di punto (0.8, P4). Sono
+  corretti gli ADR 0055, 0056 e 0057, REGOLE-NUMERICHE.md (sezione 4) e le
+  schede PT15, PT16, PT18, PT19, PT26, PT27, PT28, PT29, PT30, PT31,
+  PT32, PT33 e PT34.
+
+  Dalla revisione della correzione (verbale di Codex nella
+  [#992](https://github.com/Matleyx78/tecnigrafo/pull/992), cinque
+  [bloccante] e cinque [decisione]), tre [decisione] le decide una regola che
+  c'è: fra due incroci con le stesse acquisizioni vince quello con la guida
+  orizzontale (sezione 4, «Tracciamento degli snap», punti 2 e 3); una
+  distanza negativa lungo un prolungamento è fuori dal tratto e prende il
+  ripiego, con il suo segno (scelta 4 qui sopra); *Parallelo* su due segmenti
+  della stessa polilinea prende il primo, come `closest`. Il responsabile
+  decide le altre due, un commento per scelta nella #928:
+  7. *Sosta dove vince un altro snap di punto* (PT31): si acquisisce solo lo
+     snap che vince, e il prolungamento solo se quello è un *Estremo*.
+  8. *Spegnere un solo modo* (PT31): toglie la parte delle acquisizioni che ne
+     dipende, e riaccenderlo non la riporta.
+
+  Le cinque [bloccante]: RT27 riallinea il caso della 0.8 sull'`ATTDEF`
+  invisibile (PT27); il punto d'inserimento dell'`INSERT` fra gli snap di
+  punto scritto anche in REGOLE-NUMERICHE.md e nell'ADR 0057; i tre filtri di
+  `-ATTEDIT` sono blocco, etichetta e valore (PT15, PT19); il punto finale si
+  verifica su clic e preview (PT28); `findSnapHit` in `core` dà l'identità
+  dello snap (PT31, che dipende anche da PT8).
+
+  Dal secondo giro della revisione (#992) nessuna scelta nuova: fra due
+  incroci con le stesse acquisizioni e guide diverse si confrontano le guide
+  dall'acquisizione più recente, prolungamento, poi orizzontale, poi
+  verticale (D6 e punti 2 e 3, sezione 4, «Tracciamento degli snap»); una
+  sosta su un estremo non acquisisce anche una direzione di *Parallelo*
+  (scelta 7). Corretti: gli estremi del *Prolungamento* in gara per la sosta
+  anche con *Estremo* spento (PT31); la transizione dell'ADR 0037, punto 5,
+  per il caso riallineato da RT27 (PT27); i rimandi di PT31 a
+  REGOLE-NUMERICHE.md e a PT28.

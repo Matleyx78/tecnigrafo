@@ -29,8 +29,11 @@
 
 1. Azioni `aids.grid` (`F7`) e `aids.snapgrid` (`F9`), con gli interruttori a
    icona nella barra di stato accanto all'orto e al polare: cambiano
-   `GridSettings` del documento attivo con i messaggi dell'ADR 0055, punto 3; lo
-   stato degli interruttori segue il documento quando cambia la scheda.
+   `GridSettings` del documento attivo con i messaggi dell'ADR 0055, punto 3,
+   con `edit::DocumentTables::setGrid()` di PT27, che lo segna modificato
+   senza un passo di annullamento (verbale della revisione PT5, [bloccante]
+   1); lo stato degli interruttori segue il documento quando cambia la
+   scheda.
 2. *Vicino*, *Prolungamento* e *Parallelo* fra gli snap della barra e delle
    Impostazioni (`aids.snap.nearest`, `.extension`, `.parallel`), spenti per
    difetto.
@@ -45,7 +48,9 @@
 
 ## Test richiesti
 
-- `F7` e `F9` con due documenti aperti; i tre snap nuovi accesi dalla barra
+- `F7` e `F9` con due documenti aperti, appena salvati: `F7` su A segna
+  modificata solo la scheda di A, senza un passo di annullamento; salvato e
+  riaperto, A ha la griglia com'era al salvataggio; i tre snap nuovi accesi dalla barra
   arrivano a `DrawingAids`; calamita e assi salvati nelle Impostazioni.
 
 ## Fatto quando

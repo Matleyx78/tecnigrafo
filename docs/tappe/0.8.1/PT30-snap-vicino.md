@@ -9,7 +9,7 @@
   (priorità e pareggi)
 - **Dipende da:** PT2, PT5, RT30
 - **Modulo:** `core` (più `!osnap nea`, `modes=nea` e il tipo `Nearest` in
-  `script`)
+  `script`, e il simbolo di `Nearest` in `render`)
 - **Da leggere:** [ADR 0057](../../adr/0057-snap-vicino-prolungamento-parallelo.md),
   punti 1 e 2;
   [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md), punto 5;
@@ -25,10 +25,14 @@
 - `core/src/document_query.cpp`, `core/include/tg/core/document_query.hpp`
   (anche il filtro: le forme di testo della geometria generata non danno
   *Vicino*; `generated.cpp` lo cambia PT8 e qui non si tocca)
+- `render/src/scene_renderer.cpp` (`renderSnapMarker`: il simbolo di
+  `Nearest`, e nessun simbolo per `Extension` e `Parallel`, che sono guide e
+  li disegna la vista; verbale della revisione PT5, [bloccante] 7)
 - `script/src/script.cpp` (`nea`; `ext` e `par` restano annunciati),
   `script/src/questions.cpp` (`modes=nea`), `script/src/text_format.cpp`
   (`Nearest`)
-- `tests/core/document_query_test.cpp`, `tests/script/script_test.cpp`
+- `tests/core/document_query_test.cpp`, `tests/script/script_test.cpp`,
+  `tests/render/scene_renderer_test.cpp`
 
 ## Cosa fare
 
@@ -44,13 +48,34 @@
 3. Nessun *Vicino* su `TEXT`, `MTEXT`, `ATTDEF`, `ATTRIB`, sui testi generati e
    sui retini: come AutoCAD, che su `TEXT` e sul retino (con `OSNAPHATCH` 0, il
    valore di fabbrica) risponde «Punto non valido».
+4. **Il `SOLID`** si misura dai suoi **lati** (ADR 0057, punto 2), non dalla
+   regione piena con cui lo sceglie il clic: un puntatore dentro il `SOLID`
+   ma più lontano dell'apertura da ogni lato non dà *Vicino* (revisione PT5,
+   [decisione] 3).
+5. **Il punto d'inserimento di un `INSERT`** resta fra gli snap di punto, come
+   oggi (0.8, «snap inserimento sempre»: [DECISIONI.md](../../DECISIONI.md),
+   2026-11-14, «Revisione delle interfacce PT4», P4): entro l'apertura vince su
+   *Vicino*, e vale anche quando il blocco non ha forme visibili.
+6. **`render`** ([bloccante] 7): `renderSnapMarker` ha un caso per ogni valore
+   di `SnapKind`; `Nearest` con il simbolo di AutoCAD (una clessidra: due
+   triangoli opposti al vertice dentro il quadrato del simbolo), `Extension` e
+   `Parallel` senza simbolo (sono guide di PT31, che disegna la vista, PT33).
+   Così `render` compila con gli avvisi come errori appena il tipo cambia.
 
 ## Regole della tappa che valgono qui
 
 - Priorità: [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 4,
   «Selezione e snap a oggetto», punto 2.
 - Pareggi di *Vicino*: fra due curve l'id più alto, dentro una polilinea il
-  primo segmento (stessa sezione, punto 2, «Pareggi di *Vicino*»).
+  primo segmento; fra due forme con lo stesso id (le forme generate di un
+  inserimento, i lati di un `SOLID`) la prima nell'ordine di generazione
+  (stessa sezione, punto 2, «Pareggi di *Vicino*»; revisione PT5,
+  [decisione] 3). Sull'ellisse il punto e la distanza sono quelli di
+  `nearest()`, con la sua fascia: quando l'errore dichiarato basta a cambiare
+  il vincitore, il test accetta tutti e due (ADR 0013 di solid-space,
+  punto 4).
+- `render/src/scene_renderer.cpp` lo cambia dopo questo pacchetto PT29 (la
+  griglia), che si aggiorna.
 
 ## Test richiesti
 
@@ -58,6 +83,17 @@
   bordo di un cerchio; un estremo entro l'apertura che vince su *Vicino*; due
   linee alla stessa distanza; i cinque oggetti di `autocad-vicino-altri`
   (inserimento, quota, `SOLID`, retino e `TEXT`).
+- Pareggi (revisione PT5, [decisione] 3 e [bloccante] 7): due linee di id
+  diversi alla stessa distanza (vince l'id più alto); due segmenti di una
+  polilinea (il primo); un `INSERT` con due `LINE` da `(0,-1)` a `(10,-1)` e
+  da `(0,1)` a `(10,1)`, la prima nel blocco a `y=-1`, puntatore `(5,0)`,
+  apertura 2: `Nearest 5,-1`; un `SOLID` con il puntatore al centro, lontano
+  dai lati più dell'apertura (nessun *Vicino*), e a pari distanza da due lati
+  (il primo lato).
+- `modes=ins,nea` sul punto d'inserimento di un `INSERT`: `Insertion`; lo
+  stesso con un blocco senza forme visibili.
+- `renderSnapMarker` con `Nearest`, `Extension` e `Parallel` nel pittore di
+  prova.
 
 ## Fatto quando
 

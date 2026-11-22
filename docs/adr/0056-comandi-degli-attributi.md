@@ -2,6 +2,12 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-11-21
+- **Corretto:** 2026-11-22 — punto 5, dopo la revisione delle interfacce PT5
+  (#928): fra `ATTRIB` con etichette uguali tiene valore e handle il primo
+  libero, gli altri spariscono, e l'`ATTRIB` che resta conserva i suoi dati
+  non gestiti; la sincronizzazione aggiorna ogni record `INSERT` del blocco,
+  anche dentro altre definizioni, una volta (decisioni del 2026-11-22 in
+  `docs/DECISIONI.md`, «Revisione delle interfacce PT5 della 0.8.1»).
 
 ## Contesto
 
@@ -96,10 +102,14 @@ richieste e i risultati di AutoCAD.
   altezza, rotazione, stile, modi, proprietà) dall'`ATTDEF` portato nel disegno
   dalla trasformazione dell'inserimento; quelli senza `ATTRIB` nascono con il
   predefinito; gli `ATTRIB` la cui etichetta non c'è più spariscono. Gli handle
-  degli `ATTRIB` che restano non cambiano.
+  degli `ATTRIB` che restano non cambiano. Fra etichette uguali vale la prima:
+  ogni `ATTDEF` prende il primo `ATTRIB` ancora libero con la sua etichetta, e
+  quelli in più spariscono; l'`ATTRIB` che resta conserva i suoi dati non
+  gestiti (XDATA, dizionari: [ADR 0006](0006-modello-dati-dwg-e-formato-cadx.md)).
 - **`ATTSYNC`**: `Enter an option [?/Name/Select] <Select>:`, poi il nome o
-  l'inserimento; aggiorna **tutti** gli inserimenti del blocco, senza conferma,
-  e chiude con `ATTSYNC complete.`.
+  l'inserimento; aggiorna **tutti** gli inserimenti del blocco, senza conferma
+  (ogni record `INSERT`, nel disegno e dentro le definizioni di altri blocchi,
+  una volta), e chiude con `ATTSYNC complete.`.
 - **`BATTMAN`** (solo nel programma): sceglie un blocco con attributi, mostra
   gli `ATTDEF` nell'ordine, e li **sposta** (su e giù), li **modifica**
   (etichetta, richiesta, predefinito, modi, testo) e li **toglie**; ogni

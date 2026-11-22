@@ -41,12 +41,19 @@ della 0.8.1», punto 3).
 ## Cosa fare
 
 1. I comandi dell'ADR 0055, punto 3, che cambiano `GridSettings` del disegno
-   corrente senza annullamento e lo segnano modificato; le variabili con `Enter
+   corrente senza annullamento e lo segnano modificato, sempre con
+   `edit::DocumentTables::setGrid()` di PT27 (verbale della revisione PT5,
+   [bloccante] 1); le variabili con `Enter
    new value for <NOME> <valore>:`, i punti come `x,y` con quattro decimali
    (`<10.0000,10.0000>`). Come AutoCAD:
    - **`GRID`**: un passo scritto, o Invio, accende la griglia; `2x` vuol dire
      due volte il passo dello snap; `0` mette `GRIDUNIT` a 0,0, come *Snap*; un
-     passo negativo dà `Value must be positive.` e la domanda si ripete.
+     passo negativo dà `Value must be positive.` e la domanda si ripete. Un
+     passo 0 in *Aspect* vale per il suo asse (`0` e `10` danno `GRIDUNIT`
+     0,10, che quell'asse legge come il passo dello snap: PT27, punto 1).
+     Con i due passi diversi, o uno a 0 e l'altro no, la proposta è `<A>`,
+     e *Aspect* propone `<0.0000>` per l'asse a 0, come AutoCAD (seduta del
+     2026-11-22 nella #928).
      *Aspect*: `Specify the horizontal spacing(X) <…>:` e `Specify the vertical
      spacing(Y) <…>:`; con i due passi diversi la proposta della domanda diventa
      `<A>`. *Major*: `Enter number of grid divisions per major grid line <5>:`,
@@ -64,7 +71,8 @@ della 0.8.1», punto 3).
    - **`UCSICON`**: la proposta è lo stato attuale (`<ON>` o `<OFF>`) e Invio lo
      lascia; *OFF* dà 2, *ON* 3, *Noorigin* 1, *ORigin* 3.
    - **Variabili**: `GRIDMAJOR` fuori da 1–100 come *Major*; `GRIDUNIT`
-     accetta 0,0 e rifiuta un passo negativo, `SNAPUNIT` rifiuta 0 e i negativi,
+     accetta 0,0 e uno zero su un solo asse (`0,10`, ripreso come
+     `<0.0000,10.0000>`) e rifiuta un passo negativo, `SNAPUNIT` rifiuta 0 e i negativi,
      tutte e due con `Cannot set <NOME> to that value.` e `*Invalid*`, e il
      comando finisce (AutoCAD accetta un `GRIDUNIT` negativo senza messaggi:
      [DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Esiti della seconda
@@ -75,6 +83,21 @@ della 0.8.1», punto 3).
    punto 6), poi tracciamento, polare e orto sul nodo (sezione 4, «Orto e
    polare», punto 3, e «Tracciamento degli snap»); l'incrocio di due guide
    resta il suo punto. Con `gridUnit` 0,0 il passo dello snap.
+   **Un punto solo per tutti** ([bloccante] 8): il nodo si calcola una volta,
+   in un passaggio comune che usano il clic (`aidedPoint`), la preview, il
+   rapporto (`active snap:`, `active tracking:`), `tracking()`,
+   `activePolar()` e la vista; nessuno interroga il puntatore per una strada
+   propria. Il nodo è il punto con cui si controlla l'apertura delle guide e
+   che le guide proiettano; le guide restano dove sono (una guida acquisita a
+   `y=5` resta a `y=5`). Con passo 10, puntatore `(4.9,4.9)`, quella guida e
+   apertura 1, il nodo `(0,0)` dista 5 dalla guida, quindi nessuna guida
+   aggancia: clic e preview danno `(0,0)`, e rapporto e `tracking()` dicono
+   tutti e due che non c'è una guida attiva. Il campo `pointer:` resta il
+   puntatore così com'è. Con l'orto il punto prende la
+   coordinata del nodo lungo la direzione scelta e quella della base
+   nell'altra: base scritta `(1,2)`, puntatore `(19,4)`, passo 10, orto: nodo
+   `(20,0)`, punto `(20,2)`; è un nodo solo se la base ha quella coordinata su
+   un nodo (REGOLE-NUMERICHE.md, sezione 4, «Orto e polare», punto 3).
 3. Il campo `grid snap: unit=x,y base=x,y`, dopo `ortho:`, solo con lo snap
    acceso (annunciato da PT2).
 4. `F7` e `F9` sono dell'interfaccia (PT32): qui nessun tasto.
@@ -94,6 +117,15 @@ della 0.8.1», punto 3).
   diversi in X e Y; uno snap a oggetto che vince; una coordinata scritta non
   toccata; con l'orto e con il polare; ogni richiesta e ogni messaggio del
   punto 1, con i valori rifiutati.
+- Un punto solo ([bloccante] 8; #992, [bloccante] 4): i due esempi del
+  punto 2. Il punto finale si controlla sul clic e sulla preview (anche nella
+  sezione `preview:` del rapporto): `(0,0)` e, con l'orto, `(20,2)`; nel
+  primo, rapporto (`active tracking:` assente) e `tracking()` (nessuna guida)
+  concordano sull'assenza di guide; `pointer:` è `4.9,4.9`.
+- `GRIDUNIT` `0,10` accettato e ripreso come `<0.0000,10.0000>`; `GRID`
+  *Aspect* con `0` e `10` ([decisione] 2); `GRIDMODE` e `GRIDUNIT` che
+  segnano il disegno modificato senza un passo di annullamento ([bloccante]
+  1).
 
 ## Fatto quando
 
@@ -131,7 +163,7 @@ GRIDMODE <0>:`.
 
 - **Strumenti:** righe normali, `!click`, `!osnap none`, `!report` su `main`;
   il campo `grid snap:` dell'onda 0 (PT2).
-- **Dipendenze:** PT27 (lo stato).
+- **Dipendenze:** PT27 (lo stato e `DocumentTables::setGrid()`).
 - **Fonte:** le cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` della
   seduta del 2026-11-22 (sopra); i DXF `autocad-griglia-*` per i valori delle
   variabili; con orto,

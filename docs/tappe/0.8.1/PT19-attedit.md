@@ -32,7 +32,10 @@ cronologia:
    clic (`pickAttribute`), finestra o intersezione, e si chiude da sola, senza
    Invio, come `EXPLODE` ([dxf-di-prova.md](dxf-di-prova.md), «Come sono fatti
    gli script»); tiene solo gli attributi visibili che passano i tre filtri;
-   `<n> found` e `<n> attributes selected.`.
+   `<n> found` e `<n> attributes selected.`. Con il clic i tre filtri vanno in
+   `accept` di `pickAttribute` e valgono **prima** della scelta del più
+   vicino, non dopo; gli attributi degli inserimenti annidati non si
+   scelgono (PT15; verbale della revisione PT5, [bloccante] 5).
 2. **Uno per uno:** per ciascun attributo, nell'ordine degli inserimenti e degli
    attributi, le opzioni; l'attributo corrente si segna (lo mostra il
    programma; nessun campo nel rapporto). *Value* con *Change* (`Enter string to
@@ -52,6 +55,11 @@ cronologia:
 
 - Le quattro sequenze di `-ATTEDIT` di `autocad-attributi`; *Position* rifiutato
   per un attributo bloccato; nessun attributo scelto.
+- Due attributi visibili sovrapposti, `SIGLA` e `CODICE`, con il filtro
+  d'etichetta `CODICE`: il clic trova `CODICE` (`1 attributes selected.`);
+  due inserimenti sovrapposti dei blocchi `A` e `B` con lo stesso `CODICE` e
+  lo stesso valore, con il filtro del blocco `A`: il clic trova quello di `A`
+  ([bloccante] 5; #992, [bloccante] 3).
 
 ## Fatto quando
 
