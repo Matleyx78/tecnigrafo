@@ -1,0 +1,29 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Inside a polyline bend the first of the two equidistant segments wins.
+Bend = LWPOLYLINE vertex=20,0 vertex=30,0 vertex=30,10
+? snap 29,1 aperture=2 modes=nea -> Nearest 29,0
+; Generated shapes share an owner. The order is the block definition order.
+!block "Pair" base=0,0
+Low = LINE start=0,-1 end=10,-1
+High = LINE start=0,1 end=10,1
+!endblock
+Pair = INSERT block="Pair" insertion=0,0
+? snap 5,0 aperture=2 modes=nea -> Nearest 5,-1
+; Equal distances between different owners: the later line wins.
+First = LINE start=100,-1 end=110,-1
+Last = LINE start=100,1 end=110,1
+? snap 105,0 aperture=2 modes=nea -> Nearest 105,1
+? snap 105,-0.25 aperture=2 modes=nea -> Nearest 105,-1
+; Insertion takes priority even when a generated line is closer.
+OtherPair = INSERT block="Pair" insertion=40,0
+? snap 40,0.75 aperture=1 modes=insertion,nea -> Insertion 40,0
+!block "Empty" base=0,0
+!endblock
+Empty = INSERT block="Empty" insertion=60,0
+? snap 60,0.5 aperture=1 modes=insertion,nea -> Insertion 60,0
+? snap 60,0.5 aperture=1 modes=nea -> none
+; SOLID uses the boundary 1,2,4,3. Its first edge is the bottom.
+S = SOLID vertex=80,0 vertex=90,0 vertex=80,10 vertex=90,10
+? snap 85,5 aperture=2 modes=nea -> none
+? snap 89,1 aperture=2 modes=nea -> Nearest 89,0

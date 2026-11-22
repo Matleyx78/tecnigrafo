@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Nearest wins over Center on the rim. The positive X ray gives (10,0).
+C = CIRCLE center=0,0 radius=10
+? snap 10.25,0 aperture=1 modes=center,nea -> Nearest 10,0
+? snap 10.25,0 aperture=1 modes=center -> Center 0,0
+; Endpoint wins although the perpendicular projection is closer.
+L = LINE start=0,20 end=10,20
+? snap 9.75,20.25 aperture=1 modes=endpoint,nea -> Endpoint 10,20
+? snap 9.75,20.25 aperture=1 modes=nea -> Nearest 9.75,20
+; Nearest is off without the explicit mode, away from both ends and midpoint.
+? snap 3,20.25 aperture=0.5 -> none
+; Zero aperture still accepts a point exactly on the line.
+? snap 3,20 aperture=0 modes=nea -> Nearest 3,20
+? snap 3,20.25 aperture=0 modes=nea -> none
+T = TEXT position=0,40 height=2.5 value="AB"
+? snap 1,41 aperture=1 modes=nea -> none
