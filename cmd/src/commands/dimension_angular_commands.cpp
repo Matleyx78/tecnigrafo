@@ -199,6 +199,8 @@ Prompt DimangularCommand::prompt() const {
             const core::Vec2 firstDirection = m_first.end - m_first.start;
             const core::Vec2 secondDirection = m_second.end - m_second.start;
             const double divisor = firstDirection.length() * secondDirection.length();
+            // Before the arc location is known, propose the supplement of the angle between the
+            // stored line directions; the proposal deliberately does not depend on the arc sector.
             const double cosine =
                 std::clamp(-core::dot(firstDirection, secondDirection) / divisor, -1.0, 1.0);
             std::string value = core::dimensionText(variables, core::DimensionKind::Angular,

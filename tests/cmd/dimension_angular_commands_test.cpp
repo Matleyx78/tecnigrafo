@@ -88,6 +88,18 @@ TEST_F(DimensionAngularCommandsTest, AngularLocationSelectsAllFourSectors) {
     }
 }
 
+TEST_F(DimensionAngularCommandsTest, AngularTextDefaultUsesStoredLineDirections) {
+    add(core::Line{{0.0, 0.0}, {40.0, 0.0}});
+    add(core::Line{{30.0, 40.0}, {0.0, 0.0}});
+
+    runner().submitText("DIMANGULAR");
+    runner().click({20.0, 0.0}, PickAction::Add);
+    runner().click({15.0, 20.0}, PickAction::Add);
+    runner().submitText("Mtext");
+
+    EXPECT_EQ(runner().promptText(), "Enter dimension text <53>:");
+}
+
 TEST_F(DimensionAngularCommandsTest, AngularRejectsAnArcAndPolylineArc) {
     add(core::Arc{{0.0, 0.0}, 10.0, 0.0, core::kPi});
     core::Polyline polyline;
