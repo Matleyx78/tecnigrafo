@@ -51,6 +51,16 @@ struct CommandDefaults {
     bool chamferUseAngle{false};
     bool trimMode{true};
     bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    double rectangChamferFirst{0.0};
+    double rectangChamferSecond{0.0};
+    double rectangFilletRadius{0.0};
+    double rectangWidth{0.0};
+    double rectangElevation{0.0};
+    double rectangThickness{0.0};
+    double rectangRotation{0.0};  ///< radians
+    double rectangLength{10.0};
+    double rectangOtherWidth{10.0};
+    bool rectangUseFillet{false};
     /// HPISLANDDETECTION: 0 Normal, 1 Outer (the start-up value), 2 Ignore.
     core::IslandStyle hatchIslands{core::IslandStyle::Outer};
     /// HPNAME, HPSCALE and HPANG for the next -HATCH (docs/adr/0048, point 6).
