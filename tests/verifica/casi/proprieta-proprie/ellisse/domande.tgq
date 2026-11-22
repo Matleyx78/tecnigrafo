@@ -1,0 +1,28 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT22 (#943): the full area is pi*a*b and the ratio is b/a.
+; The radii and true arc angles match the AutoCAD 2021 palette session where applicable.
+E = ELLIPSE center=10,10 major-axis=20,0 ratio=0.5
+? properties E -> center=10,10; major-radius=20; minor-radius=10; ratio=0.5; start-angle=0; end-angle=360; ~area=628.3185307179587
+? set-property E center=15,-5 -> ELLIPSE center=15,-5 major-axis=20,0 ratio=0.5 | center=15,-5; major-radius=20; minor-radius=10; ratio=0.5; start-angle=0; end-angle=360; ~area=628.3185307179587
+? set-property E major-radius=30 -> ELLIPSE center=10,10 major-axis=30,0 ratio=0.3333333333333333 | center=10,10; major-radius=30; minor-radius=10; ratio=0.3333333333333333; start-angle=0; end-angle=360; ~area=1884.955592153876
+? set-property E minor-radius=5 -> ELLIPSE center=10,10 major-axis=20,0 ratio=0.25 | center=10,10; major-radius=20; minor-radius=5; ratio=0.25; start-angle=0; end-angle=360; ~area=314.1592653589793
+? set-property E ratio=0.75 -> ELLIPSE center=10,10 major-axis=20,0 ratio=0.75 | center=10,10; major-radius=20; minor-radius=15; ratio=0.75; start-angle=0; end-angle=360; ~area=942.4777960769379
+? set-property E ratio=1 -> ELLIPSE center=10,10 major-axis=20,0 ratio=1 | center=10,10; major-radius=20; minor-radius=20; ratio=1; start-angle=0; end-angle=360; ~area=1256.637061435918
+; The old minor axis becomes the major axis (REGOLE-NUMERICHE.md, section 2, point 7).
+? set-property E major-radius=5 -> ELLIPSE center=10,10 major-axis=0,10 ratio=0.5 | center=10,10; major-radius=10; minor-radius=5; ratio=0.5; start-angle=0; end-angle=360; ~area=157.0796326794897
+? set-property E minor-radius=25 -> ELLIPSE center=10,10 major-axis=0,25 ratio=0.8 | center=10,10; major-radius=25; minor-radius=20; ratio=0.8; start-angle=0; end-angle=360; ~area=1570.796326794897
+? set-property E major-radius=0 -> invalid
+? set-property E minor-radius=-1 -> invalid
+? set-property E ratio=0 -> invalid
+? set-property E ratio=-0.25 -> invalid
+? set-property E ratio=1.01 -> invalid
+; Each question sees the original entity, including after a successful change.
+? properties E -> center=10,10; major-radius=20; minor-radius=10; ratio=0.5; start-angle=0; end-angle=360; ~area=628.3185307179587
+; DXF parameters use atan2(a*sin(theta), b*cos(theta)). The segment area is
+; a*b/2 times (sweep - sin(sweep)); changing either angle keeps the other parameter.
+A = ELLIPSE center=210,-40 major-axis=20,0 ratio=0.5 start=63.43494882292198 end=116.56505117707795
+? properties A -> center=210,-40; major-radius=20; minor-radius=10; ratio=0.5; start-angle=45; end-angle=135; ~area=12.7295218001612
+? set-property A start-angle=30 -> ELLIPSE center=210,-40 major-axis=20,0 ratio=0.5 start=49.1066053508691 end=116.56505117707795 | center=210,-40; major-radius=20; minor-radius=10; ratio=0.5; start-angle=30; end-angle=135; ~area=25.3770242285045
+? set-property A end-angle=150 -> ELLIPSE center=210,-40 major-axis=20,0 ratio=0.5 start=63.43494882292198 end=130.89339464913093 | center=210,-40; major-radius=20; minor-radius=10; ratio=0.5; start-angle=45; end-angle=150; ~area=25.3770242285045
+? properties A -> center=210,-40; major-radius=20; minor-radius=10; ratio=0.5; start-angle=45; end-angle=135; ~area=12.7295218001612
