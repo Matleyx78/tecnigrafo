@@ -1,0 +1,204 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20
+  258 LWPOLYLINE closed=yes vertex=60,3 vertex=65,0 vertex=97,0 vertex=100,5 vertex=100,17 vertex=95,20 vertex=63,20 vertex=60,15
+  259 LWPOLYLINE closed=yes vertex=120,4 bulge=0.4142135623730951 vertex=124,0 vertex=156,0 bulge=0.4142135623730951 vertex=160,4 vertex=160,16 bulge=0.4142135623730951 vertex=156,20 vertex=124,20 bulge=0.4142135623730951 vertex=120,16
+  260 LWPOLYLINE closed=yes width=1 vertex=180,0 vertex=220,0 vertex=220,20 vertex=180,20
+  261 LWPOLYLINE closed=yes vertex=240,0 vertex=270,0 vertex=270,20 vertex=240,20
+  262 LWPOLYLINE closed=yes vertex=300,0 vertex=340,0 vertex=340,20 vertex=300,20
+  263 LWPOLYLINE closed=yes vertex=360,0 vertex=400,0 vertex=400,20 vertex=360,20 elevation=5
+  264 LWPOLYLINE closed=yes vertex=420,0 vertex=460,0 vertex=460,20 vertex=420,20 thickness=2
+  265 LWPOLYLINE closed=yes vertex=520,20 vertex=480,20 vertex=480,0 vertex=520,0
+  266 LWPOLYLINE closed=yes vertex=540,0 vertex=574.6410161513775,20.00000000000001 vertex=564.6410161513776,37.32050807568877 vertex=530,17.32050807568876
+messages:
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 40,20
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 3
+  Specify second chamfer distance for rectangles <3.0000>: 5
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 60,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 100,20
+  Command: RECTANG
+  Current rectangle modes:  Chamfer=3.0000 x 5.0000
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <3.0000>: 0
+  Specify second chamfer distance for rectangles <5.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 4
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 120,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 160,20
+  Command: RECTANG
+  Current rectangle modes:  Fillet=4.0000
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <4.0000>: 0
+  Specify second chamfer distance for rectangles <4.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 1
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 180,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 220,20
+  Command: RECTANG
+  Current rectangle modes:  Width=1.0000
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <1.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 240,0
+  Specify other corner point or [Area/Dimensions/Rotation]: A
+  Enter area of rectangle in current units <100.0000>: 600
+  Calculate rectangle dimensions based on [Length/Width] <Length>: L
+  Enter rectangle length <10.0000>: 30
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 300,0
+  Specify other corner point or [Area/Dimensions/Rotation]: D
+  Specify length for rectangles <30.0000>: 40
+  Specify width for rectangles <20.0000>: 20
+  Specify other corner point or [Area/Dimensions/Rotation]: 350,30
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 5
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 360,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 400,20
+  Command: RECTANG
+  Current rectangle modes:  Elevation=5.0000
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <5.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 2
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 420,0
+  Specify other corner point or [Area/Dimensions/Rotation]: 460,20
+  Command: RECTANG
+  Current rectangle modes:  Thickness=2.0000
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <2.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 520,20
+  Specify other corner point or [Area/Dimensions/Rotation]: 480,0
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: C
+  Specify first chamfer distance for rectangles <0.0000>: 0
+  Specify second chamfer distance for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: F
+  Specify fillet radius for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: W
+  Specify line width for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: E
+  Specify the elevation for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: T
+  Specify thickness for rectangles <0.0000>: 0
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 540,0
+  Specify other corner point or [Area/Dimensions/Rotation]: R
+  Specify rotation angle or [Pick points] <0>: 30
+  Specify other corner point or [Area/Dimensions/Rotation]: D
+  Specify length for rectangles <40.0000>: 40
+  Specify width for rectangles <20.0000>: 20
+  Specify other corner point or [Area/Dimensions/Rotation]: 590,40
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+  Rectang
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 10

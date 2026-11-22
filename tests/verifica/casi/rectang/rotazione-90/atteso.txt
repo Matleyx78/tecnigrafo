@@ -1,0 +1,43 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=0,0 vertex=0,40 vertex=-20,40 vertex=-20,0
+  258 LWPOLYLINE closed=yes vertex=100,0 vertex=60,0 vertex=60,-10 vertex=100,-10
+  259 LWPOLYLINE closed=yes vertex=200,0 vertex=240,0 vertex=240,20 vertex=200,20
+messages:
+  Command: RECTANG
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 0,0
+  Specify other corner point or [Area/Dimensions/Rotation]: R
+  Specify rotation angle or [Pick points] <0>: 90
+  Specify other corner point or [Area/Dimensions/Rotation]: D
+  Specify length for rectangles <10.0000>: 40
+  Specify width for rectangles <10.0000>: 20
+  Specify other corner point or [Area/Dimensions/Rotation]: -10,50
+  Command: RECTANG
+  Current rectangle modes:  Rotation=90
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 100,0
+  Specify other corner point or [Area/Dimensions/Rotation]: R
+  Specify rotation angle or [Pick points] <90>: 180
+  Specify other corner point or [Area/Dimensions/Rotation]: 60,-10
+  Command: RECTANG
+  Current rectangle modes:  Rotation=180
+  Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]: 200,0
+  Specify other corner point or [Area/Dimensions/Rotation]: R
+  Specify rotation angle or [Pick points] <180>: 0
+  Specify other corner point or [Area/Dimensions/Rotation]: 240,20
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Rectang
+  Rectang
+  Rectang
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 3

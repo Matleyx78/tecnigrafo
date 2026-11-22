@@ -1,0 +1,28 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT35 (#932): the result of AutoCAD 2021 for autocad-rectang-opzioni.scr (Matleyx78/dxf-test-file,
+; commit d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9, CC0-1.0; second session of 2026-11-22,
+; docs/tappe/0.8.1/dxf-di-prova.md). The expected values of rectang/opzioni come from here;
+; the Oracolo ezdxf step of the CI compares these answers with ezdxf.
+D = DXF source=autocad-rectang-opzioni
+? version D -> AC1032
+? units D -> 4
+? count D -> LWPOLYLINE 8
+? unhandled D -> none
+; a: Rotation with Pick points from 0,0 to 4,3 (u = 0.8,0.6), Dimensions 40 x 20, towards 60,60
+? entity D 8C -> LWPOLYLINE closed=yes vertex=0,0 vertex=32,24 vertex=20,40 vertex=-12,16
+; b: Area 600 from the width 20
+? entity D 8D -> LWPOLYLINE closed=yes vertex=100,0 vertex=130,0 vertex=130,20 vertex=100,20
+; c: Width 1 together with Fillet 4: bulges and width both kept
+? entity D 8E -> LWPOLYLINE closed=yes width=1 vertex=160,4 bulge=0.4142135623730951 vertex=164,0 vertex=196,0 bulge=0.4142135623730951 vertex=200,4 vertex=200,16 bulge=0.4142135623730951 vertex=196,20 vertex=164,20 bulge=0.4142135623730951 vertex=160,16
+; d: Chamfer 25 and 25 on a 40 x 20 (does not fit): 8 vertices, every corner twice, no message
+? entity D 8F -> LWPOLYLINE closed=yes vertex=220,0 vertex=220,0 vertex=260,0 vertex=260,0 vertex=260,20 vertex=260,20 vertex=220,20 vertex=220,20
+; e: Fillet 15 on a 40 x 20 (does not fit): 8 vertices, no bulge, no message
+? entity D 90 -> LWPOLYLINE closed=yes vertex=280,0 vertex=280,0 vertex=320,0 vertex=320,0 vertex=320,20 vertex=320,20 vertex=280,20 vertex=280,20
+; f: Rotation 30 and the other corner typed (380,20): sizes are the projections of Q - P, clockwise
+? entity D 91 -> LWPOLYLINE closed=yes vertex=340,0 vertex=378.6602540378444,22.32050807568877 vertex=380,20 vertex=341.3397459621557,-2.320508075688768
+; g: from the bottom right corner to the top left one: clockwise
+? entity D 92 -> LWPOLYLINE closed=yes vertex=440,0 vertex=400,0 vertex=400,20 vertex=440,20
+; h: from the top left corner to the bottom right one: clockwise
+? entity D 93 -> LWPOLYLINE closed=yes vertex=460,20 vertex=500,20 vertex=500,0 vertex=460,0

@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RECTANG (0.8.1-PT35, #932): directions from Rotation with cardinalSinCos (REGOLE-NUMERICHE.md,
+; section 2, point 1; D8): a quarter turn gives exact vertices, hence absolute tolerance 0.
+; Vertices by hand as the card says: P, P + dx u, the opposite corner, P + dy v. 90 with Dimensions
+; 40 x 20 towards -10,50 (u = 0,1, v = -1,0); 180 with the corner typed 60,-10 (projections 40 and
+; 10 on u = -1,0 and v = 0,-1); 0 resets the rotation. The mode and the proposal are 90 and 180.
+!tolerance absolute 0
+RECTANG
+0,0
+R
+90
+D
+40
+20
+-10,50
+RECTANG
+100,0
+R
+180
+60,-10
+RECTANG
+200,0
+R
+0
+240,20
