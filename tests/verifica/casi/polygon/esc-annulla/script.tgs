@@ -1,0 +1,39 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; POLYGON (0.8.1-PT36, #934): Esc at every prompt leaves no entity; the alias POL; one undo
+; step Polygon, U and REDO. The Esc cases always type the proposals (4 sides, Inscribed), so
+; what Esc keeps of them does not matter. Square inscribed in a circle of radius 10, by hand: even,
+; so the first vertex is at 90 + 45 degrees.
+POLYGON
+!esc
+POL
+4
+!esc
+POLYGON
+4
+0,0
+!esc
+POLYGON
+4
+0,0
+I
+!esc
+POLYGON
+4
+E
+!esc
+POLYGON
+4
+E
+0,0
+!esc
+!report
+POLYGON
+4
+0,0
+I
+10
+!report
+U
+!report
+REDO

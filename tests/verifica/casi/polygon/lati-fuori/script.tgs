@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; POLYGON (0.8.1-PT36, #934): 2 and 1025 sides are refused with the message of AutoCAD 2021
+; and the prompt repeats (docs/tappe/0.8.1/dxf-di-prova.md, second session; card, point 1); 1024
+; is in polygon/base. Then 3 sides as polygon a of polygon/autocad (8C); the next POLYGON proposes 3
+; (Esc after typing the proposal: nothing changes).
+POLYGON
+2
+1025
+3
+0,0
+I
+20
+POLYGON
+3
+!esc

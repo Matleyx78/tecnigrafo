@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; POLYGON (0.8.1-PT36, #934): directions with cardinalSinCos (REGOLE-NUMERICHE.md, section 2,
+; point 1; D8): the vertices of a square inscribed with the radius given by a point on an axis are
+; quarter turns, hence exact, and the absolute tolerance is 0. The first vertex is the point, then
+; counterclockwise (card, point 2). The second POLYGON takes the proposals 4 and I with Enter.
+!tolerance absolute 0
+POLYGON
+4
+0,0
+I
+10,0
+POLYGON
+
+100,0
+
+100,10
