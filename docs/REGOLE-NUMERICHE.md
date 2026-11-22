@@ -338,11 +338,20 @@ puntatore (confrontata al quadrato, sezione 3):
    prolungamento) vince il prolungamento ([DECISIONI.md](DECISIONI.md),
    2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 6). Se due
    incroci usano tutti e due l'acquisizione più recente, vince quello la cui
-   **altra** guida è stata acquisita più di recente; se la coppia di guide è
-   la stessa (un prolungamento d'arco che incrocia una retta in due punti),
-   il primo incrocio lungo il prolungamento, dall'estremo acquisito
-   allontanandosi dall'arco ([DECISIONI.md](DECISIONI.md), 2026-11-22,
-   «Revisione delle interfacce PT5 della 0.8.1», [decisione] 5).
+   **altra** guida è stata acquisita più di recente. Se i due incroci usano
+   le stesse acquisizioni con guide diverse, si confrontano le guide
+   acquisizione per acquisizione, dalla più recente, con l'ordine dei punti
+   2 e 3 e della frase qui sopra: il prolungamento, poi l'orizzontale, poi la
+   verticale. Così un punto `(-1,1)` e poi un prolungamento lungo `y=x`, con
+   il puntatore `(0.2,-0.2)`, danno `(1,1)` (stesso prolungamento,
+   orizzontale contro verticale); due punti acquisiti con il loro
+   prolungamento, `(-1,-4)` lungo `y=2x-2` e poi `(1,4)` lungo `y=2x+2`, con
+   il puntatore `(0,0)`, danno `(-1,0)` (dell'acquisizione più recente, il
+   prolungamento vince sulla verticale). Se la coppia di guide è la stessa
+   (un prolungamento d'arco che incrocia una retta in due punti), il primo
+   incrocio lungo il prolungamento, dall'estremo acquisito allontanandosi
+   dall'arco ([DECISIONI.md](DECISIONI.md), 2026-11-22, «Revisione delle
+   interfacce PT5 della 0.8.1», [decisione] 5 e revisione della correzione).
 
 (I punti 1–5 in [0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3.)
 

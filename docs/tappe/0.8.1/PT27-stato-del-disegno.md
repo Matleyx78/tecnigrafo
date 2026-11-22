@@ -173,8 +173,14 @@ sull'attributo invisibile; lo stesso script con `autocad-attdisp-off` dà
   `generated`, `pick`, `crossing`, `window` e `snap` non sono più `none`
   (resta `none` per `F`, sul layer congelato). Le riallinea **RT27**, che
   aggiorna quel caso insieme ai suoi (verbale della revisione della
-  correzione #992, [bloccante] 1): finché RT27 non è unito PT27 non parte, e
-  il caso non è mai rosso. `roundtrip` dei casi di oggi resta
+  correzione #992, [bloccante] 1), con la transizione dell'[ADR
+  0037](../../adr/0037-controllo-anticipato-dei-riferimenti.md), punto 5:
+  sposta le righe di `F` (layer congelato) **prima** di quelle di `I`, così
+  restano confrontate; mette `; cambia con #945` subito prima della prima
+  risposta di `I` che cambia; scrive le risposte nuove e mette il caso nel
+  suo file di `tests/verifica/in-attesa/`. Su `main` il caso resta verde
+  fino al confine; PT27 lo toglie da `in-attesa/` e il confronto torna
+  completo (#992, secondo giro, [bloccante] 2). `roundtrip` dei casi di oggi resta
   `identical` (punto 2); `attdisp:` manca per `$ATTMODE` 1, che è quello di
   tutti i DXF usati dai casi di oggi (controllato su `dxf-test-file`: solo i
   due `autocad-attdisp-*` hanno 0 e 2); `grid snap:` è di PT28.

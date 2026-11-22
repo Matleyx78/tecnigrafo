@@ -2790,3 +2790,13 @@ i rimandi ai documenti che cambia.
   `-ATTEDIT` sono blocco, etichetta e valore (PT15, PT19); il punto finale si
   verifica su clic e preview (PT28); `findSnapHit` in `core` dà l'identità
   dello snap (PT31, che dipende anche da PT8).
+
+  Dal secondo giro della revisione (#992) nessuna scelta nuova: fra due
+  incroci con le stesse acquisizioni e guide diverse si confrontano le guide
+  dall'acquisizione più recente, prolungamento, poi orizzontale, poi
+  verticale (D6 e punti 2 e 3, sezione 4, «Tracciamento degli snap»); una
+  sosta su un estremo non acquisisce anche una direzione di *Parallelo*
+  (scelta 7). Corretti: gli estremi del *Prolungamento* in gara per la sosta
+  anche con *Estremo* spento (PT31); la transizione dell'ADR 0037, punto 5,
+  per il caso riallineato da RT27 (PT27); i rimandi di PT31 a
+  REGOLE-NUMERICHE.md e a PT28.

@@ -44,9 +44,18 @@
    di sempre: a pari distanza l'id più alto, REGOLE-NUMERICHE.md, sezione 4,
    «Selezione e snap a oggetto», punto 2), e il prolungamento **solo se**
    quello snap è l'*Estremo* di una `LINE`, di un `ARC` o del segmento
-   estremo di una `LWPOLYLINE` aperta. Se vince un altro snap di punto (un
-   *Medio* più vicino), si acquisisce solo quello, anche con un estremo
-   dentro l'apertura (#992, [decisione] 4, scelta del responsabile); la direzione di *Parallelo* è quella del segmento che vince il
+   estremo di una `LWPOLYLINE` aperta. Per la sosta, con *Prolungamento*
+   acceso, quegli estremi entrano in gara come *Estremo* **anche con
+   *Estremo* spento**: se vincono si acquisisce il solo prolungamento (il
+   punto, come punto del tracciamento, solo con OTRACK ed *Estremo* accesi);
+   per il clic e la preview restano fuori (#992, secondo giro, [bloccante]
+   1). Se vince un altro snap di punto (un *Medio* più vicino), si acquisisce
+   solo quello, anche con un estremo dentro l'apertura (#992, [decisione] 4,
+   scelta del responsabile). Per lo stesso motivo una sosta che acquisisce un
+   estremo non acquisisce anche una direzione di *Parallelo*: la direzione
+   si acquisisce solo quando nessuno snap di punto vince, estremi del
+   *Prolungamento* compresi (#992, secondo giro, [decisione] 2, applicazione
+   della stessa scelta); la direzione di *Parallelo* è quella del segmento che vince il
    clic, l'id più alto a pari distanza (punto 1). Una seconda sosta sullo
    stesso punto rilascia quell'acquisizione, punto e prolungamento insieme
    (ADR 0049, punto 2). Per questo l'acquisizione tiene id, segmento ed
@@ -93,14 +102,15 @@
    incrocia una retta in due punti), vince il primo incrocio lungo il
    prolungamento, partendo dall'estremo acquisito e allontanandosi dall'arco
    (REGOLE-NUMERICHE.md, sezione 4, «Tracciamento degli snap», punto 6).
-   Se le due coppie hanno le stesse acquisizioni ma guide diverse (un punto
-   acquisito con le sue due guide, e un prolungamento più recente che le
-   incrocia tutte e due), vince l'incrocio con la guida **orizzontale**, come
-   nei punti 2 e 3 della stessa sezione (#992, [decisione] 1, regola
-   esistente): punto `(-1,1)`, poi il prolungamento lungo `y=x` da
-   `(-5,-5)`, puntatore `(0.2,-0.2)`, apertura 1,5: `(1,1)`.
-   Le guide partono dal punto dopo lo snap alla griglia, lo stesso per clic,
-   preview, rapporto e vista (PT28, punto 2; [bloccante] 8).
+   Se le due coppie hanno le stesse acquisizioni ma guide diverse, si
+   confrontano le guide dalla acquisizione più recente: prolungamento, poi
+   orizzontale, poi verticale (REGOLE-NUMERICHE.md, sezione 4, «Tracciamento
+   degli snap», punto 6, con i due esempi: `(1,1)` e `(-1,0)`; #992, primo giro [decisione] 1 e
+   secondo giro [decisione] 1, regole esistenti).
+   Con lo snap alla griglia, il nodo è il punto con cui si controlla
+   l'apertura delle guide e che le guide proiettano, lo stesso per clic,
+   preview, rapporto e vista; le guide restano dove sono (PT28, punto 2;
+   [bloccante] 8).
    **Le guide nella vista** ([bloccante] 9): `TrackingState` dà, oltre al
    punto, l'elenco delle guide attive con la loro identità (l'acquisizione) e
    la geometria da disegnare (semiretta con origine e direzione, tratto di
@@ -159,7 +169,18 @@
   - una `LINE` da `(-10,0)` a `(0,0)` e una da `(0.5,-5)` a `(0.5,5)`,
     *Estremo*, *Medio* e *Prolungamento* accesi, sosta in `(0.5,0)` con
     apertura 0,75: `acquired:` ha solo il punto `0.5,0`, nessun
-    prolungamento (#992, [decisione] 4);
+    prolungamento (#992, [decisione] 4); lo stesso con *Estremo* spento;
+  - con il solo *Prolungamento* (e *Parallelo*), senza *Estremo*, la sosta su
+    un estremo acquisisce il prolungamento, come nella prova a secco
+    (`extension 30,-50`); con OTRACK ed *Estremo* accesi anche il punto
+    (#992, secondo giro, [bloccante] 1);
+  - una `LINE` da `(-10,0)` a `(0,0)` e una da `(0,-5)` a `(0,5)`, *Estremo*,
+    *Prolungamento* e *Parallelo* accesi, punto base `(0,5)`, sosta in
+    `(0,0)` con apertura 0,75: si acquisisce l'estremo con il prolungamento,
+    nessuna direzione (#992, secondo giro, [decisione] 2);
+  - due punti acquisiti con il loro prolungamento, `(-1,-4)` lungo `y=2x-2`
+    e poi `(1,4)` lungo `y=2x+2`, puntatore `(0,0)`, apertura 1,1: `(-1,0)`
+    (#992, secondo giro, [decisione] 1);
   - `-5` sullo stesso arco e sul prolungamento di una linea: distanza
     diretta con il segno, non un punto della guida; `0`: l'estremo
     (#992, [decisione] 2);
