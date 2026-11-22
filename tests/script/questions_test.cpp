@@ -410,7 +410,13 @@ TEST(Questions, ModesAndArgumentsOfTheCatalogueAreNeverInvalid) {
     std::vector<std::string> questions{
         "? snap 5,0 aperture=1 from=1,1 -> none",
         "? snap 5,0 from=1,1 aperture=1 modes=quadrant -> none",
+        "? snap 0,0 aperture=1 modes=nea -> none",
+        "? snap 0,0 aperture=1 modes=center,nea -> none",
     };
+    for (const std::string_view face : {"regular", "bold", "italic", "bold-italic"}) {
+        questions.push_back("? text-width \"A\" face=" + std::string{face} + " -> 1");
+        questions.push_back("? font-metrics face=" + std::string{face} + " -> ascent=1 descent=0");
+    }
     for (const std::string_view mode : kCatalogueModes) {
         questions.push_back("? snaps A modes=" + std::string{mode} + " -> none");
         questions.push_back("? snaps B modes=endpoint," + std::string{mode} + ",center -> none");
@@ -425,6 +431,16 @@ TEST(Questions, ModesAndArgumentsOfTheCatalogueAreNeverInvalid) {
             EXPECT_NE(error->message.find("not implemented yet"), std::string::npos)
                 << error->message;
         }
+    }
+}
+
+TEST(Questions, MalformedArgumentsStayInvalidAroundAnnouncedOnes) {
+    for (const std::string_view text : {"? snap 0,0 aperture=1 modes=nea,corner -> none",
+                                        "? snap 0,0 aperture=1 modes=nea from=wrong -> none",
+                                        "? text-width A face=bold -> 1",
+                                        "? text-width \"A\" face=unknown -> 1",
+                                        "? font-metrics face= -> ascent=1 descent=0"}) {
+        EXPECT_FALSE(failure(text).notImplemented) << text;
     }
 }
 

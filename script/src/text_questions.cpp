@@ -12,8 +12,21 @@
 #include <variant>
 
 namespace tg::script::detail {
+namespace {
+
+// PT6 will select the metrics of the requested face.
+bool isAnnouncedFace(std::string_view argument) {
+    return argument == "face=regular" || argument == "face=bold" || argument == "face=italic" ||
+           argument == "face=bold-italic";
+}
+
+}  // namespace
+
 QuestionResult askFontMetrics(const QuestionModel& /*model*/,
                               std::span<const std::string_view> arguments) {
+    if (arguments.size() == 1 && isAnnouncedFace(arguments[0])) {
+        return ArgumentError{"the argument 'face' is not implemented yet", true};
+    }
     if (!arguments.empty()) {
         return ArgumentError{"wrong arguments, expected: font-metrics"};
     }
@@ -23,12 +36,16 @@ QuestionResult askFontMetrics(const QuestionModel& /*model*/,
 
 QuestionResult askTextWidth(const QuestionModel& /*model*/,
                             std::span<const std::string_view> arguments) {
-    if (arguments.size() != 1) {
+    const bool hasAnnouncedFace = arguments.size() == 2 && isAnnouncedFace(arguments[1]);
+    if (arguments.size() != 1 && !hasAnnouncedFace) {
         return ArgumentError{"wrong arguments, expected: text-width \"<text>\""};
     }
     const auto text = unquoteText(arguments[0]);
     if (!text) {
         return ArgumentError{"expected a quoted text"};
+    }
+    if (hasAnnouncedFace) {
+        return ArgumentError{"the argument 'face' is not implemented yet", true};
     }
     return formatNumber(core::textWidth(core::decodeUtf8(*text)));
 }

@@ -52,6 +52,9 @@ constexpr std::array kOsnapAbbreviations{OsnapAbbreviation{"end", &core::SnapMod
                                          OsnapAbbreviation{"tan", &core::SnapModes::tangent},
                                          OsnapAbbreviation{"qua", &core::SnapModes::quadrant}};
 
+// Stage 0.8.1: PT30 implements nea, PT31 implements ext and par.
+constexpr std::array<std::string_view, 3> kAnnouncedOsnapModes{"nea", "ext", "par"};
+
 // A new member of core::SnapModes needs its abbreviation above, or !osnap
 // could never turn it on.
 static_assert(sizeof(core::SnapModes) == kOsnapAbbreviations.size() * sizeof(bool),
@@ -151,7 +154,7 @@ DirectiveResult parsePointDirective(std::string_view name, const Words& argument
 /// "!osnap end,mid", or "!osnap none": the modes written are on, the others
 /// off.
 DirectiveResult parseOsnap(const Words& arguments) {
-    constexpr std::string_view kUsage = "!osnap end,mid,cen,ins,int,per,tan,qua|none";
+    constexpr std::string_view kUsage = "!osnap end,mid,cen,ins,int,per,tan,qua,nea,ext,par|none";
     if (arguments.size() != 1) {
         return wrongArguments("osnap", kUsage);
     }
@@ -163,6 +166,7 @@ DirectiveResult parseOsnap(const Words& arguments) {
         return Action{OsnapDirective{modes}};
     }
     std::string_view rest = arguments[0];
+    std::string_view announced;
     while (true) {
         const std::size_t comma = rest.find(',');
         const std::string_view abbreviation = rest.substr(0, comma);
@@ -175,16 +179,28 @@ DirectiveResult parseOsnap(const Words& arguments) {
                 break;
             }
         }
-        if (found == nullptr) {
+        if (found != nullptr) {
+            modes.*found->member = true;
+        } else if (std::ranges::find(kAnnouncedOsnapModes, abbreviation) !=
+                   kAnnouncedOsnapModes.end()) {
+            if (announced.empty()) {
+                announced = abbreviation;
+            }
+        } else {
             return "unknown snap mode " + quoted(abbreviation) +
-                   " in !osnap, expected: end, mid, cen, ins, int, per, tan, qua or none";
+                   " in !osnap, expected: end, mid, cen, ins, int, per, tan, qua, nea, ext, par "
+                   "or none";
         }
-        modes.*found->member = true;
         if (comma == std::string_view::npos) {
-            return Action{OsnapDirective{modes}};
+            break;
         }
         rest.remove_prefix(comma + 1);
     }
+    if (!announced.empty()) {
+        return AnnouncedDirective{"the snap mode " + quoted(announced) +
+                                  " in !osnap is not implemented yet"};
+    }
+    return Action{OsnapDirective{modes}};
 }
 
 DirectiveResult parseDirective(std::string_view name, const Words& arguments) {

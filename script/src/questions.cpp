@@ -21,13 +21,18 @@
 #include <utility>
 
 namespace tg::script {
+namespace detail {
+
+[[nodiscard]] Answer announcedQuestionAnswer(int line, std::string expected, bool pending);
+
+}  // namespace detail
+
 namespace {
 
 using detail::AnswerShape;
 
 constexpr std::string_view kArrow = "->";
 constexpr std::string_view kNone = "none";
-constexpr std::string_view kNotImplemented = "error: question not implemented yet";
 
 std::string quoted(std::string_view text) {
     return "'" + std::string{text} + "'";
@@ -429,13 +434,13 @@ private:
         if (row == nullptr) {
             return error("unknown question " + quoted(name));
         }
-        Answer answer{m_line, join(std::span{arrow + 1, tokens->end()}), {}, false};
+        std::string expected = join(std::span{arrow + 1, tokens->end()});
         if (row->function == nullptr) {
-            answer.skipped = m_pending;
-            answer.actual = kNotImplemented;
-            m_answers.push_back(std::move(answer));
+            m_answers.push_back(
+                detail::announcedQuestionAnswer(m_line, std::move(expected), m_pending));
             return std::nullopt;
         }
+        Answer answer{m_line, std::move(expected), {}, false};
         const std::vector<std::string_view> arguments(tokens->begin() + 1, arrow);
         // "D:2F" names an entity of a drawing read from a file. A question
         // about it asks about a copy of that entity alone: the questions

@@ -318,6 +318,22 @@ TEST(CheckCase, AnnouncedDirectiveIsTheFrontier) {
     expectContains(result.output, "script.tgs, line 6: wrong arguments for !snap");
 }
 
+TEST(CheckCase, AnnouncedOsnapModesAreTheFrontier) {
+    for (const std::string_view mode : {"nea", "ext", "par"}) {
+        const std::string script = std::string{kScript} + "!osnap end," + std::string{mode} + "\n";
+        if (std::holds_alternative<Script>(parseScript(script))) {
+            continue;
+        }
+        const fs::path folder = makeCase(
+            "frontier-osnap", {{"script.tgs", script}, {"atteso.txt", std::string{kReport}}});
+        const Result pending = check(folder, true);
+        EXPECT_EQ(pending.code, kExitPassed) << mode;
+        expectContains(pending.output, "; as expected up to script.tgs, line 5: ");
+        expectContains(pending.output, "the snap mode '" + std::string{mode} +
+                                           "' in !osnap is not implemented yet");
+    }
+}
+
 TEST(CheckCase, LevelTwoCaseIsSkipped) {
     const fs::path folder = makeCase(
         "level2", {{"script.tgs", "!level 2\nPLINE\n!key F8\n"}, {"atteso.txt", "anything"}});
@@ -419,6 +435,10 @@ TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
         {"announced-directive", "script.tgs", "PLINE\n!scr on\n"},
         {"announced-mode", "domande.tgq", drawing + "? snaps A modes=quadrant -> none\n"},
         {"announced-argument", "domande.tgq", drawing + "? snap 5,0 aperture=1 from=1,1 -> none\n"},
+        {"announced-nearest", "domande.tgq", "? snap 0,0 aperture=1 modes=nea -> none\n"},
+        {"announced-text-face", "domande.tgq", "? text-width \"A\" face=bold -> 1\n"},
+        {"announced-metrics-face", "domande.tgq",
+         "? font-metrics face=italic -> ascent=1 descent=0\n"},
     };
     int checked = 0;
     for (const Form& form : forms) {
@@ -451,6 +471,34 @@ TEST(CheckCase, SyntaxOfTheCatalogueNotRealizedYetIsNotPassed) {
     }
     if (checked == 0) {
         GTEST_SKIP() << "the program already has all the syntax that the catalogue announced";
+    }
+}
+
+TEST(CheckCase, StageEightOneAnnouncedQuestionsArePending) {
+    constexpr std::string_view kDxf =
+        "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n0\nENDSEC\n"
+        "0\nSECTION\n2\nENTITIES\n0\nENDSEC\n0\nEOF\n";
+    const std::string definitions =
+        "D = DXF file=drawing.dxf\n"
+        "A = LINE start=0,0 end=10,0\n"
+        "H = HATCH pattern=\"SOLID\" solid=yes loop=external+polyline vertex=0,0 vertex=1,0 "
+        "vertex=1,1 vertex=0,1\n";
+    for (const std::string_view form : {"grid D", "attdisp D", "properties A",
+                                        "set-property A width=1", "pattern-lines H"}) {
+        SCOPED_TRACE(form);
+        const std::string questions = definitions + "? " + std::string{form} + " -> none\n";
+        const fs::path folder = makeCase("announced-0.8.1-question",
+                                        {{"domande.tgq", questions},
+                                         {"drawing.dxf", std::string{kDxf}}});
+        const Result ordinary = check(folder);
+        ASSERT_NE(ordinary.code, kExitInvalid) << ordinary.output;
+        if (ordinary.output.find("error: question not implemented yet") == std::string::npos) {
+            continue;  // The package implementing this question has merged.
+        }
+        EXPECT_EQ(ordinary.code, kExitFailed);
+        const Result pending = check(folder, true);
+        EXPECT_EQ(pending.code, kExitPassed);
+        expectContains(pending.output, "pending: ");
     }
 }
 

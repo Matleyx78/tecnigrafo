@@ -6,6 +6,7 @@
 # (docs/adr/0001).
 
 add_library(tg_script
+    src/announced_questions.cpp
     src/case_check.cpp
     src/case_files.cpp
     src/case_form.cpp
