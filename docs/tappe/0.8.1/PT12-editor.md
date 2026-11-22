@@ -26,8 +26,10 @@
 
 ## Cosa fare
 
-1. Quando la richiesta del runner ha `mtextEditing` (PT11), la vista apre
-   l'editor su quel `MText`: disegna il testo con l'impaginazione di `core` (le
+1. Quando il runner dà `textEditing()` (PT11) con un `MText` in `shown`, la
+   vista apre l'editor su quel testo, con `value` come valore da modificare
+   (per una quota il testo sostitutivo con `<>`, non la misura che si vede):
+   disegna il testo con l'impaginazione di `core` (le
    stesse posizioni del disegno, in scala e ruotate con la vista e con il testo),
    il cursore e la scelta dalle posizioni di `MTextEditModel` (PT10), un bordo
    largo quanto la colonna. Tastiera: caratteri, frecce, `Home`/`End`,
@@ -35,10 +37,17 @@
    `Ctrl+Invio` conferma, `Esc` annulla; il mouse sposta il cursore e sceglie.
    Un clic fuori dal bordo conferma.
 2. Confermare consegna al runner il valore con i codici, su una riga, come la
-   riga di comando (con una riga vuota dopo, per `MTEXT`); annullare dà `Esc`.
-3. Su un `TEXT`, quando `TEXTEDIT` lo chiede (richiesta di testo con l'oggetto
-   scelto), l'editor è una riga sola sul testo, senza formati; `Invio`
-   conferma.
+   riga di comando (con una riga vuota dopo, per `MTEXT` nuovo); su un oggetto
+   esistente lo consegna con `CommandRunner::submit(TextInput{…})`, **anche
+   vuoto**: un valore svuotato e confermato cancella il `TEXT` o il `MTEXT`, e
+   per una quota torna alla misura (decisione del responsabile sulla #927,
+   [decisione] 4; PT11). Se il valore alla conferma è **uguale** a quello di
+   partenza (nessuna modifica, o modifiche che lo riportano com'era), l'editor
+   consegna `ConfirmInput`, come Invio, che tiene il valore: così un `MTEXT`
+   già vuoto confermato senza modifiche non si cancella (verbale della
+   rilettura della #993, [bloccante] 1). Annullare dà `Esc`.
+3. Su un `TEXT` (`shown` è un `Text`, con la sua posizione e il suo stile),
+   l'editor è una riga sola sul testo, senza formati; `Invio` conferma.
 4. **Doppio clic** con il tasto sinistro su `TEXT`, `MTEXT`, quota, `ATTDEF` o
    `INSERT` con attributi, a `Command:`: sceglie l'oggetto e avvia `TEXTEDIT`.
    Il doppio clic con il tasto centrale resta lo zoom di oggi.
@@ -63,6 +72,12 @@ mettono casi limite che nessun documento fissa e che emergono scrivendo.
 - Scrivere, cancellare, andare a capo e confermare dà il valore atteso; `Esc`
   non cambia il disegno; doppio clic su un `TEXT` avvia `TEXTEDIT` con
   l'oggetto scelto; zoom con l'editor aperto lo lascia sopra il testo.
+- Una quota con `<> mm`: l'editor riceve `<> mm`, mostra la misura come nel
+  disegno (un'unità sola, PT10, con il testo di `measurement`) e, confermato
+  senza modifiche, ridà `<> mm`; cancellare tutto e confermare su un `MTEXT` lo
+  toglie dal disegno, e `U` lo rimette; un `MTEXT` già vuoto aperto e confermato
+  senza modifiche consegna `ConfirmInput` e resta; una frazione si salta e si
+  cancella intera (PT10).
 
 ## Fatto quando
 

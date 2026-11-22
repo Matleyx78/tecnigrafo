@@ -99,8 +99,10 @@
 ## Regole della tappa che valgono qui
 
 - File comuni: `script/src/question_table.cpp`.
-- `edit/src/editor.cpp` e `edit/src/document_tables.cpp` in questa tappa li
-  cambia solo questo pacchetto.
+- `edit/src/editor.cpp` e `edit/include/tg/edit/editor.hpp` li cambia anche
+  PT22 (`replace` con gli extras), in funzioni diverse: sono file comuni, e
+  chi arriva dopo si aggiorna. `edit/src/document_tables.cpp` lo cambia solo
+  questo pacchetto.
 
 ## Test richiesti
 
