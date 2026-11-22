@@ -158,8 +158,8 @@ testo alto 1, con fattore di larghezza 1.
 | `box <E>` | quattro punti `x,y` separati da spazi | il parallelogramma d'ingombro di un `TEXT`, nell'ordine definito sotto (ADR 0022, punto 5) |
 
 L'argomento `face=regular|bold|italic|bold-italic` sceglie la variante del
-font (PT6 della 0.8.1). Se omesso si usa Regular. Prima di PT6 l'argomento
-è annunciato e dà "not implemented yet".
+font (PT6 della 0.8.1), ciascuna misurata nelle unità dell'altezza delle
+maiuscole del suo file. Se omesso si usa Regular.
 
 `box` trasforma, nell'ordine, i punti `(0, d·h)`, `(w, d·h)`, `(w, a·h)`,
 `(0, a·h)` del sistema del testo: `w = L(valore)·h·f`, con altezza `h` e
@@ -731,8 +731,7 @@ catalogo e non ancora realizzate dal programma:
   "not implemented yet".
 
 Dalla tappa 0.8.1 aspettano il loro pacchetto `grid`, `attdisp`, `properties`,
-`set-property` e `pattern-lines`, il modo `nea` di `snap` (PT30) e
-l'argomento `face=` di `text-width` e `font-metrics` (PT6).
+`set-property` e `pattern-lines` e il modo `nea` di `snap` (PT30).
 
 In tutti questi casi il caso non è superato: se è elencato in
 `tests/verifica/in-attesa/` aspetta il suo lavoro senza bloccare la CI. Un
