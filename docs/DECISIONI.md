@@ -2711,4 +2711,8 @@ i rimandi ai documenti che cambia.
   unità le sue posizioni. Le [bloccante] corrette: l'editor consegna Invio
   quando il valore non è cambiato, così un `MTEXT` già vuoto non si cancella
   (PT11, PT12); `target` vuoto anche per *Mtext* di una quota in costruzione
-  (PT11).
+  (PT11). Dal secondo giro: la richiesta dell'editor porta anche il testo che
+  sostituisce `<>`, già formattato, e solo la prima occorrenza di `<>` è la
+  misura, come in `dimensionText` (PT10, PT11); una misura su più righe ha
+  sempre e solo le sue due posizioni, e `Home`/`End` sulle righe interne
+  portano a quelle, per la decisione appena presa (PT10).

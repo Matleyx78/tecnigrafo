@@ -53,6 +53,10 @@
        std::optional<core::EntityId> target;
        std::variant<core::Text, core::MText> shown;  // what the editor draws, where it stands
        std::string value;  // the value to edit, codes kept
+       // For the text of a dimension: what its first <> stands for, already
+       // formatted (dimensionText() of "<>", DIMPOST included); otherwise
+       // nullopt.
+       std::optional<std::string> measurement;
    };
    ```
 
@@ -70,8 +74,12 @@
      grafica della quota, quello che si vede (con la misura al posto di `<>`),
      e `value` il testo sostitutivo con `<>` (`<>` se è vuoto), separati: con
      `<> mm` la grafica mostra `30 mm` ma l'editor riceve `<> mm`, così la
-     misura resta dinamica. Nell'editor la misura si vede, ma è un'unità sola
-     legata a `<>` (PT10). `target` è l'identificativo della quota con
+     misura resta dinamica. `measurement` è il testo che sostituisce `<>`,
+     già formattato (`dimensionText` di `"<>"`, con `DIMPOST`), anche quando
+     il valore di partenza non ha `<>`: così l'editor lo mostra appena si
+     scrive `<>` (verbale del secondo giro della #993, [bloccante] 1).
+     Nell'editor la misura si vede, ma è un'unità sola legata alla prima
+     occorrenza di `<>` (PT10). `target` è l'identificativo della quota con
      `TEXTEDIT`, vuoto con *Mtext* durante la creazione, quando la quota non
      esiste ancora (verbale della rilettura della #993, [bloccante] 2).
 
@@ -120,13 +128,14 @@
 
 - `TEXTEDIT` su ogni tipo, *Single* e *Multiple*, *Undo*, Invio che tiene il
   valore, un oggetto non annotativo, un oggetto su layer bloccato.
-- `textEditing()` (#927, [bloccante] 5): `MTEXT` nuovo e *Mtext* di una quota
-  in costruzione (`target` vuoto), `TEXTEDIT` su una quota esistente (`target`
-  la quota),
-  `TEXTEDIT` su `TEXT` (il `Text` e il suo valore), su `MTEXT`, e su una quota
-  lineare lunga 30 con testo `<> mm`: `shown` mostra `30 mm`, `value` è
-  `<> mm`; *Mtext* delle quote; nessuna richiesta dell'editor su `ATTDEF` e
-  `INSERT`, né mentre si sceglie l'oggetto.
+- `textEditing()` (#927, [bloccante] 5): `MTEXT` nuovo e *Mtext* di una quota in
+  costruzione (`target` vuoto), `TEXTEDIT` su una quota esistente (`target` la
+  quota), `TEXTEDIT` su `TEXT` (il `Text` e il suo valore), su `MTEXT`, e su una
+  quota lineare lunga 30 con testo `<> mm`: `shown` mostra `30 mm`, `value` è
+  `<> mm`, `measurement` è `30`; *Mtext* in creazione con il testo `FISSO` già
+  dato: `value` è `FISSO` e `measurement` c'è lo stesso; `measurement` vuoto su
+  `TEXT` e `MTEXT`; *Mtext* delle quote; nessuna richiesta dell'editor su
+  `ATTDEF` e `INSERT`, né mentre si sceglie l'oggetto.
 - Valore vuoto (#927, [decisione] 4): `TextInput{""}` su un `TEXT` e su un
   `MTEXT` li cancella in un passo `Textedit`, e `U` li rimette; su una quota con
   `<> mm` dà il testo sostitutivo vuoto (la misura); `ConfirmInput` alla stessa

@@ -73,10 +73,11 @@ mettono casi limite che nessun documento fissa e che emergono scrivendo.
   non cambia il disegno; doppio clic su un `TEXT` avvia `TEXTEDIT` con
   l'oggetto scelto; zoom con l'editor aperto lo lascia sopra il testo.
 - Una quota con `<> mm`: l'editor riceve `<> mm`, mostra la misura come nel
-  disegno (un'unità sola, PT10) e, confermato senza modifiche, ridà `<> mm`;
-  cancellare tutto e confermare su un `MTEXT` lo toglie dal disegno, e `U` lo
-  rimette; un `MTEXT` già vuoto aperto e confermato senza modifiche consegna
-  `ConfirmInput` e resta; una frazione si salta e si cancella intera (PT10).
+  disegno (un'unità sola, PT10, con il testo di `measurement`) e, confermato
+  senza modifiche, ridà `<> mm`; cancellare tutto e confermare su un `MTEXT` lo
+  toglie dal disegno, e `U` lo rimette; un `MTEXT` già vuoto aperto e confermato
+  senza modifiche consegna `ConfirmInput` e resta; una frazione si salta e si
+  cancella intera (PT10).
 
 ## Fatto quando
 

@@ -45,15 +45,32 @@ resta solo interazione.
      frazione, o dal campo del valore nel pannello (PT25).
    - **Misura di una quota** (decisione del responsabile sulla rilettura
      della #993, seconda [decisione]): per il testo di una quota il modello
-     riceve anche la misura che la grafica mostra. Ogni `<>` del valore si
-     impagina con il testo della misura, come nella grafica, ma è **un'unità
-     sola** con i due byte di `<>`, come una frazione e come il campo di
-     AutoCAD: il cursore la salta, la scelta la prende intera o per niente,
-     `Backspace` e `Canc` tolgono `<>` intero. Esempio: misura `1234`, valore
-     `<> mm`: si vede `1234 mm`, le posizioni sono prima e dopo `1234`, poi fra
-     le lettere di ` mm`; un clic fra il `2` e il `3` va alla posizione più
-     vicina delle due; cancellare la misura dà ` mm`. Vale anche per *Mtext*
-     durante la creazione della quota.
+     riceve anche il testo che sostituisce `<>`, già formattato
+     (`TextEditRequest::measurement` di PT11), anche quando il valore di
+     partenza non ha `<>`, così si mostra appena lo si scrive. Come
+     `dimensionText`, si sostituisce solo la **prima** occorrenza di `<>` del
+     valore: le altre sono testo, carattere per carattere (verbale del secondo
+     giro della #993, [bloccante] 2). Quella prima occorrenza si impagina con
+     il testo che la sostituisce, come nella grafica, ma è **un'unità sola**
+     con i due byte di `<>`, come una frazione e come il campo di AutoCAD: il
+     cursore la salta, la scelta la prende intera o per niente, `Backspace` e
+     `Canc` tolgono `<>` intero. Esempi: misura `1234`, valore `<> mm`: si vede
+     `1234 mm`, le posizioni sono prima e dopo `1234`, poi fra le lettere di
+     ` mm`; un clic fra il `2` e il `3` va alla posizione più vicina delle due;
+     cancellare la misura dà ` mm`. Misura `30`, valore `<> / <>`: si vede
+     `30 / <>`, l'unità della misura sono i byte `[0,2)` e il secondo `<>` sono
+     due unità di testo. Vale anche per *Mtext* durante la creazione della
+     quota.
+
+     Se il testo che sostituisce `<>` va su più righe (un `DIMPOST` con `\P`,
+     o un a capo automatico), l'unità ha **sempre e solo** le sue due
+     posizioni: prima, all'inizio della sua prima riga, e dopo, alla fine
+     dell'ultima. Le righe che stanno tutte dentro l'unità non hanno posizioni
+     proprie: un clic su di loro va alla più vicina delle due, `Home` e `End`
+     su una di quelle righe portano alla posizione prima e a quella dopo
+     dell'unità (verbale del secondo giro della #993, [decisione],
+     applicazione della decisione appena presa: un'unità sola, con due
+     posizioni).
    - **A capo automatico:** gli spazi dove la riga va a capo non si disegnano
      (PT8, come oggi) ma restano unità come le altre (PT7), con una posizione
      prima e una dopo ciascuno: in `A B`, con una lettera per riga, `Canc` dopo
@@ -105,6 +122,14 @@ resta solo interazione.
 - Misura `1234` con valore `<> mm`: due posizioni ai bordi di `1234`; il clic
   fra il `2` e il `3` va a una delle due; `Canc` prima di `1234` dà ` mm`; il
   valore senza modifiche torna `<> mm`.
+- Misura `30` con valore `<> / <>`: si vede `30 / <>`; la misura è un'unità
+  sola (`[0,2)`), il secondo `<>` due unità di testo.
+- Valore di partenza `FISSO` senza `<>`: scrivere `<>` al posto di `FISSO` fa
+  vedere subito la misura ricevuta, prima della conferma.
+- `DIMPOST` `<> mm\Pnominale\Pquota` con valore `<>`: tre righe, due sole
+  posizioni (prima di `30`, dopo `quota`); un clic sulla riga `nominale` e
+  `Home`/`End` su quella riga portano a una delle due; scrivere `X` dopo dà
+  `<>X`, prima dà `X<>`.
 - `A B` con una lettera per riga: `Canc` dopo la `A` dà `AB`, `Backspace`
   prima della `B` dà `AB`; `A  B` (due spazi): un tasto toglie uno spazio
   solo, in tutti e due i versi.
