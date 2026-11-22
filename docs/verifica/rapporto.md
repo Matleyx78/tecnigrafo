@@ -597,6 +597,25 @@ HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+pol
 | `line`, `arc`, `circle` | 72 | in un contorno a lati: `line=x1,y1;x2,y2`, `arc=cx,cy;r;a1;a2` (gradi in [0, 360), sempre antiorario come `ARC`), `circle=cx,cy;r` (un arco intero) |
 | `seed` | 10/20 dopo 98 | un punto interno; si ripete, dopo i contorni |
 
+### Campi annunciati per la tappa 0.8.1
+
+I pacchetti indicati aggiungono questi campi solo nelle condizioni elencate.
+
+| Campo | Posizione e condizione | Pacchetto |
+|---|---|---|
+| `grid snap: unit=x,y base=x,y` | dopo `ortho:`, solo con lo snap alla griglia acceso | PT28 |
+| `attdisp: on\|off` | dopo `lwdisplay:`, solo quando `$ATTMODE` è 2 (`on`) o 0 (`off`) | PT27 |
+| `active snap: Nearest x,y` | quando il puntatore aggancia uno snap *Vicino* | PT30 |
+| `extension x,y` e `parallel x1,y1 x2,y2` | in `acquired:`, rispettivamente l'estremo e gli estremi della linea acquisita | PT31 |
+| `Extension x,y from x,y`, `Parallel x,y from x,y` e i relativi incroci | in `active tracking:`, quando la guida o l'incrocio aggancia il puntatore ([ADR 0057](../adr/0057-snap-vicino-prolungamento-parallelo.md), punto 5) | PT31 |
+| `lock-position=yes` | in `ATTDEF` dopo `preset`, in `ATTRIB` dopo `invisible`, solo se la posizione è bloccata | PT15 |
+| `origin=x,y` | in `HATCH` dopo `islands`, se l'origine del motivo (XDATA `ACAD` 1010/1020) è presente e diversa da `0,0` | PT23 |
+| `face=bold`, `face=italic` o `face=bold-italic` | nei `TEXT` di `generated`, dopo `vertical`, solo per una variante diversa da Regular | PT8 |
+
+Nei DXF già presenti in `dxf-test-file` l'origine del motivo è sempre `0,0`.
+Per le righe di rapporto attese dopo un cambiamento di comportamento si
+applica la regola del [confine di un caso in attesa](casi.md#il-confine-di-un-caso-in-attesa).
+
 ### Definizioni nelle domande
 
 Nelle [domande al modello](domande.md) un'entità si scrive nello stesso

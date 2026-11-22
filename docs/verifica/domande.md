@@ -75,6 +75,10 @@ B = LWPOLYLINE vertex=20,0 bulge=1 vertex=30,0
   `modes=none` li spegne tutti. Senza `modes=` sono accesi i quattro modi
   della tappa 0.4 (`endpoint`, `midpoint`, `center`, `insertion`), così le
   domande scritte prima della 0.7 non cambiano.
+  Dalla tappa 0.8.1 la domanda `snap` accetta anche `nea` per lo snap
+  *Vicino*, con risposta `Nearest x,y` quando lo trova (PT30,
+  [ADR 0057](../adr/0057-snap-vicino-prolungamento-parallelo.md)). Prima di
+  PT30 il modo è annunciato e dà "not implemented yet".
 
 ## Le risposte
 
@@ -149,9 +153,13 @@ testo alto 1, con fattore di larghezza 1.
 
 | Domanda | Risposta | Significato |
 |---|---|---|
-| `text-width "<testo>"` | numero | la larghezza di una riga, somma delle larghezze dei caratteri, senza crenatura; i codici di controllo (`%%c`) **non** si convertono: si misurano i caratteri come sono scritti |
-| `font-metrics` | `ascent=<a> descent=<d>` | ascendente (> 1) e discendente (< 0) del font incluso |
+| `text-width "<testo>" [face=…]` | numero | la larghezza di una riga, somma delle larghezze dei caratteri, senza crenatura; i codici di controllo (`%%c`) **non** si convertono: si misurano i caratteri come sono scritti |
+| `font-metrics [face=…]` | `ascent=<a> descent=<d>` | ascendente (> 1) e discendente (< 0) del font incluso |
 | `box <E>` | quattro punti `x,y` separati da spazi | il parallelogramma d'ingombro di un `TEXT`, nell'ordine definito sotto (ADR 0022, punto 5) |
+
+L'argomento `face=regular|bold|italic|bold-italic` sceglie la variante del
+font (PT6 della 0.8.1). Se omesso si usa Regular. Prima di PT6 l'argomento
+è annunciato e dà "not implemented yet".
 
 `box` trasforma, nell'ordine, i punti `(0, d·h)`, `(w, d·h)`, `(w, a·h)`,
 `(0, a·h)` del sistema del testo: `w = L(valore)·h·f`, con altezza `h` e
@@ -668,6 +676,38 @@ documento il pacchetto 0.6-P9; `dashes` il pacchetto 0.6-P11; `quickselect`
 il pacchetto 0.6-P23. Fino ad allora rispondono
 `error: question not implemented yet`.
 
+### Domande della tappa 0.8.1
+
+| Domanda | Risposta | Pacchetto |
+|---|---|---|
+| `grid D` | `grid=on\|off snap=on\|off grid-unit=x,y snap-unit=x,y snap-base=x,y display=<n> major=<n> ucsicon=<n> snap-angle=<gradi> snap-style=<n>`; senza `*ACTIVE` i valori di un disegno nuovo ([ADR 0055](../adr/0055-griglia-snap-alla-griglia-icona-ucs.md), punto 1) | PT27 |
+| `attdisp D` | `normal`, `on` o `off` per `$ATTMODE` pari a 1, 2 o 0 | PT27 |
+| `properties <E>` | le proprietà proprie, `nome=valore` separate da `;` nell'ordine qui sotto; le derivate in lettura hanno il prefisso `~`; `none` per i tipi di prima della 0.8 | PT22, PT23, PT24 |
+| `set-property <E> <nome>=<valore>` | l'entità modificata nel formato del rapporto, seguita da ` \| ` e dalle proprietà come in `properties`; `invalid` se il valore viene rifiutato | PT22, PT23, PT24 |
+| `pattern-lines <H>` | le famiglie del motivo del retino, `angle=<gradi> origin=x,y offset=x,y dashes=a,b,…` separate da `;` nell'ordine del motivo; `none` per un riempimento pieno | PT23 |
+
+Ciascuna domanda risponde `error: question not implemented yet` fino al
+pacchetto che la realizza. `D` è un documento letto dal DXF (`D = DXF …`).
+In `properties` e `set-property`, `<E>` è il nome di una definizione oppure
+`D <handle>`, un'entità del documento letto dal DXF, con i suoi dati
+conservati. Per un tipo il cui pacchetto non è ancora unito queste due
+domande rispondono `entity type not implemented yet` e il controllo le
+salta in un caso in attesa (ADR 0037, punto 4). `<H>` è il nome di un retino.
+
+Le proprietà usano i valori del rapporto (numeri, `x,y`, gradi, testi tra
+virgolette, `yes` e `no`). `set-property` rende visibili anche le proprietà
+assenti dal rapporto, come `scale-z`.
+
+| Tipo | Proprietà, in ordine | Pacchetto |
+|---|---|---|
+| `ELLIPSE` | `center`, `major-radius`, `minor-radius`, `ratio`, `start-angle`, `end-angle`, `~area` | PT22 |
+| `SOLID` | `vertex1`, `vertex2`, `vertex3`, `vertex4` | PT22 |
+| `HATCH` | `pattern`, `scale`, `angle`, `origin`, `islands` (`normal`, `outer`, `ignore`), `~area` | PT23 |
+| `DIMENSION` | `style`, `text` (testo sostitutivo, `""` per la misura), `text-rotation`, `~measurement` | PT23 |
+| `MTEXT` | `value`, `style`, `attachment`, `width`, `height`, `rotation`, `line-spacing`, `line-spacing-style` (`at-least`, `exactly`) | PT24 |
+| `ATTDEF` | `tag`, `prompt`, `default`, `invisible`, `constant`, `verify`, `preset`, `lock-position`, `height`, `rotation`, `style` | PT24 |
+| `INSERT` | `block`, `insertion`, `scale` (X,Y), `scale-z` (gruppo DXF 43, 1 se manca), `rotation`, poi un `attribute="<TAG>":"<valore>"` per attributo, nell'ordine | PT24 |
+
 ## Errori
 
 Un file che non rispetta questa specifica non è un caso valido: definizione o
@@ -689,6 +729,10 @@ catalogo e non ancora realizzate dal programma:
   o un **argomento con nome** (`from=` della domanda `snap`) descritti da questo
   catalogo dalla tappa 0.7, fino al pacchetto P7, fermano il file con
   "not implemented yet".
+
+Dalla tappa 0.8.1 aspettano il loro pacchetto `grid`, `attdisp`, `properties`,
+`set-property` e `pattern-lines`, il modo `nea` di `snap` (PT30) e
+l'argomento `face=` di `text-width` e `font-metrics` (PT6).
 
 In tutti questi casi il caso non è superato: se è elencato in
 `tests/verifica/in-attesa/` aspetta il suo lavoro senza bloccare la CI. Un

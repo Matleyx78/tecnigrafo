@@ -134,7 +134,8 @@ core::SnapModes stageFourModes() {
 
 /// "modes=endpoint,center", or "modes=none" for none; the four modes of
 /// stage 0.4 when the argument is absent.
-Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text) {
+Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text,
+                                      std::string_view announced = {}) {
     if (!text) {
         return stageFourModes();
     }
@@ -146,19 +147,28 @@ Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text) {
         return modes;
     }
     std::string_view rest = *text;
+    bool usesAnnounced = false;
     while (true) {
         const std::size_t comma = rest.find(',');
         const std::string_view name = rest.substr(0, comma);
         const auto found = std::ranges::find(snapModeNames(), name, &SnapModeName::name);
-        if (found == snapModeNames().end()) {
+        if (found != snapModeNames().end()) {
+            modes.*found->member = true;
+        } else if (!name.empty() && name == announced) {
+            usesAnnounced = true;
+        } else {
             return ArgumentError{"unknown snap mode " + quoted(name)};
         }
-        modes.*found->member = true;
         if (comma == std::string_view::npos) {
-            return modes;
+            break;
         }
         rest.remove_prefix(comma + 1);
     }
+    if (usesAnnounced) {
+        return ArgumentError{"the snap mode " + quoted(announced) + " is not implemented yet",
+                             true};
+    }
+    return modes;
 }
 
 // ---------------------------------------------------------------------------
@@ -508,11 +518,13 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     if (const auto* error = std::get_if<ArgumentError>(&aperture)) {
         return *error;
     }
+    // PT30 implements nea for snap, the question that gives the pointer location.
     const auto modesText = values.find("modes");
-    const Parsed<core::SnapModes> modes =
-        modesArgument(modesText == values.end() ? std::nullopt : std::optional{modesText->second});
-    if (const auto* error = std::get_if<ArgumentError>(&modes)) {
-        return *error;
+    const Parsed<core::SnapModes> modes = modesArgument(
+        modesText == values.end() ? std::nullopt : std::optional{modesText->second}, "nea");
+    const auto* modeError = std::get_if<ArgumentError>(&modes);
+    if (modeError != nullptr && !modeError->notImplemented) {
+        return *modeError;
     }
     // The base point of the running command, from which perpendicular starts.
     std::optional<core::Vec2> from;
@@ -522,6 +534,9 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
             return *error;
         }
         from = std::get<core::Vec2>(base);
+    }
+    if (modeError != nullptr) {
+        return *modeError;
     }
     const std::optional<core::SnapPoint> snap =
         core::findSnap(model.document, std::get<core::Vec2>(pointer), std::get<double>(aperture),
@@ -701,6 +716,12 @@ constexpr std::array kQuestions{
     // In order, so Single and not Items.
     QuestionRow{"hatch-boundary", AnswerShape::Single, &askHatchBoundary},  // PT43
     QuestionRow{"hatch-contours", AnswerShape::Single, &askHatchContours},  // PT43
+    // Stage 0.8.1: announced before the reference cases are written.
+    QuestionRow{"grid", AnswerShape::Single, nullptr},           // PT27
+    QuestionRow{"attdisp", AnswerShape::Single, nullptr},        // PT27
+    QuestionRow{"properties", AnswerShape::Single, nullptr},     // PT22, PT23, PT24
+    QuestionRow{"set-property", AnswerShape::Single, nullptr},   // PT22, PT23, PT24
+    QuestionRow{"pattern-lines", AnswerShape::Single, nullptr},  // PT23
 };
 
 }  // namespace
