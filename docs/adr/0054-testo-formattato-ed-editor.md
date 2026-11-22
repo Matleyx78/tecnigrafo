@@ -5,8 +5,9 @@
 - **Corretto:** 2026-11-22 — revisione delle interfacce PT4 della 0.8.1
   ([#927](https://github.com/Matleyx78/tecnigrafo/issues/927);
   [DECISIONI.md](../DECISIONI.md), stessa data, «Revisione delle interfacce PT4
-  della 0.8.1»): argomenti fuori dominio senza effetto (punto 1); altezze
-  assolute sotto una similitudine (punto 1); estremi della linea di `#` (punto
+  della 0.8.1»; corretto con le prove in AutoCAD del responsabile, stessa
+  data): argomenti fuori dominio senza effetto (punto 1); altezze assolute
+  intatte sotto una similitudine (punto 1); estremi della linea di `#` (punto
   3, regola 5); spaziatura nel testo formattato (punto 4); frazione e misura
   di una quota come unità, valore svuotato nell'editor (punto 5).
 
@@ -59,10 +60,10 @@ tabulazioni) e le colonne. Un codice malformato si mostra come testo, come oggi
 grandezza (`\H0;`, `\W-1;`, `\T0;`), che AutoCAD non produce, resta nascosto e
 senza effetto, come nella 0.8.
 
-Una similitudine di fattore `k` (`SCALE`, grip, `EXPLODE` di un blocco in scala
-uniforme) moltiplica per `k` anche gli argomenti delle altezze assolute `\H<n>;`
-del valore, e solo quelli: `A{\H3;B}` alto 2 scalato per 2 diventa `A{\H6;B}`
-alto 4, come lo stesso testo in un blocco inserito in scala 2.
+Una similitudine (`SCALE`, grip, `EXPLODE` di un blocco in scala uniforme)
+non tocca il valore, nemmeno le altezze assolute `\H<n>;`, come AutoCAD:
+`A{\H3;B}` alto 2 scalato per 2 è alto 4 con lo stesso valore, e B resta alto
+3.
 
 ### 2. Le quattro varianti del font
 
@@ -142,8 +143,9 @@ AutoCAD.
 - Una frazione impilata è un'unità sola, come in AutoCAD: il cursore la salta e
   si cancella intera. Lo stesso la misura di una quota: si vede come nel
   disegno, ma è un'unità sola legata a `<>`.
-- Un `TEXT` o un `MTEXT` esistente svuotato e confermato si cancella, come in
-  AutoCAD; una quota svuotata torna alla misura.
+- Un `TEXT` o un `MTEXT` esistente svuotato e confermato torna com'era, come in
+  AutoCAD; una quota svuotata torna alla misura. Svuotato vuol dire che non si
+  vede più niente, anche se nel valore restano codici nascosti.
 - Su un `TEXT` l'editor è una riga sola, senza formati, sul testo stesso.
 - Negli script, e quando la finestra non c'è, vale la forma da riga di comando:
   `MTEXT` chiede le righe come nella 0.8, `TEXTEDIT` e *Mtext* chiedono il
