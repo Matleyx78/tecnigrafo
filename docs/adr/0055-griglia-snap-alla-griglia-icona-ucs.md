@@ -1,6 +1,6 @@
 # ADR 0055: Griglia, snap alla griglia e icona dell'UCS
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-21
 
 ## Contesto

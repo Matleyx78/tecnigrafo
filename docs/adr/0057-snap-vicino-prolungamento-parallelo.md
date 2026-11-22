@@ -1,6 +1,6 @@
 # ADR 0057: Snap *Vicino*, *Prolungamento* e *Parallelo*
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-21
 
 ## Contesto

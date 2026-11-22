@@ -1,6 +1,6 @@
 # ADR 0054: Testo formattato ed editor nella finestra
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-21
 
 ## Contesto

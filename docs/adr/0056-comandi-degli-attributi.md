@@ -1,6 +1,6 @@
 # ADR 0056: Comandi degli attributi
 
-- **Stato:** Proposto
+- **Stato:** Accettato
 - **Data:** 2026-11-21
 
 ## Contesto
