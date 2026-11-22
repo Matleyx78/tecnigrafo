@@ -53,7 +53,11 @@ realizza uno toglie il suo annuncio.
    | `grid D` | `grid=on\|off snap=on\|off grid-unit=x,y snap-unit=x,y snap-base=x,y display=<n> major=<n> ucsicon=<n> snap-angle=<gradi> snap-style=<n>` (ADR 0055, punto 1; senza `*ACTIVE` i valori di un disegno nuovo) | PT27 |
    | `attdisp D` | `normal`, `on` o `off` (`$ATTMODE` 1, 2, 0) | PT27 |
    | `properties <E>` | le proprietà proprie dell'entità, `nome=valore` separate da `;`, nell'ordine della tabella sotto; le derivate (in lettura) con `~`; `none` per i tipi di prima della 0.8 | PT22, PT23, PT24 |
-   | `set-property <E> <nome>=<valore>` | l'entità dopo la modifica, nel formato del rapporto, oppure `invalid` se il valore si rifiuta | PT22, PT23, PT24 |
+   | `set-property <E> <nome>=<valore>` | l'entità dopo la modifica nel formato del rapporto, poi ` \| ` e le sue proprietà come `properties` (così si vedono anche quelle che il rapporto non ha, come `scale-z`), oppure `invalid` se il valore si rifiuta | PT22, PT23, PT24 |
+
+   In `properties` e `set-property`, `<E>` è il nome di una definizione oppure
+   `D <handle>`, un'entità di un documento letto da un file (`D = DXF …`), con
+   i suoi dati conservati.
    | `pattern-lines <H>` | le famiglie del motivo del retino, `angle=<gradi> origin=x,y offset=x,y dashes=a,b,…` separate da `;`, nell'ordine; `none` per un riempimento pieno | PT23 |
 
    `properties` e `set-property` per un tipo il cui pacchetto non è unito
@@ -70,7 +74,7 @@ realizza uno toglie il suo annuncio.
    | `DIMENSION` | `style`, `text` (il testo sostitutivo, `""` per la misura), `text-rotation`, `~measurement` | PT23 |
    | `MTEXT` | `value`, `style`, `attachment`, `width`, `height`, `rotation`, `line-spacing`, `line-spacing-style` (`at-least`, `exactly`) | PT24 |
    | `ATTDEF` | `tag`, `prompt`, `default`, `invisible`, `constant`, `verify`, `preset`, `lock-position`, `height`, `rotation`, `style` | PT24 |
-   | `INSERT` | `block`, `insertion`, `scale` (X,Y), `rotation`, poi un `attribute="<TAG>":"<valore>"` per attributo, nell'ordine | PT24 |
+   | `INSERT` | `block`, `insertion`, `scale` (X,Y), `scale-z` (il gruppo 43, 1 se manca), `rotation`, poi un `attribute="<TAG>":"<valore>"` per attributo, nell'ordine | PT24 |
 
 4. **Argomenti annunciati:** `face=regular|bold|italic|bold-italic` di
    `text-width` e `font-metrics` (PT6); il valore `nea` in `modes=` di `snap`

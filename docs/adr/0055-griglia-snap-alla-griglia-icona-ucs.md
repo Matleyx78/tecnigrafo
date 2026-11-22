@@ -89,7 +89,9 @@ cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` sono **da registrare**
 - **Adattiva** (bit 2): quando le linee secondarie sarebbero più vicine di
   `SceneStyle::minGridSpacingPx`, si mostrano solo le principali; quando anche
   quelle lo sarebbero, il passo si moltiplica per `gridMajor` finché non lo è
-  più. Senza il bit, sotto la soglia la griglia non si disegna.
+  più. Senza il bit, sotto la soglia la griglia non si disegna. **[D9]** Con
+  `gridMajor` 1 moltiplicare non serve: si propone che sotto la soglia la
+  griglia non si disegni e che non si suddivida; da confermare in AutoCAD.
 - **Suddivisione** (bit 4, con il 2): ingrandendo, quando una maglia supera
   `gridMajor · minGridSpacingPx` si divide per `gridMajor`, mai sotto lo snap.
 - La griglia si disegna su tutta la vista (non ci sono limiti).

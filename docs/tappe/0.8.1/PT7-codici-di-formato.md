@@ -32,7 +32,7 @@
    ```cpp
    enum class StackKind : std::uint8_t { Horizontal, Diagonal, Tolerance };  // / # ^
    struct MTextFormat {
-       FontFace face{FontFace::Regular};
+       bool bold{false}, italic{false};  // PT8 turns them into a FontFace (PT6)
        double height{};        // absolute, drawing units
        double widthFactor{1};
        double oblique{0};      // radians
@@ -54,7 +54,7 @@
 
 2. Le regole del punto 1 dell'ADR 0054: un gruppo `{…}` salva e ripristina il
    formato; `\H<n>x;` moltiplica l'altezza corrente; `\c<n>;` è BGR; `\f…;`
-   sceglie la variante da `|b` e `|i` e ignora il nome; `\A`, `\p…;` e gli altri
+   accende o spegne `bold` e `italic` da `|b` e `|i` e ignora il nome; `\A`, `\p…;` e gli altri
    codici saltati restano fuori dal testo; `\S` con `/`, `#`, `^` (anche `^ `,
    come lo salva AutoCAD) e i caratteri di escape dell'ADR 0046. Pezzi uguali e
    contigui si fondono.
@@ -65,6 +65,9 @@
 ## Regole della tappa che valgono qui
 
 - Un codice malformato si legge come testo, come nella 0.8 (ADR 0046).
+- `MTextFormat` non usa `FontFace`, che nasce in PT6: i due pacchetti partono
+  insieme senza toccare gli stessi file (verbale della revisione del piano,
+  [bloccante] 1).
 
 ## Test richiesti
 

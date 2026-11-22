@@ -83,14 +83,17 @@ F
 RECTANG
 F
 0
+540,0
 R
 30
-540,0
 D
 40
 20
 600,40
 ```
+
+*Rotation* e *Dimensions* si danno alla seconda richiesta, dopo il primo angolo,
+come nella cronologia (verbale della revisione del piano, [bloccante] 8).
 
 Righe da controllare: le quattro `LWPOLYLINE` (vertici, bulge, `width`), i
 messaggi `Current rectangle modes:`; i valori da `autocad-rectang.dxf` con
@@ -99,5 +102,9 @@ l'oracolo (`entity D <handle>`).
 - **Strumenti:** righe normali su `main`; `entity` dell'oracolo per i valori.
   RT35 aggiunge `autocad-rectang` a `sorgenti.json`.
 - **Dipendenze:** nessuna.
-- **Fonte:** `autocad-rectang.dxf` e la sua cronologia.
+- **Fonte:** `autocad-rectang.dxf` e la sua cronologia, che provano la
+  rotazione scritta e *Area* dalla lunghezza. *Pick points* di *Rotation*,
+  *Area* calcolata dalla larghezza e *Width* insieme a *Fillet* sono **da
+  registrare** nella seduta prima dell'apertura (sezione 5 del piano); fino ad
+  allora RT35 non li scrive.
 - **Risposte condivise:** nessuna.

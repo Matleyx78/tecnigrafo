@@ -17,10 +17,8 @@
 ## Materiale
 
 I tre file `LiberationSans-Bold.ttf`, `LiberationSans-Italic.ttf` e
-`LiberationSans-BoldItalic.ttf` dell'archivio 2.1.5 (README di
-`resources/fonts`), con i loro SHA-256, li **aggiunge il responsabile** prima
-dell'apertura: le sessioni degli agenti non raggiungono gli archivi di
-GitHub.
+`LiberationSans-BoldItalic.ttf` dell'archivio 2.1.5 sono già in
+`resources/fonts`, con i loro SHA-256 nel README (pull request del piano).
 
 ## File
 
@@ -29,7 +27,9 @@ GitHub.
 - `script/src/text_questions.cpp`, `script/src/question_table.cpp` (file
   comune: le righe di `text-width` e `font-metrics`)
 - `tests/core/text_metrics_test.cpp`, `tests/script/questions_test.cpp`
-- `resources/fonts/README.md`, `docs/verifica/domande.md` (toglie l'annuncio)
+- `resources/fonts/README.md` (la frase «until package 0.8.1-PT6 they are not
+  read» diventa la descrizione delle quattro tabelle), `docs/verifica/domande.md`
+  (toglie l'annuncio)
 
 ## Cosa fare
 
@@ -78,8 +78,8 @@ GitHub.
 ```
 
 - **Strumenti:** l'argomento `face=` dell'onda 0 (PT2). I valori si calcolano
-  in modo indipendente con fontTools sui file del responsabile, come RT13 della
-  0.8.
-- **Dipendenze:** nessun comando; i TTF del materiale.
+  in modo indipendente con fontTools sui file di `resources/fonts`, come RT13
+  della 0.8.
+- **Dipendenze:** nessun comando; i TTF sono già nel repository.
 - **Risposte condivise:** nessuna; senza `face=` le risposte di oggi non
   cambiano.

@@ -31,8 +31,10 @@
    (un retino; altro: `Object selected is not a hatch.`), poi `Enter hatch
    option [Style/Properties/Origin] <Properties>:`.
    - *Properties*: le tre domande di *Properties* di `-HATCH` (motivo, scala,
-     angolo), proponendo i valori del retino; aggiornano anche `HPNAME`,
-     `HPSCALE`, `HPANG`, come AutoCAD.
+     angolo), proponendo i valori del retino, con lo stesso elenco di motivi
+     (`ANSI31`, `NET`, `SOLID`; `withPattern` di PT23); aggiornano anche
+     `HPNAME`, `HPSCALE`, `HPANG`, come AutoCAD, e il `-HATCH` successivo li
+     propone. Scala e angolo di un motivo non generabile secondo [D10].
    - *Style*: `Enter hatching style [Ignore/Outer/Normal] <Normal>:` (il valore
      del retino); aggiorna `HPISLANDDETECTION`.
    - *Origin*: `[Use current origin/Set new origin] <Use current origin>:`;
@@ -51,8 +53,9 @@
 
 ## Test richiesti
 
-- Le sette modifiche di `autocad-hatchedit`; *Store* con *Yes* e il `-HATCH`
-  dopo; `highlighted()` durante e dopo `-HATCH`.
+- Le modifiche di `autocad-hatchedit` con `NET` al posto di `ANSI37`; *Store*
+  con *Yes* e il `-HATCH` dopo; `HPNAME` proposto dal `-HATCH` dopo un
+  `-HATCHEDIT` *Properties*; `highlighted()` durante e dopo `-HATCH`.
 
 ## Fatto quando
 
@@ -74,9 +77,13 @@ C
 -HATCHEDIT
 !click 10,10
 P
-ANSI37
+NET
 2
 30
+-HATCH
+P
+
+!esc
 -HATCHEDIT
 !click 10,10
 O
@@ -86,9 +93,10 @@ N
 !report
 ```
 
-Righe da controllare: in `entities:` il `HATCH` con `pattern="ANSI37"`,
+Righe da controllare: in `entities:` il `HATCH` con `pattern="NET"`,
 `scale=2`, `angle=30` e `origin=245,5` (campo di PT23); in `messages:` le
-richieste; `undo:` con due `Hatchedit`.
+richieste, e quella di `-HATCH` subito dopo con `<NET>` come predefinito;
+`undo:` con due `Hatchedit`.
 
 - **Strumenti:** righe normali, `!click`, `!report`, su `main`.
 - **Dipendenze:** `-HATCH` su `main`; PT23 per le funzioni e il campo

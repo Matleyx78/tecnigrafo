@@ -38,12 +38,16 @@
    [[nodiscard]] EntityExtras withPatternOriginXdata(EntityExtras extras, const Vec2& origin);
    // The hatch with another predefined pattern, scale or angle: the families
    // regenerated from the pattern, with the same origin; nullopt for a name
-   // that is not a predefined pattern.
+   // that predefinedPatternLines() cannot generate (today ANSI31 and NET;
+   // SOLID gives a solid fill).
    [[nodiscard]] std::optional<Hatch> withPattern(const Hatch& hatch, std::string_view name,
                                                   double scale, double angle);
    ```
 2. **`HATCH`** (`pattern`, `scale`, `angle`, `origin`, `islands`, `~area`): i
-   primi tre con `withPattern`; `origin` con le due funzioni del punto 1;
+   primi tre con `withPattern`, quindi `pattern` accetta solo i motivi che
+   `predefinedPatternLines` genera (`ANSI31`, `NET`) e `SOLID`, come la scelta
+   del motivo di `-HATCH`; un altro nome è rifiutato. `scale` e `angle` di un
+   retino con un motivo letto dal DXF ma non generabile seguono **[D10]**; `origin` con le due funzioni del punto 1;
    `islands` cambia lo stile; `~area` è l'area della regione piena (pari e
    dispari) con lo stile delle isole. `SOLID` come nome dà un riempimento pieno.
 3. **`DIMENSION`** (`style`, `text`, `text-rotation`, `~measurement`): lo stile
@@ -66,8 +70,9 @@
 
 ## Test richiesti
 
-- I sette retini di `autocad-hatchedit`: motivo, scala, angolo, origine, stile,
-  tutto insieme, niente; l'area di un rettangolo con un foro; una quota con lo
+- Origine, scala, angolo e stile dei retini di `autocad-hatchedit` (il cambio a
+  `ANSI37` di quel DXF resta fuori: `ANSI37` non si genera); scala e angolo di
+  un retino con un motivo non generabile, secondo [D10]; l'area di un rettangolo con un foro; una quota con lo
   stile cambiato e una con il testo `<> mm`.
 
 ## Fatto quando
@@ -82,7 +87,8 @@ H = HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external
 ? properties H -> …
 ? set-property H origin=245,5 -> …
 ? pattern-lines H -> …
-? set-property H pattern="ANSI37" -> …
+? set-property H pattern="NET" -> …
+? set-property H pattern="ANSI37" -> invalid
 ? set-property H pattern="NONESISTE" -> invalid
 
 ; oracle: ezdxf (in un caso a sé)
@@ -94,7 +100,9 @@ D = DXF source=autocad-hatchedit
   (PT2); `entity` dell'oracolo per i retini di AutoCAD. RT23 aggiunge
   `autocad-hatchedit` a `sorgenti.json`.
 - **Dipendenze:** nessun comando.
-- **Fonte:** `autocad-hatchedit.dxf` (origine nell'XDATA e nei 43/44).
+- **Fonte:** `autocad-hatchedit.dxf` (origine nell'XDATA e nei 43/44). Il
+  motivo nuovo è `NET`, non `ANSI37` del DXF: su `main` si generano solo
+  `ANSI31` e `NET` (verbale della revisione del piano, [bloccante] 4).
 - **Risposte condivise:** nessuna: `pattern-lines` è nuova; `origin=` manca
   per l'origine 0,0, che è quella di tutti i retini dei DXF di oggi
   (controllato su `dxf-test-file`) e di quelli fatti con `-HATCH`.

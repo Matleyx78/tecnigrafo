@@ -65,6 +65,14 @@
 # casi/snap/vicino-autocad/script.tgs
 OPEN
 @sources/autocad-vicino
+ERASE
+!click 20,-29
+!click 77.25,-29
+!click 118.9,-29
+!click 155,-29
+!click 180.3,-29
+!click 217.5,-29
+
 !view 100,0 0.05 800x600
 !osnap nea
 LINE
@@ -84,9 +92,16 @@ T = TEXT position=0,40 alignment-point=0,40 height=2.5 rotation=0 width-factor=1
 ? snap 1,41 aperture=1 modes=nea -> …
 ```
 
-- **Strumenti:** `!osnap nea` e `modes=nea` annunciati da PT2; `!view`,
-  `!move`, `!report`, `snap` su `main`. RT30 aggiunge `autocad-vicino` a
-  `sorgenti.json`.
+- **Strumenti:** `!osnap nea` e `modes=nea` annunciati da PT2; `ERASE`,
+  `!click`, `!view`, `!move`, `!report`, `snap` su `main`. RT30 aggiunge
+  `autocad-vicino` a `sorgenti.json`.
+- **Geometria e risultati** (verbale della revisione del piano, [bloccante]
+  7): il DXF ha anche le sei `LINE` disegnate da AutoCAD con `_nea`, che vanno
+  da ogni oggetto fino a y = −30. Lo script le cancella per prime, scegliendole
+  a y = −29, dove non c'è altro (i cerchi e gli archi scendono al più a −10):
+  così il punto atteso non può venire da una di loro (la `LINE` che parte da
+  155,0 darebbe proprio 155,0). Le coordinate attese sono i **punti iniziali**
+  di quelle linee, letti con l'oracolo (`entity D <handle>`).
 - **Dipendenze:** nessun comando nuovo.
 - **Fonte:** `autocad-vicino.dxf` e la sua cronologia (punti su linea, arco,
   cerchio, polilinea, ellisse; niente sul `MTEXT`); la seduta della #920, punto

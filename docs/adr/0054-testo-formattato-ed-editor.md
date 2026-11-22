@@ -106,10 +106,12 @@ Arial, che cambierebbe ogni caso di testo dalla tappa 0.4 e sta fuori dalla
 Per ogni pezzo nasce, nell'ordine di lettura, un **testo formattato**
 (`GeneratedShape` nuova, `FormattedText`: un `Text` e la sua `FontFace`), con le
 proprietà effettive del pezzo (il colore di `\C` o `\c`); le righe di
-decorazione e le linee delle frazioni sono `Line` con lo stesso colore. Un
-pezzo in Regular resta un `Text`, come nella 0.8, così i casi di oggi senza
-formati non cambiano. Selezione e snap del `MTEXT` restano quelli dell'ADR
-0046, punto 2: le righe non danno snap. Le quote che hanno testo formattato
+decorazione e le linee delle frazioni sono `TextLine` (una `Line` che non dà
+snap, nemmeno dentro un blocco o una quota) con lo stesso colore. Un pezzo in
+Regular resta un `Text`, come nella 0.8, così i casi di oggi senza formati non
+cambiano. Selezione e snap del `MTEXT` restano quelli dell'ADR 0046, punto 2:
+le righe non danno snap. Il numero di righe e il testo mostrato (rapporto,
+quote) vengono dalle righe dell'impaginazione, non dal numero dei pezzi. Le quote che hanno testo formattato
 usano la stessa impaginazione, quindi cambiano grafica come in AutoCAD.
 
 ### 5. Editor nella finestra

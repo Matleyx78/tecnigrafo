@@ -37,9 +37,10 @@
    scrive nella riga di comando e lascia il valore di prima.
 3. `SOLID` con *Current Vertex* come la polilinea (frecce e coordinate del
    vertice corrente).
-4. `INSERT`: un gruppo *Attributes* con un valore per attributo; il valore
-   di `MTEXT` si apre con un pulsante nell'editor di PT12, se c'è, o in un campo
-   di testo.
+4. `INSERT`: un gruppo *Attributes* con un valore per attributo. Il valore di
+   `MTEXT` qui è un campo di testo con i codici; il pulsante che lo apre
+   nell'editor della finestra lo aggiunge [PT33](PT33-segni-nella-vista.md), che
+   dipende da questo pacchetto e dall'editor (PT12).
 5. `QSELECT`: il filtro per tipo con tutti i tipi.
 
 ## Regole della tappa che valgono qui

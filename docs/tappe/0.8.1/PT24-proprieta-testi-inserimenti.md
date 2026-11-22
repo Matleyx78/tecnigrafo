@@ -26,13 +26,17 @@
 2. **`ATTDEF`** (`tag`, `prompt`, `default`, i cinque modi, `height`,
    `rotation`, `style`): `tag` con `validAttributeTag`; `lock-position` è il
    campo di PT15.
-3. **`INSERT`** (`block`, `insertion`, `scale`, `rotation`, e un
+3. **`INSERT`** (`block`, `insertion`, `scale`, `scale-z`, `rotation`, e un
    `attribute="<TAG>":"<valore>"` per attributo non costante): `block` sostituisce
    la definizione con un'altra che esiste, tenendo punto, scale, rotazione e
    gli `ATTRIB`, come AutoCAD; un nome che non esiste o che darebbe un ciclo è
    rifiutato. **Da registrare** prima del pacchetto, nella seduta in AutoCAD:
    che cosa fa il palette degli attributi quando il blocco nuovo ne ha altri.
-   Il valore di un attributo cambia solo il valore.
+   Il valore di un attributo cambia solo il valore. **`scale-z`** è il gruppo 43
+   dell'`AcDbBlockReference`, che oggi sta negli extras (`-INSERT` lo scrive
+   già): si legge da lì (1 se manca) e si cambia negli extras della
+   `PropertyChange`, senza toccare gli altri gruppi (verbale della revisione del
+   piano, [bloccante] 6). Il disegno 2D non lo usa.
 4. Ogni cambiamento è valido come l'entità che produce (`supported`), altrimenti
    `Invalid value.`.
 
@@ -44,7 +48,8 @@
 ## Test richiesti
 
 - Ogni proprietà dei tre tipi, un valore rifiutato per ciascuno, un `INSERT`
-  con il blocco sostituito e i suoi `ATTRIB` tenuti.
+  con il blocco sostituito e i suoi `ATTRIB` tenuti; `scale-z` cambiato e
+  riscritto nel DXF (andata e ritorno con `io`, gli altri gruppi intatti).
 
 ## Fatto quando
 
@@ -68,10 +73,20 @@ C2 = CIRCLE center=0,0 radius=5
 I = INSERT block="B1" insertion=10,10 scale=1,1 rotation=0
 ? set-property I block="B2" -> …
 ? set-property I block="NONESISTE" -> invalid
+
+# casi/proprieta-proprie/scala-z/domande.tgq
+D = DXF file=inserimento-z.dxf
+? properties D <handle dell'INSERT> -> …
+? set-property D <handle dell'INSERT> scale-z=2 -> …
+? roundtrip D -> identical
 ```
 
-- **Strumenti:** `properties`, `set-property` dell'onda 0 (PT2); `!block` e
-  `!endblock` su `main`.
+`inserimento-z.dxf` è un DXF del caso scritto a mano: un blocco e un `INSERT`
+con i gruppi 41, 42 e 43 (= 3).
+
+- **Strumenti:** `properties`, `set-property` (anche con `D <handle>`)
+  dell'onda 0 (PT2); `!block`, `!endblock`, `D = DXF file=…` e `roundtrip` su
+  `main`.
 - **Dipendenze:** PT15 (il modo `lock-position`).
 - **Fonte:** la seduta «da registrare» del punto 3.
 - **Risposte condivise:** nessuna.

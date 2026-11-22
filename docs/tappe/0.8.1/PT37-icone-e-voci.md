@@ -31,6 +31,12 @@ dove AutoCAD li mette (*Draw*: `RECTANG` e `POLYGON` accanto a `ELLIPSE`;
 *Block* e *Insert*: gli attributi; *Modify*: `HATCHEDIT`, `TEXTEDIT`; *View*:
 `UCSICON`), e la scorciatoia se ne ha una. `F7` e `F9` li ha già PT32.
 
+**Senza icona né voce**, come in AutoCAD, che li usa solo dalla riga di comando
+(verbale della revisione del piano, [bloccante] 9): `SELECT` (PT34) e le
+variabili `AFLAGS` (PT14), `ATTREQ` (PT17), `GRIDMODE`, `GRIDUNIT`,
+`SNAPMODE`, `SNAPUNIT`, `SNAPBASE`, `GRIDDISPLAY`, `GRIDMAJOR` (PT28). Sono
+nel manuale (PT38) e nel catalogo di parità.
+
 ## Regole della tappa che valgono qui
 
 - Le icone approvate non cambiano più; ogni pacchetto aggiunge le sue
@@ -39,8 +45,8 @@ dove AutoCAD li mette (*Draw*: `RECTANG` e `POLYGON` accanto a `ELLIPSE`;
 
 ## Test richiesti
 
-- Ogni comando nuovo ha la sua azione, l'icona nelle due misure e una voce di
-  menu e di ribbon.
+- Ogni comando nuovo dell'elenco ha la sua azione, l'icona nelle due misure e
+  una voce di menu e di ribbon; nessuno di quelli «senza icona» ne ha una.
 
 ## Fatto quando
 
