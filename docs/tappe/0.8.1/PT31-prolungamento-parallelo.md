@@ -40,7 +40,9 @@
    fra due guide qualsiasi con l'intersezione di solid-space (rette estese), e
    di un prolungamento d'arco con una guida diritta sul tratto oltre l'estremo;
    la priorità dell'ADR 0049, punto 5.
-3. **Distanza scritta** lungo una sola guida diritta (punto 4, ultimo).
+3. **Distanza scritta** lungo una sola guida diritta, e **lungo l'arco** sul
+   prolungamento di un arco: angolo `d / r` dall'estremo, con seno e coseno
+   deterministici di `robust` (punto 4, ultimo).
 4. Il rapporto (punto 5; campi annunciati da PT2).
 
 ## Regole della tappa che valgono qui
@@ -53,9 +55,11 @@
 
 ## Test richiesti
 
-- I due casi della seduta; un arco prolungato; due prolungamenti che si
-  incrociano; un prolungamento e una guida del tracciamento; la parallela senza
-  punto base (nessuna acquisizione); l'ottava acquisizione; il rilascio.
+- Le dodici `LINE` di `autocad-prolungamento-parallelo` (linea, arco e
+  polilinea oltre i due estremi, con la distanza lungo l'arco; due incroci di
+  prolungamenti; prolungamento e guida del tracciamento; le due parallele; il
+  rilascio); la parallela senza punto base (nessuna acquisizione); l'ottava
+  acquisizione.
 
 ## Fatto quando
 
@@ -98,9 +102,13 @@ linea fino a `18.9737,-53.6754` (seduta della #920, punto 6).
 - **Strumenti:** `!osnap ext,par` e i campi annunciati da PT2; `!hover` (0.8),
   `!view`, `!move`, `!report` su `main`.
 - **Dipendenze:** `LINE` su `main`; PT30 per i modi, PT28 per il runner.
-- **Fonte:** la seduta della #920, punto 6; gli altri rami (arco, incroci,
-  polilinea, più acquisizioni) sono **da registrare** in AutoCAD prima
-  dell'apertura (sezione 5 del piano).
+- **Fonte:** la seduta della #920, punto 6, e `autocad-prolungamento-parallelo.dxf`
+  con la sua cronologia (seduta del 2026-11-22,
+  [dxf-di-prova.md](dxf-di-prova.md)): le righe `[a mano]` dicono che cosa è
+  stato acquisito in ogni `LINE`; i punti attesi sono i punti iniziali delle
+  dodici `LINE`, letti con l'oracolo. Il rilascio non si vede nel DXF: la seduta
+  dice che la croce sparisce e il prolungamento non si mostra più. RT31 aggiunge
+  `autocad-prolungamento-parallelo` a `sorgenti.json`.
 - **Risposte condivise:** nessuna: con *Prolungamento* e *Parallelo* spenti
   per difetto i casi del tracciamento di oggi non acquisiscono nulla di
   nuovo.

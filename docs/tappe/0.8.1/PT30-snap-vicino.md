@@ -36,11 +36,14 @@
    questo pacchetto.
 2. In `findSnap`, il livello di *Vicino* fra gli snap di punto e centro e
    inserimento (ADR 0057, punto 2): fra le curve entro l'apertura dal puntatore
-   (anche dentro la geometria generata), escluse le forme di testo, quella più
-   vicina; il punto è `closestPoint` della curva o `nearest()` di solid-space
-   per l'ellisse.
+   (anche dentro la geometria generata di inserimenti e quote, e i lati di un
+   `SOLID`), escluse le forme di testo, quella più vicina; il punto è
+   `closestPoint` della curva o `nearest()` di solid-space per l'ellisse. Come
+   AutoCAD nella seduta del 2026-11-22: sull'inserimento, sulla linea di quota e
+   sul lato del `SOLID` *Vicino* aggancia.
 3. Nessun *Vicino* su `TEXT`, `MTEXT`, `ATTDEF`, `ATTRIB`, sui testi generati e
-   sui retini.
+   sui retini: come AutoCAD, che su `TEXT` e sul retino (con `OSNAPHATCH` 0, il
+   valore di fabbrica) risponde «Punto non valido».
 
 ## Regole della tappa che valgono qui
 
@@ -53,7 +56,8 @@
 
 - I sei oggetti di `autocad-vicino` (testo compreso); centro e *Vicino* sul
   bordo di un cerchio; un estremo entro l'apertura che vince su *Vicino*; due
-  linee alla stessa distanza; dentro un inserimento e una quota.
+  linee alla stessa distanza; i cinque oggetti di `autocad-vicino-altri`
+  (inserimento, quota, `SOLID`, retino e `TEXT`).
 
 ## Fatto quando
 
@@ -105,7 +109,11 @@ T = TEXT position=0,40 alignment-point=0,40 height=2.5 rotation=0 width-factor=1
 - **Dipendenze:** nessun comando nuovo.
 - **Fonte:** `autocad-vicino.dxf` e la sua cronologia (punti su linea, arco,
   cerchio, polilinea, ellisse; niente sul `MTEXT`); la seduta della #920, punto
-  5 (centro contro *Vicino*). *Vicino* su `TEXT`, inserimenti, quote, `SOLID` e
-  retini è **da registrare** (decisione del 2026-11-21, «Esiti…», punto 1).
+  5 (centro contro *Vicino*); `autocad-vicino-altri.dxf` e la sua cronologia
+  (seduta del 2026-11-22, [dxf-di-prova.md](dxf-di-prova.md)): punti
+  sull'inserimento (50,0), sulla linea di quota (88,10) e sul `SOLID` (140,0),
+  «Punto non valido» sul retino e sul `TEXT`, con la stessa geometria di
+  `autocad-vicino` (le `LINE` da y = −30). RT30 aggiunge anche
+  `autocad-vicino-altri` a `sorgenti.json`.
 - **Risposte condivise:** nessuna: con *Vicino* spento per difetto la domanda
   `snap` senza `nea` e `active snap:` non cambiano.

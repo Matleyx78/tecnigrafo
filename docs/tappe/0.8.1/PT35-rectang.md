@@ -32,14 +32,36 @@
    `Specify other corner point or [Area/Dimensions/Rotation]:` e le domande di
    ogni opzione.
 2. Una `LWPOLYLINE` chiusa, con il gruppo 43 (larghezza costante) sempre
-   scritto, vertici **antiorari** dal primo angolo dato, anche dato dall'alto a
-   destra; *Chamfer* con la prima distanza sul lato verticale e la seconda
-   sull'orizzontale; *Fillet* con i bulge `tan(22,5°)`; *Elevation* nel 38,
-   *Thickness* nel 39 (negli `EntityExtras`, come `PLINE`); *Area* con
-   lunghezza o larghezza; *Dimensions*; *Rotation* (con *Pick points*).
-3. Le opzioni restano per i `RECTANG` successivi della sessione, rotazione e
-   quote comprese, come AutoCAD.
-4. Un passo di annullamento `Rectang`.
+   scritto. **Vertici**, come AutoCAD: il primo angolo `P`, poi `P + dx · u`,
+   l'angolo opposto, poi `P + dy · v`, con `u` e `v` le direzioni del
+   rettangolo (x e y ruotate di *Rotation*) e `dx`, `dy` le quote con il segno.
+   Il verso è antiorario solo se `dx` e `dy` hanno lo stesso segno: dato dal
+   basso a destra all'alto a sinistra, o dall'alto a sinistra al basso a
+   destra, è orario (seduta del 2026-11-22, casi g e h). Un angolo opposto
+   **scritto** con *Rotation* dà `dx` e `dy` come proiezioni di `Q − P` su `u`
+   e `v` (caso f). *Chamfer* con la prima distanza sul lato verticale e la
+   seconda sull'orizzontale; *Fillet* con i bulge `tan(22,5°)`, anche insieme
+   a *Width*; *Elevation* nel 38, *Thickness* nel 39 (negli `EntityExtras`,
+   come `PLINE`); *Area* con lunghezza o larghezza (l'altra quota è area /
+   quota data); *Dimensions*; *Rotation*, con l'angolo scritto o con *Pick
+   points* (la direzione da un punto all'altro).
+3. **Smusso o raccordo che non ci sta** (`2 · d1 > |dy|` o `2 · d2 > |dx|`
+   per *Chamfer*, `2 · r > min(|dx|, |dy|)` per *Fillet*): nessun messaggio, e
+   una `LWPOLYLINE` di **8 vertici** con ogni angolo ripetuto due volte, nello
+   stesso ordine, senza bulge, come AutoCAD
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Esiti della seconda
+   seduta in AutoCAD della 0.8.1», punto 5). All'uguaglianza vale la fascia
+   della soglia (ADR 0013 di solid-space, punto 4).
+4. Le opzioni restano per i `RECTANG` successivi della sessione, rotazione e
+   quote comprese, come AutoCAD; `Current rectangle modes:` elenca solo quelle
+   diverse da 0 (`Chamfer=25.0000 x 25.0000`, `Fillet=4.0000`,
+   `Width=1.0000`, `Rotation=30`). **Valori proposti**, come AutoCAD (punto 6
+   della stessa voce): la seconda distanza di cimatura propone la prima appena
+   scritta; dopo un *Fillet* `r` le due distanze di cimatura proposte sono `r`
+   e `r`; dopo una cimatura `a`, `b` il raggio proposto del *Fillet* è `a`
+   (prova del 2026-11-22: dopo 3 e 5 propone 3, e con Invio il modo diventa
+   `Fillet=3.0000`).
+5. Un passo di annullamento `Rectang`.
 
 ## Regole della tappa che valgono qui
 
@@ -50,9 +72,10 @@
 
 ## Test richiesti
 
-- I dieci rettangoli di `autocad-rectang`; uno smusso più grande del lato
-  (AutoCAD lo disegna senza smusso: dalla cronologia); larghezza e raccordo
-  insieme.
+- I dieci rettangoli di `autocad-rectang` e gli otto di
+  `autocad-rectang-opzioni` (*Pick points*, *Area* dalla larghezza, *Width* con
+  *Fillet*, smusso e raccordo che non ci stanno, angolo opposto scritto con
+  *Rotation*, i due orari); i valori proposti dopo *Fillet* e dopo *Chamfer*.
 
 ## Fatto quando
 
@@ -102,8 +125,10 @@ l'oracolo (`entity D <handle>`).
   RT35 aggiunge `autocad-rectang` a `sorgenti.json`.
 - **Dipendenze:** nessuna.
 - **Fonte:** `autocad-rectang.dxf` e la sua cronologia, che provano la
-  rotazione scritta e *Area* dalla lunghezza. *Pick points* di *Rotation*,
-  *Area* calcolata dalla larghezza e *Width* insieme a *Fillet* sono **da
-  registrare** nella seduta prima dell'apertura (sezione 5 del piano); fino ad
-  allora RT35 non li scrive.
+  rotazione scritta e *Area* dalla lunghezza; `autocad-rectang-opzioni.dxf` e
+  la sua cronologia (seduta del 2026-11-22, [dxf-di-prova.md](dxf-di-prova.md)):
+  *Pick points*, *Area* dalla larghezza, *Width* con *Fillet*, smusso e
+  raccordo che non ci stanno, *Rotation* con l'angolo opposto scritto, i due
+  rettangoli orari. RT35 aggiunge anche `autocad-rectang-opzioni` a
+  `sorgenti.json`.
 - **Risposte condivise:** nessuna.

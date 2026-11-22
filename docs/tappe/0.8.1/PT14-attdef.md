@@ -32,8 +32,12 @@
 2. `-ATTDEF` (alias `ATT`, anche `ATTDEF`) con le richieste dell'ADR 0056,
    punto 2, nell'ordine della cronologia; *Justify* e *Style* come `TEXT`;
    l'`ATTDEF` entra nel disegno sul layer e con le proprietà correnti, con
-   `lockPosition` (PT15) dal modo. Etichetta non valida: `Invalid tag name.` e
-   la richiesta si ripete (o il messaggio della cronologia).
+   `lockPosition` (PT15) dal modo. La richiesta dell'etichetta non è di testo
+   (ADR 0014, punto 3): nella riga di comando lo spazio vale Invio, come in
+   AutoCAD, che con `DUE PAROLE` prende `DUE` e passa `PAROLE` alla richiesta
+   dopo (seduta del 2026-11-22). Etichetta vuota: `Tag cannot be null.` e la
+   richiesta si ripete, come AutoCAD; una riga con uno spazio che arriva intera
+   (script al livello 1): `Invalid tag name.` e la richiesta si ripete.
 3. Un passo di annullamento `Attdef`.
 
 ## Regole della tappa che valgono qui
@@ -49,7 +53,8 @@
 ## Test richiesti
 
 - Ognuno dei sei `ATTDEF` di `autocad-attributi`; *Constant* senza richiesta;
-  spazi nella richiesta e nel predefinito; etichetta con uno spazio.
+  spazi nella richiesta e nel predefinito; etichetta vuota; etichetta con uno
+  spazio al livello 1.
 
 ## Fatto quando
 
@@ -100,5 +105,7 @@ in `messages:`, in `undo:` tre passi `Attdef`.
 
 - **Strumenti:** righe normali, su `main`; il campo `lock-position` di PT15.
 - **Dipendenze:** PT15 (il campo); nient'altro.
-- **Fonte:** `autocad-attributi.txt` (richieste, ordine, *Constant*).
+- **Fonte:** `autocad-attributi.txt` (richieste, ordine, *Constant*); la seduta
+  del 2026-11-22 per l'etichetta vuota e lo spazio
+  ([dxf-di-prova.md](dxf-di-prova.md)).
 - **Risposte condivise:** nessuna.

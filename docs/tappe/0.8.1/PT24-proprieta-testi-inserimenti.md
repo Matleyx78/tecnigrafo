@@ -27,12 +27,16 @@
    `rotation`, `style`): `tag` con `validAttributeTag`; `lock-position` è il
    campo di PT15.
 3. **`INSERT`** (`block`, `insertion`, `scale`, `scale-z`, `rotation`, e un
-   `attribute="<TAG>":"<valore>"` per attributo non costante): `block` sostituisce
-   la definizione con un'altra che esiste, tenendo punto, scale, rotazione e
-   gli `ATTRIB`, come AutoCAD; un nome che non esiste o che darebbe un ciclo è
-   rifiutato. **Da registrare** prima del pacchetto, nella seduta in AutoCAD:
-   che cosa fa il palette degli attributi quando il blocco nuovo ne ha altri.
-   Il valore di un attributo cambia solo il valore. **`scale-z`** è il gruppo 43
+   `attribute="<TAG>":"<valore>"` per attributo non costante, nell'ordine
+   degli `ATTRIB` dell'inserimento, come il palette di AutoCAD): `block`
+   sostituisce la definizione con un'altra che esiste, tenendo punto, scale,
+   rotazione e gli `ATTRIB` così come sono, anche se il blocco nuovo ha altre
+   etichette (per allinearli c'è `ATTSYNC`); un nome che non esiste o che
+   darebbe un ciclo è rifiutato. È una scelta di Tecnigrafo: nel palette di
+   AutoCAD 2021 il *Nome* è in grigio, con gli attributi e senza (seduta del
+   2026-11-22; [DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Esiti della
+   seconda seduta in AutoCAD della 0.8.1», punto 4). Il valore di un attributo
+   cambia solo il valore. **`scale-z`** è il gruppo 43
    dell'`AcDbBlockReference`, che oggi sta negli extras (`-INSERT` lo scrive
    già): si legge da lì (1 se manca) e si cambia negli extras della
    `PropertyChange`, senza toccare gli altri gruppi (verbale della revisione del
@@ -88,5 +92,7 @@ con i gruppi 41, 42 e 43 (= 3).
   dell'onda 0 (PT2); `!block`, `!endblock`, `D = DXF file=…` e `roundtrip` su
   `main`.
 - **Dipendenze:** PT15 (il modo `lock-position`).
-- **Fonte:** la seduta «da registrare» del punto 3.
+- **Fonte:** per l'ordine degli attributi, `autocad-proprieta.dxf` e la sua
+  cronologia (seduta del 2026-11-22: `DUE`, `UNO`, l'ordine della
+  definizione); il cambio di blocco è una regola nostra, che AutoCAD non ha.
 - **Risposte condivise:** nessuna.

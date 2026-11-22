@@ -2613,3 +2613,45 @@ i rimandi ai documenti che cambia.
 
   D3, D6, D7, D8, D9 e D10 sono in [REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md);
   gli ADR 0054–0057 e le schede della 0.8.1 sono corretti senza le marche.
+- **2026-11-22 — Esiti della seconda seduta in AutoCAD della 0.8.1.** Con la
+  seduta in AutoCAD 2021 della sezione 5 del piano della
+  [0.8.1](tappe/0.8.1-completamenti.md) («Che cosa prepara il responsabile»,
+  punto 2), con quattro DXF nuovi in `dxf-test-file` e le cronologie dei
+  messaggi ([tappe/0.8.1/dxf-di-prova.md](tappe/0.8.1/dxf-di-prova.md),
+  «Seconda seduta in AutoCAD»), il responsabile decide sui punti in cui AutoCAD
+  e le schede non dicevano la stessa cosa:
+  1. *Distanza scritta lungo il prolungamento di un arco* (ADR 0057, punto 4;
+     PT31): come AutoCAD, si misura **lungo l'arco** dall'estremo acquisito
+     (10 su raggio 20 dà 0,5 rad), invece della direzione dal punto base al
+     puntatore.
+  2. *Raggio maggiore sotto il minore nel pannello* (PT22): gli assi si
+     **scambiano**, come con i grip (REGOLE-NUMERICHE.md, sezione 2, punto 7).
+     AutoCAD 2021 lo rifiuta («Modellazione generale non riuscita.») e lascia
+     l'ellisse com'era; Tecnigrafo resta coerente con i grip.
+  3. *Area di un arco d'ellisse* (PT22): come AutoCAD, quella del **segmento**
+     chiuso dalla corda, `a · b / 2 · (Δt − sin Δt)`, non del settore (12,7295
+     per l'arco 45°–135° di un'ellisse 20 × 10).
+  4. *Blocco di un inserimento nel pannello* (PT24): **modificabile**, tenendo
+     punto, scale, rotazione e gli `ATTRIB` così come sono. Nel palette di
+     AutoCAD 2021 il *Nome* è in grigio, con gli attributi e senza: è una
+     scelta di Tecnigrafo.
+  5. *`RECTANG` con uno smusso o un raccordo che non ci stanno* (PT35): come
+     AutoCAD, nessun messaggio e una `LWPOLYLINE` di **8 vertici** con ogni
+     angolo ripetuto due volte, senza smusso né raccordo.
+  6. *Valori proposti da `RECTANG`* (PT35): come AutoCAD, cimatura e raccordo
+     si propongono a vicenda: dopo un *Fillet* `r` la cimatura propone `r` e
+     `r`, dopo una cimatura `a`, `b` il *Fillet* propone `a`.
+  7. *`GRIDUNIT` negativo* (PT28): rifiutato con `Cannot set GRIDUNIT to that
+     value.`, come `SNAPUNIT` con 0. AutoCAD lo accetta senza messaggi, ma un
+     passo negativo non ha senso.
+
+  Il resto della seduta conferma le schede o ne corregge la descrizione di
+  AutoCAD senza scelte: i vertici di `RECTANG` vanno dal primo angolo lungo la
+  x del rettangolo, poi all'angolo opposto, e il verso è antiorario solo con le
+  due quote dello stesso segno (non sempre, come diceva la scheda); gli angoli
+  dell'ellisse nel palette sono angoli veri; *Vicino* aggancia inserimenti,
+  quote e `SOLID`, non `TEXT` né retini; richieste e messaggi di `GRID`,
+  `SNAP`, `UCSICON`, `TEXTEDIT`, `-ATTDEF`, `ATTSYNC`, `-HATCHEDIT` e
+  `POLYGON` sono quelli della seduta, tradotti. ADR 0054, 0055 e 0057 e le
+  schede PT11, PT14, PT18, PT22, PT24, PT26, PT28, PT30, PT31, PT35 e PT36
+  sono corretti.

@@ -37,13 +37,16 @@
    quote. Negli script e al livello 1 non cambia niente: la richiesta resta di
    testo.
 2. **`TEXTEDIT`** (alias `ED`, anche `DDEDIT`), con le richieste dell'ADR 0054,
-   punto 6: `Select an annotation object or [Undo/Mode]:`; *Mode* `Enter a text
-   edit mode option [Single/Multiple] <Multiple>:`; *Undo* annulla l'ultima
-   modifica del comando (`Nothing to undo.` se non ce n'è); in *Multiple* la
-   scelta si ripete fino a Invio. Accetta un oggetto già scelto (pickfirst),
-   come il doppio clic lo darà (PT12). Su `TEXT`, `MTEXT`, quota, `ATTDEF`,
-   `INSERT` con attributi le richieste del punto 6; su un altro oggetto `Object
-   is not an annotation.` (o il messaggio della cronologia). Ogni oggetto
+   punto 6: `Current settings: Edit mode = Multiple`, `Select an annotation
+   object or [Undo/Mode]:` (in *Single* senza *Undo*: `Select an annotation
+   object or [Mode]:`); *Mode* `Enter a text edit mode option [Single/Multiple]
+   <Multiple>:`, e la modalità resta per i `TEXTEDIT` successivi della
+   sessione; *Undo* annulla l'ultima modifica del comando e scrive `The command
+   has been completely undone.`, anche quando non c'è niente da annullare; in
+   *Multiple* la scelta si ripete fino a Invio. Accetta un oggetto già scelto
+   (pickfirst), come il doppio clic lo darà (PT12). Su `TEXT`, `MTEXT`, quota,
+   `ATTDEF`, `INSERT` con attributi le richieste del punto 6; un altro oggetto
+   non dà messaggi e la domanda si ripete, come AutoCAD. Ogni oggetto
    modificato è un passo `Textedit`.
 3. ***Mtext*** delle quote (l'opzione la porta PT3): la sua richiesta `Enter
    dimension text <misura>:` ha `mtextEditing`, con il testo sostitutivo di
@@ -105,5 +108,8 @@ passi `Textedit`.
   scritto a mano (un `ATTDEF` nel disegno e un blocco con due `ATTDEF`
   *Preset*, che `-INSERT` non chiede nemmeno con `ATTREQ` 1, PT17) e lo
   inserisce con `-INSERT`: tutto su `main`, senza `-ATTDEF` (PT14).
+- **Fonte:** la seduta del 2026-11-22 ([dxf-di-prova.md](dxf-di-prova.md)):
+  richieste, *Mode*, *Undo* (con e senza una modifica da annullare) e il clic su
+  una linea, che non dà messaggi.
 - **Risposte condivise:** nessuna: le richieste delle quote cambiano con PT3
   (che aggiorna i 21 casi), e `mtextEditing` non si vede negli script.

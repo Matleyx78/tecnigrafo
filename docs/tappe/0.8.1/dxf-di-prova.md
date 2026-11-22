@@ -1,7 +1,7 @@
 # DXF di prova della tappa 0.8.1
 
-Disegni preparati dal responsabile in AutoCAD 2021 (completo, in italiano), da
-zero, senza dati di lavoro e senza riferimenti al suo nome o alla sua licenza,
+Disegni preparati dal responsabile in AutoCAD 2021 (completo, in italiano), in
+due sedute (la #920 e quella del 2026-11-22), da zero, senza dati di lavoro e senza riferimenti al suo nome o alla sua licenza,
 con le stesse regole della 0.8 ([0.8/dxf-di-prova.md](../0.8/dxf-di-prova.md)).
 Sono l'elenco di lavoro della
 [#920](https://github.com/Matleyx78/tecnigrafo/issues/920) per la scheda
@@ -19,7 +19,8 @@ Chi scrive i riferimenti legge il risultato di AutoCAD con l'oracolo ezdxf
 (ADR 0020); i valori attesi si copiano dal log dell'oracolo, non si calcolano a
 mano e non si ricavano da Tecnigrafo. I casi di riferimento li assegna il piano
 della tappa. Commit e hash SHA-256 dei file pubblicati sono in «File
-pubblicati»; le prove fatte a mano sono in «Seduta in AutoCAD».
+pubblicati»; le prove fatte a mano sono in «Seduta in AutoCAD» e «Seconda
+seduta in AutoCAD».
 
 | File | Che cosa contiene |
 |---|---|
@@ -36,6 +37,10 @@ pubblicati»; le prove fatte a mano sono in «Seduta in AutoCAD».
 | `autocad-polygon.dxf` | `POLYGON` da 3, 6, 1024 e 5 lati *Inscribed* con il raggio scritto; 6 lati *Circumscribed*; 6 lati con il raggio dato da un punto (`@20<15`), *Inscribed* e *Circumscribed*; *Edge* in un verso e nell'altro |
 | `autocad-selezione.dxf` | `ERASE` *Last* due volte; `SELECT` a finestra e `MOVE` *Previous*; `MOVE`, `U` e `SELECT` *Previous*; `LINE`, `U` e `SELECT` *Last*; per ultimo `ERASE` e `SELECT` *Previous*. Resta una linea; i conteggi sono nella cronologia |
 | `autocad-vicino.dxf` | una linea, un arco, un cerchio, una polilinea con un lato ad arco, un'ellisse e un `MTEXT`; per ciascuno una `LINE` che parte con `_nea` da un punto scritto 0,3 mm fuori dall'oggetto. Sul `MTEXT` AutoCAD non trova niente: lo script si ferma lì e la cronologia finisce con l'Esc |
+| `autocad-prolungamento-parallelo.dxf` | seconda seduta: una linea, un arco, una polilinea aperta, coppie di linee e di arco e linea, una polilinea; dodici `LINE` fatte **a mano** con *Prolungamento* e *Parallelo* (`OSMODE` 12288, poi 12289 con il puntamento snap a oggetto): oltre i due estremi della linea (10), dell'arco (10, lungo l'arco) e della polilinea (13 e 10); all'incrocio di due prolungamenti (330,15) e di un prolungamento d'arco con quello di una linea (80,−60); dopo due acquisizioni e un rilascio (15); parallele a una linea (20) e a un segmento di polilinea (25); all'incrocio di un prolungamento con la guida verticale del tracciamento (450,45). Le righe `[a mano]` della cronologia dicono che cosa è stato acquisito |
+| `autocad-vicino-altri.dxf` | seconda seduta, come `autocad-vicino`: un `TEXT`, un inserimento, una quota lineare, un `SOLID` e un retino `ANSI31` senza contorno (cancellato, il retino resta dissociato), `OSNAPHATCH` 0; una `LINE` con `_nea` da 0,3 mm fuori da ciascuno, ognuna con uno script a parte (righe `[eseguito come script a parte: …]`), perché AutoCAD ferma lo script quando non trova niente |
+| `autocad-rectang-opzioni.dxf` | seconda seduta: otto `RECTANG`: *Rotation* con *Pick points* (da 0,0 a 4,3) e *Dimensions* 40×20; *Area* 600 dalla larghezza 20; *Width* 1 con *Fillet* 4; *Chamfer* 25 e *Fillet* 15 su un 40×20 (non ci stanno); *Rotation* 30 con l'angolo opposto scritto; due senza rotazione dati dal basso a destra all'alto a sinistra e viceversa |
+| `autocad-proprieta.dxf` | seconda seduta: un inserimento di `BLK_A` (attributi `UNO`, `DUE`) e un blocco `BLK_B` (`DUE`, `TRE`, un cerchio); cinque ellissi 20 × 10 cambiate a mano nel palette *Proprietà* (raggio maggiore 30; raggio minore 5; raggio maggiore 5, rifiutato; un arco 45°–135° solo letto; lo stesso arco con l'angolo iniziale 30). Le righe `[a mano nel palette Proprietà]` della cronologia dicono che cosa è stato fatto |
 
 ## Come sono fatti gli script
 
@@ -56,8 +61,17 @@ pubblicati»; le prove fatte a mano sono in «Seduta in AutoCAD».
 - Le cronologie dal registro sono ripulite: niente intestazione né percorsi con
   il nome dell'utente, niente righe vuote, lettere accentate ripristinate (il
   registro di AutoCAD è in codifica Windows), UTF-8 con fine riga CRLF.
+- Seconda seduta: ogni script finisce con `USERS1` uguale a `fine-<nome dello
+  script>` (`USERS1` non sta nel disegno): se la cronologia non finisce con
+  quella riga, lo script si è fermato prima. AutoCAD **ferma lo script al primo
+  valore che rifiuta** («Il valore deve essere positivo.», «Punto non valido»):
+  per questo i valori sbagliati si scrivono a mano e i casi di *Vicino* sono
+  script separati. I passi a mano sono nelle cronologie come righe
+  `[a mano] …`, e i cambi di script come `[eseguito come script a parte: …]`.
 
 ## File pubblicati
+
+### Prima seduta (#920)
 
 Commit `2aafbb1fa17abc67fdf2ff7de26a34b70e79b736` di
 [Matleyx78/dxf-test-file](https://github.com/Matleyx78/dxf-test-file/tree/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736),
@@ -140,6 +154,28 @@ prodotto vuoto).
 | `autocad-vicino.scr` | AutoCAD 2021 | `1b5154f3af95b1294b0a4ccd53d441a1b8f3a55fcfca56d96d4e56642dd7c93a` |
 | `autocad-vicino.txt` | AutoCAD 2021 | `688b736b4a8993a33a01d5a46d9b8711eb9458b013f4b876501d15c637e4ff67` |
 
+### Seconda seduta (2026-11-22)
+
+Commit `d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9` di
+[Matleyx78/dxf-test-file](https://github.com/Matleyx78/dxf-test-file/tree/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9),
+che contiene i file dei quattro commit della seduta (`1a475ed`, `830ba61`,
+`d2b6f7f`, `d5fe8e4`) e quelli della prima, invariati. Ripuliti come gli altri.
+
+| File | Programma | SHA-256 |
+|---|---|---|
+| `autocad-prolungamento-parallelo.dxf` | AutoCAD 2021 | `c27ee93df85a7ecd99acabfa5ecb1418e1271b387a3e75b33df7f45da5d5b66b` |
+| `autocad-prolungamento-parallelo.scr` | AutoCAD 2021 | `81b4515e0ed0e425f1045fa036331061d8b0b700fe13eb06be95e3bd3854d37f` |
+| `autocad-prolungamento-parallelo.txt` | AutoCAD 2021 | `e7ae52392aabfd535bc6707ee55faea9f6e82fece29b353e2cfc17af23697743` |
+| `autocad-vicino-altri.dxf` | AutoCAD 2021 | `2064a1f20dfc2f6f0a20cd98d9c4cf7c604ca3aba77f18fbe488c993ea567e2b` |
+| `autocad-vicino-altri.scr` | AutoCAD 2021 | `de04243aef6b9de6e45d7804bdf8189511ff622447b4457e6c5e437d3da305f4` |
+| `autocad-vicino-altri.txt` | AutoCAD 2021 | `5d6f9a5b68963ce43fb9364bb83d418ab457d073a8be83e234ca90659458f314` |
+| `autocad-rectang-opzioni.dxf` | AutoCAD 2021 | `8bc59f0ab0da1c455d64c308e860e2d6f183cfd0261b30d0ae7f2ab34b04a958` |
+| `autocad-rectang-opzioni.scr` | AutoCAD 2021 | `39329c4a3c8ec771b692d9d7bed410862cf6a28423abcb69254781ec7f37a267` |
+| `autocad-rectang-opzioni.txt` | AutoCAD 2021 | `3da58279a0f94843924e15db5275cad7fc669f409b9d84911bb22a54d9d24213` |
+| `autocad-proprieta.dxf` | AutoCAD 2021 | `98aaf3dbd5a3922f68cc7728448dc3fd608e500606b62479b6658920db7d5796` |
+| `autocad-proprieta.scr` | AutoCAD 2021 | `bb79d184346f269f934aaa0201916aa86205cad62ca623db09c500ffef93d734` |
+| `autocad-proprieta.txt` | AutoCAD 2021 | `910a5f4b1ace11a0df7b9569d17f31dbb1440925fcb249ac0fb03c4b5ea4e440` |
+
 ## Seduta in AutoCAD
 
 Risposte del responsabile nel suo
@@ -170,6 +206,90 @@ breve:
 8. **Alias**: le righe di `acad.pgp` sono state date in chat e non si
    pubblicano. L'AutoCAD del responsabile è in italiano, con nomi di comando e
    alias italiani, diversi dagli alias inglesi elencati nella scheda.
+
+## Seconda seduta in AutoCAD
+
+Il 2026-11-22, in AutoCAD 2021 (completo, in italiano), con i quattro DXF
+qui sopra e un disegno solo per i messaggi, non salvato. Le parole di AutoCAD
+sono riportate com'erano; le schede le traducono.
+
+- **Prolungamento e Parallelo** (`autocad-prolungamento-parallelo`): le dodici
+  `LINE` partono da 48,36 e −8,−6 (linea), 90.4115,17.5517 e 117.5517,−9.5885
+  (arco), 236,30 e 152,−6 (polilinea), 330,15 e 80,−60 (incroci), 326.5836,
+  16.7082 (dopo il rilascio), 518.9737,36.3246 e 590,45 (parallele), 450,45
+  (prolungamento e guida verticale del tracciamento). Sull'arco la distanza
+  scritta si misura **lungo l'arco**: 10 su raggio 20 vanno 0,5 rad oltre
+  l'estremo. Al rilascio la croce sparisce e il prolungamento non si mostra
+  più. `F11` scrive `<Puntamento snap ad oggetto on>` e `… off>`.
+- ***Vicino*** (`autocad-vicino-altri`): aggancia l'inserimento (50,0), la
+  linea di quota (88,10) e il lato del `SOLID` (140,0); sul retino (con
+  `OSNAPHATCH` 0) e sul `TEXT` «Nessun(o/a) trovato(a) per punto
+  specificato.» e «Punto non valido.», e lo script si ferma.
+- **`RECTANG`** (`autocad-rectang-opzioni`): *Pick points* da 0,0 a 4,3 con
+  40×20 dà 0,0 · 32,24 · 20,40 · −12,16, e il messaggio dei modi dice
+  `Rotazione=37` (arrotondato); *Area* 600 dalla larghezza 20 dà 30×20;
+  *Width* 1 con *Fillet* 4 tiene i bulge e la larghezza; *Chamfer* 25 e
+  *Fillet* 15 su un 40×20 non danno messaggi e scrivono **8 vertici**, ogni
+  angolo due volte; con *Rotation* 30 l'angolo opposto scritto 380,20 dà i
+  lati come proiezioni (340,0 · 378.6603,22.3205 · 380,20 · 341.3397,−2.3205),
+  in senso **orario**; i due rettangoli dati dal basso a destra all'alto a
+  sinistra e viceversa sono orari anche loro. Cimatura e raccordo si
+  propongono a vicenda: dopo *Fillet* 4 la cimatura propone 4 e 4, dopo una
+  cimatura 3 e 5 il *Fillet* propone 3 (prova a mano).
+- **Palette *Proprietà*** (`autocad-proprieta`): raggio maggiore da 20 a 30 →
+  il minore resta 10 (rapporto 0,3333); minore da 10 a 5 → il maggiore resta
+  20 (0,25); maggiore a 5, sotto il minore → finestra «Modellazione generale
+  non riuscita.» ed ellisse invariata. Gli angoli iniziale e finale sono
+  **angoli veri** (45 e 135 nel palette, parametri 63,43° e 116,57° nel DXF);
+  l'angolo iniziale 30 diventa il parametro 49,11°. L'**area** di un arco è
+  quella del segmento chiuso dalla corda (12,7295 e 25,377). Il *Nome* di un
+  inserimento è in grigio, con gli attributi e senza (`BLK_A` e `SENZA`); gli
+  attributi sono nell'ordine della definizione (`DUE`, `UNO`).
+- **`GRID`**: «Specificare spaziatura della griglia(X) o
+  [ON/OFF/SNap/Maggiore/aDattiva/Limiti/SEgui/rApporto prospettico]
+  <10.0000>:». Un passo, o Invio, accende la griglia; `2x` dà 20,20 con lo
+  snap a 10; `0` e *SNap* danno `GRIDUNIT` 0,0; −5 dà «Il valore deve essere
+  positivo.». *rApporto*: «Specificare spaziatura orizzontale(X) <…>:» e
+  «Specificare spaziatura verticale(Y) <…>:», e con 5,10 la proposta della
+  domanda diventa `<A>`. *Maggiore*: «Immettere il numero di divisioni della
+  griglia per linea principale griglia <5>:», con 0 e 101 «È richiesto un
+  valore intero compreso tra 1 e 100.» (anche la variabile `GRIDMAJOR`).
+  *aDattiva*: «Attiva funzionamento adattivo [Sì/No] <Sì>:»; *No* porta
+  `GRIDDISPLAY` da 3 a 1; *Sì* chiede «Consenti suddivisione al di sotto della
+  spaziatura della griglia [Sì/No] <No>:» (*Sì* 7, *No* 3). `GRIDUNIT` 0,0
+  accettato; −5,10 accettato senza messaggi.
+- **`SNAP`**: «Specificare l'intervallo di snap o [ON/OFF/rApporto
+  prospettico/Esistente/Stile/Tipo] <10.0000>:». Un passo, o Invio, accende lo
+  snap; 0 e −5 danno «Il valore deve essere positivo e diverso da zero.».
+  *rApporto*: «Specificare spaziatura orizzontale <…>:» e «Specificare
+  spaziatura verticale <…>:», accende lo snap, poi `<A>`. `SNAPUNIT` 0,0:
+  «Impossibile impostare SNAPUNIT a quel valore.» e «*Non valido*».
+- **`UCSICON`**: «Digitare un'opzione
+  [ON/OFf/Tutte/Nonsuorigine/ORigine/Selezionabile/Proprietà] <ON>:», con la
+  proposta uguale allo stato attuale (`<OFF>` quando è spenta); *OFF* 2, *ON*
+  3, *Nonsuorigine* 1, *ORigine* 3. `F7` e `F9`: `<Griglia off>`, `<Griglia
+  on>`, `<Snap off>`, `<Snap on>`.
+- **`TEXTEDIT`**: «Impostazioni correnti: Modalità di modifica = Multipla»,
+  «Selezionare un oggetto di annotazione o [Annulla/Modalità]:» (in *Singola*
+  senza *Annulla*); *Modalità*: «Digitare un'opzione di modalità di modifica
+  testo [Singola/Multipla] <Multipla>:», e la modalità resta al `TEXTEDIT`
+  dopo; *Annulla* scrive «Il comando è stato completamente annullato.» sia
+  quando annulla una modifica sia quando non c'è niente; un clic su una linea
+  non dà messaggi e la domanda si ripete.
+- **`-ATTDEF`**: nell'etichetta lo spazio vale Invio (`DUE PAROLE` dà `DUE`, e
+  `PAROLE` va alla richiesta); l'etichetta vuota dà «L'etichetta non può essere
+  nulla» e la domanda si ripete.
+- **`ATTSYNC`**: in un disegno senza blocchi con attributi, subito «Questo
+  disegno non contiene blocchi con attributi.»; altrimenti, con *Nome*, un
+  blocco senza attributi e un nome che non esiste danno «La tabella del blocco
+  non contiene alcun blocco con attributi denominato <nome>.», e il comando
+  finisce.
+- **`-HATCHEDIT`** su una linea: «L'oggetto selezionato dev'essere un oggetto
+  per il tratteggio associativo.» e «EDITATRATT non supporta i blocchi di
+  tratteggio non associativo delle versioni precedenti.», poi «Selezionare
+  tratteggio:» si ripete.
+- **`POLYGON`** con 2 e con 1025 lati: «È richiesto un valore intero compreso
+  tra 3 e 1024.» e la domanda si ripete.
 
 ## Che cosa si è visto nei disegni
 
@@ -218,9 +338,11 @@ con l'oracolo):
   `autocad-snap-polare.dxf` è identico allo stato di partenza (salvo date e
   GUID), e in un disegno nuovo aperto dopo `SNAPTYPE` resta 1: è del profilo,
   quindi non c'è niente da conservare nel file.
-- **`RECTANG`**: `LWPOLYLINE` chiusa, gruppo 43 sempre scritto; vertici in
-  senso antiorario a partire dal primo angolo dato, anche dato dall'alto a
-  destra. *Chamfer* 3 e 5 nell'angolo 60,0: 3 sul lato verticale e 5
+- **`RECTANG`**: `LWPOLYLINE` chiusa, gruppo 43 sempre scritto; vertici a
+  partire dal primo angolo dato, lungo la x del rettangolo, poi l'angolo
+  opposto: in senso antiorario quando le due quote hanno lo stesso segno, come
+  in tutti i casi di questo disegno (anche dato dall'alto a destra), orario
+  altrimenti (seconda seduta). *Chamfer* 3 e 5 nell'angolo 60,0: 3 sul lato verticale e 5
   sull'orizzontale (60,3 → 65,0). *Fillet* 4: bulge 0,4142 (tan 22,5°), primo
   vertice 120,4. *Elevation* nel 38, *Thickness* nel 39. *Rotation* 30 con
   *Dimensions* 40×20 da 540,0: 540,0 → 574.641,20 → 564.641,37.3205 →
@@ -254,3 +376,8 @@ responsabile: [DECISIONI.md](../../DECISIONI.md), 2026-11-21, «Esiti dei DXF di
 prova e della seduta della 0.8.1» (niente *Vicino* sui testi, `GRIDDISPLAY` 3,
 snap polare fuori dal file, `ATTREQ` 1, nodo prima di orto e polare, alias
 inglesi, *Vicino* prima del centro).
+
+Quelle della seconda seduta: [DECISIONI.md](../../DECISIONI.md), 2026-11-22,
+«Esiti della seconda seduta in AutoCAD della 0.8.1» (distanza lungo l'arco,
+assi scambiati nel pannello, area del segmento, blocco modificabile, `RECTANG`
+a 8 vertici e valori proposti come AutoCAD, `GRIDUNIT` negativo rifiutato).

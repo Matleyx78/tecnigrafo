@@ -23,8 +23,9 @@
 
 ## Cosa fare
 
-1. `POLYGON` (alias `POL`): `Enter number of sides <4>:` (da 3 a 1024; fuori:
-   il messaggio della cronologia), `Specify center of polygon or [Edge]:`,
+1. `POLYGON` (alias `POL`): `Enter number of sides <4>:` (da 3 a 1024; fuori,
+   come AutoCAD con 2 e con 1025: `Requires an integer between 3 and 1024.` e
+   la domanda si ripete), `Specify center of polygon or [Edge]:`,
    `Enter an option [Inscribed in circle/Circumscribed about circle] <I>:`,
    `Specify radius of circle:`; *Edge*: `Specify first endpoint of edge:` e
    `Specify second endpoint of edge:`.
@@ -79,5 +80,6 @@ l'oracolo); la richiesta `Enter number of sides <6>:` del secondo.
 - **Strumenti:** righe normali su `main`; `entity` dell'oracolo. RT36
   aggiunge `autocad-polygon` a `sorgenti.json`.
 - **Dipendenze:** nessuna.
-- **Fonte:** `autocad-polygon.dxf` e la sua cronologia.
+- **Fonte:** `autocad-polygon.dxf` e la sua cronologia; il messaggio per 2 e
+  1025 lati dalla seduta del 2026-11-22 ([dxf-di-prova.md](dxf-di-prova.md)).
 - **Risposte condivise:** nessuna.

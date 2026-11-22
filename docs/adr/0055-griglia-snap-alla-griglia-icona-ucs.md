@@ -66,8 +66,9 @@ profilo): lo snap polare resta fuori. Di `GRIDDISPLAY` contano il bit 2
 - `UCSICON`: `Enter an option [ON/OFF/Noorigin/ORigin] <ON>:`.
 
 Le parole delle richieste vengono dall'AutoCAD italiano tradotto: le
-cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` sono **da registrare**
-(nessun DXF di prova le ha).
+cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` sono della seduta del
+2026-11-22, e le richieste delle opzioni, i messaggi e i valori rifiutati sono
+nella scheda [PT28](../tappe/0.8.1/PT28-griglia-cmd.md).
 
 ### 4. Snap alla griglia
 

@@ -28,7 +28,10 @@
 ## Cosa fare
 
 1. **`-HATCHEDIT`** (alias `HE`, anche `HATCHEDIT`): `Select hatch object:`
-   (un retino; altro: `Object selected is not a hatch.`), poi `Enter hatch
+   (un retino; altro: `The selected object must be an associative hatch
+   object.` e la domanda si ripete, come la prima riga di AutoCAD nella seduta
+   del 2026-11-22; la seconda, sui blocchi di tratteggio delle versioni vecchie,
+   in Tecnigrafo non ha senso), poi `Enter hatch
    option [Style/Properties/Origin] <Properties>:`.
    - *Properties*: le tre domande di *Properties* di `-HATCH` (motivo, scala,
      angolo), proponendo i valori del retino, con lo stesso elenco di motivi
@@ -57,7 +60,8 @@
 
 - Le modifiche di `autocad-hatchedit` con `NET` al posto di `ANSI37`; *Store*
   con *Yes* e il `-HATCH` dopo; `HPNAME` proposto dal `-HATCH` dopo un
-  `-HATCHEDIT` *Properties*; `highlighted()` durante e dopo `-HATCH`.
+  `-HATCHEDIT` *Properties*; `highlighted()` durante e dopo `-HATCH`; una linea
+  scelta al posto del retino.
 
 ## Fatto quando
 
@@ -103,5 +107,6 @@ richieste, e quella di `-HATCH` subito dopo con `<NET>` come predefinito;
 - **Strumenti:** righe normali, `!click`, `!report`, su `main`.
 - **Dipendenze:** `-HATCH` su `main`; PT23 per le funzioni e il campo
   `origin=`.
-- **Fonte:** `autocad-hatchedit.txt`.
+- **Fonte:** `autocad-hatchedit.txt`; il messaggio su un oggetto che non è un
+  retino dalla seduta del 2026-11-22 ([dxf-di-prova.md](dxf-di-prova.md)).
 - **Risposte condivise:** nessuna: `highlighted()` non entra nel rapporto.

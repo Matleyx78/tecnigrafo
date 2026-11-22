@@ -18,11 +18,11 @@
 
 ## Prima del pacchetto
 
-Il responsabile registra in AutoCAD LT (seduta prima dell'apertura): le
-cronologie di `GRID`, `SNAP` e `UCSICON` con ogni opzione, i messaggi di `F7` e
-`F9`. Le richieste qui sotto si correggono con le parole tradotte di quelle
-cronologie. Lo snap alla griglia con orto, polare e tracciamento non si prova
-in AutoCAD: vale la regola di REGOLE-NUMERICHE.md
+Le cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` sono registrate
+(seduta in AutoCAD 2021 del 2026-11-22, [dxf-di-prova.md](dxf-di-prova.md)): le
+richieste e i messaggi del punto 1 sono le loro parole tradotte. Lo snap alla
+griglia con orto, polare e tracciamento non si prova in AutoCAD: vale la regola
+di REGOLE-NUMERICHE.md
 ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
 della 0.8.1», punto 3).
 
@@ -43,8 +43,32 @@ della 0.8.1», punto 3).
 1. I comandi dell'ADR 0055, punto 3, che cambiano `GridSettings` del disegno
    corrente senza annullamento e lo segnano modificato; le variabili con `Enter
    new value for <NOME> <valore>:`, i punti come `x,y` con quattro decimali
-   (`<10.0000,10.0000>`), i limiti di AutoCAD (`GRIDMAJOR` da 1 a 100, passi
-   > 0; `GRIDUNIT` accetta 0,0).
+   (`<10.0000,10.0000>`). Come AutoCAD:
+   - **`GRID`**: un passo scritto, o Invio, accende la griglia; `2x` vuol dire
+     due volte il passo dello snap; `0` mette `GRIDUNIT` a 0,0, come *Snap*; un
+     passo negativo dà `Value must be positive.` e la domanda si ripete.
+     *Aspect*: `Specify the horizontal spacing(X) <…>:` e `Specify the vertical
+     spacing(Y) <…>:`; con i due passi diversi la proposta della domanda diventa
+     `<A>`. *Major*: `Enter number of grid divisions per major grid line <5>:`,
+     fuori da 1–100 `Requires an integer between 1 and 100.` e la domanda si
+     ripete. *aDaptive*: `Turn adaptive behavior on [Yes/No] <Yes>:` (la
+     proposta è lo stato attuale); *Yes* chiede `Allow subdivision below grid
+     spacing [Yes/No] <No>:` (bit 4); *No* spegne il bit 2 e, regola nostra
+     dove la seduta non arriva, anche il 4 (la suddivisione vale solo con
+     l'adattiva, ADR 0055, punto 5).
+   - **`SNAP`**: un passo scritto, o Invio, accende lo snap; `0` o un passo
+     negativo danno `Value must be positive and nonzero.` e la domanda si
+     ripete. *Aspect*: `Specify horizontal spacing <…>:` e `Specify vertical
+     spacing <…>:` (senza `(X)` e `(Y)`), accende lo snap, poi la proposta è
+     `<A>`.
+   - **`UCSICON`**: la proposta è lo stato attuale (`<ON>` o `<OFF>`) e Invio lo
+     lascia; *OFF* dà 2, *ON* 3, *Noorigin* 1, *ORigin* 3.
+   - **Variabili**: `GRIDMAJOR` fuori da 1–100 come *Major*; `GRIDUNIT`
+     accetta 0,0 e rifiuta un passo negativo, `SNAPUNIT` rifiuta 0 e i negativi,
+     tutte e due con `Cannot set <NOME> to that value.` e `*Invalid*`, e il
+     comando finisce (AutoCAD accetta un `GRIDUNIT` negativo senza messaggi:
+     [DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Esiti della seconda
+     seduta in AutoCAD della 0.8.1», punto 7).
 2. **Snap alla griglia** in `aidedPoint`, per i punti indicati (clic e
    puntatore della preview), non per quelli scritti: prima lo snap a oggetto
    (se trova un punto vince), poi il nodo (REGOLE-NUMERICHE.md, sezione 3,
@@ -68,7 +92,8 @@ della 0.8.1», punto 3).
 
 - Il nodo per punti negativi, a metà fra due nodi, con `SNAPBASE` 3,4 e passi
   diversi in X e Y; uno snap a oggetto che vince; una coordinata scritta non
-  toccata; con l'orto e con il polare.
+  toccata; con l'orto e con il polare; ogni richiesta e ogni messaggio del
+  punto 1, con i valori rifiutati.
 
 ## Fatto quando
 
@@ -107,8 +132,9 @@ GRIDMODE <0>:`.
 - **Strumenti:** righe normali, `!click`, `!osnap none`, `!report` su `main`;
   il campo `grid snap:` dell'onda 0 (PT2).
 - **Dipendenze:** PT27 (lo stato).
-- **Fonte:** le cronologie «da registrare» di `GRID`, `SNAP`, `UCSICON`
-  (sopra); i DXF `autocad-griglia-*` per i valori delle variabili; con orto,
+- **Fonte:** le cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` della
+  seduta del 2026-11-22 (sopra); i DXF `autocad-griglia-*` per i valori delle
+  variabili; con orto,
   polare e tracciamento la regola di REGOLE-NUMERICHE.md (decisione D3).
 - **Risposte condivise:** nessuna: con lo snap spento, che è il valore di un
   disegno nuovo e di tutti i DXF dei casi di oggi (controllato su

@@ -75,10 +75,20 @@ per gruppo di tipi, così PT23 e PT24 lavorano in parallelo.
    la lunghezza dell'asse maggiore tenendo direzione e raggio minore;
    `minor-radius` il contrario; `ratio` (0 < r ≤ 1) tiene il maggiore; se il
    minore supera il maggiore gli assi si scambiano (REGOLE-NUMERICHE.md, sezione
-   2, punto 7). Gli angoli sono quelli del palette di AutoCAD. L'area è quella
-   dell'ellisse intera o del settore. **Da registrare** prima del pacchetto, in
-   una seduta in AutoCAD: che cosa tiene il palette quando si cambia il raggio
-   maggiore, e se gli angoli iniziale e finale sono parametri o angoli veri.
+   2, punto 7), anche se il palette di AutoCAD lo rifiuta
+   ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Esiti della seconda seduta
+   in AutoCAD della 0.8.1», punto 2). `start-angle` ed `end-angle` sono
+   **angoli veri**, come nel palette di AutoCAD, misurati dall'asse maggiore
+   come il comando `ELLIPSE`: un angolo θ è il parametro
+   `t = atan2(a · sin θ, b · cos θ)` (`a`, `b` i raggi), e scriverne uno cambia
+   solo quel parametro. `~area` è quella dell'ellisse intera (`π · a · b`) o,
+   per un arco, del **segmento** chiuso dalla corda, `a · b / 2 · (Δt − sin Δt)`
+   con `Δt` l'ampiezza in parametro (punto 3 della stessa voce). Valori della
+   seduta del 2026-11-22 (`autocad-proprieta`, [dxf-di-prova.md](dxf-di-prova.md)):
+   raggio maggiore da 20 a 30 con il minore 10 → rapporto 0,3333; minore da 10
+   a 5 → 0,25; l'arco 45°–135° di un'ellisse 20 × 10 ha i parametri 63,43° e
+   116,57° e l'area 12,7295; con l'angolo iniziale a 30 il parametro diventa
+   49,11° e l'area 25,377.
 3. **`SOLID`** (`vertex1`…`vertex4`): ogni vertice si sposta da solo; il quarto
    uguale al terzo resta un triangolo.
 4. Un valore non valido (raggio ≤ 0, rapporto fuori da (0, 1], numero non
@@ -97,9 +107,11 @@ per gruppo di tipi, così PT23 e PT24 lavorano in parallelo.
 
 ## Test richiesti
 
-- `entityTypeName` per ogni alternativa; le proprietà dell'ellisse intera e di
-  un arco d'ellisse; il cambio del raggio maggiore sotto il minore; un rapporto
-  0 rifiutato; i quattro vertici del `SOLID`.
+- `entityTypeName` per ogni alternativa; le cinque ellissi di
+  `autocad-proprieta` (raggio maggiore, raggio minore, angoli e area dell'arco,
+  angolo iniziale cambiato); il cambio del raggio maggiore sotto il minore
+  (assi scambiati, non rifiutato); un rapporto 0 rifiutato; i quattro vertici
+  del `SOLID`.
 
 ## Fatto quando
 
@@ -124,8 +136,11 @@ S = SOLID vertex=0,0 vertex=10,0 vertex=0,10 vertex=10,10
   `quickselect` su `main`. La sintassi delle definizioni di `ELLIPSE` e
   `SOLID` è quella del [rapporto](../../verifica/rapporto.md).
 - **Dipendenze:** nessun comando.
-- **Fonte:** la seduta «da registrare» del punto 2 per il raggio maggiore e
-  gli angoli.
+- **Fonte:** `autocad-proprieta.dxf` e la sua cronologia (seduta del
+  2026-11-22, righe `[a mano nel palette Proprietà]`): i valori dopo le
+  modifiche si leggono con l'oracolo; il cambio del maggiore sotto il minore è
+  una regola nostra (lo scambio), non di AutoCAD. RT22 aggiunge
+  `autocad-proprieta` a `sorgenti.json`.
 - **Risposte condivise:** `quickselect type=` con un tipo della 0.8 cambia
   risposta (oggi nessuna entità); nessun caso di oggi lo chiede (controllato:
   solo `type=LINE`, `LWPOLYLINE`, `CIRCLE`, `ARC`, `TEXT`).

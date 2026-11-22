@@ -127,9 +127,15 @@ usano la stessa impaginazione, quindi cambiano grafica come in AutoCAD.
 
 ### 6. `TEXTEDIT` dalla riga di comando
 
-`TEXTEDIT` (alias `ED`, nome lungo `DDEDIT`): `Select an annotation object or
-[Mode]:`, con *Mode* `Single` o `Multiple` (predefinito `Multiple`, come
-AutoCAD). Per l'oggetto scelto:
+`TEXTEDIT` (alias `ED`, nome lungo `DDEDIT`), con le richieste di AutoCAD
+tradotte (seduta del 2026-11-22): `Current settings: Edit mode = Multiple`, poi
+`Select an annotation object or [Undo/Mode]:` in *Multiple* e `Select an
+annotation object or [Mode]:` in *Single*; *Mode* chiede `Enter a text edit
+mode option [Single/Multiple] <Multiple>:` (predefinito `Multiple`, come
+AutoCAD) e la modalità resta per i `TEXTEDIT` successivi della sessione. *Undo*
+annulla l'ultima modifica del comando e scrive `The command has been completely
+undone.`, anche quando non c'è niente da annullare. Un oggetto che non è un
+testo non dà messaggi: la domanda si ripete. Per l'oggetto scelto:
 
 - `TEXT`, `MTEXT`, testo di una quota: `Enter new text <valore>:`; Invio tiene il
   valore; per la quota il valore è il testo sostitutivo, con `<>` per la misura,

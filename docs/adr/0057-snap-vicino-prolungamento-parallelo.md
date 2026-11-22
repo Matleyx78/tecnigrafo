@@ -90,8 +90,12 @@ oggetto acceso.
 - **Distanza scritta:** con una sola guida diritta che aggancia il puntatore
   (prolungamento di una linea o parallela), un numero scritto dà il punto a
   quella distanza dall'origine della guida (l'estremo o il punto base), verso
-  il puntatore, come l'ADR 0049, punto 6. Lungo il prolungamento di un arco la
-  distanza scritta vale come oggi (direzione dal punto base al puntatore).
+  il puntatore, come l'ADR 0049, punto 6. Lungo il **prolungamento di un
+  arco** la distanza si misura **lungo l'arco**, come AutoCAD: il punto sta sul
+  cerchio, a un angolo `d / r` dall'estremo acquisito, nel verso che si
+  allontana dall'arco (seduta del 2026-11-22: 10 su raggio 20 dà 0,5 rad;
+  [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Esiti della seconda seduta in
+  AutoCAD della 0.8.1», punto 1).
 
 ### 5. Nel rapporto e nelle domande
 

@@ -23,11 +23,14 @@
 
 ## Cosa fare
 
-1. **`ATTSYNC`**: `Enter an option [?/Name/Select] <Select>:`; *Name*: `Enter
+1. **`ATTSYNC`**: in un disegno senza blocchi con attributi scrive subito
+   `This drawing contains no blocks with attributes.` e finisce, senza domande;
+   altrimenti `Enter an option [?/Name/Select] <Select>:`; *Name*: `Enter
    name of block to synchronize or [?]:`; *Select*: `Select a block:`; `?`
-   elenca i blocchi con attributi. Un nome senza attributi: `Block <nome> has
-   no attributes.` (o il messaggio della cronologia). Poi `synchronizeInserts`
-   (PT16) e `ATTSYNC complete.`; un passo `Attsync`.
+   elenca i blocchi con attributi. Un nome senza attributi, o che non esiste:
+   `The block table contains no block with attributes named <nome>.` e il
+   comando finisce (come AutoCAD, seduta del 2026-11-22). Poi
+   `synchronizeInserts` (PT16) e `ATTSYNC complete.`; un passo `Attsync`.
 2. **`ATTDISP`**: `Enter attribute visibility setting [Normal/ON/OFF]
    <Normal>:`, che cambia l'`AttributeDisplay` del disegno (PT27), senza
    annullamento, segnando il disegno modificato, e scrive `Regenerating
@@ -41,7 +44,8 @@
 ## Test richiesti
 
 - `ATTSYNC` *Name* e *Select* sui blocchi di `autocad-attsync`; un blocco senza
-  attributi; `U` dopo `ATTSYNC`; `ATTDISP` nei tre valori.
+  attributi e un nome che non esiste; un disegno senza blocchi con attributi;
+  `U` dopo `ATTSYNC`; `ATTDISP` nei tre valori.
 
 ## Fatto quando
 
@@ -72,5 +76,6 @@ predefinito); dopo `U` di nuovo come prima; `attdisp: on` nel `[final]`.
 - **Strumenti:** righe normali, `!report`, su `main`; il campo `attdisp:`
   annunciato da PT2.
 - **Dipendenze:** PT16 e PT27.
-- **Fonte:** `autocad-attsync.dxf` e la sua cronologia; `autocad-attdisp-on.txt`.
+- **Fonte:** `autocad-attsync.dxf` e la sua cronologia; `autocad-attdisp-on.txt`;
+  i due messaggi dalla seduta del 2026-11-22 ([dxf-di-prova.md](dxf-di-prova.md)).
 - **Risposte condivise:** nessuna.
