@@ -202,7 +202,7 @@ Status PolygonCommand::finishEdge(CommandContext& context, const core::Vec2& sec
     return Status::Finished;
 }
 
-void PolygonCommand::updatePreview(const core::Vec2&) {
+void PolygonCommand::updatePreview(const core::Vec2& /*point*/) {
     m_preview.clear();
 }
 
