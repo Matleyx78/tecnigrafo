@@ -11,35 +11,35 @@ messages:
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 50,0
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: T
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: T
   Enter dimension text <50>: <> mm
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 25,10
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 25,10
   Dimension text = 50
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,20
   Specify second extension line origin: 0,50
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: A
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: A
   Specify angle of dimension text: 90
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 10,35
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 10,35
   Dimension text = 30
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,60
   Specify second extension line origin: 30,100
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: H
-  Specify dimension line location or [Text/Angle]: 40,80
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: H
+  Specify dimension line location or [Mtext/Text/Angle]: 40,80
   Dimension text = 30
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 60,60
   Specify second extension line origin: 100,90
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: V
-  Specify dimension line location or [Text/Angle]: 80,120
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: V
+  Specify dimension line location or [Mtext/Text/Angle]: 80,120
   Dimension text = 30
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,120
   Specify second extension line origin: 0,160
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: R
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: R
   Specify angle of dimension line <0>: 30
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: -20,150
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: -20,150
   Dimension text = 20
 prompt: Command:
 preview:

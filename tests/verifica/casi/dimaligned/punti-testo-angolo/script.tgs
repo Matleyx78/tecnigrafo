@@ -1,8 +1,8 @@
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; DIMALIGNED (PT26, #713): typed points, the Text option with a text without
-; <>, and the Angle option; prompt [Text/Angle] from autocad-quote.txt
-; (dxf-test-file 1ad04b0), Mtext left out (decision of 2026-11-11).
+; <>, and the Angle option; prompt [Mtext/Text/Angle] from autocad-quote.txt
+; (dxf-test-file 1ad04b0), with Mtext since [0.8.1-PT3] (#930).
 ; Values by hand from PT23 with ISO-25: direction u = (0.6, 0.8), normal
 ; n = (-0.8, 0.6), the location 10 along n from the first origin; line-point
 ; is the foot of the second origin, as AutoCAD writes group 10
@@ -15,6 +15,7 @@
 DIMALIGNED
 0,0
 30,40
+; cambia con #930
 -8,6
 DIMALIGNED
 100,0

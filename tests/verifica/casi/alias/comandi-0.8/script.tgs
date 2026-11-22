@@ -1,0 +1,37 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Short aliases of the English AutoCAD for the commands of the 0.8 ([0.8.1-RT3], work #930):
+; EL ELLIPSE, T and MT MTEXT, ST STYLE, DLI DIMLINEAR, D DIMSTYLE, H HATCH, B BLOCK,
+; I INSERT (alias column of docs/parita/comandi.md; DECISIONI.md, 2026-11-21, point 6).
+; Each alias answers its first prompt, or shows its first message, so that the echo says
+; which command started; then Esc leaves nothing and no undo step. The echo after
+; Command: is the alias as typed. Prompts and messages from the cases of the 0.8 for the
+; same commands: ellipse/esc-annulla, mtext/comando-opzioni, style/annulla-ripeti-esc,
+; dimlinear/anteprima-esc-annulla, dimstyle/salva-esistente, hatch/errori-autocad,
+; block/senza-oggetti-ed-esc, insert/errori-e-unita. An alias at Command: is the
+; boundary of the pending case (docs/verifica/casi.md, point 2), so nothing changes before.
+EL
+0,0
+!esc
+T
+0,0
+!esc
+MT
+0,0
+!esc
+ST
+Prova
+!esc
+DLI
+0,0
+!esc
+D
+!esc
+H
+!esc
+B
+Pezzo
+!esc
+I
+Sconosciuto
+!esc

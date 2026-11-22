@@ -41,12 +41,12 @@ entities:
   266 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=80,20 line-point=90,20 rotation=90 text-point=88.125,10 measurement=20 ~text="20"
 messages:
   Select object to dimension: 15,20
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: -10,20
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: -10,20
   Dimension text = 40
   Command: DIMLINEAR
   Specify first extension line origin or <select object>:
   Select object to dimension: 80,10
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 90,10
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 90,10
   Dimension text = 20
 prompt: Command:
 preview:

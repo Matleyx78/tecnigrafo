@@ -1,0 +1,31 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMLINEAR, the Mtext option ([0.8.1-RT3], work #930): before Text, as AutoCAD
+; ([testoM/Testo/Angolo/Orizzontale/Verticale/Ruotato] and, after Horizontal or Vertical,
+; [testoM/Testo/Angolo] in autocad-quote.txt, dxf-test-file 5170f18); from the command line it
+; asks "Enter dimension text <measurement>:" and writes the replaced text, as Text (PT3
+; card, point 3). First dimension: a text with <>; second, after Horizontal, a text
+; without <>; third: Esc at the text prompt leaves nothing, then U undoes the second.
+; Values as dimlinear/opzioni (same points, ISO-25): the text above the line does not
+; move with its content, six graphics records after each dimension, so 257 and 264.
+DIMLINEAR
+0,0
+50,0
+; cambia con #930
+M
+<> mm
+25,10
+DIMLINEAR
+0,60
+30,100
+H
+M
+Quota
+40,80
+!report
+DIMLINEAR
+0,120
+40,120
+M
+!esc
+U

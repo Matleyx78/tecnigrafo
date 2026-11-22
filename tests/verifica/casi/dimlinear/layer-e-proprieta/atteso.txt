@@ -14,7 +14,7 @@ messages:
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 40,0
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,10
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 20,10
   Dimension text = 40
 prompt: Command:
 preview:

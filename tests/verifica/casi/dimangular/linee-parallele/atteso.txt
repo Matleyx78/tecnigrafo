@@ -24,7 +24,7 @@ messages:
   Select second line: 20,10
   Lines are parallel.
   Select second line: 15,20
-  Specify dimension arc line location or [Text/Angle/Quadrant]: 30,10
+  Specify dimension arc line location or [Mtext/Text/Angle/Quadrant]: 30,10
   Dimension text = 53
 prompt: Command:
 preview:

@@ -10,22 +10,22 @@ messages:
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 40,30
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,40
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 20,40
   Dimension text = 40
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 40,30
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 20,-10
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 20,-10
   Dimension text = 40
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 40,30
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: 50,15
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 50,15
   Dimension text = 30
   Command: DIMLINEAR
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 40,30
-  Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]: -10,15
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: -10,15
   Dimension text = 30
 prompt: Command:
 preview:

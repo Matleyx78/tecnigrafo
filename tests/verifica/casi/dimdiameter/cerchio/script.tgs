@@ -8,6 +8,7 @@ CIRCLE
 10
 DIMDIAMETER
 10,0
+; cambia con #930
 20,15
 !report
 U

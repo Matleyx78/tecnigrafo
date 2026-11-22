@@ -4,8 +4,8 @@
 ; Angle (explicit text angle), Horizontal and Vertical against the automatic
 ; choice, Rotated 30 degrees. Prompts from autocad-quote.txt (dxf-test-file
 ; 1ad04b0): after Text and Rotated the full prompt comes back; after
-; Horizontal and Vertical only [Text/Angle] (Mtext left out, decision of
-; 2026-11-11). With a replaced text AutoCAD still ends with the measured
+; Horizontal and Vertical only [Mtext/Text/Angle] (Mtext since [0.8.1-PT3],
+; #930). With a replaced text AutoCAD still ends with the measured
 ; value ("Dimension text = 50" after "<> mm").
 ; Values by hand from PT23 with ISO-25, as in
 ; dimlinear/punti-direzione-automatica: six graphics records, numbered after
@@ -19,6 +19,7 @@
 DIMLINEAR
 0,0
 50,0
+; cambia con #930
 T
 <> mm
 25,10

@@ -18,7 +18,7 @@ messages:
   Command: DIMANGULAR
   Select arc, circle, line, or <specify vertex>: 20,0
   Select second line: 15,20
-  Specify dimension arc line location or [Text/Angle/Quadrant]: 30,10
+  Specify dimension arc line location or [Mtext/Text/Angle/Quadrant]: 30,10
   Dimension text = 53
 prompt: Command:
 preview:

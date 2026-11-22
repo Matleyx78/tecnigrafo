@@ -1,0 +1,23 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMANGULAR, the Mtext option with a text with <> ([0.8.1-RT3], work #930): before Text, as
+; AutoCAD ([testoM/Testo/Angolo/Quadrante] in autocad-quote.txt, dxf-test-file 5170f18);
+; from the command line it asks "Enter dimension text <measurement>:", with the value of
+; "Dimension text = 127" (PT3 card, point 3), and writes the replaced text.
+; Values as dimangular/settore-2 (same lines and arc point): the text on the bisector
+; 1.875 above the arc; with <> the value 127° takes its place (ADR 0047, point 3).
+LINE
+0,0
+40,0
+
+LINE
+0,0
+30,40
+
+DIMANGULAR
+20,0
+15,20
+; cambia con #930
+M
+<> circa
+-10,30
