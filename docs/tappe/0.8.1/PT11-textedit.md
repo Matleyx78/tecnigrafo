@@ -106,7 +106,11 @@
    0054, punto 6. Alla richiesta del testo un `TextInput` vuoto su un `TEXT` o
    un `MTEXT` esistente non cambia niente e non fa un passo, come
    `ConfirmInput`; su una quota dà il testo sostitutivo vuoto. Nel `MTEXT`
-   nuovo un valore vuoto non crea niente, come oggi.
+   nuovo un valore vuoto non crea niente, come oggi. Svuotato vuol dire senza
+   niente di visibile, anche se restano codici nascosti: è l'editor (PT12) che
+   lo riconosce con il modello di PT10 e consegna `ConfirmInput` per `TEXT` e
+   `MTEXT`, `TextInput{""}` per una quota; il comando riceve solo questi due
+   ingressi (decisione del responsabile sulla rilettura della #994).
 3. ***Mtext*** delle quote (l'opzione la porta PT3): alla sua richiesta `Enter
    dimension text <misura>:` il comando dà `textEditing()`, con il testo
    sostitutivo di ora e la grafica della quota in costruzione; la richiesta di

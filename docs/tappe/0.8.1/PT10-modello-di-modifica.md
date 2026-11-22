@@ -98,6 +98,12 @@ resta solo interazione.
    implementa e lo fissa con un test.
 3. Il punto più vicino a un punto del disegno (per il clic nell'editor).
 4. Il valore senza modifiche torna **identico** a quello iniziale.
+5. **Svuotato** vuol dire che non resta nessuna unità di PT7 (niente di
+   visibile), anche se nel valore restano codici nascosti: il modello lo dice
+   con `[[nodiscard]] bool isEmpty() const` (decisione del responsabile sulla
+   rilettura della #994). Esempi: `A\A1;B` con la `A` e la `B` cancellate dà
+   il valore `\A1;` e `isEmpty()` vero; `<>\A1; mm` con misura e ` mm`
+   cancellati lo stesso. Che cosa ne fa la conferma lo dicono PT11 e PT12.
 
 ## Regole della tappa che valgono qui
 
@@ -122,6 +128,8 @@ resta solo interazione.
 - Misura `1234` con valore `<> mm`: due posizioni ai bordi di `1234`; il clic
   fra il `2` e il `3` va a una delle due; `Canc` prima di `1234` dà ` mm`; il
   valore senza modifiche torna `<> mm`.
+- `isEmpty()`: falso su `A\A1;B`, vero dopo aver cancellato la `A` e la `B`
+  (valore `\A1;`), vero su un valore `""` e su `{\L}`.
 - Misura `30` con valore `<> / <>`: si vede `30 / <>`; la misura è un'unità
   sola (`[0,2)`), il secondo `<>` due unità di testo.
 - Valore di partenza `FISSO` senza `<>`: scrivere `<>` al posto di `FISSO` fa

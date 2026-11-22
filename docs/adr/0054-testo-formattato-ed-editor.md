@@ -144,7 +144,8 @@ AutoCAD.
   si cancella intera. Lo stesso la misura di una quota: si vede come nel
   disegno, ma è un'unità sola legata a `<>`.
 - Un `TEXT` o un `MTEXT` esistente svuotato e confermato torna com'era, come in
-  AutoCAD; una quota svuotata torna alla misura.
+  AutoCAD; una quota svuotata torna alla misura. Svuotato vuol dire che non si
+  vede più niente, anche se nel valore restano codici nascosti.
 - Su un `TEXT` l'editor è una riga sola, senza formati, sul testo stesso.
 - Negli script, e quando la finestra non c'è, vale la forma da riga di comando:
   `MTEXT` chiede le righe come nella 0.8, `TEXTEDIT` e *Mtext* chiedono il

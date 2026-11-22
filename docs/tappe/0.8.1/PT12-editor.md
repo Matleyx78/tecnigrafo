@@ -44,7 +44,13 @@
    responsabile, 2026-11-22; PT11). Se il valore alla conferma è **uguale** a
    quello di partenza (nessuna modifica, o modifiche che lo riportano
    com'era), l'editor consegna `ConfirmInput`, come Invio, che tiene il valore
-   (verbale della rilettura della #993, [bloccante] 1). Annullare dà `Esc`.
+   (verbale della rilettura della #993, [bloccante] 1). **Svuotato** è un
+   valore senza niente di visibile, anche con codici nascosti rimasti
+   (`MTextEditModel::isEmpty()` di PT10; decisione del responsabile sulla
+   rilettura della #994): su un `TEXT` o un `MTEXT` l'editor consegna allora
+   `ConfirmInput`, che lo lascia com'era con i suoi codici; su una quota
+   consegna `TextInput{""}`, che torna alla misura, e i codici rimasti, che
+   non hanno effetto, si perdono. Annullare dà `Esc`.
 3. Su un `TEXT` (`shown` è un `Text`, con la sua posizione e il suo stile),
    l'editor è una riga sola sul testo, senza formati; `Invio` conferma.
 4. **Doppio clic** con il tasto sinistro su `TEXT`, `MTEXT`, quota, `ATTDEF` o
@@ -74,9 +80,11 @@ mettono casi limite che nessun documento fissa e che emergono scrivendo.
 - Una quota con `<> mm`: l'editor riceve `<> mm`, mostra la misura come nel
   disegno (un'unità sola, PT10, con il testo di `measurement`) e, confermato
   senza modifiche, ridà `<> mm`, e svuotato torna alla misura; cancellare tutto
-  e confermare su un `MTEXT` lo lascia com'era; un `MTEXT` già vuoto aperto e
-  confermato senza modifiche consegna `ConfirmInput` e resta; una frazione si
-  salta e si cancella intera (PT10).
+  e confermare su un `MTEXT` lo lascia com'era, anche con `A\A1;B` di cui si
+  cancellano le due lettere (resterebbe `\A1;`); una quota con `<>\A1; mm`
+  svuotata torna alla misura (testo sostitutivo `""`); un `MTEXT` già vuoto
+  aperto e confermato senza modifiche consegna `ConfirmInput` e resta; una
+  frazione si salta e si cancella intera (PT10).
 
 ## Fatto quando
 
