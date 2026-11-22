@@ -1,0 +1,99 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=30,0 line-point=30,10 rotation=0 text-point=15,11.875 measurement=30 text="<> mm" ~text="30 mm"
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 30,0
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 15,10
+  Dimension text = 30
+  Command: TEXTEDIT
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: 5,10
+  Enter new text <<>>: <> mm
+  Select an annotation object or [Undo/Mode]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
+
+[report 2]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=30,0 line-point=30,10 rotation=0 text-point=15,11.875 measurement=30 text="Quota" ~text="Quota"
+messages:
+  Command: TEXTEDIT
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: 5,10
+  Enter new text <<> mm>: Quota
+  Select an annotation object or [Undo/Mode]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  Textedit
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
+
+[report 3]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=30,0 line-point=30,10 rotation=0 text-point=15,11.875 measurement=30 text="<> mm" ~text="30 mm"
+messages:
+  Command: U
+  Undone: Textedit.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  Textedit
+redo:
+  Textedit
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
+
+[final]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=30,0 line-point=30,10 rotation=0 text-point=15,11.875 measurement=30 text="Quota" ~text="Quota"
+messages:
+  Command: REDO
+  Redone: Textedit.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  Textedit
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1
