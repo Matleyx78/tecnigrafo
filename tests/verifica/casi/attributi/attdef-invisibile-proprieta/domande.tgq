@@ -10,14 +10,16 @@ P = LAYER name="PINS" color=1 lineweight=0.5
 A = ATTDEF position=0,0 height=1 value="A" tag="A" layer="PINS" color=1
 ? generated A -> TEXT position=0,0 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" color=255,0,0 lineweight=0.5 ~box=0,-0.3080198722498226;0.9694819020581973,-0.3080198722498226;0.9694819020581973,1.31582682753726;0,1.31582682753726
 ? effective A -> color=255,0,0 linetype="Continuous" ltscale=1 lineweight=0.5 visible=yes locked=no
-I = ATTDEF position=20,0 height=1 value="LONG_DEFAULT" tag="A" invisible=yes
-? generated I -> none
-? pick 20.5,0.5 tolerance=0.1 -> none
-? crossing 19,-1 22,2 -> none
-? window 19,-1 22,2 -> none
-? snap 20.5,0.5 aperture=0.1 modes=insertion -> none
 ; A frozen layer suppresses the standalone tag too.
 FROZEN = LAYER name="FROZEN" frozen
 F = ATTDEF position=40,0 height=1 value="A" tag="A" layer="FROZEN"
 ? generated F -> none
 ? pick 40.5,0.5 tolerance=0.1 -> none
+; The standalone definition shows its tag even with its Invisible flag set.
+; cambia con #945
+I = ATTDEF position=20,0 height=1 value="LONG_DEFAULT" tag="A" invisible=yes
+? generated I -> TEXT position=20,0 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=20,-0.3080198722498226;20.969481902058197,-0.3080198722498226;20.969481902058197,1.31582682753726;20,1.31582682753726
+? pick 20.5,0.5 tolerance=0.1 -> I
+? crossing 19,-1 22,2 -> I
+? window 19,-1 22,2 -> I
+? snap 20.5,0.5 aperture=0.1 modes=insertion -> Insertion 20,0
