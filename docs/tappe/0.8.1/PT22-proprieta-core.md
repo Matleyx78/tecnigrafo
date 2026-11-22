@@ -8,8 +8,9 @@
 - **Riferimenti:** issue `[0.8.1-RT22]` (#…), agente codex, fascia forte
   (raggi e rapporto dell'ellisse)
 - **Dipende da:** PT2, PT4, RT22
-- **Modulo:** `core` (più `quick_select.cpp` di `cmd` e le domande
-  `properties` e `set-property` di `script`)
+- **Modulo:** `core` (più `quick_select.cpp` di `cmd`, le domande
+  `properties` e `set-property` di `script` e la sostituzione con gli extras
+  in `edit`)
 - **Da leggere:** [#913](https://github.com/Matleyx78/tecnigrafo/issues/913);
   [ADR 0052](../../adr/0052-ellisse.md); [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md),
   punto 1 (le visite comuni); `core/include/tg/core/ellipse.hpp`,
@@ -35,10 +36,12 @@ per gruppo di tipi, così PT23 e PT24 lavorano in parallelo.
   proprietà: le scrivono PT23 e PT24)
 - `core/CMakeLists.txt` (file comune)
 - `cmd/src/quick_select.cpp` (usa `entityTypeName`)
+- `edit/include/tg/edit/editor.hpp`, `edit/src/editor.cpp` (`replace` con gli
+  extras)
 - `script/src/property_questions.cpp`, `script/src/question_table.cpp` (file
   comune: le due righe)
 - `tests/core/entity_properties_test.cpp` (nuovo), `tests/cmd/quick_select_test.cpp`,
-  `tests/CMakeLists.txt` (file comune)
+  `tests/edit/editor_test.cpp`, `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
 
@@ -96,7 +99,31 @@ per gruppo di tipi, così PT23 e PT24 lavorano in parallelo.
 5. `quickselect type=` e il filtro di `QSELECT` usano `entityTypeName`: i tipi
    della 0.8 si filtrano (#913).
 6. `properties` e `set-property` (annunciate da PT2), con i valori nel formato
-   del rapporto, angoli in gradi.
+   del rapporto, angoli in gradi. Le due domande **non modificano** il
+   documento delle domande, che è in sola lettura: `set-property` risponde con
+   l'entità e le proprietà dopo la modifica, ma la domanda seguente sulla
+   stessa entità vede quella di prima. Ciò che si verifica di una modifica sta
+   nella risposta di `set-property`; il salvataggio e la riapertura del DXF
+   modificato si provano con i test di unità (#927, [bloccante] 6).
+7. **Applicare una `PropertyChange`** (verbale della revisione delle interfacce
+   PT4, #927, [bloccante] 6). Oggi `Editor::replace` riceve solo l'entità e dà
+   `false` se è identica: un cambiamento che tocca solo gli extras (`scale-z` da
+   3 a 2, il gruppo 43 di PT24) o entità ed extras insieme (l'origine di un
+   retino, famiglie e XDATA, PT23) non avrebbe un passo. In `edit`:
+
+   ```cpp
+   /// Replaces geometry and extras together, as one change of the open
+   /// transaction: undo and redo restore both. Keeps identifier, handle, order
+   /// and properties. False when the entity does not exist, when both are
+   /// equal to the current ones, or when the type would change (as replace()).
+   bool replace(core::EntityId id, core::Entity entity, core::EntityExtras extras);
+   ```
+
+   Si fa in `edit` con `Document::remove()` e `Document::restore()`, che tengono
+   identificativo, extras e chiave d'ordine, **senza** toccare
+   `core/include/tg/core/document.hpp`, che cambia PT27. Il pannello (PT25) e
+   `-HATCHEDIT` (PT26) applicano una `PropertyChange` così: con `extras` usano
+   questa funzione, senza la `replace` di oggi.
 
 ## Regole della tappa che valgono qui
 
@@ -112,6 +139,11 @@ per gruppo di tipi, così PT23 e PT24 lavorano in parallelo.
   angolo iniziale cambiato); il cambio del raggio maggiore sotto il minore
   (assi scambiati, non rifiutato); un rapporto 0 rifiutato; i quattro vertici
   del `SOLID`.
+- `Editor::replace` con gli extras: un cambiamento dei soli extras (il gruppo
+  43 da 3 a 2) dà un passo, e `U` rimette il 3; entità ed extras cambiati
+  insieme tornano insieme con `U` e con la ripetizione; handle, ordine e gli
+  altri gruppi degli extras restano; entità ed extras uguali danno `false` e
+  nessun passo.
 
 ## Fatto quando
 

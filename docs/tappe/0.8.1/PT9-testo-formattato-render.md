@@ -24,12 +24,21 @@
 
 ## Cosa fare
 
-1. `Painter::drawText` riceve la `FontFace`; il pittore di prova la registra.
+1. `TextRun` (e quindi `Painter::drawText`) riceve la `FontFace` e la
+   spaziatura (`tracking`) del `FormattedText` di PT8; un `Text` dà Regular e 1.
+   Il pittore di prova le registra (verbale della revisione delle interfacce
+   PT4, #927, [bloccante] 1).
 2. `QtPainter` carica i quattro file di `resources/fonts` da `:/tg/fonts/` e
    disegna ogni pezzo con la sua variante, il suo colore (già nelle proprietà
-   effettive) e il suo obliquo; le righe di decorazione e delle frazioni sono
-   già `Line`.
-3. Nessun cambiamento alle misure: il disegno usa le posizioni di `core`.
+   effettive), il suo obliquo e la sua spaziatura: con `tracking` ≠ 1 ogni
+   carattere si mette all'ascissa data dagli avanzamenti della variante
+   moltiplicati per `tracking`, senza allargare il glifo (che allarga solo il
+   fattore di larghezza). Le righe di decorazione e delle frazioni sono già
+   `Line`.
+3. Sotto l'altezza minima in pixel il pezzo si disegna come il suo riquadro,
+   come oggi, ma con `formattedTextBox` di PT8 (variante e spaziatura), non con
+   il riquadro Regular del suo `Text`.
+4. Nessun cambiamento alle misure: il disegno usa le posizioni di `core`.
 
 ## Regole della tappa che valgono qui
 
@@ -38,7 +47,9 @@
 ## Test richiesti
 
 - Pittore di prova: un `MTEXT` con un pezzo grassetto e uno corsivo registra
-  le due varianti; `QtPainter` trova le quattro famiglie.
+  le due varianti; `{\T2;AB}` registra la spaziatura 2 e `{\W2;AB}` il
+  fattore 2 con spaziatura 1; a zoom basso un pezzo Bold dà il riquadro di
+  `formattedTextBox`; `QtPainter` trova le quattro famiglie.
 
 ## Fatto quando
 

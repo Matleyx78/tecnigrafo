@@ -13,11 +13,20 @@
   [ADR 0056](../../adr/0056-comandi-degli-attributi.md), punto 4;
   [ADR 0047](../../adr/0047-quote-e-stili-di-quota.md) (testo sostitutivo);
   `cmd/src/commands/mtext_command.cpp`, `dimension_commands.cpp`,
-  `dimension_angular_commands.cpp`, `cmd/include/tg/cmd/command_protocol.hpp`
+  `dimension_angular_commands.cpp`, `cmd/include/tg/cmd/command.hpp`,
+  `cmd/include/tg/cmd/input.hpp`;
+  [ADR 0041](../../adr/0041-documenti-e-ambienti.md), punto 5 (protocollo dei
+  comandi senza il disegno)
 
 ## File
 
-- `cmd/include/tg/cmd/command_protocol.hpp` (`Prompt::mtextEditing`)
+- `cmd/include/tg/cmd/text_editing.hpp` (nuovo: `TextEditRequest`)
+- `cmd/include/tg/cmd/command.hpp` (file comune: `Command::textEditing()`)
+- `cmd/include/tg/cmd/command_runner.hpp` (file comune: l'accessore in linea
+  `CommandRunner::textEditing()`, senza toccare `command_runner.cpp`, che è
+  della catena PT34 → PT28 → PT31)
+- `cmd/include/tg/cmd/input.hpp` (solo il commento di `TextInput`: può essere
+  vuoto quando viene dall'editor)
 - `cmd/include/tg/cmd/commands/textedit_command.hpp`,
   `cmd/src/commands/textedit_command.cpp` (nuovi)
 - `cmd/src/commands/mtext_command.cpp` (la richiesta del contenuto porta il
@@ -30,12 +39,38 @@
 
 ## Cosa fare
 
-1. `Prompt` ha `std::optional<core::MText> mtextEditing`: quando c'è, il
-   programma apre l'editor nella finestra (PT12) su quel testo invece della riga
-   di comando. Lo mettono: la richiesta delle righe di `MTEXT` (con i due angoli
-   e le opzioni già date), `TEXTEDIT` su un `MTEXT` o su una quota, *Mtext* delle
-   quote. Negli script e al livello 1 non cambia niente: la richiesta resta di
-   testo.
+1. **Richiesta dell'editor**, nel disegno 2D e non nel protocollo:
+   `command_protocol.hpp` non conosce il disegno (ADR 0041, punto 5), quindi
+   `Prompt` non cambia (verbale della revisione delle interfacce PT4, #927,
+   [bloccante] 5). In `text_editing.hpp`:
+
+   ```cpp
+   // What the editor in the window opens on (docs/adr/0054, point 5), at the
+   // Text prompt of the command that gives it.
+   struct TextEditRequest {
+       std::optional<core::EntityId> target;  // the entity edited; nullopt for a new MTEXT
+       std::variant<core::Text, core::MText> shown;  // what the editor draws, where it stands
+       std::string value;  // the value to edit, codes kept
+   };
+   ```
+
+   e `Command` ha `[[nodiscard]] virtual std::optional<TextEditRequest>
+   textEditing() const { return std::nullopt; }`; `CommandRunner::textEditing()`
+   dà quello del comando in corso (vuoto senza comando, o mentre chiede una
+   selezione). Quando c'è, il programma apre l'editor (PT12) invece della riga
+   di comando. Lo danno:
+   - la richiesta delle righe di `MTEXT` (con i due angoli e le opzioni già
+     date): `target` vuoto, `shown` il `MText` che nascerà, `value` vuoto;
+   - `TEXTEDIT` su un `TEXT`: `shown` il `Text` (posizione, rotazione, stile:
+     l'editor a una riga sta sul testo), `value` il suo valore; su un `MTEXT`:
+     `shown` il `MText`, `value` il suo valore;
+   - `TEXTEDIT` su una quota e *Mtext* delle quote: `shown` il `MTEXT` della
+     grafica della quota, quello che si vede (con la misura al posto di `<>`),
+     e `value` il testo sostitutivo con `<>` (`<>` se è vuoto), separati: con
+     `<> mm` la grafica mostra `30 mm` ma l'editor riceve `<> mm`, così la
+     misura resta dinamica.
+
+   Negli script e al livello 1 non cambia niente: la richiesta resta di testo.
 2. **`TEXTEDIT`** (alias `ED`, anche `DDEDIT`), con le richieste dell'ADR 0054,
    punto 6: `Current settings: Edit mode = Multiple`, `Select an annotation
    object or [Undo/Mode]:` (in *Single* senza *Undo*: `Select an annotation
@@ -48,14 +83,26 @@
    `ATTDEF`, `INSERT` con attributi le richieste del punto 6; un altro oggetto
    non dà messaggi e la domanda si ripete, come AutoCAD. Ogni oggetto
    modificato è un passo `Textedit`.
-3. ***Mtext*** delle quote (l'opzione la porta PT3): la sua richiesta `Enter
-   dimension text <misura>:` ha `mtextEditing`, con il testo sostitutivo di
-   ora; la richiesta di testo non cambia.
+   **Valore vuoto confermato dall'editor** (decisione del responsabile sulla
+   #927, [decisione] 4): l'editor consegna il valore con
+   `CommandRunner::submit(TextInput{…})`, anche vuoto, mentre una riga vuota
+   scritta resta `ConfirmInput` (Invio). Alla richiesta del testo un
+   `TextInput` vuoto su un `TEXT` o un `MTEXT` esistente **cancella**
+   l'oggetto, nello stesso passo `Textedit` (`U` lo rimette), come AutoCAD; su
+   una quota torna alla misura (testo sostitutivo `""`). `ConfirmInput` tiene
+   il valore, come dice l'ADR 0054, punto 6. Nel `MTEXT` nuovo un valore vuoto
+   non crea niente, come oggi.
+3. ***Mtext*** delle quote (l'opzione la porta PT3): alla sua richiesta `Enter
+   dimension text <misura>:` il comando dà `textEditing()`, con il testo
+   sostitutivo di ora e la grafica della quota in costruzione; la richiesta di
+   testo non cambia.
 
 ## Regole della tappa che valgono qui
 
 - File comuni: `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt`,
-  `tests/CMakeLists.txt`.
+  `tests/CMakeLists.txt`, `cmd/include/tg/cmd/command.hpp` (solo
+  `textEditing()`; `highlighted()` lo aggiunge PT34),
+  `cmd/include/tg/cmd/command_runner.hpp` (solo l'accessore).
 - La forma da riga di comando di `TEXTEDIT` è di Tecnigrafo, dentro `TEXTEDIT`,
   come l'ADR 0054, punto 6 ([DECISIONI.md](../../DECISIONI.md), 2026-11-22,
   «Decisioni D1–D10 del piano della 0.8.1», punto 2).
@@ -64,6 +111,15 @@
 
 - `TEXTEDIT` su ogni tipo, *Single* e *Multiple*, *Undo*, Invio che tiene il
   valore, un oggetto non annotativo, un oggetto su layer bloccato.
+- `textEditing()` (#927, [bloccante] 5): `MTEXT` nuovo (`target` vuoto),
+  `TEXTEDIT` su `TEXT` (il `Text` e il suo valore), su `MTEXT`, e su una quota
+  lineare lunga 30 con testo `<> mm`: `shown` mostra `30 mm`, `value` è
+  `<> mm`; *Mtext* delle quote; nessuna richiesta dell'editor su `ATTDEF` e
+  `INSERT`, né mentre si sceglie l'oggetto.
+- Valore vuoto (#927, [decisione] 4): `TextInput{""}` su un `TEXT` e su un
+  `MTEXT` li cancella in un passo `Textedit`, e `U` li rimette; su una quota con
+  `<> mm` dà il testo sostitutivo vuoto (la misura); `ConfirmInput` alla stessa
+  richiesta tiene il valore.
 
 ## Fatto quando
 
@@ -112,4 +168,4 @@ passi `Textedit`.
   richieste, *Mode*, *Undo* (con e senza una modifica da annullare) e il clic su
   una linea, che non dà messaggi.
 - **Risposte condivise:** nessuna: le richieste delle quote cambiano con PT3
-  (che aggiorna i 21 casi), e `mtextEditing` non si vede negli script.
+  (che aggiorna i 21 casi), e `textEditing()` non si vede negli script.

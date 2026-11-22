@@ -2,6 +2,13 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-11-21
+- **Corretto:** 2026-11-22 — revisione delle interfacce PT4 della 0.8.1
+  ([#927](https://github.com/Matleyx78/tecnigrafo/issues/927);
+  [DECISIONI.md](../DECISIONI.md), stessa data, «Revisione delle interfacce PT4
+  della 0.8.1»): argomenti fuori dominio senza effetto (punto 1); altezze
+  assolute sotto una similitudine (punto 1); estremi della linea di `#` (punto
+  3, regola 5); spaziatura nel testo formattato (punto 4); frazione come unità
+  e valore svuotato nell'editor (punto 5).
 
 ## Contesto
 
@@ -48,7 +55,14 @@ Nel disegno, nella selezione e nell'editor contano, oltre ai codici dell'ADR
 Un `\f` con qualunque nome usa Liberation Sans; con `|b1` e `|i1` la variante.
 Restano saltati e conservati, come nella 0.8: `\A`, `\p…;` (rientri e
 tabulazioni) e le colonne. Un codice malformato si mostra come testo, come oggi
-(ADR 0046, punto 2).
+(ADR 0046, punto 2). Un codice noto con un argomento fuori dal dominio della sua
+grandezza (`\H0;`, `\W-1;`, `\T0;`), che AutoCAD non produce, resta nascosto e
+senza effetto, come nella 0.8.
+
+Una similitudine di fattore `k` (`SCALE`, grip, `EXPLODE` di un blocco in scala
+uniforme) moltiplica per `k` anche gli argomenti delle altezze assolute `\H<n>;`
+del valore, e solo quelli: `A{\H3;B}` alto 2 scalato per 2 diventa `A{\H6;B}`
+alto 4, come lo stesso testo in un blocco inserito in scala 2.
 
 ### 2. Le quattro varianti del font
 
@@ -83,8 +97,9 @@ dell'altezza `h` del pezzo:
    denominatore sulla linea di base della riga; i due sono centrati sulla
    larghezza del pezzo; la linea di `/` è orizzontale a `7/6 · h` (AutoCAD:
    1,171 · h), larga quanto il pezzo; quella di
-   `#` va dall'angolo in basso a sinistra a quello in alto a destra del pezzo;
-   `^` non ha linea.
+   `#` va dall'angolo in basso a sinistra a quello in alto a destra del pezzo,
+   cioè dalla linea di base della riga (0) alla cima delle maiuscole del
+   numeratore (`7/3 · h`), con il punto medio a `7/6 · h`; `^` non ha linea.
 6. **Righe di decorazione:** sottolineato a `−0,2 · h`, sopralineato a
    `1,2 · h`, barrato a `0,5 · h` dalla linea di base, lunghe quanto il pezzo,
    con il colore del pezzo.
@@ -100,15 +115,19 @@ piano della 0.8.1», punto 1).
 ### 4. Geometria generata
 
 Per ogni pezzo nasce, nell'ordine di lettura, un **testo formattato**
-(`GeneratedShape` nuova, `FormattedText`: un `Text` e la sua `FontFace`), con le
+(`GeneratedShape` nuova, `FormattedText`: un `Text`, la sua `FontFace` e la sua
+spaziatura, che moltiplica gli avanzamenti senza allargare i glifi), con le
 proprietà effettive del pezzo (il colore di `\C` o `\c`); le righe di
 decorazione e le linee delle frazioni sono `TextLine` (una `Line` che non dà
 snap, nemmeno dentro un blocco o una quota) con lo stesso colore. Un pezzo in
-Regular resta un `Text`, come nella 0.8, così i casi di oggi senza formati non
-cambiano. Selezione e snap del `MTEXT` restano quelli dell'ADR 0046, punto 2:
-le righe non danno snap. Il numero di righe e il testo mostrato (rapporto,
-quote) vengono dalle righe dell'impaginazione, non dal numero dei pezzi. Le quote che hanno testo formattato
-usano la stessa impaginazione, quindi cambiano grafica come in AutoCAD.
+Regular e con spaziatura 1 resta un `Text`, come nella 0.8, così i casi di oggi
+senza formati non cambiano. Riquadro, distanza, selezione e disegno di un testo
+formattato usano la sua variante e la sua spaziatura. Selezione e snap del
+`MTEXT` restano quelli dell'ADR 0046, punto 2: le righe non danno snap. Il
+numero di righe e il testo mostrato (rapporto, quote) vengono dalle righe
+dell'impaginazione, non dal numero dei pezzi. Le quote che hanno testo
+formattato usano la stessa impaginazione, quindi cambiano grafica come in
+AutoCAD.
 
 ### 5. Editor nella finestra
 
@@ -120,6 +139,10 @@ usano la stessa impaginazione, quindi cambiano grafica come in AutoCAD.
 - Una barra dei formati applica alla parte scelta i formati del punto 1;
   l'editor **non perde mai** un codice che non sa mostrare: lo conserva nel
   punto del testo in cui stava.
+- Una frazione impilata è un'unità sola, come in AutoCAD: il cursore la salta e
+  si cancella intera.
+- Un `TEXT` o un `MTEXT` esistente svuotato e confermato si cancella, come in
+  AutoCAD; una quota svuotata torna alla misura.
 - Su un `TEXT` l'editor è una riga sola, senza formati, sul testo stesso.
 - Negli script, e quando la finestra non c'è, vale la forma da riga di comando:
   `MTEXT` chiede le righe come nella 0.8, `TEXTEDIT` e *Mtext* chiedono il

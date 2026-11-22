@@ -33,8 +33,12 @@
 2. Per una sola entità della 0.8, sotto *General*, un gruppo con le proprietà
    di `ownProperties`: numeri, angoli in gradi, punti (X e Y), testi, scelte,
    segni; le derivate in sola lettura. Ogni cambiamento chiama
-   `withOwnProperty` in una transazione `Properties`, come oggi; un rifiuto lo
-   scrive nella riga di comando e lascia il valore di prima.
+   `withOwnProperty` in una transazione `Properties`, come oggi, e applica la
+   `PropertyChange` intera: con gli extras (`scale-z`, l'origine di un retino)
+   con `Editor::replace(id, entity, extras)` di PT22, così entità ed extras si
+   annullano insieme (verbale della revisione delle interfacce PT4, #927,
+   [bloccante] 6); un rifiuto lo scrive nella riga di comando e lascia il
+   valore di prima.
 3. `SOLID` con *Current Vertex* come la polilinea (frecce e coordinate del
    vertice corrente).
 4. `INSERT`: un gruppo *Attributes* con un valore per attributo. Il valore di
@@ -52,6 +56,9 @@
 
 - Il nome di ogni tipo; un retino con scala cambiata dal pannello e `U`; un
   rifiuto; un `INSERT` con un attributo cambiato; `QSELECT` con `Hatch`.
+- `scale-z` di un inserimento cambiato dal pannello e `U` (solo gli extras
+  cambiano); l'origine di un retino cambiata e `U` (famiglie e XDATA tornano
+  insieme).
 
 ## Fatto quando
 

@@ -35,17 +35,29 @@
    option [Style/Properties/Origin] <Properties>:`.
    - *Properties*: le tre domande di *Properties* di `-HATCH` (motivo, scala,
      angolo), proponendo i valori del retino, con lo stesso elenco di motivi
-     (`ANSI31`, `NET`, `SOLID`; `withPattern` di PT23); aggiornano anche
-     `HPNAME`, `HPSCALE`, `HPANG`, come AutoCAD, e il `-HATCH` successivo li
-     propone. Scala e angolo di un motivo non generabile trasformano le sue
+     (`ANSI31`, `NET`, `SOLID`; `withPattern` di PT23, con l'origine di
+     `patternOrigin` degli extras e il `$MEASUREMENT` del disegno); aggiornano
+     anche `HPNAME`, `HPSCALE`, `HPANG`, come AutoCAD, e il `-HATCH` successivo
+     li propone. Scala e angolo di un motivo non generabile trasformano le sue
      famiglie in proporzione (`withPattern` di PT23;
      [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 2, punto 9).
+     **`HPNAME` si aggiorna solo con un nome che `-HATCH` sa creare** (`ANSI31`,
+     `NET`, `SOLID`): con un motivo importato non generabile resta il nome di
+     prima, mentre `HPSCALE` e `HPANG` si aggiornano comunque (decisione del
+     responsabile sulla #927, [decisione] 6). Esempio: `HPNAME` `ANSI31`, la
+     scala di un `ANSI37` portata a 2 → il `-HATCH` successivo propone
+     `<ANSI31>` e la scala 2.
    - *Style*: `Enter hatching style [Ignore/Outer/Normal] <Normal>:` (il valore
      del retino); aggiorna `HPISLANDDETECTION`.
    - *Origin*: `[Use current origin/Set new origin] <Use current origin>:`;
      *Set new origin*: `Specify origin point:` e `Store this as default origin?
      [Yes/No] <N>:` (con *Yes* `HPORIGIN` della sessione, che `-HATCH` usa per i
-     retini nuovi). *Default to boundary extents* resta fuori.
+     retini nuovi). L'origine nuova sposta le famiglie con `withPatternOrigin`
+     e scrive l'XDATA con `withPatternOriginXdata` (PT23). *Default to boundary
+     extents* resta fuori.
+   Il retino modificato si mette nel disegno con `Editor::replace(id, entity,
+   extras)` di PT22, così famiglie ed XDATA si annullano insieme (verbale della
+   revisione delle interfacce PT4, #927, [bloccante] 6).
    Un passo `Hatchedit`.
 2. **`-HATCH` evidenzia** i contorni e le isole trovati, o gli oggetti scelti,
    fino a `Invio` o `Esc`: `highlighted()` dà gli identificativi delle curve
@@ -60,7 +72,9 @@
 
 - Le modifiche di `autocad-hatchedit` con `NET` al posto di `ANSI37`; *Store*
   con *Yes* e il `-HATCH` dopo; `HPNAME` proposto dal `-HATCH` dopo un
-  `-HATCHEDIT` *Properties*; `highlighted()` durante e dopo `-HATCH`; una linea
+  `-HATCHEDIT` *Properties*; `HPNAME` che resta `ANSI31` dopo la scala di un
+  `ANSI37` letto dal DXF, con `HPSCALE` aggiornata; *Origin* e `U`, che
+  rimette famiglie e XDATA; `highlighted()` durante e dopo `-HATCH`; una linea
   scelta al posto del retino.
 
 ## Fatto quando
