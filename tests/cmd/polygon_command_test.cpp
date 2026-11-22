@@ -29,7 +29,9 @@ protected:
     }
 
     [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
     [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
     [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
 
 private:

@@ -30,12 +30,16 @@ CommandDescription PolygonCommand::description() {
             "Draws a regular closed polygon.",
             false,
             {{"sides", "Enter number of sides <{default}>:", ValueType::Integer, {}, true},
-             {"center", "Specify center of polygon or [Edge]:", ValueType::Point,
-              {{"Edge", "E"}}, false},
+             {"center",
+              "Specify center of polygon or [Edge]:",
+              ValueType::Point,
+              {{"Edge", "E"}},
+              false},
              {"option",
               "Enter an option [Inscribed in circle/Circumscribed about circle] <{default}>:",
               ValueType::Keyword,
-              {{"Inscribed in circle", "I"}, {"Circumscribed about circle", "C"}}, true},
+              {{"Inscribed in circle", "I"}, {"Circumscribed about circle", "C"}},
+              true},
              {"radius", "Specify radius of circle:", ValueType::Distance, {}, false},
              {"edge-first", "Specify first endpoint of edge:", ValueType::Point, {}, false},
              {"edge-second", "Specify second endpoint of edge:", ValueType::Point, {}, false}}};
@@ -70,10 +74,9 @@ Status PolygonCommand::handle(CommandContext& context, const Input& input) {
                 m_stage = Stage::Center;
             }
         } else if (m_stage == Stage::Radius) {
-            const double angle = core::kPi / 2.0 +
-                                 (m_defaults->polygonSides % 2 == 0
-                                      ? core::kPi / m_defaults->polygonSides
-                                      : 0.0);
+            const double angle =
+                core::kPi / 2.0 +
+                (m_defaults->polygonSides % 2 == 0 ? core::kPi / m_defaults->polygonSides : 0.0);
             return finishRadius(context, value->value, angle);
         }
         return Status::Continue;
@@ -124,7 +127,8 @@ Prompt PolygonCommand::prompt() const {
     switch (m_stage) {
         case Stage::Sides:
             return {"Enter number of sides <" + std::to_string(m_defaults->polygonSides) + ">:",
-                    {}, PromptKind::Number};
+                    {},
+                    PromptKind::Number};
         case Stage::Center:
             return {"Specify center of polygon or [Edge]:", {{"Edge", "E"}}};
         case Stage::Option:
