@@ -56,8 +56,10 @@ cronologia:
 - Le quattro sequenze di `-ATTEDIT` di `autocad-attributi`; *Position* rifiutato
   per un attributo bloccato; nessun attributo scelto.
 - Due attributi visibili sovrapposti, `SIGLA` e `CODICE`, con il filtro
-  d'etichetta `CODICE`: il clic trova `CODICE` (`1 attributes selected.`)
-  ([bloccante] 5).
+  d'etichetta `CODICE`: il clic trova `CODICE` (`1 attributes selected.`);
+  due inserimenti sovrapposti dei blocchi `A` e `B` con lo stesso `CODICE` e
+  lo stesso valore, con il filtro del blocco `A`: il clic trova quello di `A`
+  ([bloccante] 5; #992, [bloccante] 3).
 
 ## Fatto quando
 

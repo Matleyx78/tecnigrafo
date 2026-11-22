@@ -3,9 +3,11 @@
 - **Stato:** Accettato
 - **Data:** 2026-11-21
 - **Corretto:** 2026-11-22 — punti 2, 3 e 4, dopo la revisione delle
-  interfacce PT5 (#928): pareggi di *Vicino* fra forme dello stesso id;
-  acquisizione con più candidati; pareggio rimasto fra due incroci; distanza
-  scritta oltre il tratto di un prolungamento d'arco (decisioni del
+  interfacce PT5 (#928) e della sua correzione (#992): pareggi di *Vicino*
+  fra forme dello stesso id e punto d'inserimento dell'`INSERT` fra gli snap
+  di punto; acquisizione con più candidati e allo spegnimento di un modo;
+  pareggi rimasti fra due incroci; distanza scritta fuori dal tratto di un
+  prolungamento (decisioni del
   2026-11-22 in `docs/DECISIONI.md`, «Revisione delle interfacce PT5 della
   0.8.1»).
 
@@ -47,7 +49,8 @@ acceso cambierebbe i casi del tracciamento che usano `!hover` su un estremo
   danno snap.
 - **Priorità**, che estende l'ADR 0033, punto 5: gli snap di punto entro
   l'apertura; se nessuno, *Vicino* sulla curva più vicina al puntatore entro
-  l'apertura; solo dopo centro e inserimento
+  l'apertura; solo dopo centro e inserimento (il punto d'inserimento di un
+  `INSERT` no: è fra gli snap di punto, come dalla 0.8, e vince su *Vicino*)
   ([REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md), sezione 4, «Selezione e snap
   a oggetto», punto 2).
 - **Pareggi:** fra due curve alla stessa distanza vince l'id più alto, come il
@@ -74,10 +77,14 @@ oggetto acceso.
 - **Parallelo:** con un punto base del comando (`Command::basePoint()`),
   fermarsi su una `LINE` o su un segmento diritto di `LWPOLYLINE` (non entro
   l'apertura dai suoi estremi) acquisisce la sua **direzione**.
-- **Più candidati:** il prolungamento è quello dell'estremo che vince lo snap
-  *Estremo* (a pari distanza l'id più alto), la direzione quella del segmento
-  che vince il clic (l'id più alto); una seconda sosta sullo stesso punto
-  rilascia quell'acquisizione intera.
+- **Più candidati:** la sosta acquisisce lo snap che vince, con le sue
+  priorità e i suoi pareggi (a pari distanza l'id più alto), e il
+  prolungamento solo se quello snap è un *Estremo*; la direzione di
+  *Parallelo* è quella del segmento che vince il clic (l'id più alto, e in
+  una polilinea il primo segmento); una seconda sosta sullo stesso punto
+  rilascia quell'acquisizione intera. Spegnere un modo (tracciamento,
+  *Prolungamento*, *Parallelo*) toglie la parte delle acquisizioni che ne
+  dipende, e riaccenderlo non la riporta.
 
 ### 4. Aggancio
 
@@ -110,7 +117,8 @@ oggetto acceso.
   [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Esiti della seconda seduta in
   AutoCAD della 0.8.1», punto 1). Oltre il tratto (`d / r` più grande di `2π`
   meno l'ampiezza dell'arco, confine compreso nel tratto) la guida non vale e
-  il numero è una distanza diretta verso il puntatore.
+  il numero è una distanza diretta verso il puntatore; lo stesso per una
+  distanza negativa, che cadrebbe prima dell'estremo acquisito.
 
 ### 5. Nel rapporto e nelle domande
 

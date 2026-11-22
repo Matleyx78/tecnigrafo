@@ -7,9 +7,10 @@
 - **Modello e impegno:** medio; impegno alto
 - **Riferimenti:** issue `[0.8.1-RT31]` (#…), agente codex, fascia forte
   (guide, incroci, pareggi)
-- **Dipende da:** PT2, PT5, PT28, PT30, RT31
-- **Modulo:** `cmd` (più `!osnap ext,par` e le righe del tracciamento in
-  `script`)
+- **Dipende da:** PT2, PT5, PT8, PT28, PT30, RT31 (PT8 per
+  `core/src/document_query.cpp`)
+- **Modulo:** `cmd` (più l'identità dello snap trovato in `core`, `!osnap
+  ext,par` e le righe del tracciamento in `script`)
 - **Da leggere:** [ADR 0057](../../adr/0057-snap-vicino-prolungamento-parallelo.md),
   punti 3–5;
   [ADR 0049](../../adr/0049-tracciamento-degli-snap-a-oggetto.md);
@@ -20,6 +21,9 @@
 
 ## File
 
+- `core/include/tg/core/document_query.hpp`, `core/src/document_query.cpp`
+  (`findSnapHit`; verbale della revisione della correzione #992,
+  [bloccante] 5), `tests/core/document_query_test.cpp`
 - `cmd/src/object_tracking.hpp`, `cmd/src/object_tracking.cpp`
 - `cmd/include/tg/cmd/command_runner.hpp` (`TrackingState`: acquisizioni e
   guide nuove), `cmd/src/command_runner.cpp`
@@ -35,20 +39,49 @@
    di `LINE`, `ARC` e dei segmenti estremi di `LWPOLYLINE` aperte; direzioni di
    `LINE` e segmenti diritti (solo con un punto base). Le acquisizioni stanno
    nella stessa lista dei punti del tracciamento, al più 7. **Con più
-   candidati** (revisione PT5, [decisione] 4, regole esistenti): il
-   prolungamento acquisito è quello dell'estremo che vince lo snap *Estremo*,
-   quindi a pari distanza l'id più alto, e in una polilinea il suo segmento
-   estremo (REGOLE-NUMERICHE.md, sezione 4, «Selezione e snap a oggetto»,
-   punto 2); la direzione di *Parallelo* è quella del segmento che vince il
+   candidati** (revisione PT5, [decisione] 4, regole esistenti): la sosta
+   acquisisce lo snap che vince (`findSnapHit`, con le priorità e i pareggi
+   di sempre: a pari distanza l'id più alto, REGOLE-NUMERICHE.md, sezione 4,
+   «Selezione e snap a oggetto», punto 2), e il prolungamento **solo se**
+   quello snap è l'*Estremo* di una `LINE`, di un `ARC` o del segmento
+   estremo di una `LWPOLYLINE` aperta. Se vince un altro snap di punto (un
+   *Medio* più vicino), si acquisisce solo quello, anche con un estremo
+   dentro l'apertura (#992, [decisione] 4, scelta del responsabile); la direzione di *Parallelo* è quella del segmento che vince il
    clic, l'id più alto a pari distanza (punto 1). Una seconda sosta sullo
    stesso punto rilascia quell'acquisizione, punto e prolungamento insieme
-   (ADR 0049, punto 2). Per questo l'acquisizione tiene id e segmento, che
-   `SnapPoint` oggi non dà: chi realizza li ricava nello stesso passaggio di
-   `findSnap`. **`setDrawingAids`** azzera le acquisizioni solo quando non
-   può più esisterne nessuna: con lo snap a oggetto spento, o con il
-   tracciamento spento e *Prolungamento* e *Parallelo* spenti; con OTRACK
-   spento e *Prolungamento* acceso restano ([bloccante] 9; ADR 0057, punto
-   3).
+   (ADR 0049, punto 2). Per questo l'acquisizione tiene id, segmento ed
+   estremo, che `SnapPoint` non dà: `core` li restituisce con una funzione
+   nuova, e `findSnap` resta com'è per i chiamanti di oggi (#992,
+   [bloccante] 5):
+
+   ```cpp
+   struct SnapHit {
+       SnapPoint snap;
+       EntityId entity;                    // the entity that gives the point
+       std::optional<std::size_t> segment; // for a polyline, the segment
+       bool atStart{false};                // an endpoint: the start of the curve or segment
+   };
+   // findSnap() with where the point comes from; findSnap() returns its
+   // `snap`. The same candidates, priorities and ties.
+   [[nodiscard]] std::optional<SnapHit> findSnapHit(const Document& document,
+       const Vec2& pointer, double aperture, const SnapModes& modes,
+       std::optional<Vec2> from = std::nullopt);
+   ```
+
+   Due `LINE` con l'estremo `(0,0)` in comune danno le stesse coordinate ma
+   un'identità diversa, e quindi prolungamenti diversi. Con due segmenti
+   diritti della **stessa** polilinea alla stessa distanza (una polilinea
+   che si incrocia), *Parallelo* prende il **primo segmento**, come `closest`
+   e D7 (REGOLE-NUMERICHE.md, sezione 4, punto 2; #992, [decisione] 3,
+   regola esistente). **`setDrawingAids`**: spegnere un modo toglie la parte
+   delle acquisizioni che ne dipende, e riaccenderlo non la riporta (serve
+   una nuova sosta); i posti liberati non contano più fra i 7 (#992,
+   [decisione] 5, scelta del responsabile, come fa già oggi lo spegnimento
+   di OTRACK). OTRACK spento toglie i punti del tracciamento,
+   *Prolungamento* spento i prolungamenti, *Parallelo* spento le direzioni,
+   lo snap a oggetto spento tutto; ciò che resta di un'acquisizione (il
+   prolungamento, con OTRACK spento e *Prolungamento* acceso) continua a
+   valere e si rilascia con una sosta ([bloccante] 9; ADR 0057, punto 3).
 2. **Guide** (punto 4): prolungamento di una linea (semiretta), di un arco
    (tratto del cerchio oltre l'estremo), parallela per il punto base; incroci
    fra due guide qualsiasi con l'intersezione di solid-space (rette estese), e
@@ -60,6 +93,12 @@
    incrocia una retta in due punti), vince il primo incrocio lungo il
    prolungamento, partendo dall'estremo acquisito e allontanandosi dall'arco
    (REGOLE-NUMERICHE.md, sezione 4, «Tracciamento degli snap», punto 6).
+   Se le due coppie hanno le stesse acquisizioni ma guide diverse (un punto
+   acquisito con le sue due guide, e un prolungamento più recente che le
+   incrocia tutte e due), vince l'incrocio con la guida **orizzontale**, come
+   nei punti 2 e 3 della stessa sezione (#992, [decisione] 1, regola
+   esistente): punto `(-1,1)`, poi il prolungamento lungo `y=x` da
+   `(-5,-5)`, puntatore `(0.2,-0.2)`, apertura 1,5: `(1,1)`.
    Le guide partono dal punto dopo lo snap alla griglia, lo stesso per clic,
    preview, rapporto e vista (PT28, punto 2; [bloccante] 8).
    **Le guide nella vista** ([bloccante] 9): `TrackingState` dà, oltre al
@@ -78,7 +117,12 @@
    l'ampiezza del tratto oltre l'estremo (`2π −` l'ampiezza dell'arco), la
    guida non vale e il numero è una distanza diretta verso il puntatore,
    come senza guide (ADR 0049, punto 6); il confine è compreso (una distanza
-   che arriva esattamente all'altro estremo usa ancora la guida).
+   che arriva esattamente all'altro estremo usa ancora la guida). Lo stesso
+   **dall'altra parte**: una distanza negativa porterebbe prima
+   dell'estremo acquisito (sopra l'arco, o dietro la semiretta di una
+   linea), fuori dal tratto, quindi la guida non vale e il numero è una
+   distanza diretta, con il suo segno, come oggi senza guide; `0` dà
+   l'estremo (#992, [decisione] 2, applicazione della stessa regola).
 4. Il rapporto (punto 5; campi annunciati da PT2).
 
 ## Regole della tappa che valgono qui
@@ -112,11 +156,32 @@
     `(0,10)`: `50` non usa la guida e dà il punto a 50 dal punto base verso il
     puntatore; la distanza che arriva esattamente a `(10,0)` lo dà sulla
     guida ([decisione] 5);
+  - una `LINE` da `(-10,0)` a `(0,0)` e una da `(0.5,-5)` a `(0.5,5)`,
+    *Estremo*, *Medio* e *Prolungamento* accesi, sosta in `(0.5,0)` con
+    apertura 0,75: `acquired:` ha solo il punto `0.5,0`, nessun
+    prolungamento (#992, [decisione] 4);
+  - `-5` sullo stesso arco e sul prolungamento di una linea: distanza
+    diretta con il segno, non un punto della guida; `0`: l'estremo
+    (#992, [decisione] 2);
+  - il punto `(-1,1)` e il prolungamento lungo `y=x` dell'esempio del punto
+    2: `(1,1)` (#992, [decisione] 1);
+  - una `LWPOLYLINE` aperta `(-2,-2)`, `(2,2)`, `(-2,2)`, `(2,-2)`, punto base
+    `(0,5)`, sosta in `(0,0)` con apertura 0,25: la direzione del primo
+    segmento, quindi la parallela `y=5+x` (#992, [decisione] 3);
+  - `findSnapHit` sulle due `LINE` con l'estremo in comune: id e estremo di
+    quella con l'id più alto; `findSnap` dà lo stesso punto e tipo di oggi
+    (#992, [bloccante] 5);
   - distanza scritta sulla parallela con il punto base diverso dall'ultimo
     punto ([bloccante] 8);
   - OTRACK spento e *Prolungamento* acceso: l'acquisizione resta dopo
     `setDrawingAids` e la guida c'è; il rilascio la toglie dall'elenco delle
-    guide di `TrackingState` ([bloccante] 9).
+    guide di `TrackingState` ([bloccante] 9);
+  - un estremo acquisito con il suo prolungamento, poi *Prolungamento*
+    spento e riacceso senza sosta: il prolungamento non c'è più, il punto sì;
+    lo stesso con OTRACK spento e riacceso: il punto non c'è più, il
+    prolungamento sì; sette acquisizioni, poi *Prolungamento* spento e una
+    sosta nuova: nessuna acquisizione vecchia esce per far posto a quelle
+    tolte (#992, [decisione] 5).
 
 ## Fatto quando
 

@@ -260,7 +260,12 @@ proposte di metodo della 0.8»).
    centro vale con *Vicino* spento o senza un'entità per *Vicino* (testi
    compresi) ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato,
    griglia, snap e attributi della 0.8.1», punto 6, ed «Esiti dei DXF di prova
-   e della seduta della 0.8.1», punti 1 e 7).
+   e della seduta della 0.8.1», punti 1 e 7). Il punto d'inserimento di un
+   `INSERT` non è in questo livello: compete con gli snap di punto, per la sua
+   distanza dal puntatore, anche lontano dalle forme del blocco
+   ([DECISIONI.md](DECISIONI.md), 2026-11-14, «Revisione delle interfacce
+   PT4», P4), quindi entro l'apertura vince su *Vicino*; centro e inserimento
+   delle altre entità restano dopo *Vicino*.
    **Pareggi di *Vicino*:** a pari distanza dal puntatore fra due curve vince
    l'id più alto, come il clic; dentro una polilinea il primo segmento, come
    la domanda `closest` ([DECISIONI.md](DECISIONI.md), 2026-11-22, «Decisioni

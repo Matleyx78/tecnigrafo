@@ -2706,5 +2706,26 @@ i rimandi ai documenti che cambia.
   nella sincronizzazione (PT16, PT18); *All* dal più recente (PT34). Il punto
   d'inserimento di un `INSERT` resta fra gli snap di punto (0.8, P4). Sono
   corretti gli ADR 0055, 0056 e 0057, REGOLE-NUMERICHE.md (sezione 4) e le
-  schede PT15, PT16, PT18, PT19, PT23, PT26, PT27, PT28, PT29, PT30, PT31,
+  schede PT15, PT16, PT18, PT19, PT26, PT27, PT28, PT29, PT30, PT31,
   PT32, PT33 e PT34.
+
+  Dalla revisione della correzione (verbale di Codex nella
+  [#992](https://github.com/Matleyx78/tecnigrafo/pull/992), cinque
+  [bloccante] e cinque [decisione]), tre [decisione] le decide una regola che
+  c'è: fra due incroci con le stesse acquisizioni vince quello con la guida
+  orizzontale (sezione 4, «Tracciamento degli snap», punti 2 e 3); una
+  distanza negativa lungo un prolungamento è fuori dal tratto e prende il
+  ripiego, con il suo segno (scelta 4 qui sopra); *Parallelo* su due segmenti
+  della stessa polilinea prende il primo, come `closest`. Il responsabile
+  decide le altre due, un commento per scelta nella #928:
+  7. *Sosta dove vince un altro snap di punto* (PT31): si acquisisce solo lo
+     snap che vince, e il prolungamento solo se quello è un *Estremo*.
+  8. *Spegnere un solo modo* (PT31): toglie la parte delle acquisizioni che ne
+     dipende, e riaccenderlo non la riporta.
+
+  Le cinque [bloccante]: RT27 riallinea il caso della 0.8 sull'`ATTDEF`
+  invisibile (PT27); il punto d'inserimento dell'`INSERT` fra gli snap di
+  punto scritto anche in REGOLE-NUMERICHE.md e nell'ADR 0057; i tre filtri di
+  `-ATTEDIT` sono blocco, etichetta e valore (PT15, PT19); il punto finale si
+  verifica su clic e preview (PT28); `findSnapHit` in `core` dà l'identità
+  dello snap (PT31, che dipende anche da PT8).

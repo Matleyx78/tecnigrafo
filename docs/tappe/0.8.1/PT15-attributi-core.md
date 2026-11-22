@@ -66,8 +66,9 @@
    usa una volta sola. L'`ATTRIB` che resta prende dall'`ATTDEF` le
    proprietà modellate (ADR 0056, punto 5) e **conserva** i suoi dati non
    gestiti, XDATA e dizionari compresi (ADR 0006).
-   **La scelta col clic** ([bloccante] 5): i filtri di chi chiama (le
-   etichette, i valori e le richieste di `-ATTEDIT`, PT19) stanno in `accept`
+   **La scelta col clic** ([bloccante] 5): i filtri di chi chiama (il nome
+   del blocco, l'etichetta e il valore di `-ATTEDIT`, ADR 0056, punto 4;
+   PT19) stanno in `accept`, che riceve anche l'`Insert`,
    e si applicano **prima** del confronto delle distanze, così un attributo
    ammesso sotto uno escluso si trova. «Visibile» è ciò che si disegna, con la
    regola di `ATTDISP` (PT27) e dei layer della geometria generata
@@ -104,9 +105,13 @@
     secondo ha il predefinito e handle `0`; un `ATTRIB` con XDATA propria che
     resta: la XDATA c'è ancora ([decisione] 1);
   - due attributi visibili sovrapposti, `SIGLA` (primo per il pareggio) e
-    `CODICE`, con `accept` che ammette solo `CODICE`: il clic dà `CODICE`; un
+    `CODICE`, con `accept` che ammette solo `CODICE`: il clic dà `CODICE`;
+    due inserimenti sovrapposti dei blocchi `A` e `B`, tutti e due con
+    `CODICE` e lo stesso valore, con `accept` che ammette solo il blocco `A`:
+    il clic dà l'attributo di `A` anche se `B` vincerebbe il pareggio; un
     attributo di un inserimento annidato sotto il clic: nessuna scelta
-    ([bloccante] 5).
+    ([bloccante] 5; verbale della revisione della correzione #992,
+    [bloccante] 3).
 
 ## Fatto quando
 

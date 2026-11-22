@@ -33,11 +33,7 @@
 1. ```cpp
    // The pattern lines of `hatch` regenerated with base point `origin` (43/44
    // of every family), and the ACAD XDATA 1010/1020 of `extras` set to it,
-   // added when missing (docs/tappe/0.8.1/dxf-di-prova.md). With a pattern
-   // predefinedPatternLines() cannot generate, the families of the file are
-   // moved keeping their offsets from the origin: b' = origin + (b - o), the
-   // rule of docs/REGOLE-NUMERICHE.md, section 2, point 9, with k = 1 and
-   // no rotation.
+   // added when missing (docs/tappe/0.8.1/dxf-di-prova.md).
    [[nodiscard]] Hatch withPatternOrigin(const Hatch& hatch, const Vec2& origin);
    [[nodiscard]] EntityExtras withPatternOriginXdata(EntityExtras extras, const Vec2& origin);
    // The hatch with another predefined pattern, scale or angle: the families
@@ -83,10 +79,7 @@
 - Origine, scala, angolo e stile dei retini di `autocad-hatchedit` (il cambio a
   `ANSI37` di quel DXF resta fuori: `ANSI37` non si genera); scala e angolo di
   un retino con un motivo non generabile (famiglie in proporzione, un quarto
-  di giro esatto); l'origine nuova di un retino con un motivo non generabile,
-  con e senza la XDATA dell'origine (famiglie traslate con i loro scarti,
-  XDATA aggiunta se manca: verbale della revisione PT5, [decisione] 7);
-  l'area di un rettangolo con un foro; una quota con lo
+  di giro esatto); l'area di un rettangolo con un foro; una quota con lo
   stile cambiato e una con il testo `<> mm`.
 
 ## Fatto quando

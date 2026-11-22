@@ -38,7 +38,7 @@
 - `tests/core/document_test.cpp`, `tests/io/dxf_tables_test.cpp`,
   `tests/io/dxf_read_test.cpp`, `tests/io/dxf_write_test.cpp`,
   `tests/io/cadx_test.cpp`, `tests/edit/editor_test.cpp`,
-  `tests/core/attribute_definition_test.cpp`
+  `tests/core/attributes_test.cpp`
 
 ## Cosa fare
 
@@ -165,7 +165,14 @@ sull'attributo invisibile; lo stesso script con `autocad-attdisp-off` dà
 - **Dipendenze:** nessun comando nuovo.
 - **Fonte:** i DXF di prova della 0.8.1, con la tabella dei gruppi in
   [dxf-di-prova.md](dxf-di-prova.md).
-- **Risposte condivise:** nessuna. `roundtrip` dei casi di oggi resta
+- **Risposte condivise:** l'`ATTDEF` invisibile fuori dai blocchi
+  (punto 5) cambia il caso della 0.8
+  `attributi/attdef-invisibile-proprieta`: per l'`ATTDEF` `I` le risposte
+  `generated`, `pick`, `crossing`, `window` e `snap` non sono più `none`
+  (resta `none` per `F`, sul layer congelato). Le riallinea **RT27**, che
+  aggiorna quel caso insieme ai suoi (verbale della revisione della
+  correzione #992, [bloccante] 1): finché RT27 non è unito PT27 non parte, e
+  il caso non è mai rosso. `roundtrip` dei casi di oggi resta
   `identical` (punto 2); `attdisp:` manca per `$ATTMODE` 1, che è quello di
   tutti i DXF usati dai casi di oggi (controllato su `dxf-test-file`: solo i
   due `autocad-attdisp-*` hanno 0 e 2); `grid snap:` è di PT28.

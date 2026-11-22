@@ -87,10 +87,13 @@ della 0.8.1», punto 3).
    in un passaggio comune che usano il clic (`aidedPoint`), la preview, il
    rapporto (`active snap:`, `active tracking:`), `tracking()`,
    `activePolar()` e la vista; nessuno interroga il puntatore per una strada
-   propria. Le guide partono dal nodo, non dal puntatore: con passo 10,
-   puntatore `(4.9,4.9)`, una guida orizzontale a `y=5` e apertura 1, il nodo
-   `(0,0)` dista 5 dalla guida, quindi nessuna guida aggancia, e clic,
-   rapporto e vista danno tutti `(0,0)`. Con l'orto il punto prende la
+   propria. Il nodo è il punto con cui si controlla l'apertura delle guide e
+   che le guide proiettano; le guide restano dove sono (una guida acquisita a
+   `y=5` resta a `y=5`). Con passo 10, puntatore `(4.9,4.9)`, quella guida e
+   apertura 1, il nodo `(0,0)` dista 5 dalla guida, quindi nessuna guida
+   aggancia: clic e preview danno `(0,0)`, e rapporto e `tracking()` dicono
+   tutti e due che non c'è una guida attiva. Il campo `pointer:` resta il
+   puntatore così com'è. Con l'orto il punto prende la
    coordinata del nodo lungo la direzione scelta e quella della base
    nell'altra: base scritta `(1,2)`, puntatore `(19,4)`, passo 10, orto: nodo
    `(20,0)`, punto `(20,2)`; è un nodo solo se la base ha quella coordinata su
@@ -114,9 +117,11 @@ della 0.8.1», punto 3).
   diversi in X e Y; uno snap a oggetto che vince; una coordinata scritta non
   toccata; con l'orto e con il polare; ogni richiesta e ogni messaggio del
   punto 1, con i valori rifiutati.
-- Un punto solo ([bloccante] 8): i due esempi del punto 2, con clic, rapporto
-  e `tracking()` che danno lo stesso punto (`(0,0)` senza guida attiva;
-  `(20,2)` con l'orto).
+- Un punto solo ([bloccante] 8; #992, [bloccante] 4): i due esempi del
+  punto 2. Il punto finale si controlla sul clic e sulla preview (anche nella
+  sezione `preview:` del rapporto): `(0,0)` e, con l'orto, `(20,2)`; nel
+  primo, rapporto (`active tracking:` assente) e `tracking()` (nessuna guida)
+  concordano sull'assenza di guide; `pointer:` è `4.9,4.9`.
 - `GRIDUNIT` `0,10` accettato e ripreso come `<0.0000,10.0000>`; `GRID`
   *Aspect* con `0` e `10` ([decisione] 2); `GRIDMODE` e `GRIDUNIT` che
   segnano il disegno modificato senza un passo di annullamento ([bloccante]
