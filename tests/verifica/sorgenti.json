@@ -464,6 +464,14 @@
       "sha256": "98aaf3dbd5a3922f68cc7728448dc3fd608e500606b62479b6658920db7d5796",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/LICENSE"
+    },
+    {
+      "name": "autocad-polygon",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-polygon.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "2b4164ce86467651c547500e9f17aa1488d6b990d61fd4d3d8033df497828dfa",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
     }
   ]
 }

@@ -1,0 +1,31 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=10,0 vertex=0,10 vertex=-10,0 vertex=0,-10
+  258 LWPOLYLINE closed=yes vertex=100,10 vertex=90,0 vertex=100,-10 vertex=110,0
+messages:
+  Command: POLYGON
+  Enter number of sides <4>: 4
+  Specify center of polygon or [Edge]: 0,0
+  Enter an option [Inscribed in circle/Circumscribed about circle] <I>: I
+  Specify radius of circle: 10,0
+  Command: POLYGON
+  Enter number of sides <4>:
+  Specify center of polygon or [Edge]: 100,0
+  Enter an option [Inscribed in circle/Circumscribed about circle] <I>:
+  Specify radius of circle: 100,10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polygon
+  Polygon
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 2
