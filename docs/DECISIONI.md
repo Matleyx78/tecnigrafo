@@ -2559,3 +2559,99 @@ i rimandi ai documenti che cambia.
      snap *Vicino* passa prima di centro e inserimento
      ([REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md), sezione 4); cambia il punto
      6 della voce citata.
+- **2026-11-22 — Decisioni D1–D10 del piano della 0.8.1.** Prima
+  dell'apertura della [0.8.1](tappe/0.8.1-completamenti.md) (sezione 5,
+  «Decisioni del responsabile»), sulle proposte degli ADR 0054–0057, delle
+  schede e del verbale di revisione del piano
+  ([#924](https://github.com/Matleyx78/tecnigrafo/pull/924)), il responsabile
+  decide:
+  1. *Impaginazione del testo formattato* (D1, ADR 0054, punto 3): regole
+     nostre in unità dell'altezza, con i numeri dell'ADR (interlinea `5/3 · H`,
+     numeratore a `4/3 · h`, linea della frazione a `7/6 · h`, decorazioni a
+     `−0,2`, `1,2` e `0,5 · h`), valori attesi calcolati con le misure di
+     Liberation Sans; da AutoCAD si prende solo la **struttura** (quali pezzi,
+     quali formati, che cosa sta sulla stessa riga quando le larghezze non
+     cambiano la scelta). Scartate le posizioni di AutoCAD con una tolleranza
+     (le larghezze differiscono del 4,1 %) e la scala dei font sull'altezza
+     delle maiuscole di Arial, che cambierebbe ogni caso di testo dalla 0.4.
+  2. *`TEXTEDIT` dalla riga di comando* (D2, ADR 0054, punto 6): la forma di
+     Tecnigrafo come l'ADR la propone, dentro `TEXTEDIT`, per gli script e
+     quando la finestra non c'è. Scartato un comando a parte `-TEXTEDIT`, che
+     AutoCAD non ha.
+  3. *Snap alla griglia con il tracciamento* (D3, ADR 0055, punto 4): prima il
+     nodo, poi le guide, come l'orto e il polare; l'incrocio di due guide resta
+     il suo punto. Le prove in AutoCAD LT dello snap alla griglia con orto,
+     polare e tracciamento non servono più: la regola sta in piedi da sola
+     (cambia il punto 5 della voce del 2026-11-21 «Esiti dei DXF di prova e
+     della seduta della 0.8.1»).
+  4. *`AFLAGS` all'avvio* (D4, ADR 0056, punto 2): 16, come AutoCAD 2021
+     (*Lock position* acceso).
+  5. *Prolungamento per difetto* (D5, ADR 0057, punto 1): spento, come
+     *Vicino* e *Parallelo*, così i casi del tracciamento della 0.8 non
+     cambiano; `acadiso.dwt` lo accende (`OSMODE` 4133).
+  6. *Pareggi fra le guide* (D6, ADR 0057, punto 4): a pari distanza vince la
+     guida, o l'incrocio, che usa l'acquisizione più recente; fra guide della
+     stessa acquisizione vince il prolungamento.
+  7. *Pareggi di Vicino* (D7, ADR 0057, punto 2): fra due curve l'id più alto,
+     come il clic; dentro una polilinea il primo segmento, come la domanda
+     `closest`.
+  8. *Direzioni di `RECTANG` e `POLYGON`* (D8): con `cardinalSinCos`, così i
+     quarti di giro danno vertici esatti, come `ROTATE`.
+  9. *Griglia adattiva con `GRIDMAJOR` 1* (D9, ADR 0055, punto 5, dal verbale
+     di revisione): la griglia non sparisce, perché con lo snap acceso un
+     punto «pilotato» senza griglia visibile confonde; il passo si moltiplica
+     per 5, il `GRIDMAJOR` di `acadiso.dwt`, finché le linee non sono più
+     rade della soglia, e ingrandendo non si suddivide. Nessuna prova in
+     AutoCAD: con un comportamento corretto e motivato, che cosa fa AutoCAD in
+     questo caso non conta. Scartata la griglia che non si disegna sotto la
+     soglia.
+  10. *Retino con un motivo non generabile* (D10, dal verbale di revisione):
+      scala e angolo si cambiano trasformando in proporzione le famiglie del
+      file (scala nuova / vecchia, rotazione nuova − vecchia, intorno
+      all'origine del retino), che dà lo stesso risultato di AutoCAD; scartato
+      il rifiuto, che su un DXF vero farebbe sembrare rotta la funzione.
+
+  D3, D6, D7, D8, D9 e D10 sono in [REGOLE-NUMERICHE.md](REGOLE-NUMERICHE.md);
+  gli ADR 0054–0057 e le schede della 0.8.1 sono corretti senza le marche.
+- **2026-11-22 — Esiti della seconda seduta in AutoCAD della 0.8.1.** Con la
+  seduta in AutoCAD 2021 della sezione 5 del piano della
+  [0.8.1](tappe/0.8.1-completamenti.md) («Che cosa prepara il responsabile»,
+  punto 2), con quattro DXF nuovi in `dxf-test-file` e le cronologie dei
+  messaggi ([tappe/0.8.1/dxf-di-prova.md](tappe/0.8.1/dxf-di-prova.md),
+  «Seconda seduta in AutoCAD»), il responsabile decide sui punti in cui AutoCAD
+  e le schede non dicevano la stessa cosa:
+  1. *Distanza scritta lungo il prolungamento di un arco* (ADR 0057, punto 4;
+     PT31): come AutoCAD, si misura **lungo l'arco** dall'estremo acquisito
+     (10 su raggio 20 dà 0,5 rad), invece della direzione dal punto base al
+     puntatore.
+  2. *Raggio maggiore sotto il minore nel pannello* (PT22): gli assi si
+     **scambiano**, come con i grip (REGOLE-NUMERICHE.md, sezione 2, punto 7).
+     AutoCAD 2021 lo rifiuta («Modellazione generale non riuscita.») e lascia
+     l'ellisse com'era; Tecnigrafo resta coerente con i grip.
+  3. *Area di un arco d'ellisse* (PT22): come AutoCAD, quella del **segmento**
+     chiuso dalla corda, `a · b / 2 · (Δt − sin Δt)`, non del settore (12,7295
+     per l'arco 45°–135° di un'ellisse 20 × 10).
+  4. *Blocco di un inserimento nel pannello* (PT24): **modificabile**, tenendo
+     punto, scale, rotazione e gli `ATTRIB` così come sono. Nel palette di
+     AutoCAD 2021 il *Nome* è in grigio, con gli attributi e senza: è una
+     scelta di Tecnigrafo.
+  5. *`RECTANG` con uno smusso o un raccordo che non ci stanno* (PT35): come
+     AutoCAD, nessun messaggio e una `LWPOLYLINE` di **8 vertici** con ogni
+     angolo ripetuto due volte, senza smusso né raccordo.
+  6. *Valori proposti da `RECTANG`* (PT35): come AutoCAD, cimatura e raccordo
+     si propongono a vicenda: dopo un *Fillet* `r` la cimatura propone `r` e
+     `r`, dopo una cimatura `a`, `b` il *Fillet* propone `a`.
+  7. *`GRIDUNIT` negativo* (PT28): rifiutato con `Cannot set GRIDUNIT to that
+     value.`, come `SNAPUNIT` con 0. AutoCAD lo accetta senza messaggi, ma un
+     passo negativo non ha senso.
+
+  Il resto della seduta conferma le schede o ne corregge la descrizione di
+  AutoCAD senza scelte: i vertici di `RECTANG` vanno dal primo angolo lungo la
+  x del rettangolo, poi all'angolo opposto, e il verso è antiorario solo con le
+  due quote dello stesso segno (non sempre, come diceva la scheda); gli angoli
+  dell'ellisse nel palette sono angoli veri; *Vicino* aggancia inserimenti,
+  quote e `SOLID`, non `TEXT` né retini; richieste e messaggi di `GRID`,
+  `SNAP`, `UCSICON`, `TEXTEDIT`, `-ATTDEF`, `ATTSYNC`, `-HATCHEDIT` e
+  `POLYGON` sono quelli della seduta, tradotti. ADR 0054, 0055 e 0057 e le
+  schede PT11, PT14, PT18, PT22, PT24, PT26, PT28, PT30, PT31, PT35 e PT36
+  sono corretti.
