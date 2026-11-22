@@ -1,0 +1,50 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  4096 INSERT block="COMPONENTE" insertion=0,-40 scale=1,1 rotation=0
+  4097 ATTRIB owner=4096 position=28.57571396706332,-36.520423320710144 alignment-point=30,-35 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S1" tag="SIGLA" ~box=28.162219197349202,-37.375262543172866;32.53933669432504,-36.60345863072493;31.834391643753825,-32.60551658159091;27.457274146777987,-33.37732049403885
+  4098 ATTRIB owner=4096 position=22,-29 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" ~box=22,-29.770049680624556;26.847409510290987,-29.770049680624556;26.847409510290987,-25.71043293115685;22,-25.71043293115685
+  4099 ATTRIB owner=4096 position=22,-25 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" ~box=22,-25.770049680624556;28.465578424414478,-25.770049680624556;28.465578424414478,-21.71043293115685;22,-21.71043293115685
+  4100 ATTRIB owner=4096 position=2,-29 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" invisible=yes ~box=2,-29.770049680624556;18.969481902058195,-29.770049680624556;18.969481902058195,-25.71043293115685;2,-25.71043293115685
+  4101 ATTRIB owner=4096 position=2,-25 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K1" tag="CODICE" ~box=2,-25.770049680624556;6.444641589779986,-25.770049680624556;6.444641589779986,-21.71043293115685;2,-21.71043293115685
+messages:
+  Command: ATTREQ
+  Enter new value for ATTREQ <1>: 0
+  Command: OPEN
+  Enter name of drawing to open: componente.dxf
+  Command: -INSERT
+  Enter block name or [?]: COMPONENTE
+  Specify insertion point or [Basepoint/Scale/Rotate]: 0,-40
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 1
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>: 0
+  Command: ATTREQ
+  Enter new value for ATTREQ <0>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Insert
+redo:
+snap: on
+ortho: off
+drawing: componente.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "COMPONENTE" base=0,0 units=4
+  "COMPONENTE" 66 ATTDEF position=28.57571396706332,3.479576679289856 alignment-point=30,5 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S1" tag="SIGLA" prompt="Sigla" ~box=25.079889750376996,2.0812396118937295;35.62166614129724,3.9400392142084746;34.91672109072603,7.9379812633424915;24.37494469980578,6.0791816610277465
+  "COMPONENTE" 67 ATTDEF position=22,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" prompt="Posizione" preset=yes ~box=22,10.229950319375444;41.78708303761533,10.229950319375444;41.78708303761533,14.289567068843152;22,14.289567068843152
+  "COMPONENTE" 68 ATTDEF position=22,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" prompt="Tensione" verify=yes ~box=22,14.229950319375444;40.57523066004258,14.229950319375444;40.57523066004258,18.28956706884315;22,18.28956706884315
+  "COMPONENTE" 69 ATTDEF position=2,7 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ACME" tag="COSTRUTTORE" prompt="" constant=yes ~box=2,6.229950319375444;29.656139105748757,6.229950319375444;29.656139105748757,10.289567068843152;2,10.289567068843152
+  "COMPONENTE" 70 ATTDEF position=2,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" prompt="Nota di montaggio" invisible=yes ~box=2,10.229950319375444;12.09403832505323,10.229950319375444;12.09403832505323,14.289567068843152;2,14.289567068843152
+  "COMPONENTE" 71 ATTDEF position=2,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K1" tag="CODICE" prompt="Codice componente" ~box=2,14.229950319375444;16.13236337828247,14.229950319375444;16.13236337828247,18.28956706884315;2,18.28956706884315
+documents: Drawing1.cadx, componente.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  ATTRIB 5
+  INSERT 1

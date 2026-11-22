@@ -1,0 +1,36 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Esc during the attribute prompts of -INSERT cancels the insertion, as Esc at its other
+; prompts (0.8.1-PT17, #941, point 2): at the first value, and at the Verify prompt after
+; all the values. Nothing is inserted, no undo step, the drawing is not modified.
+; Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736 (CC0-1.0):
+; autocad-attributi.scr and autocad-attributi.txt (AutoCAD 2021, Italian, translated as
+; docs/adr/0056, point 3).
+; componente.dxf is handwritten, as the cases of insert/: block COMPONENTE with the six
+; ATTDEFs of autocad-attributi.dxf, same tags, prompts, defaults, modes, points, height and
+; order (SIGLA, POSIZIONE, TENSIONE, COSTRUTTORE, NOTA, CODICE), on layer 0 with style
+; Standard. Left out, because they change nothing in the prompts: the rectangle, the style
+; ARIAL of TENSIONE (a STYLE table would only add a line to the report) and the Lock
+; position of SIGLA (its second group 280 is 0: PT15, a later wave, writes lock-position
+; and lists no case to update).
+OPEN
+componente.dxf
+; cambia con #941
+-INSERT
+COMPONENTE
+0,-40
+1
+
+0
+!esc
+-INSERT
+COMPONENTE
+60,-40
+1
+
+0
+S20
+230V
+da cablare
+K20
+!esc
