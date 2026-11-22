@@ -2701,3 +2701,14 @@ i rimandi ai documenti che cambia.
   con gli extras, e salvataggio e riapertura nei test invece delle domande
   dopo `set-property` (PT22–PT26); origine e `$MEASUREMENT` in `withPattern`
   (PT23, PT26). ADR 0054 e schede PT3, PT7–PT12, PT22–PT26 corretti.
+- **2026-11-22 — Rilettura della correzione PT4 della 0.8.1.** Dal verbale di
+  Codex sulla [#993](https://github.com/Matleyx78/tecnigrafo/pull/993) (due
+  [bloccante], due [decisione], una [facoltativa], che non si tratta): il
+  responsabile decide che la misura di una quota, nell'editor, si vede come
+  nel disegno ma è un'unità sola legata a `<>`, come una frazione e come il
+  campo di AutoCAD (ADR 0054, punto 5; PT10). Gli spazi assorbiti da un a capo
+  automatico restano unità raggiungibili, per la regola di PT10 che dà a ogni
+  unità le sue posizioni. Le [bloccante] corrette: l'editor consegna Invio
+  quando il valore non è cambiato, così un `MTEXT` già vuoto non si cancella
+  (PT11, PT12); `target` vuoto anche per *Mtext* di una quota in costruzione
+  (PT11).

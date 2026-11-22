@@ -7,8 +7,8 @@
   [DECISIONI.md](../DECISIONI.md), stessa data, «Revisione delle interfacce PT4
   della 0.8.1»): argomenti fuori dominio senza effetto (punto 1); altezze
   assolute sotto una similitudine (punto 1); estremi della linea di `#` (punto
-  3, regola 5); spaziatura nel testo formattato (punto 4); frazione come unità
-  e valore svuotato nell'editor (punto 5).
+  3, regola 5); spaziatura nel testo formattato (punto 4); frazione e misura
+  di una quota come unità, valore svuotato nell'editor (punto 5).
 
 ## Contesto
 
@@ -140,7 +140,8 @@ AutoCAD.
   l'editor **non perde mai** un codice che non sa mostrare: lo conserva nel
   punto del testo in cui stava.
 - Una frazione impilata è un'unità sola, come in AutoCAD: il cursore la salta e
-  si cancella intera.
+  si cancella intera. Lo stesso la misura di una quota: si vede come nel
+  disegno, ma è un'unità sola legata a `<>`.
 - Un `TEXT` o un `MTEXT` esistente svuotato e confermato si cancella, come in
   AutoCAD; una quota svuotata torna alla misura.
 - Su un `TEXT` l'editor è una riga sola, senza formati, sul testo stesso.

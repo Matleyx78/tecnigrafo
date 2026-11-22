@@ -41,8 +41,11 @@
    esistente lo consegna con `CommandRunner::submit(TextInput{…})`, **anche
    vuoto**: un valore svuotato e confermato cancella il `TEXT` o il `MTEXT`, e
    per una quota torna alla misura (decisione del responsabile sulla #927,
-   [decisione] 4; PT11). Confermare senza modifiche consegna il valore di
-   prima. Annullare dà `Esc`.
+   [decisione] 4; PT11). Se il valore alla conferma è **uguale** a quello di
+   partenza (nessuna modifica, o modifiche che lo riportano com'era), l'editor
+   consegna `ConfirmInput`, come Invio, che tiene il valore: così un `MTEXT`
+   già vuoto confermato senza modifiche non si cancella (verbale della
+   rilettura della #993, [bloccante] 1). Annullare dà `Esc`.
 3. Su un `TEXT` (`shown` è un `Text`, con la sua posizione e il suo stile),
    l'editor è una riga sola sul testo, senza formati; `Invio` conferma.
 4. **Doppio clic** con il tasto sinistro su `TEXT`, `MTEXT`, quota, `ATTDEF` o
@@ -69,10 +72,11 @@ mettono casi limite che nessun documento fissa e che emergono scrivendo.
 - Scrivere, cancellare, andare a capo e confermare dà il valore atteso; `Esc`
   non cambia il disegno; doppio clic su un `TEXT` avvia `TEXTEDIT` con
   l'oggetto scelto; zoom con l'editor aperto lo lascia sopra il testo.
-- Una quota con `<> mm`: l'editor riceve `<> mm` e, confermato senza
-  modifiche, ridà `<> mm`; cancellare tutto e
-  confermare su un `MTEXT` lo toglie dal disegno, e `U` lo rimette; una
-  frazione si salta e si cancella intera (PT10).
+- Una quota con `<> mm`: l'editor riceve `<> mm`, mostra la misura come nel
+  disegno (un'unità sola, PT10) e, confermato senza modifiche, ridà `<> mm`;
+  cancellare tutto e confermare su un `MTEXT` lo toglie dal disegno, e `U` lo
+  rimette; un `MTEXT` già vuoto aperto e confermato senza modifiche consegna
+  `ConfirmInput` e resta; una frazione si salta e si cancella intera (PT10).
 
 ## Fatto quando
 

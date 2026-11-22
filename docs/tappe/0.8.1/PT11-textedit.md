@@ -48,7 +48,9 @@
    // What the editor in the window opens on (docs/adr/0054, point 5), at the
    // Text prompt of the command that gives it.
    struct TextEditRequest {
-       std::optional<core::EntityId> target;  // the entity edited; nullopt for a new MTEXT
+       // The entity edited; nullopt while it does not exist yet: a new MTEXT,
+       // the Mtext option of a dimension being created.
+       std::optional<core::EntityId> target;
        std::variant<core::Text, core::MText> shown;  // what the editor draws, where it stands
        std::string value;  // the value to edit, codes kept
    };
@@ -68,7 +70,10 @@
      grafica della quota, quello che si vede (con la misura al posto di `<>`),
      e `value` il testo sostitutivo con `<>` (`<>` se è vuoto), separati: con
      `<> mm` la grafica mostra `30 mm` ma l'editor riceve `<> mm`, così la
-     misura resta dinamica.
+     misura resta dinamica. Nell'editor la misura si vede, ma è un'unità sola
+     legata a `<>` (PT10). `target` è l'identificativo della quota con
+     `TEXTEDIT`, vuoto con *Mtext* durante la creazione, quando la quota non
+     esiste ancora (verbale della rilettura della #993, [bloccante] 2).
 
    Negli script e al livello 1 non cambia niente: la richiesta resta di testo.
 2. **`TEXTEDIT`** (alias `ED`, anche `DDEDIT`), con le richieste dell'ADR 0054,
@@ -86,12 +91,16 @@
    **Valore vuoto confermato dall'editor** (decisione del responsabile sulla
    #927, [decisione] 4): l'editor consegna il valore con
    `CommandRunner::submit(TextInput{…})`, anche vuoto, mentre una riga vuota
-   scritta resta `ConfirmInput` (Invio). Alla richiesta del testo un
-   `TextInput` vuoto su un `TEXT` o un `MTEXT` esistente **cancella**
-   l'oggetto, nello stesso passo `Textedit` (`U` lo rimette), come AutoCAD; su
-   una quota torna alla misura (testo sostitutivo `""`). `ConfirmInput` tiene
-   il valore, come dice l'ADR 0054, punto 6. Nel `MTEXT` nuovo un valore vuoto
-   non crea niente, come oggi.
+   scritta resta `ConfirmInput` (Invio). Alla richiesta del testo un `TextInput`
+   vuoto su un `TEXT` o un `MTEXT` esistente **con un valore non vuoto**
+   cancella l'oggetto, nello stesso passo `Textedit` (`U` lo rimette), come
+   AutoCAD; su una quota torna alla misura (testo sostitutivo `""`).
+   `ConfirmInput` tiene il valore, come dice l'ADR 0054, punto 6. Nel `MTEXT`
+   nuovo un valore vuoto non crea niente, come oggi. Un oggetto che è già vuoto
+   (un `MTEXT` con valore `""` letto da un DXF) non si cancella: confermato
+   senza modifiche resta com'è, perché l'editor consegna `ConfirmInput` (PT12),
+   e un `TextInput` vuoto su di lui non cambia niente e non fa un passo (verbale
+   della rilettura della #993, [bloccante] 1).
 3. ***Mtext*** delle quote (l'opzione la porta PT3): alla sua richiesta `Enter
    dimension text <misura>:` il comando dà `textEditing()`, con il testo
    sostitutivo di ora e la grafica della quota in costruzione; la richiesta di
@@ -111,7 +120,9 @@
 
 - `TEXTEDIT` su ogni tipo, *Single* e *Multiple*, *Undo*, Invio che tiene il
   valore, un oggetto non annotativo, un oggetto su layer bloccato.
-- `textEditing()` (#927, [bloccante] 5): `MTEXT` nuovo (`target` vuoto),
+- `textEditing()` (#927, [bloccante] 5): `MTEXT` nuovo e *Mtext* di una quota
+  in costruzione (`target` vuoto), `TEXTEDIT` su una quota esistente (`target`
+  la quota),
   `TEXTEDIT` su `TEXT` (il `Text` e il suo valore), su `MTEXT`, e su una quota
   lineare lunga 30 con testo `<> mm`: `shown` mostra `30 mm`, `value` è
   `<> mm`; *Mtext* delle quote; nessuna richiesta dell'editor su `ATTDEF` e
@@ -119,7 +130,8 @@
 - Valore vuoto (#927, [decisione] 4): `TextInput{""}` su un `TEXT` e su un
   `MTEXT` li cancella in un passo `Textedit`, e `U` li rimette; su una quota con
   `<> mm` dà il testo sostitutivo vuoto (la misura); `ConfirmInput` alla stessa
-  richiesta tiene il valore.
+  richiesta tiene il valore; un `MTEXT` con valore `""`: `ConfirmInput` e
+  `TextInput{""}` lo lasciano nel disegno, senza passo `Textedit`.
 
 ## Fatto quando
 

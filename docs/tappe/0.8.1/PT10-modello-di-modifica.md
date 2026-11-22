@@ -43,12 +43,29 @@ resta solo interazione.
      per niente, `Backspace` e `Canc` la cancellano intera con i suoi byte.
      Numeratore e denominatore si cambiano cancellando e riscrivendo la
      frazione, o dal campo del valore nel pannello (PT25).
-   - **A capo automatico:** il confine fra l'ultima unità di una riga e la
-     prima della seguente è una posizione sola nel valore ma ha due punti nel
-     disegno (fine della riga e inizio della seguente). Quale punto tiene il
-     cursore dopo una modifica e come si raggiungono i due è un buco non
-     visibile (#927, [decisione] 2): lo sceglie chi implementa, lo scrive nel
-     commento dell'interfaccia e lo fissa con un test.
+   - **Misura di una quota** (decisione del responsabile sulla rilettura
+     della #993, seconda [decisione]): per il testo di una quota il modello
+     riceve anche la misura che la grafica mostra. Ogni `<>` del valore si
+     impagina con il testo della misura, come nella grafica, ma è **un'unità
+     sola** con i due byte di `<>`, come una frazione e come il campo di
+     AutoCAD: il cursore la salta, la scelta la prende intera o per niente,
+     `Backspace` e `Canc` tolgono `<>` intero. Esempio: misura `1234`, valore
+     `<> mm`: si vede `1234 mm`, le posizioni sono prima e dopo `1234`, poi fra
+     le lettere di ` mm`; un clic fra il `2` e il `3` va alla posizione più
+     vicina delle due; cancellare la misura dà ` mm`. Vale anche per *Mtext*
+     durante la creazione della quota.
+   - **A capo automatico:** gli spazi dove la riga va a capo non si disegnano
+     (PT8, come oggi) ma restano unità come le altre (PT7), con una posizione
+     prima e una dopo ciascuno: in `A B`, con una lettera per riga, `Canc` dopo
+     la `A` e `Backspace` prima della `B` tolgono lo spazio e danno `AB`; con
+     più spazi consecutivi se ne toglie uno per volta, nei due versi, e una
+     scelta che li attraversa li prende (verbale della rilettura della #993,
+     prima [decisione], applicazione di questa regola: ogni unità ha le sue
+     posizioni). Il punto disegnato delle posizioni intorno agli spazi
+     assorbiti, e quale punto tiene il cursore quando un confine ne ha due
+     (fine della riga e inizio della seguente), sono buchi non visibili (#927,
+     [decisione] 2): li sceglie chi implementa, li scrive nel commento
+     dell'interfaccia e li fissa con un test.
 2. Operazioni: inserire testo, cancellare a sinistra e a destra, nuovo
    paragrafo, scegliere un intervallo, applicare o togliere un formato
    dell'ADR 0054, punto 1, sull'intervallo; ogni operazione dà il valore nuovo
@@ -85,6 +102,12 @@ resta solo interazione.
   (punto 3) è la posizione prima o quella dopo, mai una dentro.
 - Un paragrafo che va a capo da solo: il cursore sul confine, prima e dopo una
   scrittura, con la regola scelta.
+- Misura `1234` con valore `<> mm`: due posizioni ai bordi di `1234`; il clic
+  fra il `2` e il `3` va a una delle due; `Canc` prima di `1234` dà ` mm`; il
+  valore senza modifiche torna `<> mm`.
+- `A B` con una lettera per riga: `Canc` dopo la `A` dà `AB`, `Backspace`
+  prima della `B` dà `AB`; `A  B` (due spazi): un tasto toglie uno spazio
+  solo, in tutti e due i versi.
 
 ## Fatto quando
 
