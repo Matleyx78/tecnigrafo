@@ -458,6 +458,14 @@
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/LICENSE"
     },
     {
+      "name": "autocad-proprieta",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/autocad-proprieta.dxf",
+      "version": "d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9",
+      "sha256": "98aaf3dbd5a3922f68cc7728448dc3fd608e500606b62479b6658920db7d5796",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/LICENSE"
+    },
+    {
       "name": "autocad-polygon",
       "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-polygon.dxf",
       "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
