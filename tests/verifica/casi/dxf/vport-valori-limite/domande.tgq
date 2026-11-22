@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; ADR 0055.1-2 and PT27 (#945). Handwritten R2018 files with empty model space.
+; Missing table and named-only VPORT both use the new-drawing defaults.
+A = DXF file=senza-vport.dxf
+? grid A -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=3 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? attdisp A -> normal
+? roundtrip A -> identical
+B = DXF file=solo-alt.dxf
+? grid B -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=3 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip B -> identical
+; The first case-insensitive *ACTIVE wins; zero X stays zero, not 2.5.
+; The original group spelling, second record and SNAPISOPAIR 2 survive.
+C = DXF file=due-active.dxf
+? grid C -> grid=on snap=on grid-unit=0,10 snap-unit=2.5,5 snap-base=0,0 display=6 major=10 ucsicon=1 snap-angle=0 snap-style=1
+? roundtrip C -> identical
+? roundtrip C as=cadx -> identical
