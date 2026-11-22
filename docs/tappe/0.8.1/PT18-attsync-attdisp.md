@@ -30,11 +30,14 @@
    elenca i blocchi con attributi. Un nome senza attributi, o che non esiste:
    `The block table contains no block with attributes named <nome>.` e il
    comando finisce (come AutoCAD, seduta del 2026-11-22). Poi
-   `synchronizeInserts` (PT16) e `ATTSYNC complete.`; un passo `Attsync`.
+   `synchronizeInserts` (PT16), che aggiorna **ogni** inserimento del blocco,
+   anche quelli dentro altre definizioni (ciascuno una volta: [bloccante] 12),
+   e `ATTSYNC complete.`; un passo `Attsync`.
 2. **`ATTDISP`**: `Enter attribute visibility setting [Normal/ON/OFF]
-   <Normal>:`, che cambia l'`AttributeDisplay` del disegno (PT27), senza
-   annullamento, segnando il disegno modificato, e scrive `Regenerating
-   model.`.
+   <Normal>:`, che cambia l'`AttributeDisplay` del disegno con
+   `edit::DocumentTables::setAttributeDisplay()` (PT27), senza annullamento,
+   segnando il disegno modificato, e scrive `Regenerating model.` (verbale
+   della revisione PT5, [bloccante] 1).
 
 ## Regole della tappa che valgono qui
 
@@ -45,7 +48,8 @@
 
 - `ATTSYNC` *Name* e *Select* sui blocchi di `autocad-attsync`; un blocco senza
   attributi e un nome che non esiste; un disegno senza blocchi con attributi;
-  `U` dopo `ATTSYNC`; `ATTDISP` nei tre valori.
+  `U` dopo `ATTSYNC`; `ATTDISP` nei tre valori, che segna il disegno
+  modificato senza un passo di annullamento ([bloccante] 1).
 
 ## Fatto quando
 

@@ -264,7 +264,11 @@ proposte di metodo della 0.8»).
    **Pareggi di *Vicino*:** a pari distanza dal puntatore fra due curve vince
    l'id più alto, come il clic; dentro una polilinea il primo segmento, come
    la domanda `closest` ([DECISIONI.md](DECISIONI.md), 2026-11-22, «Decisioni
-   D1–D10 del piano della 0.8.1», punto 7).
+   D1–D10 del piano della 0.8.1», punto 7); fra due forme con lo stesso id (la
+   geometria generata di un inserimento, i lati di un `SOLID`) la prima
+   nell'ordine di generazione: un `INSERT` con due linee a `y=-1` (la prima
+   del blocco) e `y=1`, puntatore `(5,0)`, dà `(5,-1)` ([DECISIONI.md](DECISIONI.md),
+   2026-11-22, «Revisione delle interfacce PT5 della 0.8.1», [decisione] 3).
 3. **Identificativo di un'intersezione:** il punto di una coppia porta il
    maggiore dei due identificativi; un'autointersezione porta quello della
    polilinea ([DECISIONI.md](DECISIONI.md), 2026-11-03, «Revisione P15: angoli
@@ -286,8 +290,11 @@ proposte di metodo della 0.8»).
    [DECISIONI.md](DECISIONI.md), 2026-11-21, «Pareggio fra due semirette del
    polare»).
 3. **Con lo snap alla griglia** (dalla tappa 0.8.1): il punto del puntatore va
-   prima sul nodo (sezione 3, punto 6), poi l'orto o il polare lo proiettano;
-   con l'orto un nodo resta un nodo ([DECISIONI.md](DECISIONI.md), 2026-11-21,
+   prima sul nodo (sezione 3, punto 6), poi l'orto o il polare lo proiettano:
+   con l'orto il punto prende la coordinata del nodo lungo la direzione
+   scelta e quella del punto base nell'altra, quindi è un nodo solo se il
+   punto base ha quella coordinata su un nodo (base `(1,2)`, puntatore
+   `(19,4)`, passo 10: `(20,2)`) ([DECISIONI.md](DECISIONI.md), 2026-11-21,
    «Esiti dei DXF di prova e della seduta della 0.8.1», punto 5, senza la
    prova in AutoCAD LT dal 2026-11-22, «Decisioni D1–D10 del piano della
    0.8.1», punto 3).
@@ -324,7 +331,13 @@ puntatore (confrontata al quadrato, sezione 3):
    guida, o l'incrocio, che usa l'acquisizione più recente; fra guide della
    stessa acquisizione (la sosta su un estremo acquisisce il punto e il suo
    prolungamento) vince il prolungamento ([DECISIONI.md](DECISIONI.md),
-   2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 6).
+   2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 6). Se due
+   incroci usano tutti e due l'acquisizione più recente, vince quello la cui
+   **altra** guida è stata acquisita più di recente; se la coppia di guide è
+   la stessa (un prolungamento d'arco che incrocia una retta in due punti),
+   il primo incrocio lungo il prolungamento, dall'estremo acquisito
+   allontanandosi dall'arco ([DECISIONI.md](DECISIONI.md), 2026-11-22,
+   «Revisione delle interfacce PT5 della 0.8.1», [decisione] 5).
 
 (I punti 1–5 in [0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3.)
 

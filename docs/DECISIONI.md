@@ -2655,3 +2655,56 @@ i rimandi ai documenti che cambia.
   `POLYGON` sono quelli della seduta, tradotti. ADR 0054, 0055 e 0057 e le
   schede PT11, PT14, PT18, PT22, PT24, PT26, PT28, PT30, PT31, PT35 e PT36
   sono corretti.
+- **2026-11-22 — Revisione delle interfacce PT5 della 0.8.1.** Sul verbale di
+  Codex nella [#928](https://github.com/Matleyx78/tecnigrafo/issues/928)
+  (tredici [bloccante] e sette [decisione]), il responsabile approva lo
+  smistamento di Claude: alcune [decisione] le decide già una regola che c'è,
+  e si applicano così. Nella [decisione] 1, fra etichette uguali vale la prima
+  (2026-11-14, «Revisione delle interfacce PT4», P21): ogni `ATTDEF` prende il
+  primo `ATTRIB` libero, quelli in più spariscono e ogni handle si usa una
+  volta sola; l'`ATTRIB` che resta conserva i suoi dati non gestiti (ADR
+  0006). Nella [decisione] 2, il diradamento della griglia con maglie diverse
+  nei due assi non è un buco visibile e lo sceglie chi realizza. Nella
+  [decisione] 3, il `SOLID` si misura dai lati e l'ellisse ha la fascia di
+  `nearest()`. Nella [decisione] 4, il prolungamento acquisito è quello
+  dell'estremo che vince lo snap *Estremo*, la direzione quella del segmento
+  che vince il clic, e una seconda sosta rilascia l'acquisizione. Nella
+  [decisione] 6, un disegno nuovo o aperto non ha gruppo precedente. Nella
+  [decisione] 7, la nuova origine di un motivo non generabile trasla le
+  famiglie con la regola D10, con `k = 1` e `Δ = 0`. Le altre parti le decide
+  il responsabile, un commento per scelta nella #928:
+  1. *[decisione] 2, `GRIDUNIT` con un solo zero* (PT27, PT28, PT29): lo zero
+     vale per il suo asse, che prende il passo dello snap (`0,10` con snap
+     10,10 dà 10 e 10), per i comandi, la lettura DXF e il setter. AutoCAD LT
+     accetta `0,10` (seduta del responsabile nella #928).
+  2. *[decisione] 3, pareggi di Vicino a id uguale* (PT30): vince la prima
+     forma nell'ordine di generazione, come il primo segmento di D7.
+  3. *[decisione] 5, pareggio rimasto fra due incroci* (PT31): vince quello la
+     cui altra guida è più recente; con la stessa coppia di guide, il primo
+     lungo il prolungamento dall'estremo acquisito.
+  4. *[decisione] 5, distanza scritta oltre il tratto di un prolungamento
+     d'arco* (PT31): ripiego senza guida, come distanza diretta verso il
+     puntatore, confine compreso nel tratto; senza prova in AutoCAD LT.
+  5. *[decisione] 6, selezione Previous* (PT34): una richiesta finita senza oggetti
+     non cambia il gruppo precedente, e gli oggetti preselezionati con cui
+     parte un comando lo diventano; senza prova in AutoCAD LT.
+  6. *[decisione] 7, motivo proposto dopo Properties di `-HATCHEDIT`* (PT26):
+     `HPNAME` cambia solo con un motivo che `-HATCH` sa creare.
+
+  Le [bloccante] le corregge la stessa pull request, senza scelte: lo stato
+  del disegno passa da `edit::DocumentTables` e segna modificato il solo
+  documento (PT27, PT18, PT28, PT32); un DXF senza `*ACTIVE` riceve la voce
+  quando lo stato cambia (PT27); l'`ATTDEF` nel disegno si disegna sempre
+  (PT27); il secondo 280 nei record nuovi (PT15); i filtri prima della scelta
+  col clic, e niente attributi annidati (PT15, PT19); il posto degli `ATTDEF`
+  è `order` (PT16); il simbolo di `Nearest` in `render` (PT30, che passa
+  `scene_renderer.cpp` a PT29); un punto solo per clic, preview, rapporto e
+  guide, e la distanza sulla parallela dal punto base (PT28, PT31, e
+  REGOLE-NUMERICHE.md, sezione 4, «Orto e polare», punto 3, precisato); le
+  guide effettive alla vista (PT31, PT33); `#` e `*` nel campo dinamico
+  (PT34); gli id dei contorni trovati (PT26); ogni record `INSERT` una volta
+  nella sincronizzazione (PT16, PT18); *All* dal più recente (PT34). Il punto
+  d'inserimento di un `INSERT` resta fra gli snap di punto (0.8, P4). Sono
+  corretti gli ADR 0055, 0056 e 0057, REGOLE-NUMERICHE.md (sezione 4) e le
+  schede PT15, PT16, PT18, PT19, PT23, PT26, PT27, PT28, PT29, PT30, PT31,
+  PT32, PT33 e PT34.

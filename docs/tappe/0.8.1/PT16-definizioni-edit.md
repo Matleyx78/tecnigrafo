@@ -37,7 +37,27 @@ std::size_t synchronizeInserts(Editor& editor, std::string_view block);
 ```
 
 - Le entità del blocco che non sono `ATTDEF` non cambiano posto; gli `ATTDEF`
-  occupano gli stessi posti nell'ordine nuovo.
+  occupano gli stessi posti nell'ordine nuovo. **Il posto è
+  `EntityRecord::order`** (verbale della revisione PT5, [bloccante] 6): il
+  codec scrive gestite e grezze fuse per `order`, quindi riordinare scambia
+  gli `ATTDEF` fra i valori di `order` che avevano, e ognuno tiene il suo
+  handle; le entità grezze (`rawEntities`) non si toccano. Esempio: `ATTDEF A`
+  con `order` 10, un'entità grezza con 20, `ATTDEF B` con 30; riordinato in
+  `B, A`, il DXF scritto ha `B` (con il suo handle) al posto 10, la grezza al
+  20 e `A` al 30.
+- Rimuovere l'ultimo `ATTDEF` spegne `hasAttributes` della definizione, come
+  `defineBlock()`.
+- **Quali inserimenti** ([bloccante] 12): `synchronizeInserts` aggiorna ogni
+  record `INSERT` del blocco, nel disegno e dentro le definizioni di altri
+  blocchi (esplodibili o no), **una volta per record**: un `INSERT A` dentro
+  la definizione di `B` si aggiorna una volta sola, anche se `B` è inserito
+  più volte, e gli `INSERT B` del disegno non cambiano (i loro dati restano;
+  la loro geometria generata segue la definizione di `B` aggiornata). Il
+  numero restituito conta i record cambiati.
+- **Handle** ([decisione] 1 della revisione PT5): gli `ATTRIB` che restano
+  tengono il loro, una volta sola (la regola delle etichette doppie di PT15);
+  i nuovi ne hanno uno nuovo, anche dentro le definizioni (la riserva degli
+  handle annidati di `Document`).
 - Annullare la transazione rimette definizione, inserimenti e handle com'erano.
 
 ## Regole della tappa che valgono qui
@@ -49,6 +69,14 @@ std::size_t synchronizeInserts(Editor& editor, std::string_view block);
 
 - Riordino, modifica, rimozione e sincronizzazione, ciascuno con l'annulla;
   un blocco annidato in un altro, i cui inserimenti esterni non cambiano.
+- Revisione PT5: il riordino dell'esempio qui sopra con l'entità grezza in
+  mezzo, scritto in DXF e annullato ([bloccante] 6); la rimozione dell'ultimo
+  `ATTDEF` (`hasAttributes` spento); un `INSERT A` nel disegno e uno dentro la
+  definizione di `B`, inserita due volte: `synchronizeInserts(A)` restituisce
+  2, gli `ATTRIB` nuovi hanno handle nuovi e unici, quelli tenuti lo stesso
+  handle, l'ordine è quello della definizione, gli `INSERT B` hanno i dati di
+  prima e un `U` rimette tutto in un passo ([bloccante] 12); due `ATTRIB` con
+  etichette `A` e `a` e un solo `ATTDEF` `A` ([decisione] 1).
 
 ## Fatto quando
 

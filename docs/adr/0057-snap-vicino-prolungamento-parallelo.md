@@ -2,6 +2,12 @@
 
 - **Stato:** Accettato
 - **Data:** 2026-11-21
+- **Corretto:** 2026-11-22 — punti 2, 3 e 4, dopo la revisione delle
+  interfacce PT5 (#928): pareggi di *Vicino* fra forme dello stesso id;
+  acquisizione con più candidati; pareggio rimasto fra due incroci; distanza
+  scritta oltre il tratto di un prolungamento d'arco (decisioni del
+  2026-11-22 in `docs/DECISIONI.md`, «Revisione delle interfacce PT5 della
+  0.8.1»).
 
 ## Contesto
 
@@ -46,7 +52,8 @@ acceso cambierebbe i casi del tracciamento che usano `!hover` su un estremo
   a oggetto», punto 2).
 - **Pareggi:** fra due curve alla stessa distanza vince l'id più alto, come il
   clic (ADR 0008, punto 2); dentro una polilinea il primo segmento, come la
-  domanda `closest` (REGOLE-NUMERICHE.md, sezione 4, «Selezione e snap a
+  domanda `closest`; fra forme con lo stesso id (la geometria generata di un
+  inserimento, i lati di un `SOLID`) la prima nell'ordine di generazione (REGOLE-NUMERICHE.md, sezione 4, «Selezione e snap a
   oggetto», punto 2; [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni
   D1–D10 del piano della 0.8.1», punto 7).
 
@@ -67,6 +74,10 @@ oggetto acceso.
 - **Parallelo:** con un punto base del comando (`Command::basePoint()`),
   fermarsi su una `LINE` o su un segmento diritto di `LWPOLYLINE` (non entro
   l'apertura dai suoi estremi) acquisisce la sua **direzione**.
+- **Più candidati:** il prolungamento è quello dell'estremo che vince lo snap
+  *Estremo* (a pari distanza l'id più alto), la direzione quella del segmento
+  che vince il clic (l'id più alto); una seconda sosta sullo stesso punto
+  rilascia quell'acquisizione intera.
 
 ### 4. Aggancio
 
@@ -86,7 +97,9 @@ oggetto acceso.
   di un punto e un prolungamento della stessa acquisizione, il prolungamento
   (REGOLE-NUMERICHE.md, sezione 4, «Tracciamento degli snap», punto 6;
   [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano della
-  0.8.1», punto 6).
+  0.8.1», punto 6). Se due incroci usano tutti e due l'acquisizione più
+  recente, vince quello la cui altra guida è più recente; con la stessa coppia
+  di guide, il primo lungo il prolungamento dall'estremo acquisito.
 - **Distanza scritta:** con una sola guida diritta che aggancia il puntatore
   (prolungamento di una linea o parallela), un numero scritto dà il punto a
   quella distanza dall'origine della guida (l'estremo o il punto base), verso
@@ -95,7 +108,9 @@ oggetto acceso.
   cerchio, a un angolo `d / r` dall'estremo acquisito, nel verso che si
   allontana dall'arco (seduta del 2026-11-22: 10 su raggio 20 dà 0,5 rad;
   [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Esiti della seconda seduta in
-  AutoCAD della 0.8.1», punto 1).
+  AutoCAD della 0.8.1», punto 1). Oltre il tratto (`d / r` più grande di `2π`
+  meno l'ampiezza dell'arco, confine compreso nel tratto) la guida non vale e
+  il numero è una distanza diretta verso il puntatore.
 
 ### 5. Nel rapporto e nelle domande
 

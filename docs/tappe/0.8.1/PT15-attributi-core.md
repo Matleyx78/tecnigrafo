@@ -31,21 +31,48 @@
 1. `bool lockPosition{false}` in `AttributeDefinition` e in `Attribute`: il
    **secondo** gruppo 280 (ADR 0056, punto 1); il primo 280 resta dov'è, intatto;
    la riscrittura è identica a quella di oggi. `defaultAttributes` lo copia
-   dall'`ATTDEF`.
+   dall'`ATTDEF` come campo, non copiando i 280 grezzi. **Un record nuovo**
+   (`-ATTDEF`, l'`ATTRIB` che ne nasce, uno senza gruppi letti) scrive prima
+   il 280 della versione (0) e poi, con `lockPosition`, il 280 della posizione
+   bloccata (1): così un solo `280=1` non si rilegge mai come versione. Un
+   record letto con il solo 280 della versione ha `lockPosition` falso, e
+   accendendolo il secondo 280 si aggiunge subito dopo il primo, con il resto
+   invariato (verbale della revisione PT5, [bloccante] 4).
 2. ```cpp
    // ADR 0056, point 5: the attributes of `insert` after synchronising with
    // its definition, in the order of the definition.
    [[nodiscard]] std::vector<Attribute> synchronizedAttributes(
        const Document& document, const Insert& insert);
    struct AttributePick { EntityId insert; std::size_t index; };
-   // The visible attribute nearest to `point` within `tolerance` (the rules of
-   // pickEntity: a tie goes to the higher insert id, then the lower index).
+   // The visible attribute nearest to `point` within `tolerance` among those
+   // `accept` admits (none: all), with the rules of pickEntity: a tie goes to
+   // the higher insert id, then the lower index. Only the ATTRIBs of the
+   // inserts of the drawing: one of a nested insert lives in a block
+   // definition and is never picked.
    [[nodiscard]] std::optional<AttributePick> pickAttribute(
-       const Document& document, const Vec2& point, double tolerance);
+       const Document& document, const Vec2& point, double tolerance,
+       const std::function<bool(const Insert&, const Attribute&)>& accept = {});
    ```
    La sincronizzazione tiene valore **e handle** di chi ha la stessa etichetta
    (confronto senza maiuscole), e riprende il resto dall'`ATTDEF` trasformato
    dall'inserimento; quelli nuovi hanno handle `0`, che il chiamante assegna.
+   **Etichette doppie** (revisione PT5, [decisione] 1, regola esistente: fra
+   etichette uguali vale la prima, [DECISIONI.md](../../DECISIONI.md),
+   2026-11-14, «Revisione delle interfacce PT4», P21): ogni `ATTDEF` non
+   costante, nell'ordine della definizione, prende il **primo** `ATTRIB`
+   ancora libero con la sua etichetta, nell'ordine del DXF; gli `ATTRIB` che
+   restano senza `ATTDEF` spariscono; un `ATTDEF` omonimo che non trova un
+   `ATTRIB` libero nasce con il predefinito e handle `0`. Così ogni handle si
+   usa una volta sola. L'`ATTRIB` che resta prende dall'`ATTDEF` le
+   proprietà modellate (ADR 0056, punto 5) e **conserva** i suoi dati non
+   gestiti, XDATA e dizionari compresi (ADR 0006).
+   **La scelta col clic** ([bloccante] 5): i filtri di chi chiama (le
+   etichette, i valori e le richieste di `-ATTEDIT`, PT19) stanno in `accept`
+   e si applicano **prima** del confronto delle distanze, così un attributo
+   ammesso sotto uno escluso si trova. «Visibile» è ciò che si disegna, con la
+   regola di `ATTDISP` (PT27) e dei layer della geometria generata
+   dell'inserimento (0.8-PT16 e PT17): `pickAttribute` usa quella, non una
+   propria.
 3. Il campo `lock-position=yes` nel rapporto e nella risposta di ezdxf (campo
    annunciato da PT2).
 
@@ -66,6 +93,20 @@
 - Andata e ritorno di un `ATTDEF` e di un `ATTRIB` con *Lock position*; la
   sincronizzazione dei casi di `autocad-attsync.dxf` (tolto, nuovo, spostato,
   alto 3,5) e con un inserimento ruotato e scalato.
+- Revisione PT5:
+  - un `ATTDEF` nuovo con `lockPosition` e il suo `ATTRIB`, scritti e riletti
+    (versione 0, poi 1); un record letto con il solo 280 della versione
+    (`lockPosition` falso); lo stesso record con `lockPosition` acceso e
+    riscritto, uguale per il resto ([bloccante] 4);
+  - due `ATTRIB` `A` e `a` (handle 31 e 32, valori diversi) con un solo
+    `ATTDEF` `A`: resta il 31 con il suo valore, il 32 sparisce; due `ATTDEF`
+    `A` e `a` con un solo `ATTRIB` `A`: il primo tiene handle e valore, il
+    secondo ha il predefinito e handle `0`; un `ATTRIB` con XDATA propria che
+    resta: la XDATA c'è ancora ([decisione] 1);
+  - due attributi visibili sovrapposti, `SIGLA` (primo per il pareggio) e
+    `CODICE`, con `accept` che ammette solo `CODICE`: il clic dà `CODICE`; un
+    attributo di un inserimento annidato sotto il clic: nessuna scelta
+    ([bloccante] 5).
 
 ## Fatto quando
 
