@@ -1,0 +1,47 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: EL
+  Specify axis endpoint of ellipse or [Arc/Center]: 0,0
+  *Cancel*
+  Command: T
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  *Cancel*
+  Command: MT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,0
+  *Cancel*
+  Command: ST
+  Enter name of text style or [?] <Standard>: Prova
+  New style.
+  *Cancel*
+  Command: DLI
+  Specify first extension line origin or <select object>: 0,0
+  *Cancel*
+  Command: D
+  Current dimension style: ISO-25
+  *Cancel*
+  Command: H
+  Current hatch pattern: ANSI31
+  *Cancel*
+  Command: B
+  Enter block name or [?]: Pezzo
+  *Cancel*
+  Command: I
+  Enter block name or [?]: Sconosciuto
+  Unknown block name: "Sconosciuto".
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

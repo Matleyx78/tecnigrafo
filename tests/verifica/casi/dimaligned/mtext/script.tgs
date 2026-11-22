@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMALIGNED, the Mtext option ([0.8.1-RT3], work #930): before Text, as AutoCAD
+; ([testoM/Testo/Angolo] in autocad-quote.txt, dxf-test-file 5170f18); from the command line
+; it asks "Enter dimension text <measurement>:" and writes the replaced text, as Text
+; (PT3 card, point 3). First dimension: a text with <>; second: a text without <>.
+; Values as dimaligned/punti-testo-angolo (same points, ISO-25): u = (0.6, 0.8), the text
+; 1.875 along the normal from the middle, six graphics records, so 257 and 264.
+DIMALIGNED
+0,0
+30,40
+; cambia con #930
+M
+<> mm
+-8,6
+DIMALIGNED
+100,0
+130,40
+M
+Quota A
+92,6

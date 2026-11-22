@@ -13,7 +13,7 @@ messages:
   Specify end point of arc or [CLose/Line/Undo]:
   Command: DIMDIAMETER
   Select arc or circle: 30,10
-  Specify dimension line location or [Text/Angle]: 35,25
+  Specify dimension line location or [Mtext/Text/Angle]: 35,25
   Dimension text = 20
 prompt: Command:
 preview:

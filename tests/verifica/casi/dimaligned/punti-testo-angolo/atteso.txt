@@ -9,21 +9,21 @@ messages:
   Command: DIMALIGNED
   Specify first extension line origin or <select object>: 0,0
   Specify second extension line origin: 30,40
-  Specify dimension line location or [Text/Angle]: -8,6
+  Specify dimension line location or [Mtext/Text/Angle]: -8,6
   Dimension text = 50
   Command: DIMALIGNED
   Specify first extension line origin or <select object>: 100,0
   Specify second extension line origin: 130,40
-  Specify dimension line location or [Text/Angle]: T
+  Specify dimension line location or [Mtext/Text/Angle]: T
   Enter dimension text <50>: Quota A
-  Specify dimension line location or [Text/Angle]: 92,6
+  Specify dimension line location or [Mtext/Text/Angle]: 92,6
   Dimension text = 50
   Command: DIMALIGNED
   Specify first extension line origin or <select object>: 200,0
   Specify second extension line origin: 200,30
-  Specify dimension line location or [Text/Angle]: A
+  Specify dimension line location or [Mtext/Text/Angle]: A
   Specify angle of dimension text: 90
-  Specify dimension line location or [Text/Angle]: 190,15
+  Specify dimension line location or [Mtext/Text/Angle]: 190,15
   Dimension text = 30
 prompt: Command:
 preview:

@@ -1,0 +1,62 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=50,0 line-point=50,10 rotation=0 text-point=25,11.875 measurement=50 text="<> mm" ~text="50 mm"
+  264 DIMENSION kind=linear style="ISO-25" origin1=0,60 origin2=30,100 line-point=30,80 rotation=0 text-point=15,81.875 measurement=30 text="Quota" ~text="Quota"
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,0
+  Specify second extension line origin: 50,0
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: M
+  Enter dimension text <50>: <> mm
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: 25,10
+  Dimension text = 50
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,60
+  Specify second extension line origin: 30,100
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: H
+  Specify dimension line location or [Mtext/Text/Angle]: M
+  Enter dimension text <30>: Quota
+  Specify dimension line location or [Mtext/Text/Angle]: 40,80
+  Dimension text = 30
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+  DIMLINEAR
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 2
+
+[final]
+entities:
+  257 DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=50,0 line-point=50,10 rotation=0 text-point=25,11.875 measurement=50 text="<> mm" ~text="50 mm"
+messages:
+  Command: DIMLINEAR
+  Specify first extension line origin or <select object>: 0,120
+  Specify second extension line origin: 40,120
+  Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]: M
+  *Cancel*
+  Command: U
+  Undone: DIMLINEAR.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  DIMLINEAR
+redo:
+  DIMLINEAR
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  DIMENSION 1

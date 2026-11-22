@@ -10,7 +10,7 @@ messages:
   Specify radius of circle or [Diameter]: 10
   Command: DIMDIAMETER
   Select arc or circle: 10,0
-  Specify dimension line location or [Text/Angle]: 20,15
+  Specify dimension line location or [Mtext/Text/Angle]: 20,15
   Dimension text = 20
 prompt: Command:
 preview:

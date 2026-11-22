@@ -8,6 +8,7 @@
 DIMLINEAR
 0,0
 40,0
+; cambia con #930
 !move 20,15
 !report
 !esc

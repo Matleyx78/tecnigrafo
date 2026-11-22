@@ -1,0 +1,33 @@
+# [0.8.1-RT3] (#929): aliases of the 0.8 and the Mtext option of the dimensions, work #930
+alias/comandi-0.8 #930
+alias/quote-0.8 #930
+dimlinear/mtext #930
+dimaligned/mtext #930
+dimangular/mtext-misura #930
+dimangular/mtext-testo #930
+dimradius/mtext-misura #930
+dimradius/mtext-testo #930
+dimdiameter/mtext-misura #930
+dimdiameter/mtext-testo #930
+# cases of the 0.8 whose dimension prompts gain Mtext
+dimaligned/origini-uguali #930
+dimaligned/punti-testo-angolo #930
+dimangular/linee-parallele #930
+dimangular/non-linea #930
+dimangular/posizione-nel-vertice #930
+dimangular/quadrant #930
+dimangular/segmento-polilinea #930
+dimangular/settore-1-annulla #930
+dimangular/settore-2 #930
+dimangular/settore-3 #930
+dimangular/settore-4 #930
+dimdiameter/arco-polilinea #930
+dimdiameter/cerchio #930
+dimlinear/anteprima-esc-annulla #930
+dimlinear/layer-e-proprieta #930
+dimlinear/opzioni #930
+dimlinear/punti-direzione-automatica #930
+dimlinear/seleziona-oggetto #930
+dimradius/arco-polilinea #930
+dimradius/cerchio #930
+explode/quota-lineare #930

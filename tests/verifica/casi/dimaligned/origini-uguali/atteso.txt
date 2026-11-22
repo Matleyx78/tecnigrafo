@@ -24,7 +24,7 @@ entities:
   257 DIMENSION kind=aligned style="ISO-25" origin1=10,10 origin2=40,50 line-point=32,56 text-point=15.5,37.125 measurement=50 ~text="50"
 messages:
   Specify second extension line origin: 40,50
-  Specify dimension line location or [Text/Angle]: 2,16
+  Specify dimension line location or [Mtext/Text/Angle]: 2,16
   Dimension text = 50
 prompt: Command:
 preview:

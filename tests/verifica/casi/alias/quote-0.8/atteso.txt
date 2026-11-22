@@ -1,0 +1,35 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 CIRCLE center=0,0 radius=10
+messages:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 0,0
+  Specify radius of circle or [Diameter]: 10
+  Command: DAL
+  Specify first extension line origin or <select object>: 0,0
+  *Cancel*
+  Command: DAN
+  Select arc, circle, line, or <specify vertex>:
+  Object selected is not a line.
+  *Cancel*
+  Command: DRA
+  Select arc or circle: 10,0
+  *Cancel*
+  Command: DDI
+  Select arc or circle: 10,0
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Circle
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1

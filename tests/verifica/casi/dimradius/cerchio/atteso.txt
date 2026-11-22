@@ -13,11 +13,11 @@ messages:
   *Cancel*
   Command: DIMRADIUS
   Select arc or circle: 10,0
-  Specify dimension line location or [Text/Angle]: 0,0
+  Specify dimension line location or [Mtext/Text/Angle]: 0,0
   Points coincide.
-  Specify dimension line location or [Text/Angle]: A
+  Specify dimension line location or [Mtext/Text/Angle]: A
   Specify angle of dimension text: 30
-  Specify dimension line location or [Text/Angle]: 20,15
+  Specify dimension line location or [Mtext/Text/Angle]: 20,15
   Dimension text = 10
 prompt: Command:
 preview:

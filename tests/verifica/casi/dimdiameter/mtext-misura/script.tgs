@@ -1,0 +1,20 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; DIMDIAMETER, the Mtext option with a text with <> ([0.8.1-RT3], work #930): before Text, as
+; AutoCAD ([testoM/Testo/Angolo] in autocad-quote.txt, dxf-test-file 5170f18); from the
+; command line it asks "Enter dimension text <measurement>:", with the value of
+; "Dimension text = 20" (PT3 card, point 3), and writes the replaced text.
+; Values as dimdiameter/arco-polilinea (same arc and location): with <> the value
+; ⌀20 takes its place (ADR 0047, point 3).
+PLINE
+0,0
+20,0
+A
+20,20
+
+DIMDIAMETER
+30,10
+; cambia con #930
+M
+<> foro
+35,25
