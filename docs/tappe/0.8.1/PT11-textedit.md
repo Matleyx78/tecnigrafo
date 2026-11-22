@@ -96,19 +96,17 @@
    `ATTDEF`, `INSERT` con attributi le richieste del punto 6; un altro oggetto
    non dà messaggi e la domanda si ripete, come AutoCAD. Ogni oggetto
    modificato è un passo `Textedit`.
-   **Valore vuoto confermato dall'editor** (decisione del responsabile sulla
-   #927, [decisione] 4): l'editor consegna il valore con
+   **Valore vuoto confermato dall'editor**, come AutoCAD (prova in AutoCAD del
+   responsabile, 2026-11-22, che corregge la decisione sulla #927, [decisione]
+   4): un `TEXT` o un `MTEXT` esistente svuotato e confermato **torna com'era**,
+   senza un passo `Textedit`; una quota svuotata **torna alla misura** (testo
+   sostitutivo `""`). L'editor consegna il valore con
    `CommandRunner::submit(TextInput{…})`, anche vuoto, mentre una riga vuota
-   scritta resta `ConfirmInput` (Invio). Alla richiesta del testo un `TextInput`
-   vuoto su un `TEXT` o un `MTEXT` esistente **con un valore non vuoto**
-   cancella l'oggetto, nello stesso passo `Textedit` (`U` lo rimette), come
-   AutoCAD; su una quota torna alla misura (testo sostitutivo `""`).
-   `ConfirmInput` tiene il valore, come dice l'ADR 0054, punto 6. Nel `MTEXT`
-   nuovo un valore vuoto non crea niente, come oggi. Un oggetto che è già vuoto
-   (un `MTEXT` con valore `""` letto da un DXF) non si cancella: confermato
-   senza modifiche resta com'è, perché l'editor consegna `ConfirmInput` (PT12),
-   e un `TextInput` vuoto su di lui non cambia niente e non fa un passo (verbale
-   della rilettura della #993, [bloccante] 1).
+   scritta resta `ConfirmInput` (Invio), che tiene il valore come dice l'ADR
+   0054, punto 6. Alla richiesta del testo un `TextInput` vuoto su un `TEXT` o
+   un `MTEXT` esistente non cambia niente e non fa un passo, come
+   `ConfirmInput`; su una quota dà il testo sostitutivo vuoto. Nel `MTEXT`
+   nuovo un valore vuoto non crea niente, come oggi.
 3. ***Mtext*** delle quote (l'opzione la porta PT3): alla sua richiesta `Enter
    dimension text <misura>:` il comando dà `textEditing()`, con il testo
    sostitutivo di ora e la grafica della quota in costruzione; la richiesta di
@@ -136,11 +134,11 @@
   dato: `value` è `FISSO` e `measurement` c'è lo stesso; `measurement` vuoto su
   `TEXT` e `MTEXT`; *Mtext* delle quote; nessuna richiesta dell'editor su
   `ATTDEF` e `INSERT`, né mentre si sceglie l'oggetto.
-- Valore vuoto (#927, [decisione] 4): `TextInput{""}` su un `TEXT` e su un
-  `MTEXT` li cancella in un passo `Textedit`, e `U` li rimette; su una quota con
-  `<> mm` dà il testo sostitutivo vuoto (la misura); `ConfirmInput` alla stessa
-  richiesta tiene il valore; un `MTEXT` con valore `""`: `ConfirmInput` e
-  `TextInput{""}` lo lasciano nel disegno, senza passo `Textedit`.
+- Valore vuoto (prova in AutoCAD del 2026-11-22): `TextInput{""}` su un
+  `TEXT` e su un `MTEXT` con il valore `PROVA` li lascia com'erano, senza passo
+  `Textedit`; su una quota con `<> mm` dà il testo sostitutivo vuoto (la
+  misura), in un passo; `ConfirmInput` alla stessa richiesta tiene il valore;
+  un `MTEXT` con valore `""` resta nel disegno.
 
 ## Fatto quando
 

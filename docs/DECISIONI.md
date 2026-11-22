@@ -2800,3 +2800,15 @@ i rimandi ai documenti che cambia.
   anche con *Estremo* spento (PT31); la transizione dell'ADR 0037, punto 5,
   per il caso riallineato da RT27 (PT27); i rimandi di PT31 a
   REGOLE-NUMERICHE.md e a PT28.
+- **2026-11-22 — Prove in AutoCAD della correzione PT4 della 0.8.1.** Il
+  responsabile prova in AutoCAD 2021 i due comportamenti che la voce «Revisione
+  delle interfacce PT4 della 0.8.1» dava per supposti, e si segue AutoCAD:
+  1. *Valore svuotato nell'editor* (cambia il punto 3 della voce citata): un
+     `MTEXT` o un `TEXT` svuotato e confermato **torna com'era**, non si
+     cancella; una quota svuotata torna alla misura, come già scritto (PT11,
+     PT12; ADR 0054, punto 5).
+  2. *Altezze assolute sotto una similitudine* (cambia il punto 4): `SCALE`
+     per 2 di un `MTEXT` alto 2 con `A{\H3;B}` dà altezza 4 e lo stesso valore
+     (`LIST` prima e dopo): il valore non si tocca e B resta alto 3, come nella
+     0.8 (PT8; ADR 0054, punto 1). Con l'editor di AutoCAD un'altezza scelta
+     per una parte del testo si scrive relativa (`\H1.5x;`), che scala da sola.

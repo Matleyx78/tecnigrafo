@@ -39,13 +39,12 @@
 2. Confermare consegna al runner il valore con i codici, su una riga, come la
    riga di comando (con una riga vuota dopo, per `MTEXT` nuovo); su un oggetto
    esistente lo consegna con `CommandRunner::submit(TextInput{…})`, **anche
-   vuoto**: un valore svuotato e confermato cancella il `TEXT` o il `MTEXT`, e
-   per una quota torna alla misura (decisione del responsabile sulla #927,
-   [decisione] 4; PT11). Se il valore alla conferma è **uguale** a quello di
-   partenza (nessuna modifica, o modifiche che lo riportano com'era), l'editor
-   consegna `ConfirmInput`, come Invio, che tiene il valore: così un `MTEXT`
-   già vuoto confermato senza modifiche non si cancella (verbale della
-   rilettura della #993, [bloccante] 1). Annullare dà `Esc`.
+   vuoto**: come AutoCAD, un `TEXT` o un `MTEXT` svuotato e confermato torna
+   com'era, e una quota svuotata torna alla misura (prova in AutoCAD del
+   responsabile, 2026-11-22; PT11). Se il valore alla conferma è **uguale** a
+   quello di partenza (nessuna modifica, o modifiche che lo riportano
+   com'era), l'editor consegna `ConfirmInput`, come Invio, che tiene il valore
+   (verbale della rilettura della #993, [bloccante] 1). Annullare dà `Esc`.
 3. Su un `TEXT` (`shown` è un `Text`, con la sua posizione e il suo stile),
    l'editor è una riga sola sul testo, senza formati; `Invio` conferma.
 4. **Doppio clic** con il tasto sinistro su `TEXT`, `MTEXT`, quota, `ATTDEF` o
@@ -74,10 +73,10 @@ mettono casi limite che nessun documento fissa e che emergono scrivendo.
   l'oggetto scelto; zoom con l'editor aperto lo lascia sopra il testo.
 - Una quota con `<> mm`: l'editor riceve `<> mm`, mostra la misura come nel
   disegno (un'unità sola, PT10, con il testo di `measurement`) e, confermato
-  senza modifiche, ridà `<> mm`; cancellare tutto e confermare su un `MTEXT` lo
-  toglie dal disegno, e `U` lo rimette; un `MTEXT` già vuoto aperto e confermato
-  senza modifiche consegna `ConfirmInput` e resta; una frazione si salta e si
-  cancella intera (PT10).
+  senza modifiche, ridà `<> mm`, e svuotato torna alla misura; cancellare tutto
+  e confermare su un `MTEXT` lo lascia com'era; un `MTEXT` già vuoto aperto e
+  confermato senza modifiche consegna `ConfirmInput` e resta; una frazione si
+  salta e si cancella intera (PT10).
 
 ## Fatto quando
 

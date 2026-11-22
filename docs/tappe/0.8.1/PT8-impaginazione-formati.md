@@ -115,15 +115,15 @@
    l'esempio del verbale (`A A` e `A {\C1;A}` di altezza 3 con la larghezza di
    riferimento `9903/1409`) sta nella fascia (#927, [decisione] 3,
    applicazione della regola).
-7. **Altezze assolute sotto una similitudine** (decisione del responsabile
-   sulla #927, [decisione] 5): `transformed()` di un `MTEXT` con fattore `k`
-   (`SCALE`, grip, `EXPLODE` di un blocco in scala uniforme) moltiplica per `k`,
-   oltre all'altezza dell'entità, anche gli argomenti delle sole altezze
-   assolute `\H<n>;` del valore; le relative `\H<n>x;` e tutto il resto restano
-   identici, byte per byte, e il numero riscritto è il più corto che, riletto,
-   dà lo stesso `double`. Con `k` = 1 il valore non cambia. Esempio: altezza 2,
-   `A{\H3;B}`, fattore 2 → altezza 4, `A{\H6;B}`, e B è alto 6 come lo stesso
-   `MTEXT` in un blocco inserito in scala 2.
+7. **Altezze assolute sotto una similitudine**, come AutoCAD (prova in
+   AutoCAD del responsabile, 2026-11-22, che corregge la decisione sulla #927,
+   [decisione] 5): `transformed()` di un `MTEXT` cambia l'altezza dell'entità
+   come oggi e **non tocca il valore**, nemmeno le altezze assolute `\H<n>;`.
+   Esempio: altezza 2, `A{\H3;B}`, `SCALE` per 2 → altezza 4, valore
+   `A{\H3;B}`, e B resta alto 3, come in AutoCAD (`LIST` prima e dopo). Lo
+   stesso vale per `EXPLODE` di un blocco in scala uniforme, che passa da
+   `transformed()`; dentro un inserimento non esploso, invece, i pezzi generati
+   si trasformano con il blocco, come ogni forma.
 8. Un `MTEXT` senza formati dà esattamente la geometria di oggi.
 9. `generated` scrive `face=…` dopo `vertical=` per un `FormattedText` (campo
    annunciato da PT2), con il riquadro `~box` di `formattedTextBox`, e un
@@ -194,10 +194,9 @@
   chiamate).
 - **Righe vuote** (#927, [decisione] 2): `A\P\PB\P` ha `shownLines` di due
   righe, `~lines=2`, e le due `Text` alle posizioni di oggi.
-- **Similitudine** (#927, [decisione] 5): `A{\H3;B}` alto 2 scalato per 2 dà
-  `A{\H6;B}` alto 4; `A{\H2x;B}` scalato resta `A{\H2x;B}`; una rotazione
-  non cambia il valore; `EXPLODE` di un blocco in scala 2 con quel `MTEXT` dà
-  lo stesso valore di `SCALE`.
+- **Similitudine** (prova in AutoCAD del 2026-11-22): `A{\H3;B}` alto 2
+  scalato per 2 dà altezza 4 e lo stesso valore `A{\H3;B}`, con B alto 3;
+  `EXPLODE` di un blocco in scala 2 con quel `MTEXT` dà lo stesso valore.
 
 ## Fatto quando
 
