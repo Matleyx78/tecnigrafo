@@ -27,7 +27,8 @@ class DocumentHost;
 /// Values commands remember for the whole session (docs/adr/0014).
 struct CommandDefaults {
     double textHeight{2.5};
-    double textRotation{0.0};  ///< radians
+    double textRotation{0.0};            ///< radians
+    std::optional<double> circleRadius;  ///< none before the first circle
     double mtextLineSpacing{1.0};
     double rotation{0.0};  ///< the last rotation of ROTATE, radians
     /// POLARANG, the increment of polar tracking, radians: 90 degrees at
@@ -49,7 +50,6 @@ struct CommandDefaults {
     double rectangOtherWidth{10.0};
     double hatchScale{1.0};
     double hatchAngle{0.0};                               ///< radians
-    std::optional<double> circleRadius;                   ///< none before the first circle
     std::optional<double> offsetDistance = std::nullopt;  ///< none means Through
     /// HPNAME, HPSCALE and HPANG for the next -HATCH (docs/adr/0048, point 6).
     std::string hatchPattern{"ANSI31"};
