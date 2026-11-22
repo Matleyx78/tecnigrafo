@@ -107,9 +107,9 @@ GRIDMODE <0>:`.
 - **Strumenti:** righe normali, `!click`, `!osnap none`, `!report` su `main`;
   il campo `grid snap:` dell'onda 0 (PT2).
 - **Dipendenze:** PT27 (lo stato).
-- **Fonte:** le cronologie «da registrare» di `GRID`, `SNAP`, `UCSICON` e la
-  prova con orto e polare (sopra); i DXF `autocad-griglia-*` per i valori delle
-  variabili.
+- **Fonte:** le cronologie «da registrare» di `GRID`, `SNAP`, `UCSICON`
+  (sopra); i DXF `autocad-griglia-*` per i valori delle variabili; con orto,
+  polare e tracciamento la regola di REGOLE-NUMERICHE.md (decisione D3).
 - **Risposte condivise:** nessuna: con lo snap spento, che è il valore di un
   disegno nuovo e di tutti i DXF dei casi di oggi (controllato su
   `dxf-test-file`), `grid snap:` non si scrive e i punti non cambiano. Da
