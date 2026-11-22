@@ -57,6 +57,21 @@ def print_standard_answers():
         print(f"? aci {index} -> {aci_answer(index)}")
 
 
+def grid_answer(viewport):
+    # Missing groups use the new-drawing settings from ADR 0055.
+    grid = "on" if viewport.get("grid_on", 1) else "off"
+    snap = "on" if viewport.get("snap_on", 0) else "off"
+    return (f"grid={grid} snap={snap} "
+            f"grid-unit={point(viewport.get('grid_spacing', (10, 10)))} "
+            f"snap-unit={point(viewport.get('snap_spacing', (10, 10)))} "
+            f"snap-base={point(viewport.get('snap_base', (0, 0)))} "
+            f"display={viewport.get('unknown1', 3)} "
+            f"major={viewport.get('major_grid_lines', 5)} "
+            f"ucsicon={viewport.get('ucs_icon', 3)} "
+            f"snap-angle={number(viewport.get('snap_rotation', 0))} "
+            f"snap-style={viewport.get('snap_style', 0)}")
+
+
 def color_answer(attributes, layer=False):
     if attributes.hasattr("true_color"):
         return ",".join(str(channel) for channel in int2rgb(attributes.true_color))
@@ -376,12 +391,17 @@ class DrawingAnswers:
         self.linetypes = []
         self.styles = []
         self.dimstyles = []
+        self.active_viewport = {}
         for tags in sections.get("TABLES", [])[1:]:
             kind = tags[0].value
             if kind in {"LAYER", "LTYPE", "STYLE", "DIMSTYLE"}:
                 entry = factory.load(ExtendedTags(tags))
                 {"LAYER": self.layers, "LTYPE": self.linetypes,
                  "STYLE": self.styles, "DIMSTYLE": self.dimstyles}[kind].append(entry)
+            # ezdxf creates *Active when the file has no such record.
+            elif (kind == "VPORT" and not self.active_viewport
+                  and any(tag.code == 2 and tag.value.casefold() == "*active" for tag in tags)):
+                self.active_viewport = self.document.viewports.get("*Active")[0].dxf
         self.layer_names = {entry.dxf.name.casefold(): entry.dxf.name for entry in self.layers}
         self.linetype_names = {entry.dxf.name.casefold(): entry.dxf.name for entry in self.linetypes}
         self.entities = {}
@@ -439,6 +459,13 @@ class DrawingAnswers:
             return self.header.get("$ACADVER", "none") if self.header else "none"
         if question == "units":
             return str(self.header.get("$INSUNITS", 0) if self.header else 0)
+        if question == "grid":
+            return grid_answer(self.active_viewport)
+        if question == "attdisp":
+            mode = self.header.get("$ATTMODE", 1) if self.header else 1
+            if mode not in (0, 1, 2):
+                raise ValueError(f"invalid $ATTMODE: {mode}")
+            return ("off", "normal", "on")[mode]
         if question in {"count", "unhandled"}:
             def counted_as_managed(entity, supported):
                 kind = entity.dxftype()
@@ -615,7 +642,7 @@ class DrawingAnswers:
 
     def print_answers(self, name="D"):
         for question in ("version", "units", "count", "unhandled", "layers", "linetypes",
-                         "blocks", "styles", "dimstyles"):
+                         "blocks", "styles", "dimstyles", "grid", "attdisp"):
             print(f"? {question} {name} -> {self.answer(question)}")
         for handle, (entity, supported) in self.entities.items():
             if not supported:
