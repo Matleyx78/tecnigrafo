@@ -7,6 +7,7 @@
 #include "tg/cmd/command_description.hpp"
 #include "tg/core/polyline.hpp"
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 
@@ -26,7 +27,7 @@ public:
     [[nodiscard]] std::optional<core::Vec2> basePoint() const override;
 
 private:
-    enum class Stage {
+    enum class Stage : std::uint8_t {
         FirstCorner,
         OtherCorner,
         ChamferFirst,
@@ -53,8 +54,8 @@ private:
 
     Stage m_stage{Stage::FirstCorner};
     CommandDefaults* m_defaults{nullptr};
-    core::Vec2 m_first{};
-    core::Vec2 m_rotationFirst{};
+    core::Vec2 m_first;
+    core::Vec2 m_rotationFirst;
     double m_area{100.0};
     bool m_dimensions{false};
     std::optional<core::Vec2> m_pointer;

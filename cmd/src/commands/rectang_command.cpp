@@ -7,6 +7,7 @@
 #include "tg/core/entity_record.hpp"
 #include "tg/core/math.hpp"
 
+#include <array>
 #include <cmath>
 #include <string>
 #include <utility>
@@ -112,9 +113,9 @@ void RectangCommand::start(CommandContext& context) {
     m_dimensions = false;
     context.editor.beginTransaction("Rectang");
     std::string modes;
-    const auto append = [&modes](std::string value) {
+    const auto append = [&modes](const std::string& value) {
         modes += modes.empty() ? "" : "  ";
-        modes += std::move(value);
+        modes += value;
     };
     if (!m_defaults->rectangUseFillet &&
         (m_defaults->rectangChamferFirst != 0.0 || m_defaults->rectangChamferSecond != 0.0)) {
@@ -212,11 +213,11 @@ Status RectangCommand::handle(CommandContext& context, const Input& input) {
     };
     const auto* value = std::get_if<ValueInput>(&input);
     const bool confirm = std::holds_alternative<ConfirmInput>(input);
-    const double entered = value ? value->value : 0.0;
+    const double entered = value != nullptr ? value->value : 0.0;
     switch (m_stage) {
         case Stage::ChamferFirst:
             if (confirm || assign(m_defaults->rectangChamferFirst, entered, true)) {
-                if (value && entered != 0.0) {
+                if (value != nullptr && entered != 0.0) {
                     m_defaults->rectangChamferSecond = entered;
                 }
                 m_stage = Stage::ChamferSecond;
@@ -255,8 +256,8 @@ Status RectangCommand::handle(CommandContext& context, const Input& input) {
             }
             break;
         case Stage::Area:
-            if (confirm || (value && validPositive(entered))) {
-                if (value) {
+            if (confirm || (value != nullptr && validPositive(entered))) {
+                if (value != nullptr) {
                     m_area = entered;
                 }
                 m_stage = Stage::AreaBasis;
@@ -286,24 +287,24 @@ Status RectangCommand::handle(CommandContext& context, const Input& input) {
             break;
         }
         case Stage::DimensionLength:
-            if (confirm || (value && validPositive(entered))) {
-                if (value) {
+            if (confirm || (value != nullptr && validPositive(entered))) {
+                if (value != nullptr) {
                     m_defaults->rectangLength = entered;
                 }
                 m_stage = Stage::DimensionWidth;
             }
             break;
         case Stage::DimensionWidth:
-            if (confirm || (value && validPositive(entered))) {
-                if (value) {
+            if (confirm || (value != nullptr && validPositive(entered))) {
+                if (value != nullptr) {
                     m_defaults->rectangOtherWidth = entered;
                 }
                 m_stage = Stage::OtherCorner;
             }
             break;
         case Stage::Rotation:
-            if (confirm || (value && std::isfinite(entered))) {
-                if (value) {
+            if (confirm || (value != nullptr && std::isfinite(entered))) {
+                if (value != nullptr) {
                     m_defaults->rectangRotation = entered;
                 }
                 m_stage = Stage::OtherCorner;
@@ -323,7 +324,7 @@ void RectangCommand::pointerMoved(const core::Vec2& point) {
 }
 
 Prompt RectangCommand::prompt() const {
-    const auto lengthPrompt = [](std::string text, double value, PromptKind kind) {
+    const auto lengthPrompt = [](const std::string& text, double value, PromptKind kind) {
         return Prompt{text + formatLength(value) + ">:", {}, kind};
     };
     switch (m_stage) {
@@ -419,7 +420,7 @@ core::Polyline RectangCommand::rectangle(double dx, double dy) const {
     const core::Vec2 ey = scaled(v, dy);
     const core::Vec2 sx = scaled(u, std::copysign(1.0, dx));
     const core::Vec2 sy = scaled(v, std::copysign(1.0, dy));
-    const core::Vec2 corners[]{m_first, m_first + ex, m_first + ex + ey, m_first + ey};
+    const std::array<core::Vec2, 4> corners{m_first, m_first + ex, m_first + ex + ey, m_first + ey};
     std::vector<core::PolylineVertex> vertices;
     const double radius = m_defaults->rectangUseFillet ? m_defaults->rectangFilletRadius : 0.0;
     const bool filletFits = radius > 0.0 && 2.0 * radius <= std::min(std::abs(dx), std::abs(dy));
@@ -434,18 +435,18 @@ core::Polyline RectangCommand::rectangle(double dx, double dy) const {
         }
     } else if (filletFits) {
         const double bulge = std::copysign(core::tan(kBulgeAngle), dx * dy);
-        const core::Vec2 outgoing[]{sx, sy, sx * -1.0, sy * -1.0};
-        const core::Vec2 incoming[]{sy, sx * -1.0, sy * -1.0, sx};
-        for (int i = 0; i < 4; ++i) {
-            vertices.push_back({corners[i] + incoming[i] * radius, bulge});
-            vertices.push_back({corners[i] + outgoing[i] * radius});
+        const std::array<core::Vec2, 4> outgoing{sx, sy, sx * -1.0, sy * -1.0};
+        const std::array<core::Vec2, 4> incoming{sy, sx * -1.0, sy * -1.0, sx};
+        for (std::size_t i = 0; i < corners.size(); ++i) {
+            vertices.push_back({corners.at(i) + incoming.at(i) * radius, bulge});
+            vertices.push_back({corners.at(i) + outgoing.at(i) * radius});
         }
     } else if (chamferFits) {
-        const core::Vec2 outgoing[]{sx, sy, sx * -1.0, sy * -1.0};
-        const core::Vec2 incoming[]{sy, sx * -1.0, sy * -1.0, sx};
-        for (int i = 0; i < 4; ++i) {
-            vertices.push_back({corners[i] + incoming[i] * first});
-            vertices.push_back({corners[i] + outgoing[i] * second});
+        const std::array<core::Vec2, 4> outgoing{sx, sy, sx * -1.0, sy * -1.0};
+        const std::array<core::Vec2, 4> incoming{sy, sx * -1.0, sy * -1.0, sx};
+        for (std::size_t i = 0; i < corners.size(); ++i) {
+            vertices.push_back({corners.at(i) + incoming.at(i) * first});
+            vertices.push_back({corners.at(i) + outgoing.at(i) * second});
         }
     } else {
         for (const auto& corner : corners) {

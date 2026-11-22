@@ -19,6 +19,12 @@ protected:
 
     void point(double x, double y) { m_runner.submit(PointInput{{x, y}}); }
 
+    [[nodiscard]] const core::Document& document() const { return m_document; }
+
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
     [[nodiscard]] const core::Polyline& polyline() const {
         const auto& record = m_document.entities().front();
         return std::get<core::Polyline>(m_document.find(record.id)->entity);
@@ -34,9 +40,9 @@ private:
 TEST_F(RectangCommandTest, RegistersNameAndAliases) {
     for (const char* name : {"RECTANG", "REC", "RECTANGLE"}) {
         text(name);
-        EXPECT_EQ(m_runner.promptText(),
+        EXPECT_EQ(runner().promptText(),
                   "Specify first corner point or [Chamfer/Elevation/Fillet/Thickness/Width]:");
-        m_runner.submit(CancelInput{});
+        runner().submit(CancelInput{});
     }
 }
 
@@ -44,12 +50,12 @@ TEST_F(RectangCommandTest, DrawsClosedPolylineInOneUndoStep) {
     text("RECTANG");
     point(0.0, 0.0);
     point(40.0, 20.0);
-    ASSERT_EQ(m_document.entityCount(), 1U);
+    ASSERT_EQ(document().entityCount(), 1U);
     ASSERT_EQ(polyline().vertexCount(), 4U);
     EXPECT_TRUE(polyline().isClosed());
     EXPECT_EQ(polyline().vertices()[0].position, (core::Vec2{0.0, 0.0}));
     EXPECT_EQ(polyline().vertices()[2].position, (core::Vec2{40.0, 20.0}));
-    EXPECT_EQ(m_editor.undoName(), "Rectang");
+    EXPECT_EQ(editor().undoName(), "Rectang");
 }
 
 TEST_F(RectangCommandTest, RotationAndDimensionsUseExactCardinalDirections) {
