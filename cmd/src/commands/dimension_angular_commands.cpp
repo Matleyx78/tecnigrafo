@@ -10,6 +10,7 @@
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <limits>
@@ -191,8 +192,22 @@ Prompt DimangularCommand::prompt() const {
         case Stage::Location:
             return {"Specify dimension arc line location or [Mtext/Text/Angle/Quadrant]:",
                     {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}, {"Quadrant", "Q"}}};
-        case Stage::Text:
-            return {"Enter dimension text <>:", {}, PromptKind::Text};
+        case Stage::Text: {
+            const core::DimStyleTable& styles = m_document->dimStyles();
+            const core::DimVariables variables =
+                core::dimensionVariables(styles, styles.current(), currentOverrides(styles));
+            const core::Vec2 firstDirection = m_first.end - m_first.start;
+            const core::Vec2 secondDirection = m_second.end - m_second.start;
+            const double divisor = firstDirection.length() * secondDirection.length();
+            const double cosine =
+                std::clamp(-core::dot(firstDirection, secondDirection) / divisor, -1.0, 1.0);
+            std::string value = core::dimensionText(variables, core::DimensionKind::Angular,
+                                                    core::radiansToDegrees(std::acos(cosine)), {});
+            if (value.ends_with("%%d")) {
+                value.resize(value.size() - 3);
+            }
+            return {"Enter dimension text <" + value + ">:", {}, PromptKind::Text};
+        }
         case Stage::Angle:
             return {"Specify angle of dimension text:", {}, PromptKind::Angle};
         case Stage::Quadrant:
@@ -357,13 +372,13 @@ Prompt RadialDimensionCommand::prompt() const {
             const core::DimStyleTable& styles = m_document->dimStyles();
             const core::DimVariables variables =
                 core::dimensionVariables(styles, styles.current(), currentOverrides(styles));
-            const auto kind = m_kind == Kind::Radius ? core::DimensionKind::Radius
-                                                     : core::DimensionKind::Diameter;
             const double measurement = m_kind == Kind::Radius ? m_radius : 2.0 * m_radius;
-            return {"Enter dimension text <" +
-                        core::dimensionText(variables, kind, measurement, {}) + ">:",
-                    {},
-                    PromptKind::Text};
+            return {
+                "Enter dimension text <" +
+                    core::dimensionText(variables, core::DimensionKind::Linear, measurement, {}) +
+                    ">:",
+                {},
+                PromptKind::Text};
         }
         case Stage::Angle:
             return {"Specify angle of dimension text:", {}, PromptKind::Angle};
