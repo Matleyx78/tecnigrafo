@@ -77,29 +77,25 @@ dell'altezza `h` del pezzo:
    `0,2 · h` del pezzo sopralineato più alto (AutoCAD: 3,0 per `h` 2,5).
 4. **Interlinea con altezze diverse:** la distanza fra due linee di base è
    `5/3 · H · fattore d'interlinea`, con `H` la più grande altezza della riga
-   **sotto**; con altezze tutte uguali è quella dell'ADR 0046. **[D1]**
+   **sotto**; con altezze tutte uguali è quella dell'ADR 0046.
 5. **Frazioni:** i due testi hanno l'altezza del pezzo; il numeratore sta
    sopra, con la linea di base a `4/3 · h` dalla riga (AutoCAD: 1,337 · h), il
    denominatore sulla linea di base della riga; i due sono centrati sulla
    larghezza del pezzo; la linea di `/` è orizzontale a `7/6 · h` (AutoCAD:
    1,171 · h), larga quanto il pezzo; quella di
    `#` va dall'angolo in basso a sinistra a quello in alto a destra del pezzo;
-   `^` non ha linea. **[D1]**
+   `^` non ha linea.
 6. **Righe di decorazione:** sottolineato a `−0,2 · h`, sopralineato a
    `1,2 · h`, barrato a `0,5 · h` dalla linea di base, lunghe quanto il pezzo,
-   con il colore del pezzo. **[D1]**
+   con il colore del pezzo.
 
-**[D1]** I numeri dei punti 3–6 sono una proposta: AutoCAD li ricava dalle
-forme vere dei caratteri di Arial, e i DXF di prova non bastano a ricostruirli.
-Il responsabile decide fra: (a) queste regole, con i riferimenti calcolati da
-loro e dalle misure di Liberation Sans, e da AutoCAD solo la **struttura**
-(quali pezzi, quali formati, che cosa va sulla stessa riga quando le larghezze
-non cambiano la scelta); (b) prendere da AutoCAD anche le posizioni, con una
-tolleranza del confronto da fissare, sapendo che le larghezze differiscono del
-4,1 % e che il paragrafo largo 60 può andare a capo in punti diversi; (c)
-rimandare tutto a una scala dei font TrueType sull'altezza delle maiuscole di
-Arial, che cambierebbe ogni caso di testo dalla tappa 0.4 e sta fuori dalla
-0.8.1.
+I numeri dei punti 3–6 sono regole nostre, in unità dell'altezza: AutoCAD li
+ricava dalle forme vere dei caratteri di Arial, e i DXF di prova non bastano a
+ricostruirli. I riferimenti si calcolano da queste regole e dalle misure di
+Liberation Sans; da AutoCAD si prende solo la **struttura** (quali pezzi, quali
+formati, che cosa va sulla stessa riga quando le larghezze non cambiano la
+scelta) ([DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del
+piano della 0.8.1», punto 1).
 
 ### 4. Geometria generata
 
@@ -143,10 +139,10 @@ AutoCAD). Per l'oggetto scelto:
 - `INSERT` con attributi: per ogni attributo non costante, nell'ordine, `<etichetta>
   <valore>:`.
 
-Ogni modifica è un passo di annullamento. **[D2]** AutoCAD non ha una forma da
-riga di comando di `TEXTEDIT` (apre sempre l'editor o una finestra): questa è di
-Tecnigrafo, per gli script e per la verifica; il responsabile la conferma o la
-cambia.
+Ogni modifica è un passo di annullamento. AutoCAD non ha una forma da riga di
+comando di `TEXTEDIT` (apre sempre l'editor o una finestra): questa è di
+Tecnigrafo, per gli script e per la verifica ([DECISIONI.md](../DECISIONI.md),
+2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 2).
 
 ## Alternative considerate
 
@@ -154,7 +150,13 @@ cambia.
   misure del disegno; l'editor mostrerebbe a capo diversi da quelli salvati.
 - **Font diversi per ogni `\f`:** scartato dall'ADR 0013 e di nuovo dal
   responsabile (decisione citata, punto 1).
-- **Posizioni copiate da AutoCAD:** si veda **[D1]**, (b).
+- **Posizioni copiate da AutoCAD,** con una tolleranza del confronto: le
+  larghezze differiscono del 4,1 % e il paragrafo largo 60 può andare a capo in
+  punti diversi.
+- **Scala dei font TrueType sull'altezza delle maiuscole di Arial:** cambierebbe
+  ogni caso di testo dalla tappa 0.4; fuori dalla 0.8.1.
+- **`-TEXTEDIT` a parte per la riga di comando:** un comando che AutoCAD non
+  ha.
 
 ## Conseguenze
 

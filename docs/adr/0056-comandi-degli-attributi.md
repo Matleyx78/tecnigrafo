@@ -33,10 +33,11 @@ richieste e i risultati di AutoCAD.
 
 ### 2. `-ATTDEF` e `AFLAGS`
 
-- `AFLAGS` è un valore della **sessione**, come `PEDITACCEPT` (ADR 0050), con
-  i bit di AutoCAD (1 invisibile, 2 costante, 4 da verificare, 8 preimpostato,
-  16 posizione bloccata). **[D4]** All'avvio di AutoCAD 2021 vale 16; si propone
-  lo stesso valore.
+- `AFLAGS` è un valore della **sessione**, come `PEDITACCEPT` (ADR 0050), con i
+  bit di AutoCAD (1 invisibile, 2 costante, 4 da verificare, 8 preimpostato, 16
+  posizione bloccata). All'avvio vale 16, come in AutoCAD 2021 (*Lock position*
+  acceso; [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del
+  piano della 0.8.1», punto 4).
 - `-ATTDEF` (alias `ATT`, anche `ATTDEF`), con le richieste dell'AutoCAD
   italiano tradotte: `Current attribute modes: Invisible=N Constant=N
   Verify=N Preset=N Lock position=N`, `Enter an option to change
@@ -115,7 +116,7 @@ richieste e i risultati di AutoCAD.
 - **`BATTMAN` nel pacchetto di grafica a lato:** scartato dal responsabile, non
   è solo aspetto.
 - **`AFLAGS` a 0:** più comodo per chi scrive gli script, ma diverso da
-  AutoCAD **[D4]**.
+  AutoCAD; scartato dal responsabile.
 
 ## Conseguenze
 

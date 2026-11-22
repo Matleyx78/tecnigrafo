@@ -9,7 +9,7 @@
 - **Dipende da:** PT3, PT4, RT11
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0054](../../adr/0054-testo-formattato-ed-editor.md),
-  punti 5 e 6, con la decisione **[D2]**;
+  punti 5 e 6;
   [ADR 0056](../../adr/0056-comandi-degli-attributi.md), punto 4;
   [ADR 0047](../../adr/0047-quote-e-stili-di-quota.md) (testo sostitutivo);
   `cmd/src/commands/mtext_command.cpp`, `dimension_commands.cpp`,
@@ -53,8 +53,9 @@
 
 - File comuni: `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt`,
   `tests/CMakeLists.txt`.
-- **[D2]**: la forma da riga di comando di `TEXTEDIT` è di Tecnigrafo, come
-  l'ha decisa il responsabile.
+- La forma da riga di comando di `TEXTEDIT` è di Tecnigrafo, dentro `TEXTEDIT`,
+  come l'ADR 0054, punto 6 ([DECISIONI.md](../../DECISIONI.md), 2026-11-22,
+  «Decisioni D1–D10 del piano della 0.8.1», punto 2).
 
 ## Test richiesti
 

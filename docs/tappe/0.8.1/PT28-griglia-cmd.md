@@ -10,7 +10,7 @@
 - **Dipende da:** PT5, PT27, PT34, RT28
 - **Modulo:** `cmd` (più il campo `grid snap:` di `script`)
 - **Da leggere:** [ADR 0055](../../adr/0055-griglia-snap-alla-griglia-icona-ucs.md),
-  punti 3, 4 e 7, con la decisione **[D3]**;
+  punti 3, 4 e 7;
   [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 3, punto 6, e
   sezione 4, «Orto e polare», punto 3; `cmd/src/command_runner.cpp`
   (`aidedPoint`), `cmd/src/commands/aid_commands.cpp` (le variabili come
@@ -20,9 +20,11 @@
 
 Il responsabile registra in AutoCAD LT (seduta prima dell'apertura): le
 cronologie di `GRID`, `SNAP` e `UCSICON` con ogni opzione, i messaggi di `F7` e
-`F9`, e lo snap alla griglia con l'orto e con il polare **con clic veri** (la
-prova della #920 non valeva, punto 3 e 4 della seduta). Le richieste qui sotto
-si correggono con le parole tradotte di quelle cronologie.
+`F9`. Le richieste qui sotto si correggono con le parole tradotte di quelle
+cronologie. Lo snap alla griglia con orto, polare e tracciamento non si prova
+in AutoCAD: vale la regola di REGOLE-NUMERICHE.md
+([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+della 0.8.1», punto 3).
 
 ## File
 
@@ -46,8 +48,9 @@ si correggono con le parole tradotte di quelle cronologie.
 2. **Snap alla griglia** in `aidedPoint`, per i punti indicati (clic e
    puntatore della preview), non per quelli scritti: prima lo snap a oggetto
    (se trova un punto vince), poi il nodo (REGOLE-NUMERICHE.md, sezione 3,
-   punto 6), poi tracciamento, polare e orto sul nodo (sezione 4, punto 3, e
-   [D3]). Con `gridUnit` 0,0 il passo dello snap.
+   punto 6), poi tracciamento, polare e orto sul nodo (sezione 4, «Orto e
+   polare», punto 3, e «Tracciamento degli snap»); l'incrocio di due guide
+   resta il suo punto. Con `gridUnit` 0,0 il passo dello snap.
 3. Il campo `grid snap: unit=x,y base=x,y`, dopo `ortho:`, solo con lo snap
    acceso (annunciato da PT2).
 4. `F7` e `F9` sono dell'interfaccia (PT32): qui nessun tasto.
@@ -58,8 +61,8 @@ si correggono con le parole tradotte di quelle cronologie.
   `tests/CMakeLists.txt`. `command_runner.cpp` lo cambiano anche PT34 (prima) e
   PT31 (dopo).
 - Pareggi e riduzioni: [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md),
-  sezione 3, punto 6; con l'orto e il polare, la prova in AutoCAD LT del
-  responsabile.
+  sezione 3, punto 6; sezione 4, «Orto e polare», punto 3, e «Tracciamento
+  degli snap».
 
 ## Test richiesti
 

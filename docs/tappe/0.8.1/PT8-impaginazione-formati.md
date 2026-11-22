@@ -11,12 +11,14 @@
 - **Modulo:** `core` (più il campo `face=` delle risposte di `generated` in
   `script` e il ramo minimo di `render` che fa compilare la forma nuova)
 - **Da leggere:** [ADR 0054](../../adr/0054-testo-formattato-ed-editor.md),
-  punti 1, 3 e 4, con la decisione **[D1]** presa dal responsabile;
+  punti 1, 3 e 4, con l'impaginazione decisa dal responsabile
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+  della 0.8.1», punto 1);
   [ADR 0046](../../adr/0046-stili-di-testo-e-testo-multiriga.md), punto 2;
   [ADR 0044](../../adr/0044-entita-composte-e-geometria-generata.md), punto 2;
   `core/src/mtext_layout.cpp`, `core/src/mtext.cpp`, `core/src/dimension.cpp`,
-  `core/src/generated.cpp`; le schede sorelle [PT7](PT7-codici-di-formato.md)
-  e [PT10](PT10-modello-di-modifica.md)
+  `core/src/generated.cpp`; le schede sorelle [PT7](PT7-codici-di-formato.md) e
+  [PT10](PT10-modello-di-modifica.md)
 
 ## File
 
@@ -72,8 +74,10 @@
 
 ## Regole della tappa che valgono qui
 
-- **[D1]**: regole e numeri dell'ADR 0054, punto 3, come li ha decisi il
-  responsabile prima dell'apertura.
+- Regole e numeri dell'ADR 0054, punto 3: nostri, in unità dell'altezza, con le
+  misure di Liberation Sans; da AutoCAD solo la struttura
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+  della 0.8.1», punto 1).
 - A capo: «supererebbe» è il confronto stretto `>` (ADR 0046, punto 2).
 - File comuni: `script/src/new_entities_format.cpp` (solo il campo `face=`; gli
   altri campi della tappa li aggiungono PT15 e PT23).
@@ -130,8 +134,9 @@ D = DXF source=autocad-mtext-formati
   `sorgenti.json` (commit e SHA-256 in
   [dxf-di-prova.md](dxf-di-prova.md)).
 - **Dipendenze:** nessun comando; i valori attesi dei pezzi si calcolano con le
-  misure lette dai TTF in modo indipendente e con le regole di [D1]; da
-  AutoCAD, secondo [D1], la struttura o anche le posizioni.
+  misure lette dai TTF in modo indipendente e con le regole dell'ADR 0054,
+  punto 3; da AutoCAD solo la struttura (quali pezzi, quali formati, che cosa
+  sta sulla stessa riga), mai le posizioni.
 - **Risposte condivise** (controllate riga per riga): in
   `mtext/codici-semplici` cambiano `generated Groups` (`BC` sottolineato in un
   gruppo: tre pezzi e un `TextLine`), `generated Toggles` (sottolineato,

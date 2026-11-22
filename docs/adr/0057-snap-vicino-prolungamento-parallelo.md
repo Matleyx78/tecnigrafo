@@ -24,9 +24,11 @@ punti di *Vicino* su linea, arco, cerchio, polilinea ed ellisse.
 
 `core::SnapModes` ha `nearest`, `extension` e `parallel`, e `core::SnapKind`
 `Nearest`, `Extension` e `Parallel`. Tutti e tre **spenti** per difetto. Negli
-script `!osnap nea,ext,par`; nella domanda `snap` `modes=nea`. **[D5]**
-AutoCAD accende *Prolungamento* in `acadiso.dwt` (`OSMODE` 4133); acceso qui
-cambierebbe i casi del tracciamento che usano `!hover` su un estremo.
+script `!osnap nea,ext,par`; nella domanda `snap` `modes=nea`. AutoCAD accende
+*Prolungamento* in `acadiso.dwt` (`OSMODE` 4133); qui resta spento, perché
+acceso cambierebbe i casi del tracciamento che usano `!hover` su un estremo
+([DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano della
+0.8.1», punto 5).
 
 ### 2. *Vicino*
 
@@ -42,9 +44,11 @@ cambierebbe i casi del tracciamento che usano `!hover` su un estremo.
   l'apertura; solo dopo centro e inserimento
   ([REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md), sezione 4, «Selezione e snap
   a oggetto», punto 2).
-- **Pareggi:** **[D7]** fra due curve alla stessa distanza vince l'id più alto,
-  come il clic (ADR 0008, punto 2); dentro una polilinea il primo segmento, come
-  la domanda `closest`. Sono proposte: REGOLE-NUMERICHE.md non le ha.
+- **Pareggi:** fra due curve alla stessa distanza vince l'id più alto, come il
+  clic (ADR 0008, punto 2); dentro una polilinea il primo segmento, come la
+  domanda `closest` (REGOLE-NUMERICHE.md, sezione 4, «Selezione e snap a
+  oggetto», punto 2; [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni
+  D1–D10 del piano della 0.8.1», punto 7).
 
 ### 3. Acquisizione di *Prolungamento* e *Parallelo*
 
@@ -76,11 +80,13 @@ oggetto acceso.
   prendono il puntatore danno il loro **incrocio**, con l'intersezione delle
   rette di solid-space; un prolungamento d'arco incrocia le guide diritte con
   la stessa intersezione, sul tratto oltre l'estremo.
-- **Priorità:** come l'ADR 0049, punto 5: snap a oggetto, incrocio di due
-  guide, una guida, polare, orto. **[D6]** Pareggi proposti, da aggiungere a
-  REGOLE-NUMERICHE.md: a pari distanza (al quadrato, sezione 3) vince la guida
-  o l'incrocio che usa l'acquisizione più recente; fra la guida di un punto e
-  un prolungamento dello stesso istante, il prolungamento.
+- **Priorità:** come l'ADR 0049, punto 5: snap a oggetto, incrocio di due guide,
+  una guida, polare, orto. **Pareggi:** a pari distanza (al quadrato, sezione 3)
+  vince la guida o l'incrocio che usa l'acquisizione più recente; fra la guida
+  di un punto e un prolungamento della stessa acquisizione, il prolungamento
+  (REGOLE-NUMERICHE.md, sezione 4, «Tracciamento degli snap», punto 6;
+  [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano della
+  0.8.1», punto 6).
 - **Distanza scritta:** con una sola guida diritta che aggancia il puntatore
   (prolungamento di una linea o parallela), un numero scritto dà il punto a
   quella distanza dall'origine della guida (l'estremo o il punto base), verso
@@ -108,4 +114,4 @@ oggetto acceso.
 
 - La riga «Snap a oggetto» del catalogo di parità perde *vicino*,
   *prolungamento* e *parallelo* fra le mancanze.
-- Le regole di pareggio [D6] e [D7], decise, vanno in REGOLE-NUMERICHE.md.
+- Le regole di pareggio sono in REGOLE-NUMERICHE.md, sezione 4.

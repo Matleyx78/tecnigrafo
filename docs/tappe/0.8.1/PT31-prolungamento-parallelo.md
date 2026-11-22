@@ -11,7 +11,7 @@
 - **Modulo:** `cmd` (più `!osnap ext,par` e le righe del tracciamento in
   `script`)
 - **Da leggere:** [ADR 0057](../../adr/0057-snap-vicino-prolungamento-parallelo.md),
-  punti 3–5, con le decisioni **[D5]** e **[D6]**;
+  punti 3–5;
   [ADR 0049](../../adr/0049-tracciamento-degli-snap-a-oggetto.md);
   [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 3, punto 1, e
   sezione 4, «Tracciamento degli snap»; `cmd/src/object_tracking.hpp`,
@@ -47,8 +47,8 @@
 
 - Distanze al quadrato, pareggi del tracciamento:
   [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 3, punto 1, e
-  sezione 4, «Tracciamento degli snap», punti 1–5; **[D6]** per le guide nuove,
-  come lo decide il responsabile.
+  sezione 4, «Tracciamento degli snap», punti 1–5, e punto 6 per le guide
+  nuove.
 - `command_runner.cpp` lo cambiano prima PT34 e PT28.
 
 ## Test richiesti
@@ -102,5 +102,5 @@ linea fino a `18.9737,-53.6754` (seduta della #920, punto 6).
   polilinea, più acquisizioni) sono **da registrare** in AutoCAD prima
   dell'apertura (sezione 5 del piano).
 - **Risposte condivise:** nessuna: con *Prolungamento* e *Parallelo* spenti
-  per difetto ([D5]) i casi del tracciamento di oggi non acquisiscono nulla di
+  per difetto i casi del tracciamento di oggi non acquisiscono nulla di
   nuovo.

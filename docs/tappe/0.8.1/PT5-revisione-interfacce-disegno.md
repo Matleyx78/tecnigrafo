@@ -47,8 +47,10 @@ Ogni punto della lista, per ogni tipo e funzione e per ogni passaggio da una
 all'altra. Insisti su:
 
 - pareggi e priorità degli snap e delle guide nuove: dove la scheda rimanda a
-  REGOLE-NUMERICHE.md la regola c'è; le proposte [D3], [D6], [D7] degli ADR
-  vanno segnate come [decisione] se il responsabile non le ha ancora prese;
+  REGOLE-NUMERICHE.md la regola c'è, comprese quelle decise il 2026-11-22 (snap
+  alla griglia con il tracciamento, pareggi delle guide nuove e di *Vicino*:
+  [DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+  della 0.8.1», punti 3, 6 e 7);
 - lo stato del disegno fra documenti diversi (una sessione per documento,
   0.7.5-P28): chi cambia che cosa con `F7` e `F9` e che cosa si salva;
 - la vita degli `ATTRIB` nella sincronizzazione: handle, ordine, proprietà,

@@ -40,8 +40,9 @@
 
 ## Regole della tappa che valgono qui
 
-- **[D8]** come [PT35](PT35-rectang.md): direzioni con `cardinalSinCos`, se il
-  responsabile lo decide; `cos` e `sin` di `solid_space::robust`.
+- Come [PT35](PT35-rectang.md): direzioni con `cardinalSinCos`
+  ([REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 2, punto 1);
+  `cos` e `sin` di `solid_space::robust`.
 
 ## Test richiesti
 

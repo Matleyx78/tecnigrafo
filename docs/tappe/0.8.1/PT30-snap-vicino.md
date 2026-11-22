@@ -11,7 +11,7 @@
 - **Modulo:** `core` (più `!osnap nea`, `modes=nea` e il tipo `Nearest` in
   `script`)
 - **Da leggere:** [ADR 0057](../../adr/0057-snap-vicino-prolungamento-parallelo.md),
-  punti 1 e 2, con la decisione **[D7]**;
+  punti 1 e 2;
   [ADR 0033](../../adr/0033-nuovi-snap-e-tracciamento-polare.md), punto 5;
   [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 4, «Selezione e
   snap a oggetto»; `core/include/tg/core/snap_points.hpp`,
@@ -32,7 +32,7 @@
 
 ## Cosa fare
 
-1. I tre modi nuovi, spenti per difetto ([D5]); solo `nearest` fa qualcosa in
+1. I tre modi nuovi, spenti per difetto; solo `nearest` fa qualcosa in
    questo pacchetto.
 2. In `findSnap`, il livello di *Vicino* fra gli snap di punto e centro e
    inserimento (ADR 0057, punto 2): fra le curve entro l'apertura dal puntatore
@@ -46,8 +46,8 @@
 
 - Priorità: [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 4,
   «Selezione e snap a oggetto», punto 2.
-- **[D7]**: i pareggi fra due curve e dentro una polilinea, come li decide il
-  responsabile (proposta: l'id più alto; il primo segmento).
+- Pareggi di *Vicino*: fra due curve l'id più alto, dentro una polilinea il
+  primo segmento (stessa sezione, punto 2, «Pareggi di *Vicino*»).
 
 ## Test richiesti
 

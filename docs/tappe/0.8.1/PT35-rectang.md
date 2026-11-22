@@ -44,9 +44,8 @@
 ## Regole della tappa che valgono qui
 
 - Angoli digitati: [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 2,
-  punto 2. **[D8]** Direzioni calcolate dalla rotazione: proposta di usare
-  `cardinalSinCos` (sezione 2, punto 1), così una rotazione di 90° dà vertici
-  esatti; manca nel documento.
+  punto 2. Direzioni calcolate dalla rotazione con `cardinalSinCos` (sezione 2,
+  punto 1), così una rotazione di 90° dà vertici esatti.
 - Il bulge del raccordo con `solid_space::robust` (determinismo, ADR 0030).
 
 ## Test richiesti

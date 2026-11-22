@@ -53,7 +53,9 @@ della lista: è **determinato** dagli ADR, dalla scheda o dal codice di oggi
 - il modello delle proprietà: unità (gradi o radianti), valori rifiutati,
   proprietà derivate, e che cosa fa un cambiamento che rende l'entità non
   valida (raggio 0, rapporto > 1, blocco inesistente);
-- le decisioni [D1] e [D2] dell'ADR 0054, se le schede le danno per prese.
+- l'ADR 0054, punti 3 e 6, come li ha decisi il responsabile
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+  della 0.8.1», punti 1 e 2): che le schede li applichino.
 
 Non rivedi lo stile né le scelte già prese dagli ADR o dal responsabile: se una
 regola esistente risponde, la citi e vai avanti

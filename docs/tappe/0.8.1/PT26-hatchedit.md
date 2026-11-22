@@ -34,7 +34,9 @@
      angolo), proponendo i valori del retino, con lo stesso elenco di motivi
      (`ANSI31`, `NET`, `SOLID`; `withPattern` di PT23); aggiornano anche
      `HPNAME`, `HPSCALE`, `HPANG`, come AutoCAD, e il `-HATCH` successivo li
-     propone. Scala e angolo di un motivo non generabile secondo [D10].
+     propone. Scala e angolo di un motivo non generabile trasformano le sue
+     famiglie in proporzione (`withPattern` di PT23;
+     [REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 2, punto 9).
    - *Style*: `Enter hatching style [Ignore/Outer/Normal] <Normal>:` (il valore
      del retino); aggiorna `HPISLANDDETECTION`.
    - *Origin*: `[Use current origin/Set new origin] <Use current origin>:`;

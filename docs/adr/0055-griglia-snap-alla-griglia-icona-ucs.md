@@ -76,10 +76,11 @@ cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` sono **da registrare**
   [REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md), sezione 3, punto 6. Le
   coordinate scritte non si toccano.
 - Uno snap a oggetto trovato vince sulla griglia.
-- Con l'orto, il polare o il tracciamento il punto va **prima** sul nodo, poi
-  le guide lo proiettano (REGOLE-NUMERICHE.md, sezione 4, «Con lo snap alla
-  griglia»). **[D3]** Per il tracciamento la regola non c'è: questa è una
-  proposta, da confermare insieme alla prova in AutoCAD LT di orto e polare.
+- Con l'orto, il polare o il tracciamento il punto va **prima** sul nodo, poi le
+  guide lo proiettano (REGOLE-NUMERICHE.md, sezione 4, «Con lo snap alla
+  griglia», e «Tracciamento degli snap»); l'incrocio di due guide resta il suo
+  punto. Nessuna prova in AutoCAD LT ([DECISIONI.md](../DECISIONI.md),
+  2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 3).
 - Con `gridUnit` 0,0 la griglia ha il passo dello snap.
 
 ### 5. Disegno della griglia
@@ -89,11 +90,15 @@ cronologie di `GRID`, `SNAP`, `UCSICON`, `F7` e `F9` sono **da registrare**
 - **Adattiva** (bit 2): quando le linee secondarie sarebbero più vicine di
   `SceneStyle::minGridSpacingPx`, si mostrano solo le principali; quando anche
   quelle lo sarebbero, il passo si moltiplica per `gridMajor` finché non lo è
-  più. Senza il bit, sotto la soglia la griglia non si disegna. **[D9]** Con
-  `gridMajor` 1 moltiplicare non serve: si propone che sotto la soglia la
-  griglia non si disegni e che non si suddivida; da confermare in AutoCAD.
+  più. Senza il bit, sotto la soglia la griglia non si disegna. Con `gridMajor`
+  1 moltiplicare non servirebbe: il passo si moltiplica per 5 (il `gridMajor` di
+  `acadiso.dwt`), così la griglia resta visibile e si capisce che il punto è
+  guidato dallo snap ([REGOLE-NUMERICHE.md](../REGOLE-NUMERICHE.md), sezione 3,
+  punto 7; [DECISIONI.md](../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del
+  piano della 0.8.1», punto 9).
 - **Suddivisione** (bit 4, con il 2): ingrandendo, quando una maglia supera
-  `gridMajor · minGridSpacingPx` si divide per `gridMajor`, mai sotto lo snap.
+  `gridMajor · minGridSpacingPx` si divide per `gridMajor`, mai sotto lo snap;
+  con `gridMajor` 1 non si suddivide.
 - La griglia si disegna su tutta la vista (non ci sono limiti).
 
 ### 6. Icona dell'UCS

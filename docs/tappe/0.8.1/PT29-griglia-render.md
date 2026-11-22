@@ -23,8 +23,10 @@
 
 1. La griglia legge `document.grid()`: niente griglia con `gridOn` spento;
    passo `gridUnit` (o `snapUnit` con 0,0), principale ogni `gridMajor`,
-   adattiva e suddivisione come l'ADR 0055, punto 5, con `gridMajor` 1 come
-   lo decide il responsabile (**[D9]**). `gridSpacing` e il passo
+   adattiva e suddivisione come l'ADR 0055, punto 5; con `gridMajor` 1 il
+   passo si dirada per 5 e non si suddivide
+   ([REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 3, punto 7).
+   `gridSpacing` e il passo
    automatico spariscono.
 2. ```cpp
    struct AxisFrame {
@@ -48,8 +50,9 @@
 ## Test richiesti
 
 - Pittore di prova: griglia spenta; passi 5,10; adattiva a due zoom;
-  suddivisione; `GRIDMAJOR` 10 e `GRIDMAJOR` 1 a due zoom; icona nell'origine, nell'angolo con l'origine
-  fuori vista e sul bordo; `UCSICON` 0 e 1; `AxesStyle::Lines`.
+  suddivisione; `GRIDMAJOR` 10 e `GRIDMAJOR` 1 a due zoom (con 1 il passo
+  diradato per 5, mai la griglia sparita); icona nell'origine, nell'angolo con
+  l'origine fuori vista e sul bordo; `UCSICON` 0 e 1; `AxesStyle::Lines`.
 
 ## Fatto quando
 

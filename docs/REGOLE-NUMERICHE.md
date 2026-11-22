@@ -89,18 +89,21 @@ proposte di metodo della 0.8»).
 
 ## 2. Angoli
 
-1. **Direzioni e quarti di giro esatti.** `cardinalSinCos`
-   (`tg/core/math.hpp`) dà `sinCos(angolo)`, ma una componente sotto `2^-48` in
-   modulo diventa esattamente 0 e l'altra esattamente ±1, con il suo segno. La
-   usano le direzioni delle famiglie dei retini (anche dopo `ROTATE` e `MIRROR`
-   e per lo scostamento calcolato dai `.pat`) e `Similarity::matrix`, per
-   rotazione e riflessione: `ROTATE` di un multiplo di 90° e `MIRROR` su un asse
-   a un multiplo di 45° danno coordinate esatte, per gli angoli digitati e per
-   quelli entro la fascia dichiarata nel commento di `cardinalSinCos`. Fuori da
-   quella fascia, un angolo calcolato dà il risultato di `sinCos`
+1. **Direzioni e quarti di giro esatti.** `cardinalSinCos` (`tg/core/math.hpp`)
+   dà `sinCos(angolo)`, ma una componente sotto `2^-48` in modulo diventa
+   esattamente 0 e l'altra esattamente ±1, con il suo segno. La usano le
+   direzioni delle famiglie dei retini (anche dopo `ROTATE` e `MIRROR` e per lo
+   scostamento calcolato dai `.pat`), `Similarity::matrix`, per rotazione e
+   riflessione, e dalla tappa 0.8.1 le direzioni calcolate di `RECTANG`
+   (*Rotation*) e di `POLYGON`: `ROTATE` di un multiplo di 90°, `MIRROR` su un
+   asse a un multiplo di 45° e i vertici di `RECTANG` e `POLYGON` a un quarto di
+   giro danno coordinate esatte, per gli angoli digitati e per quelli entro la
+   fascia dichiarata nel commento di `cardinalSinCos`. Fuori da quella fascia,
+   un angolo calcolato dà il risultato di `sinCos`
    ([DECISIONI.md](DECISIONI.md), 2026-11-12, «Direzioni cardinali esatte delle
    righe dei motivi» e «Quarti di giro esatti»;
-   [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punti 1 e 4).
+   [0.8-PT1](tappe/0.8/PT1-trigonometria-1.md), punti 1 e 4; per `RECTANG` e
+   `POLYGON` 2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 8).
 2. **Angoli in gradi ridotti a un giro, prima della conversione.**
    `reducedDegreesToRadians`, con un argomento finito, riduce l'angolo
    a [0, 360) con `std::fmod` (esatto), aggiunge 360 a un resto negativo, porta a +0
@@ -169,6 +172,17 @@ proposte di metodo della 0.8»).
      della correzione è libero e deterministico, con `Direct` e con
      `AcrossStart` ([DECISIONI.md](DECISIONI.md), 2026-11-03, «P15, terzo
      verbale: fascia del cerchio al taglio 0/2π»).
+9. **Scala e angolo di un retino con un motivo non generabile** (dalla tappa
+   0.8.1). Per un motivo letto dal DXF che il programma non genera, cambiare
+   la scala da `s` a `s'` e l'angolo da `a` ad `a'` trasforma le famiglie del
+   file in proporzione, con `k = s' / s` e `Δ = a' − a`: il gruppo 53 di ogni
+   famiglia diventa `a53 + Δ`, ridotto a un giro (punto 2); il punto base
+   (43/44) diventa `o + R(Δ) · k · (b − o)`, con `o` l'origine del retino;
+   lo scostamento (45/46) `R(Δ) · k · v`; i trattini (49) `k · l`. `R(Δ)` usa
+   `cardinalSinCos` di `Δ` ridotto (punto 1), così un quarto di giro è
+   esatto; le scale non finite o non positive si rifiutano
+   ([DECISIONI.md](DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+   della 0.8.1», punto 10).
 
 ## 3. Distanze e punti indicati
 
@@ -218,6 +232,14 @@ proposte di metodo della 0.8»).
    snap, e uno snap a oggetto trovato vince sulla griglia
    ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato, griglia, snap
    e attributi della 0.8.1», punto 5).
+7. **Griglia adattiva con `GRIDMAJOR` 1** (dalla tappa 0.8.1). Con la griglia
+   adattiva e `GRIDMAJOR` 1 il passo mostrato si moltiplica per 5 (il
+   `GRIDMAJOR` di `acadiso.dwt`) finché le linee non distano almeno
+   `SceneStyle::minGridSpacingPx`; ingrandendo non si suddivide. Con gli altri
+   valori di `GRIDMAJOR` vale
+   l'[ADR 0055](adr/0055-griglia-snap-alla-griglia-icona-ucs.md), punto 5
+   ([DECISIONI.md](DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano della
+   0.8.1», punto 9).
 
 ## 4. Pareggi fra candidati
 
@@ -239,6 +261,10 @@ proposte di metodo della 0.8»).
    compresi) ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Testo formattato,
    griglia, snap e attributi della 0.8.1», punto 6, ed «Esiti dei DXF di prova
    e della seduta della 0.8.1», punti 1 e 7).
+   **Pareggi di *Vicino*:** a pari distanza dal puntatore fra due curve vince
+   l'id più alto, come il clic; dentro una polilinea il primo segmento, come
+   la domanda `closest` ([DECISIONI.md](DECISIONI.md), 2026-11-22, «Decisioni
+   D1–D10 del piano della 0.8.1», punto 7).
 3. **Identificativo di un'intersezione:** il punto di una coppia porta il
    maggiore dei due identificativi; un'autointersezione porta quello della
    polilinea ([DECISIONI.md](DECISIONI.md), 2026-11-03, «Revisione P15: angoli
@@ -261,9 +287,10 @@ proposte di metodo della 0.8»).
    polare»).
 3. **Con lo snap alla griglia** (dalla tappa 0.8.1): il punto del puntatore va
    prima sul nodo (sezione 3, punto 6), poi l'orto o il polare lo proiettano;
-   con l'orto un nodo resta un nodo. Da confermare con una prova in AutoCAD LT
-   prima del pacchetto ([DECISIONI.md](DECISIONI.md), 2026-11-21, «Esiti dei
-   DXF di prova e della seduta della 0.8.1», punto 5).
+   con l'orto un nodo resta un nodo ([DECISIONI.md](DECISIONI.md), 2026-11-21,
+   «Esiti dei DXF di prova e della seduta della 0.8.1», punto 5, senza la
+   prova in AutoCAD LT dal 2026-11-22, «Decisioni D1–D10 del piano della
+   0.8.1», punto 3).
 
 ### Tracciamento degli snap
 
@@ -292,8 +319,20 @@ puntatore (confrontata al quadrato, sezione 3):
    acquisita: vince quello la cui guida è del punto acquisito più di recente
    ([DECISIONI.md](DECISIONI.md), 2026-11-14, «Pareggio fra due incroci con il
    polare»).
+6. **guide nuove della 0.8.1** (prolungamenti e parallele,
+   [ADR 0057](adr/0057-snap-vicino-prolungamento-parallelo.md), punto 4): vince la
+   guida, o l'incrocio, che usa l'acquisizione più recente; fra guide della
+   stessa acquisizione (la sosta su un estremo acquisisce il punto e il suo
+   prolungamento) vince il prolungamento ([DECISIONI.md](DECISIONI.md),
+   2026-11-22, «Decisioni D1–D10 del piano della 0.8.1», punto 6).
 
-(Tutti in [0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3.)
+(I punti 1–5 in [0.8-PT34](tappe/0.8/PT34-otrack-cmd.md), punto 3.)
+
+**Con lo snap alla griglia** (dalla tappa 0.8.1): come per l'orto e il polare,
+il punto del puntatore va prima sul nodo (sezione 3, punto 6), poi una guida
+lo proietta; l'incrocio di due guide resta il suo punto, senza nodo
+([DECISIONI.md](DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano della
+0.8.1», punto 3).
 
 ### `JOIN`
 

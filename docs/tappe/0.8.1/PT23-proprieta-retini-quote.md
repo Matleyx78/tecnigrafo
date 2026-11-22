@@ -37,9 +37,12 @@
    [[nodiscard]] Hatch withPatternOrigin(const Hatch& hatch, const Vec2& origin);
    [[nodiscard]] EntityExtras withPatternOriginXdata(EntityExtras extras, const Vec2& origin);
    // The hatch with another predefined pattern, scale or angle: the families
-   // regenerated from the pattern, with the same origin; nullopt for a name
-   // that predefinedPatternLines() cannot generate (today ANSI31 and NET;
-   // SOLID gives a solid fill).
+   // regenerated from the pattern, with the same origin. With the hatch's own
+   // pattern name when predefinedPatternLines() cannot generate it, the
+   // families of the file transformed in proportion to the new scale and
+   // angle (docs/REGOLE-NUMERICHE.md, section 2, point 9). nullopt for any
+   // other name that cannot be generated (today ANSI31 and NET; SOLID gives a
+   // solid fill) and for a scale, old or new, that is not finite and positive.
    [[nodiscard]] std::optional<Hatch> withPattern(const Hatch& hatch, std::string_view name,
                                                   double scale, double angle);
    ```
@@ -47,7 +50,10 @@
    primi tre con `withPattern`, quindi `pattern` accetta solo i motivi che
    `predefinedPatternLines` genera (`ANSI31`, `NET`) e `SOLID`, come la scelta
    del motivo di `-HATCH`; un altro nome è rifiutato. `scale` e `angle` di un
-   retino con un motivo letto dal DXF ma non generabile seguono **[D10]**; `origin` con le due funzioni del punto 1;
+   retino con un motivo letto dal DXF ma non generabile trasformano le sue
+   famiglie in proporzione, con lo stesso `withPattern`
+   ([REGOLE-NUMERICHE.md](../../REGOLE-NUMERICHE.md), sezione 2, punto 9);
+   `origin` con le due funzioni del punto 1;
    `islands` cambia lo stile; `~area` è l'area della regione piena (pari e
    dispari) con lo stile delle isole. `SOLID` come nome dà un riempimento pieno.
 3. **`DIMENSION`** (`style`, `text`, `text-rotation`, `~measurement`): lo stile
@@ -72,7 +78,8 @@
 
 - Origine, scala, angolo e stile dei retini di `autocad-hatchedit` (il cambio a
   `ANSI37` di quel DXF resta fuori: `ANSI37` non si genera); scala e angolo di
-  un retino con un motivo non generabile, secondo [D10]; l'area di un rettangolo con un foro; una quota con lo
+  un retino con un motivo non generabile (famiglie in proporzione, un quarto
+  di giro esatto); l'area di un rettangolo con un foro; una quota con lo
   stile cambiato e una con il testo `<> mm`.
 
 ## Fatto quando

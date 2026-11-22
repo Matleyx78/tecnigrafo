@@ -9,7 +9,7 @@
 - **Dipende da:** PT15, RT14
 - **Modulo:** `cmd`
 - **Da leggere:** [ADR 0056](../../adr/0056-comandi-degli-attributi.md),
-  punto 2, con la decisione **[D4]**; `cmd/src/commands/text_command.cpp`
+  punto 2; `cmd/src/commands/text_command.cpp`
   (le domande di `TEXT` da riusare); `cmd/src/commands/pedit_command.cpp`
   (`PEDITACCEPT`, un valore della sessione); la cronologia
   `autocad-attributi.txt` ([dxf-di-prova.md](dxf-di-prova.md))
@@ -28,7 +28,7 @@
 ## Cosa fare
 
 1. `AFLAGS` come valore della sessione (`Enter new value for AFLAGS <16>:`,
-   da 0 a 31), con il valore iniziale di [D4].
+   da 0 a 31), che all'avvio vale 16.
 2. `-ATTDEF` (alias `ATT`, anche `ATTDEF`) con le richieste dell'ADR 0056,
    punto 2, nell'ordine della cronologia; *Justify* e *Style* come `TEXT`;
    l'`ATTDEF` entra nel disegno sul layer e con le proprietà correnti, con
@@ -42,7 +42,9 @@
   `CommandDefaults`, e la riga di `CommandRunner::setDocumentFile` non serve:
   `defaults` si copia intero), `cmd/src/builtin_commands.cpp`,
   `cmd/CMakeLists.txt`, `tests/CMakeLists.txt`.
-- **[D4]**: `AFLAGS` iniziale come lo decide il responsabile.
+- `AFLAGS` all'avvio vale 16, come AutoCAD 2021
+  ([DECISIONI.md](../../DECISIONI.md), 2026-11-22, «Decisioni D1–D10 del piano
+  della 0.8.1», punto 4).
 
 ## Test richiesti
 
