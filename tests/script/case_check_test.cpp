@@ -485,11 +485,7 @@ TEST(CheckCase, StageEightOneAnnouncedQuestionsArePending) {
         "H = HATCH pattern=\"SOLID\" solid=yes loop=external+polyline vertex=0,0 vertex=1,0 "
         "vertex=1,1 vertex=0,1\n";
     constexpr std::array<std::string_view, 5> kForms{
-        "grid D",
-        "attdisp D",
-        "properties A",
-        "set-property A width=1",
-        "pattern-lines H",
+        "grid D", "attdisp D", "properties A", "set-property A width=1", "pattern-lines H",
     };
     for (const std::string_view form : kForms) {
         SCOPED_TRACE(form);
