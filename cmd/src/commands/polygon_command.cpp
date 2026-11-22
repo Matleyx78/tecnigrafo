@@ -29,7 +29,7 @@ CommandDescription PolygonCommand::description() {
             {"POL"},
             "Draws a regular closed polygon.",
             false,
-            {{"sides", "Enter number of sides <{default}>:", ValueType::Integer, {}, true},
+            {{"sides", "Enter number of sides <{default}>:", ValueType::Real, {}, true},
              {"center",
               "Specify center of polygon or [Edge]:",
               ValueType::Point,

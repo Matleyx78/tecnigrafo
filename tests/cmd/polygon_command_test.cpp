@@ -25,7 +25,8 @@ protected:
     void text(const char* value) { m_runner.submitText(value); }
 
     [[nodiscard]] const core::Polyline& polygon() const {
-        return std::get<core::Polyline>(m_document.entities().back().entity);
+        const core::EntityId id = m_document.entities().back().id;
+        return std::get<core::Polyline>(m_document.find(id)->entity);
     }
 
     [[nodiscard]] CommandRunner& runner() { return m_runner; }
