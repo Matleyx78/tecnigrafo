@@ -1,0 +1,31 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCHEDIT (PT26, #973), Origin, Set new origin 245,5, not stored (autocad-hatchedit.txt, d):
+; the families move and the ACAD XDATA 1010/1020 is written (PT23, origin= of the report).
+; U puts back families and XDATA in one step (no origin=: the hatch had no XDATA), REDO again.
+; With No the session HPORIGIN stays 0,0: the next -HATCH makes a hatch without origin=.
+LINE
+0,0
+60,0
+60,40
+0,40
+C
+CIRCLE
+30,20
+8
+-HATCH
+5,5
+
+-HATCHEDIT
+10,10
+O
+S
+245,5
+N
+!report
+U
+!report
+REDO
+-HATCH
+5,5
+

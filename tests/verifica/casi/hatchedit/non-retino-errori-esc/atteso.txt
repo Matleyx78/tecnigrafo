@@ -1,0 +1,96 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=60,0
+  258 LINE start=60,0 end=60,40
+  259 LINE start=60,40 end=0,40
+  260 LINE start=0,40 end=0,0
+  261 CIRCLE center=30,20 radius=8
+  262 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=outer loop=external+derived+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40 loop=outermost+derived+edges circle=30,20;8 seed=5,5
+  263 LINE start=100,0 end=120,0
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 60,0
+  Specify next point or [Undo]: 60,40
+  Specify next point or [Close/Undo]: 0,40
+  Specify next point or [Close/Undo]: C
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 30,20
+  Specify radius of circle or [Diameter]: 8
+  Command: -HATCH
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]: 5,5
+  Selecting everything...
+  Selecting everything visible...
+  Analyzing the selected data...
+  Analyzing internal islands...
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]:
+  Command: LINE
+  Specify first point: 100,0
+  Specify next point or [Undo]: 120,0
+  Specify next point or [Undo]:
+  Command: HE
+  Select hatch object: 110,0
+  The selected object must be an associative hatch object.
+  Select hatch object: 10,10
+  Enter hatch option [Style/Properties/Origin] <Properties>: P
+  Enter a pattern name or [Solid] <ANSI31>: PIPPO
+  Unknown pattern name.
+  Enter a pattern name or [Solid] <ANSI31>: NET
+  Specify a scale for the pattern <1.0000>: 0
+  Value must be positive and nonzero.
+  Specify a scale for the pattern <1.0000>: 2
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Hatch
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  HATCH 1
+  LINE 5
+
+[final]
+entities:
+  257 LINE start=0,0 end=60,0
+  258 LINE start=60,0 end=60,40
+  259 LINE start=60,40 end=0,40
+  260 LINE start=0,40 end=0,0
+  261 CIRCLE center=30,20 radius=8
+  262 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=outer loop=external+derived+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40 loop=outermost+derived+edges circle=30,20;8 seed=5,5
+  263 LINE start=100,0 end=120,0
+messages:
+  Command: -HATCHEDIT
+  Select hatch object: 10,10
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Hatch
+  Line
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  HATCH 1
+  LINE 5

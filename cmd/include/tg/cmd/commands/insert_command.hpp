@@ -49,13 +49,16 @@ private:
         XyzY,
         XyzZ,
         ScaleY,
-        Rotation
+        Rotation,
+        Attribute,
+        Verify
     };
 
     Status handleName(CommandContext& context, const Input& input);
     Status handlePoint(CommandContext& context, const Input& input);
     Status handleScale(CommandContext& context, const Input& input);
     Status handleRotation(CommandContext& context, const Input& input);
+    Status handleAttribute(CommandContext& context, const Input& input);
     /// Accepts the block `name` of the drawing, with the unit factor of its
     /// definition.
     void choose(CommandContext& context, const std::string& name);
@@ -72,6 +75,9 @@ private:
     Status advance(CommandContext& context);
     /// Inserts at the insertion point `point` and ends the command.
     Status finish(CommandContext& context, const core::Vec2& point);
+    /// Starts the attribute questions, or inserts immediately when ATTREQ is
+    /// zero or the definition has no values to ask for.
+    Status askAttributes(CommandContext& context);
     /// The insert as it would be added now, at `point`.
     [[nodiscard]] core::Insert insertAt(const core::Vec2& point) const;
     void updatePreview();
@@ -91,8 +97,37 @@ private:
     std::optional<double> m_scaleZ;  ///< given with XYZ, kept as group 43
     double m_rotation{0.0};
     bool m_keepOnCancel{false};  ///< name=path: Esc keeps the definition
+
+    struct AttributeQuestion {
+        std::size_t index;
+        std::string prompt;
+        bool verify;
+    };
+
+    std::vector<core::Attribute> m_attributes;
+    std::vector<AttributeQuestion> m_questions;
+    std::size_t m_question{0};
     std::optional<core::Vec2> m_pointer;
     std::vector<core::Entity> m_preview;
+};
+
+/// ATTREQ: whether -INSERT asks for attribute values. It is a session value,
+/// one at start-up, and opens no undo step (docs/adr/0056, point 3).
+class AttreqCommand final : public Command {
+public:
+    void start(CommandContext& context) override;
+    Status handle(CommandContext& context, const Input& input) override;
+
+    void pointerMoved(const core::Vec2& point) override { (void)point; }
+
+    [[nodiscard]] Prompt prompt() const override;
+
+    [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
+
+    [[nodiscard]] static CommandDescription description();
+
+private:
+    bool m_value{true};
 };
 
 }  // namespace tg::cmd

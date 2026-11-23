@@ -532,6 +532,9 @@ private:
     QAction* m_perpendicularAction{nullptr};
     QAction* m_tangentAction{nullptr};
     QAction* m_quadrantAction{nullptr};
+    // The modes without a switch in the menu yet (nearest, extension,
+    // parallel): the last ones set by the scripts, until PT32 adds them.
+    core::SnapModes m_modesWithoutSwitch;
     QToolButton* m_environmentIndicator{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};

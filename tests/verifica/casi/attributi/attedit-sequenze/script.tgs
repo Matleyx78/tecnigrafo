@@ -1,0 +1,72 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; The four -ATTEDIT sequences recorded in autocad-attributi.scr and
+; autocad-attributi.txt (AutoCAD 2021), translated by ADR 0056, point 4.
+; The CC0 drawing is the saved result of those sequences. Repeating the same
+; choices exercises every option and the locked-position rejection; four U
+; commands verify that each complete -ATTEDIT invocation is one undo step.
+OPEN
+@sources/autocad-attributi
+; cambia con #958
+-ATTEDIT
+Y
+COMPONENTE
+CODICE
+*
+C
+-1,-41
+41,-19
+V
+R
+K11
+P
+5,-27
+H
+3.5
+A
+15
+S
+ARIAL
+L
+ATTRIBUTI
+C
+1
+N
+-ATTEDIT
+Y
+COMPONENTE
+SIGLA
+*
+C
+119,-41
+161,-19
+V
+C
+30
+31
+P
+N
+-ATTEDIT
+N
+N
+COMPONENTE
+NOTA
+*
+cablare
+verificare
+-ATTEDIT
+N
+Y
+*
+CODICE
+K*
+C
+-1,-41
+161,-19
+K
+KA
+U
+U
+U
+U
+NEW

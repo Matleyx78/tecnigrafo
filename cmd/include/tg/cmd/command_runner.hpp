@@ -359,6 +359,9 @@ public:
     /// Passing nullptr selects the runner's own file.
     void setDocumentFile(edit::DocumentFile* file);
 
+    /// Carries session variables to a newly opened drawing's runner.
+    void setDefaults(CommandDefaults defaults) { context().defaults = std::move(defaults); }
+
     /// The active file, either borrowed or owned by the runner.
     [[nodiscard]] const edit::DocumentFile& documentFile() const { return context().file; }
 
