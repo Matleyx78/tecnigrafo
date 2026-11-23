@@ -241,7 +241,7 @@ TEST(SceneRendererGrid, MajorOneUsesFiveAndNeverDisappears) {
     grid.gridDisplay = 6;
     grid.gridMajor = 1;
     document.setGrid(grid);
-    for (const auto [scale, expectedSpacing] :
+    for (const auto& [scale, expectedSpacing] :
          std::array{std::pair{0.1, 12.5}, std::pair{100.0, 100.0}}) {
         RecordingPainter painter;
         renderScene(document, furnitureViewport(scale), gridStyle(), painter);
