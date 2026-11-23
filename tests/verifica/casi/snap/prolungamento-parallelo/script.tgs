@@ -1,0 +1,26 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Extension and Parallel dry run from PT31. Values are calculated from the source geometry.
+!view 0,-60 0.05 800x600
+!osnap ext,par
+LINE
+0,-50
+30,-50
+
+LINE
+0,-80
+30,-70
+
+LINE
+!hover 30,-50
+!move 38,-50.2
+!report
+10
+
+LINE
+0,-60
+!hover 15,-75
+!move 17,-54
+!report
+20
+
