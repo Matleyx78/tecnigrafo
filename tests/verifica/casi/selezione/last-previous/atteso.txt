@@ -63,8 +63,8 @@ messages:
   Select objects:
   Command: ERASE
   Select objects: W
-  Specify first corner: 40,-20
-  Specify opposite corner: 60,0
+  Specify first corner: 40,-10
+  Specify opposite corner: 60,10
   1 found, 1 total
   Select objects:
   Command: SELECT
