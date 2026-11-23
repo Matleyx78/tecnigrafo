@@ -3,4 +3,3 @@ mtext/spaziatura #953
 mtext/decorazioni-senza-snap #953
 mtext/righe-e-similitudine #953
 mtext/formati-autocad #953
-mtext/codici-semplici #953

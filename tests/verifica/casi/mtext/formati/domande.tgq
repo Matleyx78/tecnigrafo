@@ -7,6 +7,7 @@
 ; advance(A)=1479. Coordinates below apply the layout ratios in ADR 0054.3.
 
 Bold = MTEXT insertion=0,0 height=2.5 width=0 attachment=top-left rotation=0 style="Standard" value="A{\\fArial|b1|i0|c0|p34;A}"
+; cambia con #953
 ? generated Bold -> TEXT position=0,-2.5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" ~box=0,-3.270049680624557;2.423704755145493,0.789567068843151;0,0.789567068843151; TEXT position=2.423704755145493,-2.5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A" face=bold ~box=2.423704755145493,-3.270049680624557;5.047906316536551,-3.270049680624557;5.047906316536551,0.789567068843151;2.423704755145493,0.789567068843151
 
 Overline = MTEXT insertion=0,10 height=2.5 width=0 attachment=top-left rotation=0 style="Standard" value="{\\OA}"

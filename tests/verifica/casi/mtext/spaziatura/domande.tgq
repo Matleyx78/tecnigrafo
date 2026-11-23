@@ -5,6 +5,7 @@
 ; glyphs too. Values use advance(A)=advance(B)=1366 and cap=1409.
 
 Tracking = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="{\\T2;AB}"
+; cambia con #953
 ? generated Tracking -> TEXT position=0,-1 alignment-point=0,0 height=1 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="AB" face=regular ~box=0,-1.308019872249823;3.877927608232789,-1.308019872249823;3.877927608232789,0.3158268275372604;0,0.3158268275372604
 Wide = MTEXT insertion=0,10 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="{\\W2;AB}"
 ? generated Wide -> TEXT position=0,9 alignment-point=0,0 height=1 rotation=0 width-factor=2 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="AB" ~box=0,8.691980127750178;3.877927608232789,8.691980127750178;3.877927608232789,10.31582682753726;0,10.31582682753726

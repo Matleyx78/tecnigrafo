@@ -5,6 +5,7 @@
 ; and absolute formatted heights remain absolute under a similarity.
 
 Rows = MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A{\\C1;B}{\\fArial|b1|i0|c0|p34;C}"
+; cambia con #953
 ? entity Rows -> MTEXT insertion=0,0 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A{\\C1;B}{\\fArial|b1|i0|c0|p34;C}" ~lines=1
 Empty = MTEXT insertion=0,10 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\P\\PB\\P"
 ? entity Empty -> MTEXT insertion=0,10 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="A\\P\\PB\\P" ~lines=2

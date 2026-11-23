@@ -9,6 +9,7 @@ T = MTEXT insertion=0,10 height=2.5 width=0 attachment=top-left rotation=0 style
 L = LINE start=0,0 end=40,0
 !endblock
 I = INSERT block="TARGA" insertion=0,0 scale=1,1 rotation=0
+; cambia con #953
 ? snap 0.1,7 aperture=0.5 modes=endpoint,midpoint,intersection,nearest -> none
 ? snap 0.1,0.1 aperture=0.5 modes=endpoint,midpoint,intersection,nearest -> Endpoint 0,0
 ? snap 0.1,7 aperture=0.5 modes=insertion -> none
