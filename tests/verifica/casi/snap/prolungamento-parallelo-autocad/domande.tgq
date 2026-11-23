@@ -7,7 +7,7 @@
 D = DXF source=autocad-prolungamento-parallelo
 ? version D -> AC1032
 ? units D -> 4
-? count D -> ARC 2, LINE 19, LWPOLYLINE 2
+? count D -> ARC 2; LINE 19; LWPOLYLINE 2
 ? unhandled D -> none
 ; Extension beyond both ends of a line, an arc and an open polyline.
 ? entity D 97 -> LINE start=48,36 end=48,26
