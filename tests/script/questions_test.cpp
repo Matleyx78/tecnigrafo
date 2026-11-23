@@ -453,6 +453,23 @@ TEST(Questions, FaceSelectsTheFontVariant) {
     }
 }
 
+// nea of PT30: only the question snap takes it, and Nearest stays off without
+// it (docs/verifica/domande.md).
+TEST(Questions, SnapTakesNearestWithNea) {
+    expectAnswer("snap 5,0.25 aperture=1 modes=nea", "Nearest 5,0");
+    expectAnswer("snap 5,0.25 aperture=1 modes=endpoint,nea", "Nearest 5,0");
+    expectAnswer("snap 9.75,0.25 aperture=1 modes=endpoint,nea", "Endpoint 10,0");
+    expectAnswer("snap 3,0.25 aperture=1", "none");
+    expectAnswer("snap 3,0.25 aperture=1 modes=endpoint,midpoint", "none");
+    for (const std::string_view text :
+         {"? snaps A modes=nea -> none", "? snap 0,0 aperture=1 modes=nearest -> none",
+          "? snap 0,0 aperture=1 modes=NEA -> none"}) {
+        const ParseError error = failure(std::string{kDefinitions} + std::string{text});
+        EXPECT_FALSE(error.notImplemented) << text;
+        EXPECT_NE(error.message.find("unknown snap mode"), std::string::npos) << error.message;
+    }
+}
+
 TEST(Questions, MalformedArgumentsStayInvalidAroundAnnouncedOnes) {
     constexpr std::array<std::string_view, 5> kForms{
         "? snap 0,0 aperture=1 modes=nea,corner -> none",
