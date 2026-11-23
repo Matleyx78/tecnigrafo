@@ -90,6 +90,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(HatchCommand::description(), [] { return std::make_unique<HatchCommand>(); });
     registry.add(HpislanddetectionCommand::description(),
                  [] { return std::make_unique<HpislanddetectionCommand>(); });
+    registry.add(AttreqCommand::description(), [] { return std::make_unique<AttreqCommand>(); });
     registry.add(InsertCommand::description(), [] { return std::make_unique<InsertCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(JoinCommand::description(), [] { return std::make_unique<JoinCommand>(); });

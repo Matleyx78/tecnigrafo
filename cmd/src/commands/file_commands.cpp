@@ -194,7 +194,9 @@ Status NewCommand::proceed(CommandContext& context) {
         edit::DocumentFile file;
         file.reset(untitledName(context.host->openNames()));
         // The host keeps this runner alive: nothing of `context` is used after.
-        context.host->addDocument(core::Document::newDrawing(), std::move(file));
+        DrawingSession& session =
+            context.host->addDocument(core::Document::newDrawing(), std::move(file));
+        session.runner().setDefaults(context.defaults);
         return Status::Finished;
     }
     context.file.reset("Drawing1.cadx");
@@ -300,7 +302,9 @@ Status NewCommand::open(CommandContext& context, const std::string& name) {
         // written, and nothing of `context` is used after.
         edit::DocumentFile file;
         file.setSaved(name);
-        context.host->addDocument(std::move(result.value().document), std::move(file));
+        DrawingSession& session =
+            context.host->addDocument(std::move(result.value().document), std::move(file));
+        session.runner().setDefaults(context.defaults);
         return Status::Finished;
     }
     context.file.setSaved(name);

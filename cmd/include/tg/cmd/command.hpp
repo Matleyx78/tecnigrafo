@@ -50,7 +50,8 @@ struct CommandDefaults {
     double chamferAngle{0.0};  ///< radians
     bool chamferUseAngle{false};
     bool trimMode{true};
-    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool peditAccept{false};      ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool attributeRequest{true};  ///< ATTREQ, session-only (docs/adr/0056, point 3).
     /// HPISLANDDETECTION: 0 Normal, 1 Outer (the start-up value), 2 Ignore.
     core::IslandStyle hatchIslands{core::IslandStyle::Outer};
     /// HPNAME, HPSCALE and HPANG for the next -HATCH (docs/adr/0048, point 6).

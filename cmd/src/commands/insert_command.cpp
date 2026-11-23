@@ -103,6 +103,9 @@ Status InsertCommand::handle(CommandContext& context, const Input& input) {
             return handlePoint(context, input);
         case Stage::Rotation:
             return handleRotation(context, input);
+        case Stage::Attribute:
+        case Stage::Verify:
+            return handleAttribute(context, input);
         case Stage::ScaleX:
         case Stage::Corner:
         case Stage::XyzX:
@@ -401,7 +404,7 @@ Status InsertCommand::advance(CommandContext& context) {
     } else if (!m_rotationGiven) {
         m_stage = Stage::Rotation;
     } else {
-        return finish(context, *m_point);
+        return askAttributes(context);
     }
     updatePreview();
     return Status::Continue;
@@ -412,10 +415,77 @@ Status InsertCommand::finish(CommandContext& context, const core::Vec2& point) {
     if (m_scaleZ) {
         specific = {{100, "AcDbBlockReference"}, {43, groupNumber(*m_scaleZ)}};
     }
-    edit::addInsert(context.editor, insertAt(point), std::move(specific));
+    const core::EntityId id = edit::addInsert(context.editor, insertAt(point), std::move(specific));
+    if (!m_attributes.empty()) {
+        const core::EntityRecord* record = context.editor.document().find(id);
+        core::Insert insert = std::get<core::Insert>(record->entity);
+        for (std::size_t index = 0; index < m_attributes.size(); ++index) {
+            insert.attributes[index].text.value = m_attributes[index].text.value;
+        }
+        context.editor.replace(id, std::move(insert));
+    }
     context.editor.commit();
     m_preview.clear();
     return Status::Finished;
+}
+
+Status InsertCommand::askAttributes(CommandContext& context) {
+    m_attributes = core::defaultAttributes(context.editor.document(), insertAt(*m_point));
+    if (!context.defaults.attributeRequest || m_attributes.empty()) {
+        return finish(context, *m_point);
+    }
+    const core::BlockDefinition* block = context.editor.document().blocks().find(m_block);
+    std::size_t attribute = 0;
+    for (const core::EntityRecord& record : block->entities) {
+        const auto* definition = std::get_if<core::AttributeDefinition>(&record.entity);
+        if (definition == nullptr || definition->flags.constant || !core::supported(*definition)) {
+            continue;
+        }
+        if (!definition->flags.preset) {
+            m_questions.push_back(
+                {attribute, definition->prompt.empty() ? definition->tag : definition->prompt,
+                 definition->flags.verify});
+        }
+        ++attribute;
+    }
+    if (m_questions.empty()) {
+        return finish(context, *m_point);
+    }
+    context.message("Enter attribute values");
+    m_stage = Stage::Attribute;
+    m_question = 0;
+    m_preview.clear();
+    return Status::Continue;
+}
+
+Status InsertCommand::handleAttribute(CommandContext& context, const Input& input) {
+    AttributeQuestion& question = m_questions[m_question];
+    if (const auto* text = std::get_if<TextInput>(&input)) {
+        m_attributes[question.index].text.value = text->text;
+    } else if (!std::holds_alternative<ConfirmInput>(input)) {
+        return Status::Continue;
+    }
+    ++m_question;
+    if (m_stage == Stage::Attribute && m_question == m_questions.size()) {
+        const auto firstVerify = std::ranges::find_if(
+            m_questions, [](const AttributeQuestion& item) { return item.verify; });
+        if (firstVerify == m_questions.end()) {
+            return finish(context, *m_point);
+        }
+        context.message("Verify attribute values");
+        m_stage = Stage::Verify;
+        m_question = static_cast<std::size_t>(firstVerify - m_questions.begin());
+        return Status::Continue;
+    }
+    if (m_stage == Stage::Verify) {
+        while (m_question < m_questions.size() && !m_questions[m_question].verify) {
+            ++m_question;
+        }
+        if (m_question == m_questions.size()) {
+            return finish(context, *m_point);
+        }
+    }
+    return Status::Continue;
 }
 
 void InsertCommand::cancel(CommandContext& context) {
@@ -506,6 +576,13 @@ Prompt InsertCommand::prompt() const {
             return {"Enter Z scale factor <use X scale factor>:", {}, PromptKind::Number};
         case Stage::Rotation:
             return {"Specify rotation angle <0>:", {}, PromptKind::Angle};
+        case Stage::Attribute:
+        case Stage::Verify: {
+            const AttributeQuestion& question = m_questions[m_question];
+            return {question.prompt + " <" + m_attributes[question.index].text.value + ">:",
+                    {},
+                    PromptKind::Text};
+        }
     }
     return {};
 }
@@ -542,7 +619,45 @@ CommandDescription InsertCommand::description() {
              {"xyz-x-scale", "Enter X scale factor <{default}>:", ValueType::Real, {}, true},
              {"y-scale", "Enter Y scale factor <{default}>:", ValueType::Real, {}, true},
              {"z-scale", "Enter Z scale factor <{default}>:", ValueType::Real, {}, true},
-             {"rotation", "Specify rotation angle <{default}>:", ValueType::Angle, {}, true}}};
+             {"rotation", "Specify rotation angle <{default}>:", ValueType::Angle, {}, true},
+             {"attribute-value", "{default} <{default}>:", ValueType::Text, {}, true}}};
+}
+
+CommandDescription AttreqCommand::description() {
+    return {"ATTREQ",
+            {},
+            "Sets whether -INSERT asks for attribute values.",
+            false,
+            {{"value", "Enter new value for ATTREQ <{default}>:", ValueType::Integer, {}, true}}};
+}
+
+void AttreqCommand::start(CommandContext& context) {
+    m_value = context.defaults.attributeRequest;
+}
+
+Status AttreqCommand::handle(CommandContext& context, const Input& input) {
+    if (const auto* text = std::get_if<TextInput>(&input)) {
+        std::string_view value = detail::trim(text->text);
+        if (value.starts_with('+')) {
+            value.remove_prefix(1);
+        }
+        int number = 0;
+        const auto parsed = std::from_chars(value.data(), value.data() + value.size(), number);
+        if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() || number < 0 ||
+            number > 1) {
+            context.message("Requires an integer between 0 and 1.");
+            return Status::Continue;
+        }
+        context.defaults.attributeRequest = number == 1;
+        return Status::Finished;
+    }
+    return std::holds_alternative<ConfirmInput>(input) ? Status::Finished : Status::Continue;
+}
+
+Prompt AttreqCommand::prompt() const {
+    return {"Enter new value for ATTREQ <" + std::string{m_value ? "1" : "0"} + ">:",
+            {},
+            PromptKind::Text};
 }
 
 }  // namespace tg::cmd

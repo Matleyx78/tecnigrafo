@@ -6,6 +6,7 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/circle.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/line.hpp"
@@ -88,6 +89,25 @@ core::BlockDefinition lineBlock(std::string name, int units = 0, core::Vec2 end 
     return block;
 }
 
+core::BlockDefinition attributeBlock() {
+    core::BlockDefinition block{"Labels"};
+    core::AttributeDefinition first;
+    first.tag = "CODE";
+    first.prompt = "Part code";
+    first.text.value = "A1";
+    first.text.height = 1.0;
+    first.flags.verify = true;
+    core::AttributeDefinition preset = first;
+    preset.tag = "FIXED";
+    preset.text.value = "ready";
+    preset.flags.verify = false;
+    preset.flags.preset = true;
+    block.entities.push_back({{}, first});
+    block.entities.push_back({{}, preset});
+    block.hasAttributes = true;
+    return block;
+}
+
 class InsertCommandTest : public ::testing::Test {
 public:
     InsertCommandTest()
@@ -150,6 +170,31 @@ TEST_F(InsertCommandTest, ScaleAndRotationAfterThePoint) {
     EXPECT_EQ(insert.scaleY, 1.0);
     EXPECT_DOUBLE_EQ(insert.rotation, core::degreesToRadians(30.0));
     EXPECT_EQ(editor.undoNames(), (std::vector<std::string>{"Insert"}));
+}
+
+TEST_F(InsertCommandTest, AttreqAsksForValuesAndVerificationAfterRotation) {
+    document.replaceBlock("Labels", attributeBlock());
+    type({"-INSERT", "Labels", "0,0", "1", "1", "0"});
+    EXPECT_TRUE(heard("Enter attribute values"));
+    EXPECT_EQ(runner.promptText(), "Part code <A1>:");
+    runner.submitText("panel 1");
+    EXPECT_TRUE(heard("Verify attribute values"));
+    EXPECT_EQ(runner.promptText(), "Part code <panel 1>:");
+    runner.submitText("");
+    ASSERT_EQ(lastInsert().attributes.size(), 2U);
+    EXPECT_EQ(lastInsert().attributes[0].text.value, "panel 1");
+    EXPECT_EQ(lastInsert().attributes[1].text.value, "ready");
+}
+
+TEST_F(InsertCommandTest, AttreqZeroUsesDefaultsAndEscRollsBackQuestions) {
+    document.replaceBlock("Labels", attributeBlock());
+    type({"ATTREQ", "0", "-INSERT", "Labels", "0,0", "1", "1", "0"});
+    ASSERT_EQ(lastInsert().attributes.size(), 2U);
+    EXPECT_EQ(lastInsert().attributes[0].text.value, "A1");
+
+    type({"ATTREQ", "1", "-INSERT", "Labels", "1,1", "1", "1", "0"});
+    runner.submit(CancelInput{});
+    EXPECT_EQ(document.entityCount(), 1U);
 }
 
 TEST_F(InsertCommandTest, ScaleAndRotateBeforeThePointAskNothingAfterIt) {
