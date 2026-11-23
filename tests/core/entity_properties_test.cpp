@@ -102,6 +102,15 @@ Ellipse changedEllipse(const Ellipse& ellipse, std::string_view name, const Prop
     return std::get<Ellipse>(*change.entity);
 }
 
+/// The solid of a change; an empty or different entity fails the test.
+Solid solidOf(const PropertyChange& change) {
+    if (!change.entity || !std::holds_alternative<Solid>(*change.entity)) {
+        ADD_FAILURE() << "no solid in the change";
+        return Solid{};
+    }
+    return std::get<Solid>(*change.entity);
+}
+
 std::vector<OwnProperty> propertiesOf(const Entity& entity) {
     const Document document = Document::newDrawing();
     return ownProperties(document, recordOf(entity));
@@ -271,7 +280,7 @@ TEST(SolidProperties, EachOfTheFourVerticesMovesAlone) {
         ASSERT_TRUE(change.entity) << names.at(i);
         Solid expected = solid;
         expected.vertices.at(i) = target;
-        EXPECT_EQ(std::get<Solid>(*change.entity), expected) << names.at(i);
+        EXPECT_EQ(solidOf(change), expected) << names.at(i);
     }
     const PropertyChange refused = withOwnProperty(
         document, record, "vertex2", Vec2{std::numeric_limits<double>::quiet_NaN(), 0});
@@ -286,12 +295,12 @@ TEST(SolidProperties, AFourthVertexEqualToTheThirdStaysATriangle) {
         withOwnProperty(document, recordOf(triangle), "vertex1", Vec2{-2, 1});
     ASSERT_TRUE(change.entity);
     const Solid expected{{Vec2{-2, 1}, Vec2{10, 0}, Vec2{0, 10}, Vec2{0, 10}}, false};
-    EXPECT_EQ(std::get<Solid>(*change.entity), expected);
+    EXPECT_EQ(solidOf(change), expected);
     // Moved apart from the third, the fourth vertex is written again.
     const PropertyChange apart =
         withOwnProperty(document, recordOf(triangle), "vertex4", Vec2{5, 5});
     ASSERT_TRUE(apart.entity);
-    EXPECT_TRUE(std::get<Solid>(*apart.entity).fourthVertexPresent);
+    EXPECT_TRUE(solidOf(apart).fourthVertexPresent);
 }
 
 TEST(OwnProperties, TypesOfBeforeThe08HaveNone) {

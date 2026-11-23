@@ -228,7 +228,7 @@ QuestionResult askSetProperty(const QuestionModel& model,
     if (const auto* error = std::get_if<ArgumentError>(&found)) {
         return *error;
     }
-    const PropertyTarget& target = std::get<PropertyTarget>(found);
+    const auto& target = std::get<PropertyTarget>(found);
     auto read = targetProperties(target);
     if (auto* error = std::get_if<ArgumentError>(&read)) {
         return std::move(*error);
