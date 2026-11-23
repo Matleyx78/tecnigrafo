@@ -258,8 +258,11 @@ TEST_F(DynamicInputTest, HashAndStarAreTakenOnlyFirst) {
     enter("LINE");
     firstPoint();
     events::type(view(), "1#");
+    // A late "#" does not enter the field; where else it goes is not part
+    // of the contract (docs/tappe/0.8.1/PT34-last-previous.md, point 4).
     EXPECT_EQ(field(0)->text(), QStringLiteral("1"));
-    EXPECT_EQ(input()->text(), QStringLiteral("#"));
+    events::type(view(), "*2");
+    EXPECT_EQ(field(0)->text(), QStringLiteral("12"));
 }
 
 TEST_F(DynamicInputTest, OverlayStaysInsideViewAndUsesCurrentThemeAccent) {
