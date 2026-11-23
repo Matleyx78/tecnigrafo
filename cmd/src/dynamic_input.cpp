@@ -130,7 +130,7 @@ std::string dynamicInputText(const DynamicInput& input, const CommandRunner& run
         return std::ranges::find(input.fields, kind, &DynamicField::kind) != input.fields.end();
     };
     if (has(Kind::X) || has(Kind::Y)) {
-        const std::string x = fieldText(input, Kind::X, runner, point);
+        std::string x = fieldText(input, Kind::X, runner, point);
         if (isAbsolute(x) && x.find(',') != std::string::npos) {
             return x;  // "#<x>,<y>" typed whole in the X field
         }
