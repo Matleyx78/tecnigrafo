@@ -616,6 +616,14 @@
       "sha256": "5b69493f63208ac85f9c3c97557e1aa537fe61bedc30f4e40047784fde85ea4b",
       "license": "CC0-1.0",
       "license-url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+    },
+    {
+      "name": "autocad-prolungamento-parallelo",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/autocad-prolungamento-parallelo.dxf",
+      "version": "d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9",
+      "sha256": "c27ee93df85a7ecd99acabfa5ecb1418e1271b387a3e75b33df7f45da5d5b66b",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/LICENSE"
     }
   ]
 }

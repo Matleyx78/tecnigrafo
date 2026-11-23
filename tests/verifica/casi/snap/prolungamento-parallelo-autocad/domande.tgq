@@ -1,0 +1,25 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; AutoCAD 2021 witness lines for Extension and Parallel, from Matleyx78/dxf-test-file
+; commit d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9 (CC0-1.0). The twelve starts
+; are the points selected with the two modes; the short vertical ends only make them visible.
+D = DXF source=autocad-prolungamento-parallelo
+? version D -> AC1032
+? units D -> 4
+? count D -> ARC 2, LINE 19, LWPOLYLINE 2
+? unhandled D -> none
+; Extension beyond both ends of a line, an arc and an open polyline.
+? entity D 97 -> LINE start=48,36 end=48,26
+? entity D 98 -> LINE start=-8,-6 end=-8,-16
+? entity D 99 -> LINE start=90.41148922791593,17.55165123780745 end=90.41148922791593,7.551651237807455
+? entity D 9A -> LINE start=117.5516512378074,-9.588510772084063 end=117.5516512378074,-19.58851077208406
+? entity D 9B -> LINE start=236,30 end=236,20
+? entity D 9C -> LINE start=152,-6 end=152,-16
+; Two extension crossings, release, two parallels, and extension/tracking crossing.
+? entity D 9D -> LINE start=330,14.99999999999999 end=330,4.999999999999987
+? entity D 9E -> LINE start=80,-60 end=80,-70
+? entity D 9F -> LINE start=326.5835921350013,16.70820393249937 end=326.5835921350013,6.708203932499369
+? entity D A0 -> LINE start=500,30 end=518.9736659610103,36.32455532033676
+? entity D A1 -> LINE start=570,30 end=590,45
+? entity D A2 -> LINE start=449.9999999999999,45.00000000000005 end=449.9999999999999,35.00000000000005
