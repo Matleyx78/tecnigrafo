@@ -421,6 +421,36 @@ QuestionResult askUnits(const QuestionModel& model, Arguments arguments) {
                            });
 }
 
+QuestionResult askGrid(const QuestionModel& model, Arguments arguments) {
+    return askAboutDrawing(
+        model, arguments, "grid <drawing>", 0, [](const FileDrawing& drawing, Arguments /*more*/) {
+            const core::GridSettings& grid = drawing.read.document.grid();
+            const auto onOff = [](bool on) {
+                return on ? "on" : "off";
+            };
+            return std::string{"grid="} + onOff(grid.gridOn) + " snap=" + onOff(grid.snapOn) +
+                   " grid-unit=" + formatPoint(grid.gridUnit) +
+                   " snap-unit=" + formatPoint(grid.snapUnit) +
+                   " snap-base=" + formatPoint(grid.snapBase) +
+                   " display=" + std::to_string(grid.gridDisplay) +
+                   " major=" + std::to_string(grid.gridMajor) +
+                   " ucsicon=" + std::to_string(grid.ucsIcon) +
+                   " snap-angle=" + formatNumber(grid.snapAngle) +
+                   " snap-style=" + std::to_string(grid.snapStyle);
+        });
+}
+
+QuestionResult askAttdisp(const QuestionModel& model, Arguments arguments) {
+    return askAboutDrawing(
+        model, arguments, "attdisp <drawing>", 0,
+        [](const FileDrawing& drawing, Arguments /*more*/) {
+            // In the order of core::AttributeDisplay.
+            constexpr std::array<std::string_view, 3> kNames{"off", "normal", "on"};
+            return std::string{
+                kNames.at(static_cast<std::size_t>(drawing.read.document.attributeDisplay()))};
+        });
+}
+
 QuestionResult askWarnings(const QuestionModel& model, Arguments arguments) {
     return askAboutDrawing(model, arguments, "warnings <drawing>", 0,
                            [](const FileDrawing& drawing, Arguments /*more*/) {

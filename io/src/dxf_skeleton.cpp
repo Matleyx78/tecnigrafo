@@ -228,19 +228,10 @@ DxfSkeleton buildSkeleton(const Handles& handles, const Defaults& defaults, std:
     const auto paperLayout = builder.handle(LayoutPaper);
 
     auto owner = builder.table(TableVport, "VPORT", 1);
+    // The grid of acadiso.dwt: writeTables() puts that of the document in it
+    // (docs/adr/0055, point 2).
     builder.record(VportActive, "VPORT", "AcDbViewportTableRecord", "*Active", owner,
-                   {{10, "0.0"},
-                    {20, "0.0"},
-                    {11, "1.0"},
-                    {21, "1.0"},
-                    {12, "0.0"},
-                    {22, "0.0"},
-                    {16, "0.0"},
-                    {26, "0.0"},
-                    {36, "1.0"},
-                    {40, "100.0"},
-                    {41, "1.0"},
-                    {42, "50.0"}});
+                   newActiveViewportGroups());
     builder.endTable();
     const std::array<std::pair<Object, bool>, 3> linetypes{{{ByBlock, defaults.byBlock},
                                                             {ByLayer, defaults.byLayer},

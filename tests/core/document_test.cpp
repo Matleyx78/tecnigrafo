@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -802,6 +803,66 @@ TEST(DocumentTables, CurrentValuesChange) {
     EXPECT_DOUBLE_EQ(document.ltscale(), 2.5);
     EXPECT_EQ(document.lwdefault(), 18);
     EXPECT_TRUE(document.lwdisplay());
+}
+
+TEST(DocumentTables, GridAndAttributeDisplayStartAsInANewDrawing) {
+    // acadiso.dwt (docs/adr/0055, point 1; docs/adr/0056, point 1).
+    for (const Document& document : {Document{}, Document::newDrawing()}) {
+        const GridSettings& grid = document.grid();
+        EXPECT_TRUE(grid.gridOn);
+        EXPECT_EQ(grid.gridUnit, (Vec2{10, 10}));
+        EXPECT_FALSE(grid.snapOn);
+        EXPECT_EQ(grid.snapUnit, (Vec2{10, 10}));
+        EXPECT_EQ(grid.snapBase, (Vec2{0, 0}));
+        EXPECT_EQ(grid.gridDisplay, 3);
+        EXPECT_EQ(grid.gridMajor, 5);
+        EXPECT_EQ(grid.ucsIcon, 3);
+        EXPECT_EQ(grid.snapAngle, 0.0);
+        EXPECT_EQ(grid.snapStyle, 0);
+        EXPECT_EQ(grid.snapIsoPair, 0);
+        EXPECT_EQ(grid, GridSettings{});
+        EXPECT_EQ(document.attributeDisplay(), AttributeDisplay::Normal);
+    }
+}
+
+TEST(DocumentTables, GridAndAttributeDisplayChange) {
+    Document document = Document::newDrawing();
+    GridSettings grid;
+    grid.gridOn = false;
+    grid.gridUnit = {0, 10};  // an axis at 0 is kept as written
+    grid.snapOn = true;
+    grid.snapUnit = {2.5, 5};
+    grid.snapBase = {3, 4};
+    grid.gridDisplay = 6;
+    grid.gridMajor = 10;
+    grid.ucsIcon = 1;
+    grid.snapAngle = 30;
+    grid.snapStyle = 1;
+    grid.snapIsoPair = 2;
+    ASSERT_TRUE(isValid(grid));
+    document.setGrid(grid);
+    EXPECT_EQ(document.grid(), grid);
+    document.setAttributeDisplay(AttributeDisplay::On);
+    EXPECT_EQ(document.attributeDisplay(), AttributeDisplay::On);
+    document.setAttributeDisplay(AttributeDisplay::Off);
+    EXPECT_EQ(document.attributeDisplay(), AttributeDisplay::Off);
+}
+
+TEST(DocumentTables, GridSettingsOutOfRangeAreNotValid) {
+    EXPECT_TRUE(isValid(GridSettings{}));
+    const auto with = [](auto change) {
+        GridSettings grid;
+        change(grid);
+        return isValid(grid);
+    };
+    EXPECT_TRUE(with([](GridSettings& g) { g.gridUnit = {0, 0}; }));
+    EXPECT_FALSE(with([](GridSettings& g) { g.gridUnit.x = -1; }));
+    EXPECT_FALSE(with([](GridSettings& g) { g.snapUnit.y = 0; }));
+    EXPECT_FALSE(with([](GridSettings& g) { g.snapBase.x = std::nan(""); }));
+    EXPECT_FALSE(with([](GridSettings& g) { g.snapAngle = std::nan(""); }));
+    EXPECT_FALSE(with([](GridSettings& g) { g.gridMajor = 0; }));
+    EXPECT_TRUE(with([](GridSettings& g) { g.gridMajor = GridSettings::kMaxGridMajor; }));
+    EXPECT_FALSE(with([](GridSettings& g) { g.gridMajor = GridSettings::kMaxGridMajor + 1; }));
 }
 
 TEST(Document, ReplaceEntityPreservesRecordAndUpdatesSpatialIndex) {

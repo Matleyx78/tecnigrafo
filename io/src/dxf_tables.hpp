@@ -36,7 +36,10 @@ public:
         : m_document(document), m_seed(document.nextId()) {}
 
     /// Takes the LAYER and LTYPE records out of the groups of the TABLES
-    /// section, leaving a kRecordPlaceholder group in their place. The
+    /// section, leaving a kRecordPlaceholder group in their place. The first
+    /// VPORT record named *ACTIVE gives the grid of the document, with the
+    /// values of a new drawing for its missing or invalid groups, and stays
+    /// raw (docs/adr/0055, point 2). The
     /// linetypes enter the document at once, with their handles; the layers
     /// at finish(). A record with a name that is not valid, or already used
     /// by an earlier record of the same table, or with a colour that is not
@@ -46,7 +49,7 @@ public:
                     std::vector<std::string>& warnings);
 
     /// Reads $CLAYER, $CECOLOR, $CELTYPE, $CELWEIGHT, $CELTSCALE, $LTSCALE,
-    /// $LWDISPLAY and $LWDEFAULT, $TEXTSTYLE, and $DIMSTYLE with the other
+    /// $LWDISPLAY and $LWDEFAULT, $ATTMODE (0, 1 or 2), $TEXTSTYLE, and $DIMSTYLE with the other
     /// $DIM… variables (docs/tappe/0.8/PT22-stili-di-quota.md, point 3).
     /// $DIMSTYLE and the $DIM… variables stay in the raw HEADER: the writer
     /// gives them the values of the document (headerDimVariables()). The value groups of $CLAYER
@@ -162,12 +165,25 @@ private:
     int m_replacedLayerLinetypes{0};
 };
 
+/// The groups of an *ACTIVE record of the VPORT table of a new drawing after
+/// its name (2) and flags (70): the view of the skeleton and the grid of
+/// acadiso.dwt, the values of core::GridSettings (docs/adr/0055, point 1).
+[[nodiscard]] core::RawGroups newActiveViewportGroups();
+
 /// The groups of the TABLES section `tables` with the LAYER and LTYPE
 /// records of the document at their placeholders, in table order, and the
 /// records without a placeholder at the end of their table; the count (70)
 /// of the two tables follows the records added or removed. A LAYER or
 /// LTYPE table the section lacks is added when the document needs it
 /// (needsLayerTable, needsLinetypeTable), with a handle from `nextHandle`.
+///
+/// The first VPORT record named *ACTIVE (in any case) gets the grid of the
+/// document: a group that reads as the document's value keeps its text, a
+/// missing one is added only when the value is not that of a new drawing.
+/// Without that record, and with a grid that is not that of a new drawing,
+/// one is added at the end of the VPORT table, and the table first in the
+/// section if it lacks one, with handles from `nextHandle`; the other
+/// records stay as they are (docs/adr/0055, point 2).
 void writeTables(const core::RawGroups& tables, const core::Document& document,
                  std::uint64_t& nextHandle, core::RawGroups& out);
 
@@ -175,9 +191,10 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
 /// has none; empty when the document needs none.
 [[nodiscard]] core::RawGroups newTables(const core::Document& document, std::uint64_t& nextHandle);
 
-/// How many tables writeTables() or newTables() add to `raw` for
-/// `document`, so that their handles can be counted in $HANDSEED before
-/// the header is written: 0, 1 or 2.
+/// How many handles writeTables() or newTables() take for `raw` and
+/// `document`, so that they can be counted in $HANDSEED before the header is
+/// written: one for each table they add, and one for an *ACTIVE record of
+/// the VPORT table they add (docs/adr/0055, point 2).
 [[nodiscard]] std::uint64_t tablesToAdd(const core::RawDrawing& raw,
                                         const core::Document& document);
 
@@ -243,7 +260,7 @@ void writeDimOverrides(core::RawGroups& extras, const DimOverrides& overrides,
 
 /// The HEADER groups `source` with the values of the document for
 /// $CLAYER, $CECOLOR, $CELTYPE, $CELWEIGHT, $CELTSCALE, $LTSCALE,
-/// $LWDISPLAY and $LWDEFAULT, and for the $DIM… variables as
+/// $LWDISPLAY, $LWDEFAULT and $ATTMODE, and for the $DIM… variables as
 /// headerDimVariables() gives them. A value read and not changed keeps its
 /// spelling; a variable the header lacks is added at the end when `addAll`
 /// (a new drawing or a conversion) or when the document's value differs

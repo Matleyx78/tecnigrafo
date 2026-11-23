@@ -599,6 +599,8 @@ QuestionResult askCount(const QuestionModel& model, Arguments arguments);
 QuestionResult askUnhandled(const QuestionModel& model, Arguments arguments);
 QuestionResult askVersion(const QuestionModel& model, Arguments arguments);
 QuestionResult askUnits(const QuestionModel& model, Arguments arguments);
+QuestionResult askGrid(const QuestionModel& model, Arguments arguments);
+QuestionResult askAttdisp(const QuestionModel& model, Arguments arguments);
 QuestionResult askWarnings(const QuestionModel& model, Arguments arguments);
 QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
@@ -718,9 +720,10 @@ constexpr std::array kQuestions{
     // In order, so Single and not Items.
     QuestionRow{"hatch-boundary", AnswerShape::Single, &askHatchBoundary},  // PT43
     QuestionRow{"hatch-contours", AnswerShape::Single, &askHatchContours},  // PT43
+    // Stage 0.8.1: the state of the drawing (file_questions.cpp).
+    QuestionRow{"grid", AnswerShape::Single, &askGrid},        // PT27
+    QuestionRow{"attdisp", AnswerShape::Single, &askAttdisp},  // PT27
     // Stage 0.8.1: announced before the reference cases are written.
-    QuestionRow{"grid", AnswerShape::Single, nullptr},                  // PT27
-    QuestionRow{"attdisp", AnswerShape::Single, nullptr},               // PT27
     QuestionRow{"properties", AnswerShape::Single, &askProperties},     // PT22, PT23, PT24
     QuestionRow{"set-property", AnswerShape::Single, &askSetProperty},  // PT22, PT23, PT24
     QuestionRow{"pattern-lines", AnswerShape::Single, nullptr},         // PT23

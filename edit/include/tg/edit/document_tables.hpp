@@ -55,6 +55,16 @@ public:
     /// No transaction is needed. Notifies the change listener on a change.
     void setLwdisplay(bool on);
 
+    /// The grid, the snap and the UCS icon, as setLwdisplay(): no undo step,
+    /// the drawing becomes modified (Editor::isModified()) and the listener
+    /// is notified on a change (docs/adr/0055, point 3). The only way for
+    /// the commands and the interface to change them.
+    /// Precondition: core::isValid(grid).
+    void setGrid(const core::GridSettings& grid);
+
+    /// ATTDISP, as setLwdisplay() (docs/adr/0056, point 1).
+    void setAttributeDisplay(core::AttributeDisplay display);
+
 private:
     friend class Editor;
 
