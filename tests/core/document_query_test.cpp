@@ -3,9 +3,16 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "tg/core/attribute_definition.hpp"
+#include "tg/core/block_table.hpp"
+#include "tg/core/dimension.hpp"
+#include "tg/core/ellipse.hpp"
+#include "tg/core/hatch.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
+#include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
 
 #include <gtest/gtest.h>
@@ -18,7 +25,9 @@
 #include <numbers>
 #include <optional>
 #include <random>
+#include <string>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -595,6 +604,224 @@ TEST(DocumentQuery, EveryModeOffGivesNothing) {
     constexpr SnapModes kNone{false, false, false, false, false, false, false, false};
     EXPECT_EQ(findSnap(document, {5, 0}, 1.0, kNone, Vec2{5, 5}), std::nullopt);
     EXPECT_EQ(findSnap(document, {0, 0}, 1.0, kNone), std::nullopt);
+}
+
+// --- Nearest (docs/adr/0057, point 2) -------------------------------------
+
+/// Only Nearest, with the modes of `others` that are on.
+SnapModes nearestAnd(SnapModes others = {false, false, false, false, false}) {
+    others.nearest = true;
+    return others;
+}
+
+void expectNearest(const std::optional<SnapPoint>& actual, const Vec2& expected,
+                   double tolerance = 1e-12) {
+    if (!actual) {
+        ADD_FAILURE() << "no snap";
+        return;
+    }
+    EXPECT_EQ(actual->kind, SnapKind::Nearest);
+    EXPECT_NEAR(actual->point.x, expected.x, tolerance);
+    EXPECT_NEAR(actual->point.y, expected.y, tolerance);
+}
+
+TEST(NearestSnap, IsOffByDefaultAndAloneEnablesTheSnap) {
+    EXPECT_FALSE(SnapModes{}.nearest);
+    EXPECT_FALSE(SnapModes{}.extension);
+    EXPECT_FALSE(SnapModes{}.parallel);
+    Document document;
+    document.add(Line{{0, 20}, {10, 20}});
+    EXPECT_FALSE(findSnap(document, {3, 20.25}, 0.5, SnapModes{}));
+    expectNearest(findSnap(document, {3, 20.25}, 0.5, nearestAnd()), {3, 20});
+    // A point exactly on the line within a zero aperture.
+    expectNearest(findSnap(document, {3, 20}, 0.0, nearestAnd()), {3, 20});
+    EXPECT_FALSE(findSnap(document, {3, 20.25}, 0.0, nearestAnd()));
+    // Extension and parallel alone give no snap point.
+    SnapModes guides{false, false, false, false, false};
+    guides.extension = true;
+    guides.parallel = true;
+    EXPECT_FALSE(findSnap(document, {3, 20}, 1.0, guides));
+}
+
+// The six objects of autocad-vicino.dxf, as AutoCAD 2021 placed its points.
+TEST(NearestSnap, TheObjectsOfAutocadVicino) {
+    Document document = Document::newDrawing();
+    document.add(Line{{0, 0}, {40, 10}});
+    document.add(Arc{{70, 0}, 10, 0, std::numbers::pi});
+    document.add(Circle{{110, 0}, 10});
+    document.add(Polyline{{{{140, 0}}, {{170, 0}, 1.0}, {{170, 20}}, {{140, 20}}}, false});
+    document.add(Ellipse{{210, 0}, {15, 0}, 1.0 / 3.0, 0.0, 2.0 * std::numbers::pi});
+    MText text;
+    text.insertion = {240, 10};
+    text.height = 2.5;
+    text.width = 30;
+    text.value = "Testo multiriga per lo snap Vicino";
+    document.add(text);
+    const SnapModes modes = nearestAnd();
+    expectNearest(findSnap(document, {20, 5.3}, 0.5, modes),
+                  {20.07058823529412, 5.017647058823529});
+    expectNearest(findSnap(document, {77.28, 7.28}, 0.5, modes),
+                  {77.07106781186548, 7.071067811865473});
+    expectNearest(findSnap(document, {118.92, 5.15}, 0.5, modes),
+                  {118.6602390719562, 5.000025921589077});
+    expectNearest(findSnap(document, {155, 0.3}, 0.5, modes), {155, 0});
+    expectNearest(findSnap(document, {180.3, 10}, 0.5, modes), {180, 10});
+    expectNearest(findSnap(document, {217.5, 4.6}, 0.5, modes),
+                  {217.4503351974475, 4.339642912161662}, 1e-9);
+    // The rows of an MTEXT give no Nearest, and here nothing else either.
+    EXPECT_FALSE(findSnap(document, {250, 7}, 0.5, modes));
+}
+
+TEST(NearestSnap, TheEllipseUsesTheDistanceOfNearest) {
+    Document document;
+    document.add(Ellipse{{0, 0}, {10, 0}, 0.5, 0.0, 2.0 * std::numbers::pi});
+    // solid-space certifies 2.8816126631665626 from (12, 3).
+    EXPECT_FALSE(findSnap(document, {12, 3}, 2.0, nearestAnd()));
+    expectNearest(findSnap(document, {12, 3}, 3.0, nearestAnd()),
+                  {9.551207013215885, 1.481084449879183}, 1e-9);
+}
+
+TEST(NearestSnap, BeatsTheCentreOnTheRimButNotAPointInTheAperture) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    document.add(Line{{0, 20}, {10, 20}});
+    const SnapModes centre{false, false, true, false, false};
+    expectNearest(findSnap(document, {10.25, 0}, 1.0, nearestAnd(centre)), {10, 0});
+    EXPECT_EQ(findSnap(document, {10.25, 0}, 1.0, centre), (SnapPoint{{0, 0}, SnapKind::Center}));
+    // The end point within the aperture wins, though the line is nearer.
+    const SnapModes endpoint{true, false, false, false, false};
+    EXPECT_EQ(findSnap(document, {9.75, 20.25}, 1.0, nearestAnd(endpoint)),
+              (SnapPoint{{10, 20}, SnapKind::Endpoint}));
+    expectNearest(findSnap(document, {9.75, 20.25}, 1.0, nearestAnd()), {9.75, 20});
+    // Every mode of 0.7 on: away from the points of the line, Nearest.
+    SnapModes every;
+    every.perpendicular = true;
+    every.tangent = true;
+    every.quadrant = true;
+    expectNearest(findSnap(document, {2, 20.25}, 1.0, nearestAnd(every)), {2, 20});
+}
+
+TEST(NearestSnap, TiesTakeTheHighestIdThenTheFirstSegment) {
+    Document document;
+    document.add(Line{{100, -1}, {110, -1}});
+    document.add(Line{{100, 1}, {110, 1}});
+    expectNearest(findSnap(document, {105, 0}, 2.0, nearestAnd()), {105, 1});
+    expectNearest(findSnap(document, {105, -0.25}, 2.0, nearestAnd()), {105, -1});
+    // Inside a polyline bend, the first of two segments at the same distance.
+    document.add(Polyline{{{{20, 0}}, {{30, 0}}, {{30, 10}}}});
+    expectNearest(findSnap(document, {29, 1}, 2.0, nearestAnd()), {29, 0});
+}
+
+/// A block entity with the default properties of a new drawing.
+EntityRecord member(const Document& document, Entity entity) {
+    EntityRecord record{EntityId{}, std::move(entity)};
+    record.properties.layer = document.layerZero();
+    record.properties.linetype = document.byLayerLinetype();
+    return record;
+}
+
+/// Puts the block `name` with base (0, 0) and `entities` in the document.
+void defineBlock(Document& document, const std::string& name, std::vector<Entity> entities) {
+    BlockDefinition definition{name};
+    for (Entity& entity : entities) {
+        definition.entities.push_back(member(document, std::move(entity)));
+    }
+    document.replaceBlock(name, std::move(definition));
+}
+
+Insert insertOf(std::string name, const Vec2& insertion) {
+    Insert insert;
+    insert.block = std::move(name);
+    insert.insertion = insertion;
+    return insert;
+}
+
+TEST(NearestSnap, TheShapesOfAnInsertInGenerationOrder) {
+    Document document = Document::newDrawing();
+    defineBlock(document, "Pair", {Line{{0, -1}, {10, -1}}, Line{{0, 1}, {10, 1}}});
+    document.add(insertOf("Pair", {0, 0}));
+    expectNearest(findSnap(document, {5, 0}, 2.0, nearestAnd()), {5, -1});
+    // The insertion point is a point snap: within the aperture it wins.
+    document.add(insertOf("Pair", {40, 0}));
+    const SnapModes insertion{false, false, false, true, false};
+    EXPECT_EQ(findSnap(document, {40, 0.75}, 1.0, nearestAnd(insertion)),
+              (SnapPoint{{40, 0}, SnapKind::Insertion}));
+    expectNearest(findSnap(document, {40, 0.75}, 1.0, nearestAnd()), {40, 1});
+    // So it does with a block without shapes, which gives no Nearest.
+    defineBlock(document, "Empty", {});
+    document.add(insertOf("Empty", {60, 0}));
+    EXPECT_EQ(findSnap(document, {60, 0.5}, 1.0, nearestAnd(insertion)),
+              (SnapPoint{{60, 0}, SnapKind::Insertion}));
+    EXPECT_FALSE(findSnap(document, {60, 0.5}, 1.0, nearestAnd()));
+}
+
+TEST(NearestSnap, TheSidesOfASolidNotItsRegion) {
+    Document document = Document::newDrawing();
+    document.add(Solid{{Vec2{80, 0}, Vec2{90, 0}, Vec2{80, 10}, Vec2{90, 10}}});
+    // Inside, farther than the aperture from every side.
+    EXPECT_FALSE(findSnap(document, {85, 5}, 2.0, nearestAnd()));
+    // Equally far from the bottom and the right side: the first, v0 to v1.
+    expectNearest(findSnap(document, {89, 1}, 2.0, nearestAnd()), {89, 0});
+    expectNearest(findSnap(document, {91, 5}, 2.0, nearestAnd()), {90, 5});
+    // The sides of a solid inside an insert are shapes too.
+    defineBlock(document, "Filled", {Solid{{Vec2{0, 0}, Vec2{20, 0}, Vec2{0, 10}, Vec2{20, 10}}}});
+    document.add(insertOf("Filled", {130, 0}));
+    expectNearest(findSnap(document, {140, -0.3}, 0.5, nearestAnd()), {140, 0});
+}
+
+TEST(NearestSnap, TheLineOfADimension) {
+    Document document = Document::newDrawing();
+    Dimension dimension;
+    dimension.definition.kind = DimensionKind::Linear;
+    dimension.definition.point13 = {80, 0};
+    dimension.definition.point14 = {110, 0};
+    dimension.definition.linePoint = {110, 10};
+    std::string reason;
+    const std::optional<Dimension> made = regenerated(document, std::move(dimension), &reason);
+    EXPECT_TRUE(made.has_value()) << reason;
+    document.add(made.value_or(Dimension{}));
+    expectNearest(findSnap(document, {88, 9.7}, 0.5, nearestAnd()), {88, 10});
+    // Over the text of the measurement, nothing.
+    EXPECT_FALSE(findSnap(document, {95, 11.875}, 0.5, nearestAnd()));
+}
+
+TEST(NearestSnap, NoneOnTextsAttributesAndHatches) {
+    Document document = Document::newDrawing();
+    Text text;
+    text.position = {0, 40};
+    text.height = 2.5;
+    text.value = "AB";
+    document.add(text);
+    EXPECT_FALSE(findSnap(document, {1, 41}, 1.0, nearestAnd()));
+    // On the text the insertion point still answers, as before.
+    const SnapModes insertion{false, false, false, true, false};
+    EXPECT_EQ(findSnap(document, {1, 41}, 1.0, nearestAnd(insertion)),
+              (SnapPoint{{0, 40}, SnapKind::Insertion}));
+
+    AttributeDefinition definition;
+    definition.text.position = {0, 50};
+    definition.text.height = 2.5;
+    definition.text.value = "Default";
+    definition.tag = "CODE";
+    document.add(definition);
+    EXPECT_FALSE(findSnap(document, {1, 51}, 1.0, nearestAnd()));
+
+    Text label = text;
+    label.position = {0, 0};
+    defineBlock(document, "Label", {label});
+    document.add(insertOf("Label", {0, 60}));
+    EXPECT_FALSE(findSnap(document, {1, 61}, 1.0, nearestAnd()));
+
+    Hatch hatch;
+    hatch.pattern = "SOLID";
+    hatch.solid = true;
+    HatchLoop loop;
+    loop.flags = 3;
+    loop.polyline = Polyline{{{{170, 0}}, {{200, 0}}, {{200, 20}}, {{170, 20}}}, true};
+    hatch.loops.push_back(loop);
+    document.add(hatch);
+    EXPECT_FALSE(findSnap(document, {185, -0.3}, 0.5, nearestAnd()));
+    EXPECT_FALSE(findSnap(document, {185, 10}, 0.5, nearestAnd()));
 }
 
 // --- Comparison with an exhaustive search -------------------------------

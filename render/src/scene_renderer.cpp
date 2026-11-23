@@ -259,6 +259,19 @@ void renderSnapMarker(const core::SnapPoint& snap, const Viewport& viewport,
             painter.drawPolyline(points, true);
             break;
         }
+        case core::SnapKind::Nearest: {
+            // An hourglass, as AutoCAD: two triangles meeting at the centre,
+            // between the top and bottom sides of the marker square.
+            const std::array points{center + Vec2{-half, -half}, center + Vec2{half, -half},
+                                    center + Vec2{-half, half}, center + Vec2{half, half}};
+            painter.drawPolyline(points, true);
+            break;
+        }
+        case core::SnapKind::Extension:
+        case core::SnapKind::Parallel:
+            // Guides of the tracking, drawn by the view (docs/adr/0057,
+            // point 5): no marker here.
+            break;
     }
 }
 
