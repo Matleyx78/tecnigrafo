@@ -1,8 +1,0 @@
-# 0.8.1-RT35: RECTANG cases, made mandatory by PT35 (#932).
-# rectang/autocad and rectang/autocad-opzioni (questions to the ezdxf oracle) are not listed:
-# they read the DXF files of AutoCAD and already pass.
-rectang/base #932
-rectang/opzioni #932
-rectang/valori-proposti #932
-rectang/esc-annulla #932
-rectang/rotazione-90 #932

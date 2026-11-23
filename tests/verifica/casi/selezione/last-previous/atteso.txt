@@ -1,0 +1,90 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,-10 end=30,-10
+  258 CIRCLE center=50,-10 radius=5
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 30,0
+  Specify next point or [Undo]:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 50,0
+  Specify radius of circle or [Diameter]: 5
+  Command: LINE
+  Specify first point: 0,20
+  Specify next point or [Undo]: 30,20
+  Specify next point or [Undo]:
+  Command: ERASE
+  Select objects: L
+  1 found, 1 total
+  Select objects:
+  Command: SELECT
+  Select objects: W
+  Specify first corner: -5,-10
+  Specify opposite corner: 60,10
+  2 found, 2 total
+  Select objects:
+  Command: MOVE
+  Select objects: P
+  2 found, 2 total
+  Select objects:
+  Specify base point or [Displacement] <Displacement>: 0,0
+  Specify second point or <use first point as displacement>: 0,-10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Line
+  Erase
+  Move
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  LINE 1
+
+[final]
+entities:
+  257 LINE start=0,0 end=30,0
+messages:
+  Command: U
+  Undone: Move.
+  Command: SELECT
+  Select objects: P
+  2 found, 2 total
+  Select objects:
+  Command: ERASE
+  Select objects: W
+  Specify first corner: 40,-10
+  Specify opposite corner: 60,10
+  1 found, 1 total
+  Select objects:
+  Command: SELECT
+  Select objects: P
+  No previous selection set.
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Line
+  Erase
+  Erase
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LINE 1

@@ -3,6 +3,7 @@
 
 #include "mtext_layout.hpp"
 
+#include "tg/core/mtext_format.hpp"
 #include "tg/core/text_metrics.hpp"
 
 #include <algorithm>
@@ -20,12 +21,6 @@ constexpr char32_t kReplacement = U'�';
 // The baseline of the next row is 5/3 of the height below, times the line
 // spacing factor (docs/adr/0013 and docs/adr/0046, point 2, as AutoCAD).
 constexpr double kBaselineDistance = 5.0 / 3.0;
-
-// `\U+XXXX`: the backslash, 'U', '+' and four hexadecimal digits.
-constexpr std::size_t kUnicodeCodeLength = 7;
-constexpr std::size_t kUnicodeDigits = 4;
-constexpr std::size_t kHexBase = 16;
-constexpr std::size_t kDecimalDigits = 10;
 
 // "%%" and the character of a DXF control code (docs/adr/0013, point 5).
 constexpr std::size_t kPercentCodeLength = 3;
@@ -53,94 +48,21 @@ std::optional<char32_t> percentCharacter(char32_t code) {
     }
 }
 
-/// The codes with an argument up to ';' that are removed (PT13, point 2).
-bool isArgumentCode(char32_t code) {
-    switch (code) {
-        case U'f':
-        case U'F':
-        case U'H':
-        case U'W':
-        case U'Q':
-        case U'T':
-        case U'A':
-        case U'C':
-        case U'c':
-        case U'p':
-            return true;
-        default:
-            return false;
-    }
+/// The `\~` of `unit`: the no-break space that the paragraphs of the layout
+/// keep as kNoBreakSpace, unlike a U+00A0 written in the value.
+bool isNoBreakCode(std::string_view value, const MTextUnit& unit) {
+    return value.substr(unit.sourceBegin, unit.sourceEnd - unit.sourceBegin) == "\\~";
 }
 
-/// The codes that end at ';': those removed and `\S`, which keeps its text.
-bool takesArgument(char32_t code) {
-    return isArgumentCode(code) || code == U'S';
-}
-
-/// Underline, overline and strike-through on and off, removed.
-bool isToggleCode(char32_t code) {
-    switch (code) {
-        case U'L':
-        case U'l':
-        case U'O':
-        case U'o':
-        case U'K':
-        case U'k':
-            return true;
-        default:
-            return false;
+/// A stacked fraction shown on one line, as in stage 0.8: the characters
+/// between `\S` and ';' as written, with "1^2", "1#2" and "1/2" all "1/2".
+void appendFlatStack(std::string_view value, const MTextUnit& unit, std::u32string& out) {
+    constexpr std::size_t kOpening = 2;  // "\S"
+    constexpr std::size_t kClosing = 1;  // ";"
+    const std::size_t length = unit.sourceEnd - unit.sourceBegin - kOpening - kClosing;
+    for (const char32_t part : decodeUtf8(value.substr(unit.sourceBegin + kOpening, length))) {
+        out += part == U'^' || part == U'#' ? U'/' : part;
     }
-}
-
-std::optional<std::size_t> hexDigit(char32_t c) {
-    if (c >= U'0' && c <= U'9') {
-        return static_cast<std::size_t>(c - U'0');
-    }
-    if (c >= U'a' && c <= U'f') {
-        return static_cast<std::size_t>(c - U'a') + kDecimalDigits;
-    }
-    if (c >= U'A' && c <= U'F') {
-        return static_cast<std::size_t>(c - U'A') + kDecimalDigits;
-    }
-    return std::nullopt;
-}
-
-/// The character of `\U+XXXX` at `at`, or std::nullopt when the four digits
-/// are not there. A surrogate is not a character: U+FFFD, as decodeUtf8().
-std::optional<char32_t> unicodeCode(std::u32string_view text, std::size_t at) {
-    if (at + kUnicodeCodeLength > text.size() || text[at + 2] != U'+') {
-        return std::nullopt;
-    }
-    std::size_t value = 0;
-    for (std::size_t i = 0; i < kUnicodeDigits; ++i) {
-        const std::optional<std::size_t> digit = hexDigit(text[at + 3 + i]);
-        if (!digit) {
-            return std::nullopt;
-        }
-        value = (value * kHexBase) + *digit;
-    }
-    const auto code = static_cast<char32_t>(value);
-    return code >= kFirstSurrogate && code <= kLastSurrogate ? kReplacement : code;
-}
-
-/// No ';' ends the argument: argumentEnd() of a code that stays literal.
-constexpr std::size_t kNoEnd = std::u32string_view::npos;
-
-/// The index of the ';' that ends the argument starting at `from`, or kNoEnd
-/// when a `\P` or the end of the text comes first.
-std::size_t argumentEnd(std::u32string_view text, std::size_t from) {
-    for (std::size_t i = from; i < text.size(); ++i) {
-        if (text[i] == U';') {
-            return i;
-        }
-        if (text[i] == U'\\' && i + 1 < text.size()) {
-            if (text[i + 1] == U'P') {
-                return kNoEnd;
-            }
-            ++i;  // an escaped character never ends the argument
-        }
-    }
-    return kNoEnd;
 }
 
 /// A word and the normal spaces before it; the word is empty only for the
@@ -234,60 +156,18 @@ void appendUtf8(char32_t code, std::string& out) {
 }  // namespace
 
 std::vector<std::u32string> paragraphs(std::string_view value) {
-    const std::u32string text = decodeUtf8(value);
-    std::vector<std::u32string> result(1);
-    std::size_t i = 0;
-    while (i < text.size()) {
-        std::u32string& current = result.back();
-        const char32_t c = text[i];
-        if (c == U'{' || c == U'}') {
-            ++i;  // a group
-            continue;
-        }
-        if (c == U'%' && i + kPercentCodeLength <= text.size() && text[i + 1] == U'%') {
-            if (const std::optional<char32_t> converted = percentCharacter(text[i + 2])) {
-                current += *converted;
-                i += kPercentCodeLength;
+    // The pieces of PT7 joined again: the formats do not count here yet.
+    std::vector<std::u32string> result;
+    for (const MTextParagraph& paragraph : formattedParagraphs(value, MTextFormat{})) {
+        std::u32string& current = result.emplace_back();
+        for (const MTextRun& run : paragraph) {
+            if (run.stack) {
+                appendFlatStack(value, run.units.front(), current);
                 continue;
             }
-        }
-        if (c != U'\\' || i + 1 == text.size()) {
-            current += c;
-            ++i;
-            continue;
-        }
-        const char32_t code = text[i + 1];
-        if (code == U'P') {
-            result.emplace_back();
-            i += 2;
-        } else if (code == U'~') {
-            current += kNoBreakSpace;
-            i += 2;
-        } else if (code == U'\\' || code == U'{' || code == U'}') {
-            current += code;
-            i += 2;
-        } else if (isToggleCode(code)) {
-            i += 2;
-        } else if (const std::optional<char32_t> unicode =
-                       code == U'U' ? unicodeCode(text, i) : std::nullopt) {
-            current += *unicode;
-            i += kUnicodeCodeLength;
-        } else if (const std::size_t end = takesArgument(code) ? argumentEnd(text, i + 2) : kNoEnd;
-                   end != kNoEnd) {
-            if (code == U'S') {
-                // A stacked fraction, shown on one line: "1^2", "1#2" and
-                // "1/2" all become "1/2".
-                for (std::size_t k = i + 2; k < end; ++k) {
-                    const char32_t part = text[k];
-                    current += part == U'^' || part == U'#' ? U'/' : part;
-                }
+            for (std::size_t k = 0; k < run.text.size(); ++k) {
+                current += isNoBreakCode(value, run.units[k]) ? kNoBreakSpace : run.text[k];
             }
-            i = end + 1;
-        } else {
-            // Any other code, and one without its ';', stays as written: the
-            // characters after the backslash are read again as text.
-            current += c;
-            ++i;
         }
     }
     return result;
