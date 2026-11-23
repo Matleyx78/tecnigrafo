@@ -1,0 +1,121 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,0 end=60,0
+  258 LINE start=60,0 end=60,40
+  259 LINE start=60,40 end=0,40
+  260 LINE start=0,40 end=0,0
+  261 CIRCLE center=30,20 radius=8
+  262 HATCH pattern="NET" solid=no angle=30 scale=2 islands=outer loop=external+derived+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40 loop=outermost+derived+edges circle=30,20;8 seed=5,5
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 60,0
+  Specify next point or [Undo]: 60,40
+  Specify next point or [Close/Undo]: 0,40
+  Specify next point or [Close/Undo]: C
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 30,20
+  Specify radius of circle or [Diameter]: 8
+  Command: -HATCH
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]: 5,5
+  Selecting everything...
+  Selecting everything visible...
+  Analyzing the selected data...
+  Analyzing internal islands...
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]:
+  Command: -HATCHEDIT
+  Select hatch object: 10,10
+  Enter hatch option [Style/Properties/Origin] <Properties>: P
+  Enter a pattern name or [Solid] <ANSI31>: NET
+  Specify a scale for the pattern <1.0000>: 2
+  Specify an angle for the pattern <0>: 30
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Hatch
+  Hatchedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  HATCH 1
+  LINE 4
+
+[report 2]
+entities:
+  257 LINE start=0,0 end=60,0
+  258 LINE start=60,0 end=60,40
+  259 LINE start=60,40 end=0,40
+  260 LINE start=0,40 end=0,0
+  261 CIRCLE center=30,20 radius=8
+  262 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=outer loop=external+derived+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40 loop=outermost+derived+edges circle=30,20;8 seed=5,5
+messages:
+  Command: -HATCH
+  Current hatch pattern: NET
+  Specify internal point or [Properties/Select objects]: P
+  Enter a pattern name or [Solid] <NET>:
+  Specify a scale for the pattern <2.0000>:
+  Specify an angle for the pattern <30>:
+  Current hatch pattern: NET
+  *Cancel*
+  Command: U
+  Undone: Hatchedit.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Hatch
+redo:
+  Hatchedit
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  HATCH 1
+  LINE 4
+
+[final]
+entities:
+  257 LINE start=0,0 end=60,0
+  258 LINE start=60,0 end=60,40
+  259 LINE start=60,40 end=0,40
+  260 LINE start=0,40 end=0,0
+  261 CIRCLE center=30,20 radius=8
+  262 HATCH pattern="NET" solid=no angle=30 scale=2 islands=outer loop=external+derived+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40 loop=outermost+derived+edges circle=30,20;8 seed=5,5
+messages:
+  Command: REDO
+  Redone: Hatchedit.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Hatch
+  Hatchedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  CIRCLE 1
+  HATCH 1
+  LINE 4
