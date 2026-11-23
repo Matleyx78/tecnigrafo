@@ -72,7 +72,7 @@ core::MTextAttachment attachment(std::string_view keyword) {
 
 CommandDescription MTextCommand::description() {
     return {"MTEXT",
-            {},
+            {"T", "MT"},
             "Creates multiline text from a reference rectangle.",
             false,
             {{"first-corner", "Specify first corner:", ValueType::Point, {}, false},

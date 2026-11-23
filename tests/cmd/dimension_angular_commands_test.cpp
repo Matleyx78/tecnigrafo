@@ -88,6 +88,18 @@ TEST_F(DimensionAngularCommandsTest, AngularLocationSelectsAllFourSectors) {
     }
 }
 
+TEST_F(DimensionAngularCommandsTest, AngularTextDefaultUsesStoredLineDirections) {
+    add(core::Line{{0.0, 0.0}, {40.0, 0.0}});
+    add(core::Line{{30.0, 40.0}, {0.0, 0.0}});
+
+    runner().submitText("DIMANGULAR");
+    runner().click({20.0, 0.0}, PickAction::Add);
+    runner().click({15.0, 20.0}, PickAction::Add);
+    runner().submitText("Mtext");
+
+    EXPECT_EQ(runner().promptText(), "Enter dimension text <53>:");
+}
+
 TEST_F(DimensionAngularCommandsTest, AngularRejectsAnArcAndPolylineArc) {
     add(core::Arc{{0.0, 0.0}, 10.0, 0.0, core::kPi});
     core::Polyline polyline;
@@ -147,7 +159,7 @@ TEST_F(DimensionAngularCommandsTest, RadiusOnPolylineArcAndInvalidCenterRepeatLo
     runner().click({0.0, -10.0}, PickAction::Add);
     point(0.0, 0.0);
     EXPECT_EQ(messages().back(), "Points coincide.");
-    EXPECT_EQ(runner().promptText(), "Specify dimension line location or [Text/Angle]:");
+    EXPECT_EQ(runner().promptText(), "Specify dimension line location or [Mtext/Text/Angle]:");
     point(0.0, -20.0);
     EXPECT_EQ(dimension().definition.kind, core::DimensionKind::Radius);
 
@@ -181,7 +193,7 @@ TEST_F(DimensionAngularCommandsTest, AngularVertexRepeatsLocationPrompt) {
     point(0.0, 0.0);
     EXPECT_EQ(messages().back(), "Points coincide.");
     EXPECT_EQ(runner().promptText(),
-              "Specify dimension arc line location or [Text/Angle/Quadrant]:");
+              "Specify dimension arc line location or [Mtext/Text/Angle/Quadrant]:");
 }
 
 }  // namespace
