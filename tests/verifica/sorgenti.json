@@ -618,6 +618,14 @@
       "license-url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
     },
     {
+      "name": "autocad-attributi",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-attributi.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "180f81f8c9af3de95eaa13ca9f938ec5eca0a23bb95fcadc78cbf85ee612685e",
+      "license": "CC0-1.0",
+      "license-url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+    },
+    {
       "name": "autocad-prolungamento-parallelo",
       "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/autocad-prolungamento-parallelo.dxf",
       "version": "d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9",
