@@ -1,0 +1,38 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=-10,17.320508075689 vertex=-20,0 vertex=-10,-17.320508075689 vertex=10,-17.320508075689 vertex=20,0 vertex=10,17.320508075689
+  258 LWPOLYLINE closed=yes vertex=38.452994616207,20 vertex=26.905989232415,0 vertex=38.452994616207,-20 vertex=61.547005383792,-20 vertex=73.094010767585,0 vertex=61.547005383793,20
+  259 LWPOLYLINE closed=yes vertex=100,0 vertex=120,0 vertex=126.180339887499,19.021130325903 vertex=110,30.776835371753 vertex=93.819660112501,19.021130325903
+messages:
+  Command: POLYGON
+  Enter number of sides <4>: 6
+  Specify center of polygon or [Edge]: 0,0
+  Enter an option [Inscribed in circle/Circumscribed about circle] <I>: I
+  Specify radius of circle: 20
+  Command: POLYGON
+  Enter number of sides <6>:
+  Specify center of polygon or [Edge]: 50,0
+  Enter an option [Inscribed in circle/Circumscribed about circle] <I>: C
+  Specify radius of circle: 20
+  Command: POLYGON
+  Enter number of sides <6>: 5
+  Specify center of polygon or [Edge]: E
+  Specify first endpoint of edge: 100,0
+  Specify second endpoint of edge: 120,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polygon
+  Polygon
+  Polygon
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 3

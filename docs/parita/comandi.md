@@ -57,21 +57,21 @@ Aggiornato alla versione **0.8**.
 | Comando | Alias | Stato | Tappa | Note |
 |---|---|---|---|---|
 | `TEXT` | `DT`, `DTEXT` | presente | 0.4 | una o più righe, codici speciali DXF; negli script una riga sola, come AutoCAD (0.7); usa lo stile corrente (0.8); mancano le opzioni *Justify* e *Style* |
-| `MTEXT` | `T`, `MT` | presente | 0.8 | dalla riga di comando, con *Height*, *Justify*, *Line spacing*, *Rotation*, *Style*, *Width*; i codici di formato si mostrano come testo; mancano l'editor nella finestra e `TEXTEDIT` (idea #662) e gli alias `T` e `MT` (0.8.1) |
-| `STYLE` | `ST` | presente | 0.8 | `-STYLE` (anche `STYLE`) dalla riga di comando: font, altezza fissa, larghezza, obliquo, rovesciato e capovolto; manca la finestra degli stili e l'alias `ST` (0.8.1) |
+| `MTEXT` | `T`, `MT` | presente | 0.8 | dalla riga di comando, con *Height*, *Justify*, *Line spacing*, *Rotation*, *Style*, *Width*; i codici di formato si mostrano come testo; mancano l'editor nella finestra e `TEXTEDIT` (idea #662) |
+| `STYLE` | `ST` | presente | 0.8 | `-STYLE` (anche `STYLE`) dalla riga di comando: font, altezza fissa, larghezza, obliquo, rovesciato e capovolto; manca la finestra degli stili |
 | `TEXTSTYLE` | | completo | 0.8 | stile di testo corrente |
 | `TEXTEDIT` | `ED`, `DDEDIT` | assente | 0.8.1 | testi, `MTEXT` nell'editor con i formati, quote, attributi (#662) |
-| `DIMLINEAR` | `DLI`, `DIMLIN` | presente | 0.8 | due punti o un oggetto, *Text*, *Angle*, *Horizontal*, *Vertical*, *Rotated*; manca *Mtext* (idea #662) e l'alias `DLI` (0.8.1) |
-| `DIMALIGNED` | `DAL`, `DIMALI` | presente | 0.8 | *Text* e *Angle*; manca *Mtext* (idea #662) e l'alias `DAL` (0.8.1) |
-| `DIMANGULAR` | `DAN`, `DIMANG` | presente | 0.8 | due linee, arco, cerchio o tre punti, *Text*, *Angle*, *Quadrant*; manca *Mtext* (idea #662) e l'alias `DAN` (0.8.1) |
-| `DIMRADIUS` | `DRA`, `DIMRAD` | presente | 0.8 | *Text* e *Angle*; manca *Mtext* (idea #662) e l'alias `DRA` (0.8.1) |
-| `DIMDIAMETER` | `DDI`, `DIMDIA` | presente | 0.8 | *Text* e *Angle*; manca *Mtext* (idea #662) e l'alias `DDI` (0.8.1) |
-| `DIMSTYLE` | `D` | presente | 0.8 | `-DIMSTYLE` (anche `DIMSTYLE`) con *Save*, *Restore*, *STatus* e `?`, e le variabili di quota come comandi; una quota con adattamento diverso da `ISO-25` non si rigenera; mancano la finestra degli stili, *Variables*, *Apply* e l'alias `D` (0.8.1) |
-| `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; manca la finestra e l'alias `H` (0.8.1) |
+| `DIMLINEAR` | `DLI`, `DIMLIN` | presente | 0.8 | due punti o un oggetto, *Mtext*, *Text*, *Angle*, *Horizontal*, *Vertical*, *Rotated* |
+| `DIMALIGNED` | `DAL`, `DIMALI` | presente | 0.8 | *Mtext*, *Text* e *Angle* |
+| `DIMANGULAR` | `DAN`, `DIMANG` | presente | 0.8 | due linee, arco, cerchio o tre punti, *Mtext*, *Text*, *Angle*, *Quadrant* |
+| `DIMRADIUS` | `DRA`, `DIMRAD` | presente | 0.8 | *Mtext*, *Text* e *Angle* |
+| `DIMDIAMETER` | `DDI`, `DIMDIA` | presente | 0.8 | *Mtext*, *Text* e *Angle* |
+| `DIMSTYLE` | `D` | presente | 0.8 | `-DIMSTYLE` (anche `DIMSTYLE`) con *Save*, *Restore*, *STatus* e `?`, e le variabili di quota come comandi; una quota con adattamento diverso da `ISO-25` non si rigenera; mancano la finestra degli stili, *Variables* e *Apply* |
+| `HATCH` | `H` | presente | 0.8 | `-HATCH` (anche `HATCH`) con un punto interno o *Select objects*, motivi `ANSI31`, `SOLID` e `NET`, scala e angolo; non associativo; contorni solo fra linee, archi, cerchi e polilinee; i retini di AutoCAD con altri motivi si leggono e si vedono; manca la finestra |
 | `HPISLANDDETECTION` | | completo | 0.8 | *Normal*, *Outer*, *Ignore* |
 | `HATCHEDIT` | `HE` | assente | 0.8.1 | `-HATCHEDIT` con *Properties*, *Origin*, *Style* (#913) |
-| `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra e l'alias `B` (0.8.1) |
-| `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o di un file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*), *Rotate*; attributi ai valori predefiniti, senza domande; mancano la finestra, le domande degli attributi e l'alias `I` (0.8.1) |
+| `BLOCK` | `B` | presente | 0.8 | `-BLOCK` (anche `BLOCK`): nome, punto base e oggetti, ridefinizione; manca la finestra |
+| `INSERT` | `I` | presente | 0.8 | `-INSERT` (anche `INSERT`) di un blocco o di un file DXF, `nome=file`, *Basepoint*, *Scale* (*Corner*, *XYZ*), *Rotate*; attributi ai valori predefiniti, senza domande; mancano la finestra e le domande degli attributi |
 | `ATTDEF` | `ATT` | assente | 0.8.1 | `-ATTDEF` dalla riga di comando |
 | `ATTEDIT` | `ATE` | assente | 0.8.1 | `-ATTEDIT` uno per uno e globale |
 | `ATTSYNC` | | assente | 0.8.1 | |

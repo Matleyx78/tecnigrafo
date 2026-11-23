@@ -17,11 +17,11 @@ e5bae5c4cde31f22142753855f4f8fb86da6ff39955ed3c0a11248b0d16948b0  LiberationSans
 698da70fc191cc5f33ad4d6d3fe830fe4624b898ea2e3169955928b7c491f1ee  LiberationSans-BoldItalic.ttf
 ```
 
-`tools/fontmetrics` reads the Regular TTF during the build and generates the
-table used by `core`. Capital-letter height is one unit; advances are added
-without kerning. See [ADR 0013](../../docs/adr/0013-testo-e-font.md).
-
-The Bold, Italic and BoldItalic files come from the same archive for the
-formatted text of stage 0.8.1
-([ADR 0054](../../docs/adr/0054-testo-formattato-ed-editor.md), point 2); until
-package 0.8.1-PT6 they are not read by the build.
+`tools/fontmetrics` reads each of the four TTF files during the build and
+generates one table per face (`font_metrics_regular.inc`, `font_metrics_bold.inc`,
+`font_metrics_italic.inc`, `font_metrics_bolditalic.inc`) used by `core`. Each
+table holds ascent, descent, advances and the missing glyph's advance, in units
+of the capital-letter height **of its own file**; advances are added without
+kerning. See [ADR 0013](../../docs/adr/0013-testo-e-font.md) and, for the Bold,
+Italic and BoldItalic faces of formatted text,
+[ADR 0054](../../docs/adr/0054-testo-formattato-ed-editor.md), point 2.

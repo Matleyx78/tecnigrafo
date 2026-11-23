@@ -239,7 +239,7 @@ Status HatchCommand::finish(CommandContext& context) {
 
 CommandDescription HatchCommand::description() {
     return {"-HATCH",
-            {"HATCH"},
+            {"HATCH", "H"},
             "Creates a hatch from points or selected objects.",
             false,
             {{"internal-point",
