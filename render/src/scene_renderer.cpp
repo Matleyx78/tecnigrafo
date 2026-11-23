@@ -7,6 +7,7 @@
 #include "tg/core/generated.hpp"
 #include "tg/core/math.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <type_traits>
@@ -26,6 +27,8 @@ constexpr double kMaxGridLines = 4000.0;
 
 constexpr int kAdaptiveFallbackMajor = 5;
 constexpr double kUcsIconMarginPx = 12.0;
+constexpr double kUcsIconLabelHeightPx = 9.0;
+constexpr double kUcsIconLabelGapPx = 3.0;
 
 bool overlaps(const BBox& a, const BBox& b) {
     if (a.isEmpty() || b.isEmpty()) {
@@ -67,14 +70,15 @@ std::optional<GridAxis> gridAxis(double gridUnit, double snapUnit, int gridDispl
     return GridAxis{spacing, 1, true};
 }
 
-void drawGridAxis(const GridAxis& grid, double first, double last, bool vertical,
+void drawGridAxis(const GridAxis& grid, double base, double first, double last, bool vertical,
                   const Viewport& viewport, const SceneStyle& style, Painter& painter) {
-    const double span = std::ceil(last / grid.spacing) - std::floor(first / grid.spacing);
+    const double span =
+        std::ceil((last - base) / grid.spacing) - std::floor((first - base) / grid.spacing);
     if (!std::isfinite(span) || span > kMaxGridLines) {
         return;
     }
-    const auto begin = static_cast<long long>(std::floor(first / grid.spacing));
-    const auto end = static_cast<long long>(std::ceil(last / grid.spacing));
+    const auto begin = static_cast<long long>(std::floor((first - base) / grid.spacing));
+    const auto end = static_cast<long long>(std::ceil((last - base) / grid.spacing));
     for (const bool major : std::array{false, true}) {
         if (grid.onlyMajor && !major) {
             continue;
@@ -86,11 +90,11 @@ void drawGridAxis(const GridAxis& grid, double first, double last, bool vertical
             }
             if (vertical) {
                 const double x =
-                    viewport.worldToScreen({static_cast<double>(i) * grid.spacing, 0}).x;
+                    viewport.worldToScreen({base + static_cast<double>(i) * grid.spacing, 0}).x;
                 painter.drawLine({x, 0.0}, {x, viewport.screenHeight()});
             } else {
                 const double y =
-                    viewport.worldToScreen({0, static_cast<double>(i) * grid.spacing}).y;
+                    viewport.worldToScreen({0, base + static_cast<double>(i) * grid.spacing}).y;
                 painter.drawLine({0.0, y}, {viewport.screenWidth(), y});
             }
         }
@@ -103,11 +107,13 @@ void drawGrid(const core::GridSettings& settings, const Viewport& viewport, cons
     // Axes adapt independently: an 8 x 20 px grid can hide or coarsen only X.
     if (const auto x = gridAxis(settings.gridUnit.x, settings.snapUnit.x, settings.gridDisplay,
                                 settings.gridMajor, viewport.scale(), style.minGridSpacingPx)) {
-        drawGridAxis(*x, area.min().x, area.max().x, true, viewport, style, painter);
+        drawGridAxis(*x, settings.snapBase.x, area.min().x, area.max().x, true, viewport, style,
+                     painter);
     }
     if (const auto y = gridAxis(settings.gridUnit.y, settings.snapUnit.y, settings.gridDisplay,
                                 settings.gridMajor, viewport.scale(), style.minGridSpacingPx)) {
-        drawGridAxis(*y, area.min().y, area.max().y, false, viewport, style, painter);
+        drawGridAxis(*y, settings.snapBase.y, area.min().y, area.max().y, false, viewport, style,
+                     painter);
     }
 }
 
@@ -122,23 +128,37 @@ void drawAxesLines(const Viewport& viewport, const SceneStyle& style, Painter& p
 void drawUcsIcon(int ucsIcon, const Viewport& viewport, const SceneStyle& style, Painter& painter) {
     Vec2 origin = viewport.worldToScreen(style.axisFrame.origin);
     const double size = style.ucsIconSizePx;
-    if ((ucsIcon & 2) == 0 || origin.x - size < 0.0 || origin.y - size < 0.0 ||
-        origin.x + size > viewport.screenWidth() || origin.y + size > viewport.screenHeight()) {
-        origin = {kUcsIconMarginPx, viewport.screenHeight() - kUcsIconMarginPx};
-    }
     const auto screenDirection = [](const Vec2& direction) {
         return Vec2{direction.x, -direction.y};
     };
+    const auto includeAxis = [&](const Vec2& direction, Vec2& minimum, Vec2& maximum) {
+        const Vec2 unit = screenDirection(direction);
+        const Vec2 tip = origin + unit * size;
+        const Vec2 labelCenter = tip + unit * (kUcsIconLabelGapPx + kUcsIconLabelHeightPx * 0.5);
+        const double halfLabel = kUcsIconLabelHeightPx * 0.5;
+        minimum.x = std::min({minimum.x, tip.x, labelCenter.x - halfLabel});
+        minimum.y = std::min({minimum.y, tip.y, labelCenter.y - halfLabel});
+        maximum.x = std::max({maximum.x, tip.x, labelCenter.x + halfLabel});
+        maximum.y = std::max({maximum.y, tip.y, labelCenter.y + halfLabel});
+    };
+    Vec2 minimum = origin;
+    Vec2 maximum = origin;
+    includeAxis(style.axisFrame.xDirection, minimum, maximum);
+    includeAxis(style.axisFrame.yDirection, minimum, maximum);
+    if ((ucsIcon & 2) == 0 || minimum.x < 0.0 || minimum.y < 0.0 ||
+        maximum.x > viewport.screenWidth() || maximum.y > viewport.screenHeight()) {
+        origin = {kUcsIconMarginPx, viewport.screenHeight() - kUcsIconMarginPx};
+    }
     const auto arrow = [&](const Vec2& direction, const Color& color, const std::string& label) {
         const Vec2 unit = screenDirection(direction);
-        const Vec2 normal{-unit.y, unit.x};
         const Vec2 tip = origin + unit * size;
         painter.setPen(color, 0.0, LineStyle::Solid);
         painter.drawLine(origin, tip);
-        painter.drawLine(tip, tip - unit * 5.0 + normal * 3.0);
-        painter.drawLine(tip, tip - unit * 5.0 - normal * 3.0);
+        const Vec2 labelCenter = tip + unit * (kUcsIconLabelGapPx + kUcsIconLabelHeightPx * 0.5);
         painter.drawText(
-            {std::u32string(label.begin(), label.end()), tip + unit * 3.0 - normal * 3.0, 10.0});
+            {std::u32string(label.begin(), label.end()),
+             labelCenter + Vec2{-kUcsIconLabelHeightPx * 0.5, kUcsIconLabelHeightPx * 0.5},
+             kUcsIconLabelHeightPx});
     };
     arrow(style.axisFrame.xDirection, style.axisX, style.axisFrame.xLabel);
     arrow(style.axisFrame.yDirection, style.axisY, style.axisFrame.yLabel);

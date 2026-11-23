@@ -10,6 +10,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <numbers>
 #include <string>
@@ -108,6 +109,26 @@ SceneStyle gridStyle() {
     return style;
 }
 
+std::vector<double> gridCoordinates(const RecordingPainter& painter, bool vertical,
+                                    std::optional<Color> color = std::nullopt) {
+    std::vector<double> coordinates;
+    for (const Stroke& stroke : painter.strokes) {
+        const bool isVertical = stroke.points[0].x == stroke.points[1].x;
+        if (isVertical == vertical && (!color || stroke.pen.color == *color)) {
+            coordinates.push_back(vertical ? stroke.points[0].x : stroke.points[0].y);
+        }
+    }
+    std::ranges::sort(coordinates);
+    return coordinates;
+}
+
+void expectUniformSpacing(const std::vector<double>& coordinates, double spacing) {
+    ASSERT_GE(coordinates.size(), 2U);
+    for (std::size_t i = 1; i < coordinates.size(); ++i) {
+        EXPECT_NEAR(coordinates[i] - coordinates[i - 1], spacing, 1e-10);
+    }
+}
+
 TEST(SceneRendererGrid, OffDrawsNoGrid) {
     core::Document document;
     auto grid = document.grid();
@@ -129,7 +150,20 @@ TEST(SceneRendererGrid, UsesFixedAndSnapFallbackSpacingPerAxis) {
     RecordingPainter painter;
     renderScene(document, furnitureViewport(3.0), gridStyle(), painter);
     // X lines are 15 px apart and Y lines 30 px apart. Both include zero.
-    EXPECT_EQ(painter.strokes.size(), 9U + 5U);
+    EXPECT_EQ(gridCoordinates(painter, true).size(), 9U);
+    EXPECT_EQ(gridCoordinates(painter, false).size(), 5U);
+}
+
+TEST(SceneRendererGrid, UsesWrittenFiveByTenSpacing) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {5.0, 10.0};
+    grid.gridDisplay = 0;
+    document.setGrid(grid);
+    RecordingPainter painter;
+    renderScene(document, furnitureViewport(3.0), gridStyle(), painter);
+    EXPECT_EQ(gridCoordinates(painter, true).size(), 9U);
+    EXPECT_EQ(gridCoordinates(painter, false).size(), 5U);
 }
 
 TEST(SceneRendererGrid, DifferentAxisSpacingAdaptsIndependently) {
@@ -145,6 +179,15 @@ TEST(SceneRendererGrid, DifferentAxisSpacingAdaptsIndependently) {
     for (const Stroke& stroke : painter.strokes) {
         EXPECT_DOUBLE_EQ(stroke.points[0].y, stroke.points[1].y);
     }
+
+    grid.gridDisplay = 2;
+    document.setGrid(grid);
+    RecordingPainter adaptivePainter;
+    renderScene(document, furnitureViewport(2.0), gridStyle(), adaptivePainter);
+    expectUniformSpacing(gridCoordinates(adaptivePainter, true), 40.0);
+    expectUniformSpacing(gridCoordinates(adaptivePainter, false), 20.0);
+    EXPECT_EQ(gridCoordinates(adaptivePainter, true, gridStyle().gridMajor).size(), 5U);
+    EXPECT_EQ(gridCoordinates(adaptivePainter, false, gridStyle().gridMinor).size(), 6U);
 }
 
 TEST(SceneRendererGrid, AdaptiveCoarsensAndSubdividesAtTwoZooms) {
@@ -155,16 +198,40 @@ TEST(SceneRendererGrid, AdaptiveCoarsensAndSubdividesAtTwoZooms) {
     grid.gridDisplay = 6;
     grid.gridMajor = 5;
     document.setGrid(grid);
-    for (const double scale : {0.1, 10.0}) {
-        RecordingPainter painter;
-        renderScene(document, furnitureViewport(scale), gridStyle(), painter);
-        EXPECT_FALSE(painter.strokes.empty());
-        for (const Stroke& stroke : painter.strokes) {
-            const double dx = std::abs(stroke.points[1].x - stroke.points[0].x);
-            const double dy = std::abs(stroke.points[1].y - stroke.points[0].y);
-            EXPECT_TRUE(dx >= 12.0 || dy >= 12.0);
-        }
-    }
+    RecordingPainter distantPainter;
+    renderScene(document, furnitureViewport(0.1), gridStyle(), distantPainter);
+    expectUniformSpacing(gridCoordinates(distantPainter, true), 25.0);
+    EXPECT_EQ(gridCoordinates(distantPainter, true, gridStyle().gridMajor).size(), 5U);
+    EXPECT_TRUE(gridCoordinates(distantPainter, true, gridStyle().gridMinor).empty());
+
+    RecordingPainter closePainter;
+    renderScene(document, furnitureViewport(10.0), gridStyle(), closePainter);
+    expectUniformSpacing(gridCoordinates(closePainter, true), 20.0);
+    EXPECT_EQ(gridCoordinates(closePainter, true, gridStyle().gridMajor).size(), 1U);
+    EXPECT_EQ(gridCoordinates(closePainter, true, gridStyle().gridMinor).size(), 6U);
+}
+
+TEST(SceneRendererGrid, MajorTenCoarsensAndSubdividesAtTwoZooms) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {10.0, 10.0};
+    grid.snapUnit = {1.0, 1.0};
+    grid.gridDisplay = 6;
+    grid.gridMajor = 10;
+    document.setGrid(grid);
+
+    RecordingPainter distantPainter;
+    renderScene(document, furnitureViewport(0.1), gridStyle(), distantPainter);
+    expectUniformSpacing(gridCoordinates(distantPainter, true), 100.0);
+    EXPECT_EQ(gridCoordinates(distantPainter, true).size(), 3U);
+    EXPECT_TRUE(gridCoordinates(distantPainter, true, gridStyle().gridMinor).empty());
+
+    RecordingPainter closePainter;
+    renderScene(document, furnitureViewport(100.0), gridStyle(), closePainter);
+    expectUniformSpacing(gridCoordinates(closePainter, true), 100.0);
+    EXPECT_EQ(gridCoordinates(closePainter, true).size(), 3U);
+    EXPECT_EQ(gridCoordinates(closePainter, true, gridStyle().gridMajor).size(), 1U);
+    EXPECT_EQ(gridCoordinates(closePainter, true, gridStyle().gridMinor).size(), 2U);
 }
 
 TEST(SceneRendererGrid, MajorOneUsesFiveAndNeverDisappears) {
@@ -174,14 +241,39 @@ TEST(SceneRendererGrid, MajorOneUsesFiveAndNeverDisappears) {
     grid.gridDisplay = 6;
     grid.gridMajor = 1;
     document.setGrid(grid);
-    for (const double scale : {0.1, 3.0}) {
+    for (const auto [scale, expectedSpacing] :
+         std::array{std::pair{0.1, 12.5}, std::pair{100.0, 100.0}}) {
         RecordingPainter painter;
         renderScene(document, furnitureViewport(scale), gridStyle(), painter);
-        ASSERT_FALSE(painter.strokes.empty());
+        const auto vertical = gridCoordinates(painter, true);
+        ASSERT_FALSE(vertical.empty());
+        if (vertical.size() > 1) {
+            expectUniformSpacing(vertical, expectedSpacing);
+        }
         for (const Stroke& stroke : painter.strokes) {
             EXPECT_EQ(stroke.pen.color, gridStyle().gridMajor);
         }
     }
+}
+
+TEST(SceneRendererGrid, SnapBaseOffsetsGridAndMajorLines) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {5.0, 10.0};
+    grid.snapBase = {3.0, 4.0};
+    grid.gridDisplay = 0;
+    grid.gridMajor = 5;
+    document.setGrid(grid);
+    RecordingPainter painter;
+    renderScene(document, furnitureViewport(1.0), gridStyle(), painter);
+    const auto vertical = gridCoordinates(painter, true);
+    const auto horizontal = gridCoordinates(painter, false);
+    EXPECT_NE(std::ranges::find(vertical, 53.0), vertical.end());
+    EXPECT_NE(std::ranges::find(horizontal, 46.0), horizontal.end());
+    const auto verticalMajor = gridCoordinates(painter, true, gridStyle().gridMajor);
+    const auto horizontalMajor = gridCoordinates(painter, false, gridStyle().gridMajor);
+    EXPECT_NE(std::ranges::find(verticalMajor, 53.0), verticalMajor.end());
+    EXPECT_NE(std::ranges::find(horizontalMajor, 46.0), horizontalMajor.end());
 }
 
 TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
@@ -204,7 +296,7 @@ TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
         ASSERT_EQ(painter.runs.size(), 2U);
         const core::Vec2 expected = ucsIcon == 3 ? core::Vec2{50.0, 50.0} : core::Vec2{12.0, 88.0};
         expectPoint(painter.strokes[0].points[0], expected);
-        expectPoint(painter.strokes[3].points[0], expected);
+        expectPoint(painter.strokes[1].points[0], expected);
     }
 
     grid.ucsIcon = 3;
@@ -213,7 +305,25 @@ TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
     edgeViewport.setCenter({50.0, 0.0});
     RecordingPainter edgePainter;
     renderScene(document, edgeViewport, style, edgePainter);
-    expectPoint(edgePainter.strokes[0].points[0], {12.0, 88.0});
+    expectPoint(edgePainter.strokes[0].points[0], {0.0, 50.0});
+
+    auto outsideViewport = furnitureViewport(1.0);
+    outsideViewport.setCenter({100.0, 0.0});
+    RecordingPainter outsidePainter;
+    renderScene(document, outsideViewport, style, outsidePainter);
+    expectPoint(outsidePainter.strokes[0].points[0], {12.0, 88.0});
+
+    auto nearLeftViewport = furnitureViewport(1.0);
+    nearLeftViewport.setCenter({40.0, 0.0});
+    RecordingPainter nearLeftPainter;
+    renderScene(document, nearLeftViewport, style, nearLeftPainter);
+    expectPoint(nearLeftPainter.strokes[0].points[0], {10.0, 50.0});
+
+    auto clippedLabelViewport = furnitureViewport(1.0);
+    clippedLabelViewport.setCenter({0.0, -18.0});
+    RecordingPainter clippedLabelPainter;
+    renderScene(document, clippedLabelViewport, style, clippedLabelPainter);
+    expectPoint(clippedLabelPainter.strokes[0].points[0], {12.0, 88.0});
 }
 
 TEST(SceneRendererAxes, LinesPreferenceKeepsFullAxes) {
