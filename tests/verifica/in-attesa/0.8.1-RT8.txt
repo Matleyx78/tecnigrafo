@@ -1,5 +1,3 @@
 mtext/formati #953
 mtext/codici-semplici #953
 mtext/spaziatura #953
-mtext/decorazioni-senza-snap #953
-mtext/righe-e-similitudine #953
