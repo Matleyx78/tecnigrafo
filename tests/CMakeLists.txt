@@ -91,6 +91,7 @@ add_executable(tg_tests
     core/insert_test.cpp
     core/line_test.cpp
     core/math_test.cpp
+    core/mtext_format_test.cpp
     core/mtext_test.cpp
     core/new_entities_test.cpp
     core/polyline_test.cpp
@@ -171,11 +172,13 @@ target_compile_definitions(tg_tests PRIVATE
     TG_IO_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/io-output"
     TG_IO_TEST_DATA="${CMAKE_CURRENT_SOURCE_DIR}/io/dati")
 # The ZIP container is internal to io (io/src/zip.hpp), the lineweights and
-# linetypes on the screen to render (render/src/linework.hpp), and the lines
+# linetypes on the screen to render (render/src/linework.hpp), the lines
 # of the entity types of stage 0.8 to script
-# (script/src/new_entities_format.hpp); their tests reach them here.
+# (script/src/new_entities_format.hpp), and the paragraphs of an MTEXT to
+# core (core/src/mtext_layout.hpp); their tests reach them here.
 target_include_directories(tg_tests PRIVATE "${PROJECT_SOURCE_DIR}/io/src"
-    "${PROJECT_SOURCE_DIR}/render/src" "${PROJECT_SOURCE_DIR}/script/src")
+    "${PROJECT_SOURCE_DIR}/render/src" "${PROJECT_SOURCE_DIR}/script/src"
+    "${PROJECT_SOURCE_DIR}/core/src")
 tg_configure_target(tg_tests)
 
 gtest_discover_tests(tg_tests DISCOVERY_MODE PRE_TEST)
