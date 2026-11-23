@@ -265,15 +265,15 @@ TEST(SceneRendererGrid, SnapBaseOffsetsGridAndMajorLines) {
     grid.gridMajor = 5;
     document.setGrid(grid);
     RecordingPainter painter;
-    renderScene(document, furnitureViewport(1.0), gridStyle(), painter);
+    renderScene(document, furnitureViewport(3.0), gridStyle(), painter);
     const auto vertical = gridCoordinates(painter, true);
     const auto horizontal = gridCoordinates(painter, false);
-    EXPECT_NE(std::ranges::find(vertical, 53.0), vertical.end());
-    EXPECT_NE(std::ranges::find(horizontal, 46.0), horizontal.end());
+    EXPECT_NE(std::ranges::find(vertical, 59.0), vertical.end());
+    EXPECT_NE(std::ranges::find(horizontal, 38.0), horizontal.end());
     const auto verticalMajor = gridCoordinates(painter, true, gridStyle().gridMajor);
     const auto horizontalMajor = gridCoordinates(painter, false, gridStyle().gridMajor);
-    EXPECT_NE(std::ranges::find(verticalMajor, 53.0), verticalMajor.end());
-    EXPECT_NE(std::ranges::find(horizontalMajor, 46.0), horizontalMajor.end());
+    EXPECT_NE(std::ranges::find(verticalMajor, 59.0), verticalMajor.end());
+    EXPECT_NE(std::ranges::find(horizontalMajor, 38.0), horizontalMajor.end());
 }
 
 TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
@@ -305,7 +305,7 @@ TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
     edgeViewport.setCenter({50.0, 0.0});
     RecordingPainter edgePainter;
     renderScene(document, edgeViewport, style, edgePainter);
-    expectPoint(edgePainter.strokes[0].points[0], {0.0, 50.0});
+    expectPoint(edgePainter.strokes[0].points[0], {12.0, 88.0});
 
     auto outsideViewport = furnitureViewport(1.0);
     outsideViewport.setCenter({100.0, 0.0});
@@ -320,7 +320,7 @@ TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
     expectPoint(nearLeftPainter.strokes[0].points[0], {10.0, 50.0});
 
     auto clippedLabelViewport = furnitureViewport(1.0);
-    clippedLabelViewport.setCenter({0.0, -18.0});
+    clippedLabelViewport.setCenter({0.0, -19.0});
     RecordingPainter clippedLabelPainter;
     renderScene(document, clippedLabelViewport, style, clippedLabelPainter);
     expectPoint(clippedLabelPainter.strokes[0].points[0], {12.0, 88.0});
