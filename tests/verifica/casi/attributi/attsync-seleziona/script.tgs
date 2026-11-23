@@ -1,0 +1,45 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT18] (#968), work #969: ATTSYNC with Select, the default option (Enter),
+; picking the INSERT of SINCRO_B on its rectangle (140,-40, more than 4 from every
+; attribute box): only SINCRO_B is synchronized, the two inserts of SINCRO_A stay as
+; they were. No confirmation (docs/adr/0056, point 5). Card PT18.
+; Source: Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736
+; (CC0-1.0): autocad-attsync.dxf, .scr and .txt (AutoCAD 2021, Italian; the prompts
+; are translated as docs/adr/0056, point 5, and card PT18).
+; sincro.dxf is handwritten, with the header and tables of textedit/attributi
+; ($HANDSEED 1000, no DIMSTYLE table): the state of autocad-attsync.dxf after the two
+; -BLOCK redefinitions and before ATTSYNC, taken from SINCRO_B, which ATTSYNC left alone.
+; - SINCRO_A (record 90, BLOCK B6) and SINCRO_B (record 9B, BLOCK C2), base 0,0, as
+;   in autocad-attsync.dxf: a 40x20 LWPOLYLINE (B7, C3), a CIRCLE at 35,5 radius 3
+;   (B8, C4), then the ATTDEFs QUARTO (prompt Quarto, default Q0) at 2,5 height 2.5
+;   (B9, C5), TERZO (Terzo, T0) at 22,15 height 3.5 (BA, C6) and PRIMO (Primo, P0) at
+;   2,15 height 2.5 (BB, C7), in this order;
+; - TELAIO (record D0, BLOCK D1): a 30x10 LWPOLYLINE D2, no attributes, not inserted;
+; - in the drawing, with the ATTRIBs of the first definition (TERZO at 2,5, SECONDO at
+;   2,10, PRIMO at 2,15, height 2.5, moved by the insertion point), as SINCRO_B in
+;   autocad-attsync.dxf: INSERT A2 of SINCRO_A at 0,-40 with A4 TERZO "A1-3",
+;   A5 SECONDO "A1-2", A6 PRIMO "A1-1" and SEQEND A3; INSERT A7 of SINCRO_A at 60,-40
+;   with A9 "A2-3", AA "A2-2", AB "A2-1" and SEQEND A8; INSERT AC of SINCRO_B at
+;   120,-40 with AE "B-3", AF "B-2", B0 "B-1" and SEQEND AD.
+; The ATTRIBs read from the file have alignment-point 0,0 (no group 11, as AutoCAD
+; writes a left-aligned text; dxf-blocchi/attributi-extra-seqend).
+; ~box: LiberationSans-Regular.ttf of resources/fonts, read with a small reader of its
+; OS/2, cmap and hmtx tables: cap height 1409, ascent 1854, descent -434, summed
+; advances; an ATTDEF shows its tag, an ATTRIB its value.
+; The report after OPEN (drawing, dimension styles of a file without DIMSTYLE, blocks
+; with units=4 from the record, documents) follows textedit/attributi.
+; A synchronized insert is like SINCRO_A in autocad-attsync.dxf: QUARTO, TERZO, PRIMO
+; in the order of the definition; TERZO keeps its value, moves to 22,15 plus the
+; insertion point and is 3.5 high; SECONDO is gone; PRIMO keeps value and place;
+; QUARTO is new, with Q0 at 2,5 plus the insertion point. AutoCAD gives the kept
+; ATTRIBs new handles; here they keep theirs (docs/adr/0056, point 5) and a new ATTRIB
+; takes a new one from $HANDSEED 1000, that is 4096, inserts in id order (card PT16).
+; Both points of a synchronized ATTRIB are those of its ATTDEF moved by the insertion
+; (docs/adr/0031, point 2, as insert/attributi-domande): alignment-point is the
+; insertion point.
+OPEN
+sincro.dxf
+ATTSYNC
+
+140,-40
