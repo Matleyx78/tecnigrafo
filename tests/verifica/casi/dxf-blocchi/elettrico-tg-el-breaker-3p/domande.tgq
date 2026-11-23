@@ -8,14 +8,15 @@ D = DXF source=elettrico-tg-el-breaker-3p
 ? count D -> ATTDEF 30; LINE 29; TEXT 1
 ? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:5B -> none
+; cambia con #945
+? snaps D:5B -> Insertion 0,0
 ; TG_PIN2=S, flags=3 (constant + invisible).
-? snaps D:5C -> none
+? snaps D:5C -> Insertion 0,-10
 ; TG_PIN3=N, flags=3 (constant + invisible).
-? snaps D:5D -> none
+? snaps D:5D -> Insertion 10,0
 ; TG_PIN4=S, flags=3 (constant + invisible).
-? snaps D:5E -> none
+? snaps D:5E -> Insertion 10,-10
 ; TG_PIN5=N, flags=3 (constant + invisible).
-? snaps D:5F -> none
+? snaps D:5F -> Insertion 20,0
 ; TG_PIN6=S, flags=3 (constant + invisible).
-? snaps D:60 -> none
+? snaps D:60 -> Insertion 20,-10

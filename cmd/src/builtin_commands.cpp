@@ -30,6 +30,7 @@
 #include "tg/cmd/commands/offset_command.hpp"
 #include "tg/cmd/commands/pedit_command.hpp"
 #include "tg/cmd/commands/pline_command.hpp"
+#include "tg/cmd/commands/polygon_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rectang_command.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
@@ -91,6 +92,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(HatchCommand::description(), [] { return std::make_unique<HatchCommand>(); });
     registry.add(HpislanddetectionCommand::description(),
                  [] { return std::make_unique<HpislanddetectionCommand>(); });
+    registry.add(AttreqCommand::description(), [] { return std::make_unique<AttreqCommand>(); });
     registry.add(InsertCommand::description(), [] { return std::make_unique<InsertCommand>(); });
     registry.add(detail::insunitsDescription(), [] { return std::make_unique<InsunitsCommand>(); });
     registry.add(JoinCommand::description(), [] { return std::make_unique<JoinCommand>(); });
@@ -112,6 +114,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(PeditacceptCommand::description(),
                  [] { return std::make_unique<PeditacceptCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });
+    registry.add(PolygonCommand::description(), [] { return std::make_unique<PolygonCommand>(); });
     registry.add(RectangCommand::description(), [] { return std::make_unique<RectangCommand>(); });
     registry.add(PolarangCommand::description(),
                  [] { return std::make_unique<PolarangCommand>(); });

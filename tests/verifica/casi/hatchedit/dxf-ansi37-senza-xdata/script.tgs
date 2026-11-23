@@ -1,0 +1,32 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCHEDIT (PT26, #973) on an ANSI37 hatch read from a DXF (input.dxf, written by hand: the two
+; ANSI37 families of autocad-hatchedit.dxf, hatch B7, on a 60 x 40 polyline loop, no seed point,
+; no ACAD XDATA, so its origin is 0,0). Properties with Enter everywhere but the scale, 2: the
+; pattern stays ANSI37, scaled around 0,0. HPNAME is not updated with a pattern -HATCH cannot
+; make (#927, [decisione] 6; #928, [decisione] 7), HPSCALE is: the next -HATCH proposes <ANSI31>
+; and <2.0000>. Then Origin 10,5 on the hatch without XDATA: the XDATA is added (origin=10,5),
+; and U takes it away again. 10,10 lies on the 45-degree family through 0,0, before and after
+; the scale.
+OPEN
+input.dxf
+-HATCHEDIT
+10,10
+
+
+2
+
+!report
+-HATCH
+P
+
+
+!esc
+-HATCHEDIT
+10,10
+O
+S
+10,5
+N
+!report
+U

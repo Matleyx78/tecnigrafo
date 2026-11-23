@@ -1,0 +1,38 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Move CODICE over the visible SIGLA, then click the overlap with the CODICE
+; tag filter. The filter must be applied by pickAttribute before nearest-item
+; choice, so exactly CODICE is selected. Matching is case-insensitive and uses
+; AutoCAD wildcards; the last selection covers the no-match path.
+OPEN
+@sources/autocad-attributi
+; cambia con #958
+-ATTEDIT
+Y
+COMPONENTE
+CODICE
+K*
+C
+-1,-41
+41,-19
+P
+30,-35
+N
+-ATTEDIT
+Y
+comp*
+CODICE
+K*
+!click 30,-35
+N
+-ATTEDIT
+Y
+componente
+NO_MATCH_#
+*
+C
+-1,-41
+161,-19
+U
+U
+NEW

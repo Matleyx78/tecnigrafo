@@ -45,9 +45,16 @@ constexpr std::array kSnapModeNames{SnapModeName{"endpoint", &core::SnapModes::e
                                     SnapModeName{"tangent", &core::SnapModes::tangent},
                                     SnapModeName{"quadrant", &core::SnapModes::quadrant}};
 
+// The three modes of stage 0.8.1 (nearest, extension, parallel) have no
+// name above, so the reports written before them do not change: a report
+// lists the modes above that are off, and the question snap takes nearest as
+// "nea" (question_table.cpp; docs/tappe/0.8.1/PT30-snap-vicino.md).
+constexpr std::size_t kStageEightOneModes = 3;
+
 // A new member of core::SnapModes needs its name above, or reports and
 // questions would silently ignore it.
-static_assert(sizeof(core::SnapModes) == kSnapModeNames.size() * sizeof(bool),
+static_assert(sizeof(core::SnapModes) ==
+                  (kSnapModeNames.size() + kStageEightOneModes) * sizeof(bool),
               "every snap mode needs a name in kSnapModeNames");
 
 /// Builds one visitor out of several lambdas, one per entity type.
@@ -900,6 +907,12 @@ std::string_view snapKindName(core::SnapKind kind) {
             return "Tangent";
         case core::SnapKind::Quadrant:
             return "Quadrant";
+        case core::SnapKind::Nearest:
+            return "Nearest";
+        case core::SnapKind::Extension:
+            return "Extension";
+        case core::SnapKind::Parallel:
+            return "Parallel";
     }
     return "Unknown";
 }

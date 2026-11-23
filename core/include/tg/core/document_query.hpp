@@ -57,6 +57,22 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 /// (docs/adr/0013, point 6). With every mode disabled the result is always
 /// std::nullopt.
 ///
+/// With `modes.nearest`, between the two levels comes Nearest (docs/adr/0057,
+/// point 2): if no snap point is within `aperture`, the point of the curve
+/// nearest to the pointer, if within `aperture`, wins over centre and text
+/// insertion point. The curves are the visible lines, circles, arcs,
+/// polylines and ellipses, and the shapes of the generated geometry of
+/// inserts, dimensions and solids; a solid is measured from its sides, in the
+/// order v0, v1, v3, v2, not from its filled region. Texts, the rows of an
+/// MTEXT, the texts of the generated geometry, filled regions and hatches
+/// give no Nearest. On equal distance the highest id wins; within a polyline
+/// (or the sides of a solid) the earliest segment, and between the shapes of
+/// one entity the first in generation order. The point is closestPoint(), and
+/// on an ellipse solid-space's nearest() (ellipse.hpp). The insertion point
+/// of an insert is a snap point (appendOwnSnapPointsOf()), so within
+/// `aperture` it wins over Nearest. Extension and parallel give nothing here:
+/// they are guides of the tracking.
+///
 /// Intersections come from pairs of visible curves within the aperture,
 /// ellipses included (intersections.hpp), and from self-intersections of each
 /// such polyline, without extensions. Shared

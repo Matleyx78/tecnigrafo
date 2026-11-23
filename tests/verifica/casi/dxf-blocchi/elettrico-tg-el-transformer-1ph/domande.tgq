@@ -8,10 +8,11 @@ D = DXF source=elettrico-tg-el-transformer-1ph
 ? count D -> ARC 8; ATTDEF 24; LINE 10
 ? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:4F -> none
+; cambia con #945
+? snaps D:4F -> Insertion 0,0
 ; TG_PIN2=N, flags=3 (constant + invisible).
-? snaps D:50 -> none
+? snaps D:50 -> Insertion 15,0
 ; TG_PIN3=S, flags=3 (constant + invisible).
-? snaps D:51 -> none
+? snaps D:51 -> Insertion 0,-15
 ; TG_PIN4=S, flags=3 (constant + invisible).
-? snaps D:52 -> none
+? snaps D:52 -> Insertion 15,-15

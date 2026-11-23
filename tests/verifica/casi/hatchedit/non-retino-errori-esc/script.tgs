@@ -1,0 +1,36 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCHEDIT (PT26, #973) through the alias HE: a line is not a hatch, with the first message of
+; the AutoCAD session of 2026-11-22 (dxf-di-prova.md), and the prompt again; then the hatch.
+; Properties gives the -HATCH messages for an unknown name and a scale of 0; Esc at the angle
+; leaves the hatch as it was and no undo step. -HATCHEDIT with Esc at the option: nothing.
+; The line 100,0-120,0 is far from the hatch, so the pick at 110,0 can only find the line.
+LINE
+0,0
+60,0
+60,40
+0,40
+C
+CIRCLE
+30,20
+8
+-HATCH
+5,5
+
+LINE
+100,0
+120,0
+
+HE
+110,0
+10,10
+P
+PIPPO
+NET
+0
+2
+!esc
+!report
+-HATCHEDIT
+10,10
+!esc

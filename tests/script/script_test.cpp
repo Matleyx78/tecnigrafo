@@ -123,6 +123,26 @@ TEST(ParseScript, OsnapDirective) {
     qp.quadrant = true;
     qp.perpendicular = true;
     EXPECT_EQ(single("!osnap qua,per,qua"), Action(OsnapDirective{qp}));
+
+    // Nearest since stage 0.8.1 (PT30), alone or with the others.
+    core::SnapModes nearest = none;
+    nearest.nearest = true;
+    EXPECT_EQ(single("!osnap nea"), Action(OsnapDirective{nearest}));
+    core::SnapModes allAndNearest = all;
+    allAndNearest.nearest = true;
+    EXPECT_EQ(single("!osnap end,mid,cen,ins,int,per,tan,qua,nea"),
+              Action(OsnapDirective{allAndNearest}));
+}
+
+// ext and par wait for PT31: the frontier, never an invalid script, even
+// next to nea.
+TEST(ParseScript, OsnapExtensionAndParallelAreStillAnnounced) {
+    for (const char* line : {"!osnap ext", "!osnap nea,par", "!osnap end,ext,nea"}) {
+        const ParseError error = failure(std::string{"; comment\n"} + line + "\n");
+        EXPECT_EQ(error.line, 2) << line;
+        EXPECT_TRUE(error.notImplemented) << line;
+        EXPECT_NE(error.message.find("not implemented yet"), std::string::npos) << line;
+    }
 }
 
 TEST(ParseScript, OsnapIsParsedAndNeverNotImplemented) {

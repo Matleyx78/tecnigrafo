@@ -1,5 +1,13 @@
 attributi/attdef-invisibile-proprieta #945
 attributi/attdisp-snap-off #945
 attributi/attdisp-snap-on #945
+dxf-blocchi/elettrico-tg-el-breaker-3p #945
+dxf-blocchi/elettrico-tg-el-coil-delay-off #945
+dxf-blocchi/elettrico-tg-el-contact-no #945
+dxf-blocchi/elettrico-tg-el-folio-out #945
+dxf-blocchi/elettrico-tg-el-motor-3ph #945
+dxf-blocchi/elettrico-tg-el-pushbutton-no #945
+dxf-blocchi/elettrico-tg-el-terminal #945
+dxf-blocchi/elettrico-tg-el-transformer-1ph #945
 dxf/vport-griglia #945
 dxf/vport-valori-limite #945

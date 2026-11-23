@@ -1,0 +1,65 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: SNAPUNIT
+  Enter new value for SNAPUNIT <10.0000,10.0000>: 2.5,5
+  Command: SNAPBASE
+  Enter new value for SNAPBASE <0.0000,0.0000>: 3,4
+  Command: SNAPMODE
+  Enter new value for SNAPMODE <0>: 1
+  Command: LINE
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=-2,4 end=5.5,9
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+grid snap: unit=2.5,5 base=3,4
+pointer: 4.25,6.5
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  257 LINE start=-2,4 end=5.5,9
+  258 LINE start=5.5,9 end=-1.2,0.3
+messages:
+  Specify next point or [Undo]: -1.2,0.3
+  Specify next point or [Close/Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+grid snap: unit=2.5,5 base=3,4
+pointer: 4.25,6.5
+active snap: none
+statistics:
+  LINE 2
+
+[final]
+entities:
+  257 LINE start=-2,4 end=5.5,9
+  258 LINE start=5.5,9 end=-1.2,0.3
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+grid snap: unit=2.5,5 base=3,4
+pointer: 4.25,6.5
+active snap: none
+statistics:
+  LINE 2

@@ -8,6 +8,7 @@ D = DXF source=elettrico-tg-el-pushbutton-no
 ? count D -> ATTDEF 22; LINE 7
 ? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:44 -> none
+; cambia con #945
+? snaps D:44 -> Insertion 0,0
 ; TG_PIN2=S, flags=3 (constant + invisible).
-? snaps D:45 -> none
+? snaps D:45 -> Insertion 0,-10

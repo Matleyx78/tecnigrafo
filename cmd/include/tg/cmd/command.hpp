@@ -59,6 +59,7 @@ struct CommandDefaults {
     /// TRIMEXTENDMODE: 1 (quick) at start-up, or 0 (standard); the mode
     /// TRIM and EXTEND start in (docs/adr/0035, point 3).
     int trimExtendMode{1};
+    int polygonSides{4};
     /// MIRRTEXT: 0 (Readable) at start-up (docs/adr/0031, point 3).
     core::MirrorText mirrorText{core::MirrorText::Readable};
     /// HPISLANDDETECTION: 0 Normal, 1 Outer (the start-up value), 2 Ignore.
@@ -68,8 +69,10 @@ struct CommandDefaults {
     bool offsetCurrentLayer{false};  ///< false means Source
     bool chamferUseAngle{false};
     bool trimMode{true};
-    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool peditAccept{false};      ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool attributeRequest{true};  ///< ATTREQ, session-only (docs/adr/0056, point 3).
     bool rectangUseFillet{false};
+    bool polygonCircumscribed{false};
 };
 
 /// What a command of the drawing works with: the protocol's context

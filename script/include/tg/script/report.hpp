@@ -102,7 +102,8 @@ struct SnapModeName {
     bool core::SnapModes::*member;
 };
 
-/// Every mode of core::SnapModes, in the order of its members.
+/// The modes of core::SnapModes up to stage 0.7, in the order of its
+/// members: those of stage 0.8.1 have no name in reports and questions.
 [[nodiscard]] std::span<const SnapModeName> snapModeNames();
 
 }  // namespace tg::script
