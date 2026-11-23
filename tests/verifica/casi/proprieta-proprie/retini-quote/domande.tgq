@@ -26,5 +26,8 @@ D = DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,
 ? set-property D text="<> mm" -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 text="<> mm" | style="ISO-25"; text="<> mm"; text-rotation=0; ~measurement=40
 ? set-property D text-rotation=90 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 text-rotation=90 | style="ISO-25"; text=""; text-rotation=90; ~measurement=40
 
-Other = DIMENSION kind=other style="ISO-25" type=6 text-point=0,0 measurement=0 text="A"
-? set-property Other text="B" -> invalid
+; A dimension Tecnigrafo cannot regenerate refuses text changes (ADR 0047,
+; point 4). The case language cannot define kind=other inline, so the
+; AutoCAD ordinate dimension 2BE of autocad-quote (kind=other type=6) is used.
+Q = DXF source=autocad-quote
+? set-property Q 2BE text="B" -> invalid
