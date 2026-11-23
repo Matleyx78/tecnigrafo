@@ -8,6 +8,10 @@
   non gestiti; la sincronizzazione aggiorna ogni record `INSERT` del blocco,
   anche dentro altre definizioni, una volta (decisioni del 2026-11-22 in
   `docs/DECISIONI.md`, «Revisione delle interfacce PT5 della 0.8.1»).
+- **Corretto:** 2026-11-23 — punto 2, dopo il buco di RT14 (#954): le domande
+  del testo di `-ATTDEF` sono scritte qui, perché `TEXT` non ha *Justify* né
+  *Style*; Esc a metà comando non cambia niente (decisione del 2026-11-23 in
+  `docs/DECISIONI.md`, «Domande del testo di `-ATTDEF` (PT14)»).
 
 ## Contesto
 
@@ -50,9 +54,17 @@ richieste e i risultati di AutoCAD.
   [Invisible/Constant/Verify/Preset/Lock position] <done>:` (ogni opzione
   inverte un modo e ripete le due righe), `Enter attribute tag name:`, `Enter
   attribute prompt:` (non per *Constant*), `Enter default attribute value:` o,
-  per *Constant*, `Enter attribute value:`, poi le domande di `TEXT` (punto
-  iniziale con *Justify* e *Style*, altezza, rotazione). Alla fine `AFLAGS`
-  prende i modi usati. Etichetta senza spazi (`validAttributeTag`); richiesta,
+  per *Constant*, `Enter attribute value:`, poi le domande del testo, tradotte
+  dalla cronologia con le parole di AutoCAD in inglese:
+  `Current text style:  "<stile>"  Text height:  <altezza>  Justify:  <giustificazione>`
+  (altezza con quattro decimali), `Specify start point of text or [Justify/Style]:`; *Justify* con `Enter an
+  option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]:` e
+  la richiesta del punto di ciascuna (scheda
+  [PT14](../tappe/0.8.1/PT14-attdef.md)); *Style* con `Enter style name or
+  [?] <stile corrente>:`, che rende corrente lo stile scelto e ripete le due
+  righe con il nome nuovo; poi altezza e rotazione. Alla fine `AFLAGS`
+  prende i modi usati; con Esc a metà comando nessun `ATTDEF`, nessun passo
+  di annullamento e `AFLAGS` invariato. Etichetta senza spazi (`validAttributeTag`); richiesta,
   predefinito e valore accettano gli spazi.
 
 ### 3. Domande all'inserimento

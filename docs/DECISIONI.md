@@ -2834,3 +2834,30 @@ i rimandi ai documenti che cambia.
   [PT34](tappe/0.8.1/PT34-last-previous.md), "Test richiesti"). Scartata
   una direttiva di livello 2 per accendere il campo: avrebbe cambiato un ADR
   accettato a tappa aperta e chiesto uno strumento che su `main` non c'è.
+- **2026-11-23 — Domande del testo di `-ATTDEF` (PT14).** Claude, fermo su RT14
+  ([#954](https://github.com/Matleyx78/tecnigrafo/issues/954)), segnala che la
+  scheda [PT14](tappe/0.8.1/PT14-attdef.md) e l'[ADR 0056](adr/0056-comandi-degli-attributi.md),
+  punto 2, chiedono *Justify* e *Style* «come `TEXT`», ma `TEXT` chiede solo
+  `Specify start point of text:`. Il responsabile sceglie le scelte A, cioè
+  AutoCAD in inglese tradotto dalla cronologia `autocad-attributi.txt`:
+  1. prima del punto iniziale la riga
+     `Current text style:  "<stile>"  Text height:  <altezza>  Justify:  <giustificazione>`,
+     altezza con quattro decimali;
+  2. `Specify start point of text or [Justify/Style]:`, con `J` e `S`;
+  3. *Justify*: `Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]:`,
+     tutte e quindici, con le richieste del punto di AutoCAD in inglese
+     (*Middle* e `MC`: `Specify middle point of text:`; *Align* e *Fit* con i
+     due estremi della linea di base, *Align* senza altezza né rotazione,
+     *Fit* senza rotazione);
+  4. *Style*: `Enter style name or [?] <stile corrente>:`; lo stile scelto
+     diventa quello corrente, e si ripetono la riga del punto 1 con il nome
+     nuovo e la richiesta del punto 2; un nome che non esiste dà
+     `Cannot find text style "<nome>".` e la domanda si ripete;
+  5. Esc a metà comando: nessun `ATTDEF`, nessun passo `Attdef`, `AFLAGS`
+     invariato.
+
+  Scartate: nessuna riga dello stile, come `TEXT` di oggi; *Justify* senza
+  *Align* e *Fit*, o con le sole nove di `MTEXT`; lo stile valido solo per
+  l'`ATTDEF`, come `MTEXT`, o la riga ripetuta con il nome vecchio, come la
+  cronologia; `AFLAGS` con i modi già cambiati dopo un Esc. Cambiano la
+  scheda PT14 e l'ADR 0056, punto 2; file, dipendenze e onde non cambiano.
