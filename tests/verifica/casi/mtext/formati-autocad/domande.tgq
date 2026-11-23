@@ -1,0 +1,8 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; oracle: ezdxf
+; AutoCAD supplies structure only; geometric positions are covered by the
+; independently calculated cases above (ADR 0054.3).
+D = DXF source=autocad-mtext-formati
+? count D -> 97
+? entity D 8E -> MTEXT insertion=0,0 height=2.5 width=0 attachment=top-left rotation=0 style="ARIAL" value="Normale {\\fArial|b1|i0|c0|p34;grassetto} normale" ~lines=1
