@@ -220,12 +220,12 @@ void TexteditCommand::pointerMoved(const core::Vec2& /*point*/) {}
 
 Prompt TexteditCommand::prompt() const {
     if (m_stage == Stage::Object) {
-        return m_multiple ? Prompt{"Select an annotation object or [Undo/Mode]:",
-                                   {{"Undo", "U"}, {"Mode", "M"}},
-                                   PromptKind::Object}
-                          : Prompt{"Select an annotation object or [Mode]:",
-                                   {{"Mode", "M"}},
-                                   PromptKind::Object};
+        if (m_multiple) {
+            return {"Select an annotation object or [Undo/Mode]:",
+                    {{"Undo", "U"}, {"Mode", "M"}},
+                    PromptKind::Object};
+        }
+        return {"Select an annotation object or [Mode]:", {{"Mode", "M"}}, PromptKind::Object};
     }
     if (m_stage == Stage::Mode) {
         return {"Enter a text edit mode option [Single/Multiple] <Multiple>:",
