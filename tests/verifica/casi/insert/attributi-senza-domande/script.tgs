@@ -1,0 +1,51 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; ATTREQ 1 (0.8.1-PT17, #941; docs/adr/0056, point 3): Enter keeps 1, a value other than
+; 0 or 1 is refused as by the other values of the session (PEDITACCEPT, TRIMEXTENDMODE).
+; With 1, a block whose attributes are all Constant or Preset (FISSO) and a block without
+; attributes (VUOTO) ask nothing: no "Enter attribute values" (point 3 of the work); the
+; Preset SERIE takes its default. An empty prompt shows the tag (ETICHETTA). A Verify
+; value changed at the second prompt is the one kept (VERIFICA). Undo and redo of the
+; insertion with its attribute.
+; blocchi.dxf is handwritten: four blocks, each with the ATTDEFs said above (VUOTO: one line).
+; ~box (docs/adr/0022): LiberationSans-Regular.ttf of resources/fonts, read with a small
+; reader of its head, hhea, OS/2, cmap and hmtx tables: cap height 1409, ascent 1854,
+; descent -434. An ATTDEF shows its tag; an ATTRIB is its ATTDEF moved by the insertion
+; point (docs/adr/0045, point 6; docs/adr/0031, point 2: both points move).
+OPEN
+blocchi.dxf
+ATTREQ
+
+ATTREQ
+2
+1
+-INSERT
+FISSO
+0,0
+1
+
+0
+-INSERT
+VUOTO
+20,0
+1
+
+0
+; cambia con #941
+-INSERT
+ETICHETTA
+40,0
+1
+
+0
+2
+-INSERT
+VERIFICA
+60,0
+1
+
+0
+230V
+400V
+U
+REDO
