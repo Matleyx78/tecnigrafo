@@ -1,0 +1,17 @@
+; Grid nodes: negative coordinates, half ties, base and unequal units; typed point stays exact
+; cambia con #964
+!osnap none
+SNAPUNIT
+2.5,5
+SNAPBASE
+3,4
+SNAPMODE
+1
+LINE
+!click -1.2,0.3
+!move 4.25,6.5
+!report
+!click 4.25,6.5
+-1.2,0.3
+
+!report

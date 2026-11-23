@@ -1,0 +1,95 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 HATCH pattern="ANSI37" solid=no angle=0 scale=2 islands=normal loop=external+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40
+messages:
+  Command: OPEN
+  Enter name of drawing to open: input.dxf
+  line 1: ignored 2 comment groups (999) outside any section
+  Command: -HATCHEDIT
+  Select hatch object: 10,10
+  Enter hatch option [Style/Properties/Origin] <Properties>:
+  Enter a pattern name or [Solid] <ANSI37>:
+  Specify a scale for the pattern <1.0000>: 2
+  Specify an angle for the pattern <0>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Hatchedit
+redo:
+snap: on
+ortho: off
+drawing: input.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+documents: Drawing1.cadx, input.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  HATCH 1
+
+[report 2]
+entities:
+  257 HATCH pattern="ANSI37" solid=no angle=0 scale=2 islands=normal origin=10,5 loop=external+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40
+messages:
+  Command: -HATCH
+  Current hatch pattern: ANSI31
+  Specify internal point or [Properties/Select objects]: P
+  Enter a pattern name or [Solid] <ANSI31>:
+  Specify a scale for the pattern <2.0000>:
+  *Cancel*
+  Command: -HATCHEDIT
+  Select hatch object: 10,10
+  Enter hatch option [Style/Properties/Origin] <Properties>: O
+  [Use current origin/Set new origin] <Use current origin>: S
+  Specify origin point: 10,5
+  Store this as default origin? [Yes/No] <N>: N
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Hatchedit
+  Hatchedit
+redo:
+snap: on
+ortho: off
+drawing: input.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+documents: Drawing1.cadx, input.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  HATCH 1
+
+[final]
+entities:
+  257 HATCH pattern="ANSI37" solid=no angle=0 scale=2 islands=normal loop=external+polyline vertex=0,0 vertex=60,0 vertex=60,40 vertex=0,40
+messages:
+  Command: U
+  Undone: Hatchedit.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Hatchedit
+redo:
+  Hatchedit
+snap: on
+ortho: off
+drawing: input.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+documents: Drawing1.cadx, input.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  HATCH 1

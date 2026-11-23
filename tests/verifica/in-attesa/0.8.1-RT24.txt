@@ -1,0 +1,4 @@
+proprieta-proprie/testi-inserimenti #962
+proprieta-proprie/proprieta-attdef #962
+proprieta-proprie/proprieta-insert #962
+proprieta-proprie/scala-z-attributi #962

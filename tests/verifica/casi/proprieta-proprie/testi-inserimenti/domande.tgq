@@ -1,0 +1,19 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT24 / PT24 (#962). Expected values follow the PT24 property contract,
+; ADR 0045.2/6, ADR 0046.2 and ADR 0056.1; no Tecnigrafo executable was used.
+
+M = MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="uno\\Pdue"
+? properties M -> value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=15; line-spacing=1.5; line-spacing-style=exactly
+? set-property M value="tre" -> MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="tre" | value="tre"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=15; line-spacing=1.5; line-spacing-style=exactly
+? set-property M style="Missing" -> invalid
+? set-property M attachment=bottom-right -> MTEXT insertion=0,0 height=2.5 width=60 attachment=bottom-right rotation=15 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=bottom-right; width=60; height=2.5; rotation=15; line-spacing=1.5; line-spacing-style=exactly
+? set-property M attachment=left -> invalid
+? set-property M width=0 -> MTEXT insertion=0,0 height=2.5 width=0 attachment=top-left rotation=15 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=0; height=2.5; rotation=15; line-spacing=1.5; line-spacing-style=exactly
+? set-property M width=-1 -> invalid
+? set-property M height=4 -> MTEXT insertion=0,0 height=4 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=4; rotation=15; line-spacing=1.5; line-spacing-style=exactly
+? set-property M height=0 -> invalid
+? set-property M rotation=390 -> MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=30 style="Standard" line-spacing=1.5 line-spacing-style=exactly value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=30; line-spacing=1.5; line-spacing-style=exactly
+? set-property M line-spacing=2 -> MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=2 line-spacing-style=exactly value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=15; line-spacing=2; line-spacing-style=exactly
+? set-property M line-spacing=0 -> invalid
+? set-property M line-spacing-style=at-least -> MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=1.5 value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=15; line-spacing=1.5; line-spacing-style=at-least

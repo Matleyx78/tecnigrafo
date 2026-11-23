@@ -1,0 +1,88 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=0,-50 end=30,-50
+  258 LINE start=0,-80 end=30,-70
+messages:
+  Command: LINE
+  Specify first point: 0,-50
+  Specify next point or [Undo]: 30,-50
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,-80
+  Specify next point or [Undo]: 30,-70
+  Specify next point or [Undo]:
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 38,-50.2
+active snap: none
+acquired:
+  extension 30,-50
+active tracking: Extension 38,-50 from 30,-50
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  257 LINE start=0,-50 end=30,-50
+  258 LINE start=0,-80 end=30,-70
+  259 LINE start=40,-50 end=0,-60
+messages:
+  Specify first point: 10
+  Specify next point or [Undo]:
+  Command: LINE
+  Specify first point: 0,-60
+prompt: Specify next point or [Undo]:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 17,-54
+active snap: none
+acquired:
+  parallel 0,-80 30,-70
+active tracking: Parallel 17.07629936490925,-54.30790021169692 from 0,-60
+statistics:
+  LINE 3
+
+[final]
+entities:
+  257 LINE start=0,-50 end=30,-50
+  258 LINE start=0,-80 end=30,-70
+  259 LINE start=40,-50 end=0,-60
+  260 LINE start=0,-60 end=18.97366596101028,-53.67544467966324
+messages:
+  Specify next point or [Undo]: 20
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Line
+  Line
+  Line
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+pointer: 17,-54
+active snap: none
+statistics:
+  LINE 4

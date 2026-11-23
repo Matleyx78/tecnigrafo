@@ -1,0 +1,28 @@
+; The same grid node drives preview, click, ortho and tracking decisions
+; cambia con #964
+!osnap none
+SNAPUNIT
+10,10
+SNAPMODE
+1
+!otrack on
+LINE
+0,5
+10,5
+
+LINE
+1,2
+!ortho on
+!move 19,4
+!report
+!click 19,4
+
+!ortho off
+LINE
+0,0
+!hover 0,5
+!move 4.9,4.9
+!report
+!click 4.9,4.9
+
+!report

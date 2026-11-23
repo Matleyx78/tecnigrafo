@@ -5,6 +5,7 @@
 
 #include "tg/core/color.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/core/text.hpp"
 
 #include <gtest/gtest.h>
@@ -90,6 +91,48 @@ void expectPoint(const core::Vec2& actual, const core::Vec2& expected) {
     constexpr double kTolerance = 1e-10;
     EXPECT_NEAR(actual.x, expected.x, kTolerance);
     EXPECT_NEAR(actual.y, expected.y, kTolerance);
+}
+
+// Nearest is AutoCAD's hourglass: the top side, a diagonal, the bottom side
+// and the other diagonal, two triangles meeting at the snap point
+// (docs/tappe/0.8.1/PT30-snap-vicino.md, point 6).
+TEST(SceneRendererSnapMarker, NearestIsAnHourglass) {
+    const Viewport viewport = textViewport();
+    SceneStyle style;
+    style.snapMarkerSizePx = 12.0;
+    style.snapMarker = {12, 34, 56, 200};
+    const core::SnapPoint snap{{11.0, 21.0}, core::SnapKind::Nearest};
+    const core::Vec2 center = viewport.worldToScreen(snap.point);
+    RecordingPainter painter;
+    renderSnapMarker(snap, viewport, style, painter);
+    ASSERT_EQ(painter.strokes.size(), 1U);
+    const Stroke& stroke = painter.strokes.front();
+    EXPECT_FALSE(stroke.line);
+    EXPECT_TRUE(stroke.closed);
+    ASSERT_EQ(stroke.points.size(), 4U);
+    expectPoint(stroke.points[0], center + core::Vec2{-6.0, -6.0});
+    expectPoint(stroke.points[1], center + core::Vec2{6.0, -6.0});
+    expectPoint(stroke.points[2], center + core::Vec2{-6.0, 6.0});
+    expectPoint(stroke.points[3], center + core::Vec2{6.0, 6.0});
+    EXPECT_EQ(stroke.pen.color, style.snapMarker);
+    EXPECT_DOUBLE_EQ(stroke.pen.widthPx, 2.0);
+    EXPECT_EQ(stroke.pen.style, LineStyle::Solid);
+    EXPECT_TRUE(painter.fills.empty());
+}
+
+// Extension and parallel are guides of the tracking, which the view draws:
+// the marker draws nothing for them (docs/adr/0057, point 5).
+TEST(SceneRendererSnapMarker, ExtensionAndParallelHaveNoMarker) {
+    const Viewport viewport = textViewport();
+    const SceneStyle style;
+    for (const core::SnapKind kind : {core::SnapKind::Extension, core::SnapKind::Parallel}) {
+        RecordingPainter painter;
+        renderSnapMarker({{11.0, 21.0}, kind}, viewport, style, painter);
+        EXPECT_TRUE(painter.strokes.empty());
+        EXPECT_TRUE(painter.fills.empty());
+        EXPECT_TRUE(painter.loopFills.empty());
+        EXPECT_TRUE(painter.runs.empty());
+    }
 }
 
 TEST(SceneRendererGrips, FilledSquaresKeepTheirPixelSizeAtEveryZoom) {
