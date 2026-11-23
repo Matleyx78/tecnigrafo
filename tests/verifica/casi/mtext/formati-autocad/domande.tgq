@@ -5,4 +5,4 @@
 ; independently calculated cases above (ADR 0054.3).
 D = DXF source=autocad-mtext-formati
 ? count D -> DIMENSION 1; LINE 4; MTEXT 19; TEXT 73
-? entity D 8E -> MTEXT insertion=0,0 height=2.5 width=0 attachment=top-left rotation=0 style="ARIAL" value="Normale {\\fArial|b1|i0|c0|p34;grassetto} normale" ~lines=1
+? entity D 8E -> MTEXT insertion=0,0 height=2.5 width=0 attachment=top-left rotation=0 style="ARIAL" direction=by-style value="Normale {\\fArial|b1|i0|c0|p34;grassetto} normale" ~lines=1
