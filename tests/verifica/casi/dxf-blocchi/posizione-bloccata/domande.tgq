@@ -4,6 +4,7 @@
 ; PT15 (#951): AutoCAD 2021 lock-position groups from the immutable CC0 drawing
 ; autocad-attributi.dxf (Matleyx78/dxf-test-file, commit 0108805582166d376b12d8f3a053cbce4df798c1).
 ; The second group 280 is 1 for SIGLA; the first group 280 remains the version (0).
+; ATTRIB SIGLA is checked directly; the identical round-trip preserves ATTDEF SIGLA.
 D = DXF source=autocad-attributi
 ? count D -> ATTRIB 15; INSERT 3
 ; cambia con #951
