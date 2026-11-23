@@ -141,7 +141,7 @@ void generate(const char* inputPath, const char* outputPath) {
         throw std::runtime_error("no supported Unicode cmap");
     }
     std::ofstream output(outputPath, std::ios::binary);
-    output << "// Generated from the bundled font. Do not edit.\n"
+    output << "// Generated from a bundled font face. Do not edit.\n"
            << "constexpr double kUnitsPerEm = " << head.read(18) << ";\n"
            << "static_assert(kUnitsPerEm > 0);\nconstexpr double kCapHeight = " << capHeight
            << ";\n"

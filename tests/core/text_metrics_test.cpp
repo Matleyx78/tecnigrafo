@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <string>
 #include <string_view>
 
@@ -36,6 +37,49 @@ TEST(TextMetrics, SubstitutesAndMissingGlyph) {
     EXPECT_DOUBLE_EQ(advanceWidth(U'中'), 1536.0 / 1409.0);
     EXPECT_DOUBLE_EQ(advanceWidth(U'😀'), advanceWidth(U'中'));
     EXPECT_DOUBLE_EQ(advanceWidth(static_cast<char32_t>(0x110000)), advanceWidth(U'中'));
+}
+
+// Independent hmtx advances of the four Liberation Sans 2.1.5 files; each face
+// has its own cap height (1409 in all four).
+TEST(TextMetrics, EachFaceHasItsOwnAdvances) {
+    struct Expected {
+        FontFace face;
+        double capitalA;
+        double smallA;
+        double space;
+        double missing;
+    };
+
+    constexpr std::array<Expected, 4> kFaces{{
+        {FontFace::Regular, 1366.0, 1139.0, 569.0, 1536.0},
+        {FontFace::Bold, 1479.0, 1139.0, 569.0, 1536.0},
+        {FontFace::Italic, 1366.0, 1139.0, 569.0, 1536.0},
+        {FontFace::BoldItalic, 1479.0, 1139.0, 569.0, 1536.0},
+    }};
+    for (const Expected& expected : kFaces) {
+        const auto face = expected.face;
+        EXPECT_DOUBLE_EQ(advanceWidth(U'A', face), expected.capitalA / 1409.0);
+        EXPECT_DOUBLE_EQ(advanceWidth(U'a', face), expected.smallA / 1409.0);
+        EXPECT_DOUBLE_EQ(advanceWidth(U' ', face), expected.space / 1409.0);
+        EXPECT_DOUBLE_EQ(advanceWidth(U'☃', face), expected.missing / 1409.0);
+        EXPECT_DOUBLE_EQ(fontMetrics(face).ascent, 1854.0 / 1409.0);
+        EXPECT_DOUBLE_EQ(fontMetrics(face).descent, -434.0 / 1409.0);
+        EXPECT_EQ(fontCharacter(U'⌀', face), U'Ø');
+        EXPECT_DOUBLE_EQ(advanceWidth(U'⌀', face), advanceWidth(U'Ø', face));
+        EXPECT_DOUBLE_EQ(
+            textWidth(U"Aa ", face),
+            advanceWidth(U'A', face) + advanceWidth(U'a', face) + advanceWidth(U' ', face));
+    }
+}
+
+TEST(TextMetrics, RegularIsTheDefaultAndUnchanged) {
+    EXPECT_EQ(&fontMetrics(), &fontMetrics(FontFace::Regular));
+    for (const char32_t code : std::u32string_view{U"Aa ☃⌀ď"}) {
+        EXPECT_EQ(advanceWidth(code), advanceWidth(code, FontFace::Regular));
+    }
+    EXPECT_DOUBLE_EQ(advanceWidth(U'ď'), 1259.0 / 1409.0);
+    EXPECT_DOUBLE_EQ(advanceWidth(U'ď', FontFace::Bold), 1472.0 / 1409.0);
+    EXPECT_EQ(textWidth(U"Normale"), textWidth(U"Normale", FontFace::Regular));
 }
 
 TEST(TextMetrics, DecodesAllUtf8LengthsAndEmbeddedNull) {
