@@ -1,0 +1,11 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT15 (#951): AutoCAD 2021 lock-position groups from the immutable CC0 drawing
+; autocad-attributi.dxf (Matleyx78/dxf-test-file, commit 0108805582166d376b12d8f3a053cbce4df798c1).
+; The second group 280 is 1 for SIGLA; the first group 280 remains the version (0).
+D = DXF source=autocad-attributi
+? count D -> ATTRIB 15; INSERT 3
+? entity D 9A -> ATTDEF position=28.57571396706332,3.479576679289856 alignment-point=30,5 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S1" tag="SIGLA" prompt="Sigla" lock-position=yes
+? entity D A3 -> ATTRIB owner=A1 position=27.5498725576756,-36.70130683911319 alignment-point=30,-35 height=2.499999999999999 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S10" tag="SIGLA" lock-position=yes
+? roundtrip D -> identical
