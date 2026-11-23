@@ -109,13 +109,16 @@ public:
     /// the lifetime of this editor and the component cannot be copied or moved.
     [[nodiscard]] DocumentTables& tables() { return m_tables; }
 
-    /// True if the undo stack is not at the last save or load position.
+    /// True if the undo stack is not at the last save or load position, or
+    /// LWDISPLAY, the grid settings or ATTDISP differ from those saved.
     [[nodiscard]] bool isModified() const;
 
-    /// Records the current history position and LWDISPLAY as saved.
+    /// Records the current history position, LWDISPLAY, the grid settings
+    /// and ATTDISP as saved.
     void markSaved();
 
     /// Replaces the referenced document, clears history and notifies once.
+    /// The new document is not modified: its saved values are its own.
     /// Precondition: no transaction is open.
     void replaceDocument(core::Document document);
 
@@ -258,6 +261,8 @@ private:
     // A discarded redo branch can make the saved position unreachable.
     std::optional<std::size_t> m_savedPosition{0};
     bool m_savedLwdisplay{false};
+    core::GridSettings m_savedGrid;
+    core::AttributeDisplay m_savedAttributeDisplay{core::AttributeDisplay::Normal};
     Listener m_listener;
 };
 

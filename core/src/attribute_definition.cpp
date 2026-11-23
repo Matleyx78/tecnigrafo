@@ -75,10 +75,9 @@ std::vector<GeneratedItem> generateOf(const Document& document, const EntityReco
     if (layerState(document, record.properties).frozen) {
         return {};
     }
-    GeneratedItem item{shownText(definition), effectiveProperties(document, record)};
-    // Not drawn nor selected, but measured (docs/adr/0045, point 6).
-    item.properties.visible = item.properties.visible && !definition.flags.invisible;
-    return {std::move(item)};
+    // Drawn even when invisible and whatever ATTDISP, as in AutoCAD: only the
+    // attributes of the inserts follow them (docs/adr/0056, point 1).
+    return {GeneratedItem{shownText(definition), effectiveProperties(document, record)}};
 }
 
 BBox extentOf(const Document& document, const EntityRecord& record,

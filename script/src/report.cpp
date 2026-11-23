@@ -390,6 +390,10 @@ void writeTables(const core::Document& document, std::string& out) {
     if (document.lwdisplay() != kNewSession.lwdisplay()) {
         appendField("lwdisplay", onOff(document.lwdisplay()), out);
     }
+    if (document.attributeDisplay() != core::AttributeDisplay::Normal) {
+        appendField("attdisp", onOff(document.attributeDisplay() == core::AttributeDisplay::On),
+                    out);
+    }
     std::vector<const core::TextStyle*> changedStyles;
     const core::TextStyle* defaultStandard = kNewSession.textStyles().find("Standard");
     for (const core::TextStyle& style : document.textStyles().styles()) {
