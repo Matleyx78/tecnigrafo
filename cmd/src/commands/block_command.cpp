@@ -127,7 +127,7 @@ std::optional<core::Vec2> BlockCommand::basePoint() const {
 
 CommandDescription BlockCommand::description() {
     return {"-BLOCK",
-            {"BLOCK"},
+            {"BLOCK", "B"},
             "Creates a block definition from selected objects.",
             false,
             {{"block-name", "Enter block name or [?]:", ValueType::Name, {{"?", "?"}}},

@@ -518,7 +518,7 @@ std::optional<core::Vec2> InsertCommand::basePoint() const {
 
 CommandDescription InsertCommand::description() {
     return {"-INSERT",
-            {"INSERT"},
+            {"INSERT", "I"},
             "Inserts a block of the drawing, or a DXF file as a block.",
             false,
             {{"block-name", "Enter block name or [?]:", ValueType::Name, {{"?", "?"}}},
