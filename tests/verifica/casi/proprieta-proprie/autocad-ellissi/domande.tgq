@@ -10,7 +10,7 @@ D = DXF source=autocad-proprieta
 ? units D -> 4
 ; A4: major radius 20 to 30, minor radius still 10.
 ? entity D A4 -> ELLIPSE center=60,-40 major-axis=30,0 ratio=0.3333333333333333
-? properties D A4 -> center=60,-40; major-radius=30; minor-radius=10; ratio=0.3333333333333333; start-angle=0; end-angle=360; ~area=1884.955592153876
+? properties D A4 -> center=60,-40; major-radius=30; minor-radius=10; ratio=0.3333333333333333; start-angle=0; end-angle=360; ~area=942.4777960769379
 ; A5: minor radius 10 to 5, major radius still 20.
 ? entity D A5 -> ELLIPSE center=110,-40 major-axis=20,0 ratio=0.25
 ? properties D A5 -> center=110,-40; major-radius=20; minor-radius=5; ratio=0.25; start-angle=0; end-angle=360; ~area=314.1592653589793
