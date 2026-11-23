@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT24 / PT24 (#962). Expected values follow the PT24 property contract,
+; ADR 0045.2/6, ADR 0046.2 and ADR 0056.1; no Tecnigrafo executable was used.
+
+!block "B1" base=0,0
+L1 = LINE start=0,0 end=10,0
+!endblock
+!block "B2" base=0,0
+C2 = CIRCLE center=0,0 radius=5
+!endblock
+I = INSERT block="B1" insertion=10,20 scale=2,-3 rotation=25
+? properties I -> block="B1"; insertion=10,20; scale=2,-3; scale-z=1; rotation=25
+? set-property I block="B2" -> INSERT block="B2" insertion=10,20 scale=2,-3 rotation=25 | block="B2"; insertion=10,20; scale=2,-3; scale-z=1; rotation=25
+? set-property I block="MISSING" -> invalid
+? set-property I insertion=-4,8 -> INSERT block="B1" insertion=-4,8 scale=2,-3 rotation=25 | block="B1"; insertion=-4,8; scale=2,-3; scale-z=1; rotation=25
+? set-property I scale=-1,4 -> INSERT block="B1" insertion=10,20 scale=-1,4 rotation=25 | block="B1"; insertion=10,20; scale=-1,4; scale-z=1; rotation=25
+? set-property I scale=0,1 -> invalid
+? set-property I scale-z=-2 -> INSERT block="B1" insertion=10,20 scale=2,-3 rotation=25 | block="B1"; insertion=10,20; scale=2,-3; scale-z=-2; rotation=25
+? set-property I scale-z=0 -> invalid
+? set-property I rotation=400 -> INSERT block="B1" insertion=10,20 scale=2,-3 rotation=40 | block="B1"; insertion=10,20; scale=2,-3; scale-z=1; rotation=40
+!block "Loop" base=0,0
+Nested = INSERT block="B1" insertion=0,0
+!endblock
+? set-property Nested block="Loop" -> invalid
