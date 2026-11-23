@@ -10,8 +10,9 @@
   `docs/DECISIONI.md`, «Revisione delle interfacce PT5 della 0.8.1»).
 - **Corretto:** 2026-11-23 — punto 2, dopo il buco di RT14 (#954): le domande
   del testo di `-ATTDEF` sono scritte qui, perché `TEXT` non ha *Justify* né
-  *Style*; Esc a metà comando non cambia niente (decisione del 2026-11-23 in
-  `docs/DECISIONI.md`, «Domande del testo di `-ATTDEF` (PT14)»).
+  *Style*; Esc a metà comando non cambia niente, nemmeno lo stile corrente
+  (decisione del 2026-11-23 in `docs/DECISIONI.md`, «Domande del testo di
+  `-ATTDEF` (PT14)», con i tre punti della revisione).
 
 ## Contesto
 
@@ -62,9 +63,10 @@ richieste e i risultati di AutoCAD.
   la richiesta del punto di ciascuna (scheda
   [PT14](../tappe/0.8.1/PT14-attdef.md)); *Style* con `Enter style name or
   [?] <stile corrente>:`, che rende corrente lo stile scelto e ripete le due
-  righe con il nome nuovo; poi altezza e rotazione. Alla fine `AFLAGS`
-  prende i modi usati; con Esc a metà comando nessun `ATTDEF`, nessun passo
-  di annullamento e `AFLAGS` invariato. Etichetta senza spazi (`validAttributeTag`); richiesta,
+  righe con il nome nuovo (`?` e i nomi che non esistono:
+  `Cannot find text style "<nome>".`); poi altezza e rotazione. Alla fine
+  `AFLAGS` prende i modi usati; con Esc a metà comando nessun `ATTDEF`,
+  nessun passo di annullamento, `AFLAGS` e lo stile corrente invariati. Etichetta senza spazi (`validAttributeTag`); richiesta,
   predefinito e valore accettano gli spazi.
 
 ### 3. Domande all'inserimento

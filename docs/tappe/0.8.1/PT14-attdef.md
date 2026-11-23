@@ -40,8 +40,9 @@
    (script al livello 1): `Invalid tag name.` e la richiesta si ripete.
 3. Un passo di annullamento `Attdef`. Esc a metà comando, anche dopo aver
    cambiato un modo o lo stile: nessun `ATTDEF`, nessun passo `Attdef`,
-   `AFLAGS` resta quello di prima, e anche lo stile corrente (il cambio di
-   *Style* sta nel passo `Attdef`, che non c'è).
+   `AFLAGS` resta quello di prima, e torna lo stile corrente di prima (il
+   cambio di *Style* sta nel passo `Attdef`, che non c'è; decisione del
+   responsabile sulla revisione della #1026, punto 1).
 
 ### Le domande del testo
 
@@ -55,8 +56,9 @@ Decisione del responsabile sulla #954 (scelte A dei punti 1–5;
    con due spazi dopo ogni due punti e prima di ogni voce, lo stile corrente
    del disegno, l'altezza che propone la domanda dell'altezza con quattro
    decimali (`2.5000`) e la giustificazione con il nome dell'opzione del
-   punto 3 (`Left` all'inizio del comando: come `TEXT`, `-ATTDEF` non ricorda
-   la giustificazione dell'ultima volta).
+   punto 3 (`Left` all'inizio di ogni comando: come `TEXT`, `-ATTDEF` non
+   ricorda la giustificazione dell'ultima volta; decisione del responsabile
+   sulla revisione della #1026, punto 2).
 2. `Specify start point of text or [Justify/Style]:`, con le parole chiave
    `J` e `S`; un punto è il punto iniziale (giustificazione `Left`).
 3. *Justify*: `Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]:`,
@@ -79,7 +81,10 @@ Decisione del responsabile sulla #954 (scelte A dei punti 1–5;
    corrente). Lo stile scelto **diventa quello corrente** del disegno, come in
    AutoCAD, e si ripetono la riga del punto 1, **con il nome nuovo**, e la
    richiesta del punto 2. Un nome che non esiste: `Cannot find text style
-   "<nome>".` e la domanda si ripete, come `MTEXT`.
+   "<nome>".` e la domanda si ripete, come `MTEXT`. Anche `?` è un nome che
+   non esiste: `Cannot find text style "?".` e la domanda si ripete, senza
+   elenco degli stili (decisione del responsabile sulla revisione della #1026,
+   punto 3).
 
 ## Regole della tappa che valgono qui
 
@@ -100,12 +105,18 @@ Decisione del responsabile sulla #954 (scelte A dei punti 1–5;
   prima del punto iniziale,
   `Current text style:  "Standard"  Text height:  2.5000  Justify:  Left`; *Justify* con `MC` (`Specify middle point of
   text:`), con una delle nove `TL`…`BR` diversa da `MC` e con *Align* (due
-  punti, né altezza né rotazione); *Style* con `ARIAL`, come `TENSIONE` della
+  punti, né altezza né rotazione); *Fit* (`Specify first endpoint of text
+  baseline:`, `Specify second endpoint of text baseline:`, poi l'altezza e
+  nessuna rotazione); *Style* con `ARIAL`, come `TENSIONE` della
   cronologia: la riga ripetuta dice `"ARIAL"` e dopo il comando lo stile
   corrente è `ARIAL`; *Style* con un nome che non esiste (`Cannot find text
-  style "<nome>".`, la domanda si ripete).
+  style "<nome>".`, la domanda si ripete); *Style* con `?` (`Cannot find
+  text style "?".`, la domanda si ripete).
 - Esc a metà comando dopo aver acceso un modo: nessun `ATTDEF`, nessun passo
   `Attdef`, `AFLAGS` invariato.
+- Esc a metà comando dopo aver scelto `ARIAL` con *Style* (stile corrente
+  `Standard` prima del comando): nessun `ATTDEF`, nessun passo `Attdef`, e lo
+  stile corrente torna `Standard`.
 
 ## Fatto quando
 

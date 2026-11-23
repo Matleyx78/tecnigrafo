@@ -2861,3 +2861,15 @@ i rimandi ai documenti che cambia.
   l'`ATTDEF`, come `MTEXT`, o la riga ripetuta con il nome vecchio, come la
   cronologia; `AFLAGS` con i modi già cambiati dopo un Esc. Cambiano la
   scheda PT14 e l'ADR 0056, punto 2; file, dipendenze e onde non cambiano.
+
+  Nella revisione della correzione
+  ([#1026](https://github.com/Matleyx78/tecnigrafo/pull/1026), giro 1) Codex
+  segnala tre punti che la decisione non diceva; il responsabile sceglie:
+  1. Esc a metà comando dopo *Style*: torna lo stile corrente di prima;
+  2. ogni nuovo `-ATTDEF` riparte da `Left` nella riga dello stile corrente;
+  3. `?` alla domanda di *Style* è un nome che non esiste:
+     `Cannot find text style "?".` e la domanda si ripete.
+
+  Scartate: lo stile scelto che resta corrente dopo Esc; la giustificazione
+  dell'ultima volta ricordata; l'elenco degli stili per `?`, che nessun
+  documento scrive.
