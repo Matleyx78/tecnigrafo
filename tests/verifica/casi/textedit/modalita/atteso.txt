@@ -1,0 +1,97 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Primo" ~box=0,-0.7700496806245565;9.48899929027679,-0.7700496806245565;9.48899929027679,3.289567068843151;0,3.289567068843151
+  258 TEXT position=0,-10 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Due" ~box=0,-10.770049680624556;6.666075230660042,-10.770049680624556;6.666075230660042,-6.7104329311568485;0,-6.7104329311568485
+messages:
+  Command: TEXT
+  Specify start point of text: 0,0
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Uno
+  Enter text:
+  Command: TEXT
+  Specify start point of text: 0,-10
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Due
+  Enter text:
+  Command: DDEDIT
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: M
+  Enter a text edit mode option [Single/Multiple] <Multiple>:
+  Select an annotation object or [Undo/Mode]: M
+  Enter a text edit mode option [Single/Multiple] <Multiple>: S
+  Select an annotation object or [Mode]: 1,1
+  Enter new text <Uno>: Primo
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  TEXT 2
+
+[report 2]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Primo" ~box=0,-0.7700496806245565;9.48899929027679,-0.7700496806245565;9.48899929027679,3.289567068843151;0,3.289567068843151
+  258 TEXT position=0,-10 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Secondo" ~box=0,-10.770049680624556;14.34528034066714,-10.770049680624556;14.34528034066714,-6.7104329311568485;0,-6.7104329311568485
+messages:
+  Command: TEXTEDIT
+  Current settings: Edit mode = Single
+  Select an annotation object or [Mode]: 1,-9
+  Enter new text <Due>: Secondo
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Textedit
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  TEXT 2
+
+[final]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Primo" ~box=0,-0.7700496806245565;9.48899929027679,-0.7700496806245565;9.48899929027679,3.289567068843151;0,3.289567068843151
+  258 TEXT position=0,-10 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Secondo" ~box=0,-10.770049680624556;14.34528034066714,-10.770049680624556;14.34528034066714,-6.7104329311568485;0,-6.7104329311568485
+messages:
+  Command: TEXTEDIT
+  Current settings: Edit mode = Single
+  *Cancel*
+  Command: TEXTEDIT
+  Current settings: Edit mode = Single
+  Select an annotation object or [Mode]: 1,1
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Text
+  Textedit
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  TEXT 2

@@ -1,0 +1,45 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; TEXTEDIT with the long name DDEDIT: the Mode option and Esc ([0.8.1-RT11], work #939;
+; card PT11, point 2; ADR 0054, point 6; session of 2026-11-22).
+; - Mode asks "Enter a text edit mode option [Single/Multiple] <Multiple>:"; Enter
+;   keeps Multiple, then Single. As after an option of FILLET, the settings line is
+;   not written again: the prompt of the Single mode has no Undo.
+; - In the Single mode the command ends after one object; the mode stays for the
+;   following TEXTEDIT, which writes "Edit mode = Single".
+; - Esc at the object prompt and at the text prompt cancels the command, before any
+;   modification: nothing changes and there is no step.
+; ~box: Liberation Sans 2.1.5 advances read with fontTools, cap height 1409, ascent
+; 1854, descent -434. "Primo" (P 1366, r 682, i 455, m 1706, o 1139: 5348 units):
+; 5348 / 1409 * 2.5 = 9.48899929027679; "Secondo" (S 1366, e 1139, c 1024, o 1139,
+; n 1139, d 1139, o 1139: 8085 units): 8085 / 1409 * 2.5 = 14.34528034066714.
+TEXT
+0,0
+2.5
+0
+Uno
+
+TEXT
+0,-10
+2.5
+0
+Due
+
+DDEDIT
+M
+
+M
+S
+1,1
+Primo
+!report
+TEXTEDIT
+1,-9
+Secondo
+!report
+TEXTEDIT
+!esc
+TEXTEDIT
+1,1
+!esc
