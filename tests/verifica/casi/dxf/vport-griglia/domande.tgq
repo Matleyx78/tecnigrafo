@@ -1,0 +1,67 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT27 / PT27 (#945): AutoCAD 2021 DXFs, first 0.8.1 session.
+; See docs/tappe/0.8.1/dxf-di-prova.md and ADRs 0055 and 0056.
+; SNAPTYPE is profile state: the polar file has the baseline VPORT values.
+ATTDISP_ON = DXF source=autocad-attdisp-on
+? attdisp ATTDISP_ON -> on
+? roundtrip ATTDISP_ON -> identical
+
+ATTDISP_OFF = DXF source=autocad-attdisp-off
+? attdisp ATTDISP_OFF -> off
+? roundtrip ATTDISP_OFF -> identical
+
+GRIGLIA_SPENTA = DXF source=autocad-griglia-spenta
+? grid GRIGLIA_SPENTA -> grid=off snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip GRIGLIA_SPENTA -> identical
+
+GRIGLIA_PASSI = DXF source=autocad-griglia-passi
+? grid GRIGLIA_PASSI -> grid=on snap=on grid-unit=5,10 snap-unit=2.5,5 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? attdisp GRIGLIA_PASSI -> normal
+? roundtrip GRIGLIA_PASSI as=cadx -> identical
+? roundtrip GRIGLIA_PASSI -> identical
+
+GRIGLIA_SNAPBASE = DXF source=autocad-griglia-snapbase
+? grid GRIGLIA_SNAPBASE -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=3,4 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip GRIGLIA_SNAPBASE -> identical
+
+GRIGLIA_DISPLAY0 = DXF source=autocad-griglia-display0
+? grid GRIGLIA_DISPLAY0 -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=0 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip GRIGLIA_DISPLAY0 -> identical
+
+GRIGLIA_DISPLAY2 = DXF source=autocad-griglia-display2
+? grid GRIGLIA_DISPLAY2 -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip GRIGLIA_DISPLAY2 -> identical
+
+GRIGLIA_DISPLAY6 = DXF source=autocad-griglia-display6
+? grid GRIGLIA_DISPLAY6 -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=6 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip GRIGLIA_DISPLAY6 -> identical
+
+GRIGLIA_MAJOR = DXF source=autocad-griglia-major
+? grid GRIGLIA_MAJOR -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=10 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip GRIGLIA_MAJOR -> identical
+
+UCSICON_OFF = DXF source=autocad-ucsicon-off
+? grid UCSICON_OFF -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=0 snap-angle=0 snap-style=0
+? roundtrip UCSICON_OFF -> identical
+
+UCSICON_NOORIGIN = DXF source=autocad-ucsicon-noorigin
+? grid UCSICON_NOORIGIN -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=1 snap-angle=0 snap-style=0
+? roundtrip UCSICON_NOORIGIN -> identical
+
+UCSICON_ORIGIN = DXF source=autocad-ucsicon-origin
+? grid UCSICON_ORIGIN -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip UCSICON_ORIGIN -> identical
+
+SNAP_ANG30 = DXF source=autocad-snap-ang30
+? grid SNAP_ANG30 -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=30 snap-style=0
+? roundtrip SNAP_ANG30 -> identical
+
+SNAP_ISO = DXF source=autocad-snap-iso
+? grid SNAP_ISO -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=1
+? roundtrip SNAP_ISO -> identical
+
+SNAP_POLARE = DXF source=autocad-snap-polare
+? grid SNAP_POLARE -> grid=on snap=off grid-unit=10,10 snap-unit=10,10 snap-base=0,0 display=2 major=5 ucsicon=3 snap-angle=0 snap-style=0
+? roundtrip SNAP_POLARE -> identical
