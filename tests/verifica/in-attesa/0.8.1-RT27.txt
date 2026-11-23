@@ -1,0 +1,5 @@
+attributi/attdef-invisibile-proprieta #945
+attributi/attdisp-snap-off #945
+attributi/attdisp-snap-on #945
+dxf/vport-griglia #945
+dxf/vport-valori-limite #945

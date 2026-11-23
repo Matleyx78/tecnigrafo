@@ -80,14 +80,23 @@ tre. `Command::highlighted()` serve a PT26, che così non tocca il runner.
 
 - La cronologia di `autocad-selezione`; *Last* con l'ultima entità su un layer
   spento; *Previous* dopo `ERASE`; `#10,10` dopo un punto, con l'immissione
-  dinamica accesa e spenta.
+  dinamica accesa (test di `cmd` e test Qt) e spenta (anche nei casi di RT34).
 - Revisione PT5: `SELECT` A, Invio; `SELECT`, Invio a vuoto; `MOVE` `P` dà A
   (`1 found`); `SELECT` A, poi B preselezionata e `MOVE`; `MOVE` `P` dà B
   ([decisione] 6); `NEW` nello stesso runner e `P`: `No previous selection
   set.`.
 - `#10,10` e `*10,10` **digitati nel campo dinamico** con il focus nella vista
-  e un punto base già posto (test Qt e uno script di livello 2), oltre alla
-  riga di comando ([bloccante] 10).
+  e un punto base già posto, oltre alla riga di comando ([bloccante] 10). Il
+  campo si prova **solo con il test Qt** in `tests/app/dynamic_input_test.cpp`:
+  negli script e nelle prove l'immissione dinamica non c'è
+  ([ADR 0042](../../adr/0042-immissione-dinamica.md), punto 4; `setScriptMode()`
+  la spegne) e nessuna direttiva la accende ([DECISIONI.md](../../DECISIONI.md),
+  «Prefissi `#` e `*` nel campo dinamico (PT34)»). Esempio: `LINE`, base `3,4`
+  con un clic nella vista, focus nella vista, `#10,10` e `Invio`: segmento da
+  `(3,4)` a `(10,10)`; lo stesso con `*10,10`; per controllo `10,10` nel campo
+  dà il segmento fino a `(13,14)`. In tutti e tre il campo parte vuoto, così
+  `#` e `*` sono il primo carattere. I casi di RT34 provano `#10,10` e
+  `*10,10` dalla riga di comando, con le righe normali dello script.
 - `-BLOCK` con `ALL` dopo una `LINE` e poi un `CIRCLE`: nella definizione
   prima il `CIRCLE`, poi la `LINE` ([bloccante] 13; con gli `ATTDEF`, che
   arrivano con PT14, vale lo stesso ordine).
@@ -142,7 +151,9 @@ Righe da controllare: in `messages:` `1 found` e `2 found` come la cronologia
 (tradotti), `No previous selection set.` alla fine; `entities:` dopo
 `[report 1]`.
 
-- **Strumenti:** righe normali, `!report`, su `main`.
+- **Strumenti:** righe normali, `!report`, su `main`. I prefissi `#` e `*` si
+  scrivono anche loro come righe normali (riga di comando): il campo dinamico
+  negli script non c'è, e lo prova il test Qt ("Test richiesti").
 - **Dipendenze:** `ERASE`, `MOVE`, `LINE`, `CIRCLE` su `main`; `SELECT` è di
   questo pacchetto (fino ad allora `Unknown command`: è il confine del caso,
   ADR 0037, punto 4.2).

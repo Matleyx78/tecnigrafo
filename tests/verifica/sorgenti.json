@@ -464,6 +464,134 @@
       "sha256": "98aaf3dbd5a3922f68cc7728448dc3fd608e500606b62479b6658920db7d5796",
       "license": "CC0-1.0",
       "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/d5fe8e419b90d0c2bf32e0ce652c03c0c7dfd3f9/LICENSE"
+    },
+    {
+      "name": "autocad-polygon",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-polygon.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "2b4164ce86467651c547500e9f17aa1488d6b990d61fd4d3d8033df497828dfa",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-attdisp-on",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-attdisp-on.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "e6117fe73e8439034ab9336933ac28012d3e4ba8fe65841dcd8f76fd5060128a",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-attdisp-off",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-attdisp-off.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "19cb4dee9f7b7d14f9ddd556722aa6de0b8d2a558c66e7fc123c0347c7c1a00f",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-spenta",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-spenta.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "646153d8b2a29dfbda511b52cc2dcd9617c6ddf3b2e5aebd4490d9c6731b9258",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-passi",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-passi.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "09ed440e60e775b7a39f767149f6fb518336224ac470bc2175ac8fa7b7b9ef83",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-snapbase",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-snapbase.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "4d7c6412d81ccbd0f77a6c7564d662c878280e3fa097698793162c41b8bc0ff1",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-display0",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-display0.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "8ce775da654bf848e45fbb1e2efddcfc133a3f2805c7fb37dc8aa47338e83e25",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-display2",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-display2.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "8fc9f41ea8cbc95d8efc55e06716ba8a817b487badf5b32f3f4d168a376a9947",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-display6",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-display6.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "6a8cfe117181fdce32b39770e3baf925f65f61d2d7fbc5644f8a2902516f5517",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-griglia-major",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-griglia-major.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "f200845a62a07572256972b0c423f147363cfd35d92523246ab7b2d04e3ea8ff",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-ucsicon-off",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-ucsicon-off.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "97e247408935a3415477f0293c7d905c5f901d46e165ad80e8503e76786b04a2",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-ucsicon-noorigin",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-ucsicon-noorigin.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "76eb93b937d535ee0c022f823a299915a0390c5ee7a680f07f8e64e296145fe1",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-ucsicon-origin",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-ucsicon-origin.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "d550f231bc5f11df0df2632492a4f4777777a8d710a1054f69bedf5a468ea611",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-snap-ang30",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-snap-ang30.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "b4998d098078f0e4d37f079c23f71d40b6f640c81e3b92476a037d8d3a5da8b3",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-snap-iso",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-snap-iso.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "158cc1a1a81e7f8aa27b0e8cf63f7823d666ca93cddff836fb067a3ea5cd07d3",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
+    },
+    {
+      "name": "autocad-snap-polare",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/autocad-snap-polare.dxf",
+      "version": "2aafbb1fa17abc67fdf2ff7de26a34b70e79b736",
+      "sha256": "36cf05126e2197c50ca550d41255a6a82be592fb4235cd4a424f5fb697b69c4e",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/2aafbb1fa17abc67fdf2ff7de26a34b70e79b736/LICENSE"
     }
   ]
 }
