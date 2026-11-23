@@ -10,12 +10,23 @@
 
 #include <optional>
 #include <span>
+#include <string>
 
 namespace tg::render {
 
 /// Below this height of the capital letters, in pixels, a text is drawn as
 /// its box: its characters could not be read (docs/adr/0013, point 4).
 inline constexpr double kMinTextHeightPx = 2.0;
+
+struct AxisFrame {
+    core::Vec2 origin{0.0, 0.0};
+    core::Vec2 xDirection{1.0, 0.0};
+    core::Vec2 yDirection{0.0, 1.0};  ///< Unit vectors.
+    std::string xLabel{"X"};
+    std::string yLabel{"Y"};
+};
+
+enum class AxesStyle : std::uint8_t { UcsIcon, Lines, None };
 
 /// Visual settings of the drawing area.
 struct SceneStyle {
@@ -39,18 +50,17 @@ struct SceneStyle {
     Color hotGrip{255, 0, 0};
     /// cmd::CommandRunner::kGripSizePixels.
     double gripSizePx{10.0};
-    double minGridSpacingPx{12.0};  ///< finer grids are hidden
+    double minGridSpacingPx{12.0};
+    bool showGrid{true};  ///< Program preference; gridOn is the drawing switch.
+    AxesStyle axes{AxesStyle::UcsIcon};
+    AxisFrame axisFrame;
+    double ucsIconSizePx{32.0};
     double tessellationTolerancePx{0.25};
     /// Device pixels per logical pixel of the screen: the width of a pen
     /// drawn with a lineweight is in device pixels (docs/adr/0025, point 6).
     /// Precondition: positive.
     double devicePixelRatio{1.0};
-    bool showGrid{true};
 };
-
-/// Spacing (drawing units) of the minor grid lines: the smallest value of
-/// the form {1, 2, 5} * 10^n that is at least `minSpacingPx` on screen.
-[[nodiscard]] double gridSpacing(double pixelsPerUnit, double minSpacingPx);
 
 /// Draws grid, axes and every visible entity of `document` as seen through
 /// `viewport`: those on a layer that is off or frozen are skipped, those on a

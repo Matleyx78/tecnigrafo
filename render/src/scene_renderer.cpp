@@ -24,8 +24,8 @@ namespace {
 // Safety net: never emit more grid lines than this per direction.
 constexpr double kMaxGridLines = 4000.0;
 
-// Every n-th grid line is drawn as a major line.
-constexpr long long kMajorEvery = 5;
+constexpr int kAdaptiveFallbackMajor = 5;
+constexpr double kUcsIconMarginPx = 12.0;
 
 bool overlaps(const BBox& a, const BBox& b) {
     if (a.isEmpty() || b.isEmpty()) {
@@ -35,53 +35,113 @@ bool overlaps(const BBox& a, const BBox& b) {
            a.max().y >= b.min().y;
 }
 
-void drawGrid(const Viewport& viewport, const SceneStyle& style, Painter& painter) {
-    const double spacing = gridSpacing(viewport.scale(), style.minGridSpacingPx);
-    const BBox area = viewport.visibleWorldArea();
+struct GridAxis {
+    double spacing;
+    long long majorEvery;
+    bool onlyMajor;
+};
 
-    const double spanX = std::ceil(area.max().x / spacing) - std::floor(area.min().x / spacing);
-    const double spanY = std::ceil(area.max().y / spacing) - std::floor(area.min().y / spacing);
-    const bool finite = std::isfinite(spanX) && std::isfinite(spanY);
-    if (!finite || spanX > kMaxGridLines || spanY > kMaxGridLines) {
+std::optional<GridAxis> gridAxis(double gridUnit, double snapUnit, int gridDisplay, int gridMajor,
+                                 double scale, double minimumPx) {
+    const double base = gridUnit > 0.0 ? gridUnit : snapUnit;
+    double spacing = base;
+    const bool adaptive = (gridDisplay & 2) != 0;
+    const bool subdivide = adaptive && (gridDisplay & 4) != 0 && gridMajor > 1;
+    if (subdivide) {
+        while (spacing / static_cast<double>(gridMajor) >= snapUnit &&
+               spacing * scale > static_cast<double>(gridMajor) * minimumPx) {
+            spacing /= static_cast<double>(gridMajor);
+        }
+    }
+    if (spacing * scale >= minimumPx) {
+        return GridAxis{spacing, gridMajor, false};
+    }
+    if (!adaptive) {
+        return std::nullopt;
+    }
+    const int factor = gridMajor == 1 ? kAdaptiveFallbackMajor : gridMajor;
+    spacing *= static_cast<double>(factor);
+    while (spacing * scale < minimumPx) {
+        spacing *= static_cast<double>(factor);
+    }
+    return GridAxis{spacing, 1, true};
+}
+
+void drawGridAxis(const GridAxis& grid, double first, double last, bool vertical,
+                  const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+    const double span = std::ceil(last / grid.spacing) - std::floor(first / grid.spacing);
+    if (!std::isfinite(span) || span > kMaxGridLines) {
         return;
     }
-    // Grid lines are numbered with integers: line i lies at i * spacing.
-    const long long firstX = std::llround(std::floor(area.min().x / spacing));
-    const long long lastX = std::llround(std::ceil(area.max().x / spacing));
-    const long long firstY = std::llround(std::floor(area.min().y / spacing));
-    const long long lastY = std::llround(std::ceil(area.max().y / spacing));
-
-    const double top = 0.0;
-    const double bottom = viewport.screenHeight();
-    const double left = 0.0;
-    const double right = viewport.screenWidth();
-
-    // Two passes so that major lines are painted over minor ones.
+    const auto begin = static_cast<long long>(std::floor(first / grid.spacing));
+    const auto end = static_cast<long long>(std::ceil(last / grid.spacing));
     for (const bool major : std::array{false, true}) {
-        painter.setPen(major ? style.gridMajor : style.gridMinor, 0.0, LineStyle::Solid);
-        for (long long i = firstX; i <= lastX; ++i) {
-            if ((i % kMajorEvery == 0) != major) {
-                continue;
-            }
-            const double x = viewport.worldToScreen({static_cast<double>(i) * spacing, 0.0}).x;
-            painter.drawLine({x, top}, {x, bottom});
+        if (grid.onlyMajor && !major) {
+            continue;
         }
-        for (long long i = firstY; i <= lastY; ++i) {
-            if ((i % kMajorEvery == 0) != major) {
+        painter.setPen(major ? style.gridMajor : style.gridMinor, 0.0, LineStyle::Solid);
+        for (long long i = begin; i <= end; ++i) {
+            if (((i % grid.majorEvery) == 0) != major) {
                 continue;
             }
-            const double y = viewport.worldToScreen({0.0, static_cast<double>(i) * spacing}).y;
-            painter.drawLine({left, y}, {right, y});
+            if (vertical) {
+                const double x =
+                    viewport.worldToScreen({static_cast<double>(i) * grid.spacing, 0}).x;
+                painter.drawLine({x, 0.0}, {x, viewport.screenHeight()});
+            } else {
+                const double y =
+                    viewport.worldToScreen({0, static_cast<double>(i) * grid.spacing}).y;
+                painter.drawLine({0.0, y}, {viewport.screenWidth(), y});
+            }
         }
     }
 }
 
-void drawAxes(const Viewport& viewport, const SceneStyle& style, Painter& painter) {
-    const Vec2 origin = viewport.worldToScreen({0.0, 0.0});
+void drawGrid(const core::GridSettings& settings, const Viewport& viewport, const SceneStyle& style,
+              Painter& painter) {
+    const BBox area = viewport.visibleWorldArea();
+    // Axes adapt independently: an 8 x 20 px grid can hide or coarsen only X.
+    if (const auto x = gridAxis(settings.gridUnit.x, settings.snapUnit.x, settings.gridDisplay,
+                                settings.gridMajor, viewport.scale(), style.minGridSpacingPx)) {
+        drawGridAxis(*x, area.min().x, area.max().x, true, viewport, style, painter);
+    }
+    if (const auto y = gridAxis(settings.gridUnit.y, settings.snapUnit.y, settings.gridDisplay,
+                                settings.gridMajor, viewport.scale(), style.minGridSpacingPx)) {
+        drawGridAxis(*y, area.min().y, area.max().y, false, viewport, style, painter);
+    }
+}
+
+void drawAxesLines(const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+    const Vec2 origin = viewport.worldToScreen(style.axisFrame.origin);
     painter.setPen(style.axisX, 0.0, LineStyle::Solid);
     painter.drawLine({0.0, origin.y}, {viewport.screenWidth(), origin.y});
     painter.setPen(style.axisY, 0.0, LineStyle::Solid);
     painter.drawLine({origin.x, 0.0}, {origin.x, viewport.screenHeight()});
+}
+
+void drawUcsIcon(int ucsIcon, const Viewport& viewport, const SceneStyle& style, Painter& painter) {
+    Vec2 origin = viewport.worldToScreen(style.axisFrame.origin);
+    const double size = style.ucsIconSizePx;
+    if ((ucsIcon & 2) == 0 || origin.x - size < 0.0 || origin.y - size < 0.0 ||
+        origin.x + size > viewport.screenWidth() || origin.y + size > viewport.screenHeight()) {
+        origin = {kUcsIconMarginPx, viewport.screenHeight() - kUcsIconMarginPx};
+    }
+    const auto screenDirection = [](const Vec2& direction) {
+        return Vec2{direction.x, -direction.y};
+    };
+    const auto arrow = [&](const Vec2& direction, const Color& color, const std::string& label) {
+        const Vec2 unit = screenDirection(direction);
+        const Vec2 normal{-unit.y, unit.x};
+        const Vec2 tip = origin + unit * size;
+        painter.setPen(color, 0.0, LineStyle::Solid);
+        painter.drawLine(origin, tip);
+        painter.drawLine(tip, tip - unit * 5.0 + normal * 3.0);
+        painter.drawLine(tip, tip - unit * 5.0 - normal * 3.0);
+        painter.drawText(
+            {std::u32string(label.begin(), label.end()), tip + unit * 3.0 - normal * 3.0, 10.0});
+    };
+    arrow(style.axisFrame.xDirection, style.axisX, style.axisFrame.xLabel);
+    arrow(style.axisFrame.yDirection, style.axisY, style.axisFrame.yLabel);
 }
 
 // The shapes of a preview entity: an entity of a shape type is its own shape,
@@ -123,27 +183,17 @@ std::array<Vec2, kMarkerCircleSegments> markerCircle(const Vec2& center, double 
 
 }  // namespace
 
-double gridSpacing(double pixelsPerUnit, double minSpacingPx) {
-    if (pixelsPerUnit <= 0.0 || minSpacingPx <= 0.0) {
-        return 1.0;
-    }
-    const double minWorld = minSpacingPx / pixelsPerUnit;
-    const double decade = std::pow(10.0, std::floor(std::log10(minWorld)));
-    for (const double mantissa : {1.0, 2.0, 5.0, 10.0}) {
-        if (mantissa * decade >= minWorld) {
-            return mantissa * decade;
-        }
-    }
-    return 10.0 * decade;
-}
-
 void renderScene(const core::Document& document, const Viewport& viewport, const SceneStyle& style,
                  Painter& painter) {
     painter.clear(style.background);
-    if (style.showGrid) {
-        drawGrid(viewport, style, painter);
+    if (style.showGrid && document.grid().gridOn) {
+        drawGrid(document.grid(), viewport, style, painter);
     }
-    drawAxes(viewport, style, painter);
+    if (style.axes == AxesStyle::Lines) {
+        drawAxesLines(viewport, style, painter);
+    } else if (style.axes == AxesStyle::UcsIcon && (document.grid().ucsIcon & 1) != 0) {
+        drawUcsIcon(document.grid().ucsIcon, viewport, style, painter);
+    }
 
     const BBox visible = viewport.visibleWorldArea();
     for (const core::EntityRecord& record : document.entities()) {

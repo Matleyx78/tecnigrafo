@@ -93,6 +93,143 @@ void expectPoint(const core::Vec2& actual, const core::Vec2& expected) {
     EXPECT_NEAR(actual.y, expected.y, kTolerance);
 }
 
+Viewport furnitureViewport(double scale) {
+    Viewport viewport;
+    viewport.setScreenSize(100.0, 100.0);
+    viewport.setCenter({0.0, 0.0});
+    viewport.setScale(scale);
+    return viewport;
+}
+
+SceneStyle gridStyle() {
+    SceneStyle style;
+    style.axes = AxesStyle::None;
+    style.minGridSpacingPx = 12.0;
+    return style;
+}
+
+TEST(SceneRendererGrid, OffDrawsNoGrid) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridOn = false;
+    document.setGrid(grid);
+    RecordingPainter painter;
+    renderScene(document, furnitureViewport(2.0), gridStyle(), painter);
+    EXPECT_TRUE(painter.strokes.empty());
+}
+
+TEST(SceneRendererGrid, UsesFixedAndSnapFallbackSpacingPerAxis) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {0.0, 10.0};
+    grid.snapUnit = {5.0, 5.0};
+    grid.gridDisplay = 0;
+    grid.gridMajor = 5;
+    document.setGrid(grid);
+    RecordingPainter painter;
+    renderScene(document, furnitureViewport(3.0), gridStyle(), painter);
+    // X lines are 15 px apart and Y lines 30 px apart. Both include zero.
+    EXPECT_EQ(painter.strokes.size(), 9U + 5U);
+}
+
+TEST(SceneRendererGrid, DifferentAxisSpacingAdaptsIndependently) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {4.0, 10.0};  // 8 x 20 px.
+    grid.gridDisplay = 0;
+    document.setGrid(grid);
+    RecordingPainter painter;
+    renderScene(document, furnitureViewport(2.0), gridStyle(), painter);
+    // The X spacing is hidden, while the Y spacing remains visible.
+    EXPECT_EQ(painter.strokes.size(), 7U);
+    for (const Stroke& stroke : painter.strokes) {
+        EXPECT_DOUBLE_EQ(stroke.points[0].y, stroke.points[1].y);
+    }
+}
+
+TEST(SceneRendererGrid, AdaptiveCoarsensAndSubdividesAtTwoZooms) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {10.0, 10.0};
+    grid.snapUnit = {2.0, 2.0};
+    grid.gridDisplay = 6;
+    grid.gridMajor = 5;
+    document.setGrid(grid);
+    for (const double scale : {0.1, 10.0}) {
+        RecordingPainter painter;
+        renderScene(document, furnitureViewport(scale), gridStyle(), painter);
+        EXPECT_FALSE(painter.strokes.empty());
+        for (const Stroke& stroke : painter.strokes) {
+            const double dx = std::abs(stroke.points[1].x - stroke.points[0].x);
+            const double dy = std::abs(stroke.points[1].y - stroke.points[0].y);
+            EXPECT_TRUE(dx >= 12.0 || dy >= 12.0);
+        }
+    }
+}
+
+TEST(SceneRendererGrid, MajorOneUsesFiveAndNeverDisappears) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridUnit = {1.0, 1.0};
+    grid.gridDisplay = 6;
+    grid.gridMajor = 1;
+    document.setGrid(grid);
+    for (const double scale : {0.1, 3.0}) {
+        RecordingPainter painter;
+        renderScene(document, furnitureViewport(scale), gridStyle(), painter);
+        ASSERT_FALSE(painter.strokes.empty());
+        for (const Stroke& stroke : painter.strokes) {
+            EXPECT_EQ(stroke.pen.color, gridStyle().gridMajor);
+        }
+    }
+}
+
+TEST(SceneRendererAxes, UcsIconUsesOriginCornerAndDrawingSwitch) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridOn = false;
+    SceneStyle style = gridStyle();
+    style.axes = AxesStyle::UcsIcon;
+    style.ucsIconSizePx = 20.0;
+
+    for (const int ucsIcon : {0, 1, 3}) {
+        grid.ucsIcon = ucsIcon;
+        document.setGrid(grid);
+        RecordingPainter painter;
+        renderScene(document, furnitureViewport(1.0), style, painter);
+        if (ucsIcon == 0) {
+            EXPECT_TRUE(painter.runs.empty());
+            continue;
+        }
+        ASSERT_EQ(painter.runs.size(), 2U);
+        const core::Vec2 expected = ucsIcon == 3 ? core::Vec2{50.0, 50.0} : core::Vec2{12.0, 88.0};
+        expectPoint(painter.strokes[0].points[0], expected);
+        expectPoint(painter.strokes[3].points[0], expected);
+    }
+
+    grid.ucsIcon = 3;
+    document.setGrid(grid);
+    auto edgeViewport = furnitureViewport(1.0);
+    edgeViewport.setCenter({50.0, 0.0});
+    RecordingPainter edgePainter;
+    renderScene(document, edgeViewport, style, edgePainter);
+    expectPoint(edgePainter.strokes[0].points[0], {12.0, 88.0});
+}
+
+TEST(SceneRendererAxes, LinesPreferenceKeepsFullAxes) {
+    core::Document document;
+    auto grid = document.grid();
+    grid.gridOn = false;
+    document.setGrid(grid);
+    SceneStyle style = gridStyle();
+    style.axes = AxesStyle::Lines;
+    RecordingPainter painter;
+    renderScene(document, furnitureViewport(1.0), style, painter);
+    ASSERT_EQ(painter.strokes.size(), 2U);
+    expectPoint(painter.strokes[0].points[0], {0.0, 50.0});
+    expectPoint(painter.strokes[1].points[0], {50.0, 0.0});
+}
+
 // Nearest is AutoCAD's hourglass: the top side, a diagonal, the bottom side
 // and the other diagonal, two triangles meeting at the snap point
 // (docs/tappe/0.8.1/PT30-snap-vicino.md, point 6).
@@ -248,9 +385,12 @@ constexpr Color kThemeColor{200, 201, 202};
 
 SceneStyle propertiesStyle() {
     SceneStyle style;
-    style.showGrid = false;
+    // This suite filters scene furniture by this marker colour.
+    style.gridMinor = kAxisMarker;
+    style.gridMajor = kAxisMarker;
     style.axisX = kAxisMarker;
     style.axisY = kAxisMarker;
+    style.axes = AxesStyle::Lines;
     style.entity = kThemeColor;
     return style;
 }
