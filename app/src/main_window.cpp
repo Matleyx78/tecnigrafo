@@ -897,6 +897,7 @@ bool MainWindow::confirmReplace(const QString& path) {
 }
 
 void MainWindow::setSnapModes(const core::SnapModes& modes) {
+    m_modesWithoutSwitch = modes;
     m_endpointAction->setChecked(modes.endpoint);
     m_midpointAction->setChecked(modes.midpoint);
     m_centerAction->setChecked(modes.center);
@@ -935,6 +936,9 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.perpendicular = m_perpendicularAction->isChecked();
     aids.snapModes.tangent = m_tangentAction->isChecked();
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
+    aids.snapModes.nearest = m_modesWithoutSwitch.nearest;
+    aids.snapModes.extension = m_modesWithoutSwitch.extension;
+    aids.snapModes.parallel = m_modesWithoutSwitch.parallel;
     aids.polar = m_polarAction->isChecked();
     aids.tracking = m_trackingAction->isChecked();
     if (m_active != nullptr) {
