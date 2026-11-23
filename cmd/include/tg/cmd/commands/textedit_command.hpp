@@ -40,7 +40,7 @@ private:
 
     Stage m_stage{Stage::Object};
     core::EntityId m_target;
-    core::Entity m_original;
+    core::Entity m_original{core::Line{}};
     std::size_t m_attribute{0};
     bool m_multiple{true};
     bool m_objectChanged{false};
