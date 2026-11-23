@@ -8,4 +8,5 @@ D = DXF source=elettrico-tg-el-folio-out
 ? count D -> ATTDEF 13; LINE 6
 ? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:43 -> none
+; cambia con #945
+? snaps D:43 -> Insertion 0,0

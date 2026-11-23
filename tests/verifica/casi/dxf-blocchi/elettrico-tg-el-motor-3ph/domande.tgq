@@ -8,8 +8,9 @@ D = DXF source=elettrico-tg-el-motor-3ph
 ? count D -> ATTDEF 22; CIRCLE 1; LINE 5; TEXT 2
 ? unhandled D -> none
 ; TG_PIN1=N, flags=3 (constant + invisible).
-? snaps D:45 -> none
+; cambia con #945
+? snaps D:45 -> Insertion 0,0
 ; TG_PIN2=N, flags=3 (constant + invisible).
-? snaps D:46 -> none
+? snaps D:46 -> Insertion 10,0
 ; TG_PIN3=N, flags=3 (constant + invisible).
-? snaps D:47 -> none
+? snaps D:47 -> Insertion 20,0
