@@ -79,8 +79,7 @@ struct AttributeDefinition {
 /// generate() keeps only the drawn shapes, extent() measures them all
 /// (docs/adr/0044, point 2).
 ///
-/// The text shownText(), drawn even with the Invisible flag and whatever
-/// Document::attributeDisplay(), as in AutoCAD (docs/adr/0056, point 1).
+/// The text shownText(), not drawn when the definition is invisible.
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record,
                                                     const AttributeDefinition& definition);

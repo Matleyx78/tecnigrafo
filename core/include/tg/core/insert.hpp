@@ -162,9 +162,7 @@ inline constexpr int kMaxInsertDepth = 64;
 /// point 3). The attribute definitions of the block are not drawn: the
 /// attributes of the insert are, after the shapes of its block, as texts with
 /// the properties propertiesInBlock() gives them (layer 0 and ByBlock as the
-/// entities of the block), drawn as Document::attributeDisplay() says: with
-/// Normal an invisible one is not drawn, with On all are, with Off none
-/// (docs/adr/0056, point 1). The ATTRIBs of a
+/// entities of the block); an invisible one is not drawn. The ATTRIBs of a
 /// nested insert are mapped as the entities of the block that holds it.
 /// Nothing from a block that is not there, its attributes included, nor
 /// from an insert deeper than kMaxInsertDepth.

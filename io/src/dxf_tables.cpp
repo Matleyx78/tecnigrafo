@@ -640,6 +640,18 @@ void writeGrid(core::RawGroups& record, const core::GridSettings& grid) {
     dxf_groups::insertInOrder(record, additions, kViewportOrder);
 }
 
+/// The groups of an *ACTIVE record of a new drawing after its name (2) and
+/// flags (70): the view of a new drawing, then the grid of acadiso.dwt
+/// (core::GridSettings), by kViewportOrder. The skeleton writes the same
+/// groups (dxf_skeleton.cpp).
+core::RawGroups newActiveViewportGroups() {
+    return {{10, "0.0"}, {20, "0.0"}, {11, "1.0"},  {21, "1.0"},   {12, "0.0"},  {22, "0.0"},
+            {13, "0.0"}, {23, "0.0"}, {14, "10.0"}, {24, "10.0"},  {15, "10.0"}, {25, "10.0"},
+            {16, "0.0"}, {26, "0.0"}, {36, "1.0"},  {40, "100.0"}, {41, "1.0"},  {42, "50.0"},
+            {50, "0.0"}, {74, "3"},   {75, "0"},    {76, "1"},     {77, "0"},    {78, "0"},
+            {60, "3"},   {61, "5"}};
+}
+
 /// True when a file without an *ACTIVE record must get one: the grid of the
 /// document is not that of a new drawing (docs/adr/0055, point 2).
 bool needsActiveViewport(const core::Document& document) {
@@ -1421,16 +1433,6 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
            (!layers && needsLayerTable(document) ? 1U : 0U) +
            (!styles && needsStyleTable(document) ? 1U : 0U) +
            (!dimStyles && needsDimStyleTable(document) ? 1U : 0U);
-}
-
-core::RawGroups newActiveViewportGroups() {
-    // The view of a new drawing, then the grid of acadiso.dwt
-    // (core::GridSettings), by kViewportOrder.
-    return {{10, "0.0"}, {20, "0.0"}, {11, "1.0"},  {21, "1.0"},   {12, "0.0"},  {22, "0.0"},
-            {13, "0.0"}, {23, "0.0"}, {14, "10.0"}, {24, "10.0"},  {15, "10.0"}, {25, "10.0"},
-            {16, "0.0"}, {26, "0.0"}, {36, "1.0"},  {40, "100.0"}, {41, "1.0"},  {42, "50.0"},
-            {50, "0.0"}, {74, "3"},   {75, "0"},    {76, "1"},     {77, "0"},    {78, "0"},
-            {60, "3"},   {61, "5"}};
 }
 
 core::RawGroups newTables(const core::Document& document, std::uint64_t& nextHandle) {
