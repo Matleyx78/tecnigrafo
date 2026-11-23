@@ -228,19 +228,17 @@ DxfSkeleton buildSkeleton(const Handles& handles, const Defaults& defaults, std:
     const auto paperLayout = builder.handle(LayoutPaper);
 
     auto owner = builder.table(TableVport, "VPORT", 1);
-    builder.record(VportActive, "VPORT", "AcDbViewportTableRecord", "*Active", owner,
-                   {{10, "0.0"},
-                    {20, "0.0"},
-                    {11, "1.0"},
-                    {21, "1.0"},
-                    {12, "0.0"},
-                    {22, "0.0"},
-                    {16, "0.0"},
-                    {26, "0.0"},
-                    {36, "1.0"},
-                    {40, "100.0"},
-                    {41, "1.0"},
-                    {42, "50.0"}});
+    // The view of a new drawing and the grid of acadiso.dwt, the values of
+    // core::GridSettings, in the order of the record written by AutoCAD:
+    // writeTables() puts the grid of the document in it (docs/adr/0055,
+    // point 2).
+    builder.record(
+        VportActive, "VPORT", "AcDbViewportTableRecord", "*Active", owner,
+        {{10, "0.0"}, {20, "0.0"}, {11, "1.0"},  {21, "1.0"},   {12, "0.0"},  {22, "0.0"},
+         {13, "0.0"}, {23, "0.0"}, {14, "10.0"}, {24, "10.0"},  {15, "10.0"}, {25, "10.0"},
+         {16, "0.0"}, {26, "0.0"}, {36, "1.0"},  {40, "100.0"}, {41, "1.0"},  {42, "50.0"},
+         {50, "0.0"}, {74, "3"},   {75, "0"},    {76, "1"},     {77, "0"},    {78, "0"},
+         {60, "3"},   {61, "5"}});
     builder.endTable();
     const std::array<std::pair<Object, bool>, 3> linetypes{{{ByBlock, defaults.byBlock},
                                                             {ByLayer, defaults.byLayer},

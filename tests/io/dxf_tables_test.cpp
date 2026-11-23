@@ -13,9 +13,12 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <random>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -878,6 +881,353 @@ TEST(DxfTables, MissingHeaderVariablesAreAddedOnlyWhenTheyDiffer) {
     EXPECT_NE(std::ranges::search(written, RawGroups{{9, "$LTSCALE"}, {40, "3.0"}}).begin(),
               written.end());
     EXPECT_EQ(std::ranges::find(written, core::RawGroup{9, "$CLAYER"}), written.end());
+}
+
+// --- The *ACTIVE record of the VPORT table (docs/adr/0055, point 2) --------
+
+/// A VPORT record with the groups AutoCAD 2021 writes for the *Active one of
+/// the files autocad-griglia-*, -ucsicon-*, -snap-* and -attdisp-* (the same
+/// starting state, docs/tappe/0.8.1/dxf-di-prova.md), with `changes` in place
+/// of the groups of the same code.
+RawGroups viewport(std::string_view handle, std::string_view name, const RawGroups& changes = {}) {
+    RawGroups groups{{0, "VPORT"},
+                     {5, std::string{handle}},
+                     {330, "8"},
+                     {100, "AcDbSymbolTableRecord"},
+                     {100, "AcDbViewportTableRecord"},
+                     {2, std::string{name}},
+                     {70, "     0"},
+                     {10, "0.0"},
+                     {20, "0.0"},
+                     {11, "1.0"},
+                     {21, "1.0"},
+                     {12, "24.99710159259513"},
+                     {22, "15.0027242299434"},
+                     {13, "0.0"},
+                     {23, "0.0"},
+                     {14, "10.0"},
+                     {24, "10.0"},
+                     {15, "10.0"},
+                     {25, "10.0"},
+                     {16, "0.0"},
+                     {26, "0.0"},
+                     {36, "1.0"},
+                     {17, "0.0"},
+                     {27, "0.0"},
+                     {37, "0.0"},
+                     {40, "44.67939230725607"},
+                     {41, "1.124481327800829"},
+                     {42, "50.0"},
+                     {43, "0.0"},
+                     {44, "0.0"},
+                     {50, "0.0"},
+                     {51, "0.0"},
+                     {71, "     0"},
+                     {72, "  1000"},
+                     {73, "     1"},
+                     {74, "     3"},
+                     {75, "     0"},
+                     {76, "     1"},
+                     {77, "     0"},
+                     {78, "     0"},
+                     {281, "     0"},
+                     {65, "     1"},
+                     {146, "0.0"},
+                     {348, "2F"},
+                     {60, "     2"},
+                     {61, "     5"},
+                     {292, "     1"},
+                     {282, "     1"},
+                     {141, "0.0"},
+                     {142, "0.0"},
+                     {63, "   250"}};
+    for (const core::RawGroup& change : changes) {
+        const auto at = std::ranges::find(groups, change.code, &core::RawGroup::code);
+        EXPECT_NE(at, groups.end()) << change.code;
+        if (at != groups.end()) {
+            at->value = change.value;
+        }
+    }
+    return groups;
+}
+
+/// A DXF R2018 file with a line, these HEADER groups and, unless
+/// std::nullopt, a VPORT table (handle 8) with these records.
+std::string drawingWithViewports(const std::optional<std::vector<RawGroups>>& viewports,
+                                 const RawGroups& header = {}) {
+    RawGroups groups{{0, "SECTION"}, {2, "HEADER"},    {9, "$ACADVER"},
+                     {1, "AC1032"},  {9, "$HANDSEED"}, {5, "100"}};
+    groups.insert(groups.end(), header.begin(), header.end());
+    groups.insert(groups.end(), {{0, "ENDSEC"}, {0, "SECTION"}, {2, "TABLES"}});
+    if (viewports) {
+        groups.insert(groups.end(), {{0, "TABLE"},
+                                     {2, "VPORT"},
+                                     {5, "8"},
+                                     {330, "0"},
+                                     {100, "AcDbSymbolTable"},
+                                     {70, "     " + std::to_string(viewports->size())}});
+        for (const RawGroups& record : *viewports) {
+            groups.insert(groups.end(), record.begin(), record.end());
+        }
+        groups.push_back({0, "ENDTAB"});
+    }
+    groups.insert(groups.end(), {{0, "ENDSEC"}, {0, "SECTION"}, {2, "ENTITIES"}});
+    const RawGroups entity = line("30", {{8, "0"}});
+    groups.insert(groups.end(), entity.begin(), entity.end());
+    groups.insert(groups.end(), {{0, "ENDSEC"}, {0, "EOF"}});
+    return writeGroups(groups, TextEncoding::Utf8);
+}
+
+/// The VPORT records of `bytes`, from group 0, in file order.
+std::vector<RawGroups> viewportsOf(const std::string& bytes) {
+    const auto all = groupsOf(bytes);
+    std::vector<RawGroups> found;
+    for (std::size_t i = 0; i < all.size(); ++i) {
+        if (all[i].code != 0 || all[i].value != "VPORT") {
+            continue;
+        }
+        std::size_t end = i + 1;
+        while (end < all.size() && all[end].code != 0) {
+            ++end;
+        }
+        found.emplace_back(all.begin() + static_cast<std::ptrdiff_t>(i),
+                           all.begin() + static_cast<std::ptrdiff_t>(end));
+    }
+    return found;
+}
+
+/// The value of the first group `code` of `record`, empty if it has none.
+std::string valueOf(const RawGroups& record, int code) {
+    const auto at = std::ranges::find(record, code, &core::RawGroup::code);
+    return at != record.end() ? at->value : std::string{};
+}
+
+/// Every handle (group 5) of `bytes`, in file order, and $HANDSEED.
+std::pair<std::vector<std::uint64_t>, std::uint64_t> handlesOf(const std::string& bytes) {
+    const auto all = groupsOf(bytes);
+    std::vector<std::uint64_t> handles;
+    std::uint64_t seed = 0;
+    for (std::size_t i = 0; i + 1 < all.size(); ++i) {
+        if (all[i].code == 9 && all[i].value == "$HANDSEED") {
+            seed = std::stoull(all[i + 1].value, nullptr, 16);
+        } else if (all[i].code == 5 && (i == 0 || all[i - 1].code != 9)) {
+            handles.push_back(std::stoull(all[i].value, nullptr, 16));
+        }
+    }
+    return {handles, seed};
+}
+
+TEST(DxfTables, EveryAutocadActiveViewportGivesItsGridAndIsWrittenAsRead) {
+    // The variants of the files autocad-griglia-*, -ucsicon-* and -snap-*
+    // (docs/tappe/0.8.1/dxf-di-prova.md); autocad-snap-polare changes only
+    // SNAPTYPE, which is not in the VPORT table.
+    core::GridSettings start;
+    start.gridDisplay = 2;
+
+    struct Variant {
+        std::string_view file;
+        RawGroups changes;
+        core::GridSettings expected;
+    };
+
+    const auto with = [&](auto change) {
+        core::GridSettings grid = start;
+        change(grid);
+        return grid;
+    };
+    const std::vector<Variant> variants{
+        {"griglia-spenta", {{76, "     0"}}, with([](auto& g) { g.gridOn = false; })},
+        {"griglia-passi",
+         {{14, "2.5"}, {24, "5.0"}, {15, "5.0"}, {25, "10.0"}, {75, "     1"}},
+         with([](auto& g) {
+             g.snapUnit = {2.5, 5};
+             g.gridUnit = {5, 10};
+             g.snapOn = true;
+         })},
+        {"griglia-snapbase", {{13, "3.0"}, {23, "4.0"}}, with([](auto& g) {
+             g.snapBase = {3, 4};
+         })},
+        {"griglia-display0", {{60, "     0"}}, with([](auto& g) { g.gridDisplay = 0; })},
+        {"griglia-display2", {}, start},
+        {"griglia-display6", {{60, "     6"}}, with([](auto& g) { g.gridDisplay = 6; })},
+        {"griglia-major", {{61, "    10"}}, with([](auto& g) { g.gridMajor = 10; })},
+        {"ucsicon-off", {{74, "     0"}}, with([](auto& g) { g.ucsIcon = 0; })},
+        {"ucsicon-noorigin", {{74, "     1"}}, with([](auto& g) { g.ucsIcon = 1; })},
+        {"ucsicon-origin", {}, start},
+        {"snap-ang30", {{50, "30.0"}}, with([](auto& g) { g.snapAngle = 30; })},
+        {"snap-iso", {{77, "     1"}}, with([](auto& g) { g.snapStyle = 1; })},
+        {"snap-polare", {}, start},
+        {"attdisp-on", {{76, "     0"}, {60, "     3"}}, with([](auto& g) {
+             g.gridOn = false;
+             g.gridDisplay = 3;
+         })},
+    };
+    for (const Variant& variant : variants) {
+        SCOPED_TRACE(variant.file);
+        const std::string bytes = drawingWithViewports(
+            std::vector<RawGroups>{viewport("29", "*Active", variant.changes)});
+        auto read = readOk(bytes);
+        EXPECT_EQ(read.document.grid(), variant.expected);
+        // Without changes, written again as read.
+        EXPECT_EQ(writeOk(read.document), bytes);
+        // A change rewrites only its group, and is read back.
+        core::GridSettings changed = variant.expected;
+        changed.snapOn = !changed.snapOn;
+        read.document.setGrid(changed);
+        const std::string written = writeOk(read.document);
+        RawGroups expectedRecord = viewport("29", "*Active", variant.changes);
+        std::ranges::find(expectedRecord, 75, &core::RawGroup::code)->value =
+            changed.snapOn ? "1" : "0";
+        EXPECT_EQ(viewportsOf(written), std::vector<RawGroups>{expectedRecord});
+        EXPECT_EQ(readOk(written).document.grid(), changed);
+    }
+}
+
+TEST(DxfTables, TheGridSpacingKeepsAnAxisAtZero) {
+    // GRIDUNIT 0,10: X takes the snap spacing, and the value is kept as
+    // written (docs/DECISIONI.md, 2026-11-22, "Revisione delle interfacce PT5").
+    const std::string bytes =
+        drawingWithViewports(std::vector<RawGroups>{viewport("29", "*Active", {{15, "0.0"}})});
+    auto read = readOk(bytes);
+    EXPECT_EQ(read.document.grid().gridUnit, (core::Vec2{0, 10}));
+    EXPECT_EQ(writeOk(read.document), bytes);
+    core::GridSettings grid = read.document.grid();
+    grid.gridMajor = 4;
+    read.document.setGrid(grid);
+    const auto written = viewportsOf(writeOk(read.document));
+    ASSERT_EQ(written.size(), 1U);
+    EXPECT_EQ(valueOf(written[0], 15), "0.0");
+    EXPECT_EQ(valueOf(written[0], 25), "10.0");
+    EXPECT_EQ(valueOf(written[0], 61), "4");
+}
+
+TEST(DxfTables, InvalidViewportGroupsReadAsANewDrawingAndAreKept) {
+    // A group out of its range takes the value of a new drawing; its text
+    // stays as long as that value does not change.
+    const RawGroups invalid{{14, "-1.0"}, {15, "-2.0"}, {61, "   500"}};
+    const std::string bytes =
+        drawingWithViewports(std::vector<RawGroups>{viewport("29", "*Active", invalid)});
+    auto read = readOk(bytes);
+    core::GridSettings expected;
+    expected.gridDisplay = 2;
+    EXPECT_EQ(read.document.grid(), expected);
+    EXPECT_EQ(writeOk(read.document), bytes);
+    expected.gridMajor = 8;
+    read.document.setGrid(expected);
+    const auto written = viewportsOf(writeOk(read.document));
+    ASSERT_EQ(written.size(), 1U);
+    EXPECT_EQ(valueOf(written[0], 14), "-1.0");
+    EXPECT_EQ(valueOf(written[0], 61), "8");
+}
+
+TEST(DxfTables, OnlyTheFirstActiveViewportGivesTheGrid) {
+    // Two *Active records (in any case): the first counts and gets the
+    // grid, the second stays as read.
+    const RawGroups second = viewport("2A", "*Active", {{75, "     1"}, {14, "5.0"}});
+    const std::string bytes = drawingWithViewports(
+        std::vector<RawGroups>{viewport("28", "*ALT", {{76, "     0"}}),
+                               viewport("29", "*ACTIVE", {{74, "     1"}}), second});
+    auto read = readOk(bytes);
+    EXPECT_FALSE(read.document.grid().snapOn);
+    EXPECT_TRUE(read.document.grid().gridOn);
+    EXPECT_EQ(read.document.grid().ucsIcon, 1);
+    EXPECT_EQ(writeOk(read.document), bytes);
+    core::GridSettings grid = read.document.grid();
+    grid.gridOn = false;
+    read.document.setGrid(grid);
+    const auto written = viewportsOf(writeOk(read.document));
+    ASSERT_EQ(written.size(), 3U);
+    EXPECT_EQ(written[0], viewport("28", "*ALT", {{76, "     0"}}));
+    EXPECT_EQ(written[1], viewport("29", "*ACTIVE", {{74, "     1"}, {76, "0"}}));
+    EXPECT_EQ(written[2], second);
+}
+
+TEST(DxfTables, WithoutAnActiveViewportOneIsAddedOnlyForANewGrid) {
+    // No VPORT table, or one with *ALT alone: the grid of a new drawing, and
+    // the file written as read; with SNAPMODE 1 an *Active record with a new
+    // and unique handle, in a VPORT table added first if missing
+    // (docs/adr/0055, point 2).
+    const RawGroups alt = viewport("28", "*Alt", {{75, "     1"}, {14, "5.0"}});
+    for (const auto& viewports :
+         {std::optional<std::vector<RawGroups>>{}, std::optional{std::vector<RawGroups>{alt}}}) {
+        SCOPED_TRACE(viewports ? "*Alt" : "no VPORT");
+        const std::string bytes = drawingWithViewports(viewports);
+        auto read = readOk(bytes);
+        EXPECT_EQ(read.document.grid(), core::GridSettings{});
+        EXPECT_EQ(writeOk(read.document), bytes);
+        core::GridSettings grid;
+        grid.snapOn = true;
+        read.document.setGrid(grid);
+        const std::string written = writeOk(read.document);
+        const auto records = viewportsOf(written);
+        ASSERT_EQ(records.size(), viewports ? 2U : 1U);
+        if (viewports) {
+            EXPECT_EQ(records[0], alt);
+        }
+        const RawGroups& active = records.back();
+        EXPECT_EQ(valueOf(active, 2), "*Active");
+        EXPECT_EQ(valueOf(active, 75), "1");
+        const auto groups = groupsOf(written);
+        const auto table = std::ranges::search(groups, RawGroups{{0, "TABLE"}, {2, "VPORT"}});
+        ASSERT_FALSE(table.empty());
+        const auto count =
+            std::ranges::find(table.begin(), groups.end(), 70, &core::RawGroup::code);
+        ASSERT_NE(count, groups.end());
+        EXPECT_EQ(std::stoi(count->value), viewports ? 2 : 1);
+        // The owner is the VPORT table.
+        EXPECT_EQ(valueOf(active, 330), valueOf(RawGroups(table.begin(), count), 5));
+        const auto [handles, seed] = handlesOf(written);
+        const std::uint64_t handle = std::stoull(valueOf(active, 5), nullptr, 16);
+        EXPECT_EQ(std::ranges::count(handles, handle), 1);
+        for (const std::uint64_t each : handles) {
+            EXPECT_LT(each, seed);
+        }
+        const auto reread = readOk(written);
+        EXPECT_TRUE(reread.document.grid().snapOn);
+        // A new entity does not take a handle of the new records.
+        auto again = readOk(written);
+        const auto added = again.document.add(core::Line{});
+        EXPECT_EQ(std::ranges::count(handles, added.value), 0);
+        // Written again without changes, the same file.
+        EXPECT_EQ(writeOk(readOk(written).document), written);
+    }
+}
+
+TEST(DxfTables, AttmodeGivesTheAttributeDisplay) {
+    // $ATTMODE 0, 1 and 2 (docs/adr/0056, point 1), written as read.
+    const std::vector<std::pair<std::string, core::AttributeDisplay>> values{
+        {"     0", core::AttributeDisplay::Off},
+        {"     1", core::AttributeDisplay::Normal},
+        {"     2", core::AttributeDisplay::On}};
+    for (const auto& [text, display] : values) {
+        SCOPED_TRACE(text);
+        const std::string bytes = drawingWithViewports(std::nullopt, {{9, "$ATTMODE"}, {70, text}});
+        auto read = readOk(bytes);
+        EXPECT_EQ(read.document.attributeDisplay(), display);
+        EXPECT_EQ(writeOk(read.document), bytes);
+    }
+    // Another value reads as Normal and is written as 1, as $LWDISPLAY
+    // writes the value it reads: the variable is held by the model.
+    const auto other =
+        readOk(drawingWithViewports(std::nullopt, {{9, "$ATTMODE"}, {70, "     7"}}));
+    EXPECT_EQ(other.document.attributeDisplay(), core::AttributeDisplay::Normal);
+    const auto rewritten = groupsOf(writeOk(other.document));
+    EXPECT_NE(std::ranges::search(rewritten, RawGroups{{9, "$ATTMODE"}, {70, "1"}}).begin(),
+              rewritten.end());
+    auto read = readOk(drawingWithViewports(std::nullopt, {{9, "$ATTMODE"}, {70, "     2"}}));
+    read.document.setAttributeDisplay(core::AttributeDisplay::Off);
+    const auto written = groupsOf(writeOk(read.document));
+    EXPECT_NE(std::ranges::search(written, RawGroups{{9, "$ATTMODE"}, {70, "0"}}).begin(),
+              written.end());
+    EXPECT_EQ(readOk(writeOk(read.document)).document.attributeDisplay(),
+              core::AttributeDisplay::Off);
+    // Missing: not added for Normal, added for another value.
+    auto missing = readOk(drawingWithViewports(std::nullopt));
+    EXPECT_EQ(missing.document.attributeDisplay(), core::AttributeDisplay::Normal);
+    EXPECT_EQ(writeOk(missing.document).find("$ATTMODE"), std::string::npos);
+    missing.document.setAttributeDisplay(core::AttributeDisplay::On);
+    EXPECT_EQ(readOk(writeOk(missing.document)).document.attributeDisplay(),
+              core::AttributeDisplay::On);
 }
 
 // --- Random drawings ----------------------------------------------------------

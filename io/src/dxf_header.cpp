@@ -3,9 +3,8 @@
 
 // The header variables of the current values, of the linetype scale and of
 // the lineweights (docs/adr/0023, point 3; docs/adr/0025, points 3 and 6),
-// and the current styles (docs/adr/0046 and 0047; the $DIM… variables are in
-// dxf_dimstyle.cpp).
-// Reading is TableReader::readHeader(), in dxf_tables.cpp.
+// ATTDISP (docs/adr/0056, point 1), and the current styles (docs/adr/0046 and 0047; the $DIM…
+// variables are in dxf_dimstyle.cpp). Reading is TableReader::readHeader(), in dxf_tables.cpp.
 
 #include "dxf_entity_common.hpp"
 #include "dxf_tables.hpp"
@@ -89,6 +88,10 @@ std::vector<Variable> variables(const core::Document& document) {
         {"$LWDEFAULT",
          {integerValue(370, document.lwdefault())},
          document.lwdefault() != core::Document::kDefaultLwdefault},
+        // 0 Off, 1 Normal, 2 On (docs/adr/0056, point 1).
+        {"$ATTMODE",
+         {integerValue(70, static_cast<long long>(document.attributeDisplay()))},
+         document.attributeDisplay() != core::AttributeDisplay::Normal},
     };
 }
 
