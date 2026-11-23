@@ -1,0 +1,33 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT22 (#943): each alternative of core::Entity has its DXF type name.
+P = LWPOLYLINE closed=no vertex=0,0 vertex=10,0
+L = LINE start=0,0 end=10,0
+C = CIRCLE center=0,0 radius=5
+A = ARC center=0,0 radius=5 start-angle=0 end-angle=90
+T = TEXT position=0,0 height=1 value="Text"
+S = SOLID vertex=0,0 vertex=10,0 vertex=0,10 vertex=10,10
+E = ELLIPSE center=10,10 major-axis=20,0 ratio=0.5
+M = MTEXT insertion=10,20 height=1 width=0 attachment=top-left rotation=0 style="Standard" value="Text"
+F = ATTDEF position=100,0 height=1 value="Default" tag="TAG"
+!block "Sample" base=0,0
+B = LINE start=0,0 end=10,0
+!endblock
+I = INSERT block="Sample" insertion=10,20
+D = DIMENSION kind=aligned origin1=0,0 origin2=10,0 line-point=0,5 text-point=5,5 measurement=0
+H = HATCH pattern="SOLID" solid=yes loop=external+polyline vertex=0,0 vertex=10,0 vertex=10,8 vertex=0,8 seed=1,1
+? quickselect type=LWPOLYLINE -> P
+? quickselect type=LINE -> L
+? quickselect type=CIRCLE -> C
+? quickselect type=ARC -> A
+? quickselect type=TEXT -> T
+? properties L -> none
+; Existing quickselect recognizes only the types available before 0.8.
+; cambia con #943
+? quickselect type=SOLID -> S
+? quickselect type=ellipse -> E
+? quickselect type=MTEXT -> M
+? quickselect type=ATTDEF -> F
+? quickselect type=INSERT -> I
+? quickselect type=DIMENSION -> D
+? quickselect type=HATCH -> H

@@ -1,0 +1,100 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: POLYGON
+  *Cancel*
+  Command: POL
+  Enter number of sides <4>: 4
+  *Cancel*
+  Command: POLYGON
+  Enter number of sides <4>: 4
+  Specify center of polygon or [Edge]: 0,0
+  *Cancel*
+  Command: POLYGON
+  Enter number of sides <4>: 4
+  Specify center of polygon or [Edge]: 0,0
+  Enter an option [Inscribed in circle/Circumscribed about circle] <I>: I
+  *Cancel*
+  Command: POLYGON
+  Enter number of sides <4>: 4
+  Specify center of polygon or [Edge]: E
+  *Cancel*
+  Command: POLYGON
+  Enter number of sides <4>: 4
+  Specify center of polygon or [Edge]: E
+  Specify first endpoint of edge: 0,0
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[report 2]
+entities:
+  257 LWPOLYLINE closed=yes vertex=-7.071067811865,7.071067811865 vertex=-7.071067811865,-7.071067811865 vertex=7.071067811865,-7.071067811865 vertex=7.071067811865,7.071067811865
+messages:
+  Command: POLYGON
+  Enter number of sides <4>: 4
+  Specify center of polygon or [Edge]: 0,0
+  Enter an option [Inscribed in circle/Circumscribed about circle] <I>: I
+  Specify radius of circle: 10
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polygon
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1
+
+[report 3]
+entities:
+messages:
+  Command: U
+  Undone: Polygon.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+  Polygon
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  257 LWPOLYLINE closed=yes vertex=-7.071067811865,7.071067811865 vertex=-7.071067811865,-7.071067811865 vertex=7.071067811865,-7.071067811865 vertex=7.071067811865,7.071067811865
+messages:
+  Command: REDO
+  Redone: Polygon.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Polygon
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  LWPOLYLINE 1

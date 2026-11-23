@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; POLYGON (0.8.1-PT36, #934): Enter at the number of sides and at the option takes the
+; proposals, the last ones (card, point 3; autocad-polygon.txt proposes <C> after a Circumscribed
+; polygon). Square circumscribed about a circle of radius 10, by hand: even, so the first vertex is
+; at 90 + 45 degrees, at the distance 10 / cos(45 degrees): -10,10, then counterclockwise.
+POLYGON
+4
+0,0
+C
+10
+POLYGON
+
+50,0
+
+10

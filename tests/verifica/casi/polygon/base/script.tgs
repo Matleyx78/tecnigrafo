@@ -1,0 +1,52 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; POLYGON (0.8.1-PT36, #934): the nine polygons of autocad-polygon.scr, in the same order and
+; with the same answers. Prompts: autocad-polygon.txt, translated as the PT36 card (point 1); the
+; proposed number of sides and option are the last ones, as in that history. Values: polygon/autocad
+; (ezdxf oracle), Matleyx78/dxf-test-file,
+; commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736, CC0-1.0.
+POLYGON
+3
+0,0
+I
+20
+POLYGON
+6
+60,0
+I
+20
+POLYGON
+6
+120,0
+C
+20
+POLYGON
+1024
+180,0
+I
+20
+POLYGON
+6
+240,0
+I
+@20<15
+POLYGON
+6
+300,0
+C
+@20<15
+POLYGON
+5
+360,0
+I
+20
+POLYGON
+6
+E
+400,-10
+420,-10
+POLYGON
+6
+E
+470,-10
+450,-10

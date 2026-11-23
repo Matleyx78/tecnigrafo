@@ -1,0 +1,56 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+
+; Liberation Sans 2.1.5 (resources/fonts), read with fontTools.
+; Divide hhea.ascent, hhea.descent and hmtx advances by each font's
+; OS/2.sCapHeight (1409 in all four files). Sum advances without kerning.
+; U+2603 (☃) is absent and uses .notdef. U+2300 (⌀) is absent and uses
+; U+00D8 (Ø) under ADR 0013. U+010F (ď) has a distinct advance in each face.
+
+; Regular
+? font-metrics face=regular -> ascent=1.3158268275372604 descent=-0.30801987224982258
+? text-width "A" face=regular -> 0.96948190205819729
+? text-width "a" face=regular -> 0.80837473385379699
+? text-width " " face=regular -> 0.40383250532292408
+? text-width "☃" face=regular -> 1.0901348474095103
+? text-width "Ø" face=regular -> 1.1305890702625976
+? text-width "⌀" face=regular -> 1.1305890702625976
+? text-width "ď" face=regular -> 0.89354151880766497
+? text-width "Normale grassetto" face=regular -> 11.875088715400993
+? font-metrics -> ascent=1.3158268275372604 descent=-0.30801987224982258
+? text-width "Normale grassetto" -> 11.875088715400993
+? text-width "ď" -> 0.89354151880766497
+
+; Bold
+? font-metrics face=bold -> ascent=1.3158268275372604 descent=-0.30801987224982258
+? text-width "A" face=bold -> 1.049680624556423
+? text-width "a" face=bold -> 0.80837473385379699
+? text-width " " face=bold -> 0.40383250532292408
+? text-width "☃" face=bold -> 1.0901348474095103
+? text-width "Ø" face=bold -> 1.1305890702625976
+? text-width "⌀" face=bold -> 1.1305890702625976
+? text-width "ď" face=bold -> 1.0447125621007807
+? text-width "Normale grassetto" face=bold -> 12.762952448545068
+
+; Italic
+? font-metrics face=italic -> ascent=1.3158268275372604 descent=-0.30801987224982258
+? text-width "A" face=italic -> 0.96948190205819729
+? text-width "a" face=italic -> 0.80837473385379699
+? text-width " " face=italic -> 0.40383250532292408
+? text-width "☃" face=italic -> 1.0901348474095103
+? text-width "Ø" face=italic -> 1.1305890702625976
+? text-width "⌀" face=italic -> 1.1305890702625976
+? text-width "ď" face=italic -> 0.90844570617459186
+? text-width "corsivo" face=italic -> 4.6039744499645137
+
+; BoldItalic
+? font-metrics face=bold-italic -> ascent=1.3158268275372604 descent=-0.30801987224982258
+? text-width "A" face=bold-italic -> 1.049680624556423
+? text-width "a" face=bold-italic -> 0.80837473385379699
+? text-width " " face=bold-italic -> 0.40383250532292408
+? text-width "☃" face=bold-italic -> 1.0901348474095103
+? text-width "Ø" face=bold-italic -> 1.1305890702625976
+? text-width "⌀" face=bold-italic -> 1.1305890702625976
+? text-width "ď" face=bold-italic -> 1.0752306600425834
+? text-width "grassetto corsivo" face=bold-italic -> 12.117104329311568
+? text-width "" face=bold-italic -> 0
