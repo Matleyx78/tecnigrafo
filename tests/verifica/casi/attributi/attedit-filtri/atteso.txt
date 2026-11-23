@@ -1,0 +1,55 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/autocad-attributi
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: Y
+  Enter block name specification <*>: COMPONENTE
+  Enter attribute tag specification <*>: CODICE
+  Enter attribute value specification <*>: K*
+  Select Attributes: C
+  Specify first corner: -1,-41
+  Specify opposite corner: 41,-19
+  1 found
+  1 attributes selected.
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: P
+  Specify new text insertion point <no change>: 30,-35
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: N
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: Y
+  Enter block name specification <*>: comp*
+  Enter attribute tag specification <*>: CODICE
+  Enter attribute value specification <*>: K*
+  Select Attributes:
+  1 attributes selected.
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: N
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: Y
+  Enter block name specification <*>: componente
+  Enter attribute tag specification <*>: NO_MATCH_#
+  Enter attribute value specification <*>: *
+  Select Attributes: C
+  Specify first corner: -1,-41
+  Specify opposite corner: 161,-19
+  0 found
+  0 attributes selected.
+  Command: U
+  Undone: Attedit.
+  Command: U
+  Undone: Attedit.
+  Command: NEW
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+documents: Drawing1.cadx, autocad-attributi.dxf, Drawing2.cadx (active)
+pointer: none
+active snap: none
+statistics:
