@@ -434,6 +434,25 @@ TEST(Questions, ModesAndArgumentsOfTheCatalogueAreNeverInvalid) {
     }
 }
 
+// Advances of the Liberation Sans 2.1.5 files divided by their cap height 1409.
+TEST(Questions, FaceSelectsTheFontVariant) {
+    expectAnswer("text-width \"A\"", "0.96948190205819729");
+    expectAnswer("text-width \"A\" face=regular", "0.96948190205819729");
+    expectAnswer("text-width \"A\" face=bold", "1.049680624556423");
+    expectAnswer("text-width \"A\" face=italic", "0.96948190205819729");
+    expectAnswer("text-width \"A\" face=bold-italic", "1.049680624556423");
+    expectAnswer("text-width \"ď\" face=italic", "0.90844570617459186");
+    for (const std::string_view face : {"", " face=regular", " face=bold-italic"}) {
+        expectAnswer("font-metrics" + std::string{face},
+                     "ascent=1.3158268275372604 descent=-0.30801987224982258");
+    }
+    for (const std::string_view text :
+         {"? text-width \"A\" face=bold face=bold -> 1", "? font-metrics face=bold face=bold -> 1",
+          "? text-width face=bold -> 1", "? font-metrics bold -> 1"}) {
+        EXPECT_FALSE(failure(text).notImplemented) << text;
+    }
+}
+
 TEST(Questions, MalformedArgumentsStayInvalidAroundAnnouncedOnes) {
     constexpr std::array<std::string_view, 5> kForms{
         "? snap 0,0 aperture=1 modes=nea,corner -> none",

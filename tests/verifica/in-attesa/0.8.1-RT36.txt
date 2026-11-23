@@ -1,0 +1,9 @@
+# 0.8.1-RT36: POLYGON cases, made mandatory by PT36 (#934).
+# polygon/autocad (questions to the ezdxf oracle) is not listed: it reads the DXF file of AutoCAD
+# and already passes.
+polygon/base #934
+polygon/varianti #934
+polygon/proposte #934
+polygon/lati-fuori #934
+polygon/esc-annulla #934
+polygon/quarti-di-giro #934

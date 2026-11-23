@@ -77,15 +77,15 @@ TEST_F(DimensionCommandsTest, SelectObjectTextAndRotatedOptionsAreApplied) {
     runner().submitText("");
     runner().click({5.0, 0.0}, PickAction::Add);
     EXPECT_EQ(runner().promptText(),
-              "Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:");
-    runner().submitText("Text");
+              "Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]:");
+    runner().submitText("Mtext");
     EXPECT_EQ(runner().promptText(), "Enter dimension text <10>:");
     runner().submitText("length <>");
     runner().submitText("Rotated");
     EXPECT_EQ(runner().promptText(), "Specify angle of dimension line <0>:");
     runner().submitText("30");
     EXPECT_EQ(runner().promptText(),
-              "Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:");
+              "Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]:");
     point(0.0, 5.0);
     ASSERT_EQ(document().entityCount(), 2U);
     EXPECT_EQ(dimension().presentation.textOverride, "length <>");

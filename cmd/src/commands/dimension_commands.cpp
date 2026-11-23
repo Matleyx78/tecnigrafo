@@ -50,11 +50,11 @@ CommandDescription DimensionCommand::description(Kind kind) {
     const bool linear = kind == Kind::Linear;
     // Built before the list: conditional temporaries inside it make GCC
     // report -Wmaybe-uninitialized.
-    std::string locationPrompt = "Specify dimension line location or [Text/Angle]:";
-    std::vector<Keyword> locationKeywords{{"Text", "T"}, {"Angle", "A"}};
+    std::string locationPrompt = "Specify dimension line location or [Mtext/Text/Angle]:";
+    std::vector<Keyword> locationKeywords{{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}};
     if (linear) {
         locationPrompt =
-            "Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:";
+            "Specify dimension line location or [Mtext/Text/Angle/Horizontal/Vertical/Rotated]:";
         locationKeywords.push_back({"Horizontal", "H"});
         locationKeywords.push_back({"Vertical", "V"});
         locationKeywords.push_back({"Rotated", "R"});
@@ -70,9 +70,9 @@ CommandDescription DimensionCommand::description(Kind kind) {
         {"location", std::move(locationPrompt), ValueType::Point, std::move(locationKeywords),
          false},
         {"location-axis",
-         "Specify dimension line location or [Text/Angle]:",
+         "Specify dimension line location or [Mtext/Text/Angle]:",
          ValueType::Point,
-         {{"Text", "T"}, {"Angle", "A"}},
+         {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}},
          false},
         {"text", "Enter dimension text <{default}>:", ValueType::Text, {}, true},
         {"text-angle", "Specify angle of dimension text:", ValueType::Angle, {}, true},
@@ -82,9 +82,17 @@ CommandDescription DimensionCommand::description(Kind kind) {
             {"rotation", "Specify angle of dimension line <0>:", ValueType::Angle, {}, true});
     }
     if (linear) {
-        return {"DIMLINEAR", {"DIMLIN"}, "Creates a linear dimension.", false, std::move(prompts)};
+        return {"DIMLINEAR",
+                {"DIMLIN", "DLI"},
+                "Creates a linear dimension.",
+                false,
+                std::move(prompts)};
     }
-    return {"DIMALIGNED", {"DIMALI"}, "Creates an aligned dimension.", false, std::move(prompts)};
+    return {"DIMALIGNED",
+            {"DIMALI", "DAL"},
+            "Creates an aligned dimension.",
+            false,
+            std::move(prompts)};
 }
 
 void DimensionCommand::start(CommandContext& context) {
@@ -129,7 +137,7 @@ Status DimensionCommand::handle(CommandContext& context, const Input& input) {
             return finish(context, point->point);
         }
         if (keyword != nullptr) {
-            if (keyword->keyword == "Text") {
+            if (keyword->keyword == "Mtext" || keyword->keyword == "Text") {
                 m_stage = Stage::Text;
             } else if (keyword->keyword == "Angle") {
                 m_stage = Stage::Angle;
@@ -178,15 +186,18 @@ Prompt DimensionCommand::prompt() const {
             return {"Specify second extension line origin:", {}};
         case Stage::Location:
             if (m_kind == Kind::Aligned || m_axisFixed) {
-                return {"Specify dimension line location or [Text/Angle]:",
-                        {{"Text", "T"}, {"Angle", "A"}}};
+                return {"Specify dimension line location or [Mtext/Text/Angle]:",
+                        {{"Mtext", "M"}, {"Text", "T"}, {"Angle", "A"}}};
             }
-            return {"Specify dimension line location or [Text/Angle/Horizontal/Vertical/Rotated]:",
-                    {{"Text", "T"},
-                     {"Angle", "A"},
-                     {"Horizontal", "H"},
-                     {"Vertical", "V"},
-                     {"Rotated", "R"}}};
+            return {
+                "Specify dimension line location or "
+                "[Mtext/Text/Angle/Horizontal/Vertical/Rotated]:",
+                {{"Mtext", "M"},
+                 {"Text", "T"},
+                 {"Angle", "A"},
+                 {"Horizontal", "H"},
+                 {"Vertical", "V"},
+                 {"Rotated", "R"}}};
         case Stage::Text: {
             const core::DimStyleTable& styles = m_document->dimStyles();
             const auto overrides = currentOverrides(styles);

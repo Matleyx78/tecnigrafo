@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <span>
 
 namespace tg::core {
 namespace {
@@ -16,36 +17,67 @@ struct CharacterWidth {
     double advance;
 };
 
-#include "font_metrics.inc"
+// Each generated table defines the same names, so each gets its own namespace.
+namespace regular {
+#include "font_metrics_regular.inc"
+}  // namespace regular
 
-const CharacterWidth* findCharacter(char32_t code) {
-    const auto index = static_cast<std::size_t>(
-        std::ranges::lower_bound(kWidths, code, {}, &CharacterWidth::code) - kWidths.begin());
-    return index < kWidths.size() && kWidths.at(index).code == code ? &kWidths.at(index) : nullptr;
+namespace bold {
+#include "font_metrics_bold.inc"
+}  // namespace bold
+
+namespace italic {
+#include "font_metrics_italic.inc"
+}  // namespace italic
+
+namespace bold_italic {
+#include "font_metrics_bolditalic.inc"
+}  // namespace bold_italic
+
+struct FaceTable {
+    const FontMetrics* metrics;
+    double missingAdvance;
+    std::span<const CharacterWidth> widths;
+};
+
+const FaceTable& faceTable(FontFace face) {
+    static const std::array<FaceTable, 4> kFaces{{
+        {&regular::kMetrics, regular::kMissingAdvance, regular::kWidths},
+        {&bold::kMetrics, bold::kMissingAdvance, bold::kWidths},
+        {&italic::kMetrics, italic::kMissingAdvance, italic::kWidths},
+        {&bold_italic::kMetrics, bold_italic::kMissingAdvance, bold_italic::kWidths},
+    }};
+    return kFaces.at(static_cast<std::size_t>(face));
+}
+
+const CharacterWidth* findCharacter(char32_t code, FontFace face) {
+    const auto widths = faceTable(face).widths;
+    const auto found = std::ranges::lower_bound(widths, code, {}, &CharacterWidth::code);
+    return found != widths.end() && found->code == code ? &*found : nullptr;
 }
 }  // namespace
 
-const FontMetrics& fontMetrics() {
-    return kMetrics;
+const FontMetrics& fontMetrics(FontFace face) {
+    return *faceTable(face).metrics;
 }
 
-char32_t fontCharacter(char32_t codePoint) {
-    if ((codePoint == U'\u2300' || codePoint == U'\u2205') && findCharacter(codePoint) == nullptr &&
-        findCharacter(U'\u00D8') != nullptr) {
+char32_t fontCharacter(char32_t codePoint, FontFace face) {
+    if ((codePoint == U'\u2300' || codePoint == U'\u2205') &&
+        findCharacter(codePoint, face) == nullptr && findCharacter(U'\u00D8', face) != nullptr) {
         return U'\u00D8';
     }
     return codePoint;
 }
 
-double advanceWidth(char32_t codePoint) {
-    const auto* character = findCharacter(fontCharacter(codePoint));
-    return character != nullptr ? character->advance : kMissingAdvance;
+double advanceWidth(char32_t codePoint, FontFace face) {
+    const auto* character = findCharacter(fontCharacter(codePoint, face), face);
+    return character != nullptr ? character->advance : faceTable(face).missingAdvance;
 }
 
-double textWidth(std::u32string_view text) {
+double textWidth(std::u32string_view text, FontFace face) {
     double width = 0;
     for (const auto code : text) {
-        width += advanceWidth(code);
+        width += advanceWidth(code, face);
     }
     return width;
 }

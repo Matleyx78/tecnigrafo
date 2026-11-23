@@ -14,40 +14,47 @@
 namespace tg::script::detail {
 namespace {
 
-// PT6 will select the metrics of the requested face.
-bool isAnnouncedFace(std::string_view argument) {
-    return argument == "face=regular" || argument == "face=bold" || argument == "face=italic" ||
-           argument == "face=bold-italic";
+std::optional<core::FontFace> parseFace(std::string_view argument) {
+    if (argument == "face=regular") {
+        return core::FontFace::Regular;
+    }
+    if (argument == "face=bold") {
+        return core::FontFace::Bold;
+    }
+    if (argument == "face=italic") {
+        return core::FontFace::Italic;
+    }
+    if (argument == "face=bold-italic") {
+        return core::FontFace::BoldItalic;
+    }
+    return std::nullopt;
 }
 
 }  // namespace
 
 QuestionResult askFontMetrics(const QuestionModel& /*model*/,
                               std::span<const std::string_view> arguments) {
-    if (arguments.size() == 1 && isAnnouncedFace(arguments[0])) {
-        return ArgumentError{"the argument 'face' is not implemented yet", true};
+    const std::optional<core::FontFace> face =
+        arguments.size() == 1 ? parseFace(arguments[0]) : core::FontFace::Regular;
+    if (arguments.size() > 1 || !face) {
+        return ArgumentError{"wrong arguments, expected: font-metrics [face=<face>]"};
     }
-    if (!arguments.empty()) {
-        return ArgumentError{"wrong arguments, expected: font-metrics"};
-    }
-    const auto& metrics = core::fontMetrics();
+    const auto& metrics = core::fontMetrics(*face);
     return "ascent=" + formatNumber(metrics.ascent) + " descent=" + formatNumber(metrics.descent);
 }
 
 QuestionResult askTextWidth(const QuestionModel& /*model*/,
                             std::span<const std::string_view> arguments) {
-    const bool hasAnnouncedFace = arguments.size() == 2 && isAnnouncedFace(arguments[1]);
-    if (arguments.size() != 1 && !hasAnnouncedFace) {
-        return ArgumentError{"wrong arguments, expected: text-width \"<text>\""};
+    const std::optional<core::FontFace> face =
+        arguments.size() == 2 ? parseFace(arguments[1]) : core::FontFace::Regular;
+    if (arguments.empty() || arguments.size() > 2 || !face) {
+        return ArgumentError{"wrong arguments, expected: text-width \"<text>\" [face=<face>]"};
     }
     const auto text = unquoteText(arguments[0]);
     if (!text) {
         return ArgumentError{"expected a quoted text"};
     }
-    if (hasAnnouncedFace) {
-        return ArgumentError{"the argument 'face' is not implemented yet", true};
-    }
-    return formatNumber(core::textWidth(core::decodeUtf8(*text)));
+    return formatNumber(core::textWidth(core::decodeUtf8(*text), *face));
 }
 
 QuestionResult askBox(const QuestionModel& model, std::span<const std::string_view> arguments) {
