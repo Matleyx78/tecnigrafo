@@ -245,7 +245,7 @@ TEST_F(DynamicInputTest, HashAndStarTypedInTheFieldGiveAnAbsolutePoint) {
         if (typed[0] == '#' || typed[0] == '*') {
             EXPECT_EQ(line.end, (core::Vec2{10, 10})) << typed;
         } else {
-            EXPECT_EQ(line.end, line.start + core::Vec2{10, 10});
+            EXPECT_EQ(line.end, (line.start + core::Vec2{10, 10})) << typed;
         }
     }
     EXPECT_EQ(window().document().entityCount(), 3U);
