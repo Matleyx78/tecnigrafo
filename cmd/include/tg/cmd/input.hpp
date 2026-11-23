@@ -58,6 +58,8 @@ struct ValueInput {
 
 /// A line typed for a Text prompt, exactly as typed. Never empty.
 struct TextInput {
+    /// May be empty when submitted by the in-window editor. An empty command
+    /// line is represented by ConfirmInput instead.
     std::string text;
 
     friend bool operator==(const TextInput&, const TextInput&) = default;

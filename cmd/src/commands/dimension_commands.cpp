@@ -239,6 +239,28 @@ std::optional<core::Vec2> DimensionCommand::basePoint() const {
     return std::nullopt;
 }
 
+std::optional<TextEditRequest> DimensionCommand::textEditing() const {
+    if (m_stage != Stage::Text || !m_pointer || m_document == nullptr) {
+        return std::nullopt;
+    }
+    const auto dimension = regeneratedAt(*m_pointer);
+    if (!dimension) {
+        return std::nullopt;
+    }
+    const auto graphic = std::ranges::find_if(dimension->graphics, [](const auto& record) {
+        return std::holds_alternative<core::MText>(record.entity);
+    });
+    if (graphic == dimension->graphics.end()) {
+        return std::nullopt;
+    }
+    const auto variables = core::dimensionVariables(
+        m_document->dimStyles(), dimension->presentation.style, dimension->presentation.overrides);
+    const std::string measurement = core::dimensionText(variables, dimension->definition.kind,
+                                                        dimension->value.measurement, "<>");
+    return TextEditRequest{std::nullopt, std::get<core::MText>(graphic->entity),
+                           m_textOverride.empty() ? "<>" : m_textOverride, measurement};
+}
+
 core::Dimension DimensionCommand::makeDimension(const core::Vec2& location) const {
     core::Dimension dimension;
     dimension.definition.kind =

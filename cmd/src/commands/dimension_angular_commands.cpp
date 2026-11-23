@@ -229,6 +229,29 @@ std::optional<core::Vec2> DimangularCommand::basePoint() const {
     return std::nullopt;
 }
 
+std::optional<TextEditRequest> DimangularCommand::textEditing() const {
+    if (m_stage != Stage::Text || !m_pointer || m_document == nullptr) {
+        return std::nullopt;
+    }
+    const auto dimension = core::regenerated(*m_document, makeDimension(*m_pointer));
+    if (!dimension) {
+        return std::nullopt;
+    }
+    const auto graphic = std::ranges::find_if(dimension->graphics, [](const auto& record) {
+        return std::holds_alternative<core::MText>(record.entity);
+    });
+    if (graphic == dimension->graphics.end()) {
+        return std::nullopt;
+    }
+    const auto variables = core::dimensionVariables(
+        m_document->dimStyles(), dimension->presentation.style, dimension->presentation.overrides);
+    return TextEditRequest{
+        std::nullopt, std::get<core::MText>(graphic->entity),
+        m_textOverride.empty() ? "<>" : m_textOverride,
+        core::dimensionText(variables, dimension->definition.kind,
+                            core::radiansToDegrees(dimension->value.measurement), "<>")};
+}
+
 bool DimangularCommand::selectLine(CommandContext& context, const ObjectInput& object, bool first) {
     const core::EntityRecord* record = context.editor.document().find(object.id);
     const std::optional<core::Line> line =
@@ -395,6 +418,29 @@ std::span<const core::Entity> RadialDimensionCommand::preview() const {
 std::optional<core::Vec2> RadialDimensionCommand::basePoint() const {
     return m_stage == Stage::Location || m_stage == Stage::Angle ? std::optional{m_center}
                                                                  : std::nullopt;
+}
+
+std::optional<TextEditRequest> RadialDimensionCommand::textEditing() const {
+    if (m_stage != Stage::Text || !m_pointer || m_document == nullptr ||
+        core::distance(*m_pointer, m_center) == 0.0) {
+        return std::nullopt;
+    }
+    const auto dimension = core::regenerated(*m_document, makeDimension(*m_pointer));
+    if (!dimension) {
+        return std::nullopt;
+    }
+    const auto graphic = std::ranges::find_if(dimension->graphics, [](const auto& record) {
+        return std::holds_alternative<core::MText>(record.entity);
+    });
+    if (graphic == dimension->graphics.end()) {
+        return std::nullopt;
+    }
+    const auto variables = core::dimensionVariables(
+        m_document->dimStyles(), dimension->presentation.style, dimension->presentation.overrides);
+    return TextEditRequest{std::nullopt, std::get<core::MText>(graphic->entity),
+                           m_textOverride.empty() ? "<>" : m_textOverride,
+                           core::dimensionText(variables, dimension->definition.kind,
+                                               dimension->value.measurement, "<>")};
 }
 
 bool RadialDimensionCommand::selectCurve(CommandContext& context, const ObjectInput& object) {

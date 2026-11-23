@@ -227,7 +227,7 @@ Status MTextCommand::handle(CommandContext& context, const Input& input) {
         }
         beginText(width);
     } else if (m_stage == Stage::Text) {
-        if (text != nullptr) {
+        if (text != nullptr && !text->text.empty()) {
             if (m_hasLines) {
                 m_mtext.value += "\\P";
             }
@@ -326,6 +326,13 @@ std::span<const core::Entity> MTextCommand::preview() const {
 
 std::optional<core::Vec2> MTextCommand::basePoint() const {
     return m_stage == Stage::FirstCorner ? std::nullopt : std::optional<core::Vec2>{m_first};
+}
+
+std::optional<TextEditRequest> MTextCommand::textEditing() const {
+    if (m_stage != Stage::Text) {
+        return std::nullopt;
+    }
+    return TextEditRequest{std::nullopt, m_mtext, m_mtext.value, std::nullopt};
 }
 
 }  // namespace tg::cmd

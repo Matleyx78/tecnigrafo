@@ -21,6 +21,7 @@ public:
     [[nodiscard]] Prompt prompt() const override;
     [[nodiscard]] std::span<const core::Entity> preview() const override;
     [[nodiscard]] std::optional<core::Vec2> basePoint() const override;
+    [[nodiscard]] std::optional<TextEditRequest> textEditing() const override;
 
 private:
     enum class Stage : std::uint8_t {
