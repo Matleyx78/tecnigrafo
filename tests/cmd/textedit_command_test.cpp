@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -38,6 +39,15 @@ protected:
         return m_document.find(id)->entity;
     }
 
+    [[nodiscard]] core::Document& document() { return m_document; }
+
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -57,16 +67,18 @@ TEST_F(TexteditCommandTest, MultipleEditsTextAndMtextInSeparateUndoSteps) {
     const core::EntityId mtextId = add(mtext);
 
     submit({"TEXTEDIT", "0,0"});
-    ASSERT_TRUE(m_runner.textEditing());
-    EXPECT_EQ(m_runner.textEditing()->target, textId);
-    EXPECT_EQ(m_runner.textEditing()->value, "OLD");
+    const std::optional<TextEditRequest> pendingRequest = runner().textEditing();
+    ASSERT_TRUE(pendingRequest);
+    const TextEditRequest request = pendingRequest.value_or(TextEditRequest{});
+    EXPECT_EQ(request.target, textId);
+    EXPECT_EQ(request.value, "OLD");
     submit({"NEW", "0,-10", "AFTER", ""});
 
     EXPECT_EQ(std::get<core::Text>(entity(textId)).value, "NEW");
     EXPECT_EQ(std::get<core::MText>(entity(mtextId)).value, "AFTER");
-    ASSERT_GE(m_editor.undoNames().size(), 2U);
-    EXPECT_EQ(m_editor.undoNames()[m_editor.undoNames().size() - 2], "Textedit");
-    EXPECT_EQ(m_editor.undoNames().back(), "Textedit");
+    ASSERT_GE(editor().undoNames().size(), 2U);
+    EXPECT_EQ(editor().undoNames()[editor().undoNames().size() - 2], "Textedit");
+    EXPECT_EQ(editor().undoNames().back(), "Textedit");
 }
 
 TEST_F(TexteditCommandTest, EmptyEditorValueKeepsTextAndUndoRevertsTheLastEdit) {
@@ -75,11 +87,11 @@ TEST_F(TexteditCommandTest, EmptyEditorValueKeepsTextAndUndoRevertsTheLastEdit) 
     const core::EntityId id = add(text);
 
     submit({"TEXTEDIT", "0,0"});
-    m_runner.submit(TextInput{""});
+    runner().submit(TextInput{""});
     EXPECT_EQ(std::get<core::Text>(entity(id)).value, "OLD");
     submit({"0,0", "NEW", "U", ""});
     EXPECT_EQ(std::get<core::Text>(entity(id)).value, "OLD");
-    EXPECT_EQ(m_messages.back(), "The command has been completely undone.");
+    EXPECT_EQ(messages().back(), "The command has been completely undone.");
 }
 
 TEST_F(TexteditCommandTest, SingleModePersistsAndFinishesAfterOneObject) {
@@ -88,22 +100,24 @@ TEST_F(TexteditCommandTest, SingleModePersistsAndFinishesAfterOneObject) {
     const core::EntityId id = add(text);
 
     submit({"TEXTEDIT", "M", "S", "0,0", "NEW"});
-    EXPECT_FALSE(m_runner.isActive());
+    EXPECT_FALSE(runner().isActive());
     EXPECT_EQ(std::get<core::Text>(entity(id)).value, "NEW");
 
     submit({"TEXTEDIT"});
-    EXPECT_EQ(m_runner.promptText(), "Select an annotation object or [Mode]:");
-    m_runner.submit(CancelInput{});
+    EXPECT_EQ(runner().promptText(), "Select an annotation object or [Mode]:");
+    runner().submit(CancelInput{});
 }
 
 TEST_F(TexteditCommandTest, NewMtextExposesTheEditorRequest) {
     submit({"MTEXT", "0,0", "20,-10"});
-    ASSERT_TRUE(m_runner.textEditing());
-    EXPECT_FALSE(m_runner.textEditing()->target);
-    EXPECT_TRUE(std::holds_alternative<core::MText>(m_runner.textEditing()->shown));
-    m_runner.submit(TextInput{""});
-    m_runner.submitText("");
-    EXPECT_TRUE(m_document.isEmpty());
+    const std::optional<TextEditRequest> pendingRequest = runner().textEditing();
+    ASSERT_TRUE(pendingRequest);
+    const TextEditRequest request = pendingRequest.value_or(TextEditRequest{});
+    EXPECT_FALSE(request.target);
+    EXPECT_TRUE(std::holds_alternative<core::MText>(request.shown));
+    runner().submit(TextInput{""});
+    runner().submitText("");
+    EXPECT_TRUE(document().isEmpty());
 }
 
 }  // namespace
