@@ -70,7 +70,7 @@ struct CommandDefaults {
     bool offsetCurrentLayer{false};  ///< false means Source
     bool chamferUseAngle{false};
     bool trimMode{true};
-    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool peditAccept{false};      ///< PEDITACCEPT, session-only (docs/adr/0050).
     bool textEditMultiple{true};  ///< TEXTEDIT mode, kept for the session (ADR 0054).
     bool rectangUseFillet{false};
     bool polygonCircumscribed{false};
