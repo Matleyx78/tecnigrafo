@@ -3,6 +3,8 @@
 
 #include "tg/cmd/quick_select.hpp"
 
+#include "tg/core/math.hpp"
+
 #include <gtest/gtest.h>
 
 #include <vector>
@@ -48,6 +50,23 @@ TEST(QuickSelectTest, FiltersOwnPropertiesAndCombinesTypeWithinAndExclude) {
     EXPECT_EQ(quickSelect(document, {}, criteria), (std::vector{first}));
     criteria.op = QuickSelectCriteria::Operator::NotEqual;
     EXPECT_EQ(quickSelect(document, {}, criteria), (std::vector{second}));
+}
+
+TEST(QuickSelectTest, TypeFilterUsesTheDxfNameOfEveryType) {
+    auto document = core::Document::newDrawing();
+    const auto line = document.add(core::Line{{0, 0}, {10, 0}});
+    const auto ellipse = document.add(core::Ellipse{{10, 10}, {20, 0}, 0.5, 0.0, core::kTwoPi});
+    const auto solid = document.add(
+        core::Solid{{core::Vec2{0, 0}, core::Vec2{10, 0}, core::Vec2{0, 10}, core::Vec2{10, 10}}});
+    QuickSelectCriteria criteria;
+    criteria.type = "ELLIPSE";
+    EXPECT_EQ(quickSelect(document, {}, criteria), (std::vector{ellipse}));
+    criteria.type = "solid";
+    EXPECT_EQ(quickSelect(document, {}, criteria), (std::vector{solid}));
+    criteria.type = "LINE";
+    EXPECT_EQ(quickSelect(document, {}, criteria), (std::vector{line}));
+    criteria.exclude = true;
+    EXPECT_EQ(quickSelect(document, {}, criteria), (std::vector{ellipse, solid}));
 }
 
 TEST(QuickSelectTest, InvalidValuesNeverMatchEvenWithNotEqual) {

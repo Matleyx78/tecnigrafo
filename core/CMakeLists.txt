@@ -19,6 +19,10 @@ add_library(tg_core
     src/dimension_radial.cpp
     src/dimension_text.cpp
     src/ellipse.cpp
+    src/entity_properties.cpp
+    src/entity_properties_annotations.cpp
+    src/entity_properties_shapes.cpp
+    src/entity_properties_texts.cpp
     src/explode.cpp
     src/generated.cpp
     src/hatch.cpp
@@ -36,6 +40,7 @@ add_library(tg_core
     src/intersections.cpp
     src/join.cpp
     src/mtext.cpp
+    src/mtext_format.cpp
     src/mtext_layout.cpp
     src/offset.cpp
     src/pedit_join.cpp

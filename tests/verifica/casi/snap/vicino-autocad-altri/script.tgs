@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; AutoCAD 2021. Erase the witness lines before enabling Nearest.
+OPEN
+@sources/autocad-vicino-altri
+ERASE
+!click 50,-29
+!click 88,-29
+!click 140,-29
+
+!view 125,0 0.05 5600x1000
+!report
+!osnap nea
+LINE
+!move 50,-0.3
+!report
+!move 88,9.7
+!report
+!move 140,-0.3
+!report
+!move 185,-0.3
+!report
+!move 5,-0.3
+!report
+!esc

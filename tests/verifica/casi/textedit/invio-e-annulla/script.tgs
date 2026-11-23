@@ -1,0 +1,42 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; TEXTEDIT with the alias ED: Enter keeps the value, Undo ([0.8.1-RT11], work #939;
+; card PT11, point 2; ADR 0054, point 6).
+; - An empty line at "Enter new text <value>:" is Enter (ConfirmInput): the TEXT keeps
+;   its value and there is no Textedit step (card PT11, point 2).
+; - Undo cancels the last modification of the command (the MTEXT, back to "Beta") and
+;   writes "The command has been completely undone."; a second Undo, with nothing
+;   left to undo in the command, writes the same message (session of 2026-11-22).
+; - In a second ED, Undo before any modification writes the message and leaves the
+;   modification of the first ED ("Delta") in place; Enter keeps "Beta".
+; ~box of "Delta": Liberation Sans 2.1.5 advances read with fontTools (D 1479,
+; e 1139, l 455, t 569, a 1139: 4781 font units), cap height 1409, ascent 1854,
+; descent -434: width 4781 / 1409 * 2.5 = 8.482966643009227.
+TEXT
+0,0
+2.5
+0
+Alfa
+
+MTEXT
+0,-10
+60,-20
+Beta
+
+ED
+1,1
+
+1,-11
+Gamma
+U
+U
+1,1
+Delta
+
+!report
+ED
+U
+1,-11
+
+

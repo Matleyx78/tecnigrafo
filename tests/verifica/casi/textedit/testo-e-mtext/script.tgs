@@ -1,0 +1,42 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; TEXTEDIT in the Multiple mode on a TEXT and an MTEXT ([0.8.1-RT11], work #939;
+; card PT11, point 2; ADR 0054, point 6). Prompts from the ADR: "Current settings:
+; Edit mode = Multiple", "Select an annotation object or [Undo/Mode]:", "Enter new
+; text <value>:"; the MTEXT value is shown and typed with its codes on one line.
+; A line is not an annotation object: no message, the prompt repeats (session of
+; 2026-11-22). Objects are chosen with a typed point, as at every object request
+; (ADR 0032, point 1). Each modified object is a Textedit step: U undoes the last one
+; (the MTEXT) and REDO repeats it.
+; ~box of "Corretto": Liberation Sans 2.1.5 advances read with fontTools (C 1479,
+; o 1139, r 682, e 1139, t 569: 7398 font units), cap height 1409, ascent 1854,
+; descent -434: width 7398 / 1409 * 2.5 = 13.126330731014903.
+; ~lines: two paragraphs, each shorter than the width 60.
+TEXT
+0,0
+2.5
+0
+Primo
+
+MTEXT
+0,-10
+60,-20
+riga uno
+riga due
+
+LINE
+0,-30
+40,-30
+
+TEXTEDIT
+20,-30
+1,1
+Corretto
+1,-11
+riga corretta\Pseconda riga
+
+!report
+U
+!report
+REDO

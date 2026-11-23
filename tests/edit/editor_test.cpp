@@ -8,6 +8,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -1272,6 +1273,88 @@ TEST(Editor, BlockChangesUseSavepointsAndRollback) {
     EXPECT_EQ(document.blocks(), initial);
     EXPECT_FALSE(editor.canUndo());
     EXPECT_FALSE(editor.isModified());
+}
+
+// Editor::replace with the extras (docs/tappe/0.8.1/PT22-proprieta-core.md,
+// point 7). The group 43 stands for the scale Z of an INSERT (PT24): the
+// editor does not look at the type of the entity.
+core::EntityExtras extrasWithScaleZ(std::string_view scale) {
+    core::EntityExtras extras;
+    extras.beforeEntity = {{330, "1F"}};
+    extras.specific = {{43, std::string{scale}}, {999, "kept"}};
+    extras.extended = {{1001, "APP"}, {1000, "value"}};
+    return extras;
+}
+
+TEST(Editor, ReplaceWithOnlyChangedExtrasIsOneUndoableStep) {
+    Document document = Document::newDrawing();
+    const EntityRecord original{EntityId{300}, segment(1), extrasWithScaleZ("3"), 7,
+                                document.current()};
+    document.insert(original);
+    const EntityId following = document.add(segment(2));
+    Editor editor(document);
+    editor.beginTransaction("Properties");
+    ASSERT_TRUE(editor.replace(original.id, segment(1), extrasWithScaleZ("2")));
+    editor.commit();
+    ASSERT_TRUE(editor.canUndo());
+    EXPECT_EQ(editor.undoName(), "Properties");
+    EntityRecord expected = original;
+    expected.extras = extrasWithScaleZ("2");
+    ASSERT_NE(document.find(original.id), nullptr);
+    EXPECT_EQ(*document.find(original.id), expected);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{original.id, following}));
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(*document.find(original.id), original);
+    EXPECT_EQ(document.find(original.id)->extras.specific.front().value, "3");
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(*document.find(original.id), expected);
+}
+
+TEST(Editor, ReplaceWithEntityAndExtrasRestoresBothTogether) {
+    Document document = Document::newDrawing();
+    core::EntityProperties properties = document.current();
+    properties.color = core::Color::fromIndex(3);
+    const EntityRecord original{EntityId{300}, segment(1), extrasWithScaleZ("3"), 7, properties};
+    document.insert(original);
+    const EntityId following = document.add(segment(2));
+    Editor editor(document);
+    editor.beginTransaction("Properties");
+    ASSERT_TRUE(editor.replace(original.id, segment(20), extrasWithScaleZ("2")));
+    editor.commit();
+    // Handle, order, properties and the other groups of the extras stay.
+    EntityRecord expected = original;
+    expected.entity = segment(20);
+    expected.extras = extrasWithScaleZ("2");
+    ASSERT_NE(document.find(original.id), nullptr);
+    EXPECT_EQ(*document.find(original.id), expected);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{original.id, following}));
+    std::vector<EntityId> hits;
+    document.query(core::BBox{{15, -1}, {21, 1}}, hits);
+    EXPECT_EQ(hits, (std::vector<EntityId>{original.id}));
+    ASSERT_TRUE(editor.undo());
+    EXPECT_EQ(*document.find(original.id), original);
+    hits.clear();
+    document.query(core::BBox{{15, -1}, {21, 1}}, hits);
+    EXPECT_TRUE(hits.empty());
+    ASSERT_TRUE(editor.redo());
+    EXPECT_EQ(*document.find(original.id), expected);
+    EXPECT_EQ(idsOf(document), (std::vector<EntityId>{original.id, following}));
+}
+
+TEST(Editor, ReplaceWithExtrasRejectsAbsentUnchangedAndForbiddenTypesWithoutHistory) {
+    Document document = Document::newDrawing();
+    const EntityRecord original{EntityId{300}, segment(1), extrasWithScaleZ("3"), 7,
+                                document.current()};
+    document.insert(original);
+    Editor editor(document);
+    editor.beginTransaction("Properties");
+    EXPECT_FALSE(editor.replace(EntityId{999}, segment(1), extrasWithScaleZ("2")));
+    EXPECT_FALSE(editor.replace(original.id, segment(1), extrasWithScaleZ("3")));
+    EXPECT_FALSE(editor.replace(original.id, core::Circle{{0, 0}, 2}, extrasWithScaleZ("2")));
+    editor.commit();
+    EXPECT_FALSE(editor.canUndo());
+    EXPECT_FALSE(editor.isModified());
+    EXPECT_EQ(*document.find(original.id), original);
 }
 
 }  // namespace

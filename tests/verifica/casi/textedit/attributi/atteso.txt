@@ -1,0 +1,47 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  256 ATTDEF position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Nessuno" tag="AVVISO" prompt="Nota" ~box=0,-0.7700496806245565;13.530872959545777,-0.7700496806245565;13.530872959545777,3.289567068843151;0,3.289567068843151
+  257 INSERT block="COMP" insertion=50,0 scale=1,1 rotation=0
+  258 ATTRIB owner=257 position=50,5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A100" tag="CODICE" ~box=50,4.229950319375444;58.48651525904897,4.229950319375444;58.48651525904897,8.289567068843152;50,8.289567068843152
+  259 ATTRIB owner=257 position=50,10 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K2" tag="SIGLA" ~box=50,9.229950319375444;54.444641589779984,9.229950319375444;54.444641589779984,13.289567068843152;50,13.289567068843152
+messages:
+  Command: OPEN
+  Enter name of drawing to open: attributi.dxf
+  Command: TEXTEDIT
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: 1,1
+  Enter attribute tag <NOTA>: AVVISO
+  Enter attribute prompt <Nota>:
+  Enter default attribute value <Testo>: Nessuno
+  Select an annotation object or [Undo/Mode]: 60,0
+  CODICE <A100>:
+  SIGLA <K1>: K2
+  Select an annotation object or [Undo/Mode]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Textedit
+  Textedit
+redo:
+snap: on
+ortho: off
+drawing: attributi.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "COMP" base=0,0 units=4
+  "COMP" 66 LINE start=0,0 end=20,0
+  "COMP" 67 ATTDEF position=0,5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A100" tag="CODICE" prompt="Codice" ~box=0,4.229950319375444;14.13236337828247,4.229950319375444;14.13236337828247,8.289567068843152;0,8.289567068843152
+  "COMP" 68 ATTDEF position=0,10 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K1" tag="SIGLA" prompt="Sigla" ~box=0,9.229950319375444;10.704400283889283,9.229950319375444;10.704400283889283,13.289567068843152;0,13.289567068843152
+documents: Drawing1.cadx, attributi.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 1
+  ATTRIB 2
+  INSERT 1

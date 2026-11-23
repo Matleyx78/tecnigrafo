@@ -1,0 +1,48 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  258 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Fermo" layer="Bloccato" ~box=0,-0.7700496806245565;10.498580553584102,-0.7700496806245565;10.498580553584102,3.289567068843151;0,3.289567068843151
+messages:
+  Command: -LAYER
+  Current layer:  "0"
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: New
+  Enter name list for new layer(s): Bloccato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]: LOck
+  Enter name list of layer(s) to lock: Bloccato
+  Enter an option [?/Make/Set/New/Rename/ON/OFF/Color/Ltype/LWeight/Plot/Freeze/Thaw/LOck/Unlock]:
+  Command: CLAYER
+  Enter new value for CLAYER <"0">: Bloccato
+  Command: TEXT
+  Specify start point of text: 0,0
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Fermo
+  Enter text:
+  Command: CLAYER
+  Enter new value for CLAYER <"Bloccato">: 0
+  Command: TEXTEDIT
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: 100,100
+  Select an annotation object or [Undo/Mode]: 1,1
+  1 was on a locked layer.
+  Select an annotation object or [Undo/Mode]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Layer
+  CLAYER
+  Text
+  CLAYER
+redo:
+snap: on
+ortho: off
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Bloccato" color=7 linetype="Continuous" lineweight=default locked
+pointer: none
+active snap: none
+statistics:
+  TEXT 1

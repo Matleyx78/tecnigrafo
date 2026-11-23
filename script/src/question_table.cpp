@@ -634,6 +634,8 @@ QuestionResult askEffective(const QuestionModel& model, Arguments arguments);
 QuestionResult askDashes(const QuestionModel& model, Arguments arguments);
 QuestionResult askLayers(const QuestionModel& model, Arguments arguments);
 QuestionResult askLinetypes(const QuestionModel& model, Arguments arguments);
+QuestionResult askProperties(const QuestionModel& model, Arguments arguments);
+QuestionResult askSetProperty(const QuestionModel& model, Arguments arguments);
 
 namespace {
 
@@ -717,11 +719,11 @@ constexpr std::array kQuestions{
     QuestionRow{"hatch-boundary", AnswerShape::Single, &askHatchBoundary},  // PT43
     QuestionRow{"hatch-contours", AnswerShape::Single, &askHatchContours},  // PT43
     // Stage 0.8.1: announced before the reference cases are written.
-    QuestionRow{"grid", AnswerShape::Single, nullptr},           // PT27
-    QuestionRow{"attdisp", AnswerShape::Single, nullptr},        // PT27
-    QuestionRow{"properties", AnswerShape::Single, nullptr},     // PT22, PT23, PT24
-    QuestionRow{"set-property", AnswerShape::Single, nullptr},   // PT22, PT23, PT24
-    QuestionRow{"pattern-lines", AnswerShape::Single, nullptr},  // PT23
+    QuestionRow{"grid", AnswerShape::Single, nullptr},                  // PT27
+    QuestionRow{"attdisp", AnswerShape::Single, nullptr},               // PT27
+    QuestionRow{"properties", AnswerShape::Single, &askProperties},     // PT22, PT23, PT24
+    QuestionRow{"set-property", AnswerShape::Single, &askSetProperty},  // PT22, PT23, PT24
+    QuestionRow{"pattern-lines", AnswerShape::Single, nullptr},         // PT23
 };
 
 }  // namespace
