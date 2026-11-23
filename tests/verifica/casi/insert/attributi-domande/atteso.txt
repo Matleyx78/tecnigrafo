@@ -1,0 +1,93 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  4096 INSERT block="COMPONENTE" insertion=0,-40 scale=1,1 rotation=0
+  4097 ATTRIB owner=4096 position=28.57571396706332,-36.520423320710144 alignment-point=30,-35 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S10" tag="SIGLA" ~box=27.167102065801203,-37.550728542429994;33.53445382587304,-36.4279926314678;32.829508775301825,-32.430050582333784;26.462157015229987,-33.552786493295976
+  4098 ATTRIB owner=4096 position=22,-29 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" ~box=22,-29.770049680624556;26.847409510290987,-29.770049680624556;26.847409510290987,-25.71043293115685;22,-25.71043293115685
+  4099 ATTRIB owner=4096 position=22,-25 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="230V" tag="TENSIONE" ~box=22,-25.770049680624556;30.48651525904897,-25.770049680624556;30.48651525904897,-21.71043293115685;22,-21.71043293115685
+  4100 ATTRIB owner=4096 position=2,-29 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="montaggio a quadro" tag="NOTA" invisible=yes ~box=2,-29.770049680624556;34.32434350603265,-29.770049680624556;34.32434350603265,-25.71043293115685;2,-25.71043293115685
+  4101 ATTRIB owner=4096 position=2,-25 alignment-point=0,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K10" tag="CODICE" ~box=2,-25.770049680624556;8.465578424414478,-25.770049680624556;8.465578424414478,-21.71043293115685;2,-21.71043293115685
+  4102 INSERT block="COMPONENTE" insertion=60,-40 scale=1,1 rotation=0
+  4103 ATTRIB owner=4102 position=88.57571396706332,-36.520423320710144 alignment-point=90,-35 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S1" tag="SIGLA" ~box=88.1622191973492,-37.375262543172866;92.53933669432504,-36.60345863072493;91.83439164375382,-32.60551658159091;87.45727414677798,-33.37732049403885
+  4104 ATTRIB owner=4102 position=82,-29 alignment-point=60,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" ~box=82,-29.770049680624556;86.84740951029099,-29.770049680624556;86.84740951029099,-25.71043293115685;82,-25.71043293115685
+  4105 ATTRIB owner=4102 position=82,-25 alignment-point=60,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" ~box=82,-25.770049680624556;88.46557842441447,-25.770049680624556;88.46557842441447,-21.71043293115685;82,-21.71043293115685
+  4106 ATTRIB owner=4102 position=62,-29 alignment-point=60,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" invisible=yes ~box=62,-29.770049680624556;78.96948190205819,-29.770049680624556;78.96948190205819,-25.71043293115685;62,-25.71043293115685
+  4107 ATTRIB owner=4102 position=62,-25 alignment-point=60,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K1" tag="CODICE" ~box=62,-25.770049680624556;66.44464158977999,-25.770049680624556;66.44464158977999,-21.71043293115685;62,-21.71043293115685
+  4108 INSERT block="COMPONENTE" insertion=120,-40 scale=1,1 rotation=0
+  4109 ATTRIB owner=4108 position=148.5757139670633,-36.520423320710144 alignment-point=150,-35 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S30" tag="SIGLA" ~box=147.1671020658012,-37.550728542429994;153.53445382587302,-36.4279926314678;152.8295087753018,-32.430050582333784;146.46215701523,-33.552786493295976
+  4110 ATTRIB owner=4108 position=142,-29 alignment-point=120,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" ~box=142,-29.770049680624556;146.847409510291,-29.770049680624556;146.847409510291,-25.71043293115685;142,-25.71043293115685
+  4111 ATTRIB owner=4108 position=142,-25 alignment-point=120,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="400V" tag="TENSIONE" ~box=142,-25.770049680624556;150.48651525904899,-25.770049680624556;150.48651525904899,-21.71043293115685;142,-21.71043293115685
+  4112 ATTRIB owner=4108 position=122,-29 alignment-point=120,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" invisible=yes ~box=122,-29.770049680624556;138.9694819020582,-29.770049680624556;138.9694819020582,-25.71043293115685;122,-25.71043293115685
+  4113 ATTRIB owner=4108 position=122,-25 alignment-point=120,-40 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K30" tag="CODICE" ~box=122,-25.770049680624556;128.46557842441447,-25.770049680624556;128.46557842441447,-21.71043293115685;122,-21.71043293115685
+messages:
+  Command: OPEN
+  Enter name of drawing to open: componente.dxf
+  Command: -INSERT
+  Enter block name or [?]: COMPONENTE
+  Specify insertion point or [Basepoint/Scale/Rotate]: 0,-40
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 1
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>: 0
+  Enter attribute values
+  Sigla <S1>: S10
+  Tensione <24V>: 230V
+  Nota di montaggio <da cablare>: montaggio a quadro
+  Codice componente <K1>: K10
+  Verify attribute values
+  Tensione <230V>: 230V
+  Command: -INSERT
+  Enter block name or [?] <COMPONENTE>: COMPONENTE
+  Specify insertion point or [Basepoint/Scale/Rotate]: 60,-40
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 1
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>: 0
+  Enter attribute values
+  Sigla <S1>:
+  Tensione <24V>:
+  Nota di montaggio <da cablare>:
+  Codice componente <K1>:
+  Verify attribute values
+  Tensione <24V>:
+  Command: -INSERT
+  Enter block name or [?] <COMPONENTE>: COMPONENTE
+  Specify insertion point or [Basepoint/Scale/Rotate]: 120,-40
+  Enter X scale factor, specify opposite corner, or [Corner/XYZ] <1>: 1
+  Enter Y scale factor <use X scale factor>:
+  Specify rotation angle <0>: 0
+  Enter attribute values
+  Sigla <S1>: S30
+  Tensione <24V>: 400V
+  Nota di montaggio <da cablare>: da cablare
+  Codice componente <K1>: K30
+  Verify attribute values
+  Tensione <400V>: 400V
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Insert
+  Insert
+  Insert
+redo:
+snap: on
+ortho: off
+drawing: componente.dxf, modified
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "COMPONENTE" base=0,0 units=4
+  "COMPONENTE" 66 ATTDEF position=28.57571396706332,3.479576679289856 alignment-point=30,5 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S1" tag="SIGLA" prompt="Sigla" ~box=25.079889750376996,2.0812396118937295;35.62166614129724,3.9400392142084746;34.91672109072603,7.9379812633424915;24.37494469980578,6.0791816610277465
+  "COMPONENTE" 67 ATTDEF position=22,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" prompt="Posizione" preset=yes ~box=22,10.229950319375444;41.78708303761533,10.229950319375444;41.78708303761533,14.289567068843152;22,14.289567068843152
+  "COMPONENTE" 68 ATTDEF position=22,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" prompt="Tensione" verify=yes ~box=22,14.229950319375444;40.57523066004258,14.229950319375444;40.57523066004258,18.28956706884315;22,18.28956706884315
+  "COMPONENTE" 69 ATTDEF position=2,7 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ACME" tag="COSTRUTTORE" prompt="" constant=yes ~box=2,6.229950319375444;29.656139105748757,6.229950319375444;29.656139105748757,10.289567068843152;2,10.289567068843152
+  "COMPONENTE" 70 ATTDEF position=2,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" prompt="Nota di montaggio" invisible=yes ~box=2,10.229950319375444;12.09403832505323,10.229950319375444;12.09403832505323,14.289567068843152;2,14.289567068843152
+  "COMPONENTE" 71 ATTDEF position=2,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K1" tag="CODICE" prompt="Codice componente" ~box=2,14.229950319375444;16.13236337828247,14.229950319375444;16.13236337828247,18.28956706884315;2,18.28956706884315
+documents: Drawing1.cadx, componente.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  ATTRIB 15
+  INSERT 3

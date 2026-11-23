@@ -32,6 +32,7 @@
 #include "tg/cmd/commands/pline_command.hpp"
 #include "tg/cmd/commands/polygon_command.hpp"
 #include "tg/cmd/commands/property_commands.hpp"
+#include "tg/cmd/commands/rectang_command.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
 #include "tg/cmd/commands/style_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
@@ -113,6 +114,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
                  [] { return std::make_unique<PeditacceptCommand>(); });
     registry.add(detail::plineDescription(), [] { return std::make_unique<PlineCommand>(); });
     registry.add(PolygonCommand::description(), [] { return std::make_unique<PolygonCommand>(); });
+    registry.add(RectangCommand::description(), [] { return std::make_unique<RectangCommand>(); });
     registry.add(PolarangCommand::description(),
                  [] { return std::make_unique<PolarangCommand>(); });
     registry.add(detail::qsaveDescription(), [] { return std::make_unique<QsaveCommand>(); });

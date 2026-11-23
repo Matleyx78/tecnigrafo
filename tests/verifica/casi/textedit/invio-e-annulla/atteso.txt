@@ -1,0 +1,77 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Delta" ~box=0,-0.7700496806245565;8.482966643009227,-0.7700496806245565;8.482966643009227,3.289567068843151;0,3.289567068843151
+  258 MTEXT insertion=0,-10 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Beta" ~lines=1
+messages:
+  Command: TEXT
+  Specify start point of text: 0,0
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Enter text: Alfa
+  Enter text:
+  Command: MTEXT
+  Current text style:  "Standard"  Text height:  2.5  Annotative:  No
+  Specify first corner: 0,-10
+  Specify opposite corner or [Height/Justify/Line spacing/Rotation/Style/Width]: 60,-20
+  MText: Beta
+  MText:
+  Command: ED
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: 1,1
+  Enter new text <Alfa>:
+  Select an annotation object or [Undo/Mode]: 1,-11
+  Enter new text <Beta>: Gamma
+  Select an annotation object or [Undo/Mode]: U
+  The command has been completely undone.
+  Select an annotation object or [Undo/Mode]: U
+  The command has been completely undone.
+  Select an annotation object or [Undo/Mode]: 1,1
+  Enter new text <Alfa>: Delta
+  Select an annotation object or [Undo/Mode]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Mtext
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 1
+  TEXT 1
+
+[final]
+entities:
+  257 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Delta" ~box=0,-0.7700496806245565;8.482966643009227,-0.7700496806245565;8.482966643009227,3.289567068843151;0,3.289567068843151
+  258 MTEXT insertion=0,-10 height=2.5 width=60 attachment=top-left rotation=0 style="Standard" value="Beta" ~lines=1
+messages:
+  Command: ED
+  Current settings: Edit mode = Multiple
+  Select an annotation object or [Undo/Mode]: U
+  The command has been completely undone.
+  Select an annotation object or [Undo/Mode]: 1,-11
+  Enter new text <Beta>:
+  Select an annotation object or [Undo/Mode]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Text
+  Mtext
+  Textedit
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  MTEXT 1
+  TEXT 1

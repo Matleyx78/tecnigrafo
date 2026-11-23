@@ -30,37 +30,47 @@ struct CommandDefaults {
     double textRotation{0.0};            ///< radians
     std::optional<double> circleRadius;  ///< none before the first circle
     double mtextLineSpacing{1.0};
-    bool mtextExactSpacing{false};
     double rotation{0.0};  ///< the last rotation of ROTATE, radians
-    /// MIRRTEXT: 0 (Readable) at start-up (docs/adr/0031, point 3).
-    core::MirrorText mirrorText{core::MirrorText::Readable};
     /// POLARANG, the increment of polar tracking, radians: 90 degrees at
     /// start-up (docs/adr/0033, point 8).
     double polarAngle{core::kPi / 2.0};
-    /// TRIMEXTENDMODE: 1 (quick) at start-up, or 0 (standard); the mode
-    /// TRIM and EXTEND start in (docs/adr/0035, point 3).
-    int trimExtendMode{1};
-    std::optional<double> offsetDistance = std::nullopt;  ///< none means Through
-    bool offsetEraseSource{false};
-    bool offsetCurrentLayer{false};  ///< false means Source
     double filletRadius{0.0};
     double chamferFirstDistance{0.0};
     double chamferSecondDistance{0.0};
     double chamferLength{0.0};
     double chamferAngle{0.0};  ///< radians
-    bool chamferUseAngle{false};
-    bool trimMode{true};
-    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
-    /// HPISLANDDETECTION: 0 Normal, 1 Outer (the start-up value), 2 Ignore.
-    core::IslandStyle hatchIslands{core::IslandStyle::Outer};
+    double rectangChamferFirst{0.0};
+    double rectangChamferSecond{0.0};
+    double rectangFilletRadius{0.0};
+    double rectangWidth{0.0};
+    double rectangElevation{0.0};
+    double rectangThickness{0.0};
+    double rectangRotation{0.0};  ///< radians
+    double rectangLength{10.0};
+    double rectangOtherWidth{10.0};
+    double hatchScale{1.0};
+    double hatchAngle{0.0};                               ///< radians
+    std::optional<double> offsetDistance = std::nullopt;  ///< none means Through
     /// HPNAME, HPSCALE and HPANG for the next -HATCH (docs/adr/0048, point 6).
     std::string hatchPattern{"ANSI31"};
-    double hatchScale{1.0};
-    double hatchAngle{0.0};  ///< radians
     /// INSNAME: the block -INSERT proposes, the last one it accepted; none
     /// at start-up (docs/tappe/0.8/PT21-comando-insert.md).
     std::optional<std::string> insertBlock = std::nullopt;
+    /// TRIMEXTENDMODE: 1 (quick) at start-up, or 0 (standard); the mode
+    /// TRIM and EXTEND start in (docs/adr/0035, point 3).
+    int trimExtendMode{1};
     int polygonSides{4};
+    /// MIRRTEXT: 0 (Readable) at start-up (docs/adr/0031, point 3).
+    core::MirrorText mirrorText{core::MirrorText::Readable};
+    /// HPISLANDDETECTION: 0 Normal, 1 Outer (the start-up value), 2 Ignore.
+    core::IslandStyle hatchIslands{core::IslandStyle::Outer};
+    bool mtextExactSpacing{false};
+    bool offsetEraseSource{false};
+    bool offsetCurrentLayer{false};  ///< false means Source
+    bool chamferUseAngle{false};
+    bool trimMode{true};
+    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool rectangUseFillet{false};
     bool polygonCircumscribed{false};
 };
 

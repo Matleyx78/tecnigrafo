@@ -1,0 +1,32 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; TEXTEDIT on a linear dimension ([0.8.1-RT11], work #939; card PT11, point 2; ADR 0054,
+; point 6). The value is the replaced text, with <> for the measurement, and <> when the
+; replaced text is empty (card PT11, point 1: "value ... <> se è vuoto"): the prompt is
+; "Enter new text <<>>:". The text "<> mm" shows "30 mm" and keeps the measurement
+; dynamic; a second TEXTEDIT proposes "<> mm" and writes "Quota". Each modification is
+; a Textedit step: U undoes the second one, REDO repeats it.
+; Dimension as dimlinear/mtext (ISO-25, text above the line, 1.875 over it, not moved
+; by its content, which fits between the extension lines): origins 0,0 and 30,0, line
+; at y = 10, so line-point 30,10 and text-point 15,11.875; measurement 30. The
+; dimension line is chosen with the typed point 5,10, away from the text.
+; The location prompt of DIMLINEAR gains Mtext with PT3 (#930), hence the comment.
+DIMLINEAR
+0,0
+30,0
+; cambia con #930
+15,10
+TEXTEDIT
+5,10
+<> mm
+
+!report
+TEXTEDIT
+5,10
+Quota
+
+!report
+U
+!report
+REDO

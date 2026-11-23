@@ -5,7 +5,7 @@
 E = ELLIPSE center=10,10 major-axis=20,0 ratio=0.5
 ? properties E -> center=10,10; major-radius=20; minor-radius=10; ratio=0.5; start-angle=0; end-angle=360; ~area=628.3185307179587
 ? set-property E center=15,-5 -> ELLIPSE center=15,-5 major-axis=20,0 ratio=0.5 | center=15,-5; major-radius=20; minor-radius=10; ratio=0.5; start-angle=0; end-angle=360; ~area=628.3185307179587
-? set-property E major-radius=30 -> ELLIPSE center=10,10 major-axis=30,0 ratio=0.3333333333333333 | center=10,10; major-radius=30; minor-radius=10; ratio=0.3333333333333333; start-angle=0; end-angle=360; ~area=1884.955592153876
+? set-property E major-radius=30 -> ELLIPSE center=10,10 major-axis=30,0 ratio=0.3333333333333333 | center=10,10; major-radius=30; minor-radius=10; ratio=0.3333333333333333; start-angle=0; end-angle=360; ~area=942.4777960769379
 ? set-property E minor-radius=5 -> ELLIPSE center=10,10 major-axis=20,0 ratio=0.25 | center=10,10; major-radius=20; minor-radius=5; ratio=0.25; start-angle=0; end-angle=360; ~area=314.1592653589793
 ? set-property E ratio=0.75 -> ELLIPSE center=10,10 major-axis=20,0 ratio=0.75 | center=10,10; major-radius=20; minor-radius=15; ratio=0.75; start-angle=0; end-angle=360; ~area=942.4777960769379
 ? set-property E ratio=1 -> ELLIPSE center=10,10 major-axis=20,0 ratio=1 | center=10,10; major-radius=20; minor-radius=20; ratio=1; start-angle=0; end-angle=360; ~area=1256.637061435918

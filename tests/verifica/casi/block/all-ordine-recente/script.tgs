@@ -1,0 +1,16 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; ALL supplies entities newest first to -BLOCK (PT34, #949).
+LINE
+0,0
+10,0
+
+CIRCLE
+30,0
+5
+-BLOCK
+Pezzo
+0,0
+; cambia con #949
+ALL
+

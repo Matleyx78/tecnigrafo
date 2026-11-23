@@ -1,0 +1,107 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  149 INSERT block="VISTA" insertion=0,0 scale=1,1 rotation=0
+  151 ATTRIB owner=149 position=2,2 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N1" tag="NASCOSTO" invisible=yes ~box=2,1.229950319375444;6.64513839602555,1.229950319375444;6.64513839602555,5.289567068843152;2,5.289567068843152
+  152 ATTRIB owner=149 position=2,6 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="V1" tag="VISIBILE" ~box=2,5.229950319375444;6.444641589779986,5.229950319375444;6.444641589779986,9.289567068843152;2,9.289567068843152
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/autocad-attdisp-off
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on, modes off: endpoint midpoint center intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-attdisp-off
+attdisp: off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "VISTA" base=0,0 units=4
+  "VISTA" 145 LWPOLYLINE closed=yes vertex=0,0 vertex=30,0 vertex=30,10 vertex=0,10
+  "VISTA" 146 ATTDEF position=2,2 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N1" tag="NASCOSTO" prompt="Nascosto" invisible=yes ~box=2,1.229950319375444;22.39212207239177,1.229950319375444;22.39212207239177,5.289567068843152;2,5.289567068843152
+  "VISTA" 147 ATTDEF position=2,6 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="V1" tag="VISIBILE" prompt="Visibile" ~box=2,5.229950319375444;16.7444996451384,5.229950319375444;16.7444996451384,9.289567068843152;2,9.289567068843152
+documents: Drawing1.cadx, @sources/autocad-attdisp-off (active)
+pointer: 2,2
+active snap: none
+statistics:
+  ATTRIB 2
+  INSERT 1
+
+[report 2]
+entities:
+  149 INSERT block="VISTA" insertion=0,0 scale=1,1 rotation=0
+  151 ATTRIB owner=149 position=2,2 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N1" tag="NASCOSTO" invisible=yes ~box=2,1.229950319375444;6.64513839602555,1.229950319375444;6.64513839602555,5.289567068843152;2,5.289567068843152
+  152 ATTRIB owner=149 position=2,6 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="V1" tag="VISIBILE" ~box=2,5.229950319375444;6.444641589779986,5.229950319375444;6.444641589779986,9.289567068843152;2,9.289567068843152
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on, modes off: endpoint midpoint center intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-attdisp-off
+attdisp: off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "VISTA" base=0,0 units=4
+  "VISTA" 145 LWPOLYLINE closed=yes vertex=0,0 vertex=30,0 vertex=30,10 vertex=0,10
+  "VISTA" 146 ATTDEF position=2,2 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N1" tag="NASCOSTO" prompt="Nascosto" invisible=yes ~box=2,1.229950319375444;22.39212207239177,1.229950319375444;22.39212207239177,5.289567068843152;2,5.289567068843152
+  "VISTA" 147 ATTDEF position=2,6 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="V1" tag="VISIBILE" prompt="Visibile" ~box=2,5.229950319375444;16.7444996451384,5.229950319375444;16.7444996451384,9.289567068843152;2,9.289567068843152
+documents: Drawing1.cadx, @sources/autocad-attdisp-off (active)
+pointer: 2,6
+active snap: none
+statistics:
+  ATTRIB 2
+  INSERT 1
+
+[final]
+entities:
+  149 INSERT block="VISTA" insertion=0,0 scale=1,1 rotation=0
+  151 ATTRIB owner=149 position=2,2 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N1" tag="NASCOSTO" invisible=yes ~box=2,1.229950319375444;6.64513839602555,1.229950319375444;6.64513839602555,5.289567068843152;2,5.289567068843152
+  152 ATTRIB owner=149 position=2,6 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="V1" tag="VISIBILE" ~box=2,5.229950319375444;6.444641589779986,5.229950319375444;6.444641589779986,9.289567068843152;2,9.289567068843152
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on, modes off: endpoint midpoint center intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-attdisp-off
+attdisp: off
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "VISTA" base=0,0 units=4
+  "VISTA" 145 LWPOLYLINE closed=yes vertex=0,0 vertex=30,0 vertex=30,10 vertex=0,10
+  "VISTA" 146 ATTDEF position=2,2 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="N1" tag="NASCOSTO" prompt="Nascosto" invisible=yes ~box=2,1.229950319375444;22.39212207239177,1.229950319375444;22.39212207239177,5.289567068843152;2,5.289567068843152
+  "VISTA" 147 ATTDEF position=2,6 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="V1" tag="VISIBILE" prompt="Visibile" ~box=2,5.229950319375444;16.7444996451384,5.229950319375444;16.7444996451384,9.289567068843152;2,9.289567068843152
+documents: Drawing1.cadx, @sources/autocad-attdisp-off (active)
+pointer: 2,6
+active snap: none
+statistics:
+  ATTRIB 2
+  INSERT 1

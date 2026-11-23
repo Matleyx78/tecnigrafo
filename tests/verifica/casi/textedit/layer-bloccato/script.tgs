@@ -1,0 +1,32 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; TEXTEDIT where there is nothing and on a TEXT on a locked layer ([0.8.1-RT11], work
+; #939; card PT11, point 2). The object prompt follows the object requests of ADR 0032,
+; point 1: a point with no entity leaves the prompt, with no message; an entity on a
+; locked layer is not chosen, the selection message "1 was on a locked layer." appears
+; and the prompt stays. Enter ends the command: nothing changes, no Textedit step.
+; The new layer takes the identifier 257 (as chprop/layer-bloccati), the TEXT 258.
+; ~box of "Fermo": Liberation Sans 2.1.5 advances read with fontTools (F 1251,
+; e 1139, r 682, m 1706, o 1139: 5917 font units), cap height 1409, ascent 1854,
+; descent -434: width 5917 / 1409 * 2.5 = 10.498580553584102.
+-LAYER
+New
+Bloccato
+LOck
+Bloccato
+
+CLAYER
+Bloccato
+TEXT
+0,0
+2.5
+0
+Fermo
+
+CLAYER
+0
+TEXTEDIT
+100,100
+1,1
+

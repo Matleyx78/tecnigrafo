@@ -1,0 +1,290 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/autocad-vicino-altri
+  Command: ERASE
+  1 found, 1 total
+  1 found, 2 total
+  1 found, 3 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 140,-29
+active snap: none
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1
+
+[report 2]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+  Command: LINE
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 50,-0.3
+active snap: Nearest 50,0
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1
+
+[report 3]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 88,9.7
+active snap: Nearest 88,10
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1
+
+[report 4]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 140,-0.3
+active snap: Nearest 140,0
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1
+
+[report 5]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 185,-0.3
+active snap: none
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1
+
+[report 6]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+prompt: Specify first point:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 5,-0.3
+active snap: none
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1
+
+[final]
+entities:
+  140 TEXT position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Testo per Vicino" ~box=0,-0.7700496806245565;26.256210078069554,-0.7700496806245565;26.256210078069554,3.289567068843151;0,3.289567068843151
+  146 INSERT block="QUADRO" insertion=40,0 scale=1,1 rotation=0
+  147 DIMENSION kind=linear style="ISO-25" origin1=80,0 origin2=110,0 line-point=110,10 rotation=0 text-point=95,11.875 measurement=30 ~text="30"
+  161 SOLID vertex=130,0 vertex=150,0 vertex=130,10 vertex=150,10
+  165 HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+edges line=170,0;200,0 line=200,0;200,20 line=200,20;170,20 line=170,20;170,0 seed=0,0
+messages:
+  *Cancel*
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Erase
+redo:
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
+ortho: off
+drawing: @sources/autocad-vicino-altri, modified
+layers:
+  "0" color=7 linetype="Continuous" lineweight=default
+  "Defpoints" color=7 linetype="Continuous" lineweight=default noplot
+text styles:
+  "Standard" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+  "Annotative" font="txt" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+dimension styles:
+  "ISO-25"
+  "Annotative" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+blocks:
+  "QUADRO" base=0,0 units=4
+  "QUADRO" 144 LWPOLYLINE closed=yes vertex=0,0 vertex=20,0 vertex=20,10 vertex=0,10
+documents: Drawing1.cadx, @sources/autocad-vicino-altri (active)
+pointer: 5,-0.3
+active snap: none
+statistics:
+  DIMENSION 1
+  HATCH 1
+  INSERT 1
+  SOLID 1
+  TEXT 1

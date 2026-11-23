@@ -2820,3 +2820,17 @@ i rimandi ai documenti che cambia.
      alla misura e i codici rimasti, senza effetto, si perdono (PT10, PT11,
      PT12; ADR 0054, punto 5). Scartato il salvataggio di un `MTEXT` di soli
      codici, invisibile.
+- **2026-11-22 — Prefissi `#` e `*` nel campo dinamico (PT34).** Codex, fermo
+  su RT34 ([#948](https://github.com/Matleyx78/tecnigrafo/issues/948)),
+  segnala che la scheda PT34 chiede uno script di livello 2 che digiti
+  `#10,10` e `*10,10` nel campo dinamico, mentre l'[ADR 0042](adr/0042-immissione-dinamica.md),
+  punto 4, toglie l'immissione dinamica dagli script (`setScriptMode()` la
+  spegne e disabilita `F12`). Il responsabile sceglie di tenere la regola
+  dell'ADR, che non cambia: nessuna direttiva accende il campo negli script.
+  La digitazione nel campo si prova solo con il test Qt di PT34
+  (`LINE`, base `3,4`, `#10,10` o `*10,10` nel campo: segmento fino a
+  `(10,10)`; `10,10` nel campo: fino a `(13,14)`), e i casi di RT34 provano i
+  prefissi dalla riga di comando (scheda
+  [PT34](tappe/0.8.1/PT34-last-previous.md), "Test richiesti"). Scartata
+  una direttiva di livello 2 per accendere il campo: avrebbe cambiato un ADR
+  accettato a tappa aperta e chiesto uno strumento che su `main` non c'è.

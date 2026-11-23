@@ -1,0 +1,9 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; solid-space tests/corpus/casi/geom2d/ellipse-nearest-mm-esterno-obliquo.json
+; aa29390f5ef454add5f9e75a5cb023924ccf9418
+; The certified distance 2.8816126631665626 separates apertures 2 and 3.
+E = ELLIPSE center=0,0 major-axis=10,0 ratio=0.5
+? snap 12,3 aperture=2 modes=nea -> none
+!tolerance absolute 6.821210263296963e-13
+? snap 12,3 aperture=3 modes=nea -> Nearest 9.551207013215885,1.481084449879183

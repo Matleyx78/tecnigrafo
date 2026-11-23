@@ -1,0 +1,7 @@
+# [0.8.1-RT11] (#938): TEXTEDIT cases, made mandatory by PT11 (#939).
+textedit/testo-e-mtext #939
+textedit/invio-e-annulla #939
+textedit/modalita #939
+textedit/quota #939
+textedit/layer-bloccato #939
+textedit/attributi #939

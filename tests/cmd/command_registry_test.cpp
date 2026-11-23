@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <memory>
 #include <span>
 #include <string>
@@ -305,14 +306,42 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         "DIMSCALE DIMSD1 DIMSD2 DIMSE1 DIMSE2 DIMTAD DIMTIH DIMTOH DIMTXSTY DIMTXT DIMZIN "
         "ELLIPSE ERASE EXPLODE EXTEND FILLET "
         "HPISLANDDETECTION INSUNITS JOIN LINE LTSCALE LWDISPLAY LWEIGHT MIRROR MIRRTEXT "
-        "MOVE MTEXT NEW OFFSET OPEN PEDIT PEDITACCEPT PLINE POLARANG POLYGON QSAVE ROTATE SAVE "
-        "SAVEAS "
+        "MOVE MTEXT NEW OFFSET OPEN PEDIT PEDITACCEPT PLINE POLARANG POLYGON QSAVE RECTANG ROTATE "
+        "SAVE SAVEAS "
         "SCALE "
         "TEXT "
         "TEXTSTYLE TRIM TRIMEXTENDMODE";
     EXPECT_EQ(names, expected);
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);
     EXPECT_EQ(registry.describe("DTEXT")->name, "TEXT");
+}
+
+TEST(BuiltinCommands, Version08AliasesAndDimensionMtextAreRegistered) {
+    CommandRegistry registry;
+    registerBuiltinCommands(registry);
+
+    const std::vector<std::pair<std::string, std::string>> aliases{
+        {"EL", "ELLIPSE"},      {"T", "MTEXT"},        {"MT", "MTEXT"},       {"ST", "-STYLE"},
+        {"DLI", "DIMLINEAR"},   {"DAL", "DIMALIGNED"}, {"DAN", "DIMANGULAR"}, {"DRA", "DIMRADIUS"},
+        {"DDI", "DIMDIAMETER"}, {"D", "-DIMSTYLE"},    {"H", "-HATCH"},       {"B", "-BLOCK"},
+        {"I", "-INSERT"}};
+    for (const auto& [alias, name] : aliases) {
+        ASSERT_NE(registry.describe(alias), nullptr) << alias;
+        EXPECT_EQ(registry.describe(alias)->name, name) << alias;
+        EXPECT_NE(registry.create(alias), nullptr) << alias;
+    }
+
+    for (const std::string name :
+         {"DIMLINEAR", "DIMALIGNED", "DIMANGULAR", "DIMRADIUS", "DIMDIAMETER"}) {
+        const CommandDescription* description = registry.describe(name);
+        ASSERT_NE(description, nullptr);
+        const auto location = std::ranges::find_if(
+            description->prompts, [](const auto& prompt) { return prompt.id == "location"; });
+        ASSERT_NE(location, description->prompts.end()) << name;
+        ASSERT_GE(location->keywords.size(), 2U) << name;
+        EXPECT_EQ(location->keywords[0].name, "Mtext") << name;
+        EXPECT_EQ(location->keywords[1].name, "Text") << name;
+    }
 }
 
 }  // namespace

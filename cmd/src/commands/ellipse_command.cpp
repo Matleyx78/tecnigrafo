@@ -29,7 +29,7 @@ double ellipseParameter(double direction, double ratio) {
 CommandDescription EllipseCommand::description() {
     return {
         "ELLIPSE",
-        {},
+        {"EL"},
         "Draws an ellipse or an elliptical arc from its axes.",
         false,
         {{"axis-endpoint",

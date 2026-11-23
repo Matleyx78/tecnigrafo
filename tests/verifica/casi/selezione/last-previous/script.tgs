@@ -1,0 +1,41 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; Last and Previous selection sequence from the AutoCAD selection transcript.
+LINE
+0,0
+30,0
+
+CIRCLE
+50,0
+5
+LINE
+0,20
+30,20
+
+; cambia con #949
+ERASE
+L
+
+SELECT
+W
+-5,-10
+60,10
+
+MOVE
+P
+
+0,0
+0,-10
+!report
+U
+SELECT
+P
+
+ERASE
+W
+40,-20
+60,0
+
+SELECT
+P
+
