@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; A nearer Midpoint wins over an extension endpoint, even when Endpoint is disabled.
+!view 0,0 0.1 800x600
+LINE
+-10,0
+0,0
+
+LINE
+0.5,-5
+0.5,5
+
+!osnap mid,ext
+LINE
+!hover 0.5,0
+!report
+!esc

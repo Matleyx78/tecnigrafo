@@ -1,0 +1,58 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  162 INSERT block="SINCRO_A" insertion=0,-40 scale=1,1 rotation=0
+  164 ATTRIB owner=162 position=2,-35 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A1-3" tag="TERZO" ~box=2,-35.77004968062456;9.675656493967352,-35.77004968062456;9.675656493967352,-31.71043293115685;2,-31.71043293115685
+  165 ATTRIB owner=162 position=2,-30 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A1-2" tag="SECONDO" ~box=2,-30.770049680624556;9.675656493967352,-30.770049680624556;9.675656493967352,-26.71043293115685;2,-26.71043293115685
+  166 ATTRIB owner=162 position=2,-25 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A1-1" tag="PRIMO" ~box=2,-25.770049680624556;9.675656493967352,-25.770049680624556;9.675656493967352,-21.71043293115685;2,-21.71043293115685
+  167 INSERT block="SINCRO_A" insertion=60,-40 scale=1,1 rotation=0
+  169 ATTRIB owner=167 position=62,-35 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A2-3" tag="TERZO" ~box=62,-35.77004968062456;69.67565649396735,-35.77004968062456;69.67565649396735,-31.71043293115685;62,-31.71043293115685
+  170 ATTRIB owner=167 position=62,-30 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A2-2" tag="SECONDO" ~box=62,-30.770049680624556;69.67565649396735,-30.770049680624556;69.67565649396735,-26.71043293115685;62,-26.71043293115685
+  171 ATTRIB owner=167 position=62,-25 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="A2-1" tag="PRIMO" ~box=62,-25.770049680624556;69.67565649396735,-25.770049680624556;69.67565649396735,-21.71043293115685;62,-21.71043293115685
+  172 INSERT block="SINCRO_B" insertion=120,-40 scale=1,1 rotation=0
+  174 ATTRIB owner=172 position=122,-35 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B-3" tag="TERZO" ~box=122,-35.77004968062456;127.65471965933286,-35.77004968062456;127.65471965933286,-31.71043293115685;122,-31.71043293115685
+  175 ATTRIB owner=172 position=122,-30 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B-2" tag="SECONDO" ~box=122,-30.770049680624556;127.65471965933286,-30.770049680624556;127.65471965933286,-26.71043293115685;122,-26.71043293115685
+  176 ATTRIB owner=172 position=122,-25 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="B-1" tag="PRIMO" ~box=122,-25.770049680624556;127.65471965933286,-25.770049680624556;127.65471965933286,-21.71043293115685;122,-21.71043293115685
+messages:
+  Command: OPEN
+  Enter name of drawing to open: sincro.dxf
+  Command: ATTDISP
+  Enter attribute visibility setting [Normal/ON/OFF] <Normal>:
+  Regenerating model.
+  Command: ATTDISP
+  Enter attribute visibility setting [Normal/ON/OFF] <Normal>: N
+  Regenerating model.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+drawing: sincro.dxf
+dimension styles:
+  "Standard" DIMASZ:0.18 DIMCEN:0.09 DIMDEC:4 DIMDSEP:. DIMEXE:0.18 DIMEXO:0.0625 DIMGAP:0.09 DIMTAD:0 DIMTIH:1 DIMTOH:1 DIMTXT:0.18 DIMZIN:0
+dimension style: "Standard"
+blocks:
+  "SINCRO_A" base=0,0 units=4
+  "SINCRO_A" 183 LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20
+  "SINCRO_A" 184 CIRCLE center=35,5 radius=3
+  "SINCRO_A" 185 ATTDEF position=2,5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q0" tag="QUARTO" prompt="Quarto" ~box=2,4.229950319375444;17.54471256210078,4.229950319375444;17.54471256210078,8.289567068843152;2,8.289567068843152
+  "SINCRO_A" 186 ATTDEF position=22,15 alignment-point=0,0 height=3.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="T0" tag="TERZO" prompt="Terzo" ~box=22,13.921930447125622;39.23917672107878,13.921930447125622;39.23917672107878,19.605393896380413;22,19.605393896380413
+  "SINCRO_A" 187 ATTDEF position=2,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="P0" tag="PRIMO" prompt="Primo" ~box=2,14.229950319375444;13.910929737402412,14.229950319375444;13.910929737402412,18.28956706884315;2,18.28956706884315
+  "SINCRO_B" base=0,0 units=4
+  "SINCRO_B" 195 LWPOLYLINE closed=yes vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20
+  "SINCRO_B" 196 CIRCLE center=35,5 radius=3
+  "SINCRO_B" 197 ATTDEF position=2,5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q0" tag="QUARTO" prompt="Quarto" ~box=2,4.229950319375444;17.54471256210078,4.229950319375444;17.54471256210078,8.289567068843152;2,8.289567068843152
+  "SINCRO_B" 198 ATTDEF position=22,15 alignment-point=0,0 height=3.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="T0" tag="TERZO" prompt="Terzo" ~box=22,13.921930447125622;39.23917672107878,13.921930447125622;39.23917672107878,19.605393896380413;22,19.605393896380413
+  "SINCRO_B" 199 ATTDEF position=2,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="P0" tag="PRIMO" prompt="Primo" ~box=2,14.229950319375444;13.910929737402412,14.229950319375444;13.910929737402412,18.28956706884315;2,18.28956706884315
+  "TELAIO" base=0,0 units=4
+  "TELAIO" 210 LWPOLYLINE closed=yes vertex=0,0 vertex=30,0 vertex=30,10 vertex=0,10
+documents: Drawing1.cadx, sincro.dxf (active)
+pointer: none
+active snap: none
+statistics:
+  ATTRIB 9
+  INSERT 3

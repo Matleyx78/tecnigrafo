@@ -50,14 +50,16 @@ constexpr std::array kOsnapAbbreviations{OsnapAbbreviation{"end", &core::SnapMod
                                          OsnapAbbreviation{"int", &core::SnapModes::intersection},
                                          OsnapAbbreviation{"per", &core::SnapModes::perpendicular},
                                          OsnapAbbreviation{"tan", &core::SnapModes::tangent},
-                                         OsnapAbbreviation{"qua", &core::SnapModes::quadrant}};
+                                         OsnapAbbreviation{"qua", &core::SnapModes::quadrant},
+                                         OsnapAbbreviation{"nea", &core::SnapModes::nearest}};
 
-// Stage 0.8.1: PT30 implements nea, PT31 implements ext and par.
-constexpr std::array<std::string_view, 3> kAnnouncedOsnapModes{"nea", "ext", "par"};
+// Stage 0.8.1: PT31 implements ext and par.
+constexpr std::array<std::string_view, 2> kAnnouncedOsnapModes{"ext", "par"};
 
-// A new member of core::SnapModes needs its abbreviation above, or !osnap
-// could never turn it on.
-static_assert(sizeof(core::SnapModes) == kOsnapAbbreviations.size() * sizeof(bool),
+// A new member of core::SnapModes needs its abbreviation above, or one
+// announced until its package, or !osnap could never turn it on.
+static_assert(sizeof(core::SnapModes) ==
+                  (kOsnapAbbreviations.size() + kAnnouncedOsnapModes.size()) * sizeof(bool),
               "every snap mode needs an abbreviation in kOsnapAbbreviations");
 
 /// A directive of the catalogue that the program does not have yet: a script

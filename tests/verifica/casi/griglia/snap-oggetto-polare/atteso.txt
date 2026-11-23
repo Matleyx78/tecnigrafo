@@ -1,0 +1,75 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 LINE start=3,3 end=13,3
+  258 LINE start=13,3 end=23,3
+messages:
+  Command: SNAPUNIT
+  Enter new value for SNAPUNIT <10.0000,10.0000>: 10,10
+  Command: SNAPMODE
+  Enter new value for SNAPMODE <0>: 1
+  Command: LINE
+  Specify first point: 3,3
+  Specify next point or [Undo]: 13,3
+  Specify next point or [Close/Undo]:
+  Command: LINE
+  Specify next point or [Undo]: 23,3
+  Specify next point or [Close/Undo]:
+  Command: LINE
+  Specify first point: 1,2
+prompt: Specify next point or [Undo]:
+preview:
+  LINE start=1,2 end=20,2
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+grid snap: unit=10,10 base=0,0
+pointer: 19,9
+active snap: none
+statistics:
+  LINE 2
+
+[report 2]
+entities:
+  257 LINE start=3,3 end=13,3
+  258 LINE start=13,3 end=23,3
+  259 LINE start=1,2 end=20,2
+messages:
+  Specify next point or [Undo]:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+grid snap: unit=10,10 base=0,0
+pointer: 19,9
+active snap: none
+statistics:
+  LINE 3
+
+[final]
+entities:
+  257 LINE start=3,3 end=13,3
+  258 LINE start=13,3 end=23,3
+  259 LINE start=1,2 end=20,2
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+grid snap: unit=10,10 base=0,0
+pointer: 19,9
+active snap: none
+statistics:
+  LINE 3

@@ -1,0 +1,18 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT18] (#968), work #969: ATTSYNC in a drawing whose only block, TELAIO, has
+; no attributes: "This drawing contains no blocks with attributes." at once, no
+; prompt, and the command ends (card PT18, point 1, from the session of 2026-11-22 in
+; docs/tappe/0.8.1/dxf-di-prova.md). No undo step for ATTSYNC.
+; LINE and -BLOCK as explode/inserimento-trasformato: the line is 257 and goes into
+; the block.
+LINE
+0,0
+10,0
+
+-BLOCK
+TELAIO
+0,0
+5,0
+
+ATTSYNC
