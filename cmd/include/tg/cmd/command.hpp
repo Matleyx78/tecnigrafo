@@ -69,7 +69,8 @@ struct CommandDefaults {
     bool offsetCurrentLayer{false};  ///< false means Source
     bool chamferUseAngle{false};
     bool trimMode{true};
-    bool peditAccept{false};  ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool peditAccept{false};      ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool attributeRequest{true};  ///< ATTREQ, session-only (docs/adr/0056, point 3).
     bool rectangUseFillet{false};
     bool polygonCircumscribed{false};
 };
