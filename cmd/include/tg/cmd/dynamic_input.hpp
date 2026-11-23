@@ -68,7 +68,9 @@ struct DynamicInput {
 ///
 /// Typed fields enter the line as typed, so the runner reads and diagnoses
 /// them as it reads the command line. With a comma in the Length field the
-/// Angle field is not used.
+/// Angle field is not used. A Length field typed with "#" or "*" first gives
+/// an absolute coordinate, without "@": "#<x>,<y>" or "#<length><<angle>";
+/// an X field typed "#<x>,<y>" (or with "*") is the whole line.
 ///
 /// The line is what Enter guarantees, not the point the fields measure: the
 /// runner reads "@" from the last point (docs/adr/0005), while Length and

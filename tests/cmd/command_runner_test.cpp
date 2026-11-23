@@ -57,7 +57,7 @@ public:
         if (const auto* point = std::get_if<PointInput>(&input)) {
             Polyline polyline;
             polyline.addVertex(point->point);
-            context.editor.add(polyline);
+            m_added.push_back(context.editor.add(polyline));
             context.lastPoint = point->point;
             m_preview.emplace_back(polyline);
             return Status::Continue;
@@ -79,9 +79,13 @@ public:
 
     [[nodiscard]] std::span<const Entity> preview() const override { return m_preview; }
 
+    /// The polylines added so far.
+    [[nodiscard]] std::span<const core::EntityId> highlighted() const override { return m_added; }
+
 private:
     Journal& m_journal;
     std::vector<Entity> m_preview;
+    std::vector<core::EntityId> m_added;
 };
 
 /// The description of FakeCommand under `name`.
@@ -207,6 +211,24 @@ TEST_F(CommandRunnerTest, UndoAndRedoRepeatInEveryEnvironment) {
         EXPECT_EQ(document().entityCount(), initialCount + 2);
         EXPECT_TRUE(messages().back().starts_with("Redone:"));
     }
+}
+
+TEST_F(CommandRunnerTest, HighlightedIsThatOfTheRunningCommand) {
+    EXPECT_TRUE(runner().highlighted().empty());
+    runner().submitText("FAKE");
+    EXPECT_TRUE(runner().highlighted().empty());
+    runner().submitText("1,2");
+    ASSERT_EQ(runner().highlighted().size(), 1U);
+    EXPECT_EQ(runner().highlighted().front(), document().entities().back().id);
+    runner().submitText("C");
+    EXPECT_FALSE(runner().isActive());
+    EXPECT_TRUE(runner().highlighted().empty());
+
+    // Commands highlight nothing by default.
+    runner().submitText("LINE");
+    runner().submitText("0,0");
+    EXPECT_TRUE(runner().highlighted().empty());
+    runner().submit(CancelInput{});
 }
 
 TEST_F(CommandRunnerTest, ReplaceSelectionIsSilentAndClosesTheRectangle) {
@@ -994,8 +1016,8 @@ TEST_F(SelectionTest, TheCornersOfAWrittenOptionCanBeClicked) {
 TEST_F(SelectionTest, AllTakesEveryEntityAsOneGesture) {
     runner().submitText("PICK");
     runner().submitText("5,0");
-    runner().submitText("all");
-    EXPECT_EQ(selected(), (Ids{a(), b(), c(), d()}));
+    runner().submitText("all");  // the most recent first, after a, chosen already
+    EXPECT_EQ(selected(), (Ids{a(), d(), c(), b()}));
     EXPECT_EQ(messages().back(), "4 found, 4 total");
 }
 

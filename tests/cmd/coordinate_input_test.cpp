@@ -10,6 +10,7 @@
 #include <numbers>
 #include <optional>
 #include <ostream>
+#include <string>
 #include <string_view>
 
 namespace tg::cmd {
@@ -177,6 +178,26 @@ TEST(CoordinateInput, DistanceNeedsALastPoint) {
 
 TEST(CoordinateInput, DistanceNeedsAPointerAwayFromTheLastPoint) {
     EXPECT_EQ(pointFor("5", Vec2{2.0, 3.0}, Vec2{2.0, 3.0}), std::nullopt);
+}
+
+// "#" and "*" force an absolute coordinate (PT34, point 4).
+TEST(CoordinateInput, HashAndStarForceAnAbsoluteCoordinate) {
+    for (const char* prefix : {"#", "*"}) {
+        const std::string text = std::string{prefix} + "10,10";
+        EXPECT_EQ(parseCoordinate(text), (PointSpec{Kind::Absolute, 10.0, 10.0})) << text;
+        expectPoint(pointFor(text, Vec2{3.0, 4.0}), {10.0, 10.0});
+        const std::string polar = std::string{prefix} + "2<90";
+        EXPECT_EQ(parseCoordinate(polar), (PointSpec{Kind::PolarAbsolute, 2.0, 90.0})) << polar;
+        expectPoint(pointFor(polar, Vec2{3.0, 4.0}), {0.0, 2.0});
+    }
+    EXPECT_EQ(parseCoordinate("  #10,10 "), (PointSpec{Kind::Absolute, 10.0, 10.0}));
+}
+
+TEST(CoordinateInput, HashAndStarNeedACoordinate) {
+    for (const std::string_view text :
+         {"#", "*", "#5", "*5", "#@1,1", "*@1,1", "@#1,1", "##1,1", "#*1,1", "# 1,1", "1,#1"}) {
+        EXPECT_EQ(parseCoordinate(text), std::nullopt) << text;
+    }
 }
 
 // Step 3 of the manual test of stage 0.2: a closed square of side 50.

@@ -34,6 +34,7 @@
 #include "tg/cmd/commands/property_commands.hpp"
 #include "tg/cmd/commands/rectang_command.hpp"
 #include "tg/cmd/commands/rotate_scale_commands.hpp"
+#include "tg/cmd/commands/select_command.hpp"
 #include "tg/cmd/commands/style_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
 #include "tg/cmd/commands/trim_extend_commands.hpp"
@@ -123,6 +124,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(detail::saveasDescription(), [] { return std::make_unique<SaveasCommand>(); });
     registry.add(ScaleObjectsCommand::description(),
                  [] { return std::make_unique<ScaleObjectsCommand>(); });
+    registry.add(SelectCommand::description(), [] { return std::make_unique<SelectCommand>(); });
     registry.add(StyleCommand::description(), [] { return std::make_unique<StyleCommand>(); });
     registry.add(detail::textDescription(), [] { return std::make_unique<TextCommand>(); });
     registry.add(TextstyleCommand::description(),

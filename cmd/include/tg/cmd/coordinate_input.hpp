@@ -22,6 +22,9 @@ namespace tg::cmd {
 /// | `@d<a`  | PolarRelative | distance | angle, degrees  |
 /// | `d`     | Distance      | distance | (unused)        |
 ///
+/// A leading `#` or `*` (`#x,y`, `*d<a`) forces an absolute form, as in
+/// AutoCAD: the text after it must be `x,y` or `d<a`, without spaces.
+///
 /// Angles are counter-clockwise from +X, as everywhere in the drawing.
 struct PointSpec {
     enum class Kind : std::uint8_t { Absolute, Relative, PolarAbsolute, PolarRelative, Distance };
