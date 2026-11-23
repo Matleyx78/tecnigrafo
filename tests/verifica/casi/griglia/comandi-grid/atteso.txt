@@ -1,0 +1,80 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+messages:
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <10.0000>: -2
+  Value must be positive.
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <10.0000>: 2x
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <20.0000>: Aspect
+  Specify the horizontal spacing(X) <20.0000>: 0
+  Specify the vertical spacing(Y) <20.0000>: 10
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>: Major
+  Enter number of grid divisions per major grid line <5>: 0
+  Requires an integer between 1 and 100.
+  Enter number of grid divisions per major grid line <5>: 101
+  Requires an integer between 1 and 100.
+  Enter number of grid divisions per major grid line <5>: 7
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>: aDaptive
+  Turn adaptive behavior on [Yes/No] <Yes>: No
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>: aDaptive
+  Turn adaptive behavior on [Yes/No] <No>: Yes
+  Allow subdivision below grid spacing [Yes/No] <No>: Yes
+  Command: GRIDUNIT
+  Enter new value for GRIDUNIT <0.0000,10.0000>: 0,10
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>:
+  Command: GRIDUNIT
+  Enter new value for GRIDUNIT <0.0000,10.0000>: -1,10
+  Cannot set GRIDUNIT to that value.
+  *Invalid*
+  Command: GRIDMODE
+  Enter new value for GRIDMODE <1>: 0
+  Command: GRIDMODE
+  Enter new value for GRIDMODE <0>: 1
+  Command: GRIDDISPLAY
+  Enter new value for GRIDDISPLAY <7>: 6
+  Command: GRIDMAJOR
+  Enter new value for GRIDMAJOR <7>: 101
+  Cannot set GRIDMAJOR to that value.
+  *Invalid*
+  Command: GRIDMAJOR
+  Enter new value for GRIDMAJOR <7>: 10
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>: Aspect
+  *Cancel*
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>: OFF
+  Command: GRID
+  Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+messages:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

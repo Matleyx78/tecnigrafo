@@ -1,0 +1,23 @@
+; Object snap wins over the grid; polar projection uses the grid node first
+; cambia con #964
+SNAPUNIT
+10,10
+SNAPMODE
+1
+LINE
+3,3
+13,3
+
+LINE
+!click 13.2,3.1
+23,3
+
+!osnap none
+!polar on
+LINE
+1,2
+!move 19,9
+!report
+!click 19,9
+
+!report
