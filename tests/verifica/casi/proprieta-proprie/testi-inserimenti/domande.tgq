@@ -17,4 +17,3 @@ M = MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 styl
 ? set-property M line-spacing=2 -> MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=2 line-spacing-style=exactly value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=15; line-spacing=2; line-spacing-style=exactly
 ? set-property M line-spacing=0 -> invalid
 ? set-property M line-spacing-style=at-least -> MTEXT insertion=0,0 height=2.5 width=60 attachment=top-left rotation=15 style="Standard" line-spacing=1.5 value="uno\\Pdue" | value="uno\\Pdue"; style="Standard"; attachment=top-left; width=60; height=2.5; rotation=15; line-spacing=1.5; line-spacing-style=at-least
-

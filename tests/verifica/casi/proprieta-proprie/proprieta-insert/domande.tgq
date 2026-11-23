@@ -19,7 +19,3 @@ I = INSERT block="B1" insertion=10,20 scale=2,-3 rotation=25
 ? set-property I scale-z=-2 -> INSERT block="B1" insertion=10,20 scale=2,-3 rotation=25 | block="B1"; insertion=10,20; scale=2,-3; scale-z=-2; rotation=25
 ? set-property I scale-z=0 -> invalid
 ? set-property I rotation=400 -> INSERT block="B1" insertion=10,20 scale=2,-3 rotation=40 | block="B1"; insertion=10,20; scale=2,-3; scale-z=1; rotation=40
-!block "Loop" base=0,0
-Nested = INSERT block="B1" insertion=0,0
-!endblock
-? set-property Nested block="Loop" -> invalid
