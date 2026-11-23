@@ -118,7 +118,7 @@ public:
     void start(CommandContext& context) override;
     Status handle(CommandContext& context, const Input& input) override;
 
-    void pointerMoved(const core::Vec2&) override {}
+    void pointerMoved(const core::Vec2& point) override { (void)point; }
 
     [[nodiscard]] Prompt prompt() const override;
 

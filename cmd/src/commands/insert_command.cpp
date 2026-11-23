@@ -430,9 +430,10 @@ Status InsertCommand::finish(CommandContext& context, const core::Vec2& point) {
 }
 
 Status InsertCommand::askAttributes(CommandContext& context) {
-    m_attributes = core::defaultAttributes(context.editor.document(), insertAt(*m_point));
+    const core::Vec2 point = m_point.value_or(core::Vec2{});
+    m_attributes = core::defaultAttributes(context.editor.document(), insertAt(point));
     if (!context.defaults.attributeRequest || m_attributes.empty()) {
-        return finish(context, *m_point);
+        return finish(context, point);
     }
     const core::BlockDefinition* block = context.editor.document().blocks().find(m_block);
     std::size_t attribute = 0;
@@ -449,7 +450,7 @@ Status InsertCommand::askAttributes(CommandContext& context) {
         ++attribute;
     }
     if (m_questions.empty()) {
-        return finish(context, *m_point);
+        return finish(context, point);
     }
     context.message("Enter attribute values");
     m_stage = Stage::Attribute;
@@ -459,7 +460,7 @@ Status InsertCommand::askAttributes(CommandContext& context) {
 }
 
 Status InsertCommand::handleAttribute(CommandContext& context, const Input& input) {
-    AttributeQuestion& question = m_questions[m_question];
+    const AttributeQuestion& question = m_questions[m_question];
     if (const auto* text = std::get_if<TextInput>(&input)) {
         m_attributes[question.index].text.value = text->text;
     } else if (!std::holds_alternative<ConfirmInput>(input)) {
@@ -470,7 +471,7 @@ Status InsertCommand::handleAttribute(CommandContext& context, const Input& inpu
         const auto firstVerify = std::ranges::find_if(
             m_questions, [](const AttributeQuestion& item) { return item.verify; });
         if (firstVerify == m_questions.end()) {
-            return finish(context, *m_point);
+            return finish(context, m_point.value_or(core::Vec2{}));
         }
         context.message("Verify attribute values");
         m_stage = Stage::Verify;
@@ -482,7 +483,7 @@ Status InsertCommand::handleAttribute(CommandContext& context, const Input& inpu
             ++m_question;
         }
         if (m_question == m_questions.size()) {
-            return finish(context, *m_point);
+            return finish(context, m_point.value_or(core::Vec2{}));
         }
     }
     return Status::Continue;
