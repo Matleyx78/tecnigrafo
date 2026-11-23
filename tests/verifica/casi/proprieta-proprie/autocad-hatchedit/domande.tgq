@@ -1,0 +1,14 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT23 / PT23 (#960). AutoCAD 2021 hatches from the immutable CC0 drawing.
+; Entity fields come from the ezdxf oracle and the ACAD 1010/1020 XDATA.
+D = DXF source=autocad-hatchedit
+; PT23 adds the nonzero origin field to HATCH reports and HATCH properties.
+? entity D CC -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 origin=245,5 islands=normal loop=external+derived+polyline vertex=300,40 vertex=240,40 vertex=240,0 vertex=300,0 loop=outermost+derived+polyline vertex=262,20 bulge=-1 vertex=278,20 bulge=-1 seed=245,5 seed=245,5
+? properties D CC -> pattern="ANSI31"; scale=1; angle=0; origin=245,5; islands=normal; ~area=2198.938070170253
+; Independent AutoCAD variants: scale, angle, island style and all changes.
+? properties D BE -> pattern="ANSI31"; scale=2; angle=0; origin=0,0; islands=normal; ~area=2198.938070170253
+? properties D C5 -> pattern="ANSI31"; scale=1; angle=30; origin=0,0; islands=normal; ~area=2198.938070170253
+? properties D D3 -> pattern="ANSI31"; scale=1; angle=0; origin=0,0; islands=outer; ~area=2198.938070170253
+? properties D DA -> pattern="ANSI37"; scale=2; angle=30; origin=405,5; islands=ignore; ~area=2400

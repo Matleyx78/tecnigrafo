@@ -616,6 +616,14 @@
       "sha256": "5b69493f63208ac85f9c3c97557e1aa537fe61bedc30f4e40047784fde85ea4b",
       "license": "CC0-1.0",
       "license-url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+    },
+    {
+      "name": "autocad-hatchedit",
+      "url": "https://raw.githubusercontent.com/Matleyx78/dxf-test-file/fd3bd8c5c6db0146ea8868b49e3e15b18ab293d1/autocad-hatchedit.dxf",
+      "version": "fd3bd8c5c6db0146ea8868b49e3e15b18ab293d1",
+      "sha256": "5b11e0d6eb2c863deff2c529f33c5ff7c3d8b932dc9f54719dfb2758221017eb",
+      "license": "CC0-1.0",
+      "license-url": "https://github.com/Matleyx78/dxf-test-file/blob/fd3bd8c5c6db0146ea8868b49e3e15b18ab293d1/LICENSE"
     }
   ]
 }

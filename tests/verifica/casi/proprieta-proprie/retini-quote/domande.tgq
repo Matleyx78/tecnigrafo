@@ -1,0 +1,30 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT23 / PT23 (#960). Expectations follow ADR 0047, ADR 0048 and direct
+; arithmetic. The filled area is 40*20 - pi*5^2. Pattern-family values are
+; the published acadiso.pat definitions used by predefinedPatternLines.
+; No Tecnigrafo executable was used to derive the expectations.
+
+H = HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5
+; PT23 implements HATCH properties and the pattern-lines question.
+? properties H -> pattern="ANSI31"; scale=1; angle=0; origin=0,0; islands=normal; ~area=721.4601836602552
+? pattern-lines H -> angle=45 origin=0,0 offset=-2.245064030267288,2.245064030267288 dashes=
+? set-property H origin=10,0 -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 origin=10,0 islands=normal loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5 | pattern="ANSI31"; scale=1; angle=0; origin=10,0; islands=normal; ~area=721.4601836602552
+? set-property H pattern="NET" -> HATCH pattern="NET" solid=no angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5 | pattern="NET"; scale=1; angle=0; origin=0,0; islands=normal; ~area=721.4601836602552
+? set-property H scale=2 -> HATCH pattern="ANSI31" solid=no angle=0 scale=2 islands=normal loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5 | pattern="ANSI31"; scale=2; angle=0; origin=0,0; islands=normal; ~area=721.4601836602552
+? set-property H angle=90 -> HATCH pattern="ANSI31" solid=no angle=90 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5 | pattern="ANSI31"; scale=1; angle=90; origin=0,0; islands=normal; ~area=721.4601836602552
+? set-property H islands=outer -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=outer loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5 | pattern="ANSI31"; scale=1; angle=0; origin=0,0; islands=outer; ~area=721.4601836602552
+? set-property H pattern="SOLID" -> HATCH pattern="SOLID" solid=yes angle=0 scale=1 islands=normal loop=external+polyline vertex=0,0 vertex=40,0 vertex=40,20 vertex=0,20 loop=outermost+edges circle=20,10;5 seed=5,5 | pattern="SOLID"; scale=1; angle=0; origin=0,0; islands=normal; ~area=721.4601836602552
+? set-property H pattern="ANSI37" -> invalid
+? set-property H pattern="NONESISTE" -> invalid
+? set-property H scale=0 -> invalid
+? set-property H scale=-1 -> invalid
+
+D = DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40
+? properties D -> style="ISO-25"; text=""; text-rotation=0; ~measurement=40
+? set-property D text="<> mm" -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 text="<> mm" | style="ISO-25"; text="<> mm"; text-rotation=0; ~measurement=40
+? set-property D text-rotation=90 -> DIMENSION kind=linear style="ISO-25" origin1=0,0 origin2=40,0 line-point=40,10 rotation=0 text-point=20,11.875 measurement=40 text-rotation=90 | style="ISO-25"; text=""; text-rotation=90; ~measurement=40
+
+Other = DIMENSION kind=other style="ISO-25" type=6 text-point=0,0 measurement=0 text="A"
+? set-property Other text="B" -> invalid
