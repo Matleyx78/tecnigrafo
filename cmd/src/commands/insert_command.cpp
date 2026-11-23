@@ -621,7 +621,8 @@ CommandDescription InsertCommand::description() {
              {"y-scale", "Enter Y scale factor <{default}>:", ValueType::Real, {}, true},
              {"z-scale", "Enter Z scale factor <{default}>:", ValueType::Real, {}, true},
              {"rotation", "Specify rotation angle <{default}>:", ValueType::Angle, {}, true},
-             {"attribute-value", "{default} <{default}>:", ValueType::Text, {}, true}}};
+             {"attribute-value", "{default} <{default}>:", ValueType::Text, {}, true},
+             {"attribute-value-empty", "{default} <>:", ValueType::Text, {}, true}}};
 }
 
 CommandDescription AttreqCommand::description() {
