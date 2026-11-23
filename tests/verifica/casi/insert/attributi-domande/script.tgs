@@ -1,0 +1,56 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -INSERT with ATTREQ 1, its value at start-up (0.8.1-PT17, #941; docs/adr/0056, point 3):
+; the three insertions of autocad-attributi, values typed, Enter at every prompt, values
+; typed again. The prompts follow the order of the definition, without the Constant
+; COSTRUTTORE and the Preset POSIZIONE, then the Verify TENSIONE again with the value given.
+; Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736 (CC0-1.0):
+; autocad-attributi.scr and autocad-attributi.txt (AutoCAD 2021, Italian, translated as
+; docs/adr/0056, point 3).
+; componente.dxf is handwritten, as the cases of insert/: block COMPONENTE with the six
+; ATTDEFs of autocad-attributi.dxf, same tags, prompts, defaults, modes, points, height and
+; order (SIGLA, POSIZIONE, TENSIONE, COSTRUTTORE, NOTA, CODICE), on layer 0 with style
+; Standard. Left out, because they change nothing in the prompts: the rectangle, the style
+; ARIAL of TENSIONE (a STYLE table would only add a line to the report) and the Lock
+; position of SIGLA (its second group 280 is 0: PT15, a later wave, writes lock-position
+; and lists no case to update).
+; ~box (docs/adr/0022): LiberationSans-Regular.ttf of resources/fonts, read with a small
+; reader of its head, hhea, OS/2, cmap and hmtx tables: cap height 1409, ascent 1854,
+; descent -434. An ATTDEF shows its tag; an ATTRIB is its ATTDEF moved by the insertion
+; point (docs/adr/0045, point 6; docs/adr/0031, point 2: both points move).
+OPEN
+componente.dxf
+; cambia con #941
+-INSERT
+COMPONENTE
+0,-40
+1
+
+0
+S10
+230V
+montaggio a quadro
+K10
+230V
+-INSERT
+COMPONENTE
+60,-40
+1
+
+0
+
+
+
+
+
+-INSERT
+COMPONENTE
+120,-40
+1
+
+0
+S30
+400V
+da cablare
+K30
+400V
