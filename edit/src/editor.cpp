@@ -96,6 +96,31 @@ bool Editor::replace(core::EntityId id, core::Entity entity) {
     return true;
 }
 
+bool Editor::replace(core::EntityId id, core::Entity entity, core::EntityExtras extras) {
+    assert(m_open && "replace() needs an open transaction");
+    const core::EntityRecord* previous = m_document.find(id);
+    if (previous == nullptr || (previous->entity == entity && previous->extras == extras)) {
+        return false;
+    }
+    const bool circleToArc = std::holds_alternative<core::Circle>(previous->entity) &&
+                             std::holds_alternative<core::Arc>(entity);
+    if (previous->entity.index() != entity.index() && !circleToArc) {
+        return false;
+    }
+    // The whole record is swapped through Document::remove() and restore(),
+    // which keep identifier, extras and order key: undo and redo put back
+    // geometry and extras together, as for setProperties().
+    core::EntityRecord next = *previous;
+    next.entity = std::move(entity);
+    next.extras = std::move(extras);
+    Change change;
+    change.kind = Change::Kind::Properties;
+    change.data = std::move(next);
+    swapUpdate(change);
+    m_open->changes.push_back(std::move(change));
+    return true;
+}
+
 std::optional<core::EntityId> Editor::addCopy(core::EntityId source, core::Entity entity) {
     assert(m_open && "addCopy() needs an open transaction");
     const core::EntityRecord* original = m_document.find(source);

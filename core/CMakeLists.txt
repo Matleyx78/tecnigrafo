@@ -19,6 +19,10 @@ add_library(tg_core
     src/dimension_radial.cpp
     src/dimension_text.cpp
     src/ellipse.cpp
+    src/entity_properties.cpp
+    src/entity_properties_annotations.cpp
+    src/entity_properties_shapes.cpp
+    src/entity_properties_texts.cpp
     src/explode.cpp
     src/generated.cpp
     src/hatch.cpp

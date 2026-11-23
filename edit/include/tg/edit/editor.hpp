@@ -60,6 +60,13 @@ public:
     /// Precondition: a transaction is open.
     bool replace(core::EntityId id, core::Entity entity);
 
+    /// Replaces geometry and extras together, as one change of the open
+    /// transaction: undo and redo restore both. Keeps identifier, handle, order
+    /// and properties. False when the entity does not exist, when both are
+    /// equal to the current ones, or when the type would change (as replace()).
+    /// Precondition: a transaction is open.
+    bool replace(core::EntityId id, core::Entity entity, core::EntityExtras extras);
+
     /// Adds a derived entity with new identity/order and the source's properties
     /// and extras, except complete 102 groups in beforeEntity (ADR 0031, point 6).
     /// Returns nullopt without changes if source does not exist.
