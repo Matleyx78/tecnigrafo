@@ -1,0 +1,36 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: LINE
+  Specify first point: 0,0
+  Specify next point or [Undo]: 10,0
+  Specify next point or [Undo]:
+  Command: CIRCLE
+  Specify center point for circle or [3P/2P/Ttr (tan tan radius)]: 30,0
+  Specify radius of circle or [Diameter]: 5
+  Command: -BLOCK
+  Enter block name or [?]: Pezzo
+  Specify insertion base point: 0,0
+  Select objects: ALL
+  2 found, 2 total
+  Select objects:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Line
+  Circle
+  Block
+redo:
+snap: on
+ortho: off
+blocks:
+  "Pezzo" base=0,0
+  "Pezzo" 258 CIRCLE center=30,0 radius=5
+  "Pezzo" 257 LINE start=0,0 end=10,0
+pointer: none
+active snap: none
+statistics:

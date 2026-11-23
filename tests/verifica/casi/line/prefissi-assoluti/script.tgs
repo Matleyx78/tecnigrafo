@@ -1,0 +1,12 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; # and * are absolute coordinate prefixes on the command line (PT34, #949).
+LINE
+3,4
+; cambia con #949
+#10,10
+
+LINE
+3,4
+*10,10
+
