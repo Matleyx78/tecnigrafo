@@ -65,8 +65,9 @@ TEST_F(MTextCommandTest, EditorRequestKeepsEnteredLinesOnlyInShownMtext) {
     submit({"MTEXT", "0,0", "20,-10", "line one"});
     const auto request = runner().textEditing();
     ASSERT_TRUE(request);
-    EXPECT_TRUE(request->value.empty());
-    EXPECT_EQ(std::get<core::MText>(request->shown).value, "line one");
+    const TextEditRequest edit = request.value_or(TextEditRequest{});
+    EXPECT_TRUE(edit.value.empty());
+    EXPECT_EQ(std::get<core::MText>(edit.shown).value, "line one");
     runner().submit(CancelInput{});
 }
 

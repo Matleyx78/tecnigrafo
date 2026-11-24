@@ -133,7 +133,7 @@ TEST_F(TexteditCommandTest, InvalidAttributeTagRepeatsItsPrompt) {
 }
 
 TEST_F(TexteditCommandTest, InsertAttributesNeverExposeTheEditorRequest) {
-    document().replaceBlock("ATTRS", core::BlockDefinition{"ATTRS"});
+    document().replaceBlock("ATTRS", core::BlockDefinition{.name = "ATTRS"});
     core::Insert insert;
     insert.block = "ATTRS";
     core::Attribute attribute;
@@ -204,10 +204,11 @@ TEST_F(TexteditCommandTest, MtextRequestCarriesShownEntityAndEmptyValueIsKept) {
     submit({"TEXTEDIT", "0,0"});
     const auto request = runner().textEditing();
     ASSERT_TRUE(request);
-    EXPECT_EQ(request->target, id);
-    EXPECT_EQ(request->value, "PROVA");
-    EXPECT_EQ(std::get<core::MText>(request->shown).value, "PROVA");
-    EXPECT_FALSE(request->measurement);
+    const TextEditRequest edit = request.value_or(TextEditRequest{});
+    EXPECT_EQ(edit.target, id);
+    EXPECT_EQ(edit.value, "PROVA");
+    EXPECT_EQ(std::get<core::MText>(edit.shown).value, "PROVA");
+    EXPECT_FALSE(edit.measurement);
     const std::size_t undoSteps = editor().undoNames().size();
     runner().submit(TextInput{""});
     EXPECT_EQ(std::get<core::MText>(entity(id)).value, "PROVA");
@@ -229,10 +230,11 @@ TEST_F(TexteditCommandTest, LinearDimensionRequestSeparatesShownAndReplacementTe
     runner().click(textPoint, PickAction::Add);
     const auto request = runner().textEditing();
     ASSERT_TRUE(request);
-    EXPECT_EQ(request->target, id);
-    EXPECT_EQ(request->value, "<> mm");
-    EXPECT_EQ(request->measurement, "30");
-    EXPECT_EQ(std::get<core::MText>(request->shown).value, "30 mm");
+    const TextEditRequest edit = request.value_or(TextEditRequest{});
+    EXPECT_EQ(edit.target, id);
+    EXPECT_EQ(edit.value, "<> mm");
+    EXPECT_EQ(edit.measurement, "30");
+    EXPECT_EQ(std::get<core::MText>(edit.shown).value, "30 mm");
 
     runner().submit(ConfirmInput{});
     EXPECT_EQ(std::get<core::Dimension>(entity(id)).presentation.textOverride, "<> mm");
@@ -259,9 +261,10 @@ TEST_F(TexteditCommandTest, AngularDimensionMeasurementIsFormattedInDegrees) {
     runner().click(made.presentation.textPoint, PickAction::Add);
     const auto request = runner().textEditing();
     ASSERT_TRUE(request);
+    const TextEditRequest edit = request.value_or(TextEditRequest{});
     const auto variables = core::dimensionVariables(document().dimStyles(), made.presentation.style,
                                                     made.presentation.overrides);
-    EXPECT_EQ(request->measurement,
+    EXPECT_EQ(edit.measurement,
               core::dimensionText(variables, core::DimensionKind::Angular, 90.0, "<>"));
     runner().submit(CancelInput{});
 }

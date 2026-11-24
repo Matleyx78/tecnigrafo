@@ -101,8 +101,8 @@ TEST_F(DimensionAngularCommandsTest, AngularTextDefaultUsesStoredLineDirections)
 }
 
 TEST_F(DimensionAngularCommandsTest, AngularMtextExposesItsEditorRequest) {
-    add(core::Line{{0.0, 0.0}, {40.0, 0.0}});
-    add(core::Line{{0.0, 0.0}, {0.0, 40.0}});
+    add(core::Line{.start = {0.0, 0.0}, .end = {40.0, 0.0}});
+    add(core::Line{.start = {0.0, 0.0}, .end = {0.0, 40.0}});
     runner().submitText("DIMANGULAR");
     runner().click({20.0, 0.0}, PickAction::Add);
     runner().click({0.0, 20.0}, PickAction::Add);
@@ -111,15 +111,16 @@ TEST_F(DimensionAngularCommandsTest, AngularMtextExposesItsEditorRequest) {
 
     const auto request = runner().textEditing();
     ASSERT_TRUE(request);
-    EXPECT_FALSE(request->target);
-    EXPECT_EQ(request->value, "<>");
-    EXPECT_TRUE(request->measurement);
-    EXPECT_TRUE(std::holds_alternative<core::MText>(request->shown));
+    const TextEditRequest edit = request.value_or(TextEditRequest{});
+    EXPECT_FALSE(edit.target);
+    EXPECT_EQ(edit.value, "<>");
+    EXPECT_TRUE(edit.measurement);
+    EXPECT_TRUE(std::holds_alternative<core::MText>(edit.shown));
     runner().submit(CancelInput{});
 }
 
 TEST_F(DimensionAngularCommandsTest, RadialMtextExposesRadiusAndDiameterRequests) {
-    add(core::Circle{{0.0, 0.0}, 10.0});
+    add(core::Circle{.center = {0.0, 0.0}, .radius = 10.0});
     for (const char* command : {"DIMRADIUS", "DIMDIAMETER"}) {
         runner().submitText(command);
         runner().click({10.0, 0.0}, PickAction::Add);
@@ -127,10 +128,11 @@ TEST_F(DimensionAngularCommandsTest, RadialMtextExposesRadiusAndDiameterRequests
         runner().submitText("Mtext");
         const auto request = runner().textEditing();
         ASSERT_TRUE(request);
-        EXPECT_FALSE(request->target);
-        EXPECT_EQ(request->value, "<>");
-        EXPECT_TRUE(request->measurement);
-        EXPECT_TRUE(std::holds_alternative<core::MText>(request->shown));
+        const TextEditRequest edit = request.value_or(TextEditRequest{});
+        EXPECT_FALSE(edit.target);
+        EXPECT_EQ(edit.value, "<>");
+        EXPECT_TRUE(edit.measurement);
+        EXPECT_TRUE(std::holds_alternative<core::MText>(edit.shown));
         runner().submit(CancelInput{});
     }
 }

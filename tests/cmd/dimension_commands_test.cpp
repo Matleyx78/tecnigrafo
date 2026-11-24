@@ -78,18 +78,20 @@ TEST_F(DimensionCommandsTest, LinearAndAlignedMtextExposeTheirEditorRequests) {
         runner().submitText("Mtext");
         const auto request = runner().textEditing();
         ASSERT_TRUE(request);
-        EXPECT_FALSE(request->target);
-        EXPECT_EQ(request->value, "<>");
-        EXPECT_TRUE(request->measurement);
-        EXPECT_TRUE(std::holds_alternative<core::MText>(request->shown));
+        const TextEditRequest edit = request.value_or(TextEditRequest{});
+        EXPECT_FALSE(edit.target);
+        EXPECT_EQ(edit.value, "<>");
+        EXPECT_TRUE(edit.measurement);
+        EXPECT_TRUE(std::holds_alternative<core::MText>(edit.shown));
 
         runner().submit(TextInput{"FIXED"});
         runner().pointerMoved({15.0, 10.0});
         runner().submitText("Mtext");
         const auto fixedRequest = runner().textEditing();
         ASSERT_TRUE(fixedRequest);
-        EXPECT_EQ(fixedRequest->value, "FIXED");
-        EXPECT_TRUE(fixedRequest->measurement);
+        const TextEditRequest fixedEdit = fixedRequest.value_or(TextEditRequest{});
+        EXPECT_EQ(fixedEdit.value, "FIXED");
+        EXPECT_TRUE(fixedEdit.measurement);
         runner().submit(CancelInput{});
     }
 }
