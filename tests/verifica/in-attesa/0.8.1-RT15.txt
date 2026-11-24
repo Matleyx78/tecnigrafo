@@ -1,1 +1,2 @@
 dxf-blocchi/posizione-bloccata-attrib #951
+dxf-blocchi/attributi-extra-seqend #951
