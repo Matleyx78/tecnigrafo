@@ -2,21 +2,28 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 // The BLOCKS section and the BLOCK_RECORD table (docs/tappe/0.8,
-// PT18-blocchi-dxf.md, "Test richiesti").
+// PT18-blocchi-dxf.md, "Test richiesti"), and the locked position of the
+// attributes of a block (docs/tappe/0.8.1/PT15-attributi-core.md).
 
 #include "dxf_entities.hpp"
+#include "tg/core/attribute_definition.hpp"
+#include "tg/core/document.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/line.hpp"
+#include "tg/core/text.hpp"
 #include "tg/io/dxf_groups.hpp"
 #include "tg/io/io.hpp"
 
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace tg::io {
@@ -137,6 +144,12 @@ Groups rewritten(std::string_view text) {
         return {};
     }
     auto written = writeDxf(read.value().document, DxfVersion::R2018);
+    return written.ok() ? groupsOf(written.value()) : Groups{};
+}
+
+/// The groups of `document` as written.
+Groups rewritten(const core::Document& document) {
+    auto written = writeDxf(document, DxfVersion::R2018);
     return written.ok() ? groupsOf(written.value()) : Groups{};
 }
 
@@ -397,6 +410,226 @@ TEST(DxfBlocks, AUnitCodeOutsideTheTableIsReadAndWrittenAsItIs) {
     EXPECT_EQ(read.value().document.entityCount(), 1U);
     EXPECT_TRUE(read.value().report.unhandled.empty());
     EXPECT_EQ(valueOf(rewritten(text), "BLOCK_RECORD", "U25", 70), "25");
+}
+
+/// The values of the groups 280 of the subclass `marker` of the first
+/// entity `type` of `groups`, in order.
+std::vector<std::string> subclass280(const Groups& groups, std::string_view type,
+                                     std::string_view marker) {
+    std::vector<std::string> values;
+    const auto start = std::ranges::find(groups, core::RawGroup{0, std::string{type}});
+    bool inside = false;
+    for (auto it = start == groups.end() ? start : start + 1; it != groups.end() && it->code != 0;
+         ++it) {
+        if (it->code == 100) {
+            inside = it->value == marker;
+        } else if (inside && it->code == 280) {
+            values.push_back(it->value);
+        }
+    }
+    return values;
+}
+
+/// The groups of the subclass `marker` of the first entity `type` of
+/// `groups`, up to the next marker or entity.
+Groups subclassOf(const Groups& groups, std::string_view type, std::string_view marker) {
+    Groups out;
+    const auto start = std::ranges::find(groups, core::RawGroup{0, std::string{type}});
+    bool inside = false;
+    for (auto it = start == groups.end() ? start : start + 1; it != groups.end() && it->code != 0;
+         ++it) {
+        if (it->code == 100) {
+            inside = it->value == marker;
+        }
+        if (inside) {
+            out.push_back(*it);
+        }
+    }
+    return out;
+}
+
+/// An ATTDEF as AutoCAD 2021 writes it (autocad-attributi.dxf): the version
+/// 0 after the marker and, when `lock` is given, the locked position last.
+Groups attdef(std::string_view handle, std::string_view owner,
+              std::optional<std::string_view> lock) {
+    Groups out{{0, "ATTDEF"},
+               {5, std::string{handle}},
+               {330, std::string{owner}},
+               {100, "AcDbEntity"},
+               {8, "0"},
+               {100, "AcDbText"},
+               {10, "2.0"},
+               {20, "4.0"},
+               {30, "0.0"},
+               {40, "2.5"},
+               {1, "S1"},
+               {100, "AcDbAttributeDefinition"},
+               {280, "     0"},
+               {3, "Sigla"},
+               {2, "SIGLA"},
+               {70, "     0"}};
+    if (lock) {
+        out.push_back({280, std::string{*lock}});
+    }
+    return out;
+}
+
+/// An ATTRIB of the insert `owner`, as attdef().
+Groups attrib(std::string_view handle, std::string_view owner,
+              std::optional<std::string_view> lock) {
+    Groups out{{0, "ATTRIB"},
+               {5, std::string{handle}},
+               {330, std::string{owner}},
+               {100, "AcDbEntity"},
+               {8, "0"},
+               {100, "AcDbText"},
+               {10, "12.0"},
+               {20, "24.0"},
+               {30, "0.0"},
+               {40, "2.5"},
+               {1, "S10"},
+               {100, "AcDbAttribute"},
+               {280, "     0"},
+               {2, "SIGLA"},
+               {70, "     0"}};
+    if (lock) {
+        out.push_back({280, std::string{*lock}});
+    }
+    return out;
+}
+
+/// The block SYM (record 40) with `definition`, and an insert of it with
+/// `attribute` and its SEQEND.
+std::string drawingWithAttribute(const Groups& definition, const Groups& attribute) {
+    Groups entities = insert("100", "20", "SYM");
+    entities.insert(entities.begin() + 6, {66, "     1"});
+    append(entities, attribute);
+    append(entities, {{0, "SEQEND"}, {5, "102"}, {330, "100"}, {100, "AcDbEntity"}, {8, "0"}});
+    return drawing(record("40", "SYM"), block("41", "40", "SYM", 2, definition, "43"), entities);
+}
+
+const core::AttributeDefinition& definitionIn(const core::Document& document) {
+    return std::get<core::AttributeDefinition>(
+        document.blocks().find("SYM")->entities.front().entity);
+}
+
+const core::Attribute& attributeIn(const core::Document& document) {
+    return std::get<core::Insert>(document.entities().front().entity).attributes.front();
+}
+
+TEST(DxfBlocks, ALockedAttdefAndAttribAreReadAndWrittenBackAsRead) {
+    // docs/adr/0056, point 1: the second group 280 is the locked position.
+    const std::string text =
+        drawingWithAttribute(attdef("42", "40", "     1"), attrib("101", "100", "     1"));
+    const auto read = readDxf(text);
+    ASSERT_TRUE(read.ok());
+    const auto& document = read.value().document;
+    EXPECT_TRUE(read.value().report.unhandled.empty());
+    EXPECT_TRUE(definitionIn(document).lockPosition);
+    EXPECT_TRUE(attributeIn(document).lockPosition);
+    EXPECT_EQ(rewritten(text), groupsOf(text));
+
+    // A second 280 = 0 is not locked, and is written back as read.
+    const std::string open =
+        drawingWithAttribute(attdef("42", "40", "     0"), attrib("101", "100", "     0"));
+    const auto unlocked = readDxf(open);
+    ASSERT_TRUE(unlocked.ok());
+    EXPECT_FALSE(definitionIn(unlocked.value().document).lockPosition);
+    EXPECT_FALSE(attributeIn(unlocked.value().document).lockPosition);
+    EXPECT_EQ(rewritten(open), groupsOf(open));
+}
+
+TEST(DxfBlocks, AnAttributeWithTheVersionAloneIsNotLockedUntilTurnedOn) {
+    // The verbale of the revision of PT5, [bloccante] 4: a lone 280 is the
+    // version; turning the locked position on adds the second right after it.
+    const std::string text =
+        drawingWithAttribute(attdef("42", "40", std::nullopt), attrib("101", "100", std::nullopt));
+    auto read = readDxf(text);
+    ASSERT_TRUE(read.ok());
+    auto& document = read.value().document;
+    EXPECT_FALSE(definitionIn(document).lockPosition);
+    EXPECT_FALSE(attributeIn(document).lockPosition);
+    EXPECT_EQ(rewritten(text), groupsOf(text));
+
+    core::BlockDefinition locked = *document.blocks().find("SYM");
+    std::get<core::AttributeDefinition>(locked.entities.front().entity).lockPosition = true;
+    document.replaceBlock("SYM", std::move(locked));
+    core::EntityRecord insertRecord = document.entities().front();
+    std::get<core::Insert>(insertRecord.entity).attributes.front().lockPosition = true;
+    document.replaceEntity(insertRecord.id, insertRecord.entity);
+
+    const Groups groups = rewritten(document);
+    Groups expected = groupsOf(text);
+    for (const std::string_view type : {"ATTDEF", "ATTRIB"}) {
+        const auto start = std::ranges::find(expected, core::RawGroup{0, std::string{type}});
+        const auto version = std::find(start, expected.end(), core::RawGroup{280, "     0"});
+        ASSERT_NE(version, expected.end());
+        expected.insert(version + 1, {280, "1"});
+    }
+    EXPECT_EQ(groups, expected);
+
+    const auto again = readDxf(writeDxf(document, DxfVersion::R2018).value());
+    ASSERT_TRUE(again.ok());
+    EXPECT_TRUE(definitionIn(again.value().document).lockPosition);
+    EXPECT_TRUE(attributeIn(again.value().document).lockPosition);
+}
+
+TEST(DxfBlocks, ANewLockedAttdefAndItsAttribWriteTheVersionThenTheLock) {
+    // A record without groups read writes the version 0 and then, when
+    // locked, the locked position 1: a lone 280 = 1 is never read again as
+    // the version (docs/tappe/0.8.1/PT15-attributi-core.md, point 1).
+    for (const bool lock : {true, false}) {
+        SCOPED_TRACE(lock ? "locked" : "not locked");
+        core::Document document = core::Document::newDrawing();
+        core::Text text;
+        text.position = {2, 4};
+        text.height = 2.5;
+        text.value = "S1";
+        core::AttributeDefinition definition;
+        definition.text = text;
+        definition.tag = "SIGLA";
+        definition.prompt = "Sigla";
+        definition.lockPosition = lock;
+        core::BlockDefinition block{"SYM"};
+        core::EntityRecord member{core::EntityId{}, definition};
+        member.properties.layer = document.layerZero();
+        member.properties.linetype = document.byLayerLinetype();
+        block.entities.push_back(member);
+        document.replaceBlock("SYM", std::move(block));
+        core::Insert insert;
+        insert.block = "SYM";
+        insert.insertion = {10, 20};
+        insert.attributes = core::defaultAttributes(document, insert);
+        ASSERT_EQ(insert.attributes.size(), 1U);
+        EXPECT_EQ(insert.attributes.front().lockPosition, lock);
+        insert.attributes.front().id = core::EntityId{document.nextId()};
+        document.reserveHandle(insert.attributes.front().id);
+        document.add(insert);
+
+        const Groups groups = rewritten(document);
+        const std::vector<std::string> expected =
+            lock ? std::vector<std::string>{"0", "1"} : std::vector<std::string>{"0"};
+        EXPECT_EQ(subclass280(groups, "ATTDEF", "AcDbAttributeDefinition"), expected);
+        EXPECT_EQ(subclass280(groups, "ATTRIB", "AcDbAttribute"), expected);
+        // The two groups 280 come first, right after the marker.
+        const Groups definitionGroups = subclassOf(groups, "ATTDEF", "AcDbAttributeDefinition");
+        ASSERT_GE(definitionGroups.size(), 3U);
+        EXPECT_EQ(definitionGroups[1], (core::RawGroup{280, "0"}));
+        if (lock) {
+            EXPECT_EQ(definitionGroups[2], (core::RawGroup{280, "1"}));
+        }
+        const Groups attributeGroups = subclassOf(groups, "ATTRIB", "AcDbAttribute");
+        ASSERT_GE(attributeGroups.size(), 3U);
+        EXPECT_EQ(attributeGroups[1], (core::RawGroup{280, "0"}));
+        if (lock) {
+            EXPECT_EQ(attributeGroups[2], (core::RawGroup{280, "1"}));
+        }
+
+        const auto again = readDxf(writeDxf(document, DxfVersion::R2018).value());
+        ASSERT_TRUE(again.ok());
+        EXPECT_EQ(definitionIn(again.value().document).lockPosition, lock);
+        EXPECT_EQ(attributeIn(again.value().document).lockPosition, lock);
+    }
 }
 
 }  // namespace

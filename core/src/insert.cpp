@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -88,24 +89,39 @@ bool isShown(const Document& document, const Attribute& attribute) {
 /// Appends the ATTRIBs of `insert`, shown with `shown` through `state`, as
 /// texts mapped by `outer`, the map of the block that holds the insert
 /// (std::nullopt for an insert of the drawing: they are in its coordinates).
+/// The properties `attribute` is drawn with, for an insert shown with
+/// `shown` through `state`: std::nullopt on a frozen layer, which generates
+/// nothing; `visible` false when it is not drawn (a layer that is off,
+/// ATTDISP). The one rule of drawing, selection and pickAttribute().
+std::optional<EffectiveProperties> attributeProperties(const Document& document,
+                                                       const Attribute& attribute,
+                                                       const EntityProperties& shown,
+                                                       const LayerState& state) {
+    const EntityProperties properties = propertiesInBlock(document, shown, attribute.properties);
+    const LayerState layers = layerState(document, properties, state);
+    if (layers.frozen) {
+        return std::nullopt;
+    }
+    EffectiveProperties effective = effectiveProperties(document, properties);
+    effective.visible = effective.visible && layers.on && isShown(document, attribute);
+    return effective;
+}
+
 void appendAttributeItems(const Document& document, const Insert& insert,
                           const std::optional<Transform2D>& outer, const EntityProperties& shown,
                           const LayerState& state, std::vector<GeneratedItem>& out) {
     for (const Attribute& attribute : insert.attributes) {
-        const EntityProperties properties =
-            propertiesInBlock(document, shown, attribute.properties);
-        const LayerState layers = layerState(document, properties, state);
-        if (layers.frozen) {
+        const std::optional<EffectiveProperties> effective =
+            attributeProperties(document, attribute, shown, state);
+        if (!effective) {
             continue;
         }
-        EffectiveProperties effective = effectiveProperties(document, properties);
-        effective.visible = effective.visible && layers.on && isShown(document, attribute);
         if (!outer) {
-            out.push_back(GeneratedItem{attribute.text, effective});
+            out.push_back(GeneratedItem{attribute.text, *effective});
             continue;
         }
         for (GeneratedShape& shape : transformedShape(attribute.text, *outer)) {
-            out.push_back(GeneratedItem{std::move(shape), effective});
+            out.push_back(GeneratedItem{std::move(shape), *effective});
         }
     }
 }
@@ -188,11 +204,9 @@ void appendBlockItems(const Document& document, const Insert& insert, const Enti
     }
 }
 
-// The group of the flags of an ATTRIB, and that of its locked position
-// (Attribute; docs/DECISIONI.md, 2026-11-14, "Revisione delle interfacce
-// PT4", P21).
+// The group of the flags of an ATTRIB (Attribute; docs/DECISIONI.md,
+// 2026-11-14, "Revisione delle interfacce PT4", P21).
 constexpr std::int16_t kFlagsCode = 70;
-constexpr std::int16_t kLockedPositionCode = 280;
 constexpr int kInvisibleBit = 1;
 constexpr int kVerifyBit = 4;
 constexpr int kPresetBit = 8;
@@ -212,6 +226,71 @@ std::optional<int> flagsValue(std::string_view text) {
         return std::nullopt;
     }
     return value;
+}
+
+/// The whole value of the flags of an ATTRIB with `flags`: invisible,
+/// verify and preset (never constant).
+int attributeFlagsValue(const AttributeFlags& flags) {
+    return (flags.invisible ? kInvisibleBit : 0) | (flags.verify ? kVerifyBit : 0) |
+           (flags.preset ? kPresetBit : 0);
+}
+
+/// The ATTRIB that `definition`, an ATTDEF of the block of an insert, gives
+/// it with ATTREQ = 0 (defaultAttributes()): placed by `map`, the insert's
+/// transform, with the default value and id 0.
+Attribute defaultAttribute(const EntityRecord& record, const AttributeDefinition& definition,
+                           const Transform2D& map) {
+    Attribute attribute;
+    attribute.text = transformedText(definition.text, map);
+    attribute.text.value = definition.text.value;
+    attribute.tag = definition.tag;
+    attribute.invisible = definition.flags.invisible;
+    attribute.lockPosition = definition.lockPosition;
+    attribute.properties = record.properties;
+    if (definition.flags.verify || definition.flags.preset) {
+        attribute.extras.specific.push_back(
+            {kFlagsCode, std::to_string(attributeFlagsValue(definition.flags))});
+    }
+    return attribute;
+}
+
+/// The ATTDEFs of `block` that give an ATTRIB: not constant and supported,
+/// in order.
+std::vector<std::pair<const EntityRecord*, const AttributeDefinition*>> variableDefinitions(
+    const BlockDefinition& block) {
+    std::vector<std::pair<const EntityRecord*, const AttributeDefinition*>> definitions;
+    for (const EntityRecord& record : block.entities) {
+        const auto* definition = std::get_if<AttributeDefinition>(&record.entity);
+        if (definition != nullptr && !definition->flags.constant && supported(*definition)) {
+            definitions.emplace_back(&record, definition);
+        }
+    }
+    return definitions;
+}
+
+/// Sets the bits invisible, verify and preset of every group 70 of
+/// `specific` that attributeFlags() reads to those of `flags`, the other bits
+/// kept; without such a group, one is appended when verify or preset is on.
+void setFlagsGroups(RawGroups& specific, const AttributeFlags& flags) {
+    constexpr int kModelBits = kInvisibleBit | kVerifyBit | kPresetBit;
+    bool found = false;
+    for (RawGroup& group : specific) {
+        if (group.code != kFlagsCode) {
+            continue;
+        }
+        const std::optional<int> value = flagsValue(group.value);
+        if (!value) {
+            continue;
+        }
+        found = true;
+        const int updated = (*value & ~kModelBits) | attributeFlagsValue(flags);
+        if (updated != *value) {
+            group.value = std::to_string(updated);
+        }
+    }
+    if (!found && (flags.verify || flags.preset)) {
+        specific.push_back({kFlagsCode, std::to_string(attributeFlagsValue(flags))});
+    }
 }
 
 /// The constant ATTDEF of a block, placed in the drawing by `map`.
@@ -296,31 +375,86 @@ std::vector<Attribute> defaultAttributes(const Document& document, const Insert&
         return attributes;
     }
     const Transform2D map = insertTransform(document, insert);
-    for (const EntityRecord& record : block->entities) {
-        const auto* definition = std::get_if<AttributeDefinition>(&record.entity);
-        if (definition == nullptr || definition->flags.constant || !supported(*definition)) {
-            continue;
-        }
-        Attribute attribute;
-        attribute.text = transformedText(definition->text, map);
-        attribute.text.value = definition->text.value;
-        attribute.tag = definition->tag;
-        attribute.invisible = definition->flags.invisible;
-        attribute.properties = record.properties;
-        if (definition->flags.verify || definition->flags.preset) {
-            const int flags = (definition->flags.invisible ? kInvisibleBit : 0) |
-                              (definition->flags.verify ? kVerifyBit : 0) |
-                              (definition->flags.preset ? kPresetBit : 0);
-            attribute.extras.specific.push_back({kFlagsCode, std::to_string(flags)});
-        }
-        for (const RawGroup& group : record.extras.specific) {
-            if (group.code == kLockedPositionCode) {
-                attribute.extras.specific.push_back(group);
-            }
-        }
-        attributes.push_back(std::move(attribute));
+    for (const auto& [record, definition] : variableDefinitions(*block)) {
+        attributes.push_back(defaultAttribute(*record, *definition, map));
     }
     return attributes;
+}
+
+std::vector<Attribute> synchronizedAttributes(const Document& document, const Insert& insert) {
+    const BlockDefinition* block = document.blocks().find(insert.block);
+    if (block == nullptr) {
+        return insert.attributes;
+    }
+    const Transform2D map = insertTransform(document, insert);
+    std::vector<bool> taken(insert.attributes.size(), false);
+    std::vector<Attribute> attributes;
+    for (const auto& [record, definition] : variableDefinitions(*block)) {
+        Attribute fresh = defaultAttribute(*record, *definition, map);
+        std::size_t index = 0;
+        while (index < insert.attributes.size() &&
+               (taken[index] || !sameTableName(insert.attributes[index].tag, definition->tag))) {
+            ++index;
+        }
+        if (index == insert.attributes.size()) {
+            attributes.push_back(std::move(fresh));
+            continue;
+        }
+        taken[index] = true;
+        Attribute kept = insert.attributes[index];
+        fresh.text.value = std::move(kept.text.value);
+        kept.text = std::move(fresh.text);
+        kept.tag = std::move(fresh.tag);
+        kept.invisible = fresh.invisible;
+        kept.lockPosition = fresh.lockPosition;
+        kept.properties = fresh.properties;
+        setFlagsGroups(kept.extras.specific, definition->flags);
+        attributes.push_back(std::move(kept));
+    }
+    return attributes;
+}
+
+std::optional<AttributePick> pickAttribute(
+    const Document& document, const Vec2& point, double tolerance,
+    const std::function<bool(const Insert&, const Attribute&)>& accept) {
+    assert(tolerance >= 0.0);
+    std::optional<AttributePick> picked;
+    double best = 0.0;
+    for (const EntityRecord& record : document.entities()) {
+        const auto* insert = std::get_if<Insert>(&record.entity);
+        if (insert == nullptr || !supported(*insert)) {
+            continue;
+        }
+        const LayerState state = layerState(document, record.properties);
+        if (state.frozen) {
+            continue;
+        }
+        for (std::size_t index = 0; index < insert->attributes.size(); ++index) {
+            const Attribute& attribute = insert->attributes[index];
+            if (accept && !accept(*insert, attribute)) {
+                continue;
+            }
+            const std::optional<EffectiveProperties> effective =
+                attributeProperties(document, attribute, record.properties, state);
+            if (!effective || !effective->visible) {
+                continue;
+            }
+            const GeneratedItem item{attribute.text, *effective};
+            const double distance = distanceToDrawnItems({&item, 1}, point);
+            if (distance > tolerance) {
+                continue;
+            }
+            const bool beats =
+                !picked || distance < best ||
+                (distance == best && (record.id.value > picked->insert.value ||
+                                      (record.id == picked->insert && index < picked->index)));
+            if (beats) {
+                picked = AttributePick{record.id, index};
+                best = distance;
+            }
+        }
+    }
+    return picked;
 }
 
 std::vector<PlacedAttribute> attributesOf(const Document& document, const Insert& insert) {

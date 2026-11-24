@@ -194,6 +194,46 @@ def managed(entity, model_owner):
     return kind != "LWPOLYLINE" or len(entity) > 0
 
 
+ATTRIBUTE_MARKERS = {"ATTDEF": "AcDbAttributeDefinition", "ATTRIB": "AcDbAttribute"}
+
+
+def locked_position(tags):
+    """True when the second own group 280 of the attribute subclass is 1.
+
+    The first one is the version, the second the locked position (ADR 0056,
+    point 1): a record with one group 280 is not locked.  Read from the raw
+    tags, because ezdxf keeps only the last group 280 as lock_position.
+    """
+    marker = ATTRIBUTE_MARKERS.get(tags[0].value)
+    if marker is None:
+        return False
+    values = []
+    inside = False
+    depth = 0
+    for tag in tags[1:]:
+        if tag.code == 1001:
+            break
+        if tag.code == 102:
+            value = str(tag.value).strip()
+            if value.startswith("{"):
+                depth += 1
+            elif value == "}" and depth:
+                depth -= 1
+            continue
+        if depth:
+            continue
+        if tag.code == 100:
+            inside = str(tag.value).strip() == marker
+        elif inside and tag.code == 280:
+            values.append(tag.value)
+    if len(values) < 2:
+        return False
+    try:
+        return int(str(values[1]).strip()) == 1
+    except ValueError:
+        return False
+
+
 def text_fields(d):
     alignment = d.get("align_point", (0, 0, 0))
     return [f"position={point(d.insert)}", f"alignment-point={point(alignment)}",
@@ -232,7 +272,8 @@ def hatch_loop(path):
     return fields
 
 
-def entity_answer(entity, layer_names=None, linetype_names=None, properties=True, owner=None):
+def entity_answer(entity, layer_names=None, linetype_names=None, properties=True, owner=None,
+                  locked=False):
     d = entity.dxf
     kind = entity.dxftype()
     fields = [kind]
@@ -300,6 +341,7 @@ def entity_answer(entity, layer_names=None, linetype_names=None, properties=True
         flags = d.get("flags", 0)
         for bit, name in ((1, "invisible"), (2, "constant"), (4, "verify"), (8, "preset")):
             if flags & bit and (kind == "ATTDEF" or name == "invisible"): add(name, "yes")
+        if locked: add("lock-position", "yes")
         if kind == "ATTRIB":
             alignment = d.get("align_point", (0, 0, 0))
             optional("z", d.insert.z)
@@ -404,6 +446,15 @@ class DrawingAnswers:
                 self.active_viewport = self.document.viewports.get("*Active")[0].dxf
         self.layer_names = {entry.dxf.name.casefold(): entry.dxf.name for entry in self.layers}
         self.linetype_names = {entry.dxf.name.casefold(): entry.dxf.name for entry in self.linetypes}
+        # Handles of the ATTDEFs and ATTRIBs whose position is locked, in the
+        # drawing and in the block definitions.
+        self.locked_positions = {
+            str(handle.value).upper()
+            for section in ("ENTITIES", "BLOCKS")
+            for tags in sections.get(section, [])[1:]
+            if locked_position(tags)
+            for handle in tags if handle.code == 5
+        }
         self.entities = {}
         self.bound_entities = self.document.entitydb
         # Block definitions, linked vertices/attributes and sequence terminators
@@ -506,7 +557,9 @@ class DrawingAnswers:
                 rows.append(head)
                 for entity in block:
                     if entity.dxftype() not in {"ATTRIB", "SEQEND"}:
-                        rows.append(f"{quoted(block.name)} {entity.dxf.handle} {entity_answer(entity)}")
+                        locked = entity.dxf.get("handle", "").upper() in self.locked_positions
+                        rows.append(f"{quoted(block.name)} {entity.dxf.handle} "
+                                    f"{entity_answer(entity, locked=locked)}")
             return "; ".join(rows) or "none"
         if question == "generated":
             answer, _ = self.generated_answer(handle)
@@ -519,8 +572,9 @@ class DrawingAnswers:
             answered_entity = (self.bound_entities[entity.dxf.handle]
                                if entity.dxftype() == "DIMENSION" else entity)
             owner = self.attribute_owners.get(entity.dxf.handle.upper())
+            locked = entity.dxf.handle.upper() in self.locked_positions
             return (entity_answer(answered_entity, self.layer_names, self.linetype_names,
-                                  owner=owner)
+                                  owner=owner, locked=locked)
                     if supported else "unhandled " + entity.dxftype())
         raise ValueError(f"unsupported oracle question: {question}")
 

@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -34,9 +35,10 @@ enum class MirrorText : std::uint8_t;
 /// DXF ATTRIB, owned by its Insert (docs/adr/0045, point 2): it has its own
 /// handle, extras and properties, and leaves and comes back with the insert.
 /// The flags the model does not represent (verify 4, preset 8) stay in a
-/// group 70 of extras.specific, with the whole value of the flags; the
-/// locked position (280) in a group 280 there (docs/DECISIONI.md,
-/// 2026-11-14, "Revisione delle interfacce PT4", P21).
+/// group 70 of extras.specific, with the whole value of the flags
+/// (docs/DECISIONI.md, 2026-11-14, "Revisione delle interfacce PT4", P21).
+/// The locked position is the second group 280, as for the ATTDEF
+/// (AttributeDefinition; docs/adr/0056, point 1).
 struct Attribute {
     EntityId id;                  ///< its handle
     Text text;                    ///< text.value is the value (1)
@@ -44,6 +46,7 @@ struct Attribute {
     bool invisible{false};        ///< 70 bit 1
     EntityExtras extras;          ///< what the model does not represent
     EntityProperties properties;  ///< layer, colour, linetype, …
+    bool lockPosition{false};     ///< the second 280
 
     friend bool operator==(const Attribute&, const Attribute&) = default;
 };
@@ -87,11 +90,54 @@ struct PlacedAttribute {
 ///
 /// The properties are those of the ATTDEF as a whole (its linetype scale
 /// too); verify and preset go in a group 70 of extras.specific with the
-/// whole value of the flags, and a group 280 of the ATTDEF (locked
-/// position) is copied there (Attribute). Nothing without the definition;
-/// an ATTDEF that is not supported gives nothing either.
+/// whole value of the flags (Attribute), and the locked position is copied
+/// as a field, not as the groups 280 of the ATTDEF. Nothing without the
+/// definition; an ATTDEF that is not supported gives nothing either.
 [[nodiscard]] std::vector<Attribute> defaultAttributes(const Document& document,
                                                        const Insert& insert);
+
+/// ADR 0056, point 5: the attributes of `insert` after synchronising with
+/// its definition, in the order of the definition.
+///
+/// Each non-constant ATTDEF that defaultAttributes() takes, in order, takes
+/// the first ATTRIB of `insert` still free with its tag (compared without
+/// case for ASCII letters, sameTableName()), in the order of the DXF: that
+/// ATTRIB keeps its value, its handle and the data the model does not
+/// represent (its extras: XDATA, dictionaries, groups as read, docs/adr/0006),
+/// and takes everything else from the ATTRIB defaultAttributes() gives for
+/// the ATTDEF: text placed by the insert, tag, invisible, verify and preset
+/// (its group 70 of extras.specific, the other bits kept), locked position
+/// and properties. An ATTDEF without a free ATTRIB gives the attribute of
+/// defaultAttributes(), with the default value and id 0, which the caller
+/// assigns. The ATTRIBs left free are dropped: each handle is used once.
+/// Without the definition the attributes are returned unchanged.
+[[nodiscard]] std::vector<Attribute> synchronizedAttributes(const Document& document,
+                                                            const Insert& insert);
+
+/// An attribute picked with a click: the insert that owns it and its index
+/// in Insert::attributes.
+struct AttributePick {
+    EntityId insert;
+    std::size_t index{0};
+
+    friend bool operator==(const AttributePick&, const AttributePick&) = default;
+};
+
+/// The visible attribute nearest to `point` within `tolerance` among those
+/// `accept` admits (none: all), with the rules of pickEntity: a tie goes to
+/// the higher insert id, then the lower index. Only the ATTRIBs of the
+/// inserts of the drawing: one of a nested insert lives in a block
+/// definition and is never picked.
+///
+/// `accept` is applied before the distances are compared, so an admitted
+/// attribute under an excluded one is found. Visible is what is drawn, by the
+/// rule of generateOf(): ATTDISP, and the layers of the insert and of the
+/// attribute (docs/tappe/0.8.1/PT15-attributi-core.md, point 2). The distance
+/// is that of a text, a region: a click inside its box is at distance 0
+/// (pickEntity()). Precondition: tolerance >= 0.
+[[nodiscard]] std::optional<AttributePick> pickAttribute(
+    const Document& document, const Vec2& point, double tolerance,
+    const std::function<bool(const Insert&, const Attribute&)>& accept = {});
 
 /// Every attribute of an insert in drawing coordinates: its ATTRIBs, then
 /// the constant ATTDEFs of its definition (fromDefinition), in order.

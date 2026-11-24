@@ -200,17 +200,22 @@ TEST(Attributes, ANewAttributeTakesThePropertiesOfItsDefinition) {
 
 TEST(Attributes, TheFlagsTheModelDoesNotHoldAreRewritten) {
     Document document = Document::newDrawing();
-    EntityRecord record =
-        member(document, definitionOf({0, 0}, "CHECK", "x", {.invisible = true, .verify = true}));
-    record.extras.specific.push_back({280, "1"});
+    AttributeDefinition definition =
+        definitionOf({0, 0}, "CHECK", "x", {.invisible = true, .verify = true});
+    definition.lockPosition = true;
+    EntityRecord record = member(document, definition);
+    // The groups 280 of the ATTDEF as read: the locked position is copied
+    // as a field, not as these groups (docs/tappe/0.8.1/PT15, point 1).
+    record.extras.specific = {{100, "AcDbAttributeDefinition"}, {280, "0"}, {280, "1"}};
     BlockDefinition block{"V"};
     block.entities.push_back(record);
     document.replaceBlock("V", std::move(block));
 
     const std::vector<Attribute> attributes = defaultAttributes(document, insertOf("V", {0, 0}));
     ASSERT_EQ(attributes.size(), 1U);
-    const RawGroups expected{{70, "5"}, {280, "1"}};
+    const RawGroups expected{{70, "5"}};
     EXPECT_EQ(attributes[0].extras.specific, expected);
+    EXPECT_TRUE(attributes[0].lockPosition);
     const AttributeFlags flags = attributeFlags(attributes[0]);
     EXPECT_TRUE(flags.invisible);
     EXPECT_TRUE(flags.verify);

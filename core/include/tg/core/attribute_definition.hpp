@@ -37,11 +37,17 @@ struct AttributeFlags {
 };
 
 /// DXF ATTDEF (docs/adr/0045, point 2): a text with a tag and a prompt.
+///
+/// The locked position (*Lock position*, docs/adr/0056, point 1) is the
+/// second group 280 of the subclass, equal to 1; the first one is the
+/// version and stays where it is. A record read with the version alone is
+/// not locked (docs/tappe/0.8.1/PT15-attributi-core.md, point 1).
 struct AttributeDefinition {
     Text text;           ///< text.value is the default value (1)
     std::string tag;     ///< 2
     std::string prompt;  ///< 3
     AttributeFlags flags;
+    bool lockPosition{false};  ///< the second 280
 
     friend bool operator==(const AttributeDefinition&, const AttributeDefinition&) = default;
 };
@@ -109,8 +115,8 @@ void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
                            std::vector<SnapPoint>& out, const std::optional<Vec2>& from);
 
 /// The entity transformed by `similarity` as the text shownText() with
-/// `mirrorText` (ADR 0031, points 2 and 3), the default value, tag, prompt
-/// and flags kept. Never refused.
+/// `mirrorText` (ADR 0031, points 2 and 3), the default value, tag, prompt,
+/// flags and locked position kept. Never refused.
 [[nodiscard]] TransformOutcome transformedOf(const Document& document,
                                              const AttributeDefinition& definition,
                                              const Similarity& similarity, MirrorText mirrorText);
@@ -119,7 +125,7 @@ void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,
 [[nodiscard]] std::vector<Vec2> gripPointsOf(const AttributeDefinition& definition);
 
 /// Moves grip `index` to `target` as for the text shownText(), the default
-/// value, tag, prompt and flags kept. Precondition:
+/// value, tag, prompt, flags and locked position kept. Precondition:
 /// index < gripPointsOf().size().
 [[nodiscard]] GripResult moveGripOf(const Document& document, const AttributeDefinition& definition,
                                     std::size_t index, const Vec2& target);
