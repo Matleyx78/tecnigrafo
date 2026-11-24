@@ -3,10 +3,15 @@
 
 #include "tg/core/mtext.hpp"
 
+#include "tg/core/block_table.hpp"
+#include "tg/core/color.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/effective_properties.hpp"
+#include "tg/core/explode.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
@@ -25,6 +30,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -76,6 +82,45 @@ std::vector<std::string> values(const MText& entity) {
 }
 
 using Values = std::vector<std::string>;
+
+/// Everything that `entity` generates, alone in a new drawing (or `document`).
+std::vector<GeneratedItem> items(const MText& entity, Document document = Document::newDrawing()) {
+    const EntityRecord record = *document.find(document.add(entity));
+    return generate(document, record);
+}
+
+/// The Text of a Text or of a FormattedText; nullptr for a line.
+const Text* textOf(const GeneratedItem& item) {
+    if (const auto* text = std::get_if<Text>(&item.shape)) {
+        return text;
+    }
+    if (const auto* piece = std::get_if<FormattedText>(&item.shape)) {
+        return &piece->text;
+    }
+    return nullptr;
+}
+
+/// The values of the texts of every piece, plain and formatted, in order.
+Values pieceValues(const MText& entity) {
+    Values result;
+    for (const GeneratedItem& item : items(entity)) {
+        if (const Text* text = textOf(item)) {
+            result.push_back(text->value);
+        }
+    }
+    return result;
+}
+
+/// The lines of decoration and of the fractions, in order.
+std::vector<Line> textLines(const MText& entity) {
+    std::vector<Line> result;
+    for (const GeneratedItem& item : items(entity)) {
+        if (const auto* line = std::get_if<TextLine>(&item.shape)) {
+            result.push_back(line->line);
+        }
+    }
+    return result;
+}
 
 TEST(MTextSupport, IsSupported) {
     EXPECT_TRUE(supported(MText{}));
@@ -182,18 +227,27 @@ TEST(MTextValue, TheBoxOfARowIsThatOfItsCharacters) {
     EXPECT_GT(std::abs(widthOf(U"%%c", 2.0) - widthOf(U"⌀", 2.0)), 0.1);
 }
 
-TEST(MTextCodes, CodesWithAnArgumentAreRemoved) {
-    EXPECT_EQ(values(mtext(R"(A\fArial|b1;B\FArial;C\H2.5x;D\W2;E\Q30;F\T2;G\A1;H\C1;I)"
-                           R"(\c255;J\px1,qc;K)")),
-              (Values{"ABCDEFGHIJK"}));
+TEST(MTextCodes, CodesWithAnArgumentAreHiddenAndSplitThePieces) {
+    // Since the 0.8.1 the codes make pieces (PT8): their texts, in reading
+    // order, still show every character and no code.
+    std::string joined;
+    for (const std::string& value :
+         pieceValues(mtext(R"(A\fArial|b1;B\FArial;C\H2.5x;D\W2;E\Q30;F\T2;G\A1;H\C1;I)"
+                           R"(\c255;J\px1,qc;K)"))) {
+        joined += value;
+    }
+    EXPECT_EQ(joined, "ABCDEFGHIJK");
 }
 
-TEST(MTextCodes, StacksKeepTheirTextWithASlash) {
-    EXPECT_EQ(values(mtext(R"(\S1^2; \S3#4; \S5/6;)")), (Values{"1/2 3/4 5/6"}));
+TEST(MTextCodes, StacksAreFractionsOfTwoTexts) {
+    // Since the 0.8.1 a stack is two texts, no longer "1/2" (PT8).
+    EXPECT_EQ(pieceValues(mtext(R"(\S1^2; \S3#4; \S5/6;)")),
+              (Values{"1", "2", "3", "4", "5", "6"}));
 }
 
-TEST(MTextCodes, TogglesAreRemoved) {
-    EXPECT_EQ(values(mtext(R"(\LA\l\OB\o\KC\k)")), (Values{"ABC"}));
+TEST(MTextCodes, TogglesKeepTheTextAndAddTheirLines) {
+    EXPECT_EQ(pieceValues(mtext(R"(\LA\l\OB\o\KC\k)")), (Values{"A", "B", "C"}));
+    EXPECT_EQ(textLines(mtext(R"(\LA\l\OB\o\KC\k)")).size(), 3U);
 }
 
 TEST(MTextCodes, AnyOtherCodeStaysAsWritten) {
@@ -206,6 +260,254 @@ TEST(MTextCodes, ACodeWithoutItsSemicolonStaysButBreaksAtP) {
     EXPECT_EQ(values(mtext(R"(A\S1^2)")), (Values{R"(A\S1^2)"}));
     // The ';' after a \P does not end the code before it.
     EXPECT_EQ(values(mtext(R"(A\H2\PB;C)")), (Values{R"(A\H2)", "B;C"}));
+}
+
+// --- Formats (docs/adr/0054, points 1, 3 and 4; 0.8.1 PT8) -----------------------
+
+/// The width of `text` in `face` at height `height`.
+double faceWidth(std::u32string_view text, FontFace face, double height = 1.0) {
+    return textWidth(text, face) * height;
+}
+
+/// The item `index` of `all` as a `T`, or a failure.
+template <typename T>
+T shapeAt(const std::vector<GeneratedItem>& all, std::size_t index) {
+    if (index >= all.size() || !std::holds_alternative<T>(all[index].shape)) {
+        ADD_FAILURE() << "item " << index << " is not of the expected shape";
+        return T{};
+    }
+    return std::get<T>(all[index].shape);
+}
+
+/// The shapes of an MTEXT.
+using PieceShape = std::variant<Text, FormattedText, TextLine>;
+
+/// The shapes that `entity` generates, alone in a new drawing.
+std::vector<PieceShape> shapes(const MText& entity) {
+    std::vector<PieceShape> result;
+    for (const GeneratedItem& item : items(entity)) {
+        std::visit(
+            [&](const auto& shape) {
+                using T = std::decay_t<decltype(shape)>;
+                if constexpr (std::is_same_v<T, Text> || std::is_same_v<T, FormattedText> ||
+                              std::is_same_v<T, TextLine>) {
+                    result.emplace_back(shape);
+                } else {
+                    ADD_FAILURE() << "not a shape of an MTEXT";
+                }
+            },
+            item.shape);
+    }
+    return result;
+}
+
+void expectLine(const Line& line, const Vec2& start, const Vec2& end) {
+    expectNear(line.start, start);
+    expectNear(line.end, end);
+}
+
+TEST(MTextFormats, BoldItalicAndBothAreFormattedTextsOnTheirAdvances) {
+    // \f with any name: Liberation Sans in the face of |b and |i.
+    const std::vector<GeneratedItem> all =
+        items(mtext(R"(A{\fArial|b1;B}{\fTimes|i1;C}{\fArial|b1|i1;D}E)"));
+    ASSERT_EQ(all.size(), 5U);
+    const auto a = shapeAt<Text>(all, 0);
+    expectNear(a.position, {0, -1});
+    double x = widthOf(U"A");
+    const std::array<std::pair<FontFace, std::u32string_view>, 3> formatted{{
+        {FontFace::Bold, U"B"},
+        {FontFace::Italic, U"C"},
+        {FontFace::BoldItalic, U"D"},
+    }};
+    for (std::size_t i = 0; i < formatted.size(); ++i) {
+        const auto [face, character] = formatted.at(i);
+        const auto piece = shapeAt<FormattedText>(all, i + 1);
+        EXPECT_EQ(piece.face, face) << i;
+        EXPECT_EQ(piece.tracking, 1.0) << i;
+        EXPECT_EQ(piece.text.height, 1.0) << i;
+        EXPECT_EQ(piece.text.widthFactor, 1.0) << i;
+        expectNear(piece.text.position, {x, -1});
+        x += faceWidth(character, face);
+    }
+    const auto e = shapeAt<Text>(all, 4);
+    EXPECT_EQ(e.value, "E");
+    expectNear(e.position, {x, -1});
+}
+
+TEST(MTextFormats, RelativeAndAbsoluteHeights) {
+    // The first baseline is below the top by the highest piece (rule 3).
+    const std::vector<GeneratedItem> relative = items(mtext(R"(A{\H2x;B}C)"));
+    ASSERT_EQ(relative.size(), 3U);
+    const auto a = shapeAt<Text>(relative, 0);
+    const auto b = shapeAt<Text>(relative, 1);
+    const auto c = shapeAt<Text>(relative, 2);
+    EXPECT_EQ(a.height, 1.0);
+    EXPECT_EQ(b.height, 2.0);
+    EXPECT_EQ(c.height, 1.0);
+    expectNear(a.position, {0, -2});
+    expectNear(b.position, {widthOf(U"A"), -2});
+    expectNear(c.position, {widthOf(U"A") + widthOf(U"B", 2.0), -2});
+
+    const std::vector<GeneratedItem> absolute = items(mtext(R"(A{\H3;B})", 2.0));
+    ASSERT_EQ(absolute.size(), 2U);
+    EXPECT_EQ(shapeAt<Text>(absolute, 0).height, 2.0);
+    EXPECT_EQ(shapeAt<Text>(absolute, 1).height, 3.0);
+    expectNear(shapeAt<Text>(absolute, 1).position, {widthOf(U"A", 2.0), -3});
+}
+
+TEST(MTextFormats, WidthFactorObliqueAndTracking) {
+    const double a = widthOf(U"A");
+    const double b = widthOf(U"B");
+
+    const std::vector<GeneratedItem> wide = items(mtext(R"(A{\W2;B}C)"));
+    ASSERT_EQ(wide.size(), 3U);
+    EXPECT_EQ(shapeAt<Text>(wide, 1).widthFactor, 2.0);
+    expectNear(shapeAt<Text>(wide, 1).position, {a, -1});
+    expectNear(shapeAt<Text>(wide, 2).position, {a + (2.0 * b), -1});
+
+    const std::vector<GeneratedItem> oblique = items(mtext(R"(A{\Q30;B}C)"));
+    ASSERT_EQ(oblique.size(), 3U);
+    EXPECT_NEAR(shapeAt<Text>(oblique, 1).obliqueAngle, degreesToRadians(30.0), kTolerance);
+    expectNear(shapeAt<Text>(oblique, 2).position, {a + b, -1});
+
+    // A Regular piece with a tracking other than 1 is a FormattedText
+    // (#927, [bloccante] 1): its advances double, its width factor stays 1.
+    const std::vector<GeneratedItem> tracked = items(mtext(R"(A{\T2;B}C)"));
+    ASSERT_EQ(tracked.size(), 3U);
+    const auto piece = shapeAt<FormattedText>(tracked, 1);
+    EXPECT_EQ(piece.face, FontFace::Regular);
+    EXPECT_EQ(piece.tracking, 2.0);
+    EXPECT_EQ(piece.text.widthFactor, 1.0);
+    expectNear(piece.text.position, {a, -1});
+    expectNear(shapeAt<Text>(tracked, 2).position, {a + (2.0 * b), -1});
+    // {\T2;A} alone is a FormattedText too, not a Text.
+    const std::vector<GeneratedItem> alone = items(mtext(R"({\T2;A})"));
+    ASSERT_EQ(alone.size(), 1U);
+    EXPECT_TRUE(std::holds_alternative<FormattedText>(alone[0].shape));
+}
+
+TEST(MTextFormats, IndexAndTrueColoursOfThePieces) {
+    Document document = Document::newDrawing();
+    const EntityRecord record = *document.find(document.add(mtext(R"(A{\C1;B}{\c16744448;C})")));
+    const std::vector<GeneratedItem> all = generate(document, record);
+    ASSERT_EQ(all.size(), 3U);
+    EXPECT_EQ(all[0].properties.color, effectiveProperties(document, record).color);
+    EXPECT_EQ(all[1].properties.color, (Rgb{255, 0, 0}));
+    // BGR as AutoCAD: 16744448 is 0080FF in RGB.
+    EXPECT_EQ(all[2].properties.color, (Rgb{0x00, 0x80, 0xFF}));
+    // A colour alone keeps the piece a Text.
+    EXPECT_TRUE(std::holds_alternative<Text>(all[1].shape));
+    EXPECT_TRUE(std::holds_alternative<Text>(all[2].shape));
+}
+
+TEST(MTextFormats, UnderlineOverlineAndStrikeWithTheColourOfThePiece) {
+    const double a = widthOf(U"A", 2.5);
+    const std::vector<GeneratedItem> under = items(mtext(R"({\C1;\LA})", 2.5));
+    ASSERT_EQ(under.size(), 2U);
+    expectNear(shapeAt<Text>(under, 0).position, {0, -2.5});
+    expectLine(shapeAt<TextLine>(under, 1).line, {0, -3}, {a, -3});
+    EXPECT_EQ(under[1].properties.color, (Rgb{255, 0, 0}));
+
+    // The overline lowers the first baseline by 0.2 h: 3 for h 2.5 (rule 3).
+    const std::vector<GeneratedItem> over = items(mtext(R"({\OA})", 2.5));
+    ASSERT_EQ(over.size(), 2U);
+    expectNear(shapeAt<Text>(over, 0).position, {0, -3});
+    expectLine(shapeAt<TextLine>(over, 1).line, {0, 0}, {a, 0});
+
+    const std::vector<GeneratedItem> strike = items(mtext(R"({\KA})", 2.5));
+    ASSERT_EQ(strike.size(), 2U);
+    expectLine(shapeAt<TextLine>(strike, 1).line, {0, -1.25}, {a, -1.25});
+}
+
+TEST(MTextFormats, TheThreeStackedFractions) {
+    // Rule 5: as wide as the wider text, both centred; the numerator 4/3 h
+    // above the baseline, the line of '/' at 7/6 h.
+    const double wide = widthOf(U"22");
+    const double narrow = widthOf(U"1");
+    const std::vector<GeneratedItem> horizontal = items(mtext(R"(\S1/22;)"));
+    ASSERT_EQ(horizontal.size(), 3U);
+    const auto top = shapeAt<Text>(horizontal, 0);
+    const auto bottom = shapeAt<Text>(horizontal, 1);
+    EXPECT_EQ(top.value, "1");
+    EXPECT_EQ(bottom.value, "22");
+    expectNear(top.position, {(wide - narrow) / 2.0, -1 + (4.0 / 3.0)});
+    expectNear(bottom.position, {0, -1});
+    expectLine(shapeAt<TextLine>(horizontal, 2).line, {0, -1 + (7.0 / 6.0)},
+               {wide, -1 + (7.0 / 6.0)});
+
+    // '^': no line.
+    const std::vector<GeneratedItem> tolerance = items(mtext(R"(\S1^22;)"));
+    ASSERT_EQ(tolerance.size(), 2U);
+    EXPECT_TRUE(std::holds_alternative<Text>(tolerance[0].shape));
+    EXPECT_TRUE(std::holds_alternative<Text>(tolerance[1].shape));
+}
+
+TEST(MTextFormats, TheDiagonalFractionReachesTheTopOfTheNumerator) {
+    // \S1#2; of height 2.5 after an A: from (x, 0) to (x + w, 7/3 h) of
+    // its baseline (#927, [decisione] 3).
+    const double x = widthOf(U"A", 2.5);
+    const double w = widthOf(U"1", 2.5);
+    const std::vector<GeneratedItem> all = items(mtext(R"(A\S1#2;)", 2.5));
+    ASSERT_EQ(all.size(), 4U);
+    const Line line = shapeAt<TextLine>(all, 3).line;
+    const double baseline = -2.5;
+    expectNear(line.start, {x, baseline});
+    expectNear(line.end, {x + w, baseline + 5.833333333333333});
+    // Its middle is that of the line of '/'.
+    EXPECT_NEAR((line.start.y + line.end.y) / 2.0 - baseline, (7.0 / 6.0) * 2.5, kTolerance);
+}
+
+TEST(MTextFormats, AWordWithTwoFormatsWrapsWhole) {
+    // "AA B" fits, "AA BCD" does not: the word B{C}D moves whole (rule 2).
+    const double width = widthOf(U"AA B") + 0.01;
+    ASSERT_LT(width, widthOf(U"AA BCD"));
+    const std::vector<GeneratedItem> all = items(mtext(R"(AA B{\C1;C}D)", 1.0, width));
+    ASSERT_EQ(all.size(), 4U);
+    const double second = -1 - (5.0 / 3.0);
+    EXPECT_EQ(shapeAt<Text>(all, 0).value, "AA");
+    expectNear(shapeAt<Text>(all, 0).position, {0, -1});
+    EXPECT_EQ(shapeAt<Text>(all, 1).value, "B");
+    expectNear(shapeAt<Text>(all, 1).position, {0, second});
+    EXPECT_EQ(shapeAt<Text>(all, 2).value, "C");
+    expectNear(shapeAt<Text>(all, 2).position, {widthOf(U"B"), second});
+    expectNear(shapeAt<Text>(all, 3).position, {widthOf(U"BC"), second});
+}
+
+TEST(MTextFormats, TheBreakInTheBandOfTheThreshold) {
+    // "A A" at height 3 is exactly 9903/1409 wide: one row, as in the 0.8.
+    const double width = 9903.0 / 1409.0;
+    EXPECT_EQ(values(mtext("A A", 3.0, width)), (Values{"A A"}));
+    // With two pieces the sum may round either way: free, but the same twice.
+    const MText coloured = mtext(R"(A {\C1;A})", 3.0, width);
+    EXPECT_EQ(shapes(coloured), shapes(coloured));
+}
+
+TEST(MTextFormats, EmptyRowsKeepTheirPlaceButShowNothing) {
+    Document document = Document::newDrawing();
+    const EntityRecord record = *document.find(document.add(mtext(R"(A\P\PB\P)")));
+    const std::vector<GeneratedItem> all = generate(document, record);
+    ASSERT_EQ(all.size(), 2U);
+    expectNear(shapeAt<Text>(all, 0).position, {0, -1});
+    expectNear(shapeAt<Text>(all, 1).position, {0, -1 - (2.0 * 5.0 / 3.0)});
+    EXPECT_EQ(shownLines(document, record), (std::vector<std::u32string>{U"A", U"B"}));
+}
+
+TEST(MTextFormats, ShownLinesJoinThePiecesOfARow) {
+    Document document = Document::newDrawing();
+    const EntityRecord three = *document.find(document.add(mtext(R"(A{\C1;B}{\fArial|b1;C})")));
+    ASSERT_EQ(generate(document, three).size(), 3U);
+    EXPECT_EQ(shownLines(document, three), (std::vector<std::u32string>{U"ABC"}));
+    const EntityRecord stacked = *document.find(document.add(mtext(R"(A \S1/2;\PB)")));
+    EXPECT_EQ(shownLines(document, stacked), (std::vector<std::u32string>{U"A 1/2", U"B"}));
+    // Nothing for the other types.
+    const EntityRecord line = *document.find(document.add(Line{{0, 0}, {1, 0}}));
+    EXPECT_TRUE(shownLines(document, line).empty());
+}
+
+TEST(MTextFormats, WithoutFormatsOneTextPerRow) {
+    for (const GeneratedItem& item : items(mtext(R"(Prima riga\PSeconda)", 2.5, 10.0))) {
+        EXPECT_TRUE(std::holds_alternative<Text>(item.shape));
+    }
 }
 
 // --- Layout (PT13, point 3) -----------------------------------------------------
@@ -523,6 +825,42 @@ TEST(MTextTransform, MoveRotateScale) {
     EXPECT_EQ(scaled.width, 24.0);
     EXPECT_EQ(scaled.lineSpacing, 1.5);
     EXPECT_EQ(scaled.value, entity.value);
+}
+
+TEST(MTextTransform, AbsoluteHeightsStayUnderASimilarity) {
+    // As AutoCAD (LIST before and after SCALE, 2026-11-22): the height of
+    // the entity doubles, the value and its \H3; do not change.
+    const MText entity = mtext(R"(A{\H3;B})", 2.0);
+    const std::optional<Similarity> scaling = Similarity::scaling(2.0, {0, 0});
+    ASSERT_TRUE(scaling.has_value());
+    const MText scaled =
+        transformedMText(entity, scaling.value_or(Similarity{}), MirrorText::Readable);
+    EXPECT_EQ(scaled.height, 4.0);
+    EXPECT_EQ(scaled.value, entity.value);
+    const std::vector<GeneratedItem> all = items(scaled);
+    ASSERT_EQ(all.size(), 2U);
+    EXPECT_EQ(shapeAt<Text>(all, 0).height, 4.0);
+    EXPECT_EQ(shapeAt<Text>(all, 1).height, 3.0);
+
+    // EXPLODE of a block in scale 2 goes through the same transformation.
+    Document document = Document::newDrawing();
+    BlockDefinition definition{"Note"};
+    EntityRecord member{EntityId{}, Entity{entity}};
+    member.properties.layer = document.layerZero();
+    member.properties.linetype = document.byLayerLinetype();
+    definition.entities.push_back(member);
+    document.replaceBlock("Note", std::move(definition));
+    Insert insert;
+    insert.block = "Note";
+    insert.scaleX = 2.0;
+    insert.scaleY = 2.0;
+    const Exploded exploded = explodeInsert(document, insert);
+    ASSERT_TRUE(exploded.refusal.empty()) << exploded.refusal;
+    ASSERT_EQ(exploded.entities.size(), 1U);
+    const auto* result = std::get_if<MText>(&exploded.entities[0].entity);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->height, 4.0);
+    EXPECT_EQ(result->value, entity.value);
 }
 
 struct MirrorCase {

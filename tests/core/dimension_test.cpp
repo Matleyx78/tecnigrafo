@@ -9,6 +9,7 @@
 #include "tg/core/dim_style_table.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/effective_properties.hpp"
 #include "tg/core/entity_record.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
@@ -617,6 +618,47 @@ TEST(DimensionTextPoint, MiddleOfATextOfTwoRowsAboveTheLine) {
     expectNear(outside.presentation.textPoint, middleOfTheRows(document, outside));
     // The grip of the text is that point.
     expectNear(gripPointsOf(outside)[3], middleOfTheRows(document, outside));
+}
+
+// --- Formatted text (docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 5) --
+
+TEST(DimensionFormattedText, ASubstituteTextWithAColouredMeasurement) {
+    // The text is measured with the pieces of its layout: "40" red, " mm".
+    const Document document = Document::newDrawing();
+    Dimension dimension = linear({0, 0}, {40, 0}, {40, 10});
+    dimension.presentation.overrides = {{"DIMTAD", "0"}};
+    dimension.presentation.textOverride = R"({\C1;<>} mm)";
+    dimension = made(document, std::move(dimension));
+    const MText text = textOf(dimension);
+    EXPECT_EQ(text.value, R"({\C1;40} mm)");
+    const double half = (widthOf(U"40 mm", 2.5) / 2.0) + 0.625;
+    const std::vector<Line> lines = linesOf(dimension);
+    ASSERT_EQ(lines.size(), 4U);
+    expectLine(lines[2], {2.5, 10}, {20 - half, 10});
+    expectLine(lines[3], {37.5, 10}, {20 + half, 10});
+    // Two pieces on one row, the first red; one shown line with its space.
+    const std::vector<GeneratedItem> pieces =
+        generate(document, EntityRecord{EntityId{9}, Entity{text}});
+    ASSERT_EQ(pieces.size(), 2U);
+    EXPECT_EQ(std::get<Text>(pieces[0].shape).value, "40");
+    EXPECT_EQ(pieces[0].properties.color, (Rgb{255, 0, 0}));
+    EXPECT_EQ(std::get<Text>(pieces[1].shape).value, " mm");
+    EXPECT_EQ(std::get<Text>(pieces[1].shape).position.y,
+              std::get<Text>(pieces[0].shape).position.y);
+    const EntityRecord record{EntityId{9}, dimension};
+    EXPECT_EQ(shownLines(document, record), (std::vector<std::u32string>{U"40 mm"}));
+}
+
+TEST(DimensionFormattedText, AFractionHasTheNominalHeight) {
+    // The numerator stands above the row, but the text counts its height
+    // only: the middle of the text is where it is for "40".
+    const Document document = Document::newDrawing();
+    Dimension dimension = linear({0, 0}, {40, 0}, {40, 10});
+    dimension.presentation.textOverride = R"(\S1#2;)";
+    dimension = made(document, std::move(dimension));
+    EXPECT_EQ(textOf(dimension).attachment, MTextAttachment::BottomCenter);
+    expectNear(textOf(dimension).insertion, {20, 10.625});
+    expectNear(dimension.presentation.textPoint, {20, 11.875});
 }
 
 // --- Snaps ----------------------------------------------------------------
