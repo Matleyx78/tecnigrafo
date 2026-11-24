@@ -274,6 +274,7 @@ TEST(GeneratedDrawing, HighlightAndPreviewDrawTheShapesOfTheScene) {
     }
     SceneStyle style;
     style.showGrid = false;
+    style.axes = AxesStyle::Lines;
     style.highlight = {7, 8, 9};
     style.preview = {4, 5, 6};
     const auto viewport = testViewport();
@@ -331,6 +332,7 @@ TEST(GeneratedDrawing, HighlightAndPreviewOfAnInsertDrawTheShapesOfTheScene) {
     const std::array<core::EntityId, 2> ids{document.add(inserts[0]), document.add(inserts[1])};
     SceneStyle style;
     style.showGrid = false;
+    style.axes = AxesStyle::Lines;
     style.highlight = {7, 8, 9};
     style.preview = {4, 5, 6};
     const auto viewport = testViewport();
@@ -387,6 +389,7 @@ TEST(GeneratedDrawing, AStretchedPolylineOfAnInsertReachesThePainterInPieces) {
 
     SceneStyle style;
     style.showGrid = false;
+    style.axes = AxesStyle::Lines;
     const auto viewport = testViewport();
     ShapePainter painter;
     renderScene(document, viewport, style, painter);
@@ -424,6 +427,7 @@ TEST(GeneratedDrawing, TheFiveEntitiesOfBeforeAreDrawnAsBefore) {
     document.add(text);
     SceneStyle style;
     style.showGrid = false;
+    style.axes = AxesStyle::Lines;
     const auto viewport = testViewport();
     ShapePainter painter;
     renderScene(document, viewport, style, painter);

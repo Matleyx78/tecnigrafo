@@ -86,14 +86,6 @@ TEST(Viewport, ZoomToEmptyBoxChangesNothing) {
     expectNear(viewport.center(), {10.0, 20.0});
 }
 
-TEST(GridSpacing, UsesOneTwoFiveSequence) {
-    EXPECT_NEAR(gridSpacing(1.0, 12.0), 20.0, kEps);
-    EXPECT_NEAR(gridSpacing(10.0, 12.0), 2.0, kEps);
-    EXPECT_NEAR(gridSpacing(3.0, 12.0), 5.0, kEps);
-    EXPECT_NEAR(gridSpacing(12.0, 12.0), 1.0, kEps);
-    EXPECT_NEAR(gridSpacing(1000.0, 12.0), 0.02, kEps);
-}
-
 /// Painter that records calls instead of drawing.
 class RecordingPainter final : public Painter {
 public:
@@ -166,7 +158,8 @@ TEST(SceneRenderer, DrawsVisiblePolylinesInScreenSpace) {
     polyline.addVertex({11.0, 21.0});
     document.add(polyline);
 
-    const SceneStyle style;
+    SceneStyle style;
+    style.axes = AxesStyle::None;
     RecordingPainter painter;
     renderScene(document, makeViewport(), style, painter);
 
@@ -185,7 +178,8 @@ TEST(SceneRenderer, DrawsLinesCirclesAndArcs) {
     document.add(core::Circle{{10.0, 20.0}, 5.0});
     document.add(core::Arc{{10.0, 20.0}, 5.0, 0.0, core::kPi / 2.0});
 
-    const SceneStyle style;
+    SceneStyle style;
+    style.axes = AxesStyle::None;
     RecordingPainter painter;
     renderScene(document, makeViewport(), style, painter);
     ASSERT_EQ(painter.polylines.size(), 3U);
@@ -486,7 +480,8 @@ TEST(SceneRenderer, DrawsTextsWithTheirHeightRotationAndWidthFactor) {
     // Preserve the original Left/baseline rendering as a regression test.
     document.add(text);
 
-    const SceneStyle style;
+    SceneStyle style;
+    style.axes = AxesStyle::None;
     RecordingPainter painter;
     renderScene(document, makeViewport(), style, painter);
     ASSERT_EQ(painter.texts.size(), 1U);
@@ -537,8 +532,10 @@ TEST(SceneRenderer, TextsOutsideTheViewAndHighlightedTexts) {
     near.position = {10.0, 20.0};
     near.value = "Near";
     const core::EntityId id = document.add(near);
+    SceneStyle style;
+    style.axes = AxesStyle::None;
     RecordingPainter scene;
-    renderScene(document, makeViewport(), SceneStyle{}, scene);
+    renderScene(document, makeViewport(), style, scene);
     ASSERT_EQ(scene.texts.size(), 1U);
     EXPECT_EQ(scene.texts.front().text, U"Near");
 
