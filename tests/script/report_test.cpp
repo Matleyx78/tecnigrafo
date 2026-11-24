@@ -25,6 +25,7 @@
 #include "tg/core/polyline.hpp"
 #include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
+#include "tg/core/text_metrics.hpp"
 #include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 #include "tg/script/entity_reader.hpp"
@@ -1090,6 +1091,60 @@ TEST(WriteGeneratedItem, ARegionWritesItsLoopsAndAMapOtherThanTheIdentity) {
     EXPECT_EQ(out,
               "REGION loop=polyline vertex=0,0 vertex=10,0 bulge=0.5 vertex=10,10 "
               "~affine=2,0,0,1,5,-1");
+}
+
+// --- Formatted MTEXT (docs/tappe/0.8.1/PT8-impaginazione-formati.md) ---------
+
+std::string mtextLine(core::Document& document, std::string value) {
+    core::MText mtext;
+    mtext.height = 1.0;
+    mtext.value = std::move(value);
+    const core::EntityRecord& record = *document.find(document.add(mtext));
+    std::string out;
+    writeEntity(record, document, out);
+    return out;
+}
+
+TEST(WriteFormattedMText, LinesAreTheRowsOfTheLayoutNotThePieces) {
+    core::Document document = core::Document::newDrawing();
+    // Three pieces on one row: one line.
+    const std::string pieces = mtextLine(document, R"(A{\C1;B}{\fArial|b1;C})");
+    EXPECT_TRUE(pieces.ends_with(" ~lines=1")) << pieces;
+    // Two empty rows of the layout are not shown: two lines, as in the 0.8.
+    const std::string empty = mtextLine(document, R"(A\P\PB\P)");
+    EXPECT_TRUE(empty.ends_with(" ~lines=2")) << empty;
+}
+
+TEST(WriteFormattedMText, AFormattedPieceWritesItsFaceAndItsOwnBox) {
+    const core::Document document = core::Document::newDrawing();
+    const core::EntityRecord record = lineOf(document);
+    core::FormattedText bold{core::Text{}, core::FontFace::Bold, 1.0};
+    bold.text.height = 1.0;
+    bold.text.value = "A";
+    std::string out;
+    detail::writeGeneratedItem({bold, core::effectiveProperties(document, record)}, out);
+    // face= after the properties of the TEXT, the box of the Bold face.
+    std::string expected = "TEXT ";
+    detail::writeTextProperties(bold.text, expected);
+    expected += " face=bold";
+    detail::writeFormattedTextBox(bold, expected);
+    EXPECT_EQ(out, expected);
+    std::string regularBox;
+    detail::writeTextBox(bold.text, regularBox);
+    EXPECT_EQ(out.find(regularBox), std::string::npos) << out;
+
+    // Tracking has no field of its own: only the box changes.
+    const core::FormattedText tracked{bold.text, core::FontFace::Regular, 2.0};
+    std::string spaced;
+    detail::writeGeneratedItem({tracked, core::effectiveProperties(document, record)}, spaced);
+    expectContains(spaced, R"( value="A" face=regular ~box=)");
+
+    // A TextLine is a LINE.
+    std::string line;
+    detail::writeGeneratedItem({core::TextLine{core::Line{{0.0, -0.2}, {1.0, -0.2}}},
+                                core::effectiveProperties(document, record)},
+                               line);
+    EXPECT_EQ(line, "LINE start=0,-0.2 end=1,-0.2");
 }
 
 }  // namespace

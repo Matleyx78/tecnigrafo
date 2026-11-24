@@ -7,6 +7,7 @@
 #include "tg/core/block_table.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/ellipse.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/math.hpp"
@@ -14,6 +15,7 @@
 #include "tg/core/proximity.hpp"
 #include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
+#include "tg/core/text_metrics.hpp"
 
 #include <gtest/gtest.h>
 
@@ -26,6 +28,7 @@
 #include <optional>
 #include <random>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <variant>
@@ -1204,6 +1207,148 @@ TEST(MTextQueries, AnEmptyMTextIsItsInsertionPoint) {
     EXPECT_EQ(findSnap(document, {5.0, 5.0}, 0.1, kInsertionOnly),
               (SnapPoint{{5.0, 5.0}, SnapKind::Insertion}));
     EXPECT_FALSE(findSnap(document, {5.5, 5.0}, 0.1, kInsertionOnly));
+}
+
+// docs/tappe/0.8.1/PT8-impaginazione-formati.md, points 1 and 2: the pieces
+// of a formatted MTEXT, a Bold one and an underlined one, give no snap point
+// of their own, directly, in a block and in a dimension.
+constexpr std::string_view kBoldAndUnderlined = R"({\fArial|b1;A} {\LA})";
+
+SnapModes endMidIntNea() {
+    return nearestAnd(SnapModes{true, true, false, false, true});
+}
+
+/// The generated pieces of `mtext` alone, as in the drawing.
+std::vector<GeneratedItem> piecesOf(const MText& mtext) {
+    Document document = Document::newDrawing();
+    return generate(document, *document.find(document.add(mtext)));
+}
+
+Vec2 middleOf(const Line& line) {
+    return (line.start + line.end) * 0.5;
+}
+
+template <typename T>
+T pieceOf(const std::vector<GeneratedItem>& items) {
+    for (const GeneratedItem& item : items) {
+        if (const auto* shape = std::get_if<T>(&item.shape)) {
+            return *shape;
+        }
+    }
+    ADD_FAILURE() << "no piece of the expected shape";
+    return T{};
+}
+
+MText boldAndUnderlined(const Vec2& insertion) {
+    MText mtext;
+    mtext.insertion = insertion;
+    mtext.height = 2.5;
+    mtext.value = std::string{kBoldAndUnderlined};
+    return mtext;
+}
+
+TEST(FormattedMTextSnap, ADirectMTextLeadsToItsInsertionPointOnly) {
+    Document document = Document::newDrawing();
+    const MText mtext = boldAndUnderlined({0, 30});
+    document.add(mtext);
+    const std::vector<GeneratedItem> pieces = piecesOf(mtext);
+    const auto bold = pieceOf<FormattedText>(pieces);
+    const auto plain = pieceOf<Text>(pieces);
+    const Line underline = pieceOf<TextLine>(pieces).line;
+    const SnapPoint insertion{{0, 30}, SnapKind::Insertion};
+    // On the Bold piece and on the underlined one, farther than the aperture
+    // from the insertion point: the insertion point of the MTEXT.
+    const Vec2 onBold = bold.text.position + Vec2{0.2, 1.0};
+    ASSERT_GT(distance(onBold, insertion.point), 0.5);
+    EXPECT_EQ(findSnap(document, onBold, 0.5, kInsertionOnly), insertion);
+    EXPECT_EQ(findSnap(document, plain.position + Vec2{0.2, 1.0}, 0.5, kInsertionOnly), insertion);
+    // No end, middle or Nearest of the underline.
+    for (const Vec2& point : {underline.start, underline.end, middleOf(underline)}) {
+        EXPECT_FALSE(findSnap(document, point, 0.5, endMidIntNea())) << point.x;
+    }
+}
+
+TEST(FormattedMTextSnap, InABlockNoPointFromTheLinesNorFromAFormattedText) {
+    Document document = Document::newDrawing();
+    const MText mtext = boldAndUnderlined({0, 30});
+    const std::vector<GeneratedItem> pieces = piecesOf(mtext);
+    const Line underline = pieceOf<TextLine>(pieces).line;
+    const Vec2 middle = middleOf(underline);
+    // A line of the block crosses the underline in its middle.
+    defineBlock(document, "Tag", {mtext, Line{middle - Vec2{0, 2}, middle + Vec2{0, 2}}});
+    const Vec2 at{100, 0};
+    document.add(insertOf("Tag", at));
+    const auto bold = pieceOf<FormattedText>(pieces);
+    const auto plain = pieceOf<Text>(pieces);
+    // The Bold piece gives not even its insertion point; a Text gives its own.
+    EXPECT_FALSE(findSnap(document, at + bold.text.position + Vec2{0.2, 1.0}, 0.5, kInsertionOnly));
+    EXPECT_EQ(findSnap(document, at + plain.position + Vec2{0.2, 1.0}, 0.5, kInsertionOnly),
+              (SnapPoint{at + plain.position, SnapKind::Insertion}));
+    // No end or middle of the underline, no crossing with the line.
+    for (const Vec2& point : {underline.start, underline.end}) {
+        EXPECT_FALSE(findSnap(document, at + point, 0.5, endMidIntNea())) << point.x;
+    }
+    const SnapModes intersection{false, false, false, false, true};
+    EXPECT_FALSE(findSnap(document, at + middle, 0.5, intersection));
+    // Near the underline, away from the line: no Nearest.
+    EXPECT_FALSE(findSnap(document, at + middle + Vec2{0.3, 0.05}, 0.2, endMidIntNea()));
+}
+
+TEST(FormattedMTextSnap, InADimensionTheInsertionPointOfItsText) {
+    Document document = Document::newDrawing();
+    Dimension dimension;
+    dimension.definition.kind = DimensionKind::Linear;
+    dimension.definition.point13 = {0, 0};
+    dimension.definition.point14 = {40, 0};
+    dimension.definition.linePoint = {40, 10};
+    dimension.presentation.textOverride = std::string{kBoldAndUnderlined};
+    std::string reason;
+    const std::optional<Dimension> regenerable =
+        regenerated(document, std::move(dimension), &reason);
+    ASSERT_TRUE(regenerable.has_value()) << reason;
+    const Dimension made = regenerable.value_or(Dimension{});
+    document.add(made);
+    MText text;
+    for (const EntityRecord& record : made.graphics) {
+        if (const auto* shown = std::get_if<MText>(&record.entity)) {
+            text = *shown;
+        }
+    }
+    const std::vector<GeneratedItem> pieces =
+        generate(document, EntityRecord{EntityId{9}, Entity{text}});
+    const auto bold = pieceOf<FormattedText>(pieces);
+    const Line underline = pieceOf<TextLine>(pieces).line;
+    const SnapPoint insertion{text.insertion, SnapKind::Insertion};
+    const Vec2 onBold = bold.text.position + Vec2{0.2, 1.0};
+    ASSERT_GT(distance(onBold, text.insertion), 0.5);
+    EXPECT_EQ(findSnap(document, onBold, 0.5, kInsertionOnly), insertion);
+    // The underline is 0.125 above the dimension line: within 0.1 nothing.
+    for (const Vec2& point : {underline.start, underline.end, middleOf(underline)}) {
+        EXPECT_FALSE(findSnap(document, point, 0.1, endMidIntNea())) << point.x;
+    }
+}
+
+TEST(FormattedMTextSnap, AVisibleTextLineCountsForDistanceAndSelection) {
+    // Underlined spaces: a TextLine without a text over it.
+    Document document = Document::newDrawing();
+    MText mtext;
+    mtext.height = 1.0;
+    mtext.value = R"(A{\L   })";
+    const EntityId id = document.add(mtext);
+    const EntityRecord& record = *document.find(id);
+    const double a = textWidth(U"A");
+    const double end = textWidth(U"A   ");
+    const Vec2 onTheLine{(a + end) / 2.0, -1.2};
+    EXPECT_EQ(distance(document, record, onTheLine), 0.0);
+    EXPECT_EQ(selectInRectangle(document,
+                                BBox{onTheLine - Vec2{0.05, 0.05}, onTheLine + Vec2{0.05, 0.05}},
+                                RectangleMode::Crossing),
+              std::vector<EntityId>{id});
+    // A window around the A alone leaves the line out, and the MTEXT.
+    EXPECT_TRUE(
+        selectInRectangle(document, BBox{{-0.1, -2}, {a + 0.1, 1}}, RectangleMode::Window).empty());
+    EXPECT_EQ(selectInRectangle(document, BBox{{-0.1, -2}, {end + 0.1, 1}}, RectangleMode::Window),
+              std::vector<EntityId>{id});
 }
 
 TEST_F(RandomDocument, PickMatchesExhaustiveSearch) {

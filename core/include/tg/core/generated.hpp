@@ -16,9 +16,11 @@
 #include "tg/core/snap_points.hpp"
 #include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
+#include "tg/core/text_metrics.hpp"
 #include "tg/core/transform2d.hpp"
 #include "tg/core/vec2.hpp"
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <span>
@@ -43,8 +45,36 @@ struct FilledRegion {
     Transform2D transform;        ///< identity unless inside a non-uniform insert
 };
 
-using GeneratedShape =
-    std::variant<Line, Arc, Circle, Ellipse, Polyline, Text, Solid, FilledRegion>;
+/// A piece of a formatted MTEXT that is not a plain Text (docs/adr/0054,
+/// point 4; docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 1): its
+/// Text, drawn and measured with `face` and with every advance multiplied by
+/// `tracking` (`\T`), which, unlike the width factor of the Text (`\W`),
+/// does not widen the glyphs. It gives no snap point of its own, not even
+/// the insertion point of its Text.
+struct FormattedText {
+    Text text;
+    FontFace face{FontFace::Regular};
+    double tracking{1};
+
+    friend bool operator==(const FormattedText&, const FormattedText&) = default;
+};
+
+/// A line of a formatted MTEXT: an underline, overline or strike-through, or
+/// the line of a stacked fraction (docs/adr/0054, points 3 and 4). Distance
+/// and selection take it as its Line; it gives no snap point, takes part in
+/// no intersection and is no curve for Nearest.
+struct TextLine {
+    Line line;
+
+    friend bool operator==(const TextLine&, const TextLine&) = default;
+};
+
+using GeneratedShape = std::variant<Line, Arc, Circle, Ellipse, Polyline, Text, Solid, FilledRegion,
+                                    FormattedText, TextLine>;
+
+// The box of a formatted piece: textBox() of its Text, with the advances
+// of its face multiplied by its tracking and its ascent and descent.
+[[nodiscard]] std::array<Vec2, 4> formattedTextBox(const FormattedText& piece);
 
 struct GeneratedItem {
     GeneratedShape shape;            ///< in drawing coordinates (docs/adr/0044, point 2)
@@ -96,7 +126,8 @@ struct GeneratedItem {
 /// appendSnapPoints(const Entity&, …): those of every drawn shape, in order,
 /// then those of the entity that no shape gives (appendOwnSnapPointsOf()).
 /// The rows of an MTEXT give none: only its own points (docs/adr/0046,
-/// point 2).
+/// point 2). A FormattedText or a TextLine gives none either, in a block as
+/// in a dimension (docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 2).
 void appendSnapPoints(const Document& document, const EntityRecord& record, const SnapModes& modes,
                       std::vector<SnapPoint>& out, const std::optional<Vec2>& from);
 
@@ -120,7 +151,8 @@ struct TransformOutcome {
 
 // --- Questions on one shape, for the visits and the packages of the types ---
 
-/// The bounding box of a shape. A filled region under a map other than the
+/// The bounding box of a shape; that of formattedTextBox() for a
+/// FormattedText. A filled region under a map other than the
 /// identity gives the box of the mapped corners of its loops' boxes: it
 /// contains the region, and is exact for a scaling along the axes.
 [[nodiscard]] BBox shapeBoundingBox(const GeneratedShape& shape);
@@ -138,11 +170,15 @@ struct TransformOutcome {
 /// filled.
 [[nodiscard]] bool shapeIntersects(const GeneratedShape& shape, const BBox& rectangle);
 
-/// The snap points, as for the entity of the same type; none for a filled region.
+/// The snap points, as for the entity of the same type; none for a filled
+/// region, a FormattedText or a TextLine.
 void appendShapeSnapPoints(const GeneratedShape& shape, const SnapModes& modes,
                            std::vector<SnapPoint>& out, const std::optional<Vec2>& from);
 
-/// The shape as an entity of the same type; std::nullopt for a filled region.
+/// The shape as an entity of the same type; std::nullopt for a filled
+/// region. A FormattedText is its Text, a TextLine its Line: the variant and
+/// the tracking are lost, so the questions on one shape above take them
+/// from the shape itself.
 [[nodiscard]] std::optional<Entity> shapeEntity(const GeneratedShape& shape);
 
 /// The box of every item, drawn or not: the default extentOf() of a type.

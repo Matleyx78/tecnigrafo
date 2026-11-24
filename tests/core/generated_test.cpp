@@ -9,15 +9,20 @@
 #include "tg/core/proximity.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
+#include "tg/core/text.hpp"
+#include "tg/core/text_metrics.hpp"
 #include "tg/core/transform2d.hpp"
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstddef>
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <string>
 #include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -438,6 +443,121 @@ TEST(Generated, AFilledRegionUnderAMapAnswersInDrawingCoordinates) {
     region.transform = Transform2D::scaling(2.0, 1.0);
     EXPECT_EQ(shapeDistance(region, {19, 1}), 0.0);
     expectSameBox(shapeBoundingBox(region), BBox{{0, 0}, {20, 10}});
+}
+
+// --- Formatted pieces of an MTEXT (docs/tappe/0.8.1/PT8-impaginazione-formati.md) --
+
+/// The pieces that an MTEXT of height 1 with `value` generates.
+std::vector<GeneratedItem> piecesOf(std::string value) {
+    MText mtext;
+    mtext.height = 1.0;
+    mtext.value = std::move(value);
+    Document document = Document::newDrawing();
+    return generate(document, *document.find(document.add(mtext)));
+}
+
+TEST(FormattedPieces, TrackingWidensTheAdvancesAndTheWidthFactorTheText) {
+    // A{\T2;AB} and A{\W2;AB}: the second piece is a FormattedText with
+    // tracking 2 and width factor 1 in one, a Text with width factor 2 in the
+    // other (#927, [bloccante] 1). Rule 1 gives both the same advances; the
+    // glyphs differ, as the drawing shows them (PT9).
+    const std::vector<GeneratedItem> tracked = piecesOf(R"(A{\T2;AB})");
+    const std::vector<GeneratedItem> wide = piecesOf(R"(A{\W2;AB})");
+    ASSERT_EQ(tracked.size(), 2U);
+    ASSERT_EQ(wide.size(), 2U);
+    const auto* piece = std::get_if<FormattedText>(&tracked[1].shape);
+    const auto* text = std::get_if<Text>(&wide[1].shape);
+    ASSERT_NE(piece, nullptr);
+    ASSERT_NE(text, nullptr);
+    EXPECT_EQ(piece->tracking, 2.0);
+    EXPECT_EQ(piece->text.widthFactor, 1.0);
+    EXPECT_EQ(text->widthFactor, 2.0);
+    // The box of the FormattedText doubles that of its Regular Text.
+    const std::array<Vec2, 4> box = formattedTextBox(*piece);
+    const std::array<Vec2, 4> regular = textBox(piece->text);
+    EXPECT_NEAR(box[1].x - box[0].x, 2.0 * (regular[1].x - regular[0].x), 1e-12);
+    EXPECT_EQ(box[0], regular[0]);
+    EXPECT_EQ(box[3], regular[3]);
+    const std::array<Vec2, 4> widened = textBox(*text);
+    for (std::size_t i = 0; i < box.size(); ++i) {
+        EXPECT_NEAR(box.at(i).x, widened.at(i).x, 1e-12) << i;
+        EXPECT_NEAR(box.at(i).y, widened.at(i).y, 1e-12) << i;
+    }
+}
+
+TEST(FormattedPieces, TheBoxOfABoldPieceIsThatOfItsFace) {
+    FormattedText bold{Text{}, FontFace::Bold, 1.0};
+    bold.text.height = 1.0;
+    bold.text.value = "A";
+    const double boldWidth = textWidth(U"A", FontFace::Bold);
+    const double regularWidth = textWidth(U"A");
+    ASSERT_GT(boldWidth, regularWidth + 0.01);
+    const std::array<Vec2, 4> box = formattedTextBox(bold);
+    EXPECT_NEAR(box[1].x, boldWidth, 1e-12);
+    EXPECT_NEAR(box[0].y, fontMetrics(FontFace::Bold).descent, 1e-12);
+    EXPECT_NEAR(box[3].y, fontMetrics(FontFace::Bold).ascent, 1e-12);
+
+    // A point on the right side of the Bold box, outside the Regular one.
+    const GeneratedShape shape{bold};
+    const GeneratedShape plain{bold.text};
+    const Vec2 onTheSide{boldWidth, 0.5};
+    EXPECT_EQ(shapeDistance(shape, onTheSide), 0.0);
+    EXPECT_GT(shapeDistance(plain, onTheSide), 0.0);
+    // A window across that side crosses the Bold piece, not the Regular one.
+    const BBox across{{boldWidth - 0.005, 0.4}, {boldWidth + 1.0, 0.6}};
+    ASSERT_GT(across.min().x, regularWidth);
+    EXPECT_TRUE(shapeIntersects(shape, across));
+    EXPECT_FALSE(shapeIntersects(plain, across));
+    // A window around the Regular box does not hold the Bold one.
+    const BBox around{{-0.1, -1.0}, {regularWidth + 0.005, 2.0}};
+    EXPECT_TRUE(shapeIsInside(plain, around));
+    EXPECT_FALSE(shapeIsInside(shape, around));
+    expectSameBox(shapeBoundingBox(shape), BBox{box[0], box[2]});
+}
+
+TEST(FormattedPieces, NeitherGivesSnapPointsAndTheLineCountsAsALine) {
+    FormattedText bold{Text{}, FontFace::Bold, 1.0};
+    bold.text.value = "A";
+    const TextLine underline{Line{{0, -0.2}, {1, -0.2}}};
+    SnapModes all;
+    all.perpendicular = true;
+    all.tangent = true;
+    all.quadrant = true;
+    for (const GeneratedShape& shape : {GeneratedShape{bold}, GeneratedShape{underline}}) {
+        std::vector<SnapPoint> out;
+        appendShapeSnapPoints(shape, all, out, Vec2{3, 3});
+        EXPECT_TRUE(out.empty());
+    }
+    // For distance and selection a TextLine is its Line.
+    const GeneratedShape line{underline};
+    EXPECT_EQ(shapeDistance(line, {0.5, -0.2}), 0.0);
+    EXPECT_NEAR(shapeDistance(line, {0.5, 0.3}), 0.5, 1e-12);
+    EXPECT_TRUE(shapeIsInside(line, BBox{{-1, -1}, {2, 1}}));
+    EXPECT_TRUE(shapeIntersects(line, BBox{{0.4, -0.3}, {0.6, -0.1}}));
+    // As an entity: its Text, its Line.
+    EXPECT_EQ(shapeEntity(GeneratedShape{bold}), std::optional<Entity>{Entity{bold.text}});
+    EXPECT_EQ(shapeEntity(line), std::optional<Entity>{Entity{underline.line}});
+}
+
+TEST(FormattedPieces, AnAffineMapKeepsTheFaceAndTheTracking) {
+    FormattedText piece{Text{}, FontFace::Italic, 2.0};
+    piece.text.height = 1.0;
+    piece.text.value = "A";
+    const std::vector<GeneratedShape> stretched =
+        transformedShape(piece, Transform2D::scaling(2.0, 1.0));
+    ASSERT_EQ(stretched.size(), 1U);
+    const auto* mapped = std::get_if<FormattedText>(&stretched.front());
+    ASSERT_NE(mapped, nullptr);
+    EXPECT_EQ(mapped->face, FontFace::Italic);
+    EXPECT_EQ(mapped->tracking, 2.0);
+    EXPECT_DOUBLE_EQ(mapped->text.widthFactor, 2.0);
+    // A singular map gives nothing, as for a Text.
+    EXPECT_TRUE(transformedShape(piece, Transform2D::scaling(2.0, 0.0)).empty());
+
+    const std::vector<GeneratedShape> moved =
+        transformedShape(TextLine{Line{{0, 0}, {1, 0}}}, Transform2D::translation({5, 1}));
+    ASSERT_EQ(moved.size(), 1U);
+    EXPECT_EQ(std::get<TextLine>(moved.front()).line, (Line{{5, 1}, {6, 1}}));
 }
 
 }  // namespace
