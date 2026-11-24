@@ -332,7 +332,7 @@ std::optional<TextEditRequest> MTextCommand::textEditing() const {
     if (m_stage != Stage::Text) {
         return std::nullopt;
     }
-    return TextEditRequest{std::nullopt, m_mtext, m_mtext.value, std::nullopt};
+    return TextEditRequest{std::nullopt, m_mtext, "", std::nullopt};
 }
 
 }  // namespace tg::cmd

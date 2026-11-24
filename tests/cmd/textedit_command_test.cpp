@@ -29,6 +29,12 @@ protected:
         return id;
     }
 
+    core::EntityId addDimension(core::Dimension dimension) {
+        const auto regenerated = core::regenerated(document(), std::move(dimension));
+        EXPECT_TRUE(regenerated);
+        return add(regenerated.value_or(core::Dimension{}));
+    }
+
     void submit(std::initializer_list<const char*> inputs) {
         for (const char* input : inputs) {
             m_runner.submitText(input);
@@ -72,6 +78,8 @@ TEST_F(TexteditCommandTest, MultipleEditsTextAndMtextInSeparateUndoSteps) {
     const TextEditRequest request = pendingRequest.value_or(TextEditRequest{});
     EXPECT_EQ(request.target, textId);
     EXPECT_EQ(request.value, "OLD");
+    EXPECT_TRUE(std::holds_alternative<core::Text>(request.shown));
+    EXPECT_FALSE(request.measurement);
     submit({"NEW", "0,-10", "AFTER", ""});
 
     EXPECT_EQ(std::get<core::Text>(entity(textId)).value, "NEW");
@@ -81,14 +89,79 @@ TEST_F(TexteditCommandTest, MultipleEditsTextAndMtextInSeparateUndoSteps) {
     EXPECT_EQ(editor().undoNames().back(), "Textedit");
 }
 
+TEST_F(TexteditCommandTest, OnePickfirstObjectIsEditedButTwoAreNotConsumed) {
+    core::Text first;
+    first.position = {0, 0};
+    first.value = "FIRST";
+    add(first);
+    core::Text second;
+    second.position = {20, 0};
+    second.value = "SECOND";
+    add(second);
+
+    runner().click({0, 0}, PickAction::Add);
+    submit({"ED"});
+    EXPECT_EQ(runner().promptText(), "Enter new text <FIRST>:");
+    runner().submit(CancelInput{});
+
+    runner().click({0, 0}, PickAction::Add);
+    runner().click({20, 0}, PickAction::Add);
+    submit({"ED"});
+    EXPECT_EQ(runner().promptText(), "Select an annotation object or [Undo/Mode]:");
+    EXPECT_TRUE(runner().selection().isEmpty());
+    runner().submit(CancelInput{});
+}
+
+TEST_F(TexteditCommandTest, InvalidAttributeTagRepeatsItsPrompt) {
+    core::AttributeDefinition definition;
+    definition.text.height = 1.0;
+    definition.tag = "ALFA";
+    definition.prompt = "Prompt";
+    const core::EntityId id = add(definition);
+
+    submit({"TEXTEDIT", "0,0", "DUE PAROLE"});
+    EXPECT_FALSE(runner().textEditing());
+    EXPECT_EQ(messages().back(), "Invalid tag name.");
+    EXPECT_EQ(runner().promptText(), "Enter attribute tag <ALFA>:");
+    runner().submit(TextInput{""});
+    EXPECT_EQ(messages().back(), "Invalid tag name.");
+    EXPECT_EQ(runner().promptText(), "Enter attribute tag <ALFA>:");
+    runner().submit(TextInput{"BETA"});
+    EXPECT_EQ(runner().promptText(), "Enter attribute prompt <Prompt>:");
+    EXPECT_EQ(std::get<core::AttributeDefinition>(entity(id)).tag, "BETA");
+    runner().submit(CancelInput{});
+}
+
+TEST_F(TexteditCommandTest, InsertAttributesNeverExposeTheEditorRequest) {
+    document().replaceBlock("ATTRS", core::BlockDefinition{"ATTRS"});
+    core::Insert insert;
+    insert.block = "ATTRS";
+    core::Attribute attribute;
+    attribute.tag = "CODE";
+    attribute.text.height = 1.0;
+    attribute.text.value = "A1";
+    attribute.text.position = {30, 0};
+    insert.attributes.push_back(attribute);
+    add(insert);
+
+    runner().submitText("TEXTEDIT");
+    EXPECT_FALSE(runner().textEditing());
+    runner().click({30, 0}, PickAction::Add);
+    EXPECT_EQ(runner().promptText(), "CODE <A1>:");
+    EXPECT_FALSE(runner().textEditing());
+    runner().submit(CancelInput{});
+}
+
 TEST_F(TexteditCommandTest, EmptyEditorValueKeepsTextAndUndoRevertsTheLastEdit) {
     core::Text text;
     text.value = "OLD";
     const core::EntityId id = add(text);
 
     submit({"TEXTEDIT", "0,0"});
+    const std::size_t undoSteps = editor().undoNames().size();
     runner().submit(TextInput{""});
     EXPECT_EQ(std::get<core::Text>(entity(id)).value, "OLD");
+    EXPECT_EQ(editor().undoNames().size(), undoSteps);
     submit({"0,0", "NEW", "U", ""});
     EXPECT_EQ(std::get<core::Text>(entity(id)).value, "OLD");
     EXPECT_EQ(messages().back(), "The command has been completely undone.");
@@ -115,9 +188,82 @@ TEST_F(TexteditCommandTest, NewMtextExposesTheEditorRequest) {
     const TextEditRequest request = pendingRequest.value_or(TextEditRequest{});
     EXPECT_FALSE(request.target);
     EXPECT_TRUE(std::holds_alternative<core::MText>(request.shown));
+    EXPECT_TRUE(request.value.empty());
     runner().submit(TextInput{""});
     runner().submitText("");
     EXPECT_TRUE(document().isEmpty());
+}
+
+TEST_F(TexteditCommandTest, MtextRequestCarriesShownEntityAndEmptyValueIsKept) {
+    core::MText mtext;
+    mtext.insertion = {0, 0};
+    mtext.width = 20;
+    mtext.value = "PROVA";
+    const core::EntityId id = add(mtext);
+
+    submit({"TEXTEDIT", "0,0"});
+    const auto request = runner().textEditing();
+    ASSERT_TRUE(request);
+    EXPECT_EQ(request->target, id);
+    EXPECT_EQ(request->value, "PROVA");
+    EXPECT_EQ(std::get<core::MText>(request->shown).value, "PROVA");
+    EXPECT_FALSE(request->measurement);
+    const std::size_t undoSteps = editor().undoNames().size();
+    runner().submit(TextInput{""});
+    EXPECT_EQ(std::get<core::MText>(entity(id)).value, "PROVA");
+    EXPECT_EQ(editor().undoNames().size(), undoSteps);
+}
+
+TEST_F(TexteditCommandTest, LinearDimensionRequestSeparatesShownAndReplacementText) {
+    core::Dimension dimension;
+    dimension.definition.kind = core::DimensionKind::Linear;
+    dimension.definition.point13 = {0, 0};
+    dimension.definition.point14 = {30, 0};
+    dimension.definition.linePoint = {15, 10};
+    dimension.presentation.textOverride = "<> mm";
+    const core::EntityId id = addDimension(dimension);
+    const auto& made = std::get<core::Dimension>(entity(id));
+    const core::Vec2 textPoint = made.presentation.textPoint;
+
+    runner().submitText("TEXTEDIT");
+    runner().click(textPoint, PickAction::Add);
+    const auto request = runner().textEditing();
+    ASSERT_TRUE(request);
+    EXPECT_EQ(request->target, id);
+    EXPECT_EQ(request->value, "<> mm");
+    EXPECT_EQ(request->measurement, "30");
+    EXPECT_EQ(std::get<core::MText>(request->shown).value, "30 mm");
+
+    runner().submit(ConfirmInput{});
+    EXPECT_EQ(std::get<core::Dimension>(entity(id)).presentation.textOverride, "<> mm");
+    runner().click(textPoint, PickAction::Add);
+    runner().submit(TextInput{""});
+    EXPECT_TRUE(std::get<core::Dimension>(entity(id)).presentation.textOverride.empty());
+    EXPECT_EQ(editor().undoNames().back(), "Textedit");
+    runner().submit(CancelInput{});
+}
+
+TEST_F(TexteditCommandTest, AngularDimensionMeasurementIsFormattedInDegrees) {
+    core::Dimension dimension;
+    dimension.definition.kind = core::DimensionKind::Angular;
+    dimension.definition.dxfType = 2;
+    dimension.definition.point13 = {0, 0};
+    dimension.definition.point14 = {0, 40};
+    dimension.definition.linePoint = {40, 0};
+    dimension.definition.point15 = {0, 0};
+    dimension.definition.point16 = {10, 10};
+    const core::EntityId id = addDimension(dimension);
+    const auto& made = std::get<core::Dimension>(entity(id));
+
+    runner().submitText("TEXTEDIT");
+    runner().click(made.presentation.textPoint, PickAction::Add);
+    const auto request = runner().textEditing();
+    ASSERT_TRUE(request);
+    const auto variables = core::dimensionVariables(document().dimStyles(), made.presentation.style,
+                                                    made.presentation.overrides);
+    EXPECT_EQ(request->measurement,
+              core::dimensionText(variables, core::DimensionKind::Angular, 90.0, "<>"));
+    runner().submit(CancelInput{});
 }
 
 }  // namespace

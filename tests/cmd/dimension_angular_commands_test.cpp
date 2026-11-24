@@ -100,6 +100,41 @@ TEST_F(DimensionAngularCommandsTest, AngularTextDefaultUsesStoredLineDirections)
     EXPECT_EQ(runner().promptText(), "Enter dimension text <53>:");
 }
 
+TEST_F(DimensionAngularCommandsTest, AngularMtextExposesItsEditorRequest) {
+    add(core::Line{{0.0, 0.0}, {40.0, 0.0}});
+    add(core::Line{{0.0, 0.0}, {0.0, 40.0}});
+    runner().submitText("DIMANGULAR");
+    runner().click({20.0, 0.0}, PickAction::Add);
+    runner().click({0.0, 20.0}, PickAction::Add);
+    runner().pointerMoved({10.0, 10.0});
+    runner().submitText("Mtext");
+
+    const auto request = runner().textEditing();
+    ASSERT_TRUE(request);
+    EXPECT_FALSE(request->target);
+    EXPECT_EQ(request->value, "<>");
+    EXPECT_TRUE(request->measurement);
+    EXPECT_TRUE(std::holds_alternative<core::MText>(request->shown));
+    runner().submit(CancelInput{});
+}
+
+TEST_F(DimensionAngularCommandsTest, RadialMtextExposesRadiusAndDiameterRequests) {
+    add(core::Circle{{0.0, 0.0}, 10.0});
+    for (const char* command : {"DIMRADIUS", "DIMDIAMETER"}) {
+        runner().submitText(command);
+        runner().click({10.0, 0.0}, PickAction::Add);
+        runner().pointerMoved({20.0, 0.0});
+        runner().submitText("Mtext");
+        const auto request = runner().textEditing();
+        ASSERT_TRUE(request);
+        EXPECT_FALSE(request->target);
+        EXPECT_EQ(request->value, "<>");
+        EXPECT_TRUE(request->measurement);
+        EXPECT_TRUE(std::holds_alternative<core::MText>(request->shown));
+        runner().submit(CancelInput{});
+    }
+}
+
 TEST_F(DimensionAngularCommandsTest, AngularRejectsAnArcAndPolylineArc) {
     add(core::Arc{{0.0, 0.0}, 10.0, 0.0, core::kPi});
     core::Polyline polyline;

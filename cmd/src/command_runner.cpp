@@ -505,6 +505,14 @@ void CommandRunner::beginCommand() {
         forward(selection);  // checks the prompt that follows
         return;
     }
+    // TEXTEDIT accepts one pickfirst object without becoming a
+    // needsSelection() command: that would add a runner-owned selection
+    // prompt when there is no pickfirst selection (issue #939).
+    if (m_description != nullptr && m_description->name == "TEXTEDIT" &&
+        selection.ids.size() == 1) {
+        forward(ObjectInput{selection.ids.front(), {}, false});
+        return;
+    }
     checkPrompt();
 }
 

@@ -122,7 +122,11 @@ Status TexteditCommand::handle(CommandContext& context, const Input& input) {
         }
     } else if (m_stage == Stage::AttributeTag && (text != nullptr || confirm)) {
         auto definition = std::get<core::AttributeDefinition>(m_original);
-        if (text != nullptr && core::validAttributeTag(text->text)) {
+        if (text != nullptr) {
+            if (!core::validAttributeTag(text->text)) {
+                context.message("Invalid tag name.");
+                return Status::Continue;
+            }
             definition.tag = text->text;
         }
         m_objectChanged = context.editor.replace(m_target, definition) || m_objectChanged;
@@ -290,9 +294,13 @@ std::optional<TextEditRequest> TexteditCommand::textEditing() const {
     }
     const auto variables = core::dimensionVariables(
         m_document->dimStyles(), dimension->presentation.style, dimension->presentation.overrides);
-    return TextEditRequest{m_target, *shown, dimensionValue(*dimension),
-                           core::dimensionText(variables, dimension->definition.kind,
-                                               dimension->value.measurement, "<>")};
+    double measurement = dimension->value.measurement;
+    if (dimension->definition.kind == core::DimensionKind::Angular) {
+        measurement = core::radiansToDegrees(measurement);
+    }
+    return TextEditRequest{
+        m_target, *shown, dimensionValue(*dimension),
+        core::dimensionText(variables, dimension->definition.kind, measurement, "<>")};
 }
 
 }  // namespace tg::cmd

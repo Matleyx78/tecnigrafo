@@ -69,6 +69,31 @@ TEST_F(DimensionCommandsTest, WrittenPointsCreateLinearAndAlignedDimensions) {
     EXPECT_DOUBLE_EQ(dimension().value.measurement, 5.0);
 }
 
+TEST_F(DimensionCommandsTest, LinearAndAlignedMtextExposeTheirEditorRequests) {
+    for (const char* command : {"DIMLINEAR", "DIMALIGNED"}) {
+        runner().submitText(command);
+        point(0.0, 0.0);
+        point(30.0, 0.0);
+        runner().pointerMoved({15.0, 10.0});
+        runner().submitText("Mtext");
+        const auto request = runner().textEditing();
+        ASSERT_TRUE(request);
+        EXPECT_FALSE(request->target);
+        EXPECT_EQ(request->value, "<>");
+        EXPECT_TRUE(request->measurement);
+        EXPECT_TRUE(std::holds_alternative<core::MText>(request->shown));
+
+        runner().submit(TextInput{"FIXED"});
+        runner().pointerMoved({15.0, 10.0});
+        runner().submitText("Mtext");
+        const auto fixedRequest = runner().textEditing();
+        ASSERT_TRUE(fixedRequest);
+        EXPECT_EQ(fixedRequest->value, "FIXED");
+        EXPECT_TRUE(fixedRequest->measurement);
+        runner().submit(CancelInput{});
+    }
+}
+
 TEST_F(DimensionCommandsTest, SelectObjectTextAndRotatedOptionsAreApplied) {
     editor().beginTransaction("Line");
     editor().add(core::Line{{0.0, 0.0}, {10.0, 0.0}});

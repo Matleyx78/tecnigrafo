@@ -61,6 +61,15 @@ TEST_F(MTextCommandTest, CreatesParagraphsAndOneUndoStep) {
     EXPECT_TRUE(document().isEmpty());
 }
 
+TEST_F(MTextCommandTest, EditorRequestKeepsEnteredLinesOnlyInShownMtext) {
+    submit({"MTEXT", "0,0", "20,-10", "line one"});
+    const auto request = runner().textEditing();
+    ASSERT_TRUE(request);
+    EXPECT_TRUE(request->value.empty());
+    EXPECT_EQ(std::get<core::MText>(request->shown).value, "line one");
+    runner().submit(CancelInput{});
+}
+
 TEST_F(MTextCommandTest, WidthJustificationStyleAndRotationOptions) {
     submit({"MTEXT", "100,50", "H", "4", "J", "MC", "R", "30", "W", "40", "Center", ""});
     ASSERT_EQ(document().entityCount(), 1U);
