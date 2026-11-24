@@ -88,6 +88,12 @@ public:
             frame.rotation, frame.widthFactor, text.obliqueAngle, text.mirroredX, text.mirroredY});
     }
 
+    // Until PT9 brings the faces, a formatted piece is drawn as its Text and
+    // a line of a formatted MTEXT as its Line.
+    void operator()(const core::FormattedText& piece) { (*this)(piece.text); }
+
+    void operator()(const core::TextLine& textLine) { (*this)(textLine.line); }
+
     void operator()(const core::Solid& solid) {
         // The figure is the quadrilateral v0, v1, v3, v2 (docs/adr/0044, point 7).
         const auto& v = solid.vertices;
@@ -155,7 +161,8 @@ private:
 
 // The curve that core::dashes() takes for `shape`: the entity of the same
 // type, an ellipse as the polyline of its points with the pattern running
-// across its vertices; none for a text and for the fills.
+// across its vertices; none for a text and for the fills. A line of a
+// formatted MTEXT is its Line.
 std::optional<core::Entity> dashedCurve(const core::GeneratedShape& shape, double toleranceWorld) {
     if (const auto* ellipse = std::get_if<core::Ellipse>(&shape)) {
         std::vector<core::PolylineVertex> vertices;
@@ -166,7 +173,9 @@ std::optional<core::Entity> dashedCurve(const core::GeneratedShape& shape, doubl
         polyline.setContinuousLinetype(true);
         return core::Entity{std::move(polyline)};
     }
-    if (std::holds_alternative<core::Text>(shape) || std::holds_alternative<core::Solid>(shape) ||
+    if (std::holds_alternative<core::Text>(shape) ||
+        std::holds_alternative<core::FormattedText>(shape) ||
+        std::holds_alternative<core::Solid>(shape) ||
         std::holds_alternative<core::FilledRegion>(shape)) {
         return std::nullopt;
     }
@@ -224,7 +233,8 @@ void drawGeneratedItem(const core::GeneratedItem& item, bool lwdisplay, const Vi
         drawShape(shape, color, viewport, style.tessellationTolerancePx, painter);
         return;
     }
-    if (std::holds_alternative<core::Text>(shape)) {
+    if (std::holds_alternative<core::Text>(shape) ||
+        std::holds_alternative<core::FormattedText>(shape)) {
         // A text has neither lineweight nor linetype; its tiny box, if it
         // comes to that, is a plain cosmetic outline.
         painter.setPen(color, 0.0, LineStyle::Solid);
