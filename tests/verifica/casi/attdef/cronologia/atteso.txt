@@ -1,0 +1,152 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  258 ATTDEF position=2,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="K1" tag="CODICE" prompt="Codice componente" ~box=2,14.229950319375444;16.13236337828247,14.229950319375444;16.13236337828247,18.28956706884315;2,18.28956706884315
+  259 ATTDEF position=2,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" prompt="Nota di montaggio" invisible=yes ~box=2,10.229950319375444;12.09403832505323,10.229950319375444;12.09403832505323,14.289567068843152;2,14.289567068843152
+  260 ATTDEF position=2,7 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="ACME" tag="COSTRUTTORE" prompt="" constant=yes ~box=2,6.229950319375444;29.656139105748757,6.229950319375444;29.656139105748757,10.289567068843152;2,10.289567068843152
+  261 ATTDEF position=22,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="ARIAL" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" prompt="Tensione" verify=yes ~box=22,14.229950319375444;40.57523066004258,14.229950319375444;40.57523066004258,18.28956706884315;22,18.28956706884315
+  262 ATTDEF position=22,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="Q1" tag="POSIZIONE" prompt="Posizione" preset=yes ~box=22,10.229950319375444;41.78708303761533,10.229950319375444;41.78708303761533,14.289567068843152;22,14.289567068843152
+  263 ATTDEF position=30,5 alignment-point=30,5 height=2.5 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S1" tag="SIGLA" prompt="Sigla" lock-position=yes ~box=25.079889750376996,2.0812396118937295;35.62166614129724,3.9400392142084746;34.91672109072603,7.9379812633424915;24.37494469980578,6.0791816610277465
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: ARIAL
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 1
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "ARIAL" is now the current text style.
+  Command: -STYLE
+  Enter name of text style or [?] <ARIAL>: Standard
+  Existing style.
+  Specify full font name or font filename (TTF or SHX) <arial.ttf>:
+  Specify height of text <0.0000>:
+  Specify width factor <1.0000>:
+  Specify obliquing angle <0>:
+  Display text backwards? [Yes/No] <No>:
+  Display text upside-down? [Yes/No] <No>:
+  "Standard" is now the current text style.
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: CODICE
+  Enter attribute prompt: Codice componente
+  Enter default attribute value: K1
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 2,15
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: AFLAGS
+  Enter new value for AFLAGS <0>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: I
+  Current attribute modes: Invisible=Y Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: NOTA
+  Enter attribute prompt: Nota di montaggio
+  Enter default attribute value: da cablare
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 2,11
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: AFLAGS
+  Enter new value for AFLAGS <1>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: C
+  Current attribute modes: Invisible=N Constant=Y Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: COSTRUTTORE
+  Enter attribute value: ACME
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 2,7
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: AFLAGS
+  Enter new value for AFLAGS <2>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: V
+  Current attribute modes: Invisible=N Constant=N Verify=Y Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: TENSIONE
+  Enter attribute prompt: Tensione
+  Enter default attribute value: 24V
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: S
+  Enter style name or [?] <Standard>: ARIAL
+  Current text style:  "ARIAL"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 22,15
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: -STYLE
+  Enter name of text style or [?] <ARIAL>: Standard
+  Existing style.
+  Specify full font name or font filename (TTF or SHX) <arial.ttf>:
+  Specify height of text <0.0000>:
+  Specify width factor <1.0000>:
+  Specify obliquing angle <0>:
+  Display text backwards? [Yes/No] <No>:
+  Display text upside-down? [Yes/No] <No>:
+  "Standard" is now the current text style.
+  Command: AFLAGS
+  Enter new value for AFLAGS <4>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: P
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=Y Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: POSIZIONE
+  Enter attribute prompt: Posizione
+  Enter default attribute value: Q1
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 22,11
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: AFLAGS
+  Enter new value for AFLAGS <8>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: L
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=Y
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: SIGLA
+  Enter attribute prompt: Sigla
+  Enter default attribute value: S1
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: J
+  Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]: MC
+  Specify middle point of text: 30,5
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 10
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Style
+  Attdef
+  Attdef
+  Attdef
+  Attdef
+  Style
+  Attdef
+  Attdef
+redo:
+snap: on
+ortho: off
+text styles:
+  "ARIAL" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 6

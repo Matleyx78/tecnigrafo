@@ -1,0 +1,49 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT14] (#954), work #955: Justify of -ATTDEF (card PT14, "Le domande del testo",
+; point 3; decision on #954). TL asks "Specify top-left point of text:", then height and
+; rotation; Fit asks the two endpoints of the baseline, then the height and no rotation;
+; Align asks the two endpoints and neither height nor rotation. MC is in attdef/cronologia.
+; Not visible, chosen as the simplest: TL keeps the given point both as position and
+; alignment-point (the drawing uses only the alignment point, docs/adr/0022, point 2).
+; Align and Fit: position is the first endpoint, alignment-point the second
+; (docs/adr/0022, point 3). The second endpoint is on the horizontal through the first, at
+; L(tag) * 2.5 from it, and each tag equals its default: the stored rotation is 0, and the
+; height of Align and the width factor of Fit come out as 2.5 and 1 whether the command
+; stores the asked values or the ones derived from the text.
+; L("FI") * 2.5 = 3.229240596167495, L("AL") * 2.5 = 4.444641589779986.
+; ~box (docs/adr/0022): LiberationSans-Regular.ttf of resources/fonts, read with a small
+; reader of its head, hhea, OS/2, cmap and hmtx tables: cap height 1409, ascent 1854,
+; descent -434, summed advances; an ATTDEF shows its tag. TL: oy = h; Align and Fit:
+; anchor at the first endpoint, ox = oy = 0.
+AFLAGS
+0
+-ATTDEF
+
+TL
+Alto a sinistra
+TL
+J
+TL
+0,10
+2.5
+0
+-ATTDEF
+
+FI
+Adatta
+FI
+J
+Fit
+20,0
+23.229240596167495,0
+2.5
+-ATTDEF
+
+AL
+Allineato
+AL
+J
+Align
+40,0
+44.444641589779986,0

@@ -1,0 +1,50 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT14] (#954), work #955: Style of -ATTDEF (card PT14, "Le domande del testo",
+; point 4; decision on #954 and on the review of #1026, point 3). A name that does not
+; exist and "?" give "Cannot find text style "<name>"." and the question repeats; ARIAL,
+; as TENSIONE of autocad-attributi, becomes the current style, and the repeated line says
+; "ARIAL". The change of style is part of the Attdef step (card PT14, point 3): U takes
+; the ATTDEF away and Standard is current again; REDO brings both back.
+; Source: Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736
+; (CC0-1.0): autocad-attributi.txt (AutoCAD 2021, Italian, translated as docs/adr/0056,
+; point 2, and card PT14). The ARIAL style is made with -STYLE and the prompts of
+; style/cambia-esistente and text/stile-altezza-fissa, then Standard is made current
+; again; the ARIAL record takes handle 257.
+; ~box (docs/adr/0022): LiberationSans-Regular.ttf of resources/fonts, read with a small
+; reader of its head, hhea, OS/2, cmap and hmtx tables: cap height 1409, ascent 1854,
+; descent -434, summed advances; an ATTDEF shows its tag. arial.ttf is Liberation Sans.
+-STYLE
+ARIAL
+arial.ttf
+0
+1
+0
+No
+No
+-STYLE
+Standard
+
+
+
+
+
+
+AFLAGS
+0
+-ATTDEF
+
+TENSIONE
+Tensione
+24V
+S
+NESSUNO
+?
+ARIAL
+22,15
+2.5
+0
+!report
+U
+!report
+REDO

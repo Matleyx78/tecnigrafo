@@ -1,0 +1,35 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 ATTDEF position=2,11 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="da cablare" tag="NOTA" prompt="Nota di montaggio" ~box=2,10.229950319375444;12.09403832505323,10.229950319375444;12.09403832505323,14.289567068843152;2,14.289567068843152
+messages:
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name:
+  Tag cannot be null.
+  Enter attribute tag name: DUE PAROLE
+  Invalid tag name.
+  Enter attribute tag name: NOTA
+  Enter attribute prompt: Nota di montaggio
+  Enter default attribute value: da cablare
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 2,11
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Attdef
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 1
