@@ -132,7 +132,15 @@ core::Vec2 polar(double distance, double angleDegrees) {
 
 std::optional<PointSpec> parseCoordinate(std::string_view text) {
     text = trim(text);
-    const bool relative = text.starts_with('@');
+    // "#" and "*" force an absolute coordinate, as in AutoCAD: they matter
+    // with the dynamic input, which makes the numbers typed in its fields
+    // relative (docs/tappe/0.8.1/PT34-last-previous.md, point 4). A Cartesian
+    // or polar coordinate follows, never "@" nor a distance alone.
+    const bool absolute = text.starts_with('#') || text.starts_with('*');
+    if (absolute) {
+        text.remove_prefix(1);
+    }
+    const bool relative = !absolute && text.starts_with('@');
     if (relative) {
         text.remove_prefix(1);
     }
@@ -146,9 +154,9 @@ std::optional<PointSpec> parseCoordinate(std::string_view text) {
             text, angle,
             relative ? PointSpec::Kind::PolarRelative : PointSpec::Kind::PolarAbsolute);
     }
-    // A bare number is a distance; "@" followed by a single number is not a
-    // form of ADR 0005.
-    if (relative) {
+    // A bare number is a distance; "@", "#" or "*" followed by a single
+    // number is not a form of ADR 0005.
+    if (relative || absolute) {
         return std::nullopt;
     }
     const std::optional<double> distance = parseNumber(text);

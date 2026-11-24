@@ -6,6 +6,7 @@
 #include "tg/cmd/command_protocol.hpp"
 #include "tg/cmd/input.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/entity_id.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/vec2.hpp"
@@ -141,6 +142,11 @@ public:
     /// the user clicks, as in AutoCAD. Unlike CommandContext::lastPoint it
     /// never comes from a previous command.
     [[nodiscard]] virtual std::optional<core::Vec2> basePoint() const { return std::nullopt; }
+
+    /// Entities of the drawing the command shows highlighted while it runs,
+    /// for example those it has chosen and still works on; none by default.
+    /// Valid until the next call to a non-const function of the command.
+    [[nodiscard]] virtual std::span<const core::EntityId> highlighted() const { return {}; }
 
     /// True for commands that work on existing entities. The runner asks
     /// "Select objects:" itself and calls start() only once it has a

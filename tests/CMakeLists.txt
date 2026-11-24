@@ -56,6 +56,7 @@ add_executable(tg_tests
     cmd/property_commands_test.cpp
     cmd/quick_select_test.cpp
     cmd/rotate_scale_commands_test.cpp
+    cmd/select_command_test.cpp
     cmd/selection_set_test.cpp
     cmd/style_commands_test.cpp
     cmd/text_command_test.cpp
