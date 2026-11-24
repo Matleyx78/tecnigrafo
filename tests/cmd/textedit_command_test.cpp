@@ -215,6 +215,23 @@ TEST_F(TexteditCommandTest, MtextRequestCarriesShownEntityAndEmptyValueIsKept) {
     EXPECT_EQ(editor().undoNames().size(), undoSteps);
 }
 
+TEST_F(TexteditCommandTest, EmptyMtextRemainsInTheDrawingWithoutAnUndoStep) {
+    core::MText mtext;
+    mtext.insertion = {0, 0};
+    mtext.width = 20;
+    mtext.value = "";
+    const core::EntityId id = add(mtext);
+
+    runner().submitText("TEXTEDIT");
+    runner().submit(ObjectInput{id, {}, false});
+    const std::size_t undoSteps = editor().undoNames().size();
+    runner().submit(TextInput{""});
+
+    EXPECT_EQ(document().entityCount(), 1U);
+    EXPECT_TRUE(std::get<core::MText>(entity(id)).value.empty());
+    EXPECT_EQ(editor().undoNames().size(), undoSteps);
+}
+
 TEST_F(TexteditCommandTest, LinearDimensionRequestSeparatesShownAndReplacementText) {
     core::Dimension dimension;
     dimension.definition.kind = core::DimensionKind::Linear;
