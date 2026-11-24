@@ -3,10 +3,19 @@
 
 #include "tg/core/document_query.hpp"
 
+#include "tg/core/attribute_definition.hpp"
+#include "tg/core/block_table.hpp"
+#include "tg/core/dimension.hpp"
+#include "tg/core/ellipse.hpp"
+#include "tg/core/generated.hpp"
+#include "tg/core/hatch.hpp"
+#include "tg/core/insert.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
+#include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
+#include "tg/core/text_metrics.hpp"
 
 #include <gtest/gtest.h>
 
@@ -18,7 +27,10 @@
 #include <numbers>
 #include <optional>
 #include <random>
+#include <string>
+#include <string_view>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -597,6 +609,224 @@ TEST(DocumentQuery, EveryModeOffGivesNothing) {
     EXPECT_EQ(findSnap(document, {0, 0}, 1.0, kNone), std::nullopt);
 }
 
+// --- Nearest (docs/adr/0057, point 2) -------------------------------------
+
+/// Only Nearest, with the modes of `others` that are on.
+SnapModes nearestAnd(SnapModes others = {false, false, false, false, false}) {
+    others.nearest = true;
+    return others;
+}
+
+void expectNearest(const std::optional<SnapPoint>& actual, const Vec2& expected,
+                   double tolerance = 1e-12) {
+    if (!actual) {
+        ADD_FAILURE() << "no snap";
+        return;
+    }
+    EXPECT_EQ(actual->kind, SnapKind::Nearest);
+    EXPECT_NEAR(actual->point.x, expected.x, tolerance);
+    EXPECT_NEAR(actual->point.y, expected.y, tolerance);
+}
+
+TEST(NearestSnap, IsOffByDefaultAndAloneEnablesTheSnap) {
+    EXPECT_FALSE(SnapModes{}.nearest);
+    EXPECT_FALSE(SnapModes{}.extension);
+    EXPECT_FALSE(SnapModes{}.parallel);
+    Document document;
+    document.add(Line{{0, 20}, {10, 20}});
+    EXPECT_FALSE(findSnap(document, {3, 20.25}, 0.5, SnapModes{}));
+    expectNearest(findSnap(document, {3, 20.25}, 0.5, nearestAnd()), {3, 20});
+    // A point exactly on the line within a zero aperture.
+    expectNearest(findSnap(document, {3, 20}, 0.0, nearestAnd()), {3, 20});
+    EXPECT_FALSE(findSnap(document, {3, 20.25}, 0.0, nearestAnd()));
+    // Extension and parallel alone give no snap point.
+    SnapModes guides{false, false, false, false, false};
+    guides.extension = true;
+    guides.parallel = true;
+    EXPECT_FALSE(findSnap(document, {3, 20}, 1.0, guides));
+}
+
+// The six objects of autocad-vicino.dxf, as AutoCAD 2021 placed its points.
+TEST(NearestSnap, TheObjectsOfAutocadVicino) {
+    Document document = Document::newDrawing();
+    document.add(Line{{0, 0}, {40, 10}});
+    document.add(Arc{{70, 0}, 10, 0, std::numbers::pi});
+    document.add(Circle{{110, 0}, 10});
+    document.add(Polyline{{{{140, 0}}, {{170, 0}, 1.0}, {{170, 20}}, {{140, 20}}}, false});
+    document.add(Ellipse{{210, 0}, {15, 0}, 1.0 / 3.0, 0.0, 2.0 * std::numbers::pi});
+    MText text;
+    text.insertion = {240, 10};
+    text.height = 2.5;
+    text.width = 30;
+    text.value = "Testo multiriga per lo snap Vicino";
+    document.add(text);
+    const SnapModes modes = nearestAnd();
+    expectNearest(findSnap(document, {20, 5.3}, 0.5, modes),
+                  {20.07058823529412, 5.017647058823529});
+    expectNearest(findSnap(document, {77.28, 7.28}, 0.5, modes),
+                  {77.07106781186548, 7.071067811865473});
+    expectNearest(findSnap(document, {118.92, 5.15}, 0.5, modes),
+                  {118.6602390719562, 5.000025921589077});
+    expectNearest(findSnap(document, {155, 0.3}, 0.5, modes), {155, 0});
+    expectNearest(findSnap(document, {180.3, 10}, 0.5, modes), {180, 10});
+    expectNearest(findSnap(document, {217.5, 4.6}, 0.5, modes),
+                  {217.4503351974475, 4.339642912161662}, 1e-9);
+    // The rows of an MTEXT give no Nearest, and here nothing else either.
+    EXPECT_FALSE(findSnap(document, {250, 7}, 0.5, modes));
+}
+
+TEST(NearestSnap, TheEllipseUsesTheDistanceOfNearest) {
+    Document document;
+    document.add(Ellipse{{0, 0}, {10, 0}, 0.5, 0.0, 2.0 * std::numbers::pi});
+    // solid-space certifies 2.8816126631665626 from (12, 3).
+    EXPECT_FALSE(findSnap(document, {12, 3}, 2.0, nearestAnd()));
+    expectNearest(findSnap(document, {12, 3}, 3.0, nearestAnd()),
+                  {9.551207013215885, 1.481084449879183}, 1e-9);
+}
+
+TEST(NearestSnap, BeatsTheCentreOnTheRimButNotAPointInTheAperture) {
+    Document document;
+    document.add(Circle{{0, 0}, 10});
+    document.add(Line{{0, 20}, {10, 20}});
+    const SnapModes centre{false, false, true, false, false};
+    expectNearest(findSnap(document, {10.25, 0}, 1.0, nearestAnd(centre)), {10, 0});
+    EXPECT_EQ(findSnap(document, {10.25, 0}, 1.0, centre), (SnapPoint{{0, 0}, SnapKind::Center}));
+    // The end point within the aperture wins, though the line is nearer.
+    const SnapModes endpoint{true, false, false, false, false};
+    EXPECT_EQ(findSnap(document, {9.75, 20.25}, 1.0, nearestAnd(endpoint)),
+              (SnapPoint{{10, 20}, SnapKind::Endpoint}));
+    expectNearest(findSnap(document, {9.75, 20.25}, 1.0, nearestAnd()), {9.75, 20});
+    // Every mode of 0.7 on: away from the points of the line, Nearest.
+    SnapModes every;
+    every.perpendicular = true;
+    every.tangent = true;
+    every.quadrant = true;
+    expectNearest(findSnap(document, {2, 20.25}, 1.0, nearestAnd(every)), {2, 20});
+}
+
+TEST(NearestSnap, TiesTakeTheHighestIdThenTheFirstSegment) {
+    Document document;
+    document.add(Line{{100, -1}, {110, -1}});
+    document.add(Line{{100, 1}, {110, 1}});
+    expectNearest(findSnap(document, {105, 0}, 2.0, nearestAnd()), {105, 1});
+    expectNearest(findSnap(document, {105, -0.25}, 2.0, nearestAnd()), {105, -1});
+    // Inside a polyline bend, the first of two segments at the same distance.
+    document.add(Polyline{{{{20, 0}}, {{30, 0}}, {{30, 10}}}});
+    expectNearest(findSnap(document, {29, 1}, 2.0, nearestAnd()), {29, 0});
+}
+
+/// A block entity with the default properties of a new drawing.
+EntityRecord member(const Document& document, Entity entity) {
+    EntityRecord record{EntityId{}, std::move(entity)};
+    record.properties.layer = document.layerZero();
+    record.properties.linetype = document.byLayerLinetype();
+    return record;
+}
+
+/// Puts the block `name` with base (0, 0) and `entities` in the document.
+void defineBlock(Document& document, const std::string& name, std::vector<Entity> entities) {
+    BlockDefinition definition{name};
+    for (Entity& entity : entities) {
+        definition.entities.push_back(member(document, std::move(entity)));
+    }
+    document.replaceBlock(name, std::move(definition));
+}
+
+Insert insertOf(std::string name, const Vec2& insertion) {
+    Insert insert;
+    insert.block = std::move(name);
+    insert.insertion = insertion;
+    return insert;
+}
+
+TEST(NearestSnap, TheShapesOfAnInsertInGenerationOrder) {
+    Document document = Document::newDrawing();
+    defineBlock(document, "Pair", {Line{{0, -1}, {10, -1}}, Line{{0, 1}, {10, 1}}});
+    document.add(insertOf("Pair", {0, 0}));
+    expectNearest(findSnap(document, {5, 0}, 2.0, nearestAnd()), {5, -1});
+    // The insertion point is a point snap: within the aperture it wins.
+    document.add(insertOf("Pair", {40, 0}));
+    const SnapModes insertion{false, false, false, true, false};
+    EXPECT_EQ(findSnap(document, {40, 0.75}, 1.0, nearestAnd(insertion)),
+              (SnapPoint{{40, 0}, SnapKind::Insertion}));
+    expectNearest(findSnap(document, {40, 0.75}, 1.0, nearestAnd()), {40, 1});
+    // So it does with a block without shapes, which gives no Nearest.
+    defineBlock(document, "Empty", {});
+    document.add(insertOf("Empty", {60, 0}));
+    EXPECT_EQ(findSnap(document, {60, 0.5}, 1.0, nearestAnd(insertion)),
+              (SnapPoint{{60, 0}, SnapKind::Insertion}));
+    EXPECT_FALSE(findSnap(document, {60, 0.5}, 1.0, nearestAnd()));
+}
+
+TEST(NearestSnap, TheSidesOfASolidNotItsRegion) {
+    Document document = Document::newDrawing();
+    document.add(Solid{{Vec2{80, 0}, Vec2{90, 0}, Vec2{80, 10}, Vec2{90, 10}}});
+    // Inside, farther than the aperture from every side.
+    EXPECT_FALSE(findSnap(document, {85, 5}, 2.0, nearestAnd()));
+    // Equally far from the bottom and the right side: the first, v0 to v1.
+    expectNearest(findSnap(document, {89, 1}, 2.0, nearestAnd()), {89, 0});
+    expectNearest(findSnap(document, {91, 5}, 2.0, nearestAnd()), {90, 5});
+    // The sides of a solid inside an insert are shapes too.
+    defineBlock(document, "Filled", {Solid{{Vec2{0, 0}, Vec2{20, 0}, Vec2{0, 10}, Vec2{20, 10}}}});
+    document.add(insertOf("Filled", {130, 0}));
+    expectNearest(findSnap(document, {140, -0.3}, 0.5, nearestAnd()), {140, 0});
+}
+
+TEST(NearestSnap, TheLineOfADimension) {
+    Document document = Document::newDrawing();
+    Dimension dimension;
+    dimension.definition.kind = DimensionKind::Linear;
+    dimension.definition.point13 = {80, 0};
+    dimension.definition.point14 = {110, 0};
+    dimension.definition.linePoint = {110, 10};
+    std::string reason;
+    const std::optional<Dimension> made = regenerated(document, std::move(dimension), &reason);
+    EXPECT_TRUE(made.has_value()) << reason;
+    document.add(made.value_or(Dimension{}));
+    expectNearest(findSnap(document, {88, 9.7}, 0.5, nearestAnd()), {88, 10});
+    // Over the text of the measurement, nothing.
+    EXPECT_FALSE(findSnap(document, {95, 11.875}, 0.5, nearestAnd()));
+}
+
+TEST(NearestSnap, NoneOnTextsAttributesAndHatches) {
+    Document document = Document::newDrawing();
+    Text text;
+    text.position = {0, 40};
+    text.height = 2.5;
+    text.value = "AB";
+    document.add(text);
+    EXPECT_FALSE(findSnap(document, {1, 41}, 1.0, nearestAnd()));
+    // On the text the insertion point still answers, as before.
+    const SnapModes insertion{false, false, false, true, false};
+    EXPECT_EQ(findSnap(document, {1, 41}, 1.0, nearestAnd(insertion)),
+              (SnapPoint{{0, 40}, SnapKind::Insertion}));
+
+    AttributeDefinition definition;
+    definition.text.position = {0, 50};
+    definition.text.height = 2.5;
+    definition.text.value = "Default";
+    definition.tag = "CODE";
+    document.add(definition);
+    EXPECT_FALSE(findSnap(document, {1, 51}, 1.0, nearestAnd()));
+
+    Text label = text;
+    label.position = {0, 0};
+    defineBlock(document, "Label", {label});
+    document.add(insertOf("Label", {0, 60}));
+    EXPECT_FALSE(findSnap(document, {1, 61}, 1.0, nearestAnd()));
+
+    Hatch hatch;
+    hatch.pattern = "SOLID";
+    hatch.solid = true;
+    HatchLoop loop;
+    loop.flags = 3;
+    loop.polyline = Polyline{{{{170, 0}}, {{200, 0}}, {{200, 20}}, {{170, 20}}}, true};
+    hatch.loops.push_back(loop);
+    document.add(hatch);
+    EXPECT_FALSE(findSnap(document, {185, -0.3}, 0.5, nearestAnd()));
+    EXPECT_FALSE(findSnap(document, {185, 10}, 0.5, nearestAnd()));
+}
+
 // --- Comparison with an exhaustive search -------------------------------
 
 /// Random geometry reproducible on every platform: std::mt19937 is fully
@@ -977,6 +1207,148 @@ TEST(MTextQueries, AnEmptyMTextIsItsInsertionPoint) {
     EXPECT_EQ(findSnap(document, {5.0, 5.0}, 0.1, kInsertionOnly),
               (SnapPoint{{5.0, 5.0}, SnapKind::Insertion}));
     EXPECT_FALSE(findSnap(document, {5.5, 5.0}, 0.1, kInsertionOnly));
+}
+
+// docs/tappe/0.8.1/PT8-impaginazione-formati.md, points 1 and 2: the pieces
+// of a formatted MTEXT, a Bold one and an underlined one, give no snap point
+// of their own, directly, in a block and in a dimension.
+constexpr std::string_view kBoldAndUnderlined = R"({\fArial|b1;A} {\LA})";
+
+SnapModes endMidIntNea() {
+    return nearestAnd(SnapModes{true, true, false, false, true});
+}
+
+/// The generated pieces of `mtext` alone, as in the drawing.
+std::vector<GeneratedItem> piecesOf(const MText& mtext) {
+    Document document = Document::newDrawing();
+    return generate(document, *document.find(document.add(mtext)));
+}
+
+Vec2 middleOf(const Line& line) {
+    return (line.start + line.end) * 0.5;
+}
+
+template <typename T>
+T pieceOf(const std::vector<GeneratedItem>& items) {
+    for (const GeneratedItem& item : items) {
+        if (const auto* shape = std::get_if<T>(&item.shape)) {
+            return *shape;
+        }
+    }
+    ADD_FAILURE() << "no piece of the expected shape";
+    return T{};
+}
+
+MText boldAndUnderlined(const Vec2& insertion) {
+    MText mtext;
+    mtext.insertion = insertion;
+    mtext.height = 2.5;
+    mtext.value = std::string{kBoldAndUnderlined};
+    return mtext;
+}
+
+TEST(FormattedMTextSnap, ADirectMTextLeadsToItsInsertionPointOnly) {
+    Document document = Document::newDrawing();
+    const MText mtext = boldAndUnderlined({0, 30});
+    document.add(mtext);
+    const std::vector<GeneratedItem> pieces = piecesOf(mtext);
+    const auto bold = pieceOf<FormattedText>(pieces);
+    const auto plain = pieceOf<Text>(pieces);
+    const Line underline = pieceOf<TextLine>(pieces).line;
+    const SnapPoint insertion{{0, 30}, SnapKind::Insertion};
+    // On the Bold piece and on the underlined one, farther than the aperture
+    // from the insertion point: the insertion point of the MTEXT.
+    const Vec2 onBold = bold.text.position + Vec2{0.2, 1.0};
+    ASSERT_GT(distance(onBold, insertion.point), 0.5);
+    EXPECT_EQ(findSnap(document, onBold, 0.5, kInsertionOnly), insertion);
+    EXPECT_EQ(findSnap(document, plain.position + Vec2{0.2, 1.0}, 0.5, kInsertionOnly), insertion);
+    // No end, middle or Nearest of the underline.
+    for (const Vec2& point : {underline.start, underline.end, middleOf(underline)}) {
+        EXPECT_FALSE(findSnap(document, point, 0.5, endMidIntNea())) << point.x;
+    }
+}
+
+TEST(FormattedMTextSnap, InABlockNoPointFromTheLinesNorFromAFormattedText) {
+    Document document = Document::newDrawing();
+    const MText mtext = boldAndUnderlined({0, 30});
+    const std::vector<GeneratedItem> pieces = piecesOf(mtext);
+    const Line underline = pieceOf<TextLine>(pieces).line;
+    const Vec2 middle = middleOf(underline);
+    // A line of the block crosses the underline in its middle.
+    defineBlock(document, "Tag", {mtext, Line{middle - Vec2{0, 2}, middle + Vec2{0, 2}}});
+    const Vec2 at{100, 0};
+    document.add(insertOf("Tag", at));
+    const auto bold = pieceOf<FormattedText>(pieces);
+    const auto plain = pieceOf<Text>(pieces);
+    // The Bold piece gives not even its insertion point; a Text gives its own.
+    EXPECT_FALSE(findSnap(document, at + bold.text.position + Vec2{0.2, 1.0}, 0.5, kInsertionOnly));
+    EXPECT_EQ(findSnap(document, at + plain.position + Vec2{0.2, 1.0}, 0.5, kInsertionOnly),
+              (SnapPoint{at + plain.position, SnapKind::Insertion}));
+    // No end or middle of the underline, no crossing with the line.
+    for (const Vec2& point : {underline.start, underline.end}) {
+        EXPECT_FALSE(findSnap(document, at + point, 0.5, endMidIntNea())) << point.x;
+    }
+    const SnapModes intersection{false, false, false, false, true};
+    EXPECT_FALSE(findSnap(document, at + middle, 0.5, intersection));
+    // Near the underline, away from the line: no Nearest.
+    EXPECT_FALSE(findSnap(document, at + middle + Vec2{0.3, 0.05}, 0.2, endMidIntNea()));
+}
+
+TEST(FormattedMTextSnap, InADimensionTheInsertionPointOfItsText) {
+    Document document = Document::newDrawing();
+    Dimension dimension;
+    dimension.definition.kind = DimensionKind::Linear;
+    dimension.definition.point13 = {0, 0};
+    dimension.definition.point14 = {40, 0};
+    dimension.definition.linePoint = {40, 10};
+    dimension.presentation.textOverride = std::string{kBoldAndUnderlined};
+    std::string reason;
+    const std::optional<Dimension> regenerable =
+        regenerated(document, std::move(dimension), &reason);
+    ASSERT_TRUE(regenerable.has_value()) << reason;
+    const Dimension made = regenerable.value_or(Dimension{});
+    document.add(made);
+    MText text;
+    for (const EntityRecord& record : made.graphics) {
+        if (const auto* shown = std::get_if<MText>(&record.entity)) {
+            text = *shown;
+        }
+    }
+    const std::vector<GeneratedItem> pieces =
+        generate(document, EntityRecord{EntityId{9}, Entity{text}});
+    const auto bold = pieceOf<FormattedText>(pieces);
+    const Line underline = pieceOf<TextLine>(pieces).line;
+    const SnapPoint insertion{text.insertion, SnapKind::Insertion};
+    const Vec2 onBold = bold.text.position + Vec2{0.2, 1.0};
+    ASSERT_GT(distance(onBold, text.insertion), 0.5);
+    EXPECT_EQ(findSnap(document, onBold, 0.5, kInsertionOnly), insertion);
+    // The underline is 0.125 above the dimension line: within 0.1 nothing.
+    for (const Vec2& point : {underline.start, underline.end, middleOf(underline)}) {
+        EXPECT_FALSE(findSnap(document, point, 0.1, endMidIntNea())) << point.x;
+    }
+}
+
+TEST(FormattedMTextSnap, AVisibleTextLineCountsForDistanceAndSelection) {
+    // Underlined spaces: a TextLine without a text over it.
+    Document document = Document::newDrawing();
+    MText mtext;
+    mtext.height = 1.0;
+    mtext.value = R"(A{\L   })";
+    const EntityId id = document.add(mtext);
+    const EntityRecord& record = *document.find(id);
+    const double a = textWidth(U"A");
+    const double end = textWidth(U"A   ");
+    const Vec2 onTheLine{(a + end) / 2.0, -1.2};
+    EXPECT_EQ(distance(document, record, onTheLine), 0.0);
+    EXPECT_EQ(selectInRectangle(document,
+                                BBox{onTheLine - Vec2{0.05, 0.05}, onTheLine + Vec2{0.05, 0.05}},
+                                RectangleMode::Crossing),
+              std::vector<EntityId>{id});
+    // A window around the A alone leaves the line out, and the MTEXT.
+    EXPECT_TRUE(
+        selectInRectangle(document, BBox{{-0.1, -2}, {a + 0.1, 1}}, RectangleMode::Window).empty());
+    EXPECT_EQ(selectInRectangle(document, BBox{{-0.1, -2}, {end + 0.1, 1}}, RectangleMode::Window),
+              std::vector<EntityId>{id});
 }
 
 TEST_F(RandomDocument, PickMatchesExhaustiveSearch) {

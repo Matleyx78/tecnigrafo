@@ -1,0 +1,9 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+;
+; RT8 / PT8 (#953): pieces join into shown rows, empty layout rows stay hidden,
+; and absolute formatted heights remain absolute under a similarity.
+
+Absolute = MTEXT insertion=0,20 height=2 width=0 attachment=top-left rotation=0 style="Standard" value="A{\\H3;B}"
+; cambia con #953
+? transform Absolute scale 2 0,0 -> MTEXT insertion=0,40 height=4 width=0 attachment=top-left rotation=0 style="Standard" value="A{\\H3;B}"

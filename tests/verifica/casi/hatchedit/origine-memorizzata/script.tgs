@@ -1,0 +1,27 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; -HATCHEDIT (PT26, #973), Origin, Set new origin 245,5 stored with Yes: HPORIGIN of the session.
+; The next -HATCH makes its hatch with that origin, written in its ACAD XDATA 1010/1020 like
+; every AutoCAD hatch (autocad-hatchedit.dxf: each HATCH carries 1010/1020 = its origin; ADR 0006),
+; so its line has origin=245,5 too.
+LINE
+0,0
+60,0
+60,40
+0,40
+C
+CIRCLE
+30,20
+8
+-HATCH
+5,5
+
+-HATCHEDIT
+10,10
+O
+S
+245,5
+Y
+-HATCH
+5,5
+

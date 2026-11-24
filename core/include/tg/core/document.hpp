@@ -10,6 +10,7 @@
 #include "tg/core/circle.hpp"
 #include "tg/core/dim_style_table.hpp"
 #include "tg/core/dimension.hpp"
+#include "tg/core/drawing_settings.hpp"
 #include "tg/core/ellipse.hpp"
 #include "tg/core/entity_extras.hpp"
 #include "tg/core/entity_id.hpp"
@@ -253,6 +254,13 @@ public:
     /// LWDISPLAY: whether lineweights are shown.
     [[nodiscard]] bool lwdisplay() const { return m_lwdisplay; }
 
+    /// The grid, the snap to the grid and the UCS icon (docs/adr/0055,
+    /// point 1); the defaults of GridSettings for a new document.
+    [[nodiscard]] const GridSettings& grid() const { return m_grid; }
+
+    /// ATTDISP ($ATTMODE): Normal for a new document (docs/adr/0056, point 1).
+    [[nodiscard]] AttributeDisplay attributeDisplay() const { return m_attributeDisplay; }
+
     // Changed only by edit and io, like the entities.
 
     /// Appends a layer. If layer.id is 0 it gets a new identifier from the
@@ -298,6 +306,9 @@ public:
     void setLtscale(double scale);  ///< precondition: > 0
     void setLwdefault(int value);   ///< precondition: an allowed value
     void setLwdisplay(bool on);
+    void setGrid(const GridSettings& grid);  ///< precondition: isValid(grid)
+    /// The extents do not change: they measure the attributes drawn or not.
+    void setAttributeDisplay(AttributeDisplay display);
 
 private:
     /// True when `id` belongs to a handled entity, an unhandled one or a
@@ -351,6 +362,8 @@ private:
     double m_ltscale{1.0};
     int m_lwdefault{kDefaultLwdefault};
     bool m_lwdisplay{false};
+    GridSettings m_grid;
+    AttributeDisplay m_attributeDisplay{AttributeDisplay::Normal};
     TextStyleTable m_textStyles;
     DimStyleTable m_dimStyles;
     BlockTable m_blocks;

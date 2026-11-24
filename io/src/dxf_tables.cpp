@@ -451,6 +451,318 @@ bool isMandatoryLinetype(const core::Linetype& linetype) {
            linetype.pattern.continuous() && linetype.extras.empty();
 }
 
+// --- The *ACTIVE record of the VPORT table (docs/adr/0055, points 1 and 2) --
+
+constexpr std::string_view kActiveViewportName = "*Active";
+
+// The groups of a VPORT record in the order AutoCAD writes them; the groups
+// of the model the record lacks go in by it.
+constexpr std::array kViewportOrder{
+    2,   70,  10,  20,  11,  21,  12,  22,  13, 23,  14,  24, 15, 25,  16,  26,  36,  17, 27,
+    37,  40,  41,  42,  43,  44,  50,  51,  71, 72,  73,  74, 75, 76,  77,  78,  281, 65, 110,
+    120, 130, 111, 121, 131, 112, 122, 132, 79, 146, 348, 60, 61, 292, 282, 141, 142, 63, 421};
+
+/// A group of the *ACTIVE record that the model holds, as a number: a flag
+/// is 0 or 1. A group whose value is not valid reads as the value of a new
+/// drawing.
+struct GridField {
+    enum class Kind : std::uint8_t { Real, Integer, Flag };
+
+    std::int16_t code{0};
+    Kind kind{Kind::Real};
+    bool (*valid)(double){nullptr};
+    double (*get)(const core::GridSettings&){nullptr};
+    void (*set)(core::GridSettings&, double){nullptr};
+};
+
+constexpr double kMinShort = -32768;
+constexpr double kMaxShort = 32767;
+
+constexpr bool anyNumber(double /*value*/) {
+    return true;
+}
+
+constexpr bool nonNegative(double value) {
+    return value >= 0.0;
+}
+
+constexpr bool positive(double value) {
+    return value > 0.0;
+}
+
+constexpr bool shortInteger(double value) {
+    return value >= kMinShort && value <= kMaxShort;
+}
+
+constexpr bool gridMajor(double value) {
+    return value >= 1 && value <= core::GridSettings::kMaxGridMajor;
+}
+
+constexpr double onOff(bool on) {
+    return on ? 1.0 : 0.0;
+}
+
+using Kind = GridField::Kind;
+
+// By kViewportOrder, so that the missing groups go in in that order.
+constexpr std::array<GridField, 14> kGridFields{{
+    {13, Kind::Real, anyNumber, [](const core::GridSettings& g) { return g.snapBase.x; },
+     [](core::GridSettings& g, double v) {
+         g.snapBase.x = v;
+     }},
+    {23, Kind::Real, anyNumber, [](const core::GridSettings& g) { return g.snapBase.y; },
+     [](core::GridSettings& g, double v) {
+         g.snapBase.y = v;
+     }},
+    {14, Kind::Real, positive, [](const core::GridSettings& g) { return g.snapUnit.x; },
+     [](core::GridSettings& g, double v) {
+         g.snapUnit.x = v;
+     }},
+    {24, Kind::Real, positive, [](const core::GridSettings& g) { return g.snapUnit.y; },
+     [](core::GridSettings& g, double v) {
+         g.snapUnit.y = v;
+     }},
+    {15, Kind::Real, nonNegative, [](const core::GridSettings& g) { return g.gridUnit.x; },
+     [](core::GridSettings& g, double v) {
+         g.gridUnit.x = v;
+     }},
+    {25, Kind::Real, nonNegative, [](const core::GridSettings& g) { return g.gridUnit.y; },
+     [](core::GridSettings& g, double v) {
+         g.gridUnit.y = v;
+     }},
+    {50, Kind::Real, anyNumber, [](const core::GridSettings& g) { return g.snapAngle; },
+     [](core::GridSettings& g, double v) {
+         g.snapAngle = v;
+     }},
+    {74, Kind::Integer, shortInteger,
+     [](const core::GridSettings& g) { return static_cast<double>(g.ucsIcon); },
+     [](core::GridSettings& g, double v) {
+         g.ucsIcon = static_cast<int>(v);
+     }},
+    {75, Kind::Flag, shortInteger, [](const core::GridSettings& g) { return onOff(g.snapOn); },
+     [](core::GridSettings& g, double v) {
+         g.snapOn = v != 0.0;
+     }},
+    {76, Kind::Flag, shortInteger, [](const core::GridSettings& g) { return onOff(g.gridOn); },
+     [](core::GridSettings& g, double v) {
+         g.gridOn = v != 0.0;
+     }},
+    {77, Kind::Integer, shortInteger,
+     [](const core::GridSettings& g) { return static_cast<double>(g.snapStyle); },
+     [](core::GridSettings& g, double v) {
+         g.snapStyle = static_cast<int>(v);
+     }},
+    {78, Kind::Integer, shortInteger,
+     [](const core::GridSettings& g) { return static_cast<double>(g.snapIsoPair); },
+     [](core::GridSettings& g, double v) {
+         g.snapIsoPair = static_cast<int>(v);
+     }},
+    {60, Kind::Integer, shortInteger,
+     [](const core::GridSettings& g) { return static_cast<double>(g.gridDisplay); },
+     [](core::GridSettings& g, double v) {
+         g.gridDisplay = static_cast<int>(v);
+     }},
+    {61, Kind::Integer, gridMajor,
+     [](const core::GridSettings& g) { return static_cast<double>(g.gridMajor); },
+     [](core::GridSettings& g, double v) {
+         g.gridMajor = static_cast<int>(v);
+     }},
+}};
+
+/// The value a reader takes from the text of a group of `field`: std::nullopt
+/// when it is not valid, and then the value of a new drawing is taken.
+std::optional<double> fieldValue(const GridField& field, std::string_view text) {
+    std::optional<double> value;
+    if (field.kind == Kind::Real) {
+        value = parseNumber(trimDxf(text));
+    } else if (const auto integer = parseInteger(text)) {
+        value = static_cast<double>(*integer);
+    }
+    if (!value || !field.valid(*value)) {
+        return std::nullopt;
+    }
+    // A flag is on for any value but 0.
+    if (field.kind == Kind::Flag) {
+        value = onOff(*value != 0.0);
+    }
+    return value;
+}
+
+std::string fieldText(const GridField& field, double value) {
+    return field.kind == Kind::Real ? formatNumber(value)
+                                    : std::to_string(static_cast<long long>(value));
+}
+
+/// True when the groups of a record, from its group 0, are a VPORT record
+/// named *ACTIVE in any case (docs/adr/0055, point 2).
+bool isActiveViewport(const core::RawGroups& record) {
+    if (record.empty() || !isMarker(record.front(), "VPORT")) {
+        return false;
+    }
+    const auto name = firstOwn(record, ownGroups(record), 2);
+    return name && core::sameTableName(record[*name].value, kActiveViewportName);
+}
+
+/// The grid settings of an *ACTIVE record, from its group 0: a group that is
+/// missing or not valid has the value of a new drawing.
+core::GridSettings gridOf(const core::RawGroups& record) {
+    core::GridSettings grid;
+    const auto own = ownGroups(record);
+    for (const GridField& field : kGridFields) {
+        if (const auto at = firstOwn(record, own, field.code)) {
+            if (const auto value = fieldValue(field, record[*at].value)) {
+                field.set(grid, *value);
+            }
+        }
+    }
+    return grid;
+}
+
+/// Writes `grid` in an *ACTIVE record, from its group 0: a group that reads
+/// as the value of the model keeps its text, another gets the model's; a
+/// missing one is added, by kViewportOrder, only when the model's value is
+/// not that of a new drawing, which a reader gives to it.
+void writeGrid(core::RawGroups& record, const core::GridSettings& grid) {
+    const core::GridSettings newDrawing;
+    const auto own = ownGroups(record);
+    core::RawGroups additions;
+    for (const GridField& field : kGridFields) {
+        const double wanted = field.get(grid);
+        const auto at = firstOwn(record, own, field.code);
+        if (!at) {
+            if (wanted != field.get(newDrawing)) {
+                additions.push_back({field.code, fieldText(field, wanted)});
+            }
+        } else if (fieldValue(field, record[*at].value).value_or(field.get(newDrawing)) != wanted) {
+            record[*at].value = fieldText(field, wanted);
+        }
+    }
+    dxf_groups::insertInOrder(record, additions, kViewportOrder);
+}
+
+/// The groups of an *ACTIVE record of a new drawing after its name (2) and
+/// flags (70): the view of a new drawing, then the grid of acadiso.dwt
+/// (core::GridSettings), by kViewportOrder. The skeleton writes the same
+/// groups (dxf_skeleton.cpp).
+core::RawGroups newActiveViewportGroups() {
+    return {{10, "0.0"}, {20, "0.0"}, {11, "1.0"},  {21, "1.0"},   {12, "0.0"},  {22, "0.0"},
+            {13, "0.0"}, {23, "0.0"}, {14, "10.0"}, {24, "10.0"},  {15, "10.0"}, {25, "10.0"},
+            {16, "0.0"}, {26, "0.0"}, {36, "1.0"},  {40, "100.0"}, {41, "1.0"},  {42, "50.0"},
+            {50, "0.0"}, {74, "3"},   {75, "0"},    {76, "1"},     {77, "0"},    {78, "0"},
+            {60, "3"},   {61, "5"}};
+}
+
+/// True when a file without an *ACTIVE record must get one: the grid of the
+/// document is not that of a new drawing (docs/adr/0055, point 2).
+bool needsActiveViewport(const core::Document& document) {
+    return document.grid() != core::GridSettings{};
+}
+
+/// A new *ACTIVE record with the handle `handle`, the view of a new drawing
+/// and the grid of the document.
+core::RawGroups newActiveViewport(std::uint64_t handle, std::string_view owner,
+                                  const core::Document& document) {
+    core::RawGroups record{{0, "VPORT"}, {5, handleText(handle)}};
+    const auto preamble = recordPreamble(owner, "AcDbViewportTableRecord");
+    record.insert(record.end(), preamble.begin(), preamble.end());
+    record.push_back({2, std::string{kActiveViewportName}});
+    record.push_back({70, "0"});
+    const auto view = newActiveViewportGroups();
+    record.insert(record.end(), view.begin(), view.end());
+    writeGrid(record, document.grid());
+    return record;
+}
+
+/// Where the VPORT table of a TABLES section stands, and whether it has an
+/// *ACTIVE record.
+struct ViewportTable {
+    bool table{false};
+    bool active{false};
+};
+
+ViewportTable viewportTable(const core::RawGroups& tables) {
+    ViewportTable found;
+    std::string_view table;
+    for (std::size_t i = 0; i < tables.size(); ++i) {
+        if (isMarker(tables[i], "TABLE")) {
+            table = i + 1 < tables.size() && tables[i + 1].code == 2 ? trimDxf(tables[i + 1].value)
+                                                                     : std::string_view{};
+            found.table = found.table || table == "VPORT";
+        } else if (table == "VPORT" && isMarker(tables[i], "VPORT")) {
+            core::RawGroups record{tables[i]};
+            for (std::size_t j = i + 1; j < tables.size() && tables[j].code != 0; ++j) {
+                record.push_back(tables[j]);
+            }
+            found.active = found.active || isActiveViewport(record);
+        }
+    }
+    return found;
+}
+
+/// The handles writeTables() takes for the *ACTIVE record: 2 for a section
+/// without a VPORT table (the table and the record), 1 for a VPORT table
+/// without the record, 0 when it is there or not needed.
+std::uint64_t viewportHandlesToAdd(const ViewportTable& found, const core::Document& document) {
+    if (found.active || !needsActiveViewport(document)) {
+        return 0;
+    }
+    return found.table ? 1 : 2;
+}
+
+/// Writes a VPORT table as read, with the grid of the document in its first
+/// *ACTIVE record, or in a new one at its end when it has none and the grid
+/// is not that of a new drawing; the count (70) follows the new record.
+void writeViewportTable(const TableParts& table, const core::Document& document,
+                        std::uint64_t& nextHandle, core::RawGroups& out) {
+    const auto active = std::ranges::find_if(table.items, isActiveViewport);
+    const bool add = active == table.items.end() && needsActiveViewport(document);
+    std::string owner{"0"};
+    bool counted = false;
+    for (const auto& group : table.header) {
+        if (group.code == 5 && owner == "0") {
+            owner = trimDxf(group.value);
+        }
+        if (group.code == 70 && !counted && add) {
+            counted = true;
+            out.push_back({70, std::to_string(parseInteger(group.value).value_or(0) + 1)});
+            continue;
+        }
+        out.push_back(group);
+    }
+    for (auto item = table.items.begin(); item != table.items.end(); ++item) {
+        if (item != active) {
+            out.insert(out.end(), item->begin(), item->end());
+            continue;
+        }
+        core::RawGroups record = *item;
+        writeGrid(record, document.grid());
+        out.insert(out.end(), record.begin(), record.end());
+    }
+    if (add) {
+        const auto record = newActiveViewport(nextHandle++, owner, document);
+        out.insert(out.end(), record.begin(), record.end());
+    }
+    if (table.end.empty()) {
+        out.push_back({0, "ENDTAB"});
+    } else {
+        out.insert(out.end(), table.end.begin(), table.end.end());
+    }
+}
+
+/// A VPORT table for a section that lacks one, with its *ACTIVE record.
+void writeNewViewportTable(const core::Document& document, std::uint64_t& nextHandle,
+                           core::RawGroups& out) {
+    TableParts table;
+    table.name = "VPORT";
+    table.header = {{0, "TABLE"},
+                    {2, "VPORT"},
+                    {5, handleText(nextHandle++)},
+                    {330, "0"},
+                    {100, "AcDbSymbolTable"},
+                    {70, "0"}};
+    writeViewportTable(table, document, nextHandle, out);
+}
+
 }  // namespace
 
 // --- Reading ---------------------------------------------------------------
@@ -563,9 +875,25 @@ void TableReader::readTables(core::RawGroups& groups, std::span<const std::size_
     // finds its linetypes all the same.
     core::RawGroups out;
     std::string table;
+    bool activeViewport = false;
     std::size_t i = 0;
     while (i < groups.size()) {
         const auto& group = groups[i];
+        // The first *ACTIVE record gives the grid; it stays raw, and the
+        // writer puts the grid back in it (docs/adr/0055, point 2).
+        if (table == "VPORT" && !activeViewport && isMarker(group, "VPORT")) {
+            core::RawGroups record{group};
+            for (std::size_t j = i + 1; j < groups.size() && groups[j].code != 0; ++j) {
+                record.push_back(groups[j]);
+            }
+            if (isActiveViewport(record)) {
+                activeViewport = true;
+                const core::GridSettings grid = gridOf(record);
+                if (core::isValid(grid)) {
+                    m_document.setGrid(grid);
+                }
+            }
+        }
         if (isMarker(group, "TABLE")) {
             table = i + 1 < groups.size() && groups[i + 1].code == 2
                         ? std::string{trimDxf(groups[i + 1].value)}
@@ -734,6 +1062,10 @@ void TableReader::readHeader(core::RawGroups& header) {
             m_document.setLtscale(*number);
         } else if (variable == "$LWDISPLAY" && group.code == 290 && integer) {
             m_document.setLwdisplay(*integer != 0);
+        } else if (variable == "$ATTMODE" && group.code == 70 && integer && *integer >= 0 &&
+                   *integer <= 2) {
+            // 0 Off, 1 Normal, 2 On, the order of core::AttributeDisplay.
+            m_document.setAttributeDisplay(static_cast<core::AttributeDisplay>(*integer));
         } else if (variable == "$LWDEFAULT" && group.code == 370 && integer) {
             const auto value = static_cast<int>(std::clamp<long long>(*integer, 0, 1000));
             if (!core::isAllowedLineweight(value) || value != *integer) {
@@ -994,7 +1326,19 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
             dimStyles = dimStyles || name == "DIMSTYLE";
         }
     }
+    // The VPORT table comes first, as in AutoCAD: a missing one goes before
+    // the first table, or alone (docs/adr/0055, point 2).
+    bool viewports = viewportTable(tables).table;
+    const auto addViewports = [&] {
+        if (!viewports) {
+            viewports = true;
+            if (needsActiveViewport(document)) {
+                writeNewViewportTable(document, nextHandle, out);
+            }
+        }
+    };
     const auto addMissing = [&](std::string_view before) {
+        addViewports();
         if (!linetypes && (before.empty() ||
                            std::ranges::find(kAfterLinetypes, before) != kAfterLinetypes.end())) {
             linetypes = true;
@@ -1030,7 +1374,12 @@ void writeTables(const core::RawGroups& tables, const core::Document& document,
             out.push_back(tables[i++]);
             continue;
         }
+        addViewports();
         const auto table = readTable(tables, i);
+        if (table.name == "VPORT") {
+            writeViewportTable(table, document, nextHandle, out);
+            continue;
+        }
         if (table.name == "LTYPE" || table.name == "LAYER" || table.name == "STYLE" ||
             table.name == "DIMSTYLE") {
             if (table.name == "LTYPE") {
@@ -1060,11 +1409,15 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
     bool layers = false;
     bool styles = false;
     bool dimStyles = false;
+    ViewportTable viewports;
     for (const auto& section : raw.sections) {
         if (section.name != "TABLES") {
             continue;
         }
         const auto& groups = section.groups;
+        const ViewportTable found = viewportTable(groups);
+        viewports.table = viewports.table || found.table;
+        viewports.active = viewports.active || found.active;
         for (std::size_t i = 0; i + 1 < groups.size(); ++i) {
             if (isMarker(groups[i], "TABLE") && groups[i + 1].code == 2) {
                 const auto name = trimDxf(groups[i + 1].value);
@@ -1075,7 +1428,8 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
             }
         }
     }
-    return (!linetypes && needsLinetypeTable(document) ? 1U : 0U) +
+    return viewportHandlesToAdd(viewports, document) +
+           (!linetypes && needsLinetypeTable(document) ? 1U : 0U) +
            (!layers && needsLayerTable(document) ? 1U : 0U) +
            (!styles && needsStyleTable(document) ? 1U : 0U) +
            (!dimStyles && needsDimStyleTable(document) ? 1U : 0U);
@@ -1083,8 +1437,8 @@ std::uint64_t tablesToAdd(const core::RawDrawing& raw, const core::Document& doc
 
 core::RawGroups newTables(const core::Document& document, std::uint64_t& nextHandle) {
     core::RawGroups out;
-    if (needsLinetypeTable(document) || needsLayerTable(document) || needsStyleTable(document) ||
-        needsDimStyleTable(document)) {
+    if (needsActiveViewport(document) || needsLinetypeTable(document) ||
+        needsLayerTable(document) || needsStyleTable(document) || needsDimStyleTable(document)) {
         writeTables({}, document, nextHandle, out);
     }
     return out;

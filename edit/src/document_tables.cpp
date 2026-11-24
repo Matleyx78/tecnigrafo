@@ -203,6 +203,23 @@ void DocumentTables::setLwdisplay(bool on) {
     }
 }
 
+void DocumentTables::setGrid(const core::GridSettings& grid) {
+    assert(core::isValid(grid) && "setGrid() needs valid settings");
+    auto& document = m_editor.m_document;
+    if (grid != document.grid()) {
+        document.setGrid(grid);
+        m_editor.notify();
+    }
+}
+
+void DocumentTables::setAttributeDisplay(core::AttributeDisplay display) {
+    auto& document = m_editor.m_document;
+    if (display != document.attributeDisplay()) {
+        document.setAttributeDisplay(display);
+        m_editor.notify();
+    }
+}
+
 bool DocumentTables::replaceTextStyles(core::TextStyleTable table) {
     assert(m_editor.m_open && "replaceTextStyles() needs an open transaction");
     if (table == m_editor.m_document.textStyles()) {

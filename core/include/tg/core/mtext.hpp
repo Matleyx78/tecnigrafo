@@ -61,17 +61,36 @@ struct MText {
 /// True: MText is supported (docs/adr/0044, point 1).
 [[nodiscard]] bool supported(const MText& mtext);
 
-/// One Text for every row with a character other than a space, left aligned
-/// on its baseline, with the height and the rotation of the entity and the
-/// width factor and the oblique angle of its style (1 and 0 when the style is
-/// not in the table), the mirror signals of the style with directionByStyle,
-/// and as value the plain row written so that displayText() gives it back:
-/// every '%' that forms %%c, %%d, %%p or %%% with the two characters after it
-/// is written %%% (the row "%%c" has the value "%%%%c"). Nothing on a frozen
+/// The pieces of every row with a character other than a space, in reading
+/// order (docs/adr/0054, points 3 and 4;
+/// docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 3): a Text for a
+/// Regular piece with tracking 1, a FormattedText for the others, the two
+/// texts of a stacked fraction and its TextLine, and a TextLine for each
+/// underline, overline and strike-through. A text is left aligned on its
+/// baseline, with the rotation of the entity and the height, width factor
+/// and oblique angle of its piece (those of the entity and its style
+/// without codes: 1 and 0 when the style is not in the table), the mirror
+/// signals of the style with directionByStyle, and as value its characters
+/// written so that displayText() gives them back: every '%' that forms
+/// %%c, %%d, %%p or %%% with the two characters after it is written %%%
+/// (the row "%%c" has the value "%%%%c"). The shapes of a piece have the
+/// effective properties of the entity, with the colour of its `\C` or `\c`.
+/// Without formats, one Text per row, as in stage 0.8. Nothing on a frozen
 /// layer; properties.visible false on a layer that is off (docs/adr/0044,
 /// point 2).
 [[nodiscard]] std::vector<GeneratedItem> generateOf(const Document& document,
                                                     const EntityRecord& record, const MText& mtext);
+
+/// The text each layout row shows, pieces joined in reading order (a stack as
+/// "top/bottom"), for an MTEXT or for the text of a dimension
+/// (docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 10). Only the rows
+/// with a character other than a space: `A\P\PB\P` gives "A" and "B". For a
+/// dimension, its graphics in drawing order: the rows of an MTEXT that is
+/// drawn, the texts of the drawn shapes of another entity (a TEXT read from
+/// a DXF). Nothing for the other types. The layer of an MTEXT does not
+/// count, nor does that of the dimension.
+[[nodiscard]] std::vector<std::u32string> shownLines(const Document& document,
+                                                     const EntityRecord& record);
 
 /// The bounding box of every shape of generateOf(), drawn or not; the
 /// insertion point when there is none, except on a frozen layer (PT5, B04).

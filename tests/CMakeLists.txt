@@ -96,6 +96,7 @@ add_executable(tg_tests
     core/line_test.cpp
     core/math_test.cpp
     core/mtext_format_test.cpp
+    core/mtext_layout_test.cpp
     core/mtext_test.cpp
     core/new_entities_test.cpp
     core/polyline_test.cpp

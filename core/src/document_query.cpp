@@ -5,8 +5,10 @@
 
 #include "dimension_graphics.hpp"
 #include "insert_snap.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/effective_properties.hpp"
+#include "tg/core/ellipse.hpp"
 #include "tg/core/fillet.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
@@ -15,8 +17,10 @@
 #include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/proximity.hpp"
+#include "tg/core/solid.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -99,8 +103,10 @@ struct SnapShape {
 };
 
 /// Rank of a snap kind on equal distance (docs/adr/0033, point 5): endpoint,
-/// intersection, midpoint, quadrant, perpendicular, tangent. The centre and
-/// the insertion point never compete with them, so their rank is not used.
+/// intersection, midpoint, quadrant, perpendicular, tangent. The centre, the
+/// insertion point and the nearest point never compete with them, and
+/// extension and parallel are guides of the tracking, not snap points, so
+/// their rank is not used.
 int tieRank(SnapKind kind) {
     switch (kind) {
         case SnapKind::Endpoint:
@@ -117,14 +123,20 @@ int tieRank(SnapKind kind) {
             return 5;
         case SnapKind::Center:
         case SnapKind::Insertion:
+        case SnapKind::Nearest:
+        case SnapKind::Extension:
+        case SnapKind::Parallel:
             break;
     }
     return 6;
 }
 
+/// Extension and parallel give nothing here: they are guides of the
+/// tracking (docs/adr/0057, point 3).
 bool anyModeEnabled(const SnapModes& modes) {
     return modes.endpoint || modes.midpoint || modes.center || modes.insertion ||
-           modes.intersection || modes.perpendicular || modes.tangent || modes.quadrant;
+           modes.intersection || modes.perpendicular || modes.tangent || modes.quadrant ||
+           modes.nearest;
 }
 
 /// A candidate answer, ordered by distance, then rank, then highest id.
@@ -158,6 +170,74 @@ void forEachSnapSegment(const Polyline& polyline, const Visit& visit) {
     for (std::size_t i = 0; i < polyline.segmentCount(); ++i) {
         visit(polyline.segment(i));
     }
+}
+
+/// A point of a curve and its distance from the pointer.
+struct NearPoint {
+    Vec2 point;
+    double distance{std::numeric_limits<double>::infinity()};
+};
+
+/// The point of the segments nearest to `pointer`; on equal distance the
+/// earliest segment, as the question `closest` (docs/verifica/domande.md).
+template <typename Segments>
+std::optional<NearPoint> nearestOnSegments(const Segments& forEachSegment, const Vec2& pointer) {
+    std::optional<NearPoint> best;
+    forEachSegment([&](const PolylineSegment& segment) {
+        const Vec2 point = closestPoint(segment, pointer);
+        const double pointDistance = distance(point, pointer);
+        if (!best || pointDistance < best->distance) {
+            best = NearPoint{point, pointDistance};
+        }
+    });
+    return best;
+}
+
+/// The point of a shape that Nearest takes (docs/adr/0057, point 2): the
+/// projection of closestPoint() on lines, circles, arcs and polylines,
+/// nearest() of solid-space on an ellipse, with its distance. A solid is
+/// measured from its sides, in the order v0, v1, v3, v2 in which it is
+/// filled, not from the filled region its click picks. Texts give none, as
+/// in AutoCAD; the types of the 0.8 that are not shapes reach here only
+/// through their shapes.
+std::optional<NearPoint> nearestOnShape(const Entity& shape, const Vec2& pointer) {
+    if (const auto* polyline = std::get_if<Polyline>(&shape)) {
+        return nearestOnSegments([&](const auto& visit) { forEachSnapSegment(*polyline, visit); },
+                                 pointer);
+    }
+    if (const auto* line = std::get_if<Line>(&shape)) {
+        const Vec2 point = closestPoint(PolylineSegment{line->start, line->end}, pointer);
+        return NearPoint{point, distance(point, pointer)};
+    }
+    if (const auto* circle = std::get_if<Circle>(&shape)) {
+        const Vec2 point = closestPoint(circle->geometry(), pointer);
+        return NearPoint{point, distance(point, pointer)};
+    }
+    if (const auto* arc = std::get_if<Arc>(&shape)) {
+        const Vec2 point = closestPoint(arc->geometry(), pointer);
+        return NearPoint{point, distance(point, pointer)};
+    }
+    if (const auto* ellipse = std::get_if<Ellipse>(&shape)) {
+        // Point and distance both from nearest(), within its declared band
+        // (docs/adr/0052, point 4); data solid-space refuses give none.
+        const std::optional<Vec2> point = closestPoint(*ellipse, pointer);
+        if (!point) {
+            return std::nullopt;
+        }
+        return NearPoint{*point, distance(*ellipse, pointer)};
+    }
+    if (const auto* solid = std::get_if<Solid>(&shape)) {
+        const auto& v = solid->vertices;
+        const std::array corners{v[0], v[1], v[3], v[2]};
+        return nearestOnSegments(
+            [&](const auto& visit) {
+                for (std::size_t i = 0; i < corners.size(); ++i) {
+                    visit(PolylineSegment{corners.at(i), corners.at((i + 1) % corners.size())});
+                }
+            },
+            pointer);
+    }
+    return std::nullopt;
 }
 
 }  // namespace
@@ -203,6 +283,8 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
     Candidate bestPoint;
     std::optional<SnapPoint> center;
     Candidate bestCenter;
+    std::optional<SnapPoint> nearest;
+    Candidate bestNearest;
     std::vector<SnapPoint> curvePoints;
 
     // One curve within the aperture: a polyline segment, or a whole line,
@@ -245,9 +327,28 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         consider(curveDistance, id);
     };
 
+    // The nearest point of a curve within the aperture (docs/adr/0057,
+    // point 2). On equal distance the highest id wins, and between shapes of
+    // one entity (an insert, the sides of a solid) the first generated stays.
+    const auto considerNearest = [&](const Entity& entity, std::uint64_t id) {
+        if (!modes.nearest) {
+            return;
+        }
+        const std::optional<NearPoint> found = nearestOnShape(entity, pointer);
+        if (!found) {
+            return;
+        }
+        const Candidate candidate{found->distance, 0, id};
+        if (candidate.distance <= aperture && (!nearest || candidate.beats(bestNearest))) {
+            nearest = SnapPoint{found->point, SnapKind::Nearest};
+            bestNearest = candidate;
+        }
+    };
+
     // The snap points of one shape of an entity with identifier `id`.
     std::vector<SnapShape> nearbyCurves;
     const auto considerShape = [&](const Entity& entity, std::uint64_t id) {
+        considerNearest(entity, id);
         if (modes.intersection && meetsOthers(entity) && distance(entity, pointer) <= aperture) {
             nearbyCurves.push_back({id, &entity});
         }
@@ -274,21 +375,23 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         consider(curveDistance, id);
     };
 
-    // A row of an MTEXT gives no snap point of its own: within the aperture
+    // A piece of an MTEXT gives no snap point of its own: within the aperture
     // it makes the insertion point of the MTEXT a candidate, at the distance
-    // from the row's box, as the box of a text does with its insertion point
-    // (docs/tappe/0.8/PT13-mtext-core.md, point 6). The nearest row decides.
-    // `mtext` is drawn with the properties of `owner`, the MTEXT itself or
-    // the one in the graphics of a dimension; `id` is the entity of the
-    // document.
+    // from the piece's box, as the box of a text does with its insertion
+    // point (docs/tappe/0.8/PT13-mtext-core.md, point 6;
+    // docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 2): a Text with
+    // its box, a FormattedText with formattedTextBox(); a TextLine makes
+    // nothing a candidate. The nearest piece decides. `mtext` is drawn with
+    // the properties of `owner`, the MTEXT itself or the one in the graphics
+    // of a dimension; `id` is the entity of the document.
     const auto considerRows = [&](const std::vector<GeneratedItem>& rows, const EntityRecord& owner,
                                   const MText& mtext, std::uint64_t id) {
         for (const GeneratedItem& item : rows) {
-            const std::optional<Entity> row = shapeEntity(item.shape);
-            if (!row) {
+            if (!std::holds_alternative<Text>(item.shape) &&
+                !std::holds_alternative<FormattedText>(item.shape)) {
                 continue;
             }
-            const double rowDistance = distance(*row, pointer);
+            const double rowDistance = shapeDistance(item.shape, pointer);
             if (rowDistance > aperture) {
                 continue;
             }
@@ -333,6 +436,14 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                 items = generate(document, record);
             }
             for (const GeneratedItem& item : items) {
+                // The pieces of a formatted MTEXT in a block give nothing,
+                // not even the insertion point of their text, nor are their
+                // lines curves (docs/tappe/0.8.1/PT8-impaginazione-formati.md,
+                // point 1).
+                if (std::holds_alternative<FormattedText>(item.shape) ||
+                    std::holds_alternative<TextLine>(item.shape)) {
+                    continue;
+                }
                 if (std::optional<Entity> shape = shapeEntity(item.shape)) {
                     generatedShapes.push_back(std::move(*shape));
                     considerShape(generatedShapes.back(), id.value);
@@ -390,7 +501,13 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             }
         }
     }
-    return point ? point : center;
+    // A point within the aperture, then Nearest, then centre and insertion
+    // (docs/REGOLE-NUMERICHE.md, section 4, "Selezione e snap a oggetto",
+    // point 2).
+    if (point) {
+        return point;
+    }
+    return nearest ? nearest : center;
 }
 
 }  // namespace tg::core

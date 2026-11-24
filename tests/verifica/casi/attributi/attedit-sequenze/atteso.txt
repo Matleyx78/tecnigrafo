@@ -1,0 +1,96 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: OPEN
+  Enter name of drawing to open: @sources/autocad-attributi
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: Y
+  Enter block name specification <*>: COMPONENTE
+  Enter attribute tag specification <*>: CODICE
+  Enter attribute value specification <*>: *
+  Select Attributes: C
+  Specify first corner: -1,-41
+  Specify opposite corner: 41,-19
+  1 found
+  1 attributes selected.
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: V
+  Enter type of value modification [Change/Replace] <R>: R
+  Enter new attribute value: K11
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: P
+  Specify new text insertion point <no change>: 5,-27
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: H
+  Specify new height <3.5>: 3.5
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: A
+  Specify new rotation angle <15>: 15
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: S
+  Enter new text style <ARIAL>: ARIAL
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: L
+  Enter new layer name <ATTRIBUTI>: ATTRIBUTI
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: C
+  Enter new color [Truecolor/Colorbook] <1>: 1
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: N
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: Y
+  Enter block name specification <*>: COMPONENTE
+  Enter attribute tag specification <*>: SIGLA
+  Enter attribute value specification <*>: *
+  Select Attributes: C
+  Specify first corner: 119,-41
+  Specify opposite corner: 161,-19
+  1 found
+  1 attributes selected.
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: V
+  Enter type of value modification [Change/Replace] <R>: C
+  Enter string to change: 30
+  Enter new string: 31
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: P
+  Attribute position is locked.
+  Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: N
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: N
+  Performing global editing of attribute values.
+  Edit only attributes visible on screen? [Yes/No] <Y>: N
+  Drawing must be regenerated afterwards.
+  Enter block name specification <*>: COMPONENTE
+  Enter attribute tag specification <*>: NOTA
+  Enter attribute value specification <*>: *
+  3 attributes selected.
+  Enter string to change: cablare
+  Enter new string: verificare
+  Command: -ATTEDIT
+  Edit attributes one at a time? [Yes/No] <Y>: N
+  Performing global editing of attribute values.
+  Edit only attributes visible on screen? [Yes/No] <Y>: Y
+  Enter block name specification <*>: *
+  Enter attribute tag specification <*>: CODICE
+  Enter attribute value specification <*>: K*
+  Select Attributes: C
+  Specify first corner: -1,-41
+  Specify opposite corner: 161,-19
+  3 found
+  3 attributes selected.
+  Enter string to change: K
+  Enter new string: KA
+  Command: U
+  Undone: Attedit.
+  Command: U
+  Undone: Attedit.
+  Command: U
+  Undone: Attedit.
+  Command: U
+  Undone: Attedit.
+  Command: NEW
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+documents: Drawing1.cadx, autocad-attributi.dxf, Drawing2.cadx (active)
+pointer: none
+active snap: none
+statistics:

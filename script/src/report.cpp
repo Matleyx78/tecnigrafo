@@ -45,9 +45,16 @@ constexpr std::array kSnapModeNames{SnapModeName{"endpoint", &core::SnapModes::e
                                     SnapModeName{"tangent", &core::SnapModes::tangent},
                                     SnapModeName{"quadrant", &core::SnapModes::quadrant}};
 
+// The three modes of stage 0.8.1 (nearest, extension, parallel) have no
+// name above, so the reports written before them do not change: a report
+// lists the modes above that are off, and the question snap takes nearest as
+// "nea" (question_table.cpp; docs/tappe/0.8.1/PT30-snap-vicino.md).
+constexpr std::size_t kStageEightOneModes = 3;
+
 // A new member of core::SnapModes needs its name above, or reports and
 // questions would silently ignore it.
-static_assert(sizeof(core::SnapModes) == kSnapModeNames.size() * sizeof(bool),
+static_assert(sizeof(core::SnapModes) ==
+                  (kSnapModeNames.size() + kStageEightOneModes) * sizeof(bool),
               "every snap mode needs a name in kSnapModeNames");
 
 /// Builds one visitor out of several lambdas, one per entity type.
@@ -383,6 +390,10 @@ void writeTables(const core::Document& document, std::string& out) {
     if (document.lwdisplay() != kNewSession.lwdisplay()) {
         appendField("lwdisplay", onOff(document.lwdisplay()), out);
     }
+    if (document.attributeDisplay() != core::AttributeDisplay::Normal) {
+        appendField("attdisp", onOff(document.attributeDisplay() == core::AttributeDisplay::On),
+                    out);
+    }
     std::vector<const core::TextStyle*> changedStyles;
     const core::TextStyle* defaultStandard = kNewSession.textStyles().find("Standard");
     for (const core::TextStyle& style : document.textStyles().styles()) {
@@ -635,9 +646,16 @@ void writeRegion(const core::FilledRegion& region, std::string& out) {
 }  // namespace
 
 void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& out) {
-    const std::optional<core::Entity> entity = core::shapeEntity(item.shape);
+    // A formatted piece with its variant and its box, not those of the Text
+    // of shapeEntity() (docs/tappe/0.8.1/PT8-impaginazione-formati.md,
+    // point 9).
+    const auto* piece = std::get_if<core::FormattedText>(&item.shape);
+    const std::optional<core::Entity> entity =
+        piece != nullptr ? std::nullopt : core::shapeEntity(item.shape);
     const auto* region = std::get_if<core::FilledRegion>(&item.shape);
-    if (entity) {
+    if (piece != nullptr) {
+        writeFormattedText(*piece, out);
+    } else if (entity) {
         writeModel(*entity, out);
     } else if (region != nullptr) {
         writeRegion(*region, out);
@@ -649,7 +667,9 @@ void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& ou
             out += text;
         }
     }
-    if (entity) {
+    if (piece != nullptr) {
+        writeFormattedTextBox(*piece, out);
+    } else if (entity) {
         writeDerived(*entity, out);
     } else if (region != nullptr) {
         // The identity is the default of Transform2D: exact on purpose, a
@@ -900,6 +920,12 @@ std::string_view snapKindName(core::SnapKind kind) {
             return "Tangent";
         case core::SnapKind::Quadrant:
             return "Quadrant";
+        case core::SnapKind::Nearest:
+            return "Nearest";
+        case core::SnapKind::Extension:
+            return "Extension";
+        case core::SnapKind::Parallel:
+            return "Parallel";
     }
     return "Unknown";
 }

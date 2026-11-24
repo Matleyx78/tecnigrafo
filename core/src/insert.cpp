@@ -71,6 +71,20 @@ std::vector<GeneratedItem> localItems(const Document& document, const EntityReco
         local.entity);
 }
 
+/// True when ATTDISP draws `attribute`: Normal only a visible one, On every
+/// one, Off none (docs/adr/0056, point 1).
+bool isShown(const Document& document, const Attribute& attribute) {
+    switch (document.attributeDisplay()) {
+        case AttributeDisplay::Off:
+            return false;
+        case AttributeDisplay::On:
+            return true;
+        case AttributeDisplay::Normal:
+            break;
+    }
+    return !attribute.invisible;
+}
+
 /// Appends the ATTRIBs of `insert`, shown with `shown` through `state`, as
 /// texts mapped by `outer`, the map of the block that holds the insert
 /// (std::nullopt for an insert of the drawing: they are in its coordinates).
@@ -85,7 +99,7 @@ void appendAttributeItems(const Document& document, const Insert& insert,
             continue;
         }
         EffectiveProperties effective = effectiveProperties(document, properties);
-        effective.visible = effective.visible && layers.on && !attribute.invisible;
+        effective.visible = effective.visible && layers.on && isShown(document, attribute);
         if (!outer) {
             out.push_back(GeneratedItem{attribute.text, effective});
             continue;

@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -128,6 +129,76 @@ std::pair<std::set<std::uint64_t>, std::set<std::uint64_t>> handlesOf(const std:
         }
     }
     return {objects, entities};
+}
+
+TEST(DxfWrite, ANewDrawingHasTheGridOfAcadisoInItsActiveViewport) {
+    // docs/adr/0055, point 2: the skeleton writes the *Active record with the
+    // values of acadiso.dwt, which read as those of a new drawing.
+    const auto written = writeDxf(core::Document::newDrawing(), DxfVersion::R2018);
+    ASSERT_TRUE(written.ok()) << written.error().message;
+    const auto groups = readGroups(written.value());
+    ASSERT_TRUE(groups.ok());
+    const auto& all = groups.value().groups;
+    const auto name = std::ranges::find(all, core::RawGroup{2, "*Active"});
+    ASSERT_NE(name, all.end());
+    std::vector<std::pair<int, std::string>> grid;
+    for (auto at = name; at != all.end() && at->code != 0; ++at) {
+        for (const int code : {13, 23, 14, 24, 15, 25, 50, 60, 61, 74, 75, 76, 77, 78}) {
+            if (at->code == code) {
+                grid.emplace_back(code, at->value);
+            }
+        }
+    }
+    EXPECT_EQ(grid, (std::vector<std::pair<int, std::string>>{{13, "0.0"},
+                                                              {23, "0.0"},
+                                                              {14, "10.0"},
+                                                              {24, "10.0"},
+                                                              {15, "10.0"},
+                                                              {25, "10.0"},
+                                                              {50, "0.0"},
+                                                              {74, "3"},
+                                                              {75, "0"},
+                                                              {76, "1"},
+                                                              {77, "0"},
+                                                              {78, "0"},
+                                                              {60, "3"},
+                                                              {61, "5"}}));
+    EXPECT_NE(written.value().find("$ATTMODE\r\n 70\r\n1\r\n"), std::string::npos);
+    const auto read = readDxf(written.value());
+    ASSERT_TRUE(read.ok());
+    EXPECT_EQ(read.value().document.grid(), core::GridSettings{});
+    EXPECT_EQ(read.value().document.attributeDisplay(), core::AttributeDisplay::Normal);
+}
+
+TEST(DxfWrite, SnapModeAndAttdispAreSavedAndReopened) {
+    // A new drawing saved in R2018 and a drawing read from R2000 saved in
+    // R2000, reopened with SNAPMODE 1 and ATTDISP ON; written again from
+    // what was read, the same file.
+    core::Document created = core::Document::newDrawing();
+    created.add(core::Line{{0, 0}, {1, 1}});
+    auto older = readDxf(fixture("r2000.dxf"));
+    ASSERT_TRUE(older.ok()) << older.error().message;
+    std::vector<std::pair<core::Document, DxfVersion>> drawings;
+    drawings.emplace_back(std::move(created), DxfVersion::R2018);
+    drawings.emplace_back(std::move(older).value().document, DxfVersion::R2000);
+    for (auto& [document, version] : drawings) {
+        SCOPED_TRACE(static_cast<int>(version));
+        core::GridSettings grid;
+        grid.snapOn = true;
+        grid.gridUnit = {0, 10};
+        grid.snapUnit = {2.5, 5};
+        document.setGrid(grid);
+        document.setAttributeDisplay(core::AttributeDisplay::On);
+        const auto written = writeDxf(document, version);
+        ASSERT_TRUE(written.ok()) << written.error().message;
+        const auto read = readDxf(written.value());
+        ASSERT_TRUE(read.ok()) << read.error().message;
+        EXPECT_EQ(read.value().document.grid(), grid);
+        EXPECT_EQ(read.value().document.attributeDisplay(), core::AttributeDisplay::On);
+        const auto again = writeDxf(read.value().document, version);
+        ASSERT_TRUE(again.ok());
+        EXPECT_EQ(again.value(), written.value());
+    }
 }
 
 TEST(DxfWrite, ANewDrawingHasTheFixedStartHandlesWhateverItsEntities) {

@@ -19,11 +19,17 @@ enum class SnapKind : std::uint8_t {
     Intersection,
     Perpendicular,
     Tangent,
-    Quadrant
+    Quadrant,
+    Nearest,    ///< the nearest point of a curve (docs/adr/0057, point 2)
+    Extension,  ///< a guide along an extension, for the tracking (docs/adr/0057, point 3)
+    Parallel    ///< a guide parallel to a line, for the tracking (docs/adr/0057, point 3)
 };
 
 /// Which object snaps are enabled (docs/adr/0008, docs/adr/0013,
-/// docs/adr/0033, point 6). Perpendicular, tangent and quadrant start off.
+/// docs/adr/0033, point 6). Perpendicular, tangent and quadrant start off,
+/// and so do nearest, extension and parallel of stage 0.8.1 (docs/adr/0057,
+/// point 1). Nearest comes from findSnap() (document_query.hpp); extension
+/// and parallel are guides of the tracking (docs/tappe/0.8.1, PT31).
 struct SnapModes {
     bool endpoint{true};
     bool midpoint{true};
@@ -33,6 +39,9 @@ struct SnapModes {
     bool perpendicular{false};
     bool tangent{false};
     bool quadrant{false};
+    bool nearest{false};
+    bool extension{false};
+    bool parallel{false};
     friend constexpr bool operator==(const SnapModes&, const SnapModes&) = default;
 };
 

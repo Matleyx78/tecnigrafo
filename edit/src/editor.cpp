@@ -47,7 +47,11 @@ bool Editor::validProperties(const core::Document& doc, const core::EntityProper
 }
 
 Editor::Editor(core::Document& document)
-    : m_document(document), m_tables(*this), m_savedLwdisplay(document.lwdisplay()) {}
+    : m_document(document),
+      m_tables(*this),
+      m_savedLwdisplay(document.lwdisplay()),
+      m_savedGrid(document.grid()),
+      m_savedAttributeDisplay(document.attributeDisplay()) {}
 
 void Editor::beginTransaction(std::string name) {
     assert(!m_open && "a transaction is already open");
@@ -237,12 +241,16 @@ bool Editor::setProperties(core::EntityId id, const core::EntityProperties& prop
 
 bool Editor::isModified() const {
     return !m_savedPosition || *m_savedPosition != m_undo.size() ||
-           (m_open && !m_open->changes.empty()) || m_document.lwdisplay() != m_savedLwdisplay;
+           (m_open && !m_open->changes.empty()) || m_document.lwdisplay() != m_savedLwdisplay ||
+           m_document.grid() != m_savedGrid ||
+           m_document.attributeDisplay() != m_savedAttributeDisplay;
 }
 
 void Editor::markSaved() {
     m_savedPosition = m_undo.size();
     m_savedLwdisplay = m_document.lwdisplay();
+    m_savedGrid = m_document.grid();
+    m_savedAttributeDisplay = m_document.attributeDisplay();
 }
 
 void Editor::replaceDocument(core::Document document) {
@@ -252,6 +260,8 @@ void Editor::replaceDocument(core::Document document) {
     m_redo.clear();
     m_savedPosition = 0;
     m_savedLwdisplay = m_document.lwdisplay();
+    m_savedGrid = m_document.grid();
+    m_savedAttributeDisplay = m_document.attributeDisplay();
     notify();
 }
 

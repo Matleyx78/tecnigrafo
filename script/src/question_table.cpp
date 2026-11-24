@@ -133,9 +133,11 @@ core::SnapModes stageFourModes() {
 }
 
 /// "modes=endpoint,center", or "modes=none" for none; the four modes of
-/// stage 0.4 when the argument is absent.
+/// stage 0.4 when the argument is absent. With `withNearest`, also "nea",
+/// Nearest (docs/verifica/domande.md, stage 0.8.1). Nearest, extension and
+/// parallel start off.
 Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text,
-                                      std::string_view announced = {}) {
+                                      bool withNearest = false) {
     if (!text) {
         return stageFourModes();
     }
@@ -147,15 +149,14 @@ Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text,
         return modes;
     }
     std::string_view rest = *text;
-    bool usesAnnounced = false;
     while (true) {
         const std::size_t comma = rest.find(',');
         const std::string_view name = rest.substr(0, comma);
         const auto found = std::ranges::find(snapModeNames(), name, &SnapModeName::name);
         if (found != snapModeNames().end()) {
             modes.*found->member = true;
-        } else if (!name.empty() && name == announced) {
-            usesAnnounced = true;
+        } else if (withNearest && name == "nea") {
+            modes.nearest = true;
         } else {
             return ArgumentError{"unknown snap mode " + quoted(name)};
         }
@@ -163,10 +164,6 @@ Parsed<core::SnapModes> modesArgument(std::optional<std::string_view> text,
             break;
         }
         rest.remove_prefix(comma + 1);
-    }
-    if (usesAnnounced) {
-        return ArgumentError{"the snap mode " + quoted(announced) + " is not implemented yet",
-                             true};
     }
     return modes;
 }
@@ -518,13 +515,12 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
     if (const auto* error = std::get_if<ArgumentError>(&aperture)) {
         return *error;
     }
-    // PT30 implements nea for snap, the question that gives the pointer location.
+    // Nearest only for snap, the question that gives the pointer location.
     const auto modesText = values.find("modes");
     const Parsed<core::SnapModes> modes = modesArgument(
-        modesText == values.end() ? std::nullopt : std::optional{modesText->second}, "nea");
-    const auto* modeError = std::get_if<ArgumentError>(&modes);
-    if (modeError != nullptr && !modeError->notImplemented) {
-        return *modeError;
+        modesText == values.end() ? std::nullopt : std::optional{modesText->second}, true);
+    if (const auto* error = std::get_if<ArgumentError>(&modes)) {
+        return *error;
     }
     // The base point of the running command, from which perpendicular starts.
     std::optional<core::Vec2> from;
@@ -534,9 +530,6 @@ QuestionResult askSnap(const QuestionModel& model, Arguments arguments) {
             return *error;
         }
         from = std::get<core::Vec2>(base);
-    }
-    if (modeError != nullptr) {
-        return *modeError;
     }
     const std::optional<core::SnapPoint> snap =
         core::findSnap(model.document, std::get<core::Vec2>(pointer), std::get<double>(aperture),
@@ -599,6 +592,8 @@ QuestionResult askCount(const QuestionModel& model, Arguments arguments);
 QuestionResult askUnhandled(const QuestionModel& model, Arguments arguments);
 QuestionResult askVersion(const QuestionModel& model, Arguments arguments);
 QuestionResult askUnits(const QuestionModel& model, Arguments arguments);
+QuestionResult askGrid(const QuestionModel& model, Arguments arguments);
+QuestionResult askAttdisp(const QuestionModel& model, Arguments arguments);
 QuestionResult askWarnings(const QuestionModel& model, Arguments arguments);
 QuestionResult askRoundtrip(const QuestionModel& model, Arguments arguments);
 QuestionResult askOpenError(const QuestionModel& model, Arguments arguments);
@@ -718,9 +713,10 @@ constexpr std::array kQuestions{
     // In order, so Single and not Items.
     QuestionRow{"hatch-boundary", AnswerShape::Single, &askHatchBoundary},  // PT43
     QuestionRow{"hatch-contours", AnswerShape::Single, &askHatchContours},  // PT43
+    // Stage 0.8.1: the state of the drawing (file_questions.cpp).
+    QuestionRow{"grid", AnswerShape::Single, &askGrid},        // PT27
+    QuestionRow{"attdisp", AnswerShape::Single, &askAttdisp},  // PT27
     // Stage 0.8.1: announced before the reference cases are written.
-    QuestionRow{"grid", AnswerShape::Single, nullptr},                  // PT27
-    QuestionRow{"attdisp", AnswerShape::Single, nullptr},               // PT27
     QuestionRow{"properties", AnswerShape::Single, &askProperties},     // PT22, PT23, PT24
     QuestionRow{"set-property", AnswerShape::Single, &askSetProperty},  // PT22, PT23, PT24
     QuestionRow{"pattern-lines", AnswerShape::Single, nullptr},         // PT23

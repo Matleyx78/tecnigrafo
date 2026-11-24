@@ -1,5 +1,0 @@
-# [0.8.1-RT17] (#940): ATTREQ and the attribute prompts of -INSERT, work #941
-insert/attributi-domande #941
-insert/attributi-attreq-0 #941
-insert/attributi-esc #941
-insert/attributi-senza-domande #941

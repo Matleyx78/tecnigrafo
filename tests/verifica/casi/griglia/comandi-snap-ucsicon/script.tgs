@@ -1,0 +1,32 @@
+; SNAP, snap variables, and UCSICON options and rejected values
+; cambia con #964
+SNAP
+0
+-1
+2.5
+SNAP
+Aspect
+0
+5
+2.5
+SNAPUNIT
+0,5
+SNAPUNIT
+-1,5
+SNAPBASE
+3,4
+SNAPMODE
+0
+SNAP
+ON
+UCSICON
+OFF
+UCSICON
+
+UCSICON
+Noorigin
+UCSICON
+ORigin
+UCSICON
+ON
+!report
