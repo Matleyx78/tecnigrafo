@@ -1,8 +1,9 @@
-; oracle: ezdxf
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; Copyright (C) 2026 The Tecnigrafo authors
 ; RT23 / PT23 (#960). AutoCAD 2021 hatches from the immutable CC0 drawing.
-; Entity fields come from the ezdxf oracle and the ACAD 1010/1020 XDATA.
+; Entity fields come from ezdxf and the ACAD 1010/1020 XDATA. Not declared
+; for the oracle: ezdxf_attesi.py reports origin= only from PT23 (#960) on,
+; and the oracle step checks pending cases too (docs/verifica/casi.md).
 D = DXF source=autocad-hatchedit
 ; PT23 adds the nonzero origin field to HATCH reports and HATCH properties.
 ; cambia con #960
