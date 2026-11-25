@@ -61,8 +61,8 @@ inline constexpr std::string_view kReadOnlyProperty = "Read-only property.";
 /// The own properties of the entity, in the order of
 /// docs/verifica/domande.md. None for the types of before the 0.8, for which
 /// the panel keeps its Geometry group, and for a type whose package has not
-/// written them yet (HATCH and DIMENSION until PT23; MTEXT, ATTDEF and
-/// INSERT until PT24). Precondition: isSupported(record.entity).
+/// written them yet (MTEXT, ATTDEF and INSERT until PT24). Precondition:
+/// isSupported(record.entity).
 [[nodiscard]] std::vector<OwnProperty> ownProperties(const Document& document,
                                                      const EntityRecord& record);
 
@@ -123,7 +123,9 @@ struct PropertyChange {
                                                const Solid& solid, std::string_view name,
                                                const PropertyValue& value);
 
-/// HATCH: none until PT23.
+/// HATCH: pattern, scale, angle, origin, islands, ~area
+/// (docs/tappe/0.8.1/PT23-proprieta-retini-quote.md, point 2). origin is
+/// patternOrigin() of the extras; ~area is filledArea().
 [[nodiscard]] std::vector<OwnProperty> ownPropertiesOf(const Document& document,
                                                        const EntityRecord& record,
                                                        const Hatch& hatch);
@@ -131,7 +133,10 @@ struct PropertyChange {
                                                const Hatch& hatch, std::string_view name,
                                                const PropertyValue& value);
 
-/// DIMENSION: none until PT23.
+/// DIMENSION: style, text, text-rotation (0 for the automatic angle),
+/// ~measurement (PT23, point 3). style, text and text-rotation regenerate
+/// the dimension with regenerated(); one that cannot be regenerated refuses
+/// them with kDimensionNotRegenerable and stays as it was.
 [[nodiscard]] std::vector<OwnProperty> ownPropertiesOf(const Document& document,
                                                        const EntityRecord& record,
                                                        const Dimension& dimension);

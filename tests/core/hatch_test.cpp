@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -465,6 +466,259 @@ TEST(PredefinedPatterns, AReflectionNegatesTheStepAndKeepsTheShift) {
     EXPECT_NEAR(stepOf(line), -3.0, kPatternTolerance);
     EXPECT_NEAR(shiftOf(line), 2.0, kPatternTolerance);
     EXPECT_EQ(line.dashes, (std::vector<double>{1.0, -0.5}));
+}
+
+// --- Origin, pattern and area (docs/tappe/0.8.1/PT23-proprieta-retini-quote.md)
+
+/// The XDATA of the hatches of autocad-hatchedit: two gradient colours, then
+/// ACAD with the origin of the pattern.
+EntityExtras hatcheditExtras(const char* x, const char* y) {
+    EntityExtras extras;
+    extras.extended = {{1001, "GradientColor1ACI"},
+                       {1070, "     5"},
+                       {1001, "GradientColor2ACI"},
+                       {1070, "     2"},
+                       {1001, "ACAD"},
+                       {1010, x},
+                       {1020, y},
+                       {1030, "0.0"}};
+    return extras;
+}
+
+/// The outer rectangle and the island of the hatches of autocad-hatchedit,
+/// whose left lower corner is at (x, 0): a 60 x 40 rectangle flagged
+/// external, a circle of radius 8 flagged outermost.
+Hatch hatcheditShape(double x) {
+    Hatch hatch;
+    hatch.pattern = "ANSI31";
+    HatchLoop outer = polylineLoop({{{x + 60, 40}}, {{x, 40}}, {{x, 0}}, {{x + 60, 0}}});
+    outer.flags = 7;
+    HatchLoop island = polylineLoop({{{x + 22, 20}, -1.0}, {{x + 38, 20}, -1.0}});
+    island.flags = 22;
+    hatch.loops = {outer, island};
+    hatch.seeds = {{x + 5, 5}, {x + 5, 5}};
+    return hatch;
+}
+
+/// The ANSI31 family of a hatch of autocad-hatchedit with scale `scale`.
+PatternLine ansi31Family(const Vec2& base, double scale) {
+    constexpr double kOffset = 2.245064030267288;  // 3.175 / sqrt(2)
+    return PatternLine{degreesToRadians(45), base, Vec2{-kOffset, kOffset} * scale, {}};
+}
+
+void expectSameFamilies(const std::vector<PatternLine>& actual,
+                        const std::vector<PatternLine>& expected) {
+    ASSERT_EQ(actual.size(), expected.size());
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_NEAR(actual[i].angle, expected[i].angle, kPatternTolerance);
+        EXPECT_NEAR(actual[i].origin.x, expected[i].origin.x, kPatternTolerance);
+        EXPECT_NEAR(actual[i].origin.y, expected[i].origin.y, kPatternTolerance);
+        EXPECT_NEAR(actual[i].offset.x, expected[i].offset.x, kPatternTolerance);
+        EXPECT_NEAR(actual[i].offset.y, expected[i].offset.y, kPatternTolerance);
+        ASSERT_EQ(actual[i].dashes.size(), expected[i].dashes.size());
+        for (std::size_t j = 0; j < actual[i].dashes.size(); ++j) {
+            EXPECT_NEAR(actual[i].dashes[j], expected[i].dashes[j], kPatternTolerance);
+        }
+    }
+}
+
+/// The hatch withPattern() gives; std::nullopt fails the test.
+Hatch made(const std::optional<Hatch>& hatch) {
+    EXPECT_TRUE(hatch.has_value());
+    return hatch.value_or(Hatch{});
+}
+
+TEST(PatternOrigin, ReadsTheAcadPointAndIsZeroWithout) {
+    EXPECT_EQ(patternOrigin(hatcheditExtras("245.0", "5.0")), (Vec2{245, 5}));
+    EXPECT_EQ(patternOrigin(EntityExtras{}), (Vec2{0, 0}));
+    EntityExtras other;
+    other.extended = {{1001, "OTHER"}, {1010, "3.0"}, {1020, "4.0"}};
+    EXPECT_EQ(patternOrigin(other), (Vec2{0, 0}));
+    EXPECT_EQ(patternOrigin(hatcheditExtras("x", "5.0")), (Vec2{0, 0}));
+}
+
+TEST(PatternOrigin, TwoFamiliesOfTheFileMoveByTheSameShift) {
+    Hatch hatch = hatcheditShape(0);
+    hatch.patternLines = {PatternLine{0.0, {13, 0}, {0, 1}, {}},
+                          PatternLine{kPi / 2, {17, 0}, {-1, 0}, {}}};
+    const Hatch moved = withPatternOrigin(hatch, {10, 0}, {20, 0});
+    EXPECT_EQ(moved.patternLines.at(0).origin, (Vec2{23, 0}));
+    EXPECT_EQ(moved.patternLines.at(1).origin, (Vec2{27, 0}));
+    EXPECT_EQ(moved.patternLines.at(0).offset, (Vec2{0, 1}));
+    EXPECT_EQ(moved.loops, hatch.loops);
+}
+
+TEST(PatternOrigin, TheOriginOfCcOfAutocadHatchedit) {
+    // E1 has origin 0,0; CC is the same hatch after -HATCHEDIT Origin 245,5.
+    Hatch hatch = hatcheditShape(480);
+    hatch.patternLines = {ansi31Family({0, 0}, 1)};
+    const Hatch moved = withPatternOrigin(hatch, patternOrigin(EntityExtras{}), {245, 5});
+    expectSameFamilies(moved.patternLines, {ansi31Family({245, 5}, 1)});
+}
+
+TEST(PatternOrigin, XdataIsSetInPlaceOrAdded) {
+    const EntityExtras set = withPatternOriginXdata(hatcheditExtras("0.0", "0.0"), {245, 5});
+    EXPECT_EQ(set.extended, hatcheditExtras("245.0", "5.0").extended);
+
+    const EntityExtras added = withPatternOriginXdata(EntityExtras{}, {10, -0.5});
+    EXPECT_EQ(added.extended,
+              (RawGroups{{1001, "ACAD"}, {1010, "10.0"}, {1020, "-0.5"}, {1030, "0.0"}}));
+    EXPECT_EQ(patternOrigin(added), (Vec2{10, -0.5}));
+
+    EntityExtras withoutPoint;
+    withoutPoint.extended = {{1001, "ACAD"}, {1000, "x"}, {1001, "OTHER"}, {1070, "1"}};
+    const EntityExtras inserted = withPatternOriginXdata(withoutPoint, {0.1, 2});
+    EXPECT_EQ(inserted.extended, (RawGroups{{1001, "ACAD"},
+                                            {1000, "x"},
+                                            {1010, "0.1"},
+                                            {1020, "2.0"},
+                                            {1030, "0.0"},
+                                            {1001, "OTHER"},
+                                            {1070, "1"}}));
+
+    EntityExtras withoutY;
+    withoutY.extended = {{1001, "ACAD"}, {1010, "1.0"}};
+    EXPECT_EQ(withPatternOriginXdata(withoutY, {3, 4}).extended,
+              (RawGroups{{1001, "ACAD"}, {1010, "3.0"}, {1020, "4.0"}}));
+}
+
+TEST(PatternOrigin, XdataKeepsEveryDigitOfTheOrigin) {
+    const Vec2 origin{0.1 + 0.2, -1.0 / 3.0};
+    EXPECT_EQ(patternOrigin(withPatternOriginXdata(EntityExtras{}, origin)), origin);
+}
+
+TEST(WithPattern, ScaleFrom1To2AroundTheOrigin) {
+    Hatch hatch = hatcheditShape(0);
+    hatch.pattern = "USER1";
+    hatch.patternLines = {PatternLine{0.0, {13, 0}, {0, 1}, {0.5, -0.25}}};
+    const Hatch scaled = made(withPattern(hatch, {10, 0}, "user1", 2, 0, 1));
+    EXPECT_EQ(scaled.pattern, "USER1");
+    EXPECT_EQ(scaled.scale, 2);
+    expectSameFamilies(scaled.patternLines, {PatternLine{0.0, {16, 0}, {0, 2}, {1.0, -0.5}}});
+}
+
+TEST(WithPattern, AQuarterTurnOfAPatternThatIsNotGeneratedIsExact) {
+    // B7 of autocad-hatchedit: ANSI37, scale 1, angle 0, origin 0,0.
+    Hatch hatch = hatcheditShape(0);
+    hatch.pattern = "ANSI37";
+    constexpr double kOffset = 2.245064030267288;
+    hatch.patternLines = {PatternLine{degreesToRadians(45), {0, 0}, {-kOffset, kOffset}, {}},
+                          PatternLine{degreesToRadians(135), {0, 0}, {-kOffset, -kOffset}, {}}};
+    const Hatch turned = made(
+        withPattern(hatch, {0, 0}, "ANSI37", 1, reducedDegreesToRadians(90), kMetricMeasurement));
+    EXPECT_EQ(turned.patternLines.at(0).offset, (Vec2{-kOffset, -kOffset}));
+    EXPECT_EQ(turned.patternLines.at(1).offset, (Vec2{kOffset, -kOffset}));
+}
+
+TEST(WithPattern, TheAngleOfAFamilyOfAPatternThatIsNotGeneratedStaysInOneTurn) {
+    // 315 + 90 is 405, reduced to 45; 45 - 90 is -45, reduced to 315.
+    Hatch hatch = hatcheditShape(0);
+    hatch.pattern = "USER1";
+    hatch.patternLines = {PatternLine{degreesToRadians(315), {0, 0}, {0, 1}, {}},
+                          PatternLine{degreesToRadians(45), {0, 0}, {0, 1}, {}}};
+    const Hatch up = made(withPattern(hatch, {0, 0}, "USER1", 1, reducedDegreesToRadians(90), 1));
+    for (const PatternLine& line : up.patternLines) {
+        EXPECT_GE(line.angle, 0.0);
+        EXPECT_LT(line.angle, kTwoPi);
+    }
+    EXPECT_NEAR(up.patternLines.at(0).angle, degreesToRadians(45), 1e-12);
+    EXPECT_NEAR(up.patternLines.at(1).angle, degreesToRadians(135), 1e-12);
+
+    const Hatch down = made(withPattern(up, {0, 0}, "USER1", 1, 0, 1));
+    for (const PatternLine& line : down.patternLines) {
+        EXPECT_GE(line.angle, 0.0);
+        EXPECT_LT(line.angle, kTwoPi);
+    }
+    EXPECT_NEAR(down.patternLines.at(0).angle, degreesToRadians(315), 1e-12);
+    EXPECT_NEAR(down.patternLines.at(1).angle, degreesToRadians(45), 1e-12);
+}
+
+TEST(WithPattern, ScaleAndAngleOfAPatternThatIsNotGeneratedGiveTheFamiliesOfDa) {
+    // B7 (ANSI37 at 0,0, scale 1, angle 0) with the origin, scale and angle
+    // of DA (405,5, scale 2, angle 30): the families AutoCAD wrote in DA.
+    Hatch hatch = hatcheditShape(400);
+    hatch.pattern = "ANSI37";
+    constexpr double kOffset = 2.245064030267288;
+    hatch.patternLines = {PatternLine{degreesToRadians(45), {0, 0}, {-kOffset, kOffset}, {}},
+                          PatternLine{degreesToRadians(135), {0, 0}, {-kOffset, -kOffset}, {}}};
+    const Hatch moved = withPatternOrigin(hatch, {0, 0}, {405, 5});
+    const Hatch changed = made(
+        withPattern(moved, {405, 5}, "ANSI37", 2, reducedDegreesToRadians(30), kMetricMeasurement));
+    expectSameFamilies(
+        changed.patternLines,
+        {PatternLine{degreesToRadians(74.99999999999999),
+                     {405, 5},
+                     {-6.133628996935582, 1.643500936401007},
+                     {}},
+         PatternLine{
+             degreesToRadians(165), {405, 5}, {-1.643500936401007, -6.133628996935582}, {}}});
+}
+
+TEST(WithPattern, GeneratedPatternsOfAutocadHatchedit) {
+    Hatch hatch = hatcheditShape(0);
+    hatch.patternLines = {ansi31Family({245, 5}, 1)};
+    // CC with scale 2 keeps its origin; BE (origin 0,0) has scale 2.
+    const Hatch twice = made(withPattern(hatch, {245, 5}, "ANSI31", 2, 0, 1));
+    expectSameFamilies(twice.patternLines, {ansi31Family({245, 5}, 2)});
+    const Hatch be = made(withPattern(hatch, {0, 0}, "ANSI31", 2, 0, 1));
+    expectSameFamilies(
+        be.patternLines,
+        {PatternLine{degreesToRadians(45), {0, 0}, {-4.490128060534576, 4.490128060534576}, {}}});
+    // C5: angle 30.
+    const Hatch c5 = made(withPattern(hatch, {0, 0}, "ansi31", 1, reducedDegreesToRadians(30), 1));
+    EXPECT_EQ(c5.pattern, "ANSI31");
+    expectSameFamilies(c5.patternLines, {PatternLine{degreesToRadians(74.99999999999999),
+                                                     {0, 0},
+                                                     {-3.066814498467791, 0.8217504682005037},
+                                                     {}}});
+}
+
+TEST(WithPattern, NetFollowsTheMeasurementOfTheDrawing) {
+    const Hatch hatch = hatcheditShape(0);
+    const Hatch metric = made(withPattern(hatch, {0, 0}, "NET", 1, 0, 1));
+    const Hatch inches = made(withPattern(hatch, {0, 0}, "NET", 1, 0, 0));
+    ASSERT_EQ(metric.patternLines.size(), 2U);
+    ASSERT_EQ(inches.patternLines.size(), 2U);
+    EXPECT_NEAR(metric.patternLines[0].offset.y, 3.175, kPatternTolerance);
+    EXPECT_NEAR(metric.patternLines[1].offset.x, -3.175, kPatternTolerance);
+    EXPECT_NEAR(inches.patternLines[0].offset.y, 0.125, kPatternTolerance);
+    EXPECT_NEAR(inches.patternLines[1].offset.x, -0.125, kPatternTolerance);
+}
+
+TEST(WithPattern, SolidOtherNamesAndScalesThatAreNotPositive) {
+    const Hatch hatch = hatcheditShape(0);
+    const Hatch solid = made(withPattern(hatch, {245, 5}, "solid", 1, 0, 1));
+    EXPECT_EQ(solid.pattern, "SOLID");
+    EXPECT_TRUE(solid.solid);
+    EXPECT_TRUE(solid.patternLines.empty());
+    EXPECT_FALSE(withPattern(hatch, {0, 0}, "ANSI37", 1, 0, 1));
+    EXPECT_FALSE(withPattern(hatch, {0, 0}, "NONESISTE", 1, 0, 1));
+    for (const double scale : {0.0, -1.0, std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::infinity()}) {
+        EXPECT_FALSE(withPattern(hatch, {0, 0}, "ANSI31", scale, 0, 1)) << scale;
+    }
+    Hatch zero = hatch;
+    zero.scale = 0;
+    EXPECT_FALSE(withPattern(zero, {0, 0}, "ANSI31", 1, 0, 1));
+}
+
+TEST(FilledArea, ARectangleWithAHoleAndTheIslandStyles) {
+    Hatch hatch = hatcheditShape(0);
+    EXPECT_NEAR(filledArea(hatch), 2400 - (64 * kPi), 1e-9);
+    hatch.islands = IslandStyle::Outer;
+    EXPECT_NEAR(filledArea(hatch), 2400 - (64 * kPi), 1e-9);
+    hatch.islands = IslandStyle::Ignore;
+    EXPECT_NEAR(filledArea(hatch), 2400, 1e-9);
+    // The hole of RT30, an edge loop without flags: kept by every style when
+    // no loop is flagged external.
+    EXPECT_NEAR(filledArea(rectangleWithHole()), 80 - (4 * kPi), 1e-9);
+}
+
+TEST(FilledArea, AnIslandInAnIslandIsFilledAgain) {
+    const Hatch hatch = solidHatch({rectangleLoop({0, 0}, {10, 10}), rectangleLoop({2, 2}, {8, 8}),
+                                    rectangleLoop({4, 4}, {6, 6})});
+    EXPECT_NEAR(filledArea(hatch), 100 - 36 + 4, 1e-9);
 }
 
 }  // namespace

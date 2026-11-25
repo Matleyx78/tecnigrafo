@@ -9,6 +9,7 @@
 #include "tg/core/ellipse.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
+#include "tg/core/hatch_patterns.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/mtext.hpp"
@@ -19,6 +20,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -319,7 +321,7 @@ void writeEdge(const core::HatchEdge& edge, std::string& out) {
                edge.curve);
 }
 
-void writeHatch(const core::Hatch& hatch, std::string& out) {
+void writeHatch(const core::Hatch& hatch, const core::EntityExtras& extras, std::string& out) {
     out += "HATCH";
     writeQuoted("pattern", hatch.pattern, out);
     writeProperty("solid", yesNo(hatch.solid), out);
@@ -327,6 +329,12 @@ void writeHatch(const core::Hatch& hatch, std::string& out) {
     writeNumber("scale", hatch.scale, out);
     writeIfYes("double", hatch.doubled, out);
     writeProperty("islands", kIslandNames.at(static_cast<std::size_t>(hatch.islands)), out);
+    // The origin of the pattern, from the ACAD XDATA, only when it is there
+    // and not 0,0 (docs/verifica/rapporto.md, "Campi annunciati per la tappa
+    // 0.8.1"): patternOrigin() gives 0,0 when it is missing.
+    if (const core::Vec2 origin = core::patternOrigin(extras); origin != core::Vec2{}) {
+        writePoint("origin", origin, out);
+    }
     for (const core::HatchLoop& loop : hatch.loops) {
         std::string signals;
         for (const LoopSignal& signal : kLoopSignals) {
@@ -1123,8 +1131,8 @@ struct LoopBeingRead {
 Read<core::Entity> readHatch(PropertyTokens tokens) {
     // pattern … islands are given once each, in any order; loop starts a
     // boundary path, followed by its elements; seed may come anywhere.
-    constexpr std::array<std::string_view, 6> kNames{"pattern", "solid",  "angle",
-                                                     "scale",   "double", "islands"};
+    constexpr std::array<std::string_view, 7> kNames{"pattern", "solid",   "angle", "scale",
+                                                     "double",  "islands", "origin"};
     Read<std::vector<Property>> split = splitProperties(tokens);
     if (auto* error = std::get_if<Error>(&split)) {
         return std::move(*error);
@@ -1187,15 +1195,30 @@ Read<core::Entity> readHatch(PropertyTokens tokens) {
     }
     core::Hatch hatch;
     std::size_t islands = 0;
-    if (auto error =
-            firstError({fields.text("pattern", hatch.pattern), fields.flag("solid", hatch.solid),
-                        fields.degrees("angle", hatch.angle),
-                        fields.number("scale", hatch.scale, NumberRule::Positive),
-                        fields.flag("double", hatch.doubled),
-                        fields.option("islands", kIslandNames, islands)})) {
+    double degrees = 0.0;
+    // The origin of the pattern lives in the XDATA of a record read from a
+    // file: checked and left out, as the quota of stage 0.5, since an entity
+    // read here is made as a command makes it, with origin 0,0.
+    core::Vec2 origin;
+    if (auto error = firstError(
+            {fields.text("pattern", hatch.pattern), fields.flag("solid", hatch.solid),
+             fields.degrees("angle", hatch.angle), fields.number("angle", degrees),
+             fields.number("scale", hatch.scale, NumberRule::Positive),
+             fields.flag("double", hatch.doubled), fields.option("islands", kIslandNames, islands),
+             fields.point("origin", origin)})) {
         return std::move(*error);
     }
     hatch.islands = static_cast<core::IslandStyle>(islands);
+    // The families of a pattern that -HATCH generates, as -HATCH writes them
+    // in a new drawing ($MEASUREMENT 1, acadiso.pat), with origin 0,0; none
+    // for a solid fill or a pattern it does not generate (decision D1 on
+    // #960; docs/tappe/0.8.1/PT23-proprieta-retini-quote.md, point 5). A
+    // doubled pattern keeps the same families: -HATCH does not double.
+    if (!hatch.solid && std::isfinite(degrees)) {
+        hatch.patternLines = core::predefinedPatternLines(hatch.pattern, hatch.scale,
+                                                          core::reducedDegreesToRadians(degrees),
+                                                          core::kMetricMeasurement);
+    }
     for (LoopBeingRead& loop : loops) {
         core::HatchLoop path;
         path.flags = loop.flags;
@@ -1264,6 +1287,11 @@ void writeFormattedTextBox(const core::FormattedText& piece, std::string& out) {
 }
 
 void writeNewEntity(const core::Entity& entity, std::string& out) {
+    writeNewEntity(entity, core::EntityExtras{}, out);
+}
+
+void writeNewEntity(const core::Entity& entity, const core::EntityExtras& extras,
+                    std::string& out) {
     std::visit(Overloaded{
                    [&out](const core::Solid& solid) { writeSolid(solid, out); },
                    [&out](const core::Ellipse& ellipse) { writeEllipse(ellipse, out); },
@@ -1273,7 +1301,7 @@ void writeNewEntity(const core::Entity& entity, std::string& out) {
                    },
                    [&out](const core::Insert& insert) { writeInsert(insert, out); },
                    [&out](const core::Dimension& dimension) { writeDimension(dimension, out); },
-                   [&out](const core::Hatch& hatch) { writeHatch(hatch, out); },
+                   [&out, &extras](const core::Hatch& hatch) { writeHatch(hatch, extras, out); },
                    // The types of before the 0.8 are written by report.cpp.
                    [](const auto& /*older*/) {},
                },
