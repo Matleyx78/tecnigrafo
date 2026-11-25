@@ -187,7 +187,8 @@ std::string groupText(double value) {
     constexpr std::size_t kSize = 32;
     std::array<char, kSize> buffer{};
     const auto [end, error] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
-    std::string text = error == std::errc{} ? std::string(buffer.data(), end) : std::string{"1"};
+    const std::string text =
+        error == std::errc{} ? std::string(buffer.data(), end) : std::string{"1"};
     return text == "-0" ? std::string{"0"} : text;
 }
 
