@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 The Tecnigrafo authors
 
-#include "text_editor_overlay.hpp"
 #include "text_format_bar.hpp"
+
+#include "text_editor_overlay.hpp"
 #include "tg/cmd/text_editing.hpp"
 #include "tg/core/document.hpp"
 #include "tg/render/viewport.hpp"

@@ -4,10 +4,10 @@
 #include "text_format_bar.hpp"
 
 #include "text_editor_overlay.hpp"
-#include "theme.hpp"
 #include "tg/core/color.hpp"
-#include "tg/core/mtext_edit.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/mtext_edit.hpp"
+#include "theme.hpp"
 
 #include <QColor>
 #include <QComboBox>
@@ -83,7 +83,8 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     m_stackKind->setObjectName(QStringLiteral("formatStackKind"));
     m_stackKind->addItems({QStringLiteral("/"), QStringLiteral("#"), QStringLiteral("^")});
     layout->addWidget(m_stackKind);
-    auto* stack = addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("format-stack"));
+    auto* stack =
+        addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("format-stack"));
     stack->setCheckable(false);
     auto* unstack =
         addToggle(QStringLiteral("formatUnstack"), tr("Unstack"), QStringLiteral("format-unstack"));
@@ -95,9 +96,8 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     applyToggle(m_overline, static_cast<int>(Kind::Overline));
     applyToggle(m_strike, static_cast<int>(Kind::Strike));
     const auto numberChange = [this](QDoubleSpinBox* field, Kind kind) {
-        connect(field, &QDoubleSpinBox::editingFinished, this, [this, field, kind] {
-            m_editor->applyFormat({kind, true, field->value()});
-        });
+        connect(field, &QDoubleSpinBox::editingFinished, this,
+                [this, field, kind] { m_editor->applyFormat({kind, true, field->value()}); });
     };
     numberChange(m_height, Kind::Height);
     numberChange(m_width, Kind::WidthFactor);
@@ -148,8 +148,7 @@ QDoubleSpinBox* TextFormatBar::addNumber(const QString& name, const QString& suf
 
 void TextFormatBar::applyToggle(QToolButton* button, int kind) {
     connect(button, &QToolButton::clicked, this, [this, button, kind](bool checked) {
-        m_editor->applyFormat(
-            {static_cast<core::MTextFormatChange::Kind>(kind), checked});
+        m_editor->applyFormat({static_cast<core::MTextFormatChange::Kind>(kind), checked});
     });
 }
 
