@@ -70,6 +70,13 @@ protected:
         return result;
     }
 
+    [[nodiscard]] core::Document& document() { return m_document; }
+
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
+    [[nodiscard]] BattmanDialog& dialog() { return *m_dialog; }
+
+private:
     core::Document m_document;
     edit::Editor m_editor;
     std::unique_ptr<BattmanDialog> m_dialog;
@@ -84,16 +91,16 @@ TEST_F(BattmanDialogTest, ListsDefinitionsAndMovesEachInAnUndoableStep) {
     table()->selectRow(1);
     button("battmanUp")->click();
     EXPECT_EQ(tags(), (std::vector<std::string>{"SECOND", "FIRST"}));
-    EXPECT_EQ(m_editor.undoName(), "Battman");
-    ASSERT_TRUE(m_editor.undo());
-    m_dialog->refresh();
+    EXPECT_EQ(editor().undoName(), "Battman");
+    ASSERT_TRUE(editor().undo());
+    dialog().refresh();
     EXPECT_EQ(tags(), (std::vector<std::string>{"FIRST", "SECOND"}));
 }
 
 TEST_F(BattmanDialogTest, EditsAndRemovesDefinitionsWithUndo) {
     table()->selectRow(0);
-    QTimer::singleShot(0, m_dialog.get(), [this] {
-        auto* edit = m_dialog->findChild<QDialog*>();
+    QTimer::singleShot(0, &dialog(), [this] {
+        auto* edit = dialog().findChild<QDialog*>();
         ASSERT_NE(edit, nullptr);
         auto* prompt = edit->findChild<QLineEdit*>(QStringLiteral("battmanEditPrompt"));
         ASSERT_NE(prompt, nullptr);
@@ -101,20 +108,20 @@ TEST_F(BattmanDialogTest, EditsAndRemovesDefinitionsWithUndo) {
         edit->accept();
     });
     button("battmanEdit")->click();
-    const core::BlockDefinition* block = m_document.blocks().find("Part");
+    const core::BlockDefinition* block = document().blocks().find("Part");
     ASSERT_NE(block, nullptr);
     EXPECT_EQ(std::get<core::AttributeDefinition>(block->entities[0].entity).prompt,
               "Changed prompt");
-    EXPECT_TRUE(m_dialog->hasUnsynchronizedChanges());
-    ASSERT_TRUE(m_editor.undo());
-    m_dialog->refresh();
+    EXPECT_TRUE(dialog().hasUnsynchronizedChanges());
+    ASSERT_TRUE(editor().undo());
+    dialog().refresh();
 
     table()->selectRow(1);
     button("battmanRemove")->click();
     EXPECT_EQ(tags(), (std::vector<std::string>{"FIRST"}));
-    EXPECT_EQ(m_editor.undoName(), "Battman");
-    ASSERT_TRUE(m_editor.undo());
-    m_dialog->refresh();
+    EXPECT_EQ(editor().undoName(), "Battman");
+    ASSERT_TRUE(editor().undo());
+    dialog().refresh();
     EXPECT_EQ(tags(), (std::vector<std::string>{"FIRST", "SECOND"}));
 }
 
@@ -122,18 +129,18 @@ TEST_F(BattmanDialogTest, SynchronizesValuesInNewOrderAndUndoRestoresInsert) {
     table()->selectRow(1);
     button("battmanUp")->click();
     button("battmanSynchronize")->click();
-    ASSERT_EQ(m_document.entities().size(), 1U);
-    const auto synchronizedEntities = m_document.entities();
+    ASSERT_EQ(document().entities().size(), 1U);
+    const auto synchronizedEntities = document().entities();
     const auto& insert = std::get<core::Insert>(synchronizedEntities.front().entity);
     ASSERT_EQ(insert.attributes.size(), 2U);
     EXPECT_EQ(insert.attributes[0].tag, "SECOND");
     EXPECT_EQ(insert.attributes[0].text.value, "two");
     EXPECT_EQ(insert.attributes[1].tag, "FIRST");
     EXPECT_EQ(insert.attributes[1].text.value, "one");
-    EXPECT_FALSE(m_dialog->hasUnsynchronizedChanges());
-    EXPECT_EQ(m_editor.undoName(), "Battman");
-    ASSERT_TRUE(m_editor.undo());
-    const auto restoredEntities = m_document.entities();
+    EXPECT_FALSE(dialog().hasUnsynchronizedChanges());
+    EXPECT_EQ(editor().undoName(), "Battman");
+    ASSERT_TRUE(editor().undo());
+    const auto restoredEntities = document().entities();
     const auto& restored = std::get<core::Insert>(restoredEntities.front().entity);
     EXPECT_EQ(restored.attributes[0].tag, "FIRST");
     EXPECT_EQ(restored.attributes[1].tag, "SECOND");
@@ -143,13 +150,13 @@ TEST_F(BattmanDialogTest, ClosingAsksAboutUnsynchronizedChanges) {
     table()->selectRow(1);
     button("battmanUp")->click();
     int questions = 0;
-    m_dialog->setConfirm([&questions](const QString&) {
+    dialog().setConfirm([&questions](const QString&) {
         ++questions;
         return QMessageBox::No;
     });
-    m_dialog->reject();
+    dialog().reject();
     EXPECT_EQ(questions, 1);
-    EXPECT_EQ(m_dialog->result(), QDialog::Rejected);
+    EXPECT_EQ(dialog().result(), QDialog::Rejected);
 }
 
 }  // namespace

@@ -67,7 +67,7 @@ private:
     QPushButton* m_edit;
     QPushButton* m_remove;
     QPushButton* m_synchronize;
-    QPushButton* m_apply;
+    QPushButton* m_apply{nullptr};
     bool m_unsynchronized{false};
     bool m_closing{false};
     Confirm m_confirm;

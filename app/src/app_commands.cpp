@@ -144,7 +144,7 @@ public:
                 }
             }
         }
-        auto* dialog = new BattmanDialog(session->editor(), std::move(selectedBlock), &m_window);
+        auto* dialog = new BattmanDialog(session->editor(), selectedBlock, &m_window);
         dialog->setAttribute(Qt::WA_DeleteOnClose);
         dialog->open();
     }

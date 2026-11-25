@@ -83,17 +83,8 @@ public:
     explicit AttributeDefinitionDialog(core::AttributeDefinition definition, QWidget* parent)
         : QDialog(parent),
           m_definition(std::move(definition)),
-          m_tag(nullptr),
-          m_prompt(nullptr),
-          m_default(nullptr),
-          m_invisible(nullptr),
-          m_constant(nullptr),
-          m_verify(nullptr),
-          m_preset(nullptr),
-          m_locked(nullptr),
           m_height(new QDoubleSpinBox(this)),
-          m_rotation(new QDoubleSpinBox(this)),
-          m_style(nullptr) {
+          m_rotation(new QDoubleSpinBox(this)) {
         setWindowTitle(tr("Edit Attribute Definition"));
         auto* form = new QFormLayout;
         m_tag = new QLineEdit(QString::fromStdString(m_definition.tag), this);
@@ -155,17 +146,17 @@ public:
 
 private:
     core::AttributeDefinition m_definition;
-    QLineEdit* m_tag;
-    QLineEdit* m_prompt;
-    QLineEdit* m_default;
-    QCheckBox* m_invisible;
-    QCheckBox* m_constant;
-    QCheckBox* m_verify;
-    QCheckBox* m_preset;
-    QCheckBox* m_locked;
+    QLineEdit* m_tag{nullptr};
+    QLineEdit* m_prompt{nullptr};
+    QLineEdit* m_default{nullptr};
+    QCheckBox* m_invisible{nullptr};
+    QCheckBox* m_constant{nullptr};
+    QCheckBox* m_verify{nullptr};
+    QCheckBox* m_preset{nullptr};
+    QCheckBox* m_locked{nullptr};
     QDoubleSpinBox* m_height;
     QDoubleSpinBox* m_rotation;
-    QLineEdit* m_style;
+    QLineEdit* m_style{nullptr};
 };
 
 }  // namespace
@@ -181,7 +172,6 @@ BattmanDialog::BattmanDialog(edit::Editor& editor, const std::string& selectedBl
       m_edit(new QPushButton(tr("Edit..."), this)),
       m_remove(new QPushButton(tr("Remove"), this)),
       m_synchronize(new QPushButton(tr("Synchronize"), this)),
-      m_apply(nullptr),
       m_confirm([this](const QString& text) {
           return QMessageBox::question(this, tr("Block Attribute Manager"), text,
                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
