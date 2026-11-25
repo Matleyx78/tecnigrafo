@@ -103,8 +103,15 @@ struct AttributeRead {
     std::string tag;
     std::string prompt;
     int flags{0};
+    bool lockPosition{false};
     core::EntityExtras extras;
 };
+
+/// The locked position of a value of the second group 280 of the subclass
+/// (docs/adr/0056, point 1): 1 is locked, anything else is not.
+bool lockedValue(const std::string& value) {
+    return parseInteger(value) == 1;
+}
 
 /// Counts the subclass markers AcDbText before splitEntityGroups() drops
 /// them: an attribute with the second marker of TEXT is not one AutoCAD
@@ -142,6 +149,7 @@ std::optional<AttributeRead> readAttributeGroups(const core::RawGroups& groups,
         return true;
     };
     bool hasValue = false;
+    int groups280 = 0;  // the own groups 280 of the subclass: version, locked position
     const auto own = ownGroups(parts.geometry);
     for (std::size_t i = 0; i < parts.geometry.size(); ++i) {
         const auto& group = parts.geometry[i];
@@ -189,6 +197,13 @@ std::optional<AttributeRead> readAttributeGroups(const core::RawGroups& groups,
                     return std::nullopt;
                 }
                 read.tag = group.value;
+                break;
+            case 1280:
+                // The first is the version, the second the locked position:
+                // a record with the version alone is not locked (PT15).
+                if (++groups280 == 2) {
+                    read.lockPosition = lockedValue(group.value);
+                }
                 break;
             case 1003:
                 if (!definition) {
@@ -280,10 +295,50 @@ std::optional<AttributeRead> readAttributeGroups(const core::RawGroups& groups,
     return read;
 }
 
+/// Puts the locked position `locked` in `subclass`, the groups of the
+/// subclass from its marker (docs/adr/0056, point 1; docs/tappe/0.8.1,
+/// PT15, point 1). The second own group 280 is the locked position: it
+/// keeps its spelling while it says the same, and becomes 0 or 1 otherwise.
+/// With the version alone (one group 280), a locked position is added right
+/// after it. Without any group 280, a new attribute (`read` false) gets the
+/// version 0 after the marker and then, when locked, the locked position 1,
+/// so that a lone 280 = 1 is never read again as the version; a read one
+/// gets the two groups only when locked, so that it is written again as read.
+void writeLockPosition(core::RawGroups& subclass, bool locked, bool read) {
+    const auto own = ownGroups(subclass);
+    std::vector<std::size_t> found;
+    for (std::size_t i = 0; i < subclass.size(); ++i) {
+        if (own[i] && subclass[i].code == 280) {
+            found.push_back(i);
+        }
+    }
+    const auto at = [&subclass](std::size_t index) {
+        return subclass.begin() + static_cast<std::ptrdiff_t>(index);
+    };
+    if (found.size() >= 2) {
+        core::RawGroup& group = subclass[found[1]];
+        if (lockedValue(group.value) != locked) {
+            group.value = locked ? "1" : "0";
+        }
+    } else if (found.size() == 1) {
+        if (locked) {
+            subclass.insert(at(found[0] + 1), {280, "1"});
+        }
+    } else if (!read || locked) {
+        // The marker is the first group of the subclass.
+        core::RawGroups added{{280, "0"}};
+        if (locked) {
+            added.push_back({280, "1"});
+        }
+        subclass.insert(at(std::min<std::size_t>(1, subclass.size())), added.begin(), added.end());
+    }
+}
+
 /// The groups of TEXT and of the subclass of an attribute, from the groups
 /// kept in `specific` and the values of the model.
-void writeAttributeGroups(const core::Text& model, const core::EntityExtras& extras,
-                          std::string_view marker, std::vector<ModelGroup> subclassValues,
+void writeAttributeGroups(const core::Text& model, bool lockPosition,
+                          const core::EntityExtras& extras, std::string_view marker,
+                          std::vector<ModelGroup> subclassValues,
                           std::span<const int> subclassOrder, core::RawGroups& out) {
     core::Text text = model;
     if (extras.flippedExtrusion) {
@@ -300,8 +355,8 @@ void writeAttributeGroups(const core::Text& model, const core::EntityExtras& ext
     core::RawGroups second(specific.begin() + static_cast<std::ptrdiff_t>(start), specific.end());
     const bool read = start != specific.size();
     if (!read) {
-        // A new attribute: the groups of extras.specific (the flags and the
-        // locked position an ATTDEF gives its ATTRIB) after the marker.
+        // A new attribute: the groups of extras.specific (the flags an
+        // ATTDEF gives its ATTRIB) after the marker.
         first.clear();
         second = specific;
         // Appended and rotated to the front: an insert at begin() makes GCC 13
@@ -343,6 +398,7 @@ void writeAttributeGroups(const core::Text& model, const core::EntityExtras& ext
                               static_cast<double>(text.vertical),
                               text.vertical == core::TextVertical::Baseline});
     fillGroups(second, subclassValues, subclassOrder);
+    writeLockPosition(second, lockPosition, read);
 
     // The groups of placement where TEXT has them: thickness after the
     // marker, Z after the points, the extrusion at the end of the text.
@@ -390,6 +446,7 @@ std::optional<core::EntityRecord> readAttdef(const core::RawGroups& groups,
     definition.flags.constant = (read->flags & kConstantBit) != 0;
     definition.flags.verify = (read->flags & kVerifyBit) != 0;
     definition.flags.preset = (read->flags & kPresetBit) != 0;
+    definition.lockPosition = read->lockPosition;
     if (!core::supported(definition)) {
         return std::nullopt;
     }
@@ -423,8 +480,8 @@ void writeAttdef(const core::EntityRecord& record, EntityWriteContext& context,
         {2, Kind::Text, definition.tag},
         {70, Kind::Integer, std::to_string(flags), static_cast<double>(flags)},
     };
-    writeAttributeGroups(definition.text, record.extras, kDefinitionMarker, std::move(values),
-                         kDefinitionOrder, out);
+    writeAttributeGroups(definition.text, definition.lockPosition, record.extras, kDefinitionMarker,
+                         std::move(values), kDefinitionOrder, out);
 }
 
 }  // namespace
@@ -462,6 +519,7 @@ std::optional<core::Attribute> readAttribute(const core::RawGroups& groups,
     attribute.text = std::move(read->text);
     attribute.tag = std::move(read->tag);
     attribute.invisible = (read->flags & kInvisibleBit) != 0;
+    attribute.lockPosition = read->lockPosition;
     attribute.extras = std::move(read->extras);
     if (!core::supported(attribute)) {
         return std::nullopt;
@@ -506,8 +564,8 @@ void writeAttribute(const core::Attribute& attribute, core::EntityId owner,
         {2, Kind::Text, attribute.tag},
         {70, Kind::Integer, std::to_string(flags), static_cast<double>(flags)},
     };
-    writeAttributeGroups(attribute.text, attribute.extras, kAttributeMarker, std::move(values),
-                         kAttributeOrder, out);
+    writeAttributeGroups(attribute.text, attribute.lockPosition, attribute.extras, kAttributeMarker,
+                         std::move(values), kAttributeOrder, out);
 }
 
 }  // namespace tg::io

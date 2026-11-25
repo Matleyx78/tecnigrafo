@@ -195,6 +195,7 @@ void writeAttributeDefinition(const core::AttributeDefinition& definition, std::
     writeIfYes("constant", definition.flags.constant, out);
     writeIfYes("verify", definition.flags.verify, out);
     writeIfYes("preset", definition.flags.preset, out);
+    writeIfYes("lock-position", definition.lockPosition, out);
 }
 
 void writeInsert(const core::Insert& insert, std::string& out) {
@@ -1286,6 +1287,7 @@ void writeAttribute(const core::Attribute& attribute, core::EntityId owner, std:
     writeTextProperties(attribute.text, out);
     writeQuoted("tag", attribute.tag, out);
     writeIfYes("invisible", attribute.invisible, out);
+    writeIfYes("lock-position", attribute.lockPosition, out);
 }
 
 void writeNewDerived(const core::Entity& entity, std::string& out) {

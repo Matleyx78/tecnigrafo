@@ -3,18 +3,24 @@
 
 #include "tg/core/insert.hpp"
 
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/document_query.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/layer.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/raw_group.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
+#include "tg/core/text.hpp"
+#include "tg/core/text_affine.hpp"
 
 #include <gtest/gtest.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
@@ -602,6 +608,242 @@ TEST(Insert, AnEmptyBlockIsTakenOnlyByAWindowOnTheInsertionPoint) {
     EXPECT_TRUE(selectInRectangle(document, {{201, 49}, {202, 51}}, RectangleMode::Window).empty());
     const SnapPoint snap = found(findSnap(document, {200.1, 50}, 0.5, only(&SnapModes::insertion)));
     EXPECT_EQ(snap.point, (Vec2{200, 50}));
+}
+
+// Synchronising with the definition and picking an attribute
+// (docs/tappe/0.8.1/PT15-attributi-core.md).
+
+AttributeDefinition definitionAt(const Vec2& position, std::string tag, std::string value,
+                                 double height = 2.5) {
+    AttributeDefinition definition;
+    definition.text.position = position;
+    definition.text.height = height;
+    definition.text.value = std::move(value);
+    definition.tag = std::move(tag);
+    return definition;
+}
+
+/// An ATTRIB with its handle, tag and value, placed at `position` in the
+/// drawing, with the default properties of a new drawing.
+Attribute attributeAt(const Document& document, std::uint64_t id, std::string tag,
+                      std::string value, const Vec2& position) {
+    Attribute attribute;
+    attribute.id = EntityId{id};
+    attribute.text.position = position;
+    attribute.text.height = 2.5;
+    attribute.text.value = std::move(value);
+    attribute.tag = std::move(tag);
+    attribute.properties = member(document, Line{}).properties;
+    return attribute;
+}
+
+void expectAttribute(const Attribute& actual, std::uint64_t id, std::string_view tag,
+                     std::string_view value, const Vec2& position, double height) {
+    EXPECT_EQ(actual.id.value, id);
+    EXPECT_EQ(actual.tag, tag);
+    EXPECT_EQ(actual.text.value, value);
+    expectPoint(actual.text.position, position);
+    EXPECT_NEAR(actual.text.height, height, kEps);
+}
+
+TEST(Insert, SynchronizingFollowsTheAttsyncOfAutocad) {
+    // autocad-attsync.dxf (dxf-test-file, commit 2aafbb1): SINCRO_A redefined
+    // with PRIMO the same, SECONDO removed, TERZO moved from (2, 5) to
+    // (22, 15) and 3.5 high, QUARTO added; the ATTDEFs in the order of the
+    // definition, the inverse of their creation. The insert at (0, -40) had
+    // the ATTRIBs of the first definition. AutoCAD gives other handles; the
+    // ones that stay keep theirs (docs/adr/0056, point 5).
+    Document document = Document::newDrawing();
+    document.replaceBlock("SINCRO_A", block(document, "SINCRO_A", {0, 0},
+                                            {definitionAt({2, 5}, "QUARTO", "Q0"),
+                                             definitionAt({22, 15}, "TERZO", "T0", 3.5),
+                                             definitionAt({2, 15}, "PRIMO", "P0")}));
+    Insert insert = insertOf("SINCRO_A", {0, -40});
+    insert.attributes = {attributeAt(document, 0xA3, "TERZO", "A1-3", {2, -35}),
+                         attributeAt(document, 0xA4, "SECONDO", "A1-2", {2, -30}),
+                         attributeAt(document, 0xA5, "PRIMO", "A1-1", {2, -25})};
+
+    const std::vector<Attribute> synced = synchronizedAttributes(document, insert);
+    ASSERT_EQ(synced.size(), 3U);
+    expectAttribute(synced[0], 0, "QUARTO", "Q0", {2, -35}, 2.5);       // new
+    expectAttribute(synced[1], 0xA3, "TERZO", "A1-3", {22, -25}, 3.5);  // moved, 3.5 high
+    expectAttribute(synced[2], 0xA5, "PRIMO", "A1-1", {2, -25}, 2.5);   // the same
+    // SECONDO, removed from the definition, is gone.
+
+    // Without the definition nothing changes.
+    Insert missing = insert;
+    missing.block = "MISSING";
+    EXPECT_EQ(synchronizedAttributes(document, missing), insert.attributes);
+}
+
+TEST(Insert, SynchronizingPlacesTheDefinitionsByARotatedAndScaledInsert) {
+    Document document = Document::newDrawing();
+    AttributeDefinition definition = definitionAt({2, 0}, "REF", "-K0", 1.0);
+    definition.text.rotation = degreesToRadians(10.0);
+    definition.flags.invisible = true;
+    definition.lockPosition = true;
+    document.replaceBlock("SYM", block(document, "SYM", {0, 0}, {definition}));
+    Insert insert = insertOf("SYM", {10, 20}, 2.0, 3.0, 30.0);
+    insert.attributes = {attributeAt(document, 7, "ref", "-K1", {50, 50})};
+
+    const std::vector<Attribute> synced = synchronizedAttributes(document, insert);
+    ASSERT_EQ(synced.size(), 1U);
+    // (2, 0) scaled to (4, 0), turned by 30 degrees, moved to (10, 20).
+    expectPoint(synced[0].text.position, {13.464101615137754, 22});
+    Text expected = transformedText(definition.text, insertTransform(document, insert));
+    expected.value = "-K1";
+    EXPECT_EQ(synced[0].text, expected);
+    EXPECT_EQ(synced[0].id.value, 7U);
+    EXPECT_EQ(synced[0].tag, "REF");
+    EXPECT_TRUE(synced[0].invisible);
+    EXPECT_TRUE(synced[0].lockPosition);
+}
+
+TEST(Insert, BetweenEqualTagsTheFirstFreeAttributeIsKept) {
+    // The revision of PT5, [decisione] 1: each ATTDEF takes the first free
+    // ATTRIB with its tag, without case; each handle is used once.
+    Document document = Document::newDrawing();
+    document.replaceBlock("ONE", block(document, "ONE", {0, 0}, {definitionAt({0, 0}, "A", "D")}));
+    Insert one = insertOf("ONE", {0, 0});
+    one.attributes = {attributeAt(document, 31, "A", "first", {0, 0}),
+                      attributeAt(document, 32, "a", "second", {0, 0})};
+    const std::vector<Attribute> kept = synchronizedAttributes(document, one);
+    ASSERT_EQ(kept.size(), 1U);
+    expectAttribute(kept[0], 31, "A", "first", {0, 0}, 2.5);
+
+    document.replaceBlock(
+        "TWO", block(document, "TWO", {0, 0},
+                     {definitionAt({0, 0}, "A", "D1"), definitionAt({0, 5}, "a", "D2")}));
+    Insert two = insertOf("TWO", {0, 0});
+    two.attributes = {attributeAt(document, 31, "A", "first", {0, 0})};
+    const std::vector<Attribute> both = synchronizedAttributes(document, two);
+    ASSERT_EQ(both.size(), 2U);
+    expectAttribute(both[0], 31, "A", "first", {0, 0}, 2.5);
+    expectAttribute(both[1], 0, "a", "D2", {0, 5}, 2.5);
+}
+
+TEST(Insert, AKeptAttributeKeepsItsDataAndTakesTheModesOfItsDefinition) {
+    // ADR 0006: XDATA, dictionaries and the groups as read stay; the flags of
+    // the group 70 follow the ATTDEF, the other bits kept.
+    Document document = Document::newDrawing();
+    AttributeDefinition preset = definitionAt({0, 0}, "CODE", "D");
+    preset.flags.preset = true;
+    Layer notes;
+    notes.name = "NOTES";
+    notes.linetype = document.continuousLinetype();
+    const LayerId layer = document.addLayer(notes);
+    BlockDefinition definition = block(document, "SYM", {0, 0}, {preset});
+    definition.entities[0].properties.layer = layer;
+    document.replaceBlock("SYM", std::move(definition));
+    Insert insert = insertOf("SYM", {0, 0});
+    Attribute attribute = attributeAt(document, 40, "CODE", "X9", {0, 0});
+    attribute.lockPosition = true;
+    attribute.extras.beforeEntity = {{102, "{ACAD_XDICTIONARY"}, {360, "41"}, {102, "}"}};
+    attribute.extras.specific = {{100, "AcDbAttribute"}, {2, "CODE"}, {70, "     4"}, {73, "0"}};
+    attribute.extras.extended = {{1001, "APP"}, {1000, "kept"}};
+    insert.attributes = {attribute};
+
+    const std::vector<Attribute> synced = synchronizedAttributes(document, insert);
+    ASSERT_EQ(synced.size(), 1U);
+    EXPECT_EQ(synced[0].id.value, 40U);
+    EXPECT_EQ(synced[0].text.value, "X9");
+    EXPECT_FALSE(synced[0].lockPosition);
+    EXPECT_EQ(synced[0].properties.layer, layer);
+    EXPECT_EQ(synced[0].extras.beforeEntity, attribute.extras.beforeEntity);
+    EXPECT_EQ(synced[0].extras.extended, attribute.extras.extended);
+    const RawGroups specific{{100, "AcDbAttribute"}, {2, "CODE"}, {70, "8"}, {73, "0"}};
+    EXPECT_EQ(synced[0].extras.specific, specific);
+    EXPECT_TRUE(attributeFlags(synced[0]).preset);
+    EXPECT_FALSE(attributeFlags(synced[0]).verify);
+}
+
+/// The blocks "A" and "B", each with the ATTDEFs SIGLA and CODICE on the
+/// same place, and their inserts at the origin with `value` for CODICE.
+struct Overlapping {
+    Document document = Document::newDrawing();
+    EntityId first;
+    EntityId second;
+
+    Overlapping() {
+        for (const char* name : {"A", "B"}) {
+            document.replaceBlock(name, block(document, name, {0, 0},
+                                              {definitionAt({0, 0}, "SIGLA", "S1"),
+                                               definitionAt({0, 0}, "CODICE", "C1")}));
+        }
+        first = addInsert("A");
+        second = addInsert("B");
+    }
+
+    EntityId addInsert(const std::string& name) {
+        Insert insert = insertOf(name, {0, 0});
+        insert.attributes = defaultAttributes(document, insert);
+        for (Attribute& attribute : insert.attributes) {
+            attribute.id = EntityId{document.nextId()};
+            document.reserveHandle(attribute.id);
+        }
+        return document.add(insert);
+    }
+};
+
+TEST(Insert, TheFiltersOfAPickComeBeforeTheDistances) {
+    // [bloccante] 5 of the revision of PT5: accept is applied first.
+    const Overlapping drawing;
+    const Document& document = drawing.document;
+    const Vec2 click{0.5, 0.5};
+    // A tie: the higher insert id, then the lower index.
+    EXPECT_EQ(pickAttribute(document, click, 1.0), (AttributePick{drawing.second, 0}));
+    const auto code = [](const Insert& /*insert*/, const Attribute& attribute) {
+        return attribute.tag == "CODICE";
+    };
+    EXPECT_EQ(pickAttribute(document, click, 1.0, code), (AttributePick{drawing.second, 1}));
+    const auto blockA = [](const Insert& insert, const Attribute& attribute) {
+        return insert.block == "A" && attribute.tag == "CODICE";
+    };
+    EXPECT_EQ(pickAttribute(document, click, 1.0, blockA), (AttributePick{drawing.first, 1}));
+    const auto none = [](const Insert& /*insert*/, const Attribute& /*attribute*/) {
+        return false;
+    };
+    EXPECT_FALSE(pickAttribute(document, click, 1.0, none));
+    EXPECT_FALSE(pickAttribute(document, {50, 50}, 1.0));
+}
+
+TEST(Insert, OnlyTheDrawnAttributesOfTheDrawingArePicked) {
+    Document document = Document::newDrawing();
+    AttributeDefinition hidden = definitionAt({0, 0}, "NOTE", "n");
+    hidden.flags.invisible = true;
+    document.replaceBlock("SYM", block(document, "SYM", {0, 0}, {hidden}));
+    Insert insert = insertOf("SYM", {0, 0});
+    insert.attributes = defaultAttributes(document, insert);
+    const EntityId id = document.add(insert);
+    // ATTDISP Normal does not draw it, On does (docs/adr/0056, point 1).
+    EXPECT_FALSE(pickAttribute(document, {0.5, 0.5}, 1.0));
+    document.setAttributeDisplay(AttributeDisplay::On);
+    EXPECT_EQ(pickAttribute(document, {0.5, 0.5}, 1.0), (AttributePick{id, 0}));
+    // The layer of the insert off: nothing is drawn.
+    Layer off;
+    off.name = "OFF";
+    off.linetype = document.continuousLinetype();
+    off.on = false;
+    EntityProperties properties = document.find(id)->properties;
+    properties.layer = document.addLayer(off);
+    document.setProperties(id, properties);
+    EXPECT_FALSE(pickAttribute(document, {0.5, 0.5}, 1.0));
+}
+
+TEST(Insert, AnAttributeOfANestedInsertIsNeverPicked) {
+    // The revision of the correction #992, [bloccante] 3.
+    Document document = Document::newDrawing();
+    document.replaceBlock("INNER",
+                          block(document, "INNER", {0, 0}, {definitionAt({0, 0}, "CODICE", "C")}));
+    Insert inner = insertOf("INNER", {0, 0});
+    inner.attributes = defaultAttributes(document, inner);
+    inner.attributes[0].id = EntityId{0x50};
+    document.reserveHandle(inner.attributes[0].id);
+    document.replaceBlock("OUTER", block(document, "OUTER", {0, 0}, {inner}));
+    const EntityId outer = document.add(insertOf("OUTER", {0, 0}));
+    // The nested ATTRIB is drawn under the click, but lives in a block.
+    EXPECT_EQ(pickEntity(document, {0.5, 0.5}, 1.0), outer);
+    EXPECT_FALSE(pickAttribute(document, {0.5, 0.5}, 1.0));
 }
 
 }  // namespace

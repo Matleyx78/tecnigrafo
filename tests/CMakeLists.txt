@@ -73,6 +73,7 @@ add_executable(tg_tests
     core/offset_test.cpp
     core/pedit_join_test.cpp
     core/arc_test.cpp
+    core/attribute_definition_test.cpp
     core/attributes_test.cpp
     core/block_table_test.cpp
     core/ellipse_test.cpp
