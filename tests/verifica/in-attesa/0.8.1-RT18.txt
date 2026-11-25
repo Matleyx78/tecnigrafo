@@ -1,7 +1,0 @@
-# [0.8.1-RT18] (#968): ATTSYNC and ATTDISP, work #969
-attributi/attsync-nome #969
-attributi/attsync-seleziona #969
-attributi/attsync-nome-senza-attributi #969
-attributi/attsync-nessun-attributo #969
-attributi/attdisp-off #969
-attributi/attdisp-normale #969
