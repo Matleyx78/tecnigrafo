@@ -102,7 +102,7 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
         auto* field = bar->findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
         ASSERT_NE(field, nullptr);
         field->setValue(test.value);
-        ASSERT_TRUE(QMetaObject::invokeMethod(field, "editingFinished"));
+        field->editingFinished();
         EXPECT_EQ(editor.value(), test.expected) << test.field;
         editor.close();
     }
@@ -112,7 +112,7 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
     auto* color = bar->findChild<QLineEdit*>(QStringLiteral("formatColor"));
     ASSERT_NE(color, nullptr);
     color->setText(QStringLiteral("1"));
-    ASSERT_TRUE(QMetaObject::invokeMethod(color, "editingFinished"));
+    color->editingFinished();
     EXPECT_EQ(editor.value(), "{\\C1;A}B");
 }
 
