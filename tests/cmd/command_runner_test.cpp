@@ -6,7 +6,11 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_description.hpp"
 #include "tg/cmd/commands/aid_commands.hpp"
+#include "tg/core/drawing_settings.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/snap_points.hpp"
+#include "tg/edit/editor.hpp"
 
 #include <gtest/gtest.h>
 
@@ -2622,6 +2626,174 @@ TEST(DescriptionCheckDeathTest, TheDefaultCheckAborts) {
                  [&journal] { return std::make_unique<FakeCommand>(journal); });
     CommandRunner runner{registry, editor};
     EXPECT_DEATH(runner.submitText("FAKE"), "FAKE: undescribed prompt");
+}
+
+// --- Snap to the grid (docs/adr/0055, point 4) ---------------------------------
+
+/// The built-in commands on a drawing with the line (0,5)-(10,5), the snap
+/// to the grid on with the spacing 10 and object snap off, unless a test
+/// changes them (docs/tappe/0.8.1/PT28-griglia-cmd.md, point 2).
+class GridSnapTest : public testing::Test {
+protected:
+    GridSnapTest() {
+        registerBuiltinCommands(m_registry);
+        m_editor.beginTransaction("Line");
+        m_editor.add(core::Line{{0, 5}, {10, 5}});
+        m_editor.commit();
+        core::GridSettings grid = m_document.grid();
+        grid.snapOn = true;
+        m_editor.tables().setGrid(grid);
+        setModes(core::SnapModes{false, false, false, false, false});
+        m_runner.setMessageSink(
+            [this](std::string text) { m_messages.push_back(std::move(text)); });
+    }
+
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const std::vector<std::string>& messages() const { return m_messages; }
+
+    void setGrid(Vec2 unit, Vec2 base) {
+        core::GridSettings grid = m_document.grid();
+        grid.snapUnit = unit;
+        grid.snapBase = base;
+        m_editor.tables().setGrid(grid);
+    }
+
+    void setModes(const core::SnapModes& modes) {
+        DrawingAids aids = m_runner.drawingAids();
+        aids.snapModes = modes;
+        m_runner.setDrawingAids(aids);
+    }
+
+    void setAids(bool ortho, bool polar, bool tracking) {
+        DrawingAids aids = m_runner.drawingAids();
+        aids.ortho = ortho;
+        aids.polar = polar;
+        aids.tracking = tracking;
+        m_runner.setDrawingAids(aids);
+    }
+
+    /// The end of the preview of LINE, if it shows one.
+    [[nodiscard]] std::optional<Vec2> previewEnd() const {
+        const std::span<const Entity> preview = m_runner.preview();
+        if (preview.size() != 1) {
+            return std::nullopt;
+        }
+        return std::get<core::Line>(preview.front()).end;
+    }
+
+    /// The segments the LINE commands drew, after the line of the fixture.
+    [[nodiscard]] std::vector<core::Line> drawn() const {
+        std::vector<core::Line> lines;
+        for (const core::EntityRecord& record : m_document.entities()) {
+            lines.push_back(std::get<core::Line>(record.entity));
+        }
+        lines.erase(lines.begin());
+        return lines;
+    }
+
+private:
+    Document m_document{Document::newDrawing()};
+    edit::Editor m_editor{m_document};
+    CommandRegistry m_registry;
+    CommandRunner m_runner{m_registry, m_editor};
+    std::vector<std::string> m_messages;
+};
+
+TEST_F(GridSnapTest, ClickAndPreviewGoToTheNodeAndATypedPointStays) {
+    setGrid({2.5, 5}, {3, 4});
+    runner().submitText("LINE");
+    runner().pointerMoved({-1.2, 0.3});
+    runner().click({-1.2, 0.3}, PickAction::Add);  // a negative node
+    runner().pointerMoved({4.25, 6.5});            // half way: away from the base
+    EXPECT_EQ(previewEnd(), (Vec2{5.5, 9}));
+    EXPECT_EQ(runner().clickPoint({4.25, 6.5}), (Vec2{5.5, 9}));
+    runner().click({4.25, 6.5}, PickAction::Add);
+    runner().submitText("-1.2,0.3");
+    runner().submitText("");
+    const std::vector<core::Line> lines = drawn();
+    ASSERT_EQ(lines.size(), 2U);
+    EXPECT_EQ(lines[0].start, (Vec2{-2, -1}));
+    EXPECT_EQ(lines[0].end, (Vec2{5.5, 9}));
+    EXPECT_EQ(lines[1].end, (Vec2{-1.2, 0.3}));
+}
+
+TEST_F(GridSnapTest, WithTheSnapOffThePointsStay) {
+    runner().submitText("SNAPMODE");
+    runner().submitText("0");
+    runner().submitText("LINE");
+    runner().click({-1.2, 0.3}, PickAction::Add);
+    runner().pointerMoved({4.25, 6.5});
+    EXPECT_EQ(previewEnd(), (Vec2{4.25, 6.5}));
+}
+
+TEST_F(GridSnapTest, AnObjectSnapFoundWinsOverTheGrid) {
+    setModes(core::SnapModes{});
+    runner().submitText("LINE");
+    runner().click({10.2, 5.1}, PickAction::Add);  // the endpoint, not the node (10,10)
+    runner().pointerMoved({29, 19});               // no snap: the node
+    EXPECT_EQ(previewEnd(), (Vec2{30, 20}));
+    EXPECT_EQ(drawn().size(), 0U);
+    runner().click({29, 19}, PickAction::Add);
+    ASSERT_EQ(drawn().size(), 1U);
+    EXPECT_EQ(drawn()[0].start, (Vec2{10, 5}));
+    EXPECT_EQ(drawn()[0].end, (Vec2{30, 20}));
+}
+
+TEST_F(GridSnapTest, OrthoTakesTheNodeAlongItsDirectionAndTheBaseAcross) {
+    setAids(true, false, false);
+    runner().submitText("LINE");
+    runner().submitText("1,2");
+    runner().pointerMoved({19, 4});  // node (20,0)
+    EXPECT_EQ(previewEnd(), (Vec2{20, 2}));
+    runner().click({19, 4}, PickAction::Add);
+    ASSERT_EQ(drawn().size(), 1U);
+    EXPECT_EQ(drawn()[0].end, (Vec2{20, 2}));
+}
+
+TEST_F(GridSnapTest, PolarProjectsTheNode) {
+    setAids(false, true, false);
+    runner().submitText("LINE");
+    runner().submitText("1,2");
+    // Node (20,10), 8 from the ray at 0 degrees, within the aperture of 10;
+    // the pointer itself would give (19,2).
+    runner().pointerMoved({19, 9});
+    EXPECT_EQ(previewEnd(), (Vec2{20, 2}));
+    const std::optional<CommandRunner::PolarTracking> polar = runner().activePolar();
+    const std::optional<Vec2> polarPoint =
+        polar ? std::optional<Vec2>{polar->point} : std::optional<Vec2>{};
+    EXPECT_EQ(polarPoint, (std::optional<Vec2>{Vec2{20, 2}}));
+    runner().click({19, 9}, PickAction::Add);
+    ASSERT_EQ(drawn().size(), 1U);
+    EXPECT_EQ(drawn()[0].end, (Vec2{20, 2}));
+}
+
+TEST_F(GridSnapTest, OnePointForClickPreviewAndTracking) {
+    // Aperture 1; the point (10,5) acquired gives the guides y=5 and x=10.
+    runner().setPixelSize(0.1);
+    setAids(false, false, true);
+    setModes(core::SnapModes{true, false, false, false, false});
+    runner().submitText("LINE");
+    runner().submitText("20,20");
+    runner().pointerHeld({10, 5});
+    ASSERT_EQ(runner().tracking().acquired, (std::vector<Vec2>{{10, 5}}));
+    setModes(core::SnapModes{false, false, false, false, false});
+    // The pointer is 0.1 from the guide y=5, its node (0,0) is 5 from it:
+    // no guide catches, and the guides stay where they are.
+    runner().pointerMoved({4.9, 4.9});
+    EXPECT_EQ(runner().tracking().guide, CommandRunner::TrackingState::Guide::None);
+    EXPECT_FALSE(runner().tracking().guidePoint);
+    EXPECT_EQ(previewEnd(), (Vec2{0, 0}));
+    EXPECT_EQ(runner().clickPoint({4.9, 4.9}), (Vec2{0, 0}));
+    // A node on the guide: the guide gives it.
+    runner().pointerMoved({19.6, 5.2});  // node (20,10): 5 from y=5
+    EXPECT_EQ(runner().tracking().guide, CommandRunner::TrackingState::Guide::None);
+    runner().pointerMoved({10.4, 1});  // node (10,0), on x=10
+    EXPECT_EQ(runner().tracking().guide, CommandRunner::TrackingState::Guide::Vertical);
+    EXPECT_EQ(previewEnd(), (Vec2{10, 0}));
+    runner().click({4.9, 4.9}, PickAction::Add);
+    ASSERT_EQ(drawn().size(), 1U);
+    EXPECT_EQ(drawn()[0].end, (Vec2{0, 0}));
 }
 
 }  // namespace

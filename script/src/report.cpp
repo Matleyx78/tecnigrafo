@@ -8,6 +8,7 @@
 #include "tg/core/block_table.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/dim_style_table.hpp"
+#include "tg/core/drawing_settings.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/layer.hpp"
@@ -806,6 +807,13 @@ void writeState(const ReportInput& input, std::string& out) {
     }
     appendField("snap", snapText(runner.drawingAids()), out);
     appendField("ortho", onOff(runner.drawingAids().ortho), out);
+    // Only with the snap to the grid on (docs/adr/0055, point 7), so that
+    // the reports of the drawings with the snap off stay as they were.
+    if (const core::GridSettings& grid = document.grid(); grid.snapOn) {
+        appendField("grid snap",
+                    "unit=" + formatPoint(grid.snapUnit) + " base=" + formatPoint(grid.snapBase),
+                    out);
+    }
     writeDrawing(input, out);
     appendField("pointer", input.pointer ? formatPoint(*input.pointer) : "none", out);
     appendField("active snap", snapPointText(runner.activeSnap()), out);
