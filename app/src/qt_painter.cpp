@@ -58,7 +58,7 @@ const QRawFont& bundledFont(core::FontFace face) {
         const std::array paths{
             ":/tg/fonts/LiberationSans-Regular.ttf", ":/tg/fonts/LiberationSans-Bold.ttf",
             ":/tg/fonts/LiberationSans-Italic.ttf", ":/tg/fonts/LiberationSans-BoldItalic.ttf"};
-        bundledFontFamily();
+        (void)bundledFontFamily();
         // A fixed, large size keeps the outline metrics independent of zoom.
         constexpr int kReferencePixelSize = 1024;
         for (std::size_t i = 0; i < fonts.size(); ++i) {
