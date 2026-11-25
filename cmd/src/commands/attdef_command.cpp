@@ -97,10 +97,10 @@ void AttdefCommand::start(CommandContext& context) {
 }
 
 void AttdefCommand::reportModes(CommandContext& context) const {
-    context.message("Current attribute modes: Invisible=" + yesNo(m_flags & kInvisible) +
-                    " Constant=" + yesNo(m_flags & kConstant) +
-                    " Verify=" + yesNo(m_flags & kVerify) + " Preset=" + yesNo(m_flags & kPreset) +
-                    " Lock position=" + yesNo(m_flags & kLockPosition));
+    context.message("Current attribute modes: Invisible=" + yesNo((m_flags & kInvisible) != 0) +
+                    " Constant=" + yesNo((m_flags & kConstant) != 0) + " Verify=" +
+                    yesNo((m_flags & kVerify) != 0) + " Preset=" + yesNo((m_flags & kPreset) != 0) +
+                    " Lock position=" + yesNo((m_flags & kLockPosition) != 0));
 }
 
 void AttdefCommand::reportText(CommandContext& context) const {
@@ -159,7 +159,7 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
                     context.message("Invalid tag name.");
                 } else {
                     m_definition.tag = text->text;
-                    m_stage = (m_flags & kConstant) ? Stage::Value : Stage::AttributePrompt;
+                    m_stage = (m_flags & kConstant) != 0 ? Stage::Value : Stage::AttributePrompt;
                 }
             }
             break;
@@ -308,9 +308,9 @@ void AttdefCommand::afterPoint(const CommandContext& context) {
 }
 
 Status AttdefCommand::finish(CommandContext& context) {
-    m_definition.flags = {bool(m_flags & kInvisible), bool(m_flags & kConstant),
-                          bool(m_flags & kVerify), bool(m_flags & kPreset)};
-    m_definition.lockPosition = m_flags & kLockPosition;
+    m_definition.flags = {(m_flags & kInvisible) != 0, (m_flags & kConstant) != 0,
+                          (m_flags & kVerify) != 0, (m_flags & kPreset) != 0};
+    m_definition.lockPosition = (m_flags & kLockPosition) != 0;
     context.editor.add(m_definition);
     context.defaults.attributeFlags = m_flags;
     context.defaults.textHeight = m_definition.text.height;
@@ -335,10 +335,10 @@ Prompt AttdefCommand::prompt() const {
         case Stage::AttributePrompt:
             return {"Enter attribute prompt:", {}, PromptKind::Text};
         case Stage::Value:
-            return {
-                (m_flags & kConstant) ? "Enter attribute value:" : "Enter default attribute value:",
-                {},
-                PromptKind::Text};
+            return {(m_flags & kConstant) != 0 ? "Enter attribute value:"
+                                               : "Enter default attribute value:",
+                    {},
+                    PromptKind::Text};
         case Stage::Start:
             return {"Specify start point of text or [Justify/Style]:",
                     {{"Justify", "J"}, {"Style", "S"}}};
@@ -380,9 +380,18 @@ Prompt AttdefCommand::prompt() const {
             if (name == "Align" || name == "Fit") {
                 return {"Specify first endpoint of text baseline:", {}};
             }
-            std::string vertical = name[0] == 'T' ? "top" : (name[0] == 'M' ? "middle" : "bottom");
-            std::string horizontal =
-                name[1] == 'L' ? "left" : (name[1] == 'C' ? "center" : "right");
+            const std::string vertical = [&name] {
+                if (name[0] == 'T') {
+                    return "top";
+                }
+                return name[0] == 'M' ? "middle" : "bottom";
+            }();
+            const std::string horizontal = [&name] {
+                if (name[1] == 'L') {
+                    return "left";
+                }
+                return name[1] == 'C' ? "center" : "right";
+            }();
             return {"Specify " + vertical + "-" + horizontal + " point of text:", {}};
         }
         case Stage::SecondPoint:
