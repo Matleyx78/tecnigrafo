@@ -32,7 +32,7 @@ public:
 
     using Confirm = std::function<QMessageBox::StandardButton(const QString&)>;
 
-    explicit BattmanDialog(edit::Editor& editor, std::string selectedBlock = {},
+    explicit BattmanDialog(edit::Editor& editor, const std::string& selectedBlock = {},
                            QWidget* parent = nullptr);
     ~BattmanDialog() override = default;
 
@@ -42,7 +42,6 @@ public:
 
     [[nodiscard]] bool hasUnsynchronizedChanges() const { return m_unsynchronized; }
 
-public Q_SLOTS:
     void refresh();
     void moveUp();
     void moveDown();

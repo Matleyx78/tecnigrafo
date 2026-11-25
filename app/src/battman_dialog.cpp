@@ -81,7 +81,19 @@ QString modesOf(const core::AttributeDefinition& definition) {
 class AttributeDefinitionDialog final : public QDialog {
 public:
     explicit AttributeDefinitionDialog(core::AttributeDefinition definition, QWidget* parent)
-        : QDialog(parent), m_definition(std::move(definition)) {
+        : QDialog(parent),
+          m_definition(std::move(definition)),
+          m_tag(nullptr),
+          m_prompt(nullptr),
+          m_default(nullptr),
+          m_invisible(nullptr),
+          m_constant(nullptr),
+          m_verify(nullptr),
+          m_preset(nullptr),
+          m_locked(nullptr),
+          m_height(new QDoubleSpinBox(this)),
+          m_rotation(new QDoubleSpinBox(this)),
+          m_style(nullptr) {
         setWindowTitle(tr("Edit Attribute Definition"));
         auto* form = new QFormLayout;
         m_tag = new QLineEdit(QString::fromStdString(m_definition.tag), this);
@@ -90,12 +102,10 @@ public:
         m_prompt->setObjectName(QStringLiteral("battmanEditPrompt"));
         m_default = new QLineEdit(QString::fromStdString(m_definition.text.value), this);
         m_default->setObjectName(QStringLiteral("battmanEditDefault"));
-        m_height = new QDoubleSpinBox(this);
         m_height->setObjectName(QStringLiteral("battmanEditHeight"));
         m_height->setRange(0.000001, 1.0e12);
         m_height->setDecimals(6);
         m_height->setValue(m_definition.text.height);
-        m_rotation = new QDoubleSpinBox(this);
         m_rotation->setObjectName(QStringLiteral("battmanEditRotation"));
         m_rotation->setRange(-360.0, 360.0);
         m_rotation->setDecimals(6);
@@ -160,7 +170,8 @@ private:
 
 }  // namespace
 
-BattmanDialog::BattmanDialog(edit::Editor& editor, std::string selectedBlock, QWidget* parent)
+BattmanDialog::BattmanDialog(edit::Editor& editor, const std::string& selectedBlock,
+                             QWidget* parent)
     : QDialog(parent),
       m_editor(editor),
       m_blocks(new QComboBox(this)),
@@ -252,7 +263,7 @@ void BattmanDialog::refresh() {
             QString::fromStdString(definition.text.value), modesOf(definition)};
         for (int column = 0; column < static_cast<int>(cells.size()); ++column) {
             m_table->setItem(row, column,
-                             new QTableWidgetItem(cells[static_cast<std::size_t>(column)]));
+                             new QTableWidgetItem(cells.at(static_cast<std::size_t>(column))));
         }
     }
     if (!definitions.empty()) {
@@ -303,6 +314,7 @@ void BattmanDialog::moveUp() {
     std::swap(definitions[static_cast<std::size_t>(row - 1)],
               definitions[static_cast<std::size_t>(row)]);
     std::vector<std::string> tags;
+    tags.reserve(definitions.size());
     for (const DefinitionEntry& definition : definitions) {
         tags.push_back(definition.tag);
     }
@@ -322,9 +334,10 @@ void BattmanDialog::moveDown() {
         return;
     }
     auto definitions = definitionsOf(*block);
-    std::swap(definitions[static_cast<std::size_t>(row)],
-              definitions[static_cast<std::size_t>(row + 1)]);
+    const auto index = static_cast<std::size_t>(row);
+    std::swap(definitions[index], definitions[index + 1]);
     std::vector<std::string> tags;
+    tags.reserve(definitions.size());
     for (const DefinitionEntry& definition : definitions) {
         tags.push_back(definition.tag);
     }
