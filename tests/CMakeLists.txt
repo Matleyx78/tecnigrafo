@@ -299,6 +299,7 @@ if(TG_BUILD_APP)
         app/session_test.cpp
         app/text_input_test.cpp
         app/text_editor_overlay_test.cpp
+        app/text_format_bar_test.cpp
     )
     target_link_libraries(tg_app_tests PRIVATE
         tg_app_ui Qt6::Network Qt6::Svg Qt6::Test Qt6::Widgets GTest::gtest)
