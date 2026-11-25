@@ -153,9 +153,9 @@ TEST_F(TextFormatBarTest, BarIsHiddenForSingleLineText) {
     request.shown = text;
     request.value = text.value;
     editor.open(request, document);
-    auto* bar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
-    ASSERT_NE(bar, nullptr);
-    EXPECT_TRUE(bar->isHidden());
+    auto* formatBar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
+    ASSERT_NE(formatBar, nullptr);
+    EXPECT_TRUE(formatBar->isHidden());
 }
 
 }  // namespace
