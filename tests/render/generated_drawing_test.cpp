@@ -479,7 +479,7 @@ TEST(GeneratedDrawing, TinyFormattedTextUsesItsFormattedBox) {
     ASSERT_EQ(painter.strokes[0].points.size(), 4U);
     const auto box = core::formattedTextBox(piece);
     for (std::size_t i = 0; i < box.size(); ++i) {
-        expectPoint(painter.strokes[0].points[i], viewport.worldToScreen(box[i]));
+        expectPoint(painter.strokes[0].points[i], viewport.worldToScreen(box.at(i)));
     }
 }
 

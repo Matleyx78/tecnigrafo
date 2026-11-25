@@ -31,11 +31,11 @@ namespace tg::app {
 QString bundledFontFamily() {
     static const QString kFamily = [] {
         initializeFontResources();
-        constexpr std::array paths{
+        constexpr std::array kPaths{
             ":/tg/fonts/LiberationSans-Regular.ttf", ":/tg/fonts/LiberationSans-Bold.ttf",
             ":/tg/fonts/LiberationSans-Italic.ttf", ":/tg/fonts/LiberationSans-BoldItalic.ttf"};
         QString family;
-        for (const char* path : paths) {
+        for (const char* path : kPaths) {
             const int id = QFontDatabase::addApplicationFont(QString::fromLatin1(path));
             if (id < 0) {
                 qFatal("Cannot load a bundled font");
@@ -67,8 +67,8 @@ const QRawFont& bundledFont(core::FontFace face) {
                          i == static_cast<std::size_t>(core::FontFace::BoldItalic));
             font.setItalic(i == static_cast<std::size_t>(core::FontFace::Italic) ||
                            i == static_cast<std::size_t>(core::FontFace::BoldItalic));
-            fonts[i] = QRawFont::fromFont(font);
-            if (!fonts[i].isValid() || fonts[i].capHeight() <= 0.0) {
+            fonts.at(i) = QRawFont::fromFont(font);
+            if (!fonts.at(i).isValid() || fonts.at(i).capHeight() <= 0.0) {
                 qFatal("Cannot obtain the bundled font outlines");
             }
         }
