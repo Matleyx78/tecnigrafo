@@ -41,6 +41,7 @@ constexpr std::string_view kSelectObjects = "Select objects:";
 constexpr std::string_view kFirstCorner = "Specify first corner:";
 constexpr std::string_view kOppositeCorner = "Specify opposite corner:";
 constexpr std::string_view kInvalidSelection = "Invalid selection.";
+constexpr std::string_view kNoPreviousSelection = "No previous selection set.";
 
 // Pick tolerance of docs/adr/0008, in screen pixels: AutoCAD's default
 // PICKBOX.
@@ -84,6 +85,14 @@ bool isCrossingOption(std::string_view text) {
 
 bool isAllOption(std::string_view text) {
     return matchesKeyword(Keyword{"ALL", ""}, text);
+}
+
+bool isLastOption(std::string_view text) {
+    return matchesKeyword(Keyword{"Last", "L"}, text);
+}
+
+bool isPreviousOption(std::string_view text) {
+    return matchesKeyword(Keyword{"Previous", "P"}, text);
 }
 
 // The questions to the model still find the entities of a locked layer, but
@@ -426,6 +435,11 @@ Prompt CommandRunner::prompt() const {
     return m_command->prompt();
 }
 
+std::span<const core::EntityId> CommandRunner::highlighted() const {
+    return isActive() && !m_askingSelection ? m_command->highlighted()
+                                            : std::span<const core::EntityId>{};
+}
+
 std::span<const core::Entity> CommandRunner::preview() const {
     return isActive() && !m_askingSelection ? m_command->preview()
                                             : std::span<const core::Entity>{};
@@ -494,6 +508,11 @@ void CommandRunner::beginCommand() {
     SelectionInput selection;
     selection.ids.assign(m_selection.ids().begin(), m_selection.ids().end());
     clearSelection();
+    // The objects a command starts with, chosen at "Select objects:" or
+    // preselected, become the previous selection set (PT34, point 2).
+    if (m_command->needsSelection() && !selection.ids.empty()) {
+        m_previous = selection.ids;
+    }
     m_command->start(context());
     // Immediate commands finish in start() and have no question to ask.
     if (m_command->prompt().text.empty()) {
@@ -681,8 +700,18 @@ void CommandRunner::typedSelection(std::string_view text) {
                 ids.push_back(record.id);
             }
         }
-        std::ranges::sort(ids, {}, &core::EntityId::value);
+        // The most recent first, as AutoCAD gives them (docs/adr/0056,
+        // point 1).
+        std::ranges::sort(ids, std::ranges::greater{}, &core::EntityId::value);
         applyToSelection(ids, PickAction::Add);
+        return;
+    }
+    if (isLastOption(text)) {
+        selectLast();
+        return;
+    }
+    if (isPreviousOption(text)) {
+        selectPrevious();
         return;
     }
     if (const std::optional<core::Vec2> point = typedPosition(text)) {
@@ -744,7 +773,41 @@ void CommandRunner::endSelectionQuestion() {
 void CommandRunner::endSelectionPrompt() {
     SelectionInput selection;
     selection.ids.assign(m_selection.ids().begin(), m_selection.ids().end());
+    // An answer without objects leaves the previous selection set as it is.
+    if (!selection.ids.empty()) {
+        m_previous = selection.ids;
+    }
     forward(selection);  // possibly empty: the command decides what that means
+}
+
+void CommandRunner::selectLast() {
+    // The visible entity with the highest identifier, the one created last;
+    // one on a locked layer is discarded as by any gesture.
+    const core::Document& document = m_editor.document();
+    std::optional<core::EntityId> last;
+    for (const core::EntityRecord& record : document.entities()) {
+        if (core::isVisible(document, record) && (!last || record.id.value > last->value)) {
+            last = record.id;
+        }
+    }
+    applyToSelection(last ? std::span{&*last, 1} : std::span<const core::EntityId>{},
+                     PickAction::Add);
+}
+
+void CommandRunner::selectPrevious() {
+    // Erased entities are no longer part of it (PT34, point 2).
+    const core::Document& document = m_editor.document();
+    std::vector<core::EntityId> ids;
+    for (const core::EntityId id : m_previous) {
+        if (document.find(id) != nullptr) {
+            ids.push_back(id);
+        }
+    }
+    if (ids.empty()) {
+        message(std::string{kNoPreviousSelection});
+        return;
+    }
+    applyToSelection(ids, PickAction::Add);
 }
 
 void CommandRunner::selectionClick(const core::Vec2& point, PickAction action) {
@@ -1033,6 +1096,8 @@ void CommandRunner::finish() {
     if (context().documentReplaced) {
         context().lastPoint.reset();
         context().documentReplaced = false;
+        // The previous selection set belongs to the document (PT34, point 2).
+        m_previous.clear();
     }
     m_command.reset();
     clearAcquired();

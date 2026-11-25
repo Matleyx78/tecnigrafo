@@ -390,6 +390,10 @@ void writeTables(const core::Document& document, std::string& out) {
     if (document.lwdisplay() != kNewSession.lwdisplay()) {
         appendField("lwdisplay", onOff(document.lwdisplay()), out);
     }
+    if (document.attributeDisplay() != core::AttributeDisplay::Normal) {
+        appendField("attdisp", onOff(document.attributeDisplay() == core::AttributeDisplay::On),
+                    out);
+    }
     std::vector<const core::TextStyle*> changedStyles;
     const core::TextStyle* defaultStandard = kNewSession.textStyles().find("Standard");
     for (const core::TextStyle& style : document.textStyles().styles()) {
@@ -642,9 +646,16 @@ void writeRegion(const core::FilledRegion& region, std::string& out) {
 }  // namespace
 
 void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& out) {
-    const std::optional<core::Entity> entity = core::shapeEntity(item.shape);
+    // A formatted piece with its variant and its box, not those of the Text
+    // of shapeEntity() (docs/tappe/0.8.1/PT8-impaginazione-formati.md,
+    // point 9).
+    const auto* piece = std::get_if<core::FormattedText>(&item.shape);
+    const std::optional<core::Entity> entity =
+        piece != nullptr ? std::nullopt : core::shapeEntity(item.shape);
     const auto* region = std::get_if<core::FilledRegion>(&item.shape);
-    if (entity) {
+    if (piece != nullptr) {
+        writeFormattedText(*piece, out);
+    } else if (entity) {
         writeModel(*entity, out);
     } else if (region != nullptr) {
         writeRegion(*region, out);
@@ -656,7 +667,9 @@ void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& ou
             out += text;
         }
     }
-    if (entity) {
+    if (piece != nullptr) {
+        writeFormattedTextBox(*piece, out);
+    } else if (entity) {
         writeDerived(*entity, out);
     } else if (region != nullptr) {
         // The identity is the default of Transform2D: exact on purpose, a

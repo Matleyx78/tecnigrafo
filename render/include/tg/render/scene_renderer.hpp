@@ -8,14 +8,28 @@
 #include "tg/render/painter.hpp"
 #include "tg/render/viewport.hpp"
 
+#include <cstdint>
 #include <optional>
 #include <span>
+#include <string>
 
 namespace tg::render {
 
 /// Below this height of the capital letters, in pixels, a text is drawn as
 /// its box: its characters could not be read (docs/adr/0013, point 4).
 inline constexpr double kMinTextHeightPx = 2.0;
+
+/// Screen-independent origin, directions and labels of the displayed axes.
+struct AxisFrame {
+    core::Vec2 origin{0.0, 0.0};
+    core::Vec2 xDirection{1.0, 0.0};
+    core::Vec2 yDirection{0.0, 1.0};  ///< Unit vectors.
+    std::string xLabel{"X"};
+    std::string yLabel{"Y"};
+};
+
+/// Program preference for displaying the reference frame.
+enum class AxesStyle : std::uint8_t { UcsIcon, Lines, None };
 
 /// Visual settings of the drawing area.
 struct SceneStyle {
@@ -39,21 +53,32 @@ struct SceneStyle {
     Color hotGrip{255, 0, 0};
     /// cmd::CommandRunner::kGripSizePixels.
     double gripSizePx{10.0};
-    double minGridSpacingPx{12.0};  ///< finer grids are hidden
+    /// Minimum distance between adjacent grid lines on one screen axis.
+    double minGridSpacingPx{12.0};
+    bool showGrid{true};  ///< Program preference; gridOn is the drawing switch.
+    AxesStyle axes{AxesStyle::UcsIcon};
+    AxisFrame axisFrame;
+    double ucsIconSizePx{37.0};
     double tessellationTolerancePx{0.25};
     /// Device pixels per logical pixel of the screen: the width of a pen
     /// drawn with a lineweight is in device pixels (docs/adr/0025, point 6).
     /// Precondition: positive.
     double devicePixelRatio{1.0};
-    bool showGrid{true};
 };
 
-/// Spacing (drawing units) of the minor grid lines: the smallest value of
-/// the form {1, 2, 5} * 10^n that is at least `minSpacingPx` on screen.
-[[nodiscard]] double gridSpacing(double pixelsPerUnit, double minSpacingPx);
-
-/// Draws grid, axes and every visible entity of `document` as seen through
-/// `viewport`: those on a layer that is off or frozen are skipped, those on a
+/// Draws the grid when both style.showGrid and document.grid().gridOn are set.
+/// Its per-axis step is gridUnit, falling back to snapUnit for a zero component,
+/// and its origin is snapBase; every gridMajor line is a major line. GRIDDISPLAY
+/// bits 2 and 4 respectively enable adaptive coarsening and subdivision, with a
+/// coarsening factor of 5 when GRIDMAJOR is 1. Each screen axis adapts by itself:
+/// without bit 2 one axis can disappear while the other remains visible.
+///
+/// The reference frame follows style.axes. UcsIcon observes UCSICON bits 1
+/// (visible) and 2 (at the origin when the complete icon fits), otherwise using
+/// the bottom-left corner; Lines draws the full axes and None draws neither.
+///
+/// Draws every visible entity of `document` as seen through `viewport`: those
+/// on a layer that is off or frozen are skipped, those on a
 /// locked layer are drawn (docs/adr/0023). Each entity is drawn as its
 /// generated geometry (core::generate(), docs/adr/0044, point 2): every shape
 /// with its effective properties:

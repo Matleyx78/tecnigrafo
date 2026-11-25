@@ -5,12 +5,14 @@
 #include "tg/core/bbox.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/document_query.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/raw_group.hpp"
 #include "tg/core/similarity.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/core/text.hpp"
 #include "tg/core/text_affine.hpp"
 #include "tg/core/transform2d.hpp"
@@ -370,6 +372,96 @@ TEST(Attributes, TheGeneratedGeometryDrawsTheVisibleAttributes) {
     ASSERT_TRUE(std::holds_alternative<Text>(items[1].shape));
     EXPECT_EQ(std::get<Text>(items[1].shape).value, "-K1");
     expectPoint(std::get<Text>(items[1].shape).position, {11, 20});
+}
+
+TEST(Attributes, AttdispDecidesWhichAttributesOfAnInsertAreDrawn) {
+    // docs/adr/0056, point 1: Normal the visible ones, On all, Off none.
+    Document document = drawingWithSymbol();
+    Insert insert = insertOf("SYM", {10, 20});
+    insert.attributes = defaultAttributes(document, insert);
+    ASSERT_EQ(insert.attributes.size(), 2U);
+    ASSERT_TRUE(insert.attributes[1].invisible);
+    const EntityId id = document.add(insert);
+    const auto texts = [&] {
+        std::vector<std::string> values;
+        for (const GeneratedItem& item : generate(document, *document.find(id))) {
+            if (const auto* text = std::get_if<Text>(&item.shape)) {
+                values.push_back(text->value);
+            }
+        }
+        return values;
+    };
+    EXPECT_EQ(texts(), (std::vector<std::string>{"-K1"}));
+    const BBox normal = extent(document, *document.find(id));
+    document.setAttributeDisplay(AttributeDisplay::On);
+    EXPECT_EQ(texts(), (std::vector<std::string>{"-K1", "n"}));
+    document.setAttributeDisplay(AttributeDisplay::Off);
+    EXPECT_TRUE(texts().empty());
+    // The extents measure the attributes whether drawn or not.
+    EXPECT_EQ(extent(document, *document.find(id)).min(), normal.min());
+    EXPECT_EQ(extent(document, *document.find(id)).max(), normal.max());
+}
+
+TEST(Attributes, AnInvisibleDefinitionInTheDrawingIsAlwaysDrawnPickedAndSnapped) {
+    // An ATTDEF outside the blocks, on a layer that is on: drawn, picked and
+    // snapped with ATTDISP Off, Normal and On, as in AutoCAD; an invisible
+    // ATTRIB of the same drawing follows ATTDISP (docs/adr/0056, point 1).
+    Document document = Document::newDrawing();
+    // The block "TAG": a visible REF at (0, 0) and an invisible NOTE far from it.
+    BlockDefinition block{"TAG"};
+    block.entities.push_back(member(document, definitionOf({0, 0}, "REF", "r")));
+    block.entities.push_back(
+        member(document, definitionOf({20, 0}, "NOTE", "n", {.invisible = true})));
+    document.replaceBlock("TAG", std::move(block));
+    const EntityId definition =
+        document.add(definitionOf({100, 0}, "HIDDEN", "h", {.invisible = true}));
+    Insert insert = insertOf("TAG", {0, 50});
+    insert.attributes = defaultAttributes(document, insert);
+    document.add(insert);
+    const Vec2 note{20, 50};  // the invisible NOTE of the insert
+    SnapModes insertion{};
+    insertion.endpoint = false;
+    insertion.midpoint = false;
+    insertion.center = false;
+    insertion.intersection = false;
+    for (const AttributeDisplay display :
+         {AttributeDisplay::Off, AttributeDisplay::Normal, AttributeDisplay::On}) {
+        SCOPED_TRACE(static_cast<int>(display));
+        document.setAttributeDisplay(display);
+        const std::vector<GeneratedItem> items = generate(document, *document.find(definition));
+        ASSERT_EQ(items.size(), 1U);
+        EXPECT_TRUE(items[0].properties.visible);
+        EXPECT_EQ(std::get<Text>(items[0].shape).value, "HIDDEN");
+        EXPECT_EQ(pickEntity(document, {100.2, 0.2}, 0.01), definition);
+        EXPECT_EQ(selectInRectangle(document, BBox{{99, -1}, {110, 2}}, RectangleMode::Window),
+                  (std::vector<EntityId>{definition}));
+        const auto snap = findSnap(document, {100.1, 0.1}, 0.5, insertion);
+        ASSERT_TRUE(snap.has_value());
+        EXPECT_EQ(snap.value_or(SnapPoint{}), (SnapPoint{{100, 0}, SnapKind::Insertion}));
+        // The NOTE of the insert only with On.
+        const auto attribute = findSnap(document, note + Vec2{0.1, 0.1}, 0.5, insertion);
+        if (display == AttributeDisplay::On) {
+            EXPECT_EQ(attribute.value_or(SnapPoint{}), (SnapPoint{note, SnapKind::Insertion}));
+        } else {
+            EXPECT_FALSE(attribute.has_value());
+        }
+    }
+}
+
+TEST(Attributes, AnInvisibleDefinitionOnAFrozenLayerIsNotDrawn) {
+    Document document = Document::newDrawing();
+    Layer frozen;
+    frozen.name = "Frozen";
+    frozen.linetype = document.continuousLinetype();
+    frozen.frozen = true;
+    const LayerId layer = document.addLayer(frozen);
+    const EntityId id = document.add(definitionOf({0, 0}, "HIDDEN", "h", {.invisible = true}));
+    EntityProperties properties = document.find(id)->properties;
+    properties.layer = layer;
+    document.setProperties(id, properties);
+    document.setAttributeDisplay(AttributeDisplay::On);
+    EXPECT_TRUE(generate(document, *document.find(id)).empty());
+    EXPECT_FALSE(pickEntity(document, {0.2, 0.2}, 0.01).has_value());
 }
 
 TEST(Attributes, MirrorTransformsTheAttributesAsTexts) {

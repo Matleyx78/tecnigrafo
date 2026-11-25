@@ -1,0 +1,10 @@
+; oracle: ezdxf
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; PT15 (#951): AutoCAD 2021 lock-position groups from the immutable CC0 drawing
+; autocad-attributi.dxf (Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736).
+; For ATTRIB and ATTDEF SIGLA, the second group 280 is 1; the first remains the version (0).
+; The identical round-trip preserves ATTDEF SIGLA.
+D = DXF source=autocad-attributi
+? count D -> ATTRIB 15; INSERT 3
+? roundtrip D -> identical

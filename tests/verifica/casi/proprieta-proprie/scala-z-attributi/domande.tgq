@@ -1,0 +1,12 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; RT24 / PT24 (#962). This hand-authored DXF has Z scale 3, two case-insensitive
+; duplicate tags, and preserved entity/attribute/sequence extras.
+D = DXF file=inserimento-z.dxf
+? properties D 101 -> block="ATTRIBUTES"; insertion=20,30; scale=1,1; scale-z=3; rotation=0; attribute="ID":"A"
+? set-property D 101 scale-z=2 -> INSERT block="ATTRIBUTES" insertion=20,30 scale=1,1 rotation=0 | block="ATTRIBUTES"; insertion=20,30; scale=1,1; scale-z=2; rotation=0; attribute="ID":"A"
+? set-property D 101 scale-z=0 -> invalid
+? set-property D 101 attribute="id":"CHANGED" -> INSERT block="ATTRIBUTES" insertion=20,30 scale=1,1 rotation=0 | block="ATTRIBUTES"; insertion=20,30; scale=1,1; scale-z=3; rotation=0; attribute="ID":"CHANGED"
+; Changing another field checks only that field and preserves pre-existing invalid scales.
+? properties D 104 -> block="ATTRIBUTES"; insertion=50,60; scale=1,0; scale-z=0; rotation=15
+? set-property D 104 rotation=30 -> INSERT block="ATTRIBUTES" insertion=50,60 scale=1,0 rotation=30 | block="ATTRIBUTES"; insertion=50,60; scale=1,0; scale-z=0; rotation=30

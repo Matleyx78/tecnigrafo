@@ -7,6 +7,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/cmd/drawing_aids.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/edit/editor.hpp"
 
@@ -177,6 +178,38 @@ TEST_F(DynamicInputTest, LineNextPointWithACommaInTheLengthIsRelativeCartesian) 
     both("2,3");
     enter(fields({"3,4", "60"}), {0.0, 0.0}, "@3,4");
     enter(fields({"-1,0"}), {0.0, 0.0}, "@-1,0");
+}
+
+// "#" and "*" first in a field make the coordinate absolute, as on the
+// command line (PT34, point 4).
+TEST_F(DynamicInputTest, HashAndStarInTheLengthFieldAreAbsolute) {
+    both("LINE");
+    both("3,4");
+    enter(fields({"#10,10"}), {0.0, 0.0}, "#10,10");
+    EXPECT_EQ(dynamic().document().entities().back().entity,
+              (core::Entity{core::Line{{3.0, 4.0}, {10.0, 10.0}}}));
+    enter(fields({"*1,1"}), {0.0, 0.0}, "*1,1");
+    EXPECT_EQ(dynamic().document().entities().back().entity,
+              (core::Entity{core::Line{{10.0, 10.0}, {1.0, 1.0}}}));
+    enter(fields({"#2", "90"}), {0.0, 0.0}, "#2<90");  // polar, from the origin
+    EXPECT_EQ(dynamic().document().entityCount(), 3U);
+    // Without a prefix the numbers stay relative.
+    enter(fields({"10,10"}), {0.0, 0.0}, "@10,10");
+    EXPECT_EQ(dynamic().document().entityCount(), 4U);
+}
+
+TEST_F(DynamicInputTest, HashInTheXFieldIsTheWholePoint) {
+    both("LINE");
+    enter(fields({"#10,10"}), {0.0, 0.0}, "#10,10");
+    both("11,12");
+    EXPECT_EQ(dynamic().document().entities().back().entity,
+              (core::Entity{core::Line{{10.0, 10.0}, {11.0, 12.0}}}));
+    both("");
+    both("LINE");
+    enter(fields({"*1", "2"}), {0.0, 0.0}, "*1,2");
+    both("3,4");
+    EXPECT_EQ(dynamic().document().entities().back().entity,
+              (core::Entity{core::Line{{1.0, 2.0}, {3.0, 4.0}}}));
 }
 
 TEST_F(DynamicInputTest, EnterWithNoFieldTypedEndsLine) {

@@ -84,6 +84,29 @@ TEST(Cadx, LayersAndPropertiesTravelInTheDrawing) {
     EXPECT_EQ(again.value(), written.value());
 }
 
+TEST(Cadx, GridAndAttdispTravelInTheDrawing) {
+    // The state travels in drawing.dxf (the VPORT table and $ATTMODE): the
+    // native format does not move standard DXF data (docs/formati/cadx.md).
+    core::Document document = core::Document::newDrawing();
+    core::GridSettings grid;
+    grid.snapOn = true;
+    grid.gridOn = false;
+    grid.gridUnit = {0, 10};
+    grid.snapBase = {3, 4};
+    grid.ucsIcon = 1;
+    document.setGrid(grid);
+    document.setAttributeDisplay(core::AttributeDisplay::On);
+    const auto written = writeCadx(document);
+    ASSERT_TRUE(written.ok()) << written.error().message;
+    const auto read = readCadx(written.value());
+    ASSERT_TRUE(read.ok()) << read.error().message;
+    EXPECT_EQ(read.value().document.grid(), grid);
+    EXPECT_EQ(read.value().document.attributeDisplay(), core::AttributeDisplay::On);
+    const auto again = writeCadx(read.value().document);
+    ASSERT_TRUE(again.ok());
+    EXPECT_EQ(again.value(), written.value());
+}
+
 TEST(Cadx, WritesDeterministicOrderedArchiveAndPreservesOpaqueData) {
     core::Document document;
     core::RawDrawing raw;

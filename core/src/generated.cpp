@@ -13,10 +13,12 @@
 #include "tg/core/mtext.hpp"
 #include "tg/core/proximity.hpp"
 #include "tg/core/text_affine.hpp"
+#include "tg/core/text_metrics.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <optional>
@@ -63,6 +65,98 @@ GeneratedShape shapeOf(const Entity& entity) {
         entity);
 }
 
+// --- Formatted pieces: the parallelogram of formattedTextBox() --------------
+
+// The roundoff allowance of the text box in proximity.cpp, relative to the
+// operands: a FormattedText answers as a Text with the same box would.
+constexpr double kRoundoff = 32.0 * std::numeric_limits<double>::epsilon();
+
+bool inRange(double value, double lower, double upper) {
+    const double tolerance =
+        kRoundoff * std::max({std::abs(value), std::abs(lower), std::abs(upper)});
+    return value >= lower - tolerance && value <= upper + tolerance;
+}
+
+bool overlaps(double lowerA, double upperA, double lowerB, double upperB) {
+    const double tolerance = kRoundoff * std::max({std::abs(lowerA), std::abs(upperA),
+                                                   std::abs(lowerB), std::abs(upperB)});
+    return upperA >= lowerB - tolerance && upperB >= lowerA - tolerance;
+}
+
+/// The lowest and highest projections of `points` on `axis`.
+template <std::size_t N>
+std::array<double, 2> project(const std::array<Vec2, N>& points, const Vec2& axis) {
+    double lower = dot(points.front(), axis);
+    double upper = lower;
+    for (const Vec2& point : points) {
+        lower = std::min(lower, dot(point, axis));
+        upper = std::max(upper, dot(point, axis));
+    }
+    return {lower, upper};
+}
+
+BBox formattedBoundingBox(const FormattedText& piece) {
+    BBox box;
+    for (const Vec2& corner : formattedTextBox(piece)) {
+        box.expand(corner);
+    }
+    return box;
+}
+
+/// As the distance of a Text from its box (proximity.cpp): 0 inside the
+/// parallelogram, otherwise the distance from its nearest side.
+double formattedDistance(const FormattedText& piece, const Vec2& point) {
+    const TextFrame frame = textFrame(piece.text);
+    const std::array<Vec2, 4> box = formattedTextBox(piece);
+    const std::array<Vec2, 2> normals{frame.xAxis.perpendicular(), frame.yAxis.perpendicular()};
+    const bool inside = std::ranges::all_of(normals, [&](const Vec2& normal) {
+        const auto [lower, upper] = project(box, normal);
+        return inRange(dot(point, normal), lower, upper);
+    });
+    if (inside) {
+        return 0.0;
+    }
+    double nearest = kInfinity;
+    for (std::size_t i = 0; i < box.size(); ++i) {
+        const PolylineSegment side{box.at(i), box.at((i + 1) % box.size())};
+        nearest = std::min(nearest, distance(side, point));
+    }
+    return nearest;
+}
+
+/// Window selection of a Text (proximity.cpp): its box inside.
+bool formattedIsInside(const FormattedText& piece, const BBox& rectangle) {
+    const BBox box = formattedBoundingBox(piece);
+    return !box.isEmpty() && !rectangle.isEmpty() && rectangle.contains(box.min()) &&
+           rectangle.contains(box.max());
+}
+
+/// Crossing selection of a Text (proximity.cpp): separating axes, those of
+/// the rectangle and the normals of the sides of the parallelogram.
+bool formattedIntersects(const FormattedText& piece, const BBox& rectangle) {
+    const BBox bounds = formattedBoundingBox(piece);
+    if (bounds.isEmpty() || rectangle.isEmpty() ||
+        !overlaps(bounds.min().x, bounds.max().x, rectangle.min().x, rectangle.max().x) ||
+        !overlaps(bounds.min().y, bounds.max().y, rectangle.min().y, rectangle.max().y)) {
+        return false;
+    }
+    if (formattedIsInside(piece, rectangle)) {
+        return true;
+    }
+    const std::array<Vec2, 4> box = formattedTextBox(piece);
+    const Vec2 low = rectangle.min();
+    const Vec2 high = rectangle.max();
+    const std::array<Vec2, 4> corners{low, Vec2{high.x, low.y}, high, Vec2{low.x, high.y}};
+    const TextFrame frame = textFrame(piece.text);
+    const std::array<Vec2, 4> axes{Vec2{1.0, 0.0}, Vec2{0.0, 1.0}, frame.xAxis.perpendicular(),
+                                   frame.yAxis.perpendicular()};
+    return std::ranges::all_of(axes, [&](const Vec2& axis) {
+        const auto [pieceLower, pieceUpper] = project(box, axis);
+        const auto [rectangleLower, rectangleUpper] = project(corners, axis);
+        return overlaps(pieceLower, pieceUpper, rectangleLower, rectangleUpper);
+    });
+}
+
 // --- Curves: the shapes other than a filled region ---------------------------
 
 double curveDistance(const GeneratedShape& shape, const Vec2& point) {
@@ -71,6 +165,10 @@ double curveDistance(const GeneratedShape& shape, const Vec2& point) {
             using T = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<T, FilledRegion>) {
                 return kInfinity;  // never asked: see shapeDistance()
+            } else if constexpr (std::is_same_v<T, FormattedText>) {
+                return formattedDistance(value, point);
+            } else if constexpr (std::is_same_v<T, TextLine>) {
+                return distance(Entity{value.line}, point);
             } else if constexpr (kShapeOfItsOwn<T>) {
                 return distanceOf(value, point);
             } else {
@@ -86,6 +184,10 @@ bool curveIsInside(const GeneratedShape& shape, const BBox& rectangle) {
             using T = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<T, FilledRegion>) {
                 return false;  // never asked: see shapeIsInside()
+            } else if constexpr (std::is_same_v<T, FormattedText>) {
+                return formattedIsInside(value, rectangle);
+            } else if constexpr (std::is_same_v<T, TextLine>) {
+                return isInside(Entity{value.line}, rectangle);
             } else if constexpr (kShapeOfItsOwn<T>) {
                 return isInsideOf(value, rectangle);
             } else {
@@ -101,6 +203,10 @@ bool curveIntersects(const GeneratedShape& shape, const BBox& rectangle) {
             using T = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<T, FilledRegion>) {
                 return false;  // never asked: see shapeIntersects()
+            } else if constexpr (std::is_same_v<T, FormattedText>) {
+                return formattedIntersects(value, rectangle);
+            } else if constexpr (std::is_same_v<T, TextLine>) {
+                return intersects(Entity{value.line}, rectangle);
             } else if constexpr (kShapeOfItsOwn<T>) {
                 return intersectsOf(value, rectangle);
             } else {
@@ -327,8 +433,53 @@ std::vector<GeneratedShape> affinePolyline(const Polyline& polyline, const Trans
 
 }  // namespace
 
+std::array<Vec2, 4> formattedTextBox(const FormattedText& piece) {
+    // textBox() with the measures of the face and the tracking.
+    const TextFrame frame = textFrame(piece.text);
+    const FontMetrics& metrics = fontMetrics(piece.face);
+    const double width = textWidth(displayText(piece.text.value), piece.face) * frame.height *
+                         frame.widthFactor * piece.tracking;
+    const double bottom = metrics.descent * frame.height;
+    const double top = metrics.ascent * frame.height;
+    const auto place = [&](double x, double y) {
+        return frame.origin + frame.xAxis * x + frame.yAxis * y;
+    };
+    return {place(0.0, bottom), place(width, bottom), place(width, top), place(0.0, top)};
+}
+
+namespace {
+
+/// `text` under `transform`, as transformedShape() maps a Text: through
+/// transformed() under a similarity, decomposed under another map
+/// (docs/tappe/0.8/PT17-attributi-core.md, point 2), nothing under a
+/// singular one.
+std::optional<Text> mappedText(const Text& text, const Transform2D& transform) {
+    if (const std::optional<Similarity> similarity = similarityOf(transform)) {
+        return std::get<Text>(transformed(Entity{text}, *similarity, MirrorText::Mirrored));
+    }
+    if (transform.determinant() == 0.0) {
+        return std::nullopt;
+    }
+    return transformedText(text, transform);
+}
+
+}  // namespace
+
 std::vector<GeneratedShape> transformedShape(const GeneratedShape& shape,
                                              const Transform2D& transform) {
+    if (const auto* piece = std::get_if<FormattedText>(&shape)) {
+        // Its text as a Text is, keeping the variant and the tracking
+        // (docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 1).
+        std::optional<Text> mapped = mappedText(piece->text, transform);
+        if (!mapped) {
+            return {};
+        }
+        return {FormattedText{std::move(*mapped), piece->face, piece->tracking}};
+    }
+    if (const auto* textLine = std::get_if<TextLine>(&shape)) {
+        return {TextLine{
+            Line{transform.apply(textLine->line.start), transform.apply(textLine->line.end)}}};
+    }
     if (std::holds_alternative<Ellipse>(shape)) {
         // Every affine map, similarities included, on the same exact path.
         return transformedConic(shape, transform).value_or(std::vector<GeneratedShape>{});
@@ -501,6 +652,10 @@ BBox shapeBoundingBox(const GeneratedShape& shape) {
             using T = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<T, FilledRegion>) {
                 return regionBoundingBox(value);
+            } else if constexpr (std::is_same_v<T, FormattedText>) {
+                return formattedBoundingBox(value);
+            } else if constexpr (std::is_same_v<T, TextLine>) {
+                return value.line.boundingBox();
             } else if constexpr (kShapeOfItsOwn<T>) {
                 return boundingBox(value);
             } else {
@@ -536,7 +691,10 @@ void appendShapeSnapPoints(const GeneratedShape& shape, const SnapModes& modes,
     std::visit(
         [&](const auto& value) {
             using T = std::decay_t<decltype(value)>;
-            if constexpr (std::is_same_v<T, FilledRegion>) {
+            if constexpr (std::is_same_v<T, FilledRegion> || std::is_same_v<T, FormattedText> ||
+                          std::is_same_v<T, TextLine>) {
+                // A piece of a formatted MTEXT gives no snap point
+                // (docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 1).
                 return;
             } else if constexpr (kShapeOfItsOwn<T>) {
                 appendSnapPointsOf(value, modes, out, from);
@@ -550,8 +708,13 @@ void appendShapeSnapPoints(const GeneratedShape& shape, const SnapModes& modes,
 std::optional<Entity> shapeEntity(const GeneratedShape& shape) {
     return std::visit(
         [](const auto& value) -> std::optional<Entity> {
-            if constexpr (std::is_same_v<std::decay_t<decltype(value)>, FilledRegion>) {
+            using T = std::decay_t<decltype(value)>;
+            if constexpr (std::is_same_v<T, FilledRegion>) {
                 return std::nullopt;
+            } else if constexpr (std::is_same_v<T, FormattedText>) {
+                return Entity{value.text};
+            } else if constexpr (std::is_same_v<T, TextLine>) {
+                return Entity{value.line};
             } else {
                 return Entity{value};
             }

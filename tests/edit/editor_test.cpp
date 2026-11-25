@@ -835,6 +835,86 @@ TEST(Editor, LwdisplayHasNoUndoStepPreservesRedoAndTracksSavedValue) {
     EXPECT_FALSE(editor.isModified());
 }
 
+TEST(Editor, GridAndAttdispHaveNoUndoStepAndMarkOnlyTheirDrawingModified) {
+    // docs/tappe/0.8.1/PT27-stato-del-disegno.md, point 2.
+    Document first = Document::newDrawing();
+    Document second = Document::newDrawing();
+    Editor a(first);
+    Editor b(second);
+    addCommitted(a, 1);
+    a.markSaved();
+    b.markSaved();
+    int notifications = 0;
+    a.setChangeListener([&] { ++notifications; });
+    core::GridSettings snap = first.grid();
+    snap.snapOn = true;
+    a.tables().setGrid(snap);
+    EXPECT_EQ(notifications, 1);
+    EXPECT_TRUE(first.grid().snapOn);
+    EXPECT_TRUE(a.isModified());
+    EXPECT_FALSE(b.isModified());
+    a.tables().setGrid(snap);  // the same settings: no notification
+    EXPECT_EQ(notifications, 1);
+    // U undoes the line, not the snap.
+    ASSERT_TRUE(a.undo());
+    EXPECT_TRUE(first.grid().snapOn);
+    EXPECT_FALSE(a.canUndo());
+    ASSERT_TRUE(a.redo());
+    a.markSaved();
+    EXPECT_FALSE(a.isModified());
+    // Back to the saved value: not modified.
+    snap.snapOn = false;
+    a.tables().setGrid(snap);
+    EXPECT_TRUE(a.isModified());
+    snap.snapOn = true;
+    a.tables().setGrid(snap);
+    EXPECT_FALSE(a.isModified());
+
+    notifications = 0;
+    a.tables().setAttributeDisplay(core::AttributeDisplay::On);
+    EXPECT_EQ(notifications, 1);
+    EXPECT_EQ(first.attributeDisplay(), core::AttributeDisplay::On);
+    EXPECT_TRUE(a.isModified());
+    EXPECT_FALSE(b.isModified());
+    a.tables().setAttributeDisplay(core::AttributeDisplay::On);
+    EXPECT_EQ(notifications, 1);
+    ASSERT_TRUE(a.undo());
+    EXPECT_EQ(first.attributeDisplay(), core::AttributeDisplay::On);
+    ASSERT_TRUE(a.redo());
+    a.markSaved();
+    EXPECT_FALSE(a.isModified());
+
+    notifications = 0;
+    b.tables().setAttributeDisplay(core::AttributeDisplay::Off);
+    EXPECT_TRUE(b.isModified());
+    EXPECT_FALSE(a.isModified());
+    EXPECT_EQ(notifications, 0);
+    b.markSaved();
+    EXPECT_FALSE(b.isModified());
+
+    // A drawing just read, with its own grid and ATTDISP, is not modified.
+    Document read = Document::newDrawing();
+    core::GridSettings readGrid;
+    readGrid.gridUnit = {0, 10};
+    readGrid.snapOn = true;
+    read.setGrid(readGrid);
+    read.setAttributeDisplay(core::AttributeDisplay::Off);
+    a.replaceDocument(read);
+    EXPECT_FALSE(a.isModified());
+    EXPECT_EQ(first.grid(), readGrid);
+    EXPECT_EQ(first.attributeDisplay(), core::AttributeDisplay::Off);
+    a.tables().setGrid(core::GridSettings{});
+    EXPECT_TRUE(a.isModified());
+    a.replaceDocument(read);
+    a.tables().setAttributeDisplay(core::AttributeDisplay::Normal);
+    EXPECT_TRUE(a.isModified());
+
+    // An editor made on a drawing read is not modified either.
+    Document other = read;
+    const Editor fresh(other);
+    EXPECT_FALSE(fresh.isModified());
+}
+
 TEST(Editor, OpenTransactionReportsPropertyModificationsAndRollbackClearsThem) {
     Document doc = Document::newDrawing();
     Editor editor(doc);

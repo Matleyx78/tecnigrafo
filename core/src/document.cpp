@@ -511,6 +511,15 @@ void Document::setLwdisplay(bool on) {
     m_lwdisplay = on;
 }
 
+void Document::setGrid(const GridSettings& grid) {
+    assert(isValid(grid));
+    m_grid = grid;
+}
+
+void Document::setAttributeDisplay(AttributeDisplay display) {
+    m_attributeDisplay = display;
+}
+
 std::uint64_t Document::claimRecordHandle(std::uint64_t id) {
     if (id == 0) {
         assert(m_nextId <= kLastUsable);
