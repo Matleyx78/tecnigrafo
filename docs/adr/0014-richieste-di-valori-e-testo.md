@@ -2,6 +2,7 @@
 
 - **Stato:** Accettato (2026-10-18)
 - **Data:** 2026-10-18
+- **Corretto:** 2026-11-25 (`PromptKind::Name` per una sola parola)
 
 ## Contesto
 
@@ -27,16 +28,16 @@ per tutti i comandi perché la interpreta il runner. Questo ADR lo integra.
 ### 1. Tipo di richiesta
 
 `Prompt` dichiara cosa chiede: `PromptKind::Point` (come oggi, predefinito),
-`Distance`, `Angle` o `Text`. Il runner interpreta ciò che l'utente scrive in base
-al tipo:
+`Distance`, `Angle`, `Name` o `Text`. Il runner interpreta ciò che l'utente
+scrive in base al tipo:
 
-| Scritto | `Point` | `Distance` | `Angle` | `Text` |
-|---|---|---|---|---|
-| vuoto (`Invio`) | conferma | conferma | conferma | conferma |
-| parola chiave | parola chiave | parola chiave | parola chiave | testo |
-| numero da solo (`50`) | distanza diretta | **valore** | **valore**, in gradi | testo |
-| altra coordinata | punto | punto | punto | testo |
-| altro | messaggio | messaggio | messaggio | testo |
+| Scritto | `Point` | `Distance` | `Angle` | `Name` | `Text` |
+|---|---|---|---|---|---|
+| vuoto (`Invio`) | conferma | conferma | conferma | conferma | conferma |
+| parola chiave | parola chiave | parola chiave | parola chiave | testo | testo |
+| numero da solo (`50`) | distanza diretta | **valore** | **valore**, in gradi | testo | testo |
+| altra coordinata | punto | punto | punto | testo | testo |
+| altro | messaggio | messaggio | messaggio | testo | testo |
 
 - Due nuovi input: `ValueInput { double value }` (unità di disegno per le
   distanze, radianti per gli angoli) e `TextInput { std::string text }` (mai
@@ -46,6 +47,11 @@ al tipo:
   in gradi, in senso antiorario da +X. Il segno lo controlla il comando.
 - Messaggi: `Requires a distance, a point or an option.` e
   `Requires an angle, a point or an option.`; la domanda resta.
+- Una richiesta `Name` accetta una sola parola: il runner toglie gli spazi
+  iniziali e finali e la passa come `TextInput`. `acceptsText()` resta falso,
+  quindi nella riga di comando lo spazio vale `Invio`; negli script una riga
+  che contiene spazi arriva intera, dopo la sola rimozione degli spazi agli
+  estremi.
 
 ### 2. Punti alle richieste di distanza e angolo
 
