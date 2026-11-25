@@ -41,9 +41,7 @@ messages:
   Enter new value for GRIDDISPLAY <7>: 6
   Command: GRIDMAJOR
   Enter new value for GRIDMAJOR <7>: 101
-  Cannot set GRIDMAJOR to that value.
-  *Invalid*
-  Command: GRIDMAJOR
+  Requires an integer between 1 and 100.
   Enter new value for GRIDMAJOR <7>: 10
   Command: GRID
   Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <A>: Aspect
