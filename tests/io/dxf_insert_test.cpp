@@ -378,13 +378,13 @@ TEST(DxfInsert, AMultilineAttdefStaysUnhandled) {
     EXPECT_EQ(read.value().report.unhandled.at("ATTDEF"), 1);
 }
 
-// The scale Z of an insert changed in the panel (docs/tappe/0.8.1/
-// PT24-proprieta-testi-inserimenti.md, "Test richiesti"; #927, [bloccante] 6).
-TEST(DxfInsert, AScaleZChangedWithTheEditorIsSavedAndReadBack) {
-    Groups entities = insert("100", "TAGGED", false);
-    append(entities, {{41, "2.0"}, {42, "1.5"}, {43, "3.0"}, {1001, "APP"}, {1000, "kept"}});
-    const std::string text = drawing({}, entities);
-    auto read = readDxf(text);
+/// Reads `entities`, changes the scale Z of its insert to 2 with
+/// Editor::replace, and checks that the file saved has the groups of
+/// `expected` and reads back with the scale Z 2 and every other group intact
+/// (docs/tappe/0.8.1/PT24-proprieta-testi-inserimenti.md, "Test richiesti";
+/// #927, [bloccante] 6).
+void expectScaleZSavedAndReadBack(const Groups& entities, const Groups& expected) {
+    auto read = readDxf(drawing({}, entities));
     ASSERT_TRUE(read.ok());
     auto& document = read.value().document;
     ASSERT_EQ(document.entityCount(), 1U);
@@ -399,11 +399,8 @@ TEST(DxfInsert, AScaleZChangedWithTheEditorIsSavedAndReadBack) {
                                change.extras.value_or(core::EntityExtras{})));
     editor.commit();
 
-    Groups expected = groupsOf(text);
-    const auto scaleZ = std::ranges::find(expected, core::RawGroup{43, "3.0"});
-    ASSERT_NE(scaleZ, expected.end());
-    scaleZ->value = "2";
-    EXPECT_EQ(rewritten(document), expected);
+    const Groups saved = rewritten(document);
+    EXPECT_EQ(saved, groupsOf(drawing({}, expected)));
 
     const auto again = readDxf(writeDxf(document, DxfVersion::R2018).value());
     ASSERT_TRUE(again.ok());
@@ -417,6 +414,27 @@ TEST(DxfInsert, AScaleZChangedWithTheEditorIsSavedAndReadBack) {
     const auto& insert = std::get<core::Insert>(reread.entities()[0].entity);
     EXPECT_EQ(insert.scaleX, 2.0);
     EXPECT_EQ(insert.scaleY, 1.5);
+    EXPECT_EQ(rewritten(reread), saved);
+}
+
+// An insert without the group 43 gets a new one, after the 42, and keeps
+// every other group, XDATA included.
+TEST(DxfInsert, AScaleZChangedWithTheEditorAddsTheGroup43) {
+    Groups entities = insert("100", "TAGGED", false);
+    append(entities, {{41, "2.0"}, {42, "1.5"}, {50, "30.0"}, {1001, "APP"}, {1000, "kept"}});
+    Groups expected = insert("100", "TAGGED", false);
+    append(expected,
+           {{41, "2.0"}, {42, "1.5"}, {43, "2"}, {50, "30.0"}, {1001, "APP"}, {1000, "kept"}});
+    expectScaleZSavedAndReadBack(entities, expected);
+}
+
+// An insert with the group 43 changes only its value.
+TEST(DxfInsert, AScaleZChangedWithTheEditorReplacesTheGroup43) {
+    Groups entities = insert("100", "TAGGED", false);
+    append(entities, {{41, "2.0"}, {42, "1.5"}, {43, "3.0"}, {1001, "APP"}, {1000, "kept"}});
+    Groups expected = insert("100", "TAGGED", false);
+    append(expected, {{41, "2.0"}, {42, "1.5"}, {43, "2"}, {1001, "APP"}, {1000, "kept"}});
+    expectScaleZSavedAndReadBack(entities, expected);
 }
 
 }  // namespace

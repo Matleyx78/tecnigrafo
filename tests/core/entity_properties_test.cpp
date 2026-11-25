@@ -444,6 +444,9 @@ TEST(AttdefProperties, InvalidValuesAreRefused) {
     expectRefused(document, record, "prompt", true);
     expectRefused(document, record, "default", 2.0);
     expectRefused(document, record, "invisible", std::string{"yes"});
+    expectRefused(document, record, "constant", std::string{"yes"});
+    expectRefused(document, record, "verify", 1.0);
+    expectRefused(document, record, "preset", std::string{});
     expectRefused(document, record, "lock-position", 1.0);
     expectRefused(document, record, "height", -2.5);
     expectRefused(document, record, "rotation", std::numeric_limits<double>::quiet_NaN());
