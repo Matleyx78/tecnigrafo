@@ -40,6 +40,7 @@ add_library(tg_core
     src/intersections.cpp
     src/join.cpp
     src/mtext.cpp
+    src/mtext_edit.cpp
     src/mtext_format.cpp
     src/mtext_layout.cpp
     src/offset.cpp
