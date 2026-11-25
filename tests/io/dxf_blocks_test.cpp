@@ -513,7 +513,9 @@ const core::AttributeDefinition& definitionIn(const core::Document& document) {
         document.blocks().find("SYM")->entities.front().entity);
 }
 
-const core::Attribute& attributeIn(const core::Document& document) {
+/// A copy: a reference through the temporary span of entities() would
+/// dangle for libc++, whose span::front() is lifetimebound.
+core::Attribute attributeIn(const core::Document& document) {
     return std::get<core::Insert>(document.entities().front().entity).attributes.front();
 }
 
