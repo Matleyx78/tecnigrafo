@@ -7,6 +7,7 @@
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/ellipse.hpp"
+#include "tg/core/generated.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
@@ -20,6 +21,8 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <string>
+#include <string_view>
 #include <utility>
 
 // Angles: the model keeps radians, the lines write degrees, as in the DXF
@@ -375,24 +378,34 @@ core::EntityRecord shownRecord(const core::EntityRecord& record) {
     return core::EntityRecord{record.id, record.entity};
 }
 
-/// The texts the generated geometry shows, without codes: the values of its
-/// TEXT shapes with %%c, %%d, %%p and %%% converted (core::displayText()),
-/// one line each.
-std::string shownText(std::span<const core::GeneratedItem> items) {
+/// The lines of core::shownLines(), joined by a line feed, in UTF-8.
+std::string joinedLines(const std::vector<std::u32string>& lines) {
     std::string text;
-    bool first = true;
-    for (const core::GeneratedItem& item : items) {
-        if (const auto* shape = std::get_if<core::Text>(&item.shape)) {
-            if (!first) {
-                text += '\n';
-            }
-            first = false;
-            for (const char32_t codePoint : core::displayText(shape->value)) {
-                appendUtf8(codePoint, text);
-            }
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (i > 0) {
+            text += '\n';
+        }
+        for (const char32_t codePoint : lines[i]) {
+            appendUtf8(codePoint, text);
         }
     }
     return text;
+}
+
+/// The name of a face in face= (docs/verifica/rapporto.md), as the argument
+/// of the questions text-width and font-metrics.
+std::string_view faceName(core::FontFace face) {
+    switch (face) {
+        case core::FontFace::Bold:
+            return "bold";
+        case core::FontFace::Italic:
+            return "italic";
+        case core::FontFace::BoldItalic:
+            return "bold-italic";
+        case core::FontFace::Regular:
+            break;
+    }
+    return "regular";
 }
 
 // ---------------------------------------------------------------------------
@@ -1220,15 +1233,33 @@ void writeTextProperties(const core::Text& text, std::string& out) {
     writeQuoted("value", text.value, out);
 }
 
-void writeTextBox(const core::Text& text, std::string& out) {
+namespace {
+
+void writeBoxCorners(const std::array<core::Vec2, 4>& box, std::string& out) {
     std::string corners;
-    for (const core::Vec2& corner : core::textBox(text)) {
+    for (const core::Vec2& corner : box) {
         if (!corners.empty()) {
             corners += ';';
         }
         corners += formatPoint(corner);
     }
     writeProperty("~box", corners, out);
+}
+
+}  // namespace
+
+void writeTextBox(const core::Text& text, std::string& out) {
+    writeBoxCorners(core::textBox(text), out);
+}
+
+void writeFormattedText(const core::FormattedText& piece, std::string& out) {
+    out += "TEXT ";
+    writeTextProperties(piece.text, out);
+    writeProperty("face", faceName(piece.face), out);
+}
+
+void writeFormattedTextBox(const core::FormattedText& piece, std::string& out) {
+    writeBoxCorners(core::formattedTextBox(piece), out);
 }
 
 void writeNewEntity(const core::Entity& entity, std::string& out) {
@@ -1272,14 +1303,13 @@ void writeGeneratedDerived(const core::Document& document, const core::EntityRec
     if ((!lines && !text) || !core::isSupported(record.entity)) {
         return;
     }
-    const std::vector<core::GeneratedItem> items = core::generate(document, shownRecord(record));
+    // The rows of the layout, not the pieces of the generated geometry
+    // (docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 10).
+    const std::vector<std::u32string> shown = core::shownLines(document, shownRecord(record));
     if (lines) {
-        const auto count = std::ranges::count_if(items, [](const core::GeneratedItem& item) {
-            return std::holds_alternative<core::Text>(item.shape);
-        });
-        writeProperty("~lines", std::to_string(count), out);
+        writeProperty("~lines", std::to_string(shown.size()), out);
     } else {
-        writeQuoted("~text", shownText(items), out);
+        writeQuoted("~text", joinedLines(shown), out);
     }
 }
 

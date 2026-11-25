@@ -220,6 +220,51 @@ TEST_F(DynamicInputTest, FreeCoordinateUsesSnapAndCommaUsesRelativeCartesianText
     EXPECT_TRUE(history().contains(QStringLiteral("@5,-2")));
 }
 
+// "#" and "*" typed first in the field, with the focus in the view, make the
+// point absolute (docs/tappe/0.8.1/PT34-last-previous.md, point 4).
+TEST_F(DynamicInputTest, HashAndStarTypedInTheFieldGiveAnAbsolutePoint) {
+    view()->setFocus();
+    const auto screen = view()->viewport().worldToScreen({3, 4});
+    const QPoint base(qRound(screen.x), qRound(screen.y));
+    for (const char* typed : {"#10,10", "*10,10", "10,10"}) {
+        enter("LINE");
+        view()->setFocus();
+        events::click(view(), Qt::LeftButton, base);
+        ASSERT_TRUE(box()->isVisible()) << typed;
+        EXPECT_EQ(field(0)->accessibleName(), QStringLiteral("Length"));
+        events::type(view(), typed);
+        EXPECT_EQ(field(0)->text(), QString::fromLatin1(typed));
+        EXPECT_TRUE(input()->text().isEmpty()) << typed;
+        events::press(view(), Qt::Key_Return);
+        events::press(view(), Qt::Key_Return);
+        EXPECT_FALSE(window().runner().isActive()) << typed;
+        const auto line = std::get<core::Line>(window().document().entities().back().entity);
+        // The click lands within half a pixel of (3, 4).
+        EXPECT_NEAR(line.start.x, 3.0, 0.5);
+        EXPECT_NEAR(line.start.y, 4.0, 0.5);
+        if (typed[0] == '#' || typed[0] == '*') {
+            EXPECT_EQ(line.end, (core::Vec2{10, 10})) << typed;
+        } else {
+            EXPECT_EQ(line.end, (line.start + core::Vec2{10, 10})) << typed;
+        }
+    }
+    EXPECT_EQ(window().document().entityCount(), 3U);
+    EXPECT_TRUE(history().contains(QStringLiteral("#10,10")));
+    EXPECT_TRUE(history().contains(QStringLiteral("*10,10")));
+    EXPECT_TRUE(history().contains(QStringLiteral("@10,10")));
+}
+
+TEST_F(DynamicInputTest, HashAndStarAreTakenOnlyFirst) {
+    enter("LINE");
+    firstPoint();
+    events::type(view(), "1#");
+    // A late "#" does not enter the field; where else it goes is not part
+    // of the contract (docs/tappe/0.8.1/PT34-last-previous.md, point 4).
+    EXPECT_EQ(field(0)->text(), QStringLiteral("1"));
+    events::type(view(), "*2");
+    EXPECT_EQ(field(0)->text(), QStringLiteral("12"));
+}
+
 TEST_F(DynamicInputTest, OverlayStaysInsideViewAndUsesCurrentThemeAccent) {
     enter("LINE");
     events::move(view(), view()->rect().bottomRight());

@@ -33,6 +33,17 @@ void writeTextProperties(const core::Text& text, std::string& out);
 /// ATTRIB.
 void writeTextBox(const core::Text& text, std::string& out);
 
+/// Appends a FormattedText of the generated geometry as a TEXT: the type,
+/// the properties of its Text, then face= with its variant ("regular",
+/// "bold", "italic" or "bold-italic";
+/// docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 9). The tracking has
+/// no field: it shows in the positions and in the box.
+void writeFormattedText(const core::FormattedText& piece, std::string& out);
+
+/// Appends the derived ` ~box=…` of a FormattedText: the corners of
+/// core::formattedTextBox(), with its variant and its tracking.
+void writeFormattedTextBox(const core::FormattedText& piece, std::string& out);
+
 /// Appends the type and the properties of the model of an entity of the
 /// seven types (SOLID, ELLIPSE, MTEXT, ATTDEF, INSERT, DIMENSION, HATCH),
 /// without the derived ones; nothing for the types of before the 0.8.

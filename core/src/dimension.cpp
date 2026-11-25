@@ -71,17 +71,32 @@ Fit fitOf(double length, double textExtent, double arrow) {
 }
 
 TextSize textSize(const Document& document, const MText& mtext) {
+    // The same layout as the MTEXT (docs/tappe/0.8.1/PT8-impaginazione-formati.md,
+    // point 5): nominal heights, a stacked fraction counting its height only.
     const TextStyle* style = document.textStyles().find(mtext.style);
     const double widthFactor = style != nullptr ? style->widthFactor : 1.0;
-    const std::vector<mtext_layout::Row> rows = mtext_layout::layout(mtext, widthFactor);
+    const double oblique = style != nullptr ? style->oblique : 0.0;
+    const mtext_layout::Layout layout = mtext_layout::layout(mtext, widthFactor, oblique);
     TextSize size;
-    for (const mtext_layout::Row& row : rows) {
-        if (!row.blank) {
-            size.width = std::max(size.width, textWidth(row.text) * mtext.height * widthFactor);
+    for (const mtext_layout::Row& row : layout.rows) {
+        if (row.blank) {
+            continue;
         }
+        // A row of one piece as in stage 0.8: its advances times height and
+        // width factor, in this order.
+        double width = 0.0;
+        for (const mtext_layout::Piece& piece : row.pieces) {
+            const MTextRun& run = layout.runOf(piece);
+            width += run.stack
+                         ? piece.width
+                         : textWidth(piece.text, mtext_layout::faceOf(run.format)) *
+                               run.format.height * run.format.widthFactor * run.format.tracking;
+        }
+        size.width = std::max(size.width, width);
     }
-    // The rows are at least one (mtext_layout::layout()).
-    size.height = rows.front().start.y - rows.back().start.y + mtext.height;
+    // The rows are at least one (mtext_layout::layout()); with rows all as
+    // high and no overline, top is the height of the MTEXT, as in stage 0.8.
+    size.height = mtext_layout::columnHeight(layout);
     return size;
 }
 
@@ -370,6 +385,52 @@ std::vector<DrawnMText> drawnMTextsOf(const Document& document, const EntityReco
                       }
                   });
     return texts;
+}
+
+std::vector<std::u32string> shownLines(const Document& document, const EntityRecord& record) {
+    // An MTEXT whatever its layer, as its ~lines in stage 0.8.
+    const auto rowsOf = [&](const MText& mtext, std::vector<std::u32string>& out) {
+        const TextStyle* style = document.textStyles().find(mtext.style);
+        const double widthFactor = style != nullptr ? style->widthFactor : 1.0;
+        for (const mtext_layout::Row& row : mtext_layout::layout(mtext, widthFactor).rows) {
+            if (!row.blank) {
+                out.push_back(row.text);
+            }
+        }
+    };
+    std::vector<std::u32string> lines;
+    if (const auto* mtext = std::get_if<MText>(&record.entity)) {
+        rowsOf(*mtext, lines);
+        return lines;
+    }
+    const auto* dimension = std::get_if<Dimension>(&record.entity);
+    if (dimension == nullptr) {
+        return lines;
+    }
+    const EntityRecord shown{record.id, record.entity};  // its layer does not count
+    visitGraphics(document, shown, *dimension,
+                  [&](const EntityRecord& local, const std::vector<GeneratedItem>& shapes) {
+                      const bool drawn = std::ranges::any_of(shapes, [](const GeneratedItem& item) {
+                          return item.properties.visible;
+                      });
+                      if (const auto* text = std::get_if<MText>(&local.entity)) {
+                          if (drawn) {
+                              rowsOf(*text, lines);
+                          }
+                          return;
+                      }
+                      for (const GeneratedItem& item : shapes) {
+                          if (!item.properties.visible) {
+                              continue;
+                          }
+                          if (const auto* shape = std::get_if<Text>(&item.shape)) {
+                              lines.push_back(displayText(shape->value));
+                          } else if (const auto* piece = std::get_if<FormattedText>(&item.shape)) {
+                              lines.push_back(displayText(piece->text.value));
+                          }
+                      }
+                  });
+    return lines;
 }
 
 void appendOwnSnapPointsOf(const Document& document, const EntityRecord& record,

@@ -375,21 +375,23 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         consider(curveDistance, id);
     };
 
-    // A row of an MTEXT gives no snap point of its own: within the aperture
+    // A piece of an MTEXT gives no snap point of its own: within the aperture
     // it makes the insertion point of the MTEXT a candidate, at the distance
-    // from the row's box, as the box of a text does with its insertion point
-    // (docs/tappe/0.8/PT13-mtext-core.md, point 6). The nearest row decides.
-    // `mtext` is drawn with the properties of `owner`, the MTEXT itself or
-    // the one in the graphics of a dimension; `id` is the entity of the
-    // document.
+    // from the piece's box, as the box of a text does with its insertion
+    // point (docs/tappe/0.8/PT13-mtext-core.md, point 6;
+    // docs/tappe/0.8.1/PT8-impaginazione-formati.md, point 2): a Text with
+    // its box, a FormattedText with formattedTextBox(); a TextLine makes
+    // nothing a candidate. The nearest piece decides. `mtext` is drawn with
+    // the properties of `owner`, the MTEXT itself or the one in the graphics
+    // of a dimension; `id` is the entity of the document.
     const auto considerRows = [&](const std::vector<GeneratedItem>& rows, const EntityRecord& owner,
                                   const MText& mtext, std::uint64_t id) {
         for (const GeneratedItem& item : rows) {
-            const std::optional<Entity> row = shapeEntity(item.shape);
-            if (!row) {
+            if (!std::holds_alternative<Text>(item.shape) &&
+                !std::holds_alternative<FormattedText>(item.shape)) {
                 continue;
             }
-            const double rowDistance = distance(*row, pointer);
+            const double rowDistance = shapeDistance(item.shape, pointer);
             if (rowDistance > aperture) {
                 continue;
             }
@@ -434,6 +436,14 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                 items = generate(document, record);
             }
             for (const GeneratedItem& item : items) {
+                // The pieces of a formatted MTEXT in a block give nothing,
+                // not even the insertion point of their text, nor are their
+                // lines curves (docs/tappe/0.8.1/PT8-impaginazione-formati.md,
+                // point 1).
+                if (std::holds_alternative<FormattedText>(item.shape) ||
+                    std::holds_alternative<TextLine>(item.shape)) {
+                    continue;
+                }
                 if (std::optional<Entity> shape = shapeEntity(item.shape)) {
                     generatedShapes.push_back(std::move(*shape));
                     considerShape(generatedShapes.back(), id.value);

@@ -13,6 +13,7 @@
 #include <cmath>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace tg::cmd {
@@ -67,6 +68,11 @@ std::string fieldText(const DynamicInput& input, Kind kind, const CommandRunner&
         return field->typed;
     }
     return pointerValue(kind, runner, point);
+}
+
+/// True for a field typed with "#" or "*" first: an absolute coordinate.
+bool isAbsolute(std::string_view typed) {
+    return typed.starts_with('#') || typed.starts_with('*');
 }
 
 }  // namespace
@@ -124,15 +130,21 @@ std::string dynamicInputText(const DynamicInput& input, const CommandRunner& run
         return std::ranges::find(input.fields, kind, &DynamicField::kind) != input.fields.end();
     };
     if (has(Kind::X) || has(Kind::Y)) {
-        return fieldText(input, Kind::X, runner, point) + "," +
-               fieldText(input, Kind::Y, runner, point);
+        std::string x = fieldText(input, Kind::X, runner, point);
+        if (isAbsolute(x) && x.find(',') != std::string::npos) {
+            return x;  // "#<x>,<y>" typed whole in the X field
+        }
+        return x + "," + fieldText(input, Kind::Y, runner, point);
     }
     if (has(Kind::Length) || has(Kind::Angle)) {
         const std::string length = fieldText(input, Kind::Length, runner, point);
+        // "#" or "*" first makes the coordinate absolute, as in AutoCAD
+        // (docs/tappe/0.8.1/PT34-last-previous.md, point 4).
+        const std::string prefix = isAbsolute(length) ? "" : "@";
         if (length.find(',') != std::string::npos) {
-            return "@" + length;  // relative Cartesian: @<dx>,<dy>
+            return prefix + length;  // Cartesian: @<dx>,<dy> or #<x>,<y>
         }
-        return "@" + length + "<" + fieldText(input, Kind::Angle, runner, point);
+        return prefix + length + "<" + fieldText(input, Kind::Angle, runner, point);
     }
     return fieldText(input, Kind::Value, runner, point);
 }

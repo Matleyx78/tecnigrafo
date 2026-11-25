@@ -125,11 +125,25 @@ struct SelectionRectangle {
 ///   the next point, typed or clicked, opens a rectangle that selects by
 ///   window, or by crossing, whatever the direction of its second corner;
 /// - ALL: every entity on a visible layer, as one gesture, so entities on
-///   locked layers are discarded and counted as for a rectangle.
+///   locked layers are discarded and counted as for a rectangle; the most
+///   recent first (highest identifier), as AutoCAD gives them
+///   (docs/adr/0056, point 1);
+/// - L (Last): the visible entity with the highest identifier, if any, as
+///   one gesture;
+/// - P (Previous): the previous selection set, without the entities erased
+///   since, as one gesture; "No previous selection set." if none is left.
 /// Other text writes "Invalid selection.". While a corner is asked for,
 /// "Specify first corner:" or "Specify opposite corner:", text that is not
 /// a coordinate writes "Invalid point or option.". Enter ends the question
 /// as usual, dropping the corner being asked for.
+///
+/// The previous selection set (docs/tappe/0.8.1/PT34-last-previous.md,
+/// point 2) is the selection of the last question for objects that ended
+/// with some: the one a command that needsSelection() starts with, typed or
+/// preselected, or the one handed over at a Selection prompt. A question
+/// that ends without objects, or is cancelled, leaves it as it is. It
+/// belongs to the document: U, UNDO and REDO leave it, a NEW or OPEN that
+/// replaces the document of this runner drops it.
 ///
 /// Locked layers (docs/adr/0023, point 4). A gesture that adds entities
 /// never selects those on a locked layer: it discards them, with a command
@@ -343,6 +357,10 @@ public:
     /// the running command's, unless the runner asks its own question.
     [[nodiscard]] Prompt prompt() const;
 
+    /// The entities the running command highlights (Command::highlighted()),
+    /// empty with none or while asking "Select objects:" for it.
+    [[nodiscard]] std::span<const core::EntityId> highlighted() const;
+
     /// The preview of the running command, empty with none or while asking
     /// for a selection.
     [[nodiscard]] std::span<const core::Entity> preview() const;
@@ -406,6 +424,9 @@ private:
     /// Enter at a Selection prompt: hands over what has been chosen.
     void endSelectionPrompt();
     void selectionClick(const core::Vec2& point, PickAction action);
+    /// The written Last and Previous of a selection question.
+    void selectLast();
+    void selectPrevious();
     /// Makes hot the grip whose square holds `point`, and starts stretching
     /// it; false if no grip square holds it.
     bool clickGrip(const core::Vec2& point);
@@ -481,6 +502,8 @@ private:
     DescriptionCheck m_descriptionCheck;
     const CommandDescription* m_description{nullptr};  ///< of the running command
     SelectionSet m_selection;
+    /// The previous selection set, in the order it was chosen; empty: none.
+    std::vector<core::EntityId> m_previous;
     std::optional<SelectionRectangle> m_rectangle;
     /// After a written W or C: the mode of the rectangle, whatever its
     /// direction, asked for or open.

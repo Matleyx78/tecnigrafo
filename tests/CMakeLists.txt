@@ -56,6 +56,7 @@ add_executable(tg_tests
     cmd/property_commands_test.cpp
     cmd/quick_select_test.cpp
     cmd/rotate_scale_commands_test.cpp
+    cmd/select_command_test.cpp
     cmd/selection_set_test.cpp
     cmd/style_commands_test.cpp
     cmd/text_command_test.cpp
@@ -95,6 +96,7 @@ add_executable(tg_tests
     core/line_test.cpp
     core/math_test.cpp
     core/mtext_format_test.cpp
+    core/mtext_layout_test.cpp
     core/mtext_test.cpp
     core/new_entities_test.cpp
     core/polyline_test.cpp

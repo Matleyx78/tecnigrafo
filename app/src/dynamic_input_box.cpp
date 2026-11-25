@@ -213,8 +213,15 @@ bool DynamicInputBox::eventFilter(QObject* watched, QEvent* event) {
         return true;
     }
     const QString text = key->text();
-    if (text.size() == 1 && QStringView(u"0123456789.-,").contains(text.front())) {
-        m_input.fields[m_input.active].typed += text.toStdString();
+    if (text.size() != 1) {
+        return false;
+    }
+    auto& typed = m_input.fields[m_input.active].typed;
+    // "#" and "*" make the coordinate absolute, so they come only first
+    // (docs/tappe/0.8.1/PT34-last-previous.md, point 4).
+    const bool prefix = typed.empty() && QStringView(u"#*").contains(text.front());
+    if (prefix || QStringView(u"0123456789.-,").contains(text.front())) {
+        typed += text.toStdString();
         updateFields();
         return true;
     }
