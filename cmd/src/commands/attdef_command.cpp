@@ -20,7 +20,9 @@ constexpr int kVerify = 4;
 constexpr int kPreset = 8;
 constexpr int kLockPosition = 16;
 
-std::string yesNo(bool value) { return value ? "Y" : "N"; }
+std::string yesNo(bool value) {
+    return value ? "Y" : "N";
+}
 
 }  // namespace
 
@@ -43,15 +45,13 @@ void AttdefCommand::start(CommandContext& context) {
 void AttdefCommand::reportModes(CommandContext& context) const {
     context.message("Current attribute modes: Invisible=" + yesNo(m_flags & kInvisible) +
                     " Constant=" + yesNo(m_flags & kConstant) +
-                    " Verify=" + yesNo(m_flags & kVerify) +
-                    " Preset=" + yesNo(m_flags & kPreset) +
+                    " Verify=" + yesNo(m_flags & kVerify) + " Preset=" + yesNo(m_flags & kPreset) +
                     " Lock position=" + yesNo(m_flags & kLockPosition));
 }
 
 void AttdefCommand::reportText(CommandContext& context) const {
-    context.message("Current text style:  \"" + m_definition.text.style +
-                    "\"  Text height:  " + formatLength(m_definition.text.height) +
-                    "  Justify:  " + m_justify);
+    context.message("Current text style:  \"" + m_definition.text.style + "\"  Text height:  " +
+                    formatLength(m_definition.text.height) + "  Justify:  " + m_justify);
 }
 
 void AttdefCommand::useStyle(const CommandContext& context) {
@@ -78,11 +78,21 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
                 m_stage = Stage::Tag;
             } else if (keyword != nullptr) {
                 int bit = 0;
-                if (keyword->keyword == "Invisible") bit = kInvisible;
-                if (keyword->keyword == "Constant") bit = kConstant;
-                if (keyword->keyword == "Verify") bit = kVerify;
-                if (keyword->keyword == "Preset") bit = kPreset;
-                if (keyword->keyword == "Lock position") bit = kLockPosition;
+                if (keyword->keyword == "Invisible") {
+                    bit = kInvisible;
+                }
+                if (keyword->keyword == "Constant") {
+                    bit = kConstant;
+                }
+                if (keyword->keyword == "Verify") {
+                    bit = kVerify;
+                }
+                if (keyword->keyword == "Preset") {
+                    bit = kPreset;
+                }
+                if (keyword->keyword == "Lock position") {
+                    bit = kLockPosition;
+                }
                 m_flags ^= bit;
                 reportModes(context);
             }
@@ -131,19 +141,30 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
                 const auto& j = m_justify;
                 m_definition.text.horizontal = core::TextHorizontal::Left;
                 m_definition.text.vertical = core::TextVertical::Baseline;
-                if (j == "Center" || j == "TC" || j == "MC" || j == "BC")
+                if (j == "Center" || j == "TC" || j == "MC" || j == "BC") {
                     m_definition.text.horizontal = core::TextHorizontal::Center;
-                if (j == "Right" || j == "TR" || j == "MR" || j == "BR")
+                }
+                if (j == "Right" || j == "TR" || j == "MR" || j == "BR") {
                     m_definition.text.horizontal = core::TextHorizontal::Right;
-                if (j == "Align") m_definition.text.horizontal = core::TextHorizontal::Aligned;
-                if (j == "Middle") m_definition.text.horizontal = core::TextHorizontal::Middle;
-                if (j == "Fit") m_definition.text.horizontal = core::TextHorizontal::Fit;
-                if (j == "TL" || j == "TC" || j == "TR")
+                }
+                if (j == "Align") {
+                    m_definition.text.horizontal = core::TextHorizontal::Aligned;
+                }
+                if (j == "Middle") {
+                    m_definition.text.horizontal = core::TextHorizontal::Middle;
+                }
+                if (j == "Fit") {
+                    m_definition.text.horizontal = core::TextHorizontal::Fit;
+                }
+                if (j == "TL" || j == "TC" || j == "TR") {
                     m_definition.text.vertical = core::TextVertical::Top;
-                if (j == "ML" || j == "MC" || j == "MR" || j == "Middle")
+                }
+                if (j == "ML" || j == "MC" || j == "MR" || j == "Middle") {
                     m_definition.text.vertical = core::TextVertical::Middle;
-                if (j == "BL" || j == "BC" || j == "BR")
+                }
+                if (j == "BL" || j == "BC" || j == "BR") {
                     m_definition.text.vertical = core::TextVertical::Bottom;
+                }
                 m_stage = Stage::FirstPoint;
             }
             break;
@@ -180,21 +201,29 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
             if (point != nullptr) {
                 m_definition.text.alignmentPoint = point->point;
                 context.lastPoint = point->point;
-                if (m_justify == "Align") return finish(context);
+                if (m_justify == "Align") {
+                    return finish(context);
+                }
                 m_stage = Stage::Height;
             }
             break;
         case Stage::Height:
             if (point != nullptr || value != nullptr || confirm) {
                 double height = m_definition.text.height;
-                if (point != nullptr) height = core::distance(m_first, point->point);
-                if (value != nullptr) height = value->value;
+                if (point != nullptr) {
+                    height = core::distance(m_first, point->point);
+                }
+                if (value != nullptr) {
+                    height = value->value;
+                }
                 if (!(height > 0.0) || !std::isfinite(height)) {
                     context.message("Value must be positive and nonzero.");
                     break;
                 }
                 m_definition.text.height = height;
-                if (m_justify == "Fit") return finish(context);
+                if (m_justify == "Fit") {
+                    return finish(context);
+                }
                 m_stage = Stage::Rotation;
             }
             break;
@@ -206,8 +235,12 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
                     rotation = core::reducedDegreesToRadians(
                         core::radiansToDegrees(core::atan2(delta.y, delta.x)));
                 }
-                if (value != nullptr) rotation = value->value;
-                if (!std::isfinite(rotation)) break;
+                if (value != nullptr) {
+                    rotation = value->value;
+                }
+                if (!std::isfinite(rotation)) {
+                    break;
+                }
                 m_definition.text.rotation = rotation;
                 return finish(context);
             }
@@ -236,69 +269,110 @@ Status AttdefCommand::finish(CommandContext& context) {
 Prompt AttdefCommand::prompt() const {
     switch (m_stage) {
         case Stage::Modes:
-            return {"Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:",
-                    {{"Invisible", "I"}, {"Constant", "C"}, {"Verify", "V"},
-                     {"Preset", "P"}, {"Lock position", "L"}}};
-        case Stage::Tag: return {"Enter attribute tag name:", {}};
-        case Stage::AttributePrompt: return {"Enter attribute prompt:", {}, PromptKind::Text};
+            return {
+                "Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] "
+                "<done>:",
+                {{"Invisible", "I"},
+                 {"Constant", "C"},
+                 {"Verify", "V"},
+                 {"Preset", "P"},
+                 {"Lock position", "L"}}};
+        case Stage::Tag:
+            return {"Enter attribute tag name:", {}};
+        case Stage::AttributePrompt:
+            return {"Enter attribute prompt:", {}, PromptKind::Text};
         case Stage::Value:
-            return {(m_flags & kConstant) ? "Enter attribute value:"
-                                         : "Enter default attribute value:",
-                    {}, PromptKind::Text};
+            return {
+                (m_flags & kConstant) ? "Enter attribute value:" : "Enter default attribute value:",
+                {},
+                PromptKind::Text};
         case Stage::Start:
             return {"Specify start point of text or [Justify/Style]:",
                     {{"Justify", "J"}, {"Style", "S"}}};
         case Stage::Justify:
-            return {"Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]:",
-                    {{"Left", "L"}, {"Center", "C"}, {"Right", "R"}, {"Align", "A"},
-                     {"Middle", "M"}, {"Fit", "F"}, {"TL", "TL"}, {"TC", "TC"},
-                     {"TR", "TR"}, {"ML", "ML"}, {"MC", "MC"}, {"MR", "MR"},
-                     {"BL", "BL"}, {"BC", "BC"}, {"BR", "BR"}}};
+            return {
+                "Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]:",
+                {{"Left", "L"},
+                 {"Center", "C"},
+                 {"Right", "R"},
+                 {"Align", "A"},
+                 {"Middle", "M"},
+                 {"Fit", "F"},
+                 {"TL", "TL"},
+                 {"TC", "TC"},
+                 {"TR", "TR"},
+                 {"ML", "ML"},
+                 {"MC", "MC"},
+                 {"MR", "MR"},
+                 {"BL", "BL"},
+                 {"BC", "BC"},
+                 {"BR", "BR"}}};
         case Stage::Style:
-            return {"Enter style name or [?] <" + m_definition.text.style + ">:", {},
-                    PromptKind::Text};
+            return {
+                "Enter style name or [?] <" + m_definition.text.style + ">:", {}, PromptKind::Text};
         case Stage::FirstPoint: {
             std::string name = m_justify;
-            if (name == "Left") return {"Specify start point of text:", {}};
-            if (name == "Center") return {"Specify center point of text:", {}};
-            if (name == "Right") return {"Specify right endpoint of text baseline:", {}};
-            if (name == "Middle" || name == "MC") return {"Specify middle point of text:", {}};
-            if (name == "Align" || name == "Fit")
+            if (name == "Left") {
+                return {"Specify start point of text:", {}};
+            }
+            if (name == "Center") {
+                return {"Specify center point of text:", {}};
+            }
+            if (name == "Right") {
+                return {"Specify right endpoint of text baseline:", {}};
+            }
+            if (name == "Middle" || name == "MC") {
+                return {"Specify middle point of text:", {}};
+            }
+            if (name == "Align" || name == "Fit") {
                 return {"Specify first endpoint of text baseline:", {}};
+            }
             std::string vertical = name[0] == 'T' ? "top" : (name[0] == 'M' ? "middle" : "bottom");
-            std::string horizontal = name[1] == 'L' ? "left" : (name[1] == 'C' ? "center" : "right");
+            std::string horizontal =
+                name[1] == 'L' ? "left" : (name[1] == 'C' ? "center" : "right");
             return {"Specify " + vertical + "-" + horizontal + " point of text:", {}};
         }
-        case Stage::SecondPoint: return {"Specify second endpoint of text baseline:", {}};
+        case Stage::SecondPoint:
+            return {"Specify second endpoint of text baseline:", {}};
         case Stage::Height:
-            return {"Specify height <" + formatLength(m_definition.text.height) + ">:", {},
+            return {"Specify height <" + formatLength(m_definition.text.height) + ">:",
+                    {},
                     PromptKind::Distance};
         case Stage::Rotation: {
             auto angle = formatAngle(m_definition.text.rotation);
             return {"Specify rotation angle of text <" + (angle == "360" ? "0" : angle) + ">:",
-                    {}, PromptKind::Angle};
+                    {},
+                    PromptKind::Angle};
         }
     }
     return {};
 }
 
 std::optional<core::Vec2> AttdefCommand::basePoint() const {
-    if (m_stage == Stage::SecondPoint || m_stage == Stage::Height || m_stage == Stage::Rotation)
+    if (m_stage == Stage::SecondPoint || m_stage == Stage::Height || m_stage == Stage::Rotation) {
         return m_first;
+    }
     return std::nullopt;
 }
 
 CommandDescription AflagsCommand::description() {
-    return {"AFLAGS", {}, "Sets the default attribute modes.", false,
+    return {"AFLAGS",
+            {},
+            "Sets the default attribute modes.",
+            false,
             {{"value", "Enter new value for AFLAGS <{default}>:", ValueType::Integer, {}, true}}};
 }
 
-void AflagsCommand::start(CommandContext& context) { m_value = context.defaults.attributeFlags; }
+void AflagsCommand::start(CommandContext& context) {
+    m_value = context.defaults.attributeFlags;
+}
 
 Status AflagsCommand::handle(CommandContext& context, const Input& input) {
     if (const auto* text = std::get_if<TextInput>(&input)) {
         auto value = detail::trim(text->text);
-        if (value.starts_with('+')) value.remove_prefix(1);
+        if (value.starts_with('+')) {
+            value.remove_prefix(1);
+        }
         int number = 0;
         const auto parsed = std::from_chars(value.data(), value.data() + value.size(), number);
         if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() || number < 0 ||
