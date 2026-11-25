@@ -123,7 +123,8 @@ TEST_F(BattmanDialogTest, SynchronizesValuesInNewOrderAndUndoRestoresInsert) {
     button("battmanUp")->click();
     button("battmanSynchronize")->click();
     ASSERT_EQ(m_document.entities().size(), 1U);
-    const auto& insert = std::get<core::Insert>(m_document.entities().front().entity);
+    const auto synchronizedEntities = m_document.entities();
+    const auto& insert = std::get<core::Insert>(synchronizedEntities.front().entity);
     ASSERT_EQ(insert.attributes.size(), 2U);
     EXPECT_EQ(insert.attributes[0].tag, "SECOND");
     EXPECT_EQ(insert.attributes[0].text.value, "two");
@@ -132,7 +133,8 @@ TEST_F(BattmanDialogTest, SynchronizesValuesInNewOrderAndUndoRestoresInsert) {
     EXPECT_FALSE(m_dialog->hasUnsynchronizedChanges());
     EXPECT_EQ(m_editor.undoName(), "Battman");
     ASSERT_TRUE(m_editor.undo());
-    const auto& restored = std::get<core::Insert>(m_document.entities().front().entity);
+    const auto restoredEntities = m_document.entities();
+    const auto& restored = std::get<core::Insert>(restoredEntities.front().entity);
     EXPECT_EQ(restored.attributes[0].tag, "FIRST");
     EXPECT_EQ(restored.attributes[1].tag, "SECOND");
 }
