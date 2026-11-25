@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT14] (#954), work #955: Esc in the middle of -ATTDEF after turning a mode on
+; (card PT14, point 3; decision on #954, point 5): no ATTDEF, no Attdef step, AFLAGS keeps
+; the value it had before. Once at the question of the modes just after Invisible, once
+; at the height after Verify and the start point.
+; Source: card PT14 and docs/adr/0056, point 2 (the history autocad-attributi.txt has no
+; Esc); the questions are those of attdef/cronologia.
+AFLAGS
+0
+-ATTDEF
+I
+!esc
+AFLAGS
+
+-ATTDEF
+V
+
+NOTA
+Nota di montaggio
+da cablare
+2,11
+!esc
+AFLAGS
+

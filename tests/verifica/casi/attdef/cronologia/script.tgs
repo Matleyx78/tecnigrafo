@@ -1,0 +1,115 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT14] (#954), work #955: the six ATTDEFs of autocad-attributi, one per mode, each
+; with AFLAGS 0 and the mode turned on by the question of -ATTDEF, in the order and with the
+; answers of the history (card PT14, points 1-2 and "Le domande del testo"; docs/adr/0056,
+; point 2). Constant asks the value and no prompt; prompts and defaults keep their spaces.
+; AFLAGS takes the modes used: 0, 1, 2, 4, 8, 16 as in the history. TENSIONE picks ARIAL with
+; Style: the repeated line says "ARIAL" and ARIAL becomes current (decision on #954, point
+; 4); the history then sets TEXTSTYLE back to Standard, here with -STYLE Standard. SIGLA is
+; justified MC (Specify middle point of text:) and rotated by 10 degrees.
+; Source: Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736
+; (CC0-1.0): autocad-attributi.scr and autocad-attributi.txt (AutoCAD 2021, Italian,
+; translated as docs/adr/0056, point 2, and card PT14). The ARIAL style is made with -STYLE
+; and the prompts of style/cambia-esistente and text/stile-altezza-fissa; its record takes
+; handle 257, so the ATTDEFs start at 258.
+; Not visible, chosen as the simplest: an ATTDEF justified other than Left keeps the given
+; point both as position and alignment-point (the drawing uses only the alignment point,
+; docs/adr/0022, point 2).
+; ~box (docs/adr/0022): LiberationSans-Regular.ttf of resources/fonts, read with a small
+; reader of its head, hhea, OS/2, cmap and hmtx tables: cap height 1409, ascent 1854,
+; descent -434, summed advances; an ATTDEF shows its tag. arial.ttf is Liberation Sans.
+-STYLE
+ARIAL
+arial.ttf
+0
+1
+0
+No
+No
+-STYLE
+Standard
+
+
+
+
+
+
+AFLAGS
+0
+-ATTDEF
+
+CODICE
+Codice componente
+K1
+2,15
+2.5
+0
+AFLAGS
+0
+-ATTDEF
+I
+
+NOTA
+Nota di montaggio
+da cablare
+2,11
+2.5
+0
+AFLAGS
+0
+-ATTDEF
+C
+
+COSTRUTTORE
+ACME
+2,7
+2.5
+0
+AFLAGS
+0
+-ATTDEF
+V
+
+TENSIONE
+Tensione
+24V
+S
+ARIAL
+22,15
+2.5
+0
+-STYLE
+Standard
+
+
+
+
+
+
+AFLAGS
+0
+-ATTDEF
+P
+
+POSIZIONE
+Posizione
+Q1
+22,11
+2.5
+0
+AFLAGS
+0
+-ATTDEF
+L
+
+SIGLA
+Sigla
+S1
+J
+MC
+30,5
+2.5
+10
+AFLAGS
+0

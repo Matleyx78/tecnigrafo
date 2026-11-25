@@ -1,0 +1,57 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: ARIAL
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 1
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "ARIAL" is now the current text style.
+  Command: -STYLE
+  Enter name of text style or [?] <ARIAL>: Standard
+  Existing style.
+  Specify full font name or font filename (TTF or SHX) <arial.ttf>:
+  Specify height of text <0.0000>:
+  Specify width factor <1.0000>:
+  Specify obliquing angle <0>:
+  Display text backwards? [Yes/No] <No>:
+  Display text upside-down? [Yes/No] <No>:
+  "Standard" is now the current text style.
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: V
+  Current attribute modes: Invisible=N Constant=N Verify=Y Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: TENSIONE
+  Enter attribute prompt: Tensione
+  Enter default attribute value: 24V
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: S
+  Enter style name or [?] <Standard>: ARIAL
+  Current text style:  "ARIAL"  Text height:  2.5000  Justify:  Left
+  *Cancel*
+  Command: AFLAGS
+  Enter new value for AFLAGS <0>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Style
+redo:
+snap: on
+ortho: off
+text styles:
+  "ARIAL" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+pointer: none
+active snap: none
+statistics:

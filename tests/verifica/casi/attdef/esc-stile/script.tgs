@@ -1,0 +1,38 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT14] (#954), work #955: Esc in the middle of -ATTDEF after choosing ARIAL with
+; Style, with Standard current before the command (card PT14, point 3; decision on the
+; review of #1026, point 1): no ATTDEF, no Attdef step, AFLAGS unchanged, and Standard is
+; the current style again (the report has no "text style:" line).
+; Source: card PT14 and docs/adr/0056, point 2; the questions are those of attdef/stile.
+; The ARIAL style is made with -STYLE and the prompts of style/cambia-esistente and
+; text/stile-altezza-fissa, then Standard is made current again.
+-STYLE
+ARIAL
+arial.ttf
+0
+1
+0
+No
+No
+-STYLE
+Standard
+
+
+
+
+
+
+AFLAGS
+0
+-ATTDEF
+V
+
+TENSIONE
+Tensione
+24V
+S
+ARIAL
+!esc
+AFLAGS
+

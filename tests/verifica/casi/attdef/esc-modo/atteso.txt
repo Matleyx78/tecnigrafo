@@ -1,0 +1,38 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+messages:
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: I
+  Current attribute modes: Invisible=Y Constant=N Verify=N Preset=N Lock position=N
+  *Cancel*
+  Command: AFLAGS
+  Enter new value for AFLAGS <0>:
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: V
+  Current attribute modes: Invisible=N Constant=N Verify=Y Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: NOTA
+  Enter attribute prompt: Nota di montaggio
+  Enter default attribute value: da cablare
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 2,11
+  *Cancel*
+  Command: AFLAGS
+  Enter new value for AFLAGS <0>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:

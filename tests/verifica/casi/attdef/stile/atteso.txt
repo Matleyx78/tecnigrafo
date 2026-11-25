@@ -1,0 +1,110 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  258 ATTDEF position=22,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="ARIAL" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" prompt="Tensione" ~box=22,14.229950319375444;40.57523066004258,14.229950319375444;40.57523066004258,18.28956706884315;22,18.28956706884315
+messages:
+  Command: -STYLE
+  Enter name of text style or [?] <Standard>: ARIAL
+  New style.
+  Specify full font name or font filename (TTF or SHX) <txt>: arial.ttf
+  Specify height of text <0.0000>: 0
+  Specify width factor <1.0000>: 1
+  Specify obliquing angle <0>: 0
+  Display text backwards? [Yes/No] <No>: No
+  Display text upside-down? [Yes/No] <No>: No
+  "ARIAL" is now the current text style.
+  Command: -STYLE
+  Enter name of text style or [?] <ARIAL>: Standard
+  Existing style.
+  Specify full font name or font filename (TTF or SHX) <arial.ttf>:
+  Specify height of text <0.0000>:
+  Specify width factor <1.0000>:
+  Specify obliquing angle <0>:
+  Display text backwards? [Yes/No] <No>:
+  Display text upside-down? [Yes/No] <No>:
+  "Standard" is now the current text style.
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: TENSIONE
+  Enter attribute prompt: Tensione
+  Enter default attribute value: 24V
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: S
+  Enter style name or [?] <Standard>: NESSUNO
+  Cannot find text style "NESSUNO".
+  Enter style name or [?] <Standard>: ?
+  Cannot find text style "?".
+  Enter style name or [?] <Standard>: ARIAL
+  Current text style:  "ARIAL"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 22,15
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Style
+  Attdef
+redo:
+snap: on
+ortho: off
+text styles:
+  "ARIAL" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+text style: "ARIAL"
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 1
+
+[report 2]
+entities:
+messages:
+  Command: U
+  Undone: Attdef.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Style
+redo:
+  Attdef
+snap: on
+ortho: off
+text styles:
+  "ARIAL" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+pointer: none
+active snap: none
+statistics:
+
+[final]
+entities:
+  258 ATTDEF position=22,15 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="ARIAL" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="24V" tag="TENSIONE" prompt="Tensione" ~box=22,14.229950319375444;40.57523066004258,14.229950319375444;40.57523066004258,18.28956706884315;22,18.28956706884315
+messages:
+  Command: REDO
+  Redone: Attdef.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Style
+  Style
+  Attdef
+redo:
+snap: on
+ortho: off
+text styles:
+  "ARIAL" font="arial.ttf" height=0 width-factor=1 oblique=0 backwards=no upside-down=no
+text style: "ARIAL"
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 1

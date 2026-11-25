@@ -1,0 +1,8 @@
+# [0.8.1-RT14] (#954): -ATTDEF and AFLAGS, work #955
+attdef/aflags #955
+attdef/cronologia #955
+attdef/etichetta #955
+attdef/giustificazioni #955
+attdef/stile #955
+attdef/esc-modo #955
+attdef/esc-stile #955

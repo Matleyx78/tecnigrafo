@@ -1,0 +1,94 @@
+tecnigrafo-report 1
+
+[report 1]
+entities:
+  257 ATTDEF position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="P1" tag="PRIMO" prompt="Primo" lock-position=yes ~box=0,-0.7700496806245565;11.910929737402414,-0.7700496806245565;11.910929737402414,3.289567068843151;0,3.289567068843151
+  258 ATTDEF position=0,-5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="valore con spazi" tag="SECONDO" prompt="Secondo" verify=yes ~box=0,-5.770049680624556;18.37295954577715,-5.770049680624556;18.37295954577715,-1.710432931156849;0,-1.710432931156849
+messages:
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>:
+  Command: ATT
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=Y
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: PRIMO
+  Enter attribute prompt: Primo
+  Enter default attribute value: P1
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 0,0
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 32
+  Requires an integer between 0 and 31.
+  Enter new value for AFLAGS <16>: 5
+  Command: ATTDEF
+  Current attribute modes: Invisible=Y Constant=N Verify=Y Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>: I
+  Current attribute modes: Invisible=N Constant=N Verify=Y Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: SECONDO
+  Enter attribute prompt: Secondo
+  Enter default attribute value: valore con spazi
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: 0,-5
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: AFLAGS
+  Enter new value for AFLAGS <4>:
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Attdef
+  Attdef
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 2
+
+[report 2]
+entities:
+  257 ATTDEF position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="P1" tag="PRIMO" prompt="Primo" lock-position=yes ~box=0,-0.7700496806245565;11.910929737402414,-0.7700496806245565;11.910929737402414,3.289567068843151;0,3.289567068843151
+messages:
+  Command: U
+  Undone: Attdef.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Attdef
+redo:
+  Attdef
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 1
+
+[final]
+entities:
+  257 ATTDEF position=0,0 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="P1" tag="PRIMO" prompt="Primo" lock-position=yes ~box=0,-0.7700496806245565;11.910929737402414,-0.7700496806245565;11.910929737402414,3.289567068843151;0,3.289567068843151
+  258 ATTDEF position=0,-5 alignment-point=0,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=baseline value="valore con spazi" tag="SECONDO" prompt="Secondo" verify=yes ~box=0,-5.770049680624556;18.37295954577715,-5.770049680624556;18.37295954577715,-1.710432931156849;0,-1.710432931156849
+messages:
+  Command: REDO
+  Redone: Attdef.
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Attdef
+  Attdef
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 2

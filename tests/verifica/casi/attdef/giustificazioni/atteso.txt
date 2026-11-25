@@ -1,0 +1,60 @@
+tecnigrafo-report 1
+
+[final]
+entities:
+  257 ATTDEF position=0,10 alignment-point=0,10 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=left vertical=top value="TL" tag="TL" prompt="Alto a sinistra" ~box=0,6.729950319375444;4.240596167494677,6.729950319375444;4.240596167494677,10.789567068843152;0,10.789567068843152
+  258 ATTDEF position=20,0 alignment-point=23.229240596167497,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=fit vertical=baseline value="FI" tag="FI" prompt="Adatta" ~box=20,-0.7700496806245565;23.229240596167497,-0.7700496806245565;23.229240596167497,3.289567068843151;20,3.289567068843151
+  259 ATTDEF position=40,0 alignment-point=44.444641589779984,0 height=2.5 rotation=0 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=aligned vertical=baseline value="AL" tag="AL" prompt="Allineato" ~box=40,-0.7700496806245561;44.444641589779984,-0.7700496806245561;44.444641589779984,3.2895670688431498;40,3.2895670688431498
+messages:
+  Command: AFLAGS
+  Enter new value for AFLAGS <16>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: TL
+  Enter attribute prompt: Alto a sinistra
+  Enter default attribute value: TL
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: J
+  Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]: TL
+  Specify top-left point of text: 0,10
+  Specify height <2.5000>: 2.5
+  Specify rotation angle of text <0>: 0
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: FI
+  Enter attribute prompt: Adatta
+  Enter default attribute value: FI
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: J
+  Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]: Fit
+  Specify first endpoint of text baseline: 20,0
+  Specify second endpoint of text baseline: 23.229240596167495,0
+  Specify height <2.5000>: 2.5
+  Command: -ATTDEF
+  Current attribute modes: Invisible=N Constant=N Verify=N Preset=N Lock position=N
+  Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
+  Enter attribute tag name: AL
+  Enter attribute prompt: Allineato
+  Enter default attribute value: AL
+  Current text style:  "Standard"  Text height:  2.5000  Justify:  Left
+  Specify start point of text or [Justify/Style]: J
+  Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]: Align
+  Specify first endpoint of text baseline: 40,0
+  Specify second endpoint of text baseline: 44.444641589779986,0
+prompt: Command:
+preview:
+selection: none
+rectangle: none
+undo:
+  Attdef
+  Attdef
+  Attdef
+redo:
+snap: on
+ortho: off
+pointer: none
+active snap: none
+statistics:
+  ATTDEF 3

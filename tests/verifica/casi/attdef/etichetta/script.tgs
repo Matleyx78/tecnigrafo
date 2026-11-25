@@ -1,0 +1,25 @@
+; SPDX-License-Identifier: GPL-3.0-or-later
+; Copyright (C) 2026 The Tecnigrafo authors
+; [0.8.1-RT14] (#954), work #955: the tag of -ATTDEF (card PT14, point 2; docs/adr/0056,
+; point 2). An empty tag gives "Tag cannot be null." and the question repeats, as AutoCAD
+; in the session of 2026-11-22; a line with a space that arrives whole, as here at level 1,
+; gives "Invalid tag name." and the question repeats (validAttributeTag). Prompt and
+; default keep their spaces, as NOTA of autocad-attributi.
+; Source: Matleyx78/dxf-test-file, commit 2aafbb1fa17abc67fdf2ff7de26a34b70e79b736
+; (CC0-1.0): autocad-attributi.txt (AutoCAD 2021, Italian, translated as docs/adr/0056,
+; point 2); docs/tappe/0.8.1/dxf-di-prova.md, second session, for the empty tag.
+; ~box (docs/adr/0022): LiberationSans-Regular.ttf of resources/fonts, read with a small
+; reader of its head, hhea, OS/2, cmap and hmtx tables: cap height 1409, ascent 1854,
+; descent -434, summed advances; an ATTDEF shows its tag.
+AFLAGS
+0
+-ATTDEF
+
+
+DUE PAROLE
+NOTA
+Nota di montaggio
+da cablare
+2,11
+2.5
+0
