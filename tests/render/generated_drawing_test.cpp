@@ -464,6 +464,36 @@ TEST(GeneratedDrawing, FormattedTextPassesItsFaceAndTrackingToThePainter) {
     EXPECT_DOUBLE_EQ(painter.runs[1].widthFactor, 2.0);
 }
 
+TEST(GeneratedDrawing, MTextFormattingReachesThePainter) {
+    core::Document document = core::Document::newDrawing();
+    const auto addMText = [&](std::string value, double y) {
+        core::MText mtext;
+        mtext.insertion = {0.0, y};
+        mtext.height = 5.0;
+        mtext.value = std::move(value);
+        document.add(mtext);
+    };
+    addMText(R"({\fArial|b1;A}{\fArial|i1;B})", 0.0);
+    addMText(R"({\T2;AB})", 10.0);
+    addMText(R"({\W2;AB})", 20.0);
+
+    SceneStyle style;
+    style.showGrid = false;
+    style.axes = AxesStyle::Lines;
+    ShapePainter painter;
+    renderScene(document, testViewport(), style, painter);
+
+    ASSERT_EQ(painter.runs.size(), 4U);
+    EXPECT_EQ(painter.runs[0].face, core::FontFace::Bold);
+    EXPECT_EQ(painter.runs[1].face, core::FontFace::Italic);
+    EXPECT_DOUBLE_EQ(painter.runs[2].tracking, 2.0);
+    EXPECT_DOUBLE_EQ(painter.runs[2].widthFactor, 1.0);
+    EXPECT_EQ(painter.runs[2].face, core::FontFace::Regular);
+    EXPECT_DOUBLE_EQ(painter.runs[3].widthFactor, 2.0);
+    EXPECT_DOUBLE_EQ(painter.runs[3].tracking, 1.0);
+    EXPECT_EQ(painter.runs[3].face, core::FontFace::Regular);
+}
+
 TEST(GeneratedDrawing, TinyFormattedTextUsesItsFormattedBox) {
     const Items items;
     core::Text text;
