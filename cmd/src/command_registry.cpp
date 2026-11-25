@@ -80,6 +80,8 @@ bool compatible(PromptKind kind, ValueType value) {
             return value != ValueType::Point && value != ValueType::Distance &&
                    value != ValueType::Angle && value != ValueType::Object &&
                    value != ValueType::Selection;
+        case PromptKind::Name:
+            return value == ValueType::Name;
         case PromptKind::Object:
             return value == ValueType::Object || value == ValueType::Keyword;
         case PromptKind::Number:

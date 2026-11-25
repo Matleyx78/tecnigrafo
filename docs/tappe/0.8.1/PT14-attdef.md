@@ -21,9 +21,13 @@
 - `cmd/src/commands/text_command.cpp`, `cmd/src/text.hpp` (solo se serve
   esporre le domande del punto iniziale)
 - `cmd/include/tg/cmd/command.hpp` (file comune: `CommandDefaults::attributeFlags`)
+- `cmd/include/tg/cmd/command_protocol.hpp`, `cmd/src/command_runner.cpp`,
+  `cmd/src/command_registry.cpp`, `cmd/src/dynamic_input.cpp` (file comuni:
+  `PromptKind::Name`)
 - `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt` (file comuni)
-- `tests/cmd/attdef_command_test.cpp` (nuovo), `tests/CMakeLists.txt` (file
-  comune)
+- `tests/cmd/attdef_command_test.cpp` (nuovo),
+  `tests/cmd/command_runner_test.cpp`, `tests/cmd/command_registry_test.cpp`,
+  `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
 
