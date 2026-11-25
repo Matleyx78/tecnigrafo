@@ -11,6 +11,7 @@ LINE
 0.5,5
 
 !osnap mid,ext
+!otrack on
 LINE
 !hover 0.5,0
 !report
