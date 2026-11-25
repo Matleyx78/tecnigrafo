@@ -27,7 +27,61 @@ std::string yesNo(bool value) {
 }  // namespace
 
 CommandDescription AttdefCommand::description() {
-    return {"-ATTDEF", {"ATT", "ATTDEF"}, "Creates an attribute definition.", false, {}};
+    const std::vector<Keyword> justify = {
+        {"Left", "L"}, {"Center", "C"}, {"Right", "R"}, {"Align", "A"}, {"Middle", "M"},
+        {"Fit", "F"},  {"TL", "TL"},    {"TC", "TC"},   {"TR", "TR"},   {"ML", "ML"},
+        {"MC", "MC"},  {"MR", "MR"},    {"BL", "BL"},   {"BC", "BC"},   {"BR", "BR"}};
+    return {
+        "-ATTDEF",
+        {"ATT", "ATTDEF"},
+        "Creates an attribute definition.",
+        false,
+        {{"modes",
+          "Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:",
+          ValueType::Keyword,
+          {{"Invisible", "I"},
+           {"Constant", "C"},
+           {"Verify", "V"},
+           {"Preset", "P"},
+           {"Lock position", "L"}},
+          true},
+         {"tag", "Enter attribute tag name:", ValueType::Name, {}, false},
+         {"prompt", "Enter attribute prompt:", ValueType::Text, {}, true},
+         {"default", "Enter default attribute value:", ValueType::Text, {}, true},
+         {"constant", "Enter attribute value:", ValueType::Text, {}, true},
+         {"start",
+          "Specify start point of text or [Justify/Style]:",
+          ValueType::Point,
+          {{"Justify", "J"}, {"Style", "S"}},
+          false},
+         {"justify",
+          "Enter an option [Left/Center/Right/Align/Middle/Fit/TL/TC/TR/ML/MC/MR/BL/BC/BR]:",
+          ValueType::Keyword, justify, false},
+         {"style", "Enter style name or [?] <{default}>:", ValueType::Name, {}, true},
+         {"left", "Specify start point of text:", ValueType::Point, {}, false},
+         {"center", "Specify center point of text:", ValueType::Point, {}, false},
+         {"right", "Specify right endpoint of text baseline:", ValueType::Point, {}, false},
+         {"middle", "Specify middle point of text:", ValueType::Point, {}, false},
+         {"top-left", "Specify top-left point of text:", ValueType::Point, {}, false},
+         {"top-center", "Specify top-center point of text:", ValueType::Point, {}, false},
+         {"top-right", "Specify top-right point of text:", ValueType::Point, {}, false},
+         {"middle-left", "Specify middle-left point of text:", ValueType::Point, {}, false},
+         {"middle-right", "Specify middle-right point of text:", ValueType::Point, {}, false},
+         {"bottom-left", "Specify bottom-left point of text:", ValueType::Point, {}, false},
+         {"bottom-center", "Specify bottom-center point of text:", ValueType::Point, {}, false},
+         {"bottom-right", "Specify bottom-right point of text:", ValueType::Point, {}, false},
+         {"first-endpoint",
+          "Specify first endpoint of text baseline:",
+          ValueType::Point,
+          {},
+          false},
+         {"second-endpoint",
+          "Specify second endpoint of text baseline:",
+          ValueType::Point,
+          {},
+          false},
+         {"height", "Specify height <{default}>:", ValueType::Distance, {}, true},
+         {"rotation", "Specify rotation angle of text <{default}>:", ValueType::Angle, {}, true}}};
 }
 
 void AttdefCommand::start(CommandContext& context) {
@@ -126,7 +180,6 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
             if (point != nullptr) {
                 m_first = point->point;
                 m_definition.text.position = m_first;
-                m_definition.text.alignmentPoint = m_first;
                 context.lastPoint = m_first;
                 afterPoint(context);
             } else if (keyword != nullptr && keyword->keyword == "Justify") {
