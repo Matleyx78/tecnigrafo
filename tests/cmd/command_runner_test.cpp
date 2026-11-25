@@ -2109,6 +2109,14 @@ TEST_F(PromptRunnerTest, OnlyAnEmptyTextLineConfirms) {
     EXPECT_FALSE(runner().acceptsText());
 }
 
+TEST_F(PromptRunnerTest, NameTrimsSpacesAndDoesNotAcceptText) {
+    runner().setDescriptionCheck([](const std::string& /*report*/) {});
+    start(PromptKind::Name);
+    EXPECT_FALSE(runner().acceptsText());
+    runner().submitText("  ATTRIBUTE_TAG  ");
+    EXPECT_EQ(journal().inputs, (std::vector<Input>{TextInput{"ATTRIBUTE_TAG"}}));
+}
+
 TEST_F(PromptRunnerTest, TextDoesNotAcceptMousePointsOrShowSnap) {
     start(PromptKind::Text);
     runner().pointerMoved({3, 4});
@@ -2513,6 +2521,7 @@ TEST(PromptKindDescriptions, NewKindsMatchTheirValueTypes) {
                       value != ValueType::Angle && value != ValueType::Object &&
                       value != ValueType::Selection)
             << index;
+        EXPECT_EQ(compatible(PromptKind::Name, value), value == ValueType::Name) << index;
     }
 }
 

@@ -99,6 +99,7 @@ DynamicInput dynamicInputFor(const CommandRunner& runner) {
             input.fields = {{Kind::Value, {}}};
             break;
         case PromptKind::Text:
+        case PromptKind::Name:
         case PromptKind::Object:
         case PromptKind::Selection:
             break;

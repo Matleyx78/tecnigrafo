@@ -125,6 +125,7 @@ TEST(PromptMatches, KindsAndValueTypes) {
                                                            value != ValueType::Distance &&
                                                            value != ValueType::Angle)
             << index;
+        EXPECT_EQ(compatible(PromptKind::Name, value), value == ValueType::Name) << index;
     }
 }
 

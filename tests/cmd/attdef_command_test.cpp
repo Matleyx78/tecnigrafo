@@ -63,6 +63,7 @@ TEST_F(AttdefCommandTest, CreatesDefinitionAndOneUndoStep) {
 TEST_F(AttdefCommandTest, EmptyAndInvalidTagsRepeatPrompt) {
     type({"-ATTDEF", "", ""});
     EXPECT_EQ(messages.back(), "Tag cannot be null.");
+    EXPECT_FALSE(runner.acceptsText());
     runner.submitText("BAD TAG");
     EXPECT_EQ(messages.back(), "Invalid tag name.");
     EXPECT_EQ(runner.promptText(), "Enter attribute tag name:");

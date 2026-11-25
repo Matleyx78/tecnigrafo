@@ -575,6 +575,10 @@ void CommandRunner::handleTypedWhileActive(std::string_view text) {
         case PromptKind::Text:
             typedText(text, prompt);
             break;
+        case PromptKind::Name:
+            // submitText() trims non-text answers before dispatching them.
+            forward(TextInput{std::string{text}});
+            break;
         case PromptKind::Object:
             typedObject(text, prompt);
             break;
