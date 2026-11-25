@@ -111,17 +111,18 @@ void appendAttributeItems(const Document& document, const Insert& insert,
                           const std::optional<Transform2D>& outer, const EntityProperties& shown,
                           const LayerState& state, std::vector<GeneratedItem>& out) {
     for (const Attribute& attribute : insert.attributes) {
-        const std::optional<EffectiveProperties> effective =
+        const std::optional<EffectiveProperties> drawn =
             attributeProperties(document, attribute, shown, state);
-        if (!effective) {
+        if (!drawn) {
             continue;
         }
+        const EffectiveProperties& effective = *drawn;
         if (!outer) {
-            out.push_back(GeneratedItem{attribute.text, *effective});
+            out.push_back(GeneratedItem{attribute.text, effective});
             continue;
         }
         for (GeneratedShape& shape : transformedShape(attribute.text, *outer)) {
-            out.push_back(GeneratedItem{std::move(shape), *effective});
+            out.push_back(GeneratedItem{std::move(shape), effective});
         }
     }
 }
