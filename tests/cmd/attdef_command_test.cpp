@@ -14,7 +14,7 @@ namespace tg::cmd {
 namespace {
 
 class AttdefCommandTest : public ::testing::Test {
-protected:
+public:
     AttdefCommandTest() : editor(document), runner(registry, editor) {
         registerBuiltinCommands(registry);
         runner.setScriptSequences(true);
