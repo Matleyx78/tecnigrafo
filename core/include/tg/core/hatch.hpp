@@ -157,7 +157,8 @@ struct Hatch {
 /// stored in capitals ("ANSI31", "NET", "SOLID"), the hatch's own name as it
 /// is. SOLID gives solid yes and no family; a predefined pattern gives solid
 /// no. The proportion turns every family by angle - hatch.angle (its
-/// direction through cardinalSinCos, so a quarter turn is exact) and
+/// direction through cardinalSinCos, so a quarter turn is exact; its angle
+/// brought into [0, 2π) with normalizeAngle) and
 /// multiplies its base point from `origin`, its offset and its dashes by
 /// scale / hatch.scale. A finite angle is taken as it is: the caller reduces
 /// it (reducedDegreesToRadians); one that is not finite gives nullopt.

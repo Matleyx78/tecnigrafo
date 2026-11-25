@@ -8,6 +8,7 @@
 #include "solid_space/geom2d/region.hpp"
 #include "solid_space/robust/point.hpp"
 #include "solid_space_bridge.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
@@ -610,11 +611,13 @@ std::optional<Hatch> withPattern(const Hatch& hatch, const Vec2& origin, std::st
     if (hatch.solid || !sameAsciiName(name, hatch.pattern)) {
         return std::nullopt;
     }
-    // The families of the file, in proportion around the origin.
+    // The families of the file, in proportion around the origin. The angle
+    // of a family is reduced to one turn (docs/REGOLE-NUMERICHE.md, section
+    // 2, point 9); normalizeAngle() keeps the bits of one already in [0, 2π).
     const SinCos turn = cardinalSinCos(angle - hatch.angle);
     const double factor = scale / hatch.scale;
     for (PatternLine& line : result.patternLines) {
-        line.angle += angle - hatch.angle;
+        line.angle = normalizeAngle(line.angle + (angle - hatch.angle));
         line.origin = origin + (turned(line.origin - origin, turn) * factor);
         line.offset = turned(line.offset, turn) * factor;
         for (double& dash : line.dashes) {

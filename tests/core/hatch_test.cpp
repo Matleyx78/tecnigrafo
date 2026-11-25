@@ -611,6 +611,29 @@ TEST(WithPattern, AQuarterTurnOfAPatternThatIsNotGeneratedIsExact) {
     EXPECT_EQ(turned.patternLines.at(1).offset, (Vec2{kOffset, -kOffset}));
 }
 
+TEST(WithPattern, TheAngleOfAFamilyOfAPatternThatIsNotGeneratedStaysInOneTurn) {
+    // 315 + 90 is 405, reduced to 45; 45 - 90 is -45, reduced to 315.
+    Hatch hatch = hatcheditShape(0);
+    hatch.pattern = "USER1";
+    hatch.patternLines = {PatternLine{degreesToRadians(315), {0, 0}, {0, 1}, {}},
+                          PatternLine{degreesToRadians(45), {0, 0}, {0, 1}, {}}};
+    const Hatch up = made(withPattern(hatch, {0, 0}, "USER1", 1, reducedDegreesToRadians(90), 1));
+    for (const PatternLine& line : up.patternLines) {
+        EXPECT_GE(line.angle, 0.0);
+        EXPECT_LT(line.angle, kTwoPi);
+    }
+    EXPECT_NEAR(up.patternLines.at(0).angle, degreesToRadians(45), 1e-12);
+    EXPECT_NEAR(up.patternLines.at(1).angle, degreesToRadians(135), 1e-12);
+
+    const Hatch down = made(withPattern(up, {0, 0}, "USER1", 1, 0, 1));
+    for (const PatternLine& line : down.patternLines) {
+        EXPECT_GE(line.angle, 0.0);
+        EXPECT_LT(line.angle, kTwoPi);
+    }
+    EXPECT_NEAR(down.patternLines.at(0).angle, degreesToRadians(315), 1e-12);
+    EXPECT_NEAR(down.patternLines.at(1).angle, degreesToRadians(45), 1e-12);
+}
+
 TEST(WithPattern, ScaleAndAngleOfAPatternThatIsNotGeneratedGiveTheFamiliesOfDa) {
     // B7 (ANSI37 at 0,0, scale 1, angle 0) with the origin, scale and angle
     // of DA (405,5, scale 2, angle 30): the families AutoCAD wrote in DA.
