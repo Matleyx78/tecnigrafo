@@ -17,6 +17,7 @@
 namespace tg::app {
 
 class DynamicInputBox;
+class TextEditorOverlay;
 
 /// Drawing area: shows a document, its selection, the command preview and
 /// the marker of the object snap under the pointer, and handles zoom and
@@ -30,6 +31,16 @@ class DynamicInputBox;
 ///   wheel                 zoom towards the cursor
 ///   middle drag           pan
 ///   middle double-click   zoom extents
+///   left double-click     on a TEXT, an MTEXT, a dimension, an ATTDEF or an
+///                         INSERT with attributes, at "Command:": TEXTEDIT
+///                         on it (docs/tappe/0.8.1/PT12-editor.md, point 4)
+///
+/// The editor of a text (TextEditorOverlay, docs/adr/0054, point 5) lies
+/// over the view while the runner gives a cmd::TextEditRequest, unless
+/// setTextEditorEnabled(false): it takes the keys, and its confirmation or
+/// Esc go to the runner. Meanwhile the pointer is not handed to the runner,
+/// so the request stays as the editor opened it (the Mtext option of a
+/// dimension follows the pointer), while zoom and pan go on.
 ///
 /// The view shows the session of setSession(), the active one
 /// (docs/adr/0041, point 2). Without a session it paints only the
@@ -50,6 +61,19 @@ public:
     [[nodiscard]] DocumentSession* session() const { return m_session; }
 
     [[nodiscard]] DynamicInputBox* dynamicInputBox() const { return m_dynamicInput; }
+
+    [[nodiscard]] TextEditorOverlay* textEditor() const { return m_textEditor; }
+
+    /// Opens the editor on the runner's cmd::TextEditRequest, keeps it open
+    /// while the request is the same, closes it (dropping what was typed)
+    /// when the request changes or ends, and opens it again on a new one.
+    /// The view calls it after its own inputs; the owner after the others
+    /// (the command line). Without a session the editor is closed.
+    void refreshTextEditor();
+
+    /// Off, the editor never opens and the Text prompts stay on the command
+    /// line: the form of the scripts (docs/adr/0054, point 5). On at first.
+    void setTextEditorEnabled(bool enabled);
 
     [[nodiscard]] const render::Viewport& viewport() const { return m_viewport; }
 
@@ -91,6 +115,14 @@ private:
     void emitCursor(const QPointF& screenPos);
     [[nodiscard]] core::Vec2 toWorld(const QPointF& screenPos) const;
     void submit(const cmd::Input& input);
+    void closeTextEditor();
+    /// The editor's confirmation, or Esc, handed to the runner.
+    void confirmText();
+    void cancelText();
+    /// The left double click at `screenPos`: TEXTEDIT on the text there.
+    /// False, and nothing done, when the runner is not at "Command:" or no
+    /// text that TEXTEDIT edits is there.
+    [[nodiscard]] bool editTextAt(const QPointF& screenPos);
 
     DocumentSession* m_session{nullptr};
     DynamicInputBox* m_dynamicInput{nullptr};
@@ -104,6 +136,9 @@ private:
     bool m_panning{false};
     bool m_dragSelecting{false};
     bool m_initialFitDone{false};
+    bool m_textEditorEnabled{true};
+    /// After the viewport, which it keeps a reference to.
+    TextEditorOverlay* m_textEditor{nullptr};
     QTimer* m_holdTimer{nullptr};
 };
 

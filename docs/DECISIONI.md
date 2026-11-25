@@ -2886,6 +2886,25 @@ i rimandi ai documenti che cambia.
   D2: togliere la riga dal caso e lasciare `pattern-lines` ai soli test di
   unità. Cambia la scheda PT23 (punto 5 e "Test richiesti"); file,
   dipendenze e onde non cambiano.
+- **2026-11-25 — Parole chiave non scritte delle domande `Object` (PT19).**
+  Claude, fermo su PT19 (#958, commento «Serve una decisione del
+  responsabile»), segnala che `Select Attributes:` di `-ATTEDIT` deve
+  accettare, senza opzioni scritte nel testo, un clic e `C`/`W` (casi
+  `attributi/attedit-sequenze` e `attributi/attedit-filtri` di RT19), e che
+  nessun tipo di domanda lo permette: l'ADR 0026, punto 3, e `isValid()` del
+  registro vogliono le parole chiave fra parentesi quadre, una domanda `Text`
+  non riceve i clic e la selezione del runner conta gli inserimenti e si
+  chiude con Invio. Il responsabile sceglie **1**: l'ADR 0026, punto 3,
+  ammette per le domande `Object` parole chiave non scritte fra parentesi
+  quadre, dichiarate nella `PromptDescription` e accettate da `isValid()`;
+  `Select Attributes:` è una domanda `Object` con `Window` (`W`) e
+  `Crossing` (`C`). Scartate: un tipo di domanda nuovo del runner, la
+  selezione del comando, che cambia il protocollo (ADR 0005 e 0032); le
+  opzioni scritte nel testo (`Select Attributes or [Window/Crossing]:`),
+  diverse da AutoCAD. Cambiano l'ADR 0026, punto 3, e la scheda PT19, che
+  tocca anche `cmd/src/command_registry.cpp`,
+  `cmd/include/tg/cmd/command_registry.hpp` e
+  `tests/cmd/command_registry_test.cpp`; dipendenze e onde non cambiano.
 - **2026-11-25 — Anche i push di Claude dalla shell con `RELAY_PAT`
   (Catena 11).** Corregge la voce del 2026-11-19, «Le proposte di metodo
   della 0.8», e la sua applicazione del 2026-11-21, «Codice e CI della pausa

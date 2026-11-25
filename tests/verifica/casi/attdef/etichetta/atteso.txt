@@ -11,8 +11,6 @@ messages:
   Enter an option to change [Invisible/Constant/Verify/Preset/Lock position] <done>:
   Enter attribute tag name:
   Tag cannot be null.
-  Enter attribute tag name: DUE PAROLE
-  Invalid tag name.
   Enter attribute tag name: NOTA
   Enter attribute prompt: Nota di montaggio
   Enter default attribute value: da cablare
