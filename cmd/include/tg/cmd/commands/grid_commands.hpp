@@ -19,14 +19,18 @@ namespace tg::cmd {
 // They change core::GridSettings of the current drawing only with
 // edit::DocumentTables::setGrid(): no undo step, the drawing becomes
 // modified. A command changes the settings once, when it finishes; Esc
-// leaves them as they were.
+// leaves them as they were. Text that is neither a number nor an option
+// writes "Invalid option keyword." at a question with options, and
+// "Requires numeric distance." at a spacing alone; the question stays.
 
 /// GRID: "Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect]
 /// <10.0000>:". A spacing, or Enter, switches the grid on; "2x" is twice the
-/// snap spacing of each axis; 0 and Snap set GRIDUNIT to 0,0. A negative
-/// spacing writes "Value must be positive." and the question stays. The
-/// proposal is "<A>" when the two spacings differ. Aspect asks the two
-/// spacings, each of them possibly 0, and switches the grid on; Major asks
+/// snap spacing of each axis; 0 and Snap set GRIDUNIT to 0,0, Snap
+/// leaving GRIDMODE as it is. A negative spacing writes "Value must be
+/// positive." and the question stays. The proposal is "<A>" when the two
+/// spacings differ. Aspect asks the two spacings, each of them possibly 0
+/// or a multiple of the snap spacing of its axis, and switches the grid on,
+/// as a spacing does; Major asks
 /// GRIDMAJOR, from 1 to 100 ("Requires an integer between 1 and 100."
 /// otherwise); aDaptive asks bit 2 of GRIDDISPLAY and, with Yes, bit 4; No
 /// clears both, as subdivision works only with the adaptive grid
