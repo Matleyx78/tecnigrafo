@@ -7,11 +7,13 @@
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
+#include "tg/cmd/drawing_aids.hpp"
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/dim_style_table.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/drawing_settings.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/ellipse.hpp"
 #include "tg/core/generated.hpp"
@@ -23,9 +25,11 @@
 #include "tg/core/math.hpp"
 #include "tg/core/mtext.hpp"
 #include "tg/core/polyline.hpp"
+#include "tg/core/snap_points.hpp"
 #include "tg/core/solid.hpp"
 #include "tg/core/text.hpp"
 #include "tg/core/text_metrics.hpp"
+#include "tg/core/vec2.hpp"
 #include "tg/edit/document_file.hpp"
 #include "tg/edit/editor.hpp"
 #include "tg/script/entity_reader.hpp"
@@ -484,6 +488,59 @@ TEST(WriteState, EachFieldOnlyWhenItDiffersFromANewSession) {
               "ortho: off\n"
               "layers:\n"
               "  \"0\" color=255,128,0 linetype=\"Continuous\" lineweight=default\n");
+}
+
+TEST(WriteState, GridSnapOnlyWithTheSnapToTheGridOn) {
+    // Off, as in a new drawing: no field (docs/adr/0055, point 7).
+    core::Document document = core::Document::newDrawing();
+    core::GridSettings grid = document.grid();
+    grid.gridUnit = {5, 10};
+    document.setGrid(grid);
+    EXPECT_EQ(between(stateOf(document), "ortho:", "pointer:"), "ortho: off\n");
+    grid.snapOn = true;
+    grid.snapUnit = {2.5, 5};
+    grid.snapBase = {3, 4};
+    document.setGrid(grid);
+    EXPECT_EQ(between(stateOf(document), "ortho:", "pointer:"),
+              "ortho: off\n"
+              "grid snap: unit=2.5,5 base=3,4\n");
+}
+
+TEST(WriteState, TheGridNodeIsThePointOfThePreviewAndOfTheGuides) {
+    // docs/tappe/0.8.1/PT28-griglia-cmd.md, point 2: spacing 10, aperture 1,
+    // the point (10,5) acquired, the pointer at (4.9,4.9), 0.1 from the
+    // guide y=5; its node (0,0) is 5 from it, so no guide catches.
+    core::Document document = core::Document::newDrawing();
+    edit::Editor editor(document);
+    editor.beginTransaction("Line");
+    editor.add(core::Line{{0.0, 5.0}, {10.0, 5.0}});
+    editor.commit();
+    core::GridSettings grid = document.grid();
+    grid.snapOn = true;
+    editor.tables().setGrid(grid);
+    cmd::CommandRegistry registry;
+    cmd::registerBuiltinCommands(registry);
+    cmd::CommandRunner runner(registry, editor);
+    runner.setPixelSize(0.1);
+    cmd::DrawingAids aids = runner.drawingAids();
+    aids.tracking = true;
+    aids.snapModes = core::SnapModes{true, false, false, false, false};
+    runner.setDrawingAids(aids);
+    runner.submitText("LINE");
+    runner.submitText("20,20");
+    runner.pointerHeld({10.0, 5.0});
+    aids.snapModes = core::SnapModes{false, false, false, false, false};
+    runner.setDrawingAids(aids);
+    const core::Vec2 pointer{4.9, 4.9};
+    runner.pointerMoved(pointer);
+    std::string out;
+    writeState({"report 1", editor, runner, runner.documentFile(), {}, pointer, {}}, out);
+    expectContains(out, "preview:\n  LINE start=20,20 end=0,0\n");
+    expectContains(out, "grid snap: unit=10,10 base=0,0\npointer: 4.9,4.9\n");
+    expectContains(out, "acquired:\n  10,5\nstatistics:");
+    EXPECT_EQ(out.find("active tracking"), std::string::npos) << out;
+    EXPECT_FALSE(runner.tracking().guidePoint);
+    EXPECT_EQ(runner.clickPoint(pointer), (core::Vec2{0.0, 0.0}));
 }
 
 std::string written(const core::EntityRecord& record, const core::Document& document) {

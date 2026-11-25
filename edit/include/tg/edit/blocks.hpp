@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/core/attribute_definition.hpp"
 #include "tg/core/block_table.hpp"
 #include "tg/core/dim_style_table.hpp"
 #include "tg/core/entity_id.hpp"
@@ -12,9 +13,11 @@
 #include "tg/core/text_style_table.hpp"
 #include "tg/core/vec2.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace tg::edit {
@@ -66,5 +69,47 @@ core::EntityId addInsert(Editor& editor, core::Insert insert, core::RawGroups sp
 /// `redefine` is false, or if the definition would contain itself.
 /// Precondition: a transaction is open.
 bool applyImport(Editor& editor, BlockImport import, bool redefine);
+
+// The operations on the attribute definitions of a block (docs/adr/0056,
+// point 5; docs/tappe/0.8.1/PT16-definizioni-edit.md). All four work inside
+// the caller's transaction, like defineBlock(), so that undo takes each one
+// back in one step with the rest of the transaction. Tags are compared
+// without case for ASCII letters (core::sameTableName(), docs/adr/0045,
+// point 6); among equal tags the first ATTDEF of the definition counts.
+// Precondition of each: a transaction is open.
+
+/// Puts the ATTDEFs of `block` in the order of `tags`, which must name each
+/// of them once: the i-th tag takes the first ATTDEF with it not yet taken.
+/// The ATTDEFs take the places they had, which are their order keys
+/// (EntityRecord::order): each keeps its handle and moves to the order key of
+/// the ATTDEF it replaces, while the other entities, handled and unhandled,
+/// keep theirs. Returns false, changing nothing, when the block is missing or
+/// `tags` is not a permutation of the tags of its ATTDEFs; true otherwise,
+/// also when the order stays the same.
+bool reorderAttributeDefinitions(Editor& editor, std::string_view block,
+                                 std::span<const std::string> tags);
+
+/// Replaces the first ATTDEF of `block` with the tag `tag` by `definition`,
+/// keeping its handle, order key, properties and extras. Returns false,
+/// changing nothing, when the block or the tag is missing, or when the tag of
+/// `definition` equals that of another ATTDEF of the block; true otherwise,
+/// also when `definition` equals the one there.
+bool replaceAttributeDefinition(Editor& editor, std::string_view block, std::string_view tag,
+                                core::AttributeDefinition definition);
+
+/// Removes the first ATTDEF of `block` with the tag `tag`. Removing the last
+/// one turns hasAttributes off, as defineBlock(). Returns false, changing
+/// nothing, when the block or the tag is missing.
+bool removeAttributeDefinition(Editor& editor, std::string_view block, std::string_view tag);
+
+/// Gives every INSERT record of `block`, in the drawing and inside the
+/// definitions of other blocks, once per record, the attributes of
+/// core::synchronizedAttributes(). The records are taken in handle order, and
+/// the new ATTRIBs take new handles in that order, those of one record in
+/// the order of its attributes; the ATTRIBs kept keep theirs. The inserts of
+/// the blocks that contain `block` are not changed: their geometry follows
+/// the definition. Returns the number of records changed, 0 when the block
+/// is missing.
+std::size_t synchronizeInserts(Editor& editor, std::string_view block);
 
 }  // namespace tg::edit

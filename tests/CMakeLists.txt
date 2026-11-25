@@ -39,6 +39,7 @@ add_executable(tg_tests
     cmd/explode_command_test.cpp
     cmd/file_commands_test.cpp
     cmd/dimstyle_commands_test.cpp
+    cmd/grid_commands_test.cpp
     cmd/grip_test.cpp
     cmd/join_command_test.cpp
     cmd/layer_commands_test.cpp

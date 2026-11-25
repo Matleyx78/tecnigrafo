@@ -266,7 +266,8 @@ QuestionResult askSetProperty(const QuestionModel& model,
     if (target.fromFile) {
         writeEntity(changed, *target.document, answer);
     } else {
-        writeEntity(changed.entity, answer);
+        // With its extras: those of the change (the origin of a hatch).
+        writeEntity(changed, answer);
     }
     answer += " | ";
     answer += propertiesText(core::ownProperties(*target.document, changed));

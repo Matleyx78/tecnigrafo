@@ -5,11 +5,14 @@
 
 #include "tg/core/attribute_definition.hpp"
 #include "tg/core/block_table.hpp"
+#include "tg/core/dimension.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/hatch.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/mtext.hpp"
+#include "tg/core/raw_drawing.hpp"
 
 #include <gtest/gtest.h>
 
@@ -594,6 +597,286 @@ TEST(InsertProperties, OfTwoTagsEqualButForCaseTheFirstIsShownAndChanged) {
         changedOf<Insert>(document, record, "attribute", std::string{R"("id":"tre")"});
     EXPECT_EQ(changed.attributes[0].text.value, "tre");
     EXPECT_EQ(changed.attributes[1], insert.attributes[1]);
+}
+
+// --- HATCH and DIMENSION (docs/tappe/0.8.1/PT23-proprieta-retini-quote.md) --
+
+/// The hatch CC of autocad-hatchedit: ANSI31 on a 60 x 40 rectangle with an
+/// island of radius 8 flagged outermost, its pattern at the origin 245,5.
+EntityRecord hatchCc() {
+    Hatch hatch;
+    hatch.pattern = "ANSI31";
+    HatchLoop outer;
+    outer.flags = 7;
+    outer.polyline = Polyline{{{{300, 40}}, {{240, 40}}, {{240, 0}}, {{300, 0}}}, true};
+    HatchLoop island;
+    island.flags = 22;
+    island.polyline = Polyline{{{{262, 20}, -1.0}, {{278, 20}, -1.0}}, true};
+    hatch.loops = {outer, island};
+    hatch.seeds = {{245, 5}, {245, 5}};
+    constexpr double kOffset = 2.245064030267288;
+    hatch.patternLines = {PatternLine{degreesToRadians(45), {245, 5}, {-kOffset, kOffset}, {}}};
+    EntityRecord record = recordOf(std::move(hatch));
+    record.extras.extended = {{1001, "GradientColor1ACI"},
+                              {1070, "     5"},
+                              {1001, "GradientColor2ACI"},
+                              {1070, "     2"},
+                              {1001, "ACAD"},
+                              {1010, "245.0"},
+                              {1020, "5.0"},
+                              {1030, "0.0"}};
+    return record;
+}
+
+/// The hatch of a change; an empty or different entity fails the test.
+Hatch hatchOf(const PropertyChange& change) {
+    EXPECT_TRUE(change.refusal.empty()) << change.refusal;
+    if (!change.entity || !std::holds_alternative<Hatch>(*change.entity)) {
+        ADD_FAILURE() << "no hatch in the change";
+        return Hatch{};
+    }
+    return std::get<Hatch>(*change.entity);
+}
+
+/// A document whose header gives $MEASUREMENT `measurement`.
+Document drawingMeasuring(int measurement) {
+    Document document = Document::newDrawing();
+    RawDrawing raw = document.raw();
+    raw.sections.push_back(
+        RawSection{"HEADER", {{9, "$MEASUREMENT"}, {70, "     " + std::to_string(measurement)}}});
+    document.setRaw(std::move(raw));
+    return document;
+}
+
+TEST(HatchProperties, ListsTheNamesOfTheCatalogueWithTheOriginAndTheArea) {
+    const Document document = Document::newDrawing();
+    const std::vector<OwnProperty> properties = ownProperties(document, hatchCc());
+    std::vector<std::string> names;
+    for (const OwnProperty& property : properties) {
+        names.push_back(property.name);
+        EXPECT_EQ(property.readOnly, property.name == "~area") << property.name;
+    }
+    EXPECT_EQ(names, (std::vector<std::string>{"pattern", "scale", "angle", "origin", "islands",
+                                               "~area"}));
+    EXPECT_EQ(std::get<std::string>(properties.at(0).value), "ANSI31");
+    EXPECT_EQ(properties.at(0).kind, PropertyKind::Text);
+    EXPECT_DOUBLE_EQ(numberOf(properties, "scale"), 1);
+    EXPECT_DOUBLE_EQ(numberOf(properties, "angle"), 0);
+    EXPECT_EQ(std::get<Vec2>(properties.at(3).value), (Vec2{245, 5}));
+    EXPECT_EQ(std::get<std::string>(properties.at(4).value), "normal");
+    EXPECT_EQ(properties.at(4).choices, (std::vector<std::string>{"normal", "outer", "ignore"}));
+    EXPECT_NEAR(numberOf(properties, "~area"), 2198.938070170253, kTolerance);
+}
+
+TEST(HatchProperties, AHatchWithoutXdataHasTheOriginZero) {
+    EntityRecord record = hatchCc();
+    record.extras = {};
+    const Document document = Document::newDrawing();
+    EXPECT_EQ(valueOf(ownProperties(document, record), "origin"), (PropertyValue{Vec2{0, 0}}));
+}
+
+TEST(HatchProperties, OriginMovesTheFamiliesAndTheXdataTogether) {
+    const Document document = Document::newDrawing();
+    const EntityRecord record = hatchCc();
+    const PropertyChange change = withOwnProperty(document, record, "origin", Vec2{0, 0});
+    const Hatch hatch = hatchOf(change);
+    EXPECT_EQ(hatch.patternLines.at(0).origin, (Vec2{0, 0}));
+    EXPECT_TRUE(change.extras);
+    const EntityExtras extras = change.extras.value_or(EntityExtras{});
+    EXPECT_EQ(patternOrigin(extras), (Vec2{0, 0}));
+    ASSERT_EQ(extras.extended.size(), record.extras.extended.size());
+    EXPECT_EQ(extras.extended.at(5), (RawGroup{1010, "0.0"}));
+    EXPECT_EQ(extras.extended.at(6), (RawGroup{1020, "0.0"}));
+
+    const PropertyChange same = withOwnProperty(document, record, "origin", Vec2{245, 5});
+    EXPECT_EQ(hatchOf(same), std::get<Hatch>(record.entity));
+    EXPECT_FALSE(same.extras);
+}
+
+TEST(HatchProperties, ScaleAngleAndPatternKeepTheOrigin) {
+    const Document document = Document::newDrawing();
+    const EntityRecord record = hatchCc();
+    const Hatch scaled = hatchOf(withOwnProperty(document, record, "scale", 2.0));
+    EXPECT_EQ(scaled.scale, 2);
+    EXPECT_EQ(scaled.patternLines.at(0).origin, (Vec2{245, 5}));
+    EXPECT_NEAR(scaled.patternLines.at(0).offset.y, 4.490128060534576, kTolerance);
+
+    const Hatch turned =
+        hatchOf(withOwnProperty(document, record, "angle", reducedDegreesToRadians(30)));
+    EXPECT_NEAR(radiansToDegrees(turned.patternLines.at(0).angle), 75, kTolerance);
+    EXPECT_NEAR(turned.patternLines.at(0).offset.x, -3.066814498467791, kTolerance);
+    EXPECT_NEAR(turned.patternLines.at(0).offset.y, 0.8217504682005037, kTolerance);
+
+    const Hatch net = hatchOf(withOwnProperty(document, record, "pattern", std::string{"NET"}));
+    EXPECT_EQ(net.pattern, "NET");
+    ASSERT_EQ(net.patternLines.size(), 2U);
+    EXPECT_EQ(net.patternLines.at(1).origin, (Vec2{245, 5}));
+    EXPECT_NEAR(net.patternLines.at(0).offset.y, 3.175, kTolerance);
+
+    const Hatch solid = hatchOf(withOwnProperty(document, record, "pattern", std::string{"SOLID"}));
+    EXPECT_TRUE(solid.solid);
+    EXPECT_TRUE(solid.patternLines.empty());
+}
+
+TEST(HatchProperties, NetTakesTheStepOfTheMeasurementOfTheDrawing) {
+    const EntityRecord record = hatchCc();
+    const Hatch metric =
+        hatchOf(withOwnProperty(drawingMeasuring(1), record, "pattern", std::string{"NET"}));
+    const Hatch inches =
+        hatchOf(withOwnProperty(drawingMeasuring(0), record, "pattern", std::string{"NET"}));
+    ASSERT_EQ(metric.patternLines.size(), 2U);
+    ASSERT_EQ(inches.patternLines.size(), 2U);
+    EXPECT_NEAR(metric.patternLines.at(0).offset.y, 3.175, kTolerance);
+    EXPECT_NEAR(inches.patternLines.at(0).offset.y, 0.125, kTolerance);
+}
+
+TEST(HatchProperties, IslandsChangeTheStyleAndTheArea) {
+    const Document document = Document::newDrawing();
+    const PropertyChange change =
+        withOwnProperty(document, hatchCc(), "islands", std::string{"ignore"});
+    const Hatch hatch = hatchOf(change);
+    EXPECT_EQ(hatch.islands, IslandStyle::Ignore);
+    EntityRecord changed = hatchCc();
+    changed.entity = hatch;
+    EXPECT_NEAR(numberOf(ownProperties(document, changed), "~area"), 2400, kTolerance);
+}
+
+TEST(HatchProperties, InvalidValuesAreRefusedWithoutAnEntity) {
+    const Document document = Document::newDrawing();
+    const EntityRecord record = hatchCc();
+    const std::vector<std::pair<std::string_view, PropertyValue>> refused{
+        {"pattern", std::string{"ANSI37"}},
+        {"pattern", std::string{"NONESISTE"}},
+        {"pattern", 1.0},
+        {"scale", 0.0},
+        {"scale", -1.0},
+        {"scale", std::numeric_limits<double>::infinity()},
+        {"angle", std::numeric_limits<double>::quiet_NaN()},
+        {"origin", Vec2{std::numeric_limits<double>::infinity(), 0}},
+        {"islands", std::string{"outermost"}},
+    };
+    for (const auto& [name, value] : refused) {
+        SCOPED_TRACE(name);
+        const PropertyChange change = withOwnProperty(document, record, name, value);
+        EXPECT_FALSE(change.entity);
+        EXPECT_EQ(change.refusal, kInvalidPropertyValue);
+    }
+    const PropertyChange area = withOwnProperty(document, record, "~area", 1.0);
+    EXPECT_EQ(area.refusal, kReadOnlyProperty);
+}
+
+TEST(HatchProperties, ScaleAndAngleOfAPatternThatIsNotGeneratedTurnItsFamilies) {
+    const Document document = Document::newDrawing();
+    EntityRecord record = hatchCc();
+    auto& hatch = std::get<Hatch>(record.entity);
+    hatch.pattern = "ANSI37";
+    const Hatch turned =
+        hatchOf(withOwnProperty(document, record, "angle", reducedDegreesToRadians(90)));
+    EXPECT_EQ(turned.pattern, "ANSI37");
+    EXPECT_EQ(turned.patternLines.at(0).origin, (Vec2{245, 5}));
+    EXPECT_EQ(turned.patternLines.at(0).offset, (Vec2{-2.245064030267288, -2.245064030267288}));
+}
+
+/// A linear dimension of 40 as the case retini-quote defines it, made with
+/// the tables of a new drawing.
+Dimension linear40() {
+    Dimension dimension;
+    dimension.definition.point13 = {0, 0};
+    dimension.definition.point14 = {40, 0};
+    dimension.definition.linePoint = {40, 10};
+    const std::optional<Dimension> made = regenerated(Document::newDrawing(), dimension);
+    EXPECT_TRUE(made);
+    return made.value_or(dimension);
+}
+
+/// The dimension of a change; an empty or different entity fails the test.
+Dimension dimensionOf(const PropertyChange& change) {
+    EXPECT_TRUE(change.refusal.empty()) << change.refusal;
+    if (!change.entity || !std::holds_alternative<Dimension>(*change.entity)) {
+        ADD_FAILURE() << "no dimension in the change";
+        return Dimension{};
+    }
+    return std::get<Dimension>(*change.entity);
+}
+
+/// The values of the MTEXT of the graphics of `dimension`.
+std::vector<std::string> graphicTexts(const Dimension& dimension) {
+    std::vector<std::string> texts;
+    for (const EntityRecord& graphic : dimension.graphics) {
+        if (const auto* text = std::get_if<MText>(&graphic.entity)) {
+            texts.push_back(text->value);
+        }
+    }
+    return texts;
+}
+
+TEST(DimensionProperties, ListsTheNamesOfTheCatalogue) {
+    const std::vector<OwnProperty> properties = propertiesOf(linear40());
+    std::vector<std::string> names;
+    for (const OwnProperty& property : properties) {
+        names.push_back(property.name);
+        EXPECT_EQ(property.readOnly, property.name == "~measurement") << property.name;
+    }
+    EXPECT_EQ(names, (std::vector<std::string>{"style", "text", "text-rotation", "~measurement"}));
+    EXPECT_EQ(valueOf(properties, "style"), PropertyValue{std::string{"ISO-25"}});
+    EXPECT_EQ(valueOf(properties, "text"), PropertyValue{std::string{}});
+    EXPECT_DOUBLE_EQ(numberOf(properties, "text-rotation"), 0);
+    EXPECT_DOUBLE_EQ(numberOf(properties, "~measurement"), 40);
+}
+
+TEST(DimensionProperties, TextWithTheMeasureRegeneratesTheGraphics) {
+    const Document document = Document::newDrawing();
+    const Dimension dimension =
+        dimensionOf(withOwnProperty(document, recordOf(linear40()), "text", std::string{"<> mm"}));
+    EXPECT_EQ(dimension.presentation.textOverride, "<> mm");
+    EXPECT_EQ(dimension.presentation.textPoint, linear40().presentation.textPoint);
+    EXPECT_EQ(graphicTexts(dimension), (std::vector<std::string>{"40 mm"}));
+    const Dimension back =
+        dimensionOf(withOwnProperty(document, recordOf(dimension), "text", std::string{}));
+    EXPECT_EQ(graphicTexts(back), graphicTexts(linear40()));
+}
+
+TEST(DimensionProperties, StyleMustExistAndRegenerates) {
+    const Document document = Document::newDrawing();
+    const Dimension standard = dimensionOf(
+        withOwnProperty(document, recordOf(linear40()), "style", std::string{"standard"}));
+    EXPECT_EQ(standard.presentation.style, "Standard");
+    EXPECT_NE(standard.graphics, linear40().graphics);
+    const PropertyChange missing =
+        withOwnProperty(document, recordOf(linear40()), "style", std::string{"NONE"});
+    EXPECT_FALSE(missing.entity);
+    EXPECT_EQ(missing.refusal, kInvalidPropertyValue);
+}
+
+TEST(DimensionProperties, AnExplicitTextAngleGoesInTheMiddleOfTheLine) {
+    const Document document = Document::newDrawing();
+    const Dimension turned =
+        dimensionOf(withOwnProperty(document, recordOf(linear40()), "text-rotation", kPi / 2));
+    EXPECT_EQ(turned.presentation.textRotation, std::optional<double>{kPi / 2});
+    EXPECT_NEAR(turned.presentation.textPoint.x, 20, kTolerance);
+    EXPECT_NEAR(turned.presentation.textPoint.y, 10, kTolerance);
+    // 0 shown for the automatic angle: the same value leaves it automatic.
+    const Dimension same =
+        dimensionOf(withOwnProperty(document, recordOf(linear40()), "text-rotation", 0.0));
+    EXPECT_EQ(same, linear40());
+}
+
+TEST(DimensionProperties, ADimensionThatCannotBeRegeneratedRefusesTheChange) {
+    Dimension other = linear40();
+    other.definition.kind = DimensionKind::Other;
+    other.definition.dxfType = 6;
+    other.presentation.textOverride = "A";
+    const Document document = Document::newDrawing();
+    const PropertyChange change =
+        withOwnProperty(document, recordOf(other), "text", std::string{"B"});
+    EXPECT_FALSE(change.entity);
+    EXPECT_EQ(change.refusal, kDimensionNotRegenerable);
+    for (const auto& [name, value] : std::vector<std::pair<std::string_view, PropertyValue>>{
+             {"style", std::string{"Standard"}}, {"text-rotation", 1.0}}) {
+        SCOPED_TRACE(name);
+        EXPECT_EQ(withOwnProperty(document, recordOf(other), name, value).refusal,
+                  kDimensionNotRegenerable);
+    }
 }
 
 }  // namespace

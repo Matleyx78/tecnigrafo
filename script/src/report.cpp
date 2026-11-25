@@ -8,6 +8,7 @@
 #include "tg/core/block_table.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/dim_style_table.hpp"
+#include "tg/core/drawing_settings.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/layer.hpp"
@@ -440,19 +441,21 @@ void writeDerived(const core::Entity& entity, std::string& out) {
     }
 }
 
-/// The type and the properties of the model, without the derived ones.
-void writeModel(const core::Entity& entity, std::string& out) {
-    std::visit(
-        Overloaded{
-            [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
-            [&out](const core::Line& line) { writeLine(line, out); },
-            [&out](const core::Circle& circle) { writeCircle(circle, out); },
-            [&out](const core::Arc& arc) { writeArc(arc, out); },
-            [&out](const core::Text& text) { writeText(text, out); },
-            // The types of the 0.8 (docs/verifica/rapporto.md, "Tappa 0.8").
-            [&out, &entity](const auto& /*composite*/) { detail::writeNewEntity(entity, out); },
-        },
-        entity);
+/// The type and the properties of the model, without the derived ones;
+/// `extras` gives the origin of the pattern of a HATCH (PT23).
+void writeModel(const core::Entity& entity, const core::EntityExtras& extras, std::string& out) {
+    std::visit(Overloaded{
+                   [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
+                   [&out](const core::Line& line) { writeLine(line, out); },
+                   [&out](const core::Circle& circle) { writeCircle(circle, out); },
+                   [&out](const core::Arc& arc) { writeArc(arc, out); },
+                   [&out](const core::Text& text) { writeText(text, out); },
+                   // The types of the 0.8 (docs/verifica/rapporto.md, "Tappa 0.8").
+                   [&out, &entity, &extras](const auto& /*composite*/) {
+                       detail::writeNewEntity(entity, extras, out);
+                   },
+               },
+               entity);
 }
 
 std::string selectionText(const cmd::SelectionSet& selection) {
@@ -656,7 +659,7 @@ void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& ou
     if (piece != nullptr) {
         writeFormattedText(*piece, out);
     } else if (entity) {
-        writeModel(*entity, out);
+        writeModel(*entity, core::EntityExtras{}, out);
     } else if (region != nullptr) {
         writeRegion(*region, out);
     }
@@ -804,6 +807,13 @@ void writeState(const ReportInput& input, std::string& out) {
     }
     appendField("snap", snapText(runner.drawingAids()), out);
     appendField("ortho", onOff(runner.drawingAids().ortho), out);
+    // Only with the snap to the grid on (docs/adr/0055, point 7), so that
+    // the reports of the drawings with the snap off stay as they were.
+    if (const core::GridSettings& grid = document.grid(); grid.snapOn) {
+        appendField("grid snap",
+                    "unit=" + formatPoint(grid.snapUnit) + " base=" + formatPoint(grid.snapBase),
+                    out);
+    }
     writeDrawing(input, out);
     appendField("pointer", input.pointer ? formatPoint(*input.pointer) : "none", out);
     appendField("active snap", snapPointText(runner.activeSnap()), out);
@@ -830,19 +840,19 @@ std::string_view dxfType(const core::Entity& entity) {
 }
 
 void writeEntity(const core::Entity& entity, std::string& out) {
-    writeModel(entity, out);
+    writeModel(entity, core::EntityExtras{}, out);
     writeDerived(entity, out);
 }
 
 void writeEntity(const core::EntityRecord& record, std::string& out) {
-    writeModel(record.entity, out);
+    writeModel(record.entity, record.extras, out);
     writePlacementProperties(record.entity, record.extras, out);
     writeDerived(record.entity, out);
 }
 
 void writeEntity(const core::EntityRecord& record, const core::Document& document,
                  std::string& out) {
-    writeModel(record.entity, out);
+    writeModel(record.entity, record.extras, out);
     writePlacementProperties(record.entity, record.extras, out);
     writeProperties(record.properties, document, out);
     writeDerived(record.entity, out);

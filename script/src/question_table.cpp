@@ -611,6 +611,7 @@ QuestionResult askImportGroups(const QuestionModel& model, Arguments arguments);
 // Defined in hatch_questions.cpp.
 QuestionResult askHatchBoundary(const QuestionModel& model, Arguments arguments);
 QuestionResult askHatchContours(const QuestionModel& model, Arguments arguments);
+QuestionResult askPatternLines(const QuestionModel& model, Arguments arguments);
 
 // Defined in modify_questions.cpp.
 QuestionResult askGrips(const QuestionModel& model, Arguments arguments);
@@ -717,9 +718,9 @@ constexpr std::array kQuestions{
     QuestionRow{"grid", AnswerShape::Single, &askGrid},        // PT27
     QuestionRow{"attdisp", AnswerShape::Single, &askAttdisp},  // PT27
     // Stage 0.8.1: announced before the reference cases are written.
-    QuestionRow{"properties", AnswerShape::Single, &askProperties},     // PT22, PT23, PT24
-    QuestionRow{"set-property", AnswerShape::Single, &askSetProperty},  // PT22, PT23, PT24
-    QuestionRow{"pattern-lines", AnswerShape::Single, nullptr},         // PT23
+    QuestionRow{"properties", AnswerShape::Single, &askProperties},       // PT22, PT23, PT24
+    QuestionRow{"set-property", AnswerShape::Single, &askSetProperty},    // PT22, PT23, PT24
+    QuestionRow{"pattern-lines", AnswerShape::Single, &askPatternLines},  // PT23
 };
 
 }  // namespace

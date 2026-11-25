@@ -8,10 +8,12 @@
 #include "solid_space/geom2d/region.hpp"
 #include "solid_space/robust/point.hpp"
 #include "solid_space_bridge.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/hatch_patterns.hpp"
 #include "tg/core/math.hpp"
 #include "tg/core/similarity.hpp"
 #include "tg/core/snap_points.hpp"
@@ -23,8 +25,13 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iomanip>
 #include <limits>
+#include <locale>
 #include <optional>
+#include <sstream>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -303,6 +310,156 @@ double transformedAngle(double angle, const Similarity& similarity) {
                                  : angle + similarity.rotationAngle();
 }
 
+// --- Area and origin of the pattern (docs/tappe/0.8.1/PT23) ----------------
+
+/// The signed area of a closed polyline, its arcs included: the shoelace sum
+/// plus, for every arc, the circular segment between it and its chord, which
+/// a positive bulge adds and a negative one takes away.
+double signedArea(const Polyline& polyline) {
+    double area = 0.0;
+    for (std::size_t i = 0; i < polyline.segmentCount(); ++i) {
+        const PolylineSegment segment = polyline.segment(i);
+        area += cross(segment.start, segment.end) / 2.0;
+        if (segment.bulge != 0.0) {
+            // Included angle 4 atan(bulge), radius c (1 + b^2) / (4 b).
+            const double sweep = 4.0 * std::atan(segment.bulge);
+            const double radius = distance(segment.start, segment.end) *
+                                  (1.0 + (segment.bulge * segment.bulge)) / (4.0 * segment.bulge);
+            area += radius * radius * (sweep - std::sin(sweep)) / 2.0;
+        }
+    }
+    return area;
+}
+
+/// The middle of the first segment of a polyline, its arc included.
+Vec2 firstSegmentMiddle(const Polyline& polyline) {
+    if (polyline.segmentCount() == 0) {
+        return polyline.vertices().front().position;
+    }
+    const PolylineSegment segment = polyline.segment(0);
+    const Vec2 chord = segment.end - segment.start;
+    // A positive bulge runs counter-clockwise: the arc lies right of the chord.
+    return ((segment.start + segment.end) * 0.5) +
+           (Vec2{chord.y, -chord.x} * (segment.bulge * 0.5));
+}
+
+/// True when `point` is inside or on the closed `loop`: the even-odd rule of
+/// a filled region.
+bool loopHolds(const Polyline& loop, const Vec2& point) {
+    return shapeDistance(GeneratedShape{FilledRegion{{loop}, Transform2D::identity()}}, point) ==
+           0.0;
+}
+
+/// XDATA: the application name, and the point of the pattern origin.
+constexpr std::int16_t kApplicationCode = 1001;
+constexpr std::int16_t kPointX = 1010;
+constexpr std::int16_t kPointY = 1020;
+constexpr std::int16_t kPointZ = 1030;
+constexpr std::string_view kAcadApplication = "ACAD";
+
+std::string_view trimmed(std::string_view text) {
+    const std::size_t first = text.find_first_not_of(" \t");
+    if (first == std::string_view::npos) {
+        return {};
+    }
+    const std::size_t last = text.find_last_not_of(" \t");
+    return text.substr(first, last - first + 1);
+}
+
+/// The real of a group, std::nullopt when it is not a finite number. A
+/// stream with the classic locale: floating-point std::from_chars is missing
+/// from the macOS 14 standard library.
+std::optional<double> realValue(std::string_view text) {
+    const std::string_view number = trimmed(text);
+    if (number.empty()) {
+        return std::nullopt;
+    }
+    std::istringstream stream{std::string{number}};
+    stream.imbue(std::locale::classic());
+    double value = 0.0;
+    stream >> std::noskipws >> value;
+    if (stream.fail() || !stream.eof() || !std::isfinite(value)) {
+        return std::nullopt;
+    }
+    return value;
+}
+
+/// A real as io writes one: the fewest fixed decimals, at least one, that
+/// read back as the same double; scientific with 17 digits when none does.
+std::string realText(double value) {
+    constexpr int kMaxDecimals = 17;
+    for (int decimals = 1; decimals <= kMaxDecimals; ++decimals) {
+        std::ostringstream stream;
+        stream.imbue(std::locale::classic());
+        stream << std::fixed << std::setprecision(decimals) << value;
+        if (realValue(stream.str()) == value) {
+            return stream.str();
+        }
+    }
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << std::scientific << std::setprecision(kMaxDecimals - 1) << value;
+    return stream.str();
+}
+
+/// The groups of the application ACAD in `groups`: [first, last), first at
+/// its 1001; first == groups.size() when there is none.
+std::pair<std::size_t, std::size_t> acadApplication(const RawGroups& groups) {
+    std::size_t first = groups.size();
+    for (std::size_t i = 0; i < groups.size(); ++i) {
+        if (groups[i].code == kApplicationCode && trimmed(groups[i].value) == kAcadApplication) {
+            first = i;
+            break;
+        }
+    }
+    std::size_t last = first;
+    if (first < groups.size()) {
+        last = first + 1;
+        while (last < groups.size() && groups[last].code != kApplicationCode) {
+            ++last;
+        }
+    }
+    return {first, last};
+}
+
+/// The index of the first 1010 of the application ACAD, or `last`.
+std::size_t originIndex(const RawGroups& groups, std::size_t first, std::size_t last) {
+    for (std::size_t i = first; i < last; ++i) {
+        if (groups[i].code == kPointX) {
+            return i;
+        }
+    }
+    return last;
+}
+
+bool sameAsciiName(std::string_view a, std::string_view b) {
+    const auto upper = [](char c) {
+        return c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
+    };
+    return std::ranges::equal(a, b, [&](char x, char y) { return upper(x) == upper(y); });
+}
+
+/// The name in capitals, ASCII letters only.
+std::string capitals(std::string_view name) {
+    std::string text{name};
+    for (char& c : text) {
+        if (c >= 'a' && c <= 'z') {
+            c = static_cast<char>(c - 'a' + 'A');
+        }
+    }
+    return text;
+}
+
+bool finitePositive(double value) {
+    return std::isfinite(value) && value > 0.0;
+}
+
+/// `vector` turned by the angle whose sine and cosine are `turn`.
+Vec2 turned(const Vec2& vector, const SinCos& turn) {
+    return {(vector.x * turn.cosine) - (vector.y * turn.sine),
+            (vector.x * turn.sine) + (vector.y * turn.cosine)};
+}
+
 }  // namespace
 
 bool supported(const Hatch& hatch) {
@@ -351,6 +508,123 @@ std::vector<std::size_t> regionLoops(const Hatch& hatch) {
         }
     }
     return indices;
+}
+
+double filledArea(const Hatch& hatch) {
+    assert(supported(hatch) && kNotSupported);
+    std::vector<Polyline> loops;
+    for (const std::size_t index : regionLoops(hatch)) {
+        loops.push_back(loopPolyline(hatch.loops[index]));
+    }
+    double area = 0.0;
+    for (std::size_t i = 0; i < loops.size(); ++i) {
+        const Vec2 middle = firstSegmentMiddle(loops[i]);
+        std::size_t depth = 0;
+        for (std::size_t j = 0; j < loops.size(); ++j) {
+            if (j != i && loopHolds(loops[j], middle)) {
+                ++depth;
+            }
+        }
+        const double own = std::abs(signedArea(loops[i]));
+        area += depth % 2 == 0 ? own : -own;
+    }
+    return area;
+}
+
+Vec2 patternOrigin(const EntityExtras& extras) {
+    const RawGroups& groups = extras.extended;
+    const auto [first, last] = acadApplication(groups);
+    const std::size_t x = originIndex(groups, first, last);
+    if (x + 1 >= last || groups[x + 1].code != kPointY) {
+        return {};
+    }
+    const std::optional<double> xValue = realValue(groups[x].value);
+    const std::optional<double> yValue = realValue(groups[x + 1].value);
+    if (!xValue || !yValue) {
+        return {};
+    }
+    return {*xValue, *yValue};
+}
+
+Hatch withPatternOrigin(const Hatch& hatch, const Vec2& from, const Vec2& to) {
+    Hatch result = hatch;
+    const Vec2 shift = to - from;
+    for (PatternLine& line : result.patternLines) {
+        line.origin = line.origin + shift;
+    }
+    return result;
+}
+
+EntityExtras withPatternOriginXdata(EntityExtras extras, const Vec2& origin) {
+    RawGroups& groups = extras.extended;
+    const std::string x = realText(origin.x);
+    const std::string y = realText(origin.y);
+    const auto [first, last] = acadApplication(groups);
+    if (first == groups.size()) {
+        groups.insert(groups.end(), {{kApplicationCode, std::string{kAcadApplication}},
+                                     {kPointX, x},
+                                     {kPointY, y},
+                                     {kPointZ, "0.0"}});
+        return extras;
+    }
+    const std::size_t at = originIndex(groups, first, last);
+    const auto position = [&groups](std::size_t index) {
+        return groups.begin() + static_cast<std::ptrdiff_t>(index);
+    };
+    if (at == last) {
+        groups.insert(position(last), {{kPointX, x}, {kPointY, y}, {kPointZ, "0.0"}});
+        return extras;
+    }
+    groups[at].value = x;
+    if (at + 1 < last && groups[at + 1].code == kPointY) {
+        groups[at + 1].value = y;
+    } else {
+        groups.insert(position(at + 1), RawGroup{kPointY, y});
+    }
+    return extras;
+}
+
+std::optional<Hatch> withPattern(const Hatch& hatch, const Vec2& origin, std::string_view name,
+                                 double scale, double angle, int measurement) {
+    if (!finitePositive(scale) || !finitePositive(hatch.scale) || !std::isfinite(angle)) {
+        return std::nullopt;
+    }
+    Hatch result = hatch;
+    result.scale = scale;
+    result.angle = angle;
+    if (sameAsciiName(name, "SOLID")) {
+        result.pattern = "SOLID";
+        result.solid = true;
+        result.patternLines.clear();
+        return result;
+    }
+    std::vector<PatternLine> lines = predefinedPatternLines(name, scale, angle, measurement);
+    if (!lines.empty()) {
+        for (PatternLine& line : lines) {
+            line.origin = line.origin + origin;
+        }
+        result.pattern = capitals(name);
+        result.solid = false;
+        result.patternLines = std::move(lines);
+        return result;
+    }
+    if (hatch.solid || !sameAsciiName(name, hatch.pattern)) {
+        return std::nullopt;
+    }
+    // The families of the file, in proportion around the origin. The angle
+    // of a family is reduced to one turn (docs/REGOLE-NUMERICHE.md, section
+    // 2, point 9); normalizeAngle() keeps the bits of one already in [0, 2π).
+    const SinCos turn = cardinalSinCos(angle - hatch.angle);
+    const double factor = scale / hatch.scale;
+    for (PatternLine& line : result.patternLines) {
+        line.angle = normalizeAngle(line.angle + (angle - hatch.angle));
+        line.origin = origin + (turned(line.origin - origin, turn) * factor);
+        line.offset = turned(line.offset, turn) * factor;
+        for (double& dash : line.dashes) {
+            dash *= factor;
+        }
+    }
+    return result;
 }
 
 PatternLines patternLines(const Hatch& hatch) {

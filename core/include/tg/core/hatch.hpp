@@ -5,6 +5,7 @@
 
 #include "tg/core/arc.hpp"
 #include "tg/core/bbox.hpp"
+#include "tg/core/entity_extras.hpp"
 #include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
 #include "tg/core/raw_group.hpp"
@@ -14,6 +15,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -103,6 +105,66 @@ struct Hatch {
 /// external. When no loop is flagged external (a file written by another
 /// program), all of them, whatever the style.
 [[nodiscard]] std::vector<std::size_t> regionLoops(const Hatch& hatch);
+
+/// The area of the region that the loops of regionLoops() bound with the
+/// even-odd rule (the ~area of docs/tappe/0.8.1/PT23-proprieta-retini-quote.md,
+/// point 2), whatever the fill: the sum of the areas of their closed
+/// polylines (those of generateOf(), arcs included), each with the sign
+/// (-1)^depth, depth being how many other kept loops enclose the middle of
+/// its first segment. Exact for loops that do not cross one another, as the
+/// loops of a hatch made by AutoCAD or by -HATCH; for loops that cross, the
+/// even-odd area is not that sum, and this one is only an estimate.
+/// Precondition: supported(hatch).
+[[nodiscard]] double filledArea(const Hatch& hatch);
+
+// The origin of the pattern (docs/tappe/0.8.1/PT23-proprieta-retini-quote.md,
+// point 1). Origin and units are not in the Hatch: the origin is in the
+// ACAD XDATA 1010/1020 of the EntityRecord, and the step of NET depends on
+// $MEASUREMENT (3.175 or 0.125), which the caller passes.
+
+/// The origin of the pattern: the ACAD XDATA 1010/1020 of `extras`, 0,0 when
+/// missing (AutoCAD's HPORIGIN of a new drawing). The first 1010 of the
+/// application ACAD (from its 1001 to the next 1001), followed by a 1020; a
+/// value that is not a finite number counts as missing.
+[[nodiscard]] Vec2 patternOrigin(const EntityExtras& extras);
+
+/// The families of `hatch`, whose origin is `from`, with origin `to`: every
+/// base point (43/44) moves by to - from, generated pattern or read from the
+/// file alike (docs/REGOLE-NUMERICHE.md, section 2, point 9: the families
+/// stand relative to the origin). Offsets and dashes do not change.
+[[nodiscard]] Hatch withPatternOrigin(const Hatch& hatch, const Vec2& from, const Vec2& to);
+
+/// The ACAD XDATA 1010/1020 of `extras` set to `origin`, added when missing
+/// (docs/tappe/0.8.1/dxf-di-prova.md); the other groups untouched. The
+/// values are written as io writes a real, with the fewest decimals (at
+/// least one) that read back as the same double. Missing: a 1020 is inserted
+/// after a 1010 without one; without a 1010, the point 1010, 1020, 1030 0.0
+/// goes at the end of the application ACAD; without ACAD, 1001 ACAD and the
+/// point go at the end of the XDATA, as AutoCAD writes them.
+[[nodiscard]] EntityExtras withPatternOriginXdata(EntityExtras extras, const Vec2& origin);
+
+/// The hatch with another predefined pattern, scale or angle, its origin
+/// being `origin` and its drawing's $MEASUREMENT `measurement`: the families
+/// of predefinedPatternLines(name, scale, angle, measurement) with every base
+/// point moved by `origin`. With the hatch's own pattern name when
+/// predefinedPatternLines() cannot generate it, the families of the file
+/// transformed in proportion to the new scale and angle around `origin`
+/// (docs/REGOLE-NUMERICHE.md, section 2, point 9). nullopt for any other
+/// name that cannot be generated (today ANSI31 and NET; SOLID gives a solid
+/// fill) and for a scale, old or new, that is not finite and positive.
+///
+/// The names compare as ASCII letters of any case; a predefined name is
+/// stored in capitals ("ANSI31", "NET", "SOLID"), the hatch's own name as it
+/// is. SOLID gives solid yes and no family; a predefined pattern gives solid
+/// no. The proportion turns every family by angle - hatch.angle (its
+/// direction through cardinalSinCos, so a quarter turn is exact; its angle
+/// brought into [0, 2π) with normalizeAngle) and
+/// multiplies its base point from `origin`, its offset and its dashes by
+/// scale / hatch.scale. A finite angle is taken as it is: the caller reduces
+/// it (reducedDegreesToRadians); one that is not finite gives nullopt.
+[[nodiscard]] std::optional<Hatch> withPattern(const Hatch& hatch, const Vec2& origin,
+                                               std::string_view name, double scale, double angle,
+                                               int measurement);
 
 /// HPMAXLINES of AutoCAD at its initial value: a pattern that needs more
 /// lines, or more dashes, is not drawn.

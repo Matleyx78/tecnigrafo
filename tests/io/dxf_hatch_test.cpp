@@ -2,6 +2,8 @@
 // Copyright (C) 2026 The Tecnigrafo authors
 
 #include "dxf_entity_common.hpp"
+#include "tg/core/document.hpp"
+#include "tg/core/entity_properties.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/math.hpp"
 
@@ -9,8 +11,11 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <optional>
 #include <string_view>
+#include <variant>
+#include <vector>
 
 namespace tg::io {
 namespace {
@@ -216,6 +221,79 @@ TEST(DxfHatch, PatternAnglesAreReducedAndWrittenInDegrees) {
         EXPECT_NE(std::ranges::search(output, core::RawGroups{{53, "90.0"}, {43, "0.0"}}).begin(),
                   output.end());
     }
+}
+
+TEST(DxfHatch, AChangedPatternOriginIsSavedAndReadBack) {
+    // CC of autocad-hatchedit, its origin brought back from 245,5 to 0,0
+    // (docs/tappe/0.8.1/PT23-proprieta-retini-quote.md, "Test richiesti").
+    auto groups = prefix("ANSI31", false, 1);
+    groups.insert(groups.end(), {{92, "7"},
+                                 {72, "0"},
+                                 {73, "1"},
+                                 {93, "4"},
+                                 {10, "300.0"},
+                                 {20, "40.0"},
+                                 {10, "240.0"},
+                                 {20, "40.0"},
+                                 {10, "240.0"},
+                                 {20, "0.0"},
+                                 {10, "300.0"},
+                                 {20, "0.0"},
+                                 {97, "0"},
+                                 {75, "0"},
+                                 {76, "1"},
+                                 {52, "0.0"},
+                                 {41, "1.0"},
+                                 {77, "0"},
+                                 {78, "1"},
+                                 {53, "45.0"},
+                                 {43, "245.0"},
+                                 {44, "5.0"},
+                                 {45, "-2.245064030267288"},
+                                 {46, "2.245064030267288"},
+                                 {79, "0"},
+                                 {47, "0.3215508088757433"},
+                                 {98, "1"},
+                                 {10, "245.0"},
+                                 {20, "5.0"},
+                                 {1001, "GradientColor1ACI"},
+                                 {1070, "     5"},
+                                 {1001, "ACAD"},
+                                 {1010, "245.0"},
+                                 {1020, "5.0"},
+                                 {1030, "0.0"}});
+    const core::EntityRecord record = handled(groups);
+    EXPECT_EQ(core::patternOrigin(record.extras), (core::Vec2{245, 5}));
+
+    const core::PropertyChange change =
+        core::withOwnProperty(core::Document::newDrawing(), record, "origin", core::Vec2{0, 0});
+    EXPECT_TRUE(change.entity);
+    EXPECT_TRUE(change.extras);
+    core::EntityRecord moved = record;
+    moved.entity = change.entity.value_or(record.entity);
+    moved.extras = change.extras.value_or(record.extras);
+
+    const core::RawGroups before = written(record);
+    const core::RawGroups after = written(moved);
+    ASSERT_EQ(after.size(), before.size());
+    for (std::size_t i = 0; i < after.size(); ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_EQ(after[i].code, before[i].code);
+        const bool origin = after[i].code == 43 || after[i].code == 44 || after[i].code == 1010 ||
+                            after[i].code == 1020;
+        if (origin) {
+            EXPECT_EQ(after[i].value, "0.0");
+        } else {
+            EXPECT_EQ(after[i].value, before[i].value);
+        }
+    }
+    auto context = readContext();
+    const auto again = decodeEntity(&kHatchCodec, after, context);
+    ASSERT_TRUE(again.has_value());
+    const core::EntityRecord reread = again.value_or(core::EntityRecord{});
+    EXPECT_EQ(core::patternOrigin(reread.extras), (core::Vec2{0, 0}));
+    EXPECT_EQ(std::get<core::Hatch>(reread.entity).patternLines.at(0).origin, (core::Vec2{0, 0}));
+    EXPECT_EQ(reread.extras, moved.extras);
 }
 
 }  // namespace

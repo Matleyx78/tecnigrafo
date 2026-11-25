@@ -1,5 +1,0 @@
-griglia/comandi-grid #964
-griglia/comandi-snap-ucsicon #964
-griglia/snap-alla-griglia #964
-griglia/nodo-orto-tracking #964
-griglia/snap-oggetto-polare #964

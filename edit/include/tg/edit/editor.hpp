@@ -11,6 +11,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -173,6 +174,7 @@ private:
     friend bool putTextStyle(Editor& editor, core::TextStyle style);
     friend core::EntityId addInsert(Editor& editor, core::Insert insert, core::RawGroups specific);
     friend bool applyImport(Editor& editor, BlockImport import, bool redefine);
+    friend std::size_t synchronizeInserts(Editor& editor, std::string_view block);
 
     struct LayerTableChange {
         core::Layer record;

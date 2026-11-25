@@ -7,6 +7,7 @@
 #include "object_tracking.hpp"
 #include "text.hpp"
 #include "tg/cmd/command_protocol.hpp"
+#include "tg/cmd/commands/grid_commands.hpp"
 #include "tg/cmd/coordinate_input.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
@@ -64,6 +65,16 @@ bool isUndo(std::string_view name) {
 
 bool isRedo(std::string_view name) {
     return detail::equalsIgnoringCase(name, kRedo);
+}
+
+// The point the drawing aids start from, for a point given with the mouse:
+// with the snap to the grid on, the grid node of `point`, computed here
+// only, so that the click, the preview, tracking(), activePolar() and the
+// report agree (docs/adr/0055, point 4; docs/tappe/0.8.1/PT28-griglia-cmd.md,
+// point 2). The object snap looks at `point` itself, and wins.
+core::Vec2 onGrid(const core::Document& document, const core::Vec2& point) {
+    const core::GridSettings& grid = document.grid();
+    return grid.snapOn ? gridNode(grid, point) : point;
 }
 
 // The default description check: any test that meets an undescribed prompt
@@ -309,7 +320,8 @@ const CommandRunner::TrackingState& CommandRunner::tracking() const {
     if (!m_pointer || !tracksObjectSnaps() || snapAt(*m_pointer)) {
         return m_tracking;
     }
-    const TrackingState state = trackedPoint(*m_pointer, m_command->basePoint());
+    const TrackingState state =
+        trackedPoint(onGrid(m_editor.document(), *m_pointer), m_command->basePoint());
     m_tracking.guide = state.guide;
     m_tracking.guidePoint = state.guidePoint;
     m_tracking.from = state.from;
@@ -333,7 +345,7 @@ std::optional<CommandRunner::PolarTracking> CommandRunner::activePolar() const {
     if (state.guide != TrackingState::Guide::None) {
         return std::nullopt;
     }
-    const auto point = polarFoot(*base, *m_pointer);
+    const auto point = polarFoot(*base, onGrid(m_editor.document(), *m_pointer));
     if (!point) {
         return std::nullopt;
     }
@@ -606,8 +618,8 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
         // point 6).
         if (spec->kind == PointSpec::Kind::Distance && m_pointer && tracksObjectSnaps() &&
             !snapAt(*m_pointer)) {
-            if (const std::optional<core::Vec2> point =
-                    detail::pointAlongGuide(trackedPoint(*m_pointer, lastPoint), spec->a)) {
+            if (const std::optional<core::Vec2> point = detail::pointAlongGuide(
+                    trackedPoint(onGrid(m_editor.document(), *m_pointer), lastPoint), spec->a)) {
                 forward(PointInput{*point});
                 return;
             }
@@ -1026,23 +1038,26 @@ core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
     if (const std::optional<core::SnapPoint> snap = snapAt(point)) {
         return snap->point;
     }
+    // Then the grid node, which the guides, ortho and polar project; the
+    // crossing of two guides stays its own point (docs/adr/0055, point 4).
+    const core::Vec2 node = onGrid(m_editor.document(), point);
     if (tracksObjectSnaps()) {
-        if (const TrackingState state = trackedPoint(point, orthoBase); state.guidePoint) {
+        if (const TrackingState state = trackedPoint(node, orthoBase); state.guidePoint) {
             return *state.guidePoint;
         }
     }
     if (!orthoBase) {
-        return point;
+        return node;
     }
     if (m_drawingAids.ortho) {
-        return orthoPoint(*orthoBase, point);
+        return orthoPoint(*orthoBase, node);
     }
     if (m_drawingAids.polar) {
-        if (const std::optional<core::Vec2> polar = polarFoot(*orthoBase, point)) {
+        if (const std::optional<core::Vec2> polar = polarFoot(*orthoBase, node)) {
             return *polar;
         }
     }
-    return point;
+    return node;
 }
 
 std::optional<PromptKind> CommandRunner::promptKind() const {
