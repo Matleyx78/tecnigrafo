@@ -156,8 +156,8 @@ TEST(MTextEditModel, BoldOnHalfAnItalicPieceIsBoldItalic) {
 
 TEST(MTextEditModel, AHiddenCodeStaysWhenTheCharactersNextToItGo) {
     MTextEditModel a = model(R"(A\A1;B)");
-    EXPECT_EQ(a.units(), (std::vector<MTextEditUnit>{{0, 0, 1, Kind::Character},
-                                                     {0, 5, 6, Kind::Character}}));
+    EXPECT_EQ(a.units(),
+              (std::vector<MTextEditUnit>{{0, 0, 1, Kind::Character}, {0, 5, 6, Kind::Character}}));
     a.setCaret(1);
     EXPECT_EQ(a.deleteBackward(), R"(\A1;B)");
     MTextEditModel b = model(R"(A\A1;B)");
@@ -169,8 +169,8 @@ TEST(MTextEditModel, AHiddenCodeStaysWhenTheCharactersNextToItGo) {
 
 TEST(MTextEditModel, DeletingAnEscapedCharacterTakesItsSevenBytes) {
     MTextEditModel edited = model(R"(é\U+0042)");
-    EXPECT_EQ(edited.units(), (std::vector<MTextEditUnit>{{0, 0, 2, Kind::Character},
-                                                          {0, 2, 9, Kind::Character}}));
+    EXPECT_EQ(edited.units(),
+              (std::vector<MTextEditUnit>{{0, 0, 2, Kind::Character}, {0, 2, 9, Kind::Character}}));
     edited.setCaret(2);
     EXPECT_EQ(edited.deleteBackward(), "é");
 }
@@ -337,9 +337,9 @@ TEST(MTextEditModel, StackAndUnstack) {
 
 TEST(MTextEditModel, AStackedFractionIsOneUnit) {
     MTextEditModel edited = model(R"(x\S1/2;y)");
-    EXPECT_EQ(edited.units(), (std::vector<MTextEditUnit>{{0, 0, 1, Kind::Character},
-                                                          {0, 1, 7, Kind::Stack},
-                                                          {0, 7, 8, Kind::Character}}));
+    EXPECT_EQ(edited.units(),
+              (std::vector<MTextEditUnit>{
+                  {0, 0, 1, Kind::Character}, {0, 1, 7, Kind::Stack}, {0, 7, 8, Kind::Character}}));
     EXPECT_EQ(edited.positionCount(), 4U);
     const double before = widthOf(U"x");
     const double after = before + widthOf(U"1");  // as wide as the wider text

@@ -470,6 +470,7 @@ void MTextEditModel::rebuild() {
         std::optional<std::size_t> row;  ///< the row it is drawn on
         Location left, right;
     };
+
     std::vector<std::vector<std::vector<Shown>>> shownUnits(layout.paragraphs.size());
     for (std::size_t dp = 0; dp < layout.paragraphs.size(); ++dp) {
         for (const MTextRun& run : layout.paragraphs[dp]) {
@@ -601,8 +602,10 @@ std::vector<MTextEditUnit> MTextEditModel::units() const {
     std::vector<MTextEditUnit> result;
     for (std::size_t p = 0; p < m_paragraphs.size(); ++p) {
         for (const Unit& unit : m_paragraphs[p]) {
-            result.push_back(MTextEditUnit{
-                .paragraph = p, .sourceBegin = unit.begin, .sourceEnd = unit.end, .kind = unit.kind});
+            result.push_back(MTextEditUnit{.paragraph = p,
+                                           .sourceBegin = unit.begin,
+                                           .sourceEnd = unit.end,
+                                           .kind = unit.kind});
         }
     }
     return result;
