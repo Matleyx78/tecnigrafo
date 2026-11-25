@@ -8,63 +8,154 @@
 #include "tg/core/document.hpp"
 #include "tg/render/viewport.hpp"
 
+#include <QDoubleSpinBox>
+#include <QLineEdit>
+#include <QTest>
 #include <QToolButton>
 #include <gtest/gtest.h>
+
+#include <utility>
 
 namespace tg::app {
 namespace {
 
-TEST(TextFormatBarTest, ButtonsApplyCodesAndFollowCaretFormat) {
+class TextFormatBarTest : public ::testing::Test {
+protected:
+    TextFormatBarTest() : editor(&parent, viewport) {}
+
+    void open(std::string value) {
+        core::MText shown;
+        shown.value = std::move(value);
+        cmd::TextEditRequest request;
+        request.shown = shown;
+        request.value = shown.value;
+        editor.open(request, document);
+        bar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
+        ASSERT_NE(bar, nullptr);
+    }
+
+    void select(std::size_t anchor, std::size_t caret) {
+        auto* model = const_cast<core::MTextEditModel*>(editor.model());
+        ASSERT_NE(model, nullptr);
+        model->select(anchor, caret);
+    }
+
+    void click(const char* name) {
+        auto* button = bar->findChild<QToolButton*>(QString::fromLatin1(name));
+        ASSERT_NE(button, nullptr);
+        button->click();
+    }
+
     QWidget parent;
     render::Viewport viewport;
-    TextEditorOverlay editor(&parent, viewport);
+    TextEditorOverlay editor;
     core::Document document = core::Document::newDrawing();
-    core::MText shown;
-    shown.value = "AB";
-    cmd::TextEditRequest request;
-    request.shown = shown;
-    request.value = shown.value;
-    editor.open(request, document);
+    TextFormatBar* bar{nullptr};
+};
 
-    TextFormatBar* bar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
-    ASSERT_NE(bar, nullptr);
-    auto* bold = bar->findChild<QToolButton*>(QStringLiteral("formatBold"));
-    ASSERT_NE(bold, nullptr);
-    auto* model = const_cast<core::MTextEditModel*>(editor.model());
-    ASSERT_NE(model, nullptr);
-    model->select(0, 1);
-    bold->click();
+TEST_F(TextFormatBarTest, ToggleButtonsApplyCodesAndFollowCaretFormat) {
+    open("AB");
+    select(0, 1);
+    click("formatBold");
     EXPECT_EQ(editor.value(), "{\\fArial|b1|i0;A}B");
 
-    model = const_cast<core::MTextEditModel*>(editor.model());
+    auto* model = const_cast<core::MTextEditModel*>(editor.model());
+    ASSERT_NE(model, nullptr);
     model->setCaret(1);
     bar->refresh();
-    EXPECT_TRUE(bold->isChecked());
+    EXPECT_TRUE(bar->findChild<QToolButton*>(QStringLiteral("formatBold"))->isChecked());
 }
 
-TEST(TextFormatBarTest, DecorationAndStackButtonsUseEditorModel) {
-    QWidget parent;
-    render::Viewport viewport;
-    TextEditorOverlay editor(&parent, viewport);
-    core::Document document = core::Document::newDrawing();
-    core::MText shown;
-    shown.value = "1/2";
+TEST_F(TextFormatBarTest, EveryToggleButtonAppliesItsMtextCode) {
+    struct Case {
+        const char* button;
+        const char* expected;
+    };
+
+    constexpr Case cases[] = {{"formatItalic", "{\\fArial|b0|i1;A}B"},
+                              {"formatUnderline", "{\\LA}B"},
+                              {"formatOverline", "{\\OA}B"},
+                              {"formatStrike", "{\\KA}B"}};
+    for (const Case& test : cases) {
+        open("AB");
+        select(0, 1);
+        click(test.button);
+        EXPECT_EQ(editor.value(), test.expected) << test.button;
+        editor.close();
+    }
+}
+
+TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
+    struct NumberCase {
+        const char* field;
+        double value;
+        const char* expected;
+    };
+
+    constexpr NumberCase cases[] = {{"formatHeight", 2.5, "{\\H2.5;A}B"},
+                                    {"formatWidth", 1.5, "{\\W1.5;A}B"},
+                                    {"formatOblique", 12.0, "{\\Q12;A}B"},
+                                    {"formatTracking", 1.25, "{\\T1.25;A}B"}};
+    for (const NumberCase& test : cases) {
+        open("AB");
+        select(0, 1);
+        auto* field = bar->findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
+        ASSERT_NE(field, nullptr);
+        field->setValue(test.value);
+        ASSERT_TRUE(QMetaObject::invokeMethod(field, "editingFinished"));
+        EXPECT_EQ(editor.value(), test.expected) << test.field;
+        editor.close();
+    }
+
+    open("AB");
+    select(0, 1);
+    auto* color = bar->findChild<QLineEdit*>(QStringLiteral("formatColor"));
+    ASSERT_NE(color, nullptr);
+    color->setText(QStringLiteral("1"));
+    ASSERT_TRUE(QMetaObject::invokeMethod(color, "editingFinished"));
+    EXPECT_EQ(editor.value(), "{\\C1;A}B");
+}
+
+TEST_F(TextFormatBarTest, StackAndUnstackButtonsUseEditorModel) {
+    open("1/2");
+    select(0, 3);
+    click("formatStack");
+    EXPECT_EQ(editor.value(), "\\S1/2;");
+
+    select(0, 1);
+    click("formatUnstack");
+    EXPECT_EQ(editor.value(), "1/2");
+}
+
+TEST_F(TextFormatBarTest, EditorShortcutsToggleBoldItalicAndUnderline) {
+    open("ABC");
+
+    const struct Shortcut {
+        Qt::Key key;
+        const char* expected;
+    } shortcuts[] = {{Qt::Key_B, "{\\fArial|b1|i0;A}BC"},
+                     {Qt::Key_I, "{\\fArial|b0|i1;A}BC"},
+                     {Qt::Key_U, "{\\LA}BC"}};
+
+    for (const Shortcut& shortcut : shortcuts) {
+        editor.close();
+        open("ABC");
+        select(0, 1);
+        QTest::keyClick(&editor, shortcut.key, Qt::ControlModifier);
+        EXPECT_EQ(editor.value(), shortcut.expected);
+    }
+}
+
+TEST_F(TextFormatBarTest, BarIsHiddenForSingleLineText) {
+    core::Text text;
+    text.value = "plain";
     cmd::TextEditRequest request;
-    request.shown = shown;
-    request.value = shown.value;
+    request.shown = text;
+    request.value = text.value;
     editor.open(request, document);
     auto* bar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
     ASSERT_NE(bar, nullptr);
-
-    auto* model = const_cast<core::MTextEditModel*>(editor.model());
-    ASSERT_NE(model, nullptr);
-    model->select(0, 3);
-    bar->findChild<QToolButton*>(QStringLiteral("formatUnderline"))->click();
-    EXPECT_EQ(editor.value(), "{\\L1/2}");
-    model = const_cast<core::MTextEditModel*>(editor.model());
-    model->select(0, 3);
-    bar->findChild<QToolButton*>(QStringLiteral("formatStack"))->click();
-    EXPECT_NE(editor.value().find("\\S1/2;"), std::string::npos);
+    EXPECT_TRUE(bar->isHidden());
 }
 
 }  // namespace

@@ -5,7 +5,6 @@
 
 #include <QWidget>
 
-class QComboBox;
 class QDoubleSpinBox;
 class QLineEdit;
 class QToolButton;
@@ -40,7 +39,6 @@ private:
     QDoubleSpinBox* m_width;
     QDoubleSpinBox* m_oblique;
     QDoubleSpinBox* m_tracking;
-    QComboBox* m_stackKind;
 };
 
 }  // namespace tg::app

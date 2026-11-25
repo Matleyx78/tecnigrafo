@@ -10,7 +10,6 @@
 #include "theme.hpp"
 
 #include <QColor>
-#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -78,10 +77,6 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     m_tracking = addNumber(QStringLiteral("formatTracking"));
     m_tracking->setToolTip(tr("Character spacing"));
 
-    m_stackKind = new QComboBox(this);
-    m_stackKind->setObjectName(QStringLiteral("formatStackKind"));
-    m_stackKind->addItems({QStringLiteral("/"), QStringLiteral("#"), QStringLiteral("^")});
-    layout->addWidget(m_stackKind);
     auto* stack =
         addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("text-style"));
     stack->setCheckable(false);
@@ -112,11 +107,8 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
             m_editor->applyFormat(change);
         }
     });
-    connect(stack, &QToolButton::clicked, this, [this] {
-        // The model uses the first separator in the selection. Replace the
-        // selected separator only when the user explicitly chose another one.
-        m_editor->applyFormat({Kind::Stack, true});
-    });
+    connect(stack, &QToolButton::clicked, this,
+            [this] { m_editor->applyFormat({Kind::Stack, true}); });
     connect(unstack, &QToolButton::clicked, this,
             [this] { m_editor->applyFormat({Kind::Stack, false}); });
 }

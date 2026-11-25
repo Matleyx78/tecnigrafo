@@ -264,21 +264,25 @@ void TextEditorOverlay::open(const cmd::TextEditRequest& request, const core::Do
     setGeometry(parentWidget()->rect());
     show();
     raise();
-    m_formatBar->adjustSize();
-    const auto editorBorder = border();
-    double left = std::numeric_limits<double>::infinity();
-    double top = std::numeric_limits<double>::infinity();
-    for (const core::Vec2& corner : editorBorder) {
-        const core::Vec2 screen = m_viewport.worldToScreen(corner);
-        left = std::min(left, screen.x);
-        top = std::min(top, screen.y);
+    if (m_mtext) {
+        m_formatBar->adjustSize();
+        const auto editorBorder = border();
+        double left = std::numeric_limits<double>::infinity();
+        double top = std::numeric_limits<double>::infinity();
+        for (const core::Vec2& corner : editorBorder) {
+            const core::Vec2 screen = m_viewport.worldToScreen(corner);
+            left = std::min(left, screen.x);
+            top = std::min(top, screen.y);
+        }
+        const int barX = std::clamp(static_cast<int>(std::lround(left)), 0,
+                                    std::max(0, width() - m_formatBar->width()));
+        const int barY = std::clamp(static_cast<int>(std::lround(top)) - m_formatBar->height(), 0,
+                                    std::max(0, height() - m_formatBar->height()));
+        m_formatBar->move(barX, barY);
+        m_formatBar->show();
+    } else {
+        m_formatBar->hide();
     }
-    const int barX = std::clamp(static_cast<int>(std::lround(left)), 0,
-                                std::max(0, width() - m_formatBar->width()));
-    const int barY = std::clamp(static_cast<int>(std::lround(top)) - m_formatBar->height(), 0,
-                                std::max(0, height() - m_formatBar->height()));
-    m_formatBar->move(barX, barY);
-    m_formatBar->show();
     setFocus(Qt::OtherFocusReason);
     changed();
 }
