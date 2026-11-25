@@ -16,6 +16,7 @@
 #include <QRawFont>
 #include <QResource>
 
+#include <array>
 #include <cmath>
 #include <numbers>
 
@@ -30,34 +31,50 @@ namespace tg::app {
 QString bundledFontFamily() {
     static const QString kFamily = [] {
         initializeFontResources();
-        const int id = QFontDatabase::addApplicationFont(
-            QStringLiteral(":/tg/fonts/LiberationSans-Regular.ttf"));
-        if (id < 0) {
-            qFatal("Cannot load the bundled font");
+        constexpr std::array kPaths{
+            ":/tg/fonts/LiberationSans-Regular.ttf", ":/tg/fonts/LiberationSans-Bold.ttf",
+            ":/tg/fonts/LiberationSans-Italic.ttf", ":/tg/fonts/LiberationSans-BoldItalic.ttf"};
+        QString family;
+        for (const char* path : kPaths) {
+            const int id = QFontDatabase::addApplicationFont(QString::fromLatin1(path));
+            if (id < 0) {
+                qFatal("Cannot load a bundled font");
+            }
+            const QString loadedFamily = QFontDatabase::applicationFontFamilies(id).first();
+            if (family.isEmpty()) {
+                family = loadedFamily;
+            }
         }
-        return QFontDatabase::applicationFontFamilies(id).first();
+        return family;
     }();
     return kFamily;
 }
 
 namespace {
 
-const QRawFont& bundledFont() {
-    static const QRawFont kFont = [] {
-        QFont font(bundledFontFamily());
+const QRawFont& bundledFont(core::FontFace face) {
+    static const std::array<QRawFont, 4> kFonts = [] {
+        std::array<QRawFont, 4> fonts;
         // A fixed, large size keeps the outline metrics independent of zoom.
         constexpr int kReferencePixelSize = 1024;
-        font.setPixelSize(kReferencePixelSize);
-        font.setKerning(false);
-        font.setHintingPreference(QFont::PreferNoHinting);
-        font.setStyleStrategy(QFont::NoFontMerging);
-        const QRawFont raw = QRawFont::fromFont(font);
-        if (!raw.isValid() || raw.capHeight() <= 0.0) {
-            qFatal("Cannot obtain the bundled font outlines");
+        for (std::size_t i = 0; i < fonts.size(); ++i) {
+            QFont font(bundledFontFamily());
+            font.setPixelSize(kReferencePixelSize);
+            font.setKerning(false);
+            font.setHintingPreference(QFont::PreferNoHinting);
+            font.setStyleStrategy(QFont::NoFontMerging);
+            font.setBold(i == static_cast<std::size_t>(core::FontFace::Bold) ||
+                         i == static_cast<std::size_t>(core::FontFace::BoldItalic));
+            font.setItalic(i == static_cast<std::size_t>(core::FontFace::Italic) ||
+                           i == static_cast<std::size_t>(core::FontFace::BoldItalic));
+            fonts.at(i) = QRawFont::fromFont(font);
+            if (!fonts.at(i).isValid() || fonts.at(i).capHeight() <= 0.0) {
+                qFatal("Cannot obtain the bundled font outlines");
+            }
         }
-        return raw;
+        return fonts;
     }();
-    return kFont;
+    return kFonts.at(static_cast<std::size_t>(face));
 }
 
 QColor toQColor(const render::Color& color) {
@@ -132,8 +149,8 @@ void QtPainter::fillLoops(std::span<const std::vector<core::Vec2>> loops,
 void QtPainter::drawText(const render::TextRun& run) {
     if (run.text.empty() || !std::isfinite(run.capHeightPx) || run.capHeightPx <= 0.0 ||
         !std::isfinite(run.widthFactor) || run.widthFactor <= 0.0 || !std::isfinite(run.angle) ||
-        !std::isfinite(run.oblique) || !std::isfinite(run.origin.x) ||
-        !std::isfinite(run.origin.y)) {
+        !std::isfinite(run.tracking) || run.tracking <= 0.0 || !std::isfinite(run.oblique) ||
+        !std::isfinite(run.origin.x) || !std::isfinite(run.origin.y)) {
         return;
     }
     m_painter.save();
@@ -146,13 +163,14 @@ void QtPainter::drawText(const render::TextRun& run) {
     m_painter.shear(-std::tan(run.oblique), 0.0);
     constexpr double kOutlineOnlyHeightPx = 2.0;
     if (run.capHeightPx < kOutlineOnlyHeightPx) {
-        const auto& metrics = core::fontMetrics();
+        const auto& metrics = core::fontMetrics(run.face);
         m_painter.setBrush(Qt::NoBrush);
-        m_painter.drawRect(QRectF(0.0, -metrics.ascent * run.capHeightPx,
-                                  core::textWidth(run.text) * run.capHeightPx * run.widthFactor,
-                                  (metrics.ascent - metrics.descent) * run.capHeightPx));
+        m_painter.drawRect(QRectF(
+            0.0, -metrics.ascent * run.capHeightPx,
+            core::textWidth(run.text, run.face) * run.tracking * run.capHeightPx * run.widthFactor,
+            (metrics.ascent - metrics.descent) * run.capHeightPx));
     } else {
-        const auto& font = bundledFont();
+        const auto& font = bundledFont(run.face);
         QList<quint32> indexes;
         QList<QPointF> positions;
         double advance = 0.0;
@@ -162,7 +180,7 @@ void QtPainter::drawText(const render::TextRun& run) {
             // A raw glyph run never asks Qt for a system fallback or shaping.
             indexes.append(glyphs.isEmpty() ? 0U : glyphs.first());
             positions.append(QPointF(advance * font.capHeight(), 0.0));
-            advance += core::advanceWidth(code);
+            advance += core::advanceWidth(code, run.face) * run.tracking;
         }
         QGlyphRun glyphRun;
         glyphRun.setRawFont(font);

@@ -81,6 +81,34 @@ TEST(QtPainterText, CapitalHeightAndAdvanceAgreeWithCoreWithinOnePixel) {
     }
 }
 
+TEST(QtPainterText, AllBundledFacesRenderAndUseTheirOwnMetrics) {
+    const render::TextRun regular{U"HHH", {50.0, 250.0}, 100.0};
+    std::vector<QImage> images;
+    for (const core::FontFace face : {core::FontFace::Regular, core::FontFace::Bold,
+                                      core::FontFace::Italic, core::FontFace::BoldItalic}) {
+        auto run = regular;
+        run.face = face;
+        images.push_back(renderText(run));
+        const QRect bounds = inkBounds(images.back());
+        ASSERT_FALSE(bounds.isEmpty());
+        EXPECT_NEAR(bounds.height(), 100.0, 1.0);
+    }
+    EXPECT_NE(images[0], images[1]);
+    EXPECT_NE(images[0], images[2]);
+    EXPECT_NE(images[1], images[3]);
+}
+
+TEST(QtPainterText, TrackingMovesGlyphsWithoutWideningThem) {
+    const render::TextRun regular{U"HH", {50.0, 250.0}, 100.0};
+    auto tracked = regular;
+    tracked.tracking = 2.0;
+    const QRect normalBounds = inkBounds(renderText(regular));
+    const QRect trackedBounds = inkBounds(renderText(tracked));
+    const double extraAdvance = core::advanceWidth(U'H') * regular.capHeightPx;
+    EXPECT_NEAR(trackedBounds.right() - normalBounds.right(), extraAdvance, 1.0);
+    EXPECT_EQ(trackedBounds.height(), normalBounds.height());
+}
+
 TEST(QtPainterText, PositiveQuarterTurnIsCounterClockwiseAroundTheBaselineOrigin) {
     const render::TextRun horizontal{U"HHHH", {500.0, 500.0}, 100.0};
     render::TextRun vertical = horizontal;

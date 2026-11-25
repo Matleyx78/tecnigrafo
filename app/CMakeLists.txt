@@ -85,7 +85,10 @@ qt_add_library(tg_app_ui STATIC
 qt_add_resources(tg_app_ui fonts
     PREFIX "/tg/fonts"
     BASE "${PROJECT_SOURCE_DIR}/resources/fonts"
-    FILES "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Regular.ttf")
+    FILES "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Regular.ttf"
+          "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Bold.ttf"
+          "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-Italic.ttf"
+          "${PROJECT_SOURCE_DIR}/resources/fonts/LiberationSans-BoldItalic.ttf")
 
 # Every SVG of resources/icons is bundled as :/tg/icons/<name>.svg.
 # CONFIGURE_DEPENDS: a new icon is picked up at the next build, without

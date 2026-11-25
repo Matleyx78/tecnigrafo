@@ -88,9 +88,20 @@ public:
             frame.rotation, frame.widthFactor, text.obliqueAngle, text.mirroredX, text.mirroredY});
     }
 
-    // Until PT9 brings the faces, a formatted piece is drawn as its Text and
-    // a line of a formatted MTEXT as its Line.
-    void operator()(const core::FormattedText& piece) { (*this)(piece.text); }
+    void operator()(const core::FormattedText& piece) {
+        const auto frame = core::textFrame(piece.text);
+        const double heightPx = frame.height * m_viewport.scale();
+        if (heightPx < kMinTextHeightPx) {
+            const auto box = core::formattedTextBox(piece);
+            toScreen({box.begin(), box.end()});
+            m_painter.drawPolyline(m_screenPoints, true);
+            return;
+        }
+        m_painter.drawText(TextRun{core::displayText(piece.text.value),
+                                   m_viewport.worldToScreen(frame.origin), heightPx, frame.rotation,
+                                   frame.widthFactor, piece.text.obliqueAngle, piece.text.mirroredX,
+                                   piece.text.mirroredY, piece.face, piece.tracking});
+    }
 
     void operator()(const core::TextLine& textLine) { (*this)(textLine.line); }
 

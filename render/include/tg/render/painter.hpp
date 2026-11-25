@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "tg/core/text_metrics.hpp"
 #include "tg/core/vec2.hpp"
 
 #include <cstdint>
@@ -33,6 +34,8 @@ struct TextRun {
     double oblique{0.0};      ///< Radians, positive leans right (DXF 51).
     bool backward{false};     ///< Mirrored along the baseline (DXF 71, bit 2).
     bool upsideDown{false};   ///< Mirrored across the baseline (DXF 71, bit 4).
+    core::FontFace face{core::FontFace::Regular};  ///< Bundled font variant.
+    double tracking{1.0};                          ///< Multiplier applied to advances, not glyphs.
 };
 
 /// Abstract drawing backend. Every coordinate is in screen pixels (origin
