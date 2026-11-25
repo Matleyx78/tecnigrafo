@@ -21,6 +21,7 @@
 #include "tg/cmd/commands/fillet_command.hpp"
 #include "tg/cmd/commands/grid_commands.hpp"
 #include "tg/cmd/commands/hatch_command.hpp"
+#include "tg/cmd/commands/hatchedit_command.hpp"
 #include "tg/cmd/commands/insert_command.hpp"
 #include "tg/cmd/commands/join_command.hpp"
 #include "tg/cmd/commands/layer_commands.hpp"
@@ -102,6 +103,8 @@ void registerBuiltinCommands(CommandRegistry& registry) {
                      [variable] { return std::make_unique<GridVariableCommand>(variable); });
     }
     registry.add(HatchCommand::description(), [] { return std::make_unique<HatchCommand>(); });
+    registry.add(HatcheditCommand::description(),
+                 [] { return std::make_unique<HatcheditCommand>(); });
     registry.add(HpislanddetectionCommand::description(),
                  [] { return std::make_unique<HpislanddetectionCommand>(); });
     registry.add(AttreqCommand::description(), [] { return std::make_unique<AttreqCommand>(); });

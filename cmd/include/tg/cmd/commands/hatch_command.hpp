@@ -26,6 +26,10 @@ public:
 
     [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
 
+    [[nodiscard]] std::span<const core::EntityId> highlighted() const override {
+        return m_highlighted;
+    }
+
     [[nodiscard]] static CommandDescription description();
 
 private:
@@ -44,6 +48,7 @@ private:
     std::vector<core::HatchLoop> m_pointLoops;
     std::vector<core::HatchLoop> m_selectedLoops;
     std::vector<core::Vec2> m_seeds;
+    std::vector<core::EntityId> m_highlighted;
     bool m_analyzed{false};
 };
 

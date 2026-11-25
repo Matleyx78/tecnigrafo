@@ -12,6 +12,7 @@
 #include "tg/core/polyline.hpp"
 #include "tg/core/tolerance.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -121,6 +122,15 @@ DetectedBoundary detectHatchBoundary(const Document& document, const Vec2& picke
             boundary.loops.reserve(found.loops.size());
             for (const g::RegionLoop& loop : found.loops) {
                 boundary.loops.push_back(hatchLoopOf(loop.loop, loop.depth, kDerived));
+                for (const g::LoopPieceOrigin& origin : loop.origins) {
+                    for (const std::size_t curve : {origin.curve, origin.otherCurve}) {
+                        const EntityId owner = candidates.owners.at(curve);
+                        if (std::find(boundary.sources.begin(), boundary.sources.end(), owner) ==
+                            boundary.sources.end()) {
+                            boundary.sources.push_back(owner);
+                        }
+                    }
+                }
             }
             break;
         case g::BoundaryOutcome::onCurve:

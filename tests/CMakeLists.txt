@@ -27,6 +27,7 @@ add_executable(tg_tests
     cmd/ellipse_command_test.cpp
     cmd/fillet_command_test.cpp
     cmd/hatch_command_test.cpp
+    cmd/hatchedit_command_test.cpp
     cmd/insert_command_test.cpp
     cmd/command_protocol_test.cpp
     cmd/command_registry_test.cpp
