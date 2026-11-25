@@ -2886,3 +2886,18 @@ i rimandi ai documenti che cambia.
   D2: togliere la riga dal caso e lasciare `pattern-lines` ai soli test di
   unità. Cambia la scheda PT23 (punto 5 e "Test richiesti"); file,
   dipendenze e onde non cambiano.
+- **2026-11-25 — Anche i push di Claude dalla shell con `RELAY_PAT`
+  (Catena 11).** Corregge la voce del 2026-11-19, «Le proposte di metodo
+  della 0.8», e la sua applicazione del 2026-11-21, «Codice e CI della pausa
+  dopo la 0.8»: `github_token` dell'azione vale solo per ciò che l'azione
+  pubblica da sé, mentre un `git push` dalla shell di Claude usa le
+  credenziali che `actions/checkout` lascia in git, cioè quelle del token del
+  job. Il 24 e il 25/11 la CI di #1032, #1039, #1041, #1042 e #1043 è
+  rimasta in `action_required` per questo, con la catena ferma ogni volta. Il
+  responsabile applica subito la proposta «Catena 11» della
+  [#991](https://github.com/Matleyx78/tecnigrafo/issues/991), in via
+  eccezionale a tappa aperta perché blocca la catena (regola del 2026-11-03):
+  in `.github/workflows/claude.yml` anche il checkout riceve `RELAY_PAT`
+  ([F13](https://github.com/Matleyx78/tecnigrafo/issues/1047)). Il resto
+  delle proposte della 0.8.1, compreso l'aggiornamento automatico con `main`
+  della «Catena 6», aspetta la pausa dopo la 0.8.1.
