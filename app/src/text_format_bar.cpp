@@ -57,13 +57,12 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     layout->setContentsMargins(4, 3, 4, 3);
     layout->setSpacing(2);
 
-    m_bold = addToggle(QStringLiteral("formatBold"), tr("B"), QStringLiteral("format-bold"));
-    m_italic = addToggle(QStringLiteral("formatItalic"), tr("I"), QStringLiteral("format-italic"));
+    m_bold = addToggle(QStringLiteral("formatBold"), tr("B"), QStringLiteral("text-style"));
+    m_italic = addToggle(QStringLiteral("formatItalic"), tr("I"), QStringLiteral("text-style"));
     m_underline =
-        addToggle(QStringLiteral("formatUnderline"), tr("U"), QStringLiteral("format-underline"));
-    m_overline =
-        addToggle(QStringLiteral("formatOverline"), tr("O"), QStringLiteral("format-overline"));
-    m_strike = addToggle(QStringLiteral("formatStrike"), tr("S"), QStringLiteral("format-strike"));
+        addToggle(QStringLiteral("formatUnderline"), tr("U"), QStringLiteral("text-style"));
+    m_overline = addToggle(QStringLiteral("formatOverline"), tr("O"), QStringLiteral("text-style"));
+    m_strike = addToggle(QStringLiteral("formatStrike"), tr("S"), QStringLiteral("text-style"));
 
     m_height = addNumber(QStringLiteral("formatHeight"));
     m_height->setToolTip(tr("Height"));
@@ -84,10 +83,10 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     m_stackKind->addItems({QStringLiteral("/"), QStringLiteral("#"), QStringLiteral("^")});
     layout->addWidget(m_stackKind);
     auto* stack =
-        addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("format-stack"));
+        addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("text-style"));
     stack->setCheckable(false);
     auto* unstack =
-        addToggle(QStringLiteral("formatUnstack"), tr("Unstack"), QStringLiteral("format-unstack"));
+        addToggle(QStringLiteral("formatUnstack"), tr("Unstack"), QStringLiteral("text-style"));
     unstack->setCheckable(false);
 
     applyToggle(m_bold, static_cast<int>(Kind::Bold));
