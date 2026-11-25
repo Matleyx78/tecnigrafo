@@ -102,7 +102,6 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
         auto* field = bar->findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
         ASSERT_NE(field, nullptr);
         field->setValue(test.value);
-        field->editingFinished();
         EXPECT_EQ(editor.value(), test.expected) << test.field;
         editor.close();
     }

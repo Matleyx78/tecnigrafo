@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QRegularExpression>
+#include <QSignalBlocker>
 #include <QToolButton>
 
 #include <algorithm>
@@ -90,8 +91,8 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     applyToggle(m_overline, static_cast<int>(Kind::Overline));
     applyToggle(m_strike, static_cast<int>(Kind::Strike));
     const auto numberChange = [this](QDoubleSpinBox* field, Kind kind) {
-        connect(field, &QDoubleSpinBox::editingFinished, this,
-                [this, field, kind] { m_editor->applyFormat({kind, true, field->value()}); });
+        connect(field, &QDoubleSpinBox::valueChanged, this,
+                [this, kind](double value) { m_editor->applyFormat({kind, true, value}); });
     };
     numberChange(m_height, Kind::Height);
     numberChange(m_width, Kind::WidthFactor);
@@ -155,6 +156,10 @@ void TextFormatBar::refresh() {
     m_underline->setChecked(format.underline);
     m_overline->setChecked(format.overline);
     m_strike->setChecked(format.strike);
+    const QSignalBlocker heightBlocker(m_height);
+    const QSignalBlocker widthBlocker(m_width);
+    const QSignalBlocker obliqueBlocker(m_oblique);
+    const QSignalBlocker trackingBlocker(m_tracking);
     m_height->setValue(format.height);
     m_width->setValue(format.widthFactor);
     m_oblique->setValue(core::radiansToDegrees(format.oblique));
