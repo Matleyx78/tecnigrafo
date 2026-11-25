@@ -229,7 +229,7 @@ BattmanDialog::BattmanDialog(edit::Editor& editor, const std::string& selectedBl
     connect(m_edit, &QPushButton::clicked, this, &BattmanDialog::editSelected);
     connect(m_remove, &QPushButton::clicked, this, &BattmanDialog::removeSelected);
     connect(m_synchronize, &QPushButton::clicked, this, &BattmanDialog::synchronize);
-    connect(m_apply, &QPushButton::clicked, this, &BattmanDialog::synchronize);
+    connect(m_apply, &QPushButton::clicked, this, &BattmanDialog::synchronizeAll);
     connect(buttons, &QDialogButtonBox::accepted, this, &BattmanDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &BattmanDialog::reject);
     refresh();
@@ -281,10 +281,11 @@ void BattmanDialog::transact(const std::function<bool()>& operation) {
     if (m_editor.inTransaction()) {
         return;
     }
+    const std::string changedBlock = blockName();
     m_editor.beginTransaction("Battman");
     if (operation()) {
         m_editor.commit();
-        m_unsynchronized = true;
+        m_unsynchronized.insert(changedBlock);
     } else {
         m_editor.rollback();
     }
@@ -378,12 +379,27 @@ void BattmanDialog::synchronize() {
     m_editor.beginTransaction("Battman");
     static_cast<void>(edit::synchronizeInserts(m_editor, blockName()));
     m_editor.commit();
-    m_unsynchronized = false;
+    m_unsynchronized.erase(blockName());
+    updateButtons();
+}
+
+void BattmanDialog::synchronizeAll() {
+    if (m_editor.inTransaction() || m_blocks->currentIndex() < 0) {
+        return;
+    }
+    std::set<std::string> blocks = m_unsynchronized;
+    blocks.insert(blockName());
+    m_editor.beginTransaction("Battman");
+    for (const std::string& block : blocks) {
+        static_cast<void>(edit::synchronizeInserts(m_editor, block));
+    }
+    m_editor.commit();
+    m_unsynchronized.clear();
     updateButtons();
 }
 
 bool BattmanDialog::confirmClose() {
-    if (!m_unsynchronized) {
+    if (m_unsynchronized.empty()) {
         return true;
     }
     const QMessageBox::StandardButton answer =
@@ -392,13 +408,13 @@ bool BattmanDialog::confirmClose() {
         return false;
     }
     if (answer == QMessageBox::Yes) {
-        synchronize();
+        synchronizeAll();
     }
     return true;
 }
 
 void BattmanDialog::accept() {
-    synchronize();
+    synchronizeAll();
     m_closing = true;
     QDialog::accept();
 }

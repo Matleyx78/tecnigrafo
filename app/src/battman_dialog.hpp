@@ -9,6 +9,7 @@
 #include <QMessageBox>
 
 #include <functional>
+#include <set>
 #include <string>
 #include <utility>
 
@@ -40,7 +41,7 @@ public:
 
     [[nodiscard]] std::string blockName() const;
 
-    [[nodiscard]] bool hasUnsynchronizedChanges() const { return m_unsynchronized; }
+    [[nodiscard]] bool hasUnsynchronizedChanges() const { return !m_unsynchronized.empty(); }
 
     void refresh();
     void moveUp();
@@ -56,6 +57,7 @@ private:
         core::AttributeDefinition& storage) const;
     [[nodiscard]] bool applyDefinition(const core::AttributeDefinition& definition);
     [[nodiscard]] bool confirmClose();
+    void synchronizeAll();
     void transact(const std::function<bool()>& operation);
     void updateButtons();
 
@@ -68,7 +70,7 @@ private:
     QPushButton* m_remove;
     QPushButton* m_synchronize;
     QPushButton* m_apply{nullptr};
-    bool m_unsynchronized{false};
+    std::set<std::string> m_unsynchronized;
     bool m_closing{false};
     Confirm m_confirm;
 };
