@@ -55,15 +55,19 @@ namespace {
 const QRawFont& bundledFont(core::FontFace face) {
     static const std::array<QRawFont, 4> kFonts = [] {
         std::array<QRawFont, 4> fonts;
-        const std::array paths{
-            ":/tg/fonts/LiberationSans-Regular.ttf", ":/tg/fonts/LiberationSans-Bold.ttf",
-            ":/tg/fonts/LiberationSans-Italic.ttf", ":/tg/fonts/LiberationSans-BoldItalic.ttf"};
-        (void)bundledFontFamily();
         // A fixed, large size keeps the outline metrics independent of zoom.
         constexpr int kReferencePixelSize = 1024;
         for (std::size_t i = 0; i < fonts.size(); ++i) {
-            fonts[i] = QRawFont(QString::fromLatin1(paths[i]), kReferencePixelSize,
-                                QFont::PreferNoHinting);
+            QFont font(bundledFontFamily());
+            font.setPixelSize(kReferencePixelSize);
+            font.setKerning(false);
+            font.setHintingPreference(QFont::PreferNoHinting);
+            font.setStyleStrategy(QFont::NoFontMerging);
+            font.setBold(i == static_cast<std::size_t>(core::FontFace::Bold) ||
+                         i == static_cast<std::size_t>(core::FontFace::BoldItalic));
+            font.setItalic(i == static_cast<std::size_t>(core::FontFace::Italic) ||
+                           i == static_cast<std::size_t>(core::FontFace::BoldItalic));
+            fonts[i] = QRawFont::fromFont(font);
             if (!fonts[i].isValid() || fonts[i].capHeight() <= 0.0) {
                 qFatal("Cannot obtain the bundled font outlines");
             }
