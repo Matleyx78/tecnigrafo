@@ -22,11 +22,12 @@
   esporre le domande del punto iniziale)
 - `cmd/include/tg/cmd/command.hpp` (file comune: `CommandDefaults::attributeFlags`)
 - `cmd/include/tg/cmd/command_protocol.hpp`, `cmd/src/command_runner.cpp`,
-  `cmd/src/command_registry.cpp` (`PromptKind::Name`)
+  `cmd/src/command_registry.cpp`, `cmd/src/dynamic_input.cpp`
+  (`PromptKind::Name`)
 - `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt` (file comuni)
 - `tests/cmd/attdef_command_test.cpp` (nuovo),
   `tests/cmd/command_runner_test.cpp`, `tests/cmd/command_registry_test.cpp`,
-  `tests/CMakeLists.txt` (file comune)
+  `tests/cmd/dynamic_input_test.cpp`, `tests/CMakeLists.txt` (file comune)
 
 ## Cosa fare
 
@@ -41,7 +42,9 @@
    `TextInput`, mentre `acceptsText()` è falso. Nella riga di comando lo spazio
    vale quindi Invio, come in
    AutoCAD, che con `DUE PAROLE` prende `DUE` e passa `PAROLE` alla richiesta
-   dopo (seduta del 2026-11-22). Etichetta vuota: `Tag cannot be null.` e la
+   dopo (seduta del 2026-11-22). Come `Text`, una domanda `Name` non ha campi
+   dell'input dinamico (ADR 0042, punto 2). Etichetta vuota:
+   `Tag cannot be null.` e la
    richiesta si ripete, come AutoCAD; una riga con uno spazio che arriva intera
    (script al livello 1): `Invalid tag name.` e la richiesta si ripete.
 3. Un passo di annullamento `Attdef`. Esc a metà comando, anche dopo aver
@@ -109,7 +112,8 @@ Decisione del responsabile sulla #954 (scelte A dei punti 1–5;
   spazio al livello 1.
 - `PromptKind::Name`: gli spazi agli estremi sono tolti e la riga arriva come
   `TextInput`; è compatibile con `ValueType::Name`. Alla domanda
-  dell'etichetta di `-ATTDEF`, `CommandRunner::acceptsText()` è falso.
+  dell'etichetta di `-ATTDEF`, `CommandRunner::acceptsText()` è falso;
+  `dynamicInputFor()` non dà campi.
 - Le domande del testo (decisione della #954): la riga dello stile corrente
   prima del punto iniziale,
   `Current text style:  "Standard"  Text height:  2.5000  Justify:  Left`; *Justify* con `MC` (`Specify middle point of
