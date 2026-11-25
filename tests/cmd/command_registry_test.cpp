@@ -310,7 +310,7 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         "MOVE MTEXT NEW OFFSET OPEN PEDIT PEDITACCEPT PLINE POLARANG POLYGON QSAVE RECTANG ROTATE "
         "SAVE SAVEAS "
         "SCALE SELECT "
-        "TEXT "
+        "TEXT TEXTEDIT "
         "TEXTSTYLE TRIM TRIMEXTENDMODE";
     EXPECT_EQ(names, expected);
     EXPECT_TRUE(registry.describe("ERASE")->selectsFirst);

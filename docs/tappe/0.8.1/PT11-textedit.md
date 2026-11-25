@@ -23,8 +23,10 @@
 - `cmd/include/tg/cmd/text_editing.hpp` (nuovo: `TextEditRequest`)
 - `cmd/include/tg/cmd/command.hpp` (file comune: `Command::textEditing()`)
 - `cmd/include/tg/cmd/command_runner.hpp` (file comune: l'accessore in linea
-  `CommandRunner::textEditing()`, senza toccare `command_runner.cpp`, che è
-  della catena PT34 → PT28 → PT31)
+  `CommandRunner::textEditing()`)
+- `cmd/src/command_runner.cpp` (solo la consegna a `TEXTEDIT` di un unico
+  oggetto già scelto come `ObjectInput` all'avvio; eccezione decisa dal
+  responsabile nella issue #939)
 - `cmd/include/tg/cmd/input.hpp` (solo il commento di `TextInput`: può essere
   vuoto quando viene dall'editor)
 - `cmd/include/tg/cmd/commands/textedit_command.hpp`,
@@ -111,6 +113,9 @@
    lo riconosce con il modello di PT10 e consegna `ConfirmInput` per `TEXT` e
    `MTEXT`, `TextInput{""}` per una quota; il comando riceve solo questi due
    ingressi (decisione del responsabile sulla rilettura della #994).
+  Per un `ATTDEF`, un'etichetta con spazi o vuota, compreso `TextInput{""}`
+  dall'editor, scrive `Invalid tag name.` e ripete la richiesta dell'etichetta,
+  senza creare un passo; decisione del responsabile nella issue #939.
 3. ***Mtext*** delle quote (l'opzione la porta PT3): alla sua richiesta `Enter
    dimension text <misura>:` il comando dà `textEditing()`, con il testo
    sostitutivo di ora e la grafica della quota in costruzione; la richiesta di
@@ -119,6 +124,8 @@
 ## Regole della tappa che valgono qui
 
 - File comuni: `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt`,
+  `cmd/src/command_runner.cpp` (solo la consegna a `TEXTEDIT` di un unico
+  oggetto pickfirst come `ObjectInput`, eccezione decisa nella issue #939),
   `tests/CMakeLists.txt`, `cmd/include/tg/cmd/command.hpp` (solo
   `textEditing()`; `highlighted()` lo aggiunge PT34),
   `cmd/include/tg/cmd/command_runner.hpp` (solo l'accessore).

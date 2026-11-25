@@ -365,6 +365,11 @@ public:
     /// for a selection.
     [[nodiscard]] std::span<const core::Entity> preview() const;
 
+    /// The running command's editor request, if it is asking for editable text.
+    [[nodiscard]] std::optional<TextEditRequest> textEditing() const {
+        return m_command && !m_askingSelection ? m_command->textEditing() : std::nullopt;
+    }
+
     /// File access for commands, not owned. nullptr disables file commands.
     void setFileAccess(io::FileAccess* files);
 

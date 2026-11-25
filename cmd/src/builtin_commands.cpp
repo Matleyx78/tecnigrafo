@@ -37,6 +37,7 @@
 #include "tg/cmd/commands/select_command.hpp"
 #include "tg/cmd/commands/style_commands.hpp"
 #include "tg/cmd/commands/text_command.hpp"
+#include "tg/cmd/commands/textedit_command.hpp"
 #include "tg/cmd/commands/trim_extend_commands.hpp"
 
 #include <memory>
@@ -128,6 +129,8 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(SelectCommand::description(), [] { return std::make_unique<SelectCommand>(); });
     registry.add(StyleCommand::description(), [] { return std::make_unique<StyleCommand>(); });
     registry.add(detail::textDescription(), [] { return std::make_unique<TextCommand>(); });
+    registry.add(TexteditCommand::description(),
+                 [] { return std::make_unique<TexteditCommand>(); });
     registry.add(TextstyleCommand::description(),
                  [] { return std::make_unique<TextstyleCommand>(); });
     registry.add(TrimExtendCommand::description(TrimExtendCommand::Action::Trim), [] {

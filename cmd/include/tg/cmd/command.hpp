@@ -5,6 +5,7 @@
 
 #include "tg/cmd/command_protocol.hpp"
 #include "tg/cmd/input.hpp"
+#include "tg/cmd/text_editing.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/entity_id.hpp"
 #include "tg/core/math.hpp"
@@ -71,6 +72,7 @@ struct CommandDefaults {
     bool chamferUseAngle{false};
     bool trimMode{true};
     bool peditAccept{false};      ///< PEDITACCEPT, session-only (docs/adr/0050).
+    bool textEditMultiple{true};  ///< TEXTEDIT mode, kept for the session (ADR 0054).
     bool attributeRequest{true};  ///< ATTREQ, session-only (docs/adr/0056, point 3).
     bool rectangUseFillet{false};
     bool polygonCircumscribed{false};
@@ -142,6 +144,11 @@ public:
     /// the user clicks, as in AutoCAD. Unlike CommandContext::lastPoint it
     /// never comes from a previous command.
     [[nodiscard]] virtual std::optional<core::Vec2> basePoint() const { return std::nullopt; }
+
+    /// The text currently offered to the editor in the window.
+    [[nodiscard]] virtual std::optional<TextEditRequest> textEditing() const {
+        return std::nullopt;
+    }
 
     /// Entities of the drawing the command shows highlighted while it runs,
     /// for example those it has chosen and still works on; none by default.
