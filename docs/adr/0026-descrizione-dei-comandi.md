@@ -2,6 +2,11 @@
 
 - **Stato:** Accettato (2026-10-25)
 - **Data:** 2026-10-25
+- **Corretto:** 2026-11-25 — punto 3, dopo il buco di PT19 della 0.8.1 (#958):
+  una domanda `Object` può avere parole chiave non scritte fra parentesi
+  quadre, come `Select Attributes:` di `-ATTEDIT` con `Window` e `Crossing`
+  (`docs/DECISIONI.md`, «Parole chiave non scritte delle domande `Object`
+  (PT19)»).
 
 ## Contesto
 
@@ -75,7 +80,11 @@ struct CommandDescription {
   è spento nel programma distribuito.
 - Un test verifica che ogni comando registrato abbia sintesi non vuota e che
   le parole chiave di ogni domanda compaiano tra parentesi quadre nel suo
-  testo. Un comando può non avere domande (`RIBBON`, che agisce e finisce):
+  testo. Fa eccezione una domanda `Object`, che può avere parole chiave **non
+  scritte**: la descrizione le dichiara, il runner le accetta e il controllo
+  le confronta come le altre, ma il testo non le mostra, come
+  `Select Attributes:` di `-ATTEDIT`, che prende un clic, `W` o `C` (correzione
+  del 2026-11-25). Un comando può non avere domande (`RIBBON`, che agisce e finisce):
   allora `prompts` è vuoto, e il controllo del punto 3 rifiuta qualunque
   domanda gli capiti di porre.
 

@@ -20,6 +20,9 @@
 - `cmd/src/name_list.hpp`, `cmd/src/name_list.cpp` (i caratteri jolly, se
   non ci sono già)
 - `cmd/src/builtin_commands.cpp`, `cmd/CMakeLists.txt` (file comuni)
+- `cmd/src/command_registry.cpp`, `cmd/include/tg/cmd/command_registry.hpp`
+  (il commento di `isValid`), `tests/cmd/command_registry_test.cpp`: le
+  parole chiave non scritte delle domande `Object` (ADR 0026, punto 3)
 - `tests/cmd/attedit_command_test.cpp` (nuovo), `tests/CMakeLists.txt` (file
   comune)
 
@@ -36,6 +39,13 @@ cronologia:
    `accept` di `pickAttribute` e valgono **prima** della scelta del più
    vicino, non dopo; gli attributi degli inserimenti annidati non si
    scelgono (PT15; verbale della revisione PT5, [bloccante] 5).
+   La domanda è una domanda `Object` (`PromptKind::Object`, `ValueType::Object`)
+   con le parole chiave `Window` (`W`) e `Crossing` (`C`) **non scritte**:
+   il testo resta `Select Attributes:`, senza parentesi quadre, e la
+   `PromptDescription` le dichiara come le altre. `isValid()` del registro le
+   ammette solo nelle domande `Object` (ADR 0026, punto 3; decisione del
+   2026-11-25 nella #958). Un clic va a `pickAttribute`; `W` o `C` chiedono
+   `Specify first corner:` e `Specify opposite corner:`.
 2. **Uno per uno:** per ciascun attributo, nell'ordine degli inserimenti e degli
    attributi, le opzioni; l'attributo corrente si segna (lo mostra il
    programma; nessun campo nel rapporto). *Value* con *Change* (`Enter string to
@@ -60,6 +70,11 @@ cronologia:
   due inserimenti sovrapposti dei blocchi `A` e `B` con lo stesso `CODICE` e
   lo stesso valore, con il filtro del blocco `A`: il clic trova quello di `A`
   ([bloccante] 5; #992, [bloccante] 3).
+- Le parole chiave non scritte: `isValid()` accetta una domanda `Object` con
+  parole chiave che non stanno fra parentesi quadre (`Select Attributes:` con
+  `Window` e `Crossing`) e rifiuta ancora la stessa domanda di tipo `Point`,
+  `Selection` o `Text`; `Select Attributes: C` risponde
+  `Specify first corner:`, non `Invalid input.`.
 
 ## Fatto quando
 
