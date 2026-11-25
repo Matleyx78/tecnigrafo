@@ -138,6 +138,105 @@ TEST_F(GridCommandsTest, GridAspectWithAZeroAxisProposesA) {
     EXPECT_EQ(grid().gridUnit, (Vec2{5, 10}));
 }
 
+TEST_F(GridCommandsTest, GridSnapLeavesGridmodeAsItIs) {
+    // From a grid that is off: Snap sets GRIDUNIT to 0,0 and does not switch
+    // the grid on.
+    core::GridSettings off = grid();
+    off.gridOn = false;
+    off.gridUnit = {4, 4};
+    editor.tables().setGrid(off);
+    editor.markSaved();
+    EXPECT_EQ(
+        type({"GRID", "S"}),
+        (Lines{"Command: GRID",
+               "Specify grid spacing(X) or [ON/OFF/Snap/Major/aDaptive/Aspect] <4.0000>: S"}));
+    EXPECT_EQ(grid().gridUnit, (Vec2{0, 0}));
+    EXPECT_FALSE(grid().gridOn);
+    EXPECT_TRUE(editor.isModified());
+    // From a grid that is on: it stays on.
+    type({"GRID", "4", "GRID", "Snap"});
+    EXPECT_EQ(grid().gridUnit, (Vec2{0, 0}));
+    EXPECT_TRUE(grid().gridOn);
+}
+
+TEST_F(GridCommandsTest, GridAspectSwitchesTheGridOn) {
+    core::GridSettings off = grid();
+    off.gridOn = false;
+    editor.tables().setGrid(off);
+    EXPECT_EQ(type({"GRID", "A", "0", "10"}),
+              (Lines{"Command: GRID", std::string{kGridPrompt10} + " A",
+                     "Specify the horizontal spacing(X) <10.0000>: 0",
+                     "Specify the vertical spacing(Y) <10.0000>: 10"}));
+    EXPECT_EQ(grid().gridUnit, (Vec2{0, 10}));
+    EXPECT_TRUE(grid().gridOn);
+    // Enter at both spacings switches it on too.
+    type({"GRID", "OFF", "GRID", "A", "", ""});
+    EXPECT_EQ(grid().gridUnit, (Vec2{0, 10}));
+    EXPECT_TRUE(grid().gridOn);
+}
+
+TEST_F(GridCommandsTest, GridAspectTakesAMultipleOfTheSnapAxisByAxis) {
+    core::GridSettings snap = grid();
+    snap.snapUnit = {2.5, 5};
+    editor.tables().setGrid(snap);
+    EXPECT_EQ(type({"GRID", "Aspect", "2x", "3X"}),
+              (Lines{"Command: GRID", std::string{kGridPrompt10} + " Aspect",
+                     "Specify the horizontal spacing(X) <10.0000>: 2x",
+                     "Specify the vertical spacing(Y) <10.0000>: 3X"}));
+    // 2 times the snap spacing of X, 3 times that of Y.
+    EXPECT_EQ(grid().gridUnit, (Vec2{5, 15}));
+    // The same "2x" gives a different spacing on each axis.
+    type({"GRID", "Aspect", "2x", "2x"});
+    EXPECT_EQ(grid().gridUnit, (Vec2{5, 10}));
+    // Outside Aspect, too.
+    type({"GRID", "2x"});
+    EXPECT_EQ(grid().gridUnit, (Vec2{5, 10}));
+    EXPECT_EQ(type({"GRID", "Aspect", "-1x", "0x", "1x"}),
+              (Lines{"Command: GRID", std::string{kGridPromptA} + " Aspect",
+                     "Specify the horizontal spacing(X) <5.0000>: -1x", "Value must be positive.",
+                     "Specify the horizontal spacing(X) <5.0000>: 0x",
+                     "Specify the vertical spacing(Y) <10.0000>: 1x"}));
+    EXPECT_EQ(grid().gridUnit, (Vec2{0, 5}));
+}
+
+TEST_F(GridCommandsTest, GridTextThatIsNotANumber) {
+    // At the question with options: "Invalid option keyword.".
+    EXPECT_EQ(
+        type({"GRID", "ten", "x"}),
+        (Lines{"Command: GRID", std::string{kGridPrompt10} + " ten", "Invalid option keyword.",
+               std::string{kGridPrompt10} + " x", "Invalid option keyword."}));
+    EXPECT_EQ(runner.promptText(), kGridPrompt10);
+    runner.submit(CancelInput{});
+    // At a spacing alone: "Requires numeric distance.", even for the name of
+    // an option of the first question.
+    EXPECT_EQ(type({"GRID", "Aspect", "ten", "S", "4", "ten", "6"}),
+              (Lines{"Command: GRID", std::string{kGridPrompt10} + " Aspect",
+                     "Specify the horizontal spacing(X) <10.0000>: ten",
+                     "Requires numeric distance.", "Specify the horizontal spacing(X) <10.0000>: S",
+                     "Requires numeric distance.", "Specify the horizontal spacing(X) <10.0000>: 4",
+                     "Specify the vertical spacing(Y) <10.0000>: ten", "Requires numeric distance.",
+                     "Specify the vertical spacing(Y) <10.0000>: 6"}));
+    EXPECT_EQ(grid().gridUnit, (Vec2{4, 6}));
+    // At the Yes/No questions of aDaptive: "Invalid option keyword.".
+    EXPECT_EQ(type({"GRID", "D", "maybe", "Y", "maybe", "Y"}),
+              (Lines{"Command: GRID", std::string{kGridPromptA} + " D",
+                     "Turn adaptive behavior on [Yes/No] <Yes>: maybe", "Invalid option keyword.",
+                     "Turn adaptive behavior on [Yes/No] <Yes>: Y",
+                     "Allow subdivision below grid spacing [Yes/No] <No>: maybe",
+                     "Invalid option keyword.",
+                     "Allow subdivision below grid spacing [Yes/No] <No>: Y"}));
+    EXPECT_EQ(grid().gridDisplay, 7);
+    // At Major, which asks an integer: the message of its range.
+    EXPECT_EQ(type({"GRID", "M", "ten", "2.5", "8"}),
+              (Lines{"Command: GRID", std::string{kGridPromptA} + " M",
+                     "Enter number of grid divisions per major grid line <5>: ten",
+                     "Requires an integer between 1 and 100.",
+                     "Enter number of grid divisions per major grid line <5>: 2.5",
+                     "Requires an integer between 1 and 100.",
+                     "Enter number of grid divisions per major grid line <5>: 8"}));
+    EXPECT_EQ(grid().gridMajor, 8);
+}
+
 TEST_F(GridCommandsTest, GridMajorBetweenOneAndAHundred) {
     EXPECT_EQ(type({"GRID", "Major", "0", "101", "7"}),
               (Lines{"Command: GRID", std::string{kGridPrompt10} + " Major",
@@ -205,6 +304,25 @@ TEST_F(GridCommandsTest, SnapAspectSwitchesTheSnapOnAndProposesA) {
     EXPECT_TRUE(grid().snapOn);
 }
 
+TEST_F(GridCommandsTest, SnapTextThatIsNotANumber) {
+    // At the question with options: "Invalid option keyword.".
+    EXPECT_EQ(type({"SNAP", "ten"}),
+              (Lines{"Command: SNAP", "Specify snap spacing or [ON/OFF/Aspect] <10.0000>: ten",
+                     "Invalid option keyword."}));
+    EXPECT_EQ(runner.promptText(), "Specify snap spacing or [ON/OFF/Aspect] <10.0000>:");
+    runner.submit(CancelInput{});
+    // At a spacing alone: "Requires numeric distance.".
+    EXPECT_EQ(
+        type({"SNAP", "A", "ten", "ON", "5", "ten", "2.5"}),
+        (Lines{"Command: SNAP", "Specify snap spacing or [ON/OFF/Aspect] <10.0000>: A",
+               "Specify horizontal spacing <10.0000>: ten", "Requires numeric distance.",
+               "Specify horizontal spacing <10.0000>: ON", "Requires numeric distance.",
+               "Specify horizontal spacing <10.0000>: 5", "Specify vertical spacing <10.0000>: ten",
+               "Requires numeric distance.", "Specify vertical spacing <10.0000>: 2.5"}));
+    EXPECT_EQ(grid().snapUnit, (Vec2{5, 2.5}));
+    EXPECT_TRUE(grid().snapOn);
+}
+
 // --- UCSICON -----------------------------------------------------------------
 
 TEST_F(GridCommandsTest, UcsiconProposesTheStateAndSetsItsValues) {
@@ -220,6 +338,14 @@ TEST_F(GridCommandsTest, UcsiconProposesTheStateAndSetsItsValues) {
     EXPECT_EQ(grid().ucsIcon, 2);
     type({"UCSICON", "N"});
     EXPECT_EQ(grid().ucsIcon, 1);
+}
+
+TEST_F(GridCommandsTest, UcsiconRefusesAnUnknownOption) {
+    EXPECT_EQ(
+        type({"UCSICON", "maybe", "OFF"}),
+        (Lines{"Command: UCSICON", "Enter an option [ON/OFF/Noorigin/ORigin] <ON>: maybe",
+               "Invalid option keyword.", "Enter an option [ON/OFF/Noorigin/ORigin] <ON>: OFF"}));
+    EXPECT_EQ(grid().ucsIcon, 2);
 }
 
 // --- Variables -----------------------------------------------------------------
@@ -271,6 +397,32 @@ TEST_F(GridCommandsTest, SnapbaseModesDisplayAndMajor) {
                "Requires an integer between 0 and 15.", "Enter new value for GRIDDISPLAY <6>:"}));
     EXPECT_TRUE(grid().snapOn);
     EXPECT_EQ(grid().gridDisplay, 6);
+}
+
+TEST_F(GridCommandsTest, GridmodeAndSnapmodeRequireZeroOrOne) {
+    EXPECT_EQ(
+        type({"GRIDMODE", "2", "-1", "on", "0.5", "0"}),
+        (Lines{"Command: GRIDMODE", "Enter new value for GRIDMODE <1>: 2",
+               "Requires an integer between 0 and 1.", "Enter new value for GRIDMODE <1>: -1",
+               "Requires an integer between 0 and 1.", "Enter new value for GRIDMODE <1>: on",
+               "Requires an integer between 0 and 1.", "Enter new value for GRIDMODE <1>: 0.5",
+               "Requires an integer between 0 and 1.", "Enter new value for GRIDMODE <1>: 0"}));
+    EXPECT_FALSE(grid().gridOn);
+    EXPECT_EQ(
+        type({"SNAPMODE", "-1", "1"}),
+        (Lines{"Command: SNAPMODE", "Enter new value for SNAPMODE <0>: -1",
+               "Requires an integer between 0 and 1.", "Enter new value for SNAPMODE <0>: 1"}));
+    EXPECT_TRUE(grid().snapOn);
+}
+
+TEST_F(GridCommandsTest, GriddisplayFromZeroToFifteen) {
+    EXPECT_EQ(
+        type({"GRIDDISPLAY", "-1", "ten", "15", "GRIDDISPLAY", "0"}),
+        (Lines{"Command: GRIDDISPLAY", "Enter new value for GRIDDISPLAY <3>: -1",
+               "Requires an integer between 0 and 15.", "Enter new value for GRIDDISPLAY <3>: ten",
+               "Requires an integer between 0 and 15.", "Enter new value for GRIDDISPLAY <3>: 15",
+               "Command: GRIDDISPLAY", "Enter new value for GRIDDISPLAY <15>: 0"}));
+    EXPECT_EQ(grid().gridDisplay, 0);
 }
 
 TEST_F(GridCommandsTest, TheVariablesMarkTheDrawingModifiedWithoutAnUndoStep) {
