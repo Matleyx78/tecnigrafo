@@ -41,7 +41,7 @@ core::Attribute attribute(std::uint64_t id, const std::string& tag, const std::s
 }
 
 std::vector<std::string> attributeTags(const core::Document& document, std::size_t index = 0) {
-    const auto& insert = std::get<core::Insert>(document.entities().at(index).entity);
+    const auto& insert = std::get<core::Insert>(document.entities()[index].entity);
     std::vector<std::string> result;
     result.reserve(insert.attributes.size());
     for (const core::Attribute& item : insert.attributes) {
@@ -51,7 +51,7 @@ std::vector<std::string> attributeTags(const core::Document& document, std::size
 }
 
 std::vector<std::string> attributeValues(const core::Document& document, std::size_t index = 0) {
-    const auto& insert = std::get<core::Insert>(document.entities().at(index).entity);
+    const auto& insert = std::get<core::Insert>(document.entities()[index].entity);
     std::vector<std::string> result;
     result.reserve(insert.attributes.size());
     for (const core::Attribute& item : insert.attributes) {
@@ -259,12 +259,13 @@ TEST(BattmanDialogHistoryTest, ReordersAndEditsWhileSynchronizationPreservesValu
     const auto applyAndCheckUndo = [&document, &editor,
                                     &dialog](const std::function<void()>& operation) {
         const core::BlockDefinition beforeBlock = *document.blocks().find("BATT");
-        const auto beforeEntities = document.entities();
+        const std::vector<core::EntityRecord> beforeEntities(document.entities().begin(),
+                                                             document.entities().end());
         operation();
         EXPECT_EQ(editor.undoName(), "Battman");
         ASSERT_TRUE(editor.undo());
         EXPECT_EQ(*document.blocks().find("BATT"), beforeBlock);
-        EXPECT_EQ(document.entities(), beforeEntities);
+        EXPECT_TRUE(std::ranges::equal(document.entities(), beforeEntities));
         ASSERT_TRUE(editor.redo());
         dialog.refresh();
     };
