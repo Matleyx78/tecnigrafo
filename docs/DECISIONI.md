@@ -2901,3 +2901,16 @@ i rimandi ai documenti che cambia.
   ([F13](https://github.com/Matleyx78/tecnigrafo/issues/1047)). Il resto
   delle proposte della 0.8.1, compreso l'aggiornamento automatico con `main`
   della «Catena 6», aspetta la pausa dopo la 0.8.1.
+- **2026-11-25 — Domanda per una sola parola di `-ATTDEF` (PT14).** Nella
+  revisione (giro 2) della pull request #1045, Claude segnala che la domanda
+  dell'etichetta non può essere `PromptKind::Text`: renderebbe lo spazio un
+  carattere nella riga di comando, mentre la scheda richiede che valga Invio
+  come in AutoCAD. Il responsabile sceglie la soluzione B: `cmd` aggiunge
+  `PromptKind::Name`. Il runner toglie gli spazi agli estremi e passa la riga
+  come `TextInput`; `CommandRunner::acceptsText()` resta falso e
+  `compatible()` accetta il nuovo tipo con `ValueType::Name`. `-ATTDEF` usa
+  questo tipo per l'etichetta e un test fissa `acceptsText()` falso su quella
+  domanda. Cambiano l'ADR 0014, punto 1, e la scheda PT14, che include
+  `command_protocol.hpp`, `command_runner.cpp`, `command_registry.cpp` e i
+  loro test; dipendenze e onde non cambiano. Scartata la soluzione A, che
+  avrebbe mantenuto `PromptKind::Text` e la differenza da AutoCAD.
