@@ -90,7 +90,7 @@ undo:
 redo:
 snap: on
 ortho: off
-documents: Drawing1.cadx, autocad-attributi.dxf, Drawing2.cadx (active)
+documents: Drawing1.cadx, @sources/autocad-attributi, Drawing2.cadx (active)
 pointer: none
 active snap: none
 statistics:
