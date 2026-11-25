@@ -5,4 +5,4 @@
 ; ATTRIB SIGLA has a second group 280 set to 1; the first remains the version (0).
 D = DXF source=autocad-attributi
 ; cambia con #951
-? entity D A3 -> ATTRIB owner=161 position=27.5498725576756,-36.70130683911319 alignment-point=30,-35 height=2.49999999999999 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S10" tag="SIGLA" lock-position=yes
+? entity D A3 -> ATTRIB owner=161 position=27.5498725576756,-36.70130683911319 alignment-point=30,-35 height=2.49999999999999 rotation=10 width-factor=1 oblique=0 style="Standard" mirror-x=no mirror-y=no horizontal=center vertical=middle value="S10" tag="SIGLA" lock-position=yes ~box=27.167102065801203,-37.550728542429994;33.53445382587304,-36.42799263146779;32.829508775301825,-32.43005058233378;26.462157015229987,-33.552786493295976
