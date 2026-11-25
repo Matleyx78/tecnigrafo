@@ -7,7 +7,7 @@
 D = DXF source=autocad-hatchedit
 ; PT23 adds the nonzero origin field to HATCH reports and HATCH properties.
 ; cambia con #960
-? entity D CC -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 origin=245,5 islands=normal loop=external+derived+polyline vertex=300,40 vertex=240,40 vertex=240,0 vertex=300,0 loop=outermost+derived+polyline vertex=262,20 bulge=-1 vertex=278,20 bulge=-1 seed=245,5 seed=245,5
+? entity D CC -> HATCH pattern="ANSI31" solid=no angle=0 scale=1 islands=normal origin=245,5 loop=external+derived+polyline vertex=300,40 vertex=240,40 vertex=240,0 vertex=300,0 loop=outermost+derived+polyline vertex=262,20 bulge=-1 vertex=278,20 bulge=-1 seed=245,5 seed=245,5
 ? properties D CC -> pattern="ANSI31"; scale=1; angle=0; origin=245,5; islands=normal; ~area=2198.938070170253
 ; Independent AutoCAD variants: scale, angle, island style and all changes.
 ? properties D BE -> pattern="ANSI31"; scale=2; angle=0; origin=0,0; islands=normal; ~area=2198.938070170253
