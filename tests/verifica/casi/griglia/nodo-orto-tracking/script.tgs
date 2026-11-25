@@ -18,9 +18,12 @@ LINE
 !click 19,4
 
 !ortho off
+!view 0,0 0.1 800x600
+!osnap end
 LINE
-0,0
-!hover 0,5
+20,20
+!hover 10,5
+!osnap none
 !move 4.9,4.9
 !report
 !click 4.9,4.9

@@ -12,10 +12,10 @@ messages:
   Command: LINE
   Specify first point: 3,3
   Specify next point or [Undo]: 13,3
-  Specify next point or [Close/Undo]:
+  Specify next point or [Undo]:
   Command: LINE
   Specify next point or [Undo]: 23,3
-  Specify next point or [Close/Undo]:
+  Specify next point or [Undo]:
   Command: LINE
   Specify first point: 1,2
 prompt: Specify next point or [Undo]:
@@ -24,8 +24,10 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=10,10 base=0,0
 pointer: 19,9
@@ -45,8 +47,11 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
+  Line
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=10,10 base=0,0
 pointer: 19,9
@@ -65,8 +70,11 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
+  Line
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=10,10 base=0,0
 pointer: 19,9

@@ -12,12 +12,12 @@ messages:
   Command: LINE
 prompt: Specify next point or [Undo]:
 preview:
-  LINE start=-2,4 end=5.5,9
+  LINE start=-2,-1 end=5.5,9
 selection: none
 rectangle: none
 undo:
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=2.5,5 base=3,4
 pointer: 4.25,6.5
@@ -26,7 +26,7 @@ statistics:
 
 [report 2]
 entities:
-  257 LINE start=-2,4 end=5.5,9
+  257 LINE start=-2,-1 end=5.5,9
   258 LINE start=5.5,9 end=-1.2,0.3
 messages:
   Specify next point or [Undo]: -1.2,0.3
@@ -36,8 +36,9 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=2.5,5 base=3,4
 pointer: 4.25,6.5
@@ -47,7 +48,7 @@ statistics:
 
 [final]
 entities:
-  257 LINE start=-2,4 end=5.5,9
+  257 LINE start=-2,-1 end=5.5,9
   258 LINE start=5.5,9 end=-1.2,0.3
 messages:
 prompt: Command:
@@ -55,8 +56,9 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=2.5,5 base=3,4
 pointer: 4.25,6.5

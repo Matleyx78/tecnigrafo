@@ -11,7 +11,7 @@ messages:
   Command: LINE
   Specify first point: 0,5
   Specify next point or [Undo]: 10,5
-  Specify next point or [Close/Undo]:
+  Specify next point or [Undo]:
   Command: LINE
   Specify first point: 1,2
 prompt: Specify next point or [Undo]:
@@ -20,8 +20,9 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: on
 grid snap: unit=10,10 base=0,0
 pointer: 19,4
@@ -37,22 +38,24 @@ entities:
 messages:
   Specify next point or [Undo]:
   Command: LINE
-  Specify first point: 0,0
+  Specify first point: 20,20
 prompt: Specify next point or [Undo]:
 preview:
-  LINE start=0,0 end=0,0
+  LINE start=20,20 end=0,0
 selection: none
 rectangle: none
 undo:
+  Line
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=10,10 base=0,0
 pointer: 4.9,4.9
 active snap: none
 tracking: on
 acquired:
-  0,5
+  10,5
 statistics:
   LINE 2
 
@@ -60,7 +63,7 @@ statistics:
 entities:
   257 LINE start=0,5 end=10,5
   258 LINE start=1,2 end=20,2
-  259 LINE start=0,0 end=0,0
+  259 LINE start=20,20 end=0,0
 messages:
   Specify next point or [Undo]:
 prompt: Command:
@@ -68,8 +71,11 @@ preview:
 selection: none
 rectangle: none
 undo:
+  Line
+  Line
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=10,10 base=0,0
 pointer: 4.9,4.9
@@ -82,15 +88,18 @@ statistics:
 entities:
   257 LINE start=0,5 end=10,5
   258 LINE start=1,2 end=20,2
-  259 LINE start=0,0 end=0,0
+  259 LINE start=20,20 end=0,0
 messages:
 prompt: Command:
 preview:
 selection: none
 rectangle: none
 undo:
+  Line
+  Line
+  Line
 redo:
-snap: on
+snap: on, modes off: endpoint midpoint center insertion intersection perpendicular tangent quadrant
 ortho: off
 grid snap: unit=10,10 base=0,0
 pointer: 4.9,4.9
