@@ -18,11 +18,14 @@ protected:
     AttdefCommandTest() : editor(document), runner(registry, editor) {
         registerBuiltinCommands(registry);
         runner.setScriptSequences(true);
-        runner.setMessageSink([this](std::string message) { messages.push_back(std::move(message)); });
+        runner.setMessageSink(
+            [this](std::string message) { messages.push_back(std::move(message)); });
     }
 
     void type(std::initializer_list<const char*> inputs) {
-        for (const char* input : inputs) runner.submitText(input);
+        for (const char* input : inputs) {
+            runner.submitText(input);
+        }
     }
 
     core::Document document = core::Document::newDrawing();
@@ -44,8 +47,8 @@ TEST_F(AttdefCommandTest, AflagsValidatesAndSuppliesModes) {
 }
 
 TEST_F(AttdefCommandTest, CreatesDefinitionAndOneUndoStep) {
-    type({"AFLAGS", "0", "-ATTDEF", "", "TAG", "Prompt with spaces", "Default value", "1,2",
-          "3", "30"});
+    type({"AFLAGS", "0", "-ATTDEF", "", "TAG", "Prompt with spaces", "Default value", "1,2", "3",
+          "30"});
     ASSERT_EQ(document.entityCount(), 1U);
     const auto& definition =
         std::get<core::AttributeDefinition>(document.entities().front().entity);
@@ -67,8 +70,7 @@ TEST_F(AttdefCommandTest, EmptyAndInvalidTagsRepeatPrompt) {
 }
 
 TEST_F(AttdefCommandTest, ConstantSkipsPromptAndMcSetsAlignment) {
-    type({"AFLAGS", "0", "-ATTDEF", "C", "", "CONST", "value", "J", "MC", "4,5", "2.5",
-          "10"});
+    type({"AFLAGS", "0", "-ATTDEF", "C", "", "CONST", "value", "J", "MC", "4,5", "2.5", "10"});
     const auto& definition =
         std::get<core::AttributeDefinition>(document.entities().front().entity);
     EXPECT_TRUE(definition.flags.constant);
