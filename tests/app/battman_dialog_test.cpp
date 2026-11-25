@@ -16,6 +16,7 @@
 #include <QTimer>
 #include <gtest/gtest.h>
 
+#include <ranges>
 #include <string>
 #include <vector>
 
