@@ -331,7 +331,7 @@ Prompt AttdefCommand::prompt() const {
                  {"Preset", "P"},
                  {"Lock position", "L"}}};
         case Stage::Tag:
-            return {"Enter attribute tag name:", {}};
+            return {"Enter attribute tag name:", {}, PromptKind::Text};
         case Stage::AttributePrompt:
             return {"Enter attribute prompt:", {}, PromptKind::Text};
         case Stage::Value:

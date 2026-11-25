@@ -50,8 +50,7 @@ TEST_F(AttdefCommandTest, CreatesDefinitionAndOneUndoStep) {
     type({"AFLAGS", "0", "-ATTDEF", "", "TAG", "Prompt with spaces", "Default value", "1,2", "3",
           "30"});
     ASSERT_EQ(document.entityCount(), 1U);
-    const auto& definition =
-        std::get<core::AttributeDefinition>(document.entities().front().entity);
+    const auto definition = std::get<core::AttributeDefinition>(document.entities().front().entity);
     EXPECT_EQ(definition.tag, "TAG");
     EXPECT_EQ(definition.prompt, "Prompt with spaces");
     EXPECT_EQ(definition.text.value, "Default value");
@@ -71,8 +70,7 @@ TEST_F(AttdefCommandTest, EmptyAndInvalidTagsRepeatPrompt) {
 
 TEST_F(AttdefCommandTest, ConstantSkipsPromptAndMcSetsAlignment) {
     type({"AFLAGS", "0", "-ATTDEF", "C", "", "CONST", "value", "J", "MC", "4,5", "2.5", "10"});
-    const auto& definition =
-        std::get<core::AttributeDefinition>(document.entities().front().entity);
+    const auto definition = std::get<core::AttributeDefinition>(document.entities().front().entity);
     EXPECT_TRUE(definition.flags.constant);
     EXPECT_TRUE(definition.prompt.empty());
     EXPECT_EQ(definition.text.horizontal, core::TextHorizontal::Center);
