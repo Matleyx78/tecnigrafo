@@ -207,6 +207,17 @@ def text_fields(d):
             f"value={quoted(d.text)}"]
 
 
+def hatch_origin(entity):
+    """The pattern origin, the first 1010 of the ACAD XDATA (PT23), or None."""
+    if not entity.has_xdata("ACAD"):
+        return None
+    for tag in entity.get_xdata("ACAD"):
+        if tag.code == 1010:
+            x, y = tuple(tag.value)[:2]
+            return (x, y)
+    return None
+
+
 def hatch_loop(path):
     flags = path.path_type_flags
     prefix = "+".join(name for bit, name in ((1, "external"), (16, "outermost"),
@@ -340,6 +351,8 @@ def entity_answer(entity, layer_names=None, linetype_names=None, properties=True
         add("angle", number(d.get("pattern_angle", 0))); add("scale", number(d.get("pattern_scale", 1)))
         if d.get("pattern_double", 0): add("double", "yes")
         add("islands", {0: "normal", 1: "outer", 2: "ignore"}.get(d.get("hatch_style", 0), "normal"))
+        origin = hatch_origin(entity)
+        if origin is not None and origin != (0, 0): add("origin", point(origin))
         for path in entity.paths: fields.extend(hatch_loop(path))
         for seed in entity.seeds: add("seed", point(seed))
     if d.is_supported("thickness"):

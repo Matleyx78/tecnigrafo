@@ -5,7 +5,8 @@
 // (docs/verifica/domande.md, "Retini (tappa 0.8)"): the contour detected from
 // a point and the contours chosen as objects. They ask core
 // (docs/tappe/0.8/PT43-contorni-dei-retini.md, point 5) and add no logic of
-// their own.
+// their own. Stage 0.8.1 adds the families of the pattern of a hatch
+// (pattern-lines, docs/tappe/0.8.1/PT23-proprieta-retini-quote.md, point 4).
 
 #include "new_entities_format.hpp"
 #include "question_table.hpp"
@@ -13,6 +14,7 @@
 #include "tg/core/entity_id.hpp"
 #include "tg/core/hatch.hpp"
 #include "tg/core/hatch_boundary.hpp"
+#include "tg/core/math.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/script/number_format.hpp"
 
@@ -66,7 +68,47 @@ std::string loopsText(const std::vector<core::HatchLoop>& loops) {
     return first == std::string::npos ? std::string{} : line.substr(first);
 }
 
+/// A family of a pattern: "angle=<degrees> origin=x,y offset=x,y dashes=a,b,…".
+std::string familyText(const core::PatternLine& line) {
+    std::string text = "angle=" + formatNumber(core::radiansToDegrees(line.angle));
+    text += " origin=" + formatPoint(line.origin);
+    text += " offset=" + formatPoint(line.offset);
+    text += " dashes=";
+    for (std::size_t i = 0; i < line.dashes.size(); ++i) {
+        if (i > 0) {
+            text += ',';
+        }
+        text += formatNumber(line.dashes[i]);
+    }
+    return text;
+}
+
 }  // namespace
+
+QuestionResult askPatternLines(const QuestionModel& model, Arguments arguments) {
+    if (arguments.size() != 1) {
+        return usage("pattern-lines <H>");
+    }
+    const std::optional<core::EntityId> id = model.find(arguments[0]);
+    if (!id) {
+        return ArgumentError{"no entity named " + quoted(arguments[0]) + " is defined above"};
+    }
+    const auto* hatch = std::get_if<core::Hatch>(&model.document.find(*id)->entity);
+    if (hatch == nullptr) {
+        return ArgumentError{quoted(arguments[0]) + " is not a HATCH"};
+    }
+    // In the order of the pattern; none for a solid fill.
+    std::string answer;
+    if (!hatch->solid) {
+        for (const core::PatternLine& line : hatch->patternLines) {
+            if (!answer.empty()) {
+                answer += "; ";
+            }
+            answer += familyText(line);
+        }
+    }
+    return answer.empty() ? std::string{"none"} : answer;
+}
 
 QuestionResult askHatchBoundary(const QuestionModel& model, Arguments arguments) {
     constexpr std::string_view kForm = "hatch-boundary x,y [units=<n>]";

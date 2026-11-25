@@ -4,6 +4,7 @@
 #pragma once
 
 #include "tg/core/document.hpp"
+#include "tg/core/entity_extras.hpp"
 #include "tg/core/generated.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/text.hpp"
@@ -48,6 +49,12 @@ void writeFormattedTextBox(const core::FormattedText& piece, std::string& out);
 /// seven types (SOLID, ELLIPSE, MTEXT, ATTDEF, INSERT, DIMENSION, HATCH),
 /// without the derived ones; nothing for the types of before the 0.8.
 void writeNewEntity(const core::Entity& entity, std::string& out);
+
+/// The same line for an entity of a record with `extras`: a HATCH writes
+/// origin= after islands when the origin of its pattern (core::patternOrigin)
+/// is not 0,0 (docs/verifica/rapporto.md, "Campi annunciati per la tappa
+/// 0.8.1").
+void writeNewEntity(const core::Entity& entity, const core::EntityExtras& extras, std::string& out);
 
 /// Appends the line of an ATTRIB of the INSERT `owner`, without the derived
 /// properties: "ATTRIB owner=300 position=… value=\"-K1\" tag=\"TG_REF\"".

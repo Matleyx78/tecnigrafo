@@ -440,19 +440,21 @@ void writeDerived(const core::Entity& entity, std::string& out) {
     }
 }
 
-/// The type and the properties of the model, without the derived ones.
-void writeModel(const core::Entity& entity, std::string& out) {
-    std::visit(
-        Overloaded{
-            [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
-            [&out](const core::Line& line) { writeLine(line, out); },
-            [&out](const core::Circle& circle) { writeCircle(circle, out); },
-            [&out](const core::Arc& arc) { writeArc(arc, out); },
-            [&out](const core::Text& text) { writeText(text, out); },
-            // The types of the 0.8 (docs/verifica/rapporto.md, "Tappa 0.8").
-            [&out, &entity](const auto& /*composite*/) { detail::writeNewEntity(entity, out); },
-        },
-        entity);
+/// The type and the properties of the model, without the derived ones;
+/// `extras` gives the origin of the pattern of a HATCH (PT23).
+void writeModel(const core::Entity& entity, const core::EntityExtras& extras, std::string& out) {
+    std::visit(Overloaded{
+                   [&out](const core::Polyline& polyline) { writePolyline(polyline, out); },
+                   [&out](const core::Line& line) { writeLine(line, out); },
+                   [&out](const core::Circle& circle) { writeCircle(circle, out); },
+                   [&out](const core::Arc& arc) { writeArc(arc, out); },
+                   [&out](const core::Text& text) { writeText(text, out); },
+                   // The types of the 0.8 (docs/verifica/rapporto.md, "Tappa 0.8").
+                   [&out, &entity, &extras](const auto& /*composite*/) {
+                       detail::writeNewEntity(entity, extras, out);
+                   },
+               },
+               entity);
 }
 
 std::string selectionText(const cmd::SelectionSet& selection) {
@@ -656,7 +658,7 @@ void detail::writeGeneratedItem(const core::GeneratedItem& item, std::string& ou
     if (piece != nullptr) {
         writeFormattedText(*piece, out);
     } else if (entity) {
-        writeModel(*entity, out);
+        writeModel(*entity, core::EntityExtras{}, out);
     } else if (region != nullptr) {
         writeRegion(*region, out);
     }
@@ -830,19 +832,19 @@ std::string_view dxfType(const core::Entity& entity) {
 }
 
 void writeEntity(const core::Entity& entity, std::string& out) {
-    writeModel(entity, out);
+    writeModel(entity, core::EntityExtras{}, out);
     writeDerived(entity, out);
 }
 
 void writeEntity(const core::EntityRecord& record, std::string& out) {
-    writeModel(record.entity, out);
+    writeModel(record.entity, record.extras, out);
     writePlacementProperties(record.entity, record.extras, out);
     writeDerived(record.entity, out);
 }
 
 void writeEntity(const core::EntityRecord& record, const core::Document& document,
                  std::string& out) {
-    writeModel(record.entity, out);
+    writeModel(record.entity, record.extras, out);
     writePlacementProperties(record.entity, record.extras, out);
     writeProperties(record.properties, document, out);
     writeDerived(record.entity, out);

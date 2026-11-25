@@ -13,6 +13,7 @@
 #include "tg/core/document.hpp"
 #include "tg/core/ellipse.hpp"
 #include "tg/core/hatch.hpp"
+#include "tg/core/hatch_patterns.hpp"
 #include "tg/core/insert.hpp"
 #include "tg/core/layer.hpp"
 #include "tg/core/line.hpp"
@@ -666,7 +667,48 @@ TEST(ReadNewEntity, DefaultsMayBeLeftOut) {
     EXPECT_FALSE(angular.presentation.textRotation.has_value());
     core::Hatch hatch;
     hatch.pattern = "NET";
+    // With the families -HATCH gives NET in a new drawing (PT23, point 5).
+    hatch.patternLines = core::predefinedPatternLines("NET", 1.0, 0.0, core::kMetricMeasurement);
     EXPECT_EQ(std::get<core::Hatch>(entity(R"(HATCH pattern="NET")")), hatch);
+}
+
+TEST(ReadNewEntity, AHatchGetsTheFamiliesOfAGeneratedPattern) {
+    // Decision D1 on #960 (docs/tappe/0.8.1/PT23-proprieta-retini-quote.md,
+    // point 5): the families of -HATCH in a new drawing, with origin 0,0.
+    const auto families = [](std::string_view text) {
+        std::variant<core::Entity, EntityError> read = readNew(text);
+        if (const auto* error = std::get_if<EntityError>(&read)) {
+            ADD_FAILURE() << text << ": " << error->message;
+            return std::vector<core::PatternLine>{};
+        }
+        return std::get<core::Hatch>(std::get<core::Entity>(read)).patternLines;
+    };
+    const std::vector<core::PatternLine> ansi31 =
+        families(R"(HATCH pattern="ANSI31" solid=no angle=0 scale=1)");
+    ASSERT_EQ(ansi31.size(), 1U);
+    EXPECT_NEAR(core::radiansToDegrees(ansi31[0].angle), 45.0, 1e-12);
+    EXPECT_EQ(ansi31[0].origin, (core::Vec2{0.0, 0.0}));
+    EXPECT_NEAR(ansi31[0].offset.x, -2.245064030267288, 1e-12);
+    EXPECT_NEAR(ansi31[0].offset.y, 2.245064030267288, 1e-12);
+    EXPECT_TRUE(ansi31[0].dashes.empty());
+
+    const std::vector<core::PatternLine> net = families(R"(HATCH pattern="net" scale=2)");
+    ASSERT_EQ(net.size(), 2U);
+    EXPECT_NEAR(net[0].offset.y, 2 * 3.175, 1e-12);
+    // An angle beyond a turn is reduced first, as -HATCH reduces it.
+    EXPECT_EQ(families(R"(HATCH pattern="ANSI31" angle=390)"),
+              core::predefinedPatternLines("ANSI31", 1.0, core::reducedDegreesToRadians(30),
+                                           core::kMetricMeasurement));
+    // A doubled pattern keeps them: -HATCH does not double.
+    EXPECT_EQ(families(R"(HATCH pattern="NET" double=yes)"), families(R"(HATCH pattern="NET")"));
+
+    EXPECT_TRUE(families(R"(HATCH pattern="SOLID" solid=yes)").empty());
+    EXPECT_TRUE(families(R"(HATCH pattern="ANSI31" solid=yes)").empty());
+    EXPECT_TRUE(families(R"(HATCH pattern="ANSI37")").empty());
+    // The origin of the pattern is checked and left out, as the quota of
+    // stage 0.5: an entity read here has no XDATA.
+    EXPECT_EQ(families(R"(HATCH pattern="ANSI31" origin=10,0)"),
+              families(R"(HATCH pattern="ANSI31")"));
 }
 
 TEST(ReadNewEntity, AValidLineIsRefusedUntilItsTypeIsSupported) {
