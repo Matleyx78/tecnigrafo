@@ -2873,3 +2873,16 @@ i rimandi ai documenti che cambia.
   Scartate: lo stile scelto che resta corrente dopo Esc; la giustificazione
   dell'ultima volta ricordata; l'elenco degli stili per `?`, che nessun
   documento scrive.
+- **2026-11-25 — Famiglie del motivo di una definizione `HATCH` (PT23).**
+  Claude, fermo su PT23 (#960, commento «Serve una decisione del
+  responsabile», punto 4), segnala che la riga `? pattern-lines H` del caso
+  `proprieta-proprie/retini-quote` chiede la famiglia di `ANSI31` su un retino
+  nato da una definizione `HATCH`, che oggi non riceve famiglie: solo `-HATCH`
+  e il lettore DXF riempiono `Hatch::patternLines`. Il responsabile sceglie
+  **D1**: una definizione `HATCH` non piena, il cui motivo
+  `predefinedPatternLines` genera, riceve le famiglie di
+  `predefinedPatternLines(nome, scala, angolo, kMetricMeasurement)`, come
+  `-HATCH` in un disegno nuovo; senza XDATA l'origine è `(0,0)`. Scartata
+  D2: togliere la riga dal caso e lasciare `pattern-lines` ai soli test di
+  unità. Cambia la scheda PT23 (punto 5 e "Test richiesti"); file,
+  dipendenze e onde non cambiano.
