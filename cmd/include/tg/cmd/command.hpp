@@ -52,7 +52,7 @@ struct CommandDefaults {
     double rectangOtherWidth{10.0};
     double hatchScale{1.0};
     double hatchAngle{0.0};                               ///< radians
-    core::Vec2 hatchOrigin{};                             ///< HPORIGIN for newly created hatches.
+    core::Vec2 hatchOrigin;                               ///< HPORIGIN for newly created hatches.
     std::optional<double> offsetDistance = std::nullopt;  ///< none means Through
     /// HPNAME, HPSCALE and HPANG for the next -HATCH (docs/adr/0048, point 6).
     std::string hatchPattern{"ANSI31"};
