@@ -3,6 +3,7 @@
 
 #include "text_format_bar.hpp"
 
+#include "input_events.hpp"
 #include "text_editor_overlay.hpp"
 #include "tg/cmd/text_editing.hpp"
 #include "tg/core/document.hpp"
@@ -10,7 +11,6 @@
 
 #include <QDoubleSpinBox>
 #include <QLineEdit>
-#include <QTest>
 #include <QToolButton>
 #include <gtest/gtest.h>
 
@@ -37,12 +37,12 @@ protected:
 
     void select(std::size_t anchor, std::size_t caret) {
         ASSERT_LE(anchor, caret);
-        QTest::keyClick(&m_editor, Qt::Key_Home);
+        events::press(&m_editor, Qt::Key_Home);
         for (std::size_t index = 0; index < anchor; ++index) {
-            QTest::keyClick(&m_editor, Qt::Key_Right);
+            events::press(&m_editor, Qt::Key_Right);
         }
         for (std::size_t index = anchor; index < caret; ++index) {
-            QTest::keyClick(&m_editor, Qt::Key_Right, Qt::ShiftModifier);
+            events::press(&m_editor, Qt::Key_Right, Qt::ShiftModifier);
         }
     }
 
@@ -72,7 +72,7 @@ TEST_F(TextFormatBarTest, ToggleButtonsApplyCodesAndFollowCaretFormat) {
     click("formatBold");
     EXPECT_EQ(overlay().value(), "{\\fArial|b1|i0;A}B");
 
-    QTest::keyClick(&overlay(), Qt::Key_Right);
+    events::press(&overlay(), Qt::Key_Right);
     formatBar().refresh();
     EXPECT_TRUE(formatBar().findChild<QToolButton*>(QStringLiteral("formatBold"))->isChecked());
 }
@@ -152,7 +152,7 @@ TEST_F(TextFormatBarTest, EditorShortcutsToggleBoldItalicAndUnderline) {
         overlay().close();
         open("ABC");
         select(0, 1);
-        QTest::keyClick(&overlay(), shortcut.key, Qt::ControlModifier);
+        events::press(&overlay(), shortcut.key, Qt::ControlModifier);
         EXPECT_EQ(overlay().value(), shortcut.expected);
     }
 }
