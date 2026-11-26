@@ -10,6 +10,7 @@ add_library(tg_cmd
     src/commands/aid_commands.cpp
     src/commands/arc_command.cpp
     src/commands/attedit_command.cpp
+    src/commands/attribute_commands.cpp
     src/commands/block_command.cpp
     src/commands/chamfer_command.cpp
     src/commands/chprop_command.cpp
