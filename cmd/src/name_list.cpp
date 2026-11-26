@@ -7,6 +7,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <utility>
 
 namespace tg::cmd::detail {
 
@@ -22,20 +25,135 @@ std::vector<std::string> splitNameList(std::string_view text) {
     }
 }
 
-bool matchesName(std::string_view pattern, std::string_view name) {
+namespace {
+
+bool isDigit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+bool isLetter(char c) {
+    const char upper = toUpperAscii(c);
+    return upper >= 'A' && upper <= 'Z';
+}
+
+/// One element of a pattern: '*', or what a single character must be.
+struct Element {
+    enum class Kind : std::uint8_t { Star, Any, Digit, Letter, Other, Literal, Class };
+    Kind kind{Kind::Literal};
+    char literal{'\0'};
+    std::vector<std::pair<char, char>> ranges;  ///< Class: uppercase, inclusive
+    bool negated{false};                        ///< Class: "[~...]"
+
+    [[nodiscard]] bool admits(char c) const {
+        switch (kind) {
+            case Kind::Star:
+            case Kind::Any:
+                return true;
+            case Kind::Digit:
+                return isDigit(c);
+            case Kind::Letter:
+                return isLetter(c);
+            case Kind::Other:
+                return !isDigit(c) && !isLetter(c);
+            case Kind::Literal:
+                return toUpperAscii(c) == toUpperAscii(literal);
+            case Kind::Class:
+                break;
+        }
+        const char upper = toUpperAscii(c);
+        const bool listed = std::ranges::any_of(ranges, [upper](const auto& range) {
+            return upper >= range.first && upper <= range.second;
+        });
+        return listed != negated;
+    }
+};
+
+/// The class that begins at pattern[open] == '[', and the position after its
+/// ']'; std::nullopt without a ']'.
+std::optional<std::pair<Element, std::size_t>> parseClass(std::string_view pattern,
+                                                          std::size_t open) {
+    Element element;
+    element.kind = Element::Kind::Class;
+    std::size_t position = open + 1;
+    if (position + 1 < pattern.size() && pattern[position] == '~' && pattern[position + 1] != ']') {
+        element.negated = true;
+        ++position;
+    }
+    while (position < pattern.size() && pattern[position] != ']') {
+        const char first = toUpperAscii(pattern[position]);
+        if (position + 2 < pattern.size() && pattern[position + 1] == '-' &&
+            pattern[position + 2] != ']') {
+            element.ranges.emplace_back(first, toUpperAscii(pattern[position + 2]));
+            position += 3;
+        } else {
+            element.ranges.emplace_back(first, first);
+            ++position;
+        }
+    }
+    if (position == pattern.size()) {
+        return std::nullopt;
+    }
+    return std::pair{std::move(element), position + 1};
+}
+
+std::vector<Element> parsePattern(std::string_view pattern) {
+    std::vector<Element> elements;
+    std::size_t position = 0;
+    while (position < pattern.size()) {
+        const char c = pattern[position];
+        Element element;
+        switch (c) {
+            case '*':
+                element.kind = Element::Kind::Star;
+                break;
+            case '?':
+                element.kind = Element::Kind::Any;
+                break;
+            case '#':
+                element.kind = Element::Kind::Digit;
+                break;
+            case '@':
+                element.kind = Element::Kind::Letter;
+                break;
+            case '.':
+                element.kind = Element::Kind::Other;
+                break;
+            case '`':
+                if (position + 1 < pattern.size()) {
+                    ++position;
+                }
+                element.literal = pattern[position];
+                break;
+            case '[':
+                if (auto parsed = parseClass(pattern, position)) {
+                    elements.push_back(std::move(parsed->first));
+                    position = parsed->second;
+                    continue;
+                }
+                element.literal = c;
+                break;
+            default:
+                element.literal = c;
+                break;
+        }
+        elements.push_back(std::move(element));
+        ++position;
+    }
+    return elements;
+}
+
+bool matchesElements(const std::vector<Element>& elements, std::string_view name) {
     std::size_t position = 0;
     std::size_t character = 0;
     std::size_t star = std::string_view::npos;
     std::size_t retry = 0;
     while (character < name.size()) {
-        if (position < pattern.size() &&
-            (pattern[position] == '?' ||
-             toUpperAscii(pattern[position]) == toUpperAscii(name[character]))) {
-            ++position;
-            ++character;
-        } else if (position < pattern.size() && pattern[position] == '*') {
+        if (position < elements.size() && elements[position].kind == Element::Kind::Star) {
             star = position++;
             retry = character;
+        } else if (position < elements.size() && elements[position].admits(name[character])) {
+            ++position;
+            ++character;
         } else if (star != std::string_view::npos) {
             position = star + 1;
             character = ++retry;
@@ -43,19 +161,31 @@ bool matchesName(std::string_view pattern, std::string_view name) {
             return false;
         }
     }
-    while (position < pattern.size() && pattern[position] == '*') {
+    while (position < elements.size() && elements[position].kind == Element::Kind::Star) {
         ++position;
     }
-    return position == pattern.size();
+    return position == elements.size();
+}
+
+}  // namespace
+
+bool matchesName(std::string_view pattern, std::string_view name) {
+    if (pattern.size() > 1 && pattern.front() == '~') {
+        return !matchesElements(parsePattern(pattern.substr(1)), name);
+    }
+    return matchesElements(parsePattern(pattern), name);
+}
+
+bool matchesNameList(std::string_view text, std::string_view name) {
+    return std::ranges::any_of(splitNameList(text), [name](const std::string& pattern) {
+        return matchesName(pattern, name);
+    });
 }
 
 std::vector<core::LayerId> matchingLayers(const core::Document& document, std::string_view text) {
-    const auto patterns = splitNameList(text);
     std::vector<core::LayerId> ids;
     for (const auto& layer : document.layers()) {
-        if (std::ranges::any_of(patterns, [&layer](const std::string& pattern) {
-                return matchesName(pattern, layer.name);
-            })) {
+        if (matchesNameList(text, layer.name)) {
             ids.push_back(layer.id);
         }
     }

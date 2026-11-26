@@ -13,8 +13,17 @@ namespace tg::cmd::detail {
 
 /// Keeps empty elements so callers can reject invalid creation lists atomically.
 [[nodiscard]] std::vector<std::string> splitNameList(std::string_view text);
-/// ASCII case insensitive, with only '*' and '?' as wildcard operators.
+/// ASCII case insensitive, with the wildcards of AutoCAD (docs/adr/0056,
+/// point 4): '*' any sequence, '?' any character, '#' a digit, '@' a letter,
+/// '.' a character that is neither, "[...]" one of the characters listed or
+/// in a range ("[A-C]"), "[~...]" one that is not, '`' the next character as
+/// it is, and '~' in front of the whole pattern for the names it does not
+/// match. A '[' without its ']' is an ordinary character. One pattern: the
+/// commas are split by splitNameList().
 [[nodiscard]] bool matchesName(std::string_view pattern, std::string_view name);
+/// True when `name` matches one of the patterns of the list `text`
+/// (splitNameList(), matchesName()).
+[[nodiscard]] bool matchesNameList(std::string_view text, std::string_view name);
 /// Table order, each layer at most once even when patterns overlap.
 [[nodiscard]] std::vector<core::LayerId> matchingLayers(const core::Document& document,
                                                         std::string_view text);

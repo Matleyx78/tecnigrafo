@@ -115,9 +115,14 @@ bool isValid(const PromptDescription& prompt) {
     if (prompt.id.empty() || prompt.text.empty()) {
         return false;
     }
+    // An Object prompt may take keywords its text does not show, as
+    // "Select Attributes:" of -ATTEDIT takes Window and Crossing (ADR 0026,
+    // point 3).
+    const bool unwritten = prompt.value == ValueType::Object;
     const std::vector<std::string_view> options = bracketOptions(prompt.text);
-    return std::ranges::all_of(prompt.keywords, [&options](const Keyword& keyword) {
-        return !keyword.name.empty() && std::ranges::find(options, keyword.name) != options.end();
+    return std::ranges::all_of(prompt.keywords, [&options, unwritten](const Keyword& keyword) {
+        return !keyword.name.empty() &&
+               (unwritten || std::ranges::find(options, keyword.name) != options.end());
     });
 }
 
