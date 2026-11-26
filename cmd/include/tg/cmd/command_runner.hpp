@@ -8,8 +8,10 @@
 #include "tg/cmd/drawing_aids.hpp"
 #include "tg/cmd/input.hpp"
 #include "tg/cmd/selection_set.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/document.hpp"
 #include "tg/core/document_query.hpp"
+#include "tg/core/entity_id.hpp"
 #include "tg/core/snap_points.hpp"
 #include "tg/core/vec2.hpp"
 #include "tg/edit/editor.hpp"
@@ -185,6 +187,27 @@ struct SelectionRectangle {
 /// the command receives an input, finishes or is cancelled, and when
 /// tracking or object snap is switched off.
 ///
+/// Extension and Parallel (docs/adr/0057, points 3-5;
+/// docs/tappe/0.8.1/PT31-prolungamento-parallelo.md). Their holds work with
+/// tracking off too, with object snap and their mode on (see pointerHeld()),
+/// in the same list of at most seven acquisitions. An extension is a guide:
+/// the ray beyond the end of a line or of a straight polyline segment, the
+/// rest of the circle beyond the end of an arc; a direction gives the line
+/// through the base point of the command with that direction. Any two guides
+/// of different acquisitions that catch the pointer give their crossing
+/// (solid-space's intersection of the extended lines; an arc extension
+/// crosses only straight guides, on its part beyond the end), and the polar
+/// ray crosses them too. Ties: see detail::trackPoint() (object_tracking.hpp).
+/// A distance typed alone along a single extension of a line, or a parallel,
+/// is measured from its end or from the base point of the command, towards
+/// the pointer; along an arc extension, along the arc, from its end. A
+/// negative distance along an extension, or one beyond the other end of the
+/// arc, gives no point there: the number is then a direct distance, as
+/// without guides. Switching a mode off drops the part of every acquisition
+/// that depends on it (tracking: the points; Extension: the extensions;
+/// Parallel: the directions; object snap: everything), and switching it on
+/// again does not bring it back; an acquisition left empty is dropped.
+///
 /// Points given with submit() are never corrected: they are the exact
 /// points of scripts and tests. While selecting, and at Object prompts,
 /// nothing is corrected: at an Object prompt the command receives the
@@ -233,25 +256,117 @@ public:
     void pointerMoved(const core::Vec2& point);
 
     /// The pointer stays on `point` long enough to acquire or release a snap
-    /// point (docs/adr/0049, point 2). Same as pointerMoved() otherwise.
+    /// point, an extension or a direction (docs/adr/0049, point 2;
+    /// docs/adr/0057, point 3). Same as pointerMoved() otherwise.
+    ///
+    /// Only while a command asks for a point, with object snap on. The hold
+    /// takes the snap that wins with the snap modes (core::findSnapHit(),
+    /// from the base point), except that with Extension on the ends of the
+    /// lines, the arcs and the end segments of the open polylines compete as
+    /// Endpoint even with Endpoint off (only for the hold: the click and the
+    /// preview do not see them). Then:
+    /// - a snap point (not Nearest nor Center) wins: with tracking on, its
+    ///   point is acquired, an Endpoint only with Endpoint on; with Extension
+    ///   on and an Endpoint of one of those curves, its extension too;
+    /// - otherwise: with tracking on, the point of a Nearest or a Center that
+    ///   wins; with Parallel on and a base point, the direction of the line,
+    ///   or of the straight polyline segment, that a click within the snap
+    ///   aperture picks (core::pickEntity(), then the earliest nearest
+    ///   segment), if the pointer is farther than the aperture from both its
+    ///   ends.
+    /// What one hold acquires is one Acquisition. A hold that finds the point,
+    /// the extension (the same entity, segment and end) or the direction (the
+    /// same entity and segment) of an acquisition releases that whole
+    /// acquisition instead; the eighth acquisition drops the oldest.
     void pointerHeld(const core::Vec2& point);
 
-    /// Object snap tracking (docs/adr/0049): the points acquired and what
-    /// the guides do to the pointer.
+    /// Object snap tracking (docs/adr/0049) and the guides of Extension and
+    /// Parallel (docs/adr/0057, points 3-5): what is acquired and what the
+    /// guides do to the pointer.
     struct TrackingState {
-        std::vector<core::Vec2> acquired;      // oldest first, at most 7
+        /// What one hold acquired (docs/tappe/0.8.1/PT31-prolungamento-parallelo.md,
+        /// point 1). At least one of the three is set.
+        struct Acquisition {
+            /// The extension of a line, of an arc or of the first or last
+            /// segment of an open polyline, beyond one of its ends.
+            struct Extension {
+                core::EntityId entity;
+                std::optional<std::size_t> segment;  ///< for a polyline
+                bool atStart{false};                 ///< the start of the curve or segment
+                core::Vec2 end;                      ///< the end acquired, as the snap gives it
+                /// A straight extension: the direction away from the other
+                /// end, not normalized; the ray starts at `end`.
+                core::Vec2 direction;
+                /// An arc extension: the rest of its circle, from the angle of
+                /// `end`, turning away from the arc, up to its other end.
+                std::optional<core::ArcGeometry> beyond;
+
+                friend bool operator==(const Extension&, const Extension&) = default;
+            };
+
+            /// The line, or the straight polyline segment, whose direction
+            /// is acquired.
+            struct Parallel {
+                core::EntityId entity;
+                std::optional<std::size_t> segment;  ///< for a polyline
+                core::Vec2 start;
+                core::Vec2 end;
+
+                friend bool operator==(const Parallel&, const Parallel&) = default;
+            };
+
+            std::optional<core::Vec2> point;     ///< a point of the tracking
+            std::optional<Extension> extension;  ///< with Extension on
+            std::optional<Parallel> parallel;    ///< with Parallel on
+
+            friend bool operator==(const Acquisition&, const Acquisition&) = default;
+        };
+
+        /// A guide that gives the point (docs/tappe/0.8.1/PT31, point 2):
+        /// what the view draws, without rebuilding anything.
+        struct ActiveGuide {
+            enum class Kind : std::uint8_t { Horizontal, Vertical, Extension, Parallel };
+            Kind kind{Kind::Horizontal};
+            std::size_t acquisition{0};  ///< its index in `acquisitions`
+            /// The point acquired, the end of the extension or the base point.
+            core::Vec2 origin;
+            /// A straight guide: (1,0) and (0,1) for the whole horizontal and
+            /// vertical lines through `origin`, the direction of the ray of a
+            /// straight extension, that of the whole parallel line through the
+            /// base point. Not normalized.
+            core::Vec2 direction;
+            /// An arc extension instead: the part of the circle beyond `origin`.
+            std::optional<core::ArcGeometry> arc;
+
+            friend bool operator==(const ActiveGuide&, const ActiveGuide&) = default;
+        };
+
+        /// The points of the tracking among the acquisitions, oldest first.
+        std::vector<core::Vec2> acquired;
+        /// Oldest first, at most kMaxAcquired.
+        std::vector<Acquisition> acquisitions;
         std::optional<core::Vec2> guidePoint;  // the point the guides give
         enum class Guide : std::uint8_t {
             None,
             Horizontal,
             Vertical,
             Crossing,
-            WithPolar
+            WithPolar,
+            Extension,
+            Parallel
         } guide{Guide::None};
-        std::optional<core::Vec2> from;  // the acquired point of a single guide
+        /// The point acquired of a single guide: for an extension its end,
+        /// for a parallel the base point.
+        std::optional<core::Vec2> from;
+        /// The guides that give guidePoint: one for a single guide and for a
+        /// crossing with the polar ray (the ray is activePolar()), two for a
+        /// crossing, that of the more recent acquisition first. Empty with
+        /// Guide::None.
+        std::vector<ActiveGuide> guides;
     };
 
-    /// At most this many points are acquired (docs/adr/0049, point 2).
+    /// At most this many acquisitions (docs/adr/0049, point 2; docs/adr/0057,
+    /// point 3).
     static constexpr std::size_t kMaxAcquired = 7;
 
     /// The tracking state: the guide fields are computed on each call, as
@@ -464,20 +579,28 @@ private:
     }
 
     [[nodiscard]] std::optional<core::SnapPoint> snapAt(const core::Vec2& point) const;
-    /// Tracking and object snap on, while a command asks for a point.
-    [[nodiscard]] bool tracksObjectSnaps() const;
-    /// What the guides of the acquired points make of `point`, with the
-    /// polar ray from `polarBase`, if any (docs/adr/0049, points 3-5); the
+    /// Object snap on and something acquired, while a command asks for a
+    /// point: the guides may catch the pointer.
+    [[nodiscard]] bool followsGuides() const;
+    /// What the guides of the acquisitions make of `point`, with the polar
+    /// ray from `polarBase`, if any, and the parallels through the base point
+    /// of the command (docs/adr/0049, points 3-5; docs/adr/0057, point 4); the
     /// guide fields of a TrackingState, Guide::None if no guide catches it.
     /// Does not look at the snap, which wins anyway.
     [[nodiscard]] TrackingState trackedPoint(const core::Vec2& point,
                                              const std::optional<core::Vec2>& polarBase) const;
+    /// What a hold at `point` acquires (pointerHeld()); nothing set if nothing.
+    [[nodiscard]] TrackingState::Acquisition acquisitionAt(const core::Vec2& point) const;
     /// The point on the polar ray from `base` that the pointer is on, if any.
     [[nodiscard]] std::optional<core::Vec2> polarFoot(const core::Vec2& base,
                                                       const core::Vec2& point) const;
 
-    /// Drops the acquired points.
-    void clearAcquired() { m_tracking.acquired.clear(); }
+    /// Drops the acquisitions.
+    void clearAcquired() { m_acquisitions.clear(); }
+
+    /// Drops the parts of the acquisitions whose mode is off, and the
+    /// acquisitions left empty (docs/tappe/0.8.1/PT31, point 1).
+    void dropSwitchedOff();
 
     /// `point` corrected by the snap or, failing that, by object snap
     /// tracking or, failing that, by ortho or polar from `orthoBase`, if
@@ -514,8 +637,9 @@ private:
     /// direction, asked for or open.
     std::optional<core::RectangleMode> m_writtenMode;
     DrawingAids m_drawingAids;
-    /// The points acquired are kept here; the other fields are recomputed by
-    /// tracking(), which is const as activeSnap() is.
+    /// Oldest first, at most kMaxAcquired.
+    std::vector<TrackingState::Acquisition> m_acquisitions;
+    /// Recomputed by tracking(), which is const as activeSnap() is.
     mutable TrackingState m_tracking;
     double m_pixelSize{1.0};
     bool m_askingSelection{false};  ///< m_command exists but is not started yet

@@ -64,7 +64,9 @@ private:
 /// True if `description` satisfies the preconditions of
 /// CommandRegistry::add(): name and summary not empty, prompt ids not empty
 /// and unique, every keyword of a prompt listed between the square brackets
-/// of its text.
+/// of its text. The keywords of an Object prompt need not be listed there:
+/// "Select Attributes:" takes Window and Crossing without showing them
+/// (docs/adr/0026, point 3).
 [[nodiscard]] bool isValid(const CommandDescription& description);
 
 }  // namespace tg::cmd

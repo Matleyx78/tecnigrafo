@@ -5,6 +5,7 @@
 
 #include "dimension_graphics.hpp"
 #include "insert_snap.hpp"
+#include "solid_space_bridge.hpp"
 #include "tg/core/arc_geometry.hpp"
 #include "tg/core/dimension.hpp"
 #include "tg/core/effective_properties.hpp"
@@ -240,6 +241,38 @@ std::optional<NearPoint> nearestOnShape(const Entity& shape, const Vec2& pointer
     return std::nullopt;
 }
 
+/// Where a snap point comes from (findSnapHit()): the entity and, for a
+/// shape that is the entity itself, the segment of a polyline and the start
+/// of the curve, which tells which end an Endpoint is.
+struct Source {
+    std::uint64_t id{0};
+    std::optional<std::size_t> segment;
+    std::optional<Vec2> start;
+};
+
+/// A point of the generated geometry, of an intersection or of a text: only
+/// the entity.
+Source entityOnly(std::uint64_t id) {
+    return Source{id, std::nullopt, std::nullopt};
+}
+
+SnapHit hitOf(const SnapPoint& snap, const Source& source) {
+    const bool atStart =
+        snap.kind == SnapKind::Endpoint && source.start && snap.point == *source.start;
+    return SnapHit{snap, EntityId{source.id}, source.segment, atStart};
+}
+
+/// The first point of a line or an arc, as appendSnapPoints() gives it.
+std::optional<Vec2> curveStart(const Entity& entity) {
+    if (const auto* line = std::get_if<Line>(&entity)) {
+        return line->start;
+    }
+    if (const auto* arc = std::get_if<Arc>(&entity)) {
+        return bridge::arcEndpoints(*arc).first;
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 std::optional<EntityId> pickEntity(const Document& document, const Vec2& point, double tolerance) {
@@ -273,37 +306,38 @@ std::vector<EntityId> selectInRectangle(const Document& document, const BBox& re
     return selected;
 }
 
-std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer, double aperture,
-                                  const SnapModes& modes, std::optional<Vec2> from) {
+std::optional<SnapHit> findSnapHit(const Document& document, const Vec2& pointer, double aperture,
+                                   const SnapModes& modes, std::optional<Vec2> from) {
     assert(aperture >= 0.0);
     if (!anyModeEnabled(modes)) {
         return std::nullopt;
     }
-    std::optional<SnapPoint> point;
+    std::optional<SnapHit> point;
     Candidate bestPoint;
-    std::optional<SnapPoint> center;
+    std::optional<SnapHit> center;
     Candidate bestCenter;
-    std::optional<SnapPoint> nearest;
+    std::optional<SnapHit> nearest;
     Candidate bestNearest;
     std::vector<SnapPoint> curvePoints;
 
     // One curve within the aperture: a polyline segment, or a whole line,
-    // circle, arc or text box, at `curveDistance` from the pointer.
-    const auto consider = [&](double curveDistance, std::uint64_t id) {
+    // circle, arc or text box, at `curveDistance` from the pointer, with
+    // where its points come from.
+    const auto consider = [&](double curveDistance, const Source& source) {
         for (const SnapPoint& snap : curvePoints) {
             if (snap.kind == SnapKind::Center || snap.kind == SnapKind::Insertion) {
                 // The centre is reached by passing over its curve, the
                 // insertion point by passing over the text box.
-                const Candidate candidate{curveDistance, 0, id};
+                const Candidate candidate{curveDistance, 0, source.id};
                 if (!center || candidate.beats(bestCenter)) {
-                    center = snap;
+                    center = hitOf(snap, source);
                     bestCenter = candidate;
                 }
                 continue;
             }
-            const Candidate candidate{distance(snap.point, pointer), tieRank(snap.kind), id};
+            const Candidate candidate{distance(snap.point, pointer), tieRank(snap.kind), source.id};
             if (candidate.distance <= aperture && (!point || candidate.beats(bestPoint))) {
-                point = snap;
+                point = hitOf(snap, source);
                 bestPoint = candidate;
             }
         }
@@ -324,7 +358,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         for (const Vec2& tangent : tangentPoints(*from, entity)) {
             curvePoints.push_back({tangent, SnapKind::Tangent});
         }
-        consider(curveDistance, id);
+        consider(curveDistance, entityOnly(id));
     };
 
     // The nearest point of a curve within the aperture (docs/adr/0057,
@@ -340,28 +374,33 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         }
         const Candidate candidate{found->distance, 0, id};
         if (candidate.distance <= aperture && (!nearest || candidate.beats(bestNearest))) {
-            nearest = SnapPoint{found->point, SnapKind::Nearest};
+            nearest = hitOf(SnapPoint{found->point, SnapKind::Nearest}, entityOnly(id));
             bestNearest = candidate;
         }
     };
 
-    // The snap points of one shape of an entity with identifier `id`.
+    // The snap points of one shape of an entity with identifier `id`; `own`
+    // when the shape is the entity itself, whose segments and ends a hit
+    // tells (findSnapHit()).
     std::vector<SnapShape> nearbyCurves;
-    const auto considerShape = [&](const Entity& entity, std::uint64_t id) {
+    const auto considerShape = [&](const Entity& entity, std::uint64_t id, bool own) {
         considerNearest(entity, id);
         if (modes.intersection && meetsOthers(entity) && distance(entity, pointer) <= aperture) {
             nearbyCurves.push_back({id, &entity});
         }
         considerTangents(entity, id);
         if (const auto* polyline = std::get_if<Polyline>(&entity)) {
+            std::size_t index = 0;
             forEachSnapSegment(*polyline, [&](const PolylineSegment& segment) {
+                const std::size_t segmentIndex = index++;
                 const double segmentDistance = distance(segment, pointer);
                 if (segmentDistance > aperture) {
                     return;
                 }
                 curvePoints.clear();
                 appendSnapPoints(segment, modes, curvePoints, from);
-                consider(segmentDistance, id);
+                consider(segmentDistance,
+                         own ? Source{id, segmentIndex, segment.start} : entityOnly(id));
             });
             return;
         }
@@ -372,7 +411,8 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         }
         curvePoints.clear();
         appendSnapPoints(entity, modes, curvePoints, from);
-        consider(curveDistance, id);
+        consider(curveDistance,
+                 own ? Source{id, std::nullopt, curveStart(entity)} : entityOnly(id));
     };
 
     // A piece of an MTEXT gives no snap point of its own: within the aperture
@@ -397,7 +437,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             }
             curvePoints.clear();
             appendOwnSnapPointsOf(document, owner, mtext, modes, curvePoints, from);
-            consider(rowDistance, id);
+            consider(rowDistance, entityOnly(id));
         }
     };
 
@@ -413,7 +453,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             continue;
         }
         if (isOwnShape(record.entity)) {
-            considerShape(record.entity, id.value);
+            considerShape(record.entity, id.value, true);
             continue;
         }
         if (const auto* mtext = std::get_if<MText>(&record.entity)) {
@@ -446,7 +486,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                 }
                 if (std::optional<Entity> shape = shapeEntity(item.shape)) {
                     generatedShapes.push_back(std::move(*shape));
-                    considerShape(generatedShapes.back(), id.value);
+                    considerShape(generatedShapes.back(), id.value, false);
                 }
             }
         }
@@ -467,7 +507,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         for (const SnapPoint& snap : curvePoints) {
             const Candidate candidate{distance(snap.point, pointer), tieRank(snap.kind), id.value};
             if (candidate.distance <= aperture && (!point || candidate.beats(bestPoint))) {
-                point = snap;
+                point = hitOf(snap, entityOnly(id.value));
                 bestPoint = candidate;
             }
         }
@@ -486,7 +526,7 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
             for (const Crossing& crossing : found.crossings) {
                 curvePoints.push_back({crossing.point, SnapKind::Intersection});
             }
-            consider(0.0, id);
+            consider(0.0, entityOnly(id));
         };
         for (std::size_t i = 0; i < nearbyCurves.size(); ++i) {
             const SnapShape first = nearbyCurves[i];
@@ -508,6 +548,15 @@ std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
         return point;
     }
     return nearest ? nearest : center;
+}
+
+std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer, double aperture,
+                                  const SnapModes& modes, std::optional<Vec2> from) {
+    const std::optional<SnapHit> hit = findSnapHit(document, pointer, aperture, modes, from);
+    if (!hit) {
+        return std::nullopt;
+    }
+    return hit->snap;
 }
 
 }  // namespace tg::core
