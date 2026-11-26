@@ -88,7 +88,7 @@ std::string_view dxfType(const core::Entity& entity) {
 /// `text` between double quotes, as core reads the tag and the value of an
 /// attribute (core::withOwnProperty, PT24; docs/verifica/rapporto.md): '"'
 /// and '\' after a '\', a control character as \u{XX}.
-std::string quoted(std::string_view text) {
+std::string reportQuoted(std::string_view text) {
     constexpr std::string_view kHexDigits = "0123456789ABCDEF";
     constexpr unsigned char kFirstPrintable = 0x20;
     constexpr unsigned char kDelete = 0x7F;
@@ -858,7 +858,7 @@ bool PropertiesPanel::setOwnProperty(std::string_view name, const core::Property
 }
 
 bool PropertiesPanel::setAttributeValue(const std::string& tag, const std::string& value) {
-    return setOwnProperty("attribute", quoted(tag) + ":" + quoted(value));
+    return setOwnProperty("attribute", reportQuoted(tag) + ":" + reportQuoted(value));
 }
 
 bool PropertiesPanel::enterOwnValue(int group, int row, const QString& text) {
