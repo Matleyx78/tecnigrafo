@@ -22,7 +22,7 @@ namespace {
 
 class TextFormatBarTest : public ::testing::Test {
 protected:
-    TextFormatBarTest() : m_editor(nullptr, m_viewport) {}
+    TextFormatBarTest() : m_editor(*new TextEditorOverlay(&m_parent, m_viewport)) {}
 
     void open(std::string value) {
         core::MText shown;
@@ -59,8 +59,9 @@ protected:
     core::Document& drawing() { return m_document; }
 
 private:
+    QWidget m_parent;
     render::Viewport m_viewport;
-    TextEditorOverlay m_editor;
+    TextEditorOverlay& m_editor;
     core::Document m_document = core::Document::newDrawing();
     TextFormatBar* m_bar{nullptr};
 };
