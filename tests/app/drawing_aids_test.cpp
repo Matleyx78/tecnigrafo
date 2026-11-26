@@ -182,6 +182,12 @@ protected:
         QTest::keyPress(widget, key);
     }
 
+    [[nodiscard]] QString temporaryPath(const QString& name) const {
+        return m_directory.filePath(name);
+    }
+
+    void answerFileDialog(const QString& path) { m_fileAnswers.append(path); }
+
     /// PL, a click at `first`, a click at `second`, Enter: the vertices of
     /// the polyline drawn, or none if no polyline was added.
     std::vector<core::Vec2> drawTwoPoints(const QPointF& first, const QPointF& second) {
@@ -234,6 +240,7 @@ protected:
         return count;
     }
 
+private:
     QTemporaryDir m_directory;
     QStringList m_fileAnswers;
     MainWindow m_window;
@@ -406,12 +413,12 @@ TEST_F(DrawingAidsTest, GridSwitchesFollowEachDocumentWithoutUndoSteps) {
     EXPECT_EQ(action("aids.grid")->shortcut(), QKeySequence(Qt::Key_F7));
     EXPECT_EQ(action("aids.snapgrid")->shortcut(), QKeySequence(Qt::Key_F9));
 
-    const QString path = m_directory.filePath(QStringLiteral("grid-state.cadx"));
-    m_fileAnswers.append(path);
+    const QString path = temporaryPath(QStringLiteral("grid-state.cadx"));
+    answerFileDialog(path);
     action("file.save")->trigger();
     ASSERT_TRUE(QFileInfo::exists(path));
     window().closeSession(first);
-    m_fileAnswers.append(path);
+    answerFileDialog(path);
     action("file.open")->trigger();
     EXPECT_FALSE(window().document().grid().gridOn);
     EXPECT_FALSE(action("aids.grid")->isChecked());
