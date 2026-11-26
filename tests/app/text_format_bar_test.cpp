@@ -35,9 +35,14 @@ protected:
     }
 
     void select(std::size_t anchor, std::size_t caret) {
-        auto* model = const_cast<core::MTextEditModel*>(editor.model());
-        ASSERT_NE(model, nullptr);
-        model->select(anchor, caret);
+        ASSERT_LE(anchor, caret);
+        QTest::keyClick(&editor, Qt::Key_Home);
+        for (std::size_t index = 0; index < anchor; ++index) {
+            QTest::keyClick(&editor, Qt::Key_Right);
+        }
+        for (std::size_t index = anchor; index < caret; ++index) {
+            QTest::keyClick(&editor, Qt::Key_Right, Qt::ShiftModifier);
+        }
     }
 
     void click(const char* name) {
@@ -46,6 +51,7 @@ protected:
         button->click();
     }
 
+private:
     QWidget parent;
     render::Viewport viewport;
     TextEditorOverlay editor;
@@ -59,9 +65,7 @@ TEST_F(TextFormatBarTest, ToggleButtonsApplyCodesAndFollowCaretFormat) {
     click("formatBold");
     EXPECT_EQ(editor.value(), "{\\fArial|b1|i0;A}B");
 
-    auto* model = const_cast<core::MTextEditModel*>(editor.model());
-    ASSERT_NE(model, nullptr);
-    model->setCaret(1);
+    QTest::keyClick(&editor, Qt::Key_Right);
     bar->refresh();
     EXPECT_TRUE(bar->findChild<QToolButton*>(QStringLiteral("formatBold"))->isChecked());
 }

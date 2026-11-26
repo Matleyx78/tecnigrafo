@@ -114,10 +114,6 @@ bool claimsKey(const QKeyEvent& event) {
         case Qt::Key_End:
             return true;
         case Qt::Key_A:
-            if (event.modifiers().testFlag(Qt::ControlModifier)) {
-                return true;
-            }
-            break;
         case Qt::Key_B:
         case Qt::Key_I:
         case Qt::Key_U:
