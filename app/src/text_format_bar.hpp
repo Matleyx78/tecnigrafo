@@ -3,15 +3,20 @@
 
 #pragma once
 
+#include <QStringList>
 #include <QWidget>
 
 class QDoubleSpinBox;
+class QKeyEvent;
 class QLineEdit;
 class QToolButton;
 
 namespace tg::app {
 
 class TextEditorOverlay;
+
+/// The icons used directly by the text format bar: no action names them.
+[[nodiscard]] QStringList textFormatBarIconNames();
 
 /// The formatting controls shown above an open multiline text editor.
 class TextFormatBar final : public QWidget {
@@ -22,6 +27,9 @@ public:
 
     /// Refreshes the checked controls from the format at the editor caret.
     void refresh();
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 private:
     QToolButton* addToggle(const QString& name, const QString& text, const QString& iconName);

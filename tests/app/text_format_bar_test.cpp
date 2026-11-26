@@ -112,6 +112,7 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
         auto* field = formatBar().findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
         ASSERT_NE(field, nullptr);
         field->setValue(test.value);
+        field->editingFinished();
         EXPECT_EQ(overlay().value(), test.expected) << test.field;
         overlay().close();
     }
@@ -123,6 +124,28 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
     color->setText(QStringLiteral("1"));
     color->editingFinished();
     EXPECT_EQ(overlay().value(), "{\\C1;A}B");
+}
+
+TEST_F(TextFormatBarTest, EnterAppliesFieldsOnceAndReturnsFocusToEditor) {
+    open("AB");
+    select(0, 1);
+    auto* height = formatBar().findChild<QDoubleSpinBox*>(QStringLiteral("formatHeight"));
+    ASSERT_NE(height, nullptr);
+    height->selectAll();
+    events::type(height, "12");
+    events::press(height, Qt::Key_Return);
+    EXPECT_EQ(overlay().value(), "{\\H12;A}B");
+    EXPECT_TRUE(overlay().hasFocus());
+
+    overlay().close();
+    open("AB");
+    select(0, 1);
+    auto* color = formatBar().findChild<QLineEdit*>(QStringLiteral("formatColor"));
+    ASSERT_NE(color, nullptr);
+    color->setText(QStringLiteral("1"));
+    events::press(color, Qt::Key_Return);
+    EXPECT_EQ(overlay().value(), "{\\C1;A}B");
+    EXPECT_TRUE(overlay().hasFocus());
 }
 
 TEST_F(TextFormatBarTest, StackAndUnstackButtonsUseEditorModel) {

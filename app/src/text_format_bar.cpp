@@ -12,6 +12,7 @@
 #include <QColor>
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QRegularExpression>
@@ -50,6 +51,13 @@ core::Color colorFromText(const QString& text, bool& valid) {
 
 }  // namespace
 
+QStringList textFormatBarIconNames() {
+    return {QStringLiteral("format-bold"),      QStringLiteral("format-italic"),
+            QStringLiteral("format-underline"), QStringLiteral("format-overline"),
+            QStringLiteral("format-strike"),    QStringLiteral("format-stack"),
+            QStringLiteral("format-unstack")};
+}
+
 TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_editor(editor) {
     setObjectName(QStringLiteral("textFormatBar"));
     setAutoFillBackground(true);
@@ -57,12 +65,13 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     layout->setContentsMargins(4, 3, 4, 3);
     layout->setSpacing(2);
 
-    m_bold = addToggle(QStringLiteral("formatBold"), tr("B"), QStringLiteral("text-style"));
-    m_italic = addToggle(QStringLiteral("formatItalic"), tr("I"), QStringLiteral("text-style"));
+    m_bold = addToggle(QStringLiteral("formatBold"), tr("B"), QStringLiteral("format-bold"));
+    m_italic = addToggle(QStringLiteral("formatItalic"), tr("I"), QStringLiteral("format-italic"));
     m_underline =
-        addToggle(QStringLiteral("formatUnderline"), tr("U"), QStringLiteral("text-style"));
-    m_overline = addToggle(QStringLiteral("formatOverline"), tr("O"), QStringLiteral("text-style"));
-    m_strike = addToggle(QStringLiteral("formatStrike"), tr("S"), QStringLiteral("text-style"));
+        addToggle(QStringLiteral("formatUnderline"), tr("U"), QStringLiteral("format-underline"));
+    m_overline =
+        addToggle(QStringLiteral("formatOverline"), tr("O"), QStringLiteral("format-overline"));
+    m_strike = addToggle(QStringLiteral("formatStrike"), tr("S"), QStringLiteral("format-strike"));
 
     m_height = addNumber(QStringLiteral("formatHeight"));
     m_height->setToolTip(tr("Height"));
@@ -79,10 +88,10 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     m_tracking->setToolTip(tr("Character spacing"));
 
     auto* stack =
-        addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("text-style"));
+        addToggle(QStringLiteral("formatStack"), tr("Stack"), QStringLiteral("format-stack"));
     stack->setCheckable(false);
     auto* unstack =
-        addToggle(QStringLiteral("formatUnstack"), tr("Unstack"), QStringLiteral("text-style"));
+        addToggle(QStringLiteral("formatUnstack"), tr("Unstack"), QStringLiteral("format-unstack"));
     unstack->setCheckable(false);
 
     applyToggle(m_bold, static_cast<int>(Kind::Bold));
@@ -91,8 +100,8 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     applyToggle(m_overline, static_cast<int>(Kind::Overline));
     applyToggle(m_strike, static_cast<int>(Kind::Strike));
     const auto numberChange = [this](QDoubleSpinBox* field, Kind kind) {
-        connect(field, &QDoubleSpinBox::valueChanged, this,
-                [this, kind](double value) { m_editor->applyFormat({kind, true, value}); });
+        connect(field, &QDoubleSpinBox::editingFinished, this,
+                [this, field, kind] { m_editor->applyFormat({kind, true, field->value()}); });
     };
     numberChange(m_height, Kind::Height);
     numberChange(m_width, Kind::WidthFactor);
@@ -112,6 +121,15 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
             [this] { m_editor->applyFormat({Kind::Stack, true}); });
     connect(unstack, &QToolButton::clicked, this,
             [this] { m_editor->applyFormat({Kind::Stack, false}); });
+}
+
+void TextFormatBar::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        event->accept();
+        m_editor->setFocus(Qt::OtherFocusReason);
+        return;
+    }
+    QWidget::keyPressEvent(event);
 }
 
 QToolButton* TextFormatBar::addToggle(const QString& name, const QString& text,
