@@ -19,6 +19,7 @@ include(GoogleTest)
 add_executable(tg_tests
     cmd/arc_command_test.cpp
     cmd/attedit_command_test.cpp
+    cmd/attribute_commands_test.cpp
     cmd/block_command_test.cpp
     cmd/chamfer_command_test.cpp
     cmd/chprop_command_test.cpp
