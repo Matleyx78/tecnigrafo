@@ -87,7 +87,7 @@ bool HatcheditCommand::select(CommandContext& context, core::EntityId id) {
 Status HatcheditCommand::handle(CommandContext& context, const Input& input) {
     if (m_stage == Stage::Select) {
         if (const auto* object = std::get_if<ObjectInput>(&input);
-            object && select(context, object->id)) {
+            object != nullptr && select(context, object->id)) {
             m_stage = Stage::Option;
         }
         return Status::Continue;
@@ -121,10 +121,12 @@ Status HatcheditCommand::handle(CommandContext& context, const Input& input) {
             context.message("Unknown pattern name.");
             return Status::Continue;
         }
-        if (generatedPattern(answer)) {
-            m_pattern = answerIs(answer, "NET", "NET")       ? "NET"
-                        : answerIs(answer, "SOLID", "SOLID") ? "SOLID"
-                                                             : "ANSI31";
+        if (answerIs(answer, "NET", "NET")) {
+            m_pattern = "NET";
+        } else if (answerIs(answer, "SOLID", "SOLID")) {
+            m_pattern = "SOLID";
+        } else if (generatedPattern(answer)) {
+            m_pattern = "ANSI31";
         }
         m_stage = m_pattern == "SOLID" ? Stage::Angle : Stage::Scale;
         return Status::Continue;
@@ -172,7 +174,7 @@ Status HatcheditCommand::handle(CommandContext& context, const Input& input) {
     }
     if (m_stage == Stage::OriginOption) {
         if (const auto* keyword = std::get_if<KeywordInput>(&input);
-            keyword && answerIs(keyword->keyword, "Set new origin", "S")) {
+            keyword != nullptr && answerIs(keyword->keyword, "Set new origin", "S")) {
             m_stage = Stage::OriginPoint;
             return Status::Continue;
         }
@@ -192,7 +194,7 @@ Status HatcheditCommand::handle(CommandContext& context, const Input& input) {
         return Status::Continue;
     }
     if (const auto* keyword = std::get_if<KeywordInput>(&input);
-        keyword && answerIs(keyword->keyword, "Yes", "Y")) {
+        keyword != nullptr && answerIs(keyword->keyword, "Yes", "Y")) {
         context.defaults.hatchOrigin = m_newOrigin;
     }
     if (std::holds_alternative<ConfirmInput>(input) ||

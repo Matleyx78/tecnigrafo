@@ -40,10 +40,17 @@ protected:
 
     [[nodiscard]] const core::EntityRecord& record() const { return *m_document.find(m_hatchId); }
 
+    [[nodiscard]] CommandRunner& runner() { return m_runner; }
+
+    [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
+
+    [[nodiscard]] const core::Document& document() const { return m_document; }
+
     [[nodiscard]] const core::Hatch& hatch() const {
         return std::get<core::Hatch>(record().entity);
     }
 
+private:
     core::Document m_document = core::Document::newDrawing();
     edit::Editor m_editor{m_document};
     CommandRegistry m_registry;
@@ -59,11 +66,11 @@ TEST_F(HatcheditTest, ChangesPropertiesAndRemembersThemForTheNextHatch) {
     EXPECT_EQ(hatch().pattern, "NET");
     EXPECT_DOUBLE_EQ(hatch().scale, 2.0);
     EXPECT_DOUBLE_EQ(hatch().angle, core::reducedDegreesToRadians(30.0));
-    EXPECT_EQ(m_editor.undoName(), "Hatchedit");
+    EXPECT_EQ(editor().undoName(), "Hatchedit");
 
     type({"-HATCH", "P"});
-    EXPECT_EQ(m_runner.promptText(), "Enter a pattern name or [Solid] <NET>:");
-    m_runner.submit(CancelInput{});
+    EXPECT_EQ(runner().promptText(), "Enter a pattern name or [Solid] <NET>:");
+    runner().submit(CancelInput{});
 }
 
 TEST_F(HatcheditTest, ChangesAndStoresPatternOriginAndUndoRestoresExtras) {
@@ -76,7 +83,7 @@ TEST_F(HatcheditTest, ChangesAndStoresPatternOriginAndUndoRestoresExtras) {
     EXPECT_EQ(core::patternOrigin(record().extras), (core::Vec2{}));
 
     type({"-HATCH", "10,10", ""});
-    EXPECT_EQ(core::patternOrigin(m_document.entities().back().extras), (core::Vec2{5, 6}));
+    EXPECT_EQ(core::patternOrigin(document().entities().back().extras), (core::Vec2{5, 6}));
 }
 
 }  // namespace

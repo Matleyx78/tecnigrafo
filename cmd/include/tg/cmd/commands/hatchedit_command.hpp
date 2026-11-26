@@ -45,8 +45,8 @@ private:
     core::EntityId m_target{};
     core::Hatch m_hatch;
     core::EntityExtras m_extras;
-    core::Vec2 m_origin{};
-    core::Vec2 m_newOrigin{};
+    core::Vec2 m_origin;
+    core::Vec2 m_newOrigin;
     std::string m_pattern;
     double m_scale{1.0};
     double m_angle{0.0};
