@@ -607,6 +607,8 @@ TEST_F(MainWindowActionsTest, ShortcutsMatchTheBuiltinDefaults) {
         {"edit.redo", redo},
         {"edit.erase", single(QKeySequence(QKeySequence::Delete))},
         {"view.zoom-extents", {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E)}},
+        {"aids.grid", {QKeySequence(Qt::Key_F7)}},
+        {"aids.snapgrid", {QKeySequence(Qt::Key_F9)}},
         {"aids.osnap", {QKeySequence(Qt::Key_F3)}},
         {"aids.ortho", {QKeySequence(Qt::Key_F8)}},
         {"aids.polar", {QKeySequence(Qt::Key_F10)}},

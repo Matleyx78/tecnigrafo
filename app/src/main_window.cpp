@@ -1699,6 +1699,12 @@ void MainWindow::updateDrawingState() {
         registeredAction("aids.lwdisplay")->setChecked(m_active->document().lwdisplay());
         m_gridAction->setChecked(m_active->document().grid().gridOn);
         m_snapGridAction->setChecked(m_active->document().grid().snapOn);
+        if (auto* gridButton = findChild<QToolButton*>(QStringLiteral("gridButton"))) {
+            gridButton->setChecked(m_gridAction->isChecked());
+        }
+        if (auto* snapButton = findChild<QToolButton*>(QStringLiteral("snapgridButton"))) {
+            snapButton->setChecked(m_snapGridAction->isChecked());
+        }
     }
     setWindowTitle(tr("%1[*] — Tecnigrafo").arg(QFileInfo(documentName()).fileName()));
     setWindowModified(m_active->editor().isModified());
