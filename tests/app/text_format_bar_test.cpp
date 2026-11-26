@@ -146,6 +146,17 @@ TEST_F(TextFormatBarTest, EnterAppliesFieldsOnceAndReturnsFocusToEditor) {
     EXPECT_EQ(overlay().value(), "{\\C1;A}B");
 }
 
+TEST_F(TextFormatBarTest, LeavingAnUnchangedNumberFieldKeepsTheText) {
+    open("{\\H5;A}B");
+    select(0, 2);
+    auto* height = formatBar().findChild<QDoubleSpinBox*>(QStringLiteral("formatHeight"));
+    ASSERT_NE(height, nullptr);
+
+    height->editingFinished();
+
+    EXPECT_EQ(overlay().value(), "{\\H5;A}B");
+}
+
 TEST_F(TextFormatBarTest, StackAndUnstackButtonsUseEditorModel) {
     open("1/2");
     select(0, 3);

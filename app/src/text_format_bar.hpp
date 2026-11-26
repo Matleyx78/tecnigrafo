@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <QSet>
 #include <QStringList>
 #include <QWidget>
 
@@ -47,6 +48,7 @@ private:
     QDoubleSpinBox* m_width;
     QDoubleSpinBox* m_oblique;
     QDoubleSpinBox* m_tracking;
+    QSet<QDoubleSpinBox*> m_changedNumbers;
 };
 
 }  // namespace tg::app

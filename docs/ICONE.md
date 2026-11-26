@@ -466,13 +466,13 @@ icone, ciascuna con i due file `-16.svg` e `-32.svg`.
 
 | File | Uso | Disegno | Rifatta |
 |---|---|---|---|
-| `format-bold` | grassetto | lettera B in grassetto | sì |
-| `format-italic` | corsivo | lettera I inclinata | sì |
-| `format-underline` | sottolineato | lettera U sottolineata | sì |
-| `format-overline` | sopralineato | lettera O sopralineata | sì |
-| `format-strike` | barrato | lettera S barrata | sì |
-| `format-stack` | impila frazioni | due termini separati da una linea | sì |
-| `format-unstack` | disimpila frazioni | due termini affiancati | sì |
+| `format-bold` | grassetto | fila di tratti verticali doppi | sì |
+| `format-italic` | corsivo | fila di tratti obliqui paralleli | sì |
+| `format-underline` | sottolineato | fila di tratti con linea attiva sotto | sì |
+| `format-overline` | sopralineato | fila di tratti con linea attiva sopra | sì |
+| `format-strike` | barrato | fila di tratti con linea attiva in mezzo | sì |
+| `format-stack` | impila frazioni | due file corte separate da una linea attiva | sì |
+| `format-unstack` | disimpila frazioni | due file affiancate separate da una diagonale attiva | sì |
 
 ## Aggiungere un'icona
 

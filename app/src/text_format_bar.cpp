@@ -100,8 +100,13 @@ TextFormatBar::TextFormatBar(TextEditorOverlay* editor) : QWidget(editor), m_edi
     applyToggle(m_overline, static_cast<int>(Kind::Overline));
     applyToggle(m_strike, static_cast<int>(Kind::Strike));
     const auto numberChange = [this](QDoubleSpinBox* field, Kind kind) {
-        connect(field, &QDoubleSpinBox::editingFinished, this,
-                [this, field, kind] { m_editor->applyFormat({kind, true, field->value()}); });
+        connect(field, &QDoubleSpinBox::valueChanged, this,
+                [this, field] { m_changedNumbers.insert(field); });
+        connect(field, &QDoubleSpinBox::editingFinished, this, [this, field, kind] {
+            if (m_changedNumbers.remove(field)) {
+                m_editor->applyFormat({kind, true, field->value()});
+            }
+        });
     };
     numberChange(m_height, Kind::Height);
     numberChange(m_width, Kind::WidthFactor);
@@ -163,6 +168,7 @@ void TextFormatBar::applyToggle(QToolButton* button, int kind) {
 }
 
 void TextFormatBar::refresh() {
+    m_changedNumbers.clear();
     const core::MTextEditModel* model = m_editor->model();
     setEnabled(model != nullptr);
     if (model == nullptr) {
