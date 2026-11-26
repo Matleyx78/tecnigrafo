@@ -18,6 +18,7 @@ include(GoogleTest)
 
 add_executable(tg_tests
     cmd/arc_command_test.cpp
+    cmd/attedit_command_test.cpp
     cmd/attribute_commands_test.cpp
     cmd/block_command_test.cpp
     cmd/chamfer_command_test.cpp
@@ -273,6 +274,7 @@ if(TG_BUILD_APP)
         app/action_registry_test.cpp
         app/assistant_channel_test.cpp
         app/assistant_panel_test.cpp
+        app/battman_dialog_test.cpp
         app/auto_hide_test.cpp
         app/ui_builder_test.cpp
         app/command_line_test.cpp

@@ -3,17 +3,22 @@
 
 #include "app_commands.hpp"
 
+#include "battman_dialog.hpp"
+#include "document_session.hpp"
 #include "layer_panel.hpp"
 #include "main_window.hpp"
 #include "properties_panel.hpp"
 #include "tg/cmd/command.hpp"
 #include "tg/cmd/command_registry.hpp"
+#include "tg/core/insert.hpp"
 #include "ui_builder.hpp"
 
 #include <QString>
 
 #include <memory>
+#include <optional>
 #include <span>
+#include <string>
 
 namespace tg::app {
 namespace {
@@ -118,6 +123,46 @@ private:
     MainWindow& m_window;
 };
 
+class BattmanCommand final : public cmd::Command {
+public:
+    explicit BattmanCommand(MainWindow& window) : m_window(window) {}
+
+    void start(cmd::CommandContext& /*context*/) override {
+        DocumentSession* session = m_window.activeSession();
+        if (session == nullptr || session->editor().inTransaction()) {
+            return;
+        }
+        std::string selectedBlock;
+        if (auto* panel = m_window.findChild<PropertiesPanel*>(QStringLiteral("propertiesPanel"))) {
+            for (const core::EntityId id : panel->idleSelection()) {
+                const core::EntityRecord* record = session->document().find(id);
+                if (record != nullptr) {
+                    if (const auto* insert = std::get_if<core::Insert>(&record->entity)) {
+                        selectedBlock = insert->block;
+                        break;
+                    }
+                }
+            }
+        }
+        auto* dialog = new BattmanDialog(session->editor(), selectedBlock, &m_window);
+        dialog->setAttribute(Qt::WA_DeleteOnClose);
+        dialog->open();
+    }
+
+    cmd::Status handle(cmd::CommandContext& /*context*/, const cmd::Input& /*input*/) override {
+        return cmd::Status::Finished;
+    }
+
+    void pointerMoved(const core::Vec2& /*point*/) override {}
+
+    [[nodiscard]] cmd::Prompt prompt() const override { return {}; }
+
+    [[nodiscard]] std::span<const core::Entity> preview() const override { return {}; }
+
+private:
+    MainWindow& m_window;
+};
+
 }  // namespace
 
 void registerAppCommands(cmd::CommandRegistry& registry, MainWindow& window) {
@@ -138,6 +183,8 @@ void registerAppCommands(cmd::CommandRegistry& registry, MainWindow& window) {
     const cmd::CommandDescription quickSelect{
         "QSELECT", {}, "Selects objects by type and property in a window.", false, {}};
     registry.add(quickSelect, [&window] { return std::make_unique<QuickSelectCommand>(window); });
+    registry.add({"BATTMAN", {}, "Manages block attribute definitions in a window.", false, {}},
+                 [&window] { return std::make_unique<BattmanCommand>(window); });
 }
 
 }  // namespace tg::app
