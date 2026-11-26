@@ -3,11 +3,13 @@
 
 #include "tg/cmd/commands/attedit_command.hpp"
 
+#include "../../cmd/src/name_list.hpp"
 #include "tg/cmd/builtin_commands.hpp"
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/command_runner.hpp"
 #include "tg/core/color.hpp"
 #include "tg/core/insert.hpp"
+#include "tg/core/layer.hpp"
 #include "tg/core/math.hpp"
 
 #include <gtest/gtest.h>
@@ -161,6 +163,43 @@ TEST_F(AtteditCommandTest, NothingSelectedEndsTheCommandWithOneStep) {
     EXPECT_EQ(editor().undoNames().size(), steps);
 }
 
+TEST_F(AtteditCommandTest, AnEmptyDrawingStillGetsOneStep) {
+    // Without entities the step cannot come from one of them (ADR 0056,
+    // point 4): the drawing is left as it was, layer 0 included.
+    ASSERT_TRUE(document().entities().empty());
+    const core::Layer zero = *document().layer(document().layerZero());
+    const std::size_t steps = editor().undoNames().size();
+    submit({"-ATTEDIT", "Y", "*", "*", "*", "C", "-1,-1", "1,1"});
+    EXPECT_EQ(messages().back(), "0 attributes selected.");
+    EXPECT_FALSE(runner().isActive());
+    ASSERT_EQ(editor().undoNames().size(), steps + 1);
+    EXPECT_EQ(editor().undoNames().back(), "Attedit");
+    EXPECT_EQ(*document().layer(document().layerZero()), zero);
+
+    // Globally, with the invisible attributes and so without a selection.
+    submit({"-ATTEDIT", "N", "N", "*", "*", "*"});
+    EXPECT_EQ(messages().back(), "0 attributes selected.");
+    EXPECT_FALSE(runner().isActive());
+    ASSERT_EQ(editor().undoNames().size(), steps + 2);
+    EXPECT_EQ(editor().undoNames().back(), "Attedit");
+    EXPECT_EQ(*document().layer(document().layerZero()), zero);
+
+    ASSERT_TRUE(editor().undo());
+    ASSERT_TRUE(editor().undo());
+    EXPECT_EQ(editor().undoNames().size(), steps);
+    EXPECT_EQ(*document().layer(document().layerZero()), zero);
+}
+
+TEST_F(AtteditCommandTest, AnEscapedCommaFiltersTheValues) {
+    const core::EntityId first = addInsert("A", {attributeAt("NOTA", "1,2", {0, 0})});
+    const core::EntityId second = addInsert("A", {attributeAt("NOTA", "1", {0, 5})});
+    submit({"-ATTEDIT", "N", "N", "*", "*", "1`,2"});
+    EXPECT_EQ(messages().back(), "1 attributes selected.");
+    submit({"1", "3"});
+    EXPECT_EQ(attribute(first, 0).text.value, "3,2");
+    EXPECT_EQ(attribute(second, 0).text.value, "1");
+}
+
 TEST_F(AtteditCommandTest, CrossingIsAnUnwrittenKeywordOfSelectAttributes) {
     addInsert("A", {attributeAt("CODICE", "K10", {0, 0})});
     submit({"-ATTEDIT", "Y", "*", "*", "*", "C"});
@@ -260,6 +299,47 @@ TEST_F(AtteditCommandTest, EveryPromptMatchesTheDescription) {
         runner().submitText(input);
     }
     EXPECT_FALSE(runner().isActive());
+}
+
+// The wildcards of AutoCAD in the filters (docs/adr/0056, point 4).
+TEST(AtteditNameList, TakesEveryWildcardOfAutoCad) {
+    using detail::matchesName;
+    EXPECT_TRUE(matchesName("K#", "K1"));
+    EXPECT_FALSE(matchesName("K#", "KA"));
+    EXPECT_TRUE(matchesName("@1", "a1"));
+    EXPECT_FALSE(matchesName("@1", "11"));
+    EXPECT_TRUE(matchesName("A.B", "A-B"));
+    EXPECT_FALSE(matchesName("A.B", "A1B"));
+    EXPECT_FALSE(matchesName("A.B", "AxB"));
+    EXPECT_TRUE(matchesName("[A-C]1", "b1"));
+    EXPECT_FALSE(matchesName("[A-C]1", "D1"));
+    EXPECT_TRUE(matchesName("[XZ]", "z"));
+    EXPECT_FALSE(matchesName("[XZ]", "Y"));
+    EXPECT_TRUE(matchesName("[~A-C]1", "D1"));
+    EXPECT_FALSE(matchesName("[~A-C]1", "a1"));
+    EXPECT_TRUE(matchesName("~K*", "R30"));
+    EXPECT_FALSE(matchesName("~K*", "k10"));
+    EXPECT_TRUE(matchesName("`*", "*"));
+    EXPECT_FALSE(matchesName("`*", "A"));
+    EXPECT_TRUE(matchesName("`#`[", "#["));
+    EXPECT_TRUE(matchesName("[A", "[a"));  // without its ']'
+    EXPECT_TRUE(matchesName("~", "~"));
+}
+
+TEST(AtteditNameList, SplitsOnlyAtTheCommasThatAreNotEscaped) {
+    using detail::matchesNameList;
+    EXPECT_TRUE(matchesNameList("`,", ","));
+    EXPECT_FALSE(matchesNameList("`,", ""));
+    EXPECT_TRUE(matchesNameList("A`,B,C", "a,b"));
+    EXPECT_TRUE(matchesNameList("A`,B,C", "C"));
+    EXPECT_FALSE(matchesNameList("A`,B,C", "A"));
+    EXPECT_FALSE(matchesNameList("A`,B,C", "B"));
+    EXPECT_TRUE(matchesNameList("``,X", "`"));  // the comma after "``" splits
+    EXPECT_TRUE(matchesNameList("``,X", "x"));
+    EXPECT_TRUE(matchesNameList(" ` , X ", " "));  // the escaped space stays
+    EXPECT_TRUE(matchesNameList(" ` , X ", "X"));
+    EXPECT_TRUE(matchesNameList("K*, ,R?0", "R30"));
+    EXPECT_TRUE(matchesNameList("K*,,R?0", ""));
 }
 
 }  // namespace

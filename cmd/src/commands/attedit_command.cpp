@@ -542,26 +542,18 @@ Status AtteditCommand::chooseOption(CommandContext& context, std::string_view te
 
 Status AtteditCommand::finish(CommandContext& context) {
     // The whole command is one undo step, also when it has changed nothing
-    // (docs/adr/0056, point 4): the editor keeps no empty step, so an entity
-    // changes colour and back, which leaves the drawing as it was.
+    // (docs/adr/0056, point 4): the editor keeps no empty step, so layer 0,
+    // which every drawing has, even one without entities, changes its plot
+    // state and back, which leaves the drawing as it was.
     edit::Editor& editor = context.editor;
     if (editor.savepoint().changes == 0) {
-        const core::Document& document = editor.document();
-        const core::EntityRecord* record = nullptr;
-        if (!m_attributes.empty()) {
-            record = document.find(m_attributes.front().insert);
-        } else if (!document.entities().empty()) {
-            record = &document.entities().front();
-        }
-        if (record != nullptr) {
-            const core::EntityId id = record->id;
-            const core::EntityProperties original = record->properties;
-            core::EntityProperties other = original;
-            other.color = original.color.kind() == core::Color::Kind::ByBlock
-                              ? core::Color::byLayer()
-                              : core::Color::byBlock();
-            if (editor.setProperties(id, other)) {
-                editor.setProperties(id, original);
+        const core::Layer* zero = editor.document().layer(editor.document().layerZero());
+        if (zero != nullptr) {
+            const core::Layer original = *zero;
+            core::Layer other = original;
+            other.plot = !original.plot;
+            if (editor.tables().changeLayer(other)) {
+                editor.tables().changeLayer(original);
             }
         }
     }

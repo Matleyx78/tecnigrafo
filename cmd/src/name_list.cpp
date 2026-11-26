@@ -142,6 +142,33 @@ std::vector<Element> parsePattern(std::string_view pattern) {
     return elements;
 }
 
+/// The patterns of `text`, split at the commas that are not after a '`'
+/// (docs/adr/0056, point 4): each one keeps its '`', and loses the white
+/// space around it except what a '`' makes part of it.
+std::vector<std::string_view> splitPatterns(std::string_view text) {
+    std::vector<std::string_view> patterns;
+    std::size_t first = std::string_view::npos;  // the first character kept
+    std::size_t end = 0;                         // after the last one kept
+    for (std::size_t position = 0; position <= text.size(); ++position) {
+        if (position == text.size() || text[position] == ',') {
+            patterns.push_back(first == std::string_view::npos ? std::string_view{}
+                                                               : text.substr(first, end - first));
+            first = std::string_view::npos;
+            continue;
+        }
+        const bool escape = text[position] == '`' && position + 1 < text.size();
+        const std::size_t last = escape ? position + 1 : position;
+        if (escape || kWhiteSpace.find(text[position]) == std::string_view::npos) {
+            if (first == std::string_view::npos) {
+                first = position;
+            }
+            end = last + 1;
+        }
+        position = last;
+    }
+    return patterns;
+}
+
 bool matchesElements(const std::vector<Element>& elements, std::string_view name) {
     std::size_t position = 0;
     std::size_t character = 0;
@@ -177,7 +204,7 @@ bool matchesName(std::string_view pattern, std::string_view name) {
 }
 
 bool matchesNameList(std::string_view text, std::string_view name) {
-    return std::ranges::any_of(splitNameList(text), [name](const std::string& pattern) {
+    return std::ranges::any_of(splitPatterns(text), [name](std::string_view pattern) {
         return matchesName(pattern, name);
     });
 }

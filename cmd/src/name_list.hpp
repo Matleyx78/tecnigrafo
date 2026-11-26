@@ -19,10 +19,11 @@ namespace tg::cmd::detail {
 /// in a range ("[A-C]"), "[~...]" one that is not, '`' the next character as
 /// it is, and '~' in front of the whole pattern for the names it does not
 /// match. A '[' without its ']' is an ordinary character. One pattern: the
-/// commas are split by splitNameList().
+/// commas are split by matchesNameList().
 [[nodiscard]] bool matchesName(std::string_view pattern, std::string_view name);
 /// True when `name` matches one of the patterns of the list `text`
-/// (splitNameList(), matchesName()).
+/// (matchesName()). The list is split at the commas, as splitNameList(),
+/// except those after a '`': "`," is a pattern for a comma.
 [[nodiscard]] bool matchesNameList(std::string_view text, std::string_view name);
 /// Table order, each layer at most once even when patterns overlap.
 [[nodiscard]] std::vector<core::LayerId> matchingLayers(const core::Document& document,
