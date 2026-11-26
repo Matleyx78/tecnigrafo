@@ -3,6 +3,7 @@
 
 #include "app_commands.hpp"
 
+#include "attribute_dialogs.hpp"
 #include "battman_dialog.hpp"
 #include "document_session.hpp"
 #include "layer_panel.hpp"
@@ -14,6 +15,7 @@
 #include "ui_builder.hpp"
 
 #include <QString>
+#include <QTimer>
 
 #include <memory>
 #include <optional>
@@ -22,6 +24,79 @@
 
 namespace tg::app {
 namespace {
+
+const core::EntityRecord* attributeDefinitionForPrompt(const core::Document& document,
+                                                       const std::string& prompt) {
+    constexpr std::string_view prefix = "Enter attribute tag <";
+    constexpr std::string_view suffix = ">:";
+    if (!prompt.starts_with(prefix) || !prompt.ends_with(suffix)) {
+        return nullptr;
+    }
+    const std::string tag =
+        prompt.substr(prefix.size(), prompt.size() - prefix.size() - suffix.size());
+    for (const core::EntityRecord& record : document.entities()) {
+        const auto* definition = std::get_if<core::AttributeDefinition>(&record.entity);
+        if (definition != nullptr && definition->tag == tag) {
+            return &record;
+        }
+    }
+    return nullptr;
+}
+
+const core::Insert* insertForPrompt(const core::Document& document, const std::string& prompt) {
+    for (const core::EntityRecord& record : document.entities()) {
+        const auto* insert = std::get_if<core::Insert>(&record.entity);
+        if (insert == nullptr || insert->attributes.empty()) {
+            continue;
+        }
+        const core::Attribute& first = insert->attributes.front();
+        if (prompt == first.tag + " <" + first.text.value + ">:") {
+            return insert;
+        }
+    }
+    return nullptr;
+}
+
+void answerAttributeRequest(MainWindow& window) {
+    DocumentSession* session = window.activeSession();
+    if (session == nullptr || window.property("answeringAttributeRequest").toBool()) {
+        return;
+    }
+    cmd::CommandRunner& runner = session->runner();
+    const std::string prompt = runner.promptText();
+    const core::Document& document = session->document();
+    const core::EntityRecord* definitionRecord = attributeDefinitionForPrompt(document, prompt);
+    const core::Insert* insert =
+        definitionRecord == nullptr ? insertForPrompt(document, prompt) : nullptr;
+    if (definitionRecord == nullptr && insert == nullptr) {
+        return;
+    }
+
+    window.setProperty("answeringAttributeRequest", true);
+    if (definitionRecord != nullptr) {
+        AttributeDefinitionDialog dialog(
+            std::get<core::AttributeDefinition>(definitionRecord->entity), &window);
+        if (dialog.exec() == QDialog::Accepted) {
+            const core::AttributeDefinition edited = dialog.definition();
+            runner.submit(cmd::TextInput{edited.tag});
+            runner.submit(cmd::TextInput{edited.prompt});
+            runner.submit(cmd::TextInput{edited.text.value});
+        } else {
+            runner.submit(cmd::CancelInput{});
+        }
+    } else {
+        InsertAttributesDialog dialog(*insert, &window);
+        if (dialog.exec() == QDialog::Accepted) {
+            for (const std::string& value : dialog.values()) {
+                runner.submit(cmd::TextInput{value});
+            }
+        } else {
+            runner.submit(cmd::CancelInput{});
+        }
+    }
+    window.setProperty("answeringAttributeRequest", false);
+    window.inputHandled();
+}
 
 class InterfaceCommand final : public cmd::Command {
 public:
@@ -166,6 +241,9 @@ private:
 }  // namespace
 
 void registerAppCommands(cmd::CommandRegistry& registry, MainWindow& window) {
+    QObject::connect(&window, &MainWindow::inputHandled, &window, [&window] {
+        QTimer::singleShot(0, &window, [&window] { answerAttributeRequest(window); });
+    });
     registry.add({"RIBBON", {}, "Shows the ribbon interface.", false, {}}, [&window] {
         return std::make_unique<InterfaceCommand>(window, InterfaceKind::Ribbon);
     });
