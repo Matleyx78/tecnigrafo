@@ -16,6 +16,7 @@
 #include "tg/core/insert.hpp"
 #include "ui_builder.hpp"
 
+#include <QPlainTextEdit>
 #include <QString>
 #include <QTimer>
 
@@ -61,7 +62,12 @@ const core::Insert* insertForPrompt(const core::Document& document, const std::s
 
 void answerAttributeRequest(MainWindow& window) {
     DocumentSession* session = window.activeSession();
-    if (session == nullptr || window.property("answeringAttributeRequest").toBool()) {
+    const auto* history =
+        window.commandLine()->findChild<QPlainTextEdit*>(QStringLiteral("history"));
+    // ScriptSession removes the history limit before sending any input. Its
+    // TEXTEDIT requests must remain on the command line (PT21, point 3).
+    const bool script = history != nullptr && history->maximumBlockCount() == 0;
+    if (session == nullptr || script || window.property("answeringAttributeRequest").toBool()) {
         return;
     }
     cmd::CommandRunner& runner = session->runner();
