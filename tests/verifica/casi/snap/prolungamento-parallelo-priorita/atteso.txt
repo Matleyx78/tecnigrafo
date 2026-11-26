@@ -26,6 +26,7 @@ snap: on, modes off: endpoint center insertion intersection perpendicular tangen
 ortho: off
 pointer: 0.5,0
 active snap: Midpoint 0.5,0
+tracking: on
 acquired:
   0.5,0
 statistics:
@@ -49,5 +50,6 @@ snap: on, modes off: endpoint center insertion intersection perpendicular tangen
 ortho: off
 pointer: 0.5,0
 active snap: none
+tracking: on
 statistics:
   LINE 2

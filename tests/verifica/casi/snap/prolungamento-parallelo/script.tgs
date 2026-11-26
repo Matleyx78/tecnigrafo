@@ -16,8 +16,6 @@ LINE
 !move 38,-50.2
 !report
 10
-
-LINE
 0,-60
 !hover 15,-75
 !move 17,-54
