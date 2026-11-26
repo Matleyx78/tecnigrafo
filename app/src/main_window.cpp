@@ -1979,7 +1979,7 @@ void MainWindow::setTheme(Theme theme) {
     // Application palette notifications can be queued by the platform.
     // The window and its icons must already use the new colours now.
     setPalette(QApplication::palette());
-    m_view->setStyle(sceneStyle(theme, m_axesStyle, kStatusIconSize * 2.0));
+    m_view->setStyle(sceneStyle(theme, m_axesStyle));
     m_view->dynamicInputBox()->refresh(false);
     const QSignalBlocker blocker(registeredAction("ui.theme"));
     registeredAction("ui.theme")->setChecked(theme == Theme::Dark);
@@ -2062,7 +2062,7 @@ void MainWindow::showSettings() {
         setTheme(dialog.theme());
         m_snapMagnet = dialog.snapMagnet();
         m_axesStyle = dialog.axesStyle();
-        m_view->setStyle(sceneStyle(theme(), m_axesStyle, kStatusIconSize * 2.0));
+        m_view->setStyle(sceneStyle(theme(), m_axesStyle));
         saveUiSettings();
     }
 }
@@ -2124,7 +2124,7 @@ void MainWindow::restoreUiSettings() {
     const int axes = m_settings->value(QStringLiteral("ui/axesStyle"), 0).toInt();
     m_axesStyle =
         axes >= 0 && axes <= 2 ? static_cast<render::AxesStyle>(axes) : render::AxesStyle::UcsIcon;
-    m_view->setStyle(sceneStyle(theme(), m_axesStyle, kStatusIconSize * 2.0));
+    m_view->setStyle(sceneStyle(theme(), m_axesStyle));
     restoreGeometry(m_settings->value(QStringLiteral("ui/geometry")).toByteArray());
     restoreState(m_settings->value(QStringLiteral("ui/state")).toByteArray());
     // The hidden panels stay hidden in the place that restoreState() gave

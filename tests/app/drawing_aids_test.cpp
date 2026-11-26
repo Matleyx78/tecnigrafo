@@ -10,6 +10,7 @@
 #include <QAction>
 #include <QColor>
 #include <QCoreApplication>
+#include <QFileInfo>
 #include <QImage>
 #include <QLabel>
 #include <QLineEdit>
@@ -18,6 +19,8 @@
 #include <QPlainTextEdit>
 #include <QPoint>
 #include <QStatusBar>
+#include <QStringList>
+#include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
 #include <QToolButton>
@@ -90,6 +93,10 @@ protected:
         for (const char* name : kNames) {
             ASSERT_NE(action(name), nullptr) << name;
         }
+        ASSERT_TRUE(m_directory.isValid());
+        m_window.setFileDialog([this](cmd::FilePrompt /*kind*/, const QString& /*path*/) {
+            return m_fileAnswers.isEmpty() ? QString{} : m_fileAnswers.takeFirst();
+        });
         ASSERT_NE(button("gridButton"), nullptr);
         ASSERT_NE(button("snapgridButton"), nullptr);
         ASSERT_NE(button("osnapButton"), nullptr);
@@ -227,7 +234,8 @@ protected:
         return count;
     }
 
-private:
+    QTemporaryDir m_directory;
+    QStringList m_fileAnswers;
     MainWindow m_window;
 };
 
@@ -363,6 +371,11 @@ TEST_F(DrawingAidsTest, NewSnapModesHaveTheAdrDefaultsAndReachTheRunner) {
     EXPECT_FALSE(action("aids.snap.quadrant")->isChecked());
 }
 
+TEST_F(DrawingAidsTest, UcsIconKeepsTheRenderSize) {
+    EXPECT_EQ(sceneStyle(window().theme()).ucsIconSizePx, render::SceneStyle{}.ucsIconSizePx);
+    EXPECT_EQ(sceneStyle(window().theme()).ucsIconSizePx, 37.0);
+}
+
 TEST_F(DrawingAidsTest, GridSwitchesFollowEachDocumentWithoutUndoSteps) {
     DocumentSession& first = *window().activeSession();
     DocumentSession& second = window().openSession();
@@ -392,6 +405,17 @@ TEST_F(DrawingAidsTest, GridSwitchesFollowEachDocumentWithoutUndoSteps) {
     EXPECT_FALSE(action("aids.snapgrid")->isChecked());
     EXPECT_EQ(action("aids.grid")->shortcut(), QKeySequence(Qt::Key_F7));
     EXPECT_EQ(action("aids.snapgrid")->shortcut(), QKeySequence(Qt::Key_F9));
+
+    const QString path = m_directory.filePath(QStringLiteral("grid-state.cadx"));
+    m_fileAnswers.append(path);
+    action("file.save")->trigger();
+    ASSERT_TRUE(QFileInfo::exists(path));
+    window().closeSession(first);
+    m_fileAnswers.append(path);
+    action("file.open")->trigger();
+    EXPECT_FALSE(window().document().grid().gridOn);
+    EXPECT_FALSE(action("aids.grid")->isChecked());
+    EXPECT_FALSE(button("gridButton")->isChecked());
 }
 
 TEST_F(DrawingAidsTest, NearestExtensionAndParallelSwitchesReachTheRunner) {
