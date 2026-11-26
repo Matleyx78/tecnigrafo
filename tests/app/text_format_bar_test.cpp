@@ -51,6 +51,12 @@ protected:
         button->click();
     }
 
+    TextEditorOverlay& overlay() { return editor; }
+
+    TextFormatBar& formatBar() { return *bar; }
+
+    core::Document& drawing() { return document; }
+
 private:
     QWidget parent;
     render::Viewport viewport;
@@ -63,11 +69,11 @@ TEST_F(TextFormatBarTest, ToggleButtonsApplyCodesAndFollowCaretFormat) {
     open("AB");
     select(0, 1);
     click("formatBold");
-    EXPECT_EQ(editor.value(), "{\\fArial|b1|i0;A}B");
+    EXPECT_EQ(overlay().value(), "{\\fArial|b1|i0;A}B");
 
-    QTest::keyClick(&editor, Qt::Key_Right);
-    bar->refresh();
-    EXPECT_TRUE(bar->findChild<QToolButton*>(QStringLiteral("formatBold"))->isChecked());
+    QTest::keyClick(&overlay(), Qt::Key_Right);
+    formatBar().refresh();
+    EXPECT_TRUE(formatBar().findChild<QToolButton*>(QStringLiteral("formatBold"))->isChecked());
 }
 
 TEST_F(TextFormatBarTest, EveryToggleButtonAppliesItsMtextCode) {
@@ -84,8 +90,8 @@ TEST_F(TextFormatBarTest, EveryToggleButtonAppliesItsMtextCode) {
         open("AB");
         select(0, 1);
         click(test.button);
-        EXPECT_EQ(editor.value(), test.expected) << test.button;
-        editor.close();
+        EXPECT_EQ(overlay().value(), test.expected) << test.button;
+        overlay().close();
     }
 }
 
@@ -103,31 +109,31 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
     for (const NumberCase& test : cases) {
         open("AB");
         select(0, 1);
-        auto* field = bar->findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
+        auto* field = formatBar().findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
         ASSERT_NE(field, nullptr);
         field->setValue(test.value);
-        EXPECT_EQ(editor.value(), test.expected) << test.field;
-        editor.close();
+        EXPECT_EQ(overlay().value(), test.expected) << test.field;
+        overlay().close();
     }
 
     open("AB");
     select(0, 1);
-    auto* color = bar->findChild<QLineEdit*>(QStringLiteral("formatColor"));
+    auto* color = formatBar().findChild<QLineEdit*>(QStringLiteral("formatColor"));
     ASSERT_NE(color, nullptr);
     color->setText(QStringLiteral("1"));
     color->editingFinished();
-    EXPECT_EQ(editor.value(), "{\\C1;A}B");
+    EXPECT_EQ(overlay().value(), "{\\C1;A}B");
 }
 
 TEST_F(TextFormatBarTest, StackAndUnstackButtonsUseEditorModel) {
     open("1/2");
     select(0, 3);
     click("formatStack");
-    EXPECT_EQ(editor.value(), "\\S1/2;");
+    EXPECT_EQ(overlay().value(), "\\S1/2;");
 
     select(0, 1);
     click("formatUnstack");
-    EXPECT_EQ(editor.value(), "1/2");
+    EXPECT_EQ(overlay().value(), "1/2");
 }
 
 TEST_F(TextFormatBarTest, EditorShortcutsToggleBoldItalicAndUnderline) {
@@ -141,11 +147,11 @@ TEST_F(TextFormatBarTest, EditorShortcutsToggleBoldItalicAndUnderline) {
                      {Qt::Key_U, "{\\LA}BC"}};
 
     for (const Shortcut& shortcut : shortcuts) {
-        editor.close();
+        overlay().close();
         open("ABC");
         select(0, 1);
-        QTest::keyClick(&editor, shortcut.key, Qt::ControlModifier);
-        EXPECT_EQ(editor.value(), shortcut.expected);
+        QTest::keyClick(&overlay(), shortcut.key, Qt::ControlModifier);
+        EXPECT_EQ(overlay().value(), shortcut.expected);
     }
 }
 
@@ -155,10 +161,11 @@ TEST_F(TextFormatBarTest, BarIsHiddenForSingleLineText) {
     cmd::TextEditRequest request;
     request.shown = text;
     request.value = text.value;
-    editor.open(request, document);
-    auto* formatBar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
-    ASSERT_NE(formatBar, nullptr);
-    EXPECT_TRUE(formatBar->isHidden());
+    overlay().open(request, drawing());
+    auto* singleLineFormatBar =
+        overlay().findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
+    ASSERT_NE(singleLineFormatBar, nullptr);
+    EXPECT_TRUE(singleLineFormatBar->isHidden());
 }
 
 }  // namespace
