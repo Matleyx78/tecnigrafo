@@ -5,8 +5,8 @@
 
 #include "text_editor_overlay.hpp"
 #include "tg/cmd/text_editing.hpp"
-#include "tg/core/m_document.hpp"
-#include "tg/render/m_viewport.hpp"
+#include "tg/core/document.hpp"
+#include "tg/render/viewport.hpp"
 
 #include <QDoubleSpinBox>
 #include <QLineEdit>
