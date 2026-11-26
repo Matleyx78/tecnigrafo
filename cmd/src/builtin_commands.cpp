@@ -7,6 +7,7 @@
 #include "tg/cmd/command_registry.hpp"
 #include "tg/cmd/commands/aid_commands.hpp"
 #include "tg/cmd/commands/arc_command.hpp"
+#include "tg/cmd/commands/attedit_command.hpp"
 #include "tg/cmd/commands/block_command.hpp"
 #include "tg/cmd/commands/chamfer_command.hpp"
 #include "tg/cmd/commands/chprop_command.hpp"
@@ -51,6 +52,7 @@ void registerBuiltinCommands(CommandRegistry& registry) {
     registry.add(LinetypeCommand::description(),
                  [] { return std::make_unique<LinetypeCommand>(); });
     registry.add(detail::arcDescription(), [] { return std::make_unique<ArcCommand>(); });
+    registry.add(AtteditCommand::description(), [] { return std::make_unique<AtteditCommand>(); });
     registry.add(BlockCommand::description(), [] { return std::make_unique<BlockCommand>(); });
     registry.add(ScaleCommand::description(ScaleCommand::Variable::Current),
                  [] { return std::make_unique<ScaleCommand>(ScaleCommand::Variable::Current); });
