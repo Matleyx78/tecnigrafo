@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The Tecnigrafo authors -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+<line class="esist" x1="1.5" y1="8.5" x2="8.5" y2="8.5" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="cost" x1="8.5" y1="8.5" x2="14.5" y2="8.5" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"/>
+<circle class="pt" cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
+</svg>

@@ -81,10 +81,17 @@ protected:
             "aids.snap.perpendicular",
             "aids.snap.tangent",
             "aids.snap.quadrant",
+            "aids.grid",
+            "aids.snapgrid",
+            "aids.snap.nearest",
+            "aids.snap.extension",
+            "aids.snap.parallel",
         };
         for (const char* name : kNames) {
             ASSERT_NE(action(name), nullptr) << name;
         }
+        ASSERT_NE(button("gridButton"), nullptr);
+        ASSERT_NE(button("snapgridButton"), nullptr);
         ASSERT_NE(button("osnapButton"), nullptr);
         ASSERT_NE(button("orthoButton"), nullptr);
         ASSERT_NE(button("polarButton"), nullptr);
@@ -248,7 +255,9 @@ TEST_F(DrawingAidsTest, StartsWithObjectSnapOnWithEveryModeAndOrthoOff) {
 TEST_F(DrawingAidsTest, EverySwitchOfTheStatusBarIsAnIconThatFollowsItsAction) {
     // docs/adr/0039, point 1, area 10: icons without text, with the name and
     // the key in the tooltip.
-    const std::array<std::pair<const char*, const char*>, 5> kSwitches{{
+    const std::array<std::pair<const char*, const char*>, 7> kSwitches{{
+        {"gridButton", "aids.grid"},
+        {"snapgridButton", "aids.snapgrid"},
         {"orthoButton", "aids.ortho"},
         {"polarButton", "aids.polar"},
         {"otrackButton", "aids.otrack"},
@@ -305,6 +314,8 @@ TEST_F(DrawingAidsTest, TheStatusBarHasTheOrderOfTheReference) {
     };
     const QList<QWidget*> order{
         window().findChild<QWidget*>(QStringLiteral("environmentIndicator")),
+        button("gridButton"),
+        button("snapgridButton"),
         button("orthoButton"),
         button("polarButton"),
         button("otrackButton"),
@@ -350,6 +361,47 @@ TEST_F(DrawingAidsTest, NewSnapModesHaveTheAdrDefaultsAndReachTheRunner) {
     EXPECT_FALSE(action("aids.snap.perpendicular")->isChecked());
     EXPECT_FALSE(action("aids.snap.tangent")->isChecked());
     EXPECT_FALSE(action("aids.snap.quadrant")->isChecked());
+}
+
+TEST_F(DrawingAidsTest, GridSwitchesFollowEachDocumentWithoutUndoSteps) {
+    DocumentSession& first = *window().activeSession();
+    DocumentSession& second = window().openSession();
+    first.editor().markSaved();
+    second.editor().markSaved();
+
+    EXPECT_TRUE(action("aids.grid")->isChecked());
+    EXPECT_FALSE(action("aids.snapgrid")->isChecked());
+    action("aids.grid")->trigger();
+    EXPECT_FALSE(first.document().grid().gridOn);
+    EXPECT_TRUE(first.editor().isModified());
+    EXPECT_TRUE(first.editor().undoNames().empty());
+    EXPECT_FALSE(second.editor().isModified());
+    EXPECT_EQ(lastHistoryLine(), "<Grid off>");
+
+    window().activate(second);
+    EXPECT_TRUE(action("aids.grid")->isChecked());
+    action("aids.snapgrid")->trigger();
+    EXPECT_TRUE(second.document().grid().snapOn);
+    EXPECT_TRUE(second.editor().isModified());
+    EXPECT_TRUE(second.editor().undoNames().empty());
+    EXPECT_TRUE(button("gridButton")->isChecked());
+    EXPECT_TRUE(button("snapgridButton")->isChecked());
+
+    window().activate(first);
+    EXPECT_FALSE(action("aids.grid")->isChecked());
+    EXPECT_FALSE(action("aids.snapgrid")->isChecked());
+    EXPECT_EQ(action("aids.grid")->shortcut(), QKeySequence(Qt::Key_F7));
+    EXPECT_EQ(action("aids.snapgrid")->shortcut(), QKeySequence(Qt::Key_F9));
+}
+
+TEST_F(DrawingAidsTest, NearestExtensionAndParallelSwitchesReachTheRunner) {
+    for (const char* id : {"aids.snap.nearest", "aids.snap.extension", "aids.snap.parallel"}) {
+        EXPECT_FALSE(action(id)->isChecked());
+        action(id)->trigger();
+    }
+    EXPECT_TRUE(aids().snapModes.nearest);
+    EXPECT_TRUE(aids().snapModes.extension);
+    EXPECT_TRUE(aids().snapModes.parallel);
 }
 
 TEST_F(DrawingAidsTest, F10AndF8ExcludeEachOtherAndEchoBothChanges) {

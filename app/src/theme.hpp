@@ -52,7 +52,9 @@ void applyInterfaceFont();
 void applyTheme(QApplication& application, Theme theme);
 /// The colours of the drawing: only the background follows the tokens
 /// (ThemeTokens::canvas); entities, grid and markers keep their own colours.
-[[nodiscard]] render::SceneStyle sceneStyle(Theme theme);
+[[nodiscard]] render::SceneStyle sceneStyle(Theme theme,
+                                            render::AxesStyle axes = render::AxesStyle::UcsIcon,
+                                            double ucsIconSizePx = 37.0);
 /// The theme that `palette` belongs to: Dark when its window is darker than
 /// its text. For widgets that only know their palette (panels, models).
 [[nodiscard]] Theme themeOf(const QPalette& palette);
