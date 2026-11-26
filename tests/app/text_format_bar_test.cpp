@@ -92,7 +92,7 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
         const char* expected;
     };
 
-    constexpr NumberCase cases[] = {{"formatHeight", 2.5, "{\\H2.5;A}B"},
+    constexpr NumberCase cases[] = {{"formatHeight", 3.5, "{\\H3.5;A}B"},
                                     {"formatWidth", 1.5, "{\\W1.5;A}B"},
                                     {"formatOblique", 12.0, "{\\Q12;A}B"},
                                     {"formatTracking", 1.25, "{\\T1.25;A}B"}};

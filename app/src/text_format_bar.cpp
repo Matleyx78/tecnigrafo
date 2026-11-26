@@ -139,7 +139,7 @@ QDoubleSpinBox* TextFormatBar::addNumber(const QString& name, const QString& suf
 }
 
 void TextFormatBar::applyToggle(QToolButton* button, int kind) {
-    connect(button, &QToolButton::clicked, this, [this, button, kind](bool checked) {
+    connect(button, &QToolButton::clicked, this, [this, kind](bool checked) {
         m_editor->applyFormat({static_cast<core::MTextFormatChange::Kind>(kind), checked});
     });
 }
