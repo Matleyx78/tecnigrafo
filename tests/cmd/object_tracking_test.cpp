@@ -373,7 +373,7 @@ protected:
 
     /// The last entity of the drawing, a line.
     [[nodiscard]] const Line& lastLine() const {
-        return std::get<Line>(m_document.entities().back().entity);
+        return std::get<Line>(m_document.find(m_document.entities().back().id)->entity);
     }
 
     [[nodiscard]] std::size_t count() const { return m_document.entities().size(); }
