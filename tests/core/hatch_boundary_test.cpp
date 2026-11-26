@@ -111,8 +111,8 @@ const std::vector<PolylineVertex> kSquare{{{0, 0}}, {{10, 0}}, {{10, 10}}, {{0, 
 // Case 1: the rectangle and its island.
 TEST(HatchBoundary, ARectangleOfLinesWithACircleInside) {
     Document document = Document::newDrawing();
-    addRectangle(document, 0, 0, 10, 10);
-    document.add(Circle{{5, 5}, 2});
+    const auto lines = addRectangle(document, 0, 0, 10, 10);
+    const EntityId circle = document.add(Circle{{5, 5}, 2});
     const DetectedBoundary boundary = detectHatchBoundary(document, {1, 1});
     EXPECT_EQ(boundary.outcome, BoundaryOutcome::Enclosed);
     EXPECT_TRUE(boundary.complete);
@@ -121,6 +121,8 @@ TEST(HatchBoundary, ARectangleOfLinesWithACircleInside) {
     ASSERT_EQ(boundary.loops.size(), 2U);
     expectPolylineLoop(boundary.loops[0], kExternal | kDerived, kSquare);
     expectCircleLoop(boundary.loops[1], kOutermost | kDerived, {5, 5}, 2);
+    EXPECT_EQ(boundary.sources,
+              (std::vector<EntityId>{lines[0], lines[1], lines[2], lines[3], circle}));
 }
 
 // Case 1 bis: the point inside the circle.
@@ -183,6 +185,7 @@ TEST(HatchBoundary, AClosedPolylineIsAContourAndItsSegmentsNameIt) {
     EXPECT_EQ(boundary.outcome, BoundaryOutcome::Enclosed);
     ASSERT_EQ(boundary.loops.size(), 1U);
     expectPolylineLoop(boundary.loops[0], kExternal | kDerived, kSquare);
+    EXPECT_EQ(boundary.sources, (std::vector<EntityId>{square}));
     EXPECT_EQ(detectHatchBoundary(document, {0, 5}).nearEntity, square);
 }
 
