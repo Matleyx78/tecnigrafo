@@ -159,6 +159,28 @@ TEST(CommandDescriptionValidity, ChecksNamesSummaryIdsAndKeywords) {
     EXPECT_FALSE(isValid(unknownKeyword));
 }
 
+TEST(CommandDescriptionValidity, OnlyObjectPromptsTakeUnwrittenKeywords) {
+    // "Select Attributes:" of -ATTEDIT takes Window and Crossing without
+    // showing them (ADR 0026, point 3).
+    CommandDescription unwritten = description("ATTEDIT");
+    unwritten.prompts = {{"select-attributes",
+                          "Select Attributes:",
+                          ValueType::Object,
+                          {{"Window", "W"}, {"Crossing", "C"}},
+                          true}};
+    EXPECT_TRUE(isValid(unwritten));
+
+    for (const ValueType value : {ValueType::Point, ValueType::Selection, ValueType::Text}) {
+        CommandDescription other = unwritten;
+        other.prompts.front().value = value;
+        EXPECT_FALSE(isValid(other));
+    }
+
+    CommandDescription emptyName = unwritten;
+    emptyName.prompts.front().keywords.push_back({"", "X"});
+    EXPECT_FALSE(isValid(emptyName));
+}
+
 // --- Registry -----------------------------------------------------------------
 
 TEST(CommandRegistry, EnvironmentsByNameAndAlias) {
@@ -301,8 +323,8 @@ TEST(BuiltinCommands, EveryCommandHasAValidDescription) {
         EXPECT_NE(registry.create(entry->name), nullptr) << entry->name;
     }
     const std::string expected =
-        "-ATTDEF -BLOCK -DIMSTYLE -HATCH -INSERT -LAYER -LINETYPE -STYLE AFLAGS ARC ATTREQ "
-        "CELTSCALE CHAMFER "
+        "-ATTDEF -ATTEDIT -BLOCK -DIMSTYLE -HATCH -HATCHEDIT -INSERT -LAYER -LINETYPE -STYLE "
+        "AFLAGS ARC ATTDISP ATTREQ ATTSYNC CELTSCALE CHAMFER "
         "CHPROP "
         "CIRCLE CLAYER COLOR COPY DIMADEC DIMALIGNED DIMANGULAR DIMASZ DIMAZIN DIMCEN DIMDEC "
         "DIMDIAMETER DIMDSEP DIMEXE DIMEXO DIMGAP DIMLFAC DIMLINEAR DIMPOST DIMRADIUS DIMRND "

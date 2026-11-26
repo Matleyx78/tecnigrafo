@@ -70,6 +70,7 @@ void HatchCommand::start(CommandContext& context) {
     m_pointLoops.clear();
     m_selectedLoops.clear();
     m_seeds.clear();
+    m_highlighted.clear();
     m_analyzed = false;
     context.editor.beginTransaction("Hatch");
     currentPattern(context);
@@ -200,6 +201,12 @@ void HatchCommand::usePoint(CommandContext& context, const core::Vec2& point) {
         if (!duplicate) {
             m_pointLoops.insert(m_pointLoops.end(), detected.loops.begin(), detected.loops.end());
             m_seeds.push_back(point);
+            for (const core::EntityId id : detected.sources) {
+                if (std::find(m_highlighted.begin(), m_highlighted.end(), id) ==
+                    m_highlighted.end()) {
+                    m_highlighted.push_back(id);
+                }
+            }
         }
     }
     currentPattern(context);
@@ -209,6 +216,7 @@ void HatchCommand::useSelection(CommandContext& context, const SelectionInput& s
     core::ChosenContours chosen =
         core::chosenHatchContours(context.editor.document(), selection.ids);
     m_selectedLoops = std::move(chosen.loops);
+    m_highlighted = std::move(chosen.taken);
 }
 
 Status HatchCommand::finish(CommandContext& context) {
@@ -227,12 +235,21 @@ Status HatchCommand::finish(CommandContext& context) {
     hatch.loops.insert(hatch.loops.end(), m_selectedLoops.begin(), m_selectedLoops.end());
     hatch.patternLines = core::predefinedPatternLines(m_pattern, m_scale, m_angle,
                                                       measurementOf(context.editor.document()));
+    if (context.defaults.hatchOrigin != core::Vec2{}) {
+        hatch = core::withPatternOrigin(hatch, {}, context.defaults.hatchOrigin);
+    }
     if (!hatch.solid && core::patternLines(hatch).outcome == core::PatternOutcome::TooDense) {
         context.message("Hatch spacing too dense, or dash size too small.");
         context.editor.rollback();
         return Status::Finished;
     }
-    context.editor.add(std::move(hatch));
+    const core::EntityId id = context.editor.add(std::move(hatch));
+    if (context.defaults.hatchOrigin != core::Vec2{}) {
+        const core::EntityRecord* record = context.editor.document().find(id);
+        context.editor.replace(
+            id, record->entity,
+            core::withPatternOriginXdata(record->extras, context.defaults.hatchOrigin));
+    }
     context.editor.commit();
     return Status::Finished;
 }

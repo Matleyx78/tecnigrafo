@@ -1,8 +1,0 @@
-# [0.8.1-RT26] (#972): -HATCHEDIT cases, made mandatory by PT26 (#973).
-hatchedit/proprieta-net-hatch-dopo #973
-hatchedit/origine-e-annulla #973
-hatchedit/origine-memorizzata #973
-hatchedit/stile #973
-hatchedit/non-retino-errori-esc #973
-hatchedit/dxf-ansi37-senza-xdata #973
-hatchedit/autocad-tutto-insieme #973

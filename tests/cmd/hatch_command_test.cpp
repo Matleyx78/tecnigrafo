@@ -7,6 +7,7 @@
 #include "tg/core/hatch.hpp"
 #include "tg/core/hatch_boundary.hpp"
 #include "tg/core/hatch_patterns.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/polyline.hpp"
 
 #include <gtest/gtest.h>
@@ -120,6 +121,21 @@ TEST_F(HatchTest, PointFindsOuterBoundaryAndCircleIsland) {
     EXPECT_EQ(hatch().seeds, (std::vector<core::Vec2>{{10, 10}}));
 }
 
+TEST_F(HatchTest, HighlightsDetectedSourcesOnceAndClearsThemAtTheEnd) {
+    const core::EntityId bottom = document().add(core::Line{{0, 0}, {40, 0}});
+    const core::EntityId right = document().add(core::Line{{40, 0}, {40, 20}});
+    const core::EntityId top = document().add(core::Line{{40, 20}, {0, 20}});
+    const core::EntityId left = document().add(core::Line{{0, 20}, {0, 0}});
+    const core::EntityId island = document().add(core::Circle{{20, 10}, 2});
+
+    type({"-HATCH", "5,5"});
+    const auto highlighted = runner().highlighted();
+    EXPECT_EQ((std::vector<core::EntityId>{highlighted.begin(), highlighted.end()}),
+              (std::vector<core::EntityId>{bottom, right, top, left, island}));
+    type({""});
+    EXPECT_TRUE(runner().highlighted().empty());
+}
+
 TEST_F(HatchTest, PointInsideIslandAfterOuterAreaIncludesCircleTwice) {
     document().add(rectangle());
     document().add(core::Circle{{30, 20}, 5});
@@ -150,9 +166,36 @@ TEST_F(HatchTest, SecondObjectSelectionReplacesTheFirst) {
     runner().click({0, 10}, PickAction::Add);
     type({"", "S"});
     runner().click({100, 10}, PickAction::Add);
-    type({"", ""});
+    type({""});
+    const auto highlighted = runner().highlighted();
+    EXPECT_EQ((std::vector<core::EntityId>{highlighted.begin(), highlighted.end()}),
+              (std::vector<core::EntityId>{second}));
+    type({""});
 
     EXPECT_EQ(hatch().loops, expected);
+    EXPECT_TRUE(runner().highlighted().empty());
+}
+
+TEST_F(HatchTest, ObjectSelectionHighlightsBothChosenContours) {
+    const core::EntityId first = document().add(rectangle());
+    const core::EntityId second = document().add(rectangle({100, 0}, {120, 20}));
+
+    type({"-HATCH", "S"});
+    runner().click({0, 10}, PickAction::Add);
+    runner().click({100, 10}, PickAction::Add);
+    type({""});
+
+    const auto highlighted = runner().highlighted();
+    EXPECT_EQ((std::vector<core::EntityId>{highlighted.begin(), highlighted.end()}),
+              (std::vector<core::EntityId>{first, second}));
+}
+
+TEST_F(HatchTest, CancelClearsHighlightedContours) {
+    document().add(rectangle());
+    type({"-HATCH", "30,20"});
+    ASSERT_FALSE(runner().highlighted().empty());
+    runner().submit(CancelInput{});
+    EXPECT_TRUE(runner().highlighted().empty());
 }
 
 TEST_F(HatchTest, UnknownPatternRepeatsThePrompt) {

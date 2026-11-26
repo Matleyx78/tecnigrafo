@@ -10,6 +10,8 @@ add_library(tg_cmd
     src/commands/aid_commands.cpp
     src/commands/arc_command.cpp
     src/commands/attdef_command.cpp
+    src/commands/attedit_command.cpp
+    src/commands/attribute_commands.cpp
     src/commands/block_command.cpp
     src/commands/chamfer_command.cpp
     src/commands/chprop_command.cpp
@@ -25,6 +27,7 @@ add_library(tg_cmd
     src/commands/fillet_command.cpp
     src/commands/grid_commands.cpp
     src/commands/hatch_command.cpp
+    src/commands/hatchedit_command.cpp
     src/commands/insert_command.cpp
     src/commands/grip_command.cpp
     src/commands/join_command.cpp

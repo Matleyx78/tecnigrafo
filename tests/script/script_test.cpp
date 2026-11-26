@@ -136,13 +136,18 @@ TEST(ParseScript, OsnapDirective) {
 
 // ext and par wait for PT31: the frontier, never an invalid script, even
 // next to nea.
-TEST(ParseScript, OsnapExtensionAndParallelAreStillAnnounced) {
-    for (const char* line : {"!osnap ext", "!osnap nea,par", "!osnap end,ext,nea"}) {
-        const ParseError error = failure(std::string{"; comment\n"} + line + "\n");
-        EXPECT_EQ(error.line, 2) << line;
-        EXPECT_TRUE(error.notImplemented) << line;
-        EXPECT_NE(error.message.find("not implemented yet"), std::string::npos) << line;
-    }
+TEST(ParseScript, OsnapExtensionAndParallel) {
+    // Turned on by PT31 of stage 0.8.1 (docs/adr/0057, point 1).
+    const core::SnapModes none{false, false, false, false, false, false, false, false};
+    core::SnapModes extension = none;
+    extension.extension = true;
+    EXPECT_EQ(single("!osnap ext"), Action(OsnapDirective{extension}));
+
+    core::SnapModes both = none;
+    both.nearest = true;
+    both.extension = true;
+    both.parallel = true;
+    EXPECT_EQ(single("!osnap par,nea,ext"), Action(OsnapDirective{both}));
 }
 
 TEST(ParseScript, OsnapIsParsedAndNeverNotImplemented) {

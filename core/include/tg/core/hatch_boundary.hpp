@@ -44,6 +44,8 @@ struct DetectedBoundary {
     /// order (boundary.hpp, DetectedBoundary::loops), as loops of a hatch with
     /// their flags (point 4). Empty otherwise.
     std::vector<HatchLoop> loops;
+    /// Entities whose curves form `loops`, once each, in first-use order.
+    std::vector<EntityId> sources;
     /// With OnCurve: the entity that owns the curve solid-space names.
     std::optional<EntityId> nearEntity;
     /// With NotEnclosed: the free ends solid-space gives, in its order.
