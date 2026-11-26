@@ -965,8 +965,10 @@ void PropertyGridDelegate::setModelData(QWidget* editor, QAbstractItemModel* mod
         return;
     }
     typed->setModified(false);
-    // Untrimmed: the spaces of a text are its own; a number ignores them.
-    model->setData(index, typed->text(), Qt::EditRole);
+    // The scale trimmed, as before; an own value untrimmed: the spaces of a
+    // text are its own, and the panel reads a number without them.
+    const bool scale = index.data(PropertyGridModel::kFieldRole).isValid();
+    model->setData(index, scale ? typed->text().trimmed() : typed->text(), Qt::EditRole);
 }
 
 void PropertyGridDelegate::updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option,
