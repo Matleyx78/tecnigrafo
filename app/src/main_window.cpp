@@ -1124,6 +1124,8 @@ void MainWindow::refresh() {
     m_view->update();
     m_commandLine->refreshPrompt();
     m_view->dynamicInputBox()->refresh();
+    // The input may be one the text editor opens on, or ends (PT12).
+    m_view->refreshTextEditor();
     updateDrawingState();
     updateEditActions();
     handleFilePrompts();
@@ -1622,6 +1624,8 @@ void MainWindow::setScriptMode() {
     m_dynamicInputAction->setChecked(false);
     m_dynamicInputAction->setEnabled(false);
     m_view->dynamicInputBox()->setInputEnabled(false);
+    // A script writes the text on the command line (docs/adr/0054, point 5).
+    m_view->setTextEditorEnabled(false);
     // Nothing is hidden in a script session, and nothing is saved.
     m_autoHide->setEnabled(false);
     setInterface(InterfaceKind::Ribbon);

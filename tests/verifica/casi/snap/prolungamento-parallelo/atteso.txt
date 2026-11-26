@@ -39,15 +39,13 @@ entities:
   259 LINE start=40,-50 end=0,-60
 messages:
   Specify first point: 10
-  Specify next point or [Undo]:
-  Command: LINE
-  Specify first point: 0,-60
+  Specify next point or [Undo]: 0,-60
 prompt: Specify next point or [Undo]:
 preview:
+  LINE start=0,-60 end=17.1,-54.3
 selection: none
 rectangle: none
 undo:
-  Line
   Line
   Line
 redo:
@@ -57,7 +55,7 @@ pointer: 17,-54
 active snap: none
 acquired:
   parallel 0,-80 30,-70
-active tracking: Parallel 17.07629936490925,-54.30790021169692 from 0,-60
+active tracking: Parallel 17.1,-54.3 from 0,-60
 statistics:
   LINE 3
 
@@ -69,13 +67,12 @@ entities:
   260 LINE start=0,-60 end=18.97366596101028,-53.67544467966324
 messages:
   Specify next point or [Undo]: 20
-  Specify next point or [Undo]:
+  Specify next point or [Close/Undo]:
 prompt: Command:
 preview:
 selection: none
 rectangle: none
 undo:
-  Line
   Line
   Line
   Line

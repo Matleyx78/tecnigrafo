@@ -5,7 +5,9 @@
 
 #include "dynamic_input_box.hpp"
 #include "qt_painter.hpp"
+#include "text_editor_overlay.hpp"
 #include "tg/cmd/value_format.hpp"
+#include "tg/core/document_query.hpp"
 #include "tg/core/math.hpp"
 
 #include <QMouseEvent>
@@ -17,6 +19,9 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <optional>
+#include <variant>
+#include <vector>
 
 namespace tg::app {
 
@@ -31,6 +36,9 @@ constexpr double kDragThresholdPixels = 5.0;
 constexpr int kTrackingHoldMilliseconds = 500;
 constexpr double kTrackingMarkHalfSizePx = 3.5;
 constexpr double kHintOffsetPx = 14.0;
+// The pick box of a click, 3 pixels on each side of the point
+// (kPickBoxPixels of command_runner.cpp).
+constexpr double kPickBoxPixels = 3.0;
 
 core::Vec2 toVec2(const QPointF& point) {
     return {point.x(), point.y()};
@@ -62,10 +70,39 @@ QCursor drawingCursor(const render::Color& background) {
     return QCursor(pixmap, kCursorArm, kCursorArm);
 }
 
+/// True for the entity `id` of `document` that TEXTEDIT edits: a TEXT, an
+/// MTEXT, a dimension, an ATTDEF or an INSERT with attributes
+/// (docs/adr/0054, point 6), not on a locked layer, where no click selects
+/// it (docs/adr/0023, point 4).
+bool editableText(const core::Document& document, core::EntityId id) {
+    const core::EntityRecord* record = document.find(id);
+    if (record == nullptr) {
+        return false;
+    }
+    const core::Layer* layer = document.layer(record->properties.layer);
+    if (layer != nullptr && layer->locked) {
+        return false;
+    }
+    const core::Entity& entity = record->entity;
+    if (const auto* insert = std::get_if<core::Insert>(&entity)) {
+        return !insert->attributes.empty();
+    }
+    return std::holds_alternative<core::Text>(entity) ||
+           std::holds_alternative<core::MText>(entity) ||
+           std::holds_alternative<core::Dimension>(entity) ||
+           std::holds_alternative<core::AttributeDefinition>(entity);
+}
+
 }  // namespace
 
 CadView::CadView(QWidget* parent)
-    : QWidget(parent), m_dynamicInput(new DynamicInputBox(this)), m_holdTimer(new QTimer(this)) {
+    : QWidget(parent),
+      m_dynamicInput(new DynamicInputBox(this)),
+      m_textEditor(new TextEditorOverlay(this, m_viewport)),
+      m_holdTimer(new QTimer(this)) {
+    m_textEditor->setStyle(m_style);
+    connect(m_textEditor, &TextEditorOverlay::confirmed, this, &CadView::confirmText);
+    connect(m_textEditor, &TextEditorOverlay::cancelled, this, &CadView::cancelText);
     setMouseTracking(true);  // cursor coordinates without pressed buttons
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_OpaquePaintEvent);  // we paint every pixel ourselves
@@ -88,6 +125,9 @@ void CadView::setSession(DocumentSession* session) {
     if (session == m_session) {
         return;
     }
+    // The editor belongs to the request of the session left: it opens again,
+    // from the request, when that session comes back.
+    closeTextEditor();
     // A view not yet fitted to its drawing has nothing worth keeping.
     if (m_session != nullptr && m_initialFitDone) {
         m_session->setViewState({m_viewport.center(), m_viewport.scale()});
@@ -113,6 +153,7 @@ void CadView::setSession(DocumentSession* session) {
         m_viewport.setCenter(state->center);
         emit scaleChanged(m_viewport.scale());
         emitCursor(m_cursorPosition);
+        refreshTextEditor();
         update();
         return;
     }
@@ -126,7 +167,100 @@ void CadView::setSession(DocumentSession* session) {
         // are those of the new view.
         emitCursor(m_cursorPosition);
     }
+    refreshTextEditor();
     update();
+}
+
+void CadView::refreshTextEditor() {
+    std::optional<cmd::TextEditRequest> request;
+    if (m_session != nullptr && m_textEditorEnabled) {
+        request = m_session->runner().textEditing();
+    }
+    if (request != m_textEditor->request()) {
+        closeTextEditor();
+        if (request) {
+            m_textEditor->open(*request, m_session->document());
+            // The keys go to the editor, even when the owner gives the focus
+            // back to the view after an input of the command line.
+            setFocusProxy(m_textEditor);
+            m_textEditor->setFocus(Qt::OtherFocusReason);
+        }
+        update();
+    }
+    // The box of the dynamic input would cover the text being written.
+    if (m_textEditor->isOpen()) {
+        m_dynamicInput->hide();
+    }
+}
+
+void CadView::setTextEditorEnabled(bool enabled) {
+    m_textEditorEnabled = enabled;
+    refreshTextEditor();
+}
+
+void CadView::closeTextEditor() {
+    if (!m_textEditor->isOpen()) {
+        return;
+    }
+    const bool hadFocus = m_textEditor->hasFocus();
+    setFocusProxy(nullptr);
+    m_textEditor->close();
+    if (hadFocus) {
+        setFocus(Qt::OtherFocusReason);
+    }
+}
+
+void CadView::confirmText() {
+    if (m_session == nullptr || !m_textEditor->isOpen()) {
+        return;
+    }
+    const std::vector<cmd::Input> inputs = m_textEditor->confirmation();
+    closeTextEditor();
+    cmd::CommandRunner& runner = m_session->runner();
+    for (const cmd::Input& input : inputs) {
+        runner.submit(input);
+    }
+    refreshTextEditor();
+    update();
+    emit inputHandled();
+}
+
+void CadView::cancelText() {
+    if (m_session == nullptr || !m_textEditor->isOpen()) {
+        return;
+    }
+    closeTextEditor();
+    m_session->runner().submit(cmd::CancelInput{});
+    refreshTextEditor();
+    update();
+    emit inputHandled();
+}
+
+bool CadView::editTextAt(const QPointF& screenPos) {
+    if (m_session == nullptr) {
+        return false;
+    }
+    cmd::CommandRunner& runner = m_session->runner();
+    // At "Command:" only; the first click of the two may have opened a
+    // selection rectangle, which the second closes.
+    if (runner.isActive() || runner.selectionRectangle()) {
+        return false;
+    }
+    const core::Document& document = m_session->document();
+    const std::optional<core::EntityId> id =
+        core::pickEntity(document, toWorld(screenPos), kPickBoxPixels * runner.pixelSize());
+    if (!id || !editableText(document, *id)) {
+        return false;
+    }
+    // TEXTEDIT takes one object already chosen as its first (PT11).
+    if (!runner.replaceSelection({*id})) {
+        return false;
+    }
+    runner.submitText("TEXTEDIT");
+    refreshTextEditor();
+    update();
+    emit inputHandled();
+    return true;
 }
 
 void CadView::zoomExtents() {
@@ -156,6 +290,7 @@ void CadView::setView(const core::Vec2& center, double unitsPerPixel) {
 
 void CadView::setStyle(const render::SceneStyle& style) {
     m_style = style;
+    m_textEditor->setStyle(style);
     m_cursor = drawingCursor(m_style.background);
     if (!m_panning) {
         setCursor(m_cursor);
@@ -275,6 +410,7 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
 void CadView::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     m_viewport.setScreenSize(width(), height());
+    m_textEditor->setGeometry(rect());
     emitCursor(m_cursorPosition);
 }
 
@@ -343,7 +479,9 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         m_viewport.panByPixels(toVec2(delta));
         update();
     }
-    if (m_session != nullptr) {
+    // While writing, the request stays the one the editor opened on.
+    const bool editing = m_textEditor->isOpen();
+    if (m_session != nullptr && !editing) {
         cmd::CommandRunner& runner = m_session->runner();
         runner.pointerMoved(toWorld(event->position()));
         if (runner.isActive() || runner.selectionRectangle()) {
@@ -351,7 +489,7 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         }
     }
     emitCursor(event->position());
-    if (m_session != nullptr && !m_panning) {
+    if (m_session != nullptr && !m_panning && !editing) {
         m_holdTimer->start();
     }
     QWidget::mouseMoveEvent(event);
@@ -390,13 +528,21 @@ void CadView::mouseDoubleClickEvent(QMouseEvent* event) {
         event->accept();
         return;
     }
+    if (event->button() == Qt::LeftButton && editTextAt(event->position())) {
+        event->accept();
+        return;
+    }
+    // Otherwise a second click, as before (QWidget calls mousePressEvent()).
     QWidget::mouseDoubleClickEvent(event);
 }
 
 void CadView::emitCursor(const QPointF& screenPos) {
     m_cursorPosition = screenPos;
     const core::Vec2 world = toWorld(screenPos);
-    m_dynamicInput->updatePointer(world, screenPos.toPoint());
+    // Its box stays hidden while the editor is open.
+    if (!m_textEditor->isOpen()) {
+        m_dynamicInput->updatePointer(world, screenPos.toPoint());
+    }
     emit cursorMoved(world.x, world.y);
 }
 
