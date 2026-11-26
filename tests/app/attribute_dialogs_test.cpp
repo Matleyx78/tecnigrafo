@@ -18,7 +18,7 @@ TEST(AttributeDefinitionDialogTest, ReturnsTheThreeEditedFieldsAndKeepsEverythin
     original.text.value = "A-1";
     original.text.height = 2.5;
     original.lockPosition = true;
-    AttributeDefinitionDialog dialog(original);
+    const AttributeDefinitionDialog dialog(original);
 
     dialog.findChild<QLineEdit*>(QStringLiteral("attributeTag"))->setText(QStringLiteral("CODE"));
     dialog.findChild<QLineEdit*>(QStringLiteral("attributePrompt"))
@@ -43,7 +43,7 @@ TEST(InsertAttributesDialogTest, ListsAttributesInOrderAndReturnsTheirValues) {
         attribute.text.value = value;
         insert.attributes.push_back(attribute);
     }
-    InsertAttributesDialog dialog(insert);
+    const InsertAttributesDialog dialog(insert);
 
     const auto edits = dialog.findChildren<QLineEdit*>();
     ASSERT_EQ(edits.size(), 3);

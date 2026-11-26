@@ -27,9 +27,9 @@ public:
 
 private:
     core::AttributeDefinition m_definition;
-    QLineEdit* m_tag;
-    QLineEdit* m_prompt;
-    QLineEdit* m_value;
+    QLineEdit* m_tag{nullptr};
+    QLineEdit* m_prompt{nullptr};
+    QLineEdit* m_value{nullptr};
 };
 
 /// Edits the values of the non-constant attributes owned by an INSERT.

@@ -5,6 +5,8 @@
 
 #include "attribute_dialogs.hpp"
 #include "battman_dialog.hpp"
+#include "cad_view.hpp"
+#include "command_line.hpp"
 #include "document_session.hpp"
 #include "layer_panel.hpp"
 #include "main_window.hpp"
@@ -27,13 +29,13 @@ namespace {
 
 const core::EntityRecord* attributeDefinitionForPrompt(const core::Document& document,
                                                        const std::string& prompt) {
-    constexpr std::string_view prefix = "Enter attribute tag <";
-    constexpr std::string_view suffix = ">:";
-    if (!prompt.starts_with(prefix) || !prompt.ends_with(suffix)) {
+    constexpr std::string_view kPrefix = "Enter attribute tag <";
+    constexpr std::string_view kSuffix = ">:";
+    if (!prompt.starts_with(kPrefix) || !prompt.ends_with(kSuffix)) {
         return nullptr;
     }
     const std::string tag =
-        prompt.substr(prefix.size(), prompt.size() - prefix.size() - suffix.size());
+        prompt.substr(kPrefix.size(), prompt.size() - kPrefix.size() - kSuffix.size());
     for (const core::EntityRecord& record : document.entities()) {
         const auto* definition = std::get_if<core::AttributeDefinition>(&record.entity);
         if (definition != nullptr && definition->tag == tag) {
@@ -241,9 +243,11 @@ private:
 }  // namespace
 
 void registerAppCommands(cmd::CommandRegistry& registry, MainWindow& window) {
-    QObject::connect(&window, &MainWindow::inputHandled, &window, [&window] {
+    const auto request = [&window] {
         QTimer::singleShot(0, &window, [&window] { answerAttributeRequest(window); });
-    });
+    };
+    QObject::connect(window.commandLine(), &CommandLine::inputHandled, &window, request);
+    QObject::connect(window.view(), &CadView::inputHandled, &window, request);
     registry.add({"RIBBON", {}, "Shows the ribbon interface.", false, {}}, [&window] {
         return std::make_unique<InterfaceCommand>(window, InterfaceKind::Ribbon);
     });

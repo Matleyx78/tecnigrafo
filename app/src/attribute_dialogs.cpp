@@ -30,11 +30,7 @@ QLineEdit* field(QFormLayout& layout, const QString& label, const std::string& v
 
 AttributeDefinitionDialog::AttributeDefinitionDialog(const core::AttributeDefinition& definition,
                                                      QWidget* parent)
-    : QDialog(parent),
-      m_definition(definition),
-      m_tag(nullptr),
-      m_prompt(nullptr),
-      m_value(nullptr) {
+    : QDialog(parent), m_definition(definition) {
     setObjectName(QStringLiteral("attributeDefinitionDialog"));
     setWindowTitle(tr("Edit Attribute Definition"));
     auto* layout = new QFormLayout(this);
