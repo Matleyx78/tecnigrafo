@@ -176,6 +176,20 @@ TEST_F(HatchTest, SecondObjectSelectionReplacesTheFirst) {
     EXPECT_TRUE(runner().highlighted().empty());
 }
 
+TEST_F(HatchTest, ObjectSelectionHighlightsBothChosenContours) {
+    const core::EntityId first = document().add(rectangle());
+    const core::EntityId second = document().add(rectangle({100, 0}, {120, 20}));
+
+    type({"-HATCH", "S"});
+    runner().click({0, 10}, PickAction::Add);
+    runner().click({100, 10}, PickAction::Add);
+    type({""});
+
+    const auto highlighted = runner().highlighted();
+    EXPECT_EQ((std::vector<core::EntityId>{highlighted.begin(), highlighted.end()}),
+              (std::vector<core::EntityId>{first, second}));
+}
+
 TEST_F(HatchTest, CancelClearsHighlightedContours) {
     document().add(rectangle());
     type({"-HATCH", "30,20"});

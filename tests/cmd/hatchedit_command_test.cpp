@@ -42,6 +42,8 @@ protected:
 
     [[nodiscard]] CommandRunner& runner() { return m_runner; }
 
+    [[nodiscard]] edit::Editor& editor() { return m_editor; }
+
     [[nodiscard]] const edit::Editor& editor() const { return m_editor; }
 
     [[nodiscard]] const core::Document& document() const { return m_document; }
@@ -73,6 +75,20 @@ TEST_F(HatcheditTest, ChangesPropertiesAndRemembersThemForTheNextHatch) {
     runner().submit(CancelInput{});
 }
 
+TEST_F(HatcheditTest, SolidShortcutAppliesImmediatelyAndUpdatesTheDefault) {
+    type({"-HATCHEDIT"});
+    selectHatch();
+    type({"P", "S"});
+
+    EXPECT_TRUE(hatch().solid);
+    EXPECT_EQ(hatch().pattern, "SOLID");
+    EXPECT_EQ(editor().undoName(), "Hatchedit");
+
+    type({"-HATCH", "P"});
+    EXPECT_EQ(runner().promptText(), "Enter a pattern name or [Solid] <SOLID>:");
+    runner().submit(CancelInput{});
+}
+
 TEST_F(HatcheditTest, ChangesAndStoresPatternOriginAndUndoRestoresExtras) {
     type({"HE"});
     selectHatch();
@@ -84,6 +100,37 @@ TEST_F(HatcheditTest, ChangesAndStoresPatternOriginAndUndoRestoresExtras) {
 
     type({"-HATCH", "10,10", ""});
     EXPECT_EQ(core::patternOrigin(document().entities().back().extras), (core::Vec2{5, 6}));
+}
+
+TEST_F(HatcheditTest, OriginMovesImportedFamiliesAndUndoRestoresFamiliesAndExtras) {
+    core::Hatch imported = hatch();
+    imported.pattern = "ANSI37";
+    imported.patternLines = {
+        core::PatternLine{0.0, {3, 4}, {0, 2}, {1.0, -0.5}},
+        core::PatternLine{1.0, {-2, 7}, {3, 1}, {0.25, -0.75}},
+    };
+    const auto originalFamilies = imported.patternLines;
+    const core::EntityExtras originalExtras = record().extras;
+    editor().beginTransaction("Test setup");
+    ASSERT_TRUE(editor().replace(record().id, imported, originalExtras));
+    editor().commit();
+
+    type({"HE"});
+    selectHatch();
+    type({"O", "S", "10,5", "N"});
+
+    ASSERT_EQ(hatch().patternLines.size(), 2U);
+    EXPECT_EQ(hatch().patternLines.at(0).origin, (core::Vec2{13, 9}));
+    EXPECT_EQ(hatch().patternLines.at(1).origin, (core::Vec2{8, 12}));
+    EXPECT_EQ(hatch().patternLines.at(0).offset, originalFamilies.at(0).offset);
+    EXPECT_EQ(hatch().patternLines.at(1).offset, originalFamilies.at(1).offset);
+    EXPECT_EQ(hatch().patternLines.at(0).dashes, originalFamilies.at(0).dashes);
+    EXPECT_EQ(hatch().patternLines.at(1).dashes, originalFamilies.at(1).dashes);
+    EXPECT_EQ(core::patternOrigin(record().extras), (core::Vec2{10, 5}));
+
+    type({"U"});
+    EXPECT_EQ(hatch().patternLines, originalFamilies);
+    EXPECT_EQ(record().extras, originalExtras);
 }
 
 }  // namespace

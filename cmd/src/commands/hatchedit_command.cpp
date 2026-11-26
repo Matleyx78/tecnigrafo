@@ -23,7 +23,7 @@ bool answerIs(std::string_view answer, std::string_view value, std::string_view 
 
 bool generatedPattern(std::string_view name) {
     return answerIs(name, "ANSI31", "ANSI31") || answerIs(name, "NET", "NET") ||
-           answerIs(name, "SOLID", "SOLID");
+           answerIs(name, "SOLID", "S");
 }
 
 int measurementOf(const core::Document& document) {
@@ -123,12 +123,16 @@ Status HatcheditCommand::handle(CommandContext& context, const Input& input) {
         }
         if (answerIs(answer, "NET", "NET")) {
             m_pattern = "NET";
-        } else if (answerIs(answer, "SOLID", "SOLID")) {
+        } else if (answerIs(answer, "SOLID", "S")) {
             m_pattern = "SOLID";
         } else if (generatedPattern(answer)) {
             m_pattern = "ANSI31";
         }
-        m_stage = m_pattern == "SOLID" ? Stage::Angle : Stage::Scale;
+        if (m_pattern == "SOLID") {
+            m_stage = Stage::Angle;
+            return apply(context);
+        }
+        m_stage = Stage::Scale;
         return Status::Continue;
     }
     if (m_stage == Stage::Scale) {
