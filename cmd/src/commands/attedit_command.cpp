@@ -103,30 +103,30 @@ std::string replaceAll(std::string value, std::string_view from, std::string_vie
 }
 
 const std::vector<Keyword>& yesNo() {
-    static const std::vector<Keyword> keywords{{"Yes", "Y"}, {"No", "N"}};
-    return keywords;
+    static const std::vector<Keyword> kKeywords{{"Yes", "Y"}, {"No", "N"}};
+    return kKeywords;
 }
 
 const std::vector<Keyword>& optionKeywords() {
-    static const std::vector<Keyword> keywords{{"Value", "V"}, {"Position", "P"}, {"Height", "H"},
-                                               {"Angle", "A"}, {"Style", "S"},    {"Layer", "L"},
-                                               {"Color", "C"}, {"Next", "N"}};
-    return keywords;
+    static const std::vector<Keyword> kKeywords{{"Value", "V"}, {"Position", "P"}, {"Height", "H"},
+                                                {"Angle", "A"}, {"Style", "S"},    {"Layer", "L"},
+                                                {"Color", "C"}, {"Next", "N"}};
+    return kKeywords;
 }
 
 const std::vector<Keyword>& selectKeywords() {
-    static const std::vector<Keyword> keywords{{"Window", "W"}, {"Crossing", "C"}};
-    return keywords;
+    static const std::vector<Keyword> kKeywords{{"Window", "W"}, {"Crossing", "C"}};
+    return kKeywords;
 }
 
 const std::vector<Keyword>& modificationKeywords() {
-    static const std::vector<Keyword> keywords{{"Change", "C"}, {"Replace", "R"}};
-    return keywords;
+    static const std::vector<Keyword> kKeywords{{"Change", "C"}, {"Replace", "R"}};
+    return kKeywords;
 }
 
 const std::vector<Keyword>& colorKeywords() {
-    static const std::vector<Keyword> keywords{{"Truecolor", "T"}, {"Colorbook", "CO"}};
-    return keywords;
+    static const std::vector<Keyword> kKeywords{{"Truecolor", "T"}, {"Colorbook", "CO"}};
+    return kKeywords;
 }
 
 }  // namespace
@@ -225,7 +225,8 @@ Status AtteditCommand::handle(CommandContext& context, const Input& input) {
             std::optional<double> value;
             if (const auto* number = std::get_if<ValueInput>(&input)) {
                 value = number->value;
-            } else if (const auto* point = std::get_if<PointInput>(&input); point && m_basePoint) {
+            } else if (const auto* point = std::get_if<PointInput>(&input);
+                       point != nullptr && m_basePoint) {
                 const core::Vec2 offset = point->point - *m_basePoint;
                 value = m_stage == Stage::Height ? std::hypot(offset.x, offset.y)
                                                  : std::atan2(offset.y, offset.x);
@@ -546,20 +547,21 @@ Status AtteditCommand::finish(CommandContext& context) {
     edit::Editor& editor = context.editor;
     if (editor.savepoint().changes == 0) {
         const core::Document& document = editor.document();
-        std::optional<core::EntityId> id;
+        const core::EntityRecord* record = nullptr;
         if (!m_attributes.empty()) {
-            id = m_attributes.front().insert;
+            record = document.find(m_attributes.front().insert);
         } else if (!document.entities().empty()) {
-            id = document.entities().front().id;
+            record = &document.entities().front();
         }
-        if (const core::EntityRecord* record = id ? document.find(*id) : nullptr) {
+        if (record != nullptr) {
+            const core::EntityId id = record->id;
             const core::EntityProperties original = record->properties;
             core::EntityProperties other = original;
             other.color = original.color.kind() == core::Color::Kind::ByBlock
                               ? core::Color::byLayer()
                               : core::Color::byBlock();
-            if (editor.setProperties(*id, other)) {
-                editor.setProperties(*id, original);
+            if (editor.setProperties(id, other)) {
+                editor.setProperties(id, original);
             }
         }
     }
