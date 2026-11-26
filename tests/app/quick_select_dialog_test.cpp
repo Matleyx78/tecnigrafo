@@ -3,6 +3,7 @@
 
 #include "quick_select_dialog.hpp"
 
+#include "properties_panel.hpp"
 #include "property_widgets.hpp"
 #include "tg/cmd/quick_select.hpp"
 #include "tg/edit/editor.hpp"
@@ -16,6 +17,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -184,6 +186,45 @@ TEST_F(QuickSelectDialogTest, SearchesWithinTheSelection) {
     activate(*where, 0);
     EXPECT_FALSE(dialog.searchesSelection());
     EXPECT_EQ(dialog.result(), (std::vector<EntityId>{redLine(), wallLine()}));
+}
+
+// Every type of core::Entity is offered, with the name of the panel, and a
+// hatch can be filtered (docs/tappe/0.8.1/PT25-pannello.md, point 5; #913).
+TEST(QuickSelectDialogTypes, OffersEveryTypeAndFindsAHatch) {
+    core::Document document = core::Document::newDrawing();
+    edit::Editor editor(document);
+    core::Hatch hatch;
+    hatch.pattern = "ANSI31";
+    core::HatchLoop loop;
+    loop.flags = 7;
+    loop.polyline = core::Polyline{{{{30, 20}}, {{0, 20}}, {{0, 0}}, {{30, 0}}}, true};
+    hatch.loops = {loop};
+    editor.beginTransaction("Test");
+    const EntityId line = editor.add(core::Line{{0, 0}, {10, 0}});
+    const EntityId filled = editor.add(hatch);
+    editor.commit();
+
+    const QuickSelectDialog dialog(document, {});
+    auto* types = dialog.findChild<QComboBox*>(QStringLiteral("quickSelectType"));
+    ASSERT_NE(types, nullptr);
+    // "Multiple", then one per type.
+    ASSERT_EQ(types->count(), static_cast<int>(entityTypeNames().size()) + 1);
+    for (const std::string_view type : entityTypeNames()) {
+        const int index =
+            types->findData(QString::fromLatin1(type.data(), static_cast<qsizetype>(type.size())));
+        ASSERT_GE(index, 0) << type;
+        EXPECT_EQ(types->itemText(index), entityTypeLabel(type)) << type;
+    }
+    EXPECT_EQ(types->itemText(types->findData(QStringLiteral("HATCH"))), QStringLiteral("Hatch"));
+
+    auto* property = dialog.findChild<QComboBox*>(QStringLiteral("quickSelectProperty"));
+    ASSERT_NE(property, nullptr);
+    activate(*property, property->findData(static_cast<int>(Property::None)));
+    activate(*types, types->findData(QStringLiteral("HATCH")));
+    EXPECT_EQ(dialog.criteria().type, "HATCH");
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{filled});
+    activate(*types, types->findData(QStringLiteral("LINE")));
+    EXPECT_EQ(dialog.result(), std::vector<EntityId>{line});
 }
 
 }  // namespace

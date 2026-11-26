@@ -425,4 +425,17 @@ void LineweightCombo::setVaries() {
     showVaries(*this);
 }
 
+ChoiceCombo::ChoiceCombo(int group, int row, QWidget* parent)
+    : QComboBox(parent), m_group(group), m_row(row) {
+    connect(this, &QComboBox::activated, this,
+            [this](int index) { Q_EMIT valueChosen(m_group, m_row, itemText(index)); });
+}
+
+void ChoiceCombo::setValue(const QStringList& choices, const QString& value) {
+    const QSignalBlocker blocker(this);
+    clear();
+    addItems(choices);
+    setCurrentIndex(static_cast<int>(choices.indexOf(value)));
+}
+
 }  // namespace tg::app

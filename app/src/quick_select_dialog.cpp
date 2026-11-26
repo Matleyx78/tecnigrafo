@@ -3,6 +3,7 @@
 
 #include "quick_select_dialog.hpp"
 
+#include "properties_panel.hpp"
 #include "property_widgets.hpp"
 
 #include <QChar>
@@ -17,9 +18,9 @@
 #include <QVariant>
 #include <QWidget>
 
-#include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace tg::app {
@@ -33,18 +34,6 @@ constexpr char16_t kNotEqualSign = u'\u2260';
 
 // The pages of the value controls, in the order they are added.
 enum class ValuePage : std::uint8_t { Color, Layer, Linetype, Lineweight, None };
-
-struct TypeChoice {
-    const char* dxf;
-    const char* name;
-};
-
-// The handled DXF types (cmd::quickSelect), in the order of core::Entity.
-constexpr std::array<TypeChoice, 5> kTypes{{{"LWPOLYLINE", QT_TR_NOOP("Polyline")},
-                                            {"LINE", QT_TR_NOOP("Line")},
-                                            {"CIRCLE", QT_TR_NOOP("Circle")},
-                                            {"ARC", QT_TR_NOOP("Arc")},
-                                            {"TEXT", QT_TR_NOOP("Text")}}};
 
 int toInt(Property property) {
     return static_cast<int>(property);
@@ -104,8 +93,11 @@ QuickSelectDialog::QuickSelectDialog(const core::Document& document,
 
     m_type->setObjectName(QStringLiteral("quickSelectType"));
     m_type->addItem(tr("Multiple"), QString());
-    for (const TypeChoice& type : kTypes) {
-        m_type->addItem(tr(type.name), QString::fromLatin1(type.dxf));
+    // Every type of core::Entity, in its order, as cmd::quickSelect filters
+    // them (core::entityTypeName, #913).
+    for (const std::string_view type : entityTypeNames()) {
+        m_type->addItem(entityTypeLabel(type),
+                        QString::fromLatin1(type.data(), static_cast<qsizetype>(type.size())));
     }
 
     m_property->setObjectName(QStringLiteral("quickSelectProperty"));

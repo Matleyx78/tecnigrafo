@@ -8,6 +8,7 @@
 #include "tg/cmd/command_runner.hpp"
 #include "tg/cmd/quick_select.hpp"
 #include "tg/core/document.hpp"
+#include "tg/core/entity_properties.hpp"
 #include "tg/edit/editor.hpp"
 
 #include <QDockWidget>
@@ -20,6 +21,8 @@
 #include <array>
 #include <functional>
 #include <string>
+#include <string_view>
+#include <variant>
 #include <vector>
 
 class QAction;
@@ -37,6 +40,16 @@ class LayerCombo;
 class LinetypeCombo;
 class LineweightCombo;
 
+/// The DXF names of the alternatives of core::Entity, in their order
+/// (core::entityTypeName, #913).
+[[nodiscard]] const std::array<std::string_view, std::variant_size_v<core::Entity>>&
+entityTypeNames();
+
+/// The name the panel and QSELECT give the DXF type `type`, as AutoCAD does:
+/// "Polyline", "Hatch", "Block Reference"…; empty for a name that is not
+/// one of entityTypeNames().
+[[nodiscard]] QString entityTypeLabel(std::string_view type);
+
 /// Every icon the properties panel and its controls draw that no action
 /// names: those of colour, linetype and lineweight (docs/ICONE.md).
 [[nodiscard]] QStringList propertiesPanelIconNames();
@@ -49,8 +62,12 @@ class LineweightCombo;
 /// Select, the action of setQuickSelectAction(). Below, a grid of two columns
 /// (docs/adr/0039, point 1, area 8; PropertyGridModel): the group General
 /// (colour, layer, linetype, linetype scale, lineweight), whose values change
-/// in their cells, and, for a single entity, the group Geometry, read only,
-/// with the browsing of the vertices of a polyline. A click on a group's row
+/// in their cells, and, for a single entity, the group Geometry: read only
+/// for the types of before the 0.8, with the browsing of the vertices of a
+/// polyline; for those of the 0.8 the own properties of core
+/// (core::ownProperties, docs/tappe/0.8.1/PT25-pannello.md), editable but
+/// the derived ones, with the browsing of the vertices of a SOLID, and for
+/// an INSERT the group Attributes, a value per tag. A click on a group's row
 /// closes or opens it. Without a selection the panel shows and changes the
 /// current values, as in AutoCAD.
 ///
@@ -129,13 +146,14 @@ public:
 
     [[nodiscard]] const std::string& typeFilter() const { return m_typeFilter; }
 
-    /// The rows of the group Geometry: name and value. Empty unless the
-    /// panel shows a single entity.
+    /// The rows of the group Geometry (whatever its title): name and value.
+    /// Empty unless the panel shows a single entity.
     [[nodiscard]] const QList<QPair<QString, QString>>& geometry() const {
         return m_model->geometry();
     }
 
-    /// The model of the grid: General, Geometry and the current vertex.
+    /// The model of the grid: General, Geometry, Attributes and the current
+    /// vertex.
     [[nodiscard]] PropertyGridModel& grid() { return *m_model; }
 
     /// Each changes the targets, or the current value without a selection.
@@ -145,6 +163,25 @@ public:
     bool setLinetype(core::LinetypeId linetype);
     bool setLinetypeScale(double scale);
     bool setLineweight(int lineweight);
+
+    /// Gives the single entity shown the own property `name` with `value`
+    /// (core::withOwnProperty), in one transaction "Properties": with the
+    /// extras of the change, entity and extras change together
+    /// (edit::Editor::replace with the extras), so U undoes both. A refusal
+    /// is written in the history (messageShown) and changes nothing. False if
+    /// nothing changed, or without a single entity.
+    bool setOwnProperty(std::string_view name, const core::PropertyValue& value);
+
+    /// The value of the attribute `tag` of the INSERT shown, as
+    /// setOwnProperty("attribute", …) of PT24.
+    bool setAttributeValue(const std::string& tag, const std::string& value);
+
+    /// What the user typed or chose in the row `row` of the group `group` of
+    /// the grid (PropertyGridModel::kGeometryGroup, kAttributesGroup): a
+    /// number, an angle in degrees, a coordinate of a point, a text, a choice
+    /// or Yes and No. A text that is not a number where one is needed is
+    /// refused with core::kInvalidPropertyValue.
+    bool enterOwnValue(int group, int row, const QString& text);
 
     /// Opens the QSELECT window, which searches within `current` if the user
     /// chooses so. Cancel gives the runner `current` back as its selection.
@@ -202,6 +239,8 @@ private:
     void showGroups();
     void toggleGroup(const QModelIndex& index);
     void enterLinetypeScale(const QString& text);
+    /// Gives the open editors of Geometry and Attributes the values shown.
+    void showOwnEditors();
     void updateIcons();
     void updateEnabled();
 

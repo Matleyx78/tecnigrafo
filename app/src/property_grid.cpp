@@ -23,6 +23,10 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <iterator>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -63,6 +67,8 @@ const char* const kLayerEditor = "propertiesLayer";
 const char* const kLinetypeEditor = "propertiesLinetype";
 const char* const kLinetypeScaleEditor = "propertiesLinetypeScale";
 const char* const kLineweightEditor = "propertiesLineweight";
+const char* const kOwnValueEditor = "propertiesOwnValue";
+const char* const kChoiceEditor = "propertiesOwnChoice";
 
 // What a value shared by no two of the entities shows, as in AutoCAD.
 const char* const kVaries = "*VARIES*";
@@ -102,18 +108,212 @@ QString fieldName(PropertyField field) {
     return {};
 }
 
+/// The label of the own property `name` (core::ownProperties), with the
+/// names of AutoCAD's panel; the name itself for one this table lacks.
+QString ownPropertyLabel(const core::Entity& entity, std::string_view name) {
+    struct Label {
+        std::string_view name;
+        const char* label;
+    };
+
+    static constexpr std::array kLabels{
+        Label{"center", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Center")},
+        Label{"major-radius", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Major radius")},
+        Label{"minor-radius", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Minor radius")},
+        Label{"ratio", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Radius ratio")},
+        Label{"start-angle", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Start angle")},
+        Label{"end-angle", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "End angle")},
+        Label{"~area", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Area")},
+        Label{"pattern", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Pattern name")},
+        Label{"scale", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Scale")},
+        Label{"angle", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Angle")},
+        Label{"origin", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Origin")},
+        Label{"islands", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Island detection")},
+        Label{"style", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Style")},
+        Label{"text", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Text override")},
+        Label{"text-rotation", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Text rotation")},
+        Label{"~measurement", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Measurement")},
+        Label{"value", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Contents")},
+        Label{"attachment", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Justify")},
+        Label{"width", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Width")},
+        Label{"height", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Height")},
+        Label{"rotation", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Rotation")},
+        Label{"line-spacing", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Line space factor")},
+        Label{"line-spacing-style",
+              QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Line space style")},
+        Label{"tag", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Tag")},
+        Label{"prompt", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Prompt")},
+        Label{"default", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Value")},
+        Label{"invisible", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Invisible")},
+        Label{"constant", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Constant")},
+        Label{"verify", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Verify")},
+        Label{"preset", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Preset")},
+        Label{"lock-position", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Lock position")},
+        Label{"block", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Name")},
+        Label{"insertion", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Position")},
+        Label{"scale-z", QT_TRANSLATE_NOOP("tg::app::PropertyGridModel", "Scale Z")},
+    };
+    // The style of a dimension is its dimension style.
+    if (name == "style" && std::holds_alternative<core::Dimension>(entity)) {
+        return PropertyGridModel::tr("Dim style");
+    }
+    for (const Label& label : kLabels) {
+        if (label.name == name) {
+            return PropertyGridModel::tr(label.label);
+        }
+    }
+    return QString::fromUtf8(name.data(), static_cast<qsizetype>(name.size()));
+}
+
+QString yesNo(bool value) {
+    return value ? PropertyGridModel::tr("Yes") : PropertyGridModel::tr("No");
+}
+
+/// The text of the value of an own property that is not a point.
+QString ownValueText(const core::OwnProperty& property) {
+    return std::visit(
+        [&property](const auto& value) -> QString {
+            using Value = std::decay_t<decltype(value)>;
+            if constexpr (std::is_same_v<Value, double>) {
+                return property.kind == core::PropertyKind::Angle ? angleText(value)
+                                                                  : lengthText(value);
+            } else if constexpr (std::is_same_v<Value, core::Vec2>) {
+                return lengthText(value.x) + QStringLiteral(", ") + lengthText(value.y);
+            } else if constexpr (std::is_same_v<Value, std::string>) {
+                return QString::fromStdString(value);
+            } else {
+                return yesNo(value);
+            }
+        },
+        property.value);
+}
+
 struct GeometryRows {
-    QList<QPair<QString, QString>> rows;
+    std::vector<OwnPropertyRow> rows;
     /// The row of Current Vertex, or -1.
     int vertexRow{-1};
+    QString title;
+    std::vector<OwnPropertyRow> attributes;
 };
 
-/// The rows of the group Geometry of `entity`: its main coordinates, with
-/// the names of AutoCAD's panel; for a polyline, the vertex `vertex`.
-GeometryRows geometryRows(const core::Entity& entity, int vertex) {
+/// A row only shown.
+OwnPropertyRow shownRow(const QString& name, const QString& value) {
+    OwnPropertyRow row;
+    row.name = name;
+    row.value = value;
+    return row;
+}
+
+/// The rows X and Y of the point property `property`, named `label` X and
+/// `label` Y.
+void addPointRows(std::vector<OwnPropertyRow>& rows, const core::OwnProperty& property,
+                  const QString& label) {
+    const auto* point = std::get_if<core::Vec2>(&property.value);
+    if (point == nullptr) {
+        return;
+    }
+    for (int component = 0; component < 2; ++component) {
+        OwnPropertyRow row;
+        row.name = label + (component == 0 ? QStringLiteral(" X") : QStringLiteral(" Y"));
+        row.value = lengthText(component == 0 ? point->x : point->y);
+        if (!property.readOnly) {
+            row.property = property.name;
+        }
+        row.kind = property.kind;
+        row.component = component;
+        rows.push_back(std::move(row));
+    }
+}
+
+/// The name of the attribute of an INSERT, which ownProperties() gives once
+/// per tag (PT24).
+constexpr std::string_view kAttributeProperty = "attribute";
+
+/// The rows of the own properties of a type of the 0.8 (core::ownProperties).
+GeometryRows ownRows(const core::Document& document, const core::EntityRecord& record, int vertex) {
     GeometryRows result;
+    const core::Entity& entity = record.entity;
+    if (std::holds_alternative<core::Hatch>(entity)) {
+        result.title = PropertyGridModel::tr("Pattern");
+    } else if (std::holds_alternative<core::MText>(entity) ||
+               std::holds_alternative<core::AttributeDefinition>(entity) ||
+               std::holds_alternative<core::Dimension>(entity)) {
+        result.title = PropertyGridModel::tr("Text");
+    }
+    const std::vector<core::OwnProperty> properties = core::ownProperties(document, record);
+    const auto* solid = std::get_if<core::Solid>(&entity);
+    const std::string currentVertex = "vertex" + std::to_string(vertex + 1);
+    for (const core::OwnProperty& property : properties) {
+        if (property.name == kAttributeProperty) {
+            continue;
+        }
+        if (solid != nullptr) {
+            // The vertices, browsed as those of a polyline: only the current
+            // one, where the first vertex property is.
+            if (property.name == "vertex1") {
+                result.vertexRow = static_cast<int>(result.rows.size());
+                result.rows.push_back(
+                    shownRow(PropertyGridModel::tr("Current Vertex"), QString::number(vertex + 1)));
+            }
+            if (property.name == currentVertex) {
+                addPointRows(result.rows, property, PropertyGridModel::tr("Vertex"));
+            }
+            continue;
+        }
+        const QString label = ownPropertyLabel(entity, property.name);
+        if (property.kind == core::PropertyKind::Point) {
+            addPointRows(result.rows, property, label);
+            continue;
+        }
+        OwnPropertyRow row = shownRow(label, ownValueText(property));
+        if (!property.readOnly) {
+            row.property = property.name;
+        }
+        row.kind = property.kind;
+        if (property.kind == core::PropertyKind::Choice) {
+            for (const std::string& choice : property.choices) {
+                row.choices.append(QString::fromStdString(choice));
+            }
+        } else if (property.kind == core::PropertyKind::Flag) {
+            row.choices = {yesNo(true), yesNo(false)};
+        }
+        result.rows.push_back(std::move(row));
+    }
+    if (const auto* insert = std::get_if<core::Insert>(&entity)) {
+        // One row per tag, that of the first ATTRIB with it, as
+        // ownProperties() gives them and withOwnProperty() changes them.
+        for (std::size_t i = 0; i < insert->attributes.size(); ++i) {
+            const core::Attribute& attribute = insert->attributes[i];
+            const bool first =
+                std::none_of(insert->attributes.begin(),
+                             insert->attributes.begin() + static_cast<std::ptrdiff_t>(i),
+                             [&attribute](const core::Attribute& before) {
+                                 return core::sameTableName(before.tag, attribute.tag);
+                             });
+            if (!first) {
+                continue;
+            }
+            OwnPropertyRow row = shownRow(QString::fromStdString(attribute.tag),
+                                          QString::fromStdString(attribute.text.value));
+            row.property = kAttributeProperty;
+            row.kind = core::PropertyKind::Text;
+            row.tag = attribute.tag;
+            result.attributes.push_back(std::move(row));
+        }
+    }
+    return result;
+}
+
+/// The rows of the group Geometry of `record`: for the types of before the
+/// 0.8 its main coordinates, with the names of AutoCAD's panel, and for a
+/// polyline the vertex `vertex`; for the others, its own properties.
+GeometryRows geometryRows(const core::Document& document, const core::EntityRecord& record,
+                          int vertex) {
+    GeometryRows result;
+    result.title = PropertyGridModel::tr("Geometry");
+    const core::Entity& entity = record.entity;
     const auto add = [&result](const QString& name, const QString& value) {
-        result.rows.append({name, value});
+        result.rows.push_back(shownRow(name, value));
     };
     if (const auto* line = std::get_if<core::Line>(&entity)) {
         add(PropertyGridModel::tr("Start X"), lengthText(line->start.x));
@@ -143,14 +343,19 @@ GeometryRows geometryRows(const core::Entity& entity, int vertex) {
             add(PropertyGridModel::tr("Vertex X"), lengthText(position.x));
             add(PropertyGridModel::tr("Vertex Y"), lengthText(position.y));
         }
-        add(PropertyGridModel::tr("Closed"),
-            polyline->isClosed() ? PropertyGridModel::tr("Yes") : PropertyGridModel::tr("No"));
+        add(PropertyGridModel::tr("Closed"), yesNo(polyline->isClosed()));
         add(PropertyGridModel::tr("Length"), lengthText(polyline->length()));
     } else if (const auto* text = std::get_if<core::Text>(&entity)) {
         add(PropertyGridModel::tr("Position X"), lengthText(text->position.x));
         add(PropertyGridModel::tr("Position Y"), lengthText(text->position.y));
         add(PropertyGridModel::tr("Height"), lengthText(text->height));
         add(PropertyGridModel::tr("Contents"), QString::fromStdString(text->value));
+    } else {
+        GeometryRows own = ownRows(document, record, vertex);
+        if (own.title.isEmpty()) {
+            own.title = result.title;
+        }
+        return own;
     }
     return result;
 }
@@ -238,13 +443,11 @@ void PropertyGridModel::setEditable(bool editable) {
 }
 
 void PropertyGridModel::setEntity(const core::EntityRecord* record) {
-    const bool same = record != nullptr && m_entity.has_value() && record->id == m_entityId;
+    const bool same = record != nullptr && m_record.has_value() && record->id == m_record->id;
     if (record != nullptr) {
-        m_entity = record->entity;
-        m_entityId = record->id;
+        m_record = *record;
     } else {
-        m_entity.reset();
-        m_entityId = {};
+        m_record.reset();
     }
     if (!same) {
         m_vertex = 0;
@@ -254,11 +457,16 @@ void PropertyGridModel::setEntity(const core::EntityRecord* record) {
 }
 
 int PropertyGridModel::vertexCount() const {
-    if (!m_entity) {
+    if (!m_record) {
         return 0;
     }
-    const auto* polyline = std::get_if<core::Polyline>(&*m_entity);
-    return polyline != nullptr ? static_cast<int>(polyline->vertexCount()) : 0;
+    if (const auto* polyline = std::get_if<core::Polyline>(&m_record->entity)) {
+        return static_cast<int>(polyline->vertexCount());
+    }
+    if (const auto* solid = std::get_if<core::Solid>(&m_record->entity)) {
+        return static_cast<int>(solid->vertices.size());
+    }
+    return 0;
 }
 
 bool PropertyGridModel::setCurrentVertex(int vertex) {
@@ -278,29 +486,82 @@ bool PropertyGridModel::previousVertex() {
     return setCurrentVertex(m_vertex - 1);
 }
 
+const std::vector<OwnPropertyRow>& PropertyGridModel::rows(int group) const {
+    return group == kAttributesGroup ? m_attributeRows : m_geometryRows;
+}
+
+const OwnPropertyRow* PropertyGridModel::row(int group, int row) const {
+    if (group != kGeometryGroup && group != kAttributesGroup) {
+        return nullptr;
+    }
+    const std::vector<OwnPropertyRow>& list = rows(group);
+    if (row < 0 || row >= static_cast<int>(list.size())) {
+        return nullptr;
+    }
+    return &list.at(static_cast<std::size_t>(row));
+}
+
+int PropertyGridModel::rowNamed(int group, const QString& name) const {
+    if (group != kGeometryGroup && group != kAttributesGroup) {
+        return -1;
+    }
+    const std::vector<OwnPropertyRow>& list = rows(group);
+    for (std::size_t i = 0; i < list.size(); ++i) {
+        if (list[i].name == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+QModelIndex PropertyGridModel::rowValueIndex(int group, int row) const {
+    return index(row, kValueColumn, groupIndex(group));
+}
+
 void PropertyGridModel::showGeometry() {
-    GeometryRows next = m_entity ? geometryRows(*m_entity, m_vertex) : GeometryRows{};
-    const QModelIndex group = groupIndex(kGeometryGroup);
-    if (next.rows.size() == m_geometry.size()) {
+    GeometryRows next = m_record ? geometryRows(*m_document, *m_record, m_vertex) : GeometryRows{};
+    if (!next.title.isEmpty() && next.title != m_geometryTitle) {
+        m_geometryTitle = next.title;
+        const QModelIndex title = groupIndex(kGeometryGroup);
+        Q_EMIT dataChanged(title, title);
+    }
+    m_vertexRow = next.vertexRow;
+    m_geometry.clear();
+    for (const OwnPropertyRow& row : next.rows) {
+        m_geometry.append({row.name, row.value});
+    }
+    showRows(kGeometryGroup, std::move(next.rows));
+    showRows(kAttributesGroup, std::move(next.attributes));
+}
+
+void PropertyGridModel::showRows(int group, std::vector<OwnPropertyRow> next) {
+    std::vector<OwnPropertyRow>& current =
+        group == kAttributesGroup ? m_attributeRows : m_geometryRows;
+    const QModelIndex parent = groupIndex(group);
+    const bool sameShape =
+        next.size() == current.size() &&
+        std::equal(next.begin(), next.end(), current.begin(),
+                   [](const OwnPropertyRow& a, const OwnPropertyRow& b) {
+                       return a.name == b.name && a.property == b.property && a.kind == b.kind;
+                   });
+    if (sameShape) {
         // Same rows: only the values change, and the view keeps its state.
-        m_geometry = std::move(next.rows);
-        m_vertexRow = next.vertexRow;
-        if (!m_geometry.isEmpty()) {
-            Q_EMIT dataChanged(index(0, kNameColumn, group),
-                               index(static_cast<int>(m_geometry.size()) - 1, kValueColumn, group));
+        current = std::move(next);
+        // One row at a time: a view gives an open editor the new value only
+        // for a change of a single cell.
+        for (int row = 0; row < static_cast<int>(current.size()); ++row) {
+            Q_EMIT dataChanged(index(row, kNameColumn, parent), index(row, kValueColumn, parent));
         }
         return;
     }
-    if (!m_geometry.isEmpty()) {
-        beginRemoveRows(group, 0, static_cast<int>(m_geometry.size()) - 1);
-        m_geometry.clear();
-        m_vertexRow = -1;
+    if (!current.empty()) {
+        beginRemoveRows(parent, 0, static_cast<int>(current.size()) - 1);
+        current.clear();
         endRemoveRows();
     }
-    if (!next.rows.isEmpty()) {
-        beginInsertRows(group, 0, static_cast<int>(next.rows.size()) - 1);
-        m_geometry = std::move(next.rows);
-        m_vertexRow = next.vertexRow;
+    if (!next.empty()) {
+        beginInsertRows(parent, 0, static_cast<int>(next.size()) - 1);
+        current = std::move(next);
         endInsertRows();
     }
 }
@@ -337,8 +598,10 @@ int PropertyGridModel::rowCount(const QModelIndex& parent) const {
     if (parent.internalId() != kGroupRowId || parent.column() != kNameColumn) {
         return 0;
     }
-    return parent.row() == kGeneralGroup ? static_cast<int>(kFields.size())
-                                         : static_cast<int>(m_geometry.size());
+    if (parent.row() == kGeneralGroup) {
+        return static_cast<int>(kFields.size());
+    }
+    return static_cast<int>(rows(parent.row()).size());
 }
 
 int PropertyGridModel::columnCount(const QModelIndex& /*parent*/) const {
@@ -354,7 +617,14 @@ QVariant PropertyGridModel::data(const QModelIndex& index, int role) const {
             return true;
         }
         if (role == Qt::DisplayRole && index.column() == kNameColumn) {
-            return index.row() == kGeneralGroup ? tr("General") : tr("Geometry");
+            switch (index.row()) {
+                case kGeneralGroup:
+                    return tr("General");
+                case kGeometryGroup:
+                    return m_geometryTitle.isEmpty() ? tr("Geometry") : m_geometryTitle;
+                default:
+                    return tr("Attributes");
+            }
         }
         return {};
     }
@@ -364,7 +634,7 @@ QVariant PropertyGridModel::data(const QModelIndex& index, int role) const {
     if (static_cast<int>(index.internalId() - 1) == kGeneralGroup) {
         return generalData(kFields.at(static_cast<std::size_t>(index.row())), index.column(), role);
     }
-    return geometryData(index.row(), index.column(), role);
+    return rowData(static_cast<int>(index.internalId() - 1), index.row(), index.column(), role);
 }
 
 QVariant PropertyGridModel::generalData(PropertyField field, int column, int role) const {
@@ -385,17 +655,34 @@ QVariant PropertyGridModel::generalData(PropertyField field, int column, int rol
     }
 }
 
-QVariant PropertyGridModel::geometryData(int row, int column, int role) const {
-    const auto& [name, value] = m_geometry.at(row);
-    if (role == Qt::DisplayRole) {
-        return column == kNameColumn ? name : value;
+QVariant PropertyGridModel::rowData(int group, int row, int column, int role) const {
+    const OwnPropertyRow* shown = this->row(group, row);
+    if (shown == nullptr) {
+        return {};
     }
-    if (row == m_vertexRow && column == kValueColumn) {
+    if (role == Qt::DisplayRole) {
+        return column == kNameColumn ? shown->name : shown->value;
+    }
+    if (column != kValueColumn) {
+        return {};
+    }
+    if (role == Qt::ToolTipRole) {
+        return shown->value;
+    }
+    if (group == kGeometryGroup && row == m_vertexRow) {
         if (role == kPreviousVertexRole) {
             return m_vertex > 0;
         }
         if (role == kNextVertexRole) {
             return m_vertex + 1 < vertexCount();
+        }
+    }
+    if (shown->editable()) {
+        if (role == kOwnKindRole) {
+            return static_cast<int>(shown->kind);
+        }
+        if (role == kChoicesRole && !shown->choices.isEmpty()) {
+            return shown->choices;
         }
     }
     return {};
@@ -468,18 +755,34 @@ Qt::ItemFlags PropertyGridModel::flags(const QModelIndex& index) const {
         return Qt::ItemIsEnabled;
     }
     Qt::ItemFlags result = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemNeverHasChildren;
-    if (m_editable && index.column() == kValueColumn &&
-        static_cast<int>(index.internalId() - 1) == kGeneralGroup) {
+    if (!m_editable || index.column() != kValueColumn) {
+        return result;
+    }
+    const int group = static_cast<int>(index.internalId() - 1);
+    const OwnPropertyRow* shown = row(group, index.row());
+    if (group == kGeneralGroup || (shown != nullptr && shown->editable())) {
         result |= Qt::ItemIsEditable;
     }
     return result;
 }
 
 bool PropertyGridModel::setData(const QModelIndex& index, const QVariant& value, int role) {
-    if (role != Qt::EditRole || !m_editable || index != valueIndex(PropertyField::LinetypeScale)) {
+    if (role != Qt::EditRole || !m_editable || !index.isValid()) {
         return false;
     }
-    Q_EMIT linetypeScaleEntered(value.toString());
+    if (index == valueIndex(PropertyField::LinetypeScale)) {
+        Q_EMIT linetypeScaleEntered(value.toString());
+        return true;
+    }
+    if (index.internalId() == kGroupRowId || index.column() != kValueColumn) {
+        return false;
+    }
+    const int group = static_cast<int>(index.internalId() - 1);
+    const OwnPropertyRow* shown = row(group, index.row());
+    if (shown == nullptr || !shown->editable()) {
+        return false;
+    }
+    Q_EMIT ownValueEntered(group, index.row(), value.toString());
     return true;
 }
 
@@ -552,8 +855,24 @@ QSize PropertyGridDelegate::sizeHint(const QStyleOptionViewItem& option,
 
 QWidget* PropertyGridDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& /*option*/,
                                             const QModelIndex& index) const {
+    if (index.column() != PropertyGridModel::kValueColumn) {
+        return nullptr;
+    }
+    const QVariant own = index.data(PropertyGridModel::kOwnKindRole);
+    if (own.isValid()) {
+        const QModelIndex group = index.parent();
+        if (index.data(PropertyGridModel::kChoicesRole).isValid()) {
+            auto* editor = new ChoiceCombo(group.row(), index.row(), parent);
+            editor->setObjectName(QString::fromLatin1(kChoiceEditor));
+            connect(editor, &ChoiceCombo::valueChosen, this, &PropertyGridDelegate::ownValueChosen);
+            return editor;
+        }
+        auto* editor = new QLineEdit(parent);
+        editor->setObjectName(QString::fromLatin1(kOwnValueEditor));
+        return editor;
+    }
     const QVariant field = index.data(PropertyGridModel::kFieldRole);
-    if (!field.isValid() || index.column() != PropertyGridModel::kValueColumn) {
+    if (!field.isValid()) {
         return nullptr;
     }
     switch (static_cast<PropertyField>(field.toInt())) {
@@ -600,7 +919,10 @@ void PropertyGridDelegate::setEditorData(QWidget* editor, const QModelIndex& ind
     const ShownProperties& shown = model->shown();
     const core::Document& document = model->document();
     // The setters of the controls never emit valueChosen (0.6-P21).
-    if (auto* color = qobject_cast<ColorCombo*>(editor)) {
+    if (auto* choice = qobject_cast<ChoiceCombo*>(editor)) {
+        choice->setValue(index.data(PropertyGridModel::kChoicesRole).toStringList(),
+                         index.data().toString());
+    } else if (auto* color = qobject_cast<ColorCombo*>(editor)) {
         if (shown.color) {
             color->setValue(*shown.color);
         } else {
@@ -627,23 +949,24 @@ void PropertyGridDelegate::setEditorData(QWidget* editor, const QModelIndex& ind
         } else {
             lineweight->setVaries();
         }
-    } else if (auto* scale = qobject_cast<QLineEdit*>(editor)) {
-        scale->setText(index.data().toString());
-        scale->setModified(false);
+    } else if (auto* typed = qobject_cast<QLineEdit*>(editor)) {
+        typed->setText(index.data().toString());
+        typed->setModified(false);
     }
 }
 
 void PropertyGridDelegate::setModelData(QWidget* editor, QAbstractItemModel* model,
                                         const QModelIndex& index) const {
     // The view commits on Enter, Tab and the focus leaving the cell, never
-    // on Esc. The combos have reported their choice already; the scale is
-    // committed only if the user changed its text.
-    auto* scale = qobject_cast<QLineEdit*>(editor);
-    if (scale == nullptr || !scale->isModified()) {
+    // on Esc. The combos have reported their choice already; the scale and
+    // the own values are committed only if the user changed their text.
+    auto* typed = qobject_cast<QLineEdit*>(editor);
+    if (typed == nullptr || !typed->isModified()) {
         return;
     }
-    scale->setModified(false);
-    model->setData(index, scale->text().trimmed(), Qt::EditRole);
+    typed->setModified(false);
+    // Untrimmed: the spaces of a text are its own; a number ignores them.
+    model->setData(index, typed->text(), Qt::EditRole);
 }
 
 void PropertyGridDelegate::updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option,
