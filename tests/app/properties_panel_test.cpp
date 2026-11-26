@@ -37,6 +37,7 @@
 #include <QVariant>
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -956,7 +957,11 @@ TEST_F(PropertiesPanelTest, AHatchShowsItsTypeAndItsScaleChangesAndUndoes) {
     typed->setModified(true);
     commit(typed);
     EXPECT_EQ(std::get<core::Hatch>(recordOf(hatch).entity).scale, 2.0);
-    EXPECT_EQ(panel().grid().rows(PropertyGridModel::kGeometryGroup).at(scaleRow).value,
+    EXPECT_EQ(panel()
+                  .grid()
+                  .rows(PropertyGridModel::kGeometryGroup)
+                  .at(static_cast<std::size_t>(scaleRow))
+                  .value,
               QStringLiteral("2.0000"));
 
     undoProperties();
@@ -991,7 +996,11 @@ TEST_F(PropertiesPanelTest, TheOriginOfAHatchMovesFamiliesAndXdataAndUndoesThemT
     const int originX =
         panel().grid().rowNamed(PropertyGridModel::kGeometryGroup, QStringLiteral("Origin X"));
     ASSERT_GE(originX, 0);
-    EXPECT_EQ(panel().grid().rows(PropertyGridModel::kGeometryGroup).at(originX).value,
+    EXPECT_EQ(panel()
+                  .grid()
+                  .rows(PropertyGridModel::kGeometryGroup)
+                  .at(static_cast<std::size_t>(originX))
+                  .value,
               QStringLiteral("245.0000"));
     ASSERT_TRUE(
         panel().enterOwnValue(PropertyGridModel::kGeometryGroup, originX, QStringLiteral("0")));
