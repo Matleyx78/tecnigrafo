@@ -23,7 +23,6 @@ messages:
   Enter block name specification <*>: comp*
   Enter attribute tag specification <*>: CODICE
   Enter attribute value specification <*>: K*
-  Select Attributes:
   1 attributes selected.
   Enter an option [Value/Position/Height/Angle/Style/Layer/Color/Next] <N>: N
   Command: -ATTEDIT
@@ -49,7 +48,7 @@ undo:
 redo:
 snap: on
 ortho: off
-documents: Drawing1.cadx, autocad-attributi.dxf, Drawing2.cadx (active)
-pointer: none
+documents: Drawing1.cadx, @sources/autocad-attributi, Drawing2.cadx (active)
+pointer: 30,-35
 active snap: none
 statistics:
