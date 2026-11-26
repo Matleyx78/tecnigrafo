@@ -254,7 +254,7 @@ private:
 }  // namespace
 
 const TypeNames& entityTypeNames() {
-    static const TypeNames names =
+    static const TypeNames kNames =
         typeNamesOf(std::make_index_sequence<std::tuple_size_v<TypeNames>>{});
     return kNames;
 }
