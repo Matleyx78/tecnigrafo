@@ -135,9 +135,7 @@ CommandDescription AttsyncCommand::description() {
              {"block", "Select a block:", ValueType::Object, {}, true}}};
 }
 
-void AttdispCommand::start(CommandContext& context) {
-    m_display = context.editor.document().attributeDisplay();
-}
+void AttdispCommand::start(CommandContext& /*context*/) {}
 
 Status AttdispCommand::handle(CommandContext& context, const Input& input) {
     const std::string value = answer(input);

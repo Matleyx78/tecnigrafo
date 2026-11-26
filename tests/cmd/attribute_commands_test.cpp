@@ -133,5 +133,16 @@ TEST_F(AttributeCommandsTest, AttdispSetsEveryValueWithoutUndoAndMarksModified) 
     EXPECT_EQ(document.attributeDisplay(), core::AttributeDisplay::Normal);
 }
 
+TEST_F(AttributeCommandsTest, AttdispEnterUsesNormalDefault) {
+    runner.submitText("ATTDISP");
+    runner.submitText("ON");
+    ASSERT_EQ(document.attributeDisplay(), core::AttributeDisplay::On);
+
+    runner.submitText("ATTDISP");
+    runner.submitText("");
+
+    EXPECT_EQ(document.attributeDisplay(), core::AttributeDisplay::Normal);
+}
+
 }  // namespace
 }  // namespace tg::cmd
