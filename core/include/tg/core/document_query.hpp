@@ -9,6 +9,7 @@
 #include "tg/core/snap_points.hpp"
 #include "tg/core/vec2.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -96,5 +97,32 @@ enum class RectangleMode : std::uint8_t { Window, Crossing };
 [[nodiscard]] std::optional<SnapPoint> findSnap(const Document& document, const Vec2& pointer,
                                                 double aperture, const SnapModes& modes,
                                                 std::optional<Vec2> from = std::nullopt);
+
+/// A snap point with where it comes from (docs/tappe/0.8.1/PT31, point 1):
+/// what the tracking needs to acquire an extension, which SnapPoint lacks.
+struct SnapHit {
+    SnapPoint snap;
+    EntityId entity;                     ///< the entity that gives the point
+    std::optional<std::size_t> segment;  ///< for a polyline, the segment
+    bool atStart{false};                 ///< an endpoint: the start of the curve or segment
+
+    friend constexpr bool operator==(const SnapHit&, const SnapHit&) = default;
+};
+
+/// findSnap() with where the point comes from; findSnap() returns its
+/// `snap`. The same candidates, priorities and ties.
+///
+/// `entity` is the entity of the document: for an intersection the higher
+/// id of the pair, for the shapes of an insert or a dimension the insert or
+/// the dimension. Only for the lines, arcs and polylines of the document
+/// themselves, not for the shapes of the generated geometry, `segment` is
+/// the index of the polyline segment that gives the point (the earliest one
+/// on ties; 0 for a polyline with a single vertex) and `atStart` tells an
+/// Endpoint at the start of the line, of the arc (bridge::arcEndpoints) or
+/// of that segment from one at its end. Elsewhere `segment` is empty and
+/// `atStart` false.
+[[nodiscard]] std::optional<SnapHit> findSnapHit(const Document& document, const Vec2& pointer,
+                                                 double aperture, const SnapModes& modes,
+                                                 std::optional<Vec2> from = std::nullopt);
 
 }  // namespace tg::core

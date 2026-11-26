@@ -1392,5 +1392,75 @@ TEST_F(RandomDocument, SnapMatchesExhaustiveSearch) {
     EXPECT_GT(centers, 0);
 }
 
+// findSnapHit() (docs/tappe/0.8.1/PT31-prolungamento-parallelo.md, point 1;
+// #992, [bloccante] 5).
+TEST(FindSnapHit, TwoLinesWithACommonEndGiveTheHighestIdAndWhichEnd) {
+    Document document;
+    document.add(Line{{0, 0}, {10, 0}});
+    const EntityId upward = document.add(Line{{0, 0}, {0, 10}});
+    const SnapModes modes;
+    const std::optional<SnapHit> maybeHit = findSnapHit(document, {0.5, 0.5}, 1.0, modes);
+    ASSERT_TRUE(maybeHit);
+    const SnapHit hit = maybeHit.value_or(SnapHit{});
+    EXPECT_EQ(hit.snap, (SnapPoint{{0, 0}, SnapKind::Endpoint}));
+    EXPECT_EQ(hit.entity, upward);
+    EXPECT_EQ(hit.segment, std::nullopt);
+    EXPECT_TRUE(hit.atStart);
+    // findSnap() gives the same point and kind as before.
+    EXPECT_EQ(findSnap(document, {0.5, 0.5}, 1.0, modes), hit.snap);
+
+    const std::optional<SnapHit> maybeEnd = findSnapHit(document, {0.2, 9.5}, 1.0, modes);
+    ASSERT_TRUE(maybeEnd);
+    const SnapHit end = maybeEnd.value_or(SnapHit{});
+    EXPECT_EQ(end.snap.point, (Vec2{0, 10}));
+    EXPECT_FALSE(end.atStart);
+}
+
+TEST(FindSnapHit, TheEndsOfAnArcAndOfThePolylineSegments) {
+    Document document;
+    const EntityId arc = document.add(Arc{{0, 0}, 10, 0, kPi / 2});
+    const EntityId polyline = document.add(Polyline{{{{100, 0}}, {{110, 0}}, {{110, 10}}}});
+    const SnapModes modes;
+    const std::optional<SnapHit> maybeStart = findSnapHit(document, {9.8, 0.3}, 1.0, modes);
+    ASSERT_TRUE(maybeStart);
+    const SnapHit start = maybeStart.value_or(SnapHit{});
+    EXPECT_EQ(start.entity, arc);
+    EXPECT_TRUE(start.atStart);
+    const std::optional<SnapHit> maybeEnd = findSnapHit(document, {0.3, 9.8}, 1.0, modes);
+    ASSERT_TRUE(maybeEnd);
+    const SnapHit end = maybeEnd.value_or(SnapHit{});
+    EXPECT_FALSE(end.atStart);
+
+    // The inner vertex is the end of the first segment, the earliest.
+    const std::optional<SnapHit> maybeInner = findSnapHit(document, {109.8, 0.3}, 1.0, modes);
+    ASSERT_TRUE(maybeInner);
+    const SnapHit inner = maybeInner.value_or(SnapHit{});
+    EXPECT_EQ(inner.entity, polyline);
+    EXPECT_EQ(inner.segment, 0U);
+    EXPECT_FALSE(inner.atStart);
+    const std::optional<SnapHit> maybeLast = findSnapHit(document, {110.3, 9.8}, 1.0, modes);
+    ASSERT_TRUE(maybeLast);
+    const SnapHit last = maybeLast.value_or(SnapHit{});
+    EXPECT_EQ(last.segment, 1U);
+    EXPECT_FALSE(last.atStart);
+    const std::optional<SnapHit> maybeFirst = findSnapHit(document, {100.3, 0.2}, 1.0, modes);
+    ASSERT_TRUE(maybeFirst);
+    const SnapHit first = maybeFirst.value_or(SnapHit{});
+    EXPECT_EQ(first.segment, 0U);
+    EXPECT_TRUE(first.atStart);
+}
+
+TEST(FindSnapHit, OtherPointsGiveOnlyTheEntity) {
+    Document document;
+    const EntityId line = document.add(Line{{0, 0}, {10, 0}});
+    const std::optional<SnapHit> maybeMiddle = findSnapHit(document, {5, 0.2}, 1.0, SnapModes{});
+    ASSERT_TRUE(maybeMiddle);
+    const SnapHit middle = maybeMiddle.value_or(SnapHit{});
+    EXPECT_EQ(middle.snap.kind, SnapKind::Midpoint);
+    EXPECT_EQ(middle.entity, line);
+    EXPECT_FALSE(middle.atStart);
+    EXPECT_EQ(findSnapHit(document, {50, 50}, 1.0, SnapModes{}), std::nullopt);
+}
+
 }  // namespace
 }  // namespace tg::core

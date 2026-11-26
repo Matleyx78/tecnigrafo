@@ -51,10 +51,12 @@ constexpr std::array kOsnapAbbreviations{OsnapAbbreviation{"end", &core::SnapMod
                                          OsnapAbbreviation{"per", &core::SnapModes::perpendicular},
                                          OsnapAbbreviation{"tan", &core::SnapModes::tangent},
                                          OsnapAbbreviation{"qua", &core::SnapModes::quadrant},
-                                         OsnapAbbreviation{"nea", &core::SnapModes::nearest}};
+                                         OsnapAbbreviation{"nea", &core::SnapModes::nearest},
+                                         OsnapAbbreviation{"ext", &core::SnapModes::extension},
+                                         OsnapAbbreviation{"par", &core::SnapModes::parallel}};
 
-// Stage 0.8.1: PT31 implements ext and par.
-constexpr std::array<std::string_view, 2> kAnnouncedOsnapModes{"ext", "par"};
+// The modes of a package still to come: none, since PT31 of stage 0.8.1.
+constexpr std::array<std::string_view, 0> kAnnouncedOsnapModes{};
 
 // A new member of core::SnapModes needs its abbreviation above, or one
 // announced until its package, or !osnap could never turn it on.

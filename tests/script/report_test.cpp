@@ -39,6 +39,7 @@
 
 #include <array>
 #include <cstddef>
+#include <initializer_list>
 #include <optional>
 #include <span>
 #include <string>
@@ -541,6 +542,97 @@ TEST(WriteState, TheGridNodeIsThePointOfThePreviewAndOfTheGuides) {
     EXPECT_EQ(out.find("active tracking"), std::string::npos) << out;
     EXPECT_FALSE(runner.tracking().guidePoint);
     EXPECT_EQ(runner.clickPoint(pointer), (core::Vec2{0.0, 0.0}));
+}
+
+/// A runner on `editor` with LINE started, the snap aperture 10 pixels of
+/// `pixel`, object snap with `modes` and tracking as given.
+struct TrackingRunner {
+    TrackingRunner(edit::Editor& editor, const core::SnapModes& modes, bool tracking, double pixel)
+        : runner(registry, editor) {
+        cmd::registerBuiltinCommands(registry);
+        runner.setPixelSize(pixel);
+        setAids(modes, tracking);
+        runner.submitText("LINE");
+    }
+
+    void setAids(const core::SnapModes& modes, bool tracking) {
+        cmd::DrawingAids aids = runner.drawingAids();
+        aids.snapModes = modes;
+        aids.tracking = tracking;
+        runner.setDrawingAids(aids);
+    }
+
+    cmd::CommandRegistry registry;
+    cmd::CommandRunner runner;
+};
+
+core::SnapModes snapModesOn(std::initializer_list<bool core::SnapModes::*> on) {
+    core::SnapModes modes{false, false, false, false, false, false,
+                          false, false, false, false, false};
+    for (bool core::SnapModes::*const mode : on) {
+        modes.*mode = true;
+    }
+    return modes;
+}
+
+TEST(WriteState, ExtensionAndParallelInAcquiredAndActiveTracking) {
+    // The dry run of docs/tappe/0.8.1/PT31-prolungamento-parallelo.md.
+    core::Document document = core::Document::newDrawing();
+    edit::Editor editor(document);
+    editor.beginTransaction("Line");
+    editor.add(core::Line{{0.0, -50.0}, {30.0, -50.0}});
+    editor.add(core::Line{{0.0, -80.0}, {30.0, -70.0}});
+    editor.commit();
+    TrackingRunner tracking(editor,
+                            snapModesOn({&core::SnapModes::extension, &core::SnapModes::parallel}),
+                            false, 0.05);
+    cmd::CommandRunner& runner = tracking.runner;
+    runner.pointerHeld({30.0, -50.0});
+    core::Vec2 pointer{38.0, -50.2};
+    runner.pointerMoved(pointer);
+    std::string out;
+    writeState({"report 1", editor, runner, runner.documentFile(), {}, pointer, {}}, out);
+    expectContains(out,
+                   "acquired:\n  extension 30,-50\n"
+                   "active tracking: Extension 38,-50 from 30,-50\nstatistics:");
+
+    runner.submitText("0,-60");
+    runner.pointerHeld({15.0, -75.0});
+    pointer = {17.0, -54.0};
+    runner.pointerMoved(pointer);
+    out.clear();
+    writeState({"report 2", editor, runner, runner.documentFile(), {}, pointer, {}}, out);
+    expectContains(out,
+                   "acquired:\n  parallel 0,-80 30,-70\n"
+                   "active tracking: Parallel 17.099999999999998,-54.3 from 0,-60\n");
+}
+
+TEST(WriteState, APointBeforeItsExtensionAndTheGuidesOfACrossing) {
+    // docs/adr/0057, point 5: the acquisitions in order, a point before the
+    // extension acquired with it; a crossing that is not of points only
+    // names its guides, the more recent acquisition first.
+    core::Document document = core::Document::newDrawing();
+    edit::Editor editor(document);
+    editor.beginTransaction("Line");
+    editor.add(core::Line{{0.0, 0.0}, {10.0, 0.0}});
+    editor.add(core::Line{{20.0, -10.0}, {20.0, 10.0}});
+    editor.commit();
+    TrackingRunner tracking(editor,
+                            snapModesOn({&core::SnapModes::endpoint, &core::SnapModes::midpoint,
+                                         &core::SnapModes::extension}),
+                            true, 0.1);
+    cmd::CommandRunner& runner = tracking.runner;
+    runner.pointerHeld({10.0, 0.0});
+    runner.pointerHeld({20.0, 0.0});
+    tracking.setAids(snapModesOn({&core::SnapModes::extension}), true);  // no snap now
+    const core::Vec2 pointer{19.8, 0.3};
+    runner.pointerMoved(pointer);
+    std::string out;
+    writeState({"report 1", editor, runner, runner.documentFile(), {}, pointer, {}}, out);
+    expectContains(out,
+                   "acquired:\n  10,0\n  extension 10,0\n  20,0\n"
+                   "active tracking: Crossing 20,0 of Vertical from 20,0 and Extension from "
+                   "10,0\n");
 }
 
 std::string written(const core::EntityRecord& record, const core::Document& document) {

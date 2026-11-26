@@ -384,6 +384,9 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
                 }
                 break;
             }
+            case cmd::CommandRunner::TrackingState::Guide::Extension:
+            case cmd::CommandRunner::TrackingState::Guide::Parallel:
+                // Drawn from TrackingState::guides by PT33 of stage 0.8.1.
             case cmd::CommandRunner::TrackingState::Guide::None:
                 break;
         }
