@@ -79,6 +79,8 @@ qt_add_library(tg_app_ui STATIC
     src/qt_painter.hpp
     src/sample_drawing.cpp
     src/sample_drawing.hpp
+    src/text_editor_overlay.cpp
+    src/text_editor_overlay.hpp
     src/script_session.cpp
     src/script_session.hpp
 )

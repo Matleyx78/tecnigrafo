@@ -48,6 +48,9 @@ CommandDescription TexteditCommand::description() {
               {{"Single", "S"}, {"Multiple", "M"}},
               true},
              {"text", "Enter new text <{default}>:", ValueType::Text, {}, true},
+             // A TEXT or an MTEXT whose value is empty: {default} is never
+             // empty (docs/tappe/0.8.1/PT12-editor.md, an empty MTEXT opened).
+             {"text-empty", "Enter new text <>:", ValueType::Text, {}, true},
              {"dimension-measurement", "Enter new text <<>>:", ValueType::Text, {}, true},
              {"dimension-suffix", "Enter new text <<>{default}>:", ValueType::Text, {}, true},
              {"tag", "Enter attribute tag <{default}>:", ValueType::Text, {}, true},
