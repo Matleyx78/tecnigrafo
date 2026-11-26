@@ -256,7 +256,7 @@ private:
 const TypeNames& entityTypeNames() {
     static const TypeNames names =
         typeNamesOf(std::make_index_sequence<std::tuple_size_v<TypeNames>>{});
-    return names;
+    return kNames;
 }
 
 QString entityTypeLabel(std::string_view type) {
