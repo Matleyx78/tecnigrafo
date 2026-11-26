@@ -212,7 +212,7 @@ Status AttdefCommand::handle(CommandContext& context, const Input& input) {
                 if (j == "TL" || j == "TC" || j == "TR") {
                     m_definition.text.vertical = core::TextVertical::Top;
                 }
-                if (j == "ML" || j == "MC" || j == "MR" || j == "Middle") {
+                if (j == "ML" || j == "MC" || j == "MR") {
                     m_definition.text.vertical = core::TextVertical::Middle;
                 }
                 if (j == "BL" || j == "BC" || j == "BR") {

@@ -267,6 +267,14 @@ TEST_F(DynamicInputTest, TextAndValuePromptsAndNoFieldAtTheTextPrompt) {
     expectSame();
 }
 
+TEST_F(DynamicInputTest, NoFieldAtTheAttdefNamePrompt) {
+    both("-ATTDEF");
+    both("");
+    const DynamicInput input = dynamicInputFor(dynamic().runner());
+    EXPECT_EQ(input.prompt, "Enter attribute tag name:");
+    EXPECT_TRUE(input.fields.empty());
+}
+
 TEST_F(DynamicInputTest, NoFieldWhileSelectingOrWithNoCommand) {
     const DynamicInput idle = dynamicInputFor(dynamic().runner());
     EXPECT_EQ(idle.prompt, "Command:");

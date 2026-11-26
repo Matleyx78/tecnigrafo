@@ -78,6 +78,15 @@ TEST_F(AttdefCommandTest, ConstantSkipsPromptAndMcSetsAlignment) {
     EXPECT_EQ(definition.text.vertical, core::TextVertical::Middle);
 }
 
+TEST_F(AttdefCommandTest, MiddleUsesHorizontalMiddleAndBaseline) {
+    type({"-ATTDEF", "", "TAG", "Prompt", "Value", "J", "Middle"});
+    EXPECT_EQ(runner.promptText(), "Specify middle point of text:");
+    type({"4,5", "2.5", "10"});
+    const auto definition = std::get<core::AttributeDefinition>(document.entities().front().entity);
+    EXPECT_EQ(definition.text.horizontal, core::TextHorizontal::Middle);
+    EXPECT_EQ(definition.text.vertical, core::TextVertical::Baseline);
+}
+
 TEST_F(AttdefCommandTest, EscapeRollsBackModesAndStyle) {
     auto styles = document.textStyles();
     core::TextStyle arial;
