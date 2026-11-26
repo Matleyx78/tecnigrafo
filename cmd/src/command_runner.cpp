@@ -9,11 +9,17 @@
 #include "tg/cmd/command_protocol.hpp"
 #include "tg/cmd/commands/grid_commands.hpp"
 #include "tg/cmd/coordinate_input.hpp"
+#include "tg/core/arc.hpp"
+#include "tg/core/arc_geometry.hpp"
 #include "tg/core/bbox.hpp"
 #include "tg/core/document_query.hpp"
 #include "tg/core/effective_properties.hpp"
 #include "tg/core/grips.hpp"
+#include "tg/core/line.hpp"
 #include "tg/core/math.hpp"
+#include "tg/core/polyline.hpp"
+#include "tg/core/proximity.hpp"
+#include "tg/core/snap_points.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -21,7 +27,9 @@
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -133,6 +141,202 @@ std::string lockedMessage(std::size_t count) {
 // edits it (docs/adr/0023, point 4).
 bool showsGrips(const core::Document& document, const core::EntityRecord& record) {
     return core::isVisible(document, record) && !isOnLockedLayer(document, record.id);
+}
+
+using Acquisition = CommandRunner::TrackingState::Acquisition;
+
+bool isEmpty(const Acquisition& acquisition) {
+    return !acquisition.point && !acquisition.extension && !acquisition.parallel;
+}
+
+/// True if `acquisition` holds the point, the extension (the same entity,
+/// segment and end) or the direction (the same entity and segment) that
+/// `wanted` holds: holding there again releases it.
+bool holdsAnyOf(const Acquisition& acquisition, const Acquisition& wanted) {
+    if (wanted.point && acquisition.point == wanted.point) {
+        return true;
+    }
+    if (wanted.extension && acquisition.extension &&
+        acquisition.extension->entity == wanted.extension->entity &&
+        acquisition.extension->segment == wanted.extension->segment &&
+        acquisition.extension->atStart == wanted.extension->atStart) {
+        return true;
+    }
+    return wanted.parallel && acquisition.parallel &&
+           acquisition.parallel->entity == wanted.parallel->entity &&
+           acquisition.parallel->segment == wanted.parallel->segment;
+}
+
+/// The snap points that compete within the aperture (docs/REGOLE-NUMERICHE.md,
+/// section 4, "Selezione e snap a oggetto", point 2), not Nearest and Center,
+/// which only come when none does.
+bool isPointSnap(core::SnapKind kind) {
+    return kind != core::SnapKind::Nearest && kind != core::SnapKind::Center;
+}
+
+/// The end of a line, of an arc or of the first or last segment of an open
+/// polyline within `aperture` of `pointer` that the hold takes as Endpoint
+/// with Endpoint off and Extension on (docs/tappe/0.8.1/PT31, point 1): the
+/// nearest; on equal distance the highest id, then the start of a line or
+/// arc, the first vertex of a polyline, as findSnap() orders endpoints.
+/// Only ends that give an extension: not those of a curve of zero length.
+/// The points are those appendSnapPoints() gives.
+std::optional<core::SnapHit> extensionEndAt(const core::Document& document,
+                                            const core::Vec2& pointer, double aperture) {
+    // A little larger than the aperture, as findSnap() looks: the exact
+    // distance decides.
+    const double margin =
+        aperture + (32.0 * std::numeric_limits<double>::epsilon() *
+                    std::max({std::abs(pointer.x), std::abs(pointer.y), aperture}));
+    std::vector<core::EntityId> ids;
+    document.query(
+        core::BBox{pointer - core::Vec2{margin, margin}, pointer + core::Vec2{margin, margin}},
+        ids);
+    std::optional<core::SnapHit> best;
+    double bestDistance = 0.0;
+    const auto consider = [&](const core::Vec2& end, core::EntityId id,
+                              std::optional<std::size_t> segment, bool atStart) {
+        const double distance = core::distance(end, pointer);
+        if (distance > aperture) {
+            return;
+        }
+        if (!best || distance < bestDistance ||
+            (distance == bestDistance && id.value > best->entity.value)) {
+            best = core::SnapHit{{end, core::SnapKind::Endpoint}, id, segment, atStart};
+            bestDistance = distance;
+        }
+    };
+    core::SnapModes endpoints;  // perpendicular, tangent and the others are off
+    endpoints.midpoint = false;
+    endpoints.center = false;
+    endpoints.insertion = false;
+    endpoints.intersection = false;
+    std::vector<core::SnapPoint> ends;
+    for (const core::EntityId id : ids) {
+        const core::EntityRecord* record = document.find(id);
+        if (record == nullptr || !core::isVisible(document, *record)) {
+            continue;
+        }
+        if (const auto* polyline = std::get_if<core::Polyline>(&record->entity)) {
+            const std::size_t count = polyline->segmentCount();
+            if (polyline->isClosed() || count == 0) {
+                continue;
+            }
+            if (const core::PolylineSegment first = polyline->segment(0);
+                first.start != first.end) {
+                consider(first.start, id, 0, true);
+            }
+            if (const core::PolylineSegment last = polyline->segment(count - 1);
+                last.start != last.end) {
+                consider(last.end, id, count - 1, false);
+            }
+            continue;
+        }
+        const bool isLine = std::holds_alternative<core::Line>(record->entity);
+        if (!isLine && !std::holds_alternative<core::Arc>(record->entity)) {
+            continue;
+        }
+        ends.clear();
+        core::appendSnapPoints(record->entity, endpoints, ends);
+        if (ends.size() != 2 || (isLine && ends[0].point == ends[1].point)) {
+            continue;  // a line of zero length shows no direction
+        }
+        consider(ends[0].point, id, std::nullopt, true);
+        consider(ends[1].point, id, std::nullopt, false);
+    }
+    return best;
+}
+
+/// The extension beyond the Endpoint `hit` (docs/adr/0057, point 3), if
+/// `hit` is an end of a line, of an arc or of the first or last segment of
+/// an open polyline that shows a direction.
+std::optional<Acquisition::Extension> extensionOf(const core::Document& document,
+                                                  const core::SnapHit& hit) {
+    const core::EntityRecord* record = document.find(hit.entity);
+    if (record == nullptr) {
+        return std::nullopt;
+    }
+    Acquisition::Extension extension{hit.entity, hit.segment, hit.atStart, hit.snap.point, {}, {}};
+    // The rest of the circle of an arc, from the end acquired, turning away
+    // from the arc: clockwise from its start if it turns counter-clockwise.
+    const auto beyond = [&](const core::ArcGeometry& arc) {
+        const double rest = core::kTwoPi - std::abs(arc.sweep);
+        const double away = arc.sweep > 0.0 ? rest : -rest;
+        return hit.atStart
+                   ? core::ArcGeometry{arc.center, arc.radius, arc.startAngle, -away}
+                   : core::ArcGeometry{arc.center, arc.radius, arc.startAngle + arc.sweep, away};
+    };
+    const auto straight = [&](const core::Vec2& start, const core::Vec2& end) {
+        return hit.atStart ? start - end : end - start;
+    };
+    if (const auto* line = std::get_if<core::Line>(&record->entity)) {
+        extension.direction = straight(line->start, line->end);
+    } else if (const auto* arc = std::get_if<core::Arc>(&record->entity)) {
+        extension.beyond = beyond(arc->geometry());
+    } else if (const auto* polyline = std::get_if<core::Polyline>(&record->entity)) {
+        const std::size_t count = polyline->segmentCount();
+        if (polyline->isClosed() || count == 0 || !hit.segment) {
+            return std::nullopt;
+        }
+        const bool atFirstEnd = *hit.segment == 0 && hit.atStart;
+        const bool atLastEnd = *hit.segment == count - 1 && !hit.atStart;
+        if (!atFirstEnd && !atLastEnd) {
+            return std::nullopt;  // an inner vertex has no extension
+        }
+        const core::PolylineSegment segment = polyline->segment(*hit.segment);
+        if (segment.isArc()) {
+            extension.beyond =
+                beyond(core::arcFromBulge(segment.start, segment.end, segment.bulge));
+        } else {
+            extension.direction = straight(segment.start, segment.end);
+        }
+    } else {
+        return std::nullopt;
+    }
+    if (!extension.beyond && extension.direction == core::Vec2{}) {
+        return std::nullopt;  // no direction
+    }
+    return extension;
+}
+
+/// The line, or the straight polyline segment, whose direction a hold at
+/// `pointer` acquires (docs/adr/0057, point 3): the entity a click within
+/// `aperture` picks and, in a polyline, its nearest segment, the first on
+/// ties; none if it is not straight, or the pointer is within `aperture` of
+/// one of its ends.
+std::optional<Acquisition::Parallel> parallelAt(const core::Document& document,
+                                                const core::Vec2& pointer, double aperture) {
+    const std::optional<core::EntityId> picked = core::pickEntity(document, pointer, aperture);
+    if (!picked) {
+        return std::nullopt;
+    }
+    const core::EntityRecord* record = document.find(*picked);
+    std::optional<std::size_t> index;
+    core::PolylineSegment segment;
+    if (const auto* line = std::get_if<core::Line>(&record->entity)) {
+        segment = {line->start, line->end, 0.0};
+    } else if (const auto* polyline = std::get_if<core::Polyline>(&record->entity)) {
+        double nearest = std::numeric_limits<double>::infinity();
+        for (std::size_t i = 0; i < polyline->segmentCount(); ++i) {
+            const double distance = core::distance(polyline->segment(i), pointer);
+            if (!index || distance < nearest) {
+                index = i;
+                nearest = distance;
+            }
+        }
+        if (!index) {
+            return std::nullopt;
+        }
+        segment = polyline->segment(*index);
+    } else {
+        return std::nullopt;
+    }
+    if (segment.isArc() || segment.start == segment.end ||
+        core::distance(segment.start, pointer) <= aperture ||
+        core::distance(segment.end, pointer) <= aperture) {
+        return std::nullopt;
+    }
+    return Acquisition::Parallel{*picked, index, segment.start, segment.end};
 }
 
 }  // namespace
@@ -291,40 +495,101 @@ void CommandRunner::pointerMoved(const core::Vec2& point) {
 
 void CommandRunner::pointerHeld(const core::Vec2& point) {
     pointerMoved(point);
-    if (!tracksObjectSnaps()) {
+    if (!m_drawingAids.objectSnap || !asksForPoint()) {
         return;
     }
-    const std::optional<core::SnapPoint> snap = snapAt(point);
-    if (!snap) {
+    const TrackingState::Acquisition wanted = acquisitionAt(point);
+    if (isEmpty(wanted)) {
         return;
     }
-    // Held on a point acquired already, the same point, it releases it;
-    // otherwise it acquires it, and the eighth drops the oldest
-    // (docs/adr/0049, point 2).
-    std::vector<core::Vec2>& acquired = m_tracking.acquired;
-    if (const auto found = std::ranges::find(acquired, snap->point); found != acquired.end()) {
-        acquired.erase(found);
+    // Held again on what an acquisition holds, it releases the whole
+    // acquisition; otherwise it acquires, and the eighth drops the oldest
+    // (docs/adr/0049, point 2; docs/adr/0057, point 3).
+    const auto found = std::ranges::find_if(
+        m_acquisitions, [&](const auto& acquisition) { return holdsAnyOf(acquisition, wanted); });
+    if (found != m_acquisitions.end()) {
+        m_acquisitions.erase(found);
     } else {
-        if (acquired.size() == kMaxAcquired) {
-            acquired.erase(acquired.begin());
+        if (m_acquisitions.size() == kMaxAcquired) {
+            m_acquisitions.erase(m_acquisitions.begin());
         }
-        acquired.push_back(snap->point);
+        m_acquisitions.push_back(wanted);
     }
     refreshPointer();
 }
 
+CommandRunner::TrackingState::Acquisition CommandRunner::acquisitionAt(
+    const core::Vec2& point) const {
+    const core::Document& document = m_editor.document();
+    const core::SnapModes& modes = m_drawingAids.snapModes;
+    const double aperture = kSnapAperturePixels * m_pixelSize;
+    const std::optional<core::Vec2> base = m_command->basePoint();
+    // The snap that wins the hold, as snapAt() finds it; with Extension on,
+    // the ends that give an extension compete as Endpoint even with Endpoint
+    // off, and win ties, as Endpoint does (docs/tappe/0.8.1/PT31, point 1).
+    std::optional<core::SnapHit> hit = core::findSnapHit(document, point, aperture, modes, base);
+    if (modes.extension && !modes.endpoint) {
+        const std::optional<core::SnapHit> end = extensionEndAt(document, point, aperture);
+        if (end &&
+            (!hit || !isPointSnap(hit->snap.kind) ||
+             core::distance(end->snap.point, point) <= core::distance(hit->snap.point, point))) {
+            hit = end;
+        }
+    }
+    TrackingState::Acquisition wanted;
+    if (m_drawingAids.tracking && hit &&
+        (hit->snap.kind != core::SnapKind::Endpoint || modes.endpoint)) {
+        wanted.point = hit->snap.point;
+    }
+    if (hit && isPointSnap(hit->snap.kind)) {
+        // A snap point wins: an extension only from its Endpoint, and no
+        // direction (#992, second round, [decisione] 2).
+        if (modes.extension && hit->snap.kind == core::SnapKind::Endpoint) {
+            wanted.extension = extensionOf(document, *hit);
+        }
+    } else if (modes.parallel && base) {
+        wanted.parallel = parallelAt(document, point, aperture);
+    }
+    return wanted;
+}
+
+void CommandRunner::dropSwitchedOff() {
+    if (!m_drawingAids.objectSnap) {
+        clearAcquired();
+        return;
+    }
+    const core::SnapModes& modes = m_drawingAids.snapModes;
+    for (TrackingState::Acquisition& acquisition : m_acquisitions) {
+        if (!m_drawingAids.tracking) {
+            acquisition.point.reset();
+        }
+        if (!modes.extension) {
+            acquisition.extension.reset();
+        }
+        if (!modes.parallel) {
+            acquisition.parallel.reset();
+        }
+    }
+    std::erase_if(m_acquisitions, isEmpty);
+}
+
 const CommandRunner::TrackingState& CommandRunner::tracking() const {
-    m_tracking.guide = TrackingState::Guide::None;
-    m_tracking.guidePoint.reset();
-    m_tracking.from.reset();
-    if (!m_pointer || !tracksObjectSnaps() || snapAt(*m_pointer)) {
+    m_tracking = TrackingState{};
+    m_tracking.acquisitions = m_acquisitions;
+    for (const TrackingState::Acquisition& acquisition : m_acquisitions) {
+        if (acquisition.point) {
+            m_tracking.acquired.push_back(*acquisition.point);
+        }
+    }
+    if (!m_pointer || !followsGuides() || snapAt(*m_pointer)) {
         return m_tracking;
     }
-    const TrackingState state =
+    TrackingState state =
         trackedPoint(onGrid(m_editor.document(), *m_pointer), m_command->basePoint());
     m_tracking.guide = state.guide;
     m_tracking.guidePoint = state.guidePoint;
     m_tracking.from = state.from;
+    m_tracking.guides = std::move(state.guides);
     return m_tracking;
 }
 
@@ -379,9 +644,9 @@ void CommandRunner::setDrawingAids(const DrawingAids& aids) {
         return;
     }
     m_drawingAids = aids;
-    if (!m_drawingAids.tracking || !m_drawingAids.objectSnap) {
-        clearAcquired();  // tracking works only with object snap
-    }
+    // Tracking works only with object snap; a mode switched off takes its
+    // part of the acquisitions away for good (docs/tappe/0.8.1/PT31, point 1).
+    dropSwitchedOff();
     refreshPointer();
 }
 
@@ -615,8 +880,10 @@ void CommandRunner::typedPoint(std::string_view text, const Prompt& prompt) {
         const auto& lastPoint = context().lastPoint;
         // With a single guide of object snap tracking active, the distance
         // is measured from its acquired point, along it (docs/adr/0049,
-        // point 6).
-        if (spec->kind == PointSpec::Kind::Distance && m_pointer && tracksObjectSnaps() &&
+        // point 6): from the end of an extension, along an arc extension
+        // along the arc, from the base point along a parallel (docs/adr/0057,
+        // point 4); where the guide gives no point, as without guides.
+        if (spec->kind == PointSpec::Kind::Distance && m_pointer && followsGuides() &&
             !snapAt(*m_pointer)) {
             if (const std::optional<core::Vec2> point = detail::pointAlongGuide(
                     trackedPoint(onGrid(m_editor.document(), *m_pointer), lastPoint), spec->a)) {
@@ -1001,8 +1268,8 @@ std::optional<core::SnapPoint> CommandRunner::snapAt(const core::Vec2& point) co
                           m_drawingAids.snapModes, from);
 }
 
-bool CommandRunner::tracksObjectSnaps() const {
-    return m_drawingAids.tracking && m_drawingAids.objectSnap && asksForPoint();
+bool CommandRunner::followsGuides() const {
+    return m_drawingAids.objectSnap && asksForPoint() && !m_acquisitions.empty();
 }
 
 std::optional<core::Vec2> CommandRunner::polarFoot(const core::Vec2& base,
@@ -1014,7 +1281,7 @@ std::optional<core::Vec2> CommandRunner::polarFoot(const core::Vec2& base,
 
 CommandRunner::TrackingState CommandRunner::trackedPoint(
     const core::Vec2& point, const std::optional<core::Vec2>& polarBase) const {
-    if (m_tracking.acquired.empty()) {
+    if (m_acquisitions.empty()) {
         return {};
     }
     // The polar ray counts as a guide (docs/adr/0049, point 4); ortho, if a
@@ -1026,7 +1293,10 @@ CommandRunner::TrackingState CommandRunner::trackedPoint(
             ray = detail::PolarRay{*polarBase, *foot};
         }
     }
-    return detail::trackPoint(m_tracking.acquired, point, kSnapAperturePixels * m_pixelSize, ray);
+    // A parallel goes through the base point of the command, which a typed
+    // distance along it is measured from too (docs/tappe/0.8.1/PT31, point 3).
+    return detail::trackPoint(m_acquisitions, m_command->basePoint(), point,
+                              kSnapAperturePixels * m_pixelSize, ray);
 }
 
 core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
@@ -1041,7 +1311,7 @@ core::Vec2 CommandRunner::aidedPoint(const core::Vec2& point,
     // Then the grid node, which the guides, ortho and polar project; the
     // crossing of two guides stays its own point (docs/adr/0055, point 4).
     const core::Vec2 node = onGrid(m_editor.document(), point);
-    if (tracksObjectSnaps()) {
+    if (followsGuides()) {
         if (const TrackingState state = trackedPoint(node, orthoBase); state.guidePoint) {
             return *state.guidePoint;
         }

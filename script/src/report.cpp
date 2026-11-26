@@ -27,6 +27,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -735,6 +736,40 @@ std::vector<std::string> detail::statisticsLines(
 
 namespace {
 
+// The guides of a crossing, with the names of the guides of
+// docs/adr/0057, point 5: empty when only horizontals and verticals of points
+// cross, as the reports of stage 0.8 write them; otherwise " of <guide> from
+// <x,y>", and " and <guide> from <x,y>" for the second guide of two, that of
+// the more recent acquisition first.
+std::string guideNames(const cmd::CommandRunner::TrackingState& tracking) {
+    using Kind = cmd::CommandRunner::TrackingState::ActiveGuide::Kind;
+    const auto name = [](Kind kind) -> std::string_view {
+        switch (kind) {
+            case Kind::Horizontal:
+                return "Horizontal";
+            case Kind::Vertical:
+                return "Vertical";
+            case Kind::Extension:
+                return "Extension";
+            case Kind::Parallel:
+                break;
+        }
+        return "Parallel";
+    };
+    if (std::ranges::all_of(tracking.guides, [](const auto& guide) {
+            return guide.kind == Kind::Horizontal || guide.kind == Kind::Vertical;
+        })) {
+        return {};
+    }
+    std::string text;
+    for (const auto& guide : tracking.guides) {
+        text += text.empty() ? " of " : " and ";
+        text += name(guide.kind);
+        text += " from " + formatPoint(guide.origin);
+    }
+    return text;
+}
+
 // Object snap tracking (docs/adr/0049, point 8): each line only when it
 // differs from a new session ("Come cresce il formato").
 void writeTracking(const cmd::CommandRunner& runner, std::string& out) {
@@ -743,10 +778,22 @@ void writeTracking(const cmd::CommandRunner& runner, std::string& out) {
         appendField("tracking", "on", out);
     }
     const cmd::CommandRunner::TrackingState& tracking = runner.tracking();
-    if (!tracking.acquired.empty()) {
+    // In the order of acquisition, a point before the extension acquired
+    // with it (docs/adr/0057, point 5).
+    if (!tracking.acquisitions.empty()) {
         appendLine("acquired:", out);
-        for (const core::Vec2& point : tracking.acquired) {
-            appendItem(formatPoint(point), out);
+        for (const auto& acquisition : tracking.acquisitions) {
+            if (acquisition.point) {
+                appendItem(formatPoint(*acquisition.point), out);
+            }
+            if (acquisition.extension) {
+                appendItem("extension " + formatPoint(acquisition.extension->end), out);
+            }
+            if (acquisition.parallel) {
+                appendItem("parallel " + formatPoint(acquisition.parallel->start) + " " +
+                               formatPoint(acquisition.parallel->end),
+                           out);
+            }
         }
     }
     if (!tracking.guidePoint) {
@@ -763,11 +810,17 @@ void writeTracking(const cmd::CommandRunner& runner, std::string& out) {
         case Guide::Vertical:
             appendField("active tracking", "Vertical " + point + from, out);
             break;
+        case Guide::Extension:
+            appendField("active tracking", "Extension " + point + from, out);
+            break;
+        case Guide::Parallel:
+            appendField("active tracking", "Parallel " + point + from, out);
+            break;
         case Guide::Crossing:
-            appendField("active tracking", "Crossing " + point, out);
+            appendField("active tracking", "Crossing " + point + guideNames(tracking), out);
             break;
         case Guide::WithPolar:
-            appendField("active tracking", "Polar crossing " + point, out);
+            appendField("active tracking", "Polar crossing " + point + guideNames(tracking), out);
             break;
     }
 }
