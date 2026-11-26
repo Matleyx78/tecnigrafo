@@ -5,8 +5,8 @@
 
 #include "text_editor_overlay.hpp"
 #include "tg/cmd/text_editing.hpp"
-#include "tg/core/document.hpp"
-#include "tg/render/viewport.hpp"
+#include "tg/core/m_document.hpp"
+#include "tg/render/m_viewport.hpp"
 
 #include <QDoubleSpinBox>
 #include <QLineEdit>
@@ -14,6 +14,7 @@
 #include <QToolButton>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <utility>
 
 namespace tg::app {
@@ -21,7 +22,7 @@ namespace {
 
 class TextFormatBarTest : public ::testing::Test {
 protected:
-    TextFormatBarTest() : editor(&parent, viewport) {}
+    TextFormatBarTest() : m_editor(&m_parent, m_viewport) {}
 
     void open(std::string value) {
         core::MText shown;
@@ -29,40 +30,40 @@ protected:
         cmd::TextEditRequest request;
         request.shown = shown;
         request.value = shown.value;
-        editor.open(request, document);
-        bar = editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
-        ASSERT_NE(bar, nullptr);
+        m_editor.open(request, m_document);
+        m_bar = m_editor.findChild<TextFormatBar*>(QStringLiteral("textFormatBar"));
+        ASSERT_NE(m_bar, nullptr);
     }
 
     void select(std::size_t anchor, std::size_t caret) {
         ASSERT_LE(anchor, caret);
-        QTest::keyClick(&editor, Qt::Key_Home);
+        QTest::keyClick(&m_editor, Qt::Key_Home);
         for (std::size_t index = 0; index < anchor; ++index) {
-            QTest::keyClick(&editor, Qt::Key_Right);
+            QTest::keyClick(&m_editor, Qt::Key_Right);
         }
         for (std::size_t index = anchor; index < caret; ++index) {
-            QTest::keyClick(&editor, Qt::Key_Right, Qt::ShiftModifier);
+            QTest::keyClick(&m_editor, Qt::Key_Right, Qt::ShiftModifier);
         }
     }
 
     void click(const char* name) {
-        auto* button = bar->findChild<QToolButton*>(QString::fromLatin1(name));
+        auto* button = m_bar->findChild<QToolButton*>(QString::fromLatin1(name));
         ASSERT_NE(button, nullptr);
         button->click();
     }
 
-    TextEditorOverlay& overlay() { return editor; }
+    TextEditorOverlay& overlay() { return m_editor; }
 
-    TextFormatBar& formatBar() { return *bar; }
+    TextFormatBar& formatBar() { return *m_bar; }
 
-    core::Document& drawing() { return document; }
+    core::Document& drawing() { return m_document; }
 
 private:
-    QWidget parent;
-    render::Viewport viewport;
-    TextEditorOverlay editor;
-    core::Document document = core::Document::newDrawing();
-    TextFormatBar* bar{nullptr};
+    QWidget m_parent;
+    render::Viewport m_viewport;
+    TextEditorOverlay m_editor;
+    core::Document m_document = core::Document::newDrawing();
+    TextFormatBar* m_bar{nullptr};
 };
 
 TEST_F(TextFormatBarTest, ToggleButtonsApplyCodesAndFollowCaretFormat) {
@@ -82,11 +83,10 @@ TEST_F(TextFormatBarTest, EveryToggleButtonAppliesItsMtextCode) {
         const char* expected;
     };
 
-    constexpr Case cases[] = {{"formatItalic", "{\\fArial|b0|i1;A}B"},
-                              {"formatUnderline", "{\\LA}B"},
-                              {"formatOverline", "{\\OA}B"},
-                              {"formatStrike", "{\\KA}B"}};
-    for (const Case& test : cases) {
+    constexpr std::array kCases = {
+        Case{"formatItalic", "{\\fArial|b0|i1;A}B"}, Case{"formatUnderline", "{\\LA}B"},
+        Case{"formatOverline", "{\\OA}B"}, Case{"formatStrike", "{\\KA}B"}};
+    for (const Case& test : kCases) {
         open("AB");
         select(0, 1);
         click(test.button);
@@ -102,11 +102,11 @@ TEST_F(TextFormatBarTest, NumberAndColorFieldsApplyTheirMtextCodes) {
         const char* expected;
     };
 
-    constexpr NumberCase cases[] = {{"formatHeight", 3.5, "{\\H3.5;A}B"},
-                                    {"formatWidth", 1.5, "{\\W1.5;A}B"},
-                                    {"formatOblique", 12.0, "{\\Q12;A}B"},
-                                    {"formatTracking", 1.25, "{\\T1.25;A}B"}};
-    for (const NumberCase& test : cases) {
+    constexpr std::array kCases = {NumberCase{"formatHeight", 3.5, "{\\H3.5;A}B"},
+                                   NumberCase{"formatWidth", 1.5, "{\\W1.5;A}B"},
+                                   NumberCase{"formatOblique", 12.0, "{\\Q12;A}B"},
+                                   NumberCase{"formatTracking", 1.25, "{\\T1.25;A}B"}};
+    for (const NumberCase& test : kCases) {
         open("AB");
         select(0, 1);
         auto* field = formatBar().findChild<QDoubleSpinBox*>(QString::fromLatin1(test.field));
@@ -139,14 +139,16 @@ TEST_F(TextFormatBarTest, StackAndUnstackButtonsUseEditorModel) {
 TEST_F(TextFormatBarTest, EditorShortcutsToggleBoldItalicAndUnderline) {
     open("ABC");
 
-    const struct Shortcut {
+    struct Shortcut {
         Qt::Key key;
         const char* expected;
-    } shortcuts[] = {{Qt::Key_B, "{\\fArial|b1|i0;A}BC"},
-                     {Qt::Key_I, "{\\fArial|b0|i1;A}BC"},
-                     {Qt::Key_U, "{\\LA}BC"}};
+    };
 
-    for (const Shortcut& shortcut : shortcuts) {
+    constexpr std::array kShortcuts = {Shortcut{Qt::Key_B, "{\\fArial|b1|i0;A}BC"},
+                                       Shortcut{Qt::Key_I, "{\\fArial|b0|i1;A}BC"},
+                                       Shortcut{Qt::Key_U, "{\\LA}BC"}};
+
+    for (const Shortcut& shortcut : kShortcuts) {
         overlay().close();
         open("ABC");
         select(0, 1);
