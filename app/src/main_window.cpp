@@ -633,8 +633,13 @@ void MainWindow::connectDrawingAids() {
         bool& value = grid ? settings.gridOn : settings.snapOn;
         value = grid ? m_gridAction->isChecked() : m_snapGridAction->isChecked();
         m_active->editor().tables().setGrid(settings);
-        m_commandLine->appendToHistory(grid ? (value ? tr("<Grid on>") : tr("<Grid off>"))
-                                            : (value ? tr("<Snap on>") : tr("<Snap off>")));
+        QString message;
+        if (grid) {
+            message = value ? tr("<Grid on>") : tr("<Grid off>");
+        } else {
+            message = value ? tr("<Snap on>") : tr("<Snap off>");
+        }
+        m_commandLine->appendToHistory(message);
         refresh();
     };
     connect(m_gridAction, &QAction::toggled, this, [setGridSwitch](bool) { setGridSwitch(true); });
