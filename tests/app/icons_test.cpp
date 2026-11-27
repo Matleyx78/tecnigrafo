@@ -503,6 +503,32 @@ TEST(IconsTest, ViewAidsInterfaceAndHelpActionsUseTheirOwnIcons) {
     }
 }
 
+TEST(IconsTest, CompletionCommandsHaveRoleIconsOnBothGrids) {
+    ActionRegistry registry;
+    addBuiltinActions(registry);
+    const QList<std::pair<QString, QString>> expected{
+        {QStringLiteral("edit.textedit"), QStringLiteral("edit-textedit")},
+        {QStringLiteral("block.attdef"), QStringLiteral("block-attdef")},
+        {QStringLiteral("block.attedit"), QStringLiteral("block-attedit")},
+        {QStringLiteral("block.attsync"), QStringLiteral("block-attsync")},
+        {QStringLiteral("block.battman"), QStringLiteral("block-battman")},
+        {QStringLiteral("block.attdisp"), QStringLiteral("block-attdisp")},
+        {QStringLiteral("edit.hatchedit"), QStringLiteral("edit-hatchedit")},
+        {QStringLiteral("draw.rectang"), QStringLiteral("draw-rectang")},
+        {QStringLiteral("draw.polygon"), QStringLiteral("draw-polygon")},
+        {QStringLiteral("aids.grid"), QStringLiteral("aids-grid")},
+        {QStringLiteral("aids.snapgrid"), QStringLiteral("aids-snapgrid")},
+        {QStringLiteral("view.ucsicon"), QStringLiteral("view-ucsicon")}};
+    for (const auto& [id, icon] : expected) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* spec = registry.spec(id);
+        ASSERT_NE(spec, nullptr);
+        EXPECT_EQ(spec->icon, icon);
+        EXPECT_TRUE(QFile::exists(resourcePath(icon + QStringLiteral("-16"))));
+        EXPECT_TRUE(QFile::exists(resourcePath(icon + QStringLiteral("-32"))));
+    }
+}
+
 TEST(IconsTest, EveryIconFileHasAnActionOrAPanel) {
     ActionRegistry registry;
     addBuiltinActions(registry);

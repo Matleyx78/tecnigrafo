@@ -427,6 +427,13 @@ void BuiltinActions::add(ActionRegistry& registry) {
         commandSpec(QStringLiteral("draw.hatch"), tr("&Hatch"), draw,
                     tr("Fills an enclosed area with a hatch pattern."), QStringLiteral("-HATCH")),
         QStringLiteral("draw-hatch")));
+    registry.add(
+        withIcon(commandSpec(QStringLiteral("draw.rectang"), tr("&Rectangle"), draw,
+                             tr("Draws a rectangular polyline."), QStringLiteral("RECTANG")),
+                 QStringLiteral("draw-rectang")));
+    registry.add(withIcon(commandSpec(QStringLiteral("draw.polygon"), tr("&Polygon"), draw,
+                                      tr("Draws a regular polygon."), QStringLiteral("POLYGON")),
+                          QStringLiteral("draw-polygon")));
     const QString block = draw + QLatin1Char('/') + tr("&Block");
     ActionSpec createBlock =
         withIcon(commandSpec(QStringLiteral("block.create"), tr("&Create Block"), block,
@@ -440,6 +447,29 @@ void BuiltinActions::add(ActionRegistry& registry) {
                  QStringLiteral("block-insert"));
     insertBlock.ribbon = QStringLiteral("insert/block");
     registry.add(std::move(insertBlock));
+    for (ActionSpec spec :
+         {withIcon(commandSpec(QStringLiteral("block.attdef"), tr("Define &Attributes"), block,
+                               tr("Creates an attribute definition."), QStringLiteral("-ATTDEF")),
+                   QStringLiteral("block-attdef")),
+          withIcon(
+              commandSpec(QStringLiteral("block.attedit"), tr("Edit &Attributes"), tr("&Insert"),
+                          tr("Edits block attributes."), QStringLiteral("-ATTEDIT")),
+              QStringLiteral("block-attedit")),
+          withIcon(commandSpec(QStringLiteral("block.attsync"), tr("&Synchronize Attributes"),
+                               tr("&Insert"), tr("Synchronizes attributes with their definition."),
+                               QStringLiteral("ATTSYNC")),
+                   QStringLiteral("block-attsync")),
+          withIcon(commandSpec(QStringLiteral("block.battman"), tr("Block Attribute &Manager"),
+                               tr("&Insert"), tr("Manages block attribute definitions."),
+                               QStringLiteral("BATTMAN")),
+                   QStringLiteral("block-battman")),
+          withIcon(commandSpec(QStringLiteral("block.attdisp"), tr("Attribute &Display"),
+                               tr("&View"), tr("Controls the visibility of block attributes."),
+                               QStringLiteral("ATTDISP")),
+                   QStringLiteral("block-attdisp"))}) {
+        spec.ribbon = QStringLiteral("insert/block");
+        registry.add(std::move(spec));
+    }
 
     const QString modify = tr("&Modify");
     // Keep each column of three small buttons together: TRIM/EXTEND/OFFSET
@@ -483,6 +513,19 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(commandSpec(QStringLiteral("edit.pedit"), tr("Polyline &Edit"), modify,
                                       tr("Edits polylines."), QStringLiteral("PEDIT")),
                           QStringLiteral("edit-pedit")));
+    registry.add(withIcon(commandSpec(QStringLiteral("edit.hatchedit"), tr("H&atch Edit"), modify,
+                                      tr("Edits an existing hatch."), QStringLiteral("-HATCHEDIT")),
+                          QStringLiteral("edit-hatchedit")));
+    registry.add(withIcon(commandSpec(QStringLiteral("edit.textedit"), tr("Text Editin&g"), modify,
+                                      tr("Edits text and attributes."), QStringLiteral("TEXTEDIT")),
+                          QStringLiteral("edit-textedit")));
+
+    ActionSpec ucsIcon =
+        withIcon(commandSpec(QStringLiteral("view.ucsicon"), tr("&UCS Icon"), tr("&View"),
+                             tr("Controls the UCS icon."), QStringLiteral("UCSICON")),
+                 QStringLiteral("view-ucsicon"));
+    ucsIcon.ribbon = QStringLiteral("view/navigate");
+    registry.add(std::move(ucsIcon));
 
     const QString dimension = tr("&Dimension");
     ActionSpec linear =

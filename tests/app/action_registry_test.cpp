@@ -361,15 +361,23 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(titles(menus[1]->menu()->actions()),
               (QStringList{QStringLiteral("&Undo"), QStringLiteral("&Redo"), QStringLiteral("-"),
                            QStringLiteral("&Erase")}));
+    EXPECT_TRUE(titles(menus[2]->menu()->actions()).contains(QStringLiteral("Attribute &Display")));
+    EXPECT_TRUE(titles(menus[2]->menu()->actions()).contains(QStringLiteral("&UCS Icon")));
+    EXPECT_TRUE(titles(menus[3]->menu()->actions()).contains(QStringLiteral("&Grid")));
+    EXPECT_TRUE(titles(menus[3]->menu()->actions()).contains(QStringLiteral("Snap to &Grid")));
     EXPECT_EQ(
         titles(menus[4]->menu()->actions()),
         (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),
                      QStringLiteral("&Circle"), QStringLiteral("&Arc"), QStringLiteral("&Ellipse"),
                      QStringLiteral("&Text"), QStringLiteral("&Multiline Text"),
-                     QStringLiteral("&Hatch"), QStringLiteral("&Block")}));
+                     QStringLiteral("&Hatch"), QStringLiteral("&Rectangle"),
+                     QStringLiteral("&Polygon"), QStringLiteral("&Block")}));
     EXPECT_EQ(titles(menus[4]->menu()->actions().last()->menu()->actions()),
-              (QStringList{QStringLiteral("&Create Block")}));
-    EXPECT_EQ(titles(menus[5]->menu()->actions()), (QStringList{QStringLiteral("&Insert Block")}));
+              (QStringList{QStringLiteral("&Create Block"), QStringLiteral("Define &Attributes")}));
+    EXPECT_EQ(titles(menus[5]->menu()->actions()),
+              (QStringList{QStringLiteral("&Insert Block"), QStringLiteral("Edit &Attributes"),
+                           QStringLiteral("&Synchronize Attributes"),
+                           QStringLiteral("Block Attribute &Manager")}));
     EXPECT_EQ(titles(menus[7]->menu()->actions()),
               (QStringList{QStringLiteral("&Linear"), QStringLiteral("&Angular"),
                            QStringLiteral("&Radius"), QStringLiteral("&Diameter"),
@@ -414,7 +422,9 @@ TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons)
         {QStringLiteral("edit.fillet"), QStringLiteral("FILLET")},
         {QStringLiteral("edit.chamfer"), QStringLiteral("CHAMFER")},
         {QStringLiteral("edit.join"), QStringLiteral("JOIN")},
-        {QStringLiteral("edit.pedit"), QStringLiteral("PEDIT")}};
+        {QStringLiteral("edit.pedit"), QStringLiteral("PEDIT")},
+        {QStringLiteral("edit.hatchedit"), QStringLiteral("-HATCHEDIT")},
+        {QStringLiteral("edit.textedit"), QStringLiteral("TEXTEDIT")}};
     QMenu* modify = nullptr;
     for (QAction* item : window().menuBar()->actions()) {
         if (item->text() == QStringLiteral("&Modify")) {
@@ -469,7 +479,7 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
         }
     }
     // File, editing and drawing commands, including the menu/ribbon aliases.
-    EXPECT_EQ(withCommands.size(), 47);
+    EXPECT_EQ(withCommands.size(), 57);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());
@@ -502,6 +512,43 @@ TEST_F(MainWindowActionsTest, NewStageActionsReferToRegisteredCommands) {
         ASSERT_NE(actionSpec, nullptr);
         EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
         EXPECT_TRUE(actionSpec->shortcut.isEmpty());
+    }
+}
+
+TEST_F(MainWindowActionsTest, CompletionActionsReferToRegisteredCommands) {
+    const QStringList ids{QStringLiteral("edit.textedit"),  QStringLiteral("block.attdef"),
+                          QStringLiteral("block.attedit"),  QStringLiteral("block.attsync"),
+                          QStringLiteral("block.battman"),  QStringLiteral("block.attdisp"),
+                          QStringLiteral("edit.hatchedit"), QStringLiteral("draw.rectang"),
+                          QStringLiteral("draw.polygon"),   QStringLiteral("aids.grid"),
+                          QStringLiteral("aids.snapgrid"),  QStringLiteral("view.ucsicon")};
+    for (const QString& id : ids) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* actionSpec = registry().spec(id);
+        ASSERT_NE(actionSpec, nullptr);
+        if (id == QStringLiteral("aids.grid") || id == QStringLiteral("aids.snapgrid")) {
+            EXPECT_TRUE(actionSpec->checkable);
+        } else {
+            EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()),
+                      nullptr);
+        }
+    }
+}
+
+TEST_F(MainWindowActionsTest, CommandLineOnlyCompletionsHaveNoActions) {
+    const QSet<QString> commandLineOnly{QStringLiteral("SELECT"),      QStringLiteral("AFLAGS"),
+                                        QStringLiteral("ATTREQ"),      QStringLiteral("GRIDMODE"),
+                                        QStringLiteral("GRIDUNIT"),    QStringLiteral("SNAPMODE"),
+                                        QStringLiteral("SNAPUNIT"),    QStringLiteral("SNAPBASE"),
+                                        QStringLiteral("GRIDDISPLAY"), QStringLiteral("GRIDMAJOR")};
+    for (QAction* action : registry().actions()) {
+        const ActionSpec* spec = registry().spec(action->objectName());
+        ASSERT_NE(spec, nullptr);
+        QString command = spec->command.toUpper();
+        while (command.startsWith(QLatin1Char('-'))) {
+            command.removeFirst();
+        }
+        EXPECT_FALSE(commandLineOnly.contains(command)) << spec->id.toStdString();
     }
 }
 
