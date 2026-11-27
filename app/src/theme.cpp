@@ -421,10 +421,12 @@ void applyTheme(QApplication& application, Theme theme) {
     }
 }
 
-render::SceneStyle sceneStyle(Theme theme) {
+render::SceneStyle sceneStyle(Theme theme, render::AxesStyle axes, double ucsIconSizePx) {
     // Grid, sizes and tolerances stay those of the program, and only the
     // background follows the tokens (docs/adr/0039, point 2).
     render::SceneStyle style;
+    style.axes = axes;
+    style.ucsIconSizePx = ucsIconSizePx;
     style.background = toRenderColor(themeTokens(theme).canvas);
     if (theme == Theme::Dark) {
         return style;

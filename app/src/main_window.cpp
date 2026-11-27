@@ -582,6 +582,8 @@ void MainWindow::connectDrawingAids() {
     // The switches start from the settings of a new runner, the defaults of
     // docs/adr/0008: object snap on with every mode, ortho off.
     const cmd::DrawingAids aids{};
+    m_gridAction = registeredAction("aids.grid");
+    m_snapGridAction = registeredAction("aids.snapgrid");
     m_objectSnapAction = registeredAction("aids.osnap");
     m_orthoAction = registeredAction("aids.ortho");
     m_dynamicInputAction = registeredAction("aids.dynmode");
@@ -604,6 +606,9 @@ void MainWindow::connectDrawingAids() {
     m_perpendicularAction = registeredAction("aids.snap.perpendicular");
     m_tangentAction = registeredAction("aids.snap.tangent");
     m_quadrantAction = registeredAction("aids.snap.quadrant");
+    m_nearestAction = registeredAction("aids.snap.nearest");
+    m_extensionAction = registeredAction("aids.snap.extension");
+    m_parallelAction = registeredAction("aids.snap.parallel");
     m_objectSnapAction->setChecked(aids.objectSnap);
     m_orthoAction->setChecked(aids.ortho);
     m_polarAction->setChecked(aids.polar);
@@ -616,6 +621,30 @@ void MainWindow::connectDrawingAids() {
     m_perpendicularAction->setChecked(aids.snapModes.perpendicular);
     m_tangentAction->setChecked(aids.snapModes.tangent);
     m_quadrantAction->setChecked(aids.snapModes.quadrant);
+    m_nearestAction->setChecked(aids.snapModes.nearest);
+    m_extensionAction->setChecked(aids.snapModes.extension);
+    m_parallelAction->setChecked(aids.snapModes.parallel);
+
+    const auto setGridSwitch = [this](bool grid) {
+        if (m_active == nullptr) {
+            return;
+        }
+        core::GridSettings settings = m_active->document().grid();
+        bool& value = grid ? settings.gridOn : settings.snapOn;
+        value = grid ? m_gridAction->isChecked() : m_snapGridAction->isChecked();
+        m_active->editor().tables().setGrid(settings);
+        QString message;
+        if (grid) {
+            message = value ? tr("<Grid on>") : tr("<Grid off>");
+        } else {
+            message = value ? tr("<Snap on>") : tr("<Snap off>");
+        }
+        m_commandLine->appendToHistory(message);
+        refresh();
+    };
+    connect(m_gridAction, &QAction::toggled, this, [setGridSwitch](bool) { setGridSwitch(true); });
+    connect(m_snapGridAction, &QAction::toggled, this,
+            [setGridSwitch](bool) { setGridSwitch(false); });
 
     // Connected after the initial states are set, so that starting the
     // program writes nothing in the history.
@@ -897,7 +926,6 @@ bool MainWindow::confirmReplace(const QString& path) {
 }
 
 void MainWindow::setSnapModes(const core::SnapModes& modes) {
-    m_modesWithoutSwitch = modes;
     m_endpointAction->setChecked(modes.endpoint);
     m_midpointAction->setChecked(modes.midpoint);
     m_centerAction->setChecked(modes.center);
@@ -906,6 +934,9 @@ void MainWindow::setSnapModes(const core::SnapModes& modes) {
     m_perpendicularAction->setChecked(modes.perpendicular);
     m_tangentAction->setChecked(modes.tangent);
     m_quadrantAction->setChecked(modes.quadrant);
+    m_nearestAction->setChecked(modes.nearest);
+    m_extensionAction->setChecked(modes.extension);
+    m_parallelAction->setChecked(modes.parallel);
     applyDrawingAids();
 }
 
@@ -936,9 +967,9 @@ void MainWindow::applyDrawingAids() {
     aids.snapModes.perpendicular = m_perpendicularAction->isChecked();
     aids.snapModes.tangent = m_tangentAction->isChecked();
     aids.snapModes.quadrant = m_quadrantAction->isChecked();
-    aids.snapModes.nearest = m_modesWithoutSwitch.nearest;
-    aids.snapModes.extension = m_modesWithoutSwitch.extension;
-    aids.snapModes.parallel = m_modesWithoutSwitch.parallel;
+    aids.snapModes.nearest = m_nearestAction->isChecked();
+    aids.snapModes.extension = m_extensionAction->isChecked();
+    aids.snapModes.parallel = m_parallelAction->isChecked();
     aids.polar = m_polarAction->isChecked();
     aids.tracking = m_trackingAction->isChecked();
     if (m_active != nullptr) {
@@ -1066,6 +1097,9 @@ void MainWindow::createStatusBar() {
     connect(m_assistant.get(), &AssistantChannel::connectedChanged, assistantButton,
             updateAssistantButton);
     updateAssistantButton();
+    statusBar()->addPermanentWidget(createModeButton(m_gridAction, QStringLiteral("gridButton")));
+    statusBar()->addPermanentWidget(
+        createModeButton(m_snapGridAction, QStringLiteral("snapgridButton")));
     statusBar()->addPermanentWidget(createModeButton(m_orthoAction, QStringLiteral("orthoButton")));
     statusBar()->addPermanentWidget(createModeButton(m_polarAction, QStringLiteral("polarButton")));
     statusBar()->addPermanentWidget(
@@ -1664,8 +1698,18 @@ void MainWindow::updateDrawingState() {
         return;
     }
     if (m_actions != nullptr) {
-        const QSignalBlocker blocker(registeredAction("aids.lwdisplay"));
+        const QSignalBlocker lwBlocker(registeredAction("aids.lwdisplay"));
+        const QSignalBlocker gridBlocker(m_gridAction);
+        const QSignalBlocker snapBlocker(m_snapGridAction);
         registeredAction("aids.lwdisplay")->setChecked(m_active->document().lwdisplay());
+        m_gridAction->setChecked(m_active->document().grid().gridOn);
+        m_snapGridAction->setChecked(m_active->document().grid().snapOn);
+        if (auto* gridButton = findChild<QToolButton*>(QStringLiteral("gridButton"))) {
+            gridButton->setChecked(m_gridAction->isChecked());
+        }
+        if (auto* snapButton = findChild<QToolButton*>(QStringLiteral("snapgridButton"))) {
+            snapButton->setChecked(m_snapGridAction->isChecked());
+        }
     }
     setWindowTitle(tr("%1[*] — Tecnigrafo").arg(QFileInfo(documentName()).fileName()));
     setWindowModified(m_active->editor().isModified());
@@ -1935,7 +1979,7 @@ void MainWindow::setTheme(Theme theme) {
     // Application palette notifications can be queued by the platform.
     // The window and its icons must already use the new colours now.
     setPalette(QApplication::palette());
-    m_view->setStyle(sceneStyle(theme));
+    m_view->setStyle(sceneStyle(theme, m_axesStyle));
     m_view->dynamicInputBox()->refresh(false);
     const QSignalBlocker blocker(registeredAction("ui.theme"));
     registeredAction("ui.theme")->setChecked(theme == Theme::Dark);
@@ -2012,10 +2056,14 @@ void MainWindow::showSettings() {
     if (m_scriptMode) {
         return;
     }
-    SettingsDialog dialog(interfaceKind(), theme(), this);
+    SettingsDialog dialog(interfaceKind(), theme(), m_snapMagnet, m_axesStyle, this);
     if (dialog.exec() == QDialog::Accepted) {
         setInterface(dialog.interfaceKind());
         setTheme(dialog.theme());
+        m_snapMagnet = dialog.snapMagnet();
+        m_axesStyle = dialog.axesStyle();
+        m_view->setStyle(sceneStyle(theme(), m_axesStyle));
+        saveUiSettings();
     }
 }
 
@@ -2072,6 +2120,11 @@ void MainWindow::restoreUiSettings() {
                  : Theme::Light);
     m_dynamicInputAction->setChecked(
         m_settings->value(QStringLiteral("ui/dynmode"), true).toBool());
+    m_snapMagnet = m_settings->value(QStringLiteral("ui/snapMagnet"), true).toBool();
+    const int axes = m_settings->value(QStringLiteral("ui/axesStyle"), 0).toInt();
+    m_axesStyle =
+        axes >= 0 && axes <= 2 ? static_cast<render::AxesStyle>(axes) : render::AxesStyle::UcsIcon;
+    m_view->setStyle(sceneStyle(theme(), m_axesStyle));
     restoreGeometry(m_settings->value(QStringLiteral("ui/geometry")).toByteArray());
     restoreState(m_settings->value(QStringLiteral("ui/state")).toByteArray());
     // The hidden panels stay hidden in the place that restoreState() gave
@@ -2098,6 +2151,8 @@ void MainWindow::saveUiSettings() {
         themeName = QStringLiteral("dark");
     }
     m_settings->setValue(QStringLiteral("ui/dynmode"), m_dynamicInputAction->isChecked());
+    m_settings->setValue(QStringLiteral("ui/snapMagnet"), m_snapMagnet);
+    m_settings->setValue(QStringLiteral("ui/axesStyle"), static_cast<int>(m_axesStyle));
     m_settings->setValue(QStringLiteral("ui/interface"), interfaceName);
     m_settings->setValue(QStringLiteral("ui/theme"), themeName);
     m_settings->setValue(QStringLiteral("ui/geometry"), saveGeometry());

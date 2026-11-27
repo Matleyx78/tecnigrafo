@@ -55,7 +55,7 @@ TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) 
         QString(registry.spec(QStringLiteral("draw.line"))->text).remove(QLatin1Char('&'))));
     dialog.accept();
     EXPECT_NE(dialog.result(), QDialog::Accepted);
-    editShortcut(dialog, QStringLiteral("F7"));
+    editShortcut(dialog, QStringLiteral("F5"));
     dialog.accept();
     EXPECT_EQ(dialog.result(), QDialog::Accepted);
     ActionRegistry restarted;
@@ -67,7 +67,7 @@ TEST(ShortcutsDialog, ChangesApplyImmediatelyRejectConflictsAndPersistOnAccept) 
     EXPECT_EQ(restarted.action(QStringLiteral("draw.line"))->shortcut(),
               QKeySequence(QStringLiteral("F6")));
     EXPECT_EQ(restarted.action(QStringLiteral("draw.circle"))->shortcut(),
-              QKeySequence(QStringLiteral("F7")));
+              QKeySequence(QStringLiteral("F5")));
 }
 
 TEST(ShortcutsDialog, FilterRemoveResetAndCancelRestoreSession) {

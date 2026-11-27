@@ -74,7 +74,7 @@ constexpr const char* kTestAction = "test.draw";
 constexpr const char* kTestCommand = "TESTDRAW";
 
 /// The key of the test action: no built-in action has it.
-constexpr Qt::Key kTestKey = Qt::Key_F7;
+constexpr Qt::Key kTestKey = Qt::Key_F6;
 
 /// What the runner says of a command typed outside its environments
 /// (docs/tappe/0.7.5/P27).

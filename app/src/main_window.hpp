@@ -255,6 +255,10 @@ public:
 
     [[nodiscard]] Theme theme() const { return m_theme; }
 
+    [[nodiscard]] bool snapMagnet() const { return m_snapMagnet; }
+
+    [[nodiscard]] render::AxesStyle axesStyle() const { return m_axesStyle; }
+
     /// Panels must have a unique, stable, nonempty objectName. A docked
     /// panel can hide itself (docs/tappe/0.7.5/P18).
     /// True when the panel was placed in area, false when the saved layout placed it.
@@ -519,6 +523,8 @@ private:
     QAction* m_undoAction{nullptr};
     QAction* m_redoAction{nullptr};
     QAction* m_eraseAction{nullptr};
+    QAction* m_gridAction{nullptr};
+    QAction* m_snapGridAction{nullptr};
     QAction* m_objectSnapAction{nullptr};
     QAction* m_orthoAction{nullptr};
     QAction* m_dynamicInputAction{nullptr};
@@ -532,9 +538,11 @@ private:
     QAction* m_perpendicularAction{nullptr};
     QAction* m_tangentAction{nullptr};
     QAction* m_quadrantAction{nullptr};
-    // The modes without a switch in the menu yet (nearest, extension,
-    // parallel): the last ones set by the scripts, until PT32 adds them.
-    core::SnapModes m_modesWithoutSwitch;
+    QAction* m_nearestAction{nullptr};
+    QAction* m_extensionAction{nullptr};
+    QAction* m_parallelAction{nullptr};
+    bool m_snapMagnet{true};
+    render::AxesStyle m_axesStyle{render::AxesStyle::UcsIcon};
     QToolButton* m_environmentIndicator{nullptr};
     QLabel* m_cursorLabel{nullptr};
     QLabel* m_scaleLabel{nullptr};

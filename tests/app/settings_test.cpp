@@ -156,13 +156,20 @@ TEST_F(SettingsTest, ChoicesPersistImmediatelyAndSettingsDialogAppliesOnlyOnAcce
             ASSERT_NE(dialog, nullptr);
             dialog->findChild<QComboBox*>(QStringLiteral("interfaceCombo"))->setCurrentIndex(0);
             dialog->findChild<QComboBox*>(QStringLiteral("themeCombo"))->setCurrentIndex(0);
+            dialog->findChild<QComboBox*>(QStringLiteral("snapMagnetCombo"))->setCurrentIndex(1);
+            dialog->findChild<QComboBox*>(QStringLiteral("axesCombo"))->setCurrentIndex(1);
             auto* buttons = dialog->findChild<QDialogButtonBox*>();
             buttons->button(accept ? QDialogButtonBox::Ok : QDialogButtonBox::Cancel)->click();
         });
         window.actionRegistry().action(QStringLiteral("tools.settings"))->trigger();
         EXPECT_EQ(window.theme(), accept ? Theme::Light : Theme::Dark);
         EXPECT_EQ(window.interfaceKind(), accept ? InterfaceKind::Ribbon : InterfaceKind::Classic);
+        EXPECT_EQ(window.snapMagnet(), !accept);
+        EXPECT_EQ(window.axesStyle(),
+                  accept ? render::AxesStyle::Lines : render::AxesStyle::UcsIcon);
     }
+    EXPECT_EQ(QSettings{}.value(QStringLiteral("ui/snapMagnet")).toBool(), false);
+    EXPECT_EQ(QSettings{}.value(QStringLiteral("ui/axesStyle")).toInt(), 1);
     EXPECT_TRUE(window.close());
 }
 

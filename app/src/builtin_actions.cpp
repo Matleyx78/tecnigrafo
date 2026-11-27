@@ -218,6 +218,16 @@ void BuiltinActions::add(ActionRegistry& registry) {
     // Function keys are AutoCAD's keys. On laptops and on macOS they may need
     // Fn: the same switches are in the status bar (docs/tappe/0.3).
     const QString tools = tr("&Tools");
+    ActionSpec grid = switchSpec(QStringLiteral("aids.grid"), tr("&Grid"), tools,
+                                 tr("Turns the drawing grid on or off."));
+    grid.icon = QStringLiteral("aids-grid");
+    grid.shortcut = QKeySequence(Qt::Key_F7);
+    registry.add(std::move(grid));
+    ActionSpec snapGrid = switchSpec(QStringLiteral("aids.snapgrid"), tr("Snap to &Grid"), tools,
+                                     tr("Turns snap to the drawing grid on or off."));
+    snapGrid.icon = QStringLiteral("aids-snapgrid");
+    snapGrid.shortcut = QKeySequence(Qt::Key_F9);
+    registry.add(std::move(snapGrid));
     ActionSpec osnap = switchSpec(QStringLiteral("aids.osnap"), tr("Object &Snap"), tools,
                                   tr("Turns object snap on or off."));
     osnap.icon = QStringLiteral("aids-osnap");
@@ -333,6 +343,15 @@ void BuiltinActions::add(ActionRegistry& registry) {
     registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.quadrant"), tr("&Quadrant"), modes,
                                      tr("Snaps to quadrants of circles and arcs.")),
                           QStringLiteral("aids-snap-quadrant")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.nearest"), tr("&Nearest"), modes,
+                                     tr("Snaps to the nearest point of a curve.")),
+                          QStringLiteral("aids-snap-nearest")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.extension"), tr("&Extension"), modes,
+                                     tr("Tracks extensions from acquired endpoints.")),
+                          QStringLiteral("aids-snap-extension")));
+    registry.add(withIcon(switchSpec(QStringLiteral("aids.snap.parallel"), tr("&Parallel"), modes,
+                                     tr("Tracks parallel to acquired lines.")),
+                          QStringLiteral("aids-snap-parallel")));
 
     const QString draw = tr("&Draw");
     registry.add(withIcon(commandSpec(QStringLiteral("draw.line"), tr("&Line"), draw,
