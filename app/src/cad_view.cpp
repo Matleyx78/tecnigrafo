@@ -495,10 +495,11 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
         const auto selected = runner.selection().ids();
         if (selected.size() == 1 && selected.front() == m_currentVertex->first) {
             const core::Vec2 center = m_viewport.worldToScreen(m_currentVertex->second);
-            constexpr int kPieces = 32;
+            constexpr std::size_t kPieces = 32;
             std::array<core::Vec2, kPieces> circle{};
-            for (int piece = 0; piece < kPieces; ++piece) {
-                const double angle = core::kTwoPi * piece / kPieces;
+            for (std::size_t piece = 0; piece < kPieces; ++piece) {
+                const double angle =
+                    core::kTwoPi * static_cast<double>(piece) / static_cast<double>(kPieces);
                 circle.at(piece) =
                     center + core::Vec2{std::cos(angle), std::sin(angle)} * kCurrentVertexRadiusPx;
             }
