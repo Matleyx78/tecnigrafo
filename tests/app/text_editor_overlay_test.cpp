@@ -203,7 +203,8 @@ TEST_F(TextEditorTest, APropertiesMTextEditSurvivesRefreshAndIsOneUndoStep) {
     events::type(editor(), "Changed");
     confirm();
     EXPECT_FALSE(editor()->isOpen());
-    EXPECT_EQ(std::get<core::MText>(entity(id)).value, "Changed");
+    // The hidden code stays, as in every edit of an MTEXT (PT12, point 2).
+    EXPECT_EQ(std::get<core::MText>(entity(id)).value, "Changed\\A1;");
     EXPECT_EQ(session().editor().undoName(), "Properties");
 
     enter("U");
