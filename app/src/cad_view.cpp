@@ -512,6 +512,24 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
     // Above everything, so that the preview never hides it.
     if (const auto snap = runner.activeSnap()) {
         render::renderSnapMarker(*snap, m_viewport, m_style, backend);
+        if (const auto* window = qobject_cast<const MainWindow*>(this->window());
+            window != nullptr && window->snapMagnet()) {
+            const core::Vec2 point = m_viewport.worldToScreen(snap->point);
+            painter.setPen(m_style.background.r + m_style.background.g + m_style.background.b <
+                                   3 * kDarkLuminance
+                               ? Qt::white
+                               : Qt::black);
+            painter.drawLine(QPointF(point.x - kCursorArm, point.y),
+                             QPointF(point.x - kCursorBox - 1, point.y));
+            painter.drawLine(QPointF(point.x + kCursorBox + 1, point.y),
+                             QPointF(point.x + kCursorArm, point.y));
+            painter.drawLine(QPointF(point.x, point.y - kCursorArm),
+                             QPointF(point.x, point.y - kCursorBox - 1));
+            painter.drawLine(QPointF(point.x, point.y + kCursorBox + 1),
+                             QPointF(point.x, point.y + kCursorArm));
+            painter.drawRect(
+                QRectF(point.x - kCursorBox, point.y - kCursorBox, 2 * kCursorBox, 2 * kCursorBox));
+        }
     }
 }
 
@@ -594,15 +612,9 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
         runner.pointerMoved(toWorld(event->position()));
         if (const auto* window = qobject_cast<const MainWindow*>(this->window());
             window != nullptr && window->snapMagnet()) {
-            if (const auto snap = runner.activeSnap()) {
-                const core::Vec2 screen = m_viewport.worldToScreen(snap->point);
-                const QPoint target(static_cast<int>(std::lround(screen.x)),
-                                    static_cast<int>(std::lround(screen.y)));
-                if ((event->position() - QPointF(target)).manhattanLength() > 0.5) {
-                    QCursor::setPos(mapToGlobal(target));
-                    return;
-                }
-            }
+            setCursor(runner.activeSnap() ? Qt::BlankCursor : m_cursor);
+        } else {
+            setCursor(m_cursor);
         }
         if (runner.isActive() || runner.selectionRectangle()) {
             update();  // the preview or selection rectangle follows the pointer
