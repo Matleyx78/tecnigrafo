@@ -466,7 +466,8 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
             const int index = m_currentVertex->second;
             if (record != nullptr && index >= 0) {
                 if (const auto* polyline = std::get_if<core::Polyline>(&record->entity);
-                    polyline != nullptr && static_cast<std::size_t>(index) < polyline->size()) {
+                    polyline != nullptr &&
+                    static_cast<std::size_t>(index) < polyline->vertices().size()) {
                     vertex = polyline->vertices()[static_cast<std::size_t>(index)].position;
                 } else if (const auto* solid = std::get_if<core::Solid>(&record->entity);
                            solid != nullptr &&
