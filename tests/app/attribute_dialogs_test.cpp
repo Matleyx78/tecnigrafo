@@ -117,15 +117,24 @@ TEST(InsertAttributesDialogTest, DoubleClickEditsThePickedInsertAndSupportsUndoA
         }
         return result;
     };
+    const auto editSecond = [&window, &doubleClickSecond](const QString& value,
+                                                          QDialogButtonBox::StandardButton button) {
+        doubleClickSecond();
+        bool answered = false;
+        QTimer::singleShot(0, &window, [&window, &answered, value, button] {
+            auto* dialog = window.findChild<InsertAttributesDialog*>();
+            if (dialog == nullptr) {
+                return;
+            }
+            dialog->findChild<QLineEdit*>(QStringLiteral("attributeValue1"))->setText(value);
+            dialog->findChild<QDialogButtonBox*>()->button(button)->click();
+            answered = true;
+        });
+        QCoreApplication::processEvents();
+        return answered;
+    };
 
-    QTimer::singleShot(0, &window, [&window] {
-        auto* dialog = window.findChild<InsertAttributesDialog*>();
-        ASSERT_NE(dialog, nullptr);
-        dialog->findChild<QLineEdit*>(QStringLiteral("attributeValue1"))
-            ->setText(QStringLiteral("window"));
-        dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok)->click();
-    });
-    doubleClickSecond();
+    ASSERT_TRUE(editSecond(QStringLiteral("window"), QDialogButtonBox::Ok));
 
     EXPECT_EQ(values(firstId), (std::vector<std::string>{"1", "door", "first"}));
     EXPECT_EQ(values(secondId), (std::vector<std::string>{"1", "window", "second"}));
@@ -134,14 +143,7 @@ TEST(InsertAttributesDialogTest, DoubleClickEditsThePickedInsertAndSupportsUndoA
     EXPECT_EQ(values(secondId), (std::vector<std::string>{"1", "door", "second"}));
     session->runner().submit(cmd::ConfirmInput{});
 
-    QTimer::singleShot(0, &window, [&window] {
-        auto* dialog = window.findChild<InsertAttributesDialog*>();
-        ASSERT_NE(dialog, nullptr);
-        dialog->findChild<QLineEdit*>(QStringLiteral("attributeValue1"))
-            ->setText(QStringLiteral("discarded"));
-        dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Cancel)->click();
-    });
-    doubleClickSecond();
+    ASSERT_TRUE(editSecond(QStringLiteral("discarded"), QDialogButtonBox::Cancel));
     EXPECT_EQ(values(secondId), (std::vector<std::string>{"1", "door", "second"}));
 }
 
