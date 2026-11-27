@@ -506,12 +506,7 @@ TEST_F(MainWindowActionsTest, NewStageActionsReferToRegisteredCommands) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* actionSpec = registry().spec(id);
         ASSERT_NE(actionSpec, nullptr);
-        if (id == QStringLiteral("aids.grid") || id == QStringLiteral("aids.snapgrid")) {
-            EXPECT_TRUE(actionSpec->checkable);
-        } else {
-            EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()),
-                      nullptr);
-        }
+        EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
         EXPECT_TRUE(actionSpec->shortcut.isEmpty());
     }
 }
@@ -527,7 +522,12 @@ TEST_F(MainWindowActionsTest, CompletionActionsReferToRegisteredCommands) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* actionSpec = registry().spec(id);
         ASSERT_NE(actionSpec, nullptr);
-        EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
+        if (id == QStringLiteral("aids.grid") || id == QStringLiteral("aids.snapgrid")) {
+            EXPECT_TRUE(actionSpec->checkable);
+        } else {
+            EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()),
+                      nullptr);
+        }
     }
 }
 
