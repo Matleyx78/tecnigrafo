@@ -123,7 +123,8 @@ bool isLargeGroup(const QString& path) {
 /// keeps the four large buttons of the reference (docs/tappe/fuori-tappa/
 /// F6-stato.md, "Dopo PT39 e PT45").
 QStringList smallInLargeGroup() {
-    return {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")};
+    return {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch"),
+            QStringLiteral("draw.rectang"), QStringLiteral("draw.polygon")};
 }
 
 /// The text commands in the drop-down of Text in Home's Annotation, in

@@ -469,7 +469,7 @@ TEST_F(MainWindowActionsTest, EveryActionWithACommandRunsItAsTyped) {
         }
     }
     // File, editing and drawing commands, including the menu/ribbon aliases.
-    EXPECT_EQ(withCommands.size(), 47);
+    EXPECT_EQ(withCommands.size(), 57);
     for (QAction* item : withCommands) {
         const ActionSpec* spec = registry().spec(item->objectName());
         SCOPED_TRACE(spec->id.toStdString());
@@ -502,6 +502,21 @@ TEST_F(MainWindowActionsTest, NewStageActionsReferToRegisteredCommands) {
         ASSERT_NE(actionSpec, nullptr);
         EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
         EXPECT_TRUE(actionSpec->shortcut.isEmpty());
+    }
+}
+
+TEST_F(MainWindowActionsTest, CompletionActionsReferToRegisteredCommands) {
+    const QStringList ids{QStringLiteral("edit.textedit"),  QStringLiteral("block.attdef"),
+                          QStringLiteral("block.attedit"),  QStringLiteral("block.attsync"),
+                          QStringLiteral("block.battman"),  QStringLiteral("block.attdisp"),
+                          QStringLiteral("edit.hatchedit"), QStringLiteral("draw.rectang"),
+                          QStringLiteral("draw.polygon"),   QStringLiteral("aids.grid"),
+                          QStringLiteral("aids.snapgrid"),  QStringLiteral("view.ucsicon")};
+    for (const QString& id : ids) {
+        SCOPED_TRACE(id.toStdString());
+        const ActionSpec* actionSpec = registry().spec(id);
+        ASSERT_NE(actionSpec, nullptr);
+        EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
     }
 }
 
