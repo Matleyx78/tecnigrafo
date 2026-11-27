@@ -4,6 +4,7 @@
 #include "cad_view.hpp"
 
 #include "dynamic_input_box.hpp"
+#include "main_window.hpp"
 #include "qt_painter.hpp"
 #include "text_editor_overlay.hpp"
 #include "tg/cmd/value_format.hpp"
@@ -35,6 +36,7 @@ constexpr double kWheelNotch = 120.0;
 constexpr double kDragThresholdPixels = 5.0;
 constexpr int kTrackingHoldMilliseconds = 500;
 constexpr double kTrackingMarkHalfSizePx = 3.5;
+constexpr double kCurrentVertexRadiusPx = 8.0;
 constexpr double kHintOffsetPx = 14.0;
 // The pick box of a click, 3 pixels on each side of the point
 // (kPickBoxPixels of command_runner.cpp).
@@ -214,6 +216,10 @@ void CadView::confirmText() {
     if (m_session == nullptr || !m_textEditor->isOpen()) {
         return;
     }
+    if (m_propertyText) {
+        confirmPropertyText();
+        return;
+    }
     const std::vector<cmd::Input> inputs = m_textEditor->confirmation();
     closeTextEditor();
     cmd::CommandRunner& runner = m_session->runner();
@@ -225,12 +231,37 @@ void CadView::confirmText() {
     emit inputHandled();
 }
 
+void CadView::confirmPropertyText() {
+    const core::EntityId id = *m_propertyText;
+    const std::string value = m_textEditor->value();
+    const core::EntityRecord* record = m_session->document().find(id);
+    const auto* old = record != nullptr ? std::get_if<core::MText>(&record->entity) : nullptr;
+    m_propertyText.reset();
+    closeTextEditor();
+    if (old != nullptr && value != old->value) {
+        core::MText changed = *old;
+        changed.value = value;
+        m_session->editor().beginTransaction("Properties");
+        if (m_session->editor().replace(id, std::move(changed))) {
+            m_session->editor().commit();
+        } else {
+            m_session->editor().rollback();
+        }
+    }
+    update();
+    emit inputHandled();
+}
+
 void CadView::cancelText() {
     if (m_session == nullptr || !m_textEditor->isOpen()) {
         return;
     }
+    const bool propertyText = m_propertyText.has_value();
+    m_propertyText.reset();
     closeTextEditor();
-    m_session->runner().submit(cmd::CancelInput{});
+    if (!propertyText) {
+        m_session->runner().submit(cmd::CancelInput{});
+    }
     refreshTextEditor();
     update();
     emit inputHandled();
@@ -298,6 +329,31 @@ void CadView::setStyle(const render::SceneStyle& style) {
     update();
 }
 
+void CadView::setCurrentVertex(core::EntityId entity, const core::Vec2& vertex) {
+    m_currentVertex = std::pair{entity, vertex};
+    update();
+}
+
+bool CadView::editMText(core::EntityId entity) {
+    if (m_session == nullptr || m_session->editor().inTransaction() ||
+        m_session->runner().isActive()) {
+        return false;
+    }
+    const core::EntityRecord* record = m_session->document().find(entity);
+    const auto* mtext = record != nullptr ? std::get_if<core::MText>(&record->entity) : nullptr;
+    if (mtext == nullptr) {
+        return false;
+    }
+    closeTextEditor();
+    m_propertyText = entity;
+    m_textEditor->open(cmd::TextEditRequest{entity, *mtext, mtext->value, std::nullopt},
+                       m_session->document());
+    setFocusProxy(m_textEditor);
+    m_textEditor->setFocus(Qt::OtherFocusReason);
+    update();
+    return true;
+}
+
 void CadView::paintEvent(QPaintEvent* /*event*/) {
     QPainter painter(this);
     m_style.devicePixelRatio = devicePixelRatioF();
@@ -310,6 +366,7 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
     const cmd::CommandRunner& runner = m_session->runner();
     render::renderScene(document, m_viewport, m_style, backend);
     render::renderHighlight(document, runner.selection().ids(), m_viewport, m_style, backend);
+    render::renderHighlight(document, runner.highlighted(), m_viewport, m_style, backend);
     render::renderPreview(document, runner.preview(), m_viewport, m_style, backend);
     if (const auto rectangle = runner.selectionRectangle()) {
         render::renderSelectionRectangle(rectangle->first, rectangle->second, rectangle->crossing,
@@ -403,7 +460,54 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
             painter.drawText(QPointF(point.x + kHintOffsetPx, point.y - kHintOffsetPx), text);
         }
     }
+    backend.setPen(m_style.snapMarker, 0.0, render::LineStyle::Dashed);
+    for (const auto& guide : tracking.guides) {
+        if (guide.arc) {
+            constexpr int kArcPieces = 96;
+            std::vector<core::Vec2> points;
+            points.reserve(kArcPieces + 1);
+            const double sweep = guide.arc->sweep;
+            for (int piece = 0; piece <= kArcPieces; ++piece) {
+                const double angle =
+                    guide.arc->startAngle + sweep * static_cast<double>(piece) / kArcPieces;
+                points.push_back(m_viewport.worldToScreen(
+                    guide.arc->center +
+                    core::Vec2{std::cos(angle), std::sin(angle)} * guide.arc->radius));
+            }
+            backend.drawPolyline(points, false);
+            continue;
+        }
+        const core::Vec2 origin = m_viewport.worldToScreen(guide.origin);
+        const core::Vec2 next = m_viewport.worldToScreen(guide.origin + guide.direction);
+        const core::Vec2 direction = next - origin;
+        if (direction.length() == 0.0) {
+            continue;
+        }
+        const double extent = 2.0 * (std::hypot(width(), height()) +
+                                     (origin - core::Vec2{width() * 0.5, height() * 0.5}).length());
+        const core::Vec2 delta = direction * (extent / direction.length());
+        const bool ray =
+            guide.kind == cmd::CommandRunner::TrackingState::ActiveGuide::Kind::Extension;
+        backend.drawLine(ray ? origin : origin - delta, origin + delta);
+    }
     render::renderGrips(runner.grips(), runner.hotGrip(), m_viewport, m_style, backend);
+    if (m_currentVertex) {
+        const auto selected = runner.selection().ids();
+        if (selected.size() == 1 && selected.front() == m_currentVertex->first) {
+            const core::Vec2 center = m_viewport.worldToScreen(m_currentVertex->second);
+            constexpr int kPieces = 32;
+            std::array<core::Vec2, kPieces> circle{};
+            for (int piece = 0; piece < kPieces; ++piece) {
+                const double angle = core::kTwoPi * piece / kPieces;
+                circle.at(piece) =
+                    center + core::Vec2{std::cos(angle), std::sin(angle)} * kCurrentVertexRadiusPx;
+            }
+            backend.setPen(m_style.highlight, 0.0, render::LineStyle::Solid);
+            backend.drawPolyline(circle, true);
+        } else {
+            m_currentVertex.reset();
+        }
+    }
     // Above everything, so that the preview never hides it.
     if (const auto snap = runner.activeSnap()) {
         render::renderSnapMarker(*snap, m_viewport, m_style, backend);
@@ -487,6 +591,18 @@ void CadView::mouseMoveEvent(QMouseEvent* event) {
     if (m_session != nullptr && !editing) {
         cmd::CommandRunner& runner = m_session->runner();
         runner.pointerMoved(toWorld(event->position()));
+        if (const auto* window = qobject_cast<const MainWindow*>(this->window());
+            window != nullptr && window->snapMagnet()) {
+            if (const auto snap = runner.activeSnap()) {
+                const core::Vec2 screen = m_viewport.worldToScreen(snap->point);
+                const QPoint target(static_cast<int>(std::lround(screen.x)),
+                                    static_cast<int>(std::lround(screen.y)));
+                if ((event->position() - QPointF(target)).manhattanLength() > 0.5) {
+                    QCursor::setPos(mapToGlobal(target));
+                    return;
+                }
+            }
+        }
         if (runner.isActive() || runner.selectionRectangle()) {
             update();  // the preview or selection rectangle follows the pointer
         }

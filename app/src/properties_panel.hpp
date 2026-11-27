@@ -256,6 +256,7 @@ private:
     PropertyGridModel* m_model;
     PropertyGridDelegate* m_delegate;
     QTreeView* m_grid;
+    QToolButton* m_editMText;
     QLabel* m_message;
     // The width of the names, which the user can drag; a new model keeps it.
     int m_nameWidth;
