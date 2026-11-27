@@ -185,6 +185,22 @@ TEST_F(TexteditCommandTest, AttributeEditingIdentifiesOnlyTheFirstAttributeQuest
     runner().submit(CancelInput{});
 }
 
+TEST_F(TexteditCommandTest, InsertAttributeQuestionsNeverExposeTheAttributeRequest) {
+    core::BlockDefinition block{"LABELS"};
+    core::AttributeDefinition definition;
+    definition.tag = "NUMBER";
+    definition.text.value = "1";
+    definition.text.height = 1.0;
+    block.entities.push_back({{}, definition});
+    block.hasAttributes = true;
+    document().replaceBlock("LABELS", block);
+
+    submit({"ATTREQ", "1", "-INSERT", "LABELS", "0,0", "1", "1", "0"});
+    ASSERT_EQ(runner().promptText(), "NUMBER <1>:");
+    EXPECT_FALSE(runner().attributeEditing());
+    runner().submit(CancelInput{});
+}
+
 TEST_F(TexteditCommandTest, EmptyEditorValueKeepsTextAndUndoRevertsTheLastEdit) {
     core::Text text;
     text.value = "OLD";
