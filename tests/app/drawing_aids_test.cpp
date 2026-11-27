@@ -21,6 +21,7 @@
 #include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QPoint>
+#include <QSettings>
 #include <QStatusBar>
 #include <QStringList>
 #include <QTemporaryDir>
@@ -72,6 +73,11 @@ private:
 class DrawingAidsTest : public testing::Test {
 protected:
     void SetUp() override {
+        ASSERT_TRUE(m_directory.isValid());
+        QCoreApplication::setOrganizationName(QStringLiteral("TecnigrafoPT33Test"));
+        QCoreApplication::setApplicationName(QStringLiteral("DrawingAids"));
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_directory.path());
         m_window.show();
         m_window.activateWindow();
         ASSERT_TRUE(QTest::qWaitForWindowActive(&m_window));
@@ -96,7 +102,6 @@ protected:
         for (const char* name : kNames) {
             ASSERT_NE(action(name), nullptr) << name;
         }
-        ASSERT_TRUE(m_directory.isValid());
         m_window.setFileDialog([this](cmd::FilePrompt /*kind*/, const QString& /*path*/) {
             return m_fileAnswers.isEmpty() ? QString{} : m_fileAnswers.takeFirst();
         });
@@ -107,6 +112,12 @@ protected:
         ASSERT_NE(button("polarButton"), nullptr);
         ASSERT_NE(button("otrackButton"), nullptr);
         ASSERT_NE(input(), nullptr);
+    }
+
+    void TearDown() override {
+        QSettings::setDefaultFormat(m_format);
+        QCoreApplication::setOrganizationName(m_organization);
+        QCoreApplication::setApplicationName(m_application);
     }
 
     [[nodiscard]] CadView* view() const { return m_window.view(); }
@@ -247,6 +258,20 @@ protected:
         return count;
     }
 
+    [[nodiscard]] std::size_t orangePixelsIn(const QRect& area) const {
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = area.top(); y <= area.bottom(); ++y) {
+            for (int x = area.left(); x <= area.right(); ++x) {
+                const QColor color = image.pixelColor(x, y);
+                if (color.red() > color.green() + 20 && color.green() > color.blue() + 20) {
+                    ++count;
+                }
+            }
+        }
+        return count;
+    }
+
     void setSnapMagnet(bool on) {
         QTimer::singleShot(0, &m_window, [this, on] {
             auto* dialog = m_window.findChild<SettingsDialog*>();
@@ -263,6 +288,9 @@ protected:
 private:
     QTemporaryDir m_directory;
     QStringList m_fileAnswers;
+    QString m_organization{QCoreApplication::organizationName()};
+    QString m_application{QCoreApplication::applicationName()};
+    QSettings::Format m_format{QSettings::defaultFormat()};
     MainWindow m_window;
 };
 
@@ -646,7 +674,7 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
     const QPoint straightPixel = screen(straight->origin + straight->direction * 0.5).toPoint();
     const QRect arcArea{arcPixel - QPoint{12, 12}, QSize{25, 25}};
     const QRect straightArea{straightPixel - QPoint{12, 12}, QSize{25, 25}};
-    EXPECT_GT(markerPixelsIn(arcArea), 0U);
+    EXPECT_GT(orangePixelsIn(arcArea), 0U);
     EXPECT_GT(markerPixelsIn(straightArea), 0U);
 
     mutableRunner().pointerHeld({100.0, -40.0});
@@ -655,7 +683,7 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
     view()->update();
     QCoreApplication::processEvents();
     EXPECT_TRUE(runner().tracking().guides.empty());
-    EXPECT_EQ(markerPixelsIn(arcArea), 0U);
+    EXPECT_EQ(orangePixelsIn(arcArea), 0U);
     EXPECT_EQ(markerPixelsIn(straightArea), 0U);
 }
 
@@ -695,7 +723,9 @@ TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
     EXPECT_TRUE(hasCircleAt({100.0, 0.0}));
 
     enter("U");
-    EXPECT_TRUE(hasCircleAt(kVertex));
+    // U clears the selection (docs/adr/0008), and with it the circle.
+    EXPECT_TRUE(runner().selection().isEmpty());
+    EXPECT_FALSE(hasCircleAt(kVertex));
     ASSERT_TRUE(
         mutableRunner().replaceSelection(std::vector<core::EntityId>{document().entities()[1].id}));
     view()->update();
@@ -707,6 +737,8 @@ TEST_F(DrawingAidsTest, HatchSourcesAreHighlightedOnlyWhileTheCommandRuns) {
     view()->setView({70.0, 30.0}, 1.0);
     enter("-HATCH");
     click({30.0, 22.0});
+    // The dynamic input box follows the pointer: keep it off the bottom side.
+    moveScreen(QPointF{5.0, 5.0});
     ASSERT_FALSE(runner().highlighted().empty());
     const QPoint bottom = screen({60.0, 0.0}).toPoint();
     const auto highlightedPixels = [&] {
