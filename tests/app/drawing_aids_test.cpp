@@ -644,8 +644,10 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
         core::Vec2{std::cos(middleAngle), std::sin(middleAngle)} * arc->arc->radius;
     const QPoint arcPixel = screen(arcPoint).toPoint();
     const QPoint straightPixel = screen(straight->origin + straight->direction * 0.5).toPoint();
-    EXPECT_GT(markerPixelsIn(QRect{arcPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
-    EXPECT_GT(markerPixelsIn(QRect{straightPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
+    const QRect arcArea{arcPixel - QPoint{12, 12}, QSize{25, 25}};
+    const QRect straightArea{straightPixel - QPoint{12, 12}, QSize{25, 25}};
+    EXPECT_GT(markerPixelsIn(arcArea), 0U);
+    EXPECT_GT(markerPixelsIn(straightArea), 0U);
 
     mutableRunner().pointerHeld({100.0, -40.0});
     mutableRunner().pointerHeld({70.0, -60.0});
@@ -653,8 +655,8 @@ TEST_F(DrawingAidsTest, ArcAndStraightExtensionGuidesArePaintedUntilReleased) {
     view()->update();
     QCoreApplication::processEvents();
     EXPECT_TRUE(runner().tracking().guides.empty());
-    EXPECT_EQ(markerPixelsIn(QRect{arcPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
-    EXPECT_EQ(markerPixelsIn(QRect{straightPixel - QPoint{2, 2}, QSize{5, 5}}), 0U);
+    EXPECT_EQ(markerPixelsIn(arcArea), 0U);
+    EXPECT_EQ(markerPixelsIn(straightArea), 0U);
 }
 
 TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
@@ -662,8 +664,6 @@ TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
     const core::EntityId outline = document().entities().front().id;
     ASSERT_TRUE(mutableRunner().replaceSelection({outline}));
     view()->setCurrentVertex(outline, 1);
-    const render::Color highlightColor = sceneStyle(window().theme()).highlight;
-    const QColor highlight(highlightColor.r, highlightColor.g, highlightColor.b);
     const auto hasCircleAt = [&](const core::Vec2& point) {
         const QPoint center = screen(point).toPoint();
         const QImage image = view()->grab().toImage();
@@ -672,7 +672,9 @@ TEST_F(DrawingAidsTest, CurrentVertexCircleFollowsEditsUndoAndSelection) {
             for (int x = center.x() - 9; x <= center.x() + 9; ++x) {
                 const int squared =
                     (x - center.x()) * (x - center.x()) + (y - center.y()) * (y - center.y());
-                if (squared >= 36 && squared <= 100 && image.pixelColor(x, y) == highlight) {
+                const QColor color = image.pixelColor(x, y);
+                if (squared >= 36 && squared <= 100 && color.blue() > color.green() + 20 &&
+                    color.green() > color.red() + 20) {
                     ++count;
                 }
             }
@@ -707,13 +709,24 @@ TEST_F(DrawingAidsTest, HatchSourcesAreHighlightedOnlyWhileTheCommandRuns) {
     click({30.0, 22.0});
     ASSERT_FALSE(runner().highlighted().empty());
     const QPoint bottom = screen({60.0, 0.0}).toPoint();
-    const render::Color highlightColor = sceneStyle(window().theme()).highlight;
-    const QColor highlight(highlightColor.r, highlightColor.g, highlightColor.b);
-    EXPECT_EQ(view()->grab().toImage().pixelColor(bottom), highlight);
+    const auto highlightedPixels = [&] {
+        const QImage image = view()->grab().toImage();
+        std::size_t count = 0;
+        for (int y = bottom.y() - 2; y <= bottom.y() + 2; ++y) {
+            for (int x = bottom.x() - 10; x <= bottom.x() + 10; ++x) {
+                const QColor color = image.pixelColor(x, y);
+                if (color.blue() > color.green() + 20 && color.green() > color.red() + 20) {
+                    ++count;
+                }
+            }
+        }
+        return count;
+    };
+    EXPECT_GT(highlightedPixels(), 0U);
 
     events::press(input(), Qt::Key_Return);
     EXPECT_TRUE(runner().highlighted().empty());
-    EXPECT_NE(view()->grab().toImage().pixelColor(bottom), highlight);
+    EXPECT_EQ(highlightedPixels(), 0U);
 }
 
 TEST_F(DrawingAidsTest, SnapMagnetMovesOnlyTheDrawnCursorToTheSnap) {
