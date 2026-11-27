@@ -217,7 +217,7 @@ void CadView::confirmText() {
         return;
     }
     if (m_propertyText) {
-        confirmPropertyText();
+        confirmPropertyText(*m_propertyText);
         return;
     }
     const std::vector<cmd::Input> inputs = m_textEditor->confirmation();
@@ -231,8 +231,7 @@ void CadView::confirmText() {
     emit inputHandled();
 }
 
-void CadView::confirmPropertyText() {
-    const core::EntityId id = *m_propertyText;
+void CadView::confirmPropertyText(core::EntityId id) {
     const std::string value = m_textEditor->value();
     const core::EntityRecord* record = m_session->document().find(id);
     const auto* old = record != nullptr ? std::get_if<core::MText>(&record->entity) : nullptr;

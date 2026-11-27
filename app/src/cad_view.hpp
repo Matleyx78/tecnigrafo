@@ -120,7 +120,7 @@ private:
     void closeTextEditor();
     /// The editor's confirmation, or Esc, handed to the runner.
     void confirmText();
-    void confirmPropertyText();
+    void confirmPropertyText(core::EntityId entity);
     void cancelText();
     /// The left double click at `screenPos`: TEXTEDIT on the text there.
     /// False, and nothing done, when the runner is not at "Command:" or no
