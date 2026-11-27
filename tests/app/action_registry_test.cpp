@@ -366,10 +366,14 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
         (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),
                      QStringLiteral("&Circle"), QStringLiteral("&Arc"), QStringLiteral("&Ellipse"),
                      QStringLiteral("&Text"), QStringLiteral("&Multiline Text"),
-                     QStringLiteral("&Hatch"), QStringLiteral("&Block")}));
+                     QStringLiteral("&Hatch"), QStringLiteral("&Rectangle"),
+                     QStringLiteral("&Polygon"), QStringLiteral("&Block")}));
     EXPECT_EQ(titles(menus[4]->menu()->actions().last()->menu()->actions()),
-              (QStringList{QStringLiteral("&Create Block")}));
-    EXPECT_EQ(titles(menus[5]->menu()->actions()), (QStringList{QStringLiteral("&Insert Block")}));
+              (QStringList{QStringLiteral("&Create Block"), QStringLiteral("Define &Attributes")}));
+    EXPECT_EQ(titles(menus[5]->menu()->actions()),
+              (QStringList{QStringLiteral("&Insert Block"), QStringLiteral("Edit &Attributes"),
+                           QStringLiteral("&Synchronize Attributes"),
+                           QStringLiteral("Block Attribute &Manager")}));
     EXPECT_EQ(titles(menus[7]->menu()->actions()),
               (QStringList{QStringLiteral("&Linear"), QStringLiteral("&Angular"),
                            QStringLiteral("&Radius"), QStringLiteral("&Diameter"),
@@ -414,7 +418,9 @@ TEST_F(MainWindowActionsTest, ModifyCommandsHaveTheirOwnActionsMenuAndRoleIcons)
         {QStringLiteral("edit.fillet"), QStringLiteral("FILLET")},
         {QStringLiteral("edit.chamfer"), QStringLiteral("CHAMFER")},
         {QStringLiteral("edit.join"), QStringLiteral("JOIN")},
-        {QStringLiteral("edit.pedit"), QStringLiteral("PEDIT")}};
+        {QStringLiteral("edit.pedit"), QStringLiteral("PEDIT")},
+        {QStringLiteral("edit.hatchedit"), QStringLiteral("-HATCHEDIT")},
+        {QStringLiteral("edit.textedit"), QStringLiteral("TEXTEDIT")}};
     QMenu* modify = nullptr;
     for (QAction* item : window().menuBar()->actions()) {
         if (item->text() == QStringLiteral("&Modify")) {
@@ -500,7 +506,12 @@ TEST_F(MainWindowActionsTest, NewStageActionsReferToRegisteredCommands) {
         SCOPED_TRACE(id.toStdString());
         const ActionSpec* actionSpec = registry().spec(id);
         ASSERT_NE(actionSpec, nullptr);
-        EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()), nullptr);
+        if (id == QStringLiteral("aids.grid") || id == QStringLiteral("aids.snapgrid")) {
+            EXPECT_TRUE(actionSpec->checkable);
+        } else {
+            EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()),
+                      nullptr);
+        }
         EXPECT_TRUE(actionSpec->shortcut.isEmpty());
     }
 }
