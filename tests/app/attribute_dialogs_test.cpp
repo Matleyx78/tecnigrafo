@@ -112,6 +112,7 @@ TEST(InsertAttributesDialogTest, DoubleClickEditsThePickedInsertAndSupportsUndoA
     const auto values = [session](core::EntityId id) {
         std::vector<std::string> result;
         const auto& insert = std::get<core::Insert>(session->document().find(id)->entity);
+        result.reserve(insert.attributes.size());
         for (const core::Attribute& attribute : insert.attributes) {
             result.push_back(attribute.text.value);
         }
