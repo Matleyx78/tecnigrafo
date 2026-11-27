@@ -1074,7 +1074,7 @@ TEST_F(PropertiesPanelTest, ASolidBrowsesAndMovesItsCurrentVertex) {
     const core::Entity before = recordOf(id).entity;
     select({id});
     EXPECT_EQ(panel().typeLabels(), QStringList{QStringLiteral("Solid (1)")});
-    PropertyGridModel& model = panel().grid();
+    const PropertyGridModel& model = panel().grid();
     EXPECT_EQ(model.vertexCount(), 4);
     const QList<QPair<QString, QString>> first{
         {QStringLiteral("Current Vertex"), QStringLiteral("1")},

@@ -472,7 +472,7 @@ void CadView::paintEvent(QPaintEvent* /*event*/) {
                 } else if (const auto* solid = std::get_if<core::Solid>(&record->entity);
                            solid != nullptr &&
                            static_cast<std::size_t>(index) < solid->vertices.size()) {
-                    vertex = solid->vertices[static_cast<std::size_t>(index)];
+                    vertex = solid->vertices.at(static_cast<std::size_t>(index));
                 }
             }
             if (!vertex) {
