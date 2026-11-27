@@ -124,7 +124,11 @@ bool isLargeGroup(const QString& path) {
 /// F6-stato.md, "Dopo PT39 e PT45").
 QStringList smallInLargeGroup() {
     return {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch"),
-            QStringLiteral("draw.rectang"), QStringLiteral("draw.polygon")};
+            QStringLiteral("draw.rectang")};
+}
+
+QStringList polylinePrimitiveDropDown() {
+    return {QStringLiteral("draw.rectang"), QStringLiteral("draw.polygon")};
 }
 
 /// The text commands in the drop-down of Text in Home's Annotation, in
@@ -312,6 +316,26 @@ void addTextDropDown(SARibbonPanel& panel, QAction& text, const ActionRegistry& 
     auto* menu = new QMenu(button);
     menu->setObjectName(QStringLiteral("textDropDown"));
     for (const QString& id : textDropDown()) {
+        if (QAction* action = registry.action(id); action != nullptr) {
+            menu->addAction(action);
+        }
+    }
+    button->setMenu(menu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    panel.updateItemGeometry();
+}
+
+/// Gives the Rectangle button a drop-down containing Rectangle and Polygon.
+/// The actions keep their own entries in the classic Draw menu.
+void addPolylinePrimitiveDropDown(SARibbonPanel& panel, QAction& rectangle,
+                                  const ActionRegistry& registry) {
+    SARibbonToolButton* button = panel.actionToRibbonToolButton(&rectangle);
+    if (button == nullptr) {
+        return;
+    }
+    auto* menu = new QMenu(button);
+    menu->setObjectName(QStringLiteral("polylinePrimitiveDropDown"));
+    for (const QString& id : polylinePrimitiveDropDown()) {
         if (QAction* action = registry.action(id); action != nullptr) {
             menu->addAction(action);
         }
@@ -914,6 +938,11 @@ void UiBuilder::buildRibbon() {
             panelFor(QStringLiteral("annotate/text"))->addSmallAction(action);
             continue;
         }
+        // Polygon is offered by Rectangle's drop-down, not as a second
+        // button: Draw therefore remains a single column of small buttons.
+        if (spec->id == polylinePrimitiveDropDown().last()) {
+            continue;
+        }
         SARibbonPanel* panel = panelFor(spec->ribbon);
         const bool small = smallInLargeGroup().contains(spec->id);
         if (action->menu() != nullptr) {
@@ -938,6 +967,9 @@ void UiBuilder::buildRibbon() {
         }
         if (spec->id == textDropDown().first()) {
             addTextDropDown(*panel, *action, m_registry);
+        }
+        if (spec->id == polylinePrimitiveDropDown().first()) {
+            addPolylinePrimitiveDropDown(*panel, *action, m_registry);
         }
     }
     // SARibbonMainWindow disposes of the previous menu widget with

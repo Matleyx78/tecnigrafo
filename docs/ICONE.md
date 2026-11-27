@@ -461,6 +461,21 @@ PT45 aggiunge il retino all'interfaccia.
 |---|---|---|---|
 | `draw-hatch` | `draw.hatch` | contorno esistente e linee del retino | sì |
 
+PT37 porta nell'interfaccia i comandi di completamento della tappa 0.8.1.
+
+| File | Azione | Disegno | Rifatta |
+|---|---|---|---|
+| `block-attdef` | `block.attdef` | etichetta di attributo con punto di inserimento | sì |
+| `block-attdisp` | `block.attdisp` | blocco con attributo visibile | sì |
+| `block-attedit` | `block.attedit` | attributo di blocco con matita | sì |
+| `block-attsync` | `block.attsync` | due attributi collegati da frecce | sì |
+| `block-battman` | `block.battman` | elenco di attributi di un blocco | sì |
+| `draw-polygon` | `draw.polygon` | poligono regolare con centro | sì |
+| `draw-rectang` | `draw.rectang` | rettangolo con vertici opposti | sì |
+| `edit-hatchedit` | `edit.hatchedit` | retino esistente con matita | sì |
+| `edit-textedit` | `edit.textedit` | testo esistente con cursore | sì |
+| `view-ucsicon` | `view.ucsicon` | assi X e Y dell'UCS | sì |
+
 La barra dei formati dell'editor MTEXT (0.8.1-PT13) usa direttamente sette
 icone, ciascuna con i due file `-16.svg` e `-32.svg`.
 

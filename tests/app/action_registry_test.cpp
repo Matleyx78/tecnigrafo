@@ -361,6 +361,8 @@ TEST_F(MainWindowActionsTest, MenusComeFromTheRegistryInTheClassicOrder) {
     EXPECT_EQ(titles(menus[1]->menu()->actions()),
               (QStringList{QStringLiteral("&Undo"), QStringLiteral("&Redo"), QStringLiteral("-"),
                            QStringLiteral("&Erase")}));
+    EXPECT_TRUE(titles(menus[2]->menu()->actions()).contains(QStringLiteral("Attribute &Display")));
+    EXPECT_TRUE(titles(menus[2]->menu()->actions()).contains(QStringLiteral("&UCS Icon")));
     EXPECT_EQ(
         titles(menus[4]->menu()->actions()),
         (QStringList{QStringLiteral("&Line"), QStringLiteral("&Polyline"),
@@ -528,6 +530,23 @@ TEST_F(MainWindowActionsTest, CompletionActionsReferToRegisteredCommands) {
             EXPECT_NE(window().commandRegistry().describe(actionSpec->command.toStdString()),
                       nullptr);
         }
+    }
+}
+
+TEST_F(MainWindowActionsTest, CommandLineOnlyCompletionsHaveNoActions) {
+    const QSet<QString> commandLineOnly{QStringLiteral("SELECT"),      QStringLiteral("AFLAGS"),
+                                        QStringLiteral("ATTREQ"),      QStringLiteral("GRIDMODE"),
+                                        QStringLiteral("GRIDUNIT"),    QStringLiteral("SNAPMODE"),
+                                        QStringLiteral("SNAPUNIT"),    QStringLiteral("SNAPBASE"),
+                                        QStringLiteral("GRIDDISPLAY"), QStringLiteral("GRIDMAJOR")};
+    for (QAction* action : registry().actions()) {
+        const ActionSpec* spec = registry().spec(action->objectName());
+        ASSERT_NE(spec, nullptr);
+        QString command = spec->command.toUpper();
+        while (command.startsWith(QLatin1Char('-'))) {
+            command.removeFirst();
+        }
+        EXPECT_FALSE(commandLineOnly.contains(command)) << spec->id.toStdString();
     }
 }
 

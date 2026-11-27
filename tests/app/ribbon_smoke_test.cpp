@@ -261,17 +261,26 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
     const ActionRegistry& registry = window.actionRegistry();
     const QList<std::pair<QString, QStringList>> expected{
         {QStringLiteral("home/draw"),
-         {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}},
+         {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch"),
+          QStringLiteral("draw.rectang"), QStringLiteral("draw.polygon")}},
         {QStringLiteral("home/annotation"), {QStringLiteral("draw.text")}},
-        {QStringLiteral("home/modify"), {QStringLiteral("edit.pedit")}},
+        {QStringLiteral("home/modify"),
+         {QStringLiteral("edit.pedit"), QStringLiteral("edit.hatchedit"),
+          QStringLiteral("edit.textedit")}},
         {QStringLiteral("insert/block"),
-         {QStringLiteral("block.create"), QStringLiteral("block.insert")}},
+         {QStringLiteral("block.create"), QStringLiteral("block.insert"),
+          QStringLiteral("block.attdef"), QStringLiteral("block.attedit"),
+          QStringLiteral("block.attsync"), QStringLiteral("block.battman"),
+          QStringLiteral("block.attdisp")}},
         {QStringLiteral("annotate/dimensions"),
          {QStringLiteral("dimension.linear"), QStringLiteral("dimension.angular"),
           QStringLiteral("dimension.radius"), QStringLiteral("dimension.diameter"),
           QStringLiteral("dimension.style")}},
         {QStringLiteral("annotate/text"),
          {QStringLiteral("draw.mtext"), QStringLiteral("text.style")}},
+        {QStringLiteral("view/navigate"), {QStringLiteral("view.ucsicon")}},
+        {QStringLiteral("view/aids"),
+         {QStringLiteral("aids.grid"), QStringLiteral("aids.snapgrid")}},
     };
     for (const auto& [path, ids] : expected) {
         SCOPED_TRACE(path.toStdString());
@@ -282,7 +291,8 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
             ASSERT_NE(action, nullptr);
             bool found = false;
             for (QToolButton* button : panel->findChildren<QToolButton*>()) {
-                found = found || button->defaultAction() == action;
+                found = found || button->defaultAction() == action ||
+                        (button->menu() != nullptr && button->menu()->actions().contains(action));
             }
             EXPECT_TRUE(found) << id.toStdString();
         }
@@ -302,7 +312,8 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
     // F6-stato.md, "Dopo PT39 e PT45"): Ellipse and Hatch small, with the
     // icon only; Multiline Text in the drop-down of Text, whose action
     // keeps no menu, so that the classic Draw menu shows it as an item.
-    for (const QString& id : {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch")}) {
+    for (const QString& id : {QStringLiteral("draw.ellipse"), QStringLiteral("draw.hatch"),
+                              QStringLiteral("draw.rectang")}) {
         SCOPED_TRACE(id.toStdString());
         auto* button =
             dynamic_cast<SARibbonToolButton*>(ribbonButtonOf(*ribbon, registry.action(id)));
@@ -310,6 +321,13 @@ TEST(RibbonSmoke, NewDrawingCommandsAreInTheirRibbonPanelsAndClassicToolbars) {
         EXPECT_EQ(button->buttonType(), SARibbonToolButton::SmallButton);
         EXPECT_EQ(button->toolButtonStyle(), Qt::ToolButtonIconOnly);
     }
+    QAction* rectangle = registry.action(QStringLiteral("draw.rectang"));
+    QAction* polygon = registry.action(QStringLiteral("draw.polygon"));
+    QToolButton* rectangleButton = ribbonButtonOf(*ribbon, rectangle);
+    ASSERT_NE(rectangleButton, nullptr);
+    ASSERT_NE(rectangleButton->menu(), nullptr);
+    EXPECT_EQ(rectangleButton->menu()->actions(), (QList<QAction*>{rectangle, polygon}));
+    EXPECT_EQ(ribbonButtonOf(*ribbon, polygon), nullptr);
     QAction* text = registry.action(QStringLiteral("draw.text"));
     QAction* mtext = registry.action(QStringLiteral("draw.mtext"));
     QToolButton* textButton = ribbonButtonOf(*ribbon, text);
