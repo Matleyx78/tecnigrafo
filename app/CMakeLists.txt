@@ -31,6 +31,8 @@ qt_add_library(tg_app_ui STATIC
     src/quick_select_dialog.hpp
     src/battman_dialog.cpp
     src/battman_dialog.hpp
+    src/attribute_dialogs.cpp
+    src/attribute_dialogs.hpp
     src/action_registry.cpp
     src/action_registry.hpp
     src/app_commands.cpp

@@ -485,6 +485,11 @@ public:
         return m_command && !m_askingSelection ? m_command->textEditing() : std::nullopt;
     }
 
+    /// The running command's attribute-dialog request, if any.
+    [[nodiscard]] std::optional<core::EntityId> attributeEditing() const {
+        return m_command && !m_askingSelection ? m_command->attributeEditing() : std::nullopt;
+    }
+
     /// File access for commands, not owned. nullptr disables file commands.
     void setFileAccess(io::FileAccess* files);
 

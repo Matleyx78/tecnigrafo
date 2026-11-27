@@ -152,6 +152,55 @@ TEST_F(TexteditCommandTest, InsertAttributesNeverExposeTheEditorRequest) {
     runner().submit(CancelInput{});
 }
 
+TEST_F(TexteditCommandTest, AttributeEditingIdentifiesOnlyTheFirstAttributeQuestion) {
+    core::AttributeDefinition definition;
+    definition.text.height = 1.0;
+    definition.tag = "LABEL";
+    definition.prompt = "Label";
+    const core::EntityId definitionId = add(definition);
+
+    submit({"TEXTEDIT", "0,0"});
+    EXPECT_EQ(runner().attributeEditing(), definitionId);
+    runner().submit(ConfirmInput{});
+    EXPECT_FALSE(runner().attributeEditing());
+    runner().submit(CancelInput{});
+
+    document().replaceBlock("ATTRS", core::BlockDefinition{.name = "ATTRS"});
+    core::Insert insert;
+    insert.block = "ATTRS";
+    for (const auto& [tag, value] : {std::pair{"FIRST", "one"}, std::pair{"SECOND", "two"}}) {
+        core::Attribute attribute;
+        attribute.tag = tag;
+        attribute.text.height = 1.0;
+        attribute.text.value = value;
+        attribute.text.position = {30.0, 0.0};
+        insert.attributes.push_back(attribute);
+    }
+    const core::EntityId insertId = add(insert);
+
+    submit({"ATTREQ", "0", "TEXTEDIT", "30,0"});
+    EXPECT_EQ(runner().attributeEditing(), insertId);
+    runner().submit(ConfirmInput{});
+    EXPECT_FALSE(runner().attributeEditing());
+    runner().submit(CancelInput{});
+}
+
+TEST_F(TexteditCommandTest, InsertAttributeQuestionsNeverExposeTheAttributeRequest) {
+    core::BlockDefinition block{"LABELS"};
+    core::AttributeDefinition definition;
+    definition.tag = "NUMBER";
+    definition.text.value = "1";
+    definition.text.height = 1.0;
+    block.entities.push_back({{}, definition});
+    block.hasAttributes = true;
+    document().replaceBlock("LABELS", block);
+
+    submit({"ATTREQ", "1", "-INSERT", "LABELS", "0,0", "1", "1", "0"});
+    ASSERT_EQ(runner().promptText(), "NUMBER <1>:");
+    EXPECT_FALSE(runner().attributeEditing());
+    runner().submit(CancelInput{});
+}
+
 TEST_F(TexteditCommandTest, EmptyEditorValueKeepsTextAndUndoRevertsTheLastEdit) {
     core::Text text;
     text.value = "OLD";

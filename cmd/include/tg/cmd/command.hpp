@@ -152,6 +152,11 @@ public:
         return std::nullopt;
     }
 
+    /// The attribute entity currently offered to an attributes dialog.
+    [[nodiscard]] virtual std::optional<core::EntityId> attributeEditing() const {
+        return std::nullopt;
+    }
+
     /// Entities of the drawing the command shows highlighted while it runs,
     /// for example those it has chosen and still works on; none by default.
     /// Valid until the next call to a non-const function of the command.
